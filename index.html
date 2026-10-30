@@ -2,105 +2,343 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>School Exam Portal</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f1f5f9;
-      color: #1e293b;
-    }
-    header {
-      background: #123b70;
-      color: white;
-      padding: 22px;
-      text-align: center;
-    }
-    header h1 { margin: 0 0 8px; font-size: 23px; }
-    header p { margin: 0; }
-    nav {
-      background: #fff;
-      padding: 14px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-      box-shadow: 0 2px 8px #0001;
-    }
-    nav a {
-      color: #123b70;
-      text-decoration: none;
-      font-weight: bold;
-      padding: 8px;
-    }
-    main { padding: 20px; max-width: 1100px; margin: auto; }
-    .welcome { margin-bottom: 20px; }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
-      gap: 15px;
-    }
-    .card {
-      background: white;
-      padding: 22px;
-      border-radius: 12px;
-      box-shadow: 0 3px 12px #0000000d;
-      border-left: 4px solid #2563eb;
-    }
-    .card h3 { margin: 0 0 12px; font-size: 16px; }
-    .number { font-size: 27px; font-weight: bold; color: #123b70; }
-    footer { text-align: center; padding: 25px; color: #64748b; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mahadevasthan School | Exam Portal</title>
+
+<style>
+:root {
+  --blue:#174a86;
+  --dark:#10345f;
+  --light:#eaf2fc;
+  --bg:#f4f7fc;
+  --white:#ffffff;
+  --text:#26364a;
+  --muted:#78879a;
+}
+* {box-sizing:border-box}
+body {
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+button {font:inherit;cursor:pointer}
+.layout {display:flex;min-height:100vh}
+.sidebar {
+  width:250px;
+  background:var(--dark);
+  color:white;
+  padding:22px 14px;
+  flex-shrink:0;
+}
+.brand {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:5px 8px 24px;
+  border-bottom:1px solid #ffffff25;
+}
+.logo {
+  width:45px;height:45px;
+  background:white;color:var(--blue);
+  border-radius:12px;
+  display:grid;place-items:center;
+  font-size:23px;font-weight:bold;
+}
+.brand h3 {font-size:15px;margin:0 0 5px}
+.brand small {font-size:11px;color:#c7d9ee}
+.menu-title {
+  color:#9fb8d6;
+  font-size:11px;
+  margin:25px 10px 10px;
+  text-transform:uppercase;
+}
+.menu a {
+  display:flex;
+  align-items:center;
+  gap:13px;
+  padding:12px;
+  margin:4px 0;
+  border-radius:8px;
+  text-decoration:none;
+  color:#e3edf9;
+  font-size:14px;
+}
+.menu a.active,.menu a:hover {
+  background:#ffffff20;
+  color:white;
+}
+.menu-icon {width:22px;text-align:center;font-size:18px}
+.main {flex:1;min-width:0}
+.topbar {
+  height:72px;
+  background:white;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 28px;
+  box-shadow:0 2px 12px #102d5010;
+}
+.top-left {display:flex;align-items:center;gap:14px}
+.topbar h2 {font-size:19px;margin:0;color:var(--dark)}
+.year {
+  background:var(--light);
+  color:var(--blue);
+  border-radius:20px;
+  padding:8px 13px;
+  font-size:12px;font-weight:bold;
+}
+.profile {display:flex;align-items:center;gap:10px}
+.avatar {
+  width:38px;height:38px;
+  display:grid;place-items:center;
+  background:var(--light);
+  color:var(--blue);
+  border-radius:50%;font-weight:bold;
+}
+.profile small {color:var(--muted)}
+.content {padding:28px;max-width:1500px;margin:auto}
+.welcome {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  margin-bottom:24px;
+}
+.welcome h1 {font-size:25px;margin:0 0 8px;color:var(--dark)}
+.welcome p {margin:0;color:var(--muted);font-size:14px}
+.date {
+  background:white;padding:11px 15px;
+  border-radius:9px;color:var(--blue);
+  font-size:13px;border:1px solid #e3eaf4;
+}
+.cards {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:17px;
+}
+.card {
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  border:1px solid #e9eef5;
+  box-shadow:0 3px 12px #173b6410;
+}
+.card-head {display:flex;justify-content:space-between;align-items:center}
+.card-icon {
+  width:43px;height:43px;border-radius:11px;
+  display:grid;place-items:center;font-size:21px;
+  background:var(--light);
+}
+.card h4 {font-size:13px;color:var(--muted);margin:16px 0 9px}
+.card .value {font-size:28px;font-weight:bold;color:var(--dark)}
+.card .note {font-size:11px;color:var(--muted);margin-top:7px}
+.section-grid {
+  display:grid;
+  grid-template-columns:1.5fr 1fr;
+  gap:18px;margin-top:22px;
+}
+.panel {
+  background:white;border-radius:12px;
+  padding:22px;border:1px solid #e9eef5;
+  box-shadow:0 3px 12px #173b6410;
+  min-width:0;
+}
+.panel-title {
+  display:flex;justify-content:space-between;
+  align-items:center;margin-bottom:22px;
+}
+.panel-title h3 {font-size:16px;margin:0;color:var(--dark)}
+.panel-title span {font-size:12px;color:var(--muted)}
+.chart {
+  height:210px;display:flex;align-items:flex-end;
+  justify-content:space-around;gap:12px;
+  padding:10px 5px 0;border-bottom:1px solid #e7edf5;
+}
+.bar-group {
+  height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-end;
+  flex:1;gap:8px;
+}
+.bar {
+  width:min(34px,75%);
+  background:#4c8ed8;
+  border-radius:6px 6px 0 0;
+  min-height:5px;
+}
+.bar.second {background:#b6d5f4}
+.bar-label {font-size:11px;color:var(--muted)}
+.legend {display:flex;gap:18px;margin-top:17px;font-size:11px;color:var(--muted)}
+.dot {display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+.activity {display:flex;flex-direction:column;gap:17px}
+.activity-item {display:flex;align-items:center;gap:12px}
+.activity-icon {
+  width:38px;height:38px;border-radius:10px;
+  display:grid;place-items:center;background:var(--light);
+}
+.activity-item strong {font-size:13px}
+.activity-item p {font-size:11px;color:var(--muted);margin:5px 0 0}
+.quick {
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:13px;margin-top:22px;
+}
+.quick a {
+  background:white;padding:17px 10px;
+  text-align:center;border-radius:10px;
+  text-decoration:none;color:var(--blue);
+  border:1px solid #e7edf5;font-size:13px;
+}
+.quick a span {display:block;font-size:23px;margin-bottom:8px}
+footer {text-align:center;padding:25px;color:var(--muted);font-size:12px}
+.mobile-menu {display:none}
+@media(max-width:950px) {
+  .sidebar {width:215px}
+  .cards {grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:650px) {
+  .sidebar {display:none}
+  .topbar {height:62px;padding:0 15px}
+  .topbar h2 {font-size:15px}
+  .content {padding:17px}
+  .welcome {align-items:flex-start;flex-direction:column}
+  .welcome h1 {font-size:21px}
+  .section-grid {grid-template-columns:1fr}
+  .quick {grid-template-columns:repeat(2,1fr)}
+  .profile div:last-child {display:none}
+  .cards {gap:10px}
+  .card {padding:14px}
+  .card .value {font-size:23px}
+  .card h4 {font-size:12px}
+}
+</style>
 </head>
+
 <body>
-  <header>
-    <h1>Mahadevasthan Secondary School</h1>
-    <p>School Exam Management & Attendance Portal</p>
-    <p>Dhunibeshi Municipality-05, Dhading</p>
-  </header>
+<div class="layout">
 
-  <nav>
-    <a href="#">Dashboard</a>
-    <a href="#">Students</a>
-    <a href="#">Teachers</a>
-    <a href="#">Subjects</a>
-    <a href="#">Examination</a>
-    <a href="#">Results</a>
-    <a href="#">Attendance</a>
+<aside class="sidebar">
+  <div class="brand">
+    <div class="logo">M</div>
+    <div>
+      <h3>MAHADEVASTHAN</h3>
+      <small>Secondary School</small>
+    </div>
+  </div>
+
+  <div class="menu-title">Main Menu</div>
+  <nav class="menu">
+    <a class="active" href="#dashboard"><span class="menu-icon">▦</span>Dashboard</a>
+    <a href="#students"><span class="menu-icon">👨‍🎓</span>Students</a>
+    <a href="#teachers"><span class="menu-icon">👨‍🏫</span>Teachers & Staff</a>
+    <a href="#subjects"><span class="menu-icon">📚</span>Subjects</a>
+    <a href="#exams"><span class="menu-icon">📝</span>Examinations</a>
+    <a href="#results"><span class="menu-icon">📊</span>Results & Grades</a>
+    <a href="#attendance"><span class="menu-icon">📅</span>Attendance</a>
+
+    <div class="menu-title">Management</div>
+    <a href="#reports"><span class="menu-icon">📑</span>Reports</a>
+    <a href="#settings"><span class="menu-icon">⚙️</span>Settings</a>
   </nav>
+</aside>
 
-  <main>
-    <div class="welcome">
-      <h2>Dashboard</h2>
-      <p>Welcome to School Management System</p>
-      <p>Academic Year: 2083</p>
+<div class="main">
+<header class="topbar">
+  <div class="top-left">
+    <h2>School Administration</h2>
+    <span class="year">2083 BS</span>
+  </div>
+  <div class="profile">
+    <div class="avatar">A</div>
+    <div>
+      <strong style="font-size:13px">Administrator</strong><br>
+      <small>School Admin</small>
+    </div>
+  </div>
+</header>
+
+<main class="content" id="dashboard">
+  <div class="welcome">
+    <div>
+      <h1>Dashboard Overview</h1>
+      <p>Welcome to Mahadevasthan Secondary School Management Portal.</p>
+    </div>
+    <div class="date">Academic Year : 2083</div>
+  </div>
+
+  <section class="cards">
+    <div class="card">
+      <div class="card-head"><span>👨‍🎓</span><span class="card-icon">♟</span></div>
+      <h4>Total Students</h4>
+      <div class="value">0</div>
+      <div class="note">Registered students</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span>👨‍🏫</span><span class="card-icon">▣</span></div>
+      <h4>Total Teachers</h4>
+      <div class="value">0</div>
+      <div class="note">Teaching and staff members</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span>🏫</span><span class="card-icon">⌂</span></div>
+      <h4>Total Classes</h4>
+      <div class="value">10</div>
+      <div class="note">Class 1 to 10</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span>📝</span><span class="card-icon">✓</span></div>
+      <h4>Examinations</h4>
+      <div class="value">0</div>
+      <div class="note">Exams created</div>
+    </div>
+  </section>
+
+  <section class="section-grid">
+    <div class="panel">
+      <div class="panel-title">
+        <h3>Academic Performance</h3>
+        <span>Sample chart</span>
+      </div>
+      <div class="chart">
+        <div class="bar-group"><div class="bar" style="height:40%"></div><div class="bar second" style="height:25%"></div><span class="bar-label">Class 1</span></div>
+        <div class="bar-group"><div class="bar" style="height:58%"></div><div class="bar second" style="height:42%"></div><span class="bar-label">Class 2</span></div>
+        <div class="bar-group"><div class="bar" style="height:70%"></div><div class="bar second" style="height:50%"></div><span class="bar-label">Class 3</span></div>
+        <div class="bar-group"><div class="bar" style="height:48%"></div><div class="bar second" style="height:35%"></div><span class="bar-label">Class 4</span></div>
+        <div class="bar-group"><div class="bar" style="height:85%"></div><div class="bar second" style="height:60%"></div><span class="bar-label">Class 5</span></div>
+        <div class="bar-group"><div class="bar" style="height:65%"></div><div class="bar second" style="height:45%"></div><span class="bar-label">Class 6</span></div>
+      </div>
+      <div class="legend">
+        <span><i class="dot" style="background:#4c8ed8"></i>First Term</span>
+        <span><i class="dot" style="background:#b6d5f4"></i>Previous Term</span>
+      </div>
     </div>
 
-    <div class="grid">
-      <div class="card">
-        <h3>Total Students</h3>
-        <div class="number">0</div>
+    <div class="panel">
+      <div class="panel-title">
+        <h3>Quick Overview</h3>
+        <span>Portal</span>
       </div>
-      <div class="card">
-        <h3>Total Teachers</h3>
-        <div class="number">0</div>
-      </div>
-      <div class="card">
-        <h3>Total Classes</h3>
-        <div class="number">10</div>
-      </div>
-      <div class="card">
-        <h3>Examinations</h3>
-        <div class="number">0</div>
+      <div class="activity">
+        <div class="activity-item"><div class="activity-icon">🎓</div><div><strong>Student Management</strong><p>Student records and profiles</p></div></div>
+        <div class="activity-item"><div class="activity-icon">📖</div><div><strong>Academic Management</strong><p>Classes and subject details</p></div></div>
+        <div class="activity-item"><div class="activity-icon">📋</div><div><strong>Examination & Results</strong><p>Marks, grades and reports</p></div></div>
+        <div class="activity-item"><div class="activity-icon">🕒</div><div><strong>Attendance</strong><p>Daily attendance records</p></div></div>
       </div>
     </div>
-  </main>
+  </section>
 
-  <footer>
-    © 2083 Mahadevasthan Secondary School
-  </footer>
+  <section class="quick">
+    <a href="#students"><span>👨‍🎓</span>Students</a>
+    <a href="#teachers"><span>👨‍🏫</span>Teachers</a>
+    <a href="#exams"><span>📝</span>Examinations</a>
+    <a href="#results"><span>📊</span>Results</a>
+  </section>
+</main>
+
+<footer>
+  © 2083 Mahadevasthan Secondary School · Dhunibeshi Municipality-05, Dhading
+</footer>
+</div>
+</div>
 </body>
 </html>
