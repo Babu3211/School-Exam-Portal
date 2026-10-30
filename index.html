@@ -269,8 +269,119 @@ td.empty{text-align:center;color:var(--muted);padding:23px}
     width: 100% !important;
   }
 }
+  
+/* ===== Font and Icon Size Improvement ===== */
 
-</style>
+/* Sidebar menu */
+.label {
+  font-size: 12px;
+}
+
+.nav button {
+  font-size: 13px;
+  min-height: 43px;
+  padding: 11px 10px;
+  gap: 11px;
+}
+
+.ico {
+  width: 24px;
+  flex: 0 0 24px;
+  font-size: 19px;
+}
+
+/* School name */
+.brand b {
+  font-size: 14px;
+}
+
+.brand small {
+  font-size: 11px;
+}
+
+/* Dashboard heading */
+.top h1 {
+  font-size: 19px;
+}
+
+.head h2 {
+  font-size: 22px;
+}
+
+.head p,
+.hint {
+  font-size: 12px;
+}
+
+/* Dashboard cards */
+.statlabel {
+  font-size: 13px;
+}
+
+.num {
+  font-size: 27px;
+}
+
+.panel h3 {
+  font-size: 16px;
+}
+
+/* Forms */
+.field label {
+  font-size: 13px;
+}
+
+.field input,
+.field select,
+.toolbar input,
+.toolbar select {
+  font-size: 13px;
+  padding: 11px;
+}
+
+.btn {
+  font-size: 13px;
+}
+
+/* Tables */
+th {
+  font-size: 12px;
+}
+
+td {
+  font-size: 13px;
+}
+
+/* Mobile */
+@media(max-width:650px) {
+  .nav button {
+    font-size: 12px;
+    min-height: 42px;
+  }
+
+  .ico {
+    font-size: 18px;
+    width: 22px;
+    flex-basis: 22px;
+  }
+
+  .brand b {
+    font-size: 13px;
+  }
+
+  .top h1 {
+    font-size: 16px;
+  }
+
+  .head h2 {
+    font-size: 19px;
+  }
+
+  .field label {
+    font-size: 13px;
+  }
+}
+
 </style>
 </head>
 <body>
