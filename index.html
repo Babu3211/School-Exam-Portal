@@ -45,4 +45,25 @@ if(p==="backup")h=head(names[p],"डेटा Backup, परिवर्तन �
 if(p==="settings")h=head(names[p],"विद्यालय विवरण, शैक्षिक वर्ष र Grading Configuration")+note+form("विद्यालय विवरण",[f("विद्यालयको नाम","Mahadevasthan Secondary School"),f("IEMIS Code","300160003"),f("पालिका","Dhunibesi Municipality"),f("ठेगाना","Dhunibesi-05, Dhading"),f("शैक्षिक वर्ष","2083")])+`<div class="panel form"><h3>Grading Scale (Reference)</h3>${[["A+","90–100","4.0","Outstanding"],["A","80–below 90","3.6","Excellent"],["B+","70–below 80","3.2","Very Good"],["B","60–below 70","2.8","Good"],["C+","50–below 60","2.4","Satisfactory"],["C","40–below 50","2.0","Acceptable"],["D","35–below 40","1.6","Basic"],["NG","0–below 35","—","Not Graded"]].map(x=>`<div class="row"><span><b>${x[0]}</b><small>${x[1]} · ${x[3]}</small></span><b>${x[2]}</b></div>`).join("")}<p class="hint">यो उपलब्ध Grade VI reference को scale हो; सबै कक्षा र विषयका लागि आधिकारिक रूपमा पुष्टि गर्नुपर्छ।</p></div>`;
 v.innerHTML=h;v.querySelectorAll("form.demo").forEach(f=>f.addEventListener("submit",e=>{e.preventDefault();alert("Demo मात्र: Firebase जोडिएपछि मात्र सुरक्षित रूपमा Save हुनेछ।")}));v.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>render(b.dataset.go))}
 document.getElementById("nav").onclick=e=>{let b=e.target.closest("[data-page]");if(b)render(b.dataset.page)};render("dashboard");
-</script></body></html>
+</script></body>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+  import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDOwR82MTwBK1BRb-5wSVX2-EITCzJ1A5c",
+    authDomain: "exam-portal-smss-95016.firebaseapp.com",
+    projectId: "exam-portal-smss-95016",
+    storageBucket: "exam-portal-smss-95016.firebasestorage.app",
+    messagingSenderId: "86041985011",
+    appId: "1:86041985011:web:e3806d74f2ae39d97c5c86"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  console.log("Firebase Connected Successfully!");
+</script>
+</html>
