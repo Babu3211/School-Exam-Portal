@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>School Exam Portal</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+    header {
+      background: #123b70;
+      color: white;
+      padding: 22px;
+      text-align: center;
+    }
+    header h1 { margin: 0 0 8px; font-size: 23px; }
+    header p { margin: 0; }
+    nav {
+      background: #fff;
+      padding: 14px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      box-shadow: 0 2px 8px #0001;
+    }
+    nav a {
+      color: #123b70;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 8px;
+    }
+    main { padding: 20px; max-width: 1100px; margin: auto; }
+    .welcome { margin-bottom: 20px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 15px;
+    }
+    .card {
+      background: white;
+      padding: 22px;
+      border-radius: 12px;
+      box-shadow: 0 3px 12px #0000000d;
+      border-left: 4px solid #2563eb;
+    }
+    .card h3 { margin: 0 0 12px; font-size: 16px; }
+    .number { font-size: 27px; font-weight: bold; color: #123b70; }
+    footer { text-align: center; padding: 25px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mahadevasthan Secondary School</h1>
+    <p>School Exam Management & Attendance Portal</p>
+    <p>Dhunibeshi Municipality-05, Dhading</p>
+  </header>
+
+  <nav>
+    <a href="#">Dashboard</a>
+    <a href="#">Students</a>
+    <a href="#">Teachers</a>
+    <a href="#">Subjects</a>
+    <a href="#">Examination</a>
+    <a href="#">Results</a>
+    <a href="#">Attendance</a>
+  </nav>
+
+  <main>
+    <div class="welcome">
+      <h2>Dashboard</h2>
+      <p>Welcome to School Management System</p>
+      <p>Academic Year: 2083</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Total Students</h3>
+        <div class="number">0</div>
+      </div>
+      <div class="card">
+        <h3>Total Teachers</h3>
+        <div class="number">0</div>
+      </div>
+      <div class="card">
+        <h3>Total Classes</h3>
+        <div class="number">10</div>
+      </div>
+      <div class="card">
+        <h3>Examinations</h3>
+        <div class="number">0</div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    © 2083 Mahadevasthan Secondary School
+  </footer>
+</body>
+</html>
