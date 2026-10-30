@@ -168,35 +168,138 @@ td.empty{text-align:center;color:var(--muted);padding:23px}
 </div>
 
 <script>
-const names={dashboard:"Dashboard",students:"विद्यार्थी व्यवस्थापन",staff:"शिक्षक तथा कर्मचारी",classes:"कक्षा तथा विषय",exams:"परीक्षा व्यवस्थापन",marks:"Marks Entry",results:"नतिजा तथा Grade Sheet",attendance:"हाजिरी व्यवस्थापन",certificates:"प्रमाणपत्र तथा Transcript",reports:"Reports / Excel",users:"User तथा Roles",backup:"Backup तथा Audit Log",settings:"School Settings"};
+
+const names={
+ dashboard:"Dashboard",students:"विद्यार्थी व्यवस्थापन",
+ staff:"शिक्षक तथा कर्मचारी",classes:"कक्षा तथा विषय",
+ exams:"परीक्षा व्यवस्थापन",marks:"Marks Entry",
+ results:"नतिजा तथा Grade Sheet",attendance:"हाजिरी व्यवस्थापन",
+ certificates:"प्रमाणपत्र तथा Transcript",reports:"Reports / Excel",
+ users:"User तथा Roles",backup:"Backup तथा Audit Log",
+ settings:"School Settings"
+};
+
 const v=document.getElementById("view");
-const note='<div class="notice"><b>महत्त्वपूर्ण:</b> यो UI Demo हो। Form, Table र बटनका नमुना मात्र छन्; अहिले data Firebase मा Save हुँदैन। वास्तविक विद्यार्थी विवरण हाल्नुअघि Firestore data access र security rules जोड्नुपर्छ।</div>';
+const note='<div class="notice"><b>महत्त्वपूर्ण:</b> यो UI Demo हो। अहिले data Firebase मा Save हुँदैन।</div>';
 const classes=Array.from({length:12},(_,i)=>"कक्षा "+(i+1));
-function head(t,d){return `<div class="head"><div><h2>${t}</h2><p>${d}</p></div></div>`}
-function tbl(h){return `<div class="tablewrap"><table><thead><tr>${h.map(x=>`<th>${x}</th>`).join("")}</tr></thead><tbody><tr><td class="empty" colspan="${h.length}">अहिलेसम्म वास्तविक रेकर्ड छैन। Firebase database जोडिएपछि यहाँ data देखिनेछ।</td></tr></tbody></table></div>`}
-function f(l,p="",type="text"){return `<div class="field"><label>${l}</label><input type="${type}" placeholder="${p}"></div>`}
-function s(l,opts){return `<div class="field"><label>${l}</label><select>${opts.map(x=>`<option>${x}</option>`).join("")}</select></div>`}
-function form(t,fields){return `<div class="panel form"><h3>${t}</h3><form class="demo"><div class="fields">${fields.join("")}</div><button class="btn">Save (Demo)</button></form></div>`}
-function dashboard(){return `<div class="welcome"><h2>Welcome to Exam Management Portal</h2><p>Mahadevasthan Secondary School<br>Dhunibesi Municipality-05, Dhading · Academic Year 2083</p></div><div class="grid stats">${[["🎓","कुल विद्यार्थी"],["👩‍🏫","शिक्षक तथा कर्मचारी"],["🏫","सक्रिय कक्षा"],["📝","परीक्षा"]].map(x=>`<div class="card"><div class="statlabel">${x[0]} ${x[1]}</div><div class="num">—</div><div class="hint">Firebase data जोडिएपछि वास्तविक संख्या</div></div>`).join("")}</div><div class="grid two"><div class="panel"><h3>Academic Performance Overview</h3><div class="bars">${[["कक्षा ६",42],["कक्षा ७",62],["कक्षा ८",52],["कक्षा ९",78],["कक्षा १०",68]].map(x=>`<div class="barbox"><div class="bar" style="height:${x[1]}%"></div><small>${x[0]}</small></div>`).join("")}</div><p class="hint">यो नमुना graph हो, वास्तविक नतिजा होइन।</p></div><div class="panel"><h3>Quick Overview</h3>${[["🎓","Student Management"],["✍️","Marks Entry"],["📅","Attendance"],["📜","Grade Sheet"]].map(x=>`<div class="row"><span>${x[0]} ${x[1]}</span><small>Module</small></div>`).join("")}</div></div><div class="grid quick">${[["🎓","विद्यार्थी","students"],["👩‍🏫","शिक्षक","staff"],["📝","परीक्षा","exams"],["✍️","Marks Entry","marks"],["📊","नतिजा","results"],["📅","हाजिरी","attendance"],["📈","Reports","reports"],["⚙️","Settings","settings"]].map(x=>`<button data-go="${x[2]}"><span>${x[0]}</span>${x[1]}</button>`).join("")}</div>`}
-function render(p){document.getElementById("title").textContent=names[p];document.querySelectorAll("[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===p));let h="";
-if(p==="dashboard")h=dashboard();
-if(p==="students")h=head(names[p],"विद्यार्थी दर्ता, खोज, कक्षा परिवर्तन र अभिलेख व्यवस्थापन")+note+`<div class="toolbar"><input placeholder="नाम वा दर्ता नम्बर खोज्नुहोस्"><select><option>सबै कक्षा</option>${classes.map(x=>`<option>${x}</option>`)}</select><button class="btn">Search</button></div>`+tbl(["दर्ता नं.","विद्यार्थीको नाम","कक्षा","रोल नं.","अभिभावक","स्थिति"])+form("विद्यार्थी विवरण",[f("पूरा नाम","नाम"),f("जन्म मिति","","date"),f("दर्ता नम्बर","Admission No."),f("रोल नम्बर","Roll No.","number"),s("कक्षा",classes),f("अभिभावकको नाम","नाम"),f("सम्पर्क नम्बर","फोन"),f("ठेगाना","ठेगाना")]);
-if(p==="staff")h=head(names[p],"शिक्षक तथा कर्मचारीको विवरण र जिम्मेवारी")+note+tbl(["कर्मचारी ID","नाम","पद","विषय/जिम्मेवारी","सम्पर्क","स्थिति"])+form("नयाँ कर्मचारी विवरण",[f("नाम","पूरा नाम"),f("कर्मचारी ID","ID"),s("पद",["शिक्षक","प्रधानाध्यापक","लेखा","कर्मचारी","अन्य"]),f("विषय","विषय"),f("सम्पर्क","फोन")]);
-if(p==="classes")h=head(names[p],"कक्षा, Section, विषय र विषय शिक्षक व्यवस्थापन")+note+tbl(["कक्षा","Section","विषय","Credit Hour","विषय शिक्षक"])+form("कक्षा तथा विषय थप्नुहोस्",[s("कक्षा",classes),f("Section","A / B"),f("विषयको नाम","विषय"),f("Credit Hour","उदाहरण: 4","number"),f("विषय शिक्षक","नाम")]);
-if(p==="exams")h=head(names[p],"परीक्षा सिर्जना र समयतालिका व्यवस्थापन")+note+tbl(["परीक्षा नाम","शैक्षिक वर्ष","कक्षा","सुरु मिति","अन्तिम मिति","स्थिति"])+form("नयाँ परीक्षा सिर्जना",[f("परीक्षाको नाम","प्रथम त्रैमासिक"),f("शैक्षिक वर्ष","2083"),s("कक्षा",classes),f("सुरु मिति","","date"),f("अन्तिम मिति","","date"),s("परीक्षा प्रकार",["त्रैमासिक","अर्धवार्षिक","वार्षिक","आन्तरिक"])]);
-if(p==="marks")h=head(names[p],"विद्यार्थीको विषयगत प्राप्ताङ्क प्रविष्टि तथा परीक्षण")+note+`<div class="panel"><div class="fields">${s("परीक्षा",["परीक्षा छान्नुहोस्"])}${s("कक्षा",classes)}${s("विषय",["विषय छान्नुहोस्"])}${s("Section",["A","B","C"])}</div><p class="hint">विद्यार्थी सूची र marks entry table Firebase database जोडिएपछि लोड हुनेछ।</p></div><br>`+tbl(["Roll No.","विद्यार्थीको नाम","आन्तरिक","सैद्धान्तिक","प्राप्ताङ्क"]);
-if(p==="results")h=head(names[p],"नतिजा प्रकाशन, ग्रेडसिट, Ledger र GPA")+note+`<div class="panel"><div class="fields">${s("परीक्षा",["परीक्षा छान्नुहोस्"])}${s("कक्षा",classes)}</div><br><button class="btn">नतिजा हेर्नुहोस् (Demo)</button> <button class="btn alt">Grade Sheet PDF (Demo)</button></div><br>`+tbl(["Roll No.","विद्यार्थीको नाम","GPA","Grade","नतिजा"]);
-if(p==="attendance")h=head(names[p],"दैनिक तथा विषयगत विद्यार्थी हाजिरी")+note+`<div class="panel"><div class="fields">${f("मिति","","date")}${s("कक्षा",classes)}${s("Section",["A","B","C"])}${s("हाजिरी प्रकार",["दैनिक","विषयगत"])}</div><p class="hint">विद्यार्थी सूची र Present/Absent विकल्प Firebase database जोडिएपछि उपलब्ध हुनेछ।</p></div><br>`+tbl(["Roll No.","विद्यार्थीको नाम","हाजिरी","कैफियत"]);
-if(p==="certificates")h=head(names[p],"Transfer Certificate, Character Certificate र Transcript")+note+form("प्रमाणपत्र तयार गर्ने",[s("प्रमाणपत्र प्रकार",["Transfer Certificate","Character Certificate","Transcript"]),f("विद्यार्थी दर्ता नम्बर","Admission No."),f("जारी मिति","","date"),f("प्रमाणपत्र नम्बर","Certificate No.")]);
-if(p==="reports")h=head(names[p],"Excel Import/Export र विद्यालय रिपोर्ट")+note+`<div class="grid two"><div class="panel"><h3>Excel Import</h3><p class="hint">Excel template अनुसार विद्यार्थी वा marks data import गर्ने सुविधा validation पछि सक्रिय हुनेछ।</p><input type="file" accept=".xlsx,.xls,.csv"></div><div class="panel"><h3>Export Reports</h3><p class="hint">कक्षा, विद्यार्थी, हाजिरी तथा नतिजा रिपोर्ट export गर्ने सुविधा पछि जोडिनेछ।</p><button class="btn alt">Export Excel (Demo)</button></div></div>`;
-if(p==="users")h=head(names[p],"प्रयोगकर्ता खाता, अनुमति र भूमिका व्यवस्थापन")+note+tbl(["प्रयोगकर्ता","Email","Role","स्थिति"])+form("नयाँ प्रयोगकर्ता",[f("पूरा नाम","नाम"),f("Email","name@example.com","email"),s("Role",["Administrator","Teacher","Exam Officer","Accountant","Viewer"])]);
-if(p==="backup")h=head(names[p],"डेटा Backup, परिवर्तन अभिलेख र गतिविधि अनुगमन")+note+`<div class="grid two"><div class="panel"><h3>Backup Management</h3><p class="hint">Cloud backup तथा restore सुविधा सुरक्षित Firebase configuration पछि सक्रिय हुनेछ।</p><button class="btn alt">Backup (Demo)</button></div><div class="panel"><h3>Audit Log</h3><p class="hint">कुन प्रयोगकर्ताले कहिले कुन रेकर्ड परिवर्तन गर्‍यो भन्ने log राखिनेछ।</p></div></div><br>`+tbl(["मिति/समय","प्रयोगकर्ता","गतिविधि","रेकर्ड"]);
-if(p==="settings")h=head(names[p],"विद्यालय विवरण, शैक्षिक वर्ष र Grading Configuration")+note+form("विद्यालय विवरण",[f("विद्यालयको नाम","Mahadevasthan Secondary School"),f("IEMIS Code","300160003"),f("पालिका","Dhunibesi Municipality"),f("ठेगाना","Dhunibesi-05, Dhading"),f("शैक्षिक वर्ष","2083")])+`<div class="panel form"><h3>Grading Scale (Reference)</h3>${[["A+","90–100","4.0","Outstanding"],["A","80–below 90","3.6","Excellent"],["B+","70–below 80","3.2","Very Good"],["B","60–below 70","2.8","Good"],["C+","50–below 60","2.4","Satisfactory"],["C","40–below 50","2.0","Acceptable"],["D","35–below 40","1.6","Basic"],["NG","0–below 35","—","Not Graded"]].map(x=>`<div class="row"><span><b>${x[0]}</b><small>${x[1]} · ${x[3]}</small></span><b>${x[2]}</b></div>`).join("")}<p class="hint">यो उपलब्ध Grade VI reference को scale हो; सबै कक्षा र विषयका लागि आधिकारिक रूपमा पुष्टि गर्नुपर्छ।</p></div>`;
-v.innerHTML=h;
-v.querySelectorAll("form.demo").forEach(f=>f.addEventListener("submit",e=>{e.preventDefault();alert("Demo मात्र: Firebase data save सुविधा अर्को चरणमा जोडिनेछ।")}));
-v.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>render(b.dataset.go));
+
+function head(t,d){
+ return `<div class="head"><div><h2>${t}</h2><p>${d}</p></div></div>`;
 }
-document.getElementById("nav").onclick=e=>{let b=e.target.closest("[data-page]");if(b)render(b.dataset.page)};
+function tbl(h){
+ return `<div class="tablewrap"><table><thead><tr>${h.map(x=>`<th>${x}</th>`).join("")}</tr></thead><tbody><tr><td class="empty" colspan="${h.length}">अहिलेसम्म वास्तविक रेकर्ड छैन।</td></tr></tbody></table></div>`;
+}
+function f(l,p="",type="text"){
+ return `<div class="field"><label>${l}</label><input type="${type}" placeholder="${p}"></div>`;
+}
+function s(l,opts){
+ return `<div class="field"><label>${l}</label><select>${opts.map(x=>`<option>${x}</option>`).join("")}</select></div>`;
+}
+function form(t,fields){
+ return `<div class="panel form"><h3>${t}</h3><form class="demo"><div class="fields">${fields.join("")}</div><button class="btn" type="submit">Save (Demo)</button></form></div>`;
+}
+
+function dashboard(){
+ return `<div class="welcome"><h2>Welcome to Exam Management Portal</h2><p>Mahadevasthan Secondary School<br>Dhunibesi Municipality-05, Dhading · Academic Year 2083</p></div>
+ <div class="grid stats">${[["🎓","कुल विद्यार्थी"],["👩‍🏫","शिक्षक तथा कर्मचारी"],["🏫","सक्रिय कक्षा"],["📝","परीक्षा"]].map(x=>`<div class="card"><div class="statlabel">${x[0]} ${x[1]}</div><div class="num">—</div><div class="hint">Firebase data जोडिएपछि वास्तविक संख्या</div></div>`).join("")}</div>
+ <div class="grid two"><div class="panel"><h3>Academic Performance Overview</h3><div class="bars">${[["कक्षा ६",42],["कक्षा ७",62],["कक्षा ८",52],["कक्षा ९",78],["कक्षा १०",68]].map(x=>`<div class="barbox"><div class="bar" style="height:${x[1]}%"></div><small>${x[0]}</small></div>`).join("")}</div><p class="hint">यो नमुना graph हो, वास्तविक नतिजा होइन।</p></div>
+ <div class="panel"><h3>Quick Overview</h3>${[["🎓","Student Management"],["✍️","Marks Entry"],["📅","Attendance"],["📜","Grade Sheet"]].map(x=>`<div class="row"><span>${x[0]} ${x[1]}</span><small>Module</small></div>`).join("")}</div></div>
+ <div class="grid quick">${[["🎓","विद्यार्थी","students"],["👩‍🏫","शिक्षक","staff"],["📝","परीक्षा","exams"],["✍️","Marks Entry","marks"],["📊","नतिजा","results"],["📅","हाजिरी","attendance"],["📈","Reports","reports"],["⚙️","Settings","settings"]].map(x=>`<button type="button" data-go="${x[2]}"><span>${x[0]}</span>${x[1]}</button>`).join("")}</div>`;
+}
+
+function render(p){
+ if(!names[p]) return;
+ document.getElementById("title").textContent=names[p];
+
+ document.querySelectorAll("[data-page]").forEach(b=>{
+  b.classList.toggle("active",b.dataset.page===p);
+ });
+
+ let h="";
+
+ if(p==="dashboard") h=dashboard();
+
+ if(p==="students") h=head(names[p],"विद्यार्थी दर्ता, खोज र अभिलेख व्यवस्थापन")+note+
+ `<div class="toolbar"><input id="searchBox" placeholder="नाम वा दर्ता नम्बर खोज्नुहोस्"><select><option>सबै कक्षा</option>${classes.map(x=>`<option>${x}</option>`)}</select><button class="btn" data-action="search">Search</button></div>`+
+ tbl(["दर्ता नं.","विद्यार्थीको नाम","कक्षा","रोल नं.","अभिभावक","स्थिति"])+
+ form("विद्यार्थी विवरण",[f("पूरा नाम","नाम"),f("जन्म मिति","","date"),f("दर्ता नम्बर","Admission No."),f("रोल नम्बर","Roll No.","number"),s("कक्षा",classes),f("अभिभावकको नाम","नाम"),f("सम्पर्क नम्बर","फोन"),f("ठेगाना","ठेगाना")]);
+
+ if(p==="staff") h=head(names[p],"शिक्षक तथा कर्मचारीको विवरण")+note+
+ tbl(["कर्मचारी ID","नाम","पद","विषय/जिम्मेवारी","सम्पर्क","स्थिति"])+
+ form("नयाँ कर्मचारी विवरण",[f("नाम","पूरा नाम"),f("कर्मचारी ID","ID"),s("पद",["शिक्षक","प्रधानाध्यापक","लेखा","कर्मचारी","अन्य"]),f("विषय","विषय"),f("सम्पर्क","फोन")]);
+
+ if(p==="classes") h=head(names[p],"कक्षा, Section र विषय व्यवस्थापन")+note+
+ tbl(["कक्षा","Section","विषय","Credit Hour","विषय शिक्षक"])+
+ form("कक्षा तथा विषय थप्नुहोस्",[s("कक्षा",classes),f("Section","A / B"),f("विषयको नाम","विषय"),f("Credit Hour","उदाहरण: 4","number"),f("विषय शिक्षक","नाम")]);
+
+ if(p==="exams") h=head(names[p],"परीक्षा सिर्जना र समयतालिका व्यवस्थापन")+note+
+ tbl(["परीक्षा नाम","शैक्षिक वर्ष","कक्षा","सुरु मिति","अन्तिम मिति","स्थिति"])+
+ form("नयाँ परीक्षा सिर्जना",[f("परीक्षाको नाम","प्रथम त्रैमासिक"),f("शैक्षिक वर्ष","2083"),s("कक्षा",classes),f("सुरु मिति","","date"),f("अन्तिम मिति","","date"),s("परीक्षा प्रकार",["त्रैमासिक","अर्धवार्षिक","वार्षिक","आन्तरिक"])]);
+
+ if(p==="marks") h=head(names[p],"विद्यार्थीको विषयगत प्राप्ताङ्क प्रविष्टि")+note+
+ `<div class="panel"><div class="fields">${s("परीक्षा",["परीक्षा छान्नुहोस्"])}${s("कक्षा",classes)}${s("विषय",["विषय छान्नुहोस्"])}${s("Section",["A","B","C"])}</div><p class="hint">विद्यार्थी सूची Firebase जोडिएपछि लोड हुनेछ।</p></div><br>`+
+ tbl(["Roll No.","विद्यार्थीको नाम","आन्तरिक","सैद्धान्तिक","प्राप्ताङ्क"]);
+
+ if(p==="results") h=head(names[p],"नतिजा प्रकाशन, ग्रेडसिट र GPA")+note+
+ `<div class="panel"><div class="fields">${s("परीक्षा",["परीक्षा छान्नुहोस्"])}${s("कक्षा",classes)}</div><br><button class="btn" data-action="demo">नतिजा हेर्नुहोस् (Demo)</button> <button class="btn alt" data-action="demo">Grade Sheet PDF (Demo)</button></div><br>`+
+ tbl(["Roll No.","विद्यार्थीको नाम","GPA","Grade","नतिजा"]);
+
+ if(p==="attendance") h=head(names[p],"दैनिक तथा विषयगत विद्यार्थी हाजिरी")+note+
+ `<div class="panel"><div class="fields">${f("मिति","","date")}${s("कक्षा",classes)}${s("Section",["A","B","C"])}${s("हाजिरी प्रकार",["दैनिक","विषयगत"])}</div><p class="hint">विद्यार्थी सूची Firebase जोडिएपछि उपलब्ध हुनेछ।</p></div><br>`+
+ tbl(["Roll No.","विद्यार्थीको नाम","हाजिरी","कैफियत"]);
+
+ if(p==="certificates") h=head(names[p],"प्रमाणपत्र तथा Transcript")+note+
+ form("प्रमाणपत्र तयार गर्ने",[s("प्रमाणपत्र प्रकार",["Transfer Certificate","Character Certificate","Transcript"]),f("विद्यार्थी दर्ता नम्बर","Admission No."),f("जारी मिति","","date"),f("प्रमाणपत्र नम्बर","Certificate No.")]);
+
+ if(p==="reports") h=head(names[p],"Excel Import/Export र विद्यालय रिपोर्ट")+note+
+ `<div class="grid two"><div class="panel"><h3>Excel Import</h3><p class="hint">Excel template अनुसार data import सुविधा पछि जोडिनेछ।</p><input type="file" accept=".xlsx,.xls,.csv"></div><div class="panel"><h3>Export Reports</h3><p class="hint">Excel export सुविधा अझै जोडिएको छैन।</p><button class="btn alt" data-action="demo">Export Excel (Demo)</button></div></div>`;
+
+ if(p==="users") h=head(names[p],"प्रयोगकर्ता खाता र भूमिका व्यवस्थापन")+note+
+ tbl(["प्रयोगकर्ता","Email","Role","स्थिति"])+
+ form("नयाँ प्रयोगकर्ता",[f("पूरा नाम","नाम"),f("Email","name@example.com","email"),s("Role",["Administrator","Teacher","Exam Officer","Accountant","Viewer"])]);
+
+ if(p==="backup") h=head(names[p],"डेटा Backup तथा Audit Log")+note+
+ `<div class="grid two"><div class="panel"><h3>Backup Management</h3><p class="hint">Cloud backup सुविधा पछि जोडिनेछ।</p><button class="btn alt" data-action="demo">Backup (Demo)</button></div><div class="panel"><h3>Audit Log</h3><p class="hint">गतिविधि log सुविधा पछि जोडिनेछ।</p></div></div><br>`+
+ tbl(["मिति/समय","प्रयोगकर्ता","गतिविधि","रेकर्ड"]);
+
+ if(p==="settings") h=head(names[p],"विद्यालय विवरण र Grading Configuration")+note+
+ form("विद्यालय विवरण",[f("विद्यालयको नाम","Mahadevasthan Secondary School"),f("IEMIS Code","300160003"),f("पालिका","Dhunibesi Municipality"),f("ठेगाना","Dhunibesi-05, Dhading"),f("शैक्षिक वर्ष","2083")])+
+ `<div class="panel form"><h3>Grading Scale (Reference)</h3>${[["A+","90–100","4.0","Outstanding"],["A","80–below 90","3.6","Excellent"],["B+","70–below 80","3.2","Very Good"],["B","60–below 70","2.8","Good"],["C+","50–below 60","2.4","Satisfactory"],["C","40–below 50","2.0","Acceptable"],["D","35–below 40","1.6","Basic"],["NG","0–below 35","—","Not Graded"]].map(x=>`<div class="row"><span><b>${x[0]}</b><small>${x[1]} · ${x[3]}</small></span><b>${x[2]}</b></div>`).join("")}<p class="hint">यो उपलब्ध Grade VI reference हो; सबै कक्षाका लागि पुष्टि आवश्यक छ।</p></div>`;
+
+ v.innerHTML=h;
+
+ v.querySelectorAll("form.demo").forEach(frm=>{
+  frm.addEventListener("submit",e=>{
+   e.preventDefault();
+   alert("यो Demo हो। अहिले Firebase मा data Save भएको छैन।");
+  });
+ });
+}
+
+document.addEventListener("click",e=>{
+ const pageButton=e.target.closest("[data-page]");
+ const goButton=e.target.closest("[data-go]");
+ const actionButton=e.target.closest("[data-action]");
+
+ if(pageButton){
+  e.preventDefault();
+  render(pageButton.dataset.page);
+  return;
+ }
+ if(goButton){
+  render(goButton.dataset.go);
+  return;
+ }
+ if(actionButton){
+  if(actionButton.dataset.action==="search"){
+   const q=document.getElementById("searchBox")?.value.trim();
+   alert(q ? "अहिले database जोडिएको छैन। त्यसैले खोजी गर्न सकिँदैन।" : "कृपया खोज्न नाम वा दर्ता नम्बर लेख्नुहोस्।");
+  }else{
+   alert("यो सुविधा Demo मात्र हो। वास्तविक काम गर्ने सुविधा अर्को चरणमा जोड्नुपर्छ।");
+  }
+ }
+});
+
 render("dashboard");
 </script>
 
