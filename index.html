@@ -1,344 +1,48 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mahadevasthan School | Exam Portal</title>
-
+<!doctype html>
+<html lang="ne"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mahadevasthan Secondary School | Exam Portal</title>
 <style>
-:root {
-  --blue:#174a86;
-  --dark:#10345f;
-  --light:#eaf2fc;
-  --bg:#f4f7fc;
-  --white:#ffffff;
-  --text:#26364a;
-  --muted:#78879a;
-}
-* {box-sizing:border-box}
-body {
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:var(--bg);
-  color:var(--text);
-}
-button {font:inherit;cursor:pointer}
-.layout {display:flex;min-height:100vh}
-.sidebar {
-  width:250px;
-  background:var(--dark);
-  color:white;
-  padding:22px 14px;
-  flex-shrink:0;
-}
-.brand {
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:5px 8px 24px;
-  border-bottom:1px solid #ffffff25;
-}
-.logo {
-  width:45px;height:45px;
-  background:white;color:var(--blue);
-  border-radius:12px;
-  display:grid;place-items:center;
-  font-size:23px;font-weight:bold;
-}
-.brand h3 {font-size:15px;margin:0 0 5px}
-.brand small {font-size:11px;color:#c7d9ee}
-.menu-title {
-  color:#9fb8d6;
-  font-size:11px;
-  margin:25px 10px 10px;
-  text-transform:uppercase;
-}
-.menu a {
-  display:flex;
-  align-items:center;
-  gap:13px;
-  padding:12px;
-  margin:4px 0;
-  border-radius:8px;
-  text-decoration:none;
-  color:#e3edf9;
-  font-size:14px;
-}
-.menu a.active,.menu a:hover {
-  background:#ffffff20;
-  color:white;
-}
-.menu-icon {width:22px;text-align:center;font-size:18px}
-.main {flex:1;min-width:0}
-.topbar {
-  height:72px;
-  background:white;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 28px;
-  box-shadow:0 2px 12px #102d5010;
-}
-.top-left {display:flex;align-items:center;gap:14px}
-.topbar h2 {font-size:19px;margin:0;color:var(--dark)}
-.year {
-  background:var(--light);
-  color:var(--blue);
-  border-radius:20px;
-  padding:8px 13px;
-  font-size:12px;font-weight:bold;
-}
-.profile {display:flex;align-items:center;gap:10px}
-.avatar {
-  width:38px;height:38px;
-  display:grid;place-items:center;
-  background:var(--light);
-  color:var(--blue);
-  border-radius:50%;font-weight:bold;
-}
-.profile small {color:var(--muted)}
-.content {padding:28px;max-width:1500px;margin:auto}
-.welcome {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:15px;
-  margin-bottom:24px;
-}
-.welcome h1 {font-size:25px;margin:0 0 8px;color:var(--dark)}
-.welcome p {margin:0;color:var(--muted);font-size:14px}
-.date {
-  background:white;padding:11px 15px;
-  border-radius:9px;color:var(--blue);
-  font-size:13px;border:1px solid #e3eaf4;
-}
-.cards {
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:17px;
-}
-.card {
-  background:white;
-  padding:20px;
-  border-radius:12px;
-  border:1px solid #e9eef5;
-  box-shadow:0 3px 12px #173b6410;
-}
-.card-head {display:flex;justify-content:space-between;align-items:center}
-.card-icon {
-  width:43px;height:43px;border-radius:11px;
-  display:grid;place-items:center;font-size:21px;
-  background:var(--light);
-}
-.card h4 {font-size:13px;color:var(--muted);margin:16px 0 9px}
-.card .value {font-size:28px;font-weight:bold;color:var(--dark)}
-.card .note {font-size:11px;color:var(--muted);margin-top:7px}
-.section-grid {
-  display:grid;
-  grid-template-columns:1.5fr 1fr;
-  gap:18px;margin-top:22px;
-}
-.panel {
-  background:white;border-radius:12px;
-  padding:22px;border:1px solid #e9eef5;
-  box-shadow:0 3px 12px #173b6410;
-  min-width:0;
-}
-.panel-title {
-  display:flex;justify-content:space-between;
-  align-items:center;margin-bottom:22px;
-}
-.panel-title h3 {font-size:16px;margin:0;color:var(--dark)}
-.panel-title span {font-size:12px;color:var(--muted)}
-.chart {
-  height:210px;display:flex;align-items:flex-end;
-  justify-content:space-around;gap:12px;
-  padding:10px 5px 0;border-bottom:1px solid #e7edf5;
-}
-.bar-group {
-  height:100%;display:flex;flex-direction:column;
-  align-items:center;justify-content:flex-end;
-  flex:1;gap:8px;
-}
-.bar {
-  width:min(34px,75%);
-  background:#4c8ed8;
-  border-radius:6px 6px 0 0;
-  min-height:5px;
-}
-.bar.second {background:#b6d5f4}
-.bar-label {font-size:11px;color:var(--muted)}
-.legend {display:flex;gap:18px;margin-top:17px;font-size:11px;color:var(--muted)}
-.dot {display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
-.activity {display:flex;flex-direction:column;gap:17px}
-.activity-item {display:flex;align-items:center;gap:12px}
-.activity-icon {
-  width:38px;height:38px;border-radius:10px;
-  display:grid;place-items:center;background:var(--light);
-}
-.activity-item strong {font-size:13px}
-.activity-item p {font-size:11px;color:var(--muted);margin:5px 0 0}
-.quick {
-  display:grid;grid-template-columns:repeat(4,1fr);
-  gap:13px;margin-top:22px;
-}
-.quick a {
-  background:white;padding:17px 10px;
-  text-align:center;border-radius:10px;
-  text-decoration:none;color:var(--blue);
-  border:1px solid #e7edf5;font-size:13px;
-}
-.quick a span {display:block;font-size:23px;margin-bottom:8px}
-footer {text-align:center;padding:25px;color:var(--muted);font-size:12px}
-.mobile-menu {display:none}
-@media(max-width:950px) {
-  .sidebar {width:215px}
-  .cards {grid-template-columns:repeat(2,1fr)}
-}
-@media(max-width:650px) {
-  .sidebar {display:none}
-  .topbar {height:62px;padding:0 15px}
-  .topbar h2 {font-size:15px}
-  .content {padding:17px}
-  .welcome {align-items:flex-start;flex-direction:column}
-  .welcome h1 {font-size:21px}
-  .section-grid {grid-template-columns:1fr}
-  .quick {grid-template-columns:repeat(2,1fr)}
-  .profile div:last-child {display:none}
-  .cards {gap:10px}
-  .card {padding:14px}
-  .card .value {font-size:23px}
-  .card h4 {font-size:12px}
-}
-</style>
-</head>
-
-<body>
-<div class="layout">
-
-<aside class="sidebar">
-  <div class="brand">
-    <div class="logo">M</div>
-    <div>
-      <h3>MAHADEVASTHAN</h3>
-      <small>Secondary School</small>
-    </div>
-  </div>
-
-  <div class="menu-title">Main Menu</div>
-  <nav class="menu">
-    <a class="active" href="#dashboard"><span class="menu-icon">▦</span>Dashboard</a>
-    <a href="#students"><span class="menu-icon">👨‍🎓</span>Students</a>
-    <a href="#teachers"><span class="menu-icon">👨‍🏫</span>Teachers & Staff</a>
-    <a href="#subjects"><span class="menu-icon">📚</span>Subjects</a>
-    <a href="#exams"><span class="menu-icon">📝</span>Examinations</a>
-    <a href="#results"><span class="menu-icon">📊</span>Results & Grades</a>
-    <a href="#attendance"><span class="menu-icon">📅</span>Attendance</a>
-
-    <div class="menu-title">Management</div>
-    <a href="#reports"><span class="menu-icon">📑</span>Reports</a>
-    <a href="#settings"><span class="menu-icon">⚙️</span>Settings</a>
-  </nav>
-</aside>
-
-<div class="main">
-<header class="topbar">
-  <div class="top-left">
-    <h2>School Administration</h2>
-    <span class="year">2083 BS</span>
-  </div>
-  <div class="profile">
-    <div class="avatar">A</div>
-    <div>
-      <strong style="font-size:13px">Administrator</strong><br>
-      <small>School Admin</small>
-    </div>
-  </div>
-</header>
-
-<main class="content" id="dashboard">
-  <div class="welcome">
-    <div>
-      <h1>Dashboard Overview</h1>
-      <p>Welcome to Mahadevasthan Secondary School Management Portal.</p>
-    </div>
-    <div class="date">Academic Year : 2083</div>
-  </div>
-
-  <section class="cards">
-    <div class="card">
-      <div class="card-head"><span>👨‍🎓</span><span class="card-icon">♟</span></div>
-      <h4>Total Students</h4>
-      <div class="value">0</div>
-      <div class="note">Registered students</div>
-    </div>
-    <div class="card">
-      <div class="card-head"><span>👨‍🏫</span><span class="card-icon">▣</span></div>
-      <h4>Total Teachers</h4>
-      <div class="value">0</div>
-      <div class="note">Teaching and staff members</div>
-    </div>
-    <div class="card">
-      <div class="card-head"><span>🏫</span><span class="card-icon">⌂</span></div>
-      <h4>Total Classes</h4>
-      <div class="value">10</div>
-      <div class="note">Class 1 to 10</div>
-    </div>
-    <div class="card">
-      <div class="card-head"><span>📝</span><span class="card-icon">✓</span></div>
-      <h4>Examinations</h4>
-      <div class="value">0</div>
-      <div class="note">Exams created</div>
-    </div>
-  </section>
-
-  <section class="section-grid">
-    <div class="panel">
-      <div class="panel-title">
-        <h3>Academic Performance</h3>
-        <span>Sample chart</span>
-      </div>
-      <div class="chart">
-        <div class="bar-group"><div class="bar" style="height:40%"></div><div class="bar second" style="height:25%"></div><span class="bar-label">Class 1</span></div>
-        <div class="bar-group"><div class="bar" style="height:58%"></div><div class="bar second" style="height:42%"></div><span class="bar-label">Class 2</span></div>
-        <div class="bar-group"><div class="bar" style="height:70%"></div><div class="bar second" style="height:50%"></div><span class="bar-label">Class 3</span></div>
-        <div class="bar-group"><div class="bar" style="height:48%"></div><div class="bar second" style="height:35%"></div><span class="bar-label">Class 4</span></div>
-        <div class="bar-group"><div class="bar" style="height:85%"></div><div class="bar second" style="height:60%"></div><span class="bar-label">Class 5</span></div>
-        <div class="bar-group"><div class="bar" style="height:65%"></div><div class="bar second" style="height:45%"></div><span class="bar-label">Class 6</span></div>
-      </div>
-      <div class="legend">
-        <span><i class="dot" style="background:#4c8ed8"></i>First Term</span>
-        <span><i class="dot" style="background:#b6d5f4"></i>Previous Term</span>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-title">
-        <h3>Quick Overview</h3>
-        <span>Portal</span>
-      </div>
-      <div class="activity">
-        <div class="activity-item"><div class="activity-icon">🎓</div><div><strong>Student Management</strong><p>Student records and profiles</p></div></div>
-        <div class="activity-item"><div class="activity-icon">📖</div><div><strong>Academic Management</strong><p>Classes and subject details</p></div></div>
-        <div class="activity-item"><div class="activity-icon">📋</div><div><strong>Examination & Results</strong><p>Marks, grades and reports</p></div></div>
-        <div class="activity-item"><div class="activity-icon">🕒</div><div><strong>Attendance</strong><p>Daily attendance records</p></div></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="quick">
-    <a href="#students"><span>👨‍🎓</span>Students</a>
-    <a href="#teachers"><span>👨‍🏫</span>Teachers</a>
-    <a href="#exams"><span>📝</span>Examinations</a>
-    <a href="#results"><span>📊</span>Results</a>
-  </section>
-</main>
-
-<footer>
-  © 2083 Mahadevasthan Secondary School · Dhunibeshi Municipality-05, Dhading
-</footer>
+:root{--b:#1769d2;--n:#12345b;--bg:#f3f7fd;--line:#e4ebf4;--muted:#718096}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#26364a;font-family:Arial,"Noto Sans Devanagari",sans-serif}.app{display:flex;min-height:100vh}.side{width:245px;min-width:245px;background:white;border-right:1px solid var(--line);padding:15px 11px;display:flex;flex-direction:column}.brand{display:flex;gap:10px;align-items:center;padding:5px 7px 17px;border-bottom:1px solid var(--line);margin-bottom:10px}.logo{background:var(--b);color:white;border-radius:11px;width:40px;height:40px;display:grid;place-items:center;font-weight:bold}.brand b{font-size:12px;line-height:1.5;color:var(--n)}.brand small{display:block;color:var(--muted);font-size:10px}.label{font-size:10px;color:#9aa8b8;font-weight:bold;margin:14px 8px 6px}.nav{display:flex;flex-direction:column;gap:4px}.nav button{width:100%;text-align:left;border:0;background:transparent;border-radius:8px;padding:10px 9px;display:flex;align-items:center;gap:9px;color:#52647a;font-size:11px;font-weight:bold;min-height:38px}.nav button.active,.nav button:hover{background:#eaf2ff;color:var(--b)}.ico{width:20px;flex:0 0 20px;text-align:center;font-size:15px}.sidefoot{margin-top:auto;border-top:1px solid var(--line);padding:12px 7px;color:var(--muted);font-size:10px;line-height:1.6}.main{flex:1;min-width:0}.top{height:65px;background:white;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 22px;position:sticky;top:0;z-index:2}.top h1{font-size:17px;color:var(--n)}.topright{display:flex;gap:12px;align-items:center}.year{background:#eaf2ff;color:var(--b);border-radius:8px;padding:8px 10px;font-size:11px}.avatar{background:#dceaff;color:var(--b);border-radius:50%;padding:10px;font-weight:bold}.hamb{display:none}.content{padding:22px;max-width:1450px;margin:auto}.head{display:flex;justify-content:space-between;gap:10px;margin-bottom:15px}.head h2{font-size:20px;color:var(--n);margin:0 0 5px}.head p,.hint{font-size:11px;color:var(--muted);line-height:1.6}.welcome{background:linear-gradient(110deg,#1769d2,#3989ed);color:white;padding:22px;border-radius:14px;margin-bottom:18px}.welcome h2{font-size:20px;margin:0 0 7px}.welcome p{font-size:12px;line-height:1.6;margin:0}.grid{display:grid;gap:13px}.stats{grid-template-columns:repeat(4,1fr);margin-bottom:18px}.card,.panel{background:white;border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0;box-shadow:0 4px 14px #12345b0a}.statlabel{font-size:11px;color:var(--muted)}.num{font-size:25px;color:var(--n);font-weight:bold;margin-top:9px}.two{grid-template-columns:1.4fr 1fr}.panel h3{font-size:14px;color:var(--n);margin:0 0 14px}.bars{height:175px;display:flex;align-items:end;justify-content:space-around;border-bottom:1px solid var(--line);gap:8px}.barbox{height:100%;flex:1;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:7px}.bar{width:55%;max-width:40px;background:linear-gradient(#64a9f6,#1769d2);border-radius:6px 6px 0 0}.barbox small{font-size:9px;color:var(--muted);padding-bottom:6px}.quick{grid-template-columns:repeat(4,1fr);margin-top:14px}.quick button{background:white;border:1px solid var(--line);border-radius:10px;padding:15px 8px;font-size:11px;font-weight:bold}.quick span{display:block;font-size:20px;margin-bottom:7px}.notice{background:#fff8e8;border:1px solid #f2dfb4;color:#806329;border-radius:8px;padding:11px;font-size:11px;line-height:1.6;margin-bottom:13px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.toolbar input{flex:1;min-width:160px}.toolbar input,.toolbar select,.field input,.field select{border:1px solid #dce5f0;border-radius:7px;padding:10px;font-size:11px;background:white}.btn{background:var(--b);color:white;border:0;border-radius:7px;padding:10px 13px;font-size:11px;font-weight:bold}.btn.alt{background:#edf3fb;color:#31516f}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:9px;background:white}table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;padding:11px;border-bottom:1px solid var(--line);font-size:11px}th{background:#f7faff;color:#60738a;font-size:10px}td.empty{text-align:center;color:var(--muted);padding:23px}.form{margin-top:15px}.form h3{font-size:14px;color:var(--n)}.fields{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:11px;font-weight:bold;color:#53677e}.field input,.field select{width:100%}.field.full{grid-column:1/-1}.form button{margin-top:13px}.row{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:12px 0;font-size:11px}.row small{display:block;color:var(--muted);margin-top:4px}.footer{text-align:center;color:#9aa8b8;font-size:10px;padding:20px}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.quick{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.app{display:block}.side{width:100%;min-width:0;padding:9px 10px;border-right:0;border-bottom:1px solid var(--line)}.brand{padding:2px 3px 9px;margin-bottom:6px}.logo{width:34px;height:34px}.brand b{font-size:10px}.label{margin:8px 5px 5px}.nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}.nav button{min-height:35px;padding:7px 6px;font-size:10px;gap:6px}.ico{width:17px;flex-basis:17px;font-size:13px}.sidefoot{display:none}.top{height:55px;padding:0 10px;position:static}.top h1{font-size:13px}.content{padding:11px}.welcome{padding:16px}.welcome h2{font-size:16px}.two{grid-template-columns:1fr}.fields{grid-template-columns:1fr}.field.full{grid-column:auto}}
+</style></head><body><div class="app">
+<aside class="side"><div class="brand"><div class="logo">M</div><div><b>Mahadevasthan<br>Secondary School</b><small>Exam Management Portal</small></div></div>
+<div class="label">MAIN MENU</div><nav class="nav" id="nav">
+<button class="active" data-page="dashboard"><span class="ico">▦</span>Dashboard</button>
+<button data-page="students"><span class="ico">🎓</span>विद्यार्थी व्यवस्थापन</button><button data-page="staff"><span class="ico">👩‍🏫</span>शिक्षक तथा कर्मचारी</button>
+<button data-page="classes"><span class="ico">🏫</span>कक्षा तथा विषय</button><button data-page="exams"><span class="ico">📝</span>परीक्षा व्यवस्थापन</button>
+<button data-page="marks"><span class="ico">✍️</span>Marks Entry</button><button data-page="results"><span class="ico">📊</span>नतिजा तथा Grade Sheet</button>
+<button data-page="attendance"><span class="ico">📅</span>हाजिरी व्यवस्थापन</button><button data-page="certificates"><span class="ico">📜</span>प्रमाणपत्र तथा Transcript</button></nav>
+<div class="label">ADMINISTRATION</div><nav class="nav">
+<button data-page="reports"><span class="ico">📈</span>Reports / Excel</button><button data-page="users"><span class="ico">👥</span>User तथा Roles</button>
+<button data-page="backup"><span class="ico">💾</span>Backup तथा Audit Log</button><button data-page="settings"><span class="ico">⚙️</span>School Settings</button></nav>
+<div class="sidefoot">Academic Year: 2083<br>Dhunibesi-05, Dhading<br>Demo UI · Cloud connection pending</div></aside>
+<main class="main"><header class="top"><h1 id="title">Dashboard</h1><div class="topright"><span class="year">2083 B.S.</span><span class="avatar">A</span><span style="font-size:11px">Administrator</span></div></header><section class="content" id="view"></section><div class="footer">Mahadevasthan Secondary School · Exam Management Portal</div></main>
 </div>
-</div>
-</body>
-</html>
+<script>
+const names={dashboard:"Dashboard",students:"विद्यार्थी व्यवस्थापन",staff:"शिक्षक तथा कर्मचारी",classes:"कक्षा तथा विषय",exams:"परीक्षा व्यवस्थापन",marks:"Marks Entry",results:"नतिजा तथा Grade Sheet",attendance:"हाजिरी व्यवस्थापन",certificates:"प्रमाणपत्र तथा Transcript",reports:"Reports / Excel",users:"User तथा Roles",backup:"Backup तथा Audit Log",settings:"School Settings"};
+const v=document.getElementById("view");
+const note='<div class="notice"><b>महत्त्वपूर्ण:</b> यो पूर्ण UI Demo हो। Form, Table र बटनका नमुना मात्र छन्; अहिले data Firebase मा Save हुँदैन। वास्तविक विद्यार्थी विवरण हाल्नुअघि Authentication र Firestore security rules जोड्नुपर्छ।</div>';
+const classes=Array.from({length:12},(_,i)=>"कक्षा "+(i+1));
+function head(t,d){return `<div class="head"><div><h2>${t}</h2><p>${d}</p></div></div>`}
+function tbl(h){return `<div class="tablewrap"><table><thead><tr>${h.map(x=>`<th>${x}</th>`).join("")}</tr></thead><tbody><tr><td class="empty" colspan="${h.length}">अहिलेसम्म वास्तविक रेकर्ड छैन। Firebase जोडिएपछि यहाँ data देखिनेछ।</td></tr></tbody></table></div>`}
+function f(l,p="",type="text"){return `<div class="field"><label>${l}</label><input type="${type}" placeholder="${p}"></div>`}
+function s(l,opts){return `<div class="field"><label>${l}</label><select>${opts.map(x=>`<option>${x}</option>`).join("")}</select></div>`}
+function form(t,fields){return `<div class="panel form"><h3>${t}</h3><form class="demo"><div class="fields">${fields.join("")}</div><button class="btn">Save (Demo)</button></form></div>`}
+function dashboard(){return `<div class="welcome"><h2>Welcome to Exam Management Portal</h2><p>Mahadevasthan Secondary School<br>Dhunibesi Municipality-05, Dhading · Academic Year 2083</p></div><div class="grid stats">${[["🎓","कुल विद्यार्थी"],["👩‍🏫","शिक्षक तथा कर्मचारी"],["🏫","सक्रिय कक्षा"],["📝","परीक्षा"]].map(x=>`<div class="card"><div class="statlabel">${x[0]} ${x[1]}</div><div class="num">—</div><div class="hint">Firebase जोडिएपछि वास्तविक संख्या</div></div>`).join("")}</div><div class="grid two"><div class="panel"><h3>Academic Performance Overview</h3><div class="bars">${[["कक्षा ६",42],["कक्षा ७",62],["कक्षा ८",52],["कक्षा ९",78],["कक्षा १०",68]].map(x=>`<div class="barbox"><div class="bar" style="height:${x[1]}%"></div><small>${x[0]}</small></div>`).join("")}</div><p class="hint">यो नमुना graph हो, वास्तविक नतिजा होइन।</p></div><div class="panel"><h3>Quick Overview</h3>${[["🎓","Student Management"],["✍️","Marks Entry"],["📅","Attendance"],["📜","Grade Sheet"]].map(x=>`<div class="row"><span>${x[0]} ${x[1]}</span><small>Module</small></div>`).join("")}</div></div><div class="grid quick">${[["🎓","विद्यार्थी","students"],["👩‍🏫","शिक्षक","staff"],["📝","परीक्षा","exams"],["✍️","Marks Entry","marks"],["📊","नतिजा","results"],["📅","हाजिरी","attendance"],["📈","Reports","reports"],["⚙️","Settings","settings"]].map(x=>`<button data-go="${x[2]}"><span>${x[0]}</span>${x[1]}</button>`).join("")}</div>`}
+function render(p){document.getElementById("title").textContent=names[p];document.querySelectorAll("[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===p));let h="";
+if(p==="dashboard")h=dashboard();
+if(p==="students")h=head(names[p],"विद्यार्थी दर्ता, खोज, कक्षा परिवर्तन र अभिलेख व्यवस्थापन")+note+`<div class="toolbar"><input placeholder="नाम वा दर्ता नम्बर खोज्नुहोस्"><select><option>सबै कक्षा</option>${classes.map(x=>`<option>${x}</option>`)}</select><button class="btn">Search</button></div>`+tbl(["दर्ता नं.","विद्यार्थीको नाम","कक्षा","रोल नं.","अभिभावक","स्थिति"])+form("विद्यार्थी विवरण",[f("पूरा नाम","नाम"),f("जन्म मिति","","date"),f("दर्ता नम्बर","Admission No."),f("रोल नम्बर","Roll No.","number"),s("कक्षा",classes),f("अभिभावकको नाम","नाम"),f("सम्पर्क नम्बर","फोन"),f("ठेगाना","ठेगाना")]);
+if(p==="staff")h=head(names[p],"शिक्षक तथा कर्मचारीको विवरण र जिम्मेवारी")+note+tbl(["कर्मचारी ID","नाम","पद","विषय/जिम्मेवारी","सम्पर्क","स्थिति"])+form("नयाँ कर्मचारी विवरण",[f("नाम","पूरा नाम"),f("कर्मचारी ID","ID"),s("पद",["शिक्षक","प्रधानाध्यापक","लेखा","कर्मचारी","अन्य"]),f("विषय","विषय"),f("सम्पर्क","फोन")]);
+if(p==="classes")h=head(names[p],"कक्षा, Section, विषय र विषय शिक्षक व्यवस्थापन")+note+tbl(["कक्षा","Section","विषय","Credit Hour","विषय शिक्षक"])+form("कक्षा तथा विषय थप्नुहोस्",[s("कक्षा",classes),f("Section","A / B"),f("विषयको नाम","विषय"),f("Credit Hour","उदाहरण: 4","number"),f("विषय शिक्षक","नाम")]);
+if(p==="exams")h=head(names[p],"परीक्षा सिर्जना र समयतालिका व्यवस्थापन")+note+tbl(["परीक्षा नाम","शैक्षिक वर्ष","कक्षा","सुरु मिति","अन्तिम मिति","स्थिति"])+form("नयाँ परीक्षा सिर्जना",[f("परीक्षाको नाम","प्रथम त्रैमासिक"),f("शैक्षिक वर्ष","2083"),s("कक्षा",classes),f("सुरु मिति","","date"),f("अन्तिम मिति","","date"),s("परीक्षा प्रकार",["त्रैमासिक","अर्धवार्षिक","वार्षिक","आन्तरिक"])]);
+if(p==="marks")h=head(names[p],"विद्यार्थीको विषयगत प्राप्ताङ्क प्रविष्टि तथा परीक्षण")+note+`<div class="panel"><div class="fields">${s("परीक्षा",["परीक्षा छान्नुहोस्"])}${s("कक्षा",classes)}${s("विषय",["विषय छान्नुहोस्"])}${s("Section",["A","B","C"])}</div><p class="hint">विद्यार्थी सूची र marks entry table Firebase जोडिएपछि लोड हुनेछ।</p></div><br>`+tbl(["Roll No.","विद्यार्थीको नाम","आन्तरिक","सैद्धान्तिक","प्राप्ताङ्क"]);
+if(p==="results")h=head(names[p],"नतिजा प्रकाशन, ग्रेडसिट, Ledger र GPA")+note+`<div class="panel"><div class="fields">${s("परीक्षा",["परीक्षा छान्नुहोस्"])}${s("कक्षा",classes)}</div><br><button class="btn">नतिजा हेर्नुहोस् (Demo)</button> <button class="btn alt">Grade Sheet PDF (Demo)</button></div><br>`+tbl(["Roll No.","विद्यार्थीको नाम","GPA","Grade","नतिजा"]);
+if(p==="attendance")h=head(names[p],"दैनिक तथा विषयगत विद्यार्थी हाजिरी")+note+`<div class="panel"><div class="fields">${f("मिति","","date")}${s("कक्षा",classes)}${s("Section",["A","B","C"])}${s("हाजिरी प्रकार",["दैनिक","विषयगत"])}</div><p class="hint">विद्यार्थी सूची र Present/Absent विकल्प Firebase जोडिएपछि उपलब्ध हुनेछ।</p></div><br>`+tbl(["Roll No.","विद्यार्थीको नाम","हाजिरी","कैफियत"]);
+if(p==="certificates")h=head(names[p],"Transfer Certificate, Character Certificate र Transcript")+note+form("प्रमाणपत्र तयार गर्ने",[s("प्रमाणपत्र प्रकार",["Transfer Certificate","Character Certificate","Transcript"]),f("विद्यार्थी दर्ता नम्बर","Admission No."),f("जारी मिति","","date"),f("प्रमाणपत्र नम्बर","Certificate No.")]);
+if(p==="reports")h=head(names[p],"Excel Import/Export र विद्यालय रिपोर्ट")+note+`<div class="grid two"><div class="panel"><h3>Excel Import</h3><p class="hint">Excel template अनुसार विद्यार्थी वा marks data import गर्ने सुविधा validation पछि सक्रिय हुनेछ।</p><input type="file" accept=".xlsx,.xls,.csv"></div><div class="panel"><h3>Export Reports</h3><p class="hint">कक्षा, विद्यार्थी, हाजिरी तथा नतिजा रिपोर्ट export गर्ने सुविधा पछि जोडिनेछ।</p><button class="btn alt">Export Excel (Demo)</button></div></div>`;
+if(p==="users")h=head(names[p],"प्रयोगकर्ता खाता, अनुमति र भूमिका व्यवस्थापन")+note+tbl(["प्रयोगकर्ता","Email","Role","स्थिति"])+form("नयाँ प्रयोगकर्ता",[f("पूरा नाम","नाम"),f("Email","name@example.com","email"),s("Role",["Administrator","Teacher","Exam Officer","Accountant","Viewer"])]);
+if(p==="backup")h=head(names[p],"डेटा Backup, परिवर्तन अभिलेख र गतिविधि अनुगमन")+note+`<div class="grid two"><div class="panel"><h3>Backup Management</h3><p class="hint">Cloud backup तथा restore सुविधा सुरक्षित Firebase configuration पछि सक्रिय हुनेछ।</p><button class="btn alt">Backup (Demo)</button></div><div class="panel"><h3>Audit Log</h3><p class="hint">कुन प्रयोगकर्ताले कहिले कुन रेकर्ड परिवर्तन गर्‍यो भन्ने log राखिनेछ।</p></div></div><br>`+tbl(["मिति/समय","प्रयोगकर्ता","गतिविधि","रेकर्ड"]);
+if(p==="settings")h=head(names[p],"विद्यालय विवरण, शैक्षिक वर्ष र Grading Configuration")+note+form("विद्यालय विवरण",[f("विद्यालयको नाम","Mahadevasthan Secondary School"),f("IEMIS Code","300160003"),f("पालिका","Dhunibesi Municipality"),f("ठेगाना","Dhunibesi-05, Dhading"),f("शैक्षिक वर्ष","2083")])+`<div class="panel form"><h3>Grading Scale (Reference)</h3>${[["A+","90–100","4.0","Outstanding"],["A","80–below 90","3.6","Excellent"],["B+","70–below 80","3.2","Very Good"],["B","60–below 70","2.8","Good"],["C+","50–below 60","2.4","Satisfactory"],["C","40–below 50","2.0","Acceptable"],["D","35–below 40","1.6","Basic"],["NG","0–below 35","—","Not Graded"]].map(x=>`<div class="row"><span><b>${x[0]}</b><small>${x[1]} · ${x[3]}</small></span><b>${x[2]}</b></div>`).join("")}<p class="hint">यो उपलब्ध Grade VI reference को scale हो; सबै कक्षा र विषयका लागि आधिकारिक रूपमा पुष्टि गर्नुपर्छ।</p></div>`;
+v.innerHTML=h;v.querySelectorAll("form.demo").forEach(f=>f.addEventListener("submit",e=>{e.preventDefault();alert("Demo मात्र: Firebase जोडिएपछि मात्र सुरक्षित रूपमा Save हुनेछ।")}));v.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>render(b.dataset.go))}
+document.getElementById("nav").onclick=e=>{let b=e.target.closest("[data-page]");if(b)render(b.dataset.page)};render("dashboard");
+</script></body></html>
