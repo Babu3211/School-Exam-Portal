@@ -121,6 +121,60 @@ td.empty{text-align:center;color:var(--muted);padding:23px}
 
 /* बाँकी नयाँ CSS यहाँ राख्नुहोस् */
 
+/* Mobile layout correction */
+@media screen and (max-width: 650px) {
+
+  .app {
+    display: flex;
+    flex-direction: column !important;
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  .side {
+    order: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    position: relative !important;
+  }
+
+  .main {
+    order: 2;
+    width: 100% !important;
+    min-width: 0 !important;
+    flex: 1 1 auto;
+  }
+
+  .nav {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sidefoot {
+    display: none;
+  }
+
+  .content {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .two {
+    grid-template-columns: 1fr !important;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .quick {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
 </style>
 </style>
 </head>
