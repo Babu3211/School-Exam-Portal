@@ -175,6 +175,101 @@ td.empty{text-align:center;color:var(--muted);padding:23px}
   }
 }
 
+/* FORCE MOBILE FULL WIDTH LAYOUT */
+@media only screen and (max-width: 650px) {
+
+  html, body {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  .app {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  .side {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    flex: none !important;
+    position: static !important;
+  }
+
+  .main {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex: none !important;
+    overflow-x: hidden !important;
+  }
+
+  .content,
+  #view {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 10px !important;
+  }
+
+  .grid,
+  .two,
+  .fields,
+  .stats,
+  .quick {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .panel,
+  .card,
+  .form,
+  .field {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .field input,
+  .field select,
+  .toolbar input,
+  .toolbar select {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 16px !important;
+    min-height: 48px !important;
+  }
+
+  .toolbar {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  .toolbar button,
+  .form button {
+    width: 100% !important;
+    min-height: 48px !important;
+  }
+
+  .tablewrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+  }
+
+  .nav {
+    width: 100% !important;
+  }
+}
+
 </style>
 </style>
 </head>
