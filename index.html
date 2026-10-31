@@ -67,7 +67,7 @@ if(p==="staff")h=head(names[p],"शिक्षक तथा कर्मचा�
 
 if(p==="classes")h=head(names[p],"कक्षा, Section र विषय व्यवस्थापन")+`<div class="toolbar"><input id="classSearch" placeholder="कक्षा वा विषय खोज्नुहोस्"><button class="btn" id="classSearchBtn" type="button">Search</button><button class="btn alt" id="classReloadBtn" type="button">Refresh</button></div><div id="classMessage" class="hint" role="status"></div><div class="tablewrap"><table><thead><tr><th>कक्षा</th><th>Section</th><th>विषय</th><th>Credit Hour</th><th>विषय शिक्षक</th><th>कार्य</th></tr></thead><tbody id="classesBody"><tr><td class="empty" colspan="6">Firebase बाट विवरण लोड हुँदैछ...</td></tr></tbody></table></div><div class="panel form"><h3>कक्षा तथा विषय विवरण</h3><form id="classForm"><div class="fields"><div class="field"><label for="className">कक्षा *</label><select id="className" required>${classes.map(x=>`<option value="${x}">${x}</option>`).join("")}</select></div><div class="field"><label for="classSection">Section</label><input id="classSection" maxlength="30" placeholder="A / B"></div><div class="field"><label for="classSubject">विषयको नाम *</label><input id="classSubject" required maxlength="120" placeholder="विषय"></div><div class="field"><label for="classCredit">Credit Hour</label><input id="classCredit" type="number" min="0" max="20" step="0.5" placeholder="उदाहरण: 4"></div><div class="field"><label for="classTeacher">विषय शिक्षक</label><input id="classTeacher" maxlength="120" placeholder="शिक्षकको नाम"></div></div><button class="btn" id="classSaveBtn" type="submit">Firebase मा Save गर्नुहोस्</button> <button class="btn alt" id="classCancelBtn" type="button" hidden>सम्पादन रद्द गर्नुहोस्</button></form></div>`;
 if(p==="exams")h=head(names[p],"परीक्षा सिर्जना र समयतालिका व्यवस्थापन")+`<div class="toolbar"><input id="examSearch" placeholder="परीक्षा नाम वा कक्षा खोज्नुहोस्"><button class="btn" id="examSearchBtn" type="button">Search</button><button class="btn alt" id="examReloadBtn" type="button">Refresh</button></div><div id="examMessage" class="hint" role="status"></div><div class="tablewrap"><table><thead><tr><th>परीक्षा नाम</th><th>शैक्षिक वर्ष</th><th>कक्षा</th><th>परीक्षा प्रकार</th><th>सुरु मिति</th><th>अन्तिम मिति</th><th>स्थिति</th><th>कार्य</th></tr></thead><tbody id="examsBody"><tr><td class="empty" colspan="8">Firebase बाट विवरण लोड हुँदैछ...</td></tr></tbody></table></div><div class="panel form"><h3>नयाँ परीक्षा सिर्जना गर्नुहोस्</h3><form id="examForm"><div class="fields"><div class="field"><label for="examName">परीक्षाको नाम *</label><input id="examName" required maxlength="120" placeholder="प्रथम त्रैमासिक"></div><div class="field"><label for="examYear">शैक्षिक वर्ष *</label><input id="examYear" required maxlength="20" value="2083" placeholder="2083"></div><div class="field"><label for="examClass">कक्षा *</label><select id="examClass" required>${classes.map(x=>`<option value="${x}">${x}</option>`).join("")}</select></div><div class="field"><label for="examType">परीक्षा प्रकार *</label><select id="examType" required><option value="त्रैमासिक">त्रैमासिक</option><option value="अर्धवार्षिक">अर्धवार्षिक</option><option value="वार्षिक">वार्षिक</option><option value="आन्तरिक">आन्तरिक</option></select></div><div class="field"><label for="examStart">सुरु मिति *</label><input id="examStart" type="text" inputmode="numeric" autocomplete="off" placeholder="2083-07-15" pattern="20[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])" maxlength="10" required></div><div class="field"><label for="examEnd">अन्तिम मिति *</label><input id="examEnd" type="text" inputmode="numeric" autocomplete="off" placeholder="2083-07-20" pattern="20[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])" maxlength="10" required></div></div><button class="btn" id="examSaveBtn" type="submit">Firebase मा Save गर्नुहोस्</button> <button class="btn alt" id="examCancelBtn" type="button" hidden>सम्पादन रद्द गर्नुहोस्</button><p class="hint">मिति विक्रम संवत् (BS) मा YYYY-MM-DD ढाँचामा लेख्नुहोस्। उदाहरण: 2083-07-15 (१५ गते, महिना ०७, वर्ष २०८३)। अंग्रेजी मिति नलेख्नुहोस्।</p></form></div>`;
-if(p==="marks")h=head(names[p],"विद्यार्थीको विषयगत प्राप्ताङ्क प्रविष्टि")+note+`<div class="panel"><div class="fields">${s("परीक्षा",["परीक्षा छान्नुहोस्"])}${s("कक्षा",classes)}${s("विषय",["विषय छान्नुहोस्"])}${s("Section",["A","B","C"])}</div><p class="hint">विद्यार्थी सूची Firebase जोडिएपछि लोड हुनेछ। Marks Ledger मेनु पनि हाल यही Marks Entry पेजमा खुल्छ।</p></div><br>`+tbl(["Roll No.","विद्यार्थीको नाम","आन्तरिक","सैद्धान्तिक","प्राप्ताङ्क"]);
+if(p==="marks")h=head(names[p],"मूल्याङ्कन संरचना र प्राप्ताङ्क व्यवस्थापन")+`<div class="notice"><b>पहिलो चरण:</b> यहाँ कक्षा/विषयअनुसार मूल्याङ्कनका भाग र पूर्णाङ्क सेट गरिन्छ। विद्यार्थीको Marks Entry अर्को चरणमा यही सेटिङसँग जोडिनेछ। पुरानो नतिजा/GPA गणना यस चरणमा परिवर्तन गरिएको छैन।</div><div class="panel"><h3>Assessment Settings — मूल्याङ्कन सेटिङ</h3><div class="fields"><div class="field"><label for="markGroup">कक्षा समूह</label><select id="markGroup"><option value="1-3">कक्षा १–३</option><option value="4-5">कक्षा ४–५</option><option value="6-8">कक्षा ६–८</option><option value="9-10">कक्षा ९–१०</option></select></div><div class="field"><label for="markSubject">विषय</label><select id="markSubject"></select></div></div><div id="markParts" class="grid" style="margin-top:14px"></div><div class="toolbar"><button class="btn alt" id="markAddPart" type="button">+ मूल्याङ्कन भाग थप्नुहोस्</button><button class="btn" id="markSaveSettings" type="button">Firebase मा Settings Save</button><button class="btn alt" id="markReloadSettings" type="button">Refresh</button></div><p id="markSettingsMessage" class="hint" role="status"></p></div><div class="panel form"><h3>सुरक्षित गरिएको मूल्याङ्कन सेटिङ</h3><div class="tablewrap"><table><thead><tr><th>कक्षा समूह</th><th>विषय</th><th>मूल्याङ्कन भागहरू</th><th>जम्मा पूर्णाङ्क</th><th>कार्य</th></tr></thead><tbody id="markSettingsBody"><tr><td class="empty" colspan="5">लोड हुँदैछ...</td></tr></tbody></table></div></div><div class="panel form"><h3>Marks Entry</h3><p class="hint">Assessment Settings परीक्षण भएपछि विद्यार्थी, परीक्षा र Section छनोटसहित Marks Entry जोडिनेछ। अहिले यहाँ Marks प्रविष्टि सक्रिय गरिएको छैन, ताकि अपुष्ट पूर्णाङ्कका आधारमा विद्यार्थीको नतिजा नबिग्रियोस्।</p></div>`;
 if(p==="results")h=head(names[p],"नतिजा प्रकाशन, ग्रेडसिट र GPA")+note+`<div class="panel"><div class="fields">${s("परीक्षा",["परीक्षा छान्नुहोस्"])}${s("कक्षा",classes)}</div><br><button class="btn" data-action="demo">नतिजा हेर्नुहोस् (Demo)</button> <button class="btn alt" data-action="demo">Grade Sheet PDF (Demo)</button><p class="hint">Grade Sheet र Tabulation Sheet हाल यही Results पेजमा खुल्छन्।</p></div><br>`+tbl(["Roll No.","विद्यार्थीको नाम","GPA","Grade","नतिजा"]);
 if(p==="attendance")h=head(names[p],"दैनिक तथा विषयगत विद्यार्थी हाजिरी")+note+`<div class="panel"><div class="fields">${f("मिति","","date")}${s("कक्षा",classes)}${s("Section",["A","B","C"])}${s("हाजिरी प्रकार",["दैनिक","विषयगत"])}</div><p class="hint">विद्यार्थी सूची Firebase जोडिएपछि उपलब्ध हुनेछ।</p></div><br>`+tbl(["Roll No.","विद्यार्थीको नाम","हाजिरी","कैफियत"]);
 if(p==="certificates")h=head(names[p],"प्रमाणपत्र तथा Transcript")+note+form("प्रमाणपत्र तयार गर्ने",[s("प्रमाणपत्र प्रकार",["Transfer Certificate","Character Certificate","Transcript"]),f("विद्यार्थी दर्ता नम्बर","Admission No."),f("जारी मिति","","date"),f("प्रमाणपत्र नम्बर","Certificate No.")]);
@@ -75,7 +75,7 @@ if(p==="reports")h=head(names[p],"Excel Import/Export र विद्याल�
 if(p==="users")h=head(names[p],"प्रयोगकर्ता खाता र भूमिका व्यवस्थापन")+note+tbl(["प्रयोगकर्ता","Email","Role","स्थिति"])+form("नयाँ प्रयोगकर्ता",[f("पूरा नाम","नाम"),f("Email","name@example.com","email"),s("Role",["Administrator","Teacher","Exam Officer","Accountant","Viewer"])]);
 if(p==="backup")h=head(names[p],"डेटा Backup तथा Audit Log")+note+`<div class="grid two"><div class="panel"><h3>Backup Management</h3><p class="hint">Cloud backup सुविधा पछि जोडिनेछ।</p><button class="btn alt" data-action="demo">Backup (Demo)</button></div><div class="panel"><h3>Audit Log</h3><p class="hint">गतिविधि log सुविधा पछि जोडिनेछ।</p></div></div><br>`+tbl(["मिति/समय","प्रयोगकर्ता","गतिविधि","रेकर्ड"]);
 if(p==="settings")h=head(names[p],"विद्यालय विवरण र Grading Configuration")+note+form("विद्यालय विवरण",[f("विद्यालयको नाम","Mahadevasthan Secondary School"),f("IEMIS Code","300160003"),f("पालिका","Dhunibesi Municipality"),f("ठेगाना","Dhunibesi-05, Dhading"),f("शैक्षिक वर्ष","2083")])+`<div class="panel form"><h3>Grading Scale (Reference)</h3>${[["A+","90–100","4.0","Outstanding"],["A","80–below 90","3.6","Excellent"],["B+","70–below 80","3.2","Very Good"],["B","60–below 70","2.8","Good"],["C+","50–below 60","2.4","Satisfactory"],["C","40–below 50","2.0","Acceptable"],["D","35–below 40","1.6","Basic"],["NG","0–below 35","—","Not Graded"]].map(x=>`<div class="row"><span><b>${x[0]}</b><small>${x[1]} · ${x[3]}</small></span><b>${x[2]}</b></div>`).join("")}<p class="hint">यो उपलब्ध Grade VI reference हो; सबै कक्षाका लागि पुष्टि आवश्यक छ।</p></div>`;
-v.innerHTML=h;v.querySelectorAll("form.demo").forEach(frm=>frm.addEventListener("submit",e=>{e.preventDefault();alert("यो Demo हो। अहिले यो Module मा Firebase Save जोडिएको छैन।")}));if(p==="students"&&window.loadStudents)window.loadStudents();if(p==="staff"&&window.loadStaff)window.loadStaff();if(p==="classes"&&window.loadClasses)window.loadClasses();if(p==="exams"&&window.loadExams)window.loadExams();}
+v.innerHTML=h;v.querySelectorAll("form.demo").forEach(frm=>frm.addEventListener("submit",e=>{e.preventDefault();alert("यो Demo हो। अहिले यो Module मा Firebase Save जोडिएको छैन।")}));if(p==="students"&&window.loadStudents)window.loadStudents();if(p==="staff"&&window.loadStaff)window.loadStaff();if(p==="classes"&&window.loadClasses)window.loadClasses();if(p==="exams"&&window.loadExams)window.loadExams();if(p==="marks"&&window.loadMarkSettings){updateMarkSubjectOptions();window.loadMarkSettings();}}
 document.addEventListener("click",e=>{const pageButton=e.target.closest("[data-page]"),goButton=e.target.closest("[data-go]"),actionButton=e.target.closest("[data-action]");if(pageButton){e.preventDefault();render(pageButton.dataset.page);return}if(goButton){render(goButton.dataset.go);return}if(actionButton)alert("यो सुविधा Demo मात्र हो। वास्तविक काम गर्ने सुविधा अर्को चरणमा जोड्नुपर्छ。");});render("dashboard");
 </script>
 <script type="module">
@@ -550,7 +550,119 @@ document.addEventListener("click",event=>{
 });
 document.addEventListener("input",event=>{if(event.target.id==="examSearch")renderExams()});
 
-onAuthStateChanged(auth,async user=>{if(user&&user.uid===ADMIN_UID){gate.style.display="none";shell.style.display="flex";statusBox.textContent="";if(window.currentPage==="students")loadStudents();if(window.currentPage==="exams")loadExams();if(window.currentPage==="classes")loadClasses()}else{if(user)await signOut(auth);shell.style.display="none";gate.style.display="flex"}});
+
+// Assessment settings: editable evaluation components and full marks.
+// Stored separately; does not modify existing marks/results calculations.
+const markSubjects={
+ "1-3":["नेपाली","अंग्रेजी","गणित","सेरोफेरो","हाम्रो धुनिबेँशी"],
+ "4-5":["नेपाली","अंग्रेजी","गणित","विज्ञान तथा प्रविधि","सामाजिक अध्ययन तथा मानव मूल्य शिक्षा","स्वास्थ्य शारीरिक तथा सिर्जनात्मक कला","हाम्रो धुनिबेँशी"],
+ "6-8":["नेपाली","अंग्रेजी","गणित","विज्ञान तथा प्रविधि","सामाजिक अध्ययन तथा मानव मूल्य शिक्षा","स्वास्थ्य शारीरिक तथा सिर्जनात्मक कला","हाम्रो धुनिबेँशी"],
+ "9-10":["अनिवार्य नेपाली","अनिवार्य अंग्रेजी","अनिवार्य गणित","अनिवार्य विज्ञान तथा प्रविधि","अनिवार्य सामाजिक अध्ययन","ऐच्छिक प्रथम: वातावरण विज्ञान","ऐच्छिक द्वितीय: कम्प्युटर विज्ञान","ऐच्छिक प्रथम: अतिरिक्त गणित"]
+};
+let markSettingsCache=[];
+function markMsg(message,isError=false){
+ const el=document.getElementById("markSettingsMessage");
+ if(el){el.textContent=message;el.style.color=isError?"#b42318":""}
+}
+function defaultMarkParts(group,subject){
+ if(group==="1-3"||group==="4-5")return [
+  {name:"No. of Learning Achievement",fullMarks:0},
+  {name:"Obtained Learning Achievement",fullMarks:0}
+ ];
+ if(group==="6-8"||(group==="9-10"&&subject.includes("कम्प्युटर")))return [
+  {name:"Participation",fullMarks:4},
+  {name:"Practical/Project",fullMarks:36},
+  {name:"First Term Examination",fullMarks:10}
+ ];
+ return [
+  {name:"Participation",fullMarks:3},
+  {name:"Practical/Project",fullMarks:16},
+  {name:"First Term Examination",fullMarks:6}
+ ];
+}
+function markGroupLabel(g){return ({"1-3":"कक्षा १–३","4-5":"कक्षा ४–५","6-8":"कक्षा ६–८","9-10":"कक्षा ९–१०"})[g]||g}
+function renderMarkParts(parts){
+ const wrap=document.getElementById("markParts");if(!wrap)return;
+ wrap.innerHTML=parts.map((p,i)=>`<div class="row" style="align-items:end;gap:8px;flex-wrap:wrap"><div class="field" style="flex:2;min-width:150px"><label>भागको नाम</label><input data-mark-name="${i}" maxlength="80" value="${examEsc(p.name)}"></div><div class="field" style="flex:1;min-width:100px"><label>पूर्णाङ्क</label><input data-mark-full="${i}" type="number" min="0" max="1000" step="0.01" value="${Number(p.fullMarks)||0}"></div><button class="btn alt" type="button" data-mark-remove="${i}">हटाउनुहोस्</button></div>`).join("");
+}
+function readMarkParts(){
+ return [...document.querySelectorAll("[data-mark-name]")].map((el,i)=>({
+  name:el.value.trim(),
+  fullMarks:Number(document.querySelector(`[data-mark-full="${i}"]`)?.value)
+ }));
+}
+function updateMarkSubjectOptions(){
+ const group=document.getElementById("markGroup"),subject=document.getElementById("markSubject");
+ if(!group||!subject)return;
+ subject.innerHTML=markSubjects[group.value].map(x=>`<option value="${examEsc(x)}">${examEsc(x)}</option>`).join("");
+ const found=markSettingsCache.find(x=>x.classGroup===group.value&&x.subject===subject.value);
+ renderMarkParts(found?.components||defaultMarkParts(group.value,subject.value));
+}
+async function loadMarkSettings(){
+ const body=document.getElementById("markSettingsBody");if(!body)return;
+ body.innerHTML='<tr><td class="empty" colspan="5">Firebase बाट सेटिङ लोड हुँदैछ...</td></tr>';
+ try{
+  if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw new Error("Admin login आवश्यक छ।");
+  const snap=await getDocs(collection(db,"mark_settings"));
+  markSettingsCache=snap.docs.map(d=>({id:d.id,...d.data()}));
+  body.innerHTML=markSettingsCache.map(x=>`<tr><td>${examEsc(markGroupLabel(x.classGroup))}</td><td>${examEsc(x.subject)}</td><td>${(x.components||[]).map(c=>`${examEsc(c.name)} (${Number(c.fullMarks)})`).join("<br>")}</td><td>${(x.components||[]).reduce((a,c)=>a+Number(c.fullMarks||0),0)}</td><td><button class="btn alt" type="button" data-mark-edit="${examEsc(x.id)}">Edit</button></td></tr>`).join("")||'<tr><td class="empty" colspan="5">अहिलेसम्म कुनै सेटिङ Save गरिएको छैन।</td></tr>';
+  markMsg(`कुल ${markSettingsCache.length} मूल्याङ्कन सेटिङ लोड भयो।`);
+ }catch(error){
+  console.error("Mark settings load failed:",error.code||error.message);
+  body.innerHTML='<tr><td class="empty" colspan="5">सेटिङ लोड भएन।</td></tr>';
+  markMsg(`लोड भएन: ${error.code||error.message||"Firebase त्रुटि"}। Firestore Rules जाँच गर्नुहोस्।`,true);
+ }
+}
+window.loadMarkSettings=loadMarkSettings;
+document.addEventListener("change",event=>{
+ if(event.target.id==="markGroup")updateMarkSubjectOptions();
+ if(event.target.id==="markSubject"){
+  const group=document.getElementById("markGroup").value;
+  const found=markSettingsCache.find(x=>x.classGroup===group&&x.subject===event.target.value);
+  renderMarkParts(found?.components||defaultMarkParts(group,event.target.value));
+ }
+});
+document.addEventListener("click",async event=>{
+ const add=event.target.closest("#markAddPart");
+ if(add){const parts=readMarkParts();parts.push({name:"नयाँ मूल्याङ्कन भाग",fullMarks:0});renderMarkParts(parts);return}
+ const remove=event.target.closest("[data-mark-remove]");
+ if(remove){const parts=readMarkParts();parts.splice(Number(remove.dataset.markRemove),1);renderMarkParts(parts);return}
+ if(event.target.closest("#markReloadSettings")){loadMarkSettings();return}
+ const edit=event.target.closest("[data-mark-edit]");
+ if(edit){
+  const item=markSettingsCache.find(x=>x.id===edit.dataset.markEdit);if(!item)return;
+  document.getElementById("markGroup").value=item.classGroup;updateMarkSubjectOptions();
+  document.getElementById("markSubject").value=item.subject;renderMarkParts(item.components||[]);
+  document.getElementById("markSaveSettings").dataset.editId=item.id;
+  markMsg("सम्पादन मोड: आवश्यक परिवर्तन गरेर Save गर्नुहोस्।");return;
+ }
+ if(event.target.closest("#markSaveSettings")){
+  const btn=document.getElementById("markSaveSettings");
+  if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){markMsg("Admin login आवश्यक छ।",true);return}
+  const classGroup=document.getElementById("markGroup").value;
+  const subject=document.getElementById("markSubject").value;
+  const components=readMarkParts();
+  if(!components.length||components.some(c=>!c.name||!Number.isFinite(c.fullMarks)||c.fullMarks<0||c.fullMarks>1000)){
+   markMsg("कम्तीमा एउटा मूल्याङ्कन भाग राख्नुहोस्। नाम र पूर्णाङ्क सही हुनुपर्छ।",true);return;
+  }
+  if(new Set(components.map(c=>c.name.toLowerCase())).size!==components.length){markMsg("मूल्याङ्कन भागको नाम दोहोरिनु हुँदैन।",true);return}
+  const editId=btn.dataset.editId||"";
+  const duplicate=markSettingsCache.find(x=>x.classGroup===classGroup&&x.subject===subject&&x.id!==editId);
+  if(duplicate){markMsg("यो कक्षा समूह र विषयको सेटिङ पहिल्यै छ। पुरानो रेकर्डको Edit प्रयोग गर्नुहोस्।",true);return}
+  btn.disabled=true;markMsg("Firebase मा मूल्याङ्कन सेटिङ सुरक्षित हुँदैछ...");
+  const data={classGroup,subject,components,totalFullMarks:components.reduce((a,c)=>a+c.fullMarks,0),updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid};
+  try{
+   if(editId)await updateDoc(doc(db,"mark_settings",editId),data);
+   else await addDoc(collection(db,"mark_settings"),{...data,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});
+   delete btn.dataset.editId;await loadMarkSettings();markMsg("मूल्याङ्कन सेटिङ Firebase मा सुरक्षित भयो।");
+  }catch(error){
+   console.error("Mark settings save failed:",error.code||error.message);
+   markMsg(`Save भएन: ${error.code||error.message||"Firebase त्रुटि"}। Firestore Rules जाँच गर्नुहोस्।`,true);
+  }finally{btn.disabled=false}
+ }
+});
+
+onAuthStateChanged(auth,async user=>{if(user&&user.uid===ADMIN_UID){gate.style.display="none";shell.style.display="flex";statusBox.textContent="";if(window.currentPage==="students")loadStudents();if(window.currentPage==="exams")loadExams();if(window.currentPage==="classes")loadClasses();if(window.currentPage==="marks")loadMarkSettings()}else{if(user)await signOut(auth);shell.style.display="none";gate.style.display="flex"}});
 </script>
 </body>
 </html>
