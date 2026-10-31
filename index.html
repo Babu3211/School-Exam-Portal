@@ -66,7 +66,7 @@ if(p==="staff")h=head(names[p],"शिक्षक तथा कर्मचा�
 </div>`;
 
 if(p==="classes")h=head(names[p],"कक्षा, Section र विषय व्यवस्थापन")+`<div class="toolbar"><input id="classSearch" placeholder="कक्षा वा विषय खोज्नुहोस्"><button class="btn" id="classSearchBtn" type="button">Search</button><button class="btn alt" id="classReloadBtn" type="button">Refresh</button></div><div id="classMessage" class="hint" role="status"></div><div class="tablewrap"><table><thead><tr><th>कक्षा</th><th>Section</th><th>विषय</th><th>Credit Hour</th><th>विषय शिक्षक</th><th>कार्य</th></tr></thead><tbody id="classesBody"><tr><td class="empty" colspan="6">Firebase बाट विवरण लोड हुँदैछ...</td></tr></tbody></table></div><div class="panel form"><h3>कक्षा तथा विषय विवरण</h3><form id="classForm"><div class="fields"><div class="field"><label for="className">कक्षा *</label><select id="className" required>${classes.map(x=>`<option value="${x}">${x}</option>`).join("")}</select></div><div class="field"><label for="classSection">Section</label><input id="classSection" maxlength="30" placeholder="A / B"></div><div class="field"><label for="classSubject">विषयको नाम *</label><input id="classSubject" required maxlength="120" placeholder="विषय"></div><div class="field"><label for="classCredit">Credit Hour</label><input id="classCredit" type="number" min="0" max="20" step="0.5" placeholder="उदाहरण: 4"></div><div class="field"><label for="classTeacher">विषय शिक्षक</label><input id="classTeacher" maxlength="120" placeholder="शिक्षकको नाम"></div></div><button class="btn" id="classSaveBtn" type="submit">Firebase मा Save गर्नुहोस्</button> <button class="btn alt" id="classCancelBtn" type="button" hidden>सम्पादन रद्द गर्नुहोस्</button></form></div>`;
-if(p==="exams")h=head(names[p],"परीक्षा सिर्जना र समयतालिका व्यवस्थापन")+`<div class="toolbar"><input id="examSearch" placeholder="परीक्षा नाम वा कक्षा खोज्नुहोस्"><button class="btn" id="examSearchBtn" type="button">Search</button><button class="btn alt" id="examReloadBtn" type="button">Refresh</button></div><div id="examMessage" class="hint" role="status"></div><div class="tablewrap"><table><thead><tr><th>परीक्षा नाम</th><th>शैक्षिक वर्ष</th><th>कक्षा</th><th>परीक्षा प्रकार</th><th>सुरु मिति</th><th>अन्तिम मिति</th><th>स्थिति</th><th>कार्य</th></tr></thead><tbody id="examsBody"><tr><td class="empty" colspan="8">Firebase बाट विवरण लोड हुँदैछ...</td></tr></tbody></table></div><div class="panel form"><h3>नयाँ परीक्षा सिर्जना गर्नुहोस्</h3><form id="examForm"><div class="fields"><div class="field"><label for="examName">परीक्षाको नाम *</label><input id="examName" required maxlength="120" placeholder="प्रथम त्रैमासिक"></div><div class="field"><label for="examYear">शैक्षिक वर्ष *</label><input id="examYear" required maxlength="20" value="2083" placeholder="2083"></div><div class="field"><label for="examClass">कक्षा *</label><select id="examClass" required>${classes.map(x=>`<option value="${x}">${x}</option>`).join("")}</select></div><div class="field"><label for="examType">परीक्षा प्रकार *</label><select id="examType" required><option value="त्रैमासिक">त्रैमासिक</option><option value="अर्धवार्षिक">अर्धवार्षिक</option><option value="वार्षिक">वार्षिक</option><option value="आन्तरिक">आन्तरिक</option></select></div><div class="field"><label for="examStart">सुरु मिति *</label><input id="examStart" type="date" required></div><div class="field"><label for="examEnd">अन्तिम मिति *</label><input id="examEnd" type="date" required></div></div><button class="btn" id="examSaveBtn" type="submit">Firebase मा Save गर्नुहोस्</button> <button class="btn alt" id="examCancelBtn" type="button" hidden>सम्पादन रद्द गर्नुहोस्</button><p class="hint">मिति YYYY-MM-DD ढाँचामा Calendar बाट छान्नुहोस्। स्थिति मितिअनुसार आफैँ देखिन्छ।</p></form></div>`;
+if(p==="exams")h=head(names[p],"परीक्षा सिर्जना र समयतालिका व्यवस्थापन")+`<div class="toolbar"><input id="examSearch" placeholder="परीक्षा नाम वा कक्षा खोज्नुहोस्"><button class="btn" id="examSearchBtn" type="button">Search</button><button class="btn alt" id="examReloadBtn" type="button">Refresh</button></div><div id="examMessage" class="hint" role="status"></div><div class="tablewrap"><table><thead><tr><th>परीक्षा नाम</th><th>शैक्षिक वर्ष</th><th>कक्षा</th><th>परीक्षा प्रकार</th><th>सुरु मिति</th><th>अन्तिम मिति</th><th>स्थिति</th><th>कार्य</th></tr></thead><tbody id="examsBody"><tr><td class="empty" colspan="8">Firebase बाट विवरण लोड हुँदैछ...</td></tr></tbody></table></div><div class="panel form"><h3>नयाँ परीक्षा सिर्जना गर्नुहोस्</h3><form id="examForm"><div class="fields"><div class="field"><label for="examName">परीक्षाको नाम *</label><input id="examName" required maxlength="120" placeholder="प्रथम त्रैमासिक"></div><div class="field"><label for="examYear">शैक्षिक वर्ष *</label><input id="examYear" required maxlength="20" value="2083" placeholder="2083"></div><div class="field"><label for="examClass">कक्षा *</label><select id="examClass" required>${classes.map(x=>`<option value="${x}">${x}</option>`).join("")}</select></div><div class="field"><label for="examType">परीक्षा प्रकार *</label><select id="examType" required><option value="त्रैमासिक">त्रैमासिक</option><option value="अर्धवार्षिक">अर्धवार्षिक</option><option value="वार्षिक">वार्षिक</option><option value="आन्तरिक">आन्तरिक</option></select></div><div class="field"><label for="examStart">सुरु मिति *</label><input id="examStart" type="text" inputmode="numeric" autocomplete="off" placeholder="2083-07-15" pattern="20[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])" maxlength="10" required></div><div class="field"><label for="examEnd">अन्तिम मिति *</label><input id="examEnd" type="text" inputmode="numeric" autocomplete="off" placeholder="2083-07-20" pattern="20[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])" maxlength="10" required></div></div><button class="btn" id="examSaveBtn" type="submit">Firebase मा Save गर्नुहोस्</button> <button class="btn alt" id="examCancelBtn" type="button" hidden>सम्पादन रद्द गर्नुहोस्</button><p class="hint">मिति विक्रम संवत् (BS) मा YYYY-MM-DD ढाँचामा लेख्नुहोस्। उदाहरण: 2083-07-15 (१५ गते, महिना ०७, वर्ष २०८३)। अंग्रेजी मिति नलेख्नुहोस्।</p></form></div>`;
 if(p==="marks")h=head(names[p],"विद्यार्थीको विषयगत प्राप्ताङ्क प्रविष्टि")+note+`<div class="panel"><div class="fields">${s("परीक्षा",["परीक्षा छान्नुहोस्"])}${s("कक्षा",classes)}${s("विषय",["विषय छान्नुहोस्"])}${s("Section",["A","B","C"])}</div><p class="hint">विद्यार्थी सूची Firebase जोडिएपछि लोड हुनेछ। Marks Ledger मेनु पनि हाल यही Marks Entry पेजमा खुल्छ।</p></div><br>`+tbl(["Roll No.","विद्यार्थीको नाम","आन्तरिक","सैद्धान्तिक","प्राप्ताङ्क"]);
 if(p==="results")h=head(names[p],"नतिजा प्रकाशन, ग्रेडसिट र GPA")+note+`<div class="panel"><div class="fields">${s("परीक्षा",["परीक्षा छान्नुहोस्"])}${s("कक्षा",classes)}</div><br><button class="btn" data-action="demo">नतिजा हेर्नुहोस् (Demo)</button> <button class="btn alt" data-action="demo">Grade Sheet PDF (Demo)</button><p class="hint">Grade Sheet र Tabulation Sheet हाल यही Results पेजमा खुल्छन्।</p></div><br>`+tbl(["Roll No.","विद्यार्थीको नाम","GPA","Grade","नतिजा"]);
 if(p==="attendance")h=head(names[p],"दैनिक तथा विषयगत विद्यार्थी हाजिरी")+note+`<div class="panel"><div class="fields">${f("मिति","","date")}${s("कक्षा",classes)}${s("Section",["A","B","C"])}${s("हाजिरी प्रकार",["दैनिक","विषयगत"])}</div><p class="hint">विद्यार्थी सूची Firebase जोडिएपछि उपलब्ध हुनेछ।</p></div><br>`+tbl(["Roll No.","विद्यार्थीको नाम","हाजिरी","कैफियत"]);
@@ -446,12 +446,10 @@ function examEsc(value){
  return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 function examStatus(exam){
- const today=new Date();today.setHours(0,0,0,0);
- const start=new Date(`${exam.startDate}T00:00:00`);
- const end=new Date(`${exam.endDate}T23:59:59`);
- if(today<start)return "आगामी";
- if(today>end)return "सम्पन्न";
- return "सञ्चालनमा";
+ return exam.calendarSystem==="BS"?"BS मिति":"पुरानो AD";
+}
+function validBSDate(value){
+ return /^20[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/.test(value);
 }
 async function loadExams(){
  const body=document.getElementById("examsBody");if(!body)return;
@@ -472,7 +470,7 @@ function renderExams(){
  const body=document.getElementById("examsBody");if(!body)return;
  const q=(document.getElementById("examSearch")?.value||"").trim().toLowerCase();
  const rows=cachedExams.filter(x=>[x.examName,x.academicYear,x.className,x.examType].some(v=>String(v||"").toLowerCase().includes(q)));
- body.innerHTML=rows.map(x=>`<tr><td>${examEsc(x.examName)}</td><td>${examEsc(x.academicYear)}</td><td>${examEsc(x.className)}</td><td>${examEsc(x.examType)}</td><td>${examEsc(x.startDate)}</td><td>${examEsc(x.endDate)}</td><td>${examStatus(x)}</td><td><button class="btn alt" type="button" data-exam-edit="${examEsc(x.id)}">Edit</button> <button class="btn" style="background:#b42318" type="button" data-exam-delete="${examEsc(x.id)}">Delete</button></td></tr>`).join("")||'<tr><td class="empty" colspan="8">परीक्षा रेकर्ड भेटिएन।</td></tr>';
+ body.innerHTML=rows.map(x=>`<tr><td>${examEsc(x.examName)}</td><td>${examEsc(x.academicYear)}</td><td>${examEsc(x.className)}</td><td>${examEsc(x.examType)}</td><td>${examEsc(x.startDate)}${x.calendarSystem==="BS"?" (BS)":" (AD)"}</td><td>${examEsc(x.endDate)}${x.calendarSystem==="BS"?" (BS)":" (AD)"}</td><td>${examStatus(x)}</td><td><button class="btn alt" type="button" data-exam-edit="${examEsc(x.id)}">Edit</button> <button class="btn" style="background:#b42318" type="button" data-exam-delete="${examEsc(x.id)}">Delete</button></td></tr>`).join("")||'<tr><td class="empty" colspan="8">परीक्षा रेकर्ड भेटिएन।</td></tr>';
 }
 window.loadExams=loadExams;
 document.addEventListener("submit",async event=>{
@@ -485,11 +483,13 @@ document.addEventListener("submit",async event=>{
   academicYear:document.getElementById("examYear").value.trim(),
   className:document.getElementById("examClass").value,
   examType:document.getElementById("examType").value,
-  startDate:document.getElementById("examStart").value,
-  endDate:document.getElementById("examEnd").value
+  startDate:document.getElementById("examStart").value.trim(),
+  endDate:document.getElementById("examEnd").value.trim(),
+  calendarSystem:"BS"
  };
  if(!data.examName||!data.academicYear||!data.startDate||!data.endDate){setExamMessage("परीक्षाको नाम, शैक्षिक वर्ष र दुवै मिति अनिवार्य छन्।",true);return}
- if(data.endDate<data.startDate){setExamMessage("अन्तिम मिति सुरु मितिभन्दा अगाडिको हुन मिल्दैन।",true);return}
+ if(!validBSDate(data.startDate)||!validBSDate(data.endDate)){setExamMessage("BS मिति YYYY-MM-DD ढाँचामा लेख्नुहोस्। उदाहरण: 2083-07-15",true);return}
+ if(data.endDate<data.startDate){setExamMessage("अन्तिम BS मिति सुरु BS मितिभन्दा अगाडिको हुन मिल्दैन।",true);return}
  const duplicate=cachedExams.some(x=>x.id!==editId&&String(x.examName).toLowerCase()===data.examName.toLowerCase()&&String(x.academicYear)===data.academicYear&&String(x.className)===data.className);
  if(duplicate){setExamMessage("यो शैक्षिक वर्ष र कक्षाका लागि यही नामको परीक्षा पहिल्यै छ।",true);return}
  btn.disabled=true;btn.textContent=editId?"Update हुँदैछ...":"Save हुँदैछ...";
@@ -514,8 +514,9 @@ function editExam(id){
  document.getElementById("examYear").value=x.academicYear||"2083";
  document.getElementById("examClass").value=x.className||"कक्षा १";
  document.getElementById("examType").value=x.examType||"त्रैमासिक";
- document.getElementById("examStart").value=x.startDate||"";
- document.getElementById("examEnd").value=x.endDate||"";
+ document.getElementById("examStart").value=x.calendarSystem==="BS"?(x.startDate||""):"";
+ document.getElementById("examEnd").value=x.calendarSystem==="BS"?(x.endDate||""):"";
+ if(x.calendarSystem!=="BS")setExamMessage("यो पुरानो परीक्षण रेकर्ड AD मितिमा छ। सम्पादन गर्दा सुरु र अन्तिम मिति नयाँ BS ढाँचामा पुनः लेख्नुहोस्।");
  const form=document.getElementById("examForm");form.dataset.editId=id;
  document.getElementById("examSaveBtn").textContent="परिवर्तन Save गर्नुहोस्";
  document.getElementById("examCancelBtn").hidden=false;
