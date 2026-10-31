@@ -280,7 +280,11 @@ document.getElementById("staffSearchBtn")?.addEventListener("click", renderStaff
 
 document.getElementById("staffSearch")?.addEventListener("input", renderStaff);
 
-document.getElementById("staffReloadBtn")?.addEventListener("click", loadStaff);
+document.addEventListener("click", function(event) {
+  if (event.target.closest("#staffReloadBtn")) {
+    loadStaff();
+  }
+});
 
 document.getElementById("staffCancelBtn")?.addEventListener("click", function() {
   const form = document.getElementById("staffForm");
