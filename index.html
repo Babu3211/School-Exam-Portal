@@ -25,7 +25,46 @@ function dashboard(){return `<div class="welcome"><h2>Welcome to Exam Management
 function render(p){if(!names[p])return;window.currentPage=p;document.getElementById("title").textContent=names[p];document.querySelectorAll("[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===p));document.querySelectorAll(".menu-group").forEach(g=>{g.open=!!g.querySelector(`[data-page="${p}"]`)});let h="";
 if(p==="dashboard")h=dashboard();
 if(p==="students")h=head(names[p],"विद्यार्थी दर्ता, खोज र अभिलेख व्यवस्थापन")+studentNote+`<div class="toolbar"><input id="studentSearch" placeholder="नाम वा दर्ता नम्बर खोज्नुहोस्"><select id="classFilter"><option value="">सबै कक्षा</option>${classes.map(x=>`<option value="${x}">${x}</option>`).join("")}</select><button class="btn" id="studentSearchBtn" type="button">Search</button><button class="btn alt" id="studentReloadBtn" type="button">Refresh</button></div><div id="studentMessage" class="hint" role="status"></div><div class="tablewrap"><table><thead><tr><th>दर्ता नं.</th><th>विद्यार्थीको नाम</th><th>जन्म मिति (वि.सं.)</th><th>कक्षा</th><th>रोल नं.</th><th>अभिभावक</th><th>सम्पर्क</th><th>कार्य</th></tr></thead><tbody id="studentsBody"><tr><td class="empty" colspan="8">Firebase बाट विवरण लोड हुँदैछ...</td></tr></tbody></table></div><div class="panel form"><h3>विद्यार्थी विवरण</h3><form id="studentForm"><div class="fields"><div class="field"><label for="studentName">पूरा नाम *</label><input id="studentName" required maxlength="120" placeholder="विद्यार्थीको पूरा नाम"></div><div class="field"><label for="studentDob">जन्म मिति (वि.सं.)</label><input id="studentDob" type="text" inputmode="numeric" maxlength="10" placeholder="2083-01-15" aria-describedby="dobHelp"><small id="dobHelp" class="hint">नेपाली मिति YYYY-MM-DD ढाँचामा लेख्नुहोस्। उदाहरण: 2083-01-15</small></div><div class="field"><label for="admissionNo">दर्ता नम्बर *</label><input id="admissionNo" required maxlength="40" placeholder="Admission No."></div><div class="field"><label for="rollNo">रोल नम्बर *</label><input id="rollNo" required type="number" min="1" step="1" placeholder="Roll No."></div><div class="field"><label for="studentClass">कक्षा *</label><select id="studentClass" required>${classes.map(x=>`<option value="${x}">${x}</option>`).join("")}</select></div><div class="field"><label for="guardianName">अभिभावकको नाम</label><input id="guardianName" maxlength="120" placeholder="अभिभावकको नाम"></div><div class="field"><label for="studentPhone">सम्पर्क नम्बर</label><input id="studentPhone" type="tel" maxlength="30" placeholder="फोन"></div><div class="field"><label for="studentAddress">ठेगाना</label><input id="studentAddress" maxlength="250" placeholder="ठेगाना"></div></div><button class="btn" id="studentSaveBtn" type="submit">Firebase मा Save गर्नुहोस्</button> <button class="btn alt" id="studentCancelEditBtn" type="button" hidden>सम्पादन रद्द गर्नुहोस्</button></form></div>`;
-if(p==="staff")h=head(names[p],"शिक्षक तथा कर्मचारीको विवरण")+note+tbl(["कर्मचारी ID","नाम","पद","विषय/जिम्मेवारी","सम्पर्क","स्थिति"])+form("नयाँ कर्मचारी विवरण",[f("नाम","पूरा नाम"),f("कर्मचारी ID","ID"),s("पद",["शिक्षक","प्रधानाध्यापक","लेखा","कर्मचारी","अन्य"]),f("विषय","विषय"),f("सम्पर्क","फोन")]);
+
+if(p==="staff")h=head(names[p],"शिक्षक तथा कर्मचारीको विवरण")+`
+<div class="toolbar">
+<input id="staffSearch" placeholder="नाम वा कर्मचारी ID खोज्नुहोस्">
+<button class="btn" id="staffSearchBtn" type="button">Search</button>
+<button class="btn alt" id="staffReloadBtn" type="button">Refresh</button>
+</div>
+<div id="staffMessage" class="hint" role="status"></div>
+<div class="tablewrap">
+<table>
+<thead><tr>
+<th>कर्मचारी ID</th><th>नाम</th><th>पद</th>
+<th>विषय/जिम्मेवारी</th><th>सम्पर्क</th><th>अवस्था</th><th>कार्य</th>
+</tr></thead>
+<tbody id="staffBody">
+<tr><td class="empty" colspan="7">विवरण लोड हुँदैछ...</td></tr>
+</tbody>
+</table>
+</div>
+<div class="panel form">
+<h3>नयाँ कर्मचारी विवरण</h3>
+<form id="staffForm">
+<div class="fields">
+<div class="field"><label for="staffName">पूरा नाम *</label><input id="staffName" required maxlength="120"></div>
+<div class="field"><label for="staffId">कर्मचारी ID *</label><input id="staffId" required maxlength="40"></div>
+<div class="field"><label for="staffRole">पद *</label>
+<select id="staffRole" required>
+<option value="">पद छान्नुहोस्</option>
+<option>शिक्षक</option><option>प्रधानाध्यापक</option><option>लेखा</option><option>कर्मचारी</option><option>अन्य</option>
+</select></div>
+<div class="field"><label for="staffSubject">विषय/जिम्मेवारी</label><input id="staffSubject" maxlength="120"></div>
+<div class="field"><label for="staffPhone">सम्पर्क नम्बर</label><input id="staffPhone" type="tel" maxlength="30"></div>
+<div class="field"><label for="staffStatus">अवस्था</label>
+<select id="staffStatus"><option>कार्यरत</option><option>निष्क्रिय</option></select></div>
+</div>
+<button class="btn" id="staffSaveBtn" type="submit">Firebase मा Save गर्नुहोस्</button>
+<button class="btn alt" id="staffCancelBtn" type="button" hidden>सम्पादन रद्द गर्नुहोस्</button>
+</form>
+</div>`;
+
 if(p==="classes")h=head(names[p],"कक्षा, Section र विषय व्यवस्थापन")+note+tbl(["कक्षा","Section","विषय","Credit Hour","विषय शिक्षक"])+form("कक्षा तथा विषय थप्नुहोस्",[s("कक्षा",classes),f("Section","A / B"),f("विषयको नाम","विषय"),f("Credit Hour","उदाहरण: 4","number"),f("विषय शिक्षक","नाम")]);
 if(p==="exams")h=head(names[p],"परीक्षा सिर्जना र समयतालिका व्यवस्थापन")+note+tbl(["परीक्षा नाम","शैक्षिक वर्ष","कक्षा","सुरु मिति","अन्तिम मिति","स्थिति"])+form("नयाँ परीक्षा सिर्जना",[f("परीक्षाको नाम","प्रथम त्रैमासिक"),f("शैक्षिक वर्ष","2083"),s("कक्षा",classes),f("सुरु मिति","","date"),f("अन्तिम मिति","","date"),s("परीक्षा प्रकार",["त्रैमासिक","अर्धवार्षिक","वार्षिक","आन्तरिक"])]);
 if(p==="marks")h=head(names[p],"विद्यार्थीको विषयगत प्राप्ताङ्क प्रविष्टि")+note+`<div class="panel"><div class="fields">${s("परीक्षा",["परीक्षा छान्नुहोस्"])}${s("कक्षा",classes)}${s("विषय",["विषय छान्नुहोस्"])}${s("Section",["A","B","C"])}</div><p class="hint">विद्यार्थी सूची Firebase जोडिएपछि लोड हुनेछ। Marks Ledger मेनु पनि हाल यही Marks Entry पेजमा खुल्छ।</p></div><br>`+tbl(["Roll No.","विद्यार्थीको नाम","आन्तरिक","सैद्धान्तिक","प्राप्ताङ्क"]);
@@ -52,6 +91,222 @@ function setStudentMessage(message,isError=false){const el=document.getElementBy
 function esc(value){return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;", "'":"&#39;"}[c]))}
 let cachedStudents=[];
 async function loadStudents(){const body=document.getElementById("studentsBody");if(!body)return;body.innerHTML='<tr><td class="empty" colspan="8">Firebase बाट विवरण लोड हुँदैछ...</td></tr>';try{const snap=await getDocs(collection(db,"students"));cachedStudents=snap.docs.map(d=>({id:d.id,...d.data()}));filterStudents();setStudentMessage(`कुल ${cachedStudents.length} विद्यार्थीको रेकर्ड लोड भयो।`)}catch(error){console.error("Student load failed:",error.code);body.innerHTML='<tr><td class="empty" colspan="8">विद्यार्थी विवरण लोड भएन। Firestore Rules र Internet जाँच गर्नुहोस्।</td></tr>';setStudentMessage("Firebase बाट विवरण पढ्न अनुमति छैन वा जडानमा समस्या छ।",true)}}
+ 
+let cachedStaff = [];
+
+function staffText(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;",
+    '"':"&quot;", "'":"&#39;"
+  }[ch]));
+}
+
+function setStaffMessage(message, error=false) {
+  const el = document.getElementById("staffMessage");
+  if (el) {
+    el.textContent = message;
+    el.style.color = error ? "red" : "";
+  }
+}
+
+async function loadStaff() {
+  const body = document.getElementById("staffBody");
+  if (!body) return;
+
+  body.innerHTML = '<tr><td colspan="7">लोड हुँदैछ...</td></tr>';
+
+  try {
+    if (!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
+      throw new Error("Admin login आवश्यक छ।");
+    }
+
+    const snap = await getDocs(collection(db, "staff"));
+    cachedStaff = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    renderStaff();
+    setStaffMessage(`कुल ${cachedStaff.length} कर्मचारीको विवरण लोड भयो।`);
+  } catch (error) {
+    console.error("Staff load failed:", error.code || error.message);
+    body.innerHTML = '<tr><td colspan="7">विवरण लोड भएन।</td></tr>';
+    setStaffMessage(error.message || "Firebase वा Internet जाँच गर्नुहोस्।", true);
+  }
+}
+
+function renderStaff() {
+  const body = document.getElementById("staffBody");
+  if (!body) return;
+
+  const q = (document.getElementById("staffSearch")?.value || "").trim().toLowerCase();
+
+  const list = cachedStaff.filter(s =>
+    String(s.name || "").toLowerCase().includes(q) ||
+    String(s.staffId || "").toLowerCase().includes(q)
+  );
+
+  body.innerHTML = list.map(s => `
+    <tr>
+      <td>${staffText(s.staffId)}</td>
+      <td>${staffText(s.name)}</td>
+      <td>${staffText(s.role)}</td>
+      <td>${staffText(s.subject || "")}</td>
+      <td>${staffText(s.phone || "")}</td>
+      <td>${staffText(s.status || "कार्यरत")}</td>
+      <td>
+        <button type="button" data-staff-edit="${staffText(s.id)}">Edit</button>
+        <button type="button" data-staff-delete="${staffText(s.id)}">Delete</button>
+      </td>
+    </tr>
+  `).join("") || '<tr><td colspan="7">रेकर्ड भेटिएन।</td></tr>';
+} 
+document.getElementById("staffForm")?.addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const form = this;
+  const btn = document.getElementById("staffSaveBtn");
+  const editId = form.dataset.editId || "";
+
+  if (!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
+    setStaffMessage("Admin login आवश्यक छ।", true);
+    return;
+  }
+
+  const data = {
+    name: document.getElementById("staffName").value.trim(),
+    staffId: document.getElementById("staffId").value.trim(),
+    role: document.getElementById("staffRole").value,
+    subject: document.getElementById("staffSubject").value.trim(),
+    phone: document.getElementById("staffPhone").value.trim(),
+    status: document.getElementById("staffStatus").value
+  };
+
+  if (!data.name || !data.staffId || !data.role) {
+    setStaffMessage("नाम, कर्मचारी ID र पद अनिवार्य छन्।", true);
+    return;
+  }
+
+  const duplicate = cachedStaff.some(s =>
+    s.id !== editId &&
+    String(s.staffId || "").toLowerCase() === data.staffId.toLowerCase()
+  );
+
+  if (duplicate) {
+    setStaffMessage("यो कर्मचारी ID पहिल्यै प्रयोग भएको छ।", true);
+    return;
+  }
+
+  btn.disabled = true;
+
+  try {
+    if (editId) {
+      await updateDoc(doc(db, "staff", editId), {
+        ...data,
+        updatedAt: serverTimestamp(),
+        updatedBy: auth.currentUser.uid
+      });
+    } else {
+      await addDoc(collection(db, "staff"), {
+        ...data,
+        createdAt: serverTimestamp(),
+        createdBy: auth.currentUser.uid
+      });
+    }
+
+    form.reset();
+    delete form.dataset.editId;
+    btn.textContent = "Firebase मा Save गर्नुहोस्";
+    document.getElementById("staffCancelBtn").hidden = true;
+
+    await loadStaff();
+    setStaffMessage(editId ? "कर्मचारी विवरण Update भयो।" : "कर्मचारी विवरण Firebase मा सुरक्षित भयो।");
+
+  } catch (error) {
+    console.error("Staff save failed:", error.code);
+    setStaffMessage("Save/Update भएन। Internet र Firestore Rules जाँच गर्नुहोस्।", true);
+  } finally {
+    btn.disabled = false;
+  }
+}); 
+function editStaff(id) {
+  const s = cachedStaff.find(x => x.id === id);
+  if (!s) return;
+
+  document.getElementById("staffName").value = s.name || "";
+  document.getElementById("staffId").value = s.staffId || "";
+  document.getElementById("staffRole").value = s.role || "";
+  document.getElementById("staffSubject").value = s.subject || "";
+  document.getElementById("staffPhone").value = s.phone || "";
+  document.getElementById("staffStatus").value = s.status || "कार्यरत";
+
+  const form = document.getElementById("staffForm");
+  form.dataset.editId = id;
+
+  document.getElementById("staffSaveBtn").textContent = "परिवर्तन Save गर्नुहोस्";
+  document.getElementById("staffCancelBtn").hidden = false;
+  form.scrollIntoView({behavior:"smooth", block:"start"});
+  setStaffMessage("सम्पादन मोड: विवरण सच्याएर Save गर्नुहोस्।");
+}
+
+async function removeStaff(id) {
+  const s = cachedStaff.find(x => x.id === id);
+  if (!s) return;
+
+  if (!confirm(`${s.name || "यो कर्मचारी"} को विवरण Delete गर्ने?`)) return;
+
+  if (!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
+    setStaffMessage("Admin login आवश्यक छ।", true);
+    return;
+  }
+
+  try {
+    await deleteDoc(doc(db, "staff", id));
+
+    const form = document.getElementById("staffForm");
+    if (form.dataset.editId === id) {
+      form.reset();
+      delete form.dataset.editId;
+      document.getElementById("staffSaveBtn").textContent = "Firebase मा Save गर्नुहोस्";
+      document.getElementById("staffCancelBtn").hidden = true;
+    }
+
+    await loadStaff();
+    setStaffMessage("कर्मचारी विवरण Delete भयो।");
+
+  } catch (error) {
+    console.error("Staff delete failed:", error.code);
+    setStaffMessage("Delete भएन। Firestore Rules र Internet जाँच गर्नुहोस्।", true);
+  }
+}
+
+document.getElementById("staffSearchBtn")?.addEventListener("click", renderStaff);
+
+document.getElementById("staffSearch")?.addEventListener("input", renderStaff);
+
+document.getElementById("staffReloadBtn")?.addEventListener("click", loadStaff);
+
+document.getElementById("staffCancelBtn")?.addEventListener("click", function() {
+  const form = document.getElementById("staffForm");
+  form.reset();
+  delete form.dataset.editId;
+  document.getElementById("staffSaveBtn").textContent = "Firebase मा Save गर्नुहोस्";
+  this.hidden = true;
+  setStaffMessage("सम्पादन रद्द भयो।");
+});
+
+document.getElementById("staffBody")?.addEventListener("click", function(e) {
+  const edit = e.target.closest("[data-staff-edit]");
+  const del = e.target.closest("[data-staff-delete]");
+
+  if (edit) {
+    editStaff(edit.dataset.staffEdit);
+    return;
+  }
+
+  if (del) {
+    removeStaff(del.dataset.staffDelete);
+  }
+});
+
+
+
 function filterStudents(){
  const body=document.getElementById("studentsBody");if(!body)return;
  const q=(document.getElementById("studentSearch")?.value||"").trim().toLowerCase(),cl=document.getElementById("classFilter")?.value||"";
