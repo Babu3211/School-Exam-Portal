@@ -66,7 +66,7 @@ if(p==="staff")h=head(names[p],"शिक्षक तथा कर्मचा�
 </div>`;
 
 if(p==="classes")h=head(names[p],"कक्षा, Section र विषय व्यवस्थापन")+`<div class="toolbar"><input id="classSearch" placeholder="कक्षा वा विषय खोज्नुहोस्"><button class="btn" id="classSearchBtn" type="button">Search</button><button class="btn alt" id="classReloadBtn" type="button">Refresh</button></div><div id="classMessage" class="hint" role="status"></div><div class="tablewrap"><table><thead><tr><th>कक्षा</th><th>Section</th><th>विषय</th><th>Credit Hour</th><th>विषय शिक्षक</th><th>कार्य</th></tr></thead><tbody id="classesBody"><tr><td class="empty" colspan="6">Firebase बाट विवरण लोड हुँदैछ...</td></tr></tbody></table></div><div class="panel form"><h3>कक्षा तथा विषय विवरण</h3><form id="classForm"><div class="fields"><div class="field"><label for="className">कक्षा *</label><select id="className" required>${classes.map(x=>`<option value="${x}">${x}</option>`).join("")}</select></div><div class="field"><label for="classSection">Section</label><input id="classSection" maxlength="30" placeholder="A / B"></div><div class="field"><label for="classSubject">विषयको नाम *</label><input id="classSubject" required maxlength="120" placeholder="विषय"></div><div class="field"><label for="classCredit">Credit Hour</label><input id="classCredit" type="number" min="0" max="20" step="0.5" placeholder="उदाहरण: 4"></div><div class="field"><label for="classTeacher">विषय शिक्षक</label><input id="classTeacher" maxlength="120" placeholder="शिक्षकको नाम"></div></div><button class="btn" id="classSaveBtn" type="submit">Firebase मा Save गर्नुहोस्</button> <button class="btn alt" id="classCancelBtn" type="button" hidden>सम्पादन रद्द गर्नुहोस्</button></form></div>`;
-if(p==="exams")h=head(names[p],"परीक्षा सिर्जना र समयतालिका व्यवस्थापन")+note+tbl(["परीक्षा नाम","शैक्षिक वर्ष","कक्षा","सुरु मिति","अन्तिम मिति","स्थिति"])+form("नयाँ परीक्षा सिर्जना",[f("परीक्षाको नाम","प्रथम त्रैमासिक"),f("शैक्षिक वर्ष","2083"),s("कक्षा",classes),f("सुरु मिति","","date"),f("अन्तिम मिति","","date"),s("परीक्षा प्रकार",["त्रैमासिक","अर्धवार्षिक","वार्षिक","आन्तरिक"])]);
+if(p==="exams")h=head(names[p],"परीक्षा सिर्जना र समयतालिका व्यवस्थापन")+`<div class="toolbar"><input id="examSearch" placeholder="परीक्षा नाम वा कक्षा खोज्नुहोस्"><button class="btn" id="examSearchBtn" type="button">Search</button><button class="btn alt" id="examReloadBtn" type="button">Refresh</button></div><div id="examMessage" class="hint" role="status"></div><div class="tablewrap"><table><thead><tr><th>परीक्षा नाम</th><th>शैक्षिक वर्ष</th><th>कक्षा</th><th>परीक्षा प्रकार</th><th>सुरु मिति</th><th>अन्तिम मिति</th><th>स्थिति</th><th>कार्य</th></tr></thead><tbody id="examsBody"><tr><td class="empty" colspan="8">Firebase बाट विवरण लोड हुँदैछ...</td></tr></tbody></table></div><div class="panel form"><h3>नयाँ परीक्षा सिर्जना गर्नुहोस्</h3><form id="examForm"><div class="fields"><div class="field"><label for="examName">परीक्षाको नाम *</label><input id="examName" required maxlength="120" placeholder="प्रथम त्रैमासिक"></div><div class="field"><label for="examYear">शैक्षिक वर्ष *</label><input id="examYear" required maxlength="20" value="2083" placeholder="2083"></div><div class="field"><label for="examClass">कक्षा *</label><select id="examClass" required>${classes.map(x=>`<option value="${x}">${x}</option>`).join("")}</select></div><div class="field"><label for="examType">परीक्षा प्रकार *</label><select id="examType" required><option value="त्रैमासिक">त्रैमासिक</option><option value="अर्धवार्षिक">अर्धवार्षिक</option><option value="वार्षिक">वार्षिक</option><option value="आन्तरिक">आन्तरिक</option></select></div><div class="field"><label for="examStart">सुरु मिति *</label><input id="examStart" type="date" required></div><div class="field"><label for="examEnd">अन्तिम मिति *</label><input id="examEnd" type="date" required></div></div><button class="btn" id="examSaveBtn" type="submit">Firebase मा Save गर्नुहोस्</button> <button class="btn alt" id="examCancelBtn" type="button" hidden>सम्पादन रद्द गर्नुहोस्</button><p class="hint">मिति YYYY-MM-DD ढाँचामा Calendar बाट छान्नुहोस्। स्थिति मितिअनुसार आफैँ देखिन्छ।</p></form></div>`;
 if(p==="marks")h=head(names[p],"विद्यार्थीको विषयगत प्राप्ताङ्क प्रविष्टि")+note+`<div class="panel"><div class="fields">${s("परीक्षा",["परीक्षा छान्नुहोस्"])}${s("कक्षा",classes)}${s("विषय",["विषय छान्नुहोस्"])}${s("Section",["A","B","C"])}</div><p class="hint">विद्यार्थी सूची Firebase जोडिएपछि लोड हुनेछ। Marks Ledger मेनु पनि हाल यही Marks Entry पेजमा खुल्छ।</p></div><br>`+tbl(["Roll No.","विद्यार्थीको नाम","आन्तरिक","सैद्धान्तिक","प्राप्ताङ्क"]);
 if(p==="results")h=head(names[p],"नतिजा प्रकाशन, ग्रेडसिट र GPA")+note+`<div class="panel"><div class="fields">${s("परीक्षा",["परीक्षा छान्नुहोस्"])}${s("कक्षा",classes)}</div><br><button class="btn" data-action="demo">नतिजा हेर्नुहोस् (Demo)</button> <button class="btn alt" data-action="demo">Grade Sheet PDF (Demo)</button><p class="hint">Grade Sheet र Tabulation Sheet हाल यही Results पेजमा खुल्छन्।</p></div><br>`+tbl(["Roll No.","विद्यार्थीको नाम","GPA","Grade","नतिजा"]);
 if(p==="attendance")h=head(names[p],"दैनिक तथा विषयगत विद्यार्थी हाजिरी")+note+`<div class="panel"><div class="fields">${f("मिति","","date")}${s("कक्षा",classes)}${s("Section",["A","B","C"])}${s("हाजिरी प्रकार",["दैनिक","विषयगत"])}</div><p class="hint">विद्यार्थी सूची Firebase जोडिएपछि उपलब्ध हुनेछ।</p></div><br>`+tbl(["Roll No.","विद्यार्थीको नाम","हाजिरी","कैफियत"]);
@@ -75,7 +75,7 @@ if(p==="reports")h=head(names[p],"Excel Import/Export र विद्याल�
 if(p==="users")h=head(names[p],"प्रयोगकर्ता खाता र भूमिका व्यवस्थापन")+note+tbl(["प्रयोगकर्ता","Email","Role","स्थिति"])+form("नयाँ प्रयोगकर्ता",[f("पूरा नाम","नाम"),f("Email","name@example.com","email"),s("Role",["Administrator","Teacher","Exam Officer","Accountant","Viewer"])]);
 if(p==="backup")h=head(names[p],"डेटा Backup तथा Audit Log")+note+`<div class="grid two"><div class="panel"><h3>Backup Management</h3><p class="hint">Cloud backup सुविधा पछि जोडिनेछ।</p><button class="btn alt" data-action="demo">Backup (Demo)</button></div><div class="panel"><h3>Audit Log</h3><p class="hint">गतिविधि log सुविधा पछि जोडिनेछ।</p></div></div><br>`+tbl(["मिति/समय","प्रयोगकर्ता","गतिविधि","रेकर्ड"]);
 if(p==="settings")h=head(names[p],"विद्यालय विवरण र Grading Configuration")+note+form("विद्यालय विवरण",[f("विद्यालयको नाम","Mahadevasthan Secondary School"),f("IEMIS Code","300160003"),f("पालिका","Dhunibesi Municipality"),f("ठेगाना","Dhunibesi-05, Dhading"),f("शैक्षिक वर्ष","2083")])+`<div class="panel form"><h3>Grading Scale (Reference)</h3>${[["A+","90–100","4.0","Outstanding"],["A","80–below 90","3.6","Excellent"],["B+","70–below 80","3.2","Very Good"],["B","60–below 70","2.8","Good"],["C+","50–below 60","2.4","Satisfactory"],["C","40–below 50","2.0","Acceptable"],["D","35–below 40","1.6","Basic"],["NG","0–below 35","—","Not Graded"]].map(x=>`<div class="row"><span><b>${x[0]}</b><small>${x[1]} · ${x[3]}</small></span><b>${x[2]}</b></div>`).join("")}<p class="hint">यो उपलब्ध Grade VI reference हो; सबै कक्षाका लागि पुष्टि आवश्यक छ।</p></div>`;
-v.innerHTML=h;v.querySelectorAll("form.demo").forEach(frm=>frm.addEventListener("submit",e=>{e.preventDefault();alert("यो Demo हो। अहिले यो Module मा Firebase Save जोडिएको छैन।")}));if(p==="students"&&window.loadStudents)window.loadStudents();if(p==="staff"&&window.loadStaff)window.loadStaff();if(p==="classes"&&window.loadClasses)window.loadClasses();}
+v.innerHTML=h;v.querySelectorAll("form.demo").forEach(frm=>frm.addEventListener("submit",e=>{e.preventDefault();alert("यो Demo हो। अहिले यो Module मा Firebase Save जोडिएको छैन।")}));if(p==="students"&&window.loadStudents)window.loadStudents();if(p==="staff"&&window.loadStaff)window.loadStaff();if(p==="classes"&&window.loadClasses)window.loadClasses();if(p==="exams"&&window.loadExams)window.loadExams();}
 document.addEventListener("click",e=>{const pageButton=e.target.closest("[data-page]"),goButton=e.target.closest("[data-go]"),actionButton=e.target.closest("[data-action]");if(pageButton){e.preventDefault();render(pageButton.dataset.page);return}if(goButton){render(goButton.dataset.go);return}if(actionButton)alert("यो सुविधा Demo मात्र हो। वास्तविक काम गर्ने सुविधा अर्को चरणमा जोड्नुपर्छ。");});render("dashboard");
 </script>
 <script type="module">
@@ -434,7 +434,122 @@ document.addEventListener("click",event=>{
 });
 document.addEventListener("input",event=>{if(event.target.id==="classSearch")renderClasses()});
 
-onAuthStateChanged(auth,async user=>{if(user&&user.uid===ADMIN_UID){gate.style.display="none";shell.style.display="flex";statusBox.textContent="";if(window.currentPage==="students")loadStudents()}else{if(user)await signOut(auth);shell.style.display="none";gate.style.display="flex"}});
+
+// Exam management: separate Firestore collection. Existing student, staff, class,
+// marks-entry and result-calculation code is intentionally left unchanged.
+let cachedExams=[];
+function setExamMessage(message,error=false){
+ const el=document.getElementById("examMessage");
+ if(el){el.textContent=message;el.style.color=error?"#b42318":""}
+}
+function examEsc(value){
+ return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function examStatus(exam){
+ const today=new Date();today.setHours(0,0,0,0);
+ const start=new Date(`${exam.startDate}T00:00:00`);
+ const end=new Date(`${exam.endDate}T23:59:59`);
+ if(today<start)return "आगामी";
+ if(today>end)return "सम्पन्न";
+ return "सञ्चालनमा";
+}
+async function loadExams(){
+ const body=document.getElementById("examsBody");if(!body)return;
+ body.innerHTML='<tr><td class="empty" colspan="8">Firebase बाट परीक्षा विवरण लोड हुँदैछ...</td></tr>';
+ try{
+  if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw new Error("Admin login आवश्यक छ।");
+  const snap=await getDocs(collection(db,"exams"));
+  cachedExams=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.startDate||"").localeCompare(String(b.startDate||"")));
+  renderExams();
+  setExamMessage(`कुल ${cachedExams.length} परीक्षा रेकर्ड लोड भयो।`);
+ }catch(error){
+  console.error("Exam load failed:",error.code||error.message);
+  body.innerHTML='<tr><td class="empty" colspan="8">परीक्षा विवरण लोड भएन।</td></tr>';
+  setExamMessage(`लोड भएन: ${error.code||error.message||"Firebase त्रुटि"} — Firestore Rules जाँच गर्नुहोस्।`,true);
+ }
+}
+function renderExams(){
+ const body=document.getElementById("examsBody");if(!body)return;
+ const q=(document.getElementById("examSearch")?.value||"").trim().toLowerCase();
+ const rows=cachedExams.filter(x=>[x.examName,x.academicYear,x.className,x.examType].some(v=>String(v||"").toLowerCase().includes(q)));
+ body.innerHTML=rows.map(x=>`<tr><td>${examEsc(x.examName)}</td><td>${examEsc(x.academicYear)}</td><td>${examEsc(x.className)}</td><td>${examEsc(x.examType)}</td><td>${examEsc(x.startDate)}</td><td>${examEsc(x.endDate)}</td><td>${examStatus(x)}</td><td><button class="btn alt" type="button" data-exam-edit="${examEsc(x.id)}">Edit</button> <button class="btn" style="background:#b42318" type="button" data-exam-delete="${examEsc(x.id)}">Delete</button></td></tr>`).join("")||'<tr><td class="empty" colspan="8">परीक्षा रेकर्ड भेटिएन।</td></tr>';
+}
+window.loadExams=loadExams;
+document.addEventListener("submit",async event=>{
+ if(event.target.id!=="examForm")return;
+ event.preventDefault();event.stopPropagation();
+ const form=event.target,btn=document.getElementById("examSaveBtn"),editId=form.dataset.editId||"";
+ if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){setExamMessage("Admin login आवश्यक छ।",true);return}
+ const data={
+  examName:document.getElementById("examName").value.trim(),
+  academicYear:document.getElementById("examYear").value.trim(),
+  className:document.getElementById("examClass").value,
+  examType:document.getElementById("examType").value,
+  startDate:document.getElementById("examStart").value,
+  endDate:document.getElementById("examEnd").value
+ };
+ if(!data.examName||!data.academicYear||!data.startDate||!data.endDate){setExamMessage("परीक्षाको नाम, शैक्षिक वर्ष र दुवै मिति अनिवार्य छन्।",true);return}
+ if(data.endDate<data.startDate){setExamMessage("अन्तिम मिति सुरु मितिभन्दा अगाडिको हुन मिल्दैन।",true);return}
+ const duplicate=cachedExams.some(x=>x.id!==editId&&String(x.examName).toLowerCase()===data.examName.toLowerCase()&&String(x.academicYear)===data.academicYear&&String(x.className)===data.className);
+ if(duplicate){setExamMessage("यो शैक्षिक वर्ष र कक्षाका लागि यही नामको परीक्षा पहिल्यै छ।",true);return}
+ btn.disabled=true;btn.textContent=editId?"Update हुँदैछ...":"Save हुँदैछ...";
+ setExamMessage("Firebase मा परीक्षा विवरण सुरक्षित हुँदैछ...");
+ try{
+  if(editId)await updateDoc(doc(db,"exams",editId),{...data,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});
+  else await addDoc(collection(db,"exams"),{...data,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});
+  form.reset();delete form.dataset.editId;
+  document.getElementById("examYear").value="2083";
+  document.getElementById("examSaveBtn").textContent="Firebase मा Save गर्नुहोस्";
+  document.getElementById("examCancelBtn").hidden=true;
+  await loadExams();
+  setExamMessage(editId?"परीक्षा विवरण Update भयो।":"परीक्षा विवरण Firebase मा सुरक्षित भयो।");
+ }catch(error){
+  console.error("Exam save failed:",error.code||error.message,error);
+  setExamMessage(`Save भएन: ${error.code||error.message||"Firebase त्रुटि"}। Firestore Rules जाँच गर्नुहोस्।`,true);
+ }finally{btn.disabled=false;if(!form.dataset.editId)btn.textContent="Firebase मा Save गर्नुहोस्"}
+});
+function editExam(id){
+ const x=cachedExams.find(v=>v.id===id);if(!x)return;
+ document.getElementById("examName").value=x.examName||"";
+ document.getElementById("examYear").value=x.academicYear||"2083";
+ document.getElementById("examClass").value=x.className||"कक्षा १";
+ document.getElementById("examType").value=x.examType||"त्रैमासिक";
+ document.getElementById("examStart").value=x.startDate||"";
+ document.getElementById("examEnd").value=x.endDate||"";
+ const form=document.getElementById("examForm");form.dataset.editId=id;
+ document.getElementById("examSaveBtn").textContent="परिवर्तन Save गर्नुहोस्";
+ document.getElementById("examCancelBtn").hidden=false;
+ form.scrollIntoView({behavior:"smooth",block:"start"});
+ setExamMessage("सम्पादन मोड: विवरण सच्याएर Save गर्नुहोस्।");
+}
+async function deleteExam(id){
+ const x=cachedExams.find(v=>v.id===id);if(!x||!confirm(`${x.examName} - ${x.className} को परीक्षा Delete गर्ने?`))return;
+ if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){setExamMessage("Admin login आवश्यक छ।",true);return}
+ try{
+  await deleteDoc(doc(db,"exams",id));
+  const form=document.getElementById("examForm");
+  if(form?.dataset.editId===id){form.reset();delete form.dataset.editId;document.getElementById("examYear").value="2083";document.getElementById("examSaveBtn").textContent="Firebase मा Save गर्नुहोस्";document.getElementById("examCancelBtn").hidden=true}
+  await loadExams();setExamMessage("परीक्षा रेकर्ड Delete भयो।");
+ }catch(error){
+  console.error("Exam delete failed:",error.code||error.message);
+  setExamMessage(`Delete भएन: ${error.code||error.message||"Firebase त्रुटि"}`,true);
+ }
+}
+document.addEventListener("click",event=>{
+ if(event.target.closest("#examReloadBtn")){loadExams();return}
+ if(event.target.closest("#examSearchBtn")){renderExams();return}
+ if(event.target.closest("#examCancelBtn")){
+  const form=document.getElementById("examForm");
+  if(form){form.reset();delete form.dataset.editId;document.getElementById("examYear").value="2083";document.getElementById("examSaveBtn").textContent="Firebase मा Save गर्नुहोस्";document.getElementById("examCancelBtn").hidden=true;setExamMessage("सम्पादन रद्द भयो।")}
+  return;
+ }
+ const edit=event.target.closest("[data-exam-edit]"),del=event.target.closest("[data-exam-delete]");
+ if(edit){editExam(edit.dataset.examEdit);return}
+ if(del)deleteExam(del.dataset.examDelete);
+});
+document.addEventListener("input",event=>{if(event.target.id==="examSearch")renderExams()});
+
+onAuthStateChanged(auth,async user=>{if(user&&user.uid===ADMIN_UID){gate.style.display="none";shell.style.display="flex";statusBox.textContent="";if(window.currentPage==="students")loadStudents();if(window.currentPage==="exams")loadExams();if(window.currentPage==="classes")loadClasses()}else{if(user)await signOut(auth);shell.style.display="none";gate.style.display="flex"}});
 </script>
 </body>
 </html>
