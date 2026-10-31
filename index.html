@@ -75,7 +75,7 @@ if(p==="reports")h=head(names[p],"Excel Import/Export र विद्याल�
 if(p==="users")h=head(names[p],"प्रयोगकर्ता खाता र भूमिका व्यवस्थापन")+note+tbl(["प्रयोगकर्ता","Email","Role","स्थिति"])+form("नयाँ प्रयोगकर्ता",[f("पूरा नाम","नाम"),f("Email","name@example.com","email"),s("Role",["Administrator","Teacher","Exam Officer","Accountant","Viewer"])]);
 if(p==="backup")h=head(names[p],"डेटा Backup तथा Audit Log")+note+`<div class="grid two"><div class="panel"><h3>Backup Management</h3><p class="hint">Cloud backup सुविधा पछि जोडिनेछ।</p><button class="btn alt" data-action="demo">Backup (Demo)</button></div><div class="panel"><h3>Audit Log</h3><p class="hint">गतिविधि log सुविधा पछि जोडिनेछ।</p></div></div><br>`+tbl(["मिति/समय","प्रयोगकर्ता","गतिविधि","रेकर्ड"]);
 if(p==="settings")h=head(names[p],"विद्यालय विवरण र Grading Configuration")+note+form("विद्यालय विवरण",[f("विद्यालयको नाम","Mahadevasthan Secondary School"),f("IEMIS Code","300160003"),f("पालिका","Dhunibesi Municipality"),f("ठेगाना","Dhunibesi-05, Dhading"),f("शैक्षिक वर्ष","2083")])+`<div class="panel form"><h3>Grading Scale (Reference)</h3>${[["A+","90–100","4.0","Outstanding"],["A","80–below 90","3.6","Excellent"],["B+","70–below 80","3.2","Very Good"],["B","60–below 70","2.8","Good"],["C+","50–below 60","2.4","Satisfactory"],["C","40–below 50","2.0","Acceptable"],["D","35–below 40","1.6","Basic"],["NG","0–below 35","—","Not Graded"]].map(x=>`<div class="row"><span><b>${x[0]}</b><small>${x[1]} · ${x[3]}</small></span><b>${x[2]}</b></div>`).join("")}<p class="hint">यो उपलब्ध Grade VI reference हो; सबै कक्षाका लागि पुष्टि आवश्यक छ।</p></div>`;
-v.innerHTML=h;v.querySelectorAll("form.demo").forEach(frm=>frm.addEventListener("submit",e=>{e.preventDefault();alert("यो Demo हो। अहिले यो Module मा Firebase Save जोडिएको छैन।")}));if(p==="students"&&window.loadStudents)window.loadStudents();}
+v.innerHTML=h;v.querySelectorAll("form.demo").forEach(frm=>frm.addEventListener("submit",e=>{e.preventDefault();alert("यो Demo हो। अहिले यो Module मा Firebase Save जोडिएको छैन।")}));if(p==="students"&&window.loadStudents)window.loadStudents();if(p==="staff"&&window.loadStaff)window.loadStaff();}
 document.addEventListener("click",e=>{const pageButton=e.target.closest("[data-page]"),goButton=e.target.closest("[data-go]"),actionButton=e.target.closest("[data-action]");if(pageButton){e.preventDefault();render(pageButton.dataset.page);return}if(goButton){render(goButton.dataset.go);return}if(actionButton)alert("यो सुविधा Demo मात्र हो। वास्तविक काम गर्ने सुविधा अर्को चरणमा जोड्नुपर्छ。");});render("dashboard");
 </script>
 <script type="module">
@@ -157,10 +157,14 @@ function renderStaff() {
     </tr>
   `).join("") || '<tr><td colspan="7">रेकर्ड भेटिएन।</td></tr>';
 } 
-document.getElementById("staffForm")?.addEventListener("submit", async function(e) {
-  e.preventDefault();
+window.loadStaff = loadStaff;
 
-  const form = this;
+document.addEventListener("submit", async event => {
+  if (event.target.id !== "staffForm") return;
+  event.preventDefault();
+  event.stopPropagation();
+
+  const form = event.target;
   const btn = document.getElementById("staffSaveBtn");
   const editId = form.dataset.editId || "";
 
@@ -187,14 +191,14 @@ document.getElementById("staffForm")?.addEventListener("submit", async function(
     s.id !== editId &&
     String(s.staffId || "").toLowerCase() === data.staffId.toLowerCase()
   );
-
   if (duplicate) {
     setStaffMessage("यो कर्मचारी ID पहिल्यै प्रयोग भएको छ।", true);
     return;
   }
 
   btn.disabled = true;
-
+  btn.textContent = editId ? "Update हुँदैछ..." : "Save हुँदैछ...";
+  setStaffMessage("Firebase मा सुरक्षित हुँदैछ...");
   try {
     if (editId) {
       await updateDoc(doc(db, "staff", editId), {
@@ -214,17 +218,50 @@ document.getElementById("staffForm")?.addEventListener("submit", async function(
     delete form.dataset.editId;
     btn.textContent = "Firebase मा Save गर्नुहोस्";
     document.getElementById("staffCancelBtn").hidden = true;
-
     await loadStaff();
     setStaffMessage(editId ? "कर्मचारी विवरण Update भयो।" : "कर्मचारी विवरण Firebase मा सुरक्षित भयो।");
-
   } catch (error) {
-    console.error("Staff save failed:", error.code);
-    setStaffMessage("Save/Update भएन। Internet र Firestore Rules जाँच गर्नुहोस्।", true);
+    console.error("Staff save failed:", error.code || error.message, error);
+    setStaffMessage(`Save भएन: ${error.code || error.message || "Firebase त्रुटि"}`, true);
   } finally {
     btn.disabled = false;
+    btn.textContent = form.dataset.editId ? "परिवर्तन Save गर्नुहोस्" : "Firebase मा Save गर्नुहोस्";
   }
-}); 
+});
+
+document.addEventListener("click", event => {
+  const target = event.target;
+  if (target.closest("#staffReloadBtn")) {
+    loadStaff();
+    return;
+  }
+  if (target.closest("#staffSearchBtn")) {
+    renderStaff();
+    return;
+  }
+  if (target.closest("#staffCancelBtn")) {
+    const form = document.getElementById("staffForm");
+    if (!form) return;
+    form.reset();
+    delete form.dataset.editId;
+    document.getElementById("staffSaveBtn").textContent = "Firebase मा Save गर्नुहोस्";
+    document.getElementById("staffCancelBtn").hidden = true;
+    setStaffMessage("सम्पादन रद्द भयो।");
+    return;
+  }
+  const edit = target.closest("[data-staff-edit]");
+  const del = target.closest("[data-staff-delete]");
+  if (edit) {
+    editStaff(edit.dataset.staffEdit);
+    return;
+  }
+  if (del) removeStaff(del.dataset.staffDelete);
+});
+
+document.addEventListener("input", event => {
+  if (event.target.id === "staffSearch") renderStaff();
+});
+
 function editStaff(id) {
   const s = cachedStaff.find(x => x.id === id);
   if (!s) return;
@@ -260,7 +297,7 @@ async function removeStaff(id) {
     await deleteDoc(doc(db, "staff", id));
 
     const form = document.getElementById("staffForm");
-    if (form.dataset.editId === id) {
+    if (form && form.dataset.editId === id) {
       form.reset();
       delete form.dataset.editId;
       document.getElementById("staffSaveBtn").textContent = "Firebase मा Save गर्नुहोस्";
@@ -276,38 +313,7 @@ async function removeStaff(id) {
   }
 }
 
-document.getElementById("staffSearchBtn")?.addEventListener("click", renderStaff);
-
-document.getElementById("staffSearch")?.addEventListener("input", renderStaff);
-
-document.addEventListener("click", function(event) {
-  if (event.target.closest("#staffReloadBtn")) {
-    loadStaff();
-  }
-});
-
-document.getElementById("staffCancelBtn")?.addEventListener("click", function() {
-  const form = document.getElementById("staffForm");
-  form.reset();
-  delete form.dataset.editId;
-  document.getElementById("staffSaveBtn").textContent = "Firebase मा Save गर्नुहोस्";
-  this.hidden = true;
-  setStaffMessage("सम्पादन रद्द भयो।");
-});
-
-document.getElementById("staffBody")?.addEventListener("click", function(e) {
-  const edit = e.target.closest("[data-staff-edit]");
-  const del = e.target.closest("[data-staff-delete]");
-
-  if (edit) {
-    editStaff(edit.dataset.staffEdit);
-    return;
-  }
-
-  if (del) {
-    removeStaff(del.dataset.staffDelete);
-  }
-});
+/* पुराना duplicate Staff listeners हटाइएको छ; माथिको delegated listeners मात्र प्रयोग हुन्छन्। */
 
 
 
