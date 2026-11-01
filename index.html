@@ -15,6 +15,7 @@
 @media print{body{background:#fff}.side,.top,#loginGate,.footer,.notice,.toolbar,#resultMessage{display:none!important}.app{display:block!important}.content{padding:0;max-width:none}.panel{box-shadow:none;border:0}.panel:not(:last-child){display:none!important}#gradeSheetView{display:block!important}#gradeSheetView table{min-width:0}#gradeSheetView th,#gradeSheetView td{font-size:11px;padding:7px}}
 
 .social-credit{margin-top:18px;padding-top:16px;border-top:1px solid #e7edf5;text-align:center;color:#66758a;font-size:13px;line-height:1.7}.social-credit strong{color:#2457c5;font-weight:900}.social-links{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:10px 0}.social-links a{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:12px;text-decoration:none;font-weight:800;border:2px solid}.social-links .youtube{color:#b4232b;background:#fff5f5;border-color:#f7c9cc}.social-links .facebook{color:#2457c5;background:#f2f7ff;border-color:#c7dcfb}.social-copy{color:#98a4b5;font-size:11px}.login-card{max-width:480px}.login-social{margin-top:20px}.dashboard-social{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;padding:12px 18px;margin:0 22px 8px;background:#f7faff;border:1px solid #e0eaf7;border-radius:12px;color:#66758a;font-size:11px}.dashboard-social .social-links{margin:0}.dashboard-social .social-links a{padding:6px 10px;font-size:11px}.dashboard-social strong{color:#2457c5}.side-social{margin-top:12px;padding:12px 6px 4px;border-top:1px solid var(--line);text-align:center;font-size:10px;color:var(--muted);line-height:1.6}.side-social .social-links{gap:5px;margin:7px 0}.side-social .social-links a{padding:5px 7px;font-size:10px;border-width:1px}@media(max-width:700px){.dashboard-social{margin:0 12px 8px;justify-content:center;text-align:center}.side-social{display:none}.login-card{max-width:480px;padding:24px}.social-links a{padding:8px 11px}}
+#nav .menu-group[style*="display: none"]{display:none!important}
 </style>
 </head>
 <body>
@@ -98,7 +99,29 @@ const canTeachSubject=(cl,sub)=>isAdmin()||(currentUserRole?.subjectAssignmentKe
 const canTakeDailyAttendance=cl=>isAdmin()||(roleHas("class_teacher")&&(currentUserRole?.classTeacherClassNames||[]).includes(cl));
 function requireAdmin(){if(!isAdmin())throw new Error("यो सुविधा Admin का लागि मात्र हो।");}
 function rolePageAllowed(page){if(isAdmin())return true;if(!currentUserRole||currentUserRole.active!==true)return false;if(page==="attendance")return roleHas("class_teacher")&&(currentUserRole.classTeacherClassNames||[]).length>0;if(page==="marks")return roleHas("subject_teacher")&&(currentUserRole.subjectAssignments||[]).length>0;return false;}
-function applyRoleNavigation(){const teacher=!isAdmin();window.currentUserIsTeacher=teacher;window.rolePageAllowed=rolePageAllowed;document.querySelectorAll("[data-page]").forEach(b=>{b.style.display=rolePageAllowed(b.dataset.page)?"":"none";});document.querySelectorAll("[data-go]").forEach(b=>{b.style.display=rolePageAllowed(b.dataset.go)?"":"none";});const ledger=document.getElementById("marksLedgerPanel")||document.getElementById("ledgerViewExam")?.closest(".panel");if(ledger)ledger.style.display=teacher?"none":"";if(teacher&&!rolePageAllowed(window.currentPage)){const target=rolePageAllowed("attendance")?"attendance":"marks";render(target);}}
+function applyRoleNavigation(){
+ const teacher=!isAdmin();
+ window.currentUserIsTeacher=teacher;
+ window.rolePageAllowed=rolePageAllowed;
+ // Hide every navigation/action entry outside the signed-in user's assigned role.
+ document.querySelectorAll("[data-page]").forEach(b=>{b.style.display=rolePageAllowed(b.dataset.page)?"":"none";});
+ document.querySelectorAll("[data-go]").forEach(b=>{b.style.display=rolePageAllowed(b.dataset.go)?"":"none";});
+ // Hide whole menu groups when none of their child pages are permitted.
+ document.querySelectorAll("#nav .menu-group").forEach(group=>{
+  const permitted=[...group.querySelectorAll("[data-page]")].some(b=>rolePageAllowed(b.dataset.page));
+  group.style.display=permitted?"":"none";
+  if(!permitted)group.open=false;
+ });
+ // The Administration section contains only Admin-level functions in this portal.
+ const navLabels=[...document.querySelectorAll("#nav > .label")];
+ if(navLabels.length>1)navLabels[1].style.display=teacher?"none":"";
+ const ledger=document.getElementById("marksLedgerPanel")||document.getElementById("ledgerViewExam")?.closest(".panel");
+ if(ledger)ledger.style.display=teacher?"none":"";
+ if(teacher&&!rolePageAllowed(window.currentPage)){
+  const target=rolePageAllowed("attendance")?"attendance":(rolePageAllowed("marks")?"marks":null);
+  if(target)render(target);
+ }
+}
 const provisioningApp=initializeApp(firebaseConfig,"userProvisioning"),provisioningAuth=getAuth(provisioningApp);
 let currentSchoolSettings={schoolName:"Mahadevasthan Secondary School",iemisCode:"300160003",municipality:"Dhunibesi Municipality",address:"Dhunibesi-05, Dhading",academicYear:"2083"};
 function schoolSettingMessage(msg,isError=false){const el=document.getElementById("schoolSettingsMessage");if(el){el.textContent=msg;el.style.color=isError?"#b42318":"#718096"}}
