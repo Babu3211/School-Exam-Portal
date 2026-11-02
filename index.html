@@ -548,7 +548,7 @@ function renderClasses(){
  const body=document.getElementById("classesBody");if(!body)return;
  const q=(document.getElementById("classSearch")?.value||"").trim().toLowerCase();
  const rows=cachedClasses.filter(x=>[x.className,x.section,x.subject,x.teacher].some(v=>String(v||"").toLowerCase().includes(q)));
- body.innerHTML=rows.map(x=>`<tr><td>${classEsc(classEnglishLabel(x.className))}</td><td>${classEsc(x.section||"—")}</td><td>${classEsc(subjectEnglishLabel(x.subject))}</td><td>${classEsc(x.creditHour??"—")}</td><td>${classEsc(x.teacher||"—")}</td><td>${x.active===false?'<span style="color:#b42318">निष्क्रिय</span>':'<span style="color:#16803c">सक्रिय</span>'}<br><button class="btn alt" type="button" data-class-edit="${classEsc(x.id)}">Edit</button> ${x.active===false?`<button class="btn" type="button" data-class-restore="${classEsc(x.id)}">Restore</button>`:`<button class="btn" style="background:#b42318" type="button" data-class-delete="${classEsc(x.id)}">निष्क्रिय</button>`}</td></tr>`).join("")||'<tr><td class="empty" colspan="6">रेकर्ड भेटिएन।</td></tr>';
+ body.innerHTML=rows.map(x=>`<tr><td>${classEsc(classEnglishLabel(x.className))}</td><td>${classEsc(x.section||"—")}</td><td>${classEsc(subjectEnglishLabel(x.subject))}</td><td>${classEsc(x.creditHour??"—")}</td><td>${classEsc(x.teacher||"—")}</td><td><button class="btn alt" type="button" data-class-edit="${classEsc(x.id)}">Edit</button> <button class="btn" style="background:#b42318" type="button" data-class-delete="${classEsc(x.id)}">Delete</button></td></tr>`).join("")||'<tr><td class="empty" colspan="6">रेकर्ड भेटिएन।</td></tr>';
 }
 window.loadClasses=loadClasses;
 document.addEventListener("submit",async event=>{
@@ -570,7 +570,7 @@ document.addEventListener("submit",async event=>{
  btn.disabled=true;btn.textContent=editId?"Update हुँदैछ...":"Save हुँदैछ...";setClassMessage("Firebase मा सुरक्षित हुँदैछ...");
  try{
   if(editId)await updateDoc(doc(db,"classes",editId),{...data,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});
-  else await addDoc(collection(db,"classes"),{...data,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});
+  else await addDoc(collection(db,"classes"),{...data,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});
   form.reset();delete form.dataset.editId;document.getElementById("classCancelBtn").hidden=true;
   await loadClasses();setClassMessage(editId?"कक्षा/विषय विवरण Update भयो।":"कक्षा/विषय विवरण Firebase मा सुरक्षित भयो।");
  }catch(error){
@@ -591,24 +591,20 @@ function editClass(id){
  setClassMessage("सम्पादन मोड: विवरण सच्याएर Save गर्नुहोस्।");
 }
 async function deleteClass(id){
- const x=cachedClasses.find(v=>v.id===id);if(!x)return;
- if(!confirm(`${x.className} - ${x.subject} लाई निष्क्रिय गर्ने? पुराना Marks/Settings सुरक्षित रहनेछन् र विषय सूचीबाट मात्र हट्नेछ।`))return;
+ const x=cachedClasses.find(v=>v.id===id);if(!x||!confirm(`${x.className} - ${x.subject} को रेकर्ड Delete गर्ने?`))return;
  if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){setClassMessage("Admin login आवश्यक छ।",true);return}
- try{await updateDoc(doc(db,"classes",id),{active:false,archivedAt:serverTimestamp(),archivedBy:auth.currentUser.uid});await loadClasses();setClassMessage("विषय निष्क्रिय भयो। पुराना Marks र Settings सुरक्षित छन्।");}
- catch(error){console.error("Class archive failed:",error.code||error.message);setClassMessage(`निष्क्रिय गर्न सकिएन: ${error.code||error.message||"Firebase त्रुटि"}`,true)}
-}
-async function restoreClass(id){
- const x=cachedClasses.find(v=>v.id===id);if(!x)return;
- if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){setClassMessage("Admin login आवश्यक छ।",true);return}
- try{await updateDoc(doc(db,"classes",id),{active:true,restoredAt:serverTimestamp(),restoredBy:auth.currentUser.uid});await loadClasses();setClassMessage("विषय पुनः सक्रिय भयो।");}
- catch(error){console.error("Class restore failed:",error);setClassMessage(`Restore भएन: ${error.code||error.message}`,true)}
+ try{
+  await deleteDoc(doc(db,"classes",id));
+  const form=document.getElementById("classForm");if(form?.dataset.editId===id){form.reset();delete form.dataset.editId;document.getElementById("classSaveBtn").textContent="Firebase मा Save गर्नुहोस्";document.getElementById("classCancelBtn").hidden=true}
+  await loadClasses();setClassMessage("कक्षा/विषय रेकर्ड Delete भयो।");
+ }catch(error){console.error("Class delete failed:",error.code||error.message);setClassMessage(`Delete भएन: ${error.code||error.message||"Firebase त्रुटि"}`,true)}
 }
 document.addEventListener("click",event=>{
  if(event.target.closest("#classReloadBtn")){loadClasses();return}
  if(event.target.closest("#classSearchBtn")){renderClasses();return}
  if(event.target.closest("#classCancelBtn")){const form=document.getElementById("classForm");if(form){form.reset();delete form.dataset.editId;document.getElementById("classSaveBtn").textContent="Firebase मा Save गर्नुहोस्";document.getElementById("classCancelBtn").hidden=true;setClassMessage("सम्पादन रद्द भयो।")}return}
- const edit=event.target.closest("[data-class-edit]"),del=event.target.closest("[data-class-delete]"),restore=event.target.closest("[data-class-restore]");
- if(edit){editClass(edit.dataset.classEdit);return}if(del){deleteClass(del.dataset.classDelete);return}if(restore)restoreClass(restore.dataset.classRestore);
+ const edit=event.target.closest("[data-class-edit]"),del=event.target.closest("[data-class-delete]");
+ if(edit){editClass(edit.dataset.classEdit);return}if(del)deleteClass(del.dataset.classDelete);
 });
 document.addEventListener("input",event=>{if(event.target.id==="classSearch")renderClasses()});
 
@@ -731,17 +727,6 @@ document.addEventListener("input",event=>{if(event.target.id==="examSearch")rend
 
 // Assessment settings: editable evaluation components and full marks.
 // Stored separately; does not modify existing marks/results calculations.
-// Dynamic subject registry: class-specific subjects come from the existing Classes collection.
-// Existing marks/settings are retained when a subject is removed from the active class list.
-function classNoFromName(value){const m=String(value??'').replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d))).match(/[0-9]+/);return m?String(Number(m[0])):''}
-function classSubjectNames(classNo,group){
- const rows=(cachedClasses||[]).filter(x=>{const n=Number(classNoFromName(x.className));if(group==='6-8')return n>=6&&n<=8;if(group==='9-10')return n>=9&&n<=10;return classNoFromName(x.className)===String(classNo)});
- const fromClasses=rows.filter(x=>x.active!==false).map(x=>String(x.subject||'').trim()).filter(Boolean);
- const source=typeof markSettingsCache!=='undefined'?markSettingsCache:(typeof marksSettings!=='undefined'?marksSettings:[]);
- const fromSettings=source.filter(x=>x.classGroup===group&&(!x.className||String(x.className)===String(classNo))).map(x=>String(x.subject||'').trim()).filter(Boolean);
- const canonical=new Map();[...fromClasses,...fromSettings].forEach(v=>{const k=canonicalSubjectKey(v);if(k&&!canonical.has(k))canonical.set(k,k==='हाम्रो धुनिबेँशी'?'हाम्रो धुनिबेँशी':v)});return [...canonical.values()];
-}
-function activeSubjectsForClass(classNo,group){const dynamic=classSubjectNames(classNo,group),hasClassRegistry=(cachedClasses||[]).some(x=>{const n=Number(classNoFromName(x.className));return group==='6-8'?n>=6&&n<=8:group==='9-10'?n>=9&&n<=10:classNoFromName(x.className)===String(classNo)});const source=hasClassRegistry?dynamic:(markSubjects[group]||[]);const merged=new Map();source.forEach(v=>{const k=canonicalSubjectKey(v);if(k&&!merged.has(k))merged.set(k,k==='हाम्रो धुनिबेँशी'?'हाम्रो धुनिबेँशी':v)});return [...merged.values()];}
 const markSubjects={
  "1-3":["नेपाली","अंग्रेजी","गणित","सेरोफेरो","हाम्रो धुनिबेँशी","कम्प्युटर"],
  "4-5":["नेपाली","अंग्रेजी","गणित","विज्ञान तथा प्रविधि","सामाजिक अध्ययन तथा मानव मूल्य शिक्षा","स्वास्थ्य शारीरिक तथा सिर्जनात्मक कला","हाम्रो धुनिबेँशी","कम्प्युटर"],
@@ -802,9 +787,7 @@ function updateMarkSubjectOptions(){
  const group=document.getElementById("markGroup"),subject=document.getElementById("markSubject");
  if(!group||!subject)return;
  const cw=document.getElementById("markClassWrap"),cs=document.getElementById("markClass");const achGroup=["1-3","4-5"].includes(group.value);if(cw)cw.hidden=!achGroup;if(cs){const opts=group.value==="1-3"?[1,2,3]:group.value==="4-5"?[4,5]:[];const keep=cs.value;cs.innerHTML=opts.map(n=>`<option value="${n}">Class ${n}</option>`).join("");if(opts.length){if(opts.includes(Number(keep)))cs.value=keep;else cs.value=String(opts[0]);}}
- const classNo=markSettingClass();
- const subjectOptions=achGroup?activeSubjectsForClass(classNo,group.value):activeSubjectsForClass(group.value==="6-8"?"6":"9",group.value);
- subject.innerHTML=subjectOptions.map(x=>`<option value="${examEsc(x)}">${examEsc(subjectEnglishLabel(x))}</option>`).join("");
+ subject.innerHTML=markSubjects[group.value].map(x=>`<option value="${examEsc(x)}">${examEsc(subjectEnglishLabel(x))}</option>`).join("");
  const classNo=markSettingClass();const found=markSettingsCache.find(x=>x.classGroup===group.value&&canonicalSubjectKey(x.subject)===canonicalSubjectKey(subject.value)&&String(x.className||'')===classNo)||markSettingsCache.find(x=>x.classGroup===group.value&&canonicalSubjectKey(x.subject)===canonicalSubjectKey(subject.value)&&!x.className);
  const ach=['1-3','4-5'].includes(group.value);renderMarkParts(found?.components||(ach?achievementParts(group.value,subject.value,classNo):defaultMarkParts(group.value,subject.value)));
 }
@@ -813,9 +796,8 @@ async function loadMarkSettings(){
  body.innerHTML='<tr><td class="empty" colspan="5">Firebase बाट सेटिङ लोड हुँदैछ...</td></tr>';
  try{
   if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw new Error("Admin login आवश्यक छ।");
-  const [snap,classSnap]=await Promise.all([getDocs(collection(db,"mark_settings")),getDocs(collection(db,"classes"))]);
+  const snap=await getDocs(collection(db,"mark_settings"));
   markSettingsCache=snap.docs.map(d=>({id:d.id,...d.data()}));
-  cachedClasses=classSnap.docs.map(d=>({id:d.id,...d.data()}));
   body.innerHTML=markSettingsCache.map(x=>`<tr><td>${examEsc(({"1-3":"Class 1–3","4-5":"Class 4–5","6-8":"Class 6–8","9-10":"Class 9–10"})[x.classGroup]||x.classGroup)}${x.className?" — "+examEsc(x.className):""}</td><td>${examEsc(subjectEnglishLabel(x.subject))}</td><td>${(x.components||[]).map(c=>`${examEsc(c.name)} (${Number(c.fullMarks)})`).join("<br>")}</td><td>${(x.components||[]).reduce((a,c)=>a+Number(c.fullMarks||0),0)}</td><td><button class="btn alt" type="button" data-mark-edit="${examEsc(x.id)}">Edit</button></td></tr>`).join("")||'<tr><td class="empty" colspan="5">अहिलेसम्म कुनै सेटिङ Save गरिएको छैन।</td></tr>';
   markMsg(`कुल ${markSettingsCache.length} मूल्याङ्कन सेटिङ लोड भयो।`);
  }catch(error){
@@ -888,8 +870,7 @@ function fillEntrySubjects(){const cl=document.getElementById('entryClass')?.val
 
 async function loadMarksLedgerPage(){requireAdmin();const examSel=document.getElementById('ledgerViewExam');if(!examSel)return;const msg=document.getElementById('ledgerViewMessage');try{const [ss,es,ms,settings]=await Promise.all([getDocs(collection(db,'students')),getDocs(collection(db,'exams')),getDocs(collection(db,'marks')),getDocs(collection(db,'mark_settings'))]);marksStudents=ss.docs.map(d=>({id:d.id,...d.data()}));marksExams=es.docs.map(d=>({id:d.id,...d.data()}));existingMarks=ms.docs.map(d=>({id:d.id,...d.data()}));marksSettings=settings.docs.map(d=>({id:d.id,...d.data()}));examSel.innerHTML='<option value="">परीक्षा छान्नुहोस्</option>'+marksExams.map(x=>`<option value="${examEsc(x.id)}">${examEsc(x.examName)} — ${examEsc(x.className)}</option>`).join('');if(msg)msg.textContent=`${marksStudents.length} विद्यार्थी र ${existingMarks.length} Marks records लोड भए।`;}catch(err){console.error(err);if(msg)msg.textContent=`Ledger लोड भएन: ${err.code||err.message}`;}}
 window.loadMarksLedgerPage=loadMarksLedgerPage;
-function ledgerSubjectsForClass(cl,group){const no=classNoFromName(cl),fromClass=classSubjectNames(no,group),hasRegistry=(cachedClasses||[]).some(x=>{const n=Number(classNoFromName(x.className));return group==='6-8'?n>=6&&n<=8:group==='9-10'?n>=9&&n<=10:classNoFromName(x.className)===no}),base=hasRegistry?fromClass:(ledgerSubjectOrder[group]||[]),result=new Map();base.forEach(v=>{const k=canonicalSubjectKey(v);if(k&&!result.has(k))result.set(k,v)});return [...result.values()];}
-function renderMarksLedgerPage(){requireAdmin();const cl=document.getElementById('ledgerViewClass')?.value,examId=document.getElementById('ledgerViewExam')?.value,exam=marksExams.find(x=>x.id===examId),body=document.getElementById('ledgerViewBody'),head=document.getElementById('ledgerViewHead'),msg=document.getElementById('ledgerViewMessage');if(!cl||!examId||!exam){if(msg)msg.textContent='कक्षा र परीक्षा छान्नुहोस्।';return}if(exam.className!==cl){if(msg)msg.textContent='छानिएको कक्षा र परीक्षा मिलेन।';return}const group=ledgerGroupForClass(cl),subjects=ledgerSubjectsForClass(cl,group),achievement=['1-3','4-5'].includes(group),students=marksStudents.filter(x=>x.class===cl).sort((a,b)=>Number(a.rollNo)-Number(b.rollNo));const subHeads=achievement?subjects.map(sub=>`<th colspan="3">${examEsc(sub)}</th>`).join(''):subjects.map(x=>`<th>${examEsc(x)}</th>`).join('');const second=achievement?'<tr><th>Roll No.</th><th>विद्यार्थी</th>'+subjects.map(()=>'<th>No. of Learning Achievement</th><th>Full Marks</th><th>Obtained Learning Achievement</th>').join('')+'</tr>':'';head.innerHTML=(achievement?'<tr><th rowspan="2">Roll No.</th><th rowspan="2">विद्यार्थी</th>'+subHeads+'</tr>'+second:'<tr><th>Roll No.</th><th>विद्यार्थी</th>'+subHeads+'</tr>');body.innerHTML=students.map(st=>'<tr><td>'+examEsc(st.rollNo||'')+'</td><td>'+examEsc(st.studentName||st.name||'')+'</td>'+subjects.map(sub=>{const rec=existingMarks.find(m=>m.studentId===st.id&&m.examId===examId&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(sub)),scores=rec?.scores||[];if(achievement){const total=scores.find(v=>/no\.?\s*of\s*learning/i.test(String(v.name||''))),fm=scores.find(v=>/^Full Marks$/i.test(String(v.name||''))),obt=scores.find(v=>/obtained learning/i.test(String(v.name||'')));const count=total?.obtained??total?.fullMarks??'';return `<td>${count}</td><td>${fm?.fullMarks??(count!==''?Number(count)*4:'')}</td><td>${obt?.obtained??''}</td>`}return `<td>${rec?`${Number(rec.totalObtained??0)} / ${Number(rec.totalFullMarks??0)}`:'—'}</td>`}).join('')+'</tr>').join('')||`<tr><td class="empty" colspan="${subjects.length*(achievement?3:1)+2}">यस कक्षामा विद्यार्थी भेटिएनन्।</td></tr>`;if(msg)msg.textContent=`${cl} · ${exam.examName} — ${students.length} विद्यार्थी, ${subjects.length} विषय।`;}
+function renderMarksLedgerPage(){requireAdmin();const cl=document.getElementById('ledgerViewClass')?.value,examId=document.getElementById('ledgerViewExam')?.value,exam=marksExams.find(x=>x.id===examId),body=document.getElementById('ledgerViewBody'),head=document.getElementById('ledgerViewHead'),msg=document.getElementById('ledgerViewMessage');if(!cl||!examId||!exam){if(msg)msg.textContent='कक्षा र परीक्षा छान्नुहोस्।';return}if(exam.className!==cl){if(msg)msg.textContent='छानिएको कक्षा र परीक्षा मिलेन।';return}const group=ledgerGroupForClass(cl),subjects=ledgerSubjectOrder[group]||[],achievement=['1-3','4-5'].includes(group),students=marksStudents.filter(x=>x.class===cl).sort((a,b)=>Number(a.rollNo)-Number(b.rollNo));const subHeads=achievement?subjects.map(sub=>`<th colspan="3">${examEsc(sub)}</th>`).join(''):subjects.map(x=>`<th>${examEsc(x)}</th>`).join('');const second=achievement?'<tr><th>Roll No.</th><th>विद्यार्थी</th>'+subjects.map(()=>'<th>No. of Learning Achievement</th><th>Full Marks</th><th>Obtained Learning Achievement</th>').join('')+'</tr>':'';head.innerHTML=(achievement?'<tr><th rowspan="2">Roll No.</th><th rowspan="2">विद्यार्थी</th>'+subHeads+'</tr>'+second:'<tr><th>Roll No.</th><th>विद्यार्थी</th>'+subHeads+'</tr>');body.innerHTML=students.map(st=>'<tr><td>'+examEsc(st.rollNo||'')+'</td><td>'+examEsc(st.studentName||st.name||'')+'</td>'+subjects.map(sub=>{const rec=existingMarks.find(m=>m.studentId===st.id&&m.examId===examId&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(sub)),scores=rec?.scores||[];if(achievement){const total=scores.find(v=>/no\.?\s*of\s*learning/i.test(String(v.name||''))),fm=scores.find(v=>/^Full Marks$/i.test(String(v.name||''))),obt=scores.find(v=>/obtained learning/i.test(String(v.name||'')));const count=total?.obtained??total?.fullMarks??'';return `<td>${count}</td><td>${fm?.fullMarks??(count!==''?Number(count)*4:'')}</td><td>${obt?.obtained??''}</td>`}return `<td>${rec?`${Number(rec.totalObtained??0)} / ${Number(rec.totalFullMarks??0)}`:'—'}</td>`}).join('')+'</tr>').join('')||`<tr><td class="empty" colspan="${subjects.length*(achievement?3:1)+2}">यस कक्षामा विद्यार्थी भेटिएनन्।</td></tr>`;if(msg)msg.textContent=`${cl} · ${exam.examName} — ${students.length} विद्यार्थी, ${subjects.length} विषय।`;}
 document.addEventListener('click',async e=>{if(e.target.id==='showLedgerView')renderMarksLedgerPage();if(e.target.id==='refreshLedgerView'){await loadMarksLedgerPage();document.getElementById('ledgerViewBody').innerHTML='<tr><td class="empty" colspan="4">Refresh भयो। View Marks Ledger थिच्नुहोस्।</td></tr>';}});
 function sortEntryClassNames(values){
  const unique=[...new Set(values.map(x=>String(x??'').trim()).filter(Boolean))];
@@ -919,8 +900,7 @@ async function loadMarksEntry(){
    ]);
    // Use the actual class names saved in the Classes module, not a fixed 1–12 list.
    const classSnap=await getDocs(collection(db,'classes'));
-   cachedClasses=classSnap.docs.map(d=>({id:d.id,...d.data()}));
-   entryClassNames=sortEntryClassNames(cachedClasses.filter(x=>x.active!==false).map(x=>x.className));
+   entryClassNames=sortEntryClassNames(classSnap.docs.map(d=>d.data().className));
    // Keep the previous built-in options only as a safe fallback when no Classes records exist.
    if(!entryClassNames.length)entryClassNames=sortEntryClassNames(classes);
   }else{
@@ -1001,8 +981,8 @@ function ledgerGroupForClass(cl){return entryClassGroup(cl)}
 function ledgerStudentReg(st){return st.iemisNumber||st.iemisNo||st.registrationNo||st.regdNo||st.regNo||st.studentIemisNumber||""}
 function ledgerSymbol(st){return st.symbolNo||st.symbolNumber||st.examSymbolNo||""}
 function ledgerSubjectSetting(group,subject){
- const cl=document.getElementById('entryClass')?.value||document.getElementById('ledgerViewClass')?.value;
- const classNo=classNoFromName(cl);
+ const cl=document.getElementById('entryClass')?.value;
+ const classNo=String(cl||'').replace(/[^0-9]/g,'');
  const matches=marksSettings.filter(x=>x.classGroup===group&&canonicalSubjectKey(x.subject)===canonicalSubjectKey(subject));
  const exact=matches.find(x=>String(x.className||'')===classNo);
  const legacy=matches.find(x=>!x.className);
@@ -1021,7 +1001,7 @@ async function exportMarksLedgerExcel(){
  if(!cl||!examId){say('Excel Ledger export गर्न पहिले Class र Examination छान्नुहोस्।');return}
  const exam=marksExams.find(x=>x.id===examId);
  if(!exam||exam.className!==cl){say('छानिएको Examination र Class मिलेन।');return}
- const group=ledgerGroupForClass(cl),subjects=ledgerSubjectsForClass(cl,group);
+ const group=ledgerGroupForClass(cl),subjects=[...(ledgerSubjectOrder[group]||[])];
  if(!subjects.length){say('यो कक्षाको Ledger ढाँचा उपलब्ध छैन।');return}
  const btn=document.getElementById('exportLedgerExcel');if(btn){btn.disabled=true;btn.textContent='Preparing Excel...'}
  try{
