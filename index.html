@@ -74,15 +74,13 @@
 <button class="forgot-link" id="onlineResultToggle" type="button" style="display:block;width:100%;text-align:center;font-weight:800;margin-top:14px!important">विद्यार्थी Online Result हेर्नुहोस्</button>
 <div class="forgot-panel" id="onlineResultPanel" hidden>
  <b style="font-size:14px;color:var(--navy)">विद्यार्थी नतिजा (Online Result)</b>
- <p class="hint" style="margin:6px 0">आफ्नो कक्षा, प्रकाशित परीक्षा, Roll Number वा Symbol Number र जन्ममिति राख्नुहोस्।</p>
+ <p class="hint" style="margin:6px 0">आफ्नो कक्षा, प्रकाशित परीक्षा र विद्यार्थीको व्यक्तिगत Result Code राख्नुहोस्।</p>
  <label for="onlineResultClass">कक्षा छान्नुहोस्</label>
  <select id="onlineResultClass" style="width:100%;padding:12px;border:1px solid #dce5f0;border-radius:9px;font-size:15px;background:#fff"><option value="कक्षा 1">कक्षा 1</option><option value="कक्षा 2">कक्षा 2</option><option value="कक्षा 3">कक्षा 3</option><option value="कक्षा 4">कक्षा 4</option><option value="कक्षा 5">कक्षा 5</option><option value="कक्षा 6">कक्षा 6</option><option value="कक्षा 7">कक्षा 7</option><option value="कक्षा 8">कक्षा 8</option><option value="कक्षा 9">कक्षा 9</option><option value="कक्षा 10">कक्षा 10</option><option value="कक्षा 11">कक्षा 11</option><option value="कक्षा 12">कक्षा 12</option></select>
  <label for="onlineResultExam">परीक्षा / Exam Type</label>
  <select id="onlineResultExam" style="width:100%;padding:12px;border:1px solid #dce5f0;border-radius:9px;font-size:15px;background:#fff"><option value="">पहिले कक्षा छान्नुहोस्</option></select>
- <label for="onlineResultCredentialType">नम्बरको प्रकार</label>
- <select id="onlineResultCredentialType" style="width:100%;padding:12px;border:1px solid #dce5f0;border-radius:9px;font-size:15px;background:#fff"><option value="roll">Roll Number (S.N.)</option><option value="symbol">Symbol Number</option></select>
- <label for="onlineResultCredential">Roll Number / Symbol Number</label><input id="onlineResultCredential" type="text" inputmode="text" autocomplete="off" placeholder="आफ्नो नम्बर लेख्नुहोस्">
- <label for="onlineResultDob">जन्ममिति (वि.सं. वा ई.सं.)</label><input id="onlineResultDob" type="text" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD">
+ <label for="onlineResultCode">विद्यार्थी Result Code</label><input id="onlineResultCode" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" placeholder="जस्तै: BABKHA8">
+ <small class="hint">यो Code विद्यालयले विद्यार्थी दर्ता गर्दा स्वतः बनाउँछ। आफ्नो Code विद्यालयबाट प्राप्त गर्नुहोस्।</small>
  <button id="onlineResultSearchBtn" type="button">नतिजा हेर्नुहोस्</button>
  <p id="onlineResultMessage" class="forgot-status" role="status" style="min-height:22px">Admin ले प्रकाशित गरेको नतिजा मात्र यहाँ देखिन्छ।</p>
  <div id="onlineResultOutput" style="margin-top:12px"></div>
@@ -120,7 +118,7 @@ function head(t,d){return `<div class="head"><div><h2>${t}</h2><p>${d}</p></div>
 function dashboard(){return `<div class="welcome"><h2>Welcome to Exam Management Portal</h2><p>Mahadevasthan Secondary School<br>Dhunibesi Municipality-05, Dhading · Academic Year 2083</p></div><div class="grid quick">${[["🎓","विद्यार्थी","students"],["👩‍🏫","शिक्षक","staff"],["📝","परीक्षा","exams"],["✍️","Marks Entry","marks"],["⚙️","Assessment Settings","assessment-settings"],["📊","नतिजा","results"],["📅","हाजिरी","attendance"],["📈","Reports","reports"],["⚙️","Settings","settings"]].map(x=>`<button type="button" data-go="${x[2]}"><span>${x[0]}</span>${x[1]}</button>`).join("")}</div><div class="grid stats"><div class="card"><div class="statlabel">🎓 कुल विद्यार्थी</div><div class="num" id="dashStudentCount">—</div><div class="hint">Firebase विद्यार्थी रेकर्ड</div></div><div class="card"><div class="statlabel">👩‍🏫 शिक्षक तथा कर्मचारी</div><div class="num" id="dashStaffCount">—</div><div class="hint">Firebase कर्मचारी रेकर्ड</div></div><div class="card"><div class="statlabel">🏫 सक्रिय कक्षा</div><div class="num" id="dashClassCount">—</div><div class="hint">Subject Management बाट</div></div><div class="card"><div class="statlabel">📝 परीक्षा</div><div class="num" id="dashExamCount">—</div><div class="hint">Firebase परीक्षा रेकर्ड</div></div></div><div class="grid two"><div class="panel"><h3>कक्षा अनुसार विद्यार्थी संख्या</h3><div id="dashClassBars" class="bars"><p class="hint">Firebase बाट विवरण लोड हुँदैछ...</p></div><p class="hint">विद्यार्थी दर्ता विवरणमा आधारित।</p></div><div class="panel"><h3>हालको हाजिरी सारांश</h3><div id="dashAttendanceSummary"><p class="hint">हाजिरी विवरण लोड हुँदैछ...</p></div></div></div><div class="panel" style="margin-top:14px"><h3>नतिजा सारांश</h3><div id="dashResultSummary" class="hint">Marks र परीक्षा विवरण लोड हुँदैछ...</div></div><p id="dashboardMessage" class="hint" role="status"></p>`}
 function render(p){if(!names[p])return;if(window.currentUserIsTeacher&&typeof window.rolePageAllowed==="function"&&!window.rolePageAllowed(p))return;if(window.currentUserIsTeacher&&!["attendance","marks"].includes(p))return;window.currentPage=p;document.getElementById("title").textContent=names[p];document.querySelectorAll("[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===p));document.querySelectorAll(".menu-group").forEach(g=>{g.open=!!g.querySelector(`[data-page="${p}"]`)});let h="";
 if(p==="dashboard")h=dashboard();
-if(p==="students")h=head(names[p],"विद्यार्थी दर्ता, खोज र अभिलेख व्यवस्थापन")+studentNote+`<div class="toolbar"><input id="studentSearch" placeholder="नाम वा दर्ता नम्बर खोज्नुहोस्"><select id="classFilter"><option value="">सबै कक्षा</option>${classes.map(x=>`<option value="${x}">${classEnglishLabel(x)}</option>`).join("")}</select><button class="btn" id="studentSearchBtn" type="button">Search</button><button class="btn alt" id="studentReloadBtn" type="button">Refresh</button><button class="btn" id="studentExport" type="button">कक्षा अनुसार Export Excel</button><button class="btn alt" id="studentSample" type="button">Sample Download</button><label class="btn alt" for="studentImportFile">Import Excel</label><input id="studentImportFile" type="file" accept=".xlsx,.xls,.csv" hidden></div><div class="hint">सूचना: Student Excel Import मा <b>S.N.</b> स्तम्भ नै Roll Number हो। एउटै कक्षामा S.N. दोहोरिनु हुँदैन।</div><div id="studentMessage" class="hint" role="status"></div><div class="tablewrap"><table><thead><tr><th>Admission No.</th><th>Student Name</th><th>Date of Birth (B.S.)</th><th>Student IEMIS No.</th><th>Symbol No.</th><th>Class</th><th>S.N. / Roll No.</th><th>अभिभावक</th><th>सम्पर्क</th><th>कार्य</th></tr></thead><tbody id="studentsBody"><tr><td class="empty" colspan="10">Firebase बाट विवरण लोड हुँदैछ...</td></tr></tbody></table></div><div class="panel form"><h3>विद्यार्थी विवरण</h3><form id="studentForm"><div class="fields"><div class="field"><label for="studentName">पूरा नाम *</label><input id="studentName" required maxlength="120" placeholder="विद्यार्थीको पूरा नाम"></div><div class="field"><label for="studentDob">Date of Birth (B.S.)</label><input id="studentDob" type="text" inputmode="numeric" maxlength="10" placeholder="2079-12-02" aria-describedby="dobHelp"><small id="dobHelp" class="hint">Format: YYYY-MM-DD (B.S.)</small></div><div class="field"><label for="studentDobAD">Date of Birth (A.D.)</label><input id="studentDobAD" type="date"></div><div class="field"><label for="studentIemisNo">Student IEMIS Number</label><input id="studentIemisNo" maxlength="40" placeholder="Student IEMIS Number"></div><div class="field"><label for="studentSymbolNo">Symbol Number</label><input id="studentSymbolNo" maxlength="40" placeholder="Examination Symbol Number"></div><div class="field"><label for="admissionNo">Admission Number (optional)</label><input id="admissionNo" maxlength="40" placeholder="Admission No."></div><div class="field"><label for="rollNo">S.N. नम्बर / Roll Number *</label><input id="rollNo" type="number" min="1" step="1" required inputmode="numeric" placeholder="विद्यार्थीको क्रम संख्या (जस्तै 1, 2, 3)"><small class="hint">यसै S.N. नम्बरलाई सबै Ledger, Marks Entry र Attendance मा Roll Number मानिनेछ।</small></div><div class="field"><label for="studentClass">कक्षा *</label><select id="studentClass" required>${classes.map(x=>`<option value="${x}">${classEnglishLabel(x)}</option>`).join("")}</select></div><div class="field"><label for="guardianName">अभिभावकको नाम</label><input id="guardianName" maxlength="120" placeholder="अभिभावकको नाम"></div><div class="field"><label for="studentPhone">सम्पर्क नम्बर</label><input id="studentPhone" type="tel" maxlength="30" placeholder="फोन"></div><div class="field"><label for="studentAddress">ठेगाना</label><input id="studentAddress" maxlength="250" placeholder="ठेगाना"></div>
+if(p==="students")h=head(names[p],"विद्यार्थी दर्ता, खोज र अभिलेख व्यवस्थापन")+studentNote+`<div class="toolbar"><input id="studentSearch" placeholder="नाम वा दर्ता नम्बर खोज्नुहोस्"><select id="classFilter"><option value="">सबै कक्षा</option>${classes.map(x=>`<option value="${x}">${classEnglishLabel(x)}</option>`).join("")}</select><button class="btn" id="studentSearchBtn" type="button">Search</button><button class="btn alt" id="studentReloadBtn" type="button">Refresh</button><button class="btn alt" id="generateMissingStudentCodes" type="button">पुराना विद्यार्थीको Result Code बनाउनुहोस्</button><button class="btn" id="studentExport" type="button">कक्षा अनुसार Export Excel</button><button class="btn alt" id="studentSample" type="button">Sample Download</button><label class="btn alt" for="studentImportFile">Import Excel</label><input id="studentImportFile" type="file" accept=".xlsx,.xls,.csv" hidden></div><div class="hint">सूचना: Student Excel Import मा <b>S.N.</b> स्तम्भ नै Roll Number हो। एउटै कक्षामा S.N. दोहोरिनु हुँदैन।</div><div id="studentMessage" class="hint" role="status"></div><div class="tablewrap"><table><thead><tr><th>Admission No.</th><th>Student Name</th><th>Date of Birth (B.S.)</th><th>Student IEMIS No.</th><th>Symbol No.</th><th>Class</th><th>S.N. / Roll No.</th><th>Result Code</th><th>अभिभावक</th><th>सम्पर्क</th><th>कार्य</th></tr></thead><tbody id="studentsBody"><tr><td class="empty" colspan="11">Firebase बाट विवरण लोड हुँदैछ...</td></tr></tbody></table></div><div class="panel form"><h3>विद्यार्थी विवरण</h3><form id="studentForm"><div class="fields"><div class="field"><label for="studentName">पूरा नाम *</label><input id="studentName" required maxlength="120" placeholder="विद्यार्थीको पूरा नाम"></div><div class="field"><label for="studentDob">Date of Birth (B.S.)</label><input id="studentDob" type="text" inputmode="numeric" maxlength="10" placeholder="2079-12-02" aria-describedby="dobHelp"><small id="dobHelp" class="hint">Format: YYYY-MM-DD (B.S.)</small></div><div class="field"><label for="studentDobAD">Date of Birth (A.D.)</label><input id="studentDobAD" type="date"></div><div class="field"><label for="studentIemisNo">Student IEMIS Number</label><input id="studentIemisNo" maxlength="40" placeholder="Student IEMIS Number"></div><div class="field"><label for="studentSymbolNo">Symbol Number</label><input id="studentSymbolNo" maxlength="40" placeholder="Examination Symbol Number"></div><div class="field"><label for="admissionNo">Admission Number (optional)</label><input id="admissionNo" maxlength="40" placeholder="Admission No."></div><div class="field"><label for="rollNo">S.N. नम्बर / Roll Number *</label><input id="rollNo" type="number" min="1" step="1" required inputmode="numeric" placeholder="विद्यार्थीको क्रम संख्या (जस्तै 1, 2, 3)"><small class="hint">यसै S.N. नम्बरलाई सबै Ledger, Marks Entry र Attendance मा Roll Number मानिनेछ।</small></div><div class="field"><label for="studentClass">कक्षा *</label><select id="studentClass" required>${classes.map(x=>`<option value="${x}">${classEnglishLabel(x)}</option>`).join("")}</select></div><div class="field"><label for="guardianName">अभिभावकको नाम</label><input id="guardianName" maxlength="120" placeholder="अभिभावकको नाम"></div><div class="field"><label for="studentPhone">सम्पर्क नम्बर</label><input id="studentPhone" type="tel" maxlength="30" placeholder="फोन"></div><div class="field"><label for="studentAddress">ठेगाना</label><input id="studentAddress" maxlength="250" placeholder="ठेगाना"></div>
 <div class="field"><label for="studentNameNepali">विद्यार्थीको नाम (नेपाली)</label><input id="studentNameNepali" maxlength="150"></div>
 <div class="field"><label for="studentGender">लिङ्ग</label><input id="studentGender" maxlength="30"></div>
 <div class="field"><label for="studentFatherName">बुबाको नाम</label><input id="studentFatherName" maxlength="150"></div>
@@ -698,11 +696,48 @@ async function restoreStaff(id) {
 
 
 
+// Student Result Code: first 3 letters + last 3 letters + class.
+// Example: Babu Khanal, Class 8 => BABKHA8. Duplicate base codes get -02, -03, etc.
+function studentCodeLetters(value){
+ return Array.from(String(value||"").normalize("NFKC").replace(/[^\p{L}\p{N}]/gu,"")).slice(0,3).join("").toLocaleUpperCase();
+}
+function studentCodeClassPart(className){
+ const raw=String(className??"").trim().replace(/^(कक्षा|class)\s*/i,"");
+ return raw.replace(/[^\p{L}\p{N}]/gu,"").toLocaleUpperCase()||"X";
+}
+function studentCodeBase(name,className){
+ const words=String(name||"").trim().split(/\s+/).filter(Boolean);
+ const first=words[0]||"ST",last=words.length>1?words[words.length-1]:"XXX";
+ return `${studentCodeLetters(first).padEnd(3,"X")}${studentCodeLetters(last).padEnd(3,"X")}${studentCodeClassPart(className)}`;
+}
+function generateUniqueStudentCode(name,className,usedCodes){
+ const base=studentCodeBase(name,className);let code=base,n=2;
+ while(usedCodes.has(code)){code=`${base}-${String(n).padStart(2,"0")}`;n++;}
+ usedCodes.add(code);return code;
+}
+function studentCodeSet(students){return new Set(students.map(s=>String(s.studentPortalCode||"").trim().toUpperCase()).filter(Boolean));}
+async function generateMissingStudentCodes(){
+ if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw new Error("मुख्य Admin login आवश्यक छ।");
+ const msg=document.getElementById("studentMessage");
+ const snap=await getDocs(collection(db,"students"));
+ const students=snap.docs.map(d=>({id:d.id,...d.data()}));
+ const used=studentCodeSet(students),missing=students.filter(s=>!String(s.studentPortalCode||"").trim());
+ if(!missing.length){setStudentMessage("सबै विद्यार्थीको Result Code पहिले नै बनेको छ।");return 0;}
+ if(!confirm(`${missing.length} जना पुराना विद्यार्थीका लागि नयाँ Result Code बनाउने? पहिले बनेका Code परिवर्तन हुने छैनन्।`))return 0;
+ for(let i=0;i<missing.length;i+=450){
+  const batch=writeBatch(db);
+  for(const st of missing.slice(i,i+450))batch.update(doc(db,"students",st.id),{studentPortalCode:generateUniqueStudentCode(st.studentName||st.studentNameNepali,st.class,used),studentPortalCodeCreatedAt:serverTimestamp(),studentPortalCodeCreatedBy:auth.currentUser.uid});
+  await batch.commit();
+ }
+ await loadStudents();setStudentMessage(`${missing.length} जना पुराना विद्यार्थीको Result Code सफलतापूर्वक बनाइयो। Code सूचीबाट हेर्न/Export गर्न सक्नुहुन्छ।`);
+ return missing.length;
+}
+
 function filterStudents(){
  const body=document.getElementById("studentsBody");if(!body)return;
  const q=(document.getElementById("studentSearch")?.value||"").trim().toLowerCase(),cl=document.getElementById("classFilter")?.value||"";
- const rows=cachedStudents.filter(s=>(!cl||canonicalStudentClass(s.class)===cl)&&(!q||[s.studentName,s.admissionNo,s.guardianName,s.studentIemisNo,s.iemisStudentNo,s.phone,s.rollNo,s.sourceSerialNo].some(x=>String(x||"").toLowerCase().includes(q))));
- body.innerHTML=rows.length?rows.map(s=>`<tr${s.active===false?' style="opacity:.68;background:#fff7ed"':''}><td>${esc(s.admissionNo)}</td><td>${esc(s.studentName)}${s.active===false?' <small style="color:#b45309;font-weight:700">(निष्क्रिय)</small>':''}</td><td>${esc(s.dob||"—")}</td><td>${esc(s.studentIemisNo||s.iemisStudentNo||"—")}</td><td>${esc(s.symbolNo||s.symbolNumber||"—")}</td><td>${esc(s.class)}</td><td>${esc(studentRollNo(s)||"—")}</td><td>${esc(s.guardianName)}</td><td>${esc(s.phone)}</td><td><button class="btn alt" type="button" data-student-edit="${esc(s.id)}">Edit</button> ${s.active===false?`<button class="btn" type="button" data-student-restore="${esc(s.id)}">पुनः सक्रिय</button>`:`<button class="btn" style="background:#b45309" type="button" data-student-delete="${esc(s.id)}">निष्क्रिय</button>`}</td></tr>`).join(""):'<tr><td class="empty" colspan="10">मिल्दो विद्यार्थी भेटिएन।</td></tr>';
+ const rows=cachedStudents.filter(s=>(!cl||canonicalStudentClass(s.class)===cl)&&(!q||[s.studentName,s.admissionNo,s.guardianName,s.studentIemisNo,s.iemisStudentNo,s.phone,s.rollNo,s.sourceSerialNo,s.studentPortalCode].some(x=>String(x||"").toLowerCase().includes(q))));
+ body.innerHTML=rows.length?rows.map(s=>`<tr${s.active===false?' style="opacity:.68;background:#fff7ed"':''}><td>${esc(s.admissionNo)}</td><td>${esc(s.studentName)}${s.active===false?' <small style="color:#b45309;font-weight:700">(निष्क्रिय)</small>':''}</td><td>${esc(s.dob||"—")}</td><td>${esc(s.studentIemisNo||s.iemisStudentNo||"—")}</td><td>${esc(s.symbolNo||s.symbolNumber||"—")}</td><td>${esc(s.class)}</td><td>${esc(studentRollNo(s)||"—")}</td><td><b>${esc(s.studentPortalCode||"Code छैन")}</b></td><td>${esc(s.guardianName)}</td><td>${esc(s.phone)}</td><td><button class="btn alt" type="button" data-student-edit="${esc(s.id)}">Edit</button> ${s.active===false?`<button class="btn" type="button" data-student-restore="${esc(s.id)}">पुनः सक्रिय</button>`:`<button class="btn" style="background:#b45309" type="button" data-student-delete="${esc(s.id)}">निष्क्रिय</button>`}</td></tr>`).join(""):'<tr><td class="empty" colspan="11">मिल्दो विद्यार्थी भेटिएन।</td></tr>';
 }
 function resetStudentForm(){const form=document.getElementById("studentForm");if(!form)return;form.reset();form.dataset.editId="";document.getElementById("studentSaveBtn").textContent="Firebase मा Save गर्नुहोस्";document.getElementById("studentCancelEditBtn").hidden=true;}
 function editStudent(id){const s=cachedStudents.find(x=>x.id===id);if(!s)return;document.getElementById("studentName").value=s.studentName||"";document.getElementById("studentDob").value=s.dob||"";document.getElementById("studentDobAD").value=s.dobAD||s.dateOfBirthAD||"";document.getElementById("studentIemisNo").value=s.studentIemisNo||s.iemisStudentNo||"";document.getElementById("studentSymbolNo").value=s.symbolNo||s.symbolNumber||"";document.getElementById("admissionNo").value=s.admissionNo||"";document.getElementById("rollNo").value=studentRollNo(s)||"";document.getElementById("studentClass").value=s.class||classes[0];document.getElementById("guardianName").value=s.guardianName||"";document.getElementById("studentPhone").value=s.phone||"";document.getElementById("studentAddress").value=s.address||"";document.getElementById("studentNameNepali").value=s.studentNameNepali||"";document.getElementById("studentGender").value=s.gender||"";document.getElementById("studentFatherName").value=s.fatherName||"";document.getElementById("studentMotherName").value=s.motherName||"";document.getElementById("studentIemisCode").value=s.iemisCode||"";document.getElementById("studentSchool").value=s.school||"";document.getElementById("studentSection").value=s.section||"";document.getElementById("studentSourceYear").value=s.sourceYear||"";document.getElementById("studentPermanentAddress").value=s.permanentAddress||"";document.getElementById("studentTemporaryAddress").value=s.temporaryAddress||"";document.getElementById("studentTransferred").value=s.isTransferred||"";document.getElementById("studentMotherTongue").value=s.motherTongue||"";document.getElementById("studentDisabilityType").value=s.disabilityType||"";document.getElementById("studentAge").value=s.age||"";document.getElementById("studentForm").dataset.editId=id;document.getElementById("studentSaveBtn").textContent="परिवर्तन Save गर्नुहोस्";document.getElementById("studentCancelEditBtn").hidden=false;setStudentMessage("सम्पादन मोड: विवरण सच्याएर Save गर्नुहोस्।");document.getElementById("studentForm").scrollIntoView({behavior:"smooth",block:"start"});}
@@ -723,15 +758,33 @@ document.addEventListener("submit",async event=>{
   if(dup){setStudentMessage("यो दर्ता नम्बर पहिल्यै प्रयोग भएको छ।",true);return}
   const duplicateRoll=cachedStudents.some(s=>s.id!==editId&&s.active!==false&&canonicalStudentClass(s.class)===canonicalStudentClass(data.class)&&Number(studentRollNo(s))===data.rollNo);
   if(duplicateRoll){setStudentMessage(`कक्षा ${data.class} मा S.N. ${data.rollNo} पहिल्यै प्रयोग भएको छ। अर्को S.N. राख्नुहोस्।`,true);return}
-  if(editId){await updateDoc(doc(db,"students",editId),{...data,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});await writeAuditLog("students","update",editId,"student profile updated");resetStudentForm();await loadStudents();setStudentMessage("विद्यार्थी विवरण सफलतापूर्वक Update भयो।")}
-  else{const studentRef=await addDoc(collection(db,"students"),{...data,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});await writeAuditLog("students","create",studentRef.id,"student created");resetStudentForm();await loadStudents();setStudentMessage("विद्यार्थी विवरण Firebase Cloud मा सुरक्षित भयो।")}
+  if(editId){
+   const existingStudent=cachedStudents.find(s=>s.id===editId);
+   const existingCode=String(existingStudent?.studentPortalCode||"").trim().toUpperCase();
+   const oldBase=studentCodeBase(existingStudent?.studentName||existingStudent?.studentNameNepali,existingStudent?.class);
+   const newBase=studentCodeBase(data.studentName||data.studentNameNepali,data.class);
+   let updatedPortalCode=existingCode;
+   // Name/class change => regenerate code. Exclude this student’s old code from collision checks.
+   if(!existingCode||oldBase!==newBase){
+    const usedCodes=studentCodeSet(cachedStudents.filter(s=>s.id!==editId));
+    updatedPortalCode=generateUniqueStudentCode(data.studentName||data.studentNameNepali,data.class,usedCodes);
+    data.studentPortalCode=updatedPortalCode;
+    data.studentPortalCodeUpdatedAt=serverTimestamp();
+    data.studentPortalCodeUpdatedBy=auth.currentUser.uid;
+   }
+   await updateDoc(doc(db,"students",editId),{...data,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});
+   await writeAuditLog("students","update",editId,oldBase!==newBase?"student profile and result code updated":"student profile updated");
+   resetStudentForm();await loadStudents();
+   setStudentMessage(oldBase!==newBase?`विद्यार्थी विवरण Update भयो। नयाँ Result Code: ${updatedPortalCode} — विद्यार्थीलाई नयाँ Code दिनुहोस्।`:"विद्यार्थी विवरण सफलतापूर्वक Update भयो। Result Code परिवर्तन आवश्यक परेन।");
+  }
+  else{const used=studentCodeSet(cachedStudents);data.studentPortalCode=generateUniqueStudentCode(data.studentName||data.studentNameNepali,data.class,used);const studentRef=await addDoc(collection(db,"students"),{...data,studentPortalCodeCreatedAt:serverTimestamp(),studentPortalCodeCreatedBy:auth.currentUser.uid,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});await writeAuditLog("students","create",studentRef.id,"student created with portal code");resetStudentForm();await loadStudents();setStudentMessage(`विद्यार्थी दर्ता भयो। Result Code: ${data.studentPortalCode} — यो Code विद्यार्थीलाई दिनुहोस्।`)}
  }catch(error){console.error("Student save/update failed:",error.code);setStudentMessage("Save/Update भएन। Firestore Rules अनुमति र Internet जाँच गर्नुहोस्।",true)}
  finally{btn.disabled=false;if(!form.dataset.editId)btn.textContent="Firebase मा Save गर्नुहोस्";else btn.textContent="परिवर्तन Save गर्नुहोस्"}
 });
 document.addEventListener("click",event=>{
  const edit=event.target.closest("[data-student-edit]"),del=event.target.closest("[data-student-delete]"),restore=event.target.closest("[data-student-restore]");
  if(edit){editStudent(edit.dataset.studentEdit);return}if(del){removeStudent(del.dataset.studentDelete);return}if(restore){restoreStudent(restore.dataset.studentRestore);return}
- if(event.target.id==="studentReloadBtn")loadStudents();if(event.target.id==="studentSearchBtn")filterStudents();if(event.target.id==="studentCancelEditBtn")resetStudentForm();
+ if(event.target.id==="studentReloadBtn")loadStudents();if(event.target.id==="generateMissingStudentCodes")generateMissingStudentCodes().catch(e=>setStudentMessage(`Result Code बनाउन सकिएन: ${e.message||e.code}`,true));if(event.target.id==="studentSearchBtn")filterStudents();if(event.target.id==="studentCancelEditBtn")resetStudentForm();
 });
 document.addEventListener("input",event=>{if(event.target.id==="studentSearch")filterStudents()});
 document.addEventListener("change",event=>{if(event.target.id==="classFilter")filterStudents()});
@@ -1554,7 +1607,8 @@ async function importStudents(file){
  if(!finalPrepared.length){setStudentMessage(`नयाँ विद्यार्थी बाँकी रहेनन्। पछिल्लो जाँचमा Duplicate: ${duplicates.length}, त्रुटि: ${issues.length}, दायराबाहिर: ${outOfScope.length}`);return;}
  if(finalPrepared.length>450)throw Error(`एक पटकमा सुरक्षित रूपमा 450 सम्म विद्यार्थी मात्र Import गर्न मिल्छ। अहिले ${finalPrepared.length} नयाँ विद्यार्थी छन्; कृपया फाइललाई साना भागमा विभाजन गर्नुहोस्।`);
  const batch=writeBatch(db);
- for(const d of finalPrepared){const ref=doc(collection(db,'students'));batch.set(ref,{...d,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});}
+ const usedPortalCodes=studentCodeSet(finalStudents);
+ for(const d of finalPrepared){d.studentPortalCode=generateUniqueStudentCode(d.studentName||d.studentNameNepali,d.class,usedPortalCodes);d.studentPortalCodeCreatedAt=serverTimestamp();d.studentPortalCodeCreatedBy=auth.currentUser.uid;const ref=doc(collection(db,'students'));batch.set(ref,{...d,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});}
  await batch.commit();
  await loadStudents();setStudentMessage(`${finalPrepared.length} विद्यार्थी Import भयो (Excel को S.N. नै Roll Number बनाइयो)। Duplicate ${duplicates.length}, त्रुटिपूर्ण ${issues.length}, दायराबाहिर ${outOfScope.length} पङ्क्ति Skip गरियो।`);
 }
@@ -1824,8 +1878,8 @@ function onlineResultNormalizeDob(v){
  if(m)return `${m[1]}-${String(Number(m[2])).padStart(2,'0')}-${String(Number(m[3])).padStart(2,'0')}`;
  return raw.toLocaleLowerCase().replace(/[^a-z0-9]/g,'');
 }
-async function onlineResultHash(className,examId,version,type,credential,dob){
- const raw=[className,examId,version,type,onlineResultNormalizeCredential(credential),onlineResultNormalizeDob(dob)].join('|');
+async function onlineResultHash(className,examId,version,studentCode){
+ const raw=[className,examId,version,String(studentCode||"").trim().toLocaleUpperCase()].join('|');
  const bytes=new TextEncoder().encode(raw);
  const digest=await crypto.subtle.digest('SHA-256',bytes);
  return [...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('');
@@ -1844,24 +1898,18 @@ async function loadOnlineResultExams(){
  }catch(err){console.error('Online exam list failed',err);select.innerHTML='<option value="">परीक्षा सूची उपलब्ध भएन</option>';onlineResultStatus('प्रकाशित परीक्षा सूची लोड भएन। Firestore Rules मा public_result_exams को read अनुमति आवश्यक छ।',true);}
 }
 async function lookupOnlineResult(){
- const btn=document.getElementById('onlineResultSearchBtn'),className=document.getElementById('onlineResultClass')?.value,examId=document.getElementById('onlineResultExam')?.value,type=document.getElementById('onlineResultCredentialType')?.value,credential=document.getElementById('onlineResultCredential')?.value||'',dob=document.getElementById('onlineResultDob')?.value||'',out=document.getElementById('onlineResultOutput');
- if(!className||!examId||!credential.trim()||!dob.trim()){onlineResultStatus('कक्षा, परीक्षा, नम्बर र जन्ममिति सबै राख्नुहोस्।',true);return;}
+ const btn=document.getElementById('onlineResultSearchBtn'),className=document.getElementById('onlineResultClass')?.value,examId=document.getElementById('onlineResultExam')?.value,studentCode=document.getElementById('onlineResultCode')?.value||'',out=document.getElementById('onlineResultOutput');
+ if(!className||!examId||!studentCode.trim()){onlineResultStatus('कक्षा, परीक्षा र Result Code सबै राख्नुहोस्।',true);return;}
  const exam=onlinePublicExams.find(x=>x.id===examId);if(!exam){onlineResultStatus('छानिएको परीक्षा प्रकाशित सूचीमा भेटिएन।',true);return;}
- if(!crypto?.subtle){onlineResultStatus('यो Browser मा सुरक्षित Lookup उपलब्ध भएन। Chrome/Safari को नयाँ संस्करण प्रयोग गर्नुहोस्।',true);return;}
- btn.disabled=true;btn.textContent='नतिजा खोजिँदैछ...';out.innerHTML='';onlineResultStatus('विवरण जाँच हुँदैछ...');
+ btn.disabled=true;btn.textContent='नतिजा खोजिँदैछ...';out.innerHTML='';onlineResultStatus('Result Code जाँच हुँदैछ...');
  try{
-  const lookupId=await onlineResultHash(className,examId,exam.version,type,credential,dob);
-  const lookupSnap=await getDoc(doc(db,'public_result_lookup',lookupId));
-  if(!lookupSnap.exists()){onlineResultStatus('विवरण मिलेन वा यो परीक्षाको नतिजा प्रकाशित भएको छैन। नम्बर र जन्ममिति फेरि जाँच्नुहोस्।',true);return;}
-  const resultId=lookupSnap.data().resultId;
-  if(!resultId){onlineResultStatus('नतिजा रेकर्ड अपूर्ण छ। विद्यालय प्रशासनलाई सम्पर्क गर्नुहोस्।',true);return;}
-  const resultSnap=await getDoc(doc(db,'public_results',resultId));
-  if(!resultSnap.exists()||resultSnap.data().version!==exam.version||resultSnap.data().examId!==examId){onlineResultStatus('यो नतिजा हाल उपलब्ध छैन। विद्यालय प्रशासनलाई सम्पर्क गर्नुहोस्।',true);return;}
-  const html=String(resultSnap.data().gradeSheetHtml||'');
-  if(!html.includes('official-grade-sheet')){onlineResultStatus('Grade Sheet फाइल अपूर्ण छ। विद्यालय प्रशासनलाई सम्पर्क गर्नुहोस्।',true);return;}
+  const lookupResult=httpsCallable(functionsClient,'lookupPublishedStudentResult');
+  const response=await lookupResult({className,examId,version:exam.version,studentCode:studentCode.trim().toLocaleUpperCase()});
+  const html=String(response.data?.gradeSheetHtml||'');
+  if(!html.includes('official-grade-sheet'))throw new Error('नतिजा फाइल अपूर्ण छ। विद्यालय प्रशासनलाई सम्पर्क गर्नुहोस्।');
   out.innerHTML=`<div id="onlineResultSheetWrap">${html}</div><button type="button" id="onlineResultPrintBtn" style="width:100%;margin-top:12px;padding:12px;background:#1769d2;color:#fff;border:0;border-radius:9px;font-weight:800">Print / Save PDF</button>`;
-  onlineResultStatus('नतिजा सफलतापूर्वक भेटियो। यो Grade Sheet तपाईंको विवरणअनुसार हो।');
- }catch(err){console.error('Online result lookup failed',err);onlineResultStatus(err.code==='permission-denied'?'Online Result का Firestore Rules लागू भएका छैनन्। विद्यालय प्रशासनलाई जानकारी दिनुहोस्.':`नतिजा हेर्न सकिएन: ${err.message||'Firebase त्रुटि'}`,true);}
+  onlineResultStatus('नतिजा सफलतापूर्वक भेटियो। यो Grade Sheet तपाईंको Result Code अनुसार हो।');
+ }catch(err){console.error('Online result lookup failed',err);const code=err.code||'';onlineResultStatus(code==='functions/not-found'||code==='functions/permission-denied'?'Result Code मिलेन वा नतिजा प्रकाशित भएको छैन। Code फेरि जाँच्नुहोस्।':`नतिजा हेर्न सकिएन: ${err.message||'Firebase त्रुटि'}`,true);}
  finally{btn.disabled=false;btn.textContent='नतिजा हेर्नुहोस्';}
 }
 function printOnlineResult(){
@@ -1895,28 +1943,22 @@ async function publishOnlineResult(){
    if(!sheet)throw new Error(`${st.studentName||'एक विद्यार्थी'} को Grade Sheet तयार भएन।`);
    const roll=String(studentRollNo(st)??'').trim();
    const symbol=String(st.symbolNo||st.symbolNumber||st.examSymbolNo||'').trim();
-   const dobValues=[st.dob,st.dobAD,st.dateOfBirth,st.birthDate,st.dateOfBirthAD].filter(Boolean).map(String);
-   const uniqueDobs=[...new Set(dobValues.map(onlineResultNormalizeDob).filter(Boolean))];
-   const credentials=[...(roll?[{type:'roll',value:roll}]:[]),...(symbol?[{type:'symbol',value:symbol}]:[])];
-   if(!uniqueDobs.length||!credentials.length){skipped++;continue;}
+   const studentCode=String(st.studentPortalCode||'').trim().toLocaleUpperCase();
+   if(!studentCode){skipped++;continue;}
    const resultId=crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(36).slice(2)}`;
    batch.set(doc(db,'public_results',resultId),{className,examId,version,gradeSheetHtml:sheet.outerHTML,publishedAt:serverTimestamp()});batchCount++;
-   const seenLookup=new Set();
-   for(const c of credentials)for(const dobKey of uniqueDobs){
-    const hash=await onlineResultHash(className,examId,version,c.type,c.value,dobKey);
-    if(seenLookup.has(hash))continue;seenLookup.add(hash);
-    if(seenPublicLookupHashes.has(hash))throw new Error('दुई विद्यार्थीको Roll/Symbol Number र जन्ममिति एउटै भेटियो। नम्बर/जन्ममिति सच्याएर मात्र नतिजा प्रकाशित गर्नुहोस्।');
-    seenPublicLookupHashes.add(hash);
-    batch.set(doc(db,'public_result_lookup',hash),{resultId,examId,version,className});batchCount++;lookupCount++;
-    await commitIfNeeded();
-   }
+   const hash=await onlineResultHash(className,examId,version,studentCode);
+   if(seenPublicLookupHashes.has(hash))throw new Error('दुई विद्यार्थीको Result Code एउटै भेटियो। विद्यार्थी Code सच्याएर मात्र नतिजा प्रकाशित गर्नुहोस्।');
+   seenPublicLookupHashes.add(hash);
+   batch.set(doc(db,'public_result_lookup',hash),{resultId,examId,version,className});batchCount++;lookupCount++;
+   await commitIfNeeded();
    await commitIfNeeded();
   }
   await commitIfNeeded(true);
-  if(writeCount===0)throw new Error('प्रकाशनका लागि विद्यार्थीको Roll/Symbol Number र जन्ममिति भेटिएन।');
+  if(writeCount===0)throw new Error('प्रकाशनका लागि विद्यार्थीको Result Code भेटिएन। पहिले पुराना विद्यार्थीको Result Code बनाउनुहोस्।');
   await setDoc(doc(db,'public_result_exams',examId),{examId,className,examName:exam.examName||'परीक्षा',termKey:smssExamTermKey(exam),termLabel:smssTermLabel(smssExamTermKey(exam)),academicYear:exam.academicYear||'',version,active:true,publishedAt:serverTimestamp(),publishedBy:auth.currentUser.uid});
   if(gradeSelect&&originalSelected)gradeSelect.value=originalSelected;if(originalSelected)showGradeSheet(originalSelected);
-  resultMsg(`Online Result प्रकाशित भयो। ${activeResultRows.length-skipped} विद्यार्थी प्रकाशित, ${skipped} विद्यार्थीको Roll/Symbol वा जन्ममिति अपूर्ण भएकाले छुटे। विद्यार्थीले Login नगरी नतिजा हेर्न सक्छन्।`);
+  resultMsg(`Online Result प्रकाशित भयो। ${activeResultRows.length-skipped} विद्यार्थी प्रकाशित, ${skipped} विद्यार्थीको Result Code नभएकाले छुटे। विद्यार्थीले Login वा जन्ममिति बिना Result Code बाट नतिजा हेर्न सक्छन्।`);
   alert(`Online Result प्रकाशित भयो।\nप्रकाशित विद्यार्थी: ${activeResultRows.length-skipped}\nछुटेका: ${skipped}\nLookup: ${lookupCount}`);
  }catch(err){console.error('Publish online result failed',err);resultMsg(`Online Result प्रकाशित भएन: ${err.message||err.code||'Firebase त्रुटि'}। Firestore Rules जाँच गर्नुहोस्।`,true);}
  finally{if(btn){btn.disabled=false;btn.textContent='Publish Online Result';}}
