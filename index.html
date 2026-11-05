@@ -1346,7 +1346,7 @@ function renderMarksLedgerPage(){
    if(achievement)return `<td>${count===null||!Number.isFinite(count)?'—':fmt(count)}</td><td>${rec&&full>0?fmt(full):'—'}</td><td>${valid?fmt(mark):'—'}</td>`;
    const comps=componentsBySubject[si];
    return comps.map((component,ci)=>{
-    const score=scores.find(v=>String(v.name||'').trim().toLowerCase()===String(component.name||'').trim().toLowerCase())||scores[ci];
+    const score=scores.find(v=>String(v.name||'').trim().toLowerCase()===String(component.name||'').trim().toLowerCase())||(component.name==='TH (Theory)'?scores.find(v=>/^TH\b|THEORY/i.test(String(v.name||''))):undefined);
     const got=score?.obtained;
     const max=Number(score?.fullMarks??component.fullMarks);
     return `<td>${got===null||got===undefined||got===''?'—':`${fmt(got)} / ${fmt(max)}`}</td>`;
@@ -1499,9 +1499,11 @@ function ledgerComponentsForSubject(group,subject,className){
   ];
  }
  const sourceParts=(setting?.components?.length?setting.components:defaultMarkParts(group,subject));
+ const theoryPart=sourceParts.find(c=>/^TH\b|THEORY/i.test(String(c.name||'')));
  const parts=sourceParts.filter(c=>!/^TH\b|THEORY/i.test(String(c.name||''))).map(c=>({name:String(c.name||'Assessment'),fullMarks:Number(c.fullMarks)||0}));
- const thFull=(group==='6-8'||(group==='9-10'&&isComputerSubject(subject)))?50:(group==='9-10'?75:0);
- if(thFull>0)parts.push({name:'TH (Theory)',fullMarks:thFull});
+ const expectedTheoryFull=(group==='6-8'||(group==='9-10'&&isComputerSubject(subject)))?50:(group==='9-10'?75:0);
+ const thFull=Number(theoryPart?.fullMarks)||expectedTheoryFull;
+ if(thFull>0)parts.unshift({name:'TH (Theory)',fullMarks:thFull});
  return parts;
 }
 async function ensureExcelJS(){
@@ -1547,7 +1549,7 @@ async function exportMarksLedgerExcel(){
      row.push(no?.obtained??no?.fullMarks??'',fm?.fullMarks??((Number(no?.obtained??no?.fullMarks??0)*4)||''),ob?.obtained??'');
     }else{
      components.forEach((component,ci)=>{
-      const score=scores.find(x=>String(x.name||'').trim().toLowerCase()===String(component.name||'').trim().toLowerCase())||scores[ci];
+      const score=scores.find(x=>String(x.name||'').trim().toLowerCase()===String(component.name||'').trim().toLowerCase())||(component.name==='TH (Theory)'?scores.find(x=>/^TH\b|THEORY/i.test(String(x.name||''))):undefined);
       row.push(score?.obtained??'');
      });
     }
