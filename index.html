@@ -702,13 +702,14 @@ function studentCodeClassPart(className){
 }
 function studentCodeBase(name,className){
  const words=String(name||"").trim().split(/\s+/).filter(Boolean);
- const first=words[0]||"ST",last=words.length>1?words[words.length-1]:"XXX";
- return `${studentCodeLetters(first).padEnd(3,"X")}${studentCodeLetters(last).padEnd(3,"X")}${studentCodeClassPart(className)}`;
+ const first=words[0]||"",last=words.length>1?words[words.length-1]:"";
+ if(!first||!last)throw new Error("Result Code बनाउन विद्यार्थीको पहिलो नाम र थर दुवै आवश्यक छन्।");
+ return `${studentCodeLetters(first)}${studentCodeLetters(last)}-${studentCodeClassPart(className)}`;
 }
 function generateUniqueStudentCode(name,className,usedCodes){
- const base=studentCodeBase(name,className);let code=base,n=2;
- while(usedCodes.has(code)){code=`${base}-${String(n).padStart(2,"0")}`;n++;}
- usedCodes.add(code);return code;
+ const base=studentCodeBase(name,className);
+ if(usedCodes.has(base))throw new Error(`Result Code ${base} अर्को विद्यार्थीको पनि बन्ने भएकाले नाम/थर जाँचेर फरक विवरण राख्नुहोस्।`);
+ usedCodes.add(base);return base;
 }
 function studentCodeSet(students){return new Set(students.map(s=>String(s.studentPortalCode||"").trim().toUpperCase()).filter(Boolean));}
 async function generateMissingStudentCodes(){
@@ -756,11 +757,9 @@ document.addEventListener("submit",async event=>{
   if(editId){
    const existingStudent=cachedStudents.find(s=>s.id===editId);
    const existingCode=String(existingStudent?.studentPortalCode||"").trim().toUpperCase();
-   const oldBase=studentCodeBase(existingStudent?.studentName||existingStudent?.studentNameNepali,existingStudent?.class);
-   const newBase=studentCodeBase(data.studentName||data.studentNameNepali,data.class);
    let updatedPortalCode=existingCode;
-   // Name/class change => regenerate code. Exclude this student’s old code from collision checks.
-   if(!existingCode||oldBase!==newBase){
+   // Preserve every existing Result Code even when the student's name or class is edited.
+   if(!existingCode){
     const usedCodes=studentCodeSet(cachedStudents.filter(s=>s.id!==editId));
     updatedPortalCode=generateUniqueStudentCode(data.studentName||data.studentNameNepali,data.class,usedCodes);
     data.studentPortalCode=updatedPortalCode;
@@ -768,9 +767,9 @@ document.addEventListener("submit",async event=>{
     data.studentPortalCodeUpdatedBy=auth.currentUser.uid;
    }
    await updateDoc(doc(db,"students",editId),{...data,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});
-   await writeAuditLog("students","update",editId,oldBase!==newBase?"student profile and result code updated":"student profile updated");
+   await writeAuditLog("students","update",editId,"student profile updated; existing result code preserved");
    resetStudentForm();await loadStudents();
-   setStudentMessage(oldBase!==newBase?`विद्यार्थी विवरण Update भयो। नयाँ Result Code: ${updatedPortalCode} — विद्यार्थीलाई नयाँ Code दिनुहोस्।`:"विद्यार्थी विवरण सफलतापूर्वक Update भयो। Result Code परिवर्तन आवश्यक परेन।");
+   setStudentMessage(existingCode?"विद्यार्थी विवरण Update भयो। पहिलेको Result Code परिवर्तन गरिएको छैन।":`विद्यार्थी विवरण Update भयो। नयाँ Result Code: ${updatedPortalCode} — विद्यार्थीलाई नयाँ Code दिनुहोस्।`);
   }
   else{const used=studentCodeSet(cachedStudents);data.studentPortalCode=generateUniqueStudentCode(data.studentName||data.studentNameNepali,data.class,used);const studentRef=await addDoc(collection(db,"students"),{...data,studentPortalCodeCreatedAt:serverTimestamp(),studentPortalCodeCreatedBy:auth.currentUser.uid,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});await writeAuditLog("students","create",studentRef.id,"student created with portal code");resetStudentForm();await loadStudents();setStudentMessage(`विद्यार्थी दर्ता भयो। Result Code: ${data.studentPortalCode} — यो Code विद्यार्थीलाई दिनुहोस्।`)}
  }catch(error){console.error("Student save/update failed:",error.code);setStudentMessage("Save/Update भएन। Firestore Rules अनुमति र Internet जाँच गर्नुहोस्।",true)}
