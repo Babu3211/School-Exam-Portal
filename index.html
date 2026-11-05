@@ -263,7 +263,7 @@ async function loadAuditLogs(){
 }
 window.loadAuditLogs=loadAuditLogs;
 document.addEventListener("click",e=>{if(e.target.closest("#refreshAuditLogs"))loadAuditLogs();});
-function rolePageAllowed(page){if(isAdmin())return true;if(!currentUserRole||currentUserRole.active!==true)return false;if(["dashboard","students","staff","results"].includes(page))return true;if(page==="attendance")return roleHas("class_teacher")&&classTeacherNames().length>0;if(page==="marks")return roleHas("subject_teacher")&&(currentUserRole.subjectAssignments||[]).some(x=>x.className&&x.subject);return false;}
+function rolePageAllowed(page){if(isAdmin())return true;if(!currentUserRole||currentUserRole.active!==true)return false;if(["dashboard","students","staff","results","reports"].includes(page))return true;if(page==="attendance")return roleHas("class_teacher")&&classTeacherNames().length>0;if(page==="marks")return roleHas("subject_teacher")&&(currentUserRole.subjectAssignments||[]).some(x=>x.className&&x.subject);return false;}
 function applyRoleNavigation(){
  const teacher=!isAdmin();document.body.classList.toggle("smss-readonly-user",teacher);window.currentUserIsTeacher=teacher;window.rolePageAllowed=rolePageAllowed;
  document.querySelectorAll("[data-page]").forEach(b=>{b.style.display=rolePageAllowed(b.dataset.page)?"":"none";});
@@ -2164,7 +2164,7 @@ async function loadDashboardData(){
  }catch(err){console.error("Dashboard read failed",err);msg.textContent=`Dashboard विवरण लोड भएन (${err.code||err.message})। Firestore Rules र Internet जाँच गर्नुहोस्।`;}
 }
 function buildReport(){
- requireAdmin();
+ if(!auth.currentUser||(!isAdmin()&&currentUserRole?.active!==true))throw new Error("सक्रिय Login आवश्यक छ।");
  const type=document.getElementById("reportType")?.value||"students",cl=document.getElementById("reportClass")?.value||"";const c=dashboardCache;
  const inClass=x=>!cl||canonicalStudentClass(x.class??x.className??"")===canonicalStudentClass(cl);
  let title="",headers=[],rows=[];
@@ -2178,7 +2178,7 @@ function buildReport(){
  document.getElementById("reportBody").innerHTML=rows.map(r=>`<tr>${r.map(x=>`<td>${reportEsc(x)}</td>`).join("")}</tr>`).join("")||`<tr><td class="empty" colspan="${headers.length}">छानिएको रिपोर्टमा विवरण भेटिएन।</td></tr>`;
  const msg=document.getElementById("reportMessage");if(msg)msg.textContent=`${rows.length} वटा रेकर्ड देखाइयो। रिपोर्ट read-only हो; मूल Data परिवर्तन हुँदैन।`;
 }
-async function loadReportsData(){requireAdmin();const msg=document.getElementById("reportMessage");if(msg)msg.textContent="Firebase बाट रिपोर्ट विवरण लोड हुँदैछ...";try{await fetchDashboardCollections();buildReport()}catch(err){console.error("Reports load failed",err);if(msg)msg.textContent=`रिपोर्ट लोड भएन (${err.code||err.message})। Firestore Rules र Internet जाँच गर्नुहोस्।`;}}
+async function loadReportsData(){if(!auth.currentUser||(!isAdmin()&&currentUserRole?.active!==true))throw new Error("सक्रिय Login आवश्यक छ।");const msg=document.getElementById("reportMessage");if(msg)msg.textContent="Firebase बाट रिपोर्ट विवरण लोड हुँदैछ...";try{await fetchDashboardCollections();buildReport()}catch(err){console.error("Reports load failed",err);if(msg)msg.textContent=`रिपोर्ट लोड भएन (${err.code||err.message})। Firestore Rules र Internet जाँच गर्नुहोस्।`;}}
 
 async function downloadFirebaseBackup(){
  const msg=document.getElementById("firebaseBackupMessage"),btn=document.getElementById("downloadFirebaseBackup");
@@ -2278,8 +2278,8 @@ document.addEventListener("click",e=>{if(e.target.closest("#downloadFirebaseBack
 document.addEventListener("change",e=>{if(e.target.id==="restoreBackupFile"){validatedRestoreBackup=null;restorePlan=null;const run=document.getElementById("runFirebaseRestore");if(run)run.disabled=true;const out=document.getElementById("restorePreview");if(out)out.textContent="फाइल छानियो। अब Backup जाँच / Preview थिच्नुहोस्।";}if(e.target.id==="confirmFirebaseRestore"){const run=document.getElementById("runFirebaseRestore");if(run)run.disabled=!validatedRestoreBackup||!e.target.checked;}});
 
 
-function exportReportCsv(){requireAdmin();if(!reportRows.length){const m=document.getElementById("reportMessage");if(m)m.textContent="Export गर्न रेकर्ड छैन।";return;}const data=[reportHeaders,...reportRows],csv=data.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="School_Report_2083.csv";a.click();URL.revokeObjectURL(url);}
-function printReport(){requireAdmin();if(!reportRows.length){const m=document.getElementById("reportMessage");if(m)m.textContent="Print गर्न रेकर्ड छैन।";return;}const w=window.open("","_blank","width=900,height=700");if(!w){const m=document.getElementById("reportMessage");if(m)m.textContent="Popup अनुमति दिनुहोस्।";return;}w.document.write(`<!doctype html><html lang="ne"><meta charset="utf-8"><title>School Report</title><style>body{font-family:Arial,sans-serif;padding:24px}h2{text-align:center}table{width:100%;border-collapse:collapse}th,td{border:1px solid #777;padding:7px;font-size:12px}th{background:#eee}/* Active non-admin accounts can view directory records but cannot see edit/action controls. */
+function exportReportCsv(){if(!auth.currentUser||(!isAdmin()&&currentUserRole?.active!==true))throw new Error("सक्रिय Login आवश्यक छ।");if(!reportRows.length){const m=document.getElementById("reportMessage");if(m)m.textContent="Export गर्न रेकर्ड छैन।";return;}const data=[reportHeaders,...reportRows],csv=data.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="School_Report_2083.csv";a.click();URL.revokeObjectURL(url);}
+function printReport(){if(!auth.currentUser||(!isAdmin()&&currentUserRole?.active!==true))throw new Error("सक्रिय Login आवश्यक छ।");if(!reportRows.length){const m=document.getElementById("reportMessage");if(m)m.textContent="Print गर्न रेकर्ड छैन।";return;}const w=window.open("","_blank","width=900,height=700");if(!w){const m=document.getElementById("reportMessage");if(m)m.textContent="Popup अनुमति दिनुहोस्।";return;}w.document.write(`<!doctype html><html lang="ne"><meta charset="utf-8"><title>School Report</title><style>body{font-family:Arial,sans-serif;padding:24px}h2{text-align:center}table{width:100%;border-collapse:collapse}th,td{border:1px solid #777;padding:7px;font-size:12px}th{background:#eee}/* Active non-admin accounts can view directory records but cannot see edit/action controls. */
 body.smss-readonly-user #studentsBody td:last-child,body.smss-readonly-user #staffBody td:last-child{display:none!important;}
 body.smss-readonly-user #studentsBody th:last-child,body.smss-readonly-user #staffBody th:last-child{display:none!important;}
 </style><h2>Mahadevasthan Secondary School</h2><p style="text-align:center">Dhunibesi-05, Dhading · Academic Year 2083</p><table><thead><tr>${reportHeaders.map(x=>`<th>${reportEsc(x)}</th>`).join("")}</tr></thead><tbody>${reportRows.map(r=>`<tr>${r.map(x=>`<td>${reportEsc(x)}</td>`).join("")}</tr>`).join("")}</tbody></table><script>window.onload=()=>window.print();<\/script></html>`);w.document.close();}
