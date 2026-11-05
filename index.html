@@ -1909,7 +1909,8 @@ async function lookupOnlineResult(){
  const exam=onlinePublicExams.find(x=>x.id===examId);if(!exam){onlineResultStatus('छानिएको परीक्षा प्रकाशित सूचीमा भेटिएन।',true);return;}
  btn.disabled=true;btn.textContent='नतिजा खोजिँदैछ...';out.innerHTML='';onlineResultStatus('Result Code जाँच हुँदैछ...');
  try{
-  const lookupClassName=String(exam.className||className);\n  const codeHash=await onlineResultHash(lookupClassName,examId,exam.version,studentCode.trim().toLocaleUpperCase(),resultPin);
+  const lookupClassName=String(exam.className||className);
+  const codeHash=await onlineResultHash(lookupClassName,examId,exam.version,studentCode.trim().toLocaleUpperCase(),resultPin);
   const lookupSnap=await getDoc(doc(db,'public_result_lookup',codeHash));
   if(!lookupSnap.exists())throw new Error('Result Code मिलेन वा नतिजा प्रकाशित भएको छैन। Code फेरि जाँच्नुहोस्।');
   const lookup=lookupSnap.data();
