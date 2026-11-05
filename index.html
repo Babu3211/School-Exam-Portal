@@ -1874,7 +1874,7 @@ function onlineResultNormalizeDob(v){
  if(m)return `${m[1]}-${String(Number(m[2])).padStart(2,'0')}-${String(Number(m[3])).padStart(2,'0')}`;
  return raw.toLocaleLowerCase().replace(/[^a-z0-9]/g,'');
 }
-async function onlineResultHash(className,examId,version,studentCode,resultPin){
+async async function onlineResultHash(className,examId,version,studentCode,resultPin){
  const raw=[className,examId,version,String(studentCode||"").trim().toLocaleUpperCase(),String(resultPin||"").trim().toLocaleUpperCase()].join('|');
  const bytes=new TextEncoder().encode(raw);
  const digest=await crypto.subtle.digest('SHA-256',bytes);
@@ -1891,7 +1891,7 @@ function downloadResultPinList(rows,className){
  a.href=url;a.download='Result-PIN-'+String(className).replace(/[^\p{L}\p{N}-]/gu,'')+'-'+Date.now()+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
 function onlineResultStatus(message,isError=false){const el=document.getElementById('onlineResultMessage');if(el){el.textContent=message;el.style.color=isError?'#b42318':'';}}
-async function loadOnlineResultExams(){
+async async function loadOnlineResultExams(){
  const className=document.getElementById('onlineResultClass')?.value;
  const select=document.getElementById('onlineResultExam');if(!select)return;
  select.innerHTML='<option value="">नतिजा सूची लोड हुँदैछ...</option>';
@@ -1903,7 +1903,7 @@ async function loadOnlineResultExams(){
   onlineResultStatus(onlinePublicExams.length?`${onlinePublicExams.length} प्रकाशित परीक्षा भेटिए।`:'यस कक्षाका लागि नतिजा प्रकाशित गरिएको छैन।');
  }catch(err){console.error('Online exam list failed',err);select.innerHTML='<option value="">परीक्षा सूची उपलब्ध भएन</option>';onlineResultStatus('प्रकाशित परीक्षा सूची लोड भएन। Firestore Rules मा public_result_exams को read अनुमति आवश्यक छ।',true);}
 }
-async function lookupOnlineResult(){
+async async function lookupOnlineResult(){
  const btn=document.getElementById('onlineResultSearchBtn'),className=document.getElementById('onlineResultClass')?.value,examId=document.getElementById('onlineResultExam')?.value,studentCode=document.getElementById('onlineResultCode')?.value||'',resultPin=document.getElementById('onlineResultPin')?.value||'',out=document.getElementById('onlineResultOutput');
  if(!className||!examId||!studentCode.trim()||!resultPin.trim()){onlineResultStatus('कक्षा, परीक्षा, Result Code र गोप्य PIN सबै राख्नुहोस्।',true);return;}
  const exam=onlinePublicExams.find(x=>x.id===examId);if(!exam){onlineResultStatus('छानिएको परीक्षा प्रकाशित सूचीमा भेटिएन।',true);return;}
@@ -1932,7 +1932,7 @@ function printOnlineResult(){
  w.document.write(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>SMSS Grade Sheet</title><style>@page{size:A4 portrait;margin:10mm}body{font-family:Arial,sans-serif;margin:0;padding:0}.official-grade-sheet{background-color:#fff!important;background-image:url(${watermark})!important;background-repeat:repeat!important;background-size:360px 110px!important;print-color-adjust:exact;-webkit-print-color-adjust:exact;color:#111;padding:22px;max-width:1000px;margin:0 auto}.official-grade-sheet header{color:#d92d46!important}.official-grade-sheet header h2:last-child{color:#111!important}table{break-inside:avoid}button{display:none}</style></head><body>${sheet.outerHTML}<script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script></body></html>`);
  w.document.close();
 }
-async function publishOnlineResult(){
+async async function publishOnlineResult(){
  const btn=document.getElementById('publishOnlineResultBtn');
  const originalSelected=document.getElementById('gradeStudent')?.value||'';
  try{
