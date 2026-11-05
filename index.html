@@ -1932,6 +1932,7 @@ function printOnlineResult(){
 }
 async function publishOnlineResult(){
  const btn=document.getElementById('publishOnlineResultBtn');
+ const originalSelected=document.getElementById('gradeStudent')?.value||'';
  try{
   requireAdmin();if(!isAdmin())throw new Error('मुख्य Admin खाताबाट मात्र Online Result प्रकाशित गर्न मिल्छ।');
   const examId=document.getElementById('resultExam')?.value,exam=resultExams.find(x=>x.id===examId),className=document.getElementById('resultClass')?.value;
@@ -1939,14 +1940,13 @@ async function publishOnlineResult(){
   if(!activeResultRows.length)throw new Error('पहिले View Results थिचेर नतिजा लोड गर्नुहोस्।');
   if(activeResultRows.some(r=>!r.complete))throw new Error('केही विद्यार्थीको Marks अपूर्ण छन्। सबै विषयको Marks पूरा भएपछि मात्र Online Result प्रकाशित गर्नुहोस्।');
   if(!confirm(`${exam.examName} — ${className} का ${activeResultRows.length} विद्यार्थीको Grade Sheet Online प्रकाशित गर्ने?`))return;
-  btn.disabled=true;btn.textContent='प्रकाशित हुँदैछ...';
-  const originalSelected=document.getElementById('gradeStudent')?.value||'';
+  if(btn){btn.disabled=true;btn.textContent='जाँच हुँदैछ...';}
   const gradeSelect=document.getElementById('gradeStudent');
   const gradeBox=document.getElementById('gradeSheetView');
   const version=(crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(36).slice(2)}`);
-  let batch=writeBatch(db),batchCount=0,writeCount=0,lookupCount=0,skipped=0;
-  const seenPublicLookupHashes=new Set(),seenStudentCodes=new Set(),pinRows=[];
-  const commitIfNeeded=async(force=false)=>{if(batchCount>=450||(force&&batchCount)){await batch.commit();writeCount+=batchCount;batch=writeBatch(db);batchCount=0;}};
+  const pendingWrites=[],pinRows=[],seenStudentCodes=new Set(),seenPublicLookupHashes=new Set();
+  let skipped=0;
+  // Preflight: build and validate every student's sheet and lookup before writing anything.
   for(const row of activeResultRows){
    const st=row.student;
    if(gradeSelect)gradeSelect.value=st.id;
@@ -1954,31 +1954,43 @@ async function publishOnlineResult(){
    const sheet=gradeBox?.querySelector('.official-grade-sheet');
    if(!sheet)throw new Error(`${st.studentName||'एक विद्यार्थी'} को Grade Sheet तयार भएन।`);
    const roll=String(studentRollNo(st)??'').trim();
-   const symbol=String(st.symbolNo||st.symbolNumber||st.examSymbolNo||'').trim();
    const studentCode=String(st.studentPortalCode||'').trim().toLocaleUpperCase();
    if(!studentCode){skipped++;continue;}
    if(seenStudentCodes.has(studentCode))throw new Error('दुई विद्यार्थीको Result Code एउटै भेटियो। विद्यार्थी Code सच्याएर मात्र प्रकाशित गर्नुहोस्।');
    seenStudentCodes.add(studentCode);
+   const gradeSheetHtml=sheet.outerHTML;
+   const htmlBytes=new TextEncoder().encode(gradeSheetHtml).length;
+   if(htmlBytes>850000)throw new Error(`${st.studentName||'एक विद्यार्थी'} को Grade Sheet Firestore को सुरक्षित आकार सीमाभन्दा ठूलो छ (${htmlBytes} bytes)। Sheet छोट्याएर पुनः प्रयास गर्नुहोस्।`);
    const resultPin=generateSecureResultPin();
    const resultId=crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(36).slice(2)}`;
-   batch.set(doc(db,'public_results',resultId),{className,examId,version,gradeSheetHtml:sheet.outerHTML,publishedAt:serverTimestamp()});batchCount++;
    const hash=await onlineResultHash(className,examId,version,studentCode,resultPin);
    if(seenPublicLookupHashes.has(hash))throw new Error('दुई विद्यार्थीको सुरक्षित Lookup एउटै भेटियो। पुनः प्रयास गर्नुहोस्।');
    seenPublicLookupHashes.add(hash);
-   batch.set(doc(db,'public_result_lookup',hash),{resultId,examId,version,className});batchCount++;lookupCount++;
+   pendingWrites.push({ref:doc(db,'public_results',resultId),data:{className,examId,version,gradeSheetHtml,publishedAt:serverTimestamp()}});
+   pendingWrites.push({ref:doc(db,'public_result_lookup',hash),data:{resultId,examId,version,className}});
    pinRows.push({name:st.studentName||st.studentNameNepali||'',roll,code:studentCode,pin:resultPin});
-   await commitIfNeeded();
-   await commitIfNeeded();
   }
-  await commitIfNeeded(true);
-  if(writeCount===0)throw new Error('प्रकाशनका लागि विद्यार्थीको Result Code भेटिएन। पहिले पुराना विद्यार्थीको Result Code बनाउनुहोस्।');
+  if(!pinRows.length)throw new Error('प्रकाशनका लागि विद्यार्थीको Result Code भेटिएन। पहिले विद्यार्थीको Result Code बनाउनुहोस्।');
+  // Firestore batches are capped below 500 writes. The exam pointer is published last.
+  if(btn)btn.textContent='नतिजा सुरक्षित हुँदैछ...';
+  let writeCount=0;
+  for(let i=0;i<pendingWrites.length;i+=450){
+   const batch=writeBatch(db);
+   for(const item of pendingWrites.slice(i,i+450))batch.set(item.ref,item.data);
+   await batch.commit();writeCount+=Math.min(450,pendingWrites.length-i);
+  }
   await setDoc(doc(db,'public_result_exams',examId),{examId,className,examName:exam.examName||'परीक्षा',termKey:smssExamTermKey(exam),termLabel:smssTermLabel(smssExamTermKey(exam)),academicYear:exam.academicYear||'',version,active:true,publishedAt:serverTimestamp(),publishedBy:auth.currentUser.uid});
-  if(gradeSelect&&originalSelected)gradeSelect.value=originalSelected;if(originalSelected)showGradeSheet(originalSelected);
+  if(gradeSelect&&originalSelected)gradeSelect.value=originalSelected;
+  if(originalSelected)showGradeSheet(originalSelected);
   downloadResultPinList(pinRows,className);
-  resultMsg(`Online Result प्रकाशित भयो। ${activeResultRows.length-skipped} विद्यार्थी प्रकाशित, ${skipped} विद्यार्थीको Result Code नभएकाले छुटे। PIN सूची डाउनलोड भएको छ; यसलाई सुरक्षित राखेर विद्यार्थीलाई दिनुहोस्।`);
-  alert(`Online Result प्रकाशित भयो।\nप्रकाशित विद्यार्थी: ${activeResultRows.length-skipped}\nछुटेका: ${skipped}\nPIN सूची डाउनलोड भयो। यसलाई सुरक्षित राख्नुहोस्।`);
- }catch(err){console.error('Publish online result failed',err);resultMsg(`Online Result प्रकाशित भएन: ${err.message||err.code||'Firebase त्रुटि'}। Firestore Rules जाँच गर्नुहोस्।`,true);}
- finally{if(btn){btn.disabled=false;btn.textContent='Publish Online Result';}}
+  resultMsg(`Online Result प्रकाशित भयो। ${pinRows.length} विद्यार्थी प्रकाशित, ${skipped} विद्यार्थीको Result Code नभएकाले छुटे। PIN सूची डाउनलोड भएको छ; यसलाई सुरक्षित राखेर विद्यार्थीलाई दिनुहोस्।`);
+  alert(`Online Result प्रकाशित भयो।\\nप्रकाशित विद्यार्थी: ${pinRows.length}\\nछुटेका: ${skipped}\\nPIN सूची डाउनलोड भयो। यसलाई सुरक्षित राख्नुहोस्।`);
+ }catch(err){
+  console.error('Publish online result failed',err);
+  const gradeSelect=document.getElementById('gradeStudent');
+  if(gradeSelect&&originalSelected){gradeSelect.value=originalSelected;try{showGradeSheet(originalSelected);}catch(restoreErr){console.warn('Grade sheet restore failed',restoreErr);}}
+  resultMsg(`Online Result प्रकाशित भएन: ${err.message||err.code||'Firebase त्रुटि'}। Firestore Rules र Internet जाँच गर्नुहोस्।`,true);
+ }finally{if(btn){btn.disabled=false;btn.textContent='Publish Online Result';}}
 }
 document.addEventListener('click',e=>{
  if(e.target.closest('#onlineResultToggle')){const panel=document.getElementById('onlineResultPanel');panel.hidden=!panel.hidden;if(!panel.hidden)loadOnlineResultExams();}
