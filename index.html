@@ -1902,7 +1902,7 @@ function showGradeSheet(studentId){
  const gpa=gpaEligible&&totalCredit>0?classSubjects.reduce((a,{mark,config})=>a+Number(config.creditHour??config.creditHours)*mark.grade.point,0)/totalCredit:null;
  const rows=r.perSubject.map(x=>{
    const m=resultMarks.find(v=>v.studentId===studentId&&v.examId===exam?.id&&canonicalSubjectKey(v.subject)===canonicalSubjectKey(x.subject));
-   const scores=m?.scores||[];const th=scores.find(v=>/^TH\b|THEORY/i.test(String(v.name||'')));const inScores=scores.filter(v=>!/^TH\\b|THEORY/i.test(String(v.name||'')));
+   const scores=m?.scores||[];const th=scores.find(v=>/^TH\b|THEORY/i.test(String(v.name||'')));const inScores=scores.filter(v=>!/^TH\b|THEORY/i.test(String(v.name||'')));
    const inFull=inScores.reduce((a,v)=>a+Number(v.fullMarks||0),0),inObt=inScores.reduce((a,v)=>a+(v.obtained==null?0:Number(v.obtained)),0);
    const thFull=Number(th?.fullMarks||0),thObt=th?.obtained==null?null:Number(th.obtained);
    const inGrade=inFull>0&&inScores.every(v=>v.obtained!==null&&v.obtained!==undefined)?gradeForPercent(inObt/inFull*100):null;
