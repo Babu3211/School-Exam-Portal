@@ -989,7 +989,8 @@ function smssExamTermKey(exam){
  if(type)return type;
  return 'other';
 }
-function smssTermLabel(key){return SMSS_TERM_OPTIONS.find(x=>x.key===key)?.label||'अन्य';}\nfunction smssTermLabelEnglish(key){return ({first:'First Terminal',second:'Second Terminal',third:'Third Terminal',annual:'Annual','half-yearly':'Half-Yearly',internal:'Internal Assessment',other:'Other'})[key]||'Other';}
+function smssTermLabel(key){return SMSS_TERM_OPTIONS.find(x=>x.key===key)?.label||'अन्य';}
+function smssTermLabelEnglish(key){return ({first:'First Terminal',second:'Second Terminal',third:'Third Terminal',annual:'Annual','half-yearly':'Half-Yearly',internal:'Internal Assessment',other:'Other'})[key]||'Other';}
 function smssExamsForClassTerm(className,termKey){
  return (marksExams||[]).filter(x=>x.active!==false&&String(x.className||'')===String(className||'')&&(termKey==='all'||smssExamTermKey(x)===termKey));
 }
