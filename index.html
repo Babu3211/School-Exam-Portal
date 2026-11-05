@@ -1894,7 +1894,7 @@ function showGradeSheet(studentId){
  const gpa=gpaEligible&&totalCredit>0?classSubjects.reduce((a,{mark,config})=>a+Number(config.creditHour??config.creditHours)*mark.grade.point,0)/totalCredit:null;
  const rows=r.perSubject.map(x=>{
    const m=resultMarks.find(v=>v.studentId===studentId&&v.examId===exam?.id&&canonicalSubjectKey(v.subject)===canonicalSubjectKey(x.subject));
-   const scores=m?.scores||[];const th=scores.find(v=>/^TH\\b|THEORY/i.test(String(v.name||'')));const inScores=scores.filter(v=>!/^TH\\b|THEORY/i.test(String(v.name||'')));
+   const scores=m?.scores||[];const th=scores.find(v=>/^TH\b|THEORY/i.test(String(v.name||'')));const inScores=scores.filter(v=>!/^TH\\b|THEORY/i.test(String(v.name||'')));
    const inFull=inScores.reduce((a,v)=>a+Number(v.fullMarks||0),0),inObt=inScores.reduce((a,v)=>a+(v.obtained==null?0:Number(v.obtained)),0);
    const thFull=Number(th?.fullMarks||0),thObt=th?.obtained==null?null:Number(th.obtained);
    const inGrade=inFull>0&&inScores.every(v=>v.obtained!==null&&v.obtained!==undefined)?gradeForPercent(inObt/inFull*100):null;
@@ -1915,7 +1915,7 @@ function showGradeSheet(studentId){
    return `<tr><td>${resultEsc(subjectEnglishLabel(x.subject))}</td><td>${resultEsc(creditFor(x.subject))}</td><td>${x.grade.point===null?'—':x.grade.point.toFixed(1)}</td><td>${x.grade.grade}</td><td>${x.grade.remark.toUpperCase()}</td><td>${x.grade.grade}</td></tr>`;
  }).join('');
  box.innerHTML=`<div class="official-grade-sheet" style="color:#111;background-color:#fff;padding:22px;max-width:1000px;margin:0 auto;font-family:Arial,sans-serif">
- <header style="position:relative;text-align:center;line-height:1.35;margin-bottom:18px;padding:4px 0 0 112px;min-height:112px;color:#d92d46"><svg aria-label="School logo" viewBox="0 0 180 180" style="position:absolute;left:4px;top:0;width:104px;height:104px" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#172b78" stroke-width="3"><path d="M90 4 L176 90 L90 176 L4 90 Z"/><path d="M4 90 L90 4 L176 90 L90 176 Z"/></g><path d="M48 76 Q68 61 89 76 Q111 61 132 76 L132 113 Q110 99 89 114 Q68 99 48 113 Z" fill="#fff" stroke="#172b78" stroke-width="3"/><path d="M90 76 V114" stroke="#172b78" stroke-width="3"/></svg><h2 style="margin:0;font-size:19px;letter-spacing:.3px">MAHADEVASTHAN SECONDARY SCHOOL</h2><div>DHUNIBESHI MUNICIPALITY-05, DHADING</div><h3 style="margin:10px 0 0">GRADE ${classNo?['','I','II','III','IV','V','VI','VII','VIII','IX','X'][classNo]||classNo:''}</h3><h2 style="margin:14px 0 4px">GRADE SHEET</h2></header>
+ <header style="position:relative;text-align:center;line-height:1.35;margin-bottom:18px;padding:4px 0 0 112px;min-height:112px;color:#d92d46">${schoolLogoPrintMarkup()}<h2 style="margin:0;font-size:19px;letter-spacing:.3px">MAHADEVASTHAN SECONDARY SCHOOL</h2><div>DHUNIBESHI MUNICIPALITY-05, DHADING</div><h3 style="margin:10px 0 0">GRADE ${classNo?['','I','II','III','IV','V','VI','VII','VIII','IX','X'][classNo]||classNo:''}</h3><h2 style="margin:14px 0 4px">GRADE SHEET</h2></header>
  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13px;border-bottom:1px solid #777;padding-bottom:12px">
  <div><b>THE GRADE(S) SECURED BY</b><br>${resultEsc(student.studentName||'—')}${studentCode?' ('+resultEsc(studentCode)+')':''}</div><div><b>DATE OF BIRTH</b><br>${resultEsc(dob)}</div>
  <div><b>OF MAHADEVASTHAN SECONDARY SCHOOL, DHUNIBESHI MUNICIPALITY-05, DHADING</b></div><div><b>SYMBOL NO.</b><br>${resultEsc(symbol)}<br><b>IEMIS CODE</b><br>${resultEsc(iemis)}</div>
