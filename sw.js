@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v41-grade-sheet-online-result';
+const CACHE_NAME = 'smss-pwa-v44-school-exam-portal';
 const APP_SHELL = [
   './',
   './index.html',
