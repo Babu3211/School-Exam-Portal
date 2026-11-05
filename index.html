@@ -1885,9 +1885,9 @@ function generateSecureResultPin(){
 }
 function downloadResultPinList(rows,className){
  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
- const csv='\\uFEFF'+[['विद्यार्थीको नाम','कक्षा','Roll No.','Result Code','गोप्य Result PIN'],...rows.map(r=>[r.name,className,r.roll,r.code,r.pin])].map(row=>row.map(q).join(',')).join('\\r\\n');
+ const csv='\uFEFF'+[['विद्यार्थीको नाम','कक्षा','Roll No.','Result Code','गोप्य Result PIN'],...rows.map(r=>[r.name,className,r.roll,r.code,r.pin])].map(row=>row.map(q).join(',')).join('\r\n');
  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
- a.href=url;a.download='Result-PIN-'+String(className).replace(/[^\\p{L}\\p{N}-]/gu,'')+'-'+Date.now()+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+ a.href=url;a.download='Result-PIN-'+String(className).replace(/[^\p{L}\p{N}-]/gu,'')+'-'+Date.now()+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
 function onlineResultStatus(message,isError=false){const el=document.getElementById('onlineResultMessage');if(el){el.textContent=message;el.style.color=isError?'#b42318':'';}}
 async function loadOnlineResultExams(){
