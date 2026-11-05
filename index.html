@@ -1866,6 +1866,7 @@ window.loadResultData=loadResultData;
 // V41 Online Result: public access is limited to a published, individual grade-sheet snapshot.
 // No public access is granted to students, marks, exams or classes collections.
 let onlinePublicExams=[];
+let onlineResultExamLoadRequest=0;
 const onlineResultDigits=v=>String(v??'').replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d));
 function onlineResultNormalizeCredential(v){return onlineResultDigits(v).trim().toLocaleLowerCase().replace(/\s+/g,'');}
 function onlineResultNormalizeDob(v){
@@ -1892,16 +1893,21 @@ function downloadResultPinList(rows,className){
 }
 function onlineResultStatus(message,isError=false){const el=document.getElementById('onlineResultMessage');if(el){el.textContent=message;el.style.color=isError?'#b42318':'';}}
 async function loadOnlineResultExams(){
+ const requestId=++onlineResultExamLoadRequest;
  const className=document.getElementById('onlineResultClass')?.value;
  const select=document.getElementById('onlineResultExam');if(!select)return;
  select.innerHTML='<option value="">नतिजा सूची लोड हुँदैछ...</option>';
  onlinePublicExams=[];
  try{
   const snap=await getDocs(collection(db,'public_result_exams'));
-  onlinePublicExams=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.active!==false&&x.version&&canonicalStudentClass(x.className)===canonicalStudentClass(className)).sort((a,b)=>String(b.publishedAt?.seconds||0).localeCompare(String(a.publishedAt?.seconds||0)));
+  if(requestId!==onlineResultExamLoadRequest||document.getElementById('onlineResultClass')?.value!==className)return;
+  onlinePublicExams=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.active!==false&&x.version&&canonicalStudentClass(x.className)===canonicalStudentClass(className)).sort((a,b)=>Number(b.publishedAt?.seconds||0)-Number(a.publishedAt?.seconds||0));
   select.innerHTML='<option value="">परीक्षा छान्नुहोस्</option>'+onlinePublicExams.map(x=>`<option value="${resultEsc(x.id)}">${resultEsc(x.examName||'परीक्षा')} — ${resultEsc(x.termLabel||'')} — ${resultEsc(x.academicYear||'')}</option>`).join('');
   onlineResultStatus(onlinePublicExams.length?`${onlinePublicExams.length} प्रकाशित परीक्षा भेटिए।`:'यस कक्षाका लागि नतिजा प्रकाशित गरिएको छैन।');
- }catch(err){console.error('Online exam list failed',err);select.innerHTML='<option value="">परीक्षा सूची उपलब्ध भएन</option>';onlineResultStatus('प्रकाशित परीक्षा सूची लोड भएन। Firestore Rules मा public_result_exams को read अनुमति आवश्यक छ।',true);}
+ }catch(err){
+  if(requestId!==onlineResultExamLoadRequest)return;
+  console.error('Online exam list failed',err);onlinePublicExams=[];select.innerHTML='<option value="">परीक्षा सूची उपलब्ध भएन</option>';onlineResultStatus('प्रकाशित परीक्षा सूची लोड भएन। Firestore Rules मा public_result_exams को read अनुमति आवश्यक छ।',true);
+ }
 }
 async function lookupOnlineResult(){
  const btn=document.getElementById('onlineResultSearchBtn'),className=document.getElementById('onlineResultClass')?.value,examId=document.getElementById('onlineResultExam')?.value,studentCode=document.getElementById('onlineResultCode')?.value||'',resultPin=document.getElementById('onlineResultPin')?.value||'',out=document.getElementById('onlineResultOutput');
@@ -1920,7 +1926,8 @@ async function lookupOnlineResult(){
   const result=resultSnap.data();
   if(result.examId!==examId||result.version!==exam.version||canonicalStudentClass(result.className)!==canonicalStudentClass(className))throw new Error('नतिजा विवरण मिलेन। विद्यालय प्रशासनलाई सम्पर्क गर्नुहोस्।');
   const html=String(result.gradeSheetHtml||'');
-  const htmlBytes=new TextEncoder().encode(html).length;\n  if(htmlBytes>850000||!html.includes('official-grade-sheet'))throw new Error('नतिजा फाइल अपूर्ण वा सुरक्षित आकारभन्दा ठूलो छ। विद्यालय प्रशासनलाई सम्पर्क गर्नुहोस्।');
+  const htmlBytes=new TextEncoder().encode(html).length;
+  if(htmlBytes>850000||!html.includes('official-grade-sheet'))throw new Error('नतिजा फाइल अपूर्ण वा सुरक्षित आकारभन्दा ठूलो छ। विद्यालय प्रशासनलाई सम्पर्क गर्नुहोस्।');
   out.innerHTML=`<div id="onlineResultSheetWrap">${html}</div><button type="button" id="onlineResultPrintBtn" style="width:100%;margin-top:12px;padding:12px;background:#1769d2;color:#fff;border:0;border-radius:9px;font-weight:800">Print / Save PDF</button>`;
   onlineResultStatus('नतिजा सफलतापूर्वक भेटियो। यो Grade Sheet तपाईंको Result Code अनुसार हो।');
  }catch(err){console.error('Online result lookup failed',err);onlineResultStatus(err.message||'नतिजा हेर्न सकिएन। Firestore Rules जाँच गर्नुहोस्।',true);}
