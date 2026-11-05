@@ -1909,7 +1909,7 @@ async function lookupOnlineResult(){
  const exam=onlinePublicExams.find(x=>x.id===examId);if(!exam){onlineResultStatus('छानिएको परीक्षा प्रकाशित सूचीमा भेटिएन।',true);return;}
  btn.disabled=true;btn.textContent='नतिजा खोजिँदैछ...';out.innerHTML='';onlineResultStatus('Result Code जाँच हुँदैछ...');
  try{
-  const codeHash=await onlineResultHash(className,examId,exam.version,studentCode.trim().toLocaleUpperCase(),resultPin);
+  const lookupClassName=String(exam.className||className);\n  const codeHash=await onlineResultHash(lookupClassName,examId,exam.version,studentCode.trim().toLocaleUpperCase(),resultPin);
   const lookupSnap=await getDoc(doc(db,'public_result_lookup',codeHash));
   if(!lookupSnap.exists())throw new Error('Result Code मिलेन वा नतिजा प्रकाशित भएको छैन। Code फेरि जाँच्नुहोस्।');
   const lookup=lookupSnap.data();
@@ -1919,7 +1919,7 @@ async function lookupOnlineResult(){
   const result=resultSnap.data();
   if(result.examId!==examId||result.version!==exam.version||canonicalStudentClass(result.className)!==canonicalStudentClass(className))throw new Error('नतिजा विवरण मिलेन। विद्यालय प्रशासनलाई सम्पर्क गर्नुहोस्।');
   const html=String(result.gradeSheetHtml||'');
-  if(html.length>800000||!html.includes('official-grade-sheet'))throw new Error('नतिजा फाइल अपूर्ण छ। विद्यालय प्रशासनलाई सम्पर्क गर्नुहोस्।');
+  const htmlBytes=new TextEncoder().encode(html).length;\n  if(htmlBytes>850000||!html.includes('official-grade-sheet'))throw new Error('नतिजा फाइल अपूर्ण वा सुरक्षित आकारभन्दा ठूलो छ। विद्यालय प्रशासनलाई सम्पर्क गर्नुहोस्।');
   out.innerHTML=`<div id="onlineResultSheetWrap">${html}</div><button type="button" id="onlineResultPrintBtn" style="width:100%;margin-top:12px;padding:12px;background:#1769d2;color:#fff;border:0;border-radius:9px;font-weight:800">Print / Save PDF</button>`;
   onlineResultStatus('नतिजा सफलतापूर्वक भेटियो। यो Grade Sheet तपाईंको Result Code अनुसार हो।');
  }catch(err){console.error('Online result lookup failed',err);onlineResultStatus(err.message||'नतिजा हेर्न सकिएन। Firestore Rules जाँच गर्नुहोस्।',true);}
