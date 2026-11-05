@@ -720,9 +720,11 @@ async function generateMissingStudentCodes(){
  const used=studentCodeSet(students),missing=students.filter(s=>!String(s.studentPortalCode||"").trim());
  if(!missing.length){setStudentMessage("सबै विद्यार्थीको Result Code पहिले नै बनेको छ।");return 0;}
  if(!confirm(`${missing.length} जना पुराना विद्यार्थीका लागि नयाँ Result Code बनाउने? पहिले बनेका Code परिवर्तन हुने छैनन्।`))return 0;
- for(let i=0;i<missing.length;i+=450){
+ // Generate every missing code first. A duplicate/invalid name stops before any database write.
+ const prepared=missing.map(st=>({student:st,code:generateUniqueStudentCode(st.studentName||st.studentNameNepali,st.class,used)}));
+ for(let i=0;i<prepared.length;i+=450){
   const batch=writeBatch(db);
-  for(const st of missing.slice(i,i+450))batch.update(doc(db,"students",st.id),{studentPortalCode:generateUniqueStudentCode(st.studentName||st.studentNameNepali,st.class,used),studentPortalCodeCreatedAt:serverTimestamp(),studentPortalCodeCreatedBy:auth.currentUser.uid});
+  for(const item of prepared.slice(i,i+450))batch.update(doc(db,"students",item.student.id),{studentPortalCode:item.code,studentPortalCodeCreatedAt:serverTimestamp(),studentPortalCodeCreatedBy:auth.currentUser.uid});
   await batch.commit();
  }
  await loadStudents();setStudentMessage(`${missing.length} जना पुराना विद्यार्थीको Result Code सफलतापूर्वक बनाइयो। Code सूचीबाट हेर्न/Export गर्न सक्नुहुन्छ।`);
