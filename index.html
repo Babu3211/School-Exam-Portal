@@ -45,6 +45,36 @@
 .official-grade-sheet header h2:last-child{color:#111!important;}
 @media print{.official-grade-sheet{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important;}body.print-tabulation .side,body.print-tabulation .top,body.print-tabulation #loginGate,body.print-tabulation .footer,body.print-tabulation .notice,body.print-tabulation .toolbar,body.print-tabulation #resultMessage{display:none!important}body.print-tabulation .app{display:block!important}body.print-tabulation .content{padding:0;max-width:none}body.print-tabulation .content>.head,body.print-tabulation .content>.panel{display:none!important}body.print-tabulation #resultsTablePanel{display:block!important;box-shadow:none;border:0}body.print-tabulation #resultsTablePanel .tablewrap{overflow:visible}body.print-tabulation #resultsTablePanel table{min-width:0;width:100%;font-size:9px}body.print-tabulation #resultsTablePanel th,body.print-tabulation #resultsTablePanel td{font-size:9px;padding:4px}}
 
+
+/* V44 login refresh: responsive, accessible password reveal */
+#loginGate{position:relative;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 12% 12%,#d9e8ff 0,transparent 42%),radial-gradient(ellipse at 90% 88%,#e7ddff 0,transparent 38%),linear-gradient(135deg,#edf4ff 0%,#f8faff 48%,#f0edff 100%);padding:24px 16px}
+#loginGate:before,#loginGate:after{content:"";position:absolute;z-index:-1;border-radius:50%;filter:blur(1px);pointer-events:none}
+#loginGate:before{width:250px;height:250px;left:-110px;bottom:-100px;border:1px solid #8db7f255;box-shadow:0 0 0 24px #8db7f20c,0 0 0 50px #8db7f20a}
+#loginGate:after{width:210px;height:210px;right:-95px;top:-95px;border:1px solid #9b8be955;box-shadow:0 0 0 22px #9b8be90c,0 0 0 46px #9b8be908}
+.login-card{position:relative;max-width:470px;padding:clamp(22px,5vw,34px);border:1px solid #dce7f5;border-radius:22px;box-shadow:0 24px 65px #203c681c,0 4px 14px #203c680b;overflow:hidden}
+.login-card:before{content:"";position:absolute;inset:0 0 auto;height:5px;background:linear-gradient(90deg,#1769d2,#6954d8,#9b72ec)}
+.login-brand{display:flex;align-items:center;gap:14px;margin-bottom:23px}
+.login-logo{width:58px;height:58px;flex:0 0 58px;display:grid;place-items:center;margin:0;border-radius:17px;background:linear-gradient(145deg,#1769d2,#5749bd);box-shadow:0 8px 18px #3158ad35;color:#fff;font-size:29px}
+.login-brand h2{font-size:clamp(17px,4vw,21px);margin:4px 0 1px;line-height:1.45}
+.login-kicker{font-size:9px;letter-spacing:1.15px;font-weight:900;color:#536b91}
+.login-school-en{margin:0!important;font-size:11px!important;color:#71819a!important}
+.login-welcome{padding:17px 18px;margin:0 0 15px;border-radius:14px;background:linear-gradient(110deg,#f0f6ff,#f6f3ff);border:1px solid #e4eafb}
+.login-welcome h3{margin:0 0 4px;color:#203b69;font-size:17px}
+.login-welcome p{margin:0;font-size:12px;color:#63748d}
+.login-year{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:0 0 17px;color:#65758c;font-size:10px}
+.login-year strong{padding:4px 9px;border-radius:20px;background:#eaf1ff;color:#2457b5;font-size:11px}
+.login-card label{margin:13px 0 7px;color:#344966}
+.login-card input{min-height:48px;border:1px solid #d5e0ee;border-radius:11px;background:#fbfdff;transition:border-color .18s,box-shadow .18s}
+.login-card input:focus{outline:0;border-color:#5c8fe0;box-shadow:0 0 0 4px #4d83df1b}
+.password-field{position:relative;display:flex;align-items:center}
+.password-field input{padding-right:58px}
+.login-card .password-toggle{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:44px;height:42px;min-height:42px;margin:0;padding:0;background:transparent;color:#536b91;border:0;border-radius:9px;box-shadow:none;font-size:19px;display:grid;place-items:center}
+.login-card .password-toggle:hover{background:#edf3ff}
+.login-card #loginButton{min-height:49px;margin-top:19px;border-radius:11px;background:linear-gradient(100deg,#1769d2,#514fc3);box-shadow:0 8px 18px #3158ad2b;letter-spacing:.15px}
+.login-card #loginButton:hover{filter:brightness(1.05);box-shadow:0 10px 22px #3158ad38}
+.login-card #loginButton:focus-visible,.login-card .password-toggle:focus-visible{outline:3px solid #9dbcf2;outline-offset:2px}
+#loginError{padding:0 2px}
+@media(max-width:480px){#loginGate{padding:14px 11px;align-items:flex-start}.login-card{margin:auto 0;padding:22px 19px;border-radius:19px}.login-brand{gap:11px;margin-bottom:19px}.login-logo{width:50px;height:50px;flex-basis:50px;font-size:25px}.login-kicker{font-size:8px;letter-spacing:.8px}.login-welcome{padding:14px 15px}}
 </style>
 
 <meta name="theme-color" content="#1769d2">
@@ -59,7 +89,7 @@
 <!-- SMSS Ledger refinement V37 -->
 </head>
 <body>
-<div id="loginGate"><div class="login-card"><div class="login-logo">M</div><h2>Mahadevasthan Secondary School</h2><p>Exam Management Portal<br>Administrator / Teacher Login · Academic Year 2083</p><form id="loginForm"><label for="loginEmail">Email Address</label><input id="loginEmail" type="email" required autocomplete="username" placeholder="Admin email"><label for="loginPassword">Password</label><input id="loginPassword" type="password" required autocomplete="current-password" placeholder="Password"><button id="loginButton" type="submit">Login</button><p id="loginError" role="alert"></p><p id="loginStatus">Admin वा सक्रिय शिक्षक खाताबाट Login गर्नुहोस्।</p></form>
+<div id="loginGate"><div class="login-card"><div class="login-brand"><div class="login-logo" aria-hidden="true">म</div><div><span class="login-kicker">SCHOOL EXAM MANAGEMENT SYSTEM</span><h2>महादेवस्थान माध्यमिक विद्यालय</h2><p class="login-school-en">Mahadevsthan Secondary School</p></div></div><div class="login-welcome"><h3>स्वागत छ !</h3><p>आफ्नो आधिकारिक खाताबाट सुरक्षित रूपमा Login गर्नुहोस्।</p></div><div class="login-year"><span>Academic Year</span><strong>२०८३</strong><span>• Admin / Teacher Portal</span></div><form id="loginForm"><label for="loginEmail">Email Address</label><input id="loginEmail" type="email" required autocomplete="username" placeholder="Admin email"><label for="loginPassword">Password</label><div class="password-field"><input id="loginPassword" type="password" required autocomplete="current-password" placeholder="आफ्नो Password राख्नुहोस्"><button id="toggleLoginPassword" class="password-toggle" type="button" aria-label="Password देखाउनुहोस्" aria-pressed="false" title="Password देखाउनुहोस्"><span id="loginPasswordEye" aria-hidden="true">👁</span></button></div><button id="loginButton" type="submit">Login सुरक्षित रूपमा प्रवेश गर्नुहोस्</button><p id="loginError" role="alert"></p><p id="loginStatus">Admin वा सक्रिय शिक्षक खाताबाट Login गर्नुहोस्।</p></form>
 <button class="forgot-link" id="forgotPasswordToggle" type="button">पासवर्ड बिर्सनुभयो? Email बाट Reset Link लिनुहोस्</button>
 <div class="forgot-panel" id="forgotPasswordPanel" hidden>
  <b style="font-size:13px;color:var(--navy)">Password Reset — निःशुल्क Email Link</b>
@@ -382,6 +412,7 @@ document.addEventListener("input",e=>{if(e.target.id==="roleUserSearch"){filterR
 document.addEventListener("change",e=>{if(e.target.id==="roleClassTeacher"||e.target.id==="roleSubjectTeacher"){const ct=document.getElementById("classTeacherAssignments"),st=document.getElementById("subjectTeacherAssignments");if(ct)ct.style.opacity=document.getElementById("roleClassTeacher").checked?"1":".55";if(st)st.style.opacity=document.getElementById("roleSubjectTeacher").checked?"1":".55";}});
 // Do not re-render assignment checkboxes on every click; doing so resets checkbox state. Choices render only after Firebase data loads or explicit refresh.
 const gate=document.getElementById("loginGate"),shell=document.querySelector(".app"),loginForm=document.getElementById("loginForm"),loginButton=document.getElementById("loginButton"),errorBox=document.getElementById("loginError"),statusBox=document.getElementById("loginStatus");
+document.getElementById("toggleLoginPassword").addEventListener("click",()=>{const field=document.getElementById("loginPassword"),toggle=document.getElementById("toggleLoginPassword"),visible=field.type==="password";field.type=visible?"text":"password";toggle.setAttribute("aria-pressed",String(visible));toggle.setAttribute("aria-label",visible?"Password लुकाउनुहोस्":"Password देखाउनुहोस्");toggle.title=visible?"Password लुकाउनुहोस्":"Password देखाउनुहोस्";document.getElementById("loginPasswordEye").textContent=visible?"🙈":"👁";});
 loginForm.addEventListener("submit",async event=>{event.preventDefault();errorBox.textContent="";statusBox.textContent="Login जाँच हुँदैछ...";loginButton.disabled=true;loginButton.textContent="Please wait...";const email=document.getElementById("loginEmail").value.trim(),password=document.getElementById("loginPassword").value;try{const credential=await signInWithEmailAndPassword(auth,email,password);if(credential.user.uid===ADMIN_UID){currentUserRole={roles:["admin"],active:true};}else{const roleSnap=await getDoc(doc(db,"user_roles",credential.user.uid));if(!roleSnap.exists()||roleSnap.data().active!==true){await signOut(auth);currentUserRole=null;throw new Error("यो Account सक्रिय User Role मा छैन। Admin सँग सम्पर्क गर्नुहोस्।");}currentUserRole={uid:credential.user.uid,...roleSnap.data()};const allowed=currentUserRole.roles||[];if(!allowed.includes("class_teacher")&&!allowed.includes("subject_teacher")){await signOut(auth);currentUserRole=null;throw new Error("यो शिक्षक Role का लागि Attendance वा Marks अनुमति छैन।");}}}catch(error){console.error("Login failed:",error.code||error.message);errorBox.textContent=error.code==="auth/invalid-credential"||error.code==="auth/wrong-password"||error.code==="auth/user-not-found"?"Email वा Password मिलेन। फेरि जाँच गर्नुहोस्।":error.message||"Login हुन सकेन। Firestore Rules र Internet जाँच गर्नुहोस्।";statusBox.textContent=""}finally{loginButton.disabled=false;loginButton.textContent="Login"}});
 const forgotPanel=document.getElementById("forgotPasswordPanel"),forgotStatus=document.getElementById("forgotPasswordStatus"),sendPasswordResetButton=document.getElementById("sendPasswordResetLink");
 document.getElementById("forgotPasswordToggle").addEventListener("click",()=>{forgotPanel.hidden=!forgotPanel.hidden;if(!forgotPanel.hidden)document.getElementById("loginEmail").focus();});
