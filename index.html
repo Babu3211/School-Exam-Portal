@@ -1931,6 +1931,7 @@ async function publishOnlineResult(){
   if(!confirm(`${exam.examName} — ${className} का ${activeResultRows.length} विद्यार्थीको Grade Sheet Online प्रकाशित गर्ने?`))return;
   btn.disabled=true;btn.textContent='प्रकाशित हुँदैछ...';
   const originalSelected=document.getElementById('gradeStudent')?.value||'';
+  const gradeSelect=document.getElementById('gradeStudent');
   const gradeBox=document.getElementById('gradeSheetView');
   const version=(crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(36).slice(2)}`);
   let batch=writeBatch(db),batchCount=0,writeCount=0,lookupCount=0,skipped=0;
@@ -1938,7 +1939,7 @@ async function publishOnlineResult(){
   const commitIfNeeded=async(force=false)=>{if(batchCount>=450||(force&&batchCount)){await batch.commit();writeCount+=batchCount;batch=writeBatch(db);batchCount=0;}};
   for(const row of activeResultRows){
    const st=row.student;
-   const gradeSelect=document.getElementById('gradeStudent');if(gradeSelect)gradeSelect.value=st.id;
+   if(gradeSelect)gradeSelect.value=st.id;
    showGradeSheet(st.id);
    const sheet=gradeBox?.querySelector('.official-grade-sheet');
    if(!sheet)throw new Error(`${st.studentName||'एक विद्यार्थी'} को Grade Sheet तयार भएन।`);
