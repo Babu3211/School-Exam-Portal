@@ -1514,11 +1514,11 @@ async function exportMarksLedgerExcel(){
  const examId=document.getElementById('entryExam')?.value||document.getElementById('ledgerViewExam')?.value;
  const msg=document.getElementById('marksEntryMessage')||document.getElementById('ledgerViewMessage');
  const say=t=>{if(msg)msg.textContent=t};
- if(!cl||!examId){say('Excel Ledger export गर्न पहिले Class र Examination छान्नुहोस्।');return}
+ if(!cl||!examId){say('Select a Class and Examination before exporting the Excel Ledger.');return}
  const exam=marksExams.find(x=>x.id===examId);
- if(!exam||canonicalStudentClass(exam.className)!==canonicalStudentClass(cl)){say('छानिएको Examination र Class मिलेन।');return}
+ if(!exam||canonicalStudentClass(exam.className)!==canonicalStudentClass(cl)){say('The selected Examination does not match the Class.');return}
  const group=ledgerGroupForClass(cl),subjects=ledgerSubjectsForClass(cl,group);
- if(!subjects.length){say('यो कक्षाको Ledger ढाँचा उपलब्ध छैन।');return}
+ if(!subjects.length){say('No Ledger template is available for this Class.');return}
  const btn=document.getElementById('exportLedgerExcel')||document.getElementById('exportLedgerPageExcel');if(btn){btn.disabled=true;btn.textContent='Preparing Excel...'}
  try{
   const ExcelJS=await ensureExcelJS(),wb=new ExcelJS.Workbook();
@@ -1567,8 +1567,8 @@ async function exportMarksLedgerExcel(){
   ws.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,paperSize:ws.PAPER_LETTER,margins:{left:0.25,right:0.25,top:0.5,bottom:0.5,header:0.2,footer:0.2}};
   const buffer=await wb.xlsx.writeBuffer(),blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${String(cl).replace(/[^a-z0-9_-]/gi,'_')}_${String(termLabel).replace(/[^a-z0-9_-]/gi,'_')}_Marks_Ledger_${String(exam.examName||'Exam').replace(/[^a-z0-9_-]/gi,'_')}.xlsx`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
-  say(`Excel Ledger export भयो: ${students.length} विद्यार्थी, ${subjects.length} विषय, ${termLabel}। Theory/Practical सहित सुरक्षित प्राप्ताङ्क राखिएका छन्; खाली marks खाली नै छन्।`);
- }catch(err){console.error('Ledger Excel export failed',err);say(`Excel export भएन: ${err.message||err}`)}
+  say(`Excel Ledger exported: ${students.length} students, ${subjects.length} subjects, ${termLabel}. Saved marks, including Theory/Practical components, are preserved; blank marks remain blank.`);
+ }catch(err){console.error('Ledger Excel export failed',err);say(`Excel export failed: ${err.message||err}`)}
  finally{if(btn){btn.disabled=false;btn.textContent=btn.id==='exportLedgerPageExcel'?'Export Ledger Excel':'Export Marks Ledger to Excel'}}
 }
 
@@ -1580,8 +1580,8 @@ document.addEventListener('click',e=>{
 function printCurrentMarksLedger(){
  const cl=document.getElementById('ledgerViewClass')?.value,examId=document.getElementById('ledgerViewExam')?.value,exam=marksExams.find(x=>x.id===examId);
  const head=document.getElementById('ledgerViewHead'),body=document.getElementById('ledgerViewBody');
- if(!cl||!exam||!body||!body.querySelector('tr')){const m=document.getElementById('ledgerViewMessage');if(m)m.textContent='Print गर्न पहिले Ledger खोल्नुहोस्।';return;}
- const win=window.open('','_blank','width=1100,height=750');if(!win){const m=document.getElementById('ledgerViewMessage');if(m)m.textContent='Print window खोलिएन। Browser popup अनुमति दिनुहोस्।';return;}
+ if(!cl||!exam||!body||!body.querySelector('tr')){const m=document.getElementById('ledgerViewMessage');if(m)m.textContent='Open the Ledger before printing.';return;}
+ const win=window.open('','_blank','width=1100,height=750');if(!win){const m=document.getElementById('ledgerViewMessage');if(m)m.textContent='The print window could not open. Allow pop-ups in your browser and try again.';return;}
  const esc=examEsc;win.document.write(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>SMSS Grade Ledger</title><style>@page{size:landscape;margin:10mm}body{font-family:Arial,sans-serif;padding:18px;color:#111;background-color:#fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='110'%3E%3Cg fill='%23aeb5bf' fill-opacity='.22' font-family='Arial' font-size='14'%3E%3Ctext x='0' y='25'%3EMahadevasthan Secondary School%3C/text%3E%3Ctext x='0' y='60'%3EMahadevasthan Secondary School%3C/text%3E%3Ctext x='0' y='95'%3EMahadevasthan Secondary School%3C/text%3E%3C/g%3E%3C/svg%3E");background-repeat:repeat}header{position:relative;text-align:center;min-height:76px;color:#d92d46;padding-left:80px}header svg{position:absolute;left:0;top:0;width:72px;height:72px}h2,p{text-align:center;margin:5px}table{border-collapse:collapse;width:100%;margin-top:18px;background:transparent}th,td{border:1px solid #555;padding:5px;text-align:center;font-size:9px}th{background:#e8eef7}tr{break-inside:avoid}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body><header><svg viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#172b78" stroke-width="3"><path d="M90 4 L176 90 L90 176 L4 90 Z"/><path d="M4 90 L90 4 L176 90 L90 176 Z"/></g><path d="M48 76 Q68 61 89 76 Q111 61 132 76 L132 113 Q110 99 89 114 Q68 99 48 113 Z" fill="#fff" stroke="#172b78" stroke-width="3"/><path d="M90 76 V114" stroke="#172b78" stroke-width="3"/></svg><h2>MAHADEVASTHAN SECONDARY SCHOOL</h2><p>DHUNIBESHI MUNICIPALITY-05, DHADING</p></header><p>${esc(cl)} · ${esc(smssTermLabel(smssExamTermKey(exam)))} · ${esc(exam.examName)} · ${esc(exam.academicYear||'')}</p><table><thead>${head.innerHTML}</thead><tbody>${body.innerHTML}</tbody></table><script>window.onload=()=>window.print();<\/script></body></html>`);win.document.close();
 }
 
