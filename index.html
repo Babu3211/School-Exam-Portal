@@ -773,7 +773,7 @@ async function generateMissingStudentCodes(){
 function filterStudents(){
  const body=document.getElementById("studentsBody");if(!body)return;
  const q=(document.getElementById("studentSearch")?.value||"").trim().toLowerCase(),cl=document.getElementById("classFilter")?.value||"";
- const rows=cachedStudents.filter(s=>(!cl||canonicalStudentClass(s.class)===cl)&&(!q||[s.studentName,s.admissionNo,s.guardianName,s.studentIemisNo,s.iemisStudentNo,s.phone,s.rollNo,s.sourceSerialNo,s.studentPortalCode].some(x=>String(x||"").toLowerCase().includes(q))));
+ const rows=cachedStudents.filter(s=>(!cl||canonicalStudentClass(s.class)===cl)&&(!q||[s.studentName,s.admissionNo,s.guardianName,s.studentIemisNo,s.iemisStudentNo,s.birthRegistrationNo,s.nebRegNo,s.phone,s.rollNo,s.sourceSerialNo,s.studentPortalCode].some(x=>String(x||"").toLowerCase().includes(q))));
  body.innerHTML=rows.length?rows.map(s=>`<tr${s.active===false?' style="opacity:.68;background:#fff7ed"':''}><td>${esc(s.admissionNo)}</td><td>${esc(s.studentName)}${s.active===false?' <small style="color:#b45309;font-weight:700">(निष्क्रिय)</small>':''}</td><td>${esc(s.dob||"—")}</td><td>${esc(s.studentIemisNo||s.iemisStudentNo||"—")}</td><td>${esc(s.symbolNo||s.symbolNumber||"—")}</td><td>${esc(s.class)}</td><td>${esc(studentRollNo(s)||"—")}</td><td><b>${esc(s.studentPortalCode||"Code छैन")}</b></td><td>${esc(s.guardianName)}</td><td>${esc(s.phone)}</td><td><button class="btn alt" type="button" data-student-edit="${esc(s.id)}">Edit</button> ${s.active===false?`<button class="btn" type="button" data-student-restore="${esc(s.id)}">पुनः सक्रिय</button>`:`<button class="btn" style="background:#b45309" type="button" data-student-delete="${esc(s.id)}">निष्क्रिय</button>`}</td></tr>`).join(""):'<tr><td class="empty" colspan="11">मिल्दो विद्यार्थी भेटिएन।</td></tr>';
 }
 function resetStudentForm(){const form=document.getElementById("studentForm");if(!form)return;form.reset();form.dataset.editId="";document.getElementById("studentSaveBtn").textContent="Firebase मा Save गर्नुहोस्";document.getElementById("studentCancelEditBtn").hidden=true;}
@@ -1863,7 +1863,7 @@ function showGradeSheet(studentId){
  const student=r.student;
  const classNo=Number(classNoFromName(student.class||'')||0);
  const isPrimary=classNo>=1&&classNo<=5;
- const dob=[student.dob||student.dateOfBirth||student.birthDate,student.dobAD||student.dateOfBirthAD].filter(Boolean).join(' / ')||'—';
+ const dobBs=student.dob||student.dateOfBirth||student.birthDate||'';const dobAd=student.dobAD||student.dateOfBirthAD||'';const dob=[dobBs?`${dobBs} (B.S.)`:null,dobAd?`${dobAd} (A.D.)`:null].filter(Boolean).join(' ')||'—';
  const symbol=student.symbolNo||student.symbolNumber||student.examSymbolNo||'—';
  const studentCode=student.studentIemisNo||student.iemisStudentNo||student.admissionNo||'';
  const iemis=student.iemisCode||'300160003';
