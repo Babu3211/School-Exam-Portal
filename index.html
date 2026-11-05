@@ -1304,7 +1304,7 @@ function renderMarksLedgerPage(){
  const subjects=ledgerSubjectsForClass(cl,group);
  const achievement=['1-3','4-5'].includes(group);
  const students=marksStudents.filter(x=>canonicalStudentClass(x.class??x.className??'')===canonicalStudentClass(cl)).sort((a,b)=>Number(studentRollNo(a)||999999)-Number(studentRollNo(b)||999999));
- if(!subjects.length){if(msg)msg.textContent='No subjects were found for this class. Check Classes & Subjects or Assessment Settings.';head.innerHTML='';body.innerHTML='<tr><td class="empty">No subjects are available।</td></tr>';return}
+ if(!subjects.length){if(msg)msg.textContent='No subjects were found for this class. Check Classes & Subjects or Assessment Settings.';head.innerHTML='';body.innerHTML='<tr><td class="empty">No subjects are available.</td></tr>';return}
  const gradeMode=activeLedgerMode==='grade';
  const componentsBySubject=subjects.map(sub=>ledgerComponentsForSubject(group,sub,cl));
  const identityHeads=achievement
@@ -1354,7 +1354,7 @@ function renderMarksLedgerPage(){
 }
 function fmtLedger(n){return Number.isFinite(Number(n))?String(Number(n)):'—'}
 
-document.addEventListener('change',e=>{if(e.target.id==='ledgerViewClass'||e.target.id==='ledgerViewTerm'){refreshLedgerExamOptions();const body=document.getElementById('ledgerViewBody');if(body)body.innerHTML='<tr><td class="empty">कक्षा वा अवधि परिवर्तन भयो। परीक्षा छानेर View Ledger थिच्नुहोस्।</td></tr>';}});
+document.addEventListener('change',e=>{if(e.target.id==='ledgerViewClass'||e.target.id==='ledgerViewTerm'){refreshLedgerExamOptions();const body=document.getElementById('ledgerViewBody');if(body)body.innerHTML='<tr><td class="empty">Class or term changed. Select an examination and click View Ledger.</td></tr>';}});
 document.addEventListener('click',async e=>{if(e.target.closest('#showLedgerView'))renderMarksLedgerPage();if(e.target.closest('#numberLedgerTab'))setLedgerMode('number');if(e.target.closest('#gradeLedgerTab'))setLedgerMode('grade');if(e.target.closest('#refreshLedgerView')){await loadMarksLedgerPage();renderMarksLedgerPage();}});
 function sortEntryClassNames(values){
  const unique=[...new Set(values.map(x=>String(x??'').trim()).filter(Boolean))];
