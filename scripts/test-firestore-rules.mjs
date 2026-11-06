@@ -27,7 +27,8 @@ async function seed() {
     await setDoc(doc(db, "user_roles", teacherUid), {
       active: true,
       roles: ["subject_teacher", "class_teacher"],
-      subjectAssignmentKeys: ["9::Mathematics"],\n      subjectAssignmentClassNames: ["9"],
+      subjectAssignmentKeys: ["9::Mathematics"],
+      subjectAssignmentClassNames: ["9"],
       subjectAssignmentSectionKeys: ["9::Mathematics::A"],
       classTeacherClassNames: ["9"]
     });
@@ -98,7 +99,11 @@ try {
   await seed();
 
   await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(), "students", "student-1")));
-  await assertSucceeds(getDoc(doc(db(teacherUid), "students", "student-1")));\n  await assertFails(getDoc(doc(db(teacherUid), "students", "student-10")));\n  await assertSucceeds(getDocs(query(collection(db(teacherUid), "students"), where("class", "==", "9"))));\n  await assertFails(getDoc(doc(db(teacherUid), "staff", "staff-1")));\n  await assertSucceeds(getDoc(doc(db(teacherUid), "exams", "exam-1")));
+  await assertSucceeds(getDoc(doc(db(teacherUid), "students", "student-1")));
+  await assertFails(getDoc(doc(db(teacherUid), "students", "student-10")));
+  await assertSucceeds(getDocs(query(collection(db(teacherUid), "students"), where("class", "==", "9"))));
+  await assertFails(getDoc(doc(db(teacherUid), "staff", "staff-1")));
+  await assertSucceeds(getDoc(doc(db(teacherUid), "exams", "exam-1")));
   await assertFails(getDoc(doc(db(inactiveUid), "students", "student-1")));
   await assertFails(setDoc(doc(db(teacherUid), "students", "forged-student"), { name: "Forged", class: "9" }));
   await assertFails(setDoc(doc(db(teacherUid), "school_settings", "main"), { schoolName: "Forged" }));
@@ -111,7 +116,9 @@ try {
   await assertFails(getDocs(collection(db(teacherUid), "user_roles")));
   await assertSucceeds(getDocs(collection(db(ADMIN), "user_roles")));
 
-  await assertSucceeds(setDoc(doc(db(teacherUid), "marks", "mark-valid"), validMark()));\n  await assertSucceeds(getDoc(doc(db(teacherUid), "marks", "mark-valid")));\n  await assertFails(getDoc(doc(db(teacherUid), "marks", "mark-other-subject"), validMark({ subject: "Science" })));
+  await assertSucceeds(setDoc(doc(db(teacherUid), "marks", "mark-valid"), validMark()));
+  await assertSucceeds(getDoc(doc(db(teacherUid), "marks", "mark-valid")));
+  await assertFails(getDoc(doc(db(teacherUid), "marks", "mark-other-subject"), validMark({ subject: "Science" })));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-wrong-class"), validMark({ className: "10" })));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-wrong-exam"), validMark({ examId: "missing-exam" })));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-score-over-limit"), validMark({
@@ -139,7 +146,8 @@ try {
   await assertFails(deleteDoc(doc(db(teacherUid), "marks", "mark-valid")));
   await assertSucceeds(deleteDoc(doc(db(ADMIN), "marks", "mark-valid")));
 
-  await assertSucceeds(setDoc(doc(db(teacherUid), "attendance", "attendance-valid"), validAttendance()));\n  await assertSucceeds(getDoc(doc(db(teacherUid), "attendance", "attendance-valid")));
+  await assertSucceeds(setDoc(doc(db(teacherUid), "attendance", "attendance-valid"), validAttendance()));
+  await assertSucceeds(getDoc(doc(db(teacherUid), "attendance", "attendance-valid")));
   await assertFails(setDoc(doc(db(teacherUid), "attendance", "attendance-bad-count"), validAttendance({ presentCount: 0 })));
   await assertFails(setDoc(doc(db(teacherUid), "attendance", "attendance-subject-type"), validAttendance({ attendanceType: "subject" })));
   await assertFails(setDoc(doc(db(teacherUid), "attendance", "attendance-long-class"), validAttendance({ className: "9".repeat(41) })));
