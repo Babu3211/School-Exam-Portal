@@ -120,7 +120,9 @@ must(html.includes("void loadPublicSchoolBranding();") && html.includes("doc(db,
 must(html.includes("currentSchoolSettings.logoDataUrl||currentSchoolSettings.logoUrl"), "Login must display the logo saved in School Settings.");
 must(html.includes("login-welcome h3{margin:0 0 4px;color:#1769d2"), "Login welcome must be blue.");
 must(html.includes("login-user-types") && html.includes("<span>Admin</span><span>Teacher</span><span>Other</span>"), "Login must show Admin / Teacher / Other under academic year.");
-must(html.includes("login-year strong{padding:6px 18px") && html.includes("font-size:21px"), "Academic year typography must be prominent.");
+must(html.includes("Academic Year</span><strong id=\"loginAcademicYear\">2083</strong>") && html.includes(".login-year{flex-direction:row") && html.includes(".login-year strong:before{content:\"–\""), "Academic year must display compactly as Academic Year – 2083.");
+must(html.includes("#loginSchoolNameEn{font-size:clamp(22px,5vw,26px)!important") && html.includes(".login-school-ne{font-size:clamp(20px,4.5vw,24px)!important"), "Login school names must be larger.");
+must(html.includes(".login-user-types{gap:10px") && html.includes("font-size:12px;font-weight:600"), "Login account types must use refined readable typography.");
 
 must(rules.includes("match /public_result_exams/{examId}") && rules.includes("allow get, list: if true;") && rules.includes("allow create, update, delete: if isAdmin();"), "Public exam index must expose read-only publication metadata.");
 must(rules.includes("match /public_result_lookup/{lookupId}") && rules.includes("allow get: if true;") && rules.includes("allow list: if isAdmin();"), "Public result lookup must allow exact PIN-hash reads but block public listing.");
