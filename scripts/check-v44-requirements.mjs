@@ -139,7 +139,7 @@ must(selectedComponents("annual").some(name => /theory/i.test(name)), "TH/ Theor
 
 
 const reportStart = html.indexOf("function reportMarkSummary(record){");
-const reportEnd = html.indexOf("\\nfunction buildReport(){", reportStart);
+const reportEnd = html.indexOf("\nfunction buildReport(){", reportStart);
 must(reportStart >= 0 && reportEnd > reportStart, "Marks report completeness helper is missing.");
 const reportHelperSource = html.slice(reportStart, reportEnd);
 const reportHelper = new Function("ledgerScoresComplete", reportHelperSource + "; return reportMarkSummary;")(
