@@ -1422,8 +1422,8 @@ function renderMarksLedgerPage(){
  head.innerHTML='<tr>'+identityHeads+subHeads+'</tr>'+second;
  const fmt=n=>Number.isFinite(Number(n))?String(Number.isInteger(Number(n))?Number(n):Number(n).toFixed(2)):'—';
  body.innerHTML=students.map((st,idx)=>'<tr>'+(achievement
-  ?'<td>'+examEsc(studentRollNo(st)||idx+1)+'</td><td>'+examEsc(st.studentNameEnglish||st.nameEnglish||st.nameEn||st.studentNameEnglish||st.nameEnglish||st.nameEn||st.studentName||st.name||'')+'</td><td>'+examEsc(ledgerStudentReg(st))+'</td><td>'+examEsc(ledgerSymbol(st))+'</td>'
-  :'<td>'+examEsc(studentRollNo(st)||'')+'</td><td>'+examEsc(st.studentNameEnglish||st.nameEnglish||st.nameEn||st.studentNameEnglish||st.nameEnglish||st.nameEn||st.studentName||st.name||'')+'</td>')+subjects.map((sub,si)=>{
+  ?'<td>'+examEsc(onlineResultDigits(studentRollNo(st)||idx+1))+'</td><td>'+examEsc(st.studentNameEnglish||st.nameEnglish||st.nameEn||st.studentNameEnglish||st.nameEnglish||st.nameEn||st.studentName||st.name||'')+'</td><td>'+examEsc(onlineResultDigits(ledgerStudentReg(st)))+'</td><td>'+examEsc(onlineResultDigits(ledgerSymbol(st)))+'</td>'
+  :'<td>'+examEsc(onlineResultDigits(studentRollNo(st)||''))+'</td><td>'+examEsc(st.studentNameEnglish||st.nameEnglish||st.nameEn||st.studentNameEnglish||st.nameEnglish||st.nameEn||st.studentName||st.name||'')+'</td>')+subjects.map((sub,si)=>{
    const rec=existingMarks.find(m=>m.studentId===st.id&&m.examId===examId&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(sub));
    const scores=rec?.scores||[];
    let full=0,mark=null,count=null;
@@ -1641,7 +1641,7 @@ async function exportMarksLedgerExcel(){
   const students=marksStudents.filter(st=>canonicalStudentClass(st.class??st.className??'')===canonicalStudentClass(cl)).sort((a,b)=>Number(studentRollNo(a)||999999)-Number(studentRollNo(b)||999999));
   const marksFor=(studentId,subject)=>existingMarks.find(m=>m.studentId===studentId&&m.examId===examId&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(subject));
   students.forEach((st,idx)=>{
-   const row=[studentRollNo(st)||idx+1,st.studentNameEnglish||st.nameEnglish||st.nameEn||st.studentName||st.name||'',ledgerStudentReg(st),ledgerSymbol(st)];
+   const row=[onlineResultDigits(studentRollNo(st)||idx+1),st.studentNameEnglish||st.nameEnglish||st.nameEn||st.studentName||st.name||'',ledgerStudentReg(st),ledgerSymbol(st)];
    subjects.forEach((sub,si)=>{
     const mark=marksFor(st.id,sub),scores=mark?.scores||[],components=componentsBySubject[si];
     if(achievement){
@@ -1913,8 +1913,8 @@ function buildResultRows(){
  activeResultRows=rows;
  const head=document.getElementById('resultsHead'),body=document.getElementById('resultsBody');
  const adminPublication=isAdmin();head.innerHTML='<tr>'+(adminPublication?'<th class="result-admin-only"><input id="selectAllResultStudents" type="checkbox" aria-label="Select all students"></th>':'')+'<th>Roll No.</th><th>Student Name</th>'+subjects.map(x=>`<th>${resultEsc(subjectEnglishLabel(x))}<br><small>${isAchievementClass?'Obtained Marks / Full Marks':'Marks / % / Grade'}</small></th>`).join('')+'<th>Total</th><th>Average %</th><th>Status</th>'+(adminPublication?'<th class="result-admin-only">Online Publication</th>':'')+'</tr>';
- body.innerHTML=rows.map(r=>`<tr>${adminPublication?`<td class="result-admin-only"><input type="checkbox" data-result-select="${resultEsc(r.student.id)}" aria-label="Select ${resultEsc(r.student.studentNameEnglish||r.student.nameEnglish||r.student.nameEn||r.student.studentName||r.student.name||'')}"></td>`:''}<td>${resultEsc(studentRollNo(r.student))}</td><td>${resultEsc(r.student.studentNameEnglish||r.student.nameEnglish||r.student.nameEn||r.student.studentName||r.student.name||'')}</td>${r.perSubject.map(x=>`<td>${x.missing?'—':x.achievement?(x.achievementValid?`${x.totalObt} / ${x.totalFull}`:'Incomplete Data'):`${x.totalObt}/${x.totalFull}<br>${x.pct===null?'—':x.pct.toFixed(2)+'% · '+x.grade.grade}`}</td>`).join('')}<td>${r.complete?(r.isAchievementClass?`${r.sumObt} / ${r.sumFull}`:`${r.sumObt}/${r.sumFull}`):'Pending'}</td><td>${r.percentage===null?'Pending':r.percentage.toFixed(2)+'%'}</td><td>${r.complete?'Complete':'Pending Marks'}</td>${adminPublication?`<td class="result-admin-only"><span data-publication-status="${resultEsc(r.student.id)}">Checking...</span><div class="toolbar" style="gap:5px;margin-top:5px"><button type="button" class="btn alt" data-publish-one="${resultEsc(r.student.id)}">Publish / Update</button><button type="button" class="btn alt" data-unpublish-one="${resultEsc(r.student.id)}" hidden>Unpublish</button></div></td>`:''}</tr>`).join('');
- const gs=document.getElementById('gradeStudent');gs.innerHTML='<option value="">Select Student</option>'+rows.map(r=>`<option value="${resultEsc(r.student.id)}">${resultEsc(studentRollNo(r.student))} — ${resultEsc(r.student.studentNameEnglish||r.student.nameEnglish||r.student.nameEn||r.student.studentName||r.student.name||'')}</option>`).join('');
+ body.innerHTML=rows.map(r=>`<tr>${adminPublication?`<td class="result-admin-only"><input type="checkbox" data-result-select="${resultEsc(r.student.id)}" aria-label="Select ${resultEsc(r.student.studentNameEnglish||r.student.nameEnglish||r.student.nameEn||r.student.studentName||r.student.name||'')}"></td>`:''}<td>${resultEsc(onlineResultDigits(studentRollNo(r.student)))}</td><td>${resultEsc(r.student.studentNameEnglish||r.student.nameEnglish||r.student.nameEn||r.student.studentName||r.student.name||'')}</td>${r.perSubject.map(x=>`<td>${x.missing?'—':x.achievement?(x.achievementValid?`${x.totalObt} / ${x.totalFull}`:'Incomplete Data'):`${x.totalObt}/${x.totalFull}<br>${x.pct===null?'—':x.pct.toFixed(2)+'% · '+x.grade.grade}`}</td>`).join('')}<td>${r.complete?(r.isAchievementClass?`${r.sumObt} / ${r.sumFull}`:`${r.sumObt}/${r.sumFull}`):'Pending'}</td><td>${r.percentage===null?'Pending':r.percentage.toFixed(2)+'%'}</td><td>${r.complete?'Complete':'Pending Marks'}</td>${adminPublication?`<td class="result-admin-only"><span data-publication-status="${resultEsc(r.student.id)}">Checking...</span><div class="toolbar" style="gap:5px;margin-top:5px"><button type="button" class="btn alt" data-publish-one="${resultEsc(r.student.id)}">Publish / Update</button><button type="button" class="btn alt" data-unpublish-one="${resultEsc(r.student.id)}" hidden>Unpublish</button></div></td>`:''}</tr>`).join('');
+ const gs=document.getElementById('gradeStudent');gs.innerHTML='<option value="">Select Student</option>'+rows.map(r=>`<option value="${resultEsc(r.student.id)}">${resultEsc(onlineResultDigits(studentRollNo(r.student)))} — ${resultEsc(r.student.studentNameEnglish||r.student.nameEnglish||r.student.nameEn||r.student.studentName||r.student.name||'')}</option>`).join('');
  document.getElementById('gradeSheetView').textContent='Select a student to view subject-wise details.';
  resultMsg(`${exam.examName} · ${smssTermLabelEnglish(smssExamTermKey(exam))} · Class ${classEnglishLabel(cl)}: results prepared for ${rows.length} students. Percentage, Grade and Grade Point are calculated automatically in the Grade Ledger; no data was changed.`);if(adminPublication)refreshResultPublicationStates();
 }
@@ -1938,12 +1938,12 @@ function showGradeSheet(studentId){
  const displayStudentName=student.studentNameEnglish||student.nameEnglish||student.nameEn||student.studentName||student.name||'—';
  const classNo=Number(classNoFromName(student.class||'')||0);
  const isPrimary=classNo>=1&&classNo<=5;
- const dobBs=student.dob||student.dateOfBirth||student.birthDate||'';const dobAd=student.dobAD||student.dateOfBirthAD||'';const dob=[dobBs?`${dobBs} (B.S.)`:null,dobAd?`${dobAd} (A.D.)`:null].filter(Boolean).join(' ')||'—';
- const symbol=student.symbolNo||student.symbolNumber||student.examSymbolNo||'—';
- const studentCode=student.studentIemisNo||student.iemisStudentNo||student.admissionNo||'';
+ const dobBs=onlineResultDigits(student.dob||student.dateOfBirth||student.birthDate||'');const dobAd=onlineResultDigits(student.dobAD||student.dateOfBirthAD||'');const dob=[dobBs?`${dobBs} (B.S.)`:null,dobAd?`${dobAd} (A.D.)`:null].filter(Boolean).join(' ')||'—';
+ const symbol=onlineResultDigits(student.symbolNo||student.symbolNumber||student.examSymbolNo||'—');
+ const studentCode=onlineResultDigits(student.studentIemisNo||student.iemisStudentNo||student.admissionNo||'');
  const iemis=student.iemisCode||'300160003';
   const nebRegNo=student.nebRegNo||student.nebRegistrationNo||'';
- const examYear=exam?.academicYear||student.academicYear||'2083 B.S. (2026 A.D.)';
+ const examYear=onlineResultDigits(exam?.academicYear||student.academicYear||'2083 B.S. (2026 A.D.)');
  const examTerm=exam?smssTermLabelEnglish(smssExamTermKey(exam)):'Term Not Available';
  const classSubjectRecord=(subject)=>{const sameClass=x=>canonicalStudentClass(x.className??x.class??'')===canonicalStudentClass(student.class??'');const sameSubject=x=>canonicalSubjectKey(x.subject||x.subjectName)===canonicalSubjectKey(subject);return resultClasses.find(x=>sameClass(x)&&x.active!==false&&sameSubject(x))||resultClasses.find(x=>sameClass(x)&&sameSubject(x))||null};
  const creditFor=(subject)=>{const c=classSubjectRecord(subject);return c?.creditHour??c?.creditHours??'—'};
@@ -2038,7 +2038,7 @@ function generateSecureResultPin(){
 }
 function downloadResultPinList(rows,className){
  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
- const csv='\uFEFF'+[['Student Name','Class','Roll No.','Result Code','Result PIN'],...rows.map(r=>[r.name,className,r.roll,r.code,r.pin])].map(row=>row.map(q).join(',')).join('\r\n');
+ const classLabel=classEnglishLabel(className);const csv='\uFEFF'+[['Student Name','Class','Roll No.','Result Code','Result PIN'],...rows.map(r=>[r.name,classLabel,r.roll,r.code,r.pin])].map(row=>row.map(q).join(',')).join('\r\n');
  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=url;a.download='Result-PIN-'+String(className).replace(/[^\p{L}\p{N}-]/gu,'')+'-'+Date.now()+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
@@ -2198,7 +2198,7 @@ async function publishOneOnlineResult(studentId){
  await batch.commit();
  if(gradeSelect&&originalSelected)gradeSelect.value=originalSelected;
  if(originalSelected)showGradeSheet(originalSelected);
- return {student,code:studentCode,pin:resultPin,roll:String(studentRollNo(student)||''),legacyRemoved:legacyMatches.length};
+ return {student,code:studentCode,pin:resultPin,roll:onlineResultDigits(studentRollNo(student)||''),legacyRemoved:legacyMatches.length};
 }
 async function unpublishOneOnlineResult(studentId){
  requireAdmin();if(!isAdmin())throw new Error('Only the school administrator can unpublish results.');
