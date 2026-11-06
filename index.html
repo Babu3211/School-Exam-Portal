@@ -2273,25 +2273,24 @@ async function publishOnlineResult(selectedOnly=false){
  const examId=document.getElementById('resultExam')?.value,exam=resultExams.find(x=>x.id===examId),cl=document.getElementById('resultClass')?.value;
  if(!exam||!examId||!cl){resultMsg('Select a class and examination first.',true);return;}
  if(!confirm(`Publish online Grade Sheets for ${chosen.length} selected student(s) in ${classEnglishLabel(cl)} — ${exam.examName}?`))return;
- const allPins=[];let done=0,errors=[];
+ let done=0,errors=[];
  const allButton=document.getElementById('publishOnlineResultBtn'),selectedButton=document.getElementById('publishSelectedOnlineResultBtn');
  [allButton,selectedButton].forEach(b=>{if(b){b.disabled=true;b.textContent='Publishing...';}});
  try{
   for(const row of chosen){
-   try{const p=await publishOneOnlineResult(row.student.id);allPins.push({name:p.student.studentNameEnglish||p.student.nameEnglish||p.student.nameEn||englishDisplayText(p.student.studentName||p.student.name||''),roll:p.roll,code:p.code,pin:p.pin});done++;}
+   try{await publishOneOnlineResult(row.student.id);done++;}
    catch(err){errors.push((row.student.studentName||row.student.id)+': '+(err.message||err.code||'Error'));}
   }
-  if(allPins.length)downloadResultPinList(allPins,cl);
   await refreshResultPublicationStates();
-  resultMsg(`Publication finished: ${done} published/updated, ${errors.length} failed. PIN list downloaded for successful students. ${errors.slice(0,3).join(' | ')}`,errors.length>0);
-  if(errors.length)alert(`Published/updated: ${done}\nFailed: ${errors.length}\nPIN list downloaded for successful students.\n${errors.slice(0,3).join('\n')}`);
+  resultMsg(`Publication finished: ${done} published/updated, ${errors.length} failed. Result Code बाट अनलाइन नतिजा हेर्न सकिन्छ। ${errors.slice(0,3).join(' | ')}`,errors.length>0);
+  if(errors.length)alert(`Published/updated: ${done}\nFailed: ${errors.length}\n${errors.slice(0,3).join('\n')}`);
  }finally{
   [allButton,selectedButton].forEach((b,i)=>{if(b){b.disabled=false;b.textContent=i===0?'Publish All Online Results':'Publish Selected Students';}});
  }
 }
 document.addEventListener('click',e=>{
  const pubOne=e.target.closest('[data-publish-one]'),unpubOne=e.target.closest('[data-unpublish-one]');
- if(pubOne){const id=pubOne.dataset.publishOne;pubOne.disabled=true;publishOneOnlineResult(id).then(p=>{downloadResultPinList([{name:p.student.studentNameEnglish||p.student.nameEnglish||p.student.nameEn||englishDisplayText(p.student.studentName||p.student.name||''),roll:p.roll,code:p.code,pin:p.pin}],document.getElementById('resultClass')?.value||'');return refreshResultPublicationStates();}).then(()=>resultMsg('Selected student result published/updated.')).catch(err=>resultMsg(err.message||'Publish failed.',true)).finally(()=>pubOne.disabled=false);return;}
+ if(pubOne){const id=pubOne.dataset.publishOne;pubOne.disabled=true;publishOneOnlineResult(id).then(()=>{resultMsg('नतिजा प्रकाशित भयो। विद्यार्थीले Result Code बाट हेर्न सक्छन्।');return refreshResultPublicationStates();}).catch(err=>resultMsg(err.message||'Publish failed.',true)).finally(()=>pubOne.disabled=false);return;}
  if(unpubOne){const id=unpubOne.dataset.unpublishOne;unpubOne.disabled=true;unpublishOneOnlineResult(id).then(refreshResultPublicationStates).then(()=>resultMsg('Selected student result unpublished.')).catch(err=>resultMsg(err.message||'Unpublish failed.',true)).finally(()=>unpubOne.disabled=false);return;}
 });
 
