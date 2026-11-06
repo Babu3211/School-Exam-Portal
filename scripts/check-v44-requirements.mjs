@@ -167,6 +167,8 @@ must(staffRoleFromLevel("नि.मा.वि.") === "शिक्षक", "Lowe
 must(staffRoleFromLevel("प्रा.वि./तृतीय") === "शिक्षक", "Primary teacher level must receive a teacher ID.");
 must(staffRoleFromLevel("प्रधानाध्यापक") === "शिक्षक", "Headmaster must receive a teacher ID.");
 must(staffRoleFromLevel("कार्यालय सहयोगी") === "कर्मचारी", "Non-teaching staff must receive a staff ID.");
+must(staffRoleFromLevel("बालविकास स.का.") === "कर्मचारी", "Early childhood support staff must receive a staff ID.");
+must(staffRoleFromLevel("बालविकास शिक्षक") === "शिक्षक", "Explicit early childhood teachers must receive a teacher ID.");
 must(nextStaffId("शिक्षक", []) === "TCH-0001", "New teacher ID must start at TCH-0001.");
 must(nextStaffId("कर्मचारी", []) === "STF-0001", "New staff ID must start at STF-0001.");
 must(nextStaffId("शिक्षक", [{ staffId: "TCH-0001" }, { staffId: "TCH-0008" }, { staffId: "STF-0009" }]) === "TCH-0009", "Teacher ID must increment from the highest existing teacher ID only.");
