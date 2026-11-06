@@ -99,6 +99,11 @@ try {
   await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(), "students", "student-1")));
   await assertSucceeds(getDoc(doc(db(teacherUid), "students", "student-1")));
   await assertFails(getDoc(doc(db(inactiveUid), "students", "student-1")));
+  await assertFails(setDoc(doc(db(teacherUid), "students", "forged-student"), { name: "Forged", class: "9" }));
+  await assertFails(setDoc(doc(db(teacherUid), "school_settings", "main"), { schoolName: "Forged" }));
+  await assertFails(setDoc(doc(db(teacherUid), "certificates", "forged-certificate"), { issuedBy: teacherUid }));
+  await assertSucceeds(setDoc(doc(db(ADMIN), "school_settings", "main"), { schoolName: "Mahadevasthan Secondary School" }));
+  await assertFails(updateDoc(doc(db(teacherUid), "user_roles", teacherUid), { active: false }));
 
   await assertSucceeds(getDoc(doc(db(teacherUid), "user_roles", teacherUid)));
   await assertFails(getDoc(doc(db(teacherUid), "user_roles", otherUid)));
@@ -163,6 +168,8 @@ try {
     action: "Create", recordId: "x", detail: "created",
     createdAt: serverTimestamp()
   }));
+  await assertFails(getDocs(collection(db(teacherUid), "audit_logs")));
+  await assertSucceeds(getDocs(collection(db(ADMIN), "audit_logs")));
   await assertFails(updateDoc(doc(db(teacherUid), "audit_logs", "valid-log"), { detail: "tampered" }));
   await assertFails(deleteDoc(doc(db(teacherUid), "audit_logs", "valid-log")));
   console.log("Firestore Security Rules emulator tests passed.");
