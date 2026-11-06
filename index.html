@@ -539,11 +539,14 @@ async function seedInitialStaff20() {
         (phone && normKey(x.phone) === normKey(phone))
       );
       if (duplicate) { skipped.push(nameNepali); continue; }
+      const staffRole=/शिक्षक|प्रधानाध्यापक|teacher|headmaster|principal/i.test(String(role||""))?"शिक्षक":"कर्मचारी";
       const data = {
-        name:nameNepali, nameNepali, nameEnglish, role, permanentAddress,
-        levelCategory, appointmentDate:String(appointmentDate).replace(/\s+/g,""),
+        name:nameNepali, nameNepali, nameEn:nameEnglish, nameEnglish,
+        role:staffRole, permanentAddress, levelCategory,
+        appointmentDateBs:String(appointmentDate).replace(/\s+/g,""),
+        appointmentDate:String(appointmentDate).replace(/\s+/g,""),
         appointmentType, qualification, subject, phone,
-        staffId:nextStaffId(role,records), status:"कार्यरत",
+        staffId:nextStaffId(staffRole,records), status:"कार्यरत",
         createdAt:serverTimestamp(), createdBy:auth.currentUser.uid
       };
       const ref = await addDoc(collection(db,"staff"),data);
@@ -625,6 +628,8 @@ document.addEventListener("submit", async event => {
     // A failed read stops here, before any write is attempted.
     const freshStaffSnap = await getDocs(collection(db, "staff"));
     const freshStaff = freshStaffSnap.docs.map(d => ({id:d.id, ...d.data()}));
+    const existingRecord=editId?freshStaff.find(x=>x.id===editId):null;
+    data.staffId=existingRecord?.staffId||nextStaffId(data.role,freshStaff);
     const duplicate = freshStaff.some(s => s.id !== editId && norm(s.staffId) === norm(data.staffId));
     if (duplicate) {
       cachedStaff = freshStaff;
@@ -632,14 +637,13 @@ document.addEventListener("submit", async event => {
       setStaffMessage("यो कर्मचारी ID पहिल्यै प्रयोग भएको छ। नयाँ विवरण सुरक्षित गरिएन।", true);
       return;
     }
+    document.getElementById("staffId").value=data.staffId;
     setStaffMessage("Firebase मा सुरक्षित हुँदैछ...");
     if (editId) {
-      const existing=cachedStaff.find(x=>x.id===editId);
-      await updateDoc(doc(db, "staff", editId), {...data,staffId:existing?.staffId||"MSS-STF-"+editId.slice(0,8).toUpperCase(),updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});
+      await updateDoc(doc(db, "staff", editId), {...data,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});
     } else {
       const staffRef=doc(collection(db,"staff"));
-      const generatedStaffId="MSS-STF-"+staffRef.id.slice(0,8).toUpperCase();
-      await setDoc(staffRef,{...data,staffId:generatedStaffId,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});
+      await setDoc(staffRef,{...data,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});
     }
 
     await writeAuditLog("staff",editId?"update":"create",editId||"new",data.staffId||"");
