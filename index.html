@@ -75,6 +75,62 @@
 .login-card #loginButton:focus-visible,.login-card .password-toggle:focus-visible{outline:3px solid #9dbcf2;outline-offset:2px}
 #loginError{padding:0 2px}
 @media(max-width:480px){#loginGate{padding:14px 11px;align-items:flex-start}.login-card{margin:auto 0;padding:22px 19px;border-radius:19px}.login-brand{gap:11px;margin-bottom:19px}.login-logo{width:50px;height:50px;flex-basis:50px;font-size:25px}.login-kicker{font-size:8px;letter-spacing:.8px}.login-welcome{padding:14px 15px}}
+
+/* V44 login visual refinement — presentation only; authentication behavior unchanged */
+#loginGate{
+ position:relative;isolation:isolate;overflow:hidden;
+ background:radial-gradient(ellipse at 12% 12%,#d9e9ff 0,transparent 38%),
+            radial-gradient(ellipse at 90% 88%,#e5ddff 0,transparent 42%),
+            linear-gradient(135deg,#eef5ff 0%,#f7f8ff 48%,#f1f3ff 100%);
+}
+#loginGate:before,#loginGate:after{
+ content:"";position:absolute;z-index:-1;border-radius:50%;pointer-events:none;
+ border:1px solid rgba(49,105,190,.12);
+}
+#loginGate:before{width:440px;height:440px;top:-210px;right:-130px;box-shadow:0 0 0 28px rgba(49,105,190,.035),0 0 0 58px rgba(49,105,190,.025)}
+#loginGate:after{width:360px;height:360px;bottom:-210px;left:-120px;box-shadow:0 0 0 25px rgba(109,82,190,.035),0 0 0 52px rgba(109,82,190,.025)}
+.login-card{
+ position:relative;max-width:460px;padding:34px 32px 28px;
+ border:1px solid rgba(255,255,255,.9);border-radius:24px;
+ background:rgba(255,255,255,.94);
+ box-shadow:0 24px 70px rgba(29,58,112,.14),0 3px 12px rgba(29,58,112,.06);
+ backdrop-filter:blur(14px);
+}
+.login-brand{display:flex;align-items:center;gap:15px;padding-bottom:19px;border-bottom:1px solid #edf1f8}
+.login-logo{
+ flex:0 0 58px;width:58px;height:58px;margin:0;border-radius:18px;
+ background:linear-gradient(145deg,#1559b7,#7657c8);
+ box-shadow:0 9px 20px rgba(47,86,170,.25);font-size:27px;
+}
+.login-kicker{display:block;font-size:9px;letter-spacing:1.35px;font-weight:900;color:#71809a;margin-bottom:5px}
+.login-card h2{font-size:19px;line-height:1.4;letter-spacing:.1px}
+.login-school-en{margin:2px 0 0!important;font-size:11px!important;font-weight:700;color:#62738e!important}
+.login-welcome{margin:20px 0 14px;padding:15px 16px;border-radius:14px;background:linear-gradient(110deg,#f0f5ff,#f6f2ff);border:1px solid #e8edfb}
+.login-welcome h3{margin:0 0 4px;color:#234e91;font-size:17px}
+.login-welcome p{margin:0;font-size:11px;line-height:1.6}
+.login-year{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;margin:0 0 15px;border-radius:11px;background:#f8faff;border:1px solid #e9eef8}
+.login-year span{font-size:10px;color:#6f7f98;font-weight:700}
+.login-year strong{font-size:15px;color:#315bb0;letter-spacing:.5px}
+.login-card label{font-size:11px;letter-spacing:.35px;color:#435875;margin:13px 0 6px}
+.login-card input{padding:13px 14px;border:1px solid #dce5f2;border-radius:11px;background:#fbfcff;transition:border-color .18s,box-shadow .18s,background .18s}
+.login-card input:focus{outline:0;border-color:#5487d5;background:#fff;box-shadow:0 0 0 4px rgba(66,119,205,.12)}
+.password-field{position:relative}
+.password-field input{padding-right:54px}
+.password-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:40px!important;height:38px;margin:0!important;padding:0!important;border-radius:9px!important;background:#edf3ff!important;color:#315b9f!important}
+.login-card #loginButton{margin-top:18px;padding:14px;border-radius:11px;background:linear-gradient(100deg,#175fbe,#6955bd);box-shadow:0 8px 18px rgba(44,83,166,.2);letter-spacing:.2px;transition:transform .15s,box-shadow .15s}
+.login-card #loginButton:hover{transform:translateY(-1px);box-shadow:0 11px 22px rgba(44,83,166,.25)}
+.login-card #loginButton:active{transform:translateY(0)}
+.login-card #loginError{font-weight:700}
+.login-card #loginStatus{text-align:center;margin-top:8px}
+.login-card .forgot-link{font-weight:800!important;text-decoration:none;border-radius:8px!important}
+.login-card .forgot-link:hover{text-decoration:underline;background:#f2f6ff!important}
+.login-card .forgot-panel{border-radius:13px;background:#f8faff}
+@media(max-width:480px){
+ #loginGate{padding:16px}
+ .login-card{padding:26px 20px 22px;border-radius:20px}
+ .login-logo{width:50px;height:50px;flex-basis:50px;border-radius:15px}
+ .login-card h2{font-size:17px}
+}
 </style>
 
 <meta name="theme-color" content="#1769d2">
