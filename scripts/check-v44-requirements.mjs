@@ -153,8 +153,8 @@ const legacyReport = reportHelper({ totalObtained: 18, totalFullMarks: 20 });
 must(legacyReport[0] === 18 && legacyReport[1] === 20, "Legacy aggregate marks records must remain readable.");
 
 
-const staffIdStart = html.indexOf("function nextStaffId(role, records){");
-const staffIdEnd = html.indexOf("\n\n\nfunction renderStaff()", staffIdStart);
+const staffIdStart = html.indexOf("function nextStaffId(role, records)");
+const staffIdEnd = html.indexOf("function renderStaff()", staffIdStart);
 must(staffIdStart >= 0 && staffIdEnd > staffIdStart, "Automatic staff ID generator is missing.");
 const nextStaffId = new Function(html.slice(staffIdStart, staffIdEnd) + "; return nextStaffId;")();
 must(nextStaffId("शिक्षक", []) === "TCH-0001", "New teacher ID must start at TCH-0001.");
