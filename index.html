@@ -1510,8 +1510,8 @@ function renderMarksLedgerPage(){
  head.innerHTML='<tr>'+identityHeads+subHeads+'</tr>'+second;
  const fmt=n=>Number.isFinite(Number(n))?String(Number.isInteger(Number(n))?Number(n):Number(n).toFixed(2)):'—';
  body.innerHTML=students.map((st,idx)=>'<tr>'+(achievement
-  ?'<td>'+examEsc(onlineResultDigits(studentRollNo(st)||idx+1))+'</td><td>'+examEsc(st.studentNameEnglish||st.nameEnglish||st.nameEn||st.studentNameEnglish||st.nameEnglish||st.nameEn||englishDisplayText(st.studentName||st.name||''))+'</td><td>'+examEsc(onlineResultDigits(ledgerStudentReg(st)))+'</td><td>'+examEsc(onlineResultDigits(ledgerSymbol(st)))+'</td>'
-  :'<td>'+examEsc(onlineResultDigits(studentRollNo(st)||''))+'</td><td>'+examEsc(st.studentNameEnglish||st.nameEnglish||st.nameEn||st.studentNameEnglish||st.nameEnglish||st.nameEn||englishDisplayText(st.studentName||st.name||''))+'</td>')+subjects.map((sub,si)=>{
+  ?'<td>'+examEsc(onlineResultDigits(studentRollNo(st)||idx+1))+'</td><td>'+examEsc(st.studentNameEnglish||st.nameEnglish||st.nameEn||englishDisplayText(st.studentName||st.name||''))+'</td><td>'+examEsc(onlineResultDigits(ledgerStudentReg(st)))+'</td><td>'+examEsc(onlineResultDigits(ledgerSymbol(st)))+'</td>'
+  :'<td>'+examEsc(onlineResultDigits(studentRollNo(st)||''))+'</td><td>'+examEsc(st.studentNameEnglish||st.nameEnglish||st.nameEn||englishDisplayText(st.studentName||st.name||''))+'</td>')+subjects.map((sub,si)=>{
    const rec=existingMarks.find(m=>m.studentId===st.id&&m.examId===examId&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(sub));
    const scores=rec?.scores||[];
    let full=0,mark=null,count=null;
@@ -1527,7 +1527,8 @@ function renderMarksLedgerPage(){
     const raw=rec?.totalObtained??scores.reduce((a,v)=>a+(v.obtained==null?0:Number(v.obtained)),0);
     mark=rec?Number(raw):null;
    }
-   const valid=!!rec&&Number.isFinite(full)&&full>0&&mark!==null&&Number.isFinite(mark)&&mark>=0&&mark<=full;
+   const scoresComplete=achievement?count!==null&&Number.isFinite(count)&&count>0&&mark!==null&&Number.isFinite(mark)&&mark>=0&&mark<=full:scores.length>0&&scores.every(v=>v.obtained!==null&&v.obtained!==undefined&&v.obtained!==''&&Number.isFinite(Number(v.obtained))&&Number.isFinite(Number(v.fullMarks))&&Number(v.fullMarks)>=0&&Number(v.obtained)>=0&&Number(v.obtained)<=Number(v.fullMarks));
+   const valid=!!rec&&scoresComplete&&Number.isFinite(full)&&full>0&&mark!==null&&Number.isFinite(mark)&&mark>=0&&mark<=full;
    const pct=valid?mark/full*100:null;
    const gr=pct===null?null:gradeForPercent(pct);
    if(gradeMode){
