@@ -66,6 +66,15 @@ service cloud.firestore {
          roleData().get('classTeacherClassNames', []).hasAny([className]));
     }
 
+
+    function isAssignedStudentClass(className) {
+      return isAdmin() ||
+        isAssignedClassTeacher(className) ||
+        (hasRole('subject_teacher') &&
+         roleData().get('subjectAssignmentClassNames', []) is list &&
+         roleData().get('subjectAssignmentClassNames', []).hasAny([className]));
+    }
+
     // Core school records: active school users can read; only Admin can change.
     match /students/{documentId} {
       allow get, list: if hasActiveRole();
