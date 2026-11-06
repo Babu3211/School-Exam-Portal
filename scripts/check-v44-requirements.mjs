@@ -35,7 +35,7 @@ must(html.includes("return false;\n}\nfunction applyRoleNavigation()"), "Unassig
 must(html.includes("Quick actions and sidebar links are both filtered by rolePageAllowed"), "Quick actions must follow the same role permissions as sidebar navigation.");
 must(html.includes("map(normalizeRoleKey);if(!allowed.includes(\"class_teacher\")"), "Login must normalize and validate active task roles.");
 const roleStart = html.indexOf("function rolePageAllowed(page){");
-const roleEnd = html.indexOf("\\nfunction applyRoleNavigation()", roleStart);
+const roleEnd = html.indexOf("\nfunction applyRoleNavigation()", roleStart);
 must(roleStart >= 0 && roleEnd > roleStart, "Role permission helper is missing.");
 function roleMatrix(role, admin = false) {
   const hasRole = key => admin || !!role?.active && (role.roles || []).map(v => String(v).toLowerCase().replace(/[ -]+/g, "_")).includes(key);
