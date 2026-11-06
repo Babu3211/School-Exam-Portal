@@ -97,45 +97,124 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // Marks are readable by active school users. Subject teachers can write
-    // only the class/subject assignment stored on their user_roles document.
+    function validMarkShape(data) {
+      return data.keys().hasAll([
+          'studentId', 'examId', 'subject', 'className', 'section',
+          'scores', 'totalFullMarks', 'totalObtained', 'assessmentType',
+          'academicYear', 'termKey', 'termName'
+        ]) &&
+        data.keys().hasOnly([
+          'studentId', 'examId', 'subject', 'className', 'section',
+          'scores', 'totalFullMarks', 'totalObtained', 'assessmentType',
+          'academicYear', 'termKey', 'termName',
+          'createdAt', 'createdBy', 'updatedAt', 'updatedBy'
+        ]) &&
+        data.studentId is string && data.studentId.size() > 0 &&
+        data.examId is string && data.examId.size() > 0 &&
+        data.className is string && data.className.size() > 0 &&
+        data.subject is string && data.subject.size() > 0 &&
+        data.section is string &&
+        data.scores is list && data.scores.size() > 0 &&
+        data.scores.size() <= 12 &&
+        data.totalFullMarks is number && data.totalFullMarks >= 0 &&
+        data.totalObtained is number && data.totalObtained >= 0 &&
+        data.assessmentType in ['marks', 'learning-achievement'] &&
+        data.academicYear is string &&
+        data.termKey is string &&
+        data.termName is string;
+    }
+
+    function markExamMatches(data) {
+      let examPath = /databases/$(database)/documents/exams/$(data.examId);
+      return exists(examPath) &&
+        get(examPath).data.className == data.className;
+    }
+
+    // Marks are readable by active school users. Teacher writes are bound to
+    // the assigned class/subject/section, enrolled student and matching exam.
+    // Client-side score-range checks remain mirrored in the entry UI; nested
+    // score-component validation is not expressible as a safe list-wide rule.
     match /marks/{documentId} {
       allow get, list: if hasActiveRole();
       allow create: if isAdmin() ||
         (hasActiveRole() &&
+         validMarkShape(request.resource.data) &&
+         request.resource.data.createdBy == request.auth.uid &&
+         request.resource.data.createdAt == request.time &&
+         !('updatedBy' in request.resource.data) &&
          isAssignedSubject(request.resource.data.className,
                            request.resource.data.subject,
-                           request.resource.data.get('section', '')) &&
+                           request.resource.data.section) &&
          studentBelongsToClass(request.resource.data.studentId,
-                               request.resource.data.className));
+                               request.resource.data.className) &&
+         markExamMatches(request.resource.data));
       allow update: if isAdmin() ||
         (hasActiveRole() &&
-         isAssignedSubject(resource.data.className, resource.data.subject,
-                           resource.data.get('section', '')) &&
+         validMarkShape(request.resource.data) &&
+         request.resource.data.updatedBy == request.auth.uid &&
+         request.resource.data.updatedAt == request.time &&
+         request.resource.data.createdBy == resource.data.createdBy &&
+         request.resource.data.createdAt == resource.data.createdAt &&
          request.resource.data.studentId == resource.data.studentId &&
          request.resource.data.examId == resource.data.examId &&
          request.resource.data.className == resource.data.className &&
          request.resource.data.subject == resource.data.subject &&
-         request.resource.data.get('section', '') == resource.data.get('section', '') &&
-         studentBelongsToClass(resource.data.studentId, resource.data.className));
+         request.resource.data.section == resource.data.section &&
+         isAssignedSubject(resource.data.className, resource.data.subject,
+                           resource.data.section) &&
+         studentBelongsToClass(resource.data.studentId, resource.data.className) &&
+         markExamMatches(request.resource.data));
       allow delete: if isAdmin();
     }
 
-    // Class teachers can create/update attendance only for assigned classes.
+    function validDailyAttendance(data) {
+      return data.keys().hasAll([
+          'date', 'className', 'attendanceType', 'subject', 'students',
+          'totalStudents', 'presentCount', 'absentCount', 'leaveCount',
+          'academicYear', 'updatedAt', 'updatedBy'
+        ]) &&
+        data.keys().hasOnly([
+          'date', 'className', 'attendanceType', 'subject', 'students',
+          'totalStudents', 'presentCount', 'absentCount', 'leaveCount',
+          'academicYear', 'updatedAt', 'updatedBy', 'createdAt', 'createdBy'
+        ]) &&
+        data.date is string && data.date.size() > 0 &&
+        data.className is string && data.className.size() > 0 &&
+        data.attendanceType == 'daily' &&
+        (data.subject == null || data.subject is string) &&
+        data.students is list && data.students.size() > 0 &&
+        data.students.size() <= 200 &&
+        data.totalStudents is int && data.totalStudents == data.students.size() &&
+        data.presentCount is int && data.presentCount >= 0 &&
+        data.absentCount is int && data.absentCount >= 0 &&
+        data.leaveCount is int && data.leaveCount >= 0 &&
+        data.presentCount + data.absentCount + data.leaveCount == data.totalStudents &&
+        data.academicYear is string &&
+        data.updatedBy == request.auth.uid &&
+        data.updatedAt == request.time;
+    }
+
+    // Class teachers can write daily attendance only for assigned classes.
+    // Document identity, date, original creator and attendance type are immutable
+    // to prevent moving or relabelling an existing attendance register.
     match /attendance/{documentId} {
       allow get, list: if hasActiveRole();
       allow create: if isAdmin() ||
         (hasActiveRole() &&
-         request.resource.data.attendanceType == 'daily' &&
+         validDailyAttendance(request.resource.data) &&
+         request.resource.data.createdBy == request.auth.uid &&
+         request.resource.data.createdAt == request.time &&
          isAssignedClassTeacher(request.resource.data.className));
       allow update: if isAdmin() ||
         (hasActiveRole() &&
+         validDailyAttendance(request.resource.data) &&
          resource.data.attendanceType == 'daily' &&
-         request.resource.data.attendanceType == 'daily' &&
-         isAssignedClassTeacher(resource.data.className) &&
          request.resource.data.className == resource.data.className &&
          request.resource.data.date == resource.data.date &&
-         request.resource.data.subject == resource.data.subject);
+         request.resource.data.subject == resource.data.subject &&
+         request.resource.data.createdBy == resource.data.createdBy &&
+         request.resource.data.createdAt == resource.data.createdAt &&
+         isAssignedClassTeacher(resource.data.className));
       allow delete: if isAdmin();
     }
 
