@@ -9,7 +9,7 @@ const serviceWorker = await readFile("sw.js", "utf8");
 const must = (condition, message) => assert.ok(condition, message);
 const requiredCollections = [
   "students", "staff", "classes", "subjects", "exams", "marks",
-  "attendance", "mark_settings", "user_roles", "public_result_exams",
+  "attendance", "mark_settings", "certificates", "user_roles", "public_result_exams",
   "public_results", "public_result_lookup", "audit_logs"
 ];
 
