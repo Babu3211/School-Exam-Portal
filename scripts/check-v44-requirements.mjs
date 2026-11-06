@@ -34,6 +34,29 @@ must(html.includes('if(page==="attendance")return roleHas("class_teacher")'), "A
 must(html.includes("return false;\n}\nfunction applyRoleNavigation()"), "Unassigned non-admin pages must remain blocked.");
 must(html.includes("Quick actions and sidebar links are both filtered by rolePageAllowed"), "Quick actions must follow the same role permissions as sidebar navigation.");
 must(html.includes("map(normalizeRoleKey);if(!allowed.includes(\"class_teacher\")"), "Login must normalize and validate active task roles.");
+const roleStart = html.indexOf("function rolePageAllowed(page){");
+const roleEnd = html.indexOf("\\nfunction applyRoleNavigation()", roleStart);
+must(roleStart >= 0 && roleEnd > roleStart, "Role permission helper is missing.");
+function roleMatrix(role, admin = false) {
+  const hasRole = key => admin || !!role?.active && (role.roles || []).map(v => String(v).toLowerCase().replace(/[ -]+/g, "_")).includes(key);
+  const classNames = () => [...(role?.classTeacherClassNames || []), ...(role?.classTeacherClasses || []).map(x => x.className)].filter(Boolean);
+  return new Function("isAdmin", "currentUserRole", "roleHas", "classTeacherNames",
+    html.slice(roleStart, roleEnd) + "; return rolePageAllowed;"
+  )(() => admin, role, hasRole, classNames);
+}
+const viewerPermissions = roleMatrix({ active: true, roles: ["viewer"] });
+must(viewerPermissions("dashboard") && !viewerPermissions("marks") && !viewerPermissions("attendance") && !viewerPermissions("students"), "Viewer role must see Dashboard only.");
+const subjectPermissions = roleMatrix({ active: true, roles: ["subject_teacher"], subjectAssignments: [{ className: "9", subject: "Mathematics" }] });
+must(subjectPermissions("dashboard") && subjectPermissions("marks") && !subjectPermissions("attendance") && !subjectPermissions("students"), "Subject Teacher must see Dashboard and Marks only.");
+const classPermissions = roleMatrix({ active: true, roles: ["class_teacher"], classTeacherClassNames: ["9"] });
+must(classPermissions("dashboard") && classPermissions("attendance") && !classPermissions("marks") && !classPermissions("students"), "Class Teacher must see Dashboard and Attendance only.");
+const combinedPermissions = roleMatrix({ active: true, roles: ["class_teacher", "subject_teacher"], classTeacherClasses: [{ className: "9" }], subjectAssignmentKeys: ["9::Mathematics"] });
+must(combinedPermissions("marks") && combinedPermissions("attendance"), "Combined teacher roles must expose both assigned task modules.");
+const inactivePermissions = roleMatrix({ active: false, roles: ["class_teacher"], classTeacherClassNames: ["9"] });
+must(!inactivePermissions("dashboard") && !inactivePermissions("attendance"), "Inactive users must not access Dashboard or task modules.");
+const adminPermissions = roleMatrix(null, true);
+must(["dashboard", "students", "marks", "attendance", "settings"].every(adminPermissions), "Admin must retain access to all modules.");
+
 must(html.includes("function subjectEnglishLabel(value){const raw="), "English subject label fallback is missing.");
 must(html.includes("function englishDisplayText(value)") && html.includes("return mapped||englishDisplayText(raw)||'Subject';"), "Unknown Nepali subject names must be rendered in Latin script.");
 must(html.includes("subjects.map(x=>`<th>${resultEsc(subjectEnglishLabel(x))}"), "Tabulation subjects must use English labels.");
