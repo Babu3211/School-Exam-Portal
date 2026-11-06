@@ -45,12 +45,19 @@ service cloud.firestore {
         get(studentPath).data.get('active', true) != false;
     }
 
-    function isAssignedSubject(className, subjectName) {
+    function isAssignedSubject(className, subjectName, sectionName) {
+      let baseKeys = roleData().get('subjectAssignmentKeys', []);
+      let sectionKeys = roleData().get('subjectAssignmentSectionKeys', []);
       return isAdmin() ||
         (hasRole('subject_teacher') &&
-         roleData().get('subjectAssignmentKeys', []) is list &&
-         roleData().get('subjectAssignmentKeys', [])
-           .hasAny([className + '::' + subjectName]));
+         baseKeys is list &&
+         baseKeys.hasAny([className + '::' + subjectName]) &&
+         (!(sectionKeys is list) ||
+          sectionKeys.size() == 0 ||
+          sectionKeys.hasAny([
+            className + '::' + subjectName + '::ALL',
+            className + '::' + subjectName + '::' + sectionName
+          ])));
     }
 
     function isAssignedClassTeacher(className) {
@@ -98,16 +105,19 @@ service cloud.firestore {
       allow create: if isAdmin() ||
         (hasActiveRole() &&
          isAssignedSubject(request.resource.data.className,
-                           request.resource.data.subject) &&
+                           request.resource.data.subject,
+                           request.resource.data.get('section', '')) &&
          studentBelongsToClass(request.resource.data.studentId,
                                request.resource.data.className));
       allow update: if isAdmin() ||
         (hasActiveRole() &&
-         isAssignedSubject(resource.data.className, resource.data.subject) &&
+         isAssignedSubject(resource.data.className, resource.data.subject,
+                           resource.data.get('section', '')) &&
          request.resource.data.studentId == resource.data.studentId &&
          request.resource.data.examId == resource.data.examId &&
          request.resource.data.className == resource.data.className &&
          request.resource.data.subject == resource.data.subject &&
+         request.resource.data.get('section', '') == resource.data.get('section', '') &&
          studentBelongsToClass(resource.data.studentId, resource.data.className));
       allow delete: if isAdmin();
     }
