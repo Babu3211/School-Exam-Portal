@@ -135,6 +135,15 @@ must(html.includes('id="loadResultsBtn"') && html.includes('id="resultsTablePane
 must(html.includes('id="printTabulationBtn"') && html.includes('id="printGradeSheetBtn"') && html.includes("function printTabulationSheet()") && html.includes("function showGradeSheet(studentId)"), "Tabulation and Grade Sheet print/view actions are missing.");
 must(html.includes('id="numberLedgerTab"') && html.includes('id="gradeLedgerTab"') && html.includes("function renderMarksLedgerPage()"), "Number Ledger and Grade Ledger views are missing.");
 must(html.includes("const scoresComplete=achievement?count!==null") && html.includes("const valid=!!rec&&scoresComplete"), "Grade Ledger must not convert incomplete assessment components into zero marks.");
+const aggregateStart=html.indexOf("function ledgerAggregateSummary(rows){");
+const aggregateEnd=html.indexOf("\nfunction renderMarksLedgerPage",aggregateStart);
+must(aggregateStart>=0&&aggregateEnd>aggregateStart,"Grade Ledger overall summary helper is missing.");
+const aggregate=new Function("gradeForPercent",html.slice(aggregateStart,aggregateEnd)+";return ledgerAggregateSummary;")((p)=>({grade:p>=80?"A":"NG",remark:p>=35?"Pass":"Not Graded"}));
+const overall=aggregate([{fullMarks:100,obtained:80,gradePoint:3.6},{fullMarks:50,obtained:40,gradePoint:3.2}]);
+must(overall.complete&&overall.fullMarks===150&&overall.obtained===120&&overall.percentage===80&&Math.abs(overall.gpa-3.4)<0.000001,"Grade Ledger overall totals and GPA must calculate correctly.");
+must(!aggregate([{fullMarks:100,obtained:80,gradePoint:3.6},null]).complete,"Incomplete subject marks must keep the overall result Pending.");
+must(!aggregate([{fullMarks:100,obtained:110,gradePoint:4}]).complete,"Overall result must reject out-of-range marks.");
+must(html.includes("Overall Result")&&html.includes("Final Grade")&&html.includes("Pending"),"Grade Ledger must show overall result columns and pending state.");
 const ledgerHelperStart = html.indexOf("function ledgerScoresComplete(scores){");
 const ledgerHelperEnd = html.indexOf("\nfunction renderMarksLedgerPage", ledgerHelperStart);
 must(ledgerHelperStart >= 0 && ledgerHelperEnd > ledgerHelperStart, "Grade Ledger completeness validator is missing.");
