@@ -627,7 +627,7 @@ async function seedInitialStaff20() {
         (phone && normKey(x.phone) === normKey(phone))
       );
       if (duplicate) { skipped.push(nameNepali); continue; }
-      const staffRole=/शिक्षक|प्रधानाध्यापक|teacher|headmaster|principal/i.test(String(role||""))?"शिक्षक":"कर्मचारी";
+      const staffRole=staffRoleFromLevel(role);
       const data = {
         name:nameNepali, nameNepali, nameEn:nameEnglish, nameEnglish,
         role:staffRole, permanentAddress, levelCategory,
@@ -655,7 +655,7 @@ async function seedInitialStaff20() {
 
 function staffRoleFromLevel(levelCategory) {
   const value = String(levelCategory || "").trim().toLocaleLowerCase();
-  return /शिक्षक|प्रधानाध्यापक|मा\.वि|नि\.मा\.वि|प्रा\.वि|बालविकास|teacher|headmaster|principal/i.test(value) ? "शिक्षक" : "कर्मचारी";
+  return /शिक्षक|प्रधानाध्यापक|मा\.वि|नि\.मा\.वि|प्रा\.वि|teacher|headmaster|principal/i.test(value) ? "शिक्षक" : "कर्मचारी";
 }
 
 function nextStaffId(role, records) {
