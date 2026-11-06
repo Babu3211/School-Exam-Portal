@@ -653,6 +653,11 @@ async function seedInitialStaff20() {
   }
 }
 
+function staffRoleFromLevel(levelCategory) {
+  const value = String(levelCategory || "").trim().toLocaleLowerCase();
+  return /शिक्षक|प्रधानाध्यापक|मा\.वि|नि\.मा\.वि|प्रा\.वि|बालविकास|teacher|headmaster|principal/i.test(value) ? "शिक्षक" : "कर्मचारी";
+}
+
 function nextStaffId(role, records) {
   const prefix = /शिक्षक|प्रधानाध्यापक|teacher|headmaster|principal/i.test(String(role || "")) ? "TCH" : "STF";
   const maxNo = (records || []).reduce((max, item) => {
@@ -699,7 +704,7 @@ document.addEventListener("submit", async event => {
     qualification: document.getElementById("staffQualification").value.trim(),
     subject: document.getElementById("staffSubject").value.trim(),
     phone: document.getElementById("staffPhone").value.trim(),
-    role: /शिक्षक|मा\\.वि|नि\\.मा\\.वि|प्रा\\.वि|बालविकास/.test(levelCategory) ? "शिक्षक" : "कर्मचारी",
+    role: staffRoleFromLevel(levelCategory),
     status: document.getElementById("staffStatus").value
   };
 
