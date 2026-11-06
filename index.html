@@ -352,7 +352,7 @@ let certificateStudents=[];
 function certificateEsc(value){return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function certificateCode(type){
  const prefix=type==="Transfer Certificate"?"TC":type==="Character Certificate"?"CC":"SC";
- const bytes=new Uint8Array(5);crypto.getRandomValues(bytes);
+ const bytes=new Uint8Array(8);crypto.getRandomValues(bytes);
  const suffix=[...bytes].map(x=>x.toString(16).padStart(2,"0")).join("").toUpperCase();
  return "MSS/"+prefix+"/"+String(currentSchoolSettings.academicYear||"2083")+"/"+suffix;
 }
@@ -393,7 +393,7 @@ document.addEventListener("submit",async e=>{
   const certificateNumber=certificateCode(type);
   const data={certificateNumber,certificateType:type,studentId:student.id,studentName:student.studentNameNepali||student.studentName||student.name||"",fatherName:student.fatherName||"",guardianName:student.guardianName||"",className:student.class||student.className||"",rollNo:String(studentRollNo(student)||""),admissionNo:student.admissionNo||"",dob:student.dob||"",address:student.permanentAddress||student.address||"",issueDate:date,remarks:document.getElementById("certificatePurpose").value.trim(),academicYear:String(currentSchoolSettings.academicYear||"2083"),issuedBy:auth.currentUser.uid,issuedAt:serverTimestamp(),issuedAtIso:new Date().toISOString()};
   const ref=await addDoc(collection(db,"certificates"),data);await writeAuditLog("certificates","issue",ref.id,certificateNumber+" · "+type);
-  document.getElementById("certificatePurpose").value="";await loadCertificatesPage();certificateMessage("प्रमाणपत्र Firebase मा सुरक्षित भयो। नम्बर: "+certificateNumber);printIssuedCertificate(ref.id);
+  document.getElementById("certificatePurpose").value="";await loadCertificatesPage();certificateMessage("प्रमाणपत्र Firebase मा सुरक्षित भयो। नम्बर: "+certificateNumber+"। तलको Print / PDF बटन थिचेर निकाल्नुहोस्।");
  }catch(err){console.error("Certificate issue failed",err);certificateMessage("प्रमाणपत्र जारी भएन: "+(err.code||err.message),true);}
  finally{if(btn){btn.disabled=false;btn.textContent="प्रमाणपत्र जारी गरी Save गर्नुहोस्";}}
 });
