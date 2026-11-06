@@ -20,8 +20,8 @@ const codeHelpers = new Function(html.slice(codeStart, codeEnd) + "; return { st
 must(codeHelpers.studentCodeBase("Babukrishna Khanal", "8") === "BABKHA-8", "Student Result Code must follow BABKHA-8 format.");
 must(html.includes('placeholder="जस्तै: BABKHA-8"'), "Online result example must display BABKHA-8.");
 must(!html.includes("SHYBAS-6"), "Old SHYBAS-6 example must not remain in the interface.");
-must(html.includes("MAIN MENU / मुख्य मेनु"), "Dashboard main menu must be bilingual.");
-must(html.includes("Student Management / विद्यार्थी व्यवस्थापन"), "Dashboard submenu must be bilingual.");
+must(html.includes("MAIN MENU") && !html.includes("MAIN MENU / मुख्य मेनु"), "Dashboard main menu must be English-only.");
+must(html.includes("Student Management") && !html.includes("Student Management / विद्यार्थी व्यवस्थापन"), "Dashboard submenu must be English-only.");
 must(html.includes("Student registration, search and record management / विद्यार्थी दर्ता"), "Student page topic must be bilingual.");
 must(/\.login-card\{[^}]*max-width:410px[^}]*\}/.test(html), "V43-style baseline login card styling is missing.");
 must(html.includes('id="toggleLoginPassword"'), "Password show/hide control is missing.");
