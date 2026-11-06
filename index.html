@@ -1649,7 +1649,7 @@ async function exportMarksLedgerExcel(){
  try{
   const ExcelJS=await ensureExcelJS(),wb=new ExcelJS.Workbook();
   const termLabel=smssTermLabelEnglish(smssExamTermKey(exam));
-  wb.creator='Mahadevsthan Secondary School';wb.subject='Term-wise Marks Ledger';wb.title=`${cl} ${termLabel} Marks Ledger`;
+  wb.creator='Mahadevsthan Secondary School';wb.subject='Term-wise Marks Ledger';wb.title=`${classEnglishLabel(cl)} ${termLabel} Marks Ledger`;
   const ws=wb.addWorksheet('Marks',{views:[{state:'frozen',ySplit:2,xSplit:4}]});
   const achievement=['1-3','4-5'].includes(group);
   const componentsBySubject=subjects.map(sub=>ledgerComponentsForSubject(group,sub,cl));
@@ -1692,7 +1692,7 @@ async function exportMarksLedgerExcel(){
   ws.autoFilter={from:{row:2,column:1},to:{row:lastRow,column:lastCol}};
   ws.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,paperSize:ws.PAPER_LETTER,margins:{left:0.25,right:0.25,top:0.5,bottom:0.5,header:0.2,footer:0.2}};
   const buffer=await wb.xlsx.writeBuffer(),blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${String(cl).replace(/[^a-z0-9_-]/gi,'_')}_${String(termLabel).replace(/[^a-z0-9_-]/gi,'_')}_Marks_Ledger_${String(exam.examName||'Exam').replace(/[^a-z0-9_-]/gi,'_')}.xlsx`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${classEnglishLabel(cl).replace(/[^a-z0-9_-]/gi,'_')}_${String(termLabel).replace(/[^a-z0-9_-]/gi,'_')}_Marks_Ledger_${englishDisplayText(exam.examName||'Exam').replace(/[^a-z0-9_-]/gi,'_')}.xlsx`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
   say(`Excel Ledger exported: ${students.length} students, ${subjects.length} subjects, ${termLabel}. Saved marks, including Theory/Practical components, are preserved; blank marks remain blank.`);
  }catch(err){console.error('Ledger Excel export failed',err);say(`Excel export failed: ${err.message||err}`)}
  finally{if(btn){btn.disabled=false;btn.textContent=btn.id==='exportLedgerPageExcel'?'Export Ledger Excel':'Export Marks Ledger to Excel'}}
@@ -1949,7 +1949,7 @@ function exportTabulationCsv(){
  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
  const rows=[...table.querySelectorAll('tr')].map(tr=>[...tr.children].filter(td=>!td.classList.contains('result-admin-only')).map(td=>q(td.innerText.replace(/\s*\n\s*/g,' / '))).join(','));
  const csv='\uFEFF'+rows.join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
- const exam=document.getElementById('resultExam')?.selectedOptions?.[0]?.textContent||'Result';a.href=url;a.download='Tabulation-'+exam.replace(/[^\p{L}\p{N}-]+/gu,'-')+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+ const exam=resultExams.find(x=>x.id===document.getElementById('resultExam')?.value);const examLabel=englishDisplayText(exam?.examName||'Results')+'-'+(exam?smssTermLabelEnglish(smssExamTermKey(exam)):'Results');a.href=url;a.download='Tabulation-'+classEnglishLabel(document.getElementById('resultClass')?.value||'').replace(/[^a-z0-9_-]/gi,'-')+'-'+examLabel.replace(/[^a-z0-9_-]+/gi,'-')+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
 function schoolLogoPrintMarkup(){const raw=String(currentSchoolSettings.logoDataUrl||currentSchoolSettings.logoUrl||"");const safe=raw.startsWith("https://")||raw.startsWith("data:image/");return safe?`<img src="${esc(raw)}" alt="Mahadevasthan Secondary School Logo" style="position:absolute;left:4px;top:0;width:104px;height:104px;object-fit:contain">`:`<span aria-label="School logo unavailable" style="position:absolute;left:4px;top:0;width:104px;height:104px;display:grid;place-items:center;border:2px solid #172b78;border-radius:50%;font-size:38px;font-weight:bold;color:#172b78">${esc(String(currentSchoolSettings.schoolName||"M").trim().charAt(0)||"M")}</span>`;}
 function showGradeSheet(studentId){
