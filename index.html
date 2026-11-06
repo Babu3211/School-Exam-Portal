@@ -1452,6 +1452,11 @@ function ledgerSubjectsForClass(cl,group){const no=classNoFromName(cl),fromClass
 let activeLedgerMode='number';
 function setLedgerMode(mode){activeLedgerMode=mode==='grade'?'grade':'number';const n=document.getElementById('numberLedgerTab'),g=document.getElementById('gradeLedgerTab'),t=document.getElementById('ledgerTableTitle');if(n){n.className=activeLedgerMode==='number'?'btn':'btn alt'}if(g){g.className=activeLedgerMode==='grade'?'btn':'btn alt'}if(t)t.textContent=activeLedgerMode==='number'?'Number Ledger':'Grade Ledger';renderMarksLedgerPage();}
 function ledgerScoresComplete(scores){return Array.isArray(scores)&&scores.length>0&&scores.every(v=>v&&v.obtained!==null&&v.obtained!==undefined&&v.obtained!==''&&Number.isFinite(Number(v.obtained))&&Number.isFinite(Number(v.fullMarks))&&Number(v.fullMarks)>=0&&Number(v.obtained)>=0&&Number(v.obtained)<=Number(v.fullMarks));}
+function ledgerAggregateSummary(rows){
+ if(!Array.isArray(rows)||!rows.length||rows.some(x=>!x||!Number.isFinite(Number(x.fullMarks))||Number(x.fullMarks)<=0||!Number.isFinite(Number(x.obtained))||Number(x.obtained)<0||Number(x.obtained)>Number(x.fullMarks)))return {complete:false};
+ const fullMarks=rows.reduce((a,x)=>a+Number(x.fullMarks),0),obtained=rows.reduce((a,x)=>a+Number(x.obtained),0),percentage=obtained/fullMarks*100,points=rows.map(x=>Number(x.gradePoint)),gpa=points.every(Number.isFinite)?points.reduce((a,x)=>a+x,0)/points.length:null,result=gradeForPercent(percentage);
+ return {complete:true,fullMarks,obtained,percentage,gpa,grade:result?.grade||null,remark:result?.remark||'—'};
+}
 function renderMarksLedgerPage(){
  requireAdmin();
  const cl=document.getElementById('ledgerViewClass')?.value;
@@ -1475,13 +1480,12 @@ function renderMarksLedgerPage(){
   ?'<th rowspan="2">S.N. / Roll No.</th><th rowspan="2">Student Name</th><th rowspan="2">Registration No.</th><th rowspan="2">Symbol No.</th>'
   :'<th rowspan="2">S.N. / Roll No.</th><th rowspan="2">Student Name</th>';
  const spans=subjects.map((sub,i)=>gradeMode?6:componentsBySubject[i].length);
- const subHeads=subjects.map((sub,i)=>`<th colspan="${spans[i]}">${examEsc(subjectEnglishLabel(sub))}</th>`).join('');
- const second='<tr>'+subjects.map((sub,i)=>gradeMode
-  ?'<th>Full Marks</th><th>Obtained Marks</th><th>Achievement %</th><th>Grade</th><th>Grade Point</th><th>Remarks</th>'
-  :componentsBySubject[i].map(c=>`<th>${examEsc(ledgerEnglishLabel(c.name))}<br><small>/${fmtLedger(c.fullMarks)}</small></th>`).join('')).join('')+'</tr>';
- head.innerHTML='<tr>'+identityHeads+subHeads+'</tr>'+second;
- const fmt=n=>Number.isFinite(Number(n))?String(Number.isInteger(Number(n))?Number(n):Number(n).toFixed(2)):'—';
- body.innerHTML=students.map((st,idx)=>'<tr>'+(achievement
+  const summaryHeads=gradeMode?'<th colspan="6">Overall Result</th>':'';
+  const subHeads=subjects.map((sub,i)=>`<th colspan="${spans[i]}">${examEsc(subjectEnglishLabel(sub))}</th>`).join('');
+  const second='<tr>'+subjects.map((sub,i)=>gradeMode?'<th>Full Marks</th><th>Obtained Marks</th><th>Achievement %</th><th>Grade</th><th>Grade Point</th><th>Remarks</th>':componentsBySubject[i].map(c=>`<th>${examEsc(ledgerEnglishLabel(c.name))}<br><small>/${fmtLedger(c.fullMarks)}</small></th>`).join('')).join('')+(gradeMode?'<th>Full Marks</th><th>Obtained</th><th>Percentage</th><th>GPA</th><th>Final Grade</th><th>Result</th>':'')+'</tr>';
+  head.innerHTML='<tr>'+identityHeads+subHeads+summaryHeads+'</tr>'+second;
+  const fmt=n=>Number.isFinite(Number(n))?String(Number.isInteger(Number(n))?Number(n):Number(n).toFixed(2)):'—';
+ body.innerHTML=students.map((st,idx)=>{const gradeRows=[];return '<tr>'+'<tr>'+(achievement
   ?'<td>'+examEsc(onlineResultDigits(studentRollNo(st)||idx+1))+'</td><td>'+examEsc(st.studentNameEnglish||st.nameEnglish||st.nameEn||englishDisplayText(st.studentName||st.name||''))+'</td><td>'+examEsc(onlineResultDigits(ledgerStudentReg(st)))+'</td><td>'+examEsc(onlineResultDigits(ledgerSymbol(st)))+'</td>'
   :'<td>'+examEsc(onlineResultDigits(studentRollNo(st)||''))+'</td><td>'+examEsc(st.studentNameEnglish||st.nameEnglish||st.nameEn||englishDisplayText(st.studentName||st.name||''))+'</td>')+subjects.map((sub,si)=>{
    const rec=existingMarks.find(m=>m.studentId===st.id&&m.examId===examId&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(sub));
@@ -1514,7 +1518,7 @@ function renderMarksLedgerPage(){
     const max=Number(score?.fullMarks??component.fullMarks);
     return `<td>${got===null||got===undefined||got===''?'—':`${fmt(got)} / ${fmt(max)}`}</td>`;
    }).join('');
-  }).join('')+'</tr>').join('')||`<tr><td class="empty" colspan="${subjects.reduce((a,sub,i)=>a+spans[i],achievement?5:2)}">No students found in this class.</td></tr>`;
+  }).join('')+(gradeMode?(()=>{const a=ledgerAggregateSummary(gradeRows);return a.complete?`<td>${fmt(a.fullMarks)}</td><td>${fmt(a.obtained)}</td><td>${a.percentage.toFixed(2)}%</td><td>${a.gpa===null?'—':a.gpa.toFixed(2)}</td><td>${a.grade||'—'}</td><td>${a.remark.toUpperCase()}</td>`:'<td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>Pending</td>'})():'')+'</tr>'}).join('')||`<tr><td class="empty" colspan="${subjects.reduce((a,sub,i)=>a+spans[i],achievement?5:2)+(gradeMode?6:0)}">No students found in this class.</td></tr>`;
  if(msg)msg.textContent=`Class ${classEnglishLabel(cl)} · ${exam.examName} · ${smssTermLabelEnglish(smssExamTermKey(exam))} — ${students.length} students, ${subjects.length} subjects · ${gradeMode?'Grade Ledger (Percentage, Grade, Grade Point and Remarks)':'Number Ledger (Marks for each assessment component)'}.`;
 }
 function fmtLedger(n){return Number.isFinite(Number(n))?String(Number(n)):'—'}
