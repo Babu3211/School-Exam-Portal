@@ -19,6 +19,7 @@ must(html.includes("Student registration, search and record management / वि�
 must(html.includes("V44 login visual refinement"), "V44 login visual refinement is missing.");
 must(html.includes('id="toggleLoginPassword"'), "Password show/hide control is missing.");
 must(html.includes("sendPasswordResetEmail(auth,email)"), "Free Firebase email password reset is missing.");
+must(!/signInWithPhoneNumber|PhoneAuthProvider|RecaptchaVerifier|phoneAuthProvider/i.test(html), "SMS OTP must remain disabled for the Firebase Spark Free Plan.");
 
 must(html.includes("function subjectEnglishLabel(value){const raw="), "English subject label fallback is missing.");
 must(html.includes("function englishDisplayText(value)") && html.includes("return mapped||englishDisplayText(raw)||'Subject';"), "Unknown Nepali subject names must be rendered in Latin script.");
