@@ -16,7 +16,7 @@ const requiredCollections = [
 must(html.includes("MAIN MENU / मुख्य मेनु"), "Dashboard main menu must be bilingual.");
 must(html.includes("Student Management / विद्यार्थी व्यवस्थापन"), "Dashboard submenu must be bilingual.");
 must(html.includes("Student registration, search and record management / विद्यार्थी दर्ता"), "Student page topic must be bilingual.");
-must(html.includes("V44 login visual refinement"), "V44 login visual refinement is missing.");
+must(/\.login-card\{[^}]*max-width:410px[^}]*\}/.test(html), "V43-style baseline login card styling is missing.");
 must(html.includes('id="toggleLoginPassword"'), "Password show/hide control is missing.");
 must(html.includes("sendPasswordResetEmail(auth,email)"), "Free Firebase email password reset is missing.");
 must(!/signInWithPhoneNumber|PhoneAuthProvider|RecaptchaVerifier|phoneAuthProvider/i.test(html), "SMS OTP must remain disabled for the Firebase Spark Free Plan.");
