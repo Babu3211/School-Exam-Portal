@@ -33,6 +33,13 @@ must(html.includes('if(page==="marks")return roleHas("subject_teacher")'), "Mark
 must(html.includes('if(page==="attendance")return roleHas("class_teacher")'), "Attendance must be limited to users with an active Class Teacher assignment.");
 must(html.includes("return false;\n}\nfunction applyRoleNavigation()"), "Unassigned non-admin pages must remain blocked.");
 must(html.includes("Quick actions and sidebar links are both filtered by rolePageAllowed"), "Quick actions must follow the same role permissions as sidebar navigation.");
+must(html.includes('id="studentAddNewBtn"') && html.includes('id="studentFormPanel" hidden'), "Student Management must provide an Add New Student button and initially collapsed form.");
+must(html.includes('id="staffAddNewBtn"') && html.includes('id="staffFormPanel" hidden'), "Teachers & Staff must provide an Add New Staff button and initially collapsed form.");
+must(html.includes('id="setMapLatitude"') && html.includes('id="setMapLongitude"'), "School Settings must capture both map coordinates.");
+must(html.includes('id="dashboardSchoolMap"') && html.includes("openstreetmap.org/export/embed.html"), "Dashboard must show the saved school location on a map without a paid map API.");
+must(html.includes("hasLat!==hasLon") && html.includes("data.mapLatitude < -90") && html.includes("data.mapLongitude > 180"), "School map coordinates must be validated as a complete latitude/longitude pair.");
+must(html.includes('if(target.closest("#studentAddNewBtn"))') && html.includes('if (target.closest("#staffAddNewBtn"))'), "Add New buttons must reveal their respective data-entry forms.");
+
 must(html.includes("map(normalizeRoleKey);if(!allowed.includes(\"class_teacher\")"), "Login must normalize and validate active task roles.");
 const roleStart = html.indexOf("function rolePageAllowed(page){");
 const roleEnd = html.indexOf("\nfunction applyRoleNavigation()", roleStart);
