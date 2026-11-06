@@ -49,8 +49,10 @@ const backupCollections = JSON.parse(backupMatch[1]);
 const restoreCollections = JSON.parse(restoreMatch[1]);
 for (const name of requiredCollections) {
   must(backupCollections.includes(name), "Backup is missing collection: " + name);
-  must(restoreCollections.includes(name), "Restore is missing collection: " + name);
+  if (name !== "audit_logs") must(restoreCollections.includes(name), "Restore is missing collection: " + name);
 }
+must(!restoreCollections.includes("audit_logs"), "Append-only audit logs must be preserved in backup but not replayed during restore.");
+must(html.includes("append-only सुरक्षा नियमका कारण Restore हुँदैन"), "Restore UI must explain why audit logs are not replayed.");
 must(html.includes("legacyMissingCollections"), "Restore must remain compatible with older V44 backups.");
 
 must(html.includes("async function seedInitialStaff20()"), "Initial 20-staff seed action is missing.");
