@@ -2457,6 +2457,23 @@ async function loadDashboardData(){
   msg.textContent="Dashboard विवरण Firebase बाट सफलतापूर्वक लोड भयो।";
  }catch(err){console.error("Dashboard read failed",err);msg.textContent=`Dashboard विवरण लोड भएन (${err.code||err.message})। Firestore Rules र Internet जाँच गर्नुहोस्।`;}
 }
+function reportMarkSummary(record){
+ const scores=Array.isArray(record?.scores)?record.scores:null;
+ if(record?.assessmentType==="learning-achievement"){
+  const total=scores?.[0],achieved=scores?.[2];
+  const totalValue=Number(total?.obtained),obt=Number(achieved?.obtained),full=Number(achieved?.fullMarks);
+  if(!total||!achieved||total.obtained===null||total.obtained===undefined||achieved.obtained===null||achieved.obtained===undefined||!Number.isFinite(totalValue)||totalValue<=0||!Number.isFinite(obt)||!Number.isFinite(full)||full<=0||obt<0||obt>full)return ["अपूर्ण","—","—"];
+  return [obt,full,(obt/full*100).toFixed(2)+"%"];
+ }
+ if(scores){
+  if(!ledgerScoresComplete(scores))return ["अपूर्ण","—","—"];
+  const obt=scores.reduce((sum,item)=>sum+Number(item.obtained),0),full=scores.reduce((sum,item)=>sum+Number(item.fullMarks),0);
+  return [obt,full,full>0?(obt/full*100).toFixed(2)+"%":"—"];
+ }
+ const obt=Number(record?.totalObtained),full=Number(record?.totalFullMarks);
+ if(!Number.isFinite(obt)||!Number.isFinite(full)||full<=0||obt<0||obt>full)return ["जाँच आवश्यक","—","—"];
+ return [obt,full,(obt/full*100).toFixed(2)+"%"];
+}
 function buildReport(){
  if(!auth.currentUser||(!isAdmin()&&currentUserRole?.active!==true))throw new Error("सक्रिय Login आवश्यक छ।");
  const type=document.getElementById("reportType")?.value||"students",cl=document.getElementById("reportClass")?.value||"";const c=dashboardCache;
@@ -2464,7 +2481,7 @@ function buildReport(){
  let title="",headers=[],rows=[];
  if(type==="students") {title="विद्यार्थी सूची";headers=["कक्षा","रोल नं.","दर्ता नं.","विद्यार्थीको नाम","अभिभावक","सम्पर्क"];rows=c.students.filter(inClass).sort((a,b)=>String(a.class).localeCompare(String(b.class),"ne")||(Number(a.rollNo)||0)-(Number(b.rollNo)||0)).map(x=>[x.class,x.rollNo,x.admissionNo,x.studentName,x.guardianName,x.phone]);}
  if(type==="attendance") {title="हाजिरी सारांश";headers=["मिति (वि.सं.)","कक्षा","प्रकार","विषय","कुल","उपस्थित","अनुपस्थित","बिदा"];rows=c.attendance.filter(inClass).sort((a,b)=>String(b.date).localeCompare(String(a.date))).map(x=>{const ss=x.students||[];return [attendanceAdToBs(x.date),x.className,x.attendanceType==="subject"?"विषयगत":"दैनिक",x.subject||"—",x.totalStudents??ss.length,x.presentCount??ss.filter(z=>z.status==="present").length,x.absentCount??ss.filter(z=>z.status==="absent").length,x.leaveCount??ss.filter(z=>z.status==="leave").length]});}
- if(type==="marks") {title="Marks सारांश";headers=["कक्षा","परीक्षा","विद्यार्थी ID","विषय","प्राप्ताङ्क","पूर्णाङ्क","प्रतिशत"];rows=c.marks.filter(inClass).map(x=>{const obt=Number(x.totalObtained)||0,full=Number(x.totalFullMarks)||0;return [x.className,x.examName||x.examId,x.studentId,x.subject,obt,full,full?(obt/full*100).toFixed(2)+"%":"—"]});}
+ if(type==="marks") {title="Marks सारांश";headers=["कक्षा","परीक्षा","विद्यार्थी ID","विषय","प्राप्ताङ्क","पूर्णाङ्क","प्रतिशत"];rows=c.marks.filter(inClass).map(x=>{const [obt,full,percent]=reportMarkSummary(x);return [x.className,x.examName||x.examId,x.studentId,x.subject,obt,full,percent]});}
  if(type==="exams") {title="परीक्षा सूची";headers=["परीक्षा","शैक्षिक वर्ष","कक्षा","प्रकार","सुरु मिति","अन्तिम मिति","स्थिति"];rows=c.exams.filter(inClass).map(x=>[x.examName,x.academicYear,x.className,x.examType,x.startDate,x.endDate,x.status||"—"]);}
  reportHeaders=headers;reportRows=rows;
  document.getElementById("reportHeading").textContent=title;
