@@ -1,4 +1,4 @@
-name: V44 JavaScript Quality Check
+name: V44 JavaScript and Firestore Security Checks
 
 on:
   push:
@@ -12,8 +12,8 @@ permissions:
   contents: read
 
 jobs:
-  inline-javascript:
-    name: Check inline JavaScript syntax
+  quality-and-rules:
+    name: JavaScript quality and Firestore Rules tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
@@ -22,7 +22,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+      - name: Install test dependencies
+        run: npm install
       - name: Parse every inline JavaScript block
         run: node scripts/check-inline-js.mjs
       - name: Run V44 requirement regression checks
         run: node scripts/check-v44-requirements.mjs
+      - name: Run Firestore Security Rules emulator tests
+        run: npm run test:rules
