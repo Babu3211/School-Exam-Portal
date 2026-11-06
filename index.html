@@ -2555,6 +2555,17 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
       .catch(function (error) { console.error('SMSS app installation support error:', error); });
   });
 }
+
+/* V44 bilingual stacked labels and save confirmations */
+(function(){
+ const bilingualText=(raw)=>{const parts=String(raw||'').split('/').map(x=>x.trim()).filter(Boolean);return parts.length<2?null:parts;};
+ function stackLabel(el){if(!el||el.dataset.bilingualStacked==='1')return;const textNodes=[...el.childNodes].filter(n=>n.nodeType===Node.TEXT_NODE&&n.textContent.trim());if(!textNodes.length)return;const raw=textNodes.map(n=>n.textContent).join(' ').trim();const parts=bilingualText(raw);if(!parts)return;textNodes.forEach(n=>n.remove());const wrap=document.createElement('span');wrap.className='bilingual-stack';wrap.innerHTML='<span class="bilingual-en"></span><span class="bilingual-ne"></span>';wrap.querySelector('.bilingual-en').textContent=parts[0];wrap.querySelector('.bilingual-ne').textContent=parts[1];el.appendChild(wrap);el.dataset.bilingualStacked='1';}
+ function applyStacks(){document.querySelectorAll('#nav button,#nav summary,.quick .quick-card,.quick button').forEach(stackLabel);}
+ const style=document.createElement('style');style.textContent='.bilingual-stack{display:inline-flex;flex-direction:column;align-items:flex-start;gap:2px;line-height:1.3}.bilingual-en{font-weight:800}.bilingual-ne{font-size:.92em;font-weight:600;opacity:.88}.nav button,.menu-group summary{align-items:center}';document.head.appendChild(style);
+ applyStacks();
+ document.addEventListener('submit',function(e){const btn=e.submitter;if(!btn)return;const label=(btn.innerText||btn.value||'').trim();if(!/(save|सुरक्षित|थप्नुहोस्|जारी गरी)/i.test(label))return;if(!window.confirm('यो विवरण सुरक्षित गर्ने हो?')){e.preventDefault();e.stopImmediatePropagation();}},true);
+ document.addEventListener('click',function(e){const btn=e.target.closest('button');if(!btn||btn.type==='submit')return;const label=(btn.innerText||btn.value||'').trim();if(!/(save|सुरक्षित|थप्नुहोस्)/i.test(label))return;if(btn.dataset.saveConfirmed==='1'){btn.dataset.saveConfirmed='0';return;}e.preventDefault();e.stopImmediatePropagation();if(window.confirm('यो विवरण सुरक्षित गर्ने हो?')){btn.dataset.saveConfirmed='1';btn.click();}},true);
+})();
 </script>
 </body>
 </html>
