@@ -27,10 +27,10 @@ must(html.includes("ledgerEnglishLabel(component.name)"), "Marks Ledger Excel co
 must(html.includes("smssTermLabelEnglish(smssExamTermKey(exam))"), "Printed/exported term labels must use English.");
 must(html.includes("student.studentNameEnglish||student.nameEnglish||student.nameEn"), "Grade Sheet must prefer English student names.");
 const translitStart = html.indexOf("function transliterateNepaliText");
-const translitEnd = html.indexOf("\\nfunction subjectEnglishLabel", translitStart);
+const translitEnd = html.indexOf("\nfunction subjectEnglishLabel", translitStart);
 must(translitStart >= 0 && translitEnd > translitStart, "Nepali-to-Latin display helper is missing.");
 const displayHelpers = new Function(html.slice(translitStart, translitEnd) + "; return { englishDisplayText };")();
-must(!/[\\u0900-\\u097F]/.test(displayHelpers.englishDisplayText("बाबुकृष्ण खनाल")), "Student names without English aliases must be rendered in Latin script.");
+must(!/[\u0900-\u097F]/.test(displayHelpers.englishDisplayText("बाबुकृष्ण खनाल")), "Student names without English aliases must be rendered in Latin script.");
 
 
 must(html.includes("async function publishOneOnlineResult(studentId)"), "Per-student publish/update is missing.");
