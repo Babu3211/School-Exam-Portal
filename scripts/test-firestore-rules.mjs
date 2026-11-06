@@ -6,7 +6,7 @@ import {
 } from "@firebase/rules-unit-testing";
 import {
   doc, getDoc, getDocs, collection, setDoc, updateDoc, deleteDoc,
-  serverTimestamp
+  serverTimestamp, query, where
 } from "firebase/firestore";
 
 const projectId = "smss-v44-rules-test";
@@ -40,6 +40,7 @@ async function seed() {
     await setDoc(doc(db, "exams", "exam-1"), {
       className: "9", examName: "First Term"
     });
+    await setDoc(doc(db, "marks", "mark-other-subject"), { studentId:"student-1", examId:"exam-1", subject:"Science", className:"9", section:"A", scores:[], totalFullMarks:0, totalObtained:0, assessmentType:"marks", academicYear:"2083", termKey:"first", termName:"First Term" });
     await setDoc(doc(db, "public_result_exams", "published-exam"), {
       examName: "Published Exam", active: true
     });
