@@ -101,7 +101,7 @@ service cloud.firestore {
       return score is map &&
         score.keys().hasAll(['name', 'fullMarks', 'obtained']) &&
         score.keys().hasOnly(['name', 'fullMarks', 'obtained']) &&
-        score.name is string && score.name.size() > 0 &&
+        score.name is string && score.name.size() > 0 && score.name.size() <= 80 &&
         score.fullMarks is number && score.fullMarks >= 0 &&
         (score.obtained == null ||
          (score.obtained is number &&
@@ -139,11 +139,11 @@ service cloud.firestore {
           'academicYear', 'termKey', 'termName',
           'createdAt', 'createdBy', 'updatedAt', 'updatedBy'
         ]) &&
-        data.studentId is string && data.studentId.size() > 0 &&
-        data.examId is string && data.examId.size() > 0 &&
-        data.className is string && data.className.size() > 0 &&
-        data.subject is string && data.subject.size() > 0 &&
-        data.section is string &&
+        data.studentId is string && data.studentId.size() > 0 && data.studentId.size() <= 150 &&
+        data.examId is string && data.examId.size() > 0 && data.examId.size() <= 150 &&
+        data.className is string && data.className.size() > 0 && data.className.size() <= 40 &&
+        data.subject is string && data.subject.size() > 0 && data.subject.size() <= 100 &&
+        data.section is string && data.section.size() <= 40 &&
         data.scores is list && data.scores.size() > 0 &&
         data.scores.size() <= 12 &&
         validScoreList(data) &&
@@ -284,12 +284,16 @@ service cloud.firestore {
         request.resource.data.actorUid == request.auth.uid &&
         request.resource.data.createdAt == request.time &&
         request.resource.data.actorName is string &&
+        request.resource.data.actorName.size() > 0 &&
         request.resource.data.actorName.size() <= 100 &&
         request.resource.data.module is string &&
+        request.resource.data.module.size() > 0 &&
         request.resource.data.module.size() <= 40 &&
         request.resource.data.action is string &&
+        request.resource.data.action.size() > 0 &&
         request.resource.data.action.size() <= 40 &&
         request.resource.data.recordId is string &&
+        request.resource.data.recordId.size() > 0 &&
         request.resource.data.recordId.size() <= 150 &&
         request.resource.data.detail is string &&
         request.resource.data.detail.size() <= 240 &&
