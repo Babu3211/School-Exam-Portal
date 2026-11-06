@@ -531,7 +531,7 @@ document.addEventListener("submit", async event => {
       document.getElementById("staffId").value = data.staffId;
     } else {
       const oldRecord = freshStaff.find(s => s.id === editId);
-      data.staffId = oldRecord?.staffId || data.staffId;
+      data.staffId = oldRecord?.staffId || nextStaffId(data.role, freshStaff);
     }
     const duplicate = freshStaff.some(s => s.id !== editId && norm(s.staffId) === norm(data.staffId));
     if (duplicate) {
