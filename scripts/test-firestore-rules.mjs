@@ -126,11 +126,13 @@ try {
     action: "Create", recordId: "x", detail: "forged",
     createdAt: serverTimestamp()
   }));
-  await assertFails(setDoc(doc(db(teacherUid), "audit_logs", "valid-log"), {
+  await assertSucceeds(setDoc(doc(db(teacherUid), "audit_logs", "valid-log"), {
     actorUid: teacherUid, actorName: "Teacher", module: "Marks",
     action: "Create", recordId: "x", detail: "created",
     createdAt: serverTimestamp()
   }));
+  await assertFails(updateDoc(doc(db(teacherUid), "audit_logs", "valid-log"), { detail: "tampered" }));
+  await assertFails(deleteDoc(doc(db(teacherUid), "audit_logs", "valid-log")));
   console.log("Firestore Security Rules emulator tests passed.");
 } finally {
   await testEnv.cleanup();
