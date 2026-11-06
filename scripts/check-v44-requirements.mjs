@@ -76,6 +76,14 @@ must(html.includes('id="loadResultsBtn"') && html.includes('id="resultsTablePane
 must(html.includes('id="printTabulationBtn"') && html.includes('id="printGradeSheetBtn"') && html.includes("function printTabulationSheet()") && html.includes("function showGradeSheet(studentId)"), "Tabulation and Grade Sheet print/view actions are missing.");
 must(html.includes('id="numberLedgerTab"') && html.includes('id="gradeLedgerTab"') && html.includes("function renderMarksLedgerPage()"), "Number Ledger and Grade Ledger views are missing.");
 must(html.includes("const scoresComplete=achievement?count!==null") && html.includes("const valid=!!rec&&scoresComplete"), "Grade Ledger must not convert incomplete assessment components into zero marks.");
+const ledgerHelperStart = html.indexOf("function ledgerScoresComplete(scores){");
+const ledgerHelperEnd = html.indexOf("\\nfunction renderMarksLedgerPage", ledgerHelperStart);
+must(ledgerHelperStart >= 0 && ledgerHelperEnd > ledgerHelperStart, "Grade Ledger completeness validator is missing.");
+const ledgerScoresComplete = new Function(html.slice(ledgerHelperStart, ledgerHelperEnd) + "; return ledgerScoresComplete;")();
+must(ledgerScoresComplete([{ name: "Written", fullMarks: 100, obtained: 75 }]), "Complete Grade Ledger marks should be accepted.");
+must(!ledgerScoresComplete([{ name: "Written", fullMarks: 100, obtained: null }]), "Blank Grade Ledger marks must remain pending, not zero.");
+must(!ledgerScoresComplete([{ name: "Written", fullMarks: 100, obtained: 101 }]), "Out-of-range Grade Ledger marks must be rejected.");
+must(!ledgerScoresComplete([]), "Empty Grade Ledger assessment records must remain pending.");
 
 must(html.includes('collection(db,"certificates")') && rules.includes("match /certificates/{certificateId}") && rules.includes("allow create: if isAdmin()"), "Admin-only certificate persistence rules are missing.");
 must(backupCollections.includes("certificates") && restoreCollections.includes("certificates"), "Certificate records must be included in Backup and Restore.");
