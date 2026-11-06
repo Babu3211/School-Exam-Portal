@@ -159,7 +159,7 @@ const staffIdEnd = staffIdClose < 0 ? -1 : staffIdClose + 2;
 must(staffIdStart >= 0 && staffIdEnd > staffIdStart, "Automatic staff ID generator is missing.");
 const nextStaffId = new Function(html.slice(staffIdStart, staffIdEnd) + "; return nextStaffId;")();
 const staffRoleStart = html.indexOf("function staffRoleFromLevel(levelCategory)");
-const staffRoleEnd = html.indexOf("\\nfunction nextStaffId", staffRoleStart);
+const staffRoleEnd = html.indexOf("\nfunction nextStaffId", staffRoleStart);
 must(staffRoleStart >= 0 && staffRoleEnd > staffRoleStart, "Teacher/staff role classifier is missing.");
 const staffRoleFromLevel = new Function(html.slice(staffRoleStart, staffRoleEnd) + "; return staffRoleFromLevel;")();
 must(staffRoleFromLevel("मा.वि./तृतीय") === "शिक्षक", "Secondary teacher level must receive a teacher ID.");
