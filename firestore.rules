@@ -37,6 +37,14 @@ service cloud.firestore {
          roleData().get('roles', []).hasAny([roleName]));
     }
 
+    function studentBelongsToClass(studentId, className) {
+      let studentPath = /databases/$(database)/documents/students/$(studentId);
+      return exists(studentPath) &&
+        get(studentPath).data.get('class',
+          get(studentPath).data.get('className', '')) == className &&
+        get(studentPath).data.get('active', true) != false;
+    }
+
     function isAssignedSubject(className, subjectName) {
       return isAdmin() ||
         (hasRole('subject_teacher') &&
@@ -90,14 +98,17 @@ service cloud.firestore {
       allow create: if isAdmin() ||
         (hasActiveRole() &&
          isAssignedSubject(request.resource.data.className,
-                           request.resource.data.subject));
+                           request.resource.data.subject) &&
+         studentBelongsToClass(request.resource.data.studentId,
+                               request.resource.data.className));
       allow update: if isAdmin() ||
         (hasActiveRole() &&
          isAssignedSubject(resource.data.className, resource.data.subject) &&
          request.resource.data.studentId == resource.data.studentId &&
          request.resource.data.examId == resource.data.examId &&
          request.resource.data.className == resource.data.className &&
-         request.resource.data.subject == resource.data.subject);
+         request.resource.data.subject == resource.data.subject &&
+         studentBelongsToClass(resource.data.studentId, resource.data.className));
       allow delete: if isAdmin();
     }
 
@@ -106,11 +117,16 @@ service cloud.firestore {
       allow get, list: if hasActiveRole();
       allow create: if isAdmin() ||
         (hasActiveRole() &&
+         request.resource.data.attendanceType == 'daily' &&
          isAssignedClassTeacher(request.resource.data.className));
       allow update: if isAdmin() ||
         (hasActiveRole() &&
+         resource.data.attendanceType == 'daily' &&
+         request.resource.data.attendanceType == 'daily' &&
          isAssignedClassTeacher(resource.data.className) &&
-         request.resource.data.className == resource.data.className);
+         request.resource.data.className == resource.data.className &&
+         request.resource.data.date == resource.data.date &&
+         request.resource.data.subject == resource.data.subject);
       allow delete: if isAdmin();
     }
 
