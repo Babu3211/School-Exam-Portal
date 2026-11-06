@@ -71,6 +71,10 @@ must(rules.includes("function studentBelongsToClass") && rules.includes("student
 must(html.includes("subjectAssignmentSectionKeys") && rules.includes("subjectAssignmentSectionKeys"), "Subject teacher section assignments must be stored and enforced.");
 
 must(rules.includes("request.resource.data.attendanceType == 'daily'"), "Teacher attendance writes must be limited to daily attendance.");
+must(rules.includes("match /audit_logs/{documentId}") && rules.includes("allow create: if hasActiveRole()"), "Only active school users may create audit logs.");
+must(rules.includes("request.resource.data.actorUid == request.auth.uid") && rules.includes("request.resource.data.createdAt == request.time"), "Audit log actor and server timestamp must be verified.");
+must(rules.includes("request.resource.data.detail.size() <= 240") && rules.includes("request.resource.data.actorName.size() <= 100"), "Audit log text fields must have strict size limits.");
+must(rules.includes("allow update, delete: if false;"), "Audit logs must remain append-only.");
 must(manifest.includes("V44"), "PWA manifest must identify V44.");
 must(serviceWorker.includes("smss-pwa-v44-school-exam-portal"), "Service worker cache must identify V44.");
 
