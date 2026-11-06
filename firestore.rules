@@ -1,0 +1,175 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function adminUid() {
+      return 'K6uSLmqg0vWCtCuzwtxKzFpQMu62';
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.uid == adminUid();
+    }
+
+    function rolePath(uid) {
+      return /databases/$(database)/documents/user_roles/$(uid);
+    }
+
+    function hasActiveRole() {
+      return signedIn() && (
+        isAdmin() ||
+        (exists(rolePath(request.auth.uid)) &&
+         get(rolePath(request.auth.uid)).data.active == true)
+      );
+    }
+
+    function roleData() {
+      return get(rolePath(request.auth.uid)).data;
+    }
+
+    function hasRole(roleName) {
+      return isAdmin() ||
+        (hasActiveRole() &&
+         roleData().get('roles', []) is list &&
+         roleData().get('roles', []).hasAny([roleName]));
+    }
+
+    function isAssignedSubject(className, subjectName) {
+      return isAdmin() ||
+        (hasRole('subject_teacher') &&
+         roleData().get('subjectAssignmentKeys', []) is list &&
+         roleData().get('subjectAssignmentKeys', [])
+           .hasAny([className + '::' + subjectName]));
+    }
+
+    function isAssignedClassTeacher(className) {
+      return isAdmin() ||
+        (hasRole('class_teacher') &&
+         roleData().get('classTeacherClassNames', []) is list &&
+         roleData().get('classTeacherClassNames', []).hasAny([className]));
+    }
+
+    // Core school records: active school users can read; only Admin can change.
+    match /students/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /staff/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /classes/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /subjects/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /exams/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /mark_settings/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Marks are readable by active school users. Subject teachers can write
+    // only the class/subject assignment stored on their user_roles document.
+    match /marks/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create: if isAdmin() ||
+        (hasActiveRole() &&
+         isAssignedSubject(request.resource.data.className,
+                           request.resource.data.subject));
+      allow update: if isAdmin() ||
+        (hasActiveRole() &&
+         isAssignedSubject(resource.data.className, resource.data.subject) &&
+         request.resource.data.studentId == resource.data.studentId &&
+         request.resource.data.examId == resource.data.examId &&
+         request.resource.data.className == resource.data.className &&
+         request.resource.data.subject == resource.data.subject);
+      allow delete: if isAdmin();
+    }
+
+    // Class teachers can create/update attendance only for assigned classes.
+    match /attendance/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create: if isAdmin() ||
+        (hasActiveRole() &&
+         isAssignedClassTeacher(request.resource.data.className));
+      allow update: if isAdmin() ||
+        (hasActiveRole() &&
+         isAssignedClassTeacher(resource.data.className) &&
+         request.resource.data.className == resource.data.className);
+      allow delete: if isAdmin();
+    }
+
+    match /school_settings/{documentId} {
+      allow get: if hasActiveRole();
+      allow list: if false;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // A user can read their own role record; Admin manages all role records.
+    match /user_roles/{userId} {
+      allow get: if isAdmin() || (signedIn() && request.auth.uid == userId);
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Audit records are append-only. Users may write only as themselves.
+    match /audit_logs/{documentId} {
+      allow get, list: if isAdmin();
+      allow create: if signedIn() &&
+        request.resource.data.actorUid == request.auth.uid &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.keys().hasOnly([
+          'actorUid', 'actorName', 'module', 'action',
+          'recordId', 'detail', 'createdAt'
+        ]);
+      allow update, delete: if false;
+    }
+
+    // Public result index: contains exam metadata only.
+    match /public_result_exams/{examId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public lookup is exact-document get only. Public list is forbidden.
+    // Admin list is needed for safe per-student re-publish/unpublish and backup.
+    match /public_result_lookup/{lookupId} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public result documents can be fetched only by known document ID.
+    // Admin list is needed for publication status, legacy cleanup and backup.
+    match /public_results/{resultId} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Reserved collection; no client-side access is enabled.
+    match /online_result_rate_limits/{documentId} {
+      allow read, write: if false;
+    }
+
+    // Deny all other collections and documents by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
