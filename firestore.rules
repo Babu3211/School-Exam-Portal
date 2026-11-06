@@ -59,6 +59,15 @@ service cloud.firestore {
           ])));
     }
 
+
+    function isAssignedSubjectPair(className, subjectName) {
+      return isAdmin() ||
+        (hasRole('subject_teacher') &&
+         roleData().get('subjectAssignmentKeys', []) is list &&
+         roleData().get('subjectAssignmentKeys', [])
+           .hasAny([className + '::' + subjectName]));
+    }
+
     function isAssignedClassTeacher(className) {
       return isAdmin() ||
         (hasRole('class_teacher') &&
@@ -175,7 +184,7 @@ service cloud.firestore {
     // Client-side score-range checks remain mirrored in the entry UI; nested
     // score-component validation is not expressible as a safe list-wide rule.
     match /marks/{documentId} {
-      allow get, list: if hasActiveRole() && isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);
+      allow get, list: if hasActiveRole() && isAssignedSubjectPair(resource.data.className, resource.data.subject);
       allow create: if isAdmin() ||
         (hasActiveRole() &&
          validMarkShape(request.resource.data) &&
