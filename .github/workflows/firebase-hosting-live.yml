@@ -1,0 +1,26 @@
+name: Deploy SMSS V44 to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - smss-v44-work
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: \${{ vars.ENABLE_FIREBASE_HOSTING_DEPLOY == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout V44
+        uses: actions/checkout@v4
+      - name: Deploy live to Firebase Hosting (Spark-compatible)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: \${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: \${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
+          projectId: exam-portal-smss-95016
+          channelId: live
+          entryPoint: .
