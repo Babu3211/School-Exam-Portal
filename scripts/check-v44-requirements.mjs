@@ -152,4 +152,14 @@ must(incompleteReport[0] === "अपूर्ण" && incompleteReport[1] === "�
 const legacyReport = reportHelper({ totalObtained: 18, totalFullMarks: 20 });
 must(legacyReport[0] === 18 && legacyReport[1] === 20, "Legacy aggregate marks records must remain readable.");
 
+
+const staffIdStart = html.indexOf("function nextStaffId(role, records){");
+const staffIdEnd = html.indexOf("\n\n\nfunction renderStaff()", staffIdStart);
+must(staffIdStart >= 0 && staffIdEnd > staffIdStart, "Automatic staff ID generator is missing.");
+const nextStaffId = new Function(html.slice(staffIdStart, staffIdEnd) + "; return nextStaffId;")();
+must(nextStaffId("शिक्षक", []) === "TCH-0001", "New teacher ID must start at TCH-0001.");
+must(nextStaffId("कर्मचारी", []) === "STF-0001", "New staff ID must start at STF-0001.");
+must(nextStaffId("शिक्षक", [{ staffId: "TCH-0001" }, { staffId: "TCH-0008" }, { staffId: "STF-0009" }]) === "TCH-0009", "Teacher ID must increment from the highest existing teacher ID only.");
+must(nextStaffId("कर्मचारी", [{ staffId: "STF-0002" }, { staffId: "STF-0010" }, { staffId: "TCH-0015" }]) === "STF-0011", "Staff ID must increment from the highest existing staff ID only.");
+
 console.log("V44 requirement regression checks passed.");
