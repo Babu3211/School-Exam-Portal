@@ -38,6 +38,10 @@ async function seed() {
     await setDoc(doc(db, "students", "student-1"), {
       name: "Test Student", class: "9", active: true
     });
+    await setDoc(doc(db, "students", "student-10"), {
+      name: "Other Class Student", class: "10", active: true
+    });
+    await setDoc(doc(db, "staff", "staff-1"), { name: "Private Staff Record" });
     await setDoc(doc(db, "exams", "exam-1"), {
       className: "9", examName: "First Term"
     });
