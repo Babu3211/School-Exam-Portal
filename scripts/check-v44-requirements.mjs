@@ -39,7 +39,7 @@ must(html.includes('id="staffAddNewBtn"') && html.includes('id="staffFormPanel" 
 must(html.includes('id="setMapLatitude"') && html.includes('id="setMapLongitude"'), "School Settings must capture both map coordinates.");
 must(html.includes('id="dashboardSchoolMap"') && html.includes("openstreetmap.org/export/embed.html"), "Dashboard must show the saved school location on a map without a paid map API.");
 must(html.includes("hasLat!==hasLon") && html.includes("data.mapLatitude < -90") && html.includes("data.mapLongitude > 180"), "School map coordinates must be validated as a complete latitude/longitude pair.");
-must(html.includes('if(target.closest("#studentAddNewBtn"))') && html.includes('if (target.closest("#staffAddNewBtn"))'), "Add New buttons must reveal their respective data-entry forms.");
+must(/if\s*\(\s*target\.closest\("#studentAddNewBtn"\)\)/.test(html) && /if\s*\(\s*target\.closest\("#staffAddNewBtn"\)\)/.test(html), "Add New buttons must reveal their respective data-entry forms.");
 
 must(html.includes("map(normalizeRoleKey);if(!allowed.includes(\"class_teacher\")"), "Login must normalize and validate active task roles.");
 const roleStart = html.indexOf("function rolePageAllowed(page){");
