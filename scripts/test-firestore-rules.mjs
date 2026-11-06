@@ -46,6 +46,7 @@ async function seed() {
       className: "9", examName: "First Term"
     });
     await setDoc(doc(db, "marks", "mark-other-subject"), { studentId:"student-1", examId:"exam-1", subject:"Science", className:"9", section:"A", scores:[], totalFullMarks:0, totalObtained:0, assessmentType:"marks", academicYear:"2083", termKey:"first", termName:"First Term" });
+    await setDoc(doc(db, "school_public_branding", "main"), { schoolName: "Mahadevasthan Secondary School", logoDataUrl: "data:image/png;base64,test" });
     await setDoc(doc(db, "public_result_exams", "published-exam"), {
       examName: "Published Exam", active: true
     });
@@ -101,6 +102,13 @@ function validAttendance(overrides = {}) {
 
 try {
   await seed();
+
+  await assertSucceeds(getDoc(doc(testEnv.unauthenticatedContext().firestore(), "school_public_branding", "main")));
+  await assertFails(getDocs(collection(testEnv.unauthenticatedContext().firestore(), "school_public_branding")));
+  await assertFails(setDoc(doc(testEnv.unauthenticatedContext().firestore(), "school_public_branding", "main"), { schoolName: "Forged" }));
+  await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(), "school_public_branding", "other")));
+  await assertSucceeds(setDoc(doc(db(ADMIN), "school_public_branding", "main"), { schoolName: "Mahadevasthan Secondary School" }));
+  await assertFails(setDoc(doc(db(teacherUid), "school_public_branding", "main"), { schoolName: "Forged" }));
 
   await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(), "students", "student-1")));
   await assertSucceeds(getDoc(doc(db(teacherUid), "students", "student-1")));
