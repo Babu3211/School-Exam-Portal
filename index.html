@@ -1485,7 +1485,7 @@ function renderMarksLedgerPage(){
   const second='<tr>'+subjects.map((sub,i)=>gradeMode?'<th>Full Marks</th><th>Obtained Marks</th><th>Achievement %</th><th>Grade</th><th>Grade Point</th><th>Remarks</th>':componentsBySubject[i].map(c=>`<th>${examEsc(ledgerEnglishLabel(c.name))}<br><small>/${fmtLedger(c.fullMarks)}</small></th>`).join('')).join('')+(gradeMode?'<th>Full Marks</th><th>Obtained</th><th>Percentage</th><th>GPA</th><th>Final Grade</th><th>Result</th>':'')+'</tr>';
   head.innerHTML='<tr>'+identityHeads+subHeads+summaryHeads+'</tr>'+second;
   const fmt=n=>Number.isFinite(Number(n))?String(Number.isInteger(Number(n))?Number(n):Number(n).toFixed(2)):'—';
- body.innerHTML=students.map((st,idx)=>{const gradeRows=[];return '<tr>'+'<tr>'+(achievement
+ body.innerHTML=students.map((st,idx)=>{const gradeRows=[];return '<tr>'+(achievement
   ?'<td>'+examEsc(onlineResultDigits(studentRollNo(st)||idx+1))+'</td><td>'+examEsc(st.studentNameEnglish||st.nameEnglish||st.nameEn||englishDisplayText(st.studentName||st.name||''))+'</td><td>'+examEsc(onlineResultDigits(ledgerStudentReg(st)))+'</td><td>'+examEsc(onlineResultDigits(ledgerSymbol(st)))+'</td>'
   :'<td>'+examEsc(onlineResultDigits(studentRollNo(st)||''))+'</td><td>'+examEsc(st.studentNameEnglish||st.nameEnglish||st.nameEn||englishDisplayText(st.studentName||st.name||''))+'</td>')+subjects.map((sub,si)=>{
    const rec=existingMarks.find(m=>m.studentId===st.id&&m.examId===examId&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(sub));
@@ -1508,6 +1508,7 @@ function renderMarksLedgerPage(){
    const pct=valid?mark/full*100:null;
    const gr=pct===null?null:gradeForPercent(pct);
    if(gradeMode){
+    gradeRows.push(valid?{fullMarks:full,obtained:mark,gradePoint:gr?.point}:null);
     return `<td>${rec&&full>0?fmt(full):'—'}</td><td>${valid?fmt(mark):'—'}</td><td>${pct===null?'—':pct.toFixed(2)+'%'}</td><td>${gr?.grade||'—'}</td><td>${gr?.point==null?'—':gr.point.toFixed(1)}</td><td>${gr?.remark?.toUpperCase()||'—'}</td>`;
    }
    if(achievement)return `<td>${count===null||!Number.isFinite(count)?'—':fmt(count)}</td><td>${rec&&full>0?fmt(full):'—'}</td><td>${valid?fmt(mark):'—'}</td>`;
