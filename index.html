@@ -1454,7 +1454,7 @@ function setLedgerMode(mode){activeLedgerMode=mode==='grade'?'grade':'number';co
 function ledgerScoresComplete(scores){return Array.isArray(scores)&&scores.length>0&&scores.every(v=>v&&v.obtained!==null&&v.obtained!==undefined&&v.obtained!==''&&Number.isFinite(Number(v.obtained))&&Number.isFinite(Number(v.fullMarks))&&Number(v.fullMarks)>=0&&Number(v.obtained)>=0&&Number(v.obtained)<=Number(v.fullMarks));}
 function ledgerAggregateSummary(rows){
  if(!Array.isArray(rows)||!rows.length||rows.some(x=>!x||!Number.isFinite(Number(x.fullMarks))||Number(x.fullMarks)<=0||!Number.isFinite(Number(x.obtained))||Number(x.obtained)<0||Number(x.obtained)>Number(x.fullMarks)))return {complete:false};
- const fullMarks=rows.reduce((a,x)=>a+Number(x.fullMarks),0),obtained=rows.reduce((a,x)=>a+Number(x.obtained),0),percentage=obtained/fullMarks*100,points=rows.map(x=>Number(x.gradePoint)),gpa=points.every(Number.isFinite)?points.reduce((a,x)=>a+x,0)/points.length:null,result=gradeForPercent(percentage);
+ const fullMarks=rows.reduce((a,x)=>a+Number(x.fullMarks),0),obtained=rows.reduce((a,x)=>a+Number(x.obtained),0),percentage=obtained/fullMarks*100,points=rows.map(x=>x.gradePoint),gpa=points.every(x=>x!==null&&x!==undefined&&Number.isFinite(Number(x)))?points.reduce((a,x)=>a+Number(x),0)/points.length:null,result=gradeForPercent(percentage);
  return {complete:true,fullMarks,obtained,percentage,gpa,grade:result?.grade||null,remark:result?.remark||'—'};
 }
 function renderMarksLedgerPage(){
