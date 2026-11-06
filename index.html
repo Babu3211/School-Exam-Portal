@@ -2387,8 +2387,22 @@ let reportRows=[],reportHeaders=[];
 const reportEsc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 async function fetchDashboardCollections(){
  if(!auth.currentUser||(!isAdmin()&&currentUserRole?.active!==true))throw new Error("सक्रिय Login आवश्यक छ।");
- const [a,b,c,d,e,f]=await Promise.all(["students","staff","classes","exams","marks","attendance"].map(n=>getDocs(collection(db,n))));
- dashboardCache={students:a.docs.map(x=>({id:x.id,...x.data()})),staff:b.docs.map(x=>({id:x.id,...x.data()})),classes:c.docs.map(x=>({id:x.id,...x.data()})),exams:d.docs.map(x=>({id:x.id,...x.data()})),marks:e.docs.map(x=>({id:x.id,...x.data()})),attendance:f.docs.map(x=>({id:x.id,...x.data()}))};
+ if(isAdmin()){
+  const [a,b,c,d,e,f]=await Promise.all(["students","staff","classes","exams","marks","attendance"].map(n=>getDocs(collection(db,n))));
+  dashboardCache={students:a.docs.map(x=>({id:x.id,...x.data()})),staff:b.docs.map(x=>({id:x.id,...x.data()})),classes:c.docs.map(x=>({id:x.id,...x.data()})),exams:d.docs.map(x=>({id:x.id,...x.data()})),marks:e.docs.map(x=>({id:x.id,...x.data()})),attendance:f.docs.map(x=>({id:x.id,...x.data()}))};
+  return;
+ }
+ const classNames=[...new Set([...(classTeacherNames()||[]),...(currentUserRole.subjectAssignmentClassNames||[]),...(currentUserRole.subjectAssignments||[]).map(x=>x.className)].map(x=>String(x||"").trim()).filter(Boolean))];
+ const pairs=(currentUserRole.subjectAssignments||[]).filter(x=>x.className&&x.subject);
+ const [studentSnaps,examSnaps,markSnaps,attendanceSnaps,classSnap]=await Promise.all([
+  Promise.all(classNames.map(cl=>getDocs(query(collection(db,"students"),where("class","==",cl))))),
+  Promise.all(classNames.map(cl=>getDocs(query(collection(db,"exams"),where("className","==",cl))))),
+  Promise.all(pairs.map(x=>getDocs(query(collection(db,"marks"),where("className","==",x.className),where("subject","==",x.subject))))),
+  Promise.all((currentUserRole.roles||[]).includes("class_teacher")?classNames.map(cl=>getDocs(query(collection(db,"attendance"),where("className","==",cl),where("attendanceType","==","daily")))):[]),
+  getDocs(collection(db,"classes"))
+ ]);
+ const flatten=snaps=>snaps.flatMap(x=>x.docs);
+ dashboardCache={students:flatten(studentSnaps).map(x=>({id:x.id,...x.data()})),staff:[],classes:classSnap.docs.map(x=>({id:x.id,...x.data()})),exams:flatten(examSnaps).map(x=>({id:x.id,...x.data()})),marks:flatten(markSnaps).map(x=>({id:x.id,...x.data()})),attendance:flatten(attendanceSnaps).map(x=>({id:x.id,...x.data()}))};
 }
 async function loadDashboardData(){
  if(!auth.currentUser||(!isAdmin()&&currentUserRole?.active!==true))throw new Error("सक्रिय Login आवश्यक छ।");
@@ -2398,7 +2412,7 @@ async function loadDashboardData(){
   await fetchDashboardCollections();
   const c=dashboardCache;
   document.getElementById("dashStudentCount").textContent=c.students.length;
-  document.getElementById("dashStaffCount").textContent=c.staff.length;
+  document.getElementById("dashStaffCount").textContent=isAdmin()?c.staff.length:"—";
   const activeClassNames=[...new Set(c.classes.map(x=>String(x.className||x.class||"")).filter(Boolean))];
   document.getElementById("dashClassCount").textContent=activeClassNames.length||[...new Set(c.students.map(x=>String(x.class||"")).filter(Boolean))].length;
   document.getElementById("dashExamCount").textContent=c.exams.length;
