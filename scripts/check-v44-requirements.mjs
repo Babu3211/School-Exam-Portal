@@ -59,6 +59,8 @@ must(rules.includes("match /public_result_lookup/{lookupId}") && rules.includes(
 must(rules.includes("match /public_results/{resultId}") && rules.includes("allow list: if isAdmin();"), "Public result list must be Admin-only.");
 must(rules.includes("match /public_result_exams/{examId}"), "Public exam index rules are missing.");
 must(rules.includes("function studentBelongsToClass") && rules.includes("studentBelongsToClass(request.resource.data.studentId"), "Marks rules must validate that a student belongs to the assigned class.");
+must(html.includes("subjectAssignmentSectionKeys") && rules.includes("subjectAssignmentSectionKeys"), "Subject teacher section assignments must be stored and enforced.");
+
 must(rules.includes("request.resource.data.attendanceType == 'daily'"), "Teacher attendance writes must be limited to daily attendance.");
 must(manifest.includes("V44"), "PWA manifest must identify V44.");
 must(serviceWorker.includes("smss-pwa-v44-school-exam-portal"), "Service worker cache must identify V44.");
