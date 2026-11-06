@@ -207,9 +207,7 @@ must(legacyReport[0] === 18 && legacyReport[1] === 20, "Legacy aggregate marks r
 
 
 const staffIdStart = html.indexOf("function nextStaffId(role, records)");
-const staffIdClose = html.indexOf("
-}
-", staffIdStart);
+const staffIdClose = html.indexOf("\n}\n", staffIdStart);
 const staffIdEnd = staffIdClose < 0 ? -1 : staffIdClose + 2;
 must(staffIdStart >= 0 && staffIdEnd > staffIdStart, "Automatic staff ID generator is missing.");
 const nextStaffId = new Function(html.slice(staffIdStart, staffIdEnd) + "; return nextStaffId;")();
