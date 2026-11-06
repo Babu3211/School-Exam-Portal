@@ -2234,7 +2234,7 @@ async function publishOnlineResult(selectedOnly=false){
 }
 document.addEventListener('click',e=>{
  const pubOne=e.target.closest('[data-publish-one]'),unpubOne=e.target.closest('[data-unpublish-one]');
- if(pubOne){const id=pubOne.dataset.publishOne;pubOne.disabled=true;publishOnlineResultForOne(id).catch(err=>resultMsg(err.message||'Publish failed.',true)).finally(()=>pubOne.disabled=false);return;}
+ if(pubOne){const id=pubOne.dataset.publishOne;pubOne.disabled=true;publishOneOnlineResult(id).then(p=>{downloadResultPinList([{name:p.student.studentName||p.student.name||'',roll:p.roll,code:p.code,pin:p.pin}],document.getElementById('resultClass')?.value||''));return refreshResultPublicationStates();}).then(()=>resultMsg('Selected student result published/updated.')).catch(err=>resultMsg(err.message||'Publish failed.',true)).finally(()=>pubOne.disabled=false);return;}
  if(unpubOne){const id=unpubOne.dataset.unpublishOne;unpubOne.disabled=true;unpublishOneOnlineResult(id).then(refreshResultPublicationStates).then(()=>resultMsg('Selected student result unpublished.')).catch(err=>resultMsg(err.message||'Unpublish failed.',true)).finally(()=>unpubOne.disabled=false);return;}
 });
 
