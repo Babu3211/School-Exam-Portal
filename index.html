@@ -2108,7 +2108,7 @@ function legacyPublicationNameMatches(docSnap,student){
  return names.length>0&&names.some(name=>html.includes(resultEsc(name)));
 }
 function legacyPublicationIdentifiers(student){
- return [student.symbolNo,student.symbolNumber,student.examSymbolNo,student.studentIemisNo,student.iemisStudentNo,student.admissionNo].map(x=>String(x||'').trim()).filter(Boolean);
+ return [student.symbolNo,student.symbolNumber,student.examSymbolNo,student.studentIemisNo,student.iemisStudentNo,student.admissionNo].flatMap(x=>[String(x||'').trim(),onlineResultDigits(x).trim()]).filter(Boolean);
 }
 function legacyPublicationMatches(docSnap,student){
  const data=docSnap.data()||{};
