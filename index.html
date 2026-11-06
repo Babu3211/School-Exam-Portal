@@ -230,6 +230,7 @@ if(p==="staff")h=head(names[p],"शिक्षक तथा कर्मचा�
 <input id="staffSearch" placeholder="नाम, कर्मचारी ID, विषय वा सम्पर्क खोज्नुहोस्">
 <button class="btn" id="staffSearchBtn" type="button">Search</button>
 <button class="btn alt" id="staffReloadBtn" type="button">Refresh</button>
+<button class="btn" id="staffSeed20Btn" type="button">Add 20 Initial Staff Records</button>
 <button class="btn" id="staffExport" type="button">Export Excel</button><button class="btn alt" id="staffSample" type="button">Sample Download</button><label class="btn alt" for="staffImportFile">Import Excel</label><input id="staffImportFile" type="file" accept=".xlsx,.xls,.csv" hidden>
 </div>
 <div class="notice">कर्मचारी ID प्रणालीबाट स्वतः बनाइन्छ। नयाँ विवरण थप्दा ID परिवर्तन नगर्नुहोस्। पुराना रेकर्डको ID यथावत् रहनेछ।</div>
@@ -514,6 +515,62 @@ async function loadStaff() {
   }
 }
 
+async function seedInitialStaff20() {
+  const btn = document.getElementById("staffSeed20Btn");
+  if(!btn)return;
+  if (!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
+    setStaffMessage("२० कर्मचारी थप्न Admin login आवश्यक छ।", true);
+    return;
+  }
+  if (!confirm("तपाईंले उपलब्ध गराउनुभएको २० जना शिक्षक/कर्मचारीका विवरण Firebase मा थप्ने? पहिलेबाट भएका नाम वा सम्पर्क नम्बर दोहोर्‍याएर थपिने छैनन्।")) return;
+  btn.disabled = true;
+  btn.textContent = "विवरण जाँच हुँदैछ...";
+  try {
+    const snap = await getDocs(collection(db, "staff"));
+    const records = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    const rows = [["केशवप्रसाद रुपाखेती","Keshav Prasad Rupakheti","धुनिवेशी - ४, धादिङ","मा.वि./तृतीय","२०७२/०९/२१","स्थायी","M.A./M.Ed.","Rural Development/ EPM","9841319505","शिक्षक"],["हरिबहादुर राई","Hari Bahadur Rai","धुनिवेशी - ५, धादिङ","प्रा.वि./तृतीय","२०६१/०२/१९","स्थायी","M.Ed.","Nepali","9841383703","शिक्षक"],["दिपक भट्ट","Deepak Bhatt","धुनिवेशी - ५, धादिङ","प्रा.वि./द्वितीय","२०६१/०२/१९","स्थायी","M.A./B.Ed.","Sociology/Economics","9841642043","शिक्षक"],["मिना तामाङ","Mina Tamang","धुनिवेशी - ५, धादिङ","प्रा.वि./तृतीय","२०७५/१२/२९","स्थायी","I.Ed.","Nepali","9841693375","शिक्षक"],["कपिनद्र अधिकारी","Kapindra Adhikari","त्रिपुरासुन्दरी -३, धादिङ","प्रा.वि./तृतीय","२०८१/१२/१४","स्थायी","M.Sc./B.Ed.","Science","9843668214","शिक्षक"],["लक्ष्मी पण्डित","Laxmi Pandit","थाक्रे-९, धादिङ","प्रा.वि./तृतीय","२०८०/ १२/ २५","स्थायी","B.Ed.","English","9864599026","शिक्षक"],["राजेन्द्र बहादुर कुँवर","Rajendra Bahadur Kunwar","चन्द्रागिरी - ९, काठमाडौं","मा.वि.","२०७४/०३/२९","राहत","B.Sc./B.Ed. / M.A.","Science/Sociology","9848763757","शिक्षक"],["बिक्रम घलान","Bikram Ghalan","थाहा-७, मकवानपुर","मा.वि.","२०८२/०८/०३","राहत","B.Ed. /M.Ed.","Math / Social Studies","9860272470","शिक्षक"],["सपना पौडेल","Sapana Paudel","धुनिवेशी - २, धादिङ","मा.वि.","२०८१/०७/२०","स. अनुदान","B.A / M.A.","English/ Sociology","9843806831","शिक्षक"],["बाबुकृष्ण खनाल","Babu Krishna Khanal","धुनिवेशी - २, धादिङ","नि.मा.वि.","२०७७/०६/१४","राहत","B.Ed.","Math","9841575051","शिक्षक"],["विष्णु प्रसाद आचार्य","Bishnu Prasad Acharya","वीरेन्द्रनगर-३, सुर्खेत","नि.मा.वि.","२०८०/०१/२८","राहत","M.Ed. I.C.T.","Computer","9848077054","शिक्षक"],["सरिता ढुङ्गाना","Sarita Dhungana","थाक्रे-८, धादिङ","नि.मा.वि.","२०८१/०२/१४","नगर अनुदान","M.Ed.","E.P.M.","9860426952","शिक्षक"],["नरबहादुर बुढा","Nar Bahadur Budha","कनकासुन्दरी-४, जुम्ला","नि.मा.वि.","२०८२/०९/२१","नगर अनुदान","I.Ed.","Science","9848191918","शिक्षक"],["गंगा रुपाखेती","Ganga Rupakheti","धुनिवेशी -५, धादिङ","प्रा.वि.","२०७१/१०/०६","राहत","B.Ed.","Nepali","9849917998","शिक्षक"],["गोकर्ण प्रसाद पन्त","Gokarna Prasad Pant","पुरचौंडी -५, बैतडी","प्रा.वि.","२०८२/०२/११","राहत","B.Ed.","Population","9767487678","शिक्षक"],["राधा श्रेष्ठ","Radha Shrestha","धुनिवेशी - ५, धादिङ","लेखा सहायक","२०६५/०८/३०","करार","I.Com","Account","9849287679","लेखा"],["सबिना रोक्का","Sabina Rokka","धुनिवेशी - ५, धादिङ","बालविकास स.का.","२०६५/०८/३०","करार","I.Ed.","Nepali","9840174231","बालविकास सहयोगी"],["सम्झना अधिकारी","Samjhana Adhikari","धुनिवेशी - ५, धादिङ","बालविकास स.का.","२०६५/०१/०१","करार","I.Ed.","Nepali","9860778231","बालविकास सहयोगी"],["मनिता उपाध्याय","Manita Upadhyay","धुनिवेशी - ८, धादिङ","विद्यालय नर्स","२०८३/ ०४/ १४","करार","PCL Nursing","School Nurse","9767656416","विद्यालय नर्स"],["टिका बहादुर श्रेष्ठ","Tika Bahadur Shrestha","धुनिवेशी - ५, धादिङ","का.स.","२०५०/०४/१३","करार","साधारण लेखपढ","-","9866477549","कार्यालय सहयोगी"]];
+    const normKey = value => String(value || "").replace(/\s+/g,"").toLowerCase();
+    const added = [], skipped = [];
+    for (const row of rows) {
+      const [nameNepali,nameEnglish,permanentAddress,levelCategory,appointmentDate,appointmentType,qualification,subject,phone,role] = row;
+      const duplicate = records.some(x =>
+        normKey(x.nameNepali || x.name) === normKey(nameNepali) ||
+        (phone && normKey(x.phone) === normKey(phone))
+      );
+      if (duplicate) { skipped.push(nameNepali); continue; }
+      const data = {
+        name:nameNepali, nameNepali, nameEnglish, role, permanentAddress,
+        levelCategory, appointmentDate:String(appointmentDate).replace(/\s+/g,""),
+        appointmentType, qualification, subject, phone,
+        staffId:nextStaffId(role,records), status:"कार्यरत",
+        createdAt:serverTimestamp(), createdBy:auth.currentUser.uid
+      };
+      const ref = await addDoc(collection(db,"staff"),data);
+      records.push({id:ref.id,...data});
+      added.push(nameNepali);
+    }
+    await writeAuditLog("staff","bulk_create","initial-20",`थपिएका: ${added.length}, दोहोरिएका: ${skipped.length}`);
+    await loadStaff();
+    setStaffMessage(`काम सम्पन्न: ${added.length} जना थपिए, ${skipped.length} जना पहिले नै रहेकाले छोडिए।`);
+  } catch (error) {
+    console.error("Initial staff import failed:",error);
+    setStaffMessage(`विवरण थप्दा समस्या आयो: ${error.code || error.message}. पुनः प्रयासअघि सूची Refresh गरेर जाँच्नुहोस्।`,true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "२० जना शिक्षक/कर्मचारी Firebase मा थप्नुहोस्";
+  }
+}
+
+function nextStaffId(role, records) {
+  const prefix = /शिक्षक|प्रधानाध्यापक|teacher|headmaster|principal/i.test(String(role || "")) ? "TCH" : "STF";
+  const maxNo = (records || []).reduce((max, item) => {
+    const match = String(item.staffId || "").match(new RegExp("^" + prefix + "-(\\d+)$","i"));
+    return match ? Math.max(max, Number(match[1])) : max;
+  }, 0);
+  return prefix + "-" + String(maxNo + 1).padStart(4, "0");
+}
+
+
 function renderStaff() {
   const body = document.getElementById("staffBody");
   if (!body) return;
@@ -600,6 +657,7 @@ document.addEventListener("submit", async event => {
   }
 });
 
+document.addEventListener('click',e=>{if(e.target.closest('#staffSeed20Btn'))seedInitialStaff20();});
 document.addEventListener("click", event => {
   const target = event.target;
   if (target.closest("#staffReloadBtn")) {
@@ -1470,9 +1528,9 @@ async function loadMarksEntry(){
  }
 }
 window.loadMarksEntry=loadMarksEntry;
-document.addEventListener('change',e=>{if(e.target.id==='entryClass'){fillEntrySubjects();refreshEntryExamOptions();document.getElementById('marksEntryBody').innerHTML='<tr><td colspan="3">कक्षा परिवर्तन भयो। अवधि, परीक्षा र विषय छानेर सूची देखाउनुहोस्।</td></tr>';}if(e.target.id==='entryTerm'||e.target.id==='entryExam'){if(e.target.id==='entryTerm')refreshEntryExamOptions();document.getElementById('marksEntryBody').innerHTML='<tr><td colspan="3">परीक्षा छनोट परिवर्तन भयो। विद्यार्थी सूची फेरि देखाउनुहोस्।</td></tr>';}});
+document.addEventListener('change',e=>{if(!['entryClass','entryTerm','entryExam','entrySubject'].includes(e.target.id))return;if(e.target.id==='entryClass'){fillEntrySubjects();refreshEntryExamOptions();}if(e.target.id==='entryTerm')refreshEntryExamOptions();const head=document.getElementById('marksEntryHead'),body=document.getElementById('marksEntryBody'),save=document.getElementById('saveAllMarks');if(head)head.innerHTML='<tr><th>S.N. / Roll No.</th><th>Student Name</th></tr>';if(body)body.innerHTML='<tr><td class="empty" colspan="2">Selection changed. Select the class, term, examination and subject, then load the student list again.</td></tr>';if(save)save.disabled=true;entryMsg('Selection changed. Reload the student list to show the correct assessment columns.');});
 document.addEventListener('input',e=>{if(e.target.id==='marksStudentSearch'){const q=String(e.target.value||'').trim().toLocaleLowerCase();document.querySelectorAll('#marksEntryBody tr[data-entry-student]').forEach(row=>{const hay=(row.cells[0]?.textContent+' '+row.cells[1]?.textContent).toLocaleLowerCase();row.hidden=!!q&&!hay.includes(q)});}});
-function renderEntryStudents(){const cl=document.getElementById('entryClass').value,examId=document.getElementById('entryExam').value,subject=document.getElementById('entrySubject').value,setting=selectedEntrySetting(),body=document.getElementById('marksEntryBody'),head=document.getElementById('marksEntryHead');if(!canTeachSubject(cl,subject)){entryMsg('यो कक्षा/विषय तपाईंलाई तोकिएको छैन।',true);return}if(!examId||!subject||!setting){entryMsg('कक्षा, परीक्षा र त्यस विषयको Assessment Settings छान्नुहोस्।',true);return}const g=entryClassGroup(cl),isAchievement=g==='1-3'||g==='4-5';const expectedIN=g==='6-8'?50:g==='9-10'?(isComputerSubject(subject)?50:25):null;if(expectedIN!==null&&setting.internalFullMarks!==expectedIN){entryMsg(`${subject}: IN पूर्णाङ्क ${expectedIN} हुनुपर्छ। अहिले Assessment Settings मा ${setting.internalFullMarks} छ। पहिले Settings मिलाउनुहोस्।`,true);return}const exam=marksExams.find(x=>x.id===examId);const selectedTerm=document.getElementById('entryTerm')?.value||'all';if(!exam||exam.className!==cl||(selectedTerm!=='all'&&smssExamTermKey(exam)!==selectedTerm)){entryMsg('छानिएको परीक्षा, अवधि र कक्षा मिलेन। परीक्षा व्यवस्थापनमा अवधि जाँच गर्नुहोस्।',true);return}const allowedSections=assignedSectionsForSubject(cl,subject);const students=marksStudents.filter(x=>x.class===cl&&x.active!==false&&(!allowedSections||allowedSections.has(String(x.section||'').trim()))).sort((a,b)=>Number(studentRollNo(a)||999999)-Number(studentRollNo(b)||999999));if(!students.length){entryMsg(`${cl} मा विद्यार्थी भेटिएनन्। विद्यार्थी व्यवस्थापनमा कक्षा विवरण जाँच्नुहोस्।`,true);body.innerHTML='<tr><td colspan="3">विद्यार्थी भेटिएनन्।</td></tr>';return}head.innerHTML='<tr><th>S.N. / Roll No.</th><th>विद्यार्थी</th>'+setting.components.map((c,i)=>`<th>${examEsc(c.name)}${isAchievement&&i===1?' (×4)':isAchievement?'':'<br><small>/'+Number(c.fullMarks)+'</small>'}</th>`).join('')+'</tr>';const searchBox=document.getElementById('marksStudentSearch');if(searchBox)searchBox.value='';body.innerHTML=students.map(st=>{const old=existingMarks.find(m=>m.studentId===st.id&&m.examId===examId&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(subject));return `<tr data-entry-student="${examEsc(st.id)}"><td>${examEsc(studentRollNo(st))}</td><td>${examEsc(st.studentName)}</td>${setting.components.map((c,i)=>{const oldScores=old?.scores||[];const oldPart=isAchievement?(i===0?(oldScores.find(x=>/no\.?\s*of\s*learning/i.test(x.name||''))||oldScores[0]):i===1?(oldScores.find(x=>/^Full Marks$/i.test(String(x.name||'')))||null):(oldScores.find(x=>/obtained learning/i.test(x.name||''))||oldScores.find(x=>!/no\.?\s*of\s*learning|^Full Marks$/i.test(String(x.name||'')))||oldScores[1])):oldScores[i];const val=i===1&&isAchievement?Number(setting.components[0]?.fullMarks||0)*4:(oldPart?.obtained??'');const achievementCount=Number(setting.components[0]?.fullMarks||0);const max=isAchievement?(i===2?achievementCount*4:achievementCount):Number(c.fullMarks);if(isAchievement&&i===1)return `<td><input aria-label="${examEsc(st.studentName)} Full Marks" data-score="1" type="number" value="${achievementCount*4}" readonly style="min-width:78px;width:90px;background:#eef2f6"></td>`;return `<td><input aria-label="${examEsc(st.studentName)} ${examEsc(c.name)}" data-score="${i}" type="number" min="0" max="${max}" step="1" value="${val}" style="min-width:78px;width:90px" ${isAchievement&&i===2?'data-achieved-count="1"':''}></td>`}).join('')}</tr>`}).join('');if(isAchievement){body.querySelectorAll('tr[data-entry-student]').forEach(row=>{const total=row.querySelector('[data-score="0"]'),fm=row.querySelector('[data-score="1"]'),ach=row.querySelector('[data-score="2"]');if(total&&ach){const calc=()=>{const count=Math.max(0,Number(total.value)||0),full=count*4;if(fm)fm.value=full;ach.max=full;if(Number(ach.value)>full){ach.classList.add('input-error');ach.setAttribute('aria-invalid','true');entryMsg(`${row.cells[1]?.textContent||'विद्यार्थी'}: हासिल भएका सिकाइ उपलब्धिको प्राप्ताङ्क ${ach.value} बढी भयो। अधिकतम ${full} मात्र राख्न मिल्छ।`,true);}else{ach.classList.remove('input-error');ach.removeAttribute('aria-invalid');}};total.addEventListener('input',calc);calc();ach.addEventListener('input',()=>validateAchievementInput(row,ach,total));}})}entryMsg(isAchievement?`${students.length} विद्यार्थी देखिए। No. of Learning Achievement मा संख्या राख्नुहोस्; Full Marks स्वतः संख्या × ४ हुन्छ। Obtained Learning Achievement मा सोही Full Marks भित्रको प्राप्ताङ्क राख्नुहोस्।`: `${students.length} विद्यार्थी देखिए। प्रत्येक भागको पूर्णाङ्कभन्दा बढी अंक राख्न मिल्दैन।`)}
+function renderEntryStudents(){const cl=document.getElementById('entryClass').value,examId=document.getElementById('entryExam').value,subject=document.getElementById('entrySubject').value,setting=selectedEntrySetting(),body=document.getElementById('marksEntryBody'),head=document.getElementById('marksEntryHead');if(!canTeachSubject(cl,subject)){entryMsg('यो कक्षा/विषय तपाईंलाई तोकिएको छैन।',true);return}if(!examId||!subject||!setting){entryMsg('कक्षा, परीक्षा र त्यस विषयको Assessment Settings छान्नुहोस्।',true);return}const g=entryClassGroup(cl),isAchievement=g==='1-3'||g==='4-5';const expectedIN=g==='6-8'?50:g==='9-10'?(isComputerSubject(subject)?50:25):null;if(expectedIN!==null&&setting.internalFullMarks!==expectedIN){entryMsg(`${subject}: IN पूर्णाङ्क ${expectedIN} हुनुपर्छ। अहिले Assessment Settings मा ${setting.internalFullMarks} छ। पहिले Settings मिलाउनुहोस्।`,true);return}const exam=marksExams.find(x=>x.id===examId);const selectedTerm=document.getElementById('entryTerm')?.value||'all';if(!exam||exam.className!==cl||(selectedTerm!=='all'&&smssExamTermKey(exam)!==selectedTerm)){entryMsg('छानिएको परीक्षा, अवधि र कक्षा मिलेन। परीक्षा व्यवस्थापनमा अवधि जाँच गर्नुहोस्।',true);return}const allowedSections=assignedSectionsForSubject(cl,subject);const students=marksStudents.filter(x=>x.class===cl&&x.active!==false&&(!allowedSections||allowedSections.has(String(x.section||'').trim()))).sort((a,b)=>Number(studentRollNo(a)||999999)-Number(studentRollNo(b)||999999));if(!students.length){entryMsg(`${cl} मा विद्यार्थी भेटिएनन्। विद्यार्थी व्यवस्थापनमा कक्षा विवरण जाँच्नुहोस्।`,true);body.innerHTML='<tr><td colspan="3">विद्यार्थी भेटिएनन्।</td></tr>';return}head.innerHTML='<tr><th>S.N. / Roll No.</th><th>Student Name</th>'+setting.components.map((c,i)=>`<th>${examEsc(c.name)}${isAchievement&&i===1?' (×4)':isAchievement?'':'<br><small>/'+Number(c.fullMarks)+'</small>'}</th>`).join('')+'</tr>';const saveButton=document.getElementById('saveAllMarks');if(saveButton)saveButton.disabled=false;const searchBox=document.getElementById('marksStudentSearch');if(searchBox)searchBox.value='';body.innerHTML=students.map(st=>{const old=existingMarks.find(m=>m.studentId===st.id&&m.examId===examId&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(subject));return `<tr data-entry-student="${examEsc(st.id)}"><td>${examEsc(studentRollNo(st))}</td><td>${examEsc(st.studentName)}</td>${setting.components.map((c,i)=>{const oldScores=old?.scores||[];const oldPart=isAchievement?(i===0?(oldScores.find(x=>/no\.?\s*of\s*learning/i.test(x.name||''))||oldScores[0]):i===1?(oldScores.find(x=>/^Full Marks$/i.test(String(x.name||'')))||null):(oldScores.find(x=>/obtained learning/i.test(x.name||''))||oldScores.find(x=>!/no\.?\s*of\s*learning|^Full Marks$/i.test(String(x.name||'')))||oldScores[1])):oldScores[i];const val=i===1&&isAchievement?Number(setting.components[0]?.fullMarks||0)*4:(oldPart?.obtained??'');const achievementCount=Number(setting.components[0]?.fullMarks||0);const max=isAchievement?(i===2?achievementCount*4:achievementCount):Number(c.fullMarks);if(isAchievement&&i===1)return `<td><input aria-label="${examEsc(st.studentName)} Full Marks" data-score="1" type="number" value="${achievementCount*4}" readonly style="min-width:78px;width:90px;background:#eef2f6"></td>`;return `<td><input aria-label="${examEsc(st.studentName)} ${examEsc(c.name)}" data-score="${i}" type="number" min="0" max="${max}" step="1" value="${val}" style="min-width:78px;width:90px" ${isAchievement&&i===2?'data-achieved-count="1"':''}></td>`}).join('')}</tr>`}).join('');if(isAchievement){body.querySelectorAll('tr[data-entry-student]').forEach(row=>{const total=row.querySelector('[data-score="0"]'),fm=row.querySelector('[data-score="1"]'),ach=row.querySelector('[data-score="2"]');if(total&&ach){const calc=()=>{const count=Math.max(0,Number(total.value)||0),full=count*4;if(fm)fm.value=full;ach.max=full;if(Number(ach.value)>full){ach.classList.add('input-error');ach.setAttribute('aria-invalid','true');entryMsg(`${row.cells[1]?.textContent||'विद्यार्थी'}: हासिल भएका सिकाइ उपलब्धिको प्राप्ताङ्क ${ach.value} बढी भयो। अधिकतम ${full} मात्र राख्न मिल्छ।`,true);}else{ach.classList.remove('input-error');ach.removeAttribute('aria-invalid');}};total.addEventListener('input',calc);calc();ach.addEventListener('input',()=>validateAchievementInput(row,ach,total));}})}entryMsg(isAchievement?`${students.length} विद्यार्थी देखिए। No. of Learning Achievement मा संख्या राख्नुहोस्; Full Marks स्वतः संख्या × ४ हुन्छ। Obtained Learning Achievement मा सोही Full Marks भित्रको प्राप्ताङ्क राख्नुहोस्।`: `${students.length} विद्यार्थी देखिए। प्रत्येक भागको पूर्णाङ्कभन्दा बढी अंक राख्न मिल्दैन।`)}
 document.addEventListener('click',async e=>{if(e.target.id==='loadEntryStudents'){renderEntryStudents();return}if(e.target.id==='refreshEntry'){await loadMarksEntry();document.getElementById('marksEntryBody').innerHTML='<tr><td colspan="3">Refresh भयो। विद्यार्थी सूची फेरि देखाउनुहोस्।</td></tr>';return}if(e.target.id==='saveAllMarks'){const examId=document.getElementById('entryExam').value,subject=document.getElementById('entrySubject').value,cl=document.getElementById('entryClass').value,setting=selectedEntrySetting(),rows=[...document.querySelectorAll('[data-entry-student]')];if(!auth.currentUser||(!isAdmin()&&!canTeachSubject(cl,subject))){entryMsg('यो कक्षा/विषयको Marks Entry अनुमति छैन।',true);return}if(!rows.length||!setting||!examId){entryMsg('पहिले विद्यार्थी सूची देखाउनुहोस्।',true);return}const selectedExam=marksExams.find(x=>x.id===examId);if(!selectedExam||selectedExam.className!==cl||((document.getElementById('entryTerm')?.value||'all')!=='all'&&smssExamTermKey(selectedExam)!==document.getElementById('entryTerm').value)){entryMsg('छानिएको परीक्षा, अवधि र कक्षा मिलेन। Marks सुरक्षित भएनन्।',true);return}const payload=[],g=entryClassGroup(cl);
 const rowStudentIds=rows.map(row=>String(row.dataset.entryStudent||'').trim());
 if(rowStudentIds.some(id=>!id)||new Set(rowStudentIds).size!==rowStudentIds.length){entryMsg('विद्यार्थी सूचीमा खाली वा दोहोरिएको विद्यार्थी ID भेटियो। कुनै Marks सुरक्षित गरिएको छैन। Refresh गरेर पुनः प्रयास गर्नुहोस्।',true);return}
@@ -2217,7 +2275,7 @@ async function downloadFirebaseBackup(){
  if(!msg||!btn)return;
  try{requireAdmin();if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw new Error("मुख्य Admin खाताबाट Login गर्नुहोस्।");
   btn.disabled=true;msg.textContent="Firebase बाट डेटा पढिँदैछ। कृपया पर्खनुहोस्...";
-  const collectionNames=["students","staff","classes","exams","marks","attendance","mark_settings","user_roles"];
+  const collectionNames=["students","staff","classes","subjects","exams","marks","attendance","mark_settings","user_roles","public_result_exams","public_results","public_result_lookup","audit_logs"];
   const backup={format:"SMSS-Firestore-Backup",version:1,createdAt:new Date().toISOString(),collections:{},documents:{school_settings:{}}};
   let total=0;
   for(const name of collectionNames){const snap=await getDocs(collection(db,name));backup.collections[name]=snap.docs.map(d=>({id:d.id,data:d.data()}));total+=snap.size;msg.textContent=`Backup भइरहेको छ: ${name} (${total} records)...`;}
@@ -2231,7 +2289,7 @@ async function downloadFirebaseBackup(){
 }
 
 let validatedRestoreBackup=null,restorePlan=null;
-const RESTORE_COLLECTIONS=["students","staff","classes","exams","marks","attendance","mark_settings","user_roles"];
+const RESTORE_COLLECTIONS=["students","staff","classes","subjects","exams","marks","attendance","mark_settings","user_roles","public_result_exams","public_results","public_result_lookup","audit_logs"];
 function restoreRevive(value){
  if(Array.isArray(value))return value.map(restoreRevive);
  if(value&&typeof value==="object"){
@@ -2251,7 +2309,9 @@ async function previewFirebaseRestore(){
   if(parsed.format!=="SMSS-Firestore-Backup"||parsed.version!==1||!parsed.collections||typeof parsed.collections!=="object")throw new Error("यो SMSS को मान्य Backup फाइल होइन।");
   const unknown=Object.keys(parsed.collections).filter(n=>!RESTORE_COLLECTIONS.includes(n));
   if(unknown.length)throw new Error("Backup मा नचिनेका Collection छन्: "+unknown.join(", "));
+  const legacyMissingCollections=[];
   for(const n of RESTORE_COLLECTIONS){
+   if(parsed.collections[n]===undefined){parsed.collections[n]=[];legacyMissingCollections.push(n);}
    if(!Array.isArray(parsed.collections[n]))throw new Error(`Backup मा ${n} Collection को सूची छैन वा गलत छ।`);
    const seenIds=new Set();
    for(const item of parsed.collections[n]){
@@ -2264,7 +2324,7 @@ async function previewFirebaseRestore(){
   if(parsed.documents?.school_settings&&(!settings||typeof settings!=="object"||Array.isArray(settings)))throw new Error("School Settings को Backup संरचना गलत छ।");
   const counts=Object.fromEntries(RESTORE_COLLECTIONS.map(n=>[n,parsed.collections[n].length]));
   const total=Object.values(counts).reduce((a,b)=>a+b,0)+(settings?1:0);
-  validatedRestoreBackup=parsed;restorePlan={counts,total,hasSettings:!!settings};
+  validatedRestoreBackup=parsed;restorePlan={counts,total,hasSettings:!!settings,legacyMissingCollections};
   const createdAt=typeof parsed.createdAt==="string"?parsed.createdAt.slice(0,80):"उपलब्ध छैन";
   out.textContent=`Backup जाँच सफल\nमिति: ${createdAt}\nकुल रेकर्ड: ${total}\n${RESTORE_COLLECTIONS.map(n=>`${n}: ${counts[n]}`).join("\n")}\nSchool Settings: ${settings?1:0}\n\nअर्को चरणमा हालको Firebase मा पहिल्यै भएका ID जाँचिन्छन्।`;
   if(run)run.disabled=false;msg.textContent="Preview तयार भयो। हालको डेटाको नयाँ Backup लिएपछि मात्र पुष्टि गर्नुहोस्।";
