@@ -13,6 +13,11 @@ const requiredCollections = [
   "public_results", "public_result_lookup", "audit_logs"
 ];
 
+const codeStart = html.indexOf("function studentCodeLetters");
+const codeEnd = html.indexOf("\\nfunction generateUniqueStudentCode", codeStart);
+must(codeStart >= 0 && codeEnd > codeStart, "Student Result Code generator is missing.");
+const codeHelpers = new Function(html.slice(codeStart, codeEnd) + "; return { studentCodeBase };")();
+must(codeHelpers.studentCodeBase("Babukrishna Khanal", "8") === "BABKHA-8", "Student Result Code must follow BABKHA-8 format.");
 must(html.includes("MAIN MENU / मुख्य मेनु"), "Dashboard main menu must be bilingual.");
 must(html.includes("Student Management / विद्यार्थी व्यवस्थापन"), "Dashboard submenu must be bilingual.");
 must(html.includes("Student registration, search and record management / विद्यार्थी दर्ता"), "Student page topic must be bilingual.");
