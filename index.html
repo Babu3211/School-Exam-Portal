@@ -60,16 +60,12 @@
 </head>
 <body>
 <div id="loginGate"><div class="login-card"><div class="login-logo">M</div><h2>Mahadevasthan Secondary School</h2><p>Exam Management Portal<br>Administrator / Teacher Login · Academic Year 2083</p><form id="loginForm"><label for="loginEmail">Email Address</label><input id="loginEmail" type="email" required autocomplete="username" placeholder="Admin email"><label for="loginPassword">Password</label><input id="loginPassword" type="password" required autocomplete="current-password" placeholder="Password"><button id="loginButton" type="submit">Login</button><p id="loginError" role="alert"></p><p id="loginStatus">Admin वा सक्रिय शिक्षक खाताबाट Login गर्नुहोस्।</p></form>
-<button class="forgot-link" id="forgotPasswordToggle" type="button">पासवर्ड बिर्सनुभयो? Email OTP बाट Reset गर्नुहोस्</button>
+<button class="forgot-link" id="forgotPasswordToggle" type="button">पासवर्ड बिर्सनुभयो? Email बाट Reset गर्नुहोस्</button>
 <div class="forgot-panel" id="forgotPasswordPanel" hidden>
- <b style="font-size:13px;color:var(--navy)">Password Reset — Numeric OTP</b>
- <p class="hint" style="margin:6px 0">दर्ता भएको Email मा ६ अङ्कको OTP पठाइनेछ। OTP ५ मिनेट मात्र मान्य हुन्छ।</p>
- <button id="sendResetOtp" type="button">Email मा OTP पठाउनुहोस्</button>
- <label for="resetOtp">६ अङ्कको OTP</label><input id="resetOtp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="123456">
- <label for="resetNewPassword">नयाँ Password (कम्तीमा ८ अक्षर)</label><input id="resetNewPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="नयाँ Password">
- <label for="resetConfirmPassword">नयाँ Password फेरि लेख्नुहोस्</label><input id="resetConfirmPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Password पुष्टि गर्नुहोस्">
- <button id="confirmPasswordReset" type="button">OTP पुष्टि गरी Password परिवर्तन गर्नुहोस्</button>
- <p id="forgotPasswordStatus" class="forgot-status" role="status">पहिले OTP पठाउनुहोस्।</p>
+ <b style="font-size:13px;color:var(--navy)">Password Reset — Firebase Email Link</b>
+ <p class="hint" style="margin:6px 0">Login Email मा Firebase बाट सुरक्षित Password Reset Link पठाइनेछ। Email खोलेर नयाँ Password राख्नुहोस्।</p>
+ <button id="sendResetEmail" type="button">Password Reset Email पठाउनुहोस्</button>
+ <p id="forgotPasswordStatus" class="forgot-status" role="status">पहिले Login Email लेख्नुहोस्।</p>
 </div>
 <button class="forgot-link" id="onlineResultToggle" type="button" style="display:block;width:100%;text-align:center;font-weight:800;margin-top:14px!important">विद्यार्थी Online Result हेर्नुहोस्</button>
 <div class="forgot-panel" id="onlineResultPanel" hidden>
@@ -201,11 +197,10 @@ document.addEventListener("click",e=>{const pageButton=e.target.closest("[data-p
 </script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
-import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut,createUserWithEmailAndPassword,deleteUser} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import {getFunctions,httpsCallable} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-functions.js";
+import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut,createUserWithEmailAndPassword,deleteUser,sendPasswordResetEmail} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 import {getFirestore,collection,addDoc,getDocs,doc,getDoc,setDoc,updateDoc,serverTimestamp,query,where,writeBatch,runTransaction,orderBy,limit} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyDOwR82MTwBK1BRb-5wSVX2-EITCzJ1A5c",authDomain:"exam-portal-smss-95016.firebaseapp.com",projectId:"exam-portal-smss-95016",storageBucket:"exam-portal-smss-95016.firebasestorage.app",messagingSenderId:"86041985011",appId:"1:86041985011:web:e3806d74f2ae39d97c5c86"};
-const ADMIN_UID="K6uSLmqg0vWCtCuzwtxKzFpQMu62";const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);const functionsClient=getFunctions(app,"asia-south1");
+const ADMIN_UID="K6uSLmqg0vWCtCuzwtxKzFpQMu62";const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 let currentUserRole=null;
 const isAdmin=()=>!!auth.currentUser&&auth.currentUser.uid===ADMIN_UID;
 const roleHas=r=>isAdmin()||!!currentUserRole?.active&&(currentUserRole?.roles||[]).map(normalizeRoleKey).includes(normalizeRoleKey(r));
@@ -393,11 +388,9 @@ document.addEventListener("change",e=>{if(e.target.id==="roleClassTeacher"||e.ta
 // Do not re-render assignment checkboxes on every click; doing so resets checkbox state. Choices render only after Firebase data loads or explicit refresh.
 const gate=document.getElementById("loginGate"),shell=document.querySelector(".app"),loginForm=document.getElementById("loginForm"),loginButton=document.getElementById("loginButton"),errorBox=document.getElementById("loginError"),statusBox=document.getElementById("loginStatus");
 loginForm.addEventListener("submit",async event=>{event.preventDefault();errorBox.textContent="";statusBox.textContent="Login जाँच हुँदैछ...";loginButton.disabled=true;loginButton.textContent="Please wait...";const email=document.getElementById("loginEmail").value.trim(),password=document.getElementById("loginPassword").value;try{const credential=await signInWithEmailAndPassword(auth,email,password);if(credential.user.uid===ADMIN_UID){currentUserRole={roles:["admin"],active:true};}else{const roleSnap=await getDoc(doc(db,"user_roles",credential.user.uid));if(!roleSnap.exists()||roleSnap.data().active!==true){await signOut(auth);currentUserRole=null;throw new Error("यो Account सक्रिय User Role मा छैन। Admin सँग सम्पर्क गर्नुहोस्।");}currentUserRole={uid:credential.user.uid,...roleSnap.data()};const allowed=currentUserRole.roles||[];if(!allowed.includes("class_teacher")&&!allowed.includes("subject_teacher")){await signOut(auth);currentUserRole=null;throw new Error("यो शिक्षक Role का लागि Attendance वा Marks अनुमति छैन।");}}}catch(error){console.error("Login failed:",error.code||error.message);errorBox.textContent=error.code==="auth/invalid-credential"||error.code==="auth/wrong-password"||error.code==="auth/user-not-found"?"Email वा Password मिलेन। फेरि जाँच गर्नुहोस्।":error.message||"Login हुन सकेन। Firestore Rules र Internet जाँच गर्नुहोस्।";statusBox.textContent=""}finally{loginButton.disabled=false;loginButton.textContent="Login"}});
-const forgotPanel=document.getElementById("forgotPasswordPanel"),forgotStatus=document.getElementById("forgotPasswordStatus"),sendOtpButton=document.getElementById("sendResetOtp"),resetButton=document.getElementById("confirmPasswordReset");
-document.getElementById("forgotPasswordToggle").addEventListener("click",()=>{forgotPanel.hidden=!forgotPanel.hidden;if(!forgotPanel.hidden){document.getElementById("loginEmail").focus();document.getElementById("resetOtp").value="";}});
-sendOtpButton.addEventListener("click",async()=>{const email=document.getElementById("loginEmail").value.trim();if(!email){forgotStatus.textContent="पहिले Login Email मा आफ्नो दर्ता भएको Email लेख्नुहोस्।";return;}sendOtpButton.disabled=true;forgotStatus.textContent="OTP पठाउने अनुरोध हुँदैछ...";try{const requestOtp=httpsCallable(functionsClient,"requestPasswordResetOtp");const result=await requestOtp({email});forgotStatus.textContent=result.data?.message||"यदि यो Email दर्ता भएको छ भने OTP पठाइएको छ।";}catch(error){console.error("OTP request failed:",error);forgotStatus.textContent=error.code==="functions/resource-exhausted"?"धेरै अनुरोध भयो। केही समयपछि पुनः प्रयास गर्नुहोस्।":(error.message||"OTP पठाउन सकिएन। Backend deploy र Email सेवा जाँच गर्नुहोस्।");}finally{sendOtpButton.disabled=false;}});
-resetButton.addEventListener("click",async()=>{const email=document.getElementById("loginEmail").value.trim(),otp=document.getElementById("resetOtp").value.trim(),password=document.getElementById("resetNewPassword").value,confirmPassword=document.getElementById("resetConfirmPassword").value;if(!email||!/^\d{6}$/.test(otp)){forgotStatus.textContent="दर्ता भएको Email र ६ अङ्कको OTP राख्नुहोस्।";return;}if(password.length<8){forgotStatus.textContent="नयाँ Password कम्तीमा ८ अक्षरको हुनुपर्छ।";return;}if(password!==confirmPassword){forgotStatus.textContent="दुवै Password मिलेनन्। फेरि जाँच गर्नुहोस्।";return;}resetButton.disabled=true;forgotStatus.textContent="OTP जाँच गरी Password परिवर्तन हुँदैछ...";try{const resetPassword=httpsCallable(functionsClient,"resetPasswordWithOtp");const result=await resetPassword({email,otp,newPassword:password});document.getElementById("loginPassword").value=password;document.getElementById("resetOtp").value="";document.getElementById("resetNewPassword").value="";document.getElementById("resetConfirmPassword").value="";forgotStatus.textContent=result.data?.message||"Password परिवर्तन भयो। अब Login गर्नुहोस्।";}catch(error){console.error("OTP verification failed:",error);forgotStatus.textContent=error.code==="functions/permission-denied"?"OTP गलत, म्याद सकिएको वा प्रयास सीमा पुगेको छ। नयाँ OTP माग्नुहोस्।":(error.message||"Password परिवर्तन हुन सकेन।");}finally{resetButton.disabled=false;}});
-
+const forgotPanel=document.getElementById("forgotPasswordPanel"),forgotStatus=document.getElementById("forgotPasswordStatus"),sendResetEmailButton=document.getElementById("sendResetEmail");
+document.getElementById("forgotPasswordToggle").addEventListener("click",()=>{forgotPanel.hidden=!forgotPanel.hidden;if(!forgotPanel.hidden)document.getElementById("loginEmail").focus();});
+sendResetEmailButton.addEventListener("click",async()=>{const email=document.getElementById("loginEmail").value.trim();if(!email){forgotStatus.textContent="पहिले Login Email मा आफ्नो दर्ता भएको Email लेख्नुहोस्।";return;}sendResetEmailButton.disabled=true;forgotStatus.textContent="Password Reset Email पठाइँदैछ...";try{await sendPasswordResetEmail(auth,email);forgotStatus.textContent="यदि यो Email दर्ता भएको छ भने Password Reset Link पठाइएको छ। Inbox र Spam/Junk जाँच गर्नुहोस्।";}catch(error){console.error("Password reset email failed:",error);const messages={"auth/invalid-email":"Email ठेगाना मिलेन।","auth/user-not-found":"यो Email मा खाता भेटिएन।","auth/too-many-requests":"धेरै प्रयास भयो। केही समयपछि पुनः प्रयास गर्नुहोस्.","auth/network-request-failed":"Internet जडान जाँच गर्नुहोस्।"};forgotStatus.textContent=messages[error.code]||"Reset Email पठाउन सकिएन। Firebase Authentication को Email/Password र Email template सेटिङ जाँच गर्नुहोस्।";}finally{sendResetEmailButton.disabled=false;}});
 document.getElementById("logoutBtn").addEventListener("click",async()=>{currentUserRole=null;await signOut(auth)});
 function setStudentMessage(message,isError=false){const el=document.getElementById("studentMessage");if(el){el.textContent=message;el.style.color=isError?"#b42318":"#718096"}}
 function esc(value){return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;", "'":"&#39;"}[c]))}
@@ -1992,13 +1985,20 @@ async function lookupOnlineResult(){
  const exam=onlinePublicExams.find(x=>x.id===examId);if(!exam){onlineResultStatus('छानिएको परीक्षा प्रकाशित सूचीमा भेटिएन।',true);return;}
  btn.disabled=true;btn.textContent='नतिजा खोजिँदैछ...';out.innerHTML='';onlineResultStatus('Result Code जाँच हुँदैछ...');
  try{
-  const lookupResult=httpsCallable(functionsClient,'lookupPublishedStudentResult');
-  const response=await lookupResult({className,examId,version:exam.version,studentCode:studentCode.trim().toLocaleUpperCase()});
-  const html=String(response.data?.gradeSheetHtml||'');
+  const hash=await onlineResultHash(className,examId,exam.version,studentCode);
+  const lookupSnap=await getDoc(doc(db,'public_result_lookup',hash));
+  if(!lookupSnap.exists())throw new Error('Result Code मिलेन वा नतिजा प्रकाशित भएको छैन।');
+  const lookup=lookupSnap.data();
+  if(lookup.className!==className||lookup.examId!==examId)throw new Error('Result Code यो कक्षा वा परीक्षाका लागि मान्य छैन।');
+  const resultSnap=await getDoc(doc(db,'public_results',lookup.resultId));
+  if(!resultSnap.exists())throw new Error('प्रकाशित नतिजा भेटिएन।');
+  const resultData=resultSnap.data();
+  if(resultData.className!==className||resultData.examId!==examId||resultData.version!==exam.version)throw new Error('नतिजा संस्करण मिलेन। विद्यालय प्रशासनलाई सम्पर्क गर्नुहोस्।');
+  const html=String(resultData.gradeSheetHtml||'');
   if(!html.includes('official-grade-sheet'))throw new Error('नतिजा फाइल अपूर्ण छ। विद्यालय प्रशासनलाई सम्पर्क गर्नुहोस्।');
   out.innerHTML=`<div id="onlineResultSheetWrap">${html}</div><button type="button" id="onlineResultPrintBtn" style="width:100%;margin-top:12px;padding:12px;background:#1769d2;color:#fff;border:0;border-radius:9px;font-weight:800">Print / Save PDF</button>`;
   onlineResultStatus('नतिजा सफलतापूर्वक भेटियो। यो Grade Sheet तपाईंको Result Code अनुसार हो।');
- }catch(err){console.error('Online result lookup failed',err);const code=err.code||'';onlineResultStatus(code==='functions/not-found'||code==='functions/permission-denied'?'Result Code मिलेन वा नतिजा प्रकाशित भएको छैन। Code फेरि जाँच्नुहोस्।':`नतिजा हेर्न सकिएन: ${err.message||'Firebase त्रुटि'}`,true);}
+ }catch(err){console.error('Online result lookup failed',err);onlineResultStatus(`नतिजा हेर्न सकिएन: ${err.message||'Firebase त्रुटि'}`,true);}
  finally{btn.disabled=false;btn.textContent='नतिजा हेर्नुहोस्';}
 }
 function printOnlineResult(){
