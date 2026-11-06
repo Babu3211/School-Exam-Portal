@@ -287,6 +287,13 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // Public login branding only; private school contact details remain protected.
+    match /school_public_branding/{documentId} {
+      allow get: if documentId == 'main';
+      allow list: if false;
+      allow create, update, delete: if isAdmin() && documentId == 'main';
+    }
+
     // A user can read their own role record; Admin manages all role records.
     match /user_roles/{userId} {
       allow get: if isAdmin() || (signedIn() && request.auth.uid == userId);
