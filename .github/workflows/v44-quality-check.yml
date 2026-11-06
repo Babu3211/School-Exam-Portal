@@ -1,0 +1,26 @@
+name: V44 JavaScript Quality Check
+
+on:
+  push:
+    branches:
+      - smss-v44-work
+  pull_request:
+    branches:
+      - smss-v44-work
+
+permissions:
+  contents: read
+
+jobs:
+  inline-javascript:
+    name: Check inline JavaScript syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Parse every inline JavaScript block
+        run: node scripts/check-inline-js.mjs
