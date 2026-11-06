@@ -209,10 +209,10 @@ service cloud.firestore {
           'totalStudents', 'presentCount', 'absentCount', 'leaveCount',
           'academicYear', 'updatedAt', 'updatedBy', 'createdAt', 'createdBy'
         ]) &&
-        data.date is string && data.date.size() > 0 &&
-        data.className is string && data.className.size() > 0 &&
+        data.date is string && data.date.size() > 0 && data.date.size() <= 20 &&
+        data.className is string && data.className.size() > 0 && data.className.size() <= 40 &&
         data.attendanceType == 'daily' &&
-        (data.subject == null || data.subject is string) &&
+        (data.subject == null || (data.subject is string && data.subject.size() <= 100)) &&
         data.students is list && data.students.size() > 0 &&
         data.students.size() <= 200 &&
         data.totalStudents is int && data.totalStudents == data.students.size() &&
@@ -220,7 +220,7 @@ service cloud.firestore {
         data.absentCount is int && data.absentCount >= 0 &&
         data.leaveCount is int && data.leaveCount >= 0 &&
         data.presentCount + data.absentCount + data.leaveCount == data.totalStudents &&
-        data.academicYear is string &&
+        data.academicYear is string && data.academicYear.size() > 0 && data.academicYear.size() <= 20 &&
         data.updatedBy == request.auth.uid &&
         data.updatedAt == request.time;
     }
