@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "SMSS School Management System – V41",
-  "short_name": "SMSS V41",
-  "description": "SMSS Term-wise Marks Entry, Grade Sheet Watermark and Online Student Result",
+  "name": "SMSS School Management System – V44",
+  "short_name": "SMSS V44",
+  "description": "Mahadevasthan Secondary School Exam and Result Management System",
   "lang": "ne",
   "start_url": "./",
   "scope": "./",
