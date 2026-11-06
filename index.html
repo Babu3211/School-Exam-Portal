@@ -141,6 +141,7 @@ if(p==="staff")h=head(names[p],"शिक्षक तथा कर्मचा�
 <input id="staffSearch" placeholder="नाम वा कर्मचारी ID खोज्नुहोस्">
 <button class="btn" id="staffSearchBtn" type="button">Search</button>
 <button class="btn alt" id="staffReloadBtn" type="button">Refresh</button>
+<button class="btn" id="staffSeed20Btn" type="button">२० जना शिक्षक/कर्मचारी Firebase मा थप्नुहोस्</button>
 <button class="btn" id="staffExport" type="button">Export Excel</button><button class="btn alt" id="staffSample" type="button">Sample Download</button><label class="btn alt" for="staffImportFile">Import Excel</label><input id="staffImportFile" type="file" accept=".xlsx,.xls,.csv" hidden>
 </div>
 <div id="staffMessage" class="hint" role="status"></div>
@@ -166,7 +167,7 @@ if(p==="staff")h=head(names[p],"शिक्षक तथा कर्मचा�
 <div class="field"><label for="staffRole">पद *</label>
 <select id="staffRole" required>
 <option value="">पद छान्नुहोस्</option>
-<option>शिक्षक</option><option>प्रधानाध्यापक</option><option>लेखा</option><option>कर्मचारी</option><option>अन्य</option>
+<option>शिक्षक</option><option>प्रधानाध्यापक</option><option>लेखा</option><option>बालविकास सहयोगी</option><option>विद्यालय नर्स</option><option>कार्यालय सहयोगी</option><option>कर्मचारी</option><option>अन्य</option>
 </select></div>
 <div class="field"><label for="staffPermanentAddress">स्थायी ठेगाना</label><input id="staffPermanentAddress" maxlength="250"></div>
 <div class="field"><label for="staffLevelCategory">तह / श्रेणी</label><input id="staffLevelCategory" maxlength="100" placeholder="जस्तै: आधारभूत तृतीय / माध्यमिक द्वितीय"></div>
@@ -443,6 +444,51 @@ async function loadStaff() {
   }
 }
 
+async function seedInitialStaff20() {
+  const btn = document.getElementById("staffSeed20Btn");
+  if (!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
+    setStaffMessage("२० कर्मचारी थप्न Admin login आवश्यक छ।", true);
+    return;
+  }
+  if (!confirm("तपाईंले उपलब्ध गराउनुभएको २० जना शिक्षक/कर्मचारीका विवरण Firebase मा थप्ने? पहिलेबाट भएका नाम वा सम्पर्क नम्बर दोहोर्‍याएर थपिने छैनन्।")) return;
+  btn.disabled = true;
+  btn.textContent = "विवरण जाँच हुँदैछ...";
+  try {
+    const snap = await getDocs(collection(db, "staff"));
+    const records = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    const rows = [["केशवप्रसाद रुपाखेती","Keshav Prasad Rupakheti","धुनिवेशी - ४, धादिङ","मा.वि./तृतीय","२०७२/०९/२१","स्थायी","M.A./M.Ed.","Rural Development/ EPM","9841319505","शिक्षक"],["हरिबहादुर राई","Hari Bahadur Rai","धुनिवेशी - ५, धादिङ","प्रा.वि./तृतीय","२०६१/०२/१९","स्थायी","M.Ed.","Nepali","9841383703","शिक्षक"],["दिपक भट्ट","Deepak Bhatt","धुनिवेशी - ५, धादिङ","प्रा.वि./द्वितीय","२०६१/०२/१९","स्थायी","M.A./B.Ed.","Sociology/Economics","9841642043","शिक्षक"],["मिना तामाङ","Mina Tamang","धुनिवेशी - ५, धादिङ","प्रा.वि./तृतीय","२०७५/१२/२९","स्थायी","I.Ed.","Nepali","9841693375","शिक्षक"],["कपिनद्र अधिकारी","Kapindra Adhikari","त्रिपुरासुन्दरी -३, धादिङ","प्रा.वि./तृतीय","२०८१/१२/१४","स्थायी","M.Sc./B.Ed.","Science","9843668214","शिक्षक"],["लक्ष्मी पण्डित","Laxmi Pandit","थाक्रे-९, धादिङ","प्रा.वि./तृतीय","२०८०/ १२/ २५","स्थायी","B.Ed.","English","9864599026","शिक्षक"],["राजेन्द्र बहादुर कुँवर","Rajendra Bahadur Kunwar","चन्द्रागिरी - ९, काठमाडौं","मा.वि.","२०७४/०३/२९","राहत","B.Sc./B.Ed. / M.A.","Science/Sociology","9848763757","शिक्षक"],["बिक्रम घलान","Bikram Ghalan","थाहा-७, मकवानपुर","मा.वि.","२०८२/०८/०३","राहत","B.Ed. /M.Ed.","Math / Social Studies","9860272470","शिक्षक"],["सपना पौडेल","Sapana Paudel","धुनिवेशी - २, धादिङ","मा.वि.","२०८१/०७/२०","स. अनुदान","B.A / M.A.","English/ Sociology","9843806831","शिक्षक"],["बाबुकृष्ण खनाल","Babu Krishna Khanal","धुनिवेशी - २, धादिङ","नि.मा.वि.","२०७७/०६/१४","राहत","B.Ed.","Math","9841575051","शिक्षक"],["विष्णु प्रसाद आचार्य","Bishnu Prasad Acharya","वीरेन्द्रनगर-३, सुर्खेत","नि.मा.वि.","२०८०/०१/२८","राहत","M.Ed. I.C.T.","Computer","9848077054","शिक्षक"],["सरिता ढुङ्गाना","Sarita Dhungana","थाक्रे-८, धादिङ","नि.मा.वि.","२०८१/०२/१४","नगर अनुदान","M.Ed.","E.P.M.","9860426952","शिक्षक"],["नरबहादुर बुढा","Nar Bahadur Budha","कनकासुन्दरी-४, जुम्ला","नि.मा.वि.","२०८२/०९/२१","नगर अनुदान","I.Ed.","Science","9848191918","शिक्षक"],["गंगा रुपाखेती","Ganga Rupakheti","धुनिवेशी -५, धादिङ","प्रा.वि.","२०७१/१०/०६","राहत","B.Ed.","Nepali","9849917998","शिक्षक"],["गोकर्ण प्रसाद पन्त","Gokarna Prasad Pant","पुरचौंडी -५, बैतडी","प्रा.वि.","२०८२/०२/११","राहत","B.Ed.","Population","9767487678","शिक्षक"],["राधा श्रेष्ठ","Radha Shrestha","धुनिवेशी - ५, धादिङ","लेखा सहायक","२०६५/०८/३०","करार","I.Com","Account","9849287679","लेखा"],["सबिना रोक्का","Sabina Rokka","धुनिवेशी - ५, धादिङ","बालविकास स.का.","२०६५/०८/३०","करार","I.Ed.","Nepali","9840174231","बालविकास सहयोगी"],["सम्झना अधिकारी","Samjhana Adhikari","धुनिवेशी - ५, धादिङ","बालविकास स.का.","२०६५/०१/०१","करार","I.Ed.","Nepali","9860778231","बालविकास सहयोगी"],["मनिता उपाध्याय","Manita Upadhyay","धुनिवेशी - ८, धादिङ","विद्यालय नर्स","२०८३/ ०४/ १४","करार","PCL Nursing","School Nurse","9767656416","विद्यालय नर्स"],["टिका बहादुर श्रेष्ठ","Tika Bahadur Shrestha","धुनिवेशी - ५, धादिङ","का.स.","२०५०/०४/१३","करार","साधारण लेखपढ","-","9866477549","कार्यालय सहयोगी"]];
+    const normKey = value => String(value || "").replace(/\s+/g,"").toLowerCase();
+    const added = [], skipped = [];
+    for (const row of rows) {
+      const [nameNepali,nameEnglish,permanentAddress,levelCategory,appointmentDate,appointmentType,qualification,subject,phone,role] = row;
+      const duplicate = records.some(x =>
+        normKey(x.nameNepali || x.name) === normKey(nameNepali) ||
+        (phone && normKey(x.phone) === normKey(phone))
+      );
+      if (duplicate) { skipped.push(nameNepali); continue; }
+      const data = {
+        name:nameNepali, nameNepali, nameEnglish, role, permanentAddress,
+        levelCategory, appointmentDate:String(appointmentDate).replace(/\s+/g,""),
+        appointmentType, qualification, subject, phone,
+        staffId:nextStaffId(role,records), status:"कार्यरत",
+        createdAt:serverTimestamp(), createdBy:auth.currentUser.uid
+      };
+      const ref = await addDoc(collection(db,"staff"),data);
+      records.push({id:ref.id,...data});
+      added.push(nameNepali);
+    }
+    await writeAuditLog("staff","bulk_create","initial-20",`थपिएका: ${added.length}, दोहोरिएका: ${skipped.length}`);
+    await loadStaff();
+    setStaffMessage(`काम सम्पन्न: ${added.length} जना थपिए, ${skipped.length} जना पहिले नै रहेकाले छोडिए।`);
+  } catch (error) {
+    console.error("Initial staff import failed:",error);
+    setStaffMessage(`विवरण थप्दा समस्या आयो: ${error.code || error.message}. पुनः प्रयासअघि सूची Refresh गरेर जाँच्नुहोस्।`,true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "२० जना शिक्षक/कर्मचारी Firebase मा थप्नुहोस्";
+  }
+}
+
 function nextStaffId(role, records) {
   const prefix = /शिक्षक|प्रधानाध्यापक|teacher|headmaster|principal/i.test(String(role || "")) ? "TCH" : "STF";
   const maxNo = (records || []).reduce((max, item) => {
@@ -575,6 +621,10 @@ document.addEventListener("click", event => {
   const target = event.target;
   if (target.closest("#staffReloadBtn")) {
     loadStaff();
+    return;
+  }
+  if (target.closest("#staffSeed20Btn")) {
+    seedInitialStaff20();
     return;
   }
   if (target.closest("#staffSearchBtn")) {
