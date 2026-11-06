@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   deploy:
-    if: \${{ vars.ENABLE_FIREBASE_HOSTING_DEPLOY == 'true' }}
+    if: ${{ vars.ENABLE_FIREBASE_HOSTING_DEPLOY == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout V44
@@ -19,8 +19,8 @@ jobs:
       - name: Deploy live to Firebase Hosting (Spark-compatible)
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          repoToken: \${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: \${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
           projectId: exam-portal-smss-95016
           channelId: live
           entryPoint: .
