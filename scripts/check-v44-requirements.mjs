@@ -14,7 +14,7 @@ const requiredCollections = [
 ];
 
 const codeStart = html.indexOf("function studentCodeLetters");
-const codeEnd = html.indexOf("\\nfunction generateUniqueStudentCode", codeStart);
+const codeEnd = html.indexOf("\nfunction generateUniqueStudentCode", codeStart);
 must(codeStart >= 0 && codeEnd > codeStart, "Student Result Code generator is missing.");
 const codeHelpers = new Function(html.slice(codeStart, codeEnd) + "; return { studentCodeBase };")();
 must(codeHelpers.studentCodeBase("Babukrishna Khanal", "8") === "BABKHA-8", "Student Result Code must follow BABKHA-8 format.");
