@@ -15,8 +15,7 @@ const requiredCollections = [
 ];
 
 const codeStart = html.indexOf("function studentCodeLetters");
-const codeEnd = html.indexOf("
-function generateUniqueStudentCode", codeStart);
+const codeEnd = html.indexOf("\nfunction generateUniqueStudentCode", codeStart);
 must(codeStart >= 0 && codeEnd > codeStart, "Student Result Code generator is missing.");
 const codeHelpers = new Function(html.slice(codeStart, codeEnd) + "; return { studentCodeBase };")();
 must(codeHelpers.studentCodeBase("Babukrishna Khanal", "8") === "BABKHA-8", "Student Result Code must follow BABKHA-8 format.");
@@ -33,9 +32,7 @@ must(!/signInWithPhoneNumber|PhoneAuthProvider|RecaptchaVerifier|phoneAuthProvid
 must(html.includes('if(page==="dashboard")return true;'), "Active non-admin users must be allowed to view the dashboard.");
 must(html.includes('if(page==="marks")return roleHas("subject_teacher")'), "Marks Entry must be limited to users with an active Subject Teacher assignment.");
 must(html.includes('if(page==="attendance")return roleHas("class_teacher")'), "Attendance must be limited to users with an active Class Teacher assignment.");
-must(html.includes("return false;
-}
-function applyRoleNavigation()"), "Unassigned non-admin pages must remain blocked.");
+must(html.includes("return false;\n}\nfunction applyRoleNavigation()"), "Unassigned non-admin pages must remain blocked.");
 must(html.includes("Quick actions and sidebar links are both filtered by rolePageAllowed"), "Quick actions must follow the same role permissions as sidebar navigation.");
 must(html.includes('id="studentAddNewBtn"') && html.includes('id="studentFormPanel" hidden'), "Student Management must provide an Add New Student button and initially collapsed form.");
 must(html.includes('id="staffAddNewBtn"') && html.includes('id="staffFormPanel" hidden'), "Teachers & Staff must provide an Add New Staff button and initially collapsed form.");
@@ -46,8 +43,7 @@ must(/if\s*\(\s*target\.closest\("#studentAddNewBtn"\)\)/.test(html) && /if\s*\(
 
 must(html.includes("map(normalizeRoleKey);if(!allowed.includes(\"class_teacher\")"), "Login must normalize and validate active task roles.");
 const roleStart = html.indexOf("function rolePageAllowed(page){");
-const roleEnd = html.indexOf("
-function applyRoleNavigation()", roleStart);
+const roleEnd = html.indexOf("\nfunction applyRoleNavigation()", roleStart);
 must(roleStart >= 0 && roleEnd > roleStart, "Role permission helper is missing.");
 function roleMatrix(role, admin = false) {
   const hasRole = key => admin || !!role?.active && (role.roles || []).map(v => String(v).toLowerCase().replace(/[ -]+/g, "_")).includes(key);
@@ -76,8 +72,7 @@ must(html.includes("ledgerEnglishLabel(component.name)"), "Marks Ledger Excel co
 must(html.includes("smssTermLabelEnglish(smssExamTermKey(exam))"), "Printed/exported term labels must use English.");
 must(html.includes("student.studentNameEnglish||student.nameEnglish||student.nameEn"), "Grade Sheet must prefer English student names.");
 const translitStart = html.indexOf("function transliterateNepaliText");
-const translitEnd = html.indexOf("
-function subjectEnglishLabel", translitStart);
+const translitEnd = html.indexOf("\nfunction subjectEnglishLabel", translitStart);
 must(translitStart >= 0 && translitEnd > translitStart, "Nepali-to-Latin display helper is missing.");
 const displayHelpers = new Function(html.slice(translitStart, translitEnd) + "; return { englishDisplayText };")();
 must(!/[\u0900-\u097F]/.test(displayHelpers.englishDisplayText("बाबुकृष्ण खनाल")), "Student names without English aliases must be rendered in Latin script.");
@@ -126,8 +121,7 @@ must(html.includes('id="printTabulationBtn"') && html.includes('id="printGradeSh
 must(html.includes('id="numberLedgerTab"') && html.includes('id="gradeLedgerTab"') && html.includes("function renderMarksLedgerPage()"), "Number Ledger and Grade Ledger views are missing.");
 must(html.includes("const scoresComplete=achievement?count!==null") && html.includes("const valid=!!rec&&scoresComplete"), "Grade Ledger must not convert incomplete assessment components into zero marks.");
 const ledgerHelperStart = html.indexOf("function ledgerScoresComplete(scores){");
-const ledgerHelperEnd = html.indexOf("
-function renderMarksLedgerPage", ledgerHelperStart);
+const ledgerHelperEnd = html.indexOf("\nfunction renderMarksLedgerPage", ledgerHelperStart);
 must(ledgerHelperStart >= 0 && ledgerHelperEnd > ledgerHelperStart, "Grade Ledger completeness validator is missing.");
 const ledgerScoresComplete = new Function(html.slice(ledgerHelperStart, ledgerHelperEnd) + "; return ledgerScoresComplete;")();
 must(ledgerScoresComplete([{ name: "Written", fullMarks: 100, obtained: 75 }]), "Complete Grade Ledger marks should be accepted.");
@@ -166,8 +160,7 @@ must(workflow.includes("github.event_name == 'push'") && workflow.includes("ENAB
 
 
 const start = html.indexOf("function selectedEntrySetting(){");
-const end = html.indexOf("
-function entryClassGroup", start);
+const end = html.indexOf("\nfunction entryClassGroup", start);
 must(start >= 0 && end > start, "Marks Entry assessment selector is missing.");
 const selectorSource = html.slice(start, end);
 const selectorFactory = new Function(
@@ -199,8 +192,7 @@ must(selectedComponents("annual").some(name => /theory/i.test(name)), "TH/ Theor
 
 
 const reportStart = html.indexOf("function reportMarkSummary(record){");
-const reportEnd = html.indexOf("
-function buildReport(){", reportStart);
+const reportEnd = html.indexOf("\nfunction buildReport(){", reportStart);
 must(reportStart >= 0 && reportEnd > reportStart, "Marks report completeness helper is missing.");
 const reportHelperSource = html.slice(reportStart, reportEnd);
 const reportHelper = new Function("ledgerScoresComplete", reportHelperSource + "; return reportMarkSummary;")(
@@ -222,8 +214,7 @@ const staffIdEnd = staffIdClose < 0 ? -1 : staffIdClose + 2;
 must(staffIdStart >= 0 && staffIdEnd > staffIdStart, "Automatic staff ID generator is missing.");
 const nextStaffId = new Function(html.slice(staffIdStart, staffIdEnd) + "; return nextStaffId;")();
 const staffRoleStart = html.indexOf("function staffRoleFromLevel(levelCategory)");
-const staffRoleEnd = html.indexOf("
-function nextStaffId", staffRoleStart);
+const staffRoleEnd = html.indexOf("\nfunction nextStaffId", staffRoleStart);
 must(staffRoleStart >= 0 && staffRoleEnd > staffRoleStart, "Teacher/staff role classifier is missing.");
 const staffRoleFromLevel = new Function(html.slice(staffRoleStart, staffRoleEnd) + "; return staffRoleFromLevel;")();
 must(staffRoleFromLevel("मा.वि./तृतीय") === "शिक्षक", "Secondary teacher level must receive a teacher ID.");
