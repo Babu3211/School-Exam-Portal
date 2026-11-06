@@ -2394,11 +2394,12 @@ async function fetchDashboardCollections(){
  }
  const classNames=[...new Set([...(classTeacherNames()||[]),...(currentUserRole.subjectAssignmentClassNames||[]),...(currentUserRole.subjectAssignments||[]).map(x=>x.className)].map(x=>String(x||"").trim()).filter(Boolean))];
  const pairs=(currentUserRole.subjectAssignments||[]).filter(x=>x.className&&x.subject);
+ const attendanceClassNames=[...new Set((classTeacherNames()||[]).map(x=>String(x||"").trim()).filter(Boolean))];
  const [studentSnaps,examSnaps,markSnaps,attendanceSnaps,classSnap]=await Promise.all([
   Promise.all(classNames.map(cl=>getDocs(query(collection(db,"students"),where("class","==",cl))))),
   Promise.all(classNames.map(cl=>getDocs(query(collection(db,"exams"),where("className","==",cl))))),
   Promise.all(pairs.map(x=>getDocs(query(collection(db,"marks"),where("className","==",x.className),where("subject","==",x.subject))))),
-  Promise.all((currentUserRole.roles||[]).includes("class_teacher")?classNames.map(cl=>getDocs(query(collection(db,"attendance"),where("className","==",cl),where("attendanceType","==","daily")))):[]),
+  Promise.all(attendanceClassNames.map(cl=>getDocs(query(collection(db,"attendance"),where("className","==",cl),where("attendanceType","==","daily"))))),
   getDocs(collection(db,"classes"))
  ]);
  const flatten=snaps=>snaps.flatMap(x=>x.docs);
