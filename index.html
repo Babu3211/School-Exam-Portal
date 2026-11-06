@@ -444,7 +444,7 @@ async function loadStaff() {
 }
 
 function nextStaffId(role, records) {
-  const prefix = ["शिक्षक","प्रधानाध्यापक"].includes(String(role || "").trim()) ? "TCH" : "STF";
+  const prefix = /शिक्षक|प्रधानाध्यापक|teacher|headmaster|principal/i.test(String(role || "")) ? "TCH" : "STF";
   const maxNo = (records || []).reduce((max, item) => {
     const match = String(item.staffId || "").match(new RegExp("^" + prefix + "-(\\d+)$","i"));
     return match ? Math.max(max, Number(match[1])) : max;
