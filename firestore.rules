@@ -166,12 +166,23 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // Audit records are append-only. Users may write only as themselves.
+    // Audit records are append-only. Only active school users may write
+    // their own bounded, well-formed activity record. Admin alone may read.
     match /audit_logs/{documentId} {
       allow get, list: if isAdmin();
-      allow create: if signedIn() &&
+      allow create: if hasActiveRole() &&
         request.resource.data.actorUid == request.auth.uid &&
         request.resource.data.createdAt == request.time &&
+        request.resource.data.actorName is string &&
+        request.resource.data.actorName.size() <= 100 &&
+        request.resource.data.module is string &&
+        request.resource.data.module.size() <= 40 &&
+        request.resource.data.action is string &&
+        request.resource.data.action.size() <= 40 &&
+        request.resource.data.recordId is string &&
+        request.resource.data.recordId.size() <= 150 &&
+        request.resource.data.detail is string &&
+        request.resource.data.detail.size() <= 240 &&
         request.resource.data.keys().hasOnly([
           'actorUid', 'actorName', 'module', 'action',
           'recordId', 'detail', 'createdAt'
