@@ -2254,9 +2254,10 @@ async function publishOneOnlineResult(studentId){
  const pointerSnap=await getDoc(pointerRef);
  const version=pointerSnap.exists()&&pointerSnap.data().version?String(pointerSnap.data().version):(crypto.randomUUID?crypto.randomUUID():String(Date.now()));
  const legacyDocs=await loadExamPublicationDocs(examId);
- const resultId=await resultPublicationDocId(examId,studentId);
- const direct=legacyDocs.find(d=>d.id===resultId);
- const legacyMatches=legacyDocs.filter(d=>d.id!==resultId&&!d.data()?.studentId&&legacyPublicationMatches(d,student));
+ const legacyResultId=await resultPublicationDocId(examId,studentId);
+ const direct=legacyDocs.find(d=>d.id===legacyResultId||d.data()?.studentId===studentId);
+ const legacyMatches=legacyDocs.filter(d=>d.id!==legacyResultId&&!d.data()?.studentId&&legacyPublicationMatches(d,student));
+ const resultId=doc(collection(db,"public_results")).id;
  if(legacyDocs.some(d=>d.id!==resultId&&legacyPublicationIsAmbiguous(d,student)))throw new Error('An older result has the same student name but no matching Symbol No. or IEMIS/Admission No. No data was changed; add a unique identifier or review the old record manually.');
  if(legacyMatches.length>1)throw new Error('Multiple older publications match this student. No data was changed; review the old publication records first.');
  const obsolete=[...(direct?[direct]:[]),...legacyMatches];
@@ -2295,9 +2296,9 @@ async function unpublishOneOnlineResult(studentId){
  const student=activeResultRows.find(x=>x.student.id===studentId)?.student;
  if(!student)throw new Error('Selected student is not in the current result list.');
  const docs=await loadExamPublicationDocs(examId);
- const resultId=await resultPublicationDocId(examId,studentId);
- const direct=docs.find(d=>d.id===resultId);
- const legacy=docs.filter(d=>d.id!==resultId&&!d.data()?.studentId&&legacyPublicationMatches(d,student));
+ const legacyResultId=await resultPublicationDocId(examId,studentId);
+ const direct=docs.find(d=>d.id===legacyResultId||d.data()?.studentId===studentId);
+ const legacy=docs.filter(d=>d.id!==legacyResultId&&!d.data()?.studentId&&legacyPublicationMatches(d,student));
  if(docs.some(d=>d.id!==resultId&&legacyPublicationIsAmbiguous(d,student)))throw new Error('An older result has the same student name but no matching Symbol No. or IEMIS/Admission No. No data was changed; add a unique identifier or review the old record manually.');
  if(legacy.length>1)throw new Error('Multiple older publications match this student. No data was changed; review the records first.');
  const targets=[...(direct?[direct]:[]),...legacy];
