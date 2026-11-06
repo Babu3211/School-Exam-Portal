@@ -26,6 +26,12 @@ must(html.includes("<summary><span class=\"ico\">🎓</span>Student Management</
 must(html.includes("Student registration, search and record management / विद्यार्थी दर्ता"), "Student page topic must be bilingual.");
 must(/\.login-card\{[^}]*max-width:410px[^}]*\}/.test(html), "V43-style baseline login card styling is missing.");
 must(html.includes('id="toggleLoginPassword"'), "Password show/hide control is missing.");
+must(!html.includes('data-login-role=') && !html.includes('login-role-select'), "Login page must use one Login button without separate Admin/Teacher role buttons.");
+must(html.indexOf('id="loginSchoolNameEn"') < html.indexOf('id="loginSchoolNameNe"') && html.includes('id="loginSchoolAddress"'), "Login page must show English school name first, Nepali name below, and school address.");
+must(html.includes('धुनिवेशी–५, कुमाईखोला, धादिङ, नेपाल'), "Login page must provide the school's Nepali address fallback.");
+must(html.includes('if(credential.user.uid===ADMIN_UID){currentUserRole={roles:["admin"],active:true};}else{const roleSnap=await getDoc(doc(db,"user_roles",credential.user.uid));'), "Login must automatically identify Admin by UID and validate teacher roles without a role selector.");
+must(!html.includes("selectedLoginRole"), "Login authentication must not depend on a manually selected role.");
+
 must(html.includes("sendPasswordResetEmail(auth,email)"), "Free Firebase email password reset is missing.");
 must(!/signInWithPhoneNumber|PhoneAuthProvider|RecaptchaVerifier|phoneAuthProvider/i.test(html), "SMS OTP must remain disabled for the Firebase Spark Free Plan.");
 
