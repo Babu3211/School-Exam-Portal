@@ -30,3 +30,22 @@ jobs:
         run: node scripts/check-v44-requirements.mjs
       - name: Run Firestore Security Rules emulator tests
         run: npm run test:rules
+
+  deploy-live:
+    name: Deploy V44 to Firebase Hosting after tests pass
+    needs: quality-and-rules
+    if: ${{ github.event_name == 'push' && vars.ENABLE_FIREBASE_HOSTING_DEPLOY == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tested V44 commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Deploy live to Firebase Hosting (Spark-compatible)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
+          projectId: exam-portal-smss-95016
+          channelId: live
+          entryPoint: .
