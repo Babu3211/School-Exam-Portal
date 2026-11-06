@@ -5,6 +5,7 @@ const html = await readFile("index.html", "utf8");
 const rules = await readFile("firestore.rules", "utf8");
 const manifest = await readFile("manifest.webmanifest", "utf8");
 const serviceWorker = await readFile("sw.js", "utf8");
+const workflow = await readFile(".github/workflows/v44-quality-check.yml", "utf8");
 
 const must = (condition, message) => assert.ok(condition, message);
 const requiredCollections = [
@@ -148,6 +149,9 @@ must(rules.includes("request.resource.data.detail.size() <= 240") && rules.inclu
 must(rules.includes("allow update, delete: if false;"), "Audit logs must remain append-only.");
 must(manifest.includes("V44"), "PWA manifest must identify V44.");
 must(serviceWorker.includes("smss-pwa-v44-school-exam-portal"), "Service worker cache must identify V44.");
+must(workflow.includes("deploy-live:") && workflow.includes("needs: quality-and-rules"), "Live deployment must depend on successful V44 quality and Firestore Rules tests.");
+must(workflow.includes("github.event_name == 'push'") && workflow.includes("ENABLE_FIREBASE_HOSTING_DEPLOY == 'true'"), "Automatic live deployment must be push-only and explicitly enabled.");
+
 
 const start = html.indexOf("function selectedEntrySetting(){");
 const end = html.indexOf("\nfunction entryClassGroup", start);
