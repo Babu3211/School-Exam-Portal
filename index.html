@@ -862,7 +862,7 @@ async function restoreStaff(id) {
 
 
 // Student Result Code: first 3 letters + last 3 letters + class.
-// Example: Babu Khanal, Class 8 => BABKHA8. Duplicate base codes get -02, -03, etc.
+// Example: Babu Khanal, Class 8 => BABKHA-8. Duplicate base codes are rejected for manual review.
 function studentCodeLetters(value){
  return Array.from(String(value||"").normalize("NFKC").replace(/[^\p{L}\p{N}]/gu,"")).slice(0,3).join("").toLocaleUpperCase();
 }
