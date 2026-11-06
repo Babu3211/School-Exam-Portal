@@ -1480,6 +1480,7 @@ window.loadMarksLedgerPage=loadMarksLedgerPage;
 function ledgerSubjectsForClass(cl,group){const no=classNoFromName(cl),fromClass=classSubjectNames(no,group),hasRegistry=(cachedClasses||[]).some(x=>classNoFromName(x.className)===no);const base=hasRegistry?fromClass:(ledgerSubjectOrder[group]||[]);const result=new Map();base.forEach(v=>{const k=canonicalSubjectKey(v);if(k&&!result.has(k))result.set(k,v)});return [...result.values()];}
 let activeLedgerMode='number';
 function setLedgerMode(mode){activeLedgerMode=mode==='grade'?'grade':'number';const n=document.getElementById('numberLedgerTab'),g=document.getElementById('gradeLedgerTab'),t=document.getElementById('ledgerTableTitle');if(n){n.className=activeLedgerMode==='number'?'btn':'btn alt'}if(g){g.className=activeLedgerMode==='grade'?'btn':'btn alt'}if(t)t.textContent=activeLedgerMode==='number'?'Number Ledger':'Grade Ledger';renderMarksLedgerPage();}
+function ledgerScoresComplete(scores){return Array.isArray(scores)&&scores.length>0&&scores.every(v=>v&&v.obtained!==null&&v.obtained!==undefined&&v.obtained!==''&&Number.isFinite(Number(v.obtained))&&Number.isFinite(Number(v.fullMarks))&&Number(v.fullMarks)>=0&&Number(v.obtained)>=0&&Number(v.obtained)<=Number(v.fullMarks));}
 function renderMarksLedgerPage(){
  requireAdmin();
  const cl=document.getElementById('ledgerViewClass')?.value;
@@ -1527,7 +1528,7 @@ function renderMarksLedgerPage(){
     const raw=rec?.totalObtained??scores.reduce((a,v)=>a+(v.obtained==null?0:Number(v.obtained)),0);
     mark=rec?Number(raw):null;
    }
-   const scoresComplete=achievement?count!==null&&Number.isFinite(count)&&count>0&&mark!==null&&Number.isFinite(mark)&&mark>=0&&mark<=full:scores.length>0&&scores.every(v=>v.obtained!==null&&v.obtained!==undefined&&v.obtained!==''&&Number.isFinite(Number(v.obtained))&&Number.isFinite(Number(v.fullMarks))&&Number(v.fullMarks)>=0&&Number(v.obtained)>=0&&Number(v.obtained)<=Number(v.fullMarks));
+   const scoresComplete=achievement?count!==null&&Number.isFinite(count)&&count>0&&mark!==null&&Number.isFinite(mark)&&mark>=0&&mark<=full:ledgerScoresComplete(scores);
    const valid=!!rec&&scoresComplete&&Number.isFinite(full)&&full>0&&mark!==null&&Number.isFinite(mark)&&mark>=0&&mark<=full;
    const pct=valid?mark/full*100:null;
    const gr=pct===null?null:gradeForPercent(pct);
