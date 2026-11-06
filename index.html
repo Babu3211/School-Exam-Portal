@@ -257,7 +257,7 @@ if(p==="exams")h=head(names[p],"परीक्षा सिर्जना र 
 if(p==="marks")h=head(names[p],"तपाईंलाई तोकिएको कक्षा/विषयमा मात्र प्राप्ताङ्क भर्ने तथा सुरक्षित गर्ने")+`<div class="panel form"><h3>विद्यार्थीको प्राप्ताङ्क — Marks Entry</h3><div class="fields"><div class="field"><label for="entryClass">कक्षा</label><select id="entryClass">${classes.map(x=>`<option value="${x}">${classEnglishLabel(x)}</option>`).join("")}</select></div><div class="field"><label for="entryTerm">परीक्षा अवधि / Term</label><select id="entryTerm"><option value="all">सबै अवधि</option><option value="first">प्रथम त्रैमासिक</option><option value="second">द्वितीय त्रैमासिक</option><option value="third">तृतीय त्रैमासिक</option><option value="annual">वार्षिक</option><option value="half-yearly">अर्धवार्षिक</option><option value="internal">आन्तरिक</option><option value="other">अन्य / पुराना परीक्षा</option></select></div><div class="field"><label for="entryExam">परीक्षा</label><select id="entryExam"><option value="">पहिले अवधि छान्नुहोस्</option></select></div><div class="field"><label for="entrySubject">विषय</label><select id="entrySubject"><option value="">विषय छान्नुहोस्</option></select></div></div><div class="toolbar marks-entry-tools"><button class="btn" id="loadEntryStudents" type="button">विद्यार्थी सूची देखाउनुहोस्</button><button class="btn alt" id="refreshEntry" type="button">Refresh</button><button class="btn alt" id="exportLedgerExcel" type="button">Export Marks Ledger to Excel</button><button class="btn alt" id="sampleLedgerExcel" type="button">Download Sample Ledger</button><label class="btn alt" for="importLedgerExcel">Import Ledger Excel</label><input id="importLedgerExcel" type="file" accept=".xlsx,.xls" hidden></div><div class="field" style="margin:10px 0"><label for="marksStudentSearch">विद्यार्थी खोज्नुहोस् (नाम वा Roll No.)</label><input id="marksStudentSearch" type="search" placeholder="नाम वा रोल नम्बर लेख्नुहोस्" autocomplete="off"></div><p id="marksEntryMessage" class="hint" role="status">कक्षा, परीक्षा र विषय छानेर विद्यार्थी सूची देखाउनुहोस्।</p><div class="tablewrap"><table><thead id="marksEntryHead"><tr><th>Roll No.</th><th>विद्यार्थी</th><th>प्राप्ताङ्क</th></tr></thead><tbody id="marksEntryBody"><tr><td class="empty" colspan="3">अहिले विद्यार्थी सूची लोड गरिएको छैन।</td></tr></tbody></table></div><button class="btn marks-entry-save" id="saveAllMarks" type="button">सबै प्राप्ताङ्क Firebase मा Save गर्नुहोस्</button></div>`;
 if(p==="assessment-settings")h=head(names[p],"कक्षा/विषयअनुसार मूल्याङ्कन भाग र पूर्णाङ्क व्यवस्थापन")+`<div class="notice"><b>Assessment Settings:</b> यहाँ कक्षा/विषयअनुसार मूल्याङ्कनका भाग र पूर्णाङ्क सेट गरिन्छ। Marks Entry मा यही सेटिङ लागू हुन्छ। सेटिङ परिवर्तन गर्दा पहिले सुरक्षित गरिएका Marks वा प्रकाशित नतिजा स्वतः परिवर्तन हुँदैनन्।</div><div class="panel" id="assessmentSettingsPanel"><h3>Assessment Settings — मूल्याङ्कन सेटिङ</h3><div class="notice" style="margin:10px 0"><b>कक्षा १–३ र ४–५:</b> सिकाइ उपलब्धि संख्या राख्नुहोस्। प्रत्येक उपलब्धिको अधिकतम मापन ४ भएकाले Full Marks = संख्या × ४ हुन्छ। कक्षा ४–५ को CDC २०८३ मार्गदर्शनअनुसार प्रत्येक सिकाइ उपलब्धि १–४ स्तरमा अभिलेख गरी जम्मा प्राप्ताङ्कबाट उपलब्धि प्रतिशत र Grade निकालिन्छ। त्रैमासिक अवधि प्रगति समीक्षा/अभिलेखका लागि हो।</div><div class="fields"><div class="field"><label for="markGroup">कक्षा समूह</label><select id="markGroup"><option value="1-3">Class 1–3</option><option value="4-5">Class 4–5</option><option value="6-8">Class 6–8</option><option value="9-10">Class 9–10</option></select></div><div class="field" id="markClassWrap"><label for="markClass">कक्षा *</label><select id="markClass">${classes.map(x=>`<option value="${x}">${classEnglishLabel(x)}</option>`).join("")}</select></div><div class="field"><label for="markSubject">विषय</label><select id="markSubject"></select></div></div><div id="markParts" class="grid" style="margin-top:14px"></div><div class="toolbar"><button class="btn alt" id="markAddPart" type="button">+ मूल्याङ्कन भाग थप्नुहोस्</button><button class="btn" id="markSaveSettings" type="button">Firebase मा Settings Save</button><button class="btn alt" id="markReloadSettings" type="button">Refresh</button></div><p id="markSettingsMessage" class="hint" role="status"></p></div><div class="panel form" id="savedAssessmentSettingsPanel"><h3>सुरक्षित गरिएको मूल्याङ्कन सेटिङ</h3><div class="tablewrap"><table><thead><tr><th>कक्षा समूह</th><th>विषय</th><th>मूल्याङ्कन भागहरू</th><th>जम्मा पूर्णाङ्क</th><th>कार्य</th></tr></thead><tbody id="markSettingsBody"><tr><td class="empty" colspan="5">लोड हुँदैछ...</td></tr></tbody></table></div></div>`;
 if(p==="marks-ledger")h=head("Marks Ledger","Class-wise and examination-wise saved marks register")+`<div class="panel"><div class="fields"><div class="field"><label for="ledgerViewClass">Class</label><select id="ledgerViewClass">${classes.map(x=>`<option value="${x}">${classEnglishLabel(x)}</option>`).join("")}</select></div><div class="field"><label for="ledgerViewTerm">Examination Term</label><select id="ledgerViewTerm"><option value="all">All Terms</option><option value="first">First Terminal</option><option value="second">Second Terminal</option><option value="third">Third Terminal</option><option value="annual">Annual</option><option value="half-yearly">Half-Yearly</option><option value="internal">Internal Assessment</option><option value="other">Other / Legacy Examination</option></select></div><div class="field"><label for="ledgerViewExam">Examination</label><select id="ledgerViewExam"><option value="">Select Examination</option></select></div></div><div class="toolbar"><button class="btn" id="showLedgerView" type="button">View Ledger</button><button class="btn alt" id="refreshLedgerView" type="button">Refresh</button><button class="btn alt" id="exportLedgerPageExcel" type="button">Export Ledger to Excel</button><button class="btn alt" id="printLedgerPage" type="button">Print / Save PDF</button></div><div class="toolbar" style="margin-top:8px"><button class="btn" id="numberLedgerTab" type="button">Number Ledger</button><button class="btn alt" id="gradeLedgerTab" type="button">Grade Ledger</button></div><p id="ledgerViewMessage" class="hint" role="status">Select a class and examination to view the ledger.</p></div><div class="panel form"><h3 id="ledgerTableTitle">Number Ledger</h3><div class="tablewrap"><table><thead id="ledgerViewHead"><tr><th>Roll No.</th><th>Student Name</th><th>Subject</th><th>Marks Obtained</th></tr></thead><tbody id="ledgerViewBody"><tr><td class="empty" colspan="4">Ledger has not been loaded.</td></tr></tbody></table></div><p class="hint">To change an assignment, select Edit for the relevant user.</p></div>`;
-if(p==="results")h=head("Result Management","Manage Tabulation Sheets, Grade Sheets and Online Results")+`<div class="notice"><b>Read-only Result View:</b> Results are generated from saved marks records in Firebase. All active users can view results; only Admin can publish results online.</div><div class="panel"><div class="fields"><div class="field"><label for="resultClass">Class</label><select id="resultClass">${classes.map(x=>`<option value="${x}">${classEnglishLabel(x)}</option>`).join("")}</select></div><div class="field"><label for="resultTerm">Examination Term</label><select id="resultTerm"><option value="all">All Terms</option><option value="first">First Terminal</option><option value="second">Second Terminal</option><option value="third">Third Terminal</option><option value="half-yearly">Half-Yearly</option><option value="annual">Annual</option><option value="internal">Internal Assessment</option><option value="other">Other / Legacy Examination</option></select></div><div class="field"><label for="resultExam">Examination</label><select id="resultExam"><option value="">Select Examination</option></select></div></div><div class="toolbar"><button class="btn" id="loadResultsBtn" type="button">View Results</button><button class="btn alt" id="refreshResultsBtn" type="button">Refresh</button><button class="btn alt" id="printGradeSheetBtn" type="button">Print Grade Sheet / Save PDF</button><button class="btn alt" id="publishOnlineResultBtn" type="button">Publish Online Result</button></div><p id="resultMessage" class="hint" role="status">Select an examination and class to view results.</p></div><div class="panel form" id="resultsTablePanel"><div class="toolbar"><h3>Tabulation Sheet</h3><button class="btn alt" id="printTabulationBtn" type="button">Print Tabulation / Save PDF</button><button class="btn alt" id="exportTabulationBtn" type="button">Export Tabulation to CSV</button></div><div class="tablewrap"><table><thead id="resultsHead"><tr><th>Roll No.</th><th>Student Name</th><th>Status</th></tr></thead><tbody id="resultsBody"><tr><td class="empty" colspan="3">Results have not been loaded.</td></tr></tbody></table></div></div><div class="panel form"><h3>Grade Sheet</h3><div class="fields"><div class="field"><label for="gradeStudent">Select Student</label><select id="gradeStudent"><option value="">Select after loading results</option></select></div></div><div id="gradeSheetView" class="hint">Select a student to view the Grade Sheet.</div></div>`;
+if(p==="results")h=head("Result Management","Manage Tabulation Sheets, Grade Sheets and Online Results")+`<div class="notice"><b>Read-only Result View:</b> Results are generated from saved marks records in Firebase. All active users can view results; only Admin can publish results online.</div><div class="panel"><div class="fields"><div class="field"><label for="resultClass">Class</label><select id="resultClass">${classes.map(x=>`<option value="${x}">${classEnglishLabel(x)}</option>`).join("")}</select></div><div class="field"><label for="resultTerm">Examination Term</label><select id="resultTerm"><option value="all">All Terms</option><option value="first">First Terminal</option><option value="second">Second Terminal</option><option value="third">Third Terminal</option><option value="half-yearly">Half-Yearly</option><option value="annual">Annual</option><option value="internal">Internal Assessment</option><option value="other">Other / Legacy Examination</option></select></div><div class="field"><label for="resultExam">Examination</label><select id="resultExam"><option value="">Select Examination</option></select></div></div><div class="toolbar"><button class="btn" id="loadResultsBtn" type="button">View Results</button><button class="btn alt" id="refreshResultsBtn" type="button">Refresh</button><button class="btn alt" id="printGradeSheetBtn" type="button">Print Grade Sheet / Save PDF</button><button class="btn alt" id="publishSelectedOnlineResultBtn" type="button">Publish Selected Students</button><button class="btn alt" id="publishOnlineResultBtn" type="button">Publish All Online Results</button></div><p id="resultMessage" class="hint" role="status">Select an examination and class to view results.</p></div><div class="panel form" id="resultsTablePanel"><div class="toolbar"><h3>Tabulation Sheet</h3><button class="btn alt" id="printTabulationBtn" type="button">Print Tabulation / Save PDF</button><button class="btn alt" id="exportTabulationBtn" type="button">Export Tabulation to CSV</button></div><div class="tablewrap"><table><thead id="resultsHead"><tr><th>Roll No.</th><th>Student Name</th><th>Status</th></tr></thead><tbody id="resultsBody"><tr><td class="empty" colspan="3">Results have not been loaded.</td></tr></tbody></table></div></div><div class="panel form"><h3>Grade Sheet</h3><div class="fields"><div class="field"><label for="gradeStudent">Select Student</label><select id="gradeStudent"><option value="">Select after loading results</option></select></div></div><div id="gradeSheetView" class="hint">Select a student to view the Grade Sheet.</div></div>`;
 if(p==="attendance")h=head(names[p],"दैनिक विद्यार्थी हाजिरी — तपाईंलाई तोकिएको कक्षामा मात्र")+`<div class="notice"><b>हाजिरी:</b> कक्षा र मिति छानेर विद्यार्थीको उपस्थिति राख्नुहोस्। Save गर्दा Firebase को attendance collection मा छुट्टै हाजिरी रेकर्ड बन्नेछ।</div><div class="panel"><div class="fields"><div class="field"><label for="attendanceDate">नेपाली मिति (वि.सं.)</label><input id="attendanceDate" type="text" inputmode="numeric" placeholder="२०८३-०७-१५" pattern="[0-9०-९]{4}-[0-9०-९]{1,2}-[0-9०-९]{1,2}" autocomplete="off" required><small class="hint">YYYY-MM-DD ढाँचामा, जस्तै २०८३-०७-१५</small></div><div class="field"><label for="attendanceClass">कक्षा</label><select id="attendanceClass">${classes.slice(0,10).map(x=>`<option value="${x}">${x}</option>`).join("")}</select></div><div class="field"><label for="attendanceType">हाजिरी प्रकार</label><select id="attendanceType"><option value="daily">दैनिक</option><option value="subject">विषयगत</option></select></div><div class="field" id="attendanceSubjectWrap" hidden><label for="attendanceSubject">विषय</label><select id="attendanceSubject"><option value="">विषय छान्नुहोस्</option></select></div></div><div class="toolbar"><button class="btn" id="loadAttendanceStudents" type="button">विद्यार्थी सूची देखाउनुहोस्</button><button class="btn alt" id="refreshAttendance" type="button">Refresh</button><button class="btn alt" id="markAllPresent" type="button">सबै उपस्थित</button></div><p id="attendanceMessage" class="hint" role="status">पहिले मिति र कक्षा छानेर विद्यार्थी सूची देखाउनुहोस्।</p><div class="grid stats" id="attendanceCounts"><div class="card"><div class="statlabel">कुल विद्यार्थी</div><div class="num">0</div></div><div class="card"><div class="statlabel">उपस्थित</div><div class="num">0</div></div><div class="card"><div class="statlabel">अनुपस्थित</div><div class="num">0</div></div><div class="card"><div class="statlabel">बिदा</div><div class="num">0</div></div></div><div class="tablewrap"><table><thead><tr><th>Roll No.</th><th>Admission No.</th><th>विद्यार्थीको नाम</th><th>हाजिरी स्थिति</th><th>कैफियत</th></tr></thead><tbody id="attendanceStudentsBody"><tr><td class="empty" colspan="5">विद्यार्थी सूची लोड गरिएको छैन।</td></tr></tbody></table></div><div class="toolbar"><button class="btn" id="saveAttendance" type="button">हाजिरी Firebase मा Save गर्नुहोस्</button><button class="btn alt" id="printAttendance" type="button">हाजिरी Print / PDF</button><button class="btn alt" id="exportAttendance" type="button">हाजिरी Export Excel / CSV</button></div></div><div class="panel form"><h3>आज/छानिएको मितिको हाजिरी विवरण</h3><div class="toolbar"><button class="btn alt" id="loadAttendanceHistory" type="button">हाजिरी विवरण हेर्नुहोस्</button><button class="btn alt" id="printAttendanceHistory" type="button">History Print</button><button class="btn alt" id="exportAttendanceHistory" type="button">History Export CSV</button></div><div class="tablewrap"><table><thead><tr><th>मिति</th><th>कक्षा</th><th>प्रकार</th><th>विषय</th><th>कुल</th><th>उपस्थित</th><th>अनुपस्थित</th><th>बिदा</th></tr></thead><tbody id="attendanceHistoryBody"><tr><td class="empty" colspan="8">हाजिरी विवरण लोड गरिएको छैन।</td></tr></tbody></table></div></div>`;
 if(p==="certificates")h=head(names[p],"प्रमाणपत्र तथा Transcript")+note+form("प्रमाणपत्र तयार गर्ने",[s("प्रमाणपत्र प्रकार",["Transfer Certificate","Character Certificate","Transcript"]),f("विद्यार्थी दर्ता नम्बर","Admission No."),f("जारी मिति","","date"),f("प्रमाणपत्र नम्बर","Certificate No.")]);
 if(p==="reports")h=head(names[p],"विद्यार्थी, हाजिरी र परीक्षा नतिजाको वास्तविक रिपोर्ट")+`<div class="panel"><div class="fields"><div class="field"><label for="reportType">रिपोर्ट प्रकार</label><select id="reportType"><option value="students">विद्यार्थी सूची</option><option value="attendance">हाजिरी सारांश</option><option value="marks">Marks सारांश</option><option value="exams">परीक्षा सूची</option></select></div><div class="field"><label for="reportClass">कक्षा</label><select id="reportClass"><option value="">सबै कक्षा</option>${classes.slice(0,10).map(x=>`<option value="${x}">${x}</option>`).join("")}</select></div></div><div class="toolbar"><button class="btn" id="loadReportBtn" type="button">रिपोर्ट हेर्नुहोस्</button><button class="btn alt" id="refreshReportBtn" type="button">Refresh</button><button class="btn alt" id="exportReportBtn" type="button">Export CSV</button><button class="btn alt" id="printReportBtn" type="button">Print / PDF</button></div><p id="reportMessage" class="hint" role="status">रिपोर्ट प्रकार र कक्षा छानेर रिपोर्ट हेर्नुहोस्।</p></div><div class="panel form"><h3 id="reportHeading">रिपोर्ट विवरण</h3><div class="tablewrap"><table><thead id="reportHead"><tr><th>विवरण</th></tr></thead><tbody id="reportBody"><tr><td class="empty">रिपोर्ट लोड गरिएको छैन।</td></tr></tbody></table></div></div>`;
@@ -1907,11 +1907,11 @@ function buildResultRows(){
  });
  activeResultRows=rows;
  const head=document.getElementById('resultsHead'),body=document.getElementById('resultsBody');
- head.innerHTML='<tr><th>Roll No.</th><th>Student Name</th>'+subjects.map(x=>`<th>${resultEsc(subjectEnglishLabel(x))}<br><small>${isAchievementClass?'Obtained Marks / Full Marks':'Marks / % / Grade'}</small></th>`).join('')+'<th>Total</th><th>Average %</th><th>Status</th></tr>';
- body.innerHTML=rows.map(r=>`<tr><td>${resultEsc(studentRollNo(r.student))}</td><td>${resultEsc(r.student.studentName)}</td>${r.perSubject.map(x=>`<td>${x.missing?'—':x.achievement?(x.achievementValid?`${x.totalObt} / ${x.totalFull}`:'Incomplete Data'):`${x.totalObt}/${x.totalFull}<br>${x.pct===null?'—':x.pct.toFixed(2)+'% · '+x.grade.grade}`}</td>`).join('')}<td>${r.complete?(r.isAchievementClass?`${r.sumObt} / ${r.sumFull}`:`${r.sumObt}/${r.sumFull}`):'Pending'}</td><td>${r.percentage===null?'Pending':r.percentage.toFixed(2)+'%'}</td><td>${r.complete?'Complete':'Pending Marks'}</td></tr>`).join('');
+ const adminPublication=isAdmin();head.innerHTML='<tr>'+(adminPublication?'<th class="result-admin-only"><input id="selectAllResultStudents" type="checkbox" aria-label="Select all students"></th>':'')+'<th>Roll No.</th><th>Student Name</th>'+subjects.map(x=>`<th>${resultEsc(subjectEnglishLabel(x))}<br><small>${isAchievementClass?'Obtained Marks / Full Marks':'Marks / % / Grade'}</small></th>`).join('')+'<th>Total</th><th>Average %</th><th>Status</th>'+(adminPublication?'<th class="result-admin-only">Online Publication</th>':'')+'</tr>';
+ body.innerHTML=rows.map(r=>`<tr>${adminPublication?`<td class="result-admin-only"><input type="checkbox" data-result-select="${resultEsc(r.student.id)}" aria-label="Select ${resultEsc(r.student.studentName)}"></td>`:''}<td>${resultEsc(studentRollNo(r.student))}</td><td>${resultEsc(r.student.studentName)}</td>${r.perSubject.map(x=>`<td>${x.missing?'—':x.achievement?(x.achievementValid?`${x.totalObt} / ${x.totalFull}`:'Incomplete Data'):`${x.totalObt}/${x.totalFull}<br>${x.pct===null?'—':x.pct.toFixed(2)+'% · '+x.grade.grade}`}</td>`).join('')}<td>${r.complete?(r.isAchievementClass?`${r.sumObt} / ${r.sumFull}`:`${r.sumObt}/${r.sumFull}`):'Pending'}</td><td>${r.percentage===null?'Pending':r.percentage.toFixed(2)+'%'}</td><td>${r.complete?'Complete':'Pending Marks'}</td>${adminPublication?`<td class="result-admin-only"><span data-publication-status="${resultEsc(r.student.id)}">Checking...</span><div class="toolbar" style="gap:5px;margin-top:5px"><button type="button" class="btn alt" data-publish-one="${resultEsc(r.student.id)}">Publish / Update</button><button type="button" class="btn alt" data-unpublish-one="${resultEsc(r.student.id)}" hidden>Unpublish</button></div></td>`:''}</tr>`).join('');
  const gs=document.getElementById('gradeStudent');gs.innerHTML='<option value="">Select Student</option>'+rows.map(r=>`<option value="${resultEsc(r.student.id)}">${resultEsc(studentRollNo(r.student))} — ${resultEsc(r.student.studentName)}</option>`).join('');
  document.getElementById('gradeSheetView').textContent='Select a student to view subject-wise details.';
- resultMsg(`${exam.examName} · ${smssTermLabelEnglish(smssExamTermKey(exam))} · Class ${classEnglishLabel(cl)}: results prepared for ${rows.length} students. Percentage, Grade and Grade Point are calculated automatically in the Grade Ledger; no data was changed.`);
+ resultMsg(`${exam.examName} · ${smssTermLabelEnglish(smssExamTermKey(exam))} · Class ${classEnglishLabel(cl)}: results prepared for ${rows.length} students. Percentage, Grade and Grade Point are calculated automatically in the Grade Ledger; no data was changed.`);if(adminPublication)refreshResultPublicationStates();
 }
 function printTabulationSheet(){
  if(!activeResultRows.length){resultMsg('Select an examination and click View Results first.',true);return;}
@@ -2085,75 +2085,166 @@ function printOnlineResult(){
  w.document.write(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>SMSS Grade Sheet</title><style>@page{size:A4 portrait;margin:10mm}body{font-family:Arial,sans-serif;margin:0;padding:0}.official-grade-sheet{background-color:#fff!important;background-image:url(${watermark})!important;background-repeat:repeat!important;background-size:360px 110px!important;print-color-adjust:exact;-webkit-print-color-adjust:exact;color:#111;padding:22px;max-width:1000px;margin:0 auto}.official-grade-sheet header{color:#d92d46!important}.official-grade-sheet header h2:last-child{color:#111!important}table{break-inside:avoid}button{display:none}</style></head><body>${sheet.outerHTML}<script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script></body></html>`);
  w.document.close();
 }
-async function publishOnlineResult(){
- const btn=document.getElementById('publishOnlineResultBtn');
- const originalSelected=document.getElementById('gradeStudent')?.value||'';
- try{
-  requireAdmin();if(!isAdmin())throw new Error('मुख्य Admin खाताबाट मात्र Online Result प्रकाशित गर्न मिल्छ।');
-  const examId=document.getElementById('resultExam')?.value,exam=resultExams.find(x=>x.id===examId),className=document.getElementById('resultClass')?.value;
-  if(!exam||!examId)throw new Error('पहिले कक्षा र परीक्षा छान्नुहोस्।');
-  if(!activeResultRows.length)throw new Error('पहिले View Results थिचेर नतिजा लोड गर्नुहोस्।');
-  if(activeResultRows.some(r=>!r.complete))throw new Error('केही विद्यार्थीको Marks अपूर्ण छन्। सबै विषयको Marks पूरा भएपछि मात्र Online Result प्रकाशित गर्नुहोस्।');
-  if(!confirm(`${exam.examName} — ${className} का ${activeResultRows.length} विद्यार्थीको Grade Sheet Online प्रकाशित गर्ने?`))return;
-  if(btn){btn.disabled=true;btn.textContent='जाँच हुँदैछ...';}
-  const gradeSelect=document.getElementById('gradeStudent');
-  const gradeBox=document.getElementById('gradeSheetView');
-  const version=(crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(36).slice(2)}`);
-  const pendingWrites=[],pinRows=[],seenStudentCodes=new Set(),seenPublicLookupHashes=new Set();
-  let skipped=0;
-  // Preflight: build and validate every student's sheet and lookup before writing anything.
-  for(const row of activeResultRows){
-   const st=row.student;
-   if(gradeSelect)gradeSelect.value=st.id;
-   showGradeSheet(st.id);
-   const sheet=gradeBox?.querySelector('.official-grade-sheet');
-   if(!sheet)throw new Error(`${st.studentName||'एक विद्यार्थी'} को Grade Sheet तयार भएन।`);
-   const roll=String(studentRollNo(st)??'').trim();
-   const studentCode=String(st.studentPortalCode||'').trim().toLocaleUpperCase();
-   if(!studentCode){skipped++;continue;}
-   if(seenStudentCodes.has(studentCode))throw new Error('दुई विद्यार्थीको Result Code एउटै भेटियो। विद्यार्थी Code सच्याएर मात्र प्रकाशित गर्नुहोस्।');
-   seenStudentCodes.add(studentCode);
-   const gradeSheetHtml=sheet.outerHTML;
-   const htmlBytes=new TextEncoder().encode(gradeSheetHtml).length;
-   if(htmlBytes>850000)throw new Error(`${st.studentName||'एक विद्यार्थी'} को Grade Sheet Firestore को सुरक्षित आकार सीमाभन्दा ठूलो छ (${htmlBytes} bytes)। Sheet छोट्याएर पुनः प्रयास गर्नुहोस्।`);
-   const resultPin=generateSecureResultPin();
-   const resultId=crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(36).slice(2)}`;
-   const hash=await onlineResultHash(className,examId,version,studentCode,resultPin);
-   if(seenPublicLookupHashes.has(hash))throw new Error('दुई विद्यार्थीको सुरक्षित Lookup एउटै भेटियो। पुनः प्रयास गर्नुहोस्।');
-   seenPublicLookupHashes.add(hash);
-   pendingWrites.push({ref:doc(db,'public_results',resultId),data:{className,examId,version,gradeSheetHtml,publishedAt:serverTimestamp()}});
-   pendingWrites.push({ref:doc(db,'public_result_lookup',hash),data:{resultId,examId,version,className}});
-   pinRows.push({name:st.studentName||st.studentNameNepali||'',roll,code:studentCode,pin:resultPin});
-  }
-  if(!pinRows.length)throw new Error('प्रकाशनका लागि विद्यार्थीको Result Code भेटिएन। पहिले विद्यार्थीको Result Code बनाउनुहोस्।');
-  // Firestore batches are capped below 500 writes. The exam pointer is published last.
-  if(btn)btn.textContent='नतिजा सुरक्षित हुँदैछ...';
-  let writeCount=0;
-  for(let i=0;i<pendingWrites.length;i+=450){
-   const batch=writeBatch(db);
-   for(const item of pendingWrites.slice(i,i+450))batch.set(item.ref,item.data);
-   await batch.commit();writeCount+=Math.min(450,pendingWrites.length-i);
-  }
-  await setDoc(doc(db,'public_result_exams',examId),{examId,className,examName:exam.examName||'परीक्षा',termKey:smssExamTermKey(exam),termLabel:smssTermLabel(smssExamTermKey(exam)),academicYear:exam.academicYear||'',version,active:true,publishedAt:serverTimestamp(),publishedBy:auth.currentUser.uid});
-  if(gradeSelect&&originalSelected)gradeSelect.value=originalSelected;
-  if(originalSelected)showGradeSheet(originalSelected);
-  downloadResultPinList(pinRows,className);
-  resultMsg(`Online Result प्रकाशित भयो। ${pinRows.length} विद्यार्थी प्रकाशित, ${skipped} विद्यार्थीको Result Code नभएकाले छुटे। PIN सूची डाउनलोड भएको छ; यसलाई सुरक्षित राखेर विद्यार्थीलाई दिनुहोस्।`);
-  alert(`Online Result प्रकाशित भयो।\\nप्रकाशित विद्यार्थी: ${pinRows.length}\\nछुटेका: ${skipped}\\nPIN सूची डाउनलोड भयो। यसलाई सुरक्षित राख्नुहोस्।`);
- }catch(err){
-  console.error('Publish online result failed',err);
-  const gradeSelect=document.getElementById('gradeStudent');
-  if(gradeSelect&&originalSelected){gradeSelect.value=originalSelected;try{showGradeSheet(originalSelected);}catch(restoreErr){console.warn('Grade sheet restore failed',restoreErr);}}
-  resultMsg(`Online Result प्रकाशित भएन: ${err.message||err.code||'Firebase त्रुटि'}। Firestore Rules र Internet जाँच गर्नुहोस्।`,true);
- }finally{if(btn){btn.disabled=false;btn.textContent='Publish Online Result';}}
+async function resultPublicationDocId(examId,studentId){
+ const raw='SMSS-PUBLICATION-V1|'+String(examId)+'|'+String(studentId);
+ const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw));
+ return [...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('');
 }
+async function loadExamPublicationDocs(examId){
+ const snap=await getDocs(query(collection(db,'public_results'),where('examId','==',examId)));
+ return snap.docs;
+}
+function legacyPublicationMatches(docSnap,student){
+ const data=docSnap.data()||{};
+ if(data.studentId===student.id)return true;
+ if(data.studentId)return false;
+ const html=String(data.gradeSheetHtml||'');
+ const name=String(student.studentName||student.name||'').trim();
+ if(!name||!html.includes(resultEsc(name)))return false;
+ const symbol=String(student.symbolNo||student.symbolNumber||student.examSymbolNo||'').trim();
+ return !symbol||html.includes(resultEsc(symbol));
+}
+async function refreshResultPublicationStates(){
+ if(!isAdmin())return;
+ const examId=document.getElementById('resultExam')?.value;
+ const rows=activeResultRows||[];
+ if(!examId||!rows.length)return;
+ try{
+  const docs=await loadExamPublicationDocs(examId);
+  rows.forEach(row=>{
+   const student=row.student;
+   const direct=docs.find(d=>d.data()?.studentId===student.id);
+   const legacy=direct?null:docs.filter(d=>legacyPublicationMatches(d,student));
+   const status=document.querySelectorAll('[data-publication-status]');
+   for(const el of status){if(el.dataset.publicationStatus!==student.id)continue;
+    if(direct){el.textContent='Published';el.style.color='#15803d';}
+    else if(legacy?.length===1){el.textContent='Published (Legacy)';el.style.color='#a16207';}
+    else if(legacy?.length>1){el.textContent='Review required';el.style.color='#b42318';}
+    else{el.textContent='Unpublished';el.style.color='#64748b';}
+   }
+   const unpublish=document.querySelectorAll('[data-unpublish-one]');
+   for(const btn of unpublish)if(btn.dataset.unpublishOne===student.id)btn.hidden=!(direct||legacy?.length===1);
+  });
+ }catch(err){
+  console.warn('Publication status could not be loaded:',err.code||err.message);
+  document.querySelectorAll('[data-publication-status]').forEach(el=>{el.textContent='Status unavailable';el.style.color='#b42318';});
+ }
+}
+async function findLegacyLookups(resultId){
+ const snap=await getDocs(query(collection(db,'public_result_lookup'),where('resultId','==',resultId)));
+ return snap.docs;
+}
+async function publishOneOnlineResult(studentId){
+ const row=activeResultRows.find(x=>x.student.id===studentId);
+ if(!row)throw new Error('Selected student is not in the current result list.');
+ if(!row.complete)throw new Error('This student has incomplete marks. Complete all subjects before publishing.');
+ const examId=document.getElementById('resultExam')?.value;
+ const exam=resultExams.find(x=>x.id===examId);
+ const className=document.getElementById('resultClass')?.value;
+ if(!exam||!examId||!className)throw new Error('Select a class and examination first.');
+ const student=row.student,originalSelected=document.getElementById('gradeStudent')?.value||'';
+ const pointerRef=doc(db,'public_result_exams',examId);
+ const pointerSnap=await getDoc(pointerRef);
+ const version=pointerSnap.exists()&&pointerSnap.data().version?String(pointerSnap.data().version):(crypto.randomUUID?crypto.randomUUID():String(Date.now()));
+ const legacyDocs=await loadExamPublicationDocs(examId);
+ const resultId=await resultPublicationDocId(examId,studentId);
+ const direct=legacyDocs.find(d=>d.id===resultId);
+ const legacyMatches=legacyDocs.filter(d=>d.id!==resultId&&!d.data()?.studentId&&legacyPublicationMatches(d,student));
+ if(legacyMatches.length>1)throw new Error('Multiple older publications match this student. No data was changed; review the old publication records first.');
+ const obsolete=[...(direct?[direct]:[]),...legacyMatches];
+ const obsoleteLookups=[];
+ for(const old of obsolete)obsoleteLookups.push(...await findLegacyLookups(old.id));
+ const gradeSelect=document.getElementById('gradeStudent'),gradeBox=document.getElementById('gradeSheetView');
+ if(gradeSelect)gradeSelect.value=studentId;
+ showGradeSheet(studentId);
+ const sheet=gradeBox?.querySelector('.official-grade-sheet');
+ if(!sheet)throw new Error('Grade Sheet could not be generated for this student.');
+ const gradeSheetHtml=sheet.outerHTML;
+ const htmlBytes=new TextEncoder().encode(gradeSheetHtml).length;
+ if(htmlBytes>850000)throw new Error('Grade Sheet exceeds the safe Firestore document size.');
+ const studentCode=String(student.studentPortalCode||'').trim().toLocaleUpperCase();
+ if(!studentCode)throw new Error('Student Result Code is missing.');
+ const resultPin=generateSecureResultPin();
+ const lookupHash=await onlineResultHash(className,examId,version,studentCode,resultPin);
+ const batch=writeBatch(db);
+ const lookupHashes=new Set(obsoleteLookups.map(d=>d.id));
+ obsolete.forEach(d=>{const oldHash=d.data()?.lookupHash;if(oldHash)lookupHashes.add(oldHash);});
+ lookupHashes.forEach(hash=>batch.delete(doc(db,'public_result_lookup',hash)));
+ obsolete.forEach(d=>batch.delete(doc(db,'public_results',d.id)));
+ const resultRef=doc(db,'public_results',resultId);
+ batch.set(resultRef,{examId,className,version,studentId,lookupHash,publicationMode:'individual',gradeSheetHtml,publishedAt:serverTimestamp(),publishedBy:auth.currentUser.uid});
+ batch.set(doc(db,'public_result_lookup',lookupHash),{resultId,examId,version,className});
+ batch.set(pointerRef,{examId,className,examName:exam.examName||'Examination',termKey:smssExamTermKey(exam),termLabel:smssTermLabelEnglish(smssExamTermKey(exam)),academicYear:exam.academicYear||'',version,active:true,publicationMode:'individual',publishedAt:serverTimestamp(),publishedBy:auth.currentUser.uid},{merge:true});
+ await batch.commit();
+ if(gradeSelect&&originalSelected)gradeSelect.value=originalSelected;
+ if(originalSelected)showGradeSheet(originalSelected);
+ return {student,code:studentCode,pin:resultPin,roll:String(studentRollNo(student)||''),legacyRemoved:legacyMatches.length};
+}
+async function unpublishOneOnlineResult(studentId){
+ requireAdmin();if(!isAdmin())throw new Error('Only the school administrator can unpublish results.');
+ const examId=document.getElementById('resultExam')?.value;
+ if(!examId)throw new Error('Select an examination first.');
+ const student=activeResultRows.find(x=>x.student.id===studentId)?.student;
+ if(!student)throw new Error('Selected student is not in the current result list.');
+ const docs=await loadExamPublicationDocs(examId);
+ const resultId=await resultPublicationDocId(examId,studentId);
+ const direct=docs.find(d=>d.id===resultId);
+ const legacy=docs.filter(d=>d.id!==resultId&&!d.data()?.studentId&&legacyPublicationMatches(d,student));
+ if(legacy.length>1)throw new Error('Multiple older publications match this student. No data was changed; review the records first.');
+ const targets=[...(direct?[direct]:[]),...legacy];
+ if(!targets.length)throw new Error('No published result record was found for this student.');
+ const lookupDocs=[];
+ for(const target of targets)lookupDocs.push(...await findLegacyLookups(target.id));
+ const hashes=new Set(lookupDocs.map(d=>d.id));
+ targets.forEach(d=>{const h=d.data()?.lookupHash;if(h)hashes.add(h);});
+ const batch=writeBatch(db);
+ hashes.forEach(hash=>batch.delete(doc(db,'public_result_lookup',hash)));
+ targets.forEach(d=>batch.delete(doc(db,'public_results',d.id)));
+ const remaining=docs.length-targets.length;
+ if(remaining===0)batch.set(doc(db,'public_result_exams',examId),{active:false,unpublishedAt:serverTimestamp(),unpublishedBy:auth.currentUser.uid},{merge:true});
+ await batch.commit();
+ return {removed:targets.length};
+}
+async function publishOnlineResult(selectedOnly=false){
+ const allRows=activeResultRows||[];
+ const selectedIds=selectedOnly?[...document.querySelectorAll('[data-result-select]:checked')].map(x=>x.dataset.resultSelect):allRows.map(x=>x.student.id);
+ const ids=[...new Set(selectedIds)];
+ if(!ids.length){resultMsg('Select at least one student to publish.',true);return;}
+ const chosen=ids.map(id=>allRows.find(x=>x.student.id===id)).filter(Boolean);
+ if(chosen.length!==ids.length){resultMsg('The selection changed. Reload results and try again.',true);return;}
+ if(chosen.some(x=>!x.complete)){resultMsg('One or more selected students have incomplete marks. No publication was started.',true);return;}
+ const examId=document.getElementById('resultExam')?.value,exam=resultExams.find(x=>x.id===examId),cl=document.getElementById('resultClass')?.value;
+ if(!exam||!examId||!cl){resultMsg('Select a class and examination first.',true);return;}
+ if(!confirm(`Publish online Grade Sheets for ${chosen.length} selected student(s) in ${classEnglishLabel(cl)} — ${exam.examName}?`))return;
+ const allPins=[];let done=0,errors=[];
+ const allButton=document.getElementById('publishOnlineResultBtn'),selectedButton=document.getElementById('publishSelectedOnlineResultBtn');
+ [allButton,selectedButton].forEach(b=>{if(b){b.disabled=true;b.textContent='Publishing...';}});
+ try{
+  for(const row of chosen){
+   try{const p=await publishOneOnlineResult(row.student.id);allPins.push({name:p.student.studentName||p.student.name||'',roll:p.roll,code:p.code,pin:p.pin});done++;}
+   catch(err){errors.push((row.student.studentName||row.student.id)+': '+(err.message||err.code||'Error'));}
+  }
+  if(allPins.length)downloadResultPinList(allPins,cl);
+  await refreshResultPublicationStates();
+  resultMsg(`Publication finished: ${done} published/updated, ${errors.length} failed. PIN list downloaded for successful students. ${errors.slice(0,3).join(' | ')}`,errors.length>0);
+  if(errors.length)alert(`Published/updated: ${done}\nFailed: ${errors.length}\nPIN list downloaded for successful students.\n${errors.slice(0,3).join('\n')}`);
+ }finally{
+  [allButton,selectedButton].forEach((b,i)=>{if(b){b.disabled=false;b.textContent=i===0?'Publish All Online Results':'Publish Selected Students';}});
+ }
+}
+document.addEventListener('click',e=>{
+ const pubOne=e.target.closest('[data-publish-one]'),unpubOne=e.target.closest('[data-unpublish-one]');
+ if(pubOne){const id=pubOne.dataset.publishOne;pubOne.disabled=true;publishOnlineResultForOne(id).catch(err=>resultMsg(err.message||'Publish failed.',true)).finally(()=>pubOne.disabled=false);return;}
+ if(unpubOne){const id=unpubOne.dataset.unpublishOne;unpubOne.disabled=true;unpublishOneOnlineResult(id).then(refreshResultPublicationStates).then(()=>resultMsg('Selected student result unpublished.')).catch(err=>resultMsg(err.message||'Unpublish failed.',true)).finally(()=>unpubOne.disabled=false);return;}
+});
+
 document.addEventListener('click',e=>{
  if(e.target.closest('#onlineResultToggle')){const panel=document.getElementById('onlineResultPanel');panel.hidden=!panel.hidden;if(!panel.hidden)loadOnlineResultExams();}
  if(e.target.closest('#onlineResultSearchBtn'))lookupOnlineResult();
  if(e.target.closest('#onlineResultPrintBtn'))printOnlineResult();
- if(e.target.closest('#publishOnlineResultBtn'))publishOnlineResult();
+ if(e.target.closest('#publishOnlineResultBtn'))publishOnlineResult(false);if(e.target.closest('#publishSelectedOnlineResultBtn'))publishOnlineResult(true);
 });
-document.addEventListener('change',e=>{if(e.target.id==='onlineResultClass')loadOnlineResultExams();});
+document.addEventListener('change',e=>{if(e.target.id==='onlineResultClass')loadOnlineResultExams();if(e.target.id==='selectAllResultStudents')document.querySelectorAll('[data-result-select]').forEach(x=>x.checked=e.target.checked);});
 
 
 
