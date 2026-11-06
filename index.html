@@ -147,27 +147,34 @@ if(p==="staff")h=head(names[p],"शिक्षक तथा कर्मचा�
 <div class="tablewrap">
 <table>
 <thead><tr>
-<th>कर्मचारी ID</th><th>नाम</th><th>पद</th>
-<th>विषय/जिम्मेवारी</th><th>सम्पर्क</th><th>अवस्था</th><th>कार्य</th>
+<th>कर्मचारी ID</th><th>नाम (नेपाली)</th><th>Name (English)</th><th>पद/तह</th>
+<th>विषय</th><th>सम्पर्क</th><th>अवस्था</th><th>कार्य</th>
 </tr></thead>
 <tbody id="staffBody">
-<tr><td class="empty" colspan="7">विवरण लोड हुँदैछ...</td></tr>
+<tr><td class="empty" colspan="8">विवरण लोड हुँदैछ...</td></tr>
 </tbody>
 </table>
 </div>
 <div class="panel form">
-<h3>नयाँ कर्मचारी विवरण</h3>
+<h3>शिक्षक / कर्मचारीको विस्तृत विवरण</h3>
+<p class="hint">कर्मचारी ID प्रणालीबाट स्वतः सिर्जना हुन्छ। पुराना रेकर्डको ID यथावत् रहनेछ। नियुक्ति मिति वि.सं. YYYY-MM-DD ढाँचामा राख्नुहोस्।</p>
 <form id="staffForm">
 <div class="fields">
-<div class="field"><label for="staffName">पूरा नाम *</label><input id="staffName" required maxlength="120"></div>
-<div class="field"><label for="staffId">कर्मचारी ID *</label><input id="staffId" required maxlength="40"></div>
+<div class="field"><label for="staffNameNepali">नाम, थर (नेपाली) *</label><input id="staffNameNepali" required maxlength="120"></div>
+<div class="field"><label for="staffNameEnglish">Name (English)</label><input id="staffNameEnglish" maxlength="120"></div>
+<div class="field"><label for="staffId">कर्मचारी ID (स्वतः)</label><input id="staffId" maxlength="40" readonly placeholder="Save गर्दा स्वतः बन्नेछ"></div>
 <div class="field"><label for="staffRole">पद *</label>
 <select id="staffRole" required>
 <option value="">पद छान्नुहोस्</option>
 <option>शिक्षक</option><option>प्रधानाध्यापक</option><option>लेखा</option><option>कर्मचारी</option><option>अन्य</option>
 </select></div>
-<div class="field"><label for="staffSubject">विषय/जिम्मेवारी</label><input id="staffSubject" maxlength="120"></div>
-<div class="field"><label for="staffPhone">सम्पर्क नम्बर</label><input id="staffPhone" type="tel" maxlength="30"></div>
+<div class="field"><label for="staffPermanentAddress">स्थायी ठेगाना</label><input id="staffPermanentAddress" maxlength="250"></div>
+<div class="field"><label for="staffLevelCategory">तह / श्रेणी</label><input id="staffLevelCategory" maxlength="100" placeholder="जस्तै: आधारभूत तृतीय / माध्यमिक द्वितीय"></div>
+<div class="field"><label for="staffAppointmentDate">नियुक्ति मिति (वि.सं.)</label><input id="staffAppointmentDate" maxlength="20" inputmode="numeric" placeholder="२०८०-०१-१५"></div>
+<div class="field"><label for="staffAppointmentType">नियुक्ति प्रकार</label><input id="staffAppointmentType" maxlength="100" placeholder="स्थायी / अस्थायी / करार"></div>
+<div class="field"><label for="staffQualification">शैक्षिक योग्यता</label><input id="staffQualification" maxlength="160"></div>
+<div class="field"><label for="staffSubject">विषय</label><input id="staffSubject" maxlength="120"></div>
+<div class="field"><label for="staffPhone">सम्पर्क नं.</label><input id="staffPhone" type="tel" maxlength="30"></div>
 <div class="field"><label for="staffStatus">अवस्था</label>
 <select id="staffStatus"><option>कार्यरत</option><option>निष्क्रिय</option></select></div>
 </div>
@@ -418,7 +425,7 @@ async function loadStaff() {
   const body = document.getElementById("staffBody");
   if (!body) return;
 
-  body.innerHTML = '<tr><td colspan="7">लोड हुँदैछ...</td></tr>';
+  body.innerHTML = '<tr><td colspan="8">लोड हुँदैछ...</td></tr>';
 
   try {
     if (!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
@@ -431,9 +438,18 @@ async function loadStaff() {
     setStaffMessage(`कुल ${cachedStaff.length} कर्मचारीको विवरण लोड भयो।`);
   } catch (error) {
     console.error("Staff load failed:", error.code || error.message);
-    body.innerHTML = '<tr><td colspan="7">विवरण लोड भएन।</td></tr>';
+    body.innerHTML = '<tr><td colspan="8">विवरण लोड भएन।</td></tr>';
     setStaffMessage(error.message || "Firebase वा Internet जाँच गर्नुहोस्।", true);
   }
+}
+
+function nextStaffId(role, records) {
+  const prefix = ["शिक्षक","प्रधानाध्यापक"].includes(String(role || "").trim()) ? "TCH" : "STF";
+  const maxNo = (records || []).reduce((max, item) => {
+    const match = String(item.staffId || "").match(new RegExp("^" + prefix + "-(\\d+)$","i"));
+    return match ? Math.max(max, Number(match[1])) : max;
+  }, 0);
+  return prefix + "-" + String(maxNo + 1).padStart(4, "0");
 }
 
 function renderStaff() {
@@ -443,15 +459,15 @@ function renderStaff() {
   const q = (document.getElementById("staffSearch")?.value || "").trim().toLowerCase();
 
   const list = cachedStaff.filter(s =>
-    String(s.name || "").toLowerCase().includes(q) ||
-    String(s.staffId || "").toLowerCase().includes(q)
+    [s.nameNepali,s.name,s.nameEnglish,s.staffId].some(v => String(v || "").toLowerCase().includes(q))
   );
 
   body.innerHTML = list.map(s => `
     <tr>
-      <td>${staffText(s.staffId)}</td>
-      <td>${staffText(s.name)}</td>
-      <td>${staffText(s.role)}</td>
+      <td>${staffText(s.staffId || "—")}</td>
+      <td>${staffText(s.nameNepali || s.name || "")}</td>
+      <td>${staffText(s.nameEnglish || "")}</td>
+      <td>${staffText([s.role,s.levelCategory].filter(Boolean).join(" / "))}</td>
       <td>${staffText(s.subject || "")}</td>
       <td>${staffText(s.phone || "")}</td>
       <td>${staffText(s.status || "कार्यरत")}</td>
@@ -462,7 +478,7 @@ function renderStaff() {
           : `<button type="button" class="btn alt" data-staff-delete="${staffText(s.id)}">निष्क्रिय बनाउनुहोस्</button>`}
       </td>
     </tr>
-  `).join("") || '<tr><td colspan="7">रेकर्ड भेटिएन।</td></tr>';
+  `).join("") || '<tr><td colspan="8">रेकर्ड भेटिएन।</td></tr>';
 } 
 window.loadStaff = loadStaff;
 
@@ -480,17 +496,25 @@ document.addEventListener("submit", async event => {
     return;
   }
 
+  const nameNepali = document.getElementById("staffNameNepali").value.trim();
   const data = {
-    name: document.getElementById("staffName").value.trim(),
+    name: nameNepali,
+    nameNepali,
+    nameEnglish: document.getElementById("staffNameEnglish").value.trim(),
     staffId: document.getElementById("staffId").value.trim(),
     role: document.getElementById("staffRole").value,
+    permanentAddress: document.getElementById("staffPermanentAddress").value.trim(),
+    levelCategory: document.getElementById("staffLevelCategory").value.trim(),
+    appointmentDate: document.getElementById("staffAppointmentDate").value.trim(),
+    appointmentType: document.getElementById("staffAppointmentType").value.trim(),
+    qualification: document.getElementById("staffQualification").value.trim(),
     subject: document.getElementById("staffSubject").value.trim(),
     phone: document.getElementById("staffPhone").value.trim(),
     status: document.getElementById("staffStatus").value
   };
 
-  if (!data.name || !data.staffId || !data.role) {
-    setStaffMessage("नाम, कर्मचारी ID र पद अनिवार्य छन्।", true);
+  if (!data.nameNepali || !data.role) {
+    setStaffMessage("नेपाली नाम र पद अनिवार्य छन्।", true);
     return;
   }
 
@@ -502,6 +526,13 @@ document.addEventListener("submit", async event => {
     // A failed read stops here, before any write is attempted.
     const freshStaffSnap = await getDocs(collection(db, "staff"));
     const freshStaff = freshStaffSnap.docs.map(d => ({id:d.id, ...d.data()}));
+    if (!editId) {
+      data.staffId = nextStaffId(data.role, freshStaff);
+      document.getElementById("staffId").value = data.staffId;
+    } else {
+      const oldRecord = freshStaff.find(s => s.id === editId);
+      data.staffId = oldRecord?.staffId || data.staffId;
+    }
     const duplicate = freshStaff.some(s => s.id !== editId && norm(s.staffId) === norm(data.staffId));
     if (duplicate) {
       cachedStaff = freshStaff;
@@ -579,9 +610,15 @@ function editStaff(id) {
   const s = cachedStaff.find(x => x.id === id);
   if (!s) return;
 
-  document.getElementById("staffName").value = s.name || "";
+  document.getElementById("staffNameNepali").value = s.nameNepali || s.name || "";
+  document.getElementById("staffNameEnglish").value = s.nameEnglish || "";
   document.getElementById("staffId").value = s.staffId || "";
   document.getElementById("staffRole").value = s.role || "";
+  document.getElementById("staffPermanentAddress").value = s.permanentAddress || "";
+  document.getElementById("staffLevelCategory").value = s.levelCategory || "";
+  document.getElementById("staffAppointmentDate").value = s.appointmentDate || "";
+  document.getElementById("staffAppointmentType").value = s.appointmentType || "";
+  document.getElementById("staffQualification").value = s.qualification || "";
   document.getElementById("staffSubject").value = s.subject || "";
   document.getElementById("staffPhone").value = s.phone || "";
   document.getElementById("staffStatus").value = s.status || "कार्यरत";
@@ -1551,11 +1588,11 @@ async function ensureSheetJS(){if(window.XLSX)return window.XLSX;await new Promi
 function saveWorkbook(wb,filename){const X=window.XLSX;X.writeFile(wb,filename)}
 function exportRows(rows,filename,sheet='Data'){ensureSheetJS().then(X=>{const wb=X.utils.book_new();X.utils.book_append_sheet(wb,X.utils.json_to_sheet(rows),sheet);saveWorkbook(wb,filename)}).catch(e=>alert(e.message))}
 const studentExcelHeaders=['S.N','IEMIS Code','School','Student IEMIS Id','Student Name','Student Name in Nepali','Gender','Father Name','Mother Name','Class','Section','Year','Permanent Address','Temporary Address','DOB','Is Transferred','Mother Tongue','Disability Type','Age','Guardian Name','Guardian Contact Number','Admission Number','Date of Birth (A.D.)','Symbol Number'];
-const staffExcelHeaders=['Employee ID','Name','Position','Subject / Responsibility','Contact Number','Status'];
+const staffExcelHeaders=['Employee ID','Name (Nepali)','Name (English)','Position','Permanent Address','Level / Category','Appointment Date (BS)','Appointment Type','Educational Qualification','Subject','Contact Number','Status'];
 function studentToExportRow(x){const currentClass=canonicalStudentClass(x.class)||'';const originalClass=String(x.sourceClass||'').trim();const exportClass=originalClass&&canonicalStudentClass(originalClass)===currentClass?originalClass:currentClass;return {'S.N':studentRollNo(x)||'','IEMIS Code':x.iemisCode||'','School':x.school||'','Student IEMIS Id':x.studentIemisNo||x.iemisStudentNo||'','Student Name':x.studentName||'','Student Name in Nepali':x.studentNameNepali||'','Gender':x.gender||'','Father Name':x.fatherName||'','Mother Name':x.motherName||'','Class':exportClass,'Section':x.section||'','Year':x.sourceYear||'','Permanent Address':x.permanentAddress||'','Temporary Address':x.temporaryAddress||'','DOB':x.dob||'','Is Transferred':x.isTransferred||'','Mother Tongue':x.motherTongue||'','Disability Type':x.disabilityType||'','Age':x.age||'','Guardian Name':x.guardianName||'','Guardian Contact Number':x.phone||'','Admission Number':x.admissionNo||'','Date of Birth (A.D.)':x.dobAD||'','Symbol Number':x.symbolNo||x.symbolNumber||''}}
 function safeStudentSheetName(value,used){let base=String(value||'अन्य').replace(/[\\/?*\[\]:]/g,' ').trim().slice(0,31)||'अन्य',name=base,n=2;while(used.has(name.toLowerCase())){const suffix='_'+n++;name=base.slice(0,31-suffix.length)+suffix}used.add(name.toLowerCase());return name}
 async function exportStudents(sample=false){try{const X=await ensureSheetJS(),wb=X.utils.book_new();if(sample){const ws=X.utils.json_to_sheet([Object.fromEntries(studentExcelHeaders.map(h=>[h,'']))]);X.utils.book_append_sheet(wb,ws,'Students_Template');saveWorkbook(wb,'Students_Sample_Template.xlsx');return}const selectedClass=document.getElementById('classFilter')?.value||'';const source=selectedClass?cachedStudents.filter(st=>canonicalStudentClass(st.class)===selectedClass):cachedStudents;const groups=new Map();source.forEach(st=>{const cls=canonicalStudentClass(st.class)||'अन्य';if(!groups.has(cls))groups.set(cls,[]);groups.get(cls).push(studentToExportRow(st))});if(!groups.size){alert(selectedClass?`कक्षा ${selectedClass} मा Export गर्न विद्यार्थी भेटिएन।`:'Export गर्न विद्यार्थी विवरण भेटिएन।');return}const sorted=[...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0],'ne',{numeric:true}));const used=new Set();sorted.forEach(([cls,rows])=>{const sheet=safeStudentSheetName(cls,used);X.utils.book_append_sheet(wb,X.utils.json_to_sheet(rows,{header:studentExcelHeaders}),sheet)});const filename=selectedClass?`Students_Class_${selectedClass}_Export.xlsx`:'Students_Class_Wise_Export.xlsx';saveWorkbook(wb,filename)}catch(e){alert(e.message||'विद्यार्थी Export भएन।')}}
-function exportStaff(sample=false){const rows=sample?[]:cachedStaff.map(x=>({'Employee ID':x.staffId||'','Name':x.name||'','Position':x.role||'','Subject / Responsibility':x.subject||'','Contact Number':x.phone||'','Status':x.status||'कार्यरत'}));exportRows(rows.length?rows:[Object.fromEntries(staffExcelHeaders.map(h=>[h,'']))],sample?'Teachers_Sample_Template.xlsx':'Teachers_Export.xlsx','Teachers')}
+function exportStaff(sample=false){const rows=sample?[]:cachedStaff.map(x=>({'Employee ID':x.staffId||'','Name (Nepali)':x.nameNepali||x.name||'','Name (English)':x.nameEnglish||'','Position':x.role||'','Permanent Address':x.permanentAddress||'','Level / Category':x.levelCategory||'','Appointment Date (BS)':x.appointmentDate||'','Appointment Type':x.appointmentType||'','Educational Qualification':x.qualification||'','Subject':x.subject||'','Contact Number':x.phone||'','Status':x.status||'कार्यरत'}));exportRows(rows.length?rows:[Object.fromEntries(staffExcelHeaders.map(h=>[h,'']))],sample?'Teachers_Sample_Template.xlsx':'Teachers_Export.xlsx','Teachers')}
 async function parseExcelFile(file){const X=await ensureSheetJS(),buf=await file.arrayBuffer(),wb=X.read(buf,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]];return X.utils.sheet_to_json(ws,{defval:'',raw:false})}
 function norm(v){return String(v??'').trim().toLowerCase()}
 async function importStudents(file){
@@ -1623,9 +1660,11 @@ async function importStaff(file){
  const existing=new Set(freshStaff.map(x=>norm(x.staffId)).filter(Boolean));
  const seen=new Set(),prepared=[],duplicates=[],invalid=[];
  rows.forEach((r,i)=>{
-  const d={staffId:String(r['Employee ID']||r.staffId||'').trim(),name:String(r.Name||r.name||'').trim(),role:String(r.Position||r.role||'').trim(),subject:String(r['Subject / Responsibility']||r.subject||'').trim(),phone:String(r['Contact Number']||r.phone||'').trim(),status:String(r.Status||r.status||'कार्यरत').trim()};
-  if(!d.staffId&&!d.name)return;
-  if(!d.staffId||!d.name){invalid.push(i+2);return;}
+  const nameNepali=String(r['Name (Nepali)']||r['नाम, थर (नेपाली)']||r.Name||r.name||'').trim();
+  const d={staffId:String(r['Employee ID']||r.staffId||'').trim(),name:nameNepali,nameNepali,nameEnglish:String(r['Name (English)']||r['Name English']||r['Name in English']||'').trim(),role:String(r.Position||r.role||r['पद']||'').trim(),permanentAddress:String(r['Permanent Address']||r['स्थायी ठेगाना']||'').trim(),levelCategory:String(r['Level / Category']||r['तह/श्रेणी']||r['तह / श्रेणी']||'').trim(),appointmentDate:String(r['Appointment Date (BS)']||r['नियुक्ति मिति']||'').trim(),appointmentType:String(r['Appointment Type']||r['नियुक्ति प्रकार']||'').trim(),qualification:String(r['Educational Qualification']||r['शैक्षिक योग्यता']||'').trim(),subject:String(r.Subject||r['विषय']||r['Subject / Responsibility']||r.subject||'').trim(),phone:String(r['Contact Number']||r['सम्पर्क नं.']||r.phone||'').trim(),status:String(r.Status||r.status||'कार्यरत').trim()};
+  if(!d.staffId&&!d.nameNepali)return;
+  if(!d.nameNepali||!d.role){invalid.push(i+2);return;}
+  if(!d.staffId)d.staffId=nextStaffId(d.role,[...freshStaff,...prepared]);
   const key=norm(d.staffId);
   if(existing.has(key)||seen.has(key)){duplicates.push(i+2);return;}
   seen.add(key);prepared.push(d);
