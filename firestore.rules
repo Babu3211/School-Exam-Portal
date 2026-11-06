@@ -139,6 +139,20 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Certificate records contain issued student certificate snapshots; Admin only.
+    match /certificates/{certificateId} {
+      allow get, list: if isAdmin();
+      allow create: if isAdmin() &&
+        request.resource.data.issuedBy == request.auth.uid &&
+        request.resource.data.keys().hasOnly([
+          'certificateNumber', 'certificateType', 'studentId', 'studentName',
+          'fatherName', 'guardianName', 'className', 'rollNo', 'admissionNo',
+          'dob', 'address', 'issueDate', 'remarks', 'academicYear',
+          'issuedBy', 'issuedAt', 'issuedAtIso'
+        ]);
+      allow update, delete: if isAdmin();
+    }
+
     match /school_settings/{documentId} {
       allow get: if hasActiveRole();
       allow list: if false;
