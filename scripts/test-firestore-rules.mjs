@@ -114,14 +114,30 @@ try {
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-score-extra-field"), validMark({
     scores: [{ name: "Written", fullMarks: 100, obtained: 80, forged: true }]
   })));
+  await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-score-empty-name"), validMark({
+    scores: [{ name: "", fullMarks: 100, obtained: 80 }]
+  })));
+  await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-score-long-name"), validMark({
+    scores: [{ name: "x".repeat(81), fullMarks: 100, obtained: 80 }]
+  })));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-too-many-components"), validMark({
     scores: Array.from({ length: 13 }, (_, i) => ({ name: "Part " + i, fullMarks: 10, obtained: 5 }))
   })));
+  await assertFails(updateDoc(doc(db(teacherUid), "marks", "mark-valid"), {
+    subject: "Science", updatedBy: teacherUid, updatedAt: serverTimestamp()
+  }));
+  await assertSucceeds(updateDoc(doc(db(teacherUid), "marks", "mark-valid"), {
+    scores: [{ name: "Written", fullMarks: 100, obtained: 75 }],
+    totalObtained: 75, updatedBy: teacherUid, updatedAt: serverTimestamp()
+  }));
   await assertFails(deleteDoc(doc(db(teacherUid), "marks", "mark-valid")));
   await assertSucceeds(deleteDoc(doc(db(ADMIN), "marks", "mark-valid")));
 
   await assertSucceeds(setDoc(doc(db(teacherUid), "attendance", "attendance-valid"), validAttendance()));
   await assertFails(setDoc(doc(db(teacherUid), "attendance", "attendance-bad-count"), validAttendance({ presentCount: 0 })));
+  await assertFails(updateDoc(doc(db(teacherUid), "attendance", "attendance-valid"), {
+    date: "2083-07-21", updatedBy: teacherUid, updatedAt: serverTimestamp()
+  }));
   await assertFails(deleteDoc(doc(db(teacherUid), "attendance", "attendance-valid")));
   await assertSucceeds(deleteDoc(doc(db(ADMIN), "attendance", "attendance-valid")));
 
@@ -134,6 +150,10 @@ try {
     actorUid: otherUid, actorName: "Other", module: "Marks",
     action: "Create", recordId: "x", detail: "forged",
     createdAt: serverTimestamp()
+  }));
+  await assertFails(setDoc(doc(db(teacherUid), "audit_logs", "empty-action"), {
+    actorUid: teacherUid, actorName: "Teacher", module: "Marks",
+    action: "", recordId: "x", detail: "empty action", createdAt: serverTimestamp()
   }));
   await assertSucceeds(setDoc(doc(db(teacherUid), "audit_logs", "valid-log"), {
     actorUid: teacherUid, actorName: "Teacher", module: "Marks",
