@@ -46,15 +46,14 @@ service cloud.firestore {
     }
 
     function isAssignedSubject(className, subjectName, sectionName) {
-      let baseKeys = roleData().get('subjectAssignmentKeys', []);
-      let sectionKeys = roleData().get('subjectAssignmentSectionKeys', []);
       return isAdmin() ||
         (hasRole('subject_teacher') &&
-         baseKeys is list &&
-         baseKeys.hasAny([className + '::' + subjectName]) &&
-         (!(sectionKeys is list) ||
-          sectionKeys.size() == 0 ||
-          sectionKeys.hasAny([
+         roleData().get('subjectAssignmentKeys', []) is list &&
+         roleData().get('subjectAssignmentKeys', [])
+           .hasAny([className + '::' + subjectName]) &&
+         (!(roleData().get('subjectAssignmentSectionKeys', []) is list) ||
+          roleData().get('subjectAssignmentSectionKeys', []).size() == 0 ||
+          roleData().get('subjectAssignmentSectionKeys', []).hasAny([
             className + '::' + subjectName + '::ALL',
             className + '::' + subjectName + '::' + sectionName
           ])));
