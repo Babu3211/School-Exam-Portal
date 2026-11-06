@@ -137,4 +137,19 @@ function selectedComponents(termKey) {
 must(!selectedComponents("first").some(name => /theory/i.test(name)), "TH/ Theory column must be absent outside Final/Annual Term.");
 must(selectedComponents("annual").some(name => /theory/i.test(name)), "TH/ Theory column must be present in Final/Annual Term.");
 
+
+const reportStart = html.indexOf("function reportMarkSummary(record){");
+const reportEnd = html.indexOf("\\nfunction buildReport(){", reportStart);
+must(reportStart >= 0 && reportEnd > reportStart, "Marks report completeness helper is missing.");
+const reportHelperSource = html.slice(reportStart, reportEnd);
+const reportHelper = new Function("ledgerScoresComplete", reportHelperSource + "; return reportMarkSummary;")(
+  scores => Array.isArray(scores) && scores.length > 0 && scores.every(v => v && v.obtained !== null && v.obtained !== undefined && v.obtained !== "" && Number.isFinite(Number(v.obtained)) && Number.isFinite(Number(v.fullMarks)) && Number(v.fullMarks) >= 0 && Number(v.obtained) >= 0 && Number(v.obtained) <= Number(v.fullMarks))
+);
+const completeReport = reportHelper({ scores: [{ obtained: 8, fullMarks: 10 }, { obtained: 15, fullMarks: 20 }] });
+must(completeReport[0] === 23 && completeReport[1] === 30 && completeReport[2] === "76.67%", "Marks report must calculate complete component totals.");
+const incompleteReport = reportHelper({ scores: [{ obtained: 8, fullMarks: 10 }, { obtained: null, fullMarks: 20 }], totalObtained: 8, totalFullMarks: 30 });
+must(incompleteReport[0] === "अपूर्ण" && incompleteReport[1] === "—", "Marks report must not treat missing components as zero.");
+const legacyReport = reportHelper({ totalObtained: 18, totalFullMarks: 20 });
+must(legacyReport[0] === 18 && legacyReport[1] === 20, "Legacy aggregate marks records must remain readable.");
+
 console.log("V44 requirement regression checks passed.");
