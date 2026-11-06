@@ -77,12 +77,12 @@ service cloud.firestore {
 
     // Core school records: active school users can read; only Admin can change.
     match /students/{documentId} {
-      allow get, list: if hasActiveRole();
+      allow get, list: if hasActiveRole() && isAssignedStudentClass(resource.data.get('class', resource.data.get('className', '')));
       allow create, update, delete: if isAdmin();
     }
 
     match /staff/{documentId} {
-      allow get, list: if hasActiveRole();
+      allow get, list: if isAdmin();
       allow create, update, delete: if isAdmin();
     }
 
@@ -97,7 +97,7 @@ service cloud.firestore {
     }
 
     match /exams/{documentId} {
-      allow get, list: if hasActiveRole();
+      allow get, list: if hasActiveRole() && isAssignedStudentClass(resource.data.get('className', ''));
       allow create, update, delete: if isAdmin();
     }
 
@@ -175,7 +175,7 @@ service cloud.firestore {
     // Client-side score-range checks remain mirrored in the entry UI; nested
     // score-component validation is not expressible as a safe list-wide rule.
     match /marks/{documentId} {
-      allow get, list: if hasActiveRole();
+      allow get, list: if hasActiveRole() && isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);
       allow create: if isAdmin() ||
         (hasActiveRole() &&
          validMarkShape(request.resource.data) &&
@@ -238,7 +238,7 @@ service cloud.firestore {
     // Document identity, date, original creator and attendance type are immutable
     // to prevent moving or relabelling an existing attendance register.
     match /attendance/{documentId} {
-      allow get, list: if hasActiveRole();
+      allow get, list: if hasActiveRole() && isAssignedClassTeacher(resource.data.className);
       allow create: if isAdmin() ||
         (hasActiveRole() &&
          validDailyAttendance(request.resource.data) &&
