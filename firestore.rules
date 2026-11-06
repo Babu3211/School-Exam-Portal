@@ -1,0 +1,339 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function adminUid() {
+      return 'K6uSLmqg0vWCtCuzwtxKzFpQMu62';
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.uid == adminUid();
+    }
+
+    function rolePath(uid) {
+      return /databases/$(database)/documents/user_roles/$(uid);
+    }
+
+    function hasActiveRole() {
+      return signedIn() && (
+        isAdmin() ||
+        (exists(rolePath(request.auth.uid)) &&
+         get(rolePath(request.auth.uid)).data.active == true)
+      );
+    }
+
+    function roleData() {
+      return get(rolePath(request.auth.uid)).data;
+    }
+
+    function hasRole(roleName) {
+      return isAdmin() ||
+        (hasActiveRole() &&
+         roleData().get('roles', []) is list &&
+         roleData().get('roles', []).hasAny([roleName]));
+    }
+
+    function studentBelongsToClass(studentId, className) {
+      let studentPath = /databases/$(database)/documents/students/$(studentId);
+      return exists(studentPath) &&
+        get(studentPath).data.get('class',
+          get(studentPath).data.get('className', '')) == className &&
+        get(studentPath).data.get('active', true) != false;
+    }
+
+    function isAssignedSubject(className, subjectName, sectionName) {
+      return isAdmin() ||
+        (hasRole('subject_teacher') &&
+         roleData().get('subjectAssignmentKeys', []) is list &&
+         roleData().get('subjectAssignmentKeys', [])
+           .hasAny([className + '::' + subjectName]) &&
+         (!(roleData().get('subjectAssignmentSectionKeys', []) is list) ||
+          roleData().get('subjectAssignmentSectionKeys', []).size() == 0 ||
+          roleData().get('subjectAssignmentSectionKeys', []).hasAny([
+            className + '::' + subjectName + '::ALL',
+            className + '::' + subjectName + '::' + sectionName
+          ])));
+    }
+
+    function isAssignedClassTeacher(className) {
+      return isAdmin() ||
+        (hasRole('class_teacher') &&
+         roleData().get('classTeacherClassNames', []) is list &&
+         roleData().get('classTeacherClassNames', []).hasAny([className]));
+    }
+
+    // Core school records: active school users can read; only Admin can change.
+    match /students/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /staff/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /classes/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /subjects/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /exams/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /mark_settings/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    function validScoreComponent(score) {
+      return score is map &&
+        score.keys().hasAll(['name', 'fullMarks', 'obtained']) &&
+        score.keys().hasOnly(['name', 'fullMarks', 'obtained']) &&
+        score.name is string && score.name.size() > 0 && score.name.size() <= 80 &&
+        score.fullMarks is number && score.fullMarks >= 0 &&
+        (score.obtained == null ||
+         (score.obtained is number &&
+          score.obtained >= 0 &&
+          score.obtained <= score.fullMarks));
+    }
+
+    // Firestore Rules cannot safely iterate arbitrary lists. Validate each
+    // permitted index explicitly; the 12-component cap is enforced below.
+    function validScoreList(data) {
+      return data.scores.size() > 0 &&
+        (data.scores.size() < 1 || validScoreComponent(data.scores[0])) &&
+        (data.scores.size() < 2 || validScoreComponent(data.scores[1])) &&
+        (data.scores.size() < 3 || validScoreComponent(data.scores[2])) &&
+        (data.scores.size() < 4 || validScoreComponent(data.scores[3])) &&
+        (data.scores.size() < 5 || validScoreComponent(data.scores[4])) &&
+        (data.scores.size() < 6 || validScoreComponent(data.scores[5])) &&
+        (data.scores.size() < 7 || validScoreComponent(data.scores[6])) &&
+        (data.scores.size() < 8 || validScoreComponent(data.scores[7])) &&
+        (data.scores.size() < 9 || validScoreComponent(data.scores[8])) &&
+        (data.scores.size() < 10 || validScoreComponent(data.scores[9])) &&
+        (data.scores.size() < 11 || validScoreComponent(data.scores[10])) &&
+        (data.scores.size() < 12 || validScoreComponent(data.scores[11]));
+    }
+
+    function validMarkShape(data) {
+      return data.keys().hasAll([
+          'studentId', 'examId', 'subject', 'className', 'section',
+          'scores', 'totalFullMarks', 'totalObtained', 'assessmentType',
+          'academicYear', 'termKey', 'termName'
+        ]) &&
+        data.keys().hasOnly([
+          'studentId', 'examId', 'subject', 'className', 'section',
+          'scores', 'totalFullMarks', 'totalObtained', 'assessmentType',
+          'academicYear', 'termKey', 'termName',
+          'createdAt', 'createdBy', 'updatedAt', 'updatedBy'
+        ]) &&
+        data.studentId is string && data.studentId.size() > 0 && data.studentId.size() <= 150 &&
+        data.examId is string && data.examId.size() > 0 && data.examId.size() <= 150 &&
+        data.className is string && data.className.size() > 0 && data.className.size() <= 40 &&
+        data.subject is string && data.subject.size() > 0 && data.subject.size() <= 100 &&
+        data.section is string && data.section.size() <= 40 &&
+        data.scores is list && data.scores.size() > 0 &&
+        data.scores.size() <= 12 &&
+        validScoreList(data) &&
+        data.totalFullMarks is number && data.totalFullMarks >= 0 &&
+        data.totalObtained is number && data.totalObtained >= 0 &&
+        data.assessmentType in ['marks', 'learning-achievement'] &&
+        data.academicYear is string &&
+        data.termKey is string &&
+        data.termName is string;
+    }
+
+    function markExamMatches(data) {
+      let examPath = /databases/$(database)/documents/exams/$(data.examId);
+      return exists(examPath) &&
+        get(examPath).data.className == data.className;
+    }
+
+    // Marks are readable by active school users. Teacher writes are bound to
+    // the assigned class/subject/section, enrolled student and matching exam.
+    // Client-side score-range checks remain mirrored in the entry UI; nested
+    // score-component validation is not expressible as a safe list-wide rule.
+    match /marks/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create: if isAdmin() ||
+        (hasActiveRole() &&
+         validMarkShape(request.resource.data) &&
+         request.resource.data.createdBy == request.auth.uid &&
+         request.resource.data.createdAt == request.time &&
+         !('updatedBy' in request.resource.data) &&
+         isAssignedSubject(request.resource.data.className,
+                           request.resource.data.subject,
+                           request.resource.data.section) &&
+         studentBelongsToClass(request.resource.data.studentId,
+                               request.resource.data.className) &&
+         markExamMatches(request.resource.data));
+      allow update: if isAdmin() ||
+        (hasActiveRole() &&
+         validMarkShape(request.resource.data) &&
+         request.resource.data.updatedBy == request.auth.uid &&
+         request.resource.data.updatedAt == request.time &&
+         request.resource.data.createdBy == resource.data.createdBy &&
+         request.resource.data.createdAt == resource.data.createdAt &&
+         request.resource.data.studentId == resource.data.studentId &&
+         request.resource.data.examId == resource.data.examId &&
+         request.resource.data.className == resource.data.className &&
+         request.resource.data.subject == resource.data.subject &&
+         request.resource.data.section == resource.data.section &&
+         isAssignedSubject(resource.data.className, resource.data.subject,
+                           resource.data.section) &&
+         studentBelongsToClass(resource.data.studentId, resource.data.className) &&
+         markExamMatches(request.resource.data));
+      allow delete: if isAdmin();
+    }
+
+    function validDailyAttendance(data) {
+      return data.keys().hasAll([
+          'date', 'className', 'attendanceType', 'subject', 'students',
+          'totalStudents', 'presentCount', 'absentCount', 'leaveCount',
+          'academicYear', 'updatedAt', 'updatedBy'
+        ]) &&
+        data.keys().hasOnly([
+          'date', 'className', 'attendanceType', 'subject', 'students',
+          'totalStudents', 'presentCount', 'absentCount', 'leaveCount',
+          'academicYear', 'updatedAt', 'updatedBy', 'createdAt', 'createdBy'
+        ]) &&
+        data.date is string && data.date.size() > 0 && data.date.size() <= 20 &&
+        data.className is string && data.className.size() > 0 && data.className.size() <= 40 &&
+        data.attendanceType == 'daily' &&
+        (data.subject == null || (data.subject is string && data.subject.size() <= 100)) &&
+        data.students is list && data.students.size() > 0 &&
+        data.students.size() <= 200 &&
+        data.totalStudents is int && data.totalStudents == data.students.size() &&
+        data.presentCount is int && data.presentCount >= 0 &&
+        data.absentCount is int && data.absentCount >= 0 &&
+        data.leaveCount is int && data.leaveCount >= 0 &&
+        data.presentCount + data.absentCount + data.leaveCount == data.totalStudents &&
+        data.academicYear is string && data.academicYear.size() > 0 && data.academicYear.size() <= 20 &&
+        data.updatedBy == request.auth.uid &&
+        data.updatedAt == request.time;
+    }
+
+    // Class teachers can write daily attendance only for assigned classes.
+    // Document identity, date, original creator and attendance type are immutable
+    // to prevent moving or relabelling an existing attendance register.
+    match /attendance/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create: if isAdmin() ||
+        (hasActiveRole() &&
+         validDailyAttendance(request.resource.data) &&
+         request.resource.data.createdBy == request.auth.uid &&
+         request.resource.data.createdAt == request.time &&
+         isAssignedClassTeacher(request.resource.data.className));
+      allow update: if isAdmin() ||
+        (hasActiveRole() &&
+         validDailyAttendance(request.resource.data) &&
+         resource.data.attendanceType == 'daily' &&
+         request.resource.data.className == resource.data.className &&
+         request.resource.data.date == resource.data.date &&
+         request.resource.data.subject == resource.data.subject &&
+         request.resource.data.createdBy == resource.data.createdBy &&
+         request.resource.data.createdAt == resource.data.createdAt &&
+         isAssignedClassTeacher(resource.data.className));
+      allow delete: if isAdmin();
+    }
+
+    // Certificate records contain issued student certificate snapshots; Admin only.
+    match /certificates/{certificateId} {
+      allow get, list: if isAdmin();
+      allow create: if isAdmin() &&
+        request.resource.data.issuedBy == request.auth.uid &&
+        request.resource.data.keys().hasOnly([
+          'certificateNumber', 'certificateType', 'studentId', 'studentName',
+          'fatherName', 'guardianName', 'className', 'rollNo', 'admissionNo',
+          'dob', 'address', 'issueDate', 'remarks', 'academicYear',
+          'issuedBy', 'issuedAt', 'issuedAtIso'
+        ]);
+      allow update, delete: if isAdmin();
+    }
+
+    match /school_settings/{documentId} {
+      allow get: if hasActiveRole();
+      allow list: if false;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // A user can read their own role record; Admin manages all role records.
+    match /user_roles/{userId} {
+      allow get: if isAdmin() || (signedIn() && request.auth.uid == userId);
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Audit records are append-only. Only active school users may write
+    // their own bounded, well-formed activity record. Admin alone may read.
+    match /audit_logs/{documentId} {
+      allow get, list: if isAdmin();
+      allow create: if hasActiveRole() &&
+        request.resource.data.actorUid == request.auth.uid &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.actorName is string &&
+        request.resource.data.actorName.size() > 0 &&
+        request.resource.data.actorName.size() <= 100 &&
+        request.resource.data.module is string &&
+        request.resource.data.module.size() > 0 &&
+        request.resource.data.module.size() <= 40 &&
+        request.resource.data.action is string &&
+        request.resource.data.action.size() > 0 &&
+        request.resource.data.action.size() <= 40 &&
+        request.resource.data.recordId is string &&
+        request.resource.data.recordId.size() > 0 &&
+        request.resource.data.recordId.size() <= 150 &&
+        request.resource.data.detail is string &&
+        request.resource.data.detail.size() <= 240 &&
+        request.resource.data.keys().hasOnly([
+          'actorUid', 'actorName', 'module', 'action',
+          'recordId', 'detail', 'createdAt'
+        ]);
+      allow update, delete: if false;
+    }
+
+    // Public result index: contains exam metadata only.
+    match /public_result_exams/{examId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public lookup is exact-document get only. Public list is forbidden.
+    // Admin list is needed for safe per-student re-publish/unpublish and backup.
+    match /public_result_lookup/{lookupId} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public result documents can be fetched only by known document ID.
+    // Admin list is needed for publication status, legacy cleanup and backup.
+    match /public_results/{resultId} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Reserved collection; no client-side access is enabled.
+    match /online_result_rate_limits/{documentId} {
+      allow read, write: if false;
+    }
+
+    // Deny all other collections and documents by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
