@@ -2100,15 +2100,26 @@ async function loadExamPublicationDocs(examId){
  const snap=await getDocs(query(collection(db,'public_results'),where('examId','==',examId)));
  return snap.docs;
 }
+function legacyPublicationNameMatches(docSnap,student){
+ const data=docSnap.data()||{};
+ if(data.studentId)return data.studentId===student.id;
+ const html=String(data.gradeSheetHtml||'');
+ const names=[student.studentNameEnglish,student.nameEnglish,student.nameEn,student.studentName,student.name].map(x=>String(x||'').trim()).filter(Boolean);
+ return names.length>0&&names.some(name=>html.includes(resultEsc(name)));
+}
+function legacyPublicationIdentifiers(student){
+ return [student.symbolNo,student.symbolNumber,student.examSymbolNo,student.studentIemisNo,student.iemisStudentNo,student.admissionNo].map(x=>String(x||'').trim()).filter(Boolean);
+}
 function legacyPublicationMatches(docSnap,student){
  const data=docSnap.data()||{};
  if(data.studentId===student.id)return true;
- if(data.studentId)return false;
- const html=String(data.gradeSheetHtml||'');
- const names=[student.studentNameEnglish,student.nameEnglish,student.nameEn,student.studentName,student.name].map(x=>String(x||'').trim()).filter(Boolean);
- if(!names.length||!names.some(name=>html.includes(resultEsc(name))))return false;
- const symbol=String(student.symbolNo||student.symbolNumber||student.examSymbolNo||'').trim();
- return !symbol||html.includes(resultEsc(symbol));
+ if(data.studentId||!legacyPublicationNameMatches(docSnap,student))return false;
+ const identifiers=legacyPublicationIdentifiers(student);
+ return identifiers.length>0&&identifiers.some(value=>String(data.gradeSheetHtml||'').includes(resultEsc(value)));
+}
+function legacyPublicationIsAmbiguous(docSnap,student){
+ const data=docSnap.data()||{};
+ return !data.studentId&&legacyPublicationNameMatches(docSnap,student)&&legacyPublicationIdentifiers(student).length===0;
 }
 async function refreshResultPublicationStates(){
  if(!isAdmin())return;
@@ -2121,11 +2132,12 @@ async function refreshResultPublicationStates(){
    const student=row.student;
    const direct=docs.find(d=>d.data()?.studentId===student.id);
    const legacy=direct?null:docs.filter(d=>legacyPublicationMatches(d,student));
+   const ambiguous=direct?false:docs.some(d=>d.id!==undefined&&legacyPublicationIsAmbiguous(d,student));
    const status=document.querySelectorAll('[data-publication-status]');
    for(const el of status){if(el.dataset.publicationStatus!==student.id)continue;
     if(direct){el.textContent='Published';el.style.color='#15803d';}
     else if(legacy?.length===1){el.textContent='Published (Legacy)';el.style.color='#a16207';}
-    else if(legacy?.length>1){el.textContent='Review required';el.style.color='#b42318';}
+    else if(legacy?.length>1||ambiguous){el.textContent='Review required';el.style.color='#b42318';}
     else{el.textContent='Unpublished';el.style.color='#64748b';}
    }
    const unpublish=document.querySelectorAll('[data-unpublish-one]');
@@ -2157,6 +2169,7 @@ async function publishOneOnlineResult(studentId){
  const resultId=await resultPublicationDocId(examId,studentId);
  const direct=legacyDocs.find(d=>d.id===resultId);
  const legacyMatches=legacyDocs.filter(d=>d.id!==resultId&&!d.data()?.studentId&&legacyPublicationMatches(d,student));
+ if(legacyDocs.some(d=>d.id!==resultId&&legacyPublicationIsAmbiguous(d,student)))throw new Error('An older result has the same student name but no matching Symbol No. or IEMIS/Admission No. No data was changed; add a unique identifier or review the old record manually.');
  if(legacyMatches.length>1)throw new Error('Multiple older publications match this student. No data was changed; review the old publication records first.');
  const obsolete=[...(direct?[direct]:[]),...legacyMatches];
  const obsoleteLookups=[];
@@ -2197,6 +2210,7 @@ async function unpublishOneOnlineResult(studentId){
  const resultId=await resultPublicationDocId(examId,studentId);
  const direct=docs.find(d=>d.id===resultId);
  const legacy=docs.filter(d=>d.id!==resultId&&!d.data()?.studentId&&legacyPublicationMatches(d,student));
+ if(docs.some(d=>d.id!==resultId&&legacyPublicationIsAmbiguous(d,student)))throw new Error('An older result has the same student name but no matching Symbol No. or IEMIS/Admission No. No data was changed; add a unique identifier or review the old record manually.');
  if(legacy.length>1)throw new Error('Multiple older publications match this student. No data was changed; review the records first.');
  const targets=[...(direct?[direct]:[]),...legacy];
  if(!targets.length)throw new Error('No published result record was found for this student.');
