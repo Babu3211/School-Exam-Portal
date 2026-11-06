@@ -97,6 +97,36 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    function validScoreComponent(score) {
+      return score is map &&
+        score.keys().hasAll(['name', 'fullMarks', 'obtained']) &&
+        score.keys().hasOnly(['name', 'fullMarks', 'obtained']) &&
+        score.name is string && score.name.size() > 0 &&
+        score.fullMarks is number && score.fullMarks >= 0 &&
+        (score.obtained == null ||
+         (score.obtained is number &&
+          score.obtained >= 0 &&
+          score.obtained <= score.fullMarks));
+    }
+
+    // Firestore Rules cannot safely iterate arbitrary lists. Validate each
+    // permitted index explicitly; the 12-component cap is enforced below.
+    function validScoreList(data) {
+      return data.scores.size() > 0 &&
+        (data.scores.size() < 1 || validScoreComponent(data.scores[0])) &&
+        (data.scores.size() < 2 || validScoreComponent(data.scores[1])) &&
+        (data.scores.size() < 3 || validScoreComponent(data.scores[2])) &&
+        (data.scores.size() < 4 || validScoreComponent(data.scores[3])) &&
+        (data.scores.size() < 5 || validScoreComponent(data.scores[4])) &&
+        (data.scores.size() < 6 || validScoreComponent(data.scores[5])) &&
+        (data.scores.size() < 7 || validScoreComponent(data.scores[6])) &&
+        (data.scores.size() < 8 || validScoreComponent(data.scores[7])) &&
+        (data.scores.size() < 9 || validScoreComponent(data.scores[8])) &&
+        (data.scores.size() < 10 || validScoreComponent(data.scores[9])) &&
+        (data.scores.size() < 11 || validScoreComponent(data.scores[10])) &&
+        (data.scores.size() < 12 || validScoreComponent(data.scores[11]));
+    }
+
     function validMarkShape(data) {
       return data.keys().hasAll([
           'studentId', 'examId', 'subject', 'className', 'section',
@@ -116,6 +146,7 @@ service cloud.firestore {
         data.section is string &&
         data.scores is list && data.scores.size() > 0 &&
         data.scores.size() <= 12 &&
+        validScoreList(data) &&
         data.totalFullMarks is number && data.totalFullMarks >= 0 &&
         data.totalObtained is number && data.totalObtained >= 0 &&
         data.assessmentType in ['marks', 'learning-achievement'] &&
