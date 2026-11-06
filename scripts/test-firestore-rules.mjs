@@ -79,7 +79,7 @@ function validAttendance(overrides = {}) {
     className: "9",
     attendanceType: "daily",
     subject: null,
-    students: ["student-1"],
+    students: [{ studentId: "student-1", rollNo: "1", studentName: "Test Student", status: "present", remark: "" }],
     totalStudents: 1,
     presentCount: 1,
     absentCount: 0,
@@ -108,6 +108,15 @@ try {
   await assertSucceeds(setDoc(doc(db(teacherUid), "marks", "mark-valid"), validMark()));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-wrong-class"), validMark({ className: "10" })));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-wrong-exam"), validMark({ examId: "missing-exam" })));
+  await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-score-over-limit"), validMark({
+    scores: [{ name: "Written", fullMarks: 100, obtained: 101 }]
+  })));
+  await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-score-extra-field"), validMark({
+    scores: [{ name: "Written", fullMarks: 100, obtained: 80, forged: true }]
+  })));
+  await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-too-many-components"), validMark({
+    scores: Array.from({ length: 13 }, (_, i) => ({ name: "Part " + i, fullMarks: 10, obtained: 5 }))
+  })));
   await assertFails(deleteDoc(doc(db(teacherUid), "marks", "mark-valid")));
   await assertSucceeds(deleteDoc(doc(db(ADMIN), "marks", "mark-valid")));
 
