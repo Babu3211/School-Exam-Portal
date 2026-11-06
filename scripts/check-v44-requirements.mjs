@@ -35,6 +35,7 @@ must(!/[\u0900-\u097F]/.test(displayHelpers.englishDisplayText("बाबुक�
 
 
 must(html.includes("async function publishOneOnlineResult(studentId)"), "Per-student publish/update is missing.");
+must(html.includes('const resultId=doc(collection(db,"public_results")).id;') && html.includes("d.data()?.studentId===studentId"), "New public result document IDs must be random and unpublish must find studentId-linked records.");
 must(html.includes("async function unpublishOneOnlineResult(studentId)"), "Per-student unpublish is missing.");
 must(html.includes('id="publishSelectedOnlineResultBtn"'), "Selected-student publish action is missing.");
 must(html.includes("data-result-select"), "Per-student selection checkboxes are missing.");
