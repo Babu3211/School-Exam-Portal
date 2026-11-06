@@ -68,6 +68,14 @@ must(html.includes('id="numberLedgerTab"') && html.includes('id="gradeLedgerTab"
 must(html.includes('collection(db,"certificates")') && rules.includes("match /certificates/{certificateId}") && rules.includes("allow create: if isAdmin()"), "Admin-only certificate persistence rules are missing.");
 must(backupCollections.includes("certificates") && restoreCollections.includes("certificates"), "Certificate records must be included in Backup and Restore.");
 must(rules.includes("function studentBelongsToClass") && rules.includes("studentBelongsToClass(request.resource.data.studentId"), "Marks rules must validate that a student belongs to the assigned class.");
+must(rules.includes("function validMarkShape(data)") && rules.includes("data.scores.size() <= 12"), "Marks writes must validate the record schema and cap assessment components.");
+must(rules.includes("function markExamMatches(data)") && rules.includes("get(examPath).data.className == data.className"), "Marks writes must match an existing exam in the same class.");
+must(rules.includes("request.resource.data.createdBy == request.auth.uid") && rules.includes("request.resource.data.updatedBy == request.auth.uid"), "Teacher marks writes must identify the authenticated creator/updater.");
+must(rules.includes("request.resource.data.createdAt == request.time") && rules.includes("request.resource.data.updatedAt == request.time"), "Teacher marks writes must use server timestamps.");
+must(rules.includes("function validDailyAttendance(data)") && rules.includes("data.students.size() <= 200"), "Daily attendance writes must validate the record schema and roster size.");
+must(rules.includes("data.presentCount + data.absentCount + data.leaveCount == data.totalStudents"), "Daily attendance counts must reconcile with the roster.");
+must(rules.includes("request.resource.data.createdBy == resource.data.createdBy") && rules.includes("request.resource.data.date == resource.data.date"), "Daily attendance updates must preserve original creator and date.");
+
 must(html.includes("subjectAssignmentSectionKeys") && rules.includes("subjectAssignmentSectionKeys"), "Subject teacher section assignments must be stored and enforced.");
 
 must(rules.includes("request.resource.data.attendanceType == 'daily'"), "Teacher attendance writes must be limited to daily attendance.");
