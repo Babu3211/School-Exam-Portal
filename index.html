@@ -131,6 +131,7 @@
  .login-logo{width:50px;height:50px;flex-basis:50px;border-radius:15px}
  .login-card h2{font-size:17px}
 }
+.result-admin-only{vertical-align:middle}@media print{.result-admin-only{display:none!important}}
 </style>
 
 <meta name="theme-color" content="#1769d2">
@@ -1920,7 +1921,7 @@ function printTabulationSheet(){
 function exportTabulationCsv(){
  const table=document.querySelector('#resultsTablePanel table');if(!table||!activeResultRows.length){resultMsg('Select an examination and click View Results first.',true);return;}
  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
- const rows=[...table.querySelectorAll('tr')].map(tr=>[...tr.children].map(td=>q(td.innerText.replace(/\s*\n\s*/g,' / '))).join(','));
+ const rows=[...table.querySelectorAll('tr')].map(tr=>[...tr.children].filter(td=>!td.classList.contains('result-admin-only')).map(td=>q(td.innerText.replace(/\s*\n\s*/g,' / '))).join(','));
  const csv='\uFEFF'+rows.join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
  const exam=document.getElementById('resultExam')?.selectedOptions?.[0]?.textContent||'Result';a.href=url;a.download='Tabulation-'+exam.replace(/[^\p{L}\p{N}-]+/gu,'-')+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
@@ -2032,7 +2033,7 @@ function generateSecureResultPin(){
 }
 function downloadResultPinList(rows,className){
  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
- const csv='\uFEFF'+[['विद्यार्थीको नाम','कक्षा','Roll No.','Result Code','गोप्य Result PIN'],...rows.map(r=>[r.name,className,r.roll,r.code,r.pin])].map(row=>row.map(q).join(',')).join('\r\n');
+ const csv='\uFEFF'+[['Student Name','Class','Roll No.','Result Code','Result PIN'],...rows.map(r=>[r.name,className,r.roll,r.code,r.pin])].map(row=>row.map(q).join(',')).join('\r\n');
  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=url;a.download='Result-PIN-'+String(className).replace(/[^\p{L}\p{N}-]/gu,'')+'-'+Date.now()+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
@@ -2135,6 +2136,7 @@ async function findLegacyLookups(resultId){
  return snap.docs;
 }
 async function publishOneOnlineResult(studentId){
+ requireAdmin();if(!isAdmin())throw new Error('Only the school administrator can publish results.');
  const row=activeResultRows.find(x=>x.student.id===studentId);
  if(!row)throw new Error('Selected student is not in the current result list.');
  if(!row.complete)throw new Error('This student has incomplete marks. Complete all subjects before publishing.');
@@ -2206,6 +2208,7 @@ async function unpublishOneOnlineResult(studentId){
  return {removed:targets.length};
 }
 async function publishOnlineResult(selectedOnly=false){
+ requireAdmin();if(!isAdmin()){resultMsg('Only the school administrator can publish results.',true);return;}
  const allRows=activeResultRows||[];
  const selectedIds=selectedOnly?[...document.querySelectorAll('[data-result-select]:checked')].map(x=>x.dataset.resultSelect):allRows.map(x=>x.student.id);
  const ids=[...new Set(selectedIds)];
