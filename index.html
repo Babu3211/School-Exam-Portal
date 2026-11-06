@@ -184,7 +184,7 @@ const v=document.getElementById("view");const note='<div class="notice"><b>म�
 // so existing Marks, Assessment Settings, exams and teacher assignments still match.
 function classEnglishLabel(value){
  const raw=String(value??'').replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d)));
- const m=raw.match(/[0-9]+/);return m?`Class ${Number(m[0])}`:String(value??'');
+ const m=raw.match(/[0-9]+/);return m?`Class ${Number(m[0])}`:englishDisplayText(value)||'Class';
 }
 // Normalize incoming Excel/manual class labels to the portal's existing Firestore format.
 function canonicalStudentClass(value){
