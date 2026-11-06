@@ -21,7 +21,7 @@ must(html.includes('id="toggleLoginPassword"'), "Password show/hide control is m
 must(html.includes("sendPasswordResetEmail(auth,email)"), "Free Firebase email password reset is missing.");
 
 must(html.includes("function subjectEnglishLabel(value){const raw="), "English subject label fallback is missing.");
-must(html.includes("return /[\\u0900-\\u097F]/.test(raw)?'Subject':raw;"), "Unknown Nepali subject names must not leak into English result documents.");
+must(html.includes("function englishDisplayText(value)") && html.includes("return mapped||englishDisplayText(raw)||'Subject';"), "Unknown Nepali subject names must be rendered in Latin script.");
 must(html.includes("subjects.map(x=>`<th>${resultEsc(subjectEnglishLabel(x))}"), "Tabulation subjects must use English labels.");
 must(html.includes("ledgerEnglishLabel(component.name)"), "Marks Ledger Excel component labels must use English.");
 must(html.includes("smssTermLabelEnglish(smssExamTermKey(exam))"), "Printed/exported term labels must use English.");
