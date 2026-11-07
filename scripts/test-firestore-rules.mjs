@@ -27,9 +27,9 @@ async function seed() {
     await setDoc(doc(db, "user_roles", teacherUid), {
       active: true,
       roles: ["subject_teacher", "class_teacher"],
-      subjectAssignmentKeys: ["9::Mathematics"],
+      subjectAssignmentKeys: ["9::Mathematics", "9::ऐच्छिक प्रथम: वातावरण विज्ञान"],
       subjectAssignmentClassNames: ["9"],
-      subjectAssignmentSectionKeys: ["9::Mathematics::A"],
+      subjectAssignmentSectionKeys: ["9::Mathematics::A", "9::ऐच्छिक प्रथम: वातावरण विज्ञान::A"],
       classTeacherClassNames: ["9"]
     });
     await setDoc(doc(db, "user_roles", inactiveUid), {
@@ -40,6 +40,16 @@ async function seed() {
     });
     await setDoc(doc(db, "students", "student-10"), {
       name: "Other Class Student", class: "10", active: true
+    });
+    await setDoc(doc(db, "students", "student-optional"), {
+      name: "Optional I Student", class: "9", active: true,
+      optionalSubject1: "ऐच्छिक प्रथम: वातावरण विज्ञान",
+      optionalSubjects: ["ऐच्छिक प्रथम: वातावरण विज्ञान"]
+    });
+    await setDoc(doc(db, "students", "student-other-optional"), {
+      name: "Different Optional Student", class: "9", active: true,
+      optionalSubject2: "ऐच्छिक द्वितीय: कम्प्युटर विज्ञान",
+      optionalSubjects: ["ऐच्छिक द्वितीय: कम्प्युटर विज्ञान"]
     });
     await setDoc(doc(db, "staff", "staff-1"), { name: "Private Staff Record" });
     await setDoc(doc(db, "exams", "exam-1"), {
@@ -129,6 +139,12 @@ try {
   await assertSucceeds(getDocs(collection(db(ADMIN), "user_roles")));
 
   await assertSucceeds(setDoc(doc(db(teacherUid), "marks", "mark-valid"), validMark()));
+  await assertSucceeds(setDoc(doc(db(teacherUid), "marks", "mark-optional-enrolled"), validMark({
+    studentId: "student-optional", subject: "ऐच्छिक प्रथम: वातावरण विज्ञान"
+  })));
+  await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-optional-not-enrolled"), validMark({
+    studentId: "student-other-optional", subject: "ऐच्छिक प्रथम: वातावरण विज्ञान"
+  })));
   await assertSucceeds(getDoc(doc(db(teacherUid), "marks", "mark-valid")));
   await assertFails(getDoc(doc(db(teacherUid), "marks", "mark-other-subject"), validMark({ subject: "Science" })));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-wrong-class"), validMark({ className: "10" })));
