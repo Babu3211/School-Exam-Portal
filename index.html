@@ -1475,7 +1475,7 @@ function ledgerTemplateSubjectSpecs(group,cl){
 function ledgerGradeSubjectResult(student,examId,spec,group){
  const record=existingMarks.find(m=>m.studentId===student.id&&m.examId===examId&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(spec.source));
  const scores=record?.scores||[];
- const fmtGrade=pct=>{const band=gradeForPercent(pct);return {grade:band?.grade||'—',point:Number.isFinite(Number(band?.point))?Number(band.point):null};};
+ const fmtGrade=pct=>{const band=gradeForPercent(pct);return {grade:band?.grade||'—',point:band?.point!==null&&band?.point!==undefined&&Number.isFinite(Number(band.point))?Number(band.point):null};};
  if(group==='1-3'||group==='4-5'){
   const total=scores.find(x=>/no\.?\s*of\s*learning/i.test(String(x.name||'')));
   const achieved=scores.find(x=>/obtained learning/i.test(String(x.name||'')));
@@ -1502,7 +1502,7 @@ function ledgerSchoolHeaderMarkup(cl,exam){
  const name=String(currentSchoolSettings.schoolName||'महादेवस्थान माध्यमिक विद्यालय');
  const english=String(currentSchoolSettings.schoolNameEnglish||'Mahadevsthan Secondary School');
  const address=[currentSchoolSettings.municipality,currentSchoolSettings.address].filter(Boolean).join(' · ')||'धुनिवेशी–५, कुमाईखोला, धादिङ';
- const code=currentSchoolSettings.iemisCode?('IEMIS Code: '+String(currentSchoolSettings.iemisCode)):'';
+ const code=currentSchoolSettings.iemisCode?('School Code: '+String(currentSchoolSettings.iemisCode)):'';
  const logoUrl=String(currentSchoolSettings.logoDataUrl||currentSchoolSettings.logoUrl||'');
  const logo=(logoUrl.startsWith('https://')||logoUrl.startsWith('data:image/'))?'<img src="'+examEsc(logoUrl)+'" alt="School logo" style="width:76px;height:76px;object-fit:contain">':'';
  const meta=[code,'Class '+classEnglishLabel(cl),smssTermLabelEnglish(smssExamTermKey(exam)),englishDisplayText(exam.examName||'Examination'),String(exam.academicYear||currentSchoolSettings.academicYear||'')].filter(Boolean).join(' · ');
@@ -1547,7 +1547,7 @@ function createTemplateGradeLedgerWorkbook(ExcelJS,cl,exam,group,termLabel){
  const schoolName=String(currentSchoolSettings.schoolNameEnglish||'Mahadevsthan Secondary School');
  const schoolNepali=String(currentSchoolSettings.schoolName||'महादेवस्थान माध्यमिक विद्यालय');
  const address=[currentSchoolSettings.municipality,currentSchoolSettings.address].filter(Boolean).join(' · ')||'धुनिवेशी–५, कुमाईखोला, धादिङ';
- const code=currentSchoolSettings.iemisCode?'IEMIS Code: '+currentSchoolSettings.iemisCode:'';
+ const code=currentSchoolSettings.iemisCode?'School Code: '+currentSchoolSettings.iemisCode:'';
  const meta=[code,'Class '+classEnglishLabel(cl),termLabel,englishDisplayText(exam.examName||'Examination'),String(exam.academicYear||currentSchoolSettings.academicYear||'')].filter(Boolean).join(' · ');
  [schoolName,schoolNepali+' · '+address,meta].forEach((value,i)=>{ws.mergeCells(i+1,1,i+1,totalCols);const row=ws.getRow(i+1);row.getCell(1).value=value;row.height=i===0?26:21;row.getCell(1).alignment={horizontal:'center',vertical:'middle'};row.getCell(1).font={bold:true,size:i===0?16:11};});
  const headerRow=ws.addRow(identity.map(x=>x[0]).concat(primary?specs.map(x=>x.label):specs.flatMap(x=>[x.label,'','']),['Final GPA']));
