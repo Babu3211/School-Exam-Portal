@@ -222,7 +222,7 @@ if(p==="staff")h=head(names[p],"Detailed teacher and staff records / शिक�
 </div><button class="btn" id="staffSaveBtn" type="submit">Firebase मा Save गर्नुहोस्</button> <button class="btn alt" id="staffCancelBtn" type="button" hidden>सम्पादन रद्द गर्नुहोस्</button></form></div>
 `;
 
-if(p==="classes")h=head(names[p],"Create the subject bank first, then assign subjects to each class / पहिले विषय सूची बनाउनुहोस्, त्यसपछि कक्षाअनुसार विषय छान्नुहोस्")+`<div class="panel form"><h3>१. विषय सूची (Subject Bank)</h3><p class="hint">यहाँ प्रत्येक विषय एकपटक मात्र थप्नुहोस्। त्यसपछि कक्षा व्यवस्थापनमा यही सूचीबाट छान्न सकिन्छ।</p><form id="subjectCatalogForm"><div class="fields"><div class="field"><label for="newSubjectName">नयाँ विषयको नाम *</label><input id="newSubjectName" maxlength="120" required placeholder="जस्तै: नेपाली, गणित, विज्ञान"></div><div class="field"><label for="newSubjectCode">विषय कोड (ऐच्छिक)</label><input id="newSubjectCode" maxlength="30" placeholder="जस्तै: NEP-01"></div></div><button class="btn" type="submit" id="subjectCatalogSave">विषय सूचीमा थप्नुहोस्</button></form><div id="subjectCatalogMessage" class="hint" role="status"></div><div id="subjectCatalogList" class="chips" style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px"></div></div><div class="panel form"><h3>२. कक्षाअनुसार विषय व्यवस्थापन</h3><p class="hint">कक्षा छान्नुहोस्, Subject Bank बाट विषय छान्नुहोस् र आवश्यक Section/Credit Hour राख्नुहोस्।</p><form id="classForm"><div class="fields"><div class="field"><label for="className">कक्षा *</label><select id="className" required>${classes.map(x=>`<option value="${x}">${classEnglishLabel(x)}</option>`).join("")}</select></div><div class="field"><label for="classSection">Section</label><input id="classSection" maxlength="30" placeholder="A / B"></div><div class="field"><label for="classSubject">Subject Bank बाट विषय छान्नुहोस् *</label><select id="classSubject" required><option value="">पहिले Subject Bank मा विषय थप्नुहोस्</option></select></div><div class="field"><label for="classCredit">Credit Hour *</label><input id="classCredit" type="number" min="0.5" max="20" step="0.5" required placeholder="CDC पाठ्यक्रमअनुसार"></div><div class="field"><label for="classTeacher">विषय शिक्षक</label><input id="classTeacher" maxlength="120" placeholder="शिक्षकको नाम"></div></div><button class="btn" id="classSaveBtn" type="submit">कक्षामा विषय थप्नुहोस्</button> <button class="btn alt" id="classCancelBtn" type="button" hidden>सम्पादन रद्द गर्नुहोस्</button></form></div><div class="toolbar"><input id="classSearch" placeholder="कक्षा वा विषय खोज्नुहोस्"><button class="btn" id="classSearchBtn" type="button">Search</button><button class="btn alt" id="classReloadBtn" type="button">Refresh</button></div><div id="classMessage" class="hint" role="status"></div><h3 style="margin:14px 0 8px">३. कक्षागत विषय सूची</h3><div id="classwiseSubjects"><p class="hint">Firebase बाट विवरण लोड हुँदैछ...</p></div>`;
+if(p==="classes")h=head(names[p],"Create the subject bank first, then assign subjects to each class / पहिले विषय सूची बनाउनुहोस्, त्यसपछि कक्षाअनुसार विषय छान्नुहोस्")+`<div class="panel form"><h3>१. विषय सूची (Subject Bank)</h3><p class="hint">यहाँ प्रत्येक विषय एकपटक मात्र थप्नुहोस्। त्यसपछि कक्षा व्यवस्थापनमा यही सूचीबाट छान्न सकिन्छ।</p><form id="subjectCatalogForm"><div class="fields"><div class="field"><label for="newSubjectName">नयाँ विषयको नाम *</label><input id="newSubjectName" maxlength="120" required placeholder="जस्तै: नेपाली, गणित, विज्ञान"></div><div class="field"><label for="newSubjectCode">विषय कोड (ऐच्छिक)</label><input id="newSubjectCode" maxlength="30" placeholder="जस्तै: NEP-01"></div></div><button class="btn" type="submit" id="subjectCatalogSave">Firebase मा सुरक्षित गर्नुहोस्</button> <button class="btn alt" type="button" id="subjectCatalogCancel" hidden>रद्द गर्नुहोस्</button></form><p class="hint">विषय सम्पादन वा निष्क्रिय गर्दा पुराना Marks तथा कक्षागत अभिलेख मेटिँदैनन्।</p><div id="subjectCatalogMessage" class="hint" role="status"></div><div id="subjectCatalogList" class="chips" style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px"></div></div><div class="panel form"><h3>२. कक्षाअनुसार विषय व्यवस्थापन</h3><p class="hint">कक्षा छान्नुहोस्, Subject Bank बाट विषय छान्नुहोस् र आवश्यक Section/Credit Hour राख्नुहोस्।</p><form id="classForm"><div class="fields"><div class="field"><label for="className">कक्षा *</label><select id="className" required>${classes.map(x=>`<option value="${x}">${classEnglishLabel(x)}</option>`).join("")}</select></div><div class="field"><label for="classSection">Section</label><input id="classSection" maxlength="30" placeholder="A / B"></div><div class="field"><label for="classSubject">Subject Bank बाट विषय छान्नुहोस् *</label><select id="classSubject" required><option value="">पहिले Subject Bank मा विषय थप्नुहोस्</option></select></div><div class="field"><label for="classCredit">Credit Hour *</label><input id="classCredit" type="number" min="0.5" max="20" step="0.5" required placeholder="CDC पाठ्यक्रमअनुसार"></div><div class="field"><label for="classTeacher">विषय शिक्षक</label><input id="classTeacher" maxlength="120" placeholder="शिक्षकको नाम"></div></div><button class="btn" id="classSaveBtn" type="submit">कक्षामा विषय थप्नुहोस्</button> <button class="btn alt" id="classCancelBtn" type="button" hidden>सम्पादन रद्द गर्नुहोस्</button></form></div><div class="toolbar"><input id="classSearch" placeholder="कक्षा वा विषय खोज्नुहोस्"><button class="btn" id="classSearchBtn" type="button">Search</button><button class="btn alt" id="classReloadBtn" type="button">Refresh</button></div><div id="classMessage" class="hint" role="status"></div><h3 style="margin:14px 0 8px">३. कक्षागत विषय सूची</h3><div id="classwiseSubjects"><p class="hint">Firebase बाट विवरण लोड हुँदैछ...</p></div>`;
 if(p==="exams")h=head(names[p],"Create examinations and manage examination schedules / परीक्षा सिर्जना र समयतालिका व्यवस्थापन")+`<div class="toolbar"><input id="examSearch" placeholder="परीक्षा नाम वा कक्षा खोज्नुहोस्"><button class="btn" id="examSearchBtn" type="button">Search</button><button class="btn alt" id="examReloadBtn" type="button">Refresh</button></div><div id="examMessage" class="hint" role="status"></div><div class="tablewrap"><table><thead><tr><th>परीक्षा नाम</th><th>अवधि / Term</th><th>शैक्षिक वर्ष</th><th>कक्षा</th><th>परीक्षा प्रकार</th><th>सुरु मिति</th><th>अन्तिम मिति</th><th>स्थिति</th><th>कार्य</th></tr></thead><tbody id="examsBody"><tr><td class="empty" colspan="9">Firebase बाट विवरण लोड हुँदैछ...</td></tr></tbody></table></div><div class="panel form"><h3>नयाँ परीक्षा सिर्जना गर्नुहोस्</h3><form id="examForm"><div class="fields"><div class="field"><label for="examTerm">परीक्षा अवधि / Term *</label><select id="examTerm" required><option value="first">प्रथम त्रैमासिक</option><option value="second">द्वितीय त्रैमासिक</option><option value="third">तृतीय त्रैमासिक</option><option value="annual">वार्षिक</option><option value="half-yearly">अर्धवार्षिक</option><option value="internal">आन्तरिक</option><option value="other">अन्य</option></select></div><div class="field"><label for="examName">परीक्षाको नाम *</label><input id="examName" required maxlength="120" placeholder="प्रथम त्रैमासिक"></div><div class="field"><label for="examYear">शैक्षिक वर्ष *</label><input id="examYear" required maxlength="20" value="2083" placeholder="2083"></div><div class="field"><label for="examClass">कक्षा *</label><select id="examClass" required>${classes.map(x=>`<option value="${x}">${classEnglishLabel(x)}</option>`).join("")}</select></div><div class="field"><label for="examType">परीक्षा प्रकार *</label><select id="examType" required><option value="त्रैमासिक">त्रैमासिक</option><option value="अर्धवार्षिक">अर्धवार्षिक</option><option value="वार्षिक">वार्षिक</option><option value="आन्तरिक">आन्तरिक</option></select></div><div class="field"><label for="examStart">सुरु मिति *</label><input id="examStart" type="text" inputmode="numeric" autocomplete="off" placeholder="2083-07-15" pattern="20[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])" maxlength="10" required></div><div class="field"><label for="examEnd">अन्तिम मिति *</label><input id="examEnd" type="text" inputmode="numeric" autocomplete="off" placeholder="2083-07-20" pattern="20[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])" maxlength="10" required></div></div><button class="btn" id="examSaveBtn" type="submit">Firebase मा Save गर्नुहोस्</button> <button class="btn alt" id="examCancelBtn" type="button" hidden>सम्पादन रद्द गर्नुहोस्</button><p class="hint">मिति विक्रम संवत् (BS) मा YYYY-MM-DD ढाँचामा लेख्नुहोस्। उदाहरण: 2083-07-15 (१५ गते, महिना ०७, वर्ष २०८३)। अंग्रेजी मिति नलेख्नुहोस्।</p></form></div>`;
 if(p==="marks")h=head(names[p],"Enter and save marks only for your assigned classes and subjects / तपाईंलाई तोकिएको कक्षा/विषयमा मात्र प्राप्ताङ्क भर्ने तथा सुरक्षित गर्ने")+`<div class="panel form"><h3>विद्यार्थीको प्राप्ताङ्क — Marks Entry</h3><div class="fields"><div class="field"><label for="entryClass">कक्षा</label><select id="entryClass">${classes.map(x=>`<option value="${x}">${classEnglishLabel(x)}</option>`).join("")}</select></div><div class="field"><label for="entryTerm">परीक्षा अवधि / Term</label><select id="entryTerm"><option value="all">सबै अवधि</option><option value="first">प्रथम त्रैमासिक</option><option value="second">द्वितीय त्रैमासिक</option><option value="third">तृतीय त्रैमासिक</option><option value="annual">वार्षिक</option><option value="half-yearly">अर्धवार्षिक</option><option value="internal">आन्तरिक</option><option value="other">अन्य / पुराना परीक्षा</option></select></div><div class="field"><label for="entryExam">परीक्षा</label><select id="entryExam"><option value="">पहिले अवधि छान्नुहोस्</option></select></div><div class="field"><label for="entrySubject">विषय</label><select id="entrySubject"><option value="">विषय छान्नुहोस्</option></select></div></div><div class="toolbar marks-entry-tools"><button class="btn" id="loadEntryStudents" type="button">विद्यार्थी सूची देखाउनुहोस्</button><button class="btn alt" id="refreshEntry" type="button">Refresh</button><button class="btn alt" id="exportLedgerExcel" type="button">Export Marks Ledger to Excel</button><button class="btn alt" id="sampleLedgerExcel" type="button">Download Sample Ledger</button><label class="btn alt" for="importLedgerExcel">Import Ledger Excel</label><input id="importLedgerExcel" type="file" accept=".xlsx,.xls" hidden></div><div class="field" style="margin:10px 0"><label for="marksStudentSearch">विद्यार्थी खोज्नुहोस् (नाम वा Roll No.)</label><input id="marksStudentSearch" type="search" placeholder="नाम वा रोल नम्बर लेख्नुहोस्" autocomplete="off"></div><p id="marksEntryMessage" class="hint" role="status">कक्षा, परीक्षा र विषय छानेर विद्यार्थी सूची देखाउनुहोस्।</p><div class="tablewrap"><table><thead id="marksEntryHead"><tr><th>Roll No.</th><th>विद्यार्थी</th><th>प्राप्ताङ्क</th></tr></thead><tbody id="marksEntryBody"><tr><td class="empty" colspan="3">अहिले विद्यार्थी सूची लोड गरिएको छैन।</td></tr></tbody></table></div><button class="btn marks-entry-save" id="saveAllMarks" type="button">सबै प्राप्ताङ्क Firebase मा Save गर्नुहोस्</button></div>`;
 if(p==="assessment-settings")h=head(names[p],"Manage assessment components and full marks by class and subject / कक्षा/विषयअनुसार मूल्याङ्कन भाग र पूर्णाङ्क व्यवस्थापन")+`<div class="notice"><b>Assessment Settings:</b> यहाँ कक्षा/विषयअनुसार मूल्याङ्कनका भाग र पूर्णाङ्क सेट गरिन्छ। Marks Entry मा यही सेटिङ लागू हुन्छ। सेटिङ परिवर्तन गर्दा पहिले सुरक्षित गरिएका Marks वा प्रकाशित नतिजा स्वतः परिवर्तन हुँदैनन्।</div><div class="panel" id="assessmentSettingsPanel"><h3>Assessment Settings — मूल्याङ्कन सेटिङ</h3><div class="notice" style="margin:10px 0"><b>कक्षा १–३ र ४–५:</b> सिकाइ उपलब्धि संख्या राख्नुहोस्। प्रत्येक उपलब्धिको अधिकतम मापन ४ भएकाले Full Marks = संख्या × ४ हुन्छ। कक्षा ४–५ को CDC २०८३ मार्गदर्शनअनुसार प्रत्येक सिकाइ उपलब्धि १–४ स्तरमा अभिलेख गरी जम्मा प्राप्ताङ्कबाट उपलब्धि प्रतिशत र Grade निकालिन्छ। त्रैमासिक अवधि प्रगति समीक्षा/अभिलेखका लागि हो।</div><div class="fields"><div class="field"><label for="markGroup">कक्षा समूह</label><select id="markGroup"><option value="1-3">Class 1–3</option><option value="4-5">Class 4–5</option><option value="6-8">Class 6–8</option><option value="9-10">Class 9–10</option></select></div><div class="field" id="markClassWrap"><label for="markClass">कक्षा *</label><select id="markClass">${classes.map(x=>`<option value="${x}">${classEnglishLabel(x)}</option>`).join("")}</select></div><div class="field"><label for="markSubject">विषय</label><select id="markSubject"></select></div></div><div id="markParts" class="grid" style="margin-top:14px"></div><div class="toolbar"><button class="btn alt" id="markAddPart" type="button">+ मूल्याङ्कन भाग थप्नुहोस्</button><button class="btn" id="markSaveSettings" type="button">Firebase मा Settings Save</button><button class="btn alt" id="markReloadSettings" type="button">Refresh</button></div><p id="markSettingsMessage" class="hint" role="status"></p></div><div class="panel form" id="savedAssessmentSettingsPanel"><h3>सुरक्षित गरिएको मूल्याङ्कन सेटिङ</h3><div class="tablewrap"><table><thead><tr><th>कक्षा समूह</th><th>विषय</th><th>मूल्याङ्कन भागहरू</th><th>जम्मा पूर्णाङ्क</th><th>कार्य</th></tr></thead><tbody id="markSettingsBody"><tr><td class="empty" colspan="5">लोड हुँदैछ...</td></tr></tbody></table></div></div>`;
@@ -1005,7 +1005,53 @@ async function loadClasses(){
 }
 function renderSubjectCatalog(){
  const box=document.getElementById("subjectCatalogList");if(!box)return;
- box.innerHTML=cachedSubjectCatalog.filter(x=>x.active!==false).sort((a,b)=>String(a.name||a.subject).localeCompare(String(b.name||b.subject),'ne')).map(x=>`<span style="display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border:1px solid #cbd5e1;border-radius:18px;background:#f8fafc;font-size:12px">${classEsc(x.name||x.subject)}${x.legacy?'<small style="color:#64748b">(पुरानो)</small>':''}</span>`).join("")||'<span class="hint">अहिलेसम्म विषय थपिएको छैन।</span>';
+ const rows=[...cachedSubjectCatalog].sort((a,b)=>String(a.name||a.subject).localeCompare(String(b.name||b.subject),'ne'));
+ box.innerHTML=rows.map(x=>{
+  const archived=x.active===false,legacy=!!x.legacy,id=classEsc(x.id||"");
+  const actions=legacy?'<small style="color:#64748b">(पुरानो कक्षागत विषय)</small>':archived
+   ?`<button class="btn alt" type="button" data-subject-restore="${id}">पुनः सक्रिय</button>`
+   :`<button class="btn alt" type="button" data-subject-edit="${id}">Edit</button> <button class="btn" style="background:#b42318" type="button" data-subject-archive="${id}">हटाउनुहोस्</button>`;
+  return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;background:${archived?'#f8fafc':'#fff'};font-size:12px;opacity:${archived?'.72':'1'}"><b>${classEsc(x.name||x.subject)}</b>${x.code?`<small style="color:#64748b">${classEsc(x.code)}</small>`:''}${archived?'<small style="color:#b42318">निष्क्रिय</small>':''}${actions}</div>`;
+ }).join("")||'<span class="hint">अहिलेसम्म विषय थपिएको छैन।</span>';
+}
+function editSubjectCatalog(id){
+ const x=cachedSubjectCatalog.find(v=>v.id===id&&!v.legacy);if(!x)return;
+ const form=document.getElementById("subjectCatalogForm");form.dataset.editId=id;
+ document.getElementById("newSubjectName").value=x.name||x.subject||"";
+ document.getElementById("newSubjectCode").value=x.code||"";
+ document.getElementById("subjectCatalogSave").textContent="Firebase मा सुरक्षित गर्नुहोस्";
+ document.getElementById("subjectCatalogCancel").hidden=false;
+ const msg=document.getElementById("subjectCatalogMessage");
+ if(msg)msg.textContent="विषय सूचीको नाम/कोड मात्र परिवर्तन हुन्छ; पहिले कक्षामा तोकिएका विषय र पुराना Marks सुरक्षित रहन्छन्।";
+ form.scrollIntoView({behavior:"smooth",block:"start"});
+}
+function cancelSubjectCatalogEdit(){
+ const form=document.getElementById("subjectCatalogForm");if(!form)return;
+ form.reset();delete form.dataset.editId;
+ document.getElementById("subjectCatalogSave").textContent="Firebase मा सुरक्षित गर्नुहोस्";
+ document.getElementById("subjectCatalogCancel").hidden=true;
+ const msg=document.getElementById("subjectCatalogMessage");if(msg)msg.textContent="सम्पादन रद्द भयो।";
+}
+async function archiveSubjectCatalog(id){
+ const x=cachedSubjectCatalog.find(v=>v.id===id&&!v.legacy);if(!x)return;
+ if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){const m=document.getElementById("subjectCatalogMessage");if(m)m.textContent="Admin login आवश्यक छ।";return;}
+ if(!confirm(`"${x.name||x.subject}" विषय सूचीबाट हटाउने? पुराना कक्षागत विषय, Marks र नतिजा सुरक्षित रहनेछन्।`))return;
+ try{
+  await updateDoc(doc(db,"subjects",id),{active:false,archivedAt:serverTimestamp(),archivedBy:auth.currentUser.uid});
+  await writeAuditLog("subjects","archive",id,String(x.name||x.subject));
+  await loadClasses();
+  const msg=document.getElementById("subjectCatalogMessage");if(msg)msg.textContent="विषय निष्क्रिय गरियो। पुराना कक्षागत विषय र Marks सुरक्षित छन्।";
+ }catch(error){console.error("Subject archive failed",error);const msg=document.getElementById("subjectCatalogMessage");if(msg)msg.textContent=`विषय हटाउन सकिएन: ${error.code||error.message}`;}
+}
+async function restoreSubjectCatalog(id){
+ const x=cachedSubjectCatalog.find(v=>v.id===id&&!v.legacy);if(!x)return;
+ if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){const m=document.getElementById("subjectCatalogMessage");if(m)m.textContent="Admin login आवश्यक छ।";return;}
+ try{
+  await updateDoc(doc(db,"subjects",id),{active:true,restoredAt:serverTimestamp(),restoredBy:auth.currentUser.uid});
+  await writeAuditLog("subjects","restore",id,String(x.name||x.subject));
+  await loadClasses();
+  const msg=document.getElementById("subjectCatalogMessage");if(msg)msg.textContent="विषय पुनः सक्रिय भयो।";
+ }catch(error){console.error("Subject restore failed",error);const msg=document.getElementById("subjectCatalogMessage");if(msg)msg.textContent=`विषय पुनः सक्रिय गर्न सकिएन: ${error.code||error.message}`;}
 }
 function populateClassSubjectSelect(selected=""){
  const sel=document.getElementById("classSubject");if(!sel)return;
@@ -1028,13 +1074,24 @@ document.addEventListener("submit",async event=>{
  if(event.target.id==="subjectCatalogForm"){
   event.preventDefault();event.stopPropagation();
   if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){const m=document.getElementById("subjectCatalogMessage");if(m)m.textContent="Admin login आवश्यक छ।";return;}
-  const name=document.getElementById("newSubjectName").value.trim(),code=document.getElementById("newSubjectCode").value.trim(),msg=document.getElementById("subjectCatalogMessage"),btn=document.getElementById("subjectCatalogSave");
+  const form=event.target,editId=form.dataset.editId||"",name=document.getElementById("newSubjectName").value.trim(),code=document.getElementById("newSubjectCode").value.trim(),msg=document.getElementById("subjectCatalogMessage"),btn=document.getElementById("subjectCatalogSave");
   if(!name){if(msg)msg.textContent="विषयको नाम लेख्नुहोस्।";return;}
-  if(cachedSubjectCatalog.some(x=>canonicalSubjectKey(x.name||x.subject)===canonicalSubjectKey(name))){if(msg)msg.textContent="यो विषय सूचीमा पहिल्यै छ।";return;}
+  if(cachedSubjectCatalog.some(x=>x.id!==editId&&canonicalSubjectKey(x.name||x.subject)===canonicalSubjectKey(name))){if(msg)msg.textContent="यो नामको विषय सूचीमा पहिल्यै छ। निष्क्रिय विषय भए पुनः सक्रिय गर्नुहोस्।";return;}
+  if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){if(msg)msg.textContent="Admin login आवश्यक छ।";return;}
   btn.disabled=true;
-  try{await addDoc(collection(db,"subjects"),{name,code,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});document.getElementById("subjectCatalogForm").reset();await loadClasses();if(msg)msg.textContent=`${name} विषय सूचीमा थपियो।`}
-  catch(error){console.error("Subject catalog save failed",error);if(msg)msg.textContent=`विषय थप्न सकिएन: ${error.code||error.message}`;}
-  finally{btn.disabled=false;}
+  try{
+   if(editId){
+    await updateDoc(doc(db,"subjects",editId),{name,code,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});
+    await writeAuditLog("subjects","update",editId,name);
+   }else{
+    const subjectRef=await addDoc(collection(db,"subjects"),{name,code,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});
+    await writeAuditLog("subjects","create",subjectRef.id,name);
+   }
+   form.reset();delete form.dataset.editId;document.getElementById("subjectCatalogCancel").hidden=true;
+   await loadClasses();if(msg)msg.textContent=editId?`"${name}" विषय सूची Update भयो। पुराना कक्षागत विषय र Marks परिवर्तन भएका छैनन्।`:`"${name}" विषय सूचीमा थपियो र Firebase मा सुरक्षित भयो।`;
+  }
+  catch(error){console.error("Subject catalog save failed",error);if(msg)msg.textContent=`विषय सुरक्षित गर्न सकिएन: ${error.code||error.message}`;}
+  finally{btn.disabled=false;btn.textContent="Firebase मा सुरक्षित गर्नुहोस्";}
   return;
  }
  if(event.target.id!=="classForm")return;
@@ -1090,6 +1147,11 @@ async function restoreClass(id){
  catch(error){console.error("Class restore failed:",error);setClassMessage(`Restore भएन: ${error.code||error.message}`,true)}
 }
 document.addEventListener("click",event=>{
+ const subjectEdit=event.target.closest("[data-subject-edit]"),subjectArchive=event.target.closest("[data-subject-archive]"),subjectRestore=event.target.closest("[data-subject-restore]");
+ if(subjectEdit){editSubjectCatalog(subjectEdit.dataset.subjectEdit);return}
+ if(subjectArchive){archiveSubjectCatalog(subjectArchive.dataset.subjectArchive);return}
+ if(subjectRestore){restoreSubjectCatalog(subjectRestore.dataset.subjectRestore);return}
+ if(event.target.closest("#subjectCatalogCancel")){cancelSubjectCatalogEdit();return}
  if(event.target.closest("#classReloadBtn")){loadClasses();return}
  if(event.target.closest("#classSearchBtn")){renderClasses();return}
  if(event.target.closest("#classCancelBtn")){const form=document.getElementById("classForm");if(form){form.reset();delete form.dataset.editId;document.getElementById("classSaveBtn").textContent="Firebase मा Save गर्नुहोस्";document.getElementById("classCancelBtn").hidden=true;setClassMessage("सम्पादन रद्द भयो।")}return}
@@ -2637,8 +2699,29 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
  const style=document.createElement('style');style.textContent='.bilingual-stack{display:inline-flex;flex-direction:column;align-items:flex-start;gap:2px;line-height:1.3}.bilingual-en{font-weight:800}.bilingual-ne{font-size:.92em;font-weight:600;opacity:.88}.nav button,.menu-group summary{align-items:center}';document.head.appendChild(style);
  applyStacks();
  const stackObserver=new MutationObserver(()=>applyStacks());stackObserver.observe(document.getElementById('view')||document.body,{childList:true,subtree:true});
- document.addEventListener('submit',function(e){const btn=e.submitter;if(!btn)return;const label=(btn.innerText||btn.value||'').trim();if(!/(save|सुरक्षित|थप्नुहोस्|जारी गरी)/i.test(label))return;if(!window.confirm('यो विवरण सुरक्षित गर्ने हो?')){e.preventDefault();e.stopImmediatePropagation();}},true);
- document.addEventListener('click',function(e){const btn=e.target.closest('button');if(!btn||btn.type==='submit')return;const label=(btn.innerText||btn.value||'').trim();if(!/(save|सुरक्षित|थप्नुहोस्)/i.test(label))return;if(btn.dataset.saveConfirmed==='1'){btn.dataset.saveConfirmed='0';return;}e.preventDefault();e.stopImmediatePropagation();if(window.confirm('यो विवरण सुरक्षित गर्ने हो?')){btn.dataset.saveConfirmed='1';btn.click();}},true);
+ function normalizeFirebaseSaveButton(button){
+  if(!button||button.dataset.firebaseSaveLabel==='1')return;
+  const label=(button.innerText||button.textContent||'').trim();
+  if(/print|pdf|download|restore|publish|login|reset|cancel|रद्द|हटाउनुहोस्|पुनः सक्रिय/i.test(label))return;
+  if(/saving\s*\.\.\.|updating\s*\.\.\./i.test(label)){
+   button.textContent=/saving/i.test(label)?'Firebase मा सुरक्षित हुँदैछ...':'Firebase मा अद्यावधिक हुँदैछ...';
+   button.dataset.firebaseSaveLabel='1';return;
+  }
+  if(/\b(save|submit)\b/i.test(label)){
+   button.textContent='Firebase मा सुरक्षित गर्नुहोस्';
+   button.dataset.firebaseSaveLabel='1';
+  }
+ }
+ function normalizeFirebaseSaveButtons(root=document){
+  if(root.matches&&root.matches('button'))normalizeFirebaseSaveButton(root);
+  if(root.querySelectorAll)root.querySelectorAll('button').forEach(normalizeFirebaseSaveButton);
+ }
+ normalizeFirebaseSaveButtons();
+ const saveLabelObserver=new MutationObserver(records=>records.forEach(record=>{
+  if(record.type==='childList')record.addedNodes.forEach(node=>{if(node.nodeType===1)normalizeFirebaseSaveButtons(node)});
+  else if(record.type==='characterData')normalizeFirebaseSaveButtons(record.target.parentElement);
+ }));
+ saveLabelObserver.observe(document.body,{childList:true,subtree:true,characterData:true});
 })();
 </script>
 </body>
