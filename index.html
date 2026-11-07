@@ -1058,7 +1058,7 @@ async function loadClasses(){
 }
 function renderSubjectCatalog(){
  const box=document.getElementById("subjectCatalogList");if(!box)return;
- const rows=[...cachedSubjectCatalog].sort((a,b)=>String(a.name||a.subject).localeCompare(String(b.name||b.subject),'ne'));
+ const rows=[...cachedSubjectCatalog].filter(x=>x.source!=="renamed-subject-alias").sort((a,b)=>String(a.name||a.subject).localeCompare(String(b.name||b.subject),'ne'));
  box.innerHTML=rows.map(x=>{
   const archived=x.active===false,legacy=!!x.legacy,id=classEsc(x.id||"");
   const actions=archived
@@ -1185,7 +1185,19 @@ document.addEventListener("submit",async event=>{
   btn.disabled=true;
   try{
    if(editId){
-    await updateDoc(doc(db,"subjects",editId),{name,code,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});
+    const previous=cachedSubjectCatalog.find(x=>x.id===editId);
+    const oldName=String(previous?.name||previous?.subject||"").trim();
+    if(oldName&&canonicalSubjectKey(oldName)!==canonicalSubjectKey(name)){
+     // Keep old class and Marks documents untouched, but record the renamed label as a hidden alias.
+     // This prevents loadClasses() from resurrecting the obsolete legacy label in Subject Bank.
+     const batch=writeBatch(db);
+     batch.update(doc(db,"subjects",editId),{name,code,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});
+     const aliasRef=doc(collection(db,"subjects"));
+     batch.set(aliasRef,{name:oldName,code:"",active:false,source:"renamed-subject-alias",replacedBy:editId,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid,archivedAt:serverTimestamp(),archivedBy:auth.currentUser.uid});
+     await batch.commit();
+    }else{
+     await updateDoc(doc(db,"subjects",editId),{name,code,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});
+    }
     await writeAuditLog("subjects","update",editId,name);
    }else{
     const subjectRef=await addDoc(collection(db,"subjects"),{name,code,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});
