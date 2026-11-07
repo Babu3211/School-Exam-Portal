@@ -275,10 +275,11 @@ const subjectSpecs=subjectFactory((cl,group)=>({
 must(subjectSpecs("4-5","4").map(x=>x.label).join("|")==="Nepali|English|Mathematics|Serophero|Hamro Dhunibeshi|Computer Science","Classes 1–5 must follow the uploaded six-subject Grade Ledger template.");
 must(subjectSpecs("6-8","6").map(x=>x.label).join("|")==="Computer Science|Hamro Dhunibeshi|Health Physical & Creative Art|Social Studies & Human Value Education|Science & Technology|Mathematics|English|Nepali","Classes 6–8 must follow the uploaded subject order.");
 must(subjectSpecs("9-10","9").map(x=>x.label).join("|")==="Optional II: Computer Science|Optional I: Environmental Science|Social Studies|Science & Technology|Mathematics|English|Nepali","Classes 9–10 must follow the uploaded subject order.");
-const extraSubjects=subjectSpecs("4-5","4");
+const dynamicSubjectSpecs=subjectFactory((cl,group)=>group==="4-5"?["नेपाली","अंग्रेजी","गणित","सेरोफेरो","हाम्रो धुनिबेँशी","कम्प्युटर","चित्रकला"]:group==="9-10"?["ऐच्छिक द्वितीय: कम्प्युटर विज्ञान","ऐच्छिक प्रथम: वातावरण विज्ञान","अनिवार्य सामाजिक अध्ययन","अनिवार्य विज्ञान तथा प्रविधि","अनिवार्य गणित","अनिवार्य अंग्रेजी","अनिवार्य नेपाली","ऐच्छिक प्रथम: अतिरिक्त गणित"]:[],value=>String(value).toLowerCase());
+const extraSubjects=dynamicSubjectSpecs("4-5","4");
 const extraSubject=extraSubjects.find(x=>x.source==="चित्रकला");
 must(extraSubject&&extraSubject.label==="चित्रकला","Grade Ledger must append every subject configured in Subject Settings, even when it is not in the standard template.");
-const optionalSubjects=subjectSpecs("9-10","9");
+const optionalSubjects=dynamicSubjectSpecs("9-10","9");
 must(optionalSubjects.some(x=>x.source==="ऐच्छिक प्रथम: अतिरिक्त गणित"&&x.label==="Optional I: Additional Mathematics"),"Class 9–10 must retain Optional I Additional Mathematics from Subject Settings.");
 const ledgerSubjectsStart=html.indexOf("function ledgerSubjectsForClass(cl,group){");
 const ledgerSubjectsEnd=html.indexOf("\nlet activeLedgerMode",ledgerSubjectsStart);
