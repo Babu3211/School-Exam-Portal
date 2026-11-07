@@ -262,4 +262,37 @@ must(nextStaffId("कर्मचारी", []) === "STF-0001", "New staff ID m
 must(nextStaffId("शिक्षक", [{ staffId: "TCH-0001" }, { staffId: "TCH-0008" }, { staffId: "STF-0009" }]) === "TCH-0009", "Teacher ID must increment from the highest existing teacher ID only.");
 must(nextStaffId("कर्मचारी", [{ staffId: "STF-0002" }, { staffId: "STF-0010" }, { staffId: "TCH-0015" }]) === "STF-0011", "Staff ID must increment from the highest existing staff ID only.");
 
+
+const templateStart=html.indexOf("function ledgerTemplateSubjectSpecs(group,cl){");
+const gradeResultStart=html.indexOf("\nfunction ledgerGradeSubjectResult",templateStart);
+must(templateStart>=0&&gradeResultStart>templateStart,"Uploaded Grade Ledger template subject mapping is missing.");
+const subjectFactory=new Function("ledgerSubjectsForClass","canonicalSubjectKey",html.slice(templateStart,gradeResultStart)+";return ledgerTemplateSubjectSpecs;");
+const subjectSpecs=subjectFactory((cl,group)=>({
+ "1-5":["नेपाली","अंग्रेजी","गणित","सेरोफेरो","हाम्रो धुनिबेँशी","कम्प्युटर"],
+ "6-8":["कम्प्युटर","हाम्रो धुनिबेँशी","स्वास्थ्य शारीरिक तथा सिर्जनात्मक कला","सामाजिक अध्ययन तथा मानव मूल्य शिक्षा","विज्ञान तथा प्रविधि","गणित","अंग्रेजी","नेपाली"],
+ "9-10":["ऐच्छिक द्वितीय: कम्प्युटर विज्ञान","ऐच्छिक प्रथम: वातावरण विज्ञान","अनिवार्य सामाजिक अध्ययन","अनिवार्य विज्ञान तथा प्रविधि","अनिवार्य गणित","अनिवार्य अंग्रेजी","अनिवार्य नेपाली"]
+})[group]||[],value=>String(value).toLowerCase());
+must(subjectSpecs("1-5","4").map(x=>x.label).join("|")==="Nepali|English|Mathematics|Serophero|Hamro Dhunibeshi|Computer Science","Classes 1–5 must follow the uploaded six-subject Grade Ledger template.");
+must(subjectSpecs("6-8","6").map(x=>x.label).join("|")==="Computer Science|Hamro Dhunibeshi|Health Physical & Creative Art|Social Studies & Human Value Education|Science & Technology|Mathematics|English|Nepali","Classes 6–8 must follow the uploaded subject order.");
+must(subjectSpecs("9-10","9").map(x=>x.label).join("|")==="Optional II: Computer Science|Optional I: Environmental Science|Social Studies|Science & Technology|Mathematics|English|Nepali","Classes 9–10 must follow the uploaded subject order.");
+const gradeResultEnd=html.indexOf("\nfunction ledgerSchoolHeaderMarkup",gradeResultStart);
+must(gradeResultStart>=0&&gradeResultEnd>gradeResultStart,"Grade Ledger subject grade calculator is missing.");
+const gradeResultFactory=new Function("existingMarks","canonicalSubjectKey","gradeForPercent",html.slice(gradeResultStart,gradeResultEnd)+";return ledgerGradeSubjectResult;");
+const gradeForTest=pct=>pct>=90?{grade:"A+",point:4}:pct>=80?{grade:"A",point:3.6}:pct>=70?{grade:"B+",point:3.2}:{grade:"B",point:2.8};
+const gradeCalc=gradeResultFactory([
+ {studentId:"s1",examId:"e1",subject:"नेपाली",scores:[{name:"No. of Learning Achievement",fullMarks:10,obtained:10},{name:"Full Marks",fullMarks:40,obtained:null},{name:"Obtained Learning Achievement",fullMarks:40,obtained:36}]},
+ {studentId:"s2",examId:"e1",subject:"Mathematics",scores:[{name:"Participation",fullMarks:4,obtained:4},{name:"Practical/Project",fullMarks:36,obtained:34},{name:"First Term Examination",fullMarks:10,obtained:9},{name:"TH (Theory)",fullMarks:50,obtained:40}]}
+],value=>String(value).toLowerCase(),gradeForTest);
+const primaryGrade=gradeCalc({id:"s1"},"e1",{source:"नेपाली"},"1-3");
+must(primaryGrade.complete&&primaryGrade.grades[0]==="A+"&&primaryGrade.points[0]==="3.60"===false,"Primary grade must calculate from achievement marks.");
+const secondaryGrade=gradeCalc({id:"s2"},"e1",{source:"Mathematics"},"6-8");
+must(secondaryGrade.complete&&secondaryGrade.grades.join("|")==="A+|B|A"&&secondaryGrade.points.join("|")==="4.00|2.80|3.60","Classes 6–10 must calculate IN, TH and Total grade/grade-point columns.");
+const pendingGrade=gradeCalc({id:"s2"},"e1",{source:"Mathematics"},"6-8");
+must(pendingGrade.complete,"Complete internal and theory marks must produce a complete subject grade.");
+must(html.includes('id="ledgerSchoolHeader"')&&html.includes("ledgerSchoolHeaderMarkup")&&html.includes("IEMIS Code:"),"School details and school code must appear above the Grade Ledger table.");
+must(html.includes("createTemplateGradeLedgerWorkbook")&&html.includes("gradeWb.xlsx.writeBuffer()"),"Grade Ledger Excel export must use the school template layout.");
+must(html.includes("gradeMode?(document.getElementById('ledgerSchoolHeader')?.innerHTML||'')"),"Grade Ledger print/PDF must print the school details above the table.");
+must(html.includes("['S/N','Student Name','DOB','Father Name','Mother Name','Symbol Number']"),"Grade Ledger must retain student identity columns but remove School Name and School Code columns.");
+must(html.includes("['IN','TH','Total']")&&html.includes("Final GPA"),"Classes 6–10 Grade Ledger must include IN, TH, Total and Final GPA.");
+
 console.log("V44 requirement regression checks passed.");
