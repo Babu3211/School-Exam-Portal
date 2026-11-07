@@ -1461,9 +1461,9 @@ function ledgerAggregateSummary(rows){
 function ledgerTemplateSubjectSpecs(group,cl){
  const actual=ledgerSubjectsForClass(cl,group);
  const defs=group==='1-3'||group==='4-5'
-  ?[['Nepali',/nepali|नेपाली/i],['English',/english|अंग्रेजी|अङ्ग्रेजी/i],['Mathematics',/mathematics|math|गणित/i],['Serophero',/serophero|सेरोफेरो/i],['Hamro Dhunibeshi',/hamro|धुनिबेसी|धुनिबेशी|स्थानीय|local/i],['Computer Science',/computer|कम्प्युटर|सङ्गणक/i]]
+  ?[['Nepali',/nepali|नेपाली/i],['English',/english|अंग्रेजी|अङ्ग्रेजी/i],['Mathematics',/mathematics|math|गणित/i],['Serophero',/serophero|सेरोफेरो/i],['Hamro Dhunibeshi',/hamro|हाम्रो|धुनिबे|स्थानीय|local/i],['Computer Science',/computer|कम्प्युटर|सङ्गणक/i]]
   :group==='6-8'
-  ?[['Computer Science',/computer|कम्प्युटर|सङ्गणक/i],['Hamro Dhunibeshi',/hamro|धुनिबेसी|धुनिबेशी|स्थानीय|local/i],['Health Physical & Creative Art',/health|physical|creative|स्वास्थ्य|शारीरिक|सिर्जनात्मक/i],['Social Studies & Human Value Education',/social|human value|सामाजिक|मानव मूल्य/i],['Science & Technology',/science|technology|विज्ञान|प्रविधि/i],['Mathematics',/mathematics|math|गणित/i],['English',/english|अंग्रेजी|अङ्ग्रेजी/i],['Nepali',/nepali|नेपाली/i]]
+  ?[['Computer Science',/computer|कम्प्युटर|सङ्गणक/i],['Hamro Dhunibeshi',/hamro|हाम्रो|धुनिबे|स्थानीय|local/i],['Health Physical & Creative Art',/health|physical|creative|स्वास्थ्य|शारीरिक|सिर्जनात्मक/i],['Social Studies & Human Value Education',/social|human value|सामाजिक|मानव मूल्य/i],['Science & Technology',/science|technology|विज्ञान|प्रविधि/i],['Mathematics',/mathematics|math|गणित/i],['English',/english|अंग्रेजी|अङ्ग्रेजी/i],['Nepali',/nepali|नेपाली/i]]
   :[['Optional II: Computer Science',/optional\s*ii|ऐच्छिक\s*द्वितीय|computer|कम्प्युटर/i],['Optional I: Environmental Science',/optional\s*i(?!i)|environment|वातावरण/i],['Social Studies',/social|सामाजिक/i],['Science & Technology',/science|technology|विज्ञान|प्रविधि/i],['Mathematics',/mathematics|math|गणित/i],['English',/english|अंग्रेजी|अङ्ग्रेजी/i],['Nepali',/nepali|नेपाली/i]];
  const used=new Set();
  return defs.map(([label,pattern])=>{
@@ -1819,7 +1819,7 @@ async function exportMarksLedgerExcel(){
  const termKey=document.getElementById('ledgerViewTerm')?.value||'all';
  if(useLedgerPage&&termKey!=='all'&&smssExamTermKey(exam)!==termKey){say('The selected examination does not match the selected term.');return}
  const group=ledgerGroupForClass(cl),subjects=ledgerSubjectsForClass(cl,group);
- if(!subjects.length){say('No Ledger template is available for this Class.');return}
+ if(!subjects.length&&!gradeMode){say('No Ledger template is available for this Class.');return}
  const btn=document.getElementById(useLedgerPage?'exportLedgerPageExcel':'exportLedgerExcel');
  if(btn){btn.disabled=true;btn.textContent='Preparing Excel...'}
  try{
