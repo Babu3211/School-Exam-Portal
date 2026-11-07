@@ -46,6 +46,7 @@ async function seed() {
       className: "9", examName: "First Term"
     });
     await setDoc(doc(db, "marks", "mark-other-subject"), { studentId:"student-1", examId:"exam-1", subject:"Science", className:"9", section:"A", scores:[], totalFullMarks:0, totalObtained:0, assessmentType:"marks", academicYear:"2083", termKey:"first", termName:"First Term" });
+  await setDoc(doc(db, "marks", "mark-other-section"), { studentId:"student-1", examId:"exam-1", subject:"Mathematics", className:"9", section:"B", scores:[], totalFullMarks:0, totalObtained:0, assessmentType:"marks", academicYear:"2083", termKey:"first", termName:"First Term" });
     await setDoc(doc(db, "school_public_branding", "main"), { schoolName: "Mahadevasthan Secondary School", logoDataUrl: "data:image/png;base64,test" });
     await setDoc(doc(db, "public_result_exams", "published-exam"), {
       examName: "Published Exam", active: true
@@ -131,6 +132,9 @@ try {
   await assertSucceeds(setDoc(doc(db(teacherUid), "marks", "mark-valid"), validMark()));
   await assertSucceeds(getDoc(doc(db(teacherUid), "marks", "mark-valid")));
   await assertFails(getDoc(doc(db(teacherUid), "marks", "mark-other-subject"), validMark({ subject: "Science" })));
+  await assertFails(getDoc(doc(db(teacherUid), "marks", "mark-other-section")));
+  await assertSucceeds(getDocs(query(collection(db(teacherUid), "marks"), where("className", "==", "9"), where("subject", "==", "Mathematics"), where("section", "==", "A"))));
+  await assertFails(getDocs(query(collection(db(teacherUid), "marks"), where("className", "==", "9"), where("subject", "==", "Mathematics"))));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-wrong-class"), validMark({ className: "10" })));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-wrong-exam"), validMark({ examId: "missing-exam" })));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-score-over-limit"), validMark({
