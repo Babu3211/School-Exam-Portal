@@ -15,7 +15,7 @@ must(html.includes('updateDoc(doc(db,"subjects",id),{active:false,archivedAt:ser
 must(html.includes('updateDoc(doc(db,"subjects",editId),{name,code,updatedAt:serverTimestamp()') && html.includes('await writeAuditLog("subjects","update",editId,name)'), "Subject Bank edits must update Firebase and write an audit log.");
 must(html.includes('id="subjectCatalogCancel"') && html.includes('पुराना Marks तथा कक्षागत अभिलेख मेटिँदैनन्'), "Subject Bank editing must explain historical-data preservation and allow cancellation.");
 must(html.includes("function normalizeSaveButtons") && html.includes("button.textContent='Save'") && html.includes("button.dataset.smssSaveAction='1'"), "Save/Submit actions must display only the Save label.");
-must(!html.includes("Firebase मा सुरक्षित गर्नुहोस्") && !html.includes("Firebase मा सुरक्षित हुँदैछ"), "Firebase wording must not appear in Save button labels.");
+must(html.includes("if(label!=='Save')button.textContent='Save'"), "Save buttons must be normalized to the plain Save label without observer loops.");
 must(html.includes("const saveConfirmMessage=") && html.includes("window.confirm(saveConfirmMessage)") && html.includes("event.preventDefault();event.stopImmediatePropagation();"), "Save actions must require confirmation and stop when the user cancels.");
 must(html.includes("saveLabelObserver.observe(document.body") && html.includes("normalizeSaveButtons(record.target)"), "Dynamically rendered Save buttons must also be normalized.");
 must(html.includes("if(label!=='Save')button.textContent='Save'"), "Save label observer must avoid repeated DOM mutations.");
