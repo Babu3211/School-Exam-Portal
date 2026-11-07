@@ -18,6 +18,8 @@ must(html.includes("function normalizeSaveButtons") && html.includes("button.tex
 must(html.includes("if(label!=='Save')button.textContent='Save'"), "Save buttons must be normalized to the plain Save label without observer loops.");
 must(html.includes("const saveConfirmMessage=") && html.includes("window.confirm(saveConfirmMessage)") && html.includes("event.preventDefault();event.stopImmediatePropagation();"), "Save actions must require confirmation and stop when the user cancels.");
 must(html.includes("saveLabelObserver.observe(document.body") && html.includes("normalizeSaveButtons(record.target)"), "Dynamically rendered Save buttons must also be normalized.");
+must(!html.includes("यो सुविधा Demo मात्र") && !html.includes("यो Module हाल Demo अवस्थामा छ") && !html.includes("Cloud data connection in progress") && !html.includes("V44 Development"), "The live application must not display obsolete demo or development notices.");
+must(!html.includes("form.demo") && !html.includes("data-action]"), "The application must not route unsupported actions to a demo-only alert.");
 must(html.includes("if(label!=='Save')button.textContent='Save'"), "Save label observer must avoid repeated DOM mutations.");
 const requiredCollections = [
   "students", "staff", "classes", "subjects", "exams", "marks",
