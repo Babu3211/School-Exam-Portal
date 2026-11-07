@@ -1771,7 +1771,7 @@ async function exportMarksLedgerExcel(){
    });
   }
   ws.autoFilter={from:{row:2,column:1},to:{row:lastRow,column:lastCol}};
-  ws.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,paperSize:ws.PAPERSIZE_A4||ws.PAPER_A4,margins:{left:0.25,right:0.25,top:0.5,bottom:0.5,header:0.2,footer:0.2}};
+  ws.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,paperSize:9,margins:{left:0.25,right:0.25,top:0.5,bottom:0.5,header:0.2,footer:0.2}};
   const buffer=await wb.xlsx.writeBuffer(),blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=classEnglishLabel(cl).replace(/[^a-z0-9_-]/gi,'_')+'_'+String(termLabel).replace(/[^a-z0-9_-]/gi,'_')+'_'+(gradeMode?'Grade':'Marks')+'_Ledger_'+englishDisplayText(exam.examName||'Exam').replace(/[^a-z0-9_-]/gi,'_')+'.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
   say('Excel '+(gradeMode?'Grade':'Marks')+' Ledger exported: '+students.length+' students, '+subjects.length+' subjects, '+termLabel+'. '+(gradeMode?'Overall marks, percentage, GPA and final grade included.':'Saved assessment component marks are preserved; blank marks remain blank.'));
