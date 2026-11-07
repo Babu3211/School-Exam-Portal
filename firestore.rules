@@ -45,6 +45,16 @@ service cloud.firestore {
         get(studentPath).data.get('active', true) != false;
     }
 
+    function studentCanTakeSubject(studentId, subjectName) {
+      let studentPath = /databases/$(database)/documents/students/$(studentId);
+      let student = get(studentPath).data;
+      return !subjectName.matches('^(ऐच्छिक प्रथम|ऐच्छिक द्वितीय|Optional I:|Optional II:).*') ||
+        (student.get('optionalSubjects', []) is list &&
+         student.get('optionalSubjects', []).hasAny([subjectName])) ||
+        student.get('optionalSubject1', '') == subjectName ||
+        student.get('optionalSubject2', '') == subjectName;
+    }
+
     function isAssignedSubject(className, subjectName, sectionName) {
       return isAdmin() ||
         (hasRole('subject_teacher') &&
@@ -196,6 +206,8 @@ service cloud.firestore {
                            request.resource.data.section) &&
          studentBelongsToClass(request.resource.data.studentId,
                                request.resource.data.className) &&
+         studentCanTakeSubject(request.resource.data.studentId,
+                               request.resource.data.subject) &&
          markExamMatches(request.resource.data));
       allow update: if isAdmin() ||
         (hasActiveRole() &&
@@ -212,6 +224,7 @@ service cloud.firestore {
          isAssignedSubject(resource.data.className, resource.data.subject,
                            resource.data.section) &&
          studentBelongsToClass(resource.data.studentId, resource.data.className) &&
+         studentCanTakeSubject(resource.data.studentId, request.resource.data.subject) &&
          markExamMatches(request.resource.data));
       allow delete: if isAdmin();
     }
