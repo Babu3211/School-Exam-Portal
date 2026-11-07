@@ -2691,7 +2691,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
   });
 }
 
-/* V44 bilingual stacked labels and save confirmations */
+/* V44 bilingual labels and verified Save confirmation */
 (function(){
  const bilingualText=(raw)=>{const parts=String(raw||'').split('/').map(x=>x.trim()).filter(Boolean);return parts.length<2?null:parts;};
  function stackLabel(el){if(!el||el.dataset.bilingualStacked==='1')return;const textNodes=[...el.childNodes].filter(n=>n.nodeType===Node.TEXT_NODE&&n.textContent.trim());if(!textNodes.length)return;const raw=textNodes.map(n=>n.textContent).join(' ').trim();const parts=bilingualText(raw);if(!parts)return;textNodes.forEach(n=>n.remove());const wrap=document.createElement('span');wrap.className='bilingual-stack';wrap.innerHTML='<span class="bilingual-en"></span><span class="bilingual-ne"></span>';wrap.querySelector('.bilingual-en').textContent=parts[0];wrap.querySelector('.bilingual-ne').textContent=parts[1];el.appendChild(wrap);el.dataset.bilingualStacked='1';}
@@ -2699,29 +2699,45 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
  const style=document.createElement('style');style.textContent='.bilingual-stack{display:inline-flex;flex-direction:column;align-items:flex-start;gap:2px;line-height:1.3}.bilingual-en{font-weight:800}.bilingual-ne{font-size:.92em;font-weight:600;opacity:.88}.nav button,.menu-group summary{align-items:center}';document.head.appendChild(style);
  applyStacks();
  const stackObserver=new MutationObserver(()=>applyStacks());stackObserver.observe(document.getElementById('view')||document.body,{childList:true,subtree:true});
- function normalizeFirebaseSaveButton(button){
+ const saveConfirmMessage='कृपया तपाईंले प्रविष्ट गर्नुभएको विवरण सही र पूरा छ/छैन जाँच गर्नुहोस्। सही भएको यकिन भएपछि मात्र Save थिच्नुहोस्। जारी राख्ने हो?';
+ function normalizeSaveButton(button){
   if(!button)return;
   const label=(button.innerText||button.textContent||'').trim();
-  if(/print|pdf|download|restore|publish|login|reset|cancel|रद्द|हटाउनुहोस्|पुनः सक्रिय/i.test(label))return;
+  if(/print|pdf|download|restore|publish|login|reset|cancel|रद्द|हटाउनुहोस्|पुनः सक्रिय|archive|delete/i.test(label))return;
   if(/saving\s*\.\.\.|updating\s*\.\.\./i.test(label)){
-   button.textContent=/saving/i.test(label)?'Firebase मा सुरक्षित हुँदैछ...':'Firebase मा अद्यावधिक हुँदैछ...';
-   button.dataset.firebaseSaveLabel='1';return;
+   button.textContent=/saving/i.test(label)?'Saving...':'Updating...';
+   button.dataset.smssSaveAction='1';return;
   }
   if(/\b(save|submit)\b/i.test(label)){
-   button.textContent='Firebase मा सुरक्षित गर्नुहोस्';
-   button.dataset.firebaseSaveLabel='1';
+   button.textContent='Save';
+   button.dataset.smssSaveAction='1';
   }
  }
- function normalizeFirebaseSaveButtons(root=document){
-  if(root.matches&&root.matches('button'))normalizeFirebaseSaveButton(root);
-  if(root.querySelectorAll)root.querySelectorAll('button').forEach(normalizeFirebaseSaveButton);
+ function normalizeSaveButtons(root=document){
+  if(root.matches&&root.matches('button'))normalizeSaveButton(root);
+  if(root.querySelectorAll)root.querySelectorAll('button').forEach(normalizeSaveButton);
  }
- normalizeFirebaseSaveButtons();
+ normalizeSaveButtons();
  const saveLabelObserver=new MutationObserver(records=>records.forEach(record=>{
-  if(record.type==='childList'){normalizeFirebaseSaveButtons(record.target);record.addedNodes.forEach(node=>{if(node.nodeType===1)normalizeFirebaseSaveButtons(node)})}
-  else if(record.type==='characterData')normalizeFirebaseSaveButtons(record.target.parentElement);
+  if(record.type==='childList'){normalizeSaveButtons(record.target);record.addedNodes.forEach(node=>{if(node.nodeType===1)normalizeSaveButtons(node)})}
+  else if(record.type==='characterData')normalizeSaveButtons(record.target.parentElement);
  }));
  saveLabelObserver.observe(document.body,{childList:true,subtree:true,characterData:true});
+ function isSaveButton(button){return !!(button&&button.dataset&&button.dataset.smssSaveAction==='1');}
+ document.addEventListener('click',event=>{
+  const button=event.target&&event.target.closest?event.target.closest('button'):null;
+  if(!isSaveButton(button))return;
+  // Form submission is confirmed after browser validation in the submit event.
+  if(button.form&&button.type!=='button'&&button.type!=='reset')return;
+  if(!window.confirm(saveConfirmMessage)){event.preventDefault();event.stopImmediatePropagation();}
+ },true);
+ document.addEventListener('submit',event=>{
+  const form=event.target;
+  const submitter=event.submitter;
+  const saveFormButton=isSaveButton(submitter)||Array.from(form.querySelectorAll('button')).some(isSaveButton);
+  if(!saveFormButton)return;
+  if(!window.confirm(saveConfirmMessage)){event.preventDefault();event.stopImmediatePropagation();}
+ },true);
 })();
 </script>
 </body>
