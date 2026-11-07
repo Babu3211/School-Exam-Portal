@@ -284,8 +284,8 @@ must(optionalSubjects.some(x=>x.source==="ऐच्छिक प्रथम: �
 const ledgerSubjectsStart=html.indexOf("function ledgerSubjectsForClass(cl,group){");
 const ledgerSubjectsEnd=html.indexOf("\nlet activeLedgerMode",ledgerSubjectsStart);
 must(ledgerSubjectsStart>=0&&ledgerSubjectsEnd>ledgerSubjectsStart,"Grade Ledger Subject Settings resolver is missing.");
-const ledgerSubjectsFactory=new Function("classSubjectNames","ledgerSubjectOrder","canonicalSubjectKey",html.slice(ledgerSubjectsStart,ledgerSubjectsEnd)+";return ledgerSubjectsForClass;");
-const configuredSubjects=ledgerSubjectsFactory((cl,group)=>["नेपाली","चित्रकला"],{"4-5":["Nepali","English"]},value=>String(value).toLowerCase());
+const ledgerSubjectsFactory=new Function("classSubjectNames","ledgerSubjectOrder","canonicalSubjectKey","classNoFromName",html.slice(ledgerSubjectsStart,ledgerSubjectsEnd)+";return ledgerSubjectsForClass;");
+const configuredSubjects=ledgerSubjectsFactory((cl,group)=>["नेपाली","चित्रकला"],{"4-5":["Nepali","English"]},value=>String(value).toLowerCase(),value=>String(value).replace(/[^0-9]/g,""));
 must(configuredSubjects("4","4-5").join("|")==="नेपाली|चित्रकला","Grade Ledger must prefer configured class/subject settings over hard-coded fallback subjects.");
 const ledgerLoadStart=html.indexOf("async function loadMarksLedgerPage(){");
 const ledgerLoadEnd=html.indexOf("\nwindow.loadMarksLedgerPage",ledgerLoadStart);
