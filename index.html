@@ -1634,7 +1634,7 @@ async function loadMarksEntry(){
    const assignedNames=sortEntryClassNames(pairs.map(x=>x.className));
    const studentSnaps=await Promise.all(assignedNames.map(cl=>getDocs(query(collection(db,'students'),where('class','==',cl)))));
    const examSnaps=await Promise.all(assignedNames.map(cl=>getDocs(query(collection(db,'exams'),where('className','==',cl)))));
-   const markSnaps=await Promise.all(pairs.map(x=>getDocs(query(collection(db,'marks'),where('className','==',x.className),where('subject','==',x.subject)))));
+   const markSnaps=await Promise.all(pairs.map(x=>getDocs(query(collection(db,'marks'),where('className','==',x.className),where('subject','==',x.subject),...(String(x.section||'').trim()?[where('section','==',String(x.section).trim())]:[])))));
    // Subject Teacher लाई Rules ले mark_settings पढ्न अनुमति दिएको छ।
    // सबै saved settings पढेर assigned class/subject सँग मिलाउँछौँ।
    ms=await getDocs(collection(db,'mark_settings'));
@@ -2487,7 +2487,7 @@ async function fetchDashboardCollections(){
  const [studentSnaps,examSnaps,markSnaps,attendanceSnaps,classSnap]=await Promise.all([
   Promise.all(classNames.map(cl=>getDocs(query(collection(db,"students"),where("class","==",cl))))),
   Promise.all(classNames.map(cl=>getDocs(query(collection(db,"exams"),where("className","==",cl))))),
-  Promise.all(pairs.map(x=>getDocs(query(collection(db,"marks"),where("className","==",x.className),where("subject","==",x.subject))))),
+  Promise.all(pairs.map(x=>getDocs(query(collection(db,"marks"),where("className","==",x.className),where("subject","==",x.subject),...(String(x.section||"").trim()?[where("section","==",String(x.section).trim())]:[]))))),
   Promise.all(attendanceClassNames.map(cl=>getDocs(query(collection(db,"attendance"),where("className","==",cl),where("attendanceType","==","daily"))))),
   getDocs(collection(db,"classes"))
  ]);
