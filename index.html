@@ -131,8 +131,8 @@
 
 .app-notification{position:fixed;right:18px;top:18px;z-index:99999;max-width:min(92vw,380px);padding:13px 16px;border-radius:10px;background:#14532d;color:#fff;box-shadow:0 8px 28px #0f172a30;font-size:13px;font-weight:700;line-height:1.55;display:none}.app-notification.error{background:#991b1b}.app-notification.show{display:block}@media(max-width:600px){.app-notification{left:12px;right:12px;top:10px;max-width:none}}\n
 /* Subject Bank: compact action controls (global app stylesheet) */
-.subject-bank-action-btn{padding:2px 5px!important;min-height:19px!important;height:19px!important;line-height:1!important;font-size:8px!important;border-radius:4px!important;white-space:nowrap;vertical-align:middle}
-@media(max-width:480px){.subject-bank-action-btn{padding:1px 4px!important;min-height:17px!important;height:17px!important;font-size:7px!important}}
+.subject-bank-action-btn{padding:3px 7px!important;min-height:22px!important;height:22px!important;line-height:1.2!important;font-size:11px!important;border-radius:5px!important;white-space:nowrap;vertical-align:middle}
+@media(max-width:480px){.subject-bank-action-btn{padding:2px 6px!important;min-height:21px!important;height:21px!important;font-size:10px!important}}
 </style>
 
 <meta name="theme-color" content="#1769d2">
@@ -1068,7 +1068,7 @@ function renderSubjectCatalog(){
   const actions=archived
    ?`<button class="btn subject-bank-action-btn" type="button" data-subject-restore="${id}">पुनः सक्रिय</button>`
    :`<button class="btn alt subject-bank-action-btn" type="button" data-subject-edit="${id}">Edit</button><button class="btn subject-bank-action-btn" style="background:#b45309" type="button" data-subject-archive="${id}">Delete</button>`;
-  return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;padding:5px 2px;border-bottom:1px solid #e2e8f0;background:transparent;font-size:14px;opacity:${archived?'.72':'1'}"><b style="flex:1;min-width:0">${classEsc(x.name||x.subject)}</b>${x.code?`<small style="color:#64748b">${classEsc(x.code)}</small>`:''}${archived?'<small style="color:#b42318">निष्क्रिय</small>':''}<span style="display:flex;align-items:center;gap:4px;flex-shrink:0">${actions}</span></div>`;
+  return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;padding:5px 2px;border-bottom:1px solid #e2e8f0;background:transparent;font-size:13px;line-height:1.5;opacity:${archived?'.72':'1'}"><b style="flex:1;min-width:0;font-size:13px;font-weight:600">${classEsc(x.name||x.subject)}</b>${x.code?`<small style="color:#64748b;font-size:11px">${classEsc(x.code)}</small>`:''}${archived?'<small style="color:#b42318;font-size:11px">निष्क्रिय</small>':''}<span style="display:flex;align-items:center;gap:4px;flex-shrink:0">${actions}</span></div>`;
  }).join("")||'<span class="hint">अहिलेसम्म विषय थपिएको छैन।</span>';
 }
 async function editSubjectCatalog(id){
