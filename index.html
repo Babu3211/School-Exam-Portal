@@ -1294,9 +1294,12 @@ document.addEventListener("input",event=>{if(event.target.id==="examSearch")rend
 function classNoFromName(value){const m=String(value??'').replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d))).match(/[0-9]+/);return m?String(Number(m[0])):''}
 function classSubjectNames(classNo,group){
  const rows=(cachedClasses||[]).filter(x=>classNoFromName(x.className)===String(classNo));
+ const hasClassRegistry=rows.length>0;
  const fromClasses=rows.filter(x=>x.active!==false).map(x=>String(x.subject||'').trim()).filter(Boolean);
  const source=typeof markSettingsCache!=='undefined'?markSettingsCache:(typeof marksSettings!=='undefined'?marksSettings:[]);
- const fromSettings=source.filter(x=>x.classGroup===group&&(!x.className||String(x.className)===String(classNo))).map(x=>String(x.subject||'').trim()).filter(Boolean);
+ // Once a class has an explicit subject registry, that registry is authoritative.
+ // Retired subjects remain stored for historical marks but must not reappear in current ledgers.
+ const fromSettings=hasClassRegistry?[]:source.filter(x=>x.classGroup===group&&(!x.className||String(x.className)===String(classNo))).map(x=>String(x.subject||'').trim()).filter(Boolean);
  const canonical=new Map();[...fromClasses,...fromSettings].forEach(v=>{const k=canonicalSubjectKey(v);if(k&&!canonical.has(k))canonical.set(k,k==='हाम्रो धुनिबेँशी'?'हाम्रो धुनिबेँशी':v)});return [...canonical.values()];
 }
 function activeSubjectsForClass(classNo,group){const dynamic=classSubjectNames(classNo,group),hasClassRegistry=(cachedClasses||[]).some(x=>classNoFromName(x.className)===String(classNo));const source=hasClassRegistry?dynamic:(markSubjects[group]||[]);const merged=new Map();source.forEach(v=>{const k=canonicalSubjectKey(v);if(k&&!merged.has(k))merged.set(k,k==='हाम्रो धुनिबेँशी'?'हाम्रो धुनिबेँशी':v)});return [...merged.values()];}
@@ -1940,9 +1943,14 @@ function buildResultRows(){
  if(canonicalStudentClass(exam.className)!==canonicalStudentClass(cl)){resultMsg('छानिएको परीक्षा र कक्षा मिलेन। सोही कक्षाको परीक्षा छान्नुहोस्।',true);return}
  const classNo=Number(classNoFromName(cl)||0),isAchievementClass=classNo>=1&&classNo<=5;
  const students=resultStudents.filter(x=>canonicalStudentClass(x.class??x.className??'')===canonicalStudentClass(cl)).sort((a,b)=>Number(studentRollNo(a)||999999)-Number(studentRollNo(b)||999999));
- const activeClassSubjects=resultClasses.filter(c=>canonicalStudentClass(c.className??c.class??'')===canonicalStudentClass(cl)&&c.active!==false).map(c=>String(c.subject||c.subjectName||'').trim()).filter(Boolean);
+ const classSubjectRows=resultClasses.filter(c=>canonicalStudentClass(c.className??c.class??'')===canonicalStudentClass(cl));
+ const hasClassSubjectRegistry=classSubjectRows.length>0;
+ const activeClassSubjects=classSubjectRows.filter(c=>c.active!==false).map(c=>String(c.subject||c.subjectName||'').trim()).filter(Boolean);
  const recordedSubjects=resultMarks.filter(m=>m.examId===examId&&canonicalStudentClass(m.className??cl)===canonicalStudentClass(cl)).map(m=>String(m.subject||'').trim()).filter(Boolean);
- const subjectMap=new Map();[...activeClassSubjects,...recordedSubjects].forEach(subject=>{const key=canonicalSubjectKey(subject);if(key&&!subjectMap.has(key))subjectMap.set(key,key==='हाम्रो धुनिबेँशी'?'हाम्रो धुनिबेँशी':subject)});
+ // Do not resurrect marks for subjects removed from the active class subject list.
+ // Legacy classes without a registry can still build results from saved marks.
+ const resultSubjectSource=hasClassSubjectRegistry?activeClassSubjects:recordedSubjects;
+ const subjectMap=new Map();resultSubjectSource.forEach(subject=>{const key=canonicalSubjectKey(subject);if(key&&!subjectMap.has(key))subjectMap.set(key,key==='हाम्रो धुनिबेँशी'?'हाम्रो धुनिबेँशी':subject)});
  const subjects=[...subjectMap.values()];
  if(!students.length||!subjects.length){resultMsg('यस परीक्षा/कक्षाका विद्यार्थी वा Marks भेटिएनन्।',true);document.getElementById('resultsBody').innerHTML='<tr><td class="empty" colspan="3">रेकर्ड भेटिएन।</td></tr>';return}
  const rows=students.map(st=>{
