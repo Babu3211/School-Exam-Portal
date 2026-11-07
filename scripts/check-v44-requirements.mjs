@@ -290,6 +290,11 @@ must(optionalHelpers.optionalSlotForSubject("अनिवार्य नेप�
 must(optionalHelpers.optionalSubjectsForClass("9", "optionalSubject1").length === 2, "Class 9 Optional I selector must list the configured optional I subjects.");
 must(optionalHelpers.optionalSubjectsForClass("8", "optionalSubject1").length === 0, "Optional subject selectors must remain hidden outside Classes 9–10.");
 must(html.includes('id="studentOptional1"') && html.includes('id="studentOptional2"'), "Student profile must provide separate Optional I and Optional II selectors.");
+must(html.includes("if(e.target.id==='studentClass')renderStudentOptionalSubjects(e.target.value,false)"), "Changing a student's class must refresh and clear the optional-subject choices.");
+must(html.includes("renderStudentOptionalSubjects(document.getElementById(\\"studentClass\\")?.value||classes[0],false)"), "Resetting a student form must hide stale optional-subject selectors.");
+must(html.includes("choices.length&&(!chosen||!choices.some"), "A configured optional subject slot must be selected before saving the student.");
+must(html.includes("canonicalSubjectKey(data.optionalSubject1)===canonicalSubjectKey(data.optionalSubject2)"), "The same subject cannot be selected for both optional slots.");
+
 must(html.includes("optionalSubject1:document.getElementById") && html.includes("optionalSubject2:document.getElementById"), "Student Optional I/II selections must be saved to the student record.");
 must(html.includes("studentOptionalSubject(x,optionalSlot)") && html.includes("existingMarks.some(m=>m.studentId===x.id"), "Optional-subject Mark Entry must filter to enrolled students but preserve existing marks for correction.");
 must(html.includes('colspan="6">N/A') && html.includes("componentsBySubject[si].forEach(()=>row.push('N/A'))"), "Number/Grade Ledgers and Excel export must show N/A for non-enrolled optional subjects.");
