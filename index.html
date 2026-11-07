@@ -1487,7 +1487,7 @@ function ledgerTemplateSubjectSpecs(group,cl){
  });
  return specs;
 }
-function studentOptionalEnrollmentComplete(student,group,specs){if(group!=='9-10')return true;const slots=[...new Set(specs.map(x=>optionalSubjectSlot(x.source)).filter(Boolean))];return slots.every(slot=>studentOptionalSubjects(student).some(x=>optionalSubjectSlot(x)===slot));}
+function studentOptionalEnrollmentComplete(student,group,specs){if(group!=='9-10')return true;const selected=studentOptionalSubjects(student),slots=[...new Set(specs.map(x=>optionalSubjectSlot(x.source)).filter(Boolean))];return slots.every(slot=>{const choices=selected.filter(x=>optionalSubjectSlot(x)===slot);return choices.length===1&&specs.some(spec=>canonicalSubjectKey(spec.source)===canonicalSubjectKey(choices[0]));});}
 function ledgerStudentTakesSubject(student,subject,group){return group!=='9-10'||!isOptionalSubjectName(subject)||studentTakesOptionalSubject(student,subject);}
 function ledgerGradeSubjectResult(student,examId,spec,group){
  const record=existingMarks.find(m=>m.studentId===student.id&&m.examId===examId&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(spec.source));
