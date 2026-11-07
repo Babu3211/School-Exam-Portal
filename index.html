@@ -2726,6 +2726,10 @@ body.smss-readonly-user #studentsBody th:last-child,body.smss-readonly-user #sta
 .login-user-types{gap:10px;margin:0 0 14px;color:#62738b;font-family:Arial,sans-serif;font-size:12px;font-weight:600;letter-spacing:.15px}
 .login-user-types span+span:before{margin-right:10px;color:#a2afbf;font-weight:400}
 @media(max-width:380px){.login-brand h2,#loginSchoolName{font-size:21px!important}.login-year{font-size:13px}.login-year strong{font-size:15px}}
+
+/* V44 login school name: keep the configured school name on one line */
+#loginSchoolName.login-school-en{display:block;width:100%;max-width:100%;white-space:nowrap;overflow:visible;text-overflow:clip;font-size:clamp(12px,3.9vw,21px)!important;line-height:1.25!important;letter-spacing:-.35px!important;margin:3px 0!important;text-align:center!important;}
+@media(max-width:360px){#loginSchoolName.login-school-en{font-size:clamp(11px,3.6vw,14px)!important;letter-spacing:-.45px!important;}}
 </style><h2>Mahadevasthan Secondary School</h2><p style="text-align:center">Dhunibesi-05, Dhading · Academic Year 2083</p><table><thead><tr>${reportHeaders.map(x=>`<th>${reportEsc(x)}</th>`).join("")}</tr></thead><tbody>${reportRows.map(r=>`<tr>${r.map(x=>`<td>${reportEsc(x)}</td>`).join("")}</tr>`).join("")}</tbody></table><script>window.onload=()=>window.print();<\/script></html>`);w.document.close();}
 document.addEventListener("click",e=>{if(e.target.closest("#loadReportBtn")){buildReport();return;}if(e.target.closest("#refreshReportBtn")){loadReportsData();return;}if(e.target.closest("#exportReportBtn")){exportReportCsv();return;}if(e.target.closest("#printReportBtn")){printReport();return;}});
 document.addEventListener("change",e=>{if(["reportType","reportClass"].includes(e.target.id))buildReport();});
