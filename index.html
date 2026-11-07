@@ -1188,23 +1188,51 @@ document.addEventListener("submit",async event=>{
     const previous=cachedSubjectCatalog.find(x=>x.id===editId);
     const oldName=String(previous?.name||previous?.subject||"").trim();
     if(oldName&&canonicalSubjectKey(oldName)!==canonicalSubjectKey(name)){
-     // Keep old class and Marks documents untouched, but record the renamed label as a hidden alias.
-     // This prevents loadClasses() from resurrecting the obsolete legacy label in Subject Bank.
-     const batch=writeBatch(db);
-     batch.update(doc(db,"subjects",editId),{name,code,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});
-     const aliasRef=doc(collection(db,"subjects"));
-     batch.set(aliasRef,{name:oldName,code:"",active:false,source:"renamed-subject-alias",replacedBy:editId,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid,archivedAt:serverTimestamp(),archivedBy:auth.currentUser.uid});
-     await batch.commit();
+     if(!confirm(`“${oldName}” लाई “${name}” ले सबै कक्षा, Marks, Grade Ledger, Grade Sheet र शिक्षक Assignment मा Replace गर्ने? प्राप्ताङ्क परिवर्तन हुँदैन।`)){if(msg)msg.textContent="नाम परिवर्तन रद्द गरियो।";return;}
+     msg.textContent="सम्बन्धित कक्षा, Marks र सेटिङ जाँच हुँदैछन्...";
+     const [classSnap,markSnap,settingSnap,roleSnap,studentSnap]=await Promise.all([
+      getDocs(collection(db,"classes")),getDocs(collection(db,"marks")),getDocs(collection(db,"mark_settings")),
+      getDocs(collection(db,"user_roles")),getDocs(collection(db,"students"))
+     ]);
+     const matches=v=>canonicalSubjectKey(v)===canonicalSubjectKey(oldName);
+     const classRows=classSnap.docs.filter(d=>matches(d.data().subject||d.data().subjectName));
+     const markRows=markSnap.docs.filter(d=>matches(d.data().subject));
+     const settingRows=settingSnap.docs.filter(d=>matches(d.data().subject));
+     const roleRows=roleSnap.docs.filter(d=>(d.data().subjectAssignments||[]).some(a=>matches(a.subject)));
+     const studentRows=studentSnap.docs.filter(d=>["optionalSubject1","optionalSubject2","optionalI","optionalII","optionalFirstSubject","optionalSecondSubject"].some(k=>matches(d.data()[k])));
+     const classKeys=new Set(classRows.map(d=>{const x=d.data();return [String(x.className||x.class||""),String(x.section||"").trim().toLowerCase()].join("::")}));
+     if(classSnap.docs.some(d=>{const x=d.data();return matches(x.subject||x.subjectName)===false&&canonicalSubjectKey(x.subject||x.subjectName)===canonicalSubjectKey(name)&&classKeys.has([String(x.className||x.class||""),String(x.section||"").trim().toLowerCase()].join("::"));})){
+      throw new Error("केही कक्षामा नयाँ नामको विषय पहिल्यै छ। दोहोरो विषय नबनोस् भनेर नाम परिवर्तन रोकियो।");
+     }
+     const oldMarkKeys=new Set(markRows.map(d=>{const x=d.data();return [x.studentId,x.examId,x.className,String(x.section||"").trim()].join("::")}));
+     if(markSnap.docs.some(d=>{const x=d.data();return canonicalSubjectKey(x.subject)===canonicalSubjectKey(name)&&oldMarkKeys.has([x.studentId,x.examId,x.className,String(x.section||"").trim()].join("::"));})){
+      throw new Error("नयाँ नाममा उही विद्यार्थी/परीक्षाको Marks पहिले नै छ। Marks नमिसियोस् भनेर परिवर्तन रोकियो।");
+     }
+     const settingKeys=new Set(settingRows.map(d=>{const x=d.data();return [x.classGroup,x.className,x.assessmentType,x.termKey].join("::")}));
+     if(settingSnap.docs.some(d=>{const x=d.data();return canonicalSubjectKey(x.subject)===canonicalSubjectKey(name)&&settingKeys.has([x.classGroup,x.className,x.assessmentType,x.termKey].join("::"));})){
+      throw new Error("नयाँ नामको Assessment Setting पहिल्यै छ। दोहोरो सेटिङ नबनोस् भनेर परिवर्तन रोकियो।");
+     }
+     const writes=[];
+     writes.push(batch=>batch.update(doc(db,"subjects",editId),{name,code,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid}));
+     classRows.forEach(d=>writes.push(batch=>batch.update(doc(db,"classes",d.id),{subject:name,...(d.data().subjectName!==undefined?{subjectName:name}:{}),updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid})));
+     markRows.forEach(d=>writes.push(batch=>batch.update(doc(db,"marks",d.id),{subject:name,...(d.data().subjectName!==undefined?{subjectName:name}:{}),updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid})));
+     settingRows.forEach(d=>writes.push(batch=>batch.update(doc(db,"mark_settings",d.id),{subject:name,...(d.data().subjectName!==undefined?{subjectName:name}:{}),updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid})));
+     roleRows.forEach(d=>{const x=d.data();const subjectAssignments=(x.subjectAssignments||[]).map(a=>matches(a.subject)?{...a,subject:name}:a);writes.push(batch=>batch.update(doc(db,"user_roles",d.id),{subjectAssignments,subjectAssignmentKeys:subjectAssignments.map(a=>`${a.className}::${a.subject}`),subjectAssignmentSectionKeys:subjectAssignments.map(a=>`${a.className}::${a.subject}::${String(a.section||"").trim()||"ALL"}`),updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid}));});
+     studentRows.forEach(d=>{const x=d.data(),patch={updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid};["optionalSubject1","optionalSubject2","optionalI","optionalII","optionalFirstSubject","optionalSecondSubject"].forEach(k=>{if(matches(x[k]))patch[k]=name;});writes.push(batch=>batch.update(doc(db,"students",d.id),patch));});
+     for(let offset=0;offset<writes.length;offset+=450){const batch=writeBatch(db);writes.slice(offset,offset+450).forEach(add=>add(batch));await batch.commit();}
+     await writeAuditLog("subjects","rename-propagated",editId,`${oldName} → ${name}; classes ${classRows.length}, marks ${markRows.length}, settings ${settingRows.length}, roles ${roleRows.length}, students ${studentRows.length}`);
+     const aliasSnap=await getDocs(query(collection(db,"subjects"),where("source","==","renamed-subject-alias"),where("replacedBy","==",editId)));
+     if(aliasSnap.empty){await addDoc(collection(db,"subjects"),{name:oldName,code:"",active:false,source:"renamed-subject-alias",replacedBy:editId,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid,archivedAt:serverTimestamp(),archivedBy:auth.currentUser.uid});}
     }else{
      await updateDoc(doc(db,"subjects",editId),{name,code,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});
+     await writeAuditLog("subjects","update",editId,name);
     }
-    await writeAuditLog("subjects","update",editId,name);
    }else{
     const subjectRef=await addDoc(collection(db,"subjects"),{name,code,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});
     await writeAuditLog("subjects","create",subjectRef.id,name);
    }
    form.reset();delete form.dataset.editId;document.getElementById("subjectCatalogCancel").hidden=true;
-   await loadClasses();if(msg)msg.textContent=editId?`"${name}" विषय सूची Update भयो। पुराना कक्षागत विषय र Marks परिवर्तन भएका छैनन्।`:`"${name}" विषय सूचीमा थपियो र सुरक्षित भयो।`;showAppNotification(editId?`"${name}" विषय Update भयो।`:`"${name}" विषय सफलतापूर्वक सुरक्षित भयो।`);
+   await loadClasses();if(msg)msg.textContent=editId?`"${name}" नाम सबै सम्बन्धित कक्षा, Marks र Assignment मा Replace भयो। प्राप्ताङ्क सुरक्षित छन्।`:`"${name}" विषय सूचीमा थपियो र सुरक्षित भयो।`;showAppNotification(editId?`"${name}" विषय Update भयो।`:`"${name}" विषय सफलतापूर्वक सुरक्षित भयो।`);
   }
   catch(error){console.error("Subject catalog save failed",error);if(msg)msg.textContent=`विषय सुरक्षित गर्न सकिएन: ${safeNoticeError(error)}`;showAppNotification(`विषय सुरक्षित हुन सकेन: ${safeNoticeError(error)||"त्रुटि"}`,true);}
   finally{btn.disabled=false;btn.textContent="सुरक्षित गर्नुहोस्";}
