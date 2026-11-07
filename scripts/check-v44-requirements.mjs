@@ -145,8 +145,8 @@ must(html.split("currentSchoolSettings.schoolNameEnglish||currentSchoolSettings.
 must(html.includes("currentSchoolSettings.municipality") && html.includes("currentSchoolSettings.address"), "Printed Grade Sheets and Grade Ledger must use the saved school address.");
 must(html.includes("function schoolPrintName()") && html.includes("function schoolPrintAddress()"), "All result print layouts must share School Settings name and address helpers.");
 must(html.includes("background-image:${schoolWatermarkBackground()}") && html.includes("IEMIS: ${esc(currentSchoolSettings.iemisCode||'—')}"), "Printed Marks Ledger and Grade Ledger must use School Settings watermark and IEMIS code.");
-must((html.match(/data-watermark="\\$\\{resultEsc\\(schoolPrintName\\(\\)\\)\\}"/g)||[]).length===2, "Both primary and secondary Grade Sheets must use the School Settings watermark.");
-must((html.match(/OF \\$\\{resultEsc\\(schoolPrintName\\(\\)\\.toUpperCase\\(\\)\\)\\}/g)||[]).length===2, "Both Grade Sheet formats must use the saved school name and address instead of hardcoded school details.");
+must(html.split('data-watermark="${resultEsc(schoolPrintName())}"').length-1===2, "Both primary and secondary Grade Sheets must use the School Settings watermark.");
+must(html.split('OF ${resultEsc(schoolPrintName().toUpperCase())}').length-1===2, "Both Grade Sheet formats must use the saved school name and address instead of hardcoded school details.");
 must(html.includes("const iemis=student.iemisCode||currentSchoolSettings.iemisCode||'—';"), "Grade Sheet must use the IEMIS code saved in School Settings when student IEMIS is blank.");
 must(html.includes("applyRoleNavigation();await loadSchoolSettings();"), "School Settings must finish loading before ledger and result pages are initialized.");
 
