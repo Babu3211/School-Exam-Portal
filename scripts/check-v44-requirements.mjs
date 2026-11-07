@@ -139,6 +139,10 @@ must(html.includes("header{position:relative;text-align:center;min-height:112px;
 must(html.includes("const resultSubjectSource=hasClassSubjectRegistry?activeClassSubjects:recordedSubjects;"), "Grade Sheet must use active class subjects and only use legacy marks as fallback when no class subject registry exists.");
 
 must(html.includes("const scoresComplete=achievement?count!==null") && html.includes("const valid=!!rec&&scoresComplete"), "Grade Ledger must not convert incomplete assessment components into zero marks.");
+must(html.includes("const cl=document.getElementById('ledgerViewClass')?.value||document.getElementById('entryClass')?.value;"), "Grade Ledger assessment settings must follow the selected Ledger class first.");
+must(html.includes("subjects.reduce((a,sub,i)=>a+spans[i],achievement?4:2)"), "Learning-achievement Grade Ledger empty-state colspan must match its four identity columns.");
+must((html.match(/currentSchoolSettings.schoolNameEnglish\\|\\|currentSchoolSettings.schoolName/g)||[]).length>=2, "Printed Grade Sheets must use the saved school name from School Settings.");
+must(html.includes("currentSchoolSettings.municipality") && html.includes("currentSchoolSettings.address"), "Printed Grade Sheets and Grade Ledger must use the saved school address.");
 // Active class-subject registry is authoritative; retired subjects must not reappear from old settings/marks.
 const subjectStart = html.indexOf("function classSubjectNames(classNo,group){");
 const subjectEnd = html.indexOf("\nfunction activeSubjectsForClass", subjectStart);
