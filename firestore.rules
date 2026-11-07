@@ -145,6 +145,38 @@ service cloud.firestore {
         (data.scores.size() < 12 || validScoreComponent(data.scores[11]));
     }
 
+    function scoreFullMarksTotal(data) {
+      return
+        (data.scores.size() > 0 ? data.scores[0].fullMarks : 0) +
+        (data.scores.size() > 1 ? data.scores[1].fullMarks : 0) +
+        (data.scores.size() > 2 ? data.scores[2].fullMarks : 0) +
+        (data.scores.size() > 3 ? data.scores[3].fullMarks : 0) +
+        (data.scores.size() > 4 ? data.scores[4].fullMarks : 0) +
+        (data.scores.size() > 5 ? data.scores[5].fullMarks : 0) +
+        (data.scores.size() > 6 ? data.scores[6].fullMarks : 0) +
+        (data.scores.size() > 7 ? data.scores[7].fullMarks : 0) +
+        (data.scores.size() > 8 ? data.scores[8].fullMarks : 0) +
+        (data.scores.size() > 9 ? data.scores[9].fullMarks : 0) +
+        (data.scores.size() > 10 ? data.scores[10].fullMarks : 0) +
+        (data.scores.size() > 11 ? data.scores[11].fullMarks : 0);
+    }
+
+    function scoreObtainedTotal(data) {
+      return
+        (data.scores.size() > 0 && data.scores[0].obtained != null ? data.scores[0].obtained : 0) +
+        (data.scores.size() > 1 && data.scores[1].obtained != null ? data.scores[1].obtained : 0) +
+        (data.scores.size() > 2 && data.scores[2].obtained != null ? data.scores[2].obtained : 0) +
+        (data.scores.size() > 3 && data.scores[3].obtained != null ? data.scores[3].obtained : 0) +
+        (data.scores.size() > 4 && data.scores[4].obtained != null ? data.scores[4].obtained : 0) +
+        (data.scores.size() > 5 && data.scores[5].obtained != null ? data.scores[5].obtained : 0) +
+        (data.scores.size() > 6 && data.scores[6].obtained != null ? data.scores[6].obtained : 0) +
+        (data.scores.size() > 7 && data.scores[7].obtained != null ? data.scores[7].obtained : 0) +
+        (data.scores.size() > 8 && data.scores[8].obtained != null ? data.scores[8].obtained : 0) +
+        (data.scores.size() > 9 && data.scores[9].obtained != null ? data.scores[9].obtained : 0) +
+        (data.scores.size() > 10 && data.scores[10].obtained != null ? data.scores[10].obtained : 0) +
+        (data.scores.size() > 11 && data.scores[11].obtained != null ? data.scores[11].obtained : 0);
+    }
+
     function validMarkShape(data) {
       return data.keys().hasAll([
           'studentId', 'examId', 'subject', 'className', 'section',
@@ -166,7 +198,10 @@ service cloud.firestore {
         data.scores.size() <= 12 &&
         validScoreList(data) &&
         data.totalFullMarks is number && data.totalFullMarks >= 0 &&
+        data.totalFullMarks == scoreFullMarksTotal(data) &&
         data.totalObtained is number && data.totalObtained >= 0 &&
+        data.totalObtained == scoreObtainedTotal(data) &&
+        data.totalObtained <= data.totalFullMarks &&
         data.assessmentType in ['marks', 'learning-achievement'] &&
         data.academicYear is string &&
         data.termKey is string &&
