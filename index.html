@@ -1156,7 +1156,6 @@ document.addEventListener("submit",event=>{
 document.addEventListener("click",event=>{
  const button=event.target.closest("#saveAllMarks,#markSaveSettings,#saveAttendance,#saveRoleAssignmentBtn,#runFirebaseRestore");
  if(!button||button.disabled)return;
- if(button.dataset.saveConfirmed==="yes"){delete button.dataset.saveConfirmed;return;}
  const action=(button.textContent||"Save").trim().replace(/\s+/g," ").slice(0,80);
  if(!window.confirm("के तपाईं “"+action+"” गरेर विवरण सुरक्षित गर्न चाहनुहुन्छ?\n\nपुष्टि गरेपछि मात्र प्रक्रिया अघि बढ्नेछ।")){event.preventDefault();event.stopImmediatePropagation();return;}
  button.dataset.saveConfirmed="yes";
