@@ -268,11 +268,11 @@ const gradeResultStart=html.indexOf("\nfunction ledgerGradeSubjectResult",templa
 must(templateStart>=0&&gradeResultStart>templateStart,"Uploaded Grade Ledger template subject mapping is missing.");
 const subjectFactory=new Function("ledgerSubjectsForClass","canonicalSubjectKey",html.slice(templateStart,gradeResultStart)+";return ledgerTemplateSubjectSpecs;");
 const subjectSpecs=subjectFactory((cl,group)=>({
- "1-5":["नेपाली","अंग्रेजी","गणित","सेरोफेरो","हाम्रो धुनिबेँशी","कम्प्युटर"],
+ "4-5":["नेपाली","अंग्रेजी","गणित","सेरोफेरो","हाम्रो धुनिबेँशी","कम्प्युटर"],
  "6-8":["कम्प्युटर","हाम्रो धुनिबेँशी","स्वास्थ्य शारीरिक तथा सिर्जनात्मक कला","सामाजिक अध्ययन तथा मानव मूल्य शिक्षा","विज्ञान तथा प्रविधि","गणित","अंग्रेजी","नेपाली"],
  "9-10":["ऐच्छिक द्वितीय: कम्प्युटर विज्ञान","ऐच्छिक प्रथम: वातावरण विज्ञान","अनिवार्य सामाजिक अध्ययन","अनिवार्य विज्ञान तथा प्रविधि","अनिवार्य गणित","अनिवार्य अंग्रेजी","अनिवार्य नेपाली"]
 })[group]||[],value=>String(value).toLowerCase());
-must(subjectSpecs("1-5","4").map(x=>x.label).join("|")==="Nepali|English|Mathematics|Serophero|Hamro Dhunibeshi|Computer Science","Classes 1–5 must follow the uploaded six-subject Grade Ledger template.");
+must(subjectSpecs("4-5","4").map(x=>x.label).join("|")==="Nepali|English|Mathematics|Serophero|Hamro Dhunibeshi|Computer Science","Classes 1–5 must follow the uploaded six-subject Grade Ledger template.");
 must(subjectSpecs("6-8","6").map(x=>x.label).join("|")==="Computer Science|Hamro Dhunibeshi|Health Physical & Creative Art|Social Studies & Human Value Education|Science & Technology|Mathematics|English|Nepali","Classes 6–8 must follow the uploaded subject order.");
 must(subjectSpecs("9-10","9").map(x=>x.label).join("|")==="Optional II: Computer Science|Optional I: Environmental Science|Social Studies|Science & Technology|Mathematics|English|Nepali","Classes 9–10 must follow the uploaded subject order.");
 const gradeResultEnd=html.indexOf("\nfunction ledgerSchoolHeaderMarkup",gradeResultStart);
@@ -284,11 +284,11 @@ const gradeCalc=gradeResultFactory([
  {studentId:"s2",examId:"e1",subject:"Mathematics",scores:[{name:"Participation",fullMarks:4,obtained:4},{name:"Practical/Project",fullMarks:36,obtained:34},{name:"First Term Examination",fullMarks:10,obtained:9},{name:"TH (Theory)",fullMarks:50,obtained:40}]}
 ],value=>String(value).toLowerCase(),gradeForTest);
 const primaryGrade=gradeCalc({id:"s1"},"e1",{source:"नेपाली"},"1-3");
-must(primaryGrade.complete&&primaryGrade.grades[0]==="A+"&&primaryGrade.points[0]==="3.60"===false,"Primary grade must calculate from achievement marks.");
+must(primaryGrade.complete&&primaryGrade.grades[0]==="A+"&&primaryGrade.points[0]==="4.00","Primary grade must calculate from achievement marks.");
 const secondaryGrade=gradeCalc({id:"s2"},"e1",{source:"Mathematics"},"6-8");
-must(secondaryGrade.complete&&secondaryGrade.grades.join("|")==="A+|B|A"&&secondaryGrade.points.join("|")==="4.00|2.80|3.60","Classes 6–10 must calculate IN, TH and Total grade/grade-point columns.");
-const pendingGrade=gradeCalc({id:"s2"},"e1",{source:"Mathematics"},"6-8");
-must(pendingGrade.complete,"Complete internal and theory marks must produce a complete subject grade.");
+must(secondaryGrade.complete&&secondaryGrade.grades.join("|")==="A+|A|A"&&secondaryGrade.points.join("|")==="4.00|3.60|3.60","Classes 6–10 must calculate IN, TH and Total grade/grade-point columns.");
+const incompleteCalc=gradeResultFactory([{studentId:"s3",examId:"e1",subject:"Mathematics",scores:[{name:"Participation",fullMarks:4,obtained:4},{name:"Practical/Project",fullMarks:36,obtained:34},{name:"First Term Examination",fullMarks:10,obtained:9},{name:"TH (Theory)",fullMarks:50,obtained:null}]}],value=>String(value).toLowerCase(),gradeForTest);
+must(!incompleteCalc({id:"s3"},"e1",{source:"Mathematics"},"6-8").complete,"A missing theory mark must keep the Grade Ledger subject Pending.");
 must(html.includes('id="ledgerSchoolHeader"')&&html.includes("ledgerSchoolHeaderMarkup")&&html.includes("IEMIS Code:"),"School details and school code must appear above the Grade Ledger table.");
 must(html.includes("createTemplateGradeLedgerWorkbook")&&html.includes("gradeWb.xlsx.writeBuffer()"),"Grade Ledger Excel export must use the school template layout.");
 must(html.includes("gradeMode?(document.getElementById('ledgerSchoolHeader')?.innerHTML||'')"),"Grade Ledger print/PDF must print the school details above the table.");
