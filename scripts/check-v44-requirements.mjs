@@ -253,6 +253,26 @@ function selectedComponents(termKey) {
 must(!selectedComponents("first").some(name => /theory/i.test(name)), "TH/ Theory column must be absent outside Final/Annual Term.");
 must(selectedComponents("annual").some(name => /theory/i.test(name)), "TH/ Theory column must be present in Final/Annual Term.");
 
+const ledgerComponentStart = html.indexOf("function ledgerComponentsForSubject(");
+const ledgerComponentEnd = html.indexOf("\\nasync function ensureExcelJS", ledgerComponentStart);
+must(ledgerComponentStart >= 0 && ledgerComponentEnd > ledgerComponentStart, "Term-aware Ledger component helper is missing.");
+const ledgerComponentFactory = new Function(
+  "ledgerSubjectSetting", "defaultMarkParts", "isComputerSubject", "smssExamTermKey",
+  html.slice(ledgerComponentStart, ledgerComponentEnd) + "; return ledgerComponentsForSubject;"
+);
+const ledgerComponents = ledgerComponentFactory(
+  () => ({ components: [{ name: "IN", fullMarks: 25 }, { name: "TH (Theory)", fullMarks: 75 }] }),
+  () => [],
+  () => false,
+  exam => exam.termKey
+);
+const firstTermLedger = ledgerComponents("9-10", "अनिवार्य नेपाली", "9", { termKey: "first" });
+const annualLedger = ledgerComponents("9-10", "अनिवार्य नेपाली", "9", { termKey: "annual" });
+must(firstTermLedger.length === 1 && firstTermLedger[0].name === "IN", "Non-annual Marks Ledger must not show the annual Theory column.");
+must(annualLedger.some(component => component.name === "TH (Theory)" && component.fullMarks === 75), "Annual Grade/Marks Ledger must include the configured Theory component.");
+must(html.includes("const expectedFullMarks=components.reduce((sum,component)=>sum+Number(component.fullMarks||0),0);"), "Marks Ledger Excel import must validate against term-specific Full Marks, not always 100.");
+
+
 
 const reportStart = html.indexOf("function reportMarkSummary(record){");
 const reportEnd = html.indexOf("\nfunction buildReport(){", reportStart);
