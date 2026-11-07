@@ -254,7 +254,7 @@ must(!selectedComponents("first").some(name => /theory/i.test(name)), "TH/ Theor
 must(selectedComponents("annual").some(name => /theory/i.test(name)), "TH/ Theory column must be present in Final/Annual Term.");
 
 const ledgerComponentStart = html.indexOf("function ledgerComponentsForSubject(");
-const ledgerComponentEnd = html.indexOf("\\nasync function ensureExcelJS", ledgerComponentStart);
+const ledgerComponentEnd = html.indexOf("\nasync function ensureExcelJS", ledgerComponentStart);
 must(ledgerComponentStart >= 0 && ledgerComponentEnd > ledgerComponentStart, "Term-aware Ledger component helper is missing.");
 const ledgerComponentFactory = new Function(
   "ledgerSubjectSetting", "defaultMarkParts", "isComputerSubject", "smssExamTermKey",
