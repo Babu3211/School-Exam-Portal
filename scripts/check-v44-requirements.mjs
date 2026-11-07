@@ -314,7 +314,7 @@ must(html.includes("['IN','TH','Total']")&&html.includes("Final GPA"),"Classes 6
 
 
 const optionalSlotStart=html.indexOf("function optionalSubjectSlot(subject){");
-const optionalSlotEnd=html.indexOf("\nfunction loadStudentOptionalSubjectOptions",optionalSlotStart);
+const optionalSlotEnd=html.indexOf("\nasync function loadStudentOptionalSubjectOptions",optionalSlotStart);
 must(optionalSlotStart>=0&&optionalSlotEnd>optionalSlotStart,"Student optional-subject selector is missing.");
 const optionalSlotFactory=new Function(html.slice(optionalSlotStart,optionalSlotEnd)+";return optionalSubjectSlot;")();
 must(optionalSlotFactory("ऐच्छिक प्रथम: वातावरण विज्ञान")==="1","Nepali Optional I subject must be recognized.");
@@ -323,7 +323,7 @@ must(optionalSlotFactory("Optional I: Additional Mathematics")==="1","English Op
 must(optionalSlotFactory("अनिवार्य गणित")==="","Mandatory subjects must not be treated as optional.");
 must(html.includes('id="studentOptionalSubject1"')&&html.includes('id="studentOptionalSubject2"')&&html.includes("data.optionalSubjects=[data.optionalSubject1,data.optionalSubject2].filter(Boolean)"),"Student profiles must store Optional I and Optional II enrollment.");
 must(html.includes("studentTakesOptionalSubject(x,subject)")&&html.includes("studentTakesOptionalSubject(st,subject)"),"Marks Entry and Save must include only students enrolled in the selected optional subject.");
-must(html.includes("ledgerStudentTakesSubject(st,spec.source,group)")&&html.includes("notApplicable:true"),"Grade Ledger must exclude non-enrolled optional subjects from student GPA.");
+must(html.includes("ledgerStudentTakesSubject(st,spec.source,group)")&&html.includes("notApplicable:true")&&html.includes("studentOptionalEnrollmentComplete(st,group,specs)"),"Grade Ledger must exclude non-enrolled optional subjects from student GPA and keep GPA Pending until required optional slots are assigned.");
 must(rules.includes("function studentCanTakeSubject")&&rules.includes("studentCanTakeSubject(request.resource.data.studentId"),"Firestore teacher mark writes must enforce optional-subject enrollment.");
 
 console.log("V44 requirement regression checks passed.");
