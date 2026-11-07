@@ -1680,53 +1680,90 @@ async function ensureExcelJS(){
  if(!window.ExcelJS)throw new Error('Excel export library उपलब्ध भएन।');return window.ExcelJS;
 }
 async function exportMarksLedgerExcel(){
- const cl=document.getElementById('entryClass')?.value||document.getElementById('ledgerViewClass')?.value;
- const examId=document.getElementById('entryExam')?.value||document.getElementById('ledgerViewExam')?.value;
- const msg=document.getElementById('marksEntryMessage')||document.getElementById('ledgerViewMessage');
+ const ledgerPage=document.getElementById('ledgerViewClass');
+ const useLedgerPage=!!ledgerPage&&!!document.getElementById('ledgerViewExam')?.value;
+ const cl=useLedgerPage?ledgerPage.value:(document.getElementById('entryClass')?.value||'');
+ const examId=useLedgerPage?document.getElementById('ledgerViewExam')?.value:(document.getElementById('entryExam')?.value||'');
+ const gradeMode=useLedgerPage&&activeLedgerMode==='grade';
+ const msg=document.getElementById('ledgerViewMessage')||document.getElementById('marksEntryMessage');
  const say=t=>{if(msg)msg.textContent=t};
  if(!cl||!examId){say('Select a Class and Examination before exporting the Excel Ledger.');return}
  const exam=marksExams.find(x=>x.id===examId);
  if(!exam||canonicalStudentClass(exam.className)!==canonicalStudentClass(cl)){say('The selected Examination does not match the Class.');return}
+ const termKey=document.getElementById('ledgerViewTerm')?.value||'all';
+ if(useLedgerPage&&termKey!=='all'&&smssExamTermKey(exam)!==termKey){say('The selected examination does not match the selected term.');return}
  const group=ledgerGroupForClass(cl),subjects=ledgerSubjectsForClass(cl,group);
  if(!subjects.length){say('No Ledger template is available for this Class.');return}
- const btn=document.getElementById('exportLedgerExcel')||document.getElementById('exportLedgerPageExcel');if(btn){btn.disabled=true;btn.textContent='Preparing Excel...'}
+ const btn=document.getElementById(useLedgerPage?'exportLedgerPageExcel':'exportLedgerExcel');
+ if(btn){btn.disabled=true;btn.textContent='Preparing Excel...'}
  try{
   const ExcelJS=await ensureExcelJS(),wb=new ExcelJS.Workbook();
   const termLabel=smssTermLabelEnglish(smssExamTermKey(exam));
-  wb.creator='Mahadevsthan Secondary School';wb.subject='Term-wise Marks Ledger';wb.title=`${classEnglishLabel(cl)} ${termLabel} Marks Ledger`;
-  const ws=wb.addWorksheet('Marks',{views:[{state:'frozen',ySplit:2,xSplit:4}]});
+  wb.creator='Mahadevsthan Secondary School';wb.subject=gradeMode?'Grade Ledger with Overall Result':'Term-wise Marks Ledger';wb.title=classEnglishLabel(cl)+' '+termLabel+' '+(gradeMode?'Grade':'Marks')+' Ledger';
+  const ws=wb.addWorksheet(gradeMode?'Grade Ledger':'Marks',{views:[{state:'frozen',ySplit:2,xSplit:4}]});
   const achievement=['1-3','4-5'].includes(group);
   const componentsBySubject=subjects.map(sub=>ledgerComponentsForSubject(group,sub,cl));
-  const cols=[{header:'S.N',key:'sn',width:7},{header:'Student Name',key:'name',width:27},{header:'Regd. No.',key:'reg',width:23},{header:'Symbol No.',key:'symbol',width:14}];
-  subjects.forEach((sub,si)=>componentsBySubject[si].forEach((component,ci)=>cols.push({header:`${ledgerEnglishLabel(component.name)} (${component.fullMarks})`,key:`s${si}_${ci}`,width:18})));
+  const cols=[{header:'S.N / Roll No.',key:'sn',width:12},{header:'Student Name',key:'name',width:27},{header:'Regd. No.',key:'reg',width:20},{header:'Symbol No.',key:'symbol',width:15}];
+  if(gradeMode){
+   subjects.forEach((sub,si)=>['Full Marks','Obtained Marks','Achievement %','Grade','Grade Point','Remarks'].forEach((label,i)=>cols.push({header:label,key:'s'+si+'_'+i,width:i===5?16:15})));
+   ['Overall Full Marks','Overall Obtained','Overall %','GPA','Final Grade','Result'].forEach((label,i)=>cols.push({header:label,key:'overall_'+i,width:i===5?16:17}));
+  }else subjects.forEach((sub,si)=>componentsBySubject[si].forEach((component,ci)=>cols.push({header:ledgerEnglishLabel(component.name)+' ('+component.fullMarks+')',key:'s'+si+'_'+ci,width:18})));
   ws.columns=cols;
-  const header1=['S.N','Student Name','Regd. No.','Symbol No.'];subjects.forEach(sub=>header1.push(subjectEnglishLabel(sub)));ws.addRow(header1);
-  const header2=['','','',''];componentsBySubject.forEach(list=>list.forEach(c=>header2.push(`${ledgerEnglishLabel(c.name)} / ${c.fullMarks}`)));ws.addRow(header2);
-  ['A','B','C','D'].forEach(c=>ws.mergeCells(`${c}1:${c}2`));
-  let col=5;componentsBySubject.forEach(list=>{if(list.length>0){ws.mergeCells(1,col,1,col+list.length-1);col+=list.length;}});
+  const header1=['S.N / Roll No.','Student Name','Regd. No.','Symbol No.'];
+  if(gradeMode){subjects.forEach(sub=>header1.push(subjectEnglishLabel(sub)));header1.push('OVERALL RESULT');}
+  else subjects.forEach(sub=>header1.push(subjectEnglishLabel(sub)));
+  ws.addRow(header1);
+  const header2=['','','',''];
+  if(gradeMode){subjects.forEach(()=>header2.push('Full Marks','Obtained Marks','Achievement %','Grade','Grade Point','Remarks'));header2.push('Full Marks','Obtained','Percentage','GPA','Final Grade','Result');}
+  else componentsBySubject.forEach(list=>list.forEach(c=>header2.push(ledgerEnglishLabel(c.name)+' / '+c.fullMarks)));
+  ws.addRow(header2);
+  ['A','B','C','D'].forEach(c=>ws.mergeCells(c+'1:'+c+'2'));
+  let col=5;
+  if(gradeMode){subjects.forEach(()=>{ws.mergeCells(1,col,1,col+5);col+=6;});ws.mergeCells(1,col,1,col+5);}
+  else componentsBySubject.forEach(list=>{if(list.length>0){ws.mergeCells(1,col,1,col+list.length-1);col+=list.length;}});
   const students=marksStudents.filter(st=>canonicalStudentClass(st.class??st.className??'')===canonicalStudentClass(cl)).sort((a,b)=>Number(studentRollNo(a)||999999)-Number(studentRollNo(b)||999999));
   const marksFor=(studentId,subject)=>existingMarks.find(m=>m.studentId===studentId&&m.examId===examId&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(subject));
   students.forEach((st,idx)=>{
    const row=[onlineResultDigits(studentRollNo(st)||idx+1),st.studentNameEnglish||st.nameEnglish||st.nameEn||englishDisplayText(st.studentName||st.name||''),ledgerStudentReg(st),ledgerSymbol(st)];
+   const gradeRows=[];
    subjects.forEach((sub,si)=>{
     const mark=marksFor(st.id,sub),scores=mark?.scores||[],components=componentsBySubject[si];
+    let full=0,obtained=null,count=null;
     if(achievement){
-     const no=scores.find(x=>/no\.?\s*of\s*learning/i.test(String(x.name||'')))||scores[0];
-     const fm=scores.find(x=>/^Full Marks$/i.test(String(x.name||'')));
-     const ob=scores.find(x=>/obtained learning/i.test(String(x.name||'')))||scores[2];
-     row.push(no?.obtained??no?.fullMarks??'',fm?.fullMarks??((Number(no?.obtained??no?.fullMarks??0)*4)||''),ob?.obtained??'');
+     const no=scores.find(x=>/no\.?\s*of\s*learning/i.test(String(x.name||'')));
+     const ob=scores.find(x=>/obtained learning/i.test(String(x.name||'')));
+     const countValue=no?.obtained??no?.fullMarks;
+     count=countValue==null||countValue===''?null:Number(countValue);
+     full=count!==null&&Number.isFinite(count)?count*4:0;
+     obtained=ob?.obtained==null||ob.obtained===''?null:Number(ob.obtained);
     }else{
-     components.forEach((component,ci)=>{
-      const score=scores.find(x=>String(x.name||'').trim().toLowerCase()===String(component.name||'').trim().toLowerCase())||(component.name==='TH (Theory)'?scores.find(x=>/^TH\b|THEORY/i.test(String(x.name||''))):undefined);
-      row.push(score?.obtained??'');
-     });
+     full=Number(mark?.totalFullMarks??scores.reduce((a,x)=>a+Number(x.fullMarks||0),0));
+     const raw=mark?.totalObtained??scores.reduce((a,x)=>a+(x.obtained==null?0:Number(x.obtained)),0);
+     obtained=mark?Number(raw):null;
     }
+    const complete=achievement
+     ?count!==null&&Number.isFinite(count)&&count>0&&obtained!==null&&Number.isFinite(obtained)&&obtained>=0&&obtained<=full
+     :ledgerScoresComplete(scores)&&Number.isFinite(full)&&full>0&&obtained!==null&&Number.isFinite(obtained)&&obtained>=0&&obtained<=full;
+    const valid=!!mark&&complete&&Number.isFinite(full)&&full>0&&obtained!==null&&Number.isFinite(obtained)&&obtained>=0&&obtained<=full;
+    const pct=valid?obtained/full*100:null,gr=pct===null?null:gradeForPercent(pct);
+    if(gradeMode){
+     gradeRows.push(valid?{fullMarks:full,obtained:obtained,gradePoint:gr?.point}:null);
+     row.push(valid?full:'',valid?obtained:'',pct===null?'':Number(pct.toFixed(2)),gr?.grade||'',gr?.point??'',gr?.remark||'');
+    }else if(achievement)row.push(count??'',full||'',obtained??'');
+    else components.forEach(component=>{
+     const score=scores.find(x=>String(x.name||'').trim().toLowerCase()===String(component.name||'').trim().toLowerCase())||(component.name==='TH (Theory)'?scores.find(x=>/^TH\b|THEORY/i.test(String(x.name||''))):undefined);
+     row.push(score?.obtained??'');
+    });
    });
+   if(gradeMode){
+    const overall=ledgerAggregateSummary(gradeRows);
+    row.push(overall.complete?overall.fullMarks:'',overall.complete?overall.obtained:'',overall.complete?Number(overall.percentage.toFixed(2)):'',overall.complete?(overall.gpa??''):'',overall.complete?(overall.grade||''):'',overall.complete?(overall.remark||''):'Pending');
+   }
    ws.addRow(row);
   });
   const lastCol=ws.columnCount,lastRow=ws.rowCount;
   for(let r=1;r<=lastRow;r++){
-   const row=ws.getRow(r);row.height=r<=2?32:22;
+   const row=ws.getRow(r);row.height=r<=2?34:22;
    row.eachCell({includeEmpty:true},cell=>{
     cell.border={top:{style:'thin',color:{argb:'FF777777'}},left:{style:'thin',color:{argb:'FF777777'}},bottom:{style:'thin',color:{argb:'FF777777'}},right:{style:'thin',color:{argb:'FF777777'}}};
     cell.alignment={vertical:'middle',horizontal:r<=2?'center':(cell.col===2?'left':'center'),wrapText:true};
@@ -1734,12 +1771,12 @@ async function exportMarksLedgerExcel(){
    });
   }
   ws.autoFilter={from:{row:2,column:1},to:{row:lastRow,column:lastCol}};
-  ws.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,paperSize:ws.PAPER_LETTER,margins:{left:0.25,right:0.25,top:0.5,bottom:0.5,header:0.2,footer:0.2}};
+  ws.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,paperSize:ws.PAPERSIZE_A4||ws.PAPER_A4,margins:{left:0.25,right:0.25,top:0.5,bottom:0.5,header:0.2,footer:0.2}};
   const buffer=await wb.xlsx.writeBuffer(),blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${classEnglishLabel(cl).replace(/[^a-z0-9_-]/gi,'_')}_${String(termLabel).replace(/[^a-z0-9_-]/gi,'_')}_Marks_Ledger_${englishDisplayText(exam.examName||'Exam').replace(/[^a-z0-9_-]/gi,'_')}.xlsx`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
-  say(`Excel Ledger exported: ${students.length} students, ${subjects.length} subjects, ${termLabel}. Saved marks, including Theory/Practical components, are preserved; blank marks remain blank.`);
- }catch(err){console.error('Ledger Excel export failed',err);say(`Excel export failed: ${err.message||err}`)}
- finally{if(btn){btn.disabled=false;btn.textContent=btn.id==='exportLedgerPageExcel'?'Export Ledger Excel':'Export Marks Ledger to Excel'}}
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=classEnglishLabel(cl).replace(/[^a-z0-9_-]/gi,'_')+'_'+String(termLabel).replace(/[^a-z0-9_-]/gi,'_')+'_'+(gradeMode?'Grade':'Marks')+'_Ledger_'+englishDisplayText(exam.examName||'Exam').replace(/[^a-z0-9_-]/gi,'_')+'.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+  say('Excel '+(gradeMode?'Grade':'Marks')+' Ledger exported: '+students.length+' students, '+subjects.length+' subjects, '+termLabel+'. '+(gradeMode?'Overall marks, percentage, GPA and final grade included.':'Saved assessment component marks are preserved; blank marks remain blank.'));
+ }catch(err){console.error('Ledger Excel export failed',err);say('Excel export failed: '+(err.message||err))}
+ finally{if(btn){btn.disabled=false;btn.textContent=useLedgerPage?'Export Ledger to Excel':'Export Marks Ledger to Excel'}}
 }
 
 document.addEventListener('click',e=>{if(e.target?.id==='exportLedgerExcel')exportMarksLedgerExcel()});
@@ -1751,8 +1788,9 @@ function printCurrentMarksLedger(){
  const cl=document.getElementById('ledgerViewClass')?.value,examId=document.getElementById('ledgerViewExam')?.value,exam=marksExams.find(x=>x.id===examId);
  const head=document.getElementById('ledgerViewHead'),body=document.getElementById('ledgerViewBody');
  if(!cl||!exam||!body||!body.querySelector('tr')){const m=document.getElementById('ledgerViewMessage');if(m)m.textContent='Open the Ledger before printing.';return;}
+ const gradeMode=activeLedgerMode==='grade';
  const win=window.open('','_blank','width=1100,height=750');if(!win){const m=document.getElementById('ledgerViewMessage');if(m)m.textContent='The print window could not open. Allow pop-ups in your browser and try again.';return;}
- const esc=examEsc;win.document.write(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>SMSS Grade Ledger</title><style>@page{size:A4 landscape;margin:10mm}body{font-family:Arial,sans-serif;padding:18px;color:#111;background-color:#fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='110'%3E%3Cg fill='%23aeb5bf' fill-opacity='.22' font-family='Arial' font-size='14'%3E%3Ctext x='0' y='25'%3EMahadevasthan Secondary School%3C/text%3E%3Ctext x='0' y='60'%3EMahadevasthan Secondary School%3C/text%3E%3Ctext x='0' y='95'%3EMahadevasthan Secondary School%3C/text%3E%3C/g%3E%3C/svg%3E");background-repeat:repeat}header{position:relative;text-align:center;min-height:112px;color:#d92d46;padding-left:112px}h2,p{text-align:center;margin:5px}table{border-collapse:collapse;width:100%;margin-top:18px;background:transparent}th,td{border:1px solid #555;padding:5px;text-align:center;font-size:9px}th{background:#e8eef7}tr{break-inside:avoid}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body><header>${schoolLogoPrintMarkup()}<h2>MAHADEVASTHAN SECONDARY SCHOOL</h2><p>DHUNIBESHI MUNICIPALITY-05, DHADING</p></header><p>${esc(classEnglishLabel(cl))} · ${esc(smssTermLabelEnglish(smssExamTermKey(exam)))} · ${esc(englishDisplayText(exam.examName||'Examination'))} · ${esc(String(exam.academicYear||'').replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d))))}</p><table><thead>${head.innerHTML}</thead><tbody>${body.innerHTML}</tbody></table><script>window.onload=()=>window.print();<\/script></body></html>`);win.document.close();
+ const esc=examEsc;win.document.write(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>SMSS ${gradeMode?'Grade':'Number'} Ledger</title><style>@page{size:A4 landscape;margin:10mm}body{font-family:Arial,sans-serif;padding:18px;color:#111;background-color:#fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='110'%3E%3Cg fill='%23aeb5bf' fill-opacity='.22' font-family='Arial' font-size='14'%3E%3Ctext x='0' y='25'%3EMahadevasthan Secondary School%3C/text%3E%3Ctext x='0' y='60'%3EMahadevasthan Secondary School%3C/text%3E%3Ctext x='0' y='95'%3EMahadevasthan Secondary School%3C/text%3E%3C/g%3E%3C/svg%3E");background-repeat:repeat}header{position:relative;text-align:center;min-height:112px;color:#d92d46;padding-left:112px}h2,p{text-align:center;margin:5px}table{border-collapse:collapse;width:100%;margin-top:18px;background:transparent}th,td{border:1px solid #555;padding:5px;text-align:center;font-size:9px}th{background:#e8eef7}tr{break-inside:avoid}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body><header>${schoolLogoPrintMarkup()}<h2>MAHADEVASTHAN SECONDARY SCHOOL</h2><p>DHUNIBESHI MUNICIPALITY-05, DHADING</p></header><h3 style="text-align:center;margin:8px 0">${gradeMode?'GRADE LEDGER':'NUMBER LEDGER'}</h3><p>${esc(classEnglishLabel(cl))} · ${esc(smssTermLabelEnglish(smssExamTermKey(exam)))} · ${esc(englishDisplayText(exam.examName||'Examination'))} · ${esc(String(exam.academicYear||'').replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d))))}</p><table><thead>${head.innerHTML}</thead><tbody>${body.innerHTML}</tbody></table><script>window.onload=()=>window.print();<\/script></body></html>`);win.document.close();
 }
 
 
