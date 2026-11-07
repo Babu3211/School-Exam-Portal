@@ -1221,8 +1221,8 @@ document.addEventListener("submit",async event=>{
      studentRows.forEach(d=>{const x=d.data(),patch={updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid};["optionalSubject1","optionalSubject2","optionalI","optionalII","optionalFirstSubject","optionalSecondSubject"].forEach(k=>{if(matches(x[k]))patch[k]=name;});writes.push(batch=>batch.update(doc(db,"students",d.id),patch));});
      for(let offset=0;offset<writes.length;offset+=450){const batch=writeBatch(db);writes.slice(offset,offset+450).forEach(add=>add(batch));await batch.commit();}
      await writeAuditLog("subjects","rename-propagated",editId,`${oldName} → ${name}; classes ${classRows.length}, marks ${markRows.length}, settings ${settingRows.length}, roles ${roleRows.length}, students ${studentRows.length}`);
-     const aliasSnap=await getDocs(query(collection(db,"subjects"),where("source","==","renamed-subject-alias"),where("replacedBy","==",editId)));
-     if(aliasSnap.empty){await addDoc(collection(db,"subjects"),{name:oldName,code:"",active:false,source:"renamed-subject-alias",replacedBy:editId,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid,archivedAt:serverTimestamp(),archivedBy:auth.currentUser.uid});}
+     const aliasSnap=await getDocs(collection(db,"subjects"));
+     if(!aliasSnap.docs.some(d=>d.data().source==="renamed-subject-alias"&&d.data().replacedBy===editId&&canonicalSubjectKey(d.data().name)===canonicalSubjectKey(oldName))){await addDoc(collection(db,"subjects"),{name:oldName,code:"",active:false,source:"renamed-subject-alias",replacedBy:editId,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid,archivedAt:serverTimestamp(),archivedBy:auth.currentUser.uid});}
     }else{
      await updateDoc(doc(db,"subjects",editId),{name,code,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});
      await writeAuditLog("subjects","update",editId,name);
