@@ -1062,9 +1062,9 @@ function renderSubjectCatalog(){
  box.innerHTML=rows.map(x=>{
   const archived=x.active===false,legacy=!!x.legacy,id=classEsc(x.id||"");
   const actions=archived
-   ?`<button class="btn" type="button" data-subject-restore="${id}">पुनः सक्रिय</button>`
-   :`<button class="btn alt" type="button" data-subject-edit="${id}">Edit</button><button class="btn" style="background:#b45309" type="button" data-subject-archive="${id}">Delete</button>`;
-  return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:nowrap;padding:7px 2px;border-bottom:1px solid #e2e8f0;background:transparent;font-size:14px;opacity:${archived?'.72':'1'}"><b style="flex:1;min-width:0">${classEsc(x.name||x.subject)}</b>${x.code?`<small style="color:#64748b">${classEsc(x.code)}</small>`:''}${archived?'<small style="color:#b42318">निष्क्रिय</small>':''}<span style="display:flex;align-items:center;gap:6px;flex-shrink:0">${actions}</span></div>`;
+   ?`<button class="btn subject-bank-action-btn" type="button" data-subject-restore="${id}">पुनः सक्रिय</button>`
+   :`<button class="btn alt subject-bank-action-btn" type="button" data-subject-edit="${id}">Edit</button><button class="btn subject-bank-action-btn" style="background:#b45309" type="button" data-subject-archive="${id}">Delete</button>`;
+  return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;padding:5px 2px;border-bottom:1px solid #e2e8f0;background:transparent;font-size:14px;opacity:${archived?'.72':'1'}"><b style="flex:1;min-width:0">${classEsc(x.name||x.subject)}</b>${x.code?`<small style="color:#64748b">${classEsc(x.code)}</small>`:''}${archived?'<small style="color:#b42318">निष्क्रिय</small>':''}<span style="display:flex;align-items:center;gap:4px;flex-shrink:0">${actions}</span></div>`;
  }).join("")||'<span class="hint">अहिलेसम्म विषय थपिएको छैन।</span>';
 }
 async function editSubjectCatalog(id){
@@ -2829,6 +2829,8 @@ body.smss-readonly-user #studentsBody th:last-child,body.smss-readonly-user #sta
 .welcome .dashboard-school-name{display:inline-block;font-size:17px;font-weight:800;line-height:1.45;color:#c8e8ff;letter-spacing:.15px;text-shadow:0 1px 2px rgba(0,35,90,.18);}
 @media(max-width:480px){.welcome .dashboard-school-name{font-size:16px;}}
 
+.subject-bank-action-btn{padding:4px 8px!important;min-height:24px;line-height:1.15;font-size:10px!important;border-radius:5px!important;white-space:nowrap}
+@media(max-width:480px){.subject-bank-action-btn{padding:3px 6px!important;min-height:22px;font-size:9px!important}}
 </style><h2>Mahadevasthan Secondary School</h2><p style="text-align:center">Dhunibesi-05, Dhading · Academic Year 2083</p><table><thead><tr>${reportHeaders.map(x=>`<th>${reportEsc(x)}</th>`).join("")}</tr></thead><tbody>${reportRows.map(r=>`<tr>${r.map(x=>`<td>${reportEsc(x)}</td>`).join("")}</tr>`).join("")}</tbody></table><script>window.onload=()=>window.print();<\/script></html>`);w.document.close();}
 document.addEventListener("click",e=>{if(e.target.closest("#loadReportBtn")){buildReport();return;}if(e.target.closest("#refreshReportBtn")){loadReportsData();return;}if(e.target.closest("#exportReportBtn")){exportReportCsv();return;}if(e.target.closest("#printReportBtn")){printReport();return;}});
 document.addEventListener("change",e=>{if(["reportType","reportClass"].includes(e.target.id))buildReport();});
