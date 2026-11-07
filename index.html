@@ -1061,14 +1061,25 @@ function renderSubjectCatalog(){
  const rows=[...cachedSubjectCatalog].sort((a,b)=>String(a.name||a.subject).localeCompare(String(b.name||b.subject),'ne'));
  box.innerHTML=rows.map(x=>{
   const archived=x.active===false,legacy=!!x.legacy,id=classEsc(x.id||"");
-  const actions=legacy?'<small style="color:#64748b">(पुरानो कक्षागत विषय)</small>':archived
+  const actions=archived
    ?`<button class="btn alt" type="button" data-subject-restore="${id}">पुनः सक्रिय</button>`
    :`<button class="btn alt" type="button" data-subject-edit="${id}">Edit</button> <button class="btn" style="background:#b42318" type="button" data-subject-archive="${id}">हटाउनुहोस्</button>`;
   return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;background:${archived?'#f8fafc':'#fff'};font-size:12px;opacity:${archived?'.72':'1'}"><b>${classEsc(x.name||x.subject)}</b>${x.code?`<small style="color:#64748b">${classEsc(x.code)}</small>`:''}${archived?'<small style="color:#b42318">निष्क्रिय</small>':''}${actions}</div>`;
  }).join("")||'<span class="hint">अहिलेसम्म विषय थपिएको छैन।</span>';
 }
-function editSubjectCatalog(id){
- const x=cachedSubjectCatalog.find(v=>v.id===id&&!v.legacy);if(!x)return;
+async function editSubjectCatalog(id){
+ let x=cachedSubjectCatalog.find(v=>v.id===id);if(!x)return;
+ if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){const m=document.getElementById("subjectCatalogMessage");if(m)m.textContent="Admin login आवश्यक छ।";return;}
+ // Promote an older class-only subject into the editable Subject Bank without changing existing class or marks records.
+ if(x.legacy){
+  try{
+   const ref=await addDoc(collection(db,"subjects"),{name:String(x.name||x.subject||"").trim(),code:"",active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid,source:"legacy-class-subject"});
+   await writeAuditLog("subjects","create-from-legacy",ref.id,String(x.name||x.subject));
+   await loadClasses();
+   x=cachedSubjectCatalog.find(v=>v.id===ref.id);if(!x)return;
+   id=ref.id;
+  }catch(error){const m=document.getElementById("subjectCatalogMessage");if(m)m.textContent=`पुरानो विषय सम्पादनका लागि तयार गर्न सकिएन: ${safeNoticeError(error)}`;return;}
+ }
  const form=document.getElementById("subjectCatalogForm");form.dataset.editId=id;
  document.getElementById("newSubjectName").value=x.name||x.subject||"";
  document.getElementById("newSubjectCode").value=x.code||"";
@@ -1086,12 +1097,18 @@ function cancelSubjectCatalogEdit(){
  const msg=document.getElementById("subjectCatalogMessage");if(msg)msg.textContent="सम्पादन रद्द भयो।";
 }
 async function archiveSubjectCatalog(id){
- const x=cachedSubjectCatalog.find(v=>v.id===id&&!v.legacy);if(!x)return;
+ const x=cachedSubjectCatalog.find(v=>v.id===id);if(!x)return;
  if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){const m=document.getElementById("subjectCatalogMessage");if(m)m.textContent="Admin login आवश्यक छ।";return;}
  if(!confirm(`"${x.name||x.subject}" विषय सूचीबाट हटाउने? पुराना कक्षागत विषय, Marks र नतिजा सुरक्षित रहनेछन्।`))return;
  try{
-  await updateDoc(doc(db,"subjects",id),{active:false,archivedAt:serverTimestamp(),archivedBy:auth.currentUser.uid});
-  await writeAuditLog("subjects","archive",id,String(x.name||x.subject));
+  if(x.legacy){
+   // Archive a legacy class-only subject in the bank; never delete the underlying class or marks records.
+   const ref=await addDoc(collection(db,"subjects"),{name:String(x.name||x.subject||"").trim(),code:"",active:false,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid,archivedAt:serverTimestamp(),archivedBy:auth.currentUser.uid,source:"legacy-class-subject"});
+   await writeAuditLog("subjects","archive-legacy",ref.id,String(x.name||x.subject));
+  }else{
+   await updateDoc(doc(db,"subjects",id),{active:false,archivedAt:serverTimestamp(),archivedBy:auth.currentUser.uid});
+   await writeAuditLog("subjects","archive",id,String(x.name||x.subject));
+  }
   await loadClasses();
   const msg=document.getElementById("subjectCatalogMessage");if(msg)msg.textContent="विषय निष्क्रिय गरियो। पुराना कक्षागत विषय र Marks सुरक्षित छन्।";
  }catch(error){console.error("Subject archive failed",error);const msg=document.getElementById("subjectCatalogMessage");if(msg)msg.textContent=`विषय हटाउन सकिएन: ${safeNoticeError(error)}`;}
