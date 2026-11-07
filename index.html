@@ -1319,7 +1319,7 @@ function canonicalSubjectKey(value){
  if(['स्थानीय','स्थानीय विषय','local','local subject','हाम्रो धुनिबेँशी','hamro dhunibeshi','hamro dhunibesi'].includes(raw))return 'हाम्रो धुनिबेँशी';
  return raw;
 }
-function optionalSlotForSubject(subject){const v=String(subject??'').trim().toLocaleLowerCase();if(/ऐच्छिक\\s*(?:प्रथम|पहिलो|१)|optional\\s*(?:i|1|first)\\b/.test(v))return 'optionalSubject1';if(/ऐच्छिक\\s*(?:द्वितीय|दोस्रो|२)|optional\\s*(?:ii|2|second)\\b/.test(v))return 'optionalSubject2';return '';}
+function optionalSlotForSubject(subject){const v=String(subject??'').trim().toLocaleLowerCase();if(/ऐच्छिक\s*(?:प्रथम|पहिलो|१)|optional\s*(?:i|1|first)\b/.test(v))return 'optionalSubject1';if(/ऐच्छिक\s*(?:द्वितीय|दोस्रो|२)|optional\s*(?:ii|2|second)\b/.test(v))return 'optionalSubject2';return '';}
 function optionalSubjectsForClass(className,slot){const no=classNoFromName(className);if(!['9','10'].includes(no))return [];const group='9-10';return activeSubjectsForClass(no,group).filter(x=>optionalSlotForSubject(x)===slot);}
 function studentOptionalSubject(student,slot){return String(student?.[slot]??(slot==='optionalSubject1'?(student?.optionalI||student?.optionalFirstSubject):(student?.optionalII||student?.optionalSecondSubject))??'').trim();}
 function studentOptionalSelectionComplete(student,className){return ['optionalSubject1','optionalSubject2'].every(slot=>{const options=optionalSubjectsForClass(className,slot);if(!options.length)return true;const chosen=studentOptionalSubject(student,slot);return !!chosen&&options.some(x=>canonicalSubjectKey(x)===canonicalSubjectKey(chosen));});}
