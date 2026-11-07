@@ -8,6 +8,15 @@ const serviceWorker = await readFile("sw.js", "utf8");
 const workflow = await readFile(".github/workflows/v44-quality-check.yml", "utf8");
 
 const must = (condition, message) => assert.ok(condition, message);
+
+must(html.includes("function editSubjectCatalog(id)") && html.includes("function archiveSubjectCatalog(id)") && html.includes("function restoreSubjectCatalog(id)"), "Subject Bank must support edit, safe archive and restore.");
+must(html.includes('data-subject-edit=') && html.includes('data-subject-archive=') && html.includes('data-subject-restore='), "Subject Bank must show edit, archive and restore actions.");
+must(html.includes('updateDoc(doc(db,"subjects",id),{active:false,archivedAt:serverTimestamp()') && html.includes('updateDoc(doc(db,"subjects",id),{active:true,restoredAt:serverTimestamp()'), "Subject removal must be reversible soft-archive, not permanent deletion.");
+must(html.includes('updateDoc(doc(db,"subjects",editId),{name,code,updatedAt:serverTimestamp()') && html.includes('await writeAuditLog("subjects","update",editId,name)'), "Subject Bank edits must update Firebase and write an audit log.");
+must(html.includes('id="subjectCatalogCancel"') && html.includes('पुराना Marks तथा कक्षागत अभिलेख मेटिँदैनन्'), "Subject Bank editing must explain historical-data preservation and allow cancellation.");
+must(html.includes("function normalizeFirebaseSaveButtons") && html.includes("Firebase मा सुरक्षित गर्नुहोस्"), "Save/Submit action labels must consistently say Firebase मा सुरक्षित गर्नुहोस्.");
+must(!html.includes("यो विवरण सुरक्षित गर्ने हो?"), "Firebase save actions must not show an extra save confirmation prompt.");
+must(html.includes("saveLabelObserver.observe(document.body") && html.includes("normalizeFirebaseSaveButtons(record.target)"), "Dynamically rendered save buttons must also receive the Firebase label.");
 const requiredCollections = [
   "students", "staff", "classes", "subjects", "exams", "marks",
   "attendance", "mark_settings", "certificates", "user_roles", "public_result_exams",
