@@ -2700,7 +2700,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
  applyStacks();
  const stackObserver=new MutationObserver(()=>applyStacks());stackObserver.observe(document.getElementById('view')||document.body,{childList:true,subtree:true});
  function normalizeFirebaseSaveButton(button){
-  if(!button||button.dataset.firebaseSaveLabel==='1')return;
+  if(!button)return;
   const label=(button.innerText||button.textContent||'').trim();
   if(/print|pdf|download|restore|publish|login|reset|cancel|रद्द|हटाउनुहोस्|पुनः सक्रिय/i.test(label))return;
   if(/saving\s*\.\.\.|updating\s*\.\.\./i.test(label)){
@@ -2718,7 +2718,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
  }
  normalizeFirebaseSaveButtons();
  const saveLabelObserver=new MutationObserver(records=>records.forEach(record=>{
-  if(record.type==='childList')record.addedNodes.forEach(node=>{if(node.nodeType===1)normalizeFirebaseSaveButtons(node)});
+  if(record.type==='childList'){normalizeFirebaseSaveButtons(record.target);record.addedNodes.forEach(node=>{if(node.nodeType===1)normalizeFirebaseSaveButtons(node)})}
   else if(record.type==='characterData')normalizeFirebaseSaveButtons(record.target.parentElement);
  }));
  saveLabelObserver.observe(document.body,{childList:true,subtree:true,characterData:true});
