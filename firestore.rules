@@ -178,13 +178,16 @@ service cloud.firestore {
         data.subject is string && data.subject.size() > 0 && data.subject.size() <= 100 &&
         data.section is string && data.section.size() <= 40 &&
         data.scores is list && data.scores.size() > 0 &&
-        data.scores.size() <= 6 &&
-        validScoreList(data) &&
-        data.totalFullMarks is number && data.totalFullMarks >= 0 &&
-        data.totalFullMarks == scoreFullMarksTotal(data) &&
-        data.totalObtained is number && data.totalObtained >= 0 &&
-        data.totalObtained == scoreObtainedTotal(data) &&
-        data.totalObtained <= data.totalFullMarks &&
+        // Use a conditional branch so oversized lists are rejected before
+        // evaluating the expensive per-component and total expressions.
+        (data.scores.size() <= 6
+          ? (validScoreList(data) &&
+             data.totalFullMarks is number && data.totalFullMarks >= 0 &&
+             data.totalFullMarks == scoreFullMarksTotal(data) &&
+             data.totalObtained is number && data.totalObtained >= 0 &&
+             data.totalObtained == scoreObtainedTotal(data) &&
+             data.totalObtained <= data.totalFullMarks)
+          : false) &&
         data.assessmentType in ['marks', 'learning-achievement'] &&
         data.academicYear is string &&
         data.termKey is string &&
