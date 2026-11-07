@@ -1448,7 +1448,7 @@ function fillEntrySubjects(){const cl=document.getElementById('entryClass')?.val
 
 async function loadMarksLedgerPage(){requireAdmin();const examSel=document.getElementById('ledgerViewExam');if(!examSel)return;const msg=document.getElementById('ledgerViewMessage');try{const [ss,es,ms,settings,cs]=await Promise.all([getDocs(collection(db,'students')),getDocs(collection(db,'exams')),getDocs(collection(db,'marks')),getDocs(collection(db,'mark_settings')),getDocs(collection(db,'classes'))]);cachedClasses=cs.docs.map(d=>({id:d.id,...d.data()}));marksStudents=ss.docs.map(d=>({id:d.id,...d.data()}));marksExams=es.docs.map(d=>({id:d.id,...d.data()}));existingMarks=ms.docs.map(d=>({id:d.id,...d.data()}));marksSettings=settings.docs.map(d=>({id:d.id,...d.data()}));refreshLedgerExamOptions();if(msg)msg.textContent=`${marksStudents.length} students and ${existingMarks.length} marks records loaded.`;}catch(err){console.error(err);if(msg)msg.textContent=`Unable to load ledger: ${err.code||err.message}`;}}
 window.loadMarksLedgerPage=loadMarksLedgerPage;
-function ledgerSubjectsForClass(cl,group){const no=classNoFromName(cl),fromClass=classSubjectNames(no,group),hasRegistry=(cachedClasses||[]).some(x=>classNoFromName(x.className)===no);const base=hasRegistry?fromClass:(ledgerSubjectOrder[group]||[]);const result=new Map();base.forEach(v=>{const k=canonicalSubjectKey(v);if(k&&!result.has(k))result.set(k,v)});return [...result.values()];}
+function ledgerSubjectsForClass(cl,group){const no=classNoFromName(cl),configured=classSubjectNames(no,group);const base=configured.length?configured:(ledgerSubjectOrder[group]||[]);const result=new Map();base.forEach(v=>{const k=canonicalSubjectKey(v);if(k&&!result.has(k))result.set(k,v)});return [...result.values()];}
 let activeLedgerMode='number';
 function setLedgerMode(mode){activeLedgerMode=mode==='grade'?'grade':'number';const n=document.getElementById('numberLedgerTab'),g=document.getElementById('gradeLedgerTab'),t=document.getElementById('ledgerTableTitle');if(n){n.className=activeLedgerMode==='number'?'btn':'btn alt'}if(g){g.className=activeLedgerMode==='grade'?'btn':'btn alt'}if(t)t.textContent=activeLedgerMode==='number'?'Number Ledger':'Grade Ledger';renderMarksLedgerPage();}
 function ledgerScoresComplete(scores){return Array.isArray(scores)&&scores.length>0&&scores.every(v=>v&&v.obtained!==null&&v.obtained!==undefined&&v.obtained!==''&&Number.isFinite(Number(v.obtained))&&Number.isFinite(Number(v.fullMarks))&&Number(v.fullMarks)>=0&&Number(v.obtained)>=0&&Number(v.obtained)<=Number(v.fullMarks));}
@@ -1464,13 +1464,19 @@ function ledgerTemplateSubjectSpecs(group,cl){
   ?[['Nepali',/nepali|नेपाली/i],['English',/english|अंग्रेजी|अङ्ग्रेजी/i],['Mathematics',/mathematics|math|गणित/i],['Serophero',/serophero|सेरोफेरो/i],['Hamro Dhunibeshi',/hamro|हाम्रो|धुनिबे|स्थानीय|local/i],['Computer Science',/computer|कम्प्युटर|सङ्गणक/i]]
   :group==='6-8'
   ?[['Computer Science',/computer|कम्प्युटर|सङ्गणक/i],['Hamro Dhunibeshi',/hamro|हाम्रो|धुनिबे|स्थानीय|local/i],['Health Physical & Creative Art',/health|physical|creative|स्वास्थ्य|शारीरिक|सिर्जनात्मक/i],['Social Studies & Human Value Education',/social|human value|सामाजिक|मानव मूल्य/i],['Science & Technology',/science|technology|विज्ञान|प्रविधि/i],['Mathematics',/mathematics|math|गणित/i],['English',/english|अंग्रेजी|अङ्ग्रेजी/i],['Nepali',/nepali|नेपाली/i]]
-  :[['Optional II: Computer Science',/optional\s*ii|ऐच्छिक\s*द्वितीय|computer|कम्प्युटर/i],['Optional I: Environmental Science',/optional\s*i(?!i)|environment|वातावरण/i],['Social Studies',/social|सामाजिक/i],['Science & Technology',/science|technology|विज्ञान|प्रविधि/i],['Mathematics',/mathematics|math|गणित/i],['English',/english|अंग्रेजी|अङ्ग्रेजी/i],['Nepali',/nepali|नेपाली/i]];
- const used=new Set();
- return defs.map(([label,pattern])=>{
+  :[['Optional II: Computer Science',/optional\\s*ii|ऐच्छिक\\s*द्वितीय|computer|कम्प्युटर/i],['Optional I: Environmental Science',/optional\\s*i(?!i)|environment|वातावरण/i],['Social Studies',/social|सामाजिक/i],['Science & Technology',/science|technology|विज्ञान|प्रविधि/i],['Mathematics',/mathematics|math|गणित/i],['English',/english|अंग्रेजी|अङ्ग्रेजी/i],['Nepali',/nepali|नेपाली/i],['Optional I: Additional Mathematics',/additional\\s*math|अतिरिक्त\\s*गणित/i]];
+ const used=new Set(),specs=[];
+ defs.forEach(([label,pattern])=>{
   const source=actual.find(value=>!used.has(canonicalSubjectKey(value))&&pattern.test(String(value||'')));
-  if(source)used.add(canonicalSubjectKey(source));
-  return {label,source:source||label};
+  if(source){used.add(canonicalSubjectKey(source));specs.push({label,source});}
  });
+ // Subject Settings is the source of truth: retain any configured subject not
+ // covered by the familiar template labels instead of silently dropping it.
+ actual.forEach(source=>{
+  const key=canonicalSubjectKey(source);
+  if(key&&!used.has(key)){used.add(key);specs.push({label:String(source),source});}
+ });
+ return specs;
 }
 function ledgerGradeSubjectResult(student,examId,spec,group){
  const record=existingMarks.find(m=>m.studentId===student.id&&m.examId===examId&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(spec.source));
