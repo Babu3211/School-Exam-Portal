@@ -324,12 +324,20 @@ must(optionalSlotFactory("अनिवार्य गणित")==="","Mandator
 must(html.includes('id="studentOptionalSubject1"')&&html.includes('id="studentOptionalSubject2"')&&html.includes("data.optionalSubjects=[data.optionalSubject1,data.optionalSubject2].filter(Boolean)"),"Student profiles must store Optional I and Optional II enrollment.");
 must(html.includes("studentTakesOptionalSubject(x,subject)")&&html.includes("studentTakesOptionalSubject(st,subject)"),"Marks Entry and Save must include only students enrolled in the selected optional subject.");
 must(html.includes("ledgerStudentTakesSubject(st,spec.source,group)")&&html.includes("notApplicable:true")&&html.includes("studentOptionalEnrollmentComplete(st,group,specs)"),"Grade Ledger must exclude non-enrolled optional subjects from student GPA and keep GPA Pending until required optional slots are assigned.");
+const enrollmentStart=html.indexOf("function studentOptionalEnrollmentComplete(student,group,specs){");
+const enrollmentEnd=html.indexOf("\nfunction ledgerStudentTakesSubject",enrollmentStart);
+must(enrollmentStart>=0&&enrollmentEnd>enrollmentStart,"Optional enrollment completeness validator is missing.");
+const enrollmentValidator=new Function("studentOptionalSubjects","optionalSubjectSlot","canonicalSubjectKey",html.slice(enrollmentStart,enrollmentEnd)+";return studentOptionalEnrollmentComplete;") (student=>[student.optionalSubject1,student.optionalSubject2].filter(Boolean),optionalSlotFactory,value=>String(value).toLowerCase());
+const validEnrollment={optionalSubject1:"Optional I: Environment",optionalSubject2:"Optional II: Computer"};
+must(enrollmentValidator(validEnrollment,"9-10",[{source:"English"},{source:"Optional I: Environment"},{source:"Optional I: Additional Math"},{source:"Optional II: Computer"}]),"A valid selected Optional I and Optional II pair must satisfy enrollment completeness.");
+must(!enrollmentValidator({optionalSubject1:"Optional I: Retired Subject",optionalSubject2:"Optional II: Computer"},"9-10",[{source:"English"},{source:"Optional I: Environment"},{source:"Optional II: Computer"}]),"A retired optional selection must not be accepted as a current class enrollment.");
+
 const applicabilityStart=html.indexOf("function resultSubjectApplicability(student,subjects,group){");
 const applicabilityEnd=html.indexOf("\nfunction renderEntryStudents",applicabilityStart);
 must(applicabilityStart>=0&&applicabilityEnd>applicabilityStart,"Grade Sheet optional-subject applicability helper is missing.");
 const applicabilityFactory=new Function("studentOptionalEnrollmentComplete","isOptionalSubjectName","studentTakesOptionalSubject",html.slice(applicabilityStart,applicabilityEnd)+";return resultSubjectApplicability;");
 const optionalChoice={optionalSubject1:"Optional I: Environment",optionalSubject2:"Optional II: Computer"};
-const optionalCheck=applicabilityFactory((student,group,specs)=>specs.filter(x=>optionalSlotFactory(x.source)).every(x=>[student.optionalSubject1,student.optionalSubject2].includes(x.source)),subject=>!!optionalSlotFactory(subject),(student,subject)=>[student.optionalSubject1,student.optionalSubject2].includes(subject));
+const optionalCheck=applicabilityFactory((student,group,specs)=>[...new Set(specs.map(x=>optionalSlotFactory(x.source)).filter(Boolean))].every(slot=>[student.optionalSubject1,student.optionalSubject2].filter(Boolean).some(value=>optionalSlotFactory(value)===slot)&&specs.some(spec=>optionalSlotFactory(spec.source)===slot&&spec.source===[student.optionalSubject1,student.optionalSubject2].find(value=>optionalSlotFactory(value)===slot))),subject=>!!optionalSlotFactory(subject),(student,subject)=>[student.optionalSubject1,student.optionalSubject2].includes(subject));
 const selectedOptional=optionalCheck(optionalChoice,["English","Optional I: Environment","Optional I: Additional Math","Optional II: Computer"],"9-10");
 must(selectedOptional.applicable.join("|")==="English|Optional I: Environment|Optional II: Computer"&&selectedOptional.slotsComplete,"Grade Sheet must include only the student's selected Optional I/II subjects and compulsory subjects.");
 const missingOptional=optionalCheck({optionalSubject2:"Optional II: Computer"},["English","Optional I: Environment","Optional II: Computer"],"9-10");
