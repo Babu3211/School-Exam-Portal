@@ -135,6 +135,24 @@ must(html.includes('id="loadResultsBtn"') && html.includes('id="resultsTablePane
 must(html.includes('id="printTabulationBtn"') && html.includes('id="printGradeSheetBtn"') && html.includes("function printTabulationSheet()") && html.includes("function showGradeSheet(studentId)"), "Tabulation and Grade Sheet print/view actions are missing.");
 must(html.includes('id="numberLedgerTab"') && html.includes('id="gradeLedgerTab"') && html.includes("function renderMarksLedgerPage()"), "Number Ledger and Grade Ledger views are missing.");
 must(html.includes("const scoresComplete=achievement?count!==null") && html.includes("const valid=!!rec&&scoresComplete"), "Grade Ledger must not convert incomplete assessment components into zero marks.");
+// Active class-subject registry is authoritative; retired subjects must not reappear from old settings/marks.
+const subjectStart = html.indexOf("function classSubjectNames(classNo,group){");
+const subjectEnd = html.indexOf("\nfunction activeSubjectsForClass", subjectStart);
+must(subjectStart >= 0 && subjectEnd > subjectStart, "Class subject registry helper is missing.");
+const subjectHelperSource = html.slice(subjectStart, subjectEnd);
+const subjectHelper = new Function("cachedClasses", "markSettingsCache", "marksSettings", "classNoFromName", "canonicalSubjectKey", subjectHelperSource + "; return classSubjectNames;");
+const canonicalForTest = value => String(value ?? "").trim().toLowerCase().replace(/\\s+/g, " ");
+const currentSubjects = subjectHelper(
+  [{ className: "9", subject: "Compulsory English", active: true }, { className: "9", subject: "Optional I: Computer", active: false }],
+  [{ classGroup: "9-10", className: "9", subject: "Optional I: Computer" }, { classGroup: "9-10", className: "9", subject: "Optional II: Economics" }],
+  [],
+  value => String(value),
+  canonicalForTest
+)("9", "9-10");
+must(currentSubjects.length === 1 && currentSubjects[0] === "Compulsory English", "Inactive class subjects must not be restored by assessment settings.");
+const legacySubjects = subjectHelper([], [{ classGroup: "9-10", className: "9", subject: "Legacy Optional I" }], [], value => String(value), canonicalForTest)("9", "9-10");
+must(legacySubjects.includes("Legacy Optional I"), "Legacy classes without a subject registry must retain assessment-setting fallback.");
+
 const ledgerHelperStart = html.indexOf("function ledgerScoresComplete(scores){");
 const ledgerHelperEnd = html.indexOf("\nfunction renderMarksLedgerPage", ledgerHelperStart);
 must(ledgerHelperStart >= 0 && ledgerHelperEnd > ledgerHelperStart, "Grade Ledger completeness validator is missing.");
