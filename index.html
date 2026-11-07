@@ -1063,8 +1063,8 @@ function renderSubjectCatalog(){
   const archived=x.active===false,legacy=!!x.legacy,id=classEsc(x.id||"");
   const actions=archived
    ?`<button class="btn" type="button" data-subject-restore="${id}">पुनः सक्रिय</button>`
-   :`<button class="btn alt" type="button" data-subject-edit="${id}">Edit</button> <button class="btn" style="background:#b45309" type="button" data-subject-archive="${id}">निष्क्रिय</button>`;
-  return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;background:${archived?'#f8fafc':'#fff'};font-size:12px;opacity:${archived?'.72':'1'}"><b>${classEsc(x.name||x.subject)}</b>${x.code?`<small style="color:#64748b">${classEsc(x.code)}</small>`:''}${archived?'<small style="color:#b42318">निष्क्रिय</small>':''}${actions}</div>`;
+   :`<button class="btn alt" type="button" data-subject-edit="${id}">Edit</button><button class="btn" style="background:#b45309" type="button" data-subject-archive="${id}">Delete</button>`;
+  return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:nowrap;padding:7px 2px;border-bottom:1px solid #e2e8f0;background:transparent;font-size:14px;opacity:${archived?'.72':'1'}"><b style="flex:1;min-width:0">${classEsc(x.name||x.subject)}</b>${x.code?`<small style="color:#64748b">${classEsc(x.code)}</small>`:''}${archived?'<small style="color:#b42318">निष्क्रिय</small>':''}<span style="display:flex;align-items:center;gap:6px;flex-shrink:0">${actions}</span></div>`;
  }).join("")||'<span class="hint">अहिलेसम्म विषय थपिएको छैन।</span>';
 }
 async function editSubjectCatalog(id){
