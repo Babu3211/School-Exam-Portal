@@ -150,8 +150,8 @@ try {
     totalObtained: 101
   })));
 
-  await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-score-missing-field"), validMark({
-    scores: [{ name: "Written", fullMarks: 100 }]
+  await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-score-extra-field"), validMark({
+    scores: [{ name: "Written", fullMarks: 100, obtained: 80, forged: true }]
   })));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-score-empty-name"), validMark({
     scores: [{ name: "", fullMarks: 100, obtained: 80 }]
