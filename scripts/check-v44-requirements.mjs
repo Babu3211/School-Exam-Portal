@@ -287,6 +287,11 @@ must(ledgerSubjectsStart>=0&&ledgerSubjectsEnd>ledgerSubjectsStart,"Grade Ledger
 const ledgerSubjectsFactory=new Function("classSubjectNames","ledgerSubjectOrder","canonicalSubjectKey",html.slice(ledgerSubjectsStart,ledgerSubjectsEnd)+";return ledgerSubjectsForClass;");
 const configuredSubjects=ledgerSubjectsFactory((cl,group)=>["नेपाली","चित्रकला"],{"4-5":["Nepali","English"]},value=>String(value).toLowerCase());
 must(configuredSubjects("4","4-5").join("|")==="नेपाली|चित्रकला","Grade Ledger must prefer configured class/subject settings over hard-coded fallback subjects.");
+const ledgerLoadStart=html.indexOf("async function loadMarksLedgerPage(){");
+const ledgerLoadEnd=html.indexOf("\nwindow.loadMarksLedgerPage",ledgerLoadStart);
+must(ledgerLoadStart>=0&&ledgerLoadEnd>ledgerLoadStart,"Grade Ledger loader is missing.");
+const ledgerLoadCode=html.slice(ledgerLoadStart,ledgerLoadEnd);
+must(ledgerLoadCode.includes("collection(db,'mark_settings')")&&ledgerLoadCode.includes("markSettingsCache=marksSettings"),"Opening Grade Ledger must refresh Subject Settings before building subject columns.");
 const gradeResultEnd=html.indexOf("\nfunction ledgerSchoolHeaderMarkup",gradeResultStart);
 must(gradeResultStart>=0&&gradeResultEnd>gradeResultStart,"Grade Ledger subject grade calculator is missing.");
 const gradeResultFactory=new Function("existingMarks","canonicalSubjectKey","gradeForPercent",html.slice(gradeResultStart,gradeResultEnd)+";return ledgerGradeSubjectResult;");
