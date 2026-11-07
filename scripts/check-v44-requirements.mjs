@@ -144,6 +144,17 @@ must(overall.complete&&overall.fullMarks===150&&overall.obtained===120&&overall.
 must(!aggregate([{fullMarks:100,obtained:80,gradePoint:3.6},null]).complete,"Incomplete subject marks must keep the overall result Pending.");
 must(!aggregate([{fullMarks:100,obtained:110,gradePoint:4}]).complete,"Overall result must reject out-of-range marks.");
 must(html.includes("Overall Result")&&html.includes("Final Grade")&&html.includes("Pending"),"Grade Ledger must show overall result columns and pending state.");
+const exportStart=html.indexOf("async function exportMarksLedgerExcel(){");
+const exportEnd=html.indexOf("\ndocument.addEventListener('click',e=>{if(e.target?.id==='exportLedgerExcel')",exportStart);
+must(exportStart>=0&&exportEnd>exportStart,"Ledger Excel export function is missing.");
+const exportCode=html.slice(exportStart,exportEnd);
+must(exportCode.includes("const gradeMode=useLedgerPage&&activeLedgerMode==='grade'")&&exportCode.includes("ledgerAggregateSummary(gradeRows)")&&exportCode.includes("'OVERALL RESULT'")&&exportCode.includes("'Final Grade'"),"Grade Ledger Excel export must include per-subject and overall grade result columns.");
+must(exportCode.includes("Pending")&&exportCode.includes("gradeRows.push"),"Excel export must preserve Pending when any subject mark is incomplete.");
+const printStart=html.indexOf("function printCurrentMarksLedger(){");
+const printEnd=html.indexOf("\n\n\n// Excel tools",printStart);
+must(printStart>=0&&printEnd>printStart,"Ledger print function is missing.");
+const printCode=html.slice(printStart,printEnd);
+must(printCode.includes("body.innerHTML")&&printCode.includes("gradeMode?'Grade':'Number'")&&printCode.includes("GRADE LEDGER"),"Print/PDF must use the currently rendered Grade Ledger with its overall result.");
 const ledgerHelperStart = html.indexOf("function ledgerScoresComplete(scores){");
 const ledgerHelperEnd = html.indexOf("\nfunction renderMarksLedgerPage", ledgerHelperStart);
 must(ledgerHelperStart >= 0 && ledgerHelperEnd > ledgerHelperStart, "Grade Ledger completeness validator is missing.");
