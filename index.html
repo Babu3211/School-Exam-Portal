@@ -1485,6 +1485,7 @@ function ledgerTemplateSubjectSpecs(group,cl){
  });
  return specs;
 }
+function studentOptionalEnrollmentComplete(student,group,specs){if(group!=='9-10')return true;const slots=[...new Set(specs.map(x=>optionalSubjectSlot(x.source)).filter(Boolean))];return slots.every(slot=>studentOptionalSubjects(student).some(x=>optionalSubjectSlot(x)===slot));}
 function ledgerStudentTakesSubject(student,subject,group){return group!=='9-10'||!isOptionalSubjectName(subject)||studentTakesOptionalSubject(student,subject);}
 function ledgerGradeSubjectResult(student,examId,spec,group){
  const record=existingMarks.find(m=>m.studentId===student.id&&m.examId===examId&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(spec.source));
@@ -1541,7 +1542,7 @@ function renderTemplateGradeLedger(cl,exam,group,students,head,body,msg){
   const resultBySubject=new Map(enrolledSpecs.map(spec=>[canonicalSubjectKey(spec.source),ledgerGradeSubjectResult(st,exam.id,spec,group)]));
   const results=specs.map(spec=>resultBySubject.get(canonicalSubjectKey(spec.source))||{complete:true,notApplicable:true,grades:group==='1-3'||group==='4-5'?['—']:['—','—','—'],points:group==='1-3'||group==='4-5'?['—']:['—','—','—'],gpaPoint:null});
   const applicable=enrolledSpecs.map(spec=>resultBySubject.get(canonicalSubjectKey(spec.source))).filter(Boolean);
-  const allComplete=applicable.length>0&&applicable.every(x=>x.complete&&Number.isFinite(x.gpaPoint));
+  const allComplete=studentOptionalEnrollmentComplete(st,group,specs)&&applicable.length>0&&applicable.every(x=>x.complete&&Number.isFinite(x.gpaPoint));
   const gpa=allComplete?(applicable.reduce((a,x)=>a+x.gpaPoint,0)/applicable.length).toFixed(2):'Pending';
   const identityCells=fmtIdentity(st).map((x,i)=>'<td'+(i===1?' style="text-align:left"':'')+'>'+examEsc(String(x||''))+'</td>').join('');
   const gradeCells=results.map(x=>x.grades.map(v=>'<td>'+examEsc(v)+'</td>').join('')).join('');
@@ -1579,7 +1580,7 @@ function createTemplateGradeLedgerWorkbook(ExcelJS,cl,exam,group,termLabel){
   const resultBySubject=new Map(enrolledSpecs.map(spec=>[canonicalSubjectKey(spec.source),ledgerGradeSubjectResult(st,exam.id,spec,group)]));
   const results=specs.map(spec=>resultBySubject.get(canonicalSubjectKey(spec.source))||{complete:true,notApplicable:true,grades:group==='1-3'||group==='4-5'?['—']:['—','—','—'],points:group==='1-3'||group==='4-5'?['—']:['—','—','—'],gpaPoint:null});
   const applicable=enrolledSpecs.map(spec=>resultBySubject.get(canonicalSubjectKey(spec.source))).filter(Boolean);
-  const complete=applicable.length>0&&applicable.every(x=>x.complete&&Number.isFinite(x.gpaPoint));
+  const complete=studentOptionalEnrollmentComplete(st,group,specs)&&applicable.length>0&&applicable.every(x=>x.complete&&Number.isFinite(x.gpaPoint));
   const gpa=complete?(applicable.reduce((a,x)=>a+x.gpaPoint,0)/applicable.length).toFixed(2):'Pending';
   const first=[onlineResultDigits(studentRollNo(st)||idx+1),st.studentNameEnglish||st.nameEnglish||st.nameEn||englishDisplayText(st.studentName||st.name||''),st.dob||st.dateOfBirth||st.birthDate||'',st.fatherName||'',st.motherName||'',onlineResultDigits(ledgerSymbol(st)||'')];
   results.forEach(x=>first.push(...x.grades));first.push(gpa);ws.addRow(first);
