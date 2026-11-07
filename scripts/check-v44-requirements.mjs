@@ -324,6 +324,19 @@ must(optionalSlotFactory("अनिवार्य गणित")==="","Mandator
 must(html.includes('id="studentOptionalSubject1"')&&html.includes('id="studentOptionalSubject2"')&&html.includes("data.optionalSubjects=[data.optionalSubject1,data.optionalSubject2].filter(Boolean)"),"Student profiles must store Optional I and Optional II enrollment.");
 must(html.includes("studentTakesOptionalSubject(x,subject)")&&html.includes("studentTakesOptionalSubject(st,subject)"),"Marks Entry and Save must include only students enrolled in the selected optional subject.");
 must(html.includes("ledgerStudentTakesSubject(st,spec.source,group)")&&html.includes("notApplicable:true")&&html.includes("studentOptionalEnrollmentComplete(st,group,specs)"),"Grade Ledger must exclude non-enrolled optional subjects from student GPA and keep GPA Pending until required optional slots are assigned.");
+const applicabilityStart=html.indexOf("function resultSubjectApplicability(student,subjects,group){");
+const applicabilityEnd=html.indexOf("\nfunction renderEntryStudents",applicabilityStart);
+must(applicabilityStart>=0&&applicabilityEnd>applicabilityStart,"Grade Sheet optional-subject applicability helper is missing.");
+const applicabilityFactory=new Function("studentOptionalEnrollmentComplete","isOptionalSubjectName","studentTakesOptionalSubject",html.slice(applicabilityStart,applicabilityEnd)+";return resultSubjectApplicability;");
+const optionalChoice={optionalSubject1:"Optional I: Environment",optionalSubject2:"Optional II: Computer"};
+const optionalCheck=applicabilityFactory((student,group,specs)=>specs.filter(x=>optionalSlotFactory(x.source)).every(x=>[student.optionalSubject1,student.optionalSubject2].includes(x.source)),subject=>!!optionalSlotFactory(subject),(student,subject)=>[student.optionalSubject1,student.optionalSubject2].includes(subject));
+const selectedOptional=optionalCheck(optionalChoice,["English","Optional I: Environment","Optional I: Additional Math","Optional II: Computer"],"9-10");
+must(selectedOptional.applicable.join("|")==="English|Optional I: Environment|Optional II: Computer"&&selectedOptional.slotsComplete,"Grade Sheet must include only the student's selected Optional I/II subjects and compulsory subjects.");
+const missingOptional=optionalCheck({optionalSubject2:"Optional II: Computer"},["English","Optional I: Environment","Optional II: Computer"],"9-10");
+must(!missingOptional.slotsComplete,"Grade Sheet must remain Pending when a required optional slot is not assigned.");
+must(html.includes("const applicablePerSubject=perSubject.filter(x=>!x.notApplicable)")&&html.includes("const gradeSheetSubjects=r.applicablePerSubject"),"Tabulation totals and Grade Sheet must use only subjects the student actually studies.");
+must(html.includes("const resultSubjectSource=hasClassSubjectRegistry?activeClassSubjects:recordedSubjects;"),"Grade Sheet must not restore inactive class subjects from old Marks.");
+
 must(rules.includes("function studentCanTakeSubject")&&rules.includes("studentCanTakeSubject(request.resource.data.studentId"),"Firestore teacher mark writes must enforce optional-subject enrollment.");
 
 console.log("V44 requirement regression checks passed.");
