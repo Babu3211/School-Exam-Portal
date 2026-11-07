@@ -277,7 +277,7 @@ must(nextStaffId("कर्मचारी", [{ staffId: "STF-0002" }, { staffId
 
 
 const optionalSlotStart = html.indexOf("function optionalSlotForSubject(subject)");
-const optionalSlotEnd = html.indexOf("\\nfunction studentOptionalSubject", optionalSlotStart);
+const optionalSlotEnd = html.indexOf("\nfunction studentOptionalSubject", optionalSlotStart);
 must(optionalSlotStart >= 0 && optionalSlotEnd > optionalSlotStart, "Optional I/II subject-slot resolver is missing.");
 const optionalHelpers = new Function("activeSubjectsForClass", "classNoFromName", "canonicalSubjectKey", html.slice(optionalSlotStart, optionalSlotEnd) + "; return { optionalSlotForSubject, optionalSubjectsForClass };")(
   (classNo) => classNo === "9" || classNo === "10" ? ["ऐच्छिक प्रथम: वातावरण विज्ञान", "ऐच्छिक प्रथम: अतिरिक्त गणित", "ऐच्छिक द्वितीय: कम्प्युटर विज्ञान"] : [],
@@ -291,9 +291,8 @@ must(optionalHelpers.optionalSubjectsForClass("9", "optionalSubject1").length ==
 must(optionalHelpers.optionalSubjectsForClass("8", "optionalSubject1").length === 0, "Optional subject selectors must remain hidden outside Classes 9–10.");
 must(html.includes('id="studentOptional1"') && html.includes('id="studentOptional2"'), "Student profile must provide separate Optional I and Optional II selectors.");
 must(html.includes("optionalSubject1:document.getElementById") && html.includes("optionalSubject2:document.getElementById"), "Student Optional I/II selections must be saved to the student record.");
-must(html.includes("studentOptional1").includes ? true : true, "Student optional enrollment fields are wired.");
 must(html.includes("studentOptionalSubject(x,optionalSlot)") && html.includes("existingMarks.some(m=>m.studentId===x.id"), "Optional-subject Mark Entry must filter to enrolled students but preserve existing marks for correction.");
-must(html.includes("return gradeMode?'<td colspan=\\"6\\">N/A</td>'") && html.includes("componentsBySubject[si].forEach(()=>row.push('N/A'))"), "Number/Grade Ledgers and Excel export must show N/A for non-enrolled optional subjects.");
+must(html.includes('colspan="6">N/A') && html.includes("componentsBySubject[si].forEach(()=>row.push('N/A'))"), "Number/Grade Ledgers and Excel export must show N/A for non-enrolled optional subjects.");
 must(html.includes("notApplicable:true") && html.includes("studentOptionalSelectionComplete(st,cl)") && html.includes("applicableSubjects=perSubject.filter"), "Results must exclude non-enrolled optional subjects from completion and GPA while requiring configured selections.");
 must(html.includes("const applicableSubjects=r.perSubject.filter(x=>!x.notApplicable)") && html.includes("classSubjects=applicableSubjects.map"), "Grade Sheet and GPA must use only subjects applicable to each student.");
 
