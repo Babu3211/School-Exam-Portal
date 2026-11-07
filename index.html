@@ -129,7 +129,11 @@
  .login-social{margin-top:7px;padding-top:6px}
 }
 
-.app-notification{position:fixed;right:18px;top:18px;z-index:99999;max-width:min(92vw,380px);padding:13px 16px;border-radius:10px;background:#14532d;color:#fff;box-shadow:0 8px 28px #0f172a30;font-size:13px;font-weight:700;line-height:1.55;display:none}.app-notification.error{background:#991b1b}.app-notification.show{display:block}@media(max-width:600px){.app-notification{left:12px;right:12px;top:10px;max-width:none}}\n</style>
+.app-notification{position:fixed;right:18px;top:18px;z-index:99999;max-width:min(92vw,380px);padding:13px 16px;border-radius:10px;background:#14532d;color:#fff;box-shadow:0 8px 28px #0f172a30;font-size:13px;font-weight:700;line-height:1.55;display:none}.app-notification.error{background:#991b1b}.app-notification.show{display:block}@media(max-width:600px){.app-notification{left:12px;right:12px;top:10px;max-width:none}}\n
+/* Subject Bank: compact action controls (global app stylesheet) */
+.subject-bank-action-btn{padding:2px 5px!important;min-height:19px!important;height:19px!important;line-height:1!important;font-size:8px!important;border-radius:4px!important;white-space:nowrap;vertical-align:middle}
+@media(max-width:480px){.subject-bank-action-btn{padding:1px 4px!important;min-height:17px!important;height:17px!important;font-size:7px!important}}
+</style>
 
 <meta name="theme-color" content="#1769d2">
 <meta name="mobile-web-app-capable" content="yes">
@@ -2829,8 +2833,7 @@ body.smss-readonly-user #studentsBody th:last-child,body.smss-readonly-user #sta
 .welcome .dashboard-school-name{display:inline-block;font-size:17px;font-weight:800;line-height:1.45;color:#c8e8ff;letter-spacing:.15px;text-shadow:0 1px 2px rgba(0,35,90,.18);}
 @media(max-width:480px){.welcome .dashboard-school-name{font-size:16px;}}
 
-.subject-bank-action-btn{padding:4px 8px!important;min-height:24px;line-height:1.15;font-size:10px!important;border-radius:5px!important;white-space:nowrap}
-@media(max-width:480px){.subject-bank-action-btn{padding:3px 6px!important;min-height:22px;font-size:9px!important}}
+
 </style><h2>Mahadevasthan Secondary School</h2><p style="text-align:center">Dhunibesi-05, Dhading · Academic Year 2083</p><table><thead><tr>${reportHeaders.map(x=>`<th>${reportEsc(x)}</th>`).join("")}</tr></thead><tbody>${reportRows.map(r=>`<tr>${r.map(x=>`<td>${reportEsc(x)}</td>`).join("")}</tr>`).join("")}</tbody></table><script>window.onload=()=>window.print();<\/script></html>`);w.document.close();}
 document.addEventListener("click",e=>{if(e.target.closest("#loadReportBtn")){buildReport();return;}if(e.target.closest("#refreshReportBtn")){loadReportsData();return;}if(e.target.closest("#exportReportBtn")){exportReportCsv();return;}if(e.target.closest("#printReportBtn")){printReport();return;}});
 document.addEventListener("change",e=>{if(["reportType","reportClass"].includes(e.target.id))buildReport();});
