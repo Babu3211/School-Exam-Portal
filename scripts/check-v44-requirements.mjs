@@ -194,7 +194,7 @@ must(!ledgerScoresComplete([]), "Empty Grade Ledger assessment records must rema
 must(html.includes('collection(db,"certificates")') && rules.includes("match /certificates/{certificateId}") && rules.includes("allow create: if isAdmin()"), "Admin-only certificate persistence rules are missing.");
 must(backupCollections.includes("certificates") && restoreCollections.includes("certificates"), "Certificate records must be included in Backup and Restore.");
 must(rules.includes("function studentBelongsToClass") && rules.includes("studentBelongsToClass(request.resource.data.studentId"), "Marks rules must validate that a student belongs to the assigned class.");
-must(rules.includes("function validMarkShape(data)") && rules.includes("data.scores.size() <= 12"), "Marks writes must validate the record schema and cap assessment components.");
+must(rules.includes("function validMarkShape(data)") && rules.includes("data.scores.size() <= 6"), "Marks writes must validate the record schema and cap assessment components.");
 must(rules.includes("function markExamMatches(data)") && rules.includes("get(examPath).data.className == data.className"), "Marks writes must match an existing exam in the same class.");
 must(rules.includes("request.resource.data.createdBy == request.auth.uid") && rules.includes("request.resource.data.updatedBy == request.auth.uid"), "Teacher marks writes must identify the authenticated creator/updater.");
 must(rules.includes("request.resource.data.createdAt == request.time") && rules.includes("request.resource.data.updatedAt == request.time"), "Teacher marks writes must use server timestamps.");
