@@ -160,7 +160,7 @@ try {
     scores: [{ name: "x".repeat(81), fullMarks: 100, obtained: 80 }]
   })));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-too-many-components"), validMark({
-    scores: Array.from({ length: 13 }, (_, i) => ({ name: "Part " + i, fullMarks: 10, obtained: 5 }))
+    scores: Array.from({ length: 7 }, (_, i) => ({ name: "Part " + i, fullMarks: 10, obtained: 5 }))
   })));
   await assertFails(updateDoc(doc(db(teacherUid), "marks", "mark-valid"), {
     subject: "Science", updatedBy: teacherUid, updatedAt: serverTimestamp()
