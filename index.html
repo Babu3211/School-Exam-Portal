@@ -2705,11 +2705,12 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const label=(button.innerText||button.textContent||'').trim();
   if(/print|pdf|download|restore|publish|login|reset|cancel|रद्द|हटाउनुहोस्|पुनः सक्रिय|archive|delete/i.test(label))return;
   if(/saving\s*\.\.\.|updating\s*\.\.\./i.test(label)){
-   button.textContent=/saving/i.test(label)?'Saving...':'Updating...';
+   const progressLabel=/saving/i.test(label)?'Saving...':'Updating...';
+   if(label!==progressLabel)button.textContent=progressLabel;
    button.dataset.smssSaveAction='1';return;
   }
   if(/\b(save|submit)\b/i.test(label)){
-   button.textContent='Save';
+   if(label!=='Save')button.textContent='Save';
    button.dataset.smssSaveAction='1';
   }
  }
