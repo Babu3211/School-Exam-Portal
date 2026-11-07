@@ -1489,6 +1489,7 @@ document.addEventListener("click",async event=>{
   const className=markSettingClass();
   const subject=document.getElementById("markSubject").value;
   const components=readMarkParts();
+  if(components.length>6){markMsg("अधिकतम ६ वटा मूल्याङ्कन भाग मात्र राख्न मिल्छ।",true);return}
   if(!components.length||components.some(c=>!c.name||!Number.isFinite(c.fullMarks)||c.fullMarks<0||c.fullMarks>5000)){
    markMsg("कम्तीमा एउटा मूल्याङ्कन भाग राख्नुहोस्। नाम र पूर्णाङ्क सही हुनुपर्छ।",true);return;
   }
