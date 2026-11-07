@@ -116,10 +116,9 @@ service cloud.firestore {
     }
 
     function validScoreComponent(score) {
-      // Validate only the fields used by the marks engine. Keeping this
-      // predicate compact avoids exceeding Firestore's 1,000-expression cap.
       return score is map &&
         score.keys().hasAll(['name', 'fullMarks', 'obtained']) &&
+        score.keys().hasOnly(['name', 'fullMarks', 'obtained']) &&
         score.name is string && score.name.size() > 0 && score.name.size() <= 80 &&
         score.fullMarks is number && score.fullMarks >= 0 &&
         (score.obtained == null ||
