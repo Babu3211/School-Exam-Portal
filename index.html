@@ -1146,6 +1146,20 @@ function showAppNotification(message,isError=false){
  if(window.__appNotificationTimer)clearTimeout(window.__appNotificationTimer);
  window.__appNotificationTimer=setTimeout(()=>el.classList.remove("show"),4200);
 }
+if(typeof MutationObserver!=="undefined"&&document.body){
+ const saveStatusObserver=new MutationObserver(records=>{
+  for(const record of records){
+   const node=record.target;
+   const status=node.nodeType===1?node.closest?.('[role="status"]'):node.parentElement?.closest?.('[role="status"]');
+   if(!status||status.id==="appNotification")continue;
+   const message=String(status.textContent||"").trim();
+   if(message&&/(सुरक्षित|सफल|भयो|सकेन|भएन|त्रुटि|असफल|मिलेन|जारी|बन्यो|Update|updated|saved|failed|error|निष्क्रिय|पुनः सक्रिय)/i.test(message)){
+    showAppNotification(message,/(सकेन|भएन|त्रुटि|असफल|मिलेन|failed|error)/i.test(message));
+   }
+  }
+ });
+ saveStatusObserver.observe(document.body,{subtree:true,childList:true,characterData:true});
+}
 document.addEventListener("submit",event=>{
  const form=event.target;if(!form||!form.id||["loginForm","forgotPasswordForm"].includes(form.id))return;
  if(form.dataset.saveConfirmed==="yes"){delete form.dataset.saveConfirmed;return;}
