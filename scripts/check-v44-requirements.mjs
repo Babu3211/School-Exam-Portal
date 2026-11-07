@@ -134,6 +134,10 @@ must(html.includes("function printIssuedCertificate(id)") && html.includes("wind
 must(html.includes('id="loadResultsBtn"') && html.includes('id="resultsTablePanel"') && html.includes('id="gradeSheetView"'), "Result Management must keep Results, Tabulation Sheet and Grade Sheet together.");
 must(html.includes('id="printTabulationBtn"') && html.includes('id="printGradeSheetBtn"') && html.includes("function printTabulationSheet()") && html.includes("function showGradeSheet(studentId)"), "Tabulation and Grade Sheet print/view actions are missing.");
 must(html.includes('id="numberLedgerTab"') && html.includes('id="gradeLedgerTab"') && html.includes("function renderMarksLedgerPage()"), "Number Ledger and Grade Ledger views are missing.");
+must(html.includes("padding:4px 0 0;min-height:112px;color:#d92d46") && !html.includes("padding:4px 0 0 112px;min-height:112px;color:#d92d46"), "Grade Sheet school heading must be centered independently of the left-positioned logo.");
+must(html.includes("header{position:relative;text-align:center;min-height:112px;color:#d92d46}") && !html.includes("padding-left:112px"), "Printed Grade Ledger school heading must remain centered with the logo positioned separately.");
+must(html.includes("const resultSubjectSource=hasClassSubjectRegistry?activeClassSubjects:recordedSubjects;"), "Grade Sheet must use active class subjects and only use legacy marks as fallback when no class subject registry exists.");
+
 must(html.includes("const scoresComplete=achievement?count!==null") && html.includes("const valid=!!rec&&scoresComplete"), "Grade Ledger must not convert incomplete assessment components into zero marks.");
 // Active class-subject registry is authoritative; retired subjects must not reappear from old settings/marks.
 const subjectStart = html.indexOf("function classSubjectNames(classNo,group){");
