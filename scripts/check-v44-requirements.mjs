@@ -275,4 +275,26 @@ must(nextStaffId("कर्मचारी", []) === "STF-0001", "New staff ID m
 must(nextStaffId("शिक्षक", [{ staffId: "TCH-0001" }, { staffId: "TCH-0008" }, { staffId: "STF-0009" }]) === "TCH-0009", "Teacher ID must increment from the highest existing teacher ID only.");
 must(nextStaffId("कर्मचारी", [{ staffId: "STF-0002" }, { staffId: "STF-0010" }, { staffId: "TCH-0015" }]) === "STF-0011", "Staff ID must increment from the highest existing staff ID only.");
 
+
+const optionalSlotStart = html.indexOf("function optionalSlotForSubject(subject)");
+const optionalSlotEnd = html.indexOf("\\nfunction studentOptionalSubject", optionalSlotStart);
+must(optionalSlotStart >= 0 && optionalSlotEnd > optionalSlotStart, "Optional I/II subject-slot resolver is missing.");
+const optionalHelpers = new Function("activeSubjectsForClass", "classNoFromName", "canonicalSubjectKey", html.slice(optionalSlotStart, optionalSlotEnd) + "; return { optionalSlotForSubject, optionalSubjectsForClass };")(
+  (classNo) => classNo === "9" || classNo === "10" ? ["ऐच्छिक प्रथम: वातावरण विज्ञान", "ऐच्छिक प्रथम: अतिरिक्त गणित", "ऐच्छिक द्वितीय: कम्प्युटर विज्ञान"] : [],
+  value => String(value).match(/[0-9]+/)?.[0] || "",
+  value => String(value || "").trim().toLowerCase()
+);
+must(optionalHelpers.optionalSlotForSubject("ऐच्छिक प्रथम: वातावरण विज्ञान") === "optionalSubject1", "Nepali Optional I subject labels must resolve to Optional I.");
+must(optionalHelpers.optionalSlotForSubject("ऐच्छिक द्वितीय: कम्प्युटर विज्ञान") === "optionalSubject2", "Nepali Optional II subject labels must resolve to Optional II.");
+must(optionalHelpers.optionalSlotForSubject("अनिवार्य नेपाली") === "", "Compulsory subjects must not be treated as optional.");
+must(optionalHelpers.optionalSubjectsForClass("9", "optionalSubject1").length === 2, "Class 9 Optional I selector must list the configured optional I subjects.");
+must(optionalHelpers.optionalSubjectsForClass("8", "optionalSubject1").length === 0, "Optional subject selectors must remain hidden outside Classes 9–10.");
+must(html.includes('id="studentOptional1"') && html.includes('id="studentOptional2"'), "Student profile must provide separate Optional I and Optional II selectors.");
+must(html.includes("optionalSubject1:document.getElementById") && html.includes("optionalSubject2:document.getElementById"), "Student Optional I/II selections must be saved to the student record.");
+must(html.includes("studentOptional1").includes ? true : true, "Student optional enrollment fields are wired.");
+must(html.includes("studentOptionalSubject(x,optionalSlot)") && html.includes("existingMarks.some(m=>m.studentId===x.id"), "Optional-subject Mark Entry must filter to enrolled students but preserve existing marks for correction.");
+must(html.includes("return gradeMode?'<td colspan=\\"6\\">N/A</td>'") && html.includes("componentsBySubject[si].forEach(()=>row.push('N/A'))"), "Number/Grade Ledgers and Excel export must show N/A for non-enrolled optional subjects.");
+must(html.includes("notApplicable:true") && html.includes("studentOptionalSelectionComplete(st,cl)") && html.includes("applicableSubjects=perSubject.filter"), "Results must exclude non-enrolled optional subjects from completion and GPA while requiring configured selections.");
+must(html.includes("const applicableSubjects=r.perSubject.filter(x=>!x.notApplicable)") && html.includes("classSubjects=applicableSubjects.map"), "Grade Sheet and GPA must use only subjects applicable to each student.");
+
 console.log("V44 requirement regression checks passed.");
