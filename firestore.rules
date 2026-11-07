@@ -231,9 +231,7 @@ service cloud.firestore {
          request.resource.data.subject == resource.data.subject &&
          request.resource.data.section == resource.data.section &&
          isAssignedSubject(resource.data.className, resource.data.subject,
-                           resource.data.section) &&
-         studentBelongsToClass(resource.data.studentId, resource.data.className) &&
-         markExamMatches(request.resource.data));
+                           resource.data.section));
       allow delete: if isAdmin();
     }
 
