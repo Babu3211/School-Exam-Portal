@@ -143,6 +143,13 @@ must(html.includes("const cl=document.getElementById('ledgerViewClass')?.value||
 must(html.includes("subjects.reduce((a,sub,i)=>a+spans[i],achievement?4:2)"), "Learning-achievement Grade Ledger empty-state colspan must match its four identity columns.");
 must(html.split("currentSchoolSettings.schoolNameEnglish||currentSchoolSettings.schoolName").length-1>=2, "Printed Grade Sheets must use the saved school name from School Settings.");
 must(html.includes("currentSchoolSettings.municipality") && html.includes("currentSchoolSettings.address"), "Printed Grade Sheets and Grade Ledger must use the saved school address.");
+must(html.includes("function schoolPrintName()") && html.includes("function schoolPrintAddress()"), "All result print layouts must share School Settings name and address helpers.");
+must(html.includes("background-image:${schoolWatermarkBackground()}") && html.includes("IEMIS: ${esc(currentSchoolSettings.iemisCode||'—')}"), "Printed Marks Ledger and Grade Ledger must use School Settings watermark and IEMIS code.");
+must((html.match(/data-watermark="\\$\\{resultEsc\\(schoolPrintName\\(\\)\\)\\}"/g)||[]).length===2, "Both primary and secondary Grade Sheets must use the School Settings watermark.");
+must((html.match(/OF \\$\\{resultEsc\\(schoolPrintName\\(\\)\\.toUpperCase\\(\\)\\)\\}/g)||[]).length===2, "Both Grade Sheet formats must use the saved school name and address instead of hardcoded school details.");
+must(html.includes("const iemis=student.iemisCode||currentSchoolSettings.iemisCode||'—';"), "Grade Sheet must use the IEMIS code saved in School Settings when student IEMIS is blank.");
+must(html.includes("applyRoleNavigation();await loadSchoolSettings();"), "School Settings must finish loading before ledger and result pages are initialized.");
+
 // Active class-subject registry is authoritative; retired subjects must not reappear from old settings/marks.
 const subjectStart = html.indexOf("function classSubjectNames(classNo,group){");
 const subjectEnd = html.indexOf("\nfunction activeSubjectsForClass", subjectStart);
