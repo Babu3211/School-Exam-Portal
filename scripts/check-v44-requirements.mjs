@@ -289,7 +289,7 @@ const secondaryGrade=gradeCalc({id:"s2"},"e1",{source:"Mathematics"},"6-8");
 must(secondaryGrade.complete&&secondaryGrade.grades.join("|")==="A+|A|A"&&secondaryGrade.points.join("|")==="4.00|3.60|3.60","Classes 6–10 must calculate IN, TH and Total grade/grade-point columns.");
 const incompleteCalc=gradeResultFactory([{studentId:"s3",examId:"e1",subject:"Mathematics",scores:[{name:"Participation",fullMarks:4,obtained:4},{name:"Practical/Project",fullMarks:36,obtained:34},{name:"First Term Examination",fullMarks:10,obtained:9},{name:"TH (Theory)",fullMarks:50,obtained:null}]}],value=>String(value).toLowerCase(),gradeForTest);
 must(!incompleteCalc({id:"s3"},"e1",{source:"Mathematics"},"6-8").complete,"A missing theory mark must keep the Grade Ledger subject Pending.");
-must(html.includes('id="ledgerSchoolHeader"')&&html.includes("ledgerSchoolHeaderMarkup")&&html.includes("IEMIS Code:"),"School details and school code must appear above the Grade Ledger table.");
+must(html.includes('id="ledgerSchoolHeader"')&&html.includes("ledgerSchoolHeaderMarkup")&&html.includes("School Code:"),"School details and school code must appear above the Grade Ledger table.");
 must(html.includes("createTemplateGradeLedgerWorkbook")&&html.includes("gradeWb.xlsx.writeBuffer()"),"Grade Ledger Excel export must use the school template layout.");
 must(html.includes("gradeMode?(document.getElementById('ledgerSchoolHeader')?.innerHTML||'')"),"Grade Ledger print/PDF must print the school details above the table.");
 must(html.includes("['S/N','Student Name','DOB','Father Name','Mother Name','Symbol Number']"),"Grade Ledger must retain student identity columns but remove School Name and School Code columns.");
