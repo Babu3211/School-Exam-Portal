@@ -99,6 +99,10 @@ must(unpublishCode.includes("legacyPublicationIsAmbiguous(d,student)"), "Per-stu
 const publishStart = html.indexOf("async function publishOneOnlineResult(studentId)");
 const publishCode = html.slice(publishStart, unpublishStart);
 must(publishCode.includes("const direct=legacyDocs.filter(") && publishCode.includes("const obsolete=[...direct,...legacyMatches]"), "Republish must clean up all matching student publications, not just the first.");
+
+must(publishCode.includes("const existingLookup=await getDoc(doc(db,'public_result_lookup',lookupHash))"), "Publishing must check existing result-code lookups before writing.");
+must(publishCode.includes("linkedResult.data()?.studentId!==studentId"), "Publishing must block a Result Code already assigned to a different student.");
+
 must(unpublishCode.includes("const direct=docs.filter(") && unpublishCode.includes("const targets=[...direct,...legacy]"), "Unpublish must remove all matching student publications, not just the first.");
 
 
