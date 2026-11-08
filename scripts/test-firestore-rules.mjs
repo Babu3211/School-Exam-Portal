@@ -164,6 +164,12 @@ try {
   await assertFails(getDoc(doc(db(teacherUid), "marks", "mark-other-section")));
   await assertSucceeds(getDocs(query(collection(db(teacherUid), "marks"), where("className", "==", "9"), where("subject", "==", "Mathematics"), where("section", "==", "A"))));
   await assertFails(getDocs(query(collection(db(teacherUid), "marks"), where("className", "==", "9"), where("subject", "==", "Mathematics"))));
+  await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-forged-owner"), validMark({
+    createdBy: otherUid
+  })));
+  await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-other-student-class"), validMark({
+    studentId: "student-10"
+  })));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-wrong-class"), validMark({ className: "10" })));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-wrong-exam"), validMark({ examId: "missing-exam" })));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-score-over-limit"), validMark({
