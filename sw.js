@@ -1,10 +1,10 @@
-const CACHE_NAME = 'smss-pwa-v53-grade9-science-pack';
+const CACHE_NAME = 'smss-pwa-v54-grade10-science-pack';
 const APP_SHELL = [
   './',
   './index.html',
   './cdc-question-paper.js',
   './data/cdc-grade8-science-practice-pack-v1.json',
-  './data/cdc-grade9-science-practice-pack-v1.json',
+  './data/cdc-grade10-science-practice-pack-v1.json',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
