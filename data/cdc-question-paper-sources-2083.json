@@ -219,6 +219,17 @@
       "status": "official_textbook_reference",
       "url": "https://moecdc.gov.np/storage/gallery/1687157819.pdf",
       "note": "11 unit titles used by the Grade 8 practice pack; the practice questions are newly authored and are not CDC model questions."
+    },
+    {
+      "grades": [
+        8
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official_CDC_page_linked_grid_content_not_yet_extracted",
+      "url": "https://moecdc.gov.np/content/284/specification-grid--grade-8--science-and-technology/",
+      "note": "Official grid page located; exact mark distribution and question structure must be extracted before enabling an automatic CDC blueprint."
     }
   ],
   "completion": {
