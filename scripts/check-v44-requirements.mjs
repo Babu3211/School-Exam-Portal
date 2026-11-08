@@ -163,7 +163,7 @@ must(html.includes("Marks records सुरक्षित भए, तर Screen
 must(html.includes("rows[1]?.[headerCol]??'').trim()!==subjectEnglishLabel(sub)"), "Marks Excel import must validate subject column order.");
 must(html.includes("rows[2]?.[headerCol+ci]") && html.includes("expectedComponent=ledgerEnglishLabel(components[ci].name)+' / '+components[ci].fullMarks"), "Marks Excel import must validate assessment component and full marks headers.");
 must(html.includes("for(let ri=3;ri<rows.length;ri++)"), "Marks Excel import must skip the exporter's three header rows before reading student marks.");
-must(html.includes("row.slice(4,headerCol).some(v=>clean(v)!=='')") && html.includes("Marks छन् तर विद्यार्थीको नाम"), "Marks Excel import must reject score rows without student identity.");
+must(html.includes("row.slice(4,headerCol).some(v=>clean(v)!=='')") && html.includes("Roll No. वा Marks छन् तर विद्यार्थीको नाम") && html.includes("clean(row[0])!==''"), "Marks Excel import must reject score rows without student identity.");
 must(html.includes("slice(headerCol).some(v=>String(v??'').trim()!=='')"), "Marks Excel import must reject unexpected populated columns.");
 must(restorePreviewCode.includes("if(previewSequence!==restorePreviewSequence||"), "Restore Preview must discard stale file reads.");
 must(restorePreviewCode.includes('catch(err){if(previewSequence!==restorePreviewSequence||'), "Stale restore preview failures must not overwrite newer preview messages.");
