@@ -159,6 +159,7 @@ must(html.includes("const latestMarksSnapshot=await getDocs(query(collection(db,
 must(html.includes("if(plannedKeys.has(key)){errors.push(") && html.includes("Duplicate Row हटाउनुहोस्"), "Marks Excel import must reject duplicate populated student-subject rows within the workbook.");
 must(html.includes("try{await batch.commit();saved+=Math.min(8,freshPlans.length-offset);}") && html.includes("पुनः Import गर्नुअघि Marks Ledger जाँच्नुहोस्"), "Marks Excel import must report partial batch failures instead of implying an atomic rollback.");
 must(html.includes("Marks records सुरक्षित भए, तर Audit Log लेख्न सकिएन") && html.includes("Marks import audit logging failed after committed records"), "Marks import must report committed records when post-write audit logging fails.");
+must(html.includes("Marks records सुरक्षित भए, तर Screen Refresh हुन सकेन") && html.includes("Marks import refresh failed after committed records"), "Marks import must distinguish committed records from a failed post-import screen refresh.");
 must(html.includes("rows[1]?.[headerCol]??'').trim()!==subjectEnglishLabel(sub)"), "Marks Excel import must validate subject column order.");
 must(html.includes("rows[2]?.[headerCol+ci]") && html.includes("expectedComponent=ledgerEnglishLabel(components[ci].name)+' / '+components[ci].fullMarks"), "Marks Excel import must validate assessment component and full marks headers.");
 must(html.includes("for(let ri=3;ri<rows.length;ri++)"), "Marks Excel import must skip the exporter's three header rows before reading student marks.");
