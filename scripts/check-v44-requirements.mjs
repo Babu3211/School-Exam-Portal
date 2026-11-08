@@ -103,6 +103,13 @@ must(publishCode.includes("const direct=legacyDocs.filter(") && publishCode.incl
 must(publishCode.includes("const existingLookup=await getDoc(doc(db,'public_result_lookup',lookupHash))"), "Publishing must check existing result-code lookups before writing.");
 must(publishCode.includes("linkedResult.data()?.studentId!==studentId"), "Publishing must block a Result Code already assigned to a different student.");
 
+const bulkPublishStart = html.indexOf("async function publishOnlineResult(selectedOnly=false)");
+const bulkPublishEnd = html.indexOf("document.addEventListener('click',e=>{", bulkPublishStart);
+const bulkPublishCode = html.slice(bulkPublishStart, bulkPublishEnd);
+must(bulkPublishCode.includes("const resultCodes=new Map()") && bulkPublishCode.includes("resultCodes.has(code)") && bulkPublishCode.includes("resultCodes.set(code,row.student.id)"), "Bulk result publication must reject duplicate student Result Codes before writing.");
+must(bulkPublishCode.includes("if(!code){resultMsg("), "Bulk result publication must reject missing student Result Codes before writing.");
+
+
 must(unpublishCode.includes("const direct=docs.filter(") && unpublishCode.includes("const targets=[...direct,...legacy]"), "Unpublish must remove all matching student publications, not just the first.");
 
 
