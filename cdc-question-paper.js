@@ -2,7 +2,7 @@ import { getApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.j
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc,
-  updateDoc, deleteDoc, query, where, orderBy, limit, serverTimestamp
+  updateDoc, deleteDoc, query, where, orderBy, limit, serverTimestamp, writeBatch
 } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
 const app = getApp();
@@ -550,8 +550,10 @@ async function importQuestionBank(file) {
   const rows=Array.isArray(raw)?raw:raw?.questions;
   if(!Array.isArray(rows)||!rows.length||rows.length>500)throw new Error("JSON मा १–५०० प्रश्न हुनुपर्छ।");
   const known=new Set(questionRows.map(q=>normal(q.topicId+"::"+q.questionType+"::"+q.marks+"::"+q.questionText)));
-  let added=0,duplicates=0;
-  for(const row of rows){
+  const payloads=[];
+  let duplicates=0;
+  for(let index=0;index<rows.length;index++){
+    const row=rows[index];
     const topicName=String(row.topicName||"").trim();
     const questionText=String(row.questionText||"").trim();
     const questionType=String(row.questionType||"");
@@ -560,9 +562,9 @@ async function importQuestionBank(file) {
     if(!topicName||topicName.length>180||!questionText||questionText.length>3000||
       !["mcq","short","long"].includes(questionType)||!Number.isFinite(marks)||marks<1||marks>100||
       !["knowledge","understanding","application","higher"].includes(cognitiveLevel))
-      throw new Error("प्रश्न "+(added+duplicates+1)+" मा Topic/प्रश्न/प्रकार/अङ्क/संज्ञानात्मक स्तर अमान्य छ।");
+      throw new Error("प्रश्न "+(index+1)+" मा Topic/प्रश्न/प्रकार/अङ्क/संज्ञानात्मक स्तर अमान्य छ।");
     const unitTitle=String(row.unitTitle||"CDC विषयगत पाठ").trim().slice(0,180);
-    const curriculumUnit=curriculumRows.find(unit=>String(unit.unitTitle||"")===unitTitle||(unit.topics||[]).some(t=>normal(t)===normal(topicName)));
+    const curriculumUnit=curriculumRows.find(unit=>(unit.topics||[]).some(t=>normal(t)===normal(topicName)));
     const unitId=curriculumUnit?.id||"teacher_custom";
     const resolvedUnitTitle=curriculumUnit?.unitTitle||unitTitle;
     const topicId=curriculumUnit
@@ -571,21 +573,25 @@ async function importQuestionBank(file) {
     const options=questionType==="mcq"?(Array.isArray(row.options)?row.options.map(x=>String(x).trim()):[]):[];
     const correctOption=questionType==="mcq"?String(row.correctOption||""):"";
     if(questionType==="mcq"&&(options.length!==4||options.some(x=>!x||x.length>500)||!["A","B","C","D"].includes(correctOption)))
-      throw new Error("MCQ प्रश्न "+(added+duplicates+1)+" मा चार विकल्प र सही विकल्प A/B/C/D आवश्यक छ।");
+      throw new Error("MCQ प्रश्न "+(index+1)+" मा चार विकल्प र सही विकल्प A/B/C/D आवश्यक छ।");
     const fingerprint=normal(topicId+"::"+questionType+"::"+marks+"::"+questionText);
     if(known.has(fingerprint)){duplicates++;continue;}
-    await addDoc(collection(db,"question_bank"),{
+    known.add(fingerprint);
+    payloads.push({
       gradeNumber:gradeNumber(selectedClass),className:selectedClass,subject:selectedSubject,section:selectedSection,
       unitId,unitTitle:resolvedUnitTitle,topicId,topicName,questionType,marks,cognitiveLevel,questionText,
       options,correctOption,answer:String(row.answer||"").trim().slice(0,3000),
       createdBy:auth.currentUser.uid,createdByName:String(role?.displayName||"Admin").slice(0,100),
       createdAt:serverTimestamp(),status:"active"
     });
-    known.add(fingerprint);added++;
   }
-  await logQuestionActivity("question_bank_import","bulk",selectedClass+" "+selectedSubject+" · "+added+" questions");
+  if(!payloads.length){message("नयाँ प्रश्न भेटिएन; "+duplicates+" दोहोरिएका प्रश्न छोडिए।");return;}
+  const batch=writeBatch(db);
+  for(const payload of payloads)batch.set(doc(collection(db,"question_bank")),payload);
+  await batch.commit();
+  await logQuestionActivity("question_bank_import","bulk",selectedClass+" "+selectedSubject+" · "+payloads.length+" questions");
   await loadCurrentData();
-  message(added+" प्रश्न आयात भए; "+duplicates+" दोहोरिएका प्रश्न छोडिए।");
+  message(payloads.length+" प्रश्न आयात भए; "+duplicates+" दोहोरिएका प्रश्न छोडिए।");
 }
 function downloadQuestionTemplate() {
   downloadJson("SMSS_Question_Bank_Template.json",{
@@ -625,7 +631,7 @@ document.addEventListener("change",async event=>{
   }
   if(t.id==="qpSubject"){
     selectedSubject=t.value;selectedSection="";generatedPaper=null;
-    $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;
+    $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;$("qpAnswerKeyBtn").disabled=true;
     curriculumRows=[];questionRows=[];renderTopics();renderQuestionRows();
     const sections=[...new Set(classSubjects.filter(x=>x.className===selectedClass&&x.subject===selectedSubject).map(x=>String(x.section||"")))];
     $("qpSection").innerHTML='<option value="">Section छान्नुहोस्</option>'+sections.map(x=>'<option value="'+esc(x)+'">'+esc(x||"सबै Section / लागू")+'</option>').join("");
