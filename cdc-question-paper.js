@@ -531,7 +531,8 @@ window.loadQuestionPaperModule=loadQuestionPaperModule;
 document.addEventListener("change",async event=>{
   const t=event.target;
   if(t.id==="qpClass"){
-    selectedClass=t.value;selectedSubject="";generatedPaper=null;
+    selectedClass=t.value;selectedSubject="";selectedSection="";generatedPaper=null;
+    $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;
     const opts=classSubjects.filter(x=>x.className===selectedClass);
     const subjects=[...new Set(opts.map(x=>x.subject))];
     $("qpSubject").innerHTML='<option value="">विषय छान्नुहोस्</option>'+subjects.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
@@ -541,6 +542,7 @@ document.addEventListener("change",async event=>{
   if(t.id==="qpSubject"){
     selectedSubject=t.value;selectedSection="";generatedPaper=null;
     $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;
+    curriculumRows=[];questionRows=[];renderTopics();renderQuestionRows();
     const sections=[...new Set(classSubjects.filter(x=>x.className===selectedClass&&x.subject===selectedSubject).map(x=>String(x.section||"")))];
     $("qpSection").innerHTML='<option value="">Section छान्नुहोस्</option>'+sections.map(x=>'<option value="'+esc(x)+'">'+esc(x||"सबै Section / लागू")+'</option>').join("");
     if(sections.length===1){selectedSection=sections[0];$("qpSection").value=selectedSection;}
