@@ -2100,6 +2100,7 @@ async function importMarksLedger(file){
    if(existingKeys.has(key)||plannedKeys.has(key)){skipped++;col+=components.length;continue;}
    const rawCells=components.map((_,ci)=>clean(row[col+ci]));
    if(rawCells.every(v=>v==='')){col+=components.length;continue;}
+   if(!achievement&&rawCells.some(v=>v==='')){errors.push(`${name||st.studentName}: ${sub} का सबै मूल्याङ्कन भाग भर्नुहोस्; अधूरो Marks Import हुँदैन।`);col+=components.length;continue;}
    let scores,totalFullMarks,totalObtained;
    if(achievement){
     const countCell=rawCells[0]||'',fmCell=rawCells[1]||'',obtCell=rawCells[2]||'';
