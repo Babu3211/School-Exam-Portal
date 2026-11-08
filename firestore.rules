@@ -45,6 +45,16 @@ service cloud.firestore {
         get(studentPath).data.get('active', true) != false;
     }
 
+    function studentCanTakeSubject(studentId, subjectName) {
+      let studentPath = /databases/$(database)/documents/students/$(studentId);
+      let student = get(studentPath).data;
+      return !subjectName.matches('^(ऐच्छिक प्रथम|ऐच्छिक द्वितीय|Optional I:|Optional II:).*') ||
+        (student.get('optionalSubjects', []) is list &&
+         student.get('optionalSubjects', []).hasAny([subjectName])) ||
+        student.get('optionalSubject1', '') == subjectName ||
+        student.get('optionalSubject2', '') == subjectName;
+    }
+
     function isAssignedSubject(className, subjectName, sectionName) {
       return isAdmin() ||
         (hasRole('subject_teacher') &&
@@ -395,6 +405,14 @@ service cloud.firestore {
     match /online_result_rate_limits/{documentId} {
       allow read, write: if false;
     }
+
+    match /cdc_curriculum/{documentId}
+
+    match /cdc_blueprints/{documentId}
+
+    match /question_bank/{questionId}
+
+    match /question_papers/{paperId}
 
     // Deny all other collections and documents by default.
     match /{document=**} {
