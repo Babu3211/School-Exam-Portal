@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "title": "SMSS CDC Question Paper Source Register",
+  "checkedOn": "2026-11-08",
+  "note": "Official CDC references only. A source link is not a substitute for extracting and validating its complete topic list, specification grid, model questions and answer key. Older grids are marked supplementary.",
+  "sources": [
+    {
+      "grades": [
+        6,
+        7,
+        8
+      ],
+      "subject": "सामाजिक अध्ययन तथा मानव मूल्य शिक्षा",
+      "kind": "specification_grid",
+      "version": "2083",
+      "status": "official_current",
+      "url": "https://www.moecdc.gov.np/content/290/specialization-schedule--class-6-8--social-study-and/"
+    },
+    {
+      "grades": [
+        6,
+        7,
+        8
+      ],
+      "subject": "स्वास्थ्य, शारीरिक तथा सिर्जनात्मक कला",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://www.moecdc.gov.np/content/289/specialization-schedule--class-6---8--health-/"
+    },
+    {
+      "grades": [
+        6,
+        7,
+        8
+      ],
+      "subject": "गणित",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2080",
+      "status": "official_supplementary",
+      "url": "https://moecdc.gov.np/content/292/specialization-schedule--class-6-8--math---samput/"
+    },
+    {
+      "grades": [
+        8
+      ],
+      "subject": "नेपाली",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/286/specifications-grid--grade---8--nepali/"
+    },
+    {
+      "grades": [
+        8
+      ],
+      "subject": "अङ्ग्रेजी",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/285/specification-grid--grade---8--english/"
+    },
+    {
+      "grades": [
+        8
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/category/specialization-schedule--g-/?page=5"
+    },
+    {
+      "grades": [
+        6,
+        7,
+        8
+      ],
+      "subject": "विज्ञान तथा प्रविधि / नेपाली / अङ्ग्रेजी",
+      "kind": "teacher_guides_and_curriculum_materials",
+      "version": "2082",
+      "status": "official_reference_material",
+      "url": "https://lib.moecdc.gov.np/elibrary/pages/search.php?access=&archive=&display=list&foredit=&k=&modal=&noreload=true&offset=0&order_by=field8&per_page=240&recentdaylimit=&restypes=&search=%21collection18397&sort=DESC"
+    },
+    {
+      "grades": [
+        6,
+        7,
+        8
+      ],
+      "subject": "विषयगत पाठ्यक्रम तथा नमुना प्रश्न",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2078",
+      "status": "official_legacy_supplementary",
+      "url": "https://moecdc.gov.np/storage/gallery/1672198334.pdf"
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य नेपाली",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/282/specification-grid--9---10--compulsory-nepali/"
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य अङ्ग्रेजी",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/280/specification-grid--grade-9--10--compulsory-english/"
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य गणित",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/281/"
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/category/specialization-schedule--g-/?page=6"
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2082",
+      "status": "official",
+      "url": "https://lib.moecdc.gov.np/elibrary/pages/search.php?access=&archive=&display=list&foredit=&k=&modal=&noreload=true&offset=0&order_by=field8&per_page=240&recentdaylimit=&restypes=&search=%21collection18397&sort=DESC"
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/category/specialization-schedule--g-/?page=6"
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "specification_grid",
+      "version": "2080",
+      "status": "official_supplementary",
+      "url": "https://lib.moecdc.gov.np/elibrary/pages/search.php?access=&archive=&display=list&foredit=&k=&modal=&noreload=true&offset=0&order_by=field8&per_page=240&recentdaylimit=&restypes=&search=%21collection18397&sort=DESC"
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "स्वास्थ्य तथा शारीरिक शिक्षा",
+      "kind": "curriculum",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/488/health-and-physical-education-syllabus--2082-secondary/"
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "ऐच्छिक गणित",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/10/specification-schedule-and-sample-questions--class-9/"
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "ऐच्छिक कम्प्युटर विज्ञान",
+      "kind": "specification_grid_model_questions_and_answer_key",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/658/class-10-computer-science-optional-subject-specification/"
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "ऐच्छिक अर्थशास्त्र",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2083",
+      "status": "official_current",
+      "url": "https://moecdc.gov.np/category/specialization-schedule--g-/?page=1"
+    }
+  ],
+  "completion": {
+    "sourceRegister": "created",
+    "gradeWiseTopicExtraction": "pending",
+    "specificationGridExtraction": "partial",
+    "questionBankCuration": "pending",
+    "answerKeyValidation": "pending",
+    "teacherReview": "required"
+  }
+}
