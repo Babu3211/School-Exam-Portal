@@ -49,6 +49,18 @@ assert.ok(Array.isArray(register.practicePacks) && register.practicePacks.some(p
 assert.ok(!register.practicePacks.some(p => p.grade === 9 && p.subject === "विज्ञान तथा प्रविधि"), "Grade 9 pack must stay blocked until its source/topic mismatch is resolved");
 assert.match(String(register.completion.grade9SciencePracticePack || ""), /blocked-not-importable/, "Grade 9 pack block must be documented");
 
+const questionBuilder = readFileSync(new URL("../cdc-question-paper.js", import.meta.url), "utf8");
+const appShell = readFileSync(new URL("../sw.js", import.meta.url), "utf8");
+const fs = await import("node:fs");
+assert.ok(!fs.existsSync(new URL("../data/cdc-grade9-science-practice-pack-v1.json", import.meta.url)), "Unverified Grade 9 science practice pack must not be shipped");
+assert.doesNotMatch(questionBuilder, /loadGrade9SciencePack|qpGrade9SciencePackBtn|cdc-grade9-science-practice-pack/i, "Unverified Grade 9 science import must remain unavailable");
+assert.doesNotMatch(appShell, /cdc-grade9-science-practice-pack/i, "Service worker must not cache an unverified Grade 9 science pack");
+for (const grade of [8, 10]) {
+  assert.match(questionBuilder, new RegExp("cdc-grade" + grade + "-science-practice-pack-v1\\\\.json"), "Grade " + grade + " pack must remain wired into the question builder");
+  assert.ok(appShell.includes("./data/cdc-grade" + grade + "-science-practice-pack-v1.json"), "Grade " + grade + " pack must be cached for offline use");
+}
+
+
 assert.equal(register.schemaVersion, 1, "CDC source register schema");
 assert.ok(Array.isArray(register.sources) && register.sources.length >= 15, "CDC source register must contain grade-wise sources");
 for (const [index, source] of register.sources.entries()) {
