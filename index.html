@@ -2802,7 +2802,7 @@ async function previewFirebaseRestore(){
   const createdAt=typeof parsed.createdAt==="string"?parsed.createdAt.slice(0,80):"उपलब्ध छैन";
   out.textContent=`Backup जाँच सफल\nमिति: ${createdAt}\nकुल रेकर्ड: ${total}\n${RESTORE_COLLECTIONS.map(n=>`${n}: ${counts[n]}`).join("\n")}\nSchool Settings: ${settings?1:0}\n${legacyMissingCollections.length?"\nपुरानो Backup मा नभएका Collections (Restore गरिँदैन): "+legacyMissingCollections.join(", ")+"\n":""}\nअर्को चरणमा हालको Firebase मा पहिल्यै भएका ID जाँचिन्छन्।`;
   if(run)run.disabled=false;msg.textContent="Preview तयार भयो। हालको डेटाको नयाँ Backup लिएपछि मात्र पुष्टि गर्नुहोस्।";
- }catch(err){out.textContent="Backup Preview असफल: "+(err.message||"फाइल जाँच त्रुटि");msg.textContent="Restore सुरु गर्न सकिएन।";console.error("Restore preview failed",err);}
+ }catch(err){if(previewSequence!==restorePreviewSequence||document.getElementById("restoreBackupFile")?.files?.[0]!==file)return;out.textContent="Backup Preview असफल: "+(err.message||"फाइल जाँच त्रुटि");msg.textContent="Restore सुरु गर्न सकिएन।";console.error("Restore preview failed",err);}
 }
 async function runFirebaseRestore(){
  const msg=document.getElementById("restoreFirebaseMessage"),btn=document.getElementById("runFirebaseRestore"),confirmBox=document.getElementById("confirmFirebaseRestore");
