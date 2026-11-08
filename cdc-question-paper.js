@@ -91,6 +91,7 @@ function pageShell() {
           <li><a href="https://moecdc.gov.np/content/292/specialization-schedule--class-6-8--math---samput/" target="_blank" rel="noopener">गणित कक्षा ६–८ — विशिष्टीकरण/नमुना प्रश्न (२०८०)</a></li>
           <li><a href="https://moecdc.gov.np/content/286/specifications-grid--grade---8--nepali/" target="_blank" rel="noopener">नेपाली कक्षा ८ — Grid</a></li>
           <li><a href="https://moecdc.gov.np/content/285/specification-grid--grade---8--english/" target="_blank" rel="noopener">English कक्षा ८ — Grid</a></li>
+          <li><a href="https://moecdc.gov.np/content/284/specification-grid--grade-8--science-and-technology/" target="_blank" rel="noopener">विज्ञान तथा प्रविधि कक्षा ८ — CDC विशिष्टीकरण तालिका (२०८२)</a></li>
           <li><a href="https://moecdc.gov.np/category/specialization-schedule--g-/?page=5" target="_blank" rel="noopener">विज्ञान तथा प्रविधि कक्षा ८ लगायतका Grid</a></li>
           <li><a href="https://lib.moecdc.gov.np/elibrary/pages/search.php?access=&archive=&display=list&foredit=&k=&modal=&noreload=true&offset=0&order_by=field8&per_page=240&recentdaylimit=&restypes=&search=%21collection18397&sort=DESC" target="_blank" rel="noopener">CDC Publications 2082 — कक्षा ६–८ शिक्षक निर्देशिका तथा सामग्री</a></li>
           <li><a href="https://moecdc.gov.np/storage/gallery/1672198334.pdf" target="_blank" rel="noopener">पुरानो संयुक्त नमुना प्रश्नपत्र/विशिष्टीकरण (२०७८) — पूरक सन्दर्भ</a></li>
