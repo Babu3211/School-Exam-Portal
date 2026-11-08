@@ -1,8 +1,9 @@
-const CACHE_NAME = 'smss-pwa-v49-question-answer-key-bulk-import';
+const CACHE_NAME = 'smss-pwa-v50-grade8-science-practice-pack';
 const APP_SHELL = [
   './',
   './index.html',
   './cdc-question-paper.js',
+  './data/cdc-grade8-science-practice-pack-v1.json',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
