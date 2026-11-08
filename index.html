@@ -2076,7 +2076,11 @@ async function importMarksLedger(file){
  if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw Error('Admin login आवश्यक छ।');
  const cl=document.getElementById('entryClass').value,examId=document.getElementById('entryExam').value,exam=marksExams.find(x=>x.id===examId);
  if(!cl||!examId||!exam||canonicalStudentClass(exam.className)!==canonicalStudentClass(cl))throw Error('पहिले मिल्ने Class र Examination छान्नुहोस्।');
- const X=await ensureSheetJS(),buf=await file.arrayBuffer(),wb=X.read(buf,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],rows=X.utils.sheet_to_json(ws,{header:1,defval:''});
+ if(file.size>15*1024*1024)throw Error('Marks Excel फाइल १५ MB भन्दा ठूलो छ।');
+ const X=await ensureSheetJS(),buf=await file.arrayBuffer(),wb=X.read(buf,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]];
+ if(!ws)throw Error('Marks Excel मा Worksheet भेटिएन।');
+ const rows=X.utils.sheet_to_json(ws,{header:1,defval:''});
+ if(rows.length>5002)throw Error('Marks Excel मा ५००० भन्दा धेरै विद्यार्थी Row छन्। Class अनुसार छुट्टै फाइल प्रयोग गर्नुहोस्।');
  const group=ledgerGroupForClass(cl),subjects=ledgerSubjectsForClass(cl,group),achievement=['1-3','4-5'].includes(group);
  const settings=subjects.map(sub=>ledgerSubjectSetting(group,sub));
  const expectedHeader=['S.N / Roll No.','Student Name','Regd. No.','Symbol No.'];
