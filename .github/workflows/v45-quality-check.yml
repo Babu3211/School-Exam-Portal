@@ -6,6 +6,7 @@ on:
       - smss-v45-work
   pull_request:
     branches:
+      - main
       - smss-v45-work
 
 permissions:
