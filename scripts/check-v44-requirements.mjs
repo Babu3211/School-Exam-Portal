@@ -96,6 +96,12 @@ const unpublishCode = html.slice(unpublishStart, unpublishEnd);
 must(!unpublishCode.includes("d.id!==resultId"), "Per-student unpublish must not reference the publish-only resultId variable.");
 must(unpublishCode.includes("legacyPublicationIsAmbiguous(d,student)"), "Per-student unpublish must retain ambiguous legacy result protection.");
 
+const publishStart = html.indexOf("async function publishOneOnlineResult(studentId)");
+const publishCode = html.slice(publishStart, unpublishStart);
+must(publishCode.includes("const direct=legacyDocs.filter(") && publishCode.includes("const obsolete=[...direct,...legacyMatches]"), "Republish must clean up all matching student publications, not just the first.");
+must(unpublishCode.includes("const direct=docs.filter(") && unpublishCode.includes("const targets=[...direct,...legacy]"), "Unpublish must remove all matching student publications, not just the first.");
+
+
 must(html.includes('id="publishSelectedOnlineResultBtn"'), "Selected-student publish action is missing.");
 must(html.includes("data-result-select"), "Per-student selection checkboxes are missing.");
 must(html.includes("findLegacyLookups"), "Legacy lookup cleanup is missing.");
