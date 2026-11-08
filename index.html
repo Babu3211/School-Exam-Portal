@@ -140,7 +140,7 @@
  .login-social{margin-top:7px;padding-top:6px}
 }
 
-.app-notification{position:fixed;right:18px;top:18px;z-index:99999;max-width:min(92vw,380px);padding:13px 16px;border-radius:10px;background:#14532d;color:#fff;box-shadow:0 8px 28px #0f172a30;font-size:13px;font-weight:700;line-height:1.55;display:none}.app-notification.error{background:#991b1b}.app-notification.show{display:block}@media(max-width:600px){.app-notification{left:12px;right:12px;top:10px;max-width:none}}
+
 
 /* Subject Bank: compact action controls (global app stylesheet) */
 .subject-bank-action-btn{padding:3px 7px!important;min-height:22px!important;height:22px!important;line-height:1.2!important;font-size:11px!important;border-radius:5px!important;white-space:nowrap;vertical-align:middle}
@@ -159,7 +159,7 @@
 <!-- SMSS Ledger refinement V37 -->
 </head>
 <body>
-<div id="appNotification" class="app-notification" role="status" aria-live="polite"></div>
+
 <div id="loginGate"><div class="login-card"><div class="login-brand"><div class="login-logo" id="loginSchoolLogo" aria-hidden="true">म</div><div class="login-school-titles"><span class="login-kicker">SCHOOL EXAM MANAGEMENT SYSTEM</span><h2 id="loginSchoolName" class="login-school-en"></h2><p id="loginSchoolAddress" class="login-school-address" hidden></p></div></div><div class="login-welcome"><h3>स्वागत छ !</h3><p>आफ्नो आधिकारिक खाताबाट सुरक्षित रूपमा Login गर्नुहोस्।</p></div><div class="login-year"><span>Academic Year</span><strong id="loginAcademicYear">2083</strong></div><div class="login-user-types" aria-label="Login account types"><span>Admin</span><span>Teacher</span><span>Other</span></div><form id="loginForm"><label for="loginEmail">Email Address</label><input id="loginEmail" type="email" required autocomplete="username" placeholder="Enter your email address"><label for="loginPassword">Password</label><div class="password-field"><input id="loginPassword" type="password" required autocomplete="current-password" placeholder="आफ्नो Password राख्नुहोस्"><button id="toggleLoginPassword" class="password-toggle" type="button" aria-label="Password देखाउनुहोस्" aria-pressed="false" title="Password देखाउनुहोस्"><span id="loginPasswordEye" aria-hidden="true">👁</span></button></div><button id="loginButton" type="submit">Login</button><p id="loginError" role="alert"></p><p id="loginStatus">Admin वा सक्रिय शिक्षक खाताबाट Login गर्नुहोस्।</p></form>
 <button class="forgot-link" id="forgotPasswordToggle" type="button" aria-expanded="false" aria-controls="forgotPasswordPanel">पासवर्ड बिर्सनुभयो? / Forgot Password</button>
 <div class="forgot-panel" id="forgotPasswordPanel" hidden>
@@ -1167,26 +1167,6 @@ function renderClasses(){
 }
 
 window.loadClasses=loadClasses;
-function showAppNotification(message,isError=false){
- const el=document.getElementById("appNotification");if(!el)return;
- el.textContent=String(message||"");el.classList.toggle("error",!!isError);el.classList.add("show");
- if(window.__appNotificationTimer)clearTimeout(window.__appNotificationTimer);
- window.__appNotificationTimer=setTimeout(()=>el.classList.remove("show"),4200);
-}
-if(typeof MutationObserver!=="undefined"&&document.body){
- const saveStatusObserver=new MutationObserver(records=>{
-  for(const record of records){
-   const node=record.target;
-   const status=node.nodeType===1?node.closest?.('[role="status"]'):node.parentElement?.closest?.('[role="status"]');
-   if(!status||status.id==="appNotification")continue;
-   const message=String(status.textContent||"").trim();
-   if(message&&/(सुरक्षित|सफल|भयो|सकेन|भएन|त्रुटि|असफल|मिलेन|जारी|बन्यो|Update|updated|saved|failed|error|निष्क्रिय|पुनः सक्रिय)/i.test(message)){
-    showAppNotification(message,/(सकेन|भएन|त्रुटि|असफल|मिलेन|failed|error)/i.test(message));
-   }
-  }
- });
- saveStatusObserver.observe(document.body,{subtree:true,childList:true,characterData:true});
-}
 document.addEventListener("submit",event=>{
  const form=event.target;if(!form||!form.id||["loginForm","forgotPasswordForm"].includes(form.id))return;
  if(form.dataset.saveConfirmed==="yes"){delete form.dataset.saveConfirmed;return;}
@@ -1259,9 +1239,9 @@ document.addEventListener("submit",async event=>{
     await writeAuditLog("subjects","create",subjectRef.id,name);
    }
    form.reset();delete form.dataset.editId;document.getElementById("subjectCatalogCancel").hidden=true;
-   await loadClasses();if(msg)msg.textContent=editId?`"${name}" नाम सबै सम्बन्धित कक्षा, Marks र Assignment मा Replace भयो। प्राप्ताङ्क सुरक्षित छन्।`:`"${name}" विषय सूचीमा थपियो र सुरक्षित भयो।`;showAppNotification(editId?`"${name}" विषय Update भयो।`:`"${name}" विषय सफलतापूर्वक सुरक्षित भयो।`);
+   await loadClasses();if(msg)msg.textContent=editId?`"${name}" नाम सबै सम्बन्धित कक्षा, Marks र Assignment मा Replace भयो। प्राप्ताङ्क सुरक्षित छन्।`:`"${name}" विषय सूचीमा थपियो र सुरक्षित भयो।`;
   }
-  catch(error){console.error("Subject catalog save failed",error);if(msg)msg.textContent=`विषय सुरक्षित गर्न सकिएन: ${safeNoticeError(error)}`;showAppNotification(`विषय सुरक्षित हुन सकेन: ${safeNoticeError(error)||"त्रुटि"}`,true);}
+  catch(error){console.error("Subject catalog save failed",error);if(msg)msg.textContent=`विषय सुरक्षित गर्न सकिएन: ${safeNoticeError(error)}`;}
   finally{btn.disabled=false;btn.textContent="सुरक्षित गर्नुहोस्";}
   return;
  }
