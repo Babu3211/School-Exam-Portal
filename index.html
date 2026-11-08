@@ -2110,9 +2110,10 @@ async function importMarksLedger(file){
    const sub=subjects[si],setting=settings[si],components=ledgerComponentsForSubject(group,sub,cl);
    if(!setting?.components?.length){errors.push(`${name||st.studentName}: ${sub} को Assessment Settings छैन`);col+=components.length;continue;}
    const key=`${st.id}::${canonicalSubjectKey(sub)}`;
-   if(existingKeys.has(key)||plannedKeys.has(key)){skipped++;col+=components.length;continue;}
    const rawCells=components.map((_,ci)=>clean(row[col+ci]));
    if(rawCells.every(v=>v==='')){col+=components.length;continue;}
+   if(plannedKeys.has(key)){errors.push(`Row ${ri+1}: ${name||st.studentName} को ${sub} Marks फाइलमा दोहोरिएको छ। Duplicate Row हटाउनुहोस्।`);col+=components.length;continue;}
+   if(existingKeys.has(key)){skipped++;col+=components.length;continue;}
    if(!achievement&&rawCells.some(v=>v==='')){errors.push(`${name||st.studentName}: ${sub} का सबै मूल्याङ्कन भाग भर्नुहोस्; अधूरो Marks Import हुँदैन।`);col+=components.length;continue;}
    let scores,totalFullMarks,totalObtained;
    if(achievement){
