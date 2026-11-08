@@ -401,7 +401,7 @@
     "sourceRegister": "created",
     "gradeWiseTopicExtraction": "pending_for_grades_6_7_9_10_science; grade_8_science_seeded",
     "specificationGridExtraction": "partial_official_sources_verified",
-    "questionBankCuration": "grade8-science-55-and-grade10-science-57-original-practice-questions; remaining grades-and-subjects-pending",
+    "questionBankCuration": "grade_8_science_55; grade_9_science_57; grade_10_science_57_original_practice_questions_teacher_review_required; other_subjects_pending",
     "answerKeyValidation": "pending",
     "teacherReview": "required",
     "grade8SciencePracticePack": "seed-file-created-admin-import-available-teacher-review-required",
@@ -419,14 +419,6 @@
       "subject": "विज्ञान तथा प्रविधि",
       "units": 11,
       "questions": 55,
-      "sourceStatus": "CDC textbook reference; original teacher-review practice questions"
-    },
-    {
-      "id": "grade8-science-practice-v1",
-      "grade": 8,
-      "subject": "विज्ञान तथा प्रविधि",
-      "units": 11,
-      "questions": 55,
       "sourceStatus": "CDC textbook contents; original SMSS practice questions; teacher review required"
     },
     {
@@ -435,7 +427,15 @@
       "subject": "विज्ञान तथा प्रविधि",
       "units": 19,
       "questions": 57,
-      "sourceStatus": "CDC Grade 10 textbook contents (2080); original SMSS practice questions; check 2082 modified textbook and grid"
+      "sourceStatus": "CDC Grade 10 textbook contents (2080); original SMSS practice questions; check current 2082 textbook and grid"
+    },
+    {
+      "id": "grade9-science-practice-v1",
+      "grade": 9,
+      "subject": "विज्ञान तथा प्रविधि",
+      "units": 19,
+      "questions": 57,
+      "sourceStatus": "CDC Grade 9 textbook page 2082 and teacher-guide content; original SMSS practice questions; teacher review required"
     }
   ]
 }
