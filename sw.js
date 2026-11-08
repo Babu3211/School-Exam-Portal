@@ -1,7 +1,8 @@
-const CACHE_NAME = 'smss-pwa-v47-school-exam-portal';
+const CACHE_NAME = 'smss-pwa-v48-cdc-question-paper';
 const APP_SHELL = [
   './',
   './index.html',
+  './cdc-question-paper.js',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
