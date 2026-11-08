@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - smss-v45-work
+      - smss-v45-integration
 
 permissions:
   contents: read
