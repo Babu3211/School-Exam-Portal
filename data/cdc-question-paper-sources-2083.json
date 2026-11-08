@@ -208,6 +208,17 @@
       "version": "2083",
       "status": "official_current",
       "url": "https://moecdc.gov.np/category/specialization-schedule--g-/?page=1"
+    },
+    {
+      "grades": [
+        8
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "CDC_textbook_contents_and_curriculum_reference",
+      "version": "First Edition 2023 (2080)",
+      "status": "official_textbook_reference",
+      "url": "https://moecdc.gov.np/storage/gallery/1687157819.pdf",
+      "note": "11 unit titles used by the Grade 8 practice pack; the practice questions are newly authored and are not CDC model questions."
     }
   ],
   "completion": {
@@ -216,6 +227,7 @@
     "specificationGridExtraction": "partial",
     "questionBankCuration": "pending",
     "answerKeyValidation": "pending",
-    "teacherReview": "required"
+    "teacherReview": "required",
+    "grade8SciencePracticePack": "55 original practice questions across 11 textbook units; teacher review required"
   }
 }
