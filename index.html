@@ -2083,10 +2083,9 @@ async function importMarksLedger(file){
  let skipped=0;const errors=[];
  const clean=v=>String(v??'').trim();
  const findStudent=(reg,symbol,name)=>{
-  if(reg){const hits=marksStudents.filter(x=>canonicalStudentClass(x.class)===canonicalStudentClass(cl)&&norm(ledgerStudentReg(x))===norm(reg));return hits.length===1?hits[0]:null}
-  if(symbol){const hits=marksStudents.filter(x=>canonicalStudentClass(x.class)===canonicalStudentClass(cl)&&norm(ledgerSymbol(x))===norm(symbol));return hits.length===1?hits[0]:null}
-  if(name){const hits=marksStudents.filter(x=>canonicalStudentClass(x.class)===canonicalStudentClass(cl)&&norm(x.studentName||x.name||'')===norm(name));return hits.length===1?hits[0]:null}
-  return null;
+  const candidates=marksStudents.filter(x=>canonicalStudentClass(x.class)===canonicalStudentClass(cl));
+  const match=candidates.filter(x=>(!reg||norm(ledgerStudentReg(x))===norm(reg))&&(!symbol||norm(ledgerSymbol(x))===norm(symbol))&&(!name||norm(x.studentName||x.name||'')===norm(name)));
+  return match.length===1?match[0]:null;
  };
  for(let ri=2;ri<rows.length;ri++){
   const row=rows[ri]||[],reg=clean(row[2]),symbol=clean(row[3]),name=clean(row[1]);if(!name&&!reg&&!symbol)continue;
