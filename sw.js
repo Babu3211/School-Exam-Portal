@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v50-grade8-science-practice-pack';
+const CACHE_NAME = 'smss-pwa-v51-question-paper-fixes';
 const APP_SHELL = [
   './',
   './index.html',
