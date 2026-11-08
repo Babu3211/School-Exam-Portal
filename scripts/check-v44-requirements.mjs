@@ -5,13 +5,14 @@ const html = await readFile("index.html", "utf8");
 const rules = await readFile("firestore.rules", "utf8");
 const manifest = await readFile("manifest.webmanifest", "utf8");
 const serviceWorker = await readFile("sw.js", "utf8");
+const questionModule = await readFile("cdc-question-paper.js", "utf8");
 const workflow = await readFile(".github/workflows/v44-quality-check.yml", "utf8");
 
 const must = (condition, message) => assert.ok(condition, message);
 const requiredCollections = [
   "students", "staff", "classes", "subjects", "exams", "marks",
   "attendance", "mark_settings", "certificates", "user_roles", "public_result_exams",
-  "public_results", "public_result_lookup", "audit_logs"
+  "public_results", "public_result_lookup", "audit_logs", "cdc_curriculum", "cdc_blueprints", "question_bank", "question_papers"
 ];
 
 const codeStart = html.indexOf("function studentCodeLetters");
@@ -61,9 +62,9 @@ function roleMatrix(role, admin = false) {
 const viewerPermissions = roleMatrix({ active: true, roles: ["viewer"] });
 must(viewerPermissions("dashboard") && !viewerPermissions("marks") && !viewerPermissions("attendance") && !viewerPermissions("students"), "Viewer role must see Dashboard only.");
 const subjectPermissions = roleMatrix({ active: true, roles: ["subject_teacher"], subjectAssignments: [{ className: "9", subject: "Mathematics" }] });
-must(subjectPermissions("dashboard") && subjectPermissions("marks") && !subjectPermissions("attendance") && !subjectPermissions("students"), "Subject Teacher must see Dashboard and Marks only.");
+must(subjectPermissions("dashboard") && subjectPermissions("marks") && subjectPermissions("question-papers") && !subjectPermissions("attendance") && !subjectPermissions("students"), "Subject Teacher must see Dashboard, Marks and assigned Question Paper Builder.");
 const classPermissions = roleMatrix({ active: true, roles: ["class_teacher"], classTeacherClassNames: ["9"] });
-must(classPermissions("dashboard") && classPermissions("attendance") && !classPermissions("marks") && !classPermissions("students"), "Class Teacher must see Dashboard and Attendance only.");
+must(classPermissions("dashboard") && classPermissions("attendance") && !classPermissions("marks") && !classPermissions("question-papers") && !classPermissions("students"), "Class Teacher must see Dashboard and Attendance only.");
 const combinedPermissions = roleMatrix({ active: true, roles: ["class_teacher", "subject_teacher"], classTeacherClasses: [{ className: "9" }], subjectAssignmentKeys: ["9::Mathematics"] });
 must(combinedPermissions("marks") && combinedPermissions("attendance"), "Combined teacher roles must expose both assigned task modules.");
 const inactivePermissions = roleMatrix({ active: false, roles: ["class_teacher"], classTeacherClassNames: ["9"] });
@@ -192,7 +193,12 @@ must(html.includes('id="smssInstallBanner"') && html.includes('id="smssInstallBu
 must(html.includes("beforeinstallprompt") && html.includes("appinstalled") && html.includes("display-mode: standalone"), "Native PWA install prompt and installed-state detection are missing.");
 must(html.includes("Add to Home Screen") && html.includes("Install app"), "iPhone and Android installation instructions are missing.");
 must(manifest.includes("SMSS Exam Portal"), "PWA manifest must use the approved SMSS Exam Portal app name.");
-must(serviceWorker.includes("smss-pwa-v47-school-exam-portal"), "Service worker cache must use a fresh V47 cache key.");
+must(serviceWorker.includes("smss-pwa-v48-cdc-question-paper") && serviceWorker.includes("./cdc-question-paper.js"), "Service worker must cache the CDC question paper module with a fresh V48 cache key.");
+must(html.includes('data-page="question-papers"') && html.includes('if(p==="question-papers")'), "CDC Question Paper Builder navigation and page must be present.");
+must(html.includes('if(page==="question-papers")return roleHas("subject_teacher")'), "Question Paper Builder must be restricted to assigned subject teachers and Admin.");
+must(questionModule.includes('collection(db,"cdc_curriculum")') && questionModule.includes('collection(db,"cdc_blueprints")') && questionModule.includes('collection(db,"question_bank")') && questionModule.includes('collection(db,"question_papers")'), "CDC curriculum, blueprint, question bank and saved paper collections must be connected.");
+must(questionModule.includes("cognitiveDistribution") && questionModule.includes("function allocateQuestions()"), "Auto paper generation must balance questions against the saved cognitive-level blueprint.");
+must(rules.includes("match /cdc_curriculum/{documentId}") && rules.includes("match /cdc_blueprints/{documentId}") && rules.includes("match /question_bank/{questionId}") && rules.includes("match /question_papers/{paperId}"), "CDC question paper Firestore security rules are missing.");
 must(workflow.includes("deploy-live:") && workflow.includes("needs: quality-and-rules"), "Live deployment must depend on successful V44 quality and Firestore Rules tests.");
 must(workflow.includes("github.event_name == 'push'") && workflow.includes("ENABLE_FIREBASE_HOSTING_DEPLOY == 'true'"), "Automatic live deployment must be push-only and explicitly enabled.");
 
