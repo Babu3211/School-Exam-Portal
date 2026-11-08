@@ -207,6 +207,16 @@ try {
   await assertSucceeds(getDoc(doc(testEnv.unauthenticatedContext().firestore(), "public_results", "known-result-id")));
   await assertFails(getDocs(collection(testEnv.unauthenticatedContext().firestore(), "public_results")));
   await assertFails(getDocs(collection(testEnv.unauthenticatedContext().firestore(), "public_result_lookup")));
+  // Public results are individually readable, but only Admin may enumerate or publish them.
+  await assertFails(getDocs(collection(db(teacherUid), "public_results")));
+  await assertFails(getDocs(collection(db(teacherUid), "public_result_lookup")));
+  await assertFails(setDoc(doc(testEnv.unauthenticatedContext().firestore(), "public_results", "forged-result"), { studentName: "Forged" }));
+  await assertFails(setDoc(doc(db(teacherUid), "public_results", "forged-result"), { studentName: "Forged" }));
+  await assertFails(deleteDoc(doc(db(teacherUid), "public_results", "known-result-id")));
+  await assertSucceeds(getDocs(collection(db(ADMIN), "public_results")));
+  await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(), "online_result_rate_limits", "ip-1")));
+  await assertFails(setDoc(doc(db(ADMIN), "online_result_rate_limits", "ip-1"), { count: 1 }));
+
 
   await assertFails(setDoc(doc(db(teacherUid), "audit_logs", "forged-log"), {
     actorUid: otherUid, actorName: "Other", module: "Marks",
