@@ -632,7 +632,7 @@ async function loadGrade8SciencePack() {
     throw new Error("CDC को आधिकारिक पाठ्यपुस्तक स्रोत URL मान्य छैन।");
   const existingUnits=await getDocs(query(collection(db,"cdc_curriculum"),where("gradeNumber","==",8),where("subject","==",selectedSubject)));
   const unitMetaMap=new Map();
-  const unitBatch=writeBatch(db);
+  const packBatch=writeBatch(db);
   let newUnits=0,unitWrites=0;
   for(const unit of pack.units){
     const old=existingUnits.docs.find(d=>String(d.data().unitCode||"")===String(unit.unitCode));
@@ -643,7 +643,7 @@ async function loadGrade8SciencePack() {
     unitMetaMap.set(String(unit.unitCode),{id:unitId,topics:mergedTopics,unitTitle});
     if(!old)newUnits++;
     if(!old||JSON.stringify(oldData.topics||[])!==JSON.stringify(mergedTopics)){
-      unitBatch.set(doc(db,"cdc_curriculum",unitId),{
+      packBatch.set(doc(db,"cdc_curriculum",unitId),{
         ...oldData,gradeNumber:8,className:selectedClass,subject:selectedSubject,
         unitCode:String(unit.unitCode),unitTitle,topics:mergedTopics,
         curriculumVersion:oldData.curriculumVersion||pack.curriculumVersion,
@@ -657,7 +657,7 @@ async function loadGrade8SciencePack() {
     }
   }
   const existingKeys=new Set(questionRows.map(q=>normal(q.topicId+"::"+q.questionType+"::"+q.marks+"::"+q.questionText)));
-  const questionBatch=writeBatch(db);
+
   let newQuestions=0,duplicates=0;
   for(const q of pack.questions){
     const unitMeta=unitMetaMap.get(String(q.unitCode));
@@ -671,7 +671,7 @@ async function loadGrade8SciencePack() {
       throw new Error("प्रश्न प्याकमा अमान्य प्रश्न भेटियो।");
     if(q.questionType==="mcq"&&(!Array.isArray(q.options)||q.options.length!==4||!["A","B","C","D"].includes(q.correctOption)))
       throw new Error("MCQ विकल्प/उत्तरकुञ्जिका अपूर्ण छ।");
-    questionBatch.set(doc(collection(db,"question_bank")),{
+    packBatch.set(doc(collection(db,"question_bank")),{
       gradeNumber:8,className:selectedClass,subject:selectedSubject,section:selectedSection,
       unitId:unitMeta.id,unitTitle:unitMeta.unitTitle,topicId,topicName:q.topicName,
       questionType:q.questionType,marks:Number(q.marks),cognitiveLevel:q.cognitiveLevel,
@@ -682,8 +682,8 @@ async function loadGrade8SciencePack() {
     });
     existingKeys.add(fingerprint);newQuestions++;
   }
-  if(unitWrites)await unitBatch.commit();
-  if(newQuestions)await questionBatch.commit();
+  if(unitWrites+newQuestions>500)throw new Error("Firestore batch सीमा नाघ्यो; अभ्यास प्याकलाई साना भागमा विभाजन गर्नुपर्छ।");
+  if(unitWrites+newQuestions)await packBatch.commit();
   await logQuestionActivity("cdc_practice_pack_import","grade8-science",newQuestions+" questions");
   await loadCurrentData();
   message("कक्षा ८ विज्ञान अभ्यास प्याक: "+newUnits+" नयाँ एकाइ, "+newQuestions+" नयाँ प्रश्न थपिए; "+duplicates+" दोहोरिएका प्रश्न छोडिए। यी मूल अभ्यास प्रश्न हुन्—औपचारिक परीक्षाअघि विषय शिक्षकले समीक्षा गर्नुपर्छ।");
