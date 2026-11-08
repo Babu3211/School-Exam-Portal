@@ -32,3 +32,28 @@ V45 is a trial release. Passing GitHub Actions and a Firebase preview deployment
 - [ ] Keep V44 rollback reference available.
 
 **Never put real student records into trial testing.**
+
+## Latest verified automated release candidate (2026-11-08)
+
+- Candidate commit: `176d85ad9202fb47c5dd3407c8e33b7f884ec9b8`.
+- V45 quality checks: [run 42493763406](https://github.com/Babu3211/School-Exam-Portal/actions/runs/42493763406) — success.
+- V45 quality checks: [run 42493763391](https://github.com/Babu3211/School-Exam-Portal/actions/runs/42493763391) — success.
+- Trial deployment and HTTPS smoke tests: [run 42493763429](https://github.com/Babu3211/School-Exam-Portal/actions/runs/42493763429) — success.
+- These results cover automated gates only. The manual end-to-end gate and production approval are **NOT VERIFIED**.
+- Trial preview URLs expire; retrieve the current URL from the successful deployment run rather than assuming a permanent address.
+- The candidate SHA above is a tested snapshot, **not** a production authorization. Re-run the full gates if any release code or configuration changes.
+
+## Manual sign-off record (complete before production)
+
+| Area | Tester / date | Evidence / expected vs actual | Result |
+| --- | --- | --- | --- |
+| Admin account and configuration | Pending | Pending | NOT TESTED |
+| Teacher permissions and attendance | Pending | Pending | NOT TESTED |
+| Marks entry and grade calculations | Pending | Pending | NOT TESTED |
+| Student access and result publication | Pending | Pending | NOT TESTED |
+| Question papers and printing | Pending | Pending | NOT TESTED |
+| Mobile, PWA and accessibility | Pending | Pending | NOT TESTED |
+| Backup and rollback rehearsal | Pending | Pending | NOT TESTED |
+| School/system owner approval | Pending | Pending | NOT APPROVED |
+
+Never record passwords, student personal information or production credentials in this document.
