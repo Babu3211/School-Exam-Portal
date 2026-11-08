@@ -1,0 +1,818 @@
+{
+  "schemaVersion": 1,
+  "packId": "cdc-grade8-science-practice-v1",
+  "gradeNumber": 8,
+  "canonicalSubject": "विज्ञान तथा प्रविधि",
+  "curriculumVersion": "CDC Science and Technology Grade 8 textbook, First Edition 2023 (2080)",
+  "sourceTitle": "Science and Technology, Grade 8 — Curriculum Development Centre",
+  "sourceUrl": "https://moecdc.gov.np/storage/gallery/1687157819.pdf",
+  "sourceNote": "Unit titles are transcribed from the textbook contents page. Practice questions and answer guidance in this pack are newly authored for SMSS, based on the listed subject matter; they are not copied CDC model questions and require subject-teacher review before formal examination use.",
+  "status": "curriculum_based_original_practice_questions_teacher_review_required",
+  "units": [
+    {
+      "unitCode": "1",
+      "unitTitle": "वैज्ञानिक सिकाइ",
+      "description": "Observation, hypothesis, experiment, survey, research and laboratory safety",
+      "topics": [
+        "वैज्ञानिक सिकाइ"
+      ]
+    },
+    {
+      "unitCode": "2",
+      "unitTitle": "सूचना तथा सञ्चार प्रविधि",
+      "description": "Computer systems, internet, search engines, AI, robotics, cyber safety and cloud computing",
+      "topics": [
+        "सूचना तथा सञ्चार प्रविधि"
+      ]
+    },
+    {
+      "unitCode": "3",
+      "unitTitle": "सजीवको संरचना",
+      "description": "Cells, tissues, organs and organ systems in plants and animals",
+      "topics": [
+        "सजीवको संरचना"
+      ]
+    },
+    {
+      "unitCode": "4",
+      "unitTitle": "जैविक विविधता तथा वातावरण",
+      "description": "Ecosystems, biodiversity, conservation, pollution and sustainable environment",
+      "topics": [
+        "जैविक विविधता तथा वातावरण"
+      ]
+    },
+    {
+      "unitCode": "5",
+      "unitTitle": "जीवन प्रक्रिया",
+      "description": "Nutrition, respiration, transport, excretion and reproduction",
+      "topics": [
+        "जीवन प्रक्रिया"
+      ]
+    },
+    {
+      "unitCode": "6",
+      "unitTitle": "बल र गति",
+      "description": "Force, motion, speed, acceleration, friction and pressure",
+      "topics": [
+        "बल र गति"
+      ]
+    },
+    {
+      "unitCode": "7",
+      "unitTitle": "दैनिक जीवनमा ऊर्जा",
+      "description": "Forms and sources of energy, heat, light, sound and energy conservation",
+      "topics": [
+        "दैनिक जीवनमा ऊर्जा"
+      ]
+    },
+    {
+      "unitCode": "8",
+      "unitTitle": "विद्युत् तथा चुम्बकत्व",
+      "description": "Electric circuits, current, conductors, insulators, magnets and electromagnets",
+      "topics": [
+        "विद्युत् तथा चुम्बकत्व"
+      ]
+    },
+    {
+      "unitCode": "9",
+      "unitTitle": "पदार्थ",
+      "description": "States of matter, atoms, molecules, elements, compounds, mixtures, acids and bases",
+      "topics": [
+        "पदार्थ"
+      ]
+    },
+    {
+      "unitCode": "10",
+      "unitTitle": "दैनिक जीवनमा प्रयोग हुने पदार्थ",
+      "description": "Metals, non-metals, alloys, plastics, fibres and safe use of household materials",
+      "topics": [
+        "दैनिक जीवनमा प्रयोग हुने पदार्थ"
+      ]
+    },
+    {
+      "unitCode": "11",
+      "unitTitle": "पृथ्वी र ब्रह्माण्ड",
+      "description": "Earth, solar system, Moon, stars, eclipses and seasons",
+      "topics": [
+        "पृथ्वी र ब्रह्माण्ड"
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "unitCode": "1",
+      "topicName": "वैज्ञानिक सिकाइ",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "वैज्ञानिक अध्ययनमा कुनै वस्तु वा घटनालाई ध्यानपूर्वक हेरी तथ्य सङ्कलन गर्ने प्रक्रियालाई के भनिन्छ?",
+      "options": [
+        "अवलोकन",
+        "अनुमान",
+        "निष्कर्ष",
+        "सर्वेक्षण"
+      ],
+      "correctOption": "A",
+      "answer": "अवलोकन भनेको इन्द्रिय वा उपकरणको सहायताले वस्तु/घटनालाई ध्यानपूर्वक हेरी तथ्य सङ्कलन गर्नु हो।"
+    },
+    {
+      "unitCode": "1",
+      "topicName": "वैज्ञानिक सिकाइ",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "प्रयोगशालामा रसायन प्रयोग गर्दा कुन सुरक्षा सामग्री उपयोगी हुन्छ?",
+      "options": [
+        "चस्मा र पञ्जा",
+        "खुला चप्पल",
+        "खानेकुरा",
+        "खेलौना"
+      ],
+      "correctOption": "A",
+      "answer": "आवश्यकताअनुसार सुरक्षा चस्मा, पञ्जा र एप्रोन प्रयोग गर्नुपर्छ।"
+    },
+    {
+      "unitCode": "1",
+      "topicName": "वैज्ञानिक सिकाइ",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "अवलोकन र प्रयोगबीच दुई फरक लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "अवलोकनमा वस्तु वा घटना ध्यानपूर्वक हेरेर तथ्य लिइन्छ; प्रयोगमा निश्चित प्रक्रिया अपनाई परिकल्पना वा विचारको परीक्षण गरिन्छ। उदाहरणसहित स्पष्ट पार्नुपर्छ।"
+    },
+    {
+      "unitCode": "1",
+      "topicName": "वैज्ञानिक सिकाइ",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "वैज्ञानिक अनुसन्धानका मुख्य चरणहरू क्रमबद्ध रूपमा लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "समस्या/उद्देश्य पहिचान, परिकल्पना, विधि र सामग्री छनोट, तथ्य सङ्कलन, विश्लेषण, निष्कर्ष र प्रतिवेदन तयार गर्ने।"
+    },
+    {
+      "unitCode": "1",
+      "topicName": "वैज्ञानिक सिकाइ",
+      "questionType": "long",
+      "marks": 10,
+      "cognitiveLevel": "application",
+      "questionText": "विद्यालय वरपरको फोहोर व्यवस्थापनबारे सानो सर्वेक्षण गर्ने योजना तयार गर्नुहोस्। उद्देश्य, प्रश्नावली, तथ्य सङ्कलन, विश्लेषण र निष्कर्ष समेट्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "उत्तरमा स्पष्ट उद्देश्य, नमुना घर/विद्यार्थी छनोट, निष्पक्ष प्रश्नावली, तथ्य अभिलेख, तालिका/चित्रबाट विश्लेषण, निष्कर्ष र सुधार सुझाव हुनुपर्छ।"
+    },
+    {
+      "unitCode": "2",
+      "topicName": "सूचना तथा सञ्चार प्रविधि",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "वेबसाइट वा इन्टरनेटमा सूचना खोज्न प्रयोग गरिने सेवाको उदाहरण कुन हो?",
+      "options": [
+        "Search engine",
+        "Printer",
+        "Keyboard",
+        "Speaker"
+      ],
+      "correctOption": "A",
+      "answer": "Search engine ले इन्टरनेटमा उपलब्ध वेबपृष्ठ तथा सामग्री खोज्न मद्दत गर्छ।"
+    },
+    {
+      "unitCode": "2",
+      "topicName": "सूचना तथा सञ्चार प्रविधि",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "इन्टरनेटमा आफ्नो पासवर्ड सुरक्षित राख्ने राम्रो उपाय कुन हो?",
+      "options": [
+        "बलियो र फरक पासवर्ड राख्ने",
+        "सबैलाई पासवर्ड दिने",
+        "सार्वजनिक पोस्ट गर्ने",
+        "हरेक साइटमा एउटै सजिलो पासवर्ड राख्ने"
+      ],
+      "correctOption": "A",
+      "answer": "लामो, अनुमान गर्न कठिन र सेवाअनुसार फरक पासवर्ड प्रयोग गरी गोप्य राख्नुपर्छ।"
+    },
+    {
+      "unitCode": "2",
+      "topicName": "सूचना तथा सञ्चार प्रविधि",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "Search engine र website बीच फरक लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "Search engine इन्टरनेटमा सामग्री खोज्ने सेवा हो; website भने वेबपृष्ठहरूको समूह वा अनलाइन सूचना/सेवा प्रदान गर्ने स्थान हो। उदाहरण दिनुपर्छ।"
+    },
+    {
+      "unitCode": "2",
+      "topicName": "सूचना तथा सञ्चार प्रविधि",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "कृत्रिम बुद्धिमत्ता (AI) र रोबोटिक्सको एउटा–एउटा उपयोग लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "AI ले भाषा पहिचान, सुझाव वा तस्बिर विश्लेषण गर्न सक्छ; रोबोटिक्सले उत्पादन, शल्यक्रिया सहयोग वा जोखिमयुक्त काममा रोबोट प्रयोग गर्न सक्छ।"
+    },
+    {
+      "unitCode": "2",
+      "topicName": "सूचना तथा सञ्चार प्रविधि",
+      "questionType": "long",
+      "marks": 10,
+      "cognitiveLevel": "application",
+      "questionText": "विद्यार्थीले इन्टरनेट र सामाजिक सञ्जाल सुरक्षित तथा जिम्मेवार रूपमा प्रयोग गर्न अपनाउनुपर्ने उपायहरू व्याख्या गर्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "व्यक्तिगत विवरण नखुलाउने, बलियो पासवर्ड/दुई तह प्रमाणीकरण, शंकास्पद लिंक नखोल्ने, साइबर दुर्व्यवहार रिपोर्ट गर्ने, स्रोत जाँच्ने, समय व्यवस्थापन र डिजिटल शिष्टाचार समेट्नुपर्छ।"
+    },
+    {
+      "unitCode": "3",
+      "topicName": "सजीवको संरचना",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "सजीवको संरचनात्मक तथा कार्यात्मक आधारभूत एकाइ कुन हो?",
+      "options": [
+        "कोष",
+        "अङ्ग",
+        "तन्तु",
+        "अङ्ग प्रणाली"
+      ],
+      "correctOption": "A",
+      "answer": "कोष सजीवको संरचनात्मक र कार्यात्मक आधारभूत एकाइ हो।"
+    },
+    {
+      "unitCode": "3",
+      "topicName": "सजीवको संरचना",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "बिरुवाको कोषमा प्रकाश संश्लेषणका लागि आवश्यक हरियो वर्णक कहाँ हुन्छ?",
+      "options": [
+        "हरितलवक",
+        "केन्द्रक",
+        "रिक्तिका",
+        "कोषझिल्ली"
+      ],
+      "correctOption": "A",
+      "answer": "हरितलवकमा क्लोरोफिल हुन्छ, जसले प्रकाश संश्लेषणमा सहयोग गर्छ।"
+    },
+    {
+      "unitCode": "3",
+      "topicName": "सजीवको संरचना",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "कोष, तन्तु र अङ्गबीचको सम्बन्ध उदाहरणसहित स्पष्ट पार्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "समान काम गर्ने कोषहरूको समूह तन्तु हो; विभिन्न तन्तु मिलेर अङ्ग बन्छ; अङ्गहरू मिलेर अङ्ग प्रणाली बन्छन्। उदाहरण: मांसपेशी कोष–मांसपेशी तन्तु–मुटु।"
+    },
+    {
+      "unitCode": "3",
+      "topicName": "सजीवको संरचना",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "वनस्पति कोष र जनावर कोषका दुई मुख्य फरक लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "वनस्पति कोषमा सामान्यतः कोषभित्त र हरितलवक हुन्छ तथा ठूलो केन्द्रीय रिक्तिका हुन्छ; जनावर कोषमा कोषभित्त/हरितलवक हुँदैन र रिक्तिका साना हुन सक्छन्।"
+    },
+    {
+      "unitCode": "3",
+      "topicName": "सजीवको संरचना",
+      "questionType": "long",
+      "marks": 10,
+      "cognitiveLevel": "application",
+      "questionText": "मानव शरीरमा पाचन, श्वसन र रक्तसञ्चार प्रणालीले एकअर्कालाई कसरी सहयोग गर्छन्? क्रमबद्ध व्याख्या गर्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "पाचनले पोषक तत्त्वलाई अवशोषणयोग्य बनाउँछ; श्वसनले अक्सिजन उपलब्ध गराई ऊर्जा उत्पादनमा सहयोग गर्छ; रक्तसञ्चारले पोषक तत्त्व र अक्सिजन कोषसम्म पुर्‍याउँछ र अपशिष्ट पदार्थ हटाउन सहयोग गर्छ।"
+    },
+    {
+      "unitCode": "4",
+      "topicName": "जैविक विविधता तथा वातावरण",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "कुनै क्षेत्रमा रहेका सजीव र निर्जीव तत्वबीचको अन्तरसम्बन्धित प्रणालीलाई के भनिन्छ?",
+      "options": [
+        "पारिस्थितिक प्रणाली",
+        "जनसंख्या",
+        "प्रजाति",
+        "खाद्य पदार्थ"
+      ],
+      "correctOption": "A",
+      "answer": "सजीव र निर्जीव तत्वबीच अन्तरक्रिया हुने एकाइ पारिस्थितिक प्रणाली हो।"
+    },
+    {
+      "unitCode": "4",
+      "topicName": "जैविक विविधता तथा वातावरण",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "जैविक विविधता संरक्षणका लागि कुन कार्य उपयुक्त हुन्छ?",
+      "options": [
+        "प्राकृतिक बासस्थान जोगाउने",
+        "वन विनाश गर्ने",
+        "वन्यजन्तु सिकार गर्ने",
+        "नदीमा फोहोर फाल्ने"
+      ],
+      "correctOption": "A",
+      "answer": "बासस्थान संरक्षण, दिगो उपयोग र अवैध सिकार नियन्त्रणले जैविक विविधता जोगाउँछ।"
+    },
+    {
+      "unitCode": "4",
+      "topicName": "जैविक विविधता तथा वातावरण",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "खाद्य शृङ्खला भनेको के हो? एउटा उदाहरण लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "एक जीवबाट अर्को जीवमा खाना र ऊर्जाको स्थानान्तरण हुने क्रम खाद्य शृङ्खला हो। उदाहरण: घाँस → फट्याङ्ग्रा → भ्यागुता → सर्प।"
+    },
+    {
+      "unitCode": "4",
+      "topicName": "जैविक विविधता तथा वातावरण",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "वायु प्रदूषणका दुई कारण र दुई असर लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "कारण: सवारी/उद्योगको धुवाँ, फोहोर वा इन्धन जलाउनु। असर: श्वासप्रश्वास समस्या, आँखा/घाँटी जलन, अम्लीय वर्षा वा जलवायुमा असर।"
+    },
+    {
+      "unitCode": "4",
+      "topicName": "जैविक विविधता तथा वातावरण",
+      "questionType": "long",
+      "marks": 10,
+      "cognitiveLevel": "higher",
+      "questionText": "आफ्नो समुदायको जैविक विविधता जोगाउन विद्यालय र स्थानीय समुदायले गर्न सक्ने कार्ययोजना तयार गर्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "स्थानीय प्रजाति पहिचान, बासस्थान नष्ट नगर्ने, वृक्षरोपण, पानी/माटो संरक्षण, फोहोर व्यवस्थापन, सचेतना, अवैध सिकार रोकथाम, अनुगमन र समुदाय सहभागिता समेट्नुपर्छ।"
+    },
+    {
+      "unitCode": "5",
+      "topicName": "जीवन प्रक्रिया",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "हरिया बिरुवाले आफ्नै खाना बनाउने प्रक्रियालाई के भनिन्छ?",
+      "options": [
+        "प्रकाश संश्लेषण",
+        "श्वसन",
+        "उत्सर्जन",
+        "वाष्पोत्सर्जन"
+      ],
+      "correctOption": "A",
+      "answer": "हरितलवकमा प्रकाश, पानी र कार्बन डाइअक्साइडको सहायताले खाना बन्ने प्रक्रियालाई प्रकाश संश्लेषण भनिन्छ।"
+    },
+    {
+      "unitCode": "5",
+      "topicName": "जीवन प्रक्रिया",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "मानव शरीरमा रगतबाट फोहोर पदार्थ छानेर पिसाब बनाउने मुख्य अङ्ग कुन हो?",
+      "options": [
+        "मिर्गौला",
+        "फोक्सो",
+        "मुटु",
+        "आमाशय"
+      ],
+      "correctOption": "A",
+      "answer": "मिर्गौलाले रगत छानेर अतिरिक्त पानी र घुलनशील फोहोर पदार्थ पिसाबका रूपमा निकाल्छ।"
+    },
+    {
+      "unitCode": "5",
+      "topicName": "जीवन प्रक्रिया",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "प्रकाश संश्लेषणका लागि आवश्यक कच्चा पदार्थ र अवस्था लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "पानी, कार्बन डाइअक्साइड, सूर्यको प्रकाश र क्लोरोफिल आवश्यक हुन्छन्; यसबाट ग्लुकोज र अक्सिजन उत्पादन हुन्छ।"
+    },
+    {
+      "unitCode": "5",
+      "topicName": "जीवन प्रक्रिया",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "श्वसन र प्रकाश संश्लेषणबीच दुई फरक लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "प्रकाश संश्लेषणमा प्रकाश ऊर्जाको प्रयोग गरी खाना बनाइन्छ र अक्सिजन निस्कन्छ; श्वसनमा खाना विघटन भई ऊर्जा प्राप्त हुन्छ र सामान्यतः अक्सिजन प्रयोग हुन्छ।"
+    },
+    {
+      "unitCode": "5",
+      "topicName": "जीवन प्रक्रिया",
+      "questionType": "long",
+      "marks": 10,
+      "cognitiveLevel": "application",
+      "questionText": "मानव शरीरमा पोषणदेखि उत्सर्जनसम्मका जीवन प्रक्रियाहरूले शरीरलाई स्वस्थ राख्न कसरी सहयोग गर्छन्? व्याख्या गर्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "पाचनले खाना सरल बनाउँछ, अवशोषणले पोषक तत्त्व रगतमा पुर्‍याउँछ, श्वसनले ऊर्जा निकाल्छ, रक्तसञ्चारले पदार्थ ओसार्छ र उत्सर्जनले अपशिष्ट हटाउँछ। प्रणालीबीचको सम्बन्ध स्पष्ट हुनुपर्छ।"
+    },
+    {
+      "unitCode": "6",
+      "topicName": "बल र गति",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "वस्तुको गति वा आकार परिवर्तन गराउन सक्ने धक्कालाई के भनिन्छ?",
+      "options": [
+        "बल",
+        "ऊर्जा",
+        "द्रव्यमान",
+        "घनत्व"
+      ],
+      "correctOption": "A",
+      "answer": "बल धक्का वा तान हो, जसले वस्तुको गति वा आकार परिवर्तन गर्न सक्छ।"
+    },
+    {
+      "unitCode": "6",
+      "topicName": "बल र गति",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "कुन अवस्थामा घर्षण बल उपयोगी हुन्छ?",
+      "options": [
+        "हिँड्दा चिप्लिन नदिन",
+        "मेसिनका भाग घिसाउन",
+        "ऊर्जा अनावश्यक नष्ट गर्न",
+        "सतह तताउन मात्र"
+      ],
+      "correctOption": "A",
+      "answer": "जुत्ता र जमिनबीचको घर्षणले हिँड्दा चिप्लिनबाट बचाउँछ।"
+    },
+    {
+      "unitCode": "6",
+      "topicName": "बल र गति",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "चाल र वेगबीच फरक लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "चाल एकाइ समयमा तय गरिएको दूरी हो र अदिश राशि हो; वेग एकाइ समयमा भएको विस्थापन हो र दिशा सहितको सदिश राशि हो।"
+    },
+    {
+      "unitCode": "6",
+      "topicName": "बल र गति",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "दैनिक जीवनमा घर्षणका दुई फाइदा र एउटा बेफाइदा लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "फाइदा: हिँड्न, लेख्न र ब्रेक लगाउन सहयोग। बेफाइदा: मेसिनका भाग घिसिने र ताप/ऊर्जाको क्षति हुने।"
+    },
+    {
+      "unitCode": "6",
+      "topicName": "बल र गति",
+      "questionType": "long",
+      "marks": 10,
+      "cognitiveLevel": "application",
+      "questionText": "एउटा साइकल चालकले ३० मिनेटमा ६ किलोमिटर दूरी तय गर्‍यो। उसको औसत चाल निकाल्नुहोस् र चाल बढाउन/घटाउन असर गर्ने दुई अवस्था उल्लेख गर्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "समय ०.५ घण्टा; औसत चाल = दूरी/समय = ६/०.५ = १२ km/h। बाटोको अवस्था, बल/पेडल चलाउने प्रयास, घर्षण र भारजस्ता कारण उल्लेख गर्नुपर्छ।"
+    },
+    {
+      "unitCode": "7",
+      "topicName": "दैनिक जीवनमा ऊर्जा",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "खाना पकाउन प्रयोग हुने ग्यासमा मुख्यतः कुन प्रकारको ऊर्जा सञ्चित हुन्छ?",
+      "options": [
+        "रासायनिक ऊर्जा",
+        "ध्वनि ऊर्जा",
+        "प्रकाश ऊर्जा",
+        "चुम्बकीय ऊर्जा"
+      ],
+      "correctOption": "A",
+      "answer": "इन्धनमा रासायनिक ऊर्जा सञ्चित हुन्छ, दहन हुँदा ताप ऊर्जा प्राप्त हुन्छ।"
+    },
+    {
+      "unitCode": "7",
+      "topicName": "दैनिक जीवनमा ऊर्जा",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "ताप सर्ने कुन विधिमा पदार्थको वास्तविक स्थानान्तरण आवश्यक पर्दैन?",
+      "options": [
+        "विकिरण",
+        "संवहन",
+        "चालन",
+        "बहाव"
+      ],
+      "correctOption": "A",
+      "answer": "विकिरण विद्युत्चुम्बकीय तरङ्गबाट हुन्छ र माध्यम आवश्यक पर्दैन।"
+    },
+    {
+      "unitCode": "7",
+      "topicName": "दैनिक जीवनमा ऊर्जा",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "नवीकरणीय र अनवीकरणीय ऊर्जाका दुई–दुई उदाहरण लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "नवीकरणीय: सौर्य, पवन, जलविद्युत्/बायोग्यास। अनवीकरणीय: कोइला, पेट्रोलियम, प्राकृतिक ग्यास।"
+    },
+    {
+      "unitCode": "7",
+      "topicName": "दैनिक जीवनमा ऊर्जा",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "ऊर्जा संरक्षण किन आवश्यक छ? तीन उपाय लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "स्रोत सीमित छन् र प्रदूषण/खर्च घटाउन ऊर्जा संरक्षण आवश्यक छ। LED प्रयोग, अनावश्यक बत्ती बन्द, दक्ष उपकरण, सार्वजनिक यातायात र नवीकरणीय ऊर्जा उपयोग उपाय हुन्।"
+    },
+    {
+      "unitCode": "7",
+      "topicName": "दैनिक जीवनमा ऊर्जा",
+      "questionType": "long",
+      "marks": 10,
+      "cognitiveLevel": "higher",
+      "questionText": "विद्यालयमा ऊर्जा बचत गर्ने योजना तयार गर्नुहोस्। ऊर्जा खपत पहिचान, बचतका उपाय, जिम्मेवारी र परिणाम मापन समेट्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "बत्ती/पंखा/कम्प्युटरको उपयोग अभिलेख, प्राकृतिक प्रकाश, LED, प्रयोगपछि स्विच बन्द, ऊर्जा दक्ष उपकरण, विद्यार्थी समिति, मासिक बिल तुलना र प्रगति समीक्षा समेट्नुपर्छ।"
+    },
+    {
+      "unitCode": "8",
+      "topicName": "विद्युत् तथा चुम्बकत्व",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "विद्युत् परिपथ पूरा हुँदा विद्युत् धारा बग्ने अवस्था कुन हो?",
+      "options": [
+        "बन्द परिपथ",
+        "खुला परिपथ",
+        "टुटेको तार",
+        "स्विच खुला"
+      ],
+      "correctOption": "A",
+      "answer": "बन्द परिपथमा निरन्तर चालक मार्ग बन्ने भएकाले धारा बग्न सक्छ।"
+    },
+    {
+      "unitCode": "8",
+      "topicName": "विद्युत् तथा चुम्बकत्व",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "विद्युत् प्रवाह सजिलै हुन दिने पदार्थ कुन हो?",
+      "options": [
+        "तामा",
+        "रबर",
+        "काठ",
+        "प्लास्टिक"
+      ],
+      "correctOption": "A",
+      "answer": "तामा राम्रो विद्युत् चालक हो; रबर, काठ र प्लास्टिक सामान्यतः कुचालक हुन्।"
+    },
+    {
+      "unitCode": "8",
+      "topicName": "विद्युत् तथा चुम्बकत्व",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "चालक र कुचालक पदार्थबीच फरक लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "चालकले विद्युत् धारा सजिलै प्रवाह हुन दिन्छ; कुचालकले प्रवाहलाई रोक्छ वा धेरै कम गराउँछ। उदाहरण: तामा र रबर।"
+    },
+    {
+      "unitCode": "8",
+      "topicName": "विद्युत् तथा चुम्बकत्व",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "विद्युत् चुम्बक कसरी बनाइन्छ? यसको एउटा उपयोग लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "फलामको नरम कोर वरिपरि इन्सुलेटेड तार बेरेर त्यसमा विद्युत् धारा प्रवाह गराउँदा विद्युत् चुम्बक बन्छ। क्रेन, घण्टी वा रिलेमा प्रयोग हुन्छ।"
+    },
+    {
+      "unitCode": "8",
+      "topicName": "विद्युत् तथा चुम्बकत्व",
+      "questionType": "long",
+      "marks": 10,
+      "cognitiveLevel": "application",
+      "questionText": "साधारण विद्युत् परिपथको चित्र बनाइ ब्याट्री, स्विच, तार र बल्बको काम व्याख्या गर्नुहोस्। खुला र बन्द परिपथको अवस्था पनि देखाउनुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "चित्रमा ब्याट्री ऊर्जा स्रोत, तार चालक मार्ग, स्विच परिपथ खोल्ने/बन्द गर्ने र बल्बले विद्युत् ऊर्जालाई प्रकाश/तापमा बदल्ने देखाउनुपर्छ। बन्द परिपथमा बल्ब बल्छ; खुला परिपथमा बल्दैन।"
+    },
+    {
+      "unitCode": "9",
+      "topicName": "पदार्थ",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "दुई वा दुईभन्दा बढी तत्व निश्चित अनुपातमा रासायनिक रूपमा मिलेर बनेको शुद्ध पदार्थ कुन हो?",
+      "options": [
+        "यौगिक",
+        "मिश्रण",
+        "धातु",
+        "विलयन मात्र"
+      ],
+      "correctOption": "A",
+      "answer": "यौगिक निश्चित अनुपातमा रासायनिक बन्धनद्वारा बनेको शुद्ध पदार्थ हो।"
+    },
+    {
+      "unitCode": "9",
+      "topicName": "पदार्थ",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "निलो लिटमसलाई रातो बनाउने पदार्थ कस्तो हुन्छ?",
+      "options": [
+        "अम्लीय",
+        "क्षारीय",
+        "तटस्थ",
+        "धात्विक"
+      ],
+      "correctOption": "A",
+      "answer": "अम्लले निलो लिटमसलाई रातो बनाउँछ।"
+    },
+    {
+      "unitCode": "9",
+      "topicName": "पदार्थ",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "तत्व, यौगिक र मिश्रणबीच फरक उदाहरणसहित लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "तत्व एउटै प्रकारका परमाणुबाट बनेको शुद्ध पदार्थ हो (फलाम); यौगिक तत्व निश्चित अनुपातमा रासायनिक रूपमा मिलेर बनेको हुन्छ (पानी); मिश्रण पदार्थ भौतिक रूपमा मिसिएको हुन्छ (हावा)।"
+    },
+    {
+      "unitCode": "9",
+      "topicName": "पदार्थ",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "ठोस, तरल र ग्यासका कणहरूको व्यवस्था तथा गतिमा फरक लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "ठोसमा कण नजिक र निश्चित स्थानमा कम्पन गर्छन्; तरलमा कण नजिक भए पनि एकअर्कामाथि सर्न सक्छन्; ग्यासमा कण टाढा र स्वतन्त्र रूपमा तीव्र गतिमा चल्छन्।"
+    },
+    {
+      "unitCode": "9",
+      "topicName": "पदार्थ",
+      "questionType": "long",
+      "marks": 10,
+      "cognitiveLevel": "application",
+      "questionText": "घरमा प्रयोग हुने अम्ल, क्षार र तटस्थ पदार्थका उदाहरण दिई सूचकको सहायताले तिनीहरू छुट्याउने सुरक्षित प्रयोगको योजना लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "कागतीको रस/सिरका अम्ल, साबुनपानी क्षार, नुनपानी लगभग तटस्थ उदाहरण। रातो/निलो लिटमस वा उपयुक्त सूचक प्रयोग, छुट्टाछुट्टै नमुना, अवलोकन तालिका, निष्कर्ष र स्वाद नचाख्ने सुरक्षा सावधानी समेट्नुपर्छ।"
+    },
+    {
+      "unitCode": "10",
+      "topicName": "दैनिक जीवनमा प्रयोग हुने पदार्थ",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "फलाममा खिया लाग्न मुख्यतः कुन दुई कुराको उपस्थिति आवश्यक हुन्छ?",
+      "options": [
+        "अक्सिजन र पानी/चिस्यान",
+        "नाइट्रोजन र प्रकाश",
+        "कार्बन र ध्वनि",
+        "हिलियम र ताप"
+      ],
+      "correctOption": "A",
+      "answer": "फलाममा अक्सिजन र पानी/चिस्यानको उपस्थितिमा खिया लाग्ने प्रक्रिया हुन्छ।"
+    },
+    {
+      "unitCode": "10",
+      "topicName": "दैनिक जीवनमा प्रयोग हुने पदार्थ",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "विद्युत् तार बनाउन तामा प्रयोग गर्नुको मुख्य कारण के हो?",
+      "options": [
+        "राम्रो विद्युत् चालक हुनु",
+        "पानीमा घुल्नु",
+        "पारदर्शी हुनु",
+        "चुम्बकले सधैँ तान्नु"
+      ],
+      "correctOption": "A",
+      "answer": "तामा राम्रो विद्युत् चालक र तार बनाउन तन्काउन मिल्ने धातु हो।"
+    },
+    {
+      "unitCode": "10",
+      "topicName": "दैनिक जीवनमा प्रयोग हुने पदार्थ",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "धातु र अधातुका तीन–तीन सामान्य गुण लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "धातु सामान्यतः चम्किला, ताप/विद्युत्का चालक र पिटेर पातलो बनाउन मिल्ने हुन्छन्; अधातु सामान्यतः कम चम्किला, कमजोर चालक र धेरैजसो भंगुर हुन्छन्। अपवाद हुन सक्छन्।"
+    },
+    {
+      "unitCode": "10",
+      "topicName": "दैनिक जीवनमा प्रयोग हुने पदार्थ",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "मिश्रधातु भनेको के हो? दुई उदाहरण र तिनको उपयोग लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "दुई वा बढी तत्वमध्ये कम्तीमा एउटा धातु मिसाएर बनाइएको धात्विक पदार्थ मिश्रधातु हो। उदाहरण: पित्तल (भाँडा/सजावट), स्टिल (निर्माण)।"
+    },
+    {
+      "unitCode": "10",
+      "topicName": "दैनिक जीवनमा प्रयोग हुने पदार्थ",
+      "questionType": "long",
+      "marks": 10,
+      "cognitiveLevel": "higher",
+      "questionText": "घर र विद्यालयमा प्रयोग हुने प्लास्टिक, धातु र रेशाजन्य पदार्थको सुरक्षित तथा वातावरणमैत्री उपयोगका उपायहरू तुलना गर्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "प्लास्टिक कम प्रयोग/पुनःप्रयोग/पुनर्चक्रण, धातु छुट्याएर पुनर्चक्रण, कपडा/प्राकृतिक रेशा दिगो उपयोग, फोहोर नजलाउने, उचित संकलन र सुरक्षा उपकरण प्रयोग समेट्नुपर्छ।"
+    },
+    {
+      "unitCode": "11",
+      "topicName": "पृथ्वी र ब्रह्माण्ड",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "पृथ्वीले सूर्यको एक परिक्रमा पूरा गर्न लगभग कति समय लगाउँछ?",
+      "options": [
+        "३६५ दिन",
+        "२४ घण्टा",
+        "३० दिन",
+        "१२ घण्टा"
+      ],
+      "correctOption": "A",
+      "answer": "पृथ्वीले सूर्यको एक परिक्रमा लगभग ३६५ दिन ६ घण्टामा पूरा गर्छ।"
+    },
+    {
+      "unitCode": "11",
+      "topicName": "पृथ्वी र ब्रह्माण्ड",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "दिन र रात हुनुको मुख्य कारण के हो?",
+      "options": [
+        "पृथ्वी आफ्नो अक्षमा घुम्नु",
+        "चन्द्रमा घुम्नु",
+        "सूर्य पृथ्वी वरिपरि घुम्नु",
+        "तारा हराउनु"
+      ],
+      "correctOption": "A",
+      "answer": "पृथ्वी आफ्नो अक्षमा घुम्दा सूर्यतर्फ फर्किएको भागमा दिन र विपरीत भागमा रात हुन्छ।"
+    },
+    {
+      "unitCode": "11",
+      "topicName": "पृथ्वी र ब्रह्माण्ड",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "सौर्यमण्डलका कुनै चार ग्रहको नाम सूर्यबाट नजिकदेखि क्रम मिलाएर लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "बुध, शुक्र, पृथ्वी, मङ्गल (त्यसपछि बृहस्पति, शनि, अरुण, वरुण)।"
+    },
+    {
+      "unitCode": "11",
+      "topicName": "पृथ्वी र ब्रह्माण्ड",
+      "questionType": "short",
+      "marks": 5,
+      "cognitiveLevel": "understanding",
+      "questionText": "सूर्यग्रहण र चन्द्रग्रहणबीच फरक लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "सूर्यग्रहणमा चन्द्रमा सूर्य र पृथ्वीको बीचमा आउँछ; चन्द्रग्रहणमा पृथ्वी सूर्य र चन्द्रमाको बीचमा आउँदा पृथ्वीको छाया चन्द्रमामा पर्छ।"
+    },
+    {
+      "unitCode": "11",
+      "topicName": "पृथ्वी र ब्रह्माण्ड",
+      "questionType": "long",
+      "marks": 10,
+      "cognitiveLevel": "application",
+      "questionText": "पृथ्वीको परिक्रमण र अक्षीय घूर्णनले क्रमशः ऋतु परिवर्तन तथा दिन–रात कसरी गराउँछन्? चित्रसहित व्याख्या गर्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "अक्षीय घूर्णनले करिब २४ घण्टामा दिन–रात गराउँछ; अक्ष झुकेको अवस्थामा सूर्य वरिपरि परिक्रमण गर्दा विभिन्न गोलार्द्धमा सूर्यकिरणको कोण/दिनको लम्बाइ फरक भई ऋतु परिवर्तन हुन्छ।"
+    }
+  ]
+}
