@@ -34,9 +34,9 @@ jobs:
         run: npm run test:rules
 
   deploy-live:
-    name: Deploy V44 to Firebase Hosting after tests pass
+    name: Deploy approved V45 to Firebase Hosting after tests pass
     needs: quality-and-rules
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/smss-v44-work' && vars.ENABLE_FIREBASE_HOSTING_DEPLOY == 'true' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.head_commit.message == 'release: deploy approved V45 to production [deploy-v45-live]' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout tested V44 commit
