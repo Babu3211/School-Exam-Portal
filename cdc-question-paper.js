@@ -266,7 +266,7 @@ async function loadClassSubjects() {
     }
     for (const x of rows) {
       const n=gradeNumber(x.className);
-      if(n>=6&&n<=10&&x.subject&&roleCanTeach(String(x.className),String(x.subject)))pairs.push({className:String(x.className),subject:String(x.subject),gradeNumber:n});
+      if(n>=6&&n<=10&&x.subject&&roleCanTeach(String(x.className),String(x.subject),String(x.section||"")))pairs.push({className:String(x.className),subject:String(x.subject),section:String(x.section||""),gradeNumber:n});
     }
   }
   const unique = new Map();
@@ -347,8 +347,12 @@ function allocateQuestions() {
   }
   return chosen.sort((a,b)=>["mcq","short","long"].indexOf(a.questionType)-["mcq","short","long"].indexOf(b.questionType));
 }
-function schoolHeader() {
-  return {schoolName:String(window.currentSchoolSettings?.schoolName||"Mahadevasthan Secondary School"),schoolAddress:String(window.currentSchoolSettings?.address||"")};
+async function schoolHeader() {
+  try {
+    const snap=await getDoc(doc(db,"school_settings","main"));
+    if(snap.exists()){const data=snap.data();return {schoolName:String(data.schoolName||"Mahadevasthan Secondary School"),schoolAddress:String(data.address||"")};}
+  } catch(err) { console.warn("School heading could not be loaded",err); }
+  return {schoolName:"Mahadevasthan Secondary School",schoolAddress:"Dhunibesi-05, Dhading"};
 }
 async function saveUnit(event) {
   event.preventDefault();
@@ -429,13 +433,13 @@ async function generatePaper() {
   if(!roleCanTeach(selectedClass,selectedSubject,selectedSection))throw new Error("यो विषय/Section मा प्रश्नपत्र बनाउने अनुमति छैन।");
   const questions=allocateQuestions();
   const fullMarks=Number($("qpPaperFullMarks").value);
-  const header=schoolHeader();
+  const header=await schoolHeader();
   generatedPaper={
     ...header,gradeNumber:gradeNumber(selectedClass),className:selectedClass,subject:selectedSubject,section:selectedSection,
     paperTitle:$("qpPaperTitle").value.trim(),academicYear:$("qpPaperYear").value.trim(),
     durationMinutes:Number($("qpPaperDuration").value),fullMarks,
     curriculumVersion:currentBlueprint?.curriculumVersion||"Custom Pattern",
-    blueprintId:currentBlueprint?.id||null,topicIds:selectedTopicIds(),
+    blueprintId:currentBlueprint?.id||null,cognitiveDistribution:currentBlueprint?.cognitiveDistribution||null,topicIds:selectedTopicIds(),
     questions:questions.map((q,index)=>({
       questionId:q.id,questionText:q.questionText,questionType:q.questionType,marks:Number(q.marks),
       options:q.options||[],cognitiveLevel:q.cognitiveLevel,topicName:q.topicName,answer:q.answer||"",
@@ -549,7 +553,7 @@ document.addEventListener("click",async event=>{
   const t=event.target.closest("button");if(!t)return;
   try{
     if(t.id==="qpTemplateBtn")downloadTemplate();
-    if(t.id==="qpGenerateBtn")generatePaper();
+    if(t.id==="qpGenerateBtn")await generatePaper();
     if(t.id==="qpSavePaperBtn")await savePaper();
     if(t.id==="qpPrintPaperBtn")printPaper();
     if(t.id==="qpRefreshBtn"&&selectedClass&&selectedSubject){await loadCurrentData();message("प्रश्न बैंक Refresh भयो।");}
