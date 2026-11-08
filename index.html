@@ -2513,7 +2513,7 @@ async function unpublishOneOnlineResult(studentId){
  const legacyResultId=await resultPublicationDocId(examId,studentId);
  const direct=docs.find(d=>d.id===legacyResultId||d.data()?.studentId===studentId);
  const legacy=docs.filter(d=>d.id!==legacyResultId&&!d.data()?.studentId&&legacyPublicationMatches(d,student));
- if(docs.some(d=>d.id!==resultId&&legacyPublicationIsAmbiguous(d,student)))throw new Error('An older result has the same student name but no matching Symbol No. or IEMIS/Admission No. No data was changed; add a unique identifier or review the old record manually.');
+ if(docs.some(d=>legacyPublicationIsAmbiguous(d,student)))throw new Error('An older result has the same student name but no matching Symbol No. or IEMIS/Admission No. No data was changed; add a unique identifier or review the old record manually.');
  if(legacy.length>1)throw new Error('Multiple older publications match this student. No data was changed; review the records first.');
  const targets=[...(direct?[direct]:[]),...legacy];
  if(!targets.length)throw new Error('No published result record was found for this student.');
