@@ -81,6 +81,30 @@ function pageShell() {
       <p class="qp-hint" id="qpMessage" role="status">पहिले कक्षा र विषय छान्नुहोस्। शिक्षकले आफूलाई तोकिएको कक्षा/विषयमा मात्र काम गर्न पाउनुहुनेछ।</p>
     </div>
 
+    <div class="qp-card" id="qpCdcReferences">
+      <div class="qp-section-title"><h3>CDC आधिकारिक नमुना प्रश्नपत्र तथा विशिष्टीकरण स्रोत</h3><span class="qp-badge">CDC स्रोत</span></div>
+      <p class="qp-hint">तलका कागजातहरू प्रश्नपत्रको ढाँचा, प्रश्नको प्रकार र मूल्याङ्कन मापदण्ड जाँच्नका लागि हुन्। कक्षा/विषयअनुसार लागू संस्करण फरक हुन सक्छ; प्रणालीले स्रोत पुष्टि नभएको ढाँचालाई CDC प्रमाणित भनेर प्रयोग गर्दैन।</p>
+      <div class="qp-grid">
+        <div><b>कक्षा ६–८</b><ul class="qp-hint">
+          <li><a href="https://moecdc.gov.np/storage/gallery/1672198334.pdf" target="_blank" rel="noopener">CDC विशिष्टीकरण तालिका २०७८ र नमुना प्रश्नपत्र (नेपाली, English, गणित, विज्ञान तथा प्रविधि आदि)</a></li>
+          <li><a href="https://moecdc.gov.np/category/course--g-/?page=2" target="_blank" rel="noopener">सामाजिक अध्ययन तथा मानव मूल्य शिक्षा पाठ्यक्रम २०८२</a></li>
+        </ul></div>
+        <div><b>कक्षा ९–१० अनिवार्य विषय</b><ul class="qp-hint">
+          <li><a href="https://moecdc.gov.np/content/282/specification-grid--9---10--compulsory-nepali/" target="_blank" rel="noopener">अनिवार्य नेपाली विशिष्टीकरण तालिका</a></li>
+          <li><a href="https://moecdc.gov.np/content/280/specification-grid--grade-9--10--compulsory-english/" target="_blank" rel="noopener">अनिवार्य English विशिष्टीकरण तालिका</a></li>
+          <li><a href="https://moecdc.gov.np/content/281/specification-grid--grade-9-10--compulsory-mathematics/" target="_blank" rel="noopener">अनिवार्य गणित विशिष्टीकरण तालिका</a></li>
+          <li><a href="https://moecdc.gov.np/category/specialization-schedule--g-/?page=6" target="_blank" rel="noopener">विज्ञान तथा प्रविधि र अन्य विषयका CDC विशिष्टीकरण तालिका</a></li>
+          <li><a href="https://moecdc.gov.np/content/488/health-and-physical-education-syllabus--2082-secondary/" target="_blank" rel="noopener">स्वास्थ्य तथा शारीरिक शिक्षा पाठ्यक्रम २०८२</a></li>
+        </ul></div>
+        <div><b>ऐच्छिक तथा थप विषय</b><ul class="qp-hint">
+          <li><a href="https://moecdc.gov.np/content/279/specialization-schedule-and-samput-questions--class-9-10-/" target="_blank" rel="noopener">ऐच्छिक गणित कक्षा ९–१० नमुना प्रश्न र Grid</a></li>
+          <li><a href="https://moecdc.gov.np/content/658/class-10-computer-science-optional-subject-specification/" target="_blank" rel="noopener">ऐच्छिक कम्प्युटर विज्ञान कक्षा १०</a></li>
+          <li><a href="https://moecdc.gov.np/content/659/class-10th-optional-mathematics-specification-table--model/" target="_blank" rel="noopener">ऐच्छिक गणित कक्षा १०</a></li>
+        </ul></div>
+      </div>
+      <p class="qp-hint">नोट: यी स्रोत लिंकहरू जोडिएका छन्; सबै कक्षा/सबै विषयका Topic र प्रश्न बैंकको पूर्ण, प्रमाणित आयात अझै सम्पन्न भएको छैन।</p>
+    </div>
+
     <div class="qp-card" id="qpCatalogAdmin">
       <div class="qp-section-title"><h3>१. CDC पाठ्यक्रम तथा Topic सूची व्यवस्थापन (Admin)</h3><span class="qp-badge">Admin मात्र</span></div>
       <p class="qp-hint">CDC को आधिकारिक पाठ्यक्रम/विशिष्टीकरण तालिकाबाट एकाइ र Topic प्रविष्ट वा JSON सूची आयात गर्नुहोस्। स्रोत र पाठ्यक्रम संस्करण राख्न अनिवार्य छ। अप्रमाणित Topic लाई CDC आधिकारिक भनेर चिनाइँदैन।</p>
