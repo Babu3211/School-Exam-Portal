@@ -148,6 +148,7 @@ must(html.includes("validatedRestoreFile=file"), "Restore Preview must remember 
 must(html.includes('files?.[0]!==validatedRestoreFile'), "Restore must reject a backup file changed after Preview.");
 
 must(restorePreviewCode.includes("const previewSequence=++restorePreviewSequence"), "Restore Preview must invalidate earlier asynchronous previews.");
+must(html.includes("if(!achievement&&rawCells.some(v=>v===''))"), "Marks ledger import must reject partially filled subject components.");
 must(restorePreviewCode.includes("if(previewSequence!==restorePreviewSequence||"), "Restore Preview must discard stale file reads.");
 must(restorePreviewCode.includes('catch(err){if(previewSequence!==restorePreviewSequence||'), "Stale restore preview failures must not overwrite newer preview messages.");
 
