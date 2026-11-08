@@ -210,14 +210,14 @@ function renderTopics() {
   const box = $("qpTopicList"), select = $("qpQuestionTopic");
   if (!box || !select) return;
   const topics = curriculumRows.flatMap(unit => (unit.topics || []).map((name,index) => ({id:unit.id+"_"+index,unitId:unit.id,unitTitle:unit.unitTitle,topicName:String(name)})));
-  const known=new Set(topics.map(x=>normal(x.topicName)));
-  questionRows.forEach(q=>{if(q.topicName&&!known.has(normal(q.topicName))){known.add(normal(q.topicName));topics.push({id:"custom_"+topics.length,unitId:q.unitId||"",unitTitle:q.unitTitle||"शिक्षकले थपेको Topic",topicName:String(q.topicName)});}});
+  const known=new Set(topics.map(x=>x.id));
+  questionRows.forEach(q=>{const key=String(q.topicId||("custom_"+normal((q.unitTitle||"")+"::"+q.topicName)));if(q.topicName&&!known.has(key)){known.add(key);topics.push({id:key,unitId:q.unitId||"",unitTitle:q.unitTitle||"शिक्षकले थपेको Topic",topicName:String(q.topicName)});}});
   $("qpTopicCount").textContent = topics.length+" Topic";
   if (!topics.length) {
     box.innerHTML = '<p class="qp-hint">अहिलेसम्म Topic छैन। तल प्रश्न थप्दा आफूले चाहेको Topic लेख्नुहोस्; सुरक्षित भएपछि यहीँ छान्न मिल्छ।</p>';
     select.innerHTML = ""; return;
   }
-  box.innerHTML = topics.map(x=>`<label class="qp-topic"><input type="checkbox" data-qp-topic value="${esc(x.topicName)}"><span><b>${esc(x.topicName)}</b><small class="qp-hint"> · ${esc(x.unitTitle||"एकाइ नतोकिएको")}</small></span></label>`).join("");
+  box.innerHTML = topics.map(x=>`<label class="qp-topic"><input type="checkbox" data-qp-topic value="${esc(x.id)}"><span><b>${esc(x.topicName)}</b><small class="qp-hint"> · ${esc(x.unitTitle||"एकाइ नतोकिएको")}</small></span></label>`).join("");
   select.innerHTML = topics.map(x=>'<option value="'+esc(x.topicName)+'">').join("");
 }
 function renderQuestionRows() {
@@ -342,7 +342,7 @@ function allocateQuestions() {
   const chosen=[],used=new Set();
   for(const item of pattern){
     if(!item.count)continue;
-    const pool=shuffle(questionRows.filter(q=>topics.includes(q.topicName)&&q.questionType===item.type&&Number(q.marks)===item.marks&&q.status!=="archived"));
+    const pool=shuffle(questionRows.filter(q=>topics.includes(q.topicId)&&q.questionType===item.type&&Number(q.marks)===item.marks&&q.status!=="archived"));
     if(pool.length<item.count)throw new Error(item.type+" प्रकारका "+item.marks+" अङ्कका प्रश्न "+item.count+" चाहिन्छ; प्रश्न बैंकमा "+pool.length+" मात्र छन्।");
     for(let i=0;i<item.count;i++){
       const available=pool.filter(q=>!used.has(q.id));
@@ -416,7 +416,7 @@ async function saveQuestion(event) {
   const unitTitle=$("qpQuestionUnit").value.trim()||"शिक्षकले थपेको Topic";
   if(!topicName||topicName.length>180)throw new Error("Topic को नाम १–१८० अक्षरभित्र लेख्नुहोस्।");
   const unitId="teacher_custom";
-  const topicId="custom_"+normal(topicName);
+  const topicId="custom_"+normal(unitTitle+"::"+topicName);
   const questionType=$("qpQuestionType").value;
   const options=questionType==="mcq"?["A","B","C","D"].map(k=>$("qpOption"+k).value.trim()):[];
   const correctOption=questionType==="mcq"?$("qpCorrectOption").value:"";
