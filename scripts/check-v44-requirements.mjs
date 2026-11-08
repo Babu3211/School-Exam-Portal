@@ -111,6 +111,10 @@ const restorePreviewCode = html.slice(restorePreviewStart, restorePreviewEnd);
 must(restorePreviewCode.includes('n!=="audit_logs"&&!RESTORE_COLLECTIONS.includes(n)'), "A real SMSS backup containing append-only audit_logs must be accepted by Restore Preview.");
 must(restorePreviewCode.includes("if(unknown.length)throw new Error"), "Restore Preview must still reject unknown collections.");
 
+must(restorePreviewCode.includes("parsed.collections.audit_logs!==undefined&&!Array.isArray(parsed.collections.audit_logs)"), "Restore Preview must reject malformed audit log backup collections.");
+must(restorePreviewCode.includes("legacyMissingCollections.join"), "Restore Preview must warn when older backups omit newer collections.");
+
+
 must(html.includes("append-only सुरक्षा नियमका कारण Restore हुँदैन"), "Restore UI must explain why audit logs are not replayed.");
 must(html.includes("legacyMissingCollections"), "Restore must remain compatible with older V44 backups.");
 
