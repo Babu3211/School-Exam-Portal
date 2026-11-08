@@ -55,4 +55,8 @@ jobs:
           grep -Fq 'cdc-question-paper.js' /tmp/smss-v45-preview.html
           curl --fail --location --silent --show-error --retry 5 --retry-delay 3 --max-time 30 "${PREVIEW_URL%/}/cdc-question-paper.js" -o /tmp/smss-v45-cdc.js
           node --check /tmp/smss-v45-cdc.js
-          echo "V45 preview HTML and CDC module smoke checks passed."
+          curl --fail --location --silent --show-error --retry 5 --retry-delay 3 --max-time 30 "${PREVIEW_URL%/}/manifest.webmanifest" -o /tmp/smss-v45-manifest.json
+          node -e 'const fs=require("node:fs"); const m=JSON.parse(fs.readFileSync("/tmp/smss-v45-manifest.json","utf8")); if(!m.name || !m.start_url) process.exit(1)'
+          curl --fail --location --silent --show-error --retry 5 --retry-delay 3 --max-time 30 "${PREVIEW_URL%/}/sw.js" -o /tmp/smss-v45-sw.js
+          node --check /tmp/smss-v45-sw.js
+          echo "V45 preview HTML, CDC module, PWA manifest and service worker smoke checks passed."
