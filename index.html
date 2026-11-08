@@ -2169,7 +2169,11 @@ async function importMarksLedger(file){
   try{await loadMarksEntry()}catch(refreshErr){console.error('Marks import refresh failed',refreshErr)}
   throw Error(`${saved} Marks records सुरक्षित भए, तर Audit Log लेख्न सकिएन। पुनः Import नगर्नुहोस्; Admin ले Audit Logs जाँच्नुहोस्। ${err?.message||err}`);
  }
- await loadMarksEntry();
+ try{await loadMarksEntry();}
+ catch(err){
+  console.error('Marks import refresh failed after committed records',err);
+  throw Error(`${saved} Marks records सुरक्षित भए, तर Screen Refresh हुन सकेन। पुनः Import नगर्नुहोस्; पृष्ठ Reload गरेर Marks जाँच्नुहोस्। ${err?.message||err}`);
+ }
  entryMsg(`${saved} Marks records Import भए। ${skipped+newlySkipped} Duplicate Skip। ${errors.length} पङ्क्ति/विषय त्रुटिका कारण छुटे। ${achievement?'Learning Achievement records count × 4 आधारमा राखिए।':'Theory सहित सबै मूल्याङ्कन भाग Import भए।'}`);
 }
 
