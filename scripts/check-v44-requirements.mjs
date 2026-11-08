@@ -149,6 +149,7 @@ must(html.includes('files?.[0]!==validatedRestoreFile'), "Restore must reject a 
 
 must(restorePreviewCode.includes("const previewSequence=++restorePreviewSequence"), "Restore Preview must invalidate earlier asynchronous previews.");
 must(restorePreviewCode.includes("if(previewSequence!==restorePreviewSequence||"), "Restore Preview must discard stale file reads.");
+must(restorePreviewCode.includes('catch(err){if(previewSequence!==restorePreviewSequence||'), "Stale restore preview failures must not overwrite newer preview messages.");
 
 
 must(restorePreviewCode.includes('Array.isArray(parsed.documents)'), "Restore Preview must reject malformed documents containers.");
