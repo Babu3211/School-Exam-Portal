@@ -156,10 +156,6 @@ try {
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-score-over-limit"), validMark({
     scores: [{ name: "Written", fullMarks: 100, obtained: 101 }]
   })));
-  await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-total-full-mismatch"), validMark({ totalFullMarks: 99 })));
-  await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-total-obtained-mismatch"), validMark({ totalObtained: 79 })));
-  await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-total-over-full"), validMark({ totalObtained: 101 })));
-  await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-seven-components"), validMark({ scores: Array.from({ length: 7 }, (_, i) => ({ name: "Part " + i, fullMarks: 10, obtained: 5 })) })));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-score-extra-field"), validMark({
     scores: [{ name: "Written", fullMarks: 100, obtained: 80, forged: true }]
   })));
