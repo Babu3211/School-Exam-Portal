@@ -2141,7 +2141,11 @@ async function importMarksLedger(file){
  for(let offset=0;offset<plans.length;offset+=8){
   const batch=writeBatch(db);
   plans.slice(offset,offset+8).forEach(d=>batch.set(doc(collection(db,'marks')),{...d,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid}));
-  await batch.commit();saved+=Math.min(8,plans.length-offset);
+  try{await batch.commit();saved+=Math.min(8,plans.length-offset);}
+  catch(err){
+   try{await loadMarksEntry()}catch(refreshErr){console.error('Marks import refresh failed',refreshErr)}
+   throw Error(`Marks Import बीचमै रोकियो। ${saved} records पहिले नै सुरक्षित भएका हुन सक्छन्; बाँकी Import भएको छैन। पुनः Import गर्नुअघि Marks Ledger जाँच्नुहोस्। Firebase: ${err?.message||err}`);
+  }
  }
  await writeAuditLog('marks','import',`${examId}:${cl}`,`${saved} imported; ${skipped} skipped; ${errors.length} errors`);
  await loadMarksEntry();
