@@ -2870,7 +2870,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
    for(const node of [...el.childNodes]){
     if(node.nodeType!==Node.TEXT_NODE||!node.textContent.includes('/'))continue;
     const raw=node.textContent;
-    const match=raw.match(/^(\\s*[^/]+?)\\s*\\/\\s*[\u0900-\u097F]/);
+    const match=raw.match(new RegExp('^\\s*([^/]+?)\\s*/\\s*[\\u0900-\\u097F]'));
     if(match)node.textContent=match[1];
    }
   });
