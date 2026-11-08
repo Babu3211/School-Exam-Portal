@@ -207,6 +207,23 @@ try {
   await assertSucceeds(getDocs(collection(db(ADMIN), "audit_logs")));
   await assertFails(updateDoc(doc(db(teacherUid), "audit_logs", "valid-log"), { detail: "tampered" }));
   await assertFails(deleteDoc(doc(db(teacherUid), "audit_logs", "valid-log")));
+
+  const photoPrefix = "data:image/jpeg;base64,";
+  const maxPhoto = photoPrefix + "A".repeat(245760 - photoPrefix.length);
+  const oversizedPhoto = photoPrefix + "A".repeat(245761 - photoPrefix.length);
+  await assertSucceeds(setDoc(doc(db(ADMIN), "school_gallery", "part_01"), {
+    photos: [maxPhoto], updatedAt: serverTimestamp(), updatedBy: ADMIN
+  }));
+  await assertSucceeds(getDoc(doc(testEnv.unauthenticatedContext().firestore(), "school_gallery", "part_01")));
+  await assertSucceeds(getDocs(collection(testEnv.unauthenticatedContext().firestore(), "school_gallery")));
+  await assertFails(setDoc(doc(db(ADMIN), "school_gallery", "part_02"), {
+    photos: [oversizedPhoto], updatedAt: serverTimestamp(), updatedBy: ADMIN
+  }));
+  await assertFails(setDoc(doc(db(teacherUid), "school_gallery", "part_02"), {
+    photos: [photoPrefix + "A"], updatedAt: serverTimestamp(), updatedBy: teacherUid
+  }));
+  await assertSucceeds(deleteDoc(doc(db(ADMIN), "school_gallery", "part_01")));
+
   console.log("Firestore Security Rules emulator tests passed.");
 } finally {
   await testEnv.cleanup();
