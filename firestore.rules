@@ -306,6 +306,17 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // Public school gallery images are stored in small chunks so each document stays bounded.
+    // Login needs public read; only the school administrator may change gallery chunks.
+    match /school_gallery/{documentId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin() &&
+        documentId.matches("part_[0-9]{2}") &&
+        request.resource.data.photos is list &&
+        request.resource.data.photos.size() > 0 &&
+        request.resource.data.photos.size() <= 4;
+    }
+
     // Public login branding only; private school contact details remain protected.
     match /school_public_branding/{documentId} {
       allow get: if documentId == 'main';
