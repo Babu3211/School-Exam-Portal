@@ -56,7 +56,7 @@ assert.ok(!fs.existsSync(new URL("../data/cdc-grade9-science-practice-pack-v1.js
 assert.doesNotMatch(questionBuilder, /loadGrade9SciencePack|qpGrade9SciencePackBtn|cdc-grade9-science-practice-pack/i, "Unverified Grade 9 science import must remain unavailable");
 assert.doesNotMatch(appShell, /cdc-grade9-science-practice-pack/i, "Service worker must not cache an unverified Grade 9 science pack");
 for (const grade of [8, 10]) {
-  assert.match(questionBuilder, new RegExp("cdc-grade" + grade + "-science-practice-pack-v1\\\\.json"), "Grade " + grade + " pack must remain wired into the question builder");
+  assert.ok(questionBuilder.includes("cdc-grade" + grade + "-science-practice-pack-v1.json"), "Grade " + grade + " pack must remain wired into the question builder");
   assert.ok(appShell.includes("./data/cdc-grade" + grade + "-science-practice-pack-v1.json"), "Grade " + grade + " pack must be cached for offline use");
 }
 
