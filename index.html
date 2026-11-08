@@ -2753,7 +2753,7 @@ async function downloadFirebaseBackup(){
  }finally{btn.disabled=false;}
 }
 
-let validatedRestoreBackup=null,restorePlan=null,validatedRestoreFile=null;
+let validatedRestoreBackup=null,restorePlan=null,validatedRestoreFile=null,restorePreviewSequence=0;
 const RESTORE_COLLECTIONS=["students","staff","classes","subjects","exams","marks","attendance","mark_settings","certificates","user_roles","public_result_exams","public_results","public_result_lookup","cdc_curriculum","cdc_blueprints","question_bank","question_papers"];
 function restoreRevive(value){
  if(Array.isArray(value))return value.map(restoreRevive);
@@ -2765,12 +2765,14 @@ function restoreRevive(value){
 }
 async function previewFirebaseRestore(){
  const msg=document.getElementById("restoreFirebaseMessage"),out=document.getElementById("restorePreview"),file=document.getElementById("restoreBackupFile")?.files?.[0],run=document.getElementById("runFirebaseRestore");
+ const previewSequence=++restorePreviewSequence;
  validatedRestoreBackup=null;restorePlan=null;validatedRestoreFile=null;if(run)run.disabled=true;
  try{
   requireAdmin();if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw new Error("मुख्य Admin खाताबाट Login गर्नुहोस्।");
   if(!file)throw new Error("पहिले Backup JSON फाइल छान्नुहोस्।");
   if(file.size>25*1024*1024)throw new Error("फाइल २५ MB भन्दा ठूलो छ।");
   const parsed=JSON.parse(await file.text());
+  if(previewSequence!==restorePreviewSequence||document.getElementById("restoreBackupFile")?.files?.[0]!==file)return;
   if(!parsed||typeof parsed!=="object"||Array.isArray(parsed))throw new Error("Backup JSON को मुख्य संरचना गलत छ।");
   if(parsed.format!=="SMSS-Firestore-Backup"||parsed.version!==1||!parsed.collections||typeof parsed.collections!=="object"||Array.isArray(parsed.collections))throw new Error("यो SMSS को मान्य Backup फाइल होइन।");
   const unknown=Object.keys(parsed.collections).filter(n=>n!=="audit_logs"&&!RESTORE_COLLECTIONS.includes(n));
