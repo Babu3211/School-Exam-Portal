@@ -2163,7 +2163,12 @@ async function importMarksLedger(file){
    throw Error(`Marks Import बीचमै रोकियो। ${saved} records पहिले नै सुरक्षित भएका हुन सक्छन्; बाँकी Import भएको छैन। पुनः Import गर्नुअघि Marks Ledger जाँच्नुहोस्। Firebase: ${err?.message||err}`);
   }
  }
- await writeAuditLog('marks','import',`${examId}:${cl}`,`${saved} imported; ${skipped+newlySkipped} skipped; ${errors.length} errors`);
+ try{await writeAuditLog('marks','import',`${examId}:${cl}`,`${saved} imported; ${skipped+newlySkipped} skipped; ${errors.length} errors`);}
+ catch(err){
+  console.error('Marks import audit logging failed after committed records',err);
+  try{await loadMarksEntry()}catch(refreshErr){console.error('Marks import refresh failed',refreshErr)}
+  throw Error(`${saved} Marks records सुरक्षित भए, तर Audit Log लेख्न सकिएन। पुनः Import नगर्नुहोस्; Admin ले Audit Logs जाँच्नुहोस्। ${err?.message||err}`);
+ }
  await loadMarksEntry();
  entryMsg(`${saved} Marks records Import भए। ${skipped+newlySkipped} Duplicate Skip। ${errors.length} पङ्क्ति/विषय त्रुटिका कारण छुटे। ${achievement?'Learning Achievement records count × 4 आधारमा राखिए।':'Theory सहित सबै मूल्याङ्कन भाग Import भए।'}`);
 }
