@@ -42,16 +42,12 @@ const summaries = [
   validatePack("../data/cdc-grade8-science-practice-pack-v1.json", 8, 11, 55),
   validatePack("../data/cdc-grade10-science-practice-pack-v1.json", 10, 19, 57)
 ];
-const grade9Pack = readJson("../data/cdc-grade9-science-practice-pack-v1.json");
-assert.equal(grade9Pack.sourceUrl, "https://moecdc.gov.np/content/61/science-and-technology-class-9/", "Grade 9 textbook must point to official Grade 9 CDC page");
-assert.match(grade9Pack.sourceNote, /२०८२ पाठ्यपुस्तक/, "Grade 9 source note must require comparison with current textbook");
 const grade10Pack = readJson("../data/cdc-grade10-science-practice-pack-v1.json");
 assert.equal(grade10Pack.sourceUrl, "https://moecdc.gov.np/storage/gallery/1692097269.pdf", "Grade 10 textbook must point to the official Grade 10 PDF");
 assert.match(grade10Pack.sourceTitle, /Grade 10/, "Grade 10 source title must identify Grade 10");
-assert.equal(grade10Pack.sourceUrl, "https://moecdc.gov.np/storage/gallery/1692097269.pdf", "Grade 10 textbook must point to the official Grade 10 PDF");
-assert.match(grade10Pack.sourceTitle, /Grade 10/, "Grade 10 source title must identify Grade 10");
 assert.ok(Array.isArray(register.practicePacks) && register.practicePacks.some(p => p.grade === 10 && p.subject === "विज्ञान तथा प्रविधि"), "Grade 10 science pack must be listed in source register");
-assert.ok(register.practicePacks.some(p => p.grade === 9 && p.subject === "विज्ञान तथा प्रविधि" && p.questions === 57), "Grade 9 science pack must be registered with all question types");
+assert.ok(!register.practicePacks.some(p => p.grade === 9 && p.subject === "विज्ञान तथा प्रविधि"), "Grade 9 pack must stay blocked until its source/topic mismatch is resolved");
+assert.match(String(register.completion.grade9SciencePracticePack || ""), /blocked-not-importable/, "Grade 9 pack block must be documented");
 
 assert.equal(register.schemaVersion, 1, "CDC source register schema");
 assert.ok(Array.isArray(register.sources) && register.sources.length >= 15, "CDC source register must contain grade-wise sources");
