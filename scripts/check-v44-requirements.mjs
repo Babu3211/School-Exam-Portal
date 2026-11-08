@@ -157,7 +157,7 @@ must(html.includes("if(rows.length>5002)"), "Marks Excel import must limit overs
 must(html.includes("const latestMarksSnapshot=await getDocs(query(collection(db,'marks'),where('examId','==',examId)))") && html.includes("freshPlans=plans.filter"), "Marks import must refresh duplicate keys after preview confirmation.");
 must(html.includes("if(plannedKeys.has(key)){errors.push(") && html.includes("Duplicate Row हटाउनुहोस्"), "Marks Excel import must reject duplicate populated student-subject rows within the workbook.");
 must(html.includes("try{await batch.commit();saved+=Math.min(8,freshPlans.length-offset);}") && html.includes("पुनः Import गर्नुअघि Marks Ledger जाँच्नुहोस्"), "Marks Excel import must report partial batch failures instead of implying an atomic rollback.");
-must(html.includes("header[headerCol]??'').trim()!==subjectEnglishLabel(sub)"), "Marks Excel import must validate subject column order.");
+must(html.includes("rows[1]?.[headerCol]??'').trim()!==subjectEnglishLabel(sub)"), "Marks Excel import must validate subject column order.");
 must(html.includes("rows[2]?.[headerCol+ci]") && html.includes("expectedComponent=ledgerEnglishLabel(components[ci].name)+' / '+components[ci].fullMarks"), "Marks Excel import must validate assessment component and full marks headers.");
 must(html.includes("row.slice(4,headerCol).some(v=>clean(v)!=='')") && html.includes("Marks छन् तर विद्यार्थीको नाम"), "Marks Excel import must reject score rows without student identity.");
 must(html.includes("slice(headerCol).some(v=>String(v??'').trim()!=='')"), "Marks Excel import must reject unexpected populated columns.");
