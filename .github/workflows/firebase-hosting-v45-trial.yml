@@ -73,4 +73,8 @@ jobs:
             curl --fail --location --silent --show-error --retry 3 --retry-delay 2 --max-time 30 "${PREVIEW_URL%/}/data/$asset" -o "/tmp/$asset"
             ASSET_PATH="/tmp/$asset" node -e 'const fs=require("node:fs"); const v=JSON.parse(fs.readFileSync(process.env.ASSET_PATH,"utf8")); if(!v || typeof v!=="object" || !Object.keys(v).length) process.exit(1)'
           done
-          echo "V45 preview HTML, CDC module, PWA assets and JSON packs smoke checks passed."
+          # Confirm Firebase serves the intended security headers.
+          curl --fail --location --silent --show-error --retry 3 --retry-delay 2 --max-time 30 -D /tmp/smss-v45-headers.txt "${PREVIEW_URL%/}/" -o /dev/null
+          grep -Eiq '^x-content-type-options:[[:space:]]*nosniff' /tmp/smss-v45-headers.txt
+          grep -Eiq '^referrer-policy:[[:space:]]*strict-origin-when-cross-origin' /tmp/smss-v45-headers.txt
+          echo "V45 preview HTML, PWA assets, JSON packs and security headers smoke checks passed."
