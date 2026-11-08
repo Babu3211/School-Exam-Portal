@@ -8,6 +8,11 @@ on:
 permissions:
   contents: read
 
+# Avoid older commits overwriting the latest V45 preview deployment.
+concurrency:
+  group: smss-v45-preview-deploy
+  cancel-in-progress: true
+
 jobs:
   verify-and-deploy-v45-trial:
     runs-on: ubuntu-latest
