@@ -282,7 +282,7 @@ async function loadCurrentData() {
   const g=gradeNumber(selectedClass);
   const [curr, questions, blueprints] = await Promise.all([
     getDocs(query(collection(db,"cdc_curriculum"),where("gradeNumber","==",g),where("subject","==",selectedSubject))),
-    getDocs(query(collection(db,"question_bank"),where("className","==",selectedClass),where("subject","==",selectedSubject))),
+    getDocs(query(collection(db,"question_bank"),where("className","==",selectedClass),where("subject","==",selectedSubject),where("section","==",selectedSection))),
     getDocs(query(collection(db,"cdc_blueprints"),where("gradeNumber","==",g),where("subject","==",selectedSubject)))
   ]);
   curriculumRows=curr.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.unitCode||"").localeCompare(String(b.unitCode||""),undefined,{numeric:true}));
@@ -306,8 +306,8 @@ async function loadPaperHistory() {
   const body=$("qpPaperRows");if(!body)return;
   try{
     let snap;
-    if(isAdmin()) snap=await getDocs(query(collection(db,"question_papers"),where("className","==",selectedClass),where("subject","==",selectedSubject),limit(30)));
-    else snap=await getDocs(query(collection(db,"question_papers"),where("className","==",selectedClass),where("subject","==",selectedSubject),where("createdBy","==",auth.currentUser.uid),limit(30)));
+    if(isAdmin()) snap=await getDocs(query(collection(db,"question_papers"),where("className","==",selectedClass),where("subject","==",selectedSubject),where("section","==",selectedSection),limit(30)));
+    else snap=await getDocs(query(collection(db,"question_papers"),where("className","==",selectedClass),where("subject","==",selectedSubject),where("section","==",selectedSection),where("createdBy","==",auth.currentUser.uid),limit(30)));
     savedPapers=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.createdAt?.seconds||0).localeCompare(String(a.createdAt?.seconds||0)));
     body.innerHTML=savedPapers.length?savedPapers.map(p=>`<tr><td>${esc(p.paperTitle)}</td><td>${esc(p.className)}</td><td>${esc(p.subject)}</td><td>${esc(p.fullMarks)}</td><td>${esc(p.durationMinutes)} min</td><td>${esc(p.createdAt?.toDate?p.createdAt.toDate().toLocaleDateString("ne-NP"):"—")}</td><td><button class="qp-btn alt" type="button" data-qp-print-saved="${esc(p.id)}">Print</button> ${isAdmin()||p.createdBy===auth.currentUser.uid?'<button class="qp-btn danger" type="button" data-qp-delete-paper="'+esc(p.id)+'">Delete</button>':""}</td></tr>`).join(""):'<tr><td colspan="7">अहिलेसम्म प्रश्नपत्र सुरक्षित गरिएको छैन।</td></tr>';
   }catch(err){console.error("Question paper history failed",err);body.innerHTML='<tr><td colspan="7">प्रश्नपत्र सूची लोड भएन: '+esc(err.code||err.message)+'</td></tr>';}
@@ -377,7 +377,7 @@ async function saveBlueprint(event) {
 async function saveQuestion(event) {
   event.preventDefault();
   if(!selectedClass||!selectedSubject)throw new Error("पहिले कक्षा र विषय छान्नुहोस्।");
-  if(!roleCanTeach(selectedClass,selectedSubject))throw new Error("यो कक्षा/विषय तपाईंलाई तोकिएको छैन।");
+  if(!roleCanTeach(selectedClass,selectedSubject,selectedSection))throw new Error("यो कक्षा/विषय/Section तपाईंलाई तोकिएको छैन।");
   const topicId=$("qpQuestionTopic").value;
   const unitId=topicId.slice(0,topicId.lastIndexOf("_"));
   const unit=curriculumRows.find(x=>x.id===unitId);
@@ -389,7 +389,7 @@ async function saveQuestion(event) {
   const correctOption=questionType==="mcq"?$("qpCorrectOption").value:"";
   if(questionType==="mcq"&&(options.some(x=>!x)||!correctOption))throw new Error("MCQ का चारवटै विकल्प र सही उत्तर राख्नुहोस्।");
   const data={
-    gradeNumber:gradeNumber(selectedClass),className:selectedClass,subject:selectedSubject,
+    gradeNumber:gradeNumber(selectedClass),className:selectedClass,subject:selectedSubject,section:selectedSection,
     unitId,unitTitle:unit.unitTitle,topicId,topicName:String(topicName),
     questionType,marks:Number($("qpQuestionMarks").value),cognitiveLevel:$("qpQuestionLevel").value,
     questionText:$("qpQuestionText").value.trim(),options,correctOption,
@@ -407,12 +407,12 @@ function toggleMcqFields() {
   document.querySelectorAll(".qp-mcq-field").forEach(x=>x.classList.toggle("qp-hidden",!show));
 }
 async function generatePaper() {
-  if(!roleCanTeach(selectedClass,selectedSubject))throw new Error("यो विषयमा प्रश्नपत्र बनाउने अनुमति छैन।");
+  if(!roleCanTeach(selectedClass,selectedSubject,selectedSection))throw new Error("यो विषय/Section मा प्रश्नपत्र बनाउने अनुमति छैन।");
   const questions=allocateQuestions();
   const fullMarks=Number($("qpPaperFullMarks").value);
   const header=schoolHeader();
   generatedPaper={
-    ...header,className:selectedClass,subject:selectedSubject,
+    ...header,gradeNumber:gradeNumber(selectedClass),className:selectedClass,subject:selectedSubject,section:selectedSection,
     paperTitle:$("qpPaperTitle").value.trim(),academicYear:$("qpPaperYear").value.trim(),
     durationMinutes:Number($("qpPaperDuration").value),fullMarks,
     curriculumVersion:currentBlueprint?.curriculumVersion||"Custom Pattern",
@@ -495,14 +495,20 @@ document.addEventListener("change",async event=>{
   if(t.id==="qpClass"){
     selectedClass=t.value;selectedSubject="";generatedPaper=null;
     const opts=classSubjects.filter(x=>x.className===selectedClass);
-    $("qpSubject").innerHTML='<option value="">विषय छान्नुहोस्</option>'+opts.map(x=>'<option value="'+esc(x.subject)+'">'+esc(x.subject)+'</option>').join("");
+    const subjects=[...new Set(opts.map(x=>x.subject))];
+    $("qpSubject").innerHTML='<option value="">विषय छान्नुहोस्</option>'+subjects.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
+    $("qpSection").innerHTML='<option value="">Section छान्नुहोस्</option>';
     curriculumRows=[];questionRows=[];renderTopics();renderQuestionRows();message("अब विषय छान्नुहोस्।");
   }
   if(t.id==="qpSubject"){
-    selectedSubject=t.value;generatedPaper=null;
+    selectedSubject=t.value;selectedSection="";generatedPaper=null;
     $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;
-    if(selectedClass&&selectedSubject)try{await loadCurrentData();message("CDC Topic, प्रश्न बैंक र Blueprint लोड भए।");}catch(err){console.error(err);message("डेटा लोड भएन: "+(err.code||err.message),true);}
+    const sections=[...new Set(classSubjects.filter(x=>x.className===selectedClass&&x.subject===selectedSubject).map(x=>String(x.section||"")))];
+    $("qpSection").innerHTML='<option value="">Section छान्नुहोस्</option>'+sections.map(x=>'<option value="'+esc(x)+'">'+esc(x||"सबै Section / लागू")+'</option>').join("");
+    if(sections.length===1){selectedSection=sections[0];$("qpSection").value=selectedSection;}
+    if(selectedClass&&selectedSubject&&sections.length===1)try{await loadCurrentData();message("CDC Topic, प्रश्न बैंक र Blueprint लोड भए।");}catch(err){console.error(err);message("डेटा लोड भएन: "+(err.code||err.message),true);}else if(sections.length>1)message("कृपया Section छान्नुहोस्।");
   }
+  if(t.id==="qpSection"){selectedSection=t.value;generatedPaper=null;if(selectedClass&&selectedSubject)try{await loadCurrentData();message("Section अनुसार Topic र प्रश्न बैंक लोड भए।");}catch(err){message("डेटा लोड भएन: "+(err.code||err.message),true);}}
   if(t.id==="qpQuestionType")toggleMcqFields();
   if(t.id==="qpImportFile"&&t.files?.[0]){
     try{await importTopics(t.files[0]);}catch(err){message("आयात भएन: "+(err.code||err.message),true);}finally{t.value="";}
