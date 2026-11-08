@@ -93,6 +93,8 @@ function pageShell() {
           <li><a href="https://moecdc.gov.np/content/286/specifications-grid--grade---8--nepali/" target="_blank" rel="noopener">नेपाली कक्षा ८ — Grid</a></li>
           <li><a href="https://moecdc.gov.np/content/285/specification-grid--grade---8--english/" target="_blank" rel="noopener">English कक्षा ८ — Grid</a></li>
           <li><a href="https://moecdc.gov.np/content/284/specification-grid--grade-8--science-and-technology/" target="_blank" rel="noopener">विज्ञान तथा प्रविधि कक्षा ८ — CDC विशिष्टीकरण तालिका (२०८२)</a></li>
+          <li><a href="https://moecdc.gov.np/content/111/science-/" target="_blank" rel="noopener">विज्ञान तथा प्रविधि कक्षा ६ — CDC पाठ्यपुस्तक (२०८२ पुनर्मुद्रण/२०८३ सूची)</a></li>
+          <li><a href="https://moecdc.gov.np/content/577/" target="_blank" rel="noopener">विज्ञान तथा प्रविधि कक्षा ७ — CDC पाठ्यपुस्तक (२०८२)</a></li>
           <li><a href="https://moecdc.gov.np/category/specialization-schedule--g-/?page=5" target="_blank" rel="noopener">विज्ञान तथा प्रविधि कक्षा ८ लगायतका Grid</a></li>
           <li><a href="https://lib.moecdc.gov.np/elibrary/pages/search.php?access=&archive=&display=list&foredit=&k=&modal=&noreload=true&offset=0&order_by=field8&per_page=240&recentdaylimit=&restypes=&search=%21collection18397&sort=DESC" target="_blank" rel="noopener">CDC Publications 2082 — कक्षा ६–८ शिक्षक निर्देशिका तथा सामग्री</a></li>
           <li><a href="https://moecdc.gov.np/storage/gallery/1672198334.pdf" target="_blank" rel="noopener">पुरानो संयुक्त नमुना प्रश्नपत्र/विशिष्टीकरण (२०७८) — पूरक सन्दर्भ</a></li>
@@ -101,8 +103,11 @@ function pageShell() {
           <li><a href="https://moecdc.gov.np/content/282/specification-grid--9---10--compulsory-nepali/" target="_blank" rel="noopener">अनिवार्य नेपाली — Grid (२०८२)</a></li>
           <li><a href="https://moecdc.gov.np/content/280/specification-grid--grade-9--10--compulsory-english/" target="_blank" rel="noopener">अनिवार्य English — Grid (२०८२)</a></li>
           <li><a href="https://moecdc.gov.np/content/281/" target="_blank" rel="noopener">अनिवार्य गणित — Grid (२०८२)</a></li>
-          <li><a href="https://moecdc.gov.np/category/specialization-schedule--g-/?page=6" target="_blank" rel="noopener">कक्षा ९ विज्ञान तथा प्रविधि र सामाजिक अध्ययन — विषयगत Grid</a></li>
-          <li><a href="https://lib.moecdc.gov.np/elibrary/pages/search.php?access=&archive=&display=list&foredit=&k=&modal=&noreload=true&offset=0&order_by=field8&per_page=240&recentdaylimit=&restypes=&search=%21collection18397&sort=DESC" target="_blank" rel="noopener">कक्षा १० विज्ञान तथा प्रविधि र सामाजिक अध्ययन — CDC model papers/Guides</a></li>
+          <li><a href="https://moecdc.gov.np/content/278/specialization-schedule-class-class-9-science-and/" target="_blank" rel="noopener">विज्ञान तथा प्रविधि कक्षा ९ — CDC विशिष्टीकरण तालिका (२०८२)</a></li>
+          <li><a href="https://moecdc.gov.np/content/61/science-and-technology-class-9/" target="_blank" rel="noopener">विज्ञान तथा प्रविधि कक्षा ९ — CDC पाठ्यपुस्तक (२०८२)</a></li>
+          <li><a href="https://moecdc.gov.np/content/592/science-and-technology-class---x/" target="_blank" rel="noopener">विज्ञान तथा प्रविधि कक्षा १० — CDC पाठ्यपुस्तक (२०८२)</a></li>
+          <li><a href="https://moecdc.gov.np/category/specialization-schedule--g-/?page=6" target="_blank" rel="noopener">कक्षा ९–१० विज्ञान तथा प्रविधि र सामाजिक अध्ययन — थप विषयगत Grid</a></li>
+          <li><a href="https://lib.moecdc.gov.np/elibrary/pages/search.php?access=&archive=&display=list&foredit=&k=&modal=&noreload=true&offset=0&order_by=field8&per_page=240&recentdaylimit=&restypes=&search=%21collection18397&sort=DESC" target="_blank" rel="noopener">CDC Library — विज्ञान तथा प्रविधि र सामाजिक अध्ययनका शिक्षक निर्देशिका/Model सामग्री</a></li>
           <li><a href="https://moecdc.gov.np/content/488/health-and-physical-education-syllabus--2082-secondary/" target="_blank" rel="noopener">स्वास्थ्य तथा शारीरिक शिक्षा पाठ्यक्रम २०८२</a></li>
         </ul></div>
         <div><b>ऐच्छिक तथा थप विषय</b><ul class="qp-hint">
