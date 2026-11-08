@@ -119,14 +119,14 @@ function pageShell() {
 
     <div class="qp-card">
       <div class="qp-section-title"><h3>२. CDC Topic छान्नुहोस्</h3><span class="qp-badge" id="qpTopicCount">० Topic</span></div>
-      <p class="qp-hint">तल देखिएका Topic मात्र प्रश्न निर्माणमा प्रयोग हुन्छन्। Topic सूची CDC स्रोतबाट Admin ले पुष्टि गरी राखेको हुनुपर्छ।</p>
+      <p class="qp-hint">शिक्षकले प्रश्न बैंकमा आफैँ थपेका Topic र उपलब्ध पाठ्यक्रम सूचीबाट आफूले चाहेका Topic छान्नुहोस्। कुनै पूर्वलोड गरिएको सूची आवश्यक छैन।</p>
       <div id="qpTopicList" class="qp-topic-list"><p class="qp-hint">कक्षा र विषय छान्नुहोस्।</p></div>
     </div>
 
     <div class="qp-card">
       <h3>३. प्रश्न बैंकमा प्रश्न थप्नुहोस्</h3>
       <form id="qpQuestionForm" class="qp-grid">
-        <div class="qp-field"><label for="qpQuestionTopic">Topic</label><select id="qpQuestionTopic" required><option value="">Topic छान्नुहोस्</option></select></div>
+        <div class="qp-field"><label for="qpQuestionUnit">एकाइ / पाठ (ऐच्छिक)</label><input id="qpQuestionUnit" maxlength="180" placeholder="आफूले चाहेको एकाइ"></div><div class="qp-field"><label for="qpQuestionTopic">आफूले चाहेको Topic</label><input id="qpQuestionTopic" list="qpTopicSuggestions" maxlength="180" required placeholder="Topic को नाम लेख्नुहोस्"><datalist id="qpTopicSuggestions"></datalist></div>
         <div class="qp-field"><label for="qpQuestionType">प्रश्नको प्रकार</label><select id="qpQuestionType"><option value="mcq">बहुविकल्पीय (MCQ)</option><option value="short">छोटो उत्तर</option><option value="long">लामो उत्तर</option></select></div>
         <div class="qp-field"><label for="qpQuestionMarks">पूर्णाङ्क</label><input id="qpQuestionMarks" type="number" min="1" max="100" required value="1"></div>
         <div class="qp-field"><label for="qpQuestionLevel">संज्ञानात्मक स्तर</label><select id="qpQuestionLevel"><option value="knowledge">ज्ञान (Knowledge)</option><option value="understanding">बोध (Understanding)</option><option value="application">प्रयोग (Application)</option><option value="higher">उच्च क्षमता (Higher Ability)</option></select></div>
@@ -139,7 +139,7 @@ function pageShell() {
         <div class="qp-field" style="grid-column:1/-1"><label for="qpAnswer">उत्तर/उत्तर संकेत (शिक्षकका लागि)</label><textarea id="qpAnswer" maxlength="3000"></textarea></div>
         <div class="qp-actions" style="grid-column:1/-1"><button class="qp-btn" type="submit">प्रश्न बैंकमा सुरक्षित गर्नुहोस्</button><button class="qp-btn alt" type="reset">खाली गर्नुहोस्</button></div>
       </form>
-      <p class="qp-hint">प्रश्न शिक्षकले आफैँ तयार गरी प्रश्न बैंकमा सुरक्षित गर्नुहुन्छ। स्वचालित प्रश्नपत्रले यही स्वीकृत प्रश्न बैंकबाट मात्र प्रश्न छान्छ; कुनै बाह्य AI शुल्क वा API प्रयोग हुँदैन।</p>
+      <p class="qp-hint">विषय शिक्षकले CDC सूची कुर्नु पर्दैन—आफूले पढाएको एकाइ/Topic सिधै लेखेर प्रश्न थप्न सक्नुहुन्छ। Auto Generate ले छानिएका Topic का प्रश्न बैंकबाट प्रश्नपत्र, क्रम र अङ्क स्वतः मिलाउँछ। बाह्य AI/API वा शुल्क प्रयोग हुँदैन।</p>
     </div>
 
     <div class="qp-card">
@@ -209,19 +209,16 @@ function setBuilderPattern(pattern, fullMarks, duration) {
 function renderTopics() {
   const box = $("qpTopicList"), select = $("qpQuestionTopic");
   if (!box || !select) return;
-  const topics = curriculumRows.flatMap(unit => (unit.topics || []).map((name,index) => ({
-    id: unit.id+"_"+index, unitId:unit.id, unitTitle:unit.unitTitle, topicName:String(name)
-  })));
+  const topics = curriculumRows.flatMap(unit => (unit.topics || []).map((name,index) => ({id:unit.id+"_"+index,unitId:unit.id,unitTitle:unit.unitTitle,topicName:String(name)})));
+  const known=new Set(topics.map(x=>normal(x.topicName)));
+  questionRows.forEach(q=>{if(q.topicName&&!known.has(normal(q.topicName))){known.add(normal(q.topicName));topics.push({id:"custom_"+topics.length,unitId:q.unitId||"",unitTitle:q.unitTitle||"शिक्षकले थपेको Topic",topicName:String(q.topicName)});}});
   $("qpTopicCount").textContent = topics.length+" Topic";
   if (!topics.length) {
-    box.innerHTML = '<p class="qp-hint">यस कक्षा/विषयको CDC Topic सूची अहिलेसम्म राखिएको छैन। Admin ले आधिकारिक पाठ्यक्रमबाट एकाइ/Topic आयात वा प्रविष्ट गर्नुपर्छ।</p>';
-    select.innerHTML = '<option value="">Topic सूची उपलब्ध छैन</option>';
-    return;
+    box.innerHTML = '<p class="qp-hint">अहिलेसम्म Topic छैन। तल प्रश्न थप्दा आफूले चाहेको Topic लेख्नुहोस्; सुरक्षित भएपछि यहीँ छान्न मिल्छ।</p>';
+    select.innerHTML = ""; return;
   }
-  box.innerHTML = curriculumRows.map(unit => `
-    <div style="grid-column:1/-1"><b>${esc(unit.unitCode||"")} · ${esc(unit.unitTitle)}</b> <small class="qp-hint">(${esc(unit.curriculumVersion||"CDC")})</small>
-    <div class="qp-topic-list">${(unit.topics||[]).map((topic,index)=>`<label class="qp-topic"><input type="checkbox" data-qp-topic value="${esc(unit.id+"_"+index)}"><span>${esc(topic)}</span></label>`).join("")}</div></div>`).join("");
-  select.innerHTML = '<option value="">Topic छान्नुहोस्</option>'+topics.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.unitTitle+' · '+x.topicName)+'</option>').join("");
+  box.innerHTML = topics.map(x=>`<label class="qp-topic"><input type="checkbox" data-qp-topic value="${esc(x.topicName)}"><span><b>${esc(x.topicName)}</b><small class="qp-hint"> · ${esc(x.unitTitle||"एकाइ नतोकिएको")}</small></span></label>`).join("");
+  select.innerHTML = topics.map(x=>'<option value="'+esc(x.topicName)+'">').join("");
 }
 function renderQuestionRows() {
   const body = $("qpQuestionRows"); if (!body) return;
@@ -345,7 +342,7 @@ function allocateQuestions() {
   const chosen=[],used=new Set();
   for(const item of pattern){
     if(!item.count)continue;
-    const pool=shuffle(questionRows.filter(q=>topics.includes(q.topicId)&&q.questionType===item.type&&Number(q.marks)===item.marks&&q.status!=="archived"));
+    const pool=shuffle(questionRows.filter(q=>topics.includes(q.topicName)&&q.questionType===item.type&&Number(q.marks)===item.marks&&q.status!=="archived"));
     if(pool.length<item.count)throw new Error(item.type+" प्रकारका "+item.marks+" अङ्कका प्रश्न "+item.count+" चाहिन्छ; प्रश्न बैंकमा "+pool.length+" मात्र छन्।");
     for(let i=0;i<item.count;i++){
       const available=pool.filter(q=>!used.has(q.id));
@@ -415,19 +412,18 @@ async function saveQuestion(event) {
   event.preventDefault();
   if(!selectedClass||!selectedSubject)throw new Error("पहिले कक्षा र विषय छान्नुहोस्।");
   if(!roleCanTeach(selectedClass,selectedSubject,selectedSection))throw new Error("यो कक्षा/विषय/Section तपाईंलाई तोकिएको छैन।");
-  const topicId=$("qpQuestionTopic").value;
-  const unitId=topicId.slice(0,topicId.lastIndexOf("_"));
-  const unit=curriculumRows.find(x=>x.id===unitId);
-  const index=Number(topicId.slice(topicId.lastIndexOf("_")+1));
-  const topicName=unit?.topics?.[index];
-  if(!unit||!topicName)throw new Error("मान्य CDC Topic छान्नुहोस्।");
+  const topicName=$("qpQuestionTopic").value.trim();
+  const unitTitle=$("qpQuestionUnit").value.trim()||"शिक्षकले थपेको Topic";
+  if(!topicName||topicName.length>180)throw new Error("Topic को नाम १–१८० अक्षरभित्र लेख्नुहोस्।");
+  const unitId="teacher_custom";
+  const topicId="custom_"+normal(topicName);
   const questionType=$("qpQuestionType").value;
   const options=questionType==="mcq"?["A","B","C","D"].map(k=>$("qpOption"+k).value.trim()):[];
   const correctOption=questionType==="mcq"?$("qpCorrectOption").value:"";
   if(questionType==="mcq"&&(options.some(x=>!x)||!correctOption))throw new Error("MCQ का चारवटै विकल्प र सही उत्तर राख्नुहोस्।");
   const data={
     gradeNumber:gradeNumber(selectedClass),className:selectedClass,subject:selectedSubject,section:selectedSection,
-    unitId,unitTitle:unit.unitTitle,topicId,topicName:String(topicName),
+    unitId,unitTitle,topicId,topicName:String(topicName),
     questionType,marks:Number($("qpQuestionMarks").value),cognitiveLevel:$("qpQuestionLevel").value,
     questionText:$("qpQuestionText").value.trim(),options,correctOption,
     answer:$("qpAnswer").value.trim(),createdBy:auth.currentUser.uid,
