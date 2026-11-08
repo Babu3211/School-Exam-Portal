@@ -8,14 +8,13 @@ on:
       - completed
     branches:
       - smss-v44-work
-  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   deploy:
-    if: ${{ vars.ENABLE_FIREBASE_HOSTING_DEPLOY == 'true' && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')) }}
+    if: ${{ vars.ENABLE_FIREBASE_HOSTING_DEPLOY == 'true' && (github.event_name == 'workflow_run' && github.event.workflow_run.head_branch == 'smss-v44-work' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout tested V44 commit
