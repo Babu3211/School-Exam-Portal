@@ -384,6 +384,17 @@
       "version": "2080-2082",
       "status": "official_teaching_reference_topic_extraction_pending",
       "url": "https://lib.moecdc.gov.np/elibrary/pages/search.php?access=&archive=&display=list&foredit=&k=&modal=&noreload=true&offset=0&order_by=field8&per_page=240&recentdaylimit=&restypes=&search=%21collection18397&sort=DESC"
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "textbook_table_of_contents_and_original_practice_pack",
+      "version": "2080 textbook contents; supplementary only",
+      "status": "teacher_review_required_not_current_2082_grid",
+      "url": "https://moecdc.gov.np/storage/gallery/1692097269.pdf",
+      "note": "Used for the 19-unit, 38-question original practice pack. Questions are not CDC-published model questions. CDC's 2082 textbook and Grade 9 science specification grid must be checked separately."
     }
   ],
   "completion": {
@@ -393,7 +404,28 @@
     "questionBankCuration": "grade_8_science_55_original_practice_questions_seed_pack; other_grades_pending",
     "answerKeyValidation": "pending",
     "teacherReview": "required",
-    "grade8SciencePracticePack": "55 original practice questions across 11 textbook units; teacher review required",
-    "scienceSourceDiscovery": "CDC textbook and teacher-guide source pages identified for Grades 6–10; full chapter extraction and grade-specific grid parsing still pending except Grade 8 textbook unit list"
-  }
+    "grade8SciencePracticePack": "seed-file-created-admin-import-available-teacher-review-required",
+    "scienceSourceDiscovery": "CDC textbook and teacher-guide source pages identified for Grades 6–10; full chapter extraction and grade-specific grid parsing still pending except Grade 8 textbook unit list",
+    "grade9SciencePracticePack": "seed-file-created-admin-import-available-2080-topic-reference-teacher-review-required",
+    "otherGradeSubjectPacks": "pending",
+    "officialBlueprintCoverage": "partial-only-verified-subject-grade-grid-can-be-set-by-admin"
+  },
+  "practicePacks": [
+    {
+      "id": "grade8-science-practice-v1",
+      "grade": 8,
+      "subject": "विज्ञान तथा प्रविधि",
+      "units": 11,
+      "questions": 55,
+      "sourceStatus": "CDC textbook reference; original teacher-review practice questions"
+    },
+    {
+      "id": "grade9-science-practice-v1",
+      "grade": 9,
+      "subject": "विज्ञान तथा प्रविधि",
+      "units": 19,
+      "questions": 38,
+      "sourceStatus": "CDC 2080 textbook contents; original practice questions; verify against 2082 textbook and grid"
+    }
+  ]
 }
