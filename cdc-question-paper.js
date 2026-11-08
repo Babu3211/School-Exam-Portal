@@ -560,7 +560,7 @@ document.addEventListener("change",async event=>{
   const t=event.target;
   if(t.id==="qpClass"){
     selectedClass=t.value;selectedSubject="";selectedSection="";generatedPaper=null;
-    $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;
+    $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;$("qpAnswerKeyBtn").disabled=true;
     const opts=classSubjects.filter(x=>x.className===selectedClass);
     const subjects=[...new Set(opts.map(x=>x.subject))];
     $("qpSubject").innerHTML='<option value="">विषय छान्नुहोस्</option>'+subjects.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
@@ -600,7 +600,8 @@ document.addEventListener("click",async event=>{
     if(t.id==="qpTemplateBtn")downloadTemplate();
     if(t.id==="qpGenerateBtn")await generatePaper();
     if(t.id==="qpSavePaperBtn")await savePaper();
-    if(t.id==="qpPrintPaperBtn")printPaper(generatedPaper,false);\n    if(t.id==="qpAnswerKeyBtn")printPaper(generatedPaper,true);
+    if(t.id==="qpPrintPaperBtn")printPaper(generatedPaper,false);
+    if(t.id==="qpAnswerKeyBtn")printPaper(generatedPaper,true);
     if(t.id==="qpRefreshBtn"&&selectedClass&&selectedSubject){await loadCurrentData();message("प्रश्न बैंक Refresh भयो।");}
     if(t.id==="qpPaperReloadBtn"&&selectedClass&&selectedSubject)await loadPaperHistory();
     if(t.dataset.qpDeleteQuestion)await deleteQuestion(t.dataset.qpDeleteQuestion);
