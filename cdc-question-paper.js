@@ -786,6 +786,8 @@ async function loadQuestionPaperModule() {
   }catch(err){console.error("Question paper module init failed",err);message("Module लोड भएन: "+(err.code||err.message),true);}
 }
 window.loadQuestionPaperModule=loadQuestionPaperModule;
+// Module scripts may finish after the user opens the page; initialize the existing view then.
+if(window.currentPage==="question-papers"&&document.getElementById("questionPaperRoot"))void loadQuestionPaperModule();
 
 document.addEventListener("change",async event=>{
   const t=event.target;
