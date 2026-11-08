@@ -306,6 +306,27 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // School gallery: public read for login branding; Admin-only bounded writes.
+    // Each chunk stores at most four compressed images (up to 80 KB each).
+    match /school_gallery/{documentId} {
+      allow get, list: if true;
+      allow create, update: if isAdmin() &&
+        documentId.matches("part_[0-9]{2}") &&
+        request.resource.data.keys().hasOnly(['photos', 'updatedAt', 'updatedBy']) &&
+        request.resource.data.photos is list &&
+        request.resource.data.photos.size() > 0 &&
+        request.resource.data.photos.size() <= 4 &&
+        request.resource.data.photos[0] is string &&
+        request.resource.data.photos[0].size() <= 81920 &&
+        (request.resource.data.photos.size() < 2 ||
+          (request.resource.data.photos[1] is string && request.resource.data.photos[1].size() <= 81920)) &&
+        (request.resource.data.photos.size() < 3 ||
+          (request.resource.data.photos[2] is string && request.resource.data.photos[2].size() <= 81920)) &&
+        (request.resource.data.photos.size() < 4 ||
+          (request.resource.data.photos[3] is string && request.resource.data.photos[3].size() <= 81920));
+      allow delete: if isAdmin() && documentId.matches("part_[0-9]{2}");
+    }
+
     // Public login branding only; private school contact details remain protected.
     match /school_public_branding/{documentId} {
       allow get: if documentId == 'main';
