@@ -147,6 +147,7 @@ must(html.includes("validatedRestoreFile=file"), "Restore Preview must remember 
 must(html.includes('files?.[0]!==validatedRestoreFile'), "Restore must reject a backup file changed after Preview.");
 
 must(restorePreviewCode.includes('Array.isArray(parsed.documents)'), "Restore Preview must reject malformed documents containers.");
+must(restorePreviewCode.includes('!parsed||typeof parsed!=="object"||Array.isArray(parsed)'), "Restore Preview must reject null and array-shaped backup JSON roots.");
 must(restorePreviewCode.includes('Object.keys(parsed.documents).some(n=>n!=="school_settings")'), "Restore Preview must reject unknown document groups.");
 must(restorePreviewCode.includes('Object.keys(parsed.documents.school_settings).some(n=>n!=="main")'), "Restore Preview must reject unknown School Settings documents.");
 
