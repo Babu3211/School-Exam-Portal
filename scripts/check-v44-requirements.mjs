@@ -150,6 +150,7 @@ must(html.includes('files?.[0]!==validatedRestoreFile'), "Restore must reject a 
 must(restorePreviewCode.includes("const previewSequence=++restorePreviewSequence"), "Restore Preview must invalidate earlier asynchronous previews.");
 must(html.includes("if(!achievement&&rawCells.some(v=>v===''))"), "Marks ledger import must reject partially filled subject components.");
 must(html.includes("(!reg||norm(ledgerStudentReg(x))===norm(reg))&&(!symbol||norm(ledgerSymbol(x))===norm(symbol))&&(!name||"), "Marks Excel import must match every provided student identifier, not only the first available identifier.");
+must(html.includes("[x.studentNameEnglish,x.nameEnglish,x.nameEn,englishDisplayText(x.studentName||x.name||'')"), "Marks import must accept the English student names written by its own Excel exporter.");
 must(html.includes("expectedHeader.some((label,i)=>"), "Marks Excel import must validate the workbook identity headers.");
 must(html.includes("if(errors.length)throw Error(") && html.includes("कुनै Marks सुरक्षित गरिएको छैन"), "Excel Marks import must reject the entire file when any validation error is found.");
 must(html.includes("if(file.size>15*1024*1024)"), "Marks Excel import must limit oversized workbooks.");
