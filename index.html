@@ -2096,6 +2096,7 @@ async function importMarksLedger(file){
   }
   headerCol+=components.length;
  }
+ if(rows.some((row,ri)=>ri>=2&&(row||[]).slice(headerCol).some(v=>String(v??'').trim()!=='')))throw Error('Excel Ledger मा अपेक्षित Subject भन्दा बाहिर थप डेटा छ। सही Marks Ledger फाइल प्रयोग गर्नुहोस्।');
 
  const plans=[],plannedKeys=new Set(),existingKeys=new Set(existingMarks.filter(m=>m.examId===examId).map(m=>`${m.studentId}::${canonicalSubjectKey(m.subject)}`));
  let skipped=0;const errors=[];
