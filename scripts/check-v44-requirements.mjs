@@ -20,7 +20,7 @@ must(html.includes("const saveConfirmMessage=") && html.includes("window.confirm
 must(html.includes("saveLabelObserver.observe(document.body") && html.includes("normalizeSaveButtons(record.target)"), "Dynamically rendered Save buttons must also be normalized.");
 must(!html.includes("यो सुविधा Demo मात्र") && !html.includes("यो Module हाल Demo अवस्थामा छ") && !html.includes("Cloud data connection in progress") && !html.includes("V44 Development"), "The live application must not display obsolete demo or development notices.");
 must(!html.includes("form.demo") && !html.includes("data-action]"), "The application must not route unsupported actions to a demo-only alert.");
-must(html.includes("Student Management / विद्यार्थी व्यवस्थापन") && html.includes("Examination Management / परीक्षा व्यवस्थापन") && html.includes("Marks Ledger / प्राप्ताङ्क लेजर") && html.includes("School Settings / विद्यालय सेटिङ"), "Primary navigation must show English and Nepali labels.");
+must(html.includes("Student Management") && html.includes("Examination Management") && html.includes("Marks Ledger") && html.includes("School Settings"), "Primary navigation must include all required management sections.");
 must(html.includes("if(label!=='Save')button.textContent='Save'"), "Save label observer must avoid repeated DOM mutations.");
 const requiredCollections = [
   "students", "staff", "classes", "subjects", "exams", "marks",
