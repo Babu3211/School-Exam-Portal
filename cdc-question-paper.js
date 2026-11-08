@@ -320,14 +320,32 @@ function allocateQuestions() {
   const target=Number($("qpPaperFullMarks").value);
   if(!pattern.some(x=>x.count>0))throw new Error("प्रश्न संख्या राख्नुहोस्।");
   if(total!==target)throw new Error("प्रश्न प्रकारअनुसार जम्मा अङ्क "+total+" भयो; पूर्णाङ्क "+target+" सँग मिलेन।");
-  const chosen=[];
+
+  const levels=["knowledge","understanding","application","higher"];
+  const distribution=currentBlueprint?.cognitiveDistribution||{knowledge:25,understanding:25,application:25,higher:25};
+  const questionCount=pattern.reduce((sum,x)=>sum+x.count,0);
+  const targets={};
+  let assigned=0;
+  for(const level of levels){targets[level]=Math.floor(questionCount*Number(distribution[level]||0)/100);assigned+=targets[level];}
+  const ranked=levels.map(level=>({level,remainder:questionCount*Number(distribution[level]||0)/100-targets[level]})).sort((a,b)=>b.remainder-a.remainder);
+  for(let i=0;i<questionCount-assigned;i++)targets[ranked[i%ranked.length].level]++;
+
+  const chosen=[],used=new Set();
   for(const item of pattern){
     if(!item.count)continue;
-    const candidates=shuffle(questionRows.filter(q=>topics.includes(q.topicId)&&q.questionType===item.type&&Number(q.marks)===item.marks&&q.status!=="archived"));
-    if(candidates.length<item.count)throw new Error(item.type+" प्रकारका "+item.marks+" अङ्कका प्रश्न "+item.count+" चाहिन्छ; प्रश्न बैंकमा "+candidates.length+" मात्र छन्।");
-    chosen.push(...candidates.slice(0,item.count));
+    const pool=shuffle(questionRows.filter(q=>topics.includes(q.topicId)&&q.questionType===item.type&&Number(q.marks)===item.marks&&q.status!=="archived"));
+    if(pool.length<item.count)throw new Error(item.type+" प्रकारका "+item.marks+" अङ्कका प्रश्न "+item.count+" चाहिन्छ; प्रश्न बैंकमा "+pool.length+" मात्र छन्।");
+    for(let i=0;i<item.count;i++){
+      const available=pool.filter(q=>!used.has(q.id));
+      const preferred=levels.filter(level=>targets[level]>0&&available.some(q=>q.cognitiveLevel===level)).sort((a,b)=>targets[b]-targets[a]);
+      const selectedLevel=preferred[0];
+      const q=selectedLevel?available.find(x=>x.cognitiveLevel===selectedLevel):available[0];
+      if(!q)throw new Error("छानिएको Pattern का लागि पर्याप्त फरक प्रश्न उपलब्ध छैनन्।");
+      used.add(q.id);chosen.push(q);
+      if(targets[q.cognitiveLevel]>0)targets[q.cognitiveLevel]--;
+    }
   }
-  return shuffle(chosen).sort((a,b)=>["mcq","short","long"].indexOf(a.questionType)-["mcq","short","long"].indexOf(b.questionType));
+  return chosen.sort((a,b)=>["mcq","short","long"].indexOf(a.questionType)-["mcq","short","long"].indexOf(b.questionType));
 }
 function schoolHeader() {
   return {schoolName:String(window.currentSchoolSettings?.schoolName||"Mahadevasthan Secondary School"),schoolAddress:String(window.currentSchoolSettings?.address||"")};
@@ -364,7 +382,8 @@ async function saveBlueprint(event) {
   const total=pattern.reduce((sum,x)=>sum+x.count*x.marks,0);
   const fullMarks=Number($("qpBpFullMarks").value);
   if(total!==fullMarks)throw new Error("प्रश्न ढाँचाको जम्मा अङ्क "+total+" छ; पूर्णाङ्क "+fullMarks+" हुनुपर्छ।");
-  const id="g"+gradeNumber(selectedClass)+"_"+normal(selectedSubject).replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"");
+  const subjectHash=Array.from(normal(selectedSubject)).reduce((hash,ch)=>(hash*31+ch.charCodeAt(0))>>>0,7).toString(36);
+  const id="g"+gradeNumber(selectedClass)+"_s"+subjectHash;
   await setDoc(doc(db,"cdc_blueprints",id),{
     gradeNumber:gradeNumber(selectedClass),className:selectedClass,subject:selectedSubject,
     curriculumVersion:$("qpBpVersion").value.trim(),fullMarks,durationMinutes:Number($("qpBpDuration").value),
