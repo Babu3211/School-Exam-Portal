@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v48-cdc-question-paper';
+const CACHE_NAME = 'smss-pwa-v49-question-answer-key-bulk-import';
 const APP_SHELL = [
   './',
   './index.html',
