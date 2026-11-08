@@ -2089,7 +2089,7 @@ async function importMarksLedger(file){
  let headerCol=4;
  for(const sub of subjects){
   const components=ledgerComponentsForSubject(group,sub,cl);
-  if(String(header[headerCol]??'').trim()!==subjectEnglishLabel(sub))throw Error('Excel Ledger को Subject Header वा Column क्रम मिलेन। सही Class को SMSS Marks Ledger प्रयोग गर्नुहोस्।');
+  if(String(rows[1]?.[headerCol]??'').trim()!==subjectEnglishLabel(sub))throw Error('Excel Ledger को Subject Header वा Column क्रम मिलेन। सही Class को SMSS Marks Ledger प्रयोग गर्नुहोस्।');
   for(let ci=0;ci<components.length;ci++){
    const expectedComponent=ledgerEnglishLabel(components[ci].name)+' / '+components[ci].fullMarks;
    if(String(rows[2]?.[headerCol+ci]??'').trim()!==expectedComponent)throw Error('Excel Ledger को Assessment Component वा Full Marks Header मिलेन। SMSS बाट नयाँ Marks Ledger Export गर्नुहोस्।');
