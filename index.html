@@ -2129,6 +2129,7 @@ async function importMarksLedger(file){
    plannedKeys.add(key);col+=components.length;
   }
  }
+ if(errors.length)throw Error(`Excel Import मा ${errors.length} त्रुटि भेटिए। कुनै Marks सुरक्षित गरिएको छैन। पहिले फाइल सच्याउनुहोस्।\n${errors.slice(0,8).join('\n')}`);
  if(!plans.length)throw Error(`Import गर्न मिल्ने नयाँ Marks भेटिएन। Duplicate Skip: ${skipped}; त्रुटि: ${errors.length}`);
  const previewErrors=errors.slice(0,8).join('\n');
  if(!confirm(`Marks Import Preview\nTerm: ${smssTermLabel(smssExamTermKey(exam))}\nनयाँ Marks records: ${plans.length}\nपहिल्यै भएका/फाइलमै दोहोरिएका records Skip: ${skipped}\nत्रुटि: ${errors.length}\n${previewErrors}${errors.length>8?'\n...अन्य त्रुटि पनि छन्':''}\nपुराना Marks overwrite हुँदैनन्। जारी राख्ने?`))return;
