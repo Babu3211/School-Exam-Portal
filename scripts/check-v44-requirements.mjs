@@ -356,4 +356,11 @@ must(html.includes("const resultSubjectSource=hasClassSubjectRegistry?activeClas
 
 must(rules.includes("function studentCanTakeSubject")&&rules.includes("studentCanTakeSubject(request.resource.data.studentId"),"Firestore teacher mark writes must enforce optional-subject enrollment.");
 
+
+// V45 must remain isolated from production Hosting and Firestore deployments.
+const trialWorkflow = await readFile(".github/workflows/firebase-hosting-v45-trial.yml", "utf8");
+must(trialWorkflow.includes("smss-v45-work") && trialWorkflow.includes("channelId: v45-trial"), "V45 trial must deploy only from its development branch to the isolated preview channel.");
+must(!/channelId:\s*live\b/.test(trialWorkflow) && !/firebase(?:-tools)?(?:@\d+)?\s+deploy\b/.test(trialWorkflow), "V45 trial workflow must never deploy live Hosting or production Firestore Rules.");
+must(!/firestore:rules/.test(trialWorkflow), "V45 trial must test Firestore Rules locally, not publish them to production.");
+
 console.log("V44 requirement regression checks passed.");
