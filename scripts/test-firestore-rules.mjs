@@ -209,6 +209,86 @@ try {
   await assertSucceeds(getDocs(collection(db(ADMIN), "audit_logs")));
   await assertFails(updateDoc(doc(db(teacherUid), "audit_logs", "valid-log"), { detail: "tampered" }));
   await assertFails(deleteDoc(doc(db(teacherUid), "audit_logs", "valid-log")));
+  // CDC curriculum is readable to active school users but Admin-managed.
+  await assertSucceeds(setDoc(doc(db(ADMIN), "cdc_curriculum", "grade9-math-unit1"), {
+    gradeNumber: 9, className: "9", subject: "Mathematics",
+    unitCode: "Unit 1", unitTitle: "Number System",
+    topics: ["Rational Numbers"], curriculumVersion: "CDC 2078",
+    sourceTitle: "CDC Secondary Curriculum", sourceUrl: "https://moecdc.gov.np/",
+    verifiedBy: ADMIN, status: "active"
+  }));
+  await assertSucceeds(getDoc(doc(db(teacherUid), "cdc_curriculum", "grade9-math-unit1")));
+  await assertFails(setDoc(doc(db(teacherUid), "cdc_curriculum", "teacher-forged"), {
+    gradeNumber: 9, subject: "Mathematics"
+  }));
+  await assertSucceeds(setDoc(doc(db(ADMIN), "cdc_blueprints", "g9-math"), {
+    gradeNumber: 9, subject: "Mathematics", fullMarks: 50,
+    durationMinutes: 120, pattern: [], cognitiveDistribution: {
+      knowledge: 20, understanding: 30, application: 30, higher: 20
+    }, sourceUrl: "https://moecdc.gov.np/"
+  }));
+  await assertSucceeds(getDoc(doc(db(teacherUid), "cdc_blueprints", "g9-math")));
+  await assertFails(setDoc(doc(db(teacherUid), "cdc_blueprints", "forged"), { gradeNumber: 9 }));
+
+  const validQuestion = (overrides = {}) => ({
+    gradeNumber: 9, className: "9", subject: "Mathematics", section: "A",
+    unitId: "unit-1", unitTitle: "Number System", topicId: "unit-1_0",
+    topicName: "Rational Numbers", questionType: "short", marks: 5,
+    cognitiveLevel: "understanding", questionText: "Explain rational numbers.",
+    options: [], correctOption: "", answer: "A rational number is...",
+    createdBy: teacherUid, createdByName: "Assigned Teacher",
+    createdAt: serverTimestamp(), status: "active", ...overrides
+  });
+  await assertSucceeds(setDoc(doc(db(teacherUid), "question_bank", "question-1"), validQuestion()));
+  await assertSucceeds(getDoc(doc(db(teacherUid), "question_bank", "question-1")));
+  await assertSucceeds(getDocs(query(
+    collection(db(teacherUid), "question_bank"),
+    where("className", "==", "9"),
+    where("subject", "==", "Mathematics"),
+    where("section", "==", "A")
+  )));
+  await assertFails(setDoc(doc(db(teacherUid), "question_bank", "wrong-subject"), validQuestion({ subject: "Science" })));
+  await assertFails(setDoc(doc(db(teacherUid), "question_bank", "wrong-section"), validQuestion({ section: "B" })));
+  await assertFails(setDoc(doc(db(inactiveUid), "question_bank", "inactive-question"), validQuestion({ createdBy: inactiveUid })));
+  await assertFails(getDoc(doc(db(otherUid), "question_bank", "question-1")));
+  await assertFails(deleteDoc(doc(db(otherUid), "question_bank", "question-1")));
+  await assertSucceeds(deleteDoc(doc(db(teacherUid), "question_bank", "question-1")));
+
+  const validPaper = (overrides = {}) => ({
+    schoolName: "Mahadevasthan Secondary School", schoolAddress: "Dhunibesi-05, Dhading",
+    gradeNumber: 9, className: "9", subject: "Mathematics", section: "A",
+    paperTitle: "First Term Mathematics", academicYear: "2083",
+    durationMinutes: 120, fullMarks: 50, curriculumVersion: "CDC Grid",
+    blueprintId: "g9-math", cognitiveDistribution: {
+      knowledge: 20, understanding: 30, application: 30, higher: 20
+    }, topicIds: ["unit-1_0"],
+    questions: [{
+      questionId: "question-1", questionText: "Explain rational numbers.",
+      questionType: "short", marks: 5, options: [],
+      cognitiveLevel: "understanding", topicName: "Rational Numbers",
+      answer: "A rational number is...", correctOption: "", number: 1
+    }],
+    createdBy: teacherUid, createdAt: serverTimestamp(), status: "draft",
+    ...overrides
+  });
+  await assertSucceeds(setDoc(doc(db(teacherUid), "question_papers", "paper-1"), validPaper()));
+  await assertSucceeds(getDoc(doc(db(teacherUid), "question_papers", "paper-1")));
+  await assertSucceeds(getDocs(query(
+    collection(db(teacherUid), "question_papers"),
+    where("className", "==", "9"),
+    where("subject", "==", "Mathematics"),
+    where("section", "==", "A"),
+    where("createdBy", "==", teacherUid)
+  )));
+  await assertFails(getDoc(doc(db(otherUid), "question_papers", "paper-1")));
+  await assertFails(setDoc(doc(db(teacherUid), "question_papers", "wrong-subject-paper"), validPaper({ subject: "Science" })));
+  await assertFails(setDoc(doc(db(teacherUid), "question_papers", "wrong-section-paper"), validPaper({ section: "B" })));
+  await assertFails(setDoc(doc(db(teacherUid), "question_papers", "too-many-questions"), validPaper({
+    questions: Array.from({ length: 81 }, () => ({ questionText: "x" }))
+  })));
+  await assertFails(deleteDoc(doc(db(otherUid), "question_papers", "paper-1")));
+  await assertSucceeds(deleteDoc(doc(db(teacherUid), "question_papers", "paper-1")));
+
   console.log("Firestore Security Rules emulator tests passed.");
 } finally {
   await testEnv.cleanup();
