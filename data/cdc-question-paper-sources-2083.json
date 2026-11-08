@@ -401,14 +401,16 @@
     "sourceRegister": "created",
     "gradeWiseTopicExtraction": "pending_for_grades_6_7_9_10_science; grade_8_science_seeded",
     "specificationGridExtraction": "partial_official_sources_verified",
-    "questionBankCuration": "grade_8_science_55_original_practice_questions_seed_pack; other_grades_pending",
+    "questionBankCuration": "grade8-science-55-and-grade10-science-57-original-practice-questions; remaining grades-and-subjects-pending",
     "answerKeyValidation": "pending",
     "teacherReview": "required",
     "grade8SciencePracticePack": "seed-file-created-admin-import-available-teacher-review-required",
     "scienceSourceDiscovery": "CDC textbook and teacher-guide source pages identified for Grades 6–10; full chapter extraction and grade-specific grid parsing still pending except Grade 8 textbook unit list",
-    "grade9SciencePracticePack": "seed-file-created-admin-import-available-2080-topic-reference-teacher-review-required",
+    "grade9SciencePracticePack": "blocked-not-importable-source-mismatch-found-do-not-use",
     "otherGradeSubjectPacks": "pending",
-    "officialBlueprintCoverage": "partial-only-verified-subject-grade-grid-can-be-set-by-admin"
+    "officialBlueprintCoverage": "partial-only-verified-subject-grade-grid-can-be-set-by-admin",
+    "grade10SciencePracticePack": "seed-file-created-admin-import-available-2080-textbook-reference-check-2082-modified-book-and-grid",
+    "sourceCorrection": "The 19-unit 2080 textbook contents PDF at 1692097269.pdf is explicitly Grade 10; a draft previously labelled Grade 9 was blocked and removed."
   },
   "practicePacks": [
     {
@@ -420,12 +422,20 @@
       "sourceStatus": "CDC textbook reference; original teacher-review practice questions"
     },
     {
-      "id": "grade9-science-practice-v1",
-      "grade": 9,
+      "id": "grade8-science-practice-v1",
+      "grade": 8,
+      "subject": "विज्ञान तथा प्रविधि",
+      "units": 11,
+      "questions": 55,
+      "sourceStatus": "CDC textbook contents; original SMSS practice questions; teacher review required"
+    },
+    {
+      "id": "grade10-science-practice-v1",
+      "grade": 10,
       "subject": "विज्ञान तथा प्रविधि",
       "units": 19,
-      "questions": 38,
-      "sourceStatus": "CDC 2080 textbook contents; original practice questions; verify against 2082 textbook and grid"
+      "questions": 57,
+      "sourceStatus": "CDC Grade 10 textbook contents (2080); original SMSS practice questions; check 2082 modified textbook and grid"
     }
   ]
 }
