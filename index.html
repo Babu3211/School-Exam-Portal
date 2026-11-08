@@ -2103,7 +2103,7 @@ async function importMarksLedger(file){
  const clean=v=>String(v??'').trim();
  const findStudent=(reg,symbol,name)=>{
   const candidates=marksStudents.filter(x=>canonicalStudentClass(x.class)===canonicalStudentClass(cl));
-  const match=candidates.filter(x=>(!reg||norm(ledgerStudentReg(x))===norm(reg))&&(!symbol||norm(ledgerSymbol(x))===norm(symbol))&&(!name||norm(x.studentName||x.name||'')===norm(name)));
+  const match=candidates.filter(x=>(!reg||norm(ledgerStudentReg(x))===norm(reg))&&(!symbol||norm(ledgerSymbol(x))===norm(symbol))&&(!name||[x.studentNameEnglish,x.nameEnglish,x.nameEn,englishDisplayText(x.studentName||x.name||''),x.studentName,x.name].some(candidate=>candidate&&norm(candidate)===norm(name))));
   return match.length===1?match[0]:null;
  };
  for(let ri=2;ri<rows.length;ri++){
