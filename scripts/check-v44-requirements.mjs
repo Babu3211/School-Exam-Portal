@@ -160,6 +160,7 @@ must(html.includes("try{await batch.commit();saved+=Math.min(8,freshPlans.length
 must(html.includes("header[headerCol]??'').trim()!==subjectEnglishLabel(sub)"), "Marks Excel import must validate subject column order.");
 must(html.includes("rows[2]?.[headerCol+ci]") && html.includes("expectedComponent=ledgerEnglishLabel(components[ci].name)+' / '+components[ci].fullMarks"), "Marks Excel import must validate assessment component and full marks headers.");
 must(html.includes("row.slice(4,headerCol).some(v=>clean(v)!=='')") && html.includes("Marks छन् तर विद्यार्थीको नाम"), "Marks Excel import must reject score rows without student identity.");
+must(html.includes("slice(headerCol).some(v=>String(v??'').trim()!=='')"), "Marks Excel import must reject unexpected populated columns.");
 must(restorePreviewCode.includes("if(previewSequence!==restorePreviewSequence||"), "Restore Preview must discard stale file reads.");
 must(restorePreviewCode.includes('catch(err){if(previewSequence!==restorePreviewSequence||'), "Stale restore preview failures must not overwrite newer preview messages.");
 
