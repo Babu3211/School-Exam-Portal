@@ -64,4 +64,8 @@ jobs:
           node -e 'const fs=require("node:fs"); const m=JSON.parse(fs.readFileSync("/tmp/smss-v45-manifest.json","utf8")); if(!m.name || !m.start_url) process.exit(1)'
           curl --fail --location --silent --show-error --retry 5 --retry-delay 3 --max-time 30 "${PREVIEW_URL%/}/sw.js" -o /tmp/smss-v45-sw.js
           node --check /tmp/smss-v45-sw.js
+          # Verify every asset required by the PWA install cache is reachable.
+          for asset in icon-192.png icon-512.png apple-touch-icon.png data/cdc-grade8-science-practice-pack-v1.json data/cdc-grade10-science-practice-pack-v1.json; do
+            curl --fail --location --silent --show-error --retry 3 --retry-delay 2 --max-time 30 "${PREVIEW_URL%/}/$asset" -o /dev/null
+          done
           echo "V45 preview HTML, CDC module, PWA manifest and service worker smoke checks passed."
