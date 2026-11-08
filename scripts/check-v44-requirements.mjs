@@ -88,6 +88,14 @@ must(!/[\u0900-\u097F]/.test(displayHelpers.englishDisplayText("बाबुक�
 must(html.includes("async function publishOneOnlineResult(studentId)"), "Per-student publish/update is missing.");
 must(html.includes('const resultId=doc(collection(db,"public_results")).id;') && html.includes("d.data()?.studentId===studentId"), "New public result document IDs must be random and unpublish must find studentId-linked records.");
 must(html.includes("async function unpublishOneOnlineResult(studentId)"), "Per-student unpublish is missing.");
+
+const unpublishStart = html.indexOf("async function unpublishOneOnlineResult(studentId)");
+const unpublishEnd = html.indexOf("async function publishOnlineResult(", unpublishStart);
+must(unpublishStart >= 0 && unpublishEnd > unpublishStart, "Per-student unpublish function boundaries are missing.");
+const unpublishCode = html.slice(unpublishStart, unpublishEnd);
+must(!unpublishCode.includes("d.id!==resultId"), "Per-student unpublish must not reference the publish-only resultId variable.");
+must(unpublishCode.includes("legacyPublicationIsAmbiguous(d,student)"), "Per-student unpublish must retain ambiguous legacy result protection.");
+
 must(html.includes('id="publishSelectedOnlineResultBtn"'), "Selected-student publish action is missing.");
 must(html.includes("data-result-select"), "Per-student selection checkboxes are missing.");
 must(html.includes("findLegacyLookups"), "Legacy lookup cleanup is missing.");
