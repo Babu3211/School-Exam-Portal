@@ -57,7 +57,7 @@ jobs:
             *) echo "Unexpected Firebase preview URL"; exit 1 ;;
           esac
           curl --fail --location --silent --show-error --retry 5 --retry-delay 3 --max-time 30 "$PREVIEW_URL" -o /tmp/smss-v45-preview.html
-          grep -Fq '<title>SMSS Exam Portal' /tmp/smss-v45-preview.html
+          grep -Fq '<title>Mahadevasthan Secondary School | Exam Portal</title>' /tmp/smss-v45-preview.html
           grep -Fq 'cdc-question-paper.js' /tmp/smss-v45-preview.html
           curl --fail --location --silent --show-error --retry 5 --retry-delay 3 --max-time 30 "${PREVIEW_URL%/}/cdc-question-paper.js" -o /tmp/smss-v45-cdc.js
           node --check /tmp/smss-v45-cdc.js
