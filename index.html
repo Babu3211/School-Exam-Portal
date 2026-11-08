@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mahadevasthan Secondary School | Exam Portal</title>
+<title>SMSS Exam Portal | Mahadevasthan Secondary School</title>
 <script src="https://cdn.jsdelivr.net/npm/@remotemerge/nepali-date-converter@1/ndc-browser.js"></script>
 <style>
 :root{--blue:#1769d2;--navy:#12345b;--bg:#f3f7fd;--line:#e4ebf4;--muted:#718096;--text:#26364a}
@@ -78,13 +78,28 @@
 #loginError{padding:0 2px}
 @media(max-width:480px){#loginGate{padding:14px 11px;align-items:flex-start}.login-card{margin:auto 0;padding:22px 19px;border-radius:19px}.login-brand{gap:11px;margin-bottom:19px}.login-logo{width:50px;height:50px;flex-basis:50px;font-size:25px}.login-kicker{font-size:8px;letter-spacing:.8px}.login-welcome{padding:14px 15px}}
 
-/* V44 visual refinement: centered blue school identity, role selector and social links */.login-brand{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;margin-bottom:20px;width:100%}.login-brand>div:last-child{width:100%}.login-school-titles{display:flex;flex-direction:column;align-items:center;text-align:center}.login-brand h2,#loginSchoolNameEn{color:#1769d2!important;font-family:Arial,sans-serif;font-weight:900;line-height:1.35;margin:4px 0 1px;text-align:center;font-size:clamp(17px,4vw,21px)}.login-school-ne{color:#263f68!important;font-family:Arial,"Noto Sans Devanagari",sans-serif;font-weight:900;font-size:clamp(16px,3.8vw,19px);line-height:1.5;margin:1px 0 2px;text-align:center}.login-school-address{color:#71819a!important;font-size:12px!important;font-weight:700;text-align:center;line-height:1.6;margin:2px 0 0}.login-kicker{color:#1769d2!important;text-align:center}.social-links .facebook{color:#fff!important;background:#1877f2!important;border-color:#1877f2!important}.social-links .youtube{color:#fff!important;background:#e62117!important;border-color:#e62117!important}</style>
+/* V44 visual refinement: centered blue school identity, role selector and social links */.login-brand{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;margin-bottom:20px;width:100%}.login-brand>div:last-child{width:100%}.login-school-titles{display:flex;flex-direction:column;align-items:center;text-align:center}.login-brand h2,#loginSchoolNameEn{color:#1769d2!important;font-family:Arial,sans-serif;font-weight:900;line-height:1.35;margin:4px 0 1px;text-align:center;font-size:clamp(17px,4vw,21px)}.login-school-ne{color:#263f68!important;font-family:Arial,"Noto Sans Devanagari",sans-serif;font-weight:900;font-size:clamp(16px,3.8vw,19px);line-height:1.5;margin:1px 0 2px;text-align:center}.login-school-address{color:#71819a!important;font-size:12px!important;font-weight:700;text-align:center;line-height:1.6;margin:2px 0 0}.login-kicker{color:#1769d2!important;text-align:center}.social-links .facebook{color:#fff!important;background:#1877f2!important;border-color:#1877f2!important}.social-links .youtube{color:#fff!important;background:#e62117!important;border-color:#e62117!important}
+/* V45 PWA install banner: visible until the app is installed. */
+#smssInstallBanner{position:sticky;top:0;z-index:1001;width:100%;padding:9px 14px;background:linear-gradient(100deg,#123d78,#1769d2 58%,#5545ad);color:#fff;box-shadow:0 3px 14px #102d5630}
+#smssInstallBanner[hidden],#smssInstallHelp[hidden]{display:none!important}
+.smss-install-inner{max-width:1500px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.smss-install-mark{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;border-radius:11px;background:#ffffff20;font-size:21px}
+.smss-install-copy{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
+.smss-install-copy strong{font-size:13px;font-weight:900;letter-spacing:.1px}
+.smss-install-copy span{font-size:11px;line-height:1.45;color:#e8f1ff}
+#smssInstallButton{flex:0 0 auto;border:1px solid #fff;background:#fff;color:#174d98;border-radius:9px;padding:9px 15px;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap}
+#smssInstallButton:focus-visible{outline:3px solid #f8d878;outline-offset:2px}
+#smssInstallHelp{max-width:1500px;margin:8px auto 0;padding:9px 12px;border:1px solid #ffffff45;border-radius:9px;background:#ffffff14;color:#fff;font-size:11px;line-height:1.65}
+#smssInstallHelp b{color:#fff}
+@media(max-width:520px){#smssInstallBanner{padding:8px 9px}.smss-install-inner{gap:8px}.smss-install-mark{width:33px;height:33px;flex-basis:33px;font-size:18px}.smss-install-copy strong{font-size:12px}.smss-install-copy span{font-size:10px}#smssInstallButton{padding:9px 10px;font-size:11px}}
+
+</style>
 
 <meta name="theme-color" content="#1769d2">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="SMSS School">
+<meta name="apple-mobile-web-app-title" content="SMSS Exam Portal">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
@@ -92,6 +107,19 @@
 <!-- SMSS Ledger refinement V37 -->
 </head>
 <body>
+
+<div id="smssInstallBanner" role="region" aria-label="SMSS Exam Portal installation" aria-live="polite" hidden>
+  <div class="smss-install-inner">
+    <div class="smss-install-mark" aria-hidden="true">📲</div>
+    <div class="smss-install-copy">
+      <strong>SMSS Exam Portal</strong>
+      <span>मोबाइल वा कम्प्युटरमा एप Install गरेर सजिलै खोल्नुहोस्।</span>
+    </div>
+    <button id="smssInstallButton" type="button">Install</button>
+  </div>
+  <div id="smssInstallHelp" hidden></div>
+</div>
+
 <div id="loginGate"><div class="login-card"><div class="login-brand"><div class="login-logo" id="loginSchoolLogo" aria-hidden="true">म</div><div class="login-school-titles"><span class="login-kicker">SCHOOL EXAM MANAGEMENT SYSTEM</span><h2 id="loginSchoolNameEn" class="login-school-en">Mahadevasthan Secondary School</h2><p id="loginSchoolNameNe" class="login-school-ne">महादेवस्थान माध्यमिक विद्यालय</p><p id="loginSchoolAddress" class="login-school-address">धुनिवेशी–५, कुमाईखोला, धादिङ, नेपाल</p></div></div><div class="login-welcome"><h3>स्वागत छ !</h3><p>आफ्नो आधिकारिक खाताबाट सुरक्षित रूपमा Login गर्नुहोस्।</p></div><div class="login-year"><span>Academic Year</span><strong id="loginAcademicYear">2083</strong></div><div class="login-user-types" aria-label="Login account types"><span>Admin</span><span>Teacher</span><span>Other</span></div><form id="loginForm"><label for="loginEmail">Email Address</label><input id="loginEmail" type="email" required autocomplete="username" placeholder="Enter your email address"><label for="loginPassword">Password</label><div class="password-field"><input id="loginPassword" type="password" required autocomplete="current-password" placeholder="आफ्नो Password राख्नुहोस्"><button id="toggleLoginPassword" class="password-toggle" type="button" aria-label="Password देखाउनुहोस्" aria-pressed="false" title="Password देखाउनुहोस्"><span id="loginPasswordEye" aria-hidden="true">👁</span></button></div><button id="loginButton" type="submit">Login</button><p id="loginError" role="alert"></p><p id="loginStatus">Admin वा सक्रिय शिक्षक खाताबाट Login गर्नुहोस्।</p></form>
 <button class="forgot-link" id="forgotPasswordToggle" type="button" aria-expanded="false" aria-controls="forgotPasswordPanel">पासवर्ड बिर्सनुभयो? / Forgot Password</button>
 <div class="forgot-panel" id="forgotPasswordPanel" hidden>
@@ -328,7 +356,76 @@ function printIssuedCertificate(id){
  const student=certificateEsc(c.studentName||""),guardian=certificateEsc(c.fatherName||c.guardianName||""),klass=certificateEsc(c.className||""),date=certificateEsc(c.issueDate||""),type=certificateEsc(c.certificateType||"Certificate"),number=certificateEsc(c.certificateNumber||"");
  const bodyText=c.certificateType==="Transfer Certificate"?`This is to certify that ${student}, child of ${guardian||"the parent/guardian"}, was a student of this school in ${klass}. The school records have been checked and this certificate is issued upon request.`:c.certificateType==="Character Certificate"?`This is to certify that ${student}, child of ${guardian||"the parent/guardian"}, studied in ${klass} at this school. To the best of the school's knowledge, the student's conduct during the period of study was satisfactory.`:`This is to certify that ${student}, child of ${guardian||"the parent/guardian"}, is/was a student of this school in ${klass} during the academic year ${certificateEsc(currentSchoolSettings.academicYear||"2083")}.`;
  const remarks=c.remarks?'<p><b>Remarks:</b> '+certificateEsc(c.remarks)+'</p>':"";
- w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+number+'</title><style>@page{size:A4;margin:22mm}body{font-family:Georgia,serif;color:#172554;margin:0}.sheet{min-height:250mm;border:5px double #1e3a8a;padding:22px 30px;box-sizing:border-box}.top{text-align:center}.top h1{font-size:25px;margin:8px}.top p{margin:4px}.meta{display:flex;justify-content:space-between;margin-top:28px;font-size:13px}.title{text-align:center;font-size:27px;letter-spacing:2px;text-decoration:underline;margin:45px 0}.content{font-size:19px;line-height:2.1;text-align:justify;margin:30px 10px}.sign{display:flex;justify-content:space-between;margin-top:100px;text-align:center}.sign div{width:200px;border-top:1px solid #333;padding-top:8px}.remarks{font-size:15px;margin-top:20px}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}</style></head><body><main class="sheet"><header class="top">'+safeLogo+'<h1>'+school+'</h1><p>'+address+'</p><p>EXAMINATION & ACADEMIC RECORDS OFFICE</p></header><div class="meta"><span>Certificate No.: '+number+'</span><span>Date: '+date+'</span></div><h2 class="title">'+type.toUpperCase()+'</h2><section class="content">'+bodyText+'</section><div class="remarks">'+remarks+'</div><div class="sign"><div>Class Teacher</div><div>Principal<br>'+certificateEsc(currentSchoolSettings.principalName||"")+'</div></div></main><script>window.onload=()=>window.print();<\/script></body></html>');
+ w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+number+'</title><style>@page{size:A4;margin:22mm}body{font-family:Georgia,serif;color:#172554;margin:0}.sheet{min-height:250mm;border:5px double #1e3a8a;padding:22px 30px;box-sizing:border-box}.top{text-align:center}.top h1{font-size:25px;margin:8px}.top p{margin:4px}.meta{display:flex;justify-content:space-between;margin-top:28px;font-size:13px}.title{text-align:center;font-size:27px;letter-spacing:2px;text-decoration:underline;margin:45px 0}.content{font-size:19px;line-height:2.1;text-align:justify;margin:30px 10px}.sign{display:flex;justify-content:space-between;margin-top:100px;text-align:center}.sign div{width:200px;border-top:1px solid #333;padding-top:8px}.remarks{font-size:15px;margin-top:20px}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}</style></head><body><main class="sheet"><header class="top">'+safeLogo+'<h1>'+school+'</h1><p>'+address+'</p><p>EXAMINATION & ACADEMIC RECORDS OFFICE</p></header><div class="meta"><span>Certificate No.: '+number+'</span><span>Date: '+date+'</span></div><h2 class="title">'+type.toUpperCase()+'</h2><section class="content">'+bodyText+'</section><div class="remarks">'+remarks+'</div><div class="sign"><div>Class Teacher</div><div>Principal<br>'+certificateEsc(currentSchoolSettings.principalName||"")+'</div></div></main><script>window.onload=()=>window.print();<\/script>
+<script>
+// V45: browser-native PWA installation with iPhone and desktop guidance.
+(function(){
+  'use strict';
+  const banner=document.getElementById('smssInstallBanner');
+  const button=document.getElementById('smssInstallButton');
+  const help=document.getElementById('smssInstallHelp');
+  if(!banner||!button||!help)return;
+  const installedKey='smssPwaInstalled';
+  let deferredInstallPrompt=null;
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||
+    (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const isAndroid=/android/i.test(navigator.userAgent);
+  function isStandalone(){
+    return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||
+      navigator.standalone===true||document.referrer.startsWith('android-app://');
+  }
+  function markInstalled(){
+    banner.hidden=true;
+    try{localStorage.setItem(installedKey,'1');}catch(_){}
+  }
+  let previouslyInstalled=false;
+  try{previouslyInstalled=localStorage.getItem(installedKey)==='1';}catch(_){}
+  if(isStandalone())markInstalled();
+  else if(!previouslyInstalled)banner.hidden=false;
+  else banner.hidden=true;
+  function showInstallHelp(){
+    if(isIOS){
+      help.innerHTML='<b>iPhone / iPad मा Install गर्ने तरिका:</b> Safari मा यो वेबसाइट खोल्नुहोस् → तलको Share (□↑) बटन थिच्नुहोस् → <b>Add to Home Screen</b> छान्नुहोस् → <b>Add</b> थिच्नुहोस्। त्यसपछि Home Screen मा आएको SMSS Exam Portal आइकनबाट खोल्नुहोस्।';
+    }else if(isAndroid){
+      help.innerHTML='<b>Android मा Install गर्ने तरिका:</b> Chrome को माथिल्लो ⋮ Menu खोल्नुहोस् → <b>Install app</b> वा <b>Add to Home screen</b> छान्नुहोस् → Install पुष्टि गर्नुहोस्। Chrome ले Install Prompt देखाएमा Install थिच्नुहोस्।';
+    }else{
+      help.innerHTML='<b>कम्प्युटरमा Install गर्ने तरिका:</b> Chrome वा Edge मा Address Bar नजिक देखिने Install आइकन थिच्नुहोस्, वा Browser Menu खोलेर <b>Install SMSS Exam Portal</b> छान्नुहोस्।';
+    }
+    help.hidden=false;
+  }
+  window.addEventListener('beforeinstallprompt',function(event){
+    event.preventDefault();
+    deferredInstallPrompt=event;
+    button.textContent='Install';
+  });
+  window.addEventListener('appinstalled',markInstalled);
+  button.addEventListener('click',async function(){
+    if(!deferredInstallPrompt){showInstallHelp();return;}
+    const promptEvent=deferredInstallPrompt;
+    deferredInstallPrompt=null;
+    button.disabled=true;
+    try{
+      await promptEvent.prompt();
+      const choice=await promptEvent.userChoice;
+      if(choice&&choice.outcome==='accepted'){
+        button.textContent='Installing…';
+        help.hidden=true;
+      }else{
+        button.disabled=false;
+        button.textContent='Install';
+        help.textContent='Install गर्न चाहनुहुन्छ भने फेरि Install थिच्नुहोस्।';
+        help.hidden=false;
+      }
+    }catch(error){
+      button.disabled=false;
+      showInstallHelp();
+      console.warn('SMSS PWA install prompt unavailable:',error);
+    }
+  });
+})();
+</script>
+
+</body></html>');
  w.document.close();
 }
 document.addEventListener("submit",async e=>{
