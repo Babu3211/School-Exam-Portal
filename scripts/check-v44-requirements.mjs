@@ -337,4 +337,22 @@ must(html.includes('colspan="6">N/A') && html.includes("componentsBySubject[si].
 must(html.includes("notApplicable:true") && html.includes("studentOptionalSelectionComplete(st,cl)") && html.includes("applicableSubjects=perSubject.filter"), "Results must exclude non-enrolled optional subjects from completion and GPA while requiring configured selections.");
 must(html.includes("const applicableSubjects=r.perSubject.filter(x=>!x.notApplicable)") && html.includes("classSubjects=applicableSubjects.map"), "Grade Sheet and GPA must use only subjects applicable to each student.");
 
+
+const photoCompressorStart = html.indexOf("async function compressSchoolPhoto(file)");
+const photoCompressorEnd = html.indexOf("\\nfunction applySchoolBranding", photoCompressorStart);
+must(photoCompressorStart >= 0 && photoCompressorEnd > photoCompressorStart, "School photo compressor is missing.");
+const photoCompressor = html.slice(photoCompressorStart, photoCompressorEnd);
+must(photoCompressor.includes("2400/img.width,1600/img.height") && photoCompressor.includes("150*1024") && photoCompressor.includes("180*1024"), "School photo compression must target 150 KB and enforce the 180 KB maximum.");
+must(html.includes("अधिकतम १८० KB") && !html.includes("करिब ५५ KB"), "School photo upload instructions must show the 180 KB maximum, not the old 55 KB limit.");
+const schoolSettingsSaveStart = html.indexOf("async function saveSchoolSettings(event)");
+const schoolSettingsSaveEnd = html.indexOf("\\nfunction userAdminMessage", schoolSettingsSaveStart);
+must(schoolSettingsSaveStart >= 0 && schoolSettingsSaveEnd > schoolSettingsSaveStart, "School Settings save function is missing.");
+const schoolSettingsSave = html.slice(schoolSettingsSaveStart, schoolSettingsSaveEnd);
+must(schoolSettingsSave.includes("String(x).length*0.75>180*1024") && schoolSettingsSave.includes("photos.length>20"), "School photo save validation must enforce 180 KB per photo and 20 photos total.");
+must(schoolSettingsSave.includes("for(let i=0;i<photos.length;i+=4)") && schoolSettingsSave.includes("await galleryBatch.commit()"), "School gallery must be saved in chunks of four using one atomic Firestore batch.");
+must(schoolSettingsSave.includes('galleryBatch.set(doc(db,"school_settings","main")') && schoolSettingsSave.includes('galleryBatch.set(doc(db,"school_public_branding","main")'), "School settings and public branding must commit atomically with the gallery.");
+must(rules.includes('match /school_gallery/{documentId}') && rules.includes('request.resource.data.photos.size() <= 4') && (rules.match(/size\\(\\) <= 245760/g) || []).length === 4, "Firestore Rules must allow at most four gallery photos per document, each up to 180 KB.");
+must(rules.includes('allow get, list: if true;') && rules.includes('allow create, update: if isAdmin()'), "School gallery must remain publicly readable for login and writable only by Admin.");
+must(!html.includes('id="appNotification"') && !html.includes("function showAppNotification"), "Global success/error toast popup must remain removed.");
+
 console.log("V44 requirement regression checks passed.");
