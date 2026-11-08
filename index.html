@@ -2787,6 +2787,10 @@ async function previewFirebaseRestore(){
     seenIds.add(item.id);
    }
   }
+  if(parsed.documents!==undefined&&(!parsed.documents||typeof parsed.documents!=="object"||Array.isArray(parsed.documents)))throw new Error("Backup को documents संरचना गलत छ।");
+  if(parsed.documents&&Object.keys(parsed.documents).some(n=>n!=="school_settings"))throw new Error("Backup मा अपरिचित documents समूह छ।");
+  if(parsed.documents?.school_settings!==undefined&&(!parsed.documents.school_settings||typeof parsed.documents.school_settings!=="object"||Array.isArray(parsed.documents.school_settings)))throw new Error("Backup को school_settings संरचना गलत छ।");
+  if(parsed.documents?.school_settings&&Object.keys(parsed.documents.school_settings).some(n=>n!=="main"))throw new Error("Backup मा अपरिचित School Settings Document छ।");
   const settings=parsed.documents?.school_settings?.main;
   if(parsed.documents?.school_settings&&(!settings||typeof settings!=="object"||Array.isArray(settings)))throw new Error("School Settings को Backup संरचना गलत छ।");
   const counts=Object.fromEntries(RESTORE_COLLECTIONS.map(n=>[n,parsed.collections[n].length]));
