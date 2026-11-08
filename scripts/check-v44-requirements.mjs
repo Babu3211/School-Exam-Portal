@@ -42,6 +42,8 @@ must(/\.login-card\{[^}]*max-width:410px[^}]*\}/.test(html), "V43-style baseline
 must(html.includes('id="toggleLoginPassword"'), "Password show/hide control is missing.");
 must(!html.includes('data-login-role=') && !html.includes('login-role-select'), "Login page must use one Login button without separate Admin/Teacher role buttons.");
 must(html.includes('id="loginSchoolName" class="login-school-en"') && html.includes('id="loginSchoolAddress" class="login-school-address"') && html.includes('loginName.textContent=name') && html.includes('loginAddress.textContent=address'), "Login page must preserve the current V44 school identity and dynamic address.");
+must(html.includes('id="loginSchoolNameNe"') && html.includes('id="loginSchoolAddressNe"') && html.includes('id="setSchoolNameNe"') && html.includes('id="setAddressNe"'), "Nepali school name and address must be editable and visible on login.");
+must(html.includes('schoolNameNe:data.schoolNameNe') && html.includes('addressNe:data.addressNe') && html.includes('loginNameNe.textContent=') && html.includes('loginAddressNe.textContent='), "Bilingual school identity must persist to public branding and render on login.");
 must(html.includes('धुनिवेशी–५, कुमाईखोला, धादिङ, नेपाल'), "Login page must provide the school's Nepali address fallback.");
 must(html.includes('if(credential.user.uid===ADMIN_UID){currentUserRole={roles:["admin"],active:true};}else{const roleSnap=await getDoc(doc(db,"user_roles",credential.user.uid));'), "Login must automatically identify Admin by UID and validate teacher roles without a role selector.");
 must(!html.includes("selectedLoginRole"), "Login authentication must not depend on a manually selected role.");
