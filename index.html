@@ -2771,6 +2771,7 @@ async function previewFirebaseRestore(){
   if(!file)throw new Error("पहिले Backup JSON फाइल छान्नुहोस्।");
   if(file.size>25*1024*1024)throw new Error("फाइल २५ MB भन्दा ठूलो छ।");
   const parsed=JSON.parse(await file.text());
+  if(!parsed||typeof parsed!=="object"||Array.isArray(parsed))throw new Error("Backup JSON को मुख्य संरचना गलत छ।");
   if(parsed.format!=="SMSS-Firestore-Backup"||parsed.version!==1||!parsed.collections||typeof parsed.collections!=="object"||Array.isArray(parsed.collections))throw new Error("यो SMSS को मान्य Backup फाइल होइन।");
   const unknown=Object.keys(parsed.collections).filter(n=>n!=="audit_logs"&&!RESTORE_COLLECTIONS.includes(n));
   if(parsed.collections.audit_logs!==undefined&&!Array.isArray(parsed.collections.audit_logs))throw new Error("Backup को audit_logs Collection सूची गलत छ।");
