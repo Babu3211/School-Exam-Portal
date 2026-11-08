@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v54-grade10-science-pack';
+const CACHE_NAME = 'smss-pwa-v55-question-paper-content-checks';
 const APP_SHELL = [
   './',
   './index.html',
