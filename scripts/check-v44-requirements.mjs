@@ -36,12 +36,14 @@ must(codeHelpers.studentCodeBase("Babukrishna Khanal", "8") === "BABKHA-8", "Stu
 must(html.includes('placeholder="जस्तै: BABKHA-8"'), "Online result example must display BABKHA-8.");
 must(!html.includes("SHYBAS-6"), "Old SHYBAS-6 example must not remain in the interface.");
 must(html.includes("MAIN MENU") && !html.includes("MAIN MENU / मुख्य मेनु"), "Dashboard main menu must be English-only.");
-must(html.includes("<summary><span class=\"ico\">🎓</span>Student Management / विद्यार्थी व्यवस्थापन</summary>") && html.includes("<button data-page=\"students\">Student Records / विद्यार्थी अभिलेख</button>"), "Dashboard sidebar menu and submenu must be bilingual.");
+must(html.includes("<summary><span class=\"ico\">🎓</span>Student Management</summary>") && html.includes("<button data-page=\"students\">Student Records</button>") && !html.includes("Student Management / विद्यार्थी व्यवस्थापन") && !html.includes("Student Records / विद्यार्थी अभिलेख"), "Dashboard sidebar menu and submenu must be English-only.");
 must(html.includes("Student registration, search and record management / विद्यार्थी दर्ता"), "Student page topic must be bilingual.");
 must(/\.login-card\{[^}]*max-width:410px[^}]*\}/.test(html), "V43-style baseline login card styling is missing.");
 must(html.includes('id="toggleLoginPassword"'), "Password show/hide control is missing.");
 must(!html.includes('data-login-role=') && !html.includes('login-role-select'), "Login page must use one Login button without separate Admin/Teacher role buttons.");
-must(html.indexOf('id="loginSchoolNameEn"') < html.indexOf('id="loginSchoolNameNe"') && html.includes('id="loginSchoolAddress"'), "Login page must show English school name first, Nepali name below, and school address.");
+must(html.includes('id="loginSchoolName" class="login-school-en"') && html.includes('id="loginSchoolAddress" class="login-school-address"') && html.includes('loginName.textContent=name') && html.includes('loginAddress.textContent=address'), "Login page must preserve the current V44 school identity and dynamic address.");
+must(html.includes('id="loginSchoolNameNe"') && html.includes('id="loginSchoolAddressNe"') && html.includes('id="setSchoolNameNe"') && html.includes('id="setAddressNe"'), "Nepali school name and address must be editable and visible on login.");
+must(html.includes('schoolNameNe:data.schoolNameNe') && html.includes('addressNe:data.addressNe') && html.includes('loginNameNe.textContent=') && html.includes('loginAddressNe.textContent='), "Bilingual school identity must persist to public branding and render on login.");
 must(html.includes('धुनिवेशी–५, कुमाईखोला, धादिङ, नेपाल'), "Login page must provide the school's Nepali address fallback.");
 must(html.includes('if(credential.user.uid===ADMIN_UID){currentUserRole={roles:["admin"],active:true};}else{const roleSnap=await getDoc(doc(db,"user_roles",credential.user.uid));'), "Login must automatically identify Admin by UID and validate teacher roles without a role selector.");
 must(!html.includes("selectedLoginRole"), "Login authentication must not depend on a manually selected role.");
@@ -135,7 +137,7 @@ must(html.includes("currentSchoolSettings.logoDataUrl||currentSchoolSettings.log
 must(html.includes("login-welcome h3{margin:0 0 4px;color:#1769d2"), "Login welcome must be blue.");
 must(html.includes("login-user-types") && html.includes("<span>Admin</span><span>Teacher</span><span>Other</span>"), "Login must show Admin / Teacher / Other under academic year.");
 must(html.includes("Academic Year</span><strong id=\"loginAcademicYear\">2083</strong>") && html.includes(".login-year{flex-direction:row") && html.includes(".login-year strong:before{content:\"–\""), "Academic year must display compactly as Academic Year – 2083.");
-must(html.includes("#loginSchoolNameEn{font-size:clamp(22px,5vw,26px)!important") && html.includes(".login-school-ne{font-size:clamp(20px,4.5vw,24px)!important"), "Login school names must be larger.");
+must(html.includes(".login-brand h2,#loginSchoolName{font-size:clamp(22px,5vw,26px)!important") && html.includes(".login-school-ne{font-size:clamp(20px,4.5vw,24px)!important"), "Login school names must be larger.");
 must(html.includes(".login-user-types{gap:10px") && html.includes("font-size:12px;font-weight:600"), "Login account types must use refined readable typography.");
 
 must(rules.includes("match /public_result_exams/{examId}") && rules.includes("allow get, list: if true;") && rules.includes("allow create, update, delete: if isAdmin();"), "Public exam index must expose read-only publication metadata.");
@@ -216,8 +218,8 @@ must(rules.includes("match /audit_logs/{documentId}") && rules.includes("allow c
 must(rules.includes("request.resource.data.actorUid == request.auth.uid") && rules.includes("request.resource.data.createdAt == request.time"), "Audit log actor and server timestamp must be verified.");
 must(rules.includes("request.resource.data.detail.size() <= 240") && rules.includes("request.resource.data.actorName.size() <= 100"), "Audit log text fields must have strict size limits.");
 must(rules.includes("allow update, delete: if false;"), "Audit logs must remain append-only.");
-must(manifest.includes("V44"), "PWA manifest must identify V44.");
-must(serviceWorker.includes("smss-pwa-v44-school-exam-portal"), "Service worker cache must identify V44.");
+must(manifest.includes('"name": "SMSS Exam Portal"') && manifest.includes('"display": "standalone"'), "PWA manifest must preserve the V44 installable app identity.");
+must(/smss-pwa-v(?:44|45|46|47)/.test(serviceWorker) && serviceWorker.includes("./cdc-question-paper.js"), "Service worker must preserve PWA caching and include the new V45 module.");
 must(workflow.includes("deploy-live:") && workflow.includes("needs: quality-and-rules"), "Live deployment must depend on successful V44 quality and Firestore Rules tests.");
 must(workflow.includes("Deploy tested Firestore Security Rules") && workflow.includes("firebase-tools@14 deploy --only firestore:rules"), "Production deployment must apply the tested Firestore Security Rules before Hosting.");
 must(workflow.includes("github.event_name == 'push'") && workflow.includes("ENABLE_FIREBASE_HOSTING_DEPLOY == 'true'"), "Automatic live deployment must be push-only and explicitly enabled.");
@@ -354,5 +356,9 @@ must(schoolSettingsSave.includes('galleryBatch.set(doc(db,"school_settings","mai
 must(rules.includes('match /school_gallery/{documentId}') && rules.includes('request.resource.data.photos.size() <= 4') && (rules.split("size() <= 245760").length - 1) === 4, "Firestore Rules must allow at most four gallery photos per document, each up to 180 KB.");
 must(rules.includes('allow get, list: if true;') && rules.includes('allow create, update: if isAdmin()'), "School gallery must remain publicly readable for login and writable only by Admin.");
 must(!html.includes('id="appNotification"') && !html.includes("function showAppNotification"), "Global success/error toast popup must remain removed.");
+
+must(html.includes('if(page==="question-papers")return roleHas("subject_teacher")'), "Assigned subject teachers must be able to access Question Paper Builder.");
+must(html.includes('data-page="question-papers"') && html.includes('window.loadQuestionPaperModule()') && html.includes('src="./cdc-question-paper.js"'), "V45 Question Paper Builder must be navigable and load its module.");
+must(html.includes('schoolNameNe:document.getElementById("setSchoolNameNe").value.trim()') && html.includes('addressNe:document.getElementById("setAddressNe").value.trim()'), "School Settings must save both Nepali identity fields.");
 
 console.log("V44 requirement regression checks passed.");

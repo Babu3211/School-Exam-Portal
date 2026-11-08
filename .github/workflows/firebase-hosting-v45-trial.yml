@@ -1,0 +1,81 @@
+name: Deploy SMSS V45 Trial to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - smss-v45-work
+      - smss-v45-integration
+
+permissions:
+  contents: read
+
+# Avoid older commits overwriting the latest V45 preview deployment.
+concurrency:
+  group: smss-v45-preview-deploy
+  cancel-in-progress: true
+
+jobs:
+  verify-and-deploy-v45-trial:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout V45 source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install test dependencies
+        run: npm install
+      - name: Parse every inline JavaScript block
+        run: node scripts/check-inline-js.mjs
+      - name: Parse CDC question paper module
+        run: node --check cdc-question-paper.js
+      - name: Validate CDC question paper seed packs and source register
+        run: node scripts/test-question-paper-content.mjs
+      - name: Run V45 Grade Ledger and requirement regression checks
+        run: node scripts/check-v44-requirements.mjs
+      - name: Run Firestore Security Rules emulator tests
+        run: npm run test:rules
+      - name: Deploy V45 to isolated Firebase Preview Channel
+        id: preview
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
+          projectId: exam-portal-smss-95016
+          channelId: v45-trial
+          expires: 7d
+          entryPoint: .
+      - name: Smoke test deployed V45 preview over HTTPS
+        env:
+          PREVIEW_URL: ${{ steps.preview.outputs.details_url }}
+        run: |
+          set -euo pipefail
+          test -n "$PREVIEW_URL"
+          case "$PREVIEW_URL" in
+            https://*.web.app|https://*.firebaseapp.com) ;;
+            *) echo "Unexpected Firebase preview URL"; exit 1 ;;
+          esac
+          curl --fail --location --silent --show-error --retry 5 --retry-delay 3 --max-time 30 "$PREVIEW_URL" -o /tmp/smss-v45-preview.html
+          grep -Fq '<title>Mahadevasthan Secondary School | Exam Portal</title>' /tmp/smss-v45-preview.html
+          grep -Fq 'cdc-question-paper.js' /tmp/smss-v45-preview.html
+          curl --fail --location --silent --show-error --retry 5 --retry-delay 3 --max-time 30 "${PREVIEW_URL%/}/cdc-question-paper.js" -o /tmp/smss-v45-cdc.js
+          node --check /tmp/smss-v45-cdc.js
+          curl --fail --location --silent --show-error --retry 5 --retry-delay 3 --max-time 30 "${PREVIEW_URL%/}/manifest.webmanifest" -o /tmp/smss-v45-manifest.json
+          node -e 'const fs=require("node:fs"); const m=JSON.parse(fs.readFileSync("/tmp/smss-v45-manifest.json","utf8")); if(!m.name || !m.start_url) process.exit(1)'
+          curl --fail --location --silent --show-error --retry 5 --retry-delay 3 --max-time 30 "${PREVIEW_URL%/}/sw.js" -o /tmp/smss-v45-sw.js
+          node --check /tmp/smss-v45-sw.js
+          # Check downloaded content, not only HTTP 200 responses.
+          for asset in icon-192.png icon-512.png apple-touch-icon.png; do
+            curl --fail --location --silent --show-error --retry 3 --retry-delay 2 --max-time 30 "${PREVIEW_URL%/}/$asset" -o "/tmp/$asset"
+            ASSET_PATH="/tmp/$asset" node -e 'const fs=require("node:fs"); const b=fs.readFileSync(process.env.ASSET_PATH); if(b.length<24 || b.subarray(0,8).toString("hex")!=="89504e470d0a1a0a") process.exit(1)'
+          done
+          for asset in cdc-grade8-science-practice-pack-v1.json cdc-grade10-science-practice-pack-v1.json; do
+            curl --fail --location --silent --show-error --retry 3 --retry-delay 2 --max-time 30 "${PREVIEW_URL%/}/data/$asset" -o "/tmp/$asset"
+            ASSET_PATH="/tmp/$asset" node -e 'const fs=require("node:fs"); const v=JSON.parse(fs.readFileSync(process.env.ASSET_PATH,"utf8")); if(!v || typeof v!=="object" || !Object.keys(v).length) process.exit(1)'
+          done
+          # Confirm Firebase serves the intended security headers.
+          curl --fail --location --silent --show-error --retry 3 --retry-delay 2 --max-time 30 -D /tmp/smss-v45-headers.txt "${PREVIEW_URL%/}/" -o /dev/null
+          grep -Eiq '^x-content-type-options:[[:space:]]*nosniff' /tmp/smss-v45-headers.txt
+          grep -Eiq '^referrer-policy:[[:space:]]*strict-origin-when-cross-origin' /tmp/smss-v45-headers.txt
+          echo "V45 preview HTML, PWA assets, JSON packs and security headers smoke checks passed."

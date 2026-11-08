@@ -1,0 +1,433 @@
+{
+  "schemaVersion": 1,
+  "title": "SMSS CDC Question Paper Source Register",
+  "checkedOn": "2026-11-08",
+  "note": "Official CDC references only. A source link is not a substitute for extracting and validating its complete topic list, specification grid, model questions and answer key. Older grids are marked supplementary.",
+  "sources": [
+    {
+      "grades": [
+        6,
+        7,
+        8
+      ],
+      "subject": "सामाजिक अध्ययन तथा मानव मूल्य शिक्षा",
+      "kind": "specification_grid",
+      "version": "2083",
+      "status": "official_current",
+      "url": "https://www.moecdc.gov.np/content/290/specialization-schedule--class-6-8--social-study-and/"
+    },
+    {
+      "grades": [
+        6,
+        7,
+        8
+      ],
+      "subject": "स्वास्थ्य, शारीरिक तथा सिर्जनात्मक कला",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://www.moecdc.gov.np/content/289/specialization-schedule--class-6---8--health-/"
+    },
+    {
+      "grades": [
+        6,
+        7,
+        8
+      ],
+      "subject": "गणित",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2080",
+      "status": "official_supplementary",
+      "url": "https://moecdc.gov.np/content/292/specialization-schedule--class-6-8--math---samput/"
+    },
+    {
+      "grades": [
+        8
+      ],
+      "subject": "नेपाली",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/286/specifications-grid--grade---8--nepali/"
+    },
+    {
+      "grades": [
+        8
+      ],
+      "subject": "अङ्ग्रेजी",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/285/specification-grid--grade---8--english/"
+    },
+    {
+      "grades": [
+        8
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/category/specialization-schedule--g-/?page=5"
+    },
+    {
+      "grades": [
+        6,
+        7,
+        8
+      ],
+      "subject": "विज्ञान तथा प्रविधि / नेपाली / अङ्ग्रेजी",
+      "kind": "teacher_guides_and_curriculum_materials",
+      "version": "2082",
+      "status": "official_reference_material",
+      "url": "https://lib.moecdc.gov.np/elibrary/pages/search.php?access=&archive=&display=list&foredit=&k=&modal=&noreload=true&offset=0&order_by=field8&per_page=240&recentdaylimit=&restypes=&search=%21collection18397&sort=DESC"
+    },
+    {
+      "grades": [
+        6,
+        7,
+        8
+      ],
+      "subject": "विषयगत पाठ्यक्रम तथा नमुना प्रश्न",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2078",
+      "status": "official_legacy_supplementary",
+      "url": "https://moecdc.gov.np/storage/gallery/1672198334.pdf"
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य नेपाली",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/282/specification-grid--9---10--compulsory-nepali/"
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य अङ्ग्रेजी",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/280/specification-grid--grade-9--10--compulsory-english/"
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य गणित",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/281/"
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/category/specialization-schedule--g-/?page=6"
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2082",
+      "status": "official",
+      "url": "https://lib.moecdc.gov.np/elibrary/pages/search.php?access=&archive=&display=list&foredit=&k=&modal=&noreload=true&offset=0&order_by=field8&per_page=240&recentdaylimit=&restypes=&search=%21collection18397&sort=DESC"
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/category/specialization-schedule--g-/?page=6"
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "specification_grid",
+      "version": "2080",
+      "status": "official_supplementary",
+      "url": "https://lib.moecdc.gov.np/elibrary/pages/search.php?access=&archive=&display=list&foredit=&k=&modal=&noreload=true&offset=0&order_by=field8&per_page=240&recentdaylimit=&restypes=&search=%21collection18397&sort=DESC"
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "स्वास्थ्य तथा शारीरिक शिक्षा",
+      "kind": "curriculum",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/488/health-and-physical-education-syllabus--2082-secondary/"
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "ऐच्छिक गणित",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/10/specification-schedule-and-sample-questions--class-9/"
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "ऐच्छिक कम्प्युटर विज्ञान",
+      "kind": "specification_grid_model_questions_and_answer_key",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/658/class-10-computer-science-optional-subject-specification/"
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "ऐच्छिक अर्थशास्त्र",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2083",
+      "status": "official_current",
+      "url": "https://moecdc.gov.np/category/specialization-schedule--g-/?page=1"
+    },
+    {
+      "grades": [
+        8
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "CDC_textbook_contents_and_curriculum_reference",
+      "version": "First Edition 2023 (2080)",
+      "status": "official_textbook_reference",
+      "url": "https://moecdc.gov.np/storage/gallery/1687157819.pdf",
+      "note": "11 unit titles used by the Grade 8 practice pack; the practice questions are newly authored and are not CDC model questions."
+    },
+    {
+      "grades": [
+        8
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official_CDC_page_linked_grid_content_not_yet_extracted",
+      "url": "https://moecdc.gov.np/content/284/specification-grid--grade-8--science-and-technology/",
+      "note": "Official grid page located; exact mark distribution and question structure must be extracted before enabling an automatic CDC blueprint."
+    },
+    {
+      "grades": [
+        6
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "CDC_textbook",
+      "version": "2083 translated edition listing",
+      "status": "official_CDC_textbook_page",
+      "url": "https://moecdc.gov.np/content/111/science-and-/"
+    },
+    {
+      "grades": [
+        7
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "CDC_textbook",
+      "version": "2082",
+      "status": "official_CDC_textbook_page",
+      "url": "https://moecdc.gov.np/content/577/"
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "CDC_textbook",
+      "version": "2082",
+      "status": "official_CDC_textbook_page",
+      "url": "https://moecdc.gov.np/content/61/science-and-technology-class-9/"
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "CDC_textbook",
+      "version": "2082",
+      "status": "official_CDC_textbook_page",
+      "url": "https://moecdc.gov.np/content/592/science-and-technology-class---x/"
+    },
+    {
+      "grades": [
+        6
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "teacher_guide",
+      "version": "2082",
+      "status": "official_CDC_publication_catalogue",
+      "url": "https://moecdc.gov.np/content/230/"
+    },
+    {
+      "grades": [
+        7
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "teacher_guide",
+      "version": "2080",
+      "status": "official_CDC_teacher_guide",
+      "url": "https://moecdc.gov.np/content/627/teacher-s-guide--class-7-science-and-technology/"
+    },
+    {
+      "grades": [
+        8
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "teacher_guide",
+      "version": "2081",
+      "status": "official_CDC_teacher_guide",
+      "url": "https://moecdc.gov.np/content/217/teacher-directory-sciences-and-technology-classes-8/"
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "teacher_guide",
+      "version": "2080",
+      "status": "official_CDC_library_record",
+      "url": "https://lib.moecdc.gov.np/catalog/opac_css/index.php?id=13734&lvl=notice_display"
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "teacher_guide",
+      "version": "2081",
+      "status": "official_CDC_library_record",
+      "url": "https://lib.moecdc.gov.np/catalog/opac_css/index.php?id=14073&lvl=notice_display"
+    },
+    {
+      "grades": [
+        6
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "textbook_and_current_publication_page",
+      "version": "2082 reprint / 2083 listing",
+      "status": "official_textbook_reference_topic_extraction_pending",
+      "url": "https://moecdc.gov.np/content/111/science-/"
+    },
+    {
+      "grades": [
+        7
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "textbook_and_current_publication_page",
+      "version": "2082",
+      "status": "official_textbook_reference_topic_extraction_pending",
+      "url": "https://moecdc.gov.np/content/577/"
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "textbook_and_current_publication_page",
+      "version": "2082",
+      "status": "official_textbook_reference_topic_extraction_pending",
+      "url": "https://moecdc.gov.np/content/61/science-and-technology-class-9/"
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/278/specialization-schedule-class-class-9-science-and/"
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "textbook_and_current_publication_page",
+      "version": "2082",
+      "status": "official_textbook_reference_topic_extraction_pending",
+      "url": "https://moecdc.gov.np/content/592/science-and-technology-class---x/"
+    },
+    {
+      "grades": [
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "teacher_guides",
+      "version": "2080-2082",
+      "status": "official_teaching_reference_topic_extraction_pending",
+      "url": "https://lib.moecdc.gov.np/elibrary/pages/search.php?access=&archive=&display=list&foredit=&k=&modal=&noreload=true&offset=0&order_by=field8&per_page=240&recentdaylimit=&restypes=&search=%21collection18397&sort=DESC"
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "textbook_table_of_contents_and_original_practice_pack",
+      "version": "2080 textbook contents; supplementary only",
+      "status": "teacher_review_required_not_current_2082_grid",
+      "url": "https://moecdc.gov.np/storage/gallery/1692097269.pdf",
+      "note": "Used for the 19-unit, 38-question original practice pack. Questions are not CDC-published model questions. CDC's 2082 textbook and Grade 9 science specification grid must be checked separately."
+    }
+  ],
+  "completion": {
+    "sourceRegister": "created",
+    "gradeWiseTopicExtraction": "pending_for_grades_6_7_9_science_and_other_subjects; grade_8_and_10_science_seeded",
+    "specificationGridExtraction": "partial_official_sources_verified",
+    "questionBankCuration": "grade_8_science_55; grade_10_science_57_original_practice_questions_teacher_review_required; grade_9_science_pack_blocked_source_mismatch; other_subjects_pending",
+    "answerKeyValidation": "pending",
+    "teacherReview": "required",
+    "grade8SciencePracticePack": "seed-file-created-admin-import-available-teacher-review-required",
+    "scienceSourceDiscovery": "CDC textbook and teacher-guide sources identified for Grades 6–10; Grade 8 and Grade 10 textbook unit lists seeded; Grade 6, 7 and 9 topic extraction and subject-specific grid parsing remain pending",
+    "grade9SciencePracticePack": "blocked-not-importable-source-mismatch-found-draft-deleted-do-not-use",
+    "otherGradeSubjectPacks": "pending",
+    "officialBlueprintCoverage": "partial-only-verified-subject-grade-grid-can-be-set-by-admin",
+    "grade10SciencePracticePack": "seed-file-created-admin-import-available-2080-textbook-reference-check-2082-modified-book-and-grid",
+    "sourceCorrection": "The 19-unit 2080 textbook contents PDF at 1692097269.pdf is explicitly Grade 10. A draft previously labelled Grade 9 was blocked and deleted; Grade 9 topics must be re-extracted from the actual Grade 9 textbook and grid."
+  },
+  "practicePacks": [
+    {
+      "id": "grade8-science-practice-v1",
+      "grade": 8,
+      "subject": "विज्ञान तथा प्रविधि",
+      "units": 11,
+      "questions": 55,
+      "sourceStatus": "CDC textbook contents; original SMSS practice questions; teacher review required"
+    },
+    {
+      "id": "grade10-science-practice-v1",
+      "grade": 10,
+      "subject": "विज्ञान तथा प्रविधि",
+      "units": 19,
+      "questions": 57,
+      "sourceStatus": "CDC Grade 10 textbook contents (2080); original SMSS practice questions; check current 2082 textbook and grid"
+    }
+  ]
+}
