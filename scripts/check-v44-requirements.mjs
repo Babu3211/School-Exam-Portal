@@ -103,6 +103,14 @@ for (const name of requiredCollections) {
   if (name !== "audit_logs") must(restoreCollections.includes(name), "Restore is missing collection: " + name);
 }
 must(!restoreCollections.includes("audit_logs"), "Append-only audit logs must be preserved in backup but not replayed during restore.");
+
+const restorePreviewStart = html.indexOf("async function previewFirebaseRestore()");
+const restorePreviewEnd = html.indexOf("async function runFirebaseRestore()", restorePreviewStart);
+must(restorePreviewStart >= 0 && restorePreviewEnd > restorePreviewStart, "Restore preview flow is missing.");
+const restorePreviewCode = html.slice(restorePreviewStart, restorePreviewEnd);
+must(restorePreviewCode.includes('n!=="audit_logs"&&!RESTORE_COLLECTIONS.includes(n)'), "A real SMSS backup containing append-only audit_logs must be accepted by Restore Preview.");
+must(restorePreviewCode.includes("if(unknown.length)throw new Error"), "Restore Preview must still reject unknown collections.");
+
 must(html.includes("append-only सुरक्षा नियमका कारण Restore हुँदैन"), "Restore UI must explain why audit logs are not replayed.");
 must(html.includes("legacyMissingCollections"), "Restore must remain compatible with older V44 backups.");
 
