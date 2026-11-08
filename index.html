@@ -2155,16 +2155,9 @@ async function importMarksLedger(file){
  if(!freshPlans.length)throw Error('यस Examination का Marks अर्को Session बाट सुरक्षित भइसकेका छन्। Ledger Refresh गरेर जाँच्नुहोस्।');
  let saved=0;
  for(let offset=0;offset<freshPlans.length;offset+=8){
-  const batchPlans=freshPlans.slice(offset,offset+8);
-  // Check each chunk again: a different tab may have written marks during earlier chunks.
-  const currentMarks=await getDocs(query(collection(db,'marks'),where('examId','==',examId)));
-  const currentKeys=new Set(currentMarks.docs.map(d=>`${d.data().studentId}::${canonicalSubjectKey(d.data().subject)}`));
-  const pendingPlans=batchPlans.filter(d=>!currentKeys.has(`${d.studentId}::${canonicalSubjectKey(d.subject)}`));
-  if(!pendingPlans.length){skipped+=batchPlans.length;continue;}
-  skipped+=batchPlans.length-pendingPlans.length;
   const batch=writeBatch(db);
-  pendingPlans.forEach(d=>batch.set(doc(collection(db,'marks')),{...d,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid}));
-  try{await batch.commit();saved+=pendingPlans.length;}
+  freshPlans.slice(offset,offset+8).forEach(d=>batch.set(doc(collection(db,'marks')),{...d,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid}));
+  try{await batch.commit();saved+=Math.min(8,freshPlans.length-offset);}
   catch(err){
    try{await loadMarksEntry()}catch(refreshErr){console.error('Marks import refresh failed',refreshErr)}
    throw Error(`Marks Import बीचमै रोकियो। ${saved} records पहिले नै सुरक्षित भएका हुन सक्छन्; बाँकी Import भएको छैन। पुनः Import गर्नुअघि Marks Ledger जाँच्नुहोस्। Firebase: ${err?.message||err}`);
