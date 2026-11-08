@@ -2753,7 +2753,7 @@ async function downloadFirebaseBackup(){
  }finally{btn.disabled=false;}
 }
 
-let validatedRestoreBackup=null,restorePlan=null;
+let validatedRestoreBackup=null,restorePlan=null,validatedRestoreFile=null;
 const RESTORE_COLLECTIONS=["students","staff","classes","subjects","exams","marks","attendance","mark_settings","certificates","user_roles","public_result_exams","public_results","public_result_lookup","cdc_curriculum","cdc_blueprints","question_bank","question_papers"];
 function restoreRevive(value){
  if(Array.isArray(value))return value.map(restoreRevive);
@@ -2765,7 +2765,7 @@ function restoreRevive(value){
 }
 async function previewFirebaseRestore(){
  const msg=document.getElementById("restoreFirebaseMessage"),out=document.getElementById("restorePreview"),file=document.getElementById("restoreBackupFile")?.files?.[0],run=document.getElementById("runFirebaseRestore");
- validatedRestoreBackup=null;restorePlan=null;if(run)run.disabled=true;
+ validatedRestoreBackup=null;restorePlan=null;validatedRestoreFile=null;if(run)run.disabled=true;
  try{
   requireAdmin();if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw new Error("मुख्य Admin खाताबाट Login गर्नुहोस्।");
   if(!file)throw new Error("पहिले Backup JSON फाइल छान्नुहोस्।");
@@ -2791,7 +2791,7 @@ async function previewFirebaseRestore(){
   if(parsed.documents?.school_settings&&(!settings||typeof settings!=="object"||Array.isArray(settings)))throw new Error("School Settings को Backup संरचना गलत छ।");
   const counts=Object.fromEntries(RESTORE_COLLECTIONS.map(n=>[n,parsed.collections[n].length]));
   const total=Object.values(counts).reduce((a,b)=>a+b,0)+(settings?1:0);
-  validatedRestoreBackup=parsed;restorePlan={counts,total,hasSettings:!!settings,legacyMissingCollections};
+  validatedRestoreBackup=parsed;validatedRestoreFile=file;restorePlan={counts,total,hasSettings:!!settings,legacyMissingCollections};
   const createdAt=typeof parsed.createdAt==="string"?parsed.createdAt.slice(0,80):"उपलब्ध छैन";
   out.textContent=`Backup जाँच सफल\nमिति: ${createdAt}\nकुल रेकर्ड: ${total}\n${RESTORE_COLLECTIONS.map(n=>`${n}: ${counts[n]}`).join("\n")}\nSchool Settings: ${settings?1:0}\n${legacyMissingCollections.length?"\nपुरानो Backup मा नभएका Collections (Restore गरिँदैन): "+legacyMissingCollections.join(", ")+"\n":""}\nअर्को चरणमा हालको Firebase मा पहिल्यै भएका ID जाँचिन्छन्।`;
   if(run)run.disabled=false;msg.textContent="Preview तयार भयो। हालको डेटाको नयाँ Backup लिएपछि मात्र पुष्टि गर्नुहोस्।";
@@ -2802,6 +2802,7 @@ async function runFirebaseRestore(){
  try{
   requireAdmin();if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw new Error("मुख्य Admin खाताबाट Login गर्नुहोस्।");
   if(!validatedRestoreBackup||!restorePlan)throw new Error("पहिले Backup Preview गर्नुहोस्।");
+  if(document.getElementById("restoreBackupFile")?.files?.[0]!==validatedRestoreFile)throw new Error("Backup फाइल फेरिएको छ। नयाँ फाइलको Preview फेरि गर्नुहोस्।");
   if(!confirmBox?.checked)throw new Error("अन्तिम पुष्टि बाकसमा टिक लगाउनुहोस्।");
   if(!confirm("Restore अघि हालको Firebase को Backup लिइसक्नुभएको छ? खाली ID मा मात्र डेटा थप्ने Restore जारी गर्ने?"))return;
   btn.disabled=true;msg.textContent="हालको Firebase मा Document ID जाँच हुँदैछ...";
@@ -2829,7 +2830,7 @@ async function runFirebaseRestore(){
   }
   msg.textContent=`सुरक्षित Restore पूरा भयो। ${added} नयाँ रेकर्ड थपिए; ${skipped} पहिल्यै रहेका रेकर्ड Skip भए। कुनै पुरानो रेकर्ड Update वा Delete गरिएन।`;
   document.getElementById("restorePreview").textContent="Restore पूरा भयो। अब मुख्य पेज Refresh गरेर केही विद्यार्थी/Marks/Attendance जाँच गर्नुहोस्।";
-  validatedRestoreBackup=null;restorePlan=null;confirmBox.checked=false;document.getElementById("restoreBackupFile").value="";btn.disabled=true;
+  validatedRestoreBackup=null;restorePlan=null;validatedRestoreFile=null;confirmBox.checked=false;document.getElementById("restoreBackupFile").value="";btn.disabled=true;
  }catch(err){console.error("Firebase restore failed",err);msg.textContent=`Restore पूरा हुन सकेन: ${err.code||err.message||"Firebase त्रुटि"}। केही batch पहिले नै सफल भएको हुन सक्छ; पुनः Restore अघि Backup र Firebase ID जाँच गर्नुहोस्।`; }
  finally{if(btn&&validatedRestoreBackup)btn.disabled=false;}
 }
