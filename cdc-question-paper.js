@@ -172,7 +172,7 @@ function pageShell() {
         <div class="qp-field" style="grid-column:1/-1"><label for="qpAnswer">उत्तर/उत्तर संकेत (शिक्षकका लागि)</label><textarea id="qpAnswer" maxlength="3000"></textarea></div>
         <div class="qp-actions" style="grid-column:1/-1"><button class="qp-btn" type="submit">प्रश्न बैंकमा सुरक्षित गर्नुहोस्</button><button class="qp-btn alt" type="reset">खाली गर्नुहोस्</button></div>
       </form>
-      <p class="qp-hint">विषय शिक्षकले CDC सूची कुर्नु पर्दैन—आफूले पढाएको एकाइ/Topic सिधै लेखेर प्रश्न थप्न सक्नुहुन्छ। Auto Generate ले छानिएका Topic का प्रश्न बैंकबाट प्रश्नपत्र, क्रम र अङ्क स्वतः मिलाउँछ। बाह्य AI/API वा शुल्क प्रयोग हुँदैन।</p>
+      <p class="qp-hint">Topic को नाम CDC सूचीमा जस्ताको तस्तै लेख्दा प्रश्न आधिकारिक एकाइसँग जोडिन्छ। नयाँ Topic भए शिक्षकले आफ्नै नाम लेख्न सक्नुहुन्छ। Auto Generate ले उपलब्ध प्रश्न बैंकबाट प्रश्नपत्र मिलाउँछ; प्रश्न आफैँबाट नयाँ सिर्जना गर्दैन। बाह्य AI/API वा शुल्क प्रयोग हुँदैन।</p>
       <div class="qp-actions"><button class="qp-btn alt" id="qpQuestionTemplateBtn" type="button">प्रश्न बैंक JSON नमुना</button><label class="qp-btn alt" for="qpQuestionImportFile">Admin: प्रश्न बैंक JSON आयात</label><input id="qpQuestionImportFile" class="qp-hidden" type="file" accept=".json,application/json"><button class="qp-btn alt qp-hidden" id="qpGrade8SciencePackBtn" type="button">Admin: कक्षा ८ विज्ञान CDC अभ्यास प्याक लोड</button></div>
       <p class="qp-hint">प्रश्न बैंक JSON आयात गर्दा हाल छानिएको कक्षा, विषय र Section मा मात्र प्रश्न थपिन्छ। दोहोरिएका प्रश्नहरू छुट्याइन्छ।</p>
     </div>
@@ -269,7 +269,9 @@ function renderPaperPreview(paper = generatedPaper) {
   if (!paper) { box.innerHTML='<p class="qp-hint">Topic छानेर प्रश्नपत्र Auto Generate गर्नुहोस्।</p>'; return; }
   const groups = ["mcq","short","long"];
   let number = 0;
-  box.innerHTML = `<div id="qpPrintArea" class="qp-paper-preview">
+  const report=paper.qualityReport||null;
+  const reportHtml=report?'<div class="qp-hint" style="border:1px solid #dce5f1;border-radius:8px;padding:9px;margin-bottom:10px"><b>शिक्षक समीक्षा:</b> '+esc(report.questionCount)+' प्रश्न · '+esc(report.selectedTopicCount)+' Topic · '+esc(report.missingAnswerCount)+' प्रश्नमा उत्तर संकेत बाँकी। संज्ञानात्मक वितरण: '+Object.entries(report.cognitiveActual||{}).map(([k,v])=>esc(levelLabel(k))+' '+esc(v)+'%').join(' · ')+'</div>':"";
+  box.innerHTML = reportHtml+`<div id="qpPrintArea" class="qp-paper-preview">
     <div style="text-align:center;border-bottom:1px solid #222;padding-bottom:10px">
       <h2>${esc(paper.schoolName||"विद्यालयको नाम")}</h2><div>${esc(paper.schoolAddress||"")}</div>
       <h3>${esc(paper.paperTitle)}</h3><b>${esc(paper.className)} · ${esc(paper.subject)}</b>
@@ -451,15 +453,18 @@ async function saveQuestion(event) {
   const topicName=$("qpQuestionTopic").value.trim();
   const unitTitle=$("qpQuestionUnit").value.trim()||"शिक्षकले थपेको Topic";
   if(!topicName||topicName.length>180)throw new Error("Topic को नाम १–१८० अक्षरभित्र लेख्नुहोस्।");
-  const unitId="teacher_custom";
-  const topicId="custom_"+normal(unitTitle+"::"+topicName);
+  const matchedUnit=curriculumRows.find(unit=>(unit.topics||[]).some(topic=>normal(topic)===normal(topicName)));
+  const matchedTopicIndex=matchedUnit?(matchedUnit.topics||[]).findIndex(topic=>normal(topic)===normal(topicName)):-1;
+  const resolvedUnitTitle=matchedUnit?.unitTitle||unitTitle;
+  const unitId=matchedUnit?.id||"teacher_custom";
+  const topicId=matchedUnit?matchedUnit.id+"_"+matchedTopicIndex:"custom_"+normal(resolvedUnitTitle+"::"+topicName);
   const questionType=$("qpQuestionType").value;
   const options=questionType==="mcq"?["A","B","C","D"].map(k=>$("qpOption"+k).value.trim()):[];
   const correctOption=questionType==="mcq"?$("qpCorrectOption").value:"";
   if(questionType==="mcq"&&(options.some(x=>!x)||!correctOption))throw new Error("MCQ का चारवटै विकल्प र सही उत्तर राख्नुहोस्।");
   const data={
     gradeNumber:gradeNumber(selectedClass),className:selectedClass,subject:selectedSubject,section:selectedSection,
-    unitId,unitTitle,topicId,topicName:String(topicName),
+    unitId,unitTitle:resolvedUnitTitle,topicId,topicName:String(topicName),
     questionType,marks:Number($("qpQuestionMarks").value),cognitiveLevel:$("qpQuestionLevel").value,
     questionText:$("qpQuestionText").value.trim(),options,correctOption,
     answer:$("qpAnswer").value.trim(),createdBy:auth.currentUser.uid,
@@ -481,8 +486,19 @@ async function generatePaper() {
   const questions=allocateQuestions();
   const fullMarks=Number($("qpPaperFullMarks").value);
   const header=await schoolHeader();
+  const levelCounts={knowledge:0,understanding:0,application:0,higher:0};
+  const topicCounts={};
+  let missingAnswerCount=0;
+  for(const q of questions){
+    if(levelCounts[q.cognitiveLevel]!==undefined)levelCounts[q.cognitiveLevel]++;
+    topicCounts[q.topicName]=(topicCounts[q.topicName]||0)+1;
+    if(!String(q.answer||"").trim()&&!q.correctOption)missingAnswerCount++;
+  }
+  const totalQuestions=questions.length;
+  const cognitiveActual=Object.fromEntries(Object.entries(levelCounts).map(([key,count])=>[key,totalQuestions?Math.round(count*100/totalQuestions):0]));
   generatedPaper={
     ...header,gradeNumber:gradeNumber(selectedClass),className:selectedClass,subject:selectedSubject,section:selectedSection,
+    qualityReport:{questionCount:totalQuestions,topicCounts,cognitiveActual,missingAnswerCount,selectedTopicCount:selectedTopicIds().length},
     paperTitle:$("qpPaperTitle").value.trim(),academicYear:$("qpPaperYear").value.trim(),
     durationMinutes:Number($("qpPaperDuration").value),fullMarks,
     curriculumVersion:currentBlueprint?.curriculumVersion||"Custom Pattern",
@@ -496,7 +512,8 @@ async function generatePaper() {
   };
   renderPaperPreview();
   $("qpSavePaperBtn").disabled=false;$("qpPrintPaperBtn").disabled=false;$("qpAnswerKeyBtn").disabled=false;
-  message("प्रश्नपत्र तयार भयो। कुल "+questions.length+" प्रश्न, "+fullMarks+" अङ्क। Save वा Print गर्न सक्नुहुन्छ।");
+  const coverage=Object.entries(cognitiveActual).map(([key,value])=>levelLabel(key)+" "+value+"%").join(" · ");
+  message("प्रश्नपत्र तयार भयो। "+questions.length+" प्रश्न, "+fullMarks+" अङ्क। संज्ञानात्मक वितरण: "+coverage+(missingAnswerCount?"। "+missingAnswerCount+" प्रश्नको उत्तर संकेत बाँकी छ":"। सबै प्रश्नको उत्तर संकेत उपलब्ध छ")+". Save वा Print गर्न सक्नुहुन्छ।");
 }
 async function savePaper() {
   if(!generatedPaper)throw new Error("पहिले प्रश्नपत्र Auto Generate गर्नुहोस्।");
