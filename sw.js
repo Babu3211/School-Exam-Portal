@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v44-school-exam-portal';
+const CACHE_NAME = 'smss-pwa-v45-school-exam-portal';
 const APP_SHELL = [
   './',
   './index.html',
