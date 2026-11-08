@@ -2545,6 +2545,15 @@ async function publishOnlineResult(selectedOnly=false){
  const chosen=ids.map(id=>allRows.find(x=>x.student.id===id)).filter(Boolean);
  if(chosen.length!==ids.length){resultMsg('The selection changed. Reload results and try again.',true);return;}
  if(chosen.some(x=>!x.complete)){resultMsg('One or more selected students have incomplete marks. No publication was started.',true);return;}
+ const resultCodes=new Map();
+ for(const row of chosen){
+  const code=String(row.student.studentPortalCode||'').trim().toLocaleUpperCase();
+  if(!code){resultMsg('A selected student has no Result Code. No publication was started.',true);return;}
+  if(resultCodes.has(code)&&resultCodes.get(code)!==row.student.id){
+   resultMsg('Duplicate Result Code '+code+' found among selected students. Correct the codes before publishing.',true);return;
+  }
+  resultCodes.set(code,row.student.id);
+ }
  const examId=document.getElementById('resultExam')?.value,exam=resultExams.find(x=>x.id===examId),cl=document.getElementById('resultClass')?.value;
  if(!exam||!examId||!cl){resultMsg('Select a class and examination first.',true);return;}
  if(!confirm(`Publish online Grade Sheets for ${chosen.length} selected student(s) in ${classEnglishLabel(cl)} — ${exam.examName}?`))return;
