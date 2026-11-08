@@ -2106,7 +2106,7 @@ async function importMarksLedger(file){
   const match=candidates.filter(x=>(!reg||norm(ledgerStudentReg(x))===norm(reg))&&(!symbol||norm(ledgerSymbol(x))===norm(symbol))&&(!name||[x.studentNameEnglish,x.nameEnglish,x.nameEn,englishDisplayText(x.studentName||x.name||''),x.studentName,x.name].some(candidate=>candidate&&norm(candidate)===norm(name))));
   return match.length===1?match[0]:null;
  };
- for(let ri=2;ri<rows.length;ri++){
+ for(let ri=3;ri<rows.length;ri++){
   const row=rows[ri]||[],reg=clean(row[2]),symbol=clean(row[3]),name=clean(row[1]);
   if(!name&&!reg&&!symbol){
    if(row.slice(4,headerCol).some(v=>clean(v)!==''))errors.push(`Row ${ri+1}: Marks छन् तर विद्यार्थीको नाम, Regd. No. वा Symbol No. खाली छ।`);
