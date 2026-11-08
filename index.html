@@ -2137,19 +2137,25 @@ async function importMarksLedger(file){
  if(!plans.length)throw Error(`Import गर्न मिल्ने नयाँ Marks भेटिएन। Duplicate Skip: ${skipped}; त्रुटि: ${errors.length}`);
  const previewErrors=errors.slice(0,8).join('\n');
  if(!confirm(`Marks Import Preview\nTerm: ${smssTermLabel(smssExamTermKey(exam))}\nनयाँ Marks records: ${plans.length}\nपहिल्यै भएका/फाइलमै दोहोरिएका records Skip: ${skipped}\nत्रुटि: ${errors.length}\n${previewErrors}${errors.length>8?'\n...अन्य त्रुटि पनि छन्':''}\nपुराना Marks overwrite हुँदैनन्। जारी राख्ने?`))return;
+ // Refresh after confirmation: another tab may have saved marks while the preview was open.
+ const latestMarksSnapshot=await getDocs(query(collection(db,'marks'),where('examId','==',examId)));
+ const latestKeys=new Set(latestMarksSnapshot.docs.map(d=>`${d.data().studentId}::${canonicalSubjectKey(d.data().subject)}`));
+ const freshPlans=plans.filter(d=>!latestKeys.has(`${d.studentId}::${canonicalSubjectKey(d.subject)}`));
+ const newlySkipped=plans.length-freshPlans.length;
+ if(!freshPlans.length)throw Error('यस Examination का Marks अर्को Session बाट सुरक्षित भइसकेका छन्। Ledger Refresh गरेर जाँच्नुहोस्।');
  let saved=0;
- for(let offset=0;offset<plans.length;offset+=8){
+ for(let offset=0;offset<freshPlans.length;offset+=8){
   const batch=writeBatch(db);
-  plans.slice(offset,offset+8).forEach(d=>batch.set(doc(collection(db,'marks')),{...d,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid}));
-  try{await batch.commit();saved+=Math.min(8,plans.length-offset);}
+  freshPlans.slice(offset,offset+8).forEach(d=>batch.set(doc(collection(db,'marks')),{...d,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid}));
+  try{await batch.commit();saved+=Math.min(8,freshPlans.length-offset);}
   catch(err){
    try{await loadMarksEntry()}catch(refreshErr){console.error('Marks import refresh failed',refreshErr)}
    throw Error(`Marks Import बीचमै रोकियो। ${saved} records पहिले नै सुरक्षित भएका हुन सक्छन्; बाँकी Import भएको छैन। पुनः Import गर्नुअघि Marks Ledger जाँच्नुहोस्। Firebase: ${err?.message||err}`);
   }
  }
- await writeAuditLog('marks','import',`${examId}:${cl}`,`${saved} imported; ${skipped} skipped; ${errors.length} errors`);
+ await writeAuditLog('marks','import',`${examId}:${cl}`,`${saved} imported; ${skipped+newlySkipped} skipped; ${errors.length} errors`);
  await loadMarksEntry();
- entryMsg(`${saved} Marks records Import भए। ${skipped} Duplicate Skip। ${errors.length} पङ्क्ति/विषय त्रुटिका कारण छुटे। ${achievement?'Learning Achievement records count × 4 आधारमा राखिए।':'Theory सहित सबै मूल्याङ्कन भाग Import भए।'}`);
+ entryMsg(`${saved} Marks records Import भए। ${skipped+newlySkipped} Duplicate Skip। ${errors.length} पङ्क्ति/विषय त्रुटिका कारण छुटे। ${achievement?'Learning Achievement records count × 4 आधारमा राखिए।':'Theory सहित सबै मूल्याङ्कन भाग Import भए।'}`);
 }
 
 document.addEventListener('click',e=>{if(e.target.id==='studentExport')exportStudents(false);if(e.target.id==='studentSample')exportStudents(true);if(e.target.id==='staffExport')exportStaff(false);if(e.target.id==='staffSample')exportStaff(true);if(e.target.id==='sampleLedgerExcel')makeLedgerSample()});
