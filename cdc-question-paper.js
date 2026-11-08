@@ -605,35 +605,40 @@ async function loadGrade8SciencePack() {
   if(!/^https:\/\/(www\.)?moecdc\.gov\.np\//i.test(String(pack.sourceUrl||"")))
     throw new Error("CDC को आधिकारिक पाठ्यपुस्तक स्रोत URL मान्य छैन।");
   const existingUnits=await getDocs(query(collection(db,"cdc_curriculum"),where("gradeNumber","==",8),where("subject","==",selectedSubject)));
-  const unitIdMap=new Map();
+  const unitMetaMap=new Map();
   const unitBatch=writeBatch(db);
-  let newUnits=0;
+  let newUnits=0,unitWrites=0;
   for(const unit of pack.units){
     const old=existingUnits.docs.find(d=>String(d.data().unitCode||"")===String(unit.unitCode));
+    const oldData=old?.data()||{};
     const unitId=old?.id||("g8_science_textbook2080_u"+String(unit.unitCode).replace(/[^0-9a-z]/gi,""));
-    unitIdMap.set(String(unit.unitCode),unitId);
-    if(!old){
+    const mergedTopics=[...new Set([...(Array.isArray(oldData.topics)?oldData.topics:[]),...(unit.topics||[]).map(String)])];
+    const unitTitle=String(oldData.unitTitle||unit.unitTitle);
+    unitMetaMap.set(String(unit.unitCode),{id:unitId,topics:mergedTopics,unitTitle});
+    if(!old)newUnits++;
+    if(!old||JSON.stringify(oldData.topics||[])!==JSON.stringify(mergedTopics)){
       unitBatch.set(doc(db,"cdc_curriculum",unitId),{
-        gradeNumber:8,className:selectedClass,subject:selectedSubject,
-        unitCode:String(unit.unitCode),unitTitle:String(unit.unitTitle),
-        topics:(unit.topics||[]).map(String),curriculumVersion:pack.curriculumVersion,
-        sourceTitle:pack.sourceTitle,sourceUrl:pack.sourceUrl,
-        sourceNote:pack.sourceNote,sourceStatus:"textbook_unit_reference_teacher_review_required",
-        status:"active",createdBy:auth.currentUser.uid,createdAt:serverTimestamp()
+        ...oldData,gradeNumber:8,className:selectedClass,subject:selectedSubject,
+        unitCode:String(unit.unitCode),unitTitle,topics:mergedTopics,
+        curriculumVersion:oldData.curriculumVersion||pack.curriculumVersion,
+        sourceTitle:oldData.sourceTitle||pack.sourceTitle,sourceUrl:oldData.sourceUrl||pack.sourceUrl,
+        sourceNote:oldData.sourceNote||pack.sourceNote,
+        sourceStatus:oldData.sourceStatus||"textbook_unit_reference_teacher_review_required",
+        status:"active",createdBy:oldData.createdBy||auth.currentUser.uid,
+        createdAt:oldData.createdAt||serverTimestamp()
       });
-      newUnits++;
+      unitWrites++;
     }
   }
   const existingKeys=new Set(questionRows.map(q=>normal(q.topicId+"::"+q.questionType+"::"+q.marks+"::"+q.questionText)));
   const questionBatch=writeBatch(db);
   let newQuestions=0,duplicates=0;
   for(const q of pack.questions){
-    const unitId=unitIdMap.get(String(q.unitCode));
-    const unit=pack.units.find(x=>String(x.unitCode)===String(q.unitCode));
-    if(!unitId||!unit||(unit.topics||[]).map(normal).indexOf(normal(q.topicName))<0)
+    const unitMeta=unitMetaMap.get(String(q.unitCode));
+    if(!unitMeta||!unitMeta.topics.some(t=>normal(t)===normal(q.topicName)))
       throw new Error("प्रश्न प्याकमा एकाइ/Topic मिलेन: "+String(q.topicName));
-    const topicIndex=unit.topics.map(normal).indexOf(normal(q.topicName));
-    const topicId=unitId+"_"+topicIndex;
+    const topicIndex=unitMeta.topics.map(normal).indexOf(normal(q.topicName));
+    const topicId=unitMeta.id+"_"+topicIndex;
     const fingerprint=normal(topicId+"::"+q.questionType+"::"+q.marks+"::"+q.questionText);
     if(existingKeys.has(fingerprint)){duplicates++;continue;}
     if(!["mcq","short","long"].includes(q.questionType)||!["knowledge","understanding","application","higher"].includes(q.cognitiveLevel)||!String(q.questionText||"").trim())
@@ -642,7 +647,7 @@ async function loadGrade8SciencePack() {
       throw new Error("MCQ विकल्प/उत्तरकुञ्जिका अपूर्ण छ।");
     questionBatch.set(doc(collection(db,"question_bank")),{
       gradeNumber:8,className:selectedClass,subject:selectedSubject,section:selectedSection,
-      unitId,unitTitle:unit.unitTitle,topicId,topicName:q.topicName,
+      unitId:unitMeta.id,unitTitle:unitMeta.unitTitle,topicId,topicName:q.topicName,
       questionType:q.questionType,marks:Number(q.marks),cognitiveLevel:q.cognitiveLevel,
       questionText:q.questionText,options:q.options||[],correctOption:q.correctOption||"",
       answer:q.answer||"",createdBy:auth.currentUser.uid,
@@ -651,11 +656,11 @@ async function loadGrade8SciencePack() {
     });
     existingKeys.add(fingerprint);newQuestions++;
   }
-  if(newUnits)await unitBatch.commit();
+  if(unitWrites)await unitBatch.commit();
   if(newQuestions)await questionBatch.commit();
   await logQuestionActivity("cdc_practice_pack_import","grade8-science",newQuestions+" questions");
   await loadCurrentData();
-  message("कक्षा ८ विज्ञान अभ्यास प्याक: "+newUnits+" एकाइ र "+newQuestions+" प्रश्न थपिए; "+duplicates+" दोहोरिएका प्रश्न छोडिए। यी मूल अभ्यास प्रश्न हुन्—औपचारिक परीक्षाअघि विषय शिक्षकले समीक्षा गर्नुपर्छ।");
+  message("कक्षा ८ विज्ञान अभ्यास प्याक: "+newUnits+" नयाँ एकाइ, "+newQuestions+" नयाँ प्रश्न थपिए; "+duplicates+" दोहोरिएका प्रश्न छोडिए। यी मूल अभ्यास प्रश्न हुन्—औपचारिक परीक्षाअघि विषय शिक्षकले समीक्षा गर्नुपर्छ।");
 }
 function downloadQuestionTemplate() {
   downloadJson("SMSS_Question_Bank_Template.json",{
