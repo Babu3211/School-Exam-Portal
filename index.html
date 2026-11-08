@@ -2489,6 +2489,13 @@ async function publishOneOnlineResult(studentId){
  const studentCode=String(student.studentPortalCode||'').trim().toLocaleUpperCase();
  if(!studentCode)throw new Error('Student Result Code is missing.');
  const lookupHash=await onlineResultHash(className,examId,version,studentCode);
+ const existingLookup=await getDoc(doc(db,'public_result_lookup',lookupHash));
+ if(existingLookup.exists()){
+  const linkedResultId=existingLookup.data()?.resultId;
+  if(!linkedResultId)throw new Error('This Result Code has an invalid existing lookup. Review the publication before continuing.');
+  const linkedResult=await getDoc(doc(db,'public_results',linkedResultId));
+  if(!linkedResult.exists()||linkedResult.data()?.studentId!==studentId)throw new Error('This Result Code is already linked to another or unknown student. Correct the duplicate code before publishing.');
+ }
  const batch=writeBatch(db);
  const lookupHashes=new Set(obsoleteLookups.map(d=>d.id));
  obsolete.forEach(d=>{const oldHash=d.data()?.lookupHash;if(oldHash)lookupHashes.add(oldHash);});
