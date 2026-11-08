@@ -230,6 +230,96 @@
       "status": "official_CDC_page_linked_grid_content_not_yet_extracted",
       "url": "https://moecdc.gov.np/content/284/specification-grid--grade-8--science-and-technology/",
       "note": "Official grid page located; exact mark distribution and question structure must be extracted before enabling an automatic CDC blueprint."
+    },
+    {
+      "grades": [
+        6
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "CDC_textbook",
+      "version": "2083 translated edition listing",
+      "status": "official_CDC_textbook_page",
+      "url": "https://moecdc.gov.np/content/111/science-and-/"
+    },
+    {
+      "grades": [
+        7
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "CDC_textbook",
+      "version": "2082",
+      "status": "official_CDC_textbook_page",
+      "url": "https://moecdc.gov.np/content/577/"
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "CDC_textbook",
+      "version": "2082",
+      "status": "official_CDC_textbook_page",
+      "url": "https://moecdc.gov.np/content/61/science-and-technology-class-9/"
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "CDC_textbook",
+      "version": "2082",
+      "status": "official_CDC_textbook_page",
+      "url": "https://moecdc.gov.np/content/592/science-and-technology-class---x/"
+    },
+    {
+      "grades": [
+        6
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "teacher_guide",
+      "version": "2082",
+      "status": "official_CDC_publication_catalogue",
+      "url": "https://moecdc.gov.np/content/230/"
+    },
+    {
+      "grades": [
+        7
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "teacher_guide",
+      "version": "2080",
+      "status": "official_CDC_teacher_guide",
+      "url": "https://moecdc.gov.np/content/627/teacher-s-guide--class-7-science-and-technology/"
+    },
+    {
+      "grades": [
+        8
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "teacher_guide",
+      "version": "2081",
+      "status": "official_CDC_teacher_guide",
+      "url": "https://moecdc.gov.np/content/217/teacher-directory-sciences-and-technology-classes-8/"
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "teacher_guide",
+      "version": "2080",
+      "status": "official_CDC_library_record",
+      "url": "https://lib.moecdc.gov.np/catalog/opac_css/index.php?id=13734&lvl=notice_display"
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "teacher_guide",
+      "version": "2081",
+      "status": "official_CDC_library_record",
+      "url": "https://lib.moecdc.gov.np/catalog/opac_css/index.php?id=14073&lvl=notice_display"
     }
   ],
   "completion": {
@@ -239,6 +329,7 @@
     "questionBankCuration": "pending",
     "answerKeyValidation": "pending",
     "teacherReview": "required",
-    "grade8SciencePracticePack": "55 original practice questions across 11 textbook units; teacher review required"
+    "grade8SciencePracticePack": "55 original practice questions across 11 textbook units; teacher review required",
+    "scienceSourceDiscovery": "CDC textbook and teacher-guide source pages identified for Grades 6–10; full chapter extraction and grade-specific grid parsing still pending except Grade 8 textbook unit list"
   }
 }
