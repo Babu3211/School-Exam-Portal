@@ -2499,8 +2499,8 @@ async function publishOneOnlineResult(studentId){
  const batch=writeBatch(db);
  const lookupHashes=new Set(obsoleteLookups.map(d=>d.id));
  obsolete.forEach(d=>{const oldHash=d.data()?.lookupHash;if(oldHash)lookupHashes.add(oldHash);});
- if(lookupHashes.size+obsolete.length+3>500)throw new Error('Too many older result records to replace safely in one batch. Contact the administrator.');
- lookupHashes.forEach(hash=>batch.delete(doc(db,'public_result_lookup',hash)));
+ if([...lookupHashes].filter(hash=>hash!==lookupHash).length+obsolete.length+3>500)throw new Error('Too many older result records to replace safely in one batch. Contact the administrator.');
+ lookupHashes.forEach(hash=>{if(hash!==lookupHash)batch.delete(doc(db,'public_result_lookup',hash));});
  obsolete.forEach(d=>batch.delete(doc(db,'public_results',d.id)));
  const resultRef=doc(db,'public_results',resultId);
  batch.set(resultRef,{examId,className,version,studentId,lookupHash,publicationMode:'individual',gradeSheetHtml,publishedAt:serverTimestamp(),publishedBy:auth.currentUser.uid});
