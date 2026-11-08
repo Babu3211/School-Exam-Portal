@@ -18,6 +18,7 @@
       "**/.*",
       "**/node_modules/**",
       "scripts/**",
+      "docs/**",
       "package.json",
       "package-lock.json",
       "firestore.rules",
