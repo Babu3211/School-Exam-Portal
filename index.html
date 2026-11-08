@@ -2499,6 +2499,7 @@ async function publishOneOnlineResult(studentId){
  const batch=writeBatch(db);
  const lookupHashes=new Set(obsoleteLookups.map(d=>d.id));
  obsolete.forEach(d=>{const oldHash=d.data()?.lookupHash;if(oldHash)lookupHashes.add(oldHash);});
+ if(lookupHashes.size+obsolete.length+3>500)throw new Error('Too many older result records to replace safely in one batch. Contact the administrator.');
  lookupHashes.forEach(hash=>batch.delete(doc(db,'public_result_lookup',hash)));
  obsolete.forEach(d=>batch.delete(doc(db,'public_results',d.id)));
  const resultRef=doc(db,'public_results',resultId);
@@ -2528,6 +2529,7 @@ async function unpublishOneOnlineResult(studentId){
  for(const target of targets)lookupDocs.push(...await findLegacyLookups(target.id));
  const hashes=new Set(lookupDocs.map(d=>d.id));
  targets.forEach(d=>{const h=d.data()?.lookupHash;if(h)hashes.add(h);});
+ if(hashes.size+targets.length+1>500)throw new Error('Too many older result records to remove safely in one batch. Contact the administrator.');
  const batch=writeBatch(db);
  hashes.forEach(hash=>batch.delete(doc(db,'public_result_lookup',hash)));
  targets.forEach(d=>batch.delete(doc(db,'public_results',d.id)));
