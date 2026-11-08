@@ -490,7 +490,7 @@ service cloud.firestore {
           'schoolName', 'schoolAddress', 'gradeNumber', 'className',
           'subject', 'section', 'paperTitle', 'academicYear',
           'durationMinutes', 'fullMarks', 'curriculumVersion',
-          'blueprintId', 'topicIds', 'questions', 'createdBy',
+          'blueprintId', 'cognitiveDistribution', 'topicIds', 'questions', 'createdBy',
           'createdAt', 'status'
         ]);
       allow update: if isAdmin();
