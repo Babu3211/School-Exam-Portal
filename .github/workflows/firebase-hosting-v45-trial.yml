@@ -24,6 +24,8 @@ jobs:
         run: node scripts/check-inline-js.mjs
       - name: Parse CDC question paper module
         run: node --check cdc-question-paper.js
+      - name: Validate CDC question paper seed packs and source register
+        run: node scripts/test-question-paper-content.mjs
       - name: Run V45 Grade Ledger and requirement regression checks
         run: node scripts/check-v44-requirements.mjs
       - name: Run Firestore Security Rules emulator tests
