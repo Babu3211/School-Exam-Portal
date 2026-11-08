@@ -2722,7 +2722,7 @@ async function downloadFirebaseBackup(){
  if(!msg||!btn)return;
  try{requireAdmin();if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw new Error("मुख्य Admin खाताबाट Login गर्नुहोस्।");
   btn.disabled=true;msg.textContent="Firebase बाट डेटा पढिँदैछ। कृपया पर्खनुहोस्...";
-  const collectionNames=["students","staff","classes","subjects","exams","marks","attendance","mark_settings","certificates","user_roles","public_result_exams","public_results","public_result_lookup","audit_logs"];
+  const collectionNames=["students","staff","classes","subjects","exams","marks","attendance","mark_settings","certificates","user_roles","public_result_exams","public_results","public_result_lookup","audit_logs","cdc_curriculum","cdc_blueprints","question_bank","question_papers"];
   const backup={format:"SMSS-Firestore-Backup",version:1,createdAt:new Date().toISOString(),collections:{},documents:{school_settings:{}}};
   let total=0;
   for(const name of collectionNames){const snap=await getDocs(collection(db,name));backup.collections[name]=snap.docs.map(d=>({id:d.id,data:d.data()}));total+=snap.size;msg.textContent=`Backup भइरहेको छ: ${name} (${total} records)...`;}
@@ -2736,7 +2736,7 @@ async function downloadFirebaseBackup(){
 }
 
 let validatedRestoreBackup=null,restorePlan=null;
-const RESTORE_COLLECTIONS=["students","staff","classes","subjects","exams","marks","attendance","mark_settings","certificates","user_roles","public_result_exams","public_results","public_result_lookup"];
+const RESTORE_COLLECTIONS=["students","staff","classes","subjects","exams","marks","attendance","mark_settings","certificates","user_roles","public_result_exams","public_results","public_result_lookup","cdc_curriculum","cdc_blueprints","question_bank","question_papers"];
 function restoreRevive(value){
  if(Array.isArray(value))return value.map(restoreRevive);
  if(value&&typeof value==="object"){
