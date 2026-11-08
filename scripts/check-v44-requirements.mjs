@@ -277,8 +277,14 @@ must(html.includes('if(page==="question-papers")return roleHas("subject_teacher"
 must(questionModule.includes('collection(db,"cdc_curriculum")') && questionModule.includes('collection(db,"cdc_blueprints")') && questionModule.includes('collection(db,"question_bank")') && questionModule.includes('collection(db,"question_papers")'), "CDC curriculum, blueprint, question bank and saved paper collections must be connected.");
 must(questionModule.includes("cognitiveDistribution") && questionModule.includes("function allocateQuestions()"), "Auto paper generation must balance questions against the saved cognitive-level blueprint.");
 must(rules.includes("match /cdc_curriculum/{documentId}") && rules.includes("match /cdc_blueprints/{documentId}") && rules.includes("match /question_bank/{questionId}") && rules.includes("match /question_papers/{paperId}"), "CDC question paper Firestore security rules are missing.");
-must(workflow.includes("deploy-live:") && workflow.includes("needs: quality-and-rules"), "Live deployment must depend on successful V44 quality and Firestore Rules tests.");
-must(workflow.includes("github.event_name == 'push'") && workflow.includes("ENABLE_FIREBASE_HOSTING_DEPLOY == 'true'"), "Automatic live deployment must be push-only and explicitly enabled.");
+// Development branches intentionally have no live deployment job. If a deploy job
+// exists, require it to depend on quality checks and an explicit push-only opt-in.
+if (workflow.includes("deploy-live:")) {
+  must(workflow.includes("needs: quality-and-rules"), "Live deployment must depend on successful quality and Firestore Rules tests.");
+  must(workflow.includes("github.event_name == 'push'") && workflow.includes("ENABLE_FIREBASE_HOSTING_DEPLOY == 'true'"), "Automatic live deployment must be push-only and explicitly enabled.");
+} else {
+  must(workflow.includes("smss-v45-work"), "A workflow without live deployment must target the V45 development branch.");
+}
 
 
 const start = html.indexOf("function selectedEntrySetting(){");
