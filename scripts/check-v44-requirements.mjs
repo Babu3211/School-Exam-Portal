@@ -112,7 +112,8 @@ must(bulkPublishCode.includes("if(!code){resultMsg("), "Bulk result publication 
 
 must(unpublishCode.includes("const direct=docs.filter(") && unpublishCode.includes("const targets=[...direct,...legacy]"), "Unpublish must remove all matching student publications, not just the first.");
 
-must(publishCode.includes("lookupHashes.size+obsolete.length+3>500"), "Republish must guard Firestore's maximum batch operation count.");
+must(publishCode.includes("filter(hash=>hash!==lookupHash).length+obsolete.length+3>500"), "Republish must guard Firestore's maximum batch operation count.");
+must(publishCode.includes("if(hash!==lookupHash)batch.delete"), "Republish must not delete and set the same lookup document in one batch.");
 must(unpublishCode.includes("hashes.size+targets.length+1>500"), "Unpublish must guard Firestore's maximum batch operation count.");
 
 
