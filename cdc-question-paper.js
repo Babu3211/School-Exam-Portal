@@ -193,7 +193,7 @@ function pageShell() {
         <div class="qp-field"><label for="qpPaperLongMarks">लामो प्रश्न प्रति अङ्क</label><input id="qpPaperLongMarks" type="number" min="1" max="50" value="10"></div>
       </div>
       <p class="qp-hint" id="qpPatternHint">CDC Grid आयात गरिएको छैन भने शिक्षकले Custom Pattern राख्न सक्नुहुन्छ। कुल प्रश्नको अङ्क पूर्णाङ्कसँग मिल्नुपर्छ।</p>
-      <div class="qp-actions"><button class="qp-btn" id="qpGenerateBtn" type="button">Topic अनुसार प्रश्नपत्र Auto Generate</button><button class="qp-btn alt" id="qpSavePaperBtn" type="button" disabled>प्रश्नपत्र Save</button><button class="qp-btn alt" id="qpPrintPaperBtn" type="button" disabled>Print / PDF</button></div>
+      <div class="qp-actions"><button class="qp-btn" id="qpGenerateBtn" type="button">Topic अनुसार प्रश्नपत्र Auto Generate</button><button class="qp-btn alt" id="qpSavePaperBtn" type="button" disabled>प्रश्नपत्र Save</button><button class="qp-btn alt" id="qpPrintPaperBtn" type="button" disabled>प्रश्नपत्र Print / PDF</button><button class="qp-btn alt" id="qpAnswerKeyBtn" type="button" disabled>उत्तरकुञ्जिका Print / PDF</button></div>
       <div id="qpPaperPreview" style="margin-top:14px"><p class="qp-hint">Topic छानेर प्रश्नपत्र Auto Generate गर्नुहोस्।</p></div>
     </div>
 
@@ -275,13 +275,14 @@ function renderPaperPreview(paper = generatedPaper) {
     <div style="text-align:center;margin-top:25px;font-weight:700">— प्रश्नपत्र समाप्त —</div>
   </div>`;
 }
-function printPaper(paper = generatedPaper) {
+function printPaper(paper = generatedPaper, includeAnswers = false) {
   if (!paper) return;
   const area = $("qpPaperPreview")?.querySelector("#qpPrintArea");
   if (!area) return;
   const w = window.open("", "_blank", "width=900,height=900");
   if (!w) { message("Print खोल्न Popup अनुमति दिनुहोस्।", true); return; }
-  w.document.write('<!doctype html><html lang="ne"><head><meta charset="utf-8"><title>'+esc(paper.paperTitle)+'</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h2,h3{text-align:center}.qp-q{margin:14px 0;line-height:1.7}@page{size:A4;margin:18mm}</style></head><body>'+area.outerHTML+'</body></html>');
+  const answerSheet = includeAnswers ? '<section style="page-break-before:always;font-family:Arial,sans-serif;padding:24px;color:#111"><h2>'+esc(paper.schoolName||"विद्यालय")+'</h2><h3>'+esc(paper.paperTitle||"प्रश्नपत्र")+' — उत्तरकुञ्जिका (शिक्षक प्रति)</h3><p>कक्षा: '+esc(paper.className)+' · विषय: '+esc(paper.subject)+'</p><ol>'+paper.questions.map(q=>'<li style="margin:10px 0;line-height:1.6"><b>'+esc(q.questionText)+'</b><br>उत्तर: '+esc(q.answer|| (q.correctOption ? "सही विकल्प "+q.correctOption : "उत्तर संकेत उपलब्ध छैन"))+'</li>').join("")+'</ol></section>' : "";
+  w.document.write('<!doctype html><html lang="ne"><head><meta charset="utf-8"><title>'+esc(paper.paperTitle)+'</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h2,h3{text-align:center}.qp-q{margin:14px 0;line-height:1.7}@page{size:A4;margin:18mm}</style></head><body>'+area.outerHTML+answerSheet+'</body></html>');
   w.document.close();
   w.focus();
   w.print();
@@ -349,7 +350,7 @@ async function loadPaperHistory() {
     if(isAdmin()) snap=await getDocs(query(collection(db,"question_papers"),where("className","==",selectedClass),where("subject","==",selectedSubject),where("section","==",selectedSection),limit(30)));
     else snap=await getDocs(query(collection(db,"question_papers"),where("className","==",selectedClass),where("subject","==",selectedSubject),where("section","==",selectedSection),where("createdBy","==",auth.currentUser.uid),limit(30)));
     savedPapers=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.createdAt?.seconds||0).localeCompare(String(a.createdAt?.seconds||0)));
-    body.innerHTML=savedPapers.length?savedPapers.map(p=>`<tr><td>${esc(p.paperTitle)}</td><td>${esc(p.className)}</td><td>${esc(p.subject)}</td><td>${esc(p.fullMarks)}</td><td>${esc(p.durationMinutes)} min</td><td>${esc(p.createdAt?.toDate?p.createdAt.toDate().toLocaleDateString("ne-NP"):"—")}</td><td><button class="qp-btn alt" type="button" data-qp-print-saved="${esc(p.id)}">Print</button> ${isAdmin()||p.createdBy===auth.currentUser.uid?'<button class="qp-btn danger" type="button" data-qp-delete-paper="'+esc(p.id)+'">Delete</button>':""}</td></tr>`).join(""):'<tr><td colspan="7">अहिलेसम्म प्रश्नपत्र सुरक्षित गरिएको छैन।</td></tr>';
+    body.innerHTML=savedPapers.length?savedPapers.map(p=>`<tr><td>${esc(p.paperTitle)}</td><td>${esc(p.className)}</td><td>${esc(p.subject)}</td><td>${esc(p.fullMarks)}</td><td>${esc(p.durationMinutes)} min</td><td>${esc(p.createdAt?.toDate?p.createdAt.toDate().toLocaleDateString("ne-NP"):"—")}</td><td><button class="qp-btn alt" type="button" data-qp-print-saved="${esc(p.id)}">प्रश्नपत्र</button> <button class="qp-btn alt" type="button" data-qp-answer-saved="${esc(p.id)}">उत्तरकुञ्जिका</button> ${isAdmin()||p.createdBy===auth.currentUser.uid?'<button class="qp-btn danger" type="button" data-qp-delete-paper="'+esc(p.id)+'">Delete</button>':""}</td></tr>`).join(""):'<tr><td colspan="7">अहिलेसम्म प्रश्नपत्र सुरक्षित गरिएको छैन।</td></tr>';
   }catch(err){console.error("Question paper history failed",err);body.innerHTML='<tr><td colspan="7">प्रश्नपत्र सूची लोड भएन: '+esc(err.code||err.message)+'</td></tr>';}
 }
 function allocateQuestions() {
@@ -490,7 +491,7 @@ async function generatePaper() {
     createdBy:auth.currentUser.uid
   };
   renderPaperPreview();
-  $("qpSavePaperBtn").disabled=false;$("qpPrintPaperBtn").disabled=false;
+  $("qpSavePaperBtn").disabled=false;$("qpPrintPaperBtn").disabled=false;$("qpAnswerKeyBtn").disabled=false;
   message("प्रश्नपत्र तयार भयो। कुल "+questions.length+" प्रश्न, "+fullMarks+" अङ्क। Save वा Print गर्न सक्नुहुन्छ।");
 }
 async function savePaper() {
@@ -599,14 +600,18 @@ document.addEventListener("click",async event=>{
     if(t.id==="qpTemplateBtn")downloadTemplate();
     if(t.id==="qpGenerateBtn")await generatePaper();
     if(t.id==="qpSavePaperBtn")await savePaper();
-    if(t.id==="qpPrintPaperBtn")printPaper();
+    if(t.id==="qpPrintPaperBtn")printPaper(generatedPaper,false);\n    if(t.id==="qpAnswerKeyBtn")printPaper(generatedPaper,true);
     if(t.id==="qpRefreshBtn"&&selectedClass&&selectedSubject){await loadCurrentData();message("प्रश्न बैंक Refresh भयो।");}
     if(t.id==="qpPaperReloadBtn"&&selectedClass&&selectedSubject)await loadPaperHistory();
     if(t.dataset.qpDeleteQuestion)await deleteQuestion(t.dataset.qpDeleteQuestion);
     if(t.dataset.qpDeletePaper)await deletePaper(t.dataset.qpDeletePaper);
     if(t.dataset.qpPrintSaved){
       const paper=savedPapers.find(x=>x.id===t.dataset.qpPrintSaved);
-      if(paper){generatedPaper=paper;renderPaperPreview(paper);printPaper(paper);}
+      if(paper){generatedPaper=paper;renderPaperPreview(paper);printPaper(paper,false);}
+    }
+    if(t.dataset.qpAnswerSaved){
+      const paper=savedPapers.find(x=>x.id===t.dataset.qpAnswerSaved);
+      if(paper){generatedPaper=paper;renderPaperPreview(paper);printPaper(paper,true);}
     }
   }catch(err){console.error("Question paper action failed",err);message("कार्य पूरा भएन: "+(err.code||err.message),true);}
 });
