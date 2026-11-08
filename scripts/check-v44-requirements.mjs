@@ -188,8 +188,11 @@ must(rules.includes("match /audit_logs/{documentId}") && rules.includes("allow c
 must(rules.includes("request.resource.data.actorUid == request.auth.uid") && rules.includes("request.resource.data.createdAt == request.time"), "Audit log actor and server timestamp must be verified.");
 must(rules.includes("request.resource.data.detail.size() <= 240") && rules.includes("request.resource.data.actorName.size() <= 100"), "Audit log text fields must have strict size limits.");
 must(rules.includes("allow update, delete: if false;"), "Audit logs must remain append-only.");
-must(manifest.includes("V44"), "PWA manifest must identify V44.");
-must(serviceWorker.includes("smss-pwa-v44-school-exam-portal"), "Service worker cache must identify V44.");
+must(html.includes('id="smssInstallBanner"') && html.includes('id="smssInstallButton"'), "Persistent SMSS PWA install banner and action are missing.");
+must(html.includes("beforeinstallprompt") && html.includes("appinstalled") && html.includes("display-mode: standalone"), "Native PWA install prompt and installed-state detection are missing.");
+must(html.includes("Add to Home Screen") && html.includes("Install app"), "iPhone and Android installation instructions are missing.");
+must(manifest.includes("SMSS Exam Portal"), "PWA manifest must use the approved SMSS Exam Portal app name.");
+must(serviceWorker.includes("smss-pwa-v47-school-exam-portal"), "Service worker cache must use a fresh V47 cache key.");
 must(workflow.includes("deploy-live:") && workflow.includes("needs: quality-and-rules"), "Live deployment must depend on successful V44 quality and Firestore Rules tests.");
 must(workflow.includes("github.event_name == 'push'") && workflow.includes("ENABLE_FIREBASE_HOSTING_DEPLOY == 'true'"), "Automatic live deployment must be push-only and explicitly enabled.");
 
