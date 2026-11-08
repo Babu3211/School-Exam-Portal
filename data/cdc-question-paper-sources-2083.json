@@ -406,11 +406,11 @@
     "teacherReview": "required",
     "grade8SciencePracticePack": "seed-file-created-admin-import-available-teacher-review-required",
     "scienceSourceDiscovery": "CDC textbook and teacher-guide source pages identified for Grades 6–10; full chapter extraction and grade-specific grid parsing still pending except Grade 8 textbook unit list",
-    "grade9SciencePracticePack": "blocked-not-importable-source-mismatch-found-do-not-use",
+    "grade9SciencePracticePack": "blocked-not-importable-source-mismatch-found-draft-deleted-do-not-use",
     "otherGradeSubjectPacks": "pending",
     "officialBlueprintCoverage": "partial-only-verified-subject-grade-grid-can-be-set-by-admin",
     "grade10SciencePracticePack": "seed-file-created-admin-import-available-2080-textbook-reference-check-2082-modified-book-and-grid",
-    "sourceCorrection": "The 19-unit 2080 textbook contents PDF at 1692097269.pdf is explicitly Grade 10; a draft previously labelled Grade 9 was blocked and removed."
+    "sourceCorrection": "The 19-unit 2080 textbook contents PDF at 1692097269.pdf is explicitly Grade 10. A draft previously labelled Grade 9 was blocked and deleted; Grade 9 topics must be re-extracted from the actual Grade 9 textbook and grid."
   },
   "practicePacks": [
     {
@@ -428,14 +428,6 @@
       "units": 19,
       "questions": 57,
       "sourceStatus": "CDC Grade 10 textbook contents (2080); original SMSS practice questions; check current 2082 textbook and grid"
-    },
-    {
-      "id": "grade9-science-practice-v1",
-      "grade": 9,
-      "subject": "विज्ञान तथा प्रविधि",
-      "units": 19,
-      "questions": 57,
-      "sourceStatus": "CDC Grade 9 textbook page 2082 and teacher-guide content; original SMSS practice questions; teacher review required"
     }
   ]
 }
