@@ -151,6 +151,7 @@ must(restorePreviewCode.includes("const previewSequence=++restorePreviewSequence
 must(html.includes("if(!achievement&&rawCells.some(v=>v===''))"), "Marks ledger import must reject partially filled subject components.");
 must(html.includes("(!reg||norm(ledgerStudentReg(x))===norm(reg))&&(!symbol||norm(ledgerSymbol(x))===norm(symbol))&&(!name||"), "Marks Excel import must match every provided student identifier, not only the first available identifier.");
 must(html.includes("expectedHeader.some((label,i)=>"), "Marks Excel import must validate the workbook identity headers.");
+must(html.includes("if(errors.length)throw Error(") && html.includes("कुनै Marks सुरक्षित गरिएको छैन"), "Excel Marks import must reject the entire file when any validation error is found.");
 must(html.includes("header[headerCol]??'').trim()!==subjectEnglishLabel(sub)"), "Marks Excel import must validate subject column order.");
 must(restorePreviewCode.includes("if(previewSequence!==restorePreviewSequence||"), "Restore Preview must discard stale file reads.");
 must(restorePreviewCode.includes('catch(err){if(previewSequence!==restorePreviewSequence||'), "Stale restore preview failures must not overwrite newer preview messages.");
