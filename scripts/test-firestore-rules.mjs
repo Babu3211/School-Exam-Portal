@@ -191,6 +191,13 @@ try {
   await assertFails(deleteDoc(doc(db(teacherUid), "marks", "mark-valid")));
   await assertSucceeds(deleteDoc(doc(db(ADMIN), "marks", "mark-valid")));
 
+  // A class teacher cannot submit attendance for a class outside their assignment.
+  await assertFails(setDoc(doc(db(teacherUid), "attendance", "attendance-other-class"), validAttendance({
+    className: "10"
+  })));
+  await assertFails(setDoc(doc(db(teacherUid), "attendance", "attendance-forged-owner"), validAttendance({
+    createdBy: otherUid
+  })));
   await assertSucceeds(setDoc(doc(db(teacherUid), "attendance", "attendance-valid"), validAttendance()));
   await assertSucceeds(getDoc(doc(db(teacherUid), "attendance", "attendance-valid")));
   await assertFails(setDoc(doc(db(teacherUid), "attendance", "attendance-bad-count"), validAttendance({ presentCount: 0 })));
