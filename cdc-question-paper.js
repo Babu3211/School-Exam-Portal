@@ -171,7 +171,7 @@ function pageShell() {
         <div class="qp-actions" style="grid-column:1/-1"><button class="qp-btn" type="submit">प्रश्न बैंकमा सुरक्षित गर्नुहोस्</button><button class="qp-btn alt" type="reset">खाली गर्नुहोस्</button></div>
       </form>
       <p class="qp-hint">विषय शिक्षकले CDC सूची कुर्नु पर्दैन—आफूले पढाएको एकाइ/Topic सिधै लेखेर प्रश्न थप्न सक्नुहुन्छ। Auto Generate ले छानिएका Topic का प्रश्न बैंकबाट प्रश्नपत्र, क्रम र अङ्क स्वतः मिलाउँछ। बाह्य AI/API वा शुल्क प्रयोग हुँदैन।</p>
-      <div class="qp-actions"><label class="qp-btn alt" for="qpQuestionImportFile">Admin: प्रश्न बैंक JSON आयात</label><input id="qpQuestionImportFile" class="qp-hidden" type="file" accept=".json,application/json"></div>
+      <div class="qp-actions"><button class="qp-btn alt" id="qpQuestionTemplateBtn" type="button">प्रश्न बैंक JSON नमुना</button><label class="qp-btn alt" for="qpQuestionImportFile">Admin: प्रश्न बैंक JSON आयात</label><input id="qpQuestionImportFile" class="qp-hidden" type="file" accept=".json,application/json"></div>
       <p class="qp-hint">प्रश्न बैंक JSON आयात गर्दा हाल छानिएको कक्षा, विषय र Section मा मात्र प्रश्न थपिन्छ। दोहोरिएका प्रश्नहरू छुट्याइन्छ।</p>
     </div>
 
@@ -657,6 +657,7 @@ document.addEventListener("click",async event=>{
   const t=event.target.closest("button");if(!t)return;
   try{
     if(t.id==="qpTemplateBtn")downloadTemplate();
+    if(t.id==="qpQuestionTemplateBtn")downloadQuestionTemplate();
     if(t.id==="qpGenerateBtn")await generatePaper();
     if(t.id==="qpSavePaperBtn")await savePaper();
     if(t.id==="qpPrintPaperBtn")printPaper(generatedPaper,false);
