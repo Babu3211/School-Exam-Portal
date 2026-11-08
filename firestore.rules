@@ -406,13 +406,134 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    match /cdc_curriculum/{documentId}
+    match /cdc_curriculum/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
 
-    match /cdc_blueprints/{documentId}
+    match /cdc_blueprints/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
 
-    match /question_bank/{questionId}
+    match /question_bank/{questionId} {
+      allow get, list: if hasActiveRole() &&
+        isAssignedSubject(
+          resource.data.get('className', ''),
+          resource.data.get('subject', ''),
+          resource.data.get('section', '')
+        );
+      allow create: if hasActiveRole() &&
+        isAssignedSubject(
+          request.resource.data.get('className', ''),
+          request.resource.data.get('subject', ''),
+          request.resource.data.get('section', '')
+        ) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.gradeNumber is int &&
+        request.resource.data.gradeNumber >= 6 &&
+        request.resource.data.gradeNumber <= 10 &&
+        request.resource.data.className is string &&
+        request.resource.data.className.size() > 0 &&
+        request.resource.data.subject is string &&
+        request.resource.data.subject.size() > 0 &&
+        request.resource.data.section is string &&
+        request.resource.data.section.size() <= 40 &&
+        request.resource.data.questionText is string &&
+        request.resource.data.questionText.size() > 0 &&
+        request.resource.data.questionText.size() <= 3000 &&
+        request.resource.data.questionType in ['mcq', 'short', 'long'] &&
+        request.resource.data.marks is number &&
+        request.resource.data.marks >= 1 &&
+        request.resource.data.marks <= 100 &&
+        request.resource.data.cognitiveLevel in ['knowledge', 'understanding', 'application', 'higher'] &&
+        request.resource.data.topicId is string &&
+        request.resource.data.topicId.size() > 0 &&
+        request.resource.data.topicName is string &&
+        request.resource.data.topicName.size() > 0 &&
+        request.resource.data.options is list &&
+        request.resource.data.options.size() <= 4 &&
+        request.resource.data.keys().hasOnly([
+          'gradeNumber', 'className', 'subject', 'section', 'unitId',
+          'unitTitle', 'topicId', 'topicName', 'questionType', 'marks',
+          'cognitiveLevel', 'questionText', 'options', 'correctOption',
+          'answer', 'createdBy', 'createdByName', 'createdAt', 'status'
+        ]);
+      allow update: if isAdmin() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ) &&
+         request.resource.data.createdBy == request.auth.uid &&
+         request.resource.data.className == resource.data.className &&
+         request.resource.data.subject == resource.data.subject &&
+         request.resource.data.section == resource.data.section);
+      allow delete: if isAdmin() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ));
+    }
 
-    match /question_papers/{paperId}
+    match /question_papers/{paperId} {
+      allow get, list: if isAdmin() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ));
+      allow create: if hasActiveRole() &&
+        isAssignedSubject(
+          request.resource.data.get('className', ''),
+          request.resource.data.get('subject', ''),
+          request.resource.data.get('section', '')
+        ) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.gradeNumber is int &&
+        request.resource.data.gradeNumber >= 6 &&
+        request.resource.data.gradeNumber <= 10 &&
+        request.resource.data.className is string &&
+        request.resource.data.subject is string &&
+        request.resource.data.section is string &&
+        request.resource.data.paperTitle is string &&
+        request.resource.data.paperTitle.size() > 0 &&
+        request.resource.data.paperTitle.size() <= 120 &&
+        request.resource.data.fullMarks is number &&
+        request.resource.data.fullMarks >= 1 &&
+        request.resource.data.fullMarks <= 500 &&
+        request.resource.data.durationMinutes is int &&
+        request.resource.data.durationMinutes >= 15 &&
+        request.resource.data.durationMinutes <= 360 &&
+        request.resource.data.questions is list &&
+        request.resource.data.questions.size() > 0 &&
+        request.resource.data.questions.size() <= 80 &&
+        request.resource.data.topicIds is list &&
+        request.resource.data.topicIds.size() > 0 &&
+        request.resource.data.keys().hasOnly([
+          'schoolName', 'schoolAddress', 'gradeNumber', 'className',
+          'subject', 'section', 'paperTitle', 'academicYear',
+          'durationMinutes', 'fullMarks', 'curriculumVersion',
+          'blueprintId', 'cognitiveDistribution', 'topicIds', 'questions', 'createdBy',
+          'createdAt', 'status'
+        ]);
+      allow update: if isAdmin();
+      allow delete: if isAdmin() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ));
+    }
 
     // Deny all other collections and documents by default.
     match /{document=**} {
