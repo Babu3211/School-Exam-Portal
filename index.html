@@ -395,7 +395,10 @@ function printIssuedCertificate(id){
   }
   window.addEventListener('beforeinstallprompt',function(event){
     event.preventDefault();
+    try{localStorage.removeItem(installedKey);}catch(_){}
+    banner.hidden=false;
     deferredInstallPrompt=event;
+    button.disabled=false;
     button.textContent='Install';
   });
   window.addEventListener('appinstalled',markInstalled);
