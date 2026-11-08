@@ -146,13 +146,27 @@ service cloud.firestore {
         (data.scores.size() < 3 || validScoreComponent(data.scores[2])) &&
         (data.scores.size() < 4 || validScoreComponent(data.scores[3])) &&
         (data.scores.size() < 5 || validScoreComponent(data.scores[4])) &&
-        (data.scores.size() < 6 || validScoreComponent(data.scores[5])) &&
-        (data.scores.size() < 7 || validScoreComponent(data.scores[6])) &&
-        (data.scores.size() < 8 || validScoreComponent(data.scores[7])) &&
-        (data.scores.size() < 9 || validScoreComponent(data.scores[8])) &&
-        (data.scores.size() < 10 || validScoreComponent(data.scores[9])) &&
-        (data.scores.size() < 11 || validScoreComponent(data.scores[10])) &&
-        (data.scores.size() < 12 || validScoreComponent(data.scores[11]));
+        (data.scores.size() < 6 || validScoreComponent(data.scores[5]));
+    }
+
+    function scoreFullMarksTotal(data) {
+      return
+        (data.scores.size() > 0 ? data.scores[0].fullMarks : 0) +
+        (data.scores.size() > 1 ? data.scores[1].fullMarks : 0) +
+        (data.scores.size() > 2 ? data.scores[2].fullMarks : 0) +
+        (data.scores.size() > 3 ? data.scores[3].fullMarks : 0) +
+        (data.scores.size() > 4 ? data.scores[4].fullMarks : 0) +
+        (data.scores.size() > 5 ? data.scores[5].fullMarks : 0);
+    }
+
+    function scoreObtainedTotal(data) {
+      return
+        (data.scores.size() > 0 && data.scores[0].obtained != null ? data.scores[0].obtained : 0) +
+        (data.scores.size() > 1 && data.scores[1].obtained != null ? data.scores[1].obtained : 0) +
+        (data.scores.size() > 2 && data.scores[2].obtained != null ? data.scores[2].obtained : 0) +
+        (data.scores.size() > 3 && data.scores[3].obtained != null ? data.scores[3].obtained : 0) +
+        (data.scores.size() > 4 && data.scores[4].obtained != null ? data.scores[4].obtained : 0) +
+        (data.scores.size() > 5 && data.scores[5].obtained != null ? data.scores[5].obtained : 0);
     }
 
     function validMarkShape(data) {
@@ -173,10 +187,16 @@ service cloud.firestore {
         data.subject is string && data.subject.size() > 0 && data.subject.size() <= 100 &&
         data.section is string && data.section.size() <= 40 &&
         data.scores is list && data.scores.size() > 0 &&
-        data.scores.size() <= 12 &&
-        validScoreList(data) &&
-        data.totalFullMarks is number && data.totalFullMarks >= 0 &&
-        data.totalObtained is number && data.totalObtained >= 0 &&
+        // Use a conditional branch so oversized lists are rejected before
+        // evaluating the expensive per-component and total expressions.
+        (data.scores.size() <= 6
+          ? (validScoreList(data) &&
+             data.totalFullMarks is number && data.totalFullMarks >= 0 &&
+             data.totalFullMarks == scoreFullMarksTotal(data) &&
+             data.totalObtained is number && data.totalObtained >= 0 &&
+             data.totalObtained == scoreObtainedTotal(data) &&
+             data.totalObtained <= data.totalFullMarks)
+          : false) &&
         data.assessmentType in ['marks', 'learning-achievement'] &&
         data.academicYear is string &&
         data.termKey is string &&
@@ -194,7 +214,7 @@ service cloud.firestore {
     // Client-side score-range checks remain mirrored in the entry UI; nested
     // score-component validation is not expressible as a safe list-wide rule.
     match /marks/{documentId} {
-      allow get, list: if hasActiveRole() && isAssignedSubjectPair(resource.data.className, resource.data.subject);
+      allow get, list: if hasActiveRole() && isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);
       allow create: if isAdmin() ||
         (hasActiveRole() &&
          validMarkShape(request.resource.data) &&
