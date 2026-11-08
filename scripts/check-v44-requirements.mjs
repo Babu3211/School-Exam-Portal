@@ -146,6 +146,11 @@ must(restorePreviewCode.includes("legacyMissingCollections.join"), "Restore Prev
 must(html.includes("validatedRestoreFile=file"), "Restore Preview must remember the exact file that was validated.");
 must(html.includes('files?.[0]!==validatedRestoreFile'), "Restore must reject a backup file changed after Preview.");
 
+must(restorePreviewCode.includes('Array.isArray(parsed.documents)'), "Restore Preview must reject malformed documents containers.");
+must(restorePreviewCode.includes('Object.keys(parsed.documents).some(n=>n!=="school_settings")'), "Restore Preview must reject unknown document groups.");
+must(restorePreviewCode.includes('Object.keys(parsed.documents.school_settings).some(n=>n!=="main")'), "Restore Preview must reject unknown School Settings documents.");
+
+
 
 must(restorePreviewCode.includes('Array.isArray(parsed.collections)'), "Restore Preview must reject array-shaped collection containers.");
 must(restorePreviewCode.includes('item.id==="."||item.id===".."||/^__.*__$/.test(item.id)'), "Restore Preview must reject Firestore-reserved document IDs before writing.");
