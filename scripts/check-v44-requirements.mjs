@@ -143,6 +143,10 @@ must(restorePreviewCode.includes("if(unknown.length)throw new Error"), "Restore 
 must(restorePreviewCode.includes("parsed.collections.audit_logs!==undefined&&!Array.isArray(parsed.collections.audit_logs)"), "Restore Preview must reject malformed audit log backup collections.");
 must(restorePreviewCode.includes("legacyMissingCollections.join"), "Restore Preview must warn when older backups omit newer collections.");
 
+must(html.includes("validatedRestoreFile=file"), "Restore Preview must remember the exact file that was validated.");
+must(html.includes('files?.[0]!==validatedRestoreFile'), "Restore must reject a backup file changed after Preview.");
+
+
 must(restorePreviewCode.includes('Array.isArray(parsed.collections)'), "Restore Preview must reject array-shaped collection containers.");
 must(restorePreviewCode.includes('item.id==="."||item.id===".."||/^__.*__$/.test(item.id)'), "Restore Preview must reject Firestore-reserved document IDs before writing.");
 
