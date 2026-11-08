@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "SMSS School Management System – V44",
-  "short_name": "SMSS V44",
-  "description": "SMSS School Exam Management Portal – V44",
+  "name": "SMSS Exam Portal",
+  "short_name": "SMSS Exam Portal",
+  "description": "SMSS School Examination Portal",
   "lang": "ne",
   "start_url": "./",
   "scope": "./",
