@@ -86,23 +86,30 @@ function pageShell() {
       <p class="qp-hint">तलका कागजातहरू प्रश्नपत्रको ढाँचा, प्रश्नको प्रकार र मूल्याङ्कन मापदण्ड जाँच्नका लागि हुन्। कक्षा/विषयअनुसार लागू संस्करण फरक हुन सक्छ; प्रणालीले स्रोत पुष्टि नभएको ढाँचालाई CDC प्रमाणित भनेर प्रयोग गर्दैन।</p>
       <div class="qp-grid">
         <div><b>कक्षा ६–८</b><ul class="qp-hint">
-          <li><a href="https://moecdc.gov.np/storage/gallery/1672198334.pdf" target="_blank" rel="noopener">CDC विशिष्टीकरण तालिका २०७८ र नमुना प्रश्नपत्र (नेपाली, English, गणित, विज्ञान तथा प्रविधि आदि)</a></li>
-          <li><a href="https://moecdc.gov.np/category/course--g-/?page=2" target="_blank" rel="noopener">सामाजिक अध्ययन तथा मानव मूल्य शिक्षा पाठ्यक्रम २०८२</a></li>
+          <li><a href="https://moecdc.gov.np/content/290/specialization-schedule--class-6-8--social-study-and/" target="_blank" rel="noopener">सामाजिक अध्ययन तथा मानव मूल्य शिक्षा — विशिष्टीकरण तालिका (२०८३)</a></li>
+          <li><a href="https://moecdc.gov.np/content/289/specialization-schedule--class-6---8--health-/" target="_blank" rel="noopener">स्वास्थ्य, शारीरिक तथा सिर्जनात्मक कला — Grid (२०८२)</a></li>
+          <li><a href="https://moecdc.gov.np/content/292/specialization-schedule--class-6-8--math---samput/" target="_blank" rel="noopener">गणित कक्षा ६–८ — विशिष्टीकरण/नमुना प्रश्न (२०८०)</a></li>
+          <li><a href="https://moecdc.gov.np/content/286/specifications-grid--grade---8--nepali/" target="_blank" rel="noopener">नेपाली कक्षा ८ — Grid</a></li>
+          <li><a href="https://moecdc.gov.np/content/285/specification-grid--grade---8--english/" target="_blank" rel="noopener">English कक्षा ८ — Grid</a></li>
+          <li><a href="https://moecdc.gov.np/category/specialization-schedule--g-/?page=5" target="_blank" rel="noopener">विज्ञान तथा प्रविधि कक्षा ८ लगायतका Grid</a></li>
+          <li><a href="https://lib.moecdc.gov.np/elibrary/pages/search.php?access=&archive=&display=list&foredit=&k=&modal=&noreload=true&offset=0&order_by=field8&per_page=240&recentdaylimit=&restypes=&search=%21collection18397&sort=DESC" target="_blank" rel="noopener">CDC Publications 2082 — कक्षा ६–८ शिक्षक निर्देशिका तथा सामग्री</a></li>
+          <li><a href="https://moecdc.gov.np/storage/gallery/1672198334.pdf" target="_blank" rel="noopener">पुरानो संयुक्त नमुना प्रश्नपत्र/विशिष्टीकरण (२०७८) — पूरक सन्दर्भ</a></li>
         </ul></div>
         <div><b>कक्षा ९–१० अनिवार्य विषय</b><ul class="qp-hint">
-          <li><a href="https://moecdc.gov.np/content/282/specification-grid--9---10--compulsory-nepali/" target="_blank" rel="noopener">अनिवार्य नेपाली विशिष्टीकरण तालिका</a></li>
-          <li><a href="https://moecdc.gov.np/content/280/specification-grid--grade-9--10--compulsory-english/" target="_blank" rel="noopener">अनिवार्य English विशिष्टीकरण तालिका</a></li>
-          <li><a href="https://moecdc.gov.np/content/281/specification-grid--grade-9-10--compulsory-mathematics/" target="_blank" rel="noopener">अनिवार्य गणित विशिष्टीकरण तालिका</a></li>
-          <li><a href="https://moecdc.gov.np/category/specialization-schedule--g-/?page=6" target="_blank" rel="noopener">विज्ञान तथा प्रविधि र अन्य विषयका CDC विशिष्टीकरण तालिका</a></li>
+          <li><a href="https://moecdc.gov.np/content/282/specification-grid--9---10--compulsory-nepali/" target="_blank" rel="noopener">अनिवार्य नेपाली — Grid (२०८२)</a></li>
+          <li><a href="https://moecdc.gov.np/content/280/specification-grid--grade-9--10--compulsory-english/" target="_blank" rel="noopener">अनिवार्य English — Grid (२०८२)</a></li>
+          <li><a href="https://moecdc.gov.np/content/281/" target="_blank" rel="noopener">अनिवार्य गणित — Grid (२०८२)</a></li>
+          <li><a href="https://moecdc.gov.np/category/specialization-schedule--g-/?page=6" target="_blank" rel="noopener">कक्षा ९ विज्ञान तथा प्रविधि र सामाजिक अध्ययन — विषयगत Grid</a></li>
+          <li><a href="https://lib.moecdc.gov.np/elibrary/pages/search.php?access=&archive=&display=list&foredit=&k=&modal=&noreload=true&offset=0&order_by=field8&per_page=240&recentdaylimit=&restypes=&search=%21collection18397&sort=DESC" target="_blank" rel="noopener">कक्षा १० विज्ञान तथा प्रविधि र सामाजिक अध्ययन — CDC model papers/Guides</a></li>
           <li><a href="https://moecdc.gov.np/content/488/health-and-physical-education-syllabus--2082-secondary/" target="_blank" rel="noopener">स्वास्थ्य तथा शारीरिक शिक्षा पाठ्यक्रम २०८२</a></li>
         </ul></div>
         <div><b>ऐच्छिक तथा थप विषय</b><ul class="qp-hint">
-          <li><a href="https://moecdc.gov.np/content/279/specialization-schedule-and-samput-questions--class-9-10-/" target="_blank" rel="noopener">ऐच्छिक गणित कक्षा ९–१० नमुना प्रश्न र Grid</a></li>
+          <li><a href="https://moecdc.gov.np/content/10/specification-schedule-and-sample-questions--class-9/" target="_blank" rel="noopener">ऐच्छिक गणित कक्षा ९–१० — Grid तथा नमुना प्रश्न (२०८२)</a></li>
           <li><a href="https://moecdc.gov.np/content/658/class-10-computer-science-optional-subject-specification/" target="_blank" rel="noopener">ऐच्छिक कम्प्युटर विज्ञान कक्षा १०</a></li>
-          <li><a href="https://moecdc.gov.np/content/659/class-10th-optional-mathematics-specification-table--model/" target="_blank" rel="noopener">ऐच्छिक गणित कक्षा १०</a></li>
+          <li><a href="https://moecdc.gov.np/category/specialization-schedule--g-/?page=1" target="_blank" rel="noopener">ऐच्छिक अर्थशास्त्र, कम्प्युटर विज्ञान, गणित तथा नयाँ Grid/उत्तरकुञ्जिका</a></li>
         </ul></div>
       </div>
-      <p class="qp-hint">नोट: यी स्रोत लिंकहरू जोडिएका छन्; सबै कक्षा/सबै विषयका Topic र प्रश्न बैंकको पूर्ण, प्रमाणित आयात अझै सम्पन्न भएको छैन।</p>
+      <p class="qp-hint">नोट: यी स्रोतहरू CDC का उपलब्ध प्रकाशनअनुसार अद्यावधिक गरिएका छन्। सबै कक्षा/विषयका अध्यायगत Topic र प्रश्न/उत्तर बैंकको पूर्ण आयात तथा जाँच अझै बाँकी छ; पुराना Grid लाई नयाँ संस्करणसँग नमिसाउनुहोस्।</p>
     </div>
 
     <div class="qp-card" id="qpCatalogAdmin">
