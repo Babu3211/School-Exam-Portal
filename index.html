@@ -2079,6 +2079,16 @@ async function importMarksLedger(file){
  const X=await ensureSheetJS(),buf=await file.arrayBuffer(),wb=X.read(buf,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],rows=X.utils.sheet_to_json(ws,{header:1,defval:''});
  const group=ledgerGroupForClass(cl),subjects=ledgerSubjectsForClass(cl,group),achievement=['1-3','4-5'].includes(group);
  const settings=subjects.map(sub=>ledgerSubjectSetting(group,sub));
+ const expectedHeader=['S.N / Roll No.','Student Name','Regd. No.','Symbol No.'];
+ const header=rows[0]||[];
+ if(expectedHeader.some((label,i)=>String(header[i]??'').trim()!==label))throw Error('Excel Ledger को पहिलो चार Header मिलेन। SMSS बाट Export गरिएको Marks Ledger प्रयोग गर्नुहोस्।');
+ let headerCol=4;
+ for(const sub of subjects){
+  const components=ledgerComponentsForSubject(group,sub,cl);
+  if(String(header[headerCol]??'').trim()!==subjectEnglishLabel(sub))throw Error('Excel Ledger को Subject Header वा Column क्रम मिलेन। सही Class को SMSS Marks Ledger प्रयोग गर्नुहोस्।');
+  headerCol+=components.length;
+ }
+
  const plans=[],plannedKeys=new Set(),existingKeys=new Set(existingMarks.filter(m=>m.examId===examId).map(m=>`${m.studentId}::${canonicalSubjectKey(m.subject)}`));
  let skipped=0;const errors=[];
  const clean=v=>String(v??'').trim();
