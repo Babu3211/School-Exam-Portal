@@ -357,4 +357,8 @@ must(rules.includes('match /school_gallery/{documentId}') && rules.includes('req
 must(rules.includes('allow get, list: if true;') && rules.includes('allow create, update: if isAdmin()'), "School gallery must remain publicly readable for login and writable only by Admin.");
 must(!html.includes('id="appNotification"') && !html.includes("function showAppNotification"), "Global success/error toast popup must remain removed.");
 
+must(html.includes('if(page==="question-papers")return roleHas("subject_teacher")'), "Assigned subject teachers must be able to access Question Paper Builder.");
+must(html.includes('data-page="question-papers"') && html.includes('window.loadQuestionPaperModule()') && html.includes('src="./cdc-question-paper.js"'), "V45 Question Paper Builder must be navigable and load its module.");
+must(html.includes('schoolNameNe:document.getElementById("setSchoolNameNe").value.trim()') && html.includes('addressNe:document.getElementById("setAddressNe").value.trim()'), "School Settings must save both Nepali identity fields.");
+
 console.log("V44 requirement regression checks passed.");
