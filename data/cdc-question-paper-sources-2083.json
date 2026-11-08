@@ -320,13 +320,77 @@
       "version": "2081",
       "status": "official_CDC_library_record",
       "url": "https://lib.moecdc.gov.np/catalog/opac_css/index.php?id=14073&lvl=notice_display"
+    },
+    {
+      "grades": [
+        6
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "textbook_and_current_publication_page",
+      "version": "2082 reprint / 2083 listing",
+      "status": "official_textbook_reference_topic_extraction_pending",
+      "url": "https://moecdc.gov.np/content/111/science-/"
+    },
+    {
+      "grades": [
+        7
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "textbook_and_current_publication_page",
+      "version": "2082",
+      "status": "official_textbook_reference_topic_extraction_pending",
+      "url": "https://moecdc.gov.np/content/577/"
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "textbook_and_current_publication_page",
+      "version": "2082",
+      "status": "official_textbook_reference_topic_extraction_pending",
+      "url": "https://moecdc.gov.np/content/61/science-and-technology-class-9/"
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official",
+      "url": "https://moecdc.gov.np/content/278/specialization-schedule-class-class-9-science-and/"
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "textbook_and_current_publication_page",
+      "version": "2082",
+      "status": "official_textbook_reference_topic_extraction_pending",
+      "url": "https://moecdc.gov.np/content/592/science-and-technology-class---x/"
+    },
+    {
+      "grades": [
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "teacher_guides",
+      "version": "2080-2082",
+      "status": "official_teaching_reference_topic_extraction_pending",
+      "url": "https://lib.moecdc.gov.np/elibrary/pages/search.php?access=&archive=&display=list&foredit=&k=&modal=&noreload=true&offset=0&order_by=field8&per_page=240&recentdaylimit=&restypes=&search=%21collection18397&sort=DESC"
     }
   ],
   "completion": {
     "sourceRegister": "created",
-    "gradeWiseTopicExtraction": "pending",
-    "specificationGridExtraction": "partial",
-    "questionBankCuration": "pending",
+    "gradeWiseTopicExtraction": "pending_for_grades_6_7_9_10_science; grade_8_science_seeded",
+    "specificationGridExtraction": "partial_official_sources_verified",
+    "questionBankCuration": "grade_8_science_55_original_practice_questions_seed_pack; other_grades_pending",
     "answerKeyValidation": "pending",
     "teacherReview": "required",
     "grade8SciencePracticePack": "55 original practice questions across 11 textbook units; teacher review required",
