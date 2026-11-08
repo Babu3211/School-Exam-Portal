@@ -178,7 +178,7 @@ function pageShell() {
         <div class="qp-actions" style="grid-column:1/-1"><button class="qp-btn" type="submit">प्रश्न बैंकमा सुरक्षित गर्नुहोस्</button><button class="qp-btn alt" type="reset">खाली गर्नुहोस्</button></div>
       </form>
       <p class="qp-hint">Topic को नाम CDC सूचीमा जस्ताको तस्तै लेख्दा प्रश्न आधिकारिक एकाइसँग जोडिन्छ। नयाँ Topic भए शिक्षकले आफ्नै नाम लेख्न सक्नुहुन्छ। Auto Generate ले उपलब्ध प्रश्न बैंकबाट प्रश्नपत्र मिलाउँछ; प्रश्न आफैँबाट नयाँ सिर्जना गर्दैन। बाह्य AI/API वा शुल्क प्रयोग हुँदैन।</p>
-      <div class="qp-actions"><button class="qp-btn alt" id="qpQuestionTemplateBtn" type="button">प्रश्न बैंक JSON नमुना</button><label class="qp-btn alt" for="qpQuestionImportFile">Admin: प्रश्न बैंक JSON आयात</label><input id="qpQuestionImportFile" class="qp-hidden" type="file" accept=".json,application/json"><button class="qp-btn alt qp-hidden" id="qpGrade8SciencePackBtn" type="button">Admin: कक्षा ८ विज्ञान CDC अभ्यास प्याक लोड</button><button class="qp-btn alt qp-hidden" id="qpGrade9SciencePackBtn" type="button">Admin: कक्षा ९ विज्ञान अभ्यास प्याक (शिक्षक समीक्षा)</button><button class="qp-btn alt qp-hidden" id="qpGrade10SciencePackBtn" type="button">Admin: कक्षा १० विज्ञान अभ्यास प्याक (शिक्षक समीक्षा)</button></div>
+      <div class="qp-actions"><button class="qp-btn alt" id="qpQuestionTemplateBtn" type="button">प्रश्न बैंक JSON नमुना</button><label class="qp-btn alt" for="qpQuestionImportFile">Admin: प्रश्न बैंक JSON आयात</label><input id="qpQuestionImportFile" class="qp-hidden" type="file" accept=".json,application/json"><button class="qp-btn alt qp-hidden" id="qpGrade8SciencePackBtn" type="button">Admin: कक्षा ८ विज्ञान CDC अभ्यास प्याक लोड</button><button class="qp-btn alt qp-hidden" id="qpGrade10SciencePackBtn" type="button">Admin: कक्षा १० विज्ञान अभ्यास प्याक (शिक्षक समीक्षा)</button></div>
       <p class="qp-hint">प्रश्न बैंक JSON आयात गर्दा हाल छानिएको कक्षा, विषय र Section मा मात्र प्रश्न थपिन्छ। दोहोरिएका प्रश्नहरू छुट्याइन्छ।</p>
     </div>
 
@@ -688,77 +688,6 @@ async function loadGrade8SciencePack() {
   await loadCurrentData();
   message("कक्षा ८ विज्ञान अभ्यास प्याक: "+newUnits+" नयाँ एकाइ, "+newQuestions+" नयाँ प्रश्न थपिए; "+duplicates+" दोहोरिएका प्रश्न छोडिए। यी मूल अभ्यास प्रश्न हुन्—औपचारिक परीक्षाअघि विषय शिक्षकले समीक्षा गर्नुपर्छ।");
 }
-async function loadGrade9SciencePack() {
-  if(!isAdmin())throw new Error("कक्षा ९ विज्ञान अभ्यास प्याक Admin ले मात्र लोड गर्न सक्छ।");
-  if(gradeNumber(selectedClass)!==9)throw new Error("यो प्याक कक्षा ९ का लागि मात्र हो।");
-  if(!selectedSubject)throw new Error("पहिले कक्षा ९ को विज्ञान तथा प्रविधि विषय छान्नुहोस्।");
-  const subjectLabel=normal(selectedSubject);
-  if(!subjectLabel.includes("विज्ञान")&&!subjectLabel.includes("science"))throw new Error("सही विज्ञान तथा प्रविधि विषय छान्नुहोस्।");
-  const approved=confirm("यो प्याक CDC कक्षा ९ विज्ञान पाठ्यपुस्तक २०८० को विषयसूचीमा आधारित पूरक अभ्यास सामग्री हो। CDC ले २०८२ को नयाँ पुस्तक र Grid पनि प्रकाशित गरेको छ। यी प्रश्नहरू CDC का प्रकाशित नमुना प्रश्न होइनन्। विषय शिक्षकले २०८२ को पुस्तकसँग Topic मिलान गरी समीक्षा नगरेसम्म औपचारिक परीक्षामा प्रयोग नगर्नुहोस्।\n\n१९ एकाइ र ३८ मौलिक अभ्यास प्रश्न लोड गर्ने हो?");
-  if(!approved)return;
-  const response=await fetch("./data/cdc-grade9-science-practice-pack-v1.json",{cache:"no-store"});
-  if(!response.ok)throw new Error("कक्षा ९ विज्ञान अभ्यास प्याक फाइल लोड भएन ("+response.status+")।");
-  const pack=await response.json();
-  if(pack.gradeNumber!==9||pack.subject!=="विज्ञान तथा प्रविधि"||!Array.isArray(pack.units)||!Array.isArray(pack.questions)||pack.units.length!==19||pack.questions.length!==38)
-    throw new Error("कक्षा ९ विज्ञान अभ्यास प्याकको संरचना/संख्या पुष्टि भएन।");
-  if(!/^https:\/\/(www\.)?moecdc\.gov\.np\//i.test(String(pack.sourceUrl||""))||!String(pack.sourceNote||"").includes("नयाँ २०८२"))
-    throw new Error("CDC स्रोत र संस्करणसम्बन्धी सावधानी पुष्टि भएन।");
-  const existingUnits=await getDocs(query(collection(db,"cdc_curriculum"),where("gradeNumber","==",9),where("subject","==",selectedSubject)));
-  const unitMetaMap=new Map();
-  const batch=writeBatch(db);
-  const existingKeys=new Set(questionRows.map(q=>normal(q.topicId+"::"+q.questionType+"::"+q.marks+"::"+q.questionText)));
-  let newUnits=0,unitWrites=0,newQuestions=0,duplicates=0;
-  for(const unit of pack.units){
-    const old=existingUnits.docs.find(d=>String(d.data().unitCode||"")===String(unit.unitCode));
-    const oldData=old?.data()||{};
-    const unitId=old?.id||("g9_science_textbook2080_u"+String(unit.unitCode).replace(/[^0-9a-z]/gi,""));
-    const mergedTopics=[...new Set([...(Array.isArray(oldData.topics)?oldData.topics:[]),...(unit.topics||[]).map(String)])];
-    const unitTitle=String(oldData.unitTitle||unit.unitTitle);
-    unitMetaMap.set(String(unit.unitCode),{id:unitId,topics:mergedTopics,unitTitle});
-    if(!old)newUnits++;
-    if(!old||JSON.stringify(oldData.topics||[])!==JSON.stringify(mergedTopics)){
-      batch.set(doc(db,"cdc_curriculum",unitId),{
-        ...oldData,gradeNumber:9,className:selectedClass,subject:selectedSubject,
-        unitCode:String(unit.unitCode),unitTitle,topics:mergedTopics,
-        curriculumVersion:oldData.curriculumVersion||pack.curriculumVersion,
-        sourceTitle:oldData.sourceTitle||pack.sourceTitle,sourceUrl:oldData.sourceUrl||pack.sourceUrl,
-        sourceNote:oldData.sourceNote||pack.sourceNote,
-        sourceStatus:oldData.sourceStatus||pack.status,
-        status:"active",createdBy:oldData.createdBy||auth.currentUser.uid,
-        createdAt:oldData.createdAt||serverTimestamp()
-      });
-      unitWrites++;
-    }
-  }
-  for(const q of pack.questions){
-    const unitMeta=unitMetaMap.get(String(q.unitCode));
-    if(!unitMeta||!unitMeta.topics.some(t=>normal(t)===normal(q.topicName)))
-      throw new Error("अभ्यास प्याकमा एकाइ/Topic मिलेन: "+String(q.topicName));
-    const topicIndex=unitMeta.topics.map(normal).indexOf(normal(q.topicName));
-    const topicId=unitMeta.id+"_"+topicIndex;
-    const fingerprint=normal(topicId+"::"+q.questionType+"::"+q.marks+"::"+q.questionText);
-    if(existingKeys.has(fingerprint)){duplicates++;continue;}
-    if(!["mcq","short","long"].includes(q.questionType)||!["knowledge","understanding","application","higher"].includes(q.cognitiveLevel)||!String(q.questionText||"").trim())
-      throw new Error("अभ्यास प्याकमा अमान्य प्रश्न भेटियो।");
-    if(q.questionType==="mcq"&&(!Array.isArray(q.options)||q.options.length!==4||!["A","B","C","D"].includes(q.correctOption)))
-      throw new Error("MCQ विकल्प/उत्तरकुञ्जिका अपूर्ण छ।");
-    batch.set(doc(collection(db,"question_bank")),{
-      gradeNumber:9,className:selectedClass,subject:selectedSubject,section:selectedSection,
-      unitId:unitMeta.id,unitTitle:unitMeta.unitTitle,topicId,topicName:q.topicName,
-      questionType:q.questionType,marks:Number(q.marks),cognitiveLevel:q.cognitiveLevel,
-      questionText:q.questionText,options:q.options||[],correctOption:q.correctOption||"",
-      answer:q.answer||"",createdBy:auth.currentUser.uid,
-      createdByName:"SMSS अभ्यास सामग्री · २०८० विषयसूची आधार · समीक्षा आवश्यक",
-      createdAt:serverTimestamp(),status:"active"
-    });
-    existingKeys.add(fingerprint);newQuestions++;
-  }
-  if(unitWrites+newQuestions>500)throw new Error("Firestore batch सीमा नाघ्यो; प्याकलाई साना भागमा विभाजन गर्नुपर्छ।");
-  if(unitWrites+newQuestions)await batch.commit();
-  await logQuestionActivity("cdc_practice_pack_import","grade9-science",newQuestions+" questions");
-  await loadCurrentData();
-  message("कक्षा ९ विज्ञान पूरक अभ्यास प्याक: "+newUnits+" नयाँ एकाइ, "+newQuestions+" नयाँ प्रश्न थपिए; "+duplicates+" दोहोरिएका प्रश्न छोडिए। यो २०८० विषयसूचीमा आधारित अभ्यास प्याक हो—२०८२ पाठ्यपुस्तकसँग शिक्षकले मिलान गर्नुहोस्।");
-}
 async function loadGrade10SciencePack() {
   if(!isAdmin())throw new Error("कक्षा १० विज्ञान अभ्यास प्याक Admin ले मात्र लोड गर्न सक्छ।");
   if(gradeNumber(selectedClass)!==10)throw new Error("यो प्याक कक्षा १० का लागि मात्र हो।");
@@ -772,8 +701,8 @@ async function loadGrade10SciencePack() {
   const pack=await response.json();
   if(pack.gradeNumber!==10||!Array.isArray(pack.units)||!Array.isArray(pack.questions)||pack.units.length!==19||pack.questions.length!==57)
     throw new Error("कक्षा १० विज्ञान अभ्यास प्याकको संरचना/संख्या पुष्टि भएन।");
-  if(!/^https:\/\/(www\.)?moecdc\.gov\.np\//i.test(String(pack.sourceUrl||""))||!String(pack.sourceNote||"").includes("नयाँ"))
-    throw new Error("CDC स्रोत तथा शिक्षक समीक्षा सावधानी पुष्टि भएन।");
+  if(String(pack.sourceUrl||"")!=="https://moecdc.gov.np/storage/gallery/1692097269.pdf"||!String(pack.sourceTitle||"").includes("Grade 10")||!String(pack.sourceNote||"").includes("Teacher review"))
+    throw new Error("CDC कक्षा १० स्रोत तथा शिक्षक समीक्षा सावधानी पुष्टि भएन।");
   const existingUnits=await getDocs(query(collection(db,"cdc_curriculum"),where("gradeNumber","==",10),where("subject","==",selectedSubject)));
   const unitMetaMap=new Map();
   const batch=writeBatch(db);
@@ -845,7 +774,6 @@ async function loadQuestionPaperModule() {
   root.innerHTML=pageShell();
   $("qpCatalogAdmin").classList.toggle("qp-hidden",!isAdmin());
   $("qpGrade8SciencePackBtn").classList.toggle("qp-hidden",!isAdmin());
-  $("qpGrade9SciencePackBtn").classList.toggle("qp-hidden",!isAdmin());
   $("qpGrade10SciencePackBtn").classList.toggle("qp-hidden",!isAdmin());
   if(!auth.currentUser){message("Login आवश्यक छ।",true);return;}
   try{
@@ -905,7 +833,6 @@ document.addEventListener("click",async event=>{
     if(t.id==="qpTemplateBtn")downloadTemplate();
     if(t.id==="qpQuestionTemplateBtn")downloadQuestionTemplate();
     if(t.id==="qpGrade8SciencePackBtn")await loadGrade8SciencePack();
-    if(t.id==="qpGrade9SciencePackBtn")await loadGrade9SciencePack();
     if(t.id==="qpGrade10SciencePackBtn")await loadGrade10SciencePack();
     if(t.id==="qpGenerateBtn")await generatePaper();
     if(t.id==="qpSavePaperBtn")await savePaper();
