@@ -218,8 +218,8 @@ must(rules.includes("match /audit_logs/{documentId}") && rules.includes("allow c
 must(rules.includes("request.resource.data.actorUid == request.auth.uid") && rules.includes("request.resource.data.createdAt == request.time"), "Audit log actor and server timestamp must be verified.");
 must(rules.includes("request.resource.data.detail.size() <= 240") && rules.includes("request.resource.data.actorName.size() <= 100"), "Audit log text fields must have strict size limits.");
 must(rules.includes("allow update, delete: if false;"), "Audit logs must remain append-only.");
-must(manifest.includes("V44"), "PWA manifest must identify V44.");
-must(serviceWorker.includes("smss-pwa-v44-school-exam-portal"), "Service worker cache must identify V44.");
+must(manifest.includes('"name": "SMSS Exam Portal"') && manifest.includes('"display": "standalone"'), "PWA manifest must preserve the V44 installable app identity.");
+must(/smss-pwa-v(?:44|45|46|47)/.test(serviceWorker) && serviceWorker.includes("./cdc-question-paper.js"), "Service worker must preserve PWA caching and include the new V45 module.");
 must(workflow.includes("deploy-live:") && workflow.includes("needs: quality-and-rules"), "Live deployment must depend on successful V44 quality and Firestore Rules tests.");
 must(workflow.includes("Deploy tested Firestore Security Rules") && workflow.includes("firebase-tools@14 deploy --only firestore:rules"), "Production deployment must apply the tested Firestore Security Rules before Hosting.");
 must(workflow.includes("github.event_name == 'push'") && workflow.includes("ENABLE_FIREBASE_HOSTING_DEPLOY == 'true'"), "Automatic live deployment must be push-only and explicitly enabled.");
