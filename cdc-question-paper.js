@@ -597,6 +597,8 @@ async function loadGrade8SciencePack() {
   if(!isAdmin())throw new Error("CDC अभ्यास प्याक Admin ले मात्र लोड गर्न सक्छ।");
   if(gradeNumber(selectedClass)!==8)throw new Error("यो प्याक कक्षा ८ का लागि मात्र हो।");
   if(!selectedSubject)throw new Error("पहिले कक्षा ८ को विज्ञान तथा प्रविधि विषय छान्नुहोस्।");
+  const subjectLabel=normal(selectedSubject);
+  if(!subjectLabel.includes("विज्ञान")&&!subjectLabel.includes("science"))throw new Error("यो अभ्यास प्याक विज्ञान तथा प्रविधि विषयका लागि मात्र हो; सही विषय छान्नुहोस्।");
   const response=await fetch("./data/cdc-grade8-science-practice-pack-v1.json",{cache:"no-store"});
   if(!response.ok)throw new Error("CDC अभ्यास प्याक फाइल लोड भएन ("+response.status+")।");
   const pack=await response.json();
