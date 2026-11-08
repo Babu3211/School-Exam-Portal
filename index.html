@@ -2755,6 +2755,7 @@ async function previewFirebaseRestore(){
   const parsed=JSON.parse(await file.text());
   if(parsed.format!=="SMSS-Firestore-Backup"||parsed.version!==1||!parsed.collections||typeof parsed.collections!=="object")throw new Error("यो SMSS को मान्य Backup फाइल होइन।");
   const unknown=Object.keys(parsed.collections).filter(n=>n!=="audit_logs"&&!RESTORE_COLLECTIONS.includes(n));
+  if(parsed.collections.audit_logs!==undefined&&!Array.isArray(parsed.collections.audit_logs))throw new Error("Backup को audit_logs Collection सूची गलत छ।");
   if(unknown.length)throw new Error("Backup मा नचिनेका Collection छन्: "+unknown.join(", "));
   const legacyMissingCollections=[];
   for(const n of RESTORE_COLLECTIONS){
@@ -2773,7 +2774,7 @@ async function previewFirebaseRestore(){
   const total=Object.values(counts).reduce((a,b)=>a+b,0)+(settings?1:0);
   validatedRestoreBackup=parsed;restorePlan={counts,total,hasSettings:!!settings,legacyMissingCollections};
   const createdAt=typeof parsed.createdAt==="string"?parsed.createdAt.slice(0,80):"उपलब्ध छैन";
-  out.textContent=`Backup जाँच सफल\nमिति: ${createdAt}\nकुल रेकर्ड: ${total}\n${RESTORE_COLLECTIONS.map(n=>`${n}: ${counts[n]}`).join("\n")}\nSchool Settings: ${settings?1:0}\n\nअर्को चरणमा हालको Firebase मा पहिल्यै भएका ID जाँचिन्छन्।`;
+  out.textContent=`Backup जाँच सफल\nमिति: ${createdAt}\nकुल रेकर्ड: ${total}\n${RESTORE_COLLECTIONS.map(n=>`${n}: ${counts[n]}`).join("\n")}\nSchool Settings: ${settings?1:0}\n${legacyMissingCollections.length?"\nपुरानो Backup मा नभएका Collections (Restore गरिँदैन): "+legacyMissingCollections.join(", ")+"\n":""}\nअर्को चरणमा हालको Firebase मा पहिल्यै भएका ID जाँचिन्छन्।`;
   if(run)run.disabled=false;msg.textContent="Preview तयार भयो। हालको डेटाको नयाँ Backup लिएपछि मात्र पुष्टि गर्नुहोस्।";
  }catch(err){out.textContent="Backup Preview असफल: "+(err.message||"फाइल जाँच त्रुटि");msg.textContent="Restore सुरु गर्न सकिएन।";console.error("Restore preview failed",err);}
 }
