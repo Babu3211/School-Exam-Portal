@@ -3,9 +3,11 @@ name: V44 JavaScript and Firestore Security Checks
 on:
   push:
     branches:
+      - main
       - smss-v44-work
   pull_request:
     branches:
+      - main
       - smss-v44-work
 
 permissions:
