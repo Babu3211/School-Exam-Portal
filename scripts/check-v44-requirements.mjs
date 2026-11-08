@@ -363,4 +363,10 @@ must(trialWorkflow.includes("smss-v45-work") && trialWorkflow.includes("channelI
 must(!/channelId:\s*live\b/.test(trialWorkflow) && !/firebase(?:-tools)?(?:@\d+)?\s+deploy\b/.test(trialWorkflow), "V45 trial workflow must never deploy live Hosting or production Firestore Rules.");
 must(!/firestore:rules/.test(trialWorkflow), "V45 trial must test Firestore Rules locally, not publish them to production.");
 
+const liveWorkflow = await readFile(".github/workflows/firebase-hosting-live.yml", "utf8");
+must(!/^\s*workflow_dispatch\s*:/m.test(liveWorkflow), "V45 branch must not offer a manual production Hosting deployment.");
+must(liveWorkflow.includes("github.event.workflow_run.head_branch == 'smss-v44-work'"), "Legacy production Hosting workflow must be restricted to the V44 branch.");
+must(liveWorkflow.includes("github.event.workflow_run.conclusion == 'success'"), "Legacy production Hosting workflow must require successful V44 CI.");
+
+
 console.log("V44 requirement regression checks passed.");
