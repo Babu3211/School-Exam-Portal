@@ -139,6 +139,19 @@ try {
   await assertFails(getDocs(collection(db(teacherUid), "user_roles")));
   await assertSucceeds(getDocs(collection(db(ADMIN), "user_roles")));
 
+  // Anonymous, inactive and unrelated accounts must never access private grades.
+  await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(), "marks", "mark-other-subject")));
+  await assertFails(getDocs(collection(testEnv.unauthenticatedContext().firestore(), "marks")));
+  await assertFails(setDoc(doc(testEnv.unauthenticatedContext().firestore(), "marks", "anonymous-forged"), validMark()));
+  await assertFails(getDoc(doc(db(inactiveUid), "marks", "mark-other-subject")));
+  await assertFails(setDoc(doc(db(inactiveUid), "marks", "inactive-forged"), validMark()));
+  await assertFails(setDoc(doc(db(otherUid), "marks", "unassigned-forged"), validMark()));
+  await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(), "attendance", "attendance-valid")));
+  await assertFails(getDocs(collection(testEnv.unauthenticatedContext().firestore(), "attendance")));
+  await assertFails(setDoc(doc(testEnv.unauthenticatedContext().firestore(), "attendance", "anonymous-forged"), validAttendance()));
+  await assertFails(setDoc(doc(db(inactiveUid), "attendance", "inactive-forged"), validAttendance()));
+  await assertFails(setDoc(doc(db(otherUid), "attendance", "unassigned-forged"), validAttendance()));
+
   await assertSucceeds(setDoc(doc(db(teacherUid), "marks", "mark-valid"), validMark()));
   await assertSucceeds(setDoc(doc(db(teacherUid), "marks", "mark-optional-enrolled"), validMark({
     studentId: "student-optional", subject: "ऐच्छिक प्रथम: वातावरण विज्ञान"
