@@ -171,6 +171,8 @@ function pageShell() {
         <div class="qp-actions" style="grid-column:1/-1"><button class="qp-btn" type="submit">प्रश्न बैंकमा सुरक्षित गर्नुहोस्</button><button class="qp-btn alt" type="reset">खाली गर्नुहोस्</button></div>
       </form>
       <p class="qp-hint">विषय शिक्षकले CDC सूची कुर्नु पर्दैन—आफूले पढाएको एकाइ/Topic सिधै लेखेर प्रश्न थप्न सक्नुहुन्छ। Auto Generate ले छानिएका Topic का प्रश्न बैंकबाट प्रश्नपत्र, क्रम र अङ्क स्वतः मिलाउँछ। बाह्य AI/API वा शुल्क प्रयोग हुँदैन।</p>
+      <div class="qp-actions"><label class="qp-btn alt" for="qpQuestionImportFile">Admin: प्रश्न बैंक JSON आयात</label><input id="qpQuestionImportFile" class="qp-hidden" type="file" accept=".json,application/json"></div>
+      <p class="qp-hint">प्रश्न बैंक JSON आयात गर्दा हाल छानिएको कक्षा, विषय र Section मा मात्र प्रश्न थपिन्छ। दोहोरिएका प्रश्नहरू छुट्याइन्छ।</p>
     </div>
 
     <div class="qp-card">
@@ -541,6 +543,60 @@ async function importTopics(file) {
   }
   await loadCurrentData();message(saved+" वटा CDC एकाइ आयात/अपडेट भए।");
 }
+async function importQuestionBank(file) {
+  if(!isAdmin())throw new Error("प्रश्न बैंकको सामूहिक आयात Admin का लागि मात्र हो।");
+  if(!selectedClass||!selectedSubject)throw new Error("पहिले कक्षा र विषय छान्नुहोस्।");
+  const raw=JSON.parse(await file.text());
+  const rows=Array.isArray(raw)?raw:raw?.questions;
+  if(!Array.isArray(rows)||!rows.length||rows.length>500)throw new Error("JSON मा १–५०० प्रश्न हुनुपर्छ।");
+  const known=new Set(questionRows.map(q=>normal(q.topicId+"::"+q.questionType+"::"+q.marks+"::"+q.questionText)));
+  let added=0,duplicates=0;
+  for(const row of rows){
+    const topicName=String(row.topicName||"").trim();
+    const questionText=String(row.questionText||"").trim();
+    const questionType=String(row.questionType||"");
+    const marks=Number(row.marks);
+    const cognitiveLevel=String(row.cognitiveLevel||"");
+    if(!topicName||topicName.length>180||!questionText||questionText.length>3000||
+      !["mcq","short","long"].includes(questionType)||!Number.isFinite(marks)||marks<1||marks>100||
+      !["knowledge","understanding","application","higher"].includes(cognitiveLevel))
+      throw new Error("प्रश्न "+(added+duplicates+1)+" मा Topic/प्रश्न/प्रकार/अङ्क/संज्ञानात्मक स्तर अमान्य छ।");
+    const unitTitle=String(row.unitTitle||"CDC विषयगत पाठ").trim().slice(0,180);
+    const curriculumUnit=curriculumRows.find(unit=>String(unit.unitTitle||"")===unitTitle||(unit.topics||[]).some(t=>normal(t)===normal(topicName)));
+    const unitId=curriculumUnit?.id||"teacher_custom";
+    const resolvedUnitTitle=curriculumUnit?.unitTitle||unitTitle;
+    const topicId=curriculumUnit
+      ? curriculumUnit.id+"_"+(curriculumUnit.topics||[]).findIndex(t=>normal(t)===normal(topicName))
+      : "custom_"+normal(resolvedUnitTitle+"::"+topicName);
+    const options=questionType==="mcq"?(Array.isArray(row.options)?row.options.map(x=>String(x).trim()):[]):[];
+    const correctOption=questionType==="mcq"?String(row.correctOption||""):"";
+    if(questionType==="mcq"&&(options.length!==4||options.some(x=>!x||x.length>500)||!["A","B","C","D"].includes(correctOption)))
+      throw new Error("MCQ प्रश्न "+(added+duplicates+1)+" मा चार विकल्प र सही विकल्प A/B/C/D आवश्यक छ।");
+    const fingerprint=normal(topicId+"::"+questionType+"::"+marks+"::"+questionText);
+    if(known.has(fingerprint)){duplicates++;continue;}
+    await addDoc(collection(db,"question_bank"),{
+      gradeNumber:gradeNumber(selectedClass),className:selectedClass,subject:selectedSubject,section:selectedSection,
+      unitId,unitTitle:resolvedUnitTitle,topicId,topicName,questionType,marks,cognitiveLevel,questionText,
+      options,correctOption,answer:String(row.answer||"").trim().slice(0,3000),
+      createdBy:auth.currentUser.uid,createdByName:String(role?.displayName||"Admin").slice(0,100),
+      createdAt:serverTimestamp(),status:"active"
+    });
+    known.add(fingerprint);added++;
+  }
+  await logQuestionActivity("question_bank_import","bulk",selectedClass+" "+selectedSubject+" · "+added+" questions");
+  await loadCurrentData();
+  message(added+" प्रश्न आयात भए; "+duplicates+" दोहोरिएका प्रश्न छोडिए।");
+}
+function downloadQuestionTemplate() {
+  downloadJson("SMSS_Question_Bank_Template.json",{
+    questions:[{
+      unitTitle:"एकाइको नाम",topicName:"Topic को नाम",questionType:"mcq",marks:1,
+      cognitiveLevel:"knowledge",questionText:"यहाँ प्रश्न लेख्नुहोस्",
+      options:["विकल्प A","विकल्प B","विकल्प C","विकल्प D"],correctOption:"A",
+      answer:"सही उत्तर र व्याख्या"
+    }]
+  });
+}
 async function loadQuestionPaperModule() {
   const root=$("questionPaperRoot");if(!root)return;
   root.innerHTML=pageShell();
@@ -580,6 +636,9 @@ document.addEventListener("change",async event=>{
   if(t.id==="qpQuestionType")toggleMcqFields();
   if(t.id==="qpImportFile"&&t.files?.[0]){
     try{await importTopics(t.files[0]);}catch(err){message("आयात भएन: "+(err.code||err.message),true);}finally{t.value="";}
+  }
+  if(t.id==="qpQuestionImportFile"&&t.files?.[0]){
+    try{await importQuestionBank(t.files[0]);}catch(err){console.error("Question bank import failed",err);message("प्रश्न आयात भएन: "+(err.code||err.message),true);}finally{t.value="";}
   }
 });
 document.addEventListener("submit",async event=>{
