@@ -1,11 +1,7 @@
 name: Deploy SMSS V45 Trial to Firebase Hosting
 
 on:
-  workflow_run:
-    workflows:
-      - V45 JavaScript and Firestore Security Checks
-    types:
-      - completed
+  push:
     branches:
       - smss-v45-work
 
@@ -13,15 +9,23 @@ permissions:
   contents: read
 
 jobs:
-  deploy-v45-trial:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'smss-v45-work' }}
+  verify-and-deploy-v45-trial:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout tested V45 commit
+      - name: Checkout V45 source
         uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          repository: ${{ github.event.workflow_run.head_repository.full_name || github.repository }}
-          ref: ${{ github.event.workflow_run.head_sha }}
+          node-version: 22
+      - name: Install test dependencies
+        run: npm install
+      - name: Parse every inline JavaScript block
+        run: node scripts/check-inline-js.mjs
+      - name: Run V45 Grade Ledger and requirement regression checks
+        run: node scripts/check-v44-requirements.mjs
+      - name: Run Firestore Security Rules emulator tests
+        run: npm run test:rules
       - name: Deploy V45 to isolated Firebase Preview Channel
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
