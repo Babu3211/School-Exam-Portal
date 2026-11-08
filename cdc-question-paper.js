@@ -26,6 +26,17 @@ function message(text, error = false) {
   const el = $("qpMessage");
   if (el) { el.textContent = text; el.style.color = error ? "#b42318" : "#52627a"; }
 }
+async function logQuestionActivity(action,recordId,detail) {
+  try {
+    await addDoc(collection(db,"audit_logs"),{
+      actorUid:auth.currentUser.uid,
+      actorName:String(role?.displayName||auth.currentUser.displayName||"Teacher").slice(0,100),
+      module:"question_papers",action:String(action).slice(0,40),
+      recordId:String(recordId||"new").slice(0,150),detail:String(detail||"").slice(0,240),
+      createdAt:serverTimestamp()
+    });
+  } catch(err) { console.warn("Question module audit log failed",err); }
+}
 function roleCanTeach(className, subject, section = "") {
   if (isAdmin()) return true;
   const pair = (role?.subjectAssignments || []).some(x =>
@@ -73,6 +84,7 @@ function pageShell() {
     <div class="qp-card" id="qpCatalogAdmin">
       <div class="qp-section-title"><h3>१. CDC पाठ्यक्रम तथा Topic सूची व्यवस्थापन (Admin)</h3><span class="qp-badge">Admin मात्र</span></div>
       <p class="qp-hint">CDC को आधिकारिक पाठ्यक्रम/विशिष्टीकरण तालिकाबाट एकाइ र Topic प्रविष्ट वा JSON सूची आयात गर्नुहोस्। स्रोत र पाठ्यक्रम संस्करण राख्न अनिवार्य छ। अप्रमाणित Topic लाई CDC आधिकारिक भनेर चिनाइँदैन।</p>
+      <p class="qp-hint">आधिकारिक आधार: <a href="https://moecdc.gov.np/content/472/basic-teaching-courses--2079--class-6-8--mandatory/" target="_blank" rel="noopener">कक्षा ६–८ अनिवार्य पाठ्यक्रम २०७९</a> · <a href="https://moecdc.gov.np/content/201/secondary-education-curssions--2078--class-9-10--mandatory/" target="_blank" rel="noopener">कक्षा ९–१० अनिवार्य पाठ्यक्रम २०७८</a> · <a href="https://moecdc.gov.np/category/course--g-/?page=2" target="_blank" rel="noopener">सामाजिक अध्ययन पाठ्यक्रम २०८२</a> · <a href="https://moecdc.gov.np/content/488/health-and-physical-education-syllabus--2082-secondary/" target="_blank" rel="noopener">स्वास्थ्य तथा शारीरिक शिक्षा २०८२</a>.</p>
       <form id="qpUnitForm" class="qp-grid">
         <div class="qp-field"><label for="qpUnitCode">एकाइ नम्बर/कोड</label><input id="qpUnitCode" maxlength="30" required placeholder="जस्तै: Unit 1"></div>
         <div class="qp-field"><label for="qpUnitTitle">एकाइ/पाठको नाम</label><input id="qpUnitTitle" maxlength="180" required></div>
@@ -362,13 +374,14 @@ async function saveUnit(event) {
   if(!topics.length||topics.length>80)throw new Error("Topic १ देखि ८० सम्म राख्नुहोस्।");
   const sourceUrl=$("qpSourceUrl").value.trim();
   if(!/^https:\/\/(www\.)?moecdc\.gov\.np\//i.test(sourceUrl)&&!/^https:\/\/lib\.moecdc\.gov\.np\//i.test(sourceUrl))throw new Error("CDC को आधिकारिक moecdc.gov.np वा CDC Library URL राख्नुहोस्।");
-  await addDoc(collection(db,"cdc_curriculum"),{
+  const ref=await addDoc(collection(db,"cdc_curriculum"),{
     gradeNumber:gradeNumber(selectedClass),className:selectedClass,subject:selectedSubject,
     unitCode:$("qpUnitCode").value.trim(),unitTitle:$("qpUnitTitle").value.trim(),
     topics,curriculumVersion:$("qpVersion").value.trim(),sourceTitle:$("qpSourceTitle").value.trim(),
     sourceUrl,verifiedBy:auth.currentUser.uid,verifiedAt:serverTimestamp(),
     createdBy:auth.currentUser.uid,createdAt:serverTimestamp(),status:"active"
   });
+  await logQuestionActivity("cdc_topic_import",ref.id,selectedClass+" "+selectedSubject+" · "+topics.length+" topics");
   $("qpUnitForm").reset();await loadCurrentData();message("CDC एकाइ र Topic सूची सुरक्षित भयो।");
 }
 async function saveBlueprint(event) {
@@ -395,6 +408,7 @@ async function saveBlueprint(event) {
     active:true,verifiedBy:auth.currentUser.uid,verifiedAt:serverTimestamp(),
     updatedBy:auth.currentUser.uid,updatedAt:serverTimestamp()
   });
+  await logQuestionActivity("blueprint_save",id,selectedClass+" "+selectedSubject+" · "+fullMarks+" marks");
   await loadCurrentData();$("qpBpStatus").textContent="Blueprint सुरक्षित भयो।";message("CDC विशिष्टीकरण तालिका सुरक्षित भयो।");
 }
 async function saveQuestion(event) {
@@ -421,7 +435,8 @@ async function saveQuestion(event) {
     createdAt:serverTimestamp(),status:"active"
   };
   if(!data.questionText||data.questionText.length>3000||data.marks<1||data.marks>100)throw new Error("प्रश्न वा अङ्क मिलेको छैन।");
-  await addDoc(collection(db,"question_bank"),data);
+  const ref=await addDoc(collection(db,"question_bank"),data);
+  await logQuestionActivity("question_create",ref.id,selectedClass+" "+selectedSubject+" · "+topicName);
   $("qpQuestionForm").reset();$("qpQuestionMarks").value="1";toggleMcqFields();
   await loadCurrentData();message("प्रश्न बैंकमा प्रश्न सुरक्षित भयो।");
 }
@@ -455,19 +470,20 @@ async function savePaper() {
   if(!generatedPaper)throw new Error("पहिले प्रश्नपत्र Auto Generate गर्नुहोस्।");
   const payload={...generatedPaper,createdBy:auth.currentUser.uid,createdAt:serverTimestamp(),status:"draft"};
   const ref=await addDoc(collection(db,"question_papers"),payload);
+  await logQuestionActivity("paper_create",ref.id,selectedClass+" "+selectedSubject+" · "+generatedPaper.paperTitle);
   generatedPaper.id=ref.id;await loadPaperHistory();message("प्रश्नपत्र Firebase मा सुरक्षित भयो।");
 }
 async function deleteQuestion(id) {
   const q=questionRows.find(x=>x.id===id);if(!q)return;
   if(!isAdmin()&&q.createdBy!==auth.currentUser.uid)throw new Error("आफूले थपेको प्रश्न मात्र हटाउन सक्नुहुन्छ।");
   if(!confirm("यो प्रश्न प्रश्न बैंकबाट हटाउने हो? सुरक्षित प्रश्नपत्रमा रहेको पुरानो प्रश्नको प्रति भने यथावत् रहनेछ।"))return;
-  await deleteDoc(doc(db,"question_bank",id));await loadCurrentData();message("प्रश्न हटाइयो।");
+  await deleteDoc(doc(db,"question_bank",id));await logQuestionActivity("question_delete",id,q.questionText);await loadCurrentData();message("प्रश्न हटाइयो।");
 }
 async function deletePaper(id) {
   const p=savedPapers.find(x=>x.id===id);if(!p)return;
   if(!isAdmin()&&p.createdBy!==auth.currentUser.uid)throw new Error("आफूले बनाएको प्रश्नपत्र मात्र हटाउन सक्नुहुन्छ।");
   if(!confirm("यो सुरक्षित प्रश्नपत्र हटाउने हो?"))return;
-  await deleteDoc(doc(db,"question_papers",id));await loadPaperHistory();message("प्रश्नपत्र हटाइयो।");
+  await deleteDoc(doc(db,"question_papers",id));await logQuestionActivity("paper_delete",id,p.paperTitle);await loadPaperHistory();message("प्रश्नपत्र हटाइयो।");
 }
 function downloadJson(name,data) {
   const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json;charset=utf-8"});
@@ -506,7 +522,6 @@ async function loadQuestionPaperModule() {
     if(!isAdmin()){
       const snap=await getDoc(doc(db,"user_roles",auth.currentUser.uid));
       role=snap.exists()?snap.data():null;
-      if(!roleCanTeach("", "")){} // Permission is checked again for each selected class/subject.
     }else role={roles:["admin"],active:true,displayName:"Admin"};
     await loadClassSubjects();
   }catch(err){console.error("Question paper module init failed",err);message("Module लोड भएन: "+(err.code||err.message),true);}
