@@ -357,77 +357,6 @@ function printIssuedCertificate(id){
  const bodyText=c.certificateType==="Transfer Certificate"?`This is to certify that ${student}, child of ${guardian||"the parent/guardian"}, was a student of this school in ${klass}. The school records have been checked and this certificate is issued upon request.`:c.certificateType==="Character Certificate"?`This is to certify that ${student}, child of ${guardian||"the parent/guardian"}, studied in ${klass} at this school. To the best of the school's knowledge, the student's conduct during the period of study was satisfactory.`:`This is to certify that ${student}, child of ${guardian||"the parent/guardian"}, is/was a student of this school in ${klass} during the academic year ${certificateEsc(currentSchoolSettings.academicYear||"2083")}.`;
  const remarks=c.remarks?'<p><b>Remarks:</b> '+certificateEsc(c.remarks)+'</p>':"";
  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+number+'</title><style>@page{size:A4;margin:22mm}body{font-family:Georgia,serif;color:#172554;margin:0}.sheet{min-height:250mm;border:5px double #1e3a8a;padding:22px 30px;box-sizing:border-box}.top{text-align:center}.top h1{font-size:25px;margin:8px}.top p{margin:4px}.meta{display:flex;justify-content:space-between;margin-top:28px;font-size:13px}.title{text-align:center;font-size:27px;letter-spacing:2px;text-decoration:underline;margin:45px 0}.content{font-size:19px;line-height:2.1;text-align:justify;margin:30px 10px}.sign{display:flex;justify-content:space-between;margin-top:100px;text-align:center}.sign div{width:200px;border-top:1px solid #333;padding-top:8px}.remarks{font-size:15px;margin-top:20px}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}</style></head><body><main class="sheet"><header class="top">'+safeLogo+'<h1>'+school+'</h1><p>'+address+'</p><p>EXAMINATION & ACADEMIC RECORDS OFFICE</p></header><div class="meta"><span>Certificate No.: '+number+'</span><span>Date: '+date+'</span></div><h2 class="title">'+type.toUpperCase()+'</h2><section class="content">'+bodyText+'</section><div class="remarks">'+remarks+'</div><div class="sign"><div>Class Teacher</div><div>Principal<br>'+certificateEsc(currentSchoolSettings.principalName||"")+'</div></div></main><script>window.onload=()=>window.print();<\/script>
-<script>
-// V45: browser-native PWA installation with iPhone and desktop guidance.
-(function(){
-  'use strict';
-  const banner=document.getElementById('smssInstallBanner');
-  const button=document.getElementById('smssInstallButton');
-  const help=document.getElementById('smssInstallHelp');
-  if(!banner||!button||!help)return;
-  const installedKey='smssPwaInstalled';
-  let deferredInstallPrompt=null;
-  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||
-    (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-  const isAndroid=/android/i.test(navigator.userAgent);
-  function isStandalone(){
-    return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||
-      navigator.standalone===true||document.referrer.startsWith('android-app://');
-  }
-  function markInstalled(){
-    banner.hidden=true;
-    try{localStorage.setItem(installedKey,'1');}catch(_){}
-  }
-  let previouslyInstalled=false;
-  try{previouslyInstalled=localStorage.getItem(installedKey)==='1';}catch(_){}
-  if(isStandalone())markInstalled();
-  else if(!previouslyInstalled)banner.hidden=false;
-  else banner.hidden=true;
-  function showInstallHelp(){
-    if(isIOS){
-      help.innerHTML='<b>iPhone / iPad मा Install गर्ने तरिका:</b> Safari मा यो वेबसाइट खोल्नुहोस् → तलको Share (□↑) बटन थिच्नुहोस् → <b>Add to Home Screen</b> छान्नुहोस् → <b>Add</b> थिच्नुहोस्। त्यसपछि Home Screen मा आएको SMSS Exam Portal आइकनबाट खोल्नुहोस्।';
-    }else if(isAndroid){
-      help.innerHTML='<b>Android मा Install गर्ने तरिका:</b> Chrome को माथिल्लो ⋮ Menu खोल्नुहोस् → <b>Install app</b> वा <b>Add to Home screen</b> छान्नुहोस् → Install पुष्टि गर्नुहोस्। Chrome ले Install Prompt देखाएमा Install थिच्नुहोस्।';
-    }else{
-      help.innerHTML='<b>कम्प्युटरमा Install गर्ने तरिका:</b> Chrome वा Edge मा Address Bar नजिक देखिने Install आइकन थिच्नुहोस्, वा Browser Menu खोलेर <b>Install SMSS Exam Portal</b> छान्नुहोस्।';
-    }
-    help.hidden=false;
-  }
-  window.addEventListener('beforeinstallprompt',function(event){
-    event.preventDefault();
-    try{localStorage.removeItem(installedKey);}catch(_){}
-    banner.hidden=false;
-    deferredInstallPrompt=event;
-    button.disabled=false;
-    button.textContent='Install';
-  });
-  window.addEventListener('appinstalled',markInstalled);
-  button.addEventListener('click',async function(){
-    if(!deferredInstallPrompt){showInstallHelp();return;}
-    const promptEvent=deferredInstallPrompt;
-    deferredInstallPrompt=null;
-    button.disabled=true;
-    try{
-      await promptEvent.prompt();
-      const choice=await promptEvent.userChoice;
-      if(choice&&choice.outcome==='accepted'){
-        button.textContent='Installing…';
-        help.hidden=true;
-      }else{
-        button.disabled=false;
-        button.textContent='Install';
-        help.textContent='Install गर्न चाहनुहुन्छ भने फेरि Install थिच्नुहोस्।';
-        help.hidden=false;
-      }
-    }catch(error){
-      button.disabled=false;
-      showInstallHelp();
-      console.warn('SMSS PWA install prompt unavailable:',error);
-    }
-  });
-})();
-</script>
-
 </body></html>');
  w.document.close();
 }
@@ -2930,6 +2859,76 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
  const stackObserver=new MutationObserver(()=>applyStacks());stackObserver.observe(document.getElementById('view')||document.body,{childList:true,subtree:true});
  document.addEventListener('submit',function(e){const btn=e.submitter;if(!btn)return;const label=(btn.innerText||btn.value||'').trim();if(!/(save|सुरक्षित|थप्नुहोस्|जारी गरी)/i.test(label))return;if(!window.confirm('यो विवरण सुरक्षित गर्ने हो?')){e.preventDefault();e.stopImmediatePropagation();}},true);
  document.addEventListener('click',function(e){const btn=e.target.closest('button');if(!btn||btn.type==='submit')return;const label=(btn.innerText||btn.value||'').trim();if(!/(save|सुरक्षित|थप्नुहोस्)/i.test(label))return;if(btn.dataset.saveConfirmed==='1'){btn.dataset.saveConfirmed='0';return;}e.preventDefault();e.stopImmediatePropagation();if(window.confirm('यो विवरण सुरक्षित गर्ने हो?')){btn.dataset.saveConfirmed='1';btn.click();}},true);
+})();
+</script>
+<script>
+// V45: browser-native PWA installation with iPhone and desktop guidance.
+(function(){
+  'use strict';
+  const banner=document.getElementById('smssInstallBanner');
+  const button=document.getElementById('smssInstallButton');
+  const help=document.getElementById('smssInstallHelp');
+  if(!banner||!button||!help)return;
+  const installedKey='smssPwaInstalled';
+  let deferredInstallPrompt=null;
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||
+    (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const isAndroid=/android/i.test(navigator.userAgent);
+  function isStandalone(){
+    return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||
+      navigator.standalone===true||document.referrer.startsWith('android-app://');
+  }
+  function markInstalled(){
+    banner.hidden=true;
+    try{localStorage.setItem(installedKey,'1');}catch(_){}
+  }
+  let previouslyInstalled=false;
+  try{previouslyInstalled=localStorage.getItem(installedKey)==='1';}catch(_){}
+  if(isStandalone())markInstalled();
+  else if(!previouslyInstalled)banner.hidden=false;
+  else banner.hidden=true;
+  function showInstallHelp(){
+    if(isIOS){
+      help.innerHTML='<b>iPhone / iPad मा Install गर्ने तरिका:</b> Safari मा यो वेबसाइट खोल्नुहोस् → तलको Share (□↑) बटन थिच्नुहोस् → <b>Add to Home Screen</b> छान्नुहोस् → <b>Add</b> थिच्नुहोस्। त्यसपछि Home Screen मा आएको SMSS Exam Portal आइकनबाट खोल्नुहोस्।';
+    }else if(isAndroid){
+      help.innerHTML='<b>Android मा Install गर्ने तरिका:</b> Chrome को माथिल्लो ⋮ Menu खोल्नुहोस् → <b>Install app</b> वा <b>Add to Home screen</b> छान्नुहोस् → Install पुष्टि गर्नुहोस्। Chrome ले Install Prompt देखाएमा Install थिच्नुहोस्।';
+    }else{
+      help.innerHTML='<b>कम्प्युटरमा Install गर्ने तरिका:</b> Chrome वा Edge मा Address Bar नजिक देखिने Install आइकन थिच्नुहोस्, वा Browser Menu खोलेर <b>Install SMSS Exam Portal</b> छान्नुहोस्।';
+    }
+    help.hidden=false;
+  }
+  window.addEventListener('beforeinstallprompt',function(event){
+    event.preventDefault();
+    try{localStorage.removeItem(installedKey);}catch(_){}
+    banner.hidden=false;
+    deferredInstallPrompt=event;
+    button.disabled=false;
+    button.textContent='Install';
+  });
+  window.addEventListener('appinstalled',markInstalled);
+  button.addEventListener('click',async function(){
+    if(!deferredInstallPrompt){showInstallHelp();return;}
+    const promptEvent=deferredInstallPrompt;
+    deferredInstallPrompt=null;
+    button.disabled=true;
+    try{
+      await promptEvent.prompt();
+      const choice=await promptEvent.userChoice;
+      if(choice&&choice.outcome==='accepted'){
+        button.textContent='Installing…';
+        help.hidden=true;
+      }else{
+        button.disabled=false;
+        button.textContent='Install';
+        help.textContent='Install गर्न चाहनुहुन्छ भने फेरि Install थिच्नुहोस्।';
+        help.hidden=false;
+      }
+    }catch(error){
+      button.disabled=false;
+      showInstallHelp();
+      console.warn('SMSS PWA install prompt unavailable:',error);
+    }
+  });
 })();
 </script>
 </body>
