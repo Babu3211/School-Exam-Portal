@@ -193,7 +193,7 @@ must(html.includes('id="smssInstallBanner"') && html.includes('id="smssInstallBu
 must(html.includes("beforeinstallprompt") && html.includes("appinstalled") && html.includes("display-mode: standalone"), "Native PWA install prompt and installed-state detection are missing.");
 must(html.includes("Add to Home Screen") && html.includes("Install app"), "iPhone and Android installation instructions are missing.");
 must(manifest.includes("SMSS Exam Portal"), "PWA manifest must use the approved SMSS Exam Portal app name.");
-must(serviceWorker.includes("smss-pwa-v48-cdc-question-paper") && serviceWorker.includes("./cdc-question-paper.js"), "Service worker must cache the CDC question paper module with a fresh V48 cache key.");
+must(/const CACHE_NAME = [\'"]smss-pwa-v[0-9]+-[a-z0-9-]+[\'"];/.test(serviceWorker) && serviceWorker.includes("\'./cdc-question-paper.js\'") && serviceWorker.includes("cache.addAll(APP_SHELL)"), "Service worker must use a versioned SMSS cache and precache the CDC question paper module.");
 must(html.includes('data-page="question-papers"') && html.includes('if(p==="question-papers")'), "CDC Question Paper Builder navigation and page must be present.");
 must(html.includes('if(page==="question-papers")return roleHas("subject_teacher")'), "Question Paper Builder must be restricted to assigned subject teachers and Admin.");
 must(questionModule.includes('collection(db,"cdc_curriculum")') && questionModule.includes('collection(db,"cdc_blueprints")') && questionModule.includes('collection(db,"question_bank")') && questionModule.includes('collection(db,"question_papers")'), "CDC curriculum, blueprint, question bank and saved paper collections must be connected.");
