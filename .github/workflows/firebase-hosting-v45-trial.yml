@@ -22,7 +22,7 @@ jobs:
         run: npm install
       - name: Parse every inline JavaScript block
         run: node scripts/check-inline-js.mjs
-      - name: Run V45 Grade Ledger and requirement regression checks
+      - name: Parse CDC question paper module\n        run: node --check cdc-question-paper.js\n      - name: Run V45 Grade Ledger and requirement regression checks
         run: node scripts/check-v44-requirements.mjs
       - name: Run Firestore Security Rules emulator tests
         run: npm run test:rules
