@@ -427,6 +427,7 @@ function rolePageAllowed(page){
   (Array.isArray(currentUserRole.subjectAssignments)&&currentUserRole.subjectAssignments.length>0)||
   (Array.isArray(currentUserRole.subjectAssignmentKeys)&&currentUserRole.subjectAssignmentKeys.length>0)
  );
+ if(page==="question-papers")return roleHas("subject_teacher")&&((Array.isArray(currentUserRole.subjectAssignments)&&currentUserRole.subjectAssignments.length>0)||(Array.isArray(currentUserRole.subjectAssignmentKeys)&&currentUserRole.subjectAssignmentKeys.length>0));
  if(page==="attendance")return roleHas("class_teacher")&&classTeacherNames().length>0;
  return false;
 }
