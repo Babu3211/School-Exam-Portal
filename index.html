@@ -2753,7 +2753,7 @@ async function previewFirebaseRestore(){
   if(!file)throw new Error("पहिले Backup JSON फाइल छान्नुहोस्।");
   if(file.size>25*1024*1024)throw new Error("फाइल २५ MB भन्दा ठूलो छ।");
   const parsed=JSON.parse(await file.text());
-  if(parsed.format!=="SMSS-Firestore-Backup"||parsed.version!==1||!parsed.collections||typeof parsed.collections!=="object")throw new Error("यो SMSS को मान्य Backup फाइल होइन।");
+  if(parsed.format!=="SMSS-Firestore-Backup"||parsed.version!==1||!parsed.collections||typeof parsed.collections!=="object"||Array.isArray(parsed.collections))throw new Error("यो SMSS को मान्य Backup फाइल होइन।");
   const unknown=Object.keys(parsed.collections).filter(n=>n!=="audit_logs"&&!RESTORE_COLLECTIONS.includes(n));
   if(parsed.collections.audit_logs!==undefined&&!Array.isArray(parsed.collections.audit_logs))throw new Error("Backup को audit_logs Collection सूची गलत छ।");
   if(unknown.length)throw new Error("Backup मा नचिनेका Collection छन्: "+unknown.join(", "));
@@ -2764,6 +2764,7 @@ async function previewFirebaseRestore(){
    const seenIds=new Set();
    for(const item of parsed.collections[n]){
     if(!item||typeof item.id!=="string"||!item.id||item.id.includes("/")||item.id.length>1500||!item.data||typeof item.data!=="object"||Array.isArray(item.data))throw new Error(`${n} मा गलत Document भेटियो।`);
+    if(item.id==="."||item.id===".."||/^__.*__$/.test(item.id))throw new Error(`${n} मा Firestore ले निषेध गरेको Document ID छ: ${item.id}`);
     if(seenIds.has(item.id))throw new Error(`${n} मा एउटै Document ID दोहोरिएको छ: ${item.id}`);
     seenIds.add(item.id);
    }
