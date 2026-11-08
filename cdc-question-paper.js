@@ -135,7 +135,7 @@ function pageShell() {
         <div class="qp-field"><label for="qpBpMcqMarks">प्रति MCQ अङ्क</label><input id="qpBpMcqMarks" type="number" min="1" max="20" value="1"></div>
         <div class="qp-field"><label for="qpBpShortCount">छोटो उत्तर प्रश्न संख्या</label><input id="qpBpShortCount" type="number" min="0" max="100" value="6"></div>
         <div class="qp-field"><label for="qpBpShortMarks">प्रति छोटो प्रश्न अङ्क</label><input id="qpBpShortMarks" type="number" min="1" max="30" value="5"></div>
-        <div class="qp-field"><label for="qpBpLongCount">लामो उत्तर प्रश्न संख्या</label><input id="qpBpLongCount" type="number" min="0" max="100" value="2"></div>
+        <div class="qp-field"><label for="qpBpLongCount">लामो उत्तर प्रश्न संख्या</label><input id="qpBpLongCount" type="number" min="0" max="100" value="1"></div>
         <div class="qp-field"><label for="qpBpLongMarks">प्रति लामो प्रश्न अङ्क</label><input id="qpBpLongMarks" type="number" min="1" max="50" value="10"></div>
         <div class="qp-field"><label for="qpBpKnowledge">ज्ञान (%)</label><input id="qpBpKnowledge" type="number" min="0" max="100" value="20"></div>
         <div class="qp-field"><label for="qpBpUnderstanding">बोध (%)</label><input id="qpBpUnderstanding" type="number" min="0" max="100" value="30"></div>
@@ -191,7 +191,7 @@ function pageShell() {
         <div class="qp-field"><label for="qpPaperMcqMarks">MCQ प्रति अङ्क</label><input id="qpPaperMcqMarks" type="number" min="1" max="20" value="1"></div>
         <div class="qp-field"><label for="qpPaperShortCount">छोटो प्रश्न संख्या</label><input id="qpPaperShortCount" type="number" min="0" max="100" value="6"></div>
         <div class="qp-field"><label for="qpPaperShortMarks">छोटो प्रश्न प्रति अङ्क</label><input id="qpPaperShortMarks" type="number" min="1" max="30" value="5"></div>
-        <div class="qp-field"><label for="qpPaperLongCount">लामो प्रश्न संख्या</label><input id="qpPaperLongCount" type="number" min="0" max="100" value="2"></div>
+        <div class="qp-field"><label for="qpPaperLongCount">लामो प्रश्न संख्या</label><input id="qpPaperLongCount" type="number" min="0" max="100" value="1"></div>
         <div class="qp-field"><label for="qpPaperLongMarks">लामो प्रश्न प्रति अङ्क</label><input id="qpPaperLongMarks" type="number" min="1" max="50" value="10"></div>
       </div>
       <p class="qp-hint" id="qpPatternHint">CDC Grid आयात गरिएको छैन भने शिक्षकले Custom Pattern राख्न सक्नुहुन्छ। कुल प्रश्नको अङ्क पूर्णाङ्कसँग मिल्नुपर्छ।</p>
