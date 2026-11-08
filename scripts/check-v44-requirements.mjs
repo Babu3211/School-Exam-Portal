@@ -154,6 +154,7 @@ must(html.includes("expectedHeader.some((label,i)=>"), "Marks Excel import must 
 must(html.includes("if(errors.length)throw Error(") && html.includes("कुनै Marks सुरक्षित गरिएको छैन"), "Excel Marks import must reject the entire file when any validation error is found.");
 must(html.includes("if(file.size>15*1024*1024)"), "Marks Excel import must limit oversized workbooks.");
 must(html.includes("if(rows.length>5002)"), "Marks Excel import must limit oversized row counts.");
+must(html.includes("const latestMarksSnapshot=await getDocs(query(collection(db,'marks'),where('examId','==',examId)))") && html.includes("freshPlans=plans.filter"), "Marks import must refresh duplicate keys after preview confirmation.");
 must(html.includes("try{await batch.commit();saved+=Math.min(8,plans.length-offset);}") && html.includes("पुनः Import गर्नुअघि Marks Ledger जाँच्नुहोस्"), "Marks Excel import must report partial batch failures instead of implying an atomic rollback.");
 must(html.includes("header[headerCol]??'').trim()!==subjectEnglishLabel(sub)"), "Marks Excel import must validate subject column order.");
 must(restorePreviewCode.includes("if(previewSequence!==restorePreviewSequence||"), "Restore Preview must discard stale file reads.");
