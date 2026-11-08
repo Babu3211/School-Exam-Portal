@@ -1644,7 +1644,7 @@ document.addEventListener("click",async event=>{
  const add=event.target.closest("#markAddPart");
  if(add){const parts=readMarkParts();parts.push({name:"नयाँ मूल्याङ्कन भाग",fullMarks:0});renderMarkParts(parts);return}
  const remove=event.target.closest("[data-mark-remove]");
- if(remove){const parts=readMarkParts();parts.splice(Number(remove.dataset.markRemove),1);renderMarkParts(parts);return}
+ if(remove){const index=Number(remove.dataset.markRemove);const parts=readMarkParts();if(!confirm(`मूल्याङ्कन भाग "${parts[index]?.name||"यो भाग"}" हटाउने? Save गरेपछि मात्र परिवर्तन स्थायी हुनेछ।`))return;parts.splice(index,1);renderMarkParts(parts);return}
  if(event.target.closest("#markReloadSettings")){loadMarkSettings();return}
  const edit=event.target.closest("[data-mark-edit]");
  if(edit){
