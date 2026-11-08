@@ -20,21 +20,23 @@ const gradeNumber = value => {
 const normal = value => String(value || "").trim().toLocaleLowerCase().replace(/\s+/g, " ");
 const isAdmin = () => !!auth.currentUser && auth.currentUser.uid === ADMIN_UID;
 let role = null, classSubjects = [], curriculumRows = [], questionRows = [], blueprintRows = [], savedPapers = [], generatedPaper = null;
-let selectedClass = "", selectedSubject = "", currentBlueprint = null;
+let selectedClass = "", selectedSubject = "", selectedSection = "", currentBlueprint = null;
 
 function message(text, error = false) {
   const el = $("qpMessage");
   if (el) { el.textContent = text; el.style.color = error ? "#b42318" : "#52627a"; }
 }
-function roleCanTeach(className, subject) {
+function roleCanTeach(className, subject, section = "") {
   if (isAdmin()) return true;
   const pair = (role?.subjectAssignments || []).some(x =>
-    String(x.className || "").trim() === className && normal(x.subject) === normal(subject));
+    String(x.className || "").trim() === className && normal(x.subject) === normal(subject) && (!String(x.section || "").trim() || String(x.section || "").trim() === section));
   const key = (role?.subjectAssignmentKeys || []).some(x => {
     const parts = String(x).split("::");
     return parts.length >= 2 && parts[0] === className && normal(parts.slice(1).join("::")) === normal(subject);
   });
-  return role?.active === true && (role?.roles || []).includes("subject_teacher") && (pair || key);
+  const sectionKeys = role?.subjectAssignmentSectionKeys;
+  const sectionAllowed = !Array.isArray(sectionKeys) || !sectionKeys.length || sectionKeys.includes(className+"::"+subject+"::ALL") || sectionKeys.includes(className+"::"+subject+"::"+section);
+  return role?.active === true && (role?.roles || []).includes("subject_teacher") && (pair || key) && sectionAllowed;
 }
 function pageShell() {
   return `
@@ -62,6 +64,7 @@ function pageShell() {
       <div class="qp-grid" style="margin-top:12px">
         <div class="qp-field"><label for="qpClass">कक्षा</label><select id="qpClass"><option value="">कक्षा छान्नुहोस्</option></select></div>
         <div class="qp-field"><label for="qpSubject">विषय</label><select id="qpSubject"><option value="">विषय छान्नुहोस्</option></select></div>
+        <div class="qp-field"><label for="qpSection">Section</label><select id="qpSection"><option value="">Section छान्नुहोस्</option></select></div>
         <div class="qp-field"><label>पाठ्यक्रमको आधार</label><input id="qpCurriculumVersion" value="CDC पाठ्यक्रम — विषयअनुसार लागू संस्करण" readonly></div>
       </div>
       <p class="qp-hint" id="qpMessage" role="status">पहिले कक्षा र विषय छान्नुहोस्। शिक्षकले आफूलाई तोकिएको कक्षा/विषयमा मात्र काम गर्न पाउनुहुनेछ।</p>
@@ -250,16 +253,16 @@ async function loadClassSubjects() {
   if (isAdmin()) {
     for (const x of rows) {
       const n=gradeNumber(x.className);
-      if (n>=6&&n<=10&&x.subject) pairs.push({className:String(x.className),subject:String(x.subject),gradeNumber:n});
+      if (n>=6&&n<=10&&x.subject) pairs.push({className:String(x.className),subject:String(x.subject),section:String(x.section||""),gradeNumber:n});
     }
   } else {
     for (const x of (role?.subjectAssignments||[])) {
       const n=gradeNumber(x.className);
-      if (n>=6&&n<=10&&x.subject&&roleCanTeach(String(x.className),String(x.subject))) pairs.push({className:String(x.className),subject:String(x.subject),gradeNumber:n});
+      if (n>=6&&n<=10&&x.subject&&roleCanTeach(String(x.className),String(x.subject),String(x.section||""))) pairs.push({className:String(x.className),subject:String(x.subject),section:String(x.section||""),gradeNumber:n});
     }
     for (const key of (role?.subjectAssignmentKeys||[])) {
       const parts=String(key).split("::"),n=gradeNumber(parts[0]),subject=parts.slice(1).join("::");
-      if(n>=6&&n<=10&&subject&&roleCanTeach(parts[0],subject))pairs.push({className:parts[0],subject,gradeNumber:n});
+      if(n>=6&&n<=10&&subject){const sectionKeys=role?.subjectAssignmentSectionKeys||[];const sections=sectionKeys.filter(k=>String(k).startsWith(parts[0]+"::"+subject+"::")).map(k=>String(k).split("::").slice(2).join("::")).filter(x=>x&&x!=="ALL");if(sections.length)sections.forEach(section=>{if(roleCanTeach(parts[0],subject,section))pairs.push({className:parts[0],subject,section,gradeNumber:n});});else if(roleCanTeach(parts[0],subject,""))pairs.push({className:parts[0],subject,section:"",gradeNumber:n});}
     }
     for (const x of rows) {
       const n=gradeNumber(x.className);
@@ -267,7 +270,7 @@ async function loadClassSubjects() {
     }
   }
   const unique = new Map();
-  pairs.forEach(x=>unique.set(x.className+"::"+normal(x.subject),x));
+  pairs.forEach(x=>unique.set(x.className+"::"+normal(x.subject)+"::"+String(x.section||""),x));
   classSubjects=[...unique.values()].sort((a,b)=>a.gradeNumber-b.gradeNumber||a.subject.localeCompare(b.subject));
   const classSel=$("qpClass");
   const names=[...new Set(classSubjects.map(x=>x.className))];
