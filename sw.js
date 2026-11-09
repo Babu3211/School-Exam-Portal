@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v45-icon-book-20261109';
+const CACHE_NAME = 'smss-pwa-v45-user-logo-20261109';
 const APP_SHELL = [
   './',
   './index.html',
