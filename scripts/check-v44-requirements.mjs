@@ -20,7 +20,7 @@ must(html.includes("const saveConfirmMessage=") && html.includes("window.confirm
 must(html.includes("saveLabelObserver.observe(document.body") && html.includes("normalizeSaveButtons(record.target)"), "Dynamically rendered Save buttons must also be normalized.");
 must(!html.includes("यो सुविधा Demo मात्र") && !html.includes("यो Module हाल Demo अवस्थामा छ") && !html.includes("Cloud data connection in progress") && !html.includes("V44 Development"), "The live application must not display obsolete demo or development notices.");
 must(!html.includes("form.demo") && !html.includes("data-action]"), "The application must not route unsupported actions to a demo-only alert.");
-must(html.includes("Student Management") && html.includes("Examination Management") && html.includes("Marks Ledger") && html.includes("School Settings"), "Primary navigation must include all required management sections.");
+must(["students","classes","exams","question-papers","marks","assessment-settings","marks-ledger","results","attendance","certificates","reports","users","backup","settings"].every(page=>html.includes(`data-page="${page}"`)), "Primary navigation must include all required management sections.");
 must(html.includes("if(label!=='Save')button.textContent='Save'"), "Save label observer must avoid repeated DOM mutations.");
 const requiredCollections = [
   "students", "staff", "classes", "subjects", "exams", "marks",
@@ -36,7 +36,7 @@ must(codeHelpers.studentCodeBase("Babukrishna Khanal", "8") === "BABKHA-8", "Stu
 must(html.includes('placeholder="जस्तै: BABKHA-8"'), "Online result example must display BABKHA-8.");
 must(!html.includes("SHYBAS-6"), "Old SHYBAS-6 example must not remain in the interface.");
 must(html.includes("MAIN MENU") && !html.includes("MAIN MENU / मुख्य मेनु"), "Dashboard main menu must be English-only.");
-must(html.includes("<summary><span class=\"ico\">🎓</span>Student Management</summary>") && html.includes("<button data-page=\"students\">Student Records</button>") && !html.includes("Student Management / विद्यार्थी व्यवस्थापन") && !html.includes("Student Records / विद्यार्थी अभिलेख"), "Dashboard sidebar menu and submenu must be English-only.");
+must(html.includes("Student Record</summary>") && html.includes("<button data-page=\"students\">Student Information</button>") && !html.includes("Student Management / विद्यार्थी व्यवस्थापन") && !html.includes("Student Records / विद्यार्थी अभिलेख"), "Dashboard sidebar menu and submenu must be English-only.");
 must(html.includes("Student registration, search and record management / विद्यार्थी दर्ता"), "Student page topic must be bilingual.");
 must(/\.login-card\{[^}]*max-width:410px[^}]*\}/.test(html), "V43-style baseline login card styling is missing.");
 must(html.includes('id="toggleLoginPassword"'), "Password show/hide control is missing.");
@@ -219,7 +219,7 @@ must(rules.includes("request.resource.data.actorUid == request.auth.uid") && rul
 must(rules.includes("request.resource.data.detail.size() <= 240") && rules.includes("request.resource.data.actorName.size() <= 100"), "Audit log text fields must have strict size limits.");
 must(rules.includes("allow update, delete: if false;"), "Audit logs must remain append-only.");
 must(manifest.includes('"name": "SMSS Exam Portal"') && manifest.includes('"display": "standalone"'), "PWA manifest must preserve the V44 installable app identity.");
-must(/smss-pwa-v(?:44|45|46|47)/.test(serviceWorker) && serviceWorker.includes("./cdc-question-paper.js"), "Service worker must preserve PWA caching and include the new V45 module.");
+must(/smss-pwa-v(?:44|45|46|47|48)/.test(serviceWorker) && serviceWorker.includes("./cdc-question-paper.js"), "Service worker must preserve PWA caching and include the new V45 module.");
 must(workflow.includes("deploy-live:") && workflow.includes("needs: quality-and-rules"), "Live deployment must depend on successful V44 quality and Firestore Rules tests.");
 must(workflow.includes("Deploy tested Firestore Security Rules") && workflow.includes("firebase-tools@14 deploy --only firestore:rules"), "Production deployment must apply the tested Firestore Security Rules before Hosting.");
 must(workflow.includes("github.event_name == 'push'") && workflow.includes("github.ref == 'refs/heads/main'") && workflow.includes("github.event.head_commit.message == 'release: deploy approved V45 to production [deploy-v45-live]'"), "Automatic live deployment must be push-only, main-only and gated by the explicit approved V45 release commit.");
