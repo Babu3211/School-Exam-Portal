@@ -200,9 +200,9 @@
   const update=()=>{
     if(standalone()){banner.hidden=true;return;}
     banner.hidden=false;
-    if(pendingPrompt){installButton.hidden=false;help.textContent='Android: Install App थिचेर मोबाइलमा एप स्थापना गर्नुहोस्।';}
-    else if(isIOS()){installButton.hidden=true;help.textContent='iPhone: Safari मा Share (साझा) → Add to Home Screen → Add थिच्नुहोस्।';}
-    else{installButton.hidden=true;help.textContent='Android: Chrome को मेनुबाट Install app वा Add to Home Screen थिच्नुहोस्।';}
+    if(pendingPrompt){installButton.hidden=false;help.textContent='आफ्नो मोबाइलमा SMSS Exam Portal एप इन्स्टल गर्न तलको Install App बटनमा थिच्नुहोस्।';}
+    else if(isIOS()){installButton.hidden=true;help.textContent='आफ्नो iPhone मा SMSS Exam Portal एप राख्न Safari को Share (साझा) बटन थिच्नुहोस्, त्यसपछि Add to Home Screen र Add छान्नुहोस्।';}
+    else{installButton.hidden=true;help.textContent='आफ्नो Android मोबाइलमा SMSS Exam Portal एप इन्स्टल गर्न Chrome को मेनुमा गएर Install app वा Add to Home Screen मा थिच्नुहोस्।';}
   };
   window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();pendingPrompt=event;update();});
   window.addEventListener('appinstalled',()=>{pendingPrompt=null;banner.hidden=true;});
