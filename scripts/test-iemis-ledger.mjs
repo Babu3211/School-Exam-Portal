@@ -31,6 +31,7 @@ assert.equal(iemisSubjectKey('COMP. NEPALI (1021)'),iemisSubjectKey('Nepali'));
 const markOrder=iemisSubjects(subjects,'number',6);
 assert.equal(markOrder[0],'Hamro Dhunibeshi');assert.equal(markOrder.at(-1),'Computer Science');
 assert.equal(iemisSubjects(subjects,'grade',6)[0],'Nepali');
+for(const cl of [1,2,3,4,5])for(const mode of ['number','grade','sheet'])assert.deepEqual(iemisSubjects(subjects,mode,cl),iemisSubjects(subjects,mode,1),'Current Class 1-5 achievement reports must share the Class 1-3 subject order');
 assert.equal(iemisSubjects(subjects,'sheet',6)[0],'Computer Science');
 const common={classNo:6,annual:true,subjects,students:[{id:'synthetic-1',studentName:'Test <Student>',dob:'2070-01-01',fatherName:'Test Father',motherName:'Test Mother',symbolNo:'TEST01',studentIemisNo:'TESTREG'}],records,examId:'synthetic-exam',schoolName:'Test School',schoolCode:'TEST',creditFor:s=>credits[subjects.indexOf(s)]};
 const mark=iemisLedger({...common,mode:'number'}),grade=iemisLedger({...common,mode:'grade'});
