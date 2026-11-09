@@ -10,7 +10,7 @@ const APP_SHELL = [
   './data/cdc-grade8-science-practice-pack-v1.json',
   './data/cdc-grade10-science-practice-pack-v1.json',
   './manifest.webmanifest',
-  './icon-book.svg',
+  './smss-uploaded-icon.svg',
   './icon-192.png',
   './icon-512.png',
   './apple-touch-icon.png'
