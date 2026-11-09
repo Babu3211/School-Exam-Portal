@@ -65,3 +65,8 @@ jobs:
           node -e 'const m=require("/tmp/smss-manifest.json");if(m.name!=="SMSS Exam Portal"||!m.icons.some(x=>x.src==="./icon-book.svg"))process.exit(1)'
           curl --fail --location "$url/icon-book.svg" -o /tmp/smss-icon.svg
           grep -Fq '<svg' /tmp/smss-icon.svg
+          for asset in icon-192.png icon-512.png apple-touch-icon.png; do
+            curl --fail --location "$url/$asset" -o "/tmp/$asset"
+            ASSET_PATH="/tmp/$asset" node -e 'const fs=require("node:fs");const b=fs.readFileSync(process.env.ASSET_PATH);if(b.length<100||b.subarray(0,8).toString("hex")!=="89504e470d0a1a0a")process.exit(1)'
+          done
+          echo "V45 production HTML, PWA manifest, SVG and mobile PNG icons verified."
