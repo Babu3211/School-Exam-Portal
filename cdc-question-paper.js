@@ -209,7 +209,7 @@ function pageShell() {
 
     <div class="qp-card">
       <div class="qp-section-title"><h3>६. सुरक्षित प्रश्नपत्र अभिलेख</h3><button class="qp-btn alt" id="qpPaperReloadBtn" type="button">Refresh</button></div>
-      <div class="qp-table-wrap"><table class="qp-table"><thead><tr><th>परीक्षा</th><th>कक्षा</th><th>विषय</th><th>पूर्णाङ्क</th><th>समय</th><th>मिति</th><th>कार्य</th></tr></thead><tbody id="qpPaperRows"><tr><td colspan="7">अभिलेख लोड हुँदैछ।</td></tr></tbody></table></div>
+      <div class="qp-table-wrap"><table class="qp-table"><thead><tr><th>परीक्षा</th><th>कक्षा</th><th>विषय</th><th>पूर्णाङ्क</th><th>समय</th><th>मिति</th><th>कार्य</th></tr></thead><tbody id="qpPaperRows"><tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr></tbody></table></div>
     </div>
   </div>`;
 }
@@ -523,7 +523,10 @@ async function generatePaper() {
 }
 async function savePaper() {
   if(!generatedPaper)throw new Error("पहिले प्रश्नपत्र Auto Generate गर्नुहोस्।");
-  const payload={...generatedPaper,createdBy:auth.currentUser.uid,createdAt:serverTimestamp(),status:"draft"};
+  // Persist only the paper schema; preview qualityReport and local id stay in memory.
+  const paperFields=["schoolName","schoolAddress","gradeNumber","className","subject","section","paperTitle","academicYear","durationMinutes","fullMarks","curriculumVersion","blueprintId","cognitiveDistribution","topicIds","questions"];
+  const payload=Object.fromEntries(paperFields.filter(key=>generatedPaper[key]!==undefined).map(key=>[key,generatedPaper[key]]));
+  Object.assign(payload,{createdBy:auth.currentUser.uid,createdAt:serverTimestamp(),status:"draft"});
   const ref=await addDoc(collection(db,"question_papers"),payload);
   await logQuestionActivity("paper_create",ref.id,selectedClass+" "+selectedSubject+" · "+generatedPaper.paperTitle);
   generatedPaper.id=ref.id;await loadPaperHistory();message("प्रश्नपत्र Firebase मा सुरक्षित भयो।");
@@ -792,7 +795,7 @@ if(window.currentPage==="question-papers"&&document.getElementById("questionPape
 document.addEventListener("change",async event=>{
   const t=event.target;
   if(t.id==="qpClass"){
-    selectedClass=t.value;selectedSubject="";selectedSection="";generatedPaper=null;
+    selectedClass=t.value;selectedSubject="";selectedSection="";generatedPaper=null;savedPapers=[];$("qpPaperRows").innerHTML='<tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr>';
     $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;$("qpAnswerKeyBtn").disabled=true;
     const opts=classSubjects.filter(x=>x.className===selectedClass);
     const subjects=[...new Set(opts.map(x=>x.subject))];
@@ -801,7 +804,7 @@ document.addEventListener("change",async event=>{
     curriculumRows=[];questionRows=[];renderTopics();renderQuestionRows();message("अब विषय छान्नुहोस्।");
   }
   if(t.id==="qpSubject"){
-    selectedSubject=t.value;selectedSection="";generatedPaper=null;
+    selectedSubject=t.value;selectedSection="";generatedPaper=null;savedPapers=[];$("qpPaperRows").innerHTML='<tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr>';
     $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;$("qpAnswerKeyBtn").disabled=true;
     curriculumRows=[];questionRows=[];renderTopics();renderQuestionRows();
     const sections=[...new Set(classSubjects.filter(x=>x.className===selectedClass&&x.subject===selectedSubject).map(x=>String(x.section||"")))];

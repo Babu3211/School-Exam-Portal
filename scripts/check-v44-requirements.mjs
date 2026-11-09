@@ -20,7 +20,7 @@ must(html.includes("const saveConfirmMessage=") && html.includes("window.confirm
 must(html.includes("saveLabelObserver.observe(document.body") && html.includes("normalizeSaveButtons(record.target)"), "Dynamically rendered Save buttons must also be normalized.");
 must(!html.includes("यो सुविधा Demo मात्र") && !html.includes("यो Module हाल Demo अवस्थामा छ") && !html.includes("Cloud data connection in progress") && !html.includes("V44 Development"), "The live application must not display obsolete demo or development notices.");
 must(!html.includes("form.demo") && !html.includes("data-action]"), "The application must not route unsupported actions to a demo-only alert.");
-must(html.includes("Student Management") && html.includes("Examination Management") && html.includes("Marks Ledger") && html.includes("School Settings"), "Primary navigation must include all required management sections.");
+must(["students","classes","exams","question-papers","marks","assessment-settings","marks-ledger","results","attendance","certificates","reports","users","backup","settings"].every(page=>html.includes(`data-page="${page}"`)), "Primary navigation must include all required management sections.");
 must(html.includes("if(label!=='Save')button.textContent='Save'"), "Save label observer must avoid repeated DOM mutations.");
 const requiredCollections = [
   "students", "staff", "classes", "subjects", "exams", "marks",
@@ -36,7 +36,7 @@ must(codeHelpers.studentCodeBase("Babukrishna Khanal", "8") === "BABKHA-8", "Stu
 must(html.includes('placeholder="जस्तै: BABKHA-8"'), "Online result example must display BABKHA-8.");
 must(!html.includes("SHYBAS-6"), "Old SHYBAS-6 example must not remain in the interface.");
 must(html.includes("MAIN MENU") && !html.includes("MAIN MENU / मुख्य मेनु"), "Dashboard main menu must be English-only.");
-must(html.includes("<summary><span class=\"ico\">🎓</span>Student Management</summary>") && html.includes("<button data-page=\"students\">Student Records</button>") && !html.includes("Student Management / विद्यार्थी व्यवस्थापन") && !html.includes("Student Records / विद्यार्थी अभिलेख"), "Dashboard sidebar menu and submenu must be English-only.");
+must(html.includes("Student Record</summary>") && html.includes("<button data-page=\"students\">Student Information</button>") && !html.includes("Student Management / विद्यार्थी व्यवस्थापन") && !html.includes("Student Records / विद्यार्थी अभिलेख"), "Dashboard sidebar menu and submenu must be English-only.");
 must(html.includes("Student registration, search and record management / विद्यार्थी दर्ता"), "Student page topic must be bilingual.");
 must(/\.login-card\{[^}]*max-width:410px[^}]*\}/.test(html), "V43-style baseline login card styling is missing.");
 must(html.includes('id="toggleLoginPassword"'), "Password show/hide control is missing.");
@@ -160,7 +160,7 @@ must(html.includes("subjects.reduce((a,sub,i)=>a+spans[i],achievement?4:2)"), "L
 must(html.split("currentSchoolSettings.schoolNameEnglish||currentSchoolSettings.schoolName").length-1>=2, "Printed Grade Sheets must use the saved school name from School Settings.");
 must(html.includes("currentSchoolSettings.municipality") && html.includes("currentSchoolSettings.address"), "Printed Grade Sheets and Grade Ledger must use the saved school address.");
 must(html.includes("function schoolPrintName()") && html.includes("function schoolPrintAddress()"), "All result print layouts must share School Settings name and address helpers.");
-must(html.includes("background-image:${schoolWatermarkBackground()}") && html.includes("IEMIS: ${esc(currentSchoolSettings.iemisCode||'—')}"), "Printed Marks Ledger and Grade Ledger must use School Settings watermark and IEMIS code.");
+must(html.includes("background-image:${iemisFormat?'none':schoolWatermarkBackground()}") && html.includes("IEMIS: ${esc(currentSchoolSettings.iemisCode||'—')}"), "Printed Marks Ledger and Grade Ledger must use School Settings watermark and IEMIS code.");
 must(html.split('data-watermark="${resultEsc(schoolPrintName())}"').length-1===2, "Both primary and secondary Grade Sheets must use the School Settings watermark.");
 must(html.split('OF ${resultEsc(schoolPrintName().toUpperCase())}').length-1===2, "Both Grade Sheet formats must use the saved school name and address instead of hardcoded school details.");
 must(html.includes("const iemis=student.iemisCode||currentSchoolSettings.iemisCode||'—';"), "Grade Sheet must use the IEMIS code saved in School Settings when student IEMIS is blank.");
@@ -207,7 +207,7 @@ must(rules.includes("request.resource.data.createdBy == resource.data.createdBy"
 
 must(rules.includes("function isAssignedStudentClass(className)") && rules.includes("allow get, list: if hasActiveRole() && isAssignedStudentClass"), "Student and exam reads must be limited to assigned classes.");
 must(rules.includes("allow get, list: if isAdmin();") && rules.includes("match /staff/{documentId}"), "Staff personal records must be Admin-only.");
-must(rules.includes("allow get, list: if hasActiveRole() && isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);"), "Marks reads must be limited to assigned subject/class/section.");
+must(rules.includes("allow list: if isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);") && rules.includes("allow get: if resource == null ? hasRole('subject_teacher') :") && rules.includes("return isAdmin() || (signedIn() && teacherSubjectAccess(className, subjectName, sectionName));") && rules.includes("return role.get('active', false) == true && roles is list"), "Marks reads must be limited to assigned subject/class/section.");
 must(rules.includes("allow get, list: if hasActiveRole() && isAssignedClassTeacher(resource.data.className);"), "Attendance reads must be limited to assigned classes.");
 must(html.includes("where(\"class\",\"==\",cl)") && html.includes("where(\"className\",\"==\",x.className)") && html.includes("where(\"subject\",\"==\",x.subject)") && html.includes("where(\"section\",\"==\",String(x.section).trim())"), "Teacher dashboard and Marks Entry must query assigned classes, subjects and sections.");
 
@@ -219,7 +219,7 @@ must(rules.includes("request.resource.data.actorUid == request.auth.uid") && rul
 must(rules.includes("request.resource.data.detail.size() <= 240") && rules.includes("request.resource.data.actorName.size() <= 100"), "Audit log text fields must have strict size limits.");
 must(rules.includes("allow update, delete: if false;"), "Audit logs must remain append-only.");
 must(manifest.includes('"name": "SMSS Exam Portal"') && manifest.includes('"display": "standalone"'), "PWA manifest must preserve the V44 installable app identity.");
-must(/smss-pwa-v(?:44|45|46|47)/.test(serviceWorker) && serviceWorker.includes("./cdc-question-paper.js"), "Service worker must preserve PWA caching and include the new V45 module.");
+must(/smss-pwa-v(?:44|45|46|47|48|49|50)/.test(serviceWorker) && serviceWorker.includes("./cdc-question-paper.js"), "Service worker must preserve PWA caching and include the new V45 module.");
 must(workflow.includes("deploy-live:") && workflow.includes("needs: quality-and-rules"), "Live deployment must depend on successful V44 quality and Firestore Rules tests.");
 must(workflow.includes("Deploy tested Firestore Security Rules") && workflow.includes("firebase-tools@14 deploy --only firestore:rules"), "Production deployment must apply the tested Firestore Security Rules before Hosting.");
 must(workflow.includes("github.event_name == 'push'") && workflow.includes("github.ref == 'refs/heads/main'") && workflow.includes("github.event.head_commit.message == 'release: deploy approved V45 to production [deploy-v45-live]'"), "Automatic live deployment must be push-only, main-only and gated by the explicit approved V45 release commit.");
@@ -368,5 +368,20 @@ must(html.includes('id="setSchoolNameNe"') && html.includes('id="setAddressNe"')
 must(html.includes('id="smssInstallBanner"') && html.includes('beforeinstallprompt') && html.includes('appinstalled'), "Uninstalled browsers must receive PWA installation guidance.");
 must(html.includes('Add to Home Screen') && html.includes("display-mode: standalone"), "iOS install instructions and installed-mode suppression must remain.");
 must(html.includes('data-page="question-papers"') && html.includes('src="./cdc-question-paper.js"'), "V45 question-paper feature must remain alongside V44.");
+
+// Logout or a failed sign-in must not leave the previous account's password visible.
+const secretStart=html.indexOf("function clearLoginSecret(){");
+const secretEnd=html.indexOf('loginForm.addEventListener("submit"',secretStart);
+must(secretStart>=0 && secretEnd>secretStart,"Login secret reset helper is missing.");
+const fakePassword={value:"test-only-secret",type:"text"};
+const fakeToggle={attributes:{},setAttribute(key,value){this.attributes[key]=value;}};
+const resetSecret=new Function("document",html.slice(secretStart,secretEnd)+";return clearLoginSecret;")({getElementById(id){return id==="loginPassword"?fakePassword:id==="toggleLoginPassword"?fakeToggle:null;}});
+resetSecret();
+assert.equal(fakePassword.value,"");
+assert.equal(fakePassword.type,"password");
+assert.equal(fakeToggle.attributes["aria-pressed"],"false");
+resetSecret();
+assert.equal(fakePassword.value,"");
+must(html.includes('finally{clearLoginSecret();loginButton.disabled=false') && html.includes('if(!user){clearLoginSecret();'),"Password reset must run after login attempts and sign-out.");
 
 console.log("V44 requirement regression checks passed.");
