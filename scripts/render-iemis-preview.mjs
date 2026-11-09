@@ -6,4 +6,5 @@ if(start<0||end<=start)throw new Error('Grade Sheet renderer not found');
 const template=await readFile('scripts/fixtures/iemis-layout.html','utf8');
 await mkdir('qa',{recursive:true});
 await writeFile('qa/iemis-layout.html',template.replace('/* GRADE_SHEET_SOURCE */',source.slice(start,end)));
+await writeFile('qa/iemis-entry.html',await readFile('scripts/fixtures/iemis-entry.html','utf8'));
 console.log('Generated synthetic IEMIS layout fixture for trial browser QA. No Firebase or IEMIS connection.');

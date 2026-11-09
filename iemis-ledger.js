@@ -21,6 +21,15 @@ export function iemisSubjectKey(value) {
   if (/^(serophero|hamro serofero|serofero)$/.test(s)) return 'serophero';
   return s;
 }
+export function iemisDisplaySubject(value,{codes=false}={}){
+  const raw=String(value??'').trim();
+  if(codes&&/^(COMP\.|OPT\.)/i.test(raw))return raw;
+  const key=iemisSubjectKey(raw),labels={'nepali':'Nepali','english':'English','mathematics':'Mathematics','science & technology':'Science & Technology','social studies & human value education':'Social Studies & Human Value Education','social studies':'Social Studies','health physical & creative art':'Health Physical & Creative Art','hamro dhunibeshi':'Hamro Dhunibeshi','serophero':'Serophero','computer science':'Computer Science'};
+  const course={'nepali':'COMP. NEPALI (1021)','english':'COMP. ENGLISH (1011)','mathematics':'COMP. MATHEMATICS (1031)','science & technology':'COMP. SCIENCE AND TECHNOLOGY (1041)','social studies':'COMP. SOCIAL STUDIES (1051)','social studies & human value education':'COMP. SOCIAL STUDIES (1051)'};
+  if(codes&&course[key])return course[key];
+  if(!codes&&key==='opt.i environment science')return 'Optional I: Environmental Science';
+  return labels[key]||raw.replace(/^OPT\.?\s*II\b\s*/i,'Optional II: ').replace(/^OPT\.?\s*I\b\s*/i,'Optional I: ').replace(/\s*\(\d+\)$/,'');
+}
 const core=['nepali','english','mathematics','science & technology','social studies & human value education','health physical & creative art','hamro dhunibeshi'];
 export function iemisSubjects(subjects,mode,classNo) {
   const order=classNo<=3?['nepali','english','mathematics','serophero','hamro dhunibeshi','computer science']:
@@ -31,7 +40,9 @@ export function iemisSubjects(subjects,mode,classNo) {
 }
 const number=v=>v===null||v===undefined||String(v).trim()===''?null:Number(v);
 const valid=s=>number(s.obtained)!==null&&Number.isFinite(number(s.obtained))&&Number(s.fullMarks)>0&&number(s.obtained)>=0&&number(s.obtained)<=Number(s.fullMarks);
+export function iemisComponentKey(name){const s=String(name||'').toLowerCase().trim();if(/no\.?\s*of\s*learning/.test(s))return 'count';if(/^full marks/.test(s))return 'full';if(/obtained learning/.test(s))return 'obtained';if(/^th\b|theory|total of final marks/.test(s))return 'theory';if(/participation/.test(s))return 'participation';if(/practical|project/.test(s))return 'practical';if(/term|examination/.test(s))return 'term';return null;}
 export function iemisSummary(record,{annual=false,primary=false}={}) {
+  if(record?.isAbsent===true)return {absent:true,complete:false,full:0,obtained:null,totalGrade:null,inGrade:null,theoryGrade:null,inObtained:null,theoryObtained:null};
   const scores=record?.scores||[];
   if(primary){
     const count=scores.find(s=>/no\.?\s*of\s*learning/i.test(s.name||''));
@@ -74,7 +85,7 @@ export function iemisLedger({mode='number',classNo,annual=false,subjects,student
   subjects=iemisSubjects(subjects,mode,classNo);
   const grade=mode==='grade',entry=mode==='entry';
   const identity=entry?['S.N','Student Name','Regd. No.','Symbol No.']:grade?['S.No.','School Name','School Code','Student Name','Dob','Father Name','Mother Name','Symbol Number']:['S.No.','School Name','School Code','Student Name','Symbol Number'];
-  const cols=subjects.map(s=>entry?componentsFor(s).map(c=>c.name):primary?[]:grade?(annual?['IN','TH','Total']:['IN','Total']):(annual?['IN','TH']:['IN']));
+  const cols=subjects.map(s=>entry?['IsAbsent',...componentsFor(s).map(c=>c.label||c.name)]:primary?[]:grade?(annual?['IN','TH','Total']:['IN','Total']):(annual?['IN','TH']:['IN']));
   const two=cols.some(c=>c.length);
   const head='<tr>'+identity.map(t=>`<th${two?' rowspan="2"':''}>${e(t)}</th>`).join('')+subjects.map((s,i)=>`<th${cols[i].length?` colspan="${cols[i].length}"`:two?' rowspan="2"':''}>${e(label(s))}</th>`).join('')+(grade?`<th${two?' rowspan="2"':''}>Final GPA</th>`:'')+'</tr>'+(two?'<tr>'+cols.flatMap(cs=>cs.map(c=>'<th>'+e(c)+'</th>')).join('')+'</tr>':'');
   const body=students.map((st,index)=>{
@@ -87,7 +98,8 @@ export function iemisLedger({mode='number',classNo,annual=false,subjects,student
       if(!applicable(st,sub))return `<td colspan="${cols[i].length||1}">N/A</td>`;
       const record=records.find(r=>r.studentId===st.id&&r.examId===examId&&iemisSubjectKey(r.subject)===iemisSubjectKey(sub));
       const summary=iemisSummary(record,{annual,primary});summaries.push({summary,creditHour:creditFor(sub)});
-      if(entry)return componentsFor(sub).map(c=>{const score=record?.scores?.find(s=>String(s.name).toLowerCase()===String(c.name).toLowerCase());return '<td>'+e(score?.obtained??'—')+'</td>';}).join('');
+      if(entry)return '<td>'+(!record?'—':record.isAbsent?'Yes':'No')+'</td>'+componentsFor(sub).map(c=>{const score=record?.scores?.find(s=>String(s.name).toLowerCase()===String(c.name).toLowerCase()||(c.key&&iemisComponentKey(s.name)===c.key));const value=c.readonly?score?.fullMarks:score?.obtained;return '<td>'+e(value??'—')+'</td>';}).join('');
+      if(record?.isAbsent)return `<td colspan="${cols[i].length||1}">Abs</td>`;
       const vals=primary?[grade?summary.totalGrade?.grade:summary.obtained]:grade?[summary.inGrade?.grade,...(annual?[summary.theoryGrade?.grade]:[]),summary.totalGrade?.grade]:[summary.inObtained,...(annual?[summary.theoryObtained]:[])];
       return vals.map(v=>'<td>'+e(v==null?'—':typeof v==='number'?fmt(v):v)+'</td>').join('');
     }).join('');

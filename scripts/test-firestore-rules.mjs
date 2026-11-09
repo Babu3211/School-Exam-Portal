@@ -1,3 +1,4 @@
+import {iemisEntrySchema,iemisEntryValues,iemisEntryBatches} from "../iemis-entry.js";
 import { readFile } from "node:fs/promises";
 import {
   initializeTestEnvironment,
@@ -6,7 +7,7 @@ import {
 } from "@firebase/rules-unit-testing";
 import {
   doc, getDoc, getDocs, collection, setDoc, updateDoc, deleteDoc,
-  serverTimestamp, query, where
+  serverTimestamp, query, where, runTransaction
 } from "firebase/firestore";
 
 const projectId = "smss-v44-rules-test";
@@ -264,6 +265,68 @@ try {
   await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(),"question_papers","paper-generated-1")));
   await assertFails(setDoc(doc(db(teacherUid),"question_papers","paper-wrong-section"),{...savedPaper.data(),section:"B"}));
   await assertFails(setDoc(doc(db(teacherUid),"cdc_blueprints","forged"),{gradeNumber:9}));
+
+  await assertSucceeds(setDoc(doc(db(ADMIN), "marks", "legacy-six-components"), validMark({scores:Array.from({length:6},(_,i)=>({name:"Part "+i,fullMarks:10,obtained:5})),totalFullMarks:60,totalObtained:30})));
+
+  // Actual IEMIS entry payloads against Rules, without production data.
+  const formatTeacher="format-teacher";
+  await testEnv.withSecurityRulesDisabled(async context=>{
+    const fdb=context.firestore();
+    await setDoc(doc(fdb,"user_roles",formatTeacher),{active:true,roles:["subject_teacher"],subjectAssignmentKeys:["1::Nepali","6::Mathematics","9::Mathematics","9::Computer Science"],subjectAssignmentClassNames:["1","6","9"],subjectAssignmentSectionKeys:["1::Nepali::A","6::Mathematics::A","9::Mathematics::A","9::Computer Science::A"]});
+    for(const cl of ["1","6","9"]){await setDoc(doc(fdb,"students","format-student-"+cl),{class:cl,active:true});await setDoc(doc(fdb,"exams","format-exam-"+cl),{className:cl});}
+  });
+  for(const cl of [1,6,9])for(const term of ["first","second","annual"]){
+    console.log("Validating IEMIS format",cl,term);
+    const subject=cl===1?"Nepali":"Mathematics",schema=iemisEntrySchema(cl,term,subject);
+    const values=cl===1?{count:"5",obtained:"17"}:Object.fromEntries(schema.map(c=>[c.key,String(c.max-1)]));
+    const base=iemisEntryValues(schema,{values,isAbsent:false});
+    const payload={...base,studentId:"format-student-"+cl,examId:"format-exam-"+cl,subject,className:String(cl),section:"A",academicYear:"2083",termKey:term,termName:term,createdBy:formatTeacher,createdAt:serverTimestamp()};
+    const id="format-"+cl+"-"+term;
+    await assertSucceeds(setDoc(doc(db(formatTeacher),"marks",id),payload));
+    const readBack=await assertSucceeds(getDoc(doc(db(formatTeacher),"marks",id)));
+    const edited={...base,scores:base.scores.map((score,i)=>({...score,obtained:score.obtained===null?null:i===base.scores.length-1?score.obtained-1:score.obtained})),totalObtained:base.totalObtained-1,updatedBy:formatTeacher,updatedAt:serverTimestamp()};
+    await assertSucceeds(updateDoc(doc(db(formatTeacher),"marks",id),edited));
+    await assertFails(updateDoc(doc(db(formatTeacher),"marks",id),{studentId:"forged-student",updatedBy:formatTeacher,updatedAt:serverTimestamp()}));
+    if(term==="annual"&&cl>1){
+      const extra=structuredClone(base);extra.scores[0].forged=true;
+      await assertFails(setDoc(doc(db(formatTeacher),"marks",id+"-extra-score-field"),{...payload,...extra}));
+      await assertFails(setDoc(doc(db(formatTeacher),"marks",id+"-wrong-total"),{...payload,totalObtained:base.totalObtained-1}));
+      const wrongType=structuredClone(base);wrongType.scores[0].obtained="2";
+      await assertFails(setDoc(doc(db(formatTeacher),"marks",id+"-wrong-score-type"),{...payload,...wrongType}));
+    }
+
+    if(readBack.data().totalFullMarks!==base.totalFullMarks)throw new Error("Entry total did not round trip");
+    const absent={...payload,...iemisEntryValues(schema,{values,isAbsent:true})};
+    await assertSucceeds(setDoc(doc(db(formatTeacher),"marks",id+"-absent"),absent));
+    await assertFails(setDoc(doc(db(formatTeacher),"marks",id+"-bad-absence"),{...payload,isAbsent:true}));
+    await assertFails(setDoc(doc(db(formatTeacher),"marks",id+"-wrong-section"),{...payload,section:"B"}));
+    await assertFails(setDoc(doc(db(formatTeacher),"marks",id+"-bad-flag"),{...payload,isAbsent:"yes"}));
+    if(cl===1){
+      await assertFails(setDoc(doc(db(formatTeacher),"marks",id+"-wrong-primary-full"),{...payload,totalFullMarks:0}));
+      const forged=structuredClone(base);forged.scores[1].fullMarks=21;
+      await assertFails(setDoc(doc(db(formatTeacher),"marks",id+"-wrong-count-times-four"),{...payload,...forged}));
+    }
+  }
+  const computer=iemisEntryValues(iemisEntrySchema(9,"annual","Computer Science"),{values:{participation:"3",practical:"41",term:"6",theory:"50"},isAbsent:false});
+  await assertSucceeds(setDoc(doc(db(formatTeacher),"marks","format-computer"),{...computer,studentId:"format-student-9",examId:"format-exam-9",subject:"Computer Science",className:"9",section:"A",academicYear:"2083",termKey:"annual",termName:"Final",createdBy:formatTeacher,createdAt:serverTimestamp()}));
+
+  await assertSucceeds(getDoc(doc(db(formatTeacher),"marks","unused-grid-id")));
+  await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(),"marks","unused-grid-id")));
+  await assertFails(getDoc(doc(db(inactiveUid),"marks","unused-grid-id")));
+  const gridStudents=Array.from({length:12},(_,i)=>({id:"grid-student-"+i,class:"1",section:"A",active:true}));
+  await testEnv.withSecurityRulesDisabled(async context=>{for(const student of gridStudents)await setDoc(doc(context.firestore(),"students",student.id),student);});
+  const application=await readFile("index.html","utf8"),controllerStart=application.indexOf("async function saveIemisEntryRecords("),controllerEnd=application.indexOf("function mountIemisEntryGrid()",controllerStart);
+  const versionStart=application.indexOf("function markVersion(");
+  const markVersion=new Function(application.slice(versionStart,controllerStart)+";return markVersion;")();
+  const cache=[];
+  const controllerDeps={iemisEntryContext:()=>"grid-context",auth:{currentUser:{uid:formatTeacher}},marksStudents:gridStudents,iemisEntryAllowed:()=>true,crypto:globalThis.crypto,TextEncoder,doc,db:db(formatTeacher),currentSchoolSettings:{academicYear:"2083"},smssExamTermKey:()=>"first",smssTermLabel:()=>"First Term",window:{confirm:()=>true},iemisEntryBatches,runTransaction,serverTimestamp,getDoc,existingMarks:cache,writeAuditLog:async()=>true,markVersion,safeNoticeError:e=>e.message};
+  const actualSave=new Function(...Object.keys(controllerDeps),application.slice(controllerStart,controllerEnd)+";return saveIemisEntryRecords;")(...Object.values(controllerDeps));
+  const gridPlans=gridStudents.map((student,i)=>({key:"grid-"+i,student,subject:"Nepali",old:null,data:iemisEntryValues(iemisEntrySchema(1,"first","Nepali"),{values:{count:"5",obtained:"17"},isAbsent:false})}));
+  const gridResult=await actualSave(gridPlans,"grid-context",{id:"format-exam-1",academicYear:"2083"},"1",formatTeacher);
+  if(gridResult.savedKeys.length!==12||cache.length!==12)throw new Error("Real transaction controller did not save and refresh all test rows");
+  const edits=gridStudents.map((student,i)=>({key:"grid-"+i,student,subject:"Nepali",old:cache.find(r=>r.studentId===student.id),data:iemisEntryValues(iemisEntrySchema(1,"first","Nepali"),{values:{count:"5",obtained:"18"},isAbsent:false})}));
+  await actualSave(edits,"grid-context",{id:"format-exam-1",academicYear:"2083"},"1",formatTeacher);
+  if(cache.some(r=>r.totalObtained!==18))throw new Error("Real transaction update did not reload new marks");
 
   console.log("Firestore Security Rules emulator tests passed.");
 } finally {

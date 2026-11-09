@@ -31,7 +31,7 @@ jobs:
       - name: Run V44 requirement regression checks
         run: node scripts/check-v44-requirements.mjs
       - name: Verify IEMIS ledger layouts and component-weighted GPA
-        run: node scripts/test-iemis-ledger.mjs
+        run: npm run test:iemis
       - name: Run Firestore Security Rules emulator tests
         run: npm run test:rules
 

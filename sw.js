@@ -1,8 +1,9 @@
-const CACHE_NAME = 'smss-pwa-v47-iemis-parity-20261109';
+const CACHE_NAME = 'smss-pwa-v47-iemis-entry-20261109';
 const APP_SHELL = [
   './',
   './index.html',
   './iemis-ledger.js',
+  './iemis-entry.js',
   './cdc-question-paper.js',
   './data/cdc-grade8-science-practice-pack-v1.json',
   './data/cdc-grade10-science-practice-pack-v1.json',
