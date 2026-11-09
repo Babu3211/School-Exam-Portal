@@ -32,6 +32,8 @@ jobs:
         run: node --check cdc-question-paper.js
       - name: Validate CDC question paper seed packs and source register
         run: node scripts/test-question-paper-content.mjs
+      - name: Verify V44 menu parity and V45 install assets
+        run: npm run test:v45
       - name: Run V45 Grade Ledger and requirement regression checks
         run: node scripts/check-v44-requirements.mjs
       - name: Verify IEMIS ledger layouts and component-weighted GPA
