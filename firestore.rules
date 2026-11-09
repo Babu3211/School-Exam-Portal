@@ -60,7 +60,7 @@ service cloud.firestore {
       let roles = role.get('roles', []);
       let keys = role.get('subjectAssignmentKeys', []);
       let sections = role.get('subjectAssignmentSectionKeys', []);
-      return roles is list && roles.hasAny(['subject_teacher']) &&
+      return role.get('active', false) == true && roles is list && roles.hasAny(['subject_teacher']) &&
         keys is list && keys.hasAny([className + '::' + subjectName]) &&
         (!(sections is list) || sections.size() == 0 ||
           sections.hasAny([className + '::' + subjectName + '::ALL',
@@ -68,7 +68,7 @@ service cloud.firestore {
     }
 
     function isAssignedSubject(className, subjectName, sectionName) {
-      return isAdmin() || (hasActiveRole() && teacherSubjectAccess(className, subjectName, sectionName));
+      return isAdmin() || (signedIn() && teacherSubjectAccess(className, subjectName, sectionName));
     }
 
 
@@ -128,37 +128,88 @@ service cloud.firestore {
     }
 
     // Retain legacy custom assessment validation separately from IEMIS templates.
+    // matches and numeric bounds reject incompatible types; tested with malformed maps.
+    // Use fixed-size branches to stay within the evaluation budget through six parts.
     function validMarkScore(score) {
       let name = score.name;
       let full = score.fullMarks;
       let got = score.obtained;
-      return score == {'name': name, 'fullMarks': full, 'obtained': got} &&
-        name is string && name.size() > 0 && name.size() <= 80 &&
-        full is number && full >= 0 &&
-        (got == null || (got is number && got >= 0 && got <= full));
+      return score.keys().hasOnly(['name', 'fullMarks', 'obtained']) &&
+        name.matches('^[\\s\\S]{1,80}$') &&
+        full >= 0 &&
+        (got == null || (got >= 0 && got <= full));
+    }
+
+    function validCustomScores1(data) {
+      let a = data.scores[0];
+      return validMarkScore(a) &&
+        data.totalFullMarks == a.fullMarks &&
+        data.totalObtained == (a.obtained == null ? 0 : a.obtained) &&
+        (!data.get('isAbsent', false) || (a.obtained == null));
+    }
+
+    function validCustomScores2(data) {
+      let a = data.scores[0];
+      let b = data.scores[1];
+      return validMarkScore(a) && validMarkScore(b) &&
+        data.totalFullMarks == a.fullMarks + b.fullMarks &&
+        data.totalObtained == (a.obtained == null ? 0 : a.obtained) + (b.obtained == null ? 0 : b.obtained) &&
+        (!data.get('isAbsent', false) || (a.obtained == null && b.obtained == null));
+    }
+
+    function validCustomScores3(data) {
+      let a = data.scores[0];
+      let b = data.scores[1];
+      let c = data.scores[2];
+      return validMarkScore(a) && validMarkScore(b) && validMarkScore(c) &&
+        data.totalFullMarks == a.fullMarks + b.fullMarks + c.fullMarks &&
+        data.totalObtained == (a.obtained == null ? 0 : a.obtained) + (b.obtained == null ? 0 : b.obtained) + (c.obtained == null ? 0 : c.obtained) &&
+        (!data.get('isAbsent', false) || (a.obtained == null && b.obtained == null && c.obtained == null));
+    }
+
+    function validCustomScores4(data) {
+      let a = data.scores[0];
+      let b = data.scores[1];
+      let c = data.scores[2];
+      let d = data.scores[3];
+      return validMarkScore(a) && validMarkScore(b) && validMarkScore(c) && validMarkScore(d) &&
+        data.totalFullMarks == a.fullMarks + b.fullMarks + c.fullMarks + d.fullMarks &&
+        data.totalObtained == (a.obtained == null ? 0 : a.obtained) + (b.obtained == null ? 0 : b.obtained) + (c.obtained == null ? 0 : c.obtained) + (d.obtained == null ? 0 : d.obtained) &&
+        (!data.get('isAbsent', false) || (a.obtained == null && b.obtained == null && c.obtained == null && d.obtained == null));
+    }
+
+    function validCustomScores5(data) {
+      let a = data.scores[0];
+      let b = data.scores[1];
+      let c = data.scores[2];
+      let d = data.scores[3];
+      let e = data.scores[4];
+      return validMarkScore(a) && validMarkScore(b) && validMarkScore(c) && validMarkScore(d) && validMarkScore(e) &&
+        data.totalFullMarks == a.fullMarks + b.fullMarks + c.fullMarks + d.fullMarks + e.fullMarks &&
+        data.totalObtained == (a.obtained == null ? 0 : a.obtained) + (b.obtained == null ? 0 : b.obtained) + (c.obtained == null ? 0 : c.obtained) + (d.obtained == null ? 0 : d.obtained) + (e.obtained == null ? 0 : e.obtained) &&
+        (!data.get('isAbsent', false) || (a.obtained == null && b.obtained == null && c.obtained == null && d.obtained == null && e.obtained == null));
+    }
+
+    function validCustomScores6(data) {
+      let a = data.scores[0];
+      let b = data.scores[1];
+      let c = data.scores[2];
+      let d = data.scores[3];
+      let e = data.scores[4];
+      let f = data.scores[5];
+      return validMarkScore(a) && validMarkScore(b) && validMarkScore(c) && validMarkScore(d) && validMarkScore(e) && validMarkScore(f) &&
+        data.totalFullMarks == a.fullMarks + b.fullMarks + c.fullMarks + d.fullMarks + e.fullMarks + f.fullMarks &&
+        data.totalObtained == (a.obtained == null ? 0 : a.obtained) + (b.obtained == null ? 0 : b.obtained) + (c.obtained == null ? 0 : c.obtained) + (d.obtained == null ? 0 : d.obtained) + (e.obtained == null ? 0 : e.obtained) + (f.obtained == null ? 0 : f.obtained) &&
+        (!data.get('isAbsent', false) || (a.obtained == null && b.obtained == null && c.obtained == null && d.obtained == null && e.obtained == null && f.obtained == null));
     }
 
     function validStandardMarkScores(data) {
-      let s = data.scores;
-      let n = s.size();
-      let full = s[0].fullMarks + (n > 1 ? s[1].fullMarks : 0) +
-        (n > 2 ? s[2].fullMarks : 0) + (n > 3 ? s[3].fullMarks : 0) +
-        (n > 4 ? s[4].fullMarks : 0) + (n > 5 ? s[5].fullMarks : 0);
-      let got = (s[0].obtained == null ? 0 : s[0].obtained) +
-        (n > 1 && s[1].obtained != null ? s[1].obtained : 0) +
-        (n > 2 && s[2].obtained != null ? s[2].obtained : 0) +
-        (n > 3 && s[3].obtained != null ? s[3].obtained : 0) +
-        (n > 4 && s[4].obtained != null ? s[4].obtained : 0) +
-        (n > 5 && s[5].obtained != null ? s[5].obtained : 0);
-      return validMarkScore(s[0]) &&
-        (n < 2 || validMarkScore(s[1])) && (n < 3 || validMarkScore(s[2])) &&
-        (n < 4 || validMarkScore(s[3])) && (n < 5 || validMarkScore(s[4])) &&
-        (n < 6 || validMarkScore(s[5])) &&
-        data.totalFullMarks == full && data.totalObtained == got &&
-        (!data.get('isAbsent', false) ||
-          (s[0].obtained == null && (n < 2 || s[1].obtained == null) &&
-           (n < 3 || s[2].obtained == null) && (n < 4 || s[3].obtained == null) &&
-           (n < 5 || s[4].obtained == null) && (n < 6 || s[5].obtained == null)));
+      let n = data.scores.size();
+      return n == 1 ? validCustomScores1(data) :
+        n == 2 ? validCustomScores2(data) :
+        n == 3 ? validCustomScores3(data) :
+        n == 4 ? validCustomScores4(data) :
+        n == 5 ? validCustomScores5(data) : validCustomScores6(data);
     }
 
     function validLearningAchievement(data) {
@@ -231,12 +282,8 @@ service cloud.firestore {
     }
 
     function validMarkShape(data) {
-      return data.keys().hasAll([
-          'studentId', 'examId', 'subject', 'className', 'section',
-          'scores', 'totalFullMarks', 'totalObtained', 'assessmentType',
-          'academicYear', 'termKey', 'termName'
-        ]) &&
-        data.keys().hasOnly([
+      // Every required field is accessed and type-checked below. Missing fields deny.
+      return data.keys().hasOnly([
           'studentId', 'examId', 'subject', 'className', 'section',
           'scores', 'totalFullMarks', 'totalObtained', 'assessmentType',
           'academicYear', 'termKey', 'termName',

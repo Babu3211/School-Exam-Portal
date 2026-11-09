@@ -268,6 +268,41 @@ try {
 
   await assertSucceeds(setDoc(doc(db(ADMIN), "marks", "legacy-six-components"), validMark({scores:Array.from({length:6},(_,i)=>({name:"Part "+i,fullMarks:10,obtained:5})),totalFullMarks:60,totalObtained:30})));
 
+  // Generic legacy assessments must fit the expression budget for assigned teachers.
+  for (const n of [1,2,3,4,5,6]) {
+    const scores=Array.from({length:n},(_,i)=>({name:"Part "+i,fullMarks:10,obtained:5}));
+    const payload=validMark({scores,totalFullMarks:n*10,totalObtained:n*5});
+    const ref=doc(db(teacherUid),"marks","custom-teacher-"+n);
+    await assertSucceeds(setDoc(ref,payload));
+    const saved=await assertSucceeds(getDoc(ref));
+    const updated=scores.map((x,i)=>({...x,obtained:i===0?0:x.obtained}));
+    await assertSucceeds(updateDoc(ref,{scores:updated,totalObtained:(n-1)*5,updatedBy:teacherUid,updatedAt:serverTimestamp()}));
+    await assertSucceeds(updateDoc(ref,{isAbsent:true,scores:scores.map(x=>({...x,obtained:null})),totalObtained:0,updatedBy:teacherUid,updatedAt:serverTimestamp()}));
+    if(saved.data().scores.length!==n)throw new Error("Custom components failed to round-trip.");
+  }
+  const customSix=validMark({scores:Array.from({length:6},(_,i)=>({name:"Part "+i,fullMarks:10,obtained:5})),totalFullMarks:60,totalObtained:30});
+  let customInvalid=0;
+  const denyCustom=async value=>assertFails(setDoc(doc(db(teacherUid),"marks","custom-invalid-"+(++customInvalid)),value));
+  for(const field of ["studentId","examId","subject","className","section","scores","totalFullMarks","totalObtained","assessmentType","academicYear","termKey","termName"]){const missing={...customSix};delete missing[field];await denyCustom(missing);}
+  for(const field of ["name","fullMarks","obtained"]){
+    for(const bad of [true,{},[],"not-a-number"]){
+      if(field==="name"&&typeof bad==="string")continue;
+      await denyCustom({...customSix,scores:customSix.scores.map((x,i)=>i===0?{...x,[field]:bad}:x)});
+    }
+  }
+  for(const name of ["","x".repeat(81)])await denyCustom({...customSix,scores:customSix.scores.map((x,i)=>i===0?{...x,name}:x)});
+  await denyCustom({...customSix,scores:customSix.scores.map((x,i)=>i===0?{...x,extra:true}:x)});
+  await denyCustom({...customSix,scores:customSix.scores.map((x,i)=>i===0?{...x,obtained:11}:x),totalObtained:36});
+  for(const key of ["name","fullMarks","obtained"]){const score={...customSix.scores[0]};delete score[key];await denyCustom({...customSix,scores:[score,...customSix.scores.slice(1)]});}
+  for(const bad of [null,"10",true,{},[]])await denyCustom({...customSix,scores:customSix.scores.map((x,i)=>i===0?{...x,fullMarks:bad}:x)});
+  await assertSucceeds(setDoc(doc(db(teacherUid),"marks","custom-unicode-boundary"),{...customSix,scores:customSix.scores.map((x,i)=>i===0?{...x,name:"क".repeat(80)}:x)}));
+  await denyCustom({...customSix,scores:customSix.scores.map((x,i)=>i===0?{...x,name:"क".repeat(81)}:x)});
+  await assertSucceeds(setDoc(doc(db(teacherUid),"marks","custom-fractional"),{...customSix,scores:customSix.scores.map((x,i)=>i===0?{...x,fullMarks:10.5,obtained:5.5}:x),totalFullMarks:60.5,totalObtained:30.5}));
+  await denyCustom({...customSix,totalObtained:31});
+  await denyCustom({...customSix,isAbsent:true});
+  await assertSucceeds(setDoc(doc(db(teacherUid),"marks","custom-name-boundary"),{...customSix,scores:customSix.scores.map((x,i)=>i===0?{...x,name:"x".repeat(80)}:x)}));
+  await assertSucceeds(setDoc(doc(db(teacherUid),"marks","custom-name-newline"),{...customSix,scores:customSix.scores.map((x,i)=>i===0?{...x,name:"Part\nOne"}:x)}));
+
   // Actual IEMIS entry payloads against Rules, without production data.
   const formatTeacher="format-teacher";
   await testEnv.withSecurityRulesDisabled(async context=>{
