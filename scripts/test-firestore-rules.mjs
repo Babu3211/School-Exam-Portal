@@ -224,6 +224,47 @@ try {
   }));
   await assertSucceeds(deleteDoc(doc(db(ADMIN), "school_gallery", "part_01")));
 
+  const question={gradeNumber:9,className:"9",subject:"Mathematics",section:"A",
+    unitId:"unit-1",unitTitle:"Test Unit",topicId:"topic-1",topicName:"Test Topic",
+    questionType:"short",marks:1,cognitiveLevel:"knowledge",questionText:"Test question",
+    options:[],correctOption:"",answer:"Test answer",createdBy:teacherUid,
+    createdByName:"Test Teacher",createdAt:serverTimestamp(),status:"active"};
+  await assertSucceeds(setDoc(doc(db(teacherUid),"question_bank","question-valid"),question));
+  await assertSucceeds(getDoc(doc(db(teacherUid),"question_bank","question-valid")));
+  await assertSucceeds(getDocs(query(collection(db(teacherUid),"question_bank"),where("className","==","9"),where("subject","==","Mathematics"),where("section","==","A"))));
+  await assertFails(setDoc(doc(db(teacherUid),"question_bank","question-over-limit"),{...question,marks:101}));
+  await assertFails(setDoc(doc(db(teacherUid),"question_bank","question-wrong-section"),{...question,section:"B"}));
+  await assertFails(getDoc(doc(db(inactiveUid),"question_bank","question-valid")));
+  await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(),"question_bank","question-valid")));
+
+  // Exercise the actual V45 save function, including generated-only preview metadata.
+  const moduleSource=await readFile("cdc-question-paper.js","utf8");
+  const saveStart=moduleSource.indexOf("async function savePaper() {");
+  const saveEnd=moduleSource.indexOf("async function deleteQuestion(",saveStart);
+  const generated={
+    schoolName:"Test School",schoolAddress:"Test Address",gradeNumber:9,
+    className:"9",subject:"Mathematics",section:"A",paperTitle:"Test Paper",
+    academicYear:"2083",durationMinutes:60,fullMarks:1,curriculumVersion:"Custom Pattern",
+    blueprintId:null,cognitiveDistribution:null,topicIds:["topic-1"],
+    questions:[{questionId:"q-1",questionText:"Test question",questionType:"short",marks:1,number:1}],
+    createdBy:teacherUid,qualityReport:{questionCount:1,selectedTopicCount:1}
+  };
+  let paperNumber=0;
+  const savePaper=new Function("generatedPaper","auth","serverTimestamp","addDoc","collection","db","logQuestionActivity","loadPaperHistory","message","selectedClass","selectedSubject",
+    moduleSource.slice(saveStart,saveEnd)+";return savePaper;")(
+    generated,{currentUser:{uid:teacherUid}},serverTimestamp,
+    async (_collection,payload)=>{const id="paper-generated-"+(++paperNumber);await assertSucceeds(setDoc(doc(db(teacherUid),"question_papers",id),payload));return {id};},
+    ()=>null,null,async()=>{},async()=>{},()=>{},"9","Mathematics"
+  );
+  await savePaper();
+  const savedPaper=await assertSucceeds(getDoc(doc(db(teacherUid),"question_papers","paper-generated-1")));
+  if(savedPaper.data().paperTitle!==generated.paperTitle)throw new Error("Question paper did not round-trip.");
+  await savePaper(); // A second save must not send the local document id back to Firestore.
+  await assertFails(getDoc(doc(db(inactiveUid),"question_papers","paper-generated-1")));
+  await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(),"question_papers","paper-generated-1")));
+  await assertFails(setDoc(doc(db(teacherUid),"question_papers","paper-wrong-section"),{...savedPaper.data(),section:"B"}));
+  await assertFails(setDoc(doc(db(teacherUid),"cdc_blueprints","forged"),{gradeNumber:9}));
+
   console.log("Firestore Security Rules emulator tests passed.");
 } finally {
   await testEnv.cleanup();

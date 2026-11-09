@@ -523,7 +523,10 @@ async function generatePaper() {
 }
 async function savePaper() {
   if(!generatedPaper)throw new Error("पहिले प्रश्नपत्र Auto Generate गर्नुहोस्।");
-  const payload={...generatedPaper,createdBy:auth.currentUser.uid,createdAt:serverTimestamp(),status:"draft"};
+  // Persist only the paper schema; preview qualityReport and local id stay in memory.
+  const paperFields=["schoolName","schoolAddress","gradeNumber","className","subject","section","paperTitle","academicYear","durationMinutes","fullMarks","curriculumVersion","blueprintId","cognitiveDistribution","topicIds","questions"];
+  const payload=Object.fromEntries(paperFields.filter(key=>generatedPaper[key]!==undefined).map(key=>[key,generatedPaper[key]]));
+  Object.assign(payload,{createdBy:auth.currentUser.uid,createdAt:serverTimestamp(),status:"draft"});
   const ref=await addDoc(collection(db,"question_papers"),payload);
   await logQuestionActivity("paper_create",ref.id,selectedClass+" "+selectedSubject+" · "+generatedPaper.paperTitle);
   generatedPaper.id=ref.id;await loadPaperHistory();message("प्रश्नपत्र Firebase मा सुरक्षित भयो।");
