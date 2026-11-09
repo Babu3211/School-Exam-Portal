@@ -36,7 +36,7 @@ export function iemisLegacyTheory(classNo,records,{examId,studentId}={}) {
 }
 export function iemisSubjects(subjects,mode,classNo,{legacyTheory=false}={}) {
   const legacySheet=classNo===4?['nepali','computer science',...core.filter(s=>s!=='nepali')]:['computer science',...core];
-  const order=legacyTheory&&mode==='sheet'?legacySheet:legacyTheory&&mode==='grade'&&classNo===4?['computer science',...[...core].reverse()]:classNo<=3?['nepali','english','mathematics','serophero','hamro dhunibeshi','computer science']:
+  const order=legacyTheory&&mode==='sheet'?legacySheet:legacyTheory&&mode==='grade'&&classNo===4?['computer science',...[...core].reverse()]:classNo<=5?['nepali','english','mathematics','serophero','hamro dhunibeshi','computer science']:
     mode==='number'&&classNo>=6&&classNo<=8?[...core].reverse().concat('computer science'):
     mode==='sheet'&&classNo>=6&&classNo<=8?['computer science',...core]:[...core,'computer science'];
   const rank=s=>{const k=iemisSubjectKey(s);const i=order.indexOf(k);return i<0?order.length:i;};
