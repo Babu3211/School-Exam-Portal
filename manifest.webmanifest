@@ -12,7 +12,7 @@
   "theme_color": "#1769d2",
   "icons": [
     {
-      "src": "./icon-book.svg",
+      "src": "./smss-uploaded-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
