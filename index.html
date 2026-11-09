@@ -170,21 +170,25 @@
 </head>
 <body>
 
-<!-- PWA install guidance: shown until the portal is installed; never blocks login. -->
+<!-- Compact, non-blocking install suggestion: never covers login controls. -->
 <style>
-#smssInstallBanner{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top, 0px));z-index:99999;max-width:540px;margin:auto;background:#fff;color:#12345b;border:2px solid #1769d2;border-radius:14px;box-shadow:0 8px 32px #12345b40;padding:14px;font:14px/1.5 Arial,"Noto Sans Devanagari",sans-serif}
+#smssInstallBanner{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom, 0px));top:auto;z-index:1500;max-width:420px;margin:auto;background:#fff;color:#263454;border:1px solid #e0e5f2;border-radius:16px;box-shadow:0 5px 24px #172c4930;padding:12px 14px;font:13px/1.45 Arial,"Noto Sans Devanagari",sans-serif}
 #smssInstallBanner[hidden]{display:none!important}
-#smssInstallBanner .smss-install-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-#smssInstallBanner button{border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer}
-#smssInstallNow{background:#1769d2;color:#fff}
-#smssInstallLater{background:#edf3fb;color:#12345b}
+#smssInstallBanner .smss-install-title{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700}
+#smssInstallBanner .smss-install-title img{width:30px;height:30px;border-radius:8px}
+#smssInstallBanner .smss-install-help{font-size:12px;color:#596781;margin-top:5px}
+#smssInstallBanner .smss-install-actions{display:flex;gap:8px;align-items:center;margin-top:9px}
+#smssInstallBanner button{border:0;border-radius:8px;padding:7px 12px;font-weight:700;cursor:pointer;font-size:12px}
+#smssInstallNow{background:#6259ca;color:#fff}
+#smssInstallLater{background:#f1f2f8;color:#34405c}
+@media(max-width:480px){#smssInstallBanner{left:10px;right:10px;max-width:none;padding:10px 12px}}
 </style>
-<div id="smssInstallBanner" role="region" aria-label="Install SMSS Exam Portal" hidden>
-  <strong>Install SMSS Exam Portal / SMSS एप इन्स्टल गर्नुहोस्</strong>
-  <div id="smssInstallHelp">छिटो खोल्न र एपजस्तै प्रयोग गर्न आफ्नो उपकरणमा Install गर्नुहोस्।</div>
+<div id="smssInstallBanner" role="region" aria-label="SMSS एप स्थापना" hidden>
+  <div class="smss-install-title"><img src="./icon-book.svg" alt="" aria-hidden="true"><span>SMSS Exam Portal</span></div>
+  <div id="smssInstallHelp" class="smss-install-help">एपको रूपमा छिटो खोल्न होम स्क्रिनमा थप्नुहोस्।</div>
   <div class="smss-install-actions">
-    <button type="button" id="smssInstallNow">Install / इन्स्टल</button>
-    <button type="button" id="smssInstallLater">Later / पछि</button>
+    <button type="button" id="smssInstallNow">Install App / एप राख्नुहोस्</button>
+    <button type="button" id="smssInstallLater">अहिले होइन ✕</button>
   </div>
 </div>
 <script>
@@ -194,19 +198,18 @@
   const help=document.getElementById('smssInstallHelp');
   const later=document.getElementById('smssInstallLater');
   let pendingPrompt=null;
-  let dismissedForThisPage=false;
+  const dismissedKey='smss-install-dismissed-v45';
   const standalone=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
   const isIOS=()=>/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const dismissed=()=>{try{return sessionStorage.getItem(dismissedKey)==='yes';}catch{return false;}};
   const update=()=>{
-    if(standalone()||dismissedForThisPage){banner.hidden=true;return;}
+    if(standalone()||dismissed()){banner.hidden=true;return;}
     banner.hidden=false;
-    if(pendingPrompt){installButton.hidden=false;help.textContent='Install / इन्स्टल थिचेर SMSS एप आफ्नो उपकरणमा थप्नुहोस्।';}
-    else if(isIOS()){installButton.hidden=true;help.textContent='iPhone/iPad: Safari मा Share (साझा) थिचेर Add to Home Screen / होम स्क्रिनमा थप्नुहोस्।';}
-    else{installButton.hidden=true;help.textContent='Browser menu बाट Install app वा Add to Home Screen छान्नुहोस्। उपलब्ध भए Install बटन यहीँ देखिन्छ।';}
+    if(pendingPrompt){installButton.hidden=false;help.textContent='एक पटक Install थिचेर एप थप्नुहोस्।';}
+    else if(isIOS()){installButton.hidden=true;help.textContent='iPhone: Safari को Share → Add to Home Screen प्रयोग गर्नुहोस्।';}
+    else{installButton.hidden=true;help.textContent='Browser menu बाट Install app वा Add to Home Screen छान्नुहोस्।';}
   };
-  window.addEventListener('beforeinstallprompt',event=>{
-    event.preventDefault();pendingPrompt=event;update();
-  });
+  window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();pendingPrompt=event;update();});
   window.addEventListener('appinstalled',()=>{pendingPrompt=null;banner.hidden=true;});
   window.matchMedia('(display-mode: standalone)').addEventListener?.('change',update);
   installButton.addEventListener('click',async()=>{
@@ -215,11 +218,10 @@
     try{await prompt.prompt();await prompt.userChoice;}catch(error){console.warn('Install prompt unavailable',error);}
     update();
   });
-  later.addEventListener('click',()=>{dismissedForThisPage=true;banner.hidden=true;});
+  later.addEventListener('click',()=>{try{sessionStorage.setItem(dismissedKey,'yes');}catch{}banner.hidden=true;});
   update();
 })();
 </script>
-
 
 <div id="loginGate"><div class="login-card"><div class="login-brand"><div class="login-logo" id="loginSchoolLogo" aria-hidden="true">म</div><div class="login-school-titles"><span class="login-kicker">SCHOOL EXAM MANAGEMENT SYSTEM</span><h2 id="loginSchoolName" class="login-school-en"></h2><h3 id="loginSchoolNameNe" class="login-school-ne" lang="ne"></h3><p id="loginSchoolAddress" class="login-school-address" hidden></p><p id="loginSchoolAddressNe" class="login-school-address" lang="ne" hidden></p></div></div><div class="login-welcome"><h3>स्वागत छ !</h3><p>आफ्नो आधिकारिक खाताबाट सुरक्षित रूपमा Login गर्नुहोस्।</p></div><div class="login-year"><span>Academic Year</span><strong id="loginAcademicYear">2083</strong></div><div class="login-user-types" aria-label="Login account types"><span>Admin</span><span>Teacher</span><span>Other</span></div><form id="loginForm"><label for="loginEmail">Email Address</label><input id="loginEmail" type="email" required autocomplete="username" placeholder="Enter your email address"><label for="loginPassword">Password</label><div class="password-field"><input id="loginPassword" type="password" required autocomplete="current-password" placeholder="आफ्नो Password राख्नुहोस्"><button id="toggleLoginPassword" class="password-toggle" type="button" aria-label="Password देखाउनुहोस्" aria-pressed="false" title="Password देखाउनुहोस्"><span id="loginPasswordEye" aria-hidden="true">👁</span></button></div><button id="loginButton" type="submit">Login</button><p id="loginError" role="alert"></p><p id="loginStatus">Admin वा सक्रिय शिक्षक खाताबाट Login गर्नुहोस्।</p></form>
 <button class="forgot-link" id="forgotPasswordToggle" type="button" aria-expanded="false" aria-controls="forgotPasswordPanel">पासवर्ड बिर्सनुभयो? / Forgot Password</button>
