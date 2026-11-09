@@ -1,0 +1,25 @@
+name: V45 regression checks
+on:
+  push:
+    branches: [smss-v45-integration]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify V45 menu and PWA assets
+        run: npm run test:v45
+      - name: Verify IEMIS marks entry and ledger
+        run: npm run test:iemis
+      - name: Verify PWA upgrade behavior
+        run: npm run test:pwa
+      - name: Verify question paper content
+        run: npm run test:question-paper
