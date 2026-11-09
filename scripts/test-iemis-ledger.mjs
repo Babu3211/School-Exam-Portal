@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {iemisGrade,iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisLedger} from '../iemis-ledger.js';
+import {iemisGrade,iemisFinalGrade,iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisLedger} from '../iemis-ledger.js';
 
 // Synthetic identities only. Academic vectors reproduce the verified IEMIS examples.
 const subjects=['Computer Science','Nepali','English','Mathematics','Science & Technology','Social Studies & Human Value Education','Health Physical & Creative Art','Hamro Dhunibeshi'];
@@ -22,6 +22,8 @@ assert.equal(iemisSummary({...records[0],scores:[{name:'IN',fullMarks:50,obtaine
 assert.equal(iemisSummary({...records[0],scores:[{name:'IN',fullMarks:50,obtained:51}]},{annual:false}).complete,false);
 for(const [n,expected] of [[0,'NG'],[34.99,'NG'],[35,'D'],[40,'C'],[50,'C+'],[60,'B'],[70,'B+'],[80,'A'],[90,'A+'],[100,'A+']])assert.equal(iemisGrade(n).grade,expected);
 assert.equal(iemisGrade(101),null);
+for(const [point,grade] of [[0,'NG'],[1.6,'D'],[2,'C'],[2.1,'C+'],[2.4,'C+'],[2.4001,'B'],[3,'B+'],[3.2,'B+'],[3.6,'A'],[3.7,'A+']])assert.equal(iemisFinalGrade(point).grade,grade);
+assert.deepEqual(parts.map(x=>x.summary.totalGrade.grade),['B+','B+','B+','B','B','B','B+','B+']);
 assert.equal(iemisSubjectKey('Math'),iemisSubjectKey('Mathematics'));
 assert.equal(iemisSubjectKey('COMP. NEPALI (1021)'),iemisSubjectKey('Nepali'));
 const markOrder=iemisSubjects(subjects,'number',6);
@@ -52,7 +54,8 @@ const student=common.students[0];student.class='6';
 const perSubject=parts.map((x,i)=>({subject:subjects[i],missing:false,totalFull:100,pct:x.summary.obtained,grade:x.summary.totalGrade}));
 const dependencies={activeResultRows:[{student,perSubject}],document:{getElementById:id=>id==='gradeSheetView'?box:{value:'synthetic-exam'}},resultExams:[{id:'synthetic-exam',academicYear:'2082'}],resultMarks:records,resultClasses:subjects.map((subject,i)=>({className:'6',subject,creditHour:credits[i],active:true})),currentSchoolSettings:{schoolName:'Test School',iemisCode:'TEST'},englishDisplayText:String,classNoFromName:String,onlineResultDigits:String,smssTermLabelEnglish:()=> 'Final Term',smssExamTermKey:()=> 'annual',canonicalStudentClass:String,canonicalSubjectKey:iemisSubjectKey,studentOptionalSelectionComplete:()=>true,isComputerSubject:s=>/computer/i.test(s),resultEsc:s=>String(s??''),subjectEnglishLabel:String,schoolPrintName:()=> 'Test School',schoolPrintAddress:()=> 'Test Address',schoolLogoPrintMarkup:()=> '',gradeForPercent:iemisGrade,resultGradeBands:[],iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa};
 new Function(...Object.keys(dependencies),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(dependencies));
-assert.match(box.innerHTML,/GRADE POINT AVERAGE = 2.93/);
+assert.match(box.innerHTML,/<td colspan="4"[^>]*>GRADE POINT AVERAGE = 2.93/);
+assert.ok(box.innerHTML.indexOf('ONE CREDIT HOUR EQUALS 36')<box.innerHTML.indexOf('DETAILS OF GRADE SHEET'));
 assert.match(box.innerHTML,/COMPUTER SCIENCE\(TH\)<br>COMPUTER SCIENCE\(IN\)/);
 assert.ok(box.innerHTML.indexOf('COMPUTER SCIENCE(TH)')<box.innerHTML.indexOf('NEPALI(TH)'));
 console.log('IEMIS ledger, subject order, component-weighted GPA, identity, escaping and actual Grade Sheet tests passed.');
