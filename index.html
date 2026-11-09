@@ -387,7 +387,7 @@ v.innerHTML=h;if(window.applySchoolPhotoBackgrounds)window.applySchoolPhotoBackg
 document.addEventListener("click",e=>{const pageButton=e.target.closest("[data-page]"),goButton=e.target.closest("[data-go]");if(pageButton){e.preventDefault();render(pageButton.dataset.page);document.querySelectorAll("[data-page]").forEach(b=>b.classList.toggle("active",b===pageButton));if(pageButton.dataset.ledgerMode&&window.setIemisLedgerMode)window.setIemisLedgerMode(pageButton.dataset.ledgerMode);return}if(goButton){render(goButton.dataset.go);}});render("dashboard");
 </script>
 <script type="module">
-import {iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisLedger,iemisComponentKey,iemisDisplaySubject} from "./iemis-ledger.js";
+import {iemisLegacyTheory,iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisLedger,iemisComponentKey,iemisDisplaySubject} from "./iemis-ledger.js";
 import {IemisEntryGrid,iemisEntrySchema,iemisEntryBatches,normalizeIemisEntryScores} from "./iemis-entry.js";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
 import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut,createUserWithEmailAndPassword,deleteUser,sendPasswordResetEmail} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
@@ -1785,7 +1785,7 @@ function renderMarksLedgerPage(){
   const filtered=students.filter(st=>(!section||String(st.section||'')===section)&&(!document.getElementById('ledgerWithSymbol')?.checked||!!ledgerSymbol(st)));
   const reportHeader=document.getElementById('ledgerIemisHeader');if(reportHeader){reportHeader.hidden=false;reportHeader.innerHTML=iemisLedgerHeading(cl,exam);reportHeader.style.cssText='position:relative;text-align:center;min-height:120px;color:#d92d46;margin:30px 0 45px;padding-left:110px';}
   const creditFor=sub=>{const row=cachedClasses.find(c=>canonicalStudentClass(c.className??c.class??'')===canonicalStudentClass(cl)&&c.active!==false&&iemisSubjectKey(c.subject||c.subjectName)===iemisSubjectKey(sub));return row?.creditHour??row?.creditHours;};
-  const display=iemisLedger({mode:activeLedgerMode,classNo,annual:smssExamTermKey(exam)==='annual',subjects,students:filtered.map(st=>({...st,displayName:englishDisplayText(st.studentName||st.name||'')})),records:existingMarks,examId,schoolName:schoolPrintName(),schoolCode:currentSchoolSettings.iemisCode||'',creditFor,label:sub=>iemisDisplaySubject(subjectEnglishLabel(sub)),componentsFor:sub=>activeLedgerMode==='entry'&&classNo<=10?iemisEntrySchema(cl,smssExamTermKey(exam),sub):ledgerComponentsForSubject(group,sub,cl,exam),applicable:(st,sub)=>{const slot=optionalSlotForSubject(sub);return !slot||iemisSubjectKey(studentOptionalSubject(st,slot))===iemisSubjectKey(sub);}});
+  const display=iemisLedger({mode:activeLedgerMode,classNo,annual:smssExamTermKey(exam)==='annual',subjects,students:filtered.map(st=>({...st,displayName:englishDisplayText(st.studentName||st.name||'')})),records:existingMarks,examId,schoolName:schoolPrintName(),schoolCode:currentSchoolSettings.iemisCode||'',creditFor,label:sub=>iemisDisplaySubject(subjectEnglishLabel(sub)),componentsFor:sub=>{const old=existingMarks.find(r=>r.examId===examId&&iemisSubjectKey(r.subject)===iemisSubjectKey(sub)&&iemisLegacyTheory(classNo,[r]));return old?old.scores.map(c=>({name:c.name,label:c.name,fullMarks:c.fullMarks})):activeLedgerMode==='entry'&&classNo<=10?iemisEntrySchema(cl,smssExamTermKey(exam),sub):ledgerComponentsForSubject(group,sub,cl,exam)},applicable:(st,sub)=>{const slot=optionalSlotForSubject(sub);return !slot||iemisSubjectKey(studentOptionalSubject(st,slot))===iemisSubjectKey(sub);}});
   head.innerHTML=display.head;body.innerHTML=display.body||'<tr><td>No students found.</td></tr>';
   if(msg)msg.textContent=`IEMIS ${activeLedgerMode==='grade'?'Gradewise':activeLedgerMode==='entry'?'Mark Entry':'Markwise'} Ledger · ${exam.examName} · ${filtered.length} students. Missing marks and Credit Hours remain blank; no data was changed.`;
   return;
@@ -2364,7 +2364,7 @@ function buildResultRows(){
    const totalObt=Number(m.totalObtained??scores.reduce((a,x)=>a+Number(x.obtained||0),0));
    const scoresComplete=scores.length>0&&scores.every(x=>x.obtained!==null&&x.obtained!==undefined&&Number.isFinite(Number(x.obtained))&&Number.isFinite(Number(x.fullMarks))&&Number(x.fullMarks)>=0&&Number(x.obtained)>=0&&Number(x.obtained)<=Number(x.fullMarks));
    const pct=scoresComplete&&totalFull>0&&Number.isFinite(totalObt)?totalObt/totalFull*100:null;
-   const annualIemis=classNo>=6&&classNo<=10&&smssExamTermKey(exam)==='annual';
+   const annualIemis=(classNo>=6&&classNo<=10||iemisLegacyTheory(classNo,[m],{examId:exam.id}))&&smssExamTermKey(exam)==='annual';
    const computed=annualIemis?iemisSummary(m,{annual:true}):null;
    const displayPct=annualIemis&&!computed.complete?null:pct;
    return {subject,missing:false,achievement:false,totalFull,totalObt,pct:displayPct,grade:displayPct===null?null:annualIemis?computed.totalGrade:gradeForPercent(pct)};
@@ -2406,8 +2406,9 @@ function showGradeSheet(studentId){
  const applicableSubjects=r.perSubject.filter(x=>!x.notApplicable);
  const displayStudentName=student.studentNameEnglish||student.nameEnglish||student.nameEn||englishDisplayText(student.studentName||student.name||'—');
  const classNo=Number(classNoFromName(student.class||'')||0);
- const isPrimary=classNo>=1&&classNo<=5;
- const sheetOrder=iemisSubjects(applicableSubjects.map(x=>x.subject),'sheet',classNo);applicableSubjects.sort((a,b)=>sheetOrder.indexOf(a.subject)-sheetOrder.indexOf(b.subject));
+ const legacyTheory=iemisLegacyTheory(classNo,resultMarks,{examId:exam?.id,studentId});
+ const isPrimary=classNo>=1&&classNo<=5&&!legacyTheory;
+ const sheetOrder=iemisSubjects(applicableSubjects.map(x=>x.subject),'sheet',classNo,{legacyTheory});applicableSubjects.sort((a,b)=>sheetOrder.indexOf(a.subject)-sheetOrder.indexOf(b.subject));
  const dobBs=onlineResultDigits(student.dob||student.dateOfBirth||student.birthDate||'');const dobAd=onlineResultDigits(student.dobAD||student.dateOfBirthAD||'');const dob=[dobBs?`${dobBs} (B.S.)`:null,dobAd?`${dobAd} (A.D.)`:null].filter(Boolean).join(' ')||'—';
  const symbol=onlineResultDigits(student.symbolNo||student.symbolNumber||student.examSymbolNo||'—');
  const studentCode=onlineResultDigits(student.studentIemisNo||student.iemisStudentNo||student.admissionNo||'');
@@ -2417,7 +2418,7 @@ function showGradeSheet(studentId){
  const examTerm=exam?smssTermLabelEnglish(smssExamTermKey(exam)):'Term Not Available';
  const classSubjectRecord=(subject)=>{const sameClass=x=>canonicalStudentClass(x.className??x.class??'')===canonicalStudentClass(student.class??'');const sameSubject=x=>iemisSubjectKey(x.subject||x.subjectName)===iemisSubjectKey(subject);return resultClasses.find(x=>sameClass(x)&&x.active!==false&&sameSubject(x))||resultClasses.find(x=>sameClass(x)&&sameSubject(x))||null};
  const creditFor=(subject)=>{const c=classSubjectRecord(subject);return c?.creditHour??c?.creditHours??'—'};
- if(classNo>=1&&classNo<=5){
+ if(isPrimary){
   const primaryRows=applicableSubjects.map(x=>{
    const ch=Number(creditFor(x.subject));const credit=Number.isFinite(ch)&&ch>0?ch:null;
    const valid=!x.missing&&x.pct!==null&&!!x.grade;
@@ -2442,7 +2443,7 @@ function showGradeSheet(studentId){
  }
  const classSubjects=applicableSubjects.map(x=>({mark:x,config:classSubjectRecord(x.subject)}));
  const hasTheoryTerm=smssExamTermKey(exam)==='annual';
- const gpaRequirementsComplete=hasTheoryTerm&&classNo>=6&&classNo<=10&&classSubjects.length>0&&studentOptionalSelectionComplete(student,student.class)&&classSubjects.every(({mark,config})=>{const rec=resultMarks.find(v=>v.studentId===studentId&&v.examId===exam?.id&&iemisSubjectKey(v.subject)===iemisSubjectKey(mark.subject));const sc=rec?.scores||[];const th=sc.find(v=>/^TH\b|THEORY/i.test(String(v.name||'')));const ins=sc.filter(v=>!/^TH\b|THEORY/i.test(String(v.name||'')));const inFull=ins.reduce((a,v)=>a+Number(v.fullMarks||0),0);const expectedIN=classNo<=8?50:(isComputerSubject(mark.subject)?50:25);const expectedTH=100-expectedIN;return !mark.missing&&mark.pct!==null&&mark.totalFull===100&&Number(config?.creditHour??config?.creditHours)>0&&!!th&&Number(th.fullMarks)===expectedTH&&inFull===expectedIN&&ins.every(v=>v.obtained!==null&&v.obtained!==undefined)&&th.obtained!==null&&th.obtained!==undefined;});const gpaParts=classSubjects.map(({mark,config})=>({summary:iemisSummary(resultMarks.find(v=>v.studentId===studentId&&v.examId===exam?.id&&iemisSubjectKey(v.subject)===iemisSubjectKey(mark.subject)),{annual:true}),creditHour:config?.creditHour??config?.creditHours}));const gpaHasNG=gpaRequirementsComplete&&gpaParts.some(({summary:s})=>s.inGrade?.point===null||s.theoryGrade?.point===null);const gpaEligible=gpaRequirementsComplete&&!gpaHasNG;
+ const gpaRequirementsComplete=hasTheoryTerm&&(classNo>=6&&classNo<=10||legacyTheory)&&classSubjects.length>0&&studentOptionalSelectionComplete(student,student.class)&&classSubjects.every(({mark,config})=>{const rec=resultMarks.find(v=>v.studentId===studentId&&v.examId===exam?.id&&iemisSubjectKey(v.subject)===iemisSubjectKey(mark.subject));const sc=rec?.scores||[];const th=sc.find(v=>/^TH\b|THEORY/i.test(String(v.name||'')));const ins=sc.filter(v=>!/^TH\b|THEORY/i.test(String(v.name||'')));const inFull=ins.reduce((a,v)=>a+Number(v.fullMarks||0),0);const expectedIN=classNo<=8?50:(isComputerSubject(mark.subject)?50:25);const expectedTH=100-expectedIN;return !mark.missing&&mark.pct!==null&&mark.totalFull===100&&Number(config?.creditHour??config?.creditHours)>0&&!!th&&Number(th.fullMarks)===expectedTH&&inFull===expectedIN&&ins.every(v=>v.obtained!==null&&v.obtained!==undefined)&&th.obtained!==null&&th.obtained!==undefined;});const gpaParts=classSubjects.map(({mark,config})=>({summary:iemisSummary(resultMarks.find(v=>v.studentId===studentId&&v.examId===exam?.id&&iemisSubjectKey(v.subject)===iemisSubjectKey(mark.subject)),{annual:true}),creditHour:config?.creditHour??config?.creditHours}));const gpaHasNG=gpaRequirementsComplete&&gpaParts.some(({summary:s})=>s.inGrade?.point===null||s.theoryGrade?.point===null);const gpaEligible=gpaRequirementsComplete&&!gpaHasNG;
  const displayCredit=classSubjects.reduce((a,{config})=>{const v=Number(config?.creditHour??config?.creditHours);return a+(Number.isFinite(v)&&v>0?v:0)},0);
  const totalCredit=gpaEligible?displayCredit:0;
  const gpa=gpaEligible&&totalCredit>0?iemisGpa(gpaParts,{annual:true}):null;

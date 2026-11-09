@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {iemisGrade,iemisFinalGrade,iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisLedger,iemisDisplaySubject} from '../iemis-ledger.js';
+import {iemisLegacyTheory,iemisGrade,iemisFinalGrade,iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisLedger,iemisDisplaySubject} from '../iemis-ledger.js';
 
 // Synthetic identities only. Academic vectors reproduce the verified IEMIS examples.
 const subjects=['Computer Science','Nepali','English','Mathematics','Science & Technology','Social Studies & Human Value Education','Health Physical & Creative Art','Hamro Dhunibeshi'];
@@ -54,10 +54,44 @@ const end=html.indexOf("document.addEventListener('click',e=>{if(e.target.closes
 const box={innerHTML:''};
 const student=common.students[0];student.class='6';
 const perSubject=parts.map((x,i)=>({subject:subjects[i],missing:false,totalFull:100,pct:x.summary.obtained,grade:x.summary.totalGrade}));
-const dependencies={activeResultRows:[{student,perSubject}],document:{getElementById:id=>id==='gradeSheetView'?box:{value:'synthetic-exam'}},resultExams:[{id:'synthetic-exam',academicYear:'2082'}],resultMarks:records,resultClasses:subjects.map((subject,i)=>({className:'6',subject,creditHour:credits[i],active:true})),currentSchoolSettings:{schoolName:'Test School',iemisCode:'TEST'},englishDisplayText:String,classNoFromName:String,onlineResultDigits:String,smssTermLabelEnglish:()=> 'Final Term',smssExamTermKey:()=> 'annual',canonicalStudentClass:String,canonicalSubjectKey:iemisSubjectKey,studentOptionalSelectionComplete:()=>true,isComputerSubject:s=>/computer/i.test(s),resultEsc:s=>String(s??''),subjectEnglishLabel:String,schoolPrintName:()=> 'Test School',schoolPrintAddress:()=> 'Test Address',schoolLogoPrintMarkup:()=> '',gradeForPercent:iemisGrade,resultGradeBands:[],iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisDisplaySubject};
+const dependencies={iemisLegacyTheory,activeResultRows:[{student,perSubject}],document:{getElementById:id=>id==='gradeSheetView'?box:{value:'synthetic-exam'}},resultExams:[{id:'synthetic-exam',academicYear:'2082'}],resultMarks:records,resultClasses:subjects.map((subject,i)=>({className:'6',subject,creditHour:credits[i],active:true})),currentSchoolSettings:{schoolName:'Test School',iemisCode:'TEST'},englishDisplayText:String,classNoFromName:String,onlineResultDigits:String,smssTermLabelEnglish:()=> 'Final Term',smssExamTermKey:()=> 'annual',canonicalStudentClass:String,canonicalSubjectKey:iemisSubjectKey,studentOptionalSelectionComplete:()=>true,isComputerSubject:s=>/computer/i.test(s),resultEsc:s=>String(s??''),subjectEnglishLabel:String,schoolPrintName:()=> 'Test School',schoolPrintAddress:()=> 'Test Address',schoolLogoPrintMarkup:()=> '',gradeForPercent:iemisGrade,resultGradeBands:[],iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisDisplaySubject};
 new Function(...Object.keys(dependencies),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(dependencies));
 assert.match(box.innerHTML,/<td colspan="4"[^>]*>GRADE POINT AVERAGE = 2.93/);
 assert.ok(box.innerHTML.indexOf('ONE CREDIT HOUR EQUALS 36')<box.innerHTML.indexOf('DETAILS OF GRADE SHEET'));
 assert.match(box.innerHTML,/COMPUTER SCIENCE\(TH\)<br>COMPUTER SCIENCE\(IN\)/);
 assert.ok(box.innerHTML.indexOf('COMPUTER SCIENCE(TH)')<box.innerHTML.indexOf('NEPALI(TH)'));
 console.log('IEMIS ledger, subject order, component-weighted GPA, identity, escaping and actual Grade Sheet tests passed.');
+
+// Historical Classes IV/V retain TH/IN; new achievement records stay primary.
+const legacyIn=[42.5,47.5,42.5,42.5,42.5,47.5,42.5,47.5],legacyTh=[22.5,47.5,32.5,27.5,22.5,42.5,37.5,37.5];
+const legacyRecords=records.map((r,i)=>({...r,assessmentType:'marks',scores:[{name:'Internal',fullMarks:50,obtained:legacyIn[i]},{name:'TH (Theory)',fullMarks:50,obtained:legacyTh[i]}]}));
+const legacyParts=legacyRecords.map((r,i)=>({summary:iemisSummary(r,{annual:true}),creditHour:credits[i]}));
+assert.equal(iemisGpa(legacyParts,{annual:true}).toFixed(2),'3.33');
+assert.equal(iemisLegacyTheory(5,legacyRecords,{examId:'synthetic-exam'}),true);
+assert.equal(iemisLegacyTheory(5,legacyRecords,{examId:'other-exam'}),false);
+assert.equal(iemisLegacyTheory(5,legacyRecords.map(r=>({...r,assessmentType:'learning-achievement'}))),false);
+for(const classNo of [4,5]){
+ const st={...student,class:String(classNo)};
+ const d={...dependencies,resultMarks:legacyRecords,resultClasses:dependencies.resultClasses.map(x=>({...x,className:String(classNo)})),activeResultRows:[{student:st,perSubject:legacyRecords.map(r=>{const v=iemisSummary(r,{annual:true});return {subject:r.subject,missing:false,totalFull:100,pct:v.obtained,grade:v.totalGrade};})}]};
+ new Function(...Object.keys(d),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(d));
+ assert.match(box.innerHTML,/GRADE POINT AVERAGE = 3.33/);
+ assert.match(box.innerHTML,/NEPALI\(TH\)<br>NEPALI\(IN\)/);
+ const legacyLedger=iemisLedger({...common,classNo,records:legacyRecords,mode:'grade'});
+ assert.match(legacyLedger.body,/>3.33<\/td>/);
+ assert.doesNotMatch(legacyLedger.head,/<th>IN<\/th>/,'Historical upper-primary IEMIS ledger has one grade column per subject');
+}
+assert.equal(iemisSubjects(subjects,'sheet',4,{legacyTheory:true})[0],'Nepali');
+assert.equal(iemisSubjects(subjects,'sheet',4,{legacyTheory:true})[1],'Computer Science');
+assert.equal(iemisSubjects(subjects,'sheet',5,{legacyTheory:true})[0],'Computer Science');
+assert.equal(iemisSubjects(subjects,'grade',4,{legacyTheory:true})[0],'Computer Science');
+console.log('Historical IV/V TH/IN and GPA 3.33 passed without changing new I–V entry schemas.');
+const newPrimaryRecords=records.map(r=>({...r,assessmentType:'learning-achievement',scores:[{name:'No. of Learning Achievement',fullMarks:25,obtained:25},{name:'Full Marks',fullMarks:100,obtained:null},{name:'Obtained Learning Achievement',fullMarks:100,obtained:95}]}));
+const currentPrimary={...dependencies,resultMarks:newPrimaryRecords,resultClasses:dependencies.resultClasses.map(x=>({...x,className:'5'})),activeResultRows:[{student:{...student,class:'5'},perSubject:newPrimaryRecords.map(r=>({subject:r.subject,missing:false,totalFull:100,pct:95,grade:iemisGrade(95)}))}]};
+new Function(...Object.keys(currentPrimary),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(currentPrimary));
+assert.match(box.innerHTML,/GRADE POINT AVERAGE \(GPA\): 4.00/);
+assert.doesNotMatch(box.innerHTML,/NEPALI\(TH\)/);
+const mixedNewStudent={...common.students[0],id:'new-primary'};
+const mixedRecords=legacyRecords.concat(newPrimaryRecords.map(r=>({...r,studentId:'new-primary'})));
+const mixedLedger=iemisLedger({...common,classNo:5,mode:'grade',records:mixedRecords,students:[mixedNewStudent]});
+assert.match(mixedLedger.body,/>4.00<\/td>/,'An old cohort must not force new achievement records into TH/IN calculations');
+console.log('New Class V achievement Grade Sheet and mixed-cohort isolation passed.');

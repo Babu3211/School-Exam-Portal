@@ -31,8 +31,12 @@ export function iemisDisplaySubject(value,{codes=false}={}){
   return labels[key]||raw.replace(/^OPT\.?\s*II\b\s*/i,'Optional II: ').replace(/^OPT\.?\s*I\b\s*/i,'Optional I: ').replace(/\s*\(\d+\)$/,'');
 }
 const core=['nepali','english','mathematics','science & technology','social studies & human value education','health physical & creative art','hamro dhunibeshi'];
-export function iemisSubjects(subjects,mode,classNo) {
-  const order=classNo<=3?['nepali','english','mathematics','serophero','hamro dhunibeshi','computer science']:
+export function iemisLegacyTheory(classNo,records,{examId,studentId}={}) {
+  return [4,5].includes(Number(classNo)) && records.some(r=>(!examId||r.examId===examId)&&(!studentId||r.studentId===studentId)&&r.assessmentType!=='learning-achievement'&&(r.scores||[]).some(s=>/^TH\b|THEORY/i.test(s.name||'')));
+}
+export function iemisSubjects(subjects,mode,classNo,{legacyTheory=false}={}) {
+  const legacySheet=classNo===4?['nepali','computer science',...core.filter(s=>s!=='nepali')]:['computer science',...core];
+  const order=legacyTheory&&mode==='sheet'?legacySheet:legacyTheory&&mode==='grade'&&classNo===4?['computer science',...[...core].reverse()]:classNo<=3?['nepali','english','mathematics','serophero','hamro dhunibeshi','computer science']:
     mode==='number'&&classNo>=6&&classNo<=8?[...core].reverse().concat('computer science'):
     mode==='sheet'&&classNo>=6&&classNo<=8?['computer science',...core]:[...core,'computer science'];
   const rank=s=>{const k=iemisSubjectKey(s);const i=order.indexOf(k);return i<0?order.length:i;};
@@ -82,7 +86,8 @@ export const iemisEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&
 const fmt=v=>v===null||v===undefined?'—':String(Number(Number(v).toFixed(2)));
 export function iemisLedger({mode='number',classNo,annual=false,subjects,students,records,examId,schoolName,schoolCode,creditFor=()=>null,label=s=>s,componentsFor=()=>[],applicable=()=>true}) {
   const e=iemisEscape,primary=classNo<=5;
-  subjects=iemisSubjects(subjects,mode,classNo);
+  const legacyTheory=iemisLegacyTheory(classNo,records,{examId});
+  subjects=iemisSubjects(subjects,mode,classNo,{legacyTheory});
   const grade=mode==='grade',entry=mode==='entry';
   const identity=entry?['S.N','Student Name','Regd. No.','Symbol No.']:grade?['S.No.','School Name','School Code','Student Name','Dob','Father Name','Mother Name','Symbol Number']:['S.No.','School Name','School Code','Student Name','Symbol Number'];
   const cols=subjects.map(s=>entry?['IsAbsent',...componentsFor(s).map(c=>c.label||c.name)]:primary?[]:grade?(annual?['IN','TH','Total']:['IN','Total']):(annual?['IN','TH']:['IN']));
@@ -94,16 +99,18 @@ export function iemisLedger({mode='number',classNo,annual=false,subjects,student
     const reg=st.studentIemisNo||st.iemisStudentNo||st.iemisNumber||st.iemisNo||st.registrationNo||st.regdNo||st.regNo||'';
     const ids=entry?[index+1,name,reg,symbol]:grade?[index+1,schoolName,schoolCode,name,st.dob||st.dateOfBirth||'',st.fatherName||'',st.motherName||'',symbol]:[index+1,schoolName,schoolCode,name,symbol];
     const summaries=[];
+    const rowLegacy=iemisLegacyTheory(classNo,records,{examId,studentId:st.id});
     const cells=subjects.map((sub,i)=>{
       if(!applicable(st,sub))return `<td colspan="${cols[i].length||1}">N/A</td>`;
       const record=records.find(r=>r.studentId===st.id&&r.examId===examId&&iemisSubjectKey(r.subject)===iemisSubjectKey(sub));
-      const summary=iemisSummary(record,{annual,primary});summaries.push({summary,creditHour:creditFor(sub)});
+      const legacyRecord=iemisLegacyTheory(classNo,record?[record]:[]);
+      const summary=iemisSummary(record,{annual,primary:primary&&!legacyRecord});summaries.push({summary,creditHour:creditFor(sub)});
       if(entry)return '<td>'+(!record?'—':record.isAbsent?'Yes':'No')+'</td>'+componentsFor(sub).map(c=>{const score=record?.scores?.find(s=>String(s.name).toLowerCase()===String(c.name).toLowerCase()||(c.key&&iemisComponentKey(s.name)===c.key));const value=c.readonly?score?.fullMarks:score?.obtained;return '<td>'+e(value??'—')+'</td>';}).join('');
       if(record?.isAbsent)return `<td colspan="${cols[i].length||1}">Abs</td>`;
-      const vals=primary?[grade?summary.totalGrade?.grade:summary.obtained]:grade?[summary.inGrade?.grade,...(annual?[summary.theoryGrade?.grade]:[]),summary.totalGrade?.grade]:[summary.inObtained,...(annual?[summary.theoryObtained]:[])];
+      const vals=primary?[legacyRecord?(grade?summary.theoryGrade?.grade:summary.theoryObtained):(grade?summary.totalGrade?.grade:summary.obtained)]:grade?[summary.inGrade?.grade,...(annual?[summary.theoryGrade?.grade]:[]),summary.totalGrade?.grade]:[summary.inObtained,...(annual?[summary.theoryObtained]:[])];
       return vals.map(v=>'<td>'+e(v==null?'—':typeof v==='number'?fmt(v):v)+'</td>').join('');
     }).join('');
-    const gpa=grade?iemisGpa(summaries,{annual,primary}):null;
+    const gpa=grade?iemisGpa(summaries,{annual,primary:primary&&!rowLegacy}):null;
     return '<tr>'+ids.map(v=>'<td>'+e(v)+'</td>').join('')+cells+(grade?'<td>'+(gpa===null?'—':gpa.toFixed(2))+'</td>':'')+'</tr>';
   }).join('');
   return {head,body,subjects};
