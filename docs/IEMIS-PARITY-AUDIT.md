@@ -72,3 +72,9 @@ Live trial QA caught a real stale-module failure: the new page imported `iemisLe
 `test:pwa` executes the actual worker with seeded prior-version caches. It verifies fresh release imports through the previous cache-first path, nested URL agreement, install/activate, offline release assets, QA navigation isolation, unrelated-cache preservation, and non-interception of external requests or writes. All three GitHub workflows run this regression test.
 
 For the NG discrepancy, the official CDC Letter Grading Directive 2083 was also consulted: Appendix 1, page 6 assigns NG no numeric grade point (dash), rather than 0. The existing portal's null NG grade point is retained. This does not establish how the historical IEMIS 1.65 was stored, so that value is not silently reproduced. Official publication: https://moecdc.gov.np/content/647/letter-grading-directory--2083/ ; document: https://giwmscdnone.gov.np/media/pdf_upload/LetterGrading083_k5pneb6.pdf . The downloaded official document was text-inspected and page 6 visually verified.
+
+## Approved final grading policy — 2083
+
+The school owner explicitly approved CDC Letter Grading Directive 2083 as the single authoritative grading/GPA rule. Do not attempt to reproduce the unexplained historical IEMIS Class III NG GPA 1.65 or infer a competing 1.96 from visible components. NG has no numeric grade point, and incomplete/NG results do not receive a fabricated numeric GPA. This discrepancy is closed as a historical reference inconsistency, not a release blocker.
+
+For current 2083 entry and reports, Classes 1–5 share the Class 1–3 learning-achievement schema, Classes 6–8 share their established component schema, and Classes 9–10 share theirs with the school-approved Computer exception 4/36/10 and final 50. Historical Class 4–5 TH/IN records remain read-only compatible; no migration or overwrite. Keep print-layout and native-install checks separate from grading policy.
