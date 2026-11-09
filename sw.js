@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v50-iemis-assets-20261109';
+const CACHE_NAME = 'smss-pwa-v45-icon-book-20261109';
 const APP_SHELL = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const APP_SHELL = [
   './data/cdc-grade8-science-practice-pack-v1.json',
   './data/cdc-grade10-science-practice-pack-v1.json',
   './manifest.webmanifest',
+  './icon-book.svg',
   './icon-192.png',
   './icon-512.png',
   './apple-touch-icon.png'
