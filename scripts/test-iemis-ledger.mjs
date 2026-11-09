@@ -96,3 +96,23 @@ const mixedRecords=legacyRecords.concat(newPrimaryRecords.map(r=>({...r,studentI
 const mixedLedger=iemisLedger({...common,classNo:5,mode:'grade',records:mixedRecords,students:[mixedNewStudent]});
 assert.match(mixedLedger.body,/>4.00<\/td>/,'An old cohort must not force new achievement records into TH/IN calculations');
 console.log('New Class V achievement Grade Sheet and mixed-cohort isolation passed.');
+
+
+// Print-branding and installed-app regression checks (synthetic only).
+const logoStart=html.indexOf('function schoolLogoPrintMarkup()');
+const logoEnd=html.indexOf('\n',logoStart);
+assert.ok(logoStart>=0 && logoEnd>logoStart,'Print logo helper must exist');
+const printLogo=new Function('currentSchoolSettings','esc',html.slice(logoStart,logoEnd)+';return schoolLogoPrintMarkup();');
+const printedLogo=printLogo({logoDataUrl:'data:image/png;base64,TESTLOGO'},s=>String(s));
+assert.match(printedLogo,/<img src="data:image\/png;base64,TESTLOGO"/,'Saved school logo must appear on printed sheets');
+assert.match(printLogo({logoDataUrl:''},s=>String(s)),/School logo unavailable/,'Missing logo must show an honest fallback');
+assert.match(html,/\$\{schoolLogoPrintMarkup\(\)\}/,'Print templates must embed school logo markup');
+assert.match(html,/<meta name="apple-mobile-web-app-title" content="SMSS Exam Portal">/);
+assert.match(html,/<link rel="icon" type="image\/svg\+xml" href="\.\/icon-book\.svg">/);
+const manifest=JSON.parse(readFileSync('manifest.webmanifest','utf8'));
+assert.equal(manifest.name,'SMSS Exam Portal');
+assert.equal(manifest.short_name,'SMSS Exam Portal');
+assert.ok(manifest.icons.some(i=>i.src==='./icon-book.svg'));
+assert.match(readFileSync('sw.js','utf8'),/\.\/icon-book\.svg/);
+assert.match(html,/#smssInstallBanner\{[^}]*top:/);
+console.log('Print school-logo, installed app name, icon, cache and top install-banner checks passed.');
