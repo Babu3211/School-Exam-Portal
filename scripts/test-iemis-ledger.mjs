@@ -108,12 +108,12 @@ assert.match(printedLogo,/<img src="data:image\/png;base64,TESTLOGO"/,'Saved sch
 assert.match(printLogo({logoDataUrl:''},s=>String(s)),/School logo unavailable/,'Missing logo must show an honest fallback');
 assert.match(html,/\$\{schoolLogoPrintMarkup\(\)\}/,'Print templates must embed school logo markup');
 assert.match(html,/<meta name="apple-mobile-web-app-title" content="SMSS Exam Portal">/);
-assert.match(html,/<link rel="icon" type="image\/svg\+xml" href="\.\/icon-book\.svg">/);
+assert.match(html,/<link rel="icon" type="image\/svg\+xml" href="\.\/smss-uploaded-icon\.svg">/);
 const manifest=JSON.parse(readFileSync('manifest.webmanifest','utf8'));
 assert.equal(manifest.name,'SMSS Exam Portal');
 assert.equal(manifest.short_name,'SMSS Exam Portal');
 assert.ok(manifest.icons.some(i=>i.src==='./smss-uploaded-icon.svg'));
-assert.match(readFileSync('sw.js','utf8'),/\.\/icon-book\.svg/);
+assert.match(readFileSync('sw.js','utf8'),/\.\/smss-uploaded-icon\.svg/);
 assert.match(html,/#smssInstallBanner\{[^}]*top:/);
 console.log('Print school-logo, installed app name, icon, cache and top install-banner checks passed.');
 
