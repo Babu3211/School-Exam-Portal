@@ -200,17 +200,21 @@
   const update=()=>{
     if(standalone()){banner.hidden=true;return;}
     banner.hidden=false;
-    if(pendingPrompt){installButton.hidden=false;help.textContent='आफ्नो मोबाइलमा SMSS Exam Portal एप इन्स्टल गर्न तलको Install App बटनमा थिच्नुहोस्।';}
-    else if(isIOS()){installButton.hidden=true;help.textContent='आफ्नो iPhone मा SMSS Exam Portal एप राख्न Safari को Share (साझा) बटन थिच्नुहोस्, त्यसपछि Add to Home Screen र Add छान्नुहोस्।';}
-    else{installButton.hidden=true;help.textContent='आफ्नो Android मोबाइलमा SMSS Exam Portal एप इन्स्टल गर्न Chrome को मेनुमा गएर Install app वा Add to Home Screen मा थिच्नुहोस्।';}
+    if(isIOS()){installButton.hidden=false;installButton.textContent='Add to Home Screen';help.textContent='आफ्नो iPhone मा SMSS Exam Portal एप राख्न तलको बटन थिचेर Safari मा थप्ने तरिका हेर्नुहोस्।';}
+    else if(pendingPrompt){installButton.hidden=false;installButton.textContent='Install App';help.textContent='आफ्नो Android मोबाइलमा SMSS Exam Portal एप इन्स्टल गर्न तलको Install App बटन थिच्नुहोस्।';}
+    else{installButton.hidden=true;help.textContent='Android मा Chrome खोल्नुहोस्। Install उपलब्ध भएपछि यहीँ Install App बटन देखिनेछ।';}
   };
   window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();pendingPrompt=event;update();});
   window.addEventListener('appinstalled',()=>{pendingPrompt=null;banner.hidden=true;});
   window.matchMedia('(display-mode: standalone)').addEventListener?.('change',update);
   installButton.addEventListener('click',async()=>{
+    if(isIOS()){
+      help.textContent='iPhone मा Safari खोल्नुहोस् → तलको Share (साझा) चिन्ह थिच्नुहोस् → Add to Home Screen छान्नुहोस् → Add थिच्नुहोस्। iOS ले वेबसाइटबाट यो मेनु सिधै खोल्न दिँदैन।';
+      return;
+    }
     if(!pendingPrompt)return update();
     const prompt=pendingPrompt;pendingPrompt=null;
-    try{await prompt.prompt();await prompt.userChoice;}catch(error){console.warn('Install prompt unavailable',error);}
+    try{await prompt.prompt();const result=await prompt.userChoice;if(result?.outcome==='dismissed')help.textContent='Install रद्द भयो। Chrome ले फेरि अनुमति दिएपछि Install App बटन देखिनेछ।';}catch(error){console.warn('Install prompt unavailable',error);}
     update();
   });
   update();
