@@ -1,4 +1,4 @@
-import {iemisEscape as esc,iemisSubjectKey,iemisComponentKey} from './iemis-ledger.js';
+import {iemisEscape as esc,iemisSubjectKey,iemisComponentKey} from './iemis-ledger.js?v=20261109-legacy2';
 
 export function iemisEntrySchema(classNo,term,subject='') {
   const n=Number(String(classNo).replace(/[^0-9]/g,''));

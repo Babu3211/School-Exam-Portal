@@ -387,8 +387,8 @@ v.innerHTML=h;if(window.applySchoolPhotoBackgrounds)window.applySchoolPhotoBackg
 document.addEventListener("click",e=>{const pageButton=e.target.closest("[data-page]"),goButton=e.target.closest("[data-go]");if(pageButton){e.preventDefault();render(pageButton.dataset.page);document.querySelectorAll("[data-page]").forEach(b=>b.classList.toggle("active",b===pageButton));if(pageButton.dataset.ledgerMode&&window.setIemisLedgerMode)window.setIemisLedgerMode(pageButton.dataset.ledgerMode);return}if(goButton){render(goButton.dataset.go);}});render("dashboard");
 </script>
 <script type="module">
-import {iemisLegacyTheory,iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisLedger,iemisComponentKey,iemisDisplaySubject} from "./iemis-ledger.js";
-import {IemisEntryGrid,iemisEntrySchema,iemisEntryBatches,normalizeIemisEntryScores} from "./iemis-entry.js";
+import {iemisLegacyTheory,iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisLedger,iemisComponentKey,iemisDisplaySubject} from "./iemis-ledger.js?v=20261109-legacy2";
+import {IemisEntryGrid,iemisEntrySchema,iemisEntryBatches,normalizeIemisEntryScores} from "./iemis-entry.js?v=20261109-legacy2";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
 import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut,createUserWithEmailAndPassword,deleteUser,sendPasswordResetEmail} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 

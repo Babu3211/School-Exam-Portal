@@ -1,9 +1,11 @@
-const CACHE_NAME = 'smss-pwa-v49-iemis-legacy-20261109';
+const CACHE_NAME = 'smss-pwa-v50-iemis-assets-20261109';
 const APP_SHELL = [
   './',
   './index.html',
   './iemis-ledger.js',
   './iemis-entry.js',
+  './iemis-ledger.js?v=20261109-legacy2',
+  './iemis-entry.js?v=20261109-legacy2',
   './cdc-question-paper.js',
   './data/cdc-grade8-science-practice-pack-v1.json',
   './data/cdc-grade10-science-practice-pack-v1.json',
@@ -41,7 +43,10 @@ self.addEventListener('fetch', event => {
     event.respondWith((async () => {
       try {
         const response = await fetch(request);
-        if (response && response.ok) {
+        const appRoot = new URL('./', self.location.href).pathname;
+        const appIndex = new URL('./index.html', self.location.href).pathname;
+        const isAppEntry = [appRoot, appIndex, appIndex.replace(/\.html$/, '')].includes(url.pathname);
+        if (response && response.ok && isAppEntry) {
           const cache = await caches.open(CACHE_NAME);
           await cache.put('./index.html', response.clone());
         }

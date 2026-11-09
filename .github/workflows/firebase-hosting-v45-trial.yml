@@ -36,6 +36,8 @@ jobs:
         run: node scripts/check-v44-requirements.mjs
       - name: Verify IEMIS ledger layouts and component-weighted GPA
         run: npm run test:iemis
+      - name: Check PWA release upgrades and offline isolation
+        run: npm run test:pwa
       - name: Run Firestore Security Rules emulator tests
         run: npm run test:rules
       - name: Generate synthetic IEMIS layout fixture for browser QA
