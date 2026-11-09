@@ -112,7 +112,7 @@ assert.match(html,/<link rel="icon" type="image\/svg\+xml" href="\.\/smss-upload
 const manifest=JSON.parse(readFileSync('manifest.webmanifest','utf8'));
 assert.equal(manifest.name,'SMSS Exam Portal');
 assert.equal(manifest.short_name,'SMSS Exam Portal');
-assert.ok(manifest.icons.some(i=>i.src==='./smss-uploaded-icon.svg'));
+assert.ok(manifest.icons.some(i=>i.src==='./icon-512.png' && i.sizes==='512x512'));
 assert.match(readFileSync('sw.js','utf8'),/\.\/smss-uploaded-icon\.svg/);
 assert.match(html,/#smssInstallBanner\{[^}]*top:/);
 console.log('Print school-logo, installed app name, icon, cache and top install-banner checks passed.');
