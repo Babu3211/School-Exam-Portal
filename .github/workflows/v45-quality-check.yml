@@ -33,5 +33,7 @@ jobs:
         run: node scripts/test-question-paper-content.mjs
       - name: Run V45 Grade Ledger and requirement regression checks
         run: node scripts/check-v44-requirements.mjs
+      - name: Verify IEMIS ledger layouts and component-weighted GPA
+        run: node scripts/test-iemis-ledger.mjs
       - name: Run Firestore Security Rules emulator tests
         run: npm run test:rules

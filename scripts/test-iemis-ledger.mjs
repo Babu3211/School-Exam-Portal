@@ -1,0 +1,58 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {iemisGrade,iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisLedger} from '../iemis-ledger.js';
+
+// Synthetic identities only. Academic vectors reproduce the verified IEMIS examples.
+const subjects=['Computer Science','Nepali','English','Mathematics','Science & Technology','Social Studies & Human Value Education','Health Physical & Creative Art','Hamro Dhunibeshi'];
+const credits=[4,5,5,5,5,5,3,4];
+const inMarks=[41,41,42,44,41,42,44,43],thMarks=[30,28,29,18,23,23,33,27];
+const records=subjects.map((subject,i)=>({studentId:'synthetic-1',examId:'synthetic-exam',subject,scores:[{name:'Internal',fullMarks:50,obtained:inMarks[i]},{name:'TH (Theory)',fullMarks:50,obtained:thMarks[i]}]}));
+const snapshots=structuredClone(records);
+const parts=records.map((r,i)=>({summary:iemisSummary(r,{annual:true}),creditHour:credits[i]}));
+assert.equal(iemisGpa(parts,{annual:true}).toFixed(2),'2.93');
+const wrongFinalGradeAverage=parts.reduce((sum,x)=>sum+x.creditHour*x.summary.totalGrade.point,0)/36;
+assert.equal(wrongFinalGradeAverage.toFixed(2),'3.03');
+// Secondary component-credit example shown by IEMIS (5/5/5/5/4/4/4 credits).
+const secondary=[[3.75,2,1.25,3.6],[3.75,3.2,1.25,3.2],[3.75,1.6,1.25,3.6],[3.75,1.6,1.25,3.6],[3,2.4,1,3.6],[3,2,1,3.6],[2,1.6,2,4]].map(([th,tgp,inn,igp])=>({creditHour:th+inn,summary:{complete:true,full:th+inn,theoryFull:th,inFull:inn,theoryGrade:{point:tgp},inGrade:{point:igp}}}));
+assert.equal(iemisGpa(secondary,{annual:true}).toFixed(2),'2.52');
+assert.equal(iemisGpa(parts,{annual:false}),null,'Non-final GPA must not invent TH results');
+assert.equal(iemisGpa([{...parts[0],creditHour:undefined}],{annual:true}),null);
+assert.equal(iemisSummary({...records[0],scores:[{name:'IN',fullMarks:50,obtained:''},{name:'TH',fullMarks:50,obtained:30}]},{annual:true}).complete,false);
+assert.equal(iemisSummary({...records[0],scores:[{name:'IN',fullMarks:50,obtained:0},{name:'TH',fullMarks:50,obtained:30}]},{annual:true}).inObtained,0,'A saved zero must survive');
+assert.equal(iemisSummary({...records[0],scores:[{name:'IN',fullMarks:50,obtained:51}]},{annual:false}).complete,false);
+for(const [n,expected] of [[0,'NG'],[34.99,'NG'],[35,'D'],[40,'C'],[50,'C+'],[60,'B'],[70,'B+'],[80,'A'],[90,'A+'],[100,'A+']])assert.equal(iemisGrade(n).grade,expected);
+assert.equal(iemisGrade(101),null);
+assert.equal(iemisSubjectKey('Math'),iemisSubjectKey('Mathematics'));
+assert.equal(iemisSubjectKey('COMP. NEPALI (1021)'),iemisSubjectKey('Nepali'));
+const markOrder=iemisSubjects(subjects,'number',6);
+assert.equal(markOrder[0],'Hamro Dhunibeshi');assert.equal(markOrder.at(-1),'Computer Science');
+assert.equal(iemisSubjects(subjects,'grade',6)[0],'Nepali');
+assert.equal(iemisSubjects(subjects,'sheet',6)[0],'Computer Science');
+const common={classNo:6,annual:true,subjects,students:[{id:'synthetic-1',studentName:'Test <Student>',dob:'2070-01-01',fatherName:'Test Father',motherName:'Test Mother',symbolNo:'TEST01',studentIemisNo:'TESTREG'}],records,examId:'synthetic-exam',schoolName:'Test School',schoolCode:'TEST',creditFor:s=>credits[subjects.indexOf(s)]};
+const mark=iemisLedger({...common,mode:'number'}),grade=iemisLedger({...common,mode:'grade'});
+assert.match(mark.head,/School Name/);assert.match(mark.head,/Symbol Number/);
+assert.match(mark.head,/<th>IN<\/th><th>TH<\/th>/);
+assert.match(grade.head,/<th>IN<\/th><th>TH<\/th><th>Total<\/th>/);
+assert.match(grade.head,/Dob/);assert.match(grade.head,/Father Name/);assert.match(grade.head,/Mother Name/);
+assert.match(grade.body,/>2.93<\/td>/);
+assert.match(grade.body,/Test &lt;Student&gt;/);assert.doesNotMatch(grade.body,/<Student>/);
+const first=iemisLedger({...common,annual:false,mode:'number'});
+assert.doesNotMatch(first.head,/<th>TH<\/th>/);
+const entry=iemisLedger({...common,mode:'entry',componentsFor:()=>[{name:'Internal'},{name:'TH (Theory)'}]});
+assert.match(entry.head,/Regd\. No\./);assert.match(entry.body,/TESTREG/);
+assert.deepEqual(records,snapshots,'Read-only renderer must not mutate marks');
+const html=readFileSync('index.html','utf8');
+assert.match(html,/id="iemisLedgerFormat" checked/);assert.match(html,/id="entryLedgerTab"/);
+assert.match(readFileSync('sw.js','utf8'),/\.\/iemis-ledger\.js/);
+// Exercise the actual Grade Sheet renderer, rather than just its math helper.
+const start=html.indexOf('function showGradeSheet(studentId)');
+const end=html.indexOf("document.addEventListener('click',e=>{if(e.target.closest('#loadResultsBtn'))",start);
+const box={innerHTML:''};
+const student=common.students[0];student.class='6';
+const perSubject=parts.map((x,i)=>({subject:subjects[i],missing:false,totalFull:100,pct:x.summary.obtained,grade:x.summary.totalGrade}));
+const dependencies={activeResultRows:[{student,perSubject}],document:{getElementById:id=>id==='gradeSheetView'?box:{value:'synthetic-exam'}},resultExams:[{id:'synthetic-exam',academicYear:'2082'}],resultMarks:records,resultClasses:subjects.map((subject,i)=>({className:'6',subject,creditHour:credits[i],active:true})),currentSchoolSettings:{schoolName:'Test School',iemisCode:'TEST'},englishDisplayText:String,classNoFromName:String,onlineResultDigits:String,smssTermLabelEnglish:()=> 'Final Term',smssExamTermKey:()=> 'annual',canonicalStudentClass:String,canonicalSubjectKey:iemisSubjectKey,studentOptionalSelectionComplete:()=>true,isComputerSubject:s=>/computer/i.test(s),resultEsc:s=>String(s??''),subjectEnglishLabel:String,schoolPrintName:()=> 'Test School',schoolPrintAddress:()=> 'Test Address',schoolLogoPrintMarkup:()=> '',gradeForPercent:iemisGrade,resultGradeBands:[],iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa};
+new Function(...Object.keys(dependencies),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(dependencies));
+assert.match(box.innerHTML,/GRADE POINT AVERAGE = 2.93/);
+assert.match(box.innerHTML,/COMPUTER SCIENCE\(TH\)<br>COMPUTER SCIENCE\(IN\)/);
+assert.ok(box.innerHTML.indexOf('COMPUTER SCIENCE(TH)')<box.innerHTML.indexOf('NEPALI(TH)'));
+console.log('IEMIS ledger, subject order, component-weighted GPA, identity, escaping and actual Grade Sheet tests passed.');

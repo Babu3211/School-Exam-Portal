@@ -1,0 +1,9 @@
+import {readFile,mkdir,writeFile} from 'node:fs/promises';
+const source=await readFile('index.html','utf8');
+const start=source.indexOf('function showGradeSheet(studentId)');
+const end=source.indexOf("document.addEventListener('click',e=>{if(e.target.closest('#loadResultsBtn'))",start);
+if(start<0||end<=start)throw new Error('Grade Sheet renderer not found');
+const template=await readFile('scripts/fixtures/iemis-layout.html','utf8');
+await mkdir('qa',{recursive:true});
+await writeFile('qa/iemis-layout.html',template.replace('/* GRADE_SHEET_SOURCE */',source.slice(start,end)));
+console.log('Generated synthetic IEMIS layout fixture for trial browser QA. No Firebase or IEMIS connection.');
