@@ -62,8 +62,8 @@ jobs:
           curl --fail --location --retry 5 --retry-delay 3 "$url/" -o /tmp/smss-index.html
           grep -Fq 'SMSS Exam Portal' /tmp/smss-index.html
           curl --fail --location "$url/manifest.webmanifest" -o /tmp/smss-manifest.json
-          node -e 'const m=require("/tmp/smss-manifest.json");if(m.name!=="SMSS Exam Portal"||!m.icons.some(x=>x.src==="./icon-book.svg"))process.exit(1)'
-          curl --fail --location "$url/icon-book.svg" -o /tmp/smss-icon.svg
+          node -e 'const m=require("/tmp/smss-manifest.json");if(m.name!=="SMSS Exam Portal"||!m.icons.some(x=>x.src==="./smss-uploaded-icon.svg"))process.exit(1)'
+          curl --fail --location "$url/smss-uploaded-icon.svg" -o /tmp/smss-icon.svg
           grep -Fq '<svg' /tmp/smss-icon.svg
           for asset in icon-192.png icon-512.png apple-touch-icon.png; do
             curl --fail --location "$url/$asset" -o "/tmp/$asset"
