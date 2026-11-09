@@ -116,3 +116,15 @@ assert.ok(manifest.icons.some(i=>i.src==='./icon-book.svg'));
 assert.match(readFileSync('sw.js','utf8'),/\.\/icon-book\.svg/);
 assert.match(html,/#smssInstallBanner\{[^}]*top:/);
 console.log('Print school-logo, installed app name, icon, cache and top install-banner checks passed.');
+
+
+const ngPrimaryParts=[
+ {summary:{complete:true,totalGrade:iemisGrade(80)},creditHour:5},
+ {summary:{complete:true,totalGrade:iemisGrade(30)},creditHour:4}
+];
+assert.equal(iemisGpa(ngPrimaryParts,{annual:true,primary:true}),null,'NG has no numeric GP under CDC 2083');
+assert.equal(iemisGpa([{summary:{complete:false,totalGrade:null},creditHour:5}],{annual:true,primary:true}),null,'Incomplete primary assessment cannot show GPA');
+const ngSecondary=structuredClone(parts);
+ngSecondary[0].summary.inGrade=iemisGrade(30);
+assert.equal(iemisGpa(ngSecondary,{annual:true}),null,'Secondary NG must not silently become a numeric zero');
+console.log('CDC 2083 NG/incomplete GPA safeguards passed.');
