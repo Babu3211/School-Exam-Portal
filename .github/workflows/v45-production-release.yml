@@ -1,0 +1,57 @@
+name: Deploy approved SMSS V45 to Firebase Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type DEPLOY-V45 after approving native print, school logo and IEMIS NG discrepancy policy'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smss-production-hosting
+  cancel-in-progress: false
+
+jobs:
+  verify-and-deploy:
+    if: ${{ github.event.inputs.confirmation == 'DEPLOY-V45' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Verify JavaScript and retained V44 requirements
+        run: |
+          node scripts/check-inline-js.mjs
+          node --check cdc-question-paper.js
+          node scripts/check-v44-requirements.mjs
+          npm run test:iemis
+          npm run test:pwa
+          npm run test:question-paper
+      - name: Verify Firestore rules against emulator (no production writes)
+        run: npm run test:rules
+      - name: Deploy Hosting only (never deploy Firestore rules or modify marks)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
+          projectId: exam-portal-smss-95016
+          channelId: live
+          entryPoint: .
+      - name: Smoke-test production HTML, manifest and icon
+        run: |
+          set -euo pipefail
+          url=https://exam-portal-smss-95016.web.app
+          curl --fail --location --retry 5 --retry-delay 3 "$url/" -o /tmp/smss-index.html
+          grep -Fq 'SMSS Exam Portal' /tmp/smss-index.html
+          curl --fail --location "$url/manifest.webmanifest" -o /tmp/smss-manifest.json
+          node -e 'const m=require("/tmp/smss-manifest.json");if(m.name!=="SMSS Exam Portal"||!m.icons.some(x=>x.src==="./icon-book.svg"))process.exit(1)'
+          curl --fail --location "$url/icon-book.svg" -o /tmp/smss-icon.svg
+          grep -Fq '<svg' /tmp/smss-icon.svg
