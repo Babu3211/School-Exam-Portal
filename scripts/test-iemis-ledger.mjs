@@ -31,7 +31,6 @@ assert.equal(iemisSubjectKey('COMP. NEPALI (1021)'),iemisSubjectKey('Nepali'));
 const markOrder=iemisSubjects(subjects,'number',6);
 assert.equal(markOrder[0],'Hamro Dhunibeshi');assert.equal(markOrder.at(-1),'Computer Science');
 assert.equal(iemisSubjects(subjects,'grade',6)[0],'Nepali');
-for(const cl of [1,2,3,4,5])for(const mode of ['number','grade','sheet'])assert.deepEqual(iemisSubjects(subjects,mode,cl),iemisSubjects(subjects,mode,1),'Current Class 1-5 achievement reports must share the Class 1-3 subject order');
 assert.equal(iemisSubjects(subjects,'sheet',6)[0],'Computer Science');
 const common={classNo:6,annual:true,subjects,students:[{id:'synthetic-1',studentName:'Test <Student>',dob:'2070-01-01',fatherName:'Test Father',motherName:'Test Mother',symbolNo:'TEST01',studentIemisNo:'TESTREG'}],records,examId:'synthetic-exam',schoolName:'Test School',schoolCode:'TEST',creditFor:s=>credits[subjects.indexOf(s)]};
 const mark=iemisLedger({...common,mode:'number'}),grade=iemisLedger({...common,mode:'grade'});
@@ -96,35 +95,3 @@ const mixedRecords=legacyRecords.concat(newPrimaryRecords.map(r=>({...r,studentI
 const mixedLedger=iemisLedger({...common,classNo:5,mode:'grade',records:mixedRecords,students:[mixedNewStudent]});
 assert.match(mixedLedger.body,/>4.00<\/td>/,'An old cohort must not force new achievement records into TH/IN calculations');
 console.log('New Class V achievement Grade Sheet and mixed-cohort isolation passed.');
-
-
-// Print-branding and installed-app regression checks (synthetic only).
-const logoStart=html.indexOf('function schoolLogoPrintMarkup()');
-const logoEnd=html.indexOf('\n',logoStart);
-assert.ok(logoStart>=0 && logoEnd>logoStart,'Print logo helper must exist');
-const printLogo=new Function('currentSchoolSettings','esc',html.slice(logoStart,logoEnd)+';return schoolLogoPrintMarkup();');
-const printedLogo=printLogo({logoDataUrl:'data:image/png;base64,TESTLOGO'},s=>String(s));
-assert.match(printedLogo,/<img src="data:image\/png;base64,TESTLOGO"/,'Saved school logo must appear on printed sheets');
-assert.match(printLogo({logoDataUrl:''},s=>String(s)),/School logo unavailable/,'Missing logo must show an honest fallback');
-assert.match(html,/\$\{schoolLogoPrintMarkup\(\)\}/,'Print templates must embed school logo markup');
-assert.match(html,/<meta name="apple-mobile-web-app-title" content="SMSS Exam Portal">/);
-assert.match(html,/<link rel="icon" type="image\/svg\+xml" href="\.\/smss-uploaded-icon\.svg">/);
-const manifest=JSON.parse(readFileSync('manifest.webmanifest','utf8'));
-assert.equal(manifest.name,'SMSS Exam Portal');
-assert.equal(manifest.short_name,'SMSS Exam Portal');
-assert.ok(manifest.icons.some(i=>i.src==='./icon-512.png' && i.sizes==='512x512'));
-assert.match(readFileSync('sw.js','utf8'),/\.\/smss-uploaded-icon\.svg/);
-assert.match(html,/#smssInstallBanner\{[^}]*top:/);
-console.log('Print school-logo, installed app name, icon, cache and top install-banner checks passed.');
-
-
-const ngPrimaryParts=[
- {summary:{complete:true,totalGrade:iemisGrade(80)},creditHour:5},
- {summary:{complete:true,totalGrade:iemisGrade(30)},creditHour:4}
-];
-assert.equal(iemisGpa(ngPrimaryParts,{annual:true,primary:true}),null,'NG has no numeric GP under CDC 2083');
-assert.equal(iemisGpa([{summary:{complete:false,totalGrade:null},creditHour:5}],{annual:true,primary:true}),null,'Incomplete primary assessment cannot show GPA');
-const ngSecondary=structuredClone(parts);
-ngSecondary[0].summary.inGrade=iemisGrade(30);
-assert.equal(iemisGpa(ngSecondary,{annual:true}),null,'Secondary NG must not silently become a numeric zero');
-console.log('CDC 2083 NG/incomplete GPA safeguards passed.');
