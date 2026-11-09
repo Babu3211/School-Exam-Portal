@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v47-v45-integration-20261108';
+const CACHE_NAME = 'smss-pwa-v47-live-audit-20261109';
 const APP_SHELL = [
   './',
   './index.html',

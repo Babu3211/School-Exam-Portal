@@ -369,4 +369,19 @@ must(html.includes('id="smssInstallBanner"') && html.includes('beforeinstallprom
 must(html.includes('Add to Home Screen') && html.includes("display-mode: standalone"), "iOS install instructions and installed-mode suppression must remain.");
 must(html.includes('data-page="question-papers"') && html.includes('src="./cdc-question-paper.js"'), "V45 question-paper feature must remain alongside V44.");
 
+// Logout or a failed sign-in must not leave the previous account's password visible.
+const secretStart=html.indexOf("function clearLoginSecret(){");
+const secretEnd=html.indexOf('loginForm.addEventListener("submit"',secretStart);
+must(secretStart>=0 && secretEnd>secretStart,"Login secret reset helper is missing.");
+const fakePassword={value:"test-only-secret",type:"text"};
+const fakeToggle={attributes:{},setAttribute(key,value){this.attributes[key]=value;}};
+const resetSecret=new Function("document",html.slice(secretStart,secretEnd)+";return clearLoginSecret;")({getElementById(id){return id==="loginPassword"?fakePassword:id==="toggleLoginPassword"?fakeToggle:null;}});
+resetSecret();
+assert.equal(fakePassword.value,"");
+assert.equal(fakePassword.type,"password");
+assert.equal(fakeToggle.attributes["aria-pressed"],"false");
+resetSecret();
+assert.equal(fakePassword.value,"");
+must(html.includes('finally{clearLoginSecret();loginButton.disabled=false') && html.includes('if(!user){clearLoginSecret();'),"Password reset must run after login attempts and sign-out.");
+
 console.log("V44 requirement regression checks passed.");

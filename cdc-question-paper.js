@@ -209,7 +209,7 @@ function pageShell() {
 
     <div class="qp-card">
       <div class="qp-section-title"><h3>६. सुरक्षित प्रश्नपत्र अभिलेख</h3><button class="qp-btn alt" id="qpPaperReloadBtn" type="button">Refresh</button></div>
-      <div class="qp-table-wrap"><table class="qp-table"><thead><tr><th>परीक्षा</th><th>कक्षा</th><th>विषय</th><th>पूर्णाङ्क</th><th>समय</th><th>मिति</th><th>कार्य</th></tr></thead><tbody id="qpPaperRows"><tr><td colspan="7">अभिलेख लोड हुँदैछ।</td></tr></tbody></table></div>
+      <div class="qp-table-wrap"><table class="qp-table"><thead><tr><th>परीक्षा</th><th>कक्षा</th><th>विषय</th><th>पूर्णाङ्क</th><th>समय</th><th>मिति</th><th>कार्य</th></tr></thead><tbody id="qpPaperRows"><tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr></tbody></table></div>
     </div>
   </div>`;
 }
@@ -792,7 +792,7 @@ if(window.currentPage==="question-papers"&&document.getElementById("questionPape
 document.addEventListener("change",async event=>{
   const t=event.target;
   if(t.id==="qpClass"){
-    selectedClass=t.value;selectedSubject="";selectedSection="";generatedPaper=null;
+    selectedClass=t.value;selectedSubject="";selectedSection="";generatedPaper=null;savedPapers=[];$("qpPaperRows").innerHTML='<tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr>';
     $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;$("qpAnswerKeyBtn").disabled=true;
     const opts=classSubjects.filter(x=>x.className===selectedClass);
     const subjects=[...new Set(opts.map(x=>x.subject))];
@@ -801,7 +801,7 @@ document.addEventListener("change",async event=>{
     curriculumRows=[];questionRows=[];renderTopics();renderQuestionRows();message("अब विषय छान्नुहोस्।");
   }
   if(t.id==="qpSubject"){
-    selectedSubject=t.value;selectedSection="";generatedPaper=null;
+    selectedSubject=t.value;selectedSection="";generatedPaper=null;savedPapers=[];$("qpPaperRows").innerHTML='<tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr>';
     $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;$("qpAnswerKeyBtn").disabled=true;
     curriculumRows=[];questionRows=[];renderTopics();renderQuestionRows();
     const sections=[...new Set(classSubjects.filter(x=>x.className===selectedClass&&x.subject===selectedSubject).map(x=>String(x.section||"")))];
