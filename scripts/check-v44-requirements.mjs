@@ -361,4 +361,12 @@ must(html.includes('if(page==="question-papers")return roleHas("subject_teacher"
 must(html.includes('data-page="question-papers"') && html.includes('window.loadQuestionPaperModule()') && html.includes('src="./cdc-question-paper.js"'), "V45 Question Paper Builder must be navigable and load its module.");
 must(html.includes('schoolNameNe:document.getElementById("setSchoolNameNe").value.trim()') && html.includes('addressNe:document.getElementById("setAddressNe").value.trim()'), "School Settings must save both Nepali identity fields.");
 
+
+// V44 + V45 parity guard: the login identity and install flow must not disappear.
+must(html.includes('id="loginSchoolName"') && html.includes('id="loginSchoolNameNe"') && html.includes('id="loginSchoolAddressNe"'), "English/Nepali login branding must remain visible.");
+must(html.includes('id="setSchoolNameNe"') && html.includes('id="setAddressNe"'), "School Settings must retain editable Nepali identity.");
+must(html.includes('id="smssInstallBanner"') && html.includes('beforeinstallprompt') && html.includes('appinstalled'), "Uninstalled browsers must receive PWA installation guidance.");
+must(html.includes('Add to Home Screen') && html.includes("display-mode: standalone"), "iOS install instructions and installed-mode suppression must remain.");
+must(html.includes('data-page="question-papers"') && html.includes('src="./cdc-question-paper.js"'), "V45 question-paper feature must remain alongside V44.");
+
 console.log("V44 requirement regression checks passed.");
