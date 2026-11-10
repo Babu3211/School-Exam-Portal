@@ -1,11 +1,11 @@
-const CACHE_NAME = 'smss-pwa-v51-iemis-computer-20261110';
+const CACHE_NAME = 'smss-pwa-v52-iemis-computer-20261110';
 const APP_SHELL = [
   './',
   './index.html',
   './iemis-ledger.js',
   './iemis-entry.js',
-  './iemis-ledger.js?v=20261110-computer',
-  './iemis-entry.js?v=20261110-computer',
+  './iemis-ledger.js?v=20261110-computer2',
+  './iemis-entry.js?v=20261110-computer2',
   './cdc-question-paper.js',
   './data/cdc-grade8-science-practice-pack-v1.json',
   './data/cdc-grade10-science-practice-pack-v1.json',

@@ -351,7 +351,12 @@ try {
   const editedComputer=iemisEntryValues(iemisEntrySchema(9,"annual","Computer Science"),{values:{participation:"4",practical:"35",term:"10",theory:"50"},isAbsent:false});
   await assertSucceeds(updateDoc(computerRef,{...editedComputer,updatedBy:formatTeacher,updatedAt:serverTimestamp()}));
   const legacyComputer={...computer,scores:computer.scores.map((s,i)=>({...s,fullMarks:[3,41,6,50][i],obtained:[3,41,6,50][i]}))};
-  await assertSucceeds(setDoc(doc(db(formatTeacher),"marks","format-historical-computer"),{...legacyComputer,...computerContext}));
+  const legacyComputerRef=doc(db(formatTeacher),"marks","format-historical-computer");
+  await assertSucceeds(setDoc(legacyComputerRef,{...legacyComputer,...computerContext}));
+  const legacyEdit=legacyComputer.scores.map((s,i)=>i===1?{...s,obtained:40}:s);
+  await assertSucceeds(updateDoc(legacyComputerRef,{scores:legacyEdit,totalObtained:99,updatedBy:formatTeacher,updatedAt:serverTimestamp()}));
+  const legacyReload=await assertSucceeds(getDoc(legacyComputerRef));
+  if(legacyReload.data().scores[1].fullMarks!==41)throw new Error("Historical Computer limit changed.");
   const excessComputer={...computer,totalObtained:101,scores:computer.scores.map((s,i)=>i===1?{...s,obtained:37}:s)};
   await assertFails(setDoc(doc(db(formatTeacher),"marks","format-excess-computer"),{...excessComputer,...computerContext}));
 

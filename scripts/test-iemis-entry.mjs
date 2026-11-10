@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {IemisEntryGrid,normalizeIemisEntryScores,iemisEntrySchema,iemisEntryDraft,iemisEntryValues,iemisEntryBatches} from '../iemis-entry.js';
+import {IemisEntryGrid,normalizeIemisEntryScores,iemisEntrySchema,iemisEntryDraft,iemisSavedAssessmentComponents,iemisEntryValues,iemisEntryBatches} from '../iemis-entry.js';
 import {iemisSummary} from '../iemis-ledger.js';
 
 for(const cl of [1,2,3,4,5])for(const term of ['first','second','annual']){
@@ -81,6 +81,8 @@ for(const classNo of [9,10])for(const term of ['first','second','annual']){
  const original=structuredClone(historical);
  const draft=iemisEntryDraft(historical,schema);
  assert.equal(draft.incompatible,true);
+ assert.deepEqual(iemisSavedAssessmentComponents(historical,schema).map(c=>c.fullMarks),oldLimits.slice(0,schema.length));
+ assert.equal(iemisSavedAssessmentComponents(undefined,schema),null);
  assert.throws(()=>iemisEntryValues(schema,draft),/custom assessment/);
  assert.deepEqual(normalizeIemisEntryScores(classNo,term,subject,historical.scores),original.scores);
  assert.deepEqual(historical,original);

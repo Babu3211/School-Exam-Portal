@@ -1,4 +1,4 @@
-import {iemisEscape as esc,iemisSubjectKey,iemisComponentKey} from './iemis-ledger.js?v=20261110-computer';
+import {iemisEscape as esc,iemisSubjectKey,iemisComponentKey} from './iemis-ledger.js?v=20261110-computer2';
 
 export const isIemisComputerSubject=subject=>/computer|कम्प्युटर|कम्प्यूटर/i.test(String(subject||''));
 
@@ -35,6 +35,13 @@ export function iemisEntryDraft(record,schema) {
   let incompatible=false;
   for(const score of record?.scores||[]){const key=iemisScoreKey(score.name),component=schema.find(c=>c.key===key);if(!key||!component){incompatible=true;continue;}if(schema[0].key!=='count'&&Number(score.fullMarks)!==component.max)incompatible=true;if(key!=='full')values[key]=key==='count'&&record?.isAbsent?String(score.fullMarks):score.obtained===null||score.obtained===undefined?'':String(score.obtained);}
   return {values,isAbsent:record?.isAbsent===true,dirty:false,incompatible};
+}
+// Single-subject editing can retain a saved assessment's component limits.
+export function iemisSavedAssessmentComponents(record,schema){
+  if(!record||!iemisEntryDraft(record,schema).incompatible)return null;
+  const scores=record.scores||[];
+  if(!scores.length||scores.length>6||scores.some(s=>typeof s.name!=='string'||!s.name.trim()||!Number.isFinite(s.fullMarks)||s.fullMarks<0))return [];
+  return scores.map(({name,fullMarks})=>({name,fullMarks}));
 }
 const rawNumber=value=>value===null||value===undefined||String(value).trim()===''?null:Number(value);
 export function iemisEntryValues(schema,draft) {
@@ -84,7 +91,7 @@ export class IemisEntryGrid {
         const d=this.draft(i,j);if(d.incompatible){
           const saved=this.record(i,j);
           const scores=(saved?.scores||[]).map(c=>esc(c.name)+': '+esc(c.obtained??'—')+' / '+esc(c.fullMarks)).join(' · ');
-          return `<td colspan="${schema.length+1}">Saved assessment · ${d.isAbsent?'Absent · ':''}${scores}</td>`;
+          return `<td colspan="${schema.length+1}">Saved assessment · Single-subject view to edit · ${d.isAbsent?'Absent · ':''}${scores}</td>`;
         }
         const data=`data-grid-si="${i}" data-grid-sj="${j}"`;
         return `<td><input aria-label="${esc(identity[1])} ${esc(label(subjects[j]))} IsAbsent" type="checkbox" data-grid-absent ${data} ${d.isAbsent?'checked':''}></td>`+schema.map(c=>{
