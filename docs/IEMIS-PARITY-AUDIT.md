@@ -72,3 +72,39 @@ Live trial QA caught a real stale-module failure: the new page imported `iemisLe
 `test:pwa` executes the actual worker with seeded prior-version caches. It verifies fresh release imports through the previous cache-first path, nested URL agreement, install/activate, offline release assets, QA navigation isolation, unrelated-cache preservation, and non-interception of external requests or writes. All three GitHub workflows run this regression test.
 
 For the NG discrepancy, the official CDC Letter Grading Directive 2083 was also consulted: Appendix 1, page 6 assigns NG no numeric grade point (dash), rather than 0. The existing portal's null NG grade point is retained. This does not establish how the historical IEMIS 1.65 was stored, so that value is not silently reproduced. Official publication: https://moecdc.gov.np/content/647/letter-grading-directory--2083/ ; document: https://giwmscdnone.gov.np/media/pdf_upload/LetterGrading083_k5pneb6.pdf . The downloaded official document was text-inspected and page 6 visually verified.
+
+
+## Populated 2083 Class I verification — 2026-11-10
+
+With the school user's explicit authorization, the first Class I student was used for a sample in First, Second and Final Term. The report here omits student identifiers. Each subject used achievement count 3 (derived full marks 12); obtained achievement was Nepali 10, English 9, Mathematics 8, Serophero 11 and Hamro Dhunibeshi 10. Each term was saved and reloaded, and all ten count/obtained input values persisted. These are test values, not certified academic results, and remain in IEMIS for the school to replace with actual assessed results.
+
+First Term Markwise Ledger matched 10/9/8/11/10; the other ten rows displayed Result Not Added. First Term Grade Ledger matched A/B+/B/A+/A and GPA 3.54. First Term Grade Sheet showed CH 2.5/2/2/4/2.5 (total 13), GP 3.6/3.2/2.8/4/3.6 and GPA 3.54. Final Grade Sheet showed CH 5/4/4/8/5 (total 26), the same grades and GPA 3.54. Both sheets stated one credit hour equals 26 hours. Current SMSS calculation reproduced the 3.54 example.
+
+The Class I First-Term report now displays half the configured annual subject credits; Final uses the configured annual values. The 26-hour footnote is scoped to these observed 2083 Class I First/Final reports. Saved subject configuration, marks, older years, other classes and unverified terms are not changed. Actual-renderer regression tests verify credits, GPA, footnote and unchanged source configuration, alongside existing historical IV/V and VI tests.
+
+The First Term watermark was visually observed as repeated light school-name text behind the report, with the school logo at the upper left. Print created a transient blank tab that closed before an inspectable document/dialog was available. A4/PDF parity is not certified.
+
+Second-Term Grade Sheet inspection was pending when the browser session became unavailable. Second/Final ledgers, explicit Edit/Update and validation tests, Classes II–X regression/reference checks, watermark dimensions and native printing remain pending. No production SMSS deployment or Firebase data writes were performed in this verification.
+
+
+### Class I Second/Final ledger follow-up
+
+Second Term Grade Sheet was inspected after login resumed: CH 2.5/2/2/4/2.5 (total 13), grades A/B+/B/A+/A, GPA 3.54 and the 26-hour footnote match First Term. The presentation fix and renderer regression now include Second Term; Third Term remains unchanged pending reference evidence.
+
+Second and Final Markwise Ledgers both reproduce 10/9/8/11/10. Second Grade Ledger gives A/B+/B/A+/A and GPA 3.54. Final Grade Ledger gives the same grades but **GPA 0.00**, unlike the populated Final Grade Sheet's **3.54**. This is an observed source inconsistency; preserve mathematically verified 3.54 in SMSS and do not encode 0.00 as a calculation rule.
+
+First-Term Nepali Edit test changed obtained achievement 10 to 9, saved, and reloaded 9 successfully; restoration to 10 was submitted next. An unsaved 13/12 input showed no native validationMessage or aria-invalid on blur; it was replaced with a valid value before Save. Server-side invalid-save rejection is not claimed. No other student's result was selected for these writes.
+
+
+### Teacher APK distribution release gate — 2026-11-10
+
+**Do not distribute the APK as a verified final V45 release yet.** The school-authorized sample values were written to the actual IEMIS Class I student's First, Second and Final Term records, not just to a synthetic test environment. First-Term Nepali was edited from 10 to 9; the subsequent restore-to-10 submission is documented but its saved/reloaded result is **not confirmed**. An authorized school operator must verify the restored value and replace all sample marks with genuine assessed results before relying on those IEMIS records. This is a data-integrity release blocker, not a reason to make additional automated writes.
+
+The PR remains separate from the older conflicting PR #8. Before production or APK distribution, verify the final combined code contains the school-approved Class IX/X Computer 4/36/10 and Final Theory 50 implementation, historical records remain unchanged, all CI and emulator checks pass on the *exact release commit*, and the actual Android APK is built from that release and installed/upgraded on a test device. Verify First/Second/Final Grade Sheets, Grade/Markwise ledgers, print/PDF A4 output, and iOS-only install guidance. An existing APK is not automatically updated by merging GitHub code or deploying Firebase Hosting; its WebView/update behavior must be checked on-device. No live deployment or APK release is certified by this audit.
+
+
+### Verified branch CI and release integration status — 2026-11-10
+
+Commit `6f6304238c765126fa6bc38ec158a5fac69cc861` passed all three GitHub workflows: V44 JavaScript and Firestore Security Checks, V45 JavaScript and Firestore Security Checks, and V45 regression checks. This establishes branch-level automated checks, **not** merged-release or APK certification. The Class IX/X Computer regression now checks both English and Nepali subject names against 4/36/10 and Final Theory 50.
+
+PR #8 and PR #10 overlap in `docs/IEMIS-PARITY-AUDIT.md`, `index.html`, `scripts/check-v44-requirements.mjs`, `scripts/test-iemis-ledger.mjs`, and `sw.js`. The combined release must reconcile these rather than merge either blindly. PR #8 additionally changes `iemis-entry.js`, `iemis-ledger.js`, the entry/layout fixtures and emulator tests; PR #10 adds the verified Class I 2083 term credit presentation and PWA upgrade regression. Run the complete V44/V45/entry/ledger/PWA/Firestore emulator suites on the final integration SHA before the release commit and approved production deployment.

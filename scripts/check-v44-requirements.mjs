@@ -219,7 +219,7 @@ must(rules.includes("request.resource.data.actorUid == request.auth.uid") && rul
 must(rules.includes("request.resource.data.detail.size() <= 240") && rules.includes("request.resource.data.actorName.size() <= 100"), "Audit log text fields must have strict size limits.");
 must(rules.includes("allow update, delete: if false;"), "Audit logs must remain append-only.");
 must(manifest.includes('"name": "SMSS Exam Portal"') && manifest.includes('"display": "standalone"'), "PWA manifest must preserve the V44 installable app identity.");
-must(/smss-pwa-v(?:44|45|46|47|48|49|50)/.test(serviceWorker) && serviceWorker.includes("./cdc-question-paper.js"), "Service worker must preserve PWA caching and include the new V45 module.");
+must(/smss-pwa-v(?:44|45|46|47|48|49|50|51)/.test(serviceWorker) && serviceWorker.includes("./cdc-question-paper.js"), "Service worker must preserve PWA caching and include the new V45 module.");
 must(workflow.includes("deploy-live:") && workflow.includes("needs: quality-and-rules"), "Live deployment must depend on successful V44 quality and Firestore Rules tests.");
 must(workflow.includes("Deploy tested Firestore Security Rules") && workflow.includes("firebase-tools@14 deploy --only firestore:rules"), "Production deployment must apply the tested Firestore Security Rules before Hosting.");
 must(workflow.includes("github.event_name == 'push'") && workflow.includes("github.ref == 'refs/heads/main'") && workflow.includes("github.event.head_commit.message == 'release: deploy approved V45 to production [deploy-v45-live]'"), "Automatic live deployment must be push-only, main-only and gated by the explicit approved V45 release commit.");

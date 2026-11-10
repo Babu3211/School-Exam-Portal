@@ -99,3 +99,30 @@ const mixedRecords=legacyRecords.concat(newPrimaryRecords.map(r=>({...r,studentI
 const mixedLedger=iemisLedger({...common,classNo:5,mode:'grade',records:mixedRecords,students:[mixedNewStudent]});
 assert.match(mixedLedger.body,/>4.00<\/td>/,'An old cohort must not force new achievement records into TH/IN calculations');
 console.log('New Class V achievement Grade Sheet and mixed-cohort isolation passed.');
+
+
+// Populated IEMIS 2083 Class I First/Second/Final reference; synthetic identity only.
+const primarySubjects=['Nepali','English','Mathematics','Serophero','Hamro Dhunibeshi'];
+const annualCredits=[5,4,4,8,5], achievementMarks=[10,9,8,11,10];
+for(const [year,term,expectedCredits,hours] of [
+ ['2083','first',[2.5,2,2,4,2.5],26],
+ ['2083','annual',annualCredits,26],
+ ['2082','first',annualCredits,30],
+ ['2083','second',[2.5,2,2,4,2.5],26],
+ ['2083','third',annualCredits,30]
+]){
+ const config=primarySubjects.map((subject,i)=>({className:'1',subject,creditHour:annualCredits[i],active:true}));
+ const before=structuredClone(config);
+ const fixture={...dependencies,smssExamTermKey:()=>term,resultExams:[{id:'synthetic-exam',academicYear:year}],resultClasses:config,resultMarks:[],
+  activeResultRows:[{student:{...student,class:'1'},perSubject:primarySubjects.map((subject,i)=>({subject,missing:false,pct:achievementMarks[i]/12*100,grade:iemisGrade(achievementMarks[i]/12*100)}))}]};
+ new Function(...Object.keys(fixture),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(fixture));
+ const firstTable=box.innerHTML.match(/<table[^>]*>[\s\S]*?<\/table>/)[0];
+ const rows=[...firstTable.matchAll(/<tr>([\s\S]*?)<\/tr>/g)].slice(1,6);
+ const shown=rows.map(row=>Number([...row[1].matchAll(/<td[^>]*>([^<]*)<\/td>/g)][1][1]));
+ assert.deepEqual(shown,expectedCredits);
+ assert.equal(shown.reduce((total,credit)=>total+credit,0),expectedCredits.reduce((total,credit)=>total+credit,0),'Rendered subject credits must sum to the verified term total');
+ assert.match(box.innerHTML,/GRADE POINT AVERAGE \(GPA\): 3.54/);
+ assert.ok(box.innerHTML.includes('ONE CREDIT HOUR EQUALS '+hours+' HOURS.'));
+ assert.deepEqual(config,before,'Report rendering must not change stored credits');
+}
+console.log('Class I 2083 First/Second/Final credits, totals, GPA 3.54, footnote and historical/unverified-term isolation passed.');

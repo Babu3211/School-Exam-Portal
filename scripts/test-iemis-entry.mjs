@@ -12,8 +12,8 @@ for(const cl of [1,2,3,4,5])for(const term of ['first','second','annual']){
  assert.equal(iemisEntryValues(schema,{values:{count:'',obtained:''},isAbsent:false}),null);
  const absent=iemisEntryValues(schema,{values:{count:'5',obtained:'17'},isAbsent:true});assert.ok(absent.scores.every(s=>s.obtained===null));assert.equal(absent.totalObtained,0);assert.equal(iemisSummary(absent,{primary:true}).absent,true);
 }
-for(const cl of [6,7,8,9,10])for(const term of ['first','second','annual'])for(const subject of ['Mathematics','OPT.II COMPUTER SCIENCE (3031)']){
- const schema=iemisEntrySchema(cl,term,subject),computer=cl>=9&&/computer/i.test(subject);
+for(const cl of [6,7,8,9,10])for(const term of ['first','second','annual'])for(const subject of ['Mathematics','OPT.II COMPUTER SCIENCE (3031)','कम्प्युटर विज्ञान']){
+ const schema=iemisEntrySchema(cl,term,subject),computer=cl>=9&&/computer|कम्प्युटर/i.test(subject);
  assert.deepEqual(schema.map(c=>c.max),[cl<=8||computer?4:3,cl<=8||computer?36:16,cl<=8||computer?10:6,...(term==='annual'?[cl<=8||computer?50:75]:[])]);
  assert.match(schema[2].label,term==='annual'?/^Total of Term/:term==='first'?/^First Term/:/^Second Term/);
  const values=Object.fromEntries(schema.map(c=>[c.key,String(c.max)]));

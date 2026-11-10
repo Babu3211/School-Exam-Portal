@@ -1,10 +1,15 @@
 name: Publish signed SMSS Android APK
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 permissions:
   contents: write
 jobs:
   release:
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.event.head_commit.message == 'release: deploy approved V45 to production [deploy-v45-live]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -92,6 +97,20 @@ jobs:
           echo "SMSS_ANDROID_STORE_PASSWORD=$STORE_PASSWORD" >> "$GITHUB_ENV"
           echo "SMSS_ANDROID_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
           echo "SMSS_ANDROID_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+      - name: Set monotonically increasing Android versionCode
+        working-directory: android-app/android
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os, re
+          path = Path('app/build.gradle')
+          source = path.read_text()
+          version = int(os.environ['GITHUB_RUN_NUMBER']) + 10000
+          source, count = re.subn(r'versionCode\s+\d+', f'versionCode {version}', source, count=1)
+          assert count == 1, 'Expected one Android versionCode declaration'
+          path.write_text(source)
+          print('Android versionCode:', version)
+          PY
       - name: Build signed release APK and AAB
         working-directory: android-app/android
         run: |
@@ -112,4 +131,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="android-v1.0.${GITHUB_RUN_NUMBER}"
-          gh release create "$TAG" SMSS-Exam-Portal.apk SMSS-Exam-Portal.aab --title "SMSS Exam Portal Android $TAG" --notes "Signed Android release. APK for direct installation; AAB for Google Play Console." --latest
+          gh release create "$TAG" SMSS-Exam-Portal.apk SMSS-Exam-Portal.aab --title "SMSS Exam Portal Android $TAG" --notes "Signed Android release pointing to the live SMSS Exam Portal V45. APK for direct installation; AAB for Google Play Console. Online content is loaded from Firebase Hosting." --latest

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v50-iemis-assets-20261109';
+const CACHE_NAME = 'smss-pwa-v51-network-refresh-20261110';
 const APP_SHELL = [
   './',
   './index.html',
@@ -59,6 +59,21 @@ self.addEventListener('fetch', event => {
   }
 
   event.respondWith((async () => {
+    // Mutable same-URL assets must refresh online when a hosted PWA/APK WebView opens.
+    // Versioned release imports remain cache-first for reliable offline use.
+    const mutable = /\.(?:js|css|json|webmanifest)$/i.test(url.pathname) && !url.searchParams.has('v');
+    if (mutable) {
+      try {
+        const response = await fetch(request);
+        if (response && response.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(request, response.clone());
+        }
+        return response;
+      } catch (error) {
+        return (await caches.match(request)) || Response.error();
+      }
+    }
     const cached = await caches.match(request);
     if (cached) return cached;
     return fetch(request);
