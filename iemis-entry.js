@@ -12,9 +12,9 @@ export function iemisEntrySchema(classNo,term,subject='') {
   const names={first:'First',second:'Second',third:'Third','half-yearly':'Half-Yearly',internal:'Internal',other:'Other'};
   const annual=term==='annual';
   return [
-    {key:'participation',name:'Participation',label:`Participation(${n<=8?4:3})`,max:n<=8?4:3},
-    {key:'practical',name:'Practical/Project',label:`Practical/Project(${n<=8?36:computer?41:16})`,max:n<=8?36:computer?41:16},
-    {key:'term',name:annual?'Total of Term':`${names[term]||'Term'} Term Examination`,label:`${annual?'Total of Term':(names[term]||'Term')+' Term Examination'}(${n<=8?10:6})`,max:n<=8?10:6},
+    {key:'participation',name:'Participation',label:`Participation(${n<=8||computer?4:3})`,max:n<=8||computer?4:3},
+    {key:'practical',name:'Practical/Project',label:`Practical/Project(${n<=8||computer?36:16})`,max:n<=8||computer?36:16},
+    {key:'term',name:annual?'Total of Term':`${names[term]||'Term'} Term Examination`,label:`${annual?'Total of Term':(names[term]||'Term')+' Term Examination'}(${n<=8||computer?10:6})`,max:n<=8||computer?10:6},
     ...(annual?[{key:'theory',name:'TH (Theory)',label:`Total of final marks(${n<=8||computer?50:75})`,max:n<=8||computer?50:75}]:[])
   ];
 }
