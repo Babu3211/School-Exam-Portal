@@ -684,19 +684,33 @@ async function importTeachersCsv(){
   records=parseTeacherCsv(await file.text());
   if(!records.length||records.length>100)throw new Error("CSV must contain 1 to 100 teachers.");
   const existing=(await getDocs(collection(db,"user_roles"))).docs.map(d=>({uid:d.id,...d.data()}));
-  const seen=new Set(),errors=[],prepared=[];
+  const seen=new Set(),errors=[],prepared=[],existingMatches=[];
   for(const r of records){
    const matches=cachedStaff.filter(st=>[st.nameEn,st.name,st.staffName].some(name=>name&&norm(name)===norm(r.name)));
-   if(!r.name||!/^\S+@\S+\.\S+$/.test(r.email)||r.password.length<6)errors.push("Row "+r.line+": invalid name, email or password");
-   else if(seen.has(r.email)||existing.some(u=>String(u.email||"").toLowerCase()===r.email))errors.push("Row "+r.line+": duplicate/existing email");
+   const linked=existing.find(u=>String(u.email||"").toLowerCase()===r.email);
+   if(!r.name||!/^\\S+@\\S+\\.\\S+$/.test(r.email)||r.password.length<6)errors.push("Row "+r.line+": invalid name, email or password");
+   else if(seen.has(r.email))errors.push("Row "+r.line+": duplicate email within CSV");
    else if(matches.length!==1)errors.push("Row "+r.line+": staff name not uniquely found in Staff Management");
    else if(matches[0].active===false||norm(matches[0].status)==="निष्क्रिय")errors.push("Row "+r.line+": inactive staff");
-   else if(existing.some(u=>u.staffDocId===matches[0].id))errors.push("Row "+r.line+": staff already has an account");
+   else if(linked){
+    if(linked.staffDocId!==matches[0].id)errors.push("Row "+r.line+": email belongs to a different staff account");
+    else existingMatches.push({...r,staff:matches[0],linked});
+   }
+   else if(existing.some(u=>u.staffDocId===matches[0].id))errors.push("Row "+r.line+": staff already linked to another email; edit existing account");
    else prepared.push({...r,staff:matches[0]});
    seen.add(r.email);
   }
   if(errors.length)throw new Error(errors.slice(0,12).join("; ")+(errors.length>12?"; and more":""));
-  if(!confirm("Create "+prepared.length+" active teacher accounts? Class and subject permissions will remain unassigned until you edit them. Existing records will not be modified."))return;
+  if(!confirm("Create "+prepared.length+" new teacher accounts and match "+existingMatches.length+" existing accounts by exact staff name and email? Existing accounts/passwords will NOT be replaced. English staff names will be updated only for exact unique matches."))return;
+  let namesUpdated=0;
+  for(const r of [...prepared,...existingMatches]){
+   if(r.staff.nameEn===r.name)continue;
+   try{
+    await updateDoc(doc(db,"staff",r.staff.id),{nameEn:r.name,updatedAt:serverTimestamp()});
+    r.staff.nameEn=r.name;namesUpdated++;
+   }catch(err){errors.push("Row "+r.line+": staff English name update failed ("+(err.code||"error")+")");}
+  }
+  if(errors.length)throw new Error(errors.join("; "));
   let completed=0,failures=[];
   for(const r of prepared){
    let credential=null;
@@ -713,7 +727,7 @@ async function importTeachersCsv(){
    }finally{try{if(provisioningAuth.currentUser)await signOut(provisioningAuth);}catch(_){}}
    status.textContent="Created "+completed+" of "+prepared.length+" accounts; "+failures.length+" failed.";
   }
-  status.textContent="Finished: "+completed+" active accounts created; "+failures.length+" failed. "+failures.join("; ")+" Assign class/subject via Edit before marks entry.";
+  status.textContent="Finished: "+completed+" new accounts created; "+existingMatches.length+" existing accounts preserved; "+namesUpdated+" English names updated; "+failures.length+" failed. "+failures.join("; ")+" Assign class/subject via Edit before marks entry.";
   await loadUserRoles();
  }catch(err){status.textContent="Import stopped: "+err.message;}
  finally{records.length=0;if(file)document.getElementById("bulkTeacherCsv").value="";btn.disabled=false;}
