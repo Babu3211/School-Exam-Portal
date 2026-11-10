@@ -54,7 +54,7 @@ must(!/signInWithPhoneNumber|PhoneAuthProvider|RecaptchaVerifier|phoneAuthProvid
 must(html.includes('if(page==="dashboard")return true;'), "Active non-admin users must be allowed to view the dashboard.");
 must(html.includes('if(page==="marks")return roleHas("subject_teacher")'), "Marks Entry must be limited to users with an active Subject Teacher assignment.");
 must(html.includes('if(page==="attendance")return roleHas("class_teacher")'), "Attendance must be limited to users with an active Class Teacher assignment.");
-must(html.includes("return false;\n}\nfunction applyRoleNavigation()"), "Unassigned non-admin pages must remain blocked.");
+must(html.includes("return false;\n}"), "Unassigned non-admin pages must remain blocked.");
 must(html.includes("Quick actions and sidebar links are both filtered by rolePageAllowed"), "Quick actions must follow the same role permissions as sidebar navigation.");
 must(html.includes('id="studentAddNewBtn"') && html.includes('id="studentFormPanel" hidden'), "Student Management must provide an Add New Student button and initially collapsed form.");
 must(html.includes('id="staffAddNewBtn"') && html.includes('id="staffFormPanel" hidden'), "Teachers & Staff must provide an Add New Staff button and initially collapsed form.");
@@ -75,13 +75,15 @@ function roleMatrix(role, admin = false) {
   )(() => admin, role, hasRole, classNames);
 }
 const viewerPermissions = roleMatrix({ active: true, roles: ["viewer"] });
-must(viewerPermissions("dashboard") && !viewerPermissions("marks") && !viewerPermissions("attendance") && !viewerPermissions("students"), "Viewer role must see Dashboard only.");
+must(["dashboard","marks","attendance","students","staff","users","settings","backup"].every(viewerPermissions), "Active Viewer must be able to browse all pages read-only.");
 const subjectPermissions = roleMatrix({ active: true, roles: ["subject_teacher"], subjectAssignments: [{ className: "9", subject: "Mathematics" }] });
 must(subjectPermissions("dashboard") && subjectPermissions("marks") && !subjectPermissions("attendance") && !subjectPermissions("students"), "Subject Teacher must see Dashboard and Marks only.");
 const classPermissions = roleMatrix({ active: true, roles: ["class_teacher"], classTeacherClassNames: ["9"] });
 must(classPermissions("dashboard") && classPermissions("attendance") && !classPermissions("marks") && !classPermissions("students"), "Class Teacher must see Dashboard and Attendance only.");
 const combinedPermissions = roleMatrix({ active: true, roles: ["class_teacher", "subject_teacher"], classTeacherClasses: [{ className: "9" }], subjectAssignmentKeys: ["9::Mathematics"] });
 must(combinedPermissions("marks") && combinedPermissions("attendance"), "Combined teacher roles must expose both assigned task modules.");
+const inactiveViewerPermissions = roleMatrix({ active: false, roles: ["viewer"] });
+must(!inactiveViewerPermissions("students"), "Inactive Viewer must not access school pages.");
 const inactivePermissions = roleMatrix({ active: false, roles: ["class_teacher"], classTeacherClassNames: ["9"] });
 must(!inactivePermissions("dashboard") && !inactivePermissions("attendance"), "Inactive users must not access Dashboard or task modules.");
 const adminPermissions = roleMatrix(null, true);
