@@ -36,6 +36,7 @@ assert.equal(claimed,true);assert.equal(buckets.has('smss-pwa-old'),false);asser
 const before=await (await request('./index.html','navigate')).text();
 await request('./qa/iemis-layout','navigate');
 online=false;
+assert.equal(await (await request(mutablePath)).text(),firstMutable,'Refreshed mutable script must remain available offline');
 assert.equal(await (await request('./','navigate')).text(),before,'QA navigation must never replace the offline app shell.');
 assert.match(await (await request(ledgerImport)).text(),/export function iemisLegacyTheory/);
 assert.match(await (await request(entryImport)).text(),/export class IemisEntryGrid/);
