@@ -28,6 +28,10 @@ assert.equal(iemisSubjectKey('Math'),iemisSubjectKey('Mathematics'));
 assert.equal(iemisDisplaySubject('OPT.II COMPUTER SCIENCE (3031)'),'Optional II: COMPUTER SCIENCE');assert.equal(iemisDisplaySubject('OPT.I ENVIRONMENT SCIENCE (2041)'),'Optional I: Environmental Science');
 assert.equal(iemisDisplaySubject('Math'),'Mathematics');assert.equal(iemisDisplaySubject('Mathematics',{codes:true}),'COMP. MATHEMATICS (1031)');assert.equal(iemisDisplaySubject('COMP. NEPALI (1021)'),'Nepali');
 assert.equal(iemisSubjectKey('COMP. NEPALI (1021)'),iemisSubjectKey('Nepali'));
+// New grade IV/V learning-achievement sheets follow the grade I-III subject sequence.
+for(const mode of ['number','grade','sheet'])for(const cl of [4,5]){
+ assert.deepEqual(iemisSubjects(subjects,mode,cl),iemisSubjects(subjects,mode,1),`Class ${cl} must use primary subject order for ${mode}`);
+}
 const markOrder=iemisSubjects(subjects,'number',6);
 assert.equal(markOrder[0],'Hamro Dhunibeshi');assert.equal(markOrder.at(-1),'Computer Science');
 assert.equal(iemisSubjects(subjects,'grade',6)[0],'Nepali');
