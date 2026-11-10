@@ -198,26 +198,23 @@
   const banner=document.getElementById('smssInstallBanner');
   const installButton=document.getElementById('smssInstallNow');
   const help=document.getElementById('smssInstallHelp');
-  let pendingPrompt=null;
   const standalone=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
   const isIOS=()=>/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   const update=()=>{
-    if(standalone()){banner.hidden=true;return;}
-    banner.hidden=false;
-    if(pendingPrompt){installButton.hidden=false;help.textContent='Install / इन्स्टल थिचेर SMSS एप आफ्नो उपकरणमा थप्नुहोस्।';}
-    else if(isIOS()){installButton.hidden=false;help.textContent='iPhone/iPad मा Install थिचेपछि Safari को Share (साझा) बाट Add to Home Screen / होम स्क्रिनमा थप्नुहोस्।';}
-    else{installButton.hidden=false;help.textContent='Install थिचेर एप थप्नुहोस्। आवश्यक परे Browser menu बाट Install app वा Add to Home Screen छान्नुहोस्।';}
+    // iOS Home Screen apps run standalone; never show installation guidance there.
+    // Android browsers and the Capacitor Android APK must never show this banner.
+    banner.hidden=!isIOS()||standalone();
+    if(!banner.hidden){
+      installButton.hidden=false;
+      help.textContent='iPhone/iPad मा Safari को Share (साझा) बटनबाट Add to Home Screen / होम स्क्रिनमा थप्नुहोस्।';
+    }
   };
-  window.addEventListener('beforeinstallprompt',event=>{
-    event.preventDefault();pendingPrompt=event;update();
-  });
-  window.addEventListener('appinstalled',()=>{pendingPrompt=null;banner.hidden=true;});
+  window.addEventListener('appinstalled',()=>{banner.hidden=true;});
+  window.addEventListener('pageshow',update);
+  window.addEventListener('visibilitychange',()=>{if(!document.hidden)update();});
   window.matchMedia('(display-mode: standalone)').addEventListener?.('change',update);
-  installButton.addEventListener('click',async()=>{
-    if(!pendingPrompt){help.textContent=isIOS()?'Safari को Share (साझा) बटन थिचेर Add to Home Screen / होम स्क्रिनमा थप्नुहोस्।':'Browser menu बाट Install app वा Add to Home Screen छान्नुहोस्।';return;}
-    const prompt=pendingPrompt;pendingPrompt=null;
-    try{await prompt.prompt();await prompt.userChoice;}catch(error){console.warn('Install prompt unavailable',error);}
-    update();
+  installButton.addEventListener('click',()=>{
+    help.textContent='Safari मा Share (साझा) थिच्नुहोस्, त्यसपछि Add to Home Screen / होम स्क्रिनमा थप्नुहोस्।';
   });
   update();
 })();
