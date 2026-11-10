@@ -342,7 +342,7 @@ try {
       await assertFails(setDoc(doc(db(formatTeacher),"marks",id+"-wrong-count-times-four"),{...payload,...forged}));
     }
   }
-  const computer=iemisEntryValues(iemisEntrySchema(9,"annual","Computer Science"),{values:{participation:"3",practical:"41",term:"6",theory:"50"},isAbsent:false});
+  const computer=iemisEntryValues(iemisEntrySchema(9,"annual","Computer Science"),{values:{participation:"4",practical:"36",term:"10",theory:"50"},isAbsent:false});
   await assertSucceeds(setDoc(doc(db(formatTeacher),"marks","format-computer"),{...computer,studentId:"format-student-9",examId:"format-exam-9",subject:"Computer Science",className:"9",section:"A",academicYear:"2083",termKey:"annual",termName:"Final",createdBy:formatTeacher,createdAt:serverTimestamp()}));
 
   await assertSucceeds(getDoc(doc(db(formatTeacher),"marks","unused-grid-id")));
