@@ -72,3 +72,16 @@ Live trial QA caught a real stale-module failure: the new page imported `iemisLe
 `test:pwa` executes the actual worker with seeded prior-version caches. It verifies fresh release imports through the previous cache-first path, nested URL agreement, install/activate, offline release assets, QA navigation isolation, unrelated-cache preservation, and non-interception of external requests or writes. All three GitHub workflows run this regression test.
 
 For the NG discrepancy, the official CDC Letter Grading Directive 2083 was also consulted: Appendix 1, page 6 assigns NG no numeric grade point (dash), rather than 0. The existing portal's null NG grade point is retained. This does not establish how the historical IEMIS 1.65 was stored, so that value is not silently reproduced. Official publication: https://moecdc.gov.np/content/647/letter-grading-directory--2083/ ; document: https://giwmscdnone.gov.np/media/pdf_upload/LetterGrading083_k5pneb6.pdf . The downloaded official document was text-inspected and page 6 visually verified.
+
+
+## Populated 2083 Class I verification — 2026-11-10
+
+With the school user's explicit authorization, the first Class I student was used for a sample in First, Second and Final Term. The report here omits student identifiers. Each subject used achievement count 3 (derived full marks 12); obtained achievement was Nepali 10, English 9, Mathematics 8, Serophero 11 and Hamro Dhunibeshi 10. Each term was saved and reloaded, and all ten count/obtained input values persisted. These are test values, not certified academic results, and remain in IEMIS for the school to replace with actual assessed results.
+
+First Term Markwise Ledger matched 10/9/8/11/10; the other ten rows displayed Result Not Added. First Term Grade Ledger matched A/B+/B/A+/A and GPA 3.54. First Term Grade Sheet showed CH 2.5/2/2/4/2.5 (total 13), GP 3.6/3.2/2.8/4/3.6 and GPA 3.54. Final Grade Sheet showed CH 5/4/4/8/5 (total 26), the same grades and GPA 3.54. Both sheets stated one credit hour equals 26 hours. Current SMSS calculation reproduced the 3.54 example.
+
+The Class I First-Term report now displays half the configured annual subject credits; Final uses the configured annual values. The 26-hour footnote is scoped to these observed 2083 Class I First/Final reports. Saved subject configuration, marks, older years, other classes and unverified terms are not changed. Actual-renderer regression tests verify credits, GPA, footnote and unchanged source configuration, alongside existing historical IV/V and VI tests.
+
+The First Term watermark was visually observed as repeated light school-name text behind the report, with the school logo at the upper left. Print created a transient blank tab that closed before an inspectable document/dialog was available. A4/PDF parity is not certified.
+
+Second-Term Grade Sheet inspection was pending when the browser session became unavailable. Second/Final ledgers, explicit Edit/Update and validation tests, Classes II–X regression/reference checks, watermark dimensions and native printing remain pending. No production SMSS deployment or Firebase data writes were performed in this verification.
