@@ -470,82 +470,7 @@ function printIssuedCertificate(id){
  const student=certificateEsc(c.studentName||""),guardian=certificateEsc(c.fatherName||c.guardianName||""),klass=certificateEsc(c.className||""),date=certificateEsc(c.issueDate||""),type=certificateEsc(c.certificateType||"Certificate"),number=certificateEsc(c.certificateNumber||"");
  const bodyText=c.certificateType==="Transfer Certificate"?`This is to certify that ${student}, child of ${guardian||"the parent/guardian"}, was a student of this school in ${klass}. The school records have been checked and this certificate is issued upon request.`:c.certificateType==="Character Certificate"?`This is to certify that ${student}, child of ${guardian||"the parent/guardian"}, studied in ${klass} at this school. To the best of the school's knowledge, the student's conduct during the period of study was satisfactory.`:`This is to certify that ${student}, child of ${guardian||"the parent/guardian"}, is/was a student of this school in ${klass} during the academic year ${certificateEsc(currentSchoolSettings.academicYear||"2083")}.`;
  const remarks=c.remarks?'<p><b>Remarks:</b> '+certificateEsc(c.remarks)+'</p>':"";
- w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+number+'</title><style>@page{size:A4;margin:22mm}body{font-family:Georgia,serif;color:#172554;margin:0}.sheet{min-height:250mm;border:5px double #1e3a8a;padding:22px 30px;box-sizing:border-box}.top{text-align:center}.top h1{font-size:25px;margin:8px}.top p{margin:4px}.meta{display:flex;justify-content:space-between;margin-top:28px;font-size:13px}.title{text-align:center;font-size:27px;letter-spacing:2px;text-decoration:underline;margin:45px 0}.content{font-size:19px;line-height:2.1;text-align:justify;margin:30px 10px}.sign{display:flex;justify-content:space-between;margin-top:100px;text-align:center}.sign div{width:200px;border-top:1px solid #333;padding-top:8px}.remarks{font-size:15px;margin-top:20px}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}</style></head><body><main class="sheet"><header class="top">'+safeLogo+'<h1>'+school+'</h1><p>'+address+'</p><p>EXAMINATION & ACADEMIC RECORDS OFFICE</p></header><div class="meta"><span>Certificate No.: '+number+'</span><span>Date: '+date+'</span></div><h2 class="title">'+type.toUpperCase()+'</h2><section class="content">'+bodyText+'</section><div class="remarks">'+remarks+'</div><div class="sign"><div>Class Teacher</div><div>Principal<br>'+certificateEsc(currentSchoolSettings.principalName||"")+'</div></div></main><script>window.onload=()=>window.print();<\/script><!-- Display-only English labels for dropdown options; preserve option values and saved records. -->
-<script>
-(function(){
- const labels={
-  'छान्नुहोस्':'Select',
-  'वर्ष छान्नुहोस्':'Select Year',
-  'विषय छान्नुहोस्':'Select Subject',
-  'विद्यार्थी छान्नुहोस्':'Select Student',
-  'कर्मचारी छान्नुहोस्':'Select Staff',
-  'सबै कक्षा':'All Classes',
-  'सबै विषय':'All Subjects',
-  'सबै परीक्षा':'All Exams',
-  'वार्षिक':'Annual',
-  'द्वितीय त्रैमासिक':'Second Term',
-  'तृतीय त्रैमासिक':'Third Term',
-  'प्रथम त्रैमासिक':'First Term',
-  'त्रैमासिक':'Quarterly',
-  'अर्धवार्षिक':'Half Yearly',
-  'आन्तरिक':'Internal',
-  'अन्य':'Other',
-  'स्थायी':'Permanent',
-  'राहत':'Relief',
-  'स. अनुदान':'Government Grant',
-  'नगर अनुदान':'Municipal Grant',
-  'करार':'Contract',
-  'कार्यरत':'Active',
-  'निष्क्रिय':'Inactive',
-  'दैनिक':'Daily',
-  'विषयगत':'Subject-wise',
-  'उपस्थित':'Present',
-  'अनुपस्थित':'Absent',
-  'बिदा':'Leave',
-  'विद्यार्थी सूची':'Student List',
-  'हाजिरी सारांश':'Attendance Summary',
-  'Marks सारांश':'Marks Summary',
-  'परीक्षा सूची':'Exam List',
-  'परीक्षा सूची उपलब्ध भएन':'Exam List Unavailable',
-  'नतिजा सूची लोड हुँदैछ...':'Loading Results...',
-  'विद्यार्थी सूची लोड हुँदैछ...':'Loading Students...',
-  'तपाईंको Assignment लोड हुँदैछ...':'Loading Your Assignments...',
-  'Assignment/अनुमति उपलब्ध छैन':'Assignment / Permission Unavailable',
-  'पहिले Subject Bank मा विषय थप्नुहोस्':'Add Subjects to Subject Bank First',
-  'पहिले Staff सूची लोड गर्नुहोस्':'Load Staff List First',
-  'Staff सूची लोड भएन':'Could Not Load Staff List',
-  'यस कक्षाको Assessment Settings भेटिएन':'Assessment Settings Not Found for This Class',
-  'Assignment लोड भएपछि विषय देखिन्छ':'Subjects Appear After Assignments Load',
-  'कक्षा उपलब्ध छैन':'Class Unavailable',
-  'विषय उपलब्ध छैन':'Subject Unavailable'
- };
- function englishOption(option){
-  const old=option.textContent;
-  const trimmed=old.trim();
-  const translated=labels[trimmed]||(/^कक्षा\s*(\d{1,2})$/.test(trimmed)?'Class '+RegExp.$1:null);
-  if(translated&&translated!==trimmed)option.textContent=translated;
- }
- function updateDropdowns(root){
-  if(root.nodeType!==1)return;
-  if(root.matches('option'))englishOption(root);
-  if(root.matches('select'))root.querySelectorAll('option').forEach(englishOption);
-  root.querySelectorAll('select option').forEach(englishOption);
- }
- updateDropdowns(document.body);
- const observer=new MutationObserver(records=>{
-  for(const record of records){
-   if(record.type==='characterData'){
-    const option=record.target.parentElement?.closest('option');
-    if(option)englishOption(option);
-   }else{
-    if(record.target.nodeType===1&&record.target.closest('option'))englishOption(record.target.closest('option'));
-    record.addedNodes.forEach(node=>updateDropdowns(node));
-   }
-  }
- });
- observer.observe(document.body,{childList:true,characterData:true,subtree:true});
-})();
-</script>
+ w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+number+'</title><style>@page{size:A4;margin:22mm}body{font-family:Georgia,serif;color:#172554;margin:0}.sheet{min-height:250mm;border:5px double #1e3a8a;padding:22px 30px;box-sizing:border-box}.top{text-align:center}.top h1{font-size:25px;margin:8px}.top p{margin:4px}.meta{display:flex;justify-content:space-between;margin-top:28px;font-size:13px}.title{text-align:center;font-size:27px;letter-spacing:2px;text-decoration:underline;margin:45px 0}.content{font-size:19px;line-height:2.1;text-align:justify;margin:30px 10px}.sign{display:flex;justify-content:space-between;margin-top:100px;text-align:center}.sign div{width:200px;border-top:1px solid #333;padding-top:8px}.remarks{font-size:15px;margin-top:20px}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}</style></head><body><main class="sheet"><header class="top">'+safeLogo+'<h1>'+school+'</h1><p>'+address+'</p><p>EXAMINATION & ACADEMIC RECORDS OFFICE</p></header><div class="meta"><span>Certificate No.: '+number+'</span><span>Date: '+date+'</span></div><h2 class="title">'+type.toUpperCase()+'</h2><section class="content">'+bodyText+'</section><div class="remarks">'+remarks+'</div><div class="sign"><div>Class Teacher</div><div>Principal<br>'+certificateEsc(currentSchoolSettings.principalName||"")+'</div></div></main><script>window.onload=()=>window.print();<\/script>
 </body></html>');
  w.document.close();
 }
@@ -3171,6 +3096,82 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
   if(!saveFormButton)return;
   if(!window.confirm(saveConfirmMessage)){event.preventDefault();event.stopImmediatePropagation();}
  },true);
+})();
+</script>
+<!-- Display-only English labels for dropdown options; preserve option values and saved records. -->
+<script>
+(function(){
+ const labels={
+  'छान्नुहोस्':'Select',
+  'वर्ष छान्नुहोस्':'Select Year',
+  'विषय छान्नुहोस्':'Select Subject',
+  'विद्यार्थी छान्नुहोस्':'Select Student',
+  'कर्मचारी छान्नुहोस्':'Select Staff',
+  'सबै कक्षा':'All Classes',
+  'सबै विषय':'All Subjects',
+  'सबै परीक्षा':'All Exams',
+  'वार्षिक':'Annual',
+  'द्वितीय त्रैमासिक':'Second Term',
+  'तृतीय त्रैमासिक':'Third Term',
+  'प्रथम त्रैमासिक':'First Term',
+  'त्रैमासिक':'Quarterly',
+  'अर्धवार्षिक':'Half Yearly',
+  'आन्तरिक':'Internal',
+  'अन्य':'Other',
+  'स्थायी':'Permanent',
+  'राहत':'Relief',
+  'स. अनुदान':'Government Grant',
+  'नगर अनुदान':'Municipal Grant',
+  'करार':'Contract',
+  'कार्यरत':'Active',
+  'निष्क्रिय':'Inactive',
+  'दैनिक':'Daily',
+  'विषयगत':'Subject-wise',
+  'उपस्थित':'Present',
+  'अनुपस्थित':'Absent',
+  'बिदा':'Leave',
+  'विद्यार्थी सूची':'Student List',
+  'हाजिरी सारांश':'Attendance Summary',
+  'Marks सारांश':'Marks Summary',
+  'परीक्षा सूची':'Exam List',
+  'परीक्षा सूची उपलब्ध भएन':'Exam List Unavailable',
+  'नतिजा सूची लोड हुँदैछ...':'Loading Results...',
+  'विद्यार्थी सूची लोड हुँदैछ...':'Loading Students...',
+  'तपाईंको Assignment लोड हुँदैछ...':'Loading Your Assignments...',
+  'Assignment/अनुमति उपलब्ध छैन':'Assignment / Permission Unavailable',
+  'पहिले Subject Bank मा विषय थप्नुहोस्':'Add Subjects to Subject Bank First',
+  'पहिले Staff सूची लोड गर्नुहोस्':'Load Staff List First',
+  'Staff सूची लोड भएन':'Could Not Load Staff List',
+  'यस कक्षाको Assessment Settings भेटिएन':'Assessment Settings Not Found for This Class',
+  'Assignment लोड भएपछि विषय देखिन्छ':'Subjects Appear After Assignments Load',
+  'कक्षा उपलब्ध छैन':'Class Unavailable',
+  'विषय उपलब्ध छैन':'Subject Unavailable'
+ };
+ function englishOption(option){
+  const old=option.textContent;
+  const trimmed=old.trim();
+  const translated=labels[trimmed]||(/^कक्षा\s*(\d{1,2})$/.test(trimmed)?'Class '+RegExp.$1:null);
+  if(translated&&translated!==trimmed)option.textContent=translated;
+ }
+ function updateDropdowns(root){
+  if(root.nodeType!==1)return;
+  if(root.matches('option'))englishOption(root);
+  if(root.matches('select'))root.querySelectorAll('option').forEach(englishOption);
+  root.querySelectorAll('select option').forEach(englishOption);
+ }
+ updateDropdowns(document.body);
+ const observer=new MutationObserver(records=>{
+  for(const record of records){
+   if(record.type==='characterData'){
+    const option=record.target.parentElement?.closest('option');
+    if(option)englishOption(option);
+   }else{
+    if(record.target.nodeType===1&&record.target.closest('option'))englishOption(record.target.closest('option'));
+    record.addedNodes.forEach(node=>updateDropdowns(node));
+   }
+  }
+ });
+ observer.observe(document.body,{childList:true,characterData:true,subtree:true});
 })();
 </script>
 </body>
