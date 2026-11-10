@@ -1,6 +1,7 @@
 name: V44 JavaScript and Firestore Security Checks
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -41,7 +42,7 @@ jobs:
     name: Deploy approved V45 to Firebase Hosting after tests pass
     needs: quality-and-rules
     if: >-
-      ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.head_commit.message == 'release: deploy approved V45 to production [deploy-v45-live]' }}
+      ${{ github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.event.head_commit.message == 'release: deploy approved V45 to production [deploy-v45-live]')) }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout tested V44 commit
