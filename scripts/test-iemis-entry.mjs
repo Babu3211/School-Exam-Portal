@@ -21,6 +21,23 @@ for(const cl of [6,7,8,9,10])for(const term of ['first','second','annual'])for(c
  assert.equal(result.totalObtained,result.totalFullMarks);
  assert.throws(()=>iemisEntryValues(schema,{values:{...values,participation:String(schema[0].max+1)},isAbsent:false}),/Participation/);
 }
+// Cross-class, cross-term regression: incomplete input must remain incomplete, not silently zero-filled.
+for(const cl of [6,7,8,9,10])for(const term of ['first','second','annual']){
+ const schema=iemisEntrySchema(cl,term,'Nepali');
+ const blank=Object.fromEntries(schema.map(c=>[c.key,'']));
+ assert.equal(iemisEntryValues(schema,{values:blank,isAbsent:false}),null,`Blank marks must stay unentered for class ${cl} ${term}`);
+ const zero=Object.fromEntries(schema.map(c=>[c.key:'0']));
+ const savedZero=iemisEntryValues(schema,{values:zero,isAbsent:false});
+ assert.equal(savedZero.totalObtained,0,`Zero is a real entered score for class ${cl} ${term}`);
+ assert.equal(savedZero.scores.length,schema.length);
+ const absent=iemisEntryValues(schema,{values:zero,isAbsent:true});
+ assert.equal(absent.isAbsent,true);
+ assert.ok(absent.scores.every(c=>c.obtained===null));
+ const invalid={...zero,participation:String(schema[0].max+1)};
+ assert.throws(()=>iemisEntryValues(schema,{values:invalid,isAbsent:false}),/Participation/);
+ const fractional={...zero,practical:'0.5'};
+ assert.equal(iemisEntryValues(schema,{values:fractional,isAbsent:false}).totalObtained,0.5);
+}
 assert.throws(()=>iemisEntrySchema(11,'annual'),/1–10/);
 const schema=iemisEntrySchema(6,'annual','Mathematics');
 const old={scores:[{name:'TH (Theory)',fullMarks:50,obtained:20},{name:'Participation',fullMarks:4,obtained:3},{name:'Practical/Project',fullMarks:36,obtained:25},{name:'First Term Examination',fullMarks:10,obtained:6}]};
