@@ -65,7 +65,7 @@ must(/if\s*\(\s*target\.closest\("#studentAddNewBtn"\)\)/.test(html) && /if\s*\(
 
 must(html.includes("map(normalizeRoleKey);if(!allowed.some(r=>[\"class_teacher\",\"subject_teacher\",\"viewer\",\"exam_officer\",\"accountant\"].includes(r))"), "Login must normalize and validate recognized active roles, including Viewer.");
 const roleStart = html.indexOf("function rolePageAllowed(page){");
-const roleEnd = html.indexOf("\nfunction applyRoleNavigation()", roleStart);
+const roleEnd = html.indexOf("\n// Viewer has navigation", roleStart);
 must(roleStart >= 0 && roleEnd > roleStart, "Role permission helper is missing.");
 function roleMatrix(role, admin = false) {
   const hasRole = key => admin || !!role?.active && (role.roles || []).map(v => String(v).toLowerCase().replace(/[ -]+/g, "_")).includes(key);
