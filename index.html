@@ -690,7 +690,7 @@ async function syncStaffEmailsFromTeacherCsv(){
   for(const r of records){
    const email=r.email.trim();
    const matches=staffDocs.filter(st=>[st.nameEn,st.name,st.staffName].some(n=>n&&norm(n)===norm(r.name)));
-   if(!r.name||!/^\\S+@\\S+\\.\\S+$/.test(email)){errors.push("Row "+r.line+": invalid name or email");continue;}
+   if(!r.name||!/^\S+@\S+\.\S+$/.test(email)){errors.push("Row "+r.line+": invalid name or email");continue;}
    if(seenEmail.has(email.toLowerCase())){errors.push("Row "+r.line+": duplicate CSV email");continue;}
    seenEmail.add(email.toLowerCase());
    if(matches.length!==1){skipped.push("Row "+r.line+": no unique staff name match");continue;}
@@ -736,7 +736,7 @@ async function importTeachersCsv(){
   for(const r of records){
    const matches=cachedStaff.filter(st=>[st.nameEn,st.name,st.staffName].some(name=>name&&norm(name)===norm(r.name)));
    const linked=existing.find(u=>String(u.email||"").toLowerCase()===r.email);
-   if(!r.name||!/^\\S+@\\S+\\.\\S+$/.test(r.email)||r.password.length<6)errors.push("Row "+r.line+": invalid name, email or password");
+   if(!r.name||!/^\S+@\S+\.\S+$/.test(r.email)||r.password.length<6)errors.push("Row "+r.line+": invalid name, email or password");
    else if(seen.has(r.email))errors.push("Row "+r.line+": duplicate email within CSV");
    else if(matches.length!==1)errors.push("Row "+r.line+": staff name not uniquely found in Staff Management");
    else if(matches[0].active===false||norm(matches[0].status)==="निष्क्रिय")errors.push("Row "+r.line+": inactive staff");
