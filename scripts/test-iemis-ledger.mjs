@@ -108,7 +108,8 @@ for(const [year,term,expectedCredits,hours] of [
  ['2083','first',[2.5,2,2,4,2.5],26],
  ['2083','annual',annualCredits,26],
  ['2082','first',annualCredits,30],
- ['2083','second',annualCredits,30]
+ ['2083','second',[2.5,2,2,4,2.5],26],
+ ['2083','third',annualCredits,30]
 ]){
  const config=primarySubjects.map((subject,i)=>({className:'1',subject,creditHour:annualCredits[i],active:true}));
  const before=structuredClone(config);
