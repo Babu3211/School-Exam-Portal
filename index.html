@@ -3103,6 +3103,37 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
  const labels={
   'छान्नुहोस्':'Select',
   'वर्ष छान्नुहोस्':'Select Year',
+  'कक्षा छान्नुहोस्':'Select Class',
+  'परीक्षा छान्नुहोस्':'Select Exam',
+  'परीक्षाको प्रकार छान्नुहोस्':'Select Exam Type',
+  'परीक्षा प्रकार छान्नुहोस्':'Select Exam Type',
+  'शैक्षिक वर्ष छान्नुहोस्':'Select Academic Year',
+  'सेक्सन छान्नुहोस्':'Select Section',
+  'विषयवस्तु छान्नुहोस्':'Select Topic',
+  'सबै':'All',
+  'सबै विद्यार्थी':'All Students',
+  'सबै कर्मचारी':'All Staff',
+  'सबै परीक्षा प्रकार':'All Exam Types',
+  'पहिलो त्रैमासिक':'First Term',
+  'दोस्रो त्रैमासिक':'Second Term',
+  'तेस्रो त्रैमासिक':'Third Term',
+  'प्रथम परीक्षा':'First Term',
+  'द्वितीय परीक्षा':'Second Term',
+  'तृतीय परीक्षा':'Third Term',
+  'अन्तिम परीक्षा':'Final Term',
+  'वार्षिक परीक्षा':'Final Term',
+  'अन्तिम':'Final Term',
+  'पहिलो':'First',
+  'दोस्रो':'Second',
+  'तेस्रो':'Third',
+  'नेपाली':'Nepali',
+  'अंग्रेजी':'English',
+  'अङ्ग्रेजी':'English',
+  'गणित':'Mathematics',
+  'विज्ञान':'Science',
+  'सामाजिक अध्ययन':'Social Studies',
+  'कम्प्युटर विज्ञान':'Computer Science',
+  'सेरोफेरो':'Our Surroundings',
   'विषय छान्नुहोस्':'Select Subject',
   'विद्यार्थी छान्नुहोस्':'Select Student',
   'कर्मचारी छान्नुहोस्':'Select Staff',
@@ -3149,7 +3180,9 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
  function englishOption(option){
   const old=option.textContent;
   const trimmed=old.trim();
-  const translated=labels[trimmed]||(/^कक्षा\s*(\d{1,2})$/.test(trimmed)?'Class '+RegExp.$1:null);
+  const ascii=trimmed.replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d)));
+  const classMatch=ascii.match(/^कक्षा\s*(\d{1,2})$/);
+  const translated=labels[trimmed]||(classMatch?'Class '+Number(classMatch[1]):null);
   if(translated&&translated!==trimmed)option.textContent=translated;
  }
  function updateDropdowns(root){
