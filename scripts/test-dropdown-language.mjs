@@ -11,6 +11,7 @@ assert.ok(script,'Dropdown translation script must be standalone');
 class Option {
  constructor(value,label){this.nodeType=1;this.value=value;this.textContent=label;}
  matches(selector){return selector==='option';}
+ closest(selector){return selector==='option'?this:null;}
  querySelectorAll(){return [];}
 }
 const options=[
@@ -26,7 +27,7 @@ const options=[
  new Option('विषयगत','विषयगत'),
  new Option('','विषय छान्नुहोस्')
 ];
-const body={nodeType:1,matches:()=>false,querySelectorAll:selector=>selector==='select option'?options:[],};
+const body={nodeType:1,matches:()=>false,closest:()=>null,querySelectorAll:selector=>selector==='select option'?options:[],};
 let callback;
 class MutationObserver {constructor(fn){callback=fn;}observe(){}}
 vm.runInNewContext(script,{document:{body},MutationObserver},{timeout:1000});
