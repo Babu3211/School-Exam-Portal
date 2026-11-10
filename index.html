@@ -2418,12 +2418,12 @@ function showGradeSheet(studentId){
  const examYear=onlineResultDigits(exam?.academicYear||student.academicYear||'2083 B.S. (2026 A.D.)');
  const examTerm=exam?smssTermLabelEnglish(smssExamTermKey(exam)):'Term Not Available';
  const classSubjectRecord=(subject)=>{const sameClass=x=>canonicalStudentClass(x.className??x.class??'')===canonicalStudentClass(student.class??'');const sameSubject=x=>iemisSubjectKey(x.subject||x.subjectName)===iemisSubjectKey(subject);return resultClasses.find(x=>sameClass(x)&&x.active!==false&&sameSubject(x))||resultClasses.find(x=>sameClass(x)&&sameSubject(x))||null};
- // Verified against populated IEMIS 2083 Class I First and Final sheets.
+ // Verified against populated IEMIS 2083 Class I First, Second and Final sheets.
  // Stored class credits remain annual; this adjustment affects presentation only.
  const verifiedClassOne=classNo===1&&/^2083(?:\\D|$)/.test(onlineResultDigits(exam?.academicYear||''));
- const verifiedFirst=verifiedClassOne&&smssExamTermKey(exam)==='first';
- const verifiedPrimarySheet=verifiedClassOne&&['first','annual'].includes(smssExamTermKey(exam));
- const creditFor=(subject)=>{const c=classSubjectRecord(subject),raw=c?.creditHour??c?.creditHours??'—';return verifiedFirst&&Number.isFinite(Number(raw))&&Number(raw)>0?Number(raw)/2:raw};
+ const verifiedPrimaryTerm=verifiedClassOne&&['first','second'].includes(smssExamTermKey(exam));
+ const verifiedPrimarySheet=verifiedClassOne&&['first','second','annual'].includes(smssExamTermKey(exam));
+ const creditFor=(subject)=>{const c=classSubjectRecord(subject),raw=c?.creditHour??c?.creditHours??'—';return verifiedPrimaryTerm&&Number.isFinite(Number(raw))&&Number(raw)>0?Number(raw)/2:raw};
  if(isPrimary){
   const primaryRows=applicableSubjects.map(x=>{
    const ch=Number(creditFor(x.subject));const credit=Number.isFinite(ch)&&ch>0?ch:null;
