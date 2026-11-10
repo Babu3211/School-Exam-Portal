@@ -437,7 +437,7 @@ async function writeAuditLog(moduleName,action,recordId="",detail=""){
 async function loadAuditLogs(){
  const body=document.getElementById("auditLogsBody"),msg=document.getElementById("auditLogMessage");if(!body)return;
  try{
-  requireAdmin();body.innerHTML='<tr><td class="empty" colspan="6">Audit Log लोड हुँदैछ...</td></tr>';
+  if(!isAdmin()&&!roleHas("viewer"))throw new Error("Access denied.");body.innerHTML='<tr><td class="empty" colspan="6">Audit Log लोड हुँदैछ...</td></tr>';
   const snap=await getDocs(query(collection(db,"audit_logs"),orderBy("createdAt","desc"),limit(200)));
   body.innerHTML=snap.docs.map(d=>{const x=d.data(),dt=x.createdAt?.toDate?x.createdAt.toDate().toLocaleString("ne-NP"):"समय उपलब्ध छैन";return `<tr><td>${esc(dt)}</td><td>${esc(x.actorName||x.actorUid||"—")}</td><td>${esc(x.action||"—")}</td><td>${esc(x.module||"—")}</td><td>${esc(x.recordId||"—")}</td><td>${esc(x.detail||"—")}</td></tr>`}).join("")||'<tr><td class="empty" colspan="6">अहिलेसम्म Audit Log छैन।</td></tr>';
   if(msg)msg.textContent=`पछिल्ला ${snap.size} वटा गतिविधि देखाइएको छ।`;
@@ -461,7 +461,7 @@ function certificateStudentLabel(st){return [st.studentNameNepali||st.studentNam
 async function loadCertificatesPage(){
  const studentSelect=document.getElementById("certificateStudent"),body=document.getElementById("certificatesBody");if(!studentSelect||!body)return;
  try{
-  requireAdmin();
+  if(!isAdmin()&&!roleHas("viewer"))throw new Error("Access denied.");
   const [studentsSnap,certSnap]=await Promise.all([getDocs(collection(db,"students")),getDocs(collection(db,"certificates"))]);
   certificateStudents=studentsSnap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.active!==false).sort((a,b)=>String(a.studentName||"").localeCompare(String(b.studentName||"")));
   issuedCertificates=certSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.issuedAtIso||"").localeCompare(String(a.issuedAtIso||"")));
@@ -520,6 +520,7 @@ function viewerReadOnlyGuard(event){
  if(event.type==="click"){
   const action=target.closest("button,[data-role-edit],[data-role-toggle]");
   if(!action)return;
+  if(action.matches("[data-page],[data-go]")||action.closest("[data-page],[data-go]"))return;
   const id=String(action.id||"").toLowerCase(),label=String(action.textContent||"").toLowerCase();
   const allowed=/search|refresh|reload|filter|view|preview|print|download|export|show|open|generate report|build report/.test(id+" "+label);
   if(!allowed){event.preventDefault();event.stopImmediatePropagation();}
@@ -537,7 +538,7 @@ function applyRoleNavigation(){
  document.querySelectorAll("[data-go]").forEach(b=>{b.style.display=rolePageAllowed(b.dataset.go)?"":"none";});
  // Hide empty menu groups and the Administration heading for non-admin accounts.
  document.querySelectorAll(".menu-group").forEach(group=>{const allowed=[...group.querySelectorAll("[data-page]")].some(b=>b.style.display!=="none");group.style.display=(!teacher||allowed)?"":"none";});
- document.querySelectorAll(".side-label,.label").forEach(label=>{if(teacher&&label.textContent.trim().toUpperCase()==="ADMINISTRATION")label.style.display="none";});
+ document.querySelectorAll(".side-label,.label").forEach(label=>{if(teacher&&!roleHas("viewer")&&label.textContent.trim().toUpperCase()==="ADMINISTRATION")label.style.display="none";});
  const ledger=document.getElementById("marksLedgerPanel")||document.getElementById("ledgerViewExam")?.closest(".panel");if(ledger)ledger.style.display=teacher?"none":"";
  if(teacher){
   const a=document.getElementById("assessmentSettingsPanel"),b=document.getElementById("savedAssessmentSettingsPanel");if(a)a.hidden=true;if(b)b.hidden=true;
