@@ -85,3 +85,12 @@ The Class I First-Term report now displays half the configured annual subject cr
 The First Term watermark was visually observed as repeated light school-name text behind the report, with the school logo at the upper left. Print created a transient blank tab that closed before an inspectable document/dialog was available. A4/PDF parity is not certified.
 
 Second-Term Grade Sheet inspection was pending when the browser session became unavailable. Second/Final ledgers, explicit Edit/Update and validation tests, Classes II–X regression/reference checks, watermark dimensions and native printing remain pending. No production SMSS deployment or Firebase data writes were performed in this verification.
+
+
+### Class I Second/Final ledger follow-up
+
+Second Term Grade Sheet was inspected after login resumed: CH 2.5/2/2/4/2.5 (total 13), grades A/B+/B/A+/A, GPA 3.54 and the 26-hour footnote match First Term. The presentation fix and renderer regression now include Second Term; Third Term remains unchanged pending reference evidence.
+
+Second and Final Markwise Ledgers both reproduce 10/9/8/11/10. Second Grade Ledger gives A/B+/B/A+/A and GPA 3.54. Final Grade Ledger gives the same grades but **GPA 0.00**, unlike the populated Final Grade Sheet's **3.54**. This is an observed source inconsistency; preserve mathematically verified 3.54 in SMSS and do not encode 0.00 as a calculation rule.
+
+First-Term Nepali Edit test changed obtained achievement 10 to 9, saved, and reloaded 9 successfully; restoration to 10 was submitted next. An unsaved 13/12 input showed no native validationMessage or aria-invalid on blur; it was replaced with a valid value before Save. Server-side invalid-save rejection is not claimed. No other student's result was selected for these writes.
