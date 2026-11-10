@@ -101,7 +101,7 @@ assert.match(mixedLedger.body,/>4.00<\/td>/,'An old cohort must not force new ac
 console.log('New Class V achievement Grade Sheet and mixed-cohort isolation passed.');
 
 
-// Populated IEMIS 2083 Class I First/Final reference; synthetic identity only.
+// Populated IEMIS 2083 Class I First/Second/Final reference; synthetic identity only.
 const primarySubjects=['Nepali','English','Mathematics','Serophero','Hamro Dhunibeshi'];
 const annualCredits=[5,4,4,8,5], achievementMarks=[10,9,8,11,10];
 for(const [year,term,expectedCredits,hours] of [
@@ -120,8 +120,9 @@ for(const [year,term,expectedCredits,hours] of [
  const rows=[...firstTable.matchAll(/<tr>([\s\S]*?)<\/tr>/g)].slice(1,6);
  const shown=rows.map(row=>Number([...row[1].matchAll(/<td[^>]*>([^<]*)<\/td>/g)][1][1]));
  assert.deepEqual(shown,expectedCredits);
+ assert.equal(shown.reduce((total,credit)=>total+credit,0),expectedCredits.reduce((total,credit)=>total+credit,0),'Rendered subject credits must sum to the verified term total');
  assert.match(box.innerHTML,/GRADE POINT AVERAGE \(GPA\): 3.54/);
  assert.ok(box.innerHTML.includes('ONE CREDIT HOUR EQUALS '+hours+' HOURS.'));
  assert.deepEqual(config,before,'Report rendering must not change stored credits');
 }
-console.log('Class I 2083 First/Final credits, GPA 3.54, footnote and historical/unverified-term isolation passed.');
+console.log('Class I 2083 First/Second/Final credits, totals, GPA 3.54, footnote and historical/unverified-term isolation passed.');
