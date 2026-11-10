@@ -1,0 +1,12 @@
+{
+  "appId": "com.smss.examportal",
+  "appName": "SMSS Exam Portal",
+  "webDir": "www",
+  "server": {
+    "url": "https://exam-portal-smss-95016.web.app/",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
