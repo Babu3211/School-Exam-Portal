@@ -564,6 +564,14 @@ function userAssignmentLabel(u){const labels=(u.roles||[]).map(r=>({class_teache
 function teacherClassKey(x){return String(x?.className||"").trim();}
 function teacherClassAccessKey(x){return String(x?.className||"").trim();}
 function uniqueTeacherClasses(items){const seen=new Set();return (items||[]).filter(x=>{const key=teacherClassAccessKey(x);if(!key||seen.has(key))return false;seen.add(key);return true;}).map(x=>({...x,section:""}));}
+function autofillManagedUserEmail(){
+ const select=document.getElementById("newUserStaff"),input=document.getElementById("newUserEmail");
+ if(!select||!input)return;
+ const staff=cachedStaff.find(x=>x.id===select.value);
+ input.value=staff?String(staff.email||"").trim():"";
+ input.placeholder=staff&&!staff.email?"Add Email ID in Staff Management first":"user@example.com";
+}
+document.addEventListener("change",event=>{if(event.target.id==="newUserStaff")autofillManagedUserEmail();});
 function renderUserAssignmentChoices(){
  const staffSel=document.getElementById("newUserStaff");if(staffSel){staffSel.innerHTML='<option value="">कर्मचारी छान्नुहोस्</option>'+cachedStaff.filter(x=>norm(x.status)!==norm("निष्क्रिय")&&x.active!==false).map(x=>`<option value="${esc(x.id)}">${esc(x.nameEn||x.name||x.staffName||x.staffId||"Unnamed staff")} — ${esc(x.staffId||x.id)}</option>`).join("");}
  const ct=document.getElementById("classTeacherAssignments"),st=document.getElementById("subjectTeacherAssignments");
