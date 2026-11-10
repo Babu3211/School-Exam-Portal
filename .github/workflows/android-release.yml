@@ -1,0 +1,91 @@
+name: Publish signed SMSS Android APK
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Check release signing secrets
+        env:
+          KEYSTORE_B64: ${{ secrets.SMSS_ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.SMSS_ANDROID_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.SMSS_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.SMSS_ANDROID_KEY_PASSWORD }}
+        run: |
+          test -n "$KEYSTORE_B64" && test -n "$STORE_PASSWORD" && test -n "$KEY_ALIAS" && test -n "$KEY_PASSWORD" || {
+            echo "::error::Configure all four SMSS_ANDROID signing secrets before publishing a public APK."
+            exit 1
+          }
+      - name: Install SDK platform
+        run: |
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | head -n 1)"
+          test -n "$SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
+      - name: Generate Android project
+        working-directory: android-app
+        run: |
+          npm install --no-audit --no-fund
+          npx cap add android
+          npx cap sync android
+      - name: Prepare signing
+        env:
+          KEYSTORE_B64: ${{ secrets.SMSS_ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.SMSS_ANDROID_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.SMSS_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.SMSS_ANDROID_KEY_PASSWORD }}
+        working-directory: android-app/android
+        run: |
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > release.keystore
+          cat >> app/build.gradle <<'GRADLE'
+
+          android {
+              signingConfigs {
+                  smssRelease {
+                      storeFile file("../release.keystore")
+                      storePassword System.getenv("SMSS_ANDROID_STORE_PASSWORD")
+                      keyAlias System.getenv("SMSS_ANDROID_KEY_ALIAS")
+                      keyPassword System.getenv("SMSS_ANDROID_KEY_PASSWORD")
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.smssRelease
+                  }
+              }
+          }
+          GRADLE
+          echo "SMSS_ANDROID_STORE_PASSWORD=$STORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "SMSS_ANDROID_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "SMSS_ANDROID_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+      - name: Build signed release APK and AAB
+        working-directory: android-app/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease bundleRelease --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/SMSS-Exam-Portal.apk"
+          cp app/build/outputs/bundle/release/app-release.aab "$GITHUB_WORKSPACE/SMSS-Exam-Portal.aab"
+      - name: Upload release build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: SMSS-Signed-Android-Release
+          path: |
+            SMSS-Exam-Portal.apk
+            SMSS-Exam-Portal.aab
+          if-no-files-found: error
+      - name: Publish stable public download link
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="android-v1.0.${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" SMSS-Exam-Portal.apk SMSS-Exam-Portal.aab --title "SMSS Exam Portal Android $TAG" --notes "Signed Android release. APK for direct installation; AAB for Google Play Console." --latest
