@@ -127,10 +127,10 @@ must(html.includes("async function seedInitialStaff20()"), "Initial 20-staff see
 must(html.includes("nameEn:nameEnglish"), "Staff seed must use the V44 English-name field.");
 must(html.includes("data.staffId=existingRecord?.staffId||nextStaffId(data.role,freshStaff)"), "New staff records must receive sequential IDs while preserving existing IDs.");
 
-must(rules.includes("match /public_result_lookup/{lookupId}") && rules.includes("allow get: if true;") && rules.includes("allow list: if isAdmin();"), "Public lookup rules must allow exact public get and Admin-only list.");
-must(rules.includes("match /public_results/{resultId}") && rules.includes("allow list: if isAdmin();"), "Public result list must be Admin-only.");
+must(rules.includes("match /public_result_lookup/{lookupId}") && rules.includes("allow get: if true;") && rules.includes("allow list: if isAdmin() || isViewer();"), "Public lookup rules must allow exact public get and active Viewer/Admin list.");
+must(rules.includes("match /public_results/{resultId}") && rules.includes("allow list: if isAdmin() || isViewer();"), "Public result list must be limited to active Viewer/Admin.");
 must(rules.includes("match /public_result_exams/{examId}"), "Public exam index rules are missing.");
-must(rules.includes("match /user_roles/{userId}") && rules.includes("allow get: if isAdmin() || (signedIn() && request.auth.uid == userId);"), "Users may read only their own role record; Admin may read role records.");
+must(rules.includes("match /user_roles/{userId}") && rules.includes("allow get: if isAdmin() || isViewer() || (signedIn() && request.auth.uid == userId);"), "Users may read own roles; active Viewer and Admin may read role records.");
 must(rules.includes("allow create, update, delete: if isAdmin();"), "Only Admin may create, change or deactivate user role assignments.");
 must(rules.includes("function hasActiveRole()") && rules.includes("roleData().get('roles', [])"), "Role-based access must require an active user role.");
 must(rules.includes("match /school_public_branding/{documentId}") && rules.includes("allow get: if documentId == 'main';") && rules.includes("allow create, update, delete: if isAdmin() && documentId == 'main';"), "Login branding must be public-read for the single main document and Admin-write only.");
@@ -143,8 +143,8 @@ must(html.includes(".login-brand h2,#loginSchoolName{font-size:clamp(22px,5vw,26
 must(html.includes(".login-user-types{gap:10px") && html.includes("font-size:12px;font-weight:600"), "Login account types must use refined readable typography.");
 
 must(rules.includes("match /public_result_exams/{examId}") && rules.includes("allow get, list: if true;") && rules.includes("allow create, update, delete: if isAdmin();"), "Public exam index must expose read-only publication metadata.");
-must(rules.includes("match /public_result_lookup/{lookupId}") && rules.includes("allow get: if true;") && rules.includes("allow list: if isAdmin();"), "Public result lookup must allow exact PIN-hash reads but block public listing.");
-must(rules.includes("match /public_results/{resultId}") && rules.includes("allow get: if true;") && rules.includes("allow list: if isAdmin();"), "Public result documents must allow exact reads but block public listing.");
+must(rules.includes("match /public_result_lookup/{lookupId}") && rules.includes("allow get: if true;") && rules.includes("allow list: if isAdmin() || isViewer();"), "Public result lookup must allow exact PIN-hash reads but block public listing.");
+must(rules.includes("match /public_results/{resultId}") && rules.includes("allow get: if true;") && rules.includes("allow list: if isAdmin() || isViewer();"), "Public result documents must allow exact reads but block public listing.");
 must(rules.includes("match /online_result_rate_limits/{documentId}") && rules.includes("allow read, write: if false;"), "Rate-limit collection must remain inaccessible to client apps.");
 
 must(html.includes('id="certificateForm"') && html.includes("async function loadCertificatesPage()"), "Firebase certificate issue workflow is missing.");
