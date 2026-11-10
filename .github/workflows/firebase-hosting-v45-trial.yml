@@ -5,13 +5,14 @@ on:
     branches:
       - smss-v45-work
       - smss-v45-integration
+      - fix/iemis-2083-verification
 
 permissions:
   contents: read
 
 # Avoid older commits overwriting the latest V45 preview deployment.
 concurrency:
-  group: smss-v45-preview-deploy
+  group: ${{ github.ref_name == 'fix/iemis-2083-verification' && 'smss-iemis-2083-preview' || 'smss-v45-preview-deploy' }}
   cancel-in-progress: true
 
 jobs:
@@ -34,6 +35,8 @@ jobs:
         run: node scripts/test-question-paper-content.mjs
       - name: Run V45 Grade Ledger and requirement regression checks
         run: node scripts/check-v44-requirements.mjs
+      - name: Verify V45 UI, manifest and HD icons
+        run: npm run test:v45
       - name: Verify IEMIS ledger layouts and component-weighted GPA
         run: npm run test:iemis
       - name: Check PWA release upgrades and offline isolation
@@ -49,7 +52,7 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
           projectId: exam-portal-smss-95016
-          channelId: v45-trial
+          channelId: ${{ github.ref_name == 'fix/iemis-2083-verification' && 'iemis-2083-check' || 'v45-trial' }}
           expires: 7d
           entryPoint: .
       - name: Smoke test deployed V45 preview over HTTPS

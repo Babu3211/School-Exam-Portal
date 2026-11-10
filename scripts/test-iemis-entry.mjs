@@ -14,12 +14,12 @@ for(const cl of [1,2,3,4,5])for(const term of ['first','second','annual']){
 }
 for(const cl of [6,7,8,9,10])for(const term of ['first','second','annual'])for(const subject of ['Mathematics','OPT.II COMPUTER SCIENCE (3031)']){
  const schema=iemisEntrySchema(cl,term,subject),computer=cl>=9&&/computer/i.test(subject);
- assert.deepEqual(schema.map(c=>c.max),[cl<=8?4:3,cl<=8?36:computer?41:16,cl<=8?10:6,...(term==='annual'?[cl<=8||computer?50:75]:[])]);
+ assert.deepEqual(schema.map(c=>c.max),[cl<=8||computer?4:3,cl<=8||computer?36:16,cl<=8||computer?10:6,...(term==='annual'?[cl<=8||computer?50:75]:[])]);
  assert.match(schema[2].label,term==='annual'?/^Total of Term/:term==='first'?/^First Term/:/^Second Term/);
  const values=Object.fromEntries(schema.map(c=>[c.key,String(c.max)]));
  const result=iemisEntryValues(schema,{values,isAbsent:false});assert.equal(result.totalFullMarks,term==='annual'?100:cl<=8||computer?50:25);
  assert.equal(result.totalObtained,result.totalFullMarks);
- assert.throws(()=>iemisEntryValues(schema,{values:{...values,participation:String(schema[0].max+1)},isAbsent:false}),/Participation/);
+ for(const component of schema)assert.throws(()=>iemisEntryValues(schema,{values:{...values,[component.key]:String(component.max+1)},isAbsent:false}),/enter a mark/);
 }
 // Cross-class, cross-term regression: incomplete input must remain incomplete, not silently zero-filled.
 for(const cl of [6,7,8,9,10])for(const term of ['first','second','annual']){
@@ -72,3 +72,20 @@ const stale=persistence();await assert.rejects(()=>stale.save(stale.plans,'diffe
 const partial=persistence({failBatch:2});let failure;try{await partial.save(partial.plans,'context',{id:'exam-test'},'1','teacher-test');}catch(error){failure=error;}assert.equal(failure.savedKeys.length,10);assert.equal(partial.saved.size,10);assert.match(failure.message,/10\/23/);
 const conflict=persistence({initial:new Map([['old-record',{scores:[{name:'changed',obtained:9}]}]])});conflict.plans[0].old={id:'old-record',section:'A',scores:[{name:'previous',obtained:8}]};await assert.rejects(()=>conflict.save([conflict.plans[0]],'context',{id:'exam-test'},'1','teacher-test'),/overwrite/);assert.equal(conflict.counts().writes,0);
 console.log('All 1–5/6–8/9–10 term schemas, editable grid plans, absence, learning totals, dirty-only saves, transactions, conflict and partial-save tests passed.');
+
+for(const classNo of [9,10])for(const term of ['first','second','annual']){
+ const subject='OPT.II COMPUTER SCIENCE (3031)';
+ const schema=iemisEntrySchema(classNo,term,subject);
+ const oldLimits=[3,41,6,50];
+ const historical={scores:schema.map((c,i)=>({name:c.name,fullMarks:oldLimits[i],obtained:oldLimits[i]}))};
+ const original=structuredClone(historical);
+ const draft=iemisEntryDraft(historical,schema);
+ assert.equal(draft.incompatible,true);
+ assert.throws(()=>iemisEntryValues(schema,draft),/custom assessment/);
+ assert.deepEqual(normalizeIemisEntryScores(classNo,term,subject,historical.scores),original.scores);
+ assert.deepEqual(historical,original);
+ const zero=Object.fromEntries(schema.map(c=>[c.key,'0']));
+ assert.equal(iemisEntryValues(schema,{values:zero,isAbsent:false}).totalObtained,0);
+ assert.ok(iemisEntryValues(schema,{values:zero,isAbsent:true}).scores.every(c=>c.obtained===null));
+}
+console.log('Approved IX/X Computer limits and historical 3/41/6 preservation passed.');

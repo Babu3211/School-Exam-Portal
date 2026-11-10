@@ -1,4 +1,6 @@
-import {iemisEscape as esc,iemisSubjectKey,iemisComponentKey} from './iemis-ledger.js?v=20261109-legacy2';
+import {iemisEscape as esc,iemisSubjectKey,iemisComponentKey} from './iemis-ledger.js?v=20261110-computer';
+
+export const isIemisComputerSubject=subject=>/computer|कम्प्युटर|कम्प्यूटर/i.test(String(subject||''));
 
 export function iemisEntrySchema(classNo,term,subject='') {
   const n=Number(String(classNo).replace(/[^0-9]/g,''));
@@ -8,14 +10,16 @@ export function iemisEntrySchema(classNo,term,subject='') {
     {key:'full',name:'Full Marks',label:'Full Marks',readonly:true},
     {key:'obtained',name:'Obtained Learning Achievement',label:'Obtained Learning Achievement'}
   ];
-  const computer=n>=9&&/computer|कम्प्युटर/i.test(subject);
+  const computer=n>=9&&isIemisComputerSubject(subject);
+  const internalFifty=n<=8||computer;
+  const participation=internalFifty?4:3, practical=internalFifty?36:16, termMax=internalFifty?10:6;
   const names={first:'First',second:'Second',third:'Third','half-yearly':'Half-Yearly',internal:'Internal',other:'Other'};
   const annual=term==='annual';
   return [
-    {key:'participation',name:'Participation',label:`Participation(${n<=8?4:3})`,max:n<=8?4:3},
-    {key:'practical',name:'Practical/Project',label:`Practical/Project(${n<=8?36:computer?41:16})`,max:n<=8?36:computer?41:16},
-    {key:'term',name:annual?'Total of Term':`${names[term]||'Term'} Term Examination`,label:`${annual?'Total of Term':(names[term]||'Term')+' Term Examination'}(${n<=8?10:6})`,max:n<=8?10:6},
-    ...(annual?[{key:'theory',name:'TH (Theory)',label:`Total of final marks(${n<=8||computer?50:75})`,max:n<=8||computer?50:75}]:[])
+    {key:'participation',name:'Participation',label:`Participation(${participation})`,max:participation},
+    {key:'practical',name:'Practical/Project',label:`Practical/Project(${practical})`,max:practical},
+    {key:'term',name:annual?'Total of Term':`${names[term]||'Term'} Term Examination`,label:`${annual?'Total of Term':(names[term]||'Term')+' Term Examination'}(${termMax})`,max:termMax},
+    ...(annual?[{key:'theory',name:'TH (Theory)',label:`Total of final marks(${internalFifty?50:75})`,max:internalFifty?50:75}]:[])
   ];
 }
 export const iemisScoreKey=iemisComponentKey;
@@ -77,7 +81,11 @@ export class IemisEntryGrid {
       const identity=[i+1,st.studentNameEnglish||st.nameEnglish||st.studentName||st.name||'',st.studentIemisNo||st.iemisStudentNo||st.registrationNo||st.iemisNumber||'',st.symbolNo||st.symbolNumber||st.examSymbolNo||''];
       return `<tr data-grid-row="${i}"><td><input aria-label="Select ${esc(identity[1])}" type="checkbox" data-grid-student="${i}" ${this.selectedStudents.has(st.id)?'checked':''}></td>`+identity.map(v=>'<td>'+esc(v)+'</td>').join('')+selected.map(j=>{
         const schema=this.schema(j);if(!this.allowed(i,j))return `<td colspan="${schema.length+1}">N/A</td>`;
-        const d=this.draft(i,j);if(d.incompatible)return `<td colspan="${schema.length+1}">Custom assessment — use single-subject view</td>`;
+        const d=this.draft(i,j);if(d.incompatible){
+          const saved=this.record(i,j);
+          const scores=(saved?.scores||[]).map(c=>esc(c.name)+': '+esc(c.obtained??'—')+' / '+esc(c.fullMarks)).join(' · ');
+          return `<td colspan="${schema.length+1}">Saved assessment · ${d.isAbsent?'Absent · ':''}${scores}</td>`;
+        }
         const data=`data-grid-si="${i}" data-grid-sj="${j}"`;
         return `<td><input aria-label="${esc(identity[1])} ${esc(label(subjects[j]))} IsAbsent" type="checkbox" data-grid-absent ${data} ${d.isAbsent?'checked':''}></td>`+schema.map(c=>{
           if(c.readonly)return `<td><span data-grid-full ${data}>${Math.max(0,Number(d.values.count)||0)*4}</span></td>`;
