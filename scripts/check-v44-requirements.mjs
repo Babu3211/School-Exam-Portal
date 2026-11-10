@@ -63,7 +63,7 @@ must(html.includes('id="dashboardSchoolMap"') && html.includes("openstreetmap.or
 must(html.includes("hasLat!==hasLon") && html.includes("data.mapLatitude < -90") && html.includes("data.mapLongitude > 180"), "School map coordinates must be validated as a complete latitude/longitude pair.");
 must(/if\s*\(\s*target\.closest\("#studentAddNewBtn"\)\)/.test(html) && /if\s*\(\s*target\.closest\("#staffAddNewBtn"\)\)/.test(html), "Add New buttons must reveal their respective data-entry forms.");
 
-must(html.includes("map(normalizeRoleKey);if(!allowed.includes(\"class_teacher\")"), "Login must normalize and validate active task roles.");
+must(html.includes("map(normalizeRoleKey);if(!allowed.some(r=>[\"class_teacher\",\"subject_teacher\",\"viewer\",\"exam_officer\",\"accountant\"].includes(r))"), "Login must normalize and validate recognized active roles, including Viewer.");
 const roleStart = html.indexOf("function rolePageAllowed(page){");
 const roleEnd = html.indexOf("\nfunction applyRoleNavigation()", roleStart);
 must(roleStart >= 0 && roleEnd > roleStart, "Role permission helper is missing.");
