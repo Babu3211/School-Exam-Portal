@@ -12,7 +12,8 @@ for(const title of ['Home','School Profile','Student Record','Manage Exam','Teac
 }
 assert.ok(html.includes('Exam Management Portal · V45</small>'),'V45 sidebar label missing');
 assert.ok(html.includes('#smssInstallBanner{position:relative'),'Install banner must not overlay mobile dashboard');
-assert.ok(html.includes('beforeinstallprompt'),'Android browser install event missing');
+assert.ok(html.includes("banner.hidden=!isIOS()||standalone()"),'Install guidance must only appear on iOS browsers outside standalone mode');
+assert.ok(html.includes("navigator.standalone===true"),'Installed iOS app must hide install guidance');
 assert.ok(html.includes('Add to Home Screen'),'iOS install guidance missing');
 assert.equal(manifest.display,'standalone');
 for(const size of [192,512]){
