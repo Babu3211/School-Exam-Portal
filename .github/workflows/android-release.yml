@@ -38,6 +38,30 @@ jobs:
           npm install --no-audit --no-fund
           npx cap add android
           npx cap sync android
+      - name: Apply SMSS branded Android icon
+        working-directory: android-app/android
+        run: |
+          python3 -m pip install --user --quiet cairosvg pillow
+          python3 - <<'PY'
+          import io
+          from pathlib import Path
+          import cairosvg
+          from PIL import Image
+          source = Path("../../icon-book.svg")
+          assert source.is_file(), "SMSS icon source missing"
+          png = cairosvg.svg2png(url=str(source), output_width=1024, output_height=1024)
+          original = Image.open(io.BytesIO(png)).convert("RGBA")
+          res = Path("app/src/main/res")
+          for folder, size in [("mipmap-mdpi",48),("mipmap-hdpi",72),("mipmap-xhdpi",96),("mipmap-xxhdpi",144),("mipmap-xxxhdpi",192)]:
+              target = res / folder
+              target.mkdir(parents=True, exist_ok=True)
+              icon = original.resize((size,size),Image.Resampling.LANCZOS)
+              for name in ("ic_launcher.png","ic_launcher_round.png","ic_launcher_foreground.png"):
+                  icon.save(target / name)
+          for path in (res / "mipmap-anydpi-v26").glob("ic_launcher*.xml"):
+              path.unlink()
+          print("SMSS branded icon applied to Android mipmap resources")
+          PY
       - name: Prepare signing
         env:
           KEYSTORE_B64: ${{ secrets.SMSS_ANDROID_KEYSTORE_BASE64 }}
