@@ -346,8 +346,9 @@ if(p==="staff")h=head(names[p],"Detailed teacher and staff records / शिक�
 <tbody id="staffBody"><tr><td class="empty" colspan="11">विवरण लोड हुँदैछ...</td></tr></tbody></table></div>
 <div class="panel form" id="staffFormPanel" hidden><h3>नयाँ शिक्षक तथा कर्मचारी विवरण</h3><form id="staffForm"><div class="fields">
 <div class="field"><label for="staffId">स्वतः बनेको कर्मचारी ID</label><input id="staffId" readonly aria-readonly="true" placeholder="Save गर्दा स्वतः बन्ने"></div>
-<div class="field"><label for="staffName">नाम, थर (नेपाली) *</label><input id="staffName" required maxlength="120"></div>
 <div class="field"><label for="staffNameEn">Name (English)</label><input id="staffNameEn" maxlength="120"></div>
+<div class="field"><label for="staffName">नाम, थर (नेपाली) — Optional</label><input id="staffName" maxlength="120"></div>
+<div class="field"><label for="staffEmail">Email ID</label><input id="staffEmail" type="email" maxlength="150" autocomplete="off" placeholder="teacher@example.com"></div>
 <div class="field"><label for="staffAddress">स्थायी ठेगाना</label><input id="staffAddress" maxlength="200"></div>
 <div class="field"><label for="staffLevel">तह/श्रेणी *</label><input id="staffLevel" required maxlength="100" placeholder="जस्तै: मा.वि./तृतीय, लेखा सहायक"></div>
 <div class="field"><label for="staffAppointmentDate">नियुक्ति मिति (वि.सं.)</label><input id="staffAppointmentDate" maxlength="20" placeholder="२०७२/०९/२१"></div>
@@ -711,6 +712,7 @@ async function importTeachersCsv(){
    }catch(err){errors.push("Row "+r.line+": staff English name update failed ("+(err.code||"error")+")");}
   }
   if(errors.length)throw new Error(errors.join("; "));
+  for(const r of existingMatches){if(r.staff.email!==r.email){await updateDoc(doc(db,"staff",r.staff.id),{email:r.email,updatedAt:serverTimestamp()});r.staff.email=r.email;}}
   let completed=0,failures=[];
   for(const r of prepared){
    let credential=null;
@@ -720,6 +722,8 @@ async function importTeachersCsv(){
     credential=await createUserWithEmailAndPassword(provisioningAuth,r.email,r.password);
     const uid=credential.user.uid;
     await setDoc(doc(db,"user_roles",uid),{uid,staffDocId:r.staff.id,staffId:r.staff.staffId||"",displayName:r.staff.nameEn||r.staff.name||r.staff.staffName||r.name,email:r.email,roles:["subject_teacher"],classTeacherClasses:[],subjectAssignments:[],classTeacherClassNames:[],subjectAssignmentKeys:[],subjectAssignmentSectionKeys:[],subjectAssignmentClassNames:[],active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid,updatedAt:serverTimestamp()});
+    await updateDoc(doc(db,"staff",r.staff.id),{email:r.email,updatedAt:serverTimestamp()});
+    r.staff.email=r.email;
     completed++;
    }catch(err){
     if(credential?.user){try{await deleteUser(credential.user);}catch(_){/* manual reconciliation required */}}
@@ -896,6 +900,7 @@ document.addEventListener("submit", async event => {
   const data = {
     name: document.getElementById("staffName").value.trim(),
     nameEn: document.getElementById("staffNameEn").value.trim(),
+    email: document.getElementById("staffEmail").value.trim().toLowerCase(),
     permanentAddress: document.getElementById("staffAddress").value.trim(),
     levelCategory,
     appointmentDateBs: document.getElementById("staffAppointmentDate").value.trim(),
@@ -907,8 +912,8 @@ document.addEventListener("submit", async event => {
     status: document.getElementById("staffStatus").value
   };
 
-  if (!data.name || !data.levelCategory) {
-    setStaffMessage("नेपाली नाम र तह/श्रेणी अनिवार्य छन्।", true);
+  if ((!data.name && !data.nameEn) || !data.levelCategory) {
+    setStaffMessage("English वा Nepali मध्ये कम्तीमा एउटा नाम र तह/श्रेणी अनिवार्य छन्।", true);
     return;
   }
 
@@ -929,6 +934,11 @@ document.addEventListener("submit", async event => {
       setStaffMessage("यो कर्मचारी ID पहिल्यै प्रयोग भएको छ। नयाँ विवरण सुरक्षित गरिएन।", true);
       return;
     }
+    if(data.email && (!/^\S+@\S+\.\S+$/.test(data.email) || freshStaff.some(st=>st.id!==editId && String(st.email||"").toLowerCase()===data.email))){setStaffMessage("Email ID invalid वा अर्को Staff मा प्रयोग भएको छ।",true);return;}
+    const roleSnap=await getDocs(collection(db,"user_roles"));
+    const linkedRoles=roleSnap.docs.map(d=>d.data()).filter(u=>u.staffDocId===editId || (editId && u.staffId===data.staffId));
+    if(linkedRoles.length && data.email && linkedRoles.some(u=>u.email && String(u.email).toLowerCase()!==data.email)){setStaffMessage("Existing login Email फरक छ। Account Email परिवर्तन गर्न छुट्टै सुरक्षित प्रक्रिया आवश्यक छ।",true);return;}
+    if(linkedRoles.length===1 && linkedRoles[0].email)data.email=String(linkedRoles[0].email).toLowerCase();
     document.getElementById("staffId").value=data.staffId;
     setStaffMessage("सुरक्षित हुँदैछ...");
     if (editId) {
@@ -1001,6 +1011,7 @@ function editStaff(id) {
   document.getElementById("staffName").value = s.name || "";
   document.getElementById("staffId").value = s.staffId || "";
   document.getElementById("staffNameEn").value = s.nameEn || "";
+  document.getElementById("staffEmail").value = s.email || "";
   document.getElementById("staffAddress").value = s.permanentAddress || "";
   document.getElementById("staffLevel").value = s.levelCategory || s.role || "";
   document.getElementById("staffAppointmentDate").value = s.appointmentDateBs || "";
