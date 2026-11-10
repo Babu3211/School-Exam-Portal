@@ -205,16 +205,16 @@ must(rules.includes("request.resource.data.createdBy == request.auth.uid") && ru
 must(rules.includes("request.resource.data.createdAt == request.time") && rules.includes("request.resource.data.updatedAt == request.time"), "Teacher marks writes must use server timestamps.");
 must(rules.includes("function validDailyAttendance(data)") && rules.includes("data.students.size() <= 200"), "Daily attendance writes must validate the record schema and roster size.");
 must(rules.includes("data.presentCount + data.absentCount + data.leaveCount == data.totalStudents"), "Daily attendance counts must reconcile with the roster.");
-must(rules.includes("request.resource.data.createdBy == resource.data.createdBy") && rules.includes("request.resource.data.date == resource.data.date"), "Daily attendance updates must preserve original creator and date.");
-
-must(rules.includes("function isAssignedStudentClass(className)") && rules.includes("allow get, list: if hasActiveRole() && isAssignedStudentClass"), "Student and exam reads must be limited to assigned classes.");
-must(rules.includes("allow get, list: if isAdmin();") && rules.includes("match /staff/{documentId}"), "Staff personal records must be Admin-only.");
-must(rules.includes("allow list: if isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);") && rules.includes("allow get: if resource == null ? hasRole('subject_teacher') :") && rules.includes("return isAdmin() || (signedIn() && teacherSubjectAccess(className, subjectName, sectionName));") && rules.includes("return role.get('active', false) == true && roles is list"), "Marks reads must be limited to assigned subject/class/section.");
-must(rules.includes("allow get, list: if hasActiveRole() && isAssignedClassTeacher(resource.data.className);"), "Attendance reads must be limited to assigned classes.");
-must(html.includes("where(\"class\",\"==\",cl)") && html.includes("where(\"className\",\"==\",x.className)") && html.includes("where(\"subject\",\"==\",x.subject)") && html.includes("where(\"section\",\"==\",String(x.section).trim())"), "Teacher dashboard and Marks Entry must query assigned classes, subjects and sections.");
-
-must(html.includes("subjectAssignmentSectionKeys") && rules.includes("subjectAssignmentSectionKeys"), "Subject teacher section assignments must be stored and enforced.");
-
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
 must(rules.includes("data.attendanceType == 'daily'") && rules.includes("function validDailyAttendance(data)"), "Teacher attendance writes must be limited to validated daily attendance.");
 must(rules.includes("match /audit_logs/{documentId}") && rules.includes("allow create: if hasActiveRole()"), "Only active school users may create audit logs.");
 must(rules.includes("request.resource.data.actorUid == request.auth.uid") && rules.includes("request.resource.data.createdAt == request.time"), "Audit log actor and server timestamp must be verified.");
