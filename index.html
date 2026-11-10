@@ -522,7 +522,7 @@ function viewerReadOnlyGuard(event){
   if(!action)return;
   if(action.matches("[data-page],[data-go]")||action.closest("[data-page],[data-go]"))return;
   const id=String(action.id||"").toLowerCase(),label=String(action.textContent||"").toLowerCase();
-  const allowed=/search|refresh|reload|filter|view|preview|print|download|export|show|open|generate report|build report/.test(id+" "+label);
+  const allowed=id==="loadreportbtn"||/search|refresh|reload|filter|view|preview|print|download|export|show|open|generate report|build report/.test(id+" "+label);
   if(!allowed){event.preventDefault();event.stopImmediatePropagation();}
  }
  if(event.type==="change"&&target.matches('input[type="file"]')){event.preventDefault();event.stopImmediatePropagation();target.value="";}
