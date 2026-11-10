@@ -26,7 +26,7 @@ for(const cl of [6,7,8,9,10])for(const term of ['first','second','annual']){
  const schema=iemisEntrySchema(cl,term,'Nepali');
  const blank=Object.fromEntries(schema.map(c=>[c.key,'']));
  assert.equal(iemisEntryValues(schema,{values:blank,isAbsent:false}),null,`Blank marks must stay unentered for class ${cl} ${term}`);
- const zero=Object.fromEntries(schema.map(c=>[c.key:'0']));
+ const zero=Object.fromEntries(schema.map(c=>[c.key,'0']));
  const savedZero=iemisEntryValues(schema,{values:zero,isAbsent:false});
  assert.equal(savedZero.totalObtained,0,`Zero is a real entered score for class ${cl} ${term}`);
  assert.equal(savedZero.scores.length,schema.length);
