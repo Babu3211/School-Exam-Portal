@@ -176,15 +176,19 @@
 
 <!-- PWA install guidance: shown until the portal is installed; never blocks login. -->
 <style>
-#smssInstallBanner{position:relative;z-index:2;width:calc(100% - 24px);max-width:540px;margin:12px auto;background:#fff;color:#12345b;border:2px solid #1769d2;border-radius:14px;box-shadow:0 8px 32px #12345b40;padding:14px;font:14px/1.5 Arial,"Noto Sans Devanagari",sans-serif}
+#smssInstallBanner{position:relative;z-index:2;box-sizing:border-box;width:calc(100% - 32px);max-width:440px;margin:10px auto;background:#eaf4ff;color:#183b60;border:1.5px solid #6da7e7;border-radius:12px;box-shadow:0 4px 14px #12345b1c;padding:11px 12px;font:13px/1.45 Arial,"Noto Sans Devanagari",sans-serif}
+#smssInstallBanner .smss-install-heading{display:flex;align-items:center;gap:10px;margin-bottom:5px;color:#16416e}
+#smssInstallBanner .smss-install-icon{width:42px;height:42px;flex:0 0 42px;object-fit:contain;border-radius:9px}
+#smssInstallBanner .smss-install-heading strong{font-size:14px;line-height:1.35}
+#smssInstallBanner #smssInstallHelp{color:#345879}
 #smssInstallBanner[hidden]{display:none!important}
-#smssInstallBanner .smss-install-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-#smssInstallBanner button{border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer}
+#smssInstallBanner .smss-install-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:7px}
+#smssInstallBanner button{border:0;border-radius:8px;padding:7px 12px;font-weight:700;cursor:pointer}
 #smssInstallNow{background:#1769d2;color:#fff}
 #smssInstallLater{background:#edf3fb;color:#12345b}
 </style>
 <div id="smssInstallBanner" role="region" aria-label="Install SMSS Exam Portal" hidden>
-  <strong>Install SMSS Exam Portal / SMSS एप इन्स्टल गर्नुहोस्</strong>
+  <div class="smss-install-heading"><img class="smss-install-icon" src="./icon-192.png" alt="SMSS app icon" width="42" height="42"><strong>Install SMSS Exam Portal / SMSS एप इन्स्टल गर्नुहोस्</strong></div>
   <div id="smssInstallHelp">छिटो खोल्न र एपजस्तै प्रयोग गर्न आफ्नो उपकरणमा Install गर्नुहोस्।</div>
   <div class="smss-install-actions">
     <button type="button" id="smssInstallNow">Install / इन्स्टल</button>
