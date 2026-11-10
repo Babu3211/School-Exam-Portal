@@ -108,3 +108,8 @@ The PR remains separate from the older conflicting PR #8. Before production or A
 Commit `6f6304238c765126fa6bc38ec158a5fac69cc861` passed all three GitHub workflows: V44 JavaScript and Firestore Security Checks, V45 JavaScript and Firestore Security Checks, and V45 regression checks. This establishes branch-level automated checks, **not** merged-release or APK certification. The Class IX/X Computer regression now checks both English and Nepali subject names against 4/36/10 and Final Theory 50.
 
 PR #8 and PR #10 overlap in `docs/IEMIS-PARITY-AUDIT.md`, `index.html`, `scripts/check-v44-requirements.mjs`, `scripts/test-iemis-ledger.mjs`, and `sw.js`. The combined release must reconcile these rather than merge either blindly. PR #8 additionally changes `iemis-entry.js`, `iemis-ledger.js`, the entry/layout fixtures and emulator tests; PR #10 adds the verified Class I 2083 term credit presentation and PWA upgrade regression. Run the complete V44/V45/entry/ledger/PWA/Firestore emulator suites on the final integration SHA before the release commit and approved production deployment.
+
+
+### V45 release trigger — 2026-11-10
+
+The release commit runs the existing main-branch quality gate before Firebase Hosting and Firestore rules deployment. The signed Android APK workflow independently runs V44, V45, IEMIS, PWA, UI and Firestore tests before signing and publishing a GitHub Release. APK is a Capacitor wrapper for the live Firebase URL, so it must be distributed only after the live release and signed APK workflows both succeed. PR #8's conflicting changes are excluded pending reconciliation; no student records are edited by this documentation-only trigger.
