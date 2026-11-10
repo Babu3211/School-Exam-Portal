@@ -342,8 +342,23 @@ try {
       await assertFails(setDoc(doc(db(formatTeacher),"marks",id+"-wrong-count-times-four"),{...payload,...forged}));
     }
   }
-  const computer=iemisEntryValues(iemisEntrySchema(9,"annual","Computer Science"),{values:{participation:"3",practical:"41",term:"6",theory:"50"},isAbsent:false});
-  await assertSucceeds(setDoc(doc(db(formatTeacher),"marks","format-computer"),{...computer,studentId:"format-student-9",examId:"format-exam-9",subject:"Computer Science",className:"9",section:"A",academicYear:"2083",termKey:"annual",termName:"Final",createdBy:formatTeacher,createdAt:serverTimestamp()}));
+  const computer=iemisEntryValues(iemisEntrySchema(9,"annual","Computer Science"),{values:{participation:"4",practical:"36",term:"10",theory:"50"},isAbsent:false});
+  const computerContext={studentId:"format-student-9",examId:"format-exam-9",subject:"Computer Science",className:"9",section:"A",academicYear:"2083",termKey:"annual",termName:"Final",createdBy:formatTeacher,createdAt:serverTimestamp()};
+  const computerRef=doc(db(formatTeacher),"marks","format-computer");
+  await assertSucceeds(setDoc(computerRef,{...computer,...computerContext}));
+  const loadedComputer=await assertSucceeds(getDoc(computerRef));
+  if(loadedComputer.data().totalObtained!==100)throw new Error("Computer marks failed to reload.");
+  const editedComputer=iemisEntryValues(iemisEntrySchema(9,"annual","Computer Science"),{values:{participation:"4",practical:"35",term:"10",theory:"50"},isAbsent:false});
+  await assertSucceeds(updateDoc(computerRef,{...editedComputer,updatedBy:formatTeacher,updatedAt:serverTimestamp()}));
+  const legacyComputer={...computer,scores:computer.scores.map((s,i)=>({...s,fullMarks:[3,41,6,50][i],obtained:[3,41,6,50][i]}))};
+  const legacyComputerRef=doc(db(formatTeacher),"marks","format-historical-computer");
+  await assertSucceeds(setDoc(legacyComputerRef,{...legacyComputer,...computerContext}));
+  const legacyEdit=legacyComputer.scores.map((s,i)=>i===1?{...s,obtained:40}:s);
+  await assertSucceeds(updateDoc(legacyComputerRef,{scores:legacyEdit,totalObtained:99,updatedBy:formatTeacher,updatedAt:serverTimestamp()}));
+  const legacyReload=await assertSucceeds(getDoc(legacyComputerRef));
+  if(legacyReload.data().scores[1].fullMarks!==41)throw new Error("Historical Computer limit changed.");
+  const excessComputer={...computer,totalObtained:101,scores:computer.scores.map((s,i)=>i===1?{...s,obtained:37}:s)};
+  await assertFails(setDoc(doc(db(formatTeacher),"marks","format-excess-computer"),{...excessComputer,...computerContext}));
 
   await assertSucceeds(getDoc(doc(db(formatTeacher),"marks","unused-grid-id")));
   await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(),"marks","unused-grid-id")));

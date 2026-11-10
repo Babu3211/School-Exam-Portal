@@ -105,7 +105,7 @@ export function iemisLedger({mode='number',classNo,annual=false,subjects,student
       const record=records.find(r=>r.studentId===st.id&&r.examId===examId&&iemisSubjectKey(r.subject)===iemisSubjectKey(sub));
       const legacyRecord=iemisLegacyTheory(classNo,record?[record]:[]);
       const summary=iemisSummary(record,{annual,primary:primary&&!legacyRecord});summaries.push({summary,creditHour:creditFor(sub)});
-      if(entry)return '<td>'+(!record?'—':record.isAbsent?'Yes':'No')+'</td>'+componentsFor(sub).map(c=>{const score=record?.scores?.find(s=>String(s.name).toLowerCase()===String(c.name).toLowerCase()||(c.key&&iemisComponentKey(s.name)===c.key));const value=c.readonly?score?.fullMarks:score?.obtained;return '<td>'+e(value??'—')+'</td>';}).join('');
+      if(entry)return '<td>'+(!record?'—':record.isAbsent?'Yes':'No')+'</td>'+componentsFor(sub).map(c=>{const score=record?.scores?.find(s=>String(s.name).toLowerCase()===String(c.name).toLowerCase()||(c.key&&iemisComponentKey(s.name)===c.key));const value=c.readonly?score?.fullMarks:score?.obtained;const savedLimit=!primary&&score&&Number.isFinite(c.max)&&Number(score.fullMarks)!==c.max?' / '+score.fullMarks:'';return '<td>'+e((value??'—')+savedLimit)+'</td>';}).join('');
       if(record?.isAbsent)return `<td colspan="${cols[i].length||1}">Abs</td>`;
       const vals=primary?[legacyRecord?(grade?summary.theoryGrade?.grade:summary.theoryObtained):(grade?summary.totalGrade?.grade:summary.obtained)]:grade?[summary.inGrade?.grade,...(annual?[summary.theoryGrade?.grade]:[]),summary.totalGrade?.grade]:[summary.inObtained,...(annual?[summary.theoryObtained]:[])];
       return vals.map(v=>'<td>'+e(v==null?'—':typeof v==='number'?fmt(v):v)+'</td>').join('');

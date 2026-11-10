@@ -95,3 +95,26 @@ const mixedRecords=legacyRecords.concat(newPrimaryRecords.map(r=>({...r,studentI
 const mixedLedger=iemisLedger({...common,classNo:5,mode:'grade',records:mixedRecords,students:[mixedNewStudent]});
 assert.match(mixedLedger.body,/>4.00<\/td>/,'An old cohort must not force new achievement records into TH/IN calculations');
 console.log('New Class V achievement Grade Sheet and mixed-cohort isolation passed.');
+const watermarkUrl=box.innerHTML.match(/background-image:url\(data:image\/svg\+xml,([^)]*)\)/)?.[1];
+assert.ok(watermarkUrl,'Rendered Grade Sheet must include its printable school watermark');
+assert.match(decodeURIComponent(watermarkUrl),/>Test School<\/text>/);
+assert.match(box.innerHTML,/background-repeat:repeat/);
+for(const classNo of [6,9])for(const term of ['first','second']){
+ const subject='Nepali',absentSubject='English';
+ const fullMarks=classNo===6?50:25;
+ const termMark={studentId:student.id,examId:'synthetic-exam',subject,scores:[{name:'Internal',fullMarks,obtained:fullMarks*.8}]};
+ const fixture={
+  ...dependencies,
+  smssExamTermKey:()=>term,
+  resultMarks:[termMark],
+  resultClasses:[subject,absentSubject].map(name=>({className:String(classNo),subject:name,creditHour:5,active:true})),
+  activeResultRows:[{student:{...student,class:String(classNo)},perSubject:[{subject,pct:80,grade:iemisGrade(80)},{subject:absentSubject,absent:true,pct:null}]}]
+ };
+ new Function(...Object.keys(fixture),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(fixture));
+ const table=box.innerHTML.match(/<table[^>]*>[\s\S]*?<\/table>/)[0];
+ const headers=[...table.matchAll(/<th\b[^>]*>([^<]+)<\/th>/g)].map(m=>m[1]);
+ assert.deepEqual(headers,classNo===6?['SUBJECTS','CREDIT HOUR (CH)','GRADE POINT (GP)','GRADE','REMARKS']:['SUBJECTS','CREDIT HOUR (CH)','GRADE','GRADE POINT (GP)']);
+ assert.match(table,classNo===6?/<td>3\.6<\/td><td>A<\/td>/:/<td>A<\/td><td>3\.6<\/td>/);
+ assert.match(table,new RegExp('colspan="'+(headers.length-1)+'"[^>]*>Abs'));
+}
+console.log('IEMIS Class VI/IX First and Second Grade Sheet columns and absence alignment passed.');
