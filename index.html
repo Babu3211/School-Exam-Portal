@@ -3181,7 +3181,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const old=option.textContent;
   const trimmed=old.trim();
   const ascii=trimmed.replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d)));
-  const classMatch=ascii.match(/^कक्षा\\s*(\\d{1,2})$/);
+  const classMatch=ascii.match(/^कक्षा\s*(\d{1,2})$/);
   const translated=labels[trimmed]||(classMatch?'Class '+Number(classMatch[1]):null);
   if(translated&&translated!==trimmed)option.textContent=translated;
  }
