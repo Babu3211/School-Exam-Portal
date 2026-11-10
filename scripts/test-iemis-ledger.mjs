@@ -95,3 +95,7 @@ const mixedRecords=legacyRecords.concat(newPrimaryRecords.map(r=>({...r,studentI
 const mixedLedger=iemisLedger({...common,classNo:5,mode:'grade',records:mixedRecords,students:[mixedNewStudent]});
 assert.match(mixedLedger.body,/>4.00<\/td>/,'An old cohort must not force new achievement records into TH/IN calculations');
 console.log('New Class V achievement Grade Sheet and mixed-cohort isolation passed.');
+const watermarkUrl=box.innerHTML.match(/background-image:url\(data:image\/svg\+xml,([^)]*)\)/)?.[1];
+assert.ok(watermarkUrl,'Rendered Grade Sheet must include its printable school watermark');
+assert.match(decodeURIComponent(watermarkUrl),/>Test School<\/text>/);
+assert.match(box.innerHTML,/background-repeat:repeat/);
