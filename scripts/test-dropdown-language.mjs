@@ -16,6 +16,10 @@ class Option {
 const options=[
  new Option('कक्षा १','कक्षा १'),
  new Option('कक्षा १०','कक्षा १०'),
+ new Option('कक्षा १०','कक्षा १०'),
+ new Option('','परीक्षा छान्नुहोस्'),
+ new Option('वार्षिक परीक्षा','वार्षिक परीक्षा'),
+ new Option('कम्प्युटर विज्ञान','कम्प्युटर विज्ञान'),
  new Option('वार्षिक','वार्षिक'),
  new Option('प्रथम त्रैमासिक','प्रथम त्रैमासिक'),
  new Option('द्वितीय त्रैमासिक','द्वितीय त्रैमासिक'),
@@ -26,8 +30,8 @@ const body={nodeType:1,matches:()=>false,querySelectorAll:selector=>selector==='
 let callback;
 class MutationObserver {constructor(fn){callback=fn;}observe(){}}
 vm.runInNewContext(script,{document:{body},MutationObserver},{timeout:1000});
-assert.deepEqual(options.map(o=>o.textContent),['Class 1','Class 10','Annual','First Term','Second Term','Subject-wise','Select Subject']);
-assert.deepEqual(options.map(o=>o.value),['कक्षा १','कक्षा १०','वार्षिक','प्रथम त्रैमासिक','द्वितीय त्रैमासिक','विषयगत','']);
+assert.deepEqual(options.map(o=>o.textContent),['Class 1','Class 10','Class 10','Select Exam','Final Term','Computer Science','Annual','First Term','Second Term','Subject-wise','Select Subject']);
+assert.deepEqual(options.map(o=>o.value),['कक्षा १','कक्षा १०','कक्षा १०','','वार्षिक परीक्षा','कम्प्युटर विज्ञान','वार्षिक','प्रथम त्रैमासिक','द्वितीय त्रैमासिक','विषयगत','']);
 const dynamic=new Option('तृतीय त्रैमासिक','तृतीय त्रैमासिक');
 callback([{type:'childList',target:body,addedNodes:[dynamic]}]);
 assert.equal(dynamic.textContent,'Third Term');
