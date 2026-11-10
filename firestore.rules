@@ -409,7 +409,7 @@ service cloud.firestore {
 
     // Certificate records contain issued student certificate snapshots; Admin only.
     match /certificates/{certificateId} {
-      allow get, list: if isAdmin();
+      allow get, list: if isAdmin() || isViewer();
       allow create: if isAdmin() &&
         request.resource.data.issuedBy == request.auth.uid &&
         request.resource.data.keys().hasOnly([
@@ -465,8 +465,8 @@ service cloud.firestore {
     // Audit records are append-only. Only active school users may write
     // their own bounded, well-formed activity record. Admin alone may read.
     match /audit_logs/{documentId} {
-      allow get, list: if isAdmin();
-      allow create: if hasActiveRole() &&
+      allow get, list: if isAdmin() || isViewer();
+      allow create: if hasActiveRole() && !isViewer() &&
         request.resource.data.actorUid == request.auth.uid &&
         request.resource.data.createdAt == request.time &&
         request.resource.data.actorName is string &&
@@ -500,7 +500,7 @@ service cloud.firestore {
     // Admin list is needed for safe per-student re-publish/unpublish and backup.
     match /public_result_lookup/{lookupId} {
       allow get: if true;
-      allow list: if isAdmin();
+      allow list: if isAdmin() || isViewer();
       allow create, update, delete: if isAdmin();
     }
 
@@ -508,7 +508,7 @@ service cloud.firestore {
     // Admin list is needed for publication status, legacy cleanup and backup.
     match /public_results/{resultId} {
       allow get: if true;
-      allow list: if isAdmin();
+      allow list: if isAdmin() || isViewer();
       allow create, update, delete: if isAdmin();
     }
 
