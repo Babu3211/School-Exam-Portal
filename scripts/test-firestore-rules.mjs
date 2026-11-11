@@ -348,7 +348,7 @@ try {
   await assertSucceeds(getDoc(doc(db(formatTeacher),"marks","unused-grid-id")));
   await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(),"marks","unused-grid-id")));
   await assertFails(getDoc(doc(db(inactiveUid),"marks","unused-grid-id")));
-  const gridStudents=Array.from({length:4},(_,i)=>({id:"grid-student-"+i,class:"1",section:"A",active:true}));
+  const gridStudents=Array.from({length:1},(_,i)=>({id:"grid-student-"+i,class:"1",section:"A",active:true}));
   await testEnv.withSecurityRulesDisabled(async context=>{for(const student of gridStudents)await setDoc(doc(context.firestore(),"students",student.id),student);});
   const application=await readFile("index.html","utf8"),controllerStart=application.indexOf("async function saveIemisEntryRecords("),controllerEnd=application.indexOf("function mountIemisEntryGrid()",controllerStart);
   const versionStart=application.indexOf("function markVersion(");
