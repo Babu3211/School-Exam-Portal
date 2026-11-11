@@ -472,4 +472,5 @@ must(html.includes(`"subjectCatalogForm","certificateForm","schoolSettingsForm"`
 must(html.includes(`"studentImportFile","staffAddNewBtn","staffSeed20Btn","staffImportFile"`),"Viewer must not be able to import student or staff Excel files.");
 must(html.includes(`button.previousElementSibling?.tagName==="LABEL"`),"Viewer Excel import labels must be hidden.");
 must(html.includes(`"studentAddNewBtn","generateMissingStudentCodes"`),"Viewer must not create students or bulk-generate result codes.");
+must(rules.includes("match /certificates/{certificateId} {\n      allow get, list: if isAdmin() || isViewer();"),"Viewer must be allowed to read issued certificates.");
 console.log("V44 requirement regression checks passed.");
