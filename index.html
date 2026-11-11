@@ -2097,7 +2097,7 @@ async function loadMarksEntry(){
  }
  try{
   let ss,es,ms,st,entryClassNames=[];
-  if(isAdmin()){
+  if(isAdmin()||roleHas('viewer')){
    [ss,es,ms,st]=await Promise.all([
     getDocs(collection(db,'students')),
     getDocs(collection(db,'exams')),
@@ -3001,7 +3001,7 @@ async function loadAttendancePage(){
  if(!date.value){const bs=new DateConverter(attendanceNepalTodayAD()).toBs();date.value=`${bs.year}-${attendancePad(bs.month)}-${attendancePad(bs.date)}`;}
  try{
   let ss,as;
-  if(isAdmin()){
+  if(isAdmin()||roleHas("viewer")){
    const [studentsSnap,classesSnap,attendanceSnap]=await Promise.all([getDocs(collection(db,"students")),getDocs(collection(db,"classes")),getDocs(collection(db,"attendance"))]);
    ss=studentsSnap;as=attendanceSnap;attendanceClasses=classesSnap.docs.map(d=>({id:d.id,...d.data()}));
   }else{
