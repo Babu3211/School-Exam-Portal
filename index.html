@@ -3066,7 +3066,8 @@ async function fetchDashboardCollections(force=false){
 }
 async function fetchDashboardCollectionsFresh(){
  if(!auth.currentUser||(!isAdmin()&&currentUserRole?.active!==true))throw new Error("सक्रिय Login आवश्यक छ।");
- if(isAdmin()){
+ if(isAdmin()||roleHas("viewer")){
+  // Viewer has the same school-wide read scope as Admin, but no write privileges.
   const [a,b,c,d,e,f]=await Promise.all(["students","staff","classes","exams","marks","attendance"].map(n=>getDocs(collection(db,n))));
   dashboardCache={students:a.docs.map(x=>({id:x.id,...x.data()})),staff:b.docs.map(x=>({id:x.id,...x.data()})),classes:c.docs.map(x=>({id:x.id,...x.data()})),exams:d.docs.map(x=>({id:x.id,...x.data()})),marks:e.docs.map(x=>({id:x.id,...x.data()})),attendance:f.docs.map(x=>({id:x.id,...x.data()}))};
   return;
@@ -3092,7 +3093,7 @@ async function loadDashboardData(){
   await fetchDashboardCollections();
   const c=dashboardCache;
   document.getElementById("dashStudentCount").textContent=c.students.length;
-  document.getElementById("dashStaffCount").textContent=isAdmin()?c.staff.length:"—";
+  document.getElementById("dashStaffCount").textContent=(isAdmin()||roleHas("viewer"))?c.staff.length:"—";
   const activeClassNames=[...new Set(c.classes.map(x=>String(x.className||x.class||"")).filter(Boolean))];
   document.getElementById("dashClassCount").textContent=activeClassNames.length||[...new Set(c.students.map(x=>String(x.class||"")).filter(Boolean))].length;
   document.getElementById("dashExamCount").textContent=c.exams.length;
