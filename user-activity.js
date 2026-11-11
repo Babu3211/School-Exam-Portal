@@ -3,7 +3,7 @@
 import {collection,doc,getDoc,getDocs,setDoc,addDoc,serverTimestamp,query,orderBy,limit} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 const ADMIN_UID="K6uSLmqg0vWCtCuzwtxKzFpQMu62";
 const sessionId=crypto.randomUUID();
-let heartbeat=null,trackedUid=null;
+let heartbeat=null,trackedUid=null,trackedUser=null;
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const activeWithin=(value,ms)=>value?.toMillis&&Date.now()-value.toMillis()<ms;
 export function initUserActivity({auth,db}){
@@ -25,17 +25,17 @@ export function initUserActivity({auth,db}){
  async function start(user){
   if(!user||trackedUid===user.uid)return;
   if(!await authorized(user))return;
-  trackedUid=user.uid;
+  trackedUid=user.uid;trackedUser=user;
   await presence(user,true);
   heartbeat=setInterval(()=>{if(auth.currentUser?.uid===user.uid)void presence(user,true);},45000);
  }
  async function stop(user){
   if(heartbeat)clearInterval(heartbeat);
-  heartbeat=null;trackedUid=null;
+  heartbeat=null;trackedUid=null;trackedUser=null;
   if(user)await presence(user,false);
  }
  async function onAuth(user){
-  if(!user){trackedUid=null;if(heartbeat)clearInterval(heartbeat);heartbeat=null;return;}
+  if(!user){const previous=trackedUser;if(heartbeat)clearInterval(heartbeat);heartbeat=null;trackedUid=null;trackedUser=null;if(previous)void presence(previous,false);return;}
   try{await start(user);}catch(err){console.warn("Activity initialization unavailable:",err.code||err.message);}
  }
  // Called only after the app has validated a role, not on an unsuccessful login.
@@ -54,8 +54,8 @@ export function initUserActivity({auth,db}){
    const users=roles.docs.map(x=>({uid:x.id,...x.data()}));
    const known=new Map(users.map(x=>[x.uid,x]));
    const online=new Set(presenceDocs.docs.filter(x=>x.data().online===true&&activeWithin(x.data().updatedAt,120000)).map(x=>x.data().uid));
-   const today=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Kathmandu",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
-   const day=ts=>ts?.toDate?new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Kathmandu",year:"numeric",month:"2-digit",day:"2-digit"}).format(ts.toDate()):"";
+   const today=new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Kathmandu",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+   const day=ts=>ts?.toDate?new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Kathmandu",year:"numeric",month:"2-digit",day:"2-digit"}).format(ts.toDate()):"";
    const activity=events.docs.map(x=>x.data());
    const logins=new Set(activity.filter(x=>x.type==="login"&&day(x.at)===today).map(x=>x.uid));
    const total=users.length+Number(!known.has(ADMIN_UID));
