@@ -62,7 +62,7 @@ service cloud.firestore {
       let roles = role.get('roles', []);
       let keys = role.get('subjectAssignmentKeys', []);
       let sections = role.get('subjectAssignmentSectionKeys', []);
-      return role.get('active', false) == true && roles is list && roles.hasAny(['subject_teacher']) &&
+      return role.get('active', false) == true && roles is list && !roles.hasAny(['viewer']) && roles.hasAny(['subject_teacher']) &&
         keys is list && keys.hasAny([className + '::' + subjectName]) &&
         (!(sections is list) || sections.size() == 0 ||
           sections.hasAny([className + '::' + subjectName + '::ALL',
@@ -70,7 +70,7 @@ service cloud.firestore {
     }
 
     function isAssignedSubject(className, subjectName, sectionName) {
-      return isAdmin() || (signedIn() && !isViewer() && teacherSubjectAccess(className, subjectName, sectionName));
+      return isAdmin() || (signedIn() && teacherSubjectAccess(className, subjectName, sectionName));
     }
 
 
