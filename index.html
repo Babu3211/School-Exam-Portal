@@ -3299,7 +3299,14 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
  function applyStacks(){englishMenuLabels();document.querySelectorAll('.welcome h2,.statlabel,.panel h3,.head h2,.head p').forEach(stackLabel);}
  const style=document.createElement('style');style.textContent='.bilingual-stack{display:inline-flex;flex-direction:column;align-items:flex-start;gap:2px;line-height:1.3}.bilingual-en{font-weight:800}.bilingual-ne{font-size:.92em;font-weight:600;opacity:.88}.nav button,.menu-group summary{align-items:center}';document.head.appendChild(style);
  applyStacks();
- const stackObserver=new MutationObserver(()=>applyStacks());stackObserver.observe(document.getElementById('view')||document.body,{childList:true,subtree:true});
+ // Batch visual label refreshes: rendering large student/marks tables can create hundreds of DOM mutations.
+ let stackRefreshPending=false;
+ const stackObserver=new MutationObserver(records=>{
+  if(stackRefreshPending||!records.some(record=>record.addedNodes.length))return;
+  stackRefreshPending=true;
+  requestAnimationFrame(()=>{stackRefreshPending=false;applyStacks();});
+ });
+ stackObserver.observe(document.getElementById('view')||document.body,{childList:true,subtree:true});
  const saveConfirmMessage='तपाईंले प्रविष्ट गर्नुभएको विवरण सही र पूरा छन् भन्ने कुरा कृपया यकिन गर्नुहोस्। यकिन भएपछि Save थिच्नुहोस्। के तपाईं सुरक्षित गर्न चाहनुहुन्छ?';
  function normalizeSaveButton(button){
   if(!button)return;
