@@ -3068,7 +3068,20 @@ async function fetchDashboardCollectionsFresh(){
  if(!auth.currentUser||(!isAdmin()&&currentUserRole?.active!==true))throw new Error("सक्रिय Login आवश्यक छ।");
  if(isAdmin()||roleHas("viewer")){
   // Viewer has the same school-wide read scope as Admin, but no write privileges.
-  const [a,b,c,d,e,f]=await Promise.all(["students","staff","classes","exams","marks","attendance"].map(n=>getDocs(collection(db,n))));
+  const names=["students","staff","classes","exams","marks","attendance"];
+  // Render counts as soon as each independent collection arrives; do not keep all cards blank.
+  const snaps=await Promise.all(names.map(async name=>{
+   const snap=await getDocs(collection(db,name));
+   if(window.currentPage==="dashboard"&&auth.currentUser?.uid===dashboardFetchUid){
+    const countId={students:"dashStudentCount",staff:"dashStaffCount",classes:"dashClassCount",exams:"dashExamCount"}[name];
+    const count=document.getElementById(countId);
+    if(count)count.textContent=name==="classes"?new Set(snap.docs.map(d=>String(d.data().className||d.data().class||"")).filter(Boolean)).size:snap.size;
+    const status=document.getElementById("dashboardMessage");
+    if(status)status.textContent="Dashboard loading: "+name+" ready...";
+   }
+   return snap;
+  }));
+  const [a,b,c,d,e,f]=snaps;
   dashboardCache={students:a.docs.map(x=>({id:x.id,...x.data()})),staff:b.docs.map(x=>({id:x.id,...x.data()})),classes:c.docs.map(x=>({id:x.id,...x.data()})),exams:d.docs.map(x=>({id:x.id,...x.data()})),marks:e.docs.map(x=>({id:x.id,...x.data()})),attendance:f.docs.map(x=>({id:x.id,...x.data()}))};
   return;
  }
