@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:rules": "firebase emulators:exec --project smss-v44-rules-test --only firestore \"node scripts/test-firestore-rules.mjs && node scripts/test-viewer-permissions.mjs\"",
+    "test:viewer": "firebase emulators:exec --project smss-v44-rules-test --only firestore \"node scripts/test-viewer-permissions.mjs\"",
+    "test:rules": "firebase emulators:exec --project smss-v44-rules-test --only firestore \"node scripts/test-firestore-rules.mjs\"",
     "test:question-paper": "node scripts/test-question-paper-content.mjs",
     "test:iemis": "node scripts/test-iemis-ledger.mjs && node scripts/test-iemis-entry.mjs",
     "test:pwa": "node scripts/test-pwa-upgrade.mjs",
