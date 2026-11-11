@@ -1721,7 +1721,7 @@ function sortEntryClassNames(values){
 async function loadMarksEntry(){
  if(!document.getElementById('entryClass'))return;
  const classSel=document.getElementById('entryClass');
- if(!isAdmin()){
+ if(!isAdmin()&&!isViewer()){
   classSel.disabled=true;
   classSel.innerHTML='<option value="">तपाईंको Assignment लोड हुँदैछ...</option>';
   const subjectSel=document.getElementById('entrySubject');
@@ -1729,7 +1729,7 @@ async function loadMarksEntry(){
  }
  try{
   let ss,es,ms,st,entryClassNames=[];
-  if(isAdmin()){
+  if(isAdmin()||isViewer()){
    [ss,es,ms,st]=await Promise.all([
     getDocs(collection(db,'students')),
     getDocs(collection(db,'exams')),
