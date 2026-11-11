@@ -1,0 +1,52 @@
+name: Deploy SMSS V45 to Firebase (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type DEPLOY-V45 to confirm production deployment'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smss-v45-firebase-production
+  cancel-in-progress: false
+
+jobs:
+  verify-and-deploy:
+    if: github.ref == 'refs/heads/smss-v45-work' && inputs.confirm == 'DEPLOY-V45'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: JavaScript syntax check
+        run: node --check scripts/check-v44-requirements.mjs
+      - name: Portal regression checks
+        run: node scripts/check-v44-requirements.mjs
+      - name: Question paper checks
+        run: npm run test:question-paper
+      - name: Firestore security emulator checks
+        run: npm run test:rules
+      - name: Verify Firebase credentials
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::error::Configure FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 in GitHub Actions secrets."
+            exit 1
+          fi
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
+          chmod 600 "$RUNNER_TEMP/firebase-service-account.json"
+      - name: Deploy hosting and Firestore rules
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: npx firebase-tools deploy --project exam-portal-smss-95016 --only hosting,firestore:rules --non-interactive
