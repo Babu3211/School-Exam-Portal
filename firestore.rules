@@ -30,7 +30,7 @@ service cloud.firestore {
       return get(rolePath(request.auth.uid)).data;
     }
 
-    function isViewer() { return hasActiveRole() && roleData().get('roles', []) is list && roleData().get('roles', []).hasAny(['viewer']); }
+    function isViewer() { return !isAdmin() && hasActiveRole() && roleData().get('roles', []) is list && roleData().get('roles', []).hasAny(['viewer']); }
 
     function hasRole(roleName) {
       return isAdmin() ||
@@ -466,7 +466,7 @@ service cloud.firestore {
     // their own bounded, well-formed activity record. Admin alone may read.
     match /audit_logs/{documentId} {
       allow get, list: if isAdmin() || isViewer();
-      allow create: if hasActiveRole() && (!isViewer() || hasRole('subject_teacher') || hasRole('class_teacher')) &&
+      allow create: if hasActiveRole() && !isViewer() &&
         request.resource.data.actorUid == request.auth.uid &&
         request.resource.data.createdAt == request.time &&
         request.resource.data.actorName is string &&
