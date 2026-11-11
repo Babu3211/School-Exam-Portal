@@ -292,7 +292,7 @@ const userActivity=initUserActivity({auth,db});
 const idleLogout=initIdleLogout({auth,onTimeout:async user=>{try{await Promise.race([userActivity.logout(user),new Promise(resolve=>setTimeout(resolve,2000))]);}finally{currentUserRole=null;await signOut(auth);alert("Session expired after 60 minutes of inactivity. Please log in again.");}}});
 const isAdmin=()=>!!auth.currentUser&&auth.currentUser.uid===ADMIN_UID;
 const isViewer=()=>!!currentUserRole?.active&&(currentUserRole?.roles||[]).map(normalizeRoleKey).includes("viewer");
-const roleHas=r=>isAdmin()||!!currentUserRole?.active&&(currentUserRole?.roles||[]).map(normalizeRoleKey).includes(normalizeRoleKey(r));
+const roleHas=r=>isAdmin()||!!currentUserRole?.active&&!isViewer()&&(currentUserRole?.roles||[]).map(normalizeRoleKey).includes(normalizeRoleKey(r));
 const classTeacherNames=()=>[...(currentUserRole?.classTeacherClassNames||[]),...(currentUserRole?.classTeacherClasses||[]).map(x=>x.className)].filter(Boolean).map(x=>String(x).trim());
 const teacherClassNames=()=>[...classTeacherNames(),...(currentUserRole?.subjectAssignmentClassNames||[]),...(currentUserRole?.subjectAssignments||[]).map(x=>x.className)].filter(Boolean).map(x=>String(x).trim());
 const entrySubjectKey=value=>String(value??'').trim().toLocaleLowerCase().replace(/\s+/g,' ');
