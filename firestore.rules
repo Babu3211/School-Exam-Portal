@@ -38,7 +38,8 @@ service cloud.firestore {
       return isAdmin() ||
         (hasActiveRole() &&
          roleData().get('roles', []) is list &&
-         roleData().get('roles', []).hasAny([roleName]));
+         roleData().get('roles', []).hasAny([roleName]) &&
+         (roleName == 'viewer' || !roleData().get('roles', []).hasAny(['viewer'])));
     }
 
     function studentBelongsToClass(studentId, className) {
