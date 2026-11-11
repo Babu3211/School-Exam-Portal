@@ -30,7 +30,7 @@ service cloud.firestore {
       return get(rolePath(request.auth.uid)).data;
     }
 
-    function isViewer() { return hasActiveRole() && roleData().get('roles', []) is list && roleData().get('roles', []).hasAny(['viewer']); }
+    function isViewer() { return !isAdmin() && hasActiveRole() && roleData().get('roles', []) is list && roleData().get('roles', []).hasAny(['viewer']); }
 
     function hasRole(roleName) {
       return isAdmin() ||
@@ -62,7 +62,7 @@ service cloud.firestore {
       let roles = role.get('roles', []);
       let keys = role.get('subjectAssignmentKeys', []);
       let sections = role.get('subjectAssignmentSectionKeys', []);
-      return role.get('active', false) == true && roles is list && roles.hasAny(['subject_teacher']) &&
+      return role.get('active', false) == true && roles is list && !roles.hasAny(['viewer']) && roles.hasAny(['subject_teacher']) &&
         keys is list && keys.hasAny([className + '::' + subjectName]) &&
         (!(sections is list) || sections.size() == 0 ||
           sections.hasAny([className + '::' + subjectName + '::ALL',
@@ -76,7 +76,7 @@ service cloud.firestore {
 
     function isAssignedSubjectPair(className, subjectName) {
       return isAdmin() ||
-        (hasRole('subject_teacher') &&
+        (!isViewer() && hasRole('subject_teacher') &&
          roleData().get('subjectAssignmentKeys', []) is list &&
          roleData().get('subjectAssignmentKeys', [])
            .hasAny([className + '::' + subjectName]));
@@ -84,7 +84,7 @@ service cloud.firestore {
 
     function isAssignedClassTeacher(className) {
       return isAdmin() ||
-        (hasRole('class_teacher') &&
+        (!isViewer() && hasRole('class_teacher') &&
          roleData().get('classTeacherClassNames', []) is list &&
          roleData().get('classTeacherClassNames', []).hasAny([className]));
     }
@@ -466,7 +466,7 @@ service cloud.firestore {
     // their own bounded, well-formed activity record. Admin alone may read.
     match /audit_logs/{documentId} {
       allow get, list: if isAdmin() || isViewer();
-      allow create: if hasActiveRole() && (!isViewer() || hasRole('subject_teacher') || hasRole('class_teacher')) &&
+      allow create: if hasActiveRole() && !isViewer() &&
         request.resource.data.actorUid == request.auth.uid &&
         request.resource.data.createdAt == request.time &&
         request.resource.data.actorName is string &&
