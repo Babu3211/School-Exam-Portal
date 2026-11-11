@@ -287,7 +287,7 @@ service cloud.firestore {
 
     // Certificate records contain issued student certificate snapshots; Admin only.
     match /certificates/{certificateId} {
-      allow get, list: if isAdmin();
+      allow get, list: if isAdmin() || isViewer();
       allow create: if isAdmin() &&
         request.resource.data.issuedBy == request.auth.uid &&
         request.resource.data.keys().hasOnly([
