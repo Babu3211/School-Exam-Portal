@@ -3343,6 +3343,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const roots=new Set();
   for(const record of records){
    if(record.type==='characterData'){
+    if(record.target.parentElement?.closest('button'))normalizeSaveButtons(record.target);
     const button=record.target.parentElement?.closest('button');
     if(button)roots.add(button);
    }else{
