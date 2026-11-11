@@ -61,6 +61,11 @@ function roleMatrix(role, admin = false) {
 }
 const viewerPermissions = roleMatrix({ active: true, roles: ["viewer"] });
 must(["dashboard", "marks", "attendance", "students", "staff"].every(page => viewerPermissions(page)), "Active Viewer must navigate all read-only pages.");
+const mixedViewerPermissions = roleMatrix({ active: true, roles: ["viewer", "class_teacher", "subject_teacher"], classTeacherClassNames: ["9"], subjectAssignments: [{ className: "9", subject: "Mathematics" }] });
+must(["dashboard", "marks", "attendance", "students", "staff", "question-papers", "settings"].every(page => mixedViewerPermissions(page)), "Viewer must retain full read-only navigation even when assigned teacher roles.");
+must(html.includes('const roleHas=r=>isAdmin()||!!currentUserRole?.active&&!isViewer()'), "Viewer plus Teacher must not gain teacher UI write permissions.");
+must(rules.includes("(roleName == 'viewer' || !roleData().get('roles', []).hasAny(['viewer']))"), "Firestore must deny teacher write privileges to mixed Viewer/Teacher roles.");
+must(rules.includes("allow get, list: if isAdmin() || isViewer() ||"), "Viewer must be able to inspect saved question papers.");
 const subjectPermissions = roleMatrix({ active: true, roles: ["subject_teacher"], subjectAssignments: [{ className: "9", subject: "Mathematics" }] });
 must(subjectPermissions("dashboard") && subjectPermissions("marks") && subjectPermissions("question-papers") && !subjectPermissions("attendance") && !subjectPermissions("students"), "Subject Teacher must see Dashboard, Marks and assigned Question Paper Builder.");
 const classPermissions = roleMatrix({ active: true, roles: ["class_teacher"], classTeacherClassNames: ["9"] });
