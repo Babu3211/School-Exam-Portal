@@ -317,6 +317,7 @@ try {
     const base=iemisEntryValues(schema,{values,isAbsent:false});
     const payload={...base,studentId:"format-student-"+cl,examId:"format-exam-"+cl,subject,className:String(cl),section:"A",academicYear:"2083",termKey:term,termName:term,createdBy:formatTeacher,createdAt:serverTimestamp()};
     const id="format-"+cl+"-"+term;
+    console.log("MARK_RULES_DIAGNOSTIC create", {className:cl,term,subject,scoreCount:base.scores.length});
     await assertSucceeds(setDoc(doc(db(formatTeacher),"marks",id),payload));
     const readBack=await assertSucceeds(getDoc(doc(db(formatTeacher),"marks",id)));
     const edited={...base,scores:base.scores.map((score,i)=>({...score,obtained:score.obtained===null?null:i===base.scores.length-1?score.obtained-1:score.obtained})),totalObtained:base.totalObtained-1,updatedBy:formatTeacher,updatedAt:serverTimestamp()};
