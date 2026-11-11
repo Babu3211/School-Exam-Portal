@@ -42,8 +42,9 @@ async function check(){
   if(!user)return;
   if(uid===user.uid)return;
   stop();uid=user.uid;
+  // Preserve an existing timestamp: refreshing a page must not reset idle time.
   lastActivity=read()||now();
-  save();
+  if(!read())save();
   for(const event of events)document.addEventListener(event,activity,{passive:true});
   document.addEventListener("visibilitychange",check);
   window.addEventListener("focus",check);
