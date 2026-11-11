@@ -390,11 +390,11 @@ service cloud.firestore {
     // subject and section. Admin retains full control.
     match /question_bank/{questionId} {
       allow get, list: if hasActiveRole() &&
-        isAssignedSubject(
+        (isViewer() || isAssignedSubject(
           resource.data.get('className', ''),
           resource.data.get('subject', ''),
           resource.data.get('section', '')
-        );
+        ));
       allow create: if hasActiveRole() &&
         isAssignedSubject(
           request.resource.data.get('className', ''),
@@ -456,7 +456,7 @@ service cloud.firestore {
     // Saved question papers are immutable snapshots for their author.
     // Deletion requires an explicit client confirmation; Admin can manage all.
     match /question_papers/{paperId} {
-      allow get, list: if isAdmin() ||
+      allow get, list: if isAdmin() || isViewer() ||
         (hasActiveRole() &&
          resource.data.createdBy == request.auth.uid &&
          isAssignedSubject(
