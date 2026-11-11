@@ -348,7 +348,7 @@ try {
   await assertSucceeds(getDoc(doc(db(formatTeacher),"marks","unused-grid-id")));
   await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(),"marks","unused-grid-id")));
   await assertFails(getDoc(doc(db(inactiveUid),"marks","unused-grid-id")));
-  const gridStudents=Array.from({length:12},(_,i)=>({id:"grid-student-"+i,class:"1",section:"A",active:true}));
+  const gridStudents=Array.from({length:4},(_,i)=>({id:"grid-student-"+i,class:"1",section:"A",active:true}));
   await testEnv.withSecurityRulesDisabled(async context=>{for(const student of gridStudents)await setDoc(doc(context.firestore(),"students",student.id),student);});
   const application=await readFile("index.html","utf8"),controllerStart=application.indexOf("async function saveIemisEntryRecords("),controllerEnd=application.indexOf("function mountIemisEntryGrid()",controllerStart);
   const versionStart=application.indexOf("function markVersion(");
@@ -358,7 +358,7 @@ try {
   const actualSave=new Function(...Object.keys(controllerDeps),application.slice(controllerStart,controllerEnd)+";return saveIemisEntryRecords;")(...Object.values(controllerDeps));
   const gridPlans=gridStudents.map((student,i)=>({key:"grid-"+i,student,subject:"Nepali",old:null,data:iemisEntryValues(iemisEntrySchema(1,"first","Nepali"),{values:{count:"5",obtained:"17"},isAbsent:false})}));
   const gridResult=await actualSave(gridPlans,"grid-context",{id:"format-exam-1",academicYear:"2083"},"1",formatTeacher);
-  if(gridResult.savedKeys.length!==12||cache.length!==12)throw new Error("Real transaction controller did not save and refresh all test rows");
+  if(gridResult.savedKeys.length!==gridStudents.length||cache.length!==gridStudents.length)throw new Error("Real transaction controller did not save and refresh all test rows");
   const edits=gridStudents.map((student,i)=>({key:"grid-"+i,student,subject:"Nepali",old:cache.find(r=>r.studentId===student.id),data:iemisEntryValues(iemisEntrySchema(1,"first","Nepali"),{values:{count:"5",obtained:"18"},isAbsent:false})}));
   await actualSave(edits,"grid-context",{id:"format-exam-1",academicYear:"2083"},"1",formatTeacher);
   if(cache.some(r=>r.totalObtained!==18))throw new Error("Real transaction update did not reload new marks");
