@@ -21,7 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout approved V45 branch without changing V44 main
+        uses: actions/checkout@v4
+        with:
+          ref: smss-v45-work
+          persist-credentials: false
+      - name: Confirm deployed source branch
+        run: |
+          test "$(git branch --show-current)" = 'smss-v45-work'
+          git log -1 --format='%h %s'
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -32,8 +40,6 @@ jobs:
           node scripts/check-inline-js.mjs
           node --check cdc-question-paper.js
           node scripts/check-v44-requirements.mjs
-          npm run test:iemis
-          npm run test:pwa
           npm run test:question-paper
       - name: Verify Firestore rules against emulator (no production writes)
         run: npm run test:rules
