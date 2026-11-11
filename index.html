@@ -291,6 +291,7 @@ let currentUserRole=null;
 const userActivity=initUserActivity({auth,db});
 const idleLogout=initIdleLogout({auth,onTimeout:async user=>{try{await Promise.race([userActivity.logout(user),new Promise(resolve=>setTimeout(resolve,2000))]);}finally{currentUserRole=null;await signOut(auth);alert("Session expired after 60 minutes of inactivity. Please log in again.");}}});
 const isAdmin=()=>!!auth.currentUser&&auth.currentUser.uid===ADMIN_UID;
+const isViewer=()=>!!currentUserRole?.active&&(currentUserRole?.roles||[]).map(normalizeRoleKey).includes("viewer");
 const roleHas=r=>isAdmin()||!!currentUserRole?.active&&(currentUserRole?.roles||[]).map(normalizeRoleKey).includes(normalizeRoleKey(r));
 const classTeacherNames=()=>[...(currentUserRole?.classTeacherClassNames||[]),...(currentUserRole?.classTeacherClasses||[]).map(x=>x.className)].filter(Boolean).map(x=>String(x).trim());
 const teacherClassNames=()=>[...classTeacherNames(),...(currentUserRole?.subjectAssignmentClassNames||[]),...(currentUserRole?.subjectAssignments||[]).map(x=>x.className)].filter(Boolean).map(x=>String(x).trim());
@@ -384,7 +385,7 @@ document.addEventListener("click",e=>{if(e.target.closest("#refreshAuditLogs"))l
 function rolePageAllowed(page){
  if(isAdmin())return true;
  if(!currentUserRole||currentUserRole.active!==true)return false;
- if(page==="dashboard")return true;
+ if(page==="dashboard"||isViewer())return true;
  if(page==="marks")return roleHas("subject_teacher")&&(
   (Array.isArray(currentUserRole.subjectAssignments)&&currentUserRole.subjectAssignments.length>0)||
   (Array.isArray(currentUserRole.subjectAssignmentKeys)&&currentUserRole.subjectAssignmentKeys.length>0)
@@ -394,16 +395,16 @@ function rolePageAllowed(page){
  return false;
 }
 function applyRoleNavigation(){
- const teacher=!isAdmin();document.body.classList.toggle("smss-readonly-user",teacher);window.currentUserIsTeacher=teacher;window.rolePageAllowed=rolePageAllowed;
+ const teacher=!isAdmin(),viewer=isViewer();document.body.classList.toggle("smss-readonly-user",teacher);document.body.classList.toggle("smss-viewer",viewer);window.currentUserIsTeacher=teacher;window.rolePageAllowed=rolePageAllowed;
  // Non-admin accounts see Dashboard plus only the modules explicitly assigned to their active role.
  // Quick actions and sidebar links are both filtered by rolePageAllowed below.
  document.querySelectorAll("[data-page]").forEach(b=>{b.style.display=rolePageAllowed(b.dataset.page)?"":"none";});
  document.querySelectorAll("[data-go]").forEach(b=>{b.style.display=rolePageAllowed(b.dataset.go)?"":"none";});
  // Hide empty menu groups and the Administration heading for non-admin accounts.
  document.querySelectorAll(".menu-group").forEach(group=>{const allowed=[...group.querySelectorAll("[data-page]")].some(b=>b.style.display!=="none");group.style.display=(!teacher||allowed)?"":"none";});
- document.querySelectorAll(".side-label,.label").forEach(label=>{if(teacher&&label.textContent.trim().toUpperCase()==="ADMINISTRATION")label.style.display="none";});
- const ledger=document.getElementById("marksLedgerPanel")||document.getElementById("ledgerViewExam")?.closest(".panel");if(ledger)ledger.style.display=teacher?"none":"";
- if(teacher){
+ document.querySelectorAll(".side-label,.label").forEach(label=>{if(teacher&&!viewer&&label.textContent.trim().toUpperCase()==="ADMINISTRATION")label.style.display="none";});
+ const ledger=document.getElementById("marksLedgerPanel")||document.getElementById("ledgerViewExam")?.closest(".panel");if(ledger)ledger.style.display=teacher&&!viewer?"none":"";
+ if(teacher&&!viewer){
   const a=document.getElementById("assessmentSettingsPanel"),b=document.getElementById("savedAssessmentSettingsPanel");if(a)a.hidden=true;if(b)b.hidden=true;
   // Teachers can enter marks only for assigned class/subject pairs; bulk ledger import/export is admin-only.
   ["exportLedgerExcel","sampleLedgerExcel","importLedgerExcel"].forEach(id=>{const el=document.getElementById(id);if(el){const target=el.tagName==="INPUT"?el.previousElementSibling:el; if(target)target.hidden=true;el.hidden=true;}});
