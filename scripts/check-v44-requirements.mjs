@@ -36,7 +36,7 @@ must(!html.includes("selectedLoginRole"), "Login authentication must not depend 
 must(html.includes("sendPasswordResetEmail(auth,email)"), "Free Firebase email password reset is missing.");
 must(!/signInWithPhoneNumber|PhoneAuthProvider|RecaptchaVerifier|phoneAuthProvider/i.test(html), "SMS OTP must remain disabled for the Firebase Spark Free Plan.");
 
-must(html.includes('if(page==="dashboard")return true;'), "Active non-admin users must be allowed to view the dashboard.");
+must(html.includes('if(page==="dashboard"||isViewer())return true;'), "Active non-admin users must be allowed to view the dashboard, and Viewer must be allowed to navigate read-only pages.");
 must(html.includes('if(page==="marks")return roleHas("subject_teacher")'), "Marks Entry must be limited to users with an active Subject Teacher assignment.");
 must(html.includes('if(page==="attendance")return roleHas("class_teacher")'), "Attendance must be limited to users with an active Class Teacher assignment.");
 must(html.includes("return false;\n}\nfunction applyRoleNavigation()"), "Unassigned non-admin pages must remain blocked.");
