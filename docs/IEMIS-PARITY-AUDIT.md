@@ -113,3 +113,28 @@ PR #8 and PR #10 overlap in `docs/IEMIS-PARITY-AUDIT.md`, `index.html`, `scripts
 ### V45 release trigger — 2026-11-10
 
 The release commit runs the existing main-branch quality gate before Firebase Hosting and Firestore rules deployment. The signed Android APK workflow independently runs V44, V45, IEMIS, PWA, UI and Firestore tests before signing and publishing a GitHub Release. APK is a Capacitor wrapper for the live Firebase URL, so it must be distributed only after the live release and signed APK workflows both succeed. PR #8's conflicting changes are excluded pending reconciliation; no student records are edited by this documentation-only trigger.
+
+
+## Populated 2083 Class VI verification and Class I restoration — 2026-11-11
+
+Class I First-Term Nepali restoration was reloaded and confirmed as achievement count 3 and obtained achievement 10. This supersedes the earlier restore-not-confirmed note; the values remain samples and still need replacement with genuine school-assessed results.
+
+With the school user's explicit permission, only the first Class VI student was selected for First, Second and Final Term sample writes. No identifiers are included here. Each Save was followed by Load and comparison of every displayed input: all 21 inputs persisted in each non-final term, and all 28 persisted in Final.
+
+| Subject | Participation /4 | Practical /36 | Term /10 | Final /50 |
+| --- | ---: | ---: | ---: | ---: |
+| Nepali | 3 | 30 | 8 | 40 |
+| English | 4 | 28 | 7 | 38 |
+| Mathematics | 3 | 25 | 8 | 35 |
+| Science & Technology | 4 | 32 | 9 | 42 |
+| Social Studies & Human Value Education | 3 | 27 | 7 | 36 |
+| Health Physical & Creative Art | 4 | 30 | 8 | 41 |
+| Hamro Dhunibeshi | 3 | 29 | 8 | 39 |
+
+First/Second entry headers are Participation(4), Practical/Project(36), and the respective Term Examination(10). Final headers are Participation(4), Practical/Project(36), Total of Term(10), and Total of final marks(50). The sample triplets above were used in all three terms; only Final includes the last column.
+
+Both First and Second Grade Sheets show CH 2.5/2.5/2.5/2.5/2.5/1.5/2 (total16), grades A/B+/B+/A+/B+/A/A and GPA3.48. They have Subjects/CH/GP/Grade/Remarks, without a Final Grade column or TH/IN labels. Final has paired TH/IN rows, annual CH total32, component-credit GPA3.42, and a Final Grade column. All three sheets state one credit hour equals32 hours. These totals reflect the seven configured subjects; no Computer subject appeared in this Class VI cohort.
+
+SMSS previously withheld non-final secondary GPA, showed annual credits and retained final-only columns. Commit 840c4ef now uses the existing single-grade sheet renderer for verified 2083 Class VI First/Second, halves configured annual credits for display, and shows the term GPA. Class VI 2083 footnotes use the applicable annual credit total instead of assuming36. Stored credits/marks and other classes/years/unverified terms are unchanged. Synthetic actual-renderer regression in 7b730eb checks 3.48/3.42, credits16/32, missing/NG handling and source immutability; existing I/IV/V/VI regression and all five inline JavaScript syntax checks pass locally.
+
+Class VI sample values remain in real IEMIS for replacement by the school. They are not certified academic results. No SMSS Firestore data was written and this branch was not deployed. Class VI Mark/Grade Ledger comparison, explicit edit/validation/print, other class regressions and exact watermark/A4 parity remain outstanding. The browser session was unavailable on continuation before the Grade Ledger could be inspected; do not infer its values from the Grade Sheet or claim the complete phase passed.

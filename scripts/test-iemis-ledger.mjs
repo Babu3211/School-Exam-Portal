@@ -126,3 +126,32 @@ for(const [year,term,expectedCredits,hours] of [
  assert.deepEqual(config,before,'Report rendering must not change stored credits');
 }
 console.log('Class I 2083 First/Second/Final credits, totals, GPA 3.54, footnote and historical/unverified-term isolation passed.');
+
+// School-authorized populated Class VI vectors, with synthetic identity only.
+const sixSubjects=subjects.slice(1),sixCredits=[5,5,5,5,5,3,4];
+const sixInternal=[41,39,36,45,37,42,40],sixTheory=[40,38,35,42,36,41,39];
+for(const term of ['first','second','annual']){
+ const annual=term==='annual';
+ const rs=sixSubjects.map((subject,i)=>({studentId:'synthetic-1',examId:'synthetic-exam',subject,scores:[{name:'Internal',fullMarks:50,obtained:sixInternal[i]},...(annual?[{name:'TH (Theory)',fullMarks:50,obtained:sixTheory[i]}]:[])]}));
+ const config=sixSubjects.map((subject,i)=>({className:'6',subject,creditHour:sixCredits[i],active:true}));
+ const before=structuredClone({rs,config});
+ const per=rs.map(r=>{const v=iemisSummary(r,{annual});return {subject:r.subject,missing:false,totalFull:v.full,pct:v.obtained/v.full*100,grade:v.totalGrade};});
+ const d={...dependencies,smssExamTermKey:()=>term,resultExams:[{id:'synthetic-exam',academicYear:'2083'}],resultClasses:config,resultMarks:rs,activeResultRows:[{student:{...student,class:'6'},perSubject:per}]};
+ const render=()=>new Function(...Object.keys(d),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(d));
+ render();
+ assert.match(box.innerHTML,annual?/GRADE POINT AVERAGE = 3.42/:/GRADE POINT AVERAGE \(GPA\): 3.48/);
+ assert.match(box.innerHTML,/ONE CREDIT HOUR EQUALS 32 HOURS/);
+ if(!annual){
+  assert.doesNotMatch(box.innerHTML,/FINAL GRADE|\(TH\)|\(IN\)|Annual Examination only/);
+  const table=box.innerHTML.match(/<table[^>]*>[\s\S]*?<\/table>/)[0];
+  const shown=[...table.matchAll(/<tr>([\s\S]*?)<\/tr>/g)].slice(1,8).map(row=>Number([...row[1].matchAll(/<td[^>]*>([^<]*)<\/td>/g)][1][1]));
+  assert.deepEqual(shown,[2.5,2.5,2.5,2.5,2.5,1.5,2]);
+  assert.equal(shown.reduce((a,b)=>a+b,0),16);
+  per[0]={...per[0],missing:true,pct:null,grade:null};render();
+  assert.match(box.innerHTML,/Pending — marks and Credit Hour/);
+  per[0]={...per[0],missing:false,pct:0,grade:iemisGrade(0)};render();
+  assert.match(box.innerHTML,/Not Graded — one or more subjects are NG/);
+ }
+ assert.deepEqual({rs,config},before,'Rendering must not mutate source marks or annual credits');
+}
+console.log('Class VI 2083 First/Second GPA 3.48, Final GPA 3.42, credits 16/32, missing/NG and data immutability passed.');
