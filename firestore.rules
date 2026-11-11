@@ -70,13 +70,13 @@ service cloud.firestore {
     }
 
     function isAssignedSubject(className, subjectName, sectionName) {
-      return isAdmin() || (signedIn() && teacherSubjectAccess(className, subjectName, sectionName));
+      return isAdmin() || (signedIn() && !isViewer() && teacherSubjectAccess(className, subjectName, sectionName));
     }
 
 
     function isAssignedSubjectPair(className, subjectName) {
       return isAdmin() ||
-        (hasRole('subject_teacher') &&
+        (!isViewer() && hasRole('subject_teacher') &&
          roleData().get('subjectAssignmentKeys', []) is list &&
          roleData().get('subjectAssignmentKeys', [])
            .hasAny([className + '::' + subjectName]));
@@ -84,7 +84,7 @@ service cloud.firestore {
 
     function isAssignedClassTeacher(className) {
       return isAdmin() ||
-        (hasRole('class_teacher') &&
+        (!isViewer() && hasRole('class_teacher') &&
          roleData().get('classTeacherClassNames', []) is list &&
          roleData().get('classTeacherClassNames', []).hasAny([className]));
     }
