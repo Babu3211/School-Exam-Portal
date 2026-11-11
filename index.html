@@ -2654,14 +2654,14 @@ function populateAttendanceSubjects(){const cl=document.getElementById("attendan
 function renderAttendanceStudents(saved=[]){const body=document.getElementById("attendanceStudentsBody");if(!body)return;const cl=document.getElementById("attendanceClass").value;const old=new Map(saved.map(x=>[x.studentId,x]));const savedIds=new Set(old.keys());const current=attendanceStudents.filter(x=>String(x.class||"")===String(cl)&&(x.active!==false||savedIds.has(x.id)));const known=new Set(current.map(x=>x.id));const orphaned=saved.filter(x=>x.studentId&&!known.has(x.studentId)).map(x=>({id:x.studentId,rollNo:x.rollNo??"",admissionNo:"",studentName:x.studentName||"पुरानो विद्यार्थी रेकर्ड",active:false,archivedMissing:true}));const list=[...current,...orphaned].sort((a,b)=>(Number(studentRollNo(a))||9999)-(Number(studentRollNo(b))||9999)||String(a.studentName||"").localeCompare(String(b.studentName||"")));if(!list.length){body.innerHTML='<tr><td class="empty" colspan="5">यो कक्षामा सक्रिय विद्यार्थी भेटिएनन्।</td></tr>';attendanceMessage("यो कक्षामा सक्रिय विद्यार्थी रेकर्ड छैन।",true);updateAttendanceCounts();return}body.innerHTML=list.map(st=>{const prev=old.get(st.id),status=prev?.status||"present",inactive=st.active===false;return `<tr data-attendance-student="${attendanceEsc(st.id)}"><td>${attendanceEsc(studentRollNo(st)||"—")}</td><td>${attendanceEsc(st.admissionNo||"—")}</td><td>${attendanceEsc(st.studentName||"—")}${inactive?' <small style="color:#b45309;font-weight:700">(निष्क्रिय/पुरानो रेकर्ड)</small>':''}</td><td><select data-attendance-status><option value="present" ${status==="present"?"selected":""}>उपस्थित</option><option value="absent" ${status==="absent"?"selected":""}>अनुपस्थित</option><option value="leave" ${status==="leave"?"selected":""}>बिदा</option></select></td><td><input data-attendance-remark maxlength="160" placeholder="कैफियत" value="${attendanceEsc(prev?.remark||"")}"></td></tr>`}).join("");updateAttendanceCounts();attendanceMessage(`${list.length} विद्यार्थीको सूची आयो। निष्क्रिय/पुरानो विद्यार्थी पुरानो हाजिरीमा मात्र राखिएका छन्। हाजिरी राखेर Save गर्नुहोस्।`)}
 async function loadAttendancePage(){
  const date=document.getElementById("attendanceDate");if(!date)return;
- if(!isAdmin()){
+ if(!isAdmin()&&!isViewer()){
   const classSel=document.getElementById("attendanceClass");
   if(classSel){classSel.disabled=true;classSel.innerHTML='<option value="">तपाईंको Assignment लोड हुँदैछ...</option>';}
  }
  if(!date.value){const bs=new DateConverter(attendanceNepalTodayAD()).toBs();date.value=`${bs.year}-${attendancePad(bs.month)}-${attendancePad(bs.date)}`;}
  try{
   let ss,as;
-  if(isAdmin()){
+  if(isAdmin()||isViewer()){
    const [studentsSnap,classesSnap,attendanceSnap]=await Promise.all([getDocs(collection(db,"students")),getDocs(collection(db,"classes")),getDocs(collection(db,"attendance"))]);
    ss=studentsSnap;as=attendanceSnap;attendanceClasses=classesSnap.docs.map(d=>({id:d.id,...d.data()}));
   }else{
