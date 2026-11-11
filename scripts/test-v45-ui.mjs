@@ -27,3 +27,12 @@ for(const size of [192,512]){
 const apple=await readFile('apple-touch-icon.png');
 assert.equal(apple.subarray(1,4).toString(),'PNG','Apple touch icon must be PNG');
 console.log('V45 menu, install banner, manifest and icon structure checks passed');
+
+const viewerGuard=html.match(/function viewerReadOnlyGuard\(event\)\{([\s\S]*?)\n\}\ndocument\.addEventListener\("click",viewerReadOnlyGuard,true\)/)?.[1];
+assert.ok(viewerGuard,'Viewer read-only guard must remain active');
+assert.ok(viewerGuard.includes('event.preventDefault()')&&viewerGuard.includes('event.stopImmediatePropagation()'),'Viewer mutation actions must be intercepted');
+assert.ok(viewerGuard.includes('action.id==="logoutBtn"'),'Viewer logout must remain accessible');
+assert.ok(!viewerGuard.includes('if(assignedSubjectTask||assignedClassTask)return'),'Mixed Viewer and Teacher role must not bypass read-only guard');
+assert.ok(html.includes('window.currentUserIsTeacher=teacher;window.rolePageAllowed=rolePageAllowed;'),'Viewer must not inherit Teacher-only hidden panels');
+assert.ok(html.includes('if(roleHas("viewer"))return true;'),'Viewer must retain access to all navigable pages');
+console.log('Viewer read-only, logout and full-page navigation static regression checks passed');
