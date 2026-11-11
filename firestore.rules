@@ -26,6 +26,10 @@ service cloud.firestore {
       );
     }
 
+    function isViewer() {
+      return hasRole('viewer');
+    }
+
     function roleData() {
       return get(rolePath(request.auth.uid)).data;
     }
@@ -96,12 +100,12 @@ service cloud.firestore {
 
     // Core school records: active school users can read; only Admin can change.
     match /students/{documentId} {
-      allow get, list: if hasActiveRole() && isAssignedStudentClass(resource.data.get('class', resource.data.get('className', '')));
+      allow get, list: if hasActiveRole() && (isViewer() || isAssignedStudentClass(resource.data.get('class', resource.data.get('className', '')));
       allow create, update, delete: if isAdmin();
     }
 
     match /staff/{documentId} {
-      allow get, list: if isAdmin();
+      allow get, list: if isAdmin() || isViewer();
       allow create, update, delete: if isAdmin();
     }
 
@@ -116,7 +120,7 @@ service cloud.firestore {
     }
 
     match /exams/{documentId} {
-      allow get, list: if hasActiveRole() && isAssignedStudentClass(resource.data.get('className', ''));
+      allow get, list: if hasActiveRole() && (isViewer() || isAssignedStudentClass(resource.data.get('className', '')));
       allow create, update, delete: if isAdmin();
     }
 
@@ -194,7 +198,7 @@ service cloud.firestore {
     // Client-side score-range checks remain mirrored in the entry UI; nested
     // score-component validation is not expressible as a safe list-wide rule.
     match /marks/{documentId} {
-      allow get, list: if hasActiveRole() && isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);
+      allow get, list: if hasActiveRole() && (isViewer() || isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section));
       allow create: if isAdmin() ||
         (hasActiveRole() &&
          validMarkShape(request.resource.data) &&
