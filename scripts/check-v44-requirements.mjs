@@ -55,12 +55,12 @@ must(roleStart >= 0 && roleEnd > roleStart, "Role permission helper is missing."
 function roleMatrix(role, admin = false) {
   const hasRole = key => admin || !!role?.active && (role.roles || []).map(v => String(v).toLowerCase().replace(/[ -]+/g, "_")).includes(key);
   const classNames = () => [...(role?.classTeacherClassNames || []), ...(role?.classTeacherClasses || []).map(x => x.className)].filter(Boolean);
-  return new Function("isAdmin", "currentUserRole", "roleHas", "classTeacherNames",
+  return new Function("isAdmin", "currentUserRole", "roleHas", "classTeacherNames", "isViewer",
     html.slice(roleStart, roleEnd) + "; return rolePageAllowed;"
-  )(() => admin, role, hasRole, classNames);
+  )(() => admin, role, hasRole, classNames, () => !admin && !!role?.active && (role.roles || []).some(v => String(v).toLowerCase() === "viewer"));
 }
 const viewerPermissions = roleMatrix({ active: true, roles: ["viewer"] });
-must(viewerPermissions("dashboard") && !viewerPermissions("marks") && !viewerPermissions("attendance") && !viewerPermissions("students"), "Viewer role must see Dashboard only.");
+must(["dashboard", "marks", "attendance", "students", "staff"].every(page => viewerPermissions(page)), "Active Viewer must navigate all read-only pages.");
 const subjectPermissions = roleMatrix({ active: true, roles: ["subject_teacher"], subjectAssignments: [{ className: "9", subject: "Mathematics" }] });
 must(subjectPermissions("dashboard") && subjectPermissions("marks") && subjectPermissions("question-papers") && !subjectPermissions("attendance") && !subjectPermissions("students"), "Subject Teacher must see Dashboard, Marks and assigned Question Paper Builder.");
 const classPermissions = roleMatrix({ active: true, roles: ["class_teacher"], classTeacherClassNames: ["9"] });
