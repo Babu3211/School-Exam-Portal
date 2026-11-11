@@ -26,6 +26,10 @@ service cloud.firestore {
       );
     }
 
+    function isViewer() {
+      return hasRole('viewer');
+    }
+
     function roleData() {
       return get(rolePath(request.auth.uid)).data;
     }
@@ -34,7 +38,8 @@ service cloud.firestore {
       return isAdmin() ||
         (hasActiveRole() &&
          roleData().get('roles', []) is list &&
-         roleData().get('roles', []).hasAny([roleName]));
+         roleData().get('roles', []).hasAny([roleName]) &&
+         (roleName == 'viewer' || !roleData().get('roles', []).hasAny(['viewer'])));
     }
 
     function studentBelongsToClass(studentId, className) {
@@ -96,12 +101,12 @@ service cloud.firestore {
 
     // Core school records: active school users can read; only Admin can change.
     match /students/{documentId} {
-      allow get, list: if hasActiveRole() && isAssignedStudentClass(resource.data.get('class', resource.data.get('className', '')));
+      allow get, list: if hasActiveRole() && (isViewer() || isAssignedStudentClass(resource.data.get('class', resource.data.get('className', ''))));
       allow create, update, delete: if isAdmin();
     }
 
     match /staff/{documentId} {
-      allow get, list: if isAdmin();
+      allow get, list: if isAdmin() || isViewer();
       allow create, update, delete: if isAdmin();
     }
 
@@ -116,7 +121,7 @@ service cloud.firestore {
     }
 
     match /exams/{documentId} {
-      allow get, list: if hasActiveRole() && isAssignedStudentClass(resource.data.get('className', ''));
+      allow get, list: if hasActiveRole() && (isViewer() || isAssignedStudentClass(resource.data.get('className', '')));
       allow create, update, delete: if isAdmin();
     }
 
@@ -194,7 +199,7 @@ service cloud.firestore {
     // Client-side score-range checks remain mirrored in the entry UI; nested
     // score-component validation is not expressible as a safe list-wide rule.
     match /marks/{documentId} {
-      allow get, list: if hasActiveRole() && isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);
+      allow get, list: if hasActiveRole() && (isViewer() || isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section));
       allow create: if isAdmin() ||
         (hasActiveRole() &&
          validMarkShape(request.resource.data) &&
@@ -260,7 +265,7 @@ service cloud.firestore {
     // Document identity, date, original creator and attendance type are immutable
     // to prevent moving or relabelling an existing attendance register.
     match /attendance/{documentId} {
-      allow get, list: if hasActiveRole() && isAssignedClassTeacher(resource.data.className);
+      allow get, list: if hasActiveRole() && (isViewer() || isAssignedClassTeacher(resource.data.className));
       allow create: if isAdmin() ||
         (hasActiveRole() &&
          validDailyAttendance(request.resource.data) &&
@@ -280,9 +285,9 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Certificate records contain issued student certificate snapshots; Admin only.
+    // Issued certificate snapshots are readable by Admin and Viewer; only Admin may issue or modify them.
     match /certificates/{certificateId} {
-      allow get, list: if isAdmin();
+      allow get, list: if isAdmin() || isViewer();
       allow create: if isAdmin() &&
         request.resource.data.issuedBy == request.auth.uid &&
         request.resource.data.keys().hasOnly([
@@ -385,11 +390,11 @@ service cloud.firestore {
     // subject and section. Admin retains full control.
     match /question_bank/{questionId} {
       allow get, list: if hasActiveRole() &&
-        isAssignedSubject(
+        (isViewer() || isAssignedSubject(
           resource.data.get('className', ''),
           resource.data.get('subject', ''),
           resource.data.get('section', '')
-        );
+        ));
       allow create: if hasActiveRole() &&
         isAssignedSubject(
           request.resource.data.get('className', ''),
@@ -451,7 +456,7 @@ service cloud.firestore {
     // Saved question papers are immutable snapshots for their author.
     // Deletion requires an explicit client confirmation; Admin can manage all.
     match /question_papers/{paperId} {
-      allow get, list: if isAdmin() ||
+      allow get, list: if isAdmin() || isViewer() ||
         (hasActiveRole() &&
          resource.data.createdBy == request.auth.uid &&
          isAssignedSubject(

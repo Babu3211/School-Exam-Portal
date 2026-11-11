@@ -36,7 +36,7 @@ must(!html.includes("selectedLoginRole"), "Login authentication must not depend 
 must(html.includes("sendPasswordResetEmail(auth,email)"), "Free Firebase email password reset is missing.");
 must(!/signInWithPhoneNumber|PhoneAuthProvider|RecaptchaVerifier|phoneAuthProvider/i.test(html), "SMS OTP must remain disabled for the Firebase Spark Free Plan.");
 
-must(html.includes('if(page==="dashboard")return true;'), "Active non-admin users must be allowed to view the dashboard.");
+must(html.includes('if(page==="dashboard"||isViewer())return true;'), "Active non-admin users must be allowed to view the dashboard, and Viewer must be allowed to navigate read-only pages.");
 must(html.includes('if(page==="marks")return roleHas("subject_teacher")'), "Marks Entry must be limited to users with an active Subject Teacher assignment.");
 must(html.includes('if(page==="attendance")return roleHas("class_teacher")'), "Attendance must be limited to users with an active Class Teacher assignment.");
 must(html.includes("return false;\n}\nfunction applyRoleNavigation()"), "Unassigned non-admin pages must remain blocked.");
@@ -55,12 +55,20 @@ must(roleStart >= 0 && roleEnd > roleStart, "Role permission helper is missing."
 function roleMatrix(role, admin = false) {
   const hasRole = key => admin || !!role?.active && (role.roles || []).map(v => String(v).toLowerCase().replace(/[ -]+/g, "_")).includes(key);
   const classNames = () => [...(role?.classTeacherClassNames || []), ...(role?.classTeacherClasses || []).map(x => x.className)].filter(Boolean);
-  return new Function("isAdmin", "currentUserRole", "roleHas", "classTeacherNames",
+  return new Function("isAdmin", "currentUserRole", "roleHas", "classTeacherNames", "isViewer",
     html.slice(roleStart, roleEnd) + "; return rolePageAllowed;"
-  )(() => admin, role, hasRole, classNames);
+  )(() => admin, role, hasRole, classNames, () => !admin && !!role?.active && (role.roles || []).some(v => String(v).toLowerCase() === "viewer"));
 }
 const viewerPermissions = roleMatrix({ active: true, roles: ["viewer"] });
-must(viewerPermissions("dashboard") && !viewerPermissions("marks") && !viewerPermissions("attendance") && !viewerPermissions("students"), "Viewer role must see Dashboard only.");
+must(["dashboard", "marks", "attendance", "students", "staff"].every(page => viewerPermissions(page)), "Active Viewer must navigate all read-only pages.");
+const mixedViewerPermissions = roleMatrix({ active: true, roles: ["viewer", "class_teacher", "subject_teacher"], classTeacherClassNames: ["9"], subjectAssignments: [{ className: "9", subject: "Mathematics" }] });
+must(["dashboard", "marks", "attendance", "students", "staff", "question-papers", "settings"].every(page => mixedViewerPermissions(page)), "Viewer must retain full read-only navigation even when assigned teacher roles.");
+must(html.includes('const roleHas=r=>isAdmin()||!!currentUserRole?.active&&!isViewer()'), "Viewer plus Teacher must not gain teacher UI write permissions.");
+must(rules.includes("(roleName == 'viewer' || !roleData().get('roles', []).hasAny(['viewer']))"), "Firestore must deny teacher write privileges to mixed Viewer/Teacher roles.");
+must(rules.includes("allow get, list: if isAdmin() || isViewer() ||"), "Viewer must be able to inspect saved question papers.");
+must(html.includes('async function loadMarksLedgerPage(){if(!isAdmin()&&!isViewer())'), "Viewer must be allowed to load the Marks Ledger.");
+must(html.includes("if(isAdmin()||isViewer()){") && html.includes("const [studentsSnap,classesSnap,attendanceSnap]"), "Viewer must be allowed to load attendance across classes.");
+must(html.includes('"studentAddNewBtn","generateMissingStudentCodes"'), "Read-only users must not see Add New Student.");
 const subjectPermissions = roleMatrix({ active: true, roles: ["subject_teacher"], subjectAssignments: [{ className: "9", subject: "Mathematics" }] });
 must(subjectPermissions("dashboard") && subjectPermissions("marks") && subjectPermissions("question-papers") && !subjectPermissions("attendance") && !subjectPermissions("students"), "Subject Teacher must see Dashboard, Marks and assigned Question Paper Builder.");
 const classPermissions = roleMatrix({ active: true, roles: ["class_teacher"], classTeacherClassNames: ["9"] });
@@ -254,10 +262,10 @@ must(rules.includes("function validDailyAttendance(data)") && rules.includes("da
 must(rules.includes("data.presentCount + data.absentCount + data.leaveCount == data.totalStudents"), "Daily attendance counts must reconcile with the roster.");
 must(rules.includes("request.resource.data.createdBy == resource.data.createdBy") && rules.includes("request.resource.data.date == resource.data.date"), "Daily attendance updates must preserve original creator and date.");
 
-must(rules.includes("function isAssignedStudentClass(className)") && rules.includes("allow get, list: if hasActiveRole() && isAssignedStudentClass"), "Student and exam reads must be limited to assigned classes.");
-must(rules.includes("allow get, list: if isAdmin();") && rules.includes("match /staff/{documentId}"), "Staff personal records must be Admin-only.");
-must(rules.includes("allow get, list: if hasActiveRole() && isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);"), "Marks reads must be limited to assigned subject/class/section.");
-must(rules.includes("allow get, list: if hasActiveRole() && isAssignedClassTeacher(resource.data.className);"), "Attendance reads must be limited to assigned classes.");
+must(rules.includes("function isAssignedStudentClass(className)") && rules.includes("allow get, list: if hasActiveRole() && (isViewer() || isAssignedStudentClass"), "Student and exam reads must be limited to assigned classes.");
+must(rules.includes("allow get, list: if isAdmin() || isViewer();") && rules.includes("match /staff/{documentId}"), "Staff personal records must be Admin-only.");
+must(rules.includes("allow get, list: if hasActiveRole() && (isViewer() || isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section));"), "Marks reads must be limited to assigned subject/class/section.");
+must(rules.includes("allow get, list: if hasActiveRole() && (isViewer() || isAssignedClassTeacher(resource.data.className));"), "Attendance reads must be limited to assigned classes.");
 must(html.includes("where(\"class\",\"==\",cl)") && html.includes("where(\"className\",\"==\",x.className)") && html.includes("where(\"subject\",\"==\",x.subject)"), "Teacher dashboard must query only assigned classes and subjects.");
 
 must(html.includes("subjectAssignmentSectionKeys") && rules.includes("subjectAssignmentSectionKeys"), "Subject teacher section assignments must be stored and enforced.");
@@ -453,4 +461,16 @@ must(liveWorkflow.includes("github.event.workflow_run.head_branch == 'smss-v44-w
 must(liveWorkflow.includes("github.event.workflow_run.conclusion == 'success'"), "Legacy production Hosting workflow must require successful V44 CI.");
 
 
+must(html.includes("if(e.target.id===\'saveAllMarks\'){if(isViewer())"),"Viewer Marks Save handler must reject writes.");
+must(html.includes(`if(e.target.closest("#saveAttendance")){if(isViewer())`),"Viewer Attendance Save handler must reject writes.");
+must(html.includes(`if(isViewer())body.querySelectorAll(\'input[data-score]\')`),"Viewer marks inputs must remain read-only.");
+must(html.includes(`if(isViewer())body.querySelectorAll("[data-attendance-status],[data-attendance-remark]")`),"Viewer attendance fields must remain disabled.");
+must(html.includes(`isViewer()?"Read only":\`<button class="btn alt" type="button" data-student-edit`),"Viewer must not see student row mutation controls.");
+must(html.includes(`isViewer()?"Read only":\`<button type="button" data-staff-edit`),"Viewer must not see staff row mutation controls.");
+must(html.includes(`isViewer()?"Read only":\`<button class="btn alt" type="button" data-class-edit`),"Viewer must not see class row mutation controls.");
+must(html.includes(`"subjectCatalogForm","certificateForm","schoolSettingsForm"`),"Viewer must not see subject creation form.");
+must(html.includes(`"studentImportFile","staffAddNewBtn","staffSeed20Btn","staffImportFile"`),"Viewer must not be able to import student or staff Excel files.");
+must(html.includes(`button.previousElementSibling?.tagName==="LABEL"`),"Viewer Excel import labels must be hidden.");
+must(html.includes(`"studentAddNewBtn","generateMissingStudentCodes"`),"Viewer must not create students or bulk-generate result codes.");
+must(rules.includes("match /certificates/{certificateId} {\n      allow get, list: if isAdmin() || isViewer();"),"Viewer must be allowed to read issued certificates.");
 console.log("V44 requirement regression checks passed.");
