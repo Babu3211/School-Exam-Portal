@@ -36,3 +36,10 @@ assert.ok(!viewerGuard.includes('if(assignedSubjectTask||assignedClassTask)retur
 assert.ok(html.includes('window.currentUserIsTeacher=teacher;window.rolePageAllowed=rolePageAllowed;'),'Viewer must not inherit Teacher-only hidden panels');
 assert.ok(html.includes('if(roleHas("viewer"))return true;'),'Viewer must retain access to all navigable pages');
 console.log('Viewer read-only, logout and full-page navigation static regression checks passed');
+
+for(const formId of ['studentForm','staffForm','certificateForm','schoolSettingsForm','userCreateForm','subjectCatalogForm','classForm','examForm']){
+ assert.ok(html.includes("'"+formId+"'"),'Viewer hidden-form list missing '+formId);
+}
+assert.ok(html.includes("v.querySelectorAll('form').forEach(form=>"),'Viewer form protection missing');
+assert.ok(html.includes('v.querySelectorAll(\'input[type="file"]\')'),'Viewer file input protection missing');
+console.log('Viewer create/edit forms and file upload restrictions verified');
