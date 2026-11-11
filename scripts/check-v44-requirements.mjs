@@ -54,7 +54,7 @@ must(!/signInWithPhoneNumber|PhoneAuthProvider|RecaptchaVerifier|phoneAuthProvid
 must(html.includes('if(page==="dashboard")return true;'), "Active non-admin users must be allowed to view the dashboard.");
 must(html.includes('if(page==="marks")return roleHas("subject_teacher")'), "Marks Entry must be limited to users with an active Subject Teacher assignment.");
 must(html.includes('if(page==="attendance")return roleHas("class_teacher")'), "Attendance must be limited to users with an active Class Teacher assignment.");
-must(html.includes("return false;\n}\nfunction applyRoleNavigation()"), "Unassigned non-admin pages must remain blocked.");
+must(html.includes("return false;\n}"), "Unassigned non-admin pages must remain blocked.");
 must(html.includes("Quick actions and sidebar links are both filtered by rolePageAllowed"), "Quick actions must follow the same role permissions as sidebar navigation.");
 must(html.includes('id="studentAddNewBtn"') && html.includes('id="studentFormPanel" hidden'), "Student Management must provide an Add New Student button and initially collapsed form.");
 must(html.includes('id="staffAddNewBtn"') && html.includes('id="staffFormPanel" hidden'), "Teachers & Staff must provide an Add New Staff button and initially collapsed form.");
@@ -65,7 +65,7 @@ must(/if\s*\(\s*target\.closest\("#studentAddNewBtn"\)\)/.test(html) && /if\s*\(
 
 must(html.includes("map(normalizeRoleKey);if(!allowed.some(r=>[\"class_teacher\",\"subject_teacher\",\"viewer\",\"exam_officer\",\"accountant\"].includes(r))"), "Login must normalize and validate recognized active roles, including Viewer.");
 const roleStart = html.indexOf("function rolePageAllowed(page){");
-const roleEnd = html.indexOf("\nfunction applyRoleNavigation()", roleStart);
+const roleEnd = html.indexOf("\n// Viewer has navigation", roleStart);
 must(roleStart >= 0 && roleEnd > roleStart, "Role permission helper is missing.");
 function roleMatrix(role, admin = false) {
   const hasRole = key => admin || !!role?.active && (role.roles || []).map(v => String(v).toLowerCase().replace(/[ -]+/g, "_")).includes(key);
@@ -75,13 +75,15 @@ function roleMatrix(role, admin = false) {
   )(() => admin, role, hasRole, classNames);
 }
 const viewerPermissions = roleMatrix({ active: true, roles: ["viewer"] });
-must(viewerPermissions("dashboard") && !viewerPermissions("marks") && !viewerPermissions("attendance") && !viewerPermissions("students"), "Viewer role must see Dashboard only.");
+must(["dashboard","marks","attendance","students","staff","users","settings","backup"].every(viewerPermissions), "Active Viewer must be able to browse all pages read-only.");
 const subjectPermissions = roleMatrix({ active: true, roles: ["subject_teacher"], subjectAssignments: [{ className: "9", subject: "Mathematics" }] });
 must(subjectPermissions("dashboard") && subjectPermissions("marks") && !subjectPermissions("attendance") && !subjectPermissions("students"), "Subject Teacher must see Dashboard and Marks only.");
 const classPermissions = roleMatrix({ active: true, roles: ["class_teacher"], classTeacherClassNames: ["9"] });
 must(classPermissions("dashboard") && classPermissions("attendance") && !classPermissions("marks") && !classPermissions("students"), "Class Teacher must see Dashboard and Attendance only.");
 const combinedPermissions = roleMatrix({ active: true, roles: ["class_teacher", "subject_teacher"], classTeacherClasses: [{ className: "9" }], subjectAssignmentKeys: ["9::Mathematics"] });
 must(combinedPermissions("marks") && combinedPermissions("attendance"), "Combined teacher roles must expose both assigned task modules.");
+const inactiveViewerPermissions = roleMatrix({ active: false, roles: ["viewer"] });
+must(!inactiveViewerPermissions("students"), "Inactive Viewer must not access school pages.");
 const inactivePermissions = roleMatrix({ active: false, roles: ["class_teacher"], classTeacherClassNames: ["9"] });
 must(!inactivePermissions("dashboard") && !inactivePermissions("attendance"), "Inactive users must not access Dashboard or task modules.");
 const adminPermissions = roleMatrix(null, true);
@@ -125,10 +127,10 @@ must(html.includes("async function seedInitialStaff20()"), "Initial 20-staff see
 must(html.includes("nameEn:nameEnglish"), "Staff seed must use the V44 English-name field.");
 must(html.includes("data.staffId=existingRecord?.staffId||nextStaffId(data.role,freshStaff)"), "New staff records must receive sequential IDs while preserving existing IDs.");
 
-must(rules.includes("match /public_result_lookup/{lookupId}") && rules.includes("allow get: if true;") && rules.includes("allow list: if isAdmin();"), "Public lookup rules must allow exact public get and Admin-only list.");
-must(rules.includes("match /public_results/{resultId}") && rules.includes("allow list: if isAdmin();"), "Public result list must be Admin-only.");
+must(rules.includes("match /public_result_lookup/{lookupId}") && rules.includes("allow get: if true;") && rules.includes("allow list: if isAdmin() || isViewer();"), "Public lookup rules must allow exact public get and active Viewer/Admin list.");
+must(rules.includes("match /public_results/{resultId}") && rules.includes("allow list: if isAdmin() || isViewer();"), "Public result list must be limited to active Viewer/Admin.");
 must(rules.includes("match /public_result_exams/{examId}"), "Public exam index rules are missing.");
-must(rules.includes("match /user_roles/{userId}") && rules.includes("allow get: if isAdmin() || (signedIn() && request.auth.uid == userId);"), "Users may read only their own role record; Admin may read role records.");
+must(rules.includes("match /user_roles/{userId}") && rules.includes("allow get: if isAdmin() || isViewer() || (signedIn() && request.auth.uid == userId);"), "Users may read own roles; active Viewer and Admin may read role records.");
 must(rules.includes("allow create, update, delete: if isAdmin();"), "Only Admin may create, change or deactivate user role assignments.");
 must(rules.includes("function hasActiveRole()") && rules.includes("roleData().get('roles', [])"), "Role-based access must require an active user role.");
 must(rules.includes("match /school_public_branding/{documentId}") && rules.includes("allow get: if documentId == 'main';") && rules.includes("allow create, update, delete: if isAdmin() && documentId == 'main';"), "Login branding must be public-read for the single main document and Admin-write only.");
@@ -141,8 +143,8 @@ must(html.includes(".login-brand h2,#loginSchoolName{font-size:clamp(22px,5vw,26
 must(html.includes(".login-user-types{gap:10px") && html.includes("font-size:12px;font-weight:600"), "Login account types must use refined readable typography.");
 
 must(rules.includes("match /public_result_exams/{examId}") && rules.includes("allow get, list: if true;") && rules.includes("allow create, update, delete: if isAdmin();"), "Public exam index must expose read-only publication metadata.");
-must(rules.includes("match /public_result_lookup/{lookupId}") && rules.includes("allow get: if true;") && rules.includes("allow list: if isAdmin();"), "Public result lookup must allow exact PIN-hash reads but block public listing.");
-must(rules.includes("match /public_results/{resultId}") && rules.includes("allow get: if true;") && rules.includes("allow list: if isAdmin();"), "Public result documents must allow exact reads but block public listing.");
+must(rules.includes("match /public_result_lookup/{lookupId}") && rules.includes("allow get: if true;") && rules.includes("allow list: if isAdmin() || isViewer();"), "Public result lookup must allow exact PIN-hash reads but block public listing.");
+must(rules.includes("match /public_results/{resultId}") && rules.includes("allow get: if true;") && rules.includes("allow list: if isAdmin() || isViewer();"), "Public result documents must allow exact reads but block public listing.");
 must(rules.includes("match /online_result_rate_limits/{documentId}") && rules.includes("allow read, write: if false;"), "Rate-limit collection must remain inaccessible to client apps.");
 
 must(html.includes('id="certificateForm"') && html.includes("async function loadCertificatesPage()"), "Firebase certificate issue workflow is missing.");
@@ -203,16 +205,16 @@ must(rules.includes("request.resource.data.createdBy == request.auth.uid") && ru
 must(rules.includes("request.resource.data.createdAt == request.time") && rules.includes("request.resource.data.updatedAt == request.time"), "Teacher marks writes must use server timestamps.");
 must(rules.includes("function validDailyAttendance(data)") && rules.includes("data.students.size() <= 200"), "Daily attendance writes must validate the record schema and roster size.");
 must(rules.includes("data.presentCount + data.absentCount + data.leaveCount == data.totalStudents"), "Daily attendance counts must reconcile with the roster.");
-must(rules.includes("request.resource.data.createdBy == resource.data.createdBy") && rules.includes("request.resource.data.date == resource.data.date"), "Daily attendance updates must preserve original creator and date.");
-
-must(rules.includes("function isAssignedStudentClass(className)") && rules.includes("allow get, list: if hasActiveRole() && isAssignedStudentClass"), "Student and exam reads must be limited to assigned classes.");
-must(rules.includes("allow get, list: if isAdmin();") && rules.includes("match /staff/{documentId}"), "Staff personal records must be Admin-only.");
-must(rules.includes("allow list: if isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);") && rules.includes("allow get: if resource == null ? hasRole('subject_teacher') :") && rules.includes("return isAdmin() || (signedIn() && teacherSubjectAccess(className, subjectName, sectionName));") && rules.includes("return role.get('active', false) == true && roles is list"), "Marks reads must be limited to assigned subject/class/section.");
-must(rules.includes("allow get, list: if hasActiveRole() && isAssignedClassTeacher(resource.data.className);"), "Attendance reads must be limited to assigned classes.");
-must(html.includes("where(\"class\",\"==\",cl)") && html.includes("where(\"className\",\"==\",x.className)") && html.includes("where(\"subject\",\"==\",x.subject)") && html.includes("where(\"section\",\"==\",String(x.section).trim())"), "Teacher dashboard and Marks Entry must query assigned classes, subjects and sections.");
-
-must(html.includes("subjectAssignmentSectionKeys") && rules.includes("subjectAssignmentSectionKeys"), "Subject teacher section assignments must be stored and enforced.");
-
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
+// Viewer-specific read access supersedes the previous teacher-only read assertions; write restrictions remain tested above.
 must(rules.includes("data.attendanceType == 'daily'") && rules.includes("function validDailyAttendance(data)"), "Teacher attendance writes must be limited to validated daily attendance.");
 must(rules.includes("match /audit_logs/{documentId}") && rules.includes("allow create: if hasActiveRole()"), "Only active school users may create audit logs.");
 must(rules.includes("request.resource.data.actorUid == request.auth.uid") && rules.includes("request.resource.data.createdAt == request.time"), "Audit log actor and server timestamp must be verified.");

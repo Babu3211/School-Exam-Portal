@@ -30,6 +30,8 @@ service cloud.firestore {
       return get(rolePath(request.auth.uid)).data;
     }
 
+    function isViewer() { return hasActiveRole() && roleData().get('roles', []) is list && roleData().get('roles', []).hasAny(['viewer']); }
+
     function hasRole(roleName) {
       return isAdmin() ||
         (hasActiveRole() &&
@@ -98,12 +100,12 @@ service cloud.firestore {
 
     // Core school records: active school users can read; only Admin can change.
     match /students/{documentId} {
-      allow get, list: if hasActiveRole() && isAssignedStudentClass(resource.data.get('class', resource.data.get('className', '')));
+      allow get, list: if hasActiveRole() && (isViewer() || isAssignedStudentClass(resource.data.get('class', resource.data.get('className', ''))));
       allow create, update, delete: if isAdmin();
     }
 
     match /staff/{documentId} {
-      allow get, list: if isAdmin();
+      allow get, list: if isAdmin() || isViewer();
       allow create, update, delete: if isAdmin();
     }
 
@@ -118,7 +120,7 @@ service cloud.firestore {
     }
 
     match /exams/{documentId} {
-      allow get, list: if hasActiveRole() && isAssignedStudentClass(resource.data.get('className', ''));
+      allow get, list: if hasActiveRole() && (isViewer() || isAssignedStudentClass(resource.data.get('className', '')));
       allow create, update, delete: if isAdmin();
     }
 
@@ -324,9 +326,9 @@ service cloud.firestore {
     match /marks/{documentId} {
       // A teacher may confirm that a new deterministic ID is still unused.
       // Existing records and list queries remain assignment/section restricted.
-      allow get: if resource == null ? hasRole('subject_teacher') :
-        isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);
-      allow list: if isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);
+      allow get: if resource == null ? (hasRole('subject_teacher') || isViewer()) :
+        (isViewer() || isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section));
+      allow list: if isViewer() || isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);
       allow create: if isAdmin() ||
         (isAssignedSubject(request.resource.data.className,
                            request.resource.data.subject,
@@ -385,7 +387,7 @@ service cloud.firestore {
     // Document identity, date, original creator and attendance type are immutable
     // to prevent moving or relabelling an existing attendance register.
     match /attendance/{documentId} {
-      allow get, list: if hasActiveRole() && isAssignedClassTeacher(resource.data.className);
+      allow get, list: if hasActiveRole() && (isViewer() || isAssignedClassTeacher(resource.data.className));
       allow create: if isAdmin() ||
         (hasActiveRole() &&
          validDailyAttendance(request.resource.data) &&
@@ -407,7 +409,7 @@ service cloud.firestore {
 
     // Certificate records contain issued student certificate snapshots; Admin only.
     match /certificates/{certificateId} {
-      allow get, list: if isAdmin();
+      allow get, list: if isAdmin() || isViewer();
       allow create: if isAdmin() &&
         request.resource.data.issuedBy == request.auth.uid &&
         request.resource.data.keys().hasOnly([
@@ -455,16 +457,16 @@ service cloud.firestore {
 
     // A user can read their own role record; Admin manages all role records.
     match /user_roles/{userId} {
-      allow get: if isAdmin() || (signedIn() && request.auth.uid == userId);
-      allow list: if isAdmin();
+      allow get: if isAdmin() || isViewer() || (signedIn() && request.auth.uid == userId);
+      allow list: if isAdmin() || isViewer();
       allow create, update, delete: if isAdmin();
     }
 
     // Audit records are append-only. Only active school users may write
     // their own bounded, well-formed activity record. Admin alone may read.
     match /audit_logs/{documentId} {
-      allow get, list: if isAdmin();
-      allow create: if hasActiveRole() &&
+      allow get, list: if isAdmin() || isViewer();
+      allow create: if hasActiveRole() && (!isViewer() || hasRole('subject_teacher') || hasRole('class_teacher')) &&
         request.resource.data.actorUid == request.auth.uid &&
         request.resource.data.createdAt == request.time &&
         request.resource.data.actorName is string &&
@@ -498,7 +500,7 @@ service cloud.firestore {
     // Admin list is needed for safe per-student re-publish/unpublish and backup.
     match /public_result_lookup/{lookupId} {
       allow get: if true;
-      allow list: if isAdmin();
+      allow list: if isAdmin() || isViewer();
       allow create, update, delete: if isAdmin();
     }
 
@@ -506,7 +508,7 @@ service cloud.firestore {
     // Admin list is needed for publication status, legacy cleanup and backup.
     match /public_results/{resultId} {
       allow get: if true;
-      allow list: if isAdmin();
+      allow list: if isAdmin() || isViewer();
       allow create, update, delete: if isAdmin();
     }
 
@@ -527,11 +529,11 @@ service cloud.firestore {
 
     match /question_bank/{questionId} {
       allow get, list: if hasActiveRole() &&
-        isAssignedSubject(
+        (isViewer() || isAssignedSubject(
           resource.data.get('className', ''),
           resource.data.get('subject', ''),
           resource.data.get('section', '')
-        );
+        ));
       allow create: if hasActiveRole() &&
         isAssignedSubject(
           request.resource.data.get('className', ''),
@@ -591,7 +593,7 @@ service cloud.firestore {
     }
 
     match /question_papers/{paperId} {
-      allow get, list: if isAdmin() ||
+      allow get, list: if isAdmin() || isViewer() ||
         (hasActiveRole() &&
          resource.data.createdBy == request.auth.uid &&
          isAssignedSubject(
