@@ -462,7 +462,7 @@ must(liveWorkflow.includes("github.event.workflow_run.conclusion == 'success'"),
 
 
 must(html.includes("if(e.target.id===\'saveAllMarks\'){if(isViewer())"),"Viewer Marks Save handler must reject writes.");
-must(html.includes(\'if(e.target.closest("#saveAttendance")){if(isViewer())\'),"Viewer Attendance Save handler must reject writes.");
-must(html.includes("if(isViewer())body.querySelectorAll(\'input[data-score]\')"),"Viewer marks inputs must remain read-only.");
-must(html.includes(\'if(isViewer())body.querySelectorAll("[data-attendance-status],[data-attendance-remark]")\'),"Viewer attendance fields must remain disabled.");
+must(html.includes(`if(e.target.closest("#saveAttendance")){if(isViewer())`),"Viewer Attendance Save handler must reject writes.");
+must(html.includes(`if(isViewer())body.querySelectorAll(\'input[data-score]\')`),"Viewer marks inputs must remain read-only.");
+must(html.includes(`if(isViewer())body.querySelectorAll("[data-attendance-status],[data-attendance-remark]")`),"Viewer attendance fields must remain disabled.");
 console.log("V44 requirement regression checks passed.");
