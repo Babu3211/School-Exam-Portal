@@ -3048,7 +3048,18 @@ document.addEventListener("click",async e=>{if(e.target.closest("#loadAttendance
 let dashboardCache={students:[],staff:[],classes:[],exams:[],marks:[],attendance:[]};
 let reportRows=[],reportHeaders=[];
 const reportEsc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-async function fetchDashboardCollections(){
+// Share overlapping dashboard/report reads; keep cache short-lived and scoped to the signed-in user.
+let dashboardFetchPending=null, dashboardFetchAt=0, dashboardFetchUid=null;
+async function fetchDashboardCollections(force=false){
+ if(!auth.currentUser||(!isAdmin()&&currentUserRole?.active!==true))throw new Error("सक्रिय Login आवश्यक छ।");
+ const uid=auth.currentUser.uid;
+ if(!force&&dashboardFetchUid===uid&&dashboardFetchAt&&Date.now()-dashboardFetchAt<15000)return;
+ if(!force&&dashboardFetchUid===uid&&dashboardFetchPending)return dashboardFetchPending;
+ dashboardFetchUid=uid;
+ dashboardFetchPending=(async()=>{await fetchDashboardCollectionsFresh();dashboardFetchAt=Date.now();})();
+ try{await dashboardFetchPending;}catch(error){dashboardFetchAt=0;throw error;}finally{dashboardFetchPending=null;}
+}
+async function fetchDashboardCollectionsFresh(){
  if(!auth.currentUser||(!isAdmin()&&currentUserRole?.active!==true))throw new Error("सक्रिय Login आवश्यक छ।");
  if(isAdmin()){
   const [a,b,c,d,e,f]=await Promise.all(["students","staff","classes","exams","marks","attendance"].map(n=>getDocs(collection(db,n))));
