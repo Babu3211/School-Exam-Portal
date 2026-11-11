@@ -539,7 +539,7 @@ document.addEventListener("click",viewerReadOnlyGuard,true);
 document.addEventListener("submit",viewerReadOnlyGuard,true);
 document.addEventListener("change",viewerReadOnlyGuard,true);
 function applyRoleNavigation(){
- const teacher=!isAdmin()&&!roleHas("viewer");document.body.classList.toggle("smss-viewer-readonly",roleHas("viewer")&&!isAdmin());document.body.classList.toggle("smss-readonly-user",teacher);window.currentUserIsTeacher=!isAdmin();window.rolePageAllowed=rolePageAllowed;
+ const teacher=!isAdmin()&&!roleHas("viewer");document.body.classList.toggle("smss-viewer-readonly",roleHas("viewer")&&!isAdmin());document.body.classList.toggle("smss-readonly-user",teacher);window.currentUserIsTeacher=teacher;window.rolePageAllowed=rolePageAllowed;
  // Non-admin accounts see Dashboard plus only the modules explicitly assigned to their active role.
  // Quick actions and sidebar links are both filtered by rolePageAllowed below.
  document.querySelectorAll("[data-page]").forEach(b=>{b.style.display=rolePageAllowed(b.dataset.page)?"":"none";});
