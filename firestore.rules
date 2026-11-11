@@ -264,7 +264,7 @@ service cloud.firestore {
     // Document identity, date, original creator and attendance type are immutable
     // to prevent moving or relabelling an existing attendance register.
     match /attendance/{documentId} {
-      allow get, list: if hasActiveRole() && isAssignedClassTeacher(resource.data.className);
+      allow get, list: if hasActiveRole() && (isViewer() || isAssignedClassTeacher(resource.data.className));
       allow create: if isAdmin() ||
         (hasActiveRole() &&
          validDailyAttendance(request.resource.data) &&
