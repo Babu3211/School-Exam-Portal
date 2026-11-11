@@ -100,7 +100,7 @@ service cloud.firestore {
 
     // Core school records: active school users can read; only Admin can change.
     match /students/{documentId} {
-      allow get, list: if hasActiveRole() && (isViewer() || isAssignedStudentClass(resource.data.get('class', resource.data.get('className', '')));
+      allow get, list: if hasActiveRole() && (isViewer() || isAssignedStudentClass(resource.data.get('class', resource.data.get('className', ''))));
       allow create, update, delete: if isAdmin();
     }
 
