@@ -469,4 +469,7 @@ must(html.includes(`isViewer()?"Read only":\`<button class="btn alt" type="butto
 must(html.includes(`isViewer()?"Read only":\`<button type="button" data-staff-edit`),"Viewer must not see staff row mutation controls.");
 must(html.includes(`isViewer()?"Read only":\`<button class="btn alt" type="button" data-class-edit`),"Viewer must not see class row mutation controls.");
 must(html.includes(`"subjectCatalogForm","certificateForm","schoolSettingsForm"`),"Viewer must not see subject creation form.");
+must(html.includes(`"studentImportFile","staffAddNewBtn","staffSeed20Btn","staffImportFile"`),"Viewer must not be able to import student or staff Excel files.");
+must(html.includes(`button.previousElementSibling?.tagName==="LABEL"`),"Viewer Excel import labels must be hidden.");
+must(html.includes(`"studentAddNewBtn","generateMissingStudentCodes"`),"Viewer must not create students or bulk-generate result codes.");
 console.log("V44 requirement regression checks passed.");
