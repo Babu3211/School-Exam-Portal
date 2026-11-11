@@ -328,7 +328,7 @@ service cloud.firestore {
       // Existing records and list queries remain assignment/section restricted.
       allow get: if resource == null ? (hasRole('subject_teacher') || isViewer()) :
         (isViewer() || isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section));
-      allow list: if isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);
+      allow list: if isViewer() || isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);
       allow create: if isAdmin() ||
         (isAssignedSubject(request.resource.data.className,
                            request.resource.data.subject,
@@ -466,7 +466,7 @@ service cloud.firestore {
     // their own bounded, well-formed activity record. Admin alone may read.
     match /audit_logs/{documentId} {
       allow get, list: if isAdmin() || isViewer();
-      allow create: if hasActiveRole() && !isViewer() &&
+      allow create: if hasActiveRole() && (!isViewer() || hasRole('subject_teacher') || hasRole('class_teacher')) &&
         request.resource.data.actorUid == request.auth.uid &&
         request.resource.data.createdAt == request.time &&
         request.resource.data.actorName is string &&
