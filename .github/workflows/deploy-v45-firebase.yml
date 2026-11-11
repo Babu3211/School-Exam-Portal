@@ -24,16 +24,21 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: npm
+          node-version: '22'
       - name: Install dependencies
-        run: npm ci
-      - name: JavaScript syntax check
-        run: node --check scripts/check-v44-requirements.mjs
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: JavaScript syntax checks
+        run: |
+          node scripts/check-inline-js.mjs
+          node --check cdc-question-paper.js
+          node --check scripts/check-v44-requirements.mjs
       - name: Portal regression checks
         run: node scripts/check-v44-requirements.mjs
-      - name: Question paper checks
-        run: npm run test:question-paper
+      - name: IEMIS, PWA and question paper checks
+        run: |
+          npm run test:iemis
+          npm run test:pwa
+          npm run test:question-paper
       - name: Firestore security emulator checks
         run: npm run test:rules
       - name: Verify Firebase credentials
@@ -46,7 +51,7 @@ jobs:
           fi
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
           chmod 600 "$RUNNER_TEMP/firebase-service-account.json"
-      - name: Deploy hosting and Firestore rules
+      - name: Deploy hosting only (never change student data or Firestore rules)
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-        run: npx firebase-tools deploy --project exam-portal-smss-95016 --only hosting,firestore:rules --non-interactive
+        run: npx firebase-tools deploy --project exam-portal-smss-95016 --only hosting --non-interactive
