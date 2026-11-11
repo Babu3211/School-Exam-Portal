@@ -344,7 +344,7 @@ function certificateStudentLabel(st){return [st.studentNameNepali||st.studentNam
 async function loadCertificatesPage(){
  const studentSelect=document.getElementById("certificateStudent"),body=document.getElementById("certificatesBody");if(!studentSelect||!body)return;
  try{
-  requireAdmin();
+  if(!isAdmin()&&!isViewer())throw new Error("Certificate records require Admin or Viewer access.");
   const [studentsSnap,certSnap]=await Promise.all([getDocs(collection(db,"students")),getDocs(collection(db,"certificates"))]);
   certificateStudents=studentsSnap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.active!==false).sort((a,b)=>String(a.studentName||"").localeCompare(String(b.studentName||"")));
   issuedCertificates=certSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.issuedAtIso||"").localeCompare(String(a.issuedAtIso||"")));
@@ -1028,7 +1028,7 @@ async function loadClasses(){
  const body=document.getElementById("classwiseSubjects");if(!body)return;
  body.innerHTML='<p class="hint">Firebase बाट कक्षा तथा विषय लोड हुँदैछ...</p>';
  try{
-  if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw new Error("Admin login आवश्यक छ।");
+  if(!auth.currentUser||(!isAdmin()&&!isViewer()))throw new Error("Admin or Viewer login आवश्यक छ।");
   const snap=await getDocs(collection(db,"classes"));
   cachedClasses=snap.docs.map(d=>({id:d.id,...d.data()}));
   let subjectSnap=null;try{subjectSnap=await getDocs(collection(db,"subjects"));}catch(subjectReadError){console.warn("Subject Bank read unavailable; legacy class subjects remain usable.",subjectReadError.code||subjectReadError.message);}
@@ -1220,7 +1220,7 @@ async function loadExams(){
  const body=document.getElementById("examsBody");if(!body)return;
  body.innerHTML='<tr><td class="empty" colspan="9">Firebase बाट परीक्षा विवरण लोड हुँदैछ...</td></tr>';
  try{
-  if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw new Error("Admin login आवश्यक छ।");
+  if(!auth.currentUser||(!isAdmin()&&!isViewer()))throw new Error("Admin or Viewer login आवश्यक छ।");
   const snap=await getDocs(collection(db,"exams"));
   cachedExams=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.startDate||"").localeCompare(String(b.startDate||"")));
   renderExams();
