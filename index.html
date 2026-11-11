@@ -525,6 +525,8 @@ function viewerReadOnlyGuard(event){
  if(event.type==="click"){
   const action=target.closest("button,[data-role-edit],[data-role-toggle]");
   if(!action)return;
+  // Signing out is a session action, not a data mutation; never trap Viewer accounts.
+  if(action.id==="logoutBtn"||action.closest("#logoutBtn"))return;
   if(action.matches("[data-page],[data-go]")||action.closest("[data-page],[data-go]"))return;
   const id=String(action.id||"").toLowerCase(),label=String(action.textContent||"").toLowerCase();
   const allowed=id==="loadreportbtn"||/search|refresh|reload|filter|view|preview|print|download|export|show|open|generate report|build report/.test(id+" "+label);
