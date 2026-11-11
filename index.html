@@ -515,6 +515,11 @@ function rolePageAllowed(page){
 // Viewer has navigation and search access, never mutation access. Firestore rules enforce the same boundary.
 function viewerReadOnlyGuard(event){
  if(!roleHas("viewer")||isAdmin())return;
+ // An explicitly assigned teaching role keeps its existing, Firestore-scoped task rights.
+ // Viewer-only accounts still cannot submit changes anywhere.
+ const assignedSubjectTask=(window.currentPage==="marks"||window.currentPage==="question-papers")&&roleHas("subject_teacher")&&((currentUserRole?.subjectAssignments||[]).length>0||(currentUserRole?.subjectAssignmentKeys||[]).length>0);
+ const assignedClassTask=window.currentPage==="attendance"&&roleHas("class_teacher")&&classTeacherNames().length>0;
+ if(assignedSubjectTask||assignedClassTask)return;
  const target=event.target;
  if(event.type==="submit"){event.preventDefault();event.stopImmediatePropagation();return;}
  if(event.type==="click"){
