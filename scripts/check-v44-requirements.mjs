@@ -465,4 +465,8 @@ must(html.includes("if(e.target.id===\'saveAllMarks\'){if(isViewer())"),"Viewer 
 must(html.includes(`if(e.target.closest("#saveAttendance")){if(isViewer())`),"Viewer Attendance Save handler must reject writes.");
 must(html.includes(`if(isViewer())body.querySelectorAll(\'input[data-score]\')`),"Viewer marks inputs must remain read-only.");
 must(html.includes(`if(isViewer())body.querySelectorAll("[data-attendance-status],[data-attendance-remark]")`),"Viewer attendance fields must remain disabled.");
+must(html.includes(`isViewer()?"Read only":\`<button class="btn alt" type="button" data-student-edit`),"Viewer must not see student row mutation controls.");
+must(html.includes(`isViewer()?"Read only":\`<button type="button" data-staff-edit`),"Viewer must not see staff row mutation controls.");
+must(html.includes(`isViewer()?"Read only":\`<button class="btn alt" type="button" data-class-edit`),"Viewer must not see class row mutation controls.");
+must(html.includes(`"subjectCatalogForm","certificateForm","schoolSettingsForm"`),"Viewer must not see subject creation form.");
 console.log("V44 requirement regression checks passed.");
