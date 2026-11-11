@@ -285,7 +285,7 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Certificate records contain issued student certificate snapshots; Admin only.
+    // Issued certificate snapshots are readable by Admin and Viewer; only Admin may issue or modify them.
     match /certificates/{certificateId} {
       allow get, list: if isAdmin() || isViewer();
       allow create: if isAdmin() &&
