@@ -257,7 +257,7 @@ must(rules.includes("request.resource.data.createdBy == resource.data.createdBy"
 must(rules.includes("function isAssignedStudentClass(className)") && rules.includes("allow get, list: if hasActiveRole() && (isViewer() || isAssignedStudentClass"), "Student and exam reads must be limited to assigned classes.");
 must(rules.includes("allow get, list: if isAdmin() || isViewer();") && rules.includes("match /staff/{documentId}"), "Staff personal records must be Admin-only.");
 must(rules.includes("allow get, list: if hasActiveRole() && (isViewer() || isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section));"), "Marks reads must be limited to assigned subject/class/section.");
-must(rules.includes("allow get, list: if hasActiveRole() && isAssignedClassTeacher(resource.data.className);"), "Attendance reads must be limited to assigned classes.");
+must(rules.includes("allow get, list: if hasActiveRole() && (isViewer() || isAssignedClassTeacher(resource.data.className));"), "Attendance reads must be limited to assigned classes.");
 must(html.includes("where(\"class\",\"==\",cl)") && html.includes("where(\"className\",\"==\",x.className)") && html.includes("where(\"subject\",\"==\",x.subject)"), "Teacher dashboard must query only assigned classes and subjects.");
 
 must(html.includes("subjectAssignmentSectionKeys") && rules.includes("subjectAssignmentSectionKeys"), "Subject teacher section assignments must be stored and enforced.");
