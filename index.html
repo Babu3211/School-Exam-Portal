@@ -3019,7 +3019,7 @@ function renderAttendanceStudents(saved=[]){const body=document.getElementById("
 function attendanceSetToday(){const input=document.getElementById("attendanceDate");if(!input)return;input.value=attendanceAdToBs(attendanceNepalTodayAD());input.dispatchEvent(new Event("change",{bubbles:true}));}
 async function loadAttendancePage(){
  const date=document.getElementById("attendanceDate");if(!date)return;
- if(!isAdmin()){
+ if(!isAdmin()&&!roleHas("viewer")){
   const classSel=document.getElementById("attendanceClass");
   if(classSel){classSel.disabled=true;classSel.innerHTML='<option value="">तपाईंको Assignment लोड हुँदैछ...</option>';}
  }
