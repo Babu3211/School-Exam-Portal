@@ -33,6 +33,18 @@ jobs:
           assert not unexpected, f'Unexpected changes to protected V44/IEMIS files: {sorted(unexpected)}'
           print('Approved dashboard and IEMIS source files remain protected.')
           PY
+      - name: Protect existing Android APK and iPhone PWA assets
+        run: |
+          python - <<'PY'
+          import subprocess
+          protected=['manifest.webmanifest','service-worker.js','icon-192.png','icon-512.png','apple-touch-icon.png']
+          changed=set(subprocess.check_output(['git','diff','--name-only','origin/main','HEAD'],text=True).splitlines())
+          bad=sorted(set(protected)&changed)
+          assert not bad, f'Existing PWA/APK assets unexpectedly modified: {bad}'
+          android=[p for p in changed if p.startswith(('android/','.github/workflows/android','gradle/')) or p.endswith(('.apk','.aab'))]
+          assert not android, f'Existing Android packaging unexpectedly modified: {android}'
+          print('Existing Android packaging and iPhone PWA assets are unchanged.')
+          PY
       - name: Install test dependencies
         run: npm install --no-package-lock --no-audit --no-fund
       - name: JavaScript syntax and approved dashboard regression
