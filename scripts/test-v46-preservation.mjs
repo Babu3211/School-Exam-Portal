@@ -44,6 +44,7 @@ required(html.includes("subjects.some(sub=>roleHas('viewer')||iemisEntryAllowed(
 required(html.includes("canEdit:(st,sub)=>!roleHas('viewer')&&iemisEntryAllowed(st,sub,cl,examId)"), "Viewer must not edit IEMIS grid");
 required(html.includes("if(saveButton)saveButton.disabled=roleHas('viewer')"), "Viewer marks save button must remain disabled");
 required(html.includes("roleHas('viewer')?'readonly aria-readonly=\"true\"'"), "Viewer legacy marks inputs must be read-only");
+required(html.includes("const students=marksStudents.filter(x=>canonicalStudentClass(x.class??x.className)===canonicalStudentClass(cl)"), "Marks student list must normalize Nepali and English class labels");
 required(html.includes("initIdleLogout"), "Keep idle-logout initialization");
 required(idle.includes("minutes=60"), "Keep 60-minute inactivity timeout");
 required(activity.includes("export"), "Keep activity module");
