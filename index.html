@@ -2157,6 +2157,7 @@ async function loadMarksEntry(){
   refreshEntryExamOptions();
   fillEntrySubjects();
   entryMsg(`विद्यार्थी ${marksStudents.length}, कक्षा ${entryClassNames.length}, परीक्षा ${marksExams.length}, सेटिङ ${marksSettings.length} र पुराना Marks ${existingMarks.length} लोड भए।`);
+  if(document.getElementById("entryExam")?.value){if(document.getElementById("useIemisEntryGrid")?.checked)mountIemisEntryGrid();else if(document.getElementById("entrySubject")?.value)renderEntryStudents();}
   return true;
  }catch(e){
   console.error('Marks entry load failed',e);
