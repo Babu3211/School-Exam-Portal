@@ -72,7 +72,17 @@ export function initUserActivity({auth,db}){
    const logins=new Set(todayEvents.filter(x=>x.type==="login"&&day(x.at)===today).map(x=>x.uid));
    const total=users.length+Number(!known.has(ADMIN_UID));
    const active=users.filter(x=>x.active===true).length+Number(!known.has(ADMIN_UID));
-   const cards=[["Total Users",total],["Active Accounts",active],["Online (approx.)",online.size],["Today's Logins",logins.size]];
+   const cards=[["Total Users",total],["Active Accounts",active],["Online (approx.)",online.size],["Offline Accounts",Math.max(0,active-online.size)],["Today's Logins",logins.size]];
+   const roster=[...users];
+   if(!known.has(ADMIN_UID))roster.push({uid:ADMIN_UID,displayName:"Admin",active:true});
+   const rosterRows=roster.filter(u=>u.active===true)
+    .sort((a,b)=>Number(online.has(b.uid))-Number(online.has(a.uid))||String(a.displayName||a.email||a.uid).localeCompare(String(b.displayName||b.email||b.uid)))
+    .map(u=>{
+     const name=u.displayName||u.email||(u.uid===ADMIN_UID?"Admin":u.uid);
+     const seen=lastSeen.get(u.uid);
+     const time=seen?new Date(seen).toLocaleString("en-GB",{timeZone:"Asia/Kathmandu"}):"Not recorded";
+     return '<tr><td>'+esc(name)+'</td><td>'+(online.has(u.uid)?"Online":"Offline")+'</td><td>'+esc(time)+'</td></tr>';
+    }).join("");
    host.innerHTML='<h3 style="margin:0 0 10px">User Activity (Admin Only)</h3><div class="grid stats">'+cards.map(([k,v])=>'<div class="card"><div class="statlabel">'+k+'</div><div class="num">'+v+'</div></div>').join("")+'</div><details open><summary style="cursor:pointer;font-weight:700">User Online / Offline Status</summary><div class="tablewrap"><table><thead><tr><th>User</th><th>Status</th><th>Last Seen (Nepal)</th></tr></thead><tbody>'+rosterRows+'</tbody></table></div></details><details><summary style="cursor:pointer;font-weight:700">Recent Login / Logout History</summary><div class="tablewrap"><table><thead><tr><th>User</th><th>Event</th><th>Time (Nepal)</th></tr></thead><tbody>'+activity.slice(0,50).map(e=>{const u=known.get(e.uid);const name=u?.displayName||u?.email||(e.uid===ADMIN_UID?"Admin":"User");const time=e.at?.toDate?.().toLocaleString("en-GB",{timeZone:"Asia/Kathmandu"})||"Pending";return '<tr><td>'+esc(name)+'</td><td>'+esc(e.type)+'</td><td>'+esc(time)+'</td></tr>';}).join("")+'</tbody></table></div></details><p class="hint">Online is estimated from recent heartbeats. Login counts include recorded events only.</p>';
   }catch(err){host.textContent="User activity unavailable: "+(err.code||"Check permissions/network");}
  }
