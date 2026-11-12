@@ -127,3 +127,8 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - Commit `fd11782b21c37c1caf38a7b54751f4855a68e200` changes Teacher Attendance load to launch assigned-class student and daily attendance reads concurrently. Existing `where(class == cl)` and `where(className == cl, attendanceType == daily)` Firestore scopes, display, and saved data remain unchanged.
 - Regression `scripts/test-v46-teacher-attendance-concurrency.mjs` added and registered in CI (`4fbdd3b503ac8049551cdf99e33c12619d68c40c`). CI/browser run not yet verified. Legacy class alias query/security mismatch still unresolved.
 - IEMIS live verification deferred until Work Mode available. No production deploy or database writes.
+
+## 2026-11-12 Teacher Attendance selection retention
+- Commit `09f6de40c0712c46012a60040dc4fc7ff4b2db4b` captures selected class before Teacher assignment-loading resets the dropdown, and restores the same canonical class after loading, if still assigned. Admin/Viewer restoration remains unchanged; no persisted class values or Firestore rules modified.
+- Added `scripts/test-v46-attendance-class-preserve.mjs` and CI step (`e26cd8e77ec28870dfa892c85adf70f8802fd05a`). CI/browser pass remains unverified.
+- Work Mode IEMIS comparison deferred; exact-match Teacher Firestore alias issue remains unresolved; production untouched.
