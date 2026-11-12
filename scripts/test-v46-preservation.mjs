@@ -61,6 +61,7 @@ required(html.includes("async function saveIemisEntryRecords(entries,context,exa
 required(html.includes("if(e.target.id==='saveAllMarks'){if(roleHas('viewer')){entryMsg("), "Save All Marks must reject viewer before grid or legacy writes");
 required(html.includes("console.error('Marks entry load failed',e);\n  if(!isAdmin()&&!roleHas('viewer'))"), "Viewer load errors must not be treated as teacher assignment failures");
 required(html.includes("const key=canonicalStudentClass(x);if(seen.has(key))return false;seen.add(key);return true;"), "Marks Entry must deduplicate class names across Nepali and English variants");
+required(html.includes("const save=document.getElementById('saveAllMarks');if(save)save.disabled=roleHas('viewer');"), "IEMIS grid Save button must remain disabled for viewers");
 required(html.includes("initIdleLogout"), "Keep idle-logout initialization");
 required(idle.includes("minutes=60"), "Keep 60-minute inactivity timeout");
 required(activity.includes("export"), "Keep activity module");
