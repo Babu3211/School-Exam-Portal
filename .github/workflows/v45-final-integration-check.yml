@@ -18,6 +18,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Protect approved dashboard and IEMIS source files
+        run: |
+          git fetch --no-tags --depth=1 origin main
+          python - <<'PY'
+          import subprocess
+          allowed={
+            '.github/workflows/v45-final-integration-check.yml',
+            'index.html', 'user-activity.js', 'idle-logout.js',
+            'firestore.rules', 'scripts/test-v45-final-integration.mjs'
+          }
+          changed=set(subprocess.check_output(['git','diff','--name-only','origin/main','HEAD'],text=True).splitlines())
+          unexpected=changed-allowed
+          assert not unexpected, f'Unexpected changes to protected V44/IEMIS files: {sorted(unexpected)}'
+          print('Approved dashboard and IEMIS source files remain protected.')
+          PY
       - name: Install test dependencies
         run: npm install --no-package-lock --no-audit --no-fund
       - name: JavaScript syntax and approved dashboard regression
