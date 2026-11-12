@@ -51,6 +51,8 @@ required(html.includes('if(!attendanceDataReady)await loadAttendancePage();else 
 required(html.includes('attendanceDataReady=true;populateAttendanceSubjects()'), "Attendance data readiness must only be marked after records load");
 required(html.includes("if(e.target.id==='refreshEntry'){resetIemisEntryGrid();await loadMarksEntry();return}"), "Marks Entry refresh must not clear newly loaded student rows");
 required(!html.includes("Refresh भयो। विद्यार्थी सूची फेरि देखाउनुहोस्।"), "Refresh must not instruct user to reload already fetched students");
+required(html.includes("if(!marksEntryDataReady&&!(await loadMarksEntry()))return"), "Marks Show Students must await initial Firestore data");
+required(html.includes("marksEntryDataReady=true;"), "Marks data readiness must be set after successful load");
 required(html.includes("initIdleLogout"), "Keep idle-logout initialization");
 required(idle.includes("minutes=60"), "Keep 60-minute inactivity timeout");
 required(activity.includes("export"), "Keep activity module");
