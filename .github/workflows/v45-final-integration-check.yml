@@ -27,7 +27,7 @@ jobs:
           python - <<'PY'
           import subprocess
           allowed={
-            '.github/workflows/v45-final-integration-check.yml', '.github/workflows/v45-final-production-release.yml',
+            '.github/workflows/v45-final-integration-check.yml', '.github/workflows/v45-final-production-release.yml', '.github/workflows/v45-final-firestore-rules-release.yml',
             'index.html', 'user-activity.js', 'idle-logout.js',
             'firestore.rules', 'scripts/test-v45-final-integration.mjs', 'scripts/test-attendance-bs-today.mjs', 'scripts/check-v44-requirements.mjs', 'scripts/test-user-activity-rules.mjs'
           }
