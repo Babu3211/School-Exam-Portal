@@ -60,3 +60,8 @@ Current branch: `smss-v46-integration`. Latest verified GitHub commit before thi
 
 ### New chat handoff instruction
 User prioritizes speed and short replies. **Read this document from GitHub branch `smss-v46-integration` first, inspect latest commits, then continue actual work**; do not start over or ask user to restate requirements. Keep updates brief, with commit link and clear test/deploy status.
+
+## 2026-11-12 continuation — Marks Entry loading optimization
+- Commit `0b24e0c78053e61a62b78de28fdc795eaa120128` on `smss-v46-integration`: load `classes` snapshot concurrently with students/exams/mark_settings/marks for Admin/Viewer Marks Entry, instead of awaiting classes after the other four queries. This removes one sequential Firestore round trip without changing saved data or permissions.
+- GitHub update succeeded. **No CI/browser/Firestore emulator test success has been verified** for this commit. Local git clone was unavailable due to DNS resolution failure.
+- Next: verify GitHub integration gate, first-load Show Students in Attendance/Marks Entry, Viewer role E2E and rules; keep production unchanged.
