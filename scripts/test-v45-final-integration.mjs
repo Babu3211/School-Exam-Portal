@@ -9,6 +9,7 @@ assert.ok(!html.includes('V45 Trial'),'Obsolete dashboard label must not return'
 assert.ok(html.includes('import {initUserActivity} from "./user-activity.js'),'Activity module must be loaded');
 assert.ok(html.includes('import {initIdleLogout} from "./idle-logout.js'),'Idle module must be loaded');
 assert.ok(html.includes('minutes:60'),'60-minute timeout required');
+assert.ok(html.includes('onTimeout:async user=>{if(user)await userActivity.logout(user);await signOut(auth);'),'Automatic idle logout must be recorded in activity history');
 assert.ok(html.includes('idleSession.start(user)')&&html.includes('idleSession.stop()'),'Idle lifecycle incomplete');
 assert.ok(html.includes('await userActivity.login(credential.user)'),'Login event missing');
 assert.ok(html.includes('await userActivity.logout(user)'),'Logout event missing');
