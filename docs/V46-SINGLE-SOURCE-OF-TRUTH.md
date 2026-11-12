@@ -102,3 +102,8 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - User confirms the Work Mode usage limit has been reached. Actual authenticated IEMIS 2083 comparison is **paused until Work Mode becomes available again**. Do not repeatedly request IEMIS login or claim that IEMIS parity is verified during this pause.
 - Continue independent V46 development now: English-only visible exam/class/subject/dropdown UI, no-refresh student/attendance/marks loading, Teacher/Viewer security and regression tests, without altering real records or production.
 - Once Work Mode resumes, compare actual IEMIS 2083 Mark Entry Ledger, Mark Ledger, Grade Ledger, Grade Sheet for Classes 1, 6 and 9, then replicate agreed group structures, preserving 9–10 Computer 4/36/10 and CDC grading requirements.
+
+## 2026-11-12 Attendance English status labels
+- Commit `7efd19d06c4a5f998ab05712cff2aabe0652494d` changes Attendance student-row visible status labels to Present/Absent/Leave, Remarks placeholder, inactive/archived and no-students labels to English; original persisted status codes `present`, `absent`, `leave` and saved record matching remain unchanged.
+- `scripts/test-v46-attendance-status-english.mjs` added and CI wired (`7fc5d0d5003df3db531ff8e90b1443adc181482f`). Automated test pass remains unverified because local GitHub clone is blocked by DNS and authenticated browser is not available here.
+- IEMIS live comparison remains deferred per user due to Work Mode limit. No production, Firestore rules or student/attendance record writes.
