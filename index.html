@@ -282,7 +282,7 @@ document.addEventListener("click",e=>{const pageButton=e.target.closest("[data-p
 import {initializeApp} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
 import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut,createUserWithEmailAndPassword,deleteUser,sendPasswordResetEmail} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 
-import {initUserActivity} from "./user-activity.js?v=20261111";
+import {initUserActivity} from "./user-activity.js?v=20261112-online-offline";
 import {initIdleLogout} from "./idle-logout.js?v=20261111";
 import {getFirestore,collection,addDoc,getDocs,doc,getDoc,setDoc,updateDoc,serverTimestamp,query,where,writeBatch,runTransaction,orderBy,limit} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyDOwR82MTwBK1BRb-5wSVX2-EITCzJ1A5c",authDomain:"exam-portal-smss-95016.firebaseapp.com",projectId:"exam-portal-smss-95016",storageBucket:"exam-portal-smss-95016.firebasestorage.app",messagingSenderId:"86041985011",appId:"1:86041985011:web:e3806d74f2ae39d97c5c86"};
