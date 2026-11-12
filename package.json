@@ -12,7 +12,8 @@
     "test:v46-preservation": "node scripts/test-v46-preservation.mjs",
     "test:v46-class-normalization": "node scripts/test-v46-class-normalization.mjs",
     "test:v46-english-exam": "node scripts/test-v46-english-exam-display.mjs",
-    "test:v46-attendance-english": "node scripts/test-v46-attendance-english.mjs"
+    "test:v46-attendance-english": "node scripts/test-v46-attendance-english.mjs",
+    "test:v46-attendance-class": "node scripts/test-v46-attendance-class-english.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
