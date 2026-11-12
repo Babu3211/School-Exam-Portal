@@ -41,3 +41,22 @@ User may encounter 'conversation too long' and open a new chat. Read this file, 
 - `android-app/capacitor.config.json` on main declares appId `com.smss.examportal`, appName `SMSS Exam Portal`, server.url `https://exam-portal-smss-95016.web.app/`, and cleartext false. The installed wrapper points to Firebase Live; hosting changes may propagate to the app's web UI, but native updates require rebuilding and installing an updated APK. Do not change appId or live URL.
 - The V45 branch does not contain `android-app/capacitor.config.json` at the checked path, so copying V45 wholesale onto main/V46 would risk removing Android packaging. Retain main's Android files.
 - The goal is **one active V46 branch/codebase and one production deploy pipeline**, not literally one monolithic source file. Preserve backup refs until verification, then archive rather than blindly delete.
+
+## Latest V46 work — 2026-11-12 (continuation checkpoint)
+Current branch: `smss-v46-integration`. Latest verified GitHub commit before this documentation update: `361ab22a1e58de6d16083f70914bb02d77d9d313`.
+- ECD and Classes 1–12 options, normalized Nepali/English class names and ECD-first sorting were added in V46. **ECD/11–12 assessment structures are NOT validated**. Classes 11–12 are now blocked from silently using 9–10 grading formulas.
+- Attendance Refresh previously cleared already-loaded student rows; this explicit clearing was removed. **The broader async first-load/Show Students issue is NOT yet verified fixed.**
+- Marks Entry legacy student filter now uses `canonicalStudentClass` so Class 6 / कक्षा ६ can match; this is code-level only, not browser-verified.
+- Viewer Marks Entry: configured subject options and IEMIS grid/student visibility improved without teacher assignments. Viewer IEMIS grid editing disabled; legacy inputs read-only and legacy Save button disabled. **Need real role E2E/security tests.**
+- Structural regression assertions added in `scripts/test-v46-preservation.mjs`; **no successful test run or CI result verified yet**. Do not claim test passed merely because assertions were committed.
+- No production deployment, Firestore mutation, branch deletion or main modification occurred during this sequence.
+
+### Next exact actions (prioritized)
+1. Run `npm run test:v46-preservation`, syntax checks and existing `npm test`/specific regression scripts; repair failing assertions or code. Obtain GitHub Actions run evidence.
+2. Diagnose and fix **initial** class selection/Show Students in Attendance, Marks Entry, Students; await asynchronous Firestore data and avoid clearing rendered rows. Verify no manual Refresh needed.
+3. Audit Viewer read-only across all screens and Firestore Rules, not just UI; check ECD and 11–12 class options and prevent unvalidated grade calculations.
+4. Compare V45-only features against V46 and continue the previously started IEMIS 2083 Work Mode parity checks. Do not claim Work browser session resumed unless actually accessible.
+5. Browser/role/IEMIS/PWA/Android end-to-end tests, backup/rollback, explicit production approval, then merge/deploy; never blindly merge V45 or alter main early.
+
+### New chat handoff instruction
+User prioritizes speed and short replies. **Read this document from GitHub branch `smss-v46-integration` first, inspect latest commits, then continue actual work**; do not start over or ask user to restate requirements. Keep updates brief, with commit link and clear test/deploy status.
