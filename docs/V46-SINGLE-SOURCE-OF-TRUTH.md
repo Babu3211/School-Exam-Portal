@@ -117,3 +117,8 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - Commit `bd0dede8a8c245a2993110a58f5ae6ccbd095eca` starts Teacher-assigned marks queries and `mark_settings` read concurrently using `Promise.all`, instead of waiting for all marks before requesting settings. Assignment-scoped mark/student/exam query filters and Firestore rules unchanged.
 - Added structural regression `scripts/test-v46-teacher-marks-concurrency.mjs`, registered in CI (`f8fbeac0c3ca6649255b69bbd516429c6c31c530`). No measured latency improvement or test pass claimed without CI/browser verification.
 - Exact-match Teacher class-name/rules mismatch still unresolved; IEMIS Work Mode comparison deferred. No production or data writes.
+
+## 2026-11-12 Teacher Marks Entry full parallel read improvement
+- Commit `4a79d65c65a579d12290bf7b91ab8173c090a811` launches Teacher student, exam, marks, and mark_settings requests concurrently and awaits all together, instead of sequential student→exam→marks/settings fetches. All existing exact assignment-scoped Firestore queries retained; no security rules, stored data or production changes.
+- Existing regression `scripts/test-v46-teacher-marks-concurrency.mjs` updated in commit `839bc7c932ceaecfc52758782cc87087ed195f9d` to verify all four request paths. CI pass and actual browser speed remain unverified.
+- Teacher legacy Nepali/English Firestore exact-match class assignment mismatch remains a separate unresolved blocker. IEMIS live comparison paused until Work Mode available.
