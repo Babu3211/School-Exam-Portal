@@ -20,6 +20,7 @@ const ADMIN = "K6uSLmqg0vWCtCuzwtxKzFpQMu62";
 const teacherUid = "teacher-001";
 const inactiveUid = "inactive-001";
 const otherUid = "other-001";
+const viewerUid = "viewer-001";
 
 async function seed() {
   await testEnv.withSecurityRulesDisabled(async context => {
@@ -32,6 +33,7 @@ async function seed() {
       subjectAssignmentSectionKeys: ["9::Mathematics::A", "9::ऐच्छिक प्रथम: वातावरण विज्ञान::A"],
       classTeacherClassNames: ["9"]
     });
+    await setDoc(doc(db, "user_roles", viewerUid), { active: true, roles: ["viewer"] });
     await setDoc(doc(db, "user_roles", inactiveUid), {
       active: false, roles: ["subject_teacher"]
     });
@@ -126,6 +128,23 @@ try {
   await assertFails(getDoc(doc(db(teacherUid), "students", "student-10")));
   await assertSucceeds(getDocs(query(collection(db(teacherUid), "students"), where("class", "==", "9"))));
   await assertFails(getDoc(doc(db(teacherUid), "staff", "staff-1")));
+  // Viewer may inspect school-wide records but must not modify any of them.
+  await assertSucceeds(getDoc(doc(db(viewerUid), "students", "student-1")));
+  await assertSucceeds(getDoc(doc(db(viewerUid), "students", "student-10")));
+  await assertSucceeds(getDoc(doc(db(viewerUid), "staff", "staff-1")));
+  await assertSucceeds(getDoc(doc(db(viewerUid), "exams", "exam-1")));
+  await assertSucceeds(getDoc(doc(db(viewerUid), "marks", "mark-other-subject")));
+  await assertFails(setDoc(doc(db(viewerUid), "students", "viewer-forged"), { name: "Forged", class: "9" }));
+  await assertFails(updateDoc(doc(db(viewerUid), "students", "student-1"), { name: "Forged" }));
+  await assertFails(deleteDoc(doc(db(viewerUid), "students", "student-1")));
+  await assertFails(setDoc(doc(db(viewerUid), "staff", "viewer-forged"), { name: "Forged" }));
+  await assertFails(setDoc(doc(db(viewerUid), "school_settings", "main"), { schoolName: "Forged" }));
+  await assertFails(setDoc(doc(db(viewerUid), "marks", "viewer-forged"), validMark({createdBy:viewerUid})));
+  await assertFails(updateDoc(doc(db(viewerUid), "marks", "mark-other-subject"), { totalObtained: 99 }));
+  await assertFails(deleteDoc(doc(db(viewerUid), "marks", "mark-other-subject")));
+  await assertFails(getDocs(collection(db(viewerUid), "user_activity")));
+  await assertFails(getDocs(collection(db(viewerUid), "user_presence")));
+
   await assertSucceeds(getDoc(doc(db(teacherUid), "exams", "exam-1")));
   await assertFails(getDoc(doc(db(inactiveUid), "students", "student-1")));
   await assertFails(setDoc(doc(db(teacherUid), "students", "forged-student"), { name: "Forged", class: "9" }));
