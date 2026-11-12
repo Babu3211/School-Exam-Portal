@@ -14,7 +14,7 @@ User authorizes eventual single V46 on `main` and Firebase/GitHub Pages/APK, but
 | `loadStudents(` references | 11 | 11 | 11 |
 | `loadAttendancePage(` references | 5 | 6 | 5 |
 
-These are **code-presence signals, not full feature tests**. V46 started from `main` and currently lacks the V45 viewer/idleLogout implementations in index.html; simply declaring V46 final now would be a regression. Investigate how V44/main represents viewer/idle functionality before selectively integrating.
+**Correction after deeper inspection:** These are only identifier-presence signals, not functional tests. The `main`/V46 index DOES import `idle-logout.js`, calls `initIdleLogout`, contains viewer references and `rolePageAllowed`. Absence of the exact `isViewer` and `idleLogout` identifier names does **not** prove missing functionality. Compare behavior and security before concluding a regression. The shared `idle-logout.js` content is identical on main and V45. Do not transplant V45 code based on names alone.
 
 GitHub `main...smss-v45-work` comparison: diverged, 285 commits ahead / 344 behind; 22 files differ. The 22 include `index.html`, `firestore.rules`, `sw.js`, `firebase.json`, `manifest.webmanifest`, `cdc-question-paper.js`, `idle-logout.js`, `user-activity.js`, tests and workflow files.
 
