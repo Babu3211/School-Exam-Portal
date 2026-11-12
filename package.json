@@ -17,7 +17,8 @@
     "test:v46-english-dropdown-status": "node scripts/test-v46-english-dropdown-status.mjs",
     "test:v46-attendance-status": "node scripts/test-v46-attendance-status-english.mjs",
     "test:v46-attendance-messages": "node scripts/test-v46-attendance-messages.mjs",
-    "test:v46-teacher-marks-concurrency": "node scripts/test-v46-teacher-marks-concurrency.mjs"
+    "test:v46-teacher-marks-concurrency": "node scripts/test-v46-teacher-marks-concurrency.mjs",
+    "test:v46-teacher-attendance-concurrency": "node scripts/test-v46-teacher-attendance-concurrency.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
