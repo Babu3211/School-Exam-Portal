@@ -53,7 +53,10 @@ export function initUserActivity({auth,db}){
    ]);
    const users=roles.docs.map(x=>({uid:x.id,...x.data()}));
    const known=new Map(users.map(x=>[x.uid,x]));
-   const online=new Set(presenceDocs.docs.filter(x=>x.data().online===true&&activeWithin(x.data().updatedAt,120000)).map(x=>x.data().uid));
+   const sessions=presenceDocs.docs.map(x=>x.data());
+   const online=new Set(sessions.filter(x=>x.online===true&&activeWithin(x.updatedAt,120000)).map(x=>x.uid));
+   const lastSeen=new Map();
+   for(const s of sessions){const ms=s.updatedAt?.toMillis?.()||0;if(ms>(lastSeen.get(s.uid)||0))lastSeen.set(s.uid,ms);}
    const today=new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Kathmandu",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
    const day=ts=>ts?.toDate?new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Kathmandu",year:"numeric",month:"2-digit",day:"2-digit"}).format(ts.toDate()):"";
    const activity=events.docs.map(x=>x.data());
@@ -70,7 +73,7 @@ export function initUserActivity({auth,db}){
    const total=users.length+Number(!known.has(ADMIN_UID));
    const active=users.filter(x=>x.active===true).length+Number(!known.has(ADMIN_UID));
    const cards=[["Total Users",total],["Active Accounts",active],["Online (approx.)",online.size],["Today's Logins",logins.size]];
-   host.innerHTML='<h3 style="margin:0 0 10px">User Activity (Admin Only)</h3><div class="grid stats">'+cards.map(([k,v])=>'<div class="card"><div class="statlabel">'+k+'</div><div class="num">'+v+'</div></div>').join("")+'</div><details><summary style="cursor:pointer;font-weight:700">Recent Login / Logout History</summary><div class="tablewrap"><table><thead><tr><th>User</th><th>Event</th><th>Time (Nepal)</th></tr></thead><tbody>'+activity.slice(0,50).map(e=>{const u=known.get(e.uid);const name=u?.displayName||u?.email||(e.uid===ADMIN_UID?"Admin":"User");const time=e.at?.toDate?.().toLocaleString("en-GB",{timeZone:"Asia/Kathmandu"})||"Pending";return '<tr><td>'+esc(name)+'</td><td>'+esc(e.type)+'</td><td>'+esc(time)+'</td></tr>';}).join("")+'</tbody></table></div></details><p class="hint">Online is estimated from recent heartbeats. Login counts include recorded events only.</p>';
+   host.innerHTML='<h3 style="margin:0 0 10px">User Activity (Admin Only)</h3><div class="grid stats">'+cards.map(([k,v])=>'<div class="card"><div class="statlabel">'+k+'</div><div class="num">'+v+'</div></div>').join("")+'</div><details open><summary style="cursor:pointer;font-weight:700">User Online / Offline Status</summary><div class="tablewrap"><table><thead><tr><th>User</th><th>Status</th><th>Last Seen (Nepal)</th></tr></thead><tbody>'+rosterRows+'</tbody></table></div></details><details><summary style="cursor:pointer;font-weight:700">Recent Login / Logout History</summary><div class="tablewrap"><table><thead><tr><th>User</th><th>Event</th><th>Time (Nepal)</th></tr></thead><tbody>'+activity.slice(0,50).map(e=>{const u=known.get(e.uid);const name=u?.displayName||u?.email||(e.uid===ADMIN_UID?"Admin":"User");const time=e.at?.toDate?.().toLocaleString("en-GB",{timeZone:"Asia/Kathmandu"})||"Pending";return '<tr><td>'+esc(name)+'</td><td>'+esc(e.type)+'</td><td>'+esc(time)+'</td></tr>';}).join("")+'</tbody></table></div></details><p class="hint">Online is estimated from recent heartbeats. Login counts include recorded events only.</p>';
   }catch(err){host.textContent="User activity unavailable: "+(err.code||"Check permissions/network");}
  }
  return {login,logout,onAuth,render};
