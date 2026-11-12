@@ -41,6 +41,8 @@ jobs:
         run: npm run test:v46-teacher-marks-concurrency
       - name: Teacher Attendance concurrent scoped loading
         run: npm run test:v46-teacher-attendance-concurrency
+      - name: Attendance class selection preserved across reload
+        run: npm run test:v46-attendance-class-preserve
       - name: V44 regression gate
         run: node scripts/check-v44-requirements.mjs
       - name: Install test dependencies
