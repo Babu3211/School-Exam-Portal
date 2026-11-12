@@ -2952,7 +2952,6 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
   let deferredInstallPrompt=null;
   const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||
     (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-  const isAndroid=/android/i.test(navigator.userAgent);
   function isStandalone(){
     return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||
       navigator.standalone===true||document.referrer.startsWith('android-app://');
@@ -2963,20 +2962,19 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
   }
   let previouslyInstalled=false;
   try{previouslyInstalled=localStorage.getItem(installedKey)==='1';}catch(_){}
+  // APK distribution handles Android; the website banner is iPhone/iPad only.
   if(isStandalone())markInstalled();
-  else if(!previouslyInstalled)banner.hidden=false;
-  else banner.hidden=true;
+  else banner.hidden=(!isIOS||previouslyInstalled);
   function showInstallHelp(){
     if(isIOS){
       help.innerHTML='<b>iPhone / iPad मा Install गर्ने तरिका:</b> Safari मा यो वेबसाइट खोल्नुहोस् → तलको Share (□↑) बटन थिच्नुहोस् → <b>Add to Home Screen</b> छान्नुहोस् → <b>Add</b> थिच्नुहोस्। त्यसपछि Home Screen मा आएको SMSS Exam Portal आइकनबाट खोल्नुहोस्।';
-    }else if(isAndroid){
-      help.innerHTML='<b>Android मा Install गर्ने तरिका:</b> Chrome को माथिल्लो ⋮ Menu खोल्नुहोस् → <b>Install app</b> वा <b>Add to Home screen</b> छान्नुहोस् → Install पुष्टि गर्नुहोस्। Chrome ले Install Prompt देखाएमा Install थिच्नुहोस्।';
     }else{
       help.innerHTML='<b>कम्प्युटरमा Install गर्ने तरिका:</b> Chrome वा Edge मा Address Bar नजिक देखिने Install आइकन थिच्नुहोस्, वा Browser Menu खोलेर <b>Install SMSS Exam Portal</b> छान्नुहोस्।';
     }
     help.hidden=false;
   }
   window.addEventListener('beforeinstallprompt',function(event){
+    if(!isIOS)return;
     event.preventDefault();
     try{localStorage.removeItem(installedKey);}catch(_){}
     banner.hidden=false;
@@ -2986,6 +2984,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
   });
   window.addEventListener('appinstalled',markInstalled);
   button.addEventListener('click',async function(){
+    if(!isIOS)return;
     if(!deferredInstallPrompt){showInstallHelp();return;}
     const promptEvent=deferredInstallPrompt;
     deferredInstallPrompt=null;
