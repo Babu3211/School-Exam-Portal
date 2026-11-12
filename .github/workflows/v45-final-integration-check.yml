@@ -1,0 +1,76 @@
+name: Validate V45 Final Integration (no deployment)
+
+on:
+  push:
+    branches:
+      - smss-v45-final-integration
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Protect approved dashboard and IEMIS source files
+        run: |
+          git fetch --no-tags --depth=1 origin main
+          python - <<'PY'
+          import subprocess
+          allowed={
+            '.github/workflows/v45-final-integration-check.yml', '.github/workflows/v45-final-production-release.yml', '.github/workflows/v45-final-firestore-rules-release.yml',
+            'index.html', 'user-activity.js', 'idle-logout.js',
+            'firestore.rules', 'scripts/test-v45-final-integration.mjs', 'scripts/test-attendance-bs-today.mjs', 'scripts/check-v44-requirements.mjs', 'scripts/test-user-activity-rules.mjs'
+          }
+          changed=set(subprocess.check_output(['git','diff','--name-only','origin/main','HEAD'],text=True).splitlines())
+          unexpected=changed-allowed
+          assert not unexpected, f'Unexpected changes to protected V44/IEMIS files: {sorted(unexpected)}'
+          print('Approved dashboard and IEMIS source files remain protected.')
+          PY
+      - name: Protect existing Android APK and iPhone PWA assets
+        run: |
+          python - <<'PY'
+          import subprocess
+          protected=['manifest.webmanifest','service-worker.js','icon-192.png','icon-512.png','apple-touch-icon.png']
+          changed=set(subprocess.check_output(['git','diff','--name-only','origin/main','HEAD'],text=True).splitlines())
+          bad=sorted(set(protected)&changed)
+          assert not bad, f'Existing PWA/APK assets unexpectedly modified: {bad}'
+          android=[p for p in changed if p.startswith(('android/','.github/workflows/android','gradle/')) or p.endswith(('.apk','.aab'))]
+          assert not android, f'Existing Android packaging unexpectedly modified: {android}'
+          print('Existing Android packaging and iPhone PWA assets are unchanged.')
+          PY
+      - name: Install test dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: JavaScript syntax and approved dashboard regression
+        run: |
+          node scripts/check-inline-js.mjs
+          node --check user-activity.js
+          node --check idle-logout.js
+          node scripts/check-v44-requirements.mjs
+          node scripts/test-v45-final-integration.mjs
+          node scripts/test-attendance-bs-today.mjs
+          node scripts/test-v45-ui.mjs
+          node scripts/test-dropdown-language.mjs
+      - name: Preserve question paper and PWA behavior
+        run: |
+          npm run test:question-paper
+          npm run test:pwa
+      - name: Viewer read-only and Firestore permissions (emulator only)
+        run: |
+          npm run test:viewer
+          npm run test:rules
+          npx firebase emulators:exec --only firestore --project smss-v45-activity-test 'node scripts/test-user-activity-rules.mjs'
+      - name: Verify final V45 source remains the approved dashboard
+        run: |
+          node --input-type=module -e 'import fs from "node:fs";const s=fs.readFileSync("index.html","utf8");for(const x of ["School Profile","Student Record","Teacher | Staff","initIdleLogout","initUserActivity"])if(!s.includes(x))throw Error("Missing approved V45 feature: "+x);if(s.includes("V45 Trial"))throw Error("Obsolete trial dashboard restored")'
+
+# This workflow does not open IEMIS, deploy Hosting, or write production Firestore data.

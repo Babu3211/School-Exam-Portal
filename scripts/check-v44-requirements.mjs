@@ -384,6 +384,6 @@ assert.equal(fakePassword.type,"password");
 assert.equal(fakeToggle.attributes["aria-pressed"],"false");
 resetSecret();
 assert.equal(fakePassword.value,"");
-must(html.includes('finally{clearLoginSecret();loginButton.disabled=false') && html.includes('if(!user){clearLoginSecret();'),"Password reset must run after login attempts and sign-out.");
+must(html.includes('finally{clearLoginSecret();loginButton.disabled=false') && (html.includes('if(!user){clearLoginSecret();') || html.includes('if(!user){idleSession.stop();void userActivity.onAuth(null);clearLoginSecret();')),"Password reset must run after login attempts and sign-out.");
 
 console.log("V44 requirement regression checks passed.");

@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync('index.html','utf8');
+assert.ok(html.includes('timeZone:"Asia/Kathmandu"'),'Attendance today must use Nepal timezone');
+assert.ok(html.includes('function attendanceAdToBs(ad)'),'Existing BS converter must remain');
+assert.ok(html.includes('if(!date.value)attendanceSetToday();'),'Attendance must auto-fill BS date on page opening');
+assert.ok(html.includes('input.value=attendanceAdToBs(attendanceNepalTodayAD())'),'Today date must be converted AD to BS');
+assert.ok(html.includes('id="attendanceToday"'),'Today BS button must be available');
+assert.ok(html.includes('if(e.target.closest("#attendanceToday"))attendanceSetToday();'),'Today button must reset date');
+assert.ok(html.includes('function attendanceBsToAd(bs)'),'Saved attendance date conversion must be retained');
+console.log('Attendance Nepal BS today autofill and historical-date preservation checks passed');
