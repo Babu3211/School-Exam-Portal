@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v56-grade10-pack-ui';
+const CACHE_NAME = 'smss-pwa-v57-network-first-assets';
 const APP_SHELL = [
   './',
   './index.html',
@@ -51,9 +51,19 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // Prefer the deployed version of scripts and assets; keep the last good
+  // copy only as an offline fallback. This prevents installed PWAs from
+  // retaining old functionality after a successful Hosting deployment.
   event.respondWith((async () => {
-    const cached = await caches.match(request);
-    if (cached) return cached;
-    return fetch(request);
+    try {
+      const response = await fetch(request);
+      if (response && response.ok) {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(request, response.clone());
+      }
+      return response;
+    } catch (error) {
+      return (await caches.match(request)) || Response.error();
+    }
   })());
 });
