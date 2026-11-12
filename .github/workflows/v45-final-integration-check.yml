@@ -45,6 +45,10 @@ jobs:
           node scripts/test-attendance-bs-today.mjs
           node scripts/test-v45-ui.mjs
           node scripts/test-dropdown-language.mjs
+      - name: Preserve question paper and PWA behavior
+        run: |
+          npm run test:question-paper
+          npm run test:pwa
       - name: Viewer read-only and Firestore permissions (emulator only)
         run: |
           npm run test:viewer
