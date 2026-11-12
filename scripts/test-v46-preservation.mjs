@@ -49,6 +49,8 @@ required(html.includes("const ca=canonicalStudentClass(a),cb=canonicalStudentCla
 required(html.includes('${examEsc(classEnglishLabel(x))}</option>'), "Marks class dropdown must display English labels while preserving stored values");
 required(html.includes('if(!attendanceDataReady)await loadAttendancePage();else await loadAttendanceStudentsForDay()'), "Attendance Show Students must await initial Firestore load");
 required(html.includes('attendanceDataReady=true;populateAttendanceSubjects()'), "Attendance data readiness must only be marked after records load");
+required(html.includes("if(e.target.id==='refreshEntry'){resetIemisEntryGrid();await loadMarksEntry();return}"), "Marks Entry refresh must not clear newly loaded student rows");
+required(!html.includes("Refresh भयो। विद्यार्थी सूची फेरि देखाउनुहोस्।"), "Refresh must not instruct user to reload already fetched students");
 required(html.includes("initIdleLogout"), "Keep idle-logout initialization");
 required(idle.includes("minutes=60"), "Keep 60-minute inactivity timeout");
 required(activity.includes("export"), "Keep activity module");
