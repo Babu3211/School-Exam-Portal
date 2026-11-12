@@ -3058,7 +3058,7 @@ async function loadAttendancePage(){
    ss={docs:studentSnaps.flatMap(x=>x.docs)};as={docs:attendanceSnaps.flatMap(x=>x.docs)};
    attendanceClasses=names.map(className=>({className,subject:""}));
    const classSel=document.getElementById("attendanceClass");
-   classSel.innerHTML=names.map(x=>`<option value="${attendanceEsc(x)}">${attendanceEsc(x)}</option>`).join("");classSel.disabled=false;
+   classSel.innerHTML=names.map(x=>`<option value="${attendanceEsc(x)}">${attendanceEsc(classEnglishLabel(x))}</option>`).join("");classSel.disabled=false;
    const type=document.getElementById("attendanceType");if(type){type.value="daily";type.disabled=true;}
    const subjectWrap=document.getElementById("attendanceSubjectWrap");if(subjectWrap)subjectWrap.hidden=true;
   }
@@ -3072,7 +3072,7 @@ async function loadAttendancePage(){
     const names=[...new Set([...attendanceClasses.map(x=>x.className),...attendanceStudents.map(x=>x.class??x.className)].map(x=>String(x??"").trim()).filter(Boolean))];
     names.sort((a,b)=>{const ca=canonicalStudentClass(a),cb=canonicalStudentClass(b);const na=ca==="ECD"?0:Number((ca.match(/[0-9]+/)||[])[0]);const nb=cb==="ECD"?0:Number((cb.match(/[0-9]+/)||[])[0]);return Number.isFinite(na)&&Number.isFinite(nb)?na-nb:a.localeCompare(b,undefined,{numeric:true,sensitivity:"base"});});
     if(names.length){
-     classSel.innerHTML=names.map(x=>`<option value="${attendanceEsc(x)}">${attendanceEsc(x)}</option>`).join("");
+     classSel.innerHTML=names.map(x=>`<option value="${attendanceEsc(x)}">${attendanceEsc(classEnglishLabel(x))}</option>`).join("");
      const same=names.find(x=>canonicalStudentClass(x)===canonicalStudentClass(previousClass));
      if(same)classSel.value=same;
     }
