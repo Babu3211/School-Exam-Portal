@@ -2112,7 +2112,7 @@ async function loadMarksEntry(){
  if(!document.getElementById('entryClass'))return;
  syncIemisEntryView();
  const classSel=document.getElementById('entryClass');
- if(!isAdmin()){
+ if(!isAdmin()&&!roleHas('viewer')){
   classSel.disabled=true;
   classSel.innerHTML='<option value="">तपाईंको Assignment लोड हुँदैछ...</option>';
   const subjectSel=document.getElementById('entrySubject');
@@ -3047,7 +3047,7 @@ async function loadAttendancePage(){
   populateAttendanceSubjects();attendanceMessage(`${attendanceStudents.length} विद्यार्थी र ${attendanceRecords.length} हाजिरी रेकर्ड लोड भए।`);renderAttendanceHistory();await loadAttendanceStudentsForDay();
  }catch(err){
   console.error("Attendance load failed",err);
-  if(!isAdmin()){const classSel=document.getElementById("attendanceClass");if(classSel){classSel.innerHTML='<option value="">Assignment/अनुमति उपलब्ध छैन</option>';classSel.disabled=true;}}
+  if(!isAdmin()&&!roleHas("viewer")){const classSel=document.getElementById("attendanceClass");if(classSel){classSel.innerHTML='<option value="">Assignment/अनुमति उपलब्ध छैन</option>';classSel.disabled=true;}}
   attendanceMessage(`हाजिरी लोड भएन: ${safeNoticeError(err)}। Assignment र सुरक्षा नियम जाँच गर्नुहोस्।`,true);
  }
 }
