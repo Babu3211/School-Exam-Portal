@@ -3044,6 +3044,21 @@ async function loadAttendancePage(){
   }
   attendanceStudents=ss.docs.map(d=>({id:d.id,...d.data()}));
   attendanceRecords=as.docs.map(d=>({id:d.id,...d.data()}));
+  // Use actual saved class names; keep the current selection and never alter attendance records.
+  if(isAdmin()||roleHas("viewer")){
+   const classSel=document.getElementById("attendanceClass");
+   if(classSel){
+    const previousClass=classSel.value;
+    const names=[...new Set([...attendanceClasses.map(x=>x.className),...attendanceStudents.map(x=>x.class??x.className)].map(x=>String(x??"").trim()).filter(Boolean))];
+    names.sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:"base"}));
+    if(names.length){
+     classSel.innerHTML=names.map(x=>`<option value="${attendanceEsc(x)}">${attendanceEsc(x)}</option>`).join("");
+     const same=names.find(x=>canonicalStudentClass(x)===canonicalStudentClass(previousClass));
+     if(same)classSel.value=same;
+    }
+    classSel.disabled=false;
+   }
+  }
   populateAttendanceSubjects();attendanceMessage(`${attendanceStudents.length} विद्यार्थी र ${attendanceRecords.length} हाजिरी रेकर्ड लोड भए।`);renderAttendanceHistory();await loadAttendanceStudentsForDay();
  }catch(err){
   console.error("Attendance load failed",err);
