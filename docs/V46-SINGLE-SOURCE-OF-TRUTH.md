@@ -112,3 +112,8 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - Commit `2041fa878ffa82fe7816c50101c8a9d50572449d` translates Attendance student-selection, invalid date/subject, existing record, loading error and permission messages to English; historical record lookup still matches canonical class and saved attendance status.
 - Added `scripts/test-v46-attendance-messages.mjs` and CI step (`7a6a333fc72a1ca3be2395cac829af248ec12263`). CI and authenticated browser pass not yet confirmed. No production deployment or Firestore record writes.
 - IEMIS 2083 live comparison remains paused until Work Mode access returns.
+
+## 2026-11-12 Teacher Marks Entry performance
+- Commit `bd0dede8a8c245a2993110a58f5ae6ccbd095eca` starts Teacher-assigned marks queries and `mark_settings` read concurrently using `Promise.all`, instead of waiting for all marks before requesting settings. Assignment-scoped mark/student/exam query filters and Firestore rules unchanged.
+- Added structural regression `scripts/test-v46-teacher-marks-concurrency.mjs`, registered in CI (`f8fbeac0c3ca6649255b69bbd516429c6c31c530`). No measured latency improvement or test pass claimed without CI/browser verification.
+- Exact-match Teacher class-name/rules mismatch still unresolved; IEMIS Work Mode comparison deferred. No production or data writes.
