@@ -24,9 +24,11 @@ export function initUserActivity({auth,db}){
  }
  async function start(user){
   if(!user||trackedUid===user.uid)return;
-  if(!await authorized(user))return;
+  if(!await authorized(user)||auth.currentUser?.uid!==user.uid)return;
   trackedUid=user.uid;trackedUser=user;
   await presence(user,true);
+  // An auth change may happen while the Firestore write is pending.
+  if(trackedUid!==user.uid||auth.currentUser?.uid!==user.uid)return;
   heartbeat=setInterval(()=>{if(auth.currentUser?.uid===user.uid)void presence(user,true);},45000);
  }
  async function stop(user){
