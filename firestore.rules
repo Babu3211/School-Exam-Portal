@@ -105,7 +105,7 @@ service cloud.firestore {
     }
 
     match /staff/{documentId} {
-      allow get, list: if isAdmin() || isViewer();
+      allow get, list: if hasActiveRole();
       allow create, update, delete: if isAdmin();
     }
 
