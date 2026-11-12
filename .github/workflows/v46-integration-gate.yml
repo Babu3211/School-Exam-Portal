@@ -27,6 +27,8 @@ jobs:
         run: npm run test:v46-class-normalization
       - name: English exam dropdown preservation
         run: npm run test:v46-english-exam
+      - name: English attendance subject dropdown preservation
+        run: npm run test:v46-attendance-english
       - name: V44 regression gate
         run: node scripts/check-v44-requirements.mjs
       - name: Install test dependencies
