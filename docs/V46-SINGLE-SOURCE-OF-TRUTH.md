@@ -107,3 +107,8 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - Commit `7efd19d06c4a5f998ab05712cff2aabe0652494d` changes Attendance student-row visible status labels to Present/Absent/Leave, Remarks placeholder, inactive/archived and no-students labels to English; original persisted status codes `present`, `absent`, `leave` and saved record matching remain unchanged.
 - `scripts/test-v46-attendance-status-english.mjs` added and CI wired (`7fc5d0d5003df3db531ff8e90b1443adc181482f`). Automated test pass remains unverified because local GitHub clone is blocked by DNS and authenticated browser is not available here.
 - IEMIS live comparison remains deferred per user due to Work Mode limit. No production, Firestore rules or student/attendance record writes.
+
+## 2026-11-12 Attendance English validation/selection messages
+- Commit `2041fa878ffa82fe7816c50101c8a9d50572449d` translates Attendance student-selection, invalid date/subject, existing record, loading error and permission messages to English; historical record lookup still matches canonical class and saved attendance status.
+- Added `scripts/test-v46-attendance-messages.mjs` and CI step (`7a6a333fc72a1ca3be2395cac829af248ec12263`). CI and authenticated browser pass not yet confirmed. No production deployment or Firestore record writes.
+- IEMIS 2083 live comparison remains paused until Work Mode access returns.
