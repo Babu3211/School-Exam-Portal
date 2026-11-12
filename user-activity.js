@@ -54,7 +54,9 @@ export function initUserActivity({auth,db}){
    const users=roles.docs.map(x=>({uid:x.id,...x.data()}));
    const known=new Map(users.map(x=>[x.uid,x]));
    const sessions=presenceDocs.docs.map(x=>x.data());
-   const online=new Set(sessions.filter(x=>x.online===true&&activeWithin(x.updatedAt,120000)).map(x=>x.uid));
+   const eligible=new Set(users.filter(x=>x.active===true).map(x=>x.uid));
+   eligible.add(ADMIN_UID);
+   const online=new Set(sessions.filter(x=>x.online===true&&activeWithin(x.updatedAt,120000)&&eligible.has(x.uid)).map(x=>x.uid));
    const lastSeen=new Map();
    for(const s of sessions){const ms=s.updatedAt?.toMillis?.()||0;if(ms>(lastSeen.get(s.uid)||0))lastSeen.set(s.uid,ms);}
    const today=new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Kathmandu",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
