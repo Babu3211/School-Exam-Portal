@@ -54,6 +54,7 @@ required(!html.includes("Refresh भयो। विद्यार्थी स
 required(html.includes("if(!marksEntryDataReady&&!(await loadMarksEntry()))return"), "Marks Show Students must await initial Firestore data");
 required(html.includes("marksEntryDataReady=true;"), "Marks data readiness must be set after successful load");
 required(html.includes("...ss.docs.map(d=>{const st=d.data();return st.active===false?'':(st.class??st.className??'');})"), "Marks class selector must include active students even if class registry is incomplete");
+required(html.includes("entryClassNames.find(x=>canonicalStudentClass(x)===canonicalStudentClass(previousClass))"), "Marks Entry must preserve selected class across Nepali/English reloads");
 required(html.includes("initIdleLogout"), "Keep idle-logout initialization");
 required(idle.includes("minutes=60"), "Keep 60-minute inactivity timeout");
 required(activity.includes("export"), "Keep activity module");
