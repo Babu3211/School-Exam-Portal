@@ -277,7 +277,7 @@ must(rules.includes("request.resource.data.detail.size() <= 240") && rules.inclu
 must(rules.includes("allow update, delete: if false;"), "Audit logs must remain append-only.");
 must(html.includes('id="smssInstallBanner"') && html.includes('id="smssInstallButton"'), "Persistent SMSS PWA install banner and action are missing.");
 must(html.includes("beforeinstallprompt") && html.includes("appinstalled") && html.includes("display-mode: standalone"), "Native PWA install prompt and installed-state detection are missing.");
-must(html.includes("Add to Home Screen") && html.includes("Install app"), "iPhone and Android installation instructions are missing.");
+must(html.includes("Add to Home Screen") && html.includes("APK distribution handles Android"), "iPhone installation guidance and Android APK-only policy are missing.");
 must(manifest.includes("SMSS Exam Portal"), "PWA manifest must use the approved SMSS Exam Portal app name.");
 must(/const CACHE_NAME = [\'"]smss-pwa-v[0-9]+-[a-z0-9-]+[\'"];/.test(serviceWorker) && serviceWorker.includes("\'./cdc-question-paper.js\'") && serviceWorker.includes("cache.addAll(APP_SHELL)"), "Service worker must use a versioned SMSS cache and precache the CDC question paper module.");
 must(html.includes('data-page="question-papers"') && html.includes('if(p==="question-papers")'), "CDC Question Paper Builder navigation and page must be present.");
