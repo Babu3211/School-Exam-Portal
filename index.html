@@ -2188,6 +2188,13 @@ let iemisEntryGrid=null;
 function resetIemisEntryGrid(){if(iemisEntryGrid){iemisEntryGrid.destroy();iemisEntryGrid=null;}const root=document.getElementById('iemisEntryRoot');if(root)root.innerHTML='<p class="hint">कक्षा, Term र परीक्षा छानेर विद्यार्थी सूची फेरि देखाउनुहोस्।</p>';}
 function syncIemisEntryView(){const enabled=!!document.getElementById('useIemisEntryGrid')?.checked;const root=document.getElementById('iemisEntryRoot'),legacy=document.getElementById('marksEntryBody')?.closest('.tablewrap'),subject=document.getElementById('entrySubject')?.closest('.field');if(root)root.hidden=!enabled;if(legacy)legacy.hidden=enabled;if(subject)subject.hidden=enabled;}
 function iemisEntryContext(){return ['entryClass','entryTerm','entryExam'].map(id=>document.getElementById(id)?.value||'').join('|');}
+function iemisEntryVisible(student,subject,cl,examId){
+ if(!auth.currentUser||canonicalStudentClass(student.class??student.className)!==canonicalStudentClass(cl)||student.active===false)return false;
+ const slot=optionalSlotForSubject(subject);
+ if(!slot)return true;
+ const old=existingMarks.find(m=>m.studentId===student.id&&m.examId===examId&&iemisSubjectKey(m.subject)===iemisSubjectKey(subject));
+ return iemisSubjectKey(studentOptionalSubject(student,slot))===iemisSubjectKey(subject)||!!old;
+}
 function iemisEntryAllowed(student,subject,cl,examId){
  if(!auth.currentUser||canonicalStudentClass(student.class??student.className)!==canonicalStudentClass(cl)||student.active===false||!canTeachSubject(cl,subject))return false;
  const old=existingMarks.find(m=>m.studentId===student.id&&m.examId===examId&&iemisSubjectKey(m.subject)===iemisSubjectKey(subject));
@@ -2240,7 +2247,7 @@ function mountIemisEntryGrid(){
   const subjects=[...new Set(options.filter(s=>s&&(roleHas('viewer')||canTeachSubject(cl,s))))];
   const order=(ledgerSubjectOrder[group]||[]).map(iemisSubjectKey);subjects.sort((a,b)=>{const ai=order.indexOf(iemisSubjectKey(a)),bi=order.indexOf(iemisSubjectKey(b));return (ai<0?999:ai)-(bi<0?999:bi);});
   if(!subjects.length)throw new Error('यो कक्षामा तोकिएका विषय भेटिएनन्।');
-  const students=marksStudents.filter(st=>canonicalStudentClass(st.class??st.className)===canonicalStudentClass(cl)&&st.active!==false&&subjects.some(sub=>roleHas('viewer')||iemisEntryAllowed(st,sub,cl,examId))).sort((a,b)=>Number(studentRollNo(a)||999999)-Number(studentRollNo(b)||999999));
+  const students=marksStudents.filter(st=>canonicalStudentClass(st.class??st.className)===canonicalStudentClass(cl)&&st.active!==false&&subjects.some(sub=>roleHas('viewer')?iemisEntryVisible(st,sub,cl,examId):iemisEntryAllowed(st,sub,cl,examId))).sort((a,b)=>Number(studentRollNo(a)||999999)-Number(studentRollNo(b)||999999));
   const context=iemisEntryContext(),uid=auth.currentUser.uid;
   resetIemisEntryGrid();iemisEntryGrid=new IemisEntryGrid(document.getElementById('iemisEntryRoot'),{classNo:cl,term:smssExamTermKey(exam),examId,subjects,students,subjectLabel:sub=>iemisDisplaySubject(subjectEnglishLabel(sub),{codes:Number(classNoFromName(cl))>=9}),records:existingMarks,canEdit:(st,sub)=>!roleHas('viewer')&&iemisEntryAllowed(st,sub,cl,examId),message:entryMsg,onSave:entries=>saveIemisEntryRecords(entries,context,exam,cl,uid)});
   const save=document.getElementById('saveAllMarks');if(save)save.disabled=roleHas('viewer');
