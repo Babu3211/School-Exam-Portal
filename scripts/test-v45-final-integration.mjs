@@ -19,6 +19,6 @@ assert.ok(html.includes('if(!isAdmin())return;const panel=document.getElementByI
 for(const collection of ['user_activity','user_presence'])assert.ok(rules.includes('match /'+collection+'/'),'Firestore permissions missing for '+collection);
 assert.ok(rules.includes('allow get, list: if isAdmin();'),'Only admins may read activity records');
 assert.ok(rules.includes('request.resource.data.uid == request.auth.uid'),'User cannot spoof another user');
-assert.ok(activity.includes('activeWithin(s.updatedAt,120000)'),'Presence freshness required');
+assert.ok(activity.includes('activeWithin(x.updatedAt,120000)'),'Presence freshness required');
 assert.ok(idle.includes('if(now()-Math.max(lastActivity,read())>=idleMs)'),'Expired session must not be extended');
 console.log('V45 approved dashboard and user activity integration checks passed');
