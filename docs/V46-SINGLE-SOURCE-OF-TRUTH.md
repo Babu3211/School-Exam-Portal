@@ -82,3 +82,8 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - Commit `43a40830bcce975cdf4e460ea6a179eee9b81673` changed three exam option label renderings to `englishDisplayText(x.examName)` while retaining `value` as the original exam ID. No saved exam name, marks or assignment records were rewritten.
 - Regression test `scripts/test-v46-english-exam-display.mjs` added and wired to the V46 CI workflow (`79d045f28f0d92cfb7e177eaf26be6aec8c810a9`). It checks English rendering and preserved option IDs for Marks Entry and Ledger.
 - This is **not a completed whole-portal English conversion**. Continue screen-by-screen; preserve stored Nepali legacy values and use stable IDs/compatibility matching. CI and authenticated browser tests not yet verified. No production deployment or Firestore mutation.
+
+## 2026-11-12 English-only continuation — Attendance subject dropdown
+- Commit `8105ff9e671f7406ec5513840293c8c161724647` changes Attendance subject option labels to `subjectEnglishLabel(x)` and placeholder to `Select Subject`, retaining the original stored `value=x` for attendance record matching.
+- Regression test `scripts/test-v46-attendance-english.mjs` added and registered in V46 GitHub Actions gate at `2b6cdbe233daaf92d1259164ff75818db80d9567`. No Firestore records, permission rules or production were changed.
+- CI test execution and authenticated browser behavior remain unverified; English-only rollout across all screens is not yet complete.
