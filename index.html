@@ -2007,7 +2007,7 @@ function validateAchievementInput(row,input,totalInput){const count=Math.max(0,N
 function isComputerSubject(subject){const s=String(subject||'').toLowerCase();return s.includes('computer')||s.includes('कम्प्युटर')||s.includes('कम्प्युटर विज्ञान')}
 function selectedEntrySetting(){const group=document.getElementById('entryClass')?.value;const subject=document.getElementById('entrySubject')?.value;const g=entryClassGroup(group);const matches=marksSettings.filter(x=>x.classGroup===g&&canonicalSubjectKey(x.subject)===canonicalSubjectKey(subject));const classNo=String(canonicalStudentClass(group)||'').replace(/[^0-9]/g,'');const base=matches.find(x=>String(x.className||'')===classNo)||matches.find(x=>!x.className); if(!base)return null;let parts=(base.components||[]).filter(c=>!/^TH\b|THEORY/i.test(String(c.name||''))).map(c=>({...c}));if(g==='1-3'||g==='4-5'){const count=Number(parts[0]?.fullMarks)||0;parts=[{name:'No. of Learning Achievement',fullMarks:count},{name:'Full Marks',fullMarks:count*4},{name:'Obtained Learning Achievement',fullMarks:count*4}];}const internalFull=parts.reduce((a,c)=>a+Number(c.fullMarks||0),0);const examId=document.getElementById('entryExam')?.value;const selectedExam=marksExams.find(x=>x.id===examId);const isFinalTerm=!!selectedExam&&smssExamTermKey(selectedExam)==='annual';const thFull=isFinalTerm?((g==='6-8'||(g==='9-10'&&isComputerSubject(subject)))?50:(g==='9-10'?75:0)):0;if(thFull>0)parts.push({name:'TH (Theory)',fullMarks:thFull});return {...base,components:parts,internalFullMarks:internalFull,theoryFullMarks:thFull,totalFullMarks:parts.reduce((a,c)=>a+Number(c.fullMarks||0),0)}}
 function entryClassGroup(c){const raw=String(c??'').replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d)));const digits=raw.replace(/[^0-9]/g,'');if(!digits)return '';const n=Number(digits);return n>=1&&n<=3?'1-3':n<=5?'4-5':n<=8?'6-8':n<=10?'9-10':''}
-function fillEntrySubjects(){const cl=document.getElementById('entryClass')?.value,sel=document.getElementById('entrySubject');if(!sel)return;const group=entryClassGroup(cl),classNo=String(canonicalStudentClass(cl)||'').replace(/[^0-9]/g,'');const relevant=marksSettings.filter(x=>x.classGroup===group&&(!x.className||String(x.className)===classNo));const exact=relevant.filter(x=>String(x.className||'')===classNo);const chosen=exact.length?exact:relevant.filter(x=>!x.className);const unique=new Map();if(isAdmin()||roleHas('viewer')){chosen.forEach(x=>{const key=canonicalSubjectKey(x.subject);if(key&&!unique.has(key))unique.set(key,key==='हाम्रो धुनिबेँशी'?'हाम्रो धुनिबेँशी':x.subject);});}else{const assigned=(currentUserRole?.subjectAssignments||[]).filter(x=>canonicalStudentClass(x.className)===canonicalStudentClass(cl)).map(x=>String(x.subject||'').trim()).filter(Boolean);assigned.forEach(sub=>{const key=canonicalSubjectKey(sub);if(key&&chosen.some(x=>canonicalSubjectKey(x.subject)===key)&&!unique.has(key))unique.set(key,key==='हाम्रो धुनिबेँशी'?'हाम्रो धुनिबेँशी':sub);});}const subjects=[...unique.values()];sel.innerHTML=subjects.length?subjects.map(x=>`<option value="${examEsc(x)}">${examEsc(subjectEnglishLabel(x))}</option>`).join(''):'<option value="">यस कक्षाको Assessment Settings भेटिएन</option>';}
+function fillEntrySubjects(){const cl=document.getElementById('entryClass')?.value,sel=document.getElementById('entrySubject');if(!sel)return;const group=entryClassGroup(cl),classNo=String(canonicalStudentClass(cl)||'').replace(/[^0-9]/g,'');const relevant=marksSettings.filter(x=>x.classGroup===group&&(!x.className||String(x.className)===classNo));const exact=relevant.filter(x=>String(x.className||'')===classNo);const chosen=exact.length?exact:relevant.filter(x=>!x.className);const unique=new Map();if(isAdmin()||roleHas('viewer')){chosen.forEach(x=>{const key=canonicalSubjectKey(x.subject);if(key&&!unique.has(key))unique.set(key,key==='हाम्रो धुनिबेँशी'?'हाम्रो धुनिबेँशी':x.subject);});}else{const assigned=(currentUserRole?.subjectAssignments||[]).filter(x=>canonicalStudentClass(x.className)===canonicalStudentClass(cl)).map(x=>String(x.subject||'').trim()).filter(Boolean);assigned.forEach(sub=>{const key=canonicalSubjectKey(sub);if(key&&chosen.some(x=>canonicalSubjectKey(x.subject)===key)&&!unique.has(key))unique.set(key,key==='हाम्रो धुनिबेँशी'?'हाम्रो धुनिबेँशी':sub);});}const subjects=[...unique.values()];sel.innerHTML=subjects.length?subjects.map(x=>`<option value="${examEsc(x)}">${examEsc(subjectEnglishLabel(x))}</option>`).join(''):'<option value="">No assessment settings for this class</option>';}
 
 async function loadMarksLedgerPage(){requireAdmin();const examSel=document.getElementById('ledgerViewExam');if(!examSel)return;const msg=document.getElementById('ledgerViewMessage');try{const [ss,es,ms,settings,cs]=await Promise.all([getDocs(collection(db,'students')),getDocs(collection(db,'exams')),getDocs(collection(db,'marks')),getDocs(collection(db,'mark_settings')),getDocs(collection(db,'classes'))]);cachedClasses=cs.docs.map(d=>({id:d.id,...d.data()}));marksStudents=ss.docs.map(d=>({id:d.id,...d.data()}));marksExams=es.docs.map(d=>({id:d.id,...d.data()}));existingMarks=ms.docs.map(d=>({id:d.id,...d.data()}));marksSettings=settings.docs.map(d=>({id:d.id,...d.data()}));refreshIemisLedgerFilters();refreshLedgerExamOptions();if(msg)msg.textContent=`${marksStudents.length} students and ${existingMarks.length} marks records loaded.`;}catch(err){console.error(err);if(msg)msg.textContent=`Unable to load ledger: ${safeNoticeError(err)}`;}}
 window.loadMarksLedgerPage=loadMarksLedgerPage;
@@ -2121,9 +2121,9 @@ async function loadMarksEntry(){
  const classSel=document.getElementById('entryClass');
  if(!isAdmin()&&!roleHas('viewer')){
   classSel.disabled=true;
-  classSel.innerHTML='<option value="">तपाईंको Assignment लोड हुँदैछ...</option>';
+  classSel.innerHTML='<option value="">Loading your assignment...</option>';
   const subjectSel=document.getElementById('entrySubject');
-  if(subjectSel)subjectSel.innerHTML='<option value="">Assignment लोड भएपछि विषय देखिन्छ</option>';
+  if(subjectSel)subjectSel.innerHTML='<option value="">Subjects appear after assignment loads</option>';
  }
  try{
   let ss,es,ms,st,entryClassNames=[];
@@ -2162,7 +2162,7 @@ async function loadMarksEntry(){
   marksSettings=ms.docs.map(d=>({id:d.id,...d.data()}));
   existingMarks=st.docs.map(d=>({id:d.id,...d.data()}));
   const previousClass=classSel.value;
-  classSel.innerHTML=entryClassNames.map(x=>`<option value="${examEsc(x)}">${examEsc(classEnglishLabel(x))}</option>`).join('')||'<option value="">कक्षा उपलब्ध छैन</option>';
+  classSel.innerHTML=entryClassNames.map(x=>`<option value="${examEsc(x)}">${examEsc(classEnglishLabel(x))}</option>`).join('')||'<option value="">No classes available</option>';
   const matchedClass=entryClassNames.find(x=>canonicalStudentClass(x)===canonicalStudentClass(previousClass));
   if(matchedClass)classSel.value=matchedClass;
   classSel.disabled=false;
@@ -2175,10 +2175,10 @@ async function loadMarksEntry(){
  }catch(e){
   console.error('Marks entry load failed',e);
   if(!isAdmin()&&!roleHas('viewer')){
-   classSel.innerHTML='<option value="">Assignment/अनुमति उपलब्ध छैन</option>';
+   classSel.innerHTML='<option value="">Assignment or permission unavailable</option>';
    classSel.disabled=true;
    const subjectSel=document.getElementById('entrySubject');
-   if(subjectSel)subjectSel.innerHTML='<option value="">विषय उपलब्ध छैन</option>';
+   if(subjectSel)subjectSel.innerHTML='<option value="">No subjects available</option>';
   }
   entryMsg(`Marks Entry लोड भएन: ${safeNoticeError(e)}. Admin बाट यो User को Subject Teacher भूमिका, कक्षा/विषय Assignment र सुरक्षा नियम जाँच गर्नुहोस्।`,true);
   return false;
@@ -3041,7 +3041,7 @@ async function loadAttendancePage(){
  const date=document.getElementById("attendanceDate");if(!date)return;
  if(!isAdmin()&&!roleHas("viewer")){
   const classSel=document.getElementById("attendanceClass");
-  if(classSel){classSel.disabled=true;classSel.innerHTML='<option value="">तपाईंको Assignment लोड हुँदैछ...</option>';}
+  if(classSel){classSel.disabled=true;classSel.innerHTML='<option value="">Loading your assignment...</option>';}
  }
  if(!date.value)attendanceSetToday();
  try{
@@ -3082,7 +3082,7 @@ async function loadAttendancePage(){
   attendanceDataReady=true;populateAttendanceSubjects();attendanceMessage(`${attendanceStudents.length} विद्यार्थी र ${attendanceRecords.length} हाजिरी रेकर्ड लोड भए।`);renderAttendanceHistory();await loadAttendanceStudentsForDay();
  }catch(err){
   console.error("Attendance load failed",err);
-  if(!isAdmin()&&!roleHas("viewer")){const classSel=document.getElementById("attendanceClass");if(classSel){classSel.innerHTML='<option value="">Assignment/अनुमति उपलब्ध छैन</option>';classSel.disabled=true;}}
+  if(!isAdmin()&&!roleHas("viewer")){const classSel=document.getElementById("attendanceClass");if(classSel){classSel.innerHTML='<option value="">Assignment or permission unavailable</option>';classSel.disabled=true;}}
   attendanceMessage(`हाजिरी लोड भएन: ${safeNoticeError(err)}। Assignment र सुरक्षा नियम जाँच गर्नुहोस्।`,true);
  }
 }
@@ -3514,15 +3514,15 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
   'परीक्षा सूची उपलब्ध भएन':'Exam List Unavailable',
   'नतिजा सूची लोड हुँदैछ...':'Loading Results...',
   'विद्यार्थी सूची लोड हुँदैछ...':'Loading Students...',
-  'तपाईंको Assignment लोड हुँदैछ...':'Loading Your Assignments...',
-  'Assignment/अनुमति उपलब्ध छैन':'Assignment / Permission Unavailable',
+  'Loading your assignment...':'Loading Your Assignments...',
+  'Assignment or permission unavailable':'Assignment / Permission Unavailable',
   'पहिले Subject Bank मा विषय थप्नुहोस्':'Add Subjects to Subject Bank First',
   'पहिले Staff सूची लोड गर्नुहोस्':'Load Staff List First',
   'Staff सूची लोड भएन':'Could Not Load Staff List',
-  'यस कक्षाको Assessment Settings भेटिएन':'Assessment Settings Not Found for This Class',
-  'Assignment लोड भएपछि विषय देखिन्छ':'Subjects Appear After Assignments Load',
-  'कक्षा उपलब्ध छैन':'Class Unavailable',
-  'विषय उपलब्ध छैन':'Subject Unavailable'
+  'No assessment settings for this class':'Assessment Settings Not Found for This Class',
+  'Subjects appear after assignment loads':'Subjects Appear After Assignments Load',
+  'No classes available':'Class Unavailable',
+  'No subjects available':'Subject Unavailable'
  };
  function englishOption(option){
   const old=option.textContent;
