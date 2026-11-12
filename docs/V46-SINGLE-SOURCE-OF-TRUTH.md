@@ -87,3 +87,8 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - Commit `8105ff9e671f7406ec5513840293c8c161724647` changes Attendance subject option labels to `subjectEnglishLabel(x)` and placeholder to `Select Subject`, retaining the original stored `value=x` for attendance record matching.
 - Regression test `scripts/test-v46-attendance-english.mjs` added and registered in V46 GitHub Actions gate at `2b6cdbe233daaf92d1259164ff75818db80d9567`. No Firestore records, permission rules or production were changed.
 - CI test execution and authenticated browser behavior remain unverified; English-only rollout across all screens is not yet complete.
+
+## 2026-11-12 Attendance English Class continuation
+- Commit `4729f546301fe12f9fa1ed863258e1609f1608e3` updates both Teacher and Admin/Viewer `attendanceClass` dropdown paths to display `classEnglishLabel(x)` while retaining original Firestore class values in `<option value>`.
+- Structural regression `scripts/test-v46-attendance-class-english.mjs` registered in CI (`1b811c09f396439c342cec91f164f9ddf456dece`), verifies both role paths and previous-class matching.
+- **Still blocked:** Teacher exact-match Firestore class query/rules aliases not resolved. No real authenticated testing or CI success confirmed, and no live production/data/rules changes.
