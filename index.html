@@ -293,6 +293,9 @@ const idleLogout=initIdleLogout({auth,onTimeout:async user=>{try{await Promise.r
 const isAdmin=()=>!!auth.currentUser&&auth.currentUser.uid===ADMIN_UID;
 const isViewer=()=>!!currentUserRole?.active&&(currentUserRole?.roles||[]).map(normalizeRoleKey).includes("viewer");
 const roleHas=r=>isAdmin()||!!currentUserRole?.active&&!isViewer()&&(currentUserRole?.roles||[]).map(normalizeRoleKey).includes(normalizeRoleKey(r));
+// Expose module-scoped authorization helpers to the classic navigation renderer.
+window.isAdmin=isAdmin;
+window.roleHas=roleHas;
 const classTeacherNames=()=>[...(currentUserRole?.classTeacherClassNames||[]),...(currentUserRole?.classTeacherClasses||[]).map(x=>x.className)].filter(Boolean).map(x=>String(x).trim());
 const teacherClassNames=()=>[...classTeacherNames(),...(currentUserRole?.subjectAssignmentClassNames||[]),...(currentUserRole?.subjectAssignments||[]).map(x=>x.className)].filter(Boolean).map(x=>String(x).trim());
 const entrySubjectKey=value=>String(value??'').trim().toLocaleLowerCase().replace(/\s+/g,' ');
