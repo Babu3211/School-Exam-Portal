@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - smss-v45-final-integration
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
