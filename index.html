@@ -2103,7 +2103,7 @@ function fmtLedger(n){return Number.isFinite(Number(n))?String(Number(n)):'—'}
 document.addEventListener('change',e=>{if(['iemisLedgerFormat','ledgerWithSymbol'].includes(e.target.id))renderMarksLedgerPage();if(['ledgerViewClass','ledgerViewTerm','ledgerViewYear','ledgerViewSection'].includes(e.target.id)){refreshLedgerExamOptions();const body=document.getElementById('ledgerViewBody');if(body)body.innerHTML='<tr><td class="empty">Class or term changed. Select an examination and click View Ledger.</td></tr>';}});
 document.addEventListener('click',async e=>{if(e.target.closest('#showLedgerView'))renderMarksLedgerPage();if(e.target.closest('#numberLedgerTab'))setLedgerMode('number');if(e.target.closest('#gradeLedgerTab'))setLedgerMode('grade');if(e.target.closest('#entryLedgerTab'))setLedgerMode('entry');if(e.target.closest('#refreshLedgerView')){await loadMarksLedgerPage();renderMarksLedgerPage();}});
 function sortEntryClassNames(values){
- const unique=[...new Set(values.map(x=>String(x??'').trim()).filter(Boolean))];
+ const unique=[...new Map(values.map(x=>String(x??'').trim()).filter(Boolean).map(x=>[canonicalStudentClass(x),x]).reverse()).values()].reverse();
  return unique.sort((a,b)=>{
   const ca=canonicalStudentClass(a),cb=canonicalStudentClass(b);
   const na=ca==='ECD'?0:Number((ca.match(/[0-9]+/)||[])[0]);
