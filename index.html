@@ -2105,8 +2105,9 @@ document.addEventListener('click',async e=>{if(e.target.closest('#showLedgerView
 function sortEntryClassNames(values){
  const unique=[...new Set(values.map(x=>String(x??'').trim()).filter(Boolean))];
  return unique.sort((a,b)=>{
-  const na=canonicalStudentClass(a)==='ECD'?0:Number((a.match(/[0-9]+/)||[])[0]);
-  const nb=canonicalStudentClass(b)==='ECD'?0:Number((b.match(/[0-9]+/)||[])[0]);
+  const ca=canonicalStudentClass(a),cb=canonicalStudentClass(b);
+  const na=ca==='ECD'?0:Number((ca.match(/[0-9]+/)||[])[0]);
+  const nb=cb==='ECD'?0:Number((cb.match(/[0-9]+/)||[])[0]);
   if(Number.isFinite(na)&&Number.isFinite(nb)&&na!==nb)return na-nb;
   return a.localeCompare(b,'ne');
  });
