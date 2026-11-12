@@ -65,3 +65,9 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - Commit `0b24e0c78053e61a62b78de28fdc795eaa120128` on `smss-v46-integration`: load `classes` snapshot concurrently with students/exams/mark_settings/marks for Admin/Viewer Marks Entry, instead of awaiting classes after the other four queries. This removes one sequential Firestore round trip without changing saved data or permissions.
 - GitHub update succeeded. **No CI/browser/Firestore emulator test success has been verified** for this commit. Local git clone was unavailable due to DNS resolution failure.
 - Next: verify GitHub integration gate, first-load Show Students in Attendance/Marks Entry, Viewer role E2E and rules; keep production unchanged.
+
+## 2026-11-12 continuation — Teacher class normalization regression
+- Commits `6d8d32d3905e99c61c9cea98a69b2cdaafa7de34`, `643d1aad44986aedf5974c7b6c1c43605d372995`, `540f2ad72fd4a2e1ac6f424706a30d38f8e9f56a` added `scripts/test-v46-class-normalization.mjs`, registered its npm script and wired it into the V46 integration GitHub Actions gate.
+- The test extracts and executes the actual `canonicalStudentClass` helper from `index.html`, checking Class 1–12 English/Nepali-digit labels and ECD; this guards the earlier Teacher Assignment/Student Class 6 mismatch fix (`09d04da`).
+- **Test execution and CI pass remain unverified**; GitHub commits succeeded, but local GitHub clone was blocked by DNS. Do not claim real Teacher login/Firestore Save success.
+- Next: check workflow results, actual Teacher Marks Entry Show Students and Save, Attendance initial load, Viewer role security and Firestore emulator. No production/data writes.
