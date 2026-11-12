@@ -415,7 +415,7 @@ function safeNoticeError(error,fallback="प्रणालीमा समस�
 const firebaseConfig={apiKey:"AIzaSyDOwR82MTwBK1BRb-5wSVX2-EITCzJ1A5c",authDomain:"exam-portal-smss-95016.firebaseapp.com",projectId:"exam-portal-smss-95016",storageBucket:"exam-portal-smss-95016.firebasestorage.app",messagingSenderId:"86041985011",appId:"1:86041985011:web:e3806d74f2ae39d97c5c86"};
 const ADMIN_UID="K6uSLmqg0vWCtCuzwtxKzFpQMu62";const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 let currentUserRole=null;
-const idleSession=initIdleLogout({auth,minutes:60,onTimeout:async()=>{await signOut(auth);}});
+const idleSession=initIdleLogout({auth,minutes:60,onTimeout:async user=>{if(user)await userActivity.logout(user);await signOut(auth);}});
 const userActivity=initUserActivity({auth,db});
 window.renderSmssUserActivity=()=>{if(!isAdmin())return;const panel=document.getElementById("smssUserActivity");if(panel){panel.hidden=false;void userActivity.render();}};
 const isAdmin=()=>!!auth.currentUser&&auth.currentUser.uid===ADMIN_UID;
