@@ -927,7 +927,8 @@ function setStudentMessage(message,isError=false){const el=document.getElementBy
 function esc(value){return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;", "'":"&#39;"}[c]))}
 let cachedStudents=[];
 function studentRollNo(st){const serial=String(st?.sourceSerialNo??"").trim();const legacyRoll=String(st?.rollNo??"").trim();const raw=/^\d+$/.test(serial)?serial:(legacyRoll!==""?legacyRoll:serial);return /^\d+$/.test(raw)?Number(raw):raw;}
-async function loadStudents(){const body=document.getElementById("studentsBody");if(!body)return;body.innerHTML='<tr><td class="empty" colspan="10">प्रणालीबाट विवरण लोड हुँदैछ...</td></tr>';try{const [snap,classSnap]=await Promise.all([(isAdmin()||roleHas("viewer"))?getDocs(collection(db,"students")):Promise.all([...new Set(teacherClassNames())].map(cl=>getDocs(query(collection(db,"students"),where("class","==",cl))))).then(snaps=>({docs:snaps.flatMap(x=>x.docs)})),getDocs(collection(db,"classes"))]);cachedClasses=classSnap.docs.map(d=>({id:d.id,...d.data()}));cachedStudents=snap.docs.map(d=>({id:d.id,...d.data()}));filterStudents();renderStudentOptionalSubjects(document.getElementById("studentClass")?.value||classes[0],true);setStudentMessage(`कुल ${cachedStudents.length} विद्यार्थीको रेकर्ड लोड भयो।`)}catch(error){console.error("Student load failed:",error.code);body.innerHTML='<tr><td class="empty" colspan="10">विद्यार्थी विवरण लोड भएन। सुरक्षा नियम र Internet जाँच गर्नुहोस्।</td></tr>';setStudentMessage("प्रणालीबाट विवरण पढ्न अनुमति छैन वा जडानमा समस्या छ।",true)}}
+let studentsLoaded=false;
+async function loadStudents(){studentsLoaded=false;const body=document.getElementById("studentsBody");if(!body)return;body.innerHTML='<tr><td class="empty" colspan="10">प्रणालीबाट विवरण लोड हुँदैछ...</td></tr>';try{const [snap,classSnap]=await Promise.all([(isAdmin()||roleHas("viewer"))?getDocs(collection(db,"students")):Promise.all([...new Set(teacherClassNames())].map(cl=>getDocs(query(collection(db,"students"),where("class","==",cl))))).then(snaps=>({docs:snaps.flatMap(x=>x.docs)})),getDocs(collection(db,"classes"))]);cachedClasses=classSnap.docs.map(d=>({id:d.id,...d.data()}));cachedStudents=snap.docs.map(d=>({id:d.id,...d.data()}));studentsLoaded=true;filterStudents();renderStudentOptionalSubjects(document.getElementById("studentClass")?.value||classes[0],true);setStudentMessage(`कुल ${cachedStudents.length} विद्यार्थीको रेकर्ड लोड भयो।`)}catch(error){console.error("Student load failed:",error.code);body.innerHTML='<tr><td class="empty" colspan="10">विद्यार्थी विवरण लोड भएन। सुरक्षा नियम र Internet जाँच गर्नुहोस्।</td></tr>';setStudentMessage("प्रणालीबाट विवरण पढ्न अनुमति छैन वा जडानमा समस्या छ।",true)}}
  
 let cachedStaff = [];
 
@@ -1384,10 +1385,10 @@ document.addEventListener("submit",async event=>{
 document.addEventListener("click",event=>{
  const edit=event.target.closest("[data-student-edit]"),del=event.target.closest("[data-student-delete]"),restore=event.target.closest("[data-student-restore]");
  if(edit){editStudent(edit.dataset.studentEdit);return}if(del){removeStudent(del.dataset.studentDelete);return}if(restore){restoreStudent(restore.dataset.studentRestore);return}
- if(event.target.id==="studentReloadBtn")loadStudents();if(event.target.id==="generateMissingStudentCodes")generateMissingStudentCodes().catch(e=>setStudentMessage(`Result Code बनाउन सकिएन: ${safeNoticeError(e)}`,true));if(event.target.id==="studentSearchBtn")filterStudents();if(event.target.id==="studentCancelEditBtn")resetStudentForm();
+ if(event.target.id==="studentReloadBtn")loadStudents();if(event.target.id==="generateMissingStudentCodes")generateMissingStudentCodes().catch(e=>setStudentMessage(`Result Code बनाउन सकिएन: ${safeNoticeError(e)}`,true));if(event.target.id==="studentSearchBtn"){if(!studentsLoaded)loadStudents();else filterStudents();}if(event.target.id==="studentCancelEditBtn")resetStudentForm();
 });
 document.addEventListener("input",event=>{if(event.target.id==="studentSearch")filterStudents()});
-document.addEventListener("change",event=>{if(event.target.id==="classFilter")filterStudents()});
+document.addEventListener("change",event=>{if(event.target.id==="classFilter"){if(!studentsLoaded)loadStudents();else filterStudents();}});
 
 // Class-wise subject management backed by a reusable Subject Bank; existing student/staff data untouched.
 let cachedClasses=[];
