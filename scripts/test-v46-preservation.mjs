@@ -57,6 +57,7 @@ required(html.includes("...ss.docs.map(d=>{const st=d.data();return st.active===
 required(html.includes("entryClassNames.find(x=>canonicalStudentClass(x)===canonicalStudentClass(previousClass))"), "Marks Entry must preserve selected class across Nepali/English reloads");
 required(html.includes("if(!selectedExam||canonicalStudentClass(selectedExam.className)!==canonicalStudentClass(cl)"), "Marks Save must validate equivalent Nepali/English exam classes");
 required(!html.includes("if(!selectedExam||selectedExam.className!==cl||"), "Marks Save must not reject equivalent class labels");
+required(html.includes("async function saveIemisEntryRecords(entries,context,exam,cl,uid){\n if(roleHas('viewer'))throw new Error"), "IEMIS marks save handler must reject viewer role before writes");
 required(html.includes("initIdleLogout"), "Keep idle-logout initialization");
 required(idle.includes("minutes=60"), "Keep 60-minute inactivity timeout");
 required(activity.includes("export"), "Keep activity module");
