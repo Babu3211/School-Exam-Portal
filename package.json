@@ -10,7 +10,8 @@
     "test:pwa": "node scripts/test-pwa-upgrade.mjs",
     "test:v45": "node scripts/test-v45-ui.mjs && node scripts/test-dropdown-language.mjs",
     "test:v46-preservation": "node scripts/test-v46-preservation.mjs",
-    "test:v46-class-normalization": "node scripts/test-v46-class-normalization.mjs"
+    "test:v46-class-normalization": "node scripts/test-v46-class-normalization.mjs",
+    "test:v46-english-exam": "node scripts/test-v46-english-exam-display.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
