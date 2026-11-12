@@ -9,5 +9,5 @@ const fn=html.slice(start,end);
 assert.ok(fn.includes('canonicalStudentClass(x.className)===canonicalStudentClass(cl)'), 'Preserve Nepali/English class matching');
 assert.ok(fn.includes('<option value="${attendanceEsc(x)}">${attendanceEsc(subjectEnglishLabel(x))}</option>'), 'Render English labels but keep original subject value');
 assert.ok(fn.includes('Select Subject'),'Use English placeholder');
-assert.ok(!/\\b(?:setDoc|updateDoc|addDoc|deleteDoc)\\s*\\(/.test(fn),'Dropdown rendering must not mutate Firestore');
+for(const mutation of ['setDoc(', 'updateDoc(', 'addDoc(', 'deleteDoc(']) assert.ok(!fn.includes(mutation),'Dropdown rendering must not mutate Firestore');
 console.log('V46 Attendance English subject dropdown preservation passed.');
