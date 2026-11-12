@@ -1,0 +1,34 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+
+const read = path => readFile(path, "utf8");
+const [html, android, apkWorkflow, idle, activity, pkg] = await Promise.all([
+  read("index.html"),
+  read("android-app/capacitor.config.json"),
+  read(".github/workflows/android-apk.yml"),
+  read("idle-logout.js"),
+  read("user-activity.js"),
+  read("package.json")
+]);
+const config = JSON.parse(android);
+const packageConfig = JSON.parse(pkg);
+const required = (condition, message) => assert.ok(condition, message);
+
+required(config.appId === "com.smss.examportal", "Keep installed Android APK application ID stable");
+required(config.appName === "SMSS Exam Portal", "Keep installed Android app name");
+required(config.server?.url === "https://exam-portal-smss-95016.web.app/", "Keep installed APK pointing to live Firebase URL");
+required(apkWorkflow.includes("assembleDebug"), "Keep downloadable Android APK build workflow");
+required(html.includes("window.roleHas=roleHas"), "Classic navigation must access role helper");
+required(html.includes("window.isAdmin=isAdmin"), "Classic navigation must access admin helper");
+required(html.includes("rolePageAllowed"), "Keep role-based navigation");
+required(html.includes("roleHas(\"viewer\")"), "Keep viewer access handling");
+required(html.includes('if(p==="students"&&window.loadStudents)window.loadStudents()'), "Student page must invoke data loading on navigation");
+required(html.includes('if(p==="attendance"&&window.loadAttendancePage)window.loadAttendancePage()'), "Attendance page must invoke data loading on navigation");
+required(html.includes('if(p==="marks"') && html.includes("window.loadMarksEntry"), "Keep marks entry page loading");
+required(html.includes("initIdleLogout"), "Keep idle-logout initialization");
+required(idle.includes("minutes=60"), "Keep 60-minute inactivity timeout");
+required(activity.includes("export"), "Keep activity module");
+for(const name of ["test:viewer", "test:rules", "test:question-paper", "test:iemis", "test:pwa"]){
+ required(typeof packageConfig.scripts?.[name] === "string", `Keep regression script ${name}`);
+}
+console.log("V46 structural preservation gate passed (not a substitute for browser or Firestore E2E tests).");
