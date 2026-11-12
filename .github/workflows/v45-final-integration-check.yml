@@ -26,6 +26,7 @@ jobs:
           node --check user-activity.js
           node --check idle-logout.js
           node scripts/check-v44-requirements.mjs
+          node scripts/test-v45-final-integration.mjs
           node scripts/test-v45-ui.mjs
           node scripts/test-dropdown-language.mjs
       - name: Viewer read-only and Firestore permissions (emulator only)
