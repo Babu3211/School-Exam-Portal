@@ -92,3 +92,8 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - Commit `4729f546301fe12f9fa1ed863258e1609f1608e3` updates both Teacher and Admin/Viewer `attendanceClass` dropdown paths to display `classEnglishLabel(x)` while retaining original Firestore class values in `<option value>`.
 - Structural regression `scripts/test-v46-attendance-class-english.mjs` registered in CI (`1b811c09f396439c342cec91f164f9ddf456dece`), verifies both role paths and previous-class matching.
 - **Still blocked:** Teacher exact-match Firestore class query/rules aliases not resolved. No real authenticated testing or CI success confirmed, and no live production/data/rules changes.
+
+## 2026-11-12 English-only dropdown loading/empty states
+- Commit `85948a377334b583df4241d20b8e5001077f6524` translates existing assignment loading, class/subject empty, and assessment-settings dropdown status strings into English across Marks Entry and Attendance; no data/permission logic changed.
+- `scripts/test-v46-english-dropdown-status.mjs` added and wired into V46 CI (`c693cbc42b6d1b787ddedb6c5c996f30680771ef`). CI execution and browser verification not yet confirmed.
+- Outstanding: full UI English audit, exact-match Teacher Firestore security/assignment mismatch, no-refresh loading and authenticated role E2E. Do not deploy production until validated.
