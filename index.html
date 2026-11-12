@@ -3055,8 +3055,11 @@ async function loadAttendancePage(){
    if(!roleHas("class_teacher"))throw new Error("Class Teacher अनुमति आवश्यक छ।");
    const names=[...new Set(classTeacherNames())];
    if(!names.length)throw new Error("तपाईंलाई कक्षा तोकिएको छैन।");
-   const studentSnaps=await Promise.all(names.map(cl=>getDocs(query(collection(db,"students"),where("class","==",cl)))));
-   const attendanceSnaps=await Promise.all(names.map(cl=>getDocs(query(collection(db,"attendance"),where("className","==",cl),where("attendanceType","==","daily")))));
+   // Start both class-scoped reads together, preserving Teacher security filters.
+   const [studentSnaps,attendanceSnaps]=await Promise.all([
+    Promise.all(names.map(cl=>getDocs(query(collection(db,"students"),where("class","==",cl))))),
+    Promise.all(names.map(cl=>getDocs(query(collection(db,"attendance"),where("className","==",cl),where("attendanceType","==","daily")))))
+   ]);
    ss={docs:studentSnaps.flatMap(x=>x.docs)};as={docs:attendanceSnaps.flatMap(x=>x.docs)};
    attendanceClasses=names.map(className=>({className,subject:""}));
    const classSel=document.getElementById("attendanceClass");
