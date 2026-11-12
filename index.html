@@ -2158,7 +2158,7 @@ async function loadMarksEntry(){
   marksSettings=ms.docs.map(d=>({id:d.id,...d.data()}));
   existingMarks=st.docs.map(d=>({id:d.id,...d.data()}));
   const previousClass=classSel.value;
-  classSel.innerHTML=entryClassNames.map(x=>`<option value="${examEsc(x)}">${examEsc(x)}</option>`).join('')||'<option value="">कक्षा उपलब्ध छैन</option>';
+  classSel.innerHTML=entryClassNames.map(x=>`<option value="${examEsc(x)}">${examEsc(classEnglishLabel(x))}</option>`).join('')||'<option value="">कक्षा उपलब्ध छैन</option>';
   if(entryClassNames.includes(previousClass))classSel.value=previousClass;
   classSel.disabled=false;
   refreshEntryExamOptions();
