@@ -34,3 +34,10 @@ The production workflow `.github/workflows/v45-production-release.yml` on `main`
 
 ## Continuation rule for new chat windows
 User may encounter 'conversation too long' and open a new chat. Read this file, the latest GitHub commits, and the current V46 status before any modification. Never restart from login or re-deploy old V45 by assumption. State precisely what was actually tested and what remains. Update this handoff document after each verified milestone.
+
+## Verified repository branch and Android APK audit (2026-11-12)
+- GitHub branch search returned **46 branches** (including `main`, `smss-v44-work`, `smss-v45-work`, and `smss-v46-integration`). Do not delete any until all unique work is compared and recovery tags exist.
+- `.github/workflows/android-apk.yml` exists on main and builds a downloadable Android debug APK with Capacitor and Gradle. Existing users have already installed an APK; preserve compatibility.
+- `android-app/capacitor.config.json` on main declares appId `com.smss.examportal`, appName `SMSS Exam Portal`, server.url `https://exam-portal-smss-95016.web.app/`, and cleartext false. The installed wrapper points to Firebase Live; hosting changes may propagate to the app's web UI, but native updates require rebuilding and installing an updated APK. Do not change appId or live URL.
+- The V45 branch does not contain `android-app/capacitor.config.json` at the checked path, so copying V45 wholesale onto main/V46 would risk removing Android packaging. Retain main's Android files.
+- The goal is **one active V46 branch/codebase and one production deploy pipeline**, not literally one monolithic source file. Preserve backup refs until verification, then archive rather than blindly delete.
