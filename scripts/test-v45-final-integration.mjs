@@ -9,11 +9,11 @@ assert.ok(!html.includes('V45 Trial'),'Obsolete dashboard label must not return'
 assert.ok(html.includes('import {initUserActivity} from "./user-activity.js'),'Activity module must be loaded');
 assert.ok(html.includes('import {initIdleLogout} from "./idle-logout.js'),'Idle module must be loaded');
 assert.ok(html.includes('minutes:60'),'60-minute timeout required');
-assert.ok(html.includes('onTimeout:async user=>{try{if(user)await userActivity.logout(user);}finally{await signOut(auth);}}'),'Idle signout must occur even when activity logging fails');
-assert.ok(html.includes('try{if(user)await userActivity.logout(user);}finally{await signOut(auth);}'),'Manual logout must not be blocked by activity logging');
+assert.ok(html.includes('onTimeout:async user=>{try{await signOut(auth);}finally{if(user)void userActivity.logout(user);}}'),'Idle signout must occur even when activity logging fails');
+assert.ok(html.includes('try{await signOut(auth);}finally{if(user)void userActivity.logout(user);}'),'Manual logout must not be blocked by activity logging');
 assert.ok(html.includes('idleSession.start(user)')&&html.includes('idleSession.stop()'),'Idle lifecycle incomplete');
 assert.ok(html.includes('await userActivity.login(credential.user)'),'Login event missing');
-assert.ok(html.includes('await userActivity.logout(user)'),'Logout event missing');
+assert.ok(html.includes('if(user)void userActivity.logout(user)'),'Logout event missing');
 assert.ok(html.includes('window.renderSmssUserActivity()'),'Admin dashboard render missing');
 assert.ok(html.includes('if(!isAdmin())return;const panel=document.getElementById("smssUserActivity")'),'Activity panel must be admin-only');
 for(const collection of ['user_activity','user_presence'])assert.ok(rules.includes('match /'+collection+'/'),'Firestore permissions missing for '+collection);
