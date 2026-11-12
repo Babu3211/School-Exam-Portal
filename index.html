@@ -3053,7 +3053,7 @@ async function loadAttendancePage(){
    if(classSel){
     const previousClass=classSel.value;
     const names=[...new Set([...attendanceClasses.map(x=>x.className),...attendanceStudents.map(x=>x.class??x.className)].map(x=>String(x??"").trim()).filter(Boolean))];
-    names.sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:"base"}));
+    names.sort((a,b)=>{const ca=canonicalStudentClass(a),cb=canonicalStudentClass(b);const na=ca==="ECD"?0:Number((ca.match(/[0-9]+/)||[])[0]);const nb=cb==="ECD"?0:Number((cb.match(/[0-9]+/)||[])[0]);return Number.isFinite(na)&&Number.isFinite(nb)?na-nb:a.localeCompare(b,undefined,{numeric:true,sensitivity:"base"});});
     if(names.length){
      classSel.innerHTML=names.map(x=>`<option value="${attendanceEsc(x)}">${attendanceEsc(x)}</option>`).join("");
      const same=names.find(x=>canonicalStudentClass(x)===canonicalStudentClass(previousClass));
