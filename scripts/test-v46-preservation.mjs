@@ -28,6 +28,10 @@ required(html.includes('if(!isAdmin()&&!roleHas("viewer")){\n  const classSel=do
 required(html.includes('if(p==="marks"') && html.includes("window.loadMarksEntry"), "Keep marks entry page loading");
 required(html.includes("if(!isAdmin()&&!roleHas('viewer')){\n  classSel.disabled=true;"), "Viewer must retain marks class selection while data loads");
 required(html.includes('if(!isAdmin()&&!roleHas("viewer")){const classSel=document.getElementById("attendanceClass");'), "Attendance load errors must not replace viewer class options with teacher assignment errors");
+required(html.includes('const classes=["ECD",...Array.from({length:12}'), "Class choices must include ECD and Classes 1–12");
+required(html.includes('if(/^(ecd|early childhood development)$/i.test(raw))return \'ECD\';'), "Preserve ECD class normalization");
+required(html.includes('const na=ca==="ECD"?0:'), "Attendance must sort ECD before Class 1");
+required(html.includes("const na=canonicalStudentClass(a)===\'ECD\'?0:"), "Marks entry must sort ECD before Class 1");
 required(html.includes("initIdleLogout"), "Keep idle-logout initialization");
 required(idle.includes("minutes=60"), "Keep 60-minute inactivity timeout");
 required(activity.includes("export"), "Keep activity module");
