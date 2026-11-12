@@ -1,6 +1,6 @@
 // SMSS V45 user activity. Admin-only reporting; user-owned presence and event writes.
 // Presence is approximate: stale sessions expire after 120 seconds.
-import {collection,doc,getDoc,getDocs,setDoc,addDoc,serverTimestamp,query,orderBy,limit} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import {collection,doc,getDoc,getDocs,setDoc,addDoc,serverTimestamp,query,orderBy,limit,startAfter} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 const ADMIN_UID="K6uSLmqg0vWCtCuzwtxKzFpQMu62";
 const sessionId=crypto.randomUUID();
 let heartbeat=null,trackedUid=null,trackedUser=null;
@@ -57,7 +57,16 @@ export function initUserActivity({auth,db}){
    const today=new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Kathmandu",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
    const day=ts=>ts?.toDate?new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Kathmandu",year:"numeric",month:"2-digit",day:"2-digit"}).format(ts.toDate()):"";
    const activity=events.docs.map(x=>x.data());
-   const logins=new Set(activity.filter(x=>x.type==="login"&&day(x.at)===today).map(x=>x.uid));
+   // Count today across all pages, while retaining only 150 history rows.
+   const todayEvents=[...activity];
+   let page=events;
+   while(page.size===150 && page.docs.some(x=>day(x.data().at)===today)){
+    const next=await getDocs(query(collection(db,"user_activity"),orderBy("at","desc"),startAfter(page.docs[page.docs.length-1]),limit(150)));
+    if(next.empty)break;
+    todayEvents.push(...next.docs.map(x=>x.data()));
+    page=next;
+   }
+   const logins=new Set(todayEvents.filter(x=>x.type==="login"&&day(x.at)===today).map(x=>x.uid));
    const total=users.length+Number(!known.has(ADMIN_UID));
    const active=users.filter(x=>x.active===true).length+Number(!known.has(ADMIN_UID));
    const cards=[["Total Users",total],["Active Accounts",active],["Online (approx.)",online.size],["Today's Logins",logins.size]];
