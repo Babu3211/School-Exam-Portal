@@ -40,6 +40,9 @@ required(html.includes("registry=(isAdmin()||roleHas('viewer'))?cachedClasses.fi
 required(html.includes("s&&(roleHas('viewer')||canTeachSubject(cl,s))"), "Viewer must see IEMIS subject grid");
 required(html.includes("if(!roleHas('viewer')&&!canTeachSubject(cl,subject))"), "Viewer must inspect marks rows without teacher assignments");
 required(html.includes("(!isAdmin()&&!canTeachSubject(cl,subject))"), "Marks save must still require admin or assigned teacher");
+required(html.includes("subjects.some(sub=>roleHas('viewer')||iemisEntryAllowed(st,sub,cl,examId))"), "Viewer must see IEMIS student rows");
+required(html.includes("canEdit:(st,sub)=>!roleHas('viewer')&&iemisEntryAllowed(st,sub,cl,examId)"), "Viewer must not edit IEMIS grid");
+required(html.includes("if(saveButton)saveButton.disabled=roleHas('viewer')"), "Viewer marks save button must remain disabled");
 required(html.includes("initIdleLogout"), "Keep idle-logout initialization");
 required(idle.includes("minutes=60"), "Keep 60-minute inactivity timeout");
 required(activity.includes("export"), "Keep activity module");
