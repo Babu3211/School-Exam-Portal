@@ -29,7 +29,7 @@ jobs:
           allowed={
             '.github/workflows/v45-final-integration-check.yml',
             'index.html', 'user-activity.js', 'idle-logout.js',
-            'firestore.rules', 'scripts/test-v45-final-integration.mjs', 'scripts/test-attendance-bs-today.mjs', 'scripts/check-v44-requirements.mjs'
+            'firestore.rules', 'scripts/test-v45-final-integration.mjs', 'scripts/test-attendance-bs-today.mjs', 'scripts/check-v44-requirements.mjs', 'scripts/test-user-activity-rules.mjs'
           }
           changed=set(subprocess.check_output(['git','diff','--name-only','origin/main','HEAD'],text=True).splitlines())
           unexpected=changed-allowed
@@ -68,6 +68,7 @@ jobs:
         run: |
           npm run test:viewer
           npm run test:rules
+          npx firebase emulators:exec --only firestore --project smss-v45-activity-test 'node scripts/test-user-activity-rules.mjs'
       - name: Verify final V45 source remains the approved dashboard
         run: |
           node --input-type=module -e 'import fs from "node:fs";const s=fs.readFileSync("index.html","utf8");for(const x of ["School Profile","Student Record","Teacher | Staff","initIdleLogout","initUserActivity"])if(!s.includes(x))throw Error("Missing approved V45 feature: "+x);if(s.includes("V45 Trial"))throw Error("Obsolete trial dashboard restored")'
