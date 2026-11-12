@@ -122,3 +122,8 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - Commit `4a79d65c65a579d12290bf7b91ab8173c090a811` launches Teacher student, exam, marks, and mark_settings requests concurrently and awaits all together, instead of sequential student→exam→marks/settings fetches. All existing exact assignment-scoped Firestore queries retained; no security rules, stored data or production changes.
 - Existing regression `scripts/test-v46-teacher-marks-concurrency.mjs` updated in commit `839bc7c932ceaecfc52758782cc87087ed195f9d` to verify all four request paths. CI pass and actual browser speed remain unverified.
 - Teacher legacy Nepali/English Firestore exact-match class assignment mismatch remains a separate unresolved blocker. IEMIS live comparison paused until Work Mode available.
+
+## 2026-11-12 Teacher Attendance parallel reads
+- Commit `fd11782b21c37c1caf38a7b54751f4855a68e200` changes Teacher Attendance load to launch assigned-class student and daily attendance reads concurrently. Existing `where(class == cl)` and `where(className == cl, attendanceType == daily)` Firestore scopes, display, and saved data remain unchanged.
+- Regression `scripts/test-v46-teacher-attendance-concurrency.mjs` added and registered in CI (`4fbdd3b503ac8049551cdf99e33c12619d68c40c`). CI/browser run not yet verified. Legacy class alias query/security mismatch still unresolved.
+- IEMIS live verification deferred until Work Mode available. No production deploy or database writes.
