@@ -2136,7 +2136,7 @@ async function loadMarksEntry(){
    // Use the actual class names saved in the Classes module, not a fixed 1–12 list.
    const classSnap=await getDocs(collection(db,'classes'));
    cachedClasses=classSnap.docs.map(d=>({id:d.id,...d.data()}));
-   entryClassNames=sortEntryClassNames(cachedClasses.filter(x=>x.active!==false).map(x=>x.className));
+   entryClassNames=sortEntryClassNames([...cachedClasses.filter(x=>x.active!==false).map(x=>x.className),...ss.docs.map(d=>{const st=d.data();return st.active===false?'':(st.class??st.className??'');})]);
    // Keep the previous built-in options only as a safe fallback when no Classes records exist.
    if(!entryClassNames.length)entryClassNames=sortEntryClassNames(classes);
   }else{
