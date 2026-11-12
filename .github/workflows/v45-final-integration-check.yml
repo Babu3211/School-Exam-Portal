@@ -1,0 +1,39 @@
+name: Validate V45 Final Integration (no deployment)
+
+on:
+  push:
+    branches:
+      - smss-v45-final-integration
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install test dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: JavaScript syntax and approved dashboard regression
+        run: |
+          node scripts/check-inline-js.mjs
+          node --check user-activity.js
+          node --check idle-logout.js
+          node scripts/check-v44-requirements.mjs
+          node scripts/test-v45-ui.mjs
+          node scripts/test-dropdown-language.mjs
+      - name: Viewer read-only and Firestore permissions (emulator only)
+        run: |
+          npm run test:viewer
+          npm run test:rules
+      - name: Verify final V45 source remains the approved dashboard
+        run: |
+          node --input-type=module -e 'import fs from "node:fs";const s=fs.readFileSync("index.html","utf8");for(const x of ["School Profile","Student Record","Teacher | Staff","initIdleLogout","initUserActivity"])if(!s.includes(x))throw Error("Missing approved V45 feature: "+x);if(s.includes("V45 Trial"))throw Error("Obsolete trial dashboard restored")'
+
+# This workflow does not open IEMIS, deploy Hosting, or write production Firestore data.
