@@ -33,6 +33,8 @@ jobs:
         run: npm run test:v46-attendance-class
       - name: English dropdown status messages
         run: npm run test:v46-english-dropdown-status
+      - name: English attendance status values preservation
+        run: npm run test:v46-attendance-status
       - name: V44 regression gate
         run: node scripts/check-v44-requirements.mjs
       - name: Install test dependencies
