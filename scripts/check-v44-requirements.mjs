@@ -485,6 +485,8 @@ must(activityModule.includes("const rosterRows=roster.filter"), "Online/offline 
 must(activityModule.includes("Last Seen (Nepal)"), "User roster must display last-seen time.");
 must(activityModule.includes('writeEvent("login",user)') && activityModule.includes('writeEvent("logout",user)'), "Login/logout history must be recorded.");
 must(activityModule.includes("activeWithin(x.updatedAt,120000)"), "Online presence must expire when heartbeats become stale.");
+must(activityModule.includes("eligible.has(x.uid)"), "Online count must exclude inactive or unknown user accounts.");
+must(activityModule.includes("const rosterRows=roster.filter(u=>u.active===true)"), "Online/offline roster must only include active accounts.");
 must(idleModule.includes("minutes=60") && idleModule.includes("sessionStorage"), "Idle auto-logout must retain the 60-minute timeout across refresh.");
 must(serviceWorker.includes("const response = await fetch(request);") && serviceWorker.includes("cache.put(request, response.clone())"), "PWA assets must be network-first to avoid stale deployed code.");
 console.log("V45 user activity, idle logout and iPhone-only install regression checks passed.");
