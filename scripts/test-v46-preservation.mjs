@@ -43,6 +43,7 @@ required(html.includes("(!isAdmin()&&!canTeachSubject(cl,subject))"), "Marks sav
 required(html.includes("subjects.some(sub=>roleHas('viewer')||iemisEntryAllowed(st,sub,cl,examId))"), "Viewer must see IEMIS student rows");
 required(html.includes("canEdit:(st,sub)=>!roleHas('viewer')&&iemisEntryAllowed(st,sub,cl,examId)"), "Viewer must not edit IEMIS grid");
 required(html.includes("if(saveButton)saveButton.disabled=roleHas('viewer')"), "Viewer marks save button must remain disabled");
+required(html.includes("roleHas('viewer')?'readonly aria-readonly=\"true\"'"), "Viewer legacy marks inputs must be read-only");
 required(html.includes("initIdleLogout"), "Keep idle-logout initialization");
 required(idle.includes("minutes=60"), "Keep 60-minute inactivity timeout");
 required(activity.includes("export"), "Keep activity module");
