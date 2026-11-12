@@ -473,4 +473,20 @@ must(html.includes(`"studentImportFile","staffAddNewBtn","staffSeed20Btn","staff
 must(html.includes(`button.previousElementSibling?.tagName==="LABEL"`),"Viewer Excel import labels must be hidden.");
 must(html.includes(`"studentAddNewBtn","generateMissingStudentCodes"`),"Viewer must not create students or bulk-generate result codes.");
 must(rules.includes("match /certificates/{certificateId} {\n      allow get, list: if isAdmin() || isViewer();"),"Viewer must be allowed to read issued certificates.");
+// V45 release gates: protect installed APK users, iPhone PWA, and user activity.
+const activityModule = await readFile("user-activity.js", "utf8");
+const idleModule = await readFile("idle-logout.js", "utf8");
+must(html.includes('import {initUserActivity} from "./user-activity.js?v='), "V45 must load the versioned user activity module.");
+must(html.includes('id="smssUserActivity"'), "Admin dashboard must contain user activity panel.");
+must(html.includes("else banner.hidden=(!isIOS||previouslyInstalled);"), "Install banner must remain iPhone/iPad only; Android APK users must not see it.");
+must(html.includes("if(!isIOS)return;"), "Android install prompt must not display the browser install banner.");
+must(activityModule.includes('["Offline Accounts",Math.max(0,active-online.size)]'), "Dashboard must count offline accounts.");
+must(activityModule.includes("const rosterRows=roster.filter"), "Online/offline roster must be initialized before rendering.");
+must(activityModule.includes("Last Seen (Nepal)"), "User roster must display last-seen time.");
+must(activityModule.includes('writeEvent("login",user)') && activityModule.includes('writeEvent("logout",user)'), "Login/logout history must be recorded.");
+must(activityModule.includes("activeWithin(x.updatedAt,120000)"), "Online presence must expire when heartbeats become stale.");
+must(idleModule.includes("minutes=60") && idleModule.includes("sessionStorage"), "Idle auto-logout must retain the 60-minute timeout across refresh.");
+must(serviceWorker.includes("const response = await fetch(request);") && serviceWorker.includes("cache.put(request, response.clone())"), "PWA assets must be network-first to avoid stale deployed code.");
+console.log("V45 user activity, idle logout and iPhone-only install regression checks passed.");
+
 console.log("V44 requirement regression checks passed.");
