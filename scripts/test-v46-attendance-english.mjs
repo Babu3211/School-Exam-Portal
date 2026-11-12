@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const start=html.indexOf('function populateAttendanceSubjects(){');
+assert.ok(start>=0,'Attendance subject selector function must exist');
+const end=html.indexOf('\nfunction renderAttendanceStudents(',start);
+assert.ok(end>start,'Attendance subject selector boundary must exist');
+const fn=html.slice(start,end);
+assert.ok(fn.includes('canonicalStudentClass(x.className)===canonicalStudentClass(cl)'), 'Preserve Nepali/English class matching');
+assert.ok(fn.includes('<option value="${attendanceEsc(x)}">${attendanceEsc(subjectEnglishLabel(x))}</option>'), 'Render English labels but keep original subject value');
+assert.ok(fn.includes('Select Subject'),'Use English placeholder');
+assert.ok(!/\\b(?:setDoc|updateDoc|addDoc|deleteDoc)\\s*\\(/.test(fn),'Dropdown rendering must not mutate Firestore');
+console.log('V46 Attendance English subject dropdown preservation passed.');
