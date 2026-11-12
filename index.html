@@ -2196,6 +2196,7 @@ function iemisEntryAllowed(student,subject,cl,examId){
 }
 function markVersion(record){return JSON.stringify([record?.updatedAt?.seconds,record?.updatedAt?.nanoseconds,record?.createdAt?.seconds,record?.createdAt?.nanoseconds,record?.scores,record?.isAbsent]);}
 async function saveIemisEntryRecords(entries,context,exam,cl,uid){
+ if(roleHas('viewer'))throw new Error('Viewer ले Marks Save गर्न पाउँदैन।');
  if(iemisEntryContext()!==context||auth.currentUser?.uid!==uid)throw new Error('कक्षा, परीक्षा वा Login परिवर्तन भयो। Refresh गरेर पुनः जाँच गर्नुहोस्।');
  const items=[];
  for(const entry of entries){
