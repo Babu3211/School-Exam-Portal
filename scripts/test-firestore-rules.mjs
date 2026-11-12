@@ -21,6 +21,7 @@ const teacherUid = "teacher-001";
 const inactiveUid = "inactive-001";
 const otherUid = "other-001";
 const viewerUid = "viewer-001";
+const mixedViewerUid = "viewer-mixed-001";
 
 async function seed() {
   await testEnv.withSecurityRulesDisabled(async context => {
@@ -34,6 +35,7 @@ async function seed() {
       classTeacherClassNames: ["9"]
     });
     await setDoc(doc(db, "user_roles", viewerUid), { active: true, roles: ["viewer"] });
+    await setDoc(doc(db, "user_roles", mixedViewerUid), { active: true, roles: ["viewer", "subject_teacher", "class_teacher"], subjectAssignmentKeys: ["9::Mathematics"], classTeacherClassNames: ["9"] });
     await setDoc(doc(db, "user_roles", inactiveUid), {
       active: false, roles: ["subject_teacher"]
     });
@@ -144,6 +146,12 @@ try {
   await assertFails(deleteDoc(doc(db(viewerUid), "marks", "mark-other-subject")));
   await assertFails(getDocs(collection(db(viewerUid), "user_activity")));
   await assertFails(getDocs(collection(db(viewerUid), "user_presence")));
+  // Viewer must remain read-only even when an account also has teacher roles.
+  await assertSucceeds(getDoc(doc(db(mixedViewerUid), "students", "student-10")));
+  await assertFails(setDoc(doc(db(mixedViewerUid), "marks", "mixed-viewer-forged"), validMark({createdBy:mixedViewerUid})));
+  await assertFails(setDoc(doc(db(mixedViewerUid), "attendance", "mixed-viewer-attendance"), validAttendance({createdBy:mixedViewerUid,updatedBy:mixedViewerUid})));
+  await assertFails(setDoc(doc(db(mixedViewerUid), "students", "mixed-viewer-student"), {name:"Forged",class:"9"}));
+
 
   await assertSucceeds(getDoc(doc(db(teacherUid), "exams", "exam-1")));
   await assertFails(getDoc(doc(db(inactiveUid), "students", "student-1")));
