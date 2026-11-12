@@ -36,6 +36,10 @@ required(html.includes('if(e.target.closest("#refreshAttendance")){await loadAtt
 required(!html.includes("Refresh भयो। विद्यार्थी सूची फेरि देखाउनुहोस्।"), "Attendance refresh must not clear newly rendered rows");
 required(html.includes("n<=10?'9-10':''"), "Class 11 and 12 must not silently use Class 9-10 marks formulas");
 required(html.includes("const unique=new Map();if(isAdmin()||roleHas('viewer')){chosen.forEach"), "Viewer must see marks subjects without teacher assignments");
+required(html.includes("registry=(isAdmin()||roleHas('viewer'))?cachedClasses.filter"), "Viewer must see IEMIS class subjects");
+required(html.includes("s&&(roleHas('viewer')||canTeachSubject(cl,s))"), "Viewer must see IEMIS subject grid");
+required(html.includes("if(!roleHas('viewer')&&!canTeachSubject(cl,subject))"), "Viewer must inspect marks rows without teacher assignments");
+required(html.includes("(!isAdmin()&&!canTeachSubject(cl,subject))"), "Marks save must still require admin or assigned teacher");
 required(html.includes("initIdleLogout"), "Keep idle-logout initialization");
 required(idle.includes("minutes=60"), "Keep 60-minute inactivity timeout");
 required(activity.includes("export"), "Keep activity module");
