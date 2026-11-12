@@ -2146,12 +2146,13 @@ async function loadMarksEntry(){
    const pairs=currentUserRole.subjectAssignments||[];
    if(!pairs.length)throw new Error('कुनै Subject Assignment भेटिएन।');
    const assignedNames=sortEntryClassNames(pairs.map(x=>x.className));
-   const studentSnaps=await Promise.all(assignedNames.map(cl=>getDocs(query(collection(db,'students'),where('class','==',cl)))));
-   const examSnaps=await Promise.all(assignedNames.map(cl=>getDocs(query(collection(db,'exams'),where('className','==',cl)))));
+   // Start all assignment-scoped reads together; do not broaden Firestore access.
+   const studentSnapsPromise=Promise.all(assignedNames.map(cl=>getDocs(query(collection(db,'students'),where('class','==',cl)))));
+   const examSnapsPromise=Promise.all(assignedNames.map(cl=>getDocs(query(collection(db,'exams'),where('className','==',cl)))));
    const markSnapsPromise=Promise.all(pairs.map(x=>getDocs(query(collection(db,'marks'),where('className','==',x.className),where('subject','==',x.subject),...(String(x.section||'').trim()?[where('section','==',String(x.section).trim())]:[])))));
    // Fetch settings concurrently with assignment-scoped mark queries; keep Firestore permissions unchanged.
    const settingsPromise=getDocs(collection(db,'mark_settings'));
-   const [markSnaps,settingsSnap]=await Promise.all([markSnapsPromise,settingsPromise]);
+   const [studentSnaps,examSnaps,markSnaps,settingsSnap]=await Promise.all([studentSnapsPromise,examSnapsPromise,markSnapsPromise,settingsPromise]);
    ms=settingsSnap;
    ss={docs:studentSnaps.flatMap(x=>x.docs)};
    es={docs:examSnaps.flatMap(x=>x.docs)};
