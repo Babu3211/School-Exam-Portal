@@ -97,3 +97,8 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - Commit `85948a377334b583df4241d20b8e5001077f6524` translates existing assignment loading, class/subject empty, and assessment-settings dropdown status strings into English across Marks Entry and Attendance; no data/permission logic changed.
 - `scripts/test-v46-english-dropdown-status.mjs` added and wired into V46 CI (`c693cbc42b6d1b787ddedb6c5c996f30680771ef`). CI execution and browser verification not yet confirmed.
 - Outstanding: full UI English audit, exact-match Teacher Firestore security/assignment mismatch, no-refresh loading and authenticated role E2E. Do not deploy production until validated.
+
+## 2026-11-12 user instruction — IEMIS live comparison deferred
+- User confirms the Work Mode usage limit has been reached. Actual authenticated IEMIS 2083 comparison is **paused until Work Mode becomes available again**. Do not repeatedly request IEMIS login or claim that IEMIS parity is verified during this pause.
+- Continue independent V46 development now: English-only visible exam/class/subject/dropdown UI, no-refresh student/attendance/marks loading, Teacher/Viewer security and regression tests, without altering real records or production.
+- Once Work Mode resumes, compare actual IEMIS 2083 Mark Entry Ledger, Mark Ledger, Grade Ledger, Grade Sheet for Classes 1, 6 and 9, then replicate agreed group structures, preserving 9–10 Computer 4/36/10 and CDC grading requirements.
