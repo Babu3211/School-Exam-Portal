@@ -2172,7 +2172,7 @@ async function loadMarksEntry(){
   return true;
  }catch(e){
   console.error('Marks entry load failed',e);
-  if(!isAdmin()){
+  if(!isAdmin()&&!roleHas('viewer')){
    classSel.innerHTML='<option value="">Assignment/अनुमति उपलब्ध छैन</option>';
    classSel.disabled=true;
    const subjectSel=document.getElementById('entrySubject');
