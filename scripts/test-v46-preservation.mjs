@@ -58,6 +58,7 @@ required(html.includes("entryClassNames.find(x=>canonicalStudentClass(x)===canon
 required(html.includes("if(!selectedExam||canonicalStudentClass(selectedExam.className)!==canonicalStudentClass(cl)"), "Marks Save must validate equivalent Nepali/English exam classes");
 required(!html.includes("if(!selectedExam||selectedExam.className!==cl||"), "Marks Save must not reject equivalent class labels");
 required(html.includes("async function saveIemisEntryRecords(entries,context,exam,cl,uid){\n if(roleHas('viewer'))throw new Error"), "IEMIS marks save handler must reject viewer role before writes");
+required(html.includes("if(e.target.id==='saveAllMarks'){if(roleHas('viewer')){entryMsg("), "Save All Marks must reject viewer before grid or legacy writes");
 required(html.includes("initIdleLogout"), "Keep idle-logout initialization");
 required(idle.includes("minutes=60"), "Keep 60-minute inactivity timeout");
 required(activity.includes("export"), "Keep activity module");
