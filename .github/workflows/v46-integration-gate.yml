@@ -37,6 +37,8 @@ jobs:
         run: npm run test:v46-attendance-status
       - name: English attendance student selection messages
         run: npm run test:v46-attendance-messages
+      - name: Teacher Marks Entry concurrent settings loading
+        run: npm run test:v46-teacher-marks-concurrency
       - name: V44 regression gate
         run: node scripts/check-v44-requirements.mjs
       - name: Install test dependencies
