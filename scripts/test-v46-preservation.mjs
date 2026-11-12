@@ -66,6 +66,7 @@ required(html.includes("function iemisEntryVisible(student,subject,cl,examId)"),
 required(html.includes("roleHas('viewer')?iemisEntryVisible(st,sub,cl,examId):iemisEntryAllowed(st,sub,cl,examId)"), "Viewer grid must filter optional-subject students without write permissions");
 required(html.includes("classNo=String(canonicalStudentClass(cl)||'').replace(/[^0-9]/g,'')"), "Marks Entry assessment subject lookup must support Nepali-digit classes");
 required(html.includes("const classNo=String(canonicalStudentClass(group)||'').replace(/[^0-9]/g,'');const base=matches.find"), "Marks Entry selected assessment settings must support Nepali-digit classes");
+required(html.includes("(currentUserRole?.subjectAssignments||[]).filter(x=>canonicalStudentClass(x.className)===canonicalStudentClass(cl)).map(x=>String(x.subject||'').trim())"), "Teacher subject assignments must match normalized class labels");
 required(html.includes("initIdleLogout"), "Keep idle-logout initialization");
 required(idle.includes("minutes=60"), "Keep 60-minute inactivity timeout");
 required(activity.includes("export"), "Keep activity module");
