@@ -23,6 +23,8 @@ jobs:
           node --check scripts/test-v46-preservation.mjs
       - name: V46 preservation gate
         run: npm run test:v46-preservation
+      - name: Teacher and student class normalization regression
+        run: npm run test:v46-class-normalization
       - name: V44 regression gate
         run: node scripts/check-v44-requirements.mjs
       - name: Install test dependencies
