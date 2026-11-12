@@ -47,6 +47,8 @@ required(html.includes("roleHas('viewer')?'readonly aria-readonly=\"true\"'"), "
 required(html.includes("const students=marksStudents.filter(x=>canonicalStudentClass(x.class??x.className)===canonicalStudentClass(cl)"), "Marks student list must normalize Nepali and English class labels");
 required(html.includes("const ca=canonicalStudentClass(a),cb=canonicalStudentClass(b);"), "Class sort must use normalized Nepali digits");
 required(html.includes('${examEsc(classEnglishLabel(x))}</option>'), "Marks class dropdown must display English labels while preserving stored values");
+required(html.includes('if(!attendanceDataReady)await loadAttendancePage();else await loadAttendanceStudentsForDay()'), "Attendance Show Students must await initial Firestore load");
+required(html.includes('attendanceDataReady=true;populateAttendanceSubjects()'), "Attendance data readiness must only be marked after records load");
 required(html.includes("initIdleLogout"), "Keep idle-logout initialization");
 required(idle.includes("minutes=60"), "Keep 60-minute inactivity timeout");
 required(activity.includes("export"), "Keep activity module");
