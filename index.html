@@ -3041,6 +3041,8 @@ let attendanceDataReady=false;
 async function loadAttendancePage(){
  attendanceDataReady=false;
  const date=document.getElementById("attendanceDate");if(!date)return;
+ // Capture the selected class before Teacher loading replaces the options.
+ const selectedClassBeforeLoad=document.getElementById("attendanceClass")?.value||"";
  if(!isAdmin()&&!roleHas("viewer")){
   const classSel=document.getElementById("attendanceClass");
   if(classSel){classSel.disabled=true;classSel.innerHTML='<option value="">Loading your assignment...</option>';}
@@ -3063,7 +3065,10 @@ async function loadAttendancePage(){
    ss={docs:studentSnaps.flatMap(x=>x.docs)};as={docs:attendanceSnaps.flatMap(x=>x.docs)};
    attendanceClasses=names.map(className=>({className,subject:""}));
    const classSel=document.getElementById("attendanceClass");
-   classSel.innerHTML=names.map(x=>`<option value="${attendanceEsc(x)}">${attendanceEsc(classEnglishLabel(x))}</option>`).join("");classSel.disabled=false;
+   classSel.innerHTML=names.map(x=>`<option value="${attendanceEsc(x)}">${attendanceEsc(classEnglishLabel(x))}</option>`).join("");
+   const restoredClass=names.find(x=>canonicalStudentClass(x)===canonicalStudentClass(selectedClassBeforeLoad));
+   if(restoredClass)classSel.value=restoredClass;
+   classSel.disabled=false;
    const type=document.getElementById("attendanceType");if(type){type.value="daily";type.disabled=true;}
    const subjectWrap=document.getElementById("attendanceSubjectWrap");if(subjectWrap)subjectWrap.hidden=true;
   }
