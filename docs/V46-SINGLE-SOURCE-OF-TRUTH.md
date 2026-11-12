@@ -71,3 +71,9 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - The test extracts and executes the actual `canonicalStudentClass` helper from `index.html`, checking Class 1–12 English/Nepali-digit labels and ECD; this guards the earlier Teacher Assignment/Student Class 6 mismatch fix (`09d04da`).
 - **Test execution and CI pass remain unverified**; GitHub commits succeeded, but local GitHub clone was blocked by DNS. Do not claim real Teacher login/Firestore Save success.
 - Next: check workflow results, actual Teacher Marks Entry Show Students and Save, Attendance initial load, Viewer role security and Firestore emulator. No production/data writes.
+
+## 2026-11-12 security audit — Teacher class-name mismatch blocker
+- Source-verified: `index.html` uses `canonicalStudentClass` to equate `Class 6`, `कक्षा ६`, and `कक्षा 6` for client-side Marks Entry filtering.
+- **Firestore Rules are not equivalent:** `isAssignedStudentClass(className)` tests exact membership in `subjectAssignmentClassNames` / `classTeacherClassNames`; `teacherSubjectAccess` tests exact `className + '::' + subjectName` keys; `studentBelongsToClass` requires exact `student.class == mark.className`. Teacher queries in `loadMarksEntry` also use exact `where('class','==',cl)` and `where('className','==',cl)` filters.
+- Consequence: existing Teacher assignment `Class 6` and student `कक्षा ६` may still be blocked by query/rules or marks save despite the UI-level normalization and regression test. **Do not claim the earlier `09d04da` fix is end-to-end complete.**
+- Safe next step: design backward-compatible normalized assignment aliases/queries and validate with Firestore emulator using both label variants, role/section restrictions and existing historical marks; obtain explicit release authorization before any live rules change. No rules, assignments or real records were modified in this audit.
