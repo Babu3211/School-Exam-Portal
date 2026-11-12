@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync('index.html','utf8');
+const rules=readFileSync('firestore.rules','utf8');
+const expect=(needle,label)=>assert.ok(html.includes(needle),label);
+expect('canonicalStudentClass(x.class??x.className??\'\')===canonicalStudentClass(cl)','Attendance must normalize student class');
+expect('canonicalStudentClass(st.class??st.className??\'\')===canonicalStudentClass(cl)','Mark Entry must normalize student class');
+expect('canonicalStudentClass(exam.className)!==canonicalStudentClass(cl)','Exam validation must normalize class');
+expect('canonicalStudentClass(x.className)===canonicalStudentClass(cl)','Attendance subjects must normalize class');
+expect('canonicalStudentClass(x.className)===canonicalStudentClass(key.className)','Attendance history must normalize class');
+expect('where("class","==",cl)','Teacher student reads must be class-scoped');
+assert.match(rules,/match \/staff\/\{documentId\} \{\s*allow get, list: if isAdmin\(\) \|\| isViewer\(\);/,'Staff directory permissions must remain restricted');
+assert.ok(!html.includes('marksStudents.filter(st=>st.class===cl'),'Legacy exact-match marks filter must not return');
+console.log('Student, attendance, exam class normalization and staff permission regression checks passed.');

@@ -1,3 +1,4 @@
+import './test-student-loading-regression.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const html=readFileSync('index.html','utf8');
