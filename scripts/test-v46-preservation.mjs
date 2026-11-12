@@ -24,6 +24,7 @@ required(html.includes("rolePageAllowed"), "Keep role-based navigation");
 required(html.includes("roleHas(\"viewer\")"), "Keep viewer access handling");
 required(html.includes('if(p==="students"&&window.loadStudents)window.loadStudents()'), "Student page must invoke data loading on navigation");
 required(html.includes('if(p==="attendance"&&window.loadAttendancePage)window.loadAttendancePage()'), "Attendance page must invoke data loading on navigation");
+required(html.includes('if(!isAdmin()&&!roleHas("viewer")){\n  const classSel=document.getElementById("attendanceClass");'), "Viewer attendance class selection must remain available");
 required(html.includes('if(p==="marks"') && html.includes("window.loadMarksEntry"), "Keep marks entry page loading");
 required(html.includes("initIdleLogout"), "Keep idle-logout initialization");
 required(idle.includes("minutes=60"), "Keep 60-minute inactivity timeout");
