@@ -20,9 +20,9 @@ export function mayWriteExamRecord({membership,assignment,schoolId,classId,subje
      !Array.isArray(assignment.terms) || !assignment.terms.includes(term)) return false;
   if(resource==="attendance") return membership.roles.includes("class_teacher") &&
      assignment.kind==="class_teacher";
-  return (membership.roles.includes("subject_teacher") && assignment.kind==="subject_teacher" &&
-      assignment.subjectId===subjectId) ||
-     (membership.roles.includes("class_teacher") && assignment.kind==="class_teacher" &&
-      Array.isArray(assignment.subjectIds) && assignment.subjectIds.includes(subjectId));
+  // Match the isolated Firestore prototype: class teachers may record attendance,
+  // but marks require an explicit subject-teacher assignment.
+  return membership.roles.includes("subject_teacher") &&
+    assignment.kind==="subject_teacher" && assignment.subjectId===subjectId;
  } catch {return false;}
 }
