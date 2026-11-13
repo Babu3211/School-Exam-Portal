@@ -22,7 +22,7 @@ export function createAdminFirestoreReadGateway(firestore) {
    let query=firestore.collection(path);
    for(const [field,operator,value] of filters) query=query.where(field,operator,value);
    const snapshot=await query.get();
-   return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+   return snapshot.docs.map(doc=>({...doc.data(),id:doc.id}));
   }
  });
 }
