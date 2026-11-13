@@ -152,3 +152,8 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - Commit `c0d9524da8173bf97e2c40c7bd1b687f5f495281`: student/exam Firestore queries use all unique **exact** class names explicitly stored in subject assignments, rather than canonical display-de-duplicated names. UI continues showing one canonical class; marks queries remain class/subject/section scoped. No rules, data, or production changes.
 - Regression `scripts/test-v46-marks-class-alias-queries.mjs` added to CI (`239da1724a050a2ede4c4d451c0a2f9fa5e20dec`). Execution not verified.
 - Important limitation: this resolves aliases only when both raw names are explicitly present in the Teacher's assignment. It does NOT authorize or retrieve a stored student/exam class alias absent from the Teacher role; that needs secure migration/emulator testing. IEMIS Work Mode comparison still deferred.
+
+## 2026-11-13 Attendance load-failure stale data safety
+- Commit `4e139bec37922f97a8a1b8d72b71bef016352dbf` clears previously rendered student rows and updates attendance counts if `loadAttendancePage` fails, avoiding stale display after permissions/network errors. Data and Firestore security unchanged.
+- Added `scripts/test-v46-attendance-load-failure.mjs` and CI job step (`b6cc458e56ce3f840fad3962ec6ef8cc9d5cfb12`). Structural checks against fetched code performed; CI/browser execution remains unconfirmed.
+- Exact Teacher assignment aliases absent from role still require secure migration/emulator testing. IEMIS Work Mode comparison deferred. Production unchanged.
