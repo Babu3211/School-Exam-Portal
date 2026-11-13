@@ -47,6 +47,8 @@ jobs:
         run: npm run test:v46-attendance-empty-classes
       - name: Teacher Marks Entry class selection preserved
         run: npm run test:v46-marks-class-preserve
+      - name: Attendance stale student rows cleared
+        run: npm run test:v46-attendance-stale-rows
       - name: V44 regression gate
         run: node scripts/check-v44-requirements.mjs
       - name: Install test dependencies
