@@ -24,7 +24,8 @@
     "test:v46-marks-class-preserve": "node scripts/test-v46-marks-class-preserve.mjs",
     "test:v46-attendance-stale-rows": "node scripts/test-v46-attendance-stale-rows.mjs",
     "test:v46-marks-class-alias-queries": "node scripts/test-v46-marks-class-alias-queries.mjs",
-    "test:v46-attendance-load-failure": "node scripts/test-v46-attendance-load-failure.mjs"
+    "test:v46-attendance-load-failure": "node scripts/test-v46-attendance-load-failure.mjs",
+    "test:v46-marks-load-failure": "node scripts/test-v46-marks-load-failure.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
