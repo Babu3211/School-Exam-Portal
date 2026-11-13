@@ -1,0 +1,14 @@
+import assert from "node:assert/strict";
+import {assertSchoolId,schoolDocumentPath,schoolCollectionPath,annualFeeNpr,createSchoolDraft} from "../src/v47/tenant-domain.mjs";
+const a=createSchoolDraft({schoolId:"school_A001",name:" School A ",iemisCode:"123",annualFee:3000});
+const b=createSchoolDraft({schoolId:"school_B001",name:"School B",iemisCode:"456",isOwnerSchool:true,annualFee:9999});
+assert.equal(a.annualFeeNpr,3000);assert.equal(b.annualFeeNpr,0);
+assert.equal(a.status,"pending");assert.equal(b.subscriptionStatus,"free");
+assert.notEqual(schoolCollectionPath(a.schoolId,"students"),schoolCollectionPath(b.schoolId,"students"));
+assert.equal(schoolDocumentPath(a.schoolId),"schools/school_A001");
+assert.throws(()=>assertSchoolId("../students"));
+assert.throws(()=>schoolCollectionPath(a.schoolId,"user_roles"));
+assert.throws(()=>annualFeeNpr(-1));
+assert.throws(()=>annualFeeNpr(1.5));
+assert.throws(()=>createSchoolDraft({schoolId:"school_C001",name:"",iemisCode:"1"}));
+console.log("V47 isolated tenant domain tests passed");
