@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SMSS V47 — School Registration Prototype</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#14243b;background:#f2f6fc}body{margin:0;padding:24px}
+main{max-width:760px;margin:auto}section{background:white;border:1px solid #d8e2f0;border-radius:14px;padding:20px;margin:16px 0}
+label{display:block;margin:12px 0;font-weight:600}input{display:block;box-sizing:border-box;width:100%;padding:12px;margin-top:5px;border:1px solid #b6c5d8;border-radius:8px;font:inherit}
+button{padding:12px 20px;border:0;border-radius:8px;background:#1769d2;color:white;font:inherit;cursor:pointer}
+.notice{border-left:4px solid #b15e00;padding:12px;background:#fff8ed}pre{white-space:pre-wrap;overflow-wrap:anywhere}
+</style></head><body><main>
+<h1>SMSS V47 — Super Admin Prototype</h1>
+<p class="notice"><strong>Development preview only.</strong> No login, no Firebase connection, no registration, no payments, and no real school data changes. Do not enter personal information.</p>
+<section><h2>New School Draft</h2>
+<form id="school-form">
+<label>School ID (8–64 letters, numbers, _ or -)<input name="schoolId" required pattern="[A-Za-z0-9_-]{8,64}" placeholder="school_demo001"></label>
+<label>School Name<input name="name" required placeholder="Demo School"></label>
+<label>IEMIS Code<input name="iemisCode" required pattern="[A-Za-z0-9_-]{3,32}" placeholder="DEMO123"></label>
+<label>School Admin Email (dummy only)<input name="adminEmail" required type="email" placeholder="admin@example.com"></label>
+<label>Annual Fee (NPR)<input name="annualFee" type="number" min="0" step="1" value="3000" required></label>
+<label><input name="isOwnerSchool" type="checkbox" style="display:inline;width:auto"> My school (free)</label>
+<button type="submit">Preview Draft (no save)</button>
+</form></section>
+<section><h2>Local Preview</h2><pre id="preview" aria-live="polite">No draft generated.</pre></section>
+</main><script type="module">
+import {prepareSchoolRegistration} from "../../src/v47/school-registration.mjs";
+const form=document.getElementById("school-form"),output=document.getElementById("preview");
+form.addEventListener("submit",event=>{
+ event.preventDefault();
+ try{
+ const values=new FormData(form);
+ const draft=prepareSchoolRegistration({
+ schoolId:String(values.get("schoolId")),name:String(values.get("name")),
+ iemisCode:String(values.get("iemisCode")),adminEmail:String(values.get("adminEmail")),
+ annualFee:Number(values.get("annualFee")),isOwnerSchool:values.has("isOwnerSchool")
+ });
+ output.textContent=JSON.stringify(draft,null,2)+"\n\nNOT SAVED — preview only.";
+ }catch(error){output.textContent="Validation error: "+error.message;}
+});
+</script></body></html>
