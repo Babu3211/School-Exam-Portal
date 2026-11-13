@@ -1,5 +1,7 @@
-name: Deploy approved SMSS V45 to Firebase Production
+name: ARCHIVED - V45 Firebase Production (disabled)
 
+# Archived after V46 production acceptance. Manual trigger remains visible for audit,
+# but the deployment job is permanently disabled by its false condition.
 on:
   workflow_dispatch:
     inputs:
@@ -17,7 +19,7 @@ concurrency:
 
 jobs:
   verify-and-deploy:
-    if: ${{ github.event.inputs.confirmation == 'DEPLOY-V45' }}
+    if: ${{ false }} # Archived: V45 deployment permanently gated off
     runs-on: ubuntu-latest
     environment: production
     steps:
