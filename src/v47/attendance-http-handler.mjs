@@ -2,6 +2,7 @@
  * Read-only V47 attendance endpoint contract.
  * No deployment or V46 integration is performed by this module.
  */
+import {validateV47ReadQuery} from "./read-query-validation.mjs";
 import {readVerifiedV46Attendance} from "./verified-v46-attendance-reader.mjs";
 export function createV47AttendanceHttpHandler({auth,firestore}) {
  if(!auth || typeof auth.verifyIdToken!=="function" ||
@@ -13,9 +14,7 @@ export function createV47AttendanceHttpHandler({auth,firestore}) {
   const match=typeof header==="string"?/^Bearer ([^\s]+)$/.exec(header):null;
   if(!match)return {status:401,body:{error:"Authentication required"}};
   const params=request?.query;
-  if(!params || typeof params!=="object" ||
-     !Object.keys(params).every(k=>["schoolId","className","date","attendanceType"].includes(k)) ||
-     !["schoolId","className","date","attendanceType"].every(k=>params[k]===undefined || typeof params[k]==="string"))
+  if(!validateV47ReadQuery(params,"attendance"))
    return {status:400,body:{error:"Invalid query"}};
   try {
    const rows=await readVerifiedV46Attendance({
