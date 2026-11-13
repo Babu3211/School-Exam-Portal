@@ -2147,10 +2147,13 @@ async function loadMarksEntry(){
    if(!roleHas('subject_teacher'))throw new Error('Subject Teacher अनुमति आवश्यक छ।');
    const pairs=currentUserRole.subjectAssignments||[];
    if(!pairs.length)throw new Error('कुनै Subject Assignment भेटिएन।');
-   const assignedNames=sortEntryClassNames(pairs.map(x=>x.className));
+   // Query every distinct *stored* assignment name. Canonical de-duplication is only for the UI:
+   // "Class 6" and "कक्षा ६" may refer to the same display class but are different Firestore keys.
+   const assignedQueryNames=[...new Set(pairs.map(x=>String(x.className??'').trim()).filter(Boolean))];
+   const assignedNames=sortEntryClassNames(assignedQueryNames);
    // Start all assignment-scoped reads together; do not broaden Firestore access.
-   const studentSnapsPromise=Promise.all(assignedNames.map(cl=>getDocs(query(collection(db,'students'),where('class','==',cl)))));
-   const examSnapsPromise=Promise.all(assignedNames.map(cl=>getDocs(query(collection(db,'exams'),where('className','==',cl)))));
+   const studentSnapsPromise=Promise.all(assignedQueryNames.map(cl=>getDocs(query(collection(db,'students'),where('class','==',cl)))));
+   const examSnapsPromise=Promise.all(assignedQueryNames.map(cl=>getDocs(query(collection(db,'exams'),where('className','==',cl)))));
    const markSnapsPromise=Promise.all(pairs.map(x=>getDocs(query(collection(db,'marks'),where('className','==',x.className),where('subject','==',x.subject),...(String(x.section||'').trim()?[where('section','==',String(x.section).trim())]:[])))));
    // Fetch settings concurrently with assignment-scoped mark queries; keep Firestore permissions unchanged.
    const settingsPromise=getDocs(collection(db,'mark_settings'));
