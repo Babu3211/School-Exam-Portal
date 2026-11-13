@@ -1,0 +1,18 @@
+import assert from "node:assert/strict";
+import {loadVerifiedSchoolSession} from "../src/v47/verified-school-session.mjs";
+const auth={verifyIdToken:async(token,checkRevoked)=>{
+ assert.equal(checkRevoked,true);
+ if(token==="good")return {uid:"user1",firebase:{sign_in_provider:"password"}};
+ if(token==="anonymous")return {uid:"user1",firebase:{sign_in_provider:"anonymous"}};
+ throw new Error("Invalid token");
+}};
+const docs=new Map([["schools/school_A001/members/user1",{active:true,roles:["viewer"]}],["schools/school_B001/members/user2",{active:true,roles:["school_admin"]}]]);
+const paths=[];
+const firestore={doc:path=>{paths.push(path);return {get:async()=>({exists:docs.has(path),data:()=>docs.get(path)})};}};
+const good=await loadVerifiedSchoolSession({idToken:"good",schoolId:"school_A001",auth,firestore});
+assert.deepEqual(good.roles,["viewer"]);
+await assert.rejects(loadVerifiedSchoolSession({idToken:"good",schoolId:"school_B001",auth,firestore}),/No active membership/);
+await assert.rejects(loadVerifiedSchoolSession({idToken:"anonymous",schoolId:"school_A001",auth,firestore}),/Authenticated account/);
+await assert.rejects(loadVerifiedSchoolSession({idToken:"bad",schoolId:"school_A001",auth,firestore}),/Invalid token/);
+assert.deepEqual(paths,["schools/school_A001/members/user1","schools/school_B001/members/user1"]);
+console.log("V47 verified school session tests passed");
