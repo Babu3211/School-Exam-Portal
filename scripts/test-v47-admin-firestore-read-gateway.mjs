@@ -1,0 +1,15 @@
+import assert from "node:assert/strict";
+import {createAdminFirestoreReadGateway} from "../src/v47/admin-firestore-read-gateway.mjs";
+const calls=[];
+const firestore={collection:path=>{calls.push(["collection",path]);return {where(field,op,value){calls.push(["where",field,op,value]);return this;},async get(){calls.push(["get"]);return {docs:[{id:"actual-id",data:()=>({id:"forged-id",score:87})}]};}};}};
+const gateway=createAdminFirestoreReadGateway(firestore);
+const result=await gateway.queryCollection("schools/school_A001/marks",[["className","==","9"],["subject","==","Computer"],["section","==","A"]]);
+assert.deepEqual(result,[{id:"actual-id",score:87}]);
+assert.deepEqual(calls[0],["collection","schools/school_A001/marks"]);
+assert.equal(calls.filter(x=>x[0]==="where").length,3);
+await assert.rejects(gateway.queryCollection("marks",[["className","==","9"],["subject","==","Computer"]]));
+await assert.rejects(gateway.queryCollection("schools/school_B001/students",[["className","==","9"],["subject","==","Computer"]]));
+await assert.rejects(gateway.queryCollection("schools/school_A001/marks",[["studentId","==","x"],["subject","==","Computer"]]));
+await assert.rejects(gateway.queryCollection("schools/school_A001/marks",[["className","==","9"],["subject","!=", "Computer"]]));
+assert.equal(calls.filter(x=>x[0]==="collection").length,1,"Invalid requests must not query Firestore");
+console.log("V47 Admin SDK read-only marks gateway tests passed");
