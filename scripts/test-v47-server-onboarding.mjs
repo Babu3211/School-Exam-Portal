@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import {registerSchoolOnTrustedServer} from "../src/v47/server-onboarding.mjs";
+const input={schoolId:"school_0001",name:"Pilot",iemisCode:"ABC123",adminEmail:"admin@example.com",annualFee:2000};
+let calls=0;
+const adapter={async registerAtomically(command){calls++;assert.equal(command.actorUid,"root");return {schoolId:command.school.schoolId,status:"pending"};}};
+await assert.rejects(registerSchoolOnTrustedServer({actor:{uid:"root"},input,adapter}));
+assert.equal(calls,0);
+await assert.rejects(registerSchoolOnTrustedServer({actor:{uid:"root",verifiedSuperAdmin:true},input}));
+assert.equal(calls,0);
+const result=await registerSchoolOnTrustedServer({actor:{uid:"root",verifiedSuperAdmin:true},input,adapter});
+assert.deepEqual(result,{schoolId:"school_0001",status:"pending"});
+assert.equal(calls,1);
+console.log("V47 trusted onboarding adapter contract tests passed");
