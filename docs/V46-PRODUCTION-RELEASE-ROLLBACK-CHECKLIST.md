@@ -19,6 +19,7 @@ Status: **release candidate, not deployed**. This checklist is for a school-auth
 - [ ] Verify Viewer can navigate and inspect all authorized pages, but cannot add, edit, delete or save, including forged button events.
 - [ ] Verify iPhone PWA and installed Android APK behavior; APK currently targets the Firebase live URL.
 - [ ] Verify Firestore export/backup exists **outside Hosting** and can be accessed for recovery. Record the export location privately; do not commit student data or credentials.
+- [ ] **Spark plan only:** follow `docs/V46-FREE-FIRESTORE-BACKUP-PLAN.md`; do not enable Google Cloud billing, paid PITR or managed backups. The Disaster Recovery screenshot showed scheduled backups disabled and no snapshots. Require a verified encrypted offline data backup and isolated restore rehearsal before setting `BACKUP-VERIFIED`.
 - [ ] Record current production Hosting release/version ID and verify rollback permissions before any deployment.
 - [ ] Resolve outstanding IEMIS 2083 real-system comparison when Work Mode is available. Do not claim an exact match until verified.
 - [ ] Obtain school release acceptance, review PR #47, and merge only after all mandatory checks pass.
