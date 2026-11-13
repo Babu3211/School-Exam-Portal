@@ -32,50 +32,73 @@ jobs:
       - name: Ensure V46 production files remain unchanged
         run: node scripts/test-v47-production-boundary.mjs
       - name: test-v47-tenant-domain
+        if: success() || failure()
         run: node scripts/test-v47-tenant-domain.mjs
       - name: test-v47-tenant-access
+        if: success() || failure()
         run: node scripts/test-v47-tenant-access.mjs
       - name: test-v47-school-registration
+        if: success() || failure()
         run: node scripts/test-v47-school-registration.mjs
       - name: test-v47-server-onboarding
+        if: success() || failure()
         run: node scripts/test-v47-server-onboarding.mjs
       - name: test-v47-school-session
+        if: success() || failure()
         run: node scripts/test-v47-school-session.mjs
       - name: test-v47-firestore-onboarding-adapter
+        if: success() || failure()
         run: node scripts/test-v47-firestore-onboarding-adapter.mjs
       - name: test-v47-school-admin-invitation
+        if: success() || failure()
         run: node scripts/test-v47-school-admin-invitation.mjs
       - name: test-v47-school-dashboard
+        if: success() || failure()
         run: node scripts/test-v47-school-dashboard.mjs
       - name: test-v47-school-dashboard-preview
+        if: success() || failure()
         run: node scripts/test-v47-school-dashboard-preview.mjs
       - name: test-v47-verified-platform-admin
+        if: success() || failure()
         run: node scripts/test-v47-verified-platform-admin.mjs
       - name: test-v47-trusted-onboarding-service
+        if: success() || failure()
         run: node scripts/test-v47-trusted-onboarding-service.mjs
       - name: test-v47-verified-school-session
+        if: success() || failure()
         run: node scripts/test-v47-verified-school-session.mjs
       - name: test-v47-school-data-paths
+        if: success() || failure()
         run: node scripts/test-v47-school-data-paths.mjs
       - name: test-v47-exam-write-policy
+        if: success() || failure()
         run: node scripts/test-v47-exam-write-policy.mjs
       - name: test-v47-trusted-teacher-assignment
+        if: success() || failure()
         run: node scripts/test-v47-trusted-teacher-assignment.mjs
       - name: test-v47-v46-feature-bridge
+        if: success() || failure()
         run: node scripts/test-v47-v46-feature-bridge.mjs
       - name: test-v47-v46-firestore-inventory
+        if: success() || failure()
         run: node scripts/test-v47-v46-firestore-inventory.mjs
       - name: test-v47-v46-collection-map
+        if: success() || failure()
         run: node scripts/test-v47-v46-collection-map.mjs
       - name: test-v47-v46-migration-dry-run
+        if: success() || failure()
         run: node scripts/test-v47-v46-migration-dry-run.mjs
       - name: test-v47-subscription-policy
+        if: success() || failure()
         run: node scripts/test-v47-subscription-policy.mjs
       - name: test-v47-apk-pwa-compat
+        if: success() || failure()
         run: node scripts/test-v47-apk-pwa-compat.mjs
       - name: Two-school Firestore security emulator tests
+        if: success() || failure()
         run: npx firebase emulators:exec --project smss-v47-tenant-rules-test --config firebase.v47.emulator.json --only firestore "node scripts/test-v47-firestore-isolation.mjs"
       - name: Verify V46 preservation baseline
+        if: success() || failure()
         run: |
           npm run test:v46-preservation
           npm run test:v46-class-normalization
