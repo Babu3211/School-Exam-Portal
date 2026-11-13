@@ -1,6 +1,7 @@
 name: ARCHIVED - V45 Firebase Production (disabled)
 
-# Archived after V46 production acceptance. No manual or automatic triggers.
+# Archived after V46 production acceptance. Manual trigger remains visible for audit,
+# but the deployment job is permanently disabled by its false condition.
 on:
   workflow_dispatch:
     inputs:
