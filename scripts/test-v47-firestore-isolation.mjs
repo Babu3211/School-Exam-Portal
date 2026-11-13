@@ -91,6 +91,17 @@ try {
  await assertFails(setDoc(doc(admin,"schools",schoolA,"students","student2"),{name:"Blocked"}));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m6"),mark));
  await assertSucceeds(getDoc(doc(root,"schools",schoolA)));
+ await env.withSecurityRulesDisabled(async context=>{
+   await setDoc(doc(context.firestore(),"schools",schoolA),{name:schoolA,status:"pending"});
+ });
+ await assertFails(getDoc(doc(admin,"schools",schoolA,"students","student1")));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"school_settings","default"),{name:"Blocked Pending"}));
+ await env.withSecurityRulesDisabled(async context=>{
+   await setDoc(doc(context.firestore(),"schools",schoolA),{name:schoolA,status:"active"});
+ });
+ await assertSucceeds(getDoc(doc(admin,"schools",schoolA,"students","student1")));
+ await assertSucceeds(getDoc(doc(viewer,"schools",schoolA,"students","student1")));
+ await assertFails(setDoc(doc(viewer,"schools",schoolA,"students","student1"),{name:"Still Read Only"}));
 
  console.log("V47 tenant Firestore emulator isolation and exam assignment tests passed");
 } finally {await env.cleanup();}
