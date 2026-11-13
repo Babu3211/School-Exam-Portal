@@ -36,6 +36,17 @@ try {
  await assertFails(setDoc(doc(viewer,"schools",schoolA,"students","student1"),{name:"No"}));
  await assertFails(setDoc(doc(teacher,"schools",schoolA,"students","student1"),{name:"No"}));
  await assertFails(getDoc(doc(outsider,"schools",schoolA,"students","student1")));
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"classes","class9"),{name:"9"}));
+ await assertSucceeds(getDoc(doc(viewer,"schools",schoolA,"classes","class9")));
+ await assertFails(setDoc(doc(viewer,"schools",schoolA,"classes","class9"),{name:"10"}));
+ await assertFails(setDoc(doc(admin,"schools",schoolB,"classes","class9"),{name:"9"}));
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"school_settings","default"),{name:"School A"}));
+ await assertFails(setDoc(doc(viewer,"schools",schoolA,"school_settings","default"),{name:"Changed"}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"audit_logs","log1"),{event:"tamper"}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"user_roles","user1"),{role:"admin"}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"public_results","result1"),{published:true}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"school_gallery","photo1"),{url:"unsafe"}));
+
  await assertFails(setDoc(doc(admin,"schools",schoolA,"members","adminA"),{active:true,roles:["school_admin"]}));
  await assertFails(setDoc(doc(root,"schools","school_C001"),{name:"No direct client onboarding"}));
  await assertSucceeds(getDoc(doc(root,"schools",schoolA)));
