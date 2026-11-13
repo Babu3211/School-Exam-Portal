@@ -94,6 +94,9 @@ jobs:
       - name: test-v47-apk-pwa-compat
         if: success() || failure()
         run: node scripts/test-v47-apk-pwa-compat.mjs
+      - name: Strict read query validation
+        if: success() || failure()
+        run: node scripts/test-v47-read-query-validation.mjs
       - name: Marks and attendance combined integration
         if: success() || failure()
         run: node scripts/test-v47-marks-attendance-e2e.mjs
