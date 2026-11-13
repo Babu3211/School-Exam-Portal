@@ -59,6 +59,10 @@ jobs:
         run: node scripts/check-v44-requirements.mjs
       - name: Install test dependencies
         run: npm install --no-package-lock --no-audit --no-fund
+      - name: Firestore rules and Viewer permission emulator regression
+        run: |
+          npm run test:rules
+          npm run test:viewer
       - name: IEMIS, PWA, question paper and V45 UI regression
         run: |
           npm run test:iemis
