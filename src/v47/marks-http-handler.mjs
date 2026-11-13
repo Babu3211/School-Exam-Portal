@@ -18,6 +18,7 @@ export function createV47MarksHttpHandler({auth,firestore}) {
   if(!match) return {status:401,body:{error:"Authentication required"}};
   const params=request?.query;
   if(!params || typeof params!=="object" ||
+     !Object.keys(params).every(k=>["schoolId","className","subject","section"].includes(k)) ||
      !["schoolId","className","subject","section"].every(k=>params[k]===undefined || typeof params[k]==="string"))
    return {status:400,body:{error:"Invalid query"}};
   try {
