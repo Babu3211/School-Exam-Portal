@@ -1638,6 +1638,7 @@ async function restoreClass(id){
  catch(error){console.error("Class restore failed:",error);setClassMessage(`Restore भएन: ${safeNoticeError(error)}`,true)}
 }
 document.addEventListener("click",event=>{
+ if(roleHas("viewer")&&!isAdmin() && event.target.closest("[data-subject-edit],[data-subject-archive],[data-subject-restore],[data-class-edit],[data-class-delete],[data-class-restore],[data-exam-edit],[data-exam-delete],[data-exam-restore]"))return;
  const subjectEdit=event.target.closest("[data-subject-edit]"),subjectArchive=event.target.closest("[data-subject-archive]"),subjectRestore=event.target.closest("[data-subject-restore]");
  if(subjectEdit){editSubjectCatalog(subjectEdit.dataset.subjectEdit);return}
  if(subjectArchive){archiveSubjectCatalog(subjectArchive.dataset.subjectArchive);return}
@@ -1647,6 +1648,7 @@ document.addEventListener("click",event=>{
  if(event.target.closest("#classReloadBtn")){loadClasses();return}
  if(event.target.closest("#classSearchBtn")){renderClasses();return}
  if(event.target.closest("#classCancelBtn")){const form=document.getElementById("classForm");if(form){form.reset();delete form.dataset.editId;document.getElementById("classSaveBtn").textContent="Save गर्नुहोस्";document.getElementById("classCancelBtn").hidden=true;setClassMessage("सम्पादन रद्द भयो।")}return}
+ if(roleHas("viewer")&&!isAdmin() && event.target.closest("[data-subject-edit],[data-subject-archive],[data-subject-restore],[data-class-edit],[data-class-delete],[data-class-restore],[data-exam-edit],[data-exam-delete],[data-exam-restore]"))return;
  const edit=event.target.closest("[data-class-edit]"),del=event.target.closest("[data-class-delete]"),restore=event.target.closest("[data-class-restore]");
  if(edit){editClass(edit.dataset.classEdit);return}if(del){deleteClass(del.dataset.classDelete);return}if(restore)restoreClass(restore.dataset.classRestore);
 });
@@ -1837,6 +1839,7 @@ document.addEventListener("click",event=>{
   if(form){form.reset();delete form.dataset.editId;document.getElementById("examYear").value="2083";document.getElementById("examSaveBtn").textContent="Save गर्नुहोस्";document.getElementById("examCancelBtn").hidden=true;setExamMessage("सम्पादन रद्द भयो।")}
   return;
  }
+ if(roleHas("viewer")&&!isAdmin() && event.target.closest("[data-subject-edit],[data-subject-archive],[data-subject-restore],[data-class-edit],[data-class-delete],[data-class-restore],[data-exam-edit],[data-exam-delete],[data-exam-restore]"))return;
  const edit=event.target.closest("[data-exam-edit]"),del=event.target.closest("[data-exam-delete]"),restore=event.target.closest("[data-exam-restore]");
  if(edit){editExam(edit.dataset.examEdit);return}
  if(del){deleteExam(del.dataset.examDelete);return}
