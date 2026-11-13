@@ -94,6 +94,9 @@ jobs:
       - name: test-v47-apk-pwa-compat
         if: success() || failure()
         run: node scripts/test-v47-apk-pwa-compat.mjs
+      - name: Verified V46 batch attendance reader
+        if: success() || failure()
+        run: node scripts/test-v47-verified-v46-attendance-reader.mjs
       - name: Authenticated marks HTTP handler
         if: success() || failure()
         run: node scripts/test-v47-marks-http-handler.mjs
