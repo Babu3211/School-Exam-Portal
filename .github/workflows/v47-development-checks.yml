@@ -94,6 +94,9 @@ jobs:
       - name: test-v47-apk-pwa-compat
         if: success() || failure()
         run: node scripts/test-v47-apk-pwa-compat.mjs
+      - name: Verified school dashboard HTTP handler
+        if: success() || failure()
+        run: node scripts/test-v47-dashboard-http-handler.mjs
       - name: Strict read query validation
         if: success() || failure()
         run: node scripts/test-v47-read-query-validation.mjs
