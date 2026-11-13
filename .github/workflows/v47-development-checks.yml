@@ -94,6 +94,9 @@ jobs:
       - name: test-v47-apk-pwa-compat
         if: success() || failure()
         run: node scripts/test-v47-apk-pwa-compat.mjs
+      - name: Admin SDK marks read gateway
+        if: success() || failure()
+        run: node scripts/test-v47-admin-firestore-read-gateway.mjs
       - name: Verified V46 school marks reader
         if: success() || failure()
         run: node scripts/test-v47-verified-v46-marks-reader.mjs
