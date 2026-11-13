@@ -142,3 +142,8 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - Commit `cc6070ca73315ebaf867cc909694fc6c78816ab6` captures the selected Marks Entry class before Teacher assignment dropdown reset, then restores by canonical Nepali/English class match if the class remains available. No Firestore query/rules or stored data changes.
 - Added `scripts/test-v46-marks-class-preserve.mjs`, wired into V46 CI (`d7a8245de07c5b5b44f91d56a23d87ae77f01858`). CI/browser pass not confirmed.
 - Outstanding: Teacher exact-match Firestore class aliases, authenticated E2E and no-refresh behavior, IEMIS 2083 comparison after Work Mode limit resets. No production deployment.
+
+## 2026-11-13 Attendance invalid selection stale-row fix
+- Commit `67d3f5598bd72c4ee67ebdf587581eba8d0dbcbe` clears previously displayed Attendance student rows and refreshes counts if date/class is invalid or a required subject is missing. Valid selections continue rendering saved attendance. No Firestore write, rule or production changes.
+- Regression `scripts/test-v46-attendance-stale-rows.mjs` registered in CI (`32fa1fbd3128bf462d8394f98432901c178dc498`). CI/browser execution not yet confirmed.
+- Firestore Teacher Nepali/English exact-match assignment issue still unresolved and requires emulator/security validation before modifying rules. IEMIS comparison paused until Work Mode access returns.
