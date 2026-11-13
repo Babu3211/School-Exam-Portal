@@ -1,0 +1,44 @@
+name: V46 data-loading regression checks (no deploy)
+on:
+  push:
+    branches:
+      - smss-v46-live-repair-20261113
+  pull_request:
+    branches:
+      - main
+permissions:
+  contents: read
+jobs:
+  data-loading:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify HTML JavaScript syntax
+        run: node scripts/check-inline-js.mjs
+      - name: V44 feature preservation
+        run: node scripts/check-v44-requirements.mjs
+      - name: V45 interface preservation
+        run: npm run test:v45
+      - name: V46 feature preservation
+        run: npm run test:v46-preservation
+      - name: Class normalization
+        run: npm run test:v46-class-normalization
+      - name: Attendance loading and class selection
+        run: |
+          npm run test:v46-attendance-class-preserve
+          npm run test:v46-attendance-empty-classes
+          npm run test:v46-attendance-stale-rows
+          npm run test:v46-attendance-load-failure
+          npm run test:v46-teacher-attendance-concurrency
+      - name: Marks loading and class selection
+        run: |
+          npm run test:v46-marks-class-preserve
+          npm run test:v46-marks-class-alias-queries
+          npm run test:v46-marks-load-failure
+          npm run test:v46-teacher-marks-concurrency
+      - name: PWA update checks
+        run: npm run test:pwa
