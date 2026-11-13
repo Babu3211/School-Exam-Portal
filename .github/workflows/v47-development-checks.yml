@@ -1,5 +1,6 @@
 name: V47 Multi-School Development Checks
 on:
+  workflow_dispatch:
   push:
     branches: [smss-v47-multischool-work]
   pull_request:
