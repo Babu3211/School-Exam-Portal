@@ -15,11 +15,16 @@ try {
   await setDoc(doc(db,"schools",schoolA,"members","viewerA"),{active:true,roles:["viewer"]});
   await setDoc(doc(db,"schools",schoolA,"members","teacherA"),{active:true,roles:["subject_teacher"]});
   await setDoc(doc(db,"platform_admins","root"),{active:true});
+  await setDoc(doc(db,"schools",schoolA,"assignments","teacherA_9_computer"),{uid:"teacherA",schoolId:schoolA,classId:"9",kind:"subject_teacher",active:true,terms:["first"]});
+  await setDoc(doc(db,"schools",schoolA,"assignments","classA_9"),{uid:"classA",schoolId:schoolA,classId:"9",kind:"class_teacher",active:true,terms:["first"]});
+  await setDoc(doc(db,"schools",schoolA,"members","classA"),{active:true,roles:["class_teacher"]});
  });
  const admin=env.authenticatedContext("adminA").firestore();
  const viewer=env.authenticatedContext("viewerA").firestore();
  const teacher=env.authenticatedContext("teacherA").firestore();
  const root=env.authenticatedContext("root").firestore();
+ const subject=env.authenticatedContext("teacherA").firestore();
+ const classTeacher=env.authenticatedContext("classA").firestore();
  const outsider=env.authenticatedContext("outsider").firestore();
  const studentA=doc(admin,"schools",schoolA,"students","student1");
  await assertSucceeds(getDoc(studentA));
@@ -35,5 +40,19 @@ try {
  await assertFails(setDoc(doc(root,"schools","school_C001"),{name:"No direct client onboarding"}));
  await assertSucceeds(getDoc(doc(root,"schools",schoolA)));
  await assertFails(getDoc(doc(root,"schools",schoolA,"students","student1")));
- console.log("V47 tenant Firestore emulator isolation tests passed");
+ const mark={schoolId:schoolA,classId:"9",subjectId:"computer",studentId:"student1",term:"first",score:30};
+ await assertSucceeds(setDoc(doc(subject,"schools",schoolA,"marks","m1"),mark));
+ await assertFails(setDoc(doc(subject,"schools",schoolB,"marks","m1"),{...mark,schoolId:schoolB}));
+ await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m2"),{...mark,subjectId:"math"}));
+ await assertFails(setDoc(doc(viewer,"schools",schoolA,"marks","m3"),mark));
+ await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m1"),{...mark,classId:"10"}));
+ await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m1"),{...mark,score:-1}));
+ await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m1"),{...mark,studentId:"student2"}));
+ const attendance={schoolId:schoolA,classId:"9",studentId:"student1",term:"first",present:true};
+ await assertSucceeds(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a1"),attendance));
+ await assertFails(setDoc(doc(subject,"schools",schoolA,"attendance","a2"),attendance));
+ await assertFails(setDoc(doc(viewer,"schools",schoolA,"attendance","a3"),attendance));
+ await assertFails(setDoc(doc(classTeacher,"schools",schoolB,"attendance","a4"),{...attendance,schoolId:schoolB}));
+ await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a1"),{...attendance,studentId:"student2"}));
+ console.log("V47 tenant Firestore emulator isolation and exam assignment tests passed");
 } finally {await env.cleanup();}
