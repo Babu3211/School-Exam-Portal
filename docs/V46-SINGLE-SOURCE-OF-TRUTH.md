@@ -157,3 +157,7 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - Commit `4e139bec37922f97a8a1b8d72b71bef016352dbf` clears previously rendered student rows and updates attendance counts if `loadAttendancePage` fails, avoiding stale display after permissions/network errors. Data and Firestore security unchanged.
 - Added `scripts/test-v46-attendance-load-failure.mjs` and CI job step (`b6cc458e56ce3f840fad3962ec6ef8cc9d5cfb12`). Structural checks against fetched code performed; CI/browser execution remains unconfirmed.
 - Exact Teacher assignment aliases absent from role still require secure migration/emulator testing. IEMIS Work Mode comparison deferred. Production unchanged.
+
+## 2026-11-13 Marks Entry load failure stale-data protection
+- Commit `8c8e1e644d40c72ae10d66676c3df39b2297dc27` clears in-memory marks/student/exam/settings arrays, visible Marks Entry rows, and IEMIS entry grid after failed reload; error text is English. This is UI state only; no saved marks or Firestore rules changed.
+- Regression `scripts/test-v46-marks-load-failure.mjs` added to CI (`b5f4c2cd8a2009cc8d29be8602e5700e9250b26b`). CI and authenticated browser runs still unverified. Exact Teacher role/class alias migration and IEMIS comparison remain pending.
