@@ -9,7 +9,7 @@ let writes=0;
 const firestore={
  doc:path=>({path}),
  runTransaction:async fn=>fn({
-  get:async ref=>({exists:true,data:()=>({active:true,roles:["subject_teacher"]})}),
+  get:async ref=>({exists:true,data:()=>ref.path.endsWith("/admin1")?{active:true,roles:["school_admin"]}:{active:true,roles:["subject_teacher"]}}),
   set:(ref,data)=>{writes++;assert.equal(ref.path,"schools/school_A001/assignments/teacher1_9_computer");assert.equal(data.uid,"teacher1");}
  })
 };
@@ -19,4 +19,12 @@ await assert.rejects(assignTeacherOnTrustedServer({adminSession:{...adminSession
 assert.equal(writes,0);
 const assigned=await assignTeacherOnTrustedServer({adminSession,input,firestore});
 assert.equal(assigned.schoolId,"school_A001");assert.equal(writes,1);
+const revoked={
+ doc:path=>({path}),
+ runTransaction:async fn=>fn({
+  get:async ref=>({exists:true,data:()=>ref.path.endsWith("/admin1")?{active:false,roles:["school_admin"]}:{active:true,roles:["subject_teacher"]}}),
+  set:()=>{throw new Error("Revoked admin must never write");}
+ })
+};
+await assert.rejects(assignTeacherOnTrustedServer({adminSession,input,firestore:revoked}),/Active school admin membership required/);
 console.log("V47 trusted teacher assignment contract tests passed");
