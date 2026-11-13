@@ -1,7 +1,8 @@
-name: Deploy approved SMSS V45 to Firebase Production
+name: ARCHIVED - V45 Firebase Production (disabled)
 
+# Archived after V46 production acceptance. No manual or automatic triggers.
 on:
-  workflow_dispatch:
+  workflow_dispatch_DISABLED:
     inputs:
       confirmation:
         description: 'Type DEPLOY-V45 after approving native print, school logo and IEMIS NG discrepancy policy'
