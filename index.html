@@ -2119,6 +2119,8 @@ async function loadMarksEntry(){
  if(!document.getElementById('entryClass'))return;
  syncIemisEntryView();
  const classSel=document.getElementById('entryClass');
+ // Remember the selected class before Teacher assignment loading replaces its options.
+ const selectedClassBeforeLoad=classSel.value;
  if(!isAdmin()&&!roleHas('viewer')){
   classSel.disabled=true;
   classSel.innerHTML='<option value="">Loading your assignment...</option>';
@@ -2163,7 +2165,7 @@ async function loadMarksEntry(){
   marksExams=es.docs.map(d=>({id:d.id,...d.data()}));
   marksSettings=ms.docs.map(d=>({id:d.id,...d.data()}));
   existingMarks=st.docs.map(d=>({id:d.id,...d.data()}));
-  const previousClass=classSel.value;
+  const previousClass=selectedClassBeforeLoad;
   classSel.innerHTML=entryClassNames.map(x=>`<option value="${examEsc(x)}">${examEsc(classEnglishLabel(x))}</option>`).join('')||'<option value="">No classes available</option>';
   const matchedClass=entryClassNames.find(x=>canonicalStudentClass(x)===canonicalStudentClass(previousClass));
   if(matchedClass)classSel.value=matchedClass;
