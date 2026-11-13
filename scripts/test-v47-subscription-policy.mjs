@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import {subscriptionPreview} from "../src/v47/subscription-policy.mjs";
+const base={annualFee:3000,startDate:"2026-01-01",endDate:"2026-12-31",paid:true};
+assert.equal(subscriptionPreview({...base,asOf:"2026-07-01"}).status,"active");
+assert.equal(subscriptionPreview({...base,asOf:"2027-01-10"}).status,"grace");
+assert.equal(subscriptionPreview({...base,asOf:"2027-02-01"}).status,"expired");
+assert.equal(subscriptionPreview({...base,asOf:"2026-07-01",paid:false}).status,"unpaid");
+assert.equal(subscriptionPreview({...base,asOf:"2025-12-01"}).status,"upcoming");
+const own=subscriptionPreview({...base,asOf:"2027-02-01",isOwnerSchool:true});
+assert.equal(own.status,"free");assert.equal(own.annualFeeNpr,0);
+assert.throws(()=>subscriptionPreview({...base,asOf:"2026-02-30"}));
+assert.throws(()=>subscriptionPreview({...base,asOf:"2026-07-01",graceDays:-1}));
+console.log("V47 subscription lifecycle tests passed");
