@@ -5,6 +5,7 @@ const html=await readFile('index.html','utf8');
 const entry=await readFile('iemis-entry.js','utf8');
 const ledger=await readFile('iemis-ledger.js','utf8');
 const source=await readFile('sw.js','utf8');
+assert.match(source,/fetch\(request,\s*\{\s*cache:\s*['\"]no-store['\"]\s*\}\)/,'Online navigations must bypass stale HTTP cache.');
 const base='https://smss-test.example/';
 const ledgerImport=html.match(/from ["'](\.\/iemis-ledger\.js\?v=[^"']+)["']/)?.[1];
 const entryImport=html.match(/from ["'](\.\/iemis-entry\.js\?v=[^"']+)["']/)?.[1];
