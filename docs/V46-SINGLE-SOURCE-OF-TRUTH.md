@@ -147,3 +147,8 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - Commit `67d3f5598bd72c4ee67ebdf587581eba8d0dbcbe` clears previously displayed Attendance student rows and refreshes counts if date/class is invalid or a required subject is missing. Valid selections continue rendering saved attendance. No Firestore write, rule or production changes.
 - Regression `scripts/test-v46-attendance-stale-rows.mjs` registered in CI (`32fa1fbd3128bf462d8394f98432901c178dc498`). CI/browser execution not yet confirmed.
 - Firestore Teacher Nepali/English exact-match assignment issue still unresolved and requires emulator/security validation before modifying rules. IEMIS comparison paused until Work Mode access returns.
+
+## 2026-11-13 Teacher Marks Entry multiple stored class aliases
+- Commit `c0d9524da8173bf97e2c40c7bd1b687f5f495281`: student/exam Firestore queries use all unique **exact** class names explicitly stored in subject assignments, rather than canonical display-de-duplicated names. UI continues showing one canonical class; marks queries remain class/subject/section scoped. No rules, data, or production changes.
+- Regression `scripts/test-v46-marks-class-alias-queries.mjs` added to CI (`239da1724a050a2ede4c4d451c0a2f9fa5e20dec`). Execution not verified.
+- Important limitation: this resolves aliases only when both raw names are explicitly present in the Teacher's assignment. It does NOT authorize or retrieve a stored student/exam class alias absent from the Teacher role; that needs secure migration/emulator testing. IEMIS Work Mode comparison still deferred.
