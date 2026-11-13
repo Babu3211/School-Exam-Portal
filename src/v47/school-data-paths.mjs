@@ -3,13 +3,12 @@
  * Pure route construction; this is NOT authorization.
  * Only use after server-verified school session and deployed tenant rules.
  */
-import {assertSchoolId,schoolCollectionPath} from "./tenant-domain.mjs";
-const RESOURCE_NAMES=new Set(["students","staff","exams","marks","attendance","settings","results"]);
+import {assertSchoolId} from "./tenant-domain.mjs";
+import {v47CollectionPlan} from "./v46-collection-map.mjs";
 const DOCUMENT_ID=/^[A-Za-z0-9_-]{1,128}$/;
 export function schoolResourcePath(schoolId,resource) {
  assertSchoolId(schoolId);
- if(!RESOURCE_NAMES.has(resource)) throw new TypeError("Unsupported tenant resource");
- return schoolCollectionPath(schoolId,resource);
+ return v47CollectionPlan(schoolId,resource).targetPath;
 }
 export function schoolRecordPath(schoolId,resource,documentId) {
  if(typeof documentId!=="string" || !DOCUMENT_ID.test(documentId)) throw new TypeError("Invalid document ID");
