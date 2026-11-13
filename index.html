@@ -3085,6 +3085,9 @@ async function loadAttendancePage(){
      classSel.innerHTML=names.map(x=>`<option value="${attendanceEsc(x)}">${attendanceEsc(classEnglishLabel(x))}</option>`).join("");
      const same=names.find(x=>canonicalStudentClass(x)===canonicalStudentClass(previousClass));
      if(same)classSel.value=same;
+    }else{
+     // Never leave a stale class selected after all saved classes/students disappear.
+     classSel.innerHTML='<option value="">No classes available</option>';
     }
     classSel.disabled=false;
    }
