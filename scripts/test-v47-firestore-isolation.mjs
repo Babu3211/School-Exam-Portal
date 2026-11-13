@@ -8,7 +8,7 @@ try {
  await env.withSecurityRulesDisabled(async context=>{
   const db=context.firestore();
   for(const schoolId of [schoolA,schoolB]){
-   await setDoc(doc(db,"schools",schoolId),{name:schoolId});
+   await setDoc(doc(db,"schools",schoolId),{name:schoolId,status:"active"});
    await setDoc(doc(db,"schools",schoolId,"students","student1"),{name:"Synthetic Student"});
   }
   await setDoc(doc(db,"schools",schoolA,"members","adminA"),{active:true,roles:["school_admin"]});
@@ -83,5 +83,14 @@ try {
  });
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m5"),mark));
  await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a5"),attendance));
+ await env.withSecurityRulesDisabled(async context=>{
+   await setDoc(doc(context.firestore(),"schools",schoolA),{name:schoolA,status:"suspended"});
+ });
+ await assertFails(getDoc(doc(admin,"schools",schoolA,"students","student1")));
+ await assertFails(getDoc(doc(viewer,"schools",schoolA,"students","student1")));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"students","student2"),{name:"Blocked"}));
+ await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m6"),mark));
+ await assertSucceeds(getDoc(doc(root,"schools",schoolA)));
+
  console.log("V47 tenant Firestore emulator isolation and exam assignment tests passed");
 } finally {await env.cleanup();}
