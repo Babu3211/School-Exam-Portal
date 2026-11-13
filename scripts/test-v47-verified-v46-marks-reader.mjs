@@ -1,0 +1,17 @@
+import assert from "node:assert/strict";
+import {readVerifiedV46SchoolMarks} from "../src/v47/verified-v46-marks-reader.mjs";
+const docs=new Map([["schools/school_A001",{status:"active"}],["schools/school_B001",{status:"active"}],["schools/school_A001/members/teacher1",{active:true,roles:["viewer"]}]]);
+const auth={verifyIdToken:async(token,revoked)=>{assert.equal(revoked,true);if(token!=="valid")throw new Error("Invalid token");return {uid:"teacher1",firebase:{sign_in_provider:"password"}};}};
+const firestore={doc:path=>({get:async()=>({exists:docs.has(path),data:()=>docs.get(path)})})};
+const reads=[];
+const gateway={queryCollection:async(path,filters)=>{reads.push({path,filters});return [{id:"mark_1"}];}};
+const args={idToken:"valid",schoolId:"school_A001",className:"9",subject:"Computer",auth,firestore,gateway};
+assert.deepEqual(await readVerifiedV46SchoolMarks(args),[{id:"mark_1"}]);
+assert.equal(reads[0].path,"schools/school_A001/marks");
+assert.deepEqual(reads[0].filters,[["className","==","9"],["subject","==","Computer"]]);
+await assert.rejects(readVerifiedV46SchoolMarks({...args,idToken:"bad"}),/Invalid token/);
+await assert.rejects(readVerifiedV46SchoolMarks({...args,schoolId:"school_B001"}),/No active membership/);
+docs.set("schools/school_A001",{status:"suspended"});
+await assert.rejects(readVerifiedV46SchoolMarks(args),/School is not active/);
+assert.equal(reads.length,1,"Denied requests must never query marks");
+console.log("V47 verified school marks read tests passed");
