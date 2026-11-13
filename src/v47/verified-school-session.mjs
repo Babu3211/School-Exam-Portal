@@ -4,11 +4,13 @@
  * This intentionally uses a per-user index that only trusted Admin SDK writes.
  * Index creation and migration must be transactionally enforced before use.
  */
-import {availableSchoolsForUser,resolveSchoolSession} from "./school-session.mjs";
+import {resolveSchoolSession} from "./school-session.mjs";
+import {assertSchoolId} from "./tenant-domain.mjs";
 export async function loadVerifiedSchoolSession({idToken,schoolId,auth,firestore}) {
  if(typeof idToken!=="string" || !idToken) throw new Error("Firebase ID token required");
  if(!auth || typeof auth.verifyIdToken!=="function" || !firestore || typeof firestore.doc!=="function")
    throw new TypeError("Firebase Admin SDK required");
+ assertSchoolId(schoolId);
  const decoded=await auth.verifyIdToken(idToken,true);
  if(!decoded?.uid || decoded.firebase?.sign_in_provider==="anonymous") throw new Error("Authenticated account required");
  const uid=decoded.uid;
