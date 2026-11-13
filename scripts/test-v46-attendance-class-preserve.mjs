@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const start=html.indexOf('async function loadAttendancePage(){');
+const end=html.indexOf('\nwindow.loadAttendancePage=loadAttendancePage;',start);
+assert.ok(start>=0&&end>start,'Attendance loader exists');
+const fn=html.slice(start,end);
+const capture=fn.indexOf('const selectedClassBeforeLoad=document.getElementById("attendanceClass")?.value||"";');
+const reset=fn.indexOf('classSel.innerHTML=\'<option value="">Loading your assignment...</option>\'');
+assert.ok(capture>=0&&reset>capture,'Class must be captured before Teacher options reset');
+assert.ok(fn.includes('names.find(x=>canonicalStudentClass(x)===canonicalStudentClass(selectedClassBeforeLoad))'),'Teacher class restoration must support Nepali and English names');
+assert.ok(fn.includes('if(restoredClass)classSel.value=restoredClass;'),'Teacher selection must be restored if still assigned');
+assert.ok(fn.includes('if(same)classSel.value=same;'),'Admin/Viewer selection restoration must remain');
+console.log('V46 Attendance class selection preserved across reload for all roles.');

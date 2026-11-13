@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const idle=readFileSync(new URL('../idle-logout.js',import.meta.url),'utf8');
+const activity=readFileSync(new URL('../user-activity.js',import.meta.url),'utf8');
+assert.match(html,/initIdleLogout\(\{auth,minutes:60,onTimeout:async user=>\{await signOutWithActivity\(user\);\}\}\)/,'Idle timeout must sign out after 60 minutes');
+assert.match(html,/async function signOutWithActivity\(user\)/,'Shared logout handler must exist');
+assert.match(html,/finally\{await signOut\(auth\);\}/,'Firebase signout must happen even if activity audit fails');
+assert.match(html,/window\.renderSmssUserActivity=\(\)=>\{if\(!isAdmin\(\)\)return;/,'User activity dashboard must be admin-only');
+assert.ok(idle.includes('export function initIdleLogout'),'Idle logout implementation must remain imported');
+assert.ok(activity.includes('export function initUserActivity'),'User activity audit implementation must remain imported');
+console.log('V46 60-minute idle logout and admin activity wiring regression passed.');

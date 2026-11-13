@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const start=html.indexOf('async function loadMarksEntry(){');
+const end=html.indexOf('\nwindow.loadMarksEntry=loadMarksEntry;',start);
+assert.ok(start>=0&&end>start,'Marks Entry loader must exist');
+const fn=html.slice(start,end);
+assert.ok(fn.includes('const markSnapsPromise=Promise.all(pairs.map(x=>getDocs(query(collection(db,\'marks\')'),'Teacher mark queries must remain scoped to assignments');
+assert.ok(fn.includes("const settingsPromise=getDocs(collection(db,'mark_settings'));"),'Settings request must begin before waiting for mark queries');
+assert.ok(fn.includes('const [studentSnaps,examSnaps,markSnaps,settingsSnap]=await Promise.all([studentSnapsPromise,examSnapsPromise,markSnapsPromise,settingsPromise]);'),'All four assignment-scoped reads must resolve concurrently');
+assert.ok(fn.includes('const studentSnapsPromise=Promise.all(assignedQueryNames.map('),'Student requests must start before await');
+assert.ok(fn.includes('const examSnapsPromise=Promise.all(assignedQueryNames.map('),'Exam requests must start before await');
+assert.ok(fn.includes('ms=settingsSnap;'),'Settings snapshot must be retained');
+assert.ok(fn.includes('ss={docs:studentSnaps.flatMap(x=>x.docs)};'),'Teacher student assignment scope must remain');
+assert.ok(fn.includes('st={docs:markSnaps.flatMap(x=>x.docs)};'),'Teacher marks snapshot must be retained');
+console.log('V46 Teacher Marks Entry concurrent settings query regression passed.');

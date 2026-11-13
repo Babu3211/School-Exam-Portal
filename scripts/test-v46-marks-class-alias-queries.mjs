@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const start=html.indexOf('async function loadMarksEntry(){');
+const end=html.indexOf('\nwindow.loadMarksEntry=loadMarksEntry;',start);
+assert.ok(start>=0&&end>start,'Marks Entry loader exists');
+const fn=html.slice(start,end);
+assert.ok(fn.includes('const assignedQueryNames=[...new Set(pairs.map(x=>String(x.className??\'\').trim()).filter(Boolean))];'),'Exact stored assignment names retained for Firestore queries');
+assert.ok(fn.includes('const assignedNames=sortEntryClassNames(assignedQueryNames);'),'UI still de-duplicates equivalent class labels');
+assert.ok(fn.includes('assignedQueryNames.map(cl=>getDocs(query(collection(db,\'students\'),where(\'class\',\'==\',cl)))'),'Student query uses exact assigned name');
+assert.ok(fn.includes('assignedQueryNames.map(cl=>getDocs(query(collection(db,\'exams\'),where(\'className\',\'==\',cl)))'),'Exam query uses exact assigned name');
+assert.ok(fn.includes('pairs.map(x=>getDocs(query(collection(db,\'marks\')'),'Mark query remains assignment/subject scoped');
+console.log('V46 Teacher Marks Entry exact class alias queries guarded.');

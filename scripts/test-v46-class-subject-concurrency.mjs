@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const start=html.indexOf('async function loadClasses(){');
+const end=html.indexOf('\nfunction renderSubjectCatalog()',start);
+assert.ok(start>=0&&end>start,'Class loader must exist');
+const fn=html.slice(start,end);
+const subjectStart=fn.indexOf('const subjectPromise=getDocs(collection(db,"subjects"))');
+const classAwait=fn.indexOf('const snap=await getDocs(collection(db,"classes"))');
+const subjectAwait=fn.indexOf('const subjectSnap=await subjectPromise;');
+assert.ok(subjectStart>=0&&classAwait>subjectStart&&subjectAwait>classAwait,'Subject Bank read must start before waiting on class read');
+assert.match(fn,/subjectReadError\.code\|\|subjectReadError\.message/,'Subject Bank fallback must report read failure');
+assert.match(fn,/return null;/,'Subject Bank failure must retain legacy class-subject fallback');
+assert.match(fn,/cachedClasses\.filter\(x=>x\.subject\)/,'Legacy subjects must remain visible');
+console.log('V46 Class and Subject Bank parallel loading regression passed.');

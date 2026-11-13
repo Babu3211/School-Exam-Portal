@@ -354,7 +354,7 @@ try {
   const versionStart=application.indexOf("function markVersion(");
   const markVersion=new Function(application.slice(versionStart,controllerStart)+";return markVersion;")();
   const cache=[];
-  const controllerDeps={iemisEntryContext:()=>"grid-context",auth:{currentUser:{uid:formatTeacher}},marksStudents:gridStudents,iemisEntryAllowed:()=>true,crypto:globalThis.crypto,TextEncoder,doc,db:db(formatTeacher),currentSchoolSettings:{academicYear:"2083"},smssExamTermKey:()=>"first",smssTermLabel:()=>"First Term",window:{confirm:()=>true},iemisEntryBatches,runTransaction,serverTimestamp,getDoc,existingMarks:cache,writeAuditLog:async()=>true,markVersion,safeNoticeError:e=>e.message};
+  const controllerDeps={roleHas:()=>false,iemisEntryContext:()=>"grid-context",auth:{currentUser:{uid:formatTeacher}},marksStudents:gridStudents,iemisEntryAllowed:()=>true,crypto:globalThis.crypto,TextEncoder,doc,db:db(formatTeacher),currentSchoolSettings:{academicYear:"2083"},smssExamTermKey:()=>"first",smssTermLabel:()=>"First Term",window:{confirm:()=>true},iemisEntryBatches,runTransaction,serverTimestamp,getDoc,existingMarks:cache,writeAuditLog:async()=>true,markVersion,safeNoticeError:e=>e.message};
   const actualSave=new Function(...Object.keys(controllerDeps),application.slice(controllerStart,controllerEnd)+";return saveIemisEntryRecords;")(...Object.values(controllerDeps));
   const gridPlans=gridStudents.map((student,i)=>({key:"grid-"+i,student,subject:"Nepali",old:null,data:iemisEntryValues(iemisEntrySchema(1,"first","Nepali"),{values:{count:"5",obtained:"17"},isAbsent:false})}));
   const gridResult=await actualSave(gridPlans,"grid-context",{id:"format-exam-1",academicYear:"2083"},"1",formatTeacher);
