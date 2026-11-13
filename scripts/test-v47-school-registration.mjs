@@ -1,0 +1,14 @@
+import assert from "node:assert/strict";
+import {prepareSchoolRegistration,createRegistrationCommand} from "../src/v47/school-registration.mjs";
+const input={schoolId:"school_0001",name:"School One",iemisCode:"IEMIS123",annualFee:3000,adminEmail:"ADMIN@EXAMPLE.COM"};
+const draft=prepareSchoolRegistration(input);
+assert.equal(draft.school.annualFeeNpr,3000);
+assert.equal(draft.adminEmail,"admin@example.com");
+assert.equal(draft.school.status,"pending");
+assert.equal(createRegistrationCommand({uid:"root",verifiedSuperAdmin:true},input).actorUid,"root");
+assert.throws(()=>createRegistrationCommand({uid:"root",verifiedSuperAdmin:false},input));
+assert.throws(()=>createRegistrationCommand({uid:"root",roles:["super_admin"]},input));
+assert.throws(()=>prepareSchoolRegistration({...input,adminEmail:"not-email"}));
+assert.throws(()=>prepareSchoolRegistration({...input,iemisCode:"../"}));
+assert.equal(prepareSchoolRegistration({...input,isOwnerSchool:true}).school.annualFeeNpr,0);
+console.log("V47 school registration contract tests passed");
