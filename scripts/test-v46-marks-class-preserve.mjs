@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const start=html.indexOf('async function loadMarksEntry(){');
+const end=html.indexOf('\nwindow.loadMarksEntry=loadMarksEntry;',start);
+assert.ok(start>=0&&end>start,'Marks Entry loader exists');
+const fn=html.slice(start,end);
+const capture=fn.indexOf('const selectedClassBeforeLoad=classSel.value;');
+const reset=fn.indexOf('classSel.innerHTML=\'<option value="">Loading your assignment...</option>\'');
+assert.ok(capture>=0&&reset>capture,'Selected class captured before Teacher dropdown reset');
+assert.ok(fn.includes('const previousClass=selectedClassBeforeLoad;'),'Class restore must use captured value');
+assert.ok(fn.includes('entryClassNames.find(x=>canonicalStudentClass(x)===canonicalStudentClass(previousClass))'),'Class restore must match Nepali/English aliases');
+assert.ok(fn.includes('if(matchedClass)classSel.value=matchedClass;'),'Restore only an assigned/available class');
+assert.ok(fn.includes('classSel.innerHTML=entryClassNames.map(x=>'),'Class option generation remains unchanged');
+console.log('V46 Marks Entry selected class preserved across Teacher assignment reload.');
