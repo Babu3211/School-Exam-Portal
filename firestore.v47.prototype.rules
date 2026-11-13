@@ -30,6 +30,64 @@ service cloud.firestore {
          role(schoolId, 'class_teacher') ||
          role(schoolId, 'subject_teacher'));
     }
+    function validTerm(term) { return term in ['first', 'second', 'final']; }
+    function assignmentPath(schoolId, id) {
+      return /databases/$(database)/documents/schools/$(schoolId)/assignments/$(id);
+    }
+    function assignmentAllowed(schoolId, id, classId, term, kind) {
+      return member(schoolId) && exists(assignmentPath(schoolId, id)) &&
+        get(assignmentPath(schoolId, id)).data.active == true &&
+        get(assignmentPath(schoolId, id)).data.uid == request.auth.uid &&
+        get(assignmentPath(schoolId, id)).data.schoolId == schoolId &&
+        get(assignmentPath(schoolId, id)).data.classId == classId &&
+        get(assignmentPath(schoolId, id)).data.kind == kind &&
+        term in get(assignmentPath(schoolId, id)).data.terms;
+    }
+    function marksShape(schoolId) {
+      return request.resource.data.keys().hasAll(['schoolId','classId','subjectId','term','studentId','score']) &&
+        request.resource.data.keys().hasOnly(['schoolId','classId','subjectId','term','studentId','score','updatedAt']) &&
+        request.resource.data.schoolId == schoolId &&
+        request.resource.data.classId is string &&
+        request.resource.data.subjectId is string &&
+        request.resource.data.studentId is string &&
+        request.resource.data.score is number &&
+        request.resource.data.score >= 0 &&
+        validTerm(request.resource.data.term);
+    }
+    function attendanceShape(schoolId) {
+      return request.resource.data.keys().hasAll(['schoolId','classId','term','studentId','present']) &&
+        request.resource.data.keys().hasOnly(['schoolId','classId','term','studentId','present','updatedAt']) &&
+        request.resource.data.schoolId == schoolId &&
+        request.resource.data.classId is string &&
+        request.resource.data.studentId is string &&
+        request.resource.data.present is bool &&
+        validTerm(request.resource.data.term);
+    }
+    function unchangedMarksIdentity() {
+      return request.resource.data.schoolId == resource.data.schoolId &&
+        request.resource.data.classId == resource.data.classId &&
+        request.resource.data.subjectId == resource.data.subjectId &&
+        request.resource.data.term == resource.data.term &&
+        request.resource.data.studentId == resource.data.studentId;
+    }
+    function unchangedAttendanceIdentity() {
+      return request.resource.data.schoolId == resource.data.schoolId &&
+        request.resource.data.classId == resource.data.classId &&
+        request.resource.data.term == resource.data.term &&
+        request.resource.data.studentId == resource.data.studentId;
+    }
+    function canEditMarks(schoolId) {
+      return !viewer(schoolId) && (admin(schoolId) ||
+        (role(schoolId, 'subject_teacher') &&
+         assignmentAllowed(schoolId,request.auth.uid + '_' + request.resource.data.classId + '_' + request.resource.data.subjectId,
+           request.resource.data.classId,request.resource.data.term,'subject_teacher')));
+    }
+    function canEditAttendance(schoolId) {
+      return !viewer(schoolId) && (admin(schoolId) ||
+        (role(schoolId, 'class_teacher') &&
+         assignmentAllowed(schoolId,request.auth.uid + '_' + request.resource.data.classId,
+           request.resource.data.classId,request.resource.data.term,'class_teacher')));
+    }
     // All onboarding and role changes require trusted server Admin SDK.
     match /platform_admins/{uid} { allow read, write: if false; }
     match /schools/{schoolId} {
@@ -51,8 +109,22 @@ service cloud.firestore {
         allow read: if member(schoolId);
         allow write: if admin(schoolId);
       }
-      // Deliberately deny marks/attendance writes until teacher assignments
-      // and immutable school ownership are enforced and emulator-tested.
+      match /assignments/{id} {
+        allow read: if member(schoolId) && (admin(schoolId) || resource.data.uid == request.auth.uid);
+        allow write: if false;
+      }
+      match /marks/{id} {
+        allow read: if member(schoolId);
+        allow create: if marksShape(schoolId) && canEditMarks(schoolId);
+        allow update: if marksShape(schoolId) && unchangedMarksIdentity() && canEditMarks(schoolId);
+        allow delete: if false;
+      }
+      match /attendance/{id} {
+        allow read: if member(schoolId);
+        allow create: if attendanceShape(schoolId) && canEditAttendance(schoolId);
+        allow update: if attendanceShape(schoolId) && unchangedAttendanceIdentity() && canEditAttendance(schoolId);
+        allow delete: if false;
+      }
       match /{document=**} { allow read, write: if false; }
     }
     match /{document=**} { allow read, write: if false; }
