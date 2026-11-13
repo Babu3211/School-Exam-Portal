@@ -49,6 +49,7 @@ jobs:
           node scripts/test-v47-trusted-teacher-assignment.mjs
           node scripts/test-v47-v46-feature-bridge.mjs
           node scripts/test-v47-v46-firestore-inventory.mjs
+          node scripts/test-v47-v46-collection-map.mjs
           node scripts/test-v47-subscription-policy.mjs
           node scripts/test-v47-apk-pwa-compat.mjs
       - name: Two-school Firestore security emulator tests
