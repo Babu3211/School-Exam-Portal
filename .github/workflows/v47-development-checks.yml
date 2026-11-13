@@ -29,6 +29,7 @@ jobs:
           node scripts/test-v47-school-registration.mjs
           node scripts/test-v47-server-onboarding.mjs
           node scripts/test-v47-school-session.mjs
+          node scripts/test-v47-firestore-onboarding-adapter.mjs
           node scripts/test-v47-subscription-policy.mjs
           node scripts/test-v47-apk-pwa-compat.mjs
       - name: Two-school Firestore security emulator tests
