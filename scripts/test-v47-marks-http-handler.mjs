@@ -13,6 +13,7 @@ assert.deepEqual(await handler(request),{status:200,body:{marks:[{id:"mark1",sco
 assert.equal(queries.length,2);
 assert.equal((await handler({...request,method:"POST"})).status,405);
 assert.equal((await handler({...request,headers:{}})).status,401);
+assert.equal((await handler({...request,query:{...request.query,uid:"other"}})).status,400);
 assert.equal((await handler({...request,headers:{authorization:"Bearer bad"}})).status,403);
 assert.equal((await handler({...request,query:{...request.query,schoolId:"school_B001"}})).status,403);
 docs.set("schools/school_A001",{status:"suspended"});
