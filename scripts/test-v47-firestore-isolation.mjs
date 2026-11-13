@@ -44,6 +44,7 @@ try {
  await assertSucceeds(setDoc(doc(subject,"schools",schoolA,"marks","m1"),mark));
  await assertFails(setDoc(doc(subject,"schools",schoolB,"marks","m1"),{...mark,schoolId:schoolB}));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m2"),{...mark,subjectId:"math"}));
+ await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m_missing"),{...mark,studentId:"unknown"}));
  await assertFails(setDoc(doc(viewer,"schools",schoolA,"marks","m3"),mark));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m1"),{...mark,classId:"10"}));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m1"),{...mark,score:-1}));
@@ -54,6 +55,7 @@ try {
  await assertFails(setDoc(doc(subject,"schools",schoolA,"attendance","a2"),attendance));
  await assertFails(setDoc(doc(viewer,"schools",schoolA,"attendance","a3"),attendance));
  await assertFails(setDoc(doc(classTeacher,"schools",schoolB,"attendance","a4"),{...attendance,schoolId:schoolB}));
+ await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a_missing"),{...attendance,studentId:"unknown"}));
  await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a1"),{...attendance,studentId:"student2"}));
  console.log("V47 tenant Firestore emulator isolation and exam assignment tests passed");
 } finally {await env.cleanup();}
