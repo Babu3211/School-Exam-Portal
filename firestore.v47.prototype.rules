@@ -1,0 +1,60 @@
+// V47 ISOLATED DRAFT — NOT DEPLOYED. Do not replace production firestore.rules.
+// Firestore emulator tests are required before use.
+// Platform admin enrollment must be performed by trusted backend only.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function platformAdmin() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/platform_admins/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/platform_admins/$(request.auth.uid)).data.active == true;
+    }
+    function membershipPath(schoolId) {
+      return /databases/$(database)/documents/schools/$(schoolId)/members/$(request.auth.uid);
+    }
+    function member(schoolId) {
+      return signedIn() && exists(membershipPath(schoolId)) &&
+        get(membershipPath(schoolId)).data.active == true;
+    }
+    function role(schoolId, roleName) {
+      return member(schoolId) &&
+        get(membershipPath(schoolId)).data.get('roles', []) is list &&
+        get(membershipPath(schoolId)).data.get('roles', []).hasAny([roleName]);
+    }
+    function viewer(schoolId) { return role(schoolId, 'viewer'); }
+    function admin(schoolId) { return role(schoolId, 'school_admin') && !viewer(schoolId); }
+    function canWrite(schoolId) {
+      return member(schoolId) && !viewer(schoolId) &&
+        (role(schoolId, 'school_admin') ||
+         role(schoolId, 'class_teacher') ||
+         role(schoolId, 'subject_teacher'));
+    }
+    // All onboarding and role changes require trusted server Admin SDK.
+    match /platform_admins/{uid} { allow read, write: if false; }
+    match /schools/{schoolId} {
+      allow read: if member(schoolId) || platformAdmin();
+      allow write: if false;
+      match /members/{uid} {
+        allow read: if member(schoolId) && request.auth.uid == uid;
+        allow write: if false;
+      }
+      match /subscriptions/{id} {
+        allow read: if admin(schoolId) || platformAdmin();
+        allow write: if false;
+      }
+      match /students/{id} {
+        allow read: if member(schoolId);
+        allow write: if admin(schoolId);
+      }
+      match /staff/{id} {
+        allow read: if member(schoolId);
+        allow write: if admin(schoolId);
+      }
+      // Deliberately deny marks/attendance writes until teacher assignments
+      // and immutable school ownership are enforced and emulator-tested.
+      match /{document=**} { allow read, write: if false; }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
