@@ -1,0 +1,38 @@
+name: V46 live website parity audit (read-only)
+on:
+  push:
+    branches:
+      - smss-v46-live-repair-20261113
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare-hosting:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare GitHub Pages, Firebase Hosting and approved main
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/smss-live
+          curl -fsSL --retry 3 'https://babu3211.github.io/School-Exam-Portal/?audit=20261113' -o /tmp/smss-live/pages.html
+          curl -fsSL --retry 3 'https://exam-portal-smss-95016.web.app/?audit=20261113' -o /tmp/smss-live/firebase.html
+          git fetch --depth=1 origin main
+          git show origin/main:index.html > /tmp/smss-live/main.html
+          for source in main pages firebase; do
+            echo "${source} index bytes: $(wc -c < /tmp/smss-live/${source}.html)"
+            echo "${source} index SHA256: $(sha256sum /tmp/smss-live/${source}.html | cut -d' ' -f1)"
+          done
+          if cmp -s /tmp/smss-live/pages.html /tmp/smss-live/main.html; then
+            echo 'GitHub Pages matches main index.html'
+          else
+            echo 'WARNING: GitHub Pages differs from main index.html'
+          fi
+          if cmp -s /tmp/smss-live/firebase.html /tmp/smss-live/pages.html; then
+            echo 'PASS: Firebase index matches GitHub Pages'
+          else
+            echo 'FAIL: Firebase index differs from GitHub Pages; hosting release or caching requires correction'
+            exit 1
+          fi
