@@ -39,10 +39,10 @@ jobs:
           test "$(git branch --show-current)" = main
           test "${#APPROVED_SHA}" -eq 40
           test "$(git rev-parse HEAD)" = "$APPROVED_SHA"
-        env:
-          APPROVED_SHA: ${{ inputs.expected_commit }}
           test -f scripts/test-v46-preservation.mjs
           test -f scripts/test-v46-viewer-class-exam-readonly.mjs
+        env:
+          APPROVED_SHA: ${{ inputs.expected_commit }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
