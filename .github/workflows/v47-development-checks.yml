@@ -47,5 +47,16 @@ jobs:
       - name: Two-school Firestore security emulator tests
         run: npx firebase emulators:exec --project smss-v47-tenant-rules-test --config firebase.v47.emulator.json --only firestore "node scripts/test-v47-firestore-isolation.mjs"
       - name: Verify V46 preservation baseline
-        run: npm run test:v46-preservation
+        run: |
+          npm run test:v46-preservation
+          npm run test:v46-class-normalization
+          npm run test:v46-english-exam
+          npm run test:v46-attendance-english
+          npm run test:v46-attendance-class
+          npm run test:v46-teacher-marks-concurrency
+          npm run test:v46-teacher-attendance-concurrency
+          npm run test:v46-marks-class-preserve
+          npm run test:v46-attendance-class-preserve
+          npm run test:v46-marks-load-failure
+          npm run test:v46-attendance-load-failure
 # Development-only checks. No Firebase Hosting deploy, no rules deploy, no credentials.
