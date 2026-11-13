@@ -37,7 +37,7 @@ jobs:
           # never relax protection for production PWA, Android, or other source.
           if os.environ.get('GITHUB_HEAD_REF')=='smss-v46-integration' or os.environ.get('GITHUB_REF_NAME')=='smss-v46-integration':
             allowed.update({'.github/workflows/v46-integration-gate.yml', '.github/workflows/v46-non-iemis-readiness.yml', '.github/workflows/v46-production-release.yml',
-              'docs/V46-FEATURE-DIFFERENCE-AUDIT.md', 'docs/V46-SINGLE-SOURCE-OF-TRUTH.md', 'docs/V46-PRODUCTION-RELEASE-ROLLBACK-CHECKLIST.md', 'docs/V46-FREE-FIRESTORE-BACKUP-PLAN.md',
+              'docs/V46-FEATURE-DIFFERENCE-AUDIT.md', 'docs/V46-SINGLE-SOURCE-OF-TRUTH.md', 'docs/V46-PRODUCTION-RELEASE-ROLLBACK-CHECKLIST.md', 'docs/V46-FREE-FIRESTORE-BACKUP-PLAN.md', 'docs/V46-MOBILE-ONLY-FREE-RELEASE-HANDOFF.md',
               'package.json', 'scripts/test-firestore-rules.mjs', 'scripts/test-iemis-entry.mjs'})
             allowed.update(p for p in changed if p.startswith('scripts/test-v46-') and p.endswith('.mjs'))
           unexpected=changed-allowed
