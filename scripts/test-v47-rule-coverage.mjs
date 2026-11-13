@@ -5,7 +5,7 @@ import {V46_COLLECTION_POLICY} from "../src/v47/v46-collection-map.mjs";
 const rules=readFileSync(new URL("../firestore.v47.prototype.rules",import.meta.url),"utf8");
 const collections=Object.keys(V46_COLLECTION_POLICY);
 for(const name of collections) {
- const expression=new RegExp("match\\s+/"+name.replace(/[.*+?^$\{\}()|[\]\\]/g,"\\$&")+"/\\{id\\}\\s*\\{");
+ const expression=new RegExp("match\\s+/"+name+"/\\{id\\}\\s*\\{");
  assert.match(rules,expression,"Missing explicit tenant rules for "+name);
 }
 assert.match(rules,/function schoolActive\(schoolId\)/);
