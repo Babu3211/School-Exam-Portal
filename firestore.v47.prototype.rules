@@ -114,6 +114,61 @@ service cloud.firestore {
         allow read: if member(schoolId);
         allow write: if admin(schoolId);
       }
+      // V46 school-owned reference collections: only school admins may modify.
+      match /classes/{id} {
+        allow read: if member(schoolId);
+        allow write: if admin(schoolId);
+      }
+      match /subjects/{id} {
+        allow read: if member(schoolId);
+        allow write: if admin(schoolId);
+      }
+      match /exams/{id} {
+        allow read: if member(schoolId);
+        allow write: if admin(schoolId);
+      }
+      match /mark_settings/{id} {
+        allow read: if member(schoolId);
+        allow write: if admin(schoolId);
+      }
+      match /school_settings/{id} {
+        allow read: if member(schoolId);
+        allow write: if admin(schoolId);
+      }
+      match /certificates/{id} {
+        allow read: if member(schoolId);
+        allow write: if admin(schoolId);
+      }
+      // Sensitive audit trail and role mapping: trusted server only.
+      match /audit_logs/{id} {
+        allow read: if admin(schoolId);
+        allow write: if false;
+      }
+      match /user_roles/{id} {
+        allow read: if admin(schoolId);
+        allow write: if false;
+      }
+      // Publishing is withheld until explicit public-result authorization design.
+      match /public_result_exams/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /public_result_lookup/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /public_results/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /school_gallery/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /school_public_branding/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
       match /assignments/{id} {
         allow read: if member(schoolId) && (admin(schoolId) || resource.data.uid == request.auth.uid);
         allow write: if false;
