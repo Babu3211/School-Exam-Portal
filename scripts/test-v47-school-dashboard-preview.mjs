@@ -1,0 +1,11 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const html=readFileSync(new URL("../prototypes/v47/school-dashboard.html",import.meta.url),"utf8");
+assert.match(html,/buildSchoolDashboard/);
+assert.match(html,/school-dashboard\.mjs/);
+assert.match(html,/No Save, Edit, Delete or Firebase operations/);
+assert.match(html,/read-only/i);
+assert.doesNotMatch(html,/firebase\.initializeApp|firebaseConfig|signInWithEmailAndPassword|setDoc\(/);
+assert.match(html,/school_A001/);
+assert.match(html,/school_B001/);
+console.log("V47 dashboard preview static checks passed");
