@@ -32,6 +32,7 @@ try{
  const active=initIdleLogout({auth,onTimeout,minutes:60});active.start(auth.currentUser);
  clock+=40*60*1000;events.get('keydown')?.();
  assert.equal(stored.get('smss:last-activity:active-teacher'),String(clock),'Keyboard activity must renew the session');
+ assert.equal(nodes.has('smssIdleWarning'),false,'Renewed activity must dismiss the idle warning');
  clock+=30*60*1000;await active.check();assert.equal(logouts,2,'Active user must stay logged in after 70 wall-clock minutes');
  clock+=30*60*1000;await active.check();assert.equal(logouts,3,'Session must expire 60 minutes after the last interaction');
  console.log('V46 60-minute idle session behavioral regression passed.');
