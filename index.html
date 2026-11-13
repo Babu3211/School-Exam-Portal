@@ -2181,13 +2181,18 @@ async function loadMarksEntry(){
   return true;
  }catch(e){
   console.error('Marks entry load failed',e);
+  // A failed reload must never leave stale student marks or editable cells visible.
+  marksStudents=[];marksExams=[];marksSettings=[];existingMarks=[];
+  const marksBody=document.getElementById('marksEntryBody');
+  if(marksBody)marksBody.innerHTML='';
+  resetIemisEntryGrid();
   if(!isAdmin()&&!roleHas('viewer')){
    classSel.innerHTML='<option value="">Assignment or permission unavailable</option>';
    classSel.disabled=true;
    const subjectSel=document.getElementById('entrySubject');
    if(subjectSel)subjectSel.innerHTML='<option value="">No subjects available</option>';
   }
-  entryMsg(`Marks Entry लोड भएन: ${safeNoticeError(e)}. Admin बाट यो User को Subject Teacher भूमिका, कक्षा/विषय Check assignment and security permissions.`,true);
+  entryMsg(`Marks Entry could not load: ${safeNoticeError(e)}. Check the Subject Teacher role, assigned class/subject, and security permissions.`,true);
   return false;
  }
 }
