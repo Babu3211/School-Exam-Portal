@@ -15,6 +15,9 @@ export async function loadVerifiedSchoolSession({idToken,schoolId,auth,firestore
  if(!decoded?.uid || decoded.firebase?.sign_in_provider==="anonymous") throw new Error("Authenticated account required");
  const uid=decoded.uid;
  // Direct school membership lookup avoids cross-tenant collection queries.
+ const schoolSnapshot=await firestore.doc(`schools/${schoolId}`).get();
+ if(!schoolSnapshot.exists || schoolSnapshot.data()?.status!=="active")
+   throw new Error("School is not active");
  const snapshot=await firestore.doc(`schools/${schoolId}/members/${uid}`).get();
  const data=snapshot.exists?snapshot.data():null;
  const memberships=data?[{...data,uid,schoolId}]:[];
