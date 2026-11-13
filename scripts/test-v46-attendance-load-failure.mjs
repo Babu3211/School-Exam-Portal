@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const start=html.indexOf('async function loadAttendancePage(){');
+const end=html.indexOf('\nwindow.loadAttendancePage=loadAttendancePage;',start);
+assert.ok(start>=0&&end>start,'Attendance loader exists');
+const fn=html.slice(start,end);
+const fail=fn.slice(fn.indexOf('}catch(err){'));
+assert.ok(fail.includes('if(studentBody)studentBody.innerHTML="";'),'Failed reload clears old student rows');
+assert.ok(fail.includes('updateAttendanceCounts();'),'Failed reload resets attendance counts');
+assert.ok(fail.includes('Attendance could not load:'),'Failed reload still explains error');
+assert.ok(fn.includes('attendanceDataReady=true;populateAttendanceSubjects();'),'Successful loading remains enabled');
+console.log('V46 Attendance failed reload clears stale student rows.');
