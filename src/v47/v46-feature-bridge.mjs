@@ -5,7 +5,8 @@
  */
 import {assertSchoolId} from "./tenant-domain.mjs";
 import {schoolResourcePath} from "./school-data-paths.mjs";
-const FEATURES=Object.freeze(["students","staff","exams","marks","attendance","settings","results"]);
+const FEATURE_COLLECTIONS=Object.freeze({students:"students",staff:"staff",exams:"exams",marks:"marks",attendance:"attendance",settings:"school_settings",results:"public_results"});
+const FEATURES=Object.freeze(Object.keys(FEATURE_COLLECTIONS));
 export function createV46FeatureBridge({session,legacyFeatures,tenantGateway}) {
  if(!session || typeof session!=="object") throw new TypeError("Verified session required");
  const schoolId=assertSchoolId(session.schoolId);
@@ -17,7 +18,7 @@ export function createV46FeatureBridge({session,legacyFeatures,tenantGateway}) {
  for(const feature of FEATURES) {
    const implementation=legacyFeatures[feature];
    if(typeof implementation!=="function") throw new TypeError("Missing V46 feature: "+feature);
-   const scopedGateway=tenantGateway.forCollection(schoolResourcePath(schoolId,feature));
+   const scopedGateway=tenantGateway.forCollection(schoolResourcePath(schoolId,FEATURE_COLLECTIONS[feature]));
    if(!scopedGateway || typeof scopedGateway!=="object") throw new TypeError("Invalid tenant gateway");
    result[feature]=(...args)=>implementation({schoolId,roles:[...session.roles],gateway:scopedGateway},...args);
  }
