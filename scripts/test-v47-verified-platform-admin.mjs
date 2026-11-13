@@ -1,0 +1,10 @@
+import assert from "node:assert/strict";
+import {verifyPlatformAdminRequest} from "../src/v47/verified-platform-admin.mjs";
+const auth={verifyIdToken:async(token,revoked)=>{assert.equal(revoked,true);if(token==="valid")return {uid:"root",firebase:{sign_in_provider:"password"}};if(token==="anonymous")return {uid:"root",firebase:{sign_in_provider:"anonymous"}};throw Error("Invalid token");}};
+const firestore={doc:path=>({get:async()=>({exists:path==="platform_admins/root",data:()=>({active:true})})})};
+assert.deepEqual(await verifyPlatformAdminRequest({idToken:"valid",auth,firestore}),{uid:"root",verifiedSuperAdmin:true});
+await assert.rejects(verifyPlatformAdminRequest({idToken:"anonymous",auth,firestore}),/signed-in/);
+await assert.rejects(verifyPlatformAdminRequest({idToken:"invalid",auth,firestore}),/Invalid token/);
+await assert.rejects(verifyPlatformAdminRequest({idToken:"valid",auth,firestore:{doc:()=>({get:async()=>({exists:true,data:()=>({active:false})})})}}),/access denied/);
+await assert.rejects(verifyPlatformAdminRequest({idToken:"",auth,firestore}),/token required/);
+console.log("V47 verified platform admin identity tests passed");
