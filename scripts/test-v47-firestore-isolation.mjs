@@ -47,6 +47,7 @@ try {
  await assertFails(setDoc(doc(viewer,"schools",schoolA,"marks","m3"),mark));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m1"),{...mark,classId:"10"}));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m1"),{...mark,score:-1}));
+ await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m1"),{...mark,score:101}));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m1"),{...mark,studentId:"student2"}));
  const attendance={schoolId:schoolA,classId:"9",studentId:"student1",term:"first",present:true};
  await assertSucceeds(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a1"),attendance));
