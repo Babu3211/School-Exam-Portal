@@ -1,0 +1,29 @@
+name: V46 PWA repair checks (no deploy)
+on:
+  push:
+    branches:
+      - smss-v46-live-repair-20261113
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'sw.js'
+      - 'scripts/test-pwa-upgrade.mjs'
+      - '.github/workflows/v46-pwa-repair-check.yml'
+permissions:
+  contents: read
+jobs:
+  pwa-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check inline JavaScript
+        run: node scripts/check-inline-js.mjs
+      - name: Check PWA cache and offline behavior
+        run: npm run test:pwa
+      - name: Verify V46 preservation
+        run: npm run test:v46-preservation
