@@ -31,7 +31,7 @@ required(html.includes('if(!isAdmin()&&!roleHas("viewer")){const classSel=docume
 required(html.includes('const classes=["ECD",...Array.from({length:12}'), "Class choices must include ECD and Classes 1–12");
 required(html.includes('if(/^(ecd|early childhood development)$/i.test(raw))return \'ECD\';'), "Preserve ECD class normalization");
 required(html.includes('const na=ca==="ECD"?0:'), "Attendance must sort ECD before Class 1");
-required(html.includes("const na=canonicalStudentClass(a)===\'ECD\'?0:"), "Marks entry must sort ECD before Class 1");
+required(html.includes("const na=ca==='ECD'?0:"), "Marks entry must sort ECD before Class 1");
 required(html.includes('if(e.target.closest("#refreshAttendance")){await loadAttendancePage();return}'), "Attendance refresh must retain loaded student rows");
 required(!html.includes("Refresh भयो। विद्यार्थी सूची फेरि देखाउनुहोस्।"), "Attendance refresh must not clear newly rendered rows");
 required(html.includes("n<=10?'9-10':''"), "Class 11 and 12 must not silently use Class 9-10 marks formulas");
@@ -59,7 +59,7 @@ required(html.includes("if(!selectedExam||canonicalStudentClass(selectedExam.cla
 required(!html.includes("if(!selectedExam||selectedExam.className!==cl||"), "Marks Save must not reject equivalent class labels");
 required(html.includes("async function saveIemisEntryRecords(entries,context,exam,cl,uid){\n if(roleHas('viewer'))throw new Error"), "IEMIS marks save handler must reject viewer role before writes");
 required(html.includes("if(e.target.id==='saveAllMarks'){if(roleHas('viewer')){entryMsg("), "Save All Marks must reject viewer before grid or legacy writes");
-required(html.includes("console.error('Marks entry load failed',e);\n  if(!isAdmin()&&!roleHas('viewer'))"), "Viewer load errors must not be treated as teacher assignment failures");
+required(html.includes("console.error('Marks entry load failed',e);") && html.includes("resetIemisEntryGrid();\n  if(!isAdmin()&&!roleHas('viewer'))"), "Failed Marks Entry loads must clear stale grid while preserving viewer access");
 required(html.includes("const key=canonicalStudentClass(x);if(seen.has(key))return false;seen.add(key);return true;"), "Marks Entry must deduplicate class names across Nepali and English variants");
 required(html.includes("const save=document.getElementById('saveAllMarks');if(save)save.disabled=roleHas('viewer');"), "IEMIS grid Save button must remain disabled for viewers");
 required(html.includes("function iemisEntryVisible(student,subject,cl,examId)"), "Viewer grid must use subject-enrollment visibility helper");
