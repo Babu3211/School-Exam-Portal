@@ -1406,9 +1406,10 @@ async function loadClasses(){
  body.innerHTML='<p class="hint">प्रणालीबाट कक्षा तथा विषय लोड हुँदैछ...</p>';
  try{
   if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw new Error("Admin login आवश्यक छ।");
+  const subjectPromise=getDocs(collection(db,"subjects")).catch(subjectReadError=>{console.warn("Subject Bank read unavailable; legacy class subjects remain usable.",subjectReadError.code||subjectReadError.message);return null;});
   const snap=await getDocs(collection(db,"classes"));
   cachedClasses=snap.docs.map(d=>({id:d.id,...d.data()}));
-  let subjectSnap=null;try{subjectSnap=await getDocs(collection(db,"subjects"));}catch(subjectReadError){console.warn("Subject Bank read unavailable; legacy class subjects remain usable.",subjectReadError.code||subjectReadError.message);}
+  const subjectSnap=await subjectPromise;
   cachedSubjectCatalog=subjectSnap?subjectSnap.docs.map(d=>({id:d.id,...d.data()})):[];
   // Backward compatibility: show subjects already used in Classes even if not yet in the new Subject Bank.
   const catalogKeys=new Set(cachedSubjectCatalog.map(x=>canonicalSubjectKey(x.name||x.subject)));
