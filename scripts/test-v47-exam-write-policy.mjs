@@ -14,7 +14,7 @@ assert.equal(allowed({...input,resource:"attendance"}),false);
 const classTeacher={...membership,roles:["class_teacher"]};
 const classAssignment={...assignment,kind:"class_teacher",subjectIds:["computer","math"]};
 assert.equal(allowed({...input,membership:classTeacher,assignment:classAssignment,resource:"attendance"}),true);
-assert.equal(allowed({...input,membership:classTeacher,assignment:classAssignment,subjectId:"math"}),true);
+assert.equal(allowed({...input,membership:classTeacher,assignment:classAssignment,subjectId:"math"}),false);
 assert.equal(allowed({...input,membership:classTeacher,assignment:classAssignment,subjectId:"science"}),false);
 assert.equal(allowed({...input,membership:{...membership,roles:["school_admin"]},assignment:null}),true);
 assert.equal(allowed({...input,classId:"13"}),false);
