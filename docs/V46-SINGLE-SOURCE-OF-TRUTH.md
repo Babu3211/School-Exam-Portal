@@ -137,3 +137,8 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - Commit `95ab09df3b67516648eec305e15bfcafab899135` clears Admin/Viewer Attendance class dropdown and shows English `No classes available` when there are no saved class or student names, rather than retaining stale options. Teacher class selection retention unchanged.
 - Added `scripts/test-v46-attendance-empty-classes.mjs` and CI step (`4e380f9574e003c14a01eb99e4a49b0bfe6b7320`). CI and browser run still unverified; no production or database writes.
 - IEMIS live comparison paused due to Work Mode limit; Teacher class alias Firestore rules/query issue remains unresolved.
+
+## 2026-11-13 Teacher Marks Entry selected class preservation
+- Commit `cc6070ca73315ebaf867cc909694fc6c78816ab6` captures the selected Marks Entry class before Teacher assignment dropdown reset, then restores by canonical Nepali/English class match if the class remains available. No Firestore query/rules or stored data changes.
+- Added `scripts/test-v46-marks-class-preserve.mjs`, wired into V46 CI (`d7a8245de07c5b5b44f91d56a23d87ae77f01858`). CI/browser pass not confirmed.
+- Outstanding: Teacher exact-match Firestore class aliases, authenticated E2E and no-refresh behavior, IEMIS 2083 comparison after Work Mode limit resets. No production deployment.
