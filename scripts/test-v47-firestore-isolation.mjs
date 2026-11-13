@@ -90,6 +90,15 @@ try {
  await assertFails(getDoc(doc(viewer,"schools",schoolA,"students","student1")));
  await assertFails(setDoc(doc(admin,"schools",schoolA,"students","student2"),{name:"Blocked"}));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m6"),mark));
+ // Suspending school A must not disable independent school B.
+ await env.withSecurityRulesDisabled(async context=>{
+   await setDoc(doc(context.firestore(),"schools",schoolB,"members","adminB"),{active:true,roles:["school_admin"]});
+ });
+ const otherAdmin=env.authenticatedContext("adminB").firestore();
+ await assertSucceeds(getDoc(doc(otherAdmin,"schools",schoolB,"students","student1")));
+ await assertSucceeds(setDoc(doc(otherAdmin,"schools",schoolB,"students","student2"),{name:"Independent School"}));
+ await assertFails(getDoc(doc(otherAdmin,"schools",schoolA,"students","student1")));
+
  await assertSucceeds(getDoc(doc(root,"schools",schoolA)));
  await env.withSecurityRulesDisabled(async context=>{
    await setDoc(doc(context.firestore(),"schools",schoolA),{name:schoolA,status:"pending"});
