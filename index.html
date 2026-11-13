@@ -3100,6 +3100,10 @@ async function loadAttendancePage(){
   attendanceDataReady=true;populateAttendanceSubjects();attendanceMessage(`${attendanceStudents.length} विद्यार्थी र ${attendanceRecords.length} हाजिरी रेकर्ड लोड भए।`);renderAttendanceHistory();await loadAttendanceStudentsForDay();
  }catch(err){
   console.error("Attendance load failed",err);
+  // Failed reloads must not leave previously loaded student rows or counts on screen.
+  const studentBody=document.getElementById("attendanceStudentsBody");
+  if(studentBody)studentBody.innerHTML="";
+  updateAttendanceCounts();
   if(!isAdmin()&&!roleHas("viewer")){const classSel=document.getElementById("attendanceClass");if(classSel){classSel.innerHTML='<option value="">Assignment or permission unavailable</option>';classSel.disabled=true;}}
   attendanceMessage(`Attendance could not load: ${safeNoticeError(err)}। Check assignment and security permissions.`,true);
  }
