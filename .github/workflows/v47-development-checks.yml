@@ -1,0 +1,36 @@
+name: V47 Multi-School Development Checks
+on:
+  push:
+    branches: [smss-v47-multischool-work]
+  pull_request:
+    paths:
+      - 'src/v47/**'
+      - 'scripts/test-v47-*.mjs'
+      - 'firestore.v47.prototype.rules'
+      - 'firebase.v47.emulator.json'
+      - '.github/workflows/v47-development-checks.yml'
+permissions:
+  contents: read
+jobs:
+  v47-isolated-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install development test dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: Pure tenant model tests
+        run: |
+          node scripts/test-v47-tenant-domain.mjs
+          node scripts/test-v47-tenant-access.mjs
+          node scripts/test-v47-school-registration.mjs
+          node scripts/test-v47-subscription-policy.mjs
+          node scripts/test-v47-apk-pwa-compat.mjs
+      - name: Two-school Firestore security emulator tests
+        run: npx firebase emulators:exec --project smss-v47-tenant-rules-test --config firebase.v47.emulator.json --only firestore "node scripts/test-v47-firestore-isolation.mjs"
+      - name: Verify V46 preservation baseline
+        run: npm run test:v46-preservation
+# Development-only checks. No Firebase Hosting deploy, no rules deploy, no credentials.
