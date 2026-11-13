@@ -94,6 +94,9 @@ jobs:
       - name: test-v47-apk-pwa-compat
         if: success() || failure()
         run: node scripts/test-v47-apk-pwa-compat.mjs
+      - name: V47 Firestore rule coverage
+        if: success() || failure()
+        run: node scripts/test-v47-rule-coverage.mjs
       - name: Two-school Firestore security emulator tests
         if: success() || failure()
         run: npx firebase emulators:exec --project smss-v47-tenant-rules-test --config firebase.v47.emulator.json --only firestore "node scripts/test-v47-firestore-isolation.mjs"
