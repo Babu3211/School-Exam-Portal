@@ -1,0 +1,14 @@
+import assert from "node:assert/strict";
+import {planV46AttendanceRecord} from "../src/v47/v46-attendance-adapter.mjs";
+const record={date:"2083-01-01",className:"9",attendanceType:"daily",subject:null,academicYear:"2083",students:[{studentId:"s1",studentName:"A",status:"present",remark:""},{studentId:"s2",studentName:"B",status:"absent",remark:""}],totalStudents:2,presentCount:1,absentCount:1,leaveCount:0,updatedBy:"teacher"};
+const result=planV46AttendanceRecord({schoolId:"school_A001",record});
+assert.equal(result.destinationCollection,"schools/school_A001/attendance");
+assert.equal(result.data,record);
+assert.equal(result.writeAuthorized,false);
+assert.equal(result.preservesOriginalDocumentId,true);
+assert.equal(result.students,2);
+assert.notEqual(planV46AttendanceRecord({schoolId:"school_B001",record}).destinationCollection,result.destinationCollection);
+assert.throws(()=>planV46AttendanceRecord({schoolId:"school_A001",record:{...record,presentCount:2}}),/totals mismatch/);
+assert.throws(()=>planV46AttendanceRecord({schoolId:"school_A001",record:{...record,students:[record.students[0],record.students[0]]}}),/duplicate/);
+assert.throws(()=>planV46AttendanceRecord({schoolId:"school_A001",record:{...record,students:[{...record.students[0],status:"invalid"},record.students[1]]}}));
+console.log("V47 V46 attendance compatibility planner tests passed");
