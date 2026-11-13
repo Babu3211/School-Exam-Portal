@@ -18,7 +18,7 @@ try{
  assert.equal(stored.get('smss:last-activity:test-teacher'),String(clock),'Starting session must save idle timestamp');
  clock+=54*60*1000;await session.check();assert.equal(logouts,0,'Do not log out before 60 minutes');
  clock+=60*1000;await session.check();assert.ok(nodes.has('smssIdleWarning'),'Warn at 55 minutes');
- session.stop();
+ // Simulate page reload by constructing a fresh controller with the same sessionStorage.
  session=initIdleLogout({auth,onTimeout,minutes:60});session.start(auth.currentUser);
  // Refresh preserves the persisted timestamp; re-initialize it for an existing session.
  assert.equal(logouts,0,'Refresh must not log out prematurely');
