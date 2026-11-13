@@ -31,29 +31,48 @@ jobs:
         run: npm install --no-package-lock --no-audit --no-fund
       - name: Ensure V46 production files remain unchanged
         run: node scripts/test-v47-production-boundary.mjs
-      - name: Pure tenant model tests
-        run: |
-          node scripts/test-v47-tenant-domain.mjs
-          node scripts/test-v47-tenant-access.mjs
-          node scripts/test-v47-school-registration.mjs
-          node scripts/test-v47-server-onboarding.mjs
-          node scripts/test-v47-school-session.mjs
-          node scripts/test-v47-firestore-onboarding-adapter.mjs
-          node scripts/test-v47-school-admin-invitation.mjs
-          node scripts/test-v47-school-dashboard.mjs
-          node scripts/test-v47-school-dashboard-preview.mjs
-          node scripts/test-v47-verified-platform-admin.mjs
-          node scripts/test-v47-trusted-onboarding-service.mjs
-          node scripts/test-v47-verified-school-session.mjs
-          node scripts/test-v47-school-data-paths.mjs
-          node scripts/test-v47-exam-write-policy.mjs
-          node scripts/test-v47-trusted-teacher-assignment.mjs
-          node scripts/test-v47-v46-feature-bridge.mjs
-          node scripts/test-v47-v46-firestore-inventory.mjs
-          node scripts/test-v47-v46-collection-map.mjs
-          node scripts/test-v47-v46-migration-dry-run.mjs
-          node scripts/test-v47-subscription-policy.mjs
-          node scripts/test-v47-apk-pwa-compat.mjs
+      - name: test-v47-tenant-domain
+        run: node scripts/test-v47-tenant-domain.mjs
+      - name: test-v47-tenant-access
+        run: node scripts/test-v47-tenant-access.mjs
+      - name: test-v47-school-registration
+        run: node scripts/test-v47-school-registration.mjs
+      - name: test-v47-server-onboarding
+        run: node scripts/test-v47-server-onboarding.mjs
+      - name: test-v47-school-session
+        run: node scripts/test-v47-school-session.mjs
+      - name: test-v47-firestore-onboarding-adapter
+        run: node scripts/test-v47-firestore-onboarding-adapter.mjs
+      - name: test-v47-school-admin-invitation
+        run: node scripts/test-v47-school-admin-invitation.mjs
+      - name: test-v47-school-dashboard
+        run: node scripts/test-v47-school-dashboard.mjs
+      - name: test-v47-school-dashboard-preview
+        run: node scripts/test-v47-school-dashboard-preview.mjs
+      - name: test-v47-verified-platform-admin
+        run: node scripts/test-v47-verified-platform-admin.mjs
+      - name: test-v47-trusted-onboarding-service
+        run: node scripts/test-v47-trusted-onboarding-service.mjs
+      - name: test-v47-verified-school-session
+        run: node scripts/test-v47-verified-school-session.mjs
+      - name: test-v47-school-data-paths
+        run: node scripts/test-v47-school-data-paths.mjs
+      - name: test-v47-exam-write-policy
+        run: node scripts/test-v47-exam-write-policy.mjs
+      - name: test-v47-trusted-teacher-assignment
+        run: node scripts/test-v47-trusted-teacher-assignment.mjs
+      - name: test-v47-v46-feature-bridge
+        run: node scripts/test-v47-v46-feature-bridge.mjs
+      - name: test-v47-v46-firestore-inventory
+        run: node scripts/test-v47-v46-firestore-inventory.mjs
+      - name: test-v47-v46-collection-map
+        run: node scripts/test-v47-v46-collection-map.mjs
+      - name: test-v47-v46-migration-dry-run
+        run: node scripts/test-v47-v46-migration-dry-run.mjs
+      - name: test-v47-subscription-policy
+        run: node scripts/test-v47-subscription-policy.mjs
+      - name: test-v47-apk-pwa-compat
+        run: node scripts/test-v47-apk-pwa-compat.mjs
       - name: Two-school Firestore security emulator tests
         run: npx firebase emulators:exec --project smss-v47-tenant-rules-test --config firebase.v47.emulator.json --only firestore "node scripts/test-v47-firestore-isolation.mjs"
       - name: Verify V46 preservation baseline
