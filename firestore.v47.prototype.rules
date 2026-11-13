@@ -43,13 +43,17 @@ service cloud.firestore {
         get(assignmentPath(schoolId, id)).data.kind == kind &&
         term in get(assignmentPath(schoolId, id)).data.terms;
     }
+    function studentExists(schoolId, studentId) {
+      return studentId is string &&
+        exists(/databases/$(database)/documents/schools/$(schoolId)/students/$(studentId));
+    }
     function marksShape(schoolId) {
       return request.resource.data.keys().hasAll(['schoolId','classId','subjectId','term','studentId','score']) &&
         request.resource.data.keys().hasOnly(['schoolId','classId','subjectId','term','studentId','score','updatedAt']) &&
         request.resource.data.schoolId == schoolId &&
         request.resource.data.classId is string &&
         request.resource.data.subjectId is string &&
-        request.resource.data.studentId is string &&
+        studentExists(schoolId, request.resource.data.studentId) &&
         request.resource.data.score is number &&
         request.resource.data.score >= 0 &&
         request.resource.data.score <= 100 &&
@@ -60,7 +64,7 @@ service cloud.firestore {
         request.resource.data.keys().hasOnly(['schoolId','classId','term','studentId','present','updatedAt']) &&
         request.resource.data.schoolId == schoolId &&
         request.resource.data.classId is string &&
-        request.resource.data.studentId is string &&
+        studentExists(schoolId, request.resource.data.studentId) &&
         request.resource.data.present is bool &&
         validTerm(request.resource.data.term);
     }
