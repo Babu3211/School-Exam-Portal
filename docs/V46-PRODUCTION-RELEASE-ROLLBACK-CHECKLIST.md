@@ -3,9 +3,15 @@
 Status: **release candidate, not deployed**. This checklist is for a school-authorized operator. Do not mark a step complete without evidence.
 
 ## Verified in GitHub CI
-- Commit `d7055f87433943b4dda0cf65702c86e627781e26`: all six V44/V45/V46 CI workflows passed.
-- V46 production workflow is gated to `main`, production environment approval, and three exact confirmations.
+- Commit `555e9b6a8676daf9ce3df547cdc1ce937c5c9c5b`: all six V44/V45/V46 CI workflows passed, including dashboard V46 version preservation.
+- V46 production workflow is gated to `main`, production environment approval, and three exact confirmations plus the full reviewed `main` commit SHA.
 - Deployment is Firebase **Hosting only**; it must not deploy Firestore rules or write student, attendance, or marks records.
+
+## V44/V45 branch retirement policy
+- Keep `main` as the single production source of truth after approved V46 release. Do not retain parallel V44/V45 development as active release paths.
+- Do **not** delete V44/V45 branches before V46 has passed real school-role acceptance, backup verification, live smoke tests, and a documented rollback checkpoint.
+- Archive legacy branch tip SHAs or protected tags before deleting old working branches; preserve commit history and any recovery references. Do not delete backups or historical releases.
+- Deleting branches does not remove Firestore data, but is not a substitute for a database backup. Never delete the production `main` branch.
 
 ## Before merge and live deployment (requires Work Mode or authorized school operator)
 - [ ] Open existing live school portal and verify Admin can load school settings, students, attendance, marks, results and user activity without manual refresh.
