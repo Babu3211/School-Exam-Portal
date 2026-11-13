@@ -40,7 +40,7 @@ required(html.includes("registry=(isAdmin()||roleHas('viewer'))?cachedClasses.fi
 required(html.includes("s&&(roleHas('viewer')||canTeachSubject(cl,s))"), "Viewer must see IEMIS subject grid");
 required(html.includes("if(!roleHas('viewer')&&!canTeachSubject(cl,subject))"), "Viewer must inspect marks rows without teacher assignments");
 required(html.includes("(!isAdmin()&&!canTeachSubject(cl,subject))"), "Marks save must still require admin or assigned teacher");
-required(html.includes("subjects.some(sub=>roleHas('viewer')||iemisEntryAllowed(st,sub,cl,examId))"), "Viewer must see IEMIS student rows");
+required(html.includes("subjects.some(sub=>roleHas('viewer')?iemisEntryVisible(st,sub,cl,examId):iemisEntryAllowed(st,sub,cl,examId))"), "Viewer must see authorized IEMIS student rows without edit permission");
 required(html.includes("canEdit:(st,sub)=>!roleHas('viewer')&&iemisEntryAllowed(st,sub,cl,examId)"), "Viewer must not edit IEMIS grid");
 required(html.includes("if(saveButton)saveButton.disabled=roleHas('viewer')"), "Viewer marks save button must remain disabled");
 required(html.includes("roleHas('viewer')?'readonly aria-readonly=\"true\"'"), "Viewer legacy marks inputs must be read-only");
