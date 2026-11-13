@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - smss-v46-live-repair-20261113
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 permissions:
   contents: read
