@@ -3,6 +3,9 @@ import {schoolResourcePath,schoolRecordPath,requireSchoolSessionPath} from "../s
 assert.equal(schoolResourcePath("school_A001","students"),"schools/school_A001/students");
 assert.equal(schoolRecordPath("school_B001","marks","mark_1"),"schools/school_B001/marks/mark_1");
 assert.notEqual(schoolRecordPath("school_A001","marks","mark_1"),schoolRecordPath("school_B001","marks","mark_1"));
+assert.equal(schoolResourcePath("school_A001","school_settings"),"schools/school_A001/school_settings");
+assert.equal(schoolResourcePath("school_A001","user_roles"),"schools/school_A001/user_roles");
+assert.equal(schoolResourcePath("school_A001","public_results"),"schools/school_A001/public_results");
 assert.throws(()=>schoolResourcePath("school_A001","subscriptions"));
 assert.throws(()=>schoolRecordPath("school_A001","students","../school_B001"));
 assert.throws(()=>schoolRecordPath("school_A001","students","a/b"));
