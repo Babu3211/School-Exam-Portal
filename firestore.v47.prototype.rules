@@ -13,8 +13,13 @@ service cloud.firestore {
     function membershipPath(schoolId) {
       return /databases/$(database)/documents/schools/$(schoolId)/members/$(request.auth.uid);
     }
+    function schoolActive(schoolId) {
+      return exists(/databases/$(database)/documents/schools/$(schoolId)) &&
+        get(/databases/$(database)/documents/schools/$(schoolId)).data.status == 'active';
+    }
     function member(schoolId) {
-      return signedIn() && exists(membershipPath(schoolId)) &&
+      return signedIn() && schoolActive(schoolId) &&
+        exists(membershipPath(schoolId)) &&
         get(membershipPath(schoolId)).data.active == true;
     }
     function role(schoolId, roleName) {
