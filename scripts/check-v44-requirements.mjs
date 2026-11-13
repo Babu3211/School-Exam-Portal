@@ -233,7 +233,7 @@ must(start >= 0 && end > start, "Marks Entry assessment selector is missing.");
 const selectorSource = html.slice(start, end);
 const selectorFactory = new Function(
   "document", "marksSettings", "marksExams", "entryClassGroup",
-  "canonicalSubjectKey", "isComputerSubject", "smssExamTermKey",
+  "canonicalSubjectKey", "isComputerSubject", "smssExamTermKey", "canonicalStudentClass",
   selectorSource + "; return selectedEntrySetting;"
 );
 function selectedComponents(termKey) {
@@ -251,7 +251,8 @@ function selectedComponents(termKey) {
   const getSetting = selectorFactory(
     documentStub, settings, exams, () => "9-10",
     value => String(value).toLowerCase(), () => false,
-    exam => exam.termKey
+    exam => exam.termKey,
+    value => String(value ?? "").trim().replace(/[०-९]/g, digit => String("०१२३४५६७८९".indexOf(digit))).replace(/[^0-9]/g, "")
   );
   return getSetting().components.map(component => component.name);
 }
