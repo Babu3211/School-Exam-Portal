@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const start=html.indexOf('async function loadClasses(){');
+const end=html.indexOf('\nfunction renderSubjectCatalog()',start);
+assert.ok(start>=0&&end>start,'Class and Subject Bank loader must exist');
+const fn=html.slice(start,end);
+assert.match(fn,/cachedClasses=snap\.docs\.map/,'Successful class load must refresh class cache');
+assert.match(fn,/cachedSubjectCatalog=subjectSnap\?/,'Successful subject load must refresh subject catalog');
+assert.match(fn,/cachedClasses=\[\];cachedSubjectCatalog=\[\];/,'Failed reload must clear class and subject caches');
+assert.match(fn,/catalog\.replaceChildren\(\)/,'Failed reload must remove stale subject bank UI');
+assert.match(fn,/setClassMessage\(/,'Failure must be reported');
+console.log('V46 Classes and Subject Bank failed-reload safety regression passed.');
