@@ -32,7 +32,9 @@ export function v47CollectionPlan(schoolId,legacyCollection) {
   legacyCollection,
   category,
   targetPath:`schools/${schoolId}/${legacyCollection}`,
-  browserWriteAllowed:category==="tenant-private",
+  // A collection classification is never permission to write. Actual writes
+  // require deployed rules, verified membership and schema-specific checks.
+  browserWriteAllowed:false,
   requiresSpecialReview:category!=="tenant-private"
  });
 }
