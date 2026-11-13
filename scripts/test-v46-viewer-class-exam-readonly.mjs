@@ -22,4 +22,6 @@ for(const collection of ['classes','subjects','exams']){
  assert.ok(start>=0&&end>start,'Firestore rule must exist for '+collection);
  assert.match(rules.slice(start,end),/allow create, update, delete: if isAdmin\(\)/,'Viewer writes must remain denied for '+collection);
 }
+const clickGuard='if(roleHas("viewer")&&!isAdmin() && event.target.closest("[data-subject-edit],[data-subject-archive],[data-subject-restore],[data-class-edit],[data-class-delete],[data-class-restore],[data-exam-edit],[data-exam-delete],[data-exam-restore]"))return;';
+assert.ok(html.split(clickGuard).length>=4,'All three mutation click handlers must deny Viewer');
 console.log('V46 Viewer read-only classes, subjects and exams regression passed.');
