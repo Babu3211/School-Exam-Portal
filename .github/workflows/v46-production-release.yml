@@ -6,6 +6,10 @@ on:
         description: 'Type DEPLOY-V46 after school account smoke tests, backup and rollback verification'
         required: true
         type: string
+      expected_commit:
+        description: 'Enter the full 40-character approved main commit SHA to prevent deploying a different revision'
+        required: true
+        type: string
       backup_confirmation:
         description: 'Type BACKUP-VERIFIED only after confirming an accessible production Firestore export and rollback point'
         required: true
@@ -33,6 +37,10 @@ jobs:
       - name: Verify approved source
         run: |
           test "$(git branch --show-current)" = main
+          test "${#APPROVED_SHA}" -eq 40
+          test "$(git rev-parse HEAD)" = "$APPROVED_SHA"
+        env:
+          APPROVED_SHA: ${{ inputs.expected_commit }}
           test -f scripts/test-v46-preservation.mjs
           test -f scripts/test-v46-viewer-class-exam-readonly.mjs
       - uses: actions/setup-node@v4
