@@ -33,9 +33,22 @@ jobs:
           else
             echo 'WARNING: GitHub Pages differs from main index.html'
           fi
+          echo 'Version markers (diagnostics):'
+          for source in main pages firebase; do
+            echo "--- ${source} ---"
+            grep -oE 'Exam Management Portal · V[0-9]+' "/tmp/smss-live/${source}.html" | head -n 3 || true
+          done
           if cmp -s /tmp/smss-live/firebase.html /tmp/smss-live/pages.html; then
             echo 'PASS: Firebase index matches GitHub Pages'
           else
             echo 'FAIL: Firebase index differs from GitHub Pages; hosting release or caching requires correction'
             exit 1
           fi
+      - name: Upload comparison report for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smss-live-parity-html
+          path: /tmp/smss-live/*.html
+          if-no-files-found: ignore
+          retention-days: 3
