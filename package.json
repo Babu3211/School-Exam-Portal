@@ -19,7 +19,8 @@
     "test:v46-attendance-messages": "node scripts/test-v46-attendance-messages.mjs",
     "test:v46-teacher-marks-concurrency": "node scripts/test-v46-teacher-marks-concurrency.mjs",
     "test:v46-teacher-attendance-concurrency": "node scripts/test-v46-teacher-attendance-concurrency.mjs",
-    "test:v46-attendance-class-preserve": "node scripts/test-v46-attendance-class-preserve.mjs"
+    "test:v46-attendance-class-preserve": "node scripts/test-v46-attendance-class-preserve.mjs",
+    "test:v46-attendance-empty-classes": "node scripts/test-v46-attendance-empty-classes.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
