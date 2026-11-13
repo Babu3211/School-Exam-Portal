@@ -14,6 +14,8 @@ const config = JSON.parse(android);
 const packageConfig = JSON.parse(pkg);
 const required = (condition, message) => assert.ok(condition, message);
 
+required(html.includes('id="smssVersionBadge"'), "Keep V46 version badge visible in authenticated dashboard header");
+required(html.includes("SMSS Exam Portal · V46"), "Dashboard must show the correct V46 version label");
 required(config.appId === "com.smss.examportal", "Keep installed Android APK application ID stable");
 required(config.appName === "SMSS Exam Portal", "Keep installed Android app name");
 required(config.server?.url === "https://exam-portal-smss-95016.web.app/", "Keep installed APK pointing to live Firebase URL");
