@@ -7,6 +7,9 @@ const ID=/^[^/]{1,1500}$/;
 export function planV46TenantCopy({schoolId,collections}) {
  if(!collections || typeof collections!=="object" || Array.isArray(collections)) throw new TypeError("Collection snapshots required");
  const entries=[],seen=new Set();
+ const expected=Object.keys(V46_COLLECTION_POLICY);
+ const missing=expected.filter(name=>!Object.hasOwn(collections,name));
+ if(missing.length) throw new Error("Incomplete V46 migration snapshot; missing collections: "+missing.join(", "));
  for(const [name,docs] of Object.entries(collections)) {
   const policy=v47CollectionPlan(schoolId,name);
   if(!Array.isArray(docs)) throw new TypeError("Expected document array for "+name);
