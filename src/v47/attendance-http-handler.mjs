@@ -14,6 +14,7 @@ export function createV47AttendanceHttpHandler({auth,firestore}) {
   if(!match)return {status:401,body:{error:"Authentication required"}};
   const params=request?.query;
   if(!params || typeof params!=="object" ||
+     !Object.keys(params).every(k=>["schoolId","className","date","attendanceType"].includes(k)) ||
      !["schoolId","className","date","attendanceType"].every(k=>params[k]===undefined || typeof params[k]==="string"))
    return {status:400,body:{error:"Invalid query"}};
   try {
