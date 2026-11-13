@@ -161,3 +161,7 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 ## 2026-11-13 Marks Entry load failure stale-data protection
 - Commit `8c8e1e644d40c72ae10d66676c3df39b2297dc27` clears in-memory marks/student/exam/settings arrays, visible Marks Entry rows, and IEMIS entry grid after failed reload; error text is English. This is UI state only; no saved marks or Firestore rules changed.
 - Regression `scripts/test-v46-marks-load-failure.mjs` added to CI (`b5f4c2cd8a2009cc8d29be8602e5700e9250b26b`). CI and authenticated browser runs still unverified. Exact Teacher role/class alias migration and IEMIS comparison remain pending.
+
+## 2026-11-13 Release readiness: security emulator gate
+- Commit `a7d24a254448cf5b537431b73c6d2cca1a33cf35` adds `npm run test:rules` and `npm run test:viewer` to V46 CI after installing dependencies, in addition to structural, IEMIS, PWA, question paper, V44/V45 regression tests. No deployment step.
+- Release remains BLOCKED until GitHub Actions actually reports green, authenticated Admin/Teacher/Viewer browser smoke tests pass, Teacher class-alias authorization issue is resolved with emulator tests, and IEMIS 2083 comparison can be completed when Work Mode is available. Do not promote to main or Firebase production without explicit approval.
