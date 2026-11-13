@@ -5,7 +5,7 @@
  */
 import {assertSchoolId} from "./tenant-domain.mjs";
 export const V46_COLLECTION_POLICY=Object.freeze({
- audit_logs:"tenant-private",
+ audit_logs:"tenant-server-managed",
  attendance:"tenant-private",
  certificates:"tenant-private",
  classes:"tenant-private",
@@ -17,7 +17,7 @@ export const V46_COLLECTION_POLICY=Object.freeze({
  public_results:"tenant-public-publishing",
  school_gallery:"tenant-public-publishing",
  school_public_branding:"tenant-public-publishing",
- school_settings:"tenant-private",
+ school_settings:"tenant-admin-managed",
  staff:"tenant-private",
  students:"tenant-private",
  subjects:"tenant-private",
