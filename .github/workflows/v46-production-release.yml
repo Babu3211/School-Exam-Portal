@@ -6,6 +6,14 @@ on:
         description: 'Type DEPLOY-V46 after school account smoke tests, backup and rollback verification'
         required: true
         type: string
+      backup_confirmation:
+        description: 'Type BACKUP-VERIFIED only after confirming an accessible production Firestore export and rollback point'
+        required: true
+        type: string
+      roles_confirmation:
+        description: 'Type ROLES-VERIFIED after real Admin, Teacher and Viewer login/read-only smoke tests'
+        required: true
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -13,7 +21,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify-and-deploy:
-    if: ${{ github.event.inputs.confirmation == 'DEPLOY-V46' && github.ref == 'refs/heads/main' }}
+    if: ${{ github.event.inputs.confirmation == 'DEPLOY-V46' && github.event.inputs.backup_confirmation == 'BACKUP-VERIFIED' && github.event.inputs.roles_confirmation == 'ROLES-VERIFIED' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 30
