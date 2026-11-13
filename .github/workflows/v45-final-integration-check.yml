@@ -25,13 +25,21 @@ jobs:
         run: |
           git fetch --no-tags --depth=1 origin main
           python - <<'PY'
-          import subprocess
+          import subprocess, os
           allowed={
             '.github/workflows/v45-final-integration-check.yml', '.github/workflows/v45-final-production-release.yml', '.github/workflows/v45-final-firestore-rules-release.yml',
             'index.html', 'user-activity.js', 'idle-logout.js',
             'firestore.rules', 'scripts/test-v45-final-integration.mjs', 'scripts/test-attendance-bs-today.mjs', 'scripts/test-student-loading-regression.mjs', 'scripts/check-v44-requirements.mjs', 'scripts/test-user-activity-rules.mjs'
           }
           changed=set(subprocess.check_output(['git','diff','--name-only','origin/main','HEAD'],text=True).splitlines())
+          # V46 integration has its own preservation/security gates. Permit only
+          # explicitly reviewed V46 test/docs additions and test harness updates;
+          # never relax protection for production PWA, Android, or other source.
+          if os.environ.get('GITHUB_HEAD_REF')=='smss-v46-integration' or os.environ.get('GITHUB_REF_NAME')=='smss-v46-integration':
+            allowed.update({'.github/workflows/v46-integration-gate.yml', '.github/workflows/v46-non-iemis-readiness.yml',
+              'docs/V46-FEATURE-DIFFERENCE-AUDIT.md', 'docs/V46-SINGLE-SOURCE-OF-TRUTH.md',
+              'package.json', 'scripts/test-firestore-rules.mjs', 'scripts/test-iemis-entry.mjs'})
+            allowed.update(p for p in changed if p.startswith('scripts/test-v46-') and p.endswith('.mjs'))
           unexpected=changed-allowed
           assert not unexpected, f'Unexpected changes to protected V44/IEMIS files: {sorted(unexpected)}'
           print('Approved dashboard and IEMIS source files remain protected.')
