@@ -46,6 +46,11 @@ try {
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m2"),{...mark,subjectId:"math"}));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m_missing"),{...mark,studentId:"unknown"}));
  await assertFails(setDoc(doc(viewer,"schools",schoolA,"marks","m3"),mark));
+ await assertFails(setDoc(doc(outsider,"schools",schoolA,"marks","m4"),mark));
+ await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m3"),{...mark,term:"second"}));
+ await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m3"),{...mark,schoolId:schoolB}));
+ await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m3"),{...mark,score:"30"}));
+ await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m3"),{...mark,extraField:"unsafe"}));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m1"),{...mark,classId:"10"}));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m1"),{...mark,score:-1}));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m1"),{...mark,score:101}));
@@ -54,8 +59,18 @@ try {
  await assertSucceeds(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a1"),attendance));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"attendance","a2"),attendance));
  await assertFails(setDoc(doc(viewer,"schools",schoolA,"attendance","a3"),attendance));
+ await assertFails(setDoc(doc(outsider,"schools",schoolA,"attendance","a3"),attendance));
+ await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a3"),{...attendance,term:"second"}));
+ await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a3"),{...attendance,present:"true"}));
  await assertFails(setDoc(doc(classTeacher,"schools",schoolB,"attendance","a4"),{...attendance,schoolId:schoolB}));
  await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a_missing"),{...attendance,studentId:"unknown"}));
  await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a1"),{...attendance,studentId:"student2"}));
+ await env.withSecurityRulesDisabled(async context=>{
+   const db=context.firestore();
+   await setDoc(doc(db,"schools",schoolA,"members","teacherA"),{active:false,roles:["subject_teacher"]});
+   await setDoc(doc(db,"schools",schoolA,"members","classA"),{active:false,roles:["class_teacher"]});
+ });
+ await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m5"),mark));
+ await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a5"),attendance));
  console.log("V47 tenant Firestore emulator isolation and exam assignment tests passed");
 } finally {await env.cleanup();}
