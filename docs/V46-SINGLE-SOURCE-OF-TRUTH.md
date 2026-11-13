@@ -132,3 +132,8 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 - Commit `09f6de40c0712c46012a60040dc4fc7ff4b2db4b` captures selected class before Teacher assignment-loading resets the dropdown, and restores the same canonical class after loading, if still assigned. Admin/Viewer restoration remains unchanged; no persisted class values or Firestore rules modified.
 - Added `scripts/test-v46-attendance-class-preserve.mjs` and CI step (`e26cd8e77ec28870dfa892c85adf70f8802fd05a`). CI/browser pass remains unverified.
 - Work Mode IEMIS comparison deferred; exact-match Teacher Firestore alias issue remains unresolved; production untouched.
+
+## 2026-11-13 Attendance empty-class stale selection
+- Commit `95ab09df3b67516648eec305e15bfcafab899135` clears Admin/Viewer Attendance class dropdown and shows English `No classes available` when there are no saved class or student names, rather than retaining stale options. Teacher class selection retention unchanged.
+- Added `scripts/test-v46-attendance-empty-classes.mjs` and CI step (`4e380f9574e003c14a01eb99e4a49b0bfe6b7320`). CI and browser run still unverified; no production or database writes.
+- IEMIS live comparison paused due to Work Mode limit; Teacher class alias Firestore rules/query issue remains unresolved.
