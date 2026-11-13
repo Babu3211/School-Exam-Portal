@@ -94,6 +94,9 @@ jobs:
       - name: test-v47-apk-pwa-compat
         if: success() || failure()
         run: node scripts/test-v47-apk-pwa-compat.mjs
+      - name: V46 batch attendance adapter contract
+        if: success() || failure()
+        run: node scripts/test-v47-v46-attendance-adapter.mjs
       - name: V46 attendance schema compatibility guard
         if: success() || failure()
         run: node scripts/test-v47-v46-schema-compat.mjs
