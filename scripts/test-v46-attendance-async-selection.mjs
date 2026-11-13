@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const start=html.indexOf('async function loadAttendancePage(){');
+const end=html.indexOf('\nwindow.loadAttendancePage=loadAttendancePage;',start);
+assert.ok(start>=0&&end>start,'Attendance loader must exist');
+const fn=html.slice(start,end);
+assert.ok(fn.includes('const selectedClassBeforeLoad=document.getElementById("attendanceClass")?.value||"";'),'Capture selection before loading');
+assert.ok(fn.includes('const latestClassSelection=classSel.value||selectedClassBeforeLoad;'),'Prefer latest class selection after async data load');
+assert.ok(fn.includes('canonicalStudentClass(latestClassSelection)'),'Restore class with canonical matching');
+assert.ok(fn.includes('const previousClass=classSel.value||selectedClassBeforeLoad;'),'Admin/Viewer must preserve latest selection');
+assert.ok(fn.includes('await loadAttendanceStudentsForDay();'),'Render attendance students after loading');
+console.log('PASS: V46 attendance async class selection restoration contract.');
