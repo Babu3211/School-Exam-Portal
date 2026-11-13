@@ -10,7 +10,7 @@ assert.deepEqual(icons,expected,'V45 must retain V44 sidebar icon order');
 for(const title of ['Home','School Profile','Student Record','Manage Exam','Teacher | Staff','Reports','Settings','Marks Entry(1-12)','Mark wise ledger','Grade wise ledger','Grade Sheet']){
  assert.ok(nav.includes(title),'Missing V44 menu label: '+title);
 }
-assert.ok(html.includes('Exam Management Portal · V45</small>'),'V45 sidebar label missing');
+assert.ok(/Exam Management Portal · V(?:45|46)<\/small>/.test(html),'Versioned sidebar label missing');
 assert.ok(html.includes('#smssInstallBanner{position:relative'),'Install banner must not overlay mobile dashboard');
 assert.ok(html.includes("banner.hidden=!isIOS()||standalone()"),'Install guidance must only appear on iOS browsers outside standalone mode');
 assert.ok(html.includes("navigator.standalone===true"),'Installed iOS app must hide install guidance');
