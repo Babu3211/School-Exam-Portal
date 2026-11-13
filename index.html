@@ -1405,7 +1405,7 @@ async function loadClasses(){
  const body=document.getElementById("classwiseSubjects");if(!body)return;
  body.innerHTML='<p class="hint">प्रणालीबाट कक्षा तथा विषय लोड हुँदैछ...</p>';
  try{
-  if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw new Error("Admin login आवश्यक छ।");
+  if(!auth.currentUser||!(isAdmin()||roleHas("viewer")))throw new Error("Admin वा Viewer login आवश्यक छ।");
   const subjectPromise=getDocs(collection(db,"subjects")).catch(subjectReadError=>{console.warn("Subject Bank read unavailable; legacy class subjects remain usable.",subjectReadError.code||subjectReadError.message);return null;});
   const snap=await getDocs(collection(db,"classes"));
   cachedClasses=snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -1428,7 +1428,7 @@ function renderSubjectCatalog(){
  const rows=[...cachedSubjectCatalog].filter(x=>x.source!=="renamed-subject-alias").sort((a,b)=>String(a.name||a.subject).localeCompare(String(b.name||b.subject),'ne'));
  box.innerHTML=rows.map(x=>{
   const archived=x.active===false,legacy=!!x.legacy,id=classEsc(x.id||"");
-  const actions=archived
+  const actions=roleHas("viewer")&&!isAdmin()?"":archived
    ?`<button class="btn subject-bank-action-btn" type="button" data-subject-restore="${id}">पुनः सक्रिय</button>`
    :`<button class="btn alt subject-bank-action-btn" type="button" data-subject-edit="${id}">Edit</button><button class="btn subject-bank-action-btn" style="background:#b45309" type="button" data-subject-archive="${id}">Delete</button>`;
   return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;padding:5px 2px;border-bottom:1px solid #e2e8f0;background:transparent;font-size:13px;line-height:1.5;opacity:${archived?'.72':'1'}"><b style="flex:1;min-width:0;font-size:13px;font-weight:600">${classEsc(x.name||x.subject)}</b>${x.code?`<small style="color:#64748b;font-size:11px">${classEsc(x.code)}</small>`:''}${archived?'<small style="color:#b42318;font-size:11px">निष्क्रिय</small>':''}<span style="display:flex;align-items:center;gap:4px;flex-shrink:0">${actions}</span></div>`;
@@ -1503,7 +1503,7 @@ function renderClasses(){
  const active=cachedClasses.filter(x=>x.active!==false&&[x.className,x.section,x.subject,x.teacher].some(v=>String(v||"").toLowerCase().includes(q)));
  const groups=new Map();active.forEach(x=>{const key=String(x.className||'').trim()||'कक्षा नतोकिएको';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(x)});
  const sorted=[...groups.entries()].sort((a,b)=>Number(classNoFromName(a[0])||99)-Number(classNoFromName(b[0])||99));
- box.innerHTML=sorted.map(([cl,rows])=>{const sections=new Map();rows.forEach(r=>{const sec=String(r.section||'').trim()||'Section नतोकिएको';if(!sections.has(sec))sections.set(sec,[]);sections.get(sec).push(r)});return `<div class="panel" style="margin:10px 0"><h3 style="margin:0 0 10px">${classEsc(classEnglishLabel(cl))} <small style="font-weight:500;color:#64748b">(${rows.length} विषय/Section रेकर्ड)</small></h3>${[...sections.entries()].map(([sec,items])=>`<div style="margin:8px 0 12px"><b style="font-size:13px;color:#475569">${classEsc(sec)}</b><div class="tablewrap"><table><thead><tr><th>विषय</th><th>Credit Hour</th><th>विषय शिक्षक</th><th>कार्य</th></tr></thead><tbody>${items.sort((a,b)=>String(a.subject).localeCompare(String(b.subject),'ne')).map(x=>`<tr><td>${classEsc(subjectEnglishLabel(x.subject))}</td><td>${classEsc(x.creditHour??'—')}</td><td>${classEsc(x.teacher||'—')}</td><td><button class="btn alt" type="button" data-class-edit="${classEsc(x.id)}">Edit</button> <button class="btn" style="background:#b42318" type="button" data-class-delete="${classEsc(x.id)}">हटाउनुहोस्</button></td></tr>`).join('')}</tbody></table></div></div>`).join('')}</div>`}).join('')||'<div class="panel"><p class="hint">यो खोजीमा कक्षा/विषय भेटिएन। कक्षा छानेर Subject Bank बाट विषय थप्नुहोस्।</p></div>';
+ box.innerHTML=sorted.map(([cl,rows])=>{const sections=new Map();rows.forEach(r=>{const sec=String(r.section||'').trim()||'Section नतोकिएको';if(!sections.has(sec))sections.set(sec,[]);sections.get(sec).push(r)});return `<div class="panel" style="margin:10px 0"><h3 style="margin:0 0 10px">${classEsc(classEnglishLabel(cl))} <small style="font-weight:500;color:#64748b">(${rows.length} विषय/Section रेकर्ड)</small></h3>${[...sections.entries()].map(([sec,items])=>`<div style="margin:8px 0 12px"><b style="font-size:13px;color:#475569">${classEsc(sec)}</b><div class="tablewrap"><table><thead><tr><th>विषय</th><th>Credit Hour</th><th>विषय शिक्षक</th><th>कार्य</th></tr></thead><tbody>${items.sort((a,b)=>String(a.subject).localeCompare(String(b.subject),'ne')).map(x=>`<tr><td>${classEsc(subjectEnglishLabel(x.subject))}</td><td>${classEsc(x.creditHour??'—')}</td><td>${classEsc(x.teacher||'—')}</td><td>${roleHas("viewer")&&!isAdmin()?"View only":`<button class="btn alt" type="button" data-class-edit="${classEsc(x.id)}">Edit</button> <button class="btn" style="background:#b42318" type="button" data-class-delete="${classEsc(x.id)}">हटाउनुहोस्</button>`}</td></tr>`).join('')}</tbody></table></div></div>`).join('')}</div>`}).join('')||'<div class="panel"><p class="hint">यो खोजीमा कक्षा/विषय भेटिएन। कक्षा छानेर Subject Bank बाट विषय थप्नुहोस्।</p></div>';
 }
 
 window.loadClasses=loadClasses;
@@ -1735,7 +1735,7 @@ async function loadExams(){
  const body=document.getElementById("examsBody");if(!body)return;
  body.innerHTML='<tr><td class="empty" colspan="9">प्रणालीबाट परीक्षा विवरण लोड हुँदैछ...</td></tr>';
  try{
-  if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw new Error("Admin login आवश्यक छ।");
+  if(!auth.currentUser||!(isAdmin()||roleHas("viewer")))throw new Error("Admin वा Viewer login आवश्यक छ।");
   const snap=await getDocs(collection(db,"exams"));
   cachedExams=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.startDate||"").localeCompare(String(b.startDate||"")));
   renderExams();
@@ -1751,7 +1751,7 @@ function renderExams(){
  const body=document.getElementById("examsBody");if(!body)return;
  const q=(document.getElementById("examSearch")?.value||"").trim().toLowerCase();
  const rows=cachedExams.filter(x=>[x.examName,x.termName||smssTermLabel(smssExamTermKey(x)),x.academicYear,x.className,x.examType].some(v=>String(v||"").toLowerCase().includes(q)));
- body.innerHTML=rows.map(x=>`<tr${x.active===false?' style="opacity:.68;background:#fff7ed"':''}><td>${examEsc(englishDisplayText(x.examName))}${x.active===false?' <small style="color:#b45309;font-weight:700">(निष्क्रिय)</small>':''}</td><td>${examEsc(x.termName||smssTermLabel(smssExamTermKey(x)))}</td><td>${examEsc(x.academicYear)}</td><td>${examEsc(x.className)}</td><td>${examEsc(x.examType)}</td><td>${examEsc(x.startDate)}${x.calendarSystem==="BS"?" (BS)":" (AD)"}</td><td>${examEsc(x.endDate)}${x.calendarSystem==="BS"?" (BS)":" (AD)"}</td><td>${examStatus(x)}</td><td><button class="btn alt" type="button" data-exam-edit="${examEsc(x.id)}">Edit</button> ${x.active===false?`<button class="btn" type="button" data-exam-restore="${examEsc(x.id)}">पुनः सक्रिय</button>`:`<button class="btn" style="background:#b45309" type="button" data-exam-delete="${examEsc(x.id)}">निष्क्रिय</button>`}</td></tr>`).join("")||'<tr><td class="empty" colspan="9">परीक्षा रेकर्ड भेटिएन।</td></tr>';
+ body.innerHTML=rows.map(x=>`<tr${x.active===false?' style="opacity:.68;background:#fff7ed"':''}><td>${examEsc(englishDisplayText(x.examName))}${x.active===false?' <small style="color:#b45309;font-weight:700">(निष्क्रिय)</small>':''}</td><td>${examEsc(x.termName||smssTermLabel(smssExamTermKey(x)))}</td><td>${examEsc(x.academicYear)}</td><td>${examEsc(x.className)}</td><td>${examEsc(x.examType)}</td><td>${examEsc(x.startDate)}${x.calendarSystem==="BS"?" (BS)":" (AD)"}</td><td>${examEsc(x.endDate)}${x.calendarSystem==="BS"?" (BS)":" (AD)"}</td><td>${examStatus(x)}</td><td>${roleHas("viewer")&&!isAdmin()?"View only":`<button class="btn alt" type="button" data-exam-edit="${examEsc(x.id)}">Edit</button> ${x.active===false?`<button class="btn" type="button" data-exam-restore="${examEsc(x.id)}">पुनः सक्रिय</button>`:`<button class="btn" style="background:#b45309" type="button" data-exam-delete="${examEsc(x.id)}">निष्क्रिय</button>`}`}</td></tr>`).join("")||'<tr><td class="empty" colspan="9">परीक्षा रेकर्ड भेटिएन।</td></tr>';
 }
 window.loadExams=loadExams;
 document.addEventListener('change',e=>{if(e.target.id==='examTerm'){const type=document.getElementById('examType');const map={first:'त्रैमासिक',second:'त्रैमासिक',third:'त्रैमासिक',annual:'वार्षिक','half-yearly':'अर्धवार्षिक',internal:'आन्तरिक'};if(type&&map[e.target.value])type.value=map[e.target.value];}});
