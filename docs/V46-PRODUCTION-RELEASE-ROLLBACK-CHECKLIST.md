@@ -20,7 +20,7 @@ Status: **release candidate, not deployed**. This checklist is for a school-auth
 ## Deploy
 1. Verify PR #47 is merged into `main` and the required CI checks on merged code pass.
 2. Open GitHub Actions → `Release SMSS V46 Hosting (approved, gated)` → Run workflow on `main`.
-3. Enter `DEPLOY-V46`, `BACKUP-VERIFIED`, and `ROLES-VERIFIED` **only after those checks have actually been performed**. Complete GitHub production environment approval.
+3. Enter the **full approved `main` commit SHA** in `expected_commit`, then `DEPLOY-V46`, `BACKUP-VERIFIED`, and `ROLES-VERIFIED` **only after those checks have actually been performed**. Complete GitHub production environment approval.
 4. Wait for Hosting deployment and live-resource smoke test to succeed. Then re-test Admin, Teacher, Viewer and PWA/APK on the live URL.
 
 ## If production regression occurs
