@@ -43,6 +43,7 @@ jobs:
           node scripts/test-v46-class-subject-load-failure.mjs
           node scripts/test-v46-class-subject-concurrency.mjs
           node scripts/test-v46-idle-logout-activity.mjs
+          node scripts/test-v46-idle-logout-behavior.mjs
       - name: Install emulator dependencies
         run: npm install --no-package-lock --no-audit --no-fund
       - name: Viewer read-only Firestore rules
