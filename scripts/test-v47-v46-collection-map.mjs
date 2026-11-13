@@ -9,7 +9,7 @@ for(const name of found){
  const b=v47CollectionPlan("school_B001",name);
  assert.notEqual(a.targetPath,b.targetPath);
  assert.equal(a.targetPath,`schools/school_A001/${name}`);
- if(name.startsWith("public_") || ["user_roles","audit_logs","school_settings"].includes(name)) assert.equal(a.browserWriteAllowed,false);
+ assert.equal(a.browserWriteAllowed,false,"Never infer write permission from collection category: "+name);
 }
 assert.throws(()=>v47CollectionPlan("school_A001","unreviewed"));
 assert.throws(()=>v47CollectionPlan("../invalid","marks"));
