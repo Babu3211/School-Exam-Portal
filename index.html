@@ -1416,6 +1416,8 @@ async function loadClasses(){
   renderSubjectCatalog();populateClassSubjectSelect();renderClasses();setClassMessage(`कुल ${cachedClasses.length} कक्षा-विषय रेकर्ड र ${cachedSubjectCatalog.length} उपलब्ध विषय लोड भए।`);
  }catch(error){
   console.error("Class load failed:",safeNoticeError(error));
+  cachedClasses=[];cachedSubjectCatalog=[];
+  const catalog=document.getElementById("subjectCatalogList");if(catalog)catalog.replaceChildren();
   body.innerHTML='<div class="panel"><p class="hint">विवरण लोड भएन।</p></div>';
   setClassMessage(`लोड भएन: ${safeNoticeError(error)||"प्रणाली त्रुटि"} — सुरक्षा नियम जाँच गर्नुहोस्।`,true);
  }
