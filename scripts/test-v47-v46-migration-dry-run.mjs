@@ -1,0 +1,14 @@
+import assert from "node:assert/strict";
+import {planV46TenantCopy} from "../src/v47/v46-migration-dry-run.mjs";
+const input={schoolId:"school_A001",collections:{students:[{id:"s1",data:{name:"Student"}}],marks:[{id:"m1",data:{score:50}}],user_roles:[{id:"uid1",data:{role:"teacher"}}]}};
+const plan=planV46TenantCopy(input);
+assert.equal(plan.totalDocuments,3);
+assert.equal(plan.writesPerformed,0);
+assert.equal(plan.requiresApproval,true);
+assert.equal(plan.entries[0].destination,"schools/school_A001/students/s1");
+assert.equal(plan.entries[2].review,true);
+assert.notEqual(planV46TenantCopy({...input,schoolId:"school_B001"}).entries[0].destination,plan.entries[0].destination);
+assert.throws(()=>planV46TenantCopy({...input,collections:{students:[{id:"a/b",data:{}}]}}));
+assert.throws(()=>planV46TenantCopy({...input,collections:{students:[{id:"s1",data:{}},{id:"s1",data:{}}]}}),/Duplicate/);
+assert.throws(()=>planV46TenantCopy({...input,collections:{unknown:[]}}));
+console.log("V47 migration dry-run contract tests passed");
