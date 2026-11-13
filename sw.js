@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v51-network-refresh-20261110';
+const CACHE_NAME = 'smss-pwa-v52-navigation-refresh-20261113';
 const APP_SHELL = [
   './',
   './index.html',
@@ -42,7 +42,7 @@ self.addEventListener('fetch', event => {
   if (request.mode === 'navigate') {
     event.respondWith((async () => {
       try {
-        const response = await fetch(request);
+        const response = await fetch(request, { cache: 'no-store' });
         const appRoot = new URL('./', self.location.href).pathname;
         const appIndex = new URL('./index.html', self.location.href).pathname;
         const isAppEntry = [appRoot, appIndex, appIndex.replace(/\.html$/, '')].includes(url.pathname);
