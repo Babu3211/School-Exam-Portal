@@ -20,3 +20,15 @@ export function planV46MarksQuery({schoolId,className,subject,section=""}) {
   preservesV46Fields:true
  });
 }
+
+/**
+ * Execute the planned read with an injected, read-only Firestore gateway.
+ * The caller must supply a server-verified schoolId; this function does not
+ * authenticate users or grant permission to read.
+ */
+export async function readV46MarksForSchool({schoolId,className,subject,section="",gateway}) {
+ if(!gateway || typeof gateway.queryCollection!=="function")
+   throw new TypeError("Read-only tenant query gateway required");
+ const plan=planV46MarksQuery({schoolId,className,subject,section});
+ return gateway.queryCollection(plan.collectionPath,plan.filters);
+}
