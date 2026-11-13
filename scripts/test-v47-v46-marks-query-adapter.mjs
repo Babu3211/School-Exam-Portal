@@ -1,0 +1,14 @@
+import assert from "node:assert/strict";
+import {planV46MarksQuery} from "../src/v47/v46-marks-query-adapter.mjs";
+const a=planV46MarksQuery({schoolId:"school_A001",className:"9",subject:"Computer",section:" A "});
+const b=planV46MarksQuery({schoolId:"school_B001",className:"9",subject:"Computer"});
+assert.equal(a.collectionPath,"schools/school_A001/marks");
+assert.equal(b.collectionPath,"schools/school_B001/marks");
+assert.deepEqual(a.filters,[["className","==","9"],["subject","==","Computer"],["section","==","A"]]);
+assert.deepEqual(b.filters,[["className","==","9"],["subject","==","Computer"]]);
+assert.equal(a.readOnlyPlan,true);
+assert.equal(a.preservesV46Fields,true);
+assert.throws(()=>planV46MarksQuery({schoolId:"../invalid",className:"9",subject:"Computer"}));
+assert.throws(()=>planV46MarksQuery({schoolId:"school_A001",className:"",subject:"Computer"}));
+assert.throws(()=>planV46MarksQuery({schoolId:"school_A001",className:"9",subject:"Computer",section:12}));
+console.log("V47 tenant marks query compatibility adapter tests passed");
