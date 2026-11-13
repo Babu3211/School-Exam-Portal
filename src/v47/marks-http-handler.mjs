@@ -3,6 +3,7 @@
  * Intended for a future authenticated server deployment, not V46 hosting.
  * Never accepts a UID or roles from the request body/query.
  */
+import {validateV47ReadQuery} from "./read-query-validation.mjs";
 import {readVerifiedV46SchoolMarks} from "./verified-v46-marks-reader.mjs";
 import {createAdminFirestoreReadGateway} from "./admin-firestore-read-gateway.mjs";
 
@@ -17,9 +18,7 @@ export function createV47MarksHttpHandler({auth,firestore}) {
   const match=typeof header==="string" ? /^Bearer ([^\s]+)$/.exec(header) : null;
   if(!match) return {status:401,body:{error:"Authentication required"}};
   const params=request?.query;
-  if(!params || typeof params!=="object" ||
-     !Object.keys(params).every(k=>["schoolId","className","subject","section"].includes(k)) ||
-     !["schoolId","className","subject","section"].every(k=>params[k]===undefined || typeof params[k]==="string"))
+  if(!validateV47ReadQuery(params,"marks"))
    return {status:400,body:{error:"Invalid query"}};
   try {
    const rows=await readVerifiedV46SchoolMarks({
