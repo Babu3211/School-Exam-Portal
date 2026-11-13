@@ -21,16 +21,22 @@ export function prepareTeacherAssignment({schoolId,teacherUid,classId,subjectId,
    ...(kind==="subject_teacher"?{subjectId}:{}),terms:[...new Set(terms)],active:true});
 }
 export async function assignTeacherOnTrustedServer({adminSession,input,firestore}) {
- if(!adminSession || adminSession.schoolId!==input?.schoolId ||
+ if(!adminSession || typeof adminSession.uid!=="string" || !UID.test(adminSession.uid) || adminSession.schoolId!==input?.schoolId ||
     !Array.isArray(adminSession.roles) || !adminSession.roles.includes("school_admin") ||
     adminSession.roles.includes("viewer"))
    throw new Error("Verified school admin session required");
  if(!firestore || typeof firestore.runTransaction!=="function" || typeof firestore.doc!=="function")
    throw new TypeError("Admin Firestore required");
  const assignment=prepareTeacherAssignment(input);
+ const adminRef=firestore.doc(`schools/${assignment.schoolId}/members/${adminSession.uid}`);
  const memberRef=firestore.doc(`schools/${assignment.schoolId}/members/${assignment.uid}`);
  const assignmentRef=firestore.doc(`schools/${assignment.schoolId}/assignments/${assignment.id}`);
  await firestore.runTransaction(async tx=>{
+   const adminMembership=await tx.get(adminRef);
+   const adminRecord=adminMembership.exists?adminMembership.data():null;
+   if(!adminRecord || adminRecord.active!==true || !Array.isArray(adminRecord.roles) ||
+      !adminRecord.roles.includes("school_admin") || adminRecord.roles.includes("viewer"))
+     throw new Error("Active school admin membership required");
    const membership=await tx.get(memberRef);
    const member=membership.exists?membership.data():null;
    if(!member || member.active!==true || !Array.isArray(member.roles) ||
