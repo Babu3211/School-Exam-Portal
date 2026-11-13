@@ -41,6 +41,7 @@ jobs:
           node scripts/test-v46-student-load-failure.mjs
           node scripts/test-v46-staff-exam-load-failure.mjs
           node scripts/test-v46-class-subject-load-failure.mjs
+          node scripts/test-v46-class-subject-concurrency.mjs
       - name: Install emulator dependencies
         run: npm install --no-package-lock --no-audit --no-fund
       - name: Viewer read-only Firestore rules
