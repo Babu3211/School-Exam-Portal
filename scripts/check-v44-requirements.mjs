@@ -216,11 +216,11 @@ must(rules.includes("match /audit_logs/{documentId}") && rules.includes("allow c
 must(rules.includes("request.resource.data.actorUid == request.auth.uid") && rules.includes("request.resource.data.createdAt == request.time"), "Audit log actor and server timestamp must be verified.");
 must(rules.includes("request.resource.data.detail.size() <= 240") && rules.includes("request.resource.data.actorName.size() <= 100"), "Audit log text fields must have strict size limits.");
 must(rules.includes("allow update, delete: if false;"), "Audit logs must remain append-only.");
-must(manifest.includes("V44"), "PWA manifest must identify V44.");
-must(serviceWorker.includes("smss-pwa-v44-school-exam-portal"), "Service worker cache must identify V44.");
-must(workflow.includes("deploy-live:") && workflow.includes("needs: quality-and-rules"), "Live deployment must depend on successful V44 quality and Firestore Rules tests.");
-must(workflow.includes("Deploy tested Firestore Security Rules") && workflow.includes("firebase-tools@14 deploy --only firestore:rules"), "Production deployment must apply the tested Firestore Security Rules before Hosting.");
-must(workflow.includes("github.event_name == 'push'") && workflow.includes("ENABLE_FIREBASE_HOSTING_DEPLOY == 'true'"), "Automatic live deployment must be push-only and explicitly enabled.");
+must(manifest.includes('"name": "SMSS Exam Portal"') && manifest.includes('"short_name": "SMSS Exam Portal"'), "PWA manifest must use the approved SMSS Exam Portal app name.");
+must(/const CACHE_NAME = 'smss-pwa-[a-z0-9-]+-school-exam-portal';/.test(serviceWorker), "Service worker cache must use a versioned SMSS Exam Portal cache name.");
+must(!workflow.includes("deploy-live:"), "Development quality workflow must not contain a live deployment job.");
+must(!workflow.includes("firebase deploy") && !workflow.includes("action-hosting-deploy"), "Development quality workflow must not deploy production Firebase resources.");
+must(!workflow.includes("ENABLE_FIREBASE_HOSTING_DEPLOY"), "Development quality workflow must not expose a production deployment switch.");
 
 
 const start = html.indexOf("function selectedEntrySetting(){");
