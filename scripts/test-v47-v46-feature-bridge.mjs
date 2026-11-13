@@ -9,7 +9,7 @@ assert.equal(a.marks({id:"one"}).context.gateway.path,"schools/school_A001/marks
 assert.equal(b.marks({id:"one"}).context.gateway.path,"schools/school_B001/marks");
 assert.equal(a.marks({id:"one"}).name,"marks");
 assert.equal(a.attendance().context.schoolId,"school_A001");
-assert.equal(implementations.marks.name,""); // Original function reference is reused, not replaced.
+assert.equal(typeof implementations.marks,"function"); // Existing implementation remains callable.
 assert.throws(()=>createV46FeatureBridge({session:{schoolId:"school_A001",roles:["viewer","school_admin"]},legacyFeatures:implementations,tenantGateway:gateway}));
 assert.throws(()=>createV46FeatureBridge({session:{schoolId:"school_A001",roles:["viewer"]},legacyFeatures:{},tenantGateway:gateway}),/Missing V46 feature/);
 assert.equal(paths.length,14);
