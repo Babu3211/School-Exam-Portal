@@ -29,6 +29,7 @@ jobs:
         run: npm run test:v46-class-normalization
       - name: Attendance loading and class selection
         run: |
+          node scripts/test-v46-attendance-async-selection.mjs
           npm run test:v46-attendance-class-preserve
           npm run test:v46-attendance-empty-classes
           npm run test:v46-attendance-stale-rows
