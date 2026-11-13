@@ -2,7 +2,7 @@ name: ARCHIVED - V45 Firebase Production (disabled)
 
 # Archived after V46 production acceptance. No manual or automatic triggers.
 on:
-  workflow_dispatch_DISABLED:
+  workflow_dispatch:
     inputs:
       confirmation:
         description: 'Type DEPLOY-V45 after approving native print, school logo and IEMIS NG discrepancy policy'
@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   verify-and-deploy:
-    if: ${{ github.event.inputs.confirmation == 'DEPLOY-V45' }}
+    if: ${{ false }} # Archived: V45 deployment permanently gated off
     runs-on: ubuntu-latest
     environment: production
     steps:
