@@ -165,3 +165,9 @@ User prioritizes speed and short replies. **Read this document from GitHub branc
 ## 2026-11-13 Release readiness: security emulator gate
 - Commit `a7d24a254448cf5b537431b73c6d2cca1a33cf35` adds `npm run test:rules` and `npm run test:viewer` to V46 CI after installing dependencies, in addition to structural, IEMIS, PWA, question paper, V44/V45 regression tests. No deployment step.
 - Release remains BLOCKED until GitHub Actions actually reports green, authenticated Admin/Teacher/Viewer browser smoke tests pass, Teacher class-alias authorization issue is resolved with emulator tests, and IEMIS 2083 comparison can be completed when Work Mode is available. Do not promote to main or Firebase production without explicit approval.
+
+## 2026-11-13 Non-IEMIS focus while Work Mode quota is exhausted
+- User explicitly deferred IEMIS testing/development to Work Mode. Do not claim IEMIS validation or edit its schemas in this workstream.
+- Security emulator harness role stub repaired in `71dec2fb25cb72737170964daf83c6d37d568012` (test-only).
+- Separate `.github/workflows/v46-non-iemis-readiness.yml` runs JS syntax, Teacher/Viewer/class/attendance/marks loading regressions, Viewer Firestore emulator test, PWA, question paper and V45 UI without IEMIS-specific comparison. No deployment.
+- Existing V44/V45 workflows may fail for historical protection policies or IEMIS controller tests. Keep these as visible blockers rather than bypassing their protections. Production release remains blocked until required checks and browser testing pass.
