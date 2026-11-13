@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SMSS V47 — School Dashboard Preview</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#15324b;background:#edf5fa}*{box-sizing:border-box}
+body{margin:0}.top{background:#174c79;color:white;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+main{max-width:900px;margin:auto;padding:22px}h1{font-size:1.6rem;margin:0 0 8px}p{line-height:1.5}
+.panel{background:white;border-radius:14px;padding:22px;margin:16px 0;box-shadow:0 3px 16px #163c5b15}
+label{display:block;font-weight:650;margin-bottom:8px}select{width:100%;padding:12px;border:1px solid #9eb5c8;border-radius:8px;font:inherit}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}.tile{border:1px solid #d5e3ed;border-radius:10px;padding:18px;background:#f8fbfd}
+small{color:#52697d}.warning{color:#794e00;background:#fff5db;padding:12px;border-radius:8px}
+</style></head><body>
+<header class="top"><strong>SMSS Exam Portal — V47</strong><span>DEVELOPMENT PREVIEW</span></header>
+<main><h1>School Dashboard</h1><p>School-wise access preview with synthetic accounts. No live Firebase data is loaded.</p>
+<div class="panel"><label for="account">Demo account</label><select id="account"><option value="admin">School Admin (demo)</option><option value="viewer">Viewer (demo)</option><option value="teacher">Teacher in two schools (demo)</option></select></div>
+<div class="panel"><label for="school">Select School</label><select id="school"></select><h2 id="name"></h2><p id="role"></p><p id="mode"></p></div>
+<div class="grid"><div class="tile"><strong>Students</strong><p>School-scoped view</p><small>Demo only</small></div><div class="tile"><strong>Marks &amp; Results</strong><p>Assignment-aware access pending</p><small>Not connected</small></div><div class="tile"><strong>Attendance</strong><p>Assignment-aware access pending</p><small>Not connected</small></div><div class="tile"><strong>Staff</strong><p>School-scoped view</p><small>Demo only</small></div></div>
+<p class="warning">No Save, Edit, Delete or Firebase operations are available in this preview. Viewer mode is read-only. This page is not an authentication or authorization boundary.</p>
+</main><script type="module">
+import {buildSchoolDashboard} from "../../src/v47/school-dashboard.mjs";
+const schools=[{schoolId:"school_A001",name:"SMSS Demonstration School"},{schoolId:"school_B001",name:"Second Demonstration School"}];
+const memberships=[
+{uid:"admin",schoolId:"school_A001",roles:["school_admin"],active:true},
+{uid:"viewer",schoolId:"school_A001",roles:["viewer"],active:true},
+{uid:"teacher",schoolId:"school_A001",roles:["subject_teacher"],active:true},
+{uid:"teacher",schoolId:"school_B001",roles:["viewer"],active:true}
+];
+const account=document.getElementById("account"),school=document.getElementById("school");
+function refresh(){
+ const uid=account.value;
+ const allowed=memberships.filter(m=>m.uid===uid&&m.active);
+ const current=allowed.some(m=>m.schoolId===school.value)?school.value:allowed[0].schoolId;
+ school.replaceChildren(...allowed.map(m=>{const option=document.createElement("option");option.value=m.schoolId;option.textContent=schools.find(s=>s.schoolId===m.schoolId).name;return option;}));
+ school.value=current;
+ const dashboard=buildSchoolDashboard({authUid:uid,selectedSchoolId:current,memberships,schools});
+ document.getElementById("name").textContent=dashboard.schoolName;
+ document.getElementById("role").textContent="Role: "+dashboard.roles.join(", ");
+ document.getElementById("mode").textContent=dashboard.readOnly?"Read-only access":"Role-scoped access (preview only)";
+}
+account.addEventListener("change",refresh);school.addEventListener("change",refresh);refresh();
+</script></body></html>
