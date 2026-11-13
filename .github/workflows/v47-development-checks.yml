@@ -33,6 +33,7 @@ jobs:
           node scripts/test-v47-school-admin-invitation.mjs
           node scripts/test-v47-school-dashboard.mjs
           node scripts/test-v47-school-dashboard-preview.mjs
+          node scripts/test-v47-verified-platform-admin.mjs
           node scripts/test-v47-subscription-policy.mjs
           node scripts/test-v47-apk-pwa-compat.mjs
       - name: Two-school Firestore security emulator tests
