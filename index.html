@@ -969,6 +969,7 @@ async function loadStaff() {
     setStaffMessage(`कुल ${cachedStaff.length} कर्मचारीको विवरण लोड भयो।`);
   } catch (error) {
     console.error("Staff load failed:", safeNoticeError(error));
+    cachedStaff=[];
     body.innerHTML = '<tr><td colspan="7">विवरण लोड भएन।</td></tr>';
     setStaffMessage(safeNoticeError(error) || "प्रणाली वा Internet जाँच गर्नुहोस्।", true);
   }
@@ -1738,6 +1739,7 @@ async function loadExams(){
   setExamMessage(`कुल ${cachedExams.length} परीक्षा रेकर्ड लोड भयो।`);
  }catch(error){
   console.error("Exam load failed:",safeNoticeError(error));
+  cachedExams=[];
   body.innerHTML='<tr><td class="empty" colspan="9">परीक्षा विवरण लोड भएन।</td></tr>';
   setExamMessage(`लोड भएन: ${safeNoticeError(error)||"प्रणाली त्रुटि"} — सुरक्षा नियम जाँच गर्नुहोस्।`,true);
  }
