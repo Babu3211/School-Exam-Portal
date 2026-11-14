@@ -8,7 +8,7 @@ function setup(subscriptionStatus="free",memberActive=true){
   "schools/school_A001/members/teacher1":{active:memberActive,roles:["school_admin"]}
  }));
  let audit=0;
- const firestore={doc:path=>({path}),collection:path=>({doc:()=>({path:path+"/"+(++audit)})}),async runTransaction(fn){
+ const firestore={doc:path=>({path,get:async()=>({exists:data.has(path),data:()=>data.get(path)})}),collection:path=>({doc:()=>({path:path+"/"+(++audit)})}),async runTransaction(fn){
   const writes=[];
   const tx={get:async ref=>({exists:data.has(ref.path),data:()=>data.get(ref.path)}),update:(ref,patch)=>writes.push(["update",ref.path,patch]),create:(ref,value)=>writes.push(["create",ref.path,value])};
   await fn(tx);
