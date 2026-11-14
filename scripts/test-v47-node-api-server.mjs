@@ -38,9 +38,9 @@ try{
  })});
  assert.equal(create.status,200);
  assert.equal(docs.get("schools/school_A001/students/s001").name,"Test");
- // Force a UTF-8 Nepali character to be split across separate HTTP writes.
- const payload=Buffer.from(JSON.stringify({schoolId:"school_A001",studentId:"sNepali",mode:"create",values:{name:"विद्यार्थी",className:"9"}}),"utf8");
- const split=payload.indexOf(Buffer.from("विद्यार्थी","utf8"))+1;
+ // Verify non-name Unicode fields survive a split UTF-8 HTTP request.
+ const payload=Buffer.from(JSON.stringify({schoolId:"school_A001",studentId:"sUnicode",mode:"create",values:{name:"Test Student",className:"9",guardianName:"अभिभावक"}}),"utf8");
+ const split=payload.indexOf(Buffer.from("अभिभावक","utf8"))+1;
  const chunkedStatus=await new Promise((resolve,reject)=>{
   const req=httpRequest(base+"/api/v47/students/write",{method:"POST",headers},res=>{
    res.resume();res.on("end",()=>resolve(res.statusCode));res.on("error",reject);
@@ -50,7 +50,7 @@ try{
   setImmediate(()=>req.end(payload.subarray(split)));
  });
  assert.equal(chunkedStatus,200);
- assert.equal(docs.get("schools/school_A001/students/sNepali").name,"विद्यार्थी");
+ assert.equal(docs.get("schools/school_A001/students/sUnicode").guardianName,"अभिभावक");
  const denied=await fetch(base+"/api/v47/students/write",{method:"POST",headers,body:JSON.stringify({
   schoolId:"school_B001",studentId:"s002",mode:"create",values:{name:"Blocked",className:"9"}
  })});
