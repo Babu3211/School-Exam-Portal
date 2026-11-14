@@ -20,4 +20,14 @@ await assert.rejects(()=>readVerifiedV46Records({...base,collection:"user_roles"
 await assert.rejects(()=>readVerifiedV46Records({...base,collection:"public_results"}),/not available/);
 await assert.rejects(()=>readVerifiedV46Records({...base,collection:"students",maxRows:501}),/row limit/);
 assert.equal(paths.length,1);
+const contaminated={
+ ...firestore,
+ collection:path=>({limit:n=>({get:async()=>({docs:[{id:"s001",data:()=>({schoolId:"school_B001",name:"Other School"})}]})})})
+};
+await assert.rejects(()=>readVerifiedV46Records({...base,firestore:contaminated,collection:"students"}),/Cross-school record identity mismatch/);
+const malformed={
+ ...firestore,
+ collection:path=>({limit:n=>({get:async()=>({docs:[{id:"s001",data:()=>null}]})})})
+};
+await assert.rejects(()=>readVerifiedV46Records({...base,firestore:malformed,collection:"students"}),/Invalid school record/);
 console.log("V47 verified bounded school records reader tests passed");
