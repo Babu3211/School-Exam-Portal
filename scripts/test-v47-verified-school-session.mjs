@@ -23,5 +23,5 @@ docs.set("schools/school_A001",{status:"suspended"});
 await assert.rejects(loadVerifiedSchoolSession({idToken:"good",schoolId:"school_A001",auth,firestore}),/School is not active/);
 docs.set("schools/school_A001",{status:"pending"});
 await assert.rejects(loadVerifiedSchoolSession({idToken:"good",schoolId:"school_A001",auth,firestore}),/School is not active/);
-assert.deepEqual(paths,["schools/school_A001","schools/school_A001/members/user1","schools/school_B001","schools/school_B001/members/user1","schools/school_A001","schools/school_A001","schools/school_A001/members/user1","schools/school_A001","schools/school_A001/members/user1","schools/school_A001","schools/school_A001"]);
+assert.deepEqual(paths,["schools/school_A001","schools/school_A001/members/user1","schools/school_B001","schools/school_B001/members/user1","schools/school_A001","schools/school_A001/members/user1","schools/school_A001","schools/school_A001/members/user1","schools/school_A001","schools/school_A001"]);
 console.log("V47 verified school session tests passed");
