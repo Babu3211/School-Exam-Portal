@@ -12,4 +12,12 @@ assert.throws(()=>resolveSchoolSession({authUid:"user1",schoolId:"school_B001",s
 assert.throws(()=>resolveSchoolSession({authUid:"user1",schoolId:"school_C001",serverMemberships:memberships}));
 assert.throws(()=>resolveSchoolSession({authUid:"user1",schoolId:"../",serverMemberships:memberships}));
 assert.throws(()=>availableSchoolsForUser("",memberships));
+const mixed=[
+ {uid:"user1",schoolId:"invalid/school",roles:["viewer"],active:true},
+ {uid:"user1",schoolId:"school_A001",roles:["viewer"],active:true},
+ {uid:"user1",schoolId:"school_B001",roles:["unrecognized_role"],active:true},
+ {uid:"user1",schoolId:"school_C001",roles:["school_admin"],active:true}
+];
+assert.deepEqual(availableSchoolsForUser("user1",mixed).map(x=>x.schoolId),["school_A001","school_C001"],"Malformed memberships must not hide valid schools");
+assert.equal(resolveSchoolSession({authUid:"user1",schoolId:"school_C001",serverMemberships:mixed}).roles[0],"school_admin");
 console.log("V47 school session isolation tests passed");
