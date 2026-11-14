@@ -58,6 +58,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
  const showError=error=>{status.textContent=error instanceof Error?error.message:"Request failed";};
  selectButton.onclick=async()=>{
   const current=++renderGeneration;
+  ++rowsGeneration;
   panel.hidden=true;
   result.textContent="";
   status.textContent="Loading school...";
