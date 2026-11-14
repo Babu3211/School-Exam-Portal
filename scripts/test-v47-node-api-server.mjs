@@ -56,6 +56,10 @@ try{
  })});
  assert.equal(denied.status,403);
  assert.equal(docs.has("schools/school_B001/students/s002"),false);
+ const crossSchoolRead=await fetch(base+"/api/v47/records?schoolId=school_B001&collection=students",{headers});
+ assert.equal(crossSchoolRead.status,403,"An admin of school A cannot read school B");
+ const invalidCollection=await fetch(base+"/api/v47/records?schoolId=school_A001&collection=user_roles",{headers});
+ assert.equal(invalidCollection.status,403,"Server-managed roles must not be exposed as private records");
  // End-to-end HTTP regression: a viewer can read but cannot write.
  docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:true,roles:["viewer"]});
  const viewerRead=await fetch(base+"/api/v47/records?schoolId=school_A001&collection=students",{headers});
