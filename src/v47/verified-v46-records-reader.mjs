@@ -18,5 +18,12 @@ export async function readVerifiedV46Records({idToken,schoolId,collection,auth,f
  const path=v47V46CollectionSegments({schoolId:session.schoolId,collection}).join("/");
  const snapshot=await firestore.collection(path).limit(maxRows).get();
  if(!Array.isArray(snapshot.docs))throw new Error("Invalid Firestore snapshot");
- return Object.freeze(snapshot.docs.map(doc=>Object.freeze({...doc.data(),id:doc.id})));
+ return Object.freeze(snapshot.docs.map(doc=>{
+  const data=doc.data();
+  if(!data || typeof data!=="object" || Array.isArray(data))
+   throw new Error("Invalid school record");
+  if(Object.hasOwn(data,"schoolId") && data.schoolId!==session.schoolId)
+   throw new Error("Cross-school record identity mismatch");
+  return Object.freeze({...data,id:doc.id});
+ }));
 }
