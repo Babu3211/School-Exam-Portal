@@ -26,6 +26,9 @@ export async function listVerifiedUserSchools({idToken,auth,firestore}) {
   if(!school.exists || school.data()?.status!=="active")continue;
   const actual=await firestore.doc("schools/"+membership.schoolId+"/members/"+uid).get();
   if(!actual.exists || actual.data()?.active!==true)continue;
+  const member=actual.data();
+  if((Object.hasOwn(member,"uid") && member.uid!==uid) ||
+     (Object.hasOwn(member,"schoolId") && member.schoolId!==membership.schoolId))continue;
   let verified;
   try {verified=resolveSchoolSession({authUid:uid,schoolId:membership.schoolId,serverMemberships:[{...actual.data(),uid,schoolId:membership.schoolId}]});}
   catch {continue;}
