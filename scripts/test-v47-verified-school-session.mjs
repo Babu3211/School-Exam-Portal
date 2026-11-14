@@ -13,7 +13,9 @@ const good=await loadVerifiedSchoolSession({idToken:"good",schoolId:"school_A001
 assert.deepEqual(good.roles,["viewer"]);
 await assert.rejects(loadVerifiedSchoolSession({idToken:"good",schoolId:"school_B001",auth,firestore}),/No active membership/);
 await assert.rejects(loadVerifiedSchoolSession({idToken:"anonymous",schoolId:"school_A001",auth,firestore}),/Authenticated account/);
+const pathsBeforeInvalidToken=paths.length;
 await assert.rejects(loadVerifiedSchoolSession({idToken:"bad",schoolId:"school_A001",auth,firestore}),/Invalid token/);
+assert.equal(paths.length,pathsBeforeInvalidToken,"Invalid Firebase token must not read Firestore");
 docs.set("schools/school_A001/members/user1",{active:true,roles:["viewer"],uid:"otherUser",schoolId:"school_A001"});
 await assert.rejects(loadVerifiedSchoolSession({idToken:"good",schoolId:"school_A001",auth,firestore}),/identity mismatch/);
 docs.set("schools/school_A001/members/user1",{active:true,roles:["viewer"],uid:"user1",schoolId:"school_B001"});
