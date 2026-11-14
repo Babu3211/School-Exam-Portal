@@ -5,6 +5,7 @@
  */
 import {assertSchoolId} from "./tenant-domain.mjs";
 import {availableSchoolsForUser} from "./school-session.mjs";
+import {resolveSchoolSession} from "./school-session.mjs";
 export async function listVerifiedUserSchools({idToken,auth,firestore}) {
  if(typeof idToken!=="string" || !idToken)throw new Error("Authentication required");
  if(typeof auth?.verifyIdToken!=="function" || typeof firestore?.doc!=="function")
@@ -25,10 +26,13 @@ export async function listVerifiedUserSchools({idToken,auth,firestore}) {
   if(!school.exists || school.data()?.status!=="active")continue;
   const actual=await firestore.doc("schools/"+membership.schoolId+"/members/"+uid).get();
   if(!actual.exists || actual.data()?.active!==true)continue;
+  let verified;
+  try {verified=resolveSchoolSession({authUid:uid,schoolId:membership.schoolId,serverMemberships:[{...actual.data(),uid,schoolId:membership.schoolId}]});}
+  catch {continue;}
   schools.push(Object.freeze({
    schoolId:membership.schoolId,
    schoolName:String(school.data()?.name||membership.schoolId),
-   roles:Object.freeze([...membership.roles])
+   roles:Object.freeze([...verified.roles])
   }));
  }
  return Object.freeze(schools);
