@@ -20,6 +20,8 @@ export async function writeVerifiedStudent({idToken,schoolId,studentId,values,mo
  // Student names use English-script input only; other profile fields may be Unicode.
  if(Object.hasOwn(values,"name") && !/^[A-Za-z][A-Za-z .'-]*$/.test(values.name.trim()))
   throw new TypeError("Student name must use English letters");
+ if(Object.hasOwn(values,"className") && !/^(?:ECD|[1-9]|1[0-2])$/.test(values.className.trim()))
+  throw new TypeError("Class must be ECD or 1 through 12");
  if(mode==="create" && (!values.name?.trim() || !values.className?.trim()))
   throw new TypeError("Student name and class required");
  const session=await loadVerifiedSchoolSession({idToken,schoolId,auth,firestore});
