@@ -88,6 +88,16 @@ for(const mismatch of [{schoolId:"school_B001",uid:"user1"},{schoolId:"school_A0
  assert.equal(fixture.docs.has("schools/school_A001/students/s001"),false);
  assert.equal([...fixture.docs.keys()].filter(key=>key.startsWith("schools/school_A001/audit_logs/")).length,0);
 }
+// Viewer added to an admin membership during the transaction must revoke writes.
+const viewerAdded=setup();
+const viewerAddedRun=viewerAdded.firestore.runTransaction;
+viewerAdded.firestore.runTransaction=async fn=>{
+ viewerAdded.docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:true,roles:["school_admin","viewer"]});
+ return viewerAddedRun(fn);
+};
+await assert.rejects(()=>writeVerifiedStudent({...base,auth:viewerAdded.auth,firestore:viewerAdded.firestore,mode:"create",values:{name:"Blocked",className:"9"}}),/authorization changed/);
+assert.equal(viewerAdded.docs.has("schools/school_A001/students/s001"),false);
+assert.equal([...viewerAdded.docs.keys()].filter(key=>key.startsWith("schools/school_A001/audit_logs/")).length,0);
 const wrongTenant=setup();
 wrongTenant.docs.set("schools/school_A001/students/s001",{schoolId:"school_B001",name:"Protected",className:"9"});
 await assert.rejects(()=>writeVerifiedStudent({...base,auth:wrongTenant.auth,firestore:wrongTenant.firestore,mode:"update",values:{name:"Overwrite"}}),/tenant identity mismatch/);
