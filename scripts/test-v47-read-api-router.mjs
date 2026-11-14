@@ -11,7 +11,7 @@ async function call(url,method="GET",headers={}){
 assert.equal((await call("/api/v47/missing")).statusCode,404);
 assert.equal((await call("/api/v47/dashboard","POST")).statusCode,405);
 assert.equal((await call("/api/v47/dashboard?schoolId=school_001")).statusCode,401);
-assert.equal((await call("/api/v47/dashboard?schoolId=school_001&schoolId=school_002",{toString:()=>""})).statusCode,400);
+assert.equal((await call("/api/v47/dashboard?schoolId=school_001&schoolId=school_002")).statusCode,400);
 assert.equal((await call("/api/v47/dashboard?schoolId=school_001","GET",{authorization:"Bearer token"})).statusCode,403);
 assert.equal((await call("/api/v47/marks?schoolId=school_001")).statusCode,401);
 assert.equal((await call("/api/v47/attendance?schoolId=school_001")).statusCode,401);
