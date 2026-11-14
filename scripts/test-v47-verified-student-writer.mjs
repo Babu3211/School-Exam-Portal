@@ -98,6 +98,16 @@ viewerAdded.firestore.runTransaction=async fn=>{
 await assert.rejects(()=>writeVerifiedStudent({...base,auth:viewerAdded.auth,firestore:viewerAdded.firestore,mode:"create",values:{name:"Blocked",className:"9"}}),/authorization changed/);
 assert.equal(viewerAdded.docs.has("schools/school_A001/students/s001"),false);
 assert.equal([...viewerAdded.docs.keys()].filter(key=>key.startsWith("schools/school_A001/audit_logs/")).length,0);
+// A corrupted role string must not pass an array membership check during commit.
+const malformedRoles=setup();
+const malformedRun=malformedRoles.firestore.runTransaction;
+malformedRoles.firestore.runTransaction=async fn=>{
+ malformedRoles.docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:true,roles:"school_admin"});
+ return malformedRun(fn);
+};
+await assert.rejects(()=>writeVerifiedStudent({...base,auth:malformedRoles.auth,firestore:malformedRoles.firestore,mode:"create",values:{name:"Blocked",className:"9"}}),/authorization changed/);
+assert.equal(malformedRoles.docs.has("schools/school_A001/students/s001"),false);
+assert.equal([...malformedRoles.docs.keys()].filter(key=>key.startsWith("schools/school_A001/audit_logs/")).length,0);
 const wrongTenant=setup();
 wrongTenant.docs.set("schools/school_A001/students/s001",{schoolId:"school_B001",name:"Protected",className:"9"});
 await assert.rejects(()=>writeVerifiedStudent({...base,auth:wrongTenant.auth,firestore:wrongTenant.firestore,mode:"update",values:{name:"Overwrite"}}),/tenant identity mismatch/);
