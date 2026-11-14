@@ -142,6 +142,9 @@ jobs:
       - name: V46 marks schema compatibility audit
         if: success() || failure()
         run: node scripts/test-v47-v46-marks-schema-compat.mjs
+      - name: V47 verified private school records
+        if: success() || failure()
+        run: node scripts/test-v47-verified-v46-records-reader.mjs
       - name: V47 secure school activation
         if: success() || failure()
         run: node scripts/test-v47-school-activation.mjs
