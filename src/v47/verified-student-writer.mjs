@@ -32,6 +32,9 @@ export async function writeVerifiedStudent({idToken,schoolId,studentId,values,mo
   const current=await tx.get(ref);
   if(mode==="create" && current.exists)throw new Error("Student already exists");
   if(mode==="update" && !current.exists)throw new Error("Student does not exist");
+  if(mode==="update" && Object.hasOwn(current.data()||{},"schoolId") &&
+     current.data().schoolId!==session.schoolId)
+   throw new Error("Student tenant identity mismatch");
   const data=Object.fromEntries(entries.map(([key,value])=>[key,value.trim()]));
   if(mode==="create")tx.create(ref,{...data,schoolId:session.schoolId,createdBy:session.uid});
   else tx.update(ref,{...data,updatedBy:session.uid});
