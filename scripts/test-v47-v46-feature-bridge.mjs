@@ -17,6 +17,12 @@ assert.equal(b.classes().context.gateway.path,"schools/school_B001/classes");
 assert.equal(b.markSettings().context.gateway.path,"schools/school_B001/mark_settings");
 assert.equal(a.settings().context.gateway.path,"schools/school_A001/school_settings");
 assert.equal(b.results().context.gateway.path,"schools/school_B001/public_results");
+assert.equal(a.students().context.readOnly,false);
+assert.equal(b.students().context.readOnly,true);
+assert.equal(Object.isFrozen(b.students().context),true);
+assert.equal(Object.isFrozen(b.students().context.roles),true);
+assert.throws(()=>createV46FeatureBridge({session:{schoolId:"school_A001",roles:["school_admin","school_admin"]},legacyFeatures:implementations,tenantGateway:gateway}),/Invalid school role/);
+assert.throws(()=>createV46FeatureBridge({session:{schoolId:"school_A001",roles:["school_admin",null]},legacyFeatures:implementations,tenantGateway:gateway}),/Invalid school role/);
 assert.equal(typeof implementations.marks,"function"); // Existing implementation remains callable.
 assert.throws(()=>createV46FeatureBridge({session:{schoolId:"school_A001",roles:["viewer","school_admin"]},legacyFeatures:implementations,tenantGateway:gateway}));
 assert.throws(()=>createV46FeatureBridge({session:{schoolId:"school_A001",roles:["viewer"]},legacyFeatures:{},tenantGateway:gateway}),/Missing V46 feature/);
