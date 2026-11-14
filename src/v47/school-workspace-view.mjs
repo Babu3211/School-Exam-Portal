@@ -10,6 +10,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   throw new TypeError("Verified BS date converters required");
  const workspace=createV47VerifiedSchoolWorkspace({getIdToken,fetchImpl,bsToAd});
  let renderGeneration=0;
+ let rowsGeneration=0;
  const element=(tag,text)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=String(text);return el;};
  const status=element("p","Select a school to begin");
  const heading=element("h2","V47 School Workspace");
@@ -42,6 +43,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
  root.replaceChildren(heading,reloadButton,schoolInput,selectButton,clearButton,status,panel);
  const loadSchools=async()=>{
   const current=++renderGeneration;
+  ++rowsGeneration;
   panel.hidden=true;
   schoolInput.replaceChildren();
   status.textContent="Loading authorized schools...";
@@ -68,6 +70,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
  };
  clearButton.onclick=()=>{
   renderGeneration++;
+  rowsGeneration++;
   workspace.clear();
   panel.hidden=true;
   result.textContent="";
@@ -76,11 +79,12 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
  };
  const showRows=async(loader,formatRows=rows=>rows)=>{
   const current=renderGeneration;
+  const rowsRequest=++rowsGeneration;
   result.textContent="Loading...";
   try {
    const rows=await loader();
-   if(current===renderGeneration)result.textContent=JSON.stringify(formatRows(rows),null,2);
-  }catch(error){if(current===renderGeneration){result.textContent="";showError(error);}}
+   if(current===renderGeneration && rowsRequest===rowsGeneration)result.textContent=JSON.stringify(formatRows(rows),null,2);
+  }catch(error){if(current===renderGeneration && rowsRequest===rowsGeneration){result.textContent="";showError(error);}}
  };
  marksButton.onclick=()=>showRows(()=>workspace.readMarks({className:classInput.value.trim(),subject:subjectInput.value.trim()}));
  attendanceButton.onclick=()=>showRows(()=>workspace.readAttendance({className:classInput.value.trim(),date:dateInput.value.trim(),calendar:"BS"}),rows=>rows.map(row=>{
