@@ -32,7 +32,7 @@ await writeVerifiedStudent({...base,mode:"update",values:{name:"Ram Bahadur Thap
 assert.equal(a.docs.get("schools/school_A001/students/s001").name,"Ram Bahadur Thapa");
 await assert.rejects(()=>writeVerifiedStudent({...base,mode:"update",values:{name:"   "}}),/cannot be blank/);
 await assert.rejects(()=>writeVerifiedStudent({...base,mode:"update",values:{className:"  "}}),/cannot be blank/);
-assert.equal(a.docs.get("schools/school_A001/students/s001").name,"Test");
+assert.equal(a.docs.get("schools/school_A001/students/s001").name,"Ram Bahadur Thapa");
 assert.equal(a.docs.get("schools/school_A001/students/s001").className,"9");
 await assert.rejects(()=>writeVerifiedStudent({...base,schoolId:"school_B001",mode:"update",values:{name:"Bad"}}),/membership/i);
 const viewer=setup("viewer");
