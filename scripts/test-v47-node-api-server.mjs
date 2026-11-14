@@ -56,6 +56,15 @@ try{
  })});
  assert.equal(denied.status,403);
  assert.equal(docs.has("schools/school_B001/students/s002"),false);
+ // End-to-end HTTP regression: a viewer can read but cannot write.
+ docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:true,roles:["viewer"]});
+ const viewerRead=await fetch(base+"/api/v47/records?schoolId=school_A001&collection=students",{headers});
+ assert.equal(viewerRead.status,200);
+ const viewerWrite=await fetch(base+"/api/v47/students/write",{method:"POST",headers,body:JSON.stringify({
+  schoolId:"school_A001",studentId:"viewerBlocked",mode:"create",values:{name:"Blocked Student",className:"9"}
+ })});
+ assert.equal(viewerWrite.status,403);
+ assert.equal(docs.has("schools/school_A001/students/viewerBlocked"),false);
  const method=await fetch(base+"/api/v47/records",{method:"POST",headers,body:"{}"});
  assert.equal(method.status,405);
  console.log("V47 unified real Node API integration passed");
