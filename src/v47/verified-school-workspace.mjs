@@ -28,7 +28,7 @@ export function createV47VerifiedSchoolWorkspace({getIdToken,fetchImpl,bsToAd}) 
     throw new Error("School not in verified membership list");
    const request=generation;
    const dashboard=await workspace.selectSchool(schoolId);
-   if(request!==generation){workspace.clear();throw new Error("School selection changed");}
+   if(request!==generation)throw new Error("School selection changed");
    return dashboard;
   },
   saveStudent:args=>workspace.saveStudent(args),
