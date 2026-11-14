@@ -30,5 +30,10 @@ export async function readV46MarksForSchool({schoolId,className,subject,section=
  if(!gateway || typeof gateway.queryCollection!=="function")
    throw new TypeError("Read-only tenant query gateway required");
  const plan=planV46MarksQuery({schoolId,className,subject,section});
- return gateway.queryCollection(plan.collectionPath,plan.filters);
+ const rows=await gateway.queryCollection(plan.collectionPath,plan.filters);
+ if(!Array.isArray(rows)) throw new TypeError("Invalid marks query response");
+ if(rows.some(row=>!row || typeof row!=="object" || Array.isArray(row) ||
+   (Object.hasOwn(row,"schoolId") && row.schoolId!==schoolId)))
+  throw new Error("Marks tenant mismatch");
+ return rows;
 }
