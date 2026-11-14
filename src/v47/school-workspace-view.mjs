@@ -28,8 +28,8 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl}) {
  subjectInput.setAttribute("placeholder","Subject");
  subjectInput.setAttribute("aria-label","Subject");
  const dateInput=element("input");
- dateInput.setAttribute("placeholder","YYYY-MM-DD");
- dateInput.setAttribute("aria-label","Attendance date");
+ dateInput.setAttribute("placeholder","AD YYYY-MM-DD");
+ dateInput.setAttribute("aria-label","Attendance date (AD, not BS)");
  const marksButton=element("button","View marks");
  marksButton.type="button";
  const attendanceButton=element("button","View attendance");
