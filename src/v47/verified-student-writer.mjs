@@ -24,7 +24,7 @@ export async function writeVerifiedStudent({idToken,schoolId,studentId,values,mo
  await firestore.runTransaction(async tx=>{
   const school=await tx.get(firestore.doc("schools/"+session.schoolId));
   const member=await tx.get(firestore.doc("schools/"+session.schoolId+"/members/"+session.uid));
-  if(!school.exists || school.data()?.status!=="active" || !member.exists || member.data()?.active!==true || !member.data()?.roles?.includes("school_admin"))
+  if(!school.exists || school.data()?.status!=="active" || !member.exists || member.data()?.active!==true || member.data()?.uid!==session.uid || member.data()?.schoolId!==session.schoolId || !member.data()?.roles?.includes("school_admin"))
    throw new Error("School admin authorization changed");
   const current=await tx.get(ref);
   if(mode==="create" && current.exists)throw new Error("Student already exists");
