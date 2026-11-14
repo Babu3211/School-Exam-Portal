@@ -10,6 +10,7 @@ export function normalizeMembership({uid,schoolId,roles,active=true}) {
   assertSchoolId(schoolId);
   if(!Array.isArray(roles) || !roles.length || roles.some(r=>!ROLES.has(r))) throw new TypeError("Invalid school roles");
   if(roles.includes("viewer") && roles.some(role=>role!=="viewer")) throw new TypeError("Viewer role cannot be combined with write roles");
+  if(new Set(roles).size!==roles.length) throw new TypeError("Duplicate school roles");
   if(typeof active!=="boolean") throw new TypeError("Invalid active flag");
   return Object.freeze({uid,schoolId,roles:Object.freeze([...new Set(roles)]),active});
 }
