@@ -166,6 +166,9 @@ jobs:
       - name: V47 authenticated school chooser browser client
         if: success() || failure()
         run: node scripts/test-v47-schools-client.mjs
+      - name: V47 school chooser member identity isolation
+        if: success() || failure()
+        run: node scripts/test-v47-school-chooser-member-identity.mjs
       - name: V47 verified school chooser
         if: success() || failure()
         run: node scripts/test-v47-school-list.mjs
