@@ -16,4 +16,6 @@ assert.equal(mayAccessSchool(viewer,"school_A001","write"),false);
 assert.equal(mayAccessSchool({...admin,active:false},"school_A001","read"),false);
 assert.equal(mayAccessSchool(admin,"school_A001","delete"),false);
 assert.throws(()=>normalizeMembership({uid:"a",schoolId:"school_A001",roles:["super_admin"]}));
+assert.throws(()=>normalizeMembership({uid:"a",schoolId:"school_A001",roles:["viewer","viewer"]}),/Duplicate school roles/);
+assert.throws(()=>normalizeMembership({uid:"a",schoolId:"school_A001",roles:["school_admin","school_admin"]}),/Duplicate school roles/);
 console.log("V47 membership isolation policy unit tests passed");
