@@ -16,7 +16,7 @@ export function normalizeMembership({uid,schoolId,roles,active=true}) {
 }
 export function mayAccessSchool(membership,schoolId,operation) {
   assertSchoolId(schoolId);
-  if(!membership || !membership.active || membership.schoolId!==schoolId) return false;
+  if(!membership || membership.active!==true || membership.schoolId!==schoolId || !Array.isArray(membership.roles) || !membership.roles.length || membership.roles.some(role=>!ROLES.has(role)) || new Set(membership.roles).size!==membership.roles.length || (membership.roles.includes("viewer") && membership.roles.some(role=>role!=="viewer"))) return false;
   if(operation==="read") return true;
   if(operation!=="write") return false;
   if(membership.roles.includes("viewer")) return false; // viewer always read-only, even with another role
