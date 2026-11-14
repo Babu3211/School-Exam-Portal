@@ -4,6 +4,7 @@ const auth={verifyIdToken:async(token,checkRevoked)=>{
  assert.equal(checkRevoked,true);
  if(token==="good")return {uid:"user1",firebase:{sign_in_provider:"password"}};
  if(token==="anonymous")return {uid:"user1",firebase:{sign_in_provider:"anonymous"}};
+ if(token==="missingUid")return {firebase:{sign_in_provider:"password"}};
  throw new Error("Invalid token");
 }};
 const docs=new Map([["schools/school_A001",{status:"active"}],["schools/school_B001",{status:"active"}],["schools/school_A001/members/user1",{active:true,roles:["viewer"]}],["schools/school_B001/members/user2",{active:true,roles:["school_admin"]}]]);
@@ -15,6 +16,9 @@ await assert.rejects(loadVerifiedSchoolSession({idToken:"good",schoolId:"school_
 const pathsBeforeAnonymous=paths.length;
 await assert.rejects(loadVerifiedSchoolSession({idToken:"anonymous",schoolId:"school_A001",auth,firestore}),/Authenticated account/);
 assert.equal(paths.length,pathsBeforeAnonymous,"Anonymous users must not read school data");
+const pathsBeforeMissingUid=paths.length;
+await assert.rejects(loadVerifiedSchoolSession({idToken:"missingUid",schoolId:"school_A001",auth,firestore}),/Authenticated account/);
+assert.equal(paths.length,pathsBeforeMissingUid,"Missing token UID must not read school data");
 const pathsBeforeInvalidToken=paths.length;
 await assert.rejects(loadVerifiedSchoolSession({idToken:"bad",schoolId:"school_A001",auth,firestore}),/Invalid token/);
 assert.equal(paths.length,pathsBeforeInvalidToken,"Invalid Firebase token must not read Firestore");
