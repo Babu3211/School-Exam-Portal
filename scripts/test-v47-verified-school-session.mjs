@@ -12,7 +12,9 @@ const firestore={doc:path=>{paths.push(path);return {get:async()=>({exists:docs.
 const good=await loadVerifiedSchoolSession({idToken:"good",schoolId:"school_A001",auth,firestore});
 assert.deepEqual(good.roles,["viewer"]);
 await assert.rejects(loadVerifiedSchoolSession({idToken:"good",schoolId:"school_B001",auth,firestore}),/No active membership/);
+const pathsBeforeAnonymous=paths.length;
 await assert.rejects(loadVerifiedSchoolSession({idToken:"anonymous",schoolId:"school_A001",auth,firestore}),/Authenticated account/);
+assert.equal(paths.length,pathsBeforeAnonymous,"Anonymous users must not read school data");
 const pathsBeforeInvalidToken=paths.length;
 await assert.rejects(loadVerifiedSchoolSession({idToken:"bad",schoolId:"school_A001",auth,firestore}),/Invalid token/);
 assert.equal(paths.length,pathsBeforeInvalidToken,"Invalid Firebase token must not read Firestore");
