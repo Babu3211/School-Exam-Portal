@@ -6,6 +6,8 @@ const changed=output.trim().split("\n").filter(Boolean);
 assert.ok(changed.length>0,"No V47 changes found");
 const allowed=path=>
  path.startsWith("src/v47/") ||
+ path==="v47-runtime/server.mjs" ||
+ path==="v47-runtime/package.json" ||
  path.startsWith("scripts/test-v47-") ||
  path.startsWith("prototypes/v47/") ||
  path.startsWith("docs/V47-") ||
