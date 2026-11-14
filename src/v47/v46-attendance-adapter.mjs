@@ -9,6 +9,9 @@ const STATUSES=new Set(["present","absent","leave"]);
 export function planV46AttendanceRecord({schoolId,record}) {
  assertSchoolId(schoolId);
  if(!record || typeof record!=="object" || Array.isArray(record)) throw new TypeError("Attendance record required");
+ // A migrated record must never retain a different school identity in its payload.
+ if(Object.hasOwn(record,"schoolId") && record.schoolId!==schoolId)
+  throw new TypeError("V46 attendance tenant mismatch");
  if(typeof record.date!=="string" || !/^\d{4}-\d{2}-\d{2}$/.test(record.date) ||
     typeof record.className!=="string" || !record.className.trim() ||
     typeof record.attendanceType!=="string" || !record.attendanceType.trim())
