@@ -26,6 +26,7 @@ assert.equal(a.docs.get("schools/school_A001/students/s001").className,"9");
 assert.equal(a.docs.get("schools/school_A001/students/s001").section,"A");
 await assert.rejects(()=>writeVerifiedStudent({...base,mode:"create",values:{name:"Duplicate",className:"9"}}),/exists/);
 await assert.rejects(()=>writeVerifiedStudent({...base,mode:"update",values:{roles:"admin"}}),/privileged/);
+await assert.rejects(()=>writeVerifiedStudent({...base,mode:"update",values:{nameNepali:"विद्यार्थी"}}),/privileged/);
 await assert.rejects(()=>writeVerifiedStudent({...base,mode:"update",values:{name:"   "}}),/cannot be blank/);
 await assert.rejects(()=>writeVerifiedStudent({...base,mode:"update",values:{className:"  "}}),/cannot be blank/);
 assert.equal(a.docs.get("schools/school_A001/students/s001").name,"Test");
