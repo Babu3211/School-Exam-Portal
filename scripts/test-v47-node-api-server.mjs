@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {once} from "node:events";
+import {request as httpRequest} from "node:http";
 import {createV47ApiServer} from "../src/v47/node-api-server.mjs";
 const docs=new Map(Object.entries({
  "schools/school_A001":{status:"active"},
@@ -37,6 +38,19 @@ try{
  })});
  assert.equal(create.status,200);
  assert.equal(docs.get("schools/school_A001/students/s001").name,"Test");
+ // Force a UTF-8 Nepali character to be split across separate HTTP writes.
+ const payload=Buffer.from(JSON.stringify({schoolId:"school_A001",studentId:"sNepali",mode:"create",values:{name:"विद्यार्थी",className:"9"}}),"utf8");
+ const split=payload.indexOf(Buffer.from("विद्यार्थी","utf8"))+1;
+ const chunkedStatus=await new Promise((resolve,reject)=>{
+  const req=httpRequest(base+"/api/v47/students/write",{method:"POST",headers},res=>{
+   res.resume();res.on("end",()=>resolve(res.statusCode));res.on("error",reject);
+  });
+  req.on("error",reject);
+  req.write(payload.subarray(0,split));
+  setImmediate(()=>req.end(payload.subarray(split)));
+ });
+ assert.equal(chunkedStatus,200);
+ assert.equal(docs.get("schools/school_A001/students/sNepali").name,"विद्यार्थी");
  const denied=await fetch(base+"/api/v47/students/write",{method:"POST",headers,body:JSON.stringify({
   schoolId:"school_B001",studentId:"s002",mode:"create",values:{name:"Blocked",className:"9"}
  })});
