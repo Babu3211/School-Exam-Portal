@@ -77,7 +77,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
    if(current!==renderGeneration)return;
    status.textContent=school.schoolName+" ("+school.roles.join(", ")+")";
    panel.hidden=false;
-   saveStudentButton.hidden=!school.roles.includes("school_admin") || school.roles.includes("viewer");
+   saveStudentButton.hidden=school.readOnly || !school.roles.includes("school_admin") || school.roles.includes("viewer");
   }catch(error){if(current===renderGeneration)showError(error);}
  };
  clearButton.onclick=()=>{
