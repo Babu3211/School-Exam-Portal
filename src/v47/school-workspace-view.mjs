@@ -67,7 +67,13 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl}) {
  };
  marksButton.onclick=()=>showRows(()=>workspace.readMarks({className:classInput.value.trim(),subject:subjectInput.value.trim()}));
  attendanceButton.onclick=()=>showRows(()=>workspace.readAttendance({className:classInput.value.trim(),date:dateInput.value.trim()}));
- return Object.freeze({dispose(){
+ return Object.freeze({clearSession(){
+  renderGeneration++;
+  workspace.clear();
+  panel.hidden=true;
+  result.textContent="";
+  status.textContent="Select a school to begin";
+ },dispose(){
   renderGeneration++;
   workspace.clear();
   selectButton.onclick=null;clearButton.onclick=null;marksButton.onclick=null;attendanceButton.onclick=null;
