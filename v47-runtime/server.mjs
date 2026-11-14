@@ -2,7 +2,7 @@
 import {initializeApp,applicationDefault,getApps} from "firebase-admin/app";
 import {getAuth} from "firebase-admin/auth";
 import {getFirestore} from "firebase-admin/firestore";
-import {createV47ApiServer} from "../../src/v47/node-api-server.mjs";
+import {createV47ApiServer} from "../src/v47/node-api-server.mjs";
 
 // Explicit opt-in prevents accidental connection to the production V46 project.
 const projectId=process.env.V47_FIREBASE_PROJECT_ID;
