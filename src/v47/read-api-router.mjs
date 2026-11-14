@@ -2,11 +2,13 @@
  * Isolated V47 read API router. No server startup, deployment, or V46 mutation.
  * Adapters pass an already verified Firebase Admin Auth and Firestore instance.
  */
+import {createV47SchoolsHttpHandler} from "./schools-http-handler.mjs";
 import {createV47DashboardHttpHandler} from "./dashboard-http-handler.mjs";
 import {createV47MarksHttpHandler} from "./marks-http-handler.mjs";
 import {createV47AttendanceHttpHandler} from "./attendance-http-handler.mjs";
 export function createV47ReadApiRouter({auth,firestore}) {
  const handlers=new Map([
+  ["/api/v47/schools",createV47SchoolsHttpHandler({auth,firestore})],
   ["/api/v47/dashboard",createV47DashboardHttpHandler({auth,firestore})],
   ["/api/v47/marks",createV47MarksHttpHandler({auth,firestore})],
   ["/api/v47/attendance",createV47AttendanceHttpHandler({auth,firestore})]
