@@ -4,11 +4,11 @@
  */
 import {createV47FirebaseTokenProvider} from "./firebase-workspace-auth.mjs";
 import {mountV47SchoolWorkspace} from "./school-workspace-view.mjs";
-export function mountV47FirebaseWorkspace({root,document,auth,fetchImpl,subscribeAuthState}) {
+export function mountV47FirebaseWorkspace({root,document,auth,fetchImpl,subscribeAuthState,bsToAd,adToBs}) {
  if(typeof subscribeAuthState!=="function")
   throw new TypeError("Firebase auth-state subscription required");
  const view=mountV47SchoolWorkspace({
-  root,document,fetchImpl,
+  root,document,fetchImpl,bsToAd,adToBs,
   getIdToken:createV47FirebaseTokenProvider({auth})
  });
  let initial=true;
