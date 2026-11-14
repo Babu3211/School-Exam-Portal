@@ -68,6 +68,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   }catch(error){if(current===renderGeneration)showError(error);}
  };
  reloadButton.onclick=loadSchools;
+ const clearStudentInputs=()=>{studentIdInput.value="";studentNameInput.value="";studentClassInput.value="ECD";studentMode.value="create";};
  const showError=error=>{status.textContent=error instanceof Error?error.message:"Request failed";};
  selectButton.onclick=async()=>{
   const current=++renderGeneration;
@@ -89,6 +90,8 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   rowsGeneration++;
   workspace.clear();
   panel.hidden=true;
+  saveStudentButton.hidden=true;
+  clearStudentInputs();
   result.textContent="";
   schoolInput.replaceChildren();
   status.textContent="Load your schools to begin";
@@ -117,6 +120,8 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   rowsGeneration++;
   workspace.clear();
   panel.hidden=true;
+  saveStudentButton.hidden=true;
+  clearStudentInputs();
   result.textContent="";
   schoolInput.replaceChildren();
   status.textContent="Load your schools to begin";
@@ -124,6 +129,8 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   renderGeneration++;
   rowsGeneration++;
   workspace.clear();
+  saveStudentButton.hidden=true;
+  clearStudentInputs();
   reloadButton.onclick=null;selectButton.onclick=null;clearButton.onclick=null;marksButton.onclick=null;attendanceButton.onclick=null;recordsButton.onclick=null;saveStudentButton.onclick=null;
   root.replaceChildren();
  }});
