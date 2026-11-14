@@ -65,6 +65,25 @@ try{
  })});
  assert.equal(viewerWrite.status,403);
  assert.equal(docs.has("schools/school_A001/students/viewerBlocked"),false);
+ // Revocation must invalidate both reads and writes without requiring logout.
+ docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:false,roles:["school_admin"]});
+ const revokedRead=await fetch(base+"/api/v47/records?schoolId=school_A001&collection=students",{headers});
+ assert.equal(revokedRead.status,403);
+ const revokedWrite=await fetch(base+"/api/v47/students/write",{method:"POST",headers,body:JSON.stringify({
+  schoolId:"school_A001",studentId:"revokedBlocked",mode:"create",values:{name:"Blocked Student",className:"9"}
+ })});
+ assert.equal(revokedWrite.status,403);
+ assert.equal(docs.has("schools/school_A001/students/revokedBlocked"),false);
+ // Suspension must also prevent reads from a formerly authorized school.
+ docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:true,roles:["school_admin"]});
+ docs.set("schools/school_A001",{status:"suspended"});
+ const suspendedRead=await fetch(base+"/api/v47/records?schoolId=school_A001&collection=students",{headers});
+ assert.equal(suspendedRead.status,403);
+ const suspendedWrite=await fetch(base+"/api/v47/students/write",{method:"POST",headers,body:JSON.stringify({
+  schoolId:"school_A001",studentId:"suspendedBlocked",mode:"create",values:{name:"Blocked Student",className:"9"}
+ })});
+ assert.equal(suspendedWrite.status,403);
+ assert.equal(docs.has("schools/school_A001/students/suspendedBlocked"),false);
  const method=await fetch(base+"/api/v47/records",{method:"POST",headers,body:"{}"});
  assert.equal(method.status,405);
  console.log("V47 unified real Node API integration passed");
