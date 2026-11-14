@@ -57,6 +57,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   ++rowsGeneration;
   panel.hidden=true;
   saveStudentButton.hidden=true;
+  clearStudentInputs();
   result.textContent="";
   schoolInput.replaceChildren();
   status.textContent="Loading authorized schools...";
@@ -75,6 +76,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   ++rowsGeneration;
   panel.hidden=true;
   saveStudentButton.hidden=true;
+  clearStudentInputs();
   result.textContent="";
   status.textContent="Loading school...";
   try {
