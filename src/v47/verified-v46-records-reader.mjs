@@ -19,6 +19,8 @@ export async function readVerifiedV46Records({idToken,schoolId,collection,auth,f
  const snapshot=await firestore.collection(path).limit(maxRows).get();
  if(!Array.isArray(snapshot.docs))throw new Error("Invalid Firestore snapshot");
  return Object.freeze(snapshot.docs.map(doc=>{
+  if(typeof doc?.id!=="string" || !doc.id || doc.id.includes("/") || doc.id==="." || doc.id==="..")
+   throw new Error("Invalid Firestore document identity");
   const data=doc.data();
   if(!data || typeof data!=="object" || Array.isArray(data))
    throw new Error("Invalid school record");
