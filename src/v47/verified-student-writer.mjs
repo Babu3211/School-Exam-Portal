@@ -14,6 +14,9 @@ export async function writeVerifiedStudent({idToken,schoolId,studentId,values,mo
  const entries=Object.entries(values);
  if(!entries.length || entries.some(([key,value])=>!FIELDS.has(key) || typeof value!=="string" || value.length>200))
   throw new TypeError("Invalid or privileged student fields");
+ if((Object.hasOwn(values,"name") && !values.name.trim()) ||
+    (Object.hasOwn(values,"className") && !values.className.trim()))
+  throw new TypeError("Student name and class cannot be blank");
  if(mode==="create" && (!values.name?.trim() || !values.className?.trim()))
   throw new TypeError("Student name and class required");
  const session=await loadVerifiedSchoolSession({idToken,schoolId,auth,firestore});
