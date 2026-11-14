@@ -111,6 +111,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
  }));
  return Object.freeze({clearSession(){
   renderGeneration++;
+  rowsGeneration++;
   workspace.clear();
   panel.hidden=true;
   result.textContent="";
@@ -118,6 +119,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   status.textContent="Load your schools to begin";
  },dispose(){
   renderGeneration++;
+  rowsGeneration++;
   workspace.clear();
   reloadButton.onclick=null;selectButton.onclick=null;clearButton.onclick=null;marksButton.onclick=null;attendanceButton.onclick=null;recordsButton.onclick=null;saveStudentButton.onclick=null;
   root.replaceChildren();
