@@ -20,8 +20,12 @@ export async function writeVerifiedStudent({idToken,schoolId,studentId,values,mo
  if(!session.roles.includes("school_admin"))throw new Error("School admin required for student changes");
  if(typeof firestore?.runTransaction!=="function")throw new TypeError("Admin Firestore transaction required");
  const ref=firestore.doc(schoolRecordPath(session.schoolId,"students",studentId));
- const audit=firestore.collection("v47_registration_audit").doc();
+ const audit=firestore.collection("schools/"+session.schoolId+"/audit_logs").doc();
  await firestore.runTransaction(async tx=>{
+  const school=await tx.get(firestore.doc("schools/"+session.schoolId));
+  const member=await tx.get(firestore.doc("schools/"+session.schoolId+"/members/"+session.uid));
+  if(!school.exists || school.data()?.status!=="active" || !member.exists || member.data()?.active!==true || !member.data()?.roles?.includes("school_admin"))
+   throw new Error("School admin authorization changed");
   const current=await tx.get(ref);
   if(mode==="create" && current.exists)throw new Error("Student already exists");
   if(mode==="update" && !current.exists)throw new Error("Student does not exist");
