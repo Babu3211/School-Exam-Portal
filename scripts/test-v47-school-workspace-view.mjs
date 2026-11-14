@@ -52,7 +52,13 @@ assert.equal(panel.children[12].hidden,true,"Reloading schools must disable stud
 schoolInput.value="school_A001";
 await open.onclick();
 assert.equal(panel.hidden,false);
+const studentId=panel.children[8],studentName=panel.children[9];
+studentId.value="s001";studentName.value="Student Example";studentClassInput.value="9";
 clear.onclick();
+assert.equal(studentId.value,"");
+assert.equal(studentName.value,"");
+assert.equal(studentClassInput.value,"ECD");
+assert.equal(panel.children[12].hidden,true);
 assert.equal(panel.hidden,true);
 assert.equal(result.textContent,"");
 view.clearSession();
