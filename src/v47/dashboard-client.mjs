@@ -22,8 +22,11 @@ export function createV47DashboardClient({getIdToken,fetchImpl,endpoint="/api/v4
    const payload=await response.json();
    const dashboard=payload?.dashboard;
    if(!dashboard || dashboard.schoolId!==schoolId ||
-      typeof dashboard.schoolName!=="string" || !Array.isArray(dashboard.roles) ||
-      typeof dashboard.readOnly!=="boolean")
+      typeof dashboard.schoolName!=="string" || !dashboard.schoolName.trim() ||
+      !Array.isArray(dashboard.roles) || !dashboard.roles.length ||
+      dashboard.roles.some(role=>!["school_admin","class_teacher","subject_teacher","viewer"].includes(role)) ||
+      typeof dashboard.readOnly!=="boolean" ||
+      (dashboard.roles.includes("viewer") && dashboard.readOnly!==true))
     throw new Error("Invalid dashboard response");
    return Object.freeze({
     schoolId:dashboard.schoolId,schoolName:dashboard.schoolName,
