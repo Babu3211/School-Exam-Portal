@@ -18,5 +18,5 @@ export async function readVerifiedV46Records({idToken,schoolId,collection,auth,f
  const path=v47V46CollectionSegments({schoolId:session.schoolId,collection}).join("/");
  const snapshot=await firestore.collection(path).limit(maxRows).get();
  if(!Array.isArray(snapshot.docs))throw new Error("Invalid Firestore snapshot");
- return Object.freeze(snapshot.docs.map(doc=>Object.freeze({id:doc.id,...doc.data()})));
+ return Object.freeze(snapshot.docs.map(doc=>Object.freeze({...doc.data(),id:doc.id})));
 }
