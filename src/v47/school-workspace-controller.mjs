@@ -30,7 +30,7 @@ export function createV47SchoolWorkspace({getIdToken,fetchImpl,bsToAd}) {
   async saveStudent({studentId,mode,values}) {
    const school=current;
    if(!school)throw new Error("Select an authorized school first");
-   if(!school.roles.includes("school_admin") || school.roles.includes("viewer"))throw new Error("School admin required");
+   if(school.readOnly || !school.roles.includes("school_admin") || school.roles.includes("viewer"))throw new Error("School admin required");
    const requestGeneration=generation;
    const saved=await studentWriter.saveStudent({schoolId:school.schoolId,studentId,mode,values});
    if(requestGeneration!==generation || current!==school)throw new Error("School selection changed");
