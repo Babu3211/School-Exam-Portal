@@ -30,4 +30,13 @@ await assert.rejects(()=>writeVerifiedStudent({...base,schoolId:"school_B001",mo
 const viewer=setup("viewer");
 await assert.rejects(()=>writeVerifiedStudent({...base,auth:viewer.auth,firestore:viewer.firestore,mode:"create",values:{name:"Test",className:"9"}}),/School admin/);
 assert.equal(viewer.docs.has("schools/school_A001/students/s001"),false);
-console.log("V47 verified student writer tenant, viewer and audit tests passed");
+const revoked=setup();
+const originalTransaction=revoked.firestore.runTransaction;
+revoked.firestore.runTransaction=async fn=>{
+ revoked.docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:false,roles:["school_admin"]});
+ return originalTransaction(fn);
+};
+await assert.rejects(()=>writeVerifiedStudent({...base,auth:revoked.auth,firestore:revoked.firestore,mode:"create",values:{name:"Blocked",className:"9"}}),/authorization changed/);
+assert.equal(revoked.docs.has("schools/school_A001/students/s001"),false);
+assert.ok([...a.docs.keys()].some(key=>key.startsWith("schools/school_A001/audit_logs/")));
+console.log("V47 verified student writer tenant, viewer, revoked membership and audit tests passed");
