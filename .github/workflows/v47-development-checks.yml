@@ -142,6 +142,9 @@ jobs:
       - name: V46 marks schema compatibility audit
         if: success() || failure()
         run: node scripts/test-v47-v46-marks-schema-compat.mjs
+      - name: V47 unified real HTTP API
+        if: success() || failure()
+        run: node scripts/test-v47-node-api-server.mjs
       - name: V47 student write HTTP boundary
         if: success() || failure()
         run: node scripts/test-v47-student-write-http.mjs
