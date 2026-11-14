@@ -3,8 +3,8 @@ import {listVerifiedUserSchools} from "../src/v47/verified-school-list.mjs";
 import {createV47SchoolsHttpHandler} from "../src/v47/schools-http-handler.mjs";
 const index={memberships:[
  {uid:"u1",schoolId:"school_A001",active:true,roles:["viewer"]},
- {uid:"u1",schoolId:"school_B001",active:true,roles:["teacher"]},
- {uid:"u2",schoolId:"school_C001",active:true,roles:["admin"]}
+ {uid:"u1",schoolId:"school_B001",active:true,roles:["class_teacher"]},
+ {uid:"u2",schoolId:"school_C001",active:true,roles:["school_admin"]}
 ]};
 const docs={
  "v47_user_school_index/u1":index,
