@@ -16,5 +16,11 @@ export async function readVerifiedV46Attendance({
   .where("date","==",date)
   .where("attendanceType","==",attendanceType)
   .get();
- return snapshot.docs.map(doc=>({...doc.data(),id:doc.id}));
+ return snapshot.docs.map(doc=>{
+  const data=doc.data();
+  if(!data || typeof data!=="object" || Array.isArray(data) ||
+     (Object.hasOwn(data,"schoolId") && data.schoolId!==session.schoolId))
+    throw new Error("Attendance tenant mismatch");
+  return {...data,id:doc.id};
+ });
 }
