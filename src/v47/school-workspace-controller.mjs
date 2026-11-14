@@ -2,6 +2,7 @@
  * Isolated V47 workspace state controller. No DOM, no Firebase writes,
  * and no modification to V46 production pages.
  */
+import {createV47StudentWriteClient} from "./student-write-client.mjs";
 import {createV47RecordsClient} from "./records-client.mjs";
 import {createV47DashboardClient} from "./dashboard-client.mjs";
 import {createV47ExamReadClient} from "./marks-attendance-client.mjs";
@@ -11,6 +12,7 @@ export function createV47SchoolWorkspace({getIdToken,fetchImpl,bsToAd}) {
  const dashboardClient=createV47DashboardClient({getIdToken,fetchImpl});
  const examClient=createV47ExamReadClient({getIdToken,fetchImpl});
  const recordsClient=createV47RecordsClient({getIdToken,fetchImpl});
+ const studentWriter=createV47StudentWriteClient({getIdToken,fetchImpl});
  let current=null;
  let generation=0;
  const selected=()=>current;
@@ -25,6 +27,15 @@ export function createV47SchoolWorkspace({getIdToken,fetchImpl,bsToAd}) {
    return dashboard;
   },
   clear(){generation++;current=null;},
+  async saveStudent({studentId,mode,values}) {
+   const school=current;
+   if(!school)throw new Error("Select an authorized school first");
+   if(!school.roles.includes("school_admin"))throw new Error("School admin required");
+   const requestGeneration=generation;
+   const saved=await studentWriter.saveStudent({schoolId:school.schoolId,studentId,mode,values});
+   if(requestGeneration!==generation || current!==school)throw new Error("School selection changed");
+   return saved;
+  },
   async readRecords({collection,limit=100}) {
    const school=current;
    if(!school)throw new Error("Select an authorized school first");
