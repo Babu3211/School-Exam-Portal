@@ -30,6 +30,10 @@ await assert.rejects(()=>writeVerifiedStudent({...base,schoolId:"school_B001",mo
 const viewer=setup("viewer");
 await assert.rejects(()=>writeVerifiedStudent({...base,auth:viewer.auth,firestore:viewer.firestore,mode:"create",values:{name:"Test",className:"9"}}),/School admin/);
 assert.equal(viewer.docs.has("schools/school_A001/students/s001"),false);
+const mixed=setup();
+mixed.docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:true,roles:["school_admin","viewer"]});
+await assert.rejects(()=>writeVerifiedStudent({...base,auth:mixed.auth,firestore:mixed.firestore,mode:"create",values:{name:"Blocked",className:"9"}}),/School admin required/);
+assert.equal(mixed.docs.has("schools/school_A001/students/s001"),false);
 const revoked=setup();
 const originalTransaction=revoked.firestore.runTransaction;
 revoked.firestore.runTransaction=async fn=>{
