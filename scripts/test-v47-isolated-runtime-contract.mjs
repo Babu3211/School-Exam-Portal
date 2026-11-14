@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {fileURLToPath} from "node:url";
+const source=readFileSync(fileURLToPath(new URL("../v47-runtime/server.mjs",import.meta.url)),"utf8");
+const pkg=JSON.parse(readFileSync(fileURLToPath(new URL("../v47-runtime/package.json",import.meta.url)),"utf8"));
+assert.match(source,/from "\.\.\/src\/v47\/node-api-server\.mjs"/);
+assert.match(source,/V47_FIREBASE_PROJECT_ID required/);
+assert.match(source,/exam-portal-smss-95016/);
+assert.match(source,/production Firebase project is forbidden/);
+assert.match(source,/createV47ApiServer/);
+assert.equal(pkg.type,"module");
+assert.ok(pkg.dependencies["firebase-admin"]);
+console.log("V47 isolated runtime import and production guard checks passed");
