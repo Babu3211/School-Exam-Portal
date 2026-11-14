@@ -25,9 +25,9 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
  const panel=element("section");
  const result=element("pre");
  result.setAttribute("aria-label","Read-only results");
- const classInput=element("input");
- classInput.setAttribute("placeholder","Class");
+ const classInput=element("select");
  classInput.setAttribute("aria-label","Class");
+ for(const name of ["ECD",...Array.from({length:12},(_,i)=>String(i+1))]){const option=element("option",name);option.value=name;classInput.append(option);}
  const subjectInput=element("input");
  subjectInput.setAttribute("placeholder","Subject");
  subjectInput.setAttribute("aria-label","Subject");
@@ -39,7 +39,8 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
  for(const name of ["students","staff","classes","exams","subjects","certificates","school_settings","mark_settings"]){const option=element("option",name);option.value=name;recordsSelect.append(option);}
  const studentIdInput=element("input");studentIdInput.setAttribute("placeholder","Student ID");
  const studentNameInput=element("input");studentNameInput.setAttribute("placeholder","Student name (English only)");studentNameInput.setAttribute("aria-label","Student name in English");
- const studentClassInput=element("input");studentClassInput.setAttribute("placeholder","Class");
+ const studentClassInput=element("select");studentClassInput.setAttribute("aria-label","Student class");
+ for(const name of ["ECD",...Array.from({length:12},(_,i)=>String(i+1))]){const option=element("option",name);option.value=name;studentClassInput.append(option);}
  const studentMode=element("select");for(const mode of ["create","update"]){const option=element("option",mode);option.value=mode;studentMode.append(option);}
  const saveStudentButton=element("button","Save student");saveStudentButton.type="button";saveStudentButton.hidden=true;
  const recordsButton=element("button","View school records");
