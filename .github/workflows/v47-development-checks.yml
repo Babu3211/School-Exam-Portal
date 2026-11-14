@@ -142,6 +142,9 @@ jobs:
       - name: V46 marks schema compatibility audit
         if: success() || failure()
         run: node scripts/test-v47-v46-marks-schema-compat.mjs
+      - name: V46 attendance source schema and date audit
+        if: success() || failure()
+        run: node scripts/test-v47-v46-attendance-source-contract.mjs
       - name: V46 batch attendance adapter contract
         if: success() || failure()
         run: node scripts/test-v47-v46-attendance-adapter.mjs
