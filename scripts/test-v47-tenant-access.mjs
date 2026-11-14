@@ -15,6 +15,11 @@ assert.equal(mayAccessSchool(viewer,"school_A001","write"),false);
 
 assert.equal(mayAccessSchool({...admin,active:false},"school_A001","read"),false);
 assert.equal(mayAccessSchool(admin,"school_A001","delete"),false);
+for(const malformed of [{...admin,roles:["viewer","school_admin"]},{...admin,roles:["school_admin","school_admin"]},{...admin,roles:["unknown"]},{...admin,roles:"school_admin"},{...admin,roles:[]},{...admin,active:"true"}]){
+ assert.equal(mayAccessSchool(malformed,"school_A001","read"),false);
+ assert.equal(mayAccessSchool(malformed,"school_A001","write"),false);
+ assert.equal(mayManageSchool(malformed,"school_A001"),false);
+}
 assert.throws(()=>normalizeMembership({uid:"a",schoolId:"school_A001",roles:["super_admin"]}));
 assert.throws(()=>normalizeMembership({uid:"a",schoolId:"school_A001",roles:["viewer","viewer"]}),/Duplicate school roles/);
 assert.throws(()=>normalizeMembership({uid:"a",schoolId:"school_A001",roles:["school_admin","school_admin"]}),/Duplicate school roles/);
