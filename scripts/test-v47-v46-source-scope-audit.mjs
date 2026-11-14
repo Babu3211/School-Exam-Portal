@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {auditV46FirestoreSource} from "../src/v47/v46-source-scope-audit.mjs";
+const html=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+const audit=auditV46FirestoreSource(html);
+assert.equal(audit.collections.length,17);
+assert.ok(audit.references>=140);
+assert.ok(audit.mustScopeBeforeRelease>0);
+assert.equal(audit.safeToDeployWithoutRuntimeMigration,false);
+assert.ok(audit.bootstrapDependencies.includes("user_roles"));
+assert.throws(()=>auditV46FirestoreSource('collection(db,"unknown_new_collection")'),/Unclassified/);
+console.log("V47 full V46 source audit passed:",audit.references,"root calls across",audit.collections.length,"collections; deployment gated");
