@@ -30,4 +30,12 @@ const malformed={
  collection:path=>({limit:n=>({get:async()=>({docs:[{id:"s001",data:()=>null}]})})})
 };
 await assert.rejects(()=>readVerifiedV46Records({...base,firestore:malformed,collection:"students"}),/Invalid school record/);
+// A previously authorized reader must lose access immediately when membership is revoked.
+docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:false,roles:["viewer"]});
+await assert.rejects(()=>readVerifiedV46Records({...base,collection:"students"}),/active|membership|access|denied/i);
+assert.equal(paths.length,1,"Revoked member must not query school records");
+docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:true,roles:["viewer"]});
+docs.set("schools/school_A001",{status:"suspended"});
+await assert.rejects(()=>readVerifiedV46Records({...base,collection:"students"}),/School is not active/);
+assert.equal(paths.length,1,"Suspended school must not query records");
 console.log("V47 verified bounded school records reader tests passed");
