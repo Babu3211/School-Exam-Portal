@@ -147,3 +147,10 @@ During the subsequent authenticated session, Class VI 2083 First and Second Grad
 This supersedes the earlier Grade-Ledger-pending statement only. The Mark Ledger First Term Load was initiated, but its populated output was not captured before interruption; Mark Ledger comparison remains unverified. The current main helper still renders duplicate IN/Total non-final grade columns and withholds non-final secondary GPA. PR #28 fixes Grade Sheets only; the Grade Ledger fix remains outstanding and must preserve historical cohorts.
 
 All three workflows passed on commit 8135ca7fdb59572f9cfacdc5351ccf898aa28cab: V45 regression 42958820463, V44 JavaScript/Firestore 42958820432, V45 JavaScript/Firestore 42958820495. These are branch checks, not production certification. PR #28 remains open and unmerged as checked on continuation. No merge or deployment is performed by this evidence update.
+
+
+### Class VI populated Mark Ledger verification — 2026-11-15
+
+After authenticated login resumed, all three 2083 Class VI Mark Ledgers were inspected without additional writes. First Term columns followed Nepali, English, Mathematics, Science & Technology, Social Studies & Human Value Education, Health Physical & Creative Art, Hamro Dhunibeshi, showing 41/39/36/45/37/42/40. Second Term reversed that subject order and showed 40/42/37/45/36/39/41. Final used the same reversed order with IN/TH pairs: 40/39, 42/41, 37/36, 45/42, 36/35, 39/38, 41/40. All values match the saved sample inputs documented above.
+
+The First-Term subject order differs from Second/Final in the current reference. Existing SMSS iemisSubjects reverses all Class VI number ledgers without term context, so First-Term order still requires a scoped correction. Non-final IEMIS Mark Ledgers have one column per subject, without an IN subheader. This observation completes the Class VI populated Mark Ledger value comparison, not full UI/print/edit/validation certification. Student identifiers remain omitted; no production deployment was performed.
