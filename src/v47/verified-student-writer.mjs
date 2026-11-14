@@ -5,7 +5,7 @@
  */
 import {loadVerifiedSchoolSession} from "./verified-school-session.mjs";
 import {schoolRecordPath} from "./school-data-paths.mjs";
-const FIELDS=new Set(["name","nameNepali","className","section","rollNo","iemisId","guardianName","guardianPhone"]);
+const FIELDS=new Set(["name","className","section","rollNo","iemisId","guardianName","guardianPhone"]);
 const ID=/^[A-Za-z0-9_-]{1,128}$/;
 export async function writeVerifiedStudent({idToken,schoolId,studentId,values,mode,auth,firestore}) {
  if(!["create","update"].includes(mode))throw new TypeError("Invalid write mode");
