@@ -12,6 +12,8 @@ export function createV46FeatureBridge({session,legacyFeatures,tenantGateway}) {
  const schoolId=assertSchoolId(session.schoolId);
  if(!Array.isArray(session.roles) || !session.roles.length || session.roles.some(role=>typeof role!=="string" || !role.trim()) || new Set(session.roles).size!==session.roles.length || session.roles.includes("viewer") && session.roles.some(r=>r!=="viewer"))
    throw new Error("Invalid school role session");
+ const verifiedRoles=Object.freeze([...session.roles]);
+ const readOnly=verifiedRoles.includes("viewer");
  if(!legacyFeatures || typeof legacyFeatures!=="object" || !tenantGateway || typeof tenantGateway.forCollection!=="function")
    throw new TypeError("V46 features and tenant data gateway required");
  const result={};
@@ -20,7 +22,7 @@ export function createV46FeatureBridge({session,legacyFeatures,tenantGateway}) {
    if(typeof implementation!=="function") throw new TypeError("Missing V46 feature: "+feature);
    const scopedGateway=tenantGateway.forCollection(schoolResourcePath(schoolId,FEATURE_COLLECTIONS[feature]));
    if(!scopedGateway || typeof scopedGateway!=="object") throw new TypeError("Invalid tenant gateway");
-   result[feature]=(...args)=>implementation(Object.freeze({schoolId,roles:Object.freeze([...session.roles]),readOnly:session.roles.includes("viewer"),gateway:scopedGateway}),...args);
+   result[feature]=(...args)=>implementation(Object.freeze({schoolId,roles:verifiedRoles,readOnly,gateway:scopedGateway}),...args);
  }
  return Object.freeze(result);
 }
