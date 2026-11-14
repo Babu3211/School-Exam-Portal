@@ -103,6 +103,9 @@ jobs:
       - name: V47 isolated browser workspace view
         if: success() || failure()
         run: node scripts/test-v47-school-workspace-view.mjs
+      - name: V47 viewer mixed-role browser and controller write isolation
+        if: success() || failure()
+        run: node scripts/test-v47-viewer-mixed-role-workspace.mjs
       - name: V47 workspace selection and stale data isolation
         if: success() || failure()
         run: node scripts/test-v47-school-workspace-controller.mjs
