@@ -68,5 +68,17 @@ updateRevoked.firestore.runTransaction=async fn=>{
 await assert.rejects(()=>writeVerifiedStudent({...base,auth:updateRevoked.auth,firestore:updateRevoked.firestore,mode:"update",values:{name:"Unauthorized"}}),/authorization changed/);
 assert.deepEqual(updateRevoked.docs.get(existingPath),{name:"Original",className:"9",section:"A"});
 assert.equal([...updateRevoked.docs.keys()].filter(key=>key.startsWith("schools/school_A001/audit_logs/")).length,0);
+// Reject a membership whose tenant or identity changes between verification and commit.
+for(const mismatch of [{schoolId:"school_B001",uid:"user1"},{schoolId:"school_A001",uid:"imposter"}]){
+ const fixture=setup();
+ const original=fixture.firestore.runTransaction;
+ fixture.firestore.runTransaction=async fn=>{
+  fixture.docs.set("schools/school_A001/members/user1",{...mismatch,active:true,roles:["school_admin"]});
+  return original(fn);
+ };
+ await assert.rejects(()=>writeVerifiedStudent({...base,auth:fixture.auth,firestore:fixture.firestore,mode:"create",values:{name:"Blocked",className:"9"}}),/authorization changed/);
+ assert.equal(fixture.docs.has("schools/school_A001/students/s001"),false);
+ assert.equal([...fixture.docs.keys()].filter(key=>key.startsWith("schools/school_A001/audit_logs/")).length,0);
+}
 assert.ok([...a.docs.keys()].some(key=>key.startsWith("schools/school_A001/audit_logs/")));
 console.log("V47 verified student writer tenant, viewer, revoked membership, suspended school, role downgrade and audit tests passed");
