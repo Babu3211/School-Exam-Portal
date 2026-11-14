@@ -17,14 +17,14 @@ export async function writeVerifiedStudent({idToken,schoolId,studentId,values,mo
  if(mode==="create" && (!values.name?.trim() || !values.className?.trim()))
   throw new TypeError("Student name and class required");
  const session=await loadVerifiedSchoolSession({idToken,schoolId,auth,firestore});
- if(!session.roles.includes("school_admin"))throw new Error("School admin required for student changes");
+ if(!session.roles.includes("school_admin") || session.roles.includes("viewer"))throw new Error("School admin required for student changes");
  if(typeof firestore?.runTransaction!=="function")throw new TypeError("Admin Firestore transaction required");
  const ref=firestore.doc(schoolRecordPath(session.schoolId,"students",studentId));
  const audit=firestore.collection("schools/"+session.schoolId+"/audit_logs").doc();
  await firestore.runTransaction(async tx=>{
   const school=await tx.get(firestore.doc("schools/"+session.schoolId));
   const member=await tx.get(firestore.doc("schools/"+session.schoolId+"/members/"+session.uid));
-  if(!school.exists || school.data()?.status!=="active" || !member.exists || member.data()?.active!==true || member.data()?.uid!==session.uid || member.data()?.schoolId!==session.schoolId || !member.data()?.roles?.includes("school_admin"))
+  if(!school.exists || school.data()?.status!=="active" || !member.exists || member.data()?.active!==true || member.data()?.uid!==session.uid || member.data()?.schoolId!==session.schoolId || (!member.data()?.roles?.includes("school_admin") || member.data()?.roles?.includes("viewer")))
    throw new Error("School admin authorization changed");
   const current=await tx.get(ref);
   if(mode==="create" && current.exists)throw new Error("Student already exists");
