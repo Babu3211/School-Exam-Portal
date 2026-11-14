@@ -334,6 +334,7 @@ must(html.includes('id="studentOptional1"') && html.includes('id="studentOptiona
 must(html.includes("if(e.target.id==='studentClass')renderStudentOptionalSubjects(e.target.value,false)"), "Changing a student's class must refresh and clear the optional-subject choices.");
 must(html.includes('renderStudentOptionalSubjects(document.getElementById("studentClass")?.value||classes[0],false)'), "Resetting a student form must hide stale optional-subject selectors.");
 must(html.includes("if(chosen&&!choices.some"), "An optional subject, when selected, must match the configured choices.");
+must(html.includes("sel.required=false;"), "Optional subject selectors must not block saving a student when no optional subject is selected.");
 must(html.includes("canonicalSubjectKey(data.optionalSubject1)===canonicalSubjectKey(data.optionalSubject2)"), "The same subject cannot be selected for both optional slots.");
 
 must(html.includes("optionalSubject1:document.getElementById") && html.includes("optionalSubject2:document.getElementById"), "Student Optional I/II selections must be saved to the student record.");
