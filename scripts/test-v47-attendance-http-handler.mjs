@@ -16,7 +16,7 @@ assert.equal((await handler({...req,headers:{}})).status,401);
 assert.equal((await handler({...req,query:{...req.query,uid:"other"}})).status,400);
 assert.equal((await handler({...req,headers:{authorization:"Bearer bad"}})).status,403);
 assert.equal((await handler({...req,query:{...req.query,schoolId:"school_B001"}})).status,403);
-assert.equal((await handler({...req,query:{...req.query,date:"invalid"}})).status,403);
+assert.equal((await handler({...req,query:{...req.query,date:"invalid"}})).status,400);
 docs.set("schools/school_A001",{status:"suspended"});
 assert.equal((await handler(req)).status,403);
 assert.equal(calls.length,1,"Rejected requests must not query attendance");
