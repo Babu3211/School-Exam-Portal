@@ -30,6 +30,11 @@ const malformed={
  collection:path=>({limit:n=>({get:async()=>({docs:[{id:"s001",data:()=>null}]})})})
 };
 await assert.rejects(()=>readVerifiedV46Records({...base,firestore:malformed,collection:"students"}),/Invalid school record/);
+const invalidDocIdentity={
+ ...firestore,
+ collection:path=>({limit:n=>({get:async()=>({docs:[{id:"../school_B001",data:()=>({name:"Invalid"})}]})})})
+};
+await assert.rejects(()=>readVerifiedV46Records({...base,firestore:invalidDocIdentity,collection:"students"}),/Invalid Firestore document identity/);
 // A previously authorized reader must lose access immediately when membership is revoked.
 docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:false,roles:["viewer"]});
 await assert.rejects(()=>readVerifiedV46Records({...base,collection:"students"}),/active|membership|access|denied/i);
