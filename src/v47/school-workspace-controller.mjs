@@ -4,8 +4,9 @@
  */
 import {createV47DashboardClient} from "./dashboard-client.mjs";
 import {createV47ExamReadClient} from "./marks-attendance-client.mjs";
+import {normalizeV47AttendanceDate} from "./attendance-date-adapter.mjs";
 
-export function createV47SchoolWorkspace({getIdToken,fetchImpl}) {
+export function createV47SchoolWorkspace({getIdToken,fetchImpl,bsToAd}) {
  const dashboardClient=createV47DashboardClient({getIdToken,fetchImpl});
  const examClient=createV47ExamReadClient({getIdToken,fetchImpl});
  let current=null;
@@ -31,11 +32,12 @@ export function createV47SchoolWorkspace({getIdToken,fetchImpl}) {
     throw new Error("School selection changed");
    return rows;
   },
-  async readAttendance({className,date,attendanceType="daily"}) {
+  async readAttendance({className,date,calendar="AD",attendanceType="daily"}) {
    const school=current;
    if(!school)throw new Error("Select an authorized school first");
    const requestGeneration=generation;
-   const rows=await examClient.readAttendance({schoolId:school.schoolId,className,date,attendanceType});
+   const adDate=normalizeV47AttendanceDate({value:date,calendar,bsToAd});
+   const rows=await examClient.readAttendance({schoolId:school.schoolId,className,date:adDate,attendanceType});
    if(requestGeneration!==generation || current!==school)
     throw new Error("School selection changed");
    return rows;
