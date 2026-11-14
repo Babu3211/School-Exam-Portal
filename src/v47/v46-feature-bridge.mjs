@@ -5,7 +5,7 @@
  */
 import {assertSchoolId} from "./tenant-domain.mjs";
 import {schoolResourcePath} from "./school-data-paths.mjs";
-const FEATURE_COLLECTIONS=Object.freeze({students:"students",staff:"staff",exams:"exams",marks:"marks",attendance:"attendance",settings:"school_settings",results:"public_results"});
+const FEATURE_COLLECTIONS=Object.freeze({students:"students",staff:"staff",classes:"classes",subjects:"subjects",exams:"exams",marks:"marks",attendance:"attendance",certificates:"certificates",markSettings:"mark_settings",settings:"school_settings",results:"public_results"});
 const FEATURES=Object.freeze(Object.keys(FEATURE_COLLECTIONS));
 export function createV46FeatureBridge({session,legacyFeatures,tenantGateway}) {
  if(!session || typeof session!=="object") throw new TypeError("Verified session required");
