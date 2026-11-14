@@ -38,5 +38,23 @@ revoked.firestore.runTransaction=async fn=>{
 };
 await assert.rejects(()=>writeVerifiedStudent({...base,auth:revoked.auth,firestore:revoked.firestore,mode:"create",values:{name:"Blocked",className:"9"}}),/authorization changed/);
 assert.equal(revoked.docs.has("schools/school_A001/students/s001"),false);
+const inactiveSchool=setup();
+const inactiveRun=inactiveSchool.firestore.runTransaction;
+inactiveSchool.firestore.runTransaction=async fn=>{
+ inactiveSchool.docs.set("schools/school_A001",{status:"suspended"});
+ return inactiveRun(fn);
+};
+await assert.rejects(()=>writeVerifiedStudent({...base,auth:inactiveSchool.auth,firestore:inactiveSchool.firestore,mode:"create",values:{name:"Blocked",className:"9"}}),/authorization changed/);
+assert.equal(inactiveSchool.docs.has("schools/school_A001/students/s001"),false);
+assert.equal([...inactiveSchool.docs.keys()].filter(key=>key.startsWith("schools/school_A001/audit_logs/")).length,0);
+const roleRemoved=setup();
+const roleRun=roleRemoved.firestore.runTransaction;
+roleRemoved.firestore.runTransaction=async fn=>{
+ roleRemoved.docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:true,roles:["viewer"]});
+ return roleRun(fn);
+};
+await assert.rejects(()=>writeVerifiedStudent({...base,auth:roleRemoved.auth,firestore:roleRemoved.firestore,mode:"create",values:{name:"Blocked",className:"9"}}),/authorization changed/);
+assert.equal(roleRemoved.docs.has("schools/school_A001/students/s001"),false);
+assert.equal([...roleRemoved.docs.keys()].filter(key=>key.startsWith("schools/school_A001/audit_logs/")).length,0);
 assert.ok([...a.docs.keys()].some(key=>key.startsWith("schools/school_A001/audit_logs/")));
-console.log("V47 verified student writer tenant, viewer, revoked membership and audit tests passed");
+console.log("V47 verified student writer tenant, viewer, revoked membership, suspended school, role downgrade and audit tests passed");
