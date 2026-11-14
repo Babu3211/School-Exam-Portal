@@ -24,8 +24,10 @@ export function createV47VerifiedSchoolWorkspace({getIdToken,fetchImpl,bsToAd}) 
   getAvailableSchools(){return available?Object.freeze([...available]):null;},
   getSelectedSchool:()=>workspace.getSelectedSchool(),
   async selectSchool(schoolId){
-   if(!available?.some(school=>school.schoolId===schoolId))
+   if(!available?.some(school=>school.schoolId===schoolId)){
+    workspace.clear(); // Never retain the previous school after an invalid switch.
     throw new Error("School not in verified membership list");
+   }
    const request=generation;
    const dashboard=await workspace.selectSchool(schoolId);
    if(request!==generation)throw new Error("School selection changed");
