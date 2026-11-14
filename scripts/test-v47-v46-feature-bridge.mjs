@@ -9,10 +9,16 @@ assert.equal(a.marks({id:"one"}).context.gateway.path,"schools/school_A001/marks
 assert.equal(b.marks({id:"one"}).context.gateway.path,"schools/school_B001/marks");
 assert.equal(a.marks({id:"one"}).name,"marks");
 assert.equal(a.attendance().context.schoolId,"school_A001");
+assert.equal(a.classes().context.gateway.path,"schools/school_A001/classes");
+assert.equal(a.subjects().context.gateway.path,"schools/school_A001/subjects");
+assert.equal(a.certificates().context.gateway.path,"schools/school_A001/certificates");
+assert.equal(a.markSettings().context.gateway.path,"schools/school_A001/mark_settings");
+assert.equal(b.classes().context.gateway.path,"schools/school_B001/classes");
+assert.equal(b.markSettings().context.gateway.path,"schools/school_B001/mark_settings");
 assert.equal(a.settings().context.gateway.path,"schools/school_A001/school_settings");
 assert.equal(b.results().context.gateway.path,"schools/school_B001/public_results");
 assert.equal(typeof implementations.marks,"function"); // Existing implementation remains callable.
 assert.throws(()=>createV46FeatureBridge({session:{schoolId:"school_A001",roles:["viewer","school_admin"]},legacyFeatures:implementations,tenantGateway:gateway}));
 assert.throws(()=>createV46FeatureBridge({session:{schoolId:"school_A001",roles:["viewer"]},legacyFeatures:{},tenantGateway:gateway}),/Missing V46 feature/);
-assert.equal(paths.length,14);
+assert.equal(paths.length,V46_REUSED_FEATURES.length*2);
 console.log("V47 V46 feature reuse bridge contract tests passed");
