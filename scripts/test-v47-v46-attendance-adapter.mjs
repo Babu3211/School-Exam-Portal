@@ -11,4 +11,7 @@ assert.notEqual(planV46AttendanceRecord({schoolId:"school_B001",record}).destina
 assert.throws(()=>planV46AttendanceRecord({schoolId:"school_A001",record:{...record,presentCount:2}}),/totals mismatch/);
 assert.throws(()=>planV46AttendanceRecord({schoolId:"school_A001",record:{...record,students:[record.students[0],record.students[0]]}}),/duplicate/);
 assert.throws(()=>planV46AttendanceRecord({schoolId:"school_A001",record:{...record,students:[{...record.students[0],status:"invalid"},record.students[1]]}}));
+assert.throws(()=>planV46AttendanceRecord({schoolId:"school_A001",record:{...record,schoolId:"school_B001"}}),/tenant mismatch/);
+const sameSchool={...record,schoolId:"school_A001"};
+assert.equal(planV46AttendanceRecord({schoolId:"school_A001",record:sameSchool}).data,sameSchool);
 console.log("V47 V46 attendance compatibility planner tests passed");
