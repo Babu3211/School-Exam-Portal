@@ -37,13 +37,18 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
  const recordsSelect=element("select");
  recordsSelect.setAttribute("aria-label","School records");
  for(const name of ["students","staff","classes","exams","subjects","certificates","school_settings","mark_settings"]){const option=element("option",name);option.value=name;recordsSelect.append(option);}
+ const studentIdInput=element("input");studentIdInput.setAttribute("placeholder","Student ID");
+ const studentNameInput=element("input");studentNameInput.setAttribute("placeholder","Student name");
+ const studentClassInput=element("input");studentClassInput.setAttribute("placeholder","Class");
+ const studentMode=element("select");for(const mode of ["create","update"]){const option=element("option",mode);option.value=mode;studentMode.append(option);}
+ const saveStudentButton=element("button","Save student");saveStudentButton.type="button";saveStudentButton.hidden=true;
  const recordsButton=element("button","View school records");
  recordsButton.type="button";
  const marksButton=element("button","View marks");
  marksButton.type="button";
  const attendanceButton=element("button","View attendance");
  attendanceButton.type="button";
- panel.append(classInput,subjectInput,dateInput,marksButton,attendanceButton,result,recordsSelect,recordsButton);
+ panel.append(classInput,subjectInput,dateInput,marksButton,attendanceButton,result,recordsSelect,recordsButton,studentIdInput,studentNameInput,studentClassInput,studentMode,saveStudentButton);
  panel.hidden=true;
  root.replaceChildren(heading,reloadButton,schoolInput,selectButton,clearButton,status,panel);
  const loadSchools=async()=>{
@@ -72,6 +77,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
    if(current!==renderGeneration)return;
    status.textContent=school.schoolName+" ("+school.roles.join(", ")+")";
    panel.hidden=false;
+   saveStudentButton.hidden=!school.roles.includes("school_admin");
   }catch(error){if(current===renderGeneration)showError(error);}
  };
  clearButton.onclick=()=>{
@@ -92,6 +98,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
    if(current===renderGeneration && rowsRequest===rowsGeneration)result.textContent=JSON.stringify(formatRows(rows),null,2);
   }catch(error){if(current===renderGeneration && rowsRequest===rowsGeneration){result.textContent="";showError(error);}}
  };
+ saveStudentButton.onclick=()=>showRows(()=>workspace.saveStudent({studentId:studentIdInput.value.trim(),mode:studentMode.value,values:{name:studentNameInput.value.trim(),className:studentClassInput.value.trim()}}));
  recordsButton.onclick=()=>showRows(()=>workspace.readRecords({collection:recordsSelect.value,limit:100}));
  marksButton.onclick=()=>showRows(()=>workspace.readMarks({className:classInput.value.trim(),subject:subjectInput.value.trim()}));
  attendanceButton.onclick=()=>showRows(()=>workspace.readAttendance({className:classInput.value.trim(),date:dateInput.value.trim(),calendar:"BS"}),rows=>rows.map(row=>{
@@ -111,7 +118,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
  },dispose(){
   renderGeneration++;
   workspace.clear();
-  reloadButton.onclick=null;selectButton.onclick=null;clearButton.onclick=null;marksButton.onclick=null;attendanceButton.onclick=null;recordsButton.onclick=null;
+  reloadButton.onclick=null;selectButton.onclick=null;clearButton.onclick=null;marksButton.onclick=null;attendanceButton.onclick=null;recordsButton.onclick=null;saveStudentButton.onclick=null;
   root.replaceChildren();
  }});
 }
