@@ -94,6 +94,9 @@ jobs:
       - name: test-v47-apk-pwa-compat
         if: success() || failure()
         run: node scripts/test-v47-apk-pwa-compat.mjs
+      - name: Browser marks attendance read client
+        if: success() || failure()
+        run: node scripts/test-v47-marks-attendance-client.mjs
       - name: Browser dashboard client contract
         if: success() || failure()
         run: node scripts/test-v47-dashboard-client.mjs
