@@ -15,5 +15,9 @@ assert.equal((await call("/api/v47/dashboard?schoolId=school_001&schoolId=school
 assert.equal((await call("/api/v47/dashboard?schoolId=school_001","GET",{authorization:"Bearer token"})).statusCode,403);
 assert.equal((await call("/api/v47/marks?schoolId=school_001")).statusCode,401);
 assert.equal((await call("/api/v47/attendance?schoolId=school_001")).statusCode,401);
+assert.equal((await call("/api/v47/records?schoolId=school_001&collection=students")).statusCode,401);
+assert.equal((await call("/api/v47/records?schoolId=school_001&collection=students&limit=501","GET",{authorization:"Bearer token"})).statusCode,400);
+assert.equal((await call("/api/v47/records?schoolId=school_001&collection=user_roles","GET",{authorization:"Bearer token"})).statusCode,403);
+assert.equal((await call("/api/v47/records?schoolId=school_001&collection=students","GET",{authorization:"Bearer token"})).statusCode,403);
 assert.equal((await call("/api/v47/dashboard")).headers["Cache-Control"],"no-store");
 console.log("V47 isolated Node read API router security tests passed");
