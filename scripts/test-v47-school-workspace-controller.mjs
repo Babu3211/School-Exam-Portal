@@ -39,6 +39,37 @@ await Promise.resolve();
 deferred.clear();
 resolvePending({ok:true,json:async()=>({marks:[{id:"stale"}]})});
 await assert.rejects(pending,/School selection changed/);
+// All read endpoints must discard old-school responses after a school switch.
+for(const [endpoint,read,field] of [
+ ["records?",app=>app.readRecords({collection:"students"}),"records"],
+ ["attendance?",app=>app.readAttendance({className:"9",date:"2026-04-14"}),"attendance"],
+ ["marks?",app=>app.readMarks({className:"9",subject:"Computer"}),"marks"]
+]){
+ let release;
+ let requested;
+ const started=new Promise(resolve=>{requested=resolve;});
+ const switching=createV47SchoolWorkspace({
+  getIdToken:async()=>"token",
+  fetchImpl:async url=>{
+   if(url.includes("/dashboard?")){
+    const schoolId=new URL(url,"https://local.test").searchParams.get("schoolId");
+    return {ok:true,json:async()=>({dashboard:{schoolId,schoolName:schoolId,roles:["viewer"],readOnly:true}})};
+   }
+   if(url.includes("/"+endpoint)){
+    requested();
+    return new Promise(resolve=>{release=resolve;});
+   }
+   throw Error("Unexpected endpoint "+url);
+  }
+ });
+ await switching.selectSchool("school_A001");
+ const oldRead=read(switching);
+ await started;
+ await switching.selectSchool("school_B001");
+ release({ok:true,json:async()=>({[field]:[{id:"old-school-secret"}]})});
+ await assert.rejects(oldRead,/School selection changed/,endpoint+" must reject stale data");
+ assert.equal(switching.getSelectedSchool().schoolId,"school_B001");
+}
 // An admin role must not override a server-declared read-only dashboard.
 let writeCalls=0;
 const readOnlyAdmin=createV47SchoolWorkspace({
