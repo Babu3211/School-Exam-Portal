@@ -138,3 +138,12 @@ Both First and Second Grade Sheets show CH 2.5/2.5/2.5/2.5/2.5/1.5/2 (total16), 
 SMSS previously withheld non-final secondary GPA, showed annual credits and retained final-only columns. Commit 840c4ef now uses the existing single-grade sheet renderer for verified 2083 Class VI First/Second, halves configured annual credits for display, and shows the term GPA. Class VI 2083 footnotes use the applicable annual credit total instead of assuming36. Stored credits/marks and other classes/years/unverified terms are unchanged. Synthetic actual-renderer regression in 7b730eb checks 3.48/3.42, credits16/32, missing/NG handling and source immutability; existing I/IV/V/VI regression and all five inline JavaScript syntax checks pass locally.
 
 Class VI sample values remain in real IEMIS for replacement by the school. They are not certified academic results. No SMSS Firestore data was written and this branch was not deployed. Class VI Mark/Grade Ledger comparison, explicit edit/validation/print, other class regressions and exact watermark/A4 parity remain outstanding. The browser session was unavailable on continuation before the Grade Ledger could be inspected; do not infer its values from the Grade Sheet or claim the complete phase passed.
+
+
+### Class VI Grade Ledger follow-up (recorded 2026-11-15)
+
+During the subsequent authenticated session, Class VI 2083 First and Second Grade Ledgers both showed one grade column per subject, grades A/B+/B+/A+/B+/A/A, and Final GPA 3.48. Final Grade Ledger showed IN/TH/Total groups and GPA 3.42, matching the corresponding Grade Sheets. No additional marks were written during these ledger observations. Student identifiers and parent details are omitted.
+
+This supersedes the earlier Grade-Ledger-pending statement only. The Mark Ledger First Term Load was initiated, but its populated output was not captured before interruption; Mark Ledger comparison remains unverified. The current main helper still renders duplicate IN/Total non-final grade columns and withholds non-final secondary GPA. PR #28 fixes Grade Sheets only; the Grade Ledger fix remains outstanding and must preserve historical cohorts.
+
+All three workflows passed on commit 8135ca7fdb59572f9cfacdc5351ccf898aa28cab: V45 regression 42958820463, V44 JavaScript/Firestore 42958820432, V45 JavaScript/Firestore 42958820495. These are branch checks, not production certification. PR #28 remains open and unmerged as checked on continuation. No merge or deployment is performed by this evidence update.
