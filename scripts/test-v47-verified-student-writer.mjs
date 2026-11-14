@@ -24,6 +24,15 @@ assert.equal(a.docs.get("schools/school_A001/students/s001").name,"Test");
 await writeVerifiedStudent({...base,mode:"update",values:{section:"A"}});
 assert.equal(a.docs.get("schools/school_A001/students/s001").className,"9");
 assert.equal(a.docs.get("schools/school_A001/students/s001").section,"A");
+await writeVerifiedStudent({...base,mode:"update",values:{className:"ECD"}});
+assert.equal(a.docs.get("schools/school_A001/students/s001").className,"ECD");
+await writeVerifiedStudent({...base,mode:"update",values:{className:"12"}});
+assert.equal(a.docs.get("schools/school_A001/students/s001").className,"12");
+await writeVerifiedStudent({...base,mode:"update",values:{className:"9"}});
+for(const invalidClass of ["13","0","Class 9","9/10","../students",""]) {
+ await assert.rejects(()=>writeVerifiedStudent({...base,mode:"update",values:{className:invalidClass}}),/Class must be|cannot be blank/);
+}
+assert.equal(a.docs.get("schools/school_A001/students/s001").className,"9");
 await assert.rejects(()=>writeVerifiedStudent({...base,mode:"create",values:{name:"Duplicate",className:"9"}}),/exists/);
 await assert.rejects(()=>writeVerifiedStudent({...base,mode:"update",values:{roles:"admin"}}),/privileged/);
 await assert.rejects(()=>writeVerifiedStudent({...base,mode:"update",values:{nameNepali:"विद्यार्थी"}}),/privileged/);
