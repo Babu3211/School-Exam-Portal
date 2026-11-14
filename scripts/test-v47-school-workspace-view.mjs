@@ -9,7 +9,7 @@ class FakeElement {
 const document={createElement:tag=>new FakeElement(tag)};
 const root=new FakeElement("main");
 const urls=[];
-const view=mountV47SchoolWorkspace({root,document,getIdToken:async()=>"valid",fetchImpl:async url=>{
+const view=mountV47SchoolWorkspace({bsToAd:()=> "2026-04-14",adToBs:()=> "2083-01-01",root,document,getIdToken:async()=>"valid",fetchImpl:async url=>{
  urls.push(url);
  if(url.includes("/dashboard?"))return {ok:true,json:async()=>({dashboard:{schoolId:"school_A001",schoolName:"School A",roles:["viewer"],readOnly:true}})};
  if(url.includes("/marks?"))return {ok:true,json:async()=>({marks:[{id:"m1"}]})};
