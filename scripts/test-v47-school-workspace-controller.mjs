@@ -39,4 +39,19 @@ await Promise.resolve();
 deferred.clear();
 resolvePending({ok:true,json:async()=>({marks:[{id:"stale"}]})});
 await assert.rejects(pending,/School selection changed/);
+// An admin role must not override a server-declared read-only dashboard.
+let writeCalls=0;
+const readOnlyAdmin=createV47SchoolWorkspace({
+ getIdToken:async()=>"token",
+ fetchImpl:async url=>{
+  if(url.includes("/dashboard?"))return {ok:true,json:async()=>({dashboard:{
+   schoolId:"school_A001",schoolName:"A",roles:["school_admin"],readOnly:true
+  }})};
+  if(url.includes("/students/write"))writeCalls++;
+  throw Error("Unexpected endpoint");
+ }
+});
+await readOnlyAdmin.selectSchool("school_A001");
+await assert.rejects(readOnlyAdmin.saveStudent({studentId:"s001",mode:"create",values:{name:"Test",className:"9"}}),/School admin required/);
+assert.equal(writeCalls,0);
 console.log("V47 school workspace switch and stale read tests passed");
