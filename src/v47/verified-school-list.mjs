@@ -21,7 +21,8 @@ export async function listVerifiedUserSchools({idToken,auth,firestore}) {
  const memberships=availableSchoolsForUser(uid,entries);
  const schools=[];
  for(const membership of memberships) {
-  assertSchoolId(membership.schoolId);
+  // A stale or malformed index entry must not block the user’s other schools.
+  try {assertSchoolId(membership.schoolId);} catch {continue;}
   const school=await firestore.doc("schools/"+membership.schoolId).get();
   if(!school.exists || school.data()?.status!=="active")continue;
   const actual=await firestore.doc("schools/"+membership.schoolId+"/members/"+uid).get();
