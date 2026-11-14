@@ -26,9 +26,11 @@ export async function activateSchoolFromVerifiedToken({idToken,schoolId,auth,fir
   const index=await tx.get(firestore.doc("v47_school_admin_index/"+schoolId));
   const adminUid=index.exists?index.data()?.adminUid:null;
   if(typeof adminUid!=="string" || !adminUid)throw new Error("School admin invitation required");
-  const member=await tx.get(firestore.doc("schools/"+schoolId+"/members/"+adminUid));
+  const [member,userIndex]=await Promise.all([tx.get(firestore.doc("schools/"+schoolId+"/members/"+adminUid)),tx.get(firestore.doc("v47_user_school_index/"+adminUid))]);
   if(!member.exists || member.data()?.active!==true || !member.data()?.roles?.includes("school_admin"))
    throw new Error("Active school admin required");
+  if(!userIndex.exists || !Array.isArray(userIndex.data()?.memberships) || !userIndex.data().memberships.some(entry=>entry?.schoolId===schoolId && entry?.uid===adminUid && entry?.active===true))
+   throw new Error("School admin membership index required");
   tx.update(schoolRef,{status:"active",activatedAt,activatedBy:actor.uid});
   tx.create(auditRef,{action:"school_activated",schoolId,actorUid:actor.uid,activatedAt});
  });
