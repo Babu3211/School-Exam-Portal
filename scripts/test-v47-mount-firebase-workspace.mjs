@@ -11,7 +11,7 @@ const root=new Element("main");
 const user1={uid:"user1",getIdToken:async()=>"token1"};
 const auth={currentUser:user1};
 let listener,unsubscribed=false;
-const view=mountV47FirebaseWorkspace({
+const view=mountV47FirebaseWorkspace({bsToAd:()=> "2026-04-14",adToBs:()=> "2083-01-01",
  root,document,auth,fetchImpl:async()=>({ok:true,json:async()=>({dashboard:{schoolId:"school_A001",schoolName:"A",roles:["viewer"],readOnly:true}})}),
  subscribeAuthState:(_auth,callback)=>{listener=callback;return ()=>{unsubscribed=true;};}
 });
