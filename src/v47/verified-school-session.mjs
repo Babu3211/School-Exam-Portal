@@ -20,6 +20,9 @@ export async function loadVerifiedSchoolSession({idToken,schoolId,auth,firestore
    throw new Error("School is not active");
  const snapshot=await firestore.doc(`schools/${schoolId}/members/${uid}`).get();
  const data=snapshot.exists?snapshot.data():null;
+ if(data && ((Object.hasOwn(data,"uid") && data.uid!==uid) ||
+  (Object.hasOwn(data,"schoolId") && data.schoolId!==schoolId)))
+  throw new Error("School membership identity mismatch");
  const memberships=data?[{...data,uid,schoolId}]:[];
  return resolveSchoolSession({authUid:uid,schoolId,serverMemberships:memberships});
 }
