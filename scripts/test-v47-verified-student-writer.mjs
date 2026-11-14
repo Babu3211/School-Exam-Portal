@@ -88,5 +88,10 @@ for(const mismatch of [{schoolId:"school_B001",uid:"user1"},{schoolId:"school_A0
  assert.equal(fixture.docs.has("schools/school_A001/students/s001"),false);
  assert.equal([...fixture.docs.keys()].filter(key=>key.startsWith("schools/school_A001/audit_logs/")).length,0);
 }
+const wrongTenant=setup();
+wrongTenant.docs.set("schools/school_A001/students/s001",{schoolId:"school_B001",name:"Protected",className:"9"});
+await assert.rejects(()=>writeVerifiedStudent({...base,auth:wrongTenant.auth,firestore:wrongTenant.firestore,mode:"update",values:{name:"Overwrite"}}),/tenant identity mismatch/);
+assert.equal(wrongTenant.docs.get("schools/school_A001/students/s001").name,"Protected");
+assert.equal([...wrongTenant.docs.keys()].filter(key=>key.startsWith("schools/school_A001/audit_logs/")).length,0);
 assert.ok([...a.docs.keys()].some(key=>key.startsWith("schools/school_A001/audit_logs/")));
 console.log("V47 verified student writer tenant, viewer, revoked membership, suspended school, role downgrade and audit tests passed");
