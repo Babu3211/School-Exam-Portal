@@ -21,5 +21,14 @@ const denied=createV47DashboardClient({getIdToken:async()=>"valid",fetchImpl:asy
 await assert.rejects(denied.loadSchool("school_B001"),/access denied/);
 const forged=createV47DashboardClient({getIdToken:async()=>"valid",fetchImpl:async()=>({ok:true,json:async()=>({dashboard:{schoolId:"school_B001",schoolName:"Other",roles:["school_admin"],readOnly:false}})})});
 await assert.rejects(forged.loadSchool("school_A001"),/Invalid dashboard response/);
+for(const dashboard of [
+ {schoolId:"school_A001",schoolName:"A",roles:["viewer"],readOnly:false},
+ {schoolId:"school_A001",schoolName:"A",roles:["school_admin","viewer"],readOnly:false},
+ {schoolId:"school_A001",schoolName:"A",roles:["unknown"],readOnly:true},
+ {schoolId:"school_A001",schoolName:"A",roles:[],readOnly:true}
+]){
+ const malformed=createV47DashboardClient({getIdToken:async()=>"token",fetchImpl:async()=>({ok:true,json:async()=>({dashboard})})});
+ await assert.rejects(malformed.loadSchool("school_A001"),/Invalid dashboard response/);
+}
 assert.throws(()=>createV47DashboardClient({getIdToken:async()=>"",fetchImpl:async()=>{},endpoint:"https://evil.example/api"}),/Same-origin/);
 console.log("V47 browser dashboard client tests passed");
