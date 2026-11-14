@@ -9,9 +9,17 @@ export function availableSchoolsForUser(authUid, serverMemberships) {
  if(typeof authUid!=="string" || !authUid) throw new TypeError("Verified auth UID required");
  if(!Array.isArray(serverMemberships)) throw new TypeError("Server memberships required");
  const seen=new Set();
- return Object.freeze(serverMemberships.filter(item=>item && item.uid===authUid && item.active===true)
-  .map(item=>normalizeMembership(item))
-  .filter(item=>{if(seen.has(item.schoolId))return false;seen.add(item.schoolId);return true;}));
+ const valid=[];
+ for(const item of serverMemberships) {
+  if(!item || item.uid!==authUid || item.active!==true)continue;
+  // An invalid or stale index row cannot deny access to other valid schools.
+  let membership;
+  try {membership=normalizeMembership(item);} catch {continue;}
+  if(seen.has(membership.schoolId))continue;
+  seen.add(membership.schoolId);
+  valid.push(membership);
+ }
+ return Object.freeze(valid);
 }
 export function resolveSchoolSession({authUid,schoolId,serverMemberships}) {
  assertSchoolId(schoolId);
