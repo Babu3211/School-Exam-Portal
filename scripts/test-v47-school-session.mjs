@@ -26,4 +26,10 @@ const crossUser=[
 ];
 assert.deepEqual(resolveSchoolSession({authUid:"user1",schoolId:"school_A001",serverMemberships:crossUser}).roles,["viewer"],"Another user's admin membership must never elevate this user");
 assert.throws(()=>resolveSchoolSession({authUid:"user3",schoolId:"school_A001",serverMemberships:crossUser}),/No active membership/);
+const mixedViewerRoles=[
+ {uid:"user1",schoolId:"school_A001",roles:["viewer","school_admin"],active:true},
+ {uid:"user1",schoolId:"school_B001",roles:["viewer"],active:true}
+];
+assert.deepEqual(availableSchoolsForUser("user1",mixedViewerRoles).map(x=>x.schoolId),["school_B001"]);
+assert.throws(()=>resolveSchoolSession({authUid:"user1",schoolId:"school_A001",serverMemberships:mixedViewerRoles}),/No active membership/);
 console.log("V47 school session isolation tests passed");
