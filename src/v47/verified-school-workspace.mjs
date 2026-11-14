@@ -31,6 +31,7 @@ export function createV47VerifiedSchoolWorkspace({getIdToken,fetchImpl,bsToAd}) 
    if(request!==generation){workspace.clear();throw new Error("School selection changed");}
    return dashboard;
   },
+  readRecords:args=>workspace.readRecords(args),
   readMarks:args=>workspace.readMarks(args),
   readAttendance:args=>workspace.readAttendance(args),
   clear(){
