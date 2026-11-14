@@ -94,6 +94,9 @@ jobs:
       - name: test-v47-apk-pwa-compat
         if: success() || failure()
         run: node scripts/test-v47-apk-pwa-compat.mjs
+      - name: V47 Firebase workspace auth adapter
+        if: success() || failure()
+        run: node scripts/test-v47-firebase-workspace-auth.mjs
       - name: V47 isolated browser workspace view
         if: success() || failure()
         run: node scripts/test-v47-school-workspace-view.mjs
