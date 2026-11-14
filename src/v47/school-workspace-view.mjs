@@ -34,11 +34,16 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
  const dateInput=element("input");
  dateInput.setAttribute("placeholder","BS YYYY-MM-DD");
  dateInput.setAttribute("aria-label","Attendance date (BS)");
+ const recordsSelect=element("select");
+ recordsSelect.setAttribute("aria-label","School records");
+ for(const name of ["students","staff","classes","exams","subjects","certificates","school_settings","mark_settings"]){const option=element("option",name);option.value=name;recordsSelect.append(option);}
+ const recordsButton=element("button","View school records");
+ recordsButton.type="button";
  const marksButton=element("button","View marks");
  marksButton.type="button";
  const attendanceButton=element("button","View attendance");
  attendanceButton.type="button";
- panel.append(classInput,subjectInput,dateInput,marksButton,attendanceButton,result);
+ panel.append(classInput,subjectInput,dateInput,marksButton,attendanceButton,result,recordsSelect,recordsButton);
  panel.hidden=true;
  root.replaceChildren(heading,reloadButton,schoolInput,selectButton,clearButton,status,panel);
  const loadSchools=async()=>{
@@ -87,6 +92,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
    if(current===renderGeneration && rowsRequest===rowsGeneration)result.textContent=JSON.stringify(formatRows(rows),null,2);
   }catch(error){if(current===renderGeneration && rowsRequest===rowsGeneration){result.textContent="";showError(error);}}
  };
+ recordsButton.onclick=()=>showRows(()=>workspace.readRecords({collection:recordsSelect.value,limit:100}));
  marksButton.onclick=()=>showRows(()=>workspace.readMarks({className:classInput.value.trim(),subject:subjectInput.value.trim()}));
  attendanceButton.onclick=()=>showRows(()=>workspace.readAttendance({className:classInput.value.trim(),date:dateInput.value.trim(),calendar:"BS"}),rows=>rows.map(row=>{
   const {date,...rest}=row;
@@ -105,7 +111,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
  },dispose(){
   renderGeneration++;
   workspace.clear();
-  reloadButton.onclick=null;selectButton.onclick=null;clearButton.onclick=null;marksButton.onclick=null;attendanceButton.onclick=null;
+  reloadButton.onclick=null;selectButton.onclick=null;clearButton.onclick=null;marksButton.onclick=null;attendanceButton.onclick=null;recordsButton.onclick=null;
   root.replaceChildren();
  }});
 }
