@@ -56,6 +56,8 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   const current=++renderGeneration;
   ++rowsGeneration;
   panel.hidden=true;
+  saveStudentButton.hidden=true;
+  result.textContent="";
   schoolInput.replaceChildren();
   status.textContent="Loading authorized schools...";
   try {
@@ -71,6 +73,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   const current=++renderGeneration;
   ++rowsGeneration;
   panel.hidden=true;
+  saveStudentButton.hidden=true;
   result.textContent="";
   status.textContent="Loading school...";
   try {
