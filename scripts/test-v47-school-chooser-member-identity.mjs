@@ -15,4 +15,8 @@ docs.set("schools/school_A001/members/user1",{active:true,uid:"user1",schoolId:"
 assert.deepEqual(await listVerifiedUserSchools(args),[]);
 docs.set("schools/school_A001/members/user1",{active:true,uid:"user1",schoolId:"school_A001",roles:["viewer"]});
 assert.equal((await listVerifiedUserSchools(args))[0].schoolId,"school_A001");
+docs.set("v47_user_school_index/user1",{memberships:[{uid:"user1",schoolId:"school_A001",active:true,roles:["school_admin"]}]});
+assert.deepEqual((await listVerifiedUserSchools(args))[0].roles,["viewer"],"Stale index admin role must not override verified school membership");
+docs.set("schools/school_A001/members/user1",{active:false,uid:"user1",schoolId:"school_A001",roles:["school_admin"]});
+assert.deepEqual(await listVerifiedUserSchools(args),[],"Inactive school membership must never appear in chooser");
 console.log("V47 school chooser membership identity tests passed");
