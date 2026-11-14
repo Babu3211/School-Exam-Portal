@@ -56,5 +56,17 @@ roleRemoved.firestore.runTransaction=async fn=>{
 await assert.rejects(()=>writeVerifiedStudent({...base,auth:roleRemoved.auth,firestore:roleRemoved.firestore,mode:"create",values:{name:"Blocked",className:"9"}}),/authorization changed/);
 assert.equal(roleRemoved.docs.has("schools/school_A001/students/s001"),false);
 assert.equal([...roleRemoved.docs.keys()].filter(key=>key.startsWith("schools/school_A001/audit_logs/")).length,0);
+// A previously authorized admin must not modify an existing student after revocation.
+const updateRevoked=setup();
+const existingPath="schools/school_A001/students/s001";
+updateRevoked.docs.set(existingPath,{name:"Original",className:"9",section:"A"});
+const updateRun=updateRevoked.firestore.runTransaction;
+updateRevoked.firestore.runTransaction=async fn=>{
+ updateRevoked.docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:false,roles:["school_admin"]});
+ return updateRun(fn);
+};
+await assert.rejects(()=>writeVerifiedStudent({...base,auth:updateRevoked.auth,firestore:updateRevoked.firestore,mode:"update",values:{name:"Unauthorized"}}),/authorization changed/);
+assert.deepEqual(updateRevoked.docs.get(existingPath),{name:"Original",className:"9",section:"A"});
+assert.equal([...updateRevoked.docs.keys()].filter(key=>key.startsWith("schools/school_A001/audit_logs/")).length,0);
 assert.ok([...a.docs.keys()].some(key=>key.startsWith("schools/school_A001/audit_logs/")));
 console.log("V47 verified student writer tenant, viewer, revoked membership, suspended school, role downgrade and audit tests passed");
