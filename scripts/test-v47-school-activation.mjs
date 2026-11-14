@@ -5,6 +5,7 @@ function setup(subscriptionStatus="free",memberActive=true){
   "platform_admins/root":{active:true},
   "schools/school_A001":{status:"pending",adminEmail:"admin@example.com",subscriptionStatus},
   "v47_school_admin_index/school_A001":{adminUid:"teacher1"},
+  "v47_user_school_index/teacher1":{memberships:[{schoolId:"school_A001",uid:"teacher1",active:true,roles:["school_admin"]}]},
   "schools/school_A001/members/teacher1":{active:memberActive,roles:["school_admin"]}
  }));
  let audit=0;
@@ -25,4 +26,8 @@ await assert.rejects(()=>activateSchoolFromVerifiedToken({idToken:"token",school
 assert.equal(unpaid.data.get("schools/school_A001").status,"pending");
 const missing=setup("free",false);
 await assert.rejects(()=>activateSchoolFromVerifiedToken({idToken:"token",schoolId:"school_A001",auth:missing.auth,firestore:missing.firestore}),/Active school admin/);
+const unindexed=setup();
+unindexed.data.delete("v47_user_school_index/teacher1");
+await assert.rejects(()=>activateSchoolFromVerifiedToken({idToken:"token",schoolId:"school_A001",auth:unindexed.auth,firestore:unindexed.firestore}),/membership index/);
+assert.equal(unindexed.data.get("schools/school_A001").status,"pending");
 console.log("V47 school activation security tests passed");
