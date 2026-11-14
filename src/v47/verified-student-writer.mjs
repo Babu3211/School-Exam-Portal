@@ -14,6 +14,9 @@ export async function writeVerifiedStudent({idToken,schoolId,studentId,values,mo
  const entries=Object.entries(values);
  if(!entries.length || entries.some(([key,value])=>!FIELDS.has(key) || typeof value!=="string" || value.length>200))
   throw new TypeError("Invalid or privileged student fields");
+ // Student names use English-script input only; other profile fields may be Unicode.
+ if(Object.hasOwn(values,"name") && !/^[A-Za-z][A-Za-z .'-]*$/.test(values.name.trim()))
+  throw new TypeError("Student name must use English letters");
  if((Object.hasOwn(values,"name") && !values.name.trim()) ||
     (Object.hasOwn(values,"className") && !values.className.trim()))
   throw new TypeError("Student name and class cannot be blank");
