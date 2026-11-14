@@ -8,7 +8,7 @@ const docs=new Map([
 ]);
 const firestore={
  doc:path=>({get:async()=>({exists:docs.has(path),data:()=>docs.get(path)})}),
- collection:path=>({limit:n=>({get:async()=>{paths.push([path,n]);return {docs:[{id:"student1",data:()=>({name:"Test"})}]};}})})
+ collection:path=>({limit:n=>({get:async()=>{paths.push([path,n]);return {docs:[{id:"student1",data:()=>({id:"forged-other-school-id",name:"Test"})}]};}})})
 };
 const auth={verifyIdToken:async()=>({uid:"user1"})};
 const base={idToken:"valid",schoolId:"school_A001",auth,firestore};
