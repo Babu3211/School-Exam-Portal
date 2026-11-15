@@ -27,4 +27,21 @@ const revoked={
  })
 };
 await assert.rejects(assignTeacherOnTrustedServer({adminSession,input,firestore:revoked}),/Active school admin membership required/);
+for(const [badPath,badRecord] of [
+ ["admin1",{active:true,roles:["school_admin"],uid:"other_admin",schoolId:"school_A001"}],
+ ["admin1",{active:true,roles:["school_admin"],uid:"admin1",schoolId:"school_B001"}],
+ ["teacher1",{active:true,roles:["subject_teacher"],uid:"another_teacher",schoolId:"school_A001"}],
+ ["teacher1",{active:true,roles:["subject_teacher"],uid:"teacher1",schoolId:"school_B001"}]
+]){
+ const corrupt={
+  doc:path=>({path}),
+  runTransaction:async fn=>fn({
+   get:async ref=>({exists:true,data:()=>ref.path.endsWith("/"+badPath)?badRecord:
+    ref.path.endsWith("/admin1")?{active:true,roles:["school_admin"],uid:"admin1",schoolId:"school_A001"}:
+    {active:true,roles:["subject_teacher"],uid:"teacher1",schoolId:"school_A001"}}),
+   set:()=>{throw Error("Mismatched identity must never write");}
+  })
+ };
+ await assert.rejects(assignTeacherOnTrustedServer({adminSession,input,firestore:corrupt}),/membership required/);
+}
 console.log("V47 trusted teacher assignment contract tests passed");
