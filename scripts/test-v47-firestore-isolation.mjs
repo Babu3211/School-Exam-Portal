@@ -83,6 +83,16 @@ try {
  await assertFails(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_m2"),{...assignedMark,subjectId:"math"}));
  await assertFails(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_m3"),{...assignedMark,term:"second"}));
  await assertFails(setDoc(doc(assignedSubject,"schools",schoolB,"marks","assigned_m4"),{...assignedMark,schoolId:schoolB}));
+ const subjectAssignmentRef=doc(admin,"schools",schoolA,"assignments","newTeacher_9_computer");
+ await assertFails(updateDoc(doc(assignedSubject,"schools",schoolA,"assignments","newTeacher_9_computer"),{active:false}));
+ await assertFails(updateDoc(doc(viewer,"schools",schoolA,"assignments","newTeacher_9_computer"),{active:false}));
+ await assertFails(updateDoc(doc(admin,"schools",schoolB,"assignments","newTeacher_9_computer"),{active:false}));
+ await assertFails(updateDoc(subjectAssignmentRef,{classId:"10"}));
+ await assertFails(deleteDoc(subjectAssignmentRef));
+ await assertSucceeds(updateDoc(subjectAssignmentRef,{active:false}));
+ await assertFails(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_revoked"),assignedMark));
+ await assertSucceeds(updateDoc(subjectAssignmentRef,{active:true}));
+ await assertSucceeds(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_restored"),assignedMark));
  await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"members","newClassTeacher"),{uid:"newClassTeacher",schoolId:schoolA,active:true,roles:["class_teacher"]}));
  const classAssignment={uid:"newClassTeacher",schoolId:schoolA,classId:"9",kind:"class_teacher",active:true,terms:["first","final"]};
  await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"assignments","newClassTeacher_9"),classAssignment));
