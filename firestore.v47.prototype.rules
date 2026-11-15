@@ -122,6 +122,7 @@ service cloud.firestore {
         request.resource.data.schoolId == schoolId &&
         request.resource.data.active == true &&
         request.resource.data.roles == ['school_admin'] &&
+        !exists(/databases/$(database)/documents/schools/$(schoolId)) &&
         existsAfter(/databases/$(database)/documents/schools/$(schoolId));
     }
     // Remaining role changes require a reviewed trusted workflow.
