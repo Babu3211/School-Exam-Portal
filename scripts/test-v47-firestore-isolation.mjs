@@ -164,6 +164,17 @@ try {
  // Same class integrity requirement applies even to school-admin attendance writes.
  await assertFails(setDoc(doc(admin,"schools",schoolA,"attendance","admin_wrong_class"),{...attendance,classId:"10"}));
  await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a1"),{...attendance,studentId:"student2"}));
+ // A class transfer must immediately revoke writes to the student's old class.
+ // Use an isolated synthetic student so the rest of the test fixtures stay intact.
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"students","transferredStudent"),{name:"Transfer Fixture",classId:"9"}));
+ const transferMark={...mark,studentId:"transferredStudent"};
+ const transferAttendance={...attendance,studentId:"transferredStudent"};
+ await assertSucceeds(setDoc(doc(subject,"schools",schoolA,"marks","transfer_before"),transferMark));
+ await assertSucceeds(setDoc(doc(classTeacher,"schools",schoolA,"attendance","transfer_before"),transferAttendance));
+ await assertSucceeds(updateDoc(doc(admin,"schools",schoolA,"students","transferredStudent"),{classId:"10"}));
+ await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","transfer_after"),transferMark));
+ await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","transfer_after"),transferAttendance));
+
  await env.withSecurityRulesDisabled(async context=>{
    const db=context.firestore();
    await setDoc(doc(db,"schools",schoolA,"members","teacherA"),{active:false,roles:["subject_teacher"]});
