@@ -66,6 +66,7 @@ else{
     throw new Error("School access changed during loading");
    document.querySelector("#school-title").textContent=String(latestSchool.data().name||schoolId);
    document.querySelector("#role").textContent="Access: "+latestMember.data().roles.join(", ")+" (read-only preview)";
+   if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
    tables.replaceChildren(...staged);
    workspace.hidden=false;say("School data loaded (read-only).");
   }catch(error){if(token===epoch){clear();say("Unable to load school: "+error.message);}}
