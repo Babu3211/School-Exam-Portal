@@ -43,7 +43,7 @@ for(const path of imports)await include(path);
     throw new Error("V47 Web config must match the isolated project and contain apiKey/appId");
   const json=JSON.stringify(config).replaceAll("<","\\u003c");
   await writeFile(join(output,"prototypes","v47","spark-config.js"),
-   "window.__SMSS_V47_SPARK_CONFIG__ = "+json+";\\n");
+   "window.__SMSS_V47_SPARK_CONFIG__ = "+json+";\n");
  }
  await mkdir(join(output,"prototypes","v47"),{recursive:true});
 const loader='<script src="./spark-config.js"></script>';
