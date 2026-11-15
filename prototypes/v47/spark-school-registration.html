@@ -131,6 +131,9 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
    if(auth.currentUser?.uid!==user.uid || epoch!==verificationEpoch || schoolAdminCheck.elements.namedItem("schoolId").value!==schoolId)return;
    const data=snapshot.data();
    if(!snapshot.exists() || data?.active!==true || !Array.isArray(data.roles) || !data.roles.includes("school_admin") || data.roles.includes("viewer"))throw new Error("Not school admin");
+   const schoolSnapshot=await getDoc(doc(firestore,"schools",schoolId));
+   if(auth.currentUser?.uid!==user.uid || epoch!==verificationEpoch || schoolAdminCheck.elements.namedItem("schoolId").value!==schoolId)return;
+   if(!schoolSnapshot.exists() || schoolSnapshot.data()?.status!=="active")throw new Error("School not active");
    verifiedSchoolId=schoolId;
    for(const item of managementForms){item.hidden=false;item.elements.namedItem("schoolId").value=schoolId;}
    say("School Admin verified for "+schoolId+". Management forms unlocked.");
