@@ -7,6 +7,7 @@ import {assertSchoolId} from "./tenant-domain.mjs";
 import {schoolResourcePath} from "./school-data-paths.mjs";
 const FEATURE_COLLECTIONS=Object.freeze({students:"students",staff:"staff",classes:"classes",subjects:"subjects",exams:"exams",marks:"marks",attendance:"attendance",certificates:"certificates",markSettings:"mark_settings",settings:"school_settings",results:"public_results"});
 const FEATURES=Object.freeze(Object.keys(FEATURE_COLLECTIONS));
+const ALLOWED_ROLES=new Set(["school_admin","class_teacher","subject_teacher","viewer"]);
 const WRITE_METHODS=new Set(["add","create","set","update","delete","remove","save","write","commit","batch","runTransaction","addDoc","setDoc","updateDoc","deleteDoc"]);
 function viewerSafeGateway(gateway) {
  return new Proxy(gateway,{
@@ -23,7 +24,7 @@ function viewerSafeGateway(gateway) {
 export function createV46FeatureBridge({session,legacyFeatures,tenantGateway}) {
  if(!session || typeof session!=="object") throw new TypeError("Verified session required");
  const schoolId=assertSchoolId(session.schoolId);
- if(!Array.isArray(session.roles) || !session.roles.length || session.roles.some(role=>typeof role!=="string" || !role.trim()) || new Set(session.roles).size!==session.roles.length || session.roles.includes("viewer") && session.roles.some(r=>r!=="viewer"))
+ if(!Array.isArray(session.roles) || !session.roles.length || session.roles.some(role=>typeof role!=="string" || !ALLOWED_ROLES.has(role)) || new Set(session.roles).size!==session.roles.length || session.roles.includes("viewer") && session.roles.some(r=>r!=="viewer"))
    throw new Error("Invalid school role session");
  const verifiedRoles=Object.freeze([...session.roles]);
  const readOnly=verifiedRoles.includes("viewer");
