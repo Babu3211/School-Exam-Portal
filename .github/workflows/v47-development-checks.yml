@@ -56,6 +56,9 @@ jobs:
           npm run test:v46-marks-class-alias-queries
           npm run test:v46-attendance-load-failure
           npm run test:v46-marks-load-failure
+      - name: V47 Spark platform-admin read-only identity test
+        if: success() || failure()
+        run: node scripts/test-v47-spark-platform-admin.mjs
       - name: test-v47-tenant-domain
         if: success() || failure()
         run: node scripts/test-v47-tenant-domain.mjs
