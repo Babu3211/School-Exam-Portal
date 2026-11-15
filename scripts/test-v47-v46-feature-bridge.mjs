@@ -62,8 +62,8 @@ const browserGateway=createV46BrowserTenantGateway({
  collectionFn:(_db,...parts)=>{firestoreCalls.push(parts.join("/"));return parts.join("/");},
  docFn:(_db,...parts)=>{firestoreCalls.push(parts.join("/"));return parts.join("/");},
  queryFn:(ref,lim)=>({ref,lim}),limitFn:n=>n,
- getDocsFn:async()=>({docs:[{id:"one",data:()=>({className:"1"})}]}),
- getDocFn:async()=>({exists:()=>true,id:"one",data:()=>({name:"Student"})})
+ getDocsFn:async()=>({docs:[{id:"one",data:()=>({className:"1",id:"spoofed"})}]}),
+ getDocFn:async()=>({exists:()=>true,id:"one",data:()=>({name:"Student",id:"spoofed"})})
 });
 const tenantCollection=browserGateway.forCollection("schools/school_A001/students");
 assert.deepEqual(await tenantCollection.list(),[{id:"one",className:"1"}]);
@@ -74,5 +74,6 @@ assert.throws(()=>browserGateway.forCollection("students"),/cross-school/);
 assert.throws(()=>browserGateway.forCollection("schools/school_A001/unreviewed"),/Unreviewed/);
 await assert.rejects(()=>tenantCollection.list({pageSize:100}),/Page size/);
 await assert.rejects(()=>tenantCollection.get("../other"),/Invalid document ID/);
+await assert.rejects(()=>tenantCollection.get("bad\\u0000id"),/Invalid document ID/);
 assert.equal(typeof tenantCollection.save,"undefined");
 console.log("V47 V46 feature reuse bridge contract tests passed");
