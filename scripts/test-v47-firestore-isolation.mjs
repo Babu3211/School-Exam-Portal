@@ -47,6 +47,12 @@ try {
  await assertFails(setDoc(doc(admin,"schools",schoolA,"public_results","result1"),{published:true}));
  await assertFails(setDoc(doc(admin,"schools",schoolA,"school_gallery","photo1"),{url:"unsafe"}));
 
+ await assertSucceeds(getDoc(doc(admin,"schools",schoolA,"members","teacherA")));
+ await assertSucceeds(getDocs(collection(admin,"schools",schoolA,"members")));
+ await assertFails(getDoc(doc(viewer,"schools",schoolA,"members","teacherA")));
+ await assertFails(getDocs(collection(viewer,"schools",schoolA,"members")));
+ await assertFails(getDoc(doc(admin,"schools",schoolB,"members","viewerB")));
+ await assertFails(getDocs(collection(admin,"schools",schoolB,"members")));
  await assertFails(setDoc(doc(admin,"schools",schoolA,"members","adminA"),{active:true,roles:["school_admin"]}));
  await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"members","newViewer"),{uid:"newViewer",schoolId:schoolA,active:true,roles:["viewer"]}));
  await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"members","newTeacher"),{uid:"newTeacher",schoolId:schoolA,active:true,roles:["subject_teacher"]}));
