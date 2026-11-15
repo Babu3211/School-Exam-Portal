@@ -17,6 +17,7 @@ try{
  const trusted=env.authenticatedContext("trusted").firestore();
  const other=env.authenticatedContext("other").firestore();
  const guest=env.unauthenticatedContext().firestore();
+ const school={schoolId:"school_A001",name:"Test School",iemisCode:"123456",annualFeeNpr:0,status:"pending",subscriptionStatus:"free"};
  await assertSucceeds(trusted.doc("platform_admins/trusted").get());
  await assertFails(trusted.doc("platform_admins/other").get());
  await assertFails(other.doc("platform_admins/trusted").get());
@@ -26,6 +27,15 @@ try{
  await assertFails(other.doc("platform_admins/other").set({active:true}));
  await assertFails(trusted.doc("platform_admins/trusted").update({active:false}));
  await assertFails(trusted.doc("platform_admins/trusted").delete());
+ await assertFails(other.doc("schools/school_B001").set({...school,schoolId:"school_B001"}));
+ await assertFails(trusted.doc("schools/school_A001").set({...school,status:"active"}));
+ await assertFails(trusted.doc("schools/school_A001").set({...school,annualFeeNpr:100}));
+ await assertSucceeds(trusted.doc("schools/school_A001").set(school));
+ await assertFails(trusted.doc("schools/school_A001").update({status:"active"}));
+ await assertFails(other.doc("schools/school_A001/members/other").set({uid:"other",schoolId:"school_A001",roles:["school_admin"],active:true}));
+ await assertFails(trusted.doc("schools/school_A001/members/other").set({uid:"other",schoolId:"school_A001",roles:["viewer","school_admin"],active:true}));
+ await assertSucceeds(trusted.doc("schools/school_A001/members/other").set({uid:"other",schoolId:"school_A001",roles:["school_admin"],active:true}));
+ await assertFails(other.doc("schools/school_A001/members/other").update({roles:["viewer"]}));
  assert.equal((await trusted.doc("platform_admins/trusted").get()).data().active,true);
  console.log("V47 Spark self-only platform admin rules emulator checks passed");
 }finally{await env.cleanup();}
