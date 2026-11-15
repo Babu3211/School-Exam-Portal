@@ -55,6 +55,17 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
     });
     item.append(" ",select);
    }
+   if(data.active===true && Array.isArray(data.roles) && data.roles.length===1 && ["subject_teacher","class_teacher"].includes(data.roles[0])){
+    const assign=document.createElement("button");assign.type="button";assign.textContent="Assign class";
+    assign.addEventListener("click",()=>{
+     if(!verifiedSchoolId || auth.currentUser?.uid!==user.uid)return;
+     assignmentForm.elements.namedItem("schoolId").value=schoolId;
+     assignmentForm.elements.namedItem("uid").value=memberDoc.id;
+     assignmentForm.elements.namedItem("kind").value=data.roles[0];
+     assignmentForm.scrollIntoView({behavior:"smooth",block:"start"});
+    });
+    item.append(" ",assign);
+   }
    membersList.append(item);
   }
   membersPanel.hidden=false;
