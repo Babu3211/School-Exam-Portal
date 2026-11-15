@@ -37,6 +37,8 @@ jobs:
         run: npm run test:pwa
       - name: Run Firestore Security Rules emulator tests
         run: npm run test:rules
+      - name: Test user activity and presence Firestore permissions
+        run: npm run test:user-activity-rules
 
   deploy-live:
     name: Deploy approved V45 to Firebase Hosting after tests pass
