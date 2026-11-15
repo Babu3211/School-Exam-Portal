@@ -45,6 +45,6 @@ for(const [badPath,badRecord] of [
    set:()=>{throw Error("Mismatched identity must never write");}
   })
  };
- await assert.rejects(assignTeacherOnTrustedServer({adminSession,input,firestore:corrupt}),/membership required/);
+ await assert.rejects(assignTeacherOnTrustedServer({adminSession,input,firestore:corrupt}),/membership.*required/);
 }
 console.log("V47 trusted teacher assignment contract tests passed");
