@@ -112,7 +112,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
    if(current===renderGeneration && rowsRequest===rowsGeneration)result.textContent=JSON.stringify(formatRows(rows),null,2);
   }catch(error){if(current===renderGeneration && rowsRequest===rowsGeneration){result.textContent="";showError(error);}}
  };
- saveStudentButton.onclick=()=>{
+ saveStudentButton.onclick=async()=>{
   if(savingStudent || saveStudentButton.hidden || saveStudentButton.disabled || studentEditControls.some(control=>control.disabled))return;
   savingStudent=true;
   saveStudentButton.disabled=true;
