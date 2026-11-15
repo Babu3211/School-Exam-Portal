@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import {checkSparkPlatformAdmin} from "../src/v47/spark-platform-admin.mjs";
+const accesses=[];
+const doc=(_db,collection,uid)=>{accesses.push([collection,uid]);return {collection,uid};};
+const getDoc=async ref=>({exists:()=>ref.uid==="trusted",data:()=>({active:true})});
+const check=(user)=>checkSparkPlatformAdmin({auth:{currentUser:user},firestore:{},doc,getDoc});
+assert.deepEqual(await check(null),{signedIn:false,isPlatformAdmin:false});
+assert.deepEqual(await check({uid:"anonymous",isAnonymous:true}),{signedIn:false,isPlatformAdmin:false});
+assert.deepEqual(await check({uid:"trusted"}),{signedIn:true,isPlatformAdmin:true});
+assert.deepEqual(await check({uid:"other",role:"platform_admin",verifiedSuperAdmin:true}),{signedIn:true,isPlatformAdmin:false});
+assert.deepEqual(accesses,[["platform_admins","trusted"],["platform_admins","other"]]);
+assert.equal(Object.isFrozen(await check({uid:"trusted"})),true);
+console.log("V47 Spark platform-admin read-only identity checks passed");
