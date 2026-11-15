@@ -69,7 +69,7 @@ try {
  await assertFails(setDoc(doc(admin,"schools",schoolB,"members","viewerB"),{uid:"viewerB",schoolId:schoolB,active:false,roles:["viewer"]}));
  await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"members","newViewer"),{uid:"newViewer",schoolId:schoolA,active:true,roles:["viewer"]}));
  const assignment={uid:"newTeacher",schoolId:schoolA,classId:"9",kind:"subject_teacher",active:true,terms:["first","final"]};
- await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"assignments","newTeacher_9"),assignment));
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"assignments","newTeacher_9_computer"),{...assignment,subjectId:"computer"}));
  await assertFails(setDoc(doc(viewer,"schools",schoolA,"assignments","viewer_9"),{...assignment,uid:"viewerA"}));
  await assertFails(setDoc(doc(admin,"schools",schoolB,"assignments","newTeacher_9"),{...assignment,schoolId:schoolB}));
  await assertFails(setDoc(doc(admin,"schools",schoolA,"assignments","viewer_9"),{...assignment,uid:"newViewer"}));
@@ -78,7 +78,7 @@ try {
  await assertFails(setDoc(doc(admin,"schools",schoolA,"assignments","newTeacher_9"),{...assignment,classId:"10"}));
  const assignedSubject=env.authenticatedContext("newTeacher").firestore();
  const assignedMark={schoolId:schoolA,classId:"9",subjectId:"computer",studentId:"student1",term:"first",score:32};
- await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"assignments","newTeacher_9_computer"),assignment));
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"assignments","newTeacher_9_math"),{...assignment,subjectId:"math"}));
  await assertSucceeds(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_m1"),assignedMark));
  await assertFails(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_m2"),{...assignedMark,subjectId:"math"}));
  await assertFails(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_m3"),{...assignedMark,term:"second"}));
