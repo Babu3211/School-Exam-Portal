@@ -8,6 +8,7 @@
 <form id="school-form" hidden><label>School ID (8–64 letters, digits, _ or -)<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><label>School Name<input name="name" required maxlength="200"></label><label>IEMIS Code<input name="iemisCode" required pattern="[A-Za-z0-9_-]{3,32}"></label><p>The signed-in Platform Admin becomes the initial School Admin. Additional school admins require a separately reviewed invitation workflow.</p><button id="register" type="submit">Register Pending School</button></form>
 <form id="activation-form" hidden><h2>Activate Pending School</h2><label>School ID<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><button id="activate" type="submit">Activate School</button></form>
 <form id="school-admin-check" hidden><h2>School Admin Access</h2><label>School ID<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><button type="submit">Verify School Admin</button></form>
+<section id="members-panel" hidden><h2>School Members</h2><button id="refresh-members" type="button">Refresh Members</button><ul id="members-list"></ul></section>
 <form id="member-form" hidden><h2>Add Teacher or Viewer</h2><p>Only a School Admin of the selected active school may add a member. The target must already have a Firebase Auth UID.</p><label>School ID<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><label>Existing User UID<input name="uid" required></label><label>Role<select name="role" required><option value="viewer">Viewer</option><option value="subject_teacher">Subject Teacher</option><option value="class_teacher">Class Teacher</option></select></label><button id="enroll" type="submit">Add Member</button></form>
 <form id="assignment-form" hidden><h2>Assign Teacher</h2><p>Only the selected school's Admin can assign an existing active Teacher.</p><label>School ID<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><label>Teacher UID<input name="uid" required></label><label>Subject ID (required for Subject Teacher; blank for Class Teacher)<input name="subjectId" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><label>Class<select name="classId" required><option value="ECD">ECD</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></label><label>Teacher Type<select name="kind"><option value="subject_teacher">Subject Teacher</option><option value="class_teacher">Class Teacher</option></select></label><fieldset><legend>Terms</legend><label><input type="checkbox" name="terms" value="first"> First</label><label><input type="checkbox" name="terms" value="second"> Second</label><label><input type="checkbox" name="terms" value="final"> Final</label></fieldset><button id="assign" type="submit">Create Assignment</button></form>
 <form id="member-status-form" hidden><h2>Teacher / Viewer Access</h2><p>School Admin only. Change access for an existing Teacher or Viewer; School Admin accounts cannot be changed here.</p><label>School ID<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><label>Member UID<input name="uid" required></label><label>Access<select name="active"><option value="false">Disable access</option><option value="true">Enable access</option></select></label><button id="member-status-save" type="submit">Update Access</button></form>
@@ -15,7 +16,7 @@
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,doc,getDoc,writeBatch,updateDoc,setDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,doc,getDoc,collection,getDocs,writeBatch,updateDoc,setDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import {checkSparkPlatformAdmin} from "../../src/v47/spark-platform-admin.mjs";
 import {bootstrapSparkSchool} from "../../src/v47/spark-school-bootstrap.mjs";
 import {activateSparkSchool} from "../../src/v47/spark-school-activation.mjs";
@@ -23,7 +24,7 @@ import {enrollSparkSchoolMember} from "../../src/v47/spark-school-member-enrollm
 import {createSparkTeacherAssignment} from "../../src/v47/spark-teacher-assignment.mjs";
 import {setSparkSchoolMemberActive} from "../../src/v47/spark-school-member-status.mjs";
 const config=window.__SMSS_V47_SPARK_CONFIG__;
-const message=document.querySelector("#message"),identity=document.querySelector("#identity"),form=document.querySelector("#school-form"),activationForm=document.querySelector("#activation-form"),memberForm=document.querySelector("#member-form"),assignmentForm=document.querySelector("#assignment-form"),memberStatusForm=document.querySelector("#member-status-form"),schoolAdminCheck=document.querySelector("#school-admin-check");
+const message=document.querySelector("#message"),identity=document.querySelector("#identity"),form=document.querySelector("#school-form"),activationForm=document.querySelector("#activation-form"),memberForm=document.querySelector("#member-form"),assignmentForm=document.querySelector("#assignment-form"),memberStatusForm=document.querySelector("#member-status-form"),schoolAdminCheck=document.querySelector("#school-admin-check"),membersPanel=document.querySelector("#members-panel"),membersList=document.querySelector("#members-list");
 const say=x=>message.textContent=x;
 if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="smss-exam-portal-v47.firebaseapp.com"){
  say("Missing isolated V47 configuration. No Firebase connection started.");
@@ -32,7 +33,21 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
  const app=initializeApp(config,"v47-spark-school-registration"),auth=getAuth(app),firestore=getFirestore(app);
  let authorized=false,verifiedSchoolId=null;
  const managementForms=[memberForm,assignmentForm,memberStatusForm];
- const hideManagement=()=>{verifiedSchoolId=null;for(const item of managementForms)item.hidden=true;};
+ const clearMembers=()=>{membersPanel.hidden=true;membersList.replaceChildren();};
+ const refreshMembers=async()=>{
+  const user=auth.currentUser,schoolId=verifiedSchoolId;
+  if(!user || !schoolId){clearMembers();return;}
+  const result=await getDocs(collection(firestore,"schools",schoolId,"members"));
+  if(auth.currentUser?.uid!==user.uid || verifiedSchoolId!==schoolId)return;
+  membersList.replaceChildren();
+  for(const memberDoc of result.docs){
+   const item=document.createElement("li"),data=memberDoc.data();
+   item.textContent=memberDoc.id+" — "+(Array.isArray(data.roles)?data.roles.join(", "):"Unknown role")+" — "+(data.active===true?"Active":"Inactive");
+   membersList.append(item);
+  }
+  membersPanel.hidden=false;
+ };
+ const hideManagement=()=>{verifiedSchoolId=null;clearMembers();for(const item of managementForms)item.hidden=true;};
  const managementAllowed=input=>verifiedSchoolId && auth.currentUser && input.schoolId===verifiedSchoolId;
  onAuthStateChanged(auth,async user=>{
   authorized=false;form.hidden=true;activationForm.hidden=true;hideManagement();schoolAdminCheck.hidden=!user;document.querySelector("#logout").hidden=!user;
@@ -59,7 +74,11 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
    verifiedSchoolId=schoolId;
    for(const item of managementForms){item.hidden=false;item.elements.namedItem("schoolId").value=schoolId;}
    say("School Admin verified for "+schoolId+". Management forms unlocked.");
+   try{await refreshMembers();}catch{say("Admin verified, but member list could not be loaded.");}
   }catch{say("School Admin verification denied or failed.");}
+ });
+ document.querySelector("#refresh-members").addEventListener("click",async()=>{
+  try{await refreshMembers();}catch{say("Unable to refresh members. Verify school access.");}
  });
  document.querySelector("#login-form").addEventListener("submit",async event=>{
   event.preventDefault();say("Signing in...");
@@ -77,6 +96,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
    const result=await setSparkSchoolMemberActive({auth,firestore,doc,updateDoc,projectId:app.options.projectId,...input,active:input.active==="true"});
    say("Member access "+(result.active?"enabled":"disabled")+" for "+result.uid);
    memberStatusForm.reset();memberStatusForm.elements.namedItem("schoolId").value=verifiedSchoolId;
+   try{await refreshMembers();}catch{say("Access updated, but member list refresh failed.");}
   }catch{say("Access update denied or failed. Verify school admin authority and existing teacher/viewer membership.");}
   finally{button.disabled=false;}
  });
@@ -104,6 +124,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
    const result=await enrollSparkSchoolMember({auth,firestore,doc,setDoc,projectId:app.options.projectId,...input});
    say("Member added: "+result.uid+" ("+result.role+") to "+result.schoolId);
    memberForm.reset();memberForm.elements.namedItem("schoolId").value=verifiedSchoolId;
+   try{await refreshMembers();}catch{say("Member added, but member list refresh failed.");}
   }catch{say("Enrollment denied. Sign in as the selected school's Admin and check the existing UID.");}
   finally{button.disabled=false;}
  });
