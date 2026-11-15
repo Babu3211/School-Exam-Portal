@@ -33,8 +33,10 @@ assert.equal(panel.hidden,true);
 assert.equal(schoolInput.children.length,1,"New user should automatically load authorized schools");
 assert.equal(schoolInput.children[0].value,"school_A001");
 view.dispose();
+view.dispose();
+listener(user1);
 assert.equal(unsubscribed,true);
-assert.equal(root.children.length,0);
+assert.equal(root.children.length,0,"Late auth callback after disposal must not remount workspace");
 // Pending school list must not reappear after logout.
 let releaseList,startedList;
 const listStarted=new Promise(resolve=>{startedList=resolve;});
