@@ -1,36 +1,29 @@
-# V47 staging setup — isolated project
+# V47 Spark-only staging setup — isolated project
 
-**Project:** `smss-exam-portal-v47` (user-confirmed Firebase Auth, Firestore and web app)
-**Do not touch:** `exam-portal-smss-95016` (existing V46 production).
+**V47 project:** `smss-exam-portal-v47` (reported created; not independently verified).  
+**Protected V46 project:** `exam-portal-smss-95016` — never deploy or change it from V47 work.
 
-## Completed by school owner (reported, not independently verified)
-- Separate Firebase project created; Web App registered.
-- Email/Password Authentication enabled and initial Auth user added.
-- Firestore default database created with deny-all client rules.
-- Initial `platform_admins/{auth_uid}` document created with boolean `active: true`.
+## Current verified status
+- GitHub development CI passed at commit `63c557e7`, run 43727330594. These are synthetic/emulator tests, **not** live browser or staging acceptance tests.
+- The owner reports a separate Firebase Auth project, Firestore with deny-all deployed client rules, registered Web App and an initial active platform-admin record. These claims are **not independently verified**.
+- V47 browser prototype: `prototypes/v47/spark-school-registration.html`; V47 draft rules: `firestore.v47.prototype.rules`. Neither is deployed.
+- The current repository-root `firebase.json` points at `firestore.rules` and serves the whole repository. **Do not run a default root Firebase deploy for V47**; it could target the wrong project or deploy inappropriate rules/files.
 
-## Important runtime architecture
-- Browser Firebase configuration is not a server credential.
-- `v47-runtime/server.mjs` uses Firebase **Admin SDK** with `applicationDefault()`; it requires a trusted server runtime and separately provisioned server identity/credentials.
-- Deny-all Firestore client rules remain in place: browser should not read or write Firestore directly. The trusted server verifies ID tokens and platform/school membership for each API request.
-- `prototypes/v47/verified-workspace-staging.html` is **not** a deployed site. It requires an HTTPS host with a real `window.__SMSS_V47_STAGING_CONFIG__` injected before its module executes, same-origin `/api/v47/` proxy, and verified BS/AD date conversion functions.
-- Firebase Hosting alone serves static files and does not execute this Node API. The existing free/Spark plan must **not** be assumed to support a managed server or Cloud Functions deployment without billing; confirm platform pricing and quotas before enabling anything.
-- Never commit service-account JSON, private keys, user passwords or Firebase ID tokens.
+## Approved architecture: Spark only, no billing
+- Use **Firebase Hosting static assets**, Firebase Authentication Web SDK and Firestore Web SDK with **least-privilege tenant-scoped security rules**, in the **separate V47 Firebase project only**.
+- Do not deploy `v47-runtime/server.mjs` on Cloud Functions/Run, or use paid servers, Blaze, billing accounts, or a browser-exposed Admin SDK/service-account key.
+- The Admin SDK prototype `prototypes/v47/verified-workspace-staging.html` and `scripts/test-v47-staging-smoke.mjs` target an **unavailable trusted HTTP API**. They are **not valid acceptance tests** for Spark-only static browser staging.
+- No browser client may self-grant platform-admin access: the pre-existing platform-admin document must be provisioned separately by an authorized operator, and the Firestore rules must verify it.
+- Spark quotas apply; zero billing does not guarantee unlimited usage.
 
-## Required next actions
-1. Choose an approved, cost-acceptable **separate trusted server host** for V47 staging; do not automatically enable billing or upgrade Firebase.
-2. Configure the server's scoped identity with access to `smss-exam-portal-v47`, environment variable `V47_FIREBASE_PROJECT_ID=smss-exam-portal-v47`, and HTTPS reverse proxy forwarding `/api/v47/` to the V47 API. Do not expose Admin SDK credentials to the browser.
-3. Publish the V47 staging HTML and its relative `src/v47/` modules under the same HTTPS origin as the API; inject staging-only Firebase Web App config and verified BS/AD adapters before the module runs.
-4. Run `V47_STAGING_API_ORIGIN=https://<approved-staging-origin> node scripts/test-v47-staging-smoke.mjs` against that real host; then test authenticated onboarding, two-school isolation, viewer restrictions, V46 feature parity and backup/rollback.
-5. Do not release to production until all gates in `docs/V47-FINAL-RELEASE-GATES.md` are met.
+## Safe staging preparation — no deployment authorized by this document
+1. Confirm the Firebase console shows project ID exactly `smss-exam-portal-v47`. Keep `exam-portal-smss-95016` entirely out of staging CLI aliases and commands.
+2. Review the draft V47 rules, invitation acceptance, IEMIS uniqueness, school activation, teacher assignments, viewer read-only, school suspension and cross-tenant isolation. Run the Firestore emulator suite. **Keep deployed rules deny-all until reviewed and explicitly approved.**
+3. Create a **V47-specific Hosting directory** containing only the Spark prototype, its required `src/v47/` browser modules, and a V47-only Firebase Web config loader. Never host the entire repository or publish private files. Keep Web App configuration restricted to the separate V47 project ID and auth domain.
+4. Prepare a **separate V47-only Firebase configuration** (not the root `firebase.json`) with a static Hosting target and the reviewed V47 rules. Explicitly select the V47 project in any CLI command; never rely on the default project.
+5. Only after staging authorization and rules review, deploy to the V47 project. Record its actual HTTPS Hosting URL; do not claim a URL exists before verifying it.
+6. Perform real browser tests: platform-admin login, pending school registration and activation, two-school isolation, invitation acceptance, assignment permissions, viewer read-only, student/marks/attendance and sign-out.
+7. Complete V46 feature parity (ECD–12, IEMIS 2083, CDC calculations, ledger/grade sheet/print, PWA/APK) and representative **read-only** migration dry runs. Back up and verify rollback before any data movement.
 
-## Current state
-**Not deployed.** GitHub automated tests pass, but they cannot establish a real hosting endpoint, server identity or production feature parity.
-
-## Non-negotiable owner requirement: Spark-only, zero billing (15 November 2026)
-- The owner explicitly prohibits **all billing setup, Blaze upgrades, credit-card requirements and paid backend/hosting**.
-- Do not deploy the current Firebase Admin SDK Node runtime to Cloud Run/Functions or any paid infrastructure.
-- A viable zero-billing route must be designed and tested first, likely a browser Firebase Auth + Firestore client SDK with strict tenant-scoped security rules, **without granting browser users platform-admin authority solely from self-asserted fields**. Evaluate all privileged onboarding flows carefully; the current Admin SDK-only endpoints are **not deployable as-is** on static Spark hosting.
-- Maintain the current deny-all client Firestore rules until a reviewed least-privilege replacement and emulator security tests are ready. Never relax to test-mode or blanket authenticated writes.
-- Free-plan quotas and limitations apply; zero billing does not imply unlimited usage or guaranteed scale.
-- Production deployment and data migration still require separate explicit approval.
+## Current decision
+**HOLD** — no live V47 staging deployment, no confirmed V46 feature parity, no real data migration or production release. Never modify V46 production without explicit permission.
