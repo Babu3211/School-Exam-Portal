@@ -23,9 +23,9 @@ export function createV47NodeOnboardingHandler({auth,firestore}) {
   const action=ROUTES.get(req.url);
   if(!action)return respond(404,{error:"Not found"});
   if(req.method!=="POST")return respond(405,{error:"Method not allowed"});
-  const match=/^Bearer ([^\\s]+)$/.exec(String(req.headers?.authorization||""));
+  const match=/^Bearer ([^\s]+)$/.exec(String(req.headers?.authorization||""));
   if(!match)return respond(401,{error:"Authentication required"});
-  if(!/^application\\/json(?:\\s*;|$)/i.test(String(req.headers?.["content-type"]||"")))
+  if(!/^application\/json(?:\s*;|$)/i.test(String(req.headers?.["content-type"]||"")))
    return respond(415,{error:"JSON required"});
   const chunks=[];
   let size=0;
