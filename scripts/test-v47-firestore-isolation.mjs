@@ -295,5 +295,17 @@ try {
  });
  await assertSucceeds(setDoc(doc(subject,"schools",schoolA,"marks","teacher_restored"),mark));
 
+ // A mixed viewer and admin role must never grant school data writes.
+ await env.withSecurityRulesDisabled(async context=>{
+   await updateDoc(doc(context.firestore(),"schools",schoolA,"members","adminA"),{roles:["viewer","school_admin"]});
+ });
+ await assertSucceeds(getDoc(doc(admin,"schools",schoolA,"students","student1")));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"students","mixed_admin_blocked"),{name:"Blocked",classId:"9"}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"marks","mixed_admin_mark"),mark));
+ await env.withSecurityRulesDisabled(async context=>{
+   await updateDoc(doc(context.firestore(),"schools",schoolA,"members","adminA"),{roles:["school_admin"]});
+ });
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"students","admin_restored"),{name:"Restored",classId:"9"}));
+
  console.log("V47 tenant Firestore emulator isolation and exam assignment tests passed");
 } finally {await env.cleanup();}
