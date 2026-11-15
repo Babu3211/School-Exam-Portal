@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import {prepareSparkSchoolBootstrap,bootstrapSparkSchool} from "../src/v47/spark-school-bootstrap.mjs";
 assert.throws(()=>prepareSparkSchoolBootstrap({schoolId:"bad",name:"X",iemisCode:"123",schoolAdminUid:"abc"}));
-const input={schoolId:"school_A001",name:" Demo School ",iemisCode:"123456",schoolAdminUid:"teacher-1"};
+const input={schoolId:"school_A001",name:" Demo School ",iemisCode:"123456",schoolAdminUid:"admin"};
 const x=prepareSparkSchoolBootstrap(input);
 assert.equal(x.school.name,"Demo School");
 assert.equal(x.school.annualFeeNpr,0);
@@ -13,5 +13,5 @@ await assert.rejects(bootstrapSparkSchool({auth:{currentUser:{uid:"admin"}},proj
 await assert.rejects(bootstrapSparkSchool({auth:{currentUser:null},projectId:"smss-exam-portal-v47",input,firestore:{},doc,writeBatch}),/Authentication/);
 const result=await bootstrapSparkSchool({auth:{currentUser:{uid:"admin"}},projectId:"smss-exam-portal-v47",input,firestore:{},doc,writeBatch});
 assert.equal(result.status,"pending");assert.equal(commits,1);
-assert.deepEqual(writes.map(w=>w.path),["schools/school_A001","schools/school_A001/members/teacher-1"]);
+assert.deepEqual(writes.map(w=>w.path),["schools/school_A001","schools/school_A001/members/admin"]);
 console.log("V47 Spark atomic school bootstrap unit tests passed");
