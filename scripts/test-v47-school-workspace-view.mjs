@@ -180,4 +180,31 @@ for(const index of [8,9,10,11,12])assert.equal(switchPanel.children[index].disab
 releaseDashboard();await switching;
 switchView.dispose();
 
+// A pending write must remain locked even if a school is reopened.
+const pendingRoot=new FakeElement("main");
+let releasePendingWrite;
+const pendingWrite=new Promise(resolve=>{releasePendingWrite=resolve;});
+let pendingWriteCount=0;
+const pendingView=mountV47SchoolWorkspace({
+ bsToAd:()=> "2026-04-14",adToBs:()=> "2083-01-01",root:pendingRoot,document,
+ getIdToken:async()=>"valid",
+ fetchImpl:async url=>{
+  if(url.endsWith("/schools"))return {ok:true,json:async()=>({schools:[{schoolId:"school_A001",schoolName:"School A",roles:["school_admin"]}]})};
+  if(url.includes("/dashboard?"))return {ok:true,json:async()=>({dashboard:{schoolId:"school_A001",schoolName:"School A",roles:["school_admin"],readOnly:false}})};
+  if(url.endsWith("/students/write")){pendingWriteCount++;await pendingWrite;return {ok:true,json:async()=>({result:{schoolId:"school_A001",studentId:"s001"}})};}
+  throw Error("Unexpected endpoint: "+url);
+ }
+});
+const [,pendingLoad,pendingSchool,pendingOpen,,,pendingPanel]=pendingRoot.children;
+await pendingLoad.onclick();pendingSchool.value="school_A001";await pendingOpen.onclick();
+pendingPanel.children[8].value="s001";pendingPanel.children[9].value="Example";
+const pendingButton=pendingPanel.children[12];
+const firstPendingSave=pendingButton.onclick();
+await pendingOpen.onclick();
+assert.equal(pendingButton.disabled,true,"Reopening school cannot unlock pending student save");
+await pendingButton.onclick();
+releasePendingWrite();await firstPendingSave;
+assert.equal(pendingWriteCount,1,"Reopening school must not duplicate pending save");
+pendingView.dispose();
+
 console.log("V47 isolated school workspace browser view tests passed");
