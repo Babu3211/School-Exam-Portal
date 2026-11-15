@@ -112,7 +112,9 @@ service cloud.firestore {
         request.resource.data.annualFeeNpr == 0 &&
         request.resource.data.status == 'pending' &&
         request.resource.data.subscriptionStatus == 'free' &&
-        getAfter(/databases/$(database)/documents/v47_iemis_index/$(request.resource.data.iemisCode)).data.schoolId == schoolId;
+        getAfter(/databases/$(database)/documents/v47_iemis_index/$(request.resource.data.iemisCode)).data.schoolId == schoolId &&
+        existsAfter(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.auth.uid)) &&
+        getAfter(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.auth.uid)).data.roles == ['school_admin'];
     }
     function validNewSchoolMember(schoolId, uid) {
       return request.resource.data.keys().hasAll(['uid','schoolId','roles','active']) &&
