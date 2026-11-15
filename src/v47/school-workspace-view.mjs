@@ -44,7 +44,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
  const studentMode=element("select");for(const mode of ["create","update"]){const option=element("option",mode);option.value=mode;studentMode.append(option);}
  const saveStudentButton=element("button","Save student");saveStudentButton.type="button";saveStudentButton.hidden=true;
  const studentEditControls=[studentIdInput,studentNameInput,studentClassInput,studentMode];
- const setStudentEditVisible=visible=>{for(const control of studentEditControls){control.hidden=!visible;control.disabled=!visible;}saveStudentButton.hidden=!visible;};
+ const setStudentEditVisible=visible=>{for(const control of studentEditControls){control.hidden=!visible;control.disabled=!visible;}saveStudentButton.hidden=!visible;saveStudentButton.disabled=!visible;};
  setStudentEditVisible(false); // Never expose edit controls before authorization finishes.
  const recordsButton=element("button","View school records");
  recordsButton.type="button";
