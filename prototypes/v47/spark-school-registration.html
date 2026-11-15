@@ -100,6 +100,22 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
  };
  const hideManagement=()=>{verificationEpoch++;verifiedSchoolId=null;clearMembers();clearAssignments();for(const item of managementForms)item.hidden=true;};
  const managementAllowed=input=>verifiedSchoolId && auth.currentUser && input.schoolId===verifiedSchoolId && schoolAdminCheck.elements.namedItem("schoolId").value===verifiedSchoolId;
+ const recheckManagement=async input=>{
+  if(!managementAllowed(input))throw new Error("Verify School Admin access first");
+  const user=auth.currentUser,schoolId=verifiedSchoolId,epoch=verificationEpoch;
+  const [membership,school]=await Promise.all([
+   getDoc(doc(firestore,"schools",schoolId,"members",user.uid)),
+   getDoc(doc(firestore,"schools",schoolId))
+  ]);
+  if(auth.currentUser?.uid!==user.uid || epoch!==verificationEpoch || verifiedSchoolId!==schoolId ||
+     !membership.exists() || membership.data()?.active!==true ||
+     !membership.data()?.roles?.includes("school_admin") ||
+     membership.data()?.roles?.includes("viewer") ||
+     !school.exists() || school.data()?.status!=="active"){
+   hideManagement();
+   throw new Error("School Admin access is no longer active");
+  }
+ };
  schoolAdminCheck.elements.namedItem("schoolId").addEventListener("input",hideManagement);
  onAuthStateChanged(auth,async user=>{
   const epoch=++authEpoch;
@@ -147,7 +163,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
  assignmentStatusForm.addEventListener("submit",async event=>{
   event.preventDefault();
   const input=Object.fromEntries(new FormData(assignmentStatusForm).entries());
-  if(!managementAllowed(input)){say("Verify School Admin access first.");return;}
+  try{await recheckManagement(input);}catch{say("School Admin access verification failed.");return;}
   const button=assignmentStatusForm.querySelector('button[type="submit"]');button.disabled=true;
   try{
    await setSparkTeacherAssignmentActive({auth,firestore,doc,updateDoc,projectId:app.options.projectId,...input,active:input.active==="true"});
@@ -171,7 +187,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
   const button=document.querySelector("#member-status-save");button.disabled=true;
   try{
    const input=Object.fromEntries(new FormData(memberStatusForm).entries());
-   if(!managementAllowed(input))throw new Error("Verify school admin first");
+   await recheckManagement(input);
    const result=await setSparkSchoolMemberActive({auth,firestore,doc,updateDoc,projectId:app.options.projectId,...input,active:input.active==="true"});
    say("Member access "+(result.active?"enabled":"disabled")+" for "+result.uid);
    memberStatusForm.reset();memberStatusForm.elements.namedItem("schoolId").value=verifiedSchoolId;
@@ -188,7 +204,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
    input.terms=data.getAll("terms");
    if(input.kind==="subject_teacher" && !input.subjectId){say("Subject ID is required for Subject Teacher.");return;}
    if(input.kind==="class_teacher")input.subjectId="";
-   if(!managementAllowed(input))throw new Error("Verify school admin first");
+   await recheckManagement(input);
    const result=await createSparkTeacherAssignment({auth,firestore,doc,setDoc,projectId:app.options.projectId,...input});
    say("Assignment created: "+result.assignmentId+" for class "+result.classId);
    assignmentForm.reset();assignmentForm.elements.namedItem("schoolId").value=verifiedSchoolId;
@@ -202,7 +218,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
   const button=document.querySelector("#enroll");button.disabled=true;
   try{
    const input=Object.fromEntries(new FormData(memberForm).entries());
-   if(!managementAllowed(input))throw new Error("Verify school admin first");
+   await recheckManagement(input);
    const result=await enrollSparkSchoolMember({auth,firestore,doc,setDoc,projectId:app.options.projectId,...input});
    say("Invitation sent to UID "+result.uid+" ("+result.role+") for "+result.schoolId+". Membership starts only after that user signs in and accepts.");
    memberForm.reset();memberForm.elements.namedItem("schoolId").value=verifiedSchoolId;
