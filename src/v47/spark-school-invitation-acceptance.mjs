@@ -13,7 +13,6 @@ export async function acceptSparkSchoolInvitation({auth,firestore,doc,getDoc,set
     !Array.isArray(data.roles) || data.roles.length!==1 ||
     !["viewer","subject_teacher","class_teacher"].includes(data.roles[0]))throw new Error("Invalid invitation");
  if(auth.currentUser?.uid!==uid)throw new Error("Session changed");
- if(auth.currentUser?.uid!==uid)throw new Error("Session changed");
  await setDoc(doc(firestore,"schools",schoolId,"members",uid),{uid,schoolId,roles:[data.roles[0]],active:true});
  return Object.freeze({schoolId,uid,role:data.roles[0]});
 }
