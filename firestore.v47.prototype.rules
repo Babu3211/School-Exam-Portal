@@ -117,6 +117,7 @@ service cloud.firestore {
       return request.resource.data.keys().hasAll(['uid','schoolId','roles','active']) &&
         request.resource.data.keys().hasOnly(['uid','schoolId','roles','active']) &&
         request.resource.data.uid == uid &&
+        uid == request.auth.uid &&
         request.resource.data.schoolId == schoolId &&
         request.resource.data.active == true &&
         request.resource.data.roles == ['school_admin'] &&
