@@ -65,6 +65,7 @@ assert.equal(panel.children[8].value,"");
 assert.equal(panel.children[9].value,"");
 assert.equal(studentClassInput.value,"ECD");
 assert.equal(panel.hidden,true);
+for(const index of [8,9,10,11])assert.equal(panel.children[index].disabled,true,"School reload must revoke editing");
 assert.equal(result.textContent,"","Reloading schools must clear previous tenant results");
 assert.equal(panel.children[12].hidden,true,"Reloading schools must disable student writes");
 schoolInput.value="school_A001";
