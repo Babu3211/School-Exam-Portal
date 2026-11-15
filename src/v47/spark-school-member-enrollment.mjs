@@ -1,5 +1,5 @@
 /**
- * Firebase Spark browser SDK: add a limited member to an active school.
+ * Firebase Spark browser SDK: propose a limited-role invitation to an active school.
  * Security rules authorize only the school's admin; no account is created.
  * The target UID must already exist in Firebase Auth.
  */
@@ -12,7 +12,7 @@ export async function enrollSparkSchoolMember({auth,firestore,doc,setDoc,project
  if(typeof uid!=="string" || !uid.trim() || uid.includes("/") || uid.trim()!==uid || uid.length>128 || uid===auth.currentUser.uid)throw new TypeError("Invalid target member UID");
  if(!allowed.has(role))throw new TypeError("Only teacher or viewer roles can be enrolled");
  if(typeof doc!=="function" || typeof setDoc!=="function")throw new TypeError("Firestore Web SDK adapters required");
- const membership=Object.freeze({uid,schoolId,roles:[role],active:true});
- await setDoc(doc(firestore,"schools",schoolId,"members",uid),membership);
+ const invitation=Object.freeze({uid,schoolId,roles:[role],active:true});
+ await setDoc(doc(firestore,"schools",schoolId,"invitations",uid),invitation);
  return Object.freeze({schoolId,uid,role});
 }
