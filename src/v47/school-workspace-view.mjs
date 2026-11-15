@@ -117,7 +117,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   if(typeof bsDate!=="string" || !/^\d{4}-\d{2}-\d{2}$/.test(bsDate))throw new TypeError("BS date display conversion failed");
   return {...rest,date:bsDate};
  }));
- return Object.freeze({clearSession(){
+ return Object.freeze({loadSchools,clearSession(){
   renderGeneration++;
   rowsGeneration++;
   workspace.clear();
