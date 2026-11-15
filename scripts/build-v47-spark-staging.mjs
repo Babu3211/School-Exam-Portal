@@ -25,7 +25,6 @@ async function include(path){
  await mkdir(dirname(join(output,path)),{recursive:true});
  await copyFile(join(root,path),join(output,path));
 }
-for(const path of imports)await include(path);
 await rm(output,{recursive:true,force:true});
 for(const path of imports)await include(path);
 await mkdir(join(output,"prototypes","v47"),{recursive:true});
