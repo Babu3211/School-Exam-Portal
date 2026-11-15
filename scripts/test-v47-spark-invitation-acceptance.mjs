@@ -11,6 +11,10 @@ await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>({exis
 await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>({exists:()=>true,data:()=>({...invitation,schoolId:"school_B001"})})}),/Invalid invitation/);
 await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>{auth.currentUser={uid:"other"};return {exists:()=>true,data:()=>invitation}}}),/Session changed/);
 auth.currentUser={uid:"teacherA"};
+await assert.rejects(acceptSparkSchoolInvitation({...args,auth:{currentUser:{uid:"teacherA",isAnonymous:true}}}),/Authentication/);
+await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>({exists:()=>true,data:()=>({...invitation,active:false})})}),/Invalid invitation/);
+await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>({exists:()=>true,data:()=>({...invitation,roles:["viewer","subject_teacher"]})})}),/Invalid invitation/);
+assert.equal(writes.length,0,"Rejected invitations must not write membership");
 assert.deepEqual(await acceptSparkSchoolInvitation(args),{schoolId:"school_A001",uid:"teacherA",role:"subject_teacher"});
 assert.deepEqual(writes,[{path:"schools/school_A001/members/teacherA",data:invitation}]);
 console.log("V47 Spark invitation acceptance adapter checks passed");
