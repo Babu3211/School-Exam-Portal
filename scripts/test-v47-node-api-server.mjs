@@ -18,6 +18,7 @@ const firestore={
   const tx={
    get:async ref=>({exists:docs.has(ref.path),data:()=>docs.get(ref.path)}),
    create:(ref,data)=>operations.push([ref.path,data]),
+   set:(ref,data)=>operations.push([ref.path,data]),
    update:(ref,data)=>operations.push([ref.path,{...docs.get(ref.path),...data}])
   };
   await fn(tx);
