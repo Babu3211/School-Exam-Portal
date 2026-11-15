@@ -31,6 +31,9 @@ jobs:
         run: npm install --no-package-lock --no-audit --no-fund
       - name: Ensure V46 production files remain unchanged
         run: node scripts/test-v47-production-boundary.mjs
+      - name: Build isolated V47 Spark static staging preview (no deploy)
+        if: success() || failure()
+        run: node scripts/build-v47-spark-staging.mjs
       - name: V46 existing exam portal regression suite (read-only)
         if: success() || failure()
         run: |
