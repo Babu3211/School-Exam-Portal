@@ -188,6 +188,16 @@ service cloud.firestore {
            request.resource.data.roles is list &&
            request.resource.data.roles.size() == 1 &&
            request.resource.data.roles.hasOnly(['viewer','subject_teacher','class_teacher']));
+        // A target user accepts their own immutable invitation.
+        allow create: if request.auth != null &&
+          request.auth.uid == uid &&
+          request.resource.data.keys().hasOnly(['uid','schoolId','roles','active']) &&
+          request.resource.data.keys().hasAll(['uid','schoolId','roles','active']) &&
+          request.resource.data.uid == uid &&
+          request.resource.data.schoolId == schoolId &&
+          request.resource.data.active == true &&
+          exists(/databases/$(database)/documents/schools/$(schoolId)/invitations/$(uid)) &&
+          request.resource.data == get(/databases/$(database)/documents/schools/$(schoolId)/invitations/$(uid)).data;
         allow update: if admin(schoolId) &&
           uid != request.auth.uid &&
           resource.data.uid == uid &&
