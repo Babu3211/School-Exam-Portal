@@ -230,6 +230,17 @@ try {
  await assertSucceeds(getDoc(doc(admin,"schools",schoolA,"students","student1")));
  await assertSucceeds(getDoc(doc(viewer,"schools",schoolA,"students","student1")));
  await assertFails(setDoc(doc(viewer,"schools",schoolA,"students","student1"),{name:"Still Read Only"}));
+ // Membership revocation must immediately block access without affecting other schools.
+ await env.withSecurityRulesDisabled(async context=>{
+   await updateDoc(doc(context.firestore(),"schools",schoolA,"members","viewerA"),{active:false});
+ });
+ await assertFails(getDoc(doc(viewer,"schools",schoolA,"students","student1")));
+ await assertFails(getDoc(doc(viewer,"schools",schoolA,"marks","m1")));
+ await assertSucceeds(getDoc(doc(admin,"schools",schoolA,"students","student1")));
+ await env.withSecurityRulesDisabled(async context=>{
+   await updateDoc(doc(context.firestore(),"schools",schoolA,"members","viewerA"),{active:true});
+ });
+ await assertSucceeds(getDoc(doc(viewer,"schools",schoolA,"students","student1")));
 
  console.log("V47 tenant Firestore emulator isolation and exam assignment tests passed");
 } finally {await env.cleanup();}
