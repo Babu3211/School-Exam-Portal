@@ -119,8 +119,15 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   const studentId=studentIdInput.value.trim();
   const mode=studentMode.value;
   const values=Object.fromEntries([["name",studentNameInput.value.trim()],["className",studentClassInput.value.trim()]].filter(([,value])=>value));
+  for(const control of studentEditControls)control.disabled=true;
   try{return await showRows(()=>workspace.saveStudent({studentId,mode,values}));}
-  finally{savingStudent=false;if(!panel.hidden && !saveStudentButton.hidden && !studentEditControls.some(control=>control.disabled))saveStudentButton.disabled=false;}
+  finally{
+   savingStudent=false;
+   if(!panel.hidden && !saveStudentButton.hidden){
+    for(const control of studentEditControls)control.disabled=false;
+    saveStudentButton.disabled=false;
+   }
+  }
  };
  recordsButton.onclick=()=>showRows(()=>workspace.readRecords({collection:recordsSelect.value,limit:100}));
  marksButton.onclick=()=>showRows(()=>workspace.readMarks({className:classInput.value.trim(),subject:subjectInput.value.trim()}));
