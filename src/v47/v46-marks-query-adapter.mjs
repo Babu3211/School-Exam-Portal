@@ -35,5 +35,10 @@ export async function readV46MarksForSchool({schoolId,className,subject,section=
  if(rows.some(row=>!row || typeof row!=="object" || Array.isArray(row) ||
    (Object.hasOwn(row,"schoolId") && row.schoolId!==schoolId)))
   throw new Error("Marks tenant mismatch");
+ // Never pass a gateway's unrelated class/subject rows into a grade ledger.
+ // Legacy documents may omit section, so enforce it only when present.
+ if(rows.some(row=>row.className!==className || row.subject!==subject ||
+   (section.trim() && Object.hasOwn(row,"section") && String(row.section).trim()!==section.trim())))
+  throw new Error("Marks query result mismatch");
  return rows;
 }
