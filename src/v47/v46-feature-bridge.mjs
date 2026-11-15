@@ -7,6 +7,19 @@ import {assertSchoolId} from "./tenant-domain.mjs";
 import {schoolResourcePath} from "./school-data-paths.mjs";
 const FEATURE_COLLECTIONS=Object.freeze({students:"students",staff:"staff",classes:"classes",subjects:"subjects",exams:"exams",marks:"marks",attendance:"attendance",certificates:"certificates",markSettings:"mark_settings",settings:"school_settings",results:"public_results"});
 const FEATURES=Object.freeze(Object.keys(FEATURE_COLLECTIONS));
+const WRITE_METHODS=new Set(["add","create","set","update","delete","remove","save","write","commit","batch","runTransaction","addDoc","setDoc","updateDoc","deleteDoc"]);
+function viewerSafeGateway(gateway) {
+ return new Proxy(gateway,{
+  get(target,key,receiver) {
+   if(typeof key==="string" && WRITE_METHODS.has(key))
+    return ()=>{throw new Error("Viewer access is read-only");};
+   const value=Reflect.get(target,key,receiver);
+   return typeof value==="function"?value.bind(target):value;
+  },
+  set(){throw new Error("Viewer access is read-only");},
+  deleteProperty(){throw new Error("Viewer access is read-only");}
+ });
+}
 export function createV46FeatureBridge({session,legacyFeatures,tenantGateway}) {
  if(!session || typeof session!=="object") throw new TypeError("Verified session required");
  const schoolId=assertSchoolId(session.schoolId);
@@ -22,7 +35,7 @@ export function createV46FeatureBridge({session,legacyFeatures,tenantGateway}) {
    if(typeof implementation!=="function") throw new TypeError("Missing V46 feature: "+feature);
    const scopedGateway=tenantGateway.forCollection(schoolResourcePath(schoolId,FEATURE_COLLECTIONS[feature]));
    if(!scopedGateway || typeof scopedGateway!=="object") throw new TypeError("Invalid tenant gateway");
-   result[feature]=(...args)=>implementation(Object.freeze({schoolId,roles:verifiedRoles,readOnly,gateway:scopedGateway}),...args);
+   result[feature]=(...args)=>implementation(Object.freeze({schoolId,roles:verifiedRoles,readOnly,gateway:readOnly?viewerSafeGateway(scopedGateway):scopedGateway}),...args);
  }
  return Object.freeze(result);
 }
