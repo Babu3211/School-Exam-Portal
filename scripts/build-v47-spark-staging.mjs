@@ -40,7 +40,9 @@ for(const path of imports)await include(path);
   if(!config || typeof config!=="object" || Array.isArray(config) ||
      config.projectId!==expectedProject || config.authDomain!==expectedDomain ||
      typeof config.apiKey!=="string" || !config.apiKey.trim() ||
-     typeof config.appId!=="string" || !config.appId.trim())
+     typeof config.appId!=="string" || !config.appId.trim() ||
+     Object.keys(config).some(key=>!["apiKey","authDomain","projectId","appId","messagingSenderId","storageBucket"].includes(key)) ||
+     (config.storageBucket!==undefined && ![expectedProject+".firebasestorage.app",expectedProject+".appspot.com"].includes(config.storageBucket)))
     throw new Error("V47 Web config must match the isolated project and contain apiKey/appId");
   const json=JSON.stringify(config).replaceAll("<","\\u003c");
   await writeFile(join(output,"prototypes","v47","spark-config.js"),
