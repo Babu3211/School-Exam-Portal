@@ -12,7 +12,8 @@ export function prepareSparkSchoolBootstrap({schoolId,name,iemisCode,schoolAdmin
  if(typeof schoolAdminUid!=="string" || !schoolAdminUid.trim() || schoolAdminUid.includes("/"))throw new TypeError("Invalid school admin UID");
  return Object.freeze({
   school:Object.freeze({schoolId,name:name.trim(),iemisCode,annualFeeNpr:0,status:"pending",subscriptionStatus:"free"}),
-  membership:Object.freeze({uid:schoolAdminUid,schoolId,roles:["school_admin"],active:true})
+  membership:Object.freeze({uid:schoolAdminUid,schoolId,roles:["school_admin"],active:true}),
+  iemisReservation:Object.freeze({schoolId,iemisCode})
  });
 }
 export async function bootstrapSparkSchool({auth,firestore,doc,writeBatch,projectId,input}) {
@@ -20,8 +21,9 @@ export async function bootstrapSparkSchool({auth,firestore,doc,writeBatch,projec
  if(!auth?.currentUser?.uid || auth.currentUser.isAnonymous)throw new Error("Authentication required");
  if(typeof input?.schoolAdminUid!=="string" || input.schoolAdminUid!==auth.currentUser.uid)throw new Error("Spark bootstrap only supports the authenticated platform admin as initial school admin");
  if(typeof doc!=="function" || typeof writeBatch!=="function")throw new TypeError("Firestore Web SDK adapters required");
- const {school,membership}=prepareSparkSchoolBootstrap(input);
+ const {school,membership,iemisReservation}=prepareSparkSchoolBootstrap(input);
  const batch=writeBatch(firestore);
+ batch.set(doc(firestore,"v47_iemis_index",school.iemisCode),iemisReservation);
  batch.set(doc(firestore,"schools",school.schoolId),school);
  batch.set(doc(firestore,"schools",school.schoolId,"members",membership.uid),membership);
  await batch.commit();
