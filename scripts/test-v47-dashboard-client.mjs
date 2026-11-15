@@ -31,4 +31,14 @@ for(const dashboard of [
  await assert.rejects(malformed.loadSchool("school_A001"),/Invalid dashboard response/);
 }
 assert.throws(()=>createV47DashboardClient({getIdToken:async()=>"",fetchImpl:async()=>{},endpoint:"https://evil.example/api"}),/Same-origin/);
+let finish;
+const slow=createV47DashboardClient({
+ getIdToken:async()=>"token",
+ fetchImpl:async()=>({ok:true,json:()=>new Promise(resolve=>{finish=()=>resolve({dashboard:{schoolId:"school_A001",schoolName:"A",roles:["viewer"],readOnly:true}});})})
+});
+const pending=slow.loadSchool("school_A001");
+await new Promise(resolve=>setImmediate(resolve));
+slow.clearPending();
+finish();
+await assert.rejects(pending,/School selection changed/);
 console.log("V47 browser dashboard client tests passed");
