@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import {activateSparkSchool} from "../src/v47/spark-school-activation.mjs";
+let writes=[];
+const doc=(_db,...parts)=>parts.join("/");
+const updateDoc=async(path,data)=>{writes.push({path,data});};
+const args={auth:{currentUser:{uid:"root"}},firestore:{},doc,updateDoc,projectId:"smss-exam-portal-v47",schoolId:"school_A001"};
+await assert.rejects(activateSparkSchool({...args,projectId:"exam-portal-smss-95016"}),/V47 staging/);
+await assert.rejects(activateSparkSchool({...args,auth:{currentUser:null}}),/Authentication/);
+await assert.rejects(activateSparkSchool({...args,schoolId:"bad"}),/Invalid immutable school ID/);
+assert.deepEqual(await activateSparkSchool(args),{schoolId:"school_A001",status:"active"});
+assert.deepEqual(writes,[{path:"schools/school_A001",data:{status:"active"}}]);
+console.log("V47 Spark school activation unit checks passed");
