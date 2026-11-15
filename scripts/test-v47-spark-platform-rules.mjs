@@ -56,7 +56,7 @@ try{
  await assertFails(other.doc("schools/school_A001/members/other").set({uid:"other",schoolId:"school_A001",roles:["school_admin"],active:true}));
  await assertFails(trusted.doc("schools/school_A001/members/other").set({uid:"other",schoolId:"school_A001",roles:["viewer","school_admin"],active:true}));
  await assertFails(trusted.doc("schools/school_A001/members/other").set({uid:"other",schoolId:"school_A001",roles:["school_admin"],active:true}));
- await assertSucceeds(trusted.doc("schools/school_A001/members/trusted").set({uid:"trusted",schoolId:"school_A001",roles:["school_admin"],active:true}));
+ await assertFails(trusted.doc("schools/school_A001/members/trusted").set({uid:"trusted",schoolId:"school_A001",roles:["school_admin"],active:true}));
  await assertFails(other.doc("schools/school_A001/members/other").update({roles:["viewer"]}));
  assert.equal((await trusted.doc("platform_admins/trusted").get()).data().active,true);
  console.log("V47 Spark self-only platform admin rules emulator checks passed");
