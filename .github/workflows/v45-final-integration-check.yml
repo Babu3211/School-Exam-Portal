@@ -40,6 +40,21 @@ jobs:
               'docs/V46-FEATURE-DIFFERENCE-AUDIT.md', 'docs/V46-SINGLE-SOURCE-OF-TRUTH.md', 'docs/V46-PRODUCTION-RELEASE-ROLLBACK-CHECKLIST.md', 'docs/V46-FREE-FIRESTORE-BACKUP-PLAN.md', 'docs/V46-MOBILE-ONLY-FREE-RELEASE-HANDOFF.md',
               'package.json', 'scripts/test-firestore-rules.mjs', 'scripts/test-iemis-entry.mjs'})
             allowed.update(p for p in changed if p.startswith('scripts/test-v46-') and p.endswith('.mjs'))
+          # This school-authorized IEMIS verification branch has a separate,
+          # exact file scope. All dashboard, permission and emulator checks below
+          # still run; other branches retain the existing source freeze.
+          if os.environ.get('GITHUB_HEAD_REF')=='fix/iemis-class6-2083-term-sheets' or os.environ.get('GITHUB_REF_NAME')=='fix/iemis-class6-2083-term-sheets':
+            allowed.update({'docs/IEMIS-PARITY-AUDIT.md', 'iemis-ledger.js',
+              'iemis-entry.js', 'scripts/fixtures/iemis-entry.html',
+              'scripts/fixtures/iemis-layout.html', 'scripts/test-iemis-ledger.mjs', 'sw.js'})
+            # Companion files may only receive the matching module/cache version.
+            for path in ['iemis-entry.js', 'scripts/fixtures/iemis-entry.html', 'scripts/fixtures/iemis-layout.html', 'sw.js']:
+              before=subprocess.check_output(['git','show','origin/main:'+path],text=True)
+              after=open(path).read()
+              expected=before.replace('20261109-legacy2','20261115-class6-ledger')
+              if path=='sw.js':
+                expected=expected.replace('smss-pwa-v51-network-refresh-20261110','smss-pwa-v51-class6-ledger-20261115')
+              assert after==expected, f'Unexpected behavioral change in protected companion file: {path}'
           unexpected=changed-allowed
           assert not unexpected, f'Unexpected changes to protected V44/IEMIS files: {sorted(unexpected)}'
           print('Approved dashboard and IEMIS source files remain protected.')
@@ -68,6 +83,8 @@ jobs:
           node scripts/test-attendance-bs-today.mjs
           node scripts/test-v45-ui.mjs
           node scripts/test-dropdown-language.mjs
+      - name: IEMIS calculation and entry regression
+        run: npm run test:iemis
       - name: Preserve question paper and PWA behavior
         run: |
           npm run test:question-paper
