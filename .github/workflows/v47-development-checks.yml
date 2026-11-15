@@ -56,6 +56,9 @@ jobs:
           npm run test:v46-marks-class-alias-queries
           npm run test:v46-attendance-load-failure
           npm run test:v46-marks-load-failure
+      - name: V47 Spark platform-admin Firestore emulator authorization
+        if: success() || failure()
+        run: npx firebase emulators:exec --project v47-spark-platform-rules-test --only firestore --config firebase.v47.emulator.json "node scripts/test-v47-spark-platform-rules.mjs"
       - name: V47 Spark platform-admin read-only identity test
         if: success() || failure()
         run: node scripts/test-v47-spark-platform-admin.mjs
