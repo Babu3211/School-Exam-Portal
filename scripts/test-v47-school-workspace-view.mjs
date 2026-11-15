@@ -207,10 +207,12 @@ const pendingButton=pendingPanel.children[12];
 const firstPendingSave=pendingButton.onclick();
 await pendingOpen.onclick();
 assert.equal(pendingButton.disabled,true,"Reopening school cannot unlock pending student save");
+for(const index of [8,9,10,11])assert.equal(pendingPanel.children[index].disabled,true,"Reopening school cannot unlock student fields during pending save");
 await pendingButton.onclick();
 releasePendingWrite();await firstPendingSave;
 assert.equal(pendingWriteCount,1,"Reopening school must not duplicate pending save");
 assert.equal(pendingButton.disabled,false,"Save unlocks after pending request settles for authorized school");
+for(const index of [8,9,10,11])assert.equal(pendingPanel.children[index].disabled,false,"Authorized student fields unlock after pending save settles");
 pendingView.dispose();
 
 console.log("V47 isolated school workspace browser view tests passed");
