@@ -87,11 +87,13 @@ const fmt=v=>v===null||v===undefined?'—':String(Number(Number(v).toFixed(2)));
 export function iemisLedger({mode='number',classNo,annual=false,academicYear='',term='',subjects,students,records,examId,schoolName,schoolCode,creditFor=()=>null,label=s=>s,componentsFor=()=>[],applicable=()=>true}) {
   const e=iemisEscape,primary=classNo<=5;
   const verifiedSixTerm=Number(classNo)===6&&!annual&&/^2083(?:\D|$)/.test(String(academicYear).replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)))&&['first','second'].includes(term);
+  const verifiedNineTerm=mode==='grade'&&Number(classNo)===9&&!annual&&/^2083(?:\D|$)/.test(String(academicYear).replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)))&&['first','second'].includes(term);
+  const verifiedSingleTerm=verifiedSixTerm||verifiedNineTerm;
   const legacyTheory=iemisLegacyTheory(classNo,records,{examId});
   subjects=iemisSubjects(subjects,verifiedSixTerm&&term==='first'&&mode==='number'?'grade':mode,classNo,{legacyTheory});
   const grade=mode==='grade',entry=mode==='entry';
   const identity=entry?['S.N','Student Name','Regd. No.','Symbol No.']:grade?['S.No.','School Name','School Code','Student Name','Dob','Father Name','Mother Name','Symbol Number']:['S.No.','School Name','School Code','Student Name','Symbol Number'];
-  const cols=subjects.map(s=>entry?['IsAbsent',...componentsFor(s).map(c=>c.label||c.name)]:(primary||verifiedSixTerm)?[]:grade?(annual?['IN','TH','Total']:['IN','Total']):(annual?['IN','TH']:['IN']));
+  const cols=subjects.map(s=>entry?['IsAbsent',...componentsFor(s).map(c=>c.label||c.name)]:(primary||verifiedSingleTerm)?[]:grade?(annual?['IN','TH','Total']:['IN','Total']):(annual?['IN','TH']:['IN']));
   const two=cols.some(c=>c.length);
   const head='<tr>'+identity.map(t=>`<th${two?' rowspan="2"':''}>${e(t)}</th>`).join('')+subjects.map((s,i)=>`<th${cols[i].length?` colspan="${cols[i].length}"`:two?' rowspan="2"':''}>${e(label(s))}</th>`).join('')+(grade?`<th${two?' rowspan="2"':''}>Final GPA</th>`:'')+'</tr>'+(two?'<tr>'+cols.flatMap(cs=>cs.map(c=>'<th>'+e(c)+'</th>')).join('')+'</tr>':'');
   const body=students.map((st,index)=>{
@@ -105,13 +107,13 @@ export function iemisLedger({mode='number',classNo,annual=false,academicYear='',
       if(!applicable(st,sub))return `<td colspan="${cols[i].length||1}">N/A</td>`;
       const record=records.find(r=>r.studentId===st.id&&r.examId===examId&&iemisSubjectKey(r.subject)===iemisSubjectKey(sub));
       const legacyRecord=iemisLegacyTheory(classNo,record?[record]:[]);
-      const summary=iemisSummary(record,{annual,primary:primary&&!legacyRecord});summaries.push({summary,creditHour:creditFor(sub)});
+      const summary=iemisSummary(record,{annual,primary:primary&&!legacyRecord});summaries.push({summary,creditHour:Number(creditFor(sub))*(verifiedNineTerm?summary.inFull/100:1)});
       if(entry)return '<td>'+(!record?'—':record.isAbsent?'Yes':'No')+'</td>'+componentsFor(sub).map(c=>{const score=record?.scores?.find(s=>String(s.name).toLowerCase()===String(c.name).toLowerCase()||(c.key&&iemisComponentKey(s.name)===c.key));const value=c.readonly?score?.fullMarks:score?.obtained;return '<td>'+e(value??'—')+'</td>';}).join('');
       if(record?.isAbsent)return `<td colspan="${cols[i].length||1}">Abs</td>`;
-      const vals=verifiedSixTerm?[grade?summary.totalGrade?.grade:summary.obtained]:primary?[legacyRecord?(grade?summary.theoryGrade?.grade:summary.theoryObtained):(grade?summary.totalGrade?.grade:summary.obtained)]:grade?[summary.inGrade?.grade,...(annual?[summary.theoryGrade?.grade]:[]),summary.totalGrade?.grade]:[summary.inObtained,...(annual?[summary.theoryObtained]:[])];
+      const vals=verifiedSingleTerm?[grade?summary.totalGrade?.grade:summary.obtained]:primary?[legacyRecord?(grade?summary.theoryGrade?.grade:summary.theoryObtained):(grade?summary.totalGrade?.grade:summary.obtained)]:grade?[summary.inGrade?.grade,...(annual?[summary.theoryGrade?.grade]:[]),summary.totalGrade?.grade]:[summary.inObtained,...(annual?[summary.theoryObtained]:[])];
       return vals.map(v=>'<td>'+e(v==null?'—':typeof v==='number'?fmt(v):v)+'</td>').join('');
     }).join('');
-    const gpa=grade?iemisGpa(summaries,{annual,primary:(primary&&!rowLegacy)||verifiedSixTerm}):null;
+    const gpa=grade?iemisGpa(summaries,{annual,primary:(primary&&!rowLegacy)||verifiedSingleTerm}):null;
     return '<tr>'+ids.map(v=>'<td>'+e(v)+'</td>').join('')+cells+(grade?'<td>'+(gpa===null?'—':gpa.toFixed(2))+'</td>':'')+'</tr>';
   }).join('');
   return {head,body,subjects};
