@@ -8,12 +8,15 @@ const root=resolve(import.meta.dirname,"..");
 const output=join(root,"dist","v47-spark");
 const expectedProject="smss-exam-portal-v47";
 const expectedDomain=expectedProject+".firebaseapp.com";
-const page="prototypes/v47/spark-school-registration.html";
-const html=await readFile(join(root,page),"utf8");
-if(!html.includes('<script type="module">'))throw new Error("Missing V47 module entry");
-const imports=[...html.matchAll(/from\s+["'](\.\.\/\.\.\/src\/v47\/[^"']+\.mjs)["']/g)]
- .map(match=>match[1].replace(/^\.\.\/\.\.\//,""));
-if(imports.length===0)throw new Error("No V47 browser modules found");
+const pages=["prototypes/v47/spark-school-registration.html","prototypes/v47/spark-school-workspace.html"];
+const htmlPages=await Promise.all(pages.map(async page=>({page,html:await readFile(join(root,page),"utf8")})));
+const imports=htmlPages.flatMap(({page,html})=>{
+ if(!html.includes('<script type="module">'))throw new Error("Missing V47 module entry: "+page);
+ const paths=[...html.matchAll(/from\s+["'](\.\.\/\.\.\/src\/v47\/[^"']+\.mjs)["']/g)]
+  .map(match=>match[1].replace(/^\.\.\/\.\.\//,""));
+ if(!paths.length)throw new Error("No V47 browser modules found: "+page);
+ return paths;
+});
 const visited=new Set();
 async function include(path){
  if(visited.has(path))return;
@@ -53,7 +56,9 @@ for(const path of imports)await include(path);
  await mkdir(join(output,"prototypes","v47"),{recursive:true});
 const loader='<script src="./spark-config.js"></script>';
  // When no config was supplied, keep the prototype disconnected and show its existing error.
- const htmlWithLoader=configRaw?html.replace('<script type="module">',loader+'<script type="module">'):html;
- await writeFile(join(output,page),htmlWithLoader);
-await writeFile(join(output,"index.html"),`<!doctype html><meta charset="utf-8"><title>SMSS V47 Staging</title><p>V47 Spark staging preview. Firebase configuration must be explicitly provided for the isolated V47 project.</p><a href="/prototypes/v47/spark-school-registration.html">Open registration prototype</a>`);
+ for(const {page,html} of htmlPages){
+  const htmlWithLoader=configRaw?html.replace('<script type="module">',loader+'<script type="module">'):html;
+  await writeFile(join(output,page),htmlWithLoader);
+ }
+await writeFile(join(output,"index.html"),`<!doctype html><meta charset="utf-8"><title>SMSS V47 Staging</title><p>V47 Spark staging preview. Firebase configuration must be explicitly provided for the isolated V47 project.</p><a href="/prototypes/v47/spark-school-registration.html">Open registration prototype</a><p><a href="/prototypes/v47/spark-school-workspace.html">Open read-only school workspace</a></p>`);
 console.log("Built isolated V47 Spark preview:",visited.size,"browser modules; no deployment");
