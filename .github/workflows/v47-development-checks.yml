@@ -67,6 +67,8 @@ jobs:
           test ! -e dist/v47-spark/sw.js
           test -f dist/v47-spark/prototypes/v47/spark-school-registration.html
           grep -q 'schoolSnapshot.data()?.status!=="active"' dist/v47-spark/prototypes/v47/spark-school-registration.html
+          grep -q 'Membership starts only after that user signs in and accepts' dist/v47-spark/prototypes/v47/spark-school-registration.html
+          grep -q 'Sign out failed. Please retry.' dist/v47-spark/prototypes/v47/spark-school-registration.html
       - name: V46 existing exam portal regression suite (read-only)
         if: success() || failure()
         run: |
