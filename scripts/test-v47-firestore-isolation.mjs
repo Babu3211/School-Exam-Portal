@@ -63,6 +63,13 @@ try {
  await assertFails(setDoc(doc(admin,"schools",schoolA,"assignments","admin_9"),{...assignment,uid:"adminA"}));
  await assertFails(setDoc(doc(admin,"schools",schoolA,"assignments","badTerm"),{...assignment,terms:["fourth"]}));
  await assertFails(setDoc(doc(admin,"schools",schoolA,"assignments","newTeacher_9"),{...assignment,classId:"10"}));
+ const assignedSubject=env.authenticatedContext("newTeacher").firestore();
+ const assignedMark={schoolId:schoolA,classId:"9",subjectId:"computer",studentId:"student1",term:"first",score:32};
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"assignments","newTeacher_9_computer"),assignment));
+ await assertSucceeds(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_m1"),assignedMark));
+ await assertFails(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_m2"),{...assignedMark,subjectId:"math"}));
+ await assertFails(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_m3"),{...assignedMark,term:"second"}));
+ await assertFails(setDoc(doc(assignedSubject,"schools",schoolB,"marks","assigned_m4"),{...assignedMark,schoolId:schoolB}));
  await assertFails(setDoc(doc(root,"schools","school_C001"),{name:"No direct client onboarding"}));
  await assertSucceeds(getDoc(doc(root,"schools",schoolA)));
  await assertFails(getDoc(doc(root,"schools",schoolA,"students","student1")));
