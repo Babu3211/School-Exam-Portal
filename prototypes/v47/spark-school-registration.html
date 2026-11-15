@@ -62,6 +62,8 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
      assignmentForm.elements.namedItem("schoolId").value=schoolId;
      assignmentForm.elements.namedItem("uid").value=memberDoc.id;
      assignmentForm.elements.namedItem("kind").value=data.roles[0];
+     assignmentForm.elements.namedItem("subjectId").required=data.roles[0]==="subject_teacher";
+     if(data.roles[0]==="class_teacher")assignmentForm.elements.namedItem("subjectId").value="";
      assignmentForm.scrollIntoView({behavior:"smooth",block:"start"});
     });
     item.append(" ",assign);
@@ -130,6 +132,8 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
   try{
    const data=new FormData(assignmentForm),input=Object.fromEntries(data.entries());
    input.terms=data.getAll("terms");
+   if(input.kind==="subject_teacher" && !input.subjectId){say("Subject ID is required for Subject Teacher.");return;}
+   if(input.kind==="class_teacher")input.subjectId="";
    if(!managementAllowed(input))throw new Error("Verify school admin first");
    const result=await createSparkTeacherAssignment({auth,firestore,doc,setDoc,projectId:app.options.projectId,...input});
    say("Assignment created: "+result.assignmentId+" for class "+result.classId);
