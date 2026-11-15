@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const html=readFileSync(new URL("../prototypes/v47/spark-school-workspace.html",import.meta.url),"utf8");
+assert.match(html,/const PAGE_SIZE=20;/);
+assert.match(html,/Promise\.all\(kinds\.map\(kind=>getDocs\(query\(collection\(db,schoolCollectionPath\(schoolId,kind\)\),limit\(20\)\)\)\)\)/);
+assert.match(html,/startAfter\(cursor\),limit\(PAGE_SIZE\)/);
+assert.match(html,/Load next 20/);
+assert.match(html,/memberCheck\.data\(\)\.active!==true/);
+assert.match(html,/schoolCheck\.data\(\)\.status!=="active"/);
+assert.match(html,/token!==epoch \|\| auth\.currentUser\?\.uid!==user\.uid/);
+assert.doesNotMatch(html,/collection\(db,["']students["']\)/);
+console.log("V47 school pagination remains tenant-scoped, bounded and access-checked");
