@@ -15,5 +15,5 @@ await assert.rejects(bootstrapSparkSchool({auth:{currentUser:null},projectId:"sm
 await assert.rejects(bootstrapSparkSchool({auth:{currentUser:{uid:"admin"}},projectId:"smss-exam-portal-v47",input:{...input,schoolAdminUid:"other"},firestore:{},doc,writeBatch}),/authenticated platform admin/);
 const result=await bootstrapSparkSchool({auth:{currentUser:{uid:"admin"}},projectId:"smss-exam-portal-v47",input,firestore:{},doc,writeBatch});
 assert.equal(result.status,"pending");assert.equal(commits,1);
-assert.deepEqual(writes.map(w=>w.path),["schools/school_A001","schools/school_A001/members/admin"]);
+assert.deepEqual(writes.map(w=>w.path),["v47_iemis_index/123456","schools/school_A001","schools/school_A001/members/admin"]);
 console.log("V47 Spark atomic school bootstrap unit tests passed");
