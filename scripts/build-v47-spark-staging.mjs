@@ -6,6 +6,8 @@ import {mkdir,copyFile,readFile,writeFile,rm} from "node:fs/promises";
 import {resolve,dirname,join} from "node:path";
 const root=resolve(import.meta.dirname,"..");
 const output=join(root,"dist","v47-spark");
+const expectedProject="smss-exam-portal-v47";
+const expectedDomain=expectedProject+".firebaseapp.com";
 const page="prototypes/v47/spark-school-registration.html";
 const html=await readFile(join(root,page),"utf8");
 const imports=[...html.matchAll(/from\s+["'](\.\.\/\.\.\/src\/v47\/[^"']+\.mjs)["']/g)]
@@ -27,7 +29,25 @@ async function include(path){
 }
 await rm(output,{recursive:true,force:true});
 for(const path of imports)await include(path);
-await mkdir(join(output,"prototypes","v47"),{recursive:true});
-await copyFile(join(root,page),join(output,page));
+// An optional public Firebase Web config is accepted only for the isolated V47 project.
+ // No config means the page stays safely disabled rather than connecting to V46.
+ const configRaw=process.env.V47_SPARK_WEB_CONFIG;
+ if(configRaw){
+  let config;
+  try{config=JSON.parse(configRaw);}catch{throw new Error("Invalid V47_SPARK_WEB_CONFIG JSON");}
+  if(!config || typeof config!=="object" || Array.isArray(config) ||
+     config.projectId!==expectedProject || config.authDomain!==expectedDomain ||
+     typeof config.apiKey!=="string" || !config.apiKey.trim() ||
+     typeof config.appId!=="string" || !config.appId.trim())
+    throw new Error("V47 Web config must match the isolated project and contain apiKey/appId");
+  const json=JSON.stringify(config).replaceAll("<","\\u003c");
+  await writeFile(join(output,"prototypes","v47","spark-config.js"),
+   "window.__SMSS_V47_SPARK_CONFIG__ = "+json+";\\n");
+ }
+ await mkdir(join(output,"prototypes","v47"),{recursive:true});
+const loader='<script src="./spark-config.js"></script>';
+ // When no config was supplied, keep the prototype disconnected and show its existing error.
+ const htmlWithLoader=configRaw?html.replace('<script type="module">',loader+'<script type="module">'):html;
+ await writeFile(join(output,page),htmlWithLoader);
 await writeFile(join(output,"index.html"),`<!doctype html><meta charset="utf-8"><title>SMSS V47 Staging</title><p>V47 Spark staging preview. Firebase configuration must be explicitly provided for the isolated V47 project.</p><a href="/prototypes/v47/spark-school-registration.html">Open registration prototype</a>`);
 console.log("Built isolated V47 Spark preview:",visited.size,"browser modules; no deployment");
