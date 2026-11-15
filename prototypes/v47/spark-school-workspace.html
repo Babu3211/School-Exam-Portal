@@ -39,7 +39,16 @@ else{
     if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
     const section=document.createElement("section"),heading=document.createElement("h3"),list=document.createElement("ul");
     heading.textContent=kind+" (up to 20 records)";section.append(heading);
-    for(const record of result.docs){const li=document.createElement("li");li.textContent=record.id;list.append(li);}
+    for(const record of result.docs){
+     const data=record.data(),li=document.createElement("li");
+     const label=kind==="students" ? (data.nameEnglish||data.englishName||data.name||data.studentName) :
+       kind==="classes" ? (data.name||data.className||data.label) :
+       kind==="subjects" ? (data.name||data.subjectName||data.label) :
+       (data.name||data.examName||data.title);
+     const safeLabel=typeof label==="string" && label.trim()?label.trim().slice(0,120):record.id;
+     li.textContent=safeLabel===record.id?record.id:safeLabel+" ("+record.id+")";
+     list.append(li);
+    }
     if(result.empty){const li=document.createElement("li");li.textContent="No records";list.append(li);}
     section.append(list);staged.push(section);
    }
