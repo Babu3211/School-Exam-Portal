@@ -17,7 +17,7 @@ export function mountV47FirebaseWorkspace({root,document,auth,fetchImpl,subscrib
  try {
   unsubscribe=subscribeAuthState(auth,user=>{
    const uid=user?.uid ?? null;
-   if(initial){initial=false;if(uid===lastUser){if(uid)void view.loadSchools();return;}}
+   if(initial){initial=false;if(uid===lastUser)return;}
    if(uid!==lastUser){lastUser=uid;view.clearSession();if(uid)void view.loadSchools();}
   });
   if(typeof unsubscribe!=="function")throw new TypeError("Unsubscribe function required");
