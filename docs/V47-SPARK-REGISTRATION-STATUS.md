@@ -11,7 +11,7 @@
 ## Not yet operational
 - Firebase project currently retains deny-all client Firestore rules; development rules have **not** been deployed.
 - Browser prototype is not hosted and does not yet have injected Firebase web configuration.
-- The registration design does **not** yet enforce global uniqueness of IEMIS codes. A safe index/reservation strategy and emulator tests are required before any real registration.
+- Atomic IEMIS uniqueness reservation is now implemented in the draft rules and emulator-tested; it remains **undeployed**. Check legacy index collisions and normalization policy before real registrations.
 - Creating other school admins/teachers, accepting invitations, school activation and end-to-end V46 UI integration are not yet implemented in the Spark browser flow.
 - A pending school cannot yet be activated by browser clients.
 - Firebase Spark quotas are limited; no billing is to be enabled.
