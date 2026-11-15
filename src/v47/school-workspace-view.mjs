@@ -116,7 +116,10 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   if(savingStudent || saveStudentButton.hidden || saveStudentButton.disabled || studentEditControls.some(control=>control.disabled))return;
   savingStudent=true;
   saveStudentButton.disabled=true;
-  try{return await showRows(()=>workspace.saveStudent({studentId:studentIdInput.value.trim(),mode:studentMode.value,values:Object.fromEntries([["name",studentNameInput.value.trim()],["className",studentClassInput.value.trim() ]].filter(([,value])=>value))}));}
+  const studentId=studentIdInput.value.trim();
+  const mode=studentMode.value;
+  const values=Object.fromEntries([["name",studentNameInput.value.trim()],["className",studentClassInput.value.trim()]].filter(([,value])=>value));
+  try{return await showRows(()=>workspace.saveStudent({studentId,mode,values}));}
   finally{savingStudent=false;if(!panel.hidden && !saveStudentButton.hidden && !studentEditControls.some(control=>control.disabled))saveStudentButton.disabled=false;}
  };
  recordsButton.onclick=()=>showRows(()=>workspace.readRecords({collection:recordsSelect.value,limit:100}));
