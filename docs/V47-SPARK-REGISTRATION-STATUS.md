@@ -1,20 +1,23 @@
 # V47 Spark-only registration status
 
-## Completed in development branch
-- Isolated Firebase project ID is pinned to `smss-exam-portal-v47` in the browser bootstrap module.
-- Pre-enrolled platform admin may read only their own `platform_admins/{uid}` status.
-- Only that authenticated platform admin may atomically create a pending, free-plan school and an initial `school_admin` membership for **their own UID**.
-- No client can create or edit platform admin roles, activate schools, modify subscriptions, or update memberships after creation.
-- Browser registration prototype: `prototypes/v47/spark-school-registration.html`.
-- Firestore rules emulator tests: `scripts/test-v47-spark-platform-rules.mjs`.
+## Implemented in V47 development (not deployed)
+- Firebase Web SDK is restricted to the separate `smss-exam-portal-v47` project.
+- Existing active platform admin can atomically register a pending free-plan school, reserve its IEMIS code, and become its initial school admin.
+- Platform admin can activate pending schools; emulator tests cover authorization and isolation.
+- An active school admin can enroll a limited single-role viewer, subject teacher, or class teacher using a target Auth UID; the Firestore rules prohibit delegated school-admin creation.
+- School admin can assign an existing active teacher to a class and exam terms; subject-teacher assignments use `uid_class_subject` and class-teacher assignments use `uid_class`, matching marks and attendance authorization rules.
+- School admin can toggle `active` for an existing limited-role teacher/viewer. Membership role, UID and school ID are immutable; no deletion or school-admin deactivation is permitted.
+- The isolated browser prototype `prototypes/v47/spark-school-registration.html` contains login, registration, activation, member enrollment, assignment and access status forms.
+- Firestore emulator tests and Web SDK adapter tests run in `.github/workflows/v47-development-checks.yml`. CI passing does **not** establish production readiness.
 
-## Not yet operational
-- Firebase project currently retains deny-all client Firestore rules; development rules have **not** been deployed.
-- Browser prototype is not hosted and does not yet have injected Firebase web configuration.
-- Atomic IEMIS uniqueness reservation is now implemented in the draft rules and emulator-tested; it remains **undeployed**. Check legacy index collisions and normalization policy before real registrations.
-- Creating other school admins/teachers, accepting invitations, school activation and end-to-end V46 UI integration are not yet implemented in the Spark browser flow.
-- A pending school cannot yet be activated by browser clients.
-- Firebase Spark quotas are limited; no billing is to be enabled.
+## Remaining blockers
+- V47 Firebase project's deployed Firestore rules are still deny-all. Draft `firestore.v47.prototype.rules` are **not deployed**.
+- Prototype is not hosted, has no deployed Firebase Web config, and is not a complete production school UI.
+- Existing Auth UID must be supplied for teacher/viewer enrollment. No safe invitation acceptance, account provisioning, or consent workflow exists yet.
+- Assignment form is currently shown to any signed-in user; Firestore rules reject unauthorized writes, but the UI should hide it for non-admins.
+- V46 feature parity, IEMIS 2083 end-to-end comparisons, school onboarding and browser/device testing remain incomplete.
+- Validate IEMIS code normalization, index migration, member lifecycle and real-school security before deploying draft rules.
+- Stay on Firebase Spark free plan. Do not enable billing or paid services.
 
 ## Release policy
-Do not publish these rules or register real schools until IEMIS uniqueness, membership isolation, role authorization, browser configuration, emulator tests, and V46 feature parity have been independently verified. Do not deploy to V46 production.
+Do not publish V47 rules or onboard real schools until security, migration, V46 parity and end-to-end tests pass. Do not modify or deploy V46 production without explicit permission.
