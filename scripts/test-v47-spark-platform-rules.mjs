@@ -31,6 +31,15 @@ try{
  await assertFails(trusted.doc("schools/school_A001").set({...school,status:"active"}));
  await assertFails(trusted.doc("schools/school_A001").set({...school,annualFeeNpr:100}));
  await assertSucceeds(trusted.doc("schools/school_A001").set(school));
+ const atomicSchool={...school,schoolId:"school_C001"};
+ const atomicBatch=trusted.batch();
+ atomicBatch.set(trusted.doc("schools/school_C001"),atomicSchool);
+ atomicBatch.set(trusted.doc("schools/school_C001/members/other"),{uid:"other",schoolId:"school_C001",roles:["school_admin"],active:true});
+ await assertSucceeds(atomicBatch.commit());
+ const hostileBatch=other.batch();
+ hostileBatch.set(other.doc("schools/school_D001"),{...school,schoolId:"school_D001"});
+ hostileBatch.set(other.doc("schools/school_D001/members/other"),{uid:"other",schoolId:"school_D001",roles:["school_admin"],active:true});
+ await assertFails(hostileBatch.commit());
  await assertFails(trusted.doc("schools/school_A001").update({status:"active"}));
  await assertFails(other.doc("schools/school_A001/members/other").set({uid:"other",schoolId:"school_A001",roles:["school_admin"],active:true}));
  await assertFails(trusted.doc("schools/school_A001/members/other").set({uid:"other",schoolId:"school_A001",roles:["viewer","school_admin"],active:true}));
