@@ -1,3 +1,4 @@
+import {createV46BrowserTenantGateway} from "../src/v47/v46-browser-tenant-gateway.mjs";
 import assert from "node:assert/strict";
 import {createV46FeatureBridge,V46_REUSED_FEATURES} from "../src/v47/v46-feature-bridge.mjs";
 const paths=[];
@@ -55,4 +56,23 @@ assert.equal(typeof implementations.marks,"function"); // Existing implementatio
 assert.throws(()=>createV46FeatureBridge({session:{schoolId:"school_A001",roles:["viewer","school_admin"]},legacyFeatures:implementations,tenantGateway:gateway}));
 assert.throws(()=>createV46FeatureBridge({session:{schoolId:"school_A001",roles:["viewer"]},legacyFeatures:{},tenantGateway:gateway}),/Missing V46 feature/);
 assert.equal(paths.length,V46_REUSED_FEATURES.length*3);
+const firestoreCalls=[];
+const browserGateway=createV46BrowserTenantGateway({
+ db:{},verifiedSchoolId:"school_A001",
+ collectionFn:(_db,...parts)=>{firestoreCalls.push(parts.join("/"));return parts.join("/");},
+ docFn:(_db,...parts)=>{firestoreCalls.push(parts.join("/"));return parts.join("/");},
+ queryFn:(ref,lim)=>({ref,lim}),limitFn:n=>n,
+ getDocsFn:async()=>({docs:[{id:"one",data:()=>({className:"1"})}]}),
+ getDocFn:async()=>({exists:()=>true,id:"one",data:()=>({name:"Student"})})
+});
+const tenantCollection=browserGateway.forCollection("schools/school_A001/students");
+assert.deepEqual(await tenantCollection.list(),[{id:"one",className:"1"}]);
+assert.deepEqual(await tenantCollection.get("one"),{id:"one",name:"Student"});
+assert.deepEqual(firestoreCalls,["schools/school_A001/students","schools/school_A001/students/one"]);
+assert.throws(()=>browserGateway.forCollection("schools/school_B001/students"),/cross-school/);
+assert.throws(()=>browserGateway.forCollection("students"),/cross-school/);
+assert.throws(()=>browserGateway.forCollection("schools/school_A001/unreviewed"),/Unreviewed/);
+await assert.rejects(()=>tenantCollection.list({pageSize:100}),/Page size/);
+await assert.rejects(()=>tenantCollection.get("../other"),/Invalid document ID/);
+assert.equal(typeof tenantCollection.save,"undefined");
 console.log("V47 V46 feature reuse bridge contract tests passed");
