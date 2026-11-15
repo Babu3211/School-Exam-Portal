@@ -33,7 +33,12 @@ try{
  const firstBatch=trusted.batch();
  firstBatch.set(trusted.doc("v47_iemis_index/123456"),{schoolId:"school_A001",iemisCode:"123456"});
  firstBatch.set(trusted.doc("schools/school_A001"),school);
+ firstBatch.set(trusted.doc("schools/school_A001/members/trusted"),{uid:"trusted",schoolId:"school_A001",roles:["school_admin"],active:true});
  await assertSucceeds(firstBatch.commit());
+ const incompleteBatch=trusted.batch();
+ incompleteBatch.set(trusted.doc("v47_iemis_index/999888"),{schoolId:"school_E001",iemisCode:"999888"});
+ incompleteBatch.set(trusted.doc("schools/school_E001"),{...school,schoolId:"school_E001",iemisCode:"999888"});
+ await assertFails(incompleteBatch.commit());
  await assertFails(trusted.doc("v47_iemis_index/123456").update({schoolId:"school_C001"}));
  await assertFails(trusted.doc("v47_iemis_index/123456").delete());
  await assertFails(trusted.doc("schools/school_Z001").set({...school,schoolId:"school_Z001"}));
