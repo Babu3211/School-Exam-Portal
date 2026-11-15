@@ -48,6 +48,13 @@ try {
  await assertFails(setDoc(doc(admin,"schools",schoolA,"school_gallery","photo1"),{url:"unsafe"}));
 
  await assertFails(setDoc(doc(admin,"schools",schoolA,"members","adminA"),{active:true,roles:["school_admin"]}));
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"members","newViewer"),{uid:"newViewer",schoolId:schoolA,active:true,roles:["viewer"]}));
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"members","newTeacher"),{uid:"newTeacher",schoolId:schoolA,active:true,roles:["subject_teacher"]}));
+ await assertFails(setDoc(doc(admin,"schools",schoolB,"members","outsider"),{uid:"outsider",schoolId:schoolB,active:true,roles:["viewer"]}));
+ await assertFails(setDoc(doc(viewer,"schools",schoolA,"members","viewerCreated"),{uid:"viewerCreated",schoolId:schoolA,active:true,roles:["viewer"]}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"members","newAdmin"),{uid:"newAdmin",schoolId:schoolA,active:true,roles:["school_admin"]}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"members","newMixed"),{uid:"newMixed",schoolId:schoolA,active:true,roles:["viewer","subject_teacher"]}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"members","newTeacher"),{uid:"newTeacher",schoolId:schoolA,active:true,roles:["school_admin"]}));
  await assertFails(setDoc(doc(root,"schools","school_C001"),{name:"No direct client onboarding"}));
  await assertSucceeds(getDoc(doc(root,"schools",schoolA)));
  await assertFails(getDoc(doc(root,"schools",schoolA,"students","student1")));
