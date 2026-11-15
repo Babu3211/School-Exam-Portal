@@ -100,13 +100,14 @@ const adminRoot=new FakeElement("main");
 let releaseSave;
 const pendingSave=new Promise(resolve=>{releaseSave=resolve;});
 let saveRequests=0;
+let capturedSaveBody=null;
 const adminView=mountV47SchoolWorkspace({
  bsToAd:()=> "2026-04-14",adToBs:()=> "2083-01-01",root:adminRoot,document,
  getIdToken:async()=>"valid",
  fetchImpl:async (url,options)=>{
   if(url.endsWith("/schools"))return {ok:true,json:async()=>({schools:[{schoolId:"school_A001",schoolName:"School A",roles:["school_admin"]}]})};
   if(url.includes("/dashboard?"))return {ok:true,json:async()=>({dashboard:{schoolId:"school_A001",schoolName:"School A",roles:["school_admin"],readOnly:false}})};
-  if(url.endsWith("/students/write")){saveRequests++;await pendingSave;return {ok:true,json:async()=>({result:{schoolId:"school_A001",studentId:"s001"}})};}
+  if(url.endsWith("/students/write")){saveRequests++;capturedSaveBody=JSON.parse(options.body);await pendingSave;return {ok:true,json:async()=>({result:{schoolId:"school_A001",studentId:"s001"}})};}
   throw Error("Unexpected admin endpoint: "+url);
  }
 });
@@ -119,12 +120,14 @@ assert.equal(adminSave.disabled,false,"Admin can save after authorization");
 adminPanel.children[8].value="s001";
 adminPanel.children[9].value="Example";
 const firstSave=adminSave.onclick();
+adminPanel.children[9].value="Changed after click";
 const duplicateSave=adminSave.onclick();
 assert.equal(adminSave.disabled,true,"Save disabled while request pending");
 await duplicateSave;
 releaseSave();
 await firstSave;
 assert.equal(saveRequests,1,"Double-click must submit exactly once");
+assert.equal(capturedSaveBody.values.name,"Example","Save must use student fields captured at click time");
 assert.equal(adminSave.disabled,false,"Save enabled after completion");
 adminView.dispose();
 
