@@ -123,12 +123,14 @@ const firstSave=adminSave.onclick();
 adminPanel.children[9].value="Changed after click";
 const duplicateSave=adminSave.onclick();
 assert.equal(adminSave.disabled,true,"Save disabled while request pending");
+for(const index of [8,9,10,11])assert.equal(adminPanel.children[index].disabled,true,"Student form locked while save pending");
 await duplicateSave;
 releaseSave();
 await firstSave;
 assert.equal(saveRequests,1,"Double-click must submit exactly once");
 assert.equal(capturedSaveBody.values.name,"Example","Save must use student fields captured at click time");
 assert.equal(adminSave.disabled,false,"Save enabled after completion");
+for(const index of [8,9,10,11])assert.equal(adminPanel.children[index].disabled,false,"Authorized student form restored after save");
 adminView.dispose();
 
 // An in-flight write must never restore edit permission after logout.
