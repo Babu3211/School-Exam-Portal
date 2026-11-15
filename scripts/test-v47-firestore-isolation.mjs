@@ -55,6 +55,13 @@ try {
  await assertFails(setDoc(doc(admin,"schools",schoolA,"members","newAdmin"),{uid:"newAdmin",schoolId:schoolA,active:true,roles:["school_admin"]}));
  await assertFails(setDoc(doc(admin,"schools",schoolA,"members","newMixed"),{uid:"newMixed",schoolId:schoolA,active:true,roles:["viewer","subject_teacher"]}));
  await assertFails(setDoc(doc(admin,"schools",schoolA,"members","newTeacher"),{uid:"newTeacher",schoolId:schoolA,active:true,roles:["school_admin"]}));
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"members","newViewer"),{uid:"newViewer",schoolId:schoolA,active:false,roles:["viewer"]}));
+ await assertFails(getDoc(doc(env.authenticatedContext("newViewer").firestore(),"schools",schoolA,"students","student1")));
+ await assertFails(setDoc(doc(viewer,"schools",schoolA,"members","newViewer"),{uid:"newViewer",schoolId:schoolA,active:true,roles:["viewer"]}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"members","newViewer"),{uid:"newViewer",schoolId:schoolA,active:false,roles:["school_admin"]}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"members","adminA"),{active:false,roles:["school_admin"]}));
+ await assertFails(setDoc(doc(admin,"schools",schoolB,"members","viewerB"),{uid:"viewerB",schoolId:schoolB,active:false,roles:["viewer"]}));
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"members","newViewer"),{uid:"newViewer",schoolId:schoolA,active:true,roles:["viewer"]}));
  const assignment={uid:"newTeacher",schoolId:schoolA,classId:"9",kind:"subject_teacher",active:true,terms:["first","final"]};
  await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"assignments","newTeacher_9"),assignment));
  await assertFails(setDoc(doc(viewer,"schools",schoolA,"assignments","viewer_9"),{...assignment,uid:"viewerA"}));
