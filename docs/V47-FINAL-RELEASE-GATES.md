@@ -9,10 +9,11 @@
 ## Release blockers — do not label production ready until completed
 1. Provision an independent Firebase project for V47 staging (not `exam-portal-smss-95016`). Configure staging-only credentials and separate Auth/Firestore.
 2. Deploy isolated `v47-runtime/server.mjs` and `prototypes/v47/verified-workspace-staging.html` with verified BS/AD adapters; record a real HTTPS staging URL.
-3. Run real-device login/logout, two-school school chooser, school registration and admin invitation, teacher assignment, student reads/writes, marks and attendance, and viewer read-only tests against staging.
-4. Integrate **actual** V46 UI features rather than relying on the experimental `v46-feature-bridge.mjs` contract. Check grade ledger, mark ledger, grade sheet, result/CDC calculations, IEMIS 2083 layout, ECD–12, print/PDF, staff, school settings and APK/PWA.
-5. Verify all V46 Firestore collection paths and document shapes; execute read-only migration dry run with representative anonymized fixtures. Do not assume the V47 prototype marks schema matches V46.
-6. Back up data, validate rollback, obtain explicit production approval, and only then plan a separate release. Never point staging at the V46 Firebase project.
+3. Once the isolated HTTPS API exists, run the non-mutating smoke check: `V47_STAGING_API_ORIGIN=https://your-staging-host.example node scripts/test-v47-staging-smoke.mjs`. It checks anonymous access denial on registration, invitation, teacher assignment and student writes; it **cannot** verify authenticated flows or prove that staging is deployed until actually executed against a real URL.
+4. Run real-device login/logout, two-school school chooser, school registration and admin invitation, teacher assignment, student reads/writes, marks and attendance, and viewer read-only tests against staging.
+5. Integrate **actual** V46 UI features rather than relying on the experimental `v46-feature-bridge.mjs` contract. Check grade ledger, mark ledger, grade sheet, result/CDC calculations, IEMIS 2083 layout, ECD–12, print/PDF, staff, school settings and APK/PWA.
+6. Verify all V46 Firestore collection paths and document shapes; execute read-only migration dry run with representative anonymized fixtures. Do not assume the V47 prototype marks schema matches V46.
+7. Back up data, validate rollback, obtain explicit production approval, and only then plan a separate release. Never point staging at the V46 Firebase project.
 
 ## Current release decision
 **HOLD: automated development CI green; live staging, real V46 integration and data migration verification incomplete.**
