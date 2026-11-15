@@ -111,7 +111,8 @@ service cloud.firestore {
         request.resource.data.iemisCode.matches('^[A-Za-z0-9_-]{3,32}$') &&
         request.resource.data.annualFeeNpr == 0 &&
         request.resource.data.status == 'pending' &&
-        request.resource.data.subscriptionStatus == 'free';
+        request.resource.data.subscriptionStatus == 'free' &&
+        getAfter(/databases/$(database)/documents/v47_iemis_index/$(request.resource.data.iemisCode)).data.schoolId == schoolId;
     }
     function validNewSchoolMember(schoolId, uid) {
       return request.resource.data.keys().hasAll(['uid','schoolId','roles','active']) &&
@@ -124,6 +125,121 @@ service cloud.firestore {
         existsAfter(/databases/$(database)/documents/schools/$(schoolId));
     }
     // Remaining role changes require a reviewed trusted workflow.
+    match /v47_iemis_index/{iemisCode} {
+      allow get: if platformAdmin();
+      allow list: if false;
+      allow create: if platformAdmin() &&
+        iemisCode.matches('^[A-Za-z0-9_-]{3,32}
+      // Spark Web SDK: a signed-in user may read only their own bootstrap status.
+      // No client can create, update or delete platform admin privileges.
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
+    match /schools/{schoolId} {
+      allow read: if member(schoolId) || platformAdmin();
+      allow create: if platformAdmin() && validNewSchool(schoolId);
+      allow update, delete: if false;
+      match /members/{uid} {
+        allow read: if member(schoolId) && request.auth.uid == uid;
+        allow create: if platformAdmin() && validNewSchoolMember(schoolId, uid);
+        allow update, delete: if false;
+      }
+      match /subscriptions/{id} {
+        allow read: if admin(schoolId) || platformAdmin();
+        allow write: if false;
+      }
+      match /students/{id} {
+        allow read: if member(schoolId);
+        allow write: if admin(schoolId);
+      }
+      match /staff/{id} {
+        allow read: if member(schoolId);
+        allow write: if admin(schoolId);
+      }
+      // V46 school-owned reference collections: only school admins may modify.
+      match /classes/{id} {
+        allow read: if member(schoolId);
+        allow write: if admin(schoolId);
+      }
+      match /subjects/{id} {
+        allow read: if member(schoolId);
+        allow write: if admin(schoolId);
+      }
+      match /exams/{id} {
+        allow read: if member(schoolId);
+        allow write: if admin(schoolId);
+      }
+      match /mark_settings/{id} {
+        allow read: if member(schoolId);
+        allow write: if admin(schoolId);
+      }
+      match /school_settings/{id} {
+        allow read: if member(schoolId);
+        allow write: if admin(schoolId);
+      }
+      match /certificates/{id} {
+        allow read: if member(schoolId);
+        allow write: if admin(schoolId);
+      }
+      // Sensitive audit trail and role mapping: trusted server only.
+      match /audit_logs/{id} {
+        allow read: if admin(schoolId);
+        allow write: if false;
+      }
+      match /user_roles/{id} {
+        allow read: if admin(schoolId);
+        allow write: if false;
+      }
+      // Publishing is withheld until explicit public-result authorization design.
+      match /public_result_exams/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /public_result_lookup/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /public_results/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /school_gallery/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /school_public_branding/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /assignments/{id} {
+        allow read: if member(schoolId) && (admin(schoolId) || resource.data.uid == request.auth.uid);
+        allow write: if false;
+      }
+      match /marks/{id} {
+        allow read: if member(schoolId);
+        allow create: if marksShape(schoolId) && canEditMarks(schoolId);
+        allow update: if marksShape(schoolId) && unchangedMarksIdentity() && canEditMarks(schoolId);
+        allow delete: if false;
+      }
+      match /attendance/{id} {
+        allow read: if member(schoolId);
+        allow create: if attendanceShape(schoolId) && canEditAttendance(schoolId);
+        allow update: if attendanceShape(schoolId) && unchangedAttendanceIdentity() && canEditAttendance(schoolId);
+        allow delete: if false;
+      }
+      match /{document=**} { allow read, write: if false; }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+) &&
+        request.resource.data.keys().hasOnly(['schoolId','iemisCode']) &&
+        request.resource.data.keys().hasAll(['schoolId','iemisCode']) &&
+        request.resource.data.iemisCode == iemisCode &&
+        request.resource.data.schoolId is string &&
+        getAfter(/databases/$(database)/documents/schools/$(request.resource.data.schoolId)).data.iemisCode == iemisCode;
+      allow update, delete: if false;
+    }
     match /platform_admins/{uid} {
       // Spark Web SDK: a signed-in user may read only their own bootstrap status.
       // No client can create, update or delete platform admin privileges.
