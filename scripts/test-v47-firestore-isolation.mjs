@@ -53,6 +53,11 @@ try {
  await assertFails(getDoc(doc(root,"schools",schoolA,"students","student1")));
  const mark={schoolId:schoolA,classId:"9",subjectId:"computer",studentId:"student1",term:"first",score:30};
  await assertSucceeds(setDoc(doc(subject,"schools",schoolA,"marks","m1"),mark));
+ await assertSucceeds(getDoc(doc(viewer,"schools",schoolA,"marks","m1")));
+ await assertFails(getDoc(doc(outsider,"schools",schoolA,"marks","m1")));
+ await assertFails(getDoc(doc(admin,"schools",schoolB,"marks","m1")));
+ await assertFails(getDocs(collection(admin,"schools",schoolB,"marks")));
+ await assertFails(getDoc(doc(root,"schools",schoolA,"marks","m1")));
  await assertFails(setDoc(doc(subject,"schools",schoolB,"marks","m1"),{...mark,schoolId:schoolB}));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m2"),{...mark,subjectId:"math"}));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m_missing"),{...mark,studentId:"unknown"}));
@@ -68,6 +73,11 @@ try {
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m1"),{...mark,studentId:"student2"}));
  const attendance={schoolId:schoolA,classId:"9",studentId:"student1",term:"first",present:true};
  await assertSucceeds(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a1"),attendance));
+ await assertSucceeds(getDoc(doc(viewer,"schools",schoolA,"attendance","a1")));
+ await assertFails(getDoc(doc(outsider,"schools",schoolA,"attendance","a1")));
+ await assertFails(getDoc(doc(admin,"schools",schoolB,"attendance","a1")));
+ await assertFails(getDocs(collection(admin,"schools",schoolB,"attendance")));
+ await assertFails(getDoc(doc(root,"schools",schoolA,"attendance","a1")));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"attendance","a2"),attendance));
  await assertFails(setDoc(doc(viewer,"schools",schoolA,"attendance","a3"),attendance));
  await assertFails(setDoc(doc(outsider,"schools",schoolA,"attendance","a3"),attendance));
