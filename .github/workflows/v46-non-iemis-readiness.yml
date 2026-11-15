@@ -1,0 +1,60 @@
+name: V46 non-IEMIS release readiness
+on:
+  push:
+    branches:
+      - smss-v46-integration
+  pull_request:
+    branches:
+      - main
+permissions:
+  contents: read
+jobs:
+  non-iemis-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript and V44 baseline syntax
+        run: |
+          node scripts/check-inline-js.mjs
+          node --check cdc-question-paper.js
+      - name: Class, language, attendance and marks loading regressions
+        run: |
+          npm run test:v46-class-normalization
+          npm run test:v46-english-exam
+          npm run test:v46-attendance-english
+          npm run test:v46-attendance-class
+          npm run test:v46-english-dropdown-status
+          npm run test:v46-attendance-status
+          npm run test:v46-attendance-messages
+          npm run test:v46-teacher-marks-concurrency
+          npm run test:v46-teacher-attendance-concurrency
+          npm run test:v46-attendance-class-preserve
+          npm run test:v46-attendance-empty-classes
+          npm run test:v46-marks-class-preserve
+          npm run test:v46-attendance-stale-rows
+          npm run test:v46-marks-class-alias-queries
+          npm run test:v46-attendance-load-failure
+          npm run test:v46-marks-load-failure
+          node scripts/test-v46-student-load-failure.mjs
+          node scripts/test-v46-staff-exam-load-failure.mjs
+          node scripts/test-v46-class-subject-load-failure.mjs
+          node scripts/test-v46-class-subject-concurrency.mjs
+          node scripts/test-v46-idle-logout-activity.mjs
+          node scripts/test-v46-idle-logout-behavior.mjs
+          node scripts/test-v46-user-activity-security.mjs
+          node scripts/test-v46-viewer-class-exam-readonly.mjs
+          node scripts/test-v46-english-exam-term-options.mjs
+      - name: Install emulator dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: Viewer read-only Firestore rules
+        run: npm run test:viewer
+      - name: PWA, question paper and existing V45 UI
+        run: |
+          npm run test:pwa
+          npm run test:question-paper
+          npm run test:v45
+# IEMIS-specific checks intentionally remain in the existing workflows.
+# No Firebase deployment or production data writes in this workflow.

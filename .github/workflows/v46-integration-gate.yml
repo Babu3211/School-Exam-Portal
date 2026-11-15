@@ -1,0 +1,72 @@
+name: V46 integration preservation gate
+on:
+  push:
+    branches:
+      - smss-v46-integration
+  pull_request:
+    branches:
+      - main
+permissions:
+  contents: read
+jobs:
+  structural-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript syntax
+        run: |
+          node scripts/check-inline-js.mjs
+          node --check cdc-question-paper.js
+          node --check scripts/test-v46-preservation.mjs
+      - name: V46 preservation gate
+        run: npm run test:v46-preservation
+      - name: Teacher and student class normalization regression
+        run: npm run test:v46-class-normalization
+      - name: English exam dropdown preservation
+        run: npm run test:v46-english-exam
+      - name: English attendance subject dropdown preservation
+        run: npm run test:v46-attendance-english
+      - name: English attendance class dropdown preservation
+        run: npm run test:v46-attendance-class
+      - name: English dropdown status messages
+        run: npm run test:v46-english-dropdown-status
+      - name: English attendance status values preservation
+        run: npm run test:v46-attendance-status
+      - name: English attendance student selection messages
+        run: npm run test:v46-attendance-messages
+      - name: Teacher Marks Entry concurrent settings loading
+        run: npm run test:v46-teacher-marks-concurrency
+      - name: Teacher Attendance concurrent scoped loading
+        run: npm run test:v46-teacher-attendance-concurrency
+      - name: Attendance class selection preserved across reload
+        run: npm run test:v46-attendance-class-preserve
+      - name: Attendance empty class dropdown safety
+        run: npm run test:v46-attendance-empty-classes
+      - name: Teacher Marks Entry class selection preserved
+        run: npm run test:v46-marks-class-preserve
+      - name: Attendance stale student rows cleared
+        run: npm run test:v46-attendance-stale-rows
+      - name: Teacher Marks Entry exact class alias queries
+        run: npm run test:v46-marks-class-alias-queries
+      - name: Attendance failed reload clears stale students
+        run: npm run test:v46-attendance-load-failure
+      - name: Marks Entry failed reload clears stale marks
+        run: npm run test:v46-marks-load-failure
+      - name: V44 regression gate
+        run: node scripts/check-v44-requirements.mjs
+      - name: Install test dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: Firestore rules and Viewer permission emulator regression
+        run: |
+          npm run test:rules
+          npm run test:viewer
+      - name: IEMIS, PWA, question paper and V45 UI regression
+        run: |
+          npm run test:iemis
+          npm run test:pwa
+          npm run test:question-paper
+          npm run test:v45
+# No Firebase deploy or Firestore writes in this workflow.

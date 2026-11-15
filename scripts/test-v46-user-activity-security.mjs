@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const source=readFileSync(new URL('../user-activity.js',import.meta.url),'utf8');
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+assert.match(source,/const esc=s=>String\(s\?\?""\)\.replace\(/,'Dashboard must escape untrusted names and values');
+assert.match(source,/if\(!host\|\|auth\.currentUser\?\.uid!==ADMIN_UID\)return;/,'Only admin may render activity report');
+assert.match(source,/if\(user\.uid===ADMIN_UID\)return true;/,'Admin activity must remain authorized');
+assert.match(source,/role\.exists\(\)\&\&role\.data\(\)\.active===true/,'Inactive accounts must not report presence');
+assert.match(source,/activeWithin\(x\.updatedAt,120000\)/,'Stale presence must not count as online');
+assert.match(source,/setInterval\(\(\)=>\{if\(auth\.currentUser\?\.uid===user\.uid\)void presence\(user,true\);\},45000\)/,'Heartbeat must verify current signed-in user');
+assert.match(source,/async function logout\(user\)\{await writeEvent\("logout",user\);await stop\(user\);\}/,'Logout must record event and clear presence');
+assert.match(source,/const today=new Intl\.DateTimeFormat\("sv-SE",\{timeZone:"Asia\/Kathmandu"/,'Daily activity must use Nepal timezone');
+assert.match(source,/startAfter\(page\.docs\[page\.docs\.length-1\]\)/,'Daily login counts must paginate history');
+assert.match(html,/window\.renderSmssUserActivity=\(\)=>\{if\(!isAdmin\(\)\)return;/,'UI entry point must be admin-only');
+console.log('V46 admin user activity access, heartbeat, and audit safety regression passed.');

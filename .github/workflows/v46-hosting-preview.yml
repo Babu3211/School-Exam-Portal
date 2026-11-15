@@ -1,0 +1,40 @@
+name: Preview V46 Hosting without changing live
+on:
+  push:
+    branches:
+      - smss-v46-integration
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: smss-v46-hosting-preview
+  cancel-in-progress: true
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify V46 source and preserved V44/V45 behavior
+        run: |
+          node scripts/check-inline-js.mjs
+          node scripts/check-v44-requirements.mjs
+          npm run test:v46-preservation
+          npm run test:v46-class-normalization
+          npm run test:v46-english-exam
+          npm run test:pwa
+      - name: Deploy V46 to separate preview channel only
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
+          projectId: exam-portal-smss-95016
+          channelId: v46-preview
+          expires: 7d
+          entryPoint: .
+      - name: Confirm live channel was not targeted
+        run: |
+          echo 'V46 preview deployed to Firebase Hosting preview channel; production live channel was not changed by this workflow.'

@@ -1,0 +1,83 @@
+name: Release SMSS V46 Hosting (approved, gated)
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type DEPLOY-V46 after school account smoke tests, backup and rollback verification'
+        required: true
+        type: string
+      expected_commit:
+        description: 'Enter the full 40-character approved main commit SHA to prevent deploying a different revision'
+        required: true
+        type: string
+      backup_confirmation:
+        description: 'Type BACKUP-VERIFIED only after confirming an accessible production Firestore export and rollback point'
+        required: true
+        type: string
+      roles_confirmation:
+        description: 'Type ROLES-VERIFIED after real Admin, Teacher and Viewer login/read-only smoke tests'
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: smss-production-hosting
+  cancel-in-progress: false
+jobs:
+  verify-and-deploy:
+    if: ${{ github.event.inputs.confirmation == 'DEPLOY-V46' && github.event.inputs.backup_confirmation == 'BACKUP-VERIFIED' && github.event.inputs.roles_confirmation == 'ROLES-VERIFIED' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Verify approved source
+        run: |
+          test "$(git branch --show-current)" = main
+          test "${#APPROVED_SHA}" -eq 40
+          test "$(git rev-parse HEAD)" = "$APPROVED_SHA"
+          test -f scripts/test-v46-preservation.mjs
+          test -f scripts/test-v46-viewer-class-exam-readonly.mjs
+        env:
+          APPROVED_SHA: ${{ inputs.expected_commit }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: V44, V45 and V46 release gates
+        run: |
+          node scripts/check-inline-js.mjs
+          node scripts/check-v44-requirements.mjs
+          npm run test:v46-preservation
+          npm run test:viewer
+          npm run test:rules
+          npm run test:pwa
+          npm run test:question-paper
+          node scripts/test-v46-user-activity-security.mjs
+          node scripts/test-v46-viewer-class-exam-readonly.mjs
+          node scripts/test-v46-english-exam-term-options.mjs
+          node scripts/test-v46-idle-logout-behavior.mjs
+          node scripts/test-v45-final-integration.mjs
+      - name: Deploy Firebase Hosting only (never Firestore rules or school records)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
+          projectId: exam-portal-smss-95016
+          channelId: live
+          entryPoint: .
+      - name: Verify live V46 resources
+        run: |
+          set -euo pipefail
+          url=https://exam-portal-smss-95016.web.app
+          curl --fail --location --retry 5 --retry-delay 3 "$url/" -o /tmp/smss-v46-index.html
+          grep -Fq 'SMSS Exam Portal' /tmp/smss-v46-index.html
+          grep -Fq 'initIdleLogout' /tmp/smss-v46-index.html
+          grep -Fq 'subjectCatalogList' /tmp/smss-v46-index.html
+          curl --fail --location "$url/manifest.webmanifest" -o /tmp/smss-v46-manifest.json
+          node -e 'const m=require("/tmp/smss-v46-manifest.json");if(m.name!=="SMSS Exam Portal")process.exit(1)'
+# Manual production environment approval and independent school-account/backup verification are required before dispatch.

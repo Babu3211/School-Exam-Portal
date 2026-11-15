@@ -1,0 +1,48 @@
+name: Release verified SMSS V45 Firestore Rules only
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type DEPLOY-V45-RULES after production security review'
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: smss-production-firestore-rules
+  cancel-in-progress: false
+jobs:
+  verify-and-deploy-rules:
+    if: ${{ github.event.inputs.confirmation == 'DEPLOY-V45-RULES' }}
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smss-v45-final-integration
+          persist-credentials: false
+      - name: Confirm approved final source
+        run: test "$(git branch --show-current)" = 'smss-v45-final-integration'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install test dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: Validate Firestore access controls with emulator
+        run: |
+          npm run test:rules
+          npm run test:viewer
+          npx firebase emulators:exec --only firestore --project smss-v45-activity-test 'node scripts/test-user-activity-rules.mjs'
+      - name: Deploy Firestore Rules only (never modify documents)
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
+        run: |
+          set -euo pipefail
+          test -n "$FIREBASE_SERVICE_ACCOUNT_JSON"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/smss-firebase-key.json"
+          chmod 600 "$RUNNER_TEMP/smss-firebase-key.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/smss-firebase-key.json"
+          npx firebase deploy --only firestore:rules --project exam-portal-smss-95016 --non-interactive
+          rm -f "$RUNNER_TEMP/smss-firebase-key.json"
+# This release only updates Firestore security rules. It does not write or delete school data.

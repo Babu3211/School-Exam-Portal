@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const start=html.indexOf('async function loadStudents(){');
+const end=html.indexOf('\nasync function loadStaff()',start);
+assert.ok(start>=0&&end>start,'Student loader must exist');
+const fn=html.slice(start,end);
+assert.match(fn,/studentsLoaded=false;const body=/,'Reload must invalidate student readiness before Firestore query');
+assert.match(fn,/await Promise\.all\(/,'Student and class records must load concurrently');
+assert.match(fn,/cachedStudents=snap\.docs\.map/,'Successful reload must replace cached students');
+assert.match(fn,/cachedStudents=\[\];cachedClasses=\[\];studentsLoaded=false;body\.innerHTML=/,'Failed reload must discard stale student and class caches');
+assert.match(fn,/setStudentMessage\(/,'Failure must report an actionable student load error');
+console.log('V46 Student reload cache safety regression passed.');

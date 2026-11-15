@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const start=html.indexOf('async function loadAttendancePage(){');
+const end=html.indexOf('\nwindow.loadAttendancePage=loadAttendancePage;',start);
+assert.ok(start>=0&&end>start,'Attendance loader exists');
+const fn=html.slice(start,end);
+assert.ok(fn.includes('if(names.length){'),'Attendance classes must be checked before rendering');
+assert.ok(fn.includes('classSel.innerHTML=\'<option value="">No classes available</option>\';'),'Empty classes must clear stale dropdown values');
+assert.ok(fn.includes('if(same)classSel.value=same;'),'Previously selected canonical class must remain when available');
+assert.ok(fn.includes('const restoredClass=names.find(x=>canonicalStudentClass(x)===canonicalStudentClass(selectedClassBeforeLoad));'),'Teacher class restoration must remain');
+console.log('V46 Attendance empty class dropdown and selection preservation verified structurally.');

@@ -37,5 +37,7 @@ jobs:
         run: npm run test:iemis
       - name: Check PWA release upgrades and offline isolation
         run: npm run test:pwa
+      - name: Run Viewer-only and mixed-role permission tests
+        run: npm run test:viewer
       - name: Run Firestore Security Rules emulator tests
         run: npm run test:rules

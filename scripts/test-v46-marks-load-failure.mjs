@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const start=html.indexOf('async function loadMarksEntry(){');
+const end=html.indexOf('\nwindow.loadMarksEntry=loadMarksEntry;',start);
+assert.ok(start>=0&&end>start,'Marks Entry loader exists');
+const fn=html.slice(start,end);
+const fail=fn.slice(fn.indexOf('}catch(e){'));
+assert.ok(fail.includes('marksStudents=[];marksExams=[];marksSettings=[];existingMarks=[];'),'Failed reload must clear cached student/marks state');
+assert.ok(fail.includes("if(marksBody)marksBody.innerHTML='';"),'Failed reload clears stale editable marks');
+assert.ok(fail.includes('resetIemisEntryGrid();'),'Failed reload clears IEMIS grid');
+assert.ok(fail.includes('Marks Entry could not load:'),'English error feedback remains visible');
+assert.ok(fail.includes('return false;'),'Failed load must report failure');
+console.log('V46 Marks Entry failed reload stale-data guard present.');

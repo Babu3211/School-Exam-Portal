@@ -1,5 +1,7 @@
-name: Deploy approved SMSS V45 to Firebase Production
+name: ARCHIVED - V45 Firebase Production (disabled)
 
+# Archived after V46 production acceptance. Manual trigger remains visible for audit,
+# but the deployment job is permanently disabled by its false condition.
 on:
   workflow_dispatch:
     inputs:
@@ -17,11 +19,19 @@ concurrency:
 
 jobs:
   verify-and-deploy:
-    if: ${{ github.event.inputs.confirmation == 'DEPLOY-V45' }}
+    if: ${{ false }} # Archived: V45 deployment permanently gated off
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout approved V45 branch without changing V44 main
+        uses: actions/checkout@v4
+        with:
+          ref: smss-v45-work
+          persist-credentials: false
+      - name: Confirm deployed source branch
+        run: |
+          test "$(git branch --show-current)" = 'smss-v45-work'
+          git log -1 --format='%h %s'
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -32,8 +42,6 @@ jobs:
           node scripts/check-inline-js.mjs
           node --check cdc-question-paper.js
           node scripts/check-v44-requirements.mjs
-          npm run test:iemis
-          npm run test:pwa
           npm run test:question-paper
       - name: Verify Firestore rules against emulator (no production writes)
         run: npm run test:rules
@@ -56,7 +64,7 @@ jobs:
           projectId: exam-portal-smss-95016
           channelId: live
           entryPoint: .
-      - name: Smoke-test production HTML, manifest and icon
+      - name: Smoke-test production HTML, manifest and PNG icons
         run: |
           set -euo pipefail
           url=https://exam-portal-smss-95016.web.app
@@ -64,10 +72,8 @@ jobs:
           grep -Fq 'SMSS Exam Portal' /tmp/smss-index.html
           curl --fail --location "$url/manifest.webmanifest" -o /tmp/smss-manifest.json
           node -e 'const m=require("/tmp/smss-manifest.json");if(m.name!=="SMSS Exam Portal"||!m.icons.some(x=>x.src==="./icon-512.png"))process.exit(1)'
-          curl --fail --location "$url/smss-uploaded-icon.svg" -o /tmp/smss-icon.svg
-          grep -Fq '<svg' /tmp/smss-icon.svg
           for asset in icon-192.png icon-512.png apple-touch-icon.png; do
             curl --fail --location "$url/$asset" -o "/tmp/$asset"
             ASSET_PATH="/tmp/$asset" node -e 'const fs=require("node:fs");const b=fs.readFileSync(process.env.ASSET_PATH);if(b.length<100||b.subarray(0,8).toString("hex")!=="89504e470d0a1a0a")process.exit(1)'
           done
-          echo "V45 production HTML, PWA manifest, SVG and mobile PNG icons verified."
+          echo "V45 production HTML, PWA manifest and mobile PNG icons verified."

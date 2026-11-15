@@ -1,0 +1,44 @@
+name: Deploy approved Viewer Firestore Rules
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type DEPLOY-VIEWER-RULES after reviewing Viewer permission tests and production access'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smss-production-firestore-rules
+  cancel-in-progress: false
+
+jobs:
+  verify-and-deploy-rules:
+    if: ${{ github.event.inputs.confirmation == 'DEPLOY-VIEWER-RULES' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: Verify Viewer and existing Firestore security
+        run: |
+          npm run test:viewer
+          npm run test:rules
+      - name: Deploy Firestore rules only (never upload or change school data)
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
+        run: |
+          set -euo pipefail
+          test -n "$FIREBASE_SERVICE_ACCOUNT"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/smss-firebase-service-account.json"
+          chmod 600 "$RUNNER_TEMP/smss-firebase-service-account.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/smss-firebase-service-account.json"
+          npx firebase-tools deploy --only firestore:rules --project exam-portal-smss-95016 --non-interactive
+          rm -f "$RUNNER_TEMP/smss-firebase-service-account.json"

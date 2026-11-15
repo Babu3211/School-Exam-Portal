@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const start=html.indexOf('async function loadAttendancePage(){');
+assert.ok(start>=0,'Attendance loader must exist');
+const end=html.indexOf('\nasync function loadAttendanceStudentsForDay()',start);
+assert.ok(end>start,'Attendance loader boundary must exist');
+const source=html.slice(start,end);
+const preserved='<option value="${attendanceEsc(x)}">${attendanceEsc(classEnglishLabel(x))}</option>';
+assert.equal(source.split(preserved).length-1,2,'Teacher and Admin/Viewer attendance class selectors must show English while retaining original values');
+assert.ok(source.includes('canonicalStudentClass(x)===canonicalStudentClass(previousClass)'),'Preserve previously selected class across legacy labels');
+assert.ok(source.includes('where("class","==",cl)'),'Teacher Firestore query remains unchanged; security compatibility is a separate blocker');
+console.log('V46 Attendance English class labels preserve original class values for both role paths.');

@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const start=html.indexOf('async function loadAttendancePage(){');
+const end=html.indexOf('\nwindow.loadAttendancePage=loadAttendancePage;',start);
+assert.ok(start>=0&&end>start,'Attendance loader must exist');
+const fn=html.slice(start,end);
+assert.ok(fn.includes('const [studentSnaps,attendanceSnaps]=await Promise.all(['),'Teacher student and attendance queries must execute concurrently');
+assert.ok(fn.includes('where("class","==",cl)'),'Student reads remain scoped by class');
+assert.ok(fn.includes('where("className","==",cl),where("attendanceType","==","daily")'),'Attendance reads remain scoped to class and daily type');
+assert.ok(fn.includes('ss={docs:studentSnaps.flatMap(x=>x.docs)};as={docs:attendanceSnaps.flatMap(x=>x.docs)};'),'Snapshots must populate existing state');
+assert.ok(fn.includes('attendanceDataReady=true;populateAttendanceSubjects();'),'Attendance loading must still complete and populate subjects');
+console.log('V46 Teacher Attendance concurrent loading and class-scoped query regression passed.');
