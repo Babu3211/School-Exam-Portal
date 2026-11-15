@@ -156,6 +156,23 @@ service cloud.firestore {
         request.resource.data.status == 'active' &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
       allow delete: if false;
+      // Invitation proposals are immutable. Target users must accept with their own Auth session.
+      match /invitations/{uid} {
+        allow get: if admin(schoolId) || (request.auth != null && request.auth.uid == uid);
+        allow list: if admin(schoolId);
+        allow create: if admin(schoolId) &&
+          uid != request.auth.uid &&
+          request.resource.data.keys().hasOnly(['uid','schoolId','roles','active']) &&
+          request.resource.data.keys().hasAll(['uid','schoolId','roles','active']) &&
+          request.resource.data.uid == uid &&
+          request.resource.data.schoolId == schoolId &&
+          request.resource.data.active == true &&
+          request.resource.data.roles is list &&
+          request.resource.data.roles.size() == 1 &&
+          request.resource.data.roles.hasOnly(['viewer','subject_teacher','class_teacher']) &&
+          !exists(/databases/$(database)/documents/schools/$(schoolId)/members/$(uid));
+        allow update, delete: if false;
+      }
       match /members/{uid} {
         allow read: if member(schoolId) && (request.auth.uid == uid || admin(schoolId));
         // School admin may grant a limited teacher/viewer role to a known Auth UID.
