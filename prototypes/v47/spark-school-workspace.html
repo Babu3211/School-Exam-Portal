@@ -9,10 +9,11 @@
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,doc,getDoc,collection,getDocs,query,limit} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,doc,getDoc,collection,getDocs,query,limit,startAfter} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import {assertSchoolId,schoolCollectionPath} from "../../src/v47/tenant-domain.mjs";
 const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#login-form"),logout=document.querySelector("#logout"),schoolForm=document.querySelector("#school-form"),status=document.querySelector("#status"),workspace=document.querySelector("#workspace"),tables=document.querySelector("#tables");
 let epoch=0,auth,db;
+const PAGE_SIZE=20;
 const say=value=>status.textContent=value;
 const clear=()=>{epoch++;workspace.hidden=true;tables.replaceChildren();document.querySelector("#school-title").textContent="";document.querySelector("#role").textContent="";};
 if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="smss-exam-portal-v47.firebaseapp.com"){login.hidden=true;say("V47 isolated Firebase configuration is missing. No connection started.");}
@@ -45,7 +46,7 @@ else{
     sectionCounts[kind]=result.size;
     const section=document.createElement("section"),heading=document.createElement("h3"),list=document.createElement("ul");
     heading.textContent=kind+" ("+result.size+" shown; maximum 20)";section.append(heading);
-    for(const record of result.docs){
+    const renderRecord=record=>{
      const data=record.data(),li=document.createElement("li");
      const label=kind==="students" ? (data.nameEnglish||data.englishName||data.name||data.studentName) :
        kind==="classes" ? (data.name||data.className||data.label) :
@@ -58,10 +59,41 @@ else{
      const classText=typeof secondary==="string" || typeof secondary==="number" ? String(secondary).slice(0,40) : "";
      li.textContent=(safeLabel===record.id?record.id:safeLabel+" ("+record.id+")")+(classText?" — Class "+classText:"");
      list.append(li);
-    }
+    };
+    result.docs.forEach(renderRecord);
     if(result.empty){const li=document.createElement("li");li.textContent="No records";list.append(li);}
-    if(result.size===20){const li=document.createElement("li");li.textContent="Showing only the first 20 records. This is not a complete school count.";list.append(li);}
-    section.append(list);staged.push(section);
+    section.append(list);
+    if(result.size===PAGE_SIZE){
+     const more=document.createElement("button");
+     more.type="button";more.textContent="Load next 20 "+kind;
+     let cursor=result.docs[result.docs.length-1],loading=false;
+     more.addEventListener("click",async()=>{
+      if(loading || token!==epoch || auth.currentUser?.uid!==user.uid)return;
+      loading=true;more.disabled=true;more.textContent="Loading...";
+      try{
+       const [schoolCheck,memberCheck]=await Promise.all([
+        getDoc(doc(db,"schools",schoolId)),getDoc(doc(db,"schools",schoolId,"members",user.uid))
+       ]);
+       if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
+       if(!schoolCheck.exists() || schoolCheck.data().status!=="active" ||
+          !memberCheck.exists() || memberCheck.data().active!==true ||
+          !Array.isArray(memberCheck.data().roles) ||
+          !memberCheck.data().roles.some(role=>["school_admin","class_teacher","subject_teacher","viewer"].includes(role)))
+        throw new Error("School access changed");
+       const next=await getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),startAfter(cursor),limit(PAGE_SIZE)));
+       if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
+       next.docs.forEach(renderRecord);
+       if(next.docs.length)cursor=next.docs[next.docs.length-1];
+       heading.textContent=kind+" ("+list.children.length+" shown; paginated)";
+       if(next.size<PAGE_SIZE)more.remove();
+       else{more.disabled=false;more.textContent="Load next 20 "+kind;}
+      }catch{
+       if(token===epoch){clear();say("Unable to load more records. Reopen the school to verify access.");}
+      }finally{loading=false;}
+     });
+     section.append(more);
+    }
+    staged.push(section);
    }
    const [latestSchool,latestMember]=await Promise.all([
     getDoc(doc(db,"schools",schoolId)),
@@ -77,7 +109,7 @@ else{
    document.querySelector("#role").textContent="Access: "+latestMember.data().roles.join(", ")+" (read-only preview)";
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
    tables.replaceChildren(...staged);
-   workspace.hidden=false;say("School data loaded (read-only). "+Object.values(sectionCounts).reduce((a,b)=>a+b,0)+" records displayed across 6 sections; each capped at 20. No changes saved.");
+   workspace.hidden=false;say("School data loaded (read-only). "+Object.values(sectionCounts).reduce((a,b)=>a+b,0)+" records displayed across 6 sections; initially capped at 20, with on-demand pagination. No changes saved.");
   }catch(error){if(token===epoch){clear();say("Unable to load school: "+error.message);}}
  });
 }
