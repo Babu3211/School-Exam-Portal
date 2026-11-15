@@ -34,6 +34,8 @@ for(const path of imports)await include(path);
  // No config means the page stays safely disabled rather than connecting to V46.
  await mkdir(join(output,"prototypes","v47"),{recursive:true});
  const configRaw=process.env.V47_SPARK_WEB_CONFIG;
+ if(process.env.V47_SPARK_RELEASE_BUILD==="true" && !configRaw)
+  throw new Error("V47 release build requires isolated Firebase Web configuration");
  if(configRaw){
   let config;
   try{config=JSON.parse(configRaw);}catch{throw new Error("Invalid V47_SPARK_WEB_CONFIG JSON");}
