@@ -9,7 +9,7 @@ export async function enrollSparkSchoolMember({auth,firestore,doc,setDoc,project
  if(projectId!=="smss-exam-portal-v47")throw new Error("V47 staging project required");
  if(!auth?.currentUser?.uid || auth.currentUser.isAnonymous)throw new Error("Authentication required");
  assertSchoolId(schoolId);
- if(typeof uid!=="string" || !uid.trim() || uid.includes("/") || uid===auth.currentUser.uid)throw new TypeError("Invalid target member UID");
+ if(typeof uid!=="string" || !uid.trim() || uid.includes("/") || uid.trim()!==uid || uid.length>128 || uid===auth.currentUser.uid)throw new TypeError("Invalid target member UID");
  if(!allowed.has(role))throw new TypeError("Only teacher or viewer roles can be enrolled");
  if(typeof doc!=="function" || typeof setDoc!=="function")throw new TypeError("Firestore Web SDK adapters required");
  const membership=Object.freeze({uid,schoolId,roles:[role],active:true});
