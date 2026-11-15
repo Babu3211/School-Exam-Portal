@@ -153,4 +153,31 @@ assert.equal(logoutPanel.hidden,true,"Logout must keep workspace hidden after pe
 assert.equal(logoutSave.disabled,true,"Pending save must not restore disabled button after logout");
 logoutView.dispose();
 
+// School switching must revoke edits before the next dashboard responds.
+const switchRoot=new FakeElement("main");
+let releaseDashboard;
+let dashboardCalls=0;
+const delayedDashboard=new Promise(resolve=>{releaseDashboard=resolve;});
+const switchView=mountV47SchoolWorkspace({
+ bsToAd:()=> "2026-04-14",adToBs:()=> "2083-01-01",root:switchRoot,document,
+ getIdToken:async()=>"valid",
+ fetchImpl:async url=>{
+  if(url.endsWith("/schools"))return {ok:true,json:async()=>({schools:[{schoolId:"school_A001",schoolName:"School A",roles:["school_admin"]}]})};
+  if(url.includes("/dashboard?")){
+   dashboardCalls++;
+   if(dashboardCalls===2)await delayedDashboard;
+   return {ok:true,json:async()=>({dashboard:{schoolId:"school_A001",schoolName:"School A",roles:["school_admin"],readOnly:false}})};
+  }
+  throw Error("Unexpected endpoint: "+url);
+ }
+});
+const [,switchLoad,switchSchool,switchOpen,,,switchPanel]=switchRoot.children;
+await switchLoad.onclick();switchSchool.value="school_A001";await switchOpen.onclick();
+assert.equal(switchPanel.children[12].disabled,false,"Authorized admin starts with save enabled");
+const switching=switchOpen.onclick();
+assert.equal(switchPanel.hidden,true,"Switch must hide prior school immediately");
+for(const index of [8,9,10,11,12])assert.equal(switchPanel.children[index].disabled,true,"Switch must immediately revoke edit permission");
+releaseDashboard();await switching;
+switchView.dispose();
+
 console.log("V47 isolated school workspace browser view tests passed");
