@@ -52,6 +52,7 @@ else{
      list.append(li);
     }
     if(result.empty){const li=document.createElement("li");li.textContent="No records";list.append(li);}
+    if(result.size===20){const li=document.createElement("li");li.textContent="Showing only the first 20 records. This is not a complete school count.";list.append(li);}
     section.append(list);staged.push(section);
    }
    const [latestSchool,latestMember]=await Promise.all([
