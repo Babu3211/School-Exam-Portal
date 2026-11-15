@@ -34,12 +34,16 @@ export async function assignTeacherOnTrustedServer({adminSession,input,firestore
  await firestore.runTransaction(async tx=>{
    const adminMembership=await tx.get(adminRef);
    const adminRecord=adminMembership.exists?adminMembership.data():null;
-   if(!adminRecord || adminRecord.active!==true || !Array.isArray(adminRecord.roles) ||
+   if(!adminRecord || (Object.hasOwn(adminRecord,"uid") && adminRecord.uid!==adminSession.uid) ||
+      (Object.hasOwn(adminRecord,"schoolId") && adminRecord.schoolId!==assignment.schoolId) ||
+      adminRecord.active!==true || !Array.isArray(adminRecord.roles) ||
       !adminRecord.roles.includes("school_admin") || adminRecord.roles.includes("viewer"))
      throw new Error("Active school admin membership required");
    const membership=await tx.get(memberRef);
    const member=membership.exists?membership.data():null;
-   if(!member || member.active!==true || !Array.isArray(member.roles) ||
+   if(!member || (Object.hasOwn(member,"uid") && member.uid!==assignment.uid) ||
+      (Object.hasOwn(member,"schoolId") && member.schoolId!==assignment.schoolId) ||
+      member.active!==true || !Array.isArray(member.roles) ||
       !member.roles.includes(assignment.kind) || member.roles.includes("viewer"))
      throw new Error("Active teacher membership with matching role required");
    tx.set(assignmentRef,assignment);
