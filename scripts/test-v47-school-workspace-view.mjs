@@ -33,6 +33,10 @@ assert.deepEqual(classInput.children.map(option=>option.value),expectedClasses);
 assert.deepEqual(studentClassInput.children.map(option=>option.value),expectedClasses);
 assert.equal(panel.children[9]["aria-label"],"Student name in English");
 assert.equal(panel.children[12].hidden,true,"Viewer must never see Save student");
+for(const index of [8,9,10,11]){
+ assert.equal(panel.children[index].hidden,true,"Viewer must not see student editing controls");
+ assert.equal(panel.children[index].disabled,true,"Viewer student editing controls must be disabled");
+}
 classInput.value="9";subjectInput.value="Computer";dateInput.value="2083-01-01";
 await marks.onclick();
 assert.match(result.textContent,/m1/);
