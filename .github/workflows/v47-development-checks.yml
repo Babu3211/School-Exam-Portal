@@ -71,6 +71,7 @@ jobs:
           grep -q 'Sign out failed. Please retry.' dist/v47-spark/prototypes/v47/spark-school-registration.html
           grep -q 'document.querySelector("#login-form").hidden=!!user' dist/v47-spark/prototypes/v47/spark-school-registration.html
           grep -q 'document.querySelector("#password").value=""' dist/v47-spark/prototypes/v47/spark-school-registration.html
+          grep -q 'epoch!==authEpoch' dist/v47-spark/prototypes/v47/spark-school-registration.html
       - name: V46 existing exam portal regression suite (read-only)
         if: success() || failure()
         run: |
