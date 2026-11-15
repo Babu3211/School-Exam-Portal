@@ -44,7 +44,12 @@ if(!isSafeConfig) {
  const auth=getAuth(app);
  const apiOrigin=new URL(config.apiOrigin);
  notice.textContent="V47 staging only. Firebase and API must be configured for the same isolated V47 environment.";
- const fetchImpl=(path,options)=>fetch(new URL(path,apiOrigin),options);
+ const fetchImpl=(path,options)=>{
+  const target=new URL(path,apiOrigin);
+  if(target.origin!==apiOrigin.origin || !target.pathname.startsWith("/api/v47/"))
+   throw new Error("V47 API endpoint required");
+  return fetch(target,{...options,redirect:"error"});
+ };
  // Conversion adapters must be supplied by the V47 staging host, not guessed.
  const bsToAd=config.bsToAd,adToBs=config.adToBs;
  if(typeof bsToAd!=="function" || typeof adToBs!=="function") {
