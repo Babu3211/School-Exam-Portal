@@ -104,6 +104,20 @@ try{
  assert.equal(suspendedWrite.status,403);
  assert.equal(docs.has("schools/school_A001/students/suspendedBlocked"),false);
  // Platform onboarding endpoints must fail closed for ordinary school admins.
+ // School-admin teacher assignment requires a verified tenant session.
+ docs.set("schools/school_A001",{status:"active"});
+ docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:true,roles:["school_admin"]});
+ docs.set("schools/school_A001/members/teacher1",{uid:"teacher1",schoolId:"school_A001",active:true,roles:["subject_teacher"]});
+ const teacherPayload={input:{schoolId:"school_A001",teacherUid:"teacher1",classId:"9",subjectId:"computer",kind:"subject_teacher",terms:["first","final"]}};
+ const teacherAssignment=await fetch(base+"/api/v47/teachers/assign",{method:"POST",headers,body:JSON.stringify(teacherPayload)});
+ assert.equal(teacherAssignment.status,200);
+ assert.equal(docs.get("schools/school_A001/assignments/teacher1_9_computer").classId,"9");
+ docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:true,roles:["viewer"]});
+ const viewerAssignment=await fetch(base+"/api/v47/teachers/assign",{method:"POST",headers,body:JSON.stringify(teacherPayload)});
+ assert.equal(viewerAssignment.status,403,"Viewer cannot assign teachers");
+ docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:true,roles:["school_admin"]});
+ const crossTenantAssignment=await fetch(base+"/api/v47/teachers/assign",{method:"POST",headers,body:JSON.stringify({input:{...teacherPayload.input,schoolId:"school_B001"}})});
+ assert.equal(crossTenantAssignment.status,403,"School A admin cannot assign teachers in school B");
  const registration=await fetch(base+"/api/v47/platform/schools/register",{
   method:"POST",headers,body:JSON.stringify({input:{
    schoolId:"school_C001",name:"New School",iemisCode:"900001",adminEmail:"owner@example.com"
