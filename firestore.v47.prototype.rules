@@ -157,7 +157,7 @@ service cloud.firestore {
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
       allow delete: if false;
       match /members/{uid} {
-        allow read: if member(schoolId) && request.auth.uid == uid;
+        allow read: if member(schoolId) && (request.auth.uid == uid || admin(schoolId));
         // School admin may grant a limited teacher/viewer role to a known Auth UID.
         // School-admin delegation remains prohibited.
         allow create: if (platformAdmin() && validNewSchoolMember(schoolId, uid)) ||
