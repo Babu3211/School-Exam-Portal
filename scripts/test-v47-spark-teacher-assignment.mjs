@@ -7,7 +7,7 @@ await assert.rejects(createSparkTeacherAssignment({...args,kind:"school_admin"})
 await assert.rejects(createSparkTeacherAssignment({...args,terms:["first","first"]}),/Invalid terms/);
 await assert.rejects(createSparkTeacherAssignment({...args,classId:"13"}),/Invalid class/);
 await assert.rejects(createSparkTeacherAssignment({...args,uid:" teacherB"}),/Invalid teacher UID/);
-await assert.rejects(createSparkTeacherAssignment({...args,subjectId:"x/y"}),/Invalid assignment ID/);
+await assert.rejects(createSparkTeacherAssignment({...args,subjectId:"x/y"}),/Invalid subject ID/);
 assert.deepEqual(await createSparkTeacherAssignment(args),{schoolId:"school_A001",assignmentId:"teacherB_9_computer",uid:"teacherB",classId:"9",kind:"subject_teacher"});
 assert.deepEqual(writes,[{path:"schools/school_A001/assignments/teacherB_9_computer",data:{uid:"teacherB",schoolId:"school_A001",classId:"9",kind:"subject_teacher",active:true,terms:["first","final"]}}]);
 console.log("V47 Spark teacher assignment adapter checks passed");
