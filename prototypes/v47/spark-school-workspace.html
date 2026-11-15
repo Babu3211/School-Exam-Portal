@@ -34,6 +34,8 @@ else{
    const roles=member.data().roles;
    if(!Array.isArray(roles) || !roles.some(role=>["school_admin","class_teacher","subject_teacher","viewer"].includes(role)))throw new Error("No supported school role");
    const staged=[];
+   // All school collections are loaded with the authenticated school ID only.
+
    for(const kind of ["students","classes","subjects","exams"]){
     const result=await getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),limit(20)));
     if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
@@ -69,7 +71,7 @@ else{
    document.querySelector("#role").textContent="Access: "+latestMember.data().roles.join(", ")+" (read-only preview)";
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
    tables.replaceChildren(...staged);
-   workspace.hidden=false;say("School data loaded (read-only).");
+   workspace.hidden=false;say("School data loaded (read-only). Up to 20 records per section; no changes saved.");
   }catch(error){if(token===epoch){clear();say("Unable to load school: "+error.message);}}
  });
 }
