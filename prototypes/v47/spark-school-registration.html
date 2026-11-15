@@ -5,7 +5,7 @@
 <main><h1>SMSS V47 School Registration</h1><p>Isolated Spark-plan staging only. This page never connects to V46.</p>
 <form id="login-form"><label>Email<input id="email" type="email" autocomplete="username" required></label><label>Password<input id="password" type="password" autocomplete="current-password" required></label><button id="login" type="submit">Sign in</button></form>
 <p id="identity">Not signed in</p>
-<form id="school-form" hidden><label>School ID (8–64 letters, digits, _ or -)<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><label>School Name<input name="name" required maxlength="200"></label><label>IEMIS Code<input name="iemisCode" required pattern="[A-Za-z0-9_-]{3,32}"></label><label>First School Admin Firebase UID<input name="schoolAdminUid" required></label><button id="register" type="submit">Register Pending School</button></form>
+<form id="school-form" hidden><label>School ID (8–64 letters, digits, _ or -)<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><label>School Name<input name="name" required maxlength="200"></label><label>IEMIS Code<input name="iemisCode" required pattern="[A-Za-z0-9_-]{3,32}"></label><p>The signed-in Platform Admin becomes the initial School Admin. Additional school admins require a separately reviewed invitation workflow.</p><button id="register" type="submit">Register Pending School</button></form>
 <button id="logout" type="button" hidden>Sign out</button><p id="message" role="status"></p></main>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
@@ -45,7 +45,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
   if(!authorized || !auth.currentUser){say("Platform Admin verification required.");return;}
   const button=document.querySelector("#register");button.disabled=true;
   try{
-   const input=Object.fromEntries(new FormData(form).entries());
+   const input={...Object.fromEntries(new FormData(form).entries()),schoolAdminUid:auth.currentUser.uid};
    const result=await bootstrapSparkSchool({auth,firestore,doc,writeBatch,projectId:app.options.projectId,input});
    say("School registered as pending: "+result.schoolId);
    form.reset();
