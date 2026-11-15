@@ -1915,7 +1915,7 @@ function defaultMarkParts(group,subject){
   {name:"Full Marks",fullMarks:0},
   {name:"Obtained Learning Achievement",fullMarks:0}
  ];
- if(group==="6-8"||(group==="9-10"&&subject.includes("कम्प्युटर")))return [
+ if(group==="6-8"||(group==="9-10"&&isComputerSubject(subject)))return [
   {name:"Participation",fullMarks:4},
   {name:"Practical/Project",fullMarks:36},
   {name:"First Term Examination",fullMarks:10}
@@ -2330,7 +2330,7 @@ const ledgerComponentLabels = {
   "Participation(3)","Practical/Project(16)","First Term Examination(6)",
   "Participation(3)","Practical/Project(16)","First Term Examination(6)",
   "Participation(3)","Practical/Project(16)","First Term Examination(6)",
-  "Participation(3)","Practical/Project(41)","First Term Examination(6)",
+  "Participation(4)","Practical/Project(36)","First Term Examination(10)",
   "Participation(3)","Practical/Project(16)","First Term Examination(6)"
  ]
 };
