@@ -19,7 +19,7 @@ const firestore={
   async get(){
    queried.push({path,filters:this.filters});
    if(path==="schools/school_A001/marks")return {docs:[{id:"m1",data:()=>({className:"9",subject:"Computer",marks:72})}]};
-   if(path==="schools/school_A001/attendance")return {docs:[{id:"a1",data:()=>({className:"9",date:"2083-01-01",students:[{studentId:"s1",status:"present"}]})}]};
+   if(path==="schools/school_A001/attendance")return {docs:[{id:"a1",data:()=>({className:"9",date:"2083-01-01",attendanceType:"daily",students:[{studentId:"s1",status:"present"}]})}]};
    throw Error("Unexpected cross-tenant collection read");
   }
  })
