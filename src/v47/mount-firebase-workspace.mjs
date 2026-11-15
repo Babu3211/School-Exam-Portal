@@ -15,13 +15,13 @@ export function mountV47FirebaseWorkspace({root,document,auth,fetchImpl,subscrib
  let initial=true;
  let lastUser=auth.currentUser?.uid ?? null;
  let unsubscribe;
- const refreshSchools=()=>{void Promise.resolve().then(()=>{if(!disposed)return;return view.loadSchools();}).catch(()=>{});};
+ const refreshSchools=()=>{if(!disposed)void view.loadSchools().catch(()=>{});};
  try {
   unsubscribe=subscribeAuthState(auth,user=>{
    if(disposed)return;
    const uid=user?.uid ?? null;
    if(initial){initial=false;if(uid===lastUser){if(uid)refreshSchools();return;}}
-   if(uid!==lastUser){lastUser=uid;view.clearSession();if(uid)void view.loadSchools();}
+   if(uid!==lastUser){lastUser=uid;view.clearSession();if(uid)refreshSchools();}
   });
   if(typeof unsubscribe!=="function")throw new TypeError("Unsubscribe function required");
   // Existing signed-in users should not need to click Load my schools.
