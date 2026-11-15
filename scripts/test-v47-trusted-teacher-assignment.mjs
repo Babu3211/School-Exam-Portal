@@ -5,6 +5,9 @@ assert.equal(prepareTeacherAssignment(input).id,"teacher1_9_computer");
 assert.throws(()=>prepareTeacherAssignment({...input,teacherUid:"../admin"}));
 assert.throws(()=>prepareTeacherAssignment({...input,classId:"13"}));
 assert.throws(()=>prepareTeacherAssignment({...input,terms:["fourth"]}));
+assert.throws(()=>prepareTeacherAssignment({...input,teacherUid:["teacher1"]}));
+assert.throws(()=>prepareTeacherAssignment({...input,classId:9}));
+assert.throws(()=>prepareTeacherAssignment({...input,subjectId:["computer"]}));
 let writes=0;
 const firestore={
  doc:path=>({path}),
