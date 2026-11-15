@@ -10,6 +10,7 @@ const expectedProject="smss-exam-portal-v47";
 const expectedDomain=expectedProject+".firebaseapp.com";
 const page="prototypes/v47/spark-school-registration.html";
 const html=await readFile(join(root,page),"utf8");
+if(!html.includes('<script type="module">'))throw new Error("Missing V47 module entry");
 const imports=[...html.matchAll(/from\s+["'](\.\.\/\.\.\/src\/v47\/[^"']+\.mjs)["']/g)]
  .map(match=>match[1].replace(/^\.\.\/\.\.\//,""));
 if(imports.length===0)throw new Error("No V47 browser modules found");
