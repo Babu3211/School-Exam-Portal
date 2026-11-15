@@ -8,5 +8,5 @@ await assert.rejects(enrollSparkSchoolMember({...args,uid:"adminA"}),/Invalid ta
 await assert.rejects(enrollSparkSchoolMember({...args,uid:" teacherB "}),/Invalid target/);
 await assert.rejects(enrollSparkSchoolMember({...args,uid:"a".repeat(129)}),/Invalid target/);
 assert.deepEqual(await enrollSparkSchoolMember(args),{schoolId:"school_A001",uid:"teacherB",role:"subject_teacher"});
-assert.deepEqual(writes,[{path:"schools/school_A001/members/teacherB",data:{uid:"teacherB",schoolId:"school_A001",roles:["subject_teacher"],active:true}}]);
+assert.deepEqual(writes,[{path:"schools/school_A001/invitations/teacherB",data:{uid:"teacherB",schoolId:"school_A001",roles:["subject_teacher"],active:true}}]);
 console.log("V47 Spark limited member enrollment checks passed");
