@@ -42,6 +42,18 @@ try{
  await assertFails(trusted.doc("v47_iemis_index/123456").update({schoolId:"school_C001"}));
  await assertFails(trusted.doc("v47_iemis_index/123456").delete());
  await assertFails(trusted.doc("schools/school_Z001").set({...school,schoolId:"school_Z001"}));
+ const duplicateIemis=trusted.batch();
+ duplicateIemis.set(trusted.doc("schools/school_Z001"),{...school,schoolId:"school_Z001"});
+ duplicateIemis.set(trusted.doc("schools/school_Z001/members/trusted"),{uid:"trusted",schoolId:"school_Z001",roles:["school_admin"],active:true});
+ duplicateIemis.set(trusted.doc("v47_iemis_index/123456"),{schoolId:"school_Z001",iemisCode:"123456"});
+ await assertFails(duplicateIemis.commit());
+ const orphanIndex=trusted.batch();
+ orphanIndex.set(trusted.doc("v47_iemis_index/888777"),{schoolId:"school_Y001",iemisCode:"888777"});
+ await assertFails(orphanIndex.commit());
+ const noIndex=trusted.batch();
+ noIndex.set(trusted.doc("schools/school_X001"),{...school,schoolId:"school_X001",iemisCode:"777666"});
+ noIndex.set(trusted.doc("schools/school_X001/members/trusted"),{uid:"trusted",schoolId:"school_X001",roles:["school_admin"],active:true});
+ await assertFails(noIndex.commit());
  const atomicSchool={...school,schoolId:"school_C001",iemisCode:"654321"};
  const atomicBatch=trusted.batch();
  atomicBatch.set(trusted.doc("v47_iemis_index/654321"),{schoolId:"school_C001",iemisCode:"654321"});
