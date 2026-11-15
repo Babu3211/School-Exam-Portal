@@ -42,6 +42,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
  const refreshAssignments=async()=>{
   const user=auth.currentUser,schoolId=verifiedSchoolId,epoch=verificationEpoch;
   if(!user || !schoolId){clearAssignments();return;}
+  await recheckManagement({schoolId});
   const result=await getDocs(collection(firestore,"schools",schoolId,"assignments"));
   if(auth.currentUser?.uid!==user.uid || verifiedSchoolId!==schoolId || epoch!==verificationEpoch)return;
   assignmentsList.replaceChildren();
@@ -63,6 +64,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
  const refreshMembers=async()=>{
   const user=auth.currentUser,schoolId=verifiedSchoolId,epoch=verificationEpoch;
   if(!user || !schoolId){clearMembers();return;}
+  await recheckManagement({schoolId});
   const result=await getDocs(collection(firestore,"schools",schoolId,"members"));
   if(auth.currentUser?.uid!==user.uid || verifiedSchoolId!==schoolId || epoch!==verificationEpoch)return;
   membersList.replaceChildren();
