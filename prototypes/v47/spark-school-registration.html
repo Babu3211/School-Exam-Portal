@@ -102,7 +102,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
  const managementAllowed=input=>verifiedSchoolId && auth.currentUser && input.schoolId===verifiedSchoolId && schoolAdminCheck.elements.namedItem("schoolId").value===verifiedSchoolId;
  schoolAdminCheck.elements.namedItem("schoolId").addEventListener("input",hideManagement);
  onAuthStateChanged(auth,async user=>{
-  authorized=false;form.hidden=true;activationForm.hidden=true;hideManagement();document.querySelector("#accept-invitation-form").hidden=!user;schoolAdminCheck.hidden=!user;document.querySelector("#logout").hidden=!user;
+  authorized=false;form.hidden=true;activationForm.hidden=true;hideManagement();document.querySelector("#login-form").hidden=!!user;document.querySelector("#password").value="";document.querySelector("#accept-invitation-form").hidden=!user;schoolAdminCheck.hidden=!user;document.querySelector("#logout").hidden=!user;
   identity.textContent=user?"Signed in: "+user.email:"Not signed in";
   if(!user)return;
   try{
@@ -161,7 +161,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
  document.querySelector("#login-form").addEventListener("submit",async event=>{
   event.preventDefault();say("Signing in...");
   try{await signInWithEmailAndPassword(auth,document.querySelector("#email").value,document.querySelector("#password").value);document.querySelector("#password").value="";}
-  catch{say("Sign in failed. Check your credentials.");}
+  catch{document.querySelector("#password").value="";say("Sign in failed. Check your credentials.");}
  });
  document.querySelector("#logout").addEventListener("click",async()=>{try{await signOut(auth);say("Signed out.");}catch{say("Sign out failed. Please retry.");}});
  memberStatusForm.addEventListener("submit",async event=>{
