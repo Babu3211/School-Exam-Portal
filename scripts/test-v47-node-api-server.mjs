@@ -103,6 +103,18 @@ try{
  })});
  assert.equal(suspendedWrite.status,403);
  assert.equal(docs.has("schools/school_A001/students/suspendedBlocked"),false);
+ // Platform onboarding endpoints must fail closed for ordinary school admins.
+ const registration=await fetch(base+"/api/v47/platform/schools/register",{
+  method:"POST",headers,body:JSON.stringify({input:{
+   schoolId:"school_C001",name:"New School",iemisCode:"900001",adminEmail:"owner@example.com"
+  }})
+ });
+ assert.equal(registration.status,403,"School admin cannot register a new school");
+ assert.equal(docs.has("schools/school_C001"),false);
+ const invitation=await fetch(base+"/api/v47/platform/schools/invite-admin",{
+  method:"POST",headers,body:JSON.stringify({schoolId:"school_A001",adminEmail:"owner@example.com"})
+ });
+ assert.equal(invitation.status,403,"School admin cannot invite platform-managed school admins");
  const method=await fetch(base+"/api/v47/records",{method:"POST",headers,body:"{}"});
  assert.equal(method.status,405);
  console.log("V47 unified real Node API integration passed");
