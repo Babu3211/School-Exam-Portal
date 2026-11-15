@@ -7,9 +7,10 @@
 <p id="identity">Not signed in</p>
 <form id="school-form" hidden><label>School ID (8–64 letters, digits, _ or -)<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><label>School Name<input name="name" required maxlength="200"></label><label>IEMIS Code<input name="iemisCode" required pattern="[A-Za-z0-9_-]{3,32}"></label><p>The signed-in Platform Admin becomes the initial School Admin. Additional school admins require a separately reviewed invitation workflow.</p><button id="register" type="submit">Register Pending School</button></form>
 <form id="activation-form" hidden><h2>Activate Pending School</h2><label>School ID<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><button id="activate" type="submit">Activate School</button></form>
+<form id="accept-invitation-form" hidden><h2>Accept School Invitation</h2><p>Sign in with the invited Firebase Auth account before accepting.</p><label>School ID<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><button type="submit">Accept Invitation</button></form>
 <form id="school-admin-check" hidden><h2>School Admin Access</h2><label>School ID<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><button type="submit">Verify School Admin</button></form>
 <section id="members-panel" hidden><h2>School Members</h2><button id="refresh-members" type="button">Refresh Members</button><ul id="members-list"></ul></section>
-<form id="member-form" hidden><h2>Add Teacher or Viewer</h2><p>Only a School Admin of the selected active school may add a member. The target must already have a Firebase Auth UID.</p><label>School ID<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><label>Existing User UID<input name="uid" required></label><label>Role<select name="role" required><option value="viewer">Viewer</option><option value="subject_teacher">Subject Teacher</option><option value="class_teacher">Class Teacher</option></select></label><button id="enroll" type="submit">Add Member</button></form>
+<form id="member-form" hidden><h2>Invite Teacher or Viewer</h2><p>School Admin creates an invitation for an existing Auth UID. The user must sign in and accept before gaining membership.</p><label>School ID<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><label>Existing User UID<input name="uid" required></label><label>Role<select name="role" required><option value="viewer">Viewer</option><option value="subject_teacher">Subject Teacher</option><option value="class_teacher">Class Teacher</option></select></label><button id="enroll" type="submit">Send Invitation</button></form>
 <form id="assignment-form" hidden><h2>Assign Teacher</h2><p>Only the selected school's Admin can assign an existing active Teacher.</p><label>School ID<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><label>Teacher UID<input name="uid" required></label><label>Subject ID (required for Subject Teacher; blank for Class Teacher)<input name="subjectId" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><label>Class<select name="classId" required><option value="ECD">ECD</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></label><label>Teacher Type<select name="kind"><option value="subject_teacher">Subject Teacher</option><option value="class_teacher">Class Teacher</option></select></label><fieldset><legend>Terms</legend><label><input type="checkbox" name="terms" value="first"> First</label><label><input type="checkbox" name="terms" value="second"> Second</label><label><input type="checkbox" name="terms" value="final"> Final</label></fieldset><button id="assign" type="submit">Create Assignment</button></form>
 <section id="assignments-panel" hidden><h2>Teacher Assignments</h2><button id="refresh-assignments" type="button">Refresh Assignments</button><ul id="assignments-list"></ul></section>
 <form id="assignment-status-form" hidden><h2>Assignment Access</h2><label>School ID<input name="schoolId" required pattern="[A-Za-z0-9_-]{8,64}"></label><label>Assignment ID<input name="assignmentId" required></label><label>Status<select name="active"><option value="false">Disable assignment</option><option value="true">Enable assignment</option></select></label><button type="submit">Update Assignment</button></form>
@@ -23,6 +24,7 @@ import {checkSparkPlatformAdmin} from "../../src/v47/spark-platform-admin.mjs";
 import {bootstrapSparkSchool} from "../../src/v47/spark-school-bootstrap.mjs";
 import {activateSparkSchool} from "../../src/v47/spark-school-activation.mjs";
 import {enrollSparkSchoolMember} from "../../src/v47/spark-school-member-enrollment.mjs";
+import {acceptSparkSchoolInvitation} from "../../src/v47/spark-school-invitation-acceptance.mjs";
 import {createSparkTeacherAssignment} from "../../src/v47/spark-teacher-assignment.mjs";
 import {setSparkSchoolMemberActive} from "../../src/v47/spark-school-member-status.mjs";
 import {setSparkTeacherAssignmentActive} from "../../src/v47/spark-teacher-assignment-status.mjs";
@@ -100,7 +102,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
  const managementAllowed=input=>verifiedSchoolId && auth.currentUser && input.schoolId===verifiedSchoolId && schoolAdminCheck.elements.namedItem("schoolId").value===verifiedSchoolId;
  schoolAdminCheck.elements.namedItem("schoolId").addEventListener("input",hideManagement);
  onAuthStateChanged(auth,async user=>{
-  authorized=false;form.hidden=true;activationForm.hidden=true;hideManagement();schoolAdminCheck.hidden=!user;document.querySelector("#logout").hidden=!user;
+  authorized=false;form.hidden=true;activationForm.hidden=true;hideManagement();document.querySelector("#accept-invitation-form").hidden=!user;schoolAdminCheck.hidden=!user;document.querySelector("#logout").hidden=!user;
   identity.textContent=user?"Signed in: "+user.email:"Not signed in";
   if(!user)return;
   try{
@@ -110,6 +112,14 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
    form.hidden=!authorized;activationForm.hidden=!authorized;
    say(authorized?"Platform Admin verified. Only pending schools may be created.":"Platform Admin access denied.");
   }catch{say("Unable to verify Platform Admin. Check deployed rules and connection.");}
+ });
+ document.querySelector("#accept-invitation-form").addEventListener("submit",async event=>{
+  event.preventDefault();
+  const schoolId=new FormData(event.currentTarget).get("schoolId");
+  try{
+   const result=await acceptSparkSchoolInvitation({auth,firestore,doc,getDoc,setDoc,projectId:app.options.projectId,schoolId});
+   say("Invitation accepted for "+result.schoolId+" as "+result.role+".");
+  }catch{say("Invitation acceptance failed or denied.");}
  });
  schoolAdminCheck.addEventListener("submit",async event=>{
   event.preventDefault();hideManagement();
