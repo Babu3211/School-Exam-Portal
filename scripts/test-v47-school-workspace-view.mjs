@@ -106,7 +106,7 @@ const adminView=mountV47SchoolWorkspace({
  fetchImpl:async (url,options)=>{
   if(url.endsWith("/schools"))return {ok:true,json:async()=>({schools:[{schoolId:"school_A001",schoolName:"School A",roles:["school_admin"]}]})};
   if(url.includes("/dashboard?"))return {ok:true,json:async()=>({dashboard:{schoolId:"school_A001",schoolName:"School A",roles:["school_admin"],readOnly:false}})};
-  if(url.includes("/students/") || url.endsWith("/students")){saveRequests++;await pendingSave;return {ok:true,json:async()=>({student:{id:"s001"}})};}
+  if(url.endsWith("/students/write")){saveRequests++;await pendingSave;return {ok:true,json:async()=>({result:{schoolId:"school_A001",studentId:"s001"}})};}
   throw Error("Unexpected admin endpoint: "+url);
  }
 });
