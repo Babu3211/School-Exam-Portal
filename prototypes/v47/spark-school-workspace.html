@@ -36,7 +36,7 @@ else{
    const staged=[];
    // All school collections are loaded with the authenticated school ID only.
 
-   for(const kind of ["students","classes","subjects","exams"]){
+   for(const kind of ["students","classes","subjects","exams","marks","attendance"]){
     const result=await getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),limit(20)));
     if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
     const section=document.createElement("section"),heading=document.createElement("h3"),list=document.createElement("ul");
@@ -46,9 +46,11 @@ else{
      const label=kind==="students" ? (data.nameEnglish||data.englishName||data.name||data.studentName) :
        kind==="classes" ? (data.name||data.className||data.label) :
        kind==="subjects" ? (data.name||data.subjectName||data.label) :
-       (data.name||data.examName||data.title);
+       kind==="exams" ? (data.name||data.examName||data.title) :
+       kind==="marks" ? (data.studentName||data.studentId||data.student_id) :
+       (data.studentName||data.studentId||data.student_id);
      const safeLabel=typeof label==="string" && label.trim()?label.trim().slice(0,120):record.id;
-     const secondary=kind==="students" && (data.className||data.classId||data.grade);
+     const secondary=["students","marks","attendance"].includes(kind) && (data.className||data.classId||data.grade);
      const classText=typeof secondary==="string" || typeof secondary==="number" ? String(secondary).slice(0,40) : "";
      li.textContent=(safeLabel===record.id?record.id:safeLabel+" ("+record.id+")")+(classText?" — Class "+classText:"");
      list.append(li);
