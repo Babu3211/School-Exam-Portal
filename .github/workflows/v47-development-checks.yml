@@ -79,6 +79,7 @@ jobs:
           test -f dist/v47-spark/prototypes/v47/spark-school-workspace.html
           grep -q 'schoolCollectionPath(schoolId,kind)' dist/v47-spark/prototypes/v47/spark-school-workspace.html
           grep -q 'tables.replaceChildren(...staged)' dist/v47-spark/prototypes/v47/spark-school-workspace.html
+          grep -q 'School access changed during loading' dist/v47-spark/prototypes/v47/spark-school-workspace.html
       - name: V46 existing exam portal regression suite (read-only)
         if: success() || failure()
         run: |
