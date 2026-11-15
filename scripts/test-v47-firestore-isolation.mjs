@@ -170,6 +170,12 @@ try {
  });
  await assertFails(getDoc(doc(admin,"schools",schoolA,"students","student1")));
  await assertFails(getDoc(doc(viewer,"schools",schoolA,"students","student1")));
+ // A suspended school must not admit an invited user, even with a valid invitation.
+ await env.withSecurityRulesDisabled(async context=>{
+   await setDoc(doc(context.firestore(),"schools",schoolA,"invitations","suspendedInvite"),{uid:"suspendedInvite",schoolId:schoolA,roles:["viewer"],active:true});
+ });
+ const suspendedInvite=env.authenticatedContext("suspendedInvite").firestore();
+ await assertFails(setDoc(doc(suspendedInvite,"schools",schoolA,"members","suspendedInvite"),{uid:"suspendedInvite",schoolId:schoolA,roles:["viewer"],active:true}));
  await assertFails(setDoc(doc(admin,"schools",schoolA,"students","student2"),{name:"Blocked"}));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m6"),mark));
  // Suspending school A must not disable independent school B.
