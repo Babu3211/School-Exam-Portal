@@ -75,5 +75,16 @@ assert.throws(()=>browserGateway.forCollection("schools/school_A001/unreviewed")
 await assert.rejects(()=>tenantCollection.list({pageSize:100}),/Page size/);
 await assert.rejects(()=>tenantCollection.get("../other"),/Invalid document ID/);
 await assert.rejects(()=>tenantCollection.get("bad\\u0000id"),/Invalid document ID/);
+const integratedBridge=createV46FeatureBridge({
+ session:{schoolId:"school_A001",roles:["viewer"]},
+ legacyFeatures:implementations,
+ tenantGateway:browserGateway
+});
+assert.deepEqual(await integratedBridge.students().context.gateway.list(),[{id:"one",className:"1"}]);
+assert.equal(integratedBridge.marks().context.gateway.path,"schools/school_A001/marks");
+assert.equal(integratedBridge.attendance().context.gateway.path,"schools/school_A001/attendance");
+assert.equal(integratedBridge.results().context.gateway.path,"schools/school_A001/public_results");
+assert.equal(typeof integratedBridge.students().context.gateway.save,"function");
+assert.throws(()=>integratedBridge.students().context.gateway.save(),/read-only/);
 assert.equal(typeof tenantCollection.save,"undefined");
 console.log("V47 V46 feature reuse bridge contract tests passed");
