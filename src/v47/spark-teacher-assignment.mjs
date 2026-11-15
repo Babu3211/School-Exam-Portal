@@ -18,7 +18,7 @@ export async function createSparkTeacherAssignment({auth,firestore,doc,setDoc,pr
  const assignmentId=kind==="subject_teacher"?uid+"_"+classId+"_"+subjectId:uid+"_"+classId;
  if(assignmentId.length>256)throw new TypeError("Invalid assignment ID");
  if(typeof doc!=="function" || typeof setDoc!=="function")throw new TypeError("Firestore Web SDK adapters required");
- const data=Object.freeze({uid,schoolId,classId,kind,active:true,terms:[...terms]});
+ const data=Object.freeze({uid,schoolId,classId,kind,active:true,terms:[...terms],...(kind==="subject_teacher"?{subjectId}:{})});
  await setDoc(doc(firestore,"schools",schoolId,"assignments",assignmentId),data);
  return Object.freeze({schoolId,assignmentId,uid,classId,kind});
 }
