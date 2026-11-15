@@ -135,6 +135,8 @@ try {
  await assertFails(setDoc(doc(subject,"schools",schoolB,"marks","m1"),{...mark,schoolId:schoolB}));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m2"),{...mark,subjectId:"math"}));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m_missing"),{...mark,studentId:"unknown"}));
+ // School admin has write permission, but cannot assign marks to a student from another class.
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"marks","admin_wrong_class"),{...mark,classId:"10"}));
  await assertFails(setDoc(doc(viewer,"schools",schoolA,"marks","m3"),mark));
  await assertFails(setDoc(doc(outsider,"schools",schoolA,"marks","m4"),mark));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","m3"),{...mark,term:"second"}));
@@ -159,6 +161,8 @@ try {
  await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a3"),{...attendance,present:"true"}));
  await assertFails(setDoc(doc(classTeacher,"schools",schoolB,"attendance","a4"),{...attendance,schoolId:schoolB}));
  await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a_missing"),{...attendance,studentId:"unknown"}));
+ // Same class integrity requirement applies even to school-admin attendance writes.
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"attendance","admin_wrong_class"),{...attendance,classId:"10"}));
  await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a1"),{...attendance,studentId:"student2"}));
  await env.withSecurityRulesDisabled(async context=>{
    const db=context.firestore();
