@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SMSS V47 School Workspace (Preview)</title>
+<style>body{font:16px system-ui,sans-serif;max-width:850px;margin:2rem auto;padding:0 1rem;color:#17324d}input,button{padding:.65rem;margin:.3rem 0}section{border:1px solid #cbd5e1;border-radius:12px;padding:1rem;margin:1rem 0}table{border-collapse:collapse;width:100%}td,th{padding:.6rem;border-bottom:1px solid #ddd;text-align:left}#status{white-space:pre-wrap}small{color:#526477}</style></head>
+<body><h1>SMSS V47 School Workspace</h1><p>Isolated Spark staging preview — read-only school data inspection. No marks, students or attendance are changed here.</p>
+<p><a href="./spark-school-registration.html">School registration and admin management</a></p>
+<section><form id="login-form"><label>Email <input name="email" type="email" required autocomplete="username"></label> <label>Password <input name="password" type="password" required autocomplete="current-password"></label><button>Sign in</button></form><button id="logout" hidden>Sign out</button><p id="identity"></p></section>
+<section><form id="school-form" hidden><label>School ID <input name="schoolId" required pattern="[a-zA-Z0-9_-]{8,64}" autocomplete="off"></label><button>Open school</button></form><p id="status" role="status" aria-live="polite">Awaiting isolated V47 configuration.</p></section>
+<section id="workspace" hidden><h2 id="school-title"></h2><p id="role"></p><p><small>Read-only preview: Viewer and Teacher cannot change records here. Firestore rules must also enforce access.</small></p><div id="tables"></div></section>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getFirestore,doc,getDoc,collection,getDocs,query,limit} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {assertSchoolId,schoolCollectionPath} from "../../src/v47/tenant-domain.mjs";
+const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#login-form"),logout=document.querySelector("#logout"),schoolForm=document.querySelector("#school-form"),status=document.querySelector("#status"),workspace=document.querySelector("#workspace"),tables=document.querySelector("#tables");
+let epoch=0,auth,db;
+const say=value=>status.textContent=value;
+const clear=()=>{epoch++;workspace.hidden=true;tables.replaceChildren();document.querySelector("#school-title").textContent="";document.querySelector("#role").textContent="";};
+if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="smss-exam-portal-v47.firebaseapp.com"){login.hidden=true;say("V47 isolated Firebase configuration is missing. No connection started.");}
+else{
+ const app=initializeApp(config,"v47-school-workspace");auth=getAuth(app);db=getFirestore(app);
+ onAuthStateChanged(auth,user=>{clear();login.hidden=!!user;logout.hidden=!user;schoolForm.hidden=!user;document.querySelector("#identity").textContent=user?"Signed in: "+user.email:"Not signed in";if(!user)say("Sign in to inspect a school.");});
+ login.addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(login);try{await signInWithEmailAndPassword(auth,String(f.get("email")),String(f.get("password")));say("Signed in. Enter your school ID.");}catch{say("Sign in failed.");}login.elements.namedItem("password").value="";});
+ logout.addEventListener("click",async()=>{clear();try{await signOut(auth);}catch{say("Sign out failed.");}});
+ schoolForm.elements.namedItem("schoolId").addEventListener("input",clear);
+ schoolForm.addEventListener("submit",async e=>{
+  e.preventDefault();clear();const token=epoch,user=auth.currentUser;
+  if(!user){say("Sign in required.");return;}
+  try{
+   const schoolId=assertSchoolId(schoolForm.elements.namedItem("schoolId").value);
+   say("Verifying school access...");
+   const [school,member]=await Promise.all([getDoc(doc(db,"schools",schoolId)),getDoc(doc(db,"schools",schoolId,"members",user.uid))]);
+   if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
+   if(!school.exists() || school.data().status!=="active" || !member.exists() || member.data().active!==true)throw new Error("School inactive or membership unavailable");
+   const roles=member.data().roles;
+   if(!Array.isArray(roles) || !roles.some(role=>["school_admin","class_teacher","subject_teacher","viewer"].includes(role)))throw new Error("No supported school role");
+   document.querySelector("#school-title").textContent=String(school.data().name||schoolId);
+   document.querySelector("#role").textContent="Access: "+roles.join(", ")+" (read-only preview)";
+   for(const kind of ["students","classes","subjects","exams"]){
+    const result=await getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),limit(20)));
+    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
+    const section=document.createElement("section"),heading=document.createElement("h3"),list=document.createElement("ul");
+    heading.textContent=kind+" (up to 20 records)";section.append(heading);
+    for(const record of result.docs){const li=document.createElement("li");li.textContent=record.id;list.append(li);}
+    if(result.empty){const li=document.createElement("li");li.textContent="No records";list.append(li);}
+    section.append(list);tables.append(section);
+   }
+   workspace.hidden=false;say("School data loaded (read-only).");
+  }catch(error){if(token===epoch){clear();say("Unable to load school: "+error.message);}}
+ });
+}
+</script></body></html>
