@@ -6,6 +6,10 @@ assert.equal(a.annualFeeNpr,3000);assert.equal(b.annualFeeNpr,0);
 assert.equal(a.status,"pending");assert.equal(b.subscriptionStatus,"free");
 assert.notEqual(schoolCollectionPath(a.schoolId,"students"),schoolCollectionPath(b.schoolId,"students"));
 assert.equal(schoolDocumentPath(a.schoolId),"schools/school_A001");
+for(const collection of ["classes","subjects","school_settings","mark_settings","certificates","assignments","members","invitations"]){
+ assert.equal(schoolCollectionPath(a.schoolId,collection),"schools/school_A001/"+collection);
+ assert.notEqual(schoolCollectionPath(a.schoolId,collection),schoolCollectionPath(b.schoolId,collection));
+}
 assert.throws(()=>assertSchoolId("../students"));
 assert.throws(()=>schoolCollectionPath(a.schoolId,"user_roles"));
 assert.throws(()=>annualFeeNpr(-1));
