@@ -191,3 +191,10 @@ Mark Ledger comparison was not completed before the browser session became unava
 Authenticated IEMIS showed saved sample values in all three terms. First and Second use one marks column per subject, without IN subheaders, ordered Computer, Environment, Social, Science, Mathematics, English, Nepali. Values respectively: 41, 22, 20, 23, 20, 20, 21. Corrected this scoped term rendering and added value/order/historical-isolation regression tests; local ledger suite passes.
 
 Final shows IN/TH pairs. Observed order and values: English 20/58; Nepali 21/60; Computer 41/40; Environment 22/62; Social 20/57; Science 23/65; Mathematics 20/55. Final order differs from both term ledgers and Grade Ledger; its ordering mechanism has not yet been established, so no global ordering change was made. No marks were written during this verification. Native print/PDF, watermark, remaining edit/validation and group expansion still pending. No production deployment.
+
+
+## Annual ordering recheck and Computer defaults
+
+On a new Class IX Final Mark Ledger load with the same 2083 filters, IEMIS returned Nepali, English, Mathematics, Science, Social, Environment, Computer instead of the previously observed English/Nepali/Computer-first order. The source ordering is not stable across these observations; the anomalous first order is not hardcoded into SMSS.
+
+The current branch already has approved Computer 4/36/10 in the grid. Inspection found English-named Computer assessment defaults still took ordinary-subject 3/16/6, and a legacy Excel heading array retained 3/41/6. Corrected both defaults without writing settings or marks. Regression covers English/Nepali subject names, all IX/X term component limits, rejection of excess input, and preservation/blocking of incompatible historical 3/41/6 records. Entry and Grade Sheet/ledger suites pass locally. Full single-subject historical edit parity and the remaining print/group verification are still pending. No production deployment.
