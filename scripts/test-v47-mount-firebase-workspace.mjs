@@ -63,4 +63,22 @@ await new Promise(resolve=>setImmediate(resolve));
 assert.equal(anotherRoot.children[2].children.length,0,"Logout must not restore stale school options");
 assert.equal(anotherRoot.children[5].textContent,"Load your schools to begin");
 anotherView.dispose();
+// Returning signed-in users get their school choices without a manual click.
+const returningRoot=new Element("main");
+const returningAuth={currentUser:{uid:"returning",getIdToken:async()=>"returning-token"}};
+let returningLoads=0;
+const returningView=mountV47FirebaseWorkspace({
+ bsToAd:()=> "2026-04-14",adToBs:()=> "2083-01-01",
+ root:returningRoot,document,auth:returningAuth,
+ fetchImpl:async url=>{
+  if(!url.endsWith("/schools"))throw Error("Unexpected request");
+  returningLoads++;
+  return {ok:true,json:async()=>({schools:[{schoolId:"school_A001",schoolName:"A",roles:["viewer"]}]})};
+ },
+ subscribeAuthState:()=>()=>{}
+});
+await new Promise(resolve=>setImmediate(resolve));
+assert.equal(returningLoads,1,"Already authenticated user should auto-load schools exactly once");
+assert.equal(returningRoot.children[2].children.length,1,"Returning user should see school options");
+returningView.dispose();
 console.log("V47 Firebase workspace logout and user switch tests passed");
