@@ -146,7 +146,13 @@ service cloud.firestore {
     match /schools/{schoolId} {
       allow read: if member(schoolId) || platformAdmin();
       allow create: if platformAdmin() && validNewSchool(schoolId);
-      allow update, delete: if false;
+      // Spark activation: only a pre-enrolled platform admin may activate
+      // an existing pending school without changing identity or billing fields.
+      allow update: if platformAdmin() &&
+        resource.data.status == 'pending' &&
+        request.resource.data.status == 'active' &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+      allow delete: if false;
       match /members/{uid} {
         allow read: if member(schoolId) && request.auth.uid == uid;
         allow create: if platformAdmin() && validNewSchoolMember(schoolId, uid);
