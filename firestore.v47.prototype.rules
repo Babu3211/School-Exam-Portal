@@ -275,7 +275,10 @@ service cloud.firestore {
           exists(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.resource.data.uid)) &&
           get(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.resource.data.uid)).data.active == true &&
           get(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.resource.data.uid)).data.roles.hasAny([request.resource.data.kind]);
-        allow update, delete: if false;
+        allow update: if admin(schoolId) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active']) &&
+          request.resource.data.active is bool;
+        allow delete: if false;
       }
       match /marks/{id} {
         allow read: if member(schoolId);
