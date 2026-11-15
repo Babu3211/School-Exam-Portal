@@ -74,6 +74,7 @@ jobs:
           grep -q 'epoch!==authEpoch' dist/v47-spark/prototypes/v47/spark-school-registration.html
           test "$(grep -Fc 'verifiedSchoolId!==schoolId || epoch!==verificationEpoch' dist/v47-spark/prototypes/v47/spark-school-registration.html)" -eq 2
           test "$(grep -Fc 'recheckManagement(input)' dist/v47-spark/prototypes/v47/spark-school-registration.html)" -eq 4
+          test "$(grep -Fc 'await recheckManagement({schoolId});' dist/v47-spark/prototypes/v47/spark-school-registration.html)" -eq 2
       - name: V46 existing exam portal regression suite (read-only)
         if: success() || failure()
         run: |
