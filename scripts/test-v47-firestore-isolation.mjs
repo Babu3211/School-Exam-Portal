@@ -54,8 +54,12 @@ try {
  await assertFails(getDoc(doc(admin,"schools",schoolB,"members","viewerB")));
  await assertFails(getDocs(collection(admin,"schools",schoolB,"members")));
  await assertFails(setDoc(doc(admin,"schools",schoolA,"members","adminA"),{active:true,roles:["school_admin"]}));
- await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"members","newViewer"),{uid:"newViewer",schoolId:schoolA,active:true,roles:["viewer"]}));
- await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"members","newTeacher"),{uid:"newTeacher",schoolId:schoolA,active:true,roles:["subject_teacher"]}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"members","newViewer"),{uid:"newViewer",schoolId:schoolA,active:true,roles:["viewer"]}));
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"invitations","newViewer"),{uid:"newViewer",schoolId:schoolA,active:true,roles:["viewer"]}));
+ await assertSucceeds(setDoc(doc(env.authenticatedContext("newViewer").firestore(),"schools",schoolA,"members","newViewer"),{uid:"newViewer",schoolId:schoolA,active:true,roles:["viewer"]}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"members","newTeacher"),{uid:"newTeacher",schoolId:schoolA,active:true,roles:["subject_teacher"]}));
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"invitations","newTeacher"),{uid:"newTeacher",schoolId:schoolA,active:true,roles:["subject_teacher"]}));
+ await assertSucceeds(setDoc(doc(env.authenticatedContext("newTeacher").firestore(),"schools",schoolA,"members","newTeacher"),{uid:"newTeacher",schoolId:schoolA,active:true,roles:["subject_teacher"]}));
  await assertFails(setDoc(doc(admin,"schools",schoolB,"members","outsider"),{uid:"outsider",schoolId:schoolB,active:true,roles:["viewer"]}));
  await assertFails(setDoc(doc(viewer,"schools",schoolA,"members","viewerCreated"),{uid:"viewerCreated",schoolId:schoolA,active:true,roles:["viewer"]}));
  await assertFails(setDoc(doc(admin,"schools",schoolA,"members","newAdmin"),{uid:"newAdmin",schoolId:schoolA,active:true,roles:["school_admin"]}));
@@ -104,7 +108,9 @@ try {
  await assertFails(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_revoked"),assignedMark));
  await assertSucceeds(updateDoc(subjectAssignmentRef,{active:true}));
  await assertSucceeds(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_restored"),assignedMark));
- await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"members","newClassTeacher"),{uid:"newClassTeacher",schoolId:schoolA,active:true,roles:["class_teacher"]}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"members","newClassTeacher"),{uid:"newClassTeacher",schoolId:schoolA,active:true,roles:["class_teacher"]}));
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"invitations","newClassTeacher"),{uid:"newClassTeacher",schoolId:schoolA,active:true,roles:["class_teacher"]}));
+ await assertSucceeds(setDoc(doc(env.authenticatedContext("newClassTeacher").firestore(),"schools",schoolA,"members","newClassTeacher"),{uid:"newClassTeacher",schoolId:schoolA,active:true,roles:["class_teacher"]}));
  const classAssignment={uid:"newClassTeacher",schoolId:schoolA,classId:"9",kind:"class_teacher",active:true,terms:["first","final"]};
  await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"assignments","newClassTeacher_9"),classAssignment));
  const assignedClassTeacher=env.authenticatedContext("newClassTeacher").firestore();
