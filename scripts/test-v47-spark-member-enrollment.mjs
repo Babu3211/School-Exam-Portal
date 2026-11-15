@@ -1,0 +1,10 @@
+import assert from "node:assert/strict";
+import {enrollSparkSchoolMember} from "../src/v47/spark-school-member-enrollment.mjs";
+const writes=[];
+const args={auth:{currentUser:{uid:"adminA"}},firestore:{},doc:(_db,...path)=>path.join("/"),setDoc:async(path,data)=>writes.push({path,data}),projectId:"smss-exam-portal-v47",schoolId:"school_A001",uid:"teacherB",role:"subject_teacher"};
+await assert.rejects(enrollSparkSchoolMember({...args,projectId:"exam-portal-smss-95016"}),/V47 staging/);
+await assert.rejects(enrollSparkSchoolMember({...args,role:"school_admin"}),/Only teacher or viewer/);
+await assert.rejects(enrollSparkSchoolMember({...args,uid:"adminA"}),/Invalid target/);
+assert.deepEqual(await enrollSparkSchoolMember(args),{schoolId:"school_A001",uid:"teacherB",role:"subject_teacher"});
+assert.deepEqual(writes,[{path:"schools/school_A001/members/teacherB",data:{uid:"teacherB",schoolId:"school_A001",roles:["subject_teacher"],active:true}}]);
+console.log("V47 Spark limited member enrollment checks passed");
