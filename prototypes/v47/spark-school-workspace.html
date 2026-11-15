@@ -45,7 +45,14 @@ else{
     if(result.empty){const li=document.createElement("li");li.textContent="No records";list.append(li);}
     section.append(list);staged.push(section);
    }
+   const [latestSchool,latestMember]=await Promise.all([
+    getDoc(doc(db,"schools",schoolId)),
+    getDoc(doc(db,"schools",schoolId,"members",user.uid))
+   ]);
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
+   if(!latestSchool.exists() || latestSchool.data().status!=="active" ||
+      !latestMember.exists() || latestMember.data().active!==true)
+    throw new Error("School access changed during loading");
    tables.replaceChildren(...staged);
    workspace.hidden=false;say("School data loaded (read-only).");
   }catch(error){if(token===epoch){clear();say("Unable to load school: "+error.message);}}
