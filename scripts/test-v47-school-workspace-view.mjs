@@ -21,6 +21,10 @@ const view=mountV47SchoolWorkspace({bsToAd:()=> "2026-04-14",adToBs:()=> "2083-0
 const [heading,loadSchools,schoolInput,open,clear,status,panel]=root.children;
 assert.equal(heading.textContent,"V47 School Workspace");
 assert.equal(panel.hidden,true);
+for(const index of [8,9,10,11]){
+ assert.equal(panel.children[index].hidden,true,"Edit controls must be hidden before login authorization");
+ assert.equal(panel.children[index].disabled,true,"Edit controls must be disabled before login authorization");
+}
 await loadSchools.onclick();
 schoolInput.value="school_A001";
 await open.onclick();
