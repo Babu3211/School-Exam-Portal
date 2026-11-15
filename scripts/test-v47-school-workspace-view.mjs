@@ -205,6 +205,7 @@ assert.equal(pendingButton.disabled,true,"Reopening school cannot unlock pending
 await pendingButton.onclick();
 releasePendingWrite();await firstPendingSave;
 assert.equal(pendingWriteCount,1,"Reopening school must not duplicate pending save");
+assert.equal(pendingButton.disabled,false,"Save unlocks after pending request settles for authorized school");
 pendingView.dispose();
 
 console.log("V47 isolated school workspace browser view tests passed");
