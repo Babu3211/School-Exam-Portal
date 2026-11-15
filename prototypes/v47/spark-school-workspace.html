@@ -51,7 +51,9 @@ else{
    ]);
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
    if(!latestSchool.exists() || latestSchool.data().status!=="active" ||
-      !latestMember.exists() || latestMember.data().active!==true)
+      !latestMember.exists() || latestMember.data().active!==true ||
+      !Array.isArray(latestMember.data().roles) ||
+      !latestMember.data().roles.some(role=>["school_admin","class_teacher","subject_teacher","viewer"].includes(role)))
     throw new Error("School access changed during loading");
    tables.replaceChildren(...staged);
    workspace.hidden=false;say("School data loaded (read-only).");
