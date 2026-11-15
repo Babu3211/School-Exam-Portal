@@ -35,4 +35,32 @@ assert.equal(schoolInput.children[0].value,"school_A001");
 view.dispose();
 assert.equal(unsubscribed,true);
 assert.equal(root.children.length,0);
+// Pending school list must not reappear after logout.
+let releaseList,startedList;
+const listStarted=new Promise(resolve=>{startedList=resolve;});
+const anotherRoot=new Element("main");
+const anotherAuth={currentUser:null};
+let anotherListener;
+const anotherView=mountV47FirebaseWorkspace({
+ bsToAd:()=> "2026-04-14",adToBs:()=> "2083-01-01",
+ root:anotherRoot,document,auth:anotherAuth,
+ fetchImpl:async url=>{
+  if(url.endsWith("/schools")){
+   startedList();
+   return new Promise(resolve=>{releaseList=resolve;});
+  }
+  throw Error("Unexpected request");
+ },
+ subscribeAuthState:(_auth,callback)=>{anotherListener=callback;return ()=>{};}
+});
+anotherAuth.currentUser={uid:"another",getIdToken:async()=>"token"};
+anotherListener(anotherAuth.currentUser);
+await listStarted;
+anotherAuth.currentUser=null;
+anotherListener(null);
+releaseList({ok:true,json:async()=>({schools:[{schoolId:"school_A001",schoolName:"A",roles:["viewer"]}]})});
+await new Promise(resolve=>setImmediate(resolve));
+assert.equal(anotherRoot.children[2].children.length,0,"Logout must not restore stale school options");
+assert.equal(anotherRoot.children[5].textContent,"Load your schools to begin");
+anotherView.dispose();
 console.log("V47 Firebase workspace logout and user switch tests passed");
