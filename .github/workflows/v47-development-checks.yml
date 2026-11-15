@@ -117,6 +117,9 @@ jobs:
       - name: V47 Spark platform-admin Firestore emulator authorization
         if: success() || failure()
         run: npx firebase emulators:exec --project v47-spark-platform-rules-test --only firestore --config firebase.v47.emulator.json "node scripts/test-v47-spark-platform-rules.mjs"
+      - name: V47 scalable school pagination and access checks
+        if: success() || failure()
+        run: node scripts/test-v47-spark-workspace-pagination.mjs
       - name: V47 Spark school member access toggle test
         if: success() || failure()
         run: node scripts/test-v47-spark-member-status.mjs
