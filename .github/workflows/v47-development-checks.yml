@@ -42,6 +42,14 @@ jobs:
             exit 1
           fi
           node scripts/build-v47-spark-staging.mjs
+          test ! -e dist/v47-spark/prototypes/v47/spark-config.js
+          test ! -e dist/v47-spark/index.html.bak
+          test ! -e dist/v47-spark/firebase.json
+          test ! -e dist/v47-spark/firestore.rules
+          test ! -e dist/v47-spark/scripts
+          test ! -e dist/v47-spark/docs
+          test ! -e dist/v47-spark/sw.js
+          test -f dist/v47-spark/prototypes/v47/spark-school-registration.html
       - name: V46 existing exam portal regression suite (read-only)
         if: success() || failure()
         run: |
