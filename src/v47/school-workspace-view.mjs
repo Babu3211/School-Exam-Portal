@@ -11,6 +11,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
  const workspace=createV47VerifiedSchoolWorkspace({getIdToken,fetchImpl,bsToAd});
  let renderGeneration=0;
  let rowsGeneration=0;
+ let savingStudent=false;
  const element=(tag,text)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=String(text);return el;};
  const status=element("p","Select a school to begin");
  const heading=element("h2","V47 School Workspace");
@@ -112,8 +113,12 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   }catch(error){if(current===renderGeneration && rowsRequest===rowsGeneration){result.textContent="";showError(error);}}
  };
  saveStudentButton.onclick=()=>{
-  if(saveStudentButton.hidden || saveStudentButton.disabled || studentEditControls.some(control=>control.disabled))return;
-  return showRows(()=>workspace.saveStudent({studentId:studentIdInput.value.trim(),mode:studentMode.value,values:Object.fromEntries([["name",studentNameInput.value.trim()],["className",studentClassInput.value.trim() ]].filter(([,value])=>value))}));
+  if(savingStudent || saveStudentButton.hidden || saveStudentButton.disabled || studentEditControls.some(control=>control.disabled))return;
+  savingStudent=true;
+  saveStudentButton.disabled=true;
+  const requestGeneration=renderGeneration;
+  try{return await showRows(()=>workspace.saveStudent({studentId:studentIdInput.value.trim(),mode:studentMode.value,values:Object.fromEntries([["name",studentNameInput.value.trim()],["className",studentClassInput.value.trim() ]].filter(([,value])=>value))}));}
+  finally{savingStudent=false;if(requestGeneration===renderGeneration && !saveStudentButton.hidden)saveStudentButton.disabled=false;}
  };
  recordsButton.onclick=()=>showRows(()=>workspace.readRecords({collection:recordsSelect.value,limit:100}));
  marksButton.onclick=()=>showRows(()=>workspace.readMarks({className:classInput.value.trim(),subject:subjectInput.value.trim()}));
