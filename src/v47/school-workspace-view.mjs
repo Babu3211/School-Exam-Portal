@@ -102,6 +102,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   status.textContent="Load your schools to begin";
  };
  const showRows=async(loader,formatRows=rows=>rows)=>{
+  if(panel.hidden)return;
   const current=renderGeneration;
   const rowsRequest=++rowsGeneration;
   result.textContent="Loading...";
