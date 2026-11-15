@@ -151,6 +151,9 @@ jobs:
       - name: V47 isolated runtime entrypoint and production guard
         if: success() || failure()
         run: node scripts/test-v47-isolated-runtime-contract.mjs
+      - name: V47 complete school registration and invitation transaction flow
+        if: success() || failure()
+        run: node scripts/test-v47-onboarding-full-flow.mjs
       - name: V47 trusted platform onboarding HTTP boundary
         if: success() || failure()
         run: node scripts/test-v47-node-onboarding-handler.mjs
