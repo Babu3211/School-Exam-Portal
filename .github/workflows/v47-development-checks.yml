@@ -66,6 +66,7 @@ jobs:
           test ! -e dist/v47-spark/docs
           test ! -e dist/v47-spark/sw.js
           test -f dist/v47-spark/prototypes/v47/spark-school-registration.html
+          grep -q 'schoolSnapshot.data()?.status!=="active"' dist/v47-spark/prototypes/v47/spark-school-registration.html
       - name: V46 existing exam portal regression suite (read-only)
         if: success() || failure()
         run: |
