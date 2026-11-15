@@ -4,12 +4,12 @@ const docs=new Map([["schools/school_A001",{status:"active"}],["schools/school_A
 const queries=[];
 const firestore={
  doc:path=>({get:async()=>({exists:docs.has(path),data:()=>docs.get(path)})}),
- collection:path=>({where(field,op,value){queries.push([path,field,op,value]);return this;},async get(){return {docs:[{id:"mark1",data:()=>({score:81})}]};}})
+ collection:path=>({where(field,op,value){queries.push([path,field,op,value]);return this;},async get(){return {docs:[{id:"mark1",data:()=>({score:81,className:"9",subject:"Computer"})}]};}})
 };
 const auth={verifyIdToken:async(token,revoked)=>{assert.equal(revoked,true);if(token!=="valid")throw Error("Invalid token");return {uid:"user1",firebase:{sign_in_provider:"password"}};}};
 const handler=createV47MarksHttpHandler({auth,firestore});
 const request={method:"GET",headers:{authorization:"Bearer valid"},query:{schoolId:"school_A001",className:"9",subject:"Computer"}};
-assert.deepEqual(await handler(request),{status:200,body:{marks:[{id:"mark1",score:81}]}});
+assert.deepEqual(await handler(request),{status:200,body:{marks:[{id:"mark1",score:81,className:"9",subject:"Computer"}]}});
 assert.equal(queries.length,2);
 assert.equal((await handler({...request,method:"POST"})).status,405);
 assert.equal((await handler({...request,headers:{}})).status,401);
