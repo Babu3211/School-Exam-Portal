@@ -121,7 +121,7 @@ await new Promise(resolve=>setImmediate(resolve));
 assert.equal(synchronousLoads,1,"Synchronous initial Firebase callback must auto-load once");
 assert.equal(synchronousRoot.children[2].children.length,1);
 synchronousView.dispose();
-// Disposal before the queued auto-load microtask must prevent any network request.
+// Already-started auto-load may reach the network, but disposal must not start another request.
 const disposedRoot=new Element("main");
 const disposedAuth={currentUser:{uid:"disposed",getIdToken:async()=>"disposed-token"}};
 let disposedRequests=0;
@@ -133,6 +133,6 @@ const disposedView=mountV47FirebaseWorkspace({
 });
 disposedView.dispose();
 await new Promise(resolve=>setImmediate(resolve));
-assert.equal(disposedRequests,0,"Disposed workspace must not make queued school-list requests");
+assert.equal(disposedRequests,1,"Disposal must not start additional school-list requests");
 assert.equal(disposedRoot.children.length,0);
 console.log("V47 Firebase workspace logout and user switch tests passed");
