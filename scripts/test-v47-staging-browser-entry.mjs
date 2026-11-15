@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const html=readFileSync(new URL("../prototypes/v47/verified-workspace-staging.html",import.meta.url),"utf8");
+assert.match(html,/mountV47FirebaseWorkspace/);
+assert.match(html,/signInWithEmailAndPassword/);
+assert.match(html,/onAuthStateChanged/);
+assert.match(html,/signOut\(auth\)/);
+assert.match(html,/__SMSS_V47_STAGING_CONFIG__/);
+assert.match(html,/projectId==="exam-portal-smss-95016"/);
+assert.doesNotMatch(html,/AIzaSy/);
+assert.doesNotMatch(html,/getFirestore|collection\(/);
+console.log("V47 staging browser entry uses isolated Firebase Auth and production-project guard");
