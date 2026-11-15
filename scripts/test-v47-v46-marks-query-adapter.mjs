@@ -22,6 +22,12 @@ await assert.rejects(readV46MarksForSchool({schoolId:"school_A001",className:"9"
 assert.equal(calls.length,1,"Rejected queries must not access the gateway");
 const wrongTenant={queryCollection:async()=>[{id:"m2",schoolId:"school_B001",className:"9",subject:"Computer"}]};
 await assert.rejects(readV46MarksForSchool({schoolId:"school_A001",className:"9",subject:"Computer",gateway:wrongTenant}),/tenant mismatch/);
+const wrongClass={queryCollection:async()=>[{id:"m4",schoolId:"school_A001",className:"10",subject:"Computer"}]};
+await assert.rejects(readV46MarksForSchool({schoolId:"school_A001",className:"9",subject:"Computer",gateway:wrongClass}),/result mismatch/);
+const wrongSubject={queryCollection:async()=>[{id:"m5",schoolId:"school_A001",className:"9",subject:"Math"}]};
+await assert.rejects(readV46MarksForSchool({schoolId:"school_A001",className:"9",subject:"Computer",gateway:wrongSubject}),/result mismatch/);
+const wrongSection={queryCollection:async()=>[{id:"m6",schoolId:"school_A001",className:"9",subject:"Computer",section:"B"}]};
+await assert.rejects(readV46MarksForSchool({schoolId:"school_A001",className:"9",subject:"Computer",section:"A",gateway:wrongSection}),/result mismatch/);
 const matchingTenant={queryCollection:async()=>[{id:"m3",schoolId:"school_A001",className:"9",subject:"Computer"}]};
 assert.equal((await readV46MarksForSchool({schoolId:"school_A001",className:"9",subject:"Computer",gateway:matchingTenant})).length,1);
 await assert.rejects(readV46MarksForSchool({schoolId:"school_A001",className:"9",subject:"Computer",gateway:{queryCollection:async()=>null}}),/Invalid marks query response/);
