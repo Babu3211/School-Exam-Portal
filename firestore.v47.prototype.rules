@@ -175,12 +175,11 @@ service cloud.firestore {
       }
       match /members/{uid} {
         allow read: if member(schoolId) && (request.auth.uid == uid || admin(schoolId));
-        // School admin may grant a limited teacher/viewer role to a known Auth UID.
-        // School-admin delegation remains prohibited.
-        allow create: if (platformAdmin() && validNewSchoolMember(schoolId, uid)) ||
-          false;
+        // Initial school admin is created only in the platform-admin bootstrap batch.
+        allow create: if platformAdmin() && validNewSchoolMember(schoolId, uid);
         // A target user accepts their own immutable invitation.
         allow create: if request.auth != null &&
+          get(/databases/$(database)/documents/schools/$(schoolId)).data.status == 'active' &&
           request.auth.uid == uid &&
           request.resource.data.keys().hasOnly(['uid','schoolId','roles','active']) &&
           request.resource.data.keys().hasAll(['uid','schoolId','roles','active']) &&
