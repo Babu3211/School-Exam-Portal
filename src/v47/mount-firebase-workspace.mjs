@@ -15,7 +15,7 @@ export function mountV47FirebaseWorkspace({root,document,auth,fetchImpl,subscrib
  let initial=true;
  let lastUser=auth.currentUser?.uid ?? null;
  let unsubscribe;
- const refreshSchools=()=>{void Promise.resolve().then(()=>view.loadSchools()).catch(()=>{});};
+ const refreshSchools=()=>{void Promise.resolve().then(()=>{if(!disposed)return;return view.loadSchools();}).catch(()=>{});};
  try {
   unsubscribe=subscribeAuthState(auth,user=>{
    if(disposed)return;
