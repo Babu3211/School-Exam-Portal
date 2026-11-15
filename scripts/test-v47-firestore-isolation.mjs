@@ -329,5 +329,16 @@ try {
  });
  await assertSucceeds(getDoc(doc(classTeacher,"schools",schoolA,"attendance","a1")));
 
+ // Disabling the class assignment blocks attendance writes without removing membership.
+ await env.withSecurityRulesDisabled(async context=>{
+   await updateDoc(doc(context.firestore(),"schools",schoolA,"assignments","classA_9"),{active:false});
+ });
+ await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","inactive_assignment"),attendance));
+ await assertSucceeds(getDoc(doc(classTeacher,"schools",schoolA,"attendance","a1")));
+ await env.withSecurityRulesDisabled(async context=>{
+   await updateDoc(doc(context.firestore(),"schools",schoolA,"assignments","classA_9"),{active:true});
+ });
+ await assertSucceeds(setDoc(doc(classTeacher,"schools",schoolA,"attendance","active_assignment"),attendance));
+
  console.log("V47 tenant Firestore emulator isolation and exam assignment tests passed");
 } finally {await env.cleanup();}
