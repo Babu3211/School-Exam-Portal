@@ -28,6 +28,8 @@ await assert.rejects(()=>app.selectSchool("school_A001"),/verified membership/);
 let releaseOld;
 const oldResponse=new Promise(resolve=>{releaseOld=resolve;});
 let dashboardCalls=0;
+let notifyOldStarted;
+const oldStarted=new Promise(resolve=>{notifyOldStarted=resolve;});
 const race=createV47VerifiedSchoolWorkspace({
  getIdToken:async()=>"token",
  bsToAd:()=> "2026-11-14",
@@ -38,6 +40,7 @@ const race=createV47VerifiedSchoolWorkspace({
   ]})};
   if(url==="/api/v47/dashboard?schoolId=school_A001"){
    dashboardCalls++;
+   notifyOldStarted();
    return oldResponse;
   }
   if(url==="/api/v47/dashboard?schoolId=school_B001")
@@ -47,6 +50,7 @@ const race=createV47VerifiedSchoolWorkspace({
 });
 await race.loadSchools();
 const stale=race.selectSchool("school_A001");
+await oldStarted;
 await race.loadSchools();
 await race.selectSchool("school_B001");
 releaseOld({ok:true,json:async()=>({dashboard:{schoolId:"school_A001",schoolName:"A",roles:["viewer"],readOnly:true}})});
