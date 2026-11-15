@@ -216,6 +216,11 @@ for(const term of ['first','second','annual']){
  assert.match(ledger.body,annual?/>3.48<\/td>/:/>3.66<\/td>/);
  if(!annual){
   assert.doesNotMatch(ledger.head,/<th>IN<\/th>|<th>Total<\/th>/);
+  const marks=iemisLedger({...options,mode:'number'});
+  assert.deepEqual(marks.subjects,[...nineSubjects].reverse());
+  assert.doesNotMatch(marks.head,/<th>IN<\/th>|rowspan/);
+  assert.ok(marks.body.endsWith(nineIn.slice().reverse().map(v=>'<td>'+v+'</td>').join('')+'</tr>'));
+  assert.match(iemisLedger({...options,mode:'number',academicYear:'2082'}).head,/<th>IN<\/th>/);
   const alternate=rs.map((r,i)=>i===6?{...r,scores:[{name:'Internal',fullMarks:50,obtained:30}]}:r);
   assert.match(iemisLedger({...options,records:alternate}).body,/>3.48<\/td>/,'Computer term credit must weigh 2/9, not 4/32');
   const absent=rs.map((r,i)=>i?r:{...r,isAbsent:true});
