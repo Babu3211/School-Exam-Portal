@@ -46,7 +46,9 @@ else{
        kind==="subjects" ? (data.name||data.subjectName||data.label) :
        (data.name||data.examName||data.title);
      const safeLabel=typeof label==="string" && label.trim()?label.trim().slice(0,120):record.id;
-     li.textContent=safeLabel===record.id?record.id:safeLabel+" ("+record.id+")";
+     const secondary=kind==="students" && (data.className||data.classId||data.grade);
+     const classText=typeof secondary==="string" || typeof secondary==="number" ? String(secondary).slice(0,40) : "";
+     li.textContent=(safeLabel===record.id?record.id:safeLabel+" ("+record.id+")")+(classText?" — Class "+classText:"");
      list.append(li);
     }
     if(result.empty){const li=document.createElement("li");li.textContent="No records";list.append(li);}
