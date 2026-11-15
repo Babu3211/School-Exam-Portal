@@ -81,4 +81,22 @@ await new Promise(resolve=>setImmediate(resolve));
 assert.equal(returningLoads,1,"Already authenticated user should auto-load schools exactly once");
 assert.equal(returningRoot.children[2].children.length,1,"Returning user should see school options");
 returningView.dispose();
+// Firebase SDK may invoke its initial auth callback synchronously.
+const synchronousRoot=new Element("main");
+const synchronousAuth={currentUser:{uid:"sync",getIdToken:async()=>"sync-token"}};
+let synchronousLoads=0;
+const synchronousView=mountV47FirebaseWorkspace({
+ bsToAd:()=> "2026-04-14",adToBs:()=> "2083-01-01",
+ root:synchronousRoot,document,auth:synchronousAuth,
+ fetchImpl:async url=>{
+  if(!url.endsWith("/schools"))throw Error("Unexpected request");
+  synchronousLoads++;
+  return {ok:true,json:async()=>({schools:[{schoolId:"school_A001",schoolName:"A",roles:["viewer"]}]})};
+ },
+ subscribeAuthState:(_auth,callback)=>{callback(synchronousAuth.currentUser);return ()=>{};}
+});
+await new Promise(resolve=>setImmediate(resolve));
+assert.equal(synchronousLoads,1,"Synchronous initial Firebase callback must auto-load once");
+assert.equal(synchronousRoot.children[2].children.length,1);
+synchronousView.dispose();
 console.log("V47 Firebase workspace logout and user switch tests passed");
