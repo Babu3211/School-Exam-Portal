@@ -36,7 +36,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
  document.querySelector("#login").disabled=true;
 }else{
  const app=initializeApp(config,"v47-spark-school-registration"),auth=getAuth(app),firestore=getFirestore(app);
- let authorized=false,verifiedSchoolId=null,verificationEpoch=0;
+ let authorized=false,verifiedSchoolId=null,verificationEpoch=0,authEpoch=0;
  const managementForms=[memberForm,assignmentForm,memberStatusForm,assignmentStatusForm];
  const clearAssignments=()=>{assignmentsPanel.hidden=true;assignmentsList.replaceChildren();};
  const refreshAssignments=async()=>{
@@ -102,16 +102,17 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
  const managementAllowed=input=>verifiedSchoolId && auth.currentUser && input.schoolId===verifiedSchoolId && schoolAdminCheck.elements.namedItem("schoolId").value===verifiedSchoolId;
  schoolAdminCheck.elements.namedItem("schoolId").addEventListener("input",hideManagement);
  onAuthStateChanged(auth,async user=>{
+  const epoch=++authEpoch;
   authorized=false;form.hidden=true;activationForm.hidden=true;hideManagement();document.querySelector("#login-form").hidden=!!user;document.querySelector("#password").value="";document.querySelector("#accept-invitation-form").hidden=!user;schoolAdminCheck.hidden=!user;document.querySelector("#logout").hidden=!user;
   identity.textContent=user?"Signed in: "+user.email:"Not signed in";
   if(!user)return;
   try{
    const status=await checkSparkPlatformAdmin({auth,firestore,doc,getDoc});
-   if(auth.currentUser?.uid!==user.uid)return;
+   if(auth.currentUser?.uid!==user.uid || epoch!==authEpoch)return;
    authorized=status.isPlatformAdmin;
    form.hidden=!authorized;activationForm.hidden=!authorized;
    say(authorized?"Platform Admin verified. Only pending schools may be created.":"Platform Admin access denied.");
-  }catch{say("Unable to verify Platform Admin. Check deployed rules and connection.");}
+  }catch{if(epoch===authEpoch)say("Unable to verify Platform Admin. Check deployed rules and connection.");}
  });
  document.querySelector("#accept-invitation-form").addEventListener("submit",async event=>{
   event.preventDefault();
