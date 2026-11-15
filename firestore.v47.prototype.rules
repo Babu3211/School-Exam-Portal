@@ -99,7 +99,12 @@ service cloud.firestore {
            request.resource.data.classId,request.resource.data.term,'class_teacher')));
     }
     // All onboarding and role changes require trusted server Admin SDK.
-    match /platform_admins/{uid} { allow read, write: if false; }
+    match /platform_admins/{uid} {
+      // Spark Web SDK: a signed-in user may read only their own bootstrap status.
+      // No client can create, update or delete platform admin privileges.
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
     match /schools/{schoolId} {
       allow read: if member(schoolId) || platformAdmin();
       allow write: if false;
