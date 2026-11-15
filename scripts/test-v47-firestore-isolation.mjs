@@ -70,6 +70,16 @@ try {
  await assertFails(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_m2"),{...assignedMark,subjectId:"math"}));
  await assertFails(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_m3"),{...assignedMark,term:"second"}));
  await assertFails(setDoc(doc(assignedSubject,"schools",schoolB,"marks","assigned_m4"),{...assignedMark,schoolId:schoolB}));
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"members","newClassTeacher"),{uid:"newClassTeacher",schoolId:schoolA,active:true,roles:["class_teacher"]}));
+ const classAssignment={uid:"newClassTeacher",schoolId:schoolA,classId:"9",kind:"class_teacher",active:true,terms:["first","final"]};
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"assignments","newClassTeacher_9"),classAssignment));
+ const assignedClassTeacher=env.authenticatedContext("newClassTeacher").firestore();
+ const assignedAttendance={schoolId:schoolA,classId:"9",studentId:"student1",term:"first",present:true};
+ await assertSucceeds(setDoc(doc(assignedClassTeacher,"schools",schoolA,"attendance","assigned_a1"),assignedAttendance));
+ await assertFails(setDoc(doc(assignedClassTeacher,"schools",schoolA,"attendance","assigned_a2"),{...assignedAttendance,classId:"10"}));
+ await assertFails(setDoc(doc(assignedClassTeacher,"schools",schoolA,"attendance","assigned_a3"),{...assignedAttendance,term:"second"}));
+ await assertFails(setDoc(doc(assignedClassTeacher,"schools",schoolB,"attendance","assigned_a4"),{...assignedAttendance,schoolId:schoolB}));
+ await assertFails(setDoc(doc(assignedClassTeacher,"schools",schoolA,"marks","assigned_class_mark"),{schoolId:schoolA,classId:"9",subjectId:"computer",studentId:"student1",term:"first",score:30}));
  await assertFails(setDoc(doc(root,"schools","school_C001"),{name:"No direct client onboarding"}));
  await assertSucceeds(getDoc(doc(root,"schools",schoolA)));
  await assertFails(getDoc(doc(root,"schools",schoolA,"students","student1")));
