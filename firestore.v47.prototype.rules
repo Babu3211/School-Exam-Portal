@@ -207,36 +207,44 @@ service cloud.firestore {
       }
       match /students/{id} {
         allow read: if member(schoolId);
-        allow write: if admin(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
       }
       match /staff/{id} {
         allow read: if member(schoolId);
-        allow write: if admin(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
       }
       // V46 school-owned reference collections: only school admins may modify.
       match /classes/{id} {
         allow read: if member(schoolId);
-        allow write: if admin(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
       }
       match /subjects/{id} {
         allow read: if member(schoolId);
-        allow write: if admin(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
       }
       match /exams/{id} {
         allow read: if member(schoolId);
-        allow write: if admin(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
       }
       match /mark_settings/{id} {
         allow read: if member(schoolId);
-        allow write: if admin(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
       }
       match /school_settings/{id} {
         allow read: if member(schoolId);
-        allow write: if admin(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
       }
       match /certificates/{id} {
         allow read: if member(schoolId);
-        allow write: if admin(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
       }
       // Sensitive audit trail and role mapping: trusted server only.
       match /audit_logs/{id} {
