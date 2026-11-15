@@ -95,4 +95,37 @@ await recordsButton.onclick();
 assert.equal(urls.length,afterLogoutRequests,"Hidden workspace handlers must not request tenant data after logout");
 view.dispose();
 assert.equal(root.children.length,0);
+
+const adminRoot=new FakeElement("main");
+let releaseSave;
+const pendingSave=new Promise(resolve=>{releaseSave=resolve;});
+let saveRequests=0;
+const adminView=mountV47SchoolWorkspace({
+ bsToAd:()=> "2026-04-14",adToBs:()=> "2083-01-01",root:adminRoot,document,
+ getIdToken:async()=>"valid",
+ fetchImpl:async (url,options)=>{
+  if(url.endsWith("/schools"))return {ok:true,json:async()=>({schools:[{schoolId:"school_A001",schoolName:"School A",roles:["school_admin"]}]})};
+  if(url.includes("/dashboard?"))return {ok:true,json:async()=>({dashboard:{schoolId:"school_A001",schoolName:"School A",roles:["school_admin"],readOnly:false}})};
+  if(url.includes("/students/") || url.endsWith("/students")){saveRequests++;await pendingSave;return {ok:true,json:async()=>({student:{id:"s001"}})};}
+  throw Error("Unexpected admin endpoint: "+url);
+ }
+});
+const [,adminLoad,adminSchool,adminOpen,,,adminPanel]=adminRoot.children;
+await adminLoad.onclick();
+adminSchool.value="school_A001";
+await adminOpen.onclick();
+const adminSave=adminPanel.children[12];
+assert.equal(adminSave.disabled,false,"Admin can save after authorization");
+adminPanel.children[8].value="s001";
+adminPanel.children[9].value="Example";
+const firstSave=adminSave.onclick();
+const duplicateSave=adminSave.onclick();
+assert.equal(adminSave.disabled,true,"Save disabled while request pending");
+await duplicateSave;
+releaseSave();
+await firstSave;
+assert.equal(saveRequests,1,"Double-click must submit exactly once");
+assert.equal(adminSave.disabled,false,"Save enabled after completion");
+adminView.dispose();
+
 console.log("V47 isolated school workspace browser view tests passed");
