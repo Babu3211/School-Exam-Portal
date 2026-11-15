@@ -11,7 +11,9 @@ const UID=/^[A-Za-z0-9_-]{1,128}$/;
 const TERMS=new Set(["first","second","final"]);
 export function prepareTeacherAssignment({schoolId,teacherUid,classId,subjectId,kind,terms}) {
  assertSchoolId(schoolId);
- if(!UID.test(teacherUid) || !CLASS.test(classId) ||
+ if(typeof teacherUid!=="string" || typeof classId!=="string" ||
+    (kind==="subject_teacher" && typeof subjectId!=="string") ||
+    !UID.test(teacherUid) || !CLASS.test(classId) ||
     !["subject_teacher","class_teacher"].includes(kind) ||
     (kind==="subject_teacher"&&!SUBJECT.test(subjectId)) ||
     !Array.isArray(terms) || !terms.length || terms.some(t=>!TERMS.has(t)))
