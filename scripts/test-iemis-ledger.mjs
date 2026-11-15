@@ -155,3 +155,33 @@ for(const term of ['first','second','annual']){
  assert.deepEqual({rs,config},before,'Rendering must not mutate source marks or annual credits');
 }
 console.log('Class VI 2083 First/Second GPA 3.48, Final GPA 3.42, credits 16/32, missing/NG and data immutability passed.');
+
+// Verified 2083 Class VI non-final ledgers: one column per subject and GPA.
+const termRecords=sixSubjects.map((subject,i)=>({studentId:'synthetic-1',examId:'synthetic-exam',subject,scores:[{name:'Internal',fullMarks:50,obtained:sixInternal[i]}]}));
+const termOptions={...common,subjects:sixSubjects,records:termRecords,annual:false,academicYear:'2083',creditFor:s=>sixCredits[sixSubjects.indexOf(s)]};
+const untouched=structuredClone(termRecords);
+for(const term of ['first','second']){
+ const grades=iemisLedger({...termOptions,term,mode:'grade'});
+ assert.doesNotMatch(grades.head,/<th>IN<\/th>|<th>Total<\/th>|rowspan/);
+ assert.match(grades.body,/>3.48<\/td>/);
+ const marks=iemisLedger({...termOptions,term,mode:'number'});
+ assert.deepEqual(marks.subjects,term==='first'?sixSubjects:[...sixSubjects].reverse());
+ assert.doesNotMatch(marks.head,/<th>IN<\/th>|rowspan/);
+ assert.equal((grades.body.match(/<td>/g)||[]).length,16);
+ for(const mutate of [
+  rs=>rs.slice(1),
+  rs=>rs.map((r,i)=>i?r:{...r,isAbsent:true}),
+  rs=>rs.map((r,i)=>i?r:{...r,scores:[{name:'Internal',fullMarks:50,obtained:0}]}),
+  rs=>rs.map((r,i)=>i?r:{...r,scores:[{name:'Internal',fullMarks:50,obtained:''}]})
+ ]){
+  const missing=iemisLedger({...termOptions,term,mode:'grade',records:mutate(termRecords)});
+  assert.match(missing.body,/<td>—<\/td><\/tr>$/,'Incomplete/absent/NG must not get numeric GPA');
+ }
+}
+for(const override of [{academicYear:'2082'},{term:'third'},{classNo:7},{classNo:9}]){
+ const legacy=iemisLedger({...termOptions,term:'first',mode:'grade',...override});
+ assert.match(legacy.head,/<th>IN<\/th><th>Total<\/th>/);
+ assert.match(legacy.body,/<td>—<\/td><\/tr>$/);
+}
+assert.deepEqual(termRecords,untouched);
+console.log('Verified VI term ledgers: columns, order, GPA, absence/NG/missing and historical/class isolation passed.');
