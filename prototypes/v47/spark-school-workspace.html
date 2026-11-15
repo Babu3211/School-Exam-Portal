@@ -38,7 +38,7 @@ else{
     const result=await getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),limit(20)));
     if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
     const section=document.createElement("section"),heading=document.createElement("h3"),list=document.createElement("ul");
-    heading.textContent=kind+" (up to 20 records)";section.append(heading);
+    heading.textContent=kind+" ("+result.size+" shown; maximum 20)";section.append(heading);
     for(const record of result.docs){
      const data=record.data(),li=document.createElement("li");
      const label=kind==="students" ? (data.nameEnglish||data.englishName||data.name||data.studentName) :
