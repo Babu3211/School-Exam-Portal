@@ -161,3 +161,26 @@ The First-Term subject order differs from Second/Final in the current reference.
 Commit 9b5bf1f implements the verified 2083 Class VI First/Second Ledger behavior with explicit academicYear/term context: single subject columns, term GPA weighted by subject credits, and normal core order for First-Term Mark Ledger. Second-Term reverse Mark Ledger order and annual IN/TH layout remain. Class VI First/Second Grade Ledger now yields the verified 3.48; absent, missing and NG subjects withhold numeric GPA. Other classes, years and unverified terms retain their previous behavior. This supersedes the outstanding ledger-code notes above, without certifying untested classes.
 
 Integration supplies the selected exam context. The page, nested entry import, trial fixtures and service worker use the same new module URL to avoid an installed worker serving an older ledger implementation. No marks/configuration are migrated. Local actual-renderer and helper regressions, PWA upgrade/offline/cache isolation and inline JavaScript syntax checks passed. Tests in 81ee5e6 cover columns, order, GPA, absence, blank/zero and historical/class isolation using synthetic identities only. Full GitHub CI on the resulting head and production integration remain required.
+
+
+## Populated Class IX 2083 verification — 2026-11-15
+
+With the school user's explicit authorization, only the first Class IX student was selected for sample First/Second/Final writes. No student identifiers are included here. The first six enrolled subjects use Participation3/Practical16/Term6; Computer uses the actual IEMIS Participation3/Practical41/Term6. Final adds Theory75 for ordinary subjects and Theory50 for Computer. The unassigned Additional Mathematics inputs were disabled and left blank. Every entered input was verified after Save and Load: 21 values in each non-final term, 28 in Final.
+
+| Subject | Participation | Practical | Term | Final Theory |
+| --- | ---: | ---: | ---: | ---: |
+| Nepali | 3 | 13 | 5 | 60 |
+| English | 2 | 14 | 4 | 58 |
+| Mathematics | 3 | 12 | 5 | 55 |
+| Science & Technology | 3 | 15 | 5 | 65 |
+| Social Studies | 2 | 13 | 5 | 57 |
+| Optional I Environment Science | 3 | 14 | 5 | 62 |
+| Optional II Computer Science | 2 | 34 | 5 | 40 |
+
+First and Second Grade Sheets show CH1.25/1.25/1.25/1.25/1/1/2 (total9), Grade then GP columns, grades A/A/A/A+/A/A/A and GPA3.66. Final has annual credits5/5/5/5/4/4/4 (total32), paired TH/IN credits split75/25 except Computer50/50, and GPA3.48. All three sheets state one credit hour equals32 hours. First/Second Grade Ledgers also show single subject grade columns and GPA3.66; Final Grade Ledger shows component/total grades and GPA3.48. Thus the populated Grade Ledgers agree with the Grade Sheets.
+
+The school explicitly requested Computer4/36/10 for SMSS despite the observed IEMIS3/41/6. This remains a documented intentional override requiring final integration of the older Computer fix; this report does not claim those component schemas are identical. Test values remain in real IEMIS for the school to replace with assessed marks. No SMSS production data was written.
+
+Commits1193709 and223df3 scope presentation/calculation changes to verified 2083 Class IX First/Second: subject-specific term credits, single-grade columns, Grade-before-GP sheet order, NEB registration field, and credit-weighted term GPA. Class IX number-ledger behavior remains untouched pending direct Mark Ledger comparison. Synthetic actual-renderer tests in1cb6b94 reproduce3.66/3.48, credits9, optional Computer weight, missing/absent behavior and historical isolation; prior I/IV/V/VI, PWA upgrade and inline syntax checks pass locally. A counterexample with Computer GP2.8 produces3.48 using2/9 credit weight, guarding against mistakenly using4/32 annual weight.
+
+Mark Ledger comparison was not completed before the browser session became unavailable. Explicit Class IX Edit/Update/validation, watermark dimensions and native A4/PDF output remain pending; no full phase or production certification is claimed.
