@@ -9,7 +9,7 @@ try {
   const db=context.firestore();
   for(const schoolId of [schoolA,schoolB]){
    await setDoc(doc(db,"schools",schoolId),{name:schoolId,status:"active"});
-   await setDoc(doc(db,"schools",schoolId,"students","student1"),{name:"Synthetic Student"});
+   await setDoc(doc(db,"schools",schoolId,"students","student1"),{name:"Synthetic Student",classId:"9"});
   }
   await setDoc(doc(db,"schools",schoolA,"members","adminA"),{active:true,roles:["school_admin"]});
   await setDoc(doc(db,"schools",schoolA,"members","viewerA"),{active:true,roles:["viewer"]});
@@ -28,7 +28,7 @@ try {
  const outsider=env.authenticatedContext("outsider").firestore();
  const studentA=doc(admin,"schools",schoolA,"students","student1");
  await assertSucceeds(getDoc(studentA));
- await assertSucceeds(setDoc(studentA,{name:"Synthetic Updated"}));
+ await assertSucceeds(setDoc(studentA,{name:"Synthetic Updated",classId:"9"}));
  await assertFails(getDoc(doc(admin,"schools",schoolB,"students","student1")));
  await assertFails(getDocs(collection(admin,"schools",schoolB,"students")));
  await assertFails(setDoc(doc(admin,"schools",schoolB,"students","student2"),{name:"No"}));
@@ -96,6 +96,7 @@ try {
  await assertFails(setDoc(doc(admin,"schools",schoolA,"assignments","newTeacher_9_wrong"),{...assignment,subjectId:"computer"}));
  await assertSucceeds(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_m1"),assignedMark));
  await assertFails(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_m2"),{...assignedMark,subjectId:"math"}));
+ await assertFails(setDoc(doc(assignedSubject,"schools",schoolA,"marks","wrong_class_student"),{...assignedMark,classId:"10"}));
  await assertFails(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_m3"),{...assignedMark,term:"second"}));
  await assertFails(setDoc(doc(assignedSubject,"schools",schoolB,"marks","assigned_m4"),{...assignedMark,schoolId:schoolB}));
  const subjectAssignmentRef=doc(admin,"schools",schoolA,"assignments","newTeacher_9_computer");
@@ -117,6 +118,7 @@ try {
  const assignedAttendance={schoolId:schoolA,classId:"9",studentId:"student1",term:"first",present:true};
  await assertSucceeds(setDoc(doc(assignedClassTeacher,"schools",schoolA,"attendance","assigned_a1"),assignedAttendance));
  await assertFails(setDoc(doc(assignedClassTeacher,"schools",schoolA,"attendance","assigned_a2"),{...assignedAttendance,classId:"10"}));
+ await assertFails(setDoc(doc(assignedClassTeacher,"schools",schoolA,"attendance","wrong_class_student"),{...assignedAttendance,classId:"10"}));
  await assertFails(setDoc(doc(assignedClassTeacher,"schools",schoolA,"attendance","assigned_a3"),{...assignedAttendance,term:"second"}));
  await assertFails(setDoc(doc(assignedClassTeacher,"schools",schoolB,"attendance","assigned_a4"),{...assignedAttendance,schoolId:schoolB}));
  await assertFails(setDoc(doc(assignedClassTeacher,"schools",schoolA,"marks","assigned_class_mark"),{schoolId:schoolA,classId:"9",subjectId:"computer",studentId:"student1",term:"first",score:30}));
