@@ -8,18 +8,24 @@ export function createV47DashboardClient({getIdToken,fetchImpl,endpoint="/api/v4
   throw new TypeError("Token provider and fetch implementation required");
  if(typeof endpoint!=="string" || !/^\/[A-Za-z0-9/_-]+$/.test(endpoint))
   throw new TypeError("Same-origin endpoint path required");
+ let generation=0;
  return Object.freeze({
+  clearPending(){generation++;},
   async loadSchool(schoolId) {
+   const version=++generation;
    if(typeof schoolId!=="string" || !/^[A-Za-z0-9_-]{8,64}$/.test(schoolId))
     throw new TypeError("Invalid school ID");
    const token=await getIdToken();
+   if(version!==generation)throw new Error("School selection changed");
    if(typeof token!=="string" || !token.trim())throw new Error("Login required");
    const response=await fetchImpl(endpoint+"?schoolId="+encodeURIComponent(schoolId),{
     method:"GET",headers:{Authorization:"Bearer "+token,Accept:"application/json"},
     credentials:"same-origin",cache:"no-store"
    });
+   if(version!==generation)throw new Error("School selection changed");
    if(!response?.ok)throw new Error("School dashboard unavailable or access denied");
    const payload=await response.json();
+   if(version!==generation)throw new Error("School selection changed");
    const dashboard=payload?.dashboard;
    if(!dashboard || dashboard.schoolId!==schoolId ||
       typeof dashboard.schoolName!=="string" || !dashboard.schoolName.trim() ||
