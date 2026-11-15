@@ -51,7 +51,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
    item.textContent=record.id+" — "+data.kind+" — "+(data.active===true?"Active":"Inactive");
    const button=document.createElement("button");button.type="button";button.textContent="Manage assignment";
    button.addEventListener("click",()=>{
-    if(verifiedSchoolId!==schoolId || auth.currentUser?.uid!==user.uid)return;
+    if(verifiedSchoolId!==schoolId || auth.currentUser?.uid!==user.uid || epoch!==verificationEpoch)return;
     assignmentStatusForm.elements.namedItem("schoolId").value=schoolId;
     assignmentStatusForm.elements.namedItem("assignmentId").value=record.id;
     assignmentStatusForm.elements.namedItem("active").value=data.active===true?"false":"true";
@@ -75,7 +75,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
     const select=document.createElement("button");select.type="button";
     select.textContent="Manage access";
     select.addEventListener("click",()=>{
-     if(!verifiedSchoolId || auth.currentUser?.uid!==user.uid)return;
+     if(!verifiedSchoolId || auth.currentUser?.uid!==user.uid || epoch!==verificationEpoch)return;
      memberStatusForm.elements.namedItem("schoolId").value=schoolId;
      memberStatusForm.elements.namedItem("uid").value=memberDoc.id;
      memberStatusForm.elements.namedItem("active").value=data.active===true?"false":"true";
@@ -86,7 +86,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
    if(data.active===true && Array.isArray(data.roles) && data.roles.length===1 && ["subject_teacher","class_teacher"].includes(data.roles[0])){
     const assign=document.createElement("button");assign.type="button";assign.textContent="Assign class";
     assign.addEventListener("click",()=>{
-     if(!verifiedSchoolId || auth.currentUser?.uid!==user.uid)return;
+     if(!verifiedSchoolId || auth.currentUser?.uid!==user.uid || epoch!==verificationEpoch)return;
      assignmentForm.elements.namedItem("schoolId").value=schoolId;
      assignmentForm.elements.namedItem("uid").value=memberDoc.id;
      assignmentForm.elements.namedItem("kind").value=data.roles[0];
