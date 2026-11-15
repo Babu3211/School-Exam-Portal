@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import {createSparkTeacherAssignment} from "../src/v47/spark-teacher-assignment.mjs";
+const writes=[];
+const args={auth:{currentUser:{uid:"adminA"}},firestore:{},doc:(_db,...parts)=>parts.join("/"),setDoc:async(path,data)=>writes.push({path,data}),projectId:"smss-exam-portal-v47",schoolId:"school_A001",uid:"teacherB",classId:"9",kind:"subject_teacher",terms:["first","final"],assignmentId:"teacherB_9"};
+await assert.rejects(createSparkTeacherAssignment({...args,projectId:"exam-portal-smss-95016"}),/V47 staging/);
+await assert.rejects(createSparkTeacherAssignment({...args,kind:"school_admin"}),/Invalid teacher kind/);
+await assert.rejects(createSparkTeacherAssignment({...args,terms:["first","first"]}),/Invalid terms/);
+await assert.rejects(createSparkTeacherAssignment({...args,classId:"13"}),/Invalid class/);
+await assert.rejects(createSparkTeacherAssignment({...args,uid:" teacherB"}),/Invalid teacher UID/);
+await assert.rejects(createSparkTeacherAssignment({...args,assignmentId:"x/y"}),/Invalid assignment ID/);
+assert.deepEqual(await createSparkTeacherAssignment(args),{schoolId:"school_A001",assignmentId:"teacherB_9",uid:"teacherB",classId:"9",kind:"subject_teacher"});
+assert.deepEqual(writes,[{path:"schools/school_A001/assignments/teacherB_9",data:{uid:"teacherB",schoolId:"school_A001",classId:"9",kind:"subject_teacher",active:true,terms:["first","final"]}}]);
+console.log("V47 Spark teacher assignment adapter checks passed");
