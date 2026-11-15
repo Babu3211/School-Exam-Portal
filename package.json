@@ -25,7 +25,8 @@
     "test:v46-attendance-stale-rows": "node scripts/test-v46-attendance-stale-rows.mjs",
     "test:v46-marks-class-alias-queries": "node scripts/test-v46-marks-class-alias-queries.mjs",
     "test:v46-attendance-load-failure": "node scripts/test-v46-attendance-load-failure.mjs",
-    "test:v46-marks-load-failure": "node scripts/test-v46-marks-load-failure.mjs"
+    "test:v46-marks-load-failure": "node scripts/test-v46-marks-load-failure.mjs",
+    "test:user-activity-rules": "firebase emulators:exec --project smss-v46-activity-test --only firestore \"node scripts/test-user-activity-rules.mjs\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
