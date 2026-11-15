@@ -307,6 +307,10 @@ try {
  });
  await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"students","admin_restored"),{name:"Restored",classId:"9"}));
 
+ // Restore the synthetic class teacher disabled by an earlier revocation scenario.
+ await env.withSecurityRulesDisabled(async context=>{
+   await updateDoc(doc(context.firestore(),"schools",schoolA,"members","classA"),{active:true});
+ });
  // Viewer role overrides a valid class teacher attendance assignment.
  await env.withSecurityRulesDisabled(async context=>{
    await updateDoc(doc(context.firestore(),"schools",schoolA,"members","classA"),{roles:["viewer","class_teacher"]});
