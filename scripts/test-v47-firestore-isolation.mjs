@@ -31,6 +31,18 @@ try {
  await assertSucceeds(setDoc(studentA,{name:"Synthetic Updated",classId:"9"}));
  await assertFails(deleteDoc(studentA));
  await assertFails(getDoc(doc(admin,"schools",schoolB,"students","student1")));
+ // A user enrolled in two schools may read each school independently, never write as viewer.
+ await env.withSecurityRulesDisabled(async context=>{
+   await setDoc(doc(context.firestore(),"schools",schoolB,"members","viewerA"),{active:true,roles:["viewer"]});
+ });
+ await assertSucceeds(getDoc(doc(viewer,"schools",schoolB,"students","student1")));
+ await assertFails(setDoc(doc(viewer,"schools",schoolB,"students","viewer_write"),{name:"Blocked"}));
+ await env.withSecurityRulesDisabled(async context=>{
+   await updateDoc(doc(context.firestore(),"schools",schoolB,"members","viewerA"),{active:false});
+ });
+ await assertFails(getDoc(doc(viewer,"schools",schoolB,"students","student1")));
+ await assertSucceeds(getDoc(doc(viewer,"schools",schoolA,"students","student1")));
+
  await assertFails(getDocs(collection(admin,"schools",schoolB,"students")));
  await assertFails(setDoc(doc(admin,"schools",schoolB,"students","student2"),{name:"No"}));
  await assertSucceeds(getDoc(doc(viewer,"schools",schoolA,"students","student1")));
