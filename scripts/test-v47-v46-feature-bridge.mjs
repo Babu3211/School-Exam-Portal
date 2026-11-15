@@ -48,6 +48,9 @@ const adminBridge=createV46FeatureBridge({
  legacyFeatures:implementations,tenantGateway:writableGateway
 });
 assert.equal(adminBridge.students().context.gateway.save(),"written");
+assert.throws(()=>createV46FeatureBridge({session:{schoolId:"school_A001",roles:["platform_admin"]},legacyFeatures:implementations,tenantGateway:gateway}),/Invalid school role/);
+assert.throws(()=>createV46FeatureBridge({session:{schoolId:"school_A001",roles:["administrator"]},legacyFeatures:implementations,tenantGateway:gateway}),/Invalid school role/);
+assert.throws(()=>createV46FeatureBridge({session:{schoolId:"school_A001",roles:["teacher"]},legacyFeatures:implementations,tenantGateway:gateway}),/Invalid school role/);
 assert.equal(typeof implementations.marks,"function"); // Existing implementation remains callable.
 assert.throws(()=>createV46FeatureBridge({session:{schoolId:"school_A001",roles:["viewer","school_admin"]},legacyFeatures:implementations,tenantGateway:gateway}));
 assert.throws(()=>createV46FeatureBridge({session:{schoolId:"school_A001",roles:["viewer"]},legacyFeatures:{},tenantGateway:gateway}),/Missing V46 feature/);
