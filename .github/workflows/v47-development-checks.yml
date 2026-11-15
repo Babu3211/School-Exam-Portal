@@ -77,9 +77,6 @@ jobs:
       - name: V47 Spark atomic school bootstrap unit test
         if: success() || failure()
         run: node scripts/test-v47-spark-school-bootstrap.mjs
-      - name: V47 Spark atomic school bootstrap unit test
-        if: success() || failure()
-        run: node scripts/test-v47-spark-school-bootstrap.mjs
       - name: V47 Spark platform-admin read-only identity test
         if: success() || failure()
         run: node scripts/test-v47-spark-platform-admin.mjs
