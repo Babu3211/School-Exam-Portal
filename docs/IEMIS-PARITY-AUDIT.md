@@ -184,3 +184,10 @@ The school explicitly requested Computer4/36/10 for SMSS despite the observed IE
 Commits1193709 and223df3 scope presentation/calculation changes to verified 2083 Class IX First/Second: subject-specific term credits, single-grade columns, Grade-before-GP sheet order, NEB registration field, and credit-weighted term GPA. Class IX number-ledger behavior remains untouched pending direct Mark Ledger comparison. Synthetic actual-renderer tests in1cb6b94 reproduce3.66/3.48, credits9, optional Computer weight, missing/absent behavior and historical isolation; prior I/IV/V/VI, PWA upgrade and inline syntax checks pass locally. A counterexample with Computer GP2.8 produces3.48 using2/9 credit weight, guarding against mistakenly using4/32 annual weight.
 
 Mark Ledger comparison was not completed before the browser session became unavailable. Explicit Class IX Edit/Update/validation, watermark dimensions and native A4/PDF output remain pending; no full phase or production certification is claimed.
+
+
+## Class IX Mark Ledger read-only verification — 2083
+
+Authenticated IEMIS showed saved sample values in all three terms. First and Second use one marks column per subject, without IN subheaders, ordered Computer, Environment, Social, Science, Mathematics, English, Nepali. Values respectively: 41, 22, 20, 23, 20, 20, 21. Corrected this scoped term rendering and added value/order/historical-isolation regression tests; local ledger suite passes.
+
+Final shows IN/TH pairs. Observed order and values: English 20/58; Nepali 21/60; Computer 41/40; Environment 22/62; Social 20/57; Science 23/65; Mathematics 20/55. Final order differs from both term ledgers and Grade Ledger; its ordering mechanism has not yet been established, so no global ordering change was made. No marks were written during this verification. Native print/PDF, watermark, remaining edit/validation and group expansion still pending. No production deployment.
