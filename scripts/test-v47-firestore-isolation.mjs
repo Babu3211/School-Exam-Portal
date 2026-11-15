@@ -29,6 +29,7 @@ try {
  const studentA=doc(admin,"schools",schoolA,"students","student1");
  await assertSucceeds(getDoc(studentA));
  await assertSucceeds(setDoc(studentA,{name:"Synthetic Updated",classId:"9"}));
+ await assertFails(deleteDoc(studentA));
  await assertFails(getDoc(doc(admin,"schools",schoolB,"students","student1")));
  await assertFails(getDocs(collection(admin,"schools",schoolB,"students")));
  await assertFails(setDoc(doc(admin,"schools",schoolB,"students","student2"),{name:"No"}));
@@ -37,6 +38,7 @@ try {
  await assertFails(setDoc(doc(teacher,"schools",schoolA,"students","student1"),{name:"No"}));
  await assertFails(getDoc(doc(outsider,"schools",schoolA,"students","student1")));
  await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"classes","class9"),{name:"9"}));
+ await assertFails(deleteDoc(doc(admin,"schools",schoolA,"classes","class9")));
  await assertSucceeds(getDoc(doc(viewer,"schools",schoolA,"classes","class9")));
  await assertFails(setDoc(doc(viewer,"schools",schoolA,"classes","class9"),{name:"10"}));
  await assertFails(setDoc(doc(admin,"schools",schoolB,"classes","class9"),{name:"9"}));
