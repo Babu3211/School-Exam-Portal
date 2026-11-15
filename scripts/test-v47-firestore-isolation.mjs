@@ -40,6 +40,14 @@ try {
  await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"classes","class9"),{name:"9"}));
  await assertFails(deleteDoc(doc(admin,"schools",schoolA,"classes","class9")));
  await assertSucceeds(getDoc(doc(viewer,"schools",schoolA,"classes","class9")));
+ // The isolated read-only workspace must read only the current school's collections.
+ for(const kind of ["students","classes","subjects","exams"]){
+   await assertSucceeds(getDocs(collection(viewer,"schools",schoolA,kind)));
+   await assertSucceeds(getDocs(collection(teacher,"schools",schoolA,kind)));
+   await assertFails(getDocs(collection(viewer,"schools",schoolB,kind)));
+   await assertFails(getDocs(collection(outsider,"schools",schoolA,kind)));
+ }
+
  await assertFails(setDoc(doc(viewer,"schools",schoolA,"classes","class9"),{name:"10"}));
  await assertFails(setDoc(doc(admin,"schools",schoolB,"classes","class9"),{name:"9"}));
  await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"school_settings","default"),{name:"School A"}));
