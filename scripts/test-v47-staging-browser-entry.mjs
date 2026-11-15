@@ -9,6 +9,8 @@ assert.match(html,/__SMSS_V47_STAGING_CONFIG__/);
 assert.match(html,/config\.firebase\.projectId!==forbiddenProject/);
 assert.match(html,/config\.firebase\.authDomain!==forbiddenProject/);
 assert.match(html,/url\.hostname!==forbiddenProject/);
+assert.match(html,/url\.origin===window\.location\.origin/);
+assert.match(html,/url\.pathname==="\/" && !url\.search && !url\.hash/);
 assert.match(html,/typeof config\.bsToAd==="function"/);
 assert.match(html,/typeof config\.adToBs==="function"/);
 assert.doesNotMatch(html,/AIzaSy/);
