@@ -43,6 +43,18 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
   for(const memberDoc of result.docs){
    const item=document.createElement("li"),data=memberDoc.data();
    item.textContent=memberDoc.id+" — "+(Array.isArray(data.roles)?data.roles.join(", "):"Unknown role")+" — "+(data.active===true?"Active":"Inactive");
+   if(Array.isArray(data.roles) && data.roles.length===1 && ["viewer","subject_teacher","class_teacher"].includes(data.roles[0])){
+    const select=document.createElement("button");select.type="button";
+    select.textContent="Manage access";
+    select.addEventListener("click",()=>{
+     if(!verifiedSchoolId || auth.currentUser?.uid!==user.uid)return;
+     memberStatusForm.elements.namedItem("schoolId").value=schoolId;
+     memberStatusForm.elements.namedItem("uid").value=memberDoc.id;
+     memberStatusForm.elements.namedItem("active").value=data.active===true?"false":"true";
+     memberStatusForm.scrollIntoView({behavior:"smooth",block:"start"});
+    });
+    item.append(" ",select);
+   }
    membersList.append(item);
   }
   membersPanel.hidden=false;
