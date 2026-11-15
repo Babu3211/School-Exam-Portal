@@ -171,7 +171,16 @@ service cloud.firestore {
            request.resource.data.roles is list &&
            request.resource.data.roles.size() == 1 &&
            request.resource.data.roles.hasOnly(['viewer','subject_teacher','class_teacher']));
-        allow update, delete: if false;
+        allow update: if admin(schoolId) &&
+          uid != request.auth.uid &&
+          resource.data.uid == uid &&
+          resource.data.schoolId == schoolId &&
+          resource.data.roles is list &&
+          resource.data.roles.size() == 1 &&
+          resource.data.roles.hasOnly(['viewer','subject_teacher','class_teacher']) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active']) &&
+          request.resource.data.active is bool;
+        allow delete: if false;
       }
       match /subscriptions/{id} {
         allow read: if admin(schoolId) || platformAdmin();
