@@ -43,6 +43,8 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
  for(const name of ["ECD",...Array.from({length:12},(_,i)=>String(i+1))]){const option=element("option",name);option.value=name;studentClassInput.append(option);}
  const studentMode=element("select");for(const mode of ["create","update"]){const option=element("option",mode);option.value=mode;studentMode.append(option);}
  const saveStudentButton=element("button","Save student");saveStudentButton.type="button";saveStudentButton.hidden=true;
+ const studentEditControls=[studentIdInput,studentNameInput,studentClassInput,studentMode];
+ const setStudentEditVisible=visible=>{for(const control of studentEditControls){control.hidden=!visible;control.disabled=!visible;}saveStudentButton.hidden=!visible;};
  const recordsButton=element("button","View school records");
  recordsButton.type="button";
  const marksButton=element("button","View marks");
@@ -56,7 +58,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   const current=++renderGeneration;
   ++rowsGeneration;
   panel.hidden=true;
-  saveStudentButton.hidden=true;
+  setStudentEditVisible(false);
   clearStudentInputs();
   result.textContent="";
   schoolInput.replaceChildren();
@@ -84,7 +86,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
    if(current!==renderGeneration)return;
    status.textContent=school.schoolName+" ("+school.roles.join(", ")+")";
    panel.hidden=false;
-   saveStudentButton.hidden=school.readOnly || !school.roles.includes("school_admin") || school.roles.includes("viewer");
+   setStudentEditVisible(!school.readOnly && school.roles.includes("school_admin") && !school.roles.includes("viewer"));
   }catch(error){if(current===renderGeneration)showError(error);}
  };
  clearButton.onclick=()=>{
