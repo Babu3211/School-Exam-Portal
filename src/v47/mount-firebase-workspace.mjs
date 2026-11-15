@@ -11,11 +11,13 @@ export function mountV47FirebaseWorkspace({root,document,auth,fetchImpl,subscrib
   root,document,fetchImpl,bsToAd,adToBs,
   getIdToken:createV47FirebaseTokenProvider({auth})
  });
+ let disposed=false;
  let initial=true;
  let lastUser=auth.currentUser?.uid ?? null;
  let unsubscribe;
  try {
   unsubscribe=subscribeAuthState(auth,user=>{
+   if(disposed)return;
    const uid=user?.uid ?? null;
    if(initial){initial=false;if(uid===lastUser){if(uid)void view.loadSchools();return;}}
    if(uid!==lastUser){lastUser=uid;view.clearSession();if(uid)void view.loadSchools();}
@@ -25,5 +27,5 @@ export function mountV47FirebaseWorkspace({root,document,auth,fetchImpl,subscrib
   // If a synchronous auth callback changed users, it already triggered loading.
   if(lastUser && initial){initial=false;void view.loadSchools();}
  }catch(error){view.dispose();throw error;}
- return Object.freeze({dispose(){unsubscribe();view.dispose();}});
+ return Object.freeze({dispose(){if(disposed)return;disposed=true;unsubscribe();view.dispose();}});
 }
