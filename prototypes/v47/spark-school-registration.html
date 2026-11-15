@@ -7,16 +7,18 @@
 <p id="identity">Not signed in</p>
 <form id="school-form" hidden><label>School ID (8–64 letters, digits, _ or -)<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><label>School Name<input name="name" required maxlength="200"></label><label>IEMIS Code<input name="iemisCode" required pattern="[A-Za-z0-9_-]{3,32}"></label><p>The signed-in Platform Admin becomes the initial School Admin. Additional school admins require a separately reviewed invitation workflow.</p><button id="register" type="submit">Register Pending School</button></form>
 <form id="activation-form" hidden><h2>Activate Pending School</h2><label>School ID<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><button id="activate" type="submit">Activate School</button></form>
+<form id="member-form" hidden><h2>Add Teacher or Viewer</h2><p>Only a School Admin of the selected active school may add a member. The target must already have a Firebase Auth UID.</p><label>School ID<input name="schoolId" required minlength="8" maxlength="64" pattern="[A-Za-z0-9_-]+"></label><label>Existing User UID<input name="uid" required></label><label>Role<select name="role" required><option value="viewer">Viewer</option><option value="subject_teacher">Subject Teacher</option><option value="class_teacher">Class Teacher</option></select></label><button id="enroll" type="submit">Add Member</button></form>
 <button id="logout" type="button" hidden>Sign out</button><p id="message" role="status"></p></main>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,doc,getDoc,writeBatch,updateDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,doc,getDoc,writeBatch,updateDoc,setDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import {checkSparkPlatformAdmin} from "../../src/v47/spark-platform-admin.mjs";
 import {bootstrapSparkSchool} from "../../src/v47/spark-school-bootstrap.mjs";
 import {activateSparkSchool} from "../../src/v47/spark-school-activation.mjs";
+import {enrollSparkSchoolMember} from "../../src/v47/spark-school-member-enrollment.mjs";
 const config=window.__SMSS_V47_SPARK_CONFIG__;
-const message=document.querySelector("#message"),identity=document.querySelector("#identity"),form=document.querySelector("#school-form"),activationForm=document.querySelector("#activation-form");
+const message=document.querySelector("#message"),identity=document.querySelector("#identity"),form=document.querySelector("#school-form"),activationForm=document.querySelector("#activation-form"),memberForm=document.querySelector("#member-form");
 const say=x=>message.textContent=x;
 if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="smss-exam-portal-v47.firebaseapp.com"){
  say("Missing isolated V47 configuration. No Firebase connection started.");
@@ -25,7 +27,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
  const app=initializeApp(config,"v47-spark-school-registration"),auth=getAuth(app),firestore=getFirestore(app);
  let authorized=false;
  onAuthStateChanged(auth,async user=>{
-  authorized=false;form.hidden=true;activationForm.hidden=true;document.querySelector("#logout").hidden=!user;
+  authorized=false;form.hidden=true;activationForm.hidden=true;memberForm.hidden=!user;document.querySelector("#logout").hidden=!user;
   identity.textContent=user?"Signed in: "+user.email:"Not signed in";
   if(!user)return;
   try{
@@ -42,6 +44,18 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
   catch{say("Sign in failed. Check your credentials.");}
  });
  document.querySelector("#logout").addEventListener("click",()=>signOut(auth));
+ memberForm.addEventListener("submit",async event=>{
+  event.preventDefault();
+  if(!auth.currentUser){say("Sign in required.");return;}
+  const button=document.querySelector("#enroll");button.disabled=true;
+  try{
+   const input=Object.fromEntries(new FormData(memberForm).entries());
+   const result=await enrollSparkSchoolMember({auth,firestore,doc,setDoc,projectId:app.options.projectId,...input});
+   say("Member added: "+result.uid+" ("+result.role+") to "+result.schoolId);
+   memberForm.reset();
+  }catch{say("Enrollment denied. Sign in as the selected school's Admin and check the existing UID.");}
+  finally{button.disabled=false;}
+ });
  activationForm.addEventListener("submit",async event=>{
   event.preventDefault();
   if(!authorized || !auth.currentUser){say("Platform Admin verification required.");return;}
