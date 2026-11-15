@@ -37,6 +37,7 @@ assert.deepEqual(classInput.children.map(option=>option.value),expectedClasses);
 assert.deepEqual(studentClassInput.children.map(option=>option.value),expectedClasses);
 assert.equal(panel.children[9]["aria-label"],"Student name in English");
 assert.equal(panel.children[12].hidden,true,"Viewer must never see Save student");
+assert.equal(panel.children[12].disabled,true,"Viewer save button must be disabled");
 const beforeForbiddenSave=urls.length;
 await panel.children[12].onclick();
 assert.equal(urls.length,beforeForbiddenSave,"Programmatic viewer save must not make a request");
