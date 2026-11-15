@@ -318,5 +318,16 @@ try {
  });
  await assertSucceeds(setDoc(doc(classTeacher,"schools",schoolA,"attendance","class_restored"),attendance));
 
+ // A revoked class teacher cannot write attendance, even with an active assignment.
+ await env.withSecurityRulesDisabled(async context=>{
+   await updateDoc(doc(context.firestore(),"schools",schoolA,"members","classA"),{active:false});
+ });
+ await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","revoked_class"),attendance));
+ await assertFails(getDoc(doc(classTeacher,"schools",schoolA,"attendance","a1")));
+ await env.withSecurityRulesDisabled(async context=>{
+   await updateDoc(doc(context.firestore(),"schools",schoolA,"members","classA"),{active:true});
+ });
+ await assertSucceeds(getDoc(doc(classTeacher,"schools",schoolA,"attendance","a1")));
+
  console.log("V47 tenant Firestore emulator isolation and exam assignment tests passed");
 } finally {await env.cleanup();}
