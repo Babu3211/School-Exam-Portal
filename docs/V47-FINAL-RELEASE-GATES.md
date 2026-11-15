@@ -7,7 +7,7 @@
 - These checks use synthetic data and mocks. **They do not demonstrate a live Firebase staging deployment, production data compatibility or full V46 feature parity.**
 
 ## Release blockers — do not label production ready until completed
-1. Provision an independent Firebase project for V47 staging (not `exam-portal-smss-95016`). Configure staging-only credentials and separate Auth/Firestore.
+1. **Project created (user-confirmed 15 November 2026):** independent Firebase project ID `smss-exam-portal-v47` (not `exam-portal-smss-95016`). **Still required:** enable separate Authentication and Firestore, configure staging-only credentials and runtime. Creation alone does not mean staging is deployed.
 2. Deploy isolated `v47-runtime/server.mjs` and `prototypes/v47/verified-workspace-staging.html` with verified BS/AD adapters; record a real HTTPS staging URL.
 3. Once the isolated HTTPS API exists, run the non-mutating smoke check: `V47_STAGING_API_ORIGIN=https://your-staging-host.example node scripts/test-v47-staging-smoke.mjs`. It checks anonymous access denial on registration, invitation, teacher assignment and student writes; it **cannot** verify authenticated flows or prove that staging is deployed until actually executed against a real URL.
 4. Run real-device login/logout, two-school school chooser, school registration and admin invitation, teacher assignment, student reads/writes, marks and attendance, and viewer read-only tests against staging.
