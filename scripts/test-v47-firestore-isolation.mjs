@@ -55,6 +55,14 @@ try {
  await assertFails(setDoc(doc(admin,"schools",schoolA,"members","newAdmin"),{uid:"newAdmin",schoolId:schoolA,active:true,roles:["school_admin"]}));
  await assertFails(setDoc(doc(admin,"schools",schoolA,"members","newMixed"),{uid:"newMixed",schoolId:schoolA,active:true,roles:["viewer","subject_teacher"]}));
  await assertFails(setDoc(doc(admin,"schools",schoolA,"members","newTeacher"),{uid:"newTeacher",schoolId:schoolA,active:true,roles:["school_admin"]}));
+ const assignment={uid:"newTeacher",schoolId:schoolA,classId:"9",kind:"subject_teacher",active:true,terms:["first","final"]};
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"assignments","newTeacher_9"),assignment));
+ await assertFails(setDoc(doc(viewer,"schools",schoolA,"assignments","viewer_9"),{...assignment,uid:"viewerA"}));
+ await assertFails(setDoc(doc(admin,"schools",schoolB,"assignments","newTeacher_9"),{...assignment,schoolId:schoolB}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"assignments","viewer_9"),{...assignment,uid:"newViewer"}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"assignments","admin_9"),{...assignment,uid:"adminA"}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"assignments","badTerm"),{...assignment,terms:["fourth"]}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"assignments","newTeacher_9"),{...assignment,classId:"10"}));
  await assertFails(setDoc(doc(root,"schools","school_C001"),{name:"No direct client onboarding"}));
  await assertSucceeds(getDoc(doc(root,"schools",schoolA)));
  await assertFails(getDoc(doc(root,"schools",schoolA,"students","student1")));
