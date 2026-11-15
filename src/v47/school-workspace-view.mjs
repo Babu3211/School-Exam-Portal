@@ -78,7 +78,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   const current=++renderGeneration;
   ++rowsGeneration;
   panel.hidden=true;
-  saveStudentButton.hidden=true;
+  setStudentEditVisible(false);
   clearStudentInputs();
   result.textContent="";
   status.textContent="Loading school...";
@@ -95,7 +95,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   rowsGeneration++;
   workspace.clear();
   panel.hidden=true;
-  saveStudentButton.hidden=true;
+  setStudentEditVisible(false);
   clearStudentInputs();
   result.textContent="";
   schoolInput.replaceChildren();
@@ -125,7 +125,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   rowsGeneration++;
   workspace.clear();
   panel.hidden=true;
-  saveStudentButton.hidden=true;
+  setStudentEditVisible(false);
   clearStudentInputs();
   result.textContent="";
   schoolInput.replaceChildren();
@@ -134,7 +134,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
   renderGeneration++;
   rowsGeneration++;
   workspace.clear();
-  saveStudentButton.hidden=true;
+  setStudentEditVisible(false);
   clearStudentInputs();
   reloadButton.onclick=null;selectButton.onclick=null;clearButton.onclick=null;marksButton.onclick=null;attendanceButton.onclick=null;recordsButton.onclick=null;saveStudentButton.onclick=null;
   root.replaceChildren();
