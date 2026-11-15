@@ -21,6 +21,8 @@ export async function readVerifiedV46Attendance({
   if(!data || typeof data!=="object" || Array.isArray(data) ||
      (Object.hasOwn(data,"schoolId") && data.schoolId!==session.schoolId))
     throw new Error("Attendance tenant mismatch");
+  if(data.className!==className || data.date!==date || data.attendanceType!==attendanceType)
+    throw new Error("Attendance query result mismatch");
   return {...data,id:doc.id};
  });
 }
