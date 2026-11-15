@@ -26,3 +26,11 @@
 
 ## Current state
 **Not deployed.** GitHub automated tests pass, but they cannot establish a real hosting endpoint, server identity or production feature parity.
+
+## Non-negotiable owner requirement: Spark-only, zero billing (15 November 2026)
+- The owner explicitly prohibits **all billing setup, Blaze upgrades, credit-card requirements and paid backend/hosting**.
+- Do not deploy the current Firebase Admin SDK Node runtime to Cloud Run/Functions or any paid infrastructure.
+- A viable zero-billing route must be designed and tested first, likely a browser Firebase Auth + Firestore client SDK with strict tenant-scoped security rules, **without granting browser users platform-admin authority solely from self-asserted fields**. Evaluate all privileged onboarding flows carefully; the current Admin SDK-only endpoints are **not deployable as-is** on static Spark hosting.
+- Maintain the current deny-all client Firestore rules until a reviewed least-privilege replacement and emulator security tests are ready. Never relax to test-mode or blanket authenticated writes.
+- Free-plan quotas and limitations apply; zero billing does not imply unlimited usage or guaranteed scale.
+- Production deployment and data migration still require separate explicit approval.
