@@ -1,0 +1,16 @@
+import assert from "node:assert/strict";
+import {acceptSparkSchoolInvitation} from "../src/v47/spark-school-invitation-acceptance.mjs";
+const writes=[],auth={currentUser:{uid:"teacherA"}},firestore={};
+const invitation={uid:"teacherA",schoolId:"school_A001",roles:["subject_teacher"],active:true};
+const args={auth,firestore,doc:(_db,...p)=>p.join("/"),getDoc:async()=>({exists:()=>true,data:()=>invitation}),setDoc:async(path,data)=>writes.push({path,data}),projectId:"smss-exam-portal-v47",schoolId:"school_A001"};
+await assert.rejects(acceptSparkSchoolInvitation({...args,projectId:"exam-portal-smss-95016"}),/V47 staging/);
+await assert.rejects(acceptSparkSchoolInvitation({...args,auth:{currentUser:null}}),/Authentication/);
+await assert.rejects(acceptSparkSchoolInvitation({...args,schoolId:"../school_B001"}),/school/i);
+await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>({exists:()=>false})}),/not found/);
+await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>({exists:()=>true,data:()=>({...invitation,roles:["school_admin"]})})}),/Invalid invitation/);
+await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>({exists:()=>true,data:()=>({...invitation,schoolId:"school_B001"})})}),/Invalid invitation/);
+await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>{auth.currentUser={uid:"other"};return {exists:()=>true,data:()=>invitation}}}),/Session changed/);
+auth.currentUser={uid:"teacherA"};
+assert.deepEqual(await acceptSparkSchoolInvitation(args),{schoolId:"school_A001",uid:"teacherA",role:"subject_teacher"});
+assert.deepEqual(writes,[{path:"schools/school_A001/members/teacherA",data:invitation}]);
+console.log("V47 Spark invitation acceptance adapter checks passed");
