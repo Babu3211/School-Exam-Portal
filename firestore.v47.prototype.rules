@@ -253,13 +253,20 @@ service cloud.firestore {
         allow read: if member(schoolId) && (admin(schoolId) || resource.data.uid == request.auth.uid);
         allow create: if admin(schoolId) &&
           request.resource.data.keys().hasAll(['uid','schoolId','classId','kind','active','terms']) &&
-          request.resource.data.keys().hasOnly(['uid','schoolId','classId','kind','active','terms']) &&
+          request.resource.data.keys().hasOnly(['uid','schoolId','classId','kind','active','terms','subjectId']) &&
           request.resource.data.schoolId == schoolId &&
           request.resource.data.uid is string &&
           request.resource.data.uid.size() > 0 &&
           request.resource.data.classId is string &&
           request.resource.data.classId.size() > 0 &&
           request.resource.data.kind in ['subject_teacher','class_teacher'] &&
+          ((request.resource.data.kind == 'class_teacher' &&
+            id == request.resource.data.uid + '_' + request.resource.data.classId) ||
+           (request.resource.data.kind == 'subject_teacher' &&
+            request.resource.data.keys().hasAll(['subjectId']) &&
+            request.resource.data.subjectId is string &&
+            request.resource.data.subjectId.size() > 0 &&
+            id == request.resource.data.uid + '_' + request.resource.data.classId + '_' + request.resource.data.subjectId)) &&
           request.resource.data.active == true &&
           request.resource.data.terms is list &&
           request.resource.data.terms.size() > 0 &&
