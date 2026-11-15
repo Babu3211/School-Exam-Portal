@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import {setSparkSchoolMemberActive} from "../src/v47/spark-school-member-status.mjs";
+const writes=[];
+const args={auth:{currentUser:{uid:"adminA"}},firestore:{},doc:(_db,...parts)=>parts.join("/"),updateDoc:async(path,data)=>writes.push({path,data}),projectId:"smss-exam-portal-v47",schoolId:"school_A001",uid:"teacherA",active:false};
+await assert.rejects(setSparkSchoolMemberActive({...args,projectId:"exam-portal-smss-95016"}),/V47 staging/);
+await assert.rejects(setSparkSchoolMemberActive({...args,auth:{currentUser:null}}),/Authentication/);
+await assert.rejects(setSparkSchoolMemberActive({...args,uid:"adminA"}),/own access/);
+await assert.rejects(setSparkSchoolMemberActive({...args,uid:" teacherA"}),/Invalid member UID/);
+await assert.rejects(setSparkSchoolMemberActive({...args,uid:"x/y"}),/Invalid member UID/);
+await assert.rejects(setSparkSchoolMemberActive({...args,active:"false"}),/boolean/);
+assert.deepEqual(await setSparkSchoolMemberActive(args),{schoolId:"school_A001",uid:"teacherA",active:false});
+assert.deepEqual(writes,[{path:"schools/school_A001/members/teacherA",data:{active:false}}]);
+console.log("V47 Spark member status adapter checks passed");
