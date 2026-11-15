@@ -1,6 +1,6 @@
 import {initializeTestEnvironment,assertFails,assertSucceeds} from "@firebase/rules-unit-testing";
 import {readFileSync} from "node:fs";
-import {doc,getDoc,setDoc,collection,getDocs} from "firebase/firestore";
+import {doc,getDoc,setDoc,updateDoc,deleteDoc,collection,getDocs} from "firebase/firestore";
 const rules=readFileSync(new URL("../firestore.v47.prototype.rules",import.meta.url),"utf8");
 const env=await initializeTestEnvironment({projectId:"smss-v47-tenant-rules-test",firestore:{rules,host:"127.0.0.1",port:8080}});
 const schoolA="school_A001",schoolB="school_B001";
