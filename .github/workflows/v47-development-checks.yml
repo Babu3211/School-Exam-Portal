@@ -35,6 +35,7 @@ jobs:
         if: success() || failure()
         run: |
           node scripts/build-v47-spark-staging.mjs
+          node --input-type=module -e 'import fs from "node:fs"; const c=JSON.parse(fs.readFileSync("firebase.v47.spark.json","utf8")); if(Object.keys(c).join(",")!=="hosting" || c.hosting.public!=="dist/v47-spark") process.exit(1);'
           V47_SPARK_WEB_CONFIG='{"projectId":"smss-exam-portal-v47","authDomain":"smss-exam-portal-v47.firebaseapp.com","apiKey":"synthetic-ci-key","appId":"synthetic-ci-app"}' node scripts/build-v47-spark-staging.mjs
           test -f dist/v47-spark/prototypes/v47/spark-config.js
           grep -q 'window.__SMSS_V47_SPARK_CONFIG__' dist/v47-spark/prototypes/v47/spark-config.js
