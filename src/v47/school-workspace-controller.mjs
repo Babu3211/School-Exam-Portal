@@ -20,13 +20,14 @@ export function createV47SchoolWorkspace({getIdToken,fetchImpl,bsToAd}) {
   getSelectedSchool:selected,
   async selectSchool(schoolId) {
    const requestGeneration=++generation;
+   dashboardClient.clearPending();
    current=null; // Never retain another school's data while switching.
    const dashboard=await dashboardClient.loadSchool(schoolId);
    if(requestGeneration!==generation)throw new Error("School selection changed");
    current=dashboard;
    return dashboard;
   },
-  clear(){generation++;current=null;},
+  clear(){generation++;dashboardClient.clearPending();current=null;},
   async saveStudent({studentId,mode,values}) {
    const school=current;
    if(!school)throw new Error("Select an authorized school first");
