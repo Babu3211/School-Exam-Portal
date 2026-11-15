@@ -21,6 +21,9 @@ export function mountV47FirebaseWorkspace({root,document,auth,fetchImpl,subscrib
    if(uid!==lastUser){lastUser=uid;view.clearSession();if(uid)void view.loadSchools();}
   });
   if(typeof unsubscribe!=="function")throw new TypeError("Unsubscribe function required");
+  // Existing signed-in users should not need to click Load my schools.
+  // If a synchronous auth callback changed users, it already triggered loading.
+  if(lastUser && initial)void view.loadSchools();
  }catch(error){view.dispose();throw error;}
  return Object.freeze({dispose(){unsubscribe();view.dispose();}});
 }
