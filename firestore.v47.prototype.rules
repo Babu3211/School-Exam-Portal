@@ -48,9 +48,11 @@ service cloud.firestore {
         get(assignmentPath(schoolId, id)).data.kind == kind &&
         term in get(assignmentPath(schoolId, id)).data.terms;
     }
-    function studentExists(schoolId, studentId) {
-      return studentId is string &&
-        exists(/databases/$(database)/documents/schools/$(schoolId)/students/$(studentId));
+    function studentExists(schoolId, studentId, classId) {
+      let studentPath = /databases/$(database)/documents/schools/$(schoolId)/students/$(studentId);
+      return studentId is string && classId is string &&
+        exists(studentPath) &&
+        get(studentPath).data.get('classId', '') == classId;
     }
     function marksShape(schoolId) {
       return request.resource.data.keys().hasAll(['schoolId','classId','subjectId','term','studentId','score']) &&
@@ -58,7 +60,7 @@ service cloud.firestore {
         request.resource.data.schoolId == schoolId &&
         request.resource.data.classId is string &&
         request.resource.data.subjectId is string &&
-        studentExists(schoolId, request.resource.data.studentId) &&
+        studentExists(schoolId, request.resource.data.studentId, request.resource.data.classId) &&
         request.resource.data.score is number &&
         request.resource.data.score >= 0 &&
         request.resource.data.score <= 100 &&
@@ -69,7 +71,7 @@ service cloud.firestore {
         request.resource.data.keys().hasOnly(['schoolId','classId','term','studentId','present','updatedAt']) &&
         request.resource.data.schoolId == schoolId &&
         request.resource.data.classId is string &&
-        studentExists(schoolId, request.resource.data.studentId) &&
+        studentExists(schoolId, request.resource.data.studentId, request.resource.data.classId) &&
         request.resource.data.present is bool &&
         validTerm(request.resource.data.term);
     }
