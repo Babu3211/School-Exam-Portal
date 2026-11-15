@@ -81,6 +81,26 @@ await new Promise(resolve=>setImmediate(resolve));
 assert.equal(returningLoads,1,"Already authenticated user should auto-load schools exactly once");
 assert.equal(returningRoot.children[2].children.length,1,"Returning user should see school options");
 returningView.dispose();
+// A delayed initial callback for the same user must not close an opened school.
+const delayedRoot=new Element("main");
+const delayedUser={uid:"delayed",getIdToken:async()=>"delayed-token"};
+const delayedAuth={currentUser:delayedUser};
+let delayedCallback;
+const delayedView=mountV47FirebaseWorkspace({
+ bsToAd:()=> "2026-04-14",adToBs:()=> "2083-01-01",
+ root:delayedRoot,document,auth:delayedAuth,
+ fetchImpl:async url=>({ok:true,json:async()=>url.endsWith("/schools")?
+  {schools:[{schoolId:"school_A001",schoolName:"A",roles:["viewer"]}]}:
+  {dashboard:{schoolId:"school_A001",schoolName:"A",roles:["viewer"],readOnly:true}}}),
+ subscribeAuthState:(_auth,callback)=>{delayedCallback=callback;return ()=>{};}
+});
+await new Promise(resolve=>setImmediate(resolve));
+delayedRoot.children[2].value="school_A001";
+await delayedRoot.children[3].onclick();
+assert.equal(delayedRoot.children[6].hidden,false);
+delayedCallback(delayedUser);
+assert.equal(delayedRoot.children[6].hidden,false,"Delayed same-user auth callback must preserve opened school");
+delayedView.dispose();
 // Firebase SDK may invoke its initial auth callback synchronously.
 const synchronousRoot=new Element("main");
 const synchronousAuth={currentUser:{uid:"sync",getIdToken:async()=>"sync-token"}};
