@@ -128,4 +128,29 @@ assert.equal(saveRequests,1,"Double-click must submit exactly once");
 assert.equal(adminSave.disabled,false,"Save enabled after completion");
 adminView.dispose();
 
+// An in-flight write must never restore edit permission after logout.
+const logoutRoot=new FakeElement("main");
+let releaseLogoutSave;
+const logoutPending=new Promise(resolve=>{releaseLogoutSave=resolve;});
+const logoutView=mountV47SchoolWorkspace({
+ bsToAd:()=> "2026-04-14",adToBs:()=> "2083-01-01",root:logoutRoot,document,
+ getIdToken:async()=>"valid",
+ fetchImpl:async url=>{
+  if(url.endsWith("/schools"))return {ok:true,json:async()=>({schools:[{schoolId:"school_A001",schoolName:"School A",roles:["school_admin"]}]})};
+  if(url.includes("/dashboard?"))return {ok:true,json:async()=>({dashboard:{schoolId:"school_A001",schoolName:"School A",roles:["school_admin"],readOnly:false}})};
+  if(url.endsWith("/students/write")){await logoutPending;return {ok:true,json:async()=>({result:{schoolId:"school_A001",studentId:"s001"}})};}
+  throw Error("Unexpected endpoint: "+url);
+ }
+});
+const [,logoutLoad,logoutSchool,logoutOpen,,,logoutPanel]=logoutRoot.children;
+await logoutLoad.onclick();logoutSchool.value="school_A001";await logoutOpen.onclick();
+logoutPanel.children[8].value="s001";logoutPanel.children[9].value="Example";
+const logoutSave=logoutPanel.children[12];
+const inFlightSave=logoutSave.onclick();
+logoutView.clearSession();
+releaseLogoutSave();await inFlightSave;
+assert.equal(logoutPanel.hidden,true,"Logout must keep workspace hidden after pending save");
+assert.equal(logoutSave.disabled,true,"Pending save must not restore disabled button after logout");
+logoutView.dispose();
+
 console.log("V47 isolated school workspace browser view tests passed");
