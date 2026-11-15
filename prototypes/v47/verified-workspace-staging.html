@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SMSS V47 — Isolated School Workspace</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#16354b;background:#eef5fa}*{box-sizing:border-box}
+body{margin:0}header{background:#174c79;color:white;padding:16px}main{max-width:920px;margin:auto;padding:18px}
+section{background:white;padding:18px;border-radius:12px;margin:12px 0}
+button,select,input{font:inherit;margin:5px;padding:9px;border:1px solid #9cb5c7;border-radius:7px}
+button{background:#174c79;color:white;cursor:pointer}pre{white-space:pre-wrap;overflow-wrap:anywhere}
+#notice{padding:12px;background:#fff5d9}#workspace{display:block}
+</style></head><body>
+<header><strong>SMSS Exam Portal V47 — Staging Workspace</strong></header>
+<main><p id="notice">Staging-only: requires a separate V47 Firebase project and API. No V46 production connection.</p>
+<section><label for="email">Email</label><input id="email" type="email" autocomplete="username">
+<label for="password">Password</label><input id="password" type="password" autocomplete="current-password">
+<button id="login" type="button">Sign in</button><button id="logout" type="button">Sign out</button>
+<p id="auth-status" role="status">Not signed in</p></section>
+<section id="workspace"></section></main>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {mountV47FirebaseWorkspace} from "../../src/v47/mount-firebase-workspace.mjs";
+const status=document.getElementById("auth-status"),notice=document.getElementById("notice");
+const config=window.__SMSS_V47_STAGING_CONFIG__;
+if(!config || !config.firebase || config.firebase.projectId==="exam-portal-smss-95016" ||
+   !config.apiOrigin || !/^https:\/\//.test(config.apiOrigin)) {
+ notice.textContent="V47 staging configuration missing or unsafe. No Firebase connection started.";
+ document.getElementById("login").disabled=true;
+ document.getElementById("logout").disabled=true;
+} else {
+ const app=initializeApp(config.firebase,"smss-v47-staging");
+ const auth=getAuth(app);
+ const apiOrigin=new URL(config.apiOrigin);
+ const fetchImpl=(path,options)=>fetch(new URL(path,apiOrigin),options);
+ // Conversion adapters must be supplied by the V47 staging host, not guessed.
+ const bsToAd=config.bsToAd,adToBs=config.adToBs;
+ if(typeof bsToAd!=="function" || typeof adToBs!=="function") {
+  notice.textContent="Verified BS/AD conversion adapters are required for staging.";
+ } else {
+  const mounted=mountV47FirebaseWorkspace({
+   root:document.getElementById("workspace"),document,auth,fetchImpl,
+   subscribeAuthState:onAuthStateChanged,bsToAd,adToBs
+  });
+  onAuthStateChanged(auth,user=>{status.textContent=user?"Signed in":"Not signed in";});
+  document.getElementById("login").onclick=async()=>{
+   try{await signInWithEmailAndPassword(auth,document.getElementById("email").value,document.getElementById("password").value);}
+   catch{status.textContent="Sign-in failed";}
+   document.getElementById("password").value="";
+  };
+  document.getElementById("logout").onclick=async()=>{
+   try{await signOut(auth);}catch{status.textContent="Sign-out failed";}
+  };
+  window.addEventListener("pagehide",()=>mounted.dispose(),{once:true});
+ }
+}
+</script></body></html>
