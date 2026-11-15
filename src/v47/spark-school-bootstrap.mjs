@@ -18,6 +18,7 @@ export function prepareSparkSchoolBootstrap({schoolId,name,iemisCode,schoolAdmin
 export async function bootstrapSparkSchool({auth,firestore,doc,writeBatch,projectId,input}) {
  if(projectId!=="smss-exam-portal-v47")throw new Error("V47 staging project required");
  if(!auth?.currentUser?.uid || auth.currentUser.isAnonymous)throw new Error("Authentication required");
+ if(typeof input?.schoolAdminUid!=="string" || input.schoolAdminUid!==auth.currentUser.uid)throw new Error("Spark bootstrap only supports the authenticated platform admin as initial school admin");
  if(typeof doc!=="function" || typeof writeBatch!=="function")throw new TypeError("Firestore Web SDK adapters required");
  const {school,membership}=prepareSparkSchoolBootstrap(input);
  const batch=writeBatch(firestore);
