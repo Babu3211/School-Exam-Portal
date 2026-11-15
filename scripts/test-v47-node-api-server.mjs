@@ -60,6 +60,21 @@ try{
  assert.equal(crossSchoolRead.status,403,"An admin of school A cannot read school B");
  const invalidCollection=await fetch(base+"/api/v47/records?schoolId=school_A001&collection=user_roles",{headers});
  assert.equal(invalidCollection.status,403,"Server-managed roles must not be exposed as private records");
+ // A user belonging to two schools may read only the explicitly selected school.
+ docs.set("schools/school_B001",{status:"active"});
+ docs.set("schools/school_B001/members/user1",{uid:"user1",schoolId:"school_B001",active:true,roles:["viewer"]});
+ const schoolBRead=await fetch(base+"/api/v47/records?schoolId=school_B001&collection=students",{headers});
+ assert.equal(schoolBRead.status,200);
+ const schoolBWrite=await fetch(base+"/api/v47/students/write",{method:"POST",headers,body:JSON.stringify({
+  schoolId:"school_B001",studentId:"schoolBViewerBlocked",mode:"create",values:{name:"Blocked Student",className:"9"}
+ })});
+ assert.equal(schoolBWrite.status,403);
+ assert.equal(docs.has("schools/school_B001/students/schoolBViewerBlocked"),false);
+ const schoolAAfterSwitch=await fetch(base+"/api/v47/records?schoolId=school_A001&collection=students",{headers});
+ assert.equal(schoolAAfterSwitch.status,200);
+ docs.delete("schools/school_B001/members/user1");
+ const schoolBRevoked=await fetch(base+"/api/v47/records?schoolId=school_B001&collection=students",{headers});
+ assert.equal(schoolBRevoked.status,403);
  // End-to-end HTTP regression: a viewer can read but cannot write.
  docs.set("schools/school_A001/members/user1",{uid:"user1",schoolId:"school_A001",active:true,roles:["viewer"]});
  const viewerRead=await fetch(base+"/api/v47/records?schoolId=school_A001&collection=students",{headers});
