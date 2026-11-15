@@ -242,5 +242,27 @@ try {
  });
  await assertSucceeds(getDoc(doc(viewer,"schools",schoolA,"students","student1")));
 
+ // Revoking teacher access must immediately block assigned marks writes.
+ await env.withSecurityRulesDisabled(async context=>{
+   await updateDoc(doc(context.firestore(),"schools",schoolA,"members","teacherA"),{active:false});
+ });
+ await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","revoked_teacher"),mark));
+ await assertFails(getDoc(doc(subject,"schools",schoolA,"students","student1")));
+ await env.withSecurityRulesDisabled(async context=>{
+   await updateDoc(doc(context.firestore(),"schools",schoolA,"members","teacherA"),{active:true});
+ });
+ await assertSucceeds(getDoc(doc(subject,"schools",schoolA,"students","student1")));
+ // Revoking admin access must immediately block school reads and writes.
+ await env.withSecurityRulesDisabled(async context=>{
+   await updateDoc(doc(context.firestore(),"schools",schoolA,"members","adminA"),{active:false});
+ });
+ await assertFails(getDoc(doc(admin,"schools",schoolA,"students","student1")));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"students","revoked_admin"),{name:"Blocked",classId:"9"}));
+ await assertSucceeds(getDoc(doc(viewer,"schools",schoolA,"students","student1")));
+ await env.withSecurityRulesDisabled(async context=>{
+   await updateDoc(doc(context.firestore(),"schools",schoolA,"members","adminA"),{active:true});
+ });
+ await assertSucceeds(getDoc(doc(admin,"schools",schoolA,"students","student1")));
+
  console.log("V47 tenant Firestore emulator isolation and exam assignment tests passed");
 } finally {await env.cleanup();}
