@@ -163,7 +163,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
   try{await signInWithEmailAndPassword(auth,document.querySelector("#email").value,document.querySelector("#password").value);document.querySelector("#password").value="";}
   catch{say("Sign in failed. Check your credentials.");}
  });
- document.querySelector("#logout").addEventListener("click",()=>signOut(auth));
+ document.querySelector("#logout").addEventListener("click",async()=>{try{await signOut(auth);say("Signed out.");}catch{say("Sign out failed. Please retry.");}});
  memberStatusForm.addEventListener("submit",async event=>{
   event.preventDefault();
   if(!auth.currentUser){say("Sign in required.");return;}
@@ -203,7 +203,7 @@ if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="
    const input=Object.fromEntries(new FormData(memberForm).entries());
    if(!managementAllowed(input))throw new Error("Verify school admin first");
    const result=await enrollSparkSchoolMember({auth,firestore,doc,setDoc,projectId:app.options.projectId,...input});
-   say("Member added: "+result.uid+" ("+result.role+") to "+result.schoolId);
+   say("Invitation sent to UID "+result.uid+" ("+result.role+") for "+result.schoolId+". Membership starts only after that user signs in and accepts.");
    memberForm.reset();memberForm.elements.namedItem("schoolId").value=verifiedSchoolId;
    try{await refreshMembers();}catch{say("Member added, but member list refresh failed.");}
   }catch{say("Enrollment denied. Sign in as the selected school's Admin and check the existing UID.");}
