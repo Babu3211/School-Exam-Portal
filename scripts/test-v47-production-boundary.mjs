@@ -9,6 +9,8 @@ const allowed=path=>
  path==="v47-runtime/server.mjs" ||
  path==="v47-runtime/package.json" ||
  path.startsWith("scripts/test-v47-") ||
+ path==="scripts/build-v47-spark-staging.mjs" ||
+ path==="firebase.v47.spark.json" ||
  path.startsWith("prototypes/v47/") ||
  path.startsWith("docs/V47-") ||
  path===".github/workflows/v47-development-checks.yml" ||
