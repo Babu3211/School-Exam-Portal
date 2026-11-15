@@ -35,12 +35,13 @@ else{
    if(!Array.isArray(roles) || !roles.some(role=>["school_admin","class_teacher","subject_teacher","viewer"].includes(role)))throw new Error("No supported school role");
    const staged=[];
    const sectionCounts={};
-   // All school collections are loaded with the authenticated school ID only.
-
-   // Keep Firestore reads bounded for Spark Free Plan schools (300–500 students).
-   for(const kind of ["students","classes","subjects","exams","marks","attendance"]){
-    const result=await getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),limit(20)));
-    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
+   // Fetch independent tenant-scoped previews concurrently to reduce wait time.
+   // Each query remains bounded regardless of total school enrollment.
+   const kinds=["students","classes","subjects","exams","marks","attendance"];
+   const results=await Promise.all(kinds.map(kind=>getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),limit(20)))));
+   if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
+   for(let index=0;index<kinds.length;index++){
+    const kind=kinds[index],result=results[index];
     sectionCounts[kind]=result.size;
     const section=document.createElement("section"),heading=document.createElement("h3"),list=document.createElement("ul");
     heading.textContent=kind+" ("+result.size+" shown; maximum 20)";section.append(heading);
