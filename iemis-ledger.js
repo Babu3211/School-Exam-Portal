@@ -87,10 +87,15 @@ const fmt=v=>v===null||v===undefined?'—':String(Number(Number(v).toFixed(2)));
 export function iemisLedger({mode='number',classNo,annual=false,academicYear='',term='',subjects,students,records,examId,schoolName,schoolCode,creditFor=()=>null,label=s=>s,componentsFor=()=>[],applicable=()=>true}) {
   const e=iemisEscape,primary=classNo<=5;
   const verifiedSixTerm=Number(classNo)===6&&!annual&&/^2083(?:\D|$)/.test(String(academicYear).replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)))&&['first','second'].includes(term);
-  const verifiedNineTerm=mode==='grade'&&Number(classNo)===9&&!annual&&/^2083(?:\D|$)/.test(String(academicYear).replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)))&&['first','second'].includes(term);
+  const verifiedNineTerm=Number(classNo)===9&&!annual&&/^2083(?:\D|$)/.test(String(academicYear).replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)))&&['first','second'].includes(term);
   const verifiedSingleTerm=verifiedSixTerm||verifiedNineTerm;
   const legacyTheory=iemisLegacyTheory(classNo,records,{examId});
   subjects=iemisSubjects(subjects,verifiedSixTerm&&term==='first'&&mode==='number'?'grade':mode,classNo,{legacyTheory});
+  if(verifiedNineTerm&&mode==='number'){
+    const order=['computer science','opt.ii computer science','opt.i environment science','social studies','science & technology','mathematics','english','nepali'];
+    const rank=s=>{const i=order.indexOf(iemisSubjectKey(s));return i<0?order.length:i;};
+    subjects=[...subjects].sort((a,b)=>rank(a)-rank(b));
+  }
   const grade=mode==='grade',entry=mode==='entry';
   const identity=entry?['S.N','Student Name','Regd. No.','Symbol No.']:grade?['S.No.','School Name','School Code','Student Name','Dob','Father Name','Mother Name','Symbol Number']:['S.No.','School Name','School Code','Student Name','Symbol Number'];
   const cols=subjects.map(s=>entry?['IsAbsent',...componentsFor(s).map(c=>c.label||c.name)]:(primary||verifiedSingleTerm)?[]:grade?(annual?['IN','TH','Total']:['IN','Total']):(annual?['IN','TH']:['IN']));
