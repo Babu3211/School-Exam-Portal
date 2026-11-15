@@ -5,9 +5,13 @@
  */
 import {assertSchoolId} from "./tenant-domain.mjs";
 import {V46_COLLECTION_POLICY} from "./v46-collection-map.mjs";
-const SAFE_SEGMENT=/^[^/\\u0000-\\u001f\\u007f]{1,1500}$/;
+function safeSegment(id) {
+ return typeof id==="string" && id.length>=1 && id.length<=1500 &&
+  id!=="." && id!==".." && !id.includes("/") &&
+  ![...id].some(char=>char.codePointAt(0)<32 || char.codePointAt(0)===127);
+}
 function validId(id) {
- if(typeof id!=="string" || !SAFE_SEGMENT.test(id) || id==="." || id==="..")
+ if(!safeSegment(id))
   throw new TypeError("Invalid document ID");
  return id;
 }
@@ -30,11 +34,11 @@ export function createV46BrowserTenantGateway({db,verifiedSchoolId,collectionFn,
      if(!Number.isInteger(pageSize) || pageSize<1 || pageSize>50)
       throw new RangeError("Page size must be between 1 and 50");
      const snapshot=await getDocsFn(queryFn(collectionRef(),limitFn(pageSize)));
-     return snapshot.docs.map(doc=>Object.freeze({id:doc.id,...doc.data()}));
+     return snapshot.docs.map(doc=>Object.freeze({...doc.data(),id:doc.id}));
     },
     async get(documentId) {
      const snapshot=await getDocFn(docFn(db,"schools",schoolId,collectionName,validId(documentId)));
-     return snapshot.exists()?Object.freeze({id:snapshot.id,...snapshot.data()}):null;
+     return snapshot.exists()?Object.freeze({...snapshot.data(),id:snapshot.id}):null;
     }
    });
   }
