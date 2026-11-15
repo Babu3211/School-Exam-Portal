@@ -70,6 +70,26 @@ for(const [endpoint,read,field] of [
  await assert.rejects(oldRead,/School selection changed/,endpoint+" must reject stale data");
  assert.equal(switching.getSelectedSchool().schoolId,"school_B001");
 }
+// A logout while a dashboard response is pending must invalidate it.
+let releaseDashboard;
+let dashboardRequested;
+const startedDashboard=new Promise(resolve=>{dashboardRequested=resolve;});
+const duringLogin=createV47SchoolWorkspace({
+ getIdToken:async()=>"token",
+ fetchImpl:async url=>{
+  if(url.includes("/dashboard?")){
+   dashboardRequested();
+   return new Promise(resolve=>{releaseDashboard=resolve;});
+  }
+  throw Error("Unexpected endpoint");
+ }
+});
+const oldDashboard=duringLogin.selectSchool("school_A001");
+await startedDashboard;
+duringLogin.clear();
+releaseDashboard({ok:true,json:async()=>({dashboard:{schoolId:"school_A001",schoolName:"Old school",roles:["viewer"],readOnly:true}})});
+await assert.rejects(oldDashboard,/School selection changed/);
+assert.equal(duringLogin.getSelectedSchool(),null);
 // An admin role must not override a server-declared read-only dashboard.
 let writeCalls=0;
 const readOnlyAdmin=createV47SchoolWorkspace({
