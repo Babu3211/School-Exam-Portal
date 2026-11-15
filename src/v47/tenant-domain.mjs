@@ -11,7 +11,7 @@ export function assertSchoolId(schoolId) {
 }
 export function schoolDocumentPath(schoolId) { return `schools/${assertSchoolId(schoolId)}`; }
 export function schoolCollectionPath(schoolId, collection) {
-  const allowed=["students","staff","exams","marks","attendance","settings","results","subscriptions"];
+  const allowed=["students","staff","classes","subjects","exams","marks","attendance","settings","school_settings","mark_settings","certificates","assignments","members","invitations","results","subscriptions"];
   if (!allowed.includes(collection)) throw new TypeError("Unsupported school collection");
   return `${schoolDocumentPath(schoolId)}/${collection}`;
 }
