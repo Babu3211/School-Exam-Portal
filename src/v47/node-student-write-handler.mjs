@@ -23,7 +23,7 @@ export function createV47NodeStudentWriteHandler({auth,firestore}) {
    for await(const chunk of req) {
     size+=Buffer.byteLength(chunk);
     if(size>16384)return respond(413,{error:"Request too large"});
-    chunks.push(chunk);
+    chunks.push(Buffer.isBuffer(chunk)?chunk:Buffer.from(chunk));
    }
    // Decode once: UTF-8 Nepali characters may span HTTP chunk boundaries.
    const data=JSON.parse(Buffer.concat(chunks).toString("utf8"));
