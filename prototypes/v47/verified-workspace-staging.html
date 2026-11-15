@@ -31,7 +31,8 @@ const isSafeConfig=!!config?.firebase && typeof config.firebase.projectId==="str
  config.firebase.authDomain!==forbiddenProject+".web.app" &&
  typeof config.apiOrigin==="string" && (()=>{
   try{const url=new URL(config.apiOrigin);return url.protocol==="https:" && !url.username && !url.password &&
-   url.hostname!==forbiddenProject+".web.app" && url.hostname!==forbiddenProject+".firebaseapp.com";}
+   url.hostname!==forbiddenProject+".web.app" && url.hostname!==forbiddenProject+".firebaseapp.com" &&
+   url.origin===window.location.origin && url.pathname==="/" && !url.search && !url.hash;}
   catch{return false;}
  })() && typeof config.bsToAd==="function" && typeof config.adToBs==="function";
 if(!isSafeConfig) {
