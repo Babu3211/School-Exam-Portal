@@ -130,6 +130,9 @@ try {
  const mark={schoolId:schoolA,classId:"9",subjectId:"computer",studentId:"student1",term:"first",score:30};
  await assertSucceeds(setDoc(doc(subject,"schools",schoolA,"marks","m1"),mark));
  await assertSucceeds(getDoc(doc(viewer,"schools",schoolA,"marks","m1")));
+ await assertFails(deleteDoc(doc(admin,"schools",schoolA,"marks","m1")));
+ await assertFails(deleteDoc(doc(subject,"schools",schoolA,"marks","m1")));
+ await assertFails(deleteDoc(doc(viewer,"schools",schoolA,"marks","m1")));
  await assertFails(getDoc(doc(outsider,"schools",schoolA,"marks","m1")));
  await assertFails(getDoc(doc(admin,"schools",schoolB,"marks","m1")));
  await assertFails(getDocs(collection(admin,"schools",schoolB,"marks")));
@@ -152,6 +155,9 @@ try {
  const attendance={schoolId:schoolA,classId:"9",studentId:"student1",term:"first",present:true};
  await assertSucceeds(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a1"),attendance));
  await assertSucceeds(getDoc(doc(viewer,"schools",schoolA,"attendance","a1")));
+ await assertFails(deleteDoc(doc(admin,"schools",schoolA,"attendance","a1")));
+ await assertFails(deleteDoc(doc(classTeacher,"schools",schoolA,"attendance","a1")));
+ await assertFails(deleteDoc(doc(viewer,"schools",schoolA,"attendance","a1")));
  await assertFails(getDoc(doc(outsider,"schools",schoolA,"attendance","a1")));
  await assertFails(getDoc(doc(admin,"schools",schoolB,"attendance","a1")));
  await assertFails(getDocs(collection(admin,"schools",schoolB,"attendance")));
