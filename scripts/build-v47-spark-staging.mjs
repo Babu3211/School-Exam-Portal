@@ -31,6 +31,7 @@ await rm(output,{recursive:true,force:true});
 for(const path of imports)await include(path);
 // An optional public Firebase Web config is accepted only for the isolated V47 project.
  // No config means the page stays safely disabled rather than connecting to V46.
+ await mkdir(join(output,"prototypes","v47"),{recursive:true});
  const configRaw=process.env.V47_SPARK_WEB_CONFIG;
  if(configRaw){
   let config;
