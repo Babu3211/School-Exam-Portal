@@ -307,5 +307,16 @@ try {
  });
  await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"students","admin_restored"),{name:"Restored",classId:"9"}));
 
+ // Viewer role overrides a valid class teacher attendance assignment.
+ await env.withSecurityRulesDisabled(async context=>{
+   await updateDoc(doc(context.firestore(),"schools",schoolA,"members","classA"),{roles:["viewer","class_teacher"]});
+ });
+ await assertSucceeds(getDoc(doc(classTeacher,"schools",schoolA,"attendance","a1")));
+ await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","mixed_class_blocked"),attendance));
+ await env.withSecurityRulesDisabled(async context=>{
+   await updateDoc(doc(context.firestore(),"schools",schoolA,"members","classA"),{roles:["class_teacher"]});
+ });
+ await assertSucceeds(setDoc(doc(classTeacher,"schools",schoolA,"attendance","class_restored"),attendance));
+
  console.log("V47 tenant Firestore emulator isolation and exam assignment tests passed");
 } finally {await env.cleanup();}
