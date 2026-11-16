@@ -76,6 +76,13 @@ export function auditV47LedgerReadiness(data,{schoolId}={}){
  if(duplicatePairs)blockers.push(duplicatePairs+" marks duplicate an exam, student and subject combination.");
  const percentageOnly=data.marks.filter(m=>!Array.isArray(m.scores)||!m.scores.length).length;
  if(percentageOnly)blockers.push(percentageOnly+" marks have no V46-compatible assessment components.");
+ const invalidScores=data.marks.filter(m=>Array.isArray(m.scores)&&m.scores.some(s=>{
+  if(!s||typeof s!=="object")return true;
+  const obtained=Number(s.obtained),full=Number(s.fullMarks);
+  return s.obtained==null||s.fullMarks==null||!Number.isFinite(obtained)||!Number.isFinite(full)||full<=0||obtained<0||obtained>full;
+ })).length;
+ if(invalidScores)blockers.push(invalidScores+" marks have invalid assessment scores or full marks.");
+
  const missingIdentity=data.marks.filter(m=>!m.examId||!m.studentId||!(m.subject||m.subjectId)).length;
  if(missingIdentity)blockers.push(missingIdentity+" marks lack exam, student or subject identity.");
  const unknownStudents=data.marks.filter(m=>m.studentId&&!studentIds.has(m.studentId)).length;
