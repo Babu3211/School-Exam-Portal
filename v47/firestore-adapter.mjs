@@ -1,4 +1,4 @@
-import {schoolCollectionPath,schoolDocumentPath,validateSchoolId} from './school-paths.mjs';
+import {schoolCollectionPath,schoolDocumentPath} from './school-paths.mjs';
 import {resolveSchoolContext} from './school-context.mjs';
 import {validatePageSize} from './pagination.mjs';
 import {checkedRecords} from './record-limits.mjs';
@@ -16,7 +16,7 @@ export function createSchoolStore({db,api,member,schoolId}){
   const docs=snapshot.docs;
   if(!Array.isArray(docs)||docs.length>size+1)throw new RangeError('Unexpected query result size');
   const page=docs.slice(0,size);
-  const records=checkedRecords(page.map(d=>({id:d.id,...d.data()})),size);
+  const records=checkedRecords(page.map(d=>({...d.data(),id:d.id})),size);
   return {records,hasMore:docs.length>size,cursor:page.at(-1)??null};
  }
  return Object.freeze({schoolId:ctx.schoolId,collectionRef,documentRef,listPage});
