@@ -141,4 +141,40 @@ jobs:
         run: |
           node --input-type=module -e 'import fs from "node:fs";const s=fs.readFileSync("index.html","utf8");for(const x of ["School Profile","Student Record","Teacher | Staff","initIdleLogout","initUserActivity"])if(!s.includes(x))throw Error("Missing approved V45 feature: "+x);if(s.includes("V45 Trial"))throw Error("Obsolete trial dashboard restored")'
 
-# This workflow does not open IEMIS, deploy Hosting, or write production Firestore data.
+
+  iemis-hosting-preview:
+    name: Verify IEMIS changes on Firebase Hosting preview
+    if: github.event_name == 'pull_request' && github.head_ref == 'fix/iemis-class6-2083-term-sheets' && github.event.pull_request.head.repo.full_name == github.repository
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: smss-iemis-2083-hosting-preview
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Deploy to dedicated preview channel
+        id: preview
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
+          projectId: exam-portal-smss-95016
+          channelId: iemis-2083-review
+          expires: 7d
+          entryPoint: .
+      - name: Check deployed portal and IEMIS JavaScript over HTTPS
+        env:
+          PREVIEW_URL: ${{ steps.preview.outputs.details_url }}
+        run: |
+          [[ "$PREVIEW_URL" == https://exam-portal-smss-95016--*.web.app ]]
+          curl -fsSL --retry 4 "$PREVIEW_URL/" -o "$RUNNER_TEMP/smss-preview.html"
+          cmp index.html "$RUNNER_TEMP/smss-preview.html"
+          for file in iemis-entry.js iemis-ledger.js sw.js; do
+            curl -fsSL --retry 4 "$PREVIEW_URL/$file" -o "$RUNNER_TEMP/$file"
+            cmp "$file" "$RUNNER_TEMP/$file"
+          done
+          echo "Firebase Hosting preview: $PREVIEW_URL" >> "$GITHUB_STEP_SUMMARY"
+
+# This workflow does not open IEMIS, deploy live Hosting, or write Firestore data.
