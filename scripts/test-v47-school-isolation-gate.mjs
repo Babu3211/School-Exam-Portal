@@ -4,7 +4,8 @@ import {readFileSync} from 'node:fs';
 const rules=readFileSync(new URL('../v47/firestore.rules',import.meta.url),'utf8');
 for(const name of ['students','staff','classes','subjects','exams','marks','attendance']){
  assert.doesNotMatch(rules,new RegExp(String.raw`match\s+/${name}/\{[^}]+\}`),'Unscoped V47 collection: '+name);
- assert.match(rules,new RegExp("'"+name+"'"),'Missing scoped collection: '+name);
+ if(name==='students')assert.match(rules,/match \/students\/\{docId\}/);
+ else assert.match(rules,new RegExp("'"+name+"'"),'Missing scoped collection: '+name);
 }
 assert.match(rules,/match \/schools\/\{schoolId\}/);
 assert.match(rules,/function member\(schoolId\)/);
