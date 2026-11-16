@@ -22,10 +22,6 @@ const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#log
 let epoch=0,auth,db;
 const PAGE_SIZE=20;
 const PREVIEW_KINDS=["students","staff","classes","subjects","exams","marks","attendance","certificates","mark_settings","school_settings"];
-const validRoles=roles=>Array.isArray(roles) && roles.length>0 &&
- roles.every(role=>["school_admin","class_teacher","subject_teacher","viewer"].includes(role)) &&
- new Set(roles).size===roles.length &&
- !(roles.includes("viewer") && roles.length>1);
 
 const say=value=>status.textContent=value;
 const clear=()=>{epoch++;workspace.hidden=true;tables.replaceChildren();document.querySelector("#school-title").textContent="";document.querySelector("#role").textContent="";};
@@ -109,10 +105,8 @@ else{
         getDoc(doc(db,"schools",schoolId)),getDoc(doc(db,"schools",schoolId,"members",user.uid))
        ]);
        if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
-       if(!schoolCheck.exists() || schoolCheck.data().status!=="active" ||
-          !memberCheck.exists() || memberCheck.data().active!==true ||
-          !validRoles(memberCheck.data().roles))
-        throw new Error("School access changed");
+       if(!schoolCheck.exists() || !memberCheck.exists())throw new Error("School access changed");
+       verifyV47BrowserMembership({schoolId,uid:user.uid,school:schoolCheck.data(),member:memberCheck.data()});
        const next=await getDocs(query(collection(db,tenantPaths.collection(kind)),orderBy("__name__"),startAfter(cursor),limit(PAGE_SIZE)));
        if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
        // Do not render a fetched page if membership was revoked during the request.
@@ -120,9 +114,8 @@ else{
         getDoc(doc(db,"schools",schoolId)),getDoc(doc(db,"schools",schoolId,"members",user.uid))
        ]);
        if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
-       if(!currentSchool.exists() || currentSchool.data().status!=="active" ||
-          !currentMember.exists() || currentMember.data().active!==true ||
-          !validRoles(currentMember.data().roles))throw new Error("School access changed");
+       if(!currentSchool.exists() || !currentMember.exists())throw new Error("School access changed");
+       verifyV47BrowserMembership({schoolId,uid:user.uid,school:currentSchool.data(),member:currentMember.data()});
        next.docs.forEach(renderRecord);
        if(next.docs.length)cursor=next.docs[next.docs.length-1];
        heading.textContent=kind+" ("+list.children.length+" shown; paginated)";
@@ -141,10 +134,9 @@ else{
     getDoc(doc(db,"schools",schoolId,"members",user.uid))
    ]);
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
-   if(!latestSchool.exists() || latestSchool.data().status!=="active" ||
-      !latestMember.exists() || latestMember.data().active!==true ||
-      !validRoles(latestMember.data().roles))
-    throw new Error("School access changed during loading");
+   if(!latestSchool.exists() || !latestMember.exists())throw new Error("School access changed during loading");
+   const latestVerified=verifyV47BrowserMembership({schoolId,uid:user.uid,school:latestSchool.data(),member:latestMember.data()});
+   if(latestVerified.roles.join(",")!==verified.roles.join(","))throw new Error("School role changed during loading");
    document.querySelector("#school-title").textContent=String(latestSchool.data().name||schoolId);
    document.querySelector("#role").textContent="Access: "+latestMember.data().roles.join(", ")+" (read-only preview)";
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
