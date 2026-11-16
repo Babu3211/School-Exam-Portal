@@ -23,4 +23,6 @@ assert.ok(inconsistent.blockers.some(s=>s.includes("inconsistent student")));
 const duplicates=auditV47LedgerReadiness({...data,students:[{id:"s1"},{id:"s1"}]});
 assert.ok(duplicates.blockers.some(s=>s.includes("duplicate document identities")));
 assert.throws(()=>auditV47LedgerReadiness({...data,marks:[{studentId:"s1"}]}),/Invalid marks source document identities/);
+const duplicateMarks=auditV47LedgerReadiness({...data,marks:[data.marks[0],{...data.marks[0],id:"m2"}]});
+assert.ok(duplicateMarks.blockers.some(s=>s.includes("duplicate an exam, student and subject")));
 console.log("V47 ledger readiness audit checks passed");
