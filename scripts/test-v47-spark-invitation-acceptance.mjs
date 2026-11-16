@@ -10,6 +10,7 @@ await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>({exis
 await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>({exists:()=>true,data:()=>({...invitation,roles:["school_admin"]})})}),/Invalid invitation/);
 await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>({exists:()=>true,data:()=>({...invitation,schoolId:"school_B001"})})}),/Invalid invitation/);
 await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>{auth.currentUser={uid:"other"};return {exists:()=>true,data:()=>invitation}}}),/Session changed/);
+await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>{auth.currentUser={uid:"teacherA",isAnonymous:true};return {exists:()=>true,data:()=>invitation};}}),/Session changed/);
 auth.currentUser={uid:"teacherA"};
 await assert.rejects(acceptSparkSchoolInvitation({...args,auth:{currentUser:{uid:"teacherA",isAnonymous:true}}}),/Authentication/);
 await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>({exists:()=>true,data:()=>({...invitation,active:false})})}),/Invalid invitation/);
