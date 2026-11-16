@@ -1,0 +1,14 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const page=readFileSync(new URL("../prototypes/v47/spark-school-students.html",import.meta.url),"utf8");
+const builder=readFileSync(new URL("./build-v47-spark-staging.mjs",import.meta.url),"utf8");
+assert.match(page,/schoolCollectionPath\(id,"students"\)/);
+assert.match(page,/roles\.includes\("school_admin"\)/);
+assert.match(page,/await verify\(id,user\)/);
+assert.match(page,/orderBy\("__name__"\)/);
+assert.match(page,/limit\(20\)/);
+assert.match(page,/textContent=String\(value\)/);
+assert.match(page,/config\.projectId!=="smss-exam-portal-v47"/);
+assert.doesNotMatch(page,/exam-portal-smss-95016|deleteDoc\(|updateDoc\(|setDoc\(/);
+assert.match(builder,/prototypes\/v47\/spark-school-students\.html/);
+console.log("V47 student screen tenant scoping and admin-only write static checks passed");
