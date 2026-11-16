@@ -17,7 +17,7 @@ await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>({exis
 await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>({exists:()=>true,data:()=>({...invitation,roles:["viewer","subject_teacher"]})})}),/Invalid invitation/);
 assert.equal(writes.length,0,"Rejected invitations must not write membership");
 assert.deepEqual(await acceptSparkSchoolInvitation(args),{schoolId:"school_A001",uid:"teacherA",role:"subject_teacher"});
-assert.deepEqual(writes,[{path:"schools/school_A001/members/teacherA",data:invitation}]);
+assert.deepEqual(writes,[{path:"schools/school_A001/members/teacherA",data:{uid:"teacherA",schoolId:"school_A001",roles:["subject_teacher"],active:true}}]);
 // Cover every permitted single-role invitation, not just subject teachers.
 for (const role of ["viewer", "class_teacher"]) {
  const roleWrites=[];
@@ -26,7 +26,7 @@ for (const role of ["viewer", "class_teacher"]) {
    getDoc:async()=>({exists:()=>true,data:()=>roleInvitation}),
    setDoc:async(path,data)=>roleWrites.push({path,data})});
  assert.deepEqual(result,{schoolId:"school_A001",uid:"teacherA",role});
- assert.deepEqual(roleWrites,[{path:"schools/school_A001/members/teacherA",data:roleInvitation}]);
+ assert.deepEqual(roleWrites,[{path:"schools/school_A001/members/teacherA",data:{uid:"teacherA",schoolId:"school_A001",roles:[role],active:true}}]);
 }
 // A denied Firestore write must never be reported as accepted.
 await assert.rejects(acceptSparkSchoolInvitation({...args,
