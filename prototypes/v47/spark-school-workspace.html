@@ -19,7 +19,7 @@ import {assertSchoolId,schoolCollectionPath} from "../../src/v47/tenant-domain.m
 const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#login-form"),logout=document.querySelector("#logout"),schoolForm=document.querySelector("#school-form"),status=document.querySelector("#status"),workspace=document.querySelector("#workspace"),tables=document.querySelector("#tables");
 let epoch=0,auth,db;
 const PAGE_SIZE=20;
-const PREVIEW_KINDS=["students","staff","classes","subjects","exams","marks","attendance","certificates","mark_settings","school_settings","public_results"];
+const PREVIEW_KINDS=["students","staff","classes","subjects","exams","marks","attendance","certificates","mark_settings","school_settings"];
 const validRoles=roles=>Array.isArray(roles) && roles.length>0 &&
  roles.every(role=>["school_admin","class_teacher","subject_teacher","viewer"].includes(role)) &&
  new Set(roles).size===roles.length &&
@@ -45,7 +45,7 @@ else{
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
    if(!school.exists() || school.data().status!=="active" || !member.exists() || member.data().active!==true)throw new Error("School inactive or membership unavailable");
    const roles=member.data().roles;
-   if(!validRoles(roles))throw new Error("No supported school role");
+   if(member.data().schoolId!==schoolId || member.data().uid!==user.uid || !validRoles(roles))throw new Error("Invalid school membership identity or role");
    const staged=[];
    const sectionCounts={};
    const failedSections=[];
