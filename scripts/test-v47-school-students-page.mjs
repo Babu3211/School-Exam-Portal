@@ -5,8 +5,8 @@ const builder=readFileSync(new URL("./build-v47-spark-staging.mjs",import.meta.u
 assert.match(page,/schoolCollectionPath\(id,"students"\)/);
 assert.match(page,/roles\.includes\("school_admin"\)/);
 assert.match(page,/await verify\(id,user\)/);
-assert.match(page,/orderBy\("__name__"\)/);
-assert.match(page,/limit\(20\)/);
+assert.ok(page.includes("tenantRecords.listPage({pageSize:20,cursor})"));
+assert.ok(page.includes("createV46BrowserTenantGateway({"));
 assert.match(page,/textContent=String\(value\)/);
 assert.match(page,/config\.projectId!=="smss-exam-portal-v47"/);
 assert.doesNotMatch(page,/exam-portal-smss-95016|deleteDoc\(|updateDoc\(|setDoc\(/);
