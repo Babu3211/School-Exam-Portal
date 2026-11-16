@@ -12,6 +12,9 @@ try{
   await db.doc('schools/school_001/members/adminA').set({uid:'adminA',schoolId:'school_001',role:'school_admin',active:true});
   await db.doc('schools/school_001/members/viewerA').set({uid:'viewerA',schoolId:'school_001',role:'viewer',active:true});
   await db.doc('schools/school_001/students/s1').set({name:'A Student'});
+  await db.doc('schools/school_001/marks/m1').set({score:50});
+  await db.doc('schools/school_002/marks/m2').set({score:90});
+  await db.doc('schools/school_001/attendance/a1').set({present:true});
   await db.doc('schools/school_002/students/s2').set({name:'B Student'});
   await db.doc('schools/school_003').set({name:'Inactive',active:false});
   await db.doc('schools/school_003/members/viewerA').set({uid:'viewerA',schoolId:'school_003',role:'viewer',active:true});
@@ -25,6 +28,10 @@ try{
  await assertFails(admin.doc('schools/school_002/students/s2').get());
  await assertSucceeds(admin.doc('schools/school_001/students/new').set({name:'N'}));
  await assertSucceeds(viewer.doc('schools/school_001/students/s1').get());
+ await assertSucceeds(viewer.doc('schools/school_001/marks/m1').get());
+ await assertSucceeds(viewer.doc('schools/school_001/attendance/a1').get());
+ await assertFails(viewer.doc('schools/school_002/marks/m2').get());
+ await assertFails(admin.doc('schools/school_002/marks/m2').get());
  await assertFails(viewer.doc('schools/school_001/students/new').set({name:'N'}));
  await assertFails(viewer.doc('schools/school_002/students/s2').get());
  await assertFails(viewer.doc('schools/school_003/students/s3').get());
