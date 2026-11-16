@@ -20,9 +20,8 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {getFirestore,doc,getDoc,collection,getDocs,query,limit,startAfter,orderBy} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import {assertSchoolId} from "../../src/v47/tenant-domain.mjs";
-import {createV46TenantPathResolver} from "../../src/v47/v46-tenant-path-resolver.mjs";
 import {verifyV47BrowserMembership} from "../../src/v47/browser-membership-guard.mjs";
-import {createV46BrowserTenantGateway} from "../../src/v47/v46-browser-tenant-gateway.mjs";
+import {createV46VerifiedReadSession} from "../../src/v47/v46-verified-read-session.mjs";
 const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#login-form"),logout=document.querySelector("#logout"),schoolForm=document.querySelector("#school-form"),status=document.querySelector("#status"),workspace=document.querySelector("#workspace"),tables=document.querySelector("#tables");
 let epoch=0,auth,db;
 const PAGE_SIZE=20;
@@ -54,13 +53,12 @@ else{
    if(!school.exists() || !member.exists())throw new Error("School inactive or membership unavailable");
    const verified=verifyV47BrowserMembership({schoolId,uid:user.uid,school:school.data(),member:member.data()});
    const roles=verified.roles;
-   const tenantGateway=createV46BrowserTenantGateway({
-    db,verifiedSchoolId:verified.schoolId,
-    collectionFn:collection,docFn:doc,getDocsFn:getDocs,getDocFn:getDoc,
-    queryFn:query,limitFn:limit,startAfterFn:startAfter,orderByFn:orderBy
+   // Use the same membership-verified, opaque-cursor adapter as the V46 port.
+   const schoolReads=createV46VerifiedReadSession({
+    db,auth,schoolId:verified.schoolId,collectionFn:collection,docFn:doc,
+    getDocsFn:getDocs,getDocFn:getDoc,queryFn:query,limitFn:limit,
+    startAfterFn:startAfter,orderByFn:orderBy
    });
-   const tenantPaths=createV46TenantPathResolver({verifiedSchoolId:verified.schoolId,verifiedMembership:{schoolId:verified.schoolId,active:true,roles:[...verified.roles]}});
-   const collectionGateways=Object.fromEntries(PREVIEW_KINDS.map(kind=>[kind,tenantGateway.forCollection(tenantPaths.collection(kind))]));
    const staged=[];
    const sectionCounts={};
    const failedSections=[];
@@ -73,7 +71,7 @@ else{
    // Fetch up to three independent sections at a time to balance latency and Spark usage.
    for(let offset=0;offset<kinds.length;offset+=3){
     if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
-    const batch=await Promise.allSettled(kinds.slice(offset,offset+3).map(kind=>collectionGateways[kind].listPage({pageSize:PAGE_SIZE})));
+    const batch=await Promise.allSettled(kinds.slice(offset,offset+3).map(kind=>schoolReads.listPage(kind,{pageSize:PAGE_SIZE})));
     results.push(...batch);
     completed+=batch.length;
     if(token===epoch && auth.currentUser?.uid===user.uid)say("Loading school records: "+completed+"/"+kinds.length+" sections checked...");
@@ -127,7 +125,7 @@ else{
        if(!schoolCheck.exists() || !memberCheck.exists())throw new Error("School access changed");
        const beforePage=verifyV47BrowserMembership({schoolId,uid:user.uid,school:schoolCheck.data(),member:memberCheck.data()});
        if(beforePage.roles.join(",")!==verified.roles.join(","))throw new Error("School role changed");
-       const next=await collectionGateways[kind].listPage({pageSize:PAGE_SIZE,cursor});
+       const next=await schoolReads.listPage(kind,{pageSize:PAGE_SIZE,cursor});
        if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
        // Do not render a fetched page if membership was revoked during the request.
        const [currentSchool,currentMember]=await Promise.all([
