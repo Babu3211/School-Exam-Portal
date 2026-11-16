@@ -17,4 +17,17 @@ await assert.rejects(acceptSparkSchoolInvitation({...args,getDoc:async()=>({exis
 assert.equal(writes.length,0,"Rejected invitations must not write membership");
 assert.deepEqual(await acceptSparkSchoolInvitation(args),{schoolId:"school_A001",uid:"teacherA",role:"subject_teacher"});
 assert.deepEqual(writes,[{path:"schools/school_A001/members/teacherA",data:invitation}]);
+// Cover every permitted single-role invitation, not just subject teachers.
+for (const role of ["viewer", "class_teacher"]) {
+ const roleWrites=[];
+ const roleInvitation={...invitation,roles:[role]};
+ const result=await acceptSparkSchoolInvitation({...args,
+   getDoc:async()=>({exists:()=>true,data:()=>roleInvitation}),
+   setDoc:async(path,data)=>roleWrites.push({path,data})});
+ assert.deepEqual(result,{schoolId:"school_A001",uid:"teacherA",role});
+ assert.deepEqual(roleWrites,[{path:"schools/school_A001/members/teacherA",data:roleInvitation}]);
+}
+// A denied Firestore write must never be reported as accepted.
+await assert.rejects(acceptSparkSchoolInvitation({...args,
+ setDoc:async()=>{throw new Error("permission-denied");}}),/permission-denied/);
 console.log("V47 Spark invitation acceptance adapter checks passed");
