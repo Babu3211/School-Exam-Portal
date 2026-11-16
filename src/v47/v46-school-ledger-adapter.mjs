@@ -33,5 +33,7 @@ export function renderV47SchoolLedger({schoolId,term,classNo,schoolName,schoolCo
  }
  if(typeof creditFor!=="function"||typeof componentsFor!=="function"||typeof applicable!=="function")
   throw new Error("Verified subject credit, component and applicability mappings required");
- return iemisLedger({mode,classNo:n,annual,subjects,students,records:compatible,examId,schoolName:String(schoolName??""),schoolCode:String(schoolCode??""),creditFor,componentsFor,applicable});
+ const ledger=iemisLedger({mode,classNo:n,annual,subjects,students,records:compatible,examId,schoolName:String(schoolName??""),schoolCode:String(schoolCode??""),creditFor,componentsFor,applicable});
+ // V46 returns separate header/body fragments, not a ready-made HTML string.
+ return Object.freeze({head:ledger.head,body:ledger.body,subjects:Object.freeze([...ledger.subjects])});
 }
