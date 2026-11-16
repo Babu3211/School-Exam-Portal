@@ -198,3 +198,12 @@ Final shows IN/TH pairs. Observed order and values: English 20/58; Nepali 21/60;
 On a new Class IX Final Mark Ledger load with the same 2083 filters, IEMIS returned Nepali, English, Mathematics, Science, Social, Environment, Computer instead of the previously observed English/Nepali/Computer-first order. The source ordering is not stable across these observations; the anomalous first order is not hardcoded into SMSS.
 
 The current branch already has approved Computer 4/36/10 in the grid. Inspection found English-named Computer assessment defaults still took ordinary-subject 3/16/6, and a legacy Excel heading array retained 3/41/6. Corrected both defaults without writing settings or marks. Regression covers English/Nepali subject names, all IX/X term component limits, rejection of excess input, and preservation/blocking of incompatible historical 3/41/6 records. Entry and Grade Sheet/ledger suites pass locally. Full single-subject historical edit parity and the remaining print/group verification are still pending. No production deployment.
+
+
+## Class VII/VIII read-only check — 2026-11-16
+
+Year 2083, Section All. Class VII Result Entry returned "No student list found" in First, Second and Final. Class VIII First returned one student; selecting all subjects showed Nepali, English, Mathematics, Science & Technology, Social Studies & Human Value Education, Health Physical & Creative Art, Hamro Dhunibeshi. All seven have IsAbsent plus Participation4, Practical/Project36 and First Term Examination10, matching the VI First reference. No marks were entered or saved for VII/VIII.
+
+VIII Second returned no student list. Once VIII loaded, the available Term options were First, Second, Third; Final was absent. Therefore VIII Final cannot be claimed verified or silently mapped to Third. This is a source-UI limitation/difference, not permission to alter enrollment or admit-card data. The entry notice says students require Symbol No. in Admit Card before appearing, but the exact cause of empty lists was not independently established. VII/VIII populated ledger, Grade Sheet, Save/Reload and annual parity remain open.
+
+All six CI workflows passed on implementation head 65e52f51fd5f810cbd40050b73da6800b631f211 before this documentation-only update. No production deployment.
