@@ -65,4 +65,5 @@ const oversized=createV46BrowserTenantGateway({
  queryFn:(...args)=>args,limitFn:n=>n,orderByFn:field=>({field}),startAfterFn:cursor=>({after:cursor.id})
 });
 await assert.rejects(oversized.forCollection("schools/school_A001/students").listPage({pageSize:1}),/Invalid Firestore page size response/);
+await assert.rejects(oversized.forCollection("schools/school_A001/students").list({pageSize:1}),/Invalid Firestore list size response/);
 console.log("V47 browser tenant gateway blocks sensitive collections and cursor replay");
