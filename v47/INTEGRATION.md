@@ -48,3 +48,7 @@ School Admin can mark loaded roster students Present/Absent and save up to **10 
 ## Attendance batch emulator regression cases
 
 The V47 Firestore emulator suite now contains a 10-student atomic attendance batch, a valid-plus-invalid batch that must fail entirely, and a Viewer write-denial batch. A successful emulator run has **not yet been observed**. The browser clears successfully saved selections so a second click does not immediately re-save them. V46 is unchanged.
+
+## Chunked full-class attendance (development)
+
+`v47/attendance-class-save.mjs` validates the full selected roster before writing, then commits sequential Firestore batches of 10 records. The attendance page permits up to 1,500 selected loaded students; users must page through the class roster first. **This is not one atomic transaction**: if batch 2 fails, batch 1 remains saved. The progress callback removes only successfully saved student selections, leaving unsaved selections available for retry. Confirmation warns of overwriting records. This is still unverified against live Firebase and emulator, and does not implement BS dates or IEMIS synchronization.
