@@ -1,0 +1,15 @@
+import assert from "node:assert/strict";
+import {auditV47LedgerReadiness} from "../src/v47/v46-ledger-readiness.mjs";
+const data={students:[{id:"s1"}],subjects:[{id:"sub1",name:"Mathematics"}],exams:[{id:"e1"}],marks:[{studentId:"s1",examId:"e1",subject:"Mathematics",scores:[{name:"IN",obtained:30,fullMarks:50}]}]};
+const clean=auditV47LedgerReadiness(data);
+assert.equal(clean.counts.marks,1);
+assert.equal(clean.readyForOfficialLedger,false);
+assert.equal(clean.blockers.length,1);
+assert.ok(Object.isFrozen(clean.blockers));
+const bad=auditV47LedgerReadiness({...data,marks:[{studentId:"other",examId:"unknown",subject:"Unknown",score:80}]});
+assert.ok(bad.blockers.some(s=>s.includes("unknown school students")));
+assert.ok(bad.blockers.some(s=>s.includes("unknown school exams")));
+assert.ok(bad.blockers.some(s=>s.includes("unknown school subjects")));
+assert.ok(bad.blockers.some(s=>s.includes("assessment components")));
+assert.throws(()=>auditV47LedgerReadiness({marks:[]}),/Complete verified/);
+console.log("V47 ledger readiness audit checks passed");
