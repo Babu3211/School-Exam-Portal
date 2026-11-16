@@ -15,7 +15,7 @@ function validId(id) {
   throw new TypeError("Invalid document ID");
  return id;
 }
-export function createV46BrowserTenantGateway({db,verifiedSchoolId,collectionFn,docFn,getDocsFn,getDocFn,queryFn,limitFn}) {
+export function createV46BrowserTenantGateway({db,verifiedSchoolId,collectionFn,docFn,getDocsFn,getDocFn,queryFn,limitFn,startAfterFn,orderByFn}) {
  if(!db || [collectionFn,docFn,getDocsFn,getDocFn,queryFn,limitFn].some(fn=>typeof fn!=="function"))
   throw new TypeError("Firebase Firestore read functions required");
  const schoolId=assertSchoolId(verifiedSchoolId);
@@ -35,6 +35,27 @@ export function createV46BrowserTenantGateway({db,verifiedSchoolId,collectionFn,
       throw new RangeError("Page size must be between 1 and 50");
      const snapshot=await getDocsFn(queryFn(collectionRef(),limitFn(pageSize)));
      return snapshot.docs.map(doc=>Object.freeze({...doc.data(),id:doc.id}));
+    },
+    // Cursor-based pagination avoids downloading an entire large school collection.
+    // Cursor is the last Firestore DocumentSnapshot returned by a prior page.
+    async listPage({pageSize=20,cursor=null}={}) {
+     if(!Number.isInteger(pageSize) || pageSize<1 || pageSize>50)
+      throw new RangeError("Page size must be between 1 and 50");
+     if(typeof orderByFn!=="function" || typeof startAfterFn!=="function")
+      throw new TypeError("Firestore cursor pagination adapters required");
+     const clauses=[orderByFn("__name__")];
+     if(cursor!==null){
+      if(typeof cursor!=="object" || typeof cursor.id!=="string" ||
+         !safeSegment(cursor.id) || typeof cursor.data!=="function")
+       throw new TypeError("Invalid Firestore page cursor");
+      clauses.push(startAfterFn(cursor));
+     }
+     const snapshot=await getDocsFn(queryFn(collectionRef(),...clauses,limitFn(pageSize)));
+     const docs=snapshot.docs;
+     return Object.freeze({
+      records:Object.freeze(docs.map(doc=>Object.freeze({...doc.data(),id:doc.id}))),
+      nextCursor:docs.length===pageSize?docs.at(-1):null
+     });
     },
     async get(documentId) {
      const snapshot=await getDocFn(docFn(db,"schools",schoolId,collectionName,validId(documentId)));
