@@ -33,5 +33,9 @@ jobs:
         run: node scripts/test-v47-audit-events.mjs
       - name: Super Admin registration authorization
         run: node scripts/test-v47-registration-policy.mjs
+      - name: Scoped Firestore adapter
+        run: node scripts/test-v47-firestore-adapter.mjs
+      - name: School registration transaction
+        run: node scripts/test-v47-registration-service.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
