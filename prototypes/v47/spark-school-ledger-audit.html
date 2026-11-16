@@ -33,7 +33,7 @@ else{
    const data=await loadV47LedgerCollections({session,pageSize:50,maxRecordsPerCollection:5000});
    if(token!==epoch||auth.currentUser?.uid!==user.uid)return;
    const url=new URL("./spark-school-workspace.html",location.href);url.searchParams.set("schoolId",schoolId);document.querySelector("#back").href=url.href;
-   const audit=auditV47LedgerReadiness(data);
+   const audit=auditV47LedgerReadiness(data,{schoolId});
    for(const [name,count] of Object.entries(audit.counts))append("counts",name+": "+count+" records read (verified school scope)");
    audit.blockers.forEach(p=>append("blockers",p));
    results.hidden=false;say("Read-only readiness audit complete. No records changed; this is not an official result.");
