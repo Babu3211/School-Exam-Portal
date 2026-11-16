@@ -67,5 +67,7 @@ jobs:
         run: node scripts/test-v47-school-admin-console-static.mjs
       - name: V47 school student browser static integration
         run: node scripts/test-v47-students-console-static.mjs
+      - name: V47 school isolation gate
+        run: node scripts/test-v47-school-isolation-gate.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
