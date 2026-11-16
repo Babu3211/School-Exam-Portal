@@ -81,6 +81,16 @@ revokeOnPage=false;
 const recovered=await revokedPaging.listPage("students",{pageSize:1});
 assert.deepEqual(recovered.records,[{name:"Test",id:"student1"}]);
 assert.deepEqual(recovered.nextCursor,{pageToken:true});
+// Switching authenticated users during a pending read must never return
+// the previous user's records, even when both users have the same role.
+const switchedSession=createV46VerifiedReadSession({...options,
+ getDocsFn:async()=>{
+  auth.currentUser={uid:"other_user"};
+  return {docs:[pageDoc]};
+ }
+});
+await assert.rejects(switchedSession.list("students"),/School access changed during read/);
+auth.currentUser={uid};
 assert.equal(Object.hasOwn(session,"write"),false);
 assert.equal(Object.hasOwn(session,"collection"),false);
 console.log("Verified V46 school read session checks passed");
