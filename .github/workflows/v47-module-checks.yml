@@ -41,5 +41,15 @@ jobs:
         run: node scripts/test-v47-school-status.mjs
       - name: School readiness gate
         run: node scripts/test-v47-school-readiness.mjs
+      - name: V47 class-catalog
+        run: node scripts/test-v47-class-catalog.mjs
+      - name: V47 term-catalog
+        run: node scripts/test-v47-term-catalog.mjs
+      - name: V47 tenant-query
+        run: node scripts/test-v47-tenant-query.mjs
+      - name: V47 safe-export
+        run: node scripts/test-v47-safe-export.mjs
+      - name: V47 version-info
+        run: node scripts/test-v47-version-info.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
