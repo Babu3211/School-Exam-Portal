@@ -81,5 +81,7 @@ jobs:
         run: node scripts/test-v47-nepal-date.mjs
       - name: V47 school-scoped attendance UI
         run: node scripts/test-v47-attendance-console-static.mjs
+      - name: V47 paginated class roster
+        run: node scripts/test-v47-attendance-roster.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
