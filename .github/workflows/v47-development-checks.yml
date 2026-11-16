@@ -79,6 +79,10 @@ jobs:
           test "$(grep -Fc 'recheckManagement(input)' dist/v47-spark/prototypes/v47/spark-school-registration.html)" -eq 4
           test "$(grep -Fc 'await recheckManagement({schoolId});' dist/v47-spark/prototypes/v47/spark-school-registration.html)" -eq 2
           test "$(grep -Fc 'epoch!==verificationEpoch)return;' dist/v47-spark/prototypes/v47/spark-school-registration.html)" -ge 5
+          test -f dist/v47-spark/iemis-ledger.js
+          test -f dist/v47-spark/prototypes/v47/v46-grade-calculator.html
+          grep -q '../../iemis-ledger.js' dist/v47-spark/prototypes/v47/v46-grade-calculator.html
+          if grep -q 'exam-portal-smss-95016' dist/v47-spark/prototypes/v47/v46-grade-calculator.html; then exit 1; fi
           test -f dist/v47-spark/prototypes/v47/spark-school-workspace.html
           grep -q 'schoolCollectionPath(schoolId,kind)' dist/v47-spark/prototypes/v47/spark-school-workspace.html
           grep -q 'tables.replaceChildren(...staged)' dist/v47-spark/prototypes/v47/spark-school-workspace.html
@@ -120,6 +124,9 @@ jobs:
       - name: V47 Spark platform-admin Firestore emulator authorization
         if: success() || failure()
         run: npx firebase emulators:exec --project v47-spark-platform-rules-test --only firestore --config firebase.v47.emulator.json "node scripts/test-v47-spark-platform-rules.mjs"
+      - name: V47 unchanged V46 grade module integration
+        if: success() || failure()
+        run: node scripts/test-v47-v46-grade-reuse.mjs
       - name: V47 scalable school pagination and access checks
         if: success() || failure()
         run: node scripts/test-v47-spark-workspace-pagination.mjs
