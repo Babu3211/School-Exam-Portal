@@ -11,12 +11,12 @@ const FEATURES=Object.freeze(Object.keys(FEATURE_COLLECTIONS));
 const ALLOWED_ROLES=new Set(["school_admin","class_teacher","subject_teacher","viewer"]);
 const WRITE_METHODS=new Set(["add","create","set","update","delete","remove","save","write","commit","batch","runTransaction","addDoc","setDoc","updateDoc","deleteDoc"]);
 function viewerSafeGateway(gateway) {
- return new Proxy(gateway,{
+ return new Proxy(Object.create(null),{
   get(target,key,receiver) {
    if(typeof key==="string" && WRITE_METHODS.has(key))
     return ()=>{throw new Error("Viewer access is read-only");};
-   const value=Reflect.get(target,key,receiver);
-   return typeof value==="function"?value.bind(target):value;
+   const value=Reflect.get(gateway,key,gateway);
+   return typeof value==="function"?value.bind(gateway):value;
   },
   set(){throw new Error("Viewer access is read-only");},
   deleteProperty(){throw new Error("Viewer access is read-only");}
