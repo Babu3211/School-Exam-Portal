@@ -42,4 +42,8 @@ const examClassFallback={...scopedSubjects,students:[{id:"s1"}],marks:[{...scope
 assert.ok(auditV47LedgerReadiness(examClassFallback).blockers.some(s=>s.includes("duplicate an exam, student and subject")));
 const examClassMismatch={...examClassFallback,marks:[{...examClassFallback.marks[0],subjectId:"math7",subject:undefined}]};
 assert.ok(auditV47LedgerReadiness(examClassMismatch).blockers.some(s=>s.includes("subjects from another class")));
+const contradictory=auditV47LedgerReadiness({...data,marks:[{...data.marks[0],subjectId:"sub1",subject:"Science"}]});
+assert.ok(contradictory.blockers.some(s=>s.includes("conflicting subject ID and subject name")));
+const matchingAliases=auditV47LedgerReadiness({...data,marks:[{...data.marks[0],subjectId:"sub1",subject:" mathematics "}]});
+assert.ok(!matchingAliases.blockers.some(s=>s.includes("conflicting subject ID and subject name")));
 console.log("V47 ledger readiness audit checks passed");
