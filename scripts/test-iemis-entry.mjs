@@ -97,3 +97,20 @@ for(const cl of [9,10])for(const term of ['first','second','annual']){
  assert.deepEqual(historical,before);
 }
 console.log('Computer defaults, Excel labels, all component bounds and historical-record preservation passed.');
+
+const historicalStart=computerSource.indexOf('function historicalComputerComponents(');
+const historicalEnd=computerSource.indexOf('function renderEntryStudents()',historicalStart);
+const readHistoricalComponents=new Function('isComputerSubject','iemisComponentKey',computerSource.slice(historicalStart,historicalEnd)+';return historicalComputerComponents;')(name=>/computer/i.test(name),name=>({'Participation':'participation','Practical/Project':'practical','First Term Examination':'term','Second Term Examination':'term','Total of Term':'term','TH (Theory)':'theory'}[name]));
+for(const term of ['first','second','annual']){
+ const subject='Computer Science';
+ const schema=iemisEntrySchema(9,term,subject);
+ const oldLimits=[3,41,6,50].slice(0,schema.length);
+ const scores=schema.map((c,i)=>({name:c.name,fullMarks:oldLimits[i],obtained:oldLimits[i]}));
+ const snapshot=structuredClone(scores);
+ assert.deepEqual(readHistoricalComponents({scores},'9-10',subject,term).map(c=>c.fullMarks),oldLimits);
+ assert.equal(readHistoricalComponents({scores},'6-8',subject,term),null);
+ assert.equal(readHistoricalComponents({scores},'9-10','Mathematics',term),null);
+ assert.equal(readHistoricalComponents({scores:scores.map((c,i)=>({...c,fullMarks:schema[i].max}))},'9-10',subject,term),null);
+ assert.deepEqual(scores,snapshot);
+}
+console.log('Single-subject editor recognizes original IX/X Computer assessment limits.');
