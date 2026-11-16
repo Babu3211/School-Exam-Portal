@@ -22,7 +22,7 @@ service cloud.firestore {
     allow delete: if schoolAdmin(schoolId) && (superAdmin() || resource.data.get('role','') in ['teacher','viewer']);
    }
    match /{collection}/{docId} {
-    allow get, list: if collection in ['students','staff','classes','subjects','exams','marks','attendance','mark_settings','user_roles'] && reader(schoolId);
+    allow get, list: if collection in ['students','staff','classes','subjects','exams','marks','attendance','mark_settings'] && reader(schoolId);
     allow create, update, delete: if collection in ['students','staff','classes','subjects','exams','marks','attendance','mark_settings','user_roles'] && schoolAdmin(schoolId);
    }
   }
