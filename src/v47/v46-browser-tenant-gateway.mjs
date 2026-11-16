@@ -46,7 +46,8 @@ export function createV46BrowserTenantGateway({db,verifiedSchoolId,collectionFn,
      const clauses=[orderByFn("__name__")];
      if(cursor!==null){
       if(typeof cursor!=="object" || typeof cursor.id!=="string" ||
-         !safeSegment(cursor.id) || typeof cursor.data!=="function")
+         !safeSegment(cursor.id) || typeof cursor.data!=="function" ||
+         cursor.ref?.path!==path+"/"+cursor.id)
        throw new TypeError("Invalid Firestore page cursor");
       clauses.push(startAfterFn(cursor));
      }
