@@ -3,7 +3,7 @@
  * Caller must supply records fetched through a verified tenant read session.
  * Never interprets V47 percentage-only marks as V46 assessment components.
  */
-import {iemisLedger} from "../../iemis-ledger.js";
+import {iemisLedger,iemisSubjectKey} from "../../iemis-ledger.js";
 import {assertSchoolId} from "./tenant-domain.mjs";
 import {toV46IemisTerm} from "./v46-exam-term-adapter.mjs";
 export function renderV47SchoolLedger({schoolId,term,classNo,schoolName,schoolCode,students,subjects,marks,examId,mode="number",creditFor,componentsFor,applicable}){
@@ -22,11 +22,19 @@ export function renderV47SchoolLedger({schoolId,term,classNo,schoolName,schoolCo
   studentIds.add(st.id);
  }
  const compatible=[];
+ const seenMarkKeys=new Set();
+ const subjectKeys=new Set(subjects.map(subject=>iemisSubjectKey(subject)));
+ if(subjectKeys.has("")||subjectKeys.size!==subjects.length)throw new Error("Invalid or duplicate ledger subjects");
  for(const mark of marks){
   if(!mark||typeof mark!=="object"||mark.examId!==examId)continue;
   if(!studentIds.has(mark.studentId))throw new Error("Ledger contains a mark outside selected students");
   if(!Array.isArray(mark.scores)||!mark.scores.length)
    throw new Error("V47 percentage-only marks cannot be used in an IEMIS ledger");
+  const subjectKey=iemisSubjectKey(mark.subject);
+  if(!subjectKeys.has(subjectKey))throw new Error("Ledger mark subject is not in selected subjects");
+  const uniqueKey=mark.studentId+"|"+subjectKey;
+  if(seenMarkKeys.has(uniqueKey))throw new Error("Duplicate ledger mark for student and subject");
+  seenMarkKeys.add(uniqueKey);
   if(mark.classNo!==undefined&&Number(mark.classNo)!==n)
    throw new Error("Ledger mark class mismatch");
   compatible.push(mark);
