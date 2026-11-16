@@ -40,6 +40,8 @@ for(const kind of ["marks","attendance"]){
   assert.ok(html.includes('<th>Score</th>'));
   assert.ok(html.includes('data.score??"—"'));
   assert.ok(html.includes('subjectChoice.value!==payload.subjectId'));
+  assert.ok(html.includes('getDoc(doc(db,"schools",id,"subjects",payload.subjectId))'));
+  assert.ok(html.includes('if(!selectedSubject.exists())'));
   assert.ok(html.includes('subjectGateway.listPage({pageSize:50,cursor:subjectCursor})'));
   assert.ok(html.includes('schoolCollectionPath(id,"subjects")'));
   assert.ok(html.includes('subjectChoice.replaceChildren(...options)'));
