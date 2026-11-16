@@ -1,0 +1,10 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const student=readFileSync(new URL("../prototypes/v47/spark-school-students.html",import.meta.url),"utf8");
+const rules=readFileSync(new URL("../firestore.v47.prototype.rules",import.meta.url),"utf8");
+assert.match(student,/classId:className/,"student creates classId used by marks and attendance rules");
+assert.match(student,/data\.class\|\|data\.className\|\|data\.classId/);
+assert.match(rules,/get\(studentPath\)\.data\.get\('classId', ''\) == classId/);
+assert.match(rules,/studentExists\(schoolId, request\.resource\.data\.studentId, request\.resource\.data\.classId\)/);
+assert.match(student,/schoolCollectionPath\(id,"students"\)/);
+console.log("V47 student classId compatibility with marks/attendance security rules checked");
