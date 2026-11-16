@@ -23,4 +23,8 @@ assert.match(html,/kind==="staff"/);
 assert.match(html,/kind==="certificates"/);
 assert.match(html,/kind==="school_settings"/);
 assert.match(html,/kind==="public_results"/);
+assert.match(html,/const \[currentSchool,currentMember\]=await Promise\.all/);
+assert.match(html,/currentMember\.data\(\)\.active!==true/);
+assert.match(html,/!validRoles\(currentMember\.data\(\)\.roles\)/);
+assert.ok(html.indexOf("const [currentSchool,currentMember]")<html.indexOf("next.docs.forEach(renderRecord)"));
 console.log("V47 school pagination remains tenant-scoped, bounded and access-checked");
