@@ -13,13 +13,14 @@ export function createV46TenantReadAdapter({
   throw new TypeError("Firestore collection/doc functions required");
  const paths=createV46TenantPathResolver({verifiedSchoolId,verifiedMembership});
  const safeName=name=>{
-  if(typeof name!=="string" || V46_COLLECTION_POLICY[name]!=="tenant-private" &&
-     V46_COLLECTION_POLICY[name]!=="tenant-admin-managed")
+  if(typeof name!=="string" || !Object.hasOwn(V46_COLLECTION_POLICY,name) ||
+     !["tenant-private","tenant-admin-managed"].includes(V46_COLLECTION_POLICY[name]))
    throw new Error("Legacy collection cannot be accessed from the browser");
   return paths.collection(name);
  };
  const safeId=id=>{
-  if(typeof id!=="string" || !id || id==="." || id===".." || id.includes("/"))
+  if(typeof id!=="string" || !id || id.length>1500 || id==="." || id===".." ||
+     id.includes("/") || [...id].some(char=>char.codePointAt(0)<32 || char.codePointAt(0)===127))
    throw new TypeError("Single document ID required");
   return id;
  };
