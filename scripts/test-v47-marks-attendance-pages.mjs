@@ -17,6 +17,13 @@ for(const kind of ["marks","attendance"]){
  assert.ok(html.includes('await addDoc(collection(db,schoolCollectionPath(id,"'+kind+'")),payload)'));
  assert.ok(html.includes('if(token!==epoch||auth.currentUser?.uid!==user.uid)throw Error("School selection changed")'));
  assert.ok(html.includes('entryPanel.hidden=!canEnter'));
+ assert.ok(html.includes("if(!studentGateway)studentGateway=createV46BrowserTenantGateway({"));
+ assert.ok(html.includes("studentGateway.listPage({pageSize:50,cursor:studentCursor})"));
+ assert.ok(html.includes("option.dataset.classId="));
+ assert.ok(html.includes("selectedClass!==classId"));
+ assert.ok(html.includes("studentLoading=true"));
+ assert.ok(html.includes("studentGateway=null;studentCursor=null"));
+ assert.ok(html.includes("studentChoice.addEventListener(\"change\""));
  assert.ok(html.includes('before.roles.includes("viewer")'));
  assert.doesNotMatch(html,/exam-portal-smss-95016|updateDoc\(|setDoc\(|deleteDoc\(/);
  if(kind==="marks"){
