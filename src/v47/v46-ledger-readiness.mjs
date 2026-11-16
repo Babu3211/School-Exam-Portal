@@ -113,6 +113,16 @@ export function auditV47LedgerReadiness(data,{schoolId}={}){
    [s.name,s.subjectName].filter(Boolean).some(v=>String(v).trim().toLowerCase()===name));
  }).length;
  if(nameOnlyClassMismatches)blockers.push(nameOnlyClassMismatches+" marks reference subject names assigned only to another class.");
+ const ambiguousNameOnly=data.marks.filter(m=>{
+  if(m.subjectId||!m.subject)return false;
+  const name=String(m.subject).trim().toLowerCase();
+  const classKey=String(m.classNo??m.classId??(studentClass.get(m.studentId)||examClass.get(m.examId))??"");
+  const exact=subjectByName.get(JSON.stringify([classKey,name]));
+  const generic=subjectByName.get(JSON.stringify(["",name]));
+  return Boolean((exact&&exact.size>1)||(!exact&&generic&&generic.size>1));
+ }).length;
+ if(ambiguousNameOnly)blockers.push(ambiguousNameOnly+" marks have ambiguous subject names without a unique subject ID.");
+
 
 
  blockers.push("Verify class-specific subject credits, applicability, exam term and assessment component mappings before official rendering.");
