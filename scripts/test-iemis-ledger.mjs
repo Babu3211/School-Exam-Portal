@@ -230,6 +230,7 @@ console.log('School-approved VI–VIII term ledgers: columns, order, GPA, absenc
 
 // Populated Class IX 2083 reference: no student identifiers.
 const nineSubjects=['Nepali','English','Mathematics','Science & Technology','Social Studies','OPT.I ENVIRONMENT SCIENCE (2041)','OPT.II COMPUTER SCIENCE (3031)'];
+let secondaryPrintFixture;
 const nineCredits=[5,5,5,5,4,4,4],nineIn=[21,20,20,23,20,22,41],nineTh=[60,58,55,65,57,62,40];
 for(const classNo of [9,10])for(const term of ['first','second','annual']){
  const annual=term==='annual';
@@ -240,6 +241,14 @@ for(const classNo of [9,10])for(const term of ['first','second','annual']){
  const d={...dependencies,smssExamTermKey:()=>term,resultExams:[{id:'synthetic-exam',academicYear:'2083'}],resultClasses:configs,resultMarks:rs,activeResultRows:[{student:{...student,class:String(classNo),nebRegNo:'TEST-NEB'},perSubject}]};
  const render=()=>new Function(...Object.keys(d),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(d));
  render();
+ if(classNo===9&&annual){
+  const bandsStart=html.indexOf('const resultGradeBands=');
+  const bandsEnd=html.indexOf('function gradeForPercent',bandsStart);
+  const resultGradeBands=new Function(html.slice(bandsStart,bandsEnd)+';return resultGradeBands;')();
+  const printData={...d,resultGradeBands};
+  new Function(...Object.keys(printData),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(printData));
+  secondaryPrintFixture=box.innerHTML;
+ }
  assert.match(box.innerHTML,new RegExp('GRADE '+(classNo===9?'IX':'X')));
  assert.match(box.innerHTML,annual?/GRADE POINT AVERAGE = 3.48/:/GRADE POINT AVERAGE \(GPA\): 3.66/);
  assert.match(box.innerHTML,/ONE CREDIT HOUR EQUALS 32 HOURS/);
@@ -291,7 +300,7 @@ for(const label of ['TEST SECONDARY SCHOOL','विद्यालय & School <
 }
 console.log('Online print keeps published school branding, Unicode/escaping, repeated watermark and A4 settings.');
 
-for(const [output,markup] of [[process.env.SMSS_GRADE_PRINT_FIXTURE,printReportFixture],[process.env.SMSS_PRIMARY_PRINT_FIXTURE,primaryPrintFixture]]){
+for(const [output,markup] of [[process.env.SMSS_GRADE_PRINT_FIXTURE,printReportFixture],[process.env.SMSS_PRIMARY_PRINT_FIXTURE,primaryPrintFixture],[process.env.SMSS_SECONDARY_PRINT_FIXTURE,secondaryPrintFixture]]){
  if(!output)continue;
  assert.ok(markup);
  const sheet={outerHTML:markup,getAttribute:()=> 'Test School',querySelector:()=>null};
