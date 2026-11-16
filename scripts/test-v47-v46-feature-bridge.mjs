@@ -87,4 +87,22 @@ assert.equal(integratedBridge.results().context.gateway.path,"schools/school_A00
 assert.equal(typeof integratedBridge.students().context.gateway.save,"function");
 assert.throws(()=>integratedBridge.students().context.gateway.save(),/read-only/);
 assert.equal(typeof tenantCollection.save,"undefined");
+// Every reused V46 module must remain tenant-scoped and viewer read-only.
+const expectedCollections={
+ students:"students",staff:"staff",classes:"classes",subjects:"subjects",
+ exams:"exams",marks:"marks",attendance:"attendance",
+ certificates:"certificates",markSettings:"mark_settings",
+ settings:"school_settings",results:"public_results"
+};
+assert.deepEqual([...V46_REUSED_FEATURES].sort(),Object.keys(expectedCollections).sort());
+for(const [feature,collection] of Object.entries(expectedCollections)){
+ const context=viewerBridge[feature]().context;
+ assert.equal(context.gateway.path,`schools/school_B001/${collection}`);
+ assert.equal(context.readOnly,true);
+ assert.equal(context.gateway.read(),"allowed");
+ for(const operation of ["save","update","delete"]){
+  assert.throws(()=>context.gateway[operation](),/read-only/,
+   `${feature} must deny viewer ${operation}`);
+ }
+}
 console.log("V47 V46 feature reuse bridge contract tests passed");
