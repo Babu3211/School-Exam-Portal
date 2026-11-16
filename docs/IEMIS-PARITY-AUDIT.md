@@ -230,3 +230,10 @@ Separate synthetic IX and X First/Second/Final tests pass: term credits9, GPA3.6
 Extended Class I's 2083 achievement-sheet term credits/footnote policy to Classes II–V as originally instructed. Only achievement cohorts use it; saved historical IV/V TH/IN assessments keep their original rendering. First/Second display half the class's configured annual credits; Final retains annual credits. Corrected the year-boundary matcher so a label2083-2084 receives the same2083 policy. No subject configuration or marks are overwritten.
 
 Every I–V class now runs First/Second/Final sheet tests against the same Class I reference vector (GPA3.54; credits13/26), including Roman class heading, footnote26, annual-credit immutability, old-year and Third-Term isolation. Separate historical IV/V tests still pass. This is the authorized shared school policy, not a claim of populated live IEMIS comparison for every II–V class. All local entry, ledger/sheet, PWA and syntax suites pass. Native print and remaining live edit/validation work are still release gates.
+
+
+## Online print school-branding correction
+
+Removed the hardcoded school-name image from printOnlineResult. The watermark now uses the published sheet's data-watermark, with its school header as fallback, rather than the viewing session's school settings. It preserves the repeated background and A4 print settings. XML-sensitive characters and CSS URL punctuation are encoded; regression invokes the actual print handler with English/Nepali names, ampersand, angle brackets, quotes and parentheses. The generated HTML keeps the report intact. All local sheet/ledger, syntax and PWA tests pass; native PDF rendering and exact visual parity remain unverified. No published result or stored mark was rewritten.
+
+All six CI workflows passed on preceding all-class head e7b21a5. The new print fix requires fresh CI.
