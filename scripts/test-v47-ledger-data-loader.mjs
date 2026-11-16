@@ -15,4 +15,5 @@ const exactCap={async listPage(_name,{cursor}){return cursor?{records:[],nextCur
 assert.deepEqual((await loadV47LedgerCollections({session:exactCap,collections:["students"],pageSize:1,maxRecordsPerCollection:1})).students.map(s=>s.id),["a"]);
 await assert.rejects(()=>loadV47LedgerCollections({session:{async listPage(_name,{cursor}){return cursor?{records:[{id:"a"}],nextCursor:null}:{records:[{id:"a"}],nextCursor:{page:2}};}},collections:["students"],pageSize:1,maxRecordsPerCollection:3}),/Duplicate or invalid/);
 await assert.rejects(()=>loadV47LedgerCollections({session:{async listPage(){return {records:[],nextCursor:{page:2}};}},collections:["marks"],pageSize:1,maxRecordsPerCollection:2}),/Non-advancing/);
+await assert.rejects(()=>loadV47LedgerCollections({session:{async listPage(){return {records:[{id:"a"},{id:"b"}],nextCursor:null};}},collections:["marks"],pageSize:1,maxRecordsPerCollection:3}),/Invalid verified read page/);
 console.log("V47 school ledger complete-read boundary checks passed");
