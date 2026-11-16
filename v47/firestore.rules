@@ -36,9 +36,43 @@ service cloud.firestore {
     allow update: if schoolAdmin(schoolId) && validNewStudent();
     allow delete: if schoolAdmin(schoolId);
    }
+   function validAttendance(docId) {
+    return request.resource.data.keys().hasOnly(['date','studentId','class','present'])
+      && request.resource.data.keys().hasAll(['date','studentId','class','present'])
+      && request.resource.data.date is string
+      && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}
+    allow get, list: if collection in ['staff','classes','subjects','exams','marks','mark_settings'] && reader(schoolId);
+    allow create, update, delete: if collection in ['staff','classes','subjects','exams','marks','mark_settings'] && schoolAdmin(schoolId);
+   }
+  }
+  // No legacy root collection access in the V47-only rules file.
+  match /{document=**} { allow read, write: if false; }
+ }
+}
+)
+      && request.resource.data.studentId is string
+      && request.resource.data.studentId.matches('^[A-Za-z0-9_-]{1,128}
+    allow get, list: if collection in ['staff','classes','subjects','exams','marks','mark_settings'] && reader(schoolId);
+    allow create, update, delete: if collection in ['staff','classes','subjects','exams','marks','mark_settings'] && schoolAdmin(schoolId);
+   }
+  }
+  // No legacy root collection access in the V47-only rules file.
+  match /{document=**} { allow read, write: if false; }
+ }
+}
+)
+      && request.resource.data['class'] in ['ECD','1','2','3','4','5','6','7','8','9','10','11','12']
+      && request.resource.data.present is bool
+      && docId == request.resource.data.date + '_' + request.resource.data.studentId;
+   }
+   match /attendance/{docId} {
+    allow get, list: if reader(schoolId);
+    allow create, update: if schoolAdmin(schoolId) && validAttendance(docId);
+    allow delete: if schoolAdmin(schoolId);
+   }
    match /{collection}/{docId} {
-    allow get, list: if collection in ['staff','classes','subjects','exams','marks','attendance','mark_settings'] && reader(schoolId);
-    allow create, update, delete: if collection in ['staff','classes','subjects','exams','marks','attendance','mark_settings'] && schoolAdmin(schoolId);
+    allow get, list: if collection in ['staff','classes','subjects','exams','marks','mark_settings'] && reader(schoolId);
+    allow create, update, delete: if collection in ['staff','classes','subjects','exams','marks','mark_settings'] && schoolAdmin(schoolId);
    }
   }
   // No legacy root collection access in the V47-only rules file.
