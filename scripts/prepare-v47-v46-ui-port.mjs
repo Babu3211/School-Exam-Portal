@@ -31,6 +31,11 @@ port=port.replace(dynamicSource,(full,fn,name)=>{
 const unresolved=[...port.matchAll(dynamicSource)].filter(m=>m[2]!=="tenantCollection");
 assert.equal(unresolved.length,0,"Unscoped V46 Firestore access remains");
 assert.equal(dynamicReferences,3,"V46 dynamic Firestore references changed: review required");
+// Legacy backup/restore traverses arbitrary collection names. It must remain
+// disabled until a tenant-aware export/import design is independently reviewed.
+const legacyBackupRestoreCalls=[...source.matchAll(/\b(collection|doc)\s*\(\s*db\s*,\s*name\b/g)].length;
+assert.equal(legacyBackupRestoreCalls,dynamicReferences,"Legacy backup/restore references changed; review required");
+
 assert.equal((port.match(/tenantCollection\(/g)||[]).length,changed+dynamicReferences,"Every V46 Firestore reference must use tenant gateway");
 const legacyConfig=/const firebaseConfig=\{[^;]+\};const ADMIN_UID="[^"]+";const app=initializeApp\(firebaseConfig\),auth=getAuth\(app\),db=getFirestore\(app\);/;
 assert.match(port,legacyConfig,"V46 Firebase bootstrap must be reviewed before migration");
@@ -57,6 +62,7 @@ await writeFile(join(output,"audit.json"),JSON.stringify({
  literalReferencesRewritten:changed,
  dynamicVariablesScoped:[...dynamicNames],
  dynamicReferencesRewritten:dynamicReferences,
+ legacyBackupRestoreRequiresReview:true,
  unresolvedDynamicReferences:unresolved,
  blocker:"School-scoped membership verification and complete V46 module dependencies not yet integrated"
 },null,2));
