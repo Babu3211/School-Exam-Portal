@@ -8,6 +8,12 @@ assert.throws(()=>renderV47SchoolLedger({...base,mode:"publish"}),/Unsupported l
 assert.throws(()=>renderV47SchoolLedger({...base,marks:[{examId:"exam001",studentId:"student001",score:90}]}),/percentage-only marks/);
 assert.throws(()=>renderV47SchoolLedger({...base,marks:[{examId:"exam001",studentId:"other",scores:[{name:"IN",fullMarks:50,obtained:40}]}]}),/outside selected students/);
 assert.throws(()=>renderV47SchoolLedger({...base,creditFor:null}),/Verified subject credit/);
+const validMark={examId:"exam001",studentId:"student001",subject:"Mathematics",scores:[{name:"IN",fullMarks:50,obtained:40}]};
+assert.throws(()=>renderV47SchoolLedger({...base,marks:[{...validMark,subject:"English"}]}),/subject is not in selected subjects/);
+assert.throws(()=>renderV47SchoolLedger({...base,marks:[validMark,{...validMark}]}),/Duplicate ledger mark/);
+assert.throws(()=>renderV47SchoolLedger({...base,subjects:["Mathematics","math"]}),/duplicate ledger subjects/);
+assert.ok(renderV47SchoolLedger({...base,marks:[validMark]}).body.includes("40"));
+
 const ledger=renderV47SchoolLedger(base);
 assert.equal(typeof ledger,"object");
 assert.ok(ledger.head.includes("Mathematics"));
