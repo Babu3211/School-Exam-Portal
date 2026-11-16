@@ -35,6 +35,15 @@ export function auditV47LedgerReadiness(data,{schoolId}={}){
   return Boolean((markClass&&stClass&&markClass!==stClass)||(markClass&&exClass&&markClass!==exClass)||(stClass&&exClass&&stClass!==exClass));
  }).length;
  if(classMismatches)blockers.push(classMismatches+" marks have inconsistent student, exam or mark classes.");
+ const markPairs=new Set();
+ let duplicatePairs=0;
+ for(const mark of data.marks){
+  if(!mark.studentId||!mark.examId||!(mark.subjectId||mark.subject))continue;
+  const key=JSON.stringify([mark.examId,mark.studentId,mark.subjectId||mark.subject]);
+  if(markPairs.has(key))duplicatePairs++;
+  markPairs.add(key);
+ }
+ if(duplicatePairs)blockers.push(duplicatePairs+" marks duplicate an exam, student and subject combination.");
  const percentageOnly=data.marks.filter(m=>!Array.isArray(m.scores)||!m.scores.length).length;
  if(percentageOnly)blockers.push(percentageOnly+" marks have no V46-compatible assessment components.");
  const missingIdentity=data.marks.filter(m=>!m.examId||!m.studentId||!(m.subject||m.subjectId)).length;
