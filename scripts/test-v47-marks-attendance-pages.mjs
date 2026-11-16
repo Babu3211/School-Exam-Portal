@@ -8,7 +8,7 @@ for(const kind of ["marks","attendance"]){
  assert.ok(html.includes('schoolCollectionPath(id,"'+kind+'")'));
  assert.ok(html.includes("verifyV47BrowserMembership({schoolId:id,uid:user.uid,school:s.data(),member:m.data()})"));
  assert.ok(html.includes("createV46VerifiedReadSession({"));
- assert.ok(html.includes('tenantRecords.listPage(" '+kind+'",{pageSize:20,cursor})'));
+ assert.ok(html.includes('tenantRecords.listPage("'+kind+'",{pageSize:20,cursor})'));
  assert.ok(html.includes("const after=await verify(id,user)"));
  assert.ok(html.includes('after.roles.join(",")!==before.roles.join(",")'));
  assert.ok(html.includes('td.textContent=String(value)'));
