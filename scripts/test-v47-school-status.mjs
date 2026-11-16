@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {setSchoolActive} from '../v47/school-status-service.mjs';
+const changes=[];let exists=true;
+const api={doc:(_db,...segments)=>segments.join('/'),runTransaction:async(_db,fn)=>fn({get:async()=>({exists:()=>exists}),update:(...args)=>changes.push(args)})};
+const actor={role:'super_admin',active:true};
+await assert.rejects(()=>setSchoolActive({db:{},api,actor:{role:'school_admin',active:true},schoolId:'school_001',active:true}));
+assert.equal(changes.length,0);
+await setSchoolActive({db:{},api,actor,schoolId:'school_001',active:true});
+assert.deepEqual(changes[0],['schools/school_001',{active:true}]);
+exists=false;
+await assert.rejects(()=>setSchoolActive({db:{},api,actor,schoolId:'school_001',active:false}),/does not exist/);
+assert.equal(changes.length,1);
+console.log('V47 activation and deactivation authorization tests passed');
