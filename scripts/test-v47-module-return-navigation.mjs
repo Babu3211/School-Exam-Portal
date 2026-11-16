@@ -23,9 +23,9 @@ assert.match(marks,/createV46VerifiedReadSession\(/);
 for(const kind of ["marks","students","subjects"])
  assert.ok(marks.includes('.listPage("'+kind+'",'));
 assert.doesNotMatch(marks,/createV46BrowserTenantGateway/);
-assert.match(marks,/import \{iemisGrade\} from "\.\.\/\.\.\/iemis-ledger\.js"/);
+assert.match(marks,/import \{v47MarkGradePreview\} from "\.\.\/\.\.\/src\/v47\/v46-mark-grade-preview\.mjs"/);
 assert.match(marks,/<th>Grade \(preview\)<\/th>/);
-assert.match(marks,/iemisGrade\(data\.score\)\?\.grade/);
+assert.match(marks,/v47MarkGradePreview\(data\)\?\?"—"/);
 assert.match(marks,/not an official Grade Ledger or GPA result/);
 assert.match(marks,/id="marks-term-filter"/);
 assert.match(marks,/id="marks-student-filter"/);
