@@ -36,6 +36,8 @@ try{
  await assertFails(superDb.doc('schools/school_002').delete());
  await assertFails(admin.doc('schools/school_001/members/elevated').delete());
  await assertFails(admin.doc('schools/school_001/members/adminA').delete());
+ await assertFails(admin.doc('schools/school_001/members/adminA').update({role:'teacher'}));
+ await assertSucceeds(superDb.doc('schools/school_001/members/adminA').update({active:true}));
  await assertSucceeds(admin.doc('schools/school_001/members/teacherB').delete());
  await assertFails(viewer.doc('schools/school_001/members/adminA').get());
  await assertFails(admin.doc('students/legacy').get());
