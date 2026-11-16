@@ -171,6 +171,9 @@ jobs:
       - name: V47 four school pages security regression checks
         if: success() || failure()
         run: node scripts/test-v47-school-pages-security.mjs
+      - name: V47 complete ledger data pagination
+        if: success() || failure()
+        run: node scripts/test-v47-ledger-data-loader.mjs
       - name: V47 school-scoped IEMIS ledger compatibility
         if: success() || failure()
         run: node scripts/test-v47-v46-school-ledger-adapter.mjs
