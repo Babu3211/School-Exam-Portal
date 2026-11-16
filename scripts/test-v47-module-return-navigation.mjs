@@ -23,6 +23,10 @@ assert.match(marks,/createV46VerifiedReadSession\(/);
 for(const kind of ["marks","students","subjects"])
  assert.ok(marks.includes('.listPage("'+kind+'",'));
 assert.doesNotMatch(marks,/createV46BrowserTenantGateway/);
+assert.match(marks,/import \{iemisGrade\} from "\.\.\/\.\.\/iemis-ledger\.js"/);
+assert.match(marks,/<th>Grade \(preview\)<\/th>/);
+assert.match(marks,/iemisGrade\(data\.score\)\?\.grade/);
+assert.match(marks,/not an official Grade Ledger or GPA result/);
 assert.match(marks,/await addDoc\(collection\(db,schoolCollectionPath\(id,"marks"\)\),payload\)/);
 const attendance=readFileSync(new URL("../prototypes/v47/spark-school-attendance.html",import.meta.url),"utf8");
 assert.match(attendance,/createV46VerifiedReadSession\(/);
