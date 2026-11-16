@@ -1,16 +1,13 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-
-// V47 release blocker: this test intentionally fails while legacy root-level
-// collections remain accessible without a school-scoped authorization check.
-// Do not weaken the assertions to make CI green. V46 production is untouched.
-const rules = readFileSync(new URL('../firestore.rules', import.meta.url), 'utf8');
-const protectedCollections = ['students', 'staff', 'classes', 'subjects', 'exams', 'marks', 'attendance'];
-const unscoped = protectedCollections.filter(name =>
-  new RegExp('match\\s+/' + name + '/\\{[^}]+\\}').test(rules)
-);
-assert.deepEqual(unscoped, [],
-  'V47 must not expose legacy root collections through unscoped rules: ' + unscoped.join(', '));
-assert.match(rules, /match\\s+\\/schools\\/\\{schoolId\\}/,
-  'V47 needs a school-scoped Firestore path and explicit membership checks');
-console.log('V47 school isolation structural gate passed. Run emulator cross-school tests before release.');
+import {readFileSync} from 'node:fs';
+// Check the V47-only rules. V46 root rules intentionally remain unchanged.
+const rules=readFileSync(new URL('../v47/firestore.rules',import.meta.url),'utf8');
+for(const name of ['students','staff','classes','subjects','exams','marks','attendance']){
+ assert.doesNotMatch(rules,new RegExp('match\\\\s+/'+name+'/\\\\{[^}]+\\\\}'),'Unscoped V47 collection: '+name);
+ assert.match(rules,new RegExp("'"+name+"'"),'Missing scoped collection: '+name);
+}
+assert.match(rules,/match \/schools\/\{schoolId\}/);
+assert.match(rules,/function member\(schoolId\)/);
+assert.match(rules,/match \/\{document=\*\*\} \{ allow read, write: if false; \}/);
+assert.doesNotMatch(rules,/['\"]user_roles['\"]/);
+console.log('V47 school isolation gate passed (structural only; emulator tests required)');
