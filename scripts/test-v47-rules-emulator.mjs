@@ -41,6 +41,9 @@ try{
  await assertSucceeds(admin.doc('schools/school_001/members/teacherB').delete());
  await assertFails(viewer.doc('schools/school_001/members/adminA').get());
  await assertFails(admin.doc('students/legacy').get());
+ await assertFails(admin.collection('schools').get());
+ await assertSucceeds(superDb.collection('schools').get());
+ await assertFails(viewer.collection('schools/school_001/members').get());
  await assertFails(admin.doc('schools/school_002/members/another').set({uid:'another',schoolId:'school_002',role:'viewer',active:true}));
  console.log('V47 cross-school emulator access tests passed');
 }finally{await env.cleanup();}
