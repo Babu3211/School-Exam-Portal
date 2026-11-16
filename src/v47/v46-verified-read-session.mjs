@@ -29,23 +29,25 @@ export function createV46VerifiedReadSession({
   :null;
  const pagedCollections=new Map();
  const issuedPageTokens=new WeakMap();
+ const identityOf=membership=>membership.uid+"|"+[...membership.roles].sort().join(",");
  const perform=async operation=>{
   const before=await readMembership();
+  const identity=identityOf(before);
   const adapter=createV46TenantReadAdapter({
    db,verifiedSchoolId:before.schoolId,
    verifiedMembership:{schoolId:before.schoolId,active:true,roles:[...before.roles]},
    collectionFn,docFn,getDocFn,getDocsFn,queryFn,limitFn
   });
-  const result=await operation(adapter);
+  const result=await operation(adapter,identity);
   const after=await readMembership();
-  if(before.uid!==after.uid || [...before.roles].sort().join(",")!==[...after.roles].sort().join(","))
+  if(identity!==identityOf(after))
    throw new Error("School access changed during read");
   return result;
  };
  return Object.freeze({
   list:(name,options)=>perform(adapter=>adapter.list(name,options)),
   get:(name,id)=>perform(adapter=>adapter.get(name,id)),
-  listPage:(name,options)=>perform(async()=>{
+  listPage:(name,options)=>perform(async(_adapter,identity)=>{
    if(!pagedGateway)throw new Error("Firestore pagination functions required");
    if(typeof name!=="string" || !["students","staff","classes","subjects","exams","marks","attendance","certificates","mark_settings","school_settings"].includes(name))
     throw new Error("Unreviewed school collection");
@@ -55,12 +57,12 @@ export function createV46VerifiedReadSession({
    if(cursor!==null){
     if(typeof cursor!=="object" || !issuedPageTokens.has(cursor))throw new TypeError("Invalid page token");
     const issued=issuedPageTokens.get(cursor);
-    if(issued.name!==name)throw new TypeError("Page token belongs to another collection");
+    if(issued.name!==name || issued.identity!==identity)throw new TypeError("Page token belongs to another collection or member");
     internalCursor=issued.snapshot;
    }
    const page=await pagedCollections.get(name).listPage({...rest,cursor:internalCursor});
    const nextCursor=page.nextCursor?Object.freeze({pageToken:true}):null;
-   if(nextCursor)issuedPageTokens.set(nextCursor,{name,snapshot:page.nextCursor});
+   if(nextCursor)issuedPageTokens.set(nextCursor,{name,identity,snapshot:page.nextCursor});
    return Object.freeze({records:page.records,nextCursor});
   })
  });
