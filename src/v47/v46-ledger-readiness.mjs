@@ -84,6 +84,14 @@ export function auditV47LedgerReadiness(data,{schoolId}={}){
  })).length;
  if(invalidScores)blockers.push(invalidScores+" marks have invalid assessment scores or full marks.");
 
+ const invalidComponentNames=data.marks.filter(m=>Array.isArray(m.scores)&&m.scores.some(s=>!s||typeof s.name!=="string"||!s.name.trim())).length;
+ if(invalidComponentNames)blockers.push(invalidComponentNames+" marks have unnamed assessment components.");
+ const duplicateComponentNames=data.marks.filter(m=>{
+  if(!Array.isArray(m.scores))return false;
+  const names=m.scores.filter(s=>s&&typeof s.name==="string"&&s.name.trim()).map(s=>s.name.trim().toLowerCase());
+  return new Set(names).size!==names.length;
+ }).length;
+ if(duplicateComponentNames)blockers.push(duplicateComponentNames+" marks have duplicate assessment component names.");
  const missingIdentity=data.marks.filter(m=>!m.examId||!m.studentId||!(m.subject||m.subjectId)).length;
  if(missingIdentity)blockers.push(missingIdentity+" marks lack exam, student or subject identity.");
  const unknownStudents=data.marks.filter(m=>m.studentId&&!studentIds.has(m.studentId)).length;
