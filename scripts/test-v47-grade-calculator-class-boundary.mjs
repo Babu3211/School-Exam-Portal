@@ -4,6 +4,10 @@ const html=readFileSync(new URL("../prototypes/v47/v46-grade-calculator.html",im
 const source=readFileSync(new URL("../iemis-entry.js",import.meta.url),"utf8");
 for(const value of ["ECD","11","12"])assert.ok(html.includes('<option value="'+value+'">'));
 assert.match(html,/try\{for\(const field of iemisEntrySchema\(/);
+assert.match(html,/<option value="final">Final Term<\/option>/);
+assert.doesNotMatch(html,/<option value="annual">Final Term<\/option>/);
+assert.match(html,/import \{toV46IemisTerm\} from "\.\.\/\.\.\/src\/v47\/v46-exam-term-adapter\.mjs"/);
+assert.match(html,/toV46IemisTerm\(document\.querySelector\("#term"\)\.value\)/);
 assert.match(html,/catch\(error\)\{const li=document\.createElement\("li"\)/);
 assert.match(html,/li\.textContent=error\.message/);
 assert.match(source,/if\(n<1\|\|n>10\)throw new Error/);
