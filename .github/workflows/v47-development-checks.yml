@@ -127,6 +127,9 @@ jobs:
       - name: V47 Spark platform-admin Firestore emulator authorization
         if: success() || failure()
         run: npx firebase emulators:exec --project v47-spark-platform-rules-test --only firestore --config firebase.v47.emulator.json "node scripts/test-v47-spark-platform-rules.mjs"
+      - name: V47 student class identity compatibility checks
+        if: success() || failure()
+        run: node scripts/test-v47-student-class-compat.mjs
       - name: V47 four school pages security regression checks
         if: success() || failure()
         run: node scripts/test-v47-school-pages-security.mjs
