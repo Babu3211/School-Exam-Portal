@@ -97,6 +97,40 @@ jobs:
           npm run test:viewer
           npm run test:rules
           npx firebase emulators:exec --only firestore --project smss-v45-activity-test 'node scripts/test-user-activity-rules.mjs'
+      - name: Render and verify synthetic A4 Grade Sheet
+        if: github.head_ref == 'fix/iemis-class6-2083-term-sheets'
+        run: |
+          mkdir -p "$RUNNER_TEMP/smss-print"
+          report="$RUNNER_TEMP/smss-print"
+          SMSS_GRADE_PRINT_FIXTURE="$report/grade.html" node scripts/test-iemis-ledger.mjs
+          if ! command -v pdfinfo >/dev/null || ! command -v pdftoppm >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y poppler-utils
+          fi
+          google-chrome --headless --no-sandbox --disable-gpu --no-pdf-header-footer \
+            --print-to-pdf="$report/grade.pdf" "file://$report/grade.html"
+          pdfinfo "$report/grade.pdf" | tee "$report/pdfinfo.txt"
+          grep -Eq '^Pages:[[:space:]]+1
+        run: |
+          node --input-type=module -e 'import fs from "node:fs";const s=fs.readFileSync("index.html","utf8");for(const x of ["School Profile","Student Record","Teacher | Staff","initIdleLogout","initUserActivity"])if(!s.includes(x))throw Error("Missing approved V45 feature: "+x);if(s.includes("V45 Trial"))throw Error("Obsolete trial dashboard restored")'
+
+# This workflow does not open IEMIS, deploy Hosting, or write production Firestore data.
+ "$report/pdfinfo.txt"
+          grep -Eq '^Page size:.*\(A4\)' "$report/pdfinfo.txt"
+          pdftotext "$report/grade.pdf" "$report/grade.txt"
+          grep -Fq 'GRADE POINT AVERAGE' "$report/grade.txt"
+          grep -Fq 'Head Teacher' "$report/grade.txt"
+          pdftoppm -singlefile -r 110 -png "$report/grade.pdf" "$report/grade"
+      - name: Save synthetic Grade Sheet for visual review
+        if: always() && github.head_ref == 'fix/iemis-class6-2083-term-sheets'
+        uses: actions/upload-artifact@v4
+        with:
+          name: smss-synthetic-a4-grade-sheet
+          path: |
+            ${{ runner.temp }}/smss-print/grade.pdf
+            ${{ runner.temp }}/smss-print/grade.png
+            ${{ runner.temp }}/smss-print/pdfinfo.txt
+          retention-days: 7
       - name: Verify final V45 source remains the approved dashboard
         run: |
           node --input-type=module -e 'import fs from "node:fs";const s=fs.readFileSync("index.html","utf8");for(const x of ["School Profile","Student Record","Teacher | Staff","initIdleLogout","initUserActivity"])if(!s.includes(x))throw Error("Missing approved V45 feature: "+x);if(s.includes("V45 Trial"))throw Error("Obsolete trial dashboard restored")'
