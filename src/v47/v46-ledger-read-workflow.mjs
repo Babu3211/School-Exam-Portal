@@ -4,12 +4,19 @@
  */
 import {loadV47LedgerCollections} from "./v46-ledger-data-loader.mjs";
 import {renderV47SchoolLedger} from "./v46-school-ledger-adapter.mjs";
+import {toV46IemisTerm} from "./v46-exam-term-adapter.mjs";
 export async function prepareV47SchoolLedger({session,schoolId,term,classNo,examId,schoolName,schoolCode,mode="number",selectStudents,selectSubjects,selectMarks,creditFor,componentsFor,applicable,pageSize=50,maxRecordsPerCollection=5000}){
  if(typeof selectStudents!=="function"||typeof selectSubjects!=="function"||typeof selectMarks!=="function")
   throw new TypeError("Explicit verified class/subject/mark selectors required");
  const data=await loadV47LedgerCollections({session,pageSize,maxRecordsPerCollection});
- if(!data.exams.some(exam=>exam.id===examId))
-  throw new Error("Selected exam does not exist in this school");
+ const selectedExam=data.exams.find(exam=>exam.id===examId);
+ if(!selectedExam)throw new Error("Selected exam does not exist in this school");
+ // An exam explicitly tagged with class/term must match the requested ledger.
+ if(selectedExam.classNo!=null && Number(selectedExam.classNo)!==Number(classNo))
+  throw new Error("Selected exam class mismatch");
+ const requestedLegacyTerm=toV46IemisTerm(term);
+ if(selectedExam.term!=null && selectedExam.term!==term && selectedExam.term!==requestedLegacyTerm)
+  throw new Error("Selected exam term mismatch");
  const students=selectStudents(data.students,classNo);
  const subjects=selectSubjects(data.subjects,classNo,examId);
  const marks=selectMarks(data.marks,classNo,examId);
