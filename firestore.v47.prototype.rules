@@ -95,8 +95,10 @@ service cloud.firestore {
         request.resource.data.classId is string &&
         studentExists(schoolId, request.resource.data.studentId, request.resource.data.classId) &&
         request.resource.data.present is bool &&
-        request.resource.data.get('attendanceDate', '') is string &&
-        request.resource.data.get('attendanceDate', '').matches('^([0-9]{4})-([0-9]{2})-([0-9]{2})
+        (!('attendanceDate' in request.resource.data) ||
+         (request.resource.data.attendanceDate is string &&
+          request.resource.data.attendanceDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$'))) &&
+        validTerm(request.resource.data.term);
     }
     function unchangedMarksIdentity() {
       return request.resource.data.schoolId == resource.data.schoolId &&
