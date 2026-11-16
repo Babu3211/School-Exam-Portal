@@ -4,7 +4,7 @@ export function canAccessSchool(member,schoolId,operation='read'){
  if(member.role==='super_admin')return true;
  if(member.schoolId!==schoolId||!ROLES.has(member.role))return false;
  if(operation==='read')return true;
- if(operation==='write')return member.role==='school_admin'||(member.role==='teacher'&&member.assignedWrite===true);
+ if(operation==='write')return member.role==='school_admin'; // teacher writes require server-enforced assignment rules not yet implemented
  return false;
 }
 export function canManageSchools(member){return member?.active===true&&member.role==='super_admin';}
