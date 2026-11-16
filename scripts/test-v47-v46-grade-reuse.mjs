@@ -1,0 +1,15 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {iemisGrade} from "../iemis-ledger.js";
+const root=new URL("../",import.meta.url);
+const page=readFileSync(new URL("../prototypes/v47/v46-grade-calculator.html",import.meta.url),"utf8");
+const builder=readFileSync(new URL("../scripts/build-v47-spark-staging.mjs",import.meta.url),"utf8");
+assert.match(page,/import \{iemisGrade\} from "\.\.\/\.\.\/iemis-ledger\.js"/);
+assert.match(page,/does not load or save any school records/);
+assert.doesNotMatch(page,/firebase-app|firebase-firestore|exam-portal-smss-95016|addDoc\(|setDoc\(|updateDoc\(/);
+assert.match(builder,/copyFile\(join\(root,"iemis-ledger\.js"\),join\(output,"iemis-ledger\.js"\)\)/);
+assert.match(builder,/v46-grade-calculator\.html/);
+assert.deepEqual([0,34.99,35,40,50,60,70,80,90,100].map(n=>iemisGrade(n)?.grade),["NG","NG","D","C","C+","B","B+","A","A+","A+"]);
+assert.equal(iemisGrade(-1),null);
+assert.equal(iemisGrade(101),null);
+console.log("V47 reuses V46 grade calculations unchanged, without Firebase access");
