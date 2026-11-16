@@ -5,7 +5,8 @@
  */
 import {assertSchoolId} from "./tenant-domain.mjs";
 import {schoolResourcePath} from "./school-data-paths.mjs";
-const FEATURE_COLLECTIONS=Object.freeze({students:"students",staff:"staff",classes:"classes",subjects:"subjects",exams:"exams",marks:"marks",attendance:"attendance",certificates:"certificates",markSettings:"mark_settings",settings:"school_settings",results:"public_results"});
+const FEATURE_COLLECTIONS=Object.freeze({students:"students",staff:"staff",classes:"classes",subjects:"subjects",exams:"exams",marks:"marks",attendance:"attendance",certificates:"certificates",markSettings:"mark_settings",settings:"school_settings"});
+// Public results publishing requires a separate reviewed gateway; do not expose it here.
 const FEATURES=Object.freeze(Object.keys(FEATURE_COLLECTIONS));
 const ALLOWED_ROLES=new Set(["school_admin","class_teacher","subject_teacher","viewer"]);
 const WRITE_METHODS=new Set(["add","create","set","update","delete","remove","save","write","commit","batch","runTransaction","addDoc","setDoc","updateDoc","deleteDoc"]);
