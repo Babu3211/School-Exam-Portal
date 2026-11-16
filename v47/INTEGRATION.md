@@ -28,3 +28,7 @@ These V47 modules are **not wired into the existing V46 HTML application**. They
 ## Nepal-local date utility
 
 `v47/nepal-date.mjs` computes the Gregorian calendar date in `Asia/Kathmandu` (UTC+05:45), including near-midnight boundaries. It is **not** a Bikram Sambat date converter; do not treat its ISO output as a BS/IEMIS date. Attendance UI wiring and full production verification remain pending.
+
+## Attendance browser preview
+
+`v47/attendance.html` is a standalone development-only attendance screen using the V47 Firebase project. It verifies active school membership, loads only `schools/{schoolId}/attendance`, displays a Nepal-local Gregorian date by default, and allows School Admin to save one student's presence at a time. Teacher and Viewer are read-only. The table filters **loaded pages client-side**, so a matching record may not appear until later pages are loaded. This is not a full class-wise attendance register, automatic BS date conversion, or IEMIS sync. It is not deployed.
