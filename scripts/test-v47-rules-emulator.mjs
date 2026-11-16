@@ -33,6 +33,11 @@ try{
  await assertSucceeds(superDb.doc('schools/school_001/members/elevated').set({uid:'elevated',schoolId:'school_001',role:'school_admin',active:true}));
  await assertFails(outsider.doc('schools/school_001/students/s1').get());
  await assertSucceeds(superDb.doc('schools/school_002/students/s2').get());
+ await assertFails(superDb.doc('schools/school_002').delete());
+ await assertFails(admin.doc('schools/school_001/members/elevated').delete());
+ await assertFails(admin.doc('schools/school_001/members/adminA').delete());
+ await assertSucceeds(admin.doc('schools/school_001/members/teacherB').delete());
+ await assertFails(viewer.doc('schools/school_001/members/adminA').get());
  await assertFails(admin.doc('students/legacy').get());
  await assertFails(admin.doc('schools/school_002/members/another').set({uid:'another',schoolId:'school_002',role:'viewer',active:true}));
  console.log('V47 cross-school emulator access tests passed');
