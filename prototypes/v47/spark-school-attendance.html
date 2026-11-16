@@ -1,25 +1,28 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SMSS V47 — Attendance</title>
 <style>body{font:16px system-ui,sans-serif;max-width:850px;margin:2rem auto;padding:0 1rem;color:#17324d}section{border:1px solid #cbd5e1;border-radius:12px;padding:1rem;margin:1rem 0}label{display:inline-block;margin:.5rem}input,button,select{padding:.6rem}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;text-align:left;padding:.5rem}#status{white-space:pre-wrap}</style></head>
-<body><h1>SMSS V47 Attendance</h1><p><a href="./spark-school-workspace.html">School workspace</a></p><p>School-scoped attendance records. Read-only attendance listing for authorized school members. Attendance creation and editing remain disabled until the V46 attendance schema is integrated.</p>
+<body><h1>SMSS V47 Attendance</h1><p><a href="./spark-school-workspace.html">School workspace</a></p><p>School-scoped attendance records. School-scoped attendance records. Authorized school admins and assigned teachers can add V47-format entries; V46 historical schema integration is still pending.</p>
 <section><form id="login"><label>Email <input name="email" type="email" required autocomplete="username"></label><label>Password <input name="password" type="password" required autocomplete="current-password"></label><button>Sign in</button></form><button id="logout" hidden>Sign out</button></section>
 <section><form id="school" hidden><label>School ID <input name="schoolId" pattern="[a-zA-Z0-9_-]{8,64}" required autocomplete="off"></label><button>Open attendance</button></form><p id="status" role="status" aria-live="polite">Awaiting V47 configuration.</p></section>
+<section id="entry-panel" hidden><h3>New V47 attendance entry</h3><form id="entry"><label>Student document ID <input name="studentId" required maxlength="128"></label><label>Class ID <input name="classId" required maxlength="80"></label><label>Term <select name="term"><option value="first">1st term</option><option value="second">2nd term</option><option value="final">Final</option></select></label><label>Attendance <select name="present"><option value="true">Present</option><option value="false">Absent</option></select></label><button>Save attendance</button></form><p>Use exact existing student and class IDs. Teacher assignments are checked by Firestore security rules.</p></section>
 <section id="content" hidden><h2 id="school-name"></h2><h3>Attendance</h3><table><thead><tr><th>Student</th><th>Class</th><th>Term</th><th>Record ID</th></tr></thead><tbody id="rows"></tbody></table><button id="more" hidden>Load more</button></section>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,doc,getDoc,collection,getDocs,query,orderBy,limit,startAfter} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,doc,getDoc,collection,getDocs,addDoc,query,orderBy,limit,startAfter} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import {assertSchoolId,schoolCollectionPath} from "../../src/v47/tenant-domain.mjs";
 import {verifyV47BrowserMembership} from "../../src/v47/browser-membership-guard.mjs";
 import {createV46BrowserTenantGateway} from "../../src/v47/v46-browser-tenant-gateway.mjs";
 const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#login"),schoolForm=document.querySelector("#school"),content=document.querySelector("#content"),status=document.querySelector("#status"),rows=document.querySelector("#rows"),more=document.querySelector("#more");
 let tenantRecords=null;
+const entryPanel=document.querySelector("#entry-panel"),entryForm=document.querySelector("#entry");
+let canEnter=false,saving=false;
 let auth,db,schoolId=null,schoolName="",cursor=null,epoch=0,loading=false;
 const say=s=>status.textContent=s;
 // School ID is a navigation hint only; verify() checks current membership before access.
 const selectedSchool=new URLSearchParams(location.search).get("schoolId");
 if(selectedSchool){try{schoolForm.elements.namedItem("schoolId").value=assertSchoolId(selectedSchool);}catch{ /* Ignore invalid navigation hints. */ }}
-function reset(){epoch++;schoolId=null;tenantRecords=null;cursor=null;loading=false;content.hidden=true;more.hidden=true;rows.replaceChildren();}
+function reset(){entryPanel.hidden=true;canEnter=false;epoch++;schoolId=null;tenantRecords=null;cursor=null;loading=false;content.hidden=true;more.hidden=true;rows.replaceChildren();}
 async function verify(id,user){const [s,m]=await Promise.all([getDoc(doc(db,"schools",id)),getDoc(doc(db,"schools",id,"members",user.uid))]);if(!s.exists()||!m.exists())throw Error("Active school membership required");const access=verifyV47BrowserMembership({schoolId:id,uid:user.uid,school:s.data(),member:m.data()});return {school:s.data(),roles:access.roles};}
 async function loadMore(){if(!schoolId||loading||!auth.currentUser)return;const id=schoolId,user=auth.currentUser,token=epoch;loading=true;more.disabled=true;try{const before=await verify(id,user);if(token!==epoch||auth.currentUser?.uid!==user.uid)return;const page=await tenantRecords.listPage({pageSize:20,cursor});const after=await verify(id,user);if(after.roles.join(",")!==before.roles.join(","))throw Error("School permissions changed during loading");if(token!==epoch||auth.currentUser?.uid!==user.uid)return;for(const record of page.records){const data=record,tr=document.createElement("tr");for(const value of [data.studentId||"—",data.classId||"—",data.term||"—",record.id]){const td=document.createElement("td");td.textContent=String(value);tr.append(td);}rows.append(tr);}cursor=page.nextCursor;more.hidden=!page.nextCursor;say("Loaded "+rows.children.length+" attendance.");}catch(e){if(token===epoch)say("Unable to load attendance: "+e.message);}finally{if(token===epoch){loading=false;more.disabled=false;}}}
 if(!config||config.projectId!=="smss-exam-portal-v47"||config.authDomain!=="smss-exam-portal-v47.firebaseapp.com"){login.hidden=true;say("V47 isolated Firebase configuration required. No connection started.");}else{
@@ -28,7 +31,28 @@ if(!config||config.projectId!=="smss-exam-portal-v47"||config.authDomain!=="smss
  login.addEventListener("submit",async event=>{event.preventDefault();const f=new FormData(login);try{await signInWithEmailAndPassword(auth,String(f.get("email")),String(f.get("password")));}catch{say("Sign in failed.");}login.elements.namedItem("password").value="";});
  document.querySelector("#logout").addEventListener("click",async()=>{reset();try{await signOut(auth);}catch{say("Sign out failed.");}});
  schoolForm.elements.namedItem("schoolId").addEventListener("input",reset);
- schoolForm.addEventListener("submit",async event=>{event.preventDefault();reset();const token=epoch,user=auth.currentUser;if(!user)return;try{const id=assertSchoolId(String(new FormData(schoolForm).get("schoolId")));const access=await verify(id,user);if(token!==epoch||auth.currentUser?.uid!==user.uid)return;schoolId=id;tenantRecords=createV46BrowserTenantGateway({db,verifiedSchoolId:id,collectionFn:collection,docFn:doc,getDocsFn:getDocs,getDocFn:getDoc,queryFn:query,limitFn:limit,startAfterFn:startAfter,orderByFn:orderBy}).forCollection(schoolCollectionPath(id,"attendance"));schoolName=String(access.school.name||id);document.querySelector("#school-name").textContent=schoolName;content.hidden=false;await loadMore();}catch(e){say("Cannot open school: "+e.message);}});
+ schoolForm.addEventListener("submit",async event=>{event.preventDefault();reset();const token=epoch,user=auth.currentUser;if(!user)return;try{const id=assertSchoolId(String(new FormData(schoolForm).get("schoolId")));const access=await verify(id,user);if(token!==epoch||auth.currentUser?.uid!==user.uid)return;schoolId=id;tenantRecords=createV46BrowserTenantGateway({db,verifiedSchoolId:id,collectionFn:collection,docFn:doc,getDocsFn:getDocs,getDocFn:getDoc,queryFn:query,limitFn:limit,startAfterFn:startAfter,orderByFn:orderBy}).forCollection(schoolCollectionPath(id,"attendance"));schoolName=String(access.school.name||id);canEnter=access.roles.includes("school_admin")||(access.roles.includes("class_teacher")&&!access.roles.includes("viewer"));entryPanel.hidden=!canEnter;document.querySelector("#school-name").textContent=schoolName;content.hidden=false;await loadMore();}catch(e){say("Cannot open school: "+e.message);}});
+ entryForm.addEventListener("submit",async event=>{
+  event.preventDefault();
+  if(saving||!schoolId||!auth.currentUser||!canEnter)return;
+  const id=schoolId,user=auth.currentUser,token=epoch;
+  const fields=new FormData(entryForm);
+  const studentId=String(fields.get("studentId")||"").trim(),classId=String(fields.get("classId")||"").trim(),term=String(fields.get("term")||"");
+  if(!studentId||studentId.includes("/")||!classId||!["first","second","final"].includes(term)){say("Invalid entry fields.");return;}
+  const payload={schoolId:id,studentId,classId,term,present:fields.get("present")==="true"};
+  if(!["true","false"].includes(String(fields.get("present")))){say("Invalid entry value.");return;}
+  saving=true;const button=entryForm.querySelector("button");button.disabled=true;
+  try{
+   const before=await verify(id,user);
+   if(!before.roles.some(role=>["school_admin","class_teacher"].includes(role))||before.roles.includes("viewer"))throw Error("No entry permission");
+   if(token!==epoch||auth.currentUser?.uid!==user.uid)throw Error("School selection changed");
+   await addDoc(collection(db,schoolCollectionPath(id,"attendance")),payload);
+   if(token!==epoch||auth.currentUser?.uid!==user.uid)return;
+   entryForm.reset();rows.replaceChildren();cursor=null;await loadMore();
+   say("Entry saved for verified school.");
+  }catch(error){if(token===epoch)say("Entry not saved: "+error.message);}
+  finally{saving=false;button.disabled=false;}
+ });
  more.addEventListener("click",loadMore);
 }
 </script></body></html>
