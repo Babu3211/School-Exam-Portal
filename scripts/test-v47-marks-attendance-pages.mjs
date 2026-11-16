@@ -7,8 +7,8 @@ for(const kind of ["marks","attendance"]){
  assert.ok(builder.includes(path),"staging includes "+kind);
  assert.ok(html.includes('schoolCollectionPath(id,"'+kind+'")'));
  assert.ok(html.includes("verifyV47BrowserMembership({schoolId:id,uid:user.uid,school:s.data(),member:m.data()})"));
- assert.ok(html.includes("createV46BrowserTenantGateway({"));
- assert.ok(html.includes("tenantRecords.listPage({pageSize:20,cursor})"));
+ assert.ok(html.includes("createV46VerifiedReadSession({"));
+ assert.ok(html.includes("tenantRecords.listPage("' +kind+ '",{pageSize:20,cursor})"));
  assert.ok(html.includes("const after=await verify(id,user)"));
  assert.ok(html.includes('after.roles.join(",")!==before.roles.join(",")'));
  assert.ok(html.includes('td.textContent=String(value)'));
@@ -20,8 +20,8 @@ for(const kind of ["marks","attendance"]){
  assert.ok(html.includes('canEnter=!access.roles.includes("viewer")'));
  assert.ok(html.includes('entryForm.querySelector(\'button[type="submit"]\')'));
  assert.ok(html.includes('<button type="submit">Save '));
- assert.ok(html.includes("if(!studentGateway)studentGateway=createV46BrowserTenantGateway({"));
- assert.ok(html.includes("studentGateway.listPage({pageSize:50,cursor:studentCursor})"));
+ assert.ok(html.includes("if(!studentGateway)studentGateway=createV46VerifiedReadSession({"));
+ assert.ok(html.includes("studentGateway.listPage("students",{pageSize:50,cursor:studentCursor})"));
  assert.ok(html.includes("option.dataset.classId="));
  assert.ok(html.includes("selectedClass!==classId"));
  assert.ok(html.includes('getDoc(doc(db,"schools",id,"students",studentId))'));
@@ -42,7 +42,7 @@ for(const kind of ["marks","attendance"]){
   assert.ok(html.includes('subjectChoice.value!==payload.subjectId'));
   assert.ok(html.includes('getDoc(doc(db,"schools",id,"subjects",payload.subjectId))'));
   assert.ok(html.includes('if(!selectedSubject.exists())'));
-  assert.ok(html.includes('subjectGateway.listPage({pageSize:50,cursor:subjectCursor})'));
+  assert.ok(html.includes('subjectGateway.listPage("subjects",{pageSize:50,cursor:subjectCursor})'));
   assert.ok(html.includes('schoolCollectionPath(id,"subjects")'));
   assert.ok(html.includes('subjectChoice.replaceChildren(...options)'));
   assert.ok(html.includes('void loadSubjectsForEntry()'));
