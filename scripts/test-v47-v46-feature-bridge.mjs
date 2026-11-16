@@ -113,4 +113,29 @@ for(const collection of Object.values(expectedCollections)){
  assert.throws(()=>browserGateway.forCollection(`schools/school_A001/${collection}/nested`),/cross-school/);
 }
 assert.throws(()=>browserGateway.forCollection("schools/school_A001/students/../marks"),/cross-school/);
+const pageCalls=[];
+const firstDoc={id:"s01",data:()=>({name:"Student One",id:"spoofed"})};
+const pagedGateway=createV46BrowserTenantGateway({
+ db:{},verifiedSchoolId:"school_A001",
+ collectionFn:(_db,...parts)=>parts.join("/"),
+ docFn:(_db,...parts)=>parts.join("/"),
+ queryFn:(ref,...clauses)=>{pageCalls.push({ref,clauses});return {ref,clauses};},
+ limitFn:n=>({limit:n}),orderByFn:field=>({orderBy:field}),
+ startAfterFn:cursor=>({after:cursor.id}),
+ getDocsFn:async()=>({docs:[firstDoc]}),
+ getDocFn:async()=>({exists:()=>false})
+});
+const pagedStudents=pagedGateway.forCollection("schools/school_A001/students");
+const page1=await pagedStudents.listPage({pageSize:1});
+assert.deepEqual(page1.records,[{id:"s01",name:"Student One"}]);
+assert.equal(page1.nextCursor,firstDoc);
+assert.equal(Object.isFrozen(page1.records),true);
+const page2=await pagedStudents.listPage({pageSize:1,cursor:page1.nextCursor});
+assert.deepEqual(page2.records,page1.records);
+assert.deepEqual(pageCalls[0].clauses,[{orderBy:"__name__"},{limit:1}]);
+assert.deepEqual(pageCalls[1].clauses,[{orderBy:"__name__"},{after:"s01"},{limit:1}]);
+await assert.rejects(()=>pagedStudents.listPage({pageSize:51}),/Page size/);
+await assert.rejects(()=>pagedStudents.listPage({cursor:"s01"}),/cursor/);
+await assert.rejects(()=>pagedStudents.listPage({cursor:{id:"../bad",data(){}}}),/cursor/);
+await assert.rejects(()=>tenantCollection.listPage(),/adapters required/);
 console.log("V47 V46 feature reuse bridge contract tests passed");
