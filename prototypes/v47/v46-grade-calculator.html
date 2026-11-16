@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SMSS V47 — V46 Grade Calculator</title>
+<style>body{font:16px system-ui,sans-serif;max-width:650px;margin:2rem auto;padding:0 1rem;color:#17324d}label{display:block;margin:1rem 0}input{padding:.65rem;width:10rem}section{border:1px solid #cbd5e1;border-radius:12px;padding:1rem}output{font-weight:700}small{color:#526477}</style></head>
+<body><p><a href="./spark-school-workspace.html">Back to school workspace</a></p>
+<h1>V46 IEMIS Grade Calculator</h1><p>Uses the original V46 IEMIS grade calculation module, unchanged. This is a calculation-only preview; it does not load or save any school records.</p>
+<section><form id="grade-form"><label>Percentage (0–100) <input id="percent" type="number" min="0" max="100" step="any" required></label><button type="submit">Calculate grade</button></form><p id="result" role="status" aria-live="polite"></p></section>
+<p><small>Actual Grade Sheet, Ledger and Mark Entry screens require separate V47 school-scoped integration and testing.</small></p>
+<script type="module">
+import {iemisGrade} from "../../iemis-ledger.js";
+const form=document.querySelector("#grade-form"),result=document.querySelector("#result");
+form.addEventListener("submit",event=>{event.preventDefault();const percent=Number(document.querySelector("#percent").value);
+const grade=iemisGrade(percent);result.textContent=grade?"Grade: "+grade.grade+" | Grade point: "+(grade.point??"NG")+" | "+grade.remark:"Invalid percentage";});
+</script></body></html>
