@@ -1,0 +1,14 @@
+import assert from "node:assert/strict";
+import {loadV47LedgerCollections} from "../src/v47/v46-ledger-data-loader.mjs";
+const calls=[];
+const session={async listPage(name,{pageSize,cursor}){calls.push({name,pageSize,cursor});if(!cursor)return {records:[{id:"a"}],nextCursor:{page:2}};return {records:[{id:"b"}],nextCursor:null};}};
+const result=await loadV47LedgerCollections({session,collections:["students"],pageSize:1,maxRecordsPerCollection:3});
+assert.deepEqual(result.students.map(r=>r.id),["a","b"]);
+assert.equal(calls.length,2);
+assert.ok(Object.isFrozen(result.students));
+await assert.rejects(()=>loadV47LedgerCollections({session,collections:["marks"],pageSize:1,maxRecordsPerCollection:1}),/incomplete/);
+await assert.rejects(()=>loadV47LedgerCollections({session,collections:["school_settings"]}),/Unreviewed/);
+await assert.rejects(()=>loadV47LedgerCollections({session,collections:["marks","marks"]}),/Unreviewed/);
+await assert.rejects(()=>loadV47LedgerCollections({session,collections:["marks"],pageSize:51}),/page size/);
+await assert.rejects(()=>loadV47LedgerCollections({session:{listPage:async()=>({records:[{id:"a"},{id:"b"}],nextCursor:null})},collections:["marks"],pageSize:1,maxRecordsPerCollection:1}),/exceeds safe read cap/);
+console.log("V47 school ledger complete-read boundary checks passed");
