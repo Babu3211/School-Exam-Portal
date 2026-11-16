@@ -10,7 +10,9 @@ for(const kind of ["students","staff","marks","attendance"]){
  assert.ok(html.includes("verifyV47BrowserMembership({schoolId:id,uid:user.uid,school:s.data(),member:m.data()})"),"user membership identity "+kind);
  assert.ok(html.includes('if(token===epoch){loading=false;more.disabled=false;}'),"stale request guard "+kind);
  assert.ok(html.includes('td.textContent=String(value)'),"safe text rendering "+kind);
- assert.ok(html.includes("tenantRecords.listPage({pageSize:20,cursor})"),"bounded reads "+kind);
+ assert.ok(html.includes('tenantRecords.listPage("'+kind+'",{pageSize:20,cursor})'),"bounded reads "+kind);
+ assert.ok(html.includes("createV46VerifiedReadSession({"),"verified school read session "+kind);
+ assert.doesNotMatch(html,/createV46BrowserTenantGateway/,"legacy gateway not used directly "+kind);
  assert.doesNotMatch(html,/exam-portal-smss-95016|deleteDoc\(/,"no production access or deletion "+kind);
  if(kind==="staff")assert.doesNotMatch(html,/addDoc\(|updateDoc\(|setDoc\(/,"read-only "+kind);
 }
