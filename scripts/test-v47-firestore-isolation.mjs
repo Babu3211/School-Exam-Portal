@@ -10,6 +10,7 @@ try {
   for(const schoolId of [schoolA,schoolB]){
    await setDoc(doc(db,"schools",schoolId),{name:schoolId,status:"active"});
    await setDoc(doc(db,"schools",schoolId,"students","student1"),{name:"Synthetic Student",classId:"9"});
+   await setDoc(doc(db,"schools",schoolId,"subjects","computer"),{name:"Computer"});
   }
   await setDoc(doc(db,"schools",schoolA,"members","adminA"),{active:true,roles:["school_admin"]});
   await setDoc(doc(db,"schools",schoolA,"members","viewerA"),{active:true,roles:["viewer"]});
@@ -125,6 +126,7 @@ try {
  const assignedMark={schoolId:schoolA,classId:"9",subjectId:"computer",studentId:"student1",term:"first",score:32};
  await assertFails(setDoc(doc(admin,"schools",schoolA,"assignments","newTeacher_9_wrong"),{...assignment,subjectId:"computer"}));
  await assertSucceeds(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_m1"),assignedMark));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"marks","missing_subject"),{...assignedMark,subjectId:"nonexistent"}));
  await assertFails(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_m2"),{...assignedMark,subjectId:"math"}));
  await assertFails(setDoc(doc(assignedSubject,"schools",schoolA,"marks","wrong_class_student"),{...assignedMark,classId:"10"}));
  await assertFails(setDoc(doc(assignedSubject,"schools",schoolA,"marks","assigned_m3"),{...assignedMark,term:"second"}));
