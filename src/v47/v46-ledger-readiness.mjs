@@ -82,7 +82,7 @@ export function auditV47LedgerReadiness(data,{schoolId}={}){
  if(unknownStudents)blockers.push(unknownStudents+" marks reference unknown school students.");
  const unknownExams=data.marks.filter(m=>m.examId&&!examIds.has(m.examId)).length;
  if(unknownExams)blockers.push(unknownExams+" marks reference unknown school exams.");
- const unknownSubjects=data.marks.filter(m=>{const ref=m.subjectId||m.subject;return ref&&!subjectIds.has(ref)&&!subjectNames.has(String(ref).trim().toLowerCase());}).length;
+ const unknownSubjects=data.marks.filter(m=>m.subjectId? !subjectIds.has(m.subjectId) : Boolean(m.subject)&&!subjectNames.has(String(m.subject).trim().toLowerCase())).length;
  if(unknownSubjects)blockers.push(unknownSubjects+" marks reference unknown school subjects.");
  const subjectById=new Map(data.subjects.map(s=>[s.id,s]));
  const conflictingSubjectLabels=data.marks.filter(m=>{
