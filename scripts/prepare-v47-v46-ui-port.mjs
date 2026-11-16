@@ -95,7 +95,7 @@ const firebaseOperations=[
  "getDownloadURL","signInWithEmailAndPassword","onAuthStateChanged"
 ];
 const operationInventory=Object.fromEntries(firebaseOperations.map(name=>[
- name,[...source.matchAll(new RegExp("\\b"+name+"\\s*\\(","g))].length
+ name,[...source.matchAll(new RegExp(String.raw`\\b${name}\\s*\\(`,"g"))].length
 ]).filter(([,count])=>count>0));
 const riskCategories={
  writes:["setDoc","addDoc","updateDoc","deleteDoc","runTransaction","writeBatch"],
