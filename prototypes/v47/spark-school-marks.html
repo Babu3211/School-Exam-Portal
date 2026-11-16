@@ -16,14 +16,14 @@ import {createV46BrowserTenantGateway} from "../../src/v47/v46-browser-tenant-ga
 const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#login"),schoolForm=document.querySelector("#school"),content=document.querySelector("#content"),status=document.querySelector("#status"),rows=document.querySelector("#rows"),more=document.querySelector("#more");
 let tenantRecords=null;
 const entryPanel=document.querySelector("#entry-panel"),entryForm=document.querySelector("#entry");
-let canEnter=false,saving=false,studentCursor=null;
+let canEnter=false,saving=false,studentCursor=null,studentGateway=null,studentLoading=false;
 const studentChoice=document.querySelector("#student-choice"),reloadStudents=document.querySelector("#reload-students");
 let auth,db,schoolId=null,schoolName="",cursor=null,epoch=0,loading=false;
 const say=s=>status.textContent=s;
 // School ID is a navigation hint only; verify() checks current membership before access.
 const selectedSchool=new URLSearchParams(location.search).get("schoolId");
 if(selectedSchool){try{schoolForm.elements.namedItem("schoolId").value=assertSchoolId(selectedSchool);}catch{ /* Ignore invalid navigation hints. */ }}
-function reset(){studentCursor=null;studentChoice.replaceChildren(new Option("Select student",""));entryPanel.hidden=true;canEnter=false;epoch++;schoolId=null;tenantRecords=null;cursor=null;loading=false;content.hidden=true;more.hidden=true;rows.replaceChildren();}
+function reset(){studentGateway=null;studentCursor=null;reloadStudents.hidden=false;reloadStudents.disabled=false;studentLoading=false;studentChoice.replaceChildren(new Option("Select student",""));entryPanel.hidden=true;canEnter=false;epoch++;schoolId=null;tenantRecords=null;cursor=null;loading=false;content.hidden=true;more.hidden=true;rows.replaceChildren();}
 async function verify(id,user){const [s,m]=await Promise.all([getDoc(doc(db,"schools",id)),getDoc(doc(db,"schools",id,"members",user.uid))]);if(!s.exists()||!m.exists())throw Error("Active school membership required");const access=verifyV47BrowserMembership({schoolId:id,uid:user.uid,school:s.data(),member:m.data()});return {school:s.data(),roles:access.roles};}
 async function loadMore(){if(!schoolId||loading||!auth.currentUser)return;const id=schoolId,user=auth.currentUser,token=epoch;loading=true;more.disabled=true;try{const before=await verify(id,user);if(token!==epoch||auth.currentUser?.uid!==user.uid)return;const page=await tenantRecords.listPage({pageSize:20,cursor});const after=await verify(id,user);if(after.roles.join(",")!==before.roles.join(","))throw Error("School permissions changed during loading");if(token!==epoch||auth.currentUser?.uid!==user.uid)return;for(const record of page.records){const data=record,tr=document.createElement("tr");for(const value of [data.studentId||"—",data.subjectId||"—",data.term||"—",record.id]){const td=document.createElement("td");td.textContent=String(value);tr.append(td);}rows.append(tr);}cursor=page.nextCursor;more.hidden=!page.nextCursor;say("Loaded "+rows.children.length+" marks.");}catch(e){if(token===epoch)say("Unable to load marks: "+e.message);}finally{if(token===epoch){loading=false;more.disabled=false;}}}
 if(!config||config.projectId!=="smss-exam-portal-v47"||config.authDomain!=="smss-exam-portal-v47.firebaseapp.com"){login.hidden=true;say("V47 isolated Firebase configuration required. No connection started.");}else{
@@ -34,20 +34,22 @@ if(!config||config.projectId!=="smss-exam-portal-v47"||config.authDomain!=="smss
  schoolForm.elements.namedItem("schoolId").addEventListener("input",reset);
  schoolForm.addEventListener("submit",async event=>{event.preventDefault();reset();const token=epoch,user=auth.currentUser;if(!user)return;try{const id=assertSchoolId(String(new FormData(schoolForm).get("schoolId")));const access=await verify(id,user);if(token!==epoch||auth.currentUser?.uid!==user.uid)return;schoolId=id;tenantRecords=createV46BrowserTenantGateway({db,verifiedSchoolId:id,collectionFn:collection,docFn:doc,getDocsFn:getDocs,getDocFn:getDoc,queryFn:query,limitFn:limit,startAfterFn:startAfter,orderByFn:orderBy}).forCollection(schoolCollectionPath(id,"marks"));schoolName=String(access.school.name||id);canEnter=access.roles.includes("school_admin")||(access.roles.includes("subject_teacher")&&!access.roles.includes("viewer"));entryPanel.hidden=!canEnter;if(canEnter)void loadStudentsForEntry();document.querySelector("#school-name").textContent=schoolName;content.hidden=false;await loadMore();}catch(e){say("Cannot open school: "+e.message);}});
  async function loadStudentsForEntry(){
-  if(!schoolId||!auth.currentUser||!canEnter)return;
+  if(!schoolId||!auth.currentUser||!canEnter||studentLoading)return;
   const id=schoolId,user=auth.currentUser,token=epoch;
-  reloadStudents.disabled=true;
+  studentLoading=true;reloadStudents.disabled=true;
   try{
    const before=await verify(id,user);
    if(!before.roles.some(role=>["school_admin","subject_teacher"].includes(role))||before.roles.includes("viewer"))throw Error("No entry permission");
-   const studentGateway=createV46BrowserTenantGateway({db,verifiedSchoolId:id,collectionFn:collection,docFn:doc,getDocsFn:getDocs,getDocFn:getDoc,queryFn:query,limitFn:limit,startAfterFn:startAfter,orderByFn:orderBy}).forCollection(schoolCollectionPath(id,"students"));
+   if(!studentGateway)studentGateway=createV46BrowserTenantGateway({db,verifiedSchoolId:id,collectionFn:collection,docFn:doc,getDocsFn:getDocs,getDocFn:getDoc,queryFn:query,limitFn:limit,startAfterFn:startAfter,orderByFn:orderBy}).forCollection(schoolCollectionPath(id,"students"));
    const nextOptions=studentCursor?[]:[new Option("Select student","")];
    {
     if(token!==epoch||auth.currentUser?.uid!==user.uid)return;
     const page=await studentGateway.listPage({pageSize:50,cursor:studentCursor});
     for(const student of page.records){
      const name=String(student.nameEnglish||student.englishName||student.name||student.id).slice(0,100);
-     nextOptions.push(new Option(name+" — "+String(student.classId||student.class||""),student.id));
+     const option=new Option(name+" — "+String(student.classId||student.class||""),student.id);
+     option.dataset.classId=String(student.classId||student.class||"");
+     nextOptions.push(option);
     }
     studentCursor=page.nextCursor;
    }
@@ -60,9 +62,10 @@ if(!config||config.projectId!=="smss-exam-portal-v47"||config.authDomain!=="smss
    reloadStudents.hidden=!studentCursor;
    say("Student selection loaded; additional pages available on demand.");
   }catch(error){if(token===epoch)say("Students could not be loaded: "+error.message);}
-  finally{reloadStudents.disabled=false;}
+  finally{if(token===epoch){studentLoading=false;reloadStudents.disabled=false;}}
  }
  reloadStudents.addEventListener("click",loadStudentsForEntry);
+ studentChoice.addEventListener("change",()=>{const selected=studentChoice.selectedOptions[0];if(selected?.dataset.classId)entryForm.elements.namedItem("classId").value=selected.dataset.classId;});
  entryForm.addEventListener("submit",async event=>{
   event.preventDefault();
   if(saving||!schoolId||!auth.currentUser||!canEnter)return;
@@ -70,6 +73,10 @@ if(!config||config.projectId!=="smss-exam-portal-v47"||config.authDomain!=="smss
   const fields=new FormData(entryForm);
   const studentId=String(fields.get("studentId")||"").trim(),classId=String(fields.get("classId")||"").trim(),term=String(fields.get("term")||"");
   if(!studentId||studentId.includes("/")||!classId||!["first","second","final"].includes(term)){say("Invalid entry fields.");return;}
+  const selected=studentChoice.selectedOptions[0];
+  if(!selected||!selected.value||selected.value!==studentId){say("Select a verified student.");return;}
+  const selectedClass=selected.dataset.classId;
+  if(selectedClass&&selectedClass!==classId){say("Student class does not match.");return;}
   const payload={schoolId:id,studentId,classId,term,subjectId:String(fields.get("subjectId")||"").trim(),score:Number(fields.get("score"))};
   if(!payload.subjectId||!Number.isFinite(payload.score)||payload.score<0||payload.score>100){say("Invalid entry value.");return;}
   saving=true;const button=entryForm.querySelector("button");button.disabled=true;
