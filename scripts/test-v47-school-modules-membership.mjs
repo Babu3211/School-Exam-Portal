@@ -1,0 +1,10 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+for(const name of ["students","staff","marks","attendance"]){
+ const html=readFileSync(new URL("../prototypes/v47/spark-school-"+name+".html",import.meta.url),"utf8");
+ assert.ok(html.includes('import {verifyV47BrowserMembership} from "../../src/v47/browser-membership-guard.mjs";'),name+" guard import");
+ assert.ok(html.includes("verifyV47BrowserMembership({schoolId:id,uid:user.uid,school:s.data(),member:m.data()})"),name+" verifies school identity");
+ assert.ok(!html.includes('m.data().roles.some(role=>'),name+" must not duplicate weaker role validation");
+ assert.ok(html.includes('schoolCollectionPath(id,"'+name+'")'),name+" scoped collection");
+}
+console.log("V47 students/staff/marks/attendance shared membership guard checks passed");
