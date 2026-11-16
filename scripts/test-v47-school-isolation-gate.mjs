@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 // Check the V47-only rules. V46 root rules intentionally remain unchanged.
 const rules=readFileSync(new URL('../v47/firestore.rules',import.meta.url),'utf8');
 for(const name of ['students','staff','classes','subjects','exams','marks','attendance']){
- assert.doesNotMatch(rules,new RegExp(String.raw`match\s+/${name}/\{[^}]+\}`),'Unscoped V47 collection: '+name);
+ assert.doesNotMatch(rules,new RegExp(String.raw`^  match /${name}/\{[^}]+\}`,'m'),'Unscoped V47 collection: '+name);
  if(name==='students')assert.match(rules,/match \/students\/\{docId\}/);
  else assert.match(rules,new RegExp("'"+name+"'"),'Missing scoped collection: '+name);
 }
