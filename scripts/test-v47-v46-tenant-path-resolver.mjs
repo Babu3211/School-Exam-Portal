@@ -17,6 +17,7 @@ for(const membership of [
  {schoolId:id,active:false,roles:["school_admin"]},
  {schoolId:id,active:true,roles:["viewer","school_admin"]},
  {schoolId:id,active:true,roles:[]},
+ {schoolId:id,active:true,roles:["school_admin","school_admin"]},
  {schoolId:id,active:true,roles:["unknown"]}
 ]){
  assert.throws(()=>createV46TenantPathResolver({verifiedSchoolId:id,verifiedMembership:membership}),/Verified school membership required/);
