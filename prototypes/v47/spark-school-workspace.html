@@ -10,6 +10,7 @@
 <a href="./spark-school-attendance.html">Attendance</a>
 <a href="./spark-school-workspace.html">School Dashboard</a>
 <a href="./v46-grade-calculator.html">IEMIS Grade Calculator</a>
+<a href="./spark-school-ledger-audit.html">IEMIS Ledger Readiness</a>
 </nav>
 <p><small>These V47 school-scoped modules are in staging; full V46 screens are not yet migrated.</small></p>
 <section><form id="login-form"><label>Email <input name="email" type="email" required autocomplete="username"></label> <label>Password <input name="password" type="password" required autocomplete="current-password"></label><button>Sign in</button></form><button id="logout" hidden>Sign out</button><p id="identity"></p></section>
@@ -168,7 +169,7 @@ else{
     note.textContent=Object.hasOwn(sectionCounts,kind)?"Preview records (up to 20)":"Unavailable";
     tile.append(number,label,note);summary.append(tile);
    }
-   for(const link of document.querySelectorAll('nav[aria-label="School modules"] a')){const url=new URL(link.href);if(!/^spark-school-(students|staff|marks|attendance|workspace)\.html$/.test(url.pathname.split("/").at(-1)))continue;url.searchParams.set("schoolId",verified.schoolId);link.href=url.href;}
+   for(const link of document.querySelectorAll('nav[aria-label="School modules"] a')){const url=new URL(link.href);if(!/^spark-school-(students|staff|marks|attendance|workspace|ledger-audit)\.html$/.test(url.pathname.split("/").at(-1)))continue;url.searchParams.set("schoolId",verified.schoolId);link.href=url.href;}
    workspace.hidden=false;say("School data loaded (read-only). "+Object.values(sectionCounts).reduce((a,b)=>a+b,0)+" records displayed across available sections; initially capped at 20, with on-demand pagination. "+(failedSections.length?"Unavailable sections: "+failedSections.join(", ")+". ":"")+"No changes saved.");
   }catch(error){if(token===epoch){clear();say("Unable to load school: "+error.message);}}
  });
