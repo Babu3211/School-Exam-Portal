@@ -18,4 +18,10 @@ assert.match(students,/tenantRecords\.listPage\("students",\{pageSize:20,cursor\
 assert.doesNotMatch(students,/createV46BrowserTenantGateway/);
 assert.match(students,/access\.roles\.includes\("school_admin"\)/);
 assert.match(students,/await addDoc\(collection\(db,schoolCollectionPath\(id,"students"\)\)/);
+const marks=readFileSync(new URL("../prototypes/v47/spark-school-marks.html",import.meta.url),"utf8");
+assert.match(marks,/createV46VerifiedReadSession\(/);
+for(const kind of ["marks","students","subjects"])
+ assert.ok(marks.includes('.listPage("'+kind+'",'));
+assert.doesNotMatch(marks,/createV46BrowserTenantGateway/);
+assert.match(marks,/await addDoc\(collection\(db,schoolCollectionPath\(id,"marks"\)\),payload\)/);
 console.log("V47 school module return-navigation checks passed");
