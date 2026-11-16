@@ -70,4 +70,9 @@ for(const score of [{name:"IN",obtained:" ",fullMarks:50},{name:"IN",obtained:20
 }
 const numericStrings=auditV47LedgerReadiness({...data,marks:[{...data.marks[0],scores:[{name:"IN",obtained:"30",fullMarks:"50"}]}]});
 assert.ok(!numericStrings.blockers.some(s=>s.includes("invalid assessment scores")));
+const unnamedComponent=auditV47LedgerReadiness({...data,marks:[{...data.marks[0],scores:[{name:" ",obtained:20,fullMarks:50}]}]});
+assert.ok(unnamedComponent.blockers.some(s=>s.includes("unnamed assessment components")));
+const duplicateComponents=auditV47LedgerReadiness({...data,marks:[{...data.marks[0],scores:[{name:"IN",obtained:20,fullMarks:50},{name:" in ",obtained:10,fullMarks:50}]}]});
+assert.ok(duplicateComponents.blockers.some(s=>s.includes("duplicate assessment component names")));
+assert.ok(!clean.blockers.some(s=>s.includes("duplicate assessment component names")||s.includes("unnamed assessment components")));
 console.log("V47 ledger readiness audit checks passed");
