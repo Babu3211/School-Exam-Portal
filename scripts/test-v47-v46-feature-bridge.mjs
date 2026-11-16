@@ -136,6 +136,10 @@ assert.deepEqual(pageCalls[0].clauses,[{orderBy:"__name__"},{limit:1}]);
 assert.deepEqual(pageCalls[1].clauses,[{orderBy:"__name__"},{after:"s01"},{limit:1}]);
 await assert.rejects(()=>pagedStudents.listPage({pageSize:51}),/Page size/);
 await assert.rejects(()=>pagedStudents.listPage({cursor:"s01"}),/cursor/);
+await assert.rejects(()=>pagedStudents.listPage({pageSize:1,cursor:{...firstDoc}}),/cursor/);
+const anotherCollection=pagedGateway.forCollection("schools/school_A001/students");
+await assert.rejects(()=>anotherCollection.listPage({pageSize:1,cursor:page1.nextCursor}),/cursor/);
+
 await assert.rejects(()=>pagedStudents.listPage({pageSize:1,cursor:{...firstDoc,ref:{path:"schools/school_B001/students/s01"}}}),/cursor/);
 await assert.rejects(()=>pagedStudents.listPage({pageSize:1,cursor:{...firstDoc,ref:{path:"schools/school_A001/marks/s01"}}}),/cursor/);
 
