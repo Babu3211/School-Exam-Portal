@@ -33,7 +33,8 @@ service cloud.firestore {
    match /students/{docId} {
     allow get, list: if reader(schoolId);
     allow create: if schoolAdmin(schoolId) && validNewStudent();
-    allow update, delete: if schoolAdmin(schoolId);
+    allow update: if schoolAdmin(schoolId) && validNewStudent();
+    allow delete: if schoolAdmin(schoolId);
    }
    match /{collection}/{docId} {
     allow get, list: if collection in ['staff','classes','subjects','exams','marks','attendance','mark_settings'] && reader(schoolId);
