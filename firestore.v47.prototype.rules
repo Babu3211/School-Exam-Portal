@@ -90,11 +90,547 @@ service cloud.firestore {
     }
     function attendanceShape(schoolId) {
       return request.resource.data.keys().hasAll(['schoolId','classId','term','studentId','present']) &&
+        request.resource.data.keys().hasOnly(['schoolId','classId','term','studentId','present','attendanceDate','updatedAt']) &&
+        request.resource.data.schoolId == schoolId &&
+        request.resource.data.classId is string &&
+        studentExists(schoolId, request.resource.data.studentId, request.resource.data.classId) &&
+        request.resource.data.present is bool &&
+        request.resource.data.get('attendanceDate', '') is string &&
+        request.resource.data.get('attendanceDate', '').matches('^([0-9]{4})-([0-9]{2})-([0-9]{2})
+    }
+    function unchangedMarksIdentity() {
+      return request.resource.data.schoolId == resource.data.schoolId &&
+        request.resource.data.classId == resource.data.classId &&
+        request.resource.data.subjectId == resource.data.subjectId &&
+        request.resource.data.term == resource.data.term &&
+        request.resource.data.studentId == resource.data.studentId;
+    }
+    function unchangedAttendanceIdentity() {
+      return request.resource.data.schoolId == resource.data.schoolId &&
+        request.resource.data.classId == resource.data.classId &&
+        request.resource.data.term == resource.data.term &&
+        request.resource.data.studentId == resource.data.studentId;
+    }
+    function canEditMarks(schoolId) {
+      return !viewer(schoolId) && (admin(schoolId) ||
+        (role(schoolId, 'subject_teacher') &&
+         assignmentAllowed(schoolId,request.auth.uid + '_' + request.resource.data.classId + '_' + request.resource.data.subjectId,
+           request.resource.data.classId,request.resource.data.term,'subject_teacher')));
+    }
+    function canEditAttendance(schoolId) {
+      return !viewer(schoolId) && (admin(schoolId) ||
+        (role(schoolId, 'class_teacher') &&
+         assignmentAllowed(schoolId,request.auth.uid + '_' + request.resource.data.classId,
+           request.resource.data.classId,request.resource.data.term,'class_teacher')));
+    }
+    // Spark-only platform-admin bootstrap, no self-enrollment.
+    function validNewSchool(schoolId) {
+      return request.resource.data.keys().hasAll(['schoolId','name','iemisCode','annualFeeNpr','status','subscriptionStatus']) &&
+        request.resource.data.keys().hasOnly(['schoolId','name','iemisCode','annualFeeNpr','status','subscriptionStatus']) &&
+        request.resource.data.schoolId == schoolId &&
+        schoolId.matches('^[a-zA-Z0-9_-]{8,64}$') &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 200 &&
+        request.resource.data.iemisCode is string &&
+        request.resource.data.iemisCode.matches('^[A-Za-z0-9_-]{3,32}$') &&
+        request.resource.data.annualFeeNpr == 0 &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.subscriptionStatus == 'free' &&
+        getAfter(/databases/$(database)/documents/v47_iemis_index/$(request.resource.data.iemisCode)).data.schoolId == schoolId &&
+        existsAfter(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.auth.uid)) &&
+        getAfter(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.auth.uid)).data.roles == ['school_admin'];
+    }
+    function validNewSchoolMember(schoolId, uid) {
+      return request.resource.data.keys().hasAll(['uid','schoolId','roles','active']) &&
+        request.resource.data.keys().hasOnly(['uid','schoolId','roles','active']) &&
+        request.resource.data.uid == uid &&
+        uid == request.auth.uid &&
+        request.resource.data.schoolId == schoolId &&
+        request.resource.data.active == true &&
+        request.resource.data.roles == ['school_admin'] &&
+        !exists(/databases/$(database)/documents/schools/$(schoolId)) &&
+        existsAfter(/databases/$(database)/documents/schools/$(schoolId));
+    }
+    // Remaining role changes require a reviewed trusted workflow.
+    match /v47_iemis_index/{iemisCode} {
+      allow get: if platformAdmin();
+      allow list: if false;
+      allow create: if platformAdmin() &&
+        iemisCode.matches('^[A-Za-z0-9_-]{3,32}$') &&
+        request.resource.data.keys().hasOnly(['schoolId','iemisCode']) &&
+        request.resource.data.keys().hasAll(['schoolId','iemisCode']) &&
+        request.resource.data.iemisCode == iemisCode &&
+        request.resource.data.schoolId is string &&
+        getAfter(/databases/$(database)/documents/schools/$(request.resource.data.schoolId)).data.iemisCode == iemisCode;
+      allow update, delete: if false;
+    }
+    match /platform_admins/{uid} {
+      // Spark Web SDK: a signed-in user may read only their own bootstrap status.
+      // No client can create, update or delete platform admin privileges.
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
+    match /schools/{schoolId} {
+      allow read: if member(schoolId) || platformAdmin();
+      allow create: if platformAdmin() && validNewSchool(schoolId);
+      // Spark activation: only a pre-enrolled platform admin may activate
+      // an existing pending school without changing identity or billing fields.
+      allow update: if platformAdmin() &&
+        resource.data.status == 'pending' &&
+        request.resource.data.status == 'active' &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+      allow delete: if false;
+      // Invitation proposals are immutable. Target users must accept with their own Auth session.
+      match /invitations/{uid} {
+        allow get: if admin(schoolId) || (request.auth != null && request.auth.uid == uid);
+        allow list: if admin(schoolId);
+        allow create: if admin(schoolId) &&
+          uid != request.auth.uid &&
+          request.resource.data.keys().hasOnly(['uid','schoolId','roles','active']) &&
+          request.resource.data.keys().hasAll(['uid','schoolId','roles','active']) &&
+          request.resource.data.uid == uid &&
+          request.resource.data.schoolId == schoolId &&
+          request.resource.data.active == true &&
+          request.resource.data.roles is list &&
+          request.resource.data.roles.size() == 1 &&
+          request.resource.data.roles.hasOnly(['viewer','subject_teacher','class_teacher']) &&
+          !exists(/databases/$(database)/documents/schools/$(schoolId)/members/$(uid));
+        allow update, delete: if false;
+      }
+      match /members/{uid} {
+        allow read: if member(schoolId) && (request.auth.uid == uid || admin(schoolId));
+        // Initial school admin is created only in the platform-admin bootstrap batch.
+        allow create: if platformAdmin() && validNewSchoolMember(schoolId, uid);
+        // A target user accepts their own immutable invitation.
+        allow create: if request.auth != null &&
+          get(/databases/$(database)/documents/schools/$(schoolId)).data.status == 'active' &&
+          request.auth.uid == uid &&
+          request.resource.data.keys().hasOnly(['uid','schoolId','roles','active']) &&
+          request.resource.data.keys().hasAll(['uid','schoolId','roles','active']) &&
+          request.resource.data.uid == uid &&
+          request.resource.data.schoolId == schoolId &&
+          request.resource.data.active == true &&
+          exists(/databases/$(database)/documents/schools/$(schoolId)/invitations/$(uid)) &&
+          request.resource.data == get(/databases/$(database)/documents/schools/$(schoolId)/invitations/$(uid)).data;
+        allow update: if admin(schoolId) &&
+          uid != request.auth.uid &&
+          resource.data.uid == uid &&
+          resource.data.schoolId == schoolId &&
+          resource.data.roles is list &&
+          resource.data.roles.size() == 1 &&
+          resource.data.roles.hasOnly(['viewer','subject_teacher','class_teacher']) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active']) &&
+          request.resource.data.active is bool;
+        allow delete: if false;
+      }
+      match /subscriptions/{id} {
+        allow read: if admin(schoolId) || platformAdmin();
+        allow write: if false;
+      }
+      match /students/{id} {
+        allow read: if member(schoolId);
+        allow create: if admin(schoolId) && studentCreateShape(schoolId);
+        // Legacy V46 student records may have additional fields; retain their
+        // schema while forbidding cross-school identity changes.
+        allow update: if admin(schoolId) &&
+          resource.data.get('schoolId', schoolId) == schoolId &&
+          request.resource.data.schoolId == schoolId;
+        allow delete: if false;
+      }
+      match /staff/{id} {
+        allow read: if member(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
+      }
+      // V46 school-owned reference collections: only school admins may modify.
+      match /classes/{id} {
+        allow read: if member(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
+      }
+      match /subjects/{id} {
+        allow read: if member(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
+      }
+      match /exams/{id} {
+        allow read: if member(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
+      }
+      match /mark_settings/{id} {
+        allow read: if member(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
+      }
+      match /school_settings/{id} {
+        allow read: if member(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
+      }
+      match /certificates/{id} {
+        allow read: if member(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
+      }
+      // Sensitive audit trail and role mapping: trusted server only.
+      match /audit_logs/{id} {
+        allow read: if admin(schoolId);
+        allow write: if false;
+      }
+      match /user_roles/{id} {
+        allow read: if admin(schoolId);
+        allow write: if false;
+      }
+      // Publishing is withheld until explicit public-result authorization design.
+      match /public_result_exams/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /public_result_lookup/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /public_results/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /school_gallery/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /school_public_branding/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /assignments/{id} {
+        allow read: if member(schoolId) && (admin(schoolId) || resource.data.uid == request.auth.uid);
+        allow create: if admin(schoolId) &&
+          request.resource.data.keys().hasAll(['uid','schoolId','classId','kind','active','terms']) &&
+          request.resource.data.keys().hasOnly(['uid','schoolId','classId','kind','active','terms','subjectId']) &&
+          request.resource.data.schoolId == schoolId &&
+          request.resource.data.uid is string &&
+          request.resource.data.uid.size() > 0 &&
+          request.resource.data.classId is string &&
+          request.resource.data.classId.size() > 0 &&
+          request.resource.data.kind in ['subject_teacher','class_teacher'] &&
+          ((request.resource.data.kind == 'class_teacher' &&
+            id == request.resource.data.uid + '_' + request.resource.data.classId) ||
+           (request.resource.data.kind == 'subject_teacher' &&
+            request.resource.data.keys().hasAll(['subjectId']) &&
+            request.resource.data.subjectId is string &&
+            request.resource.data.subjectId.size() > 0 &&
+            id == request.resource.data.uid + '_' + request.resource.data.classId + '_' + request.resource.data.subjectId)) &&
+          request.resource.data.active == true &&
+          request.resource.data.terms is list &&
+          request.resource.data.terms.size() > 0 &&
+          request.resource.data.terms.size() <= 3 &&
+          request.resource.data.terms.hasOnly(['first','second','final']) &&
+          exists(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.resource.data.uid)) &&
+          get(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.resource.data.uid)).data.active == true &&
+          get(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.resource.data.uid)).data.roles.hasAny([request.resource.data.kind]);
+        allow update: if admin(schoolId) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active']) &&
+          request.resource.data.active is bool;
+        allow delete: if false;
+      }
+      match /marks/{id} {
+        allow read: if member(schoolId);
+        allow create: if marksShape(schoolId) && canEditMarks(schoolId);
+        allow update: if marksShape(schoolId) && unchangedMarksIdentity() && canEditMarks(schoolId);
+        allow delete: if false;
+      }
+      match /attendance/{id} {
+        allow read: if member(schoolId);
+        allow create: if attendanceShape(schoolId) && canEditAttendance(schoolId);
+        allow update: if attendanceShape(schoolId) && unchangedAttendanceIdentity() && canEditAttendance(schoolId);
+        allow delete: if false;
+      }
+      match /{document=**} { allow read, write: if false; }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+) &&
+        exists(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(subjectId));
+    }
+    function marksShape(schoolId) {
+      return request.resource.data.keys().hasAll(['schoolId','classId','subjectId','term','studentId','score']) &&
+        request.resource.data.keys().hasOnly(['schoolId','classId','subjectId','term','studentId','score','updatedAt']) &&
+        request.resource.data.schoolId == schoolId &&
+        request.resource.data.classId is string &&
+        subjectExists(schoolId, request.resource.data.subjectId) &&
+        studentExists(schoolId, request.resource.data.studentId, request.resource.data.classId) &&
+        request.resource.data.score is number &&
+        request.resource.data.score >= 0 &&
+        request.resource.data.score <= 100 &&
+        validTerm(request.resource.data.term);
+    }
+    function attendanceShape(schoolId) {
+      return request.resource.data.keys().hasAll(['schoolId','classId','term','studentId','present']) &&
         request.resource.data.keys().hasOnly(['schoolId','classId','term','studentId','present','updatedAt']) &&
         request.resource.data.schoolId == schoolId &&
         request.resource.data.classId is string &&
         studentExists(schoolId, request.resource.data.studentId, request.resource.data.classId) &&
         request.resource.data.present is bool &&
+        validTerm(request.resource.data.term);
+    }
+    function unchangedMarksIdentity() {
+      return request.resource.data.schoolId == resource.data.schoolId &&
+        request.resource.data.classId == resource.data.classId &&
+        request.resource.data.subjectId == resource.data.subjectId &&
+        request.resource.data.term == resource.data.term &&
+        request.resource.data.studentId == resource.data.studentId;
+    }
+    function unchangedAttendanceIdentity() {
+      return request.resource.data.schoolId == resource.data.schoolId &&
+        request.resource.data.classId == resource.data.classId &&
+        request.resource.data.term == resource.data.term &&
+        request.resource.data.studentId == resource.data.studentId;
+    }
+    function canEditMarks(schoolId) {
+      return !viewer(schoolId) && (admin(schoolId) ||
+        (role(schoolId, 'subject_teacher') &&
+         assignmentAllowed(schoolId,request.auth.uid + '_' + request.resource.data.classId + '_' + request.resource.data.subjectId,
+           request.resource.data.classId,request.resource.data.term,'subject_teacher')));
+    }
+    function canEditAttendance(schoolId) {
+      return !viewer(schoolId) && (admin(schoolId) ||
+        (role(schoolId, 'class_teacher') &&
+         assignmentAllowed(schoolId,request.auth.uid + '_' + request.resource.data.classId,
+           request.resource.data.classId,request.resource.data.term,'class_teacher')));
+    }
+    // Spark-only platform-admin bootstrap, no self-enrollment.
+    function validNewSchool(schoolId) {
+      return request.resource.data.keys().hasAll(['schoolId','name','iemisCode','annualFeeNpr','status','subscriptionStatus']) &&
+        request.resource.data.keys().hasOnly(['schoolId','name','iemisCode','annualFeeNpr','status','subscriptionStatus']) &&
+        request.resource.data.schoolId == schoolId &&
+        schoolId.matches('^[a-zA-Z0-9_-]{8,64}$') &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 200 &&
+        request.resource.data.iemisCode is string &&
+        request.resource.data.iemisCode.matches('^[A-Za-z0-9_-]{3,32}$') &&
+        request.resource.data.annualFeeNpr == 0 &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.subscriptionStatus == 'free' &&
+        getAfter(/databases/$(database)/documents/v47_iemis_index/$(request.resource.data.iemisCode)).data.schoolId == schoolId &&
+        existsAfter(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.auth.uid)) &&
+        getAfter(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.auth.uid)).data.roles == ['school_admin'];
+    }
+    function validNewSchoolMember(schoolId, uid) {
+      return request.resource.data.keys().hasAll(['uid','schoolId','roles','active']) &&
+        request.resource.data.keys().hasOnly(['uid','schoolId','roles','active']) &&
+        request.resource.data.uid == uid &&
+        uid == request.auth.uid &&
+        request.resource.data.schoolId == schoolId &&
+        request.resource.data.active == true &&
+        request.resource.data.roles == ['school_admin'] &&
+        !exists(/databases/$(database)/documents/schools/$(schoolId)) &&
+        existsAfter(/databases/$(database)/documents/schools/$(schoolId));
+    }
+    // Remaining role changes require a reviewed trusted workflow.
+    match /v47_iemis_index/{iemisCode} {
+      allow get: if platformAdmin();
+      allow list: if false;
+      allow create: if platformAdmin() &&
+        iemisCode.matches('^[A-Za-z0-9_-]{3,32}$') &&
+        request.resource.data.keys().hasOnly(['schoolId','iemisCode']) &&
+        request.resource.data.keys().hasAll(['schoolId','iemisCode']) &&
+        request.resource.data.iemisCode == iemisCode &&
+        request.resource.data.schoolId is string &&
+        getAfter(/databases/$(database)/documents/schools/$(request.resource.data.schoolId)).data.iemisCode == iemisCode;
+      allow update, delete: if false;
+    }
+    match /platform_admins/{uid} {
+      // Spark Web SDK: a signed-in user may read only their own bootstrap status.
+      // No client can create, update or delete platform admin privileges.
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
+    match /schools/{schoolId} {
+      allow read: if member(schoolId) || platformAdmin();
+      allow create: if platformAdmin() && validNewSchool(schoolId);
+      // Spark activation: only a pre-enrolled platform admin may activate
+      // an existing pending school without changing identity or billing fields.
+      allow update: if platformAdmin() &&
+        resource.data.status == 'pending' &&
+        request.resource.data.status == 'active' &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+      allow delete: if false;
+      // Invitation proposals are immutable. Target users must accept with their own Auth session.
+      match /invitations/{uid} {
+        allow get: if admin(schoolId) || (request.auth != null && request.auth.uid == uid);
+        allow list: if admin(schoolId);
+        allow create: if admin(schoolId) &&
+          uid != request.auth.uid &&
+          request.resource.data.keys().hasOnly(['uid','schoolId','roles','active']) &&
+          request.resource.data.keys().hasAll(['uid','schoolId','roles','active']) &&
+          request.resource.data.uid == uid &&
+          request.resource.data.schoolId == schoolId &&
+          request.resource.data.active == true &&
+          request.resource.data.roles is list &&
+          request.resource.data.roles.size() == 1 &&
+          request.resource.data.roles.hasOnly(['viewer','subject_teacher','class_teacher']) &&
+          !exists(/databases/$(database)/documents/schools/$(schoolId)/members/$(uid));
+        allow update, delete: if false;
+      }
+      match /members/{uid} {
+        allow read: if member(schoolId) && (request.auth.uid == uid || admin(schoolId));
+        // Initial school admin is created only in the platform-admin bootstrap batch.
+        allow create: if platformAdmin() && validNewSchoolMember(schoolId, uid);
+        // A target user accepts their own immutable invitation.
+        allow create: if request.auth != null &&
+          get(/databases/$(database)/documents/schools/$(schoolId)).data.status == 'active' &&
+          request.auth.uid == uid &&
+          request.resource.data.keys().hasOnly(['uid','schoolId','roles','active']) &&
+          request.resource.data.keys().hasAll(['uid','schoolId','roles','active']) &&
+          request.resource.data.uid == uid &&
+          request.resource.data.schoolId == schoolId &&
+          request.resource.data.active == true &&
+          exists(/databases/$(database)/documents/schools/$(schoolId)/invitations/$(uid)) &&
+          request.resource.data == get(/databases/$(database)/documents/schools/$(schoolId)/invitations/$(uid)).data;
+        allow update: if admin(schoolId) &&
+          uid != request.auth.uid &&
+          resource.data.uid == uid &&
+          resource.data.schoolId == schoolId &&
+          resource.data.roles is list &&
+          resource.data.roles.size() == 1 &&
+          resource.data.roles.hasOnly(['viewer','subject_teacher','class_teacher']) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active']) &&
+          request.resource.data.active is bool;
+        allow delete: if false;
+      }
+      match /subscriptions/{id} {
+        allow read: if admin(schoolId) || platformAdmin();
+        allow write: if false;
+      }
+      match /students/{id} {
+        allow read: if member(schoolId);
+        allow create: if admin(schoolId) && studentCreateShape(schoolId);
+        // Legacy V46 student records may have additional fields; retain their
+        // schema while forbidding cross-school identity changes.
+        allow update: if admin(schoolId) &&
+          resource.data.get('schoolId', schoolId) == schoolId &&
+          request.resource.data.schoolId == schoolId;
+        allow delete: if false;
+      }
+      match /staff/{id} {
+        allow read: if member(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
+      }
+      // V46 school-owned reference collections: only school admins may modify.
+      match /classes/{id} {
+        allow read: if member(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
+      }
+      match /subjects/{id} {
+        allow read: if member(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
+      }
+      match /exams/{id} {
+        allow read: if member(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
+      }
+      match /mark_settings/{id} {
+        allow read: if member(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
+      }
+      match /school_settings/{id} {
+        allow read: if member(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
+      }
+      match /certificates/{id} {
+        allow read: if member(schoolId);
+        allow create, update: if admin(schoolId);
+        allow delete: if false;
+      }
+      // Sensitive audit trail and role mapping: trusted server only.
+      match /audit_logs/{id} {
+        allow read: if admin(schoolId);
+        allow write: if false;
+      }
+      match /user_roles/{id} {
+        allow read: if admin(schoolId);
+        allow write: if false;
+      }
+      // Publishing is withheld until explicit public-result authorization design.
+      match /public_result_exams/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /public_result_lookup/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /public_results/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /school_gallery/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /school_public_branding/{id} {
+        allow read: if member(schoolId);
+        allow write: if false;
+      }
+      match /assignments/{id} {
+        allow read: if member(schoolId) && (admin(schoolId) || resource.data.uid == request.auth.uid);
+        allow create: if admin(schoolId) &&
+          request.resource.data.keys().hasAll(['uid','schoolId','classId','kind','active','terms']) &&
+          request.resource.data.keys().hasOnly(['uid','schoolId','classId','kind','active','terms','subjectId']) &&
+          request.resource.data.schoolId == schoolId &&
+          request.resource.data.uid is string &&
+          request.resource.data.uid.size() > 0 &&
+          request.resource.data.classId is string &&
+          request.resource.data.classId.size() > 0 &&
+          request.resource.data.kind in ['subject_teacher','class_teacher'] &&
+          ((request.resource.data.kind == 'class_teacher' &&
+            id == request.resource.data.uid + '_' + request.resource.data.classId) ||
+           (request.resource.data.kind == 'subject_teacher' &&
+            request.resource.data.keys().hasAll(['subjectId']) &&
+            request.resource.data.subjectId is string &&
+            request.resource.data.subjectId.size() > 0 &&
+            id == request.resource.data.uid + '_' + request.resource.data.classId + '_' + request.resource.data.subjectId)) &&
+          request.resource.data.active == true &&
+          request.resource.data.terms is list &&
+          request.resource.data.terms.size() > 0 &&
+          request.resource.data.terms.size() <= 3 &&
+          request.resource.data.terms.hasOnly(['first','second','final']) &&
+          exists(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.resource.data.uid)) &&
+          get(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.resource.data.uid)).data.active == true &&
+          get(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.resource.data.uid)).data.roles.hasAny([request.resource.data.kind]);
+        allow update: if admin(schoolId) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active']) &&
+          request.resource.data.active is bool;
+        allow delete: if false;
+      }
+      match /marks/{id} {
+        allow read: if member(schoolId);
+        allow create: if marksShape(schoolId) && canEditMarks(schoolId);
+        allow update: if marksShape(schoolId) && unchangedMarksIdentity() && canEditMarks(schoolId);
+        allow delete: if false;
+      }
+      match /attendance/{id} {
+        allow read: if member(schoolId);
+        allow create: if attendanceShape(schoolId) && canEditAttendance(schoolId);
+        allow update: if attendanceShape(schoolId) && unchangedAttendanceIdentity() && canEditAttendance(schoolId);
+        allow delete: if false;
+      }
+      match /{document=**} { allow read, write: if false; }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+) &&
         validTerm(request.resource.data.term);
     }
     function unchangedMarksIdentity() {
