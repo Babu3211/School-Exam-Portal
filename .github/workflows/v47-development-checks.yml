@@ -133,6 +133,9 @@ jobs:
       - name: V47 Spark platform-admin Firestore emulator authorization
         if: success() || failure()
         run: npx firebase emulators:exec --project v47-spark-platform-rules-test --only firestore --config firebase.v47.emulator.json "node scripts/test-v47-spark-platform-rules.mjs"
+      - name: Verify school module return navigation
+        if: success() || failure()
+        run: node scripts/test-v47-module-return-navigation.mjs
       - name: Verify V47 school workspace deep links
         if: success() || failure()
         run: node scripts/test-v47-workspace-school-deeplink.mjs
