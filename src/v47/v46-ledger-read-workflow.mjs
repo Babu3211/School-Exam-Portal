@@ -16,5 +16,18 @@ export async function prepareV47SchoolLedger({session,schoolId,term,classNo,exam
  if(!Array.isArray(students)||!Array.isArray(subjects)||!Array.isArray(marks))
   throw new Error("Ledger selectors must return arrays");
  if(!marks.length)throw new Error("No compatible marks selected for this exam");
+ // Selectors may filter, but must not fabricate or alter verified records.
+ const studentSource=new Set(data.students);
+ const markSource=new Set(data.marks);
+ const subjectNames=new Set(data.subjects.map(s=>String(s.name??"")));
+ if(students.some(s=>!studentSource.has(s)||Number(s.classNo??s.classId)!==Number(classNo)))
+  throw new Error("Student selection is not from the verified school/class");
+ if(subjects.some(s=>typeof s!=="string"||!subjectNames.has(s)))
+  throw new Error("Subject selection is not from verified school subjects");
+ if(marks.some(m=>!markSource.has(m)||m.examId!==examId||Number(m.classNo??m.classId)!==Number(classNo)))
+  throw new Error("Mark selection is not from the verified school exam/class");
+ const selectedIds=new Set(students.map(s=>s.id));
+ if(marks.some(m=>!selectedIds.has(m.studentId)))
+  throw new Error("Selected mark belongs to a student outside this class");
  return renderV47SchoolLedger({schoolId,term,classNo,examId,schoolName,schoolCode,mode,students,subjects,marks,creditFor,componentsFor,applicable});
 }
