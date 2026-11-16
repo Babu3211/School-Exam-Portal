@@ -79,7 +79,8 @@ export function auditV47LedgerReadiness(data,{schoolId}={}){
  const invalidScores=data.marks.filter(m=>Array.isArray(m.scores)&&m.scores.some(s=>{
   if(!s||typeof s!=="object")return true;
   const obtained=Number(s.obtained),full=Number(s.fullMarks);
-  return s.obtained==null||s.fullMarks==null||!Number.isFinite(obtained)||!Number.isFinite(full)||full<=0||obtained<0||obtained>full;
+  const numeric=v=>typeof v==="number"||typeof v==="string"&&v.trim()!=="";
+  return !numeric(s.obtained)||!numeric(s.fullMarks)||!Number.isFinite(obtained)||!Number.isFinite(full)||full<=0||obtained<0||obtained>full;
  })).length;
  if(invalidScores)blockers.push(invalidScores+" marks have invalid assessment scores or full marks.");
 
