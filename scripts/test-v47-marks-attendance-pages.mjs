@@ -4,15 +4,28 @@ const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
 const builder=read("scripts/build-v47-spark-staging.mjs");
 for(const kind of ["marks","attendance"]){
  const path="prototypes/v47/spark-school-"+kind+".html",html=read(path);
- assert.match(builder,new RegExp(path.replaceAll("/","\\/").replaceAll(".","\\.")));
+ assert.ok(builder.includes(path),"staging includes "+kind);
  assert.ok(html.includes('schoolCollectionPath(id,"'+kind+'")'));
- assert.ok(html.includes('await verify(id,user)'));
- assert.ok(html.includes('m.data().schoolId!==id'));
- assert.ok(html.includes('m.data().uid!==user.uid'));
- assert.ok(html.includes('orderBy("__name__")'));
- assert.ok(html.includes('limit(20)'));
+ assert.ok(html.includes("verifyV47BrowserMembership({schoolId:id,uid:user.uid,school:s.data(),member:m.data()})"));
+ assert.ok(html.includes("createV46BrowserTenantGateway({"));
+ assert.ok(html.includes("tenantRecords.listPage({pageSize:20,cursor})"));
+ assert.ok(html.includes("const after=await verify(id,user)"));
+ assert.ok(html.includes('after.roles.join(",")!==before.roles.join(",")'));
  assert.ok(html.includes('td.textContent=String(value)'));
  assert.ok(html.includes('config.projectId!=="smss-exam-portal-v47"'));
- assert.doesNotMatch(html,/exam-portal-smss-95016|addDoc\(|updateDoc\(|setDoc\(|deleteDoc\(/);
+ assert.ok(html.includes('entryForm.addEventListener("submit"'));
+ assert.ok(html.includes('await addDoc(collection(db,schoolCollectionPath(id,"'+kind+'")),payload)'));
+ assert.ok(html.includes('if(token!==epoch||auth.currentUser?.uid!==user.uid)throw Error("School selection changed")'));
+ assert.ok(html.includes('entryPanel.hidden=!canEnter'));
+ assert.ok(html.includes('before.roles.includes("viewer")'));
+ assert.doesNotMatch(html,/exam-portal-smss-95016|updateDoc\(|setDoc\(|deleteDoc\(/);
+ if(kind==="marks"){
+  assert.ok(html.includes('access.roles.includes("subject_teacher")'));
+  assert.ok(html.includes("Number.isFinite(payload.score)"));
+  assert.ok(html.includes("payload.score>100"));
+ }else{
+  assert.ok(html.includes('access.roles.includes("class_teacher")'));
+  assert.ok(html.includes('present:fields.get("present")==="true"'));
+ }
 }
-console.log("V47 marks and attendance browser isolation static checks passed");
+console.log("V47 marks and attendance tenant-scoped write/read UI static checks passed");
