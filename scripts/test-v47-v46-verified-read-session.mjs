@@ -55,6 +55,9 @@ const second=await paging.listPage("students",{pageSize:1,cursor:first.nextCurso
 assert.deepEqual(second.records,[]);
 assert.equal(second.nextCursor,null);
 await assert.rejects(paging.listPage("staff",{cursor:first.nextCursor}));
+auth.currentUser={uid:"other_user"};
+await assert.rejects(paging.listPage("students",{pageSize:1,cursor:first.nextCursor}));
+auth.currentUser={uid};
 await assert.rejects(paging.listPage("public_results"));
 await assert.rejects(paging.listPage("students",{pageSize:51}));
 await assert.rejects(paging.listPage("students",{cursor:{id:"student1",ref:pageDoc.ref,data:pageDoc.data}}));
