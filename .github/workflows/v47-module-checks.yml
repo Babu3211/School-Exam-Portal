@@ -27,5 +27,11 @@ jobs:
         run: node scripts/test-v47-school-membership.mjs
       - name: Pagination and deduplication
         run: node scripts/test-v47-pagination.mjs
+      - name: School context isolation
+        run: node scripts/test-v47-school-context.mjs
+      - name: Audit event validation
+        run: node scripts/test-v47-audit-events.mjs
+      - name: Super Admin registration authorization
+        run: node scripts/test-v47-registration-policy.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
