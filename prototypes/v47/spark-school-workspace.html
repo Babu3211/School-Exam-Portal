@@ -99,6 +99,14 @@ else{
         throw new Error("School access changed");
        const next=await getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),startAfter(cursor),limit(PAGE_SIZE)));
        if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
+       // Do not render a fetched page if membership was revoked during the request.
+       const [currentSchool,currentMember]=await Promise.all([
+        getDoc(doc(db,"schools",schoolId)),getDoc(doc(db,"schools",schoolId,"members",user.uid))
+       ]);
+       if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
+       if(!currentSchool.exists() || currentSchool.data().status!=="active" ||
+          !currentMember.exists() || currentMember.data().active!==true ||
+          !validRoles(currentMember.data().roles))throw new Error("School access changed");
        next.docs.forEach(renderRecord);
        if(next.docs.length)cursor=next.docs[next.docs.length-1];
        heading.textContent=kind+" ("+list.children.length+" shown; paginated)";
