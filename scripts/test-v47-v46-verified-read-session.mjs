@@ -65,6 +65,22 @@ memberRoles=["viewer"];
 await assert.rejects(paging.listPage("public_results"));
 await assert.rejects(paging.listPage("students",{pageSize:51}));
 await assert.rejects(paging.listPage("students",{cursor:{id:"student1",ref:pageDoc.ref,data:pageDoc.data}}));
+// A page read that loses membership before the final check must not return
+// records or an issued next-page token. A fresh verified read may recover.
+let revokeOnPage=true;
+const revokedPaging=createV46VerifiedReadSession({...options,
+ orderByFn:field=>({field}),startAfterFn:cursor=>({after:cursor.id}),
+ getDocsFn:async()=>{
+  if(revokeOnPage)active=false;
+  return {docs:[pageDoc]};
+ }
+});
+await assert.rejects(revokedPaging.listPage("students",{pageSize:1}),/School access unavailable/);
+active=true;
+revokeOnPage=false;
+const recovered=await revokedPaging.listPage("students",{pageSize:1});
+assert.deepEqual(recovered.records,[{name:"Test",id:"student1"}]);
+assert.deepEqual(recovered.nextCursor,{pageToken:true});
 assert.equal(Object.hasOwn(session,"write"),false);
 assert.equal(Object.hasOwn(session,"collection"),false);
 console.log("Verified V46 school read session checks passed");
