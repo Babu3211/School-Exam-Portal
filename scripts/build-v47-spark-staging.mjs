@@ -36,6 +36,7 @@ for(const path of imports)await include(path);
 // Reuse the original V46 pure grade calculation module unchanged; no V46 Firebase code.
 await mkdir(output,{recursive:true});
 await copyFile(join(root,"iemis-ledger.js"),join(output,"iemis-ledger.js"));
+await copyFile(join(root,"iemis-entry.js"),join(output,"iemis-entry.js"));
 // An optional public Firebase Web config is accepted only for the isolated V47 project.
  // No config means the page stays safely disabled rather than connecting to V46.
  await mkdir(join(output,"prototypes","v47"),{recursive:true});
