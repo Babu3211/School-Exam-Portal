@@ -9,6 +9,9 @@ for(const name of ["students","staff","marks","attendance"]){
  assert.ok(html.includes("createV46BrowserTenantGateway({"),name+" tenant gateway");
  assert.ok(html.includes("tenantRecords.listPage({pageSize:20,cursor})"),name+" bounded cursor paging");
  assert.ok(html.includes("cursor=page.nextCursor"),name+" next cursor");
+ assert.ok(html.includes("const before=await verify(id,user)"),name+" prefetch verification");
+ assert.ok(html.includes("const after=await verify(id,user)"),name+" postfetch verification");
+ assert.ok(html.includes('after.roles.join(",")!==before.roles.join(",")'),name+" rejects role changes");
  assert.ok(!html.includes("const snap=await getDocs(base)"),name+" bypasses gateway");
 }
 console.log("V47 students/staff/marks/attendance shared membership guard checks passed");
