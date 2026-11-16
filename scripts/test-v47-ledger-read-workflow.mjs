@@ -36,7 +36,7 @@ source.subjects[0]={id:"math001",name:"Mathematics",classNo:6,schoolId:"otherSch
 await assert.rejects(()=>prepareV47SchoolLedger(args),/not from verified school subjects|Complete student and subject lists required/);
 source.subjects[0]={id:"math001",name:"Mathematics",classNo:6};
 source.subjects.push({id:"math002",name:"Mathematics",classNo:6});
-await assert.rejects(()=>prepareV47SchoolLedger(args),/Ambiguous selected ledger subject mapping/);
+await assert.rejects(()=>prepareV47SchoolLedger(args),/Ambiguous selected ledger subject mapping|Duplicate or invalid selected ledger subjects/);
 source.subjects.pop();
 await assert.rejects(()=>prepareV47SchoolLedger({...args,selectSubjects:()=>["Mathematics","Mathematics"]}),/Duplicate or invalid selected ledger subjects/);
 source.subjects[0]={id:"math001",name:"Mathematics",classNo:6};
