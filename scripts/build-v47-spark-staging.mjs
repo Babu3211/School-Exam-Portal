@@ -34,6 +34,7 @@ async function include(path){
 await rm(output,{recursive:true,force:true});
 for(const path of imports)await include(path);
 // Reuse the original V46 pure grade calculation module unchanged; no V46 Firebase code.
+await mkdir(output,{recursive:true});
 await copyFile(join(root,"iemis-ledger.js"),join(output,"iemis-ledger.js"));
 // An optional public Firebase Web config is accepted only for the isolated V47 project.
  // No config means the page stays safely disabled rather than connecting to V46.
@@ -59,8 +60,9 @@ await copyFile(join(root,"iemis-ledger.js"),join(output,"iemis-ledger.js"));
 const loader='<script src="./spark-config.js"></script>';
  // When no config was supplied, keep the prototype disconnected and show its existing error.
  for(const {page,html} of htmlPages){
-  const htmlWithLoader=configRaw?html.replace('<script type="module">',loader+'<script type="module">'):html;
+  const needsFirebase=page!=="prototypes/v47/v46-grade-calculator.html";
+  const htmlWithLoader=configRaw&&needsFirebase?html.replace('<script type="module">',loader+'<script type="module">'):html;
   await writeFile(join(output,page),htmlWithLoader);
  }
-await writeFile(join(output,"index.html"),`<!doctype html><meta charset="utf-8"><title>SMSS V47 Staging</title><p>V47 Spark staging preview. Firebase configuration must be explicitly provided for the isolated V47 project.</p><a href="/prototypes/v47/spark-school-registration.html">Open registration prototype</a><p><a href="/prototypes/v47/spark-school-workspace.html">Open read-only school workspace</a><p><a href="/prototypes/v47/v46-grade-calculator.html">Open V46 grade calculator</a></p></p>`);
+await writeFile(join(output,"index.html"),`<!doctype html><meta charset="utf-8"><title>SMSS V47 Staging</title><p>V47 Spark staging preview. Firebase configuration must be explicitly provided for the isolated V47 project.</p><a href="/prototypes/v47/spark-school-registration.html">Open registration prototype</a><p><a href="/prototypes/v47/spark-school-workspace.html">Open read-only school workspace</a><p><a href="/prototypes/v47/v46-grade-calculator.html">Open V46 grade calculator</a></p>`);
 console.log("Built isolated V47 Spark preview:",visited.size,"browser modules; no deployment");
