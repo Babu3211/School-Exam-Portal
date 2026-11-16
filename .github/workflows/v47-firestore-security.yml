@@ -16,6 +16,10 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
       - run: npm ci
       - run: node scripts/test-v47-rules-structure.mjs
       - run: npx firebase emulators:exec --project v47-isolation-test --config v47/firebase.v47.json --only firestore "node scripts/test-v47-rules-emulator.mjs"
