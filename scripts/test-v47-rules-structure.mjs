@@ -16,4 +16,6 @@ assert.doesNotMatch(wildcard,/'students'|'attendance'/,'Wildcard bypasses valida
 assert.ok(rules.includes("date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')"));
 assert.ok(rules.includes("studentId.matches('^[A-Za-z0-9_-]{1,128}$')"));
 for(const pattern of [/match \/\{collection\}\/\{docId\}/g,/function validAttendance\(docId\)/g,/match \/attendance\/\{docId\}/g])assert.equal((rules.match(pattern)||[]).length,1);
+assert.ok(rules.includes("students/$(request.resource.data.studentId)"),'Attendance must refer to a school-scoped student');
+assert.ok(rules.includes(".data['class'] == request.resource.data['class']"),'Attendance must match student class');
 console.log('V47 Firestore rules structural checks passed; emulator still required');
