@@ -8,6 +8,7 @@ export async function acceptSparkSchoolInvitation({auth,firestore,doc,getDoc,set
  if([doc,getDoc,setDoc].some(fn=>typeof fn!=="function"))throw new TypeError("Firestore Web SDK adapters required");
  const invitation=await getDoc(doc(firestore,"schools",schoolId,"invitations",uid));
  if(!invitation.exists())throw new Error("Invitation not found");
+ if(auth.currentUser?.uid!==uid || auth.currentUser?.isAnonymous)throw new Error("Session changed");
  const data=invitation.data();
  if(data.uid!==uid || data.schoolId!==schoolId || data.active!==true ||
     !Array.isArray(data.roles) || data.roles.length!==1 ||
