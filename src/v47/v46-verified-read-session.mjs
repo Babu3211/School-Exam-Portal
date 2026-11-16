@@ -28,6 +28,7 @@ export function createV46VerifiedReadSession({
   ?createV46BrowserTenantGateway({db,verifiedSchoolId:schoolId,collectionFn,docFn,getDocFn,getDocsFn,queryFn,limitFn,startAfterFn,orderByFn})
   :null;
  const pagedCollections=new Map();
+ const issuedPageTokens=new WeakMap();
  const perform=async operation=>{
   const before=await readMembership();
   const adapter=createV46TenantReadAdapter({
@@ -37,7 +38,7 @@ export function createV46VerifiedReadSession({
   });
   const result=await operation(adapter);
   const after=await readMembership();
-  if(before.uid!==after.uid || before.roles.join(",")!==after.roles.join(","))
+  if(before.uid!==after.uid || [...before.roles].sort().join(",")!==[...after.roles].sort().join(","))
    throw new Error("School access changed during read");
   return result;
  };
@@ -49,7 +50,18 @@ export function createV46VerifiedReadSession({
    if(typeof name!=="string" || !["students","staff","classes","subjects","exams","marks","attendance","certificates","mark_settings","school_settings"].includes(name))
     throw new Error("Unreviewed school collection");
    if(!pagedCollections.has(name))pagedCollections.set(name,pagedGateway.forCollection(`schools/${schoolId}/${name}`));
-   return pagedCollections.get(name).listPage(options);
+   const {cursor=null,...rest}=options??{};
+   let internalCursor=null;
+   if(cursor!==null){
+    if(typeof cursor!=="object" || !issuedPageTokens.has(cursor))throw new TypeError("Invalid page token");
+    const issued=issuedPageTokens.get(cursor);
+    if(issued.name!==name)throw new TypeError("Page token belongs to another collection");
+    internalCursor=issued.snapshot;
+   }
+   const page=await pagedCollections.get(name).listPage({...rest,cursor:internalCursor});
+   const nextCursor=page.nextCursor?Object.freeze({pageToken:true}):null;
+   if(nextCursor)issuedPageTokens.set(nextCursor,{name,snapshot:page.nextCursor});
+   return Object.freeze({records:page.records,nextCursor});
   })
  });
 }
