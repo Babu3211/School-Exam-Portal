@@ -43,6 +43,14 @@ export async function prepareV47SchoolLedger({session,schoolId,term,classNo,exam
  }
  if(marks.some(m=>!markSource.has(m)||m.examId!==examId||Number(m.classNo??m.classId)!==Number(classNo)))
   throw new Error("Mark selection is not from the verified school exam/class");
+ const expectedMarks=data.marks.filter(m=>m.examId===examId&&Number(m.classNo??m.classId)===Number(classNo));
+ const selectedMarkSet=new Set(marks);
+ if(expectedMarks.some(m=>!selectedMarkSet.has(m))||selectedMarkSet.size!==marks.length)
+  throw new Error("Incomplete or duplicate ledger marks selection");
+ const expectedStudents=data.students.filter(s=>Number(s.classNo??s.classId)===Number(classNo));
+ const selectedStudentSet=new Set(students);
+ if(expectedStudents.some(s=>!selectedStudentSet.has(s))||selectedStudentSet.size!==students.length)
+  throw new Error("Incomplete or duplicate ledger students selection");
  const selectedIds=new Set(students.map(s=>s.id));
  if(marks.some(m=>!selectedIds.has(m.studentId)))
   throw new Error("Selected mark belongs to a student outside this class");
