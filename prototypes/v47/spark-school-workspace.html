@@ -14,6 +14,7 @@ import {assertSchoolId,schoolCollectionPath} from "../../src/v47/tenant-domain.m
 const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#login-form"),logout=document.querySelector("#logout"),schoolForm=document.querySelector("#school-form"),status=document.querySelector("#status"),workspace=document.querySelector("#workspace"),tables=document.querySelector("#tables");
 let epoch=0,auth,db;
 const PAGE_SIZE=20;
+const PREVIEW_KINDS=["students","staff","classes","subjects","exams","marks","attendance","certificates","mark_settings","school_settings","public_results"];
 const validRoles=roles=>Array.isArray(roles) && roles.length>0 &&
  roles.every(role=>["school_admin","class_teacher","subject_teacher","viewer"].includes(role)) &&
  new Set(roles).size===roles.length &&
@@ -45,8 +46,14 @@ else{
    const failedSections=[];
    // Fetch independent tenant-scoped previews concurrently to reduce wait time.
    // Each query remains bounded regardless of total school enrollment.
-   const kinds=["students","staff","classes","subjects","exams","marks","attendance","certificates","mark_settings","school_settings","public_results"];
-   const results=await Promise.allSettled(kinds.map(kind=>getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),orderBy("__name__"),limit(PAGE_SIZE)))));
+   const kinds=PREVIEW_KINDS;
+   const results=[];
+   // Keep reads sequential to avoid bursts of 11 simultaneous Firestore queries on Spark.
+   for(const kind of kinds){
+    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
+    try{results.push({status:"fulfilled",value:await getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),orderBy("__name__"),limit(PAGE_SIZE)))});}
+    catch(reason){results.push({status:"rejected",reason});}
+   }
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
    for(let index=0;index<kinds.length;index++){
     const kind=kinds[index],outcome=results[index];
