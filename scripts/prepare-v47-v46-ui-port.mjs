@@ -57,12 +57,36 @@ assert.ok(!port.includes('const ADMIN_UID="'),"Legacy superadmin must not surviv
 assert.ok(changed>=140,"V46 references unexpectedly missing");
 await mkdir(output,{recursive:true});
 await writeFile(join(output,"index.html"),port);
+// Inventory non-collection Firebase entry points before attempting a live V46 port.
+// These calls can bypass a naive collection()/doc() rewrite when they use refs
+// built elsewhere, so this is a review inventory, not an authorization claim.
+const firebaseOperations=[
+ "getDoc","getDocs","setDoc","addDoc","updateDoc","deleteDoc",
+ "onSnapshot","runTransaction","writeBatch","getCountFromServer",
+ "collectionGroup","getStorage","ref","uploadBytes","deleteObject",
+ "getDownloadURL","signInWithEmailAndPassword","onAuthStateChanged"
+];
+const operationInventory=Object.fromEntries(firebaseOperations.map(name=>[
+ name,[...source.matchAll(new RegExp("\\b"+name+"\\s*\\(","g))].length
+]).filter(([,count])=>count>0));
+const riskCategories={
+ writes:["setDoc","addDoc","updateDoc","deleteDoc","runTransaction","writeBatch"],
+ realtime:["onSnapshot","collectionGroup"],
+ storage:["getStorage","uploadBytes","deleteObject","getDownloadURL"],
+ authentication:["signInWithEmailAndPassword","onAuthStateChanged"]
+};
+const reviewRequired=Object.fromEntries(Object.entries(riskCategories).map(([category,names])=>[
+ category,names.filter(name=>operationInventory[name]>0)
+]));
 await writeFile(join(output,"audit.json"),JSON.stringify({
  state:"QUARANTINED_NOT_DEPLOYABLE",source:"V46 index.html",
  literalReferencesRewritten:changed,
  dynamicVariablesScoped:[...dynamicNames],
  dynamicReferencesRewritten:dynamicReferences,
  legacyBackupRestoreRequiresReview:true,
+ firebaseOperationInventory:operationInventory,
+ additionalReviewRequired:reviewRequired,
+ deploymentApproved:false,
  unresolvedDynamicReferences:unresolved,
  blocker:"School-scoped membership verification and complete V46 module dependencies not yet integrated"
 },null,2));
