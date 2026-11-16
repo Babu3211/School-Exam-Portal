@@ -86,11 +86,11 @@ export const iemisEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&
 const fmt=v=>v===null||v===undefined?'—':String(Number(Number(v).toFixed(2)));
 export function iemisLedger({mode='number',classNo,annual=false,academicYear='',term='',subjects,students,records,examId,schoolName,schoolCode,creditFor=()=>null,label=s=>s,componentsFor=()=>[],applicable=()=>true}) {
   const e=iemisEscape,primary=classNo<=5;
-  const verifiedSixTerm=Number(classNo)===6&&!annual&&/^2083(?:\D|$)/.test(String(academicYear).replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)))&&['first','second'].includes(term);
+  const verifiedMiddleTerm=[6,7,8].includes(Number(classNo))&&!annual&&/^2083(?:\D|$)/.test(String(academicYear).replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)))&&['first','second'].includes(term);
   const verifiedNineTerm=Number(classNo)===9&&!annual&&/^2083(?:\D|$)/.test(String(academicYear).replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)))&&['first','second'].includes(term);
-  const verifiedSingleTerm=verifiedSixTerm||verifiedNineTerm;
+  const verifiedSingleTerm=verifiedMiddleTerm||verifiedNineTerm;
   const legacyTheory=iemisLegacyTheory(classNo,records,{examId});
-  subjects=iemisSubjects(subjects,verifiedSixTerm&&term==='first'&&mode==='number'?'grade':mode,classNo,{legacyTheory});
+  subjects=iemisSubjects(subjects,verifiedMiddleTerm&&term==='first'&&mode==='number'?'grade':mode,classNo,{legacyTheory});
   if(verifiedNineTerm&&mode==='number'){
     const order=['computer science','opt.ii computer science','opt.i environment science','social studies','science & technology','mathematics','english','nepali'];
     const rank=s=>{const i=order.indexOf(iemisSubjectKey(s));return i<0?order.length:i;};
