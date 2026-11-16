@@ -38,4 +38,8 @@ assert.ok(!auditV47LedgerReadiness(otherClass).blockers.some(s=>s.includes("dupl
 assert.ok(auditV47LedgerReadiness(otherClass).blockers.some(s=>s.includes("subjects from another class")));
 const normalizedSubject=auditV47LedgerReadiness({...data,marks:[{...data.marks[0],subject:" mathematics "}]});
 assert.ok(!normalizedSubject.blockers.some(s=>s.includes("unknown school subjects")));
+const examClassFallback={...scopedSubjects,students:[{id:"s1"}],marks:[{...scopedSubjects.marks[0],classNo:undefined},{...scopedSubjects.marks[1],classNo:undefined}]};
+assert.ok(auditV47LedgerReadiness(examClassFallback).blockers.some(s=>s.includes("duplicate an exam, student and subject")));
+const examClassMismatch={...examClassFallback,marks:[{...examClassFallback.marks[0],subjectId:"math7",subject:undefined}]};
+assert.ok(auditV47LedgerReadiness(examClassMismatch).blockers.some(s=>s.includes("subjects from another class")));
 console.log("V47 ledger readiness audit checks passed");
