@@ -59,22 +59,22 @@ assert.ok(changed>=140,"V46 references unexpectedly missing");
 // All executable scripts, inline event handlers, and external script loaders are
 // removed. This is NOT an operational app and is never copied to staging hosting.
 let visual=source
- .replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script\\s*>/gi,"")
- .replace(/\\s+on[a-z]+\\s*=\\s*(?:"[^"]*"|'[^']*'|[^\\s>]+)/gi,"")
- .replace(/\\s+href\\s*=\\s*(["'])\\s*javascript:[\\s\\S]*?\\1/gi,"")
- .replace(/\\s+src\\s*=\\s*(["'])\\s*javascript:[\\s\\S]*?\\1/gi,"");
+ .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi,"")
+ .replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi,"")
+ .replace(/\s+href\s*=\s*(["'])\s*javascript:[\s\S]*?\1/gi,"")
+ .replace(/\s+src\s*=\s*(["'])\s*javascript:[\s\S]*?\1/gi,"");
 visual=visual.replace(/<body([^>]*)>/i,'<body$1><aside style="position:sticky;top:0;z-index:2147483647;background:#7f1d1d;color:white;padding:12px;font:600 14px system-ui">V47 VISUAL REVIEW ONLY — V46 screens preserved without scripts; no sign-in or database access.</aside>');
-assert.ok(!/<script\\b/i.test(visual),"Visual-only V46 preview must have no scripts");
-assert.ok(!/\\son[a-z]+\\s*=/i.test(visual),"Visual-only V46 preview must have no inline event handlers");
+assert.ok(!/<script\b/i.test(visual),"Visual-only V46 preview must have no scripts");
+assert.ok(!/\son[a-z]+\s*=/i.test(visual),"Visual-only V46 preview must have no inline event handlers");
 assert.ok(!/javascript:/i.test(visual),"Visual-only V46 preview must have no JavaScript links");
 assert.ok(!visual.includes('exam-portal-smss-95016'),"Visual-only V46 preview must not include production Firebase identity");
 await mkdir(output,{recursive:true});
 await writeFile(join(output,"v46-visual-only.html"),visual);
 // Inventory every V46 screen and its DOM identity for a parity checklist.
 // Derived from the actual V46 page, never from a manually reconstructed menu.
-const screenIds=[...new Set([...source.matchAll(/<(?:section|main|article|div)\\b[^>]*\\bid\\s*=\\s*["']([^"']+)["']/gi)].map(m=>m[1]))];
-const navigationTargets=[...new Set([...source.matchAll(/(?:data-page|data-target)\\s*=\\s*["']([^"']+)["']/gi)].map(m=>m[1]))];
-const domHandlers=[...new Set([...source.matchAll(/\\b(?:onclick|onchange|onsubmit)\\s*=\\s*["']([^"']+)["']/gi)].map(m=>m[1]))];
+const screenIds=[...new Set([...source.matchAll(/<(?:section|main|article|div)\b[^>]*\bid\s*=\s*["']([^"']+)["']/gi)].map(m=>m[1]))];
+const navigationTargets=[...new Set([...source.matchAll(/(?:data-page|data-target)\s*=\s*["']([^"']+)["']/gi)].map(m=>m[1]))];
+const domHandlers=[...new Set([...source.matchAll(/\b(?:onclick|onchange|onsubmit)\s*=\s*["']([^"']+)["']/gi)].map(m=>m[1]))];
 await writeFile(join(output,"v46-screen-parity.json"),JSON.stringify({
  source:"V46 index.html",
  status:"INVENTORY_ONLY_NOT_IMPLEMENTED",
