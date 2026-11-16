@@ -19,6 +19,7 @@ const testEnv = await initializeTestEnvironment({
 
 const ADMIN = "K6uSLmqg0vWCtCuzwtxKzFpQMu62";
 const teacherUid = "teacher-001";
+const allSectionsUid = "teacher-all-sections";
 const inactiveUid = "inactive-001";
 const otherUid = "other-001";
 
@@ -32,6 +33,13 @@ async function seed() {
       subjectAssignmentClassNames: ["9"],
       subjectAssignmentSectionKeys: ["9::Mathematics::A"],
       classTeacherClassNames: ["9"]
+    });
+    await setDoc(doc(db, "user_roles", allSectionsUid), {
+      active: true,
+      roles: ["subject_teacher"],
+      subjectAssignmentKeys: ["9::Mathematics"],
+      subjectAssignmentClassNames: ["9"],
+      subjectAssignmentSectionKeys: ["9::Mathematics::ALL"]
     });
     await setDoc(doc(db, "user_roles", inactiveUid), {
       active: false, roles: ["subject_teacher"]
@@ -136,6 +144,13 @@ try {
   await assertFails(getDoc(doc(db(teacherUid), "marks", "mark-other-section")));
   await assertSucceeds(getDocs(query(collection(db(teacherUid), "marks"), where("className", "==", "9"), where("subject", "==", "Mathematics"), where("section", "==", "A"))));
   await assertFails(getDocs(query(collection(db(teacherUid), "marks"), where("className", "==", "9"), where("subject", "==", "Mathematics"))));
+  const allSectionsMarks = db(allSectionsUid);
+  await assertSucceeds(getDocs(query(collection(allSectionsMarks, "exams"), where("className", "==", "9"))));
+  const allSections = await assertSucceeds(getDocs(query(collection(allSectionsMarks, "marks"),
+    where("className", "==", "9"), where("subject", "==", "Mathematics"))));
+  if (allSections.size !== 2) throw new Error("Expected marks from both assigned sections");
+  await assertFails(getDocs(query(collection(allSectionsMarks, "marks"),
+    where("className", "==", "9"), where("subject", "==", "Science"))));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-wrong-class"), validMark({ className: "10" })));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-wrong-exam"), validMark({ examId: "missing-exam" })));
   await assertFails(setDoc(doc(db(teacherUid), "marks", "mark-score-over-limit"), validMark({
