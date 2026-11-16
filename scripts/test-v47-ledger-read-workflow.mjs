@@ -9,7 +9,7 @@ assert.match(ledger.body,/Student One/);
 assert.match(ledger.body,/40/);
 await assert.rejects(()=>prepareV47SchoolLedger({...args,examId:"not-real"}),/does not exist/);
 await assert.rejects(()=>prepareV47SchoolLedger({...args,selectMarks:()=>[]}),/No compatible marks/);
-await assert.rejects(()=>prepareV47SchoolLedger({...args,selectSubjects:()=>["English"]}),/not in selected subjects/);
+await assert.rejects(()=>prepareV47SchoolLedger({...args,selectSubjects:()=>["English"]}),/not from verified school subjects/);
 await assert.rejects(()=>prepareV47SchoolLedger({...args,selectStudents:null}),/selectors required/);
 await assert.rejects(()=>prepareV47SchoolLedger({...args,selectStudents:()=>[{...source.students[0]}]}),/not from the verified school/);
 await assert.rejects(()=>prepareV47SchoolLedger({...args,selectMarks:()=>[{...source.marks[0]}]}),/not from the verified school/);
