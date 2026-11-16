@@ -14,7 +14,7 @@ try{
   await db.doc('schools/school_001/students/s1').set({name:'A Student'});
   await db.doc('schools/school_001/marks/m1').set({score:50});
   await db.doc('schools/school_002/marks/m2').set({score:90});
-  await db.doc('schools/school_001/attendance/a1').set({present:true});
+  await db.doc('schools/school_001/attendance/2026-11-16_s1').set({date:'2026-11-16',studentId:'s1',class:'1',present:true});
   await db.doc('schools/school_002/students/s2').set({name:'B Student'});
   await db.doc('schools/school_003').set({name:'Inactive',active:false});
   await db.doc('schools/school_003/members/viewerA').set({uid:'viewerA',schoolId:'school_003',role:'viewer',active:true});
@@ -35,7 +35,7 @@ try{
  await assertSucceeds(admin.doc('schools/school_001/students/new').update({rollNo:'7'}));
  await assertSucceeds(viewer.doc('schools/school_001/students/s1').get());
  await assertSucceeds(viewer.doc('schools/school_001/marks/m1').get());
- await assertSucceeds(viewer.doc('schools/school_001/attendance/a1').get());
+ await assertSucceeds(viewer.doc('schools/school_001/attendance/2026-11-16_s1').get());
  await assertFails(viewer.doc('schools/school_002/marks/m2').get());
  await assertFails(admin.doc('schools/school_002/marks/m2').get());
  await assertFails(viewer.doc('schools/school_001/students/new').set({name:'N'}));
@@ -49,6 +49,10 @@ try{
  await assertFails(admin.doc('v47_super_admins/super1').get());
  await assertFails(superDb.doc('v47_super_admins/super1').update({active:false}));
  await assertFails(viewer.doc('schools/school_001/marks/mark1').set({score:100}));
+ await assertSucceeds(admin.doc('schools/school_001/attendance/2026-11-16_s1').set({date:'2026-11-16',studentId:'s1',class:'1',present:false}));
+ await assertFails(admin.doc('schools/school_001/attendance/invalid').set({date:'2026-11-16',studentId:'s1',class:'1',present:true}));
+ await assertFails(admin.doc('schools/school_001/attendance/2026-11-16_s2').set({date:'2026-11-16',studentId:'s2',class:'1',present:'yes'}));
+ await assertFails(viewer.doc('schools/school_001/attendance/2026-11-16_s1').update({present:true}));
  await assertSucceeds(superDb.doc('schools/school_002/students/s2').get());
  await assertFails(superDb.doc('schools/school_002').delete());
  await assertFails(admin.doc('schools/school_001/members/elevated').delete());
