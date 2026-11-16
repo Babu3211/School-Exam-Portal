@@ -220,7 +220,7 @@ try {
  const transferAttendance={...attendance,studentId:"transferredStudent"};
  await assertSucceeds(setDoc(doc(subject,"schools",schoolA,"marks","transfer_before"),transferMark));
  await assertSucceeds(setDoc(doc(classTeacher,"schools",schoolA,"attendance","transfer_before"),transferAttendance));
- await assertSucceeds(updateDoc(doc(admin,"schools",schoolA,"students","transferredStudent"),{classId:"10"}));
+ await assertSucceeds(updateDoc(doc(admin,"schools",schoolA,"students","transferredStudent"),{classId:"10",schoolId:schoolA}));
  await assertFails(setDoc(doc(subject,"schools",schoolA,"marks","transfer_after"),transferMark));
  await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","transfer_after"),transferAttendance));
 
