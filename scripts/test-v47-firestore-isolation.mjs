@@ -213,7 +213,9 @@ try {
  await assertFails(setDoc(doc(classTeacher,"schools",schoolA,"attendance","a1"),{...attendance,studentId:"student2"}));
  // A class transfer must immediately revoke writes to the student's old class.
  // Use an isolated synthetic student so the rest of the test fixtures stay intact.
- await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"students","transferredStudent"),{name:"Transfer Fixture",classId:"9"}));
+ await env.withSecurityRulesDisabled(async context=>{
+   await setDoc(doc(context.firestore(),"schools",schoolA,"students","transferredStudent"),{name:"Transfer Fixture",classId:"9"});
+ });
  const transferMark={...mark,studentId:"transferredStudent"};
  const transferAttendance={...attendance,studentId:"transferredStudent"};
  await assertSucceeds(setDoc(doc(subject,"schools",schoolA,"marks","transfer_before"),transferMark));
@@ -248,7 +250,7 @@ try {
  });
  const otherAdmin=env.authenticatedContext("adminB").firestore();
  await assertSucceeds(getDoc(doc(otherAdmin,"schools",schoolB,"students","student1")));
- await assertSucceeds(setDoc(doc(otherAdmin,"schools",schoolB,"students","student2"),{name:"Independent School"}));
+ await assertSucceeds(setDoc(doc(otherAdmin,"schools",schoolB,"students","student2"),{...validStudent,schoolId:schoolB,nameEnglish:"Independent School"}));
  await assertFails(getDoc(doc(otherAdmin,"schools",schoolA,"students","student1")));
 
  await assertSucceeds(getDoc(doc(root,"schools",schoolA)));
