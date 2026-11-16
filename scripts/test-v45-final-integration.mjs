@@ -24,3 +24,15 @@ assert.ok(rules.includes('request.resource.data.uid == request.auth.uid'),'User 
 assert.ok(activity.includes('activeWithin(x.updatedAt,120000)'),'Presence freshness required');
 assert.ok(idle.includes('if(now()-Math.max(lastActivity,read())>=idleMs)'),'Expired session must not be extended');
 console.log('V45 approved dashboard and user activity integration checks passed');
+
+const markEntry=html.slice(html.indexOf('function fillEntrySubjects()'),html.indexOf('const ledgerSubjectOrder'));
+const viewerGuard=markEntry.match(/if\(\((roleHas\('viewer'\)&&!isAdmin\(\))\)\)throw new Error\('Viewer/)?.[1];
+assert.ok(viewerGuard,'IEMIS save guard must distinguish Admin from Viewer');
+const denied=(admin,viewer)=>new Function('isAdmin','roleHas','return '+viewerGuard)(()=>admin,role=>role==='viewer'&&(admin||viewer));
+assert.equal(denied(true,false),false,'Admin can enter marks');
+assert.equal(denied(false,true),true,'Viewer remains read-only');
+assert.equal(denied(false,false),false,'Teacher remains subject to existing assignment checks');
+assert.ok(markEntry.includes("canEdit:(st,sub)=>!(roleHas('viewer')&&!isAdmin())&&iemisEntryAllowed"));
+assert.ok(markEntry.includes("if(e.target.id==='saveAllMarks'){if((roleHas('viewer')&&!isAdmin()))"));
+assert.ok(markEntry.includes("saveButton.disabled=(roleHas('viewer')&&!isAdmin())"));
+console.log('Admin Mark Entry and Viewer read-only reproduction passed.');
