@@ -8,8 +8,11 @@ assert.throws(()=>renderV47SchoolLedger({...base,mode:"publish"}),/Unsupported l
 assert.throws(()=>renderV47SchoolLedger({...base,marks:[{examId:"exam001",studentId:"student001",score:90}]}),/percentage-only marks/);
 assert.throws(()=>renderV47SchoolLedger({...base,marks:[{examId:"exam001",studentId:"other",scores:[{name:"IN",fullMarks:50,obtained:40}]}]}),/outside selected students/);
 assert.throws(()=>renderV47SchoolLedger({...base,creditFor:null}),/Verified subject credit/);
-const html=renderV47SchoolLedger(base);
-assert.equal(typeof html,"string");
-assert.ok(html.includes("Test School"));
-assert.ok(html.includes("Test Student"));
+const ledger=renderV47SchoolLedger(base);
+assert.equal(typeof ledger,"object");
+assert.ok(ledger.head.includes("Mathematics"));
+assert.ok(ledger.body.includes("Test School"));
+assert.ok(ledger.body.includes("Test Student"));
+assert.deepEqual(ledger.subjects,["Mathematics"]);
+assert.ok(Object.isFrozen(ledger));
 console.log("V47 school-scoped IEMIS ledger adapter checks passed");
