@@ -26,6 +26,8 @@ for(const kind of ["marks","attendance"]){
  assert.ok(html.includes("selectedClass!==classId"));
  assert.ok(html.includes('getDoc(doc(db,"schools",id,"students",studentId))'));
  assert.ok(html.includes('selectedStudent.data().classId!==classId'));
+ assert.ok(html.includes("const latest=await verify(id,user)"));
+ assert.ok(html.includes('latest.roles.join(",")!==before.roles.join(",")'));
  assert.ok(html.includes("studentLoading=true"));
  assert.ok(html.includes("studentGateway=null;studentCursor=null"));
  assert.ok(html.includes("studentChoice.addEventListener(\"change\""));
