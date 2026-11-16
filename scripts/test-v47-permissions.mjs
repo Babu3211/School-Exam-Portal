@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {canAccessSchool,canManageSchools} from '../v47/permissions.mjs';
+const admin={active:true,role:'school_admin',schoolId:'school_001'};
+const viewer={active:true,role:'viewer',schoolId:'school_001'};
+const teacher={active:true,role:'teacher',schoolId:'school_001'};
+const superAdmin={active:true,role:'super_admin'};
+assert.equal(canAccessSchool(admin,'school_001','write'),true);
+assert.equal(canAccessSchool(admin,'school_002','read'),false);
+assert.equal(canAccessSchool(viewer,'school_001','read'),true);
+assert.equal(canAccessSchool(viewer,'school_001','write'),false);
+assert.equal(canAccessSchool(teacher,'school_001','write'),false);
+assert.equal(canAccessSchool(superAdmin,'school_002','write'),true);
+assert.equal(canManageSchools(admin),false);
+assert.equal(canManageSchools(superAdmin),true);
+assert.equal(canAccessSchool({...admin,active:false},'school_001'),false);
+console.log('V47 role boundary tests passed');
