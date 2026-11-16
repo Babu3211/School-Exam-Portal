@@ -48,7 +48,8 @@ export function createV46VerifiedReadSession({
  return Object.freeze({
   list:(name,options)=>perform(adapter=>adapter.list(name,options)),
   get:(name,id)=>perform(adapter=>adapter.get(name,id)),
-  listPage:(name,options)=>perform(async(_adapter,identity)=>{
+  listPage:async(name,options)=>{
+   const result=await perform(async(_adapter,identity)=>{
    if(!pagedGateway)throw new Error("Firestore pagination functions required");
    if(typeof name!=="string" || !["students","staff","classes","subjects","exams","marks","attendance","certificates","mark_settings","school_settings"].includes(name))
     throw new Error("Unreviewed school collection");
@@ -64,9 +65,12 @@ export function createV46VerifiedReadSession({
     internalCursor=issued.snapshot;
    }
    const page=await pagedCollections.get(name).listPage({...rest,cursor:internalCursor});
-   const nextCursor=page.nextCursor?Object.freeze({pageToken:true}):null;
-   if(nextCursor)issuedPageTokens.set(nextCursor,{name,identity,snapshot:page.nextCursor});
-   return Object.freeze({records:page.records,nextCursor});
-  })
+   return {records:page.records,cursorSnapshot:page.nextCursor,identity};
+   });
+   // Do not issue reusable page tokens until the post-read membership check passes.
+   const nextCursor=result.cursorSnapshot?Object.freeze({pageToken:true}):null;
+   if(nextCursor)issuedPageTokens.set(nextCursor,{name,identity:result.identity,snapshot:result.cursorSnapshot});
+   return Object.freeze({records:result.records,nextCursor});
+  }
  });
 }
