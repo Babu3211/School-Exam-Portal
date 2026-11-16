@@ -48,10 +48,13 @@ const paging=createV46VerifiedReadSession({...options,
 });
 const first=await paging.listPage("students",{pageSize:1});
 assert.deepEqual(first.records,[{name:"Test",id:"student1"}]);
-assert.equal(first.nextCursor,pageDoc);
+assert.deepEqual(first.nextCursor,{pageToken:true});
+assert.equal(Object.hasOwn(first.nextCursor,"ref"),false);
+assert.equal(Object.hasOwn(first.nextCursor,"data"),false);
 const second=await paging.listPage("students",{pageSize:1,cursor:first.nextCursor});
 assert.deepEqual(second.records,[]);
 assert.equal(second.nextCursor,null);
+await assert.rejects(paging.listPage("staff",{cursor:first.nextCursor}));
 await assert.rejects(paging.listPage("public_results"));
 await assert.rejects(paging.listPage("students",{pageSize:51}));
 await assert.rejects(paging.listPage("students",{cursor:{id:"student1",ref:pageDoc.ref,data:pageDoc.data}}));
