@@ -62,7 +62,7 @@ const browserGateway=createV46BrowserTenantGateway({
  collectionFn:(_db,...parts)=>{firestoreCalls.push(parts.join("/"));return parts.join("/");},
  docFn:(_db,...parts)=>{firestoreCalls.push(parts.join("/"));return parts.join("/");},
  queryFn:(ref,lim)=>({ref,lim}),limitFn:n=>n,
- getDocsFn:async()=>({docs:[{id:"one",data:()=>({className:"1",id:"spoofed"})}]}),
+ getDocsFn:async()=>({docs:[{id:"one",ref:{path:"schools/school_A001/students/one"},data:()=>({className:"1",id:"spoofed"})}]}),
  getDocFn:async()=>({exists:()=>true,id:"one",data:()=>({name:"Student",id:"spoofed"})})
 });
 assert.equal(browserGateway.schoolId,"school_A001");
