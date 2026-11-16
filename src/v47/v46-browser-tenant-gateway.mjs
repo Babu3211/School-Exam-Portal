@@ -72,8 +72,11 @@ export function createV46BrowserTenantGateway({db,verifiedSchoolId,collectionFn,
      });
     },
     async get(documentId) {
-     const snapshot=await getDocFn(docFn(db,"schools",schoolId,collectionName,validId(documentId)));
-     return snapshot.exists()?Object.freeze({...snapshot.data(),id:snapshot.id}):null;
+     const safeDocumentId=validId(documentId);
+     const snapshot=await getDocFn(docFn(db,"schools",schoolId,collectionName,safeDocumentId));
+     if(!snapshot.exists())return null;
+     if(snapshot.id!==safeDocumentId)throw new TypeError("Unexpected Firestore document ID");
+     return Object.freeze({...snapshot.data(),id:snapshot.id});
     }
    });
   }
