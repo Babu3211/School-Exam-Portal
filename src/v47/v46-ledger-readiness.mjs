@@ -5,6 +5,17 @@ export function auditV47LedgerReadiness(data,{schoolId}={}){
  const counts=Object.freeze(Object.fromEntries(kinds.map(k=>[k,data[k].length])));
  const blockers=[];
  for(const kind of kinds)if(!counts[kind])blockers.push("No "+kind+" records available.");
+ for(const kind of kinds){
+  const ids=new Set();
+  let invalid=0,duplicate=0;
+  for(const record of data[kind]){
+   if(!record||typeof record!=="object"||typeof record.id!=="string"||!record.id){invalid++;continue;}
+   if(ids.has(record.id))duplicate++;
+   ids.add(record.id);
+  }
+  if(invalid)blockers.push(invalid+" "+kind+" records have invalid document identities.");
+  if(duplicate)blockers.push(duplicate+" "+kind+" records have duplicate document identities.");
+ }
  const studentIds=new Set(data.students.map(s=>s.id));
  const examIds=new Set(data.exams.map(e=>e.id));
  const subjectIds=new Set(data.subjects.map(s=>s.id));
