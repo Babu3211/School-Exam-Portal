@@ -17,9 +17,18 @@ let port=source.replace(literal,(full,fn,quote,name)=>{
  changed++;
  return fn+"(db,tenantCollection("+JSON.stringify(name)+")";
 });
-const dynamic=[...port.matchAll(/\b(collection|doc)\s*\(\s*db\s*,\s*([a-zA-Z_$][\w$]*)/g)].filter(m=>m[2]!=="tenantCollection").map(m=>m[0]);
-assert.ok(dynamic.length<=3,"Unexpected dynamic V46 collection references");
-assert.equal((port.match(/tenantCollection\(/g)||[]).length,changed,"Every literal reference must use tenant gateway");
+// Route all remaining variable collection names through the same fail-closed gateway.
+const dynamicSource=/\b(collection|doc)\s*\(\s*db\s*,\s*([a-zA-Z_$][\w$]*)/g;
+const dynamicNames=new Set();
+port=port.replace(dynamicSource,(full,fn,name)=>{
+ if(name==="tenantCollection")return full;
+ if(name!=="name")throw new Error("Unreviewed dynamic V46 collection variable: "+name);
+ dynamicNames.add(name);
+ return fn+"(db,tenantCollection("+name+")";
+});
+const unresolved=[...port.matchAll(dynamicSource)].filter(m=>m[2]!=="tenantCollection");
+assert.equal(unresolved.length,0,"Unscoped V46 Firestore access remains");
+assert.equal((port.match(/tenantCollection\(/g)||[]).length,changed+3,"Every V46 Firestore reference must use tenant gateway");
 const legacyConfig=/const firebaseConfig=\{[^;]+\};const ADMIN_UID="[^"]+";const app=initializeApp\(firebaseConfig\),auth=getAuth\(app\),db=getFirestore\(app\);/;
 assert.match(port,legacyConfig,"V46 Firebase bootstrap must be reviewed before migration");
 const blocker=`
@@ -43,7 +52,8 @@ await writeFile(join(output,"index.html"),port);
 await writeFile(join(output,"audit.json"),JSON.stringify({
  state:"QUARANTINED_NOT_DEPLOYABLE",source:"V46 index.html",
  literalReferencesRewritten:changed,
- dynamicReferencesRequiringReview:dynamic,
+ dynamicVariablesScoped:[...dynamicNames],
+ unresolvedDynamicReferences:unresolved,
  blocker:"School-scoped membership verification and complete V46 module dependencies not yet integrated"
 },null,2));
-console.log("Quarantined V46 UI port prepared:",changed,"references; dynamic:",dynamic.length);
+console.log("Quarantined V46 UI port prepared:",changed,"literal references; dynamic variables:",[...dynamicNames].join(","));
