@@ -85,5 +85,7 @@ jobs:
         run: node scripts/test-v47-attendance-roster.mjs
       - name: V47 attendance class and date query
         run: node scripts/test-v47-attendance-query.mjs
+      - name: V47 atomic class attendance batch
+        run: node scripts/test-v47-attendance-bulk.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
