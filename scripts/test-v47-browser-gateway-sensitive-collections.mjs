@@ -56,4 +56,6 @@ const mismatched=createV46BrowserTenantGateway({
  queryFn:(...args)=>args,limitFn:n=>n
 });
 await assert.rejects(mismatched.forCollection("schools/school_A001/students").get("student_1"),/Unexpected Firestore document ID/);
+// Ordinary list reads must enforce the same tenant ownership as paged reads.
+await assert.rejects(malformed.forCollection("schools/school_A001/students").list({pageSize:1}),/Invalid Firestore list document/);
 console.log("V47 browser tenant gateway blocks sensitive collections and cursor replay");
