@@ -15,7 +15,8 @@
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {getFirestore,doc,getDoc,collection,getDocs,query,limit,startAfter,orderBy} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-import {assertSchoolId,schoolCollectionPath} from "../../src/v47/tenant-domain.mjs";
+import {assertSchoolId} from "../../src/v47/tenant-domain.mjs";
+import {createV46TenantPathResolver} from "../../src/v47/v46-tenant-path-resolver.mjs";
 import {verifyV47BrowserMembership} from "../../src/v47/browser-membership-guard.mjs";
 const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#login-form"),logout=document.querySelector("#logout"),schoolForm=document.querySelector("#school-form"),status=document.querySelector("#status"),workspace=document.querySelector("#workspace"),tables=document.querySelector("#tables");
 let epoch=0,auth,db;
@@ -47,6 +48,7 @@ else{
    if(!school.exists() || !member.exists())throw new Error("School inactive or membership unavailable");
    const verified=verifyV47BrowserMembership({schoolId,uid:user.uid,school:school.data(),member:member.data()});
    const roles=verified.roles;
+   const tenantPaths=createV46TenantPathResolver({verifiedSchoolId:verified.schoolId,verifiedMembership:{schoolId:verified.schoolId,active:true,roles:[...verified.roles]}});
    const staged=[];
    const sectionCounts={};
    const failedSections=[];
@@ -57,7 +59,7 @@ else{
    // Fetch up to three independent sections at a time to balance latency and Spark usage.
    for(let offset=0;offset<kinds.length;offset+=3){
     if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
-    const batch=await Promise.allSettled(kinds.slice(offset,offset+3).map(kind=>getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),orderBy("__name__"),limit(PAGE_SIZE)))));
+    const batch=await Promise.allSettled(kinds.slice(offset,offset+3).map(kind=>getDocs(query(collection(db,tenantPaths.collection(kind)),orderBy("__name__"),limit(PAGE_SIZE)))));
     results.push(...batch);
    }
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
@@ -111,7 +113,7 @@ else{
           !memberCheck.exists() || memberCheck.data().active!==true ||
           !validRoles(memberCheck.data().roles))
         throw new Error("School access changed");
-       const next=await getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),orderBy("__name__"),startAfter(cursor),limit(PAGE_SIZE)));
+       const next=await getDocs(query(collection(db,tenantPaths.collection(kind)),orderBy("__name__"),startAfter(cursor),limit(PAGE_SIZE)));
        if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
        // Do not render a fetched page if membership was revoked during the request.
        const [currentSchool,currentMember]=await Promise.all([
