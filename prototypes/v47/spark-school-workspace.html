@@ -156,6 +156,7 @@ else{
    document.querySelector("#role").textContent="Access: "+latestMember.data().roles.join(", ")+" (read-only preview)";
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
    tables.replaceChildren(...staged);
+   for(const link of document.querySelectorAll('nav[aria-label="School modules"] a[href^="./spark-school-"]')){const url=new URL(link.getAttribute("href"),location.href);url.searchParams.set("schoolId",verified.schoolId);link.href=url.href;}
    workspace.hidden=false;say("School data loaded (read-only). "+Object.values(sectionCounts).reduce((a,b)=>a+b,0)+" records displayed across available sections; initially capped at 20, with on-demand pagination. "+(failedSections.length?"Unavailable sections: "+failedSections.join(", ")+". ":"")+"No changes saved.");
   }catch(error){if(token===epoch){clear();say("Unable to load school: "+error.message);}}
  });
