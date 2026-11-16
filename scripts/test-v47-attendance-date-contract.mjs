@@ -12,6 +12,8 @@ assert.match(html,/setToday\(\);/);
 assert.match(html,/const attendanceDate=String\(fields\.get\("attendanceDate"\)\|\|""\)/);
 assert.match(html,/const payload=\{schoolId:id,studentId,classId,term,attendanceDate,present:/);
 assert.match(html,/entryForm\.reset\(\);setToday\(\)/);
+assert.match(html,/entryPanel\.hidden=!canEnter;setToday\(\);if\(canEnter\)void loadStudentsForEntry\(\)/);
+assert.doesNotMatch(html,/if\(canEntervoid/);
 assert.match(html,/<th>Date<\/th>/);
 assert.match(html,/data\.attendanceDate\|\|"—"/);
 const shape=rules.slice(rules.indexOf("function attendanceShape(schoolId)"),rules.indexOf("function unchangedMarksIdentity()"));
