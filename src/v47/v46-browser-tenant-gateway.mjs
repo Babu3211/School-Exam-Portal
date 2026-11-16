@@ -21,6 +21,7 @@ export function createV46BrowserTenantGateway({db,verifiedSchoolId,collectionFn,
  const schoolId=assertSchoolId(verifiedSchoolId);
  const prefix="schools/"+schoolId+"/";
  return Object.freeze({
+  schoolId,
   forCollection(path) {
    if(typeof path!=="string" || !path.startsWith(prefix) ||
       path.slice(prefix.length).includes("/") ||
