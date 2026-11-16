@@ -64,6 +64,8 @@ export function createV46BrowserTenantGateway({db,verifiedSchoolId,collectionFn,
      }
      const snapshot=await getDocsFn(queryFn(collectionRef(),...clauses,limitFn(pageSize)));
      const docs=snapshot.docs;
+     if(!Array.isArray(docs) || docs.length>pageSize)
+      throw new TypeError("Invalid Firestore page size response");
      // Never issue a cursor from a different collection or malformed snapshot.
      for(const item of docs){
       if(!item || !safeSegment(item.id) || item.ref?.path!==path+"/"+item.id || typeof item.data!=="function")
