@@ -3,6 +3,7 @@
  * Validates current Firebase membership before and after every data read.
  * Never returns Firestore references or exposes write methods.
  */
+import {assertSchoolId} from "./tenant-domain.mjs";
 import {verifyV47BrowserMembership} from "./browser-membership-guard.mjs";
 import {createV46TenantReadAdapter} from "./v46-tenant-read-adapter.mjs";
 export function createV46VerifiedReadSession({
@@ -10,6 +11,7 @@ export function createV46VerifiedReadSession({
 }) {
  if(!auth || typeof auth!=="object" || typeof docFn!=="function" || typeof getDocFn!=="function")
   throw new TypeError("Auth and Firebase read functions required");
+ assertSchoolId(schoolId);
  const readMembership=async()=>{
   const uid=auth.currentUser?.uid;
   if(typeof uid!=="string" || !uid)throw new Error("Sign in required");
