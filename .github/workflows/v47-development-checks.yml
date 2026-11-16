@@ -10,6 +10,8 @@ on:
       - 'scripts/build-v47-spark-staging.mjs'
       - 'firebase.v47.spark.json'
       - 'scripts/test-v47-*.mjs'
+      - 'scripts/prepare-v47-v46-ui-port.mjs'
+      - 'scripts/audit-v46-tenant-migration.mjs'
       - 'firestore.v47.prototype.rules'
       - 'firebase.v47.emulator.json'
       - '.github/workflows/v47-development-checks.yml'
@@ -139,6 +141,9 @@ jobs:
       - name: Prepare quarantined V46 UI tenant port (never deploy)
         if: success() || failure()
         run: node scripts/prepare-v47-v46-ui-port.mjs
+      - name: Validate V46 UI migration audit and quarantine
+        if: success() || failure()
+        run: node scripts/test-v47-v46-port-audit.mjs
       - name: Audit real V46 Firebase dependencies before tenant migration
         if: success() || failure()
         run: node scripts/audit-v46-tenant-migration.mjs
