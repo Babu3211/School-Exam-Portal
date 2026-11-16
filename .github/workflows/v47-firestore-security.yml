@@ -1,0 +1,21 @@
+name: V47 Firestore isolation (non-deploy)
+on:
+  push:
+    branches: [smss-v47-multischool-work]
+  pull_request:
+    branches: [smss-v47-multischool-work]
+  workflow_dispatch:
+jobs:
+  rules-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/test-v47-rules-structure.mjs
+      - run: npx firebase emulators:exec --project v47-isolation-test --config v47/firebase.v47.json --only firestore "node scripts/test-v47-rules-emulator.mjs"
