@@ -11,7 +11,8 @@ service cloud.firestore {
   function schoolAdmin(schoolId) { return superAdmin() || memberRole(schoolId, 'school_admin'); }
   match /v47_super_admins/{uid} { allow read, write: if false; }
   match /schools/{schoolId} {
-   allow get, list: if reader(schoolId);
+   allow get: if reader(schoolId);
+   allow list: if superAdmin();
    allow create, update: if superAdmin() && request.resource.data.get('active', false) is bool;
    allow delete: if false; // prevent accidental orphaning of school subcollections
    match /members/{uid} {
