@@ -63,6 +63,10 @@ jobs:
             exit 1
           fi
           node scripts/build-v47-spark-staging.mjs
+          if grep -R -l -E 'exam-portal-smss-95016|K6uSLmqg0vWCtCuzwtxKzFpQMu62' dist/v47-spark; then
+            echo "ERROR: V46 production identity leaked into isolated V47 staging"
+            exit 1
+          fi
           test ! -e dist/v47-spark/prototypes/v47/spark-config.js
           test ! -e dist/v47-spark/index.html.bak
           test ! -e dist/v47-spark/firebase.json
