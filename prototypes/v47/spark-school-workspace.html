@@ -3,6 +3,7 @@
 <style>body{font:16px system-ui,sans-serif;max-width:850px;margin:2rem auto;padding:0 1rem;color:#17324d}input,button{padding:.65rem;margin:.3rem 0}section{border:1px solid #cbd5e1;border-radius:12px;padding:1rem;margin:1rem 0}table{border-collapse:collapse;width:100%}td,th{padding:.6rem;border-bottom:1px solid #ddd;text-align:left}#status{white-space:pre-wrap}small{color:#526477}</style></head>
 <body><h1>SMSS V47 School Workspace</h1><p>Isolated Spark staging preview — read-only school data inspection. No marks, students or attendance are changed here.</p>
 <p><a href="./spark-school-registration.html">School registration and admin management</a></p>
+<p><a href="./spark-school-students.html">Students (school-scoped)</a></p>
 <p><a href="./v46-grade-calculator.html">V46 IEMIS Grade Calculator (read-only, original calculation logic)</a></p>
 <section><form id="login-form"><label>Email <input name="email" type="email" required autocomplete="username"></label> <label>Password <input name="password" type="password" required autocomplete="current-password"></label><button>Sign in</button></form><button id="logout" hidden>Sign out</button><p id="identity"></p></section>
 <section><form id="school-form" hidden><label>School ID <input name="schoolId" required pattern="[a-zA-Z0-9_-]{8,64}" autocomplete="off"></label><button>Open school</button></form><p id="status" role="status" aria-live="polite">Awaiting isolated V47 configuration.</p></section>
