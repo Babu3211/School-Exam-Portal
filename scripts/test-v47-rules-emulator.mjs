@@ -32,6 +32,10 @@ try{
  await assertSucceeds(admin.doc('schools/school_001/members/teacherB').set({uid:'teacherB',schoolId:'school_001',role:'teacher',active:true}));
  await assertSucceeds(superDb.doc('schools/school_001/members/elevated').set({uid:'elevated',schoolId:'school_001',role:'school_admin',active:true}));
  await assertFails(outsider.doc('schools/school_001/students/s1').get());
+ await assertFails(outsider.doc('v47_super_admins/super1').get());
+ await assertFails(admin.doc('v47_super_admins/super1').get());
+ await assertFails(superDb.doc('v47_super_admins/super1').update({active:false}));
+ await assertFails(viewer.doc('schools/school_001/marks/mark1').set({score:100}));
  await assertSucceeds(superDb.doc('schools/school_002/students/s2').get());
  await assertFails(superDb.doc('schools/school_002').delete());
  await assertFails(admin.doc('schools/school_001/members/elevated').delete());
