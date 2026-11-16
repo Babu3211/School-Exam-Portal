@@ -66,4 +66,18 @@ const loader='<script src="./spark-config.js"></script>';
   await writeFile(join(output,page),htmlWithLoader);
  }
 await writeFile(join(output,"index.html"),`<!doctype html><meta charset="utf-8"><title>SMSS V47 Staging</title><p>V47 Spark staging preview. Firebase configuration must be explicitly provided for the isolated V47 project.</p><a href="/prototypes/v47/spark-school-registration.html">Open registration prototype</a><p><a href="/prototypes/v47/spark-school-workspace.html">Open read-only school workspace</a><p><a href="/prototypes/v47/v46-grade-calculator.html">Open V46 grade calculator</a></p><p><a href="/prototypes/v47/spark-school-students.html">Open school students</a></p><p><a href="/prototypes/v47/spark-school-staff.html">Open school staff</a></p><p><a href="/prototypes/v47/spark-school-marks.html">Open school marks</a></p><p><a href="/prototypes/v47/spark-school-attendance.html">Open school attendance</a></p>`);
+// Final output boundary: fail the build if any generated file carries V46's
+// production Firebase project, storage bucket or hardcoded legacy admin identity.
+const forbidden=["exam-portal-smss-95016","K6uSLmqg0vWCtCuzwtxKzFpQMu62"];
+async function scanOutput(dir){
+ for(const entry of await (await import("node:fs/promises")).readdir(dir,{withFileTypes:true})){
+  const file=join(dir,entry.name);
+  if(entry.isDirectory()){await scanOutput(file);continue;}
+  if(!entry.isFile())throw new Error("Unexpected V47 staging artifact: "+file);
+  const body=await readFile(file,"utf8");
+  for(const marker of forbidden)if(body.includes(marker))
+   throw new Error("V46 production identity leaked into V47 staging: "+file);
+ }
+}
+await scanOutput(output);
 console.log("Built isolated V47 Spark preview:",visited.size,"browser modules; no deployment");
