@@ -44,7 +44,7 @@ else{
    const failedSections=[];
    // Fetch independent tenant-scoped previews concurrently to reduce wait time.
    // Each query remains bounded regardless of total school enrollment.
-   const kinds=["students","classes","subjects","exams","marks","attendance"];
+   const kinds=["students","staff","classes","subjects","exams","marks","attendance","certificates","mark_settings","school_settings","public_results"];
    const results=await Promise.allSettled(kinds.map(kind=>getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),limit(20)))));
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
    for(let index=0;index<kinds.length;index++){
@@ -65,6 +65,11 @@ else{
        kind==="classes" ? (data.name||data.className||data.label) :
        kind==="subjects" ? (data.name||data.subjectName||data.label) :
        kind==="exams" ? (data.name||data.examName||data.title) :
+       kind==="staff" ? (data.nameEnglish||data.englishName||data.name||data.staffName) :
+       kind==="certificates" ? (data.studentName||data.certificateName||data.title) :
+       kind==="mark_settings" ? (data.name||data.examName||data.title) :
+       kind==="school_settings" ? (data.schoolNameEnglish||data.schoolName||data.name) :
+       kind==="public_results" ? (data.studentName||data.studentId||data.title) :
        kind==="marks" ? (data.studentName||data.studentId||data.student_id) :
        (data.studentName||data.studentId||data.student_id);
      const safeLabel=typeof label==="string" && label.trim()?label.trim().slice(0,120):record.id;
