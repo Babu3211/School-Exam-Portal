@@ -11,6 +11,7 @@ import {getFirestore,doc,getDoc,collection,getDocs,query,limit,startAfter,orderB
 import {assertSchoolId} from "../../src/v47/tenant-domain.mjs";
 import {createV46VerifiedReadSession} from "../../src/v47/v46-verified-read-session.mjs";
 import {loadV47LedgerCollections} from "../../src/v47/v46-ledger-data-loader.mjs";
+import {auditV47LedgerReadiness} from "../../src/v47/v46-ledger-readiness.mjs";
 const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#login"),school=document.querySelector("#school"),status=document.querySelector("#status"),results=document.querySelector("#results");
 const say=s=>status.textContent=s;
 let auth,db,epoch=0;
@@ -32,15 +33,9 @@ else{
    const data=await loadV47LedgerCollections({session,pageSize:50,maxRecordsPerCollection:5000});
    if(token!==epoch||auth.currentUser?.uid!==user.uid)return;
    const url=new URL("./spark-school-workspace.html",location.href);url.searchParams.set("schoolId",schoolId);document.querySelector("#back").href=url.href;
-   for(const name of ["students","subjects","exams","marks"])append("counts",name+": "+data[name].length+" records read (verified school scope)");
-   const problems=[];
-   for(const name of ["students","subjects","exams","marks"])if(!data[name].length)problems.push("No "+name+" records available.");
-   const percentOnly=data.marks.filter(m=>!Array.isArray(m.scores)||!m.scores.length).length;
-   if(percentOnly)problems.push(percentOnly+" marks have no V46-compatible assessment components; cannot use them for an official IEMIS ledger.");
-   const invalidMarks=data.marks.filter(m=>!m.examId||!m.studentId||!m.subject).length;
-   if(invalidMarks)problems.push(invalidMarks+" marks lack required exam, student or subject identity.");
-   problems.push("Class-specific subject credits, applicability, exam term and component mappings must be verified before rendering.");
-   problems.forEach(p=>append("blockers",p));
+   const audit=auditV47LedgerReadiness(data);
+   for(const [name,count] of Object.entries(audit.counts))append("counts",name+": "+count+" records read (verified school scope)");
+   audit.blockers.forEach(p=>append("blockers",p));
    results.hidden=false;say("Read-only readiness audit complete. No records changed; this is not an official result.");
   }catch(err){if(token===epoch)say("Audit unavailable: "+err.message+" No partial dataset shown.");}
  });
