@@ -6,6 +6,8 @@ assert.match(html,/createV46TenantPathResolver\\(\\{verifiedSchoolId:verified\\.
 assert.equal((html.match(/tenantPaths\\.collection\\(kind\\)/g)||[]).length,2);
 assert.doesNotMatch(html,/schoolCollectionPath\\(schoolId,kind\\)/);
 assert.match(html,/verifyV47BrowserMembership\(\{schoolId,uid:user\.uid,school:school\.data\(\),member:member\.data\(\)\}\)/);
+assert.equal((html.match(/verifyV47BrowserMembership\\(\\{schoolId,uid:user\\.uid,school:/g)||[]).length,4,"Membership must be verified on initial load, before and after pagination, and final render");
+assert.doesNotMatch(html,/validRoles\\(/,"No weaker alternate membership checks allowed");
 const schoolId="school_2083_a",uid="teacher_user";
 const school={schoolId,status:"active"};
 const member={schoolId,uid,active:true,roles:["viewer"]};
