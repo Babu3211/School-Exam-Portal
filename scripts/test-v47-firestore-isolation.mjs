@@ -318,7 +318,7 @@ try {
  await env.withSecurityRulesDisabled(async context=>{
    await updateDoc(doc(context.firestore(),"schools",schoolA,"members","adminA"),{roles:["school_admin"]});
  });
- await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"students","admin_restored"),{name:"Restored",classId:"9"}));
+ await assertSucceeds(setDoc(doc(admin,"schools",schoolA,"students","admin_restored"),{...validStudent,nameEnglish:"Restored"}));
 
  // Restore the synthetic class teacher disabled by an earlier revocation scenario.
  await env.withSecurityRulesDisabled(async context=>{
