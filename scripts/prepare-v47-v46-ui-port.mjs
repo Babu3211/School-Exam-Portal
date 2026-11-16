@@ -37,7 +37,7 @@ const legacyBackupRestoreCalls=[...source.matchAll(/\b(collection|doc)\s*\(\s*db
 assert.equal(legacyBackupRestoreCalls,dynamicReferences,"Legacy backup/restore references changed; review required");
 
 assert.equal((port.match(/tenantCollection\(/g)||[]).length,changed+dynamicReferences,"Every V46 Firestore reference must use tenant gateway");
-const legacyConfig=/const firebaseConfig=\{[^;]+\};const ADMIN_UID="[^"]+";const app=initializeApp\(firebaseConfig\),auth=getAuth\(app\),db=getFirestore\(app\);/;
+const legacyConfig=/const firebaseConfig=\{[^;]+\};\s*const ADMIN_UID="[^"]+";\s*const app=initializeApp\(firebaseConfig\),auth=getAuth\(app\),db=getFirestore\(app\);/;
 assert.match(port,legacyConfig,"V46 Firebase bootstrap must be reviewed before migration");
 const blocker=`
 // QUARANTINED V46 PORT: no Firebase connection, no cross-school reads or writes.
