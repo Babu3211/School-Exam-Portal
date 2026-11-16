@@ -16,6 +16,7 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {getFirestore,doc,getDoc,collection,getDocs,query,limit,startAfter,orderBy} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import {assertSchoolId,schoolCollectionPath} from "../../src/v47/tenant-domain.mjs";
+import {verifyV47BrowserMembership} from "../../src/v47/browser-membership-guard.mjs";
 const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#login-form"),logout=document.querySelector("#logout"),schoolForm=document.querySelector("#school-form"),status=document.querySelector("#status"),workspace=document.querySelector("#workspace"),tables=document.querySelector("#tables");
 let epoch=0,auth,db;
 const PAGE_SIZE=20;
@@ -43,9 +44,9 @@ else{
    say("Verifying school access...");
    const [school,member]=await Promise.all([getDoc(doc(db,"schools",schoolId)),getDoc(doc(db,"schools",schoolId,"members",user.uid))]);
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
-   if(!school.exists() || school.data().status!=="active" || !member.exists() || member.data().active!==true)throw new Error("School inactive or membership unavailable");
-   const roles=member.data().roles;
-   if(member.data().schoolId!==schoolId || member.data().uid!==user.uid || !validRoles(roles))throw new Error("Invalid school membership identity or role");
+   if(!school.exists() || !member.exists())throw new Error("School inactive or membership unavailable");
+   const verified=verifyV47BrowserMembership({schoolId,uid:user.uid,school:school.data(),member:member.data()});
+   const roles=verified.roles;
    const staged=[];
    const sectionCounts={};
    const failedSections=[];
