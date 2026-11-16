@@ -37,7 +37,7 @@ service cloud.firestore {
    }
    match /{collection}/{docId} {
     allow get, list: if collection in ['staff','classes','subjects','exams','marks','attendance','mark_settings'] && reader(schoolId);
-    allow create, update, delete: if collection in ['students','staff','classes','subjects','exams','marks','attendance','mark_settings'] && schoolAdmin(schoolId);
+    allow create, update, delete: if collection in ['staff','classes','subjects','exams','marks','attendance','mark_settings'] && schoolAdmin(schoolId);
    }
   }
   // No legacy root collection access in the V47-only rules file.
