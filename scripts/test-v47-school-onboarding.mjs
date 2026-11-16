@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {onboardSchool} from '../v47/school-onboarding.mjs';
+const writes=[];let exists=false;
+const api={doc:(_db,...parts)=>parts.join('/'),runTransaction:async(_db,cb)=>cb({get:async()=>({exists:()=>exists}),set:(...args)=>writes.push(args)})};
+const args={db:{},api,actor:{role:'super_admin',active:true},form:{id:'school_001',name:'Sample School'},adminUid:'admin123'};
+await assert.rejects(()=>onboardSchool({...args,actor:{role:'viewer',active:true}}));
+assert.equal(writes.length,0);
+const result=await onboardSchool(args);
+assert.equal(result.school.active,false);
+assert.deepEqual(writes.map(w=>w[0]),['schools/school_001','schools/school_001/members/admin123']);
+assert.equal(writes[1][1].role,'school_admin');
+exists=true;
+await assert.rejects(()=>onboardSchool(args),/already registered/);
+assert.equal(writes.length,2);
+console.log('V47 atomic school onboarding passed');
