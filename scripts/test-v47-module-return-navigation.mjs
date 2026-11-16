@@ -24,4 +24,10 @@ for(const kind of ["marks","students","subjects"])
  assert.ok(marks.includes('.listPage("'+kind+'",'));
 assert.doesNotMatch(marks,/createV46BrowserTenantGateway/);
 assert.match(marks,/await addDoc\(collection\(db,schoolCollectionPath\(id,"marks"\)\),payload\)/);
+const attendance=readFileSync(new URL("../prototypes/v47/spark-school-attendance.html",import.meta.url),"utf8");
+assert.match(attendance,/createV46VerifiedReadSession\(/);
+assert.match(attendance,/tenantRecords\.listPage\("attendance",\{pageSize:20,cursor\}\)/);
+assert.match(attendance,/studentGateway\.listPage\("students",\{pageSize:50,cursor:studentCursor\}\)/);
+assert.doesNotMatch(attendance,/createV46BrowserTenantGateway/);
+assert.match(attendance,/await addDoc\(collection\(db,schoolCollectionPath\(id,"attendance"\)\),payload\)/);
 console.log("V47 school module return-navigation checks passed");
