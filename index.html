@@ -276,7 +276,8 @@ function classEnglishLabel(value){
 // Normalize incoming Excel/manual class labels to the portal's existing Firestore format.
 function canonicalStudentClass(value){
  const raw=String(value??'').trim().replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d)));
- if(/^(ecd|early childhood development|nursery|ecd\s*\/\s*nursery|नर्सरी)$/i.test(raw))return 'ECD';
+ if(/^(ecd|early childhood development)$/i.test(raw))return 'ECD';
+ if(/^(nursery|ecd\s*\/\s*nursery|नर्सरी)$/i.test(raw))return 'ECD';
  if(/^(lkg|lower kindergarten)$/i.test(raw))return 'LKG';
  if(/^(ukg|upper kindergarten)$/i.test(raw))return 'UKG';
  const m=raw.match(/(?:कक्षा\s*)?([0-9]+)/i);
@@ -3160,12 +3161,11 @@ async function loadAttendancePage(){
    const classSel=document.getElementById("attendanceClass");
    if(classSel){
     const previousClass=classSel.value;
-    const names=[...new Set([...attendanceClasses.map(x=>x.className),...attendanceStudents.map(x=>x.class??x.className)].map(x=>String(x??"").trim()).filter(Boolean))];
-    const seenEarlyYears=new Set();
-    const distinctNames=names.filter(name=>{const key=canonicalStudentClass(name);if(!earlyYearsClasses.includes(key))return true;if(seenEarlyYears.has(key))return false;seenEarlyYears.add(key);return true;}).sort(compareClassNames);
-    if(distinctNames.length){
-     classSel.innerHTML=distinctNames.map(x=>`<option value="${attendanceEsc(x)}">${attendanceEsc(classEnglishLabel(x))}</option>`).join("");
-     const same=distinctNames.find(x=>canonicalStudentClass(x)===canonicalStudentClass(previousClass));
+    const names=[...new Set([...attendanceClasses.map(x=>x.className),...attendanceStudents.map(x=>x.class??x.className)].map(x=>{const raw=String(x??"").trim();const key=canonicalStudentClass(raw);return earlyYearsClasses.includes(key)?key:raw;}).filter(Boolean))];
+    names.sort((a,b)=>{const ca=canonicalStudentClass(a),cb=canonicalStudentClass(b);const na=ca==="ECD"?0:Number((ca.match(/[0-9]+/)||[])[0]);const nb=cb==="ECD"?0:Number((cb.match(/[0-9]+/)||[])[0]);if(ca==="LKG"||ca==="UKG"||cb==="LKG"||cb==="UKG")return compareClassNames(a,b);return Number.isFinite(na)&&Number.isFinite(nb)?na-nb:a.localeCompare(b,undefined,{numeric:true,sensitivity:"base"});});
+    if(names.length){
+     classSel.innerHTML=names.map(x=>`<option value="${attendanceEsc(x)}">${attendanceEsc(classEnglishLabel(x))}</option>`).join("");
+     const same=names.find(x=>canonicalStudentClass(x)===canonicalStudentClass(previousClass));
      if(same)classSel.value=same;
     }else{
      // Never leave a stale class selected after all saved classes/students disappear.
