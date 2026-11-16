@@ -50,4 +50,8 @@ const nameOnlyOtherClass=auditV47LedgerReadiness({...data,students:[{id:"s1",cla
 assert.ok(nameOnlyOtherClass.blockers.some(s=>s.includes("subject names assigned only to another class")));
 const nameOnlyCorrectClass=auditV47LedgerReadiness({...data,students:[{id:"s1",classNo:6}],exams:[{id:"e1",classNo:6}],subjects:[{id:"sub6",name:"Science",classNo:6},{id:"sub7",name:"Science",classNo:7}],marks:[{...data.marks[0],subject:"Science",classNo:6}]});
 assert.ok(!nameOnlyCorrectClass.blockers.some(s=>s.includes("subject names assigned only to another class")));
+const unknownIdMatchingName=auditV47LedgerReadiness({...data,marks:[{...data.marks[0],subjectId:"Mathematics",subject:"Mathematics"}]});
+assert.ok(unknownIdMatchingName.blockers.some(s=>s.includes("unknown school subjects")));
+const validIdMatchingName=auditV47LedgerReadiness({...data,marks:[{...data.marks[0],subjectId:"sub1",subject:"Mathematics"}]});
+assert.ok(!validIdMatchingName.blockers.some(s=>s.includes("unknown school subjects")));
 console.log("V47 ledger readiness audit checks passed");
