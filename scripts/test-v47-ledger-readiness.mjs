@@ -12,4 +12,12 @@ assert.ok(bad.blockers.some(s=>s.includes("unknown school exams")));
 assert.ok(bad.blockers.some(s=>s.includes("unknown school subjects")));
 assert.ok(bad.blockers.some(s=>s.includes("assessment components")));
 assert.throws(()=>auditV47LedgerReadiness({marks:[]}),/Complete verified/);
+const inconsistent=auditV47LedgerReadiness({
+ students:[{id:"s1",classNo:6,schoolId:"school001"}],
+ subjects:[{id:"sub1",name:"Mathematics",schoolId:"otherSchool"}],
+ exams:[{id:"e1",classNo:9,schoolId:"school001"}],
+ marks:[{studentId:"s1",examId:"e1",subject:"Mathematics",classNo:6,schoolId:"otherSchool",scores:[{name:"IN",obtained:40,fullMarks:50}]}]
+},{schoolId:"school001"});
+assert.ok(inconsistent.blockers.some(s=>s.includes("different school ID")));
+assert.ok(inconsistent.blockers.some(s=>s.includes("inconsistent student")));
 console.log("V47 ledger readiness audit checks passed");
