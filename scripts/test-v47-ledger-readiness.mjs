@@ -31,4 +31,8 @@ const separateClasses=auditV47LedgerReadiness({...data,subjects:[{id:"sub1",name
 assert.ok(!separateClasses.blockers.some(s=>s.includes("subjects share a name")));
 const mixedSubjectReferences=auditV47LedgerReadiness({...data,marks:[data.marks[0],{...data.marks[0],id:"m2",subjectId:"sub1",subject:undefined}]});
 assert.ok(mixedSubjectReferences.blockers.some(s=>s.includes("duplicate an exam, student and subject")));
+const scopedSubjects={...data,students:[{id:"s1",classNo:6}],exams:[{id:"e1",classNo:6}],subjects:[{id:"math6",name:"Mathematics",classNo:6},{id:"math7",name:"Mathematics",classNo:7}],marks:[{...data.marks[0],classNo:6},{...data.marks[0],id:"m2",subject:undefined,subjectId:"math6",classNo:6}]};
+assert.ok(auditV47LedgerReadiness(scopedSubjects).blockers.some(s=>s.includes("duplicate an exam, student and subject")));
+const otherClass={...scopedSubjects,marks:[scopedSubjects.marks[0],{...scopedSubjects.marks[1],subjectId:"math7"}]};
+assert.ok(!auditV47LedgerReadiness(otherClass).blockers.some(s=>s.includes("duplicate an exam, student and subject")));
 console.log("V47 ledger readiness audit checks passed");
