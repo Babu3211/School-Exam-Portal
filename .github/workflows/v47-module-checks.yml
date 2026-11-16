@@ -37,5 +37,9 @@ jobs:
         run: node scripts/test-v47-firestore-adapter.mjs
       - name: School registration transaction
         run: node scripts/test-v47-registration-service.mjs
+      - name: School activation authorization
+        run: node scripts/test-v47-school-status.mjs
+      - name: School readiness gate
+        run: node scripts/test-v47-school-readiness.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
