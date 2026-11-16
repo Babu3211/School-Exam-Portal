@@ -33,6 +33,7 @@ export function createV46BrowserTenantGateway({db,verifiedSchoolId,collectionFn,
     throw new Error("Sensitive V46 collection requires separately reviewed access");
    const collectionRef=()=>collectionFn(db,"schools",schoolId,collectionName);
    const issuedCursors=new WeakSet();
+   const consumedCursors=new WeakSet();
    return Object.freeze({
     path,
     async list({pageSize=20}={}) {
@@ -52,8 +53,9 @@ export function createV46BrowserTenantGateway({db,verifiedSchoolId,collectionFn,
      if(cursor!==null){
       if(typeof cursor!=="object" || typeof cursor.id!=="string" ||
          !safeSegment(cursor.id) || typeof cursor.data!=="function" ||
-         cursor.ref?.path!==path+"/"+cursor.id || !issuedCursors.has(cursor))
+         cursor.ref?.path!==path+"/"+cursor.id || !issuedCursors.has(cursor) || consumedCursors.has(cursor))
        throw new TypeError("Invalid Firestore page cursor");
+      consumedCursors.add(cursor);
       clauses.push(startAfterFn(cursor));
      }
      const snapshot=await getDocsFn(queryFn(collectionRef(),...clauses,limitFn(pageSize)));
