@@ -49,4 +49,11 @@ const malformed=createV46BrowserTenantGateway({
  limitFn:n=>({limit:n}),orderByFn:field=>({field}),startAfterFn:cursor=>({after:cursor.id})
 });
 await assert.rejects(malformed.forCollection("schools/school_A001/students").listPage({pageSize:1}),/Invalid Firestore page document/);
+const mismatched=createV46BrowserTenantGateway({
+ db:{},verifiedSchoolId:"school_A001",
+ collectionFn:(_db,...parts)=>parts.join("/"),docFn:(_db,...parts)=>parts.join("/"),
+ getDocsFn:async()=>({docs:[]}),getDocFn:async()=>({exists:()=>true,id:"other_student",data:()=>({name:"Wrong ID"})}),
+ queryFn:(...args)=>args,limitFn:n=>n
+});
+await assert.rejects(mismatched.forCollection("schools/school_A001/students").get("student_1"),/Unexpected Firestore document ID/);
 console.log("V47 browser tenant gateway blocks sensitive collections and cursor replay");
