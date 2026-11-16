@@ -6,6 +6,9 @@ on:
   pull_request:
     paths:
       - 'src/v47/**'
+      - 'prototypes/v47/**'
+      - 'scripts/build-v47-spark-staging.mjs'
+      - 'firebase.v47.spark.json'
       - 'scripts/test-v47-*.mjs'
       - 'firestore.v47.prototype.rules'
       - 'firebase.v47.emulator.json'
