@@ -110,12 +110,7 @@ jobs:
           google-chrome --headless --no-sandbox --disable-gpu --no-pdf-header-footer \
             --print-to-pdf="$report/grade.pdf" "file://$report/grade.html"
           pdfinfo "$report/grade.pdf" | tee "$report/pdfinfo.txt"
-          grep -Eq '^Pages:[[:space:]]+1
-        run: |
-          node --input-type=module -e 'import fs from "node:fs";const s=fs.readFileSync("index.html","utf8");for(const x of ["School Profile","Student Record","Teacher | Staff","initIdleLogout","initUserActivity"])if(!s.includes(x))throw Error("Missing approved V45 feature: "+x);if(s.includes("V45 Trial"))throw Error("Obsolete trial dashboard restored")'
-
-# This workflow does not open IEMIS, deploy Hosting, or write production Firestore data.
- "$report/pdfinfo.txt"
+          grep -Eq '^Pages:[[:space:]]+1$' "$report/pdfinfo.txt"
           grep -Eq '^Page size:.*\(A4\)' "$report/pdfinfo.txt"
           pdftotext "$report/grade.pdf" "$report/grade.txt"
           grep -Fq 'GRADE POINT AVERAGE' "$report/grade.txt"
