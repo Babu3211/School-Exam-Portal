@@ -41,6 +41,8 @@ try{
  await assertSucceeds(admin.doc('schools/school_001/members/teacherB').delete());
  await assertFails(viewer.doc('schools/school_001/members/adminA').get());
  await assertFails(admin.doc('students/legacy').get());
+ await assertFails(admin.doc('schools/school_001/user_roles/target').set({role:'super_admin'}));
+ await assertFails(superDb.doc('schools/school_001/user_roles/target').set({role:'super_admin'}));
  await assertFails(admin.collection('schools').get());
  await assertSucceeds(superDb.collection('schools').get());
  await assertFails(viewer.collection('schools/school_001/members').get());
