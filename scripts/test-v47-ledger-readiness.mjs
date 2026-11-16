@@ -54,4 +54,8 @@ const unknownIdMatchingName=auditV47LedgerReadiness({...data,marks:[{...data.mar
 assert.ok(unknownIdMatchingName.blockers.some(s=>s.includes("unknown school subjects")));
 const validIdMatchingName=auditV47LedgerReadiness({...data,marks:[{...data.marks[0],subjectId:"sub1",subject:"Mathematics"}]});
 assert.ok(!validIdMatchingName.blockers.some(s=>s.includes("unknown school subjects")));
+const ambiguousName=auditV47LedgerReadiness({...data,students:[{id:"s1",classNo:6}],exams:[{id:"e1",classNo:6}],subjects:[{id:"a",name:"Science",classNo:6},{id:"b",subjectName:" science ",classNo:6}],marks:[{...data.marks[0],subject:"Science",classNo:6}]});
+assert.ok(ambiguousName.blockers.some(s=>s.includes("ambiguous subject names")));
+const unambiguousName=auditV47LedgerReadiness({...data,students:[{id:"s1",classNo:6}],exams:[{id:"e1",classNo:6}],subjects:[{id:"a",name:"Science",classNo:6}],marks:[{...data.marks[0],subject:"Science",classNo:6}]});
+assert.ok(!unambiguousName.blockers.some(s=>s.includes("ambiguous subject names")));
 console.log("V47 ledger readiness audit checks passed");
