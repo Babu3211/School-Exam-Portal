@@ -4,6 +4,8 @@ const html=readFileSync(new URL("../prototypes/v47/spark-school-workspace.html",
 assert.match(html,/new URLSearchParams\(location\.search\)\.get\("schoolId"\)/);
 assert.match(html,/\^\[a-zA-Z0-9_-\]\{8,64\}\$/);
 assert.match(html,/schoolIdInput\.value=requestedSchoolId/);
+assert.match(html,/students\|staff\|marks\|attendance\|workspace/);
+assert.match(html,/url\.searchParams\.set\("schoolId",verified\.schoolId\)/);
 assert.match(html,/else if\(schoolIdInput\.value && !schoolForm\.hidden\)schoolForm\.requestSubmit\(\)/);
 assert.match(html,/verifyV47BrowserMembership\(\{schoolId,uid:user\.uid/);
 assert.match(html,/latestVerified\.roles\.join/);
