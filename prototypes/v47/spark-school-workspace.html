@@ -26,6 +26,7 @@ import {getFirestore,doc,getDoc,collection,getDocs,query,limit,startAfter,orderB
 import {assertSchoolId} from "../../src/v47/tenant-domain.mjs";
 import {createV46TenantPathResolver} from "../../src/v47/v46-tenant-path-resolver.mjs";
 import {verifyV47BrowserMembership} from "../../src/v47/browser-membership-guard.mjs";
+import {createV46BrowserTenantGateway} from "../../src/v47/v46-browser-tenant-gateway.mjs";
 const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#login-form"),logout=document.querySelector("#logout"),schoolForm=document.querySelector("#school-form"),status=document.querySelector("#status"),workspace=document.querySelector("#workspace"),tables=document.querySelector("#tables");
 let epoch=0,auth,db;
 const PAGE_SIZE=20;
@@ -52,7 +53,13 @@ else{
    if(!school.exists() || !member.exists())throw new Error("School inactive or membership unavailable");
    const verified=verifyV47BrowserMembership({schoolId,uid:user.uid,school:school.data(),member:member.data()});
    const roles=verified.roles;
+   const tenantGateway=createV46BrowserTenantGateway({
+    db,verifiedSchoolId:verified.schoolId,
+    collectionFn:collection,docFn:doc,getDocsFn:getDocs,getDocFn:getDoc,
+    queryFn:query,limitFn:limit,startAfterFn:startAfter,orderByFn:orderBy
+   });
    const tenantPaths=createV46TenantPathResolver({verifiedSchoolId:verified.schoolId,verifiedMembership:{schoolId:verified.schoolId,active:true,roles:[...verified.roles]}});
+   const collectionGateways=Object.fromEntries(PREVIEW_KINDS.map(kind=>[kind,tenantGateway.forCollection(tenantPaths.collection(kind))]));
    const staged=[];
    const sectionCounts={};
    const failedSections=[];
@@ -63,7 +70,7 @@ else{
    // Fetch up to three independent sections at a time to balance latency and Spark usage.
    for(let offset=0;offset<kinds.length;offset+=3){
     if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
-    const batch=await Promise.allSettled(kinds.slice(offset,offset+3).map(kind=>getDocs(query(collection(db,tenantPaths.collection(kind)),orderBy("__name__"),limit(PAGE_SIZE)))));
+    const batch=await Promise.allSettled(kinds.slice(offset,offset+3).map(kind=>collectionGateways[kind].listPage({pageSize:PAGE_SIZE})));
     results.push(...batch);
    }
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
@@ -76,11 +83,11 @@ else{
      section.append(heading,notice);staged.push(section);continue;
     }
     const result=outcome.value;
-    sectionCounts[kind]=result.size;
+    sectionCounts[kind]=result.records.length;
     const section=document.createElement("section"),heading=document.createElement("h3"),list=document.createElement("ul");
-    heading.textContent=kind+" ("+result.size+" shown; maximum 20)";section.append(heading);
+    heading.textContent=kind+" ("+result.records.length+" shown; maximum 20)";section.append(heading);
     const renderRecord=record=>{
-     const data=record.data(),li=document.createElement("li");
+     const data=record,li=document.createElement("li");
      const label=kind==="students" ? (data.nameEnglish||data.englishName||data.name||data.studentName) :
        kind==="classes" ? (data.name||data.className||data.label) :
        kind==="subjects" ? (data.name||data.subjectName||data.label) :
@@ -98,13 +105,13 @@ else{
      li.textContent=(safeLabel===record.id?record.id:safeLabel+" ("+record.id+")")+(classText?" — Class "+classText:"");
      list.append(li);
     };
-    result.docs.forEach(renderRecord);
-    if(result.empty){const li=document.createElement("li");li.textContent="No records";list.append(li);}
+    result.records.forEach(renderRecord);
+    if(!result.records.length){const li=document.createElement("li");li.textContent="No records";list.append(li);}
     section.append(list);
-    if(result.size===PAGE_SIZE){
+    if(result.nextCursor){
      const more=document.createElement("button");
      more.type="button";more.textContent="Load next 20 "+kind;
-     let cursor=result.docs[result.docs.length-1],loading=false;
+     let cursor=result.nextCursor,loading=false;
      more.addEventListener("click",async()=>{
       if(loading || token!==epoch || auth.currentUser?.uid!==user.uid)return;
       loading=true;more.disabled=true;more.textContent="Loading...";
@@ -116,7 +123,7 @@ else{
        if(!schoolCheck.exists() || !memberCheck.exists())throw new Error("School access changed");
        const beforePage=verifyV47BrowserMembership({schoolId,uid:user.uid,school:schoolCheck.data(),member:memberCheck.data()});
        if(beforePage.roles.join(",")!==verified.roles.join(","))throw new Error("School role changed");
-       const next=await getDocs(query(collection(db,tenantPaths.collection(kind)),orderBy("__name__"),startAfter(cursor),limit(PAGE_SIZE)));
+       const next=await collectionGateways[kind].listPage({pageSize:PAGE_SIZE,cursor});
        if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
        // Do not render a fetched page if membership was revoked during the request.
        const [currentSchool,currentMember]=await Promise.all([
@@ -126,10 +133,10 @@ else{
        if(!currentSchool.exists() || !currentMember.exists())throw new Error("School access changed");
        const afterPage=verifyV47BrowserMembership({schoolId,uid:user.uid,school:currentSchool.data(),member:currentMember.data()});
        if(afterPage.roles.join(",")!==verified.roles.join(","))throw new Error("School role changed");
-       next.docs.forEach(renderRecord);
-       if(next.docs.length)cursor=next.docs[next.docs.length-1];
+       next.records.forEach(renderRecord);
+       if(next.nextCursor)cursor=next.nextCursor;
        heading.textContent=kind+" ("+list.children.length+" shown; paginated)";
-       if(next.size<PAGE_SIZE)more.remove();
+       if(!next.nextCursor)more.remove();
        else{more.disabled=false;more.textContent="Load next 20 "+kind;}
       }catch{
        if(token===epoch){clear();say("Unable to load more records. Reopen the school to verify access.");}
