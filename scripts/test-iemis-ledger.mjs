@@ -130,15 +130,18 @@ console.log('Class I 2083 First/Second/Final credits, totals, GPA 3.54, footnote
 // School-authorized populated Class VI vectors, with synthetic identity only.
 const sixSubjects=subjects.slice(1),sixCredits=[5,5,5,5,5,3,4];
 const sixInternal=[41,39,36,45,37,42,40],sixTheory=[40,38,35,42,36,41,39];
-for(const term of ['first','second','annual']){
+for(const classNo of [6,7,8])for(const term of ['first','second','annual']){
  const annual=term==='annual';
  const rs=sixSubjects.map((subject,i)=>({studentId:'synthetic-1',examId:'synthetic-exam',subject,scores:[{name:'Internal',fullMarks:50,obtained:sixInternal[i]},...(annual?[{name:'TH (Theory)',fullMarks:50,obtained:sixTheory[i]}]:[])]}));
- const config=sixSubjects.map((subject,i)=>({className:'6',subject,creditHour:sixCredits[i],active:true}));
+ const config=sixSubjects.map((subject,i)=>({className:String(classNo),subject,creditHour:sixCredits[i],active:true}));
  const before=structuredClone({rs,config});
  const per=rs.map(r=>{const v=iemisSummary(r,{annual});return {subject:r.subject,missing:false,totalFull:v.full,pct:v.obtained/v.full*100,grade:v.totalGrade};});
- const d={...dependencies,smssExamTermKey:()=>term,resultExams:[{id:'synthetic-exam',academicYear:'2083'}],resultClasses:config,resultMarks:rs,activeResultRows:[{student:{...student,class:'6'},perSubject:per}]};
+ const d={...dependencies,smssExamTermKey:()=>term,resultExams:[{id:'synthetic-exam',academicYear:'2083'}],resultClasses:config,resultMarks:rs,activeResultRows:[{student:{...student,class:String(classNo)},perSubject:per}]};
  const render=()=>new Function(...Object.keys(d),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(d));
  render();
+ assert.match(box.innerHTML,new RegExp('GRADE '+({6:'VI',7:'VII',8:'VIII'}[classNo])));
+ const annualLedger=iemisLedger({...common,classNo,annual,term,academicYear:'2083',subjects:sixSubjects,records:rs,mode:'grade',creditFor:s=>sixCredits[sixSubjects.indexOf(s)]});
+ assert.match(annualLedger.body,annual?/>3.42<\/td>/:/>3.48<\/td>/);
  assert.match(box.innerHTML,annual?/GRADE POINT AVERAGE = 3.42/:/GRADE POINT AVERAGE \(GPA\): 3.48/);
  assert.match(box.innerHTML,/ONE CREDIT HOUR EQUALS 32 HOURS/);
  if(!annual){
@@ -154,17 +157,17 @@ for(const term of ['first','second','annual']){
  }
  assert.deepEqual({rs,config},before,'Rendering must not mutate source marks or annual credits');
 }
-console.log('Class VI 2083 First/Second GPA 3.48, Final GPA 3.42, credits 16/32, missing/NG and data immutability passed.');
+console.log('Classes VI–VIII 2083 First/Second GPA 3.48, Final GPA 3.42, credits 16/32, missing/NG and data immutability passed.');
 
 // Verified 2083 Class VI non-final ledgers: one column per subject and GPA.
 const termRecords=sixSubjects.map((subject,i)=>({studentId:'synthetic-1',examId:'synthetic-exam',subject,scores:[{name:'Internal',fullMarks:50,obtained:sixInternal[i]}]}));
 const termOptions={...common,subjects:sixSubjects,records:termRecords,annual:false,academicYear:'2083',creditFor:s=>sixCredits[sixSubjects.indexOf(s)]};
 const untouched=structuredClone(termRecords);
-for(const term of ['first','second']){
- const grades=iemisLedger({...termOptions,term,mode:'grade'});
+for(const classNo of [6,7,8])for(const term of ['first','second']){
+ const grades=iemisLedger({...termOptions,classNo,term,mode:'grade'});
  assert.doesNotMatch(grades.head,/<th>IN<\/th>|<th>Total<\/th>|rowspan/);
  assert.match(grades.body,/>3.48<\/td>/);
- const marks=iemisLedger({...termOptions,term,mode:'number'});
+ const marks=iemisLedger({...termOptions,classNo,term,mode:'number'});
  assert.deepEqual(marks.subjects,term==='first'?sixSubjects:[...sixSubjects].reverse());
  assert.doesNotMatch(marks.head,/<th>IN<\/th>|rowspan/);
  assert.equal((grades.body.match(/<td>/g)||[]).length,16);
@@ -174,17 +177,17 @@ for(const term of ['first','second']){
   rs=>rs.map((r,i)=>i?r:{...r,scores:[{name:'Internal',fullMarks:50,obtained:0}]}),
   rs=>rs.map((r,i)=>i?r:{...r,scores:[{name:'Internal',fullMarks:50,obtained:''}]})
  ]){
-  const missing=iemisLedger({...termOptions,term,mode:'grade',records:mutate(termRecords)});
+  const missing=iemisLedger({...termOptions,classNo,term,mode:'grade',records:mutate(termRecords)});
   assert.match(missing.body,/<td>—<\/td><\/tr>$/,'Incomplete/absent/NG must not get numeric GPA');
  }
 }
-for(const override of [{academicYear:'2082'},{term:'third'},{classNo:7},{classNo:10}]){
+for(const override of [{academicYear:'2082'},{term:'third'},{classNo:11},{classNo:10}]){
  const legacy=iemisLedger({...termOptions,term:'first',mode:'grade',...override});
  assert.match(legacy.head,/<th>IN<\/th><th>Total<\/th>/);
  assert.match(legacy.body,/<td>—<\/td><\/tr>$/);
 }
 assert.deepEqual(termRecords,untouched);
-console.log('Verified VI term ledgers: columns, order, GPA, absence/NG/missing and historical/class isolation passed.');
+console.log('School-approved VI–VIII term ledgers: columns, order, GPA, absence/NG/missing and historical/class isolation passed.');
 
 
 // Populated Class IX 2083 reference: no student identifiers.
