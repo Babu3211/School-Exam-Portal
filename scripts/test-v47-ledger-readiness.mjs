@@ -25,4 +25,8 @@ assert.ok(duplicates.blockers.some(s=>s.includes("duplicate document identities"
 assert.throws(()=>auditV47LedgerReadiness({...data,marks:[{studentId:"s1"}]}),/Invalid marks source document identities/);
 const duplicateMarks=auditV47LedgerReadiness({...data,marks:[data.marks[0],{...data.marks[0],id:"m2"}]});
 assert.ok(duplicateMarks.blockers.some(s=>s.includes("duplicate an exam, student and subject")));
+const repeatedSubjects=auditV47LedgerReadiness({...data,subjects:[{id:"sub1",name:"Mathematics",classNo:6},{id:"sub2",subjectName:" mathematics ",classNo:6}]});
+assert.ok(repeatedSubjects.blockers.some(s=>s.includes("subjects share a name")));
+const separateClasses=auditV47LedgerReadiness({...data,subjects:[{id:"sub1",name:"Mathematics",classNo:6},{id:"sub2",name:"Mathematics",classNo:7}]});
+assert.ok(!separateClasses.blockers.some(s=>s.includes("subjects share a name")));
 console.log("V47 ledger readiness audit checks passed");
