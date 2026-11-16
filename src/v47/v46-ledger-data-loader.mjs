@@ -15,6 +15,7 @@ export async function loadV47LedgerCollections({session,collections=["students",
   const records=[];
   let cursor=null;
   const seenIds=new Set();
+  const seenCursors=new Set();
   do{
    const remaining=maxRecordsPerCollection-records.length;
    // A full page may return a cursor even when the collection ends exactly
@@ -41,6 +42,12 @@ export async function loadV47LedgerCollections({session,collections=["students",
    records.push(...page.records);
    if(records.length>maxRecordsPerCollection)throw new Error("Ledger dataset exceeds safe read cap: "+name);
    cursor=page.nextCursor;
+   if(cursor){
+    const token=JSON.stringify(cursor);
+    if(typeof token!=="string"||seenCursors.has(token))
+     throw new Error("Repeated ledger page cursor: "+name);
+    seenCursors.add(token);
+   }
   }while(cursor);
   result[name]=Object.freeze(records);
  }
