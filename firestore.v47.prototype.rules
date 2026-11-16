@@ -236,7 +236,7 @@ service cloud.firestore {
         // Legacy V46 student records may have additional fields; retain their
         // schema while forbidding cross-school identity changes.
         allow update: if admin(schoolId) &&
-          resource.data.get('schoolId', schoolId) == schoolId &&
+          (!('schoolId' in resource.data) || resource.data.schoolId == schoolId) &&
           request.resource.data.schoolId == schoolId;
         allow delete: if false;
       }
