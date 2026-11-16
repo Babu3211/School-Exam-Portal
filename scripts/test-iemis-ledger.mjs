@@ -127,6 +127,10 @@ for(const classNo of [1,2,3,4,5])for(const [year,term,expectedCredits,hours] of 
   const printData={...fixture,resultGradeBands,smssTermLabelEnglish:()=> 'Second Term'};
   new Function(...Object.keys(printData),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(printData));
   primaryPrintFixture=box.innerHTML;
+  const notePosition=primaryPrintFixture.indexOf('ONE CREDIT HOUR EQUALS 26 HOURS');
+  const gpaPosition=primaryPrintFixture.indexOf('GRADE POINT AVERAGE (GPA): 3.54');
+  assert.ok(gpaPosition>=0&&gpaPosition<primaryPrintFixture.indexOf('</table>'),'Primary GPA stays inside the marks table');
+  assert.ok(notePosition>gpaPosition&&notePosition<primaryPrintFixture.indexOf('DETAILS OF GRADE SHEET'),'Credit-hours note precedes the grading key');
  }
  const firstTable=box.innerHTML.match(/<table[^>]*>[\s\S]*?<\/table>/)[0];
  const rows=[...firstTable.matchAll(/<tr>([\s\S]*?)<\/tr>/g)].slice(1,6);
