@@ -6,4 +6,6 @@ assert.deepEqual(await saveLoadedClassAttendance(args),{saved:23,total:23,date:'
 const before=commits;for(const invalid of [[entries[0],entries[0]],[entries[0],{...entries[1],class:'7'}],[entries[0],{...entries[1],present:'yes'}],[]])await assert.rejects(()=>saveLoadedClassAttendance({...args,entries:invalid}));assert.equal(commits,before);
 await assert.rejects(()=>saveLoadedClassAttendance({...args,actor:{...actor,role:'viewer'}}));await assert.rejects(()=>saveLoadedClassAttendance({...args,schoolId:'school_002'}));
 commits=0;failOn=2;const seen=[];await assert.rejects(()=>saveLoadedClassAttendance({...args,onProgress:p=>seen.push(p)}),e=>e instanceof PartialAttendanceSaveError&&e.saved===10&&e.total===23);assert.equal(commits,2);assert.deepEqual(seen.map(p=>p.saved),[10]);
+commits=0;failOn=1;await assert.rejects(()=>saveLoadedClassAttendance(args),/network/);assert.equal(commits,1,'Stop on first batch failure');
+commits=0;failOn=0;await assert.rejects(()=>saveLoadedClassAttendance({...args,entries:Array.from({length:1501},(_,i)=>({...entries[0],studentId:'s'+i}))}),/1500/);assert.equal(commits,0,'Oversized request must not write');
 console.log('V47 chunked class attendance tests passed');
