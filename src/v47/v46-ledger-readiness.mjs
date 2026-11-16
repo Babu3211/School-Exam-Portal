@@ -19,7 +19,7 @@ export function auditV47LedgerReadiness(data,{schoolId}={}){
  const studentIds=new Set(data.students.map(s=>s.id));
  const examIds=new Set(data.exams.map(e=>e.id));
  const subjectIds=new Set(data.subjects.map(s=>s.id));
- const subjectNames=new Set(data.subjects.flatMap(s=>[s.name,s.subjectName].filter(Boolean).map(String)));
+ const subjectNames=new Set(data.subjects.flatMap(s=>[s.name,s.subjectName].filter(Boolean).map(v=>String(v).trim().toLowerCase())));
  if(schoolId){
   for(const kind of kinds){
    const mismatches=data[kind].filter(record=>record.schoolId!=null&&record.schoolId!==schoolId).length;
@@ -82,8 +82,17 @@ export function auditV47LedgerReadiness(data,{schoolId}={}){
  if(unknownStudents)blockers.push(unknownStudents+" marks reference unknown school students.");
  const unknownExams=data.marks.filter(m=>m.examId&&!examIds.has(m.examId)).length;
  if(unknownExams)blockers.push(unknownExams+" marks reference unknown school exams.");
- const unknownSubjects=data.marks.filter(m=>(m.subjectId||m.subject)&&!subjectIds.has(m.subjectId||m.subject)&&!subjectNames.has(String(m.subjectId||m.subject))).length;
+ const unknownSubjects=data.marks.filter(m=>{const ref=m.subjectId||m.subject;return ref&&!subjectIds.has(ref)&&!subjectNames.has(String(ref).trim().toLowerCase());}).length;
  if(unknownSubjects)blockers.push(unknownSubjects+" marks reference unknown school subjects.");
+ const subjectClassById=new Map(data.subjects.map(s=>[s.id,String(s.classNo??s.classId??"")]));
+ const subjectClassMismatches=data.marks.filter(m=>{
+  if(!m.subjectId||!subjectClassById.has(m.subjectId))return false;
+  const subClass=subjectClassById.get(m.subjectId);
+  const markClass=String(m.classNo??m.classId??studentClass.get(m.studentId)??examClass.get(m.examId)??"");
+  return Boolean(subClass&&markClass&&subClass!==markClass);
+ }).length;
+ if(subjectClassMismatches)blockers.push(subjectClassMismatches+" marks reference subjects from another class.");
+
  blockers.push("Verify class-specific subject credits, applicability, exam term and assessment component mappings before official rendering.");
  return Object.freeze({counts,blockers:Object.freeze(blockers),readyForOfficialLedger:false});
 }
