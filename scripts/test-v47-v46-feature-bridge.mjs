@@ -17,7 +17,7 @@ assert.equal(a.markSettings().context.gateway.path,"schools/school_A001/mark_set
 assert.equal(b.classes().context.gateway.path,"schools/school_B001/classes");
 assert.equal(b.markSettings().context.gateway.path,"schools/school_B001/mark_settings");
 assert.equal(a.settings().context.gateway.path,"schools/school_A001/school_settings");
-assert.equal(b.results().context.gateway.path,"schools/school_B001/public_results");
+assert.equal(b.results,undefined,"Public result publishing requires separate reviewed gateway");
 const mutableSession={schoolId:"school_A001",roles:["viewer"]};
 const snapshotBridge=createV46FeatureBridge({session:mutableSession,legacyFeatures:implementations,tenantGateway:gateway});
 mutableSession.roles.splice(0,1,"school_admin");
@@ -83,7 +83,7 @@ const integratedBridge=createV46FeatureBridge({
 assert.deepEqual(await integratedBridge.students().context.gateway.list(),[{id:"one",className:"1"}]);
 assert.equal(integratedBridge.marks().context.gateway.path,"schools/school_A001/marks");
 assert.equal(integratedBridge.attendance().context.gateway.path,"schools/school_A001/attendance");
-assert.equal(integratedBridge.results().context.gateway.path,"schools/school_A001/public_results");
+assert.equal(integratedBridge.results,undefined,"Public result publishing must remain blocked");
 assert.equal(typeof integratedBridge.students().context.gateway.save,"function");
 assert.throws(()=>integratedBridge.students().context.gateway.save(),/read-only/);
 assert.equal(typeof tenantCollection.save,"undefined");
@@ -92,7 +92,7 @@ const expectedCollections={
  students:"students",staff:"staff",classes:"classes",subjects:"subjects",
  exams:"exams",marks:"marks",attendance:"attendance",
  certificates:"certificates",markSettings:"mark_settings",
- settings:"school_settings",results:"public_results"
+ settings:"school_settings"
 };
 assert.deepEqual([...V46_REUSED_FEATURES].sort(),Object.keys(expectedCollections).sort());
 for(const [feature,collection] of Object.entries(expectedCollections)){
