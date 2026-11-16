@@ -223,3 +223,10 @@ VII/VIII follow the owner's school policy based on VI evidence; this is not a cl
 Applied the owner's original instruction to use Class IX rules for X, scoped to year2083 First/Second. Both now use the same subject-specific term credit fractions, single-grade sheet/ledger, Grade-before-GP columns, NEB field, and term Mark Ledger order. Final remains the existing common IX/X weighted IN/TH calculation. Computer entry remains the approved4/36/10 plus FinalTheory50. No marks/settings were rewritten.
 
 Separate synthetic IX and X First/Second/Final tests pass: term credits9, GPA3.66/3.66, FinalGPA3.48 on the reference vector, class heading, Computer weighting, missing/absent behavior and historical isolation. Entry, ledger, PWA and syntax suites pass. Actual Class X Save/Reload remains unverified because the live entry lists were empty; this extension is school policy based on IX evidence. Native print remains pending. No production deployment.
+
+
+## I–V school-policy expansion
+
+Extended Class I's 2083 achievement-sheet term credits/footnote policy to Classes II–V as originally instructed. Only achievement cohorts use it; saved historical IV/V TH/IN assessments keep their original rendering. First/Second display half the class's configured annual credits; Final retains annual credits. Corrected the year-boundary matcher so a label2083-2084 receives the same2083 policy. No subject configuration or marks are overwritten.
+
+Every I–V class now runs First/Second/Final sheet tests against the same Class I reference vector (GPA3.54; credits13/26), including Roman class heading, footnote26, annual-credit immutability, old-year and Third-Term isolation. Separate historical IV/V tests still pass. This is the authorized shared school policy, not a claim of populated live IEMIS comparison for every II–V class. All local entry, ledger/sheet, PWA and syntax suites pass. Native print and remaining live edit/validation work are still release gates.
