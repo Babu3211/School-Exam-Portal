@@ -18,3 +18,5 @@ These V47 modules are **not wired into the existing V46 HTML application**. They
 - `v47/students.html`: school-scoped **read-only** students browser, accessible to verified School Admin, Teacher and Viewer.
 - These pages require a manually supplied **V47-only** Firebase web configuration and an existing authenticated user. They are not a V46 UI migration, do not provide marks entry and are not production deployed.
 - The V47 Firestore rules must be deployed to a separate V47 project only after emulator tests pass. Existing V46 rules must not be overwritten.
+
+- `v47/records.html`: school-scoped, read-only academic record preview (classes, subjects, exams, marks, attendance, mark settings and staff). This is raw data preview, **not** IEMIS/CDC calculation, Mark Ledger, Grade Ledger, Grade Sheet or marks entry.
