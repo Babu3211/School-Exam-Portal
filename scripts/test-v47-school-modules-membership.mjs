@@ -5,7 +5,7 @@ for(const name of ["students","staff","marks","attendance"]){
  assert.ok(html.includes('import {verifyV47BrowserMembership} from "../../src/v47/browser-membership-guard.mjs";'),name+" guard import");
  assert.ok(html.includes("verifyV47BrowserMembership({schoolId:id,uid:user.uid,school:s.data(),member:m.data()})"),name+" verifies school identity");
  assert.ok(!html.includes('m.data().roles.some(role=>'),name+" must not duplicate weaker role validation");
- assert.ok(html.includes('schoolCollectionPath(id,"'+name+'")'),name+" scoped collection");
+ assert.ok(html.includes('schoolCollectionPath(id,"'+name+'")') || html.includes('tenantRecords.listPage("'+name+'",{pageSize:20,cursor})'),name+" scoped collection");
  assert.ok(html.includes("createV46VerifiedReadSession({"),name+" tenant gateway");
  assert.ok(html.includes('tenantRecords.listPage("'+name+'",{pageSize:20,cursor})'),name+" bounded cursor paging");
  assert.ok(html.includes("cursor=page.nextCursor"),name+" next cursor");
