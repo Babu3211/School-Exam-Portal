@@ -6,9 +6,13 @@ const result=await loadV47LedgerCollections({session,collections:["students"],pa
 assert.deepEqual(result.students.map(r=>r.id),["a","b"]);
 assert.equal(calls.length,2);
 assert.ok(Object.isFrozen(result.students));
-await assert.rejects(()=>loadV47LedgerCollections({session,collections:["marks"],pageSize:1,maxRecordsPerCollection:1}),/incomplete/);
+await assert.rejects(()=>loadV47LedgerCollections({session,collections:["marks"],pageSize:1,maxRecordsPerCollection:1}),/exceeds safe read cap/);
 await assert.rejects(()=>loadV47LedgerCollections({session,collections:["school_settings"]}),/Unreviewed/);
 await assert.rejects(()=>loadV47LedgerCollections({session,collections:["marks","marks"]}),/Unreviewed/);
 await assert.rejects(()=>loadV47LedgerCollections({session,collections:["marks"],pageSize:51}),/page size/);
 await assert.rejects(()=>loadV47LedgerCollections({session:{listPage:async()=>({records:[{id:"a"},{id:"b"}],nextCursor:null})},collections:["marks"],pageSize:1,maxRecordsPerCollection:1}),/exceeds safe read cap/);
+const exactCap={async listPage(_name,{cursor}){return cursor?{records:[],nextCursor:null}:{records:[{id:"a"}],nextCursor:{page:2}};}};
+assert.deepEqual((await loadV47LedgerCollections({session:exactCap,collections:["students"],pageSize:1,maxRecordsPerCollection:1})).students.map(s=>s.id),["a"]);
+await assert.rejects(()=>loadV47LedgerCollections({session:{async listPage(_name,{cursor}){return cursor?{records:[{id:"a"}],nextCursor:null}:{records:[{id:"a"}],nextCursor:{page:2}};}},collections:["students"],pageSize:1,maxRecordsPerCollection:3}),/Duplicate or invalid/);
+await assert.rejects(()=>loadV47LedgerCollections({session:{async listPage(){return {records:[],nextCursor:{page:2}};}},collections:["marks"],pageSize:1,maxRecordsPerCollection:2}),/Non-advancing/);
 console.log("V47 school ledger complete-read boundary checks passed");
