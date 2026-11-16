@@ -58,4 +58,11 @@ const mismatched=createV46BrowserTenantGateway({
 await assert.rejects(mismatched.forCollection("schools/school_A001/students").get("student_1"),/Unexpected Firestore document ID/);
 // Ordinary list reads must enforce the same tenant ownership as paged reads.
 await assert.rejects(malformed.forCollection("schools/school_A001/students").list({pageSize:1}),/Invalid Firestore list document/);
+const oversized=createV46BrowserTenantGateway({
+ db:{},verifiedSchoolId:"school_A001",
+ collectionFn:(_db,...parts)=>parts.join("/"),docFn:(_db,...parts)=>parts.join("/"),
+ getDocsFn:async()=>({docs:[pageDoc,pageDoc]}),getDocFn:async()=>({exists:()=>false}),
+ queryFn:(...args)=>args,limitFn:n=>n,orderByFn:field=>({field}),startAfterFn:cursor=>({after:cursor.id})
+});
+await assert.rejects(oversized.forCollection("schools/school_A001/students").listPage({pageSize:1}),/Invalid Firestore page size response/);
 console.log("V47 browser tenant gateway blocks sensitive collections and cursor replay");
