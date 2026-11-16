@@ -40,4 +40,13 @@ await assert.rejects(paged.forCollection("schools/school_A001/students").listPag
 const next=await students.listPage({pageSize:1,cursor:first.nextCursor});
 assert.deepEqual(next.records,[]);
 await assert.rejects(students.listPage({pageSize:1,cursor:first.nextCursor}),/Invalid Firestore page cursor/);
+// Reject a backend snapshot that points outside the verified tenant.
+const malformed=createV46BrowserTenantGateway({
+ db:{},verifiedSchoolId:"school_A001",
+ collectionFn:(_db,...parts)=>parts.join("/"),docFn:(_db,...parts)=>parts.join("/"),
+ getDocsFn:async()=>({docs:[{id:"student_2",ref:{path:"schools/school_B001/students/student_2"},data:()=>({name:"Wrong tenant"})}]}),
+ getDocFn:async()=>({exists:()=>false}),queryFn:(path,...clauses)=>({path,clauses}),
+ limitFn:n=>({limit:n}),orderByFn:field=>({field}),startAfterFn:cursor=>({after:cursor.id})
+});
+await assert.rejects(malformed.forCollection("schools/school_A001/students").listPage({pageSize:1}),/Invalid Firestore page document/);
 console.log("V47 browser tenant gateway blocks sensitive collections and cursor replay");
