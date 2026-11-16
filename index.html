@@ -2725,11 +2725,11 @@ function showGradeSheet(studentId){
  const examYear=onlineResultDigits(exam?.academicYear||student.academicYear||'2083 B.S. (2026 A.D.)');
  const examTerm=exam?smssTermLabelEnglish(smssExamTermKey(exam)):'Term Not Available';
  const classSubjectRecord=(subject)=>{const sameClass=x=>canonicalStudentClass(x.className??x.class??'')===canonicalStudentClass(student.class??'');const sameSubject=x=>iemisSubjectKey(x.subject||x.subjectName)===iemisSubjectKey(subject);return resultClasses.find(x=>sameClass(x)&&x.active!==false&&sameSubject(x))||resultClasses.find(x=>sameClass(x)&&sameSubject(x))||null};
- // Verified against populated IEMIS 2083 Class I First, Second and Final sheets.
+ // School-approved I–V achievement policy based on populated Class I 2083 sheets.
  // Stored class credits remain annual; this adjustment affects presentation only.
- const verifiedClassOne=classNo===1&&/^2083(?:\\D|$)/.test(onlineResultDigits(exam?.academicYear||''));
- const verifiedPrimaryTerm=verifiedClassOne&&['first','second'].includes(smssExamTermKey(exam));
- const verifiedPrimarySheet=verifiedClassOne&&['first','second','annual'].includes(smssExamTermKey(exam));
+ const verifiedPrimaryGroup=isPrimary&&/^2083(?:\D|$)/.test(onlineResultDigits(exam?.academicYear||''));
+ const verifiedPrimaryTerm=verifiedPrimaryGroup&&['first','second'].includes(smssExamTermKey(exam));
+ const verifiedPrimarySheet=verifiedPrimaryGroup&&['first','second','annual'].includes(smssExamTermKey(exam));
  // School-approved VI–VIII policy uses the populated Class VI 2083 reference:
  // half annual credits and a term GPA; no theory grade is required.
  const verifiedMiddleSheet=[6,7,8].includes(classNo)&&/^2083(?:\D|$)/.test(onlineResultDigits(exam?.academicYear||''))&&['first','second','annual'].includes(smssExamTermKey(exam));
