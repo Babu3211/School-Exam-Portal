@@ -8,7 +8,7 @@ const root=resolve(import.meta.dirname,"..");
 const output=join(root,"dist","v47-spark");
 const expectedProject="smss-exam-portal-v47";
 const expectedDomain=expectedProject+".firebaseapp.com";
-const pages=["prototypes/v47/spark-school-registration.html","prototypes/v47/spark-school-workspace.html","prototypes/v47/v46-grade-calculator.html","prototypes/v47/spark-school-students.html"];
+const pages=["prototypes/v47/spark-school-registration.html","prototypes/v47/spark-school-workspace.html","prototypes/v47/v46-grade-calculator.html","prototypes/v47/spark-school-students.html","prototypes/v47/spark-school-staff.html"];
 const htmlPages=await Promise.all(pages.map(async page=>({page,html:await readFile(join(root,page),"utf8")})));
 const imports=htmlPages.flatMap(({page,html})=>{
  if(!html.includes('<script type="module">'))throw new Error("Missing V47 module entry: "+page);
@@ -65,5 +65,5 @@ const loader='<script src="./spark-config.js"></script>';
   const htmlWithLoader=configRaw&&needsFirebase?html.replace('<script type="module">',loader+'<script type="module">'):html;
   await writeFile(join(output,page),htmlWithLoader);
  }
-await writeFile(join(output,"index.html"),`<!doctype html><meta charset="utf-8"><title>SMSS V47 Staging</title><p>V47 Spark staging preview. Firebase configuration must be explicitly provided for the isolated V47 project.</p><a href="/prototypes/v47/spark-school-registration.html">Open registration prototype</a><p><a href="/prototypes/v47/spark-school-workspace.html">Open read-only school workspace</a><p><a href="/prototypes/v47/v46-grade-calculator.html">Open V46 grade calculator</a></p><p><a href="/prototypes/v47/spark-school-students.html">Open school students</a></p>`);
+await writeFile(join(output,"index.html"),`<!doctype html><meta charset="utf-8"><title>SMSS V47 Staging</title><p>V47 Spark staging preview. Firebase configuration must be explicitly provided for the isolated V47 project.</p><a href="/prototypes/v47/spark-school-registration.html">Open registration prototype</a><p><a href="/prototypes/v47/spark-school-workspace.html">Open read-only school workspace</a><p><a href="/prototypes/v47/v46-grade-calculator.html">Open V46 grade calculator</a></p><p><a href="/prototypes/v47/spark-school-students.html">Open school students</a></p><p><a href="/prototypes/v47/spark-school-staff.html">Open school staff</a></p>`);
 console.log("Built isolated V47 Spark preview:",visited.size,"browser modules; no deployment");
