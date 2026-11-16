@@ -10,6 +10,7 @@ export function createV46TenantPathResolver({verifiedSchoolId,verifiedMembership
  if(!verifiedMembership || verifiedMembership.schoolId!==id ||
     verifiedMembership.active!==true || !Array.isArray(verifiedMembership.roles) ||
     verifiedMembership.roles.length===0 ||
+    new Set(verifiedMembership.roles).size!==verifiedMembership.roles.length ||
     verifiedMembership.roles.some(role=>!["school_admin","class_teacher","subject_teacher","viewer"].includes(role)) ||
     (verifiedMembership.roles.includes("viewer")&&verifiedMembership.roles.length!==1))
   throw new Error("Verified school membership required");
@@ -19,8 +20,6 @@ export function createV46TenantPathResolver({verifiedSchoolId,verifiedMembership
   const category=V46_COLLECTION_POLICY[name];
   if(category==="tenant-server-managed" || category==="tenant-public-publishing")
    throw new Error("Legacy collection requires server-side migration review");
-  if(name==="school_settings" || name==="mark_settings")
-   return schoolCollectionPath(id,name);
   return schoolCollectionPath(id,name);
  };
  return Object.freeze({schoolId:id,collection:resolveCollection});
