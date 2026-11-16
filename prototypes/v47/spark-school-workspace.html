@@ -25,6 +25,11 @@ import {createV46BrowserTenantGateway} from "../../src/v47/v46-browser-tenant-ga
 const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#login-form"),logout=document.querySelector("#logout"),schoolForm=document.querySelector("#school-form"),status=document.querySelector("#status"),workspace=document.querySelector("#workspace"),tables=document.querySelector("#tables");
 let epoch=0,auth,db;
 const PAGE_SIZE=20;
+const requestedSchoolId=new URLSearchParams(location.search).get("schoolId");
+const schoolIdInput=schoolForm.elements.namedItem("schoolId");
+if(requestedSchoolId && /^[a-zA-Z0-9_-]{8,64}$/.test(requestedSchoolId))
+ schoolIdInput.value=requestedSchoolId;
+
 const PREVIEW_KINDS=["students","staff","classes","subjects","exams","marks","attendance","certificates","mark_settings","school_settings"];
 
 const say=value=>status.textContent=value;
@@ -32,7 +37,7 @@ const clear=()=>{epoch++;workspace.hidden=true;tables.replaceChildren();document
 if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="smss-exam-portal-v47.firebaseapp.com"){login.hidden=true;say("V47 isolated Firebase configuration is missing. No connection started.");}
 else{
  const app=initializeApp(config,"v47-school-workspace");auth=getAuth(app);db=getFirestore(app);
- onAuthStateChanged(auth,user=>{clear();login.hidden=!!user;logout.hidden=!user;schoolForm.hidden=!user;document.querySelector("#identity").textContent=user?"Signed in: "+user.email:"Not signed in";if(!user)say("Sign in to inspect a school.");});
+ onAuthStateChanged(auth,user=>{clear();login.hidden=!!user;logout.hidden=!user;schoolForm.hidden=!user;document.querySelector("#identity").textContent=user?"Signed in: "+user.email:"Not signed in";if(!user)say("Sign in to inspect a school.");else if(schoolIdInput.value && !schoolForm.hidden)schoolForm.requestSubmit();});
  login.addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(login);try{await signInWithEmailAndPassword(auth,String(f.get("email")),String(f.get("password")));say("Signed in. Enter your school ID.");}catch{say("Sign in failed.");}login.elements.namedItem("password").value="";});
  logout.addEventListener("click",async()=>{clear();try{await signOut(auth);}catch{say("Sign out failed.");}});
  schoolForm.elements.namedItem("schoolId").addEventListener("input",clear);
