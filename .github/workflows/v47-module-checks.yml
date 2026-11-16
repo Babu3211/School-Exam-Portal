@@ -51,5 +51,9 @@ jobs:
         run: node scripts/test-v47-safe-export.mjs
       - name: V47 version-info
         run: node scripts/test-v47-version-info.mjs
+      - name: Atomic school onboarding
+        run: node scripts/test-v47-school-onboarding.mjs
+      - name: School member management
+        run: node scripts/test-v47-member-management.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
