@@ -75,5 +75,7 @@ jobs:
         run: node scripts/test-v47-student-validation.mjs
       - name: V47 school-scoped student create service
         run: node scripts/test-v47-student-service.mjs
+      - name: V47 attendance service and date validation
+        run: node scripts/test-v47-attendance-service.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
