@@ -17,4 +17,7 @@ await assert.rejects(()=>loadV47LedgerCollections({session:{async listPage(_name
 await assert.rejects(()=>loadV47LedgerCollections({session:{async listPage(){return {records:[],nextCursor:{page:2}};}},collections:["marks"],pageSize:1,maxRecordsPerCollection:2}),/Non-advancing/);
 await assert.rejects(()=>loadV47LedgerCollections({session:{async listPage(){return {records:[{id:"a"},{id:"b"}],nextCursor:null};}},collections:["marks"],pageSize:1,maxRecordsPerCollection:3}),/Invalid verified read page/);
 await assert.rejects(()=>loadV47LedgerCollections({session:{async listPage(_name,{cursor}){return {records:[{id:cursor?"b":"a"}],nextCursor:{page:2}};}},collections:["marks"],pageSize:1,maxRecordsPerCollection:5}),/Repeated ledger page cursor/);
+await assert.rejects(()=>loadV47LedgerCollections({session:{async listPage(){return {records:[{id:"a"}],nextCursor:"bad-cursor"};}},collections:["marks"],pageSize:1,maxRecordsPerCollection:3}),/Invalid verified read page/);
+const circular={};circular.self=circular;
+await assert.rejects(()=>loadV47LedgerCollections({session:{async listPage(){return {records:[{id:"a"}],nextCursor:circular};}},collections:["marks"],pageSize:1,maxRecordsPerCollection:3}),/Invalid ledger page cursor/);
 console.log("V47 school ledger complete-read boundary checks passed");
