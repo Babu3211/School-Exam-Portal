@@ -13,7 +13,7 @@ export function auditV47LedgerReadiness(data,{schoolId}={}){
    if(ids.has(record.id))duplicate++;
    ids.add(record.id);
   }
-  if(invalid)blockers.push(invalid+" "+kind+" records have invalid document identities.");
+  if(invalid)throw new Error("Invalid "+kind+" source document identities: "+invalid);
   if(duplicate)blockers.push(duplicate+" "+kind+" records have duplicate document identities.");
  }
  const studentIds=new Set(data.students.map(s=>s.id));
