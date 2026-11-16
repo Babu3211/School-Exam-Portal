@@ -65,6 +65,11 @@ const browserGateway=createV46BrowserTenantGateway({
  getDocsFn:async()=>({docs:[{id:"one",data:()=>({className:"1",id:"spoofed"})}]}),
  getDocFn:async()=>({exists:()=>true,id:"one",data:()=>({name:"Student",id:"spoofed"})})
 });
+assert.equal(browserGateway.schoolId,"school_A001");
+assert.throws(()=>createV46FeatureBridge({
+ session:{schoolId:"school_B001",roles:["viewer"]},
+ legacyFeatures:implementations,tenantGateway:browserGateway
+}),/Tenant gateway school mismatch/);
 const tenantCollection=browserGateway.forCollection("schools/school_A001/students");
 assert.deepEqual(await tenantCollection.list(),[{id:"one",className:"1"}]);
 assert.deepEqual(await tenantCollection.get("one"),{id:"one",name:"Student"});
