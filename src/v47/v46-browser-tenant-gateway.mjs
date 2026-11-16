@@ -28,6 +28,7 @@ export function createV46BrowserTenantGateway({db,verifiedSchoolId,collectionFn,
     throw new Error("Unreviewed or cross-school V46 collection path");
    const collectionName=path.slice(prefix.length);
    const collectionRef=()=>collectionFn(db,"schools",schoolId,collectionName);
+   const issuedCursors=new WeakSet();
    return Object.freeze({
     path,
     async list({pageSize=20}={}) {
@@ -47,12 +48,13 @@ export function createV46BrowserTenantGateway({db,verifiedSchoolId,collectionFn,
      if(cursor!==null){
       if(typeof cursor!=="object" || typeof cursor.id!=="string" ||
          !safeSegment(cursor.id) || typeof cursor.data!=="function" ||
-         cursor.ref?.path!==path+"/"+cursor.id)
+         cursor.ref?.path!==path+"/"+cursor.id || !issuedCursors.has(cursor))
        throw new TypeError("Invalid Firestore page cursor");
       clauses.push(startAfterFn(cursor));
      }
      const snapshot=await getDocsFn(queryFn(collectionRef(),...clauses,limitFn(pageSize)));
      const docs=snapshot.docs;
+     if(docs.length===pageSize && docs.length)issuedCursors.add(docs.at(-1));
      return Object.freeze({
       records:Object.freeze(docs.map(doc=>Object.freeze({...doc.data(),id:doc.id}))),
       nextCursor:docs.length===pageSize?docs.at(-1):null
