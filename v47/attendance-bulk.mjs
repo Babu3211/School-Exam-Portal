@@ -1,11 +1,11 @@
 import {validateSchoolId} from './school-paths.mjs';
 import {canAccessSchool} from './permissions.mjs';
 import {validateAttendance} from './attendance-service.mjs';
-// Deliberately capped below Firestore's per-batch write limit. No writes occur until all inputs validate.
+// Capped conservatively for Firestore Security Rules document-access budgets. No writes occur until all inputs validate.
 export async function saveClassAttendance({db,api,actor,schoolId,entries}){
  validateSchoolId(schoolId);
  if(!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin permission required');
- if(!Array.isArray(entries)||entries.length<1||entries.length>100)throw new RangeError('Enter 1–100 students per save');
+ if(!Array.isArray(entries)||entries.length<1||entries.length>10)throw new RangeError('Enter 1–10 students per save');
  if(typeof api?.writeBatch!=='function'||typeof api?.doc!=='function')throw new TypeError('Missing Firebase SDK');
  const validated=entries.map(validateAttendance);
  const date=validated[0].date,schoolClass=validated[0].class;
