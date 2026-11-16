@@ -58,4 +58,10 @@ const ambiguousName=auditV47LedgerReadiness({...data,students:[{id:"s1",classNo:
 assert.ok(ambiguousName.blockers.some(s=>s.includes("ambiguous subject names")));
 const unambiguousName=auditV47LedgerReadiness({...data,students:[{id:"s1",classNo:6}],exams:[{id:"e1",classNo:6}],subjects:[{id:"a",name:"Science",classNo:6}],marks:[{...data.marks[0],subject:"Science",classNo:6}]});
 assert.ok(!unambiguousName.blockers.some(s=>s.includes("ambiguous subject names")));
+const invalidAssessment=auditV47LedgerReadiness({...data,marks:[{...data.marks[0],scores:[{name:"IN",obtained:60,fullMarks:50}]}]});
+assert.ok(invalidAssessment.blockers.some(s=>s.includes("invalid assessment scores")));
+const negativeAssessment=auditV47LedgerReadiness({...data,marks:[{...data.marks[0],scores:[{name:"IN",obtained:-1,fullMarks:50}]}]});
+assert.ok(negativeAssessment.blockers.some(s=>s.includes("invalid assessment scores")));
+const validAssessment=auditV47LedgerReadiness(data);
+assert.ok(!validAssessment.blockers.some(s=>s.includes("invalid assessment scores")));
 console.log("V47 ledger readiness audit checks passed");
