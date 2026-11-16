@@ -171,6 +171,9 @@ jobs:
       - name: V47 four school pages security regression checks
         if: success() || failure()
         run: node scripts/test-v47-school-pages-security.mjs
+      - name: V47 V46 marks grade preview compatibility
+        if: success() || failure()
+        run: node scripts/test-v47-v46-mark-grade-preview.mjs
       - name: V47 to V46 IEMIS term compatibility checks
         if: success() || failure()
         run: node scripts/test-v47-v46-exam-term-adapter.mjs
