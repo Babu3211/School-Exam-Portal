@@ -21,8 +21,12 @@ export async function loadV47LedgerCollections({session,collections=["students",
    // at the cap. Probe one more record rather than rejecting valid data.
    const requested=remaining>0?Math.min(pageSize,remaining):1;
    const page=await session.listPage(name,{pageSize:requested,cursor});
-   if(!page||!Array.isArray(page.records)||page.records.length>requested)
+   if(!page||!Array.isArray(page.records))throw new Error("Invalid verified read page");
+   if(page.records.length>requested){
+    if(records.length+page.records.length>maxRecordsPerCollection)
+     throw new Error("Ledger dataset exceeds safe read cap: "+name);
     throw new Error("Invalid verified read page");
+   }
    if(remaining===0){
     if(page.records.length||page.nextCursor)throw new Error("Ledger dataset exceeds safe read cap: "+name);
     cursor=null;
