@@ -30,6 +30,11 @@ for(const kind of ["marks","attendance"]){
   assert.ok(html.includes('access.roles.includes("subject_teacher")'));
   assert.ok(html.includes("Number.isFinite(payload.score)"));
   assert.ok(html.includes("payload.score>100"));
+  assert.ok(html.includes('subjectChoice.value!==payload.subjectId'));
+  assert.ok(html.includes('subjectGateway.listPage({pageSize:50,cursor:subjectCursor})'));
+  assert.ok(html.includes('schoolCollectionPath(id,"subjects")'));
+  assert.ok(html.includes('subjectChoice.replaceChildren(...options)'));
+  assert.ok(html.includes('void loadSubjectsForEntry()'));
  }else{
   assert.ok(html.includes('access.roles.includes("class_teacher")'));
   assert.ok(html.includes('present:fields.get("present")==="true"'));
