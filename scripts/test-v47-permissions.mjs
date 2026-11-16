@@ -9,6 +9,7 @@ assert.equal(canAccessSchool(admin,'school_002','read'),false);
 assert.equal(canAccessSchool(viewer,'school_001','read'),true);
 assert.equal(canAccessSchool(viewer,'school_001','write'),false);
 assert.equal(canAccessSchool(teacher,'school_001','write'),false);
+assert.equal(canAccessSchool({...teacher,assignedWrite:true},'school_001','write'),false);
 assert.equal(canAccessSchool(superAdmin,'school_002','write'),true);
 assert.equal(canManageSchools(admin),false);
 assert.equal(canManageSchools(superAdmin),true);
