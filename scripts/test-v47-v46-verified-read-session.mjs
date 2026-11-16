@@ -6,7 +6,7 @@ const schoolId="school_A001";
 const options={
  db:{},auth,schoolId,
  docFn:(_db,...parts)=>parts.join("/"),
- collectionFn:(_db,path)=>path,
+ collectionFn:(_db,...parts)=>parts.join("/"),
  queryFn:(path,...clauses)=>({path,clauses}),
  limitFn:n=>({limit:n}),
  getDocFn:async path=>{
