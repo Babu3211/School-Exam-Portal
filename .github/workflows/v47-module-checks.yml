@@ -71,5 +71,9 @@ jobs:
         run: node scripts/test-v47-school-isolation-gate.mjs
       - name: V47 school academic records read-only UI
         run: node scripts/test-v47-records-console-static.mjs
+      - name: V47 student input validation
+        run: node scripts/test-v47-student-validation.mjs
+      - name: V47 school-scoped student create service
+        run: node scripts/test-v47-student-service.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
