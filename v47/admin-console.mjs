@@ -1,0 +1,25 @@
+import {onboardSchool} from './school-onboarding.mjs';
+import {listSchools} from './school-list-service.mjs';
+import {setSchoolActive} from './school-status-service.mjs';
+const $=id=>document.getElementById(id);let auth,db,api,actor=null,cursor=null;
+const status=message=>{$('message').textContent=message};
+const firebaseBase='https://www.gstatic.com/firebasejs/11.10.0/';
+$('connect').onclick=async()=>{try{
+ const config=JSON.parse($('config').value);
+ if(config.projectId!=='smss-exam-portal-v47')throw new Error('Only the V47 Firebase project is allowed');
+ const appSdk=await import(firebaseBase+'firebase-app.js');
+ const authSdk=await import(firebaseBase+'firebase-auth.js');
+ api=await import(firebaseBase+'firebase-firestore.js');
+ const app=appSdk.initializeApp(config,'smss-v47-admin');auth=authSdk.getAuth(app);db=api.getFirestore(app);
+ $('connect').disabled=true;$('login').disabled=false;$('connection').textContent='Connected to V47 project';
+ $('login').onclick=async()=>{try{await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);$('password').value='';await verifyAdmin();}catch(e){status(e.message)}};
+ $('logout').onclick=async()=>{await authSdk.signOut(auth);actor=null;$('adminArea').hidden=true;$('logout').disabled=true;$('identity').textContent='Not signed in';status('Signed out')};
+ status('Connected. Sign in as a provisioned Super Admin.');
+ }catch(e){status(e.message)}};
+async function verifyAdmin(){actor=null;$('adminArea').hidden=true;const uid=auth.currentUser?.uid;if(!uid)throw new Error('Sign in first');
+ // This document is intentionally client-unreadable: authorization is verified by a harmless scoped query.
+ await api.getDocs(api.query(api.collection(db,'schools'),api.limit(1)));
+ actor={active:true,role:'super_admin'};$('identity').textContent='Authenticated Super Admin: '+uid;$('logout').disabled=false;$('adminArea').hidden=false;status('Super Admin authorization verified');await refresh();}
+async function refresh(){try{const result=await listSchools({db,api,actor,pageSize:30,cursor});const tbody=$('schools');tbody.replaceChildren();for(const school of result.schools){const tr=document.createElement('tr');for(const value of [school.id,school.name,school.active?'Active':'Inactive']){const td=document.createElement('td');td.textContent=String(value??'');tr.append(td)}const td=document.createElement('td'),button=document.createElement('button');button.textContent=school.active?'Deactivate':'Activate';button.onclick=async()=>{if(!confirm('Change school status for '+school.id+'?'))return;try{await setSchoolActive({db,api,actor,schoolId:school.id,active:!school.active});cursor=null;await refresh()}catch(e){status(e.message)}};td.append(button);tr.append(td);tbody.append(tr)}$('next').disabled=!result.hasMore;$('next').onclick=()=>{cursor=result.cursor;refresh()};status('Loaded '+result.schools.length+' schools');}catch(e){status(e.message)}}
+$('refresh').onclick=()=>{cursor=null;refresh()};
+$('register').onclick=async()=>{try{if(!confirm('Register this school as INACTIVE and assign the first Admin?'))return;const form={id:$('schoolId').value.trim(),name:$('schoolName').value.trim(),iemisCode:$('iemis').value.trim()};await onboardSchool({db,api,actor,form,adminUid:$('adminUid').value.trim()});cursor=null;await refresh();status('School registered as inactive. Activate after verification.')}catch(e){status(e.message)}};
