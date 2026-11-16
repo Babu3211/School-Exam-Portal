@@ -44,10 +44,16 @@ else{
    // Fetch independent tenant-scoped previews concurrently to reduce wait time.
    // Each query remains bounded regardless of total school enrollment.
    const kinds=["students","classes","subjects","exams","marks","attendance"];
-   const results=await Promise.all(kinds.map(kind=>getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),limit(20)))));
+   const results=await Promise.allSettled(kinds.map(kind=>getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),limit(20)))));
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
    for(let index=0;index<kinds.length;index++){
-    const kind=kinds[index],result=results[index];
+    const kind=kinds[index],outcome=results[index];
+    if(outcome.status!=="fulfilled"){
+     const section=document.createElement("section"),heading=document.createElement("h3"),notice=document.createElement("p");
+     heading.textContent=kind;notice.textContent="This section could not be loaded. Check school permissions and retry.";
+     section.append(heading,notice);staged.push(section);continue;
+    }
+    const result=outcome.value;
     sectionCounts[kind]=result.size;
     const section=document.createElement("section"),heading=document.createElement("h3"),list=document.createElement("ul");
     heading.textContent=kind+" ("+result.size+" shown; maximum 20)";section.append(heading);
@@ -112,7 +118,7 @@ else{
    document.querySelector("#role").textContent="Access: "+latestMember.data().roles.join(", ")+" (read-only preview)";
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
    tables.replaceChildren(...staged);
-   workspace.hidden=false;say("School data loaded (read-only). "+Object.values(sectionCounts).reduce((a,b)=>a+b,0)+" records displayed across 6 sections; initially capped at 20, with on-demand pagination. No changes saved.");
+   workspace.hidden=false;say("School data loaded (read-only). "+Object.values(sectionCounts).reduce((a,b)=>a+b,0)+" records displayed across available sections; initially capped at 20, with on-demand pagination. No changes saved.");
   }catch(error){if(token===epoch){clear();say("Unable to load school: "+error.message);}}
  });
 }
