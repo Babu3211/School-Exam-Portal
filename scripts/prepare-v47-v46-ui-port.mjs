@@ -20,15 +20,18 @@ let port=source.replace(literal,(full,fn,quote,name)=>{
 // Route all remaining variable collection names through the same fail-closed gateway.
 const dynamicSource=/\b(collection|doc)\s*\(\s*db\s*,\s*([a-zA-Z_$][\w$]*)/g;
 const dynamicNames=new Set();
+let dynamicReferences=0;
 port=port.replace(dynamicSource,(full,fn,name)=>{
  if(name==="tenantCollection")return full;
  if(name!=="name")throw new Error("Unreviewed dynamic V46 collection variable: "+name);
  dynamicNames.add(name);
+ dynamicReferences++;
  return fn+"(db,tenantCollection("+name+")";
 });
 const unresolved=[...port.matchAll(dynamicSource)].filter(m=>m[2]!=="tenantCollection");
 assert.equal(unresolved.length,0,"Unscoped V46 Firestore access remains");
-assert.equal((port.match(/tenantCollection\(/g)||[]).length,changed+3,"Every V46 Firestore reference must use tenant gateway");
+assert.equal(dynamicReferences,3,"V46 dynamic Firestore references changed: review required");
+assert.equal((port.match(/tenantCollection\(/g)||[]).length,changed+dynamicReferences,"Every V46 Firestore reference must use tenant gateway");
 const legacyConfig=/const firebaseConfig=\{[^;]+\};const ADMIN_UID="[^"]+";const app=initializeApp\(firebaseConfig\),auth=getAuth\(app\),db=getFirestore\(app\);/;
 assert.match(port,legacyConfig,"V46 Firebase bootstrap must be reviewed before migration");
 const blocker=`
@@ -53,6 +56,7 @@ await writeFile(join(output,"audit.json"),JSON.stringify({
  state:"QUARANTINED_NOT_DEPLOYABLE",source:"V46 index.html",
  literalReferencesRewritten:changed,
  dynamicVariablesScoped:[...dynamicNames],
+ dynamicReferencesRewritten:dynamicReferences,
  unresolvedDynamicReferences:unresolved,
  blocker:"School-scoped membership verification and complete V46 module dependencies not yet integrated"
 },null,2));
