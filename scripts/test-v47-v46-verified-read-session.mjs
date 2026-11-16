@@ -54,6 +54,7 @@ assert.equal(Object.hasOwn(first.nextCursor,"data"),false);
 const second=await paging.listPage("students",{pageSize:1,cursor:first.nextCursor});
 assert.deepEqual(second.records,[]);
 assert.equal(second.nextCursor,null);
+await assert.rejects(paging.listPage("students",{pageSize:1,cursor:first.nextCursor}));
 await assert.rejects(paging.listPage("staff",{cursor:first.nextCursor}));
 auth.currentUser={uid:"other_user"};
 await assert.rejects(paging.listPage("students",{pageSize:1,cursor:first.nextCursor}));
