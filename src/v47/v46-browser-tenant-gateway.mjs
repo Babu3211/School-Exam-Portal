@@ -40,7 +40,11 @@ export function createV46BrowserTenantGateway({db,verifiedSchoolId,collectionFn,
      if(!Number.isInteger(pageSize) || pageSize<1 || pageSize>50)
       throw new RangeError("Page size must be between 1 and 50");
      const snapshot=await getDocsFn(queryFn(collectionRef(),limitFn(pageSize)));
-     return snapshot.docs.map(doc=>Object.freeze({...doc.data(),id:doc.id}));
+     return Object.freeze(snapshot.docs.map(item=>{
+      if(!item || !safeSegment(item.id) || item.ref?.path!==path+"/"+item.id || typeof item.data!=="function")
+       throw new TypeError("Invalid Firestore list document");
+      return Object.freeze({...item.data(),id:item.id});
+     }));
     },
     // Cursor-based pagination avoids downloading an entire large school collection.
     // Cursor is the last Firestore DocumentSnapshot returned by a prior page.
