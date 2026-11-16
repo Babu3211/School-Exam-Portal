@@ -4,17 +4,19 @@ service cloud.firestore {
   function signedIn() { return request.auth != null; }
   function superAdmin() { return signedIn() && exists(/databases/$(database)/documents/v47_super_admins/$(request.auth.uid)) && get(/databases/$(database)/documents/v47_super_admins/$(request.auth.uid)).data.active == true; }
   function membershipPath(schoolId) { return /databases/$(database)/documents/schools/$(schoolId)/members/$(request.auth.uid); }
-  function member(schoolId) { return signedIn() && exists(membershipPath(schoolId)) && get(membershipPath(schoolId)).data.active == true; }
+  function schoolActive(schoolId) { return exists(/databases/$(database)/documents/schools/$(schoolId)) && get(/databases/$(database)/documents/schools/$(schoolId)).data.active == true; }
+  function member(schoolId) { return signedIn() && schoolActive(schoolId) && exists(membershipPath(schoolId)) && get(membershipPath(schoolId)).data.active == true; }
   function memberRole(schoolId, role) { return member(schoolId) && get(membershipPath(schoolId)).data.role == role; }
   function reader(schoolId) { return superAdmin() || member(schoolId); }
   function schoolAdmin(schoolId) { return superAdmin() || memberRole(schoolId, 'school_admin'); }
   match /v47_super_admins/{uid} { allow read, write: if false; }
   match /schools/{schoolId} {
    allow get, list: if reader(schoolId);
-   allow create, update, delete: if superAdmin();
+   allow create, update: if superAdmin() && request.resource.data.get('active', false) is bool;
+   allow delete: if superAdmin();
    match /members/{uid} {
     allow get, list: if schoolAdmin(schoolId) || (signedIn() && request.auth.uid == uid && member(schoolId));
-    allow create, update: if schoolAdmin(schoolId) && request.resource.data.get('role','') in ['school_admin','teacher','viewer'] && request.resource.data.get('schoolId','') == schoolId && request.resource.data.get('uid','') == uid;
+    allow create, update: if schoolAdmin(schoolId) && (superAdmin() || request.resource.data.get('role','') in ['teacher','viewer']) && request.resource.data.get('role','') in ['school_admin','teacher','viewer'] && request.resource.data.get('active',false) is bool && request.resource.data.get('schoolId','') == schoolId && request.resource.data.get('uid','') == uid;
     allow delete: if schoolAdmin(schoolId);
    }
    match /{collection}/{docId} {
