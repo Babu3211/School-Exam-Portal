@@ -232,6 +232,8 @@ jobs:
       - name: test-v47-v46-collection-map
         if: success() || failure()
         run: node scripts/test-v47-v46-collection-map.mjs
+      - name: test-v47-school-modules-membership
+        run: node scripts/test-v47-school-modules-membership.mjs
       - name: test-v47-browser-gateway-sensitive-collections
         run: node scripts/test-v47-browser-gateway-sensitive-collections.mjs
       - name: test-v47-school-backup-plan
