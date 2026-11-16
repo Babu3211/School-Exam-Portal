@@ -59,8 +59,10 @@ export function createV46VerifiedReadSession({
    if(cursor!==null){
     if(typeof cursor!=="object" || !issuedPageTokens.has(cursor))throw new TypeError("Invalid page token");
     const issued=issuedPageTokens.get(cursor);
-    if(issued.name!==name || issued.identity!==identity || consumedPageTokens.has(cursor))
+    if(issued.name!==name || issued.identity!==identity || consumedPageTokens.has(cursor)){
+     consumedPageTokens.add(cursor);
      throw new TypeError("Page token is expired or belongs to another collection or member");
+    }
     consumedPageTokens.add(cursor);
     internalCursor=issued.snapshot;
    }
