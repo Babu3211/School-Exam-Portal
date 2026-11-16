@@ -25,7 +25,7 @@ function viewerSafeGateway(gateway) {
 export function createV46FeatureBridge({session,legacyFeatures,tenantGateway}) {
  if(!session || typeof session!=="object") throw new TypeError("Verified session required");
  const schoolId=assertSchoolId(session.schoolId);
- if(tenantGateway?.schoolId!==schoolId)
+ if(typeof tenantGateway?.schoolId==="string" && tenantGateway.schoolId!==schoolId)
   throw new Error("Tenant gateway school mismatch");
  if(!Array.isArray(session.roles) || !session.roles.length || session.roles.some(role=>typeof role!=="string" || !ALLOWED_ROLES.has(role)) || new Set(session.roles).size!==session.roles.length || session.roles.includes("viewer") && session.roles.some(r=>r!=="viewer"))
    throw new Error("Invalid school role session");
