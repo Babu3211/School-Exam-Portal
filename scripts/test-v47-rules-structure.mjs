@@ -11,4 +11,10 @@ assert.match(rules,/allow create: if schoolAdmin\(schoolId\) && validNewStudent\
 const wildcard=rules.match(/match \/\{collection\}\/\{docId\} \{([\s\S]*?)\n   \}/)?.[1];
 assert.ok(wildcard,'Missing generic scoped rule');
 assert.doesNotMatch(wildcard,/'students'/,'Wildcard student write rule bypasses validation');
+assert.match(rules,/match \/attendance\/\{docId\}/);
+assert.match(rules,/request\.resource\.data\.date\.matches\('\^\[0-9\]\{4\}-\[0-9\]\{2\}-\[0-9\]\{2\}\ Firestore rules structure checked (not a security emulator substitute)');
+\)/);
+assert.equal((rules.match(/match \/\{collection\}\/\{docId\}/g)||[]).length,1,'Duplicate wildcard rules');
+assert.equal((rules.match(/function validAttendance\(docId\)/g)||[]).length,1,'Duplicate attendance validation');
+assert.equal((rules.match(/match \/attendance\/\{docId\}/g)||[]).length,1,'Duplicate attendance rules');
 console.log('V47 separate Firestore rules structure checked (not a security emulator substitute)');
