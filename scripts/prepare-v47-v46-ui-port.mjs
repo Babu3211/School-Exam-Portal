@@ -19,7 +19,7 @@ let port=source.replace(literal,(full,fn,quote,name)=>{
 });
 const dynamic=[...port.matchAll(/\b(collection|doc)\s*\(\s*db\s*,\s*([a-zA-Z_$][\w$]*)/g)].filter(m=>m[2]!=="tenantCollection").map(m=>m[0]);
 assert.ok(dynamic.length<=3,"Unexpected dynamic V46 collection references");
-assert.equal((port.match(/tenantCollection\(/g)||[]).length,changed+1,"Every literal reference must use tenant gateway");
+assert.equal((port.match(/tenantCollection\(/g)||[]).length,changed,"Every literal reference must use tenant gateway");
 const legacyConfig=/const firebaseConfig=\{[^;]+\};const ADMIN_UID="[^"]+";const app=initializeApp\(firebaseConfig\),auth=getAuth\(app\),db=getFirestore\(app\);/;
 assert.match(port,legacyConfig,"V46 Firebase bootstrap must be reviewed before migration");
 const blocker=`
