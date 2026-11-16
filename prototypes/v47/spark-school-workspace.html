@@ -9,7 +9,7 @@
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,doc,getDoc,collection,getDocs,query,limit,startAfter} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,doc,getDoc,collection,getDocs,query,limit,startAfter,orderBy} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import {assertSchoolId,schoolCollectionPath} from "../../src/v47/tenant-domain.mjs";
 const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#login-form"),logout=document.querySelector("#logout"),schoolForm=document.querySelector("#school-form"),status=document.querySelector("#status"),workspace=document.querySelector("#workspace"),tables=document.querySelector("#tables");
 let epoch=0,auth,db;
@@ -45,7 +45,7 @@ else{
    // Fetch independent tenant-scoped previews concurrently to reduce wait time.
    // Each query remains bounded regardless of total school enrollment.
    const kinds=["students","staff","classes","subjects","exams","marks","attendance","certificates","mark_settings","school_settings","public_results"];
-   const results=await Promise.allSettled(kinds.map(kind=>getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),limit(20)))));
+   const results=await Promise.allSettled(kinds.map(kind=>getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),orderBy("__name__"),limit(PAGE_SIZE)))));
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
    for(let index=0;index<kinds.length;index++){
     const kind=kinds[index],outcome=results[index];
@@ -97,7 +97,7 @@ else{
           !memberCheck.exists() || memberCheck.data().active!==true ||
           !validRoles(memberCheck.data().roles))
         throw new Error("School access changed");
-       const next=await getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),startAfter(cursor),limit(PAGE_SIZE)));
+       const next=await getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),orderBy("__name__"),startAfter(cursor),limit(PAGE_SIZE)));
        if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
        // Do not render a fetched page if membership was revoked during the request.
        const [currentSchool,currentMember]=await Promise.all([
