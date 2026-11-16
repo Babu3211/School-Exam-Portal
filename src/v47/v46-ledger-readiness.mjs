@@ -46,20 +46,24 @@ export function auditV47LedgerReadiness(data,{schoolId}={}){
   }
  }
  if(duplicateSubjects)blockers.push(duplicateSubjects+" subjects share a name in the same class.");
- const subjectById=new Map(data.subjects.map(s=>[s.id,s]));
  const subjectByName=new Map();
  for(const subject of data.subjects){
   for(const name of [subject.name,subject.subjectName].filter(Boolean)){
    const key=String(name).trim().toLowerCase();
-   if(!subjectByName.has(key))subjectByName.set(key,new Set());
-   subjectByName.get(key).add(subject.id);
+   const classKey=String(subject.classNo??subject.classId??"");
+   const composite=JSON.stringify([classKey,key]);
+   if(!subjectByName.has(composite))subjectByName.set(composite,new Set());
+   subjectByName.get(composite).add(subject.id);
   }
  }
  const resolveSubject=mark=>{
   if(mark.subjectId)return String(mark.subjectId);
   const name=String(mark.subject??"").trim().toLowerCase();
-  const matches=subjectByName.get(name);
-  return matches?.size===1?[...matches][0]:"name:"+name;
+  const classKey=String(mark.classNo??mark.classId??studentClass.get(mark.studentId)??examClass.get(mark.examId)??"");
+  const exact=subjectByName.get(JSON.stringify([classKey,name]));
+  const generic=subjectByName.get(JSON.stringify(["",name]));
+  const matches=exact?.size===1?exact:(!exact&&generic?.size===1?generic:null);
+  return matches?.size===1?[...matches][0]:"name:"+JSON.stringify([classKey,name]);
  };
  const markPairs=new Set();
  let duplicatePairs=0;
