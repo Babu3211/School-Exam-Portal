@@ -35,4 +35,7 @@ const scopedSubjects={...data,students:[{id:"s1",classNo:6}],exams:[{id:"e1",cla
 assert.ok(auditV47LedgerReadiness(scopedSubjects).blockers.some(s=>s.includes("duplicate an exam, student and subject")));
 const otherClass={...scopedSubjects,marks:[scopedSubjects.marks[0],{...scopedSubjects.marks[1],subjectId:"math7"}]};
 assert.ok(!auditV47LedgerReadiness(otherClass).blockers.some(s=>s.includes("duplicate an exam, student and subject")));
+assert.ok(auditV47LedgerReadiness(otherClass).blockers.some(s=>s.includes("subjects from another class")));
+const normalizedSubject=auditV47LedgerReadiness({...data,marks:[{...data.marks[0],subject:" mathematics "}]});
+assert.ok(!normalizedSubject.blockers.some(s=>s.includes("unknown school subjects")));
 console.log("V47 ledger readiness audit checks passed");
