@@ -27,6 +27,9 @@ export function createV46BrowserTenantGateway({db,verifiedSchoolId,collectionFn,
       !Object.hasOwn(V46_COLLECTION_POLICY,path.slice(prefix.length)))
     throw new Error("Unreviewed or cross-school V46 collection path");
    const collectionName=path.slice(prefix.length);
+   const category=V46_COLLECTION_POLICY[collectionName];
+   if(category==="tenant-server-managed" || category==="tenant-public-publishing")
+    throw new Error("Sensitive V46 collection requires separately reviewed access");
    const collectionRef=()=>collectionFn(db,"schools",schoolId,collectionName);
    const issuedCursors=new WeakSet();
    return Object.freeze({
