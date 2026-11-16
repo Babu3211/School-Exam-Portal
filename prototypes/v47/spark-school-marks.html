@@ -44,8 +44,7 @@ if(!config||config.projectId!=="smss-exam-portal-v47"||config.authDomain!=="smss
    if(!before.roles.some(role=>["school_admin","subject_teacher"].includes(role))||before.roles.includes("viewer"))throw Error("No entry permission");
    if(!studentGateway)studentGateway=createV46BrowserTenantGateway({db,verifiedSchoolId:id,collectionFn:collection,docFn:doc,getDocsFn:getDocs,getDocFn:getDoc,queryFn:query,limitFn:limit,startAfterFn:startAfter,orderByFn:orderBy}).forCollection(schoolCollectionPath(id,"students"));
    const nextOptions=studentCursor?[]:[new Option("Select student","")];
-   {
-    if(token!==epoch||auth.currentUser?.uid!==user.uid)return;
+       if(token!==epoch||auth.currentUser?.uid!==user.uid)return;
     const page=await studentGateway.listPage({pageSize:50,cursor:studentCursor});
     for(const student of page.records){
      const name=String(student.nameEnglish||student.englishName||student.name||student.id).slice(0,100);
@@ -53,11 +52,10 @@ if(!config||config.projectId!=="smss-exam-portal-v47"||config.authDomain!=="smss
      option.dataset.classId=String(student.classId||student.class||"");
      nextOptions.push(option);
     }
-    studentCursor=page.nextCursor;
-   }
    const after=await verify(id,user);
    if(after.roles.join(",")!==before.roles.join(","))throw Error("School access changed");
    if(token!==epoch||auth.currentUser?.uid!==user.uid)return;
+   studentCursor=page.nextCursor;
    if(nextOptions[0]?.value==="")studentChoice.replaceChildren(...nextOptions);
    else studentChoice.append(...nextOptions);
    reloadStudents.textContent=studentCursor?"Load next 50 students":"All students loaded";
