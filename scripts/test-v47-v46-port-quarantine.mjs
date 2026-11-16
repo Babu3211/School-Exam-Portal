@@ -7,6 +7,11 @@ execFileSync(process.execPath,["scripts/prepare-v47-v46-ui-port.mjs"],{cwd:root,
 const html=readFileSync(new URL("../dist/v47-v46-port-audit/index.html",import.meta.url),"utf8");
 const audit=JSON.parse(readFileSync(new URL("../dist/v47-v46-port-audit/audit.json",import.meta.url),"utf8"));
 const visual=readFileSync(new URL("../dist/v47-v46-port-audit/v46-visual-only.html",import.meta.url),"utf8");
+const parity=JSON.parse(readFileSync(new URL("../dist/v47-v46-port-audit/v46-screen-parity.json",import.meta.url),"utf8"));
+assert.equal(parity.status,"INVENTORY_ONLY_NOT_IMPLEMENTED");
+assert.ok(parity.originalHtmlBytes>400000);
+assert.ok(parity.screenIds.length>10);
+assert.ok(parity.visualHtmlBytes>0);
 assert.match(visual,/V47 VISUAL REVIEW ONLY/);
 assert.doesNotMatch(visual,/<script\\b/i);
 assert.doesNotMatch(visual,/\\son[a-z]+\\s*=/i);
