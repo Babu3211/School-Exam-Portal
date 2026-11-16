@@ -12,10 +12,10 @@ assert.equal(adapter.collection("students"),"schools/school_A001/students");
 assert.equal(adapter.collection("marks"),"schools/school_A001/marks");
 assert.equal(adapter.doc("attendance","entry_1"),"schools/school_A001/attendance/entry_1");
 assert.equal(adapter.doc("school_settings","default"),"schools/school_A001/school_settings/default");
-for(const name of ["audit_logs","user_roles","public_results","school_gallery","unknown","schools/school_B001/students"]){
+for(const name of ["audit_logs","user_roles","public_results","school_gallery","unknown","__proto__","constructor","toString","schools/school_B001/students"]){
  assert.throws(()=>adapter.collection(name));
 }
-for(const id of ["","/","../student","student/other",".",".."]){
+for(const id of ["","/","../student","student/other",".","..","bad\\nname","a".repeat(1501)]){
  assert.throws(()=>adapter.doc("students",id));
 }
 assert.throws(()=>createV46TenantReadAdapter({...options,verifiedMembership:{...options.verifiedMembership,schoolId:"school_B001"}}));
