@@ -70,6 +70,20 @@ assert.ok(!/javascript:/i.test(visual),"Visual-only V46 preview must have no Jav
 assert.ok(!visual.includes('exam-portal-smss-95016'),"Visual-only V46 preview must not include production Firebase identity");
 await mkdir(output,{recursive:true});
 await writeFile(join(output,"v46-visual-only.html"),visual);
+// Inventory every V46 screen and its DOM identity for a parity checklist.
+// Derived from the actual V46 page, never from a manually reconstructed menu.
+const screenIds=[...new Set([...source.matchAll(/<(?:section|main|article|div)\\b[^>]*\\bid\\s*=\\s*["']([^"']+)["']/gi)].map(m=>m[1]))];
+const navigationTargets=[...new Set([...source.matchAll(/(?:data-page|data-target)\\s*=\\s*["']([^"']+)["']/gi)].map(m=>m[1]))];
+const domHandlers=[...new Set([...source.matchAll(/\\b(?:onclick|onchange|onsubmit)\\s*=\\s*["']([^"']+)["']/gi)].map(m=>m[1]))];
+await writeFile(join(output,"v46-screen-parity.json"),JSON.stringify({
+ source:"V46 index.html",
+ status:"INVENTORY_ONLY_NOT_IMPLEMENTED",
+ screenIds,navigationTargets,inlineHandlerCount:domHandlers.length,
+ originalHtmlBytes:Buffer.byteLength(source),
+ visualHtmlBytes:Buffer.byteLength(visual),
+ note:"Full V46 behavior and Firebase dependencies are not yet tenant-migrated"
+},null,2));
+
 await writeFile(join(output,"index.html"),port);
 // Inventory non-collection Firebase entry points before attempting a live V46 port.
 // These calls can bypass a naive collection()/doc() rewrite when they use refs
