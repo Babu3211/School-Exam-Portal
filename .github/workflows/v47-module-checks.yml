@@ -87,5 +87,7 @@ jobs:
         run: node scripts/test-v47-attendance-query.mjs
       - name: V47 atomic class attendance batch
         run: node scripts/test-v47-attendance-bulk.mjs
+      - name: V47 chunked class attendance and partial failure tests
+        run: node scripts/test-v47-attendance-class-save.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
