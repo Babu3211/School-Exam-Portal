@@ -37,6 +37,8 @@ for(const kind of ["marks","attendance"]){
   assert.ok(html.includes('access.roles.includes("subject_teacher")'));
   assert.ok(html.includes("Number.isFinite(payload.score)"));
   assert.ok(html.includes("payload.score>100"));
+  assert.ok(html.includes('<th>Score</th>'));
+  assert.ok(html.includes('data.score??"—"'));
   assert.ok(html.includes('subjectChoice.value!==payload.subjectId'));
   assert.ok(html.includes('subjectGateway.listPage({pageSize:50,cursor:subjectCursor})'));
   assert.ok(html.includes('schoolCollectionPath(id,"subjects")'));
@@ -45,6 +47,8 @@ for(const kind of ["marks","attendance"]){
  }else{
   assert.ok(html.includes('access.roles.includes("class_teacher")'));
   assert.ok(html.includes('present:fields.get("present")==="true"'));
+  assert.ok(html.includes('<th>Attendance</th>'));
+  assert.ok(html.includes('data.present?"Present":"Absent"'));
  }
 }
 console.log("V47 marks and attendance tenant-scoped write/read UI static checks passed");
