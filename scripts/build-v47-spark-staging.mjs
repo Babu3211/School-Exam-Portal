@@ -8,13 +8,13 @@ const root=resolve(import.meta.dirname,"..");
 const output=join(root,"dist","v47-spark");
 const expectedProject="smss-exam-portal-v47";
 const expectedDomain=expectedProject+".firebaseapp.com";
-const pages=["prototypes/v47/spark-school-registration.html","prototypes/v47/spark-school-workspace.html"];
+const pages=["prototypes/v47/spark-school-registration.html","prototypes/v47/spark-school-workspace.html","prototypes/v47/v46-grade-calculator.html"];
 const htmlPages=await Promise.all(pages.map(async page=>({page,html:await readFile(join(root,page),"utf8")})));
 const imports=htmlPages.flatMap(({page,html})=>{
  if(!html.includes('<script type="module">'))throw new Error("Missing V47 module entry: "+page);
  const paths=[...html.matchAll(/from\s+["'](\.\.\/\.\.\/src\/v47\/[^"']+\.mjs)["']/g)]
   .map(match=>match[1].replace(/^\.\.\/\.\.\//,""));
- if(!paths.length)throw new Error("No V47 browser modules found: "+page);
+ if(!paths.length && !page.endsWith("v46-grade-calculator.html"))throw new Error("No V47 browser modules found: "+page);
  return paths;
 });
 const visited=new Set();
@@ -33,6 +33,8 @@ async function include(path){
 }
 await rm(output,{recursive:true,force:true});
 for(const path of imports)await include(path);
+// Reuse the original V46 pure grade calculation module unchanged; no V46 Firebase code.
+await copyFile(join(root,"iemis-ledger.js"),join(output,"iemis-ledger.js"));
 // An optional public Firebase Web config is accepted only for the isolated V47 project.
  // No config means the page stays safely disabled rather than connecting to V46.
  await mkdir(join(output,"prototypes","v47"),{recursive:true});
@@ -60,5 +62,5 @@ const loader='<script src="./spark-config.js"></script>';
   const htmlWithLoader=configRaw?html.replace('<script type="module">',loader+'<script type="module">'):html;
   await writeFile(join(output,page),htmlWithLoader);
  }
-await writeFile(join(output,"index.html"),`<!doctype html><meta charset="utf-8"><title>SMSS V47 Staging</title><p>V47 Spark staging preview. Firebase configuration must be explicitly provided for the isolated V47 project.</p><a href="/prototypes/v47/spark-school-registration.html">Open registration prototype</a><p><a href="/prototypes/v47/spark-school-workspace.html">Open read-only school workspace</a></p>`);
+await writeFile(join(output,"index.html"),`<!doctype html><meta charset="utf-8"><title>SMSS V47 Staging</title><p>V47 Spark staging preview. Firebase configuration must be explicitly provided for the isolated V47 project.</p><a href="/prototypes/v47/spark-school-registration.html">Open registration prototype</a><p><a href="/prototypes/v47/spark-school-workspace.html">Open read-only school workspace</a><p><a href="/prototypes/v47/v46-grade-calculator.html">Open V46 grade calculator</a></p></p>`);
 console.log("Built isolated V47 Spark preview:",visited.size,"browser modules; no deployment");
