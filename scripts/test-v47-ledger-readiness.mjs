@@ -64,4 +64,10 @@ const negativeAssessment=auditV47LedgerReadiness({...data,marks:[{...data.marks[
 assert.ok(negativeAssessment.blockers.some(s=>s.includes("invalid assessment scores")));
 const validAssessment=auditV47LedgerReadiness(data);
 assert.ok(!validAssessment.blockers.some(s=>s.includes("invalid assessment scores")));
+for(const score of [{name:"IN",obtained:" ",fullMarks:50},{name:"IN",obtained:20,fullMarks:""},{name:"IN",obtained:"abc",fullMarks:50}]){
+ const result=auditV47LedgerReadiness({...data,marks:[{...data.marks[0],scores:[score]}]});
+ assert.ok(result.blockers.some(s=>s.includes("invalid assessment scores")));
+}
+const numericStrings=auditV47LedgerReadiness({...data,marks:[{...data.marks[0],scores:[{name:"IN",obtained:"30",fullMarks:"50"}]}]});
+assert.ok(!numericStrings.blockers.some(s=>s.includes("invalid assessment scores")));
 console.log("V47 ledger readiness audit checks passed");
