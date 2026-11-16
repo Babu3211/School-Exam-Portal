@@ -97,6 +97,16 @@ memberRoles=["class_teacher"];
 await assert.rejects(revokedPaging.listPage("students",{pageSize:1,cursor:roleBound.nextCursor}),/Page token is expired/);
 memberRoles=["viewer"];
 await assert.rejects(revokedPaging.listPage("students",{pageSize:1,cursor:roleBound.nextCursor}),/School access changed|Page token is expired/);
+// A token presented to the wrong collection is invalidated permanently.
+const collectionBound=await revokedPaging.listPage("students",{pageSize:1});
+await assert.rejects(revokedPaging.listPage("staff",{pageSize:1,cursor:collectionBound.nextCursor}),/Page token is expired/);
+await assert.rejects(revokedPaging.listPage("students",{pageSize:1,cursor:collectionBound.nextCursor}),/Page token is expired/);
+// A token presented by a different authenticated member is invalidated too.
+const memberBound=await revokedPaging.listPage("students",{pageSize:1});
+auth.currentUser={uid:"other_user"};
+await assert.rejects(revokedPaging.listPage("students",{pageSize:1,cursor:memberBound.nextCursor}),/Page token is expired/);
+auth.currentUser={uid};
+await assert.rejects(revokedPaging.listPage("students",{pageSize:1,cursor:memberBound.nextCursor}),/Page token is expired/);
 assert.equal(Object.hasOwn(session,"write"),false);
 assert.equal(Object.hasOwn(session,"collection"),false);
 console.log("Verified V46 school read session checks passed");
