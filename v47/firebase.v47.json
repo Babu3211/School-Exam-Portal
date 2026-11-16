@@ -1,0 +1,4 @@
+{
+  "firestore": {"rules": "v47/firestore.rules"},
+  "emulators": {"firestore": {"port": 8081}, "ui": {"enabled": false}, "singleProjectMode": true}
+}
