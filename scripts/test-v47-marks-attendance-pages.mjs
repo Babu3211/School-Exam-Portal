@@ -17,6 +17,9 @@ for(const kind of ["marks","attendance"]){
  assert.ok(html.includes('await addDoc(collection(db,schoolCollectionPath(id,"'+kind+'")),payload)'));
  assert.ok(html.includes('if(token!==epoch||auth.currentUser?.uid!==user.uid)throw Error("School selection changed")'));
  assert.ok(html.includes('entryPanel.hidden=!canEnter'));
+ assert.ok(html.includes('canEnter=!access.roles.includes("viewer")'));
+ assert.ok(html.includes('entryForm.querySelector(\'button[type="submit"]\')'));
+ assert.ok(html.includes('<button type="submit">Save '));
  assert.ok(html.includes("if(!studentGateway)studentGateway=createV46BrowserTenantGateway({"));
  assert.ok(html.includes("studentGateway.listPage({pageSize:50,cursor:studentCursor})"));
  assert.ok(html.includes("option.dataset.classId="));
