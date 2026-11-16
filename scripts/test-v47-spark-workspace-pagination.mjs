@@ -16,4 +16,6 @@ assert.match(html,/!validRoles\(memberCheck\.data\(\)\.roles\)/);
 assert.match(html,/!validRoles\(latestMember\.data\(\)\.roles\)/);
 assert.match(html,/outcome\.status!=="fulfilled"/);
 assert.match(html,/staged\.push\(section\);continue;/);
+assert.match(html,/failedSections\.push\(kind\)/);
+assert.match(html,/Unavailable sections:/);
 console.log("V47 school pagination remains tenant-scoped, bounded and access-checked");
