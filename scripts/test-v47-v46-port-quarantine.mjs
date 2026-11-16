@@ -6,6 +6,12 @@ const root=new URL("../",import.meta.url);
 execFileSync(process.execPath,["scripts/prepare-v47-v46-ui-port.mjs"],{cwd:root,stdio:"pipe"});
 const html=readFileSync(new URL("../dist/v47-v46-port-audit/index.html",import.meta.url),"utf8");
 const audit=JSON.parse(readFileSync(new URL("../dist/v47-v46-port-audit/audit.json",import.meta.url),"utf8"));
+const visual=readFileSync(new URL("../dist/v47-v46-port-audit/v46-visual-only.html",import.meta.url),"utf8");
+assert.match(visual,/V47 VISUAL REVIEW ONLY/);
+assert.doesNotMatch(visual,/<script\\b/i);
+assert.doesNotMatch(visual,/\\son[a-z]+\\s*=/i);
+assert.doesNotMatch(visual,/exam-portal-smss-95016/);
+
 assert.equal(audit.state,"QUARANTINED_NOT_DEPLOYABLE");
 assert.ok(audit.literalReferencesRewritten>=140);
 assert.equal(audit.dynamicReferencesRewritten,3);
