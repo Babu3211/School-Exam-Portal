@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {createV46VerifiedReadSession} from "../src/v47/v46-verified-read-session.mjs";
-let active=true,uid="user_1",readCount=0;
+let active=true,uid="user_1",readCount=0,memberRoles=["viewer"];
 const auth={currentUser:{uid}};
 const schoolId="school_A001";
 const options={
@@ -16,7 +16,7 @@ const options={
    exists:()=>active,
    id:path.split("/").at(-1),
    data:()=>isSchool?{schoolId,status:"active"}:
-    path.includes("/members/")?{schoolId,uid,active,roles:["viewer"]}:{name:"Student"}
+    path.includes("/members/")?{schoolId,uid:path.split("/").at(-1),active,roles:memberRoles}:{name:"Student"}
   };
  },
  getDocsFn:async q=>{
@@ -58,6 +58,9 @@ await assert.rejects(paging.listPage("staff",{cursor:first.nextCursor}));
 auth.currentUser={uid:"other_user"};
 await assert.rejects(paging.listPage("students",{pageSize:1,cursor:first.nextCursor}));
 auth.currentUser={uid};
+memberRoles=["class_teacher"];
+await assert.rejects(paging.listPage("students",{pageSize:1,cursor:first.nextCursor}));
+memberRoles=["viewer"];
 await assert.rejects(paging.listPage("public_results"));
 await assert.rejects(paging.listPage("students",{pageSize:51}));
 await assert.rejects(paging.listPage("students",{cursor:{id:"student1",ref:pageDoc.ref,data:pageDoc.data}}));
