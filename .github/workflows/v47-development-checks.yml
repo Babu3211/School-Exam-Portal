@@ -87,7 +87,7 @@ jobs:
           grep -q '../../iemis-ledger.js' dist/v47-spark/prototypes/v47/v46-grade-calculator.html
           if grep -q 'exam-portal-smss-95016' dist/v47-spark/prototypes/v47/v46-grade-calculator.html; then exit 1; fi
           test -f dist/v47-spark/prototypes/v47/spark-school-workspace.html
-          grep -q 'schoolCollectionPath(schoolId,kind)' dist/v47-spark/prototypes/v47/spark-school-workspace.html
+          grep -q 'tenantPaths.collection(kind)' dist/v47-spark/prototypes/v47/spark-school-workspace.html
           grep -q 'tables.replaceChildren(...staged)' dist/v47-spark/prototypes/v47/spark-school-workspace.html
           grep -q 'School access changed during loading' dist/v47-spark/prototypes/v47/spark-school-workspace.html
           test "$(grep -Fc 'latestMember.data().roles' dist/v47-spark/prototypes/v47/spark-school-workspace.html)" -ge 2
@@ -133,7 +133,10 @@ jobs:
       - name: Verify V46 tenant path resolver
         if: success() || failure()
         run: node scripts/test-v47-v46-tenant-path-resolver.mjs
-      - name: Verify quarantined V46 UI migration port\n        if: success() || failure()\n        run: node scripts/test-v47-v46-port-quarantine.mjs\n      - name: Prepare quarantined V46 UI tenant port (never deploy)
+      - name: Verify quarantined V46 UI migration port
+        if: success() || failure()
+        run: node scripts/test-v47-v46-port-quarantine.mjs
+      - name: Prepare quarantined V46 UI tenant port (never deploy)
         if: success() || failure()
         run: node scripts/prepare-v47-v46-ui-port.mjs
       - name: Audit real V46 Firebase dependencies before tenant migration
