@@ -27,4 +27,7 @@ assert.match(html,/const \[currentSchool,currentMember\]=await Promise\.all/);
 assert.match(html,/currentMember\.data\(\)\.active!==true/);
 assert.match(html,/!validRoles\(currentMember\.data\(\)\.roles\)/);
 assert.ok(html.indexOf("const [currentSchool,currentMember]")<html.indexOf("next.docs.forEach(renderRecord)"));
+assert.match(html,/id="refresh-school"/);
+assert.match(html,/schoolForm\.requestSubmit\(\)/);
+assert.match(html,/if\(auth\.currentUser && !schoolForm\.hidden\)/);
 console.log("V47 school pagination remains tenant-scoped, bounded and access-checked");
