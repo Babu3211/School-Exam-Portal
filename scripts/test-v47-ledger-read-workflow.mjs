@@ -26,4 +26,12 @@ await assert.rejects(()=>prepareV47SchoolLedger(args),/student school mismatch/)
 source.students[0]={id:"student001",name:"Student One",classNo:6};
 source.marks[0]={...source.marks[0],schoolId:"otherSchool"};
 await assert.rejects(()=>prepareV47SchoolLedger(args),/mark school mismatch/);
+source.marks[0]={id:"mark001",studentId:"student001",examId:"exam001",classNo:6,subject:"Mathematics",scores:[{name:"IN",fullMarks:50,obtained:40}]};
+source.exams[0]={id:"exam001",classNo:6,term:"first",schoolId:"otherSchool"};
+await assert.rejects(()=>prepareV47SchoolLedger(args),/exam school mismatch/);
+source.exams[0]={id:"exam001",classNo:6,term:"first"};
+source.subjects[0]={id:"math001",name:"Mathematics",classNo:9};
+await assert.rejects(()=>prepareV47SchoolLedger(args),/not from verified school subjects/);
+source.subjects[0]={id:"math001",name:"Mathematics",classNo:6,schoolId:"otherSchool"};
+await assert.rejects(()=>prepareV47SchoolLedger(args),/not from verified school subjects/);
 console.log("V47 verified school ledger read workflow checks passed");
