@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,writeFileSync} from 'node:fs';
 import {iemisLegacyTheory,iemisGrade,iemisFinalGrade,iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisLedger,iemisDisplaySubject} from '../iemis-ledger.js';
 
 // Synthetic identities only. Academic vectors reproduce the verified IEMIS examples.
@@ -60,6 +60,7 @@ const student=common.students[0];student.class='6';
 const perSubject=parts.map((x,i)=>({subject:subjects[i],missing:false,totalFull:100,pct:x.summary.obtained,grade:x.summary.totalGrade}));
 const dependencies={iemisLegacyTheory,activeResultRows:[{student,perSubject}],document:{getElementById:id=>id==='gradeSheetView'?box:{value:'synthetic-exam'}},resultExams:[{id:'synthetic-exam',academicYear:'2082'}],resultMarks:records,resultClasses:subjects.map((subject,i)=>({className:'6',subject,creditHour:credits[i],active:true})),currentSchoolSettings:{schoolName:'Test School',iemisCode:'TEST'},englishDisplayText:String,classNoFromName:String,onlineResultDigits:String,smssTermLabelEnglish:()=> 'Final Term',smssExamTermKey:()=> 'annual',canonicalStudentClass:String,canonicalSubjectKey:iemisSubjectKey,studentOptionalSelectionComplete:()=>true,isComputerSubject:s=>/computer/i.test(s),resultEsc:s=>String(s??''),subjectEnglishLabel:String,schoolPrintName:()=> 'Test School',schoolPrintAddress:()=> 'Test Address',schoolLogoPrintMarkup:()=> '',gradeForPercent:iemisGrade,resultGradeBands:[],iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisDisplaySubject};
 new Function(...Object.keys(dependencies),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(dependencies));
+const printReportFixture=box.innerHTML;
 assert.match(box.innerHTML,/<td colspan="4"[^>]*>GRADE POINT AVERAGE = 2.93/);
 assert.ok(box.innerHTML.indexOf('ONE CREDIT HOUR EQUALS 36')<box.innerHTML.indexOf('DETAILS OF GRADE SHEET'));
 assert.match(box.innerHTML,/COMPUTER SCIENCE\(TH\)<br>COMPUTER SCIENCE\(IN\)/);
@@ -254,3 +255,11 @@ for(const label of ['TEST SECONDARY SCHOOL','विद्यालय & School <
  assert.match(printed,/Synthetic report/);
 }
 console.log('Online print keeps published school branding, Unicode/escaping, repeated watermark and A4 settings.');
+
+if(process.env.SMSS_GRADE_PRINT_FIXTURE){
+ const sheet={outerHTML:printReportFixture,getAttribute:()=> 'Test School',querySelector:()=>null};
+ const print=new Function('document','window','onlineResultStatus',html.slice(printStart,printEnd)+';printOnlineResult();');
+ const document={querySelector:()=>sheet};
+ const popup={document:{write:markup=>writeFileSync(process.env.SMSS_GRADE_PRINT_FIXTURE,markup),close(){}}};
+ print(document,{open:()=>popup},message=>{throw new Error(message);});
+}
