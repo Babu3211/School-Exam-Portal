@@ -77,5 +77,7 @@ jobs:
         run: node scripts/test-v47-student-service.mjs
       - name: V47 attendance service and date validation
         run: node scripts/test-v47-attendance-service.mjs
+      - name: Nepal local Gregorian date boundaries
+        run: node scripts/test-v47-nepal-date.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
