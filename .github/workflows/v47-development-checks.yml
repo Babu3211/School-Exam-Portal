@@ -79,6 +79,8 @@ jobs:
           test "$(grep -Fc 'recheckManagement(input)' dist/v47-spark/prototypes/v47/spark-school-registration.html)" -eq 4
           test "$(grep -Fc 'await recheckManagement({schoolId});' dist/v47-spark/prototypes/v47/spark-school-registration.html)" -eq 2
           test "$(grep -Fc 'epoch!==verificationEpoch)return;' dist/v47-spark/prototypes/v47/spark-school-registration.html)" -ge 5
+          test -f dist/v47-spark/prototypes/v47/spark-school-marks.html
+          test -f dist/v47-spark/prototypes/v47/spark-school-attendance.html
           test -f dist/v47-spark/prototypes/v47/spark-school-students.html
           test -f dist/v47-spark/iemis-ledger.js
           test -f dist/v47-spark/prototypes/v47/v46-grade-calculator.html
@@ -125,6 +127,9 @@ jobs:
       - name: V47 Spark platform-admin Firestore emulator authorization
         if: success() || failure()
         run: npx firebase emulators:exec --project v47-spark-platform-rules-test --only firestore --config firebase.v47.emulator.json "node scripts/test-v47-spark-platform-rules.mjs"
+      - name: V47 marks and attendance isolation checks
+        if: success() || failure()
+        run: node scripts/test-v47-marks-attendance-pages.mjs
       - name: V47 school student management isolation checks
         if: success() || failure()
         run: node scripts/test-v47-school-students-page.mjs
