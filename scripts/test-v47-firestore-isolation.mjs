@@ -28,7 +28,15 @@ try {
  const outsider=env.authenticatedContext("outsider").firestore();
  const studentA=doc(admin,"schools",schoolA,"students","student1");
  await assertSucceeds(getDoc(studentA));
- await assertSucceeds(setDoc(studentA,{name:"Synthetic Updated",classId:"9"}));
+ await assertSucceeds(setDoc(studentA,{name:"Synthetic Updated",classId:"9",schoolId:schoolA}));
+ await assertFails(setDoc(studentA,{name:"Cross-school claim",classId:"9",schoolId:schoolB}));
+ const createdStudent=doc(admin,"schools",schoolA,"students","studentCreated");
+ const validStudent={schoolId:schoolA,nameEnglish:"Synthetic Student",class:"Class 9",classId:"Class 9",active:true};
+ await assertSucceeds(setDoc(createdStudent,validStudent));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"students","wrongSchool"),{...validStudent,schoolId:schoolB}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"students","wrongClass"),{...validStudent,classId:"Class 10"}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"students","missingName"),{...validStudent,nameEnglish:""}));
+ await assertFails(setDoc(doc(admin,"schools",schoolA,"students","unexpectedField"),{...validStudent,admin:true}));
  await assertFails(deleteDoc(studentA));
  await assertFails(getDoc(doc(admin,"schools",schoolB,"students","student1")));
  // A user enrolled in two schools may read each school independently, never write as viewer.
