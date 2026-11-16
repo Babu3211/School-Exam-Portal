@@ -5,7 +5,7 @@ assert.match(rules,/match \/schools\/\{schoolId\}/);
 assert.match(rules,/function membershipPath\(schoolId\)/);
 assert.match(rules,/function superAdmin\(\)/);
 assert.match(rules,/match \/\{document=\*\*\} \{ allow read, write: if false; \}/);
-for(const name of ['students','staff','classes','subjects','exams','marks','attendance'])assert.ok(name==='students'?rules.includes('match /students/{docId}'):rules.includes("'"+name+"'"));
+for(const name of ['students','staff','classes','subjects','exams','marks','attendance'])assert.ok(['students','attendance'].includes(name)?rules.includes('match /'+name+'/{docId}'):rules.includes("'"+name+"'"));
 assert.match(rules,/match \/students\/\{docId\}/);
 assert.match(rules,/allow create: if schoolAdmin\(schoolId\) && validNewStudent\(\)/);
 const wildcard=rules.match(/match \/\{collection\}\/\{docId\} \{([\s\S]*?)\n   \}/)?.[1];
