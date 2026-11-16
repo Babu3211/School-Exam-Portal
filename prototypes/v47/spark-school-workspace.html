@@ -14,6 +14,11 @@ import {assertSchoolId,schoolCollectionPath} from "../../src/v47/tenant-domain.m
 const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#login-form"),logout=document.querySelector("#logout"),schoolForm=document.querySelector("#school-form"),status=document.querySelector("#status"),workspace=document.querySelector("#workspace"),tables=document.querySelector("#tables");
 let epoch=0,auth,db;
 const PAGE_SIZE=20;
+const validRoles=roles=>Array.isArray(roles) && roles.length>0 &&
+ roles.every(role=>["school_admin","class_teacher","subject_teacher","viewer"].includes(role)) &&
+ new Set(roles).size===roles.length &&
+ !(roles.includes("viewer") && roles.length>1);
+
 const say=value=>status.textContent=value;
 const clear=()=>{epoch++;workspace.hidden=true;tables.replaceChildren();document.querySelector("#school-title").textContent="";document.querySelector("#role").textContent="";};
 if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="smss-exam-portal-v47.firebaseapp.com"){login.hidden=true;say("V47 isolated Firebase configuration is missing. No connection started.");}
@@ -33,7 +38,7 @@ else{
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
    if(!school.exists() || school.data().status!=="active" || !member.exists() || member.data().active!==true)throw new Error("School inactive or membership unavailable");
    const roles=member.data().roles;
-   if(!Array.isArray(roles) || !roles.some(role=>["school_admin","class_teacher","subject_teacher","viewer"].includes(role)))throw new Error("No supported school role");
+   if(!validRoles(roles))throw new Error("No supported school role");
    const staged=[];
    const sectionCounts={};
    // Fetch independent tenant-scoped previews concurrently to reduce wait time.
@@ -77,8 +82,7 @@ else{
        if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
        if(!schoolCheck.exists() || schoolCheck.data().status!=="active" ||
           !memberCheck.exists() || memberCheck.data().active!==true ||
-          !Array.isArray(memberCheck.data().roles) ||
-          !memberCheck.data().roles.some(role=>["school_admin","class_teacher","subject_teacher","viewer"].includes(role)))
+          !validRoles(memberCheck.data().roles))
         throw new Error("School access changed");
        const next=await getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),startAfter(cursor),limit(PAGE_SIZE)));
        if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
@@ -102,8 +106,7 @@ else{
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
    if(!latestSchool.exists() || latestSchool.data().status!=="active" ||
       !latestMember.exists() || latestMember.data().active!==true ||
-      !Array.isArray(latestMember.data().roles) ||
-      !latestMember.data().roles.some(role=>["school_admin","class_teacher","subject_teacher","viewer"].includes(role)))
+      !validRoles(latestMember.data().roles))
     throw new Error("School access changed during loading");
    document.querySelector("#school-title").textContent=String(latestSchool.data().name||schoolId);
    document.querySelector("#role").textContent="Access: "+latestMember.data().roles.join(", ")+" (read-only preview)";
