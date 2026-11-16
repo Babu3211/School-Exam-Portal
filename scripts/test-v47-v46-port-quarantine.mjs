@@ -13,8 +13,8 @@ assert.ok(parity.originalHtmlBytes>400000);
 assert.ok(parity.screenIds.length>10);
 assert.ok(parity.visualHtmlBytes>0);
 assert.match(visual,/V47 VISUAL REVIEW ONLY/);
-assert.doesNotMatch(visual,/<script\\b/i);
-assert.doesNotMatch(visual,/\\son[a-z]+\\s*=/i);
+assert.doesNotMatch(visual,/<script\b/i);
+assert.doesNotMatch(visual,/\son[a-z]+\s*=/i);
 assert.doesNotMatch(visual,/exam-portal-smss-95016/);
 
 assert.equal(audit.state,"QUARANTINED_NOT_DEPLOYABLE");
