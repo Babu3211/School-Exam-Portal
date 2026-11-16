@@ -8,7 +8,7 @@ for(const kind of ["marks","attendance"]){
  assert.ok(html.includes('schoolCollectionPath(id,"'+kind+'")'));
  assert.ok(html.includes("verifyV47BrowserMembership({schoolId:id,uid:user.uid,school:s.data(),member:m.data()})"));
  assert.ok(html.includes("createV46VerifiedReadSession({"));
- assert.ok(html.includes("tenantRecords.listPage("' +kind+ '",{pageSize:20,cursor})"));
+ assert.ok(html.includes('tenantRecords.listPage(" '+kind+'",{pageSize:20,cursor})'));
  assert.ok(html.includes("const after=await verify(id,user)"));
  assert.ok(html.includes('after.roles.join(",")!==before.roles.join(",")'));
  assert.ok(html.includes('td.textContent=String(value)'));
@@ -21,7 +21,7 @@ for(const kind of ["marks","attendance"]){
  assert.ok(html.includes('entryForm.querySelector(\'button[type="submit"]\')'));
  assert.ok(html.includes('<button type="submit">Save '));
  assert.ok(html.includes("if(!studentGateway)studentGateway=createV46VerifiedReadSession({"));
- assert.ok(html.includes("studentGateway.listPage("students",{pageSize:50,cursor:studentCursor})"));
+ assert.ok(html.includes('studentGateway.listPage("students",{pageSize:50,cursor:studentCursor})'));
  assert.ok(html.includes("option.dataset.classId="));
  assert.ok(html.includes("selectedClass!==classId"));
  assert.ok(html.includes('getDoc(doc(db,"schools",id,"students",studentId))'));
