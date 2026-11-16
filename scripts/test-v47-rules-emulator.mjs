@@ -12,6 +12,7 @@ try{
   await db.doc('schools/school_001/members/adminA').set({uid:'adminA',schoolId:'school_001',role:'school_admin',active:true});
   await db.doc('schools/school_001/members/viewerA').set({uid:'viewerA',schoolId:'school_001',role:'viewer',active:true});
   await db.doc('schools/school_001/students/s1').set({name:'A Student',class:'1'});
+  await db.doc('schools/school_001/students/s4').set({name:'Second Student',class:'1'});
   await db.doc('schools/school_001/marks/m1').set({score:50});
   await db.doc('schools/school_002/marks/m2').set({score:90});
   await db.doc('schools/school_001/attendance/2026-11-16_s1').set({date:'2026-11-16',studentId:'s1',class:'1',present:true});
@@ -54,6 +55,19 @@ try{
  await assertFails(admin.doc('schools/school_001/attendance/2026-11-16_s1').set({date:'2026-11-16',studentId:'s1',class:'2',present:true}));
  await assertFails(admin.doc('schools/school_001/attendance/invalid').set({date:'2026-11-16',studentId:'s1',class:'1',present:true}));
  await assertFails(admin.doc('schools/school_001/attendance/2026-11-16_s2').set({date:'2026-11-16',studentId:'s2',class:'1',present:'yes'}));
+ const goodBatch=admin.batch();
+ goodBatch.set(admin.doc('schools/school_001/attendance/2026-11-17_s1'),{date:'2026-11-17',studentId:'s1',class:'1',present:true});
+ goodBatch.set(admin.doc('schools/school_001/attendance/2026-11-17_s4'),{date:'2026-11-17',studentId:'s4',class:'1',present:false});
+ await assertSucceeds(goodBatch.commit());
+ const badBatch=admin.batch();
+ badBatch.set(admin.doc('schools/school_001/attendance/2026-11-18_s1'),{date:'2026-11-18',studentId:'s1',class:'1',present:true});
+ badBatch.set(admin.doc('schools/school_001/attendance/2026-11-18_missing'),{date:'2026-11-18',studentId:'missing',class:'1',present:false});
+ await assertFails(badBatch.commit());
+ const afterFailedBatch=await admin.doc('schools/school_001/attendance/2026-11-18_s1').get();
+ assert.equal(afterFailedBatch.exists,false,'Failed batch must not partially save valid attendance');
+ const viewerBatch=viewer.batch();
+ viewerBatch.set(viewer.doc('schools/school_001/attendance/2026-11-19_s1'),{date:'2026-11-19',studentId:'s1',class:'1',present:true});
+ await assertFails(viewerBatch.commit());
  await assertFails(viewer.doc('schools/school_001/attendance/2026-11-16_s1').update({present:true}));
  await assertSucceeds(superDb.doc('schools/school_002/students/s2').get());
  await assertFails(superDb.doc('schools/school_002').delete());
