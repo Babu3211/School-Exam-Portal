@@ -21,5 +21,11 @@ jobs:
         run: node scripts/test-v47-permissions.mjs
       - name: Record limits and stale cache
         run: node scripts/test-v47-record-limits.mjs
+      - name: School registration validation
+        run: node scripts/test-v47-school-registry.mjs
+      - name: School membership validation
+        run: node scripts/test-v47-school-membership.mjs
+      - name: Pagination and deduplication
+        run: node scripts/test-v47-pagination.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
