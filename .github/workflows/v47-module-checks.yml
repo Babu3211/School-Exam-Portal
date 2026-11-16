@@ -1,0 +1,25 @@
+name: V47 isolated module checks (non-deploy)
+on:
+  push:
+    branches: [smss-v47-multischool-work]
+  pull_request:
+    branches: [smss-v47-multischool-work]
+  workflow_dispatch:
+jobs:
+  module-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: School-scoped path validation
+        run: node scripts/test-v47-school-paths.mjs
+      - name: Role boundaries
+        run: node scripts/test-v47-permissions.mjs
+      - name: Record limits and stale cache
+        run: node scripts/test-v47-record-limits.mjs
+      - name: Existing V46 preservation gate
+        run: node scripts/test-v46-preservation.mjs
