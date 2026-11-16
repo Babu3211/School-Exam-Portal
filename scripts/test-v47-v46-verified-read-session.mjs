@@ -91,6 +91,12 @@ const switchedSession=createV46VerifiedReadSession({...options,
 });
 await assert.rejects(switchedSession.list("students"),/School access changed during read/);
 auth.currentUser={uid};
+// Replayed cursor tokens must fail, including after membership role changes.
+const roleBound=await revokedPaging.listPage("students",{pageSize:1});
+memberRoles=["class_teacher"];
+await assert.rejects(revokedPaging.listPage("students",{pageSize:1,cursor:roleBound.nextCursor}),/Page token is expired/);
+memberRoles=["viewer"];
+await assert.rejects(revokedPaging.listPage("students",{pageSize:1,cursor:roleBound.nextCursor}),/School access changed|Page token is expired/);
 assert.equal(Object.hasOwn(session,"write"),false);
 assert.equal(Object.hasOwn(session,"collection"),false);
 console.log("Verified V46 school read session checks passed");
