@@ -13,6 +13,7 @@ try{
   await db.doc('schools/school_001/members/viewerA').set({uid:'viewerA',schoolId:'school_001',role:'viewer',active:true});
   await db.doc('schools/school_001/students/s1').set({name:'A Student',class:'1'});
   await db.doc('schools/school_001/students/s4').set({name:'Second Student',class:'1'});
+  for(let i=0;i<10;i++)await db.doc('schools/school_001/students/batch'+i).set({name:'Batch Student '+i,class:'1'});
   await db.doc('schools/school_001/marks/m1').set({score:50});
   await db.doc('schools/school_002/marks/m2').set({score:90});
   await db.doc('schools/school_001/attendance/2026-11-16_s1').set({date:'2026-11-16',studentId:'s1',class:'1',present:true});
@@ -59,6 +60,9 @@ try{
  goodBatch.set(admin.doc('schools/school_001/attendance/2026-11-17_s1'),{date:'2026-11-17',studentId:'s1',class:'1',present:true});
  goodBatch.set(admin.doc('schools/school_001/attendance/2026-11-17_s4'),{date:'2026-11-17',studentId:'s4',class:'1',present:false});
  await assertSucceeds(goodBatch.commit());
+ const tenBatch=admin.batch();
+ for(let i=0;i<10;i++)tenBatch.set(admin.doc('schools/school_001/attendance/2026-11-20_batch'+i),{date:'2026-11-20',studentId:'batch'+i,class:'1',present:i%2===0});
+ await assertSucceeds(tenBatch.commit());
  const badBatch=admin.batch();
  badBatch.set(admin.doc('schools/school_001/attendance/2026-11-18_s1'),{date:'2026-11-18',studentId:'s1',class:'1',present:true});
  badBatch.set(admin.doc('schools/school_001/attendance/2026-11-18_missing'),{date:'2026-11-18',studentId:'missing',class:'1',present:false});
