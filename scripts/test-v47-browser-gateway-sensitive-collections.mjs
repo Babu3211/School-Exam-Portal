@@ -18,4 +18,23 @@ for(const name of ["audit_logs","user_roles","public_results","public_result_loo
 for(const path of ["schools/school_B001/students","students","schools/school_A001/students/other","schools/school_A001/unknown"]){
  assert.throws(()=>gateway.forCollection(path),/Unreviewed or cross-school/);
 }
-console.log("V47 browser tenant gateway blocks sensitive and cross-school collections");
+// A cursor belongs to exactly one collection and must not be replayed.
+const pageDoc={id:"student_1",ref:{path:"schools/school_A001/students/student_1"},data:()=>({name:"Student"})};
+let pageCalls=0;
+const paged=createV46BrowserTenantGateway({
+ db:{},verifiedSchoolId:"school_A001",
+ collectionFn:(_db,...parts)=>parts.join("/"),
+ docFn:(_db,...parts)=>parts.join("/"),
+ getDocsFn:async()=>({docs:pageCalls++===0?[pageDoc]:[]}),
+ getDocFn:async()=>({exists:()=>false}),
+ queryFn:(path,...clauses)=>({path,clauses}),limitFn:n=>({limit:n}),
+ orderByFn:field=>({field}),startAfterFn:cursor=>({after:cursor.id})
+});
+const students=paged.forCollection("schools/school_A001/students");
+const first=await students.listPage({pageSize:1});
+assert.equal(first.nextCursor,pageDoc);
+await assert.rejects(paged.forCollection("schools/school_A001/students").listPage({pageSize:1,cursor:first.nextCursor}),/Invalid Firestore page cursor/);
+const next=await students.listPage({pageSize:1,cursor:first.nextCursor});
+assert.deepEqual(next.records,[]);
+await assert.rejects(students.listPage({pageSize:1,cursor:first.nextCursor}),/Invalid Firestore page cursor/);
+console.log("V47 browser tenant gateway blocks sensitive collections and cursor replay");
