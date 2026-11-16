@@ -232,6 +232,8 @@ jobs:
       - name: test-v47-v46-collection-map
         if: success() || failure()
         run: node scripts/test-v47-v46-collection-map.mjs
+      - name: test-v47-school-backup-plan
+        run: node scripts/test-v47-school-backup-plan.mjs
       - name: test-v47-v46-migration-dry-run
         if: success() || failure()
         run: node scripts/test-v47-v46-migration-dry-run.mjs
