@@ -36,3 +36,7 @@ These V47 modules are **not wired into the existing V46 HTML application**. They
 ## Class roster on attendance preview
 
 The attendance development page now lists school-scoped students for a selected class in pages of 50 and lets a School Admin select a student without manually typing its Firestore document ID. This is **not** bulk attendance saving; each save remains one student at a time. Student query uses a class equality filter and document-ID order, which may require index verification in the target Firebase project. Real emulator/browser verification remains outstanding.
+
+## Indexed class/date attendance reading
+
+The attendance page now requests only the selected class and Nepal-local Gregorian date from Firestore, instead of filtering an unrelated collection scan. The isolated `v47/firestore.indexes.json` declares composite indexes for attendance date/class and student class pagination, referenced by `v47/firebase.v47.json`. Index deployment and live reads have not been verified. No V46 production config or deployment changed.
