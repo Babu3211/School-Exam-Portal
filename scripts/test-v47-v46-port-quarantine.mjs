@@ -8,7 +8,11 @@ const html=readFileSync(new URL("../dist/v47-v46-port-audit/index.html",import.m
 const audit=JSON.parse(readFileSync(new URL("../dist/v47-v46-port-audit/audit.json",import.meta.url),"utf8"));
 assert.equal(audit.state,"QUARANTINED_NOT_DEPLOYABLE");
 assert.ok(audit.literalReferencesRewritten>=140);
-assert.ok(audit.dynamicReferencesRequiringReview.length<=3);
+assert.equal(audit.dynamicReferencesRewritten,3);
+assert.deepEqual(audit.dynamicVariablesScoped,["name"]);
+assert.equal(audit.unresolvedDynamicReferences.length,0);
+assert.ok(html.includes("collection(db,tenantCollection(name))"));
+assert.ok(html.includes("doc(db,tenantCollection(name),item.id)"));
 assert.match(html,/V47 V46 port is quarantined: never deploy this file/);
 assert.doesNotMatch(html,/projectId\s*:\s*["']exam-portal-smss-95016["']/);
 assert.doesNotMatch(html,/const ADMIN_UID="[^"]+"/);
