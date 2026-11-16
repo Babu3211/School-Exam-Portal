@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SMSS V47 — IEMIS Ledger Readiness</title><style>body{font:16px system-ui,sans-serif;max-width:820px;margin:2rem auto;padding:0 1rem;color:#17324d}section{border:1px solid #cbd5e1;border-radius:12px;padding:1rem;margin:1rem 0}input,button{padding:.65rem;margin:.3rem}li{margin:.5rem 0}#status{white-space:pre-wrap}</style></head>
+<body><h1>V47 School IEMIS Ledger Readiness</h1><p><a id="back" href="./spark-school-workspace.html">School workspace</a></p><p>Read-only audit of school-scoped source records. This does not publish a Mark Ledger, Grade Ledger or Grade Sheet. Percentage-only V47 marks are not IEMIS component marks.</p>
+<section><form id="login"><label>Email <input name="email" type="email" required autocomplete="username"></label><label>Password <input name="password" type="password" required autocomplete="current-password"></label><button>Sign in</button></form><button id="logout" hidden type="button">Sign out</button></section>
+<section><form id="school" hidden><label>School ID <input name="schoolId" required pattern="[a-zA-Z0-9_-]{8,64}"></label><button>Check ledger readiness</button></form><p id="status" role="status" aria-live="polite">Awaiting isolated V47 configuration.</p></section>
+<section id="results" hidden><h2>Verified school data audit</h2><ul id="counts"></ul><h3>Ledger blockers</h3><ul id="blockers"></ul></section>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {getFirestore,doc,getDoc,collection,getDocs,query,limit,startAfter,orderBy} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {assertSchoolId} from "../../src/v47/tenant-domain.mjs";
+import {createV46VerifiedReadSession} from "../../src/v47/v46-verified-read-session.mjs";
+import {loadV47LedgerCollections} from "../../src/v47/v46-ledger-data-loader.mjs";
+const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#login"),school=document.querySelector("#school"),status=document.querySelector("#status"),results=document.querySelector("#results");
+const say=s=>status.textContent=s;
+let auth,db,epoch=0;
+const clear=()=>{epoch++;results.hidden=true;document.querySelector("#counts").replaceChildren();document.querySelector("#blockers").replaceChildren();};
+const hint=new URLSearchParams(location.search).get("schoolId");
+if(hint){try{school.elements.namedItem("schoolId").value=assertSchoolId(hint);}catch{}}
+const append=(id,value)=>{const li=document.createElement("li");li.textContent=value;document.getElementById(id).append(li);};
+if(!config||config.projectId!=="smss-exam-portal-v47"||config.authDomain!=="smss-exam-portal-v47.firebaseapp.com"){login.hidden=true;say("Isolated V47 Firebase configuration required.");}
+else{
+ const app=initializeApp(config,"v47-ledger-audit");auth=getAuth(app);db=getFirestore(app);
+ onAuthStateChanged(auth,user=>{clear();login.hidden=!!user;document.querySelector("#logout").hidden=!user;school.hidden=!user;say(user?"Choose a school to audit.":"Sign in required.");if(user&&school.elements.namedItem("schoolId").value)school.requestSubmit();});
+ login.addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(login);try{await signInWithEmailAndPassword(auth,String(f.get("email")),String(f.get("password")));}catch{say("Sign in failed.");}login.elements.namedItem("password").value="";});
+ document.querySelector("#logout").addEventListener("click",async()=>{clear();try{await signOut(auth);}catch{say("Sign out failed.");}});
+ school.elements.namedItem("schoolId").addEventListener("input",clear);
+ school.addEventListener("submit",async e=>{e.preventDefault();clear();const token=epoch,user=auth.currentUser;if(!user)return;
+  try{const schoolId=assertSchoolId(school.elements.namedItem("schoolId").value);
+   say("Reading verified school records. Large schools may take longer...");
+   const session=createV46VerifiedReadSession({db,auth,schoolId,docFn:doc,getDocFn:getDoc,collectionFn:collection,getDocsFn:getDocs,queryFn:query,limitFn:limit,startAfterFn:startAfter,orderByFn:orderBy});
+   const data=await loadV47LedgerCollections({session,pageSize:50,maxRecordsPerCollection:5000});
+   if(token!==epoch||auth.currentUser?.uid!==user.uid)return;
+   const url=new URL("./spark-school-workspace.html",location.href);url.searchParams.set("schoolId",schoolId);document.querySelector("#back").href=url.href;
+   for(const name of ["students","subjects","exams","marks"])append("counts",name+": "+data[name].length+" records read (verified school scope)");
+   const problems=[];
+   for(const name of ["students","subjects","exams","marks"])if(!data[name].length)problems.push("No "+name+" records available.");
+   const percentOnly=data.marks.filter(m=>!Array.isArray(m.scores)||!m.scores.length).length;
+   if(percentOnly)problems.push(percentOnly+" marks have no V46-compatible assessment components; cannot use them for an official IEMIS ledger.");
+   const invalidMarks=data.marks.filter(m=>!m.examId||!m.studentId||!m.subject).length;
+   if(invalidMarks)problems.push(invalidMarks+" marks lack required exam, student or subject identity.");
+   problems.push("Class-specific subject credits, applicability, exam term and component mappings must be verified before rendering.");
+   problems.forEach(p=>append("blockers",p));
+   results.hidden=false;say("Read-only readiness audit complete. No records changed; this is not an official result.");
+  }catch(err){if(token===epoch)say("Audit unavailable: "+err.message+" No partial dataset shown.");}
+ });
+}
+</script></body></html>
