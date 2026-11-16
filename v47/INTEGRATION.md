@@ -32,3 +32,7 @@ These V47 modules are **not wired into the existing V46 HTML application**. They
 ## Attendance browser preview
 
 `v47/attendance.html` is a standalone development-only attendance screen using the V47 Firebase project. It verifies active school membership, loads only `schools/{schoolId}/attendance`, displays a Nepal-local Gregorian date by default, and allows School Admin to save one student's presence at a time. Teacher and Viewer are read-only. The table filters **loaded pages client-side**, so a matching record may not appear until later pages are loaded. This is not a full class-wise attendance register, automatic BS date conversion, or IEMIS sync. It is not deployed.
+
+## Class roster on attendance preview
+
+The attendance development page now lists school-scoped students for a selected class in pages of 50 and lets a School Admin select a student without manually typing its Firestore document ID. This is **not** bulk attendance saving; each save remains one student at a time. Student query uses a class equality filter and document-ID order, which may require index verification in the target Firebase project. Real emulator/browser verification remains outstanding.
