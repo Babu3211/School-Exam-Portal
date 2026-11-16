@@ -29,6 +29,7 @@ export function createV46VerifiedReadSession({
   :null;
  const pagedCollections=new Map();
  const issuedPageTokens=new WeakMap();
+ const consumedPageTokens=new WeakSet();
  const identityOf=membership=>membership.uid+"|"+[...membership.roles].sort().join(",");
  const perform=async operation=>{
   const before=await readMembership();
@@ -57,7 +58,9 @@ export function createV46VerifiedReadSession({
    if(cursor!==null){
     if(typeof cursor!=="object" || !issuedPageTokens.has(cursor))throw new TypeError("Invalid page token");
     const issued=issuedPageTokens.get(cursor);
-    if(issued.name!==name || issued.identity!==identity)throw new TypeError("Page token belongs to another collection or member");
+    if(issued.name!==name || issued.identity!==identity || consumedPageTokens.has(cursor))
+     throw new TypeError("Page token is expired or belongs to another collection or member");
+    consumedPageTokens.add(cursor);
     internalCursor=issued.snapshot;
    }
    const page=await pagedCollections.get(name).listPage({...rest,cursor:internalCursor});
