@@ -21,8 +21,22 @@ service cloud.firestore {
     allow update: if schoolAdmin(schoolId) && (superAdmin() || (resource.data.get('role','') in ['teacher','viewer'] && request.resource.data.get('role','') in ['teacher','viewer'])) && request.resource.data.get('role','') in ['school_admin','teacher','viewer'] && request.resource.data.get('active',false) is bool && request.resource.data.get('schoolId','') == schoolId && request.resource.data.get('uid','') == uid;
     allow delete: if schoolAdmin(schoolId) && (superAdmin() || resource.data.get('role','') in ['teacher','viewer']);
    }
+   function validNewStudent() {
+    return request.resource.data.keys().hasOnly(['name','class','rollNo'])
+      && request.resource.data.keys().hasAll(['name','class'])
+      && request.resource.data.name is string
+      && request.resource.data.name.size() >= 2
+      && request.resource.data.name.size() <= 160
+      && request.resource.data['class'] in ['ECD','1','2','3','4','5','6','7','8','9','10','11','12']
+      && (!('rollNo' in request.resource.data) || (request.resource.data.rollNo is string && request.resource.data.rollNo.size() <= 30));
+   }
+   match /students/{docId} {
+    allow get, list: if reader(schoolId);
+    allow create: if schoolAdmin(schoolId) && validNewStudent();
+    allow update, delete: if schoolAdmin(schoolId);
+   }
    match /{collection}/{docId} {
-    allow get, list: if collection in ['students','staff','classes','subjects','exams','marks','attendance','mark_settings'] && reader(schoolId);
+    allow get, list: if collection in ['staff','classes','subjects','exams','marks','attendance','mark_settings'] && reader(schoolId);
     allow create, update, delete: if collection in ['students','staff','classes','subjects','exams','marks','attendance','mark_settings'] && schoolAdmin(schoolId);
    }
   }
