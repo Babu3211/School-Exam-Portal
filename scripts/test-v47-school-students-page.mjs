@@ -5,7 +5,7 @@ const builder=readFileSync(new URL("./build-v47-spark-staging.mjs",import.meta.u
 assert.match(page,/schoolCollectionPath\(id,"students"\)/);
 assert.match(page,/roles\.includes\("school_admin"\)/);
 assert.match(page,/await verify\(id,user\)/);
-assert.ok(page.includes("tenantRecords.listPage("students",{pageSize:20,cursor})"));
+assert.ok(page.includes('tenantRecords.listPage("students",{pageSize:20,cursor})'));
 assert.ok(page.includes("createV46VerifiedReadSession({"));
 assert.match(page,/textContent=String\(value\)/);
 assert.match(page,/config\.projectId!=="smss-exam-portal-v47"/);
