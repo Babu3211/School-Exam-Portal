@@ -1,4 +1,15 @@
 {
-  "firestore": {"rules": "v47/firestore.rules"},
-  "emulators": {"firestore": {"port": 8081}, "ui": {"enabled": false}, "singleProjectMode": true}
+  "firestore": {
+    "rules": "v47/firestore.rules",
+    "indexes": "v47/firestore.indexes.json"
+  },
+  "emulators": {
+    "firestore": {
+      "port": 8081
+    },
+    "ui": {
+      "enabled": false
+    },
+    "singleProjectMode": true
+  }
 }
