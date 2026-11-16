@@ -4,7 +4,7 @@ const rules=readFileSync(new URL("../firestore.v47.prototype.rules",import.meta.
 const studentBlock=rules.match(/match \/students\/\{id\} \{([\s\S]*?)\n      \}/)?.[1];
 assert.ok(studentBlock,"student rules present");
 assert.match(studentBlock,/allow create: if admin\(schoolId\) && studentCreateShape\(schoolId\)/);
-assert.match(studentBlock,/resource\.data\.get\('schoolId', schoolId\) == schoolId/);
+assert.match(studentBlock,/\('schoolId' in resource\.data\) \|\| resource\.data\.schoolId == schoolId/);
 assert.match(studentBlock,/request\.resource\.data\.schoolId == schoolId/);
 assert.match(studentBlock,/allow delete: if false/);
 const shape=rules.match(/function studentCreateShape\(schoolId\) \{([\s\S]*?)\n    \}/)?.[1];
