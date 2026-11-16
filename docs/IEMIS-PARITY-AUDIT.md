@@ -216,3 +216,10 @@ The owner explicitly instructed that everything in Class VI apply through VIII. 
 Automated tests now render every VI/VII/VIII First, Second and Final sheet independently, verify the respective Roman class heading and reference-vector GPA3.48/3.48/3.42, credits16/32 and footnote32. Grade Ledgers cover those GPA values; term Mark Ledgers cover columns/order; missing, absent, NG and source immutability are checked. Older-year and unverified-term behavior remains isolated. Entry, ledger, inline syntax and PWA suites pass locally.
 
 VII/VIII follow the owner's school policy based on VI evidence; this is not a claim of populated live IEMIS VII/VIII annual verification. Previously recorded missing lists/absent VIII Final option and native print limitations remain. No production deployment.
+
+
+## IX–X shared school policy
+
+Applied the owner's original instruction to use Class IX rules for X, scoped to year2083 First/Second. Both now use the same subject-specific term credit fractions, single-grade sheet/ledger, Grade-before-GP columns, NEB field, and term Mark Ledger order. Final remains the existing common IX/X weighted IN/TH calculation. Computer entry remains the approved4/36/10 plus FinalTheory50. No marks/settings were rewritten.
+
+Separate synthetic IX and X First/Second/Final tests pass: term credits9, GPA3.66/3.66, FinalGPA3.48 on the reference vector, class heading, Computer weighting, missing/absent behavior and historical isolation. Entry, ledger, PWA and syntax suites pass. Actual Class X Save/Reload remains unverified because the live entry lists were empty; this extension is school policy based on IX evidence. Native print remains pending. No production deployment.
