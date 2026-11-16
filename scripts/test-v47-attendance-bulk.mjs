@@ -4,7 +4,7 @@ const entries=[{date:'2026-11-16',class:'1',studentId:'s1',present:true},{date:'
 let committed=0;const writes=[];const api={doc:(_db,...p)=>p.join('/'),writeBatch:()=>({set:(ref,data)=>writes.push({ref,data}),commit:async()=>{committed++}})};
 const args={db:{},api,actor,schoolId:'school_001',entries};
 assert.deepEqual(await saveClassAttendance(args),{saved:2,date:'2026-11-16',class:'1'});assert.equal(committed,1);assert.equal(writes.length,2);assert.equal(writes[0].ref,'schools/school_001/attendance/2026-11-16_s1');
-for(const bad of [[entries[0],entries[0]],[entries[0],{...entries[1],class:'2'}],[entries[0],{...entries[1],present:'yes'}],[],Array.from({length:101},(_,i)=>({...entries[0],studentId:'s'+i}))])await assert.rejects(()=>saveClassAttendance({...args,entries:bad}));
+for(const bad of [[entries[0],entries[0]],[entries[0],{...entries[1],class:'2'}],[entries[0],{...entries[1],present:'yes'}],[],Array.from({length:11},(_,i)=>({...entries[0],studentId:'s'+i}))])await assert.rejects(()=>saveClassAttendance({...args,entries:bad}));
 assert.equal(committed,1,'Invalid batches must not write');
 for(const role of ['viewer','teacher'])await assert.rejects(()=>saveClassAttendance({...args,actor:{...actor,role}}));
 await assert.rejects(()=>saveClassAttendance({...args,schoolId:'school_002'}));
