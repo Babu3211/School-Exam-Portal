@@ -16,12 +16,15 @@ const config=window.__SMSS_V47_SPARK_CONFIG__,login=document.querySelector("#log
 let tenantRecords=null;
 let auth,db,schoolId=null,schoolName="",cursor=null,epoch=0,loading=false;
 const say=s=>status.textContent=s;
+// School ID is a navigation hint only; verify() checks current membership before access.
+const selectedSchool=new URLSearchParams(location.search).get("schoolId");
+if(selectedSchool){try{schoolForm.elements.namedItem("schoolId").value=assertSchoolId(selectedSchool);}catch{ /* Ignore invalid navigation hints. */ }}
 function reset(){epoch++;schoolId=null;tenantRecords=null;cursor=null;loading=false;content.hidden=true;more.hidden=true;rows.replaceChildren();}
 async function verify(id,user){const [s,m]=await Promise.all([getDoc(doc(db,"schools",id)),getDoc(doc(db,"schools",id,"members",user.uid))]);if(!s.exists()||!m.exists())throw Error("Active school membership required");const access=verifyV47BrowserMembership({schoolId:id,uid:user.uid,school:s.data(),member:m.data()});return {school:s.data(),roles:access.roles};}
 async function loadMore(){if(!schoolId||loading||!auth.currentUser)return;const id=schoolId,user=auth.currentUser,token=epoch;loading=true;more.disabled=true;try{await verify(id,user);if(token!==epoch||auth.currentUser?.uid!==user.uid)return;const page=await tenantRecords.listPage({pageSize:20,cursor});await verify(id,user);if(token!==epoch||auth.currentUser?.uid!==user.uid)return;for(const record of page.records){const data=record,tr=document.createElement("tr");for(const value of [data.studentId||"—",data.subjectId||"—",data.term||"—",record.id]){const td=document.createElement("td");td.textContent=String(value);tr.append(td);}rows.append(tr);}cursor=page.nextCursor;more.hidden=!page.nextCursor;say("Loaded "+rows.children.length+" marks.");}catch(e){if(token===epoch)say("Unable to load marks: "+e.message);}finally{if(token===epoch){loading=false;more.disabled=false;}}}
 if(!config||config.projectId!=="smss-exam-portal-v47"||config.authDomain!=="smss-exam-portal-v47.firebaseapp.com"){login.hidden=true;say("V47 isolated Firebase configuration required. No connection started.");}else{
  const app=initializeApp(config,"v47-marks");auth=getAuth(app);db=getFirestore(app);
- onAuthStateChanged(auth,user=>{reset();login.hidden=!!user;document.querySelector("#logout").hidden=!user;schoolForm.hidden=!user;say(user?"Enter school ID to continue.":"Sign in first.");});
+ onAuthStateChanged(auth,user=>{reset();login.hidden=!!user;document.querySelector("#logout").hidden=!user;schoolForm.hidden=!user;say(user?"Enter school ID to continue.":"Sign in first.");if(user && selectedSchool && schoolForm.elements.namedItem("schoolId").value===selectedSchool)schoolForm.requestSubmit();});
  login.addEventListener("submit",async event=>{event.preventDefault();const f=new FormData(login);try{await signInWithEmailAndPassword(auth,String(f.get("email")),String(f.get("password")));}catch{say("Sign in failed.");}login.elements.namedItem("password").value="";});
  document.querySelector("#logout").addEventListener("click",async()=>{reset();try{await signOut(auth);}catch{say("Sign out failed.");}});
  schoolForm.elements.namedItem("schoolId").addEventListener("input",reset);
