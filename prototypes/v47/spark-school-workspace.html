@@ -28,7 +28,7 @@ const PAGE_SIZE=20;
 const PREVIEW_KINDS=["students","staff","classes","subjects","exams","marks","attendance","certificates","mark_settings","school_settings"];
 
 const say=value=>status.textContent=value;
-const clear=()=>{epoch++;workspace.hidden=true;tables.replaceChildren();document.querySelector("#school-title").textContent="";document.querySelector("#role").textContent="";};
+const clear=()=>{epoch++;workspace.hidden=true;tables.replaceChildren();document.querySelector("#school-title").textContent="";document.querySelector("#role").textContent="";for(const link of document.querySelectorAll('nav[aria-label="School modules"] a[href^="./spark-school-"]')){const url=new URL(link.href);url.searchParams.delete("schoolId");link.href=url.href;}};
 if(!config || config.projectId!=="smss-exam-portal-v47" || config.authDomain!=="smss-exam-portal-v47.firebaseapp.com"){login.hidden=true;say("V47 isolated Firebase configuration is missing. No connection started.");}
 else{
  const app=initializeApp(config,"v47-school-workspace");auth=getAuth(app);db=getFirestore(app);
