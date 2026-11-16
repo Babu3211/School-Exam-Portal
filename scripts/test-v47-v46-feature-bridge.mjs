@@ -79,7 +79,7 @@ assert.throws(()=>browserGateway.forCollection("students"),/cross-school/);
 assert.throws(()=>browserGateway.forCollection("schools/school_A001/unreviewed"),/Unreviewed/);
 await assert.rejects(()=>tenantCollection.list({pageSize:100}),/Page size/);
 await assert.rejects(()=>tenantCollection.get("../other"),/Invalid document ID/);
-await assert.rejects(()=>tenantCollection.get("bad\\u0000id"),/Invalid document ID/);
+await assert.rejects(()=>tenantCollection.get("bad"+String.fromCharCode(0)+"id"),/Invalid document ID/);
 const integratedBridge=createV46FeatureBridge({
  session:{schoolId:"school_A001",roles:["viewer"]},
  legacyFeatures:implementations,
