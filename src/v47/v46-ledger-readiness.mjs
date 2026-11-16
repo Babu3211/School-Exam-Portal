@@ -46,11 +46,26 @@ export function auditV47LedgerReadiness(data,{schoolId}={}){
   }
  }
  if(duplicateSubjects)blockers.push(duplicateSubjects+" subjects share a name in the same class.");
+ const subjectById=new Map(data.subjects.map(s=>[s.id,s]));
+ const subjectByName=new Map();
+ for(const subject of data.subjects){
+  for(const name of [subject.name,subject.subjectName].filter(Boolean)){
+   const key=String(name).trim().toLowerCase();
+   if(!subjectByName.has(key))subjectByName.set(key,new Set());
+   subjectByName.get(key).add(subject.id);
+  }
+ }
+ const resolveSubject=mark=>{
+  if(mark.subjectId)return String(mark.subjectId);
+  const name=String(mark.subject??"").trim().toLowerCase();
+  const matches=subjectByName.get(name);
+  return matches?.size===1?[...matches][0]:"name:"+name;
+ };
  const markPairs=new Set();
  let duplicatePairs=0;
  for(const mark of data.marks){
   if(!mark.studentId||!mark.examId||!(mark.subjectId||mark.subject))continue;
-  const key=JSON.stringify([mark.examId,mark.studentId,mark.subjectId||mark.subject]);
+  const key=JSON.stringify([mark.examId,mark.studentId,resolveSubject(mark)]);
   if(markPairs.has(key))duplicatePairs++;
   markPairs.add(key);
  }
