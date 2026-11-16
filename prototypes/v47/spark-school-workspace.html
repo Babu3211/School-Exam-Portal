@@ -67,6 +67,7 @@ else{
    // Each query remains bounded regardless of total school enrollment.
    const kinds=PREVIEW_KINDS;
    const results=[];
+   // Read each school-scoped collection only in bounded pages; no full-school scan.
    // Fetch up to three independent sections at a time to balance latency and Spark usage.
    for(let offset=0;offset<kinds.length;offset+=3){
     if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
@@ -96,7 +97,6 @@ else{
        kind==="certificates" ? (data.studentName||data.certificateName||data.title) :
        kind==="mark_settings" ? (data.name||data.examName||data.title) :
        kind==="school_settings" ? (data.schoolNameEnglish||data.schoolName||data.name) :
-       kind==="public_results" ? (data.studentName||data.studentId||data.title) :
        kind==="marks" ? (data.studentName||data.studentId||data.student_id) :
        (data.studentName||data.studentId||data.student_id);
      const safeLabel=typeof label==="string" && label.trim()?label.trim().slice(0,120):record.id;
