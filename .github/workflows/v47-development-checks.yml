@@ -93,7 +93,9 @@ jobs:
           grep -q '../../iemis-ledger.js' dist/v47-spark/prototypes/v47/v46-grade-calculator.html
           if grep -q 'exam-portal-smss-95016' dist/v47-spark/prototypes/v47/v46-grade-calculator.html; then exit 1; fi
           test -f dist/v47-spark/prototypes/v47/spark-school-workspace.html
-          grep -q 'tenantPaths.collection(kind)' dist/v47-spark/prototypes/v47/spark-school-workspace.html
+          grep -q 'createV46VerifiedReadSession' dist/v47-spark/prototypes/v47/spark-school-workspace.html
+          grep -q 'schoolReads.listPage(kind,{pageSize:PAGE_SIZE})' dist/v47-spark/prototypes/v47/spark-school-workspace.html
+          grep -q 'schoolReads.listPage(kind,{pageSize:PAGE_SIZE,cursor})' dist/v47-spark/prototypes/v47/spark-school-workspace.html
           grep -q 'tables.replaceChildren(...staged)' dist/v47-spark/prototypes/v47/spark-school-workspace.html
           grep -q 'School access changed during loading' dist/v47-spark/prototypes/v47/spark-school-workspace.html
           test "$(grep -Fc 'latestMember.data().roles' dist/v47-spark/prototypes/v47/spark-school-workspace.html)" -ge 1
