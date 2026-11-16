@@ -40,6 +40,24 @@ jobs:
               'docs/V46-FEATURE-DIFFERENCE-AUDIT.md', 'docs/V46-SINGLE-SOURCE-OF-TRUTH.md', 'docs/V46-PRODUCTION-RELEASE-ROLLBACK-CHECKLIST.md', 'docs/V46-FREE-FIRESTORE-BACKUP-PLAN.md', 'docs/V46-MOBILE-ONLY-FREE-RELEASE-HANDOFF.md',
               'package.json', 'scripts/test-firestore-rules.mjs', 'scripts/test-iemis-entry.mjs'})
             allowed.update(p for p in changed if p.startswith('scripts/test-v46-') and p.endswith('.mjs'))
+          # This school-authorized IEMIS verification branch has a separate,
+          # exact file scope. All dashboard, permission and emulator checks below
+          # still run; other branches retain the existing source freeze.
+          if os.environ.get('GITHUB_HEAD_REF')=='fix/iemis-class6-2083-term-sheets' or os.environ.get('GITHUB_REF_NAME')=='fix/iemis-class6-2083-term-sheets':
+            allowed.update({'docs/IEMIS-PARITY-AUDIT.md', 'iemis-ledger.js',
+              'iemis-entry.js', 'scripts/fixtures/iemis-entry.html',
+              'scripts/fixtures/iemis-layout.html', 'scripts/test-iemis-ledger.mjs', 'scripts/test-iemis-entry.mjs', 'sw.js'})
+            # The Computer regression additions must preserve every existing entry test.
+            entry_tests_before=subprocess.check_output(['git','show','origin/main:scripts/test-iemis-entry.mjs'],text=True)
+            assert open('scripts/test-iemis-entry.mjs').read().startswith(entry_tests_before), 'Existing entry tests must remain intact'
+            # Companion files may only receive the matching module/cache version.
+            for path in ['iemis-entry.js', 'scripts/fixtures/iemis-entry.html', 'scripts/fixtures/iemis-layout.html', 'sw.js']:
+              before=subprocess.check_output(['git','show','origin/main:'+path],text=True)
+              after=open(path).read()
+              expected=before.replace('20261109-legacy2','20261115-class6-ledger')
+              if path=='sw.js':
+                expected=expected.replace('smss-pwa-v51-network-refresh-20261110','smss-pwa-v51-class6-ledger-20261115')
+              assert after==expected, f'Unexpected behavioral change in protected companion file: {path}'
           unexpected=changed-allowed
           assert not unexpected, f'Unexpected changes to protected V44/IEMIS files: {sorted(unexpected)}'
           print('Approved dashboard and IEMIS source files remain protected.')
@@ -68,6 +86,8 @@ jobs:
           node scripts/test-attendance-bs-today.mjs
           node scripts/test-v45-ui.mjs
           node scripts/test-dropdown-language.mjs
+      - name: IEMIS calculation and entry regression
+        run: npm run test:iemis
       - name: Preserve question paper and PWA behavior
         run: |
           npm run test:question-paper
@@ -77,8 +97,84 @@ jobs:
           npm run test:viewer
           npm run test:rules
           npx firebase emulators:exec --only firestore --project smss-v45-activity-test 'node scripts/test-user-activity-rules.mjs'
+      - name: Render and verify synthetic A4 Grade Sheet
+        if: github.head_ref == 'fix/iemis-class6-2083-term-sheets'
+        run: |
+          mkdir -p "$RUNNER_TEMP/smss-print"
+          report="$RUNNER_TEMP/smss-print"
+          SMSS_GRADE_PRINT_FIXTURE="$report/grade.html" SMSS_PRIMARY_PRINT_FIXTURE="$report/primary.html" SMSS_SECONDARY_PRINT_FIXTURE="$report/secondary.html" node scripts/test-iemis-ledger.mjs
+          if ! command -v pdfinfo >/dev/null || ! command -v pdftoppm >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y poppler-utils
+          fi
+          for fixture in grade primary secondary; do
+            google-chrome --headless --no-sandbox --disable-gpu --no-pdf-header-footer \
+              --print-to-pdf="$report/$fixture.pdf" "file://$report/$fixture.html"
+            pdfinfo "$report/$fixture.pdf" | tee "$report/$fixture-info.txt"
+            grep -Eq '^Pages:[[:space:]]+1$' "$report/$fixture-info.txt"
+            grep -Eq '^Page size:.*\(A4\)' "$report/$fixture-info.txt"
+            pdftotext "$report/$fixture.pdf" "$report/$fixture.txt"
+            grep -Fq 'GRADE POINT AVERAGE' "$report/$fixture.txt"
+            grep -Fq 'Head Teacher' "$report/$fixture.txt"
+            pdftoppm -singlefile -r 110 -png "$report/$fixture.pdf" "$report/grade"
+          done
+          grep -Fq "3.54" "$report/primary.txt"
+          grep -Fq "26 HOURS" "$report/primary.txt"
+          grep -Fq "3.48" "$report/secondary.txt"
+          grep -Fq "32 HOURS" "$report/secondary.txt"
+          grep -Fq "COMPUTER SCIENCE" "$report/secondary.txt"
+      - name: Save synthetic Grade Sheet for visual review
+        if: always() && github.head_ref == 'fix/iemis-class6-2083-term-sheets'
+        uses: actions/upload-artifact@v4
+        with:
+          name: smss-synthetic-a4-grade-sheet
+          path: |
+            ${{ runner.temp }}/smss-print/grade.pdf
+            ${{ runner.temp }}/smss-print/grade.png
+            ${{ runner.temp }}/smss-print/primary.pdf
+            ${{ runner.temp }}/smss-print/primary.png
+            ${{ runner.temp }}/smss-print/secondary.pdf
+            ${{ runner.temp }}/smss-print/secondary.png
+            ${{ runner.temp }}/smss-print/*-info.txt
+          retention-days: 7
       - name: Verify final V45 source remains the approved dashboard
         run: |
           node --input-type=module -e 'import fs from "node:fs";const s=fs.readFileSync("index.html","utf8");for(const x of ["School Profile","Student Record","Teacher | Staff","initIdleLogout","initUserActivity"])if(!s.includes(x))throw Error("Missing approved V45 feature: "+x);if(s.includes("V45 Trial"))throw Error("Obsolete trial dashboard restored")'
 
-# This workflow does not open IEMIS, deploy Hosting, or write production Firestore data.
+
+  iemis-hosting-preview:
+    name: Verify IEMIS changes on Firebase Hosting preview
+    if: github.event_name == 'pull_request' && github.head_ref == 'fix/iemis-class6-2083-term-sheets' && github.event.pull_request.head.repo.full_name == github.repository
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: smss-iemis-2083-hosting-preview
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Deploy to dedicated preview channel
+        id: preview
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
+          projectId: exam-portal-smss-95016
+          channelId: iemis-2083-review
+          expires: 7d
+          entryPoint: .
+      - name: Check deployed portal and IEMIS JavaScript over HTTPS
+        env:
+          PREVIEW_URL: ${{ steps.preview.outputs.details_url }}
+        run: |
+          [[ "$PREVIEW_URL" == https://exam-portal-smss-95016--*.web.app ]]
+          curl -fsSL --retry 4 "$PREVIEW_URL/" -o "$RUNNER_TEMP/smss-preview.html"
+          cmp index.html "$RUNNER_TEMP/smss-preview.html"
+          for file in iemis-entry.js iemis-ledger.js sw.js; do
+            curl -fsSL --retry 4 "$PREVIEW_URL/$file" -o "$RUNNER_TEMP/$file"
+            cmp "$file" "$RUNNER_TEMP/$file"
+          done
+          echo "Firebase Hosting preview: $PREVIEW_URL" >> "$GITHUB_STEP_SUMMARY"
+
+# This workflow does not open IEMIS, deploy live Hosting, or write Firestore data.

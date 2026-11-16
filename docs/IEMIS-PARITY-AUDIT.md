@@ -113,3 +113,127 @@ PR #8 and PR #10 overlap in `docs/IEMIS-PARITY-AUDIT.md`, `index.html`, `scripts
 ### V45 release trigger — 2026-11-10
 
 The release commit runs the existing main-branch quality gate before Firebase Hosting and Firestore rules deployment. The signed Android APK workflow independently runs V44, V45, IEMIS, PWA, UI and Firestore tests before signing and publishing a GitHub Release. APK is a Capacitor wrapper for the live Firebase URL, so it must be distributed only after the live release and signed APK workflows both succeed. PR #8's conflicting changes are excluded pending reconciliation; no student records are edited by this documentation-only trigger.
+
+
+## Populated 2083 Class VI verification and Class I restoration — 2026-11-11
+
+Class I First-Term Nepali restoration was reloaded and confirmed as achievement count 3 and obtained achievement 10. This supersedes the earlier restore-not-confirmed note; the values remain samples and still need replacement with genuine school-assessed results.
+
+With the school user's explicit permission, only the first Class VI student was selected for First, Second and Final Term sample writes. No identifiers are included here. Each Save was followed by Load and comparison of every displayed input: all 21 inputs persisted in each non-final term, and all 28 persisted in Final.
+
+| Subject | Participation /4 | Practical /36 | Term /10 | Final /50 |
+| --- | ---: | ---: | ---: | ---: |
+| Nepali | 3 | 30 | 8 | 40 |
+| English | 4 | 28 | 7 | 38 |
+| Mathematics | 3 | 25 | 8 | 35 |
+| Science & Technology | 4 | 32 | 9 | 42 |
+| Social Studies & Human Value Education | 3 | 27 | 7 | 36 |
+| Health Physical & Creative Art | 4 | 30 | 8 | 41 |
+| Hamro Dhunibeshi | 3 | 29 | 8 | 39 |
+
+First/Second entry headers are Participation(4), Practical/Project(36), and the respective Term Examination(10). Final headers are Participation(4), Practical/Project(36), Total of Term(10), and Total of final marks(50). The sample triplets above were used in all three terms; only Final includes the last column.
+
+Both First and Second Grade Sheets show CH 2.5/2.5/2.5/2.5/2.5/1.5/2 (total16), grades A/B+/B+/A+/B+/A/A and GPA3.48. They have Subjects/CH/GP/Grade/Remarks, without a Final Grade column or TH/IN labels. Final has paired TH/IN rows, annual CH total32, component-credit GPA3.42, and a Final Grade column. All three sheets state one credit hour equals32 hours. These totals reflect the seven configured subjects; no Computer subject appeared in this Class VI cohort.
+
+SMSS previously withheld non-final secondary GPA, showed annual credits and retained final-only columns. Commit 840c4ef now uses the existing single-grade sheet renderer for verified 2083 Class VI First/Second, halves configured annual credits for display, and shows the term GPA. Class VI 2083 footnotes use the applicable annual credit total instead of assuming36. Stored credits/marks and other classes/years/unverified terms are unchanged. Synthetic actual-renderer regression in 7b730eb checks 3.48/3.42, credits16/32, missing/NG handling and source immutability; existing I/IV/V/VI regression and all five inline JavaScript syntax checks pass locally.
+
+Class VI sample values remain in real IEMIS for replacement by the school. They are not certified academic results. No SMSS Firestore data was written and this branch was not deployed. Class VI Mark/Grade Ledger comparison, explicit edit/validation/print, other class regressions and exact watermark/A4 parity remain outstanding. The browser session was unavailable on continuation before the Grade Ledger could be inspected; do not infer its values from the Grade Sheet or claim the complete phase passed.
+
+
+### Class VI Grade Ledger follow-up (recorded 2026-11-15)
+
+During the subsequent authenticated session, Class VI 2083 First and Second Grade Ledgers both showed one grade column per subject, grades A/B+/B+/A+/B+/A/A, and Final GPA 3.48. Final Grade Ledger showed IN/TH/Total groups and GPA 3.42, matching the corresponding Grade Sheets. No additional marks were written during these ledger observations. Student identifiers and parent details are omitted.
+
+This supersedes the earlier Grade-Ledger-pending statement only. The Mark Ledger First Term Load was initiated, but its populated output was not captured before interruption; Mark Ledger comparison remains unverified. The current main helper still renders duplicate IN/Total non-final grade columns and withholds non-final secondary GPA. PR #28 fixes Grade Sheets only; the Grade Ledger fix remains outstanding and must preserve historical cohorts.
+
+All three workflows passed on commit 8135ca7fdb59572f9cfacdc5351ccf898aa28cab: V45 regression 42958820463, V44 JavaScript/Firestore 42958820432, V45 JavaScript/Firestore 42958820495. These are branch checks, not production certification. PR #28 remains open and unmerged as checked on continuation. No merge or deployment is performed by this evidence update.
+
+
+### Class VI populated Mark Ledger verification — 2026-11-15
+
+After authenticated login resumed, all three 2083 Class VI Mark Ledgers were inspected without additional writes. First Term columns followed Nepali, English, Mathematics, Science & Technology, Social Studies & Human Value Education, Health Physical & Creative Art, Hamro Dhunibeshi, showing 41/39/36/45/37/42/40. Second Term reversed that subject order and showed 40/42/37/45/36/39/41. Final used the same reversed order with IN/TH pairs: 40/39, 42/41, 37/36, 45/42, 36/35, 39/38, 41/40. All values match the saved sample inputs documented above.
+
+The First-Term subject order differs from Second/Final in the current reference. Existing SMSS iemisSubjects reverses all Class VI number ledgers without term context, so First-Term order still requires a scoped correction. Non-final IEMIS Mark Ledgers have one column per subject, without an IN subheader. This observation completes the Class VI populated Mark Ledger value comparison, not full UI/print/edit/validation certification. Student identifiers remain omitted; no production deployment was performed.
+
+
+### Class VI term Ledger implementation — 2026-11-15
+
+Commit 9b5bf1f implements the verified 2083 Class VI First/Second Ledger behavior with explicit academicYear/term context: single subject columns, term GPA weighted by subject credits, and normal core order for First-Term Mark Ledger. Second-Term reverse Mark Ledger order and annual IN/TH layout remain. Class VI First/Second Grade Ledger now yields the verified 3.48; absent, missing and NG subjects withhold numeric GPA. Other classes, years and unverified terms retain their previous behavior. This supersedes the outstanding ledger-code notes above, without certifying untested classes.
+
+Integration supplies the selected exam context. The page, nested entry import, trial fixtures and service worker use the same new module URL to avoid an installed worker serving an older ledger implementation. No marks/configuration are migrated. Local actual-renderer and helper regressions, PWA upgrade/offline/cache isolation and inline JavaScript syntax checks passed. Tests in 81ee5e6 cover columns, order, GPA, absence, blank/zero and historical/class isolation using synthetic identities only. Full GitHub CI on the resulting head and production integration remain required.
+
+
+## Populated Class IX 2083 verification — 2026-11-15
+
+With the school user's explicit authorization, only the first Class IX student was selected for sample First/Second/Final writes. No student identifiers are included here. The first six enrolled subjects use Participation3/Practical16/Term6; Computer uses the actual IEMIS Participation3/Practical41/Term6. Final adds Theory75 for ordinary subjects and Theory50 for Computer. The unassigned Additional Mathematics inputs were disabled and left blank. Every entered input was verified after Save and Load: 21 values in each non-final term, 28 in Final.
+
+| Subject | Participation | Practical | Term | Final Theory |
+| --- | ---: | ---: | ---: | ---: |
+| Nepali | 3 | 13 | 5 | 60 |
+| English | 2 | 14 | 4 | 58 |
+| Mathematics | 3 | 12 | 5 | 55 |
+| Science & Technology | 3 | 15 | 5 | 65 |
+| Social Studies | 2 | 13 | 5 | 57 |
+| Optional I Environment Science | 3 | 14 | 5 | 62 |
+| Optional II Computer Science | 2 | 34 | 5 | 40 |
+
+First and Second Grade Sheets show CH1.25/1.25/1.25/1.25/1/1/2 (total9), Grade then GP columns, grades A/A/A/A+/A/A/A and GPA3.66. Final has annual credits5/5/5/5/4/4/4 (total32), paired TH/IN credits split75/25 except Computer50/50, and GPA3.48. All three sheets state one credit hour equals32 hours. First/Second Grade Ledgers also show single subject grade columns and GPA3.66; Final Grade Ledger shows component/total grades and GPA3.48. Thus the populated Grade Ledgers agree with the Grade Sheets.
+
+The school explicitly requested Computer4/36/10 for SMSS despite the observed IEMIS3/41/6. This remains a documented intentional override requiring final integration of the older Computer fix; this report does not claim those component schemas are identical. Test values remain in real IEMIS for the school to replace with assessed marks. No SMSS production data was written.
+
+Commits1193709 and223df3 scope presentation/calculation changes to verified 2083 Class IX First/Second: subject-specific term credits, single-grade columns, Grade-before-GP sheet order, NEB registration field, and credit-weighted term GPA. Class IX number-ledger behavior remains untouched pending direct Mark Ledger comparison. Synthetic actual-renderer tests in1cb6b94 reproduce3.66/3.48, credits9, optional Computer weight, missing/absent behavior and historical isolation; prior I/IV/V/VI, PWA upgrade and inline syntax checks pass locally. A counterexample with Computer GP2.8 produces3.48 using2/9 credit weight, guarding against mistakenly using4/32 annual weight.
+
+Mark Ledger comparison was not completed before the browser session became unavailable. Explicit Class IX Edit/Update/validation, watermark dimensions and native A4/PDF output remain pending; no full phase or production certification is claimed.
+
+
+## Class IX Mark Ledger read-only verification — 2083
+
+Authenticated IEMIS showed saved sample values in all three terms. First and Second use one marks column per subject, without IN subheaders, ordered Computer, Environment, Social, Science, Mathematics, English, Nepali. Values respectively: 41, 22, 20, 23, 20, 20, 21. Corrected this scoped term rendering and added value/order/historical-isolation regression tests; local ledger suite passes.
+
+Final shows IN/TH pairs. Observed order and values: English 20/58; Nepali 21/60; Computer 41/40; Environment 22/62; Social 20/57; Science 23/65; Mathematics 20/55. Final order differs from both term ledgers and Grade Ledger; its ordering mechanism has not yet been established, so no global ordering change was made. No marks were written during this verification. Native print/PDF, watermark, remaining edit/validation and group expansion still pending. No production deployment.
+
+
+## Annual ordering recheck and Computer defaults
+
+On a new Class IX Final Mark Ledger load with the same 2083 filters, IEMIS returned Nepali, English, Mathematics, Science, Social, Environment, Computer instead of the previously observed English/Nepali/Computer-first order. The source ordering is not stable across these observations; the anomalous first order is not hardcoded into SMSS.
+
+The current branch already has approved Computer 4/36/10 in the grid. Inspection found English-named Computer assessment defaults still took ordinary-subject 3/16/6, and a legacy Excel heading array retained 3/41/6. Corrected both defaults without writing settings or marks. Regression covers English/Nepali subject names, all IX/X term component limits, rejection of excess input, and preservation/blocking of incompatible historical 3/41/6 records. Entry and Grade Sheet/ledger suites pass locally. Full single-subject historical edit parity and the remaining print/group verification are still pending. No production deployment.
+
+
+## Class VII/VIII read-only check — 2026-11-16
+
+Year 2083, Section All. Class VII Result Entry returned "No student list found" in First, Second and Final. Class VIII First returned one student; selecting all subjects showed Nepali, English, Mathematics, Science & Technology, Social Studies & Human Value Education, Health Physical & Creative Art, Hamro Dhunibeshi. All seven have IsAbsent plus Participation4, Practical/Project36 and First Term Examination10, matching the VI First reference. No marks were entered or saved for VII/VIII.
+
+VIII Second returned no student list. Once VIII loaded, the available Term options were First, Second, Third; Final was absent. Therefore VIII Final cannot be claimed verified or silently mapped to Third. This is a source-UI limitation/difference, not permission to alter enrollment or admit-card data. The entry notice says students require Symbol No. in Admit Card before appearing, but the exact cause of empty lists was not independently established. VII/VIII populated ledger, Grade Sheet, Save/Reload and annual parity remain open.
+
+All six CI workflows passed on implementation head 65e52f51fd5f810cbd40050b73da6800b631f211 before this documentation-only update. No production deployment.
+
+
+## School-authorized VI–VIII rule unification — 2026-11-16
+
+The owner explicitly instructed that everything in Class VI apply through VIII. Extended the verified VI 2083 First/Second Grade Sheet and ledger rules to VII/VIII: half annual subject credits, one grade per subject, term GPA without theory, matching headers and Mark Ledger ordering. Final continues the existing common VI–VIII IN50/TH50 calculation and annual credit rules. Per-subject annual credits remain sourced from each class configuration; no marks or settings are migrated. Third Term is not relabeled Final.
+
+Automated tests now render every VI/VII/VIII First, Second and Final sheet independently, verify the respective Roman class heading and reference-vector GPA3.48/3.48/3.42, credits16/32 and footnote32. Grade Ledgers cover those GPA values; term Mark Ledgers cover columns/order; missing, absent, NG and source immutability are checked. Older-year and unverified-term behavior remains isolated. Entry, ledger, inline syntax and PWA suites pass locally.
+
+VII/VIII follow the owner's school policy based on VI evidence; this is not a claim of populated live IEMIS VII/VIII annual verification. Previously recorded missing lists/absent VIII Final option and native print limitations remain. No production deployment.
+
+
+## IX–X shared school policy
+
+Applied the owner's original instruction to use Class IX rules for X, scoped to year2083 First/Second. Both now use the same subject-specific term credit fractions, single-grade sheet/ledger, Grade-before-GP columns, NEB field, and term Mark Ledger order. Final remains the existing common IX/X weighted IN/TH calculation. Computer entry remains the approved4/36/10 plus FinalTheory50. No marks/settings were rewritten.
+
+Separate synthetic IX and X First/Second/Final tests pass: term credits9, GPA3.66/3.66, FinalGPA3.48 on the reference vector, class heading, Computer weighting, missing/absent behavior and historical isolation. Entry, ledger, PWA and syntax suites pass. Actual Class X Save/Reload remains unverified because the live entry lists were empty; this extension is school policy based on IX evidence. Native print remains pending. No production deployment.
+
+
+## I–V school-policy expansion
+
+Extended Class I's 2083 achievement-sheet term credits/footnote policy to Classes II–V as originally instructed. Only achievement cohorts use it; saved historical IV/V TH/IN assessments keep their original rendering. First/Second display half the class's configured annual credits; Final retains annual credits. Corrected the year-boundary matcher so a label2083-2084 receives the same2083 policy. No subject configuration or marks are overwritten.
+
+Every I–V class now runs First/Second/Final sheet tests against the same Class I reference vector (GPA3.54; credits13/26), including Roman class heading, footnote26, annual-credit immutability, old-year and Third-Term isolation. Separate historical IV/V tests still pass. This is the authorized shared school policy, not a claim of populated live IEMIS comparison for every II–V class. All local entry, ledger/sheet, PWA and syntax suites pass. Native print and remaining live edit/validation work are still release gates.
+
+
+## Online print school-branding correction
+
+Removed the hardcoded school-name image from printOnlineResult. The watermark now uses the published sheet's data-watermark, with its school header as fallback, rather than the viewing session's school settings. It preserves the repeated background and A4 print settings. XML-sensitive characters and CSS URL punctuation are encoded; regression invokes the actual print handler with English/Nepali names, ampersand, angle brackets, quotes and parentheses. The generated HTML keeps the report intact. All local sheet/ledger, syntax and PWA tests pass; native PDF rendering and exact visual parity remain unverified. No published result or stored mark was rewritten.
+
+All six CI workflows passed on preceding all-class head e7b21a5. The new print fix requires fresh CI.

@@ -1,11 +1,11 @@
-const CACHE_NAME = 'smss-pwa-v51-network-refresh-20261110';
+const CACHE_NAME = 'smss-pwa-v51-class6-ledger-20261115';
 const APP_SHELL = [
   './',
   './index.html',
   './iemis-ledger.js',
   './iemis-entry.js',
-  './iemis-ledger.js?v=20261109-legacy2',
-  './iemis-entry.js?v=20261109-legacy2',
+  './iemis-ledger.js?v=20261115-class6-ledger',
+  './iemis-entry.js?v=20261115-class6-ledger',
   './cdc-question-paper.js',
   './data/cdc-grade8-science-practice-pack-v1.json',
   './data/cdc-grade10-science-practice-pack-v1.json',
