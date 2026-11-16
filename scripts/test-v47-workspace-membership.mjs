@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const html=readFileSync(new URL("../prototypes/v47/spark-school-workspace.html",import.meta.url),"utf8");
+const resolver=readFileSync(new URL("../src/v47/v46-tenant-path-resolver.mjs",import.meta.url),"utf8");
+assert.match(html,/member\.data\(\)\.schoolId!==schoolId/);
+assert.match(html,/member\.data\(\)\.uid!==user\.uid/);
+assert.match(html,/member\.data\(\)\.active!==true/);
+const kinds=html.match(/const PREVIEW_KINDS=\[([^\]]+)\]/);
+assert.ok(kinds);
+assert.doesNotMatch(kinds[1],/public_results|user_roles|audit_logs/);
+assert.match(resolver,/tenant-public-publishing/);
+assert.match(resolver,/tenant-server-managed/);
+console.log("V47 workspace verified membership identity and sensitive collection exclusion");
