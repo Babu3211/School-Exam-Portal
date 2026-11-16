@@ -104,6 +104,7 @@ console.log('New Class V achievement Grade Sheet and mixed-cohort isolation pass
 
 // Populated IEMIS 2083 Class I First/Second/Final reference; synthetic identity only.
 const primarySubjects=['Nepali','English','Mathematics','Serophero','Hamro Dhunibeshi'];
+let primaryPrintFixture;
 const annualCredits=[5,4,4,8,5], achievementMarks=[10,9,8,11,10];
 for(const classNo of [1,2,3,4,5])for(const [year,term,expectedCredits,hours] of [
  ['2083-2084','first',[2.5,2,2,4,2.5],26],
@@ -119,6 +120,14 @@ for(const classNo of [1,2,3,4,5])for(const [year,term,expectedCredits,hours] of 
   activeResultRows:[{student:{...student,class:String(classNo)},perSubject:primarySubjects.map((subject,i)=>({subject,missing:false,pct:achievementMarks[i]/12*100,grade:iemisGrade(achievementMarks[i]/12*100)}))}]};
  new Function(...Object.keys(fixture),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(fixture));
  assert.match(box.innerHTML,new RegExp('GRADE '+['','I','II','III','IV','V'][classNo]));
+ if(classNo===2&&year==='2083'&&term==='second'){
+  const bandsStart=html.indexOf('const resultGradeBands=');
+  const bandsEnd=html.indexOf('function gradeForPercent',bandsStart);
+  const resultGradeBands=new Function(html.slice(bandsStart,bandsEnd)+';return resultGradeBands;')();
+  const printData={...fixture,resultGradeBands,smssTermLabelEnglish:()=> 'Second Term'};
+  new Function(...Object.keys(printData),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(printData));
+  primaryPrintFixture=box.innerHTML;
+ }
  const firstTable=box.innerHTML.match(/<table[^>]*>[\s\S]*?<\/table>/)[0];
  const rows=[...firstTable.matchAll(/<tr>([\s\S]*?)<\/tr>/g)].slice(1,6);
  const shown=rows.map(row=>Number([...row[1].matchAll(/<td[^>]*>([^<]*)<\/td>/g)][1][1]));
@@ -278,10 +287,12 @@ for(const label of ['TEST SECONDARY SCHOOL','विद्यालय & School <
 }
 console.log('Online print keeps published school branding, Unicode/escaping, repeated watermark and A4 settings.');
 
-if(process.env.SMSS_GRADE_PRINT_FIXTURE){
- const sheet={outerHTML:printReportFixture,getAttribute:()=> 'Test School',querySelector:()=>null};
+for(const [output,markup] of [[process.env.SMSS_GRADE_PRINT_FIXTURE,printReportFixture],[process.env.SMSS_PRIMARY_PRINT_FIXTURE,primaryPrintFixture]]){
+ if(!output)continue;
+ assert.ok(markup);
+ const sheet={outerHTML:markup,getAttribute:()=> 'Test School',querySelector:()=>null};
  const print=new Function('document','window','onlineResultStatus',html.slice(printStart,printEnd)+';printOnlineResult();');
  const document={querySelector:()=>sheet};
- const popup={document:{write:markup=>writeFileSync(process.env.SMSS_GRADE_PRINT_FIXTURE,markup),close(){}}};
+ const popup={document:{write:markup=>writeFileSync(output,markup),close(){}}};
  print(document,{open:()=>popup},message=>{throw new Error(message);});
 }
