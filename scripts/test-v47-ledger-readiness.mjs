@@ -29,4 +29,6 @@ const repeatedSubjects=auditV47LedgerReadiness({...data,subjects:[{id:"sub1",nam
 assert.ok(repeatedSubjects.blockers.some(s=>s.includes("subjects share a name")));
 const separateClasses=auditV47LedgerReadiness({...data,subjects:[{id:"sub1",name:"Mathematics",classNo:6},{id:"sub2",name:"Mathematics",classNo:7}]});
 assert.ok(!separateClasses.blockers.some(s=>s.includes("subjects share a name")));
+const mixedSubjectReferences=auditV47LedgerReadiness({...data,marks:[data.marks[0],{...data.marks[0],id:"m2",subjectId:"sub1",subject:undefined}]});
+assert.ok(mixedSubjectReferences.blockers.some(s=>s.includes("duplicate an exam, student and subject")));
 console.log("V47 ledger readiness audit checks passed");
