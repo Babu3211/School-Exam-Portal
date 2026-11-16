@@ -5,16 +5,15 @@ assert.match(rules,/match \/schools\/\{schoolId\}/);
 assert.match(rules,/function membershipPath\(schoolId\)/);
 assert.match(rules,/function superAdmin\(\)/);
 assert.match(rules,/match \/\{document=\*\*\} \{ allow read, write: if false; \}/);
-for(const name of ['students','staff','classes','subjects','exams','marks','attendance'])assert.ok(['students','attendance'].includes(name)?rules.includes('match /'+name+'/{docId}'):rules.includes("'"+name+"'"));
-assert.match(rules,/match \/students\/\{docId\}/);
+for(const name of ['students','staff','classes','subjects','exams','marks','attendance']){
+ if(['students','attendance'].includes(name))assert.ok(rules.includes('match /'+name+'/{docId}'));
+ else assert.ok(rules.includes("'"+name+"'"));
+}
 assert.match(rules,/allow create: if schoolAdmin\(schoolId\) && validNewStudent\(\)/);
 const wildcard=rules.match(/match \/\{collection\}\/\{docId\} \{([\s\S]*?)\n   \}/)?.[1];
 assert.ok(wildcard,'Missing generic scoped rule');
-assert.doesNotMatch(wildcard,/'students'/,'Wildcard student write rule bypasses validation');
-assert.match(rules,/match \/attendance\/\{docId\}/);
-assert.match(rules,/request\.resource\.data\.date\.matches\('\^\[0-9\]\{4\}-\[0-9\]\{2\}-\[0-9\]\{2\}\ Firestore rules structure checked (not a security emulator substitute)');
-\)/);
-assert.equal((rules.match(/match \/\{collection\}\/\{docId\}/g)||[]).length,1,'Duplicate wildcard rules');
-assert.equal((rules.match(/function validAttendance\(docId\)/g)||[]).length,1,'Duplicate attendance validation');
-assert.equal((rules.match(/match \/attendance\/\{docId\}/g)||[]).length,1,'Duplicate attendance rules');
-console.log('V47 separate Firestore rules structure checked (not a security emulator substitute)');
+assert.doesNotMatch(wildcard,/'students'|'attendance'/,'Wildcard bypasses validated collections');
+assert.ok(rules.includes("date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')"));
+assert.ok(rules.includes("studentId.matches('^[A-Za-z0-9_-]{1,128}$')"));
+for(const pattern of [/match \/\{collection\}\/\{docId\}/g,/function validAttendance\(docId\)/g,/match \/attendance\/\{docId\}/g])assert.equal((rules.match(pattern)||[]).length,1);
+console.log('V47 Firestore rules structural checks passed; emulator still required');
