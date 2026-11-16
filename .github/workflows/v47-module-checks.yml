@@ -61,5 +61,7 @@ jobs:
         run: node scripts/test-v47-school-detail-service.mjs
       - name: School member list
         run: node scripts/test-v47-member-list-service.mjs
+      - name: V47 admin console static integration
+        run: node scripts/test-v47-admin-console-static.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
