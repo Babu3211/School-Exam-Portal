@@ -24,6 +24,8 @@ const options={
   return {docs:[{id:"student1",data:()=>({name:"Test"})}]};
  }
 };
+assert.throws(()=>createV46VerifiedReadSession({...options,schoolId:"../other-school"}));
+assert.throws(()=>createV46VerifiedReadSession({...options,schoolId:""}));
 const session=createV46VerifiedReadSession(options);
 assert.deepEqual(await session.list("students"),[{name:"Test",id:"student1"}]);
 assert.equal(readCount,4);
