@@ -130,6 +130,28 @@ for(const classNo of [1,2,3,4,5])for(const [year,term,expectedCredits,hours] of 
 }
 console.log('Classes I–V 2083 First/Second/Final credits, totals, GPA 3.54, footnote and historical/unverified-term isolation passed.');
 
+// Regression from the saved and reloaded Class II 2083 Second Term sample.
+const classTwoRecords=primarySubjects.map((subject,i)=>({
+ studentId:'synthetic-1',examId:'synthetic-exam',subject,assessmentType:'learning-achievement',
+ scores:[
+  {name:'No. of Learning Achievement',fullMarks:3,obtained:3},
+  {name:'Full Marks',fullMarks:12,obtained:null},
+  {name:'Obtained Learning Achievement',fullMarks:12,obtained:achievementMarks[i]}
+ ]
+}));
+const classTwoLedger={...common,classNo:2,annual:false,academicYear:'2083',term:'second',
+ subjects:primarySubjects,records:classTwoRecords,creditFor:subject=>annualCredits[primarySubjects.indexOf(subject)]/2};
+const classTwoMarks=iemisLedger({...classTwoLedger,mode:'number'});
+const classTwoGrades=iemisLedger({...classTwoLedger,mode:'grade'});
+for(const report of [classTwoMarks,classTwoGrades]){
+ assert.deepEqual(report.subjects,primarySubjects);
+ assert.doesNotMatch(report.head,/rowspan|<th>IN<\/th>|<th>TH<\/th>/);
+}
+const trailingCells=(report,n)=>[...report.body.matchAll(/<td>([^<]*)<\/td>/g)].slice(-n).map(m=>m[1]);
+assert.deepEqual(trailingCells(classTwoMarks,5),['10','9','8','11','10']);
+assert.deepEqual(trailingCells(classTwoGrades,6),['A','B+','B','A+','A','3.54']);
+console.log('Class II Second Term live sample: marks, grades, subject order and GPA reproduced.');
+
 // School-authorized populated Class VI vectors, with synthetic identity only.
 const sixSubjects=subjects.slice(1),sixCredits=[5,5,5,5,5,3,4];
 const sixInternal=[41,39,36,45,37,42,40],sixTheory=[40,38,35,42,36,41,39];
