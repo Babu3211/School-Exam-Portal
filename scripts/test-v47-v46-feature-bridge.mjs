@@ -105,4 +105,12 @@ for(const [feature,collection] of Object.entries(expectedCollections)){
    `${feature} must deny viewer ${operation}`);
  }
 }
+// Verify tenant boundary across every V46 collection, not only students.
+for(const collection of Object.values(expectedCollections)){
+ assert.equal(browserGateway.forCollection(`schools/school_A001/${collection}`).path,
+  `schools/school_A001/${collection}`);
+ assert.throws(()=>browserGateway.forCollection(`schools/school_B001/${collection}`),/cross-school/);
+ assert.throws(()=>browserGateway.forCollection(`schools/school_A001/${collection}/nested`),/cross-school/);
+}
+assert.throws(()=>browserGateway.forCollection("schools/school_A001/students/../marks"),/cross-school/);
 console.log("V47 V46 feature reuse bridge contract tests passed");
