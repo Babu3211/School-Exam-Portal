@@ -5,6 +5,7 @@
 import {loadV47LedgerCollections} from "./v46-ledger-data-loader.mjs";
 import {renderV47SchoolLedger} from "./v46-school-ledger-adapter.mjs";
 import {toV46IemisTerm} from "./v46-exam-term-adapter.mjs";
+import {iemisSubjectKey} from "../../iemis-ledger.js";
 export async function prepareV47SchoolLedger({session,schoolId,term,classNo,examId,schoolName,schoolCode,mode="number",selectStudents,selectSubjects,selectMarks,creditFor,componentsFor,applicable,pageSize=50,maxRecordsPerCollection=5000}){
  if(typeof selectStudents!=="function"||typeof selectSubjects!=="function"||typeof selectMarks!=="function")
   throw new TypeError("Explicit verified class/subject/mark selectors required");
@@ -33,6 +34,13 @@ export async function prepareV47SchoolLedger({session,schoolId,term,classNo,exam
   throw new Error("Student selection is not from the verified school/class");
  if(subjects.some(s=>typeof s!=="string"||!subjectNames.has(s)))
   throw new Error("Subject selection is not from verified school subjects");
+ const normalizedSelected=new Set(subjects.map(iemisSubjectKey));
+ if(normalizedSelected.has("")||normalizedSelected.size!==subjects.length)
+  throw new Error("Duplicate or invalid selected ledger subjects");
+ for(const subject of subjects){
+  const matches=verifiedSubjects.filter(s=>(s.schoolId==null||s.schoolId===schoolId)&&[s.name,s.subjectName].some(name=>name===subject));
+  if(matches.length!==1)throw new Error("Ambiguous selected ledger subject mapping");
+ }
  if(marks.some(m=>!markSource.has(m)||m.examId!==examId||Number(m.classNo??m.classId)!==Number(classNo)))
   throw new Error("Mark selection is not from the verified school exam/class");
  const selectedIds=new Set(students.map(s=>s.id));
