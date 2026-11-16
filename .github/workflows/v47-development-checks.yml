@@ -136,6 +136,9 @@ jobs:
       - name: Verify V47 workspace membership boundary
         if: success() || failure()
         run: node scripts/test-v47-workspace-membership.mjs
+      - name: Verify V46 tenant membership on every read
+        if: success() || failure()
+        run: node scripts/test-v47-v46-verified-read-session.mjs
       - name: Verify V46 tenant read adapter isolation
         if: success() || failure()
         run: node scripts/test-v47-v46-tenant-read-adapter.mjs
