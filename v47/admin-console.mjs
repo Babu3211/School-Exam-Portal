@@ -12,7 +12,7 @@ $('connect').onclick=async()=>{try{
  api=await import(firebaseBase+'firebase-firestore.js');
  const app=appSdk.initializeApp(config,'smss-v47-admin');auth=authSdk.getAuth(app);await authSdk.setPersistence(auth,authSdk.inMemoryPersistence);db=api.getFirestore(app);
  $('connect').disabled=true;$('login').disabled=false;$('connection').textContent='Connected to V47 project';
- $('login').onclick=async()=>{try{await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);$('password').value='';await verifyAdmin();}catch(e){status(e.message)}};
+ $('login').onclick=async()=>{try{await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);$('password').value='';await verifyAdmin();}catch(e){actor=null;$('adminArea').hidden=true;try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status(e.message)}};
  $('logout').onclick=async()=>{await authSdk.signOut(auth);actor=null;$('adminArea').hidden=true;$('logout').disabled=true;$('identity').textContent='Not signed in';status('Signed out')};
  status('Connected. Sign in as a provisioned Super Admin.');
  }catch(e){status(e.message)}};
