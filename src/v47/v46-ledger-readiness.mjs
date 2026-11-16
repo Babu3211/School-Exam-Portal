@@ -84,6 +84,15 @@ export function auditV47LedgerReadiness(data,{schoolId}={}){
  if(unknownExams)blockers.push(unknownExams+" marks reference unknown school exams.");
  const unknownSubjects=data.marks.filter(m=>{const ref=m.subjectId||m.subject;return ref&&!subjectIds.has(ref)&&!subjectNames.has(String(ref).trim().toLowerCase());}).length;
  if(unknownSubjects)blockers.push(unknownSubjects+" marks reference unknown school subjects.");
+ const subjectById=new Map(data.subjects.map(s=>[s.id,s]));
+ const conflictingSubjectLabels=data.marks.filter(m=>{
+  if(!m.subjectId||!m.subject||!subjectById.has(m.subjectId))return false;
+  const subject=subjectById.get(m.subjectId);
+  const supplied=String(m.subject).trim().toLowerCase();
+  const aliases=[subject.name,subject.subjectName].filter(Boolean).map(v=>String(v).trim().toLowerCase());
+  return aliases.length>0&&!aliases.includes(supplied);
+ }).length;
+ if(conflictingSubjectLabels)blockers.push(conflictingSubjectLabels+" marks have conflicting subject ID and subject name.");
  const subjectClassById=new Map(data.subjects.map(s=>[s.id,String(s.classNo??s.classId??"")]));
  const subjectClassMismatches=data.marks.filter(m=>{
   if(!m.subjectId||!subjectClassById.has(m.subjectId))return false;
