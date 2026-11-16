@@ -19,6 +19,7 @@ assert.match(html,/nav\[aria-label="School modules"\] a\{/);
 assert.match(html,/@media\(max-width:600px\)/);
 assert.match(html,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important/);
 assert.match(html,/:focus-visible/);
+assert.ok(html.indexOf("@media(max-width:600px)")>html.indexOf(".summary-grid{display:grid"),"mobile summary columns override base grid styles");
 assert.match(html,/summary\.replaceChildren\(\)/);
 assert.match(html,/Object\.hasOwn\(sectionCounts,kind\)/);
 assert.match(html,/Preview records \(up to 20\)/);
