@@ -48,11 +48,11 @@ else{
    // Each query remains bounded regardless of total school enrollment.
    const kinds=PREVIEW_KINDS;
    const results=[];
-   // Keep reads sequential to avoid bursts of 11 simultaneous Firestore queries on Spark.
-   for(const kind of kinds){
+   // Fetch up to three independent sections at a time to balance latency and Spark usage.
+   for(let offset=0;offset<kinds.length;offset+=3){
     if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
-    try{results.push({status:"fulfilled",value:await getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),orderBy("__name__"),limit(PAGE_SIZE)))});}
-    catch(reason){results.push({status:"rejected",reason});}
+    const batch=await Promise.allSettled(kinds.slice(offset,offset+3).map(kind=>getDocs(query(collection(db,schoolCollectionPath(schoolId,kind)),orderBy("__name__"),limit(PAGE_SIZE)))));
+    results.push(...batch);
    }
    if(token!==epoch || auth.currentUser?.uid!==user.uid)return;
    for(let index=0;index<kinds.length;index++){
