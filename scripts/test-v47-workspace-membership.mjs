@@ -28,4 +28,6 @@ for(const bad of [
 const kinds=html.match(/const PREVIEW_KINDS=\[([^\]]+)\]/);
 assert.ok(kinds);
 assert.doesNotMatch(kinds[1],/public_results|user_roles|audit_logs/);
+assert.ok(html.includes('beforePage.roles.join(",")!==verified.roles.join(",")'));
+assert.ok(html.includes('afterPage.roles.join(",")!==verified.roles.join(",")'));
 console.log("V47 workspace verified identity, role, and sensitive collection exclusion");
