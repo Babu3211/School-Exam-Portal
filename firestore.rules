@@ -65,8 +65,8 @@ service cloud.firestore {
       return role.get('active', false) == true && roles is list && !roles.hasAny(['viewer']) && roles.hasAny(['subject_teacher']) &&
         keys is list && keys.hasAny([className + '::' + subjectName]) &&
         (!(sections is list) || sections.size() == 0 ||
-          sections.hasAny([className + '::' + subjectName + '::ALL',
-            className + '::' + subjectName + '::' + sectionName]));
+          sections.hasAny([className + '::' + subjectName + '::ALL']) ||
+          sections.hasAny([className + '::' + subjectName + '::' + sectionName]));
     }
 
     function isAssignedSubject(className, subjectName, sectionName) {
