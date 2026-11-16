@@ -87,11 +87,11 @@ const fmt=v=>v===null||v===undefined?'—':String(Number(Number(v).toFixed(2)));
 export function iemisLedger({mode='number',classNo,annual=false,academicYear='',term='',subjects,students,records,examId,schoolName,schoolCode,creditFor=()=>null,label=s=>s,componentsFor=()=>[],applicable=()=>true}) {
   const e=iemisEscape,primary=classNo<=5;
   const verifiedMiddleTerm=[6,7,8].includes(Number(classNo))&&!annual&&/^2083(?:\D|$)/.test(String(academicYear).replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)))&&['first','second'].includes(term);
-  const verifiedNineTerm=Number(classNo)===9&&!annual&&/^2083(?:\D|$)/.test(String(academicYear).replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)))&&['first','second'].includes(term);
-  const verifiedSingleTerm=verifiedMiddleTerm||verifiedNineTerm;
+  const verifiedSecondaryTerm=[9,10].includes(Number(classNo))&&!annual&&/^2083(?:\D|$)/.test(String(academicYear).replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)))&&['first','second'].includes(term);
+  const verifiedSingleTerm=verifiedMiddleTerm||verifiedSecondaryTerm;
   const legacyTheory=iemisLegacyTheory(classNo,records,{examId});
   subjects=iemisSubjects(subjects,verifiedMiddleTerm&&term==='first'&&mode==='number'?'grade':mode,classNo,{legacyTheory});
-  if(verifiedNineTerm&&mode==='number'){
+  if(verifiedSecondaryTerm&&mode==='number'){
     const order=['computer science','opt.ii computer science','opt.i environment science','social studies','science & technology','mathematics','english','nepali'];
     const rank=s=>{const i=order.indexOf(iemisSubjectKey(s));return i<0?order.length:i;};
     subjects=[...subjects].sort((a,b)=>rank(a)-rank(b));
@@ -112,7 +112,7 @@ export function iemisLedger({mode='number',classNo,annual=false,academicYear='',
       if(!applicable(st,sub))return `<td colspan="${cols[i].length||1}">N/A</td>`;
       const record=records.find(r=>r.studentId===st.id&&r.examId===examId&&iemisSubjectKey(r.subject)===iemisSubjectKey(sub));
       const legacyRecord=iemisLegacyTheory(classNo,record?[record]:[]);
-      const summary=iemisSummary(record,{annual,primary:primary&&!legacyRecord});summaries.push({summary,creditHour:Number(creditFor(sub))*(verifiedNineTerm?summary.inFull/100:1)});
+      const summary=iemisSummary(record,{annual,primary:primary&&!legacyRecord});summaries.push({summary,creditHour:Number(creditFor(sub))*(verifiedSecondaryTerm?summary.inFull/100:1)});
       if(entry)return '<td>'+(!record?'—':record.isAbsent?'Yes':'No')+'</td>'+componentsFor(sub).map(c=>{const score=record?.scores?.find(s=>String(s.name).toLowerCase()===String(c.name).toLowerCase()||(c.key&&iemisComponentKey(s.name)===c.key));const value=c.readonly?score?.fullMarks:score?.obtained;return '<td>'+e(value??'—')+'</td>';}).join('');
       if(record?.isAbsent)return `<td colspan="${cols[i].length||1}">Abs</td>`;
       const vals=verifiedSingleTerm?[grade?summary.totalGrade?.grade:summary.obtained]:primary?[legacyRecord?(grade?summary.theoryGrade?.grade:summary.theoryObtained):(grade?summary.totalGrade?.grade:summary.obtained)]:grade?[summary.inGrade?.grade,...(annual?[summary.theoryGrade?.grade]:[]),summary.totalGrade?.grade]:[summary.inObtained,...(annual?[summary.theoryObtained]:[])];
