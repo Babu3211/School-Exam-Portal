@@ -31,6 +31,9 @@ const paged=createV46BrowserTenantGateway({
  orderByFn:field=>({field}),startAfterFn:cursor=>({after:cursor.id})
 });
 const students=paged.forCollection("schools/school_A001/students");
+await assert.rejects(students.listPage({pageSize:0}),/Page size/);
+await assert.rejects(students.listPage({pageSize:51}),/Page size/);
+assert.equal(pageCalls,0,"Invalid page sizes must not query Firestore");
 const first=await students.listPage({pageSize:1});
 assert.equal(first.nextCursor,pageDoc);
 await assert.rejects(paged.forCollection("schools/school_A001/students").listPage({pageSize:1,cursor:first.nextCursor}),/Invalid Firestore page cursor/);
