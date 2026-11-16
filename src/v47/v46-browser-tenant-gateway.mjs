@@ -40,6 +40,8 @@ export function createV46BrowserTenantGateway({db,verifiedSchoolId,collectionFn,
      if(!Number.isInteger(pageSize) || pageSize<1 || pageSize>50)
       throw new RangeError("Page size must be between 1 and 50");
      const snapshot=await getDocsFn(queryFn(collectionRef(),limitFn(pageSize)));
+     if(!Array.isArray(snapshot.docs) || snapshot.docs.length>pageSize)
+      throw new TypeError("Invalid Firestore list size response");
      return Object.freeze(snapshot.docs.map(item=>{
       if(!item || !safeSegment(item.id) || item.ref?.path!==path+"/"+item.id || typeof item.data!=="function")
        throw new TypeError("Invalid Firestore list document");
