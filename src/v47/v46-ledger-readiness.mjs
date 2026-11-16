@@ -59,7 +59,7 @@ export function auditV47LedgerReadiness(data,{schoolId}={}){
  const resolveSubject=mark=>{
   if(mark.subjectId)return String(mark.subjectId);
   const name=String(mark.subject??"").trim().toLowerCase();
-  const classKey=String(mark.classNo??mark.classId??studentClass.get(mark.studentId)??examClass.get(mark.examId)??"");
+  const classKey=String(mark.classNo??mark.classId??(studentClass.get(mark.studentId)||examClass.get(mark.examId))??"");
   const exact=subjectByName.get(JSON.stringify([classKey,name]));
   const generic=subjectByName.get(JSON.stringify(["",name]));
   const matches=exact?.size===1?exact:(!exact&&generic?.size===1?generic:null);
@@ -88,7 +88,7 @@ export function auditV47LedgerReadiness(data,{schoolId}={}){
  const subjectClassMismatches=data.marks.filter(m=>{
   if(!m.subjectId||!subjectClassById.has(m.subjectId))return false;
   const subClass=subjectClassById.get(m.subjectId);
-  const markClass=String(m.classNo??m.classId??studentClass.get(m.studentId)??examClass.get(m.examId)??"");
+  const markClass=String(m.classNo??m.classId??(studentClass.get(m.studentId)||examClass.get(m.examId))??"");
   return Boolean(subClass&&markClass&&subClass!==markClass);
  }).length;
  if(subjectClassMismatches)blockers.push(subjectClassMismatches+" marks reference subjects from another class.");
