@@ -1,0 +1,15 @@
+import assert from "node:assert/strict";
+import {renderV47SchoolLedger} from "../src/v47/v46-school-ledger-adapter.mjs";
+const base={schoolId:"school001",term:"first",classNo:6,schoolName:"Test School",schoolCode:"001",examId:"exam001",students:[{id:"student001",name:"Test Student"}],subjects:["Mathematics"],marks:[],creditFor:()=>4,componentsFor:()=>[],applicable:()=>true};
+assert.throws(()=>renderV47SchoolLedger({...base,schoolId:"invalid school"}),/school/i);
+assert.throws(()=>renderV47SchoolLedger({...base,classNo:12}),/not verified/);
+assert.throws(()=>renderV47SchoolLedger({...base,term:"annual"}),/Unsupported V47 exam term/);
+assert.throws(()=>renderV47SchoolLedger({...base,mode:"publish"}),/Unsupported ledger mode/);
+assert.throws(()=>renderV47SchoolLedger({...base,marks:[{examId:"exam001",studentId:"student001",score:90}]}),/percentage-only marks/);
+assert.throws(()=>renderV47SchoolLedger({...base,marks:[{examId:"exam001",studentId:"other",scores:[{name:"IN",fullMarks:50,obtained:40}]}]}),/outside selected students/);
+assert.throws(()=>renderV47SchoolLedger({...base,creditFor:null}),/Verified subject credit/);
+const html=renderV47SchoolLedger(base);
+assert.equal(typeof html,"string");
+assert.ok(html.includes("Test School"));
+assert.ok(html.includes("Test Student"));
+console.log("V47 school-scoped IEMIS ledger adapter checks passed");
