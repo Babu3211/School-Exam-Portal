@@ -171,6 +171,9 @@ jobs:
       - name: V47 four school pages security regression checks
         if: success() || failure()
         run: node scripts/test-v47-school-pages-security.mjs
+      - name: V47 ledger readiness audit
+        if: success() || failure()
+        run: node scripts/test-v47-ledger-readiness.mjs
       - name: V47 verified ledger read workflow
         if: success() || failure()
         run: node scripts/test-v47-ledger-read-workflow.mjs
