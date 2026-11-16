@@ -207,3 +207,12 @@ Year 2083, Section All. Class VII Result Entry returned "No student list found" 
 VIII Second returned no student list. Once VIII loaded, the available Term options were First, Second, Third; Final was absent. Therefore VIII Final cannot be claimed verified or silently mapped to Third. This is a source-UI limitation/difference, not permission to alter enrollment or admit-card data. The entry notice says students require Symbol No. in Admit Card before appearing, but the exact cause of empty lists was not independently established. VII/VIII populated ledger, Grade Sheet, Save/Reload and annual parity remain open.
 
 All six CI workflows passed on implementation head 65e52f51fd5f810cbd40050b73da6800b631f211 before this documentation-only update. No production deployment.
+
+
+## School-authorized VI–VIII rule unification — 2026-11-16
+
+The owner explicitly instructed that everything in Class VI apply through VIII. Extended the verified VI 2083 First/Second Grade Sheet and ledger rules to VII/VIII: half annual subject credits, one grade per subject, term GPA without theory, matching headers and Mark Ledger ordering. Final continues the existing common VI–VIII IN50/TH50 calculation and annual credit rules. Per-subject annual credits remain sourced from each class configuration; no marks or settings are migrated. Third Term is not relabeled Final.
+
+Automated tests now render every VI/VII/VIII First, Second and Final sheet independently, verify the respective Roman class heading and reference-vector GPA3.48/3.48/3.42, credits16/32 and footnote32. Grade Ledgers cover those GPA values; term Mark Ledgers cover columns/order; missing, absent, NG and source immutability are checked. Older-year and unverified-term behavior remains isolated. Entry, ledger, inline syntax and PWA suites pass locally.
+
+VII/VIII follow the owner's school policy based on VI evidence; this is not a claim of populated live IEMIS VII/VIII annual verification. Previously recorded missing lists/absent VIII Final option and native print limitations remain. No production deployment.
