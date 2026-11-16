@@ -13,11 +13,11 @@ service cloud.firestore {
   match /schools/{schoolId} {
    allow get, list: if reader(schoolId);
    allow create, update: if superAdmin() && request.resource.data.get('active', false) is bool;
-   allow delete: if superAdmin();
+   allow delete: if false; // prevent accidental orphaning of school subcollections
    match /members/{uid} {
     allow get, list: if schoolAdmin(schoolId) || (signedIn() && request.auth.uid == uid && member(schoolId));
     allow create, update: if schoolAdmin(schoolId) && (superAdmin() || request.resource.data.get('role','') in ['teacher','viewer']) && request.resource.data.get('role','') in ['school_admin','teacher','viewer'] && request.resource.data.get('active',false) is bool && request.resource.data.get('schoolId','') == schoolId && request.resource.data.get('uid','') == uid;
-    allow delete: if schoolAdmin(schoolId);
+    allow delete: if schoolAdmin(schoolId) && (superAdmin() || resource.data.get('role','') in ['teacher','viewer']);
    }
    match /{collection}/{docId} {
     allow get, list: if collection in ['students','staff','classes','subjects','exams','marks','attendance','mark_settings','user_roles'] && reader(schoolId);
