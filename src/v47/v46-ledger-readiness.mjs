@@ -35,6 +35,17 @@ export function auditV47LedgerReadiness(data,{schoolId}={}){
   return Boolean((markClass&&stClass&&markClass!==stClass)||(markClass&&exClass&&markClass!==exClass)||(stClass&&exClass&&stClass!==exClass));
  }).length;
  if(classMismatches)blockers.push(classMismatches+" marks have inconsistent student, exam or mark classes.");
+ const subjectIdentity=new Map();
+ let duplicateSubjects=0;
+ for(const subject of data.subjects){
+  const classKey=String(subject.classNo??subject.classId??"");
+  for(const name of new Set([subject.name,subject.subjectName].filter(Boolean).map(v=>String(v).trim().toLowerCase()))){
+   const key=JSON.stringify([classKey,name]);
+   if(subjectIdentity.has(key)&&subjectIdentity.get(key)!==subject.id)duplicateSubjects++;
+   else subjectIdentity.set(key,subject.id);
+  }
+ }
+ if(duplicateSubjects)blockers.push(duplicateSubjects+" subjects share a name in the same class.");
  const markPairs=new Set();
  let duplicatePairs=0;
  for(const mark of data.marks){
