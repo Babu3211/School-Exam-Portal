@@ -9,6 +9,7 @@ const audit=JSON.parse(readFileSync(new URL("../dist/v47-v46-port-audit/audit.js
 assert.equal(audit.state,"QUARANTINED_NOT_DEPLOYABLE");
 assert.ok(audit.literalReferencesRewritten>=140);
 assert.equal(audit.dynamicReferencesRewritten,3);
+assert.equal(audit.legacyBackupRestoreRequiresReview,true);
 assert.deepEqual(audit.dynamicVariablesScoped,["name"]);
 assert.equal(audit.unresolvedDynamicReferences.length,0);
 assert.ok(html.includes("collection(db,tenantCollection(name))"));
