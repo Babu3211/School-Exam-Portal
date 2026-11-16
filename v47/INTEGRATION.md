@@ -44,3 +44,7 @@ The attendance page now requests only the selected class and Nepal-local Gregori
 ## Class attendance batch preview
 
 School Admin can mark loaded roster students Present/Absent and save up to **10 selected students** atomically per confirmation. The conservative limit accounts for Firestore security-rule document access budgets (each write verifies the student belongs to that school and class). The UI explicitly warns that saves overwrite those students' records for the selected date. Larger classes require multiple saves. Teacher/Viewer remain read-only. This is a development feature, not verified in the Firebase emulator or deployed to production.
+
+## Attendance batch emulator regression cases
+
+The V47 Firestore emulator suite now contains a 10-student atomic attendance batch, a valid-plus-invalid batch that must fail entirely, and a Viewer write-denial batch. A successful emulator run has **not yet been observed**. The browser clears successfully saved selections so a second click does not immediately re-save them. V46 is unchanged.
