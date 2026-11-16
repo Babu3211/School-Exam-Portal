@@ -26,7 +26,9 @@ try{
  const outsider=env.authenticatedContext('outsider').firestore();
  await assertSucceeds(admin.doc('schools/school_001/students/s1').get());
  await assertFails(admin.doc('schools/school_002/students/s2').get());
- await assertSucceeds(admin.doc('schools/school_001/students/new').set({name:'N'}));
+ await assertSucceeds(admin.doc('schools/school_001/students/new').set({name:'New Student',class:'1'}));
+ await assertFails(admin.doc('schools/school_001/students/bad').set({name:'N'}));
+ await assertFails(admin.doc('schools/school_001/students/forged').set({name:'New Student',class:'1',role:'super_admin'}));
  await assertSucceeds(viewer.doc('schools/school_001/students/s1').get());
  await assertSucceeds(viewer.doc('schools/school_001/marks/m1').get());
  await assertSucceeds(viewer.doc('schools/school_001/attendance/a1').get());
