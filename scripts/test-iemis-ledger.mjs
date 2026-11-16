@@ -236,3 +236,21 @@ for(const classNo of [9,10])for(const term of ['first','second','annual']){
  assert.deepEqual({rs,configs},before);
 }
 console.log('Classes IX–X term credits9/GPA3.66, Final GPA3.48, subject weighting, columns and data safety passed.');
+
+// Online print must use the published sheet's own school branding.
+const printStart=html.indexOf('function printOnlineResult()');
+const printEnd=html.indexOf('async function resultPublicationDocId',printStart);
+for(const label of ['TEST SECONDARY SCHOOL','विद्यालय & School <East> "A" (Campus)']){
+ let printed='',closed=false;
+ const sheet={outerHTML:'<div class="official-grade-sheet">Synthetic report</div>',getAttribute:()=>label,querySelector:()=>null};
+ new Function('document','window','onlineResultStatus',html.slice(printStart,printEnd)+';printOnlineResult();')({querySelector:()=>sheet},{open:()=>({document:{write:s=>printed=s,close:()=>closed=true}})},()=>{throw Error('Unexpected print error');});
+ const encoded=printed.match(/background-image:url\((data:image\/svg\+xml,[^)]*)\)/)?.[1];
+ assert.ok(encoded);assert.equal(closed,true);
+ const svg=decodeURIComponent(encoded.split(',').slice(1).join(','));
+ const escaped=label.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ assert.ok(svg.includes('>'+escaped+'</text>'));
+ assert.doesNotMatch(svg,/Mahadevasthan/);
+ assert.match(printed,/background-repeat:repeat/);assert.match(printed,/@page\{size:A4 portrait;margin:10mm\}/);
+ assert.match(printed,/Synthetic report/);
+}
+console.log('Online print keeps published school branding, Unicode/escaping, repeated watermark and A4 settings.');
