@@ -60,6 +60,11 @@ export function createV46BrowserTenantGateway({db,verifiedSchoolId,collectionFn,
      }
      const snapshot=await getDocsFn(queryFn(collectionRef(),...clauses,limitFn(pageSize)));
      const docs=snapshot.docs;
+     // Never issue a cursor from a different collection or malformed snapshot.
+     for(const item of docs){
+      if(!item || !safeSegment(item.id) || item.ref?.path!==path+"/"+item.id || typeof item.data!=="function")
+       throw new TypeError("Invalid Firestore page document");
+     }
      if(docs.length===pageSize && docs.length)issuedCursors.add(docs.at(-1));
      return Object.freeze({
       records:Object.freeze(docs.map(doc=>Object.freeze({...doc.data(),id:doc.id}))),
