@@ -1,0 +1,1 @@
+import assert from 'node:assert/strict';import {SCHOOL_CLASSES,validSchoolClass} from '../v47/class-catalog.mjs';assert.equal(SCHOOL_CLASSES.length,13);assert.equal(SCHOOL_CLASSES[0],'ECD');assert.equal(SCHOOL_CLASSES.at(-1),'12');assert.equal(validSchoolClass('9'),true);assert.equal(validSchoolClass('13'),false);console.log('V47 ECD–12 class catalog passed');
