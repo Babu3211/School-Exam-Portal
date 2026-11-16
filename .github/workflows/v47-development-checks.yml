@@ -127,6 +127,9 @@ jobs:
       - name: V47 Spark platform-admin Firestore emulator authorization
         if: success() || failure()
         run: npx firebase emulators:exec --project v47-spark-platform-rules-test --only firestore --config firebase.v47.emulator.json "node scripts/test-v47-spark-platform-rules.mjs"
+      - name: Verify V47 workspace membership boundary
+        if: success() || failure()
+        run: node scripts/test-v47-workspace-membership.mjs
       - name: Verify V46 tenant path resolver
         if: success() || failure()
         run: node scripts/test-v47-v46-tenant-path-resolver.mjs
