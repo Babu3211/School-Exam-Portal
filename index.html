@@ -1644,10 +1644,19 @@ function editClass(id){
 }
 async function deleteClass(id){
  const x=cachedClasses.find(v=>v.id===id);if(!x)return;
- if(!confirm(`${x.className} - ${x.subject} लाई कक्षाबाट हटाउने? पुराना Marks/Settings सुरक्षित रहनेछन्।`))return;
  if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){setClassMessage("Admin login आवश्यक छ।",true);return}
- try{await updateDoc(doc(db,"classes",id),{active:false,archivedAt:serverTimestamp(),archivedBy:auth.currentUser.uid});await writeAuditLog("classes","archive",id,`${x.className} ${x.subject}`);await loadClasses();setClassMessage("विषय निष्क्रिय भयो। पुराना Marks र Settings सुरक्षित छन्।");}
- catch(error){console.error("Class archive failed:",safeNoticeError(error));setClassMessage(`निष्क्रिय गर्न सकिएन: ${safeNoticeError(error)||"प्रणाली त्रुटि"}`,true)}
+ if(!confirmPermanentDeletion(String(x.className||"Class")+" — "+String(x.subject||"Subject")))return;
+ try{
+  const marks=await getDocs(collection(db,"marks"));
+  if(marks.docs.some(d=>{
+   const m=d.data();
+   return canonicalStudentClass(m.className||m.class)===canonicalStudentClass(x.className) &&
+    (!m.subject || canonicalSubjectKey(m.subject)===canonicalSubjectKey(x.subject));
+  }))throw new Error("यो कक्षा-विषयको Marks छन्। अभिलेख सुरक्षित राख्न Delete रोकियो।");
+  await deleteDoc(doc(db,"classes",id));
+  await writeAuditLog("classes","delete",id,String(x.className||"")+" "+String(x.subject||""));
+  await loadClasses();setClassMessage("कक्षा-विषय Delete भयो।");
+ }catch(error){setClassMessage("Delete भएन: "+safeNoticeError(error),true)}
 }
 async function restoreClass(id){
  const x=cachedClasses.find(v=>v.id===id);if(!x)return;
