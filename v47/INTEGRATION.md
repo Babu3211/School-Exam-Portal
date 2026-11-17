@@ -146,3 +146,7 @@ The raw mark browser now lists only active subjects explicitly matching the chos
 ## Assignment workflow verification fixes
 
 The Firebase emulator fixture now seeds Mathematics as an active Class 1 subject, consistent with the new assignment and marks rules. The browser assignment roster uses 100-record query pages and invalidates class selections when the class changes; the static test checks these guards. The emulator source adds viewer read-only and wrong-class assignment checks. These are source-level fixes and assertions; a successful emulator run has not yet been confirmed.
+
+## Raw mark legacy API hardening
+
+The exported `saveSchoolMark` API previously called Firestore `setDoc`, which could overwrite existing marks and bypass client-side assignment checks. It now delegates to the same create-only transaction as the raw marks browser. The transaction, preflight and Firestore rule now require an explicitly active subject with an exact matching class; legacy subject documents without these fields must be reviewed and migrated through an audited workflow, not silently accepted. Regression tests cover duplicate prevention, teacher/viewer denial, tenant mismatch and the absence of `setDoc` calls. This is **not** full-mark validation or official grading, and test execution on GitHub Actions/Firebase Emulator has not yet been confirmed. V46 production remains untouched.
