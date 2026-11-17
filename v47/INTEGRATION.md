@@ -234,3 +234,7 @@ The read-only raw ledger summary now distinguishes `markedPairs` (a record exist
 ## Diagnostic exceptions CSV (read-only)
 
 `ledgerExceptionsCsv(buildRawLedgerPreview(...))` exports a student-wise list of missing and invalid basic mark records, with class, term, student and subject identity, and issue reason. CSV cells are quoted and spreadsheet formula-leading strings are prefixed with an apostrophe. The helper rejects previews that are not explicitly non-publishable. This is not an official grade/result ledger, and no marks are changed. Run `node scripts/test-v47-ledger-exceptions-export.mjs` in a checked-out development branch to verify; browser integration and live validation remain pending.
+
+## Read-only missing marks browser review
+
+`v47/ledger-exceptions.html` and `ledger-exceptions-console.mjs` provide a development-only signed-in page for school admins, teachers, and viewers. The page queries only `schools/{schoolId}` collections, filters all five collections by selected class and both mark collections by exam term, reads in 100-document pages, and aborts exports if a collection exceeds the 5000-record safety limit. The browser builds the raw ledger diagnostic preview and displays student-wise missing or basic-invalid marks, with a formula-safe CSV export. All HTML table cells use `textContent`. This is NOT a CDC/IEMIS grade sheet or official mark ledger; live Firebase index, rules, emulator and browser testing remain pending. V46 production has not been changed.
