@@ -118,3 +118,7 @@ The development branch includes three new read-only diagnostic modules: `subject
 ## Create-only raw mark safety improvement
 
 The V47-only raw mark form now calls `preflightRawMarkSave` to verify the selected student's class, subject existence, subject class (if specified), active flag and whether a mark already exists. It uses `createSchoolMarkOnly` with a Firestore transaction that refuses to overwrite a record even if a concurrent save occurs after preflight. Both paths have Node regression tests in CI. This is not a substitute for Firebase security rules or CDC/IEMIS full-mark and optional-subject verification. The older `saveSchoolMark` API still supports upsert and must not be used in the development form. No live data migration or production deployment was performed.
+
+## Transaction revalidation of marks creation
+
+The create-only V47 raw marks transaction now reads the target student, subject and existing mark before writing. It checks the student's current class, the subject's active flag and optional class scope, and refuses any existing mark. This closes the gap between a browser preflight and a concurrent change to the student or subject documents. Browser roster load failures now clear stale selections. These are client and transaction safeguards, not a replacement for Firestore rule enforcement or an official grade policy. The current page still loads an entire school collection with a 1,500-record cap and must be redesigned with class-filtered pagination for larger schools.
