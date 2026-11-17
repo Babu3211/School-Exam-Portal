@@ -80,3 +80,9 @@ The V47 read-only marks preview now checks only the currently loaded records for
 ## Result publication readiness (fail-closed)
 
 `v47/result-readiness.mjs` checks class/term roster consistency, duplicate identities, student–subject mark coverage, raw mark anomalies and whether all pages were loaded. Its `ready` value is **always false** until a verified CDC/IEMIS grading engine, class-specific subject requirements, full-mark configuration and grade-sheet parity are implemented and independently tested. The current complete Cartesian student–subject matrix is a conservative diagnostic and **not** a rule that every student must take every optional subject. This module does not write marks, calculate GPA or authorize publication. Tests are added to the V47 CI workflow, but their execution has not been confirmed.
+
+## Student-specific subject coverage and mark references
+
+Result readiness now accepts an explicit `requiredSubjectsByStudent` mapping (student document ID to an array of required subject document IDs). It **does not assume every student studies every subject**: optional subjects may differ per student. Missing or malformed assignments block readiness, as do absent expected student–subject marks and marks for unassigned combinations. This mapping is an in-memory validation input only; **the actual subject-assignment persistence and verification against V46/IEMIS are not implemented**. The readiness gate remains fail-closed even when all raw checks pass.
+
+V47 Firestore rules now also require the mark's subject document to exist under the same school before accepting a mark write. A subject's existence does **not** verify the class, subject allocation, maximum marks, component weights, CDC grade or GPA; these checks still require validated school-specific configuration. The emulator suite has an added subject-reference test, but no successful emulator run has been confirmed. V46 production remains untouched.
