@@ -16,4 +16,7 @@ assert.equal(assertLedgerReviewExportable(invalid),true);
 assert.match(ledgerExceptionsCsv(invalid),/invalid_score_or_format/);
 assert.throws(()=>assertLedgerReviewExportable({...missing,issues:['unrecognized_integrity_issue']}),/integrity/);
 assert.throws(()=>assertLedgerReviewExportable({...missing,publishable:true}),/Official/);
+assert.throws(()=>assertLedgerReviewExportable({...missing,invalidOrMissingDetails:[...missing.invalidOrMissingDetails,...missing.invalidOrMissingDetails],summary:{...missing.summary,invalidOrMissingPairs:2}}),/Duplicate/);
+assert.throws(()=>assertLedgerReviewExportable({...missing,summary:{...missing.summary,validMarkedPairs:2}}),/coverage/);
+assert.throws(()=>assertLedgerReviewExportable({...missing,invalidOrMissingDetails:[{...missing.invalidOrMissingDetails[0],studentId:''}]}),/identity/);
 console.log('V47 shared diagnostic export integrity gate tests passed');
