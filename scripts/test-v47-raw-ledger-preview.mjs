@@ -1,0 +1,8 @@
+import assert from 'node:assert/strict';import {buildRawLedgerPreview} from '../v47/raw-ledger-preview.mjs';
+const args={schoolClass:'9',term:'final',students:[{id:'s1',name:'Student One',class:'9'}],subjects:[{id:'computer_9',name:'Computer',class:'9',active:true}],assignments:[{studentId:'s1',subjectId:'computer_9',class:'9'}],rawMarks:[],componentMarks:[{studentId:'s1',subjectId:'computer_9',class:'9',term:'final',scores:{component_a:4,component_b:36,component_c:10}}],allPagesLoaded:true};
+const result=buildRawLedgerPreview(args);assert.equal(result.rows.length,1);assert.equal(result.rows[0].format,'computer_4_36_10');assert.equal(result.rows[0].componentB,36);assert.equal(result.complete,true);assert.equal(result.publishable,false);assert.equal(result.officialLedger,false);assert.equal(result.gradeCalculated,false);
+const missing=buildRawLedgerPreview({...args,componentMarks:[]});assert.ok(missing.issues.includes('missing_computer_components'));
+const duplicate=buildRawLedgerPreview({...args,rawMarks:[{studentId:'s1',subjectId:'computer_9',class:'9',term:'final',theory:25,practical:10}]});assert.ok(duplicate.issues.includes('duplicate_raw_and_component_mark'));
+const incomplete=buildRawLedgerPreview({...args,allPagesLoaded:false});assert.ok(incomplete.issues.includes('pagination_incomplete'));assert.equal(incomplete.complete,false);
+assert.throws(()=>buildRawLedgerPreview({...args,schoolClass:'13'}));
+console.log('V47 read-only combined raw ledger preview tests passed');
