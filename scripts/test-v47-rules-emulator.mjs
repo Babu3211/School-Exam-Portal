@@ -227,6 +227,14 @@ try{
   await assertFails(admin.doc('schools/school_001/attendance/2026-11-21_'+studentId).set({date:'2026-11-21',studentId,class:'9',present:true}));
   await assertFails(admin.doc('schools/school_001/marks/2nd:'+studentId+':'+subjectId).set({studentId,subjectId,class:'9',term:'2nd',theory:30,practical:10}));
   await assertFails(admin.doc('schools/school_002/attendance/2026-11-20_'+studentId).set({date:'2026-11-20',studentId,class:className,present:true}));
+  await assertFails(admin.doc(studentPath).update({class:'9'}));
+  await assertFails(admin.doc(studentPath).delete());
+  await assertFails(admin.doc(markPath).update({theory:31}));
+  await assertFails(admin.doc(markPath).delete());
+  await assertFails(admin.doc(attendancePath).delete());
+  await assertFails(viewer.doc(subjectPath).update({active:false}));
+  await assertFails(outsider.doc(markPath).get());
+  await assertFails(outsider.doc(attendancePath).get());
   await assertSucceeds(viewer.doc(studentPath).get());
   await assertSucceeds(viewer.doc(markPath).get());
   await assertFails(viewer.doc(studentPath).update({name:'Unauthorized'}));
