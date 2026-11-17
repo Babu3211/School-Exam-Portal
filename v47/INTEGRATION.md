@@ -72,3 +72,7 @@ The browser now blocks login/logout, class/date changes, roster refresh, and sel
 ## Raw marks CSV export (development only)
 
 The read-only marks preview can export only currently loaded rows for the selected school, class and term as a UTF-8 CSV. `v47/marks-preview-export.mjs` escapes CSV quotes and prefixes spreadsheet formula-like values to reduce CSV formula injection risk. This is **not** a Mark Ledger, Grade Ledger, Grade Sheet or official result, and cannot calculate CDC/IEMIS grades or GPA. The export is limited to 1,500 loaded records. It does not access or change V46 data.
+
+## Raw marks audit and race protection
+
+The V47 read-only marks preview now checks only the currently loaded records for duplicate student/subject combinations, missing IDs, wrong class/term and invalid numeric fields. The audit explicitly reports `complete: false`: it cannot prove that all students, subjects, pages or CDC/IEMIS marks are present. The preview rejects stale class/term query responses and disables CSV export during loading; CSV formula-like values preceded by whitespace/control characters are escaped. No grade or GPA is calculated. Emulator/browser/CI outcomes have not been verified.
