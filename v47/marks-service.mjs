@@ -13,7 +13,7 @@ export function validateMarkEntry(input){
  if(input.theory===''||input.practical===''||input.theory==null||input.practical==null||!Number.isFinite(theory)||!Number.isFinite(practical)||theory<0||practical<0||theory>100||practical>100)throw new Error('Marks must be finite numbers between 0 and 100');
  return {studentId,subjectId,class:schoolClass,term,theory,practical};
 }
-export function markEntryId(entry){const e=validateMarkEntry(entry);return e.term+'_'+e.studentId+'_'+e.subjectId;}
+export function markEntryId(entry){const e=validateMarkEntry(entry);return e.term+':'+e.studentId+':'+e.subjectId;}
 export async function saveSchoolMark({db,api,actor,schoolId,input}){
  validateSchoolId(schoolId);if(!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin permission required');
  const entry=validateMarkEntry(input);
