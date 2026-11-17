@@ -2262,7 +2262,7 @@ async function loadMarksEntry(){
    const subjectSel=document.getElementById('entrySubject');
    if(subjectSel)subjectSel.innerHTML='<option value="">No subjects available</option>';
   }
-  entryMsg(`Marks Entry खोल्न सकिएन: ${safeNoticeError(e)}। Admin ले User Role मा Subject Teacher, तोकिएको कक्षा/विषय र Firestore अनुमति जाँच गर्नुहोस्।`,true);
+  entryMsg(`Marks Entry could not load: ${safeNoticeError(e)}। Admin ले User Role मा Subject Teacher, तोकिएको कक्षा/विषय र Firestore अनुमति जाँच गर्नुहोस्।`,true);
   return false;
  }
 }
