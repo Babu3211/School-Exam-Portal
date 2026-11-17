@@ -4,5 +4,9 @@ const result=buildRawLedgerPreview(args);assert.equal(result.rows.length,1);asse
 const missing=buildRawLedgerPreview({...args,componentMarks:[]});assert.ok(missing.issues.includes('missing_computer_components'));
 const duplicate=buildRawLedgerPreview({...args,rawMarks:[{studentId:'s1',subjectId:'computer_9',class:'9',term:'final',theory:25,practical:10}]});assert.ok(duplicate.issues.includes('duplicate_raw_and_component_mark'));
 const incomplete=buildRawLedgerPreview({...args,allPagesLoaded:false});assert.ok(incomplete.issues.includes('pagination_incomplete'));assert.equal(incomplete.complete,false);
+const math={id:'math_9',name:'Mathematics',class:'9',active:true};
+const mixed={...args,subjects:[...args.subjects,math],assignments:[...args.assignments,{studentId:'s1',subjectId:'math_9',class:'9'}]};
+const missingMath=buildRawLedgerPreview(mixed);assert.equal(missingMath.complete,false);assert.ok(missingMath.issues.includes('missing_raw_mark'));
+const completeMixed=buildRawLedgerPreview({...mixed,rawMarks:[{studentId:'s1',subjectId:'math_9',class:'9',term:'final',theory:25,practical:10}]});assert.equal(completeMixed.complete,true);assert.equal(completeMixed.rows.length,2);assert.equal(completeMixed.publishable,false);
 assert.throws(()=>buildRawLedgerPreview({...args,schoolClass:'13'}));
 console.log('V47 read-only combined raw ledger preview tests passed');
