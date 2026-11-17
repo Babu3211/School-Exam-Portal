@@ -14,7 +14,8 @@ service cloud.firestore {
       return loggedIn() && activeSchool(sid) && exists(memberPath(sid))
         && get(memberPath(sid)).data.get('active', false) == true
         && get(memberPath(sid)).data.get('uid', '') == request.auth.uid
-        && get(memberPath(sid)).data.get('schoolId', '') == sid;
+        && get(memberPath(sid)).data.get('schoolId', '') == sid
+        && get(memberPath(sid)).data.get('role', '') in ['school_admin', 'teacher', 'viewer'];
     }
     function memberRole(sid, role) {
       return activeMember(sid) && get(memberPath(sid)).data.get('role', '') == role;
@@ -29,6 +30,61 @@ service cloud.firestore {
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 3
         && request.resource.data.name.size() <= 160
+        && request.resource.data.get('iemisCode', '') is string
+        && (request.resource.data.get('iemisCode', '') == '' || request.resource.data.get('iemisCode', '').matches('^[0-9]{5,20}
+    }
+    // Bootstrap trusted super-admin documents with Admin SDK only.
+    match /v47_super_admins/{uid} { allow read, write: if false; }
+    match /schools/{sid} {
+      allow get: if canRead(sid);
+      allow list: if superAdmin();
+      allow create: if superAdmin() && validSchool(sid);
+      allow update: if superAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active'])
+        && request.resource.data.active is bool;
+      allow delete: if false;
+      match /members/{uid} {
+        allow get: if canAdmin(sid) || (loggedIn() && uid == request.auth.uid && activeMember(sid));
+        allow list: if canAdmin(sid);
+        function validMember() {
+          return request.resource.data.keys().hasOnly(['uid', 'schoolId', 'role', 'active'])
+            && request.resource.data.keys().hasAll(['uid', 'schoolId', 'role', 'active'])
+            && request.resource.data.uid == uid
+            && request.resource.data.schoolId == sid
+            && request.resource.data.role in ['school_admin', 'teacher', 'viewer']
+            && request.resource.data.active is bool;
+        }
+        allow create: if superAdmin() && validMember();
+        allow update: if superAdmin() && validMember();
+        allow delete: if superAdmin();
+      }
+      // Initial safe baseline: school administrators write; teachers are read-only
+      // until assignment-aware writes have emulator coverage.
+      match /students/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update: if canAdmin(sid);
+        allow delete: if false;
+      }
+      match /marks/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update: if canAdmin(sid);
+        allow delete: if false;
+      }
+      match /attendance/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update: if canAdmin(sid);
+        allow delete: if false;
+      }
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings'] && canRead(sid);
+        allow create, update: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings'] && canAdmin(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+))
         && request.resource.data.active == false;
     }
     // Bootstrap trusted super-admin documents with Admin SDK only.
