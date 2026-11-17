@@ -22,5 +22,7 @@ const wrongAssignment=buildRawLedgerPreview({...args,assignments:[...args.assign
 assert.equal(wrongAssignment.summary.assignedPairs,1);assert.equal(wrongAssignment.complete,false);assert.ok(wrongAssignment.issues.includes('invalid_assignment'));
 const inactiveSubject=buildRawLedgerPreview({...args,subjects:[{...args.subjects[0],active:false}]});
 assert.equal(inactiveSubject.summary.assignedPairs,0);assert.equal(inactiveSubject.complete,false);
+const foreignRoster=buildRawLedgerPreview({...args,students:[...args.students,{id:'foreign',name:'Wrong Class',class:'10'}],subjects:[...args.subjects,{id:'other',name:'Other',class:'10',active:true}]});
+assert.equal(foreignRoster.summary.students,1);assert.equal(foreignRoster.summary.subjects,1);assert.equal(foreignRoster.complete,false);
 assert.throws(()=>buildRawLedgerPreview({...args,schoolClass:'13'}));
 console.log('V47 read-only combined raw ledger preview tests passed');
