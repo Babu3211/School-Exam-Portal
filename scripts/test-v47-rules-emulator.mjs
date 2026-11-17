@@ -54,6 +54,17 @@ try{
  await assertFails(outsider.doc('v47_super_admins/super1').get());
  await assertFails(admin.doc('v47_super_admins/super1').get());
  await assertFails(superDb.doc('v47_super_admins/super1').update({active:false}));
+ await env.withSecurityRulesDisabled(async ctx=>{await ctx.firestore().doc('schools/school_001/students/computerStudent').set({name:'Computer Student',class:'9'});});
+ await assertSucceeds(admin.doc('schools/school_001/subjects/computer_9').set({name:'Computer',class:'9',active:true}));
+ await assertSucceeds(admin.doc('schools/school_001/subject_assignments/computerStudent:computer_9').set({studentId:'computerStudent',subjectId:'computer_9',class:'9'}));
+ const component={studentId:'computerStudent',subjectId:'computer_9',class:'9',term:'final',scores:{component_a:4,component_b:36,component_c:10}};
+ await assertFails(admin.doc('schools/school_001/component_marks/final:computerStudent:computer_9').set({...component,scores:{...component.scores,component_b:37}}));
+ await assertFails(viewer.doc('schools/school_001/component_marks/final:computerStudent:computer_9').set(component));
+ await assertSucceeds(admin.doc('schools/school_001/component_marks/final:computerStudent:computer_9').set(component));
+ await assertSucceeds(viewer.doc('schools/school_001/component_marks/final:computerStudent:computer_9').get());
+ await assertFails(admin.doc('schools/school_001/component_marks/final:computerStudent:computer_9').update({term:'1st'}));
+ await assertFails(admin.doc('schools/school_001/component_marks/final:computerStudent:computer_9').delete());
+ await assertFails(admin.doc('schools/school_001/marks/final:computerStudent:computer_9').set({studentId:'computerStudent',subjectId:'computer_9',class:'9',term:'final',theory:30,practical:10}));
  await assertFails(viewer.doc('schools/school_001/marks/mark1').set({score:100}));
  const mark={studentId:'s1',subjectId:'math',class:'1',term:'1st',theory:35,practical:8};
  await assertSucceeds(admin.doc('schools/school_001/subjects/new_math').set({name:'New Mathematics',class:'1',active:true}));
