@@ -6,5 +6,6 @@ assert.ok(auditMarkCoverage({...base,marks:[]}).issues.includes('missing_mark'))
 assert.ok(auditMarkCoverage({...base,marks:[mark,mark]}).issues.includes('duplicate_mark'));
 assert.ok(auditMarkCoverage({...base,marks:[{...mark,subjectId:'optional'}]}).issues.includes('unexpected_mark'));
 assert.ok(auditMarkCoverage({...base,marks:[{...mark,term:'final'}]}).issues.includes('wrong_class_or_term'));
+assert.ok(auditMarkCoverage({...base,marks:[{...mark,studentId:'bad:id'}]}).issues.includes('invalid_mark_identity'));
 assert.throws(()=>auditMarkCoverage({...base,term:'third'}));
 console.log('V47 mark coverage audit passed');
