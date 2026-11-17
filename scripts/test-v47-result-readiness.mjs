@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';import {assessResultReadiness} from '../v47/result-readiness.mjs';
-const base={schoolClass:'6',term:'1st',students:[{id:'s1',class:'6'}],subjects:[{id:'math'}],marks:[{studentId:'s1',subjectId:'math',class:'6',term:'1st',theory:35,practical:8}],allPagesLoaded:true,gradingPolicyVerified:true};
+const base={schoolClass:'6',term:'1st',students:[{id:'s1',class:'6'}],subjects:[{id:'math'}],marks:[{studentId:'s1',subjectId:'math',class:'6',term:'1st',theory:35,practical:8}],allPagesLoaded:true,gradingPolicyVerified:true,requiredSubjectsByStudent:{s1:['math']}};
 const full=assessResultReadiness(base);assert.equal(full.ready,false);assert.deepEqual(full.blockers,['grade_engine_not_integrated']);
-const incomplete=assessResultReadiness({...base,subjects:[{id:'math'},{id:'english'}],allPagesLoaded:false,gradingPolicyVerified:false});assert.ok(incomplete.blockers.includes('pagination_incomplete'));assert.ok(incomplete.blockers.includes('cdc_iemis_policy_unverified'));assert.ok(incomplete.blockers.includes('incomplete_student_subject_matrix'));
+const incomplete=assessResultReadiness({...base,subjects:[{id:'math'},{id:'english'}],requiredSubjectsByStudent:{s1:['math','english']},allPagesLoaded:false,gradingPolicyVerified:false});assert.ok(incomplete.blockers.includes('pagination_incomplete'));assert.ok(incomplete.blockers.includes('cdc_iemis_policy_unverified'));assert.ok(incomplete.blockers.includes('incomplete_student_subject_matrix'));
+const unknownAssignments=assessResultReadiness({...base,requiredSubjectsByStudent:null});assert.ok(unknownAssignments.blockers.includes('student_subject_assignments_unverified'));
+const optional=assessResultReadiness({...base,subjects:[{id:'math'},{id:'optional'}],requiredSubjectsByStudent:{s1:['math']}});assert.deepEqual(optional.blockers,['grade_engine_not_integrated']);
+const invalidAssignments=assessResultReadiness({...base,requiredSubjectsByStudent:{s1:['not_subject']}});assert.ok(invalidAssignments.blockers.includes('invalid_subject_assignments'));
+const unexpected=assessResultReadiness({...base,requiredSubjectsByStudent:{s1:['math','optional']}});assert.ok(unexpected.blockers.includes('invalid_subject_assignments'));
 const unknown=assessResultReadiness({...base,marks:[{...base.marks[0],studentId:'outside'}]});assert.ok(unknown.blockers.includes('unknown_student_or_subject'));
 const duplicate=assessResultReadiness({...base,marks:[...base.marks,...base.marks]});assert.ok(duplicate.blockers.includes('invalid_mark_records'));
 const empty=assessResultReadiness({...base,students:[],subjects:[],marks:[]});assert.ok(empty.blockers.includes('no_students'));assert.ok(empty.blockers.includes('no_subjects'));
