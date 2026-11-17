@@ -91,6 +91,8 @@ jobs:
         run: node scripts/test-v47-attendance-class-save.mjs
       - name: V47 school-scoped marks foundation
         run: node scripts/test-v47-marks-service.mjs
+      - name: V47 Firestore rules structural integrity
+        run: node scripts/test-v47-rules-structure.mjs
       - name: V47 marks rules structural safety
         run: node scripts/test-v47-marks-rules-static.mjs
       - name: V47 class-term mark query
