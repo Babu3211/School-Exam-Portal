@@ -10,6 +10,7 @@ assert.equal((await createSubjectAssignment(args)).id,'s1:math_6');assert.equal(
 await assert.rejects(()=>createSubjectAssignment(args),/already exists/);
 await assert.rejects(()=>createSubjectAssignment({...args,actor:{...actor,role:'viewer'}}));
 await assert.rejects(()=>createSubjectAssignment({...args,schoolId:'school_002'}));
+docs.delete('schools/school_001/subject_assignments/s1:math_6');
 docs.get('schools/school_001/subjects/math_6').active=false;
 await assert.rejects(()=>createSubjectAssignment({...args,input:{...input,subjectId:'math_6'}}),/inactive/);
 assert.throws(()=>subjectAssignmentId({...input,studentId:'bad\/id'}));
