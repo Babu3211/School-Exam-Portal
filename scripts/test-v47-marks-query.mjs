@@ -3,4 +3,6 @@ const actor={role:'viewer',active:true,schoolId:'school_001'};const filters=[];c
 const args={db:{},api,actor,schoolId:'school_001',schoolClass:'6',term:'1st'};
 const result=await loadMarksByClassTerm(args);assert.equal(result.records.length,1);assert.deepEqual(filters,[['class','==','6'],['term','==','1st']]);
 for(const bad of [{schoolId:'school_002'},{schoolClass:'13'},{term:'midterm'},{pageSize:101},{actor:{...actor,active:false}}])await assert.rejects(()=>loadMarksByClassTerm({...args,...bad}));
+let requestedLimit=0,usedCursor=false;const pagingApi={...api,limit:n=>{requestedLimit=n;return ['limit',n]},startAfter:()=>{usedCursor=true;return ['after','cursor']},getDocs:async()=>({docs:Array.from({length:3},(_,i)=>({id:'mark'+i,data:()=>({studentId:'s'+i})}))})};
+const page=await loadMarksByClassTerm({...args,api:pagingApi,pageSize:2,cursor:'previous'});assert.equal(requestedLimit,3);assert.equal(usedCursor,true);assert.equal(page.records.length,2);assert.equal(page.hasMore,true);assert.equal(page.cursor.id,'mark1');
 console.log('V47 school-scoped marks query tests passed');
