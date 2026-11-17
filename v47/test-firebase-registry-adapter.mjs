@@ -21,6 +21,8 @@ await assert.rejects(()=>adapter.create('schools/schoolA',{active:true}),/alread
 assert.deepEqual(stored.get('schools/schoolA'),{active:false});
 await adapter.create('schools/schoolA/members/teacher1',{active:false});
 assert.equal(stored.size,2);
+await adapter.create('schools/schoolA/members/'+'u'.repeat(128),{active:false});
+assert.equal(stored.size,3);
 await assert.rejects(()=>adapter.create('students/x',{}),/Unapproved/);
 await assert.rejects(()=>adapter.create('schools/schoolB',null),/Invalid/);
 assert.throws(()=>makeRegistryAdapter({}),TypeError);
