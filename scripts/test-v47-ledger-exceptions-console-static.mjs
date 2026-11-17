@@ -4,6 +4,9 @@ const html=readFileSync(new URL('../v47/ledger-exceptions.html',import.meta.url)
 const code=readFileSync(new URL('../v47/ledger-exceptions-console.mjs',import.meta.url),'utf8');
 assert.match(html,/read-only development diagnostics/i);
 assert.match(html,/ledger-exceptions-console\.mjs/);
+assert.match(html,/id="cancel" disabled/);
+assert.match(code,/\$\('cancel'\)\.onclick=/);
+assert.match(code,/epoch\+\+;preview=null;lock\(false\)/);
 assert.match(code,/config\.projectId!=='smss-exam-portal-v47'/);
 assert.match(code,/\['school_admin','teacher','viewer'\]/);
 assert.match(code,/api\.collection\(db,'schools',schoolId,collection\)/);
