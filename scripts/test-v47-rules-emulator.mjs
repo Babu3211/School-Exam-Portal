@@ -61,6 +61,10 @@ try{
  await assertFails(admin.doc('schools/school_001/subjects/new_math').delete());
  await assertFails(admin.doc('schools/school_001/subjects/invalid').set({name:'X',class:'1',active:true}));
  await assertFails(viewer.doc('schools/school_001/subjects/viewer_subject').set({name:'Viewer Subject',class:'1',active:true}));
+ await assertFails(admin.doc('schools/school_002/subjects/foreign_subject').set({name:'Foreign Subject',class:'1',active:true}));
+ await assertFails(admin.doc('schools/school_001/subjects/new_math').set({name:'Changed Mathematics',class:'1',active:true}));
+ await assertSucceeds(viewer.doc('schools/school_001/subjects/new_math').get());
+ await assertFails(viewer.doc('schools/school_002/subjects/other_school').get());
  await assertSucceeds(admin.doc('schools/school_001/marks/1st:s1:math').set(mark));
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').update({theory:34}));
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').delete());
