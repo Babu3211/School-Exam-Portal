@@ -28,5 +28,9 @@ assert.equal(audit({...withOrdinary,rawMarks:[{studentId:'s1',subjectId:'math_9'
 assert.ok(audit({students:[{...student,id:''}]}).issues.includes('invalid_student_roster'));
 assert.ok(audit({subjects:[{...subject,id:''}]}).issues.includes('invalid_subject_roster'));
 assert.ok(audit({rawMarks:[{studentId:'',subjectId:'computer_9',class:'9',term:'final',theory:1,practical:1}]}).issues.includes('invalid_raw_mark'));
+for(const bad of [{theory:-1,practical:3},{theory:NaN,practical:3},{theory:4,practical:Infinity},{theory:'5',practical:3},{theory:4}]){
+ const result=audit({rawMarks:[{studentId:'s1',subjectId:'computer_9',class:'9',term:'final',...bad}]});
+ assert.ok(result.issues.includes('invalid_raw_mark_scores'),'Reject malformed raw score');
+}
 assert.throws(()=>audit({schoolClass:'13'}));
 console.log('V47 Computer component coverage diagnostic checks passed');
