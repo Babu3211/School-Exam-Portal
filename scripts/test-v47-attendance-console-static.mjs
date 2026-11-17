@@ -5,4 +5,6 @@ assert.match(js,/savingAttendance=true/);assert.match(js,/if\(savingAttendance\)
 assert.match(js,/function reset\(\)\{epoch\+\+;busy=false;cursor=null/);
 assert.match(js,/function resetRoster\(\)\{if\(savingAttendance\)return;rosterEpoch\+\+;rosterBusy=false/);
 assert.match(js,/rosterEpoch\+\+;rosterBusy=false;rosterCursor=null;rosterStudents=\[\]/);
+assert.match(js,/\$\('save'\)\.onclick=async\(\)=>\{if\(savingAttendance\)return;const button=\$\('save'\);savingAttendance=true/);
+assert.match(js,/savingAttendance=false;button\.disabled=false;\$\('logout'\)\.disabled=false/);
 console.log('V47 attendance UI static tests passed');
