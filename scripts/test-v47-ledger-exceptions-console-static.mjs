@@ -28,7 +28,7 @@ assert.match(code,/member\.data\(\)\.active!==true/);
 assert.match(code,/await confirmMembership\(schoolId,actor\.uid\)/);
 assert.match(code,/await confirmMembership\(expectedSchoolId,expectedUid\)/);
 assert.match(code,/preview!==selectedPreview/);
-assert.match(code,/ledgerExceptionsCsv\(preview\)/);
+assert.match(code,/ledgerExceptionsCsv\(selectedPreview\)/);
 assert.match(code,/td\.textContent=value/);
 assert.match(code,/\$\('logout'\)\.disabled=!actor/);
 assert.match(code,/\$\('logout'\)\.onclick=async\(\)=>\{reset\(\)/);
