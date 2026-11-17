@@ -19,7 +19,7 @@ export async function saveLoadedClassAttendance({db,api,actor,schoolId,entries,o
   try{await saveClassAttendance({db,api,actor,schoolId,entries:chunk});}
   catch(cause){if(saved===0)throw cause;throw new PartialAttendanceSaveError(saved,validated.length,cause);}
   saved+=chunk.length;
-  onProgress({saved,total:validated.length,savedIds:chunk.map(e=>e.studentId)});
+  try{onProgress({saved,total:validated.length,savedIds:chunk.map(e=>e.studentId)});}catch(error){/* UI callback failures must not turn a committed batch into a misleading save failure. */}
  }
  return {saved,total:validated.length,date,class:schoolClass};
 }
