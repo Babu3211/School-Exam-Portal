@@ -39,6 +39,9 @@ try{
  await assertFails(admin.doc('schools/school_001/students/badClass').set({name:'New Student',class:'13'}));
  await assertFails(admin.doc('schools/school_001/students/new').update({role:'school_admin'}));
  await assertSucceeds(admin.doc('schools/school_001/students/new').update({rollNo:'7'}));
+ await assertFails(admin.doc('schools/school_001/students/new').delete());
+ await assertFails(superDb.doc('schools/school_001/students/new').delete());
+ await assertSucceeds(admin.doc('schools/school_001/students/new').get());
  await assertSucceeds(viewer.doc('schools/school_001/students/s1').get());
  await assertSucceeds(viewer.doc('schools/school_001/marks/m1').get());
  await assertSucceeds(viewer.doc('schools/school_001/attendance/2026-11-16_s1').get());
@@ -106,6 +109,9 @@ try{
  await assertSucceeds(viewer.doc('schools/school_001/marks/1st:s1:math').get());
 
  await assertSucceeds(admin.doc('schools/school_001/attendance/2026-11-16_s1').set({date:'2026-11-16',studentId:'s1',class:'1',present:false}));
+ await assertFails(admin.doc('schools/school_001/attendance/2026-11-16_s1').delete());
+ await assertFails(superDb.doc('schools/school_001/attendance/2026-11-16_s1').delete());
+ await assertSucceeds(admin.doc('schools/school_001/attendance/2026-11-16_s1').get());
  await assertFails(admin.doc('schools/school_001/attendance/2026-11-16_missing').set({date:'2026-11-16',studentId:'missing',class:'1',present:true}));
  await assertFails(admin.doc('schools/school_001/attendance/2026-11-16_s1').set({date:'2026-11-16',studentId:'s1',class:'2',present:true}));
  await assertFails(admin.doc('schools/school_001/attendance/invalid').set({date:'2026-11-16',studentId:'s1',class:'1',present:true}));
