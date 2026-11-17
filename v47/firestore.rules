@@ -67,6 +67,7 @@ service cloud.firestore {
       && request.resource.data.practical is number && request.resource.data.practical >= 0 && request.resource.data.practical <= 100
       && exists(/databases/$(database)/documents/schools/$(schoolId)/students/$(request.resource.data.studentId))
       && get(/databases/$(database)/documents/schools/$(schoolId)/students/$(request.resource.data.studentId)).data['class'] == request.resource.data['class']
+      && exists(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId))
       && docId == request.resource.data.term + ':' + request.resource.data.studentId + ':' + request.resource.data.subjectId;
    }
    match /marks/{docId} {
