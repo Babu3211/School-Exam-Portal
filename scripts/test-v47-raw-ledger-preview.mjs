@@ -18,5 +18,9 @@ const noRoster=buildRawLedgerPreview({...args,students:[],subjects:[],assignment
 assert.equal(noRoster.complete,false);assert.ok(noRoster.issues.includes('no_students'));assert.ok(noRoster.issues.includes('no_subject_assignments'));
 const repeated=buildRawLedgerPreview({...args,rawMarks:[{studentId:'x',subjectId:'x',class:'9',term:'final',theory:1,practical:1},{studentId:'y',subjectId:'y',class:'9',term:'final',theory:1,practical:1}]});
 assert.equal(repeated.issues.filter(issue=>issue==='unexpected_raw_mark').length,1);assert.equal(repeated.summary.markedPairs,1,'unassigned marks cannot inflate covered pairs');
+const wrongAssignment=buildRawLedgerPreview({...args,assignments:[...args.assignments,{studentId:'outside',subjectId:'computer_9',class:'9'},{studentId:'s1',subjectId:'computer_9',class:'10'}]});
+assert.equal(wrongAssignment.summary.assignedPairs,1);assert.equal(wrongAssignment.complete,false);assert.ok(wrongAssignment.issues.includes('invalid_assignment'));
+const inactiveSubject=buildRawLedgerPreview({...args,subjects:[{...args.subjects[0],active:false}]});
+assert.equal(inactiveSubject.summary.assignedPairs,0);assert.equal(inactiveSubject.complete,false);
 assert.throws(()=>buildRawLedgerPreview({...args,schoolClass:'13'}));
 console.log('V47 read-only combined raw ledger preview tests passed');
