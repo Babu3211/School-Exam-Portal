@@ -9,7 +9,7 @@ export function auditConfiguredFullMarks({schoolClass,term,marks,subjectLimits})
  const issues=[];
  for(let i=0;i<marks.length;i++){
   const mark=marks[i],limits=mark&&Object.hasOwn(subjectLimits,mark.subjectId)?subjectLimits[mark.subjectId]:null;
-  if(!limits){issues.push({index:i,code:'missing_subject_full_marks'});continue}
+  if(!limits||typeof limits!=='object'||Array.isArray(limits)){issues.push({index:i,code:'missing_subject_full_marks'});continue}
   if(!['theoryMax','practicalMax'].every(key=>typeof limits[key]==='number'&&Number.isFinite(limits[key])&&limits[key]>=0&&limits[key]<=100)||limits.theoryMax+limits.practicalMax<=0){issues.push({index:i,code:'invalid_subject_full_marks'});continue}
   if(mark.class!==schoolClass||mark.term!==term){issues.push({index:i,code:'wrong_class_or_term'});continue}
   for(const [field,max] of [['theory',limits.theoryMax],['practical',limits.practicalMax]]){
