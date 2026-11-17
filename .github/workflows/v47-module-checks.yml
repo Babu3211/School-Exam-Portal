@@ -155,5 +155,11 @@ jobs:
         run: node scripts/test-v47-assignment-create-service.mjs
       - name: V47 school subject assignment browser static checks
         run: node scripts/test-v47-assignments-console-static.mjs
+      - name: V47 diagnostic exceptions CSV safety
+        run: node scripts/test-v47-ledger-exceptions-export.mjs
+      - name: V47 read-only missing marks review UI
+        run: node scripts/test-v47-ledger-exceptions-console-static.mjs
+      - name: V47 missing marks Firestore index coverage
+        run: node scripts/test-v47-ledger-query-indexes.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
