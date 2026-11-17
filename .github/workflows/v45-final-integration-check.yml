@@ -40,6 +40,18 @@ jobs:
               'docs/V46-FEATURE-DIFFERENCE-AUDIT.md', 'docs/V46-SINGLE-SOURCE-OF-TRUTH.md', 'docs/V46-PRODUCTION-RELEASE-ROLLBACK-CHECKLIST.md', 'docs/V46-FREE-FIRESTORE-BACKUP-PLAN.md', 'docs/V46-MOBILE-ONLY-FREE-RELEASE-HANDOFF.md',
               'package.json', 'scripts/test-firestore-rules.mjs', 'scripts/test-iemis-entry.mjs'})
             allowed.update(p for p in changed if p.startswith('scripts/test-v46-') and p.endswith('.mjs'))
+          # V46 delete-safety branch: exact reviewed change scope only.
+          # Keep dashboard, IEMIS and all other production files protected.
+          if os.environ.get('GITHUB_HEAD_REF')=='smss-v46-exam-delete-safety' or os.environ.get('GITHUB_REF_NAME')=='smss-v46-exam-delete-safety':
+            allowed.update({
+              '.github/workflows/v45-final-integration-check.yml',
+              '.github/workflows/v46-delete-safety-check.yml',
+              '.github/workflows/android-apk.yml',
+              'android-app/scripts/patch-relaunch-recovery.mjs',
+              'package.json',
+              'scripts/test-v46-delete-controls.mjs',
+              'scripts/test-v46-viewer-class-exam-readonly.mjs'
+            })
           # This school-authorized IEMIS verification branch has a separate,
           # exact file scope. All dashboard, permission and emulator checks below
           # still run; other branches retain the existing source freeze.
