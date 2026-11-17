@@ -2,12 +2,15 @@ import assert from 'node:assert/strict';import {assessResultReadiness} from '../
 const base={schoolClass:'6',term:'1st',students:[{id:'s1',class:'6'}],subjects:[{id:'math',name:'Mathematics'}],marks:[{studentId:'s1',subjectId:'math',class:'6',term:'1st',theory:35,practical:8}],allPagesLoaded:true,gradingPolicyVerified:true,requiredSubjectsByStudent:{s1:['math']},subjectLimits:{math:{theoryMax:40,practicalMax:10}}};
 const full=assessResultReadiness(base);assert.equal(full.ready,false);assert.deepEqual(full.blockers,['grade_engine_not_integrated']);
 const incomplete=assessResultReadiness({...base,subjects:[{id:'math',name:'Mathematics'},{id:'english',name:'English'}],requiredSubjectsByStudent:{s1:['math','english']},allPagesLoaded:false,gradingPolicyVerified:false});assert.ok(incomplete.blockers.includes('pagination_incomplete'));assert.ok(incomplete.blockers.includes('cdc_iemis_policy_unverified'));assert.ok(incomplete.blockers.includes('incomplete_student_subject_matrix'));
-const multiComponent=assessResultReadiness({...base,componentEntries:[{studentId:'s1',subjectId:'computer',class:'6',term:'1st',scores:{a:4,b:36,c:10}}],componentsBySubject:{computer:[{key:'a',max:4},{key:'b',max:36},{key:'c',max:10}]}});assert.ok(multiComponent.blockers.includes('component_marks_storage_not_integrated'));assert.equal(multiComponent.ready,false);
+const multiComponent=assessResultReadiness({...base,componentEntries:[{studentId:'s1',subjectId:'computer',class:'6',term:'1st',scores:{a:4,b:36,c:10}}],componentsBySubject:{computer:[{key:'a',max:4},{key:'b',max:36},{key:'c',max:10}]}});assert.ok(multiComponent.blockers.includes('component_marks_grading_not_integrated'));assert.equal(multiComponent.ready,false);
 const computerOnly=assessResultReadiness({...base,schoolClass:'9',students:[{id:'s1',class:'9'}],subjects:[{id:'computer',name:'Computer',class:'9',active:true}],marks:[],requiredSubjectsByStudent:{s1:['computer']},componentEntries:[{studentId:'s1',subjectId:'computer',class:'9',term:'1st',scores:{component_a:4,component_b:36,component_c:10}}],componentsBySubject:{computer:[{key:'component_a',max:4},{key:'component_b',max:36},{key:'component_c',max:10}]}});
 assert.equal(computerOnly.ready,false);
-assert.ok(computerOnly.blockers.includes('component_mark_coverage_not_integrated'));
+assert.ok(computerOnly.blockers.includes('component_mark_grading_not_integrated'));
 assert.ok(!computerOnly.blockers.includes('incomplete_student_subject_matrix'));
 assert.ok(!computerOnly.blockers.includes('mark_coverage_incomplete_or_inconsistent'));
+assert.equal(computerOnly.checkedPairs,1);
+assert.ok(computerOnly.blockers.includes('grade_engine_not_integrated'));
+
 
 const overlap=assessResultReadiness({...base,componentEntries:[{studentId:'s1',subjectId:'math',class:'6',term:'1st',scores:{a:1}}],componentsBySubject:{math:[{key:'a',max:2}]}});assert.ok(overlap.blockers.includes('ambiguous_duplicate_mark_format'));
 const unknownComponent=assessResultReadiness({...base,componentEntries:[{studentId:'outside',subjectId:'math',class:'6',term:'1st',scores:{a:1}}],componentsBySubject:{math:[{key:'a',max:2}]}});assert.ok(unknownComponent.blockers.includes('unknown_component_student_or_subject'));
