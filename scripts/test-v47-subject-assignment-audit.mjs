@@ -1,0 +1,9 @@
+import assert from 'node:assert/strict';import {auditSubjectAssignments} from '../v47/subject-assignment-audit.mjs';
+const base={schoolClass:'9',students:[{id:'s1',class:'9'},{id:'s2',class:'9'}],subjects:[{id:'math'},{id:'computer'}],assignments:{s1:['math','computer'],s2:['math']}};
+assert.deepEqual(auditSubjectAssignments(base),{valid:true,issues:[],expectedPairs:3});
+assert.ok(auditSubjectAssignments({...base,assignments:{s1:['math']}}).issues.includes('missing_student_assignment'));
+assert.ok(auditSubjectAssignments({...base,assignments:{s1:['math','math'],s2:['math']}}).issues.includes('duplicate_assignment'));
+assert.ok(auditSubjectAssignments({...base,assignments:{s1:['missing'],s2:['math']}}).issues.includes('unknown_assigned_subject'));
+assert.ok(auditSubjectAssignments({...base,assignments:{...base.assignments,s3:['math']}}).issues.includes('unknown_assigned_student'));
+assert.throws(()=>auditSubjectAssignments({...base,schoolClass:'13'}));
+console.log('V47 optional subject assignment audit passed');
