@@ -138,3 +138,7 @@ The V47 development-only Firestore rules now allow raw mark **create** only; upd
 ## School-admin assignment browser workflow
 
 `v47/assignments.html` + `assignments-console.mjs` now let an active School Admin sign into the isolated V47 Firebase project, choose ECD–12 class, load class-filtered student and active subject records, and create one subject assignment with the existing transaction service. Subjects, assignments and raw marks pages cross-link for the setup flow. This is a **development-only** UI: it does not infer mandatory or optional subjects, import IEMIS catalog data, support bulk assignment, or permit correction of existing assignments. Class query pagination currently caps the loaded class list at 1,500 records; this is not the final large-school UX. Static CI checks were added; Firebase Emulator and browser end-to-end success remain unverified. V46 is unchanged.
+
+## Raw mark assignment enforcement follow-up
+
+The raw mark browser now lists only active subjects explicitly matching the chosen class. The transaction and preflight reject marks without a same-school student-subject assignment; Firestore rules independently require that assignment. Regression tests now cover missing assignments. These controls do **not** yet verify subject-specific maximum marks, optional-subject rules, three-component Computer marks or CDC/IEMIS grade calculations. Browser/Firestore emulator execution remains unverified, and V46 production is unchanged.
