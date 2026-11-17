@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';import {assessResultReadiness} from '../v47/result-readiness.mjs';
-const base={schoolClass:'6',term:'1st',students:[{id:'s1',class:'6'}],subjects:[{id:'math'}],marks:[{studentId:'s1',subjectId:'math',class:'6',term:'1st',theory:35,practical:8}],allPagesLoaded:true,gradingPolicyVerified:true,requiredSubjectsByStudent:{s1:['math']}};
+const base={schoolClass:'6',term:'1st',students:[{id:'s1',class:'6'}],subjects:[{id:'math'}],marks:[{studentId:'s1',subjectId:'math',class:'6',term:'1st',theory:35,practical:8}],allPagesLoaded:true,gradingPolicyVerified:true,requiredSubjectsByStudent:{s1:['math']},subjectLimits:{math:{theoryMax:40,practicalMax:10}}};
 const full=assessResultReadiness(base);assert.equal(full.ready,false);assert.deepEqual(full.blockers,['grade_engine_not_integrated']);
 const incomplete=assessResultReadiness({...base,subjects:[{id:'math'},{id:'english'}],requiredSubjectsByStudent:{s1:['math','english']},allPagesLoaded:false,gradingPolicyVerified:false});assert.ok(incomplete.blockers.includes('pagination_incomplete'));assert.ok(incomplete.blockers.includes('cdc_iemis_policy_unverified'));assert.ok(incomplete.blockers.includes('incomplete_student_subject_matrix'));
+const missingMaxima=assessResultReadiness({...base,subjectLimits:null});assert.ok(missingMaxima.blockers.includes('subject_full_marks_unverified'));
+const overMaxima=assessResultReadiness({...base,marks:[{...base.marks[0],theory:41}]});assert.ok(overMaxima.blockers.includes('invalid_or_exceeded_subject_full_marks'));
 const unknownAssignments=assessResultReadiness({...base,requiredSubjectsByStudent:null});assert.ok(unknownAssignments.blockers.includes('student_subject_assignments_unverified'));
 const optional=assessResultReadiness({...base,subjects:[{id:'math'},{id:'optional'}],requiredSubjectsByStudent:{s1:['math']}});assert.deepEqual(optional.blockers,['grade_engine_not_integrated']);
 const invalidAssignments=assessResultReadiness({...base,requiredSubjectsByStudent:{s1:['not_subject']}});assert.ok(invalidAssignments.blockers.includes('invalid_subject_assignments'));
