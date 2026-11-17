@@ -17,7 +17,8 @@ export async function createSchoolMarkOnly({db,api,actor,schoolId,input}){
   const [student,subject,assignment,existing,component]=await Promise.all([tx.get(studentRef),tx.get(subjectRef),tx.get(assignmentRef),tx.get(markRef),tx.get(componentRef)]);
   if(!student.exists()||student.data().class!==entry.class)throw new Error('Student missing or in another class');
   if(!subject.exists()||subject.data().active!==true||subject.data().class!==entry.class)throw new Error('Subject missing, inactive or in another class');
-  if(!assignment.exists()||assignment.data().studentId!==entry.studentId||assignment.data().subjectId!==entry.subjectId||assignment.data().class!==entry.class)throw new Error('Student subject assignment required');
+  if(['9','10'].includes(entry.class)&&subject.data().name==='Computer')throw new Error('Use Computer 4/36/10 component marks entry');
+ if(!assignment.exists()||assignment.data().studentId!==entry.studentId||assignment.data().subjectId!==entry.subjectId||assignment.data().class!==entry.class)throw new Error('Student subject assignment required');
   if(existing.exists()||component.exists())throw new Error('Mark already exists; overwrite blocked');
   tx.set(markRef,entry);
  });
