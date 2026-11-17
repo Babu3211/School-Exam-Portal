@@ -23,6 +23,9 @@ assert.ok(rules.includes(".data['class'] == request.resource.data['class']"),'At
 console.log('V47 Firestore rules structural checks passed; emulator still required');
 )"));
 assert.ok(rules.length<20000,'Unexpected rules expansion or corruption');
+assert.equal((rules.match(/\{/g)||[]).length,(rules.match(/\}/g)||[]).length,'Unbalanced Firestore rules braces');
+assert.equal((rules.match(/rules_version = '2';/g)||[]).length,1,'Exactly one rules header');
+assert.equal((rules.match(/match \/students\/\{docId\}/g)||[]).length,1,'Exactly one student match');
 assert.ok(!rules.includes('1,128} //'),'Broken student regex');
 const wildcard=rules.match(/match \/\{collection\}\/\{docId\} \{([\s\S]*?)\n   \}/)?.[1];
 assert.ok(wildcard,'Missing generic scoped rule');
