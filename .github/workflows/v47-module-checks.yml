@@ -99,5 +99,7 @@ jobs:
         run: node scripts/test-v47-marks-preview-static.mjs
       - name: V47 raw marks CSV safety tests
         run: node scripts/test-v47-marks-preview-export.mjs
+      - name: V47 raw marks audit tests
+        run: node scripts/test-v47-marks-audit.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
