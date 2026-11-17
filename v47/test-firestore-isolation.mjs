@@ -29,6 +29,9 @@ try {
   await assertFails(getDoc(doc(db('viewerA'),student('schoolB','s1'))));
   await assertSucceeds(getDoc(doc(db('viewerA'),student('schoolA','s1'))));
   await assertFails(getDoc(doc(db('unknownA'),student('schoolA','s1'))));
+  await assertFails(getDoc(doc(db('teacherA'),member('schoolA','adminA'))));
+  await assertSucceeds(getDoc(doc(db('teacherA'),member('schoolA','teacherA'))));
+  await assertFails(getDocs(collection(db('teacherA'),'schools/schoolA/members')));
   await assertFails(getDoc(doc(db('inactiveUser'),student('inactiveSchool','s1'))));
   await assertSucceeds(getDoc(doc(db('root'),student('inactiveSchool','s1'))));
   await assertFails(setDoc(doc(db('viewerA'),student('schoolA','s2')),{name:'Forbidden'}));
