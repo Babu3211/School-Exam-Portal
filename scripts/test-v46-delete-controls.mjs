@@ -4,7 +4,7 @@ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 for(const token of [
  'function confirmPermanentDeletion(label)',
  'return confirm("अन्तिम पुष्टि:',
- 'deleteDoc(doc(db,"exams",id))',
+ 'batch.delete(doc(db,"exams",id))',
  'deleteDoc(doc(db,"staff",id))',
  'deleteDoc(doc(db,"students",id))',
  'deleteDoc(doc(db,"subjects",id))',
@@ -12,7 +12,10 @@ for(const token of [
  'collection(db,"marks")',
  'collection(db,"attendance")',
  'collection(db,"user_roles")',
- 'Marks सुरक्षित राख्न परीक्षा Delete रोकियो',
+ 'deletedMarks=',
+ 'linked.forEach(d=>batch.delete(d.ref))',
+ 'batch.delete(doc(db,"exams",id))',
+ 'if(count>499)',
  'शैक्षिक अभिलेख सुरक्षित राख्न Delete रोकियो',
  'data-exam-delete',
  'data-staff-delete',
@@ -24,7 +27,11 @@ for(const fn of ['removeStaff','removeStudent','deleteExam','archiveSubjectCatal
  const start=html.indexOf('async function '+fn+'(');
  assert.ok(start>=0,'Missing '+fn);
  const body=html.slice(start,start+2600);
- assert.ok(body.includes('confirmPermanentDeletion('),fn+' missing two confirmations');
- assert.ok(body.includes('deleteDoc('),fn+' missing physical deletion');
+ if(fn==='deleteExam'){
+  assert.ok(body.includes('if(!confirm('),'Exam delete must explicitly confirm twice');
+  assert.ok(body.split('if(!confirm(').length>=3,'Exam delete missing second confirmation');
+ }else assert.ok(body.includes('confirmPermanentDeletion('),fn+' missing two confirmations');
+ if(fn==='deleteExam')assert.ok(body.includes('batch.delete('),fn+' missing atomic physical deletion');
+ else assert.ok(body.includes('deleteDoc('),fn+' missing physical deletion');
 }
 console.log('V46 Delete controls static checks passed (Firebase emulator and browser tests still required)');
