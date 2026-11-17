@@ -51,6 +51,17 @@ try{
  await assertFails(admin.doc('v47_super_admins/super1').get());
  await assertFails(superDb.doc('v47_super_admins/super1').update({active:false}));
  await assertFails(viewer.doc('schools/school_001/marks/mark1').set({score:100}));
+ const mark={studentId:'s1',subjectId:'math',class:'1',term:'1st',theory:35,practical:8};
+ await assertSucceeds(admin.doc('schools/school_001/marks/1st:s1:math').set(mark));
+ await assertFails(admin.doc('schools/school_001/marks/1st:s1:english').set(mark));
+ await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').set({...mark,theory:101}));
+ await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').set({...mark,class:'2'}));
+ await assertFails(admin.doc('schools/school_001/marks/1st:missing:math').set({...mark,studentId:'missing'}));
+ await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').set({...mark,role:'super_admin'}));
+ await assertFails(viewer.doc('schools/school_001/marks/1st:s1:math').set(mark));
+ await assertFails(admin.doc('schools/school_002/marks/1st:s1:math').set(mark));
+ await assertSucceeds(viewer.doc('schools/school_001/marks/1st:s1:math').get());
+
  await assertSucceeds(admin.doc('schools/school_001/attendance/2026-11-16_s1').set({date:'2026-11-16',studentId:'s1',class:'1',present:false}));
  await assertFails(admin.doc('schools/school_001/attendance/2026-11-16_missing').set({date:'2026-11-16',studentId:'missing',class:'1',present:true}));
  await assertFails(admin.doc('schools/school_001/attendance/2026-11-16_s1').set({date:'2026-11-16',studentId:'s1',class:'2',present:true}));
