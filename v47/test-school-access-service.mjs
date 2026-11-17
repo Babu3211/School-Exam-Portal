@@ -18,6 +18,10 @@ assert.equal((await loadSchoolAccess({...args,schoolId:'schoolC'})).canRead,fals
 await assert.rejects(()=>loadSchoolAccess({...args,schoolId:'../schoolB'}),TypeError);
 await assert.rejects(()=>loadSchoolAccess({...args,schoolId:'schoolA',isSuperAdmin:true}),/server-side/);
 await assert.rejects(()=>loadSchoolAccess({...args,auth:{currentUser:null},schoolId:'schoolA'}),/does not match/);
+const inactiveDocs=new Map(docs);
+inactiveDocs.set('schools/schoolA',{id:'schoolA',active:false});
+const inactiveApi={...api,getDoc:async path=>({exists:()=>inactiveDocs.has(path),data:()=>inactiveDocs.get(path)})};
+assert.equal((await loadSchoolAccess({...args,api:inactiveApi,schoolId:'schoolA'})).canRead,false);
 const deniedApi={...api,getDoc:async()=>{throw Object.assign(new Error('denied'),{code:'permission-denied'})}};
 assert.equal((await loadSchoolAccess({...args,api:deniedApi,schoolId:'schoolA'})).canRead,false);
 const offlineApi={...api,getDoc:async()=>{throw Object.assign(new Error('offline'),{code:'unavailable'})}};
