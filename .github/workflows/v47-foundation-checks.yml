@@ -16,6 +16,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install test dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
       - name: V47 school isolation and registry static tests
         run: |
           node v47/test-school-scope.mjs
@@ -26,3 +28,5 @@ jobs:
           node v47/test-access-policy.mjs
           node v47/test-school-registry-service.mjs
 
+      - name: Firestore tenant isolation emulator tests
+        run: npx firebase emulators:exec --project smss-v47-isolation-test --only firestore --config v47/firebase.emulator.json "node v47/test-firestore-isolation.mjs"
