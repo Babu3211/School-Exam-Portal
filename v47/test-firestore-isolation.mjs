@@ -50,6 +50,9 @@ try {
   await assertSucceeds(setDoc(doc(db('adminA'),'schools/schoolA/marks/m1'),{score:10}));
   await assertFails(deleteDoc(doc(db('adminA'),'schools/schoolA/marks/m1')));
   await assertFails(setDoc(doc(db('adminA'),member('schoolA','attacker')),{uid:'attacker',schoolId:'schoolA',role:'school_admin',active:true}));
+  await assertFails(setDoc(doc(db('root'),member('schoolA','forged')),{uid:'different',schoolId:'schoolA',role:'viewer',active:true}));
+  await assertFails(setDoc(doc(db('root'),member('schoolA','forged2')),{uid:'forged2',schoolId:'schoolB',role:'viewer',active:true}));
+  await assertFails(setDoc(doc(db('root'),member('schoolA','forged3')),{uid:'forged3',schoolId:'schoolA',role:'super_admin',active:true}));
   await assertFails(setDoc(doc(db('viewerA'),'v47_super_admins/viewerA'),{active:true}));
   await assertSucceeds(getDocs(collection(db('root'),'schools')));
   await assertFails(getDocs(collection(db('viewerA'),'schools')));
