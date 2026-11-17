@@ -4,7 +4,7 @@ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 for(const token of [
  'function confirmPermanentDeletion(label)',
  'return confirm("अन्तिम पुष्टि:',
- 'deleteDoc(doc(db,"exams",id))',
+ 'batch.delete(doc(db,"exams",id))',
  'deleteDoc(doc(db,"staff",id))',
  'deleteDoc(doc(db,"students",id))',
  'deleteDoc(doc(db,"subjects",id))',
