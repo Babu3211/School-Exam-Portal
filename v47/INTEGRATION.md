@@ -56,3 +56,7 @@ The V47 Firestore emulator suite now contains a 10-student atomic attendance bat
 ## In-flight save protection
 
 The browser now blocks login/logout, class/date changes, roster refresh, and selection changes while chunked attendance saves are running. A progress callback exception does not convert already-committed writes into a false failure report. The class/date attendance view is refreshed after a completed save. These are development code checks, not a verified browser or Firebase emulator run.
+
+## School-scoped marks foundation (development only)
+
+`v47/marks-service.mjs` provides a school-admin-only save operation under `schools/{schoolId}/marks/{term}:{studentId}:{subjectId}`. It validates ECD–12 classes, terms `1st`, `2nd`, `final`, student/subject IDs and numeric theory/practical values. V47 rules require the student to exist in the same school and class, and prohibit forged fields and teacher/viewer writes. **These 0–100 input bounds are generic safety checks, not CDC/IEMIS full-mark rules.** Subject full marks, internal/external component limits, grades, GPA, NG, Mark Ledger, Grade Ledger and Grade Sheet remain unimplemented/unverified in V47; do not use these fields to calculate or publish results. No V46 production changes or V47 deployment.
