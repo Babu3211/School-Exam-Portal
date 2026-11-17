@@ -7,6 +7,8 @@ const computerOnly=assessResultReadiness({...base,schoolClass:'9',students:[{id:
 assert.equal(computerOnly.ready,false);
 assert.ok(computerOnly.blockers.includes('component_mark_coverage_not_integrated'));
 assert.ok(!computerOnly.blockers.includes('incomplete_student_subject_matrix'));
+assert.ok(!computerOnly.blockers.includes('mark_coverage_incomplete_or_inconsistent'));
+
 const overlap=assessResultReadiness({...base,componentEntries:[{studentId:'s1',subjectId:'math',class:'6',term:'1st',scores:{a:1}}],componentsBySubject:{math:[{key:'a',max:2}]}});assert.ok(overlap.blockers.includes('ambiguous_duplicate_mark_format'));
 const unknownComponent=assessResultReadiness({...base,componentEntries:[{studentId:'outside',subjectId:'math',class:'6',term:'1st',scores:{a:1}}],componentsBySubject:{math:[{key:'a',max:2}]}});assert.ok(unknownComponent.blockers.includes('unknown_component_student_or_subject'));
 const inactive=assessResultReadiness({...base,subjects:[{id:'math',name:'Mathematics',active:false}]});assert.ok(inactive.blockers.includes('inactive_subject_in_catalog'));assert.ok(inactive.blockers.includes('invalid_subject_assignments'));
