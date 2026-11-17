@@ -123,5 +123,9 @@ jobs:
         run: node scripts/test-v47-diagnostic-report-export.mjs
       - name: V47 school admin raw marks entry page
         run: node scripts/test-v47-marks-entry-console-static.mjs
+      - name: V47 mark save preflight
+        run: node scripts/test-v47-mark-save-preflight.mjs
+      - name: V47 create-only raw marks transaction
+        run: node scripts/test-v47-mark-create-service.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
