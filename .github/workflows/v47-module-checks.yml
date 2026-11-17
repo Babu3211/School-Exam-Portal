@@ -93,5 +93,7 @@ jobs:
         run: node scripts/test-v47-marks-service.mjs
       - name: V47 marks rules structural safety
         run: node scripts/test-v47-marks-rules-static.mjs
+      - name: V47 class-term mark query
+        run: node scripts/test-v47-marks-query.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
