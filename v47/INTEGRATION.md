@@ -194,3 +194,7 @@ The raw Theory/Practical marks page now tracks the loaded student class and subj
 ## Marks form race-condition and coverage audit hardening
 
 Both raw and Computer component entry screens now keep student and subject class-loading state independently. An outdated roster request cannot re-enable controls after sign-out; class/epoch guards discard stale page responses. Static regression checks enforce those conditions. Computer coverage diagnostics reject assignments to inactive subjects and require the corresponding active class subject. These changes are restricted to the V47 development branch, not V46 production. No Firebase Emulator or live end-to-end success is claimed.
+
+## Mixed-subject raw ledger completeness
+
+The read-only V47 raw ledger preview now requires a raw mark for every assigned **ordinary** subject as well as all three Computer components for assigned Class 9/10 Computer subjects. Previously, a class with a complete Computer mark but a missing Mathematics mark could incorrectly be labeled `complete:true`. The diagnostic reports `missing_raw_mark` and remains non-publishable even if the data is complete. Malformed roster/mark inputs now produce diagnostic issues rather than crashing the preview rendering. Tests cover mixed subjects and malformed inputs. Official CDC/IEMIS 2083 grades and print layouts remain unimplemented and require verified source specifications. No live V46 changes.
