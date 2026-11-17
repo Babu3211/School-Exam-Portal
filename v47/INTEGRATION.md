@@ -52,3 +52,7 @@ The V47 Firestore emulator suite now contains a 10-student atomic attendance bat
 ## Chunked full-class attendance (development)
 
 `v47/attendance-class-save.mjs` validates the full selected roster before writing, then commits sequential Firestore batches of 10 records. The attendance page permits up to 1,500 selected loaded students; users must page through the class roster first. **This is not one atomic transaction**: if batch 2 fails, batch 1 remains saved. The progress callback removes only successfully saved student selections, leaving unsaved selections available for retry. Confirmation warns of overwriting records. This is still unverified against live Firebase and emulator, and does not implement BS dates or IEMIS synchronization.
+
+## In-flight save protection
+
+The browser now blocks login/logout, class/date changes, roster refresh, and selection changes while chunked attendance saves are running. A progress callback exception does not convert already-committed writes into a false failure report. The class/date attendance view is refreshed after a completed save. These are development code checks, not a verified browser or Firebase emulator run.
