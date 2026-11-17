@@ -223,6 +223,10 @@ try{
   await assertSucceeds(admin.doc(markPath).set({studentId,subjectId,class:className,term:'1st',theory:30,practical:10}));
   await assertSucceeds(admin.doc(attendancePath).set({date:'2026-11-20',studentId,class:className,present:true}));
   await assertFails(viewer.doc(attendancePath).set({date:'2026-11-20',studentId,class:className,present:true}));
+  // Until teacher class/subject assignments are enforced by rules, teacher writes remain denied.
+  await assertFails(teacher.doc('schools/school_001/marks/2nd:'+studentId+':'+subjectId).set({studentId,subjectId,class:className,term:'2nd',theory:30,practical:10}));
+  await assertFails(teacher.doc('schools/school_001/attendance/2026-11-22_'+studentId).set({date:'2026-11-22',studentId,class:className,present:true}));
+  await assertFails(teacher.doc('schools/school_002/marks/2nd:'+studentId+':'+subjectId).set({studentId,subjectId,class:className,term:'2nd',theory:30,practical:10}));
   await assertFails(teacher.doc(markPath).update({theory:35}));
   await assertFails(admin.doc('schools/school_001/attendance/2026-11-21_'+studentId).set({date:'2026-11-21',studentId,class:'9',present:true}));
   await assertFails(admin.doc('schools/school_001/marks/2nd:'+studentId+':'+subjectId).set({studentId,subjectId,class:'9',term:'2nd',theory:30,practical:10}));
