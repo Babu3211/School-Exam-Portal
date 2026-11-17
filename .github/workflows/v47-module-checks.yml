@@ -103,5 +103,7 @@ jobs:
         run: node scripts/test-v47-marks-audit.mjs
       - name: V47 result readiness fail-closed gate
         run: node scripts/test-v47-result-readiness.mjs
+      - name: V47 subject full-marks configuration audit
+        run: node scripts/test-v47-full-marks-audit.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
