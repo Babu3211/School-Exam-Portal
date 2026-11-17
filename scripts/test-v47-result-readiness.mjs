@@ -5,7 +5,7 @@ const incomplete=assessResultReadiness({...base,subjects:[{id:'math',name:'Mathe
 const multiComponent=assessResultReadiness({...base,componentEntries:[{studentId:'s1',subjectId:'computer',class:'6',term:'1st',scores:{a:4,b:36,c:10}}],componentsBySubject:{computer:[{key:'a',max:4},{key:'b',max:36},{key:'c',max:10}]}});assert.ok(multiComponent.blockers.includes('component_marks_grading_not_integrated'));assert.equal(multiComponent.ready,false);
 const computerOnly=assessResultReadiness({...base,schoolClass:'9',students:[{id:'s1',class:'9'}],subjects:[{id:'computer',name:'Computer',class:'9',active:true}],marks:[],requiredSubjectsByStudent:{s1:['computer']},componentEntries:[{studentId:'s1',subjectId:'computer',class:'9',term:'1st',scores:{component_a:4,component_b:36,component_c:10}}],componentsBySubject:{computer:[{key:'component_a',max:4},{key:'component_b',max:36},{key:'component_c',max:10}]}});
 assert.equal(computerOnly.ready,false);
-assert.ok(computerOnly.blockers.includes('component_mark_grading_not_integrated'));
+assert.ok(computerOnly.blockers.includes('component_marks_grading_not_integrated'));
 assert.ok(!computerOnly.blockers.includes('incomplete_student_subject_matrix'));
 assert.ok(!computerOnly.blockers.includes('mark_coverage_incomplete_or_inconsistent'));
 assert.equal(computerOnly.checkedPairs,1);
