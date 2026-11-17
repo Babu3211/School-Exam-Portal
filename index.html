@@ -1413,7 +1413,7 @@ async function loadClasses(){
  const body=document.getElementById("classwiseSubjects");if(!body)return;
  body.innerHTML='<p class="hint">प्रणालीबाट कक्षा तथा विषय लोड हुँदैछ...</p>';
  try{
-  if(!auth.currentUser||!(isAdmin()||roleHas("viewer")))throw new Error("Admin वा Viewer login आवश्यक छ।");
+  if(!auth.currentUser||!(isAdmin()||roleHas("viewer")))throw new Error("Admin or Viewer login is required.");
   const subjectPromise=getDocs(collection(db,"subjects")).catch(subjectReadError=>{console.warn("Subject Bank read unavailable; legacy class subjects remain usable.",subjectReadError.code||subjectReadError.message);return null;});
   const snap=await getDocs(collection(db,"classes"));
   cachedClasses=snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -1745,7 +1745,7 @@ async function loadExams(){
  const body=document.getElementById("examsBody");if(!body)return;
  body.innerHTML='<tr><td class="empty" colspan="9">Loading exams...</td></tr>';
  try{
-  if(!auth.currentUser||!(isAdmin()||roleHas("viewer")))throw new Error("Admin वा Viewer login आवश्यक छ।");
+  if(!auth.currentUser||!(isAdmin()||roleHas("viewer")))throw new Error("Admin or Viewer login is required.");
   const snap=await getDocs(collection(db,"exams"));
   cachedExams=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.startDate||"").localeCompare(String(b.startDate||"")));
   renderExams();
