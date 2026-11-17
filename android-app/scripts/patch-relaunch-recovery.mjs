@@ -23,13 +23,13 @@ public class MainActivity extends BridgeActivity {
   private final Handler recoveryHandler = new Handler(Looper.getMainLooper());
 
   @Override
-  protected void onPause() {
+  public void onPause() {
     returnedFromBackground = true;
     super.onPause();
   }
 
   @Override
-  protected void onResume() {
+  public void onResume() {
     super.onResume();
     if (!returnedFromBackground) return;
     returnedFromBackground = false;
