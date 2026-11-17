@@ -207,5 +207,27 @@ try{
  await assertSucceeds(superDb.doc('schools/school_001/students/s1').get());
  await assertSucceeds(superDb.doc('schools/school_001').update({active:true}));
  await assertSucceeds(admin.doc('schools/school_001/students/s1').get());
+ // Regression: LKG/UKG must remain tenant-scoped and role-protected.
+ for (const className of ['LKG','UKG']) {
+  const suffix=className.toLowerCase();
+  const studentId='early_'+suffix;
+  const subjectId='subject_'+suffix;
+  const studentPath='schools/school_001/students/'+studentId;
+  const subjectPath='schools/school_001/subjects/'+subjectId;
+  const assignmentPath='schools/school_001/subject_assignments/'+studentId+':'+subjectId;
+  const markPath='schools/school_001/marks/1st:'+studentId+':'+subjectId;
+  const attendancePath='schools/school_001/attendance/2026-11-20_'+studentId;
+  await assertSucceeds(admin.doc(studentPath).set({name:'Early Learner '+className,class:className}));
+  await assertSucceeds(admin.doc(subjectPath).set({name:'Early Learning',class:className,active:true}));
+  await assertSucceeds(admin.doc(assignmentPath).set({studentId,subjectId,class:className}));
+  await assertSucceeds(admin.doc(markPath).set({studentId,subjectId,class:className,term:'1st',theory:30,practical:10}));
+  await assertSucceeds(admin.doc(attendancePath).set({date:'2026-11-20',studentId,class:className,present:true}));
+  await assertSucceeds(viewer.doc(studentPath).get());
+  await assertSucceeds(viewer.doc(markPath).get());
+  await assertFails(viewer.doc(studentPath).update({name:'Unauthorized'}));
+  await assertFails(teacher.doc(attendancePath).update({present:false}));
+  await assertFails(outsider.doc(studentPath).get());
+  await assertFails(admin.doc('schools/school_002/students/'+studentId).get());
+ }
  console.log('V47 cross-school emulator access tests passed');
 }finally{await env.cleanup();}
