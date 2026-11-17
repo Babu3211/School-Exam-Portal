@@ -14,11 +14,8 @@ export function validateMarkEntry(input){
  return {studentId,subjectId,class:schoolClass,term,theory,practical};
 }
 export function markEntryId(entry){const e=validateMarkEntry(entry);return e.term+':'+e.studentId+':'+e.subjectId;}
-export async function saveSchoolMark({db,api,actor,schoolId,input}){
- validateSchoolId(schoolId);if(!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin permission required');
- const entry=validateMarkEntry(input);
- if(typeof api?.doc!=='function'||typeof api?.setDoc!=='function')throw new TypeError('Missing Firebase SDK');
- const id=markEntryId(entry);
- await api.setDoc(api.doc(db,'schools',schoolId,'marks',id),entry);
- return {id,...entry};
+// Backward-compatible entry point. Never upsert or bypass roster/assignment validation.
+export async function saveSchoolMark(args){
+ const {createSchoolMarkOnly}=await import('./mark-create-service.mjs');
+ return createSchoolMarkOnly(args);
 }
