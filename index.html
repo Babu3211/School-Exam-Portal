@@ -2221,9 +2221,9 @@ async function loadMarksEntry(){
    const assignedQueryNames=[...new Set(pairs.map(x=>String(x.className??'').trim()).filter(Boolean))];
    const assignedNames=sortEntryClassNames(assignedQueryNames);
    // Start all assignment-scoped reads together; do not broaden Firestore access.
-   const studentSnapsPromise=Promise.all(assignedQueryNames.map(cl=>getDocs(query(collection(db,'students'),where('class','==',cl)))));
-   const examSnapsPromise=Promise.all(assignedQueryNames.map(cl=>getDocs(query(collection(db,'exams'),where('className','==',cl)))));
-   const markSnapsPromise=Promise.all(pairs.map(x=>getDocs(query(collection(db,'marks'),where('className','==',x.className),where('subject','==',x.subject),...(String(x.section||'').trim()?[where('section','==',String(x.section).trim())]:[])))));
+   const studentSnapsPromise=Promise.all(assignedQueryNames.map(cl=>getDocs(query(collection(db,'students'),where('class','==',cl))).catch(e=>{throw new Error('students / '+classEnglishLabel(cl)+': '+safeNoticeError(e));})));
+   const examSnapsPromise=Promise.all(assignedQueryNames.map(cl=>getDocs(query(collection(db,'exams'),where('className','==',cl))).catch(e=>{throw new Error('exams / '+classEnglishLabel(cl)+': '+safeNoticeError(e));})));
+   const markSnapsPromise=Promise.all(pairs.map(x=>getDocs(query(collection(db,'marks'),where('className','==',x.className),where('subject','==',x.subject),...(String(x.section||'').trim()?[where('section','==',String(x.section).trim())]:[]))).catch(e=>{throw new Error('marks / '+classEnglishLabel(x.className)+' / '+subjectEnglishLabel(x.subject)+': '+safeNoticeError(e));})));
    // Fetch settings concurrently with assignment-scoped mark queries; keep Firestore permissions unchanged.
    const settingsPromise=getDocs(collection(db,'mark_settings'));
    // Keep all four scoped reads concurrent and preserve the established release contract.
@@ -2262,7 +2262,7 @@ async function loadMarksEntry(){
    const subjectSel=document.getElementById('entrySubject');
    if(subjectSel)subjectSel.innerHTML='<option value="">No subjects available</option>';
   }
-  entryMsg(`Marks Entry could not load: ${safeNoticeError(e)}। Admin ले User Role मा Subject Teacher, तोकिएको कक्षा/विषय र Firestore अनुमति जाँच गर्नुहोस्।`,true);
+  entryMsg(`Marks Entry could not load: ${String(e?.message||safeNoticeError(e)).slice(0,240)}। Admin ले User Role मा Subject Teacher, तोकिएको कक्षा/विषय र Firestore अनुमति जाँच गर्नुहोस्।`,true);
   return false;
  }
 }
