@@ -15,5 +15,7 @@ assert.match(code,/rows\.length>20000/);
 assert.match(code,/allPagesLoaded:true/);
 assert.match(code,/ledgerExceptionsCsv\(preview\)/);
 assert.match(code,/td\.textContent=value/);
+assert.match(code,/\$\('logout'\)\.disabled=!actor/);
+assert.match(code,/\$\('logout'\)\.onclick=async\(\)=>\{reset\(\)/);
 assert.doesNotMatch(code,/api\.(addDoc|updateDoc|deleteDoc|setDoc)\(/);
 console.log('V47 read-only ledger exception browser static checks passed');
