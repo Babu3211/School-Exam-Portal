@@ -57,6 +57,9 @@ try {
   await assertFails(setDoc(doc(db('root'),member('schoolA','forged2')),{uid:'forged2',schoolId:'schoolB',role:'viewer',active:true}));
   await assertFails(setDoc(doc(db('root'),member('schoolA','forged3')),{uid:'forged3',schoolId:'schoolA',role:'super_admin',active:true}));
   await assertFails(setDoc(doc(db('viewerA'),'v47_super_admins/viewerA'),{active:true}));
+  await assertFails(getDoc(doc(db('viewerA'),'v47_super_admins/root')));
+  await assertFails(getDoc(doc(db('root'),'v47_super_admins/root')));
+  await assertFails(setDoc(doc(db('root'),'v47_super_admins/attacker'),{active:true}));
   await assertSucceeds(getDocs(collection(db('root'),'schools')));
   await assertFails(getDocs(collection(db('viewerA'),'schools')));
   await assertSucceeds(setDoc(doc(db('root'),school('schoolC')),{id:'schoolC',name:'School C',active:false}));
