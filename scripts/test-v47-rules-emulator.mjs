@@ -81,6 +81,7 @@ try{
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').update({theory:34}));
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').delete());
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:inactive').set({...mark,subjectId:'inactive'}));
+ await assertFails(admin.doc('schools/school_001/marks/final:s1:missingactive').set({...mark,term:'final',subjectId:'missingactive'}));
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:wrongclass').set({...mark,subjectId:'wrongclass'}));
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:english').set(mark));
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:missing_subject').set({...mark,subjectId:'missing_subject'}));
