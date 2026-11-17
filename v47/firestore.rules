@@ -72,7 +72,138 @@ service cloud.firestore {
       && get(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId)).data['class'] == request.resource.data['class']
       && exists(/databases/$(database)/documents/schools/$(schoolId)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId))
       && get(/databases/$(database)/documents/schools/$(schoolId)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data['class'] == request.resource.data['class']
+      && !exists(/databases/$(database)/documents/schools/$(schoolId)/component_marks/$(docId))
       && docId == request.resource.data.term + ':' + request.resource.data.studentId + ':' + request.resource.data.subjectId;
+   }
+   function validComputerComponent(docId) {
+    return request.resource.data.keys().hasOnly(['studentId','subjectId','class','term','scores'])
+      && request.resource.data.keys().hasAll(['studentId','subjectId','class','term','scores'])
+      && request.resource.data.studentId is string
+      && request.resource.data.studentId.matches('^[A-Za-z0-9_-]{1,128}
+    return request.resource.data.keys().hasOnly(['studentId','subjectId','class'])
+      && request.resource.data.keys().hasAll(['studentId','subjectId','class'])
+      && request.resource.data.studentId is string
+      && request.resource.data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
+      && request.resource.data.subjectId is string
+      && request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
+      && request.resource.data['class'] in ['ECD','1','2','3','4','5','6','7','8','9','10','11','12']
+      && docId == request.resource.data.studentId + ':' + request.resource.data.subjectId
+      && exists(/databases/$(database)/documents/schools/$(schoolId)/students/$(request.resource.data.studentId))
+      && get(/databases/$(database)/documents/schools/$(schoolId)/students/$(request.resource.data.studentId)).data['class'] == request.resource.data['class']
+      && exists(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId))
+      && get(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId)).data['class'] == request.resource.data['class']
+      && get(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId)).data.active == true;
+   }
+   match /subject_assignments/{docId} {
+    allow get, list: if reader(schoolId);
+    allow create: if memberRole(schoolId,'school_admin') && validSubjectAssignment(docId);
+    allow update, delete: if false;
+   }
+   match /marks/{docId} {
+    allow get, list: if reader(schoolId);
+    allow create: if memberRole(schoolId,'school_admin') && validMark(docId);
+    allow update, delete: if false;
+   }
+   function validSubject(docId) {
+    return docId.matches('^[A-Za-z0-9_-]{1,128}$')
+      && request.resource.data.keys().hasOnly(['name','class','active'])
+      && request.resource.data.keys().hasAll(['name','class','active'])
+      && request.resource.data.name is string
+      && request.resource.data.name.size() >= 2
+      && request.resource.data.name.size() <= 160
+      && request.resource.data['class'] in ['ECD','1','2','3','4','5','6','7','8','9','10','11','12']
+      && request.resource.data.active is bool;
+   }
+   match /subjects/{docId} {
+    allow get, list: if reader(schoolId);
+    allow create: if memberRole(schoolId,'school_admin') && validSubject(docId);
+    allow update, delete: if false;
+   }
+   match /{collection}/{docId} {
+    allow get, list: if collection in ['staff','classes','exams','mark_settings'] && reader(schoolId);
+    allow create, update, delete: if collection in ['staff','classes','exams','mark_settings'] && schoolAdmin(schoolId);
+   }
+  }
+  match /{document=**} { allow read, write: if false; }
+ }
+}
+)
+      && request.resource.data.subjectId is string
+      && request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}
+    return request.resource.data.keys().hasOnly(['studentId','subjectId','class'])
+      && request.resource.data.keys().hasAll(['studentId','subjectId','class'])
+      && request.resource.data.studentId is string
+      && request.resource.data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
+      && request.resource.data.subjectId is string
+      && request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
+      && request.resource.data['class'] in ['ECD','1','2','3','4','5','6','7','8','9','10','11','12']
+      && docId == request.resource.data.studentId + ':' + request.resource.data.subjectId
+      && exists(/databases/$(database)/documents/schools/$(schoolId)/students/$(request.resource.data.studentId))
+      && get(/databases/$(database)/documents/schools/$(schoolId)/students/$(request.resource.data.studentId)).data['class'] == request.resource.data['class']
+      && exists(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId))
+      && get(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId)).data['class'] == request.resource.data['class']
+      && get(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId)).data.active == true;
+   }
+   match /subject_assignments/{docId} {
+    allow get, list: if reader(schoolId);
+    allow create: if memberRole(schoolId,'school_admin') && validSubjectAssignment(docId);
+    allow update, delete: if false;
+   }
+   match /marks/{docId} {
+    allow get, list: if reader(schoolId);
+    allow create: if memberRole(schoolId,'school_admin') && validMark(docId);
+    allow update, delete: if false;
+   }
+   function validSubject(docId) {
+    return docId.matches('^[A-Za-z0-9_-]{1,128}$')
+      && request.resource.data.keys().hasOnly(['name','class','active'])
+      && request.resource.data.keys().hasAll(['name','class','active'])
+      && request.resource.data.name is string
+      && request.resource.data.name.size() >= 2
+      && request.resource.data.name.size() <= 160
+      && request.resource.data['class'] in ['ECD','1','2','3','4','5','6','7','8','9','10','11','12']
+      && request.resource.data.active is bool;
+   }
+   match /subjects/{docId} {
+    allow get, list: if reader(schoolId);
+    allow create: if memberRole(schoolId,'school_admin') && validSubject(docId);
+    allow update, delete: if false;
+   }
+   match /{collection}/{docId} {
+    allow get, list: if collection in ['staff','classes','exams','mark_settings'] && reader(schoolId);
+    allow create, update, delete: if collection in ['staff','classes','exams','mark_settings'] && schoolAdmin(schoolId);
+   }
+  }
+  match /{document=**} { allow read, write: if false; }
+ }
+}
+)
+      && request.resource.data['class'] in ['9','10']
+      && request.resource.data.term in ['1st','2nd','final']
+      && request.resource.data.scores is map
+      && request.resource.data.scores.keys().hasOnly(['component_a','component_b','component_c'])
+      && request.resource.data.scores.keys().hasAll(['component_a','component_b','component_c'])
+      && request.resource.data.scores.component_a is number
+      && request.resource.data.scores.component_a >= 0 && request.resource.data.scores.component_a <= 4
+      && request.resource.data.scores.component_b is number
+      && request.resource.data.scores.component_b >= 0 && request.resource.data.scores.component_b <= 36
+      && request.resource.data.scores.component_c is number
+      && request.resource.data.scores.component_c >= 0 && request.resource.data.scores.component_c <= 10
+      && docId == request.resource.data.term + ':' + request.resource.data.studentId + ':' + request.resource.data.subjectId
+      && exists(/databases/$(database)/documents/schools/$(schoolId)/students/$(request.resource.data.studentId))
+      && get(/databases/$(database)/documents/schools/$(schoolId)/students/$(request.resource.data.studentId)).data['class'] == request.resource.data['class']
+      && exists(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId))
+      && get(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId)).data['class'] == request.resource.data['class']
+      && get(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId)).data.active == true
+      && get(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId)).data.name == 'Computer'
+      && exists(/databases/$(database)/documents/schools/$(schoolId)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId))
+      && get(/databases/$(database)/documents/schools/$(schoolId)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data['class'] == request.resource.data['class']
+      && !exists(/databases/$(database)/documents/schools/$(schoolId)/marks/$(docId));
+   }
+   match /component_marks/{docId} {
+    allow get, list: if reader(schoolId);
+    allow create: if memberRole(schoolId,'school_admin') && validComputerComponent(docId);
+    allow update, delete: if false;
    }
    function validSubjectAssignment(docId) {
     return request.resource.data.keys().hasOnly(['studentId','subjectId','class'])
