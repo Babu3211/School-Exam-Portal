@@ -210,3 +210,7 @@ Raw ledger coverage now rejects missing, negative, nonnumeric, NaN, and infinite
 ## Empty roster safeguards
 
 The V47 read-only raw ledger audit now flags `no_students`, `no_subjects`, and `no_subject_assignments` rather than reporting an empty school class as complete. Blank assignment identities are invalid, and the preview presents unique diagnostic issue codes for easier review. Added regression cases for empty class/assignment lists and duplicate issue codes. This does not activate official result publication or CDC/IEMIS grading. No changes to V46 production.
+
+## Per-student mark completeness matrix (diagnostic only)
+
+`v47/student-mark-matrix.mjs` builds a read-only class/term student-by-assigned-subject view from the combined raw ledger preview. It shows `missing`, `recorded`, `duplicate`, or `wrong_format` per assigned subject, including the user-specified Class 9/10 Computer 4/36/10 format. A student with no valid subject assignments now blocks diagnostic completeness (`student_subject_assignments_missing`); coverage uses a set to avoid quadratic scanning for large rosters. `scripts/test-v47-student-mark-matrix.mjs` is included in the V47 non-deploy module workflow. This is not a CDC grade engine, an official Mark Ledger, or a publishable result; emulator and CI run status still require verification. V46 remains untouched.
