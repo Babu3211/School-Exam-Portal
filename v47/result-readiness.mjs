@@ -19,7 +19,7 @@ export function assessResultReadiness({schoolClass,term,students,subjects,marks,
  const catalogAudit=auditSubjectCatalog({schoolClass,subjects});if(!catalogAudit.valid)blockers.push('invalid_subject_catalog');
  const studentIds=new Set(),subjectIds=new Set();
  for(const student of students){if(!student||typeof student.id!=='string'||!student.id||student.class!==schoolClass||studentIds.has(student.id))blockers.push('invalid_student_roster');else studentIds.add(student.id)}
- for(const subject of subjects){if(!subject||typeof subject.id!=='string'||!subject.id||subjectIds.has(subject.id))blockers.push('invalid_subject_roster');else subjectIds.add(subject.id)}
+ for(const subject of subjects){if(!subject||typeof subject.id!=='string'||!subject.id||subjectIds.has(subject.id))blockers.push('invalid_subject_roster');else {subjectIds.add(subject.id);if(subject.active===false)blockers.push('inactive_subject_in_catalog')}}
  if(requiredSubjectsByStudent!==null){
   if(!requiredSubjectsByStudent||typeof requiredSubjectsByStudent!=='object'||Array.isArray(requiredSubjectsByStudent))blockers.push('invalid_subject_assignments');
   else {const assignmentAudit=auditSubjectAssignments({schoolClass,students,subjects,assignments:requiredSubjectsByStudent});if(!assignmentAudit.valid)blockers.push('invalid_subject_assignments');}
