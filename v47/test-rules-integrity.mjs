@@ -1,10 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-const rules = readFileSync(new URL('./firestore.rules', import.meta.url), 'utf8');
-const required = ['match /schools/{schoolId}', 'match /members/{uid}', 'match /students/{docId}', 'match /attendance/{docId}', 'match /v47_super_admins/{uid}'];
-for (const item of required) assert.ok(rules.includes(item), `Missing rule section: ${item}`);
-assert.ok(!rules.includes('allow read, write: if true'), 'Public access forbidden');
-assert.ok(!rules.includes('match /{document=**}'), 'Recursive wildcard forbidden');
-const suspect = rules.match(/\.matches\('\^\[A-Za-z0-9_-\]\{1,128\}\s*\n/);
-assert.equal(suspect, null, 'Rule source appears truncated inside an assignment validation regex');
-console.log('V47 rules integrity static audit passed (emulator tests still required)');
+const r=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
+for(const s of ['match /schools/{sid}','match /members/{uid}','match /students/{id}','match /marks/{id}','match /attendance/{id}','allow read, write: if false;','activeMember(sid)','request.resource.data.uid == uid']) assert.ok(r.includes(s),s);
+assert.equal((r.match(/match \/schools\/\{sid\}/g)||[]).length,1);
+assert.equal((r.match(/match \/students\/\{id\}/g)||[]).length,1);
+assert.ok(!r.includes('allow read, write: if true'));
+console.log('V47 tenant rules static integrity checks passed; emulator tests still required');
