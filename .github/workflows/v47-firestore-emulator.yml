@@ -1,0 +1,32 @@
+name: V47 Firestore tenant isolation emulator (non-deploy)
+on:
+  push:
+    branches: [smss-v47-multischool-work]
+    paths:
+      - 'v47/firestore.rules'
+      - 'v47/firebase.v47.json'
+      - 'scripts/test-v47-rules-emulator.mjs'
+      - '.github/workflows/v47-firestore-emulator.yml'
+  pull_request:
+    branches: [smss-v47-multischool-work]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  firestore-isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run V47 tenant isolation Firestore emulator suite
+        run: npx firebase-tools emulators:exec --config v47/firebase.v47.json --project v47-isolation-test --only firestore "node scripts/test-v47-rules-emulator.mjs"
