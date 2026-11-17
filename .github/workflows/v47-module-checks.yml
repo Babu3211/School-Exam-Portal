@@ -127,5 +127,9 @@ jobs:
         run: node scripts/test-v47-mark-save-preflight.mjs
       - name: V47 create-only raw marks transaction
         run: node scripts/test-v47-mark-create-service.mjs
+      - name: V47 subject validation
+        run: node scripts/test-v47-subject-validation.mjs
+      - name: V47 create-only school subject service
+        run: node scripts/test-v47-subject-create-service.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
