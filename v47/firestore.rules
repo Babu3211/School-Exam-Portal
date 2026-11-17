@@ -13,7 +13,20 @@ service cloud.firestore {
   match /schools/{schoolId} {
    allow get: if reader(schoolId);
    allow list: if superAdmin();
-   allow create, update: if superAdmin() && request.resource.data.get('active', false) is bool;
+   function validSchoolRegistration() {
+    return schoolId.matches('^[A-Za-z0-9_-]{3,64}$')
+      && request.resource.data.keys().hasOnly(['id','name','iemisCode','active'])
+      && request.resource.data.keys().hasAll(['id','name','iemisCode','active'])
+      && request.resource.data.id == schoolId
+      && request.resource.data.name is string
+      && request.resource.data.name.size() >= 3 && request.resource.data.name.size() <= 160
+      && request.resource.data.iemisCode is string
+      && (request.resource.data.iemisCode == '' || request.resource.data.iemisCode.matches('^[0-9]{5,20}$'))
+      && request.resource.data.active == false;
+   }
+   allow create: if superAdmin() && validSchoolRegistration();
+   allow update: if superAdmin() && request.resource.data.active is bool
+     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active']);
    allow delete: if false; // prevent accidental orphaning of school subcollections
    match /members/{uid} {
     allow get, list: if schoolAdmin(schoolId) || (signedIn() && request.auth.uid == uid && member(schoolId));
