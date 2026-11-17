@@ -8,4 +8,5 @@ await assert.rejects(()=>saveLoadedClassAttendance({...args,actor:{...actor,role
 commits=0;failOn=2;const seen=[];await assert.rejects(()=>saveLoadedClassAttendance({...args,onProgress:p=>seen.push(p)}),e=>e instanceof PartialAttendanceSaveError&&e.saved===10&&e.total===23);assert.equal(commits,2);assert.deepEqual(seen.map(p=>p.saved),[10]);
 commits=0;failOn=1;await assert.rejects(()=>saveLoadedClassAttendance(args),/network/);assert.equal(commits,1,'Stop on first batch failure');
 commits=0;failOn=0;await assert.rejects(()=>saveLoadedClassAttendance({...args,entries:Array.from({length:1501},(_,i)=>({...entries[0],studentId:'s'+i}))}),/1500/);assert.equal(commits,0,'Oversized request must not write');
+commits=0;failOn=0;const callbackErrors=[];const success=await saveLoadedClassAttendance({...args,onProgress:()=>{callbackErrors.push('thrown');throw Error('UI unavailable')}});assert.equal(success.saved,23,'Committed batches must still be reported successful');assert.equal(callbackErrors.length,3);
 console.log('V47 chunked class attendance tests passed');
