@@ -3,7 +3,7 @@ const COLUMNS=['studentId','subjectId','class','term','theory','practical'];
 function csvCell(value){
  let text=value==null?'':String(value);
  // Spreadsheet formula injection protection (including leading whitespace).
- if(/^[\s]*[=+@-]/.test(text))text="'"+text;
+ if(/^[\s\u0000-\u001f]*[=+@-]/.test(text))text="'"+text;
  return '"'+text.replaceAll('"','""')+'"';
 }
 export function rawMarksCsv(records){
