@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict';
+import {initializeTestEnvironment,assertSucceeds,assertFails} from '@firebase/rules-unit-testing';
+import {doc,getDoc,setDoc,updateDoc,deleteDoc,getDocs,collection} from 'firebase/firestore';
+
+const env=await initializeTestEnvironment({
+  projectId:'smss-v47-isolation-test',
+  firestore:{host:'127.0.0.1',port:8187,rules:undefined}
+});
+const db=(uid)=>env.authenticatedContext(uid).firestore();
+const anon=env.unauthenticatedContext().firestore();
+const school=(id)=>`schools/${id}`;
+const student=(sid,id)=>`schools/${sid}/students/${id}`;
+const member=(sid,uid)=>`schools/${sid}/members/${uid}`;
+try {
+  await env.withSecurityRulesDisabled(async ctx=>{
+    const admin=ctx.firestore();
+    await setDoc(doc(admin,'v47_super_admins/root'),{active:true});
+    for(const sid of ['schoolA','schoolB']){
+      await setDoc(doc(admin,school(sid)),{id:sid,name:sid,active:true});
+      await setDoc(doc(admin,student(sid,'s1')),{name:'Example Student',class:'6'});
+    }
+    for(const [sid,uid,role] of [['schoolA','adminA','school_admin'],['schoolA','teacherA','teacher'],['schoolA','viewerA','viewer'],['schoolB','adminB','school_admin']]){
+      await setDoc(doc(admin,member(sid,uid)),{uid,schoolId:sid,role,active:true});
+    }
+  });
+  await assertFails(getDoc(doc(anon,student('schoolA','s1'))));
+  await assertFails(getDoc(doc(db('viewerA'),student('schoolB','s1'))));
+  await assertSucceeds(getDoc(doc(db('viewerA'),student('schoolA','s1'))));
+  await assertFails(setDoc(doc(db('viewerA'),student('schoolA','s2')),{name:'Forbidden'}));
+  await assertFails(updateDoc(doc(db('viewerA'),student('schoolA','s1')),{name:'Forbidden'}));
+  await assertFails(deleteDoc(doc(db('viewerA'),student('schoolA','s1'))));
+  await assertSucceeds(setDoc(doc(db('adminA'),student('schoolA','s2')),{name:'Allowed',class:'6'}));
+  await assertFails(setDoc(doc(db('adminA'),student('schoolB','s2')),{name:'Forbidden'}));
+  await assertFails(setDoc(doc(db('teacherA'),student('schoolA','s3')),{name:'Not yet assigned'}));
+  await assertFails(setDoc(doc(db('adminA'),member('schoolA','attacker')),{uid:'attacker',schoolId:'schoolA',role:'school_admin',active:true}));
+  await assertFails(setDoc(doc(db('viewerA'),'v47_super_admins/viewerA'),{active:true}));
+  await assertSucceeds(getDocs(collection(db('root'),'schools')));
+  await assertFails(getDocs(collection(db('viewerA'),'schools')));
+  await assertSucceeds(setDoc(doc(db('root'),school('schoolC')),{id:'schoolC',name:'School C',active:false}));
+  await assertFails(setDoc(doc(db('root'),school('schoolD')),{id:'schoolD',name:'School D',active:true}));
+  await assertFails(deleteDoc(doc(db('root'),school('schoolA'))));
+  console.log('V47 Firestore emulator isolation tests passed');
+} finally {await env.cleanup();}
