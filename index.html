@@ -2226,7 +2226,12 @@ async function loadMarksEntry(){
    const markSnapsPromise=Promise.all(pairs.map(x=>getDocs(query(collection(db,'marks'),where('className','==',x.className),where('subject','==',x.subject),...(String(x.section||'').trim()?[where('section','==',String(x.section).trim())]:[])))));
    // Fetch settings concurrently with assignment-scoped mark queries; keep Firestore permissions unchanged.
    const settingsPromise=getDocs(collection(db,'mark_settings'));
-   const [studentSnaps,examSnaps,markSnaps,settingsSnap]=await Promise.all([studentSnapsPromise,examSnapsPromise,markSnapsPromise,settingsPromise]);
+   // Diagnose which assignment-scoped read fails; never fall back to unrestricted reads.
+   const readResults=await Promise.allSettled([studentSnapsPromise,examSnapsPromise,markSnapsPromise,settingsPromise]);
+   const readNames=['students (assigned classes)','exams (assigned classes)','marks (assigned subjects)','mark_settings'];
+   const failures=readResults.map((r,i)=>r.status==='rejected'?readNames[i]+': '+safeNoticeError(r.reason):'').filter(Boolean);
+   if(failures.length)throw new Error('Firestore read blocked — '+failures.join(' | '));
+   const [studentSnaps,examSnaps,markSnaps,settingsSnap]=readResults.map(r=>r.value);
    ms=settingsSnap;
    ss={docs:studentSnaps.flatMap(x=>x.docs)};
    es={docs:examSnaps.flatMap(x=>x.docs)};
