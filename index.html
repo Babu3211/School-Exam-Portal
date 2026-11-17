@@ -1486,20 +1486,17 @@ function cancelSubjectCatalogEdit(){
 }
 async function archiveSubjectCatalog(id){
  const x=cachedSubjectCatalog.find(v=>v.id===id);if(!x)return;
- if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){const m=document.getElementById("subjectCatalogMessage");if(m)m.textContent="Admin login आवश्यक छ।";return;}
- if(!confirm(`"${x.name||x.subject}" विषय सूचीबाट हटाउने? पुराना कक्षागत विषय, Marks र नतिजा सुरक्षित रहनेछन्।`))return;
+ const msg=document.getElementById("subjectCatalogMessage");
+ if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){if(msg)msg.textContent="Admin login आवश्यक छ।";return}
+ if(x.legacy){if(msg)msg.textContent="यो पुरानो कक्षागत विषय हो। पहिले Class & Subjects बाट सम्बन्धित रेकर्ड हटाउनुहोस्।";return}
+ if(!confirmPermanentDeletion(String(x.name||x.subject||"Subject")))return;
  try{
-  if(x.legacy){
-   // Archive a legacy class-only subject in the bank; never delete the underlying class or marks records.
-   const ref=await addDoc(collection(db,"subjects"),{name:String(x.name||x.subject||"").trim(),code:"",active:false,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid,archivedAt:serverTimestamp(),archivedBy:auth.currentUser.uid,source:"legacy-class-subject"});
-   await writeAuditLog("subjects","archive-legacy",ref.id,String(x.name||x.subject));
-  }else{
-   await updateDoc(doc(db,"subjects",id),{active:false,archivedAt:serverTimestamp(),archivedBy:auth.currentUser.uid});
-   await writeAuditLog("subjects","archive",id,String(x.name||x.subject));
-  }
-  await loadClasses();
-  const msg=document.getElementById("subjectCatalogMessage");if(msg)msg.textContent="विषय निष्क्रिय गरियो। पुराना कक्षागत विषय र Marks सुरक्षित छन्।";
- }catch(error){console.error("Subject archive failed",error);const msg=document.getElementById("subjectCatalogMessage");if(msg)msg.textContent=`विषय हटाउन सकिएन: ${safeNoticeError(error)}`;}
+  const used=cachedClasses.some(c=>canonicalSubjectKey(c.subject)===canonicalSubjectKey(x.name||x.subject));
+  if(used)throw new Error("यो विषय कक्षामा प्रयोग भएको छ। पहिले सम्बन्धित कक्षा-विषय हटाउनुहोस्।");
+  await deleteDoc(doc(db,"subjects",id));
+  await writeAuditLog("subjects","delete",id,String(x.name||x.subject||""));
+  await loadClasses();if(msg)msg.textContent="विषय Delete भयो।";
+ }catch(error){if(msg)msg.textContent="Delete भएन: "+safeNoticeError(error)}
 }
 async function restoreSubjectCatalog(id){
  const x=cachedSubjectCatalog.find(v=>v.id===id&&!v.legacy);if(!x)return;
