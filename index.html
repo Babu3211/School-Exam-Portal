@@ -1816,7 +1816,7 @@ document.addEventListener("submit",async event=>{
  if(!data.examName||!data.academicYear||!data.startDate||!data.endDate){setExamMessage("परीक्षा अवधि, शैक्षिक वर्ष र दुवै मिति अनिवार्य छन्।",true);return}
  if(!validBSDate(data.startDate)||!validBSDate(data.endDate)){setExamMessage("BS मिति YYYY-MM-DD ढाँचामा लेख्नुहोस्। उदाहरण: 2083-07-15",true);return}
  if(data.endDate<data.startDate){setExamMessage("अन्तिम BS मिति सुरु BS मितिभन्दा अगाडिको हुन मिल्दैन।",true);return}
- const duplicate=cachedExams.some(x=>x.id!==editId&&String(x.examName).toLowerCase()===data.examName.toLowerCase()&&String(x.academicYear)===data.academicYear&&String(x.className)===data.className);
+ const duplicate=cachedExams.some(x=>x.id!==editId&&x.active!==false&&String(x.examName).toLowerCase()===data.examName.toLowerCase()&&String(x.academicYear)===data.academicYear&&String(x.className)===data.className);
  if(duplicate){setExamMessage("यो शैक्षिक वर्ष र कक्षाका लागि यही नामको परीक्षा पहिल्यै छ।",true);return}
  btn.disabled=true;btn.textContent=editId?"Update हुँदैछ...":"Save हुँदैछ...";
  setExamMessage("परीक्षा विवरण सुरक्षित हुँदैछ...");
