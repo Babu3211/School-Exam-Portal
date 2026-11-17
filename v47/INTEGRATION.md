@@ -218,3 +218,7 @@ The V47 read-only raw ledger audit now flags `no_students`, `no_subjects`, and `
 ## Read-only raw ledger coverage summary
 
 `buildRawLedgerPreview` now returns a frozen `summary` with class roster, subject, assigned pair, recorded pair, missing pair, raw record, and Computer component record counts. The recorded-pair count excludes out-of-class, wrong-term, unknown, and unassigned records. It is a diagnostic **record presence** count, not a validation of official grade correctness; always inspect `issues` and the `complete` flag. The preview remains non-publishable, and CDC/IEMIS grading remains blocked pending verified policy and end-to-end tests. V46 production remains unchanged.
+
+## Tenant class ledger summary integrity
+
+Raw ledger diagnostic summary now counts only records belonging to the selected class, with active subjects and valid student-subject assignments. Invalid assignments, inactive subjects and wrong-class roster records remain audit errors and cannot inflate coverage counters. Regression cases exercise these conditions. This does not constitute a CDC/IEMIS grade calculation or official ledger and does not affect V46 production.
