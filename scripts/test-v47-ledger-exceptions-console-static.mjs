@@ -11,7 +11,7 @@ assert.match(code,/api\.where\('class','==',schoolClass\)/);
 assert.match(code,/api\.where\('term','==',term\)/);
 assert.match(code,/api\.orderBy\('__name__'\)/);
 assert.match(code,/api\.startAfter\(cursor\)/);
-assert.match(code,/rows\.length>5000/);
+assert.match(code,/rows\.length>20000/);
 assert.match(code,/allPagesLoaded:true/);
 assert.match(code,/ledgerExceptionsCsv\(preview\)/);
 assert.match(code,/td\.textContent=value/);
