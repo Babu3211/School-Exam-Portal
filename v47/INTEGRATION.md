@@ -214,3 +214,7 @@ The V47 read-only raw ledger audit now flags `no_students`, `no_subjects`, and `
 ## Per-student mark completeness matrix (diagnostic only)
 
 `v47/student-mark-matrix.mjs` builds a read-only class/term student-by-assigned-subject view from the combined raw ledger preview. It shows `missing`, `recorded`, `duplicate`, or `wrong_format` per assigned subject, including the user-specified Class 9/10 Computer 4/36/10 format. A student with no valid subject assignments now blocks diagnostic completeness (`student_subject_assignments_missing`); coverage uses a set to avoid quadratic scanning for large rosters. `scripts/test-v47-student-mark-matrix.mjs` is included in the V47 non-deploy module workflow. This is not a CDC grade engine, an official Mark Ledger, or a publishable result; emulator and CI run status still require verification. V46 remains untouched.
+
+## Read-only raw ledger coverage summary
+
+`buildRawLedgerPreview` now returns a frozen `summary` with class roster, subject, assigned pair, recorded pair, missing pair, raw record, and Computer component record counts. The recorded-pair count excludes out-of-class, wrong-term, unknown, and unassigned records. It is a diagnostic **record presence** count, not a validation of official grade correctness; always inspect `issues` and the `complete` flag. The preview remains non-publishable, and CDC/IEMIS grading remains blocked pending verified policy and end-to-end tests. V46 production remains unchanged.
