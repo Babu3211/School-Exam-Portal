@@ -1,9 +1,9 @@
+import {assertLedgerReviewExportable} from './ledger-review-gate.mjs';
 // Read-only CSV of diagnostic exceptions; never an official CDC/IEMIS result export.
 const csvCell=value=>{const raw=String(value??'');const safe=/^[\t\r\n ]*[=+@-]/.test(raw)?"'"+raw:raw;return '"'+safe.replace(/"/g,'""')+'"';};
 export function ledgerExceptionsCsv(preview){
  if(!preview||preview.officialLedger!==false||preview.publishable!==false||!Array.isArray(preview.invalidOrMissingDetails)||!preview.summary)throw new TypeError('Non-publishable V47 raw ledger preview required');
- if(!Array.isArray(preview.issues)||preview.issues.includes('pagination_incomplete'))throw new Error('Cannot export incomplete class review');
- if(preview.summary.invalidOrMissingPairs!==preview.invalidOrMissingDetails.length)throw new Error('Exception count mismatch; export blocked');
+ assertLedgerReviewExportable(preview);
  const headers=['Class','Term','Student ID','Student Name','Subject ID','Subject Name','Issue'];
  const lines=[headers.map(csvCell).join(',')];
  for(const entry of preview.invalidOrMissingDetails){
