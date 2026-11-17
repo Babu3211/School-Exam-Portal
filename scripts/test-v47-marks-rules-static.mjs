@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
 const rules=readFileSync('v47/firestore.rules','utf8');
 assert.match(rules,/function validMark\(docId\)/);
 assert.match(rules,/match \/marks\/\{docId\}/);
-assert.match(rules,/allow create: if schoolAdmin\(schoolId\) && validMark\(docId\)/);
+assert.match(rules,/allow create: if memberRole\(schoolId,'school_admin'\) && validMark\(docId\)/);
 assert.match(rules,/allow update, delete: if false/);
 assert.match(rules,/data.get\('active', true\) == true/);
 assert.match(rules,/request\.resource\.data\.term in \['1st','2nd','final'\]/);
