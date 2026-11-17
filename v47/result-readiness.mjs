@@ -25,7 +25,8 @@ export function assessResultReadiness({schoolClass,term,students,subjects,marks,
   else {const assignmentAudit=auditSubjectAssignments({schoolClass,students,subjects,assignments:requiredSubjectsByStudent});if(!assignmentAudit.valid)blockers.push('invalid_subject_assignments');}
  }
  if(requiredSubjectsByStudent&&typeof requiredSubjectsByStudent==='object'&&!Array.isArray(requiredSubjectsByStudent)){
-  const coverage=auditMarkCoverage({schoolClass,term,assignments:requiredSubjectsByStudent,marks});
+  const combinedMarks=Array.isArray(componentEntries)?[...marks,...componentEntries]:marks;
+  const coverage=auditMarkCoverage({schoolClass,term,assignments:requiredSubjectsByStudent,marks:combinedMarks});
   if(!coverage.complete)blockers.push('mark_coverage_incomplete_or_inconsistent');
  }
  const audit=auditLoadedMarks(marks,{schoolClass,term});
