@@ -17,7 +17,7 @@ export function assessResultReadiness({schoolClass,term,students,subjects,marks,
  const audit=auditLoadedMarks(marks,{schoolClass,term});
  if(audit.issueCount)blockers.push('invalid_mark_records');
  const seen=new Set();
- for(const mark of marks){if(!studentIds.has(mark?.studentId)||!subjectIds.has(mark?.subjectId))blockers.push('unknown_student_or_subject');else seen.add(mark.studentId+'|'+mark.subjectId)}
+ for(const mark of marks){if(!studentIds.has(mark?.studentId)||!subjectIds.has(mark?.subjectId))blockers.push('unknown_student_or_subject');else seen.add(JSON.stringify([mark.studentId,mark.subjectId]))}
  if(studentIds.size&&subjectIds.size&&seen.size!==studentIds.size*subjectIds.size)blockers.push('incomplete_student_subject_matrix');
  // Even complete raw marks are not sufficient without independently validated full marks, CDC grading and IEMIS parity.
  blockers.push('grade_engine_not_integrated');
