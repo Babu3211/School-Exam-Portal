@@ -10,10 +10,10 @@ const api={
  doc:(_db,...parts)=>parts.join('/'),
  getDoc:async path=>({exists:()=>docs.has(path),data:()=>docs.get(path)})
 };
-const args={db:{},api,uid:'userA'};
+const args={db:{},api,auth:{currentUser:{uid:'userA'}},uid:'userA'};
 assert.equal((await loadSchoolAccess({...args,schoolId:'schoolA'})).role,'teacher');
 assert.equal((await loadSchoolAccess({...args,schoolId:'schoolB'})).canRead,false);
-assert.equal((await loadSchoolAccess({...args,schoolId:'schoolA',uid:'userB'})).canRead,false);
+await assert.rejects(()=>loadSchoolAccess({...args,schoolId:'schoolA',uid:'userB'}),/does not match/);
 assert.equal((await loadSchoolAccess({...args,schoolId:'schoolC'})).canRead,false);
 await assert.rejects(()=>loadSchoolAccess({...args,schoolId:'../schoolB'}),TypeError);
 await assert.rejects(()=>loadSchoolAccess({...args,schoolId:'schoolA',isSuperAdmin:true}),/server-side/);
