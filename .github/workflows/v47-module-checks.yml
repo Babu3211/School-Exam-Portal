@@ -155,6 +155,8 @@ jobs:
         run: node scripts/test-v47-assignment-create-service.mjs
       - name: V47 school subject assignment browser static checks
         run: node scripts/test-v47-assignments-console-static.mjs
+      - name: V47 shared diagnostic ledger integrity gate
+        run: node scripts/test-v47-ledger-review-gate.mjs
       - name: V47 diagnostic exceptions CSV safety
         run: node scripts/test-v47-ledger-exceptions-export.mjs
       - name: V47 read-only missing marks review UI
