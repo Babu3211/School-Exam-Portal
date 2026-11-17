@@ -25,11 +25,20 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify-and-deploy:
-    if: ${{ github.event.inputs.confirmation == 'DEPLOY-V46' && github.event.inputs.backup_confirmation == 'BACKUP-VERIFIED' && github.event.inputs.roles_confirmation == 'ROLES-VERIFIED' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 30
     steps:
+      - name: Verify release confirmations
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          BACKUP_CONFIRMATION: ${{ inputs.backup_confirmation }}
+          ROLES_CONFIRMATION: ${{ inputs.roles_confirmation }}
+        run: |
+          test "$GITHUB_REF" = refs/heads/main || { echo "::error::Select the main branch"; exit 1; }
+          test "$CONFIRMATION" = DEPLOY-V46 || { echo "::error::confirmation must be DEPLOY-V46"; exit 1; }
+          test "$BACKUP_CONFIRMATION" = BACKUP-VERIFIED || { echo "::error::Production backup must be independently verified before deployment"; exit 1; }
+          test "$ROLES_CONFIRMATION" = ROLES-VERIFIED || { echo "::error::Admin, Teacher and Viewer role checks must be verified before deployment"; exit 1; }
       - uses: actions/checkout@v4
         with:
           ref: main
