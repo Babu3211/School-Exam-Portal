@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const rules=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
+const registry=readFileSync(new URL('./school-registry.mjs',import.meta.url),'utf8');
+const registration=readFileSync(new URL('./school-registration.mjs',import.meta.url),'utf8');
+assert.match(rules,/match \/v47_super_admins\/\{uid\} \{ allow read, write: if false; \}/);
+assert.match(rules,/request\.resource\.data\.active == false/);
+assert.match(rules,/match \/schools\/\{sid\}/);
+assert.match(rules,/match \/members\/\{uid\}/);
+assert.match(rules,/match \/\{document=\*\*\} \{ allow read, write: if false; \}/);
+assert.match(registry,/return \{\.\.\.validated\}/);
+assert.match(registration,/adminMembership:\{schoolId:school\.id,uid:adminUid,role:'school_admin',active:false\}/);
+console.log('V47 static rules/client contract checks passed; emulator authorization tests still required.');
