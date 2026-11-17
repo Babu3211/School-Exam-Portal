@@ -12,7 +12,8 @@ export function auditComputerComponentCoverage({schoolClass,term,students,subjec
  for(const s of students){if(!s||typeof s.id!=='string'||!s.id||studentMap.has(s.id)||s.class!==schoolClass)issues.push('invalid_student_roster');else studentMap.set(s.id,s)}
  for(const s of subjects){if(!s||typeof s.id!=='string'||!s.id||subjectMap.has(s.id)||s.class!==schoolClass)issues.push('invalid_subject_roster');else subjectMap.set(s.id,s)}
  for(const a of assignments){const key=JSON.stringify([a?.studentId,a?.subjectId]);if(!a||a.class!==schoolClass||typeof a.studentId!=='string'||!a.studentId||typeof a.subjectId!=='string'||!a.subjectId||!studentMap.has(a.studentId)||!subjectMap.has(a.subjectId)||subjectMap.get(a.subjectId)?.active!==true||assignmentKeys.has(key))issues.push('invalid_assignment');else assignmentKeys.add(key)}
- for(const studentId of studentMap.keys())if(![...assignmentKeys].some(key=>JSON.parse(key)[0]===studentId))issues.push('student_subject_assignments_missing');
+ const assignedStudents=new Set([...assignmentKeys].map(key=>JSON.parse(key)[0]));
+ for(const studentId of studentMap.keys())if(!assignedStudents.has(studentId))issues.push('student_subject_assignments_missing');
  for(const m of rawMarks){const key=JSON.stringify([m?.studentId,m?.subjectId]);if(!m||m.class!==schoolClass||m.term!==term||typeof m.studentId!=='string'||!m.studentId||typeof m.subjectId!=='string'||!m.subjectId||rawKeys.has(key))issues.push('invalid_raw_mark');else rawKeys.add(key);if(m&&(!Number.isFinite(m.theory)||m.theory<0||!Number.isFinite(m.practical)||m.practical<0))issues.push('invalid_raw_mark_scores')}
  const definitions={},computerSubjects=new Set();
  for(const s of subjects)if(s?.name==='Computer'&&s?.active===true&&['9','10'].includes(schoolClass)){computerSubjects.add(s.id);definitions[s.id]=[{key:'component_a',max:4},{key:'component_b',max:36},{key:'component_c',max:10}]}
