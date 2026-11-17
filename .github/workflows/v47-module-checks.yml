@@ -103,6 +103,10 @@ jobs:
         run: node scripts/test-v47-marks-audit.mjs
       - name: V47 result readiness fail-closed gate
         run: node scripts/test-v47-result-readiness.mjs
+      - name: V47 Class 9-10 Computer component create-only service
+        run: node scripts/test-v47-computer-component.mjs
+      - name: V47 Computer component Firestore rules static guard
+        run: node scripts/test-v47-computer-rules-static.mjs
       - name: V47 subject full-marks configuration audit
         run: node scripts/test-v47-full-marks-audit.mjs
       - name: V47 variable-component mark validation
