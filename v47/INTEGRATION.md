@@ -68,3 +68,7 @@ The browser now blocks login/logout, class/date changes, roster refresh, and sel
 ## Read-only marks preview UI
 
 `v47/marks-preview.html` and `v47/marks-preview-console.mjs` provide an independent development-only authenticated school-scoped raw marks viewer with class ECD–12, 1st/2nd/final term filters and paginated loading. Teacher and Viewer may read records for their active school; no mark-writing controls exist on this page. It is **not** a CDC/IEMIS grade calculation, Mark Ledger, Grade Ledger or Grade Sheet. The V46 application remains separate. Browser testing, index deployment and emulator verification are still pending.
+
+## Raw marks CSV export (development only)
+
+The read-only marks preview can export only currently loaded rows for the selected school, class and term as a UTF-8 CSV. `v47/marks-preview-export.mjs` escapes CSV quotes and prefixes spreadsheet formula-like values to reduce CSV formula injection risk. This is **not** a Mark Ledger, Grade Ledger, Grade Sheet or official result, and cannot calculate CDC/IEMIS grades or GPA. The export is limited to 1,500 loaded records. It does not access or change V46 data.
