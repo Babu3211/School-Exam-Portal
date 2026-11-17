@@ -262,3 +262,7 @@ The browser now displays read-only missing/invalid mark rows and audit issues ev
 ## Active membership revalidation for diagnostic exports
 
 The V47 read-only missing-marks browser review now rechecks that the selected school and the signed-in user's membership remain active after paginated data loading, and again immediately before exporting a CSV. A review/session epoch guard prevents an old sign-in, cancelled review, or changed preview from downloading stale diagnostic data. This is defense in depth alongside Firestore Security Rules; it does not make multi-query reads an atomic snapshot. No changes to V46 production or deployment are part of this work.
+
+## Non-destructive school records
+
+V47 Firestore rules now deny direct deletion of student and attendance documents, including for school admins and super admins. Student corrections and attendance corrections remain possible through validated updates. This prevents orphaned student-related marks and accidental loss of attendance history. If retention or archival policies are introduced, design a separate audited, explicitly authorized workflow rather than enabling unrestricted document deletion. Emulator regression assertions have been added but must run successfully before deploying these rules.
