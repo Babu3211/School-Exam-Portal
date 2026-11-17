@@ -60,3 +60,7 @@ The browser now blocks login/logout, class/date changes, roster refresh, and sel
 ## School-scoped marks foundation (development only)
 
 `v47/marks-service.mjs` provides a school-admin-only save operation under `schools/{schoolId}/marks/{term}:{studentId}:{subjectId}`. It validates ECD–12 classes, terms `1st`, `2nd`, `final`, student/subject IDs and numeric theory/practical values. V47 rules require the student to exist in the same school and class, and prohibit forged fields and teacher/viewer writes. **These 0–100 input bounds are generic safety checks, not CDC/IEMIS full-mark rules.** Subject full marks, internal/external component limits, grades, GPA, NG, Mark Ledger, Grade Ledger and Grade Sheet remain unimplemented/unverified in V47; do not use these fields to calculate or publish results. No V46 production changes or V47 deployment.
+
+## Mark ledger read query and security repair
+
+`v47/marks-query.mjs` now pages marks by school, class and term; its composite index is declared in `v47/firestore.indexes.json`. This is a raw record query, **not** a CDC/IEMIS grade or mark ledger calculation. A malformed Firestore rules edit was discovered and repaired in the V47 development branch, and additional static tests guard against duplicate rule fragments and wildcard mark-write bypass. Firebase Emulator execution and deployment are still unverified.
