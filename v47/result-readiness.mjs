@@ -5,6 +5,7 @@ import {auditConfiguredFullMarks} from './full-marks-audit.mjs';
 import {auditComponentMarks} from './component-marks-audit.mjs';
 import {auditSubjectAssignments} from './subject-assignment-audit.mjs';
 import {auditMarkCoverage} from './mark-coverage-audit.mjs';
+import {auditSubjectCatalog} from './subject-catalog-audit.mjs';
 // Fail-closed readiness check. Raw mark pages alone never authorize results publication.
 export function assessResultReadiness({schoolClass,term,students,subjects,marks,allPagesLoaded=false,gradingPolicyVerified=false,requiredSubjectsByStudent=null,subjectLimits=null,componentEntries=null,componentsBySubject=null}){
  if(!validSchoolClass(schoolClass))throw new Error('Invalid class');
@@ -15,6 +16,7 @@ export function assessResultReadiness({schoolClass,term,students,subjects,marks,
  if(!gradingPolicyVerified)blockers.push('cdc_iemis_policy_unverified');
  if(students.length===0)blockers.push('no_students');
  if(subjects.length===0)blockers.push('no_subjects');
+ const catalogAudit=auditSubjectCatalog({schoolClass,subjects});if(!catalogAudit.valid)blockers.push('invalid_subject_catalog');
  const studentIds=new Set(),subjectIds=new Set();
  for(const student of students){if(!student||typeof student.id!=='string'||!student.id||student.class!==schoolClass||studentIds.has(student.id))blockers.push('invalid_student_roster');else studentIds.add(student.id)}
  for(const subject of subjects){if(!subject||typeof subject.id!=='string'||!subject.id||subjectIds.has(subject.id))blockers.push('invalid_subject_roster');else subjectIds.add(subject.id)}
