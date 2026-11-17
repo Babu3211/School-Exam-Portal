@@ -15,5 +15,5 @@ export async function preflightRawMarkSave({db,api,actor,schoolId,input}){
  ]);
  if(!student.exists()||student.data().class!==entry.class)throw new Error('Student missing or belongs to another class');
  if(!subject.exists()||subject.data().active===false||(subject.data().class!==undefined&&subject.data().class!==entry.class))throw new Error('Subject missing, inactive or belongs to another class');
- return {entry,existing:existing.exists(),existingData:existing.exists()?existing.data():null};
+ return {entry,existing:existing.exists()};
 }
