@@ -11,6 +11,10 @@ These V47 modules are **not wired into the existing V46 HTML application**. They
 7. The current V47 rules allow school admins to modify scoped academic collections and members; review membership privilege escalation, sensitive fields and all record schemas before any production release.
 8. Existing V46 UI and data are not migrated. Do not advertise V47 as deployed or fully integrated.
 
+## Multi-school development navigation
+
+`v47/index.html` is a mobile-friendly static navigation hub linking the existing V47-only school administration, student, attendance, subject, assignment, raw marks and diagnostic pages. It contains no Firebase credentials or automatic login and is not the V46 production dashboard. Individual screens still require their own V47 Firebase configuration and membership verification. The `scripts/test-v47-development-hub.mjs` check verifies link destinations and safety notices. This navigation is **not** proof of V46 feature parity, unified session management, verified CDC/IEMIS results or deployment.
+
 ## Development-only pages
 
 - `v47/admin.html`: Super Admin school registry and activation.
