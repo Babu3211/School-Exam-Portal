@@ -250,3 +250,7 @@ The read-only missing marks review now allows up to 20,000 records **per collect
 ## Ledger review performance and cancellation
 
 The read-only missing-marks browser review now supports cancelling an in-flight pagination scan and shows per-collection progress. Each new review uses an epoch token so cancelled, signed-out, or superseded reads cannot publish stale results. To limit Firestore Spark-plan reads and avoid silently incomplete CSV exports, per-class caps are students 2,000, subjects 300, subject assignments 20,000, raw marks 20,000, and component marks 20,000; exceeding any cap fails closed and disables export. These are safety limits for this diagnostic page, **not** a cap on the number of schools or enrolled students supported by V47. They do not guarantee Firestore quota sufficiency, and the browser and emulator checks are still required.
+
+## Missing-marks diagnostic export integrity gate
+
+The CSV helper rejects `pagination_incomplete` and mismatches between reported and detailed exception counts. The browser also blocks the diagnostic export when roster, assignment, unexpected mark, or duplicate raw/component records indicate unreliable coverage. Invalid individual mark scores can still appear as diagnostic exceptions when the roster itself is consistent. This remains a non-publishable review tool; no official grade calculations or result publication are enabled. The changes are committed to the V47 development branch; CI/emulator/browser results must be verified before use with live school data.
