@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+const rules=readFileSync('v47/firestore.rules','utf8');
+assert.equal((rules.match(/match \/subjects\/\{docId\}/g)||[]).length,1);
+assert.equal((rules.match(/function validSubject\(docId\)/g)||[]).length,1);
+assert.match(rules,/allow create: if schoolAdmin\(schoolId\) && validSubject\(docId\)/);
+const dedicated=rules.slice(rules.indexOf('match /subjects/{docId}'),rules.indexOf('match /{collection}/{docId}'));
+assert.match(dedicated,/allow update, delete: if false/);
+const generic=rules.slice(rules.indexOf('match /{collection}/{docId}'));
+assert.doesNotMatch(generic,/['"]subjects['"]/,'Generic rule must not bypass subject create-only policy');
+assert.equal((rules.match(/rules_version = '2';/g)||[]).length,1);
+assert.equal((rules.match(/match \/\{document=\*\*\}/g)||[]).length,1);
+assert.equal((rules.match(/\{/g)||[]).length,(rules.match(/\}/g)||[]).length,'Balanced Firestore braces');
+assert.ok(rules.trim().endsWith('}'),'Rules must close');
+console.log('V47 subject rules integrity tests passed');
