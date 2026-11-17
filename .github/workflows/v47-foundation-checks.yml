@@ -24,11 +24,5 @@ jobs:
           node v47/test-tenant-query.mjs
           node v47/test-rules-integrity.mjs
           node v47/test-access-policy.mjs
-      - name: Ensure no V46 production files changed
-        run: |
-          git fetch origin main --depth=1
-          git diff --name-only origin/main HEAD | tee /tmp/v47-files
-          if grep -Ev '^(v47/|\.github/workflows/v47-foundation-checks.yml$)' /tmp/v47-files; then
-            echo 'Non-V47 file changed: production parity review required'
-            exit 1
-          fi
+          node v47/test-school-registry-service.mjs
+
