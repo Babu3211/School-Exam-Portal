@@ -76,8 +76,8 @@ service cloud.firestore {
         allow delete: if false;
       }
       match /{collection}/{id} {
-        allow get, list: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings'] && canRead(sid);
-        allow create, update: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings'] && canAdmin(sid);
+        allow get, list: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings','subject_assignments','component_marks'] && canRead(sid);
+        allow create, update: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid);
         allow delete: if false;
       }
     }
