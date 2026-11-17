@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SMSS V47 — Super Admin Console (Development)</title>
+<style>
+body{font:16px system-ui,sans-serif;background:#f2f6fc;color:#15233b;margin:0}main{max-width:900px;margin:auto;padding:24px}section{background:white;padding:20px;border-radius:14px;margin:16px 0;box-shadow:0 2px 8px #0001}input,button{padding:12px;margin:5px 0;border:1px solid #a9b6c8;border-radius:8px;font:inherit}input{width:calc(100% - 26px)}button{background:#195fba;color:white;cursor:pointer}button:disabled{background:#8993a0;cursor:not-allowed}#message{white-space:pre-wrap}li{padding:6px}
+</style></head><body><main>
+<h1>SMSS V47 · Super Admin</h1><p>Development-only console. Connect to the separate V47 Firebase project. No V46 access.</p>
+<section><h2>Firebase V47 configuration</h2><textarea id="config" rows="6" style="width:100%" placeholder="Paste Firebase web config JSON for smss-exam-portal-v47"></textarea><button id="connect">Connect V47</button></section>
+<section><h2>Super Admin sign-in</h2><input id="email" type="email" autocomplete="username" placeholder="Email"><input id="password" type="password" autocomplete="current-password" placeholder="Password"><button id="login" disabled>Sign in</button><button id="logout" disabled>Sign out</button><p id="identity"></p></section>
+<section><h2>School overview</h2><p id="metrics">Sign in to view schools.</p><button id="refresh" disabled>Refresh schools</button><ul id="schools"></ul></section>
+<section><h2>Register school (inactive)</h2><form id="register"><input id="schoolId" required placeholder="Unique school ID"><input id="schoolName" required placeholder="School name"><input id="iemis" placeholder="IEMIS code (optional)"><button id="submit" disabled>Register school</button></form></section>
+<section><strong>Status</strong><p id="message" role="status" aria-live="polite"></p></section>
+</main><script type="module" src="./admin-console.mjs"></script></body></html>
