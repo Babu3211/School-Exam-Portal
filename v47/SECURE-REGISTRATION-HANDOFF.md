@@ -1,9 +1,15 @@
 # V47 secure school registration handoff
 
-The school registry UI view-model is prepared, but the registration write adapter deliberately fails closed. Firebase Web SDK `setDoc` overwrites an existing document; using it here would violate the create-only guarantee and could replace an existing school's metadata.
+## Implemented on the V47 branch
+- `v47/school-onboarding.mjs` uses a Firestore Web SDK transaction to atomically create an inactive school and its first active School Admin membership. It rejects duplicate school IDs.
+- `v47/firebase-registry-adapter.mjs` uses `runTransaction` to reject duplicate registry documents.
+- Firestore security rules, not the UI actor object, decide whether a client may create school and membership records.
+- This approach uses Firestore client transactions and does not require paid Cloud Functions, so it can be tested on the Firebase Spark plan.
 
-Implement a V47-only trusted registration service (Admin SDK with a Firestore transaction/create precondition) and authorize the caller as Super Admin server-side. The service must validate school ID, school name and IEMIS code, create the school inactive, and reject duplicate IDs. Never trust the UI's `isSuperAdmin` boolean as security.
+## Must verify before production
+- Emulator security suite compiles and passes, including simultaneous school and member creation.
+- The initial Super Admin document is provisioned using a trusted operator procedure, not public signup.
+- Real V47-only Firebase sign-in, school onboarding, activation, pagination and school isolation work.
+- Firebase free-tier usage and access controls are suitable for expected schools and students.
 
-The V47 Firestore rules currently permit Super Admin clients to create an inactive school document; do not use this client route until the emulator security matrix passes. Provision the first Super Admin through a trusted authenticated operator procedure, never public signup.
-
-This is a development handoff. Do not connect it to the V46 Firebase project or deploy either project's rules.
+Never connect this code to the V46 Firebase project or deploy V47 rules to V46.
