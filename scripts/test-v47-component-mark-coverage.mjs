@@ -10,5 +10,6 @@ assert.ok(audit({componentMarks:[{...mark,scores:{...mark.scores,component_b:37}
 assert.ok(audit({assignments:[]}).issues.includes('invalid_component_record'));
 assert.ok(audit({componentMarks:[mark,mark]}).issues.includes('invalid_component_record'));
 assert.ok(audit({subjects:[{...subject,active:false}]}).issues.includes('invalid_component_record'));
+assert.ok(audit({rawMarks:[{studentId:'outside',subjectId:'computer_9',class:'9',term:'final',theory:10,practical:10}]}).issues.includes('unexpected_raw_mark'));
 assert.throws(()=>audit({schoolClass:'13'}));
 console.log('V47 Computer component coverage diagnostic checks passed');
