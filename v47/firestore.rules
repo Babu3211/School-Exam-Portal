@@ -32,9 +32,9 @@ service cloud.firestore {
    }
    match /students/{docId} {
     allow get, list: if reader(schoolId);
-    allow create: if schoolAdmin(schoolId) && docId.matches('^[A-Za-z0-9_-]{1,128}
-    allow update: if schoolAdmin(schoolId) && docId.matches('^[A-Za-z0-9_-]{1,128} // preserve marks and subject links
-    allow delete: if false; // preserve enrollment records and linked marks/attendance
+    allow create: if schoolAdmin(schoolId) && docId.matches('^[A-Za-z0-9_-]{1,128}$') && validNewStudent();
+    allow update: if schoolAdmin(schoolId) && docId.matches('^[A-Za-z0-9_-]{1,128}$') && validNewStudent() && request.resource.data['class'] == resource.data['class'];
+    allow delete: if false;
    }
    function validAttendance(docId) {
     return request.resource.data.keys().hasOnly(['date','studentId','class','present'])
