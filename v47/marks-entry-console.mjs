@@ -18,7 +18,7 @@ async function loadOptions(collection,element,label){if(busy||!actor)return;cons
   if(rows.length>5000)throw new Error('Class has over 5000 records; use searchable roster');
   cursor=snap.docs.length===100?snap.docs.at(-1):null;
  }while(cursor);
- const filtered=collection==='students'?rows:rows.filter(row=>row.active===true);
+ const filtered=collection==='students'?rows:rows.filter(row=>row.active===true&&!(('9'===schoolClass||'10'===schoolClass)&&row.name==='Computer'));
  element.replaceChildren();if(collection==='students')studentsLoaded=true;else subjectsLoaded=true;loadedClass=schoolClass;
  for(const row of filtered){const option=document.createElement('option');option.value=row.id;option.textContent=String(row.name??row.id)+' ('+row.id+')';element.append(option)}
  status(filtered.length+' '+label+' loaded. Saving requires a valid student-subject assignment.');
