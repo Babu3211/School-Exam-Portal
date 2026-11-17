@@ -74,6 +74,21 @@ service cloud.firestore {
     }
 
 
+    // For an explicitly ALL-sections assignment, the list query need only
+    // constrain className and subject. Avoid an unbound resource.section
+    // expression that Firestore cannot prove for a collection query.
+    function teacherAllSectionsAccess(className, subjectName) {
+      let role = roleData();
+      let roles = role.get('roles', []);
+      let keys = role.get('subjectAssignmentKeys', []);
+      let sectionKeys = role.get('subjectAssignmentSectionKeys', []);
+      return role.get('active', false) == true && roles is list &&
+        !roles.hasAny(['viewer']) && roles.hasAny(['subject_teacher']) &&
+        keys is list && keys.hasAny([className + '::' + subjectName]) &&
+        sectionKeys is list &&
+        sectionKeys.hasAny([className + '::' + subjectName + '::ALL']);
+    }
+
     function isAssignedSubjectPair(className, subjectName) {
       return isAdmin() ||
         (!isViewer() && hasRole('subject_teacher') &&
@@ -328,7 +343,9 @@ service cloud.firestore {
       // Existing records and list queries remain assignment/section restricted.
       allow get: if resource == null ? (hasRole('subject_teacher') || isViewer()) :
         (isViewer() || isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section));
-      allow list: if isViewer() || isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);
+      allow list: if isViewer() ||
+        teacherAllSectionsAccess(resource.data.className, resource.data.subject) ||
+        isAssignedSubject(resource.data.className, resource.data.subject, resource.data.section);
       allow create: if isAdmin() ||
         (isAssignedSubject(request.resource.data.className,
                            request.resource.data.subject,
