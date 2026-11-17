@@ -43,8 +43,8 @@ export function assessResultReadiness({schoolClass,term,students,subjects,marks,
   if(!studentIds.has(entry?.studentId)||!subjectIds.has(entry?.subjectId))blockers.push('unknown_component_student_or_subject');
   else componentPairs.add(JSON.stringify([entry.studentId,entry.subjectId]));
  }
- if(componentPairs.size&&seen.size)for(const pair of componentPairs)if(seen.has(pair))blockers.push('ambiguous_duplicate_mark_format');
  for(const mark of marks){if(!studentIds.has(mark?.studentId)||!subjectIds.has(mark?.subjectId))blockers.push('unknown_student_or_subject');else seen.add(JSON.stringify([mark.studentId,mark.subjectId]))}
+ for(const pair of componentPairs)if(seen.has(pair))blockers.push('ambiguous_duplicate_mark_format');
  let expectedPairs=0;
  if(requiredSubjectsByStudent===null){
   // Optional subjects vary per student. A Cartesian product would invent required exams.
