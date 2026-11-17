@@ -13,6 +13,9 @@ try{
   await db.doc('schools/school_001/members/viewerA').set({uid:'viewerA',schoolId:'school_001',role:'viewer',active:true});
   await db.doc('schools/school_001/members/teacherA').set({uid:'teacherA',schoolId:'school_001',role:'teacher',active:true});
   await db.doc('schools/school_001/members/disabledA').set({uid:'disabledA',schoolId:'school_001',role:'teacher',active:false});
+  await db.doc('schools/school_001/members/forgedUid').set({uid:'otherUid',schoolId:'school_001',role:'school_admin',active:true});
+  await db.doc('schools/school_001/members/forgedSchool').set({uid:'forgedSchool',schoolId:'school_002',role:'school_admin',active:true});
+  await db.doc('schools/school_001/members/forgedRole').set({uid:'forgedRole',schoolId:'school_001',role:'super_admin',active:true});
   await db.doc('schools/school_001/students/s1').set({name:'A Student',class:'1'});
   await db.doc('schools/school_001/students/s4').set({name:'Second Student',class:'1'});
   for(let i=0;i<10;i++)await db.doc('schools/school_001/students/batch'+i).set({name:'Batch Student '+i,class:'1'});
@@ -34,6 +37,15 @@ try{
  const disabled=env.authenticatedContext('disabledA').firestore();
  const superDb=env.authenticatedContext('super1').firestore();
  const outsider=env.authenticatedContext('outsider').firestore();
+ const forgedUid=env.authenticatedContext('forgedUid').firestore();
+ const forgedSchool=env.authenticatedContext('forgedSchool').firestore();
+ const forgedRole=env.authenticatedContext('forgedRole').firestore();
+ await assertFails(forgedUid.doc('schools/school_001/students/s1').get());
+ await assertFails(forgedSchool.doc('schools/school_001/students/s1').get());
+ await assertFails(forgedRole.doc('schools/school_001/students/s1').get());
+ await assertFails(forgedUid.doc('schools/school_001/students/forgedStudent').set({name:'Forged Student',class:'1'}));
+ await assertFails(forgedSchool.doc('schools/school_001/students/forgedStudent').set({name:'Forged Student',class:'1'}));
+ await assertFails(forgedRole.doc('schools/school_001/students/forgedStudent').set({name:'Forged Student',class:'1'}));
  await assertSucceeds(admin.doc('schools/school_001/students/s1').get());
  await assertFails(admin.doc('schools/school_002/students/s2').get());
  await assertSucceeds(admin.doc('schools/school_001/students/new').set({name:'New Student',class:'1'}));
