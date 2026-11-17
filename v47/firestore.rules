@@ -70,6 +70,8 @@ service cloud.firestore {
       && exists(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId))
       && get(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId)).data.get('active', true) == true
       && get(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId)).data.get('class', request.resource.data['class']) == request.resource.data['class']
+      && exists(/databases/$(database)/documents/schools/$(schoolId)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId))
+      && get(/databases/$(database)/documents/schools/$(schoolId)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data['class'] == request.resource.data['class']
       && docId == request.resource.data.term + ':' + request.resource.data.studentId + ':' + request.resource.data.subjectId;
    }
    function validSubjectAssignment(docId) {
