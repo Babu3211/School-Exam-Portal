@@ -21,5 +21,9 @@ assert.ok(audit({rawMarks:[{studentId:'outside',subjectId:'computer_9',class:'9'
 assert.ok(audit({componentMarks:[{...mark,term:'1st'}]}).issues.includes('invalid_component_record'));
 assert.ok(audit({componentMarks:[{...mark,class:'10'}]}).issues.includes('invalid_component_record'));
 assert.ok(audit({rawMarks:[{studentId:'s1',subjectId:'computer_9',class:'9',term:'final',theory:3,practical:8}],subjects:[{...subject,active:false}]}).issues.includes('unexpected_raw_mark'));
+const ordinary={id:'math_9',name:'Mathematics',class:'9',active:true};
+const withOrdinary={subjects:[subject,ordinary],assignments:[assignment,{studentId:'s1',subjectId:'math_9',class:'9'}]};
+assert.ok(audit(withOrdinary).issues.includes('missing_raw_mark'));
+assert.equal(audit({...withOrdinary,rawMarks:[{studentId:'s1',subjectId:'math_9',class:'9',term:'final',theory:25,practical:10}]}).issueCount,0);
 assert.throws(()=>audit({schoolClass:'13'}));
 console.log('V47 Computer component coverage diagnostic checks passed');
