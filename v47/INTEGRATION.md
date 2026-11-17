@@ -186,3 +186,7 @@ The Computer component coverage diagnostic now rejects component records with a 
 ## Computer marks UI and readiness regression repair
 
 The Class 9/10 Computer marks form now independently records the class for which student and subject options were fetched and checks **both** classes before Save; an old `loadedClass` reference in the Save handler was removed. This prevents a JavaScript reference error and avoids mixing class-scoped dropdown contents. Result readiness now uses one canonical `component_marks_grading_not_integrated` blocker rather than two differently spelled variants; publication still remains blocked. The relevant static and readiness tests were updated. These changes are on the V47 development branch only and have not been verified against a running Firebase Emulator.
+
+## Class-scoped raw marks dropdown correction
+
+The raw Theory/Practical marks page now tracks the loaded student class and subject class independently (like the Computer component page), and its Save button **and** Save handler require both to match the currently selected class. The prior shared `loadedClass` flag could be set by loading just one dropdown, leaving the other dropdown stale after a failed or interrupted request. Both marks entry pages also ignore stale paginated roster responses after sign-out. Regression tests for the raw marks page were updated. Firebase Emulator and end-to-end browser test execution remain unverified; this change does not touch V46 or deploy V47.
