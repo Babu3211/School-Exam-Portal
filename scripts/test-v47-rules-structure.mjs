@@ -27,4 +27,6 @@ assert.ok(rules.includes(".data['class'] == request.resource.data['class']"),'At
 assert.ok(rules.includes("data.get('uid', '') == request.auth.uid"),'Member UID must match signed-in user');
 assert.ok(rules.includes("data.get('schoolId', '') == schoolId"),'Member tenant ID must match requested school');
 assert.ok(rules.includes("data.get('role', '') in ['school_admin','teacher','viewer']"),'Reject unknown member roles');
+assert.ok((rules.match(/request\.resource\.data\.keys\(\)\.hasOnly\(\['uid','schoolId','role','active'\]\)/g)||[]).length===2,'Membership create and update must reject unknown fields');
+assert.ok((rules.match(/request\.resource\.data\.keys\(\)\.hasAll\(\['uid','schoolId','role','active'\]\)/g)||[]).length===2,'Membership create and update must require identity fields');
 console.log('V47 Firestore rules structural checks passed; emulator still required');
