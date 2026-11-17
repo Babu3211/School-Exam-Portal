@@ -262,18 +262,22 @@
 <main class="main"><header class="top"><div class="topwelcome"><div class="topgreeting" id="topGreeting">नमस्ते, परीक्षा पोर्टलमा स्वागत छ।</div><h1 id="title">Dashboard</h1></div><div class="topright"><span class="year">2083 B.S.</span><span id="smssVersionBadge" aria-label="SMSS Exam Portal version 46" title="SMSS Exam Portal release version" style="display:inline-flex;align-items:center;border:1px solid #b9d6ff;border-radius:999px;background:#eaf3ff;color:#174f9b;padding:5px 10px;font-size:11px;font-weight:800;white-space:nowrap">SMSS Exam Portal · V46</span><span class="avatar" id="topAvatar">U</span><span id="topUserName" style="font-size:12px;font-weight:800;color:#145bb8">User</span><button id="logoutBtn" type="button">Logout</button></div></header><section class="content" id="view"></section><div class="dashboard-social"><span>Developed by <strong>Babukrishna Khanal</strong></span><div class="social-links"><a class="facebook" href="https://www.facebook.com/share/1FbMjHsE9Q/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer">f Facebook</a><a class="youtube" href="https://youtube.com/@technicalsupportbabu?si=Vt4SBRqYPyLuI2Vx" target="_blank" rel="noopener noreferrer">▶ YouTube</a></div></div><div class="footer">Mahadevasthan Secondary School · Exam Management Portal<br><span class="social-copy">© 2026 — All Rights Reserved · Developed by <strong>Babukrishna Khanal</strong></span></div></main></div>
 <script>
 const names={dashboard:"Home",students:"Student Information",staff:"Teacher | Staff Information",classes:"Classes & Subjects",exams:"Examination Management","question-papers":"Question Paper Builder",marks:"Marks Entry(1-12)","assessment-settings":"Assessment Settings","marks-ledger":"Marks Ledger",results:"Result Management",attendance:"Attendance",certificates:"Certificates & Transcript",reports:"Reports & Excel",users:"Users & Roles",backup:"Backup & Audit Log",settings:"School Settings"};
-const v=document.getElementById("view");const studentNote='<div class="notice"><b>Important:</b> विद्यार्थी विवरण सुरक्षित रूपमा अभिलेख हुनेछ।</div>';const classes=["ECD",...Array.from({length:12},(_,i)=>"कक्षा "+(i+1))];
+const v=document.getElementById("view");const studentNote='<div class="notice"><b>Important:</b> विद्यार्थी विवरण सुरक्षित रूपमा अभिलेख हुनेछ।</div>';const classes=["ECD","LKG","UKG",...Array.from({length:12},(_,i)=>"कक्षा "+(i+1))];
 // English display labels only. Legacy Nepali values remain unchanged in Firestore
 // so existing Marks, Assessment Settings, exams and teacher assignments still match.
 function classEnglishLabel(value){
  const raw=String(value??'').replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d)));
- if(/^\s*(ecd|early childhood development)\s*$/i.test(raw))return 'ECD';
+ if(/^\s*(ecd|early childhood development|nursery)\s*$/i.test(raw))return 'ECD';
+ if(/^\s*lkg\s*$/i.test(raw))return 'LKG';
+ if(/^\s*ukg\s*$/i.test(raw))return 'UKG';
  const m=raw.match(/[0-9]+/);return m?`Class ${Number(m[0])}`:englishDisplayText(value)||'Class';
 }
 // Normalize incoming Excel/manual class labels to the portal's existing Firestore format.
 function canonicalStudentClass(value){
  const raw=String(value??'').trim().replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d)));
- if(/^(ecd|early childhood development)$/i.test(raw))return 'ECD';
+ if(/^(ecd|early childhood development|nursery)$/i.test(raw))return 'ECD';
+ if(/^lkg$/i.test(raw))return 'LKG';
+ if(/^ukg$/i.test(raw))return 'UKG';
  const m=raw.match(/(?:कक्षा\s*)?([0-9]+)/i);
  if(!m)return raw;
  const n=Number(m[1]);
