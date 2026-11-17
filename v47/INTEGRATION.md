@@ -106,3 +106,7 @@ The development branch includes three new read-only diagnostic modules: `subject
 ## Exam readiness diagnostic reports (not results)
 
 `v47/result-diagnostic-report.mjs` builds a frozen, non-publishable diagnostic summary of students, subjects, marks, expected/checked student–subject pairs and explicit blockers. `v47/diagnostic-report-export.mjs` exports only this non-publishable summary to CSV, never student grades, GPA, or a ledger. Both modules have development-branch CI checks. The subject assignment audit flags inactive assigned subjects, and the readiness gate detects overlap between two-field and component-based mark entries after building both identity sets. No real marks were edited; no deployment or IEMIS synchronization was performed.
+
+## Result diagnostics (development only)
+
+`result-diagnostic-report.mjs` produces a frozen summary of school class, term, raw mark counts, explicit expected student–subject pairs and validation blockers. Its `ready` and `publicationAllowed` fields are always false; grade ledgers and grade sheets are always unavailable. `diagnostic-report-export.mjs` exports only this validation summary as CSV, with spreadsheet formula injection protection, bounded blocker count and validated numeric counts. No student names, personal details, grades or GPA are exported. Both modules are covered by Node tests in the non-deploy V47 CI workflow. This does not replace official IEMIS-aligned reports and must not be presented as an exam result.
