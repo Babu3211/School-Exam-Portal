@@ -423,7 +423,7 @@ import {initUserActivity} from "./user-activity.js?v=20261112-final";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
 import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut,createUserWithEmailAndPassword,deleteUser,sendPasswordResetEmail} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 
-import {getFirestore,collection,addDoc,getDocs,doc,getDoc,setDoc,updateDoc,serverTimestamp,query,where,writeBatch,runTransaction,orderBy,limit} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import {getFirestore,collection,addDoc,getDocs,doc,getDoc,setDoc,updateDoc,deleteDoc,serverTimestamp,query,where,writeBatch,runTransaction,orderBy,limit} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 function safeNoticeError(error,fallback="प्रणालीमा समस्या आयो।"){const raw=String(error?.code||error?.message||fallback);return raw.replace(/firebase|firestore/gi,"प्रणाली").slice(0,240);}
 
 const firebaseConfig={apiKey:"AIzaSyDOwR82MTwBK1BRb-5wSVX2-EITCzJ1A5c",authDomain:"exam-portal-smss-95016.firebaseapp.com",projectId:"exam-portal-smss-95016",storageBucket:"exam-portal-smss-95016.firebasestorage.app",messagingSenderId:"86041985011",appId:"1:86041985011:web:e3806d74f2ae39d97c5c86"};
@@ -1794,7 +1794,7 @@ function renderExams(){
  const body=document.getElementById("examsBody");if(!body)return;
  const q=(document.getElementById("examSearch")?.value||"").trim().toLowerCase();
  const rows=cachedExams.filter(x=>[x.examName,x.termName||smssTermLabel(smssExamTermKey(x)),x.academicYear,x.className,x.examType].some(v=>String(v||"").toLowerCase().includes(q)));
- body.innerHTML=rows.map(x=>`<tr${x.active===false?' style="opacity:.68;background:#fff7ed"':''}><td>${examEsc(englishDisplayText(x.examName))}${x.active===false?' <small style="color:#b45309;font-weight:700">(निष्क्रिय)</small>':''}</td><td>${examEsc(x.termName||smssTermLabel(smssExamTermKey(x)))}</td><td>${examEsc(x.academicYear)}</td><td>${examEsc(x.className)}</td><td>${examEsc(x.examType)}</td><td>${examEsc(x.startDate)}${x.calendarSystem==="BS"?" (BS)":" (AD)"}</td><td>${examEsc(x.endDate)}${x.calendarSystem==="BS"?" (BS)":" (AD)"}</td><td>${examStatus(x)}</td><td>${roleHas("viewer")&&!isAdmin()?"View only":`<button class="btn alt" type="button" data-exam-edit="${examEsc(x.id)}">Edit</button> ${x.active===false?`<button class="btn" type="button" data-exam-restore="${examEsc(x.id)}">पुनः सक्रिय</button>`:`<button class="btn" style="background:#b45309" type="button" data-exam-delete="${examEsc(x.id)}">निष्क्रिय</button>`}`}</td></tr>`).join("")||'<tr><td class="empty" colspan="9">परीक्षा रेकर्ड भेटिएन।</td></tr>';
+ body.innerHTML=rows.map(x=>`<tr${x.active===false?' style="opacity:.68;background:#fff7ed"':''}><td>${examEsc(englishDisplayText(x.examName))}${x.active===false?' <small style="color:#b45309;font-weight:700">(निष्क्रिय)</small>':''}</td><td>${examEsc(x.termName||smssTermLabel(smssExamTermKey(x)))}</td><td>${examEsc(x.academicYear)}</td><td>${examEsc(x.className)}</td><td>${examEsc(x.examType)}</td><td>${examEsc(x.startDate)}${x.calendarSystem==="BS"?" (BS)":" (AD)"}</td><td>${examEsc(x.endDate)}${x.calendarSystem==="BS"?" (BS)":" (AD)"}</td><td>${examStatus(x)}</td><td>${roleHas("viewer")&&!isAdmin()?"View only":`<button class="btn alt" type="button" data-exam-edit="${examEsc(x.id)}">Edit</button> ${x.active===false?`<button class="btn" type="button" data-exam-delete="${examEsc(x.id)}">Delete</button>`:`<button class="btn" style="background:#b45309" type="button" data-exam-delete="${examEsc(x.id)}">Delete</button>`}`}</td></tr>`).join("")||'<tr><td class="empty" colspan="9">परीक्षा रेकर्ड भेटिएन।</td></tr>';
 }
 window.loadExams=loadExams;
 document.addEventListener("submit",async event=>{
@@ -1849,18 +1849,35 @@ function editExam(id){
  form.scrollIntoView({behavior:"smooth",block:"start"});
  setExamMessage("सम्पादन मोड: विवरण सच्याएर Save गर्नुहोस्।");
 }
+// Two explicit confirmations. Cancelling either leaves Firestore untouched.
+function confirmPermanentDeletion(label){
+ if(!confirm(label+"\\n\\nयो रेकर्ड स्थायी रूपमा Delete गर्ने हो?"))return false;
+ return confirm("अन्तिम पुष्टि: "+label+"\\n\\nयो काम Undo गर्न मिल्दैन। फेरि OK थिचेपछि मात्र Delete हुनेछ।");
+}
 async function deleteExam(id){
- const x=cachedExams.find(v=>v.id===id);if(!x||!confirm(`${x.examName} - ${x.className} को परीक्षा निष्क्रिय बनाउने? यससँग सम्बन्धित Marks/Results मेटिने छैनन्।`))return;
+ const x=cachedExams.find(v=>v.id===id);if(!x)return;
  if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){setExamMessage("Admin login आवश्यक छ।",true);return}
+ const label=String(x.examName||"Exam")+" — "+String(x.className||"");
+ if(!confirmPermanentDeletion(label))return;
  try{
-  await updateDoc(doc(db,"exams",id),{active:false,archivedAt:serverTimestamp(),archivedBy:auth.currentUser.uid,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid});
-  await writeAuditLog("exams","archive",id,`${x.examName} ${x.className}`);
+  // Do not orphan existing marks. A missing examId is treated conservatively.
+  const markSnap=await getDocs(collection(db,"marks"));
+  const related=markSnap.docs.some(d=>{
+   const m=d.data();
+   return String(m.examId||m.examID||"")===id ||
+    (String(m.examName||"")===String(x.examName||"") &&
+     String(m.academicYear||"")===String(x.academicYear||"") &&
+     canonicalStudentClass(m.className||m.class)===canonicalStudentClass(x.className));
+  });
+  if(related)throw new Error("यो परीक्षासँग Marks जोडिएका छन्। Marks सुरक्षित राख्न परीक्षा Delete रोकियो।");
+  await deleteDoc(doc(db,"exams",id));
+  await writeAuditLog("exams","delete",id,label);
   const form=document.getElementById("examForm");
   if(form?.dataset.editId===id){form.reset();delete form.dataset.editId;document.getElementById("examYear").value="2083";document.getElementById("examSaveBtn").textContent="Save गर्नुहोस्";document.getElementById("examCancelBtn").hidden=true}
-  await loadExams();setExamMessage("परीक्षा निष्क्रिय गरियो। मूल परीक्षा र सम्बन्धित Marks/Results सुरक्षित छन्।");
+  await loadExams();setExamMessage("परीक्षा Delete भयो। Marks मा कुनै परिवर्तन गरिएको छैन।");
  }catch(error){
-  console.error("Exam archive failed:",safeNoticeError(error));
-  setExamMessage(`निष्क्रिय गर्न सकिएन: ${safeNoticeError(error)||"प्रणाली त्रुटि"}`,true);
+  console.error("Exam delete failed:",safeNoticeError(error));
+  setExamMessage(`Delete भएन: ${safeNoticeError(error)||"प्रणाली त्रुटि"}`,true);
  }
 }
 async function restoreExam(id){
