@@ -19,7 +19,9 @@ try {
       await setDoc(doc(admin,school(sid)),{id:sid,name:sid,active:true});
       await setDoc(doc(admin,student(sid,'s1')),{name:'Example Student',class:'6'});
     }
-    for(const [sid,uid,role] of [['schoolA','adminA','school_admin'],['schoolA','teacherA','teacher'],['schoolA','viewerA','viewer'],['schoolB','adminB','school_admin'],['schoolA','unknownA','unknown_role']]){
+    await setDoc(doc(admin,school('inactiveSchool')),{id:'inactiveSchool',name:'Inactive School',active:false});
+    await setDoc(doc(admin,student('inactiveSchool','s1')),{name:'Hidden Student'});
+    for(const [sid,uid,role] of [['schoolA','adminA','school_admin'],['schoolA','teacherA','teacher'],['schoolA','viewerA','viewer'],['schoolB','adminB','school_admin'],['schoolA','unknownA','unknown_role'],['inactiveSchool','inactiveUser','teacher']]){
       await setDoc(doc(admin,member(sid,uid)),{uid,schoolId:sid,role,active:true});
     }
   });
@@ -27,6 +29,8 @@ try {
   await assertFails(getDoc(doc(db('viewerA'),student('schoolB','s1'))));
   await assertSucceeds(getDoc(doc(db('viewerA'),student('schoolA','s1'))));
   await assertFails(getDoc(doc(db('unknownA'),student('schoolA','s1'))));
+  await assertFails(getDoc(doc(db('inactiveUser'),student('inactiveSchool','s1'))));
+  await assertSucceeds(getDoc(doc(db('root'),student('inactiveSchool','s1'))));
   await assertFails(setDoc(doc(db('viewerA'),student('schoolA','s2')),{name:'Forbidden'}));
   await assertFails(updateDoc(doc(db('viewerA'),student('schoolA','s1')),{name:'Forbidden'}));
   await assertFails(deleteDoc(doc(db('viewerA'),student('schoolA','s1'))));
@@ -48,5 +52,7 @@ try {
   await assertFails(setDoc(doc(db('root'),school('schoolE')),{id:'schoolE',name:'School E',iemisCode:'bad',active:false}));
   await assertSucceeds(setDoc(doc(db('root'),school('schoolF')),{id:'schoolF',name:'School F',iemisCode:'123456789',active:false}));
   await assertFails(deleteDoc(doc(db('root'),school('schoolA'))));
+  await assertFails(setDoc(doc(db('root'),school('schoolG')),{id:'schoolG',name:'School G',iemisCode:123456,active:false}));
+  await assertFails(updateDoc(doc(db('adminA'),school('schoolA')),{active:false}));
   console.log('V47 Firestore emulator isolation tests passed');
 } finally {await env.cleanup();}
