@@ -24,4 +24,7 @@ assert.ok(rules.includes("studentId.matches('^[A-Za-z0-9_-]{1,128}$')"));
 for(const pattern of [/match \/\{collection\}\/\{docId\}/g,/function validAttendance\(docId\)/g,/match \/attendance\/\{docId\}/g])assert.equal((rules.match(pattern)||[]).length,1);
 assert.ok(rules.includes("students/$(request.resource.data.studentId)"),'Attendance must refer to a school-scoped student');
 assert.ok(rules.includes(".data['class'] == request.resource.data['class']"),'Attendance must match student class');
+assert.ok(rules.includes("data.get('uid', '') == request.auth.uid"),'Member UID must match signed-in user');
+assert.ok(rules.includes("data.get('schoolId', '') == schoolId"),'Member tenant ID must match requested school');
+assert.ok(rules.includes("data.get('role', '') in ['school_admin','teacher','viewer']"),'Reject unknown member roles');
 console.log('V47 Firestore rules structural checks passed; emulator still required');
