@@ -8,7 +8,7 @@ export function auditLoadedMarks(records,{schoolClass,term}){
  const issues=[],seen=new Set();
  for(let index=0;index<records.length;index++){
   const r=records[index];const studentId=r?.studentId,subjectId=r?.subjectId;
-  if(!r||typeof studentId!=='string'||typeof subjectId!=='string'||!studentId||!subjectId){issues.push({index,code:'missing_identity'});continue}
+  if(!r||typeof studentId!=='string'||typeof subjectId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(studentId)||!/^[A-Za-z0-9_-]{1,128}$/.test(subjectId)){issues.push({index,code:'missing_identity'});continue}
   const key=JSON.stringify([studentId,subjectId]);
   if(seen.has(key))issues.push({index,code:'duplicate_student_subject'});else seen.add(key);
   if(r.class!==schoolClass||r.term!==term)issues.push({index,code:'wrong_class_or_term'});
