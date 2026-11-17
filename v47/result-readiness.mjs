@@ -38,6 +38,9 @@ export function assessResultReadiness({schoolClass,term,students,subjects,marks,
   // The current persisted marks schema only stores theory/practical; multi-component values are not integrated.
   blockers.push('component_marks_storage_not_integrated');
  }
+ // The legacy two-field coverage audit cannot account for Computer component marks.
+ // Never treat such a matrix as complete until the combined storage path is verified.
+ if(Array.isArray(componentEntries)&&componentEntries.length)blockers.push('component_mark_coverage_not_integrated');
  const seen=new Set(),componentPairs=new Set();
  if(Array.isArray(componentEntries))for(const entry of componentEntries){
   if(!studentIds.has(entry?.studentId)||!subjectIds.has(entry?.subjectId))blockers.push('unknown_component_student_or_subject');
@@ -65,7 +68,8 @@ export function assessResultReadiness({schoolClass,term,students,subjects,marks,
   }
   for(const studentId of Object.keys(requiredSubjectsByStudent))if(!studentIds.has(studentId))blockers.push('invalid_subject_assignments');
   expectedPairs=assigned.size;
-  for(const pair of assigned)if(!seen.has(pair))blockers.push('incomplete_student_subject_matrix');
+  for(const pair of assigned)if(!seen.has(pair)&&!componentPairs.has(pair))blockers.push('incomplete_student_subject_matrix');
+  for(const pair of componentPairs)if(!assigned.has(pair))blockers.push('unexpected_student_subject_component_mark');
   for(const pair of seen)if(!assigned.has(pair))blockers.push('unexpected_student_subject_mark');
  }
  // Never authorize publication without a verified CDC/IEMIS grade engine and subject-specific full marks.
