@@ -1,9 +1,21 @@
-name: Release verified SMSS V45 Firestore Rules only
+name: Release verified SMSS V46 Firestore Rules only
 on:
   workflow_dispatch:
     inputs:
       confirmation:
-        description: 'Type DEPLOY-V45-RULES after production security review'
+        description: 'Type DEPLOY-V46-RULES after security review'
+        required: true
+        type: string
+      expected_commit:
+        description: 'Full 40-character approved main commit SHA'
+        required: true
+        type: string
+      backup_confirmation:
+        description: 'Type BACKUP-VERIFIED only after checking accessible production backup and rollback plan'
+        required: true
+        type: string
+      roles_confirmation:
+        description: 'Type ROLES-VERIFIED after checking Admin, Teacher and Viewer assignments'
         required: true
         type: string
 permissions:
@@ -13,17 +25,23 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify-and-deploy-rules:
-    if: ${{ github.event.inputs.confirmation == 'DEPLOY-V45-RULES' }}
+    if: ${{ github.ref == 'refs/heads/main' && inputs.confirmation == 'DEPLOY-V46-RULES' && inputs.backup_confirmation == 'BACKUP-VERIFIED' && inputs.roles_confirmation == 'ROLES-VERIFIED' }}
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: smss-v45-final-integration
+          ref: main
           persist-credentials: false
-      - name: Confirm approved final source
-        run: test "$(git branch --show-current)" = 'smss-v45-final-integration'
+      - name: Confirm approved main commit
+        env:
+          APPROVED_SHA: ${{ inputs.expected_commit }}
+        run: |
+          set -euo pipefail
+          test "${#APPROVED_SHA}" -eq 40
+          test "$(git rev-parse HEAD)" = "$APPROVED_SHA"
+          node -e 'const c=require("./firebase.json");if(c.firestore?.rules!=="firestore.rules")process.exit(1)'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -33,6 +51,8 @@ jobs:
         run: |
           npm run test:rules
           npm run test:viewer
+          npm run test:v46-preservation
+          node scripts/test-v46-viewer-class-exam-readonly.mjs
           npx firebase emulators:exec --only firestore --project smss-v45-activity-test 'node scripts/test-user-activity-rules.mjs'
       - name: Deploy Firestore Rules only (never modify documents)
         env:
