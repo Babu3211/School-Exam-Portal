@@ -6,13 +6,13 @@ export function auditComputerComponentCoverage({schoolClass,term,students,subjec
  if(!validSchoolClass(schoolClass))throw new Error('Invalid class');validateExamTerm(term);
  if(![students,subjects,assignments,rawMarks,componentMarks].every(Array.isArray))throw new TypeError('All five record lists required');
  const issues=[],studentMap=new Map(),subjectMap=new Map(),assignmentKeys=new Set(),rawKeys=new Set(),componentKeys=new Set();
- for(const s of students){if(!s||typeof s.id!=='string'||studentMap.has(s.id)||s.class!==schoolClass)issues.push('invalid_student_roster');else studentMap.set(s.id,s)}
- for(const s of subjects){if(!s||typeof s.id!=='string'||subjectMap.has(s.id)||s.class!==schoolClass)issues.push('invalid_subject_roster');else subjectMap.set(s.id,s)}
+ for(const s of students){if(!s||typeof s.id!=='string'||!s.id||studentMap.has(s.id)||s.class!==schoolClass)issues.push('invalid_student_roster');else studentMap.set(s.id,s)}
+ for(const s of subjects){if(!s||typeof s.id!=='string'||!s.id||subjectMap.has(s.id)||s.class!==schoolClass)issues.push('invalid_subject_roster');else subjectMap.set(s.id,s)}
  for(const a of assignments){const key=JSON.stringify([a?.studentId,a?.subjectId]);if(!a||a.class!==schoolClass||!studentMap.has(a.studentId)||!subjectMap.has(a.subjectId)||subjectMap.get(a.subjectId)?.active!==true||assignmentKeys.has(key))issues.push('invalid_assignment');else assignmentKeys.add(key)}
- for(const m of rawMarks){const key=JSON.stringify([m?.studentId,m?.subjectId]);if(!m||m.class!==schoolClass||m.term!==term||rawKeys.has(key))issues.push('invalid_raw_mark');else rawKeys.add(key)}
+ for(const m of rawMarks){const key=JSON.stringify([m?.studentId,m?.subjectId]);if(!m||m.class!==schoolClass||m.term!==term||typeof m.studentId!=='string'||!m.studentId||typeof m.subjectId!=='string'||!m.subjectId||rawKeys.has(key))issues.push('invalid_raw_mark');else rawKeys.add(key)}
  const definitions={},computerSubjects=new Set();
  for(const s of subjects)if(s?.name==='Computer'&&s?.active===true&&['9','10'].includes(schoolClass)){computerSubjects.add(s.id);definitions[s.id]=[{key:'component_a',max:4},{key:'component_b',max:36},{key:'component_c',max:10}]}
- for(const m of componentMarks){const key=JSON.stringify([m?.studentId,m?.subjectId]);if(!m||m.class!==schoolClass||m.term!==term||!computerSubjects.has(m.subjectId)||!studentMap.has(m.studentId)||!assignmentKeys.has(key)||componentKeys.has(key))issues.push('invalid_component_record');else componentKeys.add(key)}
+ for(const m of componentMarks){const key=JSON.stringify([m?.studentId,m?.subjectId]);if(!m||m.class!==schoolClass||m.term!==term||typeof m.studentId!=='string'||!m.studentId||typeof m.subjectId!=='string'||!m.subjectId||!computerSubjects.has(m.subjectId)||!studentMap.has(m.studentId)||!assignmentKeys.has(key)||componentKeys.has(key))issues.push('invalid_component_record');else componentKeys.add(key)}
  if(componentMarks.length){const audit=auditComponentMarks({schoolClass,term,entries:componentMarks,componentsBySubject:definitions});for(const issue of audit.issues)issues.push(issue.code)}
  for(const key of rawKeys){const [studentId,subjectId]=JSON.parse(key);if(!studentMap.has(studentId)||!subjectMap.has(subjectId)||!assignmentKeys.has(key)||subjectMap.get(subjectId)?.active!==true)issues.push('unexpected_raw_mark')}
  for(const key of componentKeys)if(rawKeys.has(key))issues.push('duplicate_raw_and_component_mark');
