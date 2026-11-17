@@ -7,6 +7,7 @@ const overlap=assessResultReadiness({...base,componentEntries:[{studentId:'s1',s
 const unknownComponent=assessResultReadiness({...base,componentEntries:[{studentId:'outside',subjectId:'math',class:'6',term:'1st',scores:{a:1}}],componentsBySubject:{math:[{key:'a',max:2}]}});assert.ok(unknownComponent.blockers.includes('unknown_component_student_or_subject'));
 const missingMaxima=assessResultReadiness({...base,subjectLimits:null});assert.ok(missingMaxima.blockers.includes('subject_full_marks_unverified'));
 const overMaxima=assessResultReadiness({...base,marks:[{...base.marks[0],theory:41}]});assert.ok(overMaxima.blockers.includes('invalid_or_exceeded_subject_full_marks'));
+const inactiveSubject=assessResultReadiness({...base,subjects:[{id:'math',name:'Mathematics',active:false}]});assert.ok(inactiveSubject.blockers.includes('inactive_subject_in_catalog'));assert.ok(inactiveSubject.blockers.includes('invalid_subject_assignments'));
 const badCatalog=assessResultReadiness({...base,subjects:[{id:'math',name:'M'}]});assert.ok(badCatalog.blockers.includes('invalid_subject_catalog'));
 const unknownAssignments=assessResultReadiness({...base,requiredSubjectsByStudent:null});assert.ok(unknownAssignments.blockers.includes('student_subject_assignments_unverified'));
 const optional=assessResultReadiness({...base,subjects:[{id:'math',name:'Mathematics'},{id:'optional',name:'Optional Subject'}],requiredSubjectsByStudent:{s1:['math']}});assert.deepEqual(optional.blockers,['grade_engine_not_integrated']);
