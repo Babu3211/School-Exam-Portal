@@ -139,5 +139,7 @@ jobs:
         run: node scripts/test-v47-subject-assignment-validation.mjs
       - name: V47 subject assignment create-only service
         run: node scripts/test-v47-subject-assignment-create-service.mjs
+      - name: V47 subject assignment transaction and isolation
+        run: node scripts/test-v47-assignment-create-service.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
