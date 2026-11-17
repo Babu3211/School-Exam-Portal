@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';import {preflightRawMarkSave} from '../v47/mark-save-preflight.mjs';
 const input={studentId:'s1',subjectId:'math',class:'6',term:'1st',theory:30,practical:8},actor={role:'school_admin',active:true,schoolId:'school_001'};
-const docs={'students/s1':{class:'6'},'subjects/math':{name:'Mathematics',class:'6',active:true}};
+const docs={'students/s1':{class:'6'},'subjects/math':{name:'Mathematics',class:'6',active:true},'subject_assignments/s1:math':{studentId:'s1',subjectId:'math',class:'6'}};
 const api={doc:(_db,...p)=>p.join('/'),getDoc:async path=>{const d=docs[path.split('/').slice(-2).join('/')];return {exists:()=>!!d,data:()=>d}}};
 const args={db:{},api,actor,schoolId:'school_001',input};
 assert.equal((await preflightRawMarkSave(args)).existing,false);
