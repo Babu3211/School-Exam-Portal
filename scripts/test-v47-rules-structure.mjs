@@ -29,4 +29,8 @@ assert.ok(rules.includes("data.get('schoolId', '') == schoolId"),'Member tenant 
 assert.ok(rules.includes("data.get('role', '') in ['school_admin','teacher','viewer']"),'Reject unknown member roles');
 assert.ok((rules.match(/request\.resource\.data\.keys\(\)\.hasOnly\(\['uid','schoolId','role','active'\]\)/g)||[]).length===2,'Membership create and update must reject unknown fields');
 assert.ok((rules.match(/request\.resource\.data\.keys\(\)\.hasAll\(\['uid','schoolId','role','active'\]\)/g)||[]).length===2,'Membership create and update must require identity fields');
+assert.ok(rules.includes('function validSchoolRegistration()'),'School registration must validate its schema');
+assert.ok(rules.includes("request.resource.data.id == schoolId"),'School document identity must match its path');
+assert.ok(rules.includes("request.resource.data.active == false"),'New schools must start inactive');
+assert.ok(rules.includes("request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active'])"),'School updates must be activation-only');
 console.log('V47 Firestore rules structural checks passed; emulator still required');
