@@ -2,8 +2,10 @@ import {assertSchoolId,assertDocumentId} from './school-scope.mjs';
 import {resolveSchoolSession} from './school-session.mjs';
 // UI convenience only: Firestore security rules enforce actual access.
 // An inactive school or a non-member can receive permission-denied on GET.
-export async function loadSchoolAccess({db,api,schoolId,uid,isSuperAdmin=false}){
+export async function loadSchoolAccess({db,api,auth,schoolId,uid,isSuperAdmin=false}){
  assertSchoolId(schoolId);assertDocumentId(uid);
+ if(!auth?.currentUser?.uid || auth.currentUser.uid!==uid)
+  throw new Error('Authenticated user does not match requested membership');
  if(!db||typeof api?.doc!=='function'||typeof api?.getDoc!=='function')
   throw new TypeError('Firestore SDK required');
  if(isSuperAdmin)throw new Error('Super Admin authorization must be verified server-side');
