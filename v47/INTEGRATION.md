@@ -202,3 +202,7 @@ The read-only V47 raw ledger preview now requires a raw mark for every assigned 
 ## Fail-closed malformed ledger inputs
 
 Raw ledger preview sorting now tolerates null/non-string mark identities while the coverage audit reports invalid records and never treats empty student, subject, or mark IDs as valid. Regression tests include empty IDs and a null mark student ID. No official CDC/IEMIS grading or result publication is enabled. These changes are development-branch-only and have not been verified with the Firebase Emulator.
+
+## Raw marks numeric validation in read-only diagnostics
+
+Raw ledger coverage now rejects missing, negative, nonnumeric, NaN, and infinite theory/practical scores using `invalid_raw_mark_scores`. This is intentionally only basic numeric validation: subject-specific full-mark ceilings, CDC grades, GPA, NG handling, and IEMIS 2083 print parity still require verified policies and cannot be inferred from the raw ledger. Regression tests cover invalid numeric scores and prevent a misleading `complete:true` status. V46 production and real school data remain untouched.
