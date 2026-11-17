@@ -135,5 +135,9 @@ jobs:
         run: node scripts/test-v47-subjects-console-static.mjs
       - name: V47 subject rules integrity and no bypass
         run: node scripts/test-v47-subject-rules-static.mjs
+      - name: V47 subject assignment validation
+        run: node scripts/test-v47-subject-assignment-validation.mjs
+      - name: V47 subject assignment create-only service
+        run: node scripts/test-v47-subject-assignment-create-service.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
