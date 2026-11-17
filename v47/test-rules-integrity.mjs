@@ -6,7 +6,8 @@ for(const fragment of [
  "match /students/{id}","match /marks/{id}","match /attendance/{id}",
  "match /v47_super_admins/{uid}","match /{document=**}",
  "activeMember(sid)","request.resource.data.uid == uid",
- "subject_assignments","component_marks","iemisCode"
+ "subject_assignments","component_marks","iemisCode",
+ "request.resource.data.active == false","allow delete: if false;"
 ]) assert.ok(rules.includes(fragment),'Missing '+fragment);
 for(const fragment of ['match /schools/{sid}','match /students/{id}','match /{document=**}','service cloud.firestore']) {
  assert.equal(rules.split(fragment).length-1,1,'Duplicated '+fragment);
