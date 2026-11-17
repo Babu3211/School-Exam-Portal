@@ -4,7 +4,7 @@ const docs=new Map([['schools/school_001/students/s1',{class:'6'}],['schools/sch
 const api={doc:(_db,...parts)=>parts.join('/'),runTransaction:async(_db,callback)=>{transactions++;const writes=[];const tx={get:async ref=>({exists:()=>docs.has(ref),data:()=>docs.get(ref)}),set:(ref,data)=>writes.push([ref,data])};const result=await callback(tx);for(const [ref,data]of writes)docs.set(ref,data);return result}};
 const args={db:{},api,actor,schoolId:'school_001',input};
 assert.equal((await createSchoolMarkOnly(args)).id,'1st:s1:math');assert.equal(docs.size,4);
-await assert.rejects(()=>createSchoolMarkOnly(args),/already exists/);assert.equal(docs.size,3);
+await assert.rejects(()=>createSchoolMarkOnly(args),/already exists/);assert.equal(docs.size,4);
 await assert.rejects(()=>createSchoolMarkOnly({...args,actor:{...actor,role:'viewer'}}));
 await assert.rejects(()=>createSchoolMarkOnly({...args,schoolId:'school_002'}));assert.equal(transactions,2);
 docs.delete('schools/school_001/subject_assignments/s1:math');
