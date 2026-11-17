@@ -26,7 +26,12 @@ export function assessResultReadiness({schoolClass,term,students,subjects,marks,
   // The current persisted marks schema only stores theory/practical; multi-component values are not integrated.
   blockers.push('component_marks_storage_not_integrated');
  }
- const seen=new Set();
+ const seen=new Set(),componentPairs=new Set();
+ if(Array.isArray(componentEntries))for(const entry of componentEntries){
+  if(!studentIds.has(entry?.studentId)||!subjectIds.has(entry?.subjectId))blockers.push('unknown_component_student_or_subject');
+  else componentPairs.add(JSON.stringify([entry.studentId,entry.subjectId]));
+ }
+ if(componentPairs.size&&seen.size)for(const pair of componentPairs)if(seen.has(pair))blockers.push('ambiguous_duplicate_mark_format');
  for(const mark of marks){if(!studentIds.has(mark?.studentId)||!subjectIds.has(mark?.subjectId))blockers.push('unknown_student_or_subject');else seen.add(JSON.stringify([mark.studentId,mark.subjectId]))}
  let expectedPairs=0;
  if(requiredSubjectsByStudent===null){
