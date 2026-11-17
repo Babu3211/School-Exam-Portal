@@ -9,6 +9,9 @@ assert.ok(audit({rawMarks:[{...mark,theory:20,practical:10}]}).issues.includes('
 assert.ok(audit({componentMarks:[{...mark,scores:{...mark.scores,component_b:37}}]}).issues.includes('invalid_component_score'));
 assert.ok(audit({assignments:[]}).issues.includes('invalid_component_record'));
 assert.ok(audit({componentMarks:[mark,mark]}).issues.includes('invalid_component_record'));
+assert.equal(audit({}).issueCount,0,'matching Computer assignment and component mark must be recognized');
+assert.ok(audit({componentMarks:[mark],rawMarks:[{studentId:'s1',subjectId:'computer_9',class:'9',term:'final',theory:2,practical:3}]}).issues.includes('duplicate_raw_and_component_mark'));
+
 assert.ok(audit({subjects:[{...subject,active:false}]}).issues.includes('invalid_component_record'));
 assert.ok(audit({rawMarks:[{studentId:'outside',subjectId:'computer_9',class:'9',term:'final',theory:10,practical:10}]}).issues.includes('unexpected_raw_mark'));
 assert.throws(()=>audit({schoolClass:'13'}));
