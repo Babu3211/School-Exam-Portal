@@ -8,5 +8,7 @@ await assert.rejects(()=>preflightRawMarkSave({...args,actor:{...actor,role:'vie
 await assert.rejects(()=>preflightRawMarkSave({...args,schoolId:'school_002'}));
 docs['subjects/math'].active=false;await assert.rejects(()=>preflightRawMarkSave(args),/Subject missing/);docs['subjects/math'].active=true;
 docs['students/s1'].class='7';await assert.rejects(()=>preflightRawMarkSave(args),/Student missing/);docs['students/s1'].class='6';
+delete docs['subject_assignments/s1:math'];await assert.rejects(()=>preflightRawMarkSave(args),/assignment required/);
+docs['subject_assignments/s1:math']={studentId:'s1',subjectId:'math',class:'6'};
 docs['marks/1st:s1:math']={...input,theory:20};assert.equal((await preflightRawMarkSave(args)).existing,true);
 console.log('V47 mark save preflight tests passed');
