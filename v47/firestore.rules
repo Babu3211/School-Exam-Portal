@@ -78,16 +78,7 @@ service cloud.firestore {
     allow update, delete: if false; // development-only marks are immutable until a verified correction workflow exists
    }
    function validSubject(docId) {
-    return docId.matches('^[A-Za-z0-9_-]{1,128}
-    allow get, list: if collection in ['staff','classes','exams','mark_settings'] && reader(schoolId);
-    allow create, update, delete: if collection in ['staff','classes','subjects','exams','mark_settings'] && schoolAdmin(schoolId);
-   }
-  }
-  // No legacy root collection access in the V47-only rules file.
-  match /{document=**} { allow read, write: if false; }
- }
-}
-)
+    return docId.matches('^[A-Za-z0-9_-]{1,128}$')
       && request.resource.data.keys().hasOnly(['name','class','active'])
       && request.resource.data.keys().hasAll(['name','class','active'])
       && request.resource.data.name is string
@@ -99,14 +90,13 @@ service cloud.firestore {
    match /subjects/{docId} {
     allow get, list: if reader(schoolId);
     allow create: if schoolAdmin(schoolId) && validSubject(docId);
-    allow update, delete: if false; // subject corrections require reviewed migration
+    allow update, delete: if false;
    }
    match /{collection}/{docId} {
-    allow get, list: if collection in ['staff','classes','subjects','exams','mark_settings'] && reader(schoolId);
-    allow create, update, delete: if collection in ['staff','classes','subjects','exams','mark_settings'] && schoolAdmin(schoolId);
+    allow get, list: if collection in ['staff','classes','exams','mark_settings'] && reader(schoolId);
+    allow create, update, delete: if collection in ['staff','classes','exams','mark_settings'] && schoolAdmin(schoolId);
    }
   }
-  // No legacy root collection access in the V47-only rules file.
   match /{document=**} { allow read, write: if false; }
  }
 }
