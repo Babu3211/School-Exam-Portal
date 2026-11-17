@@ -5,7 +5,7 @@ service cloud.firestore {
   function superAdmin() { return signedIn() && exists(/databases/$(database)/documents/v47_super_admins/$(request.auth.uid)) && get(/databases/$(database)/documents/v47_super_admins/$(request.auth.uid)).data.active == true; }
   function membershipPath(schoolId) { return /databases/$(database)/documents/schools/$(schoolId)/members/$(request.auth.uid); }
   function schoolActive(schoolId) { return exists(/databases/$(database)/documents/schools/$(schoolId)) && get(/databases/$(database)/documents/schools/$(schoolId)).data.active == true; }
-  function member(schoolId) { return signedIn() && schoolActive(schoolId) && exists(membershipPath(schoolId)) && get(membershipPath(schoolId)).data.active == true; }
+  function member(schoolId) { return signedIn() && schoolActive(schoolId) && exists(membershipPath(schoolId)) && get(membershipPath(schoolId)).data.active == true && get(membershipPath(schoolId)).data.get('uid', '') == request.auth.uid && get(membershipPath(schoolId)).data.get('schoolId', '') == schoolId && get(membershipPath(schoolId)).data.get('role', '') in ['school_admin','teacher','viewer']; }
   function memberRole(schoolId, role) { return member(schoolId) && get(membershipPath(schoolId)).data.role == role; }
   function reader(schoolId) { return superAdmin() || member(schoolId); }
   function schoolAdmin(schoolId) { return superAdmin() || memberRole(schoolId, 'school_admin'); }
