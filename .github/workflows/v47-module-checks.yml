@@ -133,5 +133,7 @@ jobs:
         run: node scripts/test-v47-subject-create-service.mjs
       - name: V47 subject creation UI static checks
         run: node scripts/test-v47-subjects-console-static.mjs
+      - name: V47 subject rules integrity and no bypass
+        run: node scripts/test-v47-subject-rules-static.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
