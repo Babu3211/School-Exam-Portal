@@ -2213,9 +2213,9 @@ async function loadMarksEntry(){
    // Keep the previous built-in options only as a safe fallback when no Classes records exist.
    if(!entryClassNames.length)entryClassNames=sortEntryClassNames(classes);
   }else{
-   if(!roleHas('subject_teacher'))throw new Error('Subject Teacher अनुमति आवश्यक छ।');
+   if(!roleHas('subject_teacher'))throw new Error('यो खातामा Subject Teacher भूमिका छैन। Admin ले User Role मा Subject Teacher र कक्षा/विषय Assignment जाँच गर्नुपर्छ।');
    const pairs=currentUserRole.subjectAssignments||[];
-   if(!pairs.length)throw new Error('कुनै Subject Assignment भेटिएन।');
+   if(!pairs.length)throw new Error('यो खातामा Subject Assignment छैन। Admin ले User Role मा कक्षा र विषय तोक्नुपर्छ।');
    // Query every distinct *stored* assignment name. Canonical de-duplication is only for the UI:
    // "Class 6" and "कक्षा ६" may refer to the same display class but are different Firestore keys.
    const assignedQueryNames=[...new Set(pairs.map(x=>String(x.className??'').trim()).filter(Boolean))];
@@ -2261,13 +2261,13 @@ async function loadMarksEntry(){
    const subjectSel=document.getElementById('entrySubject');
    if(subjectSel)subjectSel.innerHTML='<option value="">No subjects available</option>';
   }
-  entryMsg(`Marks Entry could not load: ${safeNoticeError(e)}. Check the Subject Teacher role, assigned class/subject, and security permissions.`,true);
+  entryMsg(`Marks Entry खोल्न सकिएन: ${safeNoticeError(e)}। Admin ले User Role मा Subject Teacher, तोकिएको कक्षा/विषय र Firestore अनुमति जाँच गर्नुहोस्।`,true);
   return false;
  }
 }
 window.loadMarksEntry=loadMarksEntry;
 let iemisEntryGrid=null;
-function resetIemisEntryGrid(){if(iemisEntryGrid){iemisEntryGrid.destroy();iemisEntryGrid=null;}const root=document.getElementById('iemisEntryRoot');if(root)root.innerHTML='<p class="hint">कक्षा, Term र परीक्षा छानेर विद्यार्थी सूची फेरि देखाउनुहोस्।</p>';}
+function resetIemisEntryGrid(){if(iemisEntryGrid){iemisEntryGrid.destroy();iemisEntryGrid=null;}const root=document.getElementById('iemisEntryRoot');if(root)root.innerHTML='<p class="hint">Select class, term and exam to reload the student list.</p>';}
 function syncIemisEntryView(){const enabled=!!document.getElementById('useIemisEntryGrid')?.checked;const root=document.getElementById('iemisEntryRoot'),legacy=document.getElementById('marksEntryBody')?.closest('.tablewrap'),subject=document.getElementById('entrySubject')?.closest('.field');if(root)root.hidden=!enabled;if(legacy)legacy.hidden=enabled;if(subject)subject.hidden=enabled;}
 function iemisEntryContext(){return ['entryClass','entryTerm','entryExam'].map(id=>document.getElementById(id)?.value||'').join('|');}
 function iemisEntryVisible(student,subject,cl,examId){
