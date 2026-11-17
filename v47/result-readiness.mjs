@@ -4,6 +4,7 @@ import {auditLoadedMarks} from './marks-audit.mjs';
 import {auditConfiguredFullMarks} from './full-marks-audit.mjs';
 import {auditComponentMarks} from './component-marks-audit.mjs';
 import {auditSubjectAssignments} from './subject-assignment-audit.mjs';
+import {auditMarkCoverage} from './mark-coverage-audit.mjs';
 // Fail-closed readiness check. Raw mark pages alone never authorize results publication.
 export function assessResultReadiness({schoolClass,term,students,subjects,marks,allPagesLoaded=false,gradingPolicyVerified=false,requiredSubjectsByStudent=null,subjectLimits=null,componentEntries=null,componentsBySubject=null}){
  if(!validSchoolClass(schoolClass))throw new Error('Invalid class');
@@ -20,6 +21,10 @@ export function assessResultReadiness({schoolClass,term,students,subjects,marks,
  if(requiredSubjectsByStudent!==null){
   if(!requiredSubjectsByStudent||typeof requiredSubjectsByStudent!=='object'||Array.isArray(requiredSubjectsByStudent))blockers.push('invalid_subject_assignments');
   else {const assignmentAudit=auditSubjectAssignments({schoolClass,students,subjects,assignments:requiredSubjectsByStudent});if(!assignmentAudit.valid)blockers.push('invalid_subject_assignments');}
+ }
+ if(requiredSubjectsByStudent&&typeof requiredSubjectsByStudent==='object'&&!Array.isArray(requiredSubjectsByStudent)){
+  const coverage=auditMarkCoverage({schoolClass,term,assignments:requiredSubjectsByStudent,marks});
+  if(!coverage.complete)blockers.push('mark_coverage_incomplete_or_inconsistent');
  }
  const audit=auditLoadedMarks(marks,{schoolClass,term});
  if(audit.issueCount)blockers.push('invalid_mark_records');
