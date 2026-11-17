@@ -7,3 +7,12 @@ export function validateMembership({uid,schoolId,role,active=false}){
  if(typeof active!=='boolean')throw new Error('Invalid membership status');
  return {uid,schoolId,role,active};
 }
+
+export const SCHOOL_ROLES=Object.freeze(['school_admin','teacher','viewer']);
+export function normalizeMembership(schoolId,uid,role){
+ const membership=validateMembership({uid,schoolId,role,active:true});
+ return {...membership,path:'schools/'+schoolId+'/members/'+uid};
+}
+export function canReadSchool(m){return m?.active===true&&SCHOOL_ROLES.includes(m.role);}
+export function canManageSchool(m){return m?.active===true&&m.role==='school_admin';}
+export function canWriteSchool(m){return m?.active===true&&['school_admin','teacher'].includes(m.role);}
