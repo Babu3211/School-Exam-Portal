@@ -25,5 +25,8 @@ const ordinary={id:'math_9',name:'Mathematics',class:'9',active:true};
 const withOrdinary={subjects:[subject,ordinary],assignments:[assignment,{studentId:'s1',subjectId:'math_9',class:'9'}]};
 assert.ok(audit(withOrdinary).issues.includes('missing_raw_mark'));
 assert.equal(audit({...withOrdinary,rawMarks:[{studentId:'s1',subjectId:'math_9',class:'9',term:'final',theory:25,practical:10}]}).issueCount,0);
+assert.ok(audit({students:[{...student,id:''}]}).issues.includes('invalid_student_roster'));
+assert.ok(audit({subjects:[{...subject,id:''}]}).issues.includes('invalid_subject_roster'));
+assert.ok(audit({rawMarks:[{studentId:'',subjectId:'computer_9',class:'9',term:'final',theory:1,practical:1}]}).issues.includes('invalid_raw_mark'));
 assert.throws(()=>audit({schoolClass:'13'}));
 console.log('V47 Computer component coverage diagnostic checks passed');
