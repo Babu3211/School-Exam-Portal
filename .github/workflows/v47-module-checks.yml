@@ -107,5 +107,11 @@ jobs:
         run: node scripts/test-v47-full-marks-audit.mjs
       - name: V47 variable-component mark validation
         run: node scripts/test-v47-component-marks-audit.mjs
+      - name: V47 student subject assignment audit
+        run: node scripts/test-v47-subject-assignment-audit.mjs
+      - name: V47 school subject catalog audit
+        run: node scripts/test-v47-subject-catalog-audit.mjs
+      - name: V47 explicit mark coverage audit
+        run: node scripts/test-v47-mark-coverage-audit.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
