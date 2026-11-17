@@ -270,3 +270,7 @@ V47 Firestore rules now deny direct deletion of student and attendance documents
 ## Referential integrity on student and attendance edits
 
 Student records are not deletable, and their `class` value is now immutable after creation: changing it in place would invalidate existing attendance, subject assignments and marks. Name and optional roll number can still be corrected. Attendance history is also not deletable; updates may correct `present`, but cannot change the record's date, student ID or class. Moving a student between classes will require a separate audited promotion/transfer workflow rather than mutating historical student records. The Firebase emulator regression suite covers allowed corrections and denied identity changes. No V46 rules were modified; V47 emulator verification remains pending.
+
+## Student IDs and teacher role regression tests
+
+New student document IDs must match the same restricted identifier format expected by school-scoped marks and attendance references (`[A-Za-z0-9_-]`, 1–128 characters). The V47 emulator suite now includes invalid-ID rejection, teacher read-only access, cross-school denial and disabled-member denial. These are test definitions only until the Firestore emulator workflow runs successfully. Student promotion remains a separate unimplemented audited workflow; do not mutate the immutable historical class in place.
