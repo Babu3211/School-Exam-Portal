@@ -18,6 +18,8 @@ assert.match(code,/REVIEW_LIMITS=Object\.freeze/);
 assert.match(code,/students:2000,subjects:300,subject_assignments:20000,marks:20000,component_marks:20000/);
 assert.match(code,/rows\.length>maxRecords/);
 assert.match(code,/allPagesLoaded:true/);
+assert.match(code,/exception export blocked until records are reviewed/);
+assert.match(code,/duplicate_raw_and_component_mark/);
 assert.match(code,/ledgerExceptionsCsv\(preview\)/);
 assert.match(code,/td\.textContent=value/);
 assert.match(code,/\$\('logout'\)\.disabled=!actor/);
