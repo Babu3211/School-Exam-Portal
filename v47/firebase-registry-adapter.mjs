@@ -5,7 +5,7 @@ export function makeRegistryAdapter({db,doc,runTransaction}) {
     throw new TypeError('Firestore transaction dependencies required');
   return {
     async create(path,data) {
-      if(typeof path!=='string'||!/^schools\/[A-Za-z0-9_-]{3,64}(?:\/members\/[A-Za-z0-9_-]{1,64})?$/.test(path))
+      if(typeof path!=='string'||!/^schools\/[A-Za-z0-9_-]{3,64}(?:\/members\/[A-Za-z0-9_-]{1,128})?$/.test(path))
         throw new TypeError('Unapproved registry path');
       if(!data||typeof data!=='object'||Array.isArray(data))
         throw new TypeError('Invalid registry document');
