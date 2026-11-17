@@ -117,5 +117,9 @@ jobs:
         run: node scripts/test-v47-result-diagnostic-report.mjs
       - name: V47 safe diagnostic CSV export
         run: node scripts/test-v47-diagnostic-report-export.mjs
+      - name: V47 result diagnostic report
+        run: node scripts/test-v47-result-diagnostic-report.mjs
+      - name: V47 diagnostic CSV export
+        run: node scripts/test-v47-diagnostic-report-export.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
