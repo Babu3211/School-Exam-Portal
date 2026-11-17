@@ -73,6 +73,8 @@ service cloud.firestore {
       && !(request.resource.data['class'] in ['9','10'] && get(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId)).data.name == 'Computer')
       && exists(/databases/$(database)/documents/schools/$(schoolId)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId))
       && get(/databases/$(database)/documents/schools/$(schoolId)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data['class'] == request.resource.data['class']
+      && get(/databases/$(database)/documents/schools/$(schoolId)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.studentId == request.resource.data.studentId
+      && get(/databases/$(database)/documents/schools/$(schoolId)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.subjectId == request.resource.data.subjectId
       && !exists(/databases/$(database)/documents/schools/$(schoolId)/component_marks/$(docId))
       && docId == request.resource.data.term + ':' + request.resource.data.studentId + ':' + request.resource.data.subjectId;
    }
@@ -103,6 +105,8 @@ service cloud.firestore {
       && get(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId)).data.name == 'Computer'
       && exists(/databases/$(database)/documents/schools/$(schoolId)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId))
       && get(/databases/$(database)/documents/schools/$(schoolId)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data['class'] == request.resource.data['class']
+      && get(/databases/$(database)/documents/schools/$(schoolId)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.studentId == request.resource.data.studentId
+      && get(/databases/$(database)/documents/schools/$(schoolId)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.subjectId == request.resource.data.subjectId
       && !exists(/databases/$(database)/documents/schools/$(schoolId)/marks/$(docId));
    }
    match /component_marks/{docId} {
