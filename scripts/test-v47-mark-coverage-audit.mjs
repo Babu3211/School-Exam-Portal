@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';import {auditMarkCoverage} from '../v47/mark-coverage-audit.mjs';
+const mark={studentId:'s1',subjectId:'math',class:'6',term:'1st'};
+const base={schoolClass:'6',term:'1st',assignments:{s1:['math']},marks:[mark]};
+assert.deepEqual(auditMarkCoverage(base),{complete:true,expected:1,observed:1,issues:[]});
+assert.ok(auditMarkCoverage({...base,marks:[]}).issues.includes('missing_mark'));
+assert.ok(auditMarkCoverage({...base,marks:[mark,mark]}).issues.includes('duplicate_mark'));
+assert.ok(auditMarkCoverage({...base,marks:[{...mark,subjectId:'optional'}]}).issues.includes('unexpected_mark'));
+assert.ok(auditMarkCoverage({...base,marks:[{...mark,term:'final'}]}).issues.includes('wrong_class_or_term'));
+assert.throws(()=>auditMarkCoverage({...base,term:'third'}));
+console.log('V47 mark coverage audit passed');
