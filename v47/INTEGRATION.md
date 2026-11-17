@@ -198,3 +198,7 @@ Both raw and Computer component entry screens now keep student and subject class
 ## Mixed-subject raw ledger completeness
 
 The read-only V47 raw ledger preview now requires a raw mark for every assigned **ordinary** subject as well as all three Computer components for assigned Class 9/10 Computer subjects. Previously, a class with a complete Computer mark but a missing Mathematics mark could incorrectly be labeled `complete:true`. The diagnostic reports `missing_raw_mark` and remains non-publishable even if the data is complete. Malformed roster/mark inputs now produce diagnostic issues rather than crashing the preview rendering. Tests cover mixed subjects and malformed inputs. Official CDC/IEMIS 2083 grades and print layouts remain unimplemented and require verified source specifications. No live V46 changes.
+
+## Fail-closed malformed ledger inputs
+
+Raw ledger preview sorting now tolerates null/non-string mark identities while the coverage audit reports invalid records and never treats empty student, subject, or mark IDs as valid. Regression tests include empty IDs and a null mark student ID. No official CDC/IEMIS grading or result publication is enabled. These changes are development-branch-only and have not been verified with the Firebase Emulator.
