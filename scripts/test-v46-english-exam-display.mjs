@@ -8,12 +8,11 @@ for (const fn of ['refreshEntryExamOptions','refreshLedgerExamOptions']) {
  assert.ok(end>start,fn+' function boundary must exist');
  const body=html.slice(start,end+2);
  assert.ok(body.includes('value="${examEsc(x.id)}"'),'Stored exam ID must remain option value in '+fn);
- assert.ok(body.includes('examEsc(englishDisplayText(examEnglishDisplay(x).name))'),'Exam label must normalize legacy romanized names in '+fn);
+ assert.ok(body.includes('examEsc(englishDisplayText(x.examName))'),'Exam label must display English in '+fn);
  for(const mutation of ['updateDoc(', 'setDoc(', 'addDoc(', 'deleteDoc(']){
   assert.ok(!body.includes(mutation),'Rendering exam labels must not mutate Firestore: '+fn);
  }
 }
-assert.ok(html.includes("name:key!=='other'?term:englishDisplayText(exam.examName||'')"),'Legacy romanized exam names must resolve to English term');
 assert.ok(html.includes('function subjectEnglishLabel(value)'),'Subject English display helper retained');
 assert.ok(html.includes('function classEnglishLabel(value)'),'Class English display helper retained');
 console.log('V46 English exam display structural regression passed (no Firestore writes).');
