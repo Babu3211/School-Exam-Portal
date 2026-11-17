@@ -74,8 +74,8 @@ service cloud.firestore {
    }
    match /marks/{docId} {
     allow get, list: if reader(schoolId);
-    allow create, update: if schoolAdmin(schoolId) && validMark(docId);
-    allow delete: if schoolAdmin(schoolId);
+    allow create: if schoolAdmin(schoolId) && validMark(docId);
+    allow update, delete: if false; // development-only marks are immutable until a verified correction workflow exists
    }
    match /{collection}/{docId} {
     allow get, list: if collection in ['staff','classes','subjects','exams','mark_settings'] && reader(schoolId);
