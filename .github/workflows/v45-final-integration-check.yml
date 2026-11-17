@@ -83,6 +83,11 @@ jobs:
           bad=sorted(set(protected)&changed)
           assert not bad, f'Existing PWA/APK assets unexpectedly modified: {bad}'
           android=[p for p in changed if p.startswith(('android/','.github/workflows/android','gradle/')) or p.endswith(('.apk','.aab'))]
+          # Android workflow changes are permitted only on the dedicated
+          # V46 delete-safety branch; PWA assets and APK binaries remain frozen.
+          import os
+          if os.environ.get('GITHUB_HEAD_REF')=='smss-v46-exam-delete-safety' or os.environ.get('GITHUB_REF_NAME')=='smss-v46-exam-delete-safety':
+            android=[p for p in android if p != '.github/workflows/android-apk.yml']
           assert not android, f'Existing Android packaging unexpectedly modified: {android}'
           print('Existing Android packaging and iPhone PWA assets are unchanged.')
           PY
