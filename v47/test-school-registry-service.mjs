@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {registerSchool,provisionSchoolMember} from './school-registry-service.mjs';
+const records=new Map();
+const adapter={async create(path,data){if(records.has(path))throw Error('Already exists');records.set(path,data)}};
+const school=await registerSchool(adapter,{id:'schoolA',name:'School A'});
+assert.equal(school.active,false);
+assert.deepEqual(records.get('schools/schoolA'),school);
+await assert.rejects(()=>registerSchool(adapter,{id:'schoolA',name:'School A'}));
+const member=await provisionSchoolMember(adapter,{schoolId:'schoolA',uid:'teacher1',role:'teacher'});
+assert.equal(member.active,false);
+assert.deepEqual(records.get('schools/schoolA/members/teacher1'),member);
+await assert.rejects(()=>provisionSchoolMember(adapter,{schoolId:'schoolA',uid:'teacher1',role:'viewer'}));
+assert.equal(records.size,2);
+console.log('V47 create-only school registry adapter tests passed');
