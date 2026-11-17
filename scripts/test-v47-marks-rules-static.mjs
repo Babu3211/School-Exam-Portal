@@ -5,6 +5,7 @@ assert.match(rules,/match \/marks\/\{docId\}/);
 assert.match(rules,/allow create, update: if schoolAdmin\(schoolId\) && validMark\(docId\)/);
 assert.match(rules,/request\.resource\.data\.term in \['1st','2nd','final'\]/);
 assert.match(rules,/students\/\$\(request\.resource\.data\.studentId\)/);
+assert.match(rules,/subjects\/\$\(request\.resource\.data\.subjectId\)/);
 assert.equal((rules.match(/rules_version = '2';/g)||[]).length,1,'Exactly one rules header');
 assert.equal((rules.match(/match \/\{document=\*\*\}/g)||[]).length,1,'Exactly one root fallback');
 assert.equal((rules.match(/match \/marks\/\{docId\}/g)||[]).length,1,'Exactly one marks match');
