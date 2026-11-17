@@ -4,5 +4,7 @@ const full=assessResultReadiness(base);assert.equal(full.ready,false);assert.dee
 const incomplete=assessResultReadiness({...base,subjects:[{id:'math'},{id:'english'}],allPagesLoaded:false,gradingPolicyVerified:false});assert.ok(incomplete.blockers.includes('pagination_incomplete'));assert.ok(incomplete.blockers.includes('cdc_iemis_policy_unverified'));assert.ok(incomplete.blockers.includes('incomplete_student_subject_matrix'));
 const unknown=assessResultReadiness({...base,marks:[{...base.marks[0],studentId:'outside'}]});assert.ok(unknown.blockers.includes('unknown_student_or_subject'));
 const duplicate=assessResultReadiness({...base,marks:[...base.marks,...base.marks]});assert.ok(duplicate.blockers.includes('invalid_mark_records'));
+const empty=assessResultReadiness({...base,students:[],subjects:[],marks:[]});assert.ok(empty.blockers.includes('no_students'));assert.ok(empty.blockers.includes('no_subjects'));
+const duplicateRoster=assessResultReadiness({...base,students:[...base.students,...base.students]});assert.ok(duplicateRoster.blockers.includes('invalid_student_roster'));
 assert.throws(()=>assessResultReadiness({...base,schoolClass:'13'}));assert.throws(()=>assessResultReadiness({...base,students:null}));
 console.log('V47 fail-closed result readiness tests passed');
