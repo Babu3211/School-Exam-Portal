@@ -254,3 +254,7 @@ The read-only missing-marks browser review now supports cancelling an in-flight 
 ## Missing-marks diagnostic export integrity gate
 
 The CSV helper rejects `pagination_incomplete` and mismatches between reported and detailed exception counts. The browser also blocks the diagnostic export when roster, assignment, unexpected mark, or duplicate raw/component records indicate unreliable coverage. Invalid individual mark scores can still appear as diagnostic exceptions when the roster itself is consistent. This remains a non-publishable review tool; no official grade calculations or result publication are enabled. The changes are committed to the V47 development branch; CI/emulator/browser results must be verified before use with live school data.
+
+## Ledger exception review with blocked export
+
+The browser now displays read-only missing/invalid mark rows and audit issues even when a school roster integrity check blocks CSV export. The export button stays disabled for such reviews. The shared gate additionally rejects duplicate exception pairs, invalid student/subject IDs, unsupported exception reasons, and contradictory mark coverage totals. This is an audit aid, not a CDC/IEMIS result or atomic Firestore snapshot; data can change between paginated queries. Validate the V47 emulator, indexes, and browser before real school use.
