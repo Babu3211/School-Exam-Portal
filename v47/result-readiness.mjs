@@ -2,8 +2,9 @@ import {validSchoolClass} from './class-catalog.mjs';
 import {validateExamTerm} from './term-catalog.mjs';
 import {auditLoadedMarks} from './marks-audit.mjs';
 import {auditConfiguredFullMarks} from './full-marks-audit.mjs';
+import {auditComponentMarks} from './component-marks-audit.mjs';
 // Fail-closed readiness check. Raw mark pages alone never authorize results publication.
-export function assessResultReadiness({schoolClass,term,students,subjects,marks,allPagesLoaded=false,gradingPolicyVerified=false,requiredSubjectsByStudent=null,subjectLimits=null}){
+export function assessResultReadiness({schoolClass,term,students,subjects,marks,allPagesLoaded=false,gradingPolicyVerified=false,requiredSubjectsByStudent=null,subjectLimits=null,componentEntries=null,componentsBySubject=null}){
  if(!validSchoolClass(schoolClass))throw new Error('Invalid class');
  validateExamTerm(term);
  if(!Array.isArray(students)||!Array.isArray(subjects)||!Array.isArray(marks))throw new TypeError('Students, subjects and marks must be arrays');
@@ -19,6 +20,12 @@ export function assessResultReadiness({schoolClass,term,students,subjects,marks,
  if(audit.issueCount)blockers.push('invalid_mark_records');
  if(subjectLimits===null)blockers.push('subject_full_marks_unverified');
  else {const fullMarksAudit=auditConfiguredFullMarks({schoolClass,term,marks,subjectLimits});if(fullMarksAudit.issueCount)blockers.push('invalid_or_exceeded_subject_full_marks');}
+ if(componentEntries!==null||componentsBySubject!==null){
+  if(!Array.isArray(componentEntries)||!componentsBySubject||typeof componentsBySubject!=='object'||Array.isArray(componentsBySubject))blockers.push('component_configuration_unverified');
+  else {const componentAudit=auditComponentMarks({schoolClass,term,entries:componentEntries,componentsBySubject});if(componentAudit.issueCount)blockers.push('invalid_component_marks');}
+  // The current persisted marks schema only stores theory/practical; multi-component values are not integrated.
+  blockers.push('component_marks_storage_not_integrated');
+ }
  const seen=new Set();
  for(const mark of marks){if(!studentIds.has(mark?.studentId)||!subjectIds.has(mark?.subjectId))blockers.push('unknown_student_or_subject');else seen.add(JSON.stringify([mark.studentId,mark.subjectId]))}
  let expectedPairs=0;
