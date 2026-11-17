@@ -8,9 +8,9 @@ const serviceWorker = await readFile("sw.js", "utf8");
 const workflow = await readFile(".github/workflows/v44-quality-check.yml", "utf8");
 
 const must = (condition, message) => assert.ok(condition, message);
-
-must(html.includes("function editSubjectCatalog(id)") && html.includes("function archiveSubjectCatalog(id)") && html.includes("function restoreSubjectCatalog(id)"), "Subject Bank must support edit, safe archive and restore.");
-must(html.includes('data-subject-edit=') && html.includes('data-subject-archive=') && html.includes('data-subject-restore='), "Subject Bank must show edit, archive and restore actions.");
+must(html.includes("function editSubjectCatalog(id)") && html.includes("function archiveSubjectCatalog(id)") && html.includes("function confirmPermanentDeletion(label)"), "Subject Bank must support editing and double-confirmed deletion.");
+must(html.includes("data-subject-edit=") && html.includes("data-subject-archive=") && html.includes(">Delete</button>"), "Subject Bank must show edit and Delete actions.");
+must(html.includes('await deleteDoc(doc(db,"subjects",id))') && html.includes('if(used)throw new Error(') && html.includes('writeAuditLog("subjects","delete",id,'), "Subject deletion must check linked classes, physically delete and audit.");
 must(html.includes('updateDoc(doc(db,"subjects",id),{active:false,archivedAt:serverTimestamp()') && html.includes('updateDoc(doc(db,"subjects",id),{active:true,restoredAt:serverTimestamp()'), "Subject removal must be reversible soft-archive, not permanent deletion.");
 must(html.includes('updateDoc(doc(db,"subjects",editId),{name,code,updatedAt:serverTimestamp()') && html.includes('await writeAuditLog("subjects","update",editId,name)'), "Subject Bank edits must update Firebase and write an audit log.");
 must(html.includes('id="subjectCatalogCancel"') && html.includes('पुराना Marks तथा कक्षागत अभिलेख मेटिँदैनन्'), "Subject Bank editing must explain historical-data preservation and allow cancellation.");
