@@ -6,4 +6,6 @@ assert.doesNotMatch(js,/\bloadedClass\b/);
 assert.match(js,/loadedStudentClass!==\$\('schoolClass'\)\.value\|\|loadedSubjectClass!==\$\('schoolClass'\)\.value/);
 assert.match(html,/Development only/);assert.match(html,/max="4"/);assert.match(html,/max="36"/);assert.match(html,/max="10"/);
 assert.doesNotMatch(js,/localStorage|sessionStorage|innerHTML|eval\(/);
+assert.match(js,/finally\{if\(attempt===epoch\)lock\(false\)\}/,'Stale roster request must not unlock controls');
+assert.match(js,/schoolClass!==\$\('schoolClass'\)\.value/,'Roster query must check class before rendering');
 console.log('V47 Computer component browser static checks passed');
