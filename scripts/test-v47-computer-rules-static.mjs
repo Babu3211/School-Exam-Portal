@@ -16,4 +16,6 @@ assert.equal((rules.match(/match \/marks\/\{docId\}/g)||[]).length,1);
 assert.equal((rules.match(/match \/subject_assignments\/\{docId\}/g)||[]).length,1);
 assert.equal((rules.match(/\{/g)||[]).length,(rules.match(/\}/g)||[]).length,'Unbalanced Firestore rules');
 assert.ok(rules.trim().endsWith('}'));
+assert.equal((rules.match(/\.data\.studentId == request\.resource\.data\.studentId/g)||[]).length,2);
+assert.equal((rules.match(/\.data\.subjectId == request\.resource\.data\.subjectId/g)||[]).length,2);
 console.log('V47 Computer component security rules structural checks passed');
