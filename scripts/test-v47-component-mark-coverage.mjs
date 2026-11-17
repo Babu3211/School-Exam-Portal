@@ -32,5 +32,9 @@ for(const bad of [{theory:-1,practical:3},{theory:NaN,practical:3},{theory:4,pra
  const result=audit({rawMarks:[{studentId:'s1',subjectId:'computer_9',class:'9',term:'final',...bad}]});
  assert.ok(result.issues.includes('invalid_raw_mark_scores'),'Reject malformed raw score');
 }
+assert.ok(audit({students:[],subjects:[],assignments:[],componentMarks:[]}).issues.includes('no_students'));
+assert.ok(audit({students:[],subjects:[],assignments:[],componentMarks:[]}).issues.includes('no_subjects'));
+assert.ok(audit({students:[],subjects:[],assignments:[],componentMarks:[]}).issues.includes('no_subject_assignments'));
+assert.ok(audit({assignments:[{studentId:'',subjectId:'computer_9',class:'9'}]}).issues.includes('invalid_assignment'));
 assert.throws(()=>audit({schoolClass:'13'}));
 console.log('V47 Computer component coverage diagnostic checks passed');
