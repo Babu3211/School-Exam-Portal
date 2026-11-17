@@ -64,3 +64,7 @@ The browser now blocks login/logout, class/date changes, roster refresh, and sel
 ## Mark ledger read query and security repair
 
 `v47/marks-query.mjs` now pages marks by school, class and term; its composite index is declared in `v47/firestore.indexes.json`. This is a raw record query, **not** a CDC/IEMIS grade or mark ledger calculation. A malformed Firestore rules edit was discovered and repaired in the V47 development branch, and additional static tests guard against duplicate rule fragments and wildcard mark-write bypass. Firebase Emulator execution and deployment are still unverified.
+
+## Read-only marks preview UI
+
+`v47/marks-preview.html` and `v47/marks-preview-console.mjs` provide an independent development-only authenticated school-scoped raw marks viewer with class ECD–12, 1st/2nd/final term filters and paginated loading. Teacher and Viewer may read records for their active school; no mark-writing controls exist on this page. It is **not** a CDC/IEMIS grade calculation, Mark Ledger, Grade Ledger or Grade Sheet. The V46 application remains separate. Browser testing, index deployment and emulator verification are still pending.
