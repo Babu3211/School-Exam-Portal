@@ -13,7 +13,7 @@ async function loadOptions(collection,element,label){if(busy||!actor)return;cons
   const constraints=[api.where('class','==',schoolClass),api.orderBy('__name__'),api.limit(100)];
   if(cursor)constraints.push(api.startAfter(cursor));
   const snap=await api.getDocs(api.query(api.collection(db,'schools',schoolId,collection),...constraints));
-  if(attempt!==epoch||schoolClass!==$('schoolClass').value)return;
+  if(attempt!==epoch||schoolClass!==$('schoolClass').value||!actor)return;
   rows.push(...snap.docs.map(doc=>({id:doc.id,...doc.data()})));
   if(rows.length>5000)throw new Error('Class has over 5000 records; use searchable roster');
   cursor=snap.docs.length===100?snap.docs.at(-1):null;
@@ -22,7 +22,7 @@ async function loadOptions(collection,element,label){if(busy||!actor)return;cons
  element.replaceChildren();if(collection==='students'){studentsLoaded=true;loadedStudentClass=schoolClass}else{subjectsLoaded=true;loadedSubjectClass=schoolClass}
  for(const row of filtered){const option=document.createElement('option');option.value=row.id;option.textContent=String(row.name??row.id)+' ('+row.id+')';element.append(option)}
  status(filtered.length+' '+label+' loaded. Saving requires a valid student-subject assignment.');
- }catch(e){if(attempt===epoch){if(collection==='students'){studentsLoaded=false;loadedStudentClass=null;$('studentId').replaceChildren()}else{subjectsLoaded=false;loadedSubjectClass=null;$('subjectId').replaceChildren()}status('Load failed: '+e.message)}}finally{lock(false)}}
+ }catch(e){if(attempt===epoch&&actor){if(collection==='students'){studentsLoaded=false;loadedStudentClass=null;$('studentId').replaceChildren()}else{subjectsLoaded=false;loadedSubjectClass=null;$('subjectId').replaceChildren()}status('Load failed: '+e.message)}}finally{lock(false)}}
 $('loadStudents').onclick=()=>loadOptions('students',$('studentId'),'students');$('loadSubjects').onclick=()=>loadOptions('subjects',$('subjectId'),'subjects');
 $('schoolClass').onchange=()=>{studentsLoaded=false;subjectsLoaded=false;loadedStudentClass=null;loadedSubjectClass=null;$('studentId').replaceChildren();$('subjectId').replaceChildren();lock(false)};
 $('studentId').onchange=()=>lock(false);$('subjectId').onchange=()=>lock(false);
