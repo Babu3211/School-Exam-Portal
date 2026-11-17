@@ -246,5 +246,26 @@ try{
   await assertFails(outsider.doc(studentPath).get());
   await assertFails(admin.doc('schools/school_002/students/'+studentId).get());
  }
+ // Teacher assignment grants are school-scoped and admin-managed.
+ const teacherClass='schools/school_001/teacher_class_assignments/teacherA:1';
+ const teacherSubject='schools/school_001/teacher_subject_assignments/teacherA:1:math';
+ await assertFails(teacher.doc(teacherClass).set({uid:'teacherA',class:'1',active:true}));
+ await assertFails(teacher.doc(teacherSubject).set({uid:'teacherA',class:'1',subjectId:'math',active:true}));
+ await assertFails(viewer.doc(teacherClass).set({uid:'teacherA',class:'1',active:true}));
+ await assertSucceeds(admin.doc(teacherClass).set({uid:'teacherA',class:'1',active:true}));
+ await assertSucceeds(admin.doc(teacherSubject).set({uid:'teacherA',class:'1',subjectId:'math',active:true}));
+ await assertFails(teacher.doc('schools/school_001/attendance/2026-11-23_s1').set({date:'2026-11-23',studentId:'s1',class:'9',present:true}));
+ await assertSucceeds(teacher.doc('schools/school_001/attendance/2026-11-23_s1').set({date:'2026-11-23',studentId:'s1',class:'1',present:true}));
+ await assertSucceeds(teacher.doc('schools/school_001/attendance/2026-11-23_s1').update({present:false}));
+ await assertFails(teacher.doc('schools/school_001/attendance/2026-11-23_s1').delete());
+ await assertSucceeds(teacher.doc('schools/school_001/marks/2nd:s1:math').set({studentId:'s1',subjectId:'math',class:'1',term:'2nd',theory:30,practical:10}));
+ await assertFails(teacher.doc('schools/school_001/marks/2nd:s1:math').update({theory:35}));
+ await assertFails(teacher.doc('schools/school_001/marks/final:s1:inactive').set({studentId:'s1',subjectId:'inactive',class:'1',term:'final',theory:30,practical:10}));
+ await assertFails(teacher.doc('schools/school_002/attendance/2026-11-23_s1').set({date:'2026-11-23',studentId:'s1',class:'1',present:true}));
+ await assertFails(teacher.doc('schools/school_002/marks/2nd:s1:math').set({studentId:'s1',subjectId:'math',class:'1',term:'2nd',theory:30,practical:10}));
+ await assertSucceeds(admin.doc(teacherClass).update({active:false}));
+ await assertFails(teacher.doc('schools/school_001/attendance/2026-11-24_s1').set({date:'2026-11-24',studentId:'s1',class:'1',present:true}));
+ await assertSucceeds(admin.doc(teacherSubject).update({active:false}));
+ await assertFails(teacher.doc('schools/school_001/marks/final:s1:math').set({studentId:'s1',subjectId:'math',class:'1',term:'final',theory:30,practical:10}));
  console.log('V47 cross-school emulator access tests passed');
 }finally{await env.cleanup();}
