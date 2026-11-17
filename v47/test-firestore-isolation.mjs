@@ -57,6 +57,17 @@ try {
   await assertFails(getDoc(doc(db('firstAdmin'),student('schoolF','s1'))));
   await assertSucceeds(updateDoc(doc(db('root'),school('schoolF')),{active:true}));
   await assertSucceeds(setDoc(doc(db('firstAdmin'),student('schoolF','s1')),{name:'First Student'}));
+  // Ten production-critical isolation and lifecycle assertions.
+  await assertFails(getDoc(doc(anon,school('schoolA')))); // 1
+  await assertFails(getDoc(doc(db('viewerA'),school('schoolB')))); // 2
+  await assertSucceeds(getDoc(doc(db('adminA'),school('schoolA')))); // 3
+  await assertFails(deleteDoc(doc(db('adminA'),student('schoolA','s1')))); // 4
+  await assertFails(deleteDoc(doc(db('root'),student('schoolA','s1')))); // 5
+  await assertFails(updateDoc(doc(db('teacherA'),student('schoolA','s1')),{name:'No'})); // 6
+  await assertFails(setDoc(doc(db('viewerA'),'schools/schoolA/attendance/a1'),{present:true})); // 7
+  await assertFails(setDoc(doc(db('adminB'),'schools/schoolA/attendance/a1'),{present:true})); // 8
+  await assertSucceeds(setDoc(doc(db('adminA'),'schools/schoolA/attendance/a1'),{present:true})); // 9
+  await assertFails(deleteDoc(doc(db('root'),'schools/schoolA/attendance/a1'))); // 10
   await assertFails(deleteDoc(doc(db('root'),school('schoolA'))));
   await assertFails(setDoc(doc(db('root'),school('schoolG')),{id:'schoolG',name:'School G',iemisCode:123456,active:false}));
   await assertFails(updateDoc(doc(db('adminA'),school('schoolA')),{active:false}));
