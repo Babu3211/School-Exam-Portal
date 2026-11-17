@@ -92,6 +92,42 @@ service cloud.firestore {
     allow create: if schoolAdmin(schoolId) && validSubject(docId);
     allow update, delete: if false;
    }
+   function validSubjectAssignment(docId) {
+    return request.resource.data.keys().hasOnly(['studentId','subjectId','class'])
+      && request.resource.data.keys().hasAll(['studentId','subjectId','class'])
+      && request.resource.data.studentId is string
+      && request.resource.data.studentId.matches('^[A-Za-z0-9_-]{1,128}
+    allow get, list: if collection in ['staff','classes','exams','mark_settings'] && reader(schoolId);
+    allow create, update, delete: if collection in ['staff','classes','exams','mark_settings'] && schoolAdmin(schoolId);
+   }
+  }
+  match /{document=**} { allow read, write: if false; }
+ }
+}
+)
+      && request.resource.data.subjectId is string
+      && request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}
+    allow get, list: if collection in ['staff','classes','exams','mark_settings'] && reader(schoolId);
+    allow create, update, delete: if collection in ['staff','classes','exams','mark_settings'] && schoolAdmin(schoolId);
+   }
+  }
+  match /{document=**} { allow read, write: if false; }
+ }
+}
+)
+      && request.resource.data['class'] in ['ECD','1','2','3','4','5','6','7','8','9','10','11','12']
+      && docId == request.resource.data.studentId + '_' + request.resource.data.subjectId
+      && exists(/databases/$(database)/documents/schools/$(schoolId)/students/$(request.resource.data.studentId))
+      && get(/databases/$(database)/documents/schools/$(schoolId)/students/$(request.resource.data.studentId)).data['class'] == request.resource.data['class']
+      && exists(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId))
+      && get(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId)).data.get('active', false) == true
+      && get(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId)).data['class'] == request.resource.data['class'];
+   }
+   match /subject_assignments/{docId} {
+    allow get, list: if reader(schoolId);
+    allow create: if schoolAdmin(schoolId) && validSubjectAssignment(docId);
+    allow update, delete: if false;
+   }
    match /{collection}/{docId} {
     allow get, list: if collection in ['staff','classes','exams','mark_settings'] && reader(schoolId);
     allow create, update, delete: if collection in ['staff','classes','exams','mark_settings'] && schoolAdmin(schoolId);
