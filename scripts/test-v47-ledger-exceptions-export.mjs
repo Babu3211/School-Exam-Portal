@@ -3,7 +3,7 @@ import {buildRawLedgerPreview} from '../v47/raw-ledger-preview.mjs';
 import {ledgerExceptionsCsv} from '../v47/ledger-exceptions-export.mjs';
 const args={schoolClass:'9',term:'final',students:[{id:'s1',name:'="HACK", Student',class:'9'}],subjects:[{id:'math',name:'Mathematics',class:'9',active:true}],assignments:[{studentId:'s1',subjectId:'math',class:'9'}],rawMarks:[],componentMarks:[],allPagesLoaded:true};
 const missing=buildRawLedgerPreview(args),csv=ledgerExceptionsCsv(missing);
-assert.match(csv,/missing_mark/);assert.match(csv,/'="HACK"/);assert.ok(!csv.includes(',"="HACK"'));
+assert.match(csv,/missing_mark/);assert.ok(csv.includes("'=\"\"HACK\"\""));assert.ok(!csv.includes(',"="HACK"'));
 assert.equal(csv.trimEnd().split('\r\n').length,2);
 const invalid=buildRawLedgerPreview({...args,rawMarks:[{studentId:'s1',subjectId:'math',class:'9',term:'final',theory:-2,practical:1}]});
 assert.match(ledgerExceptionsCsv(invalid),/invalid_score_or_format/);
