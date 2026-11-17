@@ -34,6 +34,9 @@ jobs:
           node v47/test-school-directory.mjs
           node v47/test-school-session.mjs
           node v47/test-tenant-pagination.mjs
+          node v47/test-super-admin-dashboard.mjs
+          node v47/test-school-registration-form.mjs
+          node v47/test-teacher-assignment.mjs
 
       - name: Firestore tenant isolation emulator tests
         run: npx firebase emulators:exec --project smss-v47-isolation-test --only firestore --config v47/firebase.emulator.json "node v47/test-firestore-isolation.mjs"
