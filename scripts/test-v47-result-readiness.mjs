@@ -13,6 +13,7 @@ const invalidAssignments=assessResultReadiness({...base,requiredSubjectsByStuden
 const unexpected=assessResultReadiness({...base,requiredSubjectsByStudent:{s1:['math','optional']}});assert.ok(unexpected.blockers.includes('invalid_subject_assignments'));
 const unknown=assessResultReadiness({...base,marks:[{...base.marks[0],studentId:'outside'}]});assert.ok(unknown.blockers.includes('unknown_student_or_subject'));
 const duplicate=assessResultReadiness({...base,marks:[...base.marks,...base.marks]});assert.ok(duplicate.blockers.includes('invalid_mark_records'));
+const emptyMarks=assessResultReadiness({...base,marks:[]});assert.ok(emptyMarks.blockers.includes('incomplete_student_subject_matrix'));assert.equal(emptyMarks.ready,false);
 const empty=assessResultReadiness({...base,students:[],subjects:[],marks:[]});assert.ok(empty.blockers.includes('no_students'));assert.ok(empty.blockers.includes('no_subjects'));
 const duplicateRoster=assessResultReadiness({...base,students:[...base.students,...base.students]});assert.ok(duplicateRoster.blockers.includes('invalid_student_roster'));
 assert.throws(()=>assessResultReadiness({...base,schoolClass:'13'}));assert.throws(()=>assessResultReadiness({...base,students:null}));
