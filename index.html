@@ -2289,6 +2289,23 @@ function markVersion(record){return JSON.stringify([record?.updatedAt?.seconds,r
 async function saveIemisEntryRecords(entries,context,exam,cl,uid){
  if(roleHas('viewer'))throw new Error('Viewer ले Marks Save गर्न पाउँदैन।');
  if(iemisEntryContext()!==context||auth.currentUser?.uid!==uid)throw new Error('कक्षा, परीक्षा वा Login परिवर्तन भयो। Refresh गरेर पुनः जाँच गर्नुहोस्।');
+ // A Save must cover every eligible student in each selected subject, not just
+ // changed/visible rows. Zero is a valid score; explicit Absent is also valid.
+ const grid=iemisEntryGrid;
+ if(!grid||grid.options.examId!==exam.id||canonicalStudentClass(grid.options.classNo)!==canonicalStudentClass(cl))throw new Error('विद्यार्थी सूची परिवर्तन भएको छ। Refresh गर्नुहोस्।');
+ for(const sj of grid.selectedSubjects){
+  const subject=grid.options.subjects[sj],schema=grid.schema(sj);
+  for(let si=0;si<grid.options.students.length;si++){
+   const student=grid.options.students[si];
+   if(!grid.allowed(si,sj))continue;
+   const draft=grid.draft(si,sj);
+   if(draft.incompatible)throw new Error(student.studentName+' / '+subject+': पुरानो Marks format नमिलेको छ। Admin ले जाँच गर्नुहोस्।');
+   if(draft.isAbsent)continue;
+   const required=schema.filter(c=>!c.readonly);
+   const missing=required.filter(c=>draft.values[c.key]===null||draft.values[c.key]===undefined||String(draft.values[c.key]).trim()==='');
+   if(missing.length)throw new Error(student.studentName+' / '+subject+': '+missing.map(c=>c.label).join(', ')+' प्राप्ताङ्क खाली छ। सबै विद्यार्थीको Marks पूरा नभएसम्म Save हुँदैन।');
+  }
+ }
  const items=[];
  for(const entry of entries){
   const student=marksStudents.find(s=>s.id===entry.student.id);
