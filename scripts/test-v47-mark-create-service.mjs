@@ -12,4 +12,11 @@ await assert.rejects(()=>createSchoolMarkOnly({...args,input:{...input,term:'fin
 docs.set('schools/school_001/subject_assignments/s1:math',{studentId:'s1',subjectId:'math',class:'6'});
 docs.get('schools/school_001/subjects/math').active=false;await assert.rejects(()=>createSchoolMarkOnly({...args,input:{...input,term:'final'}}),/Subject missing/);docs.get('schools/school_001/subjects/math').active=true;
 docs.get('schools/school_001/students/s1').class='7';await assert.rejects(()=>createSchoolMarkOnly({...args,input:{...input,term:'final'}}),/Student missing/);
+docs.get('schools/school_001/students/s1').class='9';
+docs.set('schools/school_001/subjects/computer',{name:'Computer',class:'9',active:true});
+docs.set('schools/school_001/subject_assignments/s1:computer',{studentId:'s1',subjectId:'computer',class:'9'});
+await assert.rejects(()=>createSchoolMarkOnly({...args,input:{...input,subjectId:'computer',class:'9',term:'final'}}),/Use Computer 4\/36\/10/);
+docs.set('schools/school_001/component_marks/final:s1:math',{scores:{component_a:4}});
+docs.get('schools/school_001/subjects/math').class='9';
+await assert.rejects(()=>createSchoolMarkOnly({...args,input:{...input,class:'9',term:'final'}}),/already exists/);
 console.log('V47 create-only raw marks transaction tests passed');
