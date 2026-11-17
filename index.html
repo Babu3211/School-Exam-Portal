@@ -1746,7 +1746,7 @@ function refreshEntryExamOptions(){
  const sel=document.getElementById('entryExam');if(!sel)return;
  const previous=sel.value;
  const rows=smssExamsForClassTerm(className,termKey).sort((a,b)=>String(a.startDate||'').localeCompare(String(b.startDate||'')));
- sel.innerHTML='<option value="">Select Exam</option>'+rows.map(x=>`<option value="${examEsc(x.id)}">${examEsc(englishDisplayText(examEnglishDisplay(x).name))} — ${examEsc(x.academicYear||'')}</option>`).join('');
+ sel.innerHTML='<option value="">Select Exam</option>'+rows.map(x=>`<option value="${examEsc(x.id)}">${smssExamTermKey(x)!=='other'?examEsc(examEnglishDisplay(x).name):examEsc(englishDisplayText(x.examName))} — ${examEsc(x.academicYear||'')}</option>`).join('');
  if(rows.some(x=>x.id===previous))sel.value=previous;
 }
 function refreshLedgerExamOptions(){
@@ -1756,7 +1756,7 @@ function refreshLedgerExamOptions(){
  const previous=sel.value;
  const year=document.getElementById('ledgerViewYear')?.value;
  const rows=smssExamsForClassTerm(className,termKey).filter(x=>!year||String(x.academicYear)===year).sort((a,b)=>String(a.startDate||'').localeCompare(String(b.startDate||'')));
- sel.innerHTML='<option value="">Select Exam</option>'+rows.map(x=>`<option value="${examEsc(x.id)}">${examEsc(englishDisplayText(examEnglishDisplay(x).name))} — ${examEsc(x.academicYear||'')}</option>`).join('');
+ sel.innerHTML='<option value="">Select Exam</option>'+rows.map(x=>`<option value="${examEsc(x.id)}">${smssExamTermKey(x)!=='other'?examEsc(examEnglishDisplay(x).name):examEsc(englishDisplayText(x.examName))} — ${examEsc(x.academicYear||'')}</option>`).join('');
  if(rows.some(x=>x.id===previous))sel.value=previous;
 }
 
@@ -2226,12 +2226,9 @@ async function loadMarksEntry(){
    const markSnapsPromise=Promise.all(pairs.map(x=>getDocs(query(collection(db,'marks'),where('className','==',x.className),where('subject','==',x.subject),...(String(x.section||'').trim()?[where('section','==',String(x.section).trim())]:[])))));
    // Fetch settings concurrently with assignment-scoped mark queries; keep Firestore permissions unchanged.
    const settingsPromise=getDocs(collection(db,'mark_settings'));
-   // Diagnose which assignment-scoped read fails; never fall back to unrestricted reads.
-   const readResults=await Promise.allSettled([studentSnapsPromise,examSnapsPromise,markSnapsPromise,settingsPromise]);
-   const readNames=['students (assigned classes)','exams (assigned classes)','marks (assigned subjects)','mark_settings'];
-   const failures=readResults.map((r,i)=>r.status==='rejected'?readNames[i]+': '+safeNoticeError(r.reason):'').filter(Boolean);
-   if(failures.length)throw new Error('Firestore read blocked — '+failures.join(' | '));
-   const [studentSnaps,examSnaps,markSnaps,settingsSnap]=readResults.map(r=>r.value);
+   // Preserve parallel, assignment-scoped reads while naming the failed collection.
+   const namedRead=(promise,label)=>promise.catch(e=>{throw new Error(label+': '+safeNoticeError(e));});
+   const [studentSnaps,examSnaps,markSnaps,settingsSnap]=await Promise.all([namedRead(studentSnapsPromise,'students'),namedRead(examSnapsPromise,'exams'),namedRead(markSnapsPromise,'marks'),namedRead(settingsPromise,'mark_settings')]);
    ms=settingsSnap;
    ss={docs:studentSnaps.flatMap(x=>x.docs)};
    es={docs:examSnaps.flatMap(x=>x.docs)};
