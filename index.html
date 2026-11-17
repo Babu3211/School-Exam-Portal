@@ -1856,16 +1856,16 @@ async function deleteExam(id){
     String(m.termKey||m.termName||"")===String(x.termKey||x.termName||"");
   });
   const count=linked.length;
+  if(count>499)throw new Error("यो परीक्षामा 499 भन्दा धेरै Marks रेकर्ड छन्। सुरक्षित ठूलो Delete प्रक्रिया आवश्यक छ; कुनै डाटा मेटिएको छैन।");
   if(!confirm(label+"\\n\\nयस परीक्षाका "+count+" वटा Marks रेकर्डसहित परीक्षा स्थायी रूपमा Delete गर्ने हो?"))return;
   if(!confirm("अन्तिम पुष्टि: "+label+"\\n\\n"+count+" वटा Marks रेकर्ड मेटिन्छन्। फेरि Entry गर्नुपर्नेछ। यो काम Undo गर्न मिल्दैन।"))return;
-  // Firestore batches are limited to 500 writes. Remove marks in small
-  // batches, then delete the exam only after all linked marks are removed.
-  for(let offset=0;offset<linked.length;offset+=400){
-   const batch=writeBatch(db);
-   linked.slice(offset,offset+400).forEach(d=>batch.delete(d.ref));
-   await batch.commit();
-  }
-  await deleteDoc(doc(db,"exams",id));
+  // Atomic removal: never leave a half-deleted exam after a network failure.
+  // One batch contains all marks plus the exam document (max 500 writes).
+  if(linked.length>499)throw new Error("यो परीक्षामा 499 भन्दा धेरै Marks रेकर्ड छन्। आंशिक Delete रोकिएको छ। सुरक्षित ठूलो Delete प्रक्रिया आवश्यक छ।");
+  const batch=writeBatch(db);
+  linked.forEach(d=>batch.delete(d.ref));
+  batch.delete(doc(db,"exams",id));
+  await batch.commit();
   await writeAuditLog("exams","delete",id,label+"; deletedMarks="+count);
   const form=document.getElementById("examForm");
   if(form?.dataset.editId===id){form.reset();delete form.dataset.editId;document.getElementById("examYear").value="2083";document.getElementById("examSaveBtn").textContent="Save गर्नुहोस्";document.getElementById("examCancelBtn").hidden=true}
