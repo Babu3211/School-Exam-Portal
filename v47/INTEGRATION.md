@@ -242,3 +242,7 @@ The read-only raw ledger summary now distinguishes `markedPairs` (a record exist
 ## Firestore indexes and CI gate for missing marks review
 
 `v47/firestore.indexes.json` now includes collection-scoped class/ID indexes for `subjects` and `subject_assignments`, and class/term/ID for `component_marks`, alongside existing student and raw mark indexes. The V47 non-deploy module workflow invokes the new missing-mark browser static test, exception CSV safety test and index coverage test on branch pushes. These index definitions must be deployed to the separate V47 Firebase project before the browser's real queries are considered verified. The workflow does not deploy V47 or modify V46 production.
+
+## High-enrollment review and logout cancellation
+
+The read-only missing marks review now allows up to 20,000 records **per collection**, so a 1,500-student school with multiple subject assignments does not hit the previous 5,000-record cap. This is a safety cap, not a recommended free-tier query size: loading all class records may incur substantial Firestore reads, and production optimization/pagination UX is still required. Users can sign out while a review is loading; the request epoch invalidates stale responses, preventing a pending read from repopulating the UI after sign-out. Tests were added to the V47 non-deploy workflow, but live Firebase and CI pass results have not been verified.
