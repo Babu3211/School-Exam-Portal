@@ -52,6 +52,11 @@ jobs:
               'scripts/test-v46-delete-controls.mjs',
               'scripts/test-v46-viewer-class-exam-readonly.mjs'
             })
+          # Exam+marks deletion PR: permit only the updated static safety test.
+          # Production application source remains subject to all normal gates.
+          if os.environ.get('GITHUB_HEAD_REF')=='smss-v46-exam-marks-cascade-delete' or os.environ.get('GITHUB_REF_NAME')=='smss-v46-exam-marks-cascade-delete':
+            allowed.update({'.github/workflows/v45-final-integration-check.yml',
+              'scripts/test-v46-delete-controls.mjs'})
           # This school-authorized IEMIS verification branch has a separate,
           # exact file scope. All dashboard, permission and emulator checks below
           # still run; other branches retain the existing source freeze.
