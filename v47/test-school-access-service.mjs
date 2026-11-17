@@ -17,6 +17,7 @@ await assert.rejects(()=>loadSchoolAccess({...args,schoolId:'schoolA',uid:'userB
 assert.equal((await loadSchoolAccess({...args,schoolId:'schoolC'})).canRead,false);
 await assert.rejects(()=>loadSchoolAccess({...args,schoolId:'../schoolB'}),TypeError);
 await assert.rejects(()=>loadSchoolAccess({...args,schoolId:'schoolA',isSuperAdmin:true}),/server-side/);
+await assert.rejects(()=>loadSchoolAccess({...args,auth:{currentUser:null},schoolId:'schoolA'}),/does not match/);
 const deniedApi={...api,getDoc:async()=>{throw Object.assign(new Error('denied'),{code:'permission-denied'})}};
 assert.equal((await loadSchoolAccess({...args,api:deniedApi,schoolId:'schoolA'})).canRead,false);
 const offlineApi={...api,getDoc:async()=>{throw Object.assign(new Error('offline'),{code:'unavailable'})}};
