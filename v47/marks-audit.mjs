@@ -9,7 +9,7 @@ export function auditLoadedMarks(records,{schoolClass,term}){
  for(let index=0;index<records.length;index++){
   const r=records[index];const studentId=r?.studentId,subjectId=r?.subjectId;
   if(!r||typeof studentId!=='string'||typeof subjectId!=='string'||!studentId||!subjectId){issues.push({index,code:'missing_identity'});continue}
-  const key=studentId+'\\0'+subjectId;
+  const key=JSON.stringify([studentId,subjectId]);
   if(seen.has(key))issues.push({index,code:'duplicate_student_subject'});else seen.add(key);
   if(r.class!==schoolClass||r.term!==term)issues.push({index,code:'wrong_class_or_term'});
   for(const field of ['theory','practical'])if(typeof r[field]!=='number'||!Number.isFinite(r[field])||r[field]<0||r[field]>100)issues.push({index,code:'invalid_'+field});
