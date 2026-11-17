@@ -1842,26 +1842,37 @@ async function deleteExam(id){
  const x=cachedExams.find(v=>v.id===id);if(!x)return;
  if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){setExamMessage("Admin login आवश्यक छ।",true);return}
  const label=String(x.examName||"Exam")+" — "+String(x.className||"");
- if(!confirmPermanentDeletion(label))return;
  try{
-  // Do not orphan existing marks. A missing examId is treated conservatively.
+  // Resolve the affected marks BEFORE requesting either confirmation.
+  // Never infer ownership from class/term alone: another exam may share those values.
   const markSnap=await getDocs(collection(db,"marks"));
-  const related=markSnap.docs.some(d=>{
+  const linked=markSnap.docs.filter(d=>{
    const m=d.data();
-   return String(m.examId||m.examID||"")===id ||
-    (String(m.examName||"")===String(x.examName||"") &&
-     String(m.academicYear||"")===String(x.academicYear||"") &&
-     canonicalStudentClass(m.className||m.class)===canonicalStudentClass(x.className));
+   const explicit=String(m.examId||m.examID||"");
+   if(explicit)return explicit===id;
+   return String(m.examName||"")===String(x.examName||"") &&
+    String(m.academicYear||"")===String(x.academicYear||"") &&
+    canonicalStudentClass(m.className||m.class)===canonicalStudentClass(x.className) &&
+    String(m.termKey||m.termName||"")===String(x.termKey||x.termName||"");
   });
-  if(related)throw new Error("यो परीक्षासँग Marks जोडिएका छन्। Marks सुरक्षित राख्न परीक्षा Delete रोकियो।");
+  const count=linked.length;
+  if(!confirm(label+"\\n\\nयस परीक्षाका "+count+" वटा Marks रेकर्डसहित परीक्षा स्थायी रूपमा Delete गर्ने हो?"))return;
+  if(!confirm("अन्तिम पुष्टि: "+label+"\\n\\n"+count+" वटा Marks रेकर्ड मेटिन्छन्। फेरि Entry गर्नुपर्नेछ। यो काम Undo गर्न मिल्दैन।"))return;
+  // Firestore batches are limited to 500 writes. Remove marks in small
+  // batches, then delete the exam only after all linked marks are removed.
+  for(let offset=0;offset<linked.length;offset+=400){
+   const batch=writeBatch(db);
+   linked.slice(offset,offset+400).forEach(d=>batch.delete(d.ref));
+   await batch.commit();
+  }
   await deleteDoc(doc(db,"exams",id));
-  await writeAuditLog("exams","delete",id,label);
+  await writeAuditLog("exams","delete",id,label+"; deletedMarks="+count);
   const form=document.getElementById("examForm");
   if(form?.dataset.editId===id){form.reset();delete form.dataset.editId;document.getElementById("examYear").value="2083";document.getElementById("examSaveBtn").textContent="Save गर्नुहोस्";document.getElementById("examCancelBtn").hidden=true}
-  await loadExams();setExamMessage("परीक्षा Delete भयो। Marks मा कुनै परिवर्तन गरिएको छैन।");
+  await loadExams();setExamMessage("परीक्षा र "+count+" वटा Marks रेकर्ड Delete भए। नयाँ परीक्षा बनाएर पुनः Marks Entry गर्न सकिन्छ।");
  }catch(error){
   console.error("Exam delete failed:",safeNoticeError(error));
-  setExamMessage(`Delete भएन: ${safeNoticeError(error)||"प्रणाली त्रुटि"}`,true);
+  setExamMessage("Delete पूरा भएन: "+(safeNoticeError(error)||"प्रणाली त्रुटि")+"। पुनः प्रयास गर्नुअघि रेकर्ड जाँच गर्नुहोस्।",true);
  }
 }
 async function restoreExam(id){
