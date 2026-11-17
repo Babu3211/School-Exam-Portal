@@ -10,4 +10,10 @@ assert.match(rules,/allow create: if memberRole\(schoolId,'school_admin'\) && va
 assert.match(rules,/!exists\(\/databases\/\$\(database\)\/documents\/schools\/\$\(schoolId\)\/marks\/\$\(docId\)\)/);
 const generic=rules.slice(rules.indexOf('match /{collection}/{docId}'));
 assert.doesNotMatch(generic,/['"]component_marks['"]/);
+assert.equal((rules.match(/rules_version = '2';/g)||[]).length,1);
+assert.equal((rules.match(/function validSubjectAssignment\(docId\)/g)||[]).length,1);
+assert.equal((rules.match(/match \/marks\/\{docId\}/g)||[]).length,1);
+assert.equal((rules.match(/match \/subject_assignments\/\{docId\}/g)||[]).length,1);
+assert.equal((rules.match(/\{/g)||[]).length,(rules.match(/\}/g)||[]).length,'Unbalanced Firestore rules');
+assert.ok(rules.trim().endsWith('}'));
 console.log('V47 Computer component security rules structural checks passed');
