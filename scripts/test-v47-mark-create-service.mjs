@@ -7,6 +7,9 @@ assert.equal((await createSchoolMarkOnly(args)).id,'1st:s1:math');assert.equal(d
 await assert.rejects(()=>createSchoolMarkOnly(args),/already exists/);assert.equal(docs.size,3);
 await assert.rejects(()=>createSchoolMarkOnly({...args,actor:{...actor,role:'viewer'}}));
 await assert.rejects(()=>createSchoolMarkOnly({...args,schoolId:'school_002'}));assert.equal(transactions,2);
+docs.delete('schools/school_001/subject_assignments/s1:math');
+await assert.rejects(()=>createSchoolMarkOnly({...args,input:{...input,term:'final'}}),/assignment required/);
+docs.set('schools/school_001/subject_assignments/s1:math',{studentId:'s1',subjectId:'math',class:'6'});
 docs.get('schools/school_001/subjects/math').active=false;await assert.rejects(()=>createSchoolMarkOnly({...args,input:{...input,term:'final'}}),/Subject missing/);docs.get('schools/school_001/subjects/math').active=true;
 docs.get('schools/school_001/students/s1').class='7';await assert.rejects(()=>createSchoolMarkOnly({...args,input:{...input,term:'final'}}),/Student missing/);
 console.log('V47 create-only raw marks transaction tests passed');
