@@ -15,7 +15,7 @@ export async function createComputerComponentMark({db,api,actor,schoolId,input})
    tx.get(ref('marks',id)),tx.get(ref('component_marks',id))
   ]);
   if(!student.exists()||student.data().class!==entry.class)throw new Error('Student missing or wrong class');
-  if(!subject.exists()||subject.data().class!==entry.class||subject.data().active!==true||subject.data().name.trim().toLowerCase()!=='computer')throw new Error('Active Computer subject required');
+  if(!subject.exists()||subject.data().class!==entry.class||subject.data().active!==true||subject.data().name!=='Computer')throw new Error('Active Computer subject required');
   if(!assignment.exists()||assignment.data().studentId!==entry.studentId||assignment.data().subjectId!==entry.subjectId||assignment.data().class!==entry.class)throw new Error('Computer subject assignment required');
   if(raw.exists()||existing.exists())throw new Error('Existing raw or component mark; overwrite blocked');
   tx.set(ref('component_marks',id),entry);
