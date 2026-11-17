@@ -15,7 +15,7 @@ export async function createSchoolMarkOnly({db,api,actor,schoolId,input}){
   // All reads precede the write, so concurrent roster/subject changes retry the transaction.
   const [student,subject,assignment,existing]=await Promise.all([tx.get(studentRef),tx.get(subjectRef),tx.get(assignmentRef),tx.get(markRef)]);
   if(!student.exists()||student.data().class!==entry.class)throw new Error('Student missing or in another class');
-  if(!subject.exists()||subject.data().active===false||(subject.data().class!==undefined&&subject.data().class!==entry.class))throw new Error('Subject missing, inactive or in another class');
+  if(!subject.exists()||subject.data().active!==true||subject.data().class!==entry.class)throw new Error('Subject missing, inactive or in another class');
   if(!assignment.exists()||assignment.data().studentId!==entry.studentId||assignment.data().subjectId!==entry.subjectId||assignment.data().class!==entry.class)throw new Error('Student subject assignment required');
   if(existing.exists())throw new Error('Mark already exists; overwrite blocked');
   tx.set(markRef,entry);
