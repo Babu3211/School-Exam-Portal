@@ -3,6 +3,7 @@ import {validateExamTerm} from './term-catalog.mjs';
 import {auditLoadedMarks} from './marks-audit.mjs';
 import {auditConfiguredFullMarks} from './full-marks-audit.mjs';
 import {auditComponentMarks} from './component-marks-audit.mjs';
+import {auditSubjectAssignments} from './subject-assignment-audit.mjs';
 // Fail-closed readiness check. Raw mark pages alone never authorize results publication.
 export function assessResultReadiness({schoolClass,term,students,subjects,marks,allPagesLoaded=false,gradingPolicyVerified=false,requiredSubjectsByStudent=null,subjectLimits=null,componentEntries=null,componentsBySubject=null}){
  if(!validSchoolClass(schoolClass))throw new Error('Invalid class');
@@ -16,6 +17,10 @@ export function assessResultReadiness({schoolClass,term,students,subjects,marks,
  const studentIds=new Set(),subjectIds=new Set();
  for(const student of students){if(!student||typeof student.id!=='string'||!student.id||student.class!==schoolClass||studentIds.has(student.id))blockers.push('invalid_student_roster');else studentIds.add(student.id)}
  for(const subject of subjects){if(!subject||typeof subject.id!=='string'||!subject.id||subjectIds.has(subject.id))blockers.push('invalid_subject_roster');else subjectIds.add(subject.id)}
+ if(requiredSubjectsByStudent!==null){
+  if(!requiredSubjectsByStudent||typeof requiredSubjectsByStudent!=='object'||Array.isArray(requiredSubjectsByStudent))blockers.push('invalid_subject_assignments');
+  else {const assignmentAudit=auditSubjectAssignments({schoolClass,students,subjects,assignments:requiredSubjectsByStudent});if(!assignmentAudit.valid)blockers.push('invalid_subject_assignments');}
+ }
  const audit=auditLoadedMarks(marks,{schoolClass,term});
  if(audit.issueCount)blockers.push('invalid_mark_records');
  if(subjectLimits===null)blockers.push('subject_full_marks_unverified');
