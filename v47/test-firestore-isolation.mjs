@@ -62,6 +62,9 @@ try {
   await assertFails(setDoc(doc(db('root'),'v47_super_admins/attacker'),{active:true}));
   await assertSucceeds(getDocs(collection(db('root'),'schools')));
   await assertFails(getDocs(collection(db('viewerA'),'schools')));
+  await assertFails(getDocs(collection(db('teacherA'),'schools')));
+  await assertSucceeds(getDocs(collection(db('adminA'),'schools/schoolA/students')));
+  await assertFails(getDocs(collection(db('adminA'),'schools/schoolB/students')));
   await assertSucceeds(setDoc(doc(db('root'),school('schoolC')),{id:'schoolC',name:'School C',active:false}));
   await assertFails(setDoc(doc(db('root'),school('schoolD')),{id:'schoolD',name:'School D',active:true}));
   await assertFails(setDoc(doc(db('root'),school('schoolE')),{id:'schoolE',name:'School E',iemisCode:'bad',active:false}));
