@@ -36,12 +36,11 @@ export function assessResultReadiness({schoolClass,term,students,subjects,marks,
  if(componentEntries!==null||componentsBySubject!==null){
   if(!Array.isArray(componentEntries)||!componentsBySubject||typeof componentsBySubject!=='object'||Array.isArray(componentsBySubject))blockers.push('component_configuration_unverified');
   else {const componentAudit=auditComponentMarks({schoolClass,term,entries:componentEntries,componentsBySubject});if(componentAudit.issueCount)blockers.push('invalid_component_marks');}
-  // The current persisted marks schema only stores theory/practical; multi-component values are not integrated.
-  blockers.push('component_marks_storage_not_integrated');
+  // Computer component marks are persisted separately, but the verified grading/ledger pipeline is not integrated.
+  blockers.push('component_marks_grading_not_integrated');
  }
- // The legacy two-field coverage audit cannot account for Computer component marks.
- // Never treat such a matrix as complete until the combined storage path is verified.
- if(Array.isArray(componentEntries)&&componentEntries.length)blockers.push('component_mark_coverage_not_integrated');
+ // Coverage can count component records, but CDC/IEMIS grading and publication remain blocked.
+ if(Array.isArray(componentEntries)&&componentEntries.length)blockers.push('component_mark_grading_not_integrated');
  const seen=new Set(),componentPairs=new Set();
  if(Array.isArray(componentEntries))for(const entry of componentEntries){
   if(!studentIds.has(entry?.studentId)||!subjectIds.has(entry?.subjectId))blockers.push('unknown_component_student_or_subject');
@@ -75,5 +74,5 @@ export function assessResultReadiness({schoolClass,term,students,subjects,marks,
  }
  // Never authorize publication without a verified CDC/IEMIS grade engine and subject-specific full marks.
  blockers.push('grade_engine_not_integrated');
- return {ready:false,blockers:[...new Set(blockers)],students:studentIds.size,subjects:subjectIds.size,marks:marks.length,checkedPairs:seen.size,expectedPairs};
+ return {ready:false,blockers:[...new Set(blockers)],students:studentIds.size,subjects:subjectIds.size,marks:marks.length,checkedPairs:new Set([...seen,...componentPairs]).size,expectedPairs};
 }
