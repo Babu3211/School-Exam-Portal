@@ -226,3 +226,7 @@ Raw ledger diagnostic summary now counts only records belonging to the selected 
 ## Mark presence versus score-valid diagnostic counts
 
 The read-only raw ledger summary now distinguishes `markedPairs` (a record exists), `validMarkedPairs` (basic nonnegative finite ordinary scores, or valid Class 9/10 Computer 4/36/10 component values in the correct format), `missingPairs` (no record), and `invalidOrMissingPairs` (no basic-valid record). These are **not** CDC grading or verified full-marks checks. Invalid or duplicated records continue to block `complete` via audit issues. No results can be published from this preview; V46 remains untouched.
+
+## Student-wise ledger exception details
+
+`buildRawLedgerPreview` returns frozen, name-sorted `missingDetails` and `invalidOrMissingDetails` arrays. Each row identifies the student and assigned subject and classifies the missing record or a present mark with invalid basic score/format. This supports read-only remediation review without guessing grades or changing marks. The data remains diagnostic-only and non-publishable; it is not an official CDC/IEMIS grade ledger. The V46 production branch is not modified.
