@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';import {auditComponentMarks} from '../v47/component-marks-audit.mjs';
+const entry={studentId:'s1',subjectId:'computer',class:'9',term:'final',scores:{component_a:4,component_b:36,component_c:10}};
+const componentsBySubject={computer:[{key:'component_a',max:4},{key:'component_b',max:36},{key:'component_c',max:10}]};
+const args={schoolClass:'9',term:'final',entries:[entry],componentsBySubject};
+assert.equal(auditComponentMarks(args).issueCount,0);
+assert.deepEqual(auditComponentMarks({...args,entries:[{...entry,scores:{...entry.scores,component_b:37}}]}).issues.map(i=>i.code),['invalid_component_score']);
+assert.deepEqual(auditComponentMarks({...args,entries:[{...entry,scores:{component_a:4,component_b:36}}]}).issues.map(i=>i.code),['component_keys_mismatch']);
+assert.deepEqual(auditComponentMarks({...args,componentsBySubject:{}}).issues.map(i=>i.code),['missing_component_definition']);
+assert.deepEqual(auditComponentMarks({...args,componentsBySubject:{computer:[{key:'x',max:2},{key:'x',max:2}]}}).issues.map(i=>i.code),['invalid_component_definition']);
+assert.throws(()=>auditComponentMarks({...args,schoolClass:'13'}));
+console.log('V47 variable component raw marks audit tests passed');
