@@ -14,6 +14,7 @@ try{
   await db.doc('schools/school_001/students/s1').set({name:'A Student',class:'1'});
   await db.doc('schools/school_001/students/s4').set({name:'Second Student',class:'1'});
   for(let i=0;i<10;i++)await db.doc('schools/school_001/students/batch'+i).set({name:'Batch Student '+i,class:'1'});
+  await db.doc('schools/school_001/subjects/math').set({name:'Mathematics'});
   await db.doc('schools/school_001/marks/m1').set({score:50});
   await db.doc('schools/school_002/marks/m2').set({score:90});
   await db.doc('schools/school_001/attendance/2026-11-16_s1').set({date:'2026-11-16',studentId:'s1',class:'1',present:true});
@@ -54,6 +55,7 @@ try{
  const mark={studentId:'s1',subjectId:'math',class:'1',term:'1st',theory:35,practical:8};
  await assertSucceeds(admin.doc('schools/school_001/marks/1st:s1:math').set(mark));
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:english').set(mark));
+ await assertFails(admin.doc('schools/school_001/marks/1st:s1:missing_subject').set({...mark,subjectId:'missing_subject'}));
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').set({...mark,theory:101}));
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').set({...mark,class:'2'}));
  await assertFails(admin.doc('schools/school_001/marks/1st:missing:math').set({...mark,studentId:'missing'}));
