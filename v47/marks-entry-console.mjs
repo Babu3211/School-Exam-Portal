@@ -1,6 +1,6 @@
 import {validateSchoolId} from './school-paths.mjs';
 import {createSchoolStore} from './firestore-adapter.mjs';
-import {saveSchoolMark} from './marks-service.mjs';
+import {createSchoolMarkOnly} from './mark-create-service.mjs';
 import {preflightRawMarkSave} from './mark-save-preflight.mjs';
 const $=id=>document.getElementById(id),status=msg=>{$('message').textContent=msg};
 let auth,authSdk,api,db,actor,schoolId,epoch=0,busy=false,studentsLoaded=false,subjectsLoaded=false;
@@ -16,4 +16,4 @@ $('studentId').onchange=()=>lock(false);$('subjectId').onchange=()=>lock(false);
 $('save').onclick=async()=>{if(busy||actor?.role!=='school_admin'||!studentsLoaded||!subjectsLoaded||!$('studentId').value||!$('subjectId').value)return;const attempt=epoch;lock(true);try{const input={studentId:$('studentId').value,subjectId:$('subjectId').value,class:$('schoolClass').value,term:$('term').value,theory:$('theory').value,practical:$('practical').value};const checked=await preflightRawMarkSave({db,api,actor,schoolId,input});
   if(attempt!==epoch)return;
   if(checked.existing){status('Existing raw mark found. To prevent accidental overwriting, editing is disabled on this development page.');return}
-  const saved=await saveSchoolMark({db,api,actor,schoolId,input});if(attempt===epoch)status('Raw mark saved in V47: '+saved.id+' — NOT a CDC/IEMIS result')}catch(e){if(attempt===epoch)status('Save failed: '+e.message)}finally{lock(false)}};
+  const saved=await createSchoolMarkOnly({db,api,actor,schoolId,input});if(attempt===epoch)status('Raw mark saved in V47: '+saved.id+' — NOT a CDC/IEMIS result')}catch(e){if(attempt===epoch)status('Save failed: '+e.message)}finally{lock(false)}};
