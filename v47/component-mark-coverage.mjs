@@ -16,6 +16,6 @@ export function auditComputerComponentCoverage({schoolClass,term,students,subjec
  if(componentMarks.length){const audit=auditComponentMarks({schoolClass,term,entries:componentMarks,componentsBySubject:definitions});for(const issue of audit.issues)issues.push(issue.code)}
  for(const key of rawKeys){const [studentId,subjectId]=JSON.parse(key);if(!studentMap.has(studentId)||!subjectMap.has(subjectId)||!assignmentKeys.has(key)||subjectMap.get(subjectId)?.active!==true)issues.push('unexpected_raw_mark')}
  for(const key of componentKeys)if(rawKeys.has(key))issues.push('duplicate_raw_and_component_mark');
- for(const key of assignmentKeys){const subjectId=JSON.parse(key)[1];if(computerSubjects.has(subjectId)&&!componentKeys.has(key))issues.push('missing_computer_components');if(computerSubjects.has(subjectId)&&rawKeys.has(key))issues.push('computer_recorded_as_two_field_mark')}
+ for(const key of assignmentKeys){const subjectId=JSON.parse(key)[1];if(computerSubjects.has(subjectId)){if(!componentKeys.has(key))issues.push('missing_computer_components');if(rawKeys.has(key))issues.push('computer_recorded_as_two_field_mark')}else if(!rawKeys.has(key))issues.push('missing_raw_mark')}
  return Object.freeze({checkedComponents:componentMarks.length,computerSubjects:computerSubjects.size,issueCount:issues.length,issues:Object.freeze(issues),gradeCalculated:false,publishable:false,iemisPolicyVerified:false});
 }
