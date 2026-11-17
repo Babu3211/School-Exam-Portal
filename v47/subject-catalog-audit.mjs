@@ -9,6 +9,7 @@ export function auditSubjectCatalog({schoolClass,subjects}){
   if(ids.has(subject.id))issues.push('duplicate_subject_id');ids.add(subject.id);
   if(typeof subject.name!=='string'||subject.name.trim().length<2||subject.name.trim().length>160)issues.push('invalid_subject_name');
   if(subject.class!==undefined&&subject.class!==schoolClass)issues.push('wrong_subject_class');
+  if(subject.active!==undefined&&typeof subject.active!=='boolean')issues.push('invalid_subject_active_flag');
  }
  if(subjects.length===0)issues.push('empty_subject_catalog');
  return {valid:issues.length===0,issues:[...new Set(issues)],count:ids.size,iemisVerified:false};
