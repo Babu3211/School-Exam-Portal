@@ -33,6 +33,12 @@ try {
   await assertSucceeds(setDoc(doc(db('adminA'),student('schoolA','s2')),{name:'Allowed',class:'6'}));
   await assertFails(setDoc(doc(db('adminA'),student('schoolB','s2')),{name:'Forbidden'}));
   await assertFails(setDoc(doc(db('teacherA'),student('schoolA','s3')),{name:'Not yet assigned'}));
+  await assertSucceeds(setDoc(doc(db('adminA'),'schools/schoolA/subject_assignments/a1'),{uid:'teacherA',classId:'9',subjectId:'computer'}));
+  await assertSucceeds(getDoc(doc(db('teacherA'),'schools/schoolA/subject_assignments/a1')));
+  await assertFails(setDoc(doc(db('teacherA'),'schools/schoolA/subject_assignments/a2'),{uid:'teacherA'}));
+  await assertFails(getDoc(doc(db('adminB'),'schools/schoolA/subject_assignments/a1')));
+  await assertSucceeds(setDoc(doc(db('adminA'),'schools/schoolA/component_marks/c1'),{score:10}));
+  await assertFails(setDoc(doc(db('viewerA'),'schools/schoolA/component_marks/c2'),{score:10}));
   await assertFails(setDoc(doc(db('adminA'),member('schoolA','attacker')),{uid:'attacker',schoolId:'schoolA',role:'school_admin',active:true}));
   await assertFails(setDoc(doc(db('viewerA'),'v47_super_admins/viewerA'),{active:true}));
   await assertSucceeds(getDocs(collection(db('root'),'schools')));
