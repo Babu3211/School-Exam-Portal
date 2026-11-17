@@ -246,3 +246,7 @@ The read-only raw ledger summary now distinguishes `markedPairs` (a record exist
 ## High-enrollment review and logout cancellation
 
 The read-only missing marks review now allows up to 20,000 records **per collection**, so a 1,500-student school with multiple subject assignments does not hit the previous 5,000-record cap. This is a safety cap, not a recommended free-tier query size: loading all class records may incur substantial Firestore reads, and production optimization/pagination UX is still required. Users can sign out while a review is loading; the request epoch invalidates stale responses, preventing a pending read from repopulating the UI after sign-out. Tests were added to the V47 non-deploy workflow, but live Firebase and CI pass results have not been verified.
+
+## Ledger review performance and cancellation
+
+The read-only missing-marks browser review now supports cancelling an in-flight pagination scan and shows per-collection progress. Each new review uses an epoch token so cancelled, signed-out, or superseded reads cannot publish stale results. To limit Firestore Spark-plan reads and avoid silently incomplete CSV exports, per-class caps are students 2,000, subjects 300, subject assignments 20,000, raw marks 20,000, and component marks 20,000; exceeding any cap fails closed and disables export. These are safety limits for this diagnostic page, **not** a cap on the number of schools or enrolled students supported by V47. They do not guarantee Firestore quota sufficiency, and the browser and emulator checks are still required.
