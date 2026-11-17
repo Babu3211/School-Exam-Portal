@@ -25,11 +25,34 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify-and-deploy-rules:
-    if: ${{ github.ref == 'refs/heads/main' && inputs.confirmation == 'DEPLOY-V46-RULES' && inputs.backup_confirmation == 'BACKUP-VERIFIED' && inputs.roles_confirmation == 'ROLES-VERIFIED' }}
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 25
     steps:
+      - name: Validate release inputs with clear errors (no deployment on mismatch)
+        env:
+          RELEASE_REF: ${{ github.ref }}
+          RELEASE_CONFIRMATION: ${{ inputs.confirmation }}
+          BACKUP_CONFIRMATION: ${{ inputs.backup_confirmation }}
+          ROLES_CONFIRMATION: ${{ inputs.roles_confirmation }}
+        run: |
+          set -euo pipefail
+          if [ "$RELEASE_REF" != "refs/heads/main" ]; then
+            echo "::error::Select the main branch. No rules were deployed."
+            exit 1
+          fi
+          if [ "$RELEASE_CONFIRMATION" != "DEPLOY-V46-RULES" ]; then
+            echo "::error::confirmation must be DEPLOY-V46-RULES. No rules were deployed."
+            exit 1
+          fi
+          if [ "$BACKUP_CONFIRMATION" != "BACKUP-VERIFIED" ]; then
+            echo "::error::Production backup must be independently verified before deployment. No rules were deployed."
+            exit 1
+          fi
+          if [ "$ROLES_CONFIRMATION" != "ROLES-VERIFIED" ]; then
+            echo "::error::Admin, Teacher and Viewer role assignments must be verified before deployment. No rules were deployed."
+            exit 1
+          fi
       - uses: actions/checkout@v4
         with:
           ref: main
