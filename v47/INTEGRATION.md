@@ -266,3 +266,7 @@ The V47 read-only missing-marks browser review now rechecks that the selected sc
 ## Non-destructive school records
 
 V47 Firestore rules now deny direct deletion of student and attendance documents, including for school admins and super admins. Student corrections and attendance corrections remain possible through validated updates. This prevents orphaned student-related marks and accidental loss of attendance history. If retention or archival policies are introduced, design a separate audited, explicitly authorized workflow rather than enabling unrestricted document deletion. Emulator regression assertions have been added but must run successfully before deploying these rules.
+
+## Referential integrity on student and attendance edits
+
+Student records are not deletable, and their `class` value is now immutable after creation: changing it in place would invalidate existing attendance, subject assignments and marks. Name and optional roll number can still be corrected. Attendance history is also not deletable; updates may correct `present`, but cannot change the record's date, student ID or class. Moving a student between classes will require a separate audited promotion/transfer workflow rather than mutating historical student records. The Firebase emulator regression suite covers allowed corrections and denied identity changes. No V46 rules were modified; V47 emulator verification remains pending.
