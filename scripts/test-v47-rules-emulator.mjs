@@ -15,6 +15,8 @@ try{
   await db.doc('schools/school_001/students/s4').set({name:'Second Student',class:'1'});
   for(let i=0;i<10;i++)await db.doc('schools/school_001/students/batch'+i).set({name:'Batch Student '+i,class:'1'});
   await db.doc('schools/school_001/subjects/math').set({name:'Mathematics'});
+  await db.doc('schools/school_001/subjects/inactive').set({name:'Inactive Subject',class:'1',active:false});
+  await db.doc('schools/school_001/subjects/wrongclass').set({name:'Other Class Subject',class:'9',active:true});
   await db.doc('schools/school_002/subjects/other_school').set({name:'Other school subject'});
   await db.doc('schools/school_001/marks/m1').set({score:50});
   await db.doc('schools/school_002/marks/m2').set({score:90});
@@ -55,6 +57,10 @@ try{
  await assertFails(viewer.doc('schools/school_001/marks/mark1').set({score:100}));
  const mark={studentId:'s1',subjectId:'math',class:'1',term:'1st',theory:35,practical:8};
  await assertSucceeds(admin.doc('schools/school_001/marks/1st:s1:math').set(mark));
+ await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').update({theory:34}));
+ await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').delete());
+ await assertFails(admin.doc('schools/school_001/marks/1st:s1:inactive').set({...mark,subjectId:'inactive'}));
+ await assertFails(admin.doc('schools/school_001/marks/1st:s1:wrongclass').set({...mark,subjectId:'wrongclass'}));
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:english').set(mark));
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:missing_subject').set({...mark,subjectId:'missing_subject'}));
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:other_school').set({...mark,subjectId:'other_school'}));
