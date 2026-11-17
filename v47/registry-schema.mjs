@@ -1,4 +1,4 @@
-import {assertSchoolId} from './school-scope.mjs';
+import {assertSchoolId,assertDocumentId} from './school-scope.mjs';
 export const SCHOOL_ROLES=Object.freeze(['school_admin','teacher','viewer']);
 export function newSchoolRecord({id,name,iemisCode=''}) {
   assertSchoolId(id);
@@ -8,7 +8,7 @@ export function newSchoolRecord({id,name,iemisCode=''}) {
   return {id,name:name.trim(),iemisCode,active:false};
 }
 export function newMembership({uid,schoolId,role}) {
-  assertSchoolId(uid);assertSchoolId(schoolId);
+  assertDocumentId(uid);assertSchoolId(schoolId);
   if(!SCHOOL_ROLES.includes(role)) throw new TypeError('Invalid school role');
   return {uid,schoolId,role,active:false};
 }
