@@ -56,6 +56,11 @@ try{
  await assertFails(superDb.doc('v47_super_admins/super1').update({active:false}));
  await assertFails(viewer.doc('schools/school_001/marks/mark1').set({score:100}));
  const mark={studentId:'s1',subjectId:'math',class:'1',term:'1st',theory:35,practical:8};
+ await assertSucceeds(admin.doc('schools/school_001/subjects/new_math').set({name:'New Mathematics',class:'1',active:true}));
+ await assertFails(admin.doc('schools/school_001/subjects/new_math').update({active:false}));
+ await assertFails(admin.doc('schools/school_001/subjects/new_math').delete());
+ await assertFails(admin.doc('schools/school_001/subjects/invalid').set({name:'X',class:'1',active:true}));
+ await assertFails(viewer.doc('schools/school_001/subjects/viewer_subject').set({name:'Viewer Subject',class:'1',active:true}));
  await assertSucceeds(admin.doc('schools/school_001/marks/1st:s1:math').set(mark));
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').update({theory:34}));
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').delete());
