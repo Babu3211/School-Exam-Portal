@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+const rules=readFileSync('v47/firestore.rules','utf8');
+assert.equal((rules.match(/match \/component_marks\/\{docId\}/g)||[]).length,1);
+assert.equal((rules.match(/function validComputerComponent\(docId\)/g)||[]).length,1);
+assert.match(rules,/request\.resource\.data\.scores\.component_a <= 4/);
+assert.match(rules,/request\.resource\.data\.scores\.component_b <= 36/);
+assert.match(rules,/request\.resource\.data\.scores\.component_c <= 10/);
+assert.match(rules,/request\.resource\.data\['class'\] in \['9','10'\]/);
+assert.match(rules,/allow create: if memberRole\(schoolId,'school_admin'\) && validComputerComponent\(docId\)/);
+assert.match(rules,/!exists\(\/databases\/\$\(database\)\/documents\/schools\/\$\(schoolId\)\/marks\/\$\(docId\)\)/);
+const generic=rules.slice(rules.indexOf('match /{collection}/{docId}'));
+assert.doesNotMatch(generic,/['"]component_marks['"]/);
+console.log('V47 Computer component security rules structural checks passed');
