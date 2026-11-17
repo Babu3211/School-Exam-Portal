@@ -2,4 +2,7 @@ import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';con
 assert.match(js,/membership\.data\(\)\.uid!==credential\.user\.uid/);
 assert.match(js,/membership\.data\(\)\.schoolId!==schoolId/);
 assert.match(js,/savingAttendance=true/);assert.match(js,/if\(savingAttendance\)return/);assert.match(js,/select\.disabled=savingAttendance/);assert.match(js,/\$\('logout'\)\.disabled=true/);
+assert.match(js,/function reset\(\)\{epoch\+\+;busy=false;cursor=null/);
+assert.match(js,/function resetRoster\(\)\{if\(savingAttendance\)return;rosterEpoch\+\+;rosterBusy=false/);
+assert.match(js,/rosterEpoch\+\+;rosterBusy=false;rosterCursor=null;rosterStudents=\[\]/);
 console.log('V47 attendance UI static tests passed');
