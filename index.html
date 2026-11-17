@@ -1746,7 +1746,7 @@ function refreshEntryExamOptions(){
  const sel=document.getElementById('entryExam');if(!sel)return;
  const previous=sel.value;
  const rows=smssExamsForClassTerm(className,termKey).sort((a,b)=>String(a.startDate||'').localeCompare(String(b.startDate||'')));
- sel.innerHTML='<option value="">Select Exam</option>'+rows.map(x=>`<option value="${examEsc(x.id)}">${examEsc(examEnglishDisplay(x).name)} — ${examEsc(x.academicYear||'')}</option>`).join('');
+ sel.innerHTML='<option value="">Select Exam</option>'+rows.map(x=>`<option value="${examEsc(x.id)}">${examEsc(englishDisplayText(examEnglishDisplay(x).name))} — ${examEsc(x.academicYear||'')}</option>`).join('');
  if(rows.some(x=>x.id===previous))sel.value=previous;
 }
 function refreshLedgerExamOptions(){
@@ -1756,7 +1756,7 @@ function refreshLedgerExamOptions(){
  const previous=sel.value;
  const year=document.getElementById('ledgerViewYear')?.value;
  const rows=smssExamsForClassTerm(className,termKey).filter(x=>!year||String(x.academicYear)===year).sort((a,b)=>String(a.startDate||'').localeCompare(String(b.startDate||'')));
- sel.innerHTML='<option value="">Select Exam</option>'+rows.map(x=>`<option value="${examEsc(x.id)}">${examEsc(examEnglishDisplay(x).name)} — ${examEsc(x.academicYear||'')}</option>`).join('');
+ sel.innerHTML='<option value="">Select Exam</option>'+rows.map(x=>`<option value="${examEsc(x.id)}">${examEsc(englishDisplayText(examEnglishDisplay(x).name))} — ${examEsc(x.academicYear||'')}</option>`).join('');
  if(rows.some(x=>x.id===previous))sel.value=previous;
 }
 
