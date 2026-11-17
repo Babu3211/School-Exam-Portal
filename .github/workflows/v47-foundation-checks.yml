@@ -41,6 +41,7 @@ jobs:
           node v47/test-super-admin-ui.mjs
           node v47/test-registration-controller.mjs
           node v47/test-school-onboarding.mjs
+          node v47/test-console-contract.mjs
 
       - name: Firestore tenant isolation emulator tests
         run: npx firebase emulators:exec --project smss-v47-isolation-test --only firestore --config v47/firebase.emulator.json "node v47/test-firestore-isolation.mjs"
