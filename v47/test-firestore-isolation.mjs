@@ -53,6 +53,10 @@ try {
   await assertFails(setDoc(doc(db('root'),school('schoolD')),{id:'schoolD',name:'School D',active:true}));
   await assertFails(setDoc(doc(db('root'),school('schoolE')),{id:'schoolE',name:'School E',iemisCode:'bad',active:false}));
   await assertSucceeds(setDoc(doc(db('root'),school('schoolF')),{id:'schoolF',name:'School F',iemisCode:'123456789',active:false}));
+  await assertSucceeds(setDoc(doc(db('root'),member('schoolF','firstAdmin')),{uid:'firstAdmin',schoolId:'schoolF',role:'school_admin',active:true}));
+  await assertFails(getDoc(doc(db('firstAdmin'),student('schoolF','s1'))));
+  await assertSucceeds(updateDoc(doc(db('root'),school('schoolF')),{active:true}));
+  await assertSucceeds(setDoc(doc(db('firstAdmin'),student('schoolF','s1')),{name:'First Student'}));
   await assertFails(deleteDoc(doc(db('root'),school('schoolA'))));
   await assertFails(setDoc(doc(db('root'),school('schoolG')),{id:'schoolG',name:'School G',iemisCode:123456,active:false}));
   await assertFails(updateDoc(doc(db('adminA'),school('schoolA')),{active:false}));
