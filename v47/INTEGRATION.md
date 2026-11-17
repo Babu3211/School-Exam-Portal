@@ -238,3 +238,7 @@ The read-only raw ledger summary now distinguishes `markedPairs` (a record exist
 ## Read-only missing marks browser review
 
 `v47/ledger-exceptions.html` and `ledger-exceptions-console.mjs` provide a development-only signed-in page for school admins, teachers, and viewers. The page queries only `schools/{schoolId}` collections, filters all five collections by selected class and both mark collections by exam term, reads in 100-document pages, and aborts exports if a collection exceeds the 5000-record safety limit. The browser builds the raw ledger diagnostic preview and displays student-wise missing or basic-invalid marks, with a formula-safe CSV export. All HTML table cells use `textContent`. This is NOT a CDC/IEMIS grade sheet or official mark ledger; live Firebase index, rules, emulator and browser testing remain pending. V46 production has not been changed.
+
+## Firestore indexes and CI gate for missing marks review
+
+`v47/firestore.indexes.json` now includes collection-scoped class/ID indexes for `subjects` and `subject_assignments`, and class/term/ID for `component_marks`, alongside existing student and raw mark indexes. The V47 non-deploy module workflow invokes the new missing-mark browser static test, exception CSV safety test and index coverage test on branch pushes. These index definitions must be deployed to the separate V47 Firebase project before the browser's real queries are considered verified. The workflow does not deploy V47 or modify V46 production.
