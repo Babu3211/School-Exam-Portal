@@ -222,3 +222,7 @@ The V47 read-only raw ledger audit now flags `no_students`, `no_subjects`, and `
 ## Tenant class ledger summary integrity
 
 Raw ledger diagnostic summary now counts only records belonging to the selected class, with active subjects and valid student-subject assignments. Invalid assignments, inactive subjects and wrong-class roster records remain audit errors and cannot inflate coverage counters. Regression cases exercise these conditions. This does not constitute a CDC/IEMIS grade calculation or official ledger and does not affect V46 production.
+
+## Mark presence versus score-valid diagnostic counts
+
+The read-only raw ledger summary now distinguishes `markedPairs` (a record exists), `validMarkedPairs` (basic nonnegative finite ordinary scores, or valid Class 9/10 Computer 4/36/10 component values in the correct format), `missingPairs` (no record), and `invalidOrMissingPairs` (no basic-valid record). These are **not** CDC grading or verified full-marks checks. Invalid or duplicated records continue to block `complete` via audit issues. No results can be published from this preview; V46 remains untouched.
