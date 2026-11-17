@@ -12,5 +12,7 @@ const malformed=buildRawLedgerPreview({...args,students:[null,...args.students],
 assert.equal(malformed.complete,false);assert.ok(malformed.issues.includes('invalid_student_roster'));assert.ok(malformed.issues.includes('invalid_raw_mark'));
 const brokenIdentity=buildRawLedgerPreview({...args,rawMarks:[{studentId:null,subjectId:'computer_9',class:'9',term:'final',theory:1,practical:1}]});
 assert.equal(brokenIdentity.complete,false);assert.ok(brokenIdentity.issues.includes('invalid_raw_mark'));
+const invalidScore=buildRawLedgerPreview({...args,rawMarks:[{studentId:'s1',subjectId:'computer_9',class:'9',term:'final',theory:-5,practical:3}]});
+assert.equal(invalidScore.complete,false);assert.ok(invalidScore.issues.includes('invalid_raw_mark_scores'));
 assert.throws(()=>buildRawLedgerPreview({...args,schoolClass:'13'}));
 console.log('V47 read-only combined raw ledger preview tests passed');
