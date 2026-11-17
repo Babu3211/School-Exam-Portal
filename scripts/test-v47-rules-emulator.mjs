@@ -41,6 +41,8 @@ try{
  await assertFails(admin.doc('schools/school_001/students/forged').set({name:'New Student',class:'1',role:'super_admin'}));
  await assertFails(superDb.doc('schools/school_001/students/forgedSuper').set({name:'New Student',class:'1',role:'super_admin'}));
  await assertFails(admin.doc('schools/school_001/students/badClass').set({name:'New Student',class:'13'}));
+ await assertFails(admin.doc('schools/school_001/students/invalid:student').set({name:'New Student',class:'1'}));
+ await assertFails(superDb.doc('schools/school_001/students/invalid:student').set({name:'New Student',class:'1'}));
  await assertFails(admin.doc('schools/school_001/students/bad.student').set({name:'New Student',class:'1'}));
  await assertFails(admin.doc('schools/school_001/students/space%20student').set({name:'New Student',class:'1'}));
  await assertFails(admin.doc('schools/school_001/students/new').update({role:'school_admin'}));
