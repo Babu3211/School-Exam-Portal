@@ -12,6 +12,7 @@ export function auditMarkCoverage({schoolClass,term,assignments,marks}){
  }
  for(const mark of marks){
   if(mark?.class!==schoolClass||mark?.term!==term){issues.push('wrong_class_or_term');continue}
+  if(typeof mark.studentId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(mark.studentId)||typeof mark.subjectId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(mark.subjectId)){issues.push('invalid_mark_identity');continue}
   const key=JSON.stringify([mark.studentId,mark.subjectId]);if(observed.has(key))issues.push('duplicate_mark');observed.add(key);
   if(!expected.has(key))issues.push('unexpected_mark');
  }
