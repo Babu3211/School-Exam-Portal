@@ -190,3 +190,7 @@ The Class 9/10 Computer marks form now independently records the class for which
 ## Class-scoped raw marks dropdown correction
 
 The raw Theory/Practical marks page now tracks the loaded student class and subject class independently (like the Computer component page), and its Save button **and** Save handler require both to match the currently selected class. The prior shared `loadedClass` flag could be set by loading just one dropdown, leaving the other dropdown stale after a failed or interrupted request. Both marks entry pages also ignore stale paginated roster responses after sign-out. Regression tests for the raw marks page were updated. Firebase Emulator and end-to-end browser test execution remain unverified; this change does not touch V46 or deploy V47.
+
+## Marks form race-condition and coverage audit hardening
+
+Both raw and Computer component entry screens now keep student and subject class-loading state independently. An outdated roster request cannot re-enable controls after sign-out; class/epoch guards discard stale page responses. Static regression checks enforce those conditions. Computer coverage diagnostics reject assignments to inactive subjects and require the corresponding active class subject. These changes are restricted to the V47 development branch, not V46 production. No Firebase Emulator or live end-to-end success is claimed.
