@@ -15,6 +15,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: V47 multi-school development navigation
+        run: node scripts/test-v47-development-hub.mjs
       - name: School-scoped path validation
         run: node scripts/test-v47-school-paths.mjs
       - name: Role boundaries
