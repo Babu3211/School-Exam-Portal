@@ -39,8 +39,6 @@ export function assessResultReadiness({schoolClass,term,students,subjects,marks,
   // Computer component marks are persisted separately, but the verified grading/ledger pipeline is not integrated.
   blockers.push('component_marks_grading_not_integrated');
  }
- // Coverage can count component records, but CDC/IEMIS grading and publication remain blocked.
- if(Array.isArray(componentEntries)&&componentEntries.length)blockers.push('component_mark_grading_not_integrated');
  const seen=new Set(),componentPairs=new Set();
  if(Array.isArray(componentEntries))for(const entry of componentEntries){
   if(!studentIds.has(entry?.studentId)||!subjectIds.has(entry?.subjectId))blockers.push('unknown_component_student_or_subject');
