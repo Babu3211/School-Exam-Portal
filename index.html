@@ -307,7 +307,15 @@ function transliterateNepaliText(value){
 }
 function englishDisplayText(value){
  const raw=String(value??'').trim();
- return /[\u0900-\u097F]/.test(raw)?transliterateNepaliText(raw):raw;
+ const examTerms={
+  'प्रथम त्रैमासिक':'First Term','पहिलो त्रैमासिक':'First Term','प्रथम परीक्षा':'First Term',
+  'दोस्रो त्रैमासिक':'Second Term','द्वितीय त्रैमासिक':'Second Term','द्वितीय परीक्षा':'Second Term',
+  'तेस्रो त्रैमासिक':'Third Term','तृतीय त्रैमासिक':'Third Term',
+  'अन्तिम परीक्षा':'Final Term','वार्षिक परीक्षा':'Final Term','अन्तिम':'Final Term',
+  'त्रैमासिक':'Quarterly','अर्धवार्षिक':'Half Yearly','वार्षिक':'Annual',
+  'आन्तरिक':'Internal','अन्य':'Other'
+ };
+ return examTerms[raw]||subjectEnglishNames[raw]||(/[\u0900-\u097F]/.test(raw)?transliterateNepaliText(raw):raw);
 }
 function subjectEnglishLabel(value){const raw=String(value??'').trim();const mapped=subjectEnglishNames[raw];return mapped||englishDisplayText(raw)||'Subject';}
 function ledgerEnglishLabel(value){const raw=String(value??'');const labels={'सिकाइ उपलब्धिको संख्या':'Number of Learning Achievements','हासिल भएका सिकाइ उपलब्धि':'Obtained Learning Achievements','सिकाइ उपलब्धि':'Learning Achievement','आन्तरिक':'Internal','सैद्धान्तिक':'Theory','प्रयोगात्मक':'Practical','पूर्णाङ्क':'Full Marks','प्राप्ताङ्क':'Marks Obtained','कैफियत':'Remarks'};return labels[raw]||subjectEnglishLabel(raw);}
