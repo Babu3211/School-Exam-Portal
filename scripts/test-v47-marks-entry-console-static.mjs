@@ -8,4 +8,6 @@ assert.doesNotMatch(js,/\bloadedClass\b/);
 
 assert.match(html,/NOT verified CDC\/IEMIS results/);
 assert.doesNotMatch(js,/localStorage|sessionStorage|eval\(|innerHTML|createSchoolStore|listPage\(/);
+assert.match(js,/finally\{if\(attempt===epoch\)lock\(false\)\}/,'Stale roster request must not unlock controls');
+assert.match(js,/schoolClass!==\$\('schoolClass'\)\.value/,'Roster query must check class before rendering');
 console.log('V47 school-admin raw mark entry static tests passed');
