@@ -78,5 +78,8 @@ try {
   await assertFails(deleteDoc(doc(db('root'),school('schoolA'))));
   await assertFails(setDoc(doc(db('root'),school('schoolG')),{id:'schoolG',name:'School G',iemisCode:123456,active:false}));
   await assertFails(updateDoc(doc(db('adminA'),school('schoolA')),{active:false}));
+  await assertFails(updateDoc(doc(db('root'),school('schoolA')),{name:'Tampered'}));
+  await assertFails(updateDoc(doc(db('root'),school('schoolA')),{iemisCode:'999999'}));
+  await assertFails(setDoc(doc(db('root'),school('schoolA')),{id:'schoolA',name:'Replaced',active:false}));
   console.log('V47 Firestore emulator isolation tests passed');
 } finally {await env.cleanup();}
