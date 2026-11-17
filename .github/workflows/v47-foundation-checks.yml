@@ -1,0 +1,34 @@
+name: V47 tenant foundation checks (no deployment)
+on:
+  push:
+    branches: [smss-v47-multischool-work]
+    paths: ['v47/**', '.github/workflows/v47-foundation-checks.yml']
+  pull_request:
+    paths: ['v47/**', '.github/workflows/v47-foundation-checks.yml']
+permissions:
+  contents: read
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: V47 school isolation and registry static tests
+        run: |
+          node v47/test-school-scope.mjs
+          node v47/test-school-registry.mjs
+          node v47/test-registry-schema.mjs
+          node v47/test-tenant-query.mjs
+          node v47/test-rules-integrity.mjs
+          node v47/test-access-policy.mjs
+      - name: Ensure no V46 production files changed
+        run: |
+          git fetch origin main --depth=1
+          git diff --name-only origin/main HEAD | tee /tmp/v47-files
+          if grep -Ev '^(v47/|\.github/workflows/v47-foundation-checks.yml$)' /tmp/v47-files; then
+            echo 'Non-V47 file changed: production parity review required'
+            exit 1
+          fi
