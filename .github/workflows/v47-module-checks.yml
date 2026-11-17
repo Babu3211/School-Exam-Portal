@@ -141,5 +141,7 @@ jobs:
         run: node scripts/test-v47-subject-assignment-create-service.mjs
       - name: V47 subject assignment transaction and isolation
         run: node scripts/test-v47-assignment-create-service.mjs
+      - name: V47 school subject assignment browser static checks
+        run: node scripts/test-v47-assignments-console-static.mjs
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs
