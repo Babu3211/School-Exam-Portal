@@ -1,3 +1,8 @@
-import {schoolCollectionPath} from './school-paths.mjs';
-import {validatePageSize} from './pagination.mjs';
-export function tenantQuerySpec({schoolId,collection,pageSize=100}){return Object.freeze({path:schoolCollectionPath(schoolId,collection),pageSize:validatePageSize(pageSize),orderBy:'__name__'});}
+import {schoolCollectionPath,assertSchoolId} from './school-scope.mjs';
+// UI must request tenant-scoped collection paths; never top-level students/marks.
+export function tenantQueryPath(schoolId,kind) {
+  const allowed=['students','marks','attendance','staff','classes','subjects','exams','mark_settings','school_settings','members'];
+  assertSchoolId(schoolId);
+  if(!allowed.includes(kind)) throw new TypeError('Unapproved tenant collection');
+  return schoolCollectionPath(schoolId,kind);
+}
