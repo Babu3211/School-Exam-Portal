@@ -6,5 +6,7 @@ const over=auditConfiguredFullMarks({...args,marks:[{...mark,theory:41,practical
 assert.deepEqual(auditConfiguredFullMarks({...args,subjectLimits:{}}).issues.map(i=>i.code),['missing_subject_full_marks']);
 assert.deepEqual(auditConfiguredFullMarks({...args,subjectLimits:{math:{theoryMax:0,practicalMax:0}}}).issues.map(i=>i.code),['invalid_subject_full_marks']);
 assert.deepEqual(auditConfiguredFullMarks({...args,marks:[{...mark,term:'1st'}]}).issues.map(i=>i.code),['wrong_class_or_term']);
+assert.deepEqual(auditConfiguredFullMarks({...args,subjectLimits:{math:'invalid'}}).issues.map(i=>i.code),['missing_subject_full_marks']);
+assert.deepEqual(auditConfiguredFullMarks({...args,subjectLimits:{math:[]}}).issues.map(i=>i.code),['missing_subject_full_marks']);
 assert.throws(()=>auditConfiguredFullMarks({...args,subjectLimits:null}),/map/);assert.throws(()=>auditConfiguredFullMarks({...args,schoolClass:'13'}));
 console.log('V47 configurable full-marks audit tests passed');
