@@ -30,6 +30,8 @@ assert.match(code,/await confirmMembership\(expectedSchoolId,expectedUid\)/);
 assert.match(code,/auth\?\.currentUser\?\.uid!==expectedUid/);
 assert.match(code,/member\.data\(\)\.uid!==expectedUid/);
 assert.match(code,/member\.data\(\)\.schoolId!==expectedSchoolId/);
+assert.match(code,/member\.data\(\)\.uid!==credential\.user\.uid/);
+assert.match(code,/member\.data\(\)\.schoolId!==id/);
 assert.match(code,/preview!==selectedPreview/);
 assert.match(code,/ledgerExceptionsCsv\(selectedPreview\)/);
 assert.match(code,/td\.textContent=value/);
