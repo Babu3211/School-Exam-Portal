@@ -1079,7 +1079,7 @@ function renderStaff() {
   const q = (document.getElementById("staffSearch")?.value || "").trim().toLowerCase();
 
   const list = cachedStaff.filter(s => [s.name,s.nameEn,s.staffId,s.subject,s.phone,s.permanentAddress,s.levelCategory].some(v=>String(v||"").toLowerCase().includes(q)));
-  body.innerHTML = list.map(s => `<tr><td>${staffText(s.staffId)}</td><td><b>${staffText(s.name)}</b><br><small>${staffText(s.nameEn||"")}</small></td><td>${staffText(s.permanentAddress||"")}</td><td>${staffText(s.levelCategory||s.role||"")}</td><td>${staffText(s.appointmentDateBs||"")}</td><td>${staffText(s.appointmentType||"")}</td><td>${staffText(s.qualification||"")}</td><td>${staffText(s.subject||"")}</td><td>${staffText(s.phone||"")}</td><td>${staffText(s.status||"कार्यरत")}</td><td><button type="button" data-staff-edit="${staffText(s.id)}">Edit</button> ${norm(s.status)==norm("निष्क्रिय")||s.active===false?`<button type="button" class="btn" data-staff-restore="${staffText(s.id)}">पुनः सक्रिय</button>`:`<button type="button" class="btn alt" data-staff-delete="${staffText(s.id)}">निष्क्रिय बनाउनुहोस्</button>`}</td></tr>`).join("") || '<tr><td colspan="11">रेकर्ड भेटिएन।</td></tr>';
+  body.innerHTML = list.map(s => `<tr><td>${staffText(s.staffId)}</td><td><b>${staffText(s.name)}</b><br><small>${staffText(s.nameEn||"")}</small></td><td>${staffText(s.permanentAddress||"")}</td><td>${staffText(s.levelCategory||s.role||"")}</td><td>${staffText(s.appointmentDateBs||"")}</td><td>${staffText(s.appointmentType||"")}</td><td>${staffText(s.qualification||"")}</td><td>${staffText(s.subject||"")}</td><td>${staffText(s.phone||"")}</td><td>${staffText(s.status||"कार्यरत")}</td><td><button type="button" data-staff-edit="${staffText(s.id)}">Edit</button> ${norm(s.status)==norm("निष्क्रिय")||s.active===false?`<button type="button" class="btn" data-staff-delete="${staffText(s.id)}">Delete</button>`:`<button type="button" class="btn alt" data-staff-delete="${staffText(s.id)}">Delete</button>`}</td></tr>`).join("") || '<tr><td colspan="11">रेकर्ड भेटिएन।</td></tr>';
 } 
 window.loadStaff = loadStaff;
 
@@ -1233,58 +1233,18 @@ function editStaff(id) {
 }
 
 async function removeStaff(id) {
-  const s = cachedStaff.find(x => x.id === id);
-  if (!s) return;
-  if (!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
-    setStaffMessage("Admin login आवश्यक छ।", true);
-    return;
-  }
-  if (norm(s.status) === norm("निष्क्रिय") || s.active === false) {
-    setStaffMessage("यो कर्मचारी पहिले नै निष्क्रिय हुनुहुन्छ।");
-    return;
-  }
-  if (!confirm(`${s.name || "यो कर्मचारी"} लाई निष्क्रिय बनाउने? कर्मचारी विवरण र सम्बन्धित ऐतिहासिक रेकर्ड सुरक्षित रहनेछन्। यस कर्मचारीसँग जोडिएका सक्रिय User Role Login पनि निष्क्रिय हुनेछन्।`)) return;
-  try {
-    // Staff र यससँग जोडिएका सक्रिय Role एकै atomic batch मा निष्क्रिय हुन्छन्।
-    const roleSnap = await getDocs(query(collection(db, "user_roles"), where("staffDocId", "==", id)));
-    if (roleSnap.size > 499) throw new Error("यस कर्मचारीसँग असामान्य धेरै User Role जोडिएका छन्। Admin सहायता आवश्यक छ।");
-    const batch = writeBatch(db);
-    batch.update(doc(db, "staff", id), {
-      status: "निष्क्रिय",
-      active: false,
-      updatedAt: serverTimestamp(),
-      updatedBy: auth.currentUser.uid,
-      deactivatedAt: serverTimestamp(),
-      deactivatedBy: auth.currentUser.uid
-    });
-    let disabledRoles = 0;
-    roleSnap.docs.forEach(roleDoc => {
-      if (roleDoc.data().active === true) {
-        batch.update(roleDoc.ref, {
-          active: false,
-          deactivatedByStaff: true,
-          staffDeactivatedAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          updatedBy: auth.currentUser.uid
-        });
-        disabledRoles++;
-      }
-    });
-    await batch.commit();
-    await writeAuditLog("staff","deactivate",id,`disabledRoles=${disabledRoles}`);
-    const form = document.getElementById("staffForm");
-    if (form && form.dataset.editId === id) {
-      form.reset();
-      delete form.dataset.editId;
-      document.getElementById("staffSaveBtn").textContent = "Save गर्नुहोस्";
-      document.getElementById("staffCancelBtn").hidden = true;
-    }
-    await loadStaff();
-    setStaffMessage(`कर्मचारी निष्क्रिय गरियो। मूल विवरण सुरक्षित छ। ${disabledRoles} वटा जोडिएका User Role पनि निष्क्रिय गरिए; नयाँ Login रोकियो।`);
-  } catch (error) {
-    console.error("Staff deactivation failed:", safeNoticeError(error), error);
-    setStaffMessage(`निष्क्रिय गर्न सकिएन: ${safeNoticeError(error) || "प्रणाली त्रुटि"}। कुनै परिवर्तन भएको छ कि छैन सूची Refresh गरेर जाँच गर्नुहोस्।`, true);
-  }
+ const x=cachedStaff.find(v=>v.id===id);if(!x)return;
+ if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID){setStaffMessage("Admin login आवश्यक छ।",true);return}
+ if(!confirmPermanentDeletion(String(x.nameEn||x.name||x.staffId||"Staff")))return;
+ try{
+  // Deleting a staff profile must never silently leave a working login behind.
+  const roles=await getDocs(collection(db,"user_roles"));
+  if(roles.docs.some(d=>d.data().staffDocId===id || (x.staffId&&d.data().staffId===x.staffId)))
+   throw new Error("यो Staff सँग User Login जोडिएको छ। पहिले Users & Roles मा Login सुरक्षित रूपमा हटाउनुहोस्।");
+  await deleteDoc(doc(db,"staff",id));
+  await writeAuditLog("staff","delete",id,String(x.staffId||""));
+  await loadStaff();setStaffMessage("Staff रेकर्ड Delete भयो।");
+ }catch(error){setStaffMessage("Delete भएन: "+safeNoticeError(error),true)}
 }
 
 async function restoreStaff(id) {
