@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';import {auditConfiguredFullMarks} from '../v47/full-marks-audit.mjs';
+const mark={studentId:'s1',subjectId:'math',class:'9',term:'final',theory:36,practical:10};
+const args={schoolClass:'9',term:'final',marks:[mark],subjectLimits:{math:{theoryMax:40,practicalMax:10}}};
+assert.deepEqual(auditConfiguredFullMarks(args),{checked:1,issueCount:0,issues:[],policyVerified:false,gradeCalculated:false});
+const over=auditConfiguredFullMarks({...args,marks:[{...mark,theory:41,practical:11}]});assert.deepEqual(over.issues.map(i=>i.code),['exceeds_theory_maximum','exceeds_practical_maximum']);
+assert.deepEqual(auditConfiguredFullMarks({...args,subjectLimits:{}}).issues.map(i=>i.code),['missing_subject_full_marks']);
+assert.deepEqual(auditConfiguredFullMarks({...args,subjectLimits:{math:{theoryMax:0,practicalMax:0}}}).issues.map(i=>i.code),['invalid_subject_full_marks']);
+assert.deepEqual(auditConfiguredFullMarks({...args,marks:[{...mark,term:'1st'}]}).issues.map(i=>i.code),['wrong_class_or_term']);
+assert.throws(()=>auditConfiguredFullMarks({...args,subjectLimits:null}),/map/);assert.throws(()=>auditConfiguredFullMarks({...args,schoolClass:'13'}));
+console.log('V47 configurable full-marks audit tests passed');
