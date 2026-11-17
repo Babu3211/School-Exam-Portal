@@ -13,7 +13,9 @@ for(const token of [
  'collection(db,"attendance")',
  'collection(db,"user_roles")',
  'deletedMarks=',
- 'linked.slice(offset,offset+400).forEach(d=>batch.delete(d.ref))',
+ 'linked.forEach(d=>batch.delete(d.ref))',
+ 'batch.delete(doc(db,"exams",id))',
+ 'if(count>499)',
  'शैक्षिक अभिलेख सुरक्षित राख्न Delete रोकियो',
  'data-exam-delete',
  'data-staff-delete',
@@ -29,6 +31,7 @@ for(const fn of ['removeStaff','removeStudent','deleteExam','archiveSubjectCatal
   assert.ok(body.includes('if(!confirm('),'Exam delete must explicitly confirm twice');
   assert.ok(body.split('if(!confirm(').length>=3,'Exam delete missing second confirmation');
  }else assert.ok(body.includes('confirmPermanentDeletion('),fn+' missing two confirmations');
- assert.ok(body.includes('deleteDoc('),fn+' missing physical deletion');
+ if(fn==='deleteExam')assert.ok(body.includes('batch.delete('),fn+' missing atomic physical deletion');
+ else assert.ok(body.includes('deleteDoc('),fn+' missing physical deletion');
 }
 console.log('V46 Delete controls static checks passed (Firebase emulator and browser tests still required)');
