@@ -122,3 +122,7 @@ The V47-only raw mark form now calls `preflightRawMarkSave` to verify the select
 ## Transaction revalidation of marks creation
 
 The create-only V47 raw marks transaction now reads the target student, subject and existing mark before writing. It checks the student's current class, the subject's active flag and optional class scope, and refuses any existing mark. This closes the gap between a browser preflight and a concurrent change to the student or subject documents. Browser roster load failures now clear stale selections. These are client and transaction safeguards, not a replacement for Firestore rule enforcement or an official grade policy. The current page still loads an entire school collection with a 1,500-record cap and must be redesigned with class-filtered pagination for larger schools.
+
+## Marks immutability and referential safety
+
+The V47 development-only Firestore rules now allow raw mark **create** only; updates and deletes are denied for all client roles, including Super Admin, pending a reviewed correction and audit process. The rule checks same-school student class, same-school subject existence, optional subject class and inactive subject flag. The create-only transaction also re-reads student and subject records to reduce stale-form races. The emulator test source asserts update/delete and invalid-subject denial; emulator execution remains unverified. This restriction does not affect V46 production rules or data.
