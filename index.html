@@ -1835,8 +1835,8 @@ function editExam(id){
 }
 // Two explicit confirmations. Cancelling either leaves Firestore untouched.
 function confirmPermanentDeletion(label){
- if(!confirm(label+"\\n\\nयो रेकर्ड स्थायी रूपमा Delete गर्ने हो?"))return false;
- return confirm("अन्तिम पुष्टि: "+label+"\\n\\nयो काम Undo गर्न मिल्दैन। फेरि OK थिचेपछि मात्र Delete हुनेछ।");
+ if(!confirm(label+"\n\nयो रेकर्ड स्थायी रूपमा Delete गर्ने हो?"))return false;
+ return confirm("अन्तिम पुष्टि: "+label+"\n\nयो काम Undo गर्न मिल्दैन। फेरि OK थिचेपछि मात्र Delete हुनेछ।");
 }
 async function deleteExam(id){
  const x=cachedExams.find(v=>v.id===id);if(!x)return;
@@ -1857,8 +1857,8 @@ async function deleteExam(id){
   });
   const count=linked.length;
   if(count>499)throw new Error("यो परीक्षामा 499 भन्दा धेरै Marks रेकर्ड छन्। सुरक्षित ठूलो Delete प्रक्रिया आवश्यक छ; कुनै डाटा मेटिएको छैन।");
-  if(!confirm(label+"\\n\\nयस परीक्षाका "+count+" वटा Marks रेकर्डसहित परीक्षा स्थायी रूपमा Delete गर्ने हो?"))return;
-  if(!confirm("अन्तिम पुष्टि: "+label+"\\n\\n"+count+" वटा Marks रेकर्ड मेटिन्छन्। फेरि Entry गर्नुपर्नेछ। यो काम Undo गर्न मिल्दैन।"))return;
+  if(!confirm(label+"\n\nयस परीक्षाका "+count+" वटा Marks रेकर्डसहित परीक्षा स्थायी रूपमा Delete गर्ने हो?"))return;
+  if(!confirm("अन्तिम पुष्टि: "+label+"\n\n"+count+" वटा Marks रेकर्ड मेटिन्छन्। फेरि Entry गर्नुपर्नेछ। यो काम Undo गर्न मिल्दैन।"))return;
   // Atomic removal: never leave a half-deleted exam after a network failure.
   // One batch contains all marks plus the exam document (max 500 writes).
   if(linked.length>499)throw new Error("यो परीक्षामा 499 भन्दा धेरै Marks रेकर्ड छन्। आंशिक Delete रोकिएको छ। सुरक्षित ठूलो Delete प्रक्रिया आवश्यक छ।");
