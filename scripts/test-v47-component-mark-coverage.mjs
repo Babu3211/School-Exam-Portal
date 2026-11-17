@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';import {auditComputerComponentCoverage} from '../v47/component-mark-coverage.mjs';
+const student={id:'s1',class:'9'},subject={id:'computer_9',name:'Computer',class:'9',active:true},assignment={studentId:'s1',subjectId:'computer_9',class:'9'};
+const mark={studentId:'s1',subjectId:'computer_9',class:'9',term:'final',scores:{component_a:4,component_b:36,component_c:10}};
+const args={schoolClass:'9',term:'final',students:[student],subjects:[subject],assignments:[assignment],rawMarks:[],componentMarks:[mark]};
+const audit=x=>auditComputerComponentCoverage({...args,...x});
+assert.equal(audit({}).issueCount,0);assert.equal(audit({}).publishable,false);assert.equal(audit({}).gradeCalculated,false);
+assert.ok(audit({componentMarks:[]}).issues.includes('missing_computer_components'));
+assert.ok(audit({rawMarks:[{...mark,theory:20,practical:10}]}).issues.includes('duplicate_raw_and_component_mark'));
+assert.ok(audit({componentMarks:[{...mark,scores:{...mark.scores,component_b:37}}]}).issues.includes('invalid_component_score'));
+assert.ok(audit({assignments:[]}).issues.includes('invalid_component_record'));
+assert.ok(audit({componentMarks:[mark,mark]}).issues.includes('invalid_component_record'));
+assert.ok(audit({subjects:[{...subject,active:false}]}).issues.includes('invalid_component_record'));
+assert.throws(()=>audit({schoolClass:'13'}));
+console.log('V47 Computer component coverage diagnostic checks passed');
