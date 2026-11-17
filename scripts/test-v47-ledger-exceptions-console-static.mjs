@@ -19,6 +19,8 @@ assert.match(code,/students:2000,subjects:300,subject_assignments:20000,marks:20
 assert.match(code,/rows\.length>maxRecords/);
 assert.match(code,/allPagesLoaded:true/);
 assert.match(code,/assertLedgerReviewExportable\(result\)/);
+assert.match(code,/preview=exportAllowed\?result:null/);
+assert.match(code,/CSV export blocked:/);
 assert.match(code,/ledger-review-gate\.mjs/);
 assert.match(code,/ledgerExceptionsCsv\(preview\)/);
 assert.match(code,/td\.textContent=value/);
