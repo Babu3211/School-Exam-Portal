@@ -126,3 +126,7 @@ The create-only V47 raw marks transaction now reads the target student, subject 
 ## Marks immutability and referential safety
 
 The V47 development-only Firestore rules now allow raw mark **create** only; updates and deletes are denied for all client roles, including Super Admin, pending a reviewed correction and audit process. The rule checks same-school student class, same-school subject existence, optional subject class and inactive subject flag. The create-only transaction also re-reads student and subject records to reduce stale-form races. The emulator test source asserts update/delete and invalid-subject denial; emulator execution remains unverified. This restriction does not affect V46 production rules or data.
+
+## School-scoped subject configuration (development only)
+
+`v47/subjects.html` allows an active school administrator to create a subject ID, English name, and ECD–12 class in the V47 project only. `subject-create-service.mjs` uses a transaction and refuses to overwrite an existing subject. The dedicated `/subjects/{docId}` Firestore rule validates subject keys, class, name and active flag; it denies client-side updates and deletes until an audited correction workflow is designed. This avoids the prior unrestricted generic subject collection write. It does not assign students to subjects, set IEMIS/CDC full marks, or populate official subject lists automatically. Subject definitions must be verified before real use; V46 production is untouched.
