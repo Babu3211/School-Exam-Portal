@@ -8,7 +8,7 @@ export function auditComputerComponentCoverage({schoolClass,term,students,subjec
  const issues=[],studentMap=new Map(),subjectMap=new Map(),assignmentKeys=new Set(),rawKeys=new Set(),componentKeys=new Set();
  for(const s of students){if(!s||typeof s.id!=='string'||studentMap.has(s.id)||s.class!==schoolClass)issues.push('invalid_student_roster');else studentMap.set(s.id,s)}
  for(const s of subjects){if(!s||typeof s.id!=='string'||subjectMap.has(s.id)||s.class!==schoolClass)issues.push('invalid_subject_roster');else subjectMap.set(s.id,s)}
- for(const a of assignments){const key=JSON.stringify([a?.studentId,a?.subjectId]);if(!a||a.class!==schoolClass||!studentMap.has(a.studentId)||!subjectMap.has(a.subjectId)||assignmentKeys.has(key))issues.push('invalid_assignment');else assignmentKeys.add(key)}
+ for(const a of assignments){const key=JSON.stringify([a?.studentId,a?.subjectId]);if(!a||a.class!==schoolClass||!studentMap.has(a.studentId)||!subjectMap.has(a.subjectId)||subjectMap.get(a.subjectId)?.active!==true||assignmentKeys.has(key))issues.push('invalid_assignment');else assignmentKeys.add(key)}
  for(const m of rawMarks){const key=JSON.stringify([m?.studentId,m?.subjectId]);if(!m||m.class!==schoolClass||m.term!==term||rawKeys.has(key))issues.push('invalid_raw_mark');else rawKeys.add(key)}
  const definitions={},computerSubjects=new Set();
  for(const s of subjects)if(s?.name==='Computer'&&s?.active===true&&['9','10'].includes(schoolClass)){computerSubjects.add(s.id);definitions[s.id]=[{key:'component_a',max:4},{key:'component_b',max:36},{key:'component_c',max:10}]}
