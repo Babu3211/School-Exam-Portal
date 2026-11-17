@@ -11,7 +11,7 @@ for(const name of ['loadClasses','loadExams']){
  assert.doesNotMatch(fn,/uid!==ADMIN_UID/,name+' must not deny viewers');
 }
 const catalog=html.slice(html.indexOf('function renderSubjectCatalog(){'),html.indexOf('\nasync function editSubjectCatalog(',html.indexOf('function renderSubjectCatalog(){')));
-assert.match(catalog,/roleHas\("viewer"\)\&\&!isAdmin\(\)\?"":archived/,'Viewer must not see subject edit/archive controls');
+assert.match(catalog,/roleHas\("viewer"\)\&\&!isAdmin\(\)\?"":archived/,'Viewer must not see subject edit/delete controls');
 const classes=html.slice(html.indexOf('function renderClasses(){'),html.indexOf('\nwindow.loadClasses=',html.indexOf('function renderClasses(){')));
 assert.match(classes,/roleHas\("viewer"\)\&\&!isAdmin\(\)\?"View only"/,'Viewer must not see class edit/delete controls');
 const exams=html.slice(html.indexOf('function renderExams(){'),html.indexOf('\nwindow.loadExams=',html.indexOf('function renderExams(){')));
