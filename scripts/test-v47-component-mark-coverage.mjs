@@ -13,6 +13,10 @@ assert.equal(audit({}).issueCount,0,'matching Computer assignment and component 
 assert.ok(audit({componentMarks:[mark],rawMarks:[{studentId:'s1',subjectId:'computer_9',class:'9',term:'final',theory:2,practical:3}]}).issues.includes('duplicate_raw_and_component_mark'));
 
 assert.ok(audit({subjects:[{...subject,active:false}]}).issues.includes('invalid_component_record'));
+assert.ok(audit({componentMarks:[{...mark,studentId:'outside'}]}).issues.includes('invalid_component_record'));
+assert.ok(audit({componentMarks:[{...mark,term:'1st'}]}).issues.includes('wrong_class_or_term'));
+assert.ok(audit({componentMarks:[mark],rawMarks:[{studentId:'s1',subjectId:'computer_9',class:'9',term:'final',theory:2,practical:3}]}).issues.includes('computer_recorded_as_two_field_mark'));
+
 assert.ok(audit({rawMarks:[{studentId:'outside',subjectId:'computer_9',class:'9',term:'final',theory:10,practical:10}]}).issues.includes('unexpected_raw_mark'));
 assert.ok(audit({componentMarks:[{...mark,term:'1st'}]}).issues.includes('invalid_component_record'));
 assert.ok(audit({componentMarks:[{...mark,class:'10'}]}).issues.includes('invalid_component_record'));
