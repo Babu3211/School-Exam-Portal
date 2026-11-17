@@ -76,3 +76,7 @@ The read-only marks preview can export only currently loaded rows for the select
 ## Raw marks audit and race protection
 
 The V47 read-only marks preview now checks only the currently loaded records for duplicate student/subject combinations, missing IDs, wrong class/term and invalid numeric fields. The audit explicitly reports `complete: false`: it cannot prove that all students, subjects, pages or CDC/IEMIS marks are present. The preview rejects stale class/term query responses and disables CSV export during loading; CSV formula-like values preceded by whitespace/control characters are escaped. No grade or GPA is calculated. Emulator/browser/CI outcomes have not been verified.
+
+## Result publication readiness (fail-closed)
+
+`v47/result-readiness.mjs` checks class/term roster consistency, duplicate identities, student–subject mark coverage, raw mark anomalies and whether all pages were loaded. Its `ready` value is **always false** until a verified CDC/IEMIS grading engine, class-specific subject requirements, full-mark configuration and grade-sheet parity are implemented and independently tested. The current complete Cartesian student–subject matrix is a conservative diagnostic and **not** a rule that every student must take every optional subject. This module does not write marks, calculate GPA or authorize publication. Tests are added to the V47 CI workflow, but their execution has not been confirmed.
