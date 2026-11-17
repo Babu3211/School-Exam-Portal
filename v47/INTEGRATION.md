@@ -90,3 +90,7 @@ V47 Firestore rules now also require the mark's subject document to exist under 
 ## Subject-specific full-mark audit (no grade calculation)
 
 `v47/full-marks-audit.mjs` checks raw theory/practical marks against **explicitly provided** `subjectLimits` (`subjectId: {theoryMax, practicalMax}`) for a selected class and term. The result readiness gate blocks missing subject limits or marks exceeding those limits. This is only a validation input; no V46 subject configurations have been imported or verified and no IEMIS/CDC grading formula, NG or GPA is computed. In particular, the known Class 9–10 Computer component pattern must not be guessed or reduced to two components without comparing the actual V46/IEMIS schema. Production result publishing remains disabled.
+
+## Variable-component subject preparation
+
+`v47/component-marks-audit.mjs` now accepts an explicit list of named components with maxima for each subject and checks a matching set of raw component scores. A **three-component example** with maxima 4, 36 and 10 is covered by tests, but this example is **not a verified mapping** of V46/IEMIS Computer theory/practical/internal assessment fields. No live marks schema, UI, Firestore write rule or CDC grading calculation has been changed to use three components. `assessResultReadiness` explicitly blocks publication if multi-component entries are supplied because storage and grading are not integrated. Verify original V46 and IEMIS subject metadata before choosing component names, grade formulas or migration.
