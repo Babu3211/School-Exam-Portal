@@ -19,4 +19,7 @@ assert.throws(()=>assertLedgerReviewExportable({...missing,publishable:true}),/O
 assert.throws(()=>assertLedgerReviewExportable({...missing,invalidOrMissingDetails:[...missing.invalidOrMissingDetails,...missing.invalidOrMissingDetails],summary:{...missing.summary,invalidOrMissingPairs:2}}),/Duplicate/);
 assert.throws(()=>assertLedgerReviewExportable({...missing,summary:{...missing.summary,validMarkedPairs:2}}),/coverage/);
 assert.throws(()=>assertLedgerReviewExportable({...missing,invalidOrMissingDetails:[{...missing.invalidOrMissingDetails[0],studentId:''}]}),/identity/);
+assert.throws(()=>assertLedgerReviewExportable({...missing,summary:{...missing.summary,missingPairs:0}}),/missing mark totals/);
+assert.throws(()=>assertLedgerReviewExportable({...missing,summary:{...missing.summary,validMarkedPairs:1}}),/assignment coverage totals/);
+assert.throws(()=>assertLedgerReviewExportable({...missing,summary:{...missing.summary,invalidOrMissingPairs:2},invalidOrMissingDetails:[...missing.invalidOrMissingDetails,{studentId:'s2',subjectId:'math',reason:'missing_mark'}]}),/assignment coverage totals/);
 console.log('V47 shared diagnostic export integrity gate tests passed');
