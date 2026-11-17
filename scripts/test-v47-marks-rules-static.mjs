@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+const rules=readFileSync('v47/firestore.rules','utf8');
+assert.match(rules,/function validMark\(docId\)/);
+assert.match(rules,/match \/marks\/\{docId\}/);
+assert.match(rules,/allow create, update: if schoolAdmin\(schoolId\) && validMark\(docId\)/);
+assert.match(rules,/request\.resource\.data\.term in \['1st','2nd','final'\]/);
+assert.match(rules,/students\/\$\(request\.resource\.data\.studentId\)/);
+const generic=rules.slice(rules.indexOf('match /{collection}/{docId}'));
+assert.doesNotMatch(generic,/['"]marks['"]/,'Generic wildcard must not bypass mark validation');
+console.log('V47 mark rules static tests passed');
