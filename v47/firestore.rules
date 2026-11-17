@@ -34,7 +34,7 @@ service cloud.firestore {
     allow get, list: if reader(schoolId);
     allow create: if schoolAdmin(schoolId) && validNewStudent();
     allow update: if schoolAdmin(schoolId) && validNewStudent();
-    allow delete: if schoolAdmin(schoolId);
+    allow delete: if false; // preserve enrollment records and linked marks/attendance
    }
    function validAttendance(docId) {
     return request.resource.data.keys().hasOnly(['date','studentId','class','present'])
@@ -52,7 +52,7 @@ service cloud.firestore {
    match /attendance/{docId} {
     allow get, list: if reader(schoolId);
     allow create, update: if schoolAdmin(schoolId) && validAttendance(docId);
-    allow delete: if schoolAdmin(schoolId);
+    allow delete: if false; // protect attendance history
    }
    function validMark(docId) {
     return request.resource.data.keys().hasOnly(['studentId','subjectId','class','term','theory','practical'])
