@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SMSS Exam Portal V47 — Development Hub</title>
+<style>body{margin:0;background:#f2f7fd;color:#193550;font:16px system-ui,sans-serif}main{max-width:1050px;margin:auto;padding:20px}header{background:#124e91;color:white;padding:22px;border-radius:14px}header h1{margin:0 0 8px}header p{margin:0}.warning{background:#fff2d8;border:1px solid #d7a958;border-radius:10px;padding:14px;margin:18px 0}section{margin:24px 0}h2{font-size:1.2rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.tile{display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid #d8e5f1;border-radius:12px;padding:18px;min-height:78px}.tile:focus-visible{outline:3px solid #1255aa}.tile strong{display:block;color:#13518d;margin-bottom:8px}.tile span{font-size:.9rem;color:#4b6176}footer{margin:28px 0;color:#526b80;font-size:.9rem}</style></head><body><main>
+<header><h1>SMSS Exam Portal — V47</h1><p>Multi-School development workspace · School-scoped modules</p></header>
+<p class="warning" role="note"><strong>Development only — not live for schools.</strong> These screens are independent prototypes and are not yet integrated with the V46 dashboard. Use only the separate V47 Firebase project. Raw marks and diagnostic reports are NOT official CDC/IEMIS results. Never publish grades or GPA from these pages.</p>
+<section><h2>Administration</h2><nav class="grid" aria-label="Administration">
+<a class="tile" href="./admin.html"><strong>Super Admin</strong><span>Register and manage schools</span></a>
+<a class="tile" href="./school-admin.html"><strong>School Admin</strong><span>Manage school membership</span></a>
+</nav></section>
+<section><h2>School records</h2><nav class="grid" aria-label="School records">
+<a class="tile" href="./students.html"><strong>Students</strong><span>ECD–12 enrollment and student list</span></a>
+<a class="tile" href="./attendance.html"><strong>Attendance</strong><span>Class roster and Nepal-local date</span></a>
+<a class="tile" href="./records.html"><strong>Academic Records</strong><span>Read-only school data</span></a>
+<a class="tile" href="./subjects.html"><strong>Subjects</strong><span>School subject catalog</span></a>
+<a class="tile" href="./assignments.html"><strong>Subject Assignments</strong><span>Student–subject mapping</span></a>
+</nav></section>
+<section><h2>Examinations — development diagnostics</h2><nav class="grid" aria-label="Examination diagnostics">
+<a class="tile" href="./marks-entry.html"><strong>Raw Marks Entry</strong><span>Unverified CDC/IEMIS format</span></a>
+<a class="tile" href="./computer-marks.html"><strong>Class 9–10 Computer</strong><span>4 / 36 / 10 component entry</span></a>
+<a class="tile" href="./marks-preview.html"><strong>Raw Marks Preview</strong><span>Read-only marks listing</span></a>
+<a class="tile" href="./ledger-exceptions.html"><strong>Missing Marks Review</strong><span>Read-only exceptions and CSV</span></a>
+</nav></section>
+<footer>V47 development branch only. Firebase Emulator tests, full V46 feature parity, and official CDC/IEMIS grading validation are required before production deployment.</footer>
+</main></body></html>
