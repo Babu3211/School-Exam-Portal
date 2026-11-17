@@ -14,5 +14,5 @@ export function normalizeSchool(input){
  const validated=validateSchoolRegistration(input);
  const address=String(input.address??'').trim();
  if(address.length>240)throw new RangeError('Invalid school address');
- return {...validated,address,plan:'free'};
+ return {...validated}; // Persist only fields accepted by V47 Firestore rules; address is not yet supported.
 }
