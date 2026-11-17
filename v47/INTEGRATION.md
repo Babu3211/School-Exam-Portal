@@ -206,3 +206,7 @@ Raw ledger preview sorting now tolerates null/non-string mark identities while t
 ## Raw marks numeric validation in read-only diagnostics
 
 Raw ledger coverage now rejects missing, negative, nonnumeric, NaN, and infinite theory/practical scores using `invalid_raw_mark_scores`. This is intentionally only basic numeric validation: subject-specific full-mark ceilings, CDC grades, GPA, NG handling, and IEMIS 2083 print parity still require verified policies and cannot be inferred from the raw ledger. Regression tests cover invalid numeric scores and prevent a misleading `complete:true` status. V46 production and real school data remain untouched.
+
+## Empty roster safeguards
+
+The V47 read-only raw ledger audit now flags `no_students`, `no_subjects`, and `no_subject_assignments` rather than reporting an empty school class as complete. Blank assignment identities are invalid, and the preview presents unique diagnostic issue codes for easier review. Added regression cases for empty class/assignment lists and duplicate issue codes. This does not activate official result publication or CDC/IEMIS grading. No changes to V46 production.
