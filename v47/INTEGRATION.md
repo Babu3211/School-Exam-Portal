@@ -258,3 +258,7 @@ The CSV helper rejects `pagination_incomplete` and mismatches between reported a
 ## Ledger exception review with blocked export
 
 The browser now displays read-only missing/invalid mark rows and audit issues even when a school roster integrity check blocks CSV export. The export button stays disabled for such reviews. The shared gate additionally rejects duplicate exception pairs, invalid student/subject IDs, unsupported exception reasons, and contradictory mark coverage totals. This is an audit aid, not a CDC/IEMIS result or atomic Firestore snapshot; data can change between paginated queries. Validate the V47 emulator, indexes, and browser before real school use.
+
+## Active membership revalidation for diagnostic exports
+
+The V47 read-only missing-marks browser review now rechecks that the selected school and the signed-in user's membership remain active after paginated data loading, and again immediately before exporting a CSV. A review/session epoch guard prevents an old sign-in, cancelled review, or changed preview from downloading stale diagnostic data. This is defense in depth alongside Firestore Security Rules; it does not make multi-query reads an atomic snapshot. No changes to V46 production or deployment are part of this work.
