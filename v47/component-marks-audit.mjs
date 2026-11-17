@@ -5,9 +5,12 @@ export function auditComponentMarks({schoolClass,term,entries,componentsBySubjec
  if(!validSchoolClass(schoolClass))throw new Error('Invalid class');
  validateExamTerm(term);
  if(!Array.isArray(entries)||!componentsBySubject||typeof componentsBySubject!=='object'||Array.isArray(componentsBySubject))throw new TypeError('Entries and subject components required');
- const issues=[];
+ const issues=[],seen=new Set();
  for(let index=0;index<entries.length;index++){
-  const entry=entries[index];const definitions=entry&&Object.hasOwn(componentsBySubject,entry.subjectId)?componentsBySubject[entry.subjectId]:null;
+  const entry=entries[index];
+  if(!entry||typeof entry.studentId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(entry.studentId)||typeof entry.subjectId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(entry.subjectId)){issues.push({index,code:'invalid_entry_identity'});continue}
+  const pair=JSON.stringify([entry.studentId,entry.subjectId]);if(seen.has(pair))issues.push({index,code:'duplicate_student_subject'});else seen.add(pair);
+  const definitions=entry&&Object.hasOwn(componentsBySubject,entry.subjectId)?componentsBySubject[entry.subjectId]:null;
   if(!Array.isArray(definitions)||definitions.length===0||definitions.length>8){issues.push({index,code:'missing_component_definition'});continue}
   const names=new Set();let valid=true;
   for(const component of definitions){
