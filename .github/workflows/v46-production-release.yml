@@ -2,6 +2,14 @@ name: Release SMSS V46 Hosting (approved, gated)
 on:
   workflow_dispatch:
     inputs:
+      release_target:
+        description: 'Choose hosting (existing release) or firestore-rules (rules only)'
+        required: true
+        type: choice
+        default: hosting
+        options:
+          - hosting
+          - firestore-rules
       confirmation:
         description: 'Type DEPLOY-V46 after school account smoke tests, backup and rollback verification'
         required: true
@@ -25,7 +33,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify-and-deploy:
-    if: ${{ github.event.inputs.confirmation == 'DEPLOY-V46' && github.event.inputs.backup_confirmation == 'BACKUP-VERIFIED' && github.event.inputs.roles_confirmation == 'ROLES-VERIFIED' && github.ref == 'refs/heads/main' }}
+    if: ${{ github.event.inputs.confirmation == 'DEPLOY-V46' && github.event.inputs.backup_confirmation == 'BACKUP-VERIFIED' && github.event.inputs.roles_confirmation == 'ROLES-VERIFIED' && github.ref == 'refs/heads/main' && inputs.release_target == 'hosting' }}
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 30
@@ -81,3 +89,43 @@ jobs:
           curl --fail --location "$url/manifest.webmanifest" -o /tmp/smss-v46-manifest.json
           node -e 'const m=require("/tmp/smss-v46-manifest.json");if(m.name!=="SMSS Exam Portal")process.exit(1)'
 # Manual production environment approval and independent school-account/backup verification are required before dispatch.
+
+  verify-and-deploy-firestore-rules:
+    if: ${{ github.ref == 'refs/heads/main' && inputs.release_target == 'firestore-rules' && inputs.confirmation == 'DEPLOY-V46-RULES' && inputs.backup_confirmation == 'BACKUP-VERIFIED' && inputs.roles_confirmation == 'ROLES-VERIFIED' }}
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Verify approved rules revision
+        env:
+          APPROVED_SHA: ${{ inputs.expected_commit }}
+        run: |
+          set -euo pipefail
+          test "${#APPROVED_SHA}" -eq 40
+          test "$(git rev-parse HEAD)" = "$APPROVED_SHA"
+          node -e 'const c=require("./firebase.json");if(c.firestore?.rules!=="firestore.rules")process.exit(1)'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: Check rules and role isolation in emulator
+        run: |
+          set -euo pipefail
+          npm run test:rules
+          npm run test:viewer
+          npm run test:user-activity-rules
+          node scripts/test-v46-viewer-class-exam-readonly.mjs
+          node scripts/test-v46-user-activity-security.mjs
+          npm run test:v46-preservation
+      - name: Authenticate production Firebase service account
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
+          project_id: exam-portal-smss-95016
+      - name: Deploy Firestore Rules only (never school records or Hosting)
+        run: npx firebase-tools deploy --only firestore:rules --project exam-portal-smss-95016 --non-interactive
