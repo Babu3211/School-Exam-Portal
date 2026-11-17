@@ -11,22 +11,11 @@ for(const name of ['students','staff','classes','subjects','exams','marks','atte
 }
 assert.match(rules,/allow create: if schoolAdmin\(schoolId\) && docId\.matches/);
 assert.match(rules,/allow update: if schoolAdmin\(schoolId\) && docId\.matches/);
-assert.ok(rules.includes("docId.matches('^[A-Za-z0-9_-]{1,128}
-const wildcard=rules.match(/match \/\{collection\}\/\{docId\} \{([\s\S]*?)\n   \}/)?.[1];
-assert.ok(wildcard,'Missing generic scoped rule');
-assert.doesNotMatch(wildcard,/'students'|'attendance'/,'Wildcard bypasses validated collections');
-assert.ok(rules.includes("date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')"));
-assert.ok(rules.includes("studentId.matches('^[A-Za-z0-9_-]{1,128}$')"));
-for(const pattern of [/match \/\{collection\}\/\{docId\}/g,/function validAttendance\(docId\)/g,/match \/attendance\/\{docId\}/g])assert.equal((rules.match(pattern)||[]).length,1);
-assert.ok(rules.includes("students/$(request.resource.data.studentId)"),'Attendance must refer to a school-scoped student');
-assert.ok(rules.includes(".data['class'] == request.resource.data['class']"),'Attendance must match student class');
-console.log('V47 Firestore rules structural checks passed; emulator still required');
-)"));
+assert.ok(rules.includes("docId.matches('^[A-Za-z0-9_-]{1,128}$')"));
 assert.ok(rules.length<20000,'Unexpected rules expansion or corruption');
 assert.equal((rules.match(/\{/g)||[]).length,(rules.match(/\}/g)||[]).length,'Unbalanced Firestore rules braces');
 assert.equal((rules.match(/rules_version = '2';/g)||[]).length,1,'Exactly one rules header');
 assert.equal((rules.match(/match \/students\/\{docId\}/g)||[]).length,1,'Exactly one student match');
-assert.ok(!rules.includes('1,128} //'),'Broken student regex');
 const wildcard=rules.match(/match \/\{collection\}\/\{docId\} \{([\s\S]*?)\n   \}/)?.[1];
 assert.ok(wildcard,'Missing generic scoped rule');
 assert.doesNotMatch(wildcard,/'students'|'attendance'/,'Wildcard bypasses validated collections');
