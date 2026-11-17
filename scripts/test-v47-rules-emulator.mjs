@@ -80,7 +80,15 @@ try{
  await assertFails(viewer.doc('schools/school_002/students/s2').get());
  await assertFails(viewer.doc('schools/school_003/students/s3').get());
  await assertFails(admin.doc('schools/school_001/members/elevated').set({uid:'elevated',schoolId:'school_001',role:'school_admin',active:true}));
+ await assertFails(admin.doc('schools/school_001/members/teacherInjected').set({uid:'teacherInjected',schoolId:'school_001',role:'teacher',active:true,permissions:['admin']}));
+ await assertFails(superDb.doc('schools/school_001/members/adminInjected').set({uid:'adminInjected',schoolId:'school_001',role:'school_admin',active:true,permissions:['super_admin']}));
  await assertSucceeds(admin.doc('schools/school_001/members/teacherB').set({uid:'teacherB',schoolId:'school_001',role:'teacher',active:true}));
+ await assertFails(admin.doc('schools/school_001/members/teacherB').update({permissions:['super_admin']}));
+ await assertFails(superDb.doc('schools/school_001/members/teacherB').update({permissions:['super_admin']}));
+ await assertFails(admin.doc('schools/school_001/members/teacherB').update({uid:'someoneElse'}));
+ await assertFails(admin.doc('schools/school_001/members/teacherB').update({schoolId:'school_002'}));
+ await assertSucceeds(admin.doc('schools/school_001/members/teacherB').update({active:false}));
+ await assertSucceeds(admin.doc('schools/school_001/members/teacherB').update({active:true}));
  await assertSucceeds(superDb.doc('schools/school_001/members/elevated').set({uid:'elevated',schoolId:'school_001',role:'school_admin',active:true}));
  await assertFails(outsider.doc('schools/school_001/students/s1').get());
  await assertFails(outsider.doc('v47_super_admins/super1').get());
