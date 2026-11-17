@@ -15,7 +15,7 @@ export async function preflightRawMarkSave({db,api,actor,schoolId,input}){
   api.getDoc(api.doc(db,...base,'marks',markEntryId(entry)))
  ]);
  if(!student.exists()||student.data().class!==entry.class)throw new Error('Student missing or belongs to another class');
- if(!subject.exists()||subject.data().active===false||(subject.data().class!==undefined&&subject.data().class!==entry.class))throw new Error('Subject missing, inactive or belongs to another class');
+ if(!subject.exists()||subject.data().active!==true||subject.data().class!==entry.class)throw new Error('Subject missing, inactive or belongs to another class');
  if(!assignment.exists()||assignment.data().studentId!==entry.studentId||assignment.data().subjectId!==entry.subjectId||assignment.data().class!==entry.class)throw new Error('Student subject assignment required');
  return {entry,existing:existing.exists()};
 }
