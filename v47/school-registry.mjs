@@ -8,3 +8,11 @@ export function validateSchoolRegistration(input){
  if(iemis&&!/^[0-9]{5,20}$/.test(iemis))throw new Error('Invalid IEMIS code');
  return {id,name,iemisCode:iemis,active:false};
 }
+
+export function schoolRegistryPath(id){return 'schools/'+validateSchoolId(id);}
+export function normalizeSchool(input){
+ const validated=validateSchoolRegistration(input);
+ const address=String(input.address??'').trim();
+ if(address.length>240)throw new RangeError('Invalid school address');
+ return {...validated,address,plan:'free'};
+}
