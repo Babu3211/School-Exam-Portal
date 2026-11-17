@@ -7,5 +7,7 @@ assert.deepEqual(auditComponentMarks({...args,entries:[{...entry,scores:{...entr
 assert.deepEqual(auditComponentMarks({...args,entries:[{...entry,scores:{component_a:4,component_b:36}}]}).issues.map(i=>i.code),['component_keys_mismatch']);
 assert.deepEqual(auditComponentMarks({...args,componentsBySubject:{}}).issues.map(i=>i.code),['missing_component_definition']);
 assert.deepEqual(auditComponentMarks({...args,componentsBySubject:{computer:[{key:'x',max:2},{key:'x',max:2}]}}).issues.map(i=>i.code),['invalid_component_definition']);
+assert.deepEqual(auditComponentMarks({...args,entries:[entry,entry]}).issues.map(i=>i.code),['duplicate_student_subject']);
+assert.deepEqual(auditComponentMarks({...args,entries:[{...entry,studentId:'bad:id'}]}).issues.map(i=>i.code),['invalid_entry_identity']);
 assert.throws(()=>auditComponentMarks({...args,schoolClass:'13'}));
 console.log('V47 variable component raw marks audit tests passed');
