@@ -17,4 +17,5 @@ assert.equal((rules.match(/\{/g)||[]).length,(rules.match(/\}/g)||[]).length,'Ba
 assert.doesNotMatch(rules,/No legacy root collection access[\s\S]*?function validMark/,'No trailing duplicated rule fragments');
 const generic=rules.slice(rules.indexOf('match /{collection}/{docId}'));
 assert.doesNotMatch(generic,/['"]marks['"]/,'Generic wildcard must not bypass mark validation');
+assert.match(rules,/subject_assignments\/\$\(request\.resource\.data\.studentId \+ ':' \+ request\.resource\.data\.subjectId\)/);
 console.log('V47 mark rules static tests passed');
