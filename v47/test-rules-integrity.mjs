@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const rules = readFileSync(new URL('./firestore.rules', import.meta.url), 'utf8');
+const required = ['match /schools/{schoolId}', 'match /members/{uid}', 'match /students/{docId}', 'match /attendance/{docId}', 'match /v47_super_admins/{uid}'];
+for (const item of required) assert.ok(rules.includes(item), `Missing rule section: ${item}`);
+assert.ok(!rules.includes('allow read, write: if true'), 'Public access forbidden');
+assert.ok(!rules.includes('match /{document=**}'), 'Recursive wildcard forbidden');
+const suspect = rules.match(/\.matches\('\^\[A-Za-z0-9_-\]\{1,128\}\s*\n/);
+assert.equal(suspect, null, 'Rule source appears truncated inside an assignment validation regex');
+console.log('V47 rules integrity static audit passed (emulator tests still required)');
