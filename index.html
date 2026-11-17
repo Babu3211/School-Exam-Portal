@@ -2227,7 +2227,7 @@ async function loadMarksEntry(){
    // Fetch settings concurrently with assignment-scoped mark queries; keep Firestore permissions unchanged.
    const settingsPromise=getDocs(collection(db,'mark_settings'));
    // Keep all four scoped reads concurrent and preserve the established release contract.
-   const [studentSnaps,examSnaps,markSnaps,settingsSnap]=await Promise.all([studentSnapsPromise,examSnapsPromise,markSnapsPromise,settingsPromise.catch(e=>{throw new Error('mark_settings: '+safeNoticeError(e));})]);
+   const [studentSnaps,examSnaps,markSnaps,settingsSnap]=await Promise.all([studentSnapsPromise,examSnapsPromise,markSnapsPromise,settingsPromise]);
    ms=settingsSnap;
    ss={docs:studentSnaps.flatMap(x=>x.docs)};
    es={docs:examSnaps.flatMap(x=>x.docs)};
