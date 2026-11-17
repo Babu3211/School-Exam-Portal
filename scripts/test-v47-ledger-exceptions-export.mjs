@@ -9,4 +9,6 @@ const invalid=buildRawLedgerPreview({...args,rawMarks:[{studentId:'s1',subjectId
 assert.match(ledgerExceptionsCsv(invalid),/invalid_score_or_format/);
 assert.throws(()=>ledgerExceptionsCsv({...missing,publishable:true}));
 assert.throws(()=>ledgerExceptionsCsv({}));
+assert.throws(()=>ledgerExceptionsCsv(buildRawLedgerPreview({...args,allPagesLoaded:false})),/incomplete/);
+assert.throws(()=>ledgerExceptionsCsv({...missing,summary:{...missing.summary,invalidOrMissingPairs:999}}),/mismatch/);
 console.log('V47 diagnostic ledger exceptions CSV tests passed');
