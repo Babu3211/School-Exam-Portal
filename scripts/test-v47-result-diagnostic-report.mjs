@@ -1,0 +1,4 @@
+import assert from 'node:assert/strict';import {buildResultDiagnosticReport} from '../v47/result-diagnostic-report.mjs';
+const report=buildResultDiagnosticReport({schoolClass:'6',term:'1st',students:[{id:'s1',class:'6'}],subjects:[{id:'math',name:'Mathematics'}],marks:[{studentId:'s1',subjectId:'math',class:'6',term:'1st',theory:30,practical:8}],allPagesLoaded:true,gradingPolicyVerified:true,requiredSubjectsByStudent:{s1:['math']},subjectLimits:{math:{theoryMax:40,practicalMax:10}}});
+assert.equal(report.ready,false);assert.equal(report.publicationAllowed,false);assert.equal(report.gradeLedgerAvailable,false);assert.equal(report.gradeSheetAvailable,false);assert.deepEqual(report.blockers,['grade_engine_not_integrated']);assert.equal(report.expectedPairs,1);assert.ok(Object.isFrozen(report));
+console.log('V47 non-publishable diagnostic report tests passed');
