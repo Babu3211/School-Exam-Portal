@@ -120,7 +120,7 @@ service cloud.firestore {
 }
 )
       && request.resource.data['class'] in ['ECD','1','2','3','4','5','6','7','8','9','10','11','12']
-      && docId == request.resource.data.studentId + '_' + request.resource.data.subjectId
+      && docId == request.resource.data.studentId + ':' + request.resource.data.subjectId
       && exists(/databases/$(database)/documents/schools/$(schoolId)/students/$(request.resource.data.studentId))
       && get(/databases/$(database)/documents/schools/$(schoolId)/students/$(request.resource.data.studentId)).data['class'] == request.resource.data['class']
       && exists(/databases/$(database)/documents/schools/$(schoolId)/subjects/$(request.resource.data.subjectId))
