@@ -6,8 +6,8 @@ const env=await initializeTestEnvironment({projectId:'smss-v47-emulator-tests',f
 const db=(uid)=>env.authenticatedContext(uid).firestore();
 const anon=env.unauthenticatedContext().firestore();
 const student=(database,sid)=>doc(database,'schools',sid,'students','student_1');
-const mark=(database,sid)=>doc(database,'schools',sid,'marks','mark_1');
-const attendance=(database,sid)=>doc(database,'schools',sid,'attendance','attendance_1');
+const mark=(database,sid)=>doc(database,'schools',sid,'marks','final:student_1:math');
+const attendance=(database,sid)=>doc(database,'schools',sid,'attendance','2026-11-18_student_1');
 try{
  await env.withSecurityRulesDisabled(async context=>{
   const admin=context.firestore();
@@ -17,9 +17,11 @@ try{
    for(const [uid,role,active] of [['admin_'+sid,'school_admin',true],['teacher_'+sid,'teacher',true],['viewer_'+sid,'viewer',true],['inactive_'+sid,'viewer',false]]){
     await setDoc(doc(admin,'schools',sid,'members',uid),{uid,schoolId:sid,role,active});
    }
-   await setDoc(doc(admin,'schools',sid,'students','student_1'),{name:'Student',className:'Class 10'});
-   await setDoc(doc(admin,'schools',sid,'marks','mark_1'),{value:10});
-   await setDoc(doc(admin,'schools',sid,'attendance','attendance_1'),{status:'present'});
+   await setDoc(doc(admin,'schools',sid,'students','student_1'),{name:'Student',class:'10',schoolId:sid});
+   await setDoc(doc(admin,'schools',sid,'subjects','math'),{schoolId:sid,name:'Mathematics',class:'10',active:true});
+   await setDoc(doc(admin,'schools',sid,'subject_assignments','student_1:math'),{schoolId:sid,studentId:'student_1',subjectId:'math',class:'10'});
+   await setDoc(doc(admin,'schools',sid,'marks','final:student_1:math'),{schoolId:sid,studentId:'student_1',subjectId:'math',class:'10',term:'final',theory:10,practical:0});
+   await setDoc(doc(admin,'schools',sid,'attendance','2026-11-18_student_1'),{schoolId:sid,studentId:'student_1',class:'10',date:'2026-11-18',present:true});
   }
   await setDoc(doc(admin,'schools','school_inactive'),{id:'school_inactive',name:'Inactive School',active:false});
   await setDoc(doc(admin,'schools','school_inactive','members','viewer_school_A'),{uid:'viewer_school_A',schoolId:'school_inactive',role:'viewer',active:true});
@@ -39,11 +41,11 @@ try{
  // 6 Viewer writes denied
  await assertFails(updateDoc(student(viewer,'school_A'),{name:'bad'}));
  // 7 Teacher marks write denied until assignment rules implemented
- await assertFails(updateDoc(mark(teacher,'school_A'),{value:30}));
+ await assertFails(updateDoc(mark(teacher,'school_A'),{theory:30}));
  // 8 Teacher attendance write denied
- await assertFails(updateDoc(attendance(teacher,'school_A'),{status:'absent'}));
+ await assertFails(updateDoc(attendance(teacher,'school_A'),{present:false}));
  // 9 School admin can update own marks
- await assertSucceeds(updateDoc(mark(admin,'school_A'),{value:30}));
+ await assertSucceeds(updateDoc(mark(admin,'school_A'),{theory:30}));
  // 10 School admin cannot delete
  await assertFails(deleteDoc(mark(admin,'school_A')));
  // 11 Inactive membership denied
@@ -70,13 +72,13 @@ try{
  // 21 Teacher can read own marks
  await assertSucceeds(getDoc(mark(teacher,'school_A')));
  // 22 Viewer cannot write marks
- await assertFails(updateDoc(mark(viewer,'school_A'),{value:99}));
+ await assertFails(updateDoc(mark(viewer,'school_A'),{theory:99}));
  // 23 Viewer cannot write attendance
- await assertFails(updateDoc(attendance(viewer,'school_A'),{status:'absent'}));
+ await assertFails(updateDoc(attendance(viewer,'school_A'),{present:false}));
  // 24 Teacher cannot edit student details
  await assertFails(updateDoc(student(teacher,'school_A'),{name:'Changed'}));
  // 25 School admin can update own attendance
- await assertSucceeds(updateDoc(attendance(admin,'school_A'),{status:'late'}));
+ await assertSucceeds(updateDoc(attendance(admin,'school_A'),{present:false}));
  // 26 School admin cannot remove student
  await assertFails(deleteDoc(student(admin,'school_A')));
  // 27 School admin cannot change membership roles
@@ -116,9 +118,9 @@ try{
  // 44 Teacher cannot delete attendance
  await assertFails(deleteDoc(attendance(teacher,'school_A')));
  // 45 School admin can create own student
- await assertSucceeds(setDoc(doc(admin,'schools','school_A','students','student_2'),{name:'New Student'}));
+ await assertSucceeds(setDoc(doc(admin,'schools','school_A','students','student_2'),{name:'New Student',class:'10',schoolId:'school_A'}));
  // 46 School admin cannot create student in other school
- await assertFails(setDoc(doc(admin,'schools','school_B','students','student_2'),{name:'Bad'}));
+ await assertFails(setDoc(doc(admin,'schools','school_B','students','student_2'),{name:'Bad',class:'10',schoolId:'school_B'}));
  // 47 Viewer can read own attendance
  await assertSucceeds(getDoc(attendance(viewer,'school_A')));
  // 48 Viewer cannot read another school's attendance
