@@ -5,8 +5,8 @@ import {validateSchoolId} from './school-paths.mjs';
 // expectedStudentIds must come from the authoritative school/class roster, not UI rows.
 export function validateCompleteClassMarks({schoolId,classId,term,subjectId,expectedStudentIds,entries}){
  validateSchoolId(schoolId);
- if(!Array.isArray(expectedStudentIds)||expectedStudentIds.length===0)throw new Error('Class roster required');
- if(!Array.isArray(entries))throw new TypeError('Mark entries required');
+ if(!Array.isArray(expectedStudentIds)||expectedStudentIds.length===0||expectedStudentIds.length>1500)throw new Error('Class roster required');
+ if(!Array.isArray(entries)||entries.length>1500)throw new TypeError('Mark entries required');
  const validId=id=>typeof id==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(id);
  const expected=new Set();
  for(const id of expectedStudentIds){
