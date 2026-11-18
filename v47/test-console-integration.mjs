@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const read=name=>readFileSync(new URL('./'+name,import.meta.url),'utf8');
-for(const file of ['students-console.mjs','school-admin-console.mjs','attendance-console.mjs']){
+for(const file of ['students-console.mjs','school-admin-console.mjs','attendance-console.mjs','marks-entry-console.mjs','subjects-console.mjs','marks-preview-console.mjs','records-console.mjs']){
  const source=read(file);
  assert.match(source,/import \{verifySchoolSession\} from '\.\/verified-school-session\.mjs'/);
  assert.match(source,/await verifySchoolSession\(/);
