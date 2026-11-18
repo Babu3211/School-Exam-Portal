@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';import {createSchoolMarkOnly} from '../v47/mark-create-service.mjs';
 const actor={role:'school_admin',active:true,schoolId:'school_001'},input={studentId:'s1',subjectId:'math',class:'6',term:'1st',theory:30,practical:8};
-const docs=new Map([['schools/school_001/students/s1',{class:'6'}],['schools/school_001/subjects/math',{class:'6',active:true}],['schools/school_001/subject_assignments/s1:math',{studentId:'s1',subjectId:'math',class:'6'}]]);let transactions=0;
+const docs=new Map([['schools/school_001/students/s1',{class:'6',schoolId:'school_001'}],['schools/school_001/subjects/math',{class:'6',active:true,schoolId:'school_001'}],['schools/school_001/subject_assignments/s1:math',{studentId:'s1',subjectId:'math',class:'6',schoolId:'school_001'}]]);let transactions=0;
 const api={doc:(_db,...parts)=>parts.join('/'),runTransaction:async(_db,callback)=>{transactions++;const writes=[];const tx={get:async ref=>({exists:()=>docs.has(ref),data:()=>docs.get(ref)}),set:(ref,data)=>writes.push([ref,data])};const result=await callback(tx);for(const [ref,data]of writes)docs.set(ref,data);return result}};
 const args={db:{},api,actor,schoolId:'school_001',input};
 assert.equal((await createSchoolMarkOnly(args)).id,'1st:s1:math');assert.equal(docs.size,4);
@@ -9,14 +9,14 @@ await assert.rejects(()=>createSchoolMarkOnly({...args,actor:{...actor,role:'vie
 await assert.rejects(()=>createSchoolMarkOnly({...args,schoolId:'school_002'}));assert.equal(transactions,2);
 docs.delete('schools/school_001/subject_assignments/s1:math');
 await assert.rejects(()=>createSchoolMarkOnly({...args,input:{...input,term:'final'}}),/assignment required/);
-docs.set('schools/school_001/subject_assignments/s1:math',{studentId:'s1',subjectId:'math',class:'6'});
+docs.set('schools/school_001/subject_assignments/s1:math',{studentId:'s1',subjectId:'math',class:'6',schoolId:'school_001'});
 docs.get('schools/school_001/subjects/math').active=false;await assert.rejects(()=>createSchoolMarkOnly({...args,input:{...input,term:'final'}}),/Subject missing/);docs.get('schools/school_001/subjects/math').active=true;
 docs.get('schools/school_001/students/s1').class='7';await assert.rejects(()=>createSchoolMarkOnly({...args,input:{...input,term:'final'}}),/Student missing/);
 docs.get('schools/school_001/students/s1').class='9';
-docs.set('schools/school_001/subjects/computer',{name:'Computer',class:'9',active:true});
-docs.set('schools/school_001/subject_assignments/s1:computer',{studentId:'s1',subjectId:'computer',class:'9'});
+docs.set('schools/school_001/subjects/computer',{name:'Computer',class:'9',active:true,schoolId:'school_001'});
+docs.set('schools/school_001/subject_assignments/s1:computer',{studentId:'s1',subjectId:'computer',class:'9',schoolId:'school_001'});
 await assert.rejects(()=>createSchoolMarkOnly({...args,input:{...input,subjectId:'computer',class:'9',term:'final'}}),/Use Computer 4\/36\/10/);
-docs.set('schools/school_001/component_marks/final:s1:math',{scores:{component_a:4}});
+docs.set('schools/school_001/component_marks/final:s1:math',{schoolId:'school_001',scores:{component_a:4}});
 docs.get('schools/school_001/subjects/math').class='9';
 await assert.rejects(()=>createSchoolMarkOnly({...args,input:{...input,class:'9',term:'final'}}),/already exists/);
 console.log('V47 create-only raw marks transaction tests passed');
