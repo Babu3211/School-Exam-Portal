@@ -68,3 +68,9 @@
 - Found real onboarding bug: `member-management.mjs` created teacher/viewer membership `active:true` although Firestore rules require inactive creation. Fixed to inactive (commit `3e7565c`) and clarified UI message (`83bc0f9`).
 - Added `member-status-service.mjs` for authorized membership activation/deactivation and School Admin UI action with confirmation (commits `fbebe46`, `2ea1c7e`, `ef44d66`).
 - **Not tested against a running emulator or deployed Firebase**. Confirm all rules and UI behavior through tests before activation for real schools.
+
+## Latest critical validation (2026-11-18)
+- Reinspection discovered `v47/firestore.rules` had once again accumulated duplicate student/rules sections and a truncated teacher assignment UID regex. Reconstructed the first complete school rules section, one teacher assignment block and one catch-all (commit `81d12c0`).
+- Extended structural tests to detect duplicate student blocks and malformed teacher UID/subject regex (commit `1c0d608`).
+- The code is **not confirmed emulator-compiled or CI-passing**. Do not deploy until real tests pass.
+- Reinspection also confirmed membership UI now creates inactive records and offers activation; review security rules and execute emulator tests before relying on this workflow.
