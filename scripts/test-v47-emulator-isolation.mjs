@@ -110,5 +110,11 @@ try {
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{uid:'admin-a'}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{active:true}));
   await assertFails(deleteDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math')));
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','members','teacher-a'),{active:false}));
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{active:false}));
+  await assertFails(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{active:true}));
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','members','teacher-a'),{active:true}));
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{active:true}));
+
   console.log('V47 emulator isolation and role checks passed');
 } finally {await env.cleanup();}
