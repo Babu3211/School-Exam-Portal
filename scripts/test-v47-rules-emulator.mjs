@@ -18,9 +18,9 @@ try{
   await db.doc('schools/school_001/members/forgedUid').set({uid:'otherUid',schoolId:'school_001',role:'school_admin',active:true});
   await db.doc('schools/school_001/members/forgedSchool').set({uid:'forgedSchool',schoolId:'school_002',role:'school_admin',active:true});
   await db.doc('schools/school_001/members/forgedRole').set({uid:'forgedRole',schoolId:'school_001',role:'super_admin',active:true});
-  await db.doc('schools/school_001/students/s1').set({name:'A Student',class:'1'});
-  await db.doc('schools/school_001/students/s4').set({name:'Second Student',class:'1'});
-  for(let i=0;i<10;i++)await db.doc('schools/school_001/students/batch'+i).set({name:'Batch Student '+i,class:'1'});
+  await db.doc('schools/school_001/students/s1').set({name:'A Student',class:'1',schoolId:'school_001'});
+  await db.doc('schools/school_001/students/s4').set({name:'Second Student',class:'1',schoolId:'school_001'});
+  for(let i=0;i<10;i++)await db.doc('schools/school_001/students/batch'+i).set({name:'Batch Student '+i,class:'1',schoolId:'school_001'});
   await db.doc('schools/school_001/subjects/math').set({name:'Mathematics',class:'1',active:true});
   await db.doc('schools/school_001/subjects/inactive').set({name:'Inactive Subject',class:'1',active:false});
   await db.doc('schools/school_001/subjects/wrongclass').set({name:'Other Class Subject',class:'9',active:true});
@@ -50,7 +50,7 @@ try{
  await assertFails(forgedRole.doc('schools/school_001/students/forgedStudent').set({name:'Forged Student',class:'1'}));
  await assertSucceeds(admin.doc('schools/school_001/students/s1').get());
  await assertFails(admin.doc('schools/school_002/students/s2').get());
- await assertSucceeds(admin.doc('schools/school_001/students/new').set({name:'New Student',class:'1'}));
+ await assertSucceeds(admin.doc('schools/school_001/students/new').set({name:'New Student',class:'1',schoolId:'school_001'}));
  await assertFails(admin.doc('schools/school_001/students/bad').set({name:'N'}));
  await assertFails(admin.doc('schools/school_001/students/forged').set({name:'New Student',class:'1',role:'super_admin'}));
  await assertFails(superDb.doc('schools/school_001/students/forgedSuper').set({name:'New Student',class:'1',role:'super_admin'}));
@@ -107,7 +107,7 @@ try{
  await assertFails(outsider.doc('v47_super_admins/super1').get());
  await assertFails(admin.doc('v47_super_admins/super1').get());
  await assertFails(superDb.doc('v47_super_admins/super1').update({active:false}));
- await env.withSecurityRulesDisabled(async ctx=>{await ctx.firestore().doc('schools/school_001/students/computerStudent').set({name:'Computer Student',class:'9'});});
+ await env.withSecurityRulesDisabled(async ctx=>{await ctx.firestore().doc('schools/school_001/students/computerStudent').set({name:'Computer Student',class:'9',schoolId:'school_001'});});
  await assertSucceeds(admin.doc('schools/school_001/subjects/computer_9').set({name:'Computer',class:'9',active:true}));
  await assertSucceeds(admin.doc('schools/school_001/subject_assignments/computerStudent:computer_9').set({studentId:'computerStudent',subjectId:'computer_9',class:'9'}));
  const component={studentId:'computerStudent',subjectId:'computer_9',class:'9',term:'final',scores:{component_a:4,component_b:36,component_c:10}};
