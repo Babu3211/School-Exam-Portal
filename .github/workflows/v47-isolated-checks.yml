@@ -18,17 +18,7 @@ jobs:
         with:
           node-version: '22'
       - name: V47 isolated unit tests
-        run: |
-          set -euo pipefail
-          node v47/test-school-scope.mjs
-          node v47/test-tenant-paths.mjs
-          node v47/test-v47-foundations.mjs
-          node v47/test-security-contract.mjs
-          node v47/test-tenant-features.mjs
-          node v47/test-fail-closed-contract.mjs
-          node v47/test-tenant-invariants.mjs
-          node v47/test-member-provisioning.mjs
-          node v47/test-teacher-assignment-record.mjs
+        run: node v47/run-unit-checks.mjs
       - name: Confirm no V46 production resources are deployed
         run: echo 'This workflow only runs V47 tests; it does not deploy.'
 
