@@ -195,5 +195,24 @@ try{
  await assertSucceeds(updateDoc(doc(admin,'schools','school_A','staff','scoped_staff'),{name:'Updated Staff'}));
  // 84 Staff with a different tenant cannot be created by superadmin either
  await assertFails(setDoc(doc(superDb,'schools','school_A','staff','forged_by_super'),{schoolId:'school_B',name:'Bad'}));
- console.log('V47 Firestore emulator: 84 authorization assertions passed');
+ // 85 School Admin creates own school's exam term with tenant identity
+ await assertSucceeds(setDoc(doc(admin,'schools','school_A','exams','1st'),{schoolId:'school_A',term:'1st'}));
+ // 86 School Admin can list own school's exam terms
+ await assertSucceeds(getDocs(collection(admin,'schools','school_A','exams')));
+ // 87 Viewer may read terms but cannot create them
+ await assertSucceeds(getDoc(doc(viewer,'schools','school_A','exams','1st')));
+ await assertFails(setDoc(doc(viewer,'schools','school_A','exams','2nd'),{schoolId:'school_A',term:'2nd'}));
+ // 89 Teacher cannot create exam terms
+ await assertFails(setDoc(doc(teacher,'schools','school_A','exams','2nd'),{schoolId:'school_A',term:'2nd'}));
+ // 90 Cross-school exam create is denied
+ await assertFails(setDoc(doc(admin,'schools','school_B','exams','2nd'),{schoolId:'school_B',term:'2nd'}));
+ // 91 Forged tenant identity denied
+ await assertFails(setDoc(doc(admin,'schools','school_A','exams','2nd'),{schoolId:'school_B',term:'2nd'}));
+ // 92 Exam deletion is denied even to School Admin
+ await assertFails(deleteDoc(doc(admin,'schools','school_A','exams','1st')));
+ // 93 Existing exam term cannot have its tenant identity reassigned
+ await assertFails(updateDoc(doc(admin,'schools','school_A','exams','1st'),{schoolId:'school_B'}));
+ // 94 Other-school exam reads are denied
+ await assertFails(getDocs(collection(admin,'schools','school_B','exams')));
+ console.log('V47 Firestore emulator: 94 authorization assertions passed');
 }finally{await env.cleanup();}
