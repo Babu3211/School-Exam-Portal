@@ -31,6 +31,7 @@ export async function setTeacherAssignmentActive({db,api,actor,schoolId,uid,clas
   if(!assignment.exists())throw new Error('Assignment missing');
   const data=assignment.data();
   if(data.schoolId!==schoolId||data.uid!==uid||data.classId!==classId||data.subjectId!==subjectId)throw new Error('Assignment identity mismatch');
+  if(typeof data.active!=='boolean')throw new Error('Assignment status invalid');
   if(active){
    const member=await tx.get(api.doc(db,'schools',schoolId,'members',uid));
    if(!member.exists()||member.data().role!=='teacher'||member.data().active!==true||member.data().schoolId!==schoolId)throw new Error('Active teacher membership required');
