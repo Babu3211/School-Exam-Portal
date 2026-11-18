@@ -51,7 +51,8 @@ try {
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','missing-scope'),{score:20}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','wrong-scope'),{schoolId:'school-b',score:20}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{schoolId:'school-b'}));
-  await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{studentId:'student-2'}));
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{studentId:'student-2'}));
+  await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{studentId:'student-1'}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{theory:101}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{theory:25}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','final:student-2:math'),{...adminRawMark,term:'final',theory:-1}));
