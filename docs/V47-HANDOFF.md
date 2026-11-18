@@ -210,3 +210,10 @@
 - Fixed emulator fixture ID collision: Admin marks now target student-2 while Teacher marks target student-1 (`b235faf`).
 - Also fixed marks editor term-change control refresh, malformed draft handling and aligned its UI test in earlier commits.
 - **Release blocker:** Firebase Emulator and actual CI have not run successfully/been verified. Repaired rules must be parsed and tested in emulator before ANY deployment. The full-class >3 marks save remains unavailable; V46 production unchanged.
+
+## Verification attempt and deterministic test fix — 2026-11-18
+- Inspected V47 GitHub branch, full class-roster query test, marks draft and save tests, and the GitHub Actions workflow configuration.
+- Found a **real test-double defect**: the complete-roster mock returned a fixed three records regardless of `limit(pageSize+1)`. It now respects the requested limit (`848fa1f`).
+- Added an explicit `node --check` syntax gate for every V47 module plus the two isolation scripts, before any unit/emulator tests (`b0c3de4`).
+- Checked GitHub combined status for the latest prior commit; the API returned `statuses: []`. This does **not** mean passed. The accessible workflow-run lookup is PR-only and does not show push-triggered runs. GitHub Actions execution or Firebase Emulator PASS/FAIL remains **unverified**.
+- To establish final verification, inspect the GitHub Actions workflow run page for the V47 branch and capture the `V47 structural and emulator authorization checks` step logs. Do not deploy V47 until green emulator evidence exists. V46 remains unchanged.
