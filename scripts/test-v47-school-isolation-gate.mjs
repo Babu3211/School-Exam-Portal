@@ -11,12 +11,15 @@ for(const name of ['students','marks','attendance','exams','teacher_assignments'
 for(const token of [
  'function activeMember(sid)','function memberRole(sid, role)',
  'function immutableSchool(sid)','function validStudent()',
- 'function teacherMarkAllowed(sid, id)','function teacherAttendanceAllowed(sid, id)',
+ 'function teacherMarkAllowed(sid, id)','function validRawMark(sid, id)','function teacherAttendanceAllowed(sid, id)',
  'match /{document=**} { allow read, write: if false; }',
  "request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')",
  "data.get('active', true) == true",
  'teacherMarkAllowed(sid, id);','teacherAttendanceAllowed(sid, id);'
 ])assert.ok(rules.includes(token),'Missing or truncated '+token);
+assert.ok(rules.includes("canAdmin(sid) && validRawMark(sid, id)"),'Admin mark writes must validate schema');
+assert.ok(rules.includes("request.resource.data.theory <= 100"),'Admin mark theory upper bound missing');
+assert.ok(rules.includes("request.resource.data.practical <= 100"),'Admin mark practical upper bound missing');
 assert.equal(rules.split('function teacherMarkAllowed(sid, id)').length-1,1,'Duplicate teacher mark validator');
 assert.equal(rules.split('function teacherAttendanceAllowed(sid, id)').length-1,1,'Duplicate teacher attendance validator');
 assert.ok(rules.includes("request.resource.data.present is bool"),'Teacher attendance present must be boolean');
