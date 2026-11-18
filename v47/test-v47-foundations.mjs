@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {normalizeSchool,schoolRegistryPath} from './school-registry.mjs';
-import {normalizeMembership,canReadSchool,canManageSchool} from './school-membership.mjs';
+import {normalizeMembership,canReadSchool,canManageSchool,canWriteSchool} from './school-membership.mjs';
 import {selectableSchools,chooseSchool} from './school-selector.mjs';
 import {boundedPageSize,stablePage} from './school-pagination.mjs';
 import {assignmentKey,isAssigned} from './school-assignments.mjs';
@@ -14,6 +14,8 @@ assert.equal(schoolRegistryPath('school_A'),'schools/school_A');
 const admin=normalizeMembership('school_A','user_0001','school_admin');
 assert.equal(admin.path,'schools/school_A/members/user_0001');
 assert.equal(canManageSchool(admin),true);
+assert.equal(canWriteSchool({role:'teacher',active:true}),false);
+assert.equal(canWriteSchool(admin),true);
 assert.equal(canReadSchool({role:'viewer',active:true}),true);
 assert.equal(canManageSchool({role:'viewer',active:true}),false);
 assert.throws(()=>normalizeMembership('school_A','user_0001','super_admin'),Error);
@@ -33,6 +35,8 @@ assert.equal(prepareSchoolRegistration({id:'school_A',name:'School A'},'user_000
 assert.equal(normalizeSchool({id:'school_A',name:'School A',address:'Kathmandu'}).address,undefined);
 assert.deepEqual(Object.keys(normalizeSchool({id:'school_A',name:'School A'})).sort(),['active','id','iemisCode','name']);
 assert.throws(()=>tenantExportManifest('school_A',['schools/school_A/marks/x/other/y']),TypeError);
+assert.throws(()=>tenantExportManifest('school_A',['schools/school_A/students/student_1']),TypeError);
+assert.throws(()=>tenantExportManifest('school_A',['schools/school_A/members']),TypeError);
 assert.equal(authorizeSchoolAction({membership:{active:true,role:'school_admin',schoolId:'school_A'},action:'read',schoolId:'school_B'}),false);
 assert.deepEqual(selectableSchools([{schoolId:'school_A',role:'invalid',active:true}]),[]);
 assert.throws(()=>stablePage([{id:'a'}],{afterId:4}),TypeError);
