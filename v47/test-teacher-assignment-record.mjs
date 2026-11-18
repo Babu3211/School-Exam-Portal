@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {validateTeacherAssignment,teacherAssignmentDocumentId} from './teacher-assignment-record.mjs';
+const x={schoolId:'school_A',teacherUid:'teacher_001',className:'Class 9',subject:'Science'};
+assert.equal(validateTeacherAssignment(x).active,false);
+assert.equal(validateTeacherAssignment({...x,active:true,section:'A'}).section,'A');
+assert.throws(()=>validateTeacherAssignment({...x,schoolId:'school_B/x'}));
+assert.throws(()=>validateTeacherAssignment({...x,teacherUid:'../bad'}));
+assert.throws(()=>validateTeacherAssignment({...x,active:'true'}));
+assert.throws(()=>validateTeacherAssignment({...x,subject:'Science::All'}));
+assert.equal(teacherAssignmentDocumentId('teacher_001','Class 9','Science'),'teacher_001::Class 9::Science::ALL');
+console.log('V47 teacher assignment schema checks passed');
