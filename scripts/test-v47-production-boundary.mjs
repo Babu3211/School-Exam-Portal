@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
 import {execFileSync} from "node:child_process";
 const base=process.env.V47_BASE_REF || "origin/main";
 const output=execFileSync("git",["diff","--name-only",base+"...HEAD"],{encoding:"utf8"});
@@ -20,7 +21,19 @@ const allowed=path=>
  path===".github/workflows/v47-development-checks.yml" ||
  path==="firestore.v47.prototype.rules" ||
  path==="firebase.v47.emulator.json";
-const unexpected=changed.filter(path=>!allowed(path));
+// package.json is shared; only additive V47 test scripts are allowed.
+let packageScriptsSafe=true;
+if(changed.includes("package.json")){
+ const baseline=JSON.parse(execFileSync("git",["show",base+":package.json"],{encoding:"utf8"}));
+ const current=JSON.parse(readFileSync("package.json","utf8"));
+ const originalScripts=baseline.scripts||{};
+ const currentScripts=current.scripts||{};
+ packageScriptsSafe=Object.entries(originalScripts).every(([key,value])=>currentScripts[key]===value)
+   && Object.keys(currentScripts).filter(key=>!(key in originalScripts)).every(key=>key.startsWith("test:v47"))
+   && Object.entries(baseline).filter(([key])=>key!=="scripts").every(([key,value])=>JSON.stringify(current[key])===JSON.stringify(value))
+   && Object.keys(current).every(key=>key==="scripts" || key in baseline);
+}
+const unexpected=changed.filter(path=>!allowed(path) && !(path==="package.json" && packageScriptsSafe));
 if(unexpected.length) {
  console.error("V47 branch modified V46 production files:",unexpected);
  process.exitCode=1;
