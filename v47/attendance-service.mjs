@@ -15,6 +15,6 @@ export async function saveSchoolAttendance({db,api,actor,schoolId,input}){
  const attendance=validateAttendance(input);
  if(typeof api?.doc!=='function'||typeof api?.setDoc!=='function')throw new TypeError('Missing Firebase SDK');
  const id=attendance.date+'_'+attendance.studentId;
- await api.setDoc(api.doc(db,'schools',schoolId,'attendance',id),attendance);
- return {id,...attendance};
+ await api.setDoc(api.doc(db,'schools',schoolId,'attendance',id),{...attendance,schoolId});
+ return {id,...attendance,schoolId};
 }
