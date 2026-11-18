@@ -168,7 +168,7 @@ try {
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1'),{schoolId:'school-a',studentId:'student-1',class:'9',date:'2026-11-18',present:true,extra:'forbidden'}));
   const teacherAttendance={schoolId:'school-a',studentId:'student-1',class:'9',date:'2026-11-18',present:true};
   await assertSucceeds(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1'),teacherAttendance));
-  await assertFails(updateDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1'),{present:false}));
+  await assertSucceeds(updateDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1'),{present:false})); // Active assignment authorizes attendance correction
   await assertFails(deleteDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1')));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19',class:'8'}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19',schoolId:'school-b'}));
