@@ -13,6 +13,6 @@ for(const cls of SCHOOL_CLASSES){
 }
 for(const name of ['students.html','attendance.html','marks-entry.html','subjects.html','marks-preview.html','assignments.html']){
  const html=readFileSync(new URL('./'+name,import.meta.url),'utf8');
- assert.match(html,/LKG/);assert.match(html,/UKG/);assert.match(html,/ECD/);assert.match(html,/<option>12<\/option>/);
+ assert.match(html,/LKG/);assert.match(html,/UKG/);assert.match(html,/ECD/);assert.match(html,/<option(?:\s+[^>]*)?>12<\/option>/);
 }
 console.log('V47 class catalog and six screen options validated');
