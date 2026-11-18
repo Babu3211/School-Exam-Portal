@@ -79,4 +79,9 @@ for(const [overrides,message] of [
  await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),/Computer 4\/36\/10/);
  assert.equal(writes.length,0);
 }
+{
+ const {api,writes}=mock({'subject_assignments/s2:math':{schoolId,class:classId,studentId:'s2',subjectId,active:false}});
+ await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),/Student subject assignment/);
+ assert.equal(writes.length,0);
+}
 console.log('V47 atomic class marks save contract checks passed');
