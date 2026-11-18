@@ -13,5 +13,7 @@ assert.match(registration,/adminMembership:\{schoolId:school\.id,uid:adminUid,ro
 assert.match(rules,/function adminCanCreate\(\)/);
 assert.match(rules,/function adminCanUpdate\(\)/);
 assert.match(rules,/allow delete: if false;/);
+assert.match(rules,/function scopedRecord\(sid\)/);
+assert.match(rules,/function immutableSchool\(sid\)/);
 assert.match(rules,/request\.resource\.data\.active == false/);
 console.log('V47 static rules/client contract checks passed; emulator authorization tests still required.');
