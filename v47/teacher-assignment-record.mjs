@@ -8,6 +8,6 @@ export function validateTeacherAssignment({schoolId,teacherUid,className,subject
 export function teacherAssignmentDocumentId(teacherUid,className,subject,section='ALL'){
  assertDocumentId(teacherUid);
  for(const field of [className,subject,section])if(typeof field!=='string'||!field.trim()||field.length>160||field.includes('::'))throw new TypeError('Invalid assignment field');
- // Do not use this as a Firestore ID: deterministic hashing is required before persistence.
+ // Human-readable comparison key only; NOT a Firestore document ID or authorization proof.
  return [teacherUid,className.trim(),subject.trim(),section.trim()].join('::');
 }
