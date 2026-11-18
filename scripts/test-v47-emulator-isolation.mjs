@@ -34,6 +34,8 @@ try {
       ['school-a','admin-a','school_admin'],['school-b','admin-b','school_admin'],
       ['school-a','viewer-a','viewer'],['school-a','teacher-a','teacher']
     ]) await setDoc(doc(root,'schools',sid,'members',uid),{uid,schoolId:sid,role,active:true});
+    await setDoc(doc(root,'schools','school-a','subjects','math'),{schoolId:'school-a',class:'9',name:'Mathematics',active:true});
+    await setDoc(doc(root,'schools','school-a','subject_assignments','student-2:math'),{schoolId:'school-a',studentId:'student-2',subjectId:'math',class:'9'});
     await setDoc(doc(root,'v47_super_admins','super-a'),{active:true});
     await setDoc(doc(root,'v47_super_admins','disabled-super'),{active:false});
     await setDoc(doc(root,'schools','school-disabled'),{id:'school-disabled',name:'Disabled School',active:false});
