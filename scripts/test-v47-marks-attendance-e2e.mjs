@@ -60,4 +60,15 @@ documents.set("schools/school_A001",{status:"suspended"});
 assert.equal((await marks(markReq)).status,403);
 assert.equal((await attendance(attendanceReq)).status,403);
 assert.equal(queried.length,4,"No data reads after school suspension");
+// Revoking a member must immediately deny both endpoints without tenant reads.
+documents.set("schools/school_B001/members/user2",{active:false,roles:["school_admin"]});
+assert.equal((await marks(bMarkReq)).status,403);
+assert.equal((await attendance(bAttendanceReq)).status,403);
+assert.equal(queried.length,4,"Revoked membership must not read tenant data");
+// Even an active membership must not bypass a suspended school.
+documents.set("schools/school_B001/members/user2",{active:true,roles:["school_admin"]});
+documents.set("schools/school_B001",{status:"suspended"});
+assert.equal((await marks(bMarkReq)).status,403);
+assert.equal((await attendance(bAttendanceReq)).status,403);
+assert.equal(queried.length,4,"Suspended school must not read tenant data");
 console.log("V47 marks and attendance cross-tenant HTTP integration tests passed");
