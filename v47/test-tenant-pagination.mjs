@@ -29,3 +29,26 @@ assert.equal(seen.size,1500,'Missing student across paginated roster');
 assert.equal(records[0].id,originalFirst,'Pagination must not mutate source records');
 assert.deepEqual(stablePage(records,{limit:50,afterId:'student_99999'}),{items:[],nextCursor:null});
 console.log('V47 1,500-student bounded pagination simulation passed');
+
+// Simulate 30 separate school rosters (500 each) and verify page traversal per school.
+// This is a pure pagination test, not a Firestore authorization or load benchmark.
+for(let schoolIndex=1;schoolIndex<=30;schoolIndex++){
+ const schoolId='school_'+String(schoolIndex).padStart(2,'0');
+ const roster=Array.from({length:500},(_,i)=>({id:schoolId+'_student_'+String(i+1).padStart(4,'0'),schoolId}));
+ let next=null, count=0, rounds=0;
+ do{
+  const result=stablePage(roster,{limit:20,afterId:next});
+  assert.ok(result.items.length<=20);
+  for(const student of result.items)assert.equal(student.schoolId,schoolId);
+  count+=result.items.length;
+  rounds++;
+  next=result.nextCursor;
+  assert.ok(rounds<=25,'School cursor loop');
+ }while(next!==null);
+ assert.equal(count,500);
+ assert.equal(rounds,25);
+}
+for(const invalid of [0,-1,2.5,'20',NaN])assert.throws(()=>stablePage(records,{limit:invalid}),RangeError);
+assert.throws(()=>stablePage([{id:'ok'},{id:''}]),TypeError);
+assert.throws(()=>stablePage(records,{afterId:7}),TypeError);
+console.log('V47 30-school pagination and invalid cursor tests passed');
