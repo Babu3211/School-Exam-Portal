@@ -194,11 +194,12 @@ service cloud.firestore {
       match /marks/{id} {
         allow get, list: if canRead(sid);
         allow create: if (canAdmin(sid) && validRawMark(sid, id)) || teacherMarkAllowed(sid, id);
-        allow update: if canAdmin(sid) && immutableSchool(sid) && validRawMark(sid, id)
+        allow update: if immutableSchool(sid) && validRawMark(sid, id)
           && request.resource.data.studentId == resource.data.studentId
           && request.resource.data.subjectId == resource.data.subjectId
           && request.resource.data.class == resource.data.class
-          && request.resource.data.term == resource.data.term;
+          && request.resource.data.term == resource.data.term
+          && (canAdmin(sid) || teacherMarkAllowed(sid, id));
         allow delete: if false;
       }
       function teacherAttendanceAllowed(sid, id) {
