@@ -21,12 +21,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
       - name: Install locked dependencies
-        run: npm ci
+        run: npm install --no-package-lock --no-audit --no-fund
       - name: Run V47 tenant isolation Firestore emulator suite
         run: npx firebase-tools emulators:exec --config v47/firebase.v47.json --project v47-isolation-test --only firestore "node scripts/test-v47-rules-emulator.mjs"
