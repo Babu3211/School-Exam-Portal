@@ -1,0 +1,36 @@
+name: V47 isolated Hosting test preview (manual only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: v47-isolated-hosting-test-preview
+  cancel-in-progress: false
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smss-v47-multischool-work
+      - name: Enforce isolated V47 static preview boundary
+        shell: bash
+        run: |
+          test -f v47/index.html
+          test -f v47/admin.html
+          test -f v47/firebase.json
+          node -e 'const c=require("./v47/firebase.json");if(c.hosting.public!==".")process.exit(1)'
+          echo "V47 static development preview only. No V46 production deploy."
+      - name: Deploy to V47 preview channel only
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}
+          projectId: smss-exam-portal-v47
+          channelId: v47-test
+          expires: 7d
+          entryPoint: v47
+      - name: Preview scope
+        run: echo "Only V47 Firebase preview channel v47-test was targeted; no live channel or V46 project."
