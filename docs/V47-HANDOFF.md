@@ -74,3 +74,9 @@
 - Extended structural tests to detect duplicate student blocks and malformed teacher UID/subject regex (commit `1c0d608`).
 - The code is **not confirmed emulator-compiled or CI-passing**. Do not deploy until real tests pass.
 - Reinspection also confirmed membership UI now creates inactive records and offers activation; review security rules and execute emulator tests before relying on this workflow.
+
+## Teacher assignment integration (2026-11-18)
+- Reopened current structural test and found it contained malformed, duplicated assertion text; replaced with a clean structural gate (commit `1db0680`). Retrieved rules checked at source level for one student rule, one teacher assignment rule, one catch-all and intact regex; **not an emulator pass**.
+- Added `v47/teacher-assignment-management.mjs`: transactional create (requires active teacher membership, starts inactive) and admin-only activation/deactivation with identity checks (commit `ee727b0`).
+- Added School Admin teacher UID/class/subject controls and wired confirmed actions (commits `1938694`, `19959da`). Added basic denied-role app contract tests (commit `5ac4cbc`).
+- Teacher write permissions to marks/attendance are **still disabled** until assignment-bound Firestore rule tests pass. No deployment or live V46 changes.
