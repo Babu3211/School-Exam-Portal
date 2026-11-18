@@ -6,3 +6,5 @@ Rules must verify: active school, active teacher membership for the exact school
 Current V47 Firestore rules intentionally deny teacher marks/attendance writes. Keep that fail-closed behavior until Firebase emulator tests prove all checks. Test forged teacher membership, viewer writes, cross-school reads/writes, cross-class writes, absent assignment, disabled school, and arbitrary nested paths. No production deployment without separate approval.
 
 `canWriteSchool` and `authorizeSchoolAction` both intentionally deny teacher writes until the Firestore rules implement verified assignments.
+
+Teacher write contracts now normalize class/subject/section whitespace and reject assignment-key delimiters. These validations are not authorization.
