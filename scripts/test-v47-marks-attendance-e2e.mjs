@@ -20,14 +20,16 @@ const firestore={
    queried.push({path,filters:this.filters});
    if(path==="schools/school_A001/marks")return {docs:[{id:"m1",data:()=>({className:"9",subject:"Computer",marks:72})}]};
    if(path==="schools/school_A001/attendance")return {docs:[{id:"a1",data:()=>({className:"9",date:"2083-01-01",attendanceType:"daily",students:[{studentId:"s1",status:"present"}]})}]};
+   if(path==="schools/school_B001/marks")return {docs:[{id:"b-m1",data:()=>({className:"9",subject:"Computer",marks:88})}]};
+   if(path==="schools/school_B001/attendance")return {docs:[{id:"b-a1",data:()=>({className:"9",date:"2083-01-01",attendanceType:"daily",students:[{studentId:"b-s1",status:"absent"}]})}]};
    throw Error("Unexpected cross-tenant collection read");
   }
  })
 };
 const auth={verifyIdToken:async(token,revoked)=>{
  assert.equal(revoked,true);
- if(token!=="token-user1")throw Error("Invalid token");
- return {uid:"user1",firebase:{sign_in_provider:"password"}};
+ if(token!=="token-user1" && token!=="token-user2")throw Error("Invalid token");
+ return {uid:token==="token-user1"?"user1":"user2",firebase:{sign_in_provider:"password"}};
 }};
 const marks=createV47MarksHttpHandler({auth,firestore});
 const attendance=createV47AttendanceHttpHandler({auth,firestore});
@@ -41,8 +43,21 @@ assert.equal(a.status,200);assert.equal(a.body.attendance[0].students[0].status,
 assert.deepEqual(queried.map(q=>q.path),["schools/school_A001/marks","schools/school_A001/attendance"]);
 assert.equal((await marks({...markReq,query:{...markReq.query,schoolId:"school_B001"}})).status,403);
 assert.equal((await attendance({...attendanceReq,query:{...attendanceReq.query,schoolId:"school_B001"}})).status,403);
+// Reverse-direction isolation: user2 can read only B, never A.
+const bMarkReq={...markReq,headers:{authorization:"Bearer token-user2"},query:{...markReq.query,schoolId:"school_B001"}};
+const bAttendanceReq={...attendanceReq,headers:{authorization:"Bearer token-user2"},query:{...attendanceReq.query,schoolId:"school_B001"}};
+const bm=await marks(bMarkReq);
+const ba=await attendance(bAttendanceReq);
+assert.equal(bm.status,200);assert.equal(bm.body.marks[0].marks,88);
+assert.equal(ba.status,200);assert.equal(ba.body.attendance[0].students[0].status,"absent");
+assert.equal((await marks({...bMarkReq,query:{...bMarkReq.query,schoolId:"school_A001"}})).status,403);
+assert.equal((await attendance({...bAttendanceReq,query:{...bAttendanceReq.query,schoolId:"school_A001"}})).status,403);
+assert.deepEqual(queried.map(q=>q.path),[
+ "schools/school_A001/marks","schools/school_A001/attendance",
+ "schools/school_B001/marks","schools/school_B001/attendance"
+]);
 documents.set("schools/school_A001",{status:"suspended"});
 assert.equal((await marks(markReq)).status,403);
 assert.equal((await attendance(attendanceReq)).status,403);
-assert.equal(queried.length,2,"No data reads after school suspension");
+assert.equal(queried.length,4,"No data reads after school suspension");
 console.log("V47 marks and attendance cross-tenant HTTP integration tests passed");
