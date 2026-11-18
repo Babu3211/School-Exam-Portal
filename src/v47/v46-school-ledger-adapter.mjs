@@ -19,7 +19,7 @@ export function renderV47SchoolLedger({schoolId,term,classNo,schoolName,schoolCo
  for(const st of students){
   if(!st||typeof st!=="object"||typeof st.id!=="string"||!st.id||studentIds.has(st.id))
    throw new Error("Invalid or duplicate student identity");
-  if(st.schoolId!=null&&st.schoolId!==schoolId)throw new Error("Ledger student school mismatch");
+  if(st.schoolId!==schoolId)throw new Error("Ledger student school mismatch");
   if(st.classNo!==undefined&&Number(st.classNo)!==n)throw new Error("Ledger student class mismatch");
   if(st.examId!==undefined&&st.examId!==examId)throw new Error("Ledger student exam mismatch");
   studentIds.add(st.id);
@@ -30,7 +30,7 @@ export function renderV47SchoolLedger({schoolId,term,classNo,schoolName,schoolCo
  if(subjectKeys.has("")||subjectKeys.size!==subjects.length)throw new Error("Invalid or duplicate ledger subjects");
  for(const mark of marks){
   if(!mark||typeof mark!=="object")throw new Error("Invalid ledger mark");
-  if(mark.schoolId!=null&&mark.schoolId!==schoolId)throw new Error("Ledger mark school mismatch");
+  if(mark.schoolId!==schoolId)throw new Error("Ledger mark school mismatch");
   if(mark.examId!==examId)throw new Error("Ledger mark exam mismatch");
   if(!studentIds.has(mark.studentId))throw new Error("Ledger contains a mark outside selected students");
   if(!Array.isArray(mark.scores)||!mark.scores.length)
