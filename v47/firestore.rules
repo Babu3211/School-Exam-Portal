@@ -231,6 +231,12 @@ service cloud.firestore {
       match /component_marks/{id} {
         function validComputerComponent() {
           let data = request.resource.data;
+          let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(data.studentId);
+          let subjectPath = /databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId);
+          let assignmentPath = /databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId);
+          let student = get(studentPath).data;
+          let subject = get(subjectPath).data;
+          let assignment = get(assignmentPath).data;
           return data.keys().hasOnly(['schoolId','studentId','subjectId','class','term','scores'])
             && data.keys().hasAll(['schoolId','studentId','subjectId','class','term','scores'])
             && data.schoolId == sid
@@ -245,17 +251,17 @@ service cloud.firestore {
             && data.scores.component_a is number && data.scores.component_a >= 0 && data.scores.component_a <= 4
             && data.scores.component_b is number && data.scores.component_b >= 0 && data.scores.component_b <= 36
             && data.scores.component_c is number && data.scores.component_c >= 0 && data.scores.component_c <= 10
-            && exists(/databases/$(database)/documents/schools/$(sid)/students/$(data.studentId))
-            && get(/databases/$(database)/documents/schools/$(sid)/students/$(data.studentId)).data.get('schoolId','') == sid
-            && get(/databases/$(database)/documents/schools/$(sid)/students/$(data.studentId)).data.get('class','') == data.class
-            && exists(/databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId))
-            && get(/databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId)).data.get('schoolId','') == sid
-            && get(/databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId)).data.get('class','') == data.class
-            && exists(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId))
-            && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId)).data.get('schoolId','') == sid
-            && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId)).data.get('studentId','') == data.studentId
-            && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId)).data.get('subjectId','') == data.subjectId
-            && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId)).data.get('class','') == data.class
+            && exists(studentPath)
+            && student.get('schoolId','') == sid
+            && student.get('class','') == data.class
+            && exists(subjectPath)
+            && subject.get('schoolId','') == sid
+            && subject.get('class','') == data.class
+            && exists(assignmentPath)
+            && assignment.get('schoolId','') == sid
+            && assignment.get('studentId','') == data.studentId
+            && assignment.get('subjectId','') == data.subjectId
+            && assignment.get('class','') == data.class
             && !exists(/databases/$(database)/documents/schools/$(sid)/marks/$(id));
         }
         allow get, list: if canRead(sid);
