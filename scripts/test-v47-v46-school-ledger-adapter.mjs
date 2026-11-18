@@ -30,4 +30,12 @@ assert.throws(()=>renderV47SchoolLedger({...base,marks:[{...validMark,schoolId:"
 assert.throws(()=>renderV47SchoolLedger({...base,students:[base.students[0],base.students[0]]}),/duplicate student identity/);
 assert.throws(()=>renderV47SchoolLedger({...base,subjects:[]}),/Complete student and subject lists required/);
 assert.throws(()=>renderV47SchoolLedger({...base,marks:[{...validMark,scores:[]}]}),/percentage-only marks/);
+// The three V46 ledger views must share the same school boundary and original renderer.
+for(const mode of ["entry","number","grade"]){
+ const view=renderV47SchoolLedger({...base,mode,marks:[validMark]});
+ assert.ok(view.head.includes("Mathematics"));
+ assert.ok(view.body.includes("Test Student"));
+ assert.throws(()=>renderV47SchoolLedger({...base,mode,marks:[{...validMark,schoolId:"school002"}]}),/mark school mismatch/);
+ assert.throws(()=>renderV47SchoolLedger({...base,mode,students:[{...base.students[0],schoolId:"school002"}]}),/student school mismatch/);
+}
 console.log("V47 school-scoped IEMIS ledger adapter checks passed");
