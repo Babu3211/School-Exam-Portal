@@ -15,8 +15,8 @@ export async function loadCompleteClassRoster({db,api,actor,schoolId,classId,pag
    if(students.length>maxStudents)throw new RangeError('Class roster exceeds '+maxStudents+' students');
   }
   if(page.hasMore){
-   if(!page.students.length||!page.cursor||page.cursor===previous)throw new Error('Roster pagination stalled');
-   previous=page.cursor;cursor=page.cursor;
+   if(!page.students.length||!page.cursor||page.cursor.id===previous)throw new Error('Roster pagination stalled');
+   previous=page.cursor.id;cursor=page.cursor;
   }else cursor=null;
  }while(cursor);
  if(!students.length)throw new Error('Class has no students');
