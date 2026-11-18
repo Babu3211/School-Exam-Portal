@@ -18,4 +18,12 @@ assert.ok(html.includes('An incomplete class cannot be saved'),'Incomplete-class
 assert.ok(html.includes('Individual Save disabled'),'Legacy individual mark button must be disabled');
 assert.ok(js.includes("$('save').disabled=true"),'Legacy individual mark save must remain disabled');
 assert.ok(!js.includes('createSchoolMarkOnly'),'Legacy mark create must not be invoked by class editor');
+for(const id of ['inspectClassMarks','draftCheckResult'])assert.ok(html.includes('id="'+id+'"'),'Missing large-class draft checker: '+id);
+for(const snippet of [
+ "import {inspectClassMarkDraft} from './class-mark-draft-inspector.mjs'",
+ "$('inspectClassMarks').onclick=()=>",
+ "const inspection=inspectClassMarkDraft(",
+ "if(!inspection.ready){status('Save blocked:",
+ "for(const input of $('classMarkRows').querySelectorAll('input'))input.disabled=value"
+])assert.ok(js.includes(snippet),'Missing draft validation or row lock: '+snippet);
 console.log('V47 full-class marks UI contract passed');
