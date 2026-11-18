@@ -122,3 +122,13 @@
 15. Added verified attendance save tests, CI scripts and security structure regression assertions (2371744, ae6bc96, 285b301, 536d24c).
 
 **Not complete:** These services are not yet wired into the V47 browser marks entry screen. Attendance's existing UI still permits selected-student batch saves. No Firebase Emulator pass, browser E2E pass, or deployment is confirmed. Atomic marks service deliberately refuses classes larger than 10 until a safe class-wide strategy is verified; do not silently split into partial saves. V46 remains unchanged.
+
+## Next batch: teacher assignment tests and mark safety (2026-11-18)
+- Conservatively reduced small-class atomic marks transaction cap from 10 to 3 pending Firestore rules access-budget emulator verification, and updated its boundary test (`99781f7`, `1fd9df2`).
+- Raw mark preflight now checks schoolId of student, subject and roster assignment (`3f21384`).
+- Optimized atomic class mark transaction reads with concurrent reads (`23bc8cf`).
+- Added teacher assignment service mock tests covering creation, activation, deactivation, duplicate/missing membership, inactive teacher, cross-school access and corrupted status; added tests to npm V47 gate (`d7560ca`, `65f1182`, `5168b06`, `6589384`).
+- Added UI warnings that raw marks and partial attendance screens are NOT full-class validated saves (`8ed1ae1`, `8cb16b6`).
+- Added six class marks transaction denial cases for inactive/cross-school subject and mismatched student-subject mapping, and a Computer 4/36/10 guard test (`d3fea98`, `d018e18`).
+- Explicitly inactive student-subject assignments now block individual mark service, class mark service, raw preflight and teacher Firestore mark creation; added transaction and structural assertions (`b54a62e`, `368e4b4`, `6ead3bd`, `a855047`, `aac2dfb`, `21f74ab`).
+- **Unverified:** Node tests and Firestore emulator CI, full-class Save UI wiring, marks for classes over 3, teacher attendance authorization, CDC/IEMIS parity. V46 production unchanged. No V47 deployment.
