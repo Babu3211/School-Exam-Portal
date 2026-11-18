@@ -20,6 +20,8 @@ assert.throws(()=>validateAttendanceRecord({schoolId:'school_A',studentId:'stude
 assert.deepEqual(validateCompleteMarks('school_A',['a','b'],{a:0,b:20}),{complete:true,missing:[]});
 assert.deepEqual(validateCompleteMarks('school_A',['a','b'],{a:0}),{complete:false,missing:['b']});
 assert.deepEqual(validateCompleteMarks('school_A',['a'],{a:NaN}),{complete:false,missing:['a']});
+assert.deepEqual(validateCompleteMarks('school_A',['a'],{a:'55'}),{complete:false,missing:['a']});
+assert.deepEqual(validateCompleteMarks('school_A',['a'],{a:101}),{complete:false,missing:['a']});
 assert.equal(prepareDelete({schoolId:'school_A',collection:'students',id:'student_1',firstConfirmation:true,secondConfirmation:true}).authorized,false);
 assert.equal(V47_CLASS_ORDER.length,15);
 assert.deepEqual(sortClasses(['Class 12','ECD','Class 1']),['ECD','Class 1','Class 12']);
