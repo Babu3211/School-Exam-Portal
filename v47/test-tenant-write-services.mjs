@@ -35,6 +35,7 @@ const attendanceWrites=[];
 const attendanceApi={
  doc:(_db,...parts)=>parts.join('/'),
  setDoc:async(path,data)=>{attendanceWrites.push({path,data})},
+ getDoc:async path=>({exists:()=>path==='schools/school_A/students/student_1',data:()=>({schoolId:'school_A',class:'9'})}),
  writeBatch:()=>({set:(path,data)=>attendanceWrites.push({path,data}),commit:async()=>{}})
 };
 const attendanceInput={date:'2026-11-18',studentId:'student_1',class:'9',present:true};
