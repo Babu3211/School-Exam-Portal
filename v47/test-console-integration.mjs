@@ -11,7 +11,7 @@ for(const file of ['students-console.mjs','school-admin-console.mjs','attendance
 assert.match(read('index.html'),/href="\.\/exams\.html"/);
 assert.match(read('exams.html'),/src="\.\/exams-console\.mjs"/);
 assert.match(read('exams-console.mjs'),/await createSchoolExamTerm\(/);
-assert.match(read('exams-console.mjs'),/auth\?\.currentUser\?\.uid!==actor\.uid/);
+assert.match(read('exams-console.mjs'),/auth\.currentUser\.uid!==actor\.uid/);
 assert.doesNotMatch(read('exams.html'),/id="delete"/);
 assert.doesNotMatch(read('exams-console.mjs'),/deleteDoc\(/);
 assert.match(read('exams-console.mjs'),/session.role!=='school_admin'/);
