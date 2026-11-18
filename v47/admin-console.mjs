@@ -3,9 +3,10 @@ import {listSchools} from './school-list-service.mjs';
 import {setSchoolActive} from './school-status-service.mjs';
 const $=id=>document.getElementById(id);let auth,db,api,actor=null,cursor=null,mutating=false;
 const status=message=>{$('message').textContent=message};
+const V47_FIREBASE_CONFIG=Object.freeze({apiKey:"AIzaSyCqwHormyNH4Z5F8V0xJpW9rJcJeCtM0cQ",authDomain:"smss-exam-portal-v47.firebaseapp.com",projectId:"smss-exam-portal-v47",storageBucket:"smss-exam-portal-v47.firebasestorage.app",messagingSenderId:"570404092283",appId:"1:570404092283:web:b51a0d654bb9aaa82325de"});
 const firebaseBase='https://www.gstatic.com/firebasejs/11.10.0/';
 $('connect').onclick=async()=>{try{
- const config=JSON.parse($('config').value);
+ const config=V47_FIREBASE_CONFIG;
  if(config.projectId!=='smss-exam-portal-v47')throw new Error('Only the V47 Firebase project is allowed');
  const appSdk=await import(firebaseBase+'firebase-app.js');
  const authSdk=await import(firebaseBase+'firebase-auth.js');
