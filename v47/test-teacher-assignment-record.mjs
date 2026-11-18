@@ -9,4 +9,5 @@ assert.throws(()=>validateTeacherAssignment({...x,active:'true'}));
 assert.throws(()=>validateTeacherAssignment({...x,subject:'Science::All'}));
 assert.equal(teacherAssignmentDocumentId('teacher_001','Class 9','Science'),'teacher_001::Class 9::Science::ALL');
 assert.throws(()=>teacherAssignmentDocumentId('teacher_001','Class 9','Science::Math'));
+assert.throws(()=>validateTeacherAssignment({...x,section:'A::B'}));
 console.log('V47 teacher assignment schema checks passed');
