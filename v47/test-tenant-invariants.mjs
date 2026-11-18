@@ -19,6 +19,8 @@ assert.equal(validateAttendanceRecord({schoolId:'school_A',studentId:'student_1'
 assert.throws(()=>validateAttendanceRecord({schoolId:'school_A',studentId:'student_1',date:'2026-02-30',status:'present'}));
 assert.deepEqual(validateCompleteMarks('school_A',['a','b'],{a:0,b:20}),{complete:true,missing:[]});
 assert.deepEqual(validateCompleteMarks('school_A',['a','b'],{a:0}),{complete:false,missing:['b']});
+assert.deepEqual(validateCompleteMarks('school_A',['a'],{a:NaN}),{complete:false,missing:['a']});
+assert.equal(prepareDelete({schoolId:'school_A',collection:'students',id:'student_1',firstConfirmation:true,secondConfirmation:true}).authorized,false);
 assert.equal(V47_CLASS_ORDER.length,15);
 assert.deepEqual(sortClasses(['Class 12','ECD','Class 1']),['ECD','Class 1','Class 12']);
 assert.throws(()=>prepareDelete({schoolId:'school_A',collection:'students',id:'student_1',firstConfirmation:true,secondConfirmation:false}));
