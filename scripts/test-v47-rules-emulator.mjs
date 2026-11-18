@@ -223,11 +223,11 @@ try{
   const assignmentPath='schools/school_001/subject_assignments/'+studentId+':'+subjectId;
   const markPath='schools/school_001/marks/1st:'+studentId+':'+subjectId;
   const attendancePath='schools/school_001/attendance/2026-11-20_'+studentId;
-  await assertSucceeds(admin.doc(studentPath).set({name:'Early Learner '+className,class:className}));
-  await assertSucceeds(admin.doc(subjectPath).set({name:'Early Learning',class:className,active:true}));
-  await assertSucceeds(admin.doc(assignmentPath).set({studentId,subjectId,class:className}));
-  await assertSucceeds(admin.doc(markPath).set({studentId,subjectId,class:className,term:'1st',theory:30,practical:10}));
-  await assertSucceeds(admin.doc(attendancePath).set({date:'2026-11-20',studentId,class:className,present:true}));
+  await assertSucceeds(admin.doc(studentPath).set({name:'Early Learner '+className,class:className,schoolId:'school_001'}));
+  await assertSucceeds(admin.doc(subjectPath).set({name:'Early Learning',class:className,active:true,schoolId:'school_001'}));
+  await assertSucceeds(admin.doc(assignmentPath).set({studentId,subjectId,class:className,schoolId:'school_001'}));
+  await assertSucceeds(admin.doc(markPath).set({studentId,subjectId,class:className,term:'1st',theory:30,practical:10,schoolId:'school_001'}));
+  await assertSucceeds(admin.doc(attendancePath).set({date:'2026-11-20',studentId,class:className,present:true,schoolId:'school_001'}));
   await assertFails(viewer.doc(attendancePath).set({date:'2026-11-20',studentId,class:className,present:true}));
   // Until teacher class/subject assignments are enforced by rules, teacher writes remain denied.
   await assertFails(teacher.doc('schools/school_001/marks/2nd:'+studentId+':'+subjectId).set({studentId,subjectId,class:className,term:'2nd',theory:30,practical:10}));
