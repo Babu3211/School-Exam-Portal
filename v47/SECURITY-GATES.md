@@ -14,3 +14,6 @@
 10. Release requires green tests, independent role checks, backup verification, and an explicit separate V47 deployment approval.
 
 Role-capability helpers reflect **currently deployed V47 rules in this branch**, not intended future teacher permissions. Teacher marks and attendance writes remain disabled in BOTH client role guards and Firestore rules until emulator-verified server authorization is implemented. Client-selected school sessions are unverified and cannot be trusted as proof of access.\n\nThe deletion helper only captures two user confirmations; current Firestore rules still deny all deletions. Never treat a client confirmation as server authorization.\n\nLocal unit checks (no Firebase access): `node v47/test-school-scope.mjs`, `node v47/test-tenant-paths.mjs`, `node v47/test-v47-foundations.mjs`, `node v47/test-security-contract.mjs`, `node v47/test-tenant-features.mjs`.
+
+- Export manifests accept only top-level approved school collections (never membership records or individual documents).
+- Client collection paths are restricted to collections covered by the current V47 Firestore rules. Unsupported legacy collection names must be explicitly migrated before use.
