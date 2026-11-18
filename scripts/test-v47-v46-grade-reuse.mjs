@@ -18,4 +18,19 @@ for(const n of [9,10]) assert.deepEqual(iemisEntrySchema(n,"first","Computer").m
 assert.deepEqual([0,34.99,35,40,50,60,70,80,90,100].map(n=>iemisGrade(n)?.grade),["NG","NG","D","C","C+","B","B+","A","A+","A+"]);
 assert.equal(iemisGrade(-1),null);
 assert.equal(iemisGrade(101),null);
+// Reuse the actual V46 IEMIS GPA/ledger engine; never implement a parallel V47 GPA formula.
+const primaryRecord={scores:[{name:'No. of Learning Achievement',fullMarks:10,obtained:10},{name:'Full Marks',fullMarks:40,obtained:null},{name:'Obtained Learning Achievement',fullMarks:40,obtained:32}]};
+const primarySummary=iemisSummary(primaryRecord,{primary:true});
+assert.equal(primarySummary.totalGrade.grade,'A');
+assert.equal(iemisGpa([{summary:primarySummary,creditHour:4}],{primary:true}),3.6);
+const annualRecord={scores:[{name:'Participation',fullMarks:4,obtained:4},{name:'Practical/Project',fullMarks:36,obtained:32},{name:'Total of Term',fullMarks:10,obtained:9},{name:'TH (Theory)',fullMarks:50,obtained:40}]};
+const annualSummary=iemisSummary(annualRecord,{annual:true});
+assert.equal(annualSummary.complete,true);
+const expected=(50*annualSummary.inGrade.point+50*annualSummary.theoryGrade.point)/100;
+assert.equal(iemisGpa([{summary:annualSummary,creditHour:4}],{annual:true}),expected);
+assert.equal(iemisGpa([{summary:annualSummary,creditHour:4}],{annual:false}),null);
+assert.equal(iemisGpa([{summary:annualSummary,creditHour:null}],{annual:true}),null);
+assert.equal(iemisGpa([{summary:iemisSummary({scores:[]},{annual:true}),creditHour:4}],{annual:true}),null);
+assert.equal(typeof iemisLedger,'function');
+console.log('V47 V46 IEMIS GPA and ledger reuse contract passed');
 console.log("V47 reuses V46 grade calculations unchanged, without Firebase access");
