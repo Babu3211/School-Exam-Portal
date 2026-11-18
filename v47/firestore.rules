@@ -143,23 +143,23 @@ service cloud.firestore {
         let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(mark.studentId);
         let subjectAssignmentPath = /databases/$(database)/documents/schools/$(sid)/subject_assignments/$(mark.studentId + ':' + mark.subjectId);
         let subjectPath = /databases/$(database)/documents/schools/$(sid)/subjects/$(mark.subjectId);
+        let assignment = get(assignmentPath).data;
+        let student = get(studentPath).data;
+        let subjectAssignment = get(subjectAssignmentPath).data;
+        let subject = get(subjectPath).data;
         return memberRole(sid, 'teacher')
           && validRawMark(sid, id)
-          && exists(assignmentPath)
-          && get(assignmentPath).data.get('active', false) == true
-          && exists(studentPath)
-          && get(studentPath).data.get('schoolId', '') == sid
-          && get(studentPath).data.get('class', '') == mark.class
-          && exists(subjectAssignmentPath)
-          && get(subjectAssignmentPath).data.get('schoolId', '') == sid
-          && get(subjectAssignmentPath).data.get('studentId', '') == mark.studentId
-          && get(subjectAssignmentPath).data.get('subjectId', '') == mark.subjectId
-          && get(subjectAssignmentPath).data.get('class', '') == mark.class
-          && get(subjectAssignmentPath).data.get('active', true) == true
-          && exists(subjectPath)
-          && get(subjectPath).data.get('active', false) == true
-          && get(subjectPath).data.get('schoolId', '') == sid
-          && get(subjectPath).data.get('class', '') == mark.class;
+          && assignment.get('active', false) == true
+          && student.get('schoolId', '') == sid
+          && student.get('class', '') == mark.class
+          && subjectAssignment.get('schoolId', '') == sid
+          && subjectAssignment.get('studentId', '') == mark.studentId
+          && subjectAssignment.get('subjectId', '') == mark.subjectId
+          && subjectAssignment.get('class', '') == mark.class
+          && subjectAssignment.get('active', true) == true
+          && subject.get('active', false) == true
+          && subject.get('schoolId', '') == sid
+          && subject.get('class', '') == mark.class;
       }
       function validRawMark(sid, id) {
         return request.resource.data.keys().hasOnly(['schoolId','studentId','subjectId','class','term','theory','practical'])
