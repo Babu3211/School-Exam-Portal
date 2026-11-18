@@ -58,17 +58,19 @@ await assert.rejects(stale,/School selection changed/);
 assert.equal(dashboardCalls,1);
 assert.equal(race.getSelectedSchool().schoolId,"school_B001");
 // Rejecting an unauthorized switch must cancel an already pending authorized dashboard.
-let releaseInvalid;
+let releaseInvalid, notifyInvalidStarted;
+const invalidStarted=new Promise(resolve=>{notifyInvalidStarted=resolve;});
 const invalidRace=createV47VerifiedSchoolWorkspace({
  getIdToken:async()=>"token",bsToAd:()=>"2026-11-14",
  fetchImpl:async url=>{
   if(url==="/api/v47/schools")return {ok:true,json:async()=>({schools:[{schoolId:"school_A001",schoolName:"A",roles:["viewer"]}]})};
-  if(url==="/api/v47/dashboard?schoolId=school_A001")return new Promise(resolve=>{releaseInvalid=resolve;});
+  if(url==="/api/v47/dashboard?schoolId=school_A001")return new Promise(resolve=>{releaseInvalid=resolve;notifyInvalidStarted();});
   throw Error("Unexpected request "+url);
  }
 });
 await invalidRace.loadSchools();
 const pending=invalidRace.selectSchool("school_A001");
+await invalidStarted;
 await assert.rejects(()=>invalidRace.selectSchool("school_B001"),/verified membership/);
 assert.equal(invalidRace.getSelectedSchool(),null);
 // Dashboard may finish after the invalid switch, but must never restore school A.
