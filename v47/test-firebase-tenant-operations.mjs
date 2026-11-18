@@ -9,6 +9,8 @@ assert.match(source,/tenantReadPlan\(/);
 assert.match(source,/tenantListPlan\(/);
 assert.match(source,/tenantWritePlan\(/);
 assert.match(source,/sdk\.runTransaction\(/);
+assert.match(source,/Authentication changed after write/);
+await assert.rejects(()=>firebaseTenantOperation({auth:{currentUser:{uid:'admin_123'}},firestore:{},operation:'delete'}),/Unsupported operation/);
 assert.match(source,/existing\.exists\(\)/);
 assert.match(source,/tx\.update\(ref,plan\.data\)/);
 assert.match(source,/Existing record belongs to another school/);
