@@ -162,31 +162,34 @@ service cloud.firestore {
           && subject.get('class', '') == mark.class;
       }
       function validRawMark(sid, id) {
-        return request.resource.data.keys().hasOnly(['schoolId','studentId','subjectId','class','term','theory','practical'])
-          && request.resource.data.keys().hasAll(['schoolId','studentId','subjectId','class','term','theory','practical'])
-          && request.resource.data.schoolId == sid
-          && request.resource.data.studentId is string
-          && request.resource.data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
-          && request.resource.data.subjectId is string
-          && request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
-          && request.resource.data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
-          && request.resource.data.term in ['1st','2nd','final']
-          && request.resource.data.theory is number
-          && request.resource.data.practical is number
-          && request.resource.data.theory >= 0
-          && request.resource.data.theory <= 100
-          && request.resource.data.practical >= 0
-          && request.resource.data.practical <= 100
-          && id == request.resource.data.term + ':' + request.resource.data.studentId + ':' + request.resource.data.subjectId
-          && exists(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId))
-          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('schoolId','') == sid
-          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('class','') == request.resource.data.class
-          && exists(/databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId))
-          && get(/databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId)).data.get('schoolId','') == sid
-          && get(/databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId)).data.get('class','') == request.resource.data.class
-          && exists(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId))
-          && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.get('schoolId','') == sid
-          && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.get('class','') == request.resource.data.class;
+        let data = request.resource.data;
+        let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(data.studentId);
+        let subjectPath = /databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId);
+        let assignmentPath = /databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId);
+        return data.keys().hasOnly(['schoolId','studentId','subjectId','class','term','theory','practical'])
+          && data.keys().hasAll(['schoolId','studentId','subjectId','class','term','theory','practical'])
+          && data.schoolId == sid
+          && data.studentId is string
+          && data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
+          && data.subjectId is string
+          && data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
+          && data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+          && data.term in ['1st','2nd','final']
+          && data.theory is number
+          && data.practical is number
+          && data.theory >= 0
+          && data.theory <= 100
+          && data.practical >= 0
+          && data.practical <= 100
+          && id == data.term + ':' + data.studentId + ':' + data.subjectId
+          && exists(studentPath) && exists(subjectPath) && exists(assignmentPath)
+          && get(studentPath).data.get('schoolId','') == sid
+          && get(studentPath).data.get('class','') == data.class
+          && get(subjectPath).data.get('schoolId','') == sid
+          && get(subjectPath).data.get('class','') == data.class
+          && get(subjectPath).data.get('active',false) == true
+          && get(assignmentPath).data.get('schoolId','') == sid
+          && get(assignmentPath).data.get('class','') == data.class;
       }
       match /marks/{id} {
         allow get, list: if canRead(sid);
