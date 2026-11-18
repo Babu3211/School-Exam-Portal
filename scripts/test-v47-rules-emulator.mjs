@@ -119,9 +119,9 @@ try{
  await assertFails(admin.doc('schools/school_001/component_marks/final:computerStudent:computer_9').delete());
  await assertFails(admin.doc('schools/school_001/marks/final:computerStudent:computer_9').set({studentId:'computerStudent',subjectId:'computer_9',class:'9',term:'final',theory:30,practical:10}));
  await assertFails(viewer.doc('schools/school_001/marks/mark1').set({score:100}));
- const mark={studentId:'s1',subjectId:'math',class:'1',term:'1st',theory:35,practical:8};
- await assertSucceeds(admin.doc('schools/school_001/subjects/new_math').set({name:'New Mathematics',class:'1',active:true}));
- await assertSucceeds(admin.doc('schools/school_001/subject_assignments/s1:new_math').set({studentId:'s1',subjectId:'new_math',class:'1'}));
+ const mark={schoolId:'school_001',studentId:'s1',subjectId:'math',class:'1',term:'1st',theory:35,practical:8};
+ await assertSucceeds(admin.doc('schools/school_001/subjects/new_math').set({name:'New Mathematics',class:'1',active:true,schoolId:'school_001'}));
+ await assertSucceeds(admin.doc('schools/school_001/subject_assignments/s1:new_math').set({studentId:'s1',subjectId:'new_math',class:'1',schoolId:'school_001'}));
  await assertFails(admin.doc('schools/school_001/subject_assignments/s1:new_math').update({class:'2'}));
  await assertFails(admin.doc('schools/school_001/subject_assignments/s1:new_math').delete());
  await assertFails(viewer.doc('schools/school_001/subject_assignments/s1:math').set({studentId:'s1',subjectId:'math',class:'1'}));
