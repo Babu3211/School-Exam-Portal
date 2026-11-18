@@ -1,4 +1,4 @@
-# V47 Firestore emulator test plan (60 assertions authored; execution not yet verified)
+# V47 Firestore emulator test plan (70 assertions authored; execution not yet verified)
 
 1. Seed two active schools A/B using emulator security-disabled setup context.
 2. Seed Super Admin and one active school_admin, teacher, viewer per school, with inactive counterparts.
