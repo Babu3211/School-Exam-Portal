@@ -16,7 +16,8 @@ const suites=[
  'test-console-integration.mjs',
  'test-tenant-write-services.mjs',
  'test-class-catalog-ui.mjs',
- 'test-exam-term-service.mjs'
+ 'test-exam-term-service.mjs',
+ 'test-exam-screen-contract.mjs'
 ];
 let failures=0;
 for(const suite of suites){
