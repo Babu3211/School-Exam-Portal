@@ -172,3 +172,12 @@
 - Extended structural rules checks for Teacher attendance payload and class assignment constraints (`9c25c2d`).
 - GitHub commit workflow lookup for a prior V47 commit returned **no workflow runs**, so passing CI is NOT verified.
 - **Still required:** Firebase emulator/real browser test, large-class atomic marks strategy, full-class marks Save UI, full V46 feature parity, IEMIS/CDC result checks. No V47 production deployment. V46 unchanged.
+
+## Class-wide marks browser entry — 2026-11-18
+- Added full paginated authoritative school/class roster loader with 1,500-student cap and duplicate detection (`575ef59`), unit tests (`0f33331`).
+- Added wrapper to re-fetch full roster and validate every student's marks before a limited atomic transaction (`9dbceb6`).
+- Added class-wide marks input table in V47 development page (`a0f3008`), wired roster loading and atomic save (`4fd4b86`), and invalidated drafts on subject reload (`98f1d1f`).
+- Added wrapper and browser contract tests (`250918f`, `f293334`), wired to npm V47 suite (`ba0d4de`).
+- Disabled legacy individual mark Save so browser users cannot submit an incomplete class through that route (`75316cb`, `96c0ce2`, `e418668`); regression tests added (`67f17f3`).
+- Added explicit concurrency/official-result limitations (`1d3fb0`) and improved pagination stall detection (`8477104`).
+- **Critical limitations:** atomic Save remains capped at **3 students**; larger classes do not save. Browser entry and rules are not emulator/E2E verified. A new enrollment between roster read and transaction is not currently checked atomically, so this is **not production-ready**. CDC/IEMIS grade and full V46 parity are not established. No V47 deployment; V46 production unchanged.
