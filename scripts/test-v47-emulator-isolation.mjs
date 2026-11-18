@@ -58,6 +58,13 @@ try {
   await assertFails(setDoc(schoolDoc('admin-a','school-a','members','admin-a'),{uid:'admin-a',schoolId:'school-a',role:'school_admin',active:true}));
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','members','new-viewer'),{uid:'new-viewer',schoolId:'school-a',role:'viewer',active:false}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','members','new-viewer'),{role:'school_admin'}));
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','members','new-viewer'),{active:true}));
+  await assertSucceeds(getDoc(schoolDoc('new-viewer','school-a','students','student-1')));
+  await assertFails(setDoc(schoolDoc('new-viewer','school-a','students','new-viewer-write'),valid));
+  await assertFails(updateDoc(schoolDoc('admin-a','school-a','members','new-viewer'),{schoolId:'school-b'}));
+  await assertFails(updateDoc(schoolDoc('admin-a','school-a','members','new-viewer'),{uid:'admin-a'}));
+  await assertFails(deleteDoc(schoolDoc('admin-a','school-a','members','new-viewer')));
+  await assertFails(setDoc(schoolDoc('admin-a','school-b','members','forged-b'),{uid:'forged-b',schoolId:'school-b',role:'viewer',active:false}));
   await assertFails(setDoc(schoolDoc('viewer-a','school-a','members','forged'),{uid:'forged',schoolId:'school-a',role:'viewer',active:false}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','exams','1st'),{schoolId:'school-a',term:'final'}));
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','exams','1st'),{schoolId:'school-a',term:'1st'}));
