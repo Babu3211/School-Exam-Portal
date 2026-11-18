@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {iemisGrade} from "../iemis-ledger.js";
+import {iemisGrade,iemisSummary,iemisGpa,iemisLedger} from "../iemis-ledger.js";
 import {iemisEntrySchema} from "../iemis-entry.js";
 const root=new URL("../",import.meta.url);
 const page=readFileSync(new URL("../prototypes/v47/v46-grade-calculator.html",import.meta.url),"utf8");
