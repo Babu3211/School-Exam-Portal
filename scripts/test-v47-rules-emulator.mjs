@@ -110,7 +110,7 @@ try{
  await env.withSecurityRulesDisabled(async ctx=>{await ctx.firestore().doc('schools/school_001/students/computerStudent').set({name:'Computer Student',class:'9',schoolId:'school_001'});});
  await assertSucceeds(admin.doc('schools/school_001/subjects/computer_9').set({name:'Computer',class:'9',active:true,schoolId:'school_001'}));
  await assertSucceeds(admin.doc('schools/school_001/subject_assignments/computerStudent:computer_9').set({studentId:'computerStudent',subjectId:'computer_9',class:'9',schoolId:'school_001'}));
- const component={studentId:'computerStudent',subjectId:'computer_9',class:'9',term:'final',scores:{component_a:4,component_b:36,component_c:10}};
+ const component={schoolId:'school_001',studentId:'computerStudent',subjectId:'computer_9',class:'9',term:'final',scores:{component_a:4,component_b:36,component_c:10}};
  await assertFails(admin.doc('schools/school_001/component_marks/final:computerStudent:computer_9').set({...component,scores:{...component.scores,component_b:37}}));
  await assertFails(viewer.doc('schools/school_001/component_marks/final:computerStudent:computer_9').set(component));
  await assertSucceeds(admin.doc('schools/school_001/component_marks/final:computerStudent:computer_9').set(component));
