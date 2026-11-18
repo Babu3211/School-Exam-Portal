@@ -36,6 +36,10 @@ jobs:
           mkdir -p v47/public
           cp v47/*.html v47/*.mjs v47/public/
           test -f v47/public/index.html
+          test -f v47/public/admin.html
+          test -f v47/public/admin-console.mjs
+          ! grep -q 'id="config"' v47/public/admin.html
+          grep -q 'V47_FIREBASE_CONFIG' v47/public/admin-console.mjs
           test ! -f v47/public/firestore.rules
       - name: Require dedicated V47 Firebase credential
         env:
