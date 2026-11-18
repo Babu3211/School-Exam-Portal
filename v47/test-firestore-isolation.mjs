@@ -84,6 +84,20 @@ try {
   await assertFails(setDoc(doc(db('adminB'),'schools/schoolA/attendance/a1'),{present:true})); // 8
   await assertSucceeds(setDoc(doc(db('adminA'),'schools/schoolA/attendance/a1'),{present:true})); // 9
   await assertFails(deleteDoc(doc(db('root'),'schools/schoolA/attendance/a1'))); // 10
+  // Read isolation must also cover exam records, not only student profiles.
+  await assertSucceeds(getDoc(doc(db('viewerA'),'schools/schoolA/attendance/a1')));
+  await assertFails(getDoc(doc(db('adminB'),'schools/schoolA/attendance/a1')));
+  await assertFails(getDocs(collection(db('adminB'),'schools/schoolA/attendance')));
+  await assertFails(getDoc(doc(db('viewerA'),'schools/schoolB/students/s1')));
+  await assertFails(getDocs(collection(db('viewerA'),'schools/schoolB/students')));
+  await assertFails(getDoc(doc(db('adminB'),'schools/schoolA/component_marks/c1')));
+  await assertFails(getDocs(collection(db('adminB'),'schools/schoolA/component_marks')));
+  await assertFails(getDoc(doc(db('adminB'),'schools/schoolA/marks/m1')));
+  await assertFails(getDocs(collection(db('adminB'),'schools/schoolA/marks')));
+  await assertFails(updateDoc(doc(db('viewerA'),'schools/schoolA/attendance/a1'),{present:false}));
+  await assertFails(deleteDoc(doc(db('viewerA'),'schools/schoolA/attendance/a1'));
+  await assertFails(updateDoc(doc(db('adminB'),'schools/schoolA/attendance/a1'),{present:false}));
+
   await assertFails(deleteDoc(doc(db('root'),school('schoolA'))));
   await assertFails(setDoc(doc(db('root'),school('schoolG')),{id:'schoolG',name:'School G',iemisCode:123456,active:false}));
   await assertFails(updateDoc(doc(db('adminA'),school('schoolA')),{active:false}));
