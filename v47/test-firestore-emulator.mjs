@@ -231,7 +231,14 @@ try{
  await assertSucceeds(updateDoc(mark(teacher,'school_A'),{theory:31}));
  await assertFails(updateDoc(mark(teacher,'school_A'),{studentId:'other_student'}));
  await assertFails(updateDoc(mark(teacher,'school_B'),{theory:32}));
+ // 106-111 Assigned attendance teacher may correct presence, not identity or another tenant.
+ await assertSucceeds(setDoc(doc(admin,'schools','school_A','teacher_assignments','school_A:teacher_school_A:10:attendance'),{schoolId:'school_A',uid:'teacher_school_A',classId:'10',subjectId:'attendance',active:false}));
+ await assertFails(updateDoc(attendance(teacher,'school_A'),{present:true}));
+ await assertSucceeds(updateDoc(doc(admin,'schools','school_A','teacher_assignments','school_A:teacher_school_A:10:attendance'),{active:true}));
+ await assertSucceeds(updateDoc(attendance(teacher,'school_A'),{present:true}));
+ await assertFails(updateDoc(attendance(teacher,'school_A'),{date:'2026-11-19'}));
+ await assertFails(updateDoc(attendance(teacher,'school_B'),{present:true}));
  // 99 A second canonical term can be created independently
  await assertSucceeds(setDoc(doc(admin,'schools','school_A','exams','2nd'),{schoolId:'school_A',term:'2nd'}));
- console.log('V47 Firestore emulator: 105 authorization assertions passed');
+ console.log('V47 Firestore emulator: 111 authorization assertions passed');
 }finally{await env.cleanup();}
