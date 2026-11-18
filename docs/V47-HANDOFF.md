@@ -28,3 +28,9 @@
 - Student records currently allow only `name`, `class`, `rollNo`, `schoolId`; check compatibility with full V46 student schema before production use.
 - V47 rules currently allow marks/attendance writes only for school admins/super admins; teacher entry permissions need explicit scoped assignments before production.
 - Do not report security as passed merely because structural tests pass.
+
+## Latest continuation (2026-11-18)
+- Enforced explicit `schoolId` in student create validation and simplified immutable school scope checks (commit `90e42cc`).
+- Added negative permission tests for missing/wrong `schoolId` in marks and staff, plus staff cross-tenant update (commit `9d2a126`).
+- Latest tests are committed but still not verified as passing in the emulator.
+- Before additional permission changes, inspect app schema and teacher assignments. Do not blindly allow teacher writes or loosen tenant scoping.
