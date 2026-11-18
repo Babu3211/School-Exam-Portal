@@ -60,3 +60,11 @@
 - Found that `v47/firestore.rules` had become syntactically invalid: student ID regex truncated and a duplicate tail after the service closing brace. Repaired and verified retrieved file content (commit `458cda2`; intermediate repair commit `3375b28` was superseded).
 - Replaced malformed structural gate with clean deterministic checks to catch malformed student regex, duplicate catch-all, and duplicate tail (commit `678aa8c`; intermediate commit `c3d4fe9` superseded).
 - Source-level verification is **not** Firestore Emulator compilation; rerun `npm run test:v47` and inspect CI before claiming a pass.
+
+## Teacher assignment and membership onboarding batch (2026-11-18)
+- Added `schools/{sid}/teacher_assignments/{id}` rules with explicit schema, school-admin-only creation as inactive, admin-only active toggles, and teacher-only own-record get (commit `3db3ad4`). Teacher marks/attendance writes remain disabled pending assignment enforcement.
+- Added emulator cases for cross-school, viewer, teacher self-assignment, invalid active-at-create, admin activation and immutable identity (commit `5396606`).
+- Added teacher_assignments to school path catalog and app contract test (commits `fc4ece6`, `0e1062e`).
+- Found real onboarding bug: `member-management.mjs` created teacher/viewer membership `active:true` although Firestore rules require inactive creation. Fixed to inactive (commit `3e7565c`) and clarified UI message (`83bc0f9`).
+- Added `member-status-service.mjs` for authorized membership activation/deactivation and School Admin UI action with confirmation (commits `fbebe46`, `2ea1c7e`, `ef44d66`).
+- **Not tested against a running emulator or deployed Firebase**. Confirm all rules and UI behavior through tests before activation for real schools.
