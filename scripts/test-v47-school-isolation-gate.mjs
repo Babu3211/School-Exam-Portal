@@ -28,6 +28,11 @@ for(const token of [
  'function teacherMarkAllowed(sid, id)','function validRawMark(sid, id)',
  'function teacherAttendanceAllowed(sid, id)','match /{document=**}'
 ])assert.equal(rules.split(token).length-1,1,'Duplicate '+token);
+assert.equal(rules.split("rules_version = '2';").length-1,1,'Duplicated Firestore rules file');
+assert.equal(rules.split('match /exams/{id}').length-1,1,'Duplicated exam rule');
+assert.equal(rules.split('match /attendance/{id}').length-1,1,'Duplicated attendance rule');
+assert.ok(!rules.includes("matches('^[A-Za-z0-9_-]{1,128}\\n"),'Truncated regex');
+assert.ok(!rules.includes("matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}\\n"),'Truncated date regex');
 assert.ok(rules.trimEnd().endsWith('}'));
 assert.ok(!rules.includes('}\n})'),'Malformed duplicate tail');
 console.log('V47 structural school isolation checks passed; emulator tests still required');
