@@ -124,7 +124,7 @@ try{
  await assertSucceeds(admin.doc('schools/school_001/subject_assignments/s1:new_math').set({studentId:'s1',subjectId:'new_math',class:'1',schoolId:'school_001'}));
  await assertFails(admin.doc('schools/school_001/subject_assignments/s1:new_math').update({class:'2'}));
  await assertFails(admin.doc('schools/school_001/subject_assignments/s1:new_math').delete());
- await assertFails(viewer.doc('schools/school_001/subject_assignments/s1:math').set({studentId:'s1',subjectId:'math',class:'1'}));
+ await assertFails(viewer.doc('schools/school_001/subject_assignments/s1:math').set({studentId:'s1',subjectId:'math',class:'1',schoolId:'school_001'}));
  await assertFails(admin.doc('schools/school_001/subject_assignments/s1:inactive').set({studentId:'s1',subjectId:'inactive',class:'1'}));
  await assertFails(admin.doc('schools/school_001/subject_assignments/s1:wrongclass').set({studentId:'s1',subjectId:'wrongclass',class:'1'}));
  await assertFails(admin.doc('schools/school_002/subject_assignments/s1:other_school').set({studentId:'s1',subjectId:'other_school',class:'1'}));
