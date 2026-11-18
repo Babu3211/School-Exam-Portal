@@ -41,8 +41,14 @@ export async function firebaseTenantOperation({auth,firestore,schoolId,collectio
     tx.set(ref,plan.data);
    });
   }else{
-   // updateDoc never creates a missing record.
-   await sdk.updateDoc(ref,plan.data);
+   // Transactional update avoids modifying a record whose tenant identity is inconsistent.
+   await sdk.runTransaction(firestore,async tx=>{
+    const existing=await tx.get(ref);
+    if(!existing.exists())throw new Error('Document does not exist');
+    if(existing.data().schoolId!==undefined&&existing.data().schoolId!==schoolId)throw new Error('Existing record belongs to another school');
+    if(auth.currentUser?.uid!==uid)throw new Error('Authentication changed');
+    tx.update(ref,plan.data);
+   });
   }
   return {id,schoolId,operation};
  }
