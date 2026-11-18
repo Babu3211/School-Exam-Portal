@@ -5,7 +5,8 @@ export function validateTeacherWrite({schoolId,studentId,className,subject,secti
  assertSchoolId(schoolId);
  if(typeof studentId!=='string'||!safe.test(studentId))throw new TypeError('Invalid student');
  for(const value of [className,subject,section])if(typeof value!=='string'||!value.trim()||value.length>160)throw new TypeError('Invalid assignment field');
- if(!marks||typeof marks!=='object'||Array.isArray(marks))throw new TypeError('Invalid marks');
- for(const value of Object.values(marks))if(typeof value!=='number'||!Number.isFinite(value)||value<0||value>100)throw new RangeError('Invalid marks value');
+ if(!marks||typeof marks!=='object'||Array.isArray(marks)||Object.keys(marks).length===0)throw new TypeError('Invalid marks');
+ for(const [key,value] of Object.entries(marks)){if(!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(key))throw new TypeError('Invalid mark field');if(typeof value!=='number'||!Number.isFinite(value)||value<0||value>100)throw new RangeError('Invalid marks value');}
+ 
  return {schoolId,studentId,className,subject,section,marks};
 }
