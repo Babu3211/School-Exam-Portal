@@ -268,10 +268,30 @@ service cloud.firestore {
         allow create: if canAdmin(sid) && validComputerComponent();
         allow update, delete: if false;
       }
+      match /subject_assignments/{id} {
+        function validAssignment() {
+          let data = request.resource.data;
+          let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(data.studentId);
+          let subjectPath = /databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId);
+          return data.keys().hasAll(['schoolId','studentId','subjectId','class'])
+            && data.schoolId == sid
+            && data.studentId is string && data.subjectId is string
+            && id == data.studentId + ':' + data.subjectId
+            && exists(studentPath) && exists(subjectPath)
+            && get(studentPath).data.get('schoolId','') == sid
+            && get(studentPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('schoolId','') == sid
+            && get(subjectPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('active',true) == true;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validAssignment();
+        allow update, delete: if false;
+      }
       match /{collection}/{id} {
-        allow get, list: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments'] && canRead(sid);
-        allow create: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments'] && canAdmin(sid) && scopedRecord(sid);
-        allow update: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments'] && canAdmin(sid) && immutableSchool(sid);
+        allow get, list: if collection in ['staff','classes','subjects','mark_settings','school_settings'] && canRead(sid);
+        allow create: if collection in ['staff','classes','subjects','mark_settings','school_settings'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','subjects','mark_settings','school_settings'] && canAdmin(sid) && immutableSchool(sid);
         allow delete: if false;
       }
     }
