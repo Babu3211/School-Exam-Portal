@@ -26,5 +26,6 @@ jobs:
           node v47/test-security-contract.mjs
           node v47/test-tenant-features.mjs
           node v47/test-fail-closed-contract.mjs
+          node v47/test-tenant-invariants.mjs
       - name: Confirm no V46 production resources are deployed
         run: echo 'This workflow only runs V47 tests; it does not deploy.'
