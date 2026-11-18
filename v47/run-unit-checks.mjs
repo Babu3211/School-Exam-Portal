@@ -14,7 +14,8 @@ const suites=[
  'test-tenant-firestore-gateway.mjs',
  'test-firebase-tenant-operations.mjs',
  'test-console-integration.mjs',
- 'test-tenant-write-services.mjs'
+ 'test-tenant-write-services.mjs',
+ 'test-class-catalog-ui.mjs'
 ];
 let failures=0;
 for(const suite of suites){
