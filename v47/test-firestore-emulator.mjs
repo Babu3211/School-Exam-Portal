@@ -130,5 +130,25 @@ try{
  await assertFails(setDoc(doc(teacher,'schools','school_A','marks','mark_2'),{value:45}));
  // 50 School admin cannot delete staff
  await assertFails(deleteDoc(doc(admin,'schools','school_A','staff','staff_1')));
- console.log('V47 Firestore emulator: 50 authorization assertions passed');
+ // 51 School admin can create inactive teacher
+ await assertSucceeds(setDoc(doc(admin,'schools','school_A','members','new_teacher_A'),{uid:'new_teacher_A',schoolId:'school_A',role:'teacher',active:false}));
+ // 52 School admin can activate that teacher
+ await assertSucceeds(updateDoc(doc(admin,'schools','school_A','members','new_teacher_A'),{active:true}));
+ // 53 School admin can create inactive viewer
+ await assertSucceeds(setDoc(doc(admin,'schools','school_A','members','new_viewer_A'),{uid:'new_viewer_A',schoolId:'school_A',role:'viewer',active:false}));
+ // 54 School admin cannot create another school admin
+ await assertFails(setDoc(doc(admin,'schools','school_A','members','evil_admin'),{uid:'evil_admin',schoolId:'school_A',role:'school_admin',active:false}));
+ // 55 School admin cannot create an active teacher directly
+ await assertFails(setDoc(doc(admin,'schools','school_A','members','active_teacher'),{uid:'active_teacher',schoolId:'school_A',role:'teacher',active:true}));
+ // 56 School admin cannot change teacher to school admin
+ await assertFails(updateDoc(doc(admin,'schools','school_A','members','new_teacher_A'),{role:'school_admin'}));
+ // 57 School admin cannot edit another school's memberships
+ await assertFails(updateDoc(doc(admin,'schools','school_B','members','viewer_school_B'),{active:false}));
+ // 58 School admin cannot edit own membership
+ await assertFails(updateDoc(doc(admin,'schools','school_A','members','admin_school_A'),{active:false}));
+ // 59 Viewer cannot create a membership
+ await assertFails(setDoc(doc(viewer,'schools','school_A','members','viewer_created'),{uid:'viewer_created',schoolId:'school_A',role:'viewer',active:false}));
+ // 60 School admin cannot delete a teacher membership
+ await assertFails(deleteDoc(doc(admin,'schools','school_A','members','new_teacher_A')));
+ console.log('V47 Firestore emulator: 60 authorization assertions passed');
 }finally{await env.cleanup();}
