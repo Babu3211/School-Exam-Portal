@@ -18,8 +18,8 @@ for(const token of [
  "subjectAssignment.get('active', true) == true",
  'teacherMarkAllowed(sid, id);','teacherAttendanceAllowed(sid, id);',
  'canAdmin(sid) && validRawMark(sid, id)',
- 'request.resource.data.theory <= 100',
- 'request.resource.data.practical <= 100',
+ 'data.theory <= 100',
+ 'data.practical <= 100',
  'request.resource.data.present is bool',
  "request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')",
  "request.resource.data.class + ':attendance'"
