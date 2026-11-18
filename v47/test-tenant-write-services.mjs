@@ -40,7 +40,9 @@ const attendanceApi={
 const attendanceInput={date:'2026-11-18',studentId:'student_1',class:'9',present:true};
 await saveSchoolAttendance({db:{},api:attendanceApi,actor,schoolId:'school_A',input:attendanceInput});
 assert.equal(attendanceWrites.at(-1).data.schoolId,'school_A');
+assert.ok(attendanceWrites.at(-1).path.startsWith('schools/school_A/attendance/'));
 await saveClassAttendance({db:{},api:attendanceApi,actor,schoolId:'school_A',entries:[attendanceInput]});
 assert.equal(attendanceWrites.at(-1).data.schoolId,'school_A');
+assert.ok(attendanceWrites.at(-1).path.startsWith('schools/school_A/attendance/'));
 await assert.rejects(()=>saveClassAttendance({db:{},api:attendanceApi,actor:{role:'viewer',active:true,schoolId:'school_A'},schoolId:'school_A',entries:[attendanceInput]}),/permission/i);
 console.log('V47 tenant subject, mark and attendance write service check passed');
