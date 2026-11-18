@@ -10,6 +10,8 @@ for(const role of ['viewer','teacher']){
  assert.equal(c.delete,false);
 }
 assert.equal(roleCapabilities('school_admin').marksWrite,true);
+assert.equal(roleCapabilities('school_admin').memberProvision,true);
+assert.equal(roleCapabilities('teacher').memberProvision,false);
 for(const bad of [{},{'../../evil':20},{theory:Infinity},{theory:-1},{theory:101}]){
  assert.throws(()=>validateTeacherWrite({schoolId:'school_A',studentId:'student_1',className:'10',subject:'Science',marks:bad}));
 }
