@@ -109,6 +109,15 @@ try {
   await assertFails(updateDoc(schoolDoc('teacher-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{active:true}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{uid:'admin-a'}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{active:true}));
+  const assignedMark={schoolId:'school-a',studentId:'student-1',subjectId:'math',class:'9',term:'1st',theory:20,practical:10};
+  await assertSucceeds(setDoc(schoolDoc('teacher-a','school-a','marks','1st:student-1:math'),assignedMark));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','2nd:student-1:math'),{...assignedMark,term:'2nd',subjectId:'science'}));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','2nd:student-1:math'),{...assignedMark,term:'2nd',schoolId:'school-b'}));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','2nd:student-1:math'),{...assignedMark,term:'2nd',class:'8'}));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','forged-id'),{...assignedMark,term:'2nd'}));
+  await assertFails(updateDoc(schoolDoc('teacher-a','school-a','marks','1st:student-1:math'),{theory:99}));
+  await assertFails(deleteDoc(schoolDoc('teacher-a','school-a','marks','1st:student-1:math')));
+
   await assertFails(deleteDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math')));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','members','teacher-a'),{active:false}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{active:false}));
