@@ -110,7 +110,11 @@ service cloud.firestore {
           && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('active', false) == true;
         allow update: if canAdmin(sid) && validTeacherAssignment()
           && immutableSchool(sid)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active']);
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active'])
+          && (!request.resource.data.active
+            || (exists(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid))
+              && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('role', '') == 'teacher'
+              && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('active', false) == true));
         allow delete: if false;
       }
       match /students/{id} {
