@@ -18,10 +18,10 @@ export async function createSchoolMarkOnly({db,api,actor,schoolId,input}){
  await api.runTransaction(db,async tx=>{
   // All reads precede the write, so concurrent roster/subject changes retry the transaction.
   const [student,subject,assignment,existing,component,teacherAssignment]=await Promise.all([tx.get(studentRef),tx.get(subjectRef),tx.get(assignmentRef),tx.get(markRef),tx.get(componentRef),teacherRef?tx.get(teacherRef):Promise.resolve(null)]);
-  if(!student.exists()||student.data().class!==entry.class)throw new Error('Student missing or in another class');
-  if(!subject.exists()||subject.data().active!==true||subject.data().class!==entry.class)throw new Error('Subject missing, inactive or in another class');
+  if(!student.exists()||student.data().schoolId!==schoolId||student.data().class!==entry.class)throw new Error('Student missing or in another class');
+  if(!subject.exists()||subject.data().schoolId!==schoolId||subject.data().active!==true||subject.data().class!==entry.class)throw new Error('Subject missing, inactive or in another class');
   if(['9','10'].includes(entry.class)&&subject.data().name==='Computer')throw new Error('Use Computer 4/36/10 component marks entry');
- if(!assignment.exists()||assignment.data().studentId!==entry.studentId||assignment.data().subjectId!==entry.subjectId||assignment.data().class!==entry.class)throw new Error('Student subject assignment required');
+ if(!assignment.exists()||assignment.data().schoolId!==schoolId||assignment.data().studentId!==entry.studentId||assignment.data().subjectId!==entry.subjectId||assignment.data().class!==entry.class)throw new Error('Student subject assignment required');
   if(isTeacher&&(!teacherAssignment?.exists()||teacherAssignment.data().active!==true||teacherAssignment.data().schoolId!==schoolId||teacherAssignment.data().uid!==actor.uid||teacherAssignment.data().classId!==entry.class||teacherAssignment.data().subjectId!==entry.subjectId))throw new Error('Active teacher class/subject assignment required');
   if(existing.exists()||component.exists())throw new Error('Mark already exists; overwrite blocked');
   tx.set(markRef,{...entry,schoolId});
