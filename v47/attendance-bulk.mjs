@@ -16,7 +16,7 @@ export async function saveClassAttendance({db,api,actor,schoolId,entries}){
   ids.add(entry.studentId);
  }
  const batch=api.writeBatch(db);
- for(const entry of validated)batch.set(api.doc(db,'schools',schoolId,'attendance',entry.date+'_'+entry.studentId),entry);
+ for(const entry of validated)batch.set(api.doc(db,'schools',schoolId,'attendance',entry.date+'_'+entry.studentId),{...entry,schoolId});
  await batch.commit();
  return {saved:validated.length,date,class:schoolClass};
 }
