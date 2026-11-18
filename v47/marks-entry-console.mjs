@@ -36,6 +36,7 @@ $('term').onchange=invalidateClassMarks;
 $('subjectId').onchange=()=>{invalidateClassMarks();lock(false)};
 $('loadClassMarks').onclick=async()=>{
  if(busy||actor?.role!=='school_admin'||!subjectsLoaded||loadedSubjectClass!==$('schoolClass').value||!$('subjectId').value){status('Load active class subjects first');return}
+ if(!auth?.currentUser?.uid||auth.currentUser.uid!==actor.uid){status('Authentication changed; sign in again');return}
  const attempt=epoch,classId=$('schoolClass').value,term=$('term').value,subjectId=$('subjectId').value;
  invalidateClassMarks();lock(true);
  try{
