@@ -46,6 +46,11 @@ for(const mode of ["entry","number","grade"]){
  assert.throws(()=>renderV47SchoolLedger({...base,mode,marks:[{...validMark,classNo:7}]}),/mark class mismatch/);
  assert.ok(renderV47SchoolLedger({...base,mode,students:[{...base.students[0],classNo:6}],marks:[{...validMark,classNo:6}]}).body.includes("Test Student"));
 }
+// Reject roster records from another exam in every IEMIS ledger mode.
+for(const mode of ["entry","number","grade"]){
+ assert.throws(()=>renderV47SchoolLedger({...base,mode,students:[{...base.students[0],examId:"exam002"}]}),/student exam mismatch/);
+ assert.ok(renderV47SchoolLedger({...base,mode,students:[{...base.students[0],examId:"exam001"}]}).body.includes("Test Student"));
+}
 // Rendering all V46 ledger views is read-only and cannot mutate fetched tenant data.
 for(const mode of ["entry","number","grade"]){
  const source={...base,marks:[validMark]};
