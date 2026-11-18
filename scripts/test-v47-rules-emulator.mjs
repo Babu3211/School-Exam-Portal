@@ -137,7 +137,7 @@ try{
  await assertSucceeds(viewer.doc('schools/school_001/subjects/new_math').get());
  await assertFails(viewer.doc('schools/school_002/subjects/other_school').get());
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').set(mark)); // no assignment yet
- await assertSucceeds(admin.doc('schools/school_001/subject_assignments/s1:math').set({studentId:'s1',subjectId:'math',class:'1'}));
+ await assertSucceeds(admin.doc('schools/school_001/subject_assignments/s1:math').set({studentId:'s1',subjectId:'math',class:'1',schoolId:'school_001'}));
  await assertSucceeds(viewer.doc('schools/school_001/subject_assignments/s1:math').get());
  await assertFails(viewer.doc('schools/school_001/subject_assignments/s1:math').delete());
  await assertFails(admin.doc('schools/school_001/subject_assignments/s4:math').set({studentId:'s4',subjectId:'math',class:'9'}));
