@@ -6,7 +6,7 @@
 2. A Super Admin record under `v47_super_admins/{uid}` is **not client-writable**. Initial provisioning requires an independently approved, privileged administrative procedure; never expose service-account credentials in the browser.
 3. School registration creates an **inactive** school. The Super Admin must explicitly activate it after verification. The school registry payload must contain only `id`, `name`, `iemisCode`, and `active` until the rules schema is extended.
 4. School membership is school-scoped, with `school_admin`, `teacher`, or `viewer`. A newly prepared school admin membership is inactive until approved and activated. School admins may provision only inactive teacher/viewer memberships within their own school; account creation is a separate privileged Firebase Auth operation.
-5. UI path checks do not replace Firestore rules. Run the 80-case Firestore emulator test suite for forged school IDs, wrong membership, inactive school, disabled membership, Viewer writes, Teacher writes (currently denied), and cross-school reads/writes/queries.
+5. UI path checks do not replace Firestore rules. Run the 84-case Firestore emulator test suite for forged school IDs, wrong membership, inactive school, disabled membership, Viewer writes, Teacher writes (currently denied), and cross-school reads/writes/queries.
 6. Current `v47/firestore.rules` intentionally does **not** allow Teacher marks/attendance writes or deletes. Do not deploy as feature-complete until authorization is implemented and emulator-tested.
 7. No real student data import or V46 migration without verified backup, explicit approval, and a tested rollback.
 8. Test all V46 parity features including Classes ECD–12, exams, CDC grading, IEMIS ledgers, role permissions, PWA/APK, and mobile.
@@ -21,3 +21,5 @@ Role-capability helpers reflect **current V47 development-branch rules**, not in
 - Delete confirmation helper supports students, staff, teachers, subjects and exams as a **proposal only**. Firestore deletion is denied and requires a separately reviewed audited server operation and verified backup.
 
 - Tenant document writes must never claim a different schoolId than their containing school path; identity is immutable on update.
+
+- For existing records, the schoolId field cannot be removed on update. Legacy records without schoolId remain supported but cannot be assigned to a different school.
