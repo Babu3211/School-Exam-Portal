@@ -1,2 +1,3 @@
-import {tenantDocument} from './tenant-paths.mjs';
-export function auditDocument(schoolId,eventId){return tenantDocument(schoolId,'audit_logs',eventId);}
+// Audit logs are server-managed. Firestore rules intentionally deny client access.
+import {schoolDocumentPath} from './school-scope.mjs';
+export function auditDocument(schoolId,eventId){return schoolDocumentPath(schoolId,'audit_logs',eventId);}
