@@ -15,4 +15,4 @@ export function normalizeMembership(schoolId,uid,role){
 }
 export function canReadSchool(m){return m?.active===true&&SCHOOL_ROLES.includes(m.role);}
 export function canManageSchool(m){return m?.active===true&&m.role==='school_admin';}
-export function canWriteSchool(m){return m?.active===true&&['school_admin','teacher'].includes(m.role);}
+export function canWriteSchool(m){return m?.active===true&&m.role==='school_admin'; // Teacher writes remain denied in V47 Firestore rules.}
