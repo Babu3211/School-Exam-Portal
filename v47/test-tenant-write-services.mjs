@@ -16,7 +16,7 @@ assert.equal(writes.at(-1).data.schoolId,'school_A');
 const mark=await createSchoolMarkOnly({db:{},api,actor,schoolId:'school_A',input:{studentId:'student_1',subjectId:'science_9',class:'9',term:'1st',theory:25,practical:10}});
 assert.equal(mark.schoolId,undefined);
 assert.equal(writes.at(-1).data.schoolId,'school_A');
-assert.match(writes.at(-1).path,/schools\\/school_A\\/marks\\//);
+assert.ok(writes.at(-1).path.startsWith('schools/school_A/marks/'));
 await assert.rejects(()=>createSchoolMarkOnly({db:{},api,actor,schoolId:'school_B',input:{studentId:'student_1',subjectId:'science_9',class:'9',term:'1st',theory:25,practical:10}}),/permission/i);
 await assert.rejects(()=>createSchoolSubject({db:{},api,actor,schoolId:'school_B',input:{id:'science_9',name:'Science',class:'9'}}),/permission/i);
 console.log('V47 tenant subject write service check passed');
