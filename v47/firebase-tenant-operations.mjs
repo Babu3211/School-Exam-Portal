@@ -3,7 +3,7 @@
 // Firestore security rules independently enforce authorization.
 import {verifyFirebaseSchoolSession} from './verified-school-session.mjs';
 import {tenantReadPlan,tenantListPlan,tenantWritePlan} from './tenant-firestore-gateway.mjs';
-export async function firebaseTenantOperation({auth,firestore,schoolId,collection,id,operation,data,limit=50}){
+export async function firebaseTenantOperation({auth,firestore,schoolId,collection,id,operation,data,limit=50,cursorId=null}){
  if(!auth?.currentUser?.uid||!firestore)throw new Error('Authentication required');
  const uid=auth.currentUser.uid;
  const session=await verifyFirebaseSchoolSession({auth,firestore,schoolId});
@@ -18,7 +18,11 @@ export async function firebaseTenantOperation({auth,firestore,schoolId,collectio
  if(operation==='list'){
   if(!Number.isInteger(limit)||limit<1||limit>100)throw new RangeError('Invalid page size');
   const plan=tenantListPlan({session,schoolId,uid,collection});
-  const q=sdk.query(sdk.collection(firestore,...plan.path.split('/')),sdk.orderBy(sdk.documentId()),sdk.limit(limit));
+  if(cursorId!==null&&!/^[A-Za-z0-9_-]{1,128}$/.test(cursorId))throw new TypeError('Invalid pagination cursor');
+  const constraints=[sdk.orderBy(sdk.documentId())];
+  if(cursorId!==null)constraints.push(sdk.startAfter(cursorId));
+  constraints.push(sdk.limit(limit));
+  const q=sdk.query(sdk.collection(firestore,...plan.path.split('/')),...constraints);
   const snapshot=await sdk.getDocs(q);
   if(auth.currentUser?.uid!==uid)throw new Error('Authentication changed');
   return snapshot.docs.map(d=>({...d.data(),id:d.id}));
