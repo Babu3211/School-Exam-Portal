@@ -48,7 +48,7 @@ for(let schoolIndex=1;schoolIndex<=30;schoolIndex++){
  assert.equal(count,500);
  assert.equal(rounds,25);
 }
-for(const invalid of [0,-1,2.5,'20',NaN])assert.throws(()=>stablePage(records,{limit:invalid}),RangeError);
+for(const invalid of [0,-1,2.5,'20',NaN])assert.equal(stablePage(records,{limit:invalid}).items.length,50,'Invalid page size falls back to safe default');
 assert.throws(()=>stablePage([{id:'ok'},{id:''}]),TypeError);
 assert.throws(()=>stablePage(records,{afterId:7}),TypeError);
 console.log('V47 30-school pagination and invalid cursor tests passed');
