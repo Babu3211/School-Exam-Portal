@@ -93,3 +93,8 @@
 - `mark-create-service.mjs` now checks active teacher assignment inside the existing transaction, retaining student/subject/roster validation and no-overwrite behavior (`b7fb6fd`).
 - Emulator tests added for valid teacher mark creation and denial of forged IDs, cross-school records, wrong class/subject, update/delete; seeded required student roster (`88e753b`, `773d550`).
 - **Unverified:** Firestore rules compile, emulator permissions, client integration with teacher login, and term-wide completeness validation. No production deploy. V46 remains unchanged.
+
+## Security gate repair after teacher marks integration (2026-11-18)
+- Found a serious regression: `v47/firestore.rules` contained a truncated `teacherMarkAllowed` expression and duplicated rules tails (three catch-all blocks). Reconstructed one complete teacher-mark validator, one marks block and one final deny rule (commit `0ce7d37`).
+- Strengthened structural test to check for a single teacher mark validator and marks block and intact subject regex (commit `2e532c8`).
+- **Still unverified:** full Firebase Rules compilation and emulator tests. Local runtime has Node but not Firebase CLI/dependencies. Do not deploy or enable teacher writes for real schools before the CI/emulator gate succeeds.
