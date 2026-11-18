@@ -6,6 +6,8 @@ on:
     paths:
       - .github/workflows/v47-hosting-test-preview.yml
       - v47/firebase.json
+      - v47/admin.html
+      - v47/admin-console.mjs
   workflow_dispatch:
 permissions:
   contents: read
