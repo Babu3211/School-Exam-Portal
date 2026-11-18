@@ -33,4 +33,10 @@ assert.equal(iemisGpa([{summary:annualSummary,creditHour:null}],{annual:true}),n
 assert.equal(iemisGpa([{summary:iemisSummary({scores:[]},{annual:true}),creditHour:4}],{annual:true}),null);
 assert.equal(typeof iemisLedger,'function');
 console.log('V47 V46 IEMIS GPA and ledger reuse contract passed');
+// The V46 source retains the page-wide repeated Grade Sheet watermark and A4 print rules.
+const v46Ui=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+assert.match(v46Ui,/\.official-grade-sheet::before\{content:attr\(data-watermark\)/);
+assert.match(v46Ui,/\.official-grade-sheet\{width:100%!important;max-width:none!important;min-height:277mm/);
+assert.match(v46Ui,/@page\{size:A4 portrait;margin:10mm\}/);
+assert.match(v46Ui,/class="official-grade-sheet" data-watermark=/);
 console.log("V47 reuses V46 grade calculations unchanged, without Firebase access");
