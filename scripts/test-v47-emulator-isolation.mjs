@@ -111,6 +111,7 @@ try {
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{active:true}));
   await env.withSecurityRulesDisabled(async ctx=>{
     await setDoc(doc(ctx.firestore(),'schools','school-a','subject_assignments','student-1:math'),{schoolId:'school-a',studentId:'student-1',subjectId:'math',class:'9'});
+    await setDoc(doc(ctx.firestore(),'schools','school-a','subjects','math'),{schoolId:'school-a',class:'9',name:'Mathematics',active:true});
   });
   const assignedMark={schoolId:'school-a',studentId:'student-1',subjectId:'math',class:'9',term:'1st',theory:20,practical:10};
   await assertSucceeds(setDoc(schoolDoc('teacher-a','school-a','marks','1st:student-1:math'),assignedMark));
