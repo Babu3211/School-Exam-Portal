@@ -20,6 +20,11 @@ try {
       ['school-a','viewer-a','viewer'],['school-a','teacher-a','teacher']
     ]) await setDoc(doc(root,'schools',sid,'members',uid),{uid,schoolId:sid,role,active:true});
     await setDoc(doc(root,'v47_super_admins','super-a'),{active:true});
+    await setDoc(doc(root,'v47_super_admins','disabled-super'),{active:false});
+    await setDoc(doc(root,'schools','school-disabled'),{id:'school-disabled',name:'Disabled School',active:false});
+    await setDoc(doc(root,'schools','school-disabled','members','disabled-school-admin'),{uid:'disabled-school-admin',schoolId:'school-disabled',role:'school_admin',active:true});
+    await setDoc(doc(root,'schools','school-disabled','students','student-1'),{name:'Inactive School Student',class:'9',schoolId:'school-disabled'});
+    await setDoc(doc(root,'schools','school-a','members','inactive-viewer'),{uid:'inactive-viewer',schoolId:'school-a',role:'viewer',active:false});
   });
   const valid={name:'Student Two',class:'9',schoolId:'school-a'};
   await assertSucceeds(getDoc(schoolDoc('admin-a','school-a','students','student-1')));
@@ -62,5 +67,19 @@ try {
   await assertFails(setDoc(doc(db('outsider'),'v47_super_admins','outsider'),{active:true}));
   await assertFails(getDoc(doc(db('super-a'),'v47_super_admins','super-a')));
   await assertFails(getDoc(schoolDoc('outsider','school-a','students','student-1')));
+  await assertFails(getDoc(schoolDoc('inactive-viewer','school-a','students','student-1')));
+  await assertFails(getDoc(schoolDoc('disabled-school-admin','school-disabled','students','student-1')));
+  await assertFails(getDoc(schoolDoc('disabled-super','school-a','students','student-1')));
+  await assertFails(setDoc(schoolDoc('inactive-viewer','school-a','students','inactive-write'),valid));
+  await assertFails(setDoc(schoolDoc('disabled-school-admin','school-disabled','students','disabled-write'),{...valid,schoolId:'school-disabled'}));
+  await assertFails(setDoc(schoolDoc('disabled-super','school-a','students','disabled-super-write'),valid));
+  await assertFails(setDoc(doc(db('admin-a'),'schools','school-new'),{id:'school-new',name:'New School',active:false}));
+  await assertFails(setDoc(doc(db('super-a'),'schools','school-bad'),{id:'school-bad',name:'New School',active:true}));
+  await assertSucceeds(setDoc(doc(db('super-a'),'schools','school-new'),{id:'school-new',name:'New School',active:false}));
+  await assertFails(deleteDoc(doc(db('super-a'),'schools','school-new')));
+  await assertFails(updateDoc(doc(db('admin-a'),'schools','school-a'),{active:false}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','students','student-unknown-class'),{...valid,class:'99'}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','students','student-bad-roll'),{...valid,rollNo:100}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','students','student-extra-field'),{...valid,secret:'x'}));
   console.log('V47 emulator isolation and role checks passed');
 } finally {await env.cleanup();}
