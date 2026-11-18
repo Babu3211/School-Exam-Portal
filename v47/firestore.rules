@@ -226,10 +226,66 @@ service cloud.firestore {
         // Exam terms are create-only until audited dependent-record deletion is implemented.
         allow update, delete: if false;
       }
+      // Component marks are restricted to the approved Class 9–10 Computer split.
+      // A generic collection permission must never bypass these score limits.
+      match /component_marks/{id} {
+        function validComputerComponent() {
+          let data = request.resource.data;
+          return data.keys().hasOnly(['schoolId','studentId','subjectId','class','term','scores'])
+            && data.keys().hasAll(['schoolId','studentId','subjectId','class','term','scores'])
+            && data.schoolId == sid
+            && data.studentId is string && data.studentId.matches('^[A-Za-z0-9_-]{1,128}
+        allow get, list: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments'] && canRead(sid);
+        allow create: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+            && data.subjectId is string && data.subjectId.matches('^[A-Za-z0-9_-]{1,128}
+        allow get, list: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments'] && canRead(sid);
+        allow create: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+            && data.class in ['9','10']
+            && data.term in ['1st','2nd','final']
+            && id == data.term + ':' + data.studentId + ':' + data.subjectId
+            && data.scores is map
+            && data.scores.keys().hasOnly(['component_a','component_b','component_c'])
+            && data.scores.keys().hasAll(['component_a','component_b','component_c'])
+            && data.scores.component_a is number && data.scores.component_a >= 0 && data.scores.component_a <= 4
+            && data.scores.component_b is number && data.scores.component_b >= 0 && data.scores.component_b <= 36
+            && data.scores.component_c is number && data.scores.component_c >= 0 && data.scores.component_c <= 10
+            && exists(/databases/$(database)/documents/schools/$(sid)/students/$(data.studentId))
+            && get(/databases/$(database)/documents/schools/$(sid)/students/$(data.studentId)).data.get('schoolId','') == sid
+            && get(/databases/$(database)/documents/schools/$(sid)/students/$(data.studentId)).data.get('class','') == data.class
+            && exists(/databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId))
+            && get(/databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId)).data.get('schoolId','') == sid
+            && get(/databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId)).data.get('class','') == data.class
+            && exists(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId))
+            && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId)).data.get('schoolId','') == sid
+            && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId)).data.get('studentId','') == data.studentId
+            && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId)).data.get('subjectId','') == data.subjectId
+            && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId)).data.get('class','') == data.class
+            && !exists(/databases/$(database)/documents/schools/$(sid)/marks/$(id));
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validComputerComponent();
+        allow update, delete: if false;
+      }
       match /{collection}/{id} {
-        allow get, list: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canRead(sid);
-        allow create: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && scopedRecord(sid);
-        allow update: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && immutableSchool(sid);
+        allow get, list: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments'] && canRead(sid);
+        allow create: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments'] && canAdmin(sid) && immutableSchool(sid);
         allow delete: if false;
       }
     }
