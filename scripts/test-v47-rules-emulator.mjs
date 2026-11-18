@@ -174,9 +174,13 @@ try{
  goodBatch.set(admin.doc('schools/school_001/attendance/2026-11-17_s1'),{date:'2026-11-17',studentId:'s1',class:'1',schoolId:'school_001',present:true});
  goodBatch.set(admin.doc('schools/school_001/attendance/2026-11-17_s4'),{date:'2026-11-17',studentId:'s4',class:'1',schoolId:'school_001',present:false});
  await assertSucceeds(goodBatch.commit());
- const tenBatch=admin.batch();
- for(let i=0;i<10;i++)tenBatch.set(admin.doc('schools/school_001/attendance/2026-11-20_batch'+i),{date:'2026-11-20',studentId:'batch'+i,class:'1',schoolId:'school_001',present:i%2===0});
- await assertSucceeds(tenBatch.commit());
+ // Each attendance write checks a student; split atomic commits to avoid
+ // exceeding Firestore's per-batch rules document-access budget.
+ for(let start=0;start<10;start+=5){
+  const attendanceBatch=admin.batch();
+  for(let i=start;i<start+5;i++)attendanceBatch.set(admin.doc('schools/school_001/attendance/2026-11-20_batch'+i),{date:'2026-11-20',studentId:'batch'+i,class:'1',schoolId:'school_001',present:i%2===0});
+  await assertSucceeds(attendanceBatch.commit());
+ }
  const badBatch=admin.batch();
  badBatch.set(admin.doc('schools/school_001/attendance/2026-11-18_s1'),{date:'2026-11-18',studentId:'s1',class:'1',schoolId:'school_001',present:true});
  badBatch.set(admin.doc('schools/school_001/attendance/2026-11-18_missing'),{date:'2026-11-18',studentId:'missing',class:'1',schoolId:'school_001',present:false});
