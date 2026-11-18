@@ -28,14 +28,15 @@
     "test:v46-marks-load-failure": "node scripts/test-v46-marks-load-failure.mjs",
     "test:v47:structure": "node scripts/test-v47-school-isolation-gate.mjs",
     "test:v47:emulator": "firebase emulators:exec --project smss-v47-isolation-test --config v47/firebase.test.json --only firestore \"node scripts/test-v47-emulator-isolation.mjs\"",
-    "test:v47": "npm run test:v47:scope && npm run test:v47:contract && npm run test:v47:marks-complete && npm run test:v47:marks-save && npm run test:v47:attendance-complete && npm run test:v47:attendance-save && npm run test:v47:teacher-assignments && npm run test:v47:structure && npm run test:v47:emulator",
+    "test:v47": "npm run test:v47:scope && npm run test:v47:contract && npm run test:v47:marks-complete && npm run test:v47:marks-save && npm run test:v47:attendance-complete && npm run test:v47:attendance-save && npm run test:v47:teacher-assignments && npm run test:v47:attendance-roster && npm run test:v47:structure && npm run test:v47:emulator",
     "test:v47:scope": "node v47/test-school-scope.mjs",
     "test:v47:contract": "node v47/test-app-contract.mjs",
     "test:v47:marks-complete": "node v47/test-class-mark-completeness.mjs",
     "test:v47:marks-save": "node v47/test-class-mark-save.mjs",
     "test:v47:attendance-complete": "node v47/test-class-attendance-completeness.mjs",
     "test:v47:attendance-save": "node v47/test-verified-class-attendance-save.mjs",
-    "test:v47:teacher-assignments": "node v47/test-teacher-assignment-management.mjs"
+    "test:v47:teacher-assignments": "node v47/test-teacher-assignment-management.mjs",
+    "test:v47:attendance-roster": "node v47/test-attendance-roster-writes.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
