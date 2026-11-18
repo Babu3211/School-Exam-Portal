@@ -17,6 +17,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Check syntax of every V47 JavaScript module
+        run: |
+          set -euo pipefail
+          find v47 -type f -name '*.mjs' -print0 | xargs -0 -n 1 node --check
       - name: V47 isolated unit tests
         run: node v47/run-unit-checks.mjs
       - name: Confirm no V46 production resources are deployed
