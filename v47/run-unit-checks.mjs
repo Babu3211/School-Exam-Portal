@@ -11,7 +11,8 @@ const suites=[
  'test-member-provisioning.mjs',
  'test-teacher-assignment-record.mjs',
  'test-verified-school-session.mjs',
- 'test-tenant-firestore-gateway.mjs'
+ 'test-tenant-firestore-gateway.mjs',
+ 'test-firebase-tenant-operations.mjs'
 ];
 let failures=0;
 for(const suite of suites){
