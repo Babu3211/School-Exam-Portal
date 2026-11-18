@@ -26,4 +26,7 @@ for(const snippet of [
  "if(!inspection.ready){status('Save blocked:",
  "for(const input of $('classMarkRows').querySelectorAll('input'))input.disabled=value"
 ])assert.ok(js.includes(snippet),'Missing draft validation or row lock: '+snippet);
+assert.ok(js.includes("if(row.schoolId!==schoolId||row.class!==schoolClass)throw new Error('Cross-school"),'Marks selector must reject foreign records');
+assert.ok(js.includes("({...doc.data(),id:doc.id})"),'Document ID must override payload ID');
+assert.ok(js.includes("Authentication changed; sign in again"),'Roster load must check authenticated user');
 console.log('V47 full-class marks UI contract passed');
