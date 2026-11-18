@@ -13,7 +13,9 @@ export function validateAttendance(input){
 export async function saveSchoolAttendance({db,api,actor,schoolId,input}){
  validateSchoolId(schoolId);if(!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin permission required');
  const attendance=validateAttendance(input);
- if(typeof api?.doc!=='function'||typeof api?.setDoc!=='function')throw new TypeError('Missing Firebase SDK');
+ if(typeof api?.doc!=='function'||typeof api?.setDoc!=='function'||typeof api?.getDoc!=='function')throw new TypeError('Missing Firebase SDK');
+ const student=await api.getDoc(api.doc(db,'schools',schoolId,'students',attendance.studentId));
+ if(!student.exists()||student.data().schoolId!==schoolId||student.data().class!==attendance.class)throw new Error('Student roster changed or school mismatch');
  const id=attendance.date+'_'+attendance.studentId;
  await api.setDoc(api.doc(db,'schools',schoolId,'attendance',id),{...attendance,schoolId});
  return {id,...attendance,schoolId};
