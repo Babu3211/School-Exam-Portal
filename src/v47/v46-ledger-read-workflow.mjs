@@ -11,6 +11,8 @@ export async function prepareV47SchoolLedger({session,schoolId,term,classNo,exam
  assertSchoolId(schoolId);
  if(typeof examId!=="string"||!examId.trim())throw new Error("Exam ID required");
  if(!Number.isInteger(Number(classNo))||Number(classNo)<1||Number(classNo)>10)throw new Error("IEMIS ledger format not verified for this class");
+ if(!["number","grade","entry"].includes(mode))throw new Error("Unsupported ledger mode");
+ const requestedLegacyTerm=toV46IemisTerm(term);
  if(typeof selectStudents!=="function"||typeof selectSubjects!=="function"||typeof selectMarks!=="function")
   throw new TypeError("Explicit verified class/subject/mark selectors required");
  const data=await loadV47LedgerCollections({session,pageSize,maxRecordsPerCollection});
@@ -21,7 +23,6 @@ export async function prepareV47SchoolLedger({session,schoolId,term,classNo,exam
  // An exam explicitly tagged with class/term must match the requested ledger.
  if(selectedExam.classNo!=null && Number(selectedExam.classNo)!==Number(classNo))
   throw new Error("Selected exam class mismatch");
- const requestedLegacyTerm=toV46IemisTerm(term);
  if(selectedExam.term!=null && selectedExam.term!==term && selectedExam.term!==requestedLegacyTerm)
   throw new Error("Selected exam term mismatch");
  const students=selectStudents(data.students,classNo);
