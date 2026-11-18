@@ -27,6 +27,8 @@ assert.equal(V47_CLASS_ORDER.length,15);
 assert.deepEqual(sortClasses(['Class 12','ECD','Class 1']),['ECD','Class 1','Class 12']);
 assert.throws(()=>prepareDelete({schoolId:'school_A',collection:'students',id:'student_1',firstConfirmation:true,secondConfirmation:false}));
 assert.equal(prepareDelete({schoolId:'school_A',collection:'students',id:'student_1',firstConfirmation:true,secondConfirmation:true}).requiresServerAuthorization,true);
+assert.equal(prepareDelete({schoolId:'school_A',collection:'teachers',id:'teacher_1',firstConfirmation:true,secondConfirmation:true}).authorized,false);
+assert.throws(()=>prepareDelete({schoolId:'school_A',collection:'marks',id:'mark_1',firstConfirmation:true,secondConfirmation:true}));
 assert.equal(assertBoundedBatch(100),100);
 assert.throws(()=>assertBoundedBatch(501));
 console.log('V47 tenant invariants passed');
