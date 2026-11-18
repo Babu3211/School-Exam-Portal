@@ -26,6 +26,8 @@ assert.equal(roleCapabilities('teacher').marksWrite,false);
 assert.equal(roleCapabilities('viewer').attendanceWrite,false);
 assert.equal(roleCapabilities('school_admin').manage,true);
 assert.throws(()=>validateTeacherWrite({schoolId,studentId:'student_1',className:'10',subject:'Science',marks:{}}),TypeError);
+assert.throws(()=>validateTeacherWrite({schoolId,studentId:'student_1',className:'10',subject:'Science::Math',marks:{theory:10}}),TypeError);
+assert.equal(validateTeacherWrite({schoolId,studentId:'student_1',className:' Class 10 ',subject:' Science ',marks:{theory:10}}).className,'Class 10');
 assert.throws(()=>planTenantQuery({schoolId,collection:'audit_logs'}),TypeError);
 assert.equal(session.authorization,'unverified-client-selection');
 assert.throws(()=>roleCapabilities('super_admin'));
