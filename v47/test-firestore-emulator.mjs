@@ -214,5 +214,15 @@ try{
  await assertFails(updateDoc(doc(admin,'schools','school_A','exams','1st'),{schoolId:'school_B'}));
  // 94 Other-school exam reads are denied
  await assertFails(getDocs(collection(admin,'schools','school_B','exams')));
- console.log('V47 Firestore emulator: 94 authorization assertions passed');
+ // 95 Unknown exam term IDs are rejected by Firestore, not just the UI
+ await assertFails(setDoc(doc(admin,'schools','school_A','exams','midterm'),{schoolId:'school_A',term:'midterm'}));
+ // 96 The term field must match the document ID
+ await assertFails(setDoc(doc(admin,'schools','school_A','exams','2nd'),{schoolId:'school_A',term:'final'}));
+ // 97 Unrecognized exam fields are rejected
+ await assertFails(setDoc(doc(admin,'schools','school_A','exams','2nd'),{schoolId:'school_A',term:'2nd',examName:'Extra'}));
+ // 98 Existing term cannot be edited, even by its School Admin
+ await assertFails(updateDoc(doc(admin,'schools','school_A','exams','1st'),{term:'2nd'}));
+ // 99 A second canonical term can be created independently
+ await assertSucceeds(setDoc(doc(admin,'schools','school_A','exams','2nd'),{schoolId:'school_A',term:'2nd'}));
+ console.log('V47 Firestore emulator: 99 authorization assertions passed');
 }finally{await env.cleanup();}
