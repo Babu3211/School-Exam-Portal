@@ -24,6 +24,13 @@ service cloud.firestore {
     }
     function canRead(sid) { return superAdmin() || activeMember(sid); }
     function canAdmin(sid) { return superAdmin() || memberRole(sid, 'school_admin'); }
+    function scopedRecord(sid) {
+      return request.resource.data.get('schoolId', sid) == sid;
+    }
+    function immutableSchool(sid) {
+      return resource.data.get('schoolId', sid) == sid
+        && request.resource.data.get('schoolId', sid) == sid;
+    }
     function validSchool(sid) {
       return sid.matches('^[A-Za-z0-9_-]{3,64}$')
         && request.resource.data.keys().hasOnly(['id', 'name', 'iemisCode', 'active'])
@@ -81,7 +88,8 @@ service cloud.firestore {
       }
       match /students/{id} {
         allow get, list: if canRead(sid);
-        allow create, update: if canAdmin(sid);
+        allow create: if canAdmin(sid) && scopedRecord(sid);
+        allow update: if canAdmin(sid) && immutableSchool(sid);
         allow delete: if false;
       }
       match /marks/{id} {
@@ -96,7 +104,8 @@ service cloud.firestore {
       }
       match /{collection}/{id} {
         allow get, list: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings','subject_assignments','component_marks'] && canRead(sid);
-        allow create, update: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid);
+        allow create, update: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && immutableSchool(sid);
         allow delete: if false;
       }
     }
