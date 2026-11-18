@@ -1,7 +1,5 @@
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
-import {createSchoolMarkOnly} from './mark-create-service.mjs';
-import {preflightRawMarkSave} from './mark-save-preflight.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {saveVerifiedSmallClassMarks} from './verified-small-class-mark-save.mjs';
 const $=id=>document.getElementById(id),status=msg=>{$('message').textContent=msg};
@@ -30,10 +28,7 @@ async function loadOptions(collection,element,label){if(busy||!actor)return;if(c
 $('loadStudents').onclick=()=>loadOptions('students',$('studentId'),'students');$('loadSubjects').onclick=()=>loadOptions('subjects',$('subjectId'),'subjects');
 $('schoolClass').onchange=()=>{classMarkRoster=[];classMarkContext=null;$('classMarkRows').replaceChildren();$('classMarkCount').textContent='';$('saveClassMarks').disabled=true;studentsLoaded=false;subjectsLoaded=false;loadedStudentClass=null;loadedSubjectClass=null;$('studentId').replaceChildren();$('subjectId').replaceChildren();lock(false)};
 $('studentId').onchange=()=>lock(false);$('subjectId').onchange=()=>lock(false);
-$('save').onclick=async()=>{status('Individual mark saving is disabled. Use the complete-class mark section.');return;if(busy||actor?.role!=='school_admin'||!studentsLoaded||!subjectsLoaded||(loadedStudentClass!==$('schoolClass').value||loadedSubjectClass!==$('schoolClass').value)||!$('studentId').value||!$('subjectId').value)return;const attempt=epoch;lock(true);try{const input={studentId:$('studentId').value,subjectId:$('subjectId').value,class:$('schoolClass').value,term:$('term').value,theory:$('theory').value,practical:$('practical').value};const checked=await preflightRawMarkSave({db,api,actor,schoolId,input});
-  if(attempt!==epoch)return;
-  if(checked.existing){status('Existing raw mark found. To prevent accidental overwriting, editing is disabled on this development page.');return}
-  const saved=await createSchoolMarkOnly({db,api,actor,schoolId,input});if(attempt===epoch){$('theory').value='';$('practical').value='';status('Raw mark saved in V47: '+saved.id+' — NOT a CDC/IEMIS result')}}catch(e){if(attempt===epoch)status('Save failed: '+e.message)}finally{lock(false)}};
+$('save').onclick=()=>status('Individual mark saving is disabled. Use complete-class marks.');
 
 function invalidateClassMarks(){classMarkRoster=[];classMarkContext=null;$('classMarkRows').replaceChildren();$('classMarkCount').textContent='';$('saveClassMarks').disabled=true}
 $('term').onchange=invalidateClassMarks;
