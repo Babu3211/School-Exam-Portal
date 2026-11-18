@@ -25,6 +25,9 @@ try {
   await assertSucceeds(getDoc(schoolDoc('admin-a','school-a','students','student-1')));
   await assertFails(getDoc(schoolDoc('admin-a','school-b','students','student-1')));
   await assertFails(getDoc(schoolDoc('viewer-a','school-b','students','student-1')));
+  await assertFails(getDoc(schoolDoc('teacher-a','school-b','students','student-1')));
+  await assertFails(getDoc(schoolDoc('admin-b','school-a','students','student-1')));
+  await assertSucceeds(getDoc(schoolDoc('teacher-a','school-a','students','student-1')));
   await assertSucceeds(getDoc(schoolDoc('viewer-a','school-a','students','student-1')));
   await assertFails(setDoc(schoolDoc('viewer-a','school-a','students','student-2'),valid));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','students','student-2'),valid));
@@ -34,6 +37,17 @@ try {
   await assertFails(setDoc(schoolDoc('admin-a','school-a','students','student-4'),{name:'X',class:'9',schoolId:'school-a'}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','students','student-2'),{schoolId:'school-b'}));
   await assertFails(deleteDoc(schoolDoc('admin-a','school-a','students','student-2')));
+  await assertFails(setDoc(schoolDoc('viewer-a','school-a','marks','mark-1'),{schoolId:'school-a',score:20}));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','mark-1'),{schoolId:'school-a',score:20}));
+  await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','marks','mark-1'),{schoolId:'school-a',score:20}));
+  await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','mark-1'),{schoolId:'school-b'}));
+  await assertFails(setDoc(schoolDoc('viewer-a','school-a','attendance','day-1'),{schoolId:'school-a'}));
+  await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','attendance','day-1'),{schoolId:'school-a'}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','attendance','day-2'),{date:'2083-08-01'}));
+  await assertFails(updateDoc(schoolDoc('admin-a','school-a','attendance','day-1'),{schoolId:'school-b'}));
+  await assertFails(setDoc(schoolDoc('viewer-a','school-a','staff','staff-1'),{schoolId:'school-a'}));
+  await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','staff','staff-1'),{schoolId:'school-a'}));
+  await assertFails(deleteDoc(schoolDoc('admin-a','school-a','staff','staff-1')));
   await assertFails(setDoc(schoolDoc('admin-a','school-b','students','student-3'),{...valid,schoolId:'school-b'}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','members','new-admin'),{uid:'new-admin',schoolId:'school-a',role:'school_admin',active:true}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','members','admin-a'),{uid:'admin-a',schoolId:'school-a',role:'school_admin',active:true}));
@@ -44,6 +58,9 @@ try {
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','exams','1st'),{schoolId:'school-a',term:'1st'}));
   await assertFails(deleteDoc(schoolDoc('admin-a','school-a','exams','1st')));
   await assertSucceeds(getDoc(schoolDoc('super-a','school-b','students','student-1')));
+  await assertFails(getDoc(schoolDoc('outsider','school-a','members','admin-a')));
+  await assertFails(setDoc(doc(db('outsider'),'v47_super_admins','outsider'),{active:true}));
+  await assertFails(getDoc(doc(db('super-a'),'v47_super_admins','super-a')));
   await assertFails(getDoc(schoolDoc('outsider','school-a','students','student-1')));
   console.log('V47 emulator isolation and role checks passed');
 } finally {await env.cleanup();}
