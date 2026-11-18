@@ -19,6 +19,15 @@ for(const token of [
 ])assert.ok(rules.includes(token),'Missing or truncated '+token);
 assert.equal(rules.split('function teacherMarkAllowed(sid, id)').length-1,1,'Duplicate teacher mark validator');
 assert.equal(rules.split('function teacherAttendanceAllowed(sid, id)').length-1,1,'Duplicate teacher attendance validator');
+assert.ok(rules.includes("request.resource.data.present is bool"),'Teacher attendance present must be boolean');
+assert.ok(rules.includes("request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}
+assert.equal(rules.split('match /{document=**}').length-1,1,'Duplicate deny-all catch-all');
+assert.ok(rules.trimEnd().endsWith('}'),'Rules missing closing brace');
+assert.ok(!rules.includes('}\n})'),'Malformed duplicate tail');
+console.log('V47 structural school isolation checks passed; emulator tests still required');
+)"),'Teacher attendance date shape missing');
+assert.ok(rules.includes("request.resource.data.class + ':attendance'"),'Dedicated teacher class attendance assignment missing');
+
 assert.equal(rules.split('match /{document=**}').length-1,1,'Duplicate deny-all catch-all');
 assert.ok(rules.trimEnd().endsWith('}'),'Rules missing closing brace');
 assert.ok(!rules.includes('}\n})'),'Malformed duplicate tail');
