@@ -202,3 +202,11 @@
 - Updated emulator cases for valid admin marks, authorized correction and denials for forged ID, invalid score, extra fields and identity changes (`dc281e9`).
 - Added structural rule test assertions to prevent accidental removal of admin marks validation (`f4a83e2`).
 - Latest GitHub combined commit status lookup returned **zero status checks**; no claim of passing CI. No Firebase Emulator or browser E2E verified. V46 unchanged; V47 not deployed.
+
+## CRITICAL CI and Firestore rules recovery — 2026-11-18
+- Audited the actual V47 branch rules source and discovered a **severely corrupted 30,817-character Firestore rules file** with truncated regex strings, duplicate exam/catch-all sections, and concatenated tails. Earlier commits and claims of test coverage did **not** establish working Firestore rules.
+- Reconstructed the affected marks/attendance functions and their match blocks, retaining existing school/member/teacher authorization and final exam/generic deny rules. The repaired file has one marks, attendance, exams and deny-all match (`2109721`).
+- Discovered the structural test itself had an unterminated string and duplicate tail. Replaced it with a syntactically valid guard (`5ebe85e`), added checks for truncated regex and duplicate rules (`e84ddc7`).
+- Fixed emulator fixture ID collision: Admin marks now target student-2 while Teacher marks target student-1 (`b235faf`).
+- Also fixed marks editor term-change control refresh, malformed draft handling and aligned its UI test in earlier commits.
+- **Release blocker:** Firebase Emulator and actual CI have not run successfully/been verified. Repaired rules must be parsed and tested in emulator before ANY deployment. The full-class >3 marks save remains unavailable; V46 production unchanged.
