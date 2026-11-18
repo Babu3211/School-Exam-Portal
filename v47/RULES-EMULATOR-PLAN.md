@@ -1,4 +1,4 @@
-# V47 Firestore emulator test plan (70 assertions authored; execution not yet verified)
+# V47 Firestore emulator test plan (80 assertions authored; execution not yet verified)
 
 1. Seed two active schools A/B using emulator security-disabled setup context.
 2. Seed Super Admin and one active school_admin, teacher, viewer per school, with inactive counterparts.
@@ -18,3 +18,5 @@ Static code checks and the 70 emulator assertions are not substitutes for a succ
 Audit log paths are server-managed and intentionally unavailable through the client collection allowlist.
 
 The delete UI helper cannot execute deletes: a privileged, audited deletion workflow and recoverable backup must be reviewed separately before changing any rules.
+
+Cross-school identity forgery cases now cover students, marks, attendance and staff.
