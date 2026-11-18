@@ -18,4 +18,6 @@ await assert.rejects(()=>createSchoolExamTerm({db:{},api,actor:admin,schoolId:'s
 await assert.rejects(()=>createSchoolExamTerm({db:{},api,actor:{role:'viewer',active:true,schoolId:'school_A'},schoolId:'school_A',term:'1st'}),/permission/i);
 await assert.rejects(()=>deleteSchoolExamTerm(),/deletion unavailable/i);
 assert.equal(writes.length,3,'failed creates must not write');
+await assert.rejects(()=>createSchoolExamTerm({db:{},api:{doc:api.doc},actor:admin,schoolId:'school_A',term:'1st'}),/transaction/i);
+await assert.rejects(()=>createSchoolExamTerm({db:{},api,actor:{role:'teacher',active:true,schoolId:'school_A'},schoolId:'school_A',term:'1st'}),/permission/i);
 console.log('V47 exam term creation and deletion guard tests passed');
