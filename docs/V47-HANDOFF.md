@@ -41,3 +41,10 @@
 - `v47/students-console.mjs` uses verified school session and scoped store; `v47/admin-console.mjs` uses super-admin scoped list and onboarding; `v47/school-admin-console.mjs` manages school members. Inspect their imported services before modifying access paths.
 - `npm run test:v47` now also runs the existing school-scope helper tests (commit `8ab39cf`).
 - Remaining core blocker is full V46 feature parity/integration, NOT just more structural tests. Do not describe V47 as complete until actual app and emulator verification.
+
+## App-to-rules compatibility inspection (2026-11-18)
+- Inspected actual `v47/students-console.mjs`, `student-service.mjs`, `student-validation.mjs`, `school-paths.mjs`, `attendance-console.mjs`, `attendance-service.mjs`, `permissions.mjs`, `verified-school-session.mjs`, `admin-console.mjs`, and `school-admin-console.mjs`.
+- Found student document ID length mismatch: client path validator permits 128 characters but rules permitted only 80. Aligned rules to 128 (commit `c0935ef`) and added emulator boundary cases (commit `fa763f5`).
+- V47 student class catalog currently supports ECD, LKG, UKG, and 1–12. The V47 student UI and rules agree on these classes.
+- Teacher write operations remain intentionally disabled in `permissions.mjs` and Firestore rules. Implement assignment-scoped teacher writes only after inspecting assignment data model; do not bypass server rules.
+- No successful emulator run is confirmed; production integration is not complete.
