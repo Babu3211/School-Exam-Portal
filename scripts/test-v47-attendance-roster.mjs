@@ -1,4 +1,4 @@
 import assert from 'node:assert/strict';import {loadClassRoster} from '../v47/attendance-roster.mjs';
-const calls=[];const api={collection:(_db,...p)=>p.join('/'),where:(...a)=>{calls.push(a);return a},orderBy:x=>x,limit:x=>x,startAfter:x=>x,query:(ref,...args)=>({ref,args}),getDocs:async()=>({docs:[{id:'s1',data:()=>({name:'Student',class:'6'})}]})};
+const calls=[];const api={collection:(_db,...p)=>p.join('/'),where:(...a)=>{calls.push(a);return a},orderBy:x=>x,limit:x=>x,startAfter:x=>x,query:(ref,...args)=>({ref,args}),getDocs:async()=>({docs:[{id:'s1',data:()=>({name:'Student',class:'6',schoolId:'school_001'})}]})};
 const actor={role:'viewer',active:true,schoolId:'school_001'};const result=await loadClassRoster({db:{},api,actor,schoolId:'school_001',schoolClass:'6'});assert.equal(result.students[0].id,'s1');assert.deepEqual(calls[0],['class','==','6']);
 await assert.rejects(()=>loadClassRoster({db:{},api,actor,schoolId:'school_002',schoolClass:'6'}));await assert.rejects(()=>loadClassRoster({db:{},api,actor,schoolId:'school_001',schoolClass:'13'}));console.log('V47 attendance roster tests passed');
