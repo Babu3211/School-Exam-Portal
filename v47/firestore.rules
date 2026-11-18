@@ -222,7 +222,9 @@ service cloud.firestore {
       match /attendance/{id} {
         allow get, list: if canRead(sid);
         allow create: if (canAdmin(sid) && scopedRecord(sid)) || teacherAttendanceAllowed(sid, id);
-        allow update: if canAdmin(sid) && immutableSchool(sid);
+        allow update: if canAdmin(sid) && immutableSchool(sid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['present'])
+          && request.resource.data.present is bool;
         allow delete: if false;
       }
       match /exams/{id} {
