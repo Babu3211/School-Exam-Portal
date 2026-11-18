@@ -17,7 +17,26 @@ const suites=[
  'test-tenant-write-services.mjs',
  'test-class-catalog-ui.mjs',
  'test-exam-term-service.mjs',
- 'test-exam-screen-contract.mjs'
+ 'test-exam-screen-contract.mjs',
+ 'test-access-policy.mjs',
+ 'test-console-contract.mjs',
+ 'test-firebase-registry-adapter.mjs',
+ 'test-registration-controller.mjs',
+ 'test-registry-schema.mjs',
+ 'test-rules-integrity.mjs',
+ 'test-school-access-service.mjs',
+ 'test-school-directory.mjs',
+ 'test-school-list-service.mjs',
+ 'test-school-onboarding.mjs',
+ 'test-school-registration-form.mjs',
+ 'test-school-registry-service.mjs',
+ 'test-school-registry.mjs',
+ 'test-school-session.mjs',
+ 'test-super-admin-dashboard.mjs',
+ 'test-super-admin-ui.mjs',
+ 'test-teacher-assignment.mjs',
+ 'test-tenant-pagination.mjs',
+ 'test-tenant-query.mjs'
 ];
 let failures=0;
 for(const suite of suites){
