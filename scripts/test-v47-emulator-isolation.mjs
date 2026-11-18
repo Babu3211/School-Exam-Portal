@@ -7,7 +7,6 @@ const env=await initializeTestEnvironment({
   firestore:{rules:await readFile('v47/firestore.rules','utf8'),host:'127.0.0.1',port:8080}
 });
 const db=uid=>env.authenticatedContext(uid).firestore();
-const school=(sid,collection,id)=>doc(db('unused'),'schools',sid,collection,id);
 const schoolDoc=(uid,sid,collection,id)=>doc(db(uid),'schools',sid,collection,id);
 try {
   await env.withSecurityRulesDisabled(async ctx=>{
@@ -31,9 +30,19 @@ try {
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','students','student-2'),valid));
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','students','student-2'),valid));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','students','student-3'),{...valid,schoolId:'school-b'}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','students','student-missing-scope'),{name:'Student Missing',class:'9'}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','students','student-4'),{name:'X',class:'9',schoolId:'school-a'}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','students','student-2'),{schoolId:'school-b'}));
   await assertFails(deleteDoc(schoolDoc('admin-a','school-a','students','student-2')));
+  await assertFails(setDoc(schoolDoc('admin-a','school-b','students','student-3'),{...valid,schoolId:'school-b'}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','members','new-admin'),{uid:'new-admin',schoolId:'school-a',role:'school_admin',active:true}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','members','admin-a'),{uid:'admin-a',schoolId:'school-a',role:'school_admin',active:true}));
+  await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','members','new-viewer'),{uid:'new-viewer',schoolId:'school-a',role:'viewer',active:false}));
+  await assertFails(updateDoc(schoolDoc('admin-a','school-a','members','new-viewer'),{role:'school_admin'}));
+  await assertFails(setDoc(schoolDoc('viewer-a','school-a','members','forged'),{uid:'forged',schoolId:'school-a',role:'viewer',active:false}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','exams','1st'),{schoolId:'school-a',term:'final'}));
+  await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','exams','1st'),{schoolId:'school-a',term:'1st'}));
+  await assertFails(deleteDoc(schoolDoc('admin-a','school-a','exams','1st')));
   await assertSucceeds(getDoc(schoolDoc('super-a','school-b','students','student-1')));
   await assertFails(getDoc(schoolDoc('outsider','school-a','students','student-1')));
   console.log('V47 emulator isolation and role checks passed');
