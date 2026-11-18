@@ -17,10 +17,10 @@ try {
     await setDoc(doc(admin,'v47_super_admins/root'),{active:true});
     for(const sid of ['schoolA','schoolB']){
       await setDoc(doc(admin,school(sid)),{id:sid,name:sid,active:true});
-      await setDoc(doc(admin,student(sid,'s1')),{name:'Example Student',class:'6'});
+      await setDoc(doc(admin,student(sid,'s1')),{name:'Example Student',class:'6',schoolId:sid});
     }
     await setDoc(doc(admin,school('inactiveSchool')),{id:'inactiveSchool',name:'Inactive School',active:false});
-    await setDoc(doc(admin,student('inactiveSchool','s1')),{name:'Hidden Student'});
+    await setDoc(doc(admin,student('inactiveSchool','s1')),{name:'Hidden Student',class:'6',schoolId:'inactiveSchool'});
     for(const [sid,uid,role] of [['schoolA','adminA','school_admin'],['schoolA','teacherA','teacher'],['schoolA','viewerA','viewer'],['schoolB','adminB','school_admin'],['schoolA','unknownA','unknown_role'],['inactiveSchool','inactiveUser','teacher']]){
       await setDoc(doc(admin,member(sid,uid)),{uid,schoolId:sid,role,active:true});
     }
@@ -37,7 +37,7 @@ try {
   await assertFails(setDoc(doc(db('viewerA'),student('schoolA','s2')),{name:'Forbidden'}));
   await assertFails(updateDoc(doc(db('viewerA'),student('schoolA','s1')),{name:'Forbidden'}));
   await assertFails(deleteDoc(doc(db('viewerA'),student('schoolA','s1'))));
-  await assertSucceeds(setDoc(doc(db('adminA'),student('schoolA','s2')),{name:'Allowed',class:'6'}));
+  await assertSucceeds(setDoc(doc(db('adminA'),student('schoolA','s2')),{name:'Allowed',class:'6',schoolId:'schoolA'}));
   await assertFails(setDoc(doc(db('adminA'),student('schoolB','s2')),{name:'Forbidden'}));
   await assertFails(setDoc(doc(db('teacherA'),student('schoolA','s3')),{name:'Not yet assigned'}));
   await assertSucceeds(setDoc(doc(db('adminA'),'schools/schoolA/subject_assignments/a1'),{uid:'teacherA',classId:'9',subjectId:'computer'}));
@@ -72,7 +72,7 @@ try {
   await assertSucceeds(setDoc(doc(db('root'),member('schoolF','firstAdmin')),{uid:'firstAdmin',schoolId:'schoolF',role:'school_admin',active:true}));
   await assertFails(getDoc(doc(db('firstAdmin'),student('schoolF','s1'))));
   await assertSucceeds(updateDoc(doc(db('root'),school('schoolF')),{active:true}));
-  await assertSucceeds(setDoc(doc(db('firstAdmin'),student('schoolF','s1')),{name:'First Student'}));
+  await assertSucceeds(setDoc(doc(db('firstAdmin'),student('schoolF','s1')),{name:'First Student',class:'6',schoolId:'schoolF'}));
   // Ten production-critical isolation and lifecycle assertions.
   await assertFails(getDoc(doc(anon,school('schoolA')))); // 1
   await assertFails(getDoc(doc(db('viewerA'),school('schoolB')))); // 2
@@ -80,13 +80,13 @@ try {
   await assertFails(deleteDoc(doc(db('adminA'),student('schoolA','s1')))); // 4
   await assertFails(deleteDoc(doc(db('root'),student('schoolA','s1')))); // 5
   await assertFails(updateDoc(doc(db('teacherA'),student('schoolA','s1')),{name:'No'})); // 6
-  await assertFails(setDoc(doc(db('viewerA'),'schools/schoolA/attendance/a1'),{present:true})); // 7
-  await assertFails(setDoc(doc(db('adminB'),'schools/schoolA/attendance/a1'),{present:true})); // 8
-  await assertSucceeds(setDoc(doc(db('adminA'),'schools/schoolA/attendance/a1'),{present:true})); // 9
-  await assertFails(deleteDoc(doc(db('root'),'schools/schoolA/attendance/a1'))); // 10
+  await assertFails(setDoc(doc(db('viewerA'),'schools/schoolA/attendance/2026-11-18_s1'),{schoolId:'schoolA',studentId:'s1',class:'6',date:'2026-11-18',present:true})); // 7
+  await assertFails(setDoc(doc(db('adminB'),'schools/schoolA/attendance/2026-11-18_s1'),{schoolId:'schoolA',studentId:'s1',class:'6',date:'2026-11-18',present:true})); // 8
+  await assertSucceeds(setDoc(doc(db('adminA'),'schools/schoolA/attendance/2026-11-18_s1'),{schoolId:'schoolA',studentId:'s1',class:'6',date:'2026-11-18',present:true})); // 9
+  await assertFails(deleteDoc(doc(db('root'),'schools/schoolA/attendance/2026-11-18_s1'))); // 10
   // Read isolation must also cover exam records, not only student profiles.
-  await assertSucceeds(getDoc(doc(db('viewerA'),'schools/schoolA/attendance/a1')));
-  await assertFails(getDoc(doc(db('adminB'),'schools/schoolA/attendance/a1')));
+  await assertSucceeds(getDoc(doc(db('viewerA'),'schools/schoolA/attendance/2026-11-18_s1')));
+  await assertFails(getDoc(doc(db('adminB'),'schools/schoolA/attendance/2026-11-18_s1')));
   await assertFails(getDocs(collection(db('adminB'),'schools/schoolA/attendance')));
   await assertFails(getDoc(doc(db('viewerA'),'schools/schoolB/students/s1')));
   await assertFails(getDocs(collection(db('viewerA'),'schools/schoolB/students')));
@@ -94,9 +94,9 @@ try {
   await assertFails(getDocs(collection(db('adminB'),'schools/schoolA/component_marks')));
   await assertFails(getDoc(doc(db('adminB'),'schools/schoolA/marks/m1')));
   await assertFails(getDocs(collection(db('adminB'),'schools/schoolA/marks')));
-  await assertFails(updateDoc(doc(db('viewerA'),'schools/schoolA/attendance/a1'),{present:false}));
-  await assertFails(deleteDoc(doc(db('viewerA'),'schools/schoolA/attendance/a1')));
-  await assertFails(updateDoc(doc(db('adminB'),'schools/schoolA/attendance/a1'),{present:false}));
+  await assertFails(updateDoc(doc(db('viewerA'),'schools/schoolA/attendance/2026-11-18_s1'),{present:false}));
+  await assertFails(deleteDoc(doc(db('viewerA'),'schools/schoolA/attendance/2026-11-18_s1')));
+  await assertFails(updateDoc(doc(db('adminB'),'schools/schoolA/attendance/2026-11-18_s1'),{present:false}));
 
   await assertFails(deleteDoc(doc(db('root'),school('schoolA'))));
   await assertFails(setDoc(doc(db('root'),school('schoolG')),{id:'schoolG',name:'School G',iemisCode:123456,active:false}));
