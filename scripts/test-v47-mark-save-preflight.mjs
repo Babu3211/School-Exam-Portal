@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';import {preflightRawMarkSave} from '../v47/mark-save-preflight.mjs';
 const input={studentId:'s1',subjectId:'math',class:'6',term:'1st',theory:30,practical:8},actor={role:'school_admin',active:true,schoolId:'school_001'};
-const docs={'students/s1':{class:'6'},'subjects/math':{name:'Mathematics',class:'6',active:true},'subject_assignments/s1:math':{studentId:'s1',subjectId:'math',class:'6'}};
+const docs={'students/s1':{class:'6',schoolId:'school_001'},'subjects/math':{name:'Mathematics',class:'6',active:true,schoolId:'school_001'},'subject_assignments/s1:math':{studentId:'s1',subjectId:'math',class:'6',schoolId:'school_001'}};
 const api={doc:(_db,...p)=>p.join('/'),getDoc:async path=>{const d=docs[path.split('/').slice(-2).join('/')];return {exists:()=>!!d,data:()=>d}}};
 const args={db:{},api,actor,schoolId:'school_001',input};
 assert.equal((await preflightRawMarkSave(args)).existing,false);
@@ -9,6 +9,6 @@ await assert.rejects(()=>preflightRawMarkSave({...args,schoolId:'school_002'}));
 docs['subjects/math'].active=false;await assert.rejects(()=>preflightRawMarkSave(args),/Subject missing/);docs['subjects/math'].active=true;
 docs['students/s1'].class='7';await assert.rejects(()=>preflightRawMarkSave(args),/Student missing/);docs['students/s1'].class='6';
 delete docs['subject_assignments/s1:math'];await assert.rejects(()=>preflightRawMarkSave(args),/assignment required/);
-docs['subject_assignments/s1:math']={studentId:'s1',subjectId:'math',class:'6'};
+docs['subject_assignments/s1:math']={studentId:'s1',subjectId:'math',class:'6',schoolId:'school_001'};
 docs['marks/1st:s1:math']={...input,theory:20};assert.equal((await preflightRawMarkSave(args)).existing,true);
 console.log('V47 mark save preflight tests passed');
