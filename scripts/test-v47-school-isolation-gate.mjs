@@ -10,6 +10,15 @@ for(const name of ['students','marks','attendance','exams','teacher_assignments'
 for(const token of ['match /schools/{sid}','function activeMember(sid)','function memberRole(sid, role)','function immutableSchool(sid)','match /{document=**} { allow read, write: if false; }',"id.matches('^[A-Za-z0-9_-]{1,128}$')","request.resource.data.uid.matches('^[A-Za-z0-9_-]{1,128}$')","request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')"]){
  assert.ok(rules.includes(token),'Missing or truncated '+token);
 }
+assert.equal(rules.split('function teacherMarkAllowed(sid, id)').length-1,1,'Duplicate/missing teacher mark rule');
+assert.equal(rules.split('match /marks/{id}').length-1,1,'Duplicate/missing marks block');
+assert.ok(rules.includes('teacherMarkAllowed(sid, id)'), 'Teacher mark rule missing');
+assert.ok(rules.includes("request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}
+assert.equal(rules.split('match /{document=**}').length-1,1,'Duplicate catch-all');
+assert.ok(rules.trimEnd().endsWith('}'),'Rules missing closing brace');
+assert.ok(!rules.includes('}\n})'),'Malformed duplicate tail');
+console.log('V47 structural school isolation checks passed; emulator tests still required');
+)"),'Truncated mark subject regex');
 assert.equal(rules.split('function validStudent()').length-1,1,'Duplicate student validator');
 assert.equal(rules.split('match /{document=**}').length-1,1,'Duplicate catch-all');
 assert.ok(rules.trimEnd().endsWith('}'),'Rules missing closing brace');
