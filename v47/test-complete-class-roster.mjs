@@ -19,4 +19,8 @@ await assert.rejects(loadCompleteClassRoster({...base,api:mock(),maxStudents:2})
 await assert.rejects(loadCompleteClassRoster({...base,api:mock([])}),/no students/);
 await assert.rejects(loadCompleteClassRoster({...base,api:mock([docs[0],docs[0],docs[2]])}),/duplicate roster document ID|Duplicate student/);
 await assert.rejects(loadCompleteClassRoster({...base,api:mock([docs[0],['s2',{schoolId:'school-b',class:'9'}]])}),/Cross-school/);
+await assert.rejects(loadCompleteClassRoster({...base,maxStudents:0,api:mock()}),/Roster cap/);
+await assert.rejects(loadCompleteClassRoster({...base,maxStudents:1501,api:mock()}),/Roster cap/);
+await assert.rejects(loadCompleteClassRoster({...base,actor:{role:'viewer',active:true,schoolId:'school-b'},api:mock()}),/School membership/);
+await assert.rejects(loadCompleteClassRoster({...base,classId:'99',api:mock()}),/Invalid class/);
 console.log('V47 complete class roster pagination tests passed');
