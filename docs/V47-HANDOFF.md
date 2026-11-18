@@ -157,3 +157,18 @@
 - Teacher mark Firestore rules now require active subject document with matching school and class; emulator fixtures seed subject and test inactive subject, invalid marks (`4802e1f`, `a730dea`, `4269655`).
 - Added emulator denial checks for extra attendance fields and inactive assignment (`0cb1695`, `d0cd560`).
 - **Not verified:** no passing GitHub Actions, Firebase Emulator or browser E2E results; do not deploy. Teacher attendance service is not yet wired to UI. Existing V47 UI is admin-only. V46 production unchanged.
+
+## Teacher Attendance browser integration — 2026-11-18 (16 commits)
+- V47 Attendance browser now passes authenticated UID into actor and invokes `saveAssignedTeacherAttendance` for active teacher sessions; School Admin continues to use `saveSchoolAttendance` (`b9131d4`).
+- Teacher bulk roster editing intentionally stays read-only; no teacher bulk-save permission has been enabled (`a75a9d2`).
+- UI copy clarifies assigned Teacher create-only attendance, Viewer read-only and Admin correction rights (`867a22c`).
+- Added browser integration contract test and CI test script (`a2aec6b`, `513b915`).
+- Teacher must confirm a create-only attendance record before saving; contract test checks confirmation (`e2dc35c`, `0de4794`).
+- Browser rechecks authenticated UID before single and bulk attendance saves (`6d60746`, `e133c0f`).
+- Locks class/date/student/presence inputs while saving and tests the locks (`9765c85`, `b8e0308`).
+- Added malformed teacher attendance assignment ID tests (`2731808`).
+- Explicitly enables single-save control only for Admin and Teacher (`efcd3e0`).
+- Added emulator test rejecting Teacher attendance after membership deactivation (`8aa63e3`).
+- Extended structural rules checks for Teacher attendance payload and class assignment constraints (`9c25c2d`).
+- GitHub commit workflow lookup for a prior V47 commit returned **no workflow runs**, so passing CI is NOT verified.
+- **Still required:** Firebase emulator/real browser test, large-class atomic marks strategy, full-class marks Save UI, full V46 feature parity, IEMIS/CDC result checks. No V47 production deployment. V46 unchanged.
