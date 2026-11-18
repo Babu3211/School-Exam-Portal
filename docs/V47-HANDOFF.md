@@ -80,3 +80,10 @@
 - Added `v47/teacher-assignment-management.mjs`: transactional create (requires active teacher membership, starts inactive) and admin-only activation/deactivation with identity checks (commit `ee727b0`).
 - Added School Admin teacher UID/class/subject controls and wired confirmed actions (commits `1938694`, `19959da`). Added basic denied-role app contract tests (commit `5ac4cbc`).
 - Teacher write permissions to marks/attendance are **still disabled** until assignment-bound Firestore rule tests pass. No deployment or live V46 changes.
+
+## Composite IDs and teacher assignment authorization (2026-11-18)
+- Fixed `schoolDocumentPath` to accept colon-separated composite IDs only for marks, component_marks, teacher_assignments, and subject_assignments, retaining stricter student/member IDs; added contract assertions (`9db82ba`, `b07c37f`).
+- Teacher assignment Firestore rules now require canonical `schoolId:uid:classId:subjectId` document ID and active teacher membership at creation (`15d94cc`).
+- Emulator cases updated to canonical assignment IDs, forged-ID denial, and membership deactivation/reactivation gate (`8b6b37e`, `daf37d5`).
+- Assignment activation rules also require the target teacher membership to be active (`40e1ef2`).
+- **All changes committed only to V47 development branch. No emulator run/pass confirmed, no V47 deployment, no V46 changes.**
