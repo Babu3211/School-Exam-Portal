@@ -22,7 +22,7 @@ for(const id of ['inspectClassMarks','draftCheckResult'])assert.ok(html.includes
 for(const snippet of [
  "import {inspectClassMarkDraft} from './class-mark-draft-inspector.mjs'",
  "$('inspectClassMarks').onclick=()=>",
- "const inspection=inspectClassMarkDraft(",
+ "inspection=inspectClassMarkDraft(",
  "if(!inspection.ready){status('Save blocked:",
  "for(const input of $('classMarkRows').querySelectorAll('input'))input.disabled=value"
 ])assert.ok(js.includes(snippet),'Missing draft validation or row lock: '+snippet);
