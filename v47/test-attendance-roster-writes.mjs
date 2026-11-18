@@ -41,4 +41,14 @@ for(const badActor of [{role:'viewer',active:true,schoolId},{role:'school_admin'
  await assert.rejects(saveClassAttendance({db:{},api:state.api,actor:badActor,schoolId,entries:[entry('s1')]}),/School Admin/);
  assert.equal(state.writes.length,0);
 }
+for(const badEntries of [
+ [entry('s1'),entry('s1')],
+ [entry('s1'),{...entry('s2'),class:'8'}],
+ [entry('s1'),{...entry('s2'),date:'2026-11-17'}],
+ [entry('s1'),{...entry('s2'),present:'yes'}]
+]){
+ const state=mock();
+ await assert.rejects(saveClassAttendance({db:{},api:state.api,actor,schoolId,entries:badEntries}));
+ assert.equal(state.writes.length,0);
+}
 console.log('V47 attendance student roster authorization tests passed');
