@@ -34,7 +34,7 @@ $('studentId').onchange=()=>lock(false);$('subjectId').onchange=()=>lock(false);
 $('save').onclick=()=>status('Individual mark saving is disabled. Use complete-class marks.');
 
 function invalidateClassMarks(){classMarkRoster=[];classMarkContext=null;$('classMarkRows').replaceChildren();$('classMarkCount').textContent='';$('draftCheckResult').textContent='';$('inspectClassMarks').disabled=true;$('saveClassMarks').disabled=true}
-$('term').onchange=invalidateClassMarks;
+$('term').onchange=()=>{invalidateClassMarks();lock(false)};
 $('subjectId').onchange=()=>{invalidateClassMarks();lock(false)};
 $('loadClassMarks').onclick=async()=>{
  if(busy||actor?.role!=='school_admin'||!subjectsLoaded||loadedSubjectClass!==$('schoolClass').value||!$('subjectId').value){status('Load active class subjects first');return}
