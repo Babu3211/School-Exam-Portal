@@ -3,9 +3,8 @@
 import {schoolCollectionPath,schoolDocumentPath} from './school-scope.mjs';
 
 export const V47_SCHOOL_COLLECTIONS=Object.freeze([
- 'students','staff','teachers','subjects','exams','marks','attendance',
- 'school_settings','members','classes','mark_settings','subject_assignments','component_marks','assessment_settings','question_papers',
- 'audit_logs','results'
+ 'students','staff','subjects','exams','marks','attendance',
+ 'school_settings','members','classes','mark_settings','subject_assignments','component_marks'
 ]);
 const allowed=new Set(V47_SCHOOL_COLLECTIONS);
 export function tenantCollection(schoolId,collection){
