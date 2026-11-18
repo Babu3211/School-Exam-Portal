@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {doc,getDoc,setDoc,updateDoc,deleteDoc,collection,getDocs} from 'firebase/firestore';
 import assert from 'node:assert/strict';
 const rules=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
-const env=await initializeTestEnvironment({projectId:'smss-v47-emulator-tests',firestore:{rules,host:'127.0.0.1',port:8080}});
+const env=await initializeTestEnvironment({projectId:'smss-v47-emulator-tests',firestore:{rules,host:'127.0.0.1',port:8187}});
 const db=(uid)=>env.authenticatedContext(uid).firestore();
 const anon=env.unauthenticatedContext().firestore();
 const school=(sid)=>doc(db('root_super'),'schools',sid);
