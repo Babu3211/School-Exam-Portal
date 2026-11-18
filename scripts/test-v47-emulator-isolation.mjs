@@ -121,6 +121,11 @@ try {
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','forged-id'),{...assignedMark,term:'2nd'}));
   await assertFails(updateDoc(schoolDoc('teacher-a','school-a','marks','1st:student-1:math'),{theory:99}));
   await assertFails(deleteDoc(schoolDoc('teacher-a','school-a','marks','1st:student-1:math')));
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','subjects','math'),{active:false}));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','2nd:student-1:math'),{...assignedMark,term:'2nd'}));
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','subjects','math'),{active:true}));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','2nd:student-1:math'),{...assignedMark,term:'2nd',theory:101}));
+
 
   await assertFails(deleteDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math')));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','members','teacher-a'),{active:false}));
