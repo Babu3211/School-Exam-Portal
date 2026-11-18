@@ -6,7 +6,11 @@ import {loadV47LedgerCollections} from "./v46-ledger-data-loader.mjs";
 import {renderV47SchoolLedger} from "./v46-school-ledger-adapter.mjs";
 import {toV46IemisTerm} from "./v46-exam-term-adapter.mjs";
 import {iemisSubjectKey} from "../../iemis-ledger.js";
+import {assertSchoolId} from "./tenant-domain.mjs";
 export async function prepareV47SchoolLedger({session,schoolId,term,classNo,examId,schoolName,schoolCode,mode="number",selectStudents,selectSubjects,selectMarks,creditFor,componentsFor,applicable,pageSize=50,maxRecordsPerCollection=5000}){
+ assertSchoolId(schoolId);
+ if(typeof examId!=="string"||!examId.trim())throw new Error("Exam ID required");
+ if(!Number.isInteger(Number(classNo))||Number(classNo)<1||Number(classNo)>10)throw new Error("IEMIS ledger format not verified for this class");
  if(typeof selectStudents!=="function"||typeof selectSubjects!=="function"||typeof selectMarks!=="function")
   throw new TypeError("Explicit verified class/subject/mark selectors required");
  const data=await loadV47LedgerCollections({session,pageSize,maxRecordsPerCollection});
