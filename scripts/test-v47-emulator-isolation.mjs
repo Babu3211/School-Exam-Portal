@@ -144,7 +144,7 @@ try {
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','2nd:student-1:math'),{...assignedMark,term:'2nd',schoolId:'school-b'}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','2nd:student-1:math'),{...assignedMark,term:'2nd',class:'8'}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','forged-id'),{...assignedMark,term:'2nd'}));
-  await assertFails(updateDoc(schoolDoc('teacher-a','school-a','marks','1st:student-1:math'),{theory:99}));
+  await assertSucceeds(updateDoc(schoolDoc('teacher-a','school-a','marks','1st:student-1:math'),{theory:99})); // Assigned teacher may correct valid marks
   await assertFails(deleteDoc(schoolDoc('teacher-a','school-a','marks','1st:student-1:math')));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','subjects','math'),{active:false}));
   await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','subjects','math'),{active:false}));
