@@ -23,10 +23,10 @@ export async function saveCompleteClassMarks({db,api,actor,schoolId,classId,term
   const subject=await tx.get(subjectRef);
   if(!subject.exists()||subject.data().schoolId!==schoolId||subject.data().class!==classId||subject.data().active!==true)throw new Error('Active subject required');
   if(['9','10'].includes(classId)&&subject.data().name==='Computer')throw new Error('Computer 4/36/10 requires component entry');
-  const snapshots=await Promise.all(refs.map(async r=>({
-   student:await tx.get(r.student),assignment:await tx.get(r.subjectAssignment),
-   mark:await tx.get(r.mark),component:await tx.get(r.component)
-  })));
+  const snapshots=await Promise.all(refs.map(async r=>{
+   const [student,assignment,mark,component]=await Promise.all([tx.get(r.student),tx.get(r.subjectAssignment),tx.get(r.mark),tx.get(r.component)]);
+   return {student,assignment,mark,component};
+  }));
   for(let i=0;i<refs.length;i++){
    const {entry}=refs[i],{student,assignment,mark,component}=snapshots[i];
    if(!student.exists()||student.data().schoolId!==schoolId||student.data().class!==classId)throw new Error('Student roster changed');
