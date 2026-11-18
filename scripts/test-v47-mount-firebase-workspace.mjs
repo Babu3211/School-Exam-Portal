@@ -135,4 +135,36 @@ disposedView.dispose();
 await new Promise(resolve=>setImmediate(resolve));
 assert.equal(disposedRequests,1,"Disposal must not start additional school-list requests");
 assert.equal(disposedRoot.children.length,0);
+// Switching accounts during an in-flight school list must never show the first user's schools.
+const switchedRoot=new Element("main");
+const firstUser={uid:"first",getIdToken:async()=>"first-token"};
+const secondUser={uid:"second",getIdToken:async()=>"second-token"};
+const switchedAuth={currentUser:null};
+let switchedListener,releaseFirst,firstStarted;
+const firstRequestStarted=new Promise(resolve=>{firstStarted=resolve;});
+const switchedView=mountV47FirebaseWorkspace({
+ bsToAd:()=> "2026-04-14",adToBs:()=> "2083-01-01",
+ root:switchedRoot,document,auth:switchedAuth,
+ fetchImpl:async (_url,options)=>{
+  if(options.headers.Authorization==="Bearer first-token"){
+   firstStarted();
+   return new Promise(resolve=>{releaseFirst=resolve;});
+  }
+  assert.equal(options.headers.Authorization,"Bearer second-token");
+  return {ok:true,json:async()=>({schools:[{schoolId:"school_B001",schoolName:"B",roles:["viewer"]}]})};
+ },
+ subscribeAuthState:(_auth,callback)=>{switchedListener=callback;return ()=>{};}
+});
+switchedAuth.currentUser=firstUser;
+switchedListener(firstUser);
+await firstRequestStarted;
+switchedAuth.currentUser=secondUser;
+switchedListener(secondUser);
+await new Promise(resolve=>setImmediate(resolve));
+assert.deepEqual(switchedRoot.children[2].children.map(option=>option.value),["school_B001"]);
+releaseFirst({ok:true,json:async()=>({schools:[{schoolId:"school_A001",schoolName:"A",roles:["viewer"]}]})});
+await new Promise(resolve=>setImmediate(resolve));
+assert.deepEqual(switchedRoot.children[2].children.map(option=>option.value),["school_B001"],
+ "A stale account must not overwrite the new account's school choices");
+switchedView.dispose();
 console.log("V47 Firebase workspace logout and user switch tests passed");
