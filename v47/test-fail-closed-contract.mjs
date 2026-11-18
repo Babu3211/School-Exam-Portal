@@ -21,6 +21,7 @@ for(const collection of ['audit_logs','members','teachers','question_papers','re
  assert.throws(()=>planTenantQuery({schoolId:'school_A',collection}),TypeError);
 }
 assert.equal(planTenantQuery({schoolId:'school_A',collection:'students',limit:500}).limit,100);
+assert.equal(planTenantQuery({schoolId:'school_A',collection:'students'}).requiresServerRules,true);
 const s=selectTenantSession([{schoolId:'school_A',role:'teacher',active:true}],'school_A');
 assert.equal(s.authorization,'unverified-client-selection');
 assert.equal(authorizeSchoolAction({membership:{schoolId:'school_A',role:'teacher',active:true},action:'write',schoolId:'school_A',className:'Class 10',subject:'Science',assignments:['school_A::Class 10::Science::ALL']}),false);
