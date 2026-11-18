@@ -87,3 +87,9 @@
 - Emulator cases updated to canonical assignment IDs, forged-ID denial, and membership deactivation/reactivation gate (`8b6b37e`, `daf37d5`).
 - Assignment activation rules also require the target teacher membership to be active (`40e1ef2`).
 - **All changes committed only to V47 development branch. No emulator run/pass confirmed, no V47 deployment, no V46 changes.**
+
+## Assigned teacher mark entry (2026-11-18)
+- Firestore rules now allow teacher **create-only** mark writes when their active membership, active class/subject assignment, student class, student subject roster, scoped schoolId, canonical mark ID and numeric mark fields match (`3a4386b`, `bfbd9a6`). Teacher updates and deletes remain forbidden.
+- `mark-create-service.mjs` now checks active teacher assignment inside the existing transaction, retaining student/subject/roster validation and no-overwrite behavior (`b7fb6fd`).
+- Emulator tests added for valid teacher mark creation and denial of forged IDs, cross-school records, wrong class/subject, update/delete; seeded required student roster (`88e753b`, `773d550`).
+- **Unverified:** Firestore rules compile, emulator permissions, client integration with teacher login, and term-wide completeness validation. No production deploy. V46 remains unchanged.
