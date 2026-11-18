@@ -38,7 +38,22 @@ const suites=[
  'test-super-admin-ui.mjs',
  'test-teacher-assignment.mjs',
  'test-tenant-pagination.mjs',
- 'test-tenant-query.mjs'
+ 'test-tenant-query.mjs',
+ 'test-app-contract.mjs',
+ 'test-attendance-partial-save.mjs',
+ 'test-attendance-roster-writes.mjs',
+ 'test-class-attendance-completeness.mjs',
+ 'test-class-mark-completeness.mjs',
+ 'test-class-mark-draft-inspector.mjs',
+ 'test-class-mark-save.mjs',
+ 'test-class-mark-ui.mjs',
+ 'test-complete-class-roster.mjs',
+ 'test-roster-query-isolation.mjs',
+ 'test-teacher-assignment-management.mjs',
+ 'test-teacher-attendance-service.mjs',
+ 'test-teacher-attendance-ui.mjs',
+ 'test-verified-class-attendance-save.mjs',
+ 'test-verified-small-class-mark-save.mjs'
 ];
 const exclusions=new Set(['test-firestore-emulator.mjs','test-firestore-isolation.mjs']);
 const registered=new Set(suites);
