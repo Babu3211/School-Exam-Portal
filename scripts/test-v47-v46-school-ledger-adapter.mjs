@@ -40,6 +40,12 @@ for(const mode of ["entry","number","grade"]){
  assert.throws(()=>renderV47SchoolLedger({...base,mode,marks:[{...validMark,schoolId:"school002"}]}),/mark school mismatch/);
  assert.throws(()=>renderV47SchoolLedger({...base,mode,students:[{...base.students[0],schoolId:"school002"}]}),/student school mismatch/);
 }
+// Class and tenant boundaries must hold for every ledger presentation mode.
+for(const mode of ["entry","number","grade"]){
+ assert.throws(()=>renderV47SchoolLedger({...base,mode,students:[{...base.students[0],classNo:7}]}),/student class mismatch/);
+ assert.throws(()=>renderV47SchoolLedger({...base,mode,marks:[{...validMark,classNo:7}]}),/mark class mismatch/);
+ assert.ok(renderV47SchoolLedger({...base,mode,students:[{...base.students[0],classNo:6}],marks:[{...validMark,classNo:6}]}).body.includes("Test Student"));
+}
 // Rendering all V46 ledger views is read-only and cannot mutate fetched tenant data.
 for(const mode of ["entry","number","grade"]){
  const source={...base,marks:[validMark]};
