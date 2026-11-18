@@ -15,9 +15,9 @@ export async function preflightRawMarkSave({db,api,actor,schoolId,input}){
   api.getDoc(api.doc(db,...base,'marks',markEntryId(entry))),
   api.getDoc(api.doc(db,...base,'component_marks',markEntryId(entry)))
  ]);
- if(!student.exists()||student.data().class!==entry.class)throw new Error('Student missing or belongs to another class');
- if(!subject.exists()||subject.data().active!==true||subject.data().class!==entry.class)throw new Error('Subject missing, inactive or belongs to another class');
+ if(!student.exists()||student.data().schoolId!==schoolId||student.data().class!==entry.class)throw new Error('Student missing or belongs to another class');
+ if(!subject.exists()||subject.data().schoolId!==schoolId||subject.data().active!==true||subject.data().class!==entry.class)throw new Error('Subject missing, inactive or belongs to another class');
  if(['9','10'].includes(entry.class)&&subject.data().name==='Computer')throw new Error('Use Computer 4/36/10 component marks entry');
- if(!assignment.exists()||assignment.data().studentId!==entry.studentId||assignment.data().subjectId!==entry.subjectId||assignment.data().class!==entry.class)throw new Error('Student subject assignment required');
+ if(!assignment.exists()||assignment.data().schoolId!==schoolId||assignment.data().studentId!==entry.studentId||assignment.data().subjectId!==entry.subjectId||assignment.data().class!==entry.class)throw new Error('Student subject assignment required');
  return {entry,existing:existing.exists()||component.exists()};
 }
