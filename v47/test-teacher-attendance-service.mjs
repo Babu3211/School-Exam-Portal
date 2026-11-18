@@ -64,4 +64,9 @@ for(const badInput of [
  await assert.rejects(saveAssignedTeacherAttendance({db:{},api,actor,schoolId,input:badInput}));
  assert.equal(writes.length,0);
 }
+for(const badId of ['../bad','', 'x'.repeat(129)]){
+ assert.throws(()=>teacherAttendanceAssignmentId({schoolId,uid:badId,classId:'9'}),/Invalid teacher UID/);
+}
+assert.throws(()=>teacherAttendanceAssignmentId({schoolId,uid,classId:'99'}),/Invalid class/);
+assert.throws(()=>teacherAttendanceAssignmentId({schoolId:'../bad',uid,classId:'9'}),/Invalid school ID/);
 console.log('V47 assigned teacher attendance transaction tests passed');
