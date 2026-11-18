@@ -21,3 +21,5 @@ jobs:
         run: npm install --no-package-lock --no-audit --no-fund
       - name: V47 structural and emulator authorization checks
         run: npm run test:v47
+        env:
+          NODE_OPTIONS: --unhandled-rejections=strict
