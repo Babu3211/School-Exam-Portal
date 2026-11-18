@@ -105,10 +105,23 @@ service cloud.firestore {
         allow update: if canAdmin(sid) && immutableSchool(sid);
         allow delete: if false;
       }
+      match /exams/{id} {
+        function validExamTerm() {
+          return id in ['1st', '2nd', 'final']
+            && request.resource.data.keys().hasOnly(['schoolId', 'term'])
+            && request.resource.data.keys().hasAll(['schoolId', 'term'])
+            && request.resource.data.schoolId == sid
+            && request.resource.data.term == id;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validExamTerm();
+        // Exam terms are create-only until audited dependent-record deletion is implemented.
+        allow update, delete: if false;
+      }
       match /{collection}/{id} {
-        allow get, list: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings','subject_assignments','component_marks'] && canRead(sid);
-        allow create: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && scopedRecord(sid);
-        allow update: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && immutableSchool(sid);
+        allow get, list: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canRead(sid);
+        allow create: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && immutableSchool(sid);
         allow delete: if false;
       }
     }
