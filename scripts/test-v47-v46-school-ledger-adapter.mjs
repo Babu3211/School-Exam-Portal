@@ -58,4 +58,12 @@ for(const mode of ["entry","number","grade"]){
  renderV47SchoolLedger({...source,mode});
  assert.deepEqual({students:source.students,subjects:source.subjects,marks:source.marks},original,"Ledger renderer must not modify school records");
 }
+// Verify the supported IEMIS class boundaries without extending V46 to unverified classes.
+for(const classNo of [1,3,5,6,8,9,10]){
+ const view=renderV47SchoolLedger({...base,classNo,students:[{...base.students[0],classNo}],marks:[{...validMark,classNo}]});
+ assert.ok(view.body.includes("Test Student"),"Expected class "+classNo+" to render");
+}
+for(const classNo of [0,-1,11,12,1.5,NaN]){
+ assert.throws(()=>renderV47SchoolLedger({...base,classNo}),/not verified/);
+}
 console.log("V47 school-scoped IEMIS ledger adapter checks passed");
