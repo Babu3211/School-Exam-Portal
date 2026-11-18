@@ -13,6 +13,8 @@ export async function prepareV47SchoolLedger({session,schoolId,term,classNo,exam
  if(!Number.isInteger(Number(classNo))||Number(classNo)<1||Number(classNo)>10)throw new Error("IEMIS ledger format not verified for this class");
  if(!["number","grade","entry"].includes(mode))throw new Error("Unsupported ledger mode");
  const requestedLegacyTerm=toV46IemisTerm(term);
+ if(typeof creditFor!=="function"||typeof componentsFor!=="function"||typeof applicable!=="function")
+  throw new TypeError("Verified subject credit, component and applicability mappings required");
  if(typeof selectStudents!=="function"||typeof selectSubjects!=="function"||typeof selectMarks!=="function")
   throw new TypeError("Explicit verified class/subject/mark selectors required");
  const data=await loadV47LedgerCollections({session,pageSize,maxRecordsPerCollection});
