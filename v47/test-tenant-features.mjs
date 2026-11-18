@@ -23,6 +23,7 @@ assert.equal(assertSessionSchool(session,schoolId),schoolId);
 assert.throws(()=>assertSessionSchool(session,'school_B'));
 assert.equal(roleCapabilities('viewer').marksWrite,false);
 assert.equal(roleCapabilities('teacher').marksWrite,false);
+assert.equal(roleCapabilities('viewer').attendanceWrite,false);
 assert.equal(roleCapabilities('school_admin').manage,true);
 assert.throws(()=>validateTeacherWrite({schoolId,studentId:'student_1',className:'10',subject:'Science',marks:{}}),TypeError);
 assert.throws(()=>planTenantQuery({schoolId,collection:'audit_logs'}),TypeError);
