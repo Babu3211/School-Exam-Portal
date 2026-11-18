@@ -95,7 +95,7 @@ try {
   await assertFails(getDoc(doc(db('adminB'),'schools/schoolA/marks/m1')));
   await assertFails(getDocs(collection(db('adminB'),'schools/schoolA/marks')));
   await assertFails(updateDoc(doc(db('viewerA'),'schools/schoolA/attendance/a1'),{present:false}));
-  await assertFails(deleteDoc(doc(db('viewerA'),'schools/schoolA/attendance/a1'));
+  await assertFails(deleteDoc(doc(db('viewerA'),'schools/schoolA/attendance/a1')));
   await assertFails(updateDoc(doc(db('adminB'),'schools/schoolA/attendance/a1'),{present:false}));
 
   await assertFails(deleteDoc(doc(db('root'),school('schoolA'))));
