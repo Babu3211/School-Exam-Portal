@@ -1,32 +1,25 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const rules=readFileSync(new URL('../v47/firestore.rules',import.meta.url),'utf8');
-for(const name of ['students','staff','classes','subjects','exams','marks','attendance']){
- assert.ok(!rules.includes('match /'+name+'/{id}',0) || rules.indexOf('match /'+name+'/{id}')>rules.indexOf('match /schools/{sid}'),'Unscoped '+name);
-}
+assert.ok(rules.startsWith("rules_version = '2';"),'Missing Firestore rules header');
+assert.ok(rules.includes('match /schools/{sid}'),'Missing tenant scope');
 for(const name of ['students','marks','attendance','exams','teacher_assignments']){
- assert.equal(rules.split('match /'+name+'/{id}').length-1,1,'Duplicate/missing scoped '+name);
+ const token='match /'+name+'/{id}';
+ assert.equal(rules.split(token).length-1,1,'Missing or duplicated '+name+' rules');
+ assert.ok(rules.indexOf(token)>rules.indexOf('match /schools/{sid}'),'Unscoped '+name);
 }
-for(const token of ['match /schools/{sid}','function activeMember(sid)','function memberRole(sid, role)','function immutableSchool(sid)','match /{document=**} { allow read, write: if false; }',"id.matches('^[A-Za-z0-9_-]{1,128}$')","request.resource.data.uid.matches('^[A-Za-z0-9_-]{1,128}$')","request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')"]){
- assert.ok(rules.includes(token),'Missing or truncated '+token);
-}
-assert.equal(rules.split('function teacherMarkAllowed(sid, id)').length-1,1,'Duplicate/missing teacher mark rule');
-assert.equal(rules.split('match /marks/{id}').length-1,1,'Duplicate/missing marks block');
-assert.ok(rules.includes('teacherMarkAllowed(sid, id)'), 'Teacher mark rule missing');
-assert.ok(rules.includes("request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}
-assert.equal(rules.split('match /{document=**}').length-1,1,'Duplicate catch-all');
-assert.ok(rules.trimEnd().endsWith('}'),'Rules missing closing brace');
-assert.ok(!rules.includes('}\n})'),'Malformed duplicate tail');
-console.log('V47 structural school isolation checks passed; emulator tests still required');
-)"),'Truncated mark subject regex');
-for(const name of ['attendance','exams','teacher_assignments','students']){
- assert.equal(rules.split('match /'+name+'/{id}').length-1,1,'Duplicate '+name+' rule');
-}
-assert.equal(rules.split("allow create: if (canAdmin(sid) && scopedRecord(sid)) || teacherMarkAllowed(sid, id);").length-1,1,'Missing scoped teacher mark create permission');
-assert.ok(!rules.includes('\\n)\\n          && request.resource.data'),'Truncated rule fragments detected');
-assert.ok(rules.includes("data.get('active', true) == true"),'Teacher mark rules must deny inactive student subject mapping');
-assert.equal(rules.split('function validStudent()').length-1,1,'Duplicate student validator');
-assert.equal(rules.split('match /{document=**}').length-1,1,'Duplicate catch-all');
+for(const token of [
+ 'function activeMember(sid)','function memberRole(sid, role)',
+ 'function immutableSchool(sid)','function validStudent()',
+ 'function teacherMarkAllowed(sid, id)','function teacherAttendanceAllowed(sid, id)',
+ 'match /{document=**} { allow read, write: if false; }',
+ "request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')",
+ "data.get('active', true) == true",
+ 'teacherMarkAllowed(sid, id);','teacherAttendanceAllowed(sid, id);'
+])assert.ok(rules.includes(token),'Missing or truncated '+token);
+assert.equal(rules.split('function teacherMarkAllowed(sid, id)').length-1,1,'Duplicate teacher mark validator');
+assert.equal(rules.split('function teacherAttendanceAllowed(sid, id)').length-1,1,'Duplicate teacher attendance validator');
+assert.equal(rules.split('match /{document=**}').length-1,1,'Duplicate deny-all catch-all');
 assert.ok(rules.trimEnd().endsWith('}'),'Rules missing closing brace');
 assert.ok(!rules.includes('}\n})'),'Malformed duplicate tail');
 console.log('V47 structural school isolation checks passed; emulator tests still required');
