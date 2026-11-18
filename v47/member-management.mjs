@@ -9,7 +9,7 @@ export async function addSchoolMember({db,api,actor,schoolId,uid,role}){
  const ref=api.doc(db,'schools',schoolId,'members',uid);
  await api.runTransaction(db,async tx=>{
   if((await tx.get(ref)).exists())throw new Error('Membership already exists');
-  tx.set(ref,{uid,schoolId,role,active:true});
+  tx.set(ref,{uid,schoolId,role,active:false});
  });
- return {uid,schoolId,role};
+ return {uid,schoolId,role,active:false};
 }
