@@ -8,7 +8,8 @@ function mock(rows=docs){
  query:(...a)=>a,getDocs:async q=>{
   const c=q.find(x=>x?.cursor)?.cursor;
   const offset=c?rows.findIndex(x=>x[0]===c.id)+1:0;
-  return {docs:rows.slice(offset,offset+3).map(([id,data])=>({id,data:()=>data}))};
+  const limit=Number(q.find(x=>typeof x==='number')??3);
+  return {docs:rows.slice(offset,offset+limit).map(([id,data])=>({id,data:()=>data}))};
  }};
 }
 const result=await loadCompleteClassRoster({...base,api:mock()});
