@@ -1,5 +1,5 @@
-import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';const html=readFileSync('v47/school-admin.html','utf8'),js=readFileSync('v47/school-admin-console.mjs','utf8');assert.match(html,/school-admin-console\.mjs/);assert.match(js,/smss-exam-portal-v47/);assert.match(js,/getSchoolDetails/);assert.match(js,/addSchoolMember/);assert.match(js,/memberSnap\.data\(\)\.role!=='school_admin'/);assert.doesNotMatch(js,/localStorage|sessionStorage/);assert.match(js,/memberSnap\.data\(\)\.uid!==uid/);
-assert.match(js,/memberSnap\.data\(\)\.schoolId!==schoolId/);
+import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';const html=readFileSync('v47/school-admin.html','utf8'),js=readFileSync('v47/school-admin-console.mjs','utf8');assert.match(html,/school-admin-console\.mjs/);assert.match(js,/smss-exam-portal-v47/);assert.match(js,/getSchoolDetails/);assert.match(js,/addSchoolMember/);assert.match(js,/session.role!=='school_admin'/);assert.doesNotMatch(js,/localStorage|sessionStorage/);assert.match(js,/verifySchoolSession/);
+assert.match(js,/schoolId!==selectedSchool/);
 assert.match(js,/auth\.currentUser\?\.uid!==uid/);
 assert.match(js,/if\(busy\)return;try\{if\(!actor\)/);
 assert.match(js,/busy=true;\$\('add'\)\.disabled=true/);
