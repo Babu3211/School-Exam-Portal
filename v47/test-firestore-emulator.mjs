@@ -167,5 +167,25 @@ try{
  await assertSucceeds(updateDoc(doc(admin,'schools','school_A','members','new_teacher_A'),{active:false}));
  // 70 Deactivated teacher membership loses access
  await assertFails(getDoc(student(db('new_teacher_A'),'school_A')));
- console.log('V47 Firestore emulator: 70 authorization assertions passed');
+ // 71 School admin cannot create a student claiming another school
+ await assertFails(setDoc(doc(admin,'schools','school_A','students','forged_tenant'),{schoolId:'school_B',name:'Forged'}));
+ // 72 School admin cannot reassign student to another school
+ await assertFails(updateDoc(student(admin,'school_A'),{schoolId:'school_B'}));
+ // 73 School admin cannot create a mark claiming another school
+ await assertFails(setDoc(doc(admin,'schools','school_A','marks','forged_tenant'),{schoolId:'school_B',value:10}));
+ // 74 School admin cannot reassign mark to another school
+ await assertFails(updateDoc(mark(admin,'school_A'),{schoolId:'school_B'}));
+ // 75 School admin cannot create attendance claiming another school
+ await assertFails(setDoc(doc(admin,'schools','school_A','attendance','forged_tenant'),{schoolId:'school_B',status:'present'}));
+ // 76 School admin cannot reassign attendance to another school
+ await assertFails(updateDoc(attendance(admin,'school_A'),{schoolId:'school_B'}));
+ // 77 School admin cannot create staff claiming another school
+ await assertFails(setDoc(doc(admin,'schools','school_A','staff','forged_tenant'),{schoolId:'school_B',name:'Forged'}));
+ // 78 School admin can create staff scoped to own school
+ await assertSucceeds(setDoc(doc(admin,'schools','school_A','staff','scoped_staff'),{schoolId:'school_A',name:'Staff'}));
+ // 79 School admin cannot reassign staff to another school
+ await assertFails(updateDoc(doc(admin,'schools','school_A','staff','scoped_staff'),{schoolId:'school_B'}));
+ // 80 Viewer cannot modify staff
+ await assertFails(updateDoc(doc(viewer,'schools','school_A','staff','scoped_staff'),{name:'Altered'}));
+ console.log('V47 Firestore emulator: 80 authorization assertions passed');
 }finally{await env.cleanup();}
