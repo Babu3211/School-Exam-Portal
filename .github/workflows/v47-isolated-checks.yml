@@ -1,0 +1,30 @@
+name: V47 isolated unit and security contract checks (no deployment)
+on:
+  push:
+    branches: [smss-v47-multischool-work]
+    paths:
+      - 'v47/**'
+      - '.github/workflows/v47-isolated-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  v47-isolated-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: V47 isolated unit tests
+        run: |
+          set -euo pipefail
+          node v47/test-school-scope.mjs
+          node v47/test-tenant-paths.mjs
+          node v47/test-v47-foundations.mjs
+          node v47/test-security-contract.mjs
+          node v47/test-tenant-features.mjs
+          node v47/test-fail-closed-contract.mjs
+      - name: Confirm no V46 production resources are deployed
+        run: echo 'This workflow only runs V47 tests; it does not deploy.'
