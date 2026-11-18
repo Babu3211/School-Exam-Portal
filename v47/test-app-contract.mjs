@@ -4,6 +4,7 @@ import {validateStudent} from './student-validation.mjs';
 import {validateMarkEntry,markEntryId} from './marks-service.mjs';
 import {validateAttendance} from './attendance-service.mjs';
 import {assignmentRecord,assignmentKey} from './teacher-assignment.mjs';
+import {createTeacherAssignment,setTeacherAssignmentActive} from './teacher-assignment-management.mjs';
 
 const sid='school-a';
 for(const collection of ['students','staff','classes','subjects','subject_assignments','teacher_assignments','component_marks','exams','marks','attendance','mark_settings','school_settings','members']){
@@ -18,3 +19,7 @@ assert.deepEqual(assignmentRecord({schoolId:sid,uid:'teacher-1',classId:'9',subj
 assert.equal(assignmentKey({schoolId:sid,uid:'teacher-1',classId:'9',subjectId:'math'}),'school-a:teacher-1:9:math');
 for(const collection of ['unscoped','../marks',''])assert.throws(()=>schoolCollectionPath(sid,collection));
 console.log('V47 app schema and school path contract checks passed');
+
+await assert.rejects(createTeacherAssignment({actor:{role:'viewer',active:true,schoolId:sid},schoolId:sid,uid:'teacher-1',classId:'9',subjectId:'math'}),/School Admin required/);
+await assert.rejects(setTeacherAssignmentActive({actor:{role:'teacher',active:true,schoolId:sid},schoolId:sid,uid:'teacher-1',classId:'9',subjectId:'math',active:true}),/School Admin required/);
+await assert.rejects(createTeacherAssignment({actor:{role:'school_admin',active:true,schoolId:'school-b'},schoolId:sid,uid:'teacher-1',classId:'9',subjectId:'math'}),/School Admin required/);
