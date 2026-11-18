@@ -145,3 +145,15 @@
 - Added partial attendance batch failure test (11 students, first 10 committed, second batch fails) (`08d7fdc`) and CI script (`0449237`).
 - GitHub combined commit status endpoint returned no statuses, **not evidence of CI passing**.
 - **Important limitations:** attendance save uses sequential batches, not an all-or-nothing transaction; no browser E2E or emulator run verified. Existing V47 UI still allows selected-only attendance saves. Teacher attendance writing is not yet enabled. V46 production untouched.
+
+## Teacher attendance permissions and test-gate repair — 2026-11-18
+- Repaired two failing/incorrect unit test assertions: atomic class mark limit fixture and duplicate roster regex (`7b65199`, `861b1f9`).
+- Added dedicated create-only Teacher Attendance service using a reserved `teacher_assignments` subjectId of `attendance` for a specific class, requiring active teacher, exact school/class roster and no overwrite (`594e963`).
+- Firestore rules now authorize only matching active teacher/class attendance assignments; Teacher update/delete remain denied (`2f2bf52`).
+- Added teacher attendance service contract tests covering success, inactive/missing/foreign assignment, missing/foreign student, invalid inputs, unauthorized actors and overwrite (`21ae581`).
+- Added Firestore emulator teacher attendance allow/deny scenarios and integrated unit tests into `npm run test:v47` (`974e87b`, `22b7f78`).
+- Validated pagination lookahead row's tenant/class scope and added test (`772189c`, `ac2295e`).
+- Discovered **syntactically corrupted structural test** `scripts/test-v47-school-isolation-gate.mjs` from prior text replacement; rewrote valid script with teacher mark and attendance guards (`39181d7`).
+- Teacher mark Firestore rules now require active subject document with matching school and class; emulator fixtures seed subject and test inactive subject, invalid marks (`4802e1f`, `a730dea`, `4269655`).
+- Added emulator denial checks for extra attendance fields and inactive assignment (`0cb1695`, `d0cd560`).
+- **Not verified:** no passing GitHub Actions, Firebase Emulator or browser E2E results; do not deploy. Teacher attendance service is not yet wired to UI. Existing V47 UI is admin-only. V46 production unchanged.
