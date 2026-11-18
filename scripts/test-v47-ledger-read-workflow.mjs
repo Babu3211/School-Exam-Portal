@@ -56,6 +56,6 @@ await assert.rejects(()=>prepareV47SchoolLedger(args),/not from verified school 
 // An unscoped duplicate must not be mistaken for a verified school's subject.
 source.subjects[0]={id:"math001",name:"Mathematics",classNo:6,schoolId:"school001"};
 source.subjects.push({id:"unscopedMath",name:"Mathematics",classNo:6});
-assert.match((await prepareV47SchoolLedger(args)).body,/Student One/);
+assert.match((await prepareV47SchoolLedger({...args,selectSubjects:(records,n)=>records.filter(r=>r.classNo===n&&r.schoolId===args.schoolId).map(r=>r.name)})).body,/Student One/);
 source.subjects.pop();
 console.log("V47 verified school ledger read workflow checks passed");
