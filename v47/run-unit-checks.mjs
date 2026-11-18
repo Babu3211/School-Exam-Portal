@@ -10,7 +10,8 @@ const suites=[
  'test-tenant-invariants.mjs',
  'test-member-provisioning.mjs',
  'test-teacher-assignment-record.mjs',
- 'test-verified-school-session.mjs'
+ 'test-verified-school-session.mjs',
+ 'test-tenant-firestore-gateway.mjs'
 ];
 let failures=0;
 for(const suite of suites){
