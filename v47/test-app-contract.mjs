@@ -12,6 +12,11 @@ for(const collection of ['students','staff','classes','subjects','subject_assign
  assert.equal(schoolCollectionPath(sid,collection),'schools/'+sid+'/'+collection);
  assert.equal(schoolDocumentPath(sid,collection,'id_1'),'schools/'+sid+'/'+collection+'/id_1');
 }
+assert.equal(schoolDocumentPath(sid,'marks','1st:student-1:math'),'schools/'+sid+'/marks/1st:student-1:math');
+assert.equal(schoolDocumentPath(sid,'teacher_assignments','school-a:teacher-1:9:math'),'schools/'+sid+'/teacher_assignments/school-a:teacher-1:9:math');
+assert.throws(()=>schoolDocumentPath(sid,'students','student:1'),/Invalid document ID/);
+assert.throws(()=>schoolDocumentPath(sid,'marks','../school-b'),/Invalid document ID/);
+assert.throws(()=>schoolDocumentPath(sid,'teacher_assignments','a::b'),/Invalid document ID/);
 assert.deepEqual(validateStudent({name:'Student One',class:'9',rollNo:''}),{name:'Student One',class:'9'});
 assert.equal(markEntryId({studentId:'student-1',subjectId:'math',class:'9',term:'1st',theory:20,practical:10}),'1st:student-1:math');
 assert.deepEqual(validateAttendance({studentId:'student-1',class:'9',date:'2026-11-18',present:true}),{date:'2026-11-18',studentId:'student-1',class:'9',present:true});
