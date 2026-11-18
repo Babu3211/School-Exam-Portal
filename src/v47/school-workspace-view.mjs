@@ -28,7 +28,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
  result.setAttribute("aria-label","Read-only results");
  const classInput=element("select");
  classInput.setAttribute("aria-label","Class");
- for(const name of ["ECD",...Array.from({length:12},(_,i)=>String(i+1))]){const option=element("option",name);option.value=name;classInput.append(option);}
+ for(const name of ["ECD","LKG","UKG",...Array.from({length:12},(_,i)=>String(i+1))]){const option=element("option",name);option.value=name;classInput.append(option);}
  const subjectInput=element("input");
  subjectInput.setAttribute("placeholder","Subject");
  subjectInput.setAttribute("aria-label","Subject");
@@ -41,7 +41,7 @@ export function mountV47SchoolWorkspace({root,document,getIdToken,fetchImpl,bsTo
  const studentIdInput=element("input");studentIdInput.setAttribute("placeholder","Student ID");
  const studentNameInput=element("input");studentNameInput.setAttribute("placeholder","Student name (English only)");studentNameInput.setAttribute("aria-label","Student name in English");
  const studentClassInput=element("select");studentClassInput.setAttribute("aria-label","Student class");
- for(const name of ["ECD",...Array.from({length:12},(_,i)=>String(i+1))]){const option=element("option",name);option.value=name;studentClassInput.append(option);}
+ for(const name of ["ECD","LKG","UKG",...Array.from({length:12},(_,i)=>String(i+1))]){const option=element("option",name);option.value=name;studentClassInput.append(option);}
  const studentMode=element("select");for(const mode of ["create","update"]){const option=element("option",mode);option.value=mode;studentMode.append(option);}
  const saveStudentButton=element("button","Save student");saveStudentButton.type="button";saveStudentButton.hidden=true;
  const studentEditControls=[studentIdInput,studentNameInput,studentClassInput,studentMode];
