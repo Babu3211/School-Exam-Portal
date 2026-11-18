@@ -24,6 +24,7 @@ for(const name of ['attendance','exams','teacher_assignments','students']){
 }
 assert.equal(rules.split("allow create: if (canAdmin(sid) && scopedRecord(sid)) || teacherMarkAllowed(sid, id);").length-1,1,'Missing scoped teacher mark create permission');
 assert.ok(!rules.includes('\\n)\\n          && request.resource.data'),'Truncated rule fragments detected');
+assert.ok(rules.includes("data.get('active', true) == true"),'Teacher mark rules must deny inactive student subject mapping');
 assert.equal(rules.split('function validStudent()').length-1,1,'Duplicate student validator');
 assert.equal(rules.split('match /{document=**}').length-1,1,'Duplicate catch-all');
 assert.ok(rules.trimEnd().endsWith('}'),'Rules missing closing brace');
