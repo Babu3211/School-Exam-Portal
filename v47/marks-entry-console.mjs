@@ -81,11 +81,11 @@ $('saveClassMarks').onclick=async()=>{
  const context=classMarkContext,attempt=epoch;
  if(context.classId!==$('schoolClass').value||context.term!==$('term').value||context.subjectId!==$('subjectId').value){invalidateClassMarks();status('Class, term or subject changed; reload roster');return}
  if(classMarkRoster.length>3){status('Save blocked: full class has more than 3 students. No marks saved.');return}
- const entries=classMarkRoster.map(student=>{
-  const row=[...$('classMarkRows').children].find(r=>r.dataset.studentId===student.id);
-  return {studentId:student.id,class:context.classId,term:context.term,subjectId:context.subjectId,
-   theory:row?.querySelector('[data-field="theory"]')?.value??'',practical:row?.querySelector('[data-field="practical"]')?.value??''};
- });
+ const entries=collectClassMarkEntries();
+ const inspection=inspectClassMarkDraft({schoolId,classId:context.classId,term:context.term,subjectId:context.subjectId,expectedStudentIds:classMarkRoster.map(s=>s.id),entries});
+ $('draftCheckResult').textContent=inspection.summary+(inspection.invalid.length?' Invalid: '+inspection.invalid.slice(0,5).join('; '):'');
+ if(!inspection.ready){status('Save blocked: '+inspection.summary);return}
+
  if(!confirm('Save marks for ALL '+entries.length+' students? Existing marks cannot be overwritten.'))return;
  lock(true);
  try{
