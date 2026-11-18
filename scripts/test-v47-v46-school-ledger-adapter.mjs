@@ -30,6 +30,8 @@ assert.throws(()=>renderV47SchoolLedger({...base,marks:[{...validMark,schoolId:"
 assert.throws(()=>renderV47SchoolLedger({...base,students:[base.students[0],base.students[0]]}),/duplicate student identity/);
 assert.throws(()=>renderV47SchoolLedger({...base,subjects:[]}),/Complete student and subject lists required/);
 assert.throws(()=>renderV47SchoolLedger({...base,marks:[{...validMark,scores:[]}]}),/percentage-only marks/);
+assert.throws(()=>renderV47SchoolLedger({...base,students:[{...base.students[0],classNo:7}]}),/student class mismatch/);
+assert.ok(renderV47SchoolLedger({...base,students:[{...base.students[0],classNo:6}]}).body.includes("Test Student"));
 // The three V46 ledger views must share the same school boundary and original renderer.
 for(const mode of ["entry","number","grade"]){
  const view=renderV47SchoolLedger({...base,mode,marks:[validMark]});
