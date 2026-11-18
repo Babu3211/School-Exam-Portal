@@ -6,6 +6,9 @@ for(const term of ['1st','2nd','final'])assert.match(html,new RegExp('value="'+t
 for(const id of ['connect','login','logout','work','term','create','refresh','terms','message'])assert.match(html,new RegExp('id="'+id+'"'));
 assert.match(html,/id="refresh"[^>]*disabled/);
 assert.match(consoleCode,/verifySchoolSession/);
+assert.match(consoleCode,/async function reverifyAdmin\(/);
+assert.match(consoleCode,/await reverifyAdmin\(\);const snap=/);
+assert.match(consoleCode,/await reverifyAdmin\(\);const result=/);
 assert.match(consoleCode,/createSchoolExamTerm/);
 assert.match(consoleCode,/inMemoryPersistence/);
 assert.match(consoleCode,/auth\?\.currentUser\?\.uid!==actor\?\.uid/);
