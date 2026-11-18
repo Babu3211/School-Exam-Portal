@@ -128,5 +128,19 @@ try {
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','members','teacher-a'),{active:true}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{active:true}));
 
+  const attendanceAssignment={schoolId:'school-a',uid:'teacher-a',classId:'9',subjectId:'attendance',active:false};
+  await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),attendanceAssignment));
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),{active:true}));
+  const teacherAttendance={schoolId:'school-a',studentId:'student-1',class:'9',date:'2026-11-18',present:true};
+  await assertSucceeds(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1'),teacherAttendance));
+  await assertFails(updateDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1'),{present:false}));
+  await assertFails(deleteDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1')));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19',class:'8'}));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19',schoolId:'school-b'}));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','wrong-id'),{...teacherAttendance,date:'2026-11-19'}));
+  await assertFails(setDoc(schoolDoc('viewer-a','school-a','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19'}));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19',present:'yes'}));
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),{active:false}));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19'}));
   console.log('V47 emulator isolation and role checks passed');
 } finally {await env.cleanup();}
