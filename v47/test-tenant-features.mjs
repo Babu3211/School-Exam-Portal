@@ -34,4 +34,6 @@ assert.equal(markDocument(schoolId,'mark_1'),'schools/school_A/marks/mark_1');
 assert.equal(attendanceDocument(schoolId,'att_1'),'schools/school_A/attendance/att_1');
 assert.equal(staffDocument(schoolId,'staff_1'),'schools/school_A/staff/staff_1');
 assert.equal(auditDocument(schoolId,'event_1'),'schools/school_A/audit_logs/event_1');
+assert.throws(()=>auditDocument('school_B/x','event_1'),TypeError);
+assert.throws(()=>auditDocument(schoolId,'../event'),TypeError);
 console.log('V47 tenant feature unit checks passed');
