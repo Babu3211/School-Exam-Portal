@@ -13,4 +13,4 @@
 9. Verify Spark/free-tier quotas with realistic load tests for 20–30 schools and 300–1,500+ students per school; no fixed school cap.
 10. Release requires green tests, independent role checks, backup verification, and an explicit separate V47 deployment approval.
 
-Local unit checks (no Firebase access): `node v47/test-school-scope.mjs`, `node v47/test-tenant-paths.mjs`, `node v47/test-v47-foundations.mjs`, `node v47/test-security-contract.mjs`.
+Role-capability helpers reflect **currently deployed V47 rules in this branch**, not intended future teacher permissions. Teacher marks and attendance writes remain disabled until emulator-verified server authorization is implemented. Client-selected school sessions are unverified and cannot be trusted as proof of access.\n\nLocal unit checks (no Firebase access): `node v47/test-school-scope.mjs`, `node v47/test-tenant-paths.mjs`, `node v47/test-v47-foundations.mjs`, `node v47/test-security-contract.mjs`, `node v47/test-tenant-features.mjs`.
