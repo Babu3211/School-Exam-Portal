@@ -37,6 +37,8 @@ try {
   await assertFails(setDoc(schoolDoc('viewer-a','school-a','students','student-2'),valid));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','students','student-2'),valid));
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','students','student-2'),valid));
+  await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','students','s'.repeat(128)),valid));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','students','s'.repeat(129)),valid));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','students','student-3'),{...valid,schoolId:'school-b'}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','students','student-missing-scope'),{name:'Student Missing',class:'9'}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','students','student-4'),{name:'X',class:'9',schoolId:'school-a'}));
