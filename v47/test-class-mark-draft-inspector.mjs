@@ -31,4 +31,17 @@ for(const bad of [
  {...base,subjectId:'../math',entries:[]},
  {...base,expectedStudentIds:Array.from({length:1501},(_,i)=>'s'+i),entries:[]}
 ])assert.throws(()=>inspectClassMarkDraft(bad));
+{
+ const ids=Array.from({length:1500},(_,i)=>'s'+i);
+ const x=inspectClassMarkDraft({...base,expectedStudentIds:ids,entries:ids.slice(0,1499).map(mark)});
+ assert.equal(x.ready,false);assert.deepEqual(x.missing,['s1499']);
+}
+{
+ const x=inspectClassMarkDraft({...base,entries:[mark('s1',{class:'8'}),mark('s2',{term:'final'})]});
+ assert.equal(x.ready,false);assert.equal(x.invalid.length,2);
+}
+{
+ const x=inspectClassMarkDraft({...base,entries:[mark('s1',{theory:101}),mark('s2',{practical:-1})]});
+ assert.equal(x.ready,false);assert.equal(x.invalid.length,2);
+}
 console.log('V47 1500-student draft inspection tests passed');
