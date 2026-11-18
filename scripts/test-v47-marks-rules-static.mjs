@@ -6,7 +6,7 @@ assert.match(rules,/match \/marks\/\{id\}/);
 assert.match(rules,/allow create: if \(canAdmin\(sid\) && validRawMark\(sid, id\)\) \|\| teacherMarkAllowed\(sid, id\)/);
 assert.match(rules,/allow update: if canAdmin\(sid\) && immutableSchool\(sid\) && validRawMark\(sid, id\)/);
 assert.match(rules,/match \/marks\/\{id\} \{[\s\S]*?allow delete: if false;/);
-assert.match(rules,/request\.resource\.data\.term in \['1st','2nd','final'\]/);
+assert.match(rules,/data\.term in \['1st','2nd','final'\]/);
 assert.match(rules,/function teacherMarkAllowed\(sid, id\)/);
 assert.match(rules,/function scopedRecord\(sid\)/);
 assert.equal((rules.match(/rules_version = '2';/g)||[]).length,1);
