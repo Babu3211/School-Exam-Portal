@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import {prepareV47SchoolLedger} from "../src/v47/v46-ledger-read-workflow.mjs";
-const source={students:[{id:"student001",name:"Student One",classNo:6}],subjects:[{id:"math001",name:"Mathematics",classNo:6}],exams:[{id:"exam001"}],marks:[{id:"mark001",studentId:"student001",examId:"exam001",classNo:6,subject:"Mathematics",scores:[{name:"IN",fullMarks:50,obtained:40}]}]};
+const source={students:[{id:"student001",name:"Student One",classNo:6,schoolId:"school001"}],subjects:[{id:"math001",name:"Mathematics",classNo:6}],exams:[{id:"exam001"}],marks:[{id:"mark001",schoolId:"school001",studentId:"student001",examId:"exam001",classNo:6,subject:"Mathematics",scores:[{name:"IN",fullMarks:50,obtained:40}]}]};
 const session={async listPage(name,{cursor}){if(cursor)throw Error("unexpected cursor");return {records:source[name],nextCursor:null};}};
 const args={session,schoolId:"school001",term:"first",classNo:6,examId:"exam001",schoolName:"Test School",schoolCode:"001",selectStudents:(records,n)=>records.filter(r=>r.classNo===n),selectSubjects:(records,n)=>records.filter(r=>r.classNo===n).map(r=>r.name),selectMarks:(records,n,id)=>records.filter(r=>r.classNo===n&&r.examId===id),creditFor:()=>4,componentsFor:()=>[],applicable:()=>true};
 const ledger=await prepareV47SchoolLedger(args);
 assert.match(ledger.head,/Mathematics/);
 assert.match(ledger.body,/Student One/);
 assert.match(ledger.body,/40/);
+// Fail closed if verified tenant reads contain records without explicit school identity.
+await assert.rejects(()=>prepareV47SchoolLedger({...args,selectStudents:records=>records.map(r=>({...r,schoolId:undefined}))}),/not from the verified school/);
 await assert.rejects(()=>prepareV47SchoolLedger({...args,examId:"not-real"}),/does not exist/);
 await assert.rejects(()=>prepareV47SchoolLedger({...args,selectMarks:()=>[]}),/No compatible marks/);
 await assert.rejects(()=>prepareV47SchoolLedger({...args,selectSubjects:()=>["English"]}),/not from verified school subjects/);
