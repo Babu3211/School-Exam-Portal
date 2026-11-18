@@ -48,3 +48,10 @@
 - V47 student class catalog currently supports ECD, LKG, UKG, and 1–12. The V47 student UI and rules agree on these classes.
 - Teacher write operations remain intentionally disabled in `permissions.mjs` and Firestore rules. Implement assignment-scoped teacher writes only after inspecting assignment data model; do not bypass server rules.
 - No successful emulator run is confirmed; production integration is not complete.
+
+## App contract batch (2026-11-18)
+- Inspected existing teacher assignment schema (`teacher-assignment.mjs`), raw marks transaction (`mark-create-service.mjs`), attendance batch (`attendance-bulk.mjs`) and class save (`attendance-class-save.mjs`). These services are **school-admin-only** today.
+- Found `v47/school-paths.mjs` omitted `school_settings` and `members` even though tenant rules and other V47 modules support them; added them (commit `eedcd94`).
+- Added `v47/test-app-contract.mjs` for student, marks, attendance, teacher assignment, and scoped path contracts (commit `aab574b`), and wired into `npm run test:v47` (commit `059feae`).
+- Teacher assignments use `{schoolId,uid,classId,subjectId,active:false}`, but the student subject assignment collection uses `{studentId,subjectId,class}`. These are distinct concepts: do not conflate them or allow broad teacher writes.
+- All new tests are committed; actual test execution still needs verification.
