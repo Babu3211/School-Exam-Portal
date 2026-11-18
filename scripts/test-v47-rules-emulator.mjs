@@ -266,10 +266,10 @@ try{
  await assertSucceeds(admin.doc(teacherSubject).update({active:true}));
  await assertFails(teacher.doc('schools/school_001/attendance/2026-11-23_s1').set({date:'2026-11-23',studentId:'s1',class:'9',schoolId:'school_001',present:true}));
  await assertSucceeds(teacher.doc('schools/school_001/attendance/2026-11-23_s1').set({date:'2026-11-23',studentId:'s1',class:'1',schoolId:'school_001',present:true}));
- await assertFails(teacher.doc('schools/school_001/attendance/2026-11-23_s1').update({present:false})); // Teacher attendance correction requires explicit rule authorization
+ await assertSucceeds(teacher.doc('schools/school_001/attendance/2026-11-23_s1').update({present:false})); // Assigned teacher may correct presence
  await assertFails(teacher.doc('schools/school_001/attendance/2026-11-23_s1').delete());
  await assertSucceeds(teacher.doc('schools/school_001/marks/2nd:s1:math').set({schoolId:'school_001',studentId:'s1',subjectId:'math',class:'1',term:'2nd',theory:30,practical:10}));
- await assertFails(teacher.doc('schools/school_001/marks/2nd:s1:math').update({theory:35}));
+ await assertSucceeds(teacher.doc('schools/school_001/marks/2nd:s1:math').update({theory:35}));
  await assertFails(teacher.doc('schools/school_001/marks/final:s1:inactive').set({studentId:'s1',subjectId:'inactive',class:'1',term:'final',theory:30,practical:10}));
  await assertFails(teacher.doc('schools/school_002/attendance/2026-11-23_s1').set({date:'2026-11-23',studentId:'s1',class:'1',schoolId:'school_001',present:true}));
  await assertFails(teacher.doc('schools/school_002/marks/2nd:s1:math').set({studentId:'s1',subjectId:'math',class:'1',term:'2nd',theory:30,practical:10}));
