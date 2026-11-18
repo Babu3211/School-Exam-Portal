@@ -103,3 +103,22 @@
 - Added pure `validateCompleteClassMarks` validator (`v47/class-mark-completeness.mjs`) requiring every student ID from the authoritative class roster to have exactly one valid mark for the same class, subject and term; rejects incomplete, duplicate, foreign and malformed entries (`06b5725`).
 - Added positive/negative Node tests (`v47/test-class-mark-completeness.mjs`, `50224fc`) and included them in `npm run test:v47` (`ca3c8a8`).
 - **Important:** validator is a prerequisite, not yet wired to the live V47 class mark Save button. Do not claim full-class save enforcement is complete until UI and backend integration, roster freshness, concurrent writes and emulator tests pass.
+
+## Batch 15: roster validation and safe save services (2026-11-18)
+1. Added atomic full-class marks save service for up to 10 students (84ad432); reads student, subject, subject assignment, existing mark and component marks before any writes.
+2. Added transaction mock tests for successful two-student save (324169a).
+3. Added incomplete-class and duplicate mark denial tests (324169a).
+4. Added foreign/mixed-subject and invalid-mark denial tests (324169a).
+5. Added viewer and cross-school admin denial tests (324169a).
+6. Added over-10-student atomic save limit test (324169a).
+7. Added missing/inactive subject denial tests (324169a).
+8. Added missing/foreign student roster denial tests (324169a).
+9. Added missing subject assignment and existing mark/component denial tests (324169a).
+10. Added mark transaction tests to npm quality gate (ffb601f).
+11. Tightened student, subject and student-subject assignment schoolId checks in individual mark creation (d645387).
+12. Capped class mark preflight to 1,500 students and added boundary tests (3d26c89, 1c221d1).
+13. Added full-class attendance roster preflight with 1,500-student cap (a028baf).
+14. Added attendance validation tests and verified preflight wrapper before chunked save (c78dc26, bc1d5c9).
+15. Added verified attendance save tests, CI scripts and security structure regression assertions (2371744, ae6bc96, 285b301, 536d24c).
+
+**Not complete:** These services are not yet wired into the V47 browser marks entry screen. Attendance's existing UI still permits selected-student batch saves. No Firebase Emulator pass, browser E2E pass, or deployment is confirmed. Atomic marks service deliberately refuses classes larger than 10 until a safe class-wide strategy is verified; do not silently split into partial saves. V46 remains unchanged.
