@@ -23,7 +23,7 @@ jobs:
           test -f v47/firebase.json
           node -e 'const c=require("./v47/firebase.json");if(c.hosting.public!==".")process.exit(1)'
           echo "V47 static development preview only. No V46 production deploy."
-      - name: Deploy to V47 preview channel only
+      - name: Require dedicated V47 Firebase credential\n        env:\n          V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}\n        run: |\n          if [ -z "$V47_SERVICE_ACCOUNT" ]; then\n            echo "::error::V47 Firebase service account secret is missing. Preview deployment blocked."\n            exit 1\n          fi\n          echo "Dedicated V47 credential is configured (value not printed)."\n      - name: Deploy to V47 preview channel only
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
