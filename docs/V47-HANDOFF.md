@@ -55,3 +55,8 @@
 - Added `v47/test-app-contract.mjs` for student, marks, attendance, teacher assignment, and scoped path contracts (commit `aab574b`), and wired into `npm run test:v47` (commit `059feae`).
 - Teacher assignments use `{schoolId,uid,classId,subjectId,active:false}`, but the student subject assignment collection uses `{studentId,subjectId,class}`. These are distinct concepts: do not conflate them or allow broad teacher writes.
 - All new tests are committed; actual test execution still needs verification.
+
+## Critical security-rule repair (2026-11-18)
+- Found that `v47/firestore.rules` had become syntactically invalid: student ID regex truncated and a duplicate tail after the service closing brace. Repaired and verified retrieved file content (commit `458cda2`; intermediate repair commit `3375b28` was superseded).
+- Replaced malformed structural gate with clean deterministic checks to catch malformed student regex, duplicate catch-all, and duplicate tail (commit `678aa8c`; intermediate commit `c3d4fe9` superseded).
+- Source-level verification is **not** Firestore Emulator compilation; rerun `npm run test:v47` and inspect CI before claiming a pass.
