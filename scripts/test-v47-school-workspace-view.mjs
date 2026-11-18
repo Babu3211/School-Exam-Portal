@@ -32,7 +32,7 @@ assert.equal(panel.hidden,false);
 assert.match(status.textContent,/School A/);
 const [classInput,subjectInput,dateInput,marks,attendance,result]=panel.children;
 const studentClassInput=panel.children[10];
-const expectedClasses=["ECD",...Array.from({length:12},(_,i)=>String(i+1))];
+const expectedClasses=["ECD","LKG","UKG",...Array.from({length:12},(_,i)=>String(i+1))];
 assert.deepEqual(classInput.children.map(option=>option.value),expectedClasses);
 assert.deepEqual(studentClassInput.children.map(option=>option.value),expectedClasses);
 assert.equal(panel.children[9]["aria-label"],"Student name in English");
