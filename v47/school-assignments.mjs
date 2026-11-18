@@ -6,5 +6,5 @@ export function assignmentKey(schoolId,className,subject,section='ALL'){
 }
 export function isAssigned(assigned,schoolId,className,subject,section=''){
  if(!Array.isArray(assigned))return false;
- return assigned.includes(assignmentKey(schoolId,className,subject,'ALL'))||(section?assigned.includes(assignmentKey(schoolId,className,subject,section)):false);
+ try{return assigned.includes(assignmentKey(schoolId,className,subject,'ALL'))||(section?assigned.includes(assignmentKey(schoolId,className,subject,section)):false);}catch{return false;}
 }
