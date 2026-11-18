@@ -10,4 +10,7 @@ assert.match(rules,/match \/members\/\{uid\}/);
 assert.match(rules,/match \/\{document=\*\*\} \{ allow read, write: if false; \}/);
 assert.match(registry,/return \{\.\.\.validated\}/);
 assert.match(registration,/adminMembership:\{schoolId:school\.id,uid:adminUid,role:'school_admin',active:false\}/);
+assert.match(rules,/function adminCanCreate\(\)/);
+assert.match(rules,/function adminCanUpdate\(\)/);
+assert.match(rules,/request\.resource\.data\.active == false/);
 console.log('V47 static rules/client contract checks passed; emulator authorization tests still required.');
