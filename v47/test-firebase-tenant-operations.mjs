@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {firebaseTenantOperation} from './firebase-tenant-operations.mjs';
+const source=readFileSync(new URL('./firebase-tenant-operations.mjs',import.meta.url),'utf8');
+await assert.rejects(()=>firebaseTenantOperation({schoolId:'school_A',operation:'get'}),/Authentication required/);
+await assert.rejects(()=>firebaseTenantOperation({auth:{currentUser:{uid:'user_123'}},schoolId:'school_A',operation:'get'}),/Authentication required/);
+assert.match(source,/verifyFirebaseSchoolSession\(/);
+assert.match(source,/tenantReadPlan\(/);
+assert.match(source,/tenantListPlan\(/);
+assert.match(source,/tenantWritePlan\(/);
+assert.match(source,/sdk\.runTransaction\(/);
+assert.match(source,/existing\.exists\(\)/);
+assert.match(source,/sdk\.updateDoc\(/);
+assert.doesNotMatch(source,/sdk\.deleteDoc\(/);
+console.log('V47 Firebase tenant operations offline contracts passed; emulator integration still required');
