@@ -88,8 +88,7 @@ service cloud.firestore {
       }
       match /students/{id} {
         function validStudent() {
-          return id.matches('^[A-Za-z0-9_-]{1,128}
-            && request.resource.data.keys().hasOnly(['name','class','rollNo','schoolId'])
+          return id.matches('^[A-Za-z0-9_-]{1,128}            && request.resource.data.keys().hasOnly(['name','class','rollNo','schoolId'])
             && request.resource.data.keys().hasAll(['name','class','schoolId'])
             && request.resource.data.name is string
             && request.resource.data.name.size() >= 2
@@ -140,7 +139,8 @@ service cloud.firestore {
     }
     match /{document=**} { allow read, write: if false; }
   }
-})
+}
+)
             && request.resource.data.keys().hasOnly(['name','class','rollNo','schoolId'])
             && request.resource.data.keys().hasAll(['name','class','schoolId'])
             && request.resource.data.name is string
