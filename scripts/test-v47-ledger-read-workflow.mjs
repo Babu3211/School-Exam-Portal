@@ -68,4 +68,8 @@ for(const mode of ["entry","number","grade"]){
   await assert.rejects(()=>prepareV47SchoolLedger({...args,mode,selectSubjects:records=>records.filter(r=>r.classNo===6).map(r=>r.name)}),/Duplicate or invalid selected ledger subjects/);
  }finally{source.subjects.pop();}
 }
+// Duplicate exam IDs must fail closed before any ledger is rendered.
+source.exams.push({id:"exam001",schoolId:"school002",classNo:6,term:"first"});
+await assert.rejects(()=>prepareV47SchoolLedger(args),/Duplicate or invalid ledger document identity|Ambiguous selected exam identity/);
+source.exams.pop();
 console.log("V47 verified school ledger read workflow checks passed");
