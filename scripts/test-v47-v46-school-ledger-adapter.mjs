@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import {renderV47SchoolLedger} from "../src/v47/v46-school-ledger-adapter.mjs";
-const base={schoolId:"school001",term:"first",classNo:6,schoolName:"Test School",schoolCode:"001",examId:"exam001",students:[{id:"student001",name:"Test Student"}],subjects:["Mathematics"],marks:[],creditFor:()=>4,componentsFor:()=>[],applicable:()=>true};
+const base={schoolId:"school001",term:"first",classNo:6,schoolName:"Test School",schoolCode:"001",examId:"exam001",students:[{id:"student001",name:"Test Student",schoolId:"school001"}],subjects:["Mathematics"],marks:[],creditFor:()=>4,componentsFor:()=>[],applicable:()=>true};
 assert.throws(()=>renderV47SchoolLedger({...base,schoolId:"invalid school"}),/school/i);
 assert.throws(()=>renderV47SchoolLedger({...base,classNo:12}),/not verified/);
 assert.throws(()=>renderV47SchoolLedger({...base,term:"annual"}),/Unsupported V47 exam term/);
 assert.throws(()=>renderV47SchoolLedger({...base,mode:"publish"}),/Unsupported ledger mode/);
-assert.throws(()=>renderV47SchoolLedger({...base,marks:[{examId:"exam001",studentId:"student001",score:90}]}),/percentage-only marks/);
-assert.throws(()=>renderV47SchoolLedger({...base,marks:[{examId:"exam001",studentId:"other",scores:[{name:"IN",fullMarks:50,obtained:40}]}]}),/outside selected students/);
+assert.throws(()=>renderV47SchoolLedger({...base,marks:[{schoolId:"school001",examId:"exam001",studentId:"student001",score:90}]}),/percentage-only marks/);
+assert.throws(()=>renderV47SchoolLedger({...base,marks:[{schoolId:"school001",examId:"exam001",studentId:"other",scores:[{name:"IN",fullMarks:50,obtained:40}]}]}),/outside selected students/);
 assert.throws(()=>renderV47SchoolLedger({...base,creditFor:null}),/Verified subject credit/);
-const validMark={examId:"exam001",studentId:"student001",subject:"Mathematics",scores:[{name:"IN",fullMarks:50,obtained:40}]};
+const validMark={schoolId:"school001",examId:"exam001",studentId:"student001",subject:"Mathematics",scores:[{name:"IN",fullMarks:50,obtained:40}]};
 assert.throws(()=>renderV47SchoolLedger({...base,marks:[{...validMark,subject:"English"}]}),/subject is not in selected subjects/);
 assert.throws(()=>renderV47SchoolLedger({...base,marks:[validMark,{...validMark}]}),/Duplicate ledger mark/);
 assert.throws(()=>renderV47SchoolLedger({...base,subjects:["Mathematics","math"]}),/duplicate ledger subjects/);
@@ -21,6 +21,10 @@ assert.ok(ledger.body.includes("Test School"));
 assert.ok(ledger.body.includes("Test Student"));
 assert.deepEqual(ledger.subjects,["Mathematics"]);
 assert.ok(Object.isFrozen(ledger));
+// Records without an explicit tenant ID must never reach a school ledger.
+assert.throws(()=>renderV47SchoolLedger({...base,students:[{id:"student001",name:"Test Student"}]}),/student school mismatch/);
+assert.throws(()=>renderV47SchoolLedger({...base,marks:[{...validMark,schoolId:undefined}]}),/mark school mismatch/);
+assert.throws(()=>renderV47SchoolLedger({...base,students:[{...base.students[0],schoolId:null}]}),/student school mismatch/);
 // Never mix another school's roster or assessment components into the selected school's ledger.
 assert.throws(()=>renderV47SchoolLedger({...base,students:[{...base.students[0],schoolId:"school002"}]}),/student school mismatch/);
 assert.throws(()=>renderV47SchoolLedger({...base,marks:[{...validMark,schoolId:"school002"}]}),/mark school mismatch/);
