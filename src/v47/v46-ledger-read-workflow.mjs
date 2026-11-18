@@ -12,6 +12,7 @@ export async function prepareV47SchoolLedger({session,schoolId,term,classNo,exam
  const data=await loadV47LedgerCollections({session,pageSize,maxRecordsPerCollection});
  const selectedExam=data.exams.find(exam=>exam.id===examId);
  if(!selectedExam)throw new Error("Selected exam does not exist in this school");
+ if(data.exams.filter(exam=>exam.id===examId).length!==1)throw new Error("Ambiguous selected exam identity");
  if(selectedExam.schoolId!==schoolId)throw new Error("Selected exam school mismatch");
  // An exam explicitly tagged with class/term must match the requested ledger.
  if(selectedExam.classNo!=null && Number(selectedExam.classNo)!==Number(classNo))
