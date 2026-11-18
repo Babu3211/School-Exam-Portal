@@ -57,7 +57,26 @@ service cloud.firestore {
         }
         allow get: if canAdmin(sid) || (loggedIn() && uid == request.auth.uid && activeMember(sid));
         allow list: if canAdmin(sid);
-        allow create, update: if superAdmin() && validMember();
+        // School Admin may provision only teacher/viewer memberships, never self-elevate.
+        function subordinateRole() {
+          return request.resource.data.role in ['teacher', 'viewer'];
+        }
+        function adminCanCreate() {
+          return memberRole(sid, 'school_admin') && uid != request.auth.uid
+            && validMember() && subordinateRole()
+            && request.resource.data.active == false;
+        }
+        function adminCanUpdate() {
+          return memberRole(sid, 'school_admin') && uid != request.auth.uid
+            && resource.data.get('role', '') in ['teacher', 'viewer']
+            && validMember() && subordinateRole()
+            && request.resource.data.uid == resource.data.uid
+            && request.resource.data.schoolId == resource.data.schoolId
+            && request.resource.data.role == resource.data.role
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active']);
+        }
+        allow create: if (superAdmin() && validMember()) || adminCanCreate();
+        allow update: if (superAdmin() && validMember()) || adminCanUpdate();
         allow delete: if superAdmin();
       }
       match /students/{id} {
