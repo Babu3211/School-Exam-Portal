@@ -177,7 +177,16 @@ service cloud.firestore {
           && request.resource.data.theory <= 100
           && request.resource.data.practical >= 0
           && request.resource.data.practical <= 100
-          && id == request.resource.data.term + ':' + request.resource.data.studentId + ':' + request.resource.data.subjectId;
+          && id == request.resource.data.term + ':' + request.resource.data.studentId + ':' + request.resource.data.subjectId
+          && exists(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId))
+          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('schoolId','') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('class','') == request.resource.data.class
+          && exists(/databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId))
+          && get(/databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId)).data.get('schoolId','') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId)).data.get('class','') == request.resource.data.class
+          && exists(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId))
+          && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.get('schoolId','') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.get('class','') == request.resource.data.class;
       }
       match /marks/{id} {
         allow get, list: if canRead(sid);
