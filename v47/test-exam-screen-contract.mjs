@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=name=>readFileSync(new URL('./'+name,import.meta.url),'utf8');
+const html=read('exams.html'),consoleCode=read('exams-console.mjs'),rules=read('firestore.rules');
+for(const term of ['1st','2nd','final'])assert.match(html,new RegExp('value="'+term+'"'));
+for(const id of ['connect','login','logout','work','term','create','refresh','terms','message'])assert.match(html,new RegExp('id="'+id+'"'));
+assert.match(html,/id="refresh"[^>]*disabled/);
+assert.match(consoleCode,/verifySchoolSession/);
+assert.match(consoleCode,/createSchoolExamTerm/);
+assert.match(consoleCode,/inMemoryPersistence/);
+assert.match(consoleCode,/auth\?\.currentUser\?\.uid!==actor\?\.uid/);
+assert.doesNotMatch(consoleCode,/deleteDoc\(/);
+assert.match(rules,/match \/exams\/\{id\}/);
+assert.match(rules,/allow update, delete: if false;/);
+assert.match(read('index.html'),/href="\.\/exams\.html"/);
+console.log('V47 exam screen contract passed');
