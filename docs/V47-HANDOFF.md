@@ -34,3 +34,10 @@
 - Added negative permission tests for missing/wrong `schoolId` in marks and staff, plus staff cross-tenant update (commit `9d2a126`).
 - Latest tests are committed but still not verified as passing in the emulator.
 - Before additional permission changes, inspect app schema and teacher assignments. Do not blindly allow teacher writes or loosen tenant scoping.
+
+## Integration inspection (2026-11-18)
+- `v47/index.html` is explicitly a **development hub**, not a production V46 dashboard integration.
+- Existing V47 modules already include `v47/admin-console.mjs`, `v47/school-admin-console.mjs`, `v47/students-console.mjs`, `v47/school-scope.mjs` and `v47/test-school-scope.mjs`. **Reuse these** rather than rebuilding them.
+- `v47/students-console.mjs` uses verified school session and scoped store; `v47/admin-console.mjs` uses super-admin scoped list and onboarding; `v47/school-admin-console.mjs` manages school members. Inspect their imported services before modifying access paths.
+- `npm run test:v47` now also runs the existing school-scope helper tests (commit `8ab39cf`).
+- Remaining core blocker is full V46 feature parity/integration, NOT just more structural tests. Do not describe V47 as complete until actual app and emulator verification.
