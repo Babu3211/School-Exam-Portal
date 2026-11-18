@@ -38,4 +38,10 @@ for(const mode of ["entry","number","grade"]){
  assert.throws(()=>renderV47SchoolLedger({...base,mode,marks:[{...validMark,schoolId:"school002"}]}),/mark school mismatch/);
  assert.throws(()=>renderV47SchoolLedger({...base,mode,students:[{...base.students[0],schoolId:"school002"}]}),/student school mismatch/);
 }
+// Rendering all V46 ledger views is read-only and cannot mutate fetched tenant data.
+for(const mode of ["entry","number","grade"]){
+ const original=structuredClone({...base,marks:[validMark]});
+ renderV47SchoolLedger({...base,mode,marks:[validMark]});
+ assert.deepEqual({...base,marks:[validMark]},original,"Ledger renderer must not modify school records");
+}
 console.log("V47 school-scoped IEMIS ledger adapter checks passed");
