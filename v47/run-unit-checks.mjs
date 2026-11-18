@@ -1,5 +1,7 @@
 // V47-only offline test runner. Runs all isolated Node suites and reports failures.
 import {spawnSync} from 'node:child_process';
+import {readdirSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
 const suites=[
  'test-school-scope.mjs',
  'test-tenant-paths.mjs',
@@ -38,6 +40,12 @@ const suites=[
  'test-tenant-pagination.mjs',
  'test-tenant-query.mjs'
 ];
+const exclusions=new Set(['test-firestore-emulator.mjs','test-firestore-isolation.mjs']);
+const registered=new Set(suites);
+const all=readdirSync(fileURLToPath(new URL('.',import.meta.url))).filter(name=>/^test-.*\.mjs$/.test(name)&&!exclusions.has(name));
+const unregistered=all.filter(name=>!registered.has(name));
+const missing=suites.filter(name=>!all.includes(name));
+if(unregistered.length||missing.length){console.error('Offline suite registry mismatch:',{unregistered,missing});process.exit(1)}
 let failures=0;
 for(const suite of suites){
  const result=spawnSync(process.execPath,[new URL(suite,import.meta.url).pathname],{encoding:'utf8',stdio:'pipe'});
