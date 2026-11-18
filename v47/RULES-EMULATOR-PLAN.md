@@ -1,0 +1,14 @@
+# V47 Firestore emulator test plan (not yet executed)
+
+1. Seed two active schools A/B using emulator security-disabled setup context.
+2. Seed Super Admin and one active school_admin, teacher, viewer per school, with inactive counterparts.
+3. Assert anonymous read/write denied everywhere.
+4. Assert school A viewer cannot read or write any school B document, including nested paths and collection queries.
+5. Assert school A teacher cannot write marks or attendance until teacher assignment rules are implemented.
+6. Assert school A viewer cannot create/update/delete students, marks, attendance, or settings.
+7. Assert inactive school and inactive membership deny data access.
+8. Assert forged membership with mismatched uid or schoolId denies access.
+9. Assert only Super Admin can create inactive schools and change activation; clients cannot self-provision Super Admin.
+10. Assert arbitrary top-level and nested paths denied; run all cases against `v47/firestore.rules`, not V46 rules.
+
+Do not claim these tests passed until a real Firebase emulator run reports success. Do not deploy V47 rules without explicit approval.
