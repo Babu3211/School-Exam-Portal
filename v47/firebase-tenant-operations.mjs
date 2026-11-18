@@ -5,6 +5,7 @@ import {verifyFirebaseSchoolSession} from './verified-school-session.mjs';
 import {tenantReadPlan,tenantListPlan,tenantWritePlan} from './tenant-firestore-gateway.mjs';
 export async function firebaseTenantOperation({auth,firestore,schoolId,collection,id,operation,data,limit=50,cursorId=null}){
  if(!auth?.currentUser?.uid||!firestore)throw new Error('Authentication required');
+ if(!['get','list','create','update'].includes(operation))throw new Error('Unsupported operation');
  const uid=auth.currentUser.uid;
  const session=await verifyFirebaseSchoolSession({auth,firestore,schoolId});
  if(auth.currentUser?.uid!==uid)throw new Error('Authentication changed');
@@ -50,6 +51,7 @@ export async function firebaseTenantOperation({auth,firestore,schoolId,collectio
     tx.update(ref,plan.data);
    });
   }
+  if(auth.currentUser?.uid!==uid)throw new Error('Authentication changed after write');
   return {id,schoolId,operation};
  }
  throw new Error('Unsupported operation');
