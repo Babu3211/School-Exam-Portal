@@ -17,6 +17,7 @@ assert.equal(roleCapabilities('teacher').memberProvision,false);
 for(const bad of [{},{'../../evil':20},{theory:Infinity},{theory:-1},{theory:101}]){
  assert.throws(()=>validateTeacherWrite({schoolId:'school_A',studentId:'student_1',className:'10',subject:'Science',marks:bad}));
 }
+assert.throws(()=>validateTeacherWrite({schoolId:'school_A',studentId:'student_1',className:'Class 9',subject:'Math::Science',marks:{theory:20}}));
 for(const collection of ['audit_logs','members','teachers','question_papers','results']){
  assert.throws(()=>planTenantQuery({schoolId:'school_A',collection}),TypeError);
 }
