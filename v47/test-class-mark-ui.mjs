@@ -15,4 +15,7 @@ for(const snippet of [
  "invalidateClassMarks();status('Atomic class marks saved:"
 ])assert.ok(js.includes(snippet),'Missing full-class mark safeguard: '+snippet);
 assert.ok(html.includes('An incomplete class cannot be saved'),'Incomplete-class warning missing');
+assert.ok(html.includes('Individual Save disabled'),'Legacy individual mark button must be disabled');
+assert.ok(js.includes("$('save').disabled=true"),'Legacy individual mark save must remain disabled');
+assert.ok(!js.includes('createSchoolMarkOnly'),'Legacy mark create must not be invoked by class editor');
 console.log('V47 full-class marks UI contract passed');
