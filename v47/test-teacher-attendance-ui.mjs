@@ -11,6 +11,8 @@ for(const token of [
  "if(actor?.role!=='school_admin')throw new Error('School Admin required')"
 ])assert.ok(js.includes(token),'Missing teacher attendance UI contract: '+token);
 assert.ok(js.includes("Teachers cannot edit or overwrite this record."),'Teacher save confirmation missing');
+assert.ok(js.includes("auth.currentUser.uid!==actor.uid"),'Authentication change protection missing');
+for(const id of ['schoolClass','date','studentId','present'])assert.ok(js.includes("$('"+id+"').disabled=true"),'Save-time field lock missing: '+id);
 assert.ok(html.includes('active class attendance assignment'),'Teacher UI warning missing');
 assert.ok(html.includes('Viewer is read-only'),'Viewer UI warning missing');
 console.log('V47 teacher attendance browser wiring contract passed');
