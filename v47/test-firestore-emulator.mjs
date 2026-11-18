@@ -224,7 +224,14 @@ try{
  await assertFails(setDoc(doc(admin,'schools','school_A','exams','2nd'),{schoolId:'school_A',term:'2nd',examName:'Extra'}));
  // 98 Existing term cannot be edited, even by its School Admin
  await assertFails(updateDoc(doc(admin,'schools','school_A','exams','1st'),{term:'2nd'}));
+ // 100-105 Assigned teacher may correct scoped marks, but not alter record identity.
+ await assertSucceeds(setDoc(doc(admin,'schools','school_A','teacher_assignments','school_A:teacher_school_A:10:math'),{schoolId:'school_A',uid:'teacher_school_A',classId:'10',subjectId:'math',active:false}));
+ await assertFails(updateDoc(mark(teacher,'school_A'),{theory:31}));
+ await assertSucceeds(updateDoc(doc(admin,'schools','school_A','teacher_assignments','school_A:teacher_school_A:10:math'),{active:true}));
+ await assertSucceeds(updateDoc(mark(teacher,'school_A'),{theory:31}));
+ await assertFails(updateDoc(mark(teacher,'school_A'),{studentId:'other_student'}));
+ await assertFails(updateDoc(mark(teacher,'school_B'),{theory:32}));
  // 99 A second canonical term can be created independently
  await assertSucceeds(setDoc(doc(admin,'schools','school_A','exams','2nd'),{schoolId:'school_A',term:'2nd'}));
- console.log('V47 Firestore emulator: 99 authorization assertions passed');
+ console.log('V47 Firestore emulator: 105 authorization assertions passed');
 }finally{await env.cleanup();}
