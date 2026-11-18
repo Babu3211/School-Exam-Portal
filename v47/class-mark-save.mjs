@@ -30,7 +30,7 @@ export async function saveCompleteClassMarks({db,api,actor,schoolId,classId,term
   for(let i=0;i<refs.length;i++){
    const {entry}=refs[i],{student,assignment,mark,component}=snapshots[i];
    if(!student.exists()||student.data().schoolId!==schoolId||student.data().class!==classId)throw new Error('Student roster changed');
-   if(!assignment.exists()||assignment.data().schoolId!==schoolId||assignment.data().studentId!==entry.studentId||assignment.data().subjectId!==subjectId||assignment.data().class!==classId)throw new Error('Student subject assignment missing');
+   if(!assignment.exists()||assignment.data().schoolId!==schoolId||assignment.data().active===false||assignment.data().studentId!==entry.studentId||assignment.data().subjectId!==subjectId||assignment.data().class!==classId)throw new Error('Student subject assignment missing');
    if(mark.exists()||component.exists())throw new Error('Existing mark cannot be overwritten');
   }
   for(const r of refs)tx.set(r.mark,{...r.entry,schoolId});
