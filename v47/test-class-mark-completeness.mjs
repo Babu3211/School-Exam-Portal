@@ -13,4 +13,6 @@ assert.throws(()=>validateCompleteClassMarks({...args,entries:[mark('student-1')
 assert.throws(()=>validateCompleteClassMarks({...args,expectedStudentIds:['student-1','student-1'],entries:[mark('student-1')]}),/duplicate roster/);
 assert.throws(()=>validateCompleteClassMarks({...args,expectedStudentIds:[],entries:[]}),/Class roster required/);
 assert.throws(()=>validateCompleteClassMarks({...args,schoolId:'../other',entries:[mark('student-1')]}),/Invalid school ID/);
+assert.throws(()=>validateCompleteClassMarks({...args,expectedStudentIds:Array.from({length:1501},(_,i)=>'s'+i),entries:[]}),/Class roster required/);
+assert.throws(()=>validateCompleteClassMarks({...args,entries:Array.from({length:1501},(_,i)=>mark('s'+i))}),/Mark entries required/);
 console.log('V47 class marks completeness checks passed');
