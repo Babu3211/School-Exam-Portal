@@ -25,7 +25,8 @@ export async function firebaseTenantOperation({auth,firestore,schoolId,collectio
   const q=sdk.query(sdk.collection(firestore,...plan.path.split('/')),...constraints);
   const snapshot=await sdk.getDocs(q);
   if(auth.currentUser?.uid!==uid)throw new Error('Authentication changed');
-  return snapshot.docs.map(d=>({...d.data(),id:d.id}));
+  const records=snapshot.docs.map(d=>({...d.data(),id:d.id}));
+  return {records,nextCursor:snapshot.docs.length===limit?snapshot.docs.at(-1).id:null};
  }
  if(operation==='create'||operation==='update'){
   const plan=tenantWritePlan({session,schoolId,uid,collection,id,operation,data});
