@@ -1,6 +1,21 @@
 import {readFile} from 'node:fs/promises';
-import {initializeTestEnvironment, assertFails, assertSucceeds} from '@firebase/rules-unit-testing';
+import {initializeTestEnvironment, assertFails as firebaseAssertFails, assertSucceeds as firebaseAssertSucceeds} from '@firebase/rules-unit-testing';
 import {doc, getDoc, setDoc, updateDoc, deleteDoc} from 'firebase/firestore';
+
+// Include the originating test line on failure; Firestore permission-denied logs alone are ambiguous.
+let assertionNumber=0;
+async function checkedAssertion(assertion,operation,expected){
+ const number=++assertionNumber;
+ const callsite=new Error().stack?.split('\\n')[2]?.trim()||'unknown callsite';
+ try{return await assertion(operation)}
+ catch(error){
+  console.error('V47 EMULATOR ASSERTION FAILED #'+number+' expected='+expected+' at '+callsite);
+  console.error('Cause: '+(error?.message||String(error)));
+  throw error;
+ }
+}
+const assertFails=operation=>checkedAssertion(firebaseAssertFails,operation,'DENIED');
+const assertSucceeds=operation=>checkedAssertion(firebaseAssertSucceeds,operation,'ALLOWED');
 
 const env=await initializeTestEnvironment({
   projectId:'smss-v47-isolation-test',
