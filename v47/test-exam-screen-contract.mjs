@@ -11,7 +11,7 @@ assert.match(consoleCode,/await reverifyAdmin\(\);const snap=/);
 assert.match(consoleCode,/await reverifyAdmin\(\);const result=/);
 assert.match(consoleCode,/createSchoolExamTerm/);
 assert.match(consoleCode,/inMemoryPersistence/);
-assert.match(consoleCode,/auth\?\.currentUser\?\.uid!==actor\?\.uid/);
+assert.match(consoleCode,/auth\.currentUser\.uid!==actor\.uid/);
 assert.doesNotMatch(consoleCode,/deleteDoc\(/);
 assert.match(rules,/match \/exams\/\{id\}/);
 assert.match(rules,/allow update, delete: if false;/);
