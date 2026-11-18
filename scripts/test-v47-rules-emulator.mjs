@@ -197,7 +197,7 @@ try{
  await assertFails(admin.doc('schools/school_001/members/adminA').delete());
  await assertFails(admin.doc('schools/school_001/members/adminA').update({role:'teacher'}));
  await assertSucceeds(superDb.doc('schools/school_001/members/adminA').update({active:true}));
- await assertSucceeds(admin.doc('schools/school_001/members/teacherB').delete());
+ await assertFails(admin.doc('schools/school_001/members/teacherB').delete()); // Only Super Admin may delete membership
  await assertFails(viewer.doc('schools/school_001/members/adminA').get());
  await assertFails(admin.doc('students/legacy').get());
  await assertFails(admin.doc('schools/school_001/user_roles/target').set({role:'super_admin'}));
