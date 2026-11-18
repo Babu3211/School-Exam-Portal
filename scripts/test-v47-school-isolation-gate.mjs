@@ -19,6 +19,11 @@ assert.ok(rules.trimEnd().endsWith('}'),'Rules missing closing brace');
 assert.ok(!rules.includes('}\n})'),'Malformed duplicate tail');
 console.log('V47 structural school isolation checks passed; emulator tests still required');
 )"),'Truncated mark subject regex');
+for(const name of ['attendance','exams','teacher_assignments','students']){
+ assert.equal(rules.split('match /'+name+'/{id}').length-1,1,'Duplicate '+name+' rule');
+}
+assert.equal(rules.split("allow create: if (canAdmin(sid) && scopedRecord(sid)) || teacherMarkAllowed(sid, id);").length-1,1,'Missing scoped teacher mark create permission');
+assert.ok(!rules.includes('\\n)\\n          && request.resource.data'),'Truncated rule fragments detected');
 assert.equal(rules.split('function validStudent()').length-1,1,'Duplicate student validator');
 assert.equal(rules.split('match /{document=**}').length-1,1,'Duplicate catch-all');
 assert.ok(rules.trimEnd().endsWith('}'),'Rules missing closing brace');
