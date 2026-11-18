@@ -21,7 +21,7 @@ try{
   await db.doc('schools/school_001/students/s1').set({name:'A Student',class:'1',schoolId:'school_001'});
   await db.doc('schools/school_001/students/s4').set({name:'Second Student',class:'1',schoolId:'school_001'});
   for(let i=0;i<10;i++)await db.doc('schools/school_001/students/batch'+i).set({name:'Batch Student '+i,class:'1',schoolId:'school_001'});
-  await db.doc('schools/school_001/subjects/math').set({name:'Mathematics',class:'1',active:true});
+  await db.doc('schools/school_001/subjects/math').set({name:'Mathematics',class:'1',active:true,schoolId:'school_001'});
   await db.doc('schools/school_001/subjects/inactive').set({name:'Inactive Subject',class:'1',active:false});
   await db.doc('schools/school_001/subjects/wrongclass').set({name:'Other Class Subject',class:'9',active:true});
   await db.doc('schools/school_002/subjects/other_school').set({name:'Other school subject'});
