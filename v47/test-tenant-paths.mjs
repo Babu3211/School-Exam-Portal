@@ -11,6 +11,7 @@ for(const path of ['students','schools/school_A','schools/school_A/marks/x/child
  assert.throws(()=>assertTenantPath('school_A',path),TypeError,path);
 }
 assert.throws(()=>tenantCollection('school_A','user_roles'),TypeError);
+for(const denied of ['teachers','audit_logs','results','assessment_settings','question_papers'])assert.throws(()=>tenantCollection('school_A',denied),TypeError);
 assert.throws(()=>tenantDocument('school_A','members','../../other'),TypeError);
 assert.throws(()=>tenantCollection('invalid/id','students'),TypeError);
 console.log('V47 tenant path isolation tests passed');
