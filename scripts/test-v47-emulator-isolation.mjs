@@ -45,6 +45,8 @@ try {
   await assertFails(setDoc(schoolDoc('viewer-a','school-a','marks','mark-1'),{schoolId:'school-a',score:20}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','mark-1'),{schoolId:'school-a',score:20}));
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','marks','mark-1'),{schoolId:'school-a',score:20}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','missing-scope'),{score:20}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','wrong-scope'),{schoolId:'school-b',score:20}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','mark-1'),{schoolId:'school-b'}));
   await assertFails(setDoc(schoolDoc('viewer-a','school-a','attendance','day-1'),{schoolId:'school-a'}));
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','attendance','day-1'),{schoolId:'school-a'}));
@@ -52,6 +54,9 @@ try {
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','attendance','day-1'),{schoolId:'school-b'}));
   await assertFails(setDoc(schoolDoc('viewer-a','school-a','staff','staff-1'),{schoolId:'school-a'}));
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','staff','staff-1'),{schoolId:'school-a'}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','staff','missing-scope'),{name:'Missing scope'}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','staff','wrong-scope'),{schoolId:'school-b'}));
+  await assertFails(updateDoc(schoolDoc('admin-a','school-a','staff','staff-1'),{schoolId:'school-b'}));
   await assertFails(deleteDoc(schoolDoc('admin-a','school-a','staff','staff-1')));
   await assertFails(setDoc(schoolDoc('admin-a','school-b','students','student-3'),{...valid,schoolId:'school-b'}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','members','new-admin'),{uid:'new-admin',schoolId:'school-a',role:'school_admin',active:true}));
