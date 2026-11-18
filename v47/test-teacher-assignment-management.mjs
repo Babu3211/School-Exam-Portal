@@ -66,4 +66,14 @@ for(const badActor of [{role:'viewer',active:true,schoolId},{role:'school_admin'
  await assert.rejects(createTeacherAssignment({...base,actor:badActor,api:state.api}),/School Admin/);
  assert.equal(state.writes.length,0);
 }
+{
+ const state=setup({'teacher_assignments/school-a:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:'yes'}});
+ await assert.rejects(setTeacherAssignmentActive({...base,api:state.api,active:true}),/status invalid/);
+ assert.equal(state.writes.length,0);
+}
+{
+ const state=setup({'teacher_assignments/school-a:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:false}});
+ await assert.rejects(setTeacherAssignmentActive({...base,api:state.api,active:'yes'}),/Active must be boolean/);
+ assert.equal(state.writes.length,0);
+}
 console.log('V47 teacher assignment transaction tests passed');
