@@ -13,7 +13,7 @@ export async function firebaseTenantOperation({auth,firestore,schoolId,collectio
   const plan=tenantReadPlan({session,schoolId,uid,collection,id});
   const snapshot=await sdk.getDoc(sdk.doc(firestore,...plan.path.split('/')));
   if(auth.currentUser?.uid!==uid)throw new Error('Authentication changed');
-  return snapshot.exists()?{id:snapshot.id,...snapshot.data()}:null;
+  return snapshot.exists()?{...snapshot.data(),id:snapshot.id}:null;
  }
  if(operation==='list'){
   if(!Number.isInteger(limit)||limit<1||limit>100)throw new RangeError('Invalid page size');
@@ -21,7 +21,7 @@ export async function firebaseTenantOperation({auth,firestore,schoolId,collectio
   const q=sdk.query(sdk.collection(firestore,...plan.path.split('/')),sdk.orderBy(sdk.documentId()),sdk.limit(limit));
   const snapshot=await sdk.getDocs(q);
   if(auth.currentUser?.uid!==uid)throw new Error('Authentication changed');
-  return snapshot.docs.map(d=>({id:d.id,...d.data()}));
+  return snapshot.docs.map(d=>({...d.data(),id:d.id}));
  }
  if(operation==='create'||operation==='update'){
   const plan=tenantWritePlan({session,schoolId,uid,collection,id,operation,data});
