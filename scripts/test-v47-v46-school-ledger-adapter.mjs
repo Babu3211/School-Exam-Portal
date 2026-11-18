@@ -66,4 +66,16 @@ for(const classNo of [1,3,5,6,8,9,10]){
 for(const classNo of [0,-1,11,12,1.5,NaN]){
  assert.throws(()=>renderV47SchoolLedger({...base,classNo}),/not verified/);
 }
+// All verified class groups must be isolated for each of the three ledger views.
+for(const mode of ["entry","number","grade"]){
+ for(const classNo of [1,2,3,4,5,6,7,8,9,10]){
+  const student={...base.students[0],classNo};
+  const mark={...validMark,classNo};
+  const view=renderV47SchoolLedger({...base,mode,classNo,students:[student],marks:[mark]});
+  assert.ok(view.body.includes("Test Student"),"Class "+classNo+" "+mode+" missing student");
+  const otherClass=classNo===10?9:classNo+1;
+  assert.throws(()=>renderV47SchoolLedger({...base,mode,classNo,students:[{...student,classNo:otherClass}],marks:[mark]}),/student class mismatch/);
+  assert.throws(()=>renderV47SchoolLedger({...base,mode,classNo,students:[student],marks:[{...mark,classNo:otherClass}]}),/mark class mismatch/);
+ }
+}
 console.log("V47 school-scoped IEMIS ledger adapter checks passed");
