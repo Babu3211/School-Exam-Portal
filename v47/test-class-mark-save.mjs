@@ -62,4 +62,16 @@ for(const [overrides,message] of [
  await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),message);
  assert.equal(writes.length,0,'Failed transaction must write nothing');
 }
+for(const [overrides,message] of [
+ [{'subjects/math':{schoolId,class:classId,active:false,name:'Mathematics'}},/Active subject/],
+ [{'subjects/math':{schoolId:'school-b',class:classId,active:true,name:'Mathematics'}},/Active subject/],
+ [{'subjects/math':{schoolId,class:'8',active:true,name:'Mathematics'}},/Active subject/],
+ [{'subject_assignments/s2:math':{schoolId:'school-b',class:classId,studentId:'s2',subjectId}},/Student subject assignment/],
+ [{'subject_assignments/s2:math':{schoolId,class:'8',studentId:'s2',subjectId}},/Student subject assignment/],
+ [{'subject_assignments/s2:math':{schoolId,class:classId,studentId:'s1',subjectId}},/Student subject assignment/]
+ ]){
+ const {api,writes}=mock(overrides);
+ await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),message);
+ assert.equal(writes.length,0);
+}
 console.log('V47 atomic class marks save contract checks passed');
