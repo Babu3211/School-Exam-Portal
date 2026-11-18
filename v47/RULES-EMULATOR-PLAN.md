@@ -12,3 +12,5 @@
 10. Assert school admin can provision only inactive teacher/viewer memberships, cannot self-promote or change roles, and cannot provision in other schools. Assert arbitrary top-level and nested paths denied; run all cases against `v47/firestore.rules`, not V46 rules.
 
 The automated suite is `node v47/test-firestore-emulator.mjs` inside the dedicated V47 Firebase emulator CI job.\n\nDo not grant teacher writes from client assignment arrays: school-role guards intentionally fail closed until rules are implemented.\n\nDo not claim these tests passed until a real Firebase emulator run reports success. Do not deploy V47 rules without explicit approval.
+
+Static code checks and the 70 emulator assertions are not substitutes for a successful CI run. Verify GitHub Actions logs and Firebase emulator outcomes before deployment.
