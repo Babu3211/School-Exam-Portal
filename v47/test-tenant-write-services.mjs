@@ -4,10 +4,12 @@ import {createSchoolMarkOnly} from './mark-create-service.mjs';
 const actor={role:'school_admin',active:true,schoolId:'school_A'};
 const writes=[];
 let subjectCreateMode=true;
+let existingMark=false;
+let missingAssignment=false;
 const api={
  doc:(_db,...segments)=>segments.join('/'),
  runTransaction:async(_db,fn)=>fn({
-  get:async path=>({exists:()=>!(subjectCreateMode&&path.endsWith('/subjects/science_9'))&&!path.includes('/marks/')&&!path.includes('/component_marks/'),data:()=>path.includes('/students/')?{class:'9'}:path.includes('/subject_assignments/')?{studentId:'student_1',subjectId:'science_9',class:'9'}:{active:true,class:'9',name:'Science'}}),
+  get:async path=>({exists:()=>!(subjectCreateMode&&path.endsWith('/subjects/science_9'))&&!(path.includes('/marks/')&&!existingMark)&&!path.includes('/component_marks/')&&!(missingAssignment&&path.includes('/subject_assignments/')),data:()=>path.includes('/students/')?{class:'9'}:path.includes('/subject_assignments/')?{studentId:'student_1',subjectId:'science_9',class:'9'}:{active:true,class:'9',name:'Science'}}),
   set:(path,data)=>writes.push({path,data})
  })
 };
@@ -19,6 +21,12 @@ const mark=await createSchoolMarkOnly({db:{},api,actor,schoolId:'school_A',input
 assert.equal(mark.schoolId,undefined);
 assert.equal(writes.at(-1).data.schoolId,'school_A');
 assert.ok(writes.at(-1).path.startsWith('schools/school_A/marks/'));
+existingMark=true;
+await assert.rejects(()=>createSchoolMarkOnly({db:{},api,actor,schoolId:'school_A',input:{studentId:'student_1',subjectId:'science_9',class:'9',term:'1st',theory:25,practical:10}}),/already exists/i);
+existingMark=false;missingAssignment=true;
+await assert.rejects(()=>createSchoolMarkOnly({db:{},api,actor,schoolId:'school_A',input:{studentId:'student_1',subjectId:'science_9',class:'9',term:'1st',theory:25,practical:10}}),/assignment required/i);
+missingAssignment=false;
+await assert.rejects(()=>createSchoolMarkOnly({db:{},api,actor:{role:'viewer',active:true,schoolId:'school_A'},schoolId:'school_A',input:{studentId:'student_1',subjectId:'science_9',class:'9',term:'1st',theory:25,practical:10}}),/permission/i);
 await assert.rejects(()=>createSchoolMarkOnly({db:{},api,actor,schoolId:'school_B',input:{studentId:'student_1',subjectId:'science_9',class:'9',term:'1st',theory:25,practical:10}}),/permission/i);
 await assert.rejects(()=>createSchoolSubject({db:{},api,actor,schoolId:'school_B',input:{id:'science_9',name:'Science',class:'9'}}),/permission/i);
 console.log('V47 tenant subject write service check passed');
