@@ -138,34 +138,28 @@ service cloud.firestore {
         allow delete: if false;
       }
       function teacherMarkAllowed(sid, id) {
+        let mark = request.resource.data;
+        let assignmentPath = /databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + mark.class + ':' + mark.subjectId);
+        let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(mark.studentId);
+        let subjectAssignmentPath = /databases/$(database)/documents/schools/$(sid)/subject_assignments/$(mark.studentId + ':' + mark.subjectId);
+        let subjectPath = /databases/$(database)/documents/schools/$(sid)/subjects/$(mark.subjectId);
         return memberRole(sid, 'teacher')
-          && request.resource.data.keys().hasOnly(['schoolId','studentId','subjectId','class','term','theory','practical'])
-          && request.resource.data.keys().hasAll(['schoolId','studentId','subjectId','class','term','theory','practical'])
-          && request.resource.data.schoolId == sid
-          && request.resource.data.studentId is string
-          && request.resource.data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
-          && request.resource.data.subjectId is string
-          && request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
-          && request.resource.data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
-          && request.resource.data.term in ['1st','2nd','final']
-          && request.resource.data.theory is number
-          && request.resource.data.practical is number
-          && request.resource.data.theory >= 0 && request.resource.data.theory <= 100
-          && request.resource.data.practical >= 0 && request.resource.data.practical <= 100
-          && id == request.resource.data.term + ':' + request.resource.data.studentId + ':' + request.resource.data.subjectId
-          && exists(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':' + request.resource.data.subjectId))
-          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':' + request.resource.data.subjectId)).data.get('active', false) == true
-          && exists(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId))
-          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('class', '') == request.resource.data.class
-          && exists(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId))
-          && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.get('studentId', '') == request.resource.data.studentId
-          && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.get('subjectId', '') == request.resource.data.subjectId
-          && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.get('class', '') == request.resource.data.class
-          && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.get('active', true) == true
-          && exists(/databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId))
-          && get(/databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId)).data.get('active', false) == true
-          && get(/databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId)).data.get('schoolId', '') == sid
-          && get(/databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId)).data.get('class', '') == request.resource.data.class;
+          && validRawMark(sid, id)
+          && exists(assignmentPath)
+          && get(assignmentPath).data.get('active', false) == true
+          && exists(studentPath)
+          && get(studentPath).data.get('schoolId', '') == sid
+          && get(studentPath).data.get('class', '') == mark.class
+          && exists(subjectAssignmentPath)
+          && get(subjectAssignmentPath).data.get('schoolId', '') == sid
+          && get(subjectAssignmentPath).data.get('studentId', '') == mark.studentId
+          && get(subjectAssignmentPath).data.get('subjectId', '') == mark.subjectId
+          && get(subjectAssignmentPath).data.get('class', '') == mark.class
+          && get(subjectAssignmentPath).data.get('active', true) == true
+          && exists(subjectPath)
+          && get(subjectPath).data.get('active', false) == true
+          && get(subjectPath).data.get('schoolId', '') == sid
+          && get(subjectPath).data.get('class', '') == mark.class;
       }
       function validRawMark(sid, id) {
         return request.resource.data.keys().hasOnly(['schoolId','studentId','subjectId','class','term','theory','practical'])
