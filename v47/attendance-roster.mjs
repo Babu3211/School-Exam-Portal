@@ -12,5 +12,7 @@ export async function loadClassRoster({db,api,actor,schoolId,schoolClass,pageSiz
  const snap=await api.getDocs(api.query(api.collection(db,'schools',schoolId,'students'),...constraints));
  const docs=snap.docs;
  if(!Array.isArray(docs)||docs.length>pageSize+1)throw new RangeError('Unexpected result size');
- return {students:docs.slice(0,pageSize).map(d=>({id:d.id,...d.data()})),hasMore:docs.length>pageSize,cursor:docs.slice(0,pageSize).at(-1)??null};
+ const page=docs.slice(0,pageSize);
+ for(const d of page)if(d.data().schoolId!==schoolId||d.data().class!==schoolClass)throw new Error('Cross-school or wrong-class roster record');
+ return {students:page.map(d=>({...d.data(),id:d.id})),hasMore:docs.length>pageSize,cursor:page.at(-1)??null};
 }
