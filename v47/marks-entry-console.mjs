@@ -17,7 +17,7 @@ async function loadOptions(collection,element,label){if(busy||!actor)return;if(c
   if(cursor)constraints.push(api.startAfter(cursor));
   const snap=await api.getDocs(api.query(api.collection(db,'schools',schoolId,collection),...constraints));
   if(attempt!==epoch||schoolClass!==$('schoolClass').value||!actor)return;
-  rows.push(...snap.docs.map(doc=>({id:doc.id,...doc.data()})));
+  rows.push(...snap.docs.map(doc=>({...doc.data(),id:doc.id})));
   if(rows.length>5000)throw new Error('Class has over 5000 records; use searchable roster');
   cursor=snap.docs.length===100?snap.docs.at(-1):null;
  }while(cursor);
