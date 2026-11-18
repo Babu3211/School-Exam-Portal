@@ -11,4 +11,4 @@
 9. Assert only Super Admin can create inactive schools and change activation; clients cannot self-provision Super Admin.
 10. Assert school admin can provision only inactive teacher/viewer memberships, cannot self-promote or change roles, and cannot provision in other schools. Assert arbitrary top-level and nested paths denied; run all cases against `v47/firestore.rules`, not V46 rules.
 
-The automated suite is `node v47/test-firestore-emulator.mjs` inside the dedicated V47 Firebase emulator CI job.\n\nDo not claim these tests passed until a real Firebase emulator run reports success. Do not deploy V47 rules without explicit approval.
+The automated suite is `node v47/test-firestore-emulator.mjs` inside the dedicated V47 Firebase emulator CI job.\n\nDo not grant teacher writes from client assignment arrays: school-role guards intentionally fail closed until rules are implemented.\n\nDo not claim these tests passed until a real Firebase emulator run reports success. Do not deploy V47 rules without explicit approval.
