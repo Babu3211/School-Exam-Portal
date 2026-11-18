@@ -20,7 +20,7 @@ export async function createSchoolMarkOnly({db,api,actor,schoolId,input}){
   if(['9','10'].includes(entry.class)&&subject.data().name==='Computer')throw new Error('Use Computer 4/36/10 component marks entry');
  if(!assignment.exists()||assignment.data().studentId!==entry.studentId||assignment.data().subjectId!==entry.subjectId||assignment.data().class!==entry.class)throw new Error('Student subject assignment required');
   if(existing.exists()||component.exists())throw new Error('Mark already exists; overwrite blocked');
-  tx.set(markRef,entry);
+  tx.set(markRef,{...entry,schoolId});
  });
  return {id,...entry};
 }
