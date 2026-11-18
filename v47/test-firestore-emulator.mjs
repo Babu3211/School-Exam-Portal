@@ -147,5 +147,25 @@ try{
  await assertFails(setDoc(doc(viewer,'schools','school_A','members','viewer_created'),{uid:'viewer_created',schoolId:'school_A',role:'viewer',active:false}));
  // 60 School admin cannot delete a teacher membership
  await assertFails(deleteDoc(doc(admin,'schools','school_A','members','new_teacher_A')));
- console.log('V47 Firestore emulator: 60 authorization assertions passed');
+ // 61 School admin cannot assign a different uid inside membership
+ await assertFails(setDoc(doc(admin,'schools','school_A','members','uid_mismatch'),{uid:'other_uid',schoolId:'school_A',role:'viewer',active:false}));
+ // 62 School admin cannot forge membership schoolId
+ await assertFails(setDoc(doc(admin,'schools','school_A','members','wrong_school'),{uid:'wrong_school',schoolId:'school_B',role:'viewer',active:false}));
+ // 63 School admin cannot assign super_admin role
+ await assertFails(setDoc(doc(admin,'schools','school_A','members','new_super'),{uid:'new_super',schoolId:'school_A',role:'super_admin',active:false}));
+ // 64 School admin cannot change teacher uid
+ await assertFails(updateDoc(doc(admin,'schools','school_A','members','new_teacher_A'),{uid:'changed_uid'}));
+ // 65 School admin cannot change teacher schoolId
+ await assertFails(updateDoc(doc(admin,'schools','school_A','members','new_teacher_A'),{schoolId:'school_B'}));
+ // 66 School admin cannot add unexpected fields
+ await assertFails(updateDoc(doc(admin,'schools','school_A','members','new_teacher_A'),{permissions:['all']}));
+ // 67 Teacher cannot activate own membership
+ await assertFails(updateDoc(doc(teacher,'schools','school_A','members','teacher_school_A'),{active:false}));
+ // 68 Viewer cannot deactivate own membership
+ await assertFails(updateDoc(doc(viewer,'schools','school_A','members','viewer_school_A'),{active:false}));
+ // 69 School admin can deactivate own school's teacher
+ await assertSucceeds(updateDoc(doc(admin,'schools','school_A','members','new_teacher_A'),{active:false}));
+ // 70 Deactivated teacher membership loses access
+ await assertFails(getDoc(student(db('new_teacher_A'),'school_A')));
+ console.log('V47 Firestore emulator: 70 authorization assertions passed');
 }finally{await env.cleanup();}
