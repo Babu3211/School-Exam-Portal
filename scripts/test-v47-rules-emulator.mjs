@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import {initializeTestEnvironment,assertFails,assertSucceeds} from '@firebase/rules-unit-testing';
+import {initializeTestEnvironment,assertFails,assertSucceeds as firebaseAssertSucceeds} from '@firebase/rules-unit-testing';
+async function assertSucceeds(operation){const callsite=new Error().stack?.split('\n')[2]?.trim()??'unknown';try{return await firebaseAssertSucceeds(operation)}catch(error){console.error('Unexpected Firestore permission failure at '+callsite);throw error}}
+
 import {readFileSync} from 'node:fs';
 const projectId='v47-isolation-test';
 const env=await initializeTestEnvironment({projectId,firestore:{rules:readFileSync('v47/firestore.rules','utf8'),host:'127.0.0.1',port:8081}});
