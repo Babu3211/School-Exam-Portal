@@ -4,6 +4,7 @@ const base={schoolId:'school_A',uid:'teacher_123',role:'teacher',actorUid:'admin
 assert.deepEqual(prepareSubordinateMembership(base).data,{uid:'teacher_123',schoolId:'school_A',role:'teacher',active:false});
 assert.throws(()=>prepareSubordinateMembership({...base,role:'school_admin'}));
 assert.throws(()=>prepareSubordinateMembership({...base,uid:'admin_123'}));
+assert.throws(()=>prepareSubordinateMembership({...base,actorUid:undefined}));
 assert.throws(()=>prepareSubordinateMembership({...base,schoolId:'../bad'}));
 assert.throws(()=>prepareSubordinateActivation({...base,confirmed:false}));
 assert.equal(prepareSubordinateActivation({...base,confirmed:true}).patch.active,true);
