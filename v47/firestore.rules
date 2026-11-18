@@ -166,6 +166,9 @@ service cloud.firestore {
         let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(data.studentId);
         let subjectPath = /databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId);
         let assignmentPath = /databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId);
+        let student = get(studentPath).data;
+        let subject = get(subjectPath).data;
+        let assignment = get(assignmentPath).data;
         return data.keys().hasOnly(['schoolId','studentId','subjectId','class','term','theory','practical'])
           && data.keys().hasAll(['schoolId','studentId','subjectId','class','term','theory','practical'])
           && data.schoolId == sid
@@ -182,14 +185,12 @@ service cloud.firestore {
           && data.practical >= 0
           && data.practical <= 100
           && id == data.term + ':' + data.studentId + ':' + data.subjectId
-          && exists(studentPath) && exists(subjectPath) && exists(assignmentPath)
-          && get(studentPath).data.get('schoolId','') == sid
-          && get(studentPath).data.get('class','') == data.class
-          && get(subjectPath).data.get('schoolId','') == sid
-          && get(subjectPath).data.get('class','') == data.class
-          && get(subjectPath).data.get('active',false) == true
-          && get(assignmentPath).data.get('schoolId','') == sid
-          && get(assignmentPath).data.get('class','') == data.class;
+          && student.get('schoolId','') == sid && subject.get('schoolId','') == sid && assignment.get('schoolId','') == sid
+          && student.get('schoolId','') == sid
+          && student.get('class','') == data.class
+          && subject.get('class','') == data.class
+          && subject.get('active',false) == true
+          && assignment.get('class','') == data.class;
       }
       match /marks/{id} {
         allow get, list: if canRead(sid);
