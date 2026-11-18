@@ -1,0 +1,24 @@
+name: V47 isolated security tests
+on:
+  push:
+    branches: [smss-v47-multischool-work]
+  workflow_dispatch:
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - name: Structural school isolation checks
+        run: node scripts/test-v47-school-isolation-gate.mjs
+      - name: Real Firestore rules authorization tests
+        run: npx firebase emulators:exec --project smss-v47-isolation-test --config v47/firebase.test.json --only firestore "node scripts/test-v47-emulator-isolation.mjs"
