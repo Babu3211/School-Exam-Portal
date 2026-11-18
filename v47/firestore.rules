@@ -167,10 +167,224 @@ service cloud.firestore {
           && get(/databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId)).data.get('schoolId', '') == sid
           && get(/databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId)).data.get('class', '') == request.resource.data.class;
       }
+      function validRawMark(sid, id) {
+        return request.resource.data.keys().hasOnly(['schoolId','studentId','subjectId','class','term','theory','practical'])
+          && request.resource.data.keys().hasAll(['schoolId','studentId','subjectId','class','term','theory','practical'])
+          && request.resource.data.schoolId == sid
+          && request.resource.data.studentId is string
+          && request.resource.data.studentId.matches('^[A-Za-z0-9_-]{1,128}
+      function teacherAttendanceAllowed(sid, id) {
+        return memberRole(sid, 'teacher')
+          && request.resource.data.keys().hasOnly(['schoolId','studentId','class','date','present'])
+          && request.resource.data.keys().hasAll(['schoolId','studentId','class','date','present'])
+          && request.resource.data.schoolId == sid
+          && request.resource.data.studentId is string
+          && request.resource.data.studentId.matches('^[A-Za-z0-9_-]{1,128}
+      match /exams/{id} {
+        function validExamTerm() {
+          return id in ['1st', '2nd', 'final']
+            && request.resource.data.keys().hasOnly(['schoolId', 'term'])
+            && request.resource.data.keys().hasAll(['schoolId', 'term'])
+            && request.resource.data.schoolId == sid
+            && request.resource.data.term == id;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validExamTerm();
+        // Exam terms are create-only until audited dependent-record deletion is implemented.
+        allow update, delete: if false;
+      }
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canRead(sid);
+        allow create: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+          && request.resource.data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+          && request.resource.data.date is string
+          && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}
+      match /exams/{id} {
+        function validExamTerm() {
+          return id in ['1st', '2nd', 'final']
+            && request.resource.data.keys().hasOnly(['schoolId', 'term'])
+            && request.resource.data.keys().hasAll(['schoolId', 'term'])
+            && request.resource.data.schoolId == sid
+            && request.resource.data.term == id;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validExamTerm();
+        // Exam terms are create-only until audited dependent-record deletion is implemented.
+        allow update, delete: if false;
+      }
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canRead(sid);
+        allow create: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+          && request.resource.data.present is bool
+          && id == request.resource.data.date + '_' + request.resource.data.studentId
+          && exists(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance'))
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('active', false) == true
+          && exists(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId))
+          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('schoolId', '') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('class', '') == request.resource.data.class;
+      }
+      match /attendance/{id} {
+        allow get, list: if canRead(sid);
+        allow create: if (canAdmin(sid) && scopedRecord(sid)) || teacherAttendanceAllowed(sid, id);
+        allow update: if canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+      match /exams/{id} {
+        function validExamTerm() {
+          return id in ['1st', '2nd', 'final']
+            && request.resource.data.keys().hasOnly(['schoolId', 'term'])
+            && request.resource.data.keys().hasAll(['schoolId', 'term'])
+            && request.resource.data.schoolId == sid
+            && request.resource.data.term == id;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validExamTerm();
+        // Exam terms are create-only until audited dependent-record deletion is implemented.
+        allow update, delete: if false;
+      }
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canRead(sid);
+        allow create: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+          && request.resource.data.subjectId is string
+          && request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}
+      function teacherAttendanceAllowed(sid, id) {
+        return memberRole(sid, 'teacher')
+          && request.resource.data.keys().hasOnly(['schoolId','studentId','class','date','present'])
+          && request.resource.data.keys().hasAll(['schoolId','studentId','class','date','present'])
+          && request.resource.data.schoolId == sid
+          && request.resource.data.studentId is string
+          && request.resource.data.studentId.matches('^[A-Za-z0-9_-]{1,128}
+      match /exams/{id} {
+        function validExamTerm() {
+          return id in ['1st', '2nd', 'final']
+            && request.resource.data.keys().hasOnly(['schoolId', 'term'])
+            && request.resource.data.keys().hasAll(['schoolId', 'term'])
+            && request.resource.data.schoolId == sid
+            && request.resource.data.term == id;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validExamTerm();
+        // Exam terms are create-only until audited dependent-record deletion is implemented.
+        allow update, delete: if false;
+      }
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canRead(sid);
+        allow create: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+          && request.resource.data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+          && request.resource.data.date is string
+          && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}
+      match /exams/{id} {
+        function validExamTerm() {
+          return id in ['1st', '2nd', 'final']
+            && request.resource.data.keys().hasOnly(['schoolId', 'term'])
+            && request.resource.data.keys().hasAll(['schoolId', 'term'])
+            && request.resource.data.schoolId == sid
+            && request.resource.data.term == id;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validExamTerm();
+        // Exam terms are create-only until audited dependent-record deletion is implemented.
+        allow update, delete: if false;
+      }
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canRead(sid);
+        allow create: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+          && request.resource.data.present is bool
+          && id == request.resource.data.date + '_' + request.resource.data.studentId
+          && exists(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance'))
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('active', false) == true
+          && exists(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId))
+          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('schoolId', '') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('class', '') == request.resource.data.class;
+      }
+      match /attendance/{id} {
+        allow get, list: if canRead(sid);
+        allow create: if (canAdmin(sid) && scopedRecord(sid)) || teacherAttendanceAllowed(sid, id);
+        allow update: if canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+      match /exams/{id} {
+        function validExamTerm() {
+          return id in ['1st', '2nd', 'final']
+            && request.resource.data.keys().hasOnly(['schoolId', 'term'])
+            && request.resource.data.keys().hasAll(['schoolId', 'term'])
+            && request.resource.data.schoolId == sid
+            && request.resource.data.term == id;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validExamTerm();
+        // Exam terms are create-only until audited dependent-record deletion is implemented.
+        allow update, delete: if false;
+      }
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canRead(sid);
+        allow create: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','subjects','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+          && request.resource.data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+          && request.resource.data.term in ['1st','2nd','final']
+          && request.resource.data.theory is number
+          && request.resource.data.practical is number
+          && request.resource.data.theory >= 0
+          && request.resource.data.theory <= 100
+          && request.resource.data.practical >= 0
+          && request.resource.data.practical <= 100
+          && id == request.resource.data.term + ':' + request.resource.data.studentId + ':' + request.resource.data.subjectId;
+      }
       match /marks/{id} {
         allow get, list: if canRead(sid);
-        allow create: if (canAdmin(sid) && scopedRecord(sid)) || teacherMarkAllowed(sid, id);
-        allow update: if canAdmin(sid) && immutableSchool(sid);
+        allow create: if (canAdmin(sid) && validRawMark(sid, id)) || teacherMarkAllowed(sid, id);
+        allow update: if canAdmin(sid) && immutableSchool(sid) && validRawMark(sid, id)
+          && request.resource.data.studentId == resource.data.studentId
+          && request.resource.data.subjectId == resource.data.subjectId
+          && request.resource.data.class == resource.data.class
+          && request.resource.data.term == resource.data.term;
         allow delete: if false;
       }
       function teacherAttendanceAllowed(sid, id) {
