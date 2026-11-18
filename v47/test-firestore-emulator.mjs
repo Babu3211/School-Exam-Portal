@@ -70,5 +70,45 @@ try{
  await assertFails(getDocs(collection(viewer,'schools')));
  // 20 Super Admin school listing allowed
  await assertSucceeds(getDocs(collection(superDb,'schools')));
- console.log('V47 Firestore emulator: 20 authorization assertions passed');
+ // 21 Teacher can read own marks
+ await assertSucceeds(getDoc(mark(teacher,'school_A')));
+ // 22 Viewer cannot write marks
+ await assertFails(updateDoc(mark(viewer,'school_A'),{value:99}));
+ // 23 Viewer cannot write attendance
+ await assertFails(updateDoc(attendance(viewer,'school_A'),{status:'absent'}));
+ // 24 Teacher cannot edit student details
+ await assertFails(updateDoc(student(teacher,'school_A'),{name:'Changed'}));
+ // 25 School admin can update own attendance
+ await assertSucceeds(updateDoc(attendance(admin,'school_A'),{status:'late'}));
+ // 26 School admin cannot remove student
+ await assertFails(deleteDoc(student(admin,'school_A')));
+ // 27 School admin cannot change membership roles
+ await assertFails(updateDoc(doc(admin,'schools','school_A','members','viewer_school_A'),{role:'school_admin'}));
+ // 28 Viewer cannot list memberships
+ await assertFails(getDocs(collection(viewer,'schools','school_A','members')));
+ // 29 School admin can list own memberships
+ await assertSucceeds(getDocs(collection(admin,'schools','school_A','members')));
+ // 30 School admin cannot list other school's memberships
+ await assertFails(getDocs(collection(admin,'schools','school_B','members')));
+ // 31 Viewer cannot create arbitrary collection documents
+ await assertFails(setDoc(doc(viewer,'schools','school_A','private','x'),{secret:true}));
+ // 32 Viewer cannot write own membership
+ await assertFails(updateDoc(doc(viewer,'schools','school_A','members','viewer_school_A'),{role:'school_admin'}));
+ // 33 Teacher cannot read another school's marks
+ await assertFails(getDoc(mark(teacher,'school_B')));
+ // 34 Teacher cannot read another school's attendance
+ await assertFails(getDoc(attendance(teacher,'school_B')));
+ // 35 School admin cannot create active school
+ await assertFails(setDoc(doc(admin,'schools','school_admin_new'),{id:'school_admin_new',name:'Admin New',active:false}));
+ // 36 Super Admin cannot delete school
+ await assertFails(deleteDoc(doc(superDb,'schools','school_A')));
+ // 37 Super Admin can activate a school
+ await assertSucceeds(updateDoc(doc(superDb,'schools','school_new'),{active:true}));
+ // 38 Super Admin cannot alter school ID on update
+ await assertFails(updateDoc(doc(superDb,'schools','school_A'),{id:'school_B'}));
+ // 39 Anonymous school listing denied
+ await assertFails(getDocs(collection(anon,'schools')));
+ // 40 Viewer cannot read Super Admin registry
+ await assertFails(getDoc(doc(viewer,'v47_super_admins','root_super')));
+ console.log('V47 Firestore emulator: 40 authorization assertions passed');
 }finally{await env.cleanup();}
