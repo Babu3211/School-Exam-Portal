@@ -1,6 +1,6 @@
 import {initializeTestEnvironment,assertFails,assertSucceeds} from '@firebase/rules-unit-testing';
 import {readFileSync} from 'node:fs';
-import {doc,getDoc,setDoc,updateDoc,deleteDoc,collection,getDocs} from 'firebase/firestore';
+import {doc,getDoc,setDoc,updateDoc,deleteDoc,deleteField,collection,getDocs} from 'firebase/firestore';
 const rules=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
 const env=await initializeTestEnvironment({projectId:'smss-v47-emulator-tests',firestore:{rules,host:'127.0.0.1',port:8187}});
 const db=(uid)=>env.authenticatedContext(uid).firestore();
@@ -187,5 +187,13 @@ try{
  await assertFails(updateDoc(doc(admin,'schools','school_A','staff','scoped_staff'),{schoolId:'school_B'}));
  // 80 Viewer cannot modify staff
  await assertFails(updateDoc(doc(viewer,'schools','school_A','staff','scoped_staff'),{name:'Altered'}));
- console.log('V47 Firestore emulator: 80 authorization assertions passed');
+ // 81 Explicit tenant identity cannot be removed from staff
+ await assertFails(updateDoc(doc(admin,'schools','school_A','staff','scoped_staff'),{schoolId:null}));
+ // 82 Explicit tenant identity cannot be removed using deleteField
+ await assertFails(updateDoc(doc(admin,'schools','school_A','staff','scoped_staff'),{schoolId:deleteField()}));
+ // 83 School admin can update staff while preserving schoolId
+ await assertSucceeds(updateDoc(doc(admin,'schools','school_A','staff','scoped_staff'),{name:'Updated Staff'}));
+ // 84 Staff with a different tenant cannot be created by superadmin either
+ await assertFails(setDoc(doc(superDb,'schools','school_A','staff','forged_by_super'),{schoolId:'school_B',name:'Bad'}));
+ console.log('V47 Firestore emulator: 84 authorization assertions passed');
 }finally{await env.cleanup();}
