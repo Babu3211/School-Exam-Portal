@@ -44,7 +44,7 @@ for(const [overrides,message] of [
  [{entries:[mark('s1'),mark('s2',{theory:''})]},/Marks must/],
  [{actor:{role:'viewer',active:true,schoolId}},/School Admin/],
  [{actor:{role:'school_admin',active:true,schoolId:'school-b'}},/School Admin/],
- [{expectedStudentIds:Array.from({length:11},(_,i)=>'s'+i),entries:Array.from({length:11},(_,i)=>mark('s'+i))},/at most 10/]
+ [{expectedStudentIds:Array.from({length:4},(_,i)=>'s'+i),entries:Array.from({length:11},(_,i)=>mark('s'+i))},/at most 3/]
  ]){
  const {api,writes}=mock();
  await assert.rejects(saveCompleteClassMarks({...args,...overrides,db:{},api}),message);
