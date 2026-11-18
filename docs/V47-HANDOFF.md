@@ -132,3 +132,16 @@
 - Added six class marks transaction denial cases for inactive/cross-school subject and mismatched student-subject mapping, and a Computer 4/36/10 guard test (`d3fea98`, `d018e18`).
 - Explicitly inactive student-subject assignments now block individual mark service, class mark service, raw preflight and teacher Firestore mark creation; added transaction and structural assertions (`b54a62e`, `368e4b4`, `6ead3bd`, `a855047`, `aac2dfb`, `21f74ab`).
 - **Unverified:** Node tests and Firestore emulator CI, full-class Save UI wiring, marks for classes over 3, teacher attendance authorization, CDC/IEMIS parity. V46 production unchanged. No V47 deployment.
+
+## Attendance roster isolation batch — 2026-11-18
+- Individual attendance writes now fetch and verify student schoolId/class before saving (`5dbc717`).
+- Attendance batches verify every student record before any batch commit (`5937dc7`).
+- Verified-class attendance wrapper requires nonempty authoritative roster input (`5af3d33`).
+- Updated existing attendance save mock for roster reads (`6574978`).
+- Added attendance roster write tests for missing, wrong-school and wrong-class students, unauthorized actors, duplicates and mixed dates/classes (`10c3427`, `82ae66b`).
+- Added these tests to `npm run test:v47` (`79b06b0`).
+- Roster queries now reject foreign/wrong-class documents and prevent payload IDs from overriding document IDs (`1b788be`).
+- Added roster query tests for tenant isolation, forged IDs, duplicate IDs, invalid IDs and page size (`94c7129`, `6d7c850`, `cd0fcd0`); wired to CI (`54c6fca`).
+- Added partial attendance batch failure test (11 students, first 10 committed, second batch fails) (`08d7fdc`) and CI script (`0449237`).
+- GitHub combined commit status endpoint returned no statuses, **not evidence of CI passing**.
+- **Important limitations:** attendance save uses sequential batches, not an all-or-nothing transaction; no browser E2E or emulator run verified. Existing V47 UI still allows selected-only attendance saves. Teacher attendance writing is not yet enabled. V46 production untouched.
