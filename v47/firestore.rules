@@ -94,17 +94,19 @@ service cloud.firestore {
       }
       match /marks/{id} {
         allow get, list: if canRead(sid);
-        allow create, update: if canAdmin(sid);
+        allow create: if canAdmin(sid) && scopedRecord(sid);
+        allow update: if canAdmin(sid) && immutableSchool(sid);
         allow delete: if false;
       }
       match /attendance/{id} {
         allow get, list: if canRead(sid);
-        allow create, update: if canAdmin(sid);
+        allow create: if canAdmin(sid) && scopedRecord(sid);
+        allow update: if canAdmin(sid) && immutableSchool(sid);
         allow delete: if false;
       }
       match /{collection}/{id} {
         allow get, list: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings','subject_assignments','component_marks'] && canRead(sid);
-        allow create, update: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && scopedRecord(sid);
+        allow create: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && scopedRecord(sid);
         allow update: if collection in ['staff','classes','subjects','exams','mark_settings','school_settings','subject_assignments','component_marks'] && canAdmin(sid) && immutableSchool(sid);
         allow delete: if false;
       }
