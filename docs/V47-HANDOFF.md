@@ -194,3 +194,11 @@
 - Auth UID is checked before loading full-class marks roster (`9b37091`).
 - Mark selector now trusts Firestore document ID over payload ID, rejects foreign school/class rows (`4c8627a`, `7ebf9f1`).
 - **Critical:** This is a **draft checker only** for large classes, NOT a large-class save implementation. Atomic class save remains capped at 3. No verified passing Firebase Emulator or browser E2E results. A class enrollment change during entry is not atomically protected. V46 production unchanged and V47 not deployed.
+
+## Security follow-up — 2026-11-18
+- Fixed marks editor exam-term change so draft controls refresh immediately (`f369799`).
+- Caught invalid draft inspector exceptions before Save, denying the write without an uncaught browser error (`6d0a5f0`); aligned UI contract test (`f4dd3c4`).
+- **Critical security fix:** V47 Firestore rules formerly allowed school admins to create arbitrary `marks` records with only a matching `schoolId`. Added `validRawMark` schema, canonical document ID, numeric score bounds, supported class/term and immutable mark identity on update (`255d21e`).
+- Updated emulator cases for valid admin marks, authorized correction and denials for forged ID, invalid score, extra fields and identity changes (`dc281e9`).
+- Added structural rule test assertions to prevent accidental removal of admin marks validation (`f4a83e2`).
+- Latest GitHub combined commit status lookup returned **zero status checks**; no claim of passing CI. No Firebase Emulator or browser E2E verified. V46 unchanged; V47 not deployed.
