@@ -84,7 +84,7 @@ try{
  await assertFails(admin.doc('schools/school_001/members/elevated').set({uid:'elevated',schoolId:'school_001',role:'school_admin',active:true}));
  await assertFails(admin.doc('schools/school_001/members/teacherInjected').set({uid:'teacherInjected',schoolId:'school_001',role:'teacher',active:true,permissions:['admin']}));
  await assertFails(superDb.doc('schools/school_001/members/adminInjected').set({uid:'adminInjected',schoolId:'school_001',role:'school_admin',active:true,permissions:['super_admin']}));
- await assertSucceeds(admin.doc('schools/school_001/members/teacherB').set({uid:'teacherB',schoolId:'school_001',role:'teacher',active:true}));
+ await assertSucceeds(admin.doc('schools/school_001/members/teacherB').set({uid:'teacherB',schoolId:'school_001',role:'teacher',active:false}));
  await assertFails(admin.doc('schools/school_001/members/teacherB').update({permissions:['super_admin']}));
  await assertFails(superDb.doc('schools/school_001/members/teacherB').update({permissions:['super_admin']}));
  await assertFails(admin.doc('schools/school_001/members/teacherB').update({uid:'someoneElse'}));
