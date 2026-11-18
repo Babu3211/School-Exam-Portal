@@ -29,7 +29,8 @@ service cloud.firestore {
     }
     function immutableSchool(sid) {
       return resource.data.get('schoolId', sid) == sid
-        && request.resource.data.get('schoolId', sid) == sid;
+        && request.resource.data.get('schoolId', sid) == sid
+        && (resource.data.keys().hasAny(['schoolId']) == request.resource.data.keys().hasAny(['schoolId']));
     }
     function validSchool(sid) {
       return sid.matches('^[A-Za-z0-9_-]{3,64}$')
