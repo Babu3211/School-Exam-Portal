@@ -15,7 +15,7 @@ for(const token of [
  'function teacherAttendanceAllowed(sid, id)',
  'match /{document=**} { allow read, write: if false; }',
  "request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')",
- "data.get('active', true) == true",
+ "subjectAssignment.get('active', true) == true",
  'teacherMarkAllowed(sid, id);','teacherAttendanceAllowed(sid, id);',
  'canAdmin(sid) && validRawMark(sid, id)',
  'request.resource.data.theory <= 100',
