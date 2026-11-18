@@ -22,8 +22,11 @@ const session=selectTenantSession([{schoolId,role:'viewer',active:true}],schoolI
 assert.equal(assertSessionSchool(session,schoolId),schoolId);
 assert.throws(()=>assertSessionSchool(session,'school_B'));
 assert.equal(roleCapabilities('viewer').marksWrite,false);
-assert.equal(roleCapabilities('teacher').marksWrite,true);
+assert.equal(roleCapabilities('teacher').marksWrite,false);
 assert.equal(roleCapabilities('school_admin').manage,true);
+assert.throws(()=>validateTeacherWrite({schoolId,studentId:'student_1',className:'10',subject:'Science',marks:{}}),TypeError);
+assert.throws(()=>planTenantQuery({schoolId,collection:'audit_logs'}),TypeError);
+assert.equal(session.authorization,'unverified-client-selection');
 assert.throws(()=>roleCapabilities('super_admin'));
 assert.equal(studentDocument(schoolId,'student_1'),'schools/school_A/students/student_1');
 assert.equal(markDocument(schoolId,'mark_1'),'schools/school_A/marks/mark_1');
