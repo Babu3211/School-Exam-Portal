@@ -161,7 +161,11 @@ service cloud.firestore {
           && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.get('studentId', '') == request.resource.data.studentId
           && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.get('subjectId', '') == request.resource.data.subjectId
           && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.get('class', '') == request.resource.data.class
-          && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.get('active', true) == true;
+          && get(/databases/$(database)/documents/schools/$(sid)/subject_assignments/$(request.resource.data.studentId + ':' + request.resource.data.subjectId)).data.get('active', true) == true
+          && exists(/databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId))
+          && get(/databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId)).data.get('active', false) == true
+          && get(/databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId)).data.get('schoolId', '') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId)).data.get('class', '') == request.resource.data.class;
       }
       match /marks/{id} {
         allow get, list: if canRead(sid);
