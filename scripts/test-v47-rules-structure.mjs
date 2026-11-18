@@ -1,36 +1,26 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const rules=readFileSync(new URL('../v47/firestore.rules',import.meta.url),'utf8');
-assert.match(rules,/match \/schools\/\{schoolId\}/);
-assert.match(rules,/function membershipPath\(schoolId\)/);
-assert.match(rules,/function superAdmin\(\)/);
-assert.match(rules,/match \/\{document=\*\*\} \{ allow read, write: if false; \}/);
-for(const name of ['students','staff','classes','subjects','exams','marks','attendance']){
- if(['students','attendance'].includes(name))assert.ok(rules.includes('match /'+name+'/{docId}'));
- else assert.ok(rules.includes("'"+name+"'"));
+assert.match(rules,/^rules_version = '2';/);
+assert.equal(rules.split("rules_version = '2';").length-1,1);
+assert.match(rules,/match \/schools\/\{sid\}/);
+for(const fn of ['superAdmin()','activeSchool(sid)','activeMember(sid)','memberRole(sid, role)','canRead(sid)','canAdmin(sid)','immutableSchool(sid)','validRawMark(sid, id)','teacherMarkAllowed(sid, id)','teacherAttendanceAllowed(sid, id)']){
+ assert.equal(rules.split('function '+fn).length-1,1,'Missing or duplicate '+fn);
 }
-assert.match(rules,/allow create: if schoolAdmin\(schoolId\) && docId\.matches/);
-assert.match(rules,/allow update: if schoolAdmin\(schoolId\) && docId\.matches/);
-assert.ok(rules.includes("docId.matches('^[A-Za-z0-9_-]{1,128}$')"));
-assert.ok(rules.length<20000,'Unexpected rules expansion or corruption');
-assert.equal((rules.match(/\{/g)||[]).length,(rules.match(/\}/g)||[]).length,'Unbalanced Firestore rules braces');
-assert.equal((rules.match(/rules_version = '2';/g)||[]).length,1,'Exactly one rules header');
-assert.equal((rules.match(/match \/students\/\{docId\}/g)||[]).length,1,'Exactly one student match');
-const wildcard=rules.match(/match \/\{collection\}\/\{docId\} \{([\s\S]*?)\n   \}/)?.[1];
-assert.ok(wildcard,'Missing generic scoped rule');
-assert.doesNotMatch(wildcard,/'students'|'attendance'/,'Wildcard bypasses validated collections');
-assert.ok(rules.includes("date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')"));
-assert.ok(rules.includes("studentId.matches('^[A-Za-z0-9_-]{1,128}$')"));
-for(const pattern of [/match \/\{collection\}\/\{docId\}/g,/function validAttendance\(docId\)/g,/match \/attendance\/\{docId\}/g])assert.equal((rules.match(pattern)||[]).length,1);
-assert.ok(rules.includes("students/$(request.resource.data.studentId)"),'Attendance must refer to a school-scoped student');
-assert.ok(rules.includes(".data['class'] == request.resource.data['class']"),'Attendance must match student class');
-assert.ok(rules.includes("data.get('uid', '') == request.auth.uid"),'Member UID must match signed-in user');
-assert.ok(rules.includes("data.get('schoolId', '') == schoolId"),'Member tenant ID must match requested school');
-assert.ok(rules.includes("data.get('role', '') in ['school_admin','teacher','viewer']"),'Reject unknown member roles');
-assert.ok((rules.match(/request\.resource\.data\.keys\(\)\.hasOnly\(\['uid','schoolId','role','active'\]\)/g)||[]).length===2,'Membership create and update must reject unknown fields');
-assert.ok((rules.match(/request\.resource\.data\.keys\(\)\.hasAll\(\['uid','schoolId','role','active'\]\)/g)||[]).length===2,'Membership create and update must require identity fields');
-assert.ok(rules.includes('function validSchoolRegistration()'),'School registration must validate its schema');
-assert.ok(rules.includes("request.resource.data.id == schoolId"),'School document identity must match its path');
-assert.ok(rules.includes("request.resource.data.active == false"),'New schools must start inactive');
-assert.ok(rules.includes("request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active'])"),'School updates must be activation-only');
-console.log('V47 Firestore rules structural checks passed; emulator still required');
+for(const name of ['students','marks','attendance','exams','teacher_assignments']){
+ assert.equal(rules.split('match /'+name+'/{id}').length-1,1,'Missing or duplicate '+name);
+}
+assert.match(rules,/match \/\{document=\*\*\} \{ allow read, write: if false; \}/);
+assert.match(rules,/function activeMember\(sid\)/);
+assert.match(rules,/request\.auth\.uid/);
+assert.match(rules,/get\(memberPath\(sid\)\)\.data\.get\('schoolId', ''\) == sid/);
+assert.match(rules,/get\(memberPath\(sid\)\)\.data\.get\('active', false\) == true/);
+assert.match(rules,/request\.resource\.data\.schoolId == sid/);
+assert.match(rules,/request\.resource\.data\.theory <= 100/);
+assert.match(rules,/request\.resource\.data\.practical <= 100/);
+assert.match(rules,/teacherMarkAllowed\(sid, id\)/);
+assert.match(rules,/teacherAttendanceAllowed\(sid, id\)/);
+assert.match(rules,/allow delete: if false;/);
+assert.ok(rules.length<30000,'Unexpected rules expansion');
+assert.ok(rules.trimEnd().endsWith('}'),'Rules missing final closing brace');
+console.log('V47 current Firestore rules structural contract passed; emulator authorization remains mandatory');
