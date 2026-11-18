@@ -1,13 +1,10 @@
 import {initializeTestEnvironment,assertFails,assertSucceeds} from '@firebase/rules-unit-testing';
 import {readFileSync} from 'node:fs';
 import {doc,getDoc,setDoc,updateDoc,deleteDoc,collection,getDocs} from 'firebase/firestore';
-import assert from 'node:assert/strict';
 const rules=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
 const env=await initializeTestEnvironment({projectId:'smss-v47-emulator-tests',firestore:{rules,host:'127.0.0.1',port:8187}});
 const db=(uid)=>env.authenticatedContext(uid).firestore();
 const anon=env.unauthenticatedContext().firestore();
-const school=(sid)=>doc(db('root_super'),'schools',sid);
-const member=(sid,uid)=>doc(db('root_super'),'schools',sid,'members',uid);
 const student=(database,sid)=>doc(database,'schools',sid,'students','student_1');
 const mark=(database,sid)=>doc(database,'schools',sid,'marks','mark_1');
 const attendance=(database,sid)=>doc(database,'schools',sid,'attendance','attendance_1');
