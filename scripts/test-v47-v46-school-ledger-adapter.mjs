@@ -21,4 +21,13 @@ assert.ok(ledger.body.includes("Test School"));
 assert.ok(ledger.body.includes("Test Student"));
 assert.deepEqual(ledger.subjects,["Mathematics"]);
 assert.ok(Object.isFrozen(ledger));
+// Never mix another school's roster or assessment components into the selected school's ledger.
+assert.throws(()=>renderV47SchoolLedger({...base,students:[{...base.students[0],schoolId:"school002"}]}),/student school mismatch/);
+assert.throws(()=>renderV47SchoolLedger({...base,marks:[{...validMark,schoolId:"school002"}]}),/mark school mismatch/);
+assert.throws(()=>renderV47SchoolLedger({...base,marks:[{...validMark,examId:"exam002"}]}),/exam mismatch/);
+assert.throws(()=>renderV47SchoolLedger({...base,marks:[{...validMark,classNo:7}]}),/class mismatch/);
+assert.throws(()=>renderV47SchoolLedger({...base,marks:[{...validMark,schoolId:"school001",classNo:6},validMark]}),/Duplicate ledger mark/);
+assert.throws(()=>renderV47SchoolLedger({...base,students:[base.students[0],base.students[0]]}),/duplicate student identity/);
+assert.throws(()=>renderV47SchoolLedger({...base,subjects:[]}),/Complete student and subject lists required/);
+assert.throws(()=>renderV47SchoolLedger({...base,marks:[{...validMark,scores:[]}]}),/percentage-only marks/);
 console.log("V47 school-scoped IEMIS ledger adapter checks passed");
