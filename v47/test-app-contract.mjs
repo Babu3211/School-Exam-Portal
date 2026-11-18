@@ -6,7 +6,7 @@ import {validateAttendance} from './attendance-service.mjs';
 import {assignmentRecord,assignmentKey} from './teacher-assignment.mjs';
 
 const sid='school-a';
-for(const collection of ['students','staff','classes','subjects','subject_assignments','component_marks','exams','marks','attendance','mark_settings','school_settings','members']){
+for(const collection of ['students','staff','classes','subjects','subject_assignments','teacher_assignments','component_marks','exams','marks','attendance','mark_settings','school_settings','members']){
  assert.ok(COLLECTIONS.includes(collection),collection+' missing');
  assert.equal(schoolCollectionPath(sid,collection),'schools/'+sid+'/'+collection);
  assert.equal(schoolDocumentPath(sid,collection,'id_1'),'schools/'+sid+'/'+collection+'/id_1');
