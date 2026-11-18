@@ -75,8 +75,8 @@ source.exams.pop();
 // Invalid request scope must be rejected before a single tenant read occurs.
 let attemptedReads=0;
 const noReadSession={listPage:async()=>{attemptedReads++;throw Error("must not read");}};
-for(const invalid of [{schoolId:"../other"},{examId:" "},{classNo:11},{classNo:0},{mode:"invalid"},{term:"annual"},{term:"third"}]){
- await assert.rejects(()=>prepareV47SchoolLedger({...args,...invalid,session:noReadSession}),/Invalid school|school ID|School ID|Exam ID required|not verified for this class|Unsupported ledger mode|Unsupported V47 exam term/i);
+for(const invalid of [{schoolId:"../other"},{examId:" "},{classNo:11},{classNo:0},{mode:"invalid"},{term:"annual"},{term:"third"},{creditFor:null},{componentsFor:null},{applicable:null}]){
+ await assert.rejects(()=>prepareV47SchoolLedger({...args,...invalid,session:noReadSession}),/Invalid school|school ID|School ID|Exam ID required|not verified for this class|Unsupported ledger mode|Unsupported V47 exam term|Verified subject credit/i);
  assert.equal(attemptedReads,0);
 }
 console.log("V47 verified school ledger read workflow checks passed");
