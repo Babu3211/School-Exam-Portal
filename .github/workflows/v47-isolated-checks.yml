@@ -29,3 +29,20 @@ jobs:
           node v47/test-tenant-invariants.mjs
       - name: Confirm no V46 production resources are deployed
         run: echo 'This workflow only runs V47 tests; it does not deploy.'
+
+  v47-firestore-emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install Firebase test dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: V47 school-isolation Firestore rules emulator tests
+        run: npx firebase emulators:exec --project smss-v47-emulator-tests --only firestore --config v47/firebase.emulator.json "node v47/test-firestore-emulator.mjs"
