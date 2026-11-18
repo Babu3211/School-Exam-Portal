@@ -38,7 +38,7 @@ export async function prepareV47SchoolLedger({session,schoolId,term,classNo,exam
  if(normalizedSelected.has("")||normalizedSelected.size!==subjects.length)
   throw new Error("Duplicate or invalid selected ledger subjects");
  for(const subject of subjects){
-  const matches=verifiedSubjects.filter(s=>(s.schoolId==null||s.schoolId===schoolId)&&[s.name,s.subjectName].some(name=>name===subject));
+  const matches=verifiedSubjects.filter(s=>s.schoolId===schoolId&&[s.name,s.subjectName].some(name=>name===subject));
   if(matches.length!==1)throw new Error("Ambiguous selected ledger subject mapping");
  }
  if(marks.some(m=>!markSource.has(m)||m.examId!==examId||Number(m.classNo??m.classId)!==Number(classNo)))
