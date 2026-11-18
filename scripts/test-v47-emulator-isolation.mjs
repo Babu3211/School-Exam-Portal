@@ -150,5 +150,10 @@ try {
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19',present:'yes'}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),{active:false}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19'}));
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),{active:true}));
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','members','teacher-a'),{active:false}));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-20_student-1'),{...teacherAttendance,date:'2026-11-20'}));
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','members','teacher-a'),{active:true}));
+
   console.log('V47 emulator isolation and role checks passed');
 } finally {await env.cleanup();}
