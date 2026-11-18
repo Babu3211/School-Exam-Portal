@@ -4,7 +4,7 @@ const schoolId='school-a',classId='9',date='2026-11-18',actor={role:'school_admi
 const entry=(studentId,present=true)=>({studentId,class:classId,date,present});
 const args={schoolId,classId,date,actor,expectedStudentIds:['s1','s2'],entries:[entry('s1'),entry('s2',false)]};
 let committed=[];
-const api={doc:(_db,...parts)=>parts.join('/'),writeBatch:()=>({
+const api={doc:(_db,...parts)=>parts.join('/'),getDoc:async ref=>({exists:()=>ref.endsWith('/students/s1')||ref.endsWith('/students/s2'),data:()=>({schoolId,class:classId})}),writeBatch:()=>({
  set:(ref,value)=>committed.push([ref,value]),
  commit:async()=>{}
 })};
