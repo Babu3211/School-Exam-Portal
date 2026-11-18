@@ -1,0 +1,44 @@
+import assert from 'node:assert/strict';
+import {saveClassAttendance} from './attendance-bulk.mjs';
+import {saveSchoolAttendance} from './attendance-service.mjs';
+const schoolId='school-a',actor={role:'school_admin',active:true,schoolId};
+const entry=id=>({studentId:id,class:'9',date:'2026-11-18',present:true});
+function mock(overrides={}){
+ const records=new Map([['s1',{schoolId,class:'9'}],['s2',{schoolId,class:'9'}]]);
+ for(const [id,value] of Object.entries(overrides))value===null?records.delete(id):records.set(id,value);
+ const writes=[];
+ const api={
+  doc:(_db,...parts)=>parts.join('/'),
+  getDoc:async ref=>{const data=records.get(ref.split('/').at(-1));return {exists:()=>!!data,data:()=>data};},
+  setDoc:async(ref,data)=>{writes.push([ref,data]);},
+  writeBatch:()=>{const pending=[];return {set:(ref,data)=>pending.push([ref,data]),commit:async()=>writes.push(...pending)}}
+ };
+ return {api,writes};
+}
+{
+ const state=mock();
+ const result=await saveClassAttendance({db:{},api:state.api,actor,schoolId,entries:[entry('s1'),entry('s2')]});
+ assert.equal(result.saved,2);assert.equal(state.writes.length,2);
+}
+{
+ const state=mock();
+ const result=await saveSchoolAttendance({db:{},api:state.api,actor,schoolId,input:entry('s1')});
+ assert.equal(result.studentId,'s1');assert.equal(state.writes.length,1);
+}
+for(const overrides of [
+ {s2:null},
+ {s2:{schoolId:'school-b',class:'9'}},
+ {s2:{schoolId,class:'8'}}
+]){
+ const state=mock(overrides);
+ await assert.rejects(saveClassAttendance({db:{},api:state.api,actor,schoolId,entries:[entry('s1'),entry('s2')]}),/Student roster/);
+ assert.equal(state.writes.length,0);
+ await assert.rejects(saveSchoolAttendance({db:{},api:state.api,actor,schoolId,input:entry('s2')}),/Student roster/);
+ assert.equal(state.writes.length,0);
+}
+for(const badActor of [{role:'viewer',active:true,schoolId},{role:'school_admin',active:true,schoolId:'school-b'}]){
+ const state=mock();
+ await assert.rejects(saveClassAttendance({db:{},api:state.api,actor:badActor,schoolId,entries:[entry('s1')]}),/School Admin/);
+ assert.equal(state.writes.length,0);
+}
+console.log('V47 attendance student roster authorization tests passed');
