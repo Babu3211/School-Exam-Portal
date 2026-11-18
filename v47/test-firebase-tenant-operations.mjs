@@ -11,5 +11,8 @@ assert.match(source,/tenantWritePlan\(/);
 assert.match(source,/sdk\.runTransaction\(/);
 assert.match(source,/existing\.exists\(\)/);
 assert.match(source,/sdk\.updateDoc\(/);
+assert.match(source,/sdk\.startAfter\(cursorId\)/);
+assert.match(source,/nextCursor:/);
+assert.match(source,/snapshot\.docs\.length===limit/);
 assert.doesNotMatch(source,/sdk\.deleteDoc\(/);
 console.log('V47 Firebase tenant operations offline contracts passed; emulator integration still required');
