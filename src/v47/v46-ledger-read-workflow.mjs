@@ -12,7 +12,7 @@ export async function prepareV47SchoolLedger({session,schoolId,term,classNo,exam
  const data=await loadV47LedgerCollections({session,pageSize,maxRecordsPerCollection});
  const selectedExam=data.exams.find(exam=>exam.id===examId);
  if(!selectedExam)throw new Error("Selected exam does not exist in this school");
- if(selectedExam.schoolId!=null&&selectedExam.schoolId!==schoolId)throw new Error("Selected exam school mismatch");
+ if(selectedExam.schoolId!==schoolId)throw new Error("Selected exam school mismatch");
  // An exam explicitly tagged with class/term must match the requested ledger.
  if(selectedExam.classNo!=null && Number(selectedExam.classNo)!==Number(classNo))
   throw new Error("Selected exam class mismatch");
@@ -29,7 +29,7 @@ export async function prepareV47SchoolLedger({session,schoolId,term,classNo,exam
  const studentSource=new Set(data.students);
  const markSource=new Set(data.marks);
  const verifiedSubjects=data.subjects.filter(s=>(s.classNo??s.classId)==null||Number(s.classNo??s.classId)===Number(classNo));
- const subjectNames=new Set(verifiedSubjects.filter(s=>s.schoolId==null||s.schoolId===schoolId).flatMap(s=>[s.name,s.subjectName].filter(Boolean).map(String)));
+ const subjectNames=new Set(verifiedSubjects.filter(s=>s.schoolId===schoolId).flatMap(s=>[s.name,s.subjectName].filter(Boolean).map(String)));
  if(students.some(s=>!studentSource.has(s)||Number(s.classNo??s.classId)!==Number(classNo)))
   throw new Error("Student selection is not from the verified school/class");
  if(subjects.some(s=>typeof s!=="string"||!subjectNames.has(s)))
