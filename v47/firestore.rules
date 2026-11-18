@@ -25,11 +25,11 @@ service cloud.firestore {
     function canRead(sid) { return superAdmin() || activeMember(sid); }
     function canAdmin(sid) { return superAdmin() || memberRole(sid, 'school_admin'); }
     function scopedRecord(sid) {
-      return request.resource.data.get('schoolId', sid) == sid;
+      return request.resource.data.get('schoolId', '') == sid;
     }
     function immutableSchool(sid) {
-      return resource.data.get('schoolId', sid) == sid
-        && request.resource.data.get('schoolId', sid) == sid
+      return resource.data.get('schoolId', '') == sid
+        && request.resource.data.get('schoolId', '') == sid
         && (resource.data.keys().hasAny(['schoolId']) == request.resource.data.keys().hasAny(['schoolId']));
     }
     function validSchool(sid) {
