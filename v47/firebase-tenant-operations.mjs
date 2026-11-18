@@ -18,7 +18,7 @@ export async function firebaseTenantOperation({auth,firestore,schoolId,collectio
  if(operation==='list'){
   if(!Number.isInteger(limit)||limit<1||limit>100)throw new RangeError('Invalid page size');
   const plan=tenantListPlan({session,schoolId,uid,collection});
-  if(cursorId!==null&&!/^[A-Za-z0-9_-]{1,128}$/.test(cursorId))throw new TypeError('Invalid pagination cursor');
+  if(cursorId!==null&&(typeof cursorId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(cursorId)))throw new TypeError('Invalid pagination cursor');
   const constraints=[sdk.orderBy(sdk.documentId())];
   if(cursorId!==null)constraints.push(sdk.startAfter(cursorId));
   constraints.push(sdk.limit(limit));
