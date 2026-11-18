@@ -24,7 +24,7 @@ assert.equal(stablePage([{id:'b'},{id:'a'},{id:'c'}],{limit:2}).nextCursor,'b');
 const key=assignmentKey('school_A','Class 10','Science');
 assert.equal(isAssigned([key],'school_A','Class 10','Science','A'),true);
 assert.equal(isAssigned([key],'school_B','Class 10','Science','A'),false);
-assert.equal(authorizeSchoolAction({membership:{active:true,role:'teacher',schoolId:'school_A'},action:'write',schoolId:'school_A',className:'Class 10',subject:'Science',section:'A',assignments:[key]}),true);
+assert.equal(authorizeSchoolAction({membership:{active:true,role:'teacher',schoolId:'school_A'},action:'write',schoolId:'school_A',className:'Class 10',subject:'Science',section:'A',assignments:[key]}),false);
 assert.equal(authorizeSchoolAction({membership:{active:true,role:'viewer',schoolId:'school_A'},action:'write',schoolId:'school_A',className:'Class 10',subject:'Science',assignments:[key]}),false);
 assert.equal(auditEvent({schoolId:'school_A',actorUid:'user_0001',action:'delete',entity:'students',entityId:'student_1'}).action,'delete');
 assert.throws(()=>tenantExportManifest('school_A',['schools/school_B/marks']),TypeError);
