@@ -16,3 +16,5 @@ The automated suite is `node v47/test-firestore-emulator.mjs` inside the dedicat
 Static code checks and the 70 emulator assertions are not substitutes for a successful CI run. Verify GitHub Actions logs and Firebase emulator outcomes before deployment.
 
 Audit log paths are server-managed and intentionally unavailable through the client collection allowlist.
+
+The delete UI helper cannot execute deletes: a privileged, audited deletion workflow and recoverable backup must be reviewed separately before changing any rules.
