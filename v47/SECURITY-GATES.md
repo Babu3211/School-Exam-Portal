@@ -17,3 +17,5 @@ Role-capability helpers reflect **current V47 development-branch rules**, not in
 
 - Export manifests accept only top-level approved school collections (never membership records or individual documents).
 - Client collection paths are restricted to collections covered by the current V47 Firestore rules. Unsupported legacy collection names must be explicitly migrated before use.
+
+- Delete confirmation helper supports students, staff, teachers, subjects and exams as a **proposal only**. Firestore deletion is denied and requires a separately reviewed audited server operation and verified backup.
