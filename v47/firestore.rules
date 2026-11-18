@@ -186,7 +186,6 @@ service cloud.firestore {
           && data.practical <= 100
           && id == data.term + ':' + data.studentId + ':' + data.subjectId
           && student.get('schoolId','') == sid && subject.get('schoolId','') == sid && assignment.get('schoolId','') == sid
-          && student.get('schoolId','') == sid
           && student.get('class','') == data.class
           && subject.get('class','') == data.class
           && subject.get('active',false) == true
