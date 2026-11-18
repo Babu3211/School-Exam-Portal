@@ -18,7 +18,5 @@ jobs:
           distribution: temurin
           java-version: '21'
       - run: npm ci
-      - name: Structural school isolation checks
-        run: node scripts/test-v47-school-isolation-gate.mjs
-      - name: Real Firestore rules authorization tests
-        run: npx firebase emulators:exec --project smss-v47-isolation-test --config v47/firebase.test.json --only firestore "node scripts/test-v47-emulator-isolation.mjs"
+      - name: V47 structural and emulator authorization checks
+        run: npm run test:v47
