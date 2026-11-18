@@ -137,6 +137,7 @@ try {
   const attendanceAssignment={schoolId:'school-a',uid:'teacher-a',classId:'9',subjectId:'attendance',active:false};
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),attendanceAssignment));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),{active:true}));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1'),{schoolId:'school-a',studentId:'student-1',class:'9',date:'2026-11-18',present:true,extra:'forbidden'}));
   const teacherAttendance={schoolId:'school-a',studentId:'student-1',class:'9',date:'2026-11-18',present:true};
   await assertSucceeds(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1'),teacherAttendance));
   await assertFails(updateDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1'),{present:false}));
