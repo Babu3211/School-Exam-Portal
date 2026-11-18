@@ -4,7 +4,7 @@ import {schoolCollectionPath,schoolDocumentPath} from './school-scope.mjs';
 
 export const V47_SCHOOL_COLLECTIONS=Object.freeze([
  'students','staff','teachers','subjects','exams','marks','attendance',
- 'school_settings','members','classes','assessment_settings','question_papers',
+ 'school_settings','members','classes','mark_settings','subject_assignments','component_marks','assessment_settings','question_papers',
  'audit_logs','results'
 ]);
 const allowed=new Set(V47_SCHOOL_COLLECTIONS);
