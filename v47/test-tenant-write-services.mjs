@@ -11,7 +11,7 @@ let missingAssignment=false;
 const api={
  doc:(_db,...segments)=>segments.join('/'),
  runTransaction:async(_db,fn)=>fn({
-  get:async path=>({exists:()=>!(subjectCreateMode&&path.endsWith('/subjects/science_9'))&&!(path.includes('/marks/')&&!existingMark)&&!path.includes('/component_marks/')&&!(missingAssignment&&path.includes('/subject_assignments/')),data:()=>path.includes('/students/')?{class:'9'}:path.includes('/subject_assignments/')?{studentId:'student_1',subjectId:'science_9',class:'9'}:{active:true,class:'9',name:'Science'}}),
+  get:async path=>({exists:()=>!(subjectCreateMode&&path.endsWith('/subjects/science_9'))&&!(path.includes('/marks/')&&!existingMark)&&!path.includes('/component_marks/')&&!(missingAssignment&&path.includes('/subject_assignments/')),data:()=>path.includes('/students/')?{schoolId:'school_A',class:'9'}:path.includes('/subject_assignments/')?{schoolId:'school_A',studentId:'student_1',subjectId:'science_9',class:'9'}:{schoolId:'school_A',active:true,class:'9',name:'Science'}}),
   set:(path,data)=>writes.push({path,data})
  })
 };
