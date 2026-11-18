@@ -14,6 +14,8 @@ assert.match(read('exams-console.mjs'),/await createSchoolExamTerm\(/);
 assert.match(read('exams-console.mjs'),/auth\?\.currentUser\?\.uid!==actor\.uid/);
 assert.doesNotMatch(read('exams.html'),/id="delete"/);
 assert.doesNotMatch(read('exams-console.mjs'),/deleteDoc\(/);
+assert.match(read('exams-console.mjs'),/session.role!=='school_admin'/);
+assert.match(read('exams-console.mjs'),/smss-exam-portal-v47/);
 assert.match(read('student-service.mjs'),/\{\.\.\.student,schoolId\}/);
 assert.match(read('attendance-service.mjs'),/\{\.\.\.attendance,schoolId\}/);
 assert.match(read('attendance-bulk.mjs'),/\{\.\.\.entry,schoolId\}/);
