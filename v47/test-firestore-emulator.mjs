@@ -110,5 +110,25 @@ try{
  await assertFails(getDocs(collection(anon,'schools')));
  // 40 Viewer cannot read Super Admin registry
  await assertFails(getDoc(doc(viewer,'v47_super_admins','root_super')));
- console.log('V47 Firestore emulator: 40 authorization assertions passed');
+ // 41 School admin can read school registry entry
+ await assertSucceeds(getDoc(doc(admin,'schools','school_A')));
+ // 42 School admin cannot read other school registry entry
+ await assertFails(getDoc(doc(admin,'schools','school_B')));
+ // 43 Viewer cannot delete marks
+ await assertFails(deleteDoc(mark(viewer,'school_A')));
+ // 44 Teacher cannot delete attendance
+ await assertFails(deleteDoc(attendance(teacher,'school_A')));
+ // 45 School admin can create own student
+ await assertSucceeds(setDoc(doc(admin,'schools','school_A','students','student_2'),{name:'New Student'}));
+ // 46 School admin cannot create student in other school
+ await assertFails(setDoc(doc(admin,'schools','school_B','students','student_2'),{name:'Bad'}));
+ // 47 Viewer can read own attendance
+ await assertSucceeds(getDoc(attendance(viewer,'school_A')));
+ // 48 Viewer cannot read another school's attendance
+ await assertFails(getDoc(attendance(viewer,'school_B')));
+ // 49 Teacher cannot create marks without assignment authorization
+ await assertFails(setDoc(doc(teacher,'schools','school_A','marks','mark_2'),{value:45}));
+ // 50 School admin cannot delete staff
+ await assertFails(deleteDoc(doc(admin,'schools','school_A','staff','staff_1')));
+ console.log('V47 Firestore emulator: 50 authorization assertions passed');
 }finally{await env.cleanup();}
