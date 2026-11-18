@@ -13,7 +13,8 @@ const suites=[
  'test-verified-school-session.mjs',
  'test-tenant-firestore-gateway.mjs',
  'test-firebase-tenant-operations.mjs',
- 'test-console-integration.mjs'
+ 'test-console-integration.mjs',
+ 'test-tenant-write-services.mjs'
 ];
 let failures=0;
 for(const suite of suites){
