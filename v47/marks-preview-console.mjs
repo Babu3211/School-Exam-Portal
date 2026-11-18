@@ -1,3 +1,4 @@
+import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {loadMarksByClassTerm} from './marks-query.mjs';
 import {rawMarksCsv} from './marks-preview-export.mjs';
@@ -16,9 +17,8 @@ $('login').onclick=async()=>{
   $('password').value='';if(attempt!==epoch)return;
   const school=await api.getDoc(api.doc(db,'schools',requestedId));if(attempt!==epoch)return;
   if(!school.exists()||school.data().active!==true)throw new Error('School inactive or unavailable');
-  const member=await api.getDoc(api.doc(db,'schools',requestedId,'members',credential.user.uid));if(attempt!==epoch)return;
-  if(!member.exists()||member.data().active!==true||!['school_admin','teacher','viewer'].includes(member.data().role))throw new Error('Active school membership required');
-  schoolId=requestedId;actor={role:member.data().role,active:true,schoolId};
+  const uid=credential.user.uid;const session=await verifySchoolSession({schoolId:requestedId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(attempt!==epoch||auth.currentUser?.uid!==uid)throw new Error('Authentication changed');
+  schoolId=requestedId;actor={role:session.role,active:true,schoolId};
   $('heading').textContent='Marks — '+String(school.data().name??schoolId);$('work').hidden=false;$('logout').disabled=false;reset();
  }catch(e){if(attempt===epoch){clear();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status('Sign in failed: '+e.message)}}
  finally{$('login').disabled=false}
