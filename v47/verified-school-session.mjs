@@ -16,9 +16,12 @@ export async function verifySchoolSession({schoolId,uid,readDocument}){
 export async function verifyFirebaseSchoolSession({schoolId,auth,firestore}){
  if(!auth?.currentUser?.uid||!firestore)throw new Error('Sign-in required');
  const {doc,getDoc}=await import('firebase/firestore');
- const uid=auth.currentUser.uid;
- return verifySchoolSession({schoolId,uid,readDocument:async path=>{
+ const user=auth.currentUser;
+ const uid=user.uid;
+ const session=await verifySchoolSession({schoolId,uid,readDocument:async path=>{
   const snap=await getDoc(doc(firestore,...path.split('/')));
   return snap.exists()?snap.data():null;
  }});
+ if(auth.currentUser?.uid!==uid)throw new Error('Authentication changed during verification');
+ return session;
 }
