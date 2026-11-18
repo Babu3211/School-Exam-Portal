@@ -21,6 +21,7 @@ export function renderV47SchoolLedger({schoolId,term,classNo,schoolName,schoolCo
    throw new Error("Invalid or duplicate student identity");
   if(st.schoolId!=null&&st.schoolId!==schoolId)throw new Error("Ledger student school mismatch");
   if(st.classNo!==undefined&&Number(st.classNo)!==n)throw new Error("Ledger student class mismatch");
+  if(st.examId!==undefined&&st.examId!==examId)throw new Error("Ledger student exam mismatch");
   studentIds.add(st.id);
  }
  const compatible=[];
