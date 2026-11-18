@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {verifySchoolSession} from './verified-school-session.mjs';
+import {assertVerifiedTenantSession,selectTenantSession} from './tenant-session.mjs';
 const schoolId='school_A',uid='teacher_123';
 const records={
  'schools/school_A':{id:schoolId,active:true},
@@ -11,6 +12,10 @@ const valid=await verifySchoolSession(base);
 assert.equal(valid.role,'teacher');
 assert.equal(valid.authorization,'firestore-verified-read');
 assert.equal(Object.isFrozen(valid),true);
+assert.equal(assertVerifiedTenantSession(valid,schoolId,uid),valid);
+assert.throws(()=>assertVerifiedTenantSession(valid,'school_B',uid));
+assert.throws(()=>assertVerifiedTenantSession(valid,schoolId,'wrong_uid'));
+assert.throws(()=>assertVerifiedTenantSession(selectTenantSession([{schoolId,role:'teacher',active:true}],schoolId),schoolId,uid));
 await assert.rejects(()=>verifySchoolSession({...base,schoolId:'school_B'}));
 await assert.rejects(()=>verifySchoolSession({...base,uid:'other_123'}));
 await assert.rejects(()=>verifySchoolSession({...base,uid:'../bad'}));
