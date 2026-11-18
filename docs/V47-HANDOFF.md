@@ -181,3 +181,16 @@
 - Disabled legacy individual mark Save so browser users cannot submit an incomplete class through that route (`75316cb`, `96c0ce2`, `e418668`); regression tests added (`67f17f3`).
 - Added explicit concurrency/official-result limitations (`1d3fb0`) and improved pagination stall detection (`8477104`).
 - **Critical limitations:** atomic Save remains capped at **3 students**; larger classes do not save. Browser entry and rules are not emulator/E2E verified. A new enrollment between roster read and transaction is not currently checked atomically, so this is **not production-ready**. CDC/IEMIS grade and full V46 parity are not established. No V47 deployment; V46 production unchanged.
+
+## Large-class draft validation and mark editor hardening — 2026-11-18
+- Introduced **read-only** draft inspection for up to 1500 students, reporting missing/invalid/duplicate/foreign marks with no writes (`8879be4`).
+- Added unit tests for complete, incomplete, invalid, duplicate and 1500-student drafts (`d934073`), plus edge cases (`c0f11a5`).
+- Added Check All Students control and diagnostics in V47 Marks Entry (`28b3dd7`, `c1ab2e4`).
+- Limited small-class Save now validates all draft rows before confirmation (`9653f21`).
+- Locks subject, raw mark fields and every class mark row during Save (`2ba3631`, `13e118d`).
+- Added UI contract assertions for draft inspector, mandatory prevalidation, row locks, scope and auth (`43b22a8`, `354e39e`).
+- Added draft unit tests to V47 CI gate (`0143d66`).
+- Strengthened full roster boundary, cross-school and class tests (`8a2d782`).
+- Auth UID is checked before loading full-class marks roster (`9b37091`).
+- Mark selector now trusts Firestore document ID over payload ID, rejects foreign school/class rows (`4c8627a`, `7ebf9f1`).
+- **Critical:** This is a **draft checker only** for large classes, NOT a large-class save implementation. Atomic class save remains capped at 3. No verified passing Firebase Emulator or browser E2E results. A class enrollment change during entry is not atomically protected. V46 production unchanged and V47 not deployed.
