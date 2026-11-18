@@ -15,6 +15,6 @@ export async function loadClassRoster({db,api,actor,schoolId,schoolClass,pageSiz
  const ids=new Set();
  for(const d of docs){if(typeof d.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||ids.has(d.id))throw new Error('Invalid or duplicate roster document ID');ids.add(d.id);}
  const page=docs.slice(0,pageSize);
- for(const d of page)if(d.data().schoolId!==schoolId||d.data().class!==schoolClass)throw new Error('Cross-school or wrong-class roster record');
+ for(const d of docs)if(d.data().schoolId!==schoolId||d.data().class!==schoolClass)throw new Error('Cross-school or wrong-class roster record');
  return {students:page.map(d=>({...d.data(),id:d.id})),hasMore:docs.length>pageSize,cursor:page.at(-1)??null};
 }
