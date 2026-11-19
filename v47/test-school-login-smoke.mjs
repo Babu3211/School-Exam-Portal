@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');
+const html=read('./school-login.html');
+const js=read('./school-login.mjs');
+const admin=read('./admin-console.mjs');
+const rules=read('./firestore.rules');
+const hosting=read('../.github/workflows/v47-hosting-test-preview.yml');
+for(const id of ['schoolId','email','password','login','logout','dashboard','status','schoolName','currentSchoolId','role','uid']){
+ assert.match(html,new RegExp('id="'+id+'"'),'Missing School Login element '+id);
+}
+assert.match(html,/type="password"/);
+assert.match(html,/src="\.\/school-login\.mjs"/);
+assert.match(js,/smss-exam-portal-v47/);
+assert.match(js,/inMemoryPersistence/);
+assert.match(js,/getDoc\(api\.doc\(db,'schools',sid\)\)/);
+assert.match(js,/getDoc\(api\.doc\(db,'schools',sid,'members',uid\)\)/);
+assert.match(js,/school\.active!==true/);
+assert.match(js,/member\.uid!==uid/);
+assert.match(js,/member\.schoolId!==sid/);
+assert.match(js,/member\.active!==true/);
+assert.match(js,/member\.role!=='school_admin'/);
+assert.match(js,/await signOut\(\)/);
+assert.doesNotMatch(js,/getDocs\(api\.collection\(db,'schools'/,'School Admin must not list all schools');
+assert.match(admin,/v47_super_admins|verifyAdmin/);
+assert.match(rules,/match \/schools\/\{sid\}/);
+assert.match(rules,/allow list: if superAdmin\(\)/);
+assert.match(rules,/function activeMember\(sid\)/);
+assert.match(hosting,/test -f v47\/public\/school-login\.html/);
+assert.match(hosting,/test -f v47\/public\/school-login\.mjs/);
+assert.match(hosting,/projectId: smss-exam-portal-v47/);
+assert.match(hosting,/channelId: v47-test/);
+console.log('V47 school-login static smoke checks passed (not a live authentication test)');
