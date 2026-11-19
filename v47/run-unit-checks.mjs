@@ -4,6 +4,7 @@ import {readdirSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 const suites=[
  'test-school-scope.mjs',
+ 'test-school-login-smoke.mjs',
  'test-tenant-paths.mjs',
  'test-v47-foundations.mjs',
  'test-security-contract.mjs',
