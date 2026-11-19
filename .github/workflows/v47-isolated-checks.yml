@@ -23,6 +23,8 @@ jobs:
           find v47 -type f -name '*.mjs' -print0 | xargs -0 -n 1 node --check
       - name: V47 isolated unit tests
         run: node v47/run-unit-checks.mjs
+      - name: V47 school admin login smoke checks
+        run: node v47/test-school-login-smoke.mjs
       - name: Confirm no V46 production resources are deployed
         run: echo 'This workflow only runs V47 tests; it does not deploy.'
 
