@@ -8,6 +8,8 @@ on:
       - v47/firebase.json
       - v47/admin.html
       - v47/admin-console.mjs
+      - v47/school-login.html
+      - v47/school-login.mjs
   workflow_dispatch:
 permissions:
   contents: read
@@ -28,6 +30,8 @@ jobs:
         run: |
           test -f v47/index.html
           test -f v47/admin.html
+          test -f v47/school-login.html
+          test -f v47/school-login.mjs
           test -f v47/firebase.json
           node -e 'const c=require("./v47/firebase.json");if(c.hosting.public!=="public")process.exit(1)'
           echo "V47 static development preview only. No V46 production deploy."
@@ -38,6 +42,8 @@ jobs:
           test -f v47/public/index.html
           test -f v47/public/admin.html
           test -f v47/public/admin-console.mjs
+          test -f v47/public/school-login.html
+          test -f v47/public/school-login.mjs
           ! grep -q 'id="config"' v47/public/admin.html
           grep -q 'V47_FIREBASE_CONFIG' v47/public/admin-console.mjs
           test ! -f v47/public/firestore.rules
