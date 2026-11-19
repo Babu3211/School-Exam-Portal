@@ -16,8 +16,9 @@ async function initialize(){if(auth)return;
 }
 $('login').onclick=async()=>{if(busy)return;busy=true;$('login').disabled=true;
  try{const sid=$('schoolId').value.trim();if(!schoolIdValid(sid))throw new Error('Enter a valid School ID');
- const email=$('email').value.trim();if(!email||!$('password').value)throw new Error('Enter email and password');
- await initialize();await signOut();await authSdk.signInWithEmailAndPassword(auth,email,$('password').value);$('password').value='';
+ const email=$('email').value.trim();const password=$('password').value;
+ if(!email||!password)throw new Error('Enter email and password');
+ await initialize();await signOut();await authSdk.signInWithEmailAndPassword(auth,email,password);$('password').value='';
  const uid=auth.currentUser.uid;
  // Direct document reads are scoped to the supplied school. Never query all schools.
  const schoolSnap=await api.getDoc(api.doc(db,'schools',sid));
