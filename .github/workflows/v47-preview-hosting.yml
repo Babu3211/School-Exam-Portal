@@ -1,0 +1,41 @@
+name: V47 preview hosting (manual only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deploy-v47-preview:
+    if: github.ref == 'refs/heads/smss-v47-multischool-work'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate V47-only assets
+        run: |
+          test -f v47/admin.html
+          test -f v47/admin-console.mjs
+          test -f v47/school-login.html
+          test -f v47/school-login.mjs
+          node --check v47/school-login.mjs
+      - name: Stage only V47 pages (never V46 root)
+        run: |
+          mkdir -p "$RUNNER_TEMP/v47-site"
+          cp v47/*.html v47/*.mjs "$RUNNER_TEMP/v47-site/"
+          cat > "$RUNNER_TEMP/v47-firebase.json" <<EOF
+          {"hosting":{"public":"v47-site","ignore":[],"cleanUrls":false}}
+          EOF
+      - name: Check V47 deployment credentials
+        env:
+          V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_V47 }}
+        run: |
+          if [ -z "$V47_SERVICE_ACCOUNT" ]; then
+            echo "::error::Missing FIREBASE_SERVICE_ACCOUNT_V47 repository secret; no deployment attempted."
+            exit 1
+          fi
+      - name: Deploy to V47 preview channel only
+        env:
+          V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_V47 }}
+        run: |
+          printf '%s' "$V47_SERVICE_ACCOUNT" > "$RUNNER_TEMP/v47-credentials.json"
+          chmod 600 "$RUNNER_TEMP/v47-credentials.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/v47-credentials.json"
+          npx --yes firebase-tools@14.21.0 hosting:channel:deploy v47-test --project smss-exam-portal-v47 --config "$RUNNER_TEMP/v47-firebase.json" --expires 30d --non-interactive
