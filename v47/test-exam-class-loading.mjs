@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const s=readFileSync(new URL('./school-exam-workflows.mjs',import.meta.url),'utf8');
+const html=readFileSync(new URL('./school-login.html',import.meta.url),'utf8');
+assert.match(html,/id="marksClass"/);
+assert.match(s,/\['teacherClass','ledgerClass','marksClass'\]/);
+assert.match(s,/api\.where\('class','==',klass\),api\.limit\(1501\)/);
+assert.match(s,/More than 1500/);
+assert.match(s,/\$\('marksClass'\)\.onchange/);
+assert.match(s,/Class changed\. Load the selected class roster/);
+assert.match(s,/\$\('teacherClass'\)\.onchange/);
+assert.doesNotMatch(s,/const updateTeacherSubjects=/);
+assert.match(s,/for\(let page=0;page<30;page\+\+\)\{/);
+console.log('V47 class-scoped exam loading static checks passed');
