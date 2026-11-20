@@ -210,7 +210,7 @@ try {
   for(const patch of [{schoolId:'school-b'},{uid:'outsider'},{classId:'8'},{subjectId:'science'},{active:false}]){
     await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','teacher_assignments','school-a:teacher-a:9:math'),patch));
     await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','3rd:student-1:math'),{...assignedMark,term:'3rd'}));
-    await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','teacher_assignments','school-a:teacher-a:9:math'),teacherAssignment));
+    await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','teacher_assignments','school-a:teacher-a:9:math'),{...teacherAssignment,active:true}));
   }
   await assertSucceeds(setDoc(schoolDoc('teacher-a','school-a','marks','3rd:student-1:math'),{...assignedMark,term:'3rd'}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','2nd:student-1:math'),{...assignedMark,term:'2nd',subjectId:'science'}));
