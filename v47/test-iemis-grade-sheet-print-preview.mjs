@@ -48,4 +48,14 @@ for(const classNo of ['1','2','3','4','5','6','7','8','9','10'])for(const [term,
  assert.ok(printed.html.includes('GPA: '+calculated.student.gpa));
 }
 
+
+const bilingual=renderIemisGradeSheetPrint({...args,school:{...args.school,nameNepali:'विद्यालय & <script>',addressNepali:'काठमाडौं & <img>'}});
+assert.equal(bilingual.ready,true);
+assert.match(bilingual.html,/lang="ne"/);
+assert.match(bilingual.html,/विद्यालय &amp; &lt;script&gt;/);
+assert.match(bilingual.html,/काठमाडौं &amp; &lt;img&gt;/);
+assert.doesNotMatch(bilingual.html,/<script>|<img>/);
+assert.throws(()=>renderIemisGradeSheetPrint({...args,school:{...args.school,nameNepali:123}}),/Invalid Nepali school name/);
+assert.throws(()=>renderIemisGradeSheetPrint({...args,school:{...args.school,addressNepali:'x'.repeat(251)}}),/Invalid Nepali school address/);
+
 console.log('V47 offline A4 grade sheet preview escaping, watermark and incomplete-class tests passed');
