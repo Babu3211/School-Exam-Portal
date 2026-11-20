@@ -18,7 +18,7 @@ $('login').onclick=async()=>{
   const school=await api.getDoc(api.doc(db,'schools',requestedId));if(attempt!==epoch)return;
   if(!school.exists()||school.data().active!==true)throw new Error('School inactive or unavailable');
   const uid=credential.user.uid;const session=await verifySchoolSession({schoolId:requestedId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(attempt!==epoch||auth.currentUser?.uid!==uid)throw new Error('Authentication changed');
-  schoolId=requestedId;actor={role:session.role,active:true,schoolId};
+  schoolId=requestedId;actor={uid,role:session.role,active:true,schoolId};
   $('heading').textContent='Marks — '+String(school.data().name??schoolId);$('work').hidden=false;$('logout').disabled=false;reset();
  }catch(e){if(attempt===epoch){clear();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status('Sign in failed: '+e.message)}}
  finally{$('login').disabled=false}
@@ -41,4 +41,29 @@ async function load(reset=false){
 }
 function reset(){epoch++;cursor=null;records=[];hasMore=false;$('next').disabled=true;$('export').disabled=true;$('rows').replaceChildren();$('count').textContent='';$('audit').textContent='Waiting for raw data audit';load(true)}
 $('load').onclick=reset;$('schoolClass').onchange=reset;$('term').onchange=reset;$('next').onclick=()=>load(false);
-$('export').onclick=()=>{if(!actor||busy||records.length===0||records.length>1500||hasMore)return;try{const csv=rawMarksCsv(records);const blob=new Blob(['\uFEFF',csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='smss-v47-raw-marks-'+schoolId+'-'+$('schoolClass').value+'-'+$('term').value+'.csv';document.body.append(link);link.click();link.remove();URL.revokeObjectURL(url);status('Exported '+records.length+' loaded raw mark records (not a result ledger)')}catch(e){status('Export failed: '+e.message)}};
+async function confirmExportSession(expectedSchoolId,expectedUid){
+ if(auth?.currentUser?.uid!==expectedUid)throw new Error('Authentication changed');
+ const session=await verifySchoolSession({schoolId:expectedSchoolId,uid:expectedUid,readDocument:async path=>{
+  const snap=await api.getDoc(api.doc(db,...path.split('/')));
+  return snap.exists()?snap.data():null;
+ }});
+ if(auth?.currentUser?.uid!==expectedUid||session.schoolId!==expectedSchoolId)throw new Error('School access changed');
+}
+$('export').onclick=async()=>{
+ if(!actor||busy||records.length===0||records.length>1500||hasMore)return;
+ const current=epoch,uid=actor.uid,expectedSchoolId=schoolId,selectedClass=$('schoolClass').value,selectedTerm=$('term').value;
+ $('export').disabled=true;
+ try{
+  await confirmExportSession(expectedSchoolId,uid);
+  if(current!==epoch||!actor||actor.uid!==uid||schoolId!==expectedSchoolId||$('schoolClass').value!==selectedClass||$('term').value!==selectedTerm||busy||hasMore)return;
+  const csv=rawMarksCsv(records);
+  const blob=new Blob(['\\uFEFF',csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob),link=document.createElement('a');
+  try{
+   link.href=url;link.download='smss-v47-raw-marks-'+expectedSchoolId+'-'+selectedClass+'-'+selectedTerm+'.csv';
+   document.body.append(link);link.click();
+  }finally{link.remove();URL.revokeObjectURL(url)}
+  status('Exported '+records.length+' raw records (not official grades)');
+ }catch(e){if(current===epoch)status('Export blocked: '+e.message)}
+ finally{if(current===epoch)$('export').disabled=!actor||busy||hasMore||records.length===0||records.length>1500}
+};
