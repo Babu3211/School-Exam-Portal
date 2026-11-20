@@ -14,4 +14,7 @@ assert.match(workflow,/refusing to display an incomplete ledger/);
 assert.match(workflow,/start\+=40/);
 assert.match(workflow,/x\.data\(\)\.schoolId===ctx\(\)\.schoolId/);
 assert.match(workflow,/\[Student record unavailable\]/);
+assert.match(workflow,/member\.data\(\)\.schoolId!==schoolId/);
+assert.match(workflow,/subject\.data\(\)\.schoolId!==schoolId/);
+assert.match(workflow,/current\.data\(\)\.schoolId!==ctx\(\)\.schoolId/);
 console.log('V47 exam workflow static safety checks passed');
