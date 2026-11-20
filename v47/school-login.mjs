@@ -14,8 +14,9 @@ async function loadSubjects(){
  if(!verifiedSchool)return;
  $('loadSubjects').disabled=true;
  try{
-  const snap=await api.getDocs(api.query(subjectCollection(),api.limit(200)));
   const filter=$('subjectFilter').value;
+  const q=filter?api.query(subjectCollection(),api.where('class','==',filter),api.limit(201)):api.query(subjectCollection(),api.limit(201));
+  const snap=await api.getDocs(q);
   const rows=snap.docs.map(d=>({id:d.id,...d.data()}))
    .filter(x=>!filter||x.class===filter)
    .sort((a,b)=>String(a.class).localeCompare(String(b.class),undefined,{numeric:true})||String(a.name).localeCompare(String(b.name)));
@@ -26,7 +27,7 @@ async function loadSubjects(){
    div.textContent=x.name+' — Class '+x.class+(x.active===false?' (inactive)':'');
    $('subjectList').append(div);
   }
-  $('subjectCount').textContent='Showing '+rows.length+' subjects (up to 200 fetched)';
+  $('subjectCount').textContent='Showing '+rows.length+' subjects'+(snap.size>200?' (more records exist; refine by class)':'');
  }catch(e){subjectStatus(e.message)}
  finally{$('loadSubjects').disabled=false}
 }
