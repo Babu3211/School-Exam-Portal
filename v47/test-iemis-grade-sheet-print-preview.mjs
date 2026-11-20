@@ -1,13 +1,17 @@
 import assert from 'node:assert/strict';
 import {renderIemisGradeSheetPrint} from './iemis-grade-sheet-print-preview.mjs';
 import {iemisEntrySchema} from '../iemis-entry.js';
+import {previewIemisGradeSheet} from './iemis-grade-sheet-preview.mjs';
 const students=[{id:'s1',nameEnglish:'<script>alert(1)</script>'}];
 const subjects=[{id:'english',name:'English & <Science>',creditHour:4}];
 const schema=iemisEntrySchema('1','first','English & <Science>');
 const draft={values:Object.fromEntries(schema.filter(x=>!x.readonly).map(x=>[x.key,x.key==='count'?'10':x.key==='obtained'?'35':String(x.max)])),isAbsent:false,incompatible:false};
 const args={school:{nameEnglish:'<img src=x onerror=alert(1)>',addressEnglish:'Main & School Road'},classNo:'1',term:'1st',students,subjects,draftsBySubject:{english:{s1:draft}},studentId:'s1'};
 const result=renderIemisGradeSheetPrint(args);
-assert.equal(result.ready,true);assert.match(result.html,/PREVIEW ONLY/);assert.match(result.html,/NOT VALID FOR OFFICIAL USE/);assert.match(result.html,/@page/);
+assert.equal(result.ready,true);
+const sourceGrade=previewIemisGradeSheet(args).student.subjects[0].summary.totalGrade.grade;
+assert.match(result.html,new RegExp('<td>'+sourceGrade.replace('+','\\+')+'</td>'));
+assert.doesNotMatch(result.html,/<td>—<\/td>/);assert.match(result.html,/PREVIEW ONLY/);assert.match(result.html,/NOT VALID FOR OFFICIAL USE/);assert.match(result.html,/@page/);
 assert.match(result.html,/noindex,nofollow/);
 assert.match(result.html,/background-repeat:repeat/);assert.match(result.html,/background-size:240px 160px/);
 assert.match(result.html,/&lt;script&gt;/);assert.match(result.html,/&lt;img/);assert.match(result.html,/English &amp; &lt;Science&gt;/);
