@@ -46,4 +46,14 @@ for(const classNo of [1,2,3,4,5])for(const [term,v46term] of [['1st','first'],['
  assert.deepEqual(actual,expected);
  assert.match(actual.body,/<tr>/);
 }
-console.log('V47 tenant-scoped V46 IEMIS renderer parity, complete primary-grade cases and isolation passed');
+// Secondary grades use V46 internal/theory weighting. Final-term components must be complete.
+for(const classNo of [6,7,8,9,10])for(const term of ['1st','2nd','3rd','final']){
+ const schema=iemisEntrySchema(classNo,term==='final'?'annual':term==='1st'?'first':term==='2nd'?'second':'third','English');
+ const values=Object.fromEntries(schema.filter(field=>!field.readonly).map(field=>[field.key,String(field.max)]));
+ const record=iemisEntryValues(schema,{values,isAbsent:false,incompatible:false});
+ const completeArgs={...args,classNo,term,records:[{...record,schoolId,studentId:'s1',examId,subject:'English'}]};
+ const grade=renderCompleteV46TenantGradeLedger(completeArgs);
+ assert.deepEqual(grade,renderV46TenantLedger({...completeArgs,mode:'grade'}));
+ assert.match(grade.body,/<tr>/);
+}
+console.log('V47 tenant-scoped V46 IEMIS renderer parity, 40 complete class-term cases and isolation passed');
