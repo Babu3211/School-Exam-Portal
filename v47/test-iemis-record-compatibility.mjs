@@ -11,6 +11,10 @@ for(const classNo of [1,2,3,4,5,6,7,8,9,10])for(const term of ['1st','2nd','3rd'
  const options={schoolId,examId,classNo,term,subject};
  assert.equal(inspectV46IemisRecord(record,options).compatible,true);
  assert.equal(inspectV46IemisRecord({...record,scores:undefined},options).compatible,false);
+ assert.equal(inspectV46IemisRecord({...record,examId:''},{...options,examId:''}).compatible,false);
+ assert.equal(inspectV46IemisRecord({...record,studentId:'../bad'},options).compatible,false);
+ if(classNo>=6)assert.equal(inspectV46IemisRecord({...record,scores:record.scores.map((score,i)=>i===0?{...score,obtained:null}:score)},options).compatible,false);
+ if(classNo<=5)assert.equal(inspectV46IemisRecord({...record,scores:record.scores.map(score=>score.name==='No. of Learning Achievement'?{...score,obtained:0}:score)},options).compatible,false);
  assert.equal(inspectV46IemisRecord({...record,scores:record.scores.map((score,i)=>i===0?{...score,obtained:999999}:score)},options).compatible,false);
  assert.equal(inspectV46IemisRecord({...record,scores:record.scores.map((score,i)=>i===0?{...score,fullMarks:-1}:score)},options).compatible,false);
  if(classNo<=5)assert.equal(inspectV46IemisRecord({...record,scores:record.scores.map(score=>score.name==='Full Marks'?{...score,fullMarks:999}:score)},options).compatible,false);
