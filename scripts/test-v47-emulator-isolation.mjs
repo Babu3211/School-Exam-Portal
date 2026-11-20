@@ -248,6 +248,12 @@ try {
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','wrong-id'),{...teacherAttendance,date:'2026-11-19'}));
   await assertFails(setDoc(schoolDoc('viewer-a','school-a','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19'}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19',present:'yes'}));
+  // Forged assignment data at a legitimate path must never authorize attendance.
+  for(const patch of [{schoolId:'school-b'},{uid:'outsider'},{classId:'8'},{subjectId:'math'}]){
+    await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),patch));
+    await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19'}));
+    await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),{schoolId:'school-a',uid:'teacher-a',classId:'9',subjectId:'attendance',active:true}));
+  }
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),{active:false}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19'}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),{active:true}));
