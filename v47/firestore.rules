@@ -106,6 +106,8 @@ service cloud.firestore {
         allow create: if memberRole(sid, 'school_admin') && validTeacherAssignment()
           && request.resource.data.active == false
           && exists(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid))
+          && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('uid', '') == request.resource.data.uid
+          && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('schoolId', '') == sid
           && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('role', '') == 'teacher'
           && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('active', false) == true;
         allow update: if memberRole(sid, 'school_admin') && validTeacherAssignment()
@@ -113,7 +115,9 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active'])
           && (!request.resource.data.active
             || (exists(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid))
-              && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('role', '') == 'teacher'
+              && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('uid', '') == request.resource.data.uid
+          && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('schoolId', '') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('role', '') == 'teacher'
               && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('active', false) == true));
         allow delete: if false;
       }
