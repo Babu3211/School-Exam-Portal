@@ -20,6 +20,11 @@ for(const invalid of ['   ',true,false,[],{},'0x10','1e2','Infinity','NaN','-1',
  assert.throws(()=>validateCompleteClassMarks({...args,entries:[mark('student-1'),mark('student-2',{practical:invalid})]}),/Marks must/,'Invalid practical score: '+String(invalid));
 }
 assert.equal(validateCompleteClassMarks({...args,entries:[mark('student-1',{theory:'0',practical:'10.5'}),mark('student-2',{theory:'.5',practical:0})]}).count,2);
+for(const value of ['0','100','10.5','.5',' 20 ','00.50']){
+ const validated=validateCompleteClassMarks({...args,entries:[mark('student-1',{theory:value,practical:value}),mark('student-2')]});
+ assert.equal(validated.count,2,'Valid decimal string should be accepted: '+value);
+}
+
 // Large-school boundary: validate all 1500 students without making any writes.
 const largeIds=Array.from({length:1500},(_,i)=>'student_'+String(i+1));
 const largeEntries=largeIds.map(id=>mark(id));
