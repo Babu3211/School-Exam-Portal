@@ -48,4 +48,7 @@ assert.ok(js.includes("if(auth?.currentUser?.uid!==uid||actor.uid!==uid||schoolI
 assert.ok(js.includes("if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('Authentication changed during options load')"),'Options must recheck session before populating selectors');
 assert.ok(js.includes("$('classMarkRows').addEventListener('input',event=>"),'Draft inspection must be invalidated on edited marks');
 assert.ok(js.includes("Draft changed. Inspect again before saving."),'Old draft inspection must not appear current after edits');
+assert.ok(js.includes("const context=classMarkContext,attempt=epoch,uid=actor.uid,selectedSchoolId=schoolId"),'Save must capture original identity');
+assert.ok(js.includes("if(attempt!==epoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||actor?.schoolId!==selectedSchoolId||schoolId!==selectedSchoolId)throw new Error('Authentication or school changed before save')"),'Save must reject changed identity before writing');
+assert.ok(js.includes("saveVerifiedSmallClassMarks({db,api,actor,schoolId:selectedSchoolId,...context,entries})"),'Save must use the captured school identity');
 console.log('V47 full-class marks UI contract passed');
