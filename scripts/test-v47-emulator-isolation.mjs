@@ -130,6 +130,11 @@ try {
     const scores={...computerMark.scores,[field]:value};
     await assertFails(setDoc(schoolDoc('admin-a','school-a','component_marks','3rd:student-2:computer'),{...computerMark,term:'3rd',scores}));
   }
+  // Seed an existing component mark with rules bypassed: update/delete denials
+  // must be tested against a real document, not a missing-document error.
+  await env.withSecurityRulesDisabled(async ctx=>{
+    await setDoc(doc(ctx.firestore(),'schools','school-a','component_marks','weekly:student-2:computer'),computerMark);
+  });
   await assertFails(updateDoc(computerRef,{scores:{component_a:0,component_b:0,component_c:0}}));
   await assertFails(deleteDoc(computerRef));
   // Computer must not bypass 4/36/10 validation through the two-field raw marks collection.
@@ -141,6 +146,10 @@ try {
   await assertFails(setDoc(schoolDoc('admin-a','school-a','component_marks','monthly:student-2:math'),mathComponent));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','missing-scope'),{score:20}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','wrong-scope'),{schoolId:'school-b',score:20}));
+  // An existing legacy raw mark must remain immutable for every client role.
+  await env.withSecurityRulesDisabled(async ctx=>{
+    await setDoc(doc(ctx.firestore(),'schools','school-a','marks','1st:student-2:math'),adminRawMark);
+  });
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{schoolId:'school-b'}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{studentId:'student-2'}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{studentId:'student-1'}));
