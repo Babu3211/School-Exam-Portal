@@ -1,0 +1,31 @@
+name: V47 structural checks (development only)
+on:
+  push:
+    branches:
+      - smss-v47-multischool-work
+    paths:
+      - 'v47/**'
+      - 'scripts/test-v47-school-isolation-gate.mjs'
+      - '.github/workflows/v47-structural-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  structural:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check V47 JavaScript syntax
+        run: find v47 -name '*.mjs' -print0 | xargs -0 -n1 node --check
+      - name: Check Firestore rules structure
+        run: node scripts/test-v47-school-isolation-gate.mjs
+      - name: Check marks entry UI contract
+        run: node v47/test-class-mark-ui.mjs
+      - name: Check exam term catalog
+        run: node v47/test-term-catalog.mjs
+      - name: Check class marks draft completeness
+        run: node v47/test-class-mark-draft-inspector.mjs
