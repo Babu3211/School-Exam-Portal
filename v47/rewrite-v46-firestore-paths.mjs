@@ -17,6 +17,6 @@ export function rewriteV46FirestorePaths(source){
  for(const name of V46_COLLECTIONS)if(!seen.has(name))throw new Error('Expected V46 collection not found: '+name);
  // Do not silently rewrite dynamic paths, nested references or database rules.
  const legacyLiteral=/\b(?:collection|doc)\(\s*db\s*,\s*(['"`])([a-z_]+)\1/g;
- if(legacyLiteral.test(rewritten))throw new Error('Unscoped literal Firestore reference remains');
+ for(const match of rewritten.matchAll(legacyLiteral))if(match[2]!=='schools')throw new Error('Unscoped literal Firestore reference remains: '+match[2]);
  return {source:rewritten,collections:[...seen].sort()};
 }
