@@ -50,11 +50,11 @@ for(const classNo of ['1','2','3','4','5','6','7','8','9','10'])for(const [term,
 
 
 
-const bodyRows=[...result.html.matchAll(/<tbody>([\\s\\S]*?)<\\/tbody>/g)];
-assert.equal(bodyRows.length,1);
-assert.equal((bodyRows[0][1].match(/<td>/g)||[]).length,8,'each printed subject row must match all eight headers');
+const bodyRows=result.html.split('<tbody>');
+assert.equal(bodyRows.length,2);
+assert.equal((bodyRows[1].split('</tbody>')[0].match(/<td>/g)||[]).length,8,'each printed subject row must match all eight headers');
 assert.equal((result.html.match(/<th>/g)||[]).length,8,'exactly eight grade sheet headers');
-assert.equal((result.html.match(/<td>—<\\/td>/g)||[]).length,1,'primary class theory is the only non-applicable grade');
+assert.equal((result.html.match(/\x3ctd>—\x3c\/td>/g)||[]).length,1,'primary class theory is the only non-applicable grade');
 
 const bilingual=renderIemisGradeSheetPrint({...args,school:{...args.school,nameNepali:'विद्यालय & <script>',addressNepali:'काठमाडौं & <img>'}});
 assert.equal(bilingual.ready,true);
