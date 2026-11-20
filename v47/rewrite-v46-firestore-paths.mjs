@@ -17,7 +17,7 @@ export function rewriteV46FirestorePaths(source){
  // V46 dashboard counts, backup and restore use a variable collection name.
  // Scope these three call sites too; their allowlisted values require a separate review.
  let dynamicCount=0;
- const dynamicScoped=rewritten.replace(/\\b(collection|doc)\\(\\s*db\\s*,\\s*name\\b/g,(match,kind)=>{
+ const dynamicScoped=rewritten.replace(/\b(collection|doc)\(\s*db\s*,\s*name\b/g,(match,kind)=>{
   dynamicCount++;return kind+'(db, "schools", activeSchoolId, name';
  });
  if(dynamicCount!==3)throw new Error('V46 dynamic collection/document call count changed: '+dynamicCount);
@@ -25,6 +25,6 @@ export function rewriteV46FirestorePaths(source){
  // Do not silently rewrite dynamic paths, nested references or database rules.
  const legacyLiteral=/\b(?:collection|doc)\(\s*db\s*,\s*(['"`])([a-z_]+)\1/g;
  for(const match of dynamicScoped.matchAll(legacyLiteral))if(match[2]!=='schools')throw new Error('Unscoped literal Firestore reference remains: '+match[2]);
- if(/\\b(?:collection|doc)\\(\\s*db\\s*,\\s*name\\b/.test(dynamicScoped))throw new Error('Unscoped dynamic Firestore reference remains');
+ if(/\b(?:collection|doc)\(\s*db\s*,\s*name\b/.test(dynamicScoped))throw new Error('Unscoped dynamic Firestore reference remains');
  return {source:dynamicScoped,collections:[...seen].sort(),dynamicCount};
 }
