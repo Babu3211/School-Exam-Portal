@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {iemisLedger} from '../iemis-ledger.js';
-import {renderV46TenantLedger} from './iemis-v46-ledger-adapter.mjs';
+import {renderV46TenantLedger,renderCompleteV46TenantGradeLedger} from './iemis-v46-ledger-adapter.mjs';
 const schoolId='test_school_001',examId='term_1';
 const students=[{id:'s1',schoolId,nameEnglish:'Test Student'}];
 const subjects=['English'];
@@ -29,4 +29,8 @@ assert.throws(()=>renderV46TenantLedger({...args,students:[{...students[0],schoo
 assert.throws(()=>renderV46TenantLedger({...args,records:[{...records[0],examId:'other_exam'}]}),/Foreign student or exam record/);
 assert.throws(()=>renderV46TenantLedger({...args,students:[{...students[0],id:''}]}),/Student ID required/);
 assert.throws(()=>renderV46TenantLedger({...args,schoolId:'../other_school'}),/Valid school scope required/);
-console.log('V47 tenant-scoped V46 IEMIS renderer parity passed for 120 class/mode/term cases and isolation');
+assert.throws(()=>renderCompleteV46TenantGradeLedger(args),/Class marks incomplete/);
+assert.throws(()=>renderCompleteV46TenantGradeLedger({...args,subjects:['English','Nepali']}),/Class marks incomplete/);
+assert.throws(()=>renderCompleteV46TenantGradeLedger({...args,subjects:['English','ENGLISH']}),/duplicate subject roster/);
+assert.throws(()=>renderCompleteV46TenantGradeLedger({...args,schoolId:'another_school'}),/Cross-school/);
+console.log('V47 tenant-scoped V46 IEMIS renderer parity passed for 120 class/mode/term cases, isolation and incomplete-grade protection');
