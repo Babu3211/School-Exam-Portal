@@ -206,6 +206,13 @@ try {
   });
   const assignedMark={schoolId:'school-a',studentId:'student-1',subjectId:'math',class:'9',term:'1st',theory:20,practical:10};
   await assertSucceeds(setDoc(schoolDoc('teacher-a','school-a','marks','1st:student-1:math'),assignedMark));
+  // A forged teacher assignment payload at the correct document path must not grant marks access.
+  for(const patch of [{schoolId:'school-b'},{uid:'outsider'},{classId:'8'},{subjectId:'science'},{active:false}]){
+    await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','teacher_assignments','school-a:teacher-a:9:math'),patch));
+    await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','3rd:student-1:math'),{...assignedMark,term:'3rd'}));
+    await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','teacher_assignments','school-a:teacher-a:9:math'),teacherAssignment));
+  }
+  await assertSucceeds(setDoc(schoolDoc('teacher-a','school-a','marks','3rd:student-1:math'),{...assignedMark,term:'3rd'}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','2nd:student-1:math'),{...assignedMark,term:'2nd',subjectId:'science'}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','2nd:student-1:math'),{...assignedMark,term:'2nd',schoolId:'school-b'}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','2nd:student-1:math'),{...assignedMark,term:'2nd',class:'8'}));
