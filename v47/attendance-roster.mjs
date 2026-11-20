@@ -13,7 +13,12 @@ export async function loadClassRoster({db,api,actor,schoolId,schoolClass,pageSiz
  const docs=snap.docs;
  if(!Array.isArray(docs)||docs.length>pageSize+1)throw new RangeError('Unexpected result size');
  const ids=new Set();
- for(const d of docs){if(typeof d.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||ids.has(d.id))throw new Error('Invalid or duplicate roster document ID');ids.add(d.id);}
+ let lastId=cursor?.id??null;
+ for(const d of docs){
+  if(typeof d.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||ids.has(d.id))throw new Error('Invalid or duplicate roster document ID');
+  if(lastId!==null&&d.id<=lastId)throw new Error('Roster query returned out-of-order document IDs');
+  ids.add(d.id);lastId=d.id;
+ }
  const page=docs.slice(0,pageSize);
  for(const d of docs)if(d.data().schoolId!==schoolId||d.data().class!==schoolClass)throw new Error('Cross-school or wrong-class roster record');
  return {students:page.map(d=>({...d.data(),id:d.id})),hasMore:docs.length>pageSize,cursor:page.at(-1)??null};
