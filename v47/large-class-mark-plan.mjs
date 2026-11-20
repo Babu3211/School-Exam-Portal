@@ -1,12 +1,11 @@
 import {validateCompleteClassMarks} from './class-mark-completeness.mjs';
-import {canAccessSchool} from './permissions.mjs';
 import {markEntryId} from './marks-service.mjs';
 
 // READ-ONLY preparation. No Firestore calls or writes occur here.
 // These groups are NOT an atomic save. A server-side, audited commit protocol
 // must be implemented before allowing multi-group writes in production.
 export function planLargeClassMarks({actor,schoolId,classId,term,subjectId,expectedStudentIds,entries}){
- if(!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin permission required');
+ if(actor?.active!==true||actor?.role!=='school_admin'||actor?.schoolId!==schoolId)throw new Error('School Admin permission required');
  const complete=validateCompleteClassMarks({schoolId,classId,term,subjectId,expectedStudentIds,entries});
  const groups=[];
  for(let offset=0;offset<complete.count;offset+=3){
