@@ -9,7 +9,12 @@ const draft={values:Object.fromEntries(schema.filter(x=>!x.readonly).map(x=>[x.k
 const args={school:{nameEnglish:'<img src=x onerror=alert(1)>',addressEnglish:'Main & School Road'},classNo:'1',term:'1st',students,subjects,draftsBySubject:{english:{s1:draft}},studentId:'s1'};
 const result=renderIemisGradeSheetPrint(args);
 assert.equal(result.ready,true);
-const sourceGrade=previewIemisGradeSheet(args).student.subjects[0].summary.totalGrade.grade;
+const sheet=previewIemisGradeSheet(args).student;
+const summary=sheet.subjects[0].summary;
+const sourceGrade=summary.totalGrade.grade;
+assert.match(result.html,new RegExp('<td>'+summary.obtained+' / '+summary.full+'</td>'));
+assert.match(result.html,new RegExp('<td>'+summary.totalGrade.point+'</td>'));
+assert.match(result.html,new RegExp('GPA: '+sheet.gpa));
 assert.match(result.html,new RegExp('<td>'+sourceGrade.replace('+','\\+')+'</td>'));
 assert.doesNotMatch(result.html,/<td>—<\/td>/);assert.match(result.html,/PREVIEW ONLY/);assert.match(result.html,/NOT VALID FOR OFFICIAL USE/);assert.match(result.html,/@page/);
 assert.match(result.html,/Obtained \/ Full/);assert.match(result.html,/Grade Point/);
