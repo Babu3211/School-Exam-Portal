@@ -1,10 +1,11 @@
+import {installIdleLogout} from './idle-logout.mjs';
 import {installSchoolAdminFeatures} from './school-admin-features.mjs';
 import {installExamWorkflows} from './school-exam-workflows.mjs';
 const $=id=>document.getElementById(id);
 const status=message=>{$('status').textContent=message};
 const config=Object.freeze({apiKey:"AIzaSyCqwHormyNH4Z5F8V0xJpW9rJcJeCtM0cQ",authDomain:"smss-exam-portal-v47.firebaseapp.com",projectId:"smss-exam-portal-v47",storageBucket:"smss-exam-portal-v47.firebasestorage.app",messagingSenderId:"570404092283",appId:"1:570404092283:web:b51a0d654bb9aaa82325de"});
 const base='https://www.gstatic.com/firebasejs/11.10.0/';
-let auth,authSdk,api,db,busy=false,verifiedSchool=null;
+let auth,authSdk,api,db,busy=false,verifiedSchool=null,stopIdleLogout=null;
 const classes=['ECD','LKG','UKG',...Array.from({length:12},(_,i)=>String(i+1))];
 for(const c of classes){for(const id of ['classFilter','studentClass','subjectFilter','subjectClass']){const o=document.createElement('option');o.value=c;o.textContent=c;$(id).append(o)}}
 
@@ -56,7 +57,7 @@ $('addStudent').onclick=async()=>{if(!verifiedSchool||busy)return;busy=true;$('a
 const adminFeatures=installSchoolAdminFeatures({getContext:()=>verifiedSchool?{schoolId:verifiedSchool,api,db}:null});
 const examWorkflows=installExamWorkflows({getContext:()=>verifiedSchool?{schoolId:verifiedSchool,api,db}:null});
 const schoolIdValid=id=>/^[A-Za-z0-9_-]{3,64}$/.test(id);
-function reset(){verifiedSchool=null;adminFeatures.reset();examWorkflows.reset();$('studentList').replaceChildren();$('studentCount').textContent='Not loaded';studentStatus('');$('subjectList').replaceChildren();$('subjectCount').textContent='Not loaded';subjectStatus(''); $('dashboard').hidden=true;$('loginArea').hidden=false;$('password').value='';$('uid').textContent='';$('schoolName').textContent='';$('currentSchoolId').textContent='';$('role').textContent=''; }
+function reset(){if(stopIdleLogout){stopIdleLogout();stopIdleLogout=null}verifiedSchool=null;adminFeatures.reset();examWorkflows.reset();$('studentList').replaceChildren();$('studentCount').textContent='Not loaded';studentStatus('');$('subjectList').replaceChildren();$('subjectCount').textContent='Not loaded';subjectStatus(''); $('dashboard').hidden=true;$('loginArea').hidden=false;$('password').value='';$('uid').textContent='';$('schoolName').textContent='';$('currentSchoolId').textContent='';$('role').textContent=''; }
 async function signOut(){if(auth?.currentUser)await authSdk.signOut(auth);reset()}
 async function initialize(){if(auth)return;
  if(config.projectId!=='smss-exam-portal-v47')throw new Error('V47 Firebase project required');
@@ -81,7 +82,7 @@ $('login').onclick=async()=>{if(busy)return;busy=true;$('login').disabled=true;
  const member=memberSnap.data();
  if(member.uid!==uid||member.schoolId!==sid||member.active!==true||member.role!=='school_admin')throw new Error('Active School Admin membership required');
  $('schoolName').textContent=school.name||sid;$('currentSchoolId').textContent=sid;$('role').textContent='School Admin';$('uid').textContent=uid;
- verifiedSchool=sid;$('loginArea').hidden=true;$('dashboard').hidden=false;status('School Admin access verified for '+sid);await loadStudents();await loadSubjects();await adminFeatures.refresh();await examWorkflows.refresh();
+ verifiedSchool=sid;stopIdleLogout=installIdleLogout({onTimeout:async()=>{await signOut();status('Signed out after one hour of inactivity')}});$('loginArea').hidden=true;$('dashboard').hidden=false;status('School Admin access verified for '+sid);await loadStudents();await loadSubjects();await adminFeatures.refresh();await examWorkflows.refresh();
  }catch(error){try{await signOut()}catch{}status(error?.code==='permission-denied'?'Access denied: check school membership and Firestore rules':(error?.message||'Sign-in failed'))}
  finally{busy=false;$('login').disabled=false}};
 $('logout').onclick=async()=>{if(busy)return;busy=true;$('logout').disabled=true;try{await signOut();status('Signed out')}catch(e){status(e.message)}finally{busy=false;$('logout').disabled=false}};
