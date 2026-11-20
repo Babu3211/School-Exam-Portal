@@ -63,6 +63,18 @@ try {
   await assertFails(deleteDoc(schoolDoc('admin-a','school-a','students','student-2')));
   await assertFails(setDoc(schoolDoc('viewer-a','school-a','marks','mark-1'),{schoolId:'school-a',score:20}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','mark-1'),{schoolId:'school-a',score:20}));
+  // Subject assignment creation must reject malformed IDs, types and unrecognized fields.
+  const validSubjectAssignment={schoolId:'school-a',studentId:'student-2',subjectId:'math',class:'9'};
+  for(const [id,patch] of [
+    ['student-2:math:extra',{}],
+    ['student-2:math',{active:'yes'}],
+    ['student-2:math',{class:'99'}],
+    ['student-2:math',{studentId:'student/2'}],
+    ['student-2:math',{subjectId:'math/extra'}],
+    ['student-2:math',{untrusted:true}]
+  ]){
+    await assertFails(setDoc(schoolDoc('admin-a','school-a','subject_assignments',id),{...validSubjectAssignment,...patch}));
+  }
   const adminRawMark={schoolId:'school-a',studentId:'student-2',subjectId:'math',class:'9',term:'1st',theory:20,practical:10};
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),adminRawMark));
 
