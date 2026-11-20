@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {saveCompleteClassMarks} from './class-mark-save.mjs';
+import {EXAM_TERMS} from './term-catalog.mjs';
 const schoolId='school-a',classId='9',term='1st',subjectId='math';
 const actor={role:'school_admin',active:true,schoolId};
 const mark=(studentId,overrides={})=>({studentId,class:classId,term,subjectId,theory:30,practical:10,...overrides});
@@ -83,5 +84,15 @@ for(const [overrides,message] of [
  const {api,writes}=mock({'subject_assignments/s2:math':{schoolId,class:classId,studentId:'s2',subjectId,active:false}});
  await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),/Student subject assignment/);
  assert.equal(writes.length,0);
+}
+// Each supported term must save under its own scoped document ID.
+for(const examTerm of EXAM_TERMS){
+ const {api,writes}=mock();
+ const termEntries=[mark('s1',{term:examTerm}),mark('s2',{term:examTerm})];
+ const result=await saveCompleteClassMarks({...args,term:examTerm,entries:termEntries,db:{},api});
+ assert.equal(result.saved,2);
+ assert.deepEqual(writes.map(([ref])=>ref),[
+  'marks/'+examTerm+':s1:math','marks/'+examTerm+':s2:math'
+ ]);
 }
 console.log('V47 atomic class marks save contract checks passed');
