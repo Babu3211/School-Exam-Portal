@@ -1,5 +1,4 @@
 import {previewGrade} from './iemis-grade-preview.mjs';
-import {renderV46TenantLedger} from './iemis-v46-ledger-adapter.mjs';
 import {iemisComponentPreview} from './iemis-component-preview.mjs';
 // V47 school-admin mark entry and teacher assignment. Not a CDC grade calculator.
 export function installExamWorkflows({getContext}){
