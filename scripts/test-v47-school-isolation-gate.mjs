@@ -46,7 +46,8 @@ assert.ok(componentBlock.includes('allow update, delete: if false;'),'Computer c
 // A second allow statement is OR-ed with the deny and can silently reopen writes.
 function assertAllMarkWritesDenied(block,label){
  const clauses=[...block.matchAll(/allow\s+([^:;]+):\s*if\s+([^;]+);/g)];
- assert.ok(clauses.length>0,label+' must declare permissions');
+ const writeClauses=clauses.filter(clause=>clause[1].split(',').map(x=>x.trim()).some(x=>['write','create','update','delete'].includes(x)));
+ assert.ok(writeClauses.length>0,label+' must explicitly deny write permissions');
  for(const clause of clauses){
   const permissions=clause[1].split(',').map(x=>x.trim());
   if(permissions.some(x=>['write','create','update','delete'].includes(x)))
@@ -55,6 +56,11 @@ function assertAllMarkWritesDenied(block,label){
 }
 assertAllMarkWritesDenied(marksBlock,'Raw marks');
 assertAllMarkWritesDenied(componentBlock,'Computer component marks');
+for(const [label,block] of [['Raw marks',marksBlock],['Computer component marks',componentBlock]]){
+ assert.throws(()=>assertAllMarkWritesDenied(block.replace(/allow\\s+(?:create|update|delete|write)[^;]*;/g,''),label),/explicitly deny write permissions/,
+  label+' test must reject missing write rules');
+}
+
 for(const [label,block] of [['Raw marks',marksBlock],['Computer component marks',componentBlock]]){
  // Mutation test: an additional OR-ed write permission must fail the gate,
  // even when the original explicit deny remains in place.
