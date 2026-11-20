@@ -1,0 +1,2 @@
+// V46 IEMIS component name classification, read-only.
+export function previewIemisComponentKey(name){const s=String(name||'').toLowerCase().trim();if(/no\.?\s*of\s*learning/.test(s))return 'count';if(/^full marks/.test(s))return 'full';if(/obtained learning/.test(s))return 'obtained';if(/^th\b|theory|total of final marks/.test(s))return 'theory';if(/participation/.test(s))return 'participation';if(/practical|project/.test(s))return 'practical';if(/term|examination/.test(s))return 'term';return null;}
