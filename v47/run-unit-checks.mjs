@@ -6,6 +6,7 @@ const suites=[
  'test-idle-logout.mjs',
  'test-session-lazy-load.mjs',
  'test-admin-attendance-safety.mjs',
+ 'test-iemis-grade-preview.mjs',
  'test-iemis-component-preview.mjs',
  'test-school-exam-workflows-safety.mjs',
  'test-school-scope.mjs',
