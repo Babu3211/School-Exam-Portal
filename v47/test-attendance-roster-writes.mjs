@@ -70,6 +70,28 @@ for(const mutate of [
  await assert.rejects(saveSchoolAttendance({db:{},api:state.api,actor:{role:'super_admin',active:true},schoolId,input:entry('s1')}),/School Admin/);
  assert.equal(state.writes.length,0);
 }
+// The attendance document reference can be built after roster verification.
+// Reject any admin session mutation during that synchronous SDK step as well.
+for(const mutate of [
+ a=>{a.active=false},
+ a=>{a.role='viewer'},
+ a=>{a.schoolId='school-b'},
+ a=>{a.uid='other-admin'}
+]){
+ const changingActor={...actor,uid:'admin-a'};
+ const state=mock();
+ const originalDoc=state.api.doc;
+ state.api.doc=(db,...parts)=>{
+  const ref=originalDoc(db,...parts);
+  if(parts[2]==='attendance')mutate(changingActor);
+  return ref;
+ };
+ await assert.rejects(
+  saveSchoolAttendance({db:{},api:state.api,actor:changingActor,schoolId,input:entry('s1')}),
+  /identity changed before attendance write/
+ );
+ assert.equal(state.writes.length,0,'Revoked admin must not write after reference construction');
+}
 // Bulk saves must stop before a batch is created if a session changes during
 // roster reads; the same rule applies after the batch has been staged.
 for(const mutate of [
