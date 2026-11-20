@@ -82,6 +82,45 @@ assert.ok(teacherAssignmentBlock,'Teacher assignment rules must exist');
 assert.ok(teacherAssignmentBlock.includes("allow create: if memberRole(sid, 'school_admin')"),'Teacher assignment create must require school admin');
 assert.ok(teacherAssignmentBlock.includes("allow update: if memberRole(sid, 'school_admin')"),'Teacher assignment update must require school admin');
 assert.ok(!/allow (?:create|update): if canAdmin\(sid\)/.test(teacherAssignmentBlock),'Super admin must not bypass teacher assignment write policy');
+// Firestore ORs all matching allow clauses. Reject an extra broad write
+// clause even when the intended school-admin-only clause remains present.
+function assertNoAlternateSchoolWrites(block,label,allowed){
+ const clauses=[...block.matchAll(/allow\s+([^:;]+):\s*if\s+([^;]+);/g)];
+ const writes=clauses.filter(m=>m[1].split(',').some(p=>['write','create','update','delete'].includes(p.trim())));
+ assert.ok(writes.length,label+' must declare explicit write policy');
+ for(const clause of writes){
+  const permissions=clause[1].split(',').map(p=>p.trim());
+  for(const permission of permissions){
+   if(!['write','create','update','delete'].includes(permission))continue;
+   assert.ok(permission!=='write',label+' must not have a broad write allow');
+   assert.ok(allowed[permission]?.some(rule=>rule.test(clause[2].trim())),
+    label+' has unauthorized '+permission+' clause: '+clause[0]);
+  }
+ }
+}
+const schoolAdmin= /memberRole\(sid, 'school_admin'\)/;
+assertNoAlternateSchoolWrites(attendanceBlock,'Attendance',{
+ create:[/memberRole\(sid, 'school_admin'\).*validAdminAttendance\(\).*teacherAttendanceAllowed\(sid, id\)/],
+ update:[/memberRole\(sid, 'school_admin'\)/],
+ delete:[/^false$/]
+});
+assertNoAlternateSchoolWrites(examBlock,'Exam terms',{
+ create:[/^memberRole\(sid, 'school_admin'\) && validExamTerm\(\)$/],
+ update:[/^false$/],delete:[/^false$/]
+});
+assertNoAlternateSchoolWrites(teacherAssignmentBlock,'Teacher assignments',{
+ create:[/^memberRole\(sid, 'school_admin'\)/],
+ update:[/^memberRole\(sid, 'school_admin'\)/],
+ delete:[/^false$/]
+});
+for(const [label,block,allowed] of [
+ ['Attendance',attendanceBlock,{create:[/memberRole\(sid, 'school_admin'\).*validAdminAttendance\(\).*teacherAttendanceAllowed\(sid, id\)/],update:[schoolAdmin],delete:[/^false$/]}],
+ ['Exam terms',examBlock,{create:[schoolAdmin],update:[/^false$/],delete:[/^false$/]}],
+ ['Teacher assignments',teacherAssignmentBlock,{create:[schoolAdmin],update:[schoolAdmin],delete:[/^false$/]}]
+]){
+ for(const extra of ['allow write: if true;','allow create: if canAdmin(sid);','allow update: if true;','allow delete: if true;'])
+  assert.throws(()=>assertNoAlternateSchoolWrites(block+'\n'+extra,label,allowed),/unauthorized|broad write/,label+' must reject '+extra);
+}
 assert.equal(rules.split('match /subject_assignments/{id}').length-1,1,'Subject assignment block must occur exactly once');
 assert.equal(rules.split('match /{collection}/{id}').length-1,1,'Generic collection rule must occur exactly once');
 assert.equal(rules.split('match /{document=**}').length-1,1,'Default-deny tail must occur exactly once');
