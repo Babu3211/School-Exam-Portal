@@ -1,10 +1,9 @@
 // V47-only helpers. Never import into V46 production without an approved migration.
-const SCHOOL_ID_PATTERN=/^[A-Za-z0-9_-]{3,64}$/;
+import {assertIemisSchoolId} from './iemis-school-identity.mjs';
 const DOC_ID_PATTERN=/^[A-Za-z0-9_-]{1,128}$/;
 const COLLECTION_PATTERN=/^[A-Za-z][A-Za-z0-9_]{0,63}$/;
 export function assertSchoolId(id){
- if(typeof id!=='string'||!SCHOOL_ID_PATTERN.test(id))throw new TypeError('Invalid school ID');
- return id;
+ return assertIemisSchoolId(id);
 }
 export function assertDocumentId(id){
  if(typeof id!=='string'||!DOC_ID_PATTERN.test(id))throw new TypeError('Invalid document ID');
