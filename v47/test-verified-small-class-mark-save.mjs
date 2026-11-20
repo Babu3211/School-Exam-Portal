@@ -65,4 +65,22 @@ for(const unauthorized of [
  assert.equal(transactions,0,'Unauthorized actor must not write marks');
  assert.equal(writes.length,0);
 }
+// An in-flight roster request must not authorize a save after the actor changes.
+for(const change of [
+ actor=>{actor.active=false},
+ actor=>{actor.role='viewer'},
+ actor=>{actor.schoolId='school-b'},
+ actor=>{actor.uid='different-user'}
+]){
+ const changingActor={...actor,uid:'admin-a'};
+ const {api,writes}=mock();
+ const originalRead=api.getDocs;
+ let transactions=0;
+ api.getDocs=async(...args)=>{const result=await originalRead(...args);change(changingActor);return result};
+ const originalTransaction=api.runTransaction;
+ api.runTransaction=async(...args)=>{transactions++;return originalTransaction(...args)};
+ await assert.rejects(saveVerifiedSmallClassMarks({...base,actor:changingActor,api,entries:[entry('s1'),entry('s2')]}),/identity changed during roster load/);
+ assert.equal(transactions,0);
+ assert.equal(writes.length,0);
+}
 console.log('V47 verified small-class mark save tests passed');
