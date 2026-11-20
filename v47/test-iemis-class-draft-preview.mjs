@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {inspectIemisClassDraft} from './iemis-class-draft-preview.mjs';
+const students=[{id:'s1'},{id:'s2'},{id:'s3'}],valid={values:{count:'10',obtained:'35'},isAbsent:false,incompatible:false};
+const args={classNo:'1',term:'1st',subject:'English',students};
+const good=inspectIemisClassDraft({...args,drafts:{s1:valid,s2:valid,s3:valid}});
+assert.deepEqual(good,{complete:true,total:3,missing:[],invalid:[]});
+const missing=inspectIemisClassDraft({...args,drafts:{s1:valid,s2:valid}});
+assert.deepEqual(missing.missing,['s3']);assert.equal(missing.complete,false);
+const bad=inspectIemisClassDraft({...args,drafts:{s1:valid,s2:{...valid,values:{count:'10',obtained:'50'}},s3:valid}});
+assert.deepEqual(bad.invalid.map(x=>x.studentId),['s2']);assert.equal(bad.complete,false);
+const unsupported=inspectIemisClassDraft({...args,term:'weekly',drafts:{s1:valid,s2:valid,s3:valid}});
+assert.equal(unsupported.complete,false);assert.equal(unsupported.invalid.length,3);
+assert.throws(()=>inspectIemisClassDraft({...args,students:[],drafts:{}}),/complete class roster/);
+assert.throws(()=>inspectIemisClassDraft({...args,students:[{id:'s1'},{id:'s1'}],drafts:{}}),/duplicate/);
+assert.throws(()=>inspectIemisClassDraft({...args,students:[{id:''}],drafts:{}}),/invalid/);
+console.log('V47 offline IEMIS class-wide draft completeness tests passed');
