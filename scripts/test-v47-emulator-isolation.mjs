@@ -106,6 +106,10 @@ try {
   await assertFails(setDoc(computerRef,computerMark));
   await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','subject_assignments','student-2:computer'),{active:true}));
   await assertSucceeds(setDoc(computerRef,computerMark));
+  // Computer must not bypass 4/36/10 validation through the two-field raw marks collection.
+  const computerRaw={schoolId:'school-a',studentId:'student-2',subjectId:'computer',class:'9',term:'2nd',theory:20,practical:10};
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','2nd:student-2:computer'),computerRaw));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','2nd:student-2:computer'),computerRaw));
   // The three-component schema must never be accepted for a non-Computer subject.
   const mathComponent={...computerMark,subjectId:'math',term:'monthly'};
   await assertFails(setDoc(schoolDoc('admin-a','school-a','component_marks','monthly:student-2:math'),mathComponent));
