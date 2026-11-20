@@ -21,6 +21,7 @@ await assert.rejects(()=>deleteSchoolExamTerm(),/deletion unavailable/i);
 assert.equal(writes.length,EXAM_TERMS.length,'failed creates must not write');
 await assert.rejects(()=>createSchoolExamTerm({db:{},api:{doc:api.doc},actor:admin,schoolId:'school_A',term:'1st'}),/transaction/i);
 await assert.rejects(()=>createSchoolExamTerm({db:{},api,actor:{role:'teacher',active:true,schoolId:'school_A'},schoolId:'school_A',term:'1st'}),/permission/i);
+await assert.rejects(()=>createSchoolExamTerm({db:{},api,actor:{role:'super_admin',active:true},schoolId:'school_A',term:'1st'}),/permission/i);
 // A revoked or reassigned admin must not write after the transaction read.
 for(const mutate of [
  actor=>{actor.active=false},
