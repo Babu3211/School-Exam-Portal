@@ -47,9 +47,11 @@ $('loadClassMarks').onclick=async()=>{
   const roster=await loadCompleteClassRoster({db,api,actor,schoolId,classId});
   if(attempt!==epoch||classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value)return;
   if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId||actor?.schoolId!==selectedSchoolId)throw new Error('Authentication or school changed during roster load');
-  classMarkRoster=roster.students;classMarkContext={classId,term,subjectId};
+  // Display alphabetically without changing the authoritative roster IDs used for completeness checks.
+  classMarkRoster=[...roster.students].sort((a,b)=>String(a.name??a.id).localeCompare(String(b.name??b.id),'en',{sensitivity:'base',numeric:true})||a.id.localeCompare(b.id));
+  classMarkContext={classId,term,subjectId};
   const body=$('classMarkRows'),fragment=document.createDocumentFragment();
-  for(const student of roster.students){
+  for(const student of classMarkRoster){
    const row=document.createElement('tr');row.dataset.studentId=student.id;
    const name=document.createElement('td');name.textContent=String(student.name??student.id);row.append(name);
    for(const field of ['theory','practical']){
