@@ -26,4 +26,7 @@ await assert.rejects(loadClassRoster({...base,api:apiFor([['s1',{schoolId,class:
 await assert.rejects(loadClassRoster({...base,api:apiFor([['../evil',{schoolId,class:'9'}]])}),/Invalid or duplicate roster document ID/);
 await assert.rejects(loadClassRoster({...base,pageSize:101,api:apiFor(students)}),/Page size/);
 await assert.rejects(loadClassRoster({...base,pageSize:1,api:apiFor([['s1',{schoolId,class:'9'}],['s2',{schoolId:'school-b',class:'9'}]])}),/Cross-school or wrong-class/);
+await assert.rejects(loadClassRoster({...base,api:apiFor([students[1],students[0]])}),/out-of-order/);
+await assert.rejects(loadClassRoster({...base,pageSize:1,api:apiFor([students[1],students[0]])}),/out-of-order/);
+await assert.rejects(loadClassRoster({...base,cursor:{id:'s2'},api:apiFor([students[0]])}),/out-of-order/);
 console.log('V47 roster query isolation tests passed');
