@@ -56,6 +56,9 @@ for(const [overrides,message] of [
  [{entries:[mark('s1'),mark('s2',{subjectId:'science'})]},/Mixed class/],
  [{entries:[mark('s1'),mark('s2',{theory:''})]},/Marks must/],
  [{actor:{role:'viewer',active:true,schoolId}},/School Admin/],
+ [{actor:{role:'teacher',active:true,schoolId}},/School Admin/],
+ [{actor:{role:'super_admin',active:true}},/School Admin/],
+ [{actor:{role:'school_admin',active:false,schoolId}},/School Admin/],
  [{actor:{role:'school_admin',active:true,schoolId:'school-b'}},/School Admin/],
  [{expectedStudentIds:Array.from({length:4},(_,i)=>'s'+i),entries:Array.from({length:4},(_,i)=>mark('s'+i))},/at most 3/]
  ]){
