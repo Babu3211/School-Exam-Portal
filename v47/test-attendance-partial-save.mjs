@@ -19,4 +19,32 @@ assert.equal(commits,2);
 assert.equal(progress.length,1);
 assert.equal(progress[0].saved,10);
 assert.equal(progress[0].savedIds.length,10);
+// If an admin loses permission after the first committed chunk, report exactly
+// the committed count and never start a second batch.
+for(const mutate of [
+ a=>{a.active=false},
+ a=>{a.role='viewer'},
+ a=>{a.schoolId='school-b'},
+ a=>{a.uid='different-admin'}
+]){
+ const changingActor={...actor,uid:'admin-a'};
+ let completed=0,started=0;
+ const racingApi={
+  doc:(_db,...parts)=>parts.join('/'),
+  getDoc:async()=>({exists:()=>true,data:()=>({schoolId,class:'9'})}),
+  writeBatch:()=>{started++;return {set:()=>{},commit:async()=>{completed++;mutate(changingActor)}}}
+ };
+ await assert.rejects(
+  saveLoadedClassAttendance({db:{},api:racingApi,actor:changingActor,schoolId,entries}),
+  error=>{
+   assert.ok(error instanceof PartialAttendanceSaveError);
+   assert.equal(error.saved,10);
+   assert.equal(error.total,11);
+   assert.match(error.cause.message,/School Admin/);
+   return true;
+  }
+ );
+ assert.equal(started,1,'Revoked admin must not start another batch');
+ assert.equal(completed,1,'Only the first attendance batch may commit');
+}
 console.log('V47 attendance partial-save recovery contract passed');
