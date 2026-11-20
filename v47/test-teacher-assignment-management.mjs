@@ -41,6 +41,7 @@ for(const [change,pattern] of [
  [{'members/teacher-a':{schoolId,uid,role:'teacher',active:false}},/Active teacher membership/],
  [{'members/teacher-a':{schoolId,uid,role:'viewer',active:true}},/Active teacher membership/],
  [{'members/teacher-a':{schoolId:'school-b',uid,role:'teacher',active:true}},/Active teacher membership/],
+ [{'members/teacher-a':{schoolId,uid:'imposter-teacher',role:'teacher',active:true}},/Active teacher membership/],
  [{'teacher_assignments/school-a:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:false}},/already exists/]
  ]){
  const state=setup(change);
@@ -75,6 +76,28 @@ for(const badActor of [{role:'viewer',active:true,schoolId},{role:'super_admin',
 {
  const state=setup({'teacher_assignments/school-a:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:false}});
  await assert.rejects(setTeacherAssignmentActive({...base,api:state.api,active:'yes'}),/Active must be boolean/);
+ assert.equal(state.writes.length,0);
+}
+// Forged membership UID must be rejected on both create and activation.
+for(const action of ['create','activate']){
+ const state=setup({
+  'members/teacher-a':{schoolId,uid:'imposter-teacher',role:'teacher',active:true},
+  ...(action==='activate'?{[stateKey()]:{schoolId,uid,classId,subjectId,active:false}}:{})
+ });
+ const params={...base,api:state.api};
+ await assert.rejects(
+  action==='create'?createTeacherAssignment(params):setTeacherAssignmentActive({...params,active:true}),
+  /Active teacher membership/
+ );
+ assert.equal(state.writes.length,0);
+}
+// Invalid target roles must not be able to create or reactivate assignments.
+for(const role of ['viewer','school_admin','super_admin']){
+ const state=setup({
+  'members/teacher-a':{schoolId,uid,role,active:true},
+  [stateKey()]:{schoolId,uid,classId,subjectId,active:false}
+ });
+ await assert.rejects(setTeacherAssignmentActive({...base,api:state.api,active:true}),/Active teacher membership/);
  assert.equal(state.writes.length,0);
 }
 // Assignment creation and activation must fail if the admin session changes
