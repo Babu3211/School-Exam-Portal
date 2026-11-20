@@ -106,6 +106,9 @@ try {
   await assertFails(setDoc(computerRef,computerMark));
   await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','subject_assignments','student-2:computer'),{active:true}));
   await assertSucceeds(setDoc(computerRef,computerMark));
+  // The three-component schema must never be accepted for a non-Computer subject.
+  const mathComponent={...computerMark,subjectId:'math',term:'monthly'};
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','component_marks','monthly:student-2:math'),mathComponent));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','missing-scope'),{score:20}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','wrong-scope'),{schoolId:'school-b',score:20}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{schoolId:'school-b'}));
