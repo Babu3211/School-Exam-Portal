@@ -79,7 +79,7 @@ for(const change of [
  api.getDocs=async(...args)=>{const result=await originalRead(...args);change(changingActor);return result};
  const originalTransaction=api.runTransaction;
  api.runTransaction=async(...args)=>{transactions++;return originalTransaction(...args)};
- await assert.rejects(saveVerifiedSmallClassMarks({...base,actor:changingActor,api,entries:[entry('s1'),entry('s2')]}),/identity changed during roster load/);
+ await assert.rejects(saveVerifiedSmallClassMarks({...base,actor:changingActor,api,entries:[entry('s1'),entry('s2')]}),/School membership changed during roster query|School membership changed during roster load|School Admin identity changed during roster load/);
  assert.equal(transactions,0);
  assert.equal(writes.length,0);
 }
