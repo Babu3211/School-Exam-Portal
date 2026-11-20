@@ -354,6 +354,40 @@ service cloud.firestore {
         allow create: if canAdmin(sid) && validAssignment();
         allow update, delete: if false;
       }
+      // Legacy V46 collections: explicit, tenant-contained READ ONLY compatibility.
+      // Never grant write until each V46 schema and cross-school authorization is audited.
+      match /audit_logs/{id} {
+        allow get, list: if canAdmin(sid);
+        allow create, update, delete: if false;
+      }
+      match /certificates/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /school_public_branding/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /school_gallery/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /user_roles/{id} {
+        allow get, list: if canAdmin(sid);
+        allow create, update, delete: if false;
+      }
+      match /public_result_exams/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /public_result_lookup/{id} {
+        allow get, list: if canAdmin(sid);
+        allow create, update, delete: if false;
+      }
+      match /public_results/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
       match /{collection}/{id} {
         allow get, list: if collection in ['staff','classes','mark_settings','school_settings'] && canRead(sid);
         allow create: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && scopedRecord(sid);
