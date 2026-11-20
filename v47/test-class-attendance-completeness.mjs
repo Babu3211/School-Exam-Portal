@@ -17,4 +17,14 @@ for(const [change,pattern] of [
  [{expectedStudentIds:Array.from({length:1501},(_,i)=>'s'+i),entries:[]},/Valid class roster/],
  [{entries:Array.from({length:1501},(_,i)=>item('s'+i))},/Valid attendance entries/]
  ])assert.throws(()=>validateCompleteClassAttendance({...base,...change}),pattern);
+// The 1,500-student upper bound is inclusive, and the complete roster
+// may arrive in any order without losing any student's attendance.
+{
+ const expectedStudentIds=Array.from({length:1500},(_,i)=>'s'+i);
+ const entries=expectedStudentIds.map(studentId=>item(studentId)).reverse();
+ const complete=validateCompleteClassAttendance({...base,expectedStudentIds,entries});
+ assert.equal(complete.count,1500);
+ assert.equal(complete.entries[0].studentId,'s1499');
+ assert.equal(complete.entries.at(-1).studentId,'s0');
+}
 console.log('V47 class attendance completeness checks passed');
