@@ -55,6 +55,15 @@ function assertAllMarkWritesDenied(block,label){
 }
 assertAllMarkWritesDenied(marksBlock,'Raw marks');
 assertAllMarkWritesDenied(componentBlock,'Computer component marks');
+for(const [label,block] of [['Raw marks',marksBlock],['Computer component marks',componentBlock]]){
+ // Mutation test: an additional OR-ed write permission must fail the gate,
+ // even when the original explicit deny remains in place.
+ for(const extra of ['allow create: if true;','allow create, update: if canAdmin(sid);','allow write: if true;']){
+  assert.throws(()=>assertAllMarkWritesDenied(block+'\\n'+extra,label),/alternate writable permission/,
+   label+' mutation must be rejected: '+extra);
+ }
+}
+
 assert.equal(rules.split('match /subject_assignments/{id}').length-1,1,'Subject assignment block must occur exactly once');
 assert.equal(rules.split('match /{collection}/{id}').length-1,1,'Generic collection rule must occur exactly once');
 assert.equal(rules.split('match /{document=**}').length-1,1,'Default-deny tail must occur exactly once');
