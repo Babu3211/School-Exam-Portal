@@ -25,4 +25,10 @@ assert.match(workflow,/import \{previewGrade\} from '\.\/iemis-grade-preview\.mj
 assert.match(workflow,/\$\('showGradePreview'\)\.onclick/);
 assert.match(workflow,/Not a saved result or GPA/);
 assert.match(workflow,/\$\('gradePreviewResult'\)\.textContent=''/);
+assert.match(workflow,/student\.data\(\)\.active===false/);
+assert.match(workflow,/cachedSubjects=subjects\.filter\(x=>x\.active===true/);
+assert.match(workflow,/d\.data\(\)\.schoolId===ctx\(\)\.schoolId/);
+assert.match(workflow,/Ledger contains invalid student or subject references/);
+assert.match(workflow,/Ledger references missing or unauthorized student\/subject records/);
+assert.match(workflow,/Assignment changed or no longer belongs to this school/);
 console.log('V47 exam workflow static safety checks passed');
