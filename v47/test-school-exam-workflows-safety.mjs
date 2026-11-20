@@ -17,4 +17,8 @@ assert.match(workflow,/\[Student record unavailable\]/);
 assert.match(workflow,/member\.data\(\)\.schoolId!==schoolId/);
 assert.match(workflow,/subject\.data\(\)\.schoolId!==schoolId/);
 assert.match(workflow,/current\.data\(\)\.schoolId!==ctx\(\)\.schoolId/);
+assert.match(workflow,/subject\.data\(\)\.active!==true/);
+assert.match(workflow,/d\.data\(\)\.schoolId===ctx\(\)\.schoolId/);
+assert.match(workflow,/\[A-Za-z0-9_-\]/);
+assert.match(workflow,/theoryText\)/);
 console.log('V47 exam workflow static safety checks passed');
