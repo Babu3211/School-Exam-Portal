@@ -28,3 +28,9 @@ The initial V47 school-admin `school-exam-workflows.mjs` has a provisional two-f
 - V47 Classes 1–10 simplified marks saves remain blocked until the verified V46 component writer, complete-class validation, CDC calculations and tenant-scoped rules are integrated and emulator-tested.
 - The raw ledger is not a Grade Ledger and must not be used as a final result or Grade Sheet.
 - V47 Firestore rule and index changes require independent publication to the V47 Firebase project; hosting-only preview does not publish them.
+
+## Read-only V46 grade-band parity test
+
+- `iemis-grade-preview.mjs` projects the grade bands and final-grade point mapping from the root V46 `iemis-ledger.js` source.
+- `test-iemis-grade-preview.mjs` compares 10,001 percentage inputs and 4,001 grade-point inputs directly against V46 exports, plus invalid inputs. This does **not** verify V47 GPA, class-completeness, mark persistence, or Grade Sheet parity.
+- School Admin can view a standalone grade-band example; it never saves marks or calculates a student result.
