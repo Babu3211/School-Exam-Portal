@@ -10,6 +10,7 @@ const suites=[
  'test-admin-attendance-safety.mjs',
  'test-iemis-schema-source-parity.mjs',
  'test-iemis-v46-ledger-adapter.mjs',
+ 'test-iemis-authorized-class-ledger.mjs',
  'test-iemis-record-compatibility.mjs',
  'test-iemis-grade-sheet-print-preview.mjs',
  'test-iemis-grade-sheet-preview.mjs',
