@@ -311,6 +311,12 @@ try {
   await assertFails(getDoc(schoolDoc('teacher-a','school-a','students','student-1')));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','attendance','2026-11-22_student-1'),{...adminAttendance,date:'2026-11-22'}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-22_student-1'),{...teacherAttendance,date:'2026-11-22'}));
+  // Suspension is scoped to one school; another school's admin remains active.
+  await assertSucceeds(getDoc(schoolDoc('admin-b','school-b','students','student-1')));
+  await assertFails(getDoc(schoolDoc('admin-a','school-b','students','student-1')));
+  await assertFails(updateDoc(doc(db('disabled-super'),'schools','school-a'),{active:true}));
+  await assertFails(updateDoc(doc(db('admin-a'),'schools','school-a'),{active:true}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','students','suspended-new'),{name:'Suspended Student',class:'9',schoolId:'school-a'}));
   // Super Admin retains oversight and may restore the school.
   await assertSucceeds(getDoc(doc(db('super-a'),'schools','school-a')));
   await assertSucceeds(updateDoc(doc(db('super-a'),'schools','school-a'),{active:true}));
