@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {inspectIemisDraft} from './iemis-draft-inspector.mjs';
+const validPrimary={values:{count:'10',obtained:'35'},isAbsent:false,incompatible:false};
+assert.equal(inspectIemisDraft('1','1st','English',validPrimary).valid,true);
+assert.equal(inspectIemisDraft('1','1st','English',{...validPrimary,values:{count:'10',obtained:'45'}}).valid,false);
+assert.equal(inspectIemisDraft('1','1st','English',{...validPrimary,values:{count:'',obtained:''}}).valid,false);
+assert.equal(inspectIemisDraft('1','1st','English',{...validPrimary,isAbsent:true}).valid,false);
+const validSecondary={values:{participation:'4',practical:'36',term:'10',theory:'50'},isAbsent:false,incompatible:false};
+assert.equal(inspectIemisDraft('9','final','Computer Science',validSecondary).valid,true);
+assert.equal(inspectIemisDraft('9','final','Computer Science',{...validSecondary,values:{...validSecondary.values,theory:''}}).valid,false);
+assert.equal(inspectIemisDraft('9','final','Computer Science',{...validSecondary,incompatible:true}).valid,false);
+assert.equal(inspectIemisDraft('9','weekly','Computer Science',validSecondary).valid,false);
+assert.equal(inspectIemisDraft('11','final','English',validSecondary).valid,false);
+console.log('V47 IEMIS draft inspection rejects incomplete and unsupported previews');
