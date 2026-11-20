@@ -9,7 +9,16 @@ export function normalizeV46StudentClass(value){
  const alias=raw.replace(/^CLASS\s*|^कक्षा\s*/i,'').trim();
  return alias==='NURSERY'?'ECD':alias;
 }
-const value=(r,k)=>String(r?.[k]??'').trim();
+const value=(r,k)=>String(r?.[k]??'').normalize('NFC').trim();
+export function validateV46IemisExcelHeaders(rows){
+ if(!Array.isArray(rows)||!rows.length)throw new Error('Excel मा विद्यार्थी विवरण भेटिएन।');
+ const headings=Object.keys(rows[0]??{}).map(x=>x.trim());
+ const required=['IEMIS Code','Student Name','Class'];
+ const missing=required.filter(x=>!headings.includes(x));
+ if(!headings.includes('Student IEMIS Id')&&!headings.includes('Admission Number'))missing.push('Student IEMIS Id / Admission Number');
+ if(missing.length)throw new Error('Excel का आवश्यक Column भेटिएनन्: '+missing.join(', '));
+ return true;
+}
 export function normalizeV46IemisExcelRow(row){
  if(!row||typeof row!=='object'||Array.isArray(row))throw new TypeError('Excel row must be an object');
  return Object.freeze(Object.fromEntries(V46_IEMIS_HEADERS.map(header=>[header,value(row,header)])));
@@ -22,6 +31,7 @@ export function getReadyV46IemisRows(preview,{confirmed=false}={}){
 export function previewV46IemisStudentImport({rows,schoolId,existingIemisIds=[],existingAdmissionNumbers=[]}={}){
  assertIemisSchoolId(schoolId);
  if(!Array.isArray(rows))throw new TypeError('Excel rows array required');
+ validateV46IemisExcelHeaders(rows);
  const existing=new Set(existingIemisIds.map(x=>String(x).trim()).filter(Boolean));
  const existingAdmission=new Set(existingAdmissionNumbers.map(x=>String(x).trim()).filter(Boolean));
  const seen=new Set(),seenAdmission=new Set();
