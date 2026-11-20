@@ -42,4 +42,20 @@ for(const mutate of [
  assert.equal(batchCalls,0,'Revoked admin must not start attendance batch');
  assert.equal(committed.length,0,'Revoked admin must not write attendance');
 }
+// A session change while constructing a batch must prevent commit.
+for(const mutate of [
+ a=>{a.active=false},
+ a=>{a.role='viewer'},
+ a=>{a.schoolId='school-b'},
+ a=>{a.uid='other-admin'}
+]){
+ const changingActor={...actor,uid:'admin-a'};
+ let commitCalls=0;
+ const racingApi={...api,writeBatch:()=>({
+  set:()=>mutate(changingActor),
+  commit:async()=>{commitCalls++}
+ })};
+ await assert.rejects(saveVerifiedClassAttendance({...args,actor:changingActor,db:{},api:racingApi}),/identity changed before attendance batch commit/);
+ assert.equal(commitCalls,0,'Revoked admin must not commit a staged batch');
+}
 console.log('V47 verified attendance save contract checks passed');
