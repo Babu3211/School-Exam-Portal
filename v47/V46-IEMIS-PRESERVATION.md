@@ -41,3 +41,7 @@ The initial V47 school-admin `school-exam-workflows.mjs` has a provisional two-f
 - `iemis-gpa-preview.mjs` mirrors `iemisGpa`, including credit-hour weighting, NG/incomplete fail-closed behavior, and primary vs annual distinction. Regression tests compare its output to V46.
 - `test-iemis-schema-source-parity.mjs` compares all Classes 1–10, four mapped terms and English/Computer field structures directly with V46 `iemisEntrySchema` (80 combinations).
 - These are isolated, read-only functions. **No class-wide IEMIS writer, grade ledger, grade sheet, print workflow, or production deployment is authorized by these tests.**
+
+## Read-only entry draft and value parity
+
+The V47 preview helpers `iemis-component-key-preview.mjs`, `iemis-entry-draft-preview.mjs`, and `iemis-entry-values-preview.mjs` replicate V46 component recognition, existing-record draft conversion, and draft-to-score validation without Firestore writes. Direct source parity tests compare against V46 `iemisComponentKey`, `iemisEntryDraft`, and `iemisEntryValues` across primary and secondary classes, first/second/third/final terms, and malformed/absent values. These helpers are not a production marks writer; do not enable V47 classes 1–10 simplified marks save until authorized tenant-scoped class-wide save, source parity, and real preview tests pass. Firestore rules and indexes must be published separately after review.
