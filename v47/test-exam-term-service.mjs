@@ -21,4 +21,23 @@ await assert.rejects(()=>deleteSchoolExamTerm(),/deletion unavailable/i);
 assert.equal(writes.length,EXAM_TERMS.length,'failed creates must not write');
 await assert.rejects(()=>createSchoolExamTerm({db:{},api:{doc:api.doc},actor:admin,schoolId:'school_A',term:'1st'}),/transaction/i);
 await assert.rejects(()=>createSchoolExamTerm({db:{},api,actor:{role:'teacher',active:true,schoolId:'school_A'},schoolId:'school_A',term:'1st'}),/permission/i);
+// A revoked or reassigned admin must not write after the transaction read.
+for(const mutate of [
+ actor=>{actor.active=false},
+ actor=>{actor.role='viewer'},
+ actor=>{actor.schoolId='school_B'},
+ actor=>{actor.uid='switched-user'}
+]){
+ const actor={role:'school_admin',active:true,schoolId:'school_A',uid:'admin-a'};
+ const pending=[];
+ const racingApi={
+  doc:api.doc,
+  runTransaction:async(_db,callback)=>{
+   const tx={get:async()=>{mutate(actor);return {exists:()=>false}},set:(ref,data)=>pending.push([ref,data])};
+   await callback(tx);
+  }
+ };
+ await assert.rejects(createSchoolExamTerm({db:{},api:racingApi,actor,schoolId:'school_A',term:'monthly'}),/identity changed/);
+ assert.equal(pending.length,0,'Revoked exam creator must not write');
+}
 console.log('V47 exam term creation and deletion guard tests passed');
