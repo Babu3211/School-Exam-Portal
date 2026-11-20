@@ -56,4 +56,17 @@ for(const classNo of [6,7,8,9,10])for(const term of ['1st','2nd','3rd','final'])
  assert.deepEqual(grade,renderV46TenantLedger({...completeArgs,mode:'grade'}));
  assert.match(grade.body,/<tr>/);
 }
-console.log('V47 tenant-scoped V46 IEMIS renderer parity, 40 complete class-term cases and isolation passed');
+// Verify a class-wide grade ledger with multiple students and subjects.
+const twoStudents=[students[0],{id:'s2',schoolId,nameEnglish:'Second Student'}];
+const twoSubjects=['English','Nepali'];
+const twoSchema=iemisEntrySchema(1,'annual','English');
+const twoValues={count:'10',obtained:'36'};
+const twoRecord=iemisEntryValues(twoSchema,{values:twoValues,isAbsent:false,incompatible:false});
+const twoRecords=twoStudents.flatMap(student=>twoSubjects.map(subject=>({...twoRecord,schoolId,studentId:student.id,examId,subject})));
+const twoArgs={...args,classNo:1,students:twoStudents,subjects:twoSubjects,records:twoRecords};
+assert.deepEqual(renderCompleteV46TenantGradeLedger(twoArgs),renderV46TenantLedger({...twoArgs,mode:'grade'}));
+assert.throws(()=>renderCompleteV46TenantGradeLedger({...twoArgs,records:twoRecords.slice(0,-1)}),/Class marks incomplete/);
+assert.throws(()=>renderCompleteV46TenantGradeLedger({...twoArgs,records:twoRecords.map((r,i)=>i===0?{...r,isAbsent:true}:r)}),/Class marks incomplete/);
+assert.throws(()=>renderCompleteV46TenantGradeLedger({...twoArgs,records:twoRecords.map((r,i)=>i===0?{...r,schoolId:'another_school'}:r)}),/Cross-school/);
+assert.throws(()=>renderCompleteV46TenantGradeLedger({...twoArgs,records:twoRecords.map((r,i)=>i===0?{...r,examId:'another_exam'}:r)}),/Foreign student or exam record/);
+console.log('V47 V46 IEMIS parity: 120 renderer combinations, 40 complete grade cases, multi-student subject completeness and tenant isolation passed');
