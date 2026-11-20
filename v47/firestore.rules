@@ -251,7 +251,7 @@ service cloud.firestore {
         allow update: if immutableSchool(sid)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['present'])
           && request.resource.data.present is bool
-          && (memberRole(sid, 'school_admin') || teacherAttendanceAllowed(sid, id));
+          && memberRole(sid, 'school_admin');
         allow delete: if false;
       }
       match /exams/{id} {
