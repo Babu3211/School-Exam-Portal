@@ -1,7 +1,7 @@
 // Offline, read-only class roster completeness preview. Never saves student marks.
 import {inspectIemisDraft} from './iemis-draft-inspector.mjs';
 export function inspectIemisClassDraft({classNo,term,subject,students,drafts}){
- if(!Array.isArray(students)||students.length===0)throw Error('A complete class roster is required');
+ if(!Array.isArray(students)||students.length===0||students.length>1500)throw Error('A complete class roster is required');
  if(!drafts||typeof drafts!=='object'||Array.isArray(drafts))throw Error('Class marks drafts are required');
  const ids=students.map(s=>s?.id);
  if(ids.some(id=>typeof id!=='string'||!id.trim()||id.length>128)||new Set(ids).size!==ids.length)throw Error('Class roster contains invalid or duplicate student IDs');
