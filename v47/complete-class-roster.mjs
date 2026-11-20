@@ -3,6 +3,7 @@ import {loadClassRoster} from './attendance-roster.mjs';
 // a manually selected subset as the authoritative roster.
 export async function loadCompleteClassRoster({db,api,actor,schoolId,classId,pageSize=100,maxStudents=1500}){
  if(!Number.isInteger(maxStudents)||maxStudents<1||maxStudents>1500)throw new RangeError('Roster cap must be 1–1500');
+ if(!Number.isInteger(pageSize)||pageSize<1||pageSize>100)throw new RangeError('Page size must be 1–100');
  const seen=new Set(),students=[];
  let cursor=null,previous=null,pages=0,lastId=null;
  do{
@@ -18,6 +19,7 @@ export async function loadCompleteClassRoster({db,api,actor,schoolId,classId,pag
   }
   if(page.hasMore){
    if(!page.students.length||!page.cursor||page.cursor.id===previous)throw new Error('Roster pagination stalled');
+   if(page.cursor.id!==lastId)throw new Error('Roster cursor does not match last student');
    previous=page.cursor.id;cursor=page.cursor;
   }else cursor=null;
  }while(cursor);
