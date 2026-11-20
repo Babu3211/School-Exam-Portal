@@ -262,6 +262,12 @@ try {
   await assertFails(getDoc(schoolDoc('admin-b','school-a','teacher_assignments','school-a:teacher-a:9:math')));
   await assertFails(updateDoc(schoolDoc('teacher-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{active:true}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{uid:'admin-a'}));
+  // Activation must also reject a forged member UID or school scope.
+  for(const patch of [{uid:'other-teacher'},{schoolId:'school-b'},{role:'viewer'},{active:false}]){
+    await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','members','teacher-a'),patch));
+    await assertFails(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{active:true}));
+    await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','members','teacher-a'),{uid:'teacher-a',schoolId:'school-a',role:'teacher',active:true}));
+  }
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{active:true}));
   await env.withSecurityRulesDisabled(async ctx=>{
     await setDoc(doc(ctx.firestore(),'schools','school-a','subject_assignments','student-1:math'),{schoolId:'school-a',studentId:'student-1',subjectId:'math',class:'9'});
