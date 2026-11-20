@@ -14,4 +14,6 @@ assert.doesNotMatch(result.html,/<script>|<img/);
 const incomplete=renderIemisGradeSheetPrint({...args,draftsBySubject:{english:{}}});assert.equal(incomplete.ready,false);assert.equal(incomplete.html,null);
 assert.throws(()=>renderIemisGradeSheetPrint({...args,school:{nameEnglish:''}}),/school name/);
 assert.throws(()=>renderIemisGradeSheetPrint({...args,school:{...args.school,addressEnglish:'x'.repeat(251)}}),/Invalid school address/);
+assert.throws(()=>renderIemisGradeSheetPrint({...args,school:{...args.school,addressEnglish:42}}),/Invalid school address/);
+assert.throws(()=>renderIemisGradeSheetPrint({...args,school:{...args.school,nameEnglish:'x'.repeat(161)}}),/Valid school name/);
 console.log('V47 offline A4 grade sheet preview escaping, watermark and incomplete-class tests passed');
