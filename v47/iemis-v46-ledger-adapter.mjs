@@ -1,7 +1,8 @@
 // Offline, read-only bridge to the verified V46 IEMIS ledger renderer.
 // The caller must provide a roster and records already authorized and scoped to ONE school.
 // No Firebase access, writes, or fallback to global V46 collections.
-import {iemisLedger,iemisSubjectKey,iemisSummary} from '../iemis-ledger.js';
+import {iemisLedger,iemisSubjectKey,iemisSummary,iemisComponentKey} from '../iemis-ledger.js';
+import {iemisEntrySchema} from '../iemis-entry.js';
 export function renderV46TenantLedger({schoolId,schoolName,schoolCode='',classNo,term,mode='number',subjects,students,records,examId,...options}){
  if(typeof schoolId!=='string'||!/^[A-Za-z0-9_-]{1,64}$/.test(schoolId))throw Error('Valid school scope required');
  if(typeof schoolName!=='string'||!schoolName.trim())throw Error('School name required');
@@ -45,6 +46,17 @@ export function renderCompleteV46TenantGradeLedger(args){
  for(const student of students)for(const subject of names){
   const record=records.find(r=>r.studentId===student.id&&r.examId===examId&&iemisSubjectKey(r.subject)===subject);
   if(!record||!iemisSummary(record,{annual:term==='final',primary:Number(classNo)<=5}).complete)throw Error('Class marks incomplete; verified grade ledger unavailable');
+  const v46term=term==='final'?'annual':term==='1st'?'first':term==='2nd'?'second':'third';
+  const schema=iemisEntrySchema(classNo,v46term,subject);
+  const expected=new Map(schema.map(c=>[c.key,c]));
+  if(!Array.isArray(record.scores)||record.scores.length!==schema.length)throw Error('IEMIS component schema mismatch');
+  const found=new Set();
+  for(const score of record.scores){
+   const key=iemisComponentKey(score?.name),component=expected.get(key);
+   if(!component||found.has(key))throw Error('IEMIS component schema mismatch');
+   found.add(key);
+   if(component.key!=='count'&&component.key!=='full'&&Number(score.fullMarks)!==component.max)throw Error('IEMIS component full marks mismatch');
+  }
  }
  return scoped;
 }
