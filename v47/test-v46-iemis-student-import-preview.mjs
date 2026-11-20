@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {previewV46IemisStudentImport,V46_IEMIS_HEADERS,getReadyV46IemisRows,normalizeV46IemisExcelRow,filterV46IemisStudentPreview,normalizeV46StudentClass} from './v46-iemis-student-import-preview.mjs';
+import {previewV46IemisStudentImport,V46_IEMIS_HEADERS,getReadyV46IemisRows,normalizeV46IemisExcelRow,filterV46IemisStudentPreview,normalizeV46StudentClass,validateV46IemisExcelHeaders} from './v46-iemis-student-import-preview.mjs';
 const schoolId='300160003';
 const rows=[{'IEMIS Code':schoolId,'School':'Sample School','Student IEMIS Id':'00001234','Student Name':'Aarohi Rai','Class':'6','Gender':'Female','Permanent Address':'Dhading'}, {'IEMIS Code':schoolId,'Student IEMIS Id':'00001234','Student Name':'Duplicate','Class':'6'}, {'IEMIS Code':'300160004','Student IEMIS Id':'00005678','Student Name':'Other School','Class':'6'}];
 const result=previewV46IemisStudentImport({rows,schoolId});
@@ -35,4 +35,9 @@ assert.equal(optionalRoll.records[0].normalizedClass,'LKG');
 assert.equal(previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Admission Number':'A-17','Student Name':'Child','Class':'12'}],existingAdmissionNumbers:['A-17']}).skipped,1);
 assert.equal(previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student Name':'Missing Identity','Class':'ECD'}]}).skipped,1);
 assert.equal(previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Admission Number':'A-19','Student Name':'Invalid','Class':'13'}]}).skipped,1);
+assert.equal(validateV46IemisExcelHeaders(rows),true);
+assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[{'Student Name':'सीता','Class':'6'}]}),/आवश्यक Column/);
+const nepali=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'00991','Student Name':'सीता तामाङ','Class':'६'}]});
+assert.equal(nepali.ready,1);
+assert.equal(filterV46IemisStudentPreview(nepali,{search:'तामाङ'}).length,1);
 console.log('PASS: V46 26-column IEMIS preview, leading zeros, duplicate and cross-school rejection');
