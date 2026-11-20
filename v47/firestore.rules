@@ -189,7 +189,10 @@ service cloud.firestore {
           && student.get('class','') == data.class
           && subject.get('class','') == data.class
           && subject.get('active',false) == true
-          && assignment.get('class','') == data.class;
+          && assignment.get('class','') == data.class
+          && assignment.get('studentId','') == data.studentId
+          && assignment.get('subjectId','') == data.subjectId
+          && assignment.get('active',true) == true;
       }
       match /marks/{id} {
         allow get, list: if canRead(sid);
