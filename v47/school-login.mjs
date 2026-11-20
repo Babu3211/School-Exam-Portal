@@ -19,7 +19,7 @@ async function loadSubjects(){
   const q=filter?api.query(subjectCollection(),api.where('class','==',filter),api.limit(201)):api.query(subjectCollection(),api.limit(201));
   const snap=await api.getDocs(q);
   const rows=snap.docs.map(d=>({id:d.id,...d.data()}))
-   .filter(x=>!filter||x.class===filter)
+   .filter(x=>x.schoolId===verifiedSchool&&(!filter||x.class===filter))
    .sort((a,b)=>String(a.class).localeCompare(String(b.class),undefined,{numeric:true})||String(a.name).localeCompare(String(b.name)));
   $('subjectList').replaceChildren();
   for(const x of rows){
@@ -50,7 +50,7 @@ $('addSubject').onclick=async()=>{
 
 const studentStatus=m=>{$('studentStatus').textContent=m};
 const studentList=()=>api.collection(db,'schools',verifiedSchool,'students');
-async function loadStudents(){if(!verifiedSchool)return;$('loadStudents').disabled=true;try{const filter=$('classFilter').value;const q=filter?api.query(studentList(),api.where('class','==',filter),api.limit(1501)):api.query(studentList(),api.limit(201));const snap=await api.getDocs(q);const rows=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>!filter||x.class===filter).sort((a,b)=>String(a.class).localeCompare(String(b.class),undefined,{numeric:true})||String(a.name).localeCompare(String(b.name)));const list=$('studentList');list.replaceChildren();for(const x of rows){const div=document.createElement('div');div.className='student-row';div.textContent=`${x.name} — Class ${x.class}${x.rollNo?` — Roll ${x.rollNo}`:''}`;list.append(div)}$('studentCount').textContent=`Showing ${rows.length} students${snap.size===(filter?1501:201)?" (more may exist; refine selection)":""}`;}catch(e){studentStatus(e.message)}finally{$('loadStudents').disabled=false}}
+async function loadStudents(){if(!verifiedSchool)return;$('loadStudents').disabled=true;try{const filter=$('classFilter').value;const q=filter?api.query(studentList(),api.where('class','==',filter),api.limit(1501)):api.query(studentList(),api.limit(201));const snap=await api.getDocs(q);const rows=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.schoolId===verifiedSchool&&(!filter||x.class===filter)).sort((a,b)=>String(a.class).localeCompare(String(b.class),undefined,{numeric:true})||String(a.name).localeCompare(String(b.name)));const list=$('studentList');list.replaceChildren();for(const x of rows){const div=document.createElement('div');div.className='student-row';div.textContent=`${x.name} — Class ${x.class}${x.rollNo?` — Roll ${x.rollNo}`:''}`;list.append(div)}$('studentCount').textContent=`Showing ${rows.length} students${snap.size===(filter?1501:201)?" (more may exist; refine selection)":""}`;}catch(e){studentStatus(e.message)}finally{$('loadStudents').disabled=false}}
 $('loadStudents').onclick=loadStudents;$('classFilter').onchange=loadStudents;
 $('addStudent').onclick=async()=>{if(!verifiedSchool||busy)return;busy=true;$('addStudent').disabled=true;try{const name=$('studentName').value.trim(),klass=$('studentClass').value,rollNo=$('studentRoll').value.trim();if(name.length<2||name.length>160||!classes.includes(klass)||rollNo.length>30)throw new Error('Check student name, class and roll number');await api.addDoc(studentList(),{schoolId:verifiedSchool,name,class:klass,rollNo});$('studentName').value='';$('studentRoll').value='';studentStatus('Student saved to this school');await loadStudents()}catch(e){studentStatus(e.message)}finally{busy=false;$('addStudent').disabled=false}};
 
