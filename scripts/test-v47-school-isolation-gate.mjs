@@ -97,7 +97,7 @@ assert.ok(!/allow (?:create|update):[^;]*canAdmin\(sid\)/.test(attendanceBlock),
 // Existing attendance must never be edited beyond the boolean present flag.
 // Check the full update predicate so a future refactor cannot silently permit
 // student/class/date reassignment or updates by other roles.
-const attendanceUpdate=attendanceBlock.match(/allow update: if ([\\s\\S]*?);/)?.[1]??'';
+const attendanceUpdate=attendanceBlock.match(/allow update: if ([\s\S]*?);/)?.[1]??'';
 for(const required of [
  'immutableSchool(sid)',
  "request.resource.data.diff(resource.data).affectedKeys().hasOnly(['present'])",
