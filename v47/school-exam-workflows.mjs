@@ -5,7 +5,7 @@ export function installExamWorkflows({getContext}){
  const $=id=>document.getElementById(id);
  const ctx=()=>{const c=getContext();if(!c?.schoolId||!c?.api||!c?.db)throw Error('School Admin login required');return c};
  const classes=['ECD','LKG','UKG',...Array.from({length:12},(_,i)=>String(i+1))];
- for(const id of ['teacherClass','ledgerClass'])for(const c of classes){const opt=document.createElement('option');opt.value=c;opt.textContent=c;$(id).append(opt)}
+ for(const id of ['teacherClass','ledgerClass','marksClass'])for(const c of classes){const opt=document.createElement('option');opt.value=c;opt.textContent=c;$(id).append(opt)}
  const col=n=>{const {db,api,schoolId}=ctx();return api.collection(db,'schools',schoolId,n)};
  const list=async n=>{const {api}=ctx();const all=[];let cursor=null;for(let page=0;page<30;page++){const q=cursor?api.query(col(n),api.orderBy('__name__'),api.startAfter(cursor),api.limit(200)):api.query(col(n),api.orderBy('__name__'),api.limit(200));const snap=await api.getDocs(q);all.push(...snap.docs.filter(d=>d.data().schoolId===ctx().schoolId).map(d=>({id:d.id,...d.data()})));if(snap.size<200)return all;cursor=snap.docs[snap.docs.length-1]}throw Error('More than 6000 '+n+' records: use a class-scoped search before loading all')};
  const options=(id,items,fn)=>{const e=$(id);e.replaceChildren();for(const x of items){const o=document.createElement('option');o.value=x.id;o.textContent=fn(x);e.append(o)}};
