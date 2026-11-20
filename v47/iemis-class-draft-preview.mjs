@@ -2,7 +2,7 @@
 import {inspectIemisDraft} from './iemis-draft-inspector.mjs';
 export function inspectIemisClassDraft({classNo,term,subject,students,drafts}){
  if(!Array.isArray(students)||students.length===0)throw Error('A complete class roster is required');
- if(!drafts||typeof drafts!=='object')throw Error('Class marks drafts are required');
+ if(!drafts||typeof drafts!=='object'||Array.isArray(drafts))throw Error('Class marks drafts are required');
  const ids=students.map(s=>s?.id);
  if(ids.some(id=>typeof id!=='string'||!id.trim())||new Set(ids).size!==ids.length)throw Error('Class roster contains invalid or duplicate student IDs');
  const missing=[],invalid=[];
