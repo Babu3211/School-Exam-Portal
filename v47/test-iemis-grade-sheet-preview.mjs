@@ -17,6 +17,7 @@ for(const classNo of ['1','2','3','4','5','6','7','8','9','10'])for(const [term,
  assert.equal(partial.ready,false);assert.equal(partial.student,null);
  assert.throws(()=>previewIemisGradeSheet({...args,studentId:'outsider'}),/not in selected class/);
  assert.throws(()=>previewIemisGradeSheet({...args,studentId:'../other'}),/Valid student ID/);
+ assert.throws(()=>previewIemisGradeSheet({...args,studentId:'x'.repeat(129)}),/Valid student ID/);
  assert.throws(()=>previewIemisGradeSheet({...args,studentId:'s1',subjects:[subjects[0],subjects[0]]}),/duplicate/);
  assert.throws(()=>previewIemisGradeSheet({...args,studentId:'s1',draftsBySubject:{...draftsBySubject,outsider:{}}}),/Unexpected/);
 }
