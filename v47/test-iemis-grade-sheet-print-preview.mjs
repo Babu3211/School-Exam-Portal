@@ -8,6 +8,7 @@ const draft={values:Object.fromEntries(schema.filter(x=>!x.readonly).map(x=>[x.k
 const args={school:{nameEnglish:'<img src=x onerror=alert(1)>',addressEnglish:'Main & School Road'},classNo:'1',term:'1st',students,subjects,draftsBySubject:{english:{s1:draft}},studentId:'s1'};
 const result=renderIemisGradeSheetPrint(args);
 assert.equal(result.ready,true);assert.match(result.html,/PREVIEW ONLY/);assert.match(result.html,/NOT VALID FOR OFFICIAL USE/);assert.match(result.html,/@page/);
+assert.match(result.html,/noindex,nofollow/);
 assert.match(result.html,/background-repeat:repeat/);assert.match(result.html,/background-size:240px 160px/);
 assert.match(result.html,/&lt;script&gt;/);assert.match(result.html,/&lt;img/);assert.match(result.html,/English &amp; &lt;Science&gt;/);
 assert.doesNotMatch(result.html,/<script>|<img/);
