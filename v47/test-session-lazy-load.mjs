@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const login=readFileSync(new URL('./school-login.mjs',import.meta.url),'utf8');
+const exam=readFileSync(new URL('./school-exam-workflows.mjs',import.meta.url),'utf8');
+const admin=readFileSync(new URL('./school-admin-features.mjs',import.meta.url),'utf8');
+const html=readFileSync(new URL('./school-login.html',import.meta.url),'utf8');
+assert.match(login,/installIdleLogout\(\{onTimeout:/);
+assert.match(login,/stopIdleLogout\(\);stopIdleLogout=null/);
+assert.match(login,/x\.schoolId===verifiedSchool/);
+assert.match(exam,/cachedStudents=\[\];cachedSubjects=\[\]/);
+assert.match(admin,/assignmentStudents=\[\];assignmentSubjects=\[\]/);
+assert.match(html,/id="loadExamData"/);
+assert.match(exam,/\$\('loadExamData'\)\.onclick/);
+assert.match(exam,/refresh:\(\)=>Promise\.allSettled\(\[teacherAssignments\(\)\]\)/);
+console.log('V47 session isolation and lazy exam loading checks passed');
