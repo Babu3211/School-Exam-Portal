@@ -1,6 +1,5 @@
 import {validateCompleteClassMarks} from './class-mark-completeness.mjs';
 import {validateSchoolId} from './school-paths.mjs';
-import {canAccessSchool} from './permissions.mjs';
 import {markEntryId} from './marks-service.mjs';
 
 // Firestore transaction reads ALL records before writes. Limit to 3 students to
@@ -8,7 +7,7 @@ import {markEntryId} from './marks-service.mjs';
 // Larger classes require a separately audited server-side workflow.
 export async function saveCompleteClassMarks({db,api,actor,schoolId,classId,term,subjectId,expectedStudentIds,entries}){
  validateSchoolId(schoolId);
- if(!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin permission required');
+ if(actor?.active!==true||actor?.role!=='school_admin'||actor?.schoolId!==schoolId)throw new Error('School Admin permission required');
  const complete=validateCompleteClassMarks({schoolId,classId,term,subjectId,expectedStudentIds,entries});
  if(complete.count>3)throw new RangeError('Atomic class marks save supports at most 3 students; no records saved');
  if(typeof api?.doc!=='function'||typeof api?.runTransaction!=='function')throw new TypeError('Missing Firestore transaction methods');
