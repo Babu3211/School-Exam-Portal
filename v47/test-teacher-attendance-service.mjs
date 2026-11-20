@@ -69,4 +69,27 @@ for(const badId of ['../bad','', 'x'.repeat(129)]){
 }
 assert.throws(()=>teacherAttendanceAssignmentId({schoolId,uid,classId:'99'}),/Invalid class/);
 assert.throws(()=>teacherAttendanceAssignmentId({schoolId:'../bad',uid,classId:'9'}),/Invalid school ID/);
+// Session changes after Firestore reads must never write attendance.
+for(const mutate of [
+ a=>{a.active=false},
+ a=>{a.role='viewer'},
+ a=>{a.schoolId='school-b'},
+ a=>{a.uid='another-teacher'}
+]){
+ const changingActor={...actor};
+ const {api,writes}=mock();
+ const original=api.runTransaction;
+ api.runTransaction=(db,callback)=>original(db,async tx=>{
+  const get=tx.get;
+  let changed=false;
+  tx.get=async ref=>{
+   const result=await get(ref);
+   if(!changed){changed=true;mutate(changingActor)}
+   return result;
+  };
+  return callback(tx);
+ });
+ await assert.rejects(saveAssignedTeacherAttendance({db:{},api,actor:changingActor,schoolId,input}),/Teacher identity changed|assignment required/);
+ assert.equal(writes.length,0,'Revoked teacher must not write attendance');
+}
 console.log('V47 assigned teacher attendance transaction tests passed');
