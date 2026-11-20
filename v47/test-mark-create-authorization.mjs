@@ -61,7 +61,7 @@ for(const [overrides,message] of [
  [{'students/s1':{schoolId:'school-b',class:classId}},/Student missing/],
  [{'subjects/math':{schoolId:'school-b',class:classId,active:true,name:'Math'}},/Subject missing/],
  [{'subject_assignments/s1:math':{schoolId:'school-b',class:classId,studentId:'s1',subjectId,active:true}},/assignment required/],
- [{'subjects/math':{schoolId,class:classId,active:true,name:'Computer'}},/Computer 4\\/36\\/10/]
+ [{'subjects/math':{schoolId,class:classId,active:true,name:'Computer'}},/Computer 4.36.10/]
 ]){
  const {api,writes}=mock(overrides);
  await assert.rejects(createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId},schoolId,input}),message);
