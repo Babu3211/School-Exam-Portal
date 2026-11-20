@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('marks-preview-console.mjs',import.meta.url),'utf8');
-assert.match(source,/actor=\\{uid,role:session\\.role,active:true,schoolId\\}/,'Authenticated UID must be retained');
-assert.match(source,/async function confirmExportSession\\(expectedSchoolId,expectedUid\\)/);
-assert.match(source,/await verifySchoolSession\\(\\{schoolId:expectedSchoolId,uid:expectedUid/);
-assert.match(source,/await confirmExportSession\\(expectedSchoolId,uid\\)/);
-assert.match(source,/current!==epoch\\|\\|!actor\\|\\|actor\\.uid!==uid/,'Export must reject stale sessions');
-assert.match(source,/\\$\\('schoolClass'\\)\\.value!==selectedClass\\|\\|\\$\\('term'\\)\\.value!==selectedTerm/,'Export must reject changed selection');
-assert.match(source,/finally\\{link\\.remove\\(\\);URL\\.revokeObjectURL\\(url\\)\\}/,'Blob URL must be cleaned up');
+assert.match(source,/actor=\{uid,role:session\.role,active:true,schoolId\}/,'Authenticated UID must be retained');
+assert.match(source,/async function confirmExportSession\(expectedSchoolId,expectedUid\)/);
+assert.match(source,/await verifySchoolSession\(\{schoolId:expectedSchoolId,uid:expectedUid/);
+assert.match(source,/await confirmExportSession\(expectedSchoolId,uid\)/);
+assert.match(source,/current!==epoch\|\|!actor\|\|actor\.uid!==uid/,'Export must reject stale sessions');
+assert.match(source,/\$\('schoolClass'\)\.value!==selectedClass\|\|\$\('term'\)\.value!==selectedTerm/,'Export must reject changed selection');
+assert.match(source,/finally\{link\.remove\(\);URL\.revokeObjectURL\(url\)\}/,'Blob URL must be cleaned up');
 console.log('V47 marks preview export session guard structural tests passed');
