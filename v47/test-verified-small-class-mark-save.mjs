@@ -35,4 +35,15 @@ for(const [ids,entries,pattern] of [
  await assert.rejects(saveVerifiedSmallClassMarks({...base,api,entries}),pattern);
  assert.equal(writes.length,0);
 }
+// Large classes must fail before ANY transaction, even after multi-page roster reads.
+{
+ const ids=Array.from({length:101},(_,i)=>'s'+String(i+1).padStart(3,'0'));
+ const {api,writes}=mock(ids);
+ let transactions=0;
+ const original=api.runTransaction;
+ api.runTransaction=async(...params)=>{transactions++;return original(...params)};
+ await assert.rejects(saveVerifiedSmallClassMarks({...base,api,entries:ids.map(entry)}),/above 3/);
+ assert.equal(writes.length,0);
+ assert.equal(transactions,0,'Large class must never enter a mark-writing transaction');
+}
 console.log('V47 verified small-class mark save tests passed');
