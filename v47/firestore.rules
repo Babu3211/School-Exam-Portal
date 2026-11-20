@@ -199,16 +199,12 @@ service cloud.firestore {
           && assignment.get('subjectId','') == data.subjectId
           && assignment.get('active',true) == true;
       }
+      // Fail closed: individual mark writes bypass complete-class validation.
+      // Re-enable only after an audited all-student publish protocol and emulator tests.
+      // Reads remain available to existing school members.
       match /marks/{id} {
         allow get, list: if canRead(sid);
-        allow create: if (canAdmin(sid) && validRawMark(sid, id)) || teacherMarkAllowed(sid, id);
-        allow update: if immutableSchool(sid)
-          && request.resource.data.studentId == resource.data.studentId
-          && request.resource.data.subjectId == resource.data.subjectId
-          && request.resource.data.class == resource.data.class
-          && request.resource.data.term == resource.data.term
-          && ((canAdmin(sid) && validRawMark(sid, id)) || teacherMarkAllowed(sid, id));
-        allow delete: if false;
+        allow create, update, delete: if false;
       }
       function teacherAttendanceAllowed(sid, id) {
         return memberRole(sid, 'teacher')
