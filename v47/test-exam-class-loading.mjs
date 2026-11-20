@@ -11,7 +11,7 @@ assert.match(s,/Class changed\. Load the selected class roster/);
 assert.match(s,/\$\('teacherClass'\)\.onchange/);
 assert.doesNotMatch(s,/const updateTeacherSubjects=/);
 assert.match(s,/for\(let page=0;page<30;page\+\+\)\{/);
-assert.match(s,/sessionEpoch\+\+;cachedStudents=\[\]/);
+assert.match(s,/sessionEpoch\+\+;rosterRequest\+\+;cachedStudents=\[\]/);
 assert.match(s,/School or class changed while loading/);
 assert.match(s,/Ledger selection or school changed while loading/);
 assert.match(s,/School session changed while loading teacher assignments/);
