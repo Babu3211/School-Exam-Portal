@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('./marks-entry.html',import.meta.url),'utf8');
 const js=readFileSync(new URL('./marks-entry-console.mjs',import.meta.url),'utf8');
+import {EXAM_TERMS} from './term-catalog.mjs';
+const termOptions=[...html.matchAll(/<option value="([^"]+)">[^<]*<\/option>/g)].map(match=>match[1]);
+assert.deepEqual(termOptions,EXAM_TERMS,'Marks Entry dropdown must expose every supported exam term exactly once');
 for(const id of ['classSaveArea','loadClassMarks','classMarkRows','classMarkCount','saveClassMarks'])assert.ok(html.includes('id="'+id+'"'),'Missing full-class UI: '+id);
 for(const snippet of [
  "import {loadCompleteClassRoster} from './complete-class-roster.mjs'",
