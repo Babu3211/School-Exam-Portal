@@ -224,6 +224,10 @@ service cloud.firestore {
           && id == request.resource.data.date + '_' + request.resource.data.studentId
           && exists(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance'))
           && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('active', false) == true
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('schoolId', '') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('uid', '') == request.auth.uid
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('classId', '') == request.resource.data.class
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('subjectId', '') == 'attendance'
           && exists(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId))
           && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('schoolId', '') == sid
           && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('class', '') == request.resource.data.class;
