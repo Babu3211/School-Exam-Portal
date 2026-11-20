@@ -45,3 +45,11 @@ The initial V47 school-admin `school-exam-workflows.mjs` has a provisional two-f
 ## Read-only entry draft and value parity
 
 The V47 preview helpers `iemis-component-key-preview.mjs`, `iemis-entry-draft-preview.mjs`, and `iemis-entry-values-preview.mjs` replicate V46 component recognition, existing-record draft conversion, and draft-to-score validation without Firestore writes. Direct source parity tests compare against V46 `iemisComponentKey`, `iemisEntryDraft`, and `iemisEntryValues` across primary and secondary classes, first/second/third/final terms, and malformed/absent values. These helpers are not a production marks writer; do not enable V47 classes 1–10 simplified marks save until authorized tenant-scoped class-wide save, source parity, and real preview tests pass. Firestore rules and indexes must be published separately after review.
+
+## Confirmed project decision — V46 IEMIS is the baseline (2026-11-20)
+
+The school owner confirms that the V46 IEMIS implementation has already been fully checked. For V47, **reuse V46 behavior and presentation as-is**, including Mark Entry Ledger, Mark Ledger, Grade Ledger, Grade Sheet, CDC grades/GPA, NG rules, subject order, and print/watermark layout. Do not redesign the reports or demand another IEMIS comparison as a prerequisite to reusing the confirmed V46 implementation.
+
+V47 work is an **adaptation**, not a replacement: wrap the existing V46 implementation in tenant-scoped data loading, authorization and write safeguards under `schools/{schoolId}`. Preserve V46 functions and calculation semantics; compare migrated V47 output to V46 regression fixtures, and retain full-class validation. Any current V47 print preview is a development-only scaffold, **not** the accepted V46 print layout, and should be replaced with the V46 renderer when integrating the workspace.
+
+This confirmation does not mean the V47 tenant-specific integration, Firestore permissions or deployment have passed testing. Keep V46 production untouched and never deploy V47 production without explicit approval.
