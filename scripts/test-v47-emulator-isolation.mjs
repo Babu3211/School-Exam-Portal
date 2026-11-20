@@ -43,6 +43,12 @@ try {
     await setDoc(doc(root,'schools','school-disabled','students','student-1'),{name:'Inactive School Student',class:'9',schoolId:'school-disabled'});
     await setDoc(doc(root,'schools','school-a','members','inactive-viewer'),{uid:'inactive-viewer',schoolId:'school-a',role:'viewer',active:false});
   });
+  // Super Admin may inspect schools but must not write school attendance.
+  const adminAttendance={schoolId:'school-a',studentId:'student-1',class:'9',date:'2026-11-20',present:true};
+  await assertFails(setDoc(schoolDoc('super-a','school-a','attendance','2026-11-20_student-1'),adminAttendance));
+  await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','attendance','2026-11-20_student-1'),adminAttendance));
+  await assertFails(updateDoc(schoolDoc('super-a','school-a','attendance','2026-11-20_student-1'),{present:false}));
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','attendance','2026-11-20_student-1'),{present:false}));
   const valid={name:'Student Two',class:'9',schoolId:'school-a'};
   await assertSucceeds(getDoc(schoolDoc('admin-a','school-a','students','student-1')));
   await assertFails(getDoc(schoolDoc('admin-a','school-b','students','student-1')));
