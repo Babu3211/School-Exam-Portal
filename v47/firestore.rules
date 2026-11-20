@@ -263,7 +263,7 @@ service cloud.firestore {
             && request.resource.data.term == id;
         }
         allow get, list: if canRead(sid);
-        allow create: if canAdmin(sid) && validExamTerm();
+        allow create: if memberRole(sid, 'school_admin') && validExamTerm();
         // Exam terms are create-only until audited dependent-record deletion is implemented.
         allow update, delete: if false;
       }
