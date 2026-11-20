@@ -36,4 +36,8 @@ assert.match(workflow,/School session changed before marks creation/);
 assert.match(workflow,/School session changed before teacher assignment write/);
 assert.match(workflow,/School session changed before assignment update/);
 assert.match(workflow,/School changed during paginated load/);
+assert.match(workflow,/componentChecks=rows\.map\(x=>inspectV46IemisRecord/);
+assert.match(workflow,/compatibleCount=componentChecks\.filter\(x=>x\.compatible\)\.length/);
+assert.match(workflow,/V46 component-compatible records \(structure only\)/);
+assert.match(workflow,/CDC\/IEMIS Grade\/GPA not enabled/);
 console.log('V47 exam workflow static safety checks passed');
