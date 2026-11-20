@@ -9,6 +9,7 @@ const suites=[
  'test-session-lazy-load.mjs',
  'test-admin-attendance-safety.mjs',
  'test-iemis-schema-source-parity.mjs',
+ 'test-iemis-class-ledger-preview.mjs',
  'test-iemis-class-draft-preview.mjs',
  'test-iemis-preview-readonly.mjs',
  'test-iemis-draft-inspector.mjs',
