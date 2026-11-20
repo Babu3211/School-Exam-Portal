@@ -13,4 +13,8 @@ for(const klass of ['1','2','3','4','5','6','7','8','9','10'])for(const [term,v4
  const partial=previewIemisClassLedger({classNo:klass,term,subject,students,drafts:{s1:draft}});
  assert.equal(partial.complete,false);assert.equal(partial.rows.length,0);assert.deepEqual(partial.missing,['s2']);
 }
+const inputStudents=Object.freeze([{id:'s1',nameEnglish:'Alpha'}]);
+const inputDraft=Object.freeze({values:Object.freeze({count:'10',obtained:'35'}),isAbsent:false,incompatible:false});
+const immutable=previewIemisClassLedger({classNo:'1',term:'1st',subject:'English',students:inputStudents,drafts:Object.freeze({s1:inputDraft})});
+assert.equal(immutable.complete,true);assert.equal(immutable.rows[0].studentName,'Alpha');
 console.log('V47 IEMIS class ledger parity and fail-closed incomplete roster checks passed');
