@@ -21,4 +21,7 @@ assert.throws(()=>renderV46TenantLedger({...args,mode:'unknown'}),/Invalid ledge
 assert.throws(()=>renderV46TenantLedger({...args,schoolCode:123}),/Invalid school code/);
 assert.throws(()=>renderV46TenantLedger({...args,schoolName:'x'.repeat(161)}),/Invalid school name/);
 assert.throws(()=>renderV46TenantLedger({...args,subjects:[null]}),/Invalid subject roster/);
+assert.throws(()=>renderV46TenantLedger({...args,records:[...records,{...records[0]}]}),/Duplicate student subject marks/);
+assert.throws(()=>renderV46TenantLedger({...args,records:[...records,{...records[0],subject:'ENGLISH'}]}),/Duplicate student subject marks/);
+assert.throws(()=>renderV46TenantLedger({...args,records:[{...records[0],subject:''}]}),/Record subject required/);
 console.log('V47 tenant-scoped V46 IEMIS renderer parity passed for 120 class/mode/term cases and isolation');
