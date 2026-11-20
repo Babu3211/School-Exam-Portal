@@ -29,6 +29,16 @@ jobs:
         run: npm install --no-package-lock --ignore-scripts --no-audit --no-fund
       - name: Run complete V47 unit, structural and Firestore emulator suite
         run: npm run test:v47
+      - name: Audit 15 V47 feature parity and hosting checkpoints
+        run: |
+          if node v47/audit-feature-parity.mjs > /tmp/v47-feature-audit.log 2>&1; then
+            cat /tmp/v47-feature-audit.log
+            echo "V47 feature audit has no blockers; independent release review still required"
+          else
+            cat /tmp/v47-feature-audit.log
+            grep -q "V47 readiness audit:" /tmp/v47-feature-audit.log
+            echo "V47 feature audit reports outstanding blockers (expected before release)"
+          fi
       - name: Verify V47 production release remains blocked
         run: |
           if npm run test:v47:release > /tmp/v47-release-gate.log 2>&1; then
