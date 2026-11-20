@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {loadTenantIemisClassRecords} from './iemis-tenant-record-reader.mjs';
+const schoolId='test_school_001',examId='exam_1',classNo=6,term='final';
+const records=Array.from({length:405},(_,i)=>({schoolId,examId,class:'6',term,studentId:'s'+i}));
+let calls=0,current=true;
+const api={where:(...a)=>a,orderBy:(...a)=>a,limit:n=>n,startAfter:x=>x,query:(...a)=>a,getDocs:async()=>{const offset=calls++*200;return {docs:records.slice(offset,offset+200).map((r,i)=>({id:'r'+(offset+i),data:()=>r}))}}};
+const args={api,collection:n=>'schools/'+schoolId+'/'+n,schoolId,classNo,term,examId,assertCurrent:()=>{if(!current)throw Error('School session changed')}};
+assert.equal((await loadTenantIemisClassRecords(args)).length,405);
+assert.equal(calls,3);
+calls=0;assert.deepEqual(await loadTenantIemisClassRecords({...args,api:{...api,getDocs:async()=>({docs:[{id:'r1',data:()=>({...records[0],schoolId:'other_school'})}]})}}).then(()=>null,e=>e.message),'Cross-school or mismatched marks snapshot');
+await assert.rejects(loadTenantIemisClassRecords({...args,term:'weekly'}),/Unsupported IEMIS term/);
+await assert.rejects(loadTenantIemisClassRecords({...args,examId:''}),/Verified exam ID required/);
+await assert.rejects(loadTenantIemisClassRecords({...args,classNo:11}),/classes 1–10/);
+current=false;await assert.rejects(loadTenantIemisClassRecords(args),/School session changed/);
+console.log('V47 read-only IEMIS snapshot reader: 405 records, pagination, tenant isolation and stale session checks passed');
