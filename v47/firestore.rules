@@ -189,6 +189,7 @@ service cloud.firestore {
           && student.get('class','') == data.class
           && subject.get('class','') == data.class
           && subject.get('active',false) == true
+          && !(data.class in ['9','10'] && subject.get('name','') == 'Computer')
           && assignment.get('class','') == data.class
           && assignment.get('studentId','') == data.studentId
           && assignment.get('subjectId','') == data.subjectId
