@@ -293,11 +293,13 @@ service cloud.firestore {
             && exists(subjectPath)
             && subject.get('schoolId','') == sid
             && subject.get('class','') == data.class
+            && subject.get('active',false) == true
             && exists(assignmentPath)
             && assignment.get('schoolId','') == sid
             && assignment.get('studentId','') == data.studentId
             && assignment.get('subjectId','') == data.subjectId
             && assignment.get('class','') == data.class
+            && assignment.get('active',true) == true
             && !exists(/databases/$(database)/documents/schools/$(sid)/marks/$(id));
         }
         allow get, list: if canRead(sid);
