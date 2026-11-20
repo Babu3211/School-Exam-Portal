@@ -15,20 +15,19 @@ assert.ok(examsJs.includes('EXAM_TERMS.includes(doc.id)'),'Exam Management must 
 for(const id of ['classSaveArea','loadClassMarks','classMarkRows','classMarkCount','saveClassMarks'])assert.ok(html.includes('id="'+id+'"'),'Missing full-class UI: '+id);
 for(const snippet of [
  "import {loadCompleteClassRoster} from './complete-class-roster.mjs'",
- "import {saveVerifiedSmallClassMarks} from './verified-small-class-mark-save.mjs'",
- "roster.count>3?'Save blocked",
- "if(classMarkRoster.length>3)",
  "classMarkRoster.map(student=>",
  "theory:row?.querySelector",
  "practical:row?.querySelector",
  "if(!auth?.currentUser?.uid||auth.currentUser.uid!==actor.uid)",
- "invalidateClassMarks();status('Atomic class marks saved:"
 ])assert.ok(js.includes(snippet),'Missing full-class mark safeguard: '+snippet);
 assert.ok(js.includes("classMarkRoster=[...roster.students].sort("),'Class mark rows must be alphabetically sorted');
 assert.ok(js.includes('for(const student of classMarkRoster)'),'Rendered rows must use sorted roster');
 assert.ok(js.includes('document.createDocumentFragment()'),'Large class roster must use batched DOM rendering');
 assert.ok(js.includes('fragment.append(row)')&&js.includes('body.append(fragment)'),'Class rows must be appended in one batch');
 assert.ok(html.includes('An incomplete class cannot be saved'),'Incomplete-class warning missing');
+assert.ok(html.includes('Save/Publish unavailable — development'),'Save button must disclose unavailability');
+assert.ok(js.includes("$('saveClassMarks').disabled=true"),'Save button must always remain disabled');
+assert.ok(!js.includes('saveVerifiedSmallClassMarks'),'Marks editor must not invoke blocked Firestore writes');
 assert.ok(html.includes('Individual Save disabled'),'Legacy individual mark button must be disabled');
 assert.ok(js.includes("$('save').disabled=true"),'Legacy individual mark save must remain disabled');
 assert.ok(!js.includes('createSchoolMarkOnly'),'Legacy mark create must not be invoked by class editor');
@@ -36,8 +35,6 @@ for(const id of ['inspectClassMarks','draftCheckResult'])assert.ok(html.includes
 for(const snippet of [
  "import {inspectClassMarkDraft} from './class-mark-draft-inspector.mjs'",
  "$('inspectClassMarks').onclick=()=>",
- "inspection=inspectClassMarkDraft(",
- "if(!inspection.ready){status('Save blocked:",
  "for(const input of $('classMarkRows').querySelectorAll('input'))input.disabled=value"
 ])assert.ok(js.includes(snippet),'Missing draft validation or row lock: '+snippet);
 assert.ok(js.includes("if(row.schoolId!==schoolId||row.class!==schoolClass)throw new Error('Cross-school"),'Marks selector must reject foreign records');
@@ -52,7 +49,4 @@ assert.ok(js.includes("if(auth?.currentUser?.uid!==uid||actor.uid!==uid||schoolI
 assert.ok(js.includes("if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('Authentication changed during options load')"),'Options must recheck session before populating selectors');
 assert.ok(js.includes("$('classMarkRows').addEventListener('input',event=>"),'Draft inspection must be invalidated on edited marks');
 assert.ok(js.includes("Draft changed. Inspect again before saving."),'Old draft inspection must not appear current after edits');
-assert.ok(js.includes("const context=classMarkContext,attempt=epoch,uid=actor.uid,selectedSchoolId=schoolId"),'Save must capture original identity');
-assert.ok(js.includes("if(attempt!==epoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||actor?.schoolId!==selectedSchoolId||schoolId!==selectedSchoolId)throw new Error('Authentication or school changed before save')"),'Save must reject changed identity before writing');
-assert.ok(js.includes("saveVerifiedSmallClassMarks({db,api,actor,schoolId:selectedSchoolId,...context,entries})"),'Save must use the captured school identity');
 console.log('V47 full-class marks UI contract passed');
