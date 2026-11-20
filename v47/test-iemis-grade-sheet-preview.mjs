@@ -26,4 +26,10 @@ for(const classNo of ['1','2','3','4','5','6','7','8','9','10'])for(const [term,
  const absent=previewIemisGradeSheet({...args,draftsBySubject:{...draftsBySubject,eng:{...draftsBySubject.eng,s1:absentDraft}}});
  assert.equal(absent.ready,false);assert.equal(absent.student,null);
 }
+const frozenStudents=Object.freeze([{id:'s1',nameEnglish:'Alpha'}]);
+const frozenSchema=iemisEntrySchema('1','first','English');
+const frozenValues=Object.freeze(Object.fromEntries(frozenSchema.filter(x=>!x.readonly).map(x=>[x.key,x.key==='count'?'10':x.key==='obtained'?'35':String(x.max)])));
+const frozenDraft=Object.freeze({values:frozenValues,isAbsent:false,incompatible:false});
+const frozenResult=previewIemisGradeSheet({classNo:'1',term:'1st',students:frozenStudents,subjects:Object.freeze([{id:'eng',name:'English',creditHour:4}]),draftsBySubject:Object.freeze({eng:Object.freeze({s1:frozenDraft})}),studentId:'s1'});
+assert.equal(frozenResult.ready,true);
 console.log('V47 read-only grade sheet preview and class-completeness tests passed');
