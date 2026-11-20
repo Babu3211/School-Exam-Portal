@@ -18,12 +18,15 @@ form.addEventListener('submit',async event=>{
  try{
   const file=document.getElementById('excelFile').files[0];
   if(!file)throw Error('Excel फाइल छान्नुहोस्।');
+  if(!/\.(xlsx|xls|csv)$/i.test(file.name))throw Error('Excel वा CSV फाइल मात्र छान्नुहोस्।');
+  if(file.size>5*1024*1024)throw Error('फाइल ५ MB भन्दा ठूलो छ। सानो फाइल प्रयोग गर्नुहोस्।');
   if(!window.XLSX)throw Error('Excel पढ्ने सुविधा लोड भएन। इन्टरनेट जाँच्नुहोस्।');
   const book=window.XLSX.read(await file.arrayBuffer(),{type:'array',raw:false});
   const sheet=book.Sheets[book.SheetNames[0]];
   if(!sheet)throw Error('Excel मा Sheet भेटिएन।');
   const rows=window.XLSX.utils.sheet_to_json(sheet,{defval:'',raw:false});
   if(!rows.length)throw Error('Excel मा विद्यार्थी विवरण भेटिएन।');
+  if(rows.length>5000)throw Error('एकपटकमा ५००० भन्दा धेरै विद्यार्थी Preview गर्न मिल्दैन।');
   mountV47IemisStudentPreview({container:document.getElementById('preview'),rows,schoolId:document.getElementById('schoolId').value.trim()});
  }catch(e){error.textContent='पूर्वावलोकन तयार भएन: '+e.message;}
 });
