@@ -9,7 +9,12 @@ function mock(ids=['s1','s2']){
  const api={
   doc:(_db,...parts)=>parts.slice(2).join('/'),
   collection:(_db,...parts)=>parts.join('/'),where:(...x)=>x,orderBy:x=>x,limit:x=>x,startAfter:x=>({cursor:x}),query:(...x)=>x,
-  getDocs:async q=>({docs:ids.map(id=>({id,data:()=>records.get('students/'+id)}))}),
+  getDocs:async q=>{
+   const cursor=q.find(x=>x?.cursor)?.cursor;
+   const start=cursor?ids.indexOf(cursor.id)+1:0;
+   const limit=q.find(x=>typeof x==='number')??101;
+   return {docs:ids.slice(start,start+limit).map(id=>({id,data:()=>records.get('students/'+id)}))};
+  },
   runTransaction:async(_db,callback)=>{const pending=[];const tx={get:async ref=>({exists:()=>records.has(ref),data:()=>records.get(ref)}),set:(ref,data)=>pending.push([ref,data])};const result=await callback(tx);writes.push(...pending);return result;}
  };
  return {api,writes};
