@@ -1,9 +1,15 @@
 import assert from 'node:assert/strict';
-import {previewV46IemisStudentImport,V46_IEMIS_HEADERS,getReadyV46IemisRows,normalizeV46IemisExcelRow} from './v46-iemis-student-import-preview.mjs';
+import {previewV46IemisStudentImport,V46_IEMIS_HEADERS,getReadyV46IemisRows,normalizeV46IemisExcelRow,filterV46IemisStudentPreview} from './v46-iemis-student-import-preview.mjs';
 const schoolId='300160003';
 const rows=[{'IEMIS Code':schoolId,'School':'Sample School','Student IEMIS Id':'00001234','Student Name':'Aarohi Rai','Class':'6','Gender':'Female','Permanent Address':'Dhading'}, {'IEMIS Code':schoolId,'Student IEMIS Id':'00001234','Student Name':'Duplicate','Class':'6'}, {'IEMIS Code':'300160004','Student IEMIS Id':'00005678','Student Name':'Other School','Class':'6'}];
 const result=previewV46IemisStudentImport({rows,schoolId});
 assert.equal(V46_IEMIS_HEADERS.length,26);
+assert.equal(filterV46IemisStudentPreview(result,{className:'6'}).length,3);
+assert.equal(filterV46IemisStudentPreview(result,{search:'00001234'}).length,2);
+assert.equal(filterV46IemisStudentPreview(result,{search:'Aarohi',status:'new'}).length,1);
+assert.equal(filterV46IemisStudentPreview(result,{search:'Not present'}).length,0);
+assert.equal(filterV46IemisStudentPreview(result,{status:'skip'}).length,2);
+assert.throws(()=>filterV46IemisStudentPreview({records:result.records}),/Validated/);
 assert.equal(result.total,3);assert.equal(result.ready,1);assert.equal(result.skipped,2);
 assert.equal(result.records[0].studentIemisId,'00001234');
 assert.equal(result.records[0].permanentAddress,'Dhading');
