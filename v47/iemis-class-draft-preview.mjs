@@ -6,6 +6,7 @@ export function inspectIemisClassDraft({classNo,term,subject,students,drafts}){
  const ids=students.map(s=>s?.id);
  if(ids.some(id=>typeof id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(id))||new Set(ids).size!==ids.length)throw Error('Class roster contains invalid or duplicate student IDs');
  const rosterIds=new Set(ids);
+ if(Object.getOwnPropertySymbols(drafts).length)throw Error('Marks drafts contain unsupported symbol keys');
  const unknown=Object.keys(drafts).filter(id=>!rosterIds.has(id));
  if(unknown.length)throw Error('Marks drafts contain students outside the selected class roster');
  const missing=[],invalid=[];
