@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import {iemisLedger} from '../iemis-ledger.js';
+import {iemisLedger,iemisSummary} from '../iemis-ledger.js';
+import {iemisEntrySchema,iemisEntryValues} from '../iemis-entry.js';
 import {renderV46TenantLedger,renderCompleteV46TenantGradeLedger} from './iemis-v46-ledger-adapter.mjs';
 const schoolId='test_school_001',examId='term_1';
 const students=[{id:'s1',schoolId,nameEnglish:'Test Student'}];
@@ -33,4 +34,16 @@ assert.throws(()=>renderCompleteV46TenantGradeLedger(args),/Class marks incomple
 assert.throws(()=>renderCompleteV46TenantGradeLedger({...args,subjects:['English','Nepali']}),/Class marks incomplete/);
 assert.throws(()=>renderCompleteV46TenantGradeLedger({...args,subjects:['English','ENGLISH']}),/duplicate subject roster/);
 assert.throws(()=>renderCompleteV46TenantGradeLedger({...args,schoolId:'another_school'}),/Cross-school/);
-console.log('V47 tenant-scoped V46 IEMIS renderer parity passed for 120 class/mode/term cases, isolation and incomplete-grade protection');
+// Complete primary-school IEMIS scores must unlock the actual V46 renderer, not a mock grade.
+for(const classNo of [1,2,3,4,5])for(const [term,v46term] of [['1st','first'],['2nd','second'],['3rd','third'],['final','annual']]){
+ const schema=iemisEntrySchema(classNo,v46term,'English');
+ const values=Object.fromEntries(schema.filter(field=>!field.readonly).map(field=>[field.key,field.key==='count'?'10':field.key==='obtained'?'35':String(field.max)]));
+ const record=iemisEntryValues(schema,values);
+ assert.equal(iemisSummary(record,{annual:term==='final',primary:true}).complete,true);
+ const completeArgs={...args,classNo,term,records:[{...record,schoolId,studentId:'s1',examId,subject:'English'}]};
+ const actual=renderCompleteV46TenantGradeLedger(completeArgs);
+ const expected=renderV46TenantLedger({...completeArgs,mode:'grade'});
+ assert.deepEqual(actual,expected);
+ assert.match(actual.body,/<tr>/);
+}
+console.log('V47 tenant-scoped V46 IEMIS renderer parity, complete primary-grade cases and isolation passed');
