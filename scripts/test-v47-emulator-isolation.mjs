@@ -6,7 +6,7 @@ import {doc, getDoc, setDoc, updateDoc, deleteDoc} from 'firebase/firestore';
 let assertionNumber=0;
 async function checkedAssertion(assertion,operation,expected){
  const number=++assertionNumber;
- const callsite=new Error().stack?.split('\\n')[2]?.trim()||'unknown callsite';
+ const callsite=new Error().stack?.split('\n')[2]?.trim()||'unknown callsite';
  try{return await assertion(operation)}
  catch(error){
   console.error('V47 EMULATOR ASSERTION FAILED #'+number+' expected='+expected+' at '+callsite);
