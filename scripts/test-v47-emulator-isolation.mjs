@@ -47,11 +47,6 @@ try {
   const adminAttendance={schoolId:'school-a',studentId:'student-1',class:'9',date:'2026-11-20',present:true};
   await assertFails(setDoc(schoolDoc('super-a','school-a','attendance','2026-11-20_student-1'),adminAttendance));
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','attendance','2026-11-20_student-1'),adminAttendance));
-  await env.withSecurityRulesDisabled(async ctx=>{
-    await setDoc(doc(ctx.firestore(),'schools','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),{
-      schoolId:'school-a',uid:'teacher-a',classId:'9',subjectId:'attendance',active:true
-    });
-  });
   await assertFails(updateDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-20_student-1'),{present:false}));
   await assertSucceeds(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-21_student-1'),{...adminAttendance,date:'2026-11-21'}));
   await assertFails(updateDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-21_student-1'),{present:false}));
@@ -288,7 +283,7 @@ try {
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1'),{schoolId:'school-a',studentId:'student-1',class:'9',date:'2026-11-18',present:true,extra:'forbidden'}));
   const teacherAttendance={schoolId:'school-a',studentId:'student-1',class:'9',date:'2026-11-18',present:true};
   await assertSucceeds(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1'),teacherAttendance));
-  await assertSucceeds(updateDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1'),{present:false})); // Active assignment authorizes attendance correction
+  await assertFails(updateDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1'),{present:false})); // Teachers create attendance; only school admins may correct it.
   await assertFails(deleteDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1')));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19',class:'8'}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19',schoolId:'school-b'}));
