@@ -39,4 +39,6 @@ for(const snippet of [
 assert.ok(js.includes("if(row.schoolId!==schoolId||row.class!==schoolClass)throw new Error('Cross-school"),'Marks selector must reject foreign records');
 assert.ok(js.includes("({...doc.data(),id:doc.id})"),'Document ID must override payload ID');
 assert.ok(js.includes("Authentication changed; sign in again"),'Roster load must check authenticated user');
+assert.ok(js.includes("$('schoolClass').onchange=()=>{invalidateClassMarks();"),'Class change must invalidate old roster, draft and inspection');
+assert.ok(js.includes("$('draftCheckResult').textContent='';$('inspectClassMarks').disabled=true;"),'Invalidation must clear draft and disable inspection');
 console.log('V47 full-class marks UI contract passed');
