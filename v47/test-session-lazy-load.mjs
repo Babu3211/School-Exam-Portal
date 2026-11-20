@@ -11,5 +11,7 @@ assert.match(exam,/cachedStudents=\[\];cachedSubjects=\[\]/);
 assert.match(admin,/assignmentStudents=\[\];assignmentSubjects=\[\]/);
 assert.match(html,/id="loadExamData"/);
 assert.match(exam,/\$\('loadExamData'\)\.onclick/);
-assert.match(exam,/refresh:\(\)=>Promise\.allSettled\(\[teacherAssignments\(\)\]\)/);
+assert.match(exam,/refresh:\(\)=>Promise\.allSettled\(\[teacherAssignments\(\),Promise\.resolve\(\)/);
+assert.match(exam,/api\.where\('class','==',klass\),api\.limit\(1501\)/);
+assert.match(exam,/\$\('marksClass'\)\.onchange/);
 console.log('V47 session isolation and lazy exam loading checks passed');
