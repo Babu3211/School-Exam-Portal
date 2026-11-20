@@ -1,0 +1,23 @@
+name: V47 production release readiness (no deployment)
+on:
+  workflow_dispatch:
+jobs:
+  release-readiness:
+    if: github.ref == 'refs/heads/smss-v47-multischool-work'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Block production release until audited parity and large-class save
+        run: npm run test:v47:release
+      - name: Explain next steps
+        if: failure()
+        run: |
+          echo "V47 is NOT approved for production."
+          echo "Resolve missing hosting build, feature parity, full-class marks save and emulator checks."
+          echo "This workflow does not deploy or modify V46."
