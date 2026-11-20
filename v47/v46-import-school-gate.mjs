@@ -1,0 +1,19 @@
+// Fail-closed gate for V46 bulk import operations in the V47 school context.
+// Call this BEFORE parsing Excel or making Firestore reads/writes. The gate does
+// not itself write, import, or grant privileges.
+const SCHOOL_ID=/^[A-Za-z0-9_-]{3,64}$/;
+export function assertV47ImportContext({session,schoolId,collection}={}){
+ if(!SCHOOL_ID.test(schoolId??''))throw new Error('Valid V47 school ID required');
+ if(!session||session.authorization!=='firestore-verified-read')throw new Error('Verified school session required');
+ if(session.schoolId!==schoolId)throw new Error('Cross-school import blocked');
+ if(typeof session.uid!=='string'||!session.uid)throw new Error('Authenticated user required');
+ if(!['school_admin','super_admin'].includes(session.role))throw new Error('Only school administrators can import records');
+ if(!['students','staff'].includes(collection))throw new Error('Unreviewed import collection');
+ return Object.freeze({schoolId,collection,uid:session.uid,role:session.role,path:['schools',schoolId,collection]});
+}
+export function attachV47SchoolId(record,context){
+ if(!record||typeof record!=='object'||Array.isArray(record))throw new TypeError('Import record required');
+ if(!context||!SCHOOL_ID.test(context.schoolId??'')||!['students','staff'].includes(context.collection))throw new Error('Verified import context required');
+ if(Object.hasOwn(record,'schoolId')&&record.schoolId!==context.schoolId)throw new Error('Cross-school record blocked');
+ return {...record,schoolId:context.schoolId};
+}
