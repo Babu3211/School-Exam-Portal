@@ -135,6 +135,10 @@ try {
   await env.withSecurityRulesDisabled(async ctx=>{
     await setDoc(doc(ctx.firestore(),'schools','school-a','component_marks','weekly:student-2:computer'),computerMark);
   });
+  await assertSucceeds(getDoc(computerRef));
+  await assertSucceeds(getDoc(schoolDoc('viewer-a','school-a','component_marks','weekly:student-2:computer')));
+  await assertFails(getDoc(schoolDoc('admin-b','school-a','component_marks','weekly:student-2:computer')));
+  await assertFails(getDoc(schoolDoc('outsider','school-a','component_marks','weekly:student-2:computer')));
   await assertFails(updateDoc(computerRef,{scores:{component_a:0,component_b:0,component_c:0}}));
   await assertFails(deleteDoc(computerRef));
   // Computer must not bypass 4/36/10 validation through the two-field raw marks collection.
@@ -150,6 +154,9 @@ try {
   await env.withSecurityRulesDisabled(async ctx=>{
     await setDoc(doc(ctx.firestore(),'schools','school-a','marks','1st:student-2:math'),adminRawMark);
   });
+  await assertSucceeds(getDoc(schoolDoc('viewer-a','school-a','marks','1st:student-2:math')));
+  await assertFails(getDoc(schoolDoc('admin-b','school-a','marks','1st:student-2:math')));
+  await assertFails(getDoc(schoolDoc('outsider','school-a','marks','1st:student-2:math')));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{schoolId:'school-b'}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{studentId:'student-2'}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{studentId:'student-1'}));
