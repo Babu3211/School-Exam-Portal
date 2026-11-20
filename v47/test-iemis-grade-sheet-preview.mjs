@@ -3,7 +3,7 @@ import {previewIemisGradeSheet} from './iemis-grade-sheet-preview.mjs';
 import {iemisEntrySchema} from '../iemis-entry.js';
 import {iemisGpa} from '../iemis-ledger.js';
 const students=[{id:'s1',nameEnglish:'Alpha'},{id:'s2',nameEnglish:'Beta'}],subjects=[{id:'eng',name:'English',creditHour:4},{id:'math',name:'Mathematics',creditHour:5}];
-for(const classNo of ['1','5','6','9','10'])for(const [term,v46term] of [['1st','first'],['final','annual']]){
+for(const classNo of ['1','2','3','4','5','6','7','8','9','10'])for(const [term,v46term] of [['1st','first'],['2nd','second'],['3rd','third'],['final','annual']]){
  const draftsBySubject={};
  for(const subject of subjects){const schema=iemisEntrySchema(classNo,v46term,subject.name);const draft={values:Object.fromEntries(schema.filter(x=>!x.readonly).map(x=>[x.key,x.key==='count'?'10':x.key==='obtained'?'35':String(x.max)])),isAbsent:false,incompatible:false};draftsBySubject[subject.id]={s1:draft,s2:draft}}
  const args={classNo,term,students,subjects,draftsBySubject,studentId:'s1'};
