@@ -13,4 +13,6 @@ assert.equal(unsupported.complete,false);assert.equal(unsupported.invalid.length
 assert.throws(()=>inspectIemisClassDraft({...args,students:[],drafts:{}}),/complete class roster/);
 assert.throws(()=>inspectIemisClassDraft({...args,students:[{id:'s1'},{id:'s1'}],drafts:{}}),/duplicate/);
 assert.throws(()=>inspectIemisClassDraft({...args,students:[{id:''}],drafts:{}}),/invalid/);
+assert.throws(()=>inspectIemisClassDraft({...args,drafts:[]}),/Class marks drafts/);
+assert.equal(inspectIemisClassDraft({...args,drafts:Object.create({s1:valid,s2:valid,s3:valid})}).complete,false);
 console.log('V47 offline IEMIS class-wide draft completeness tests passed');
