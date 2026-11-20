@@ -1,3 +1,4 @@
+import {previewGrade} from './iemis-grade-preview.mjs';
 import {iemisComponentPreview} from './iemis-component-preview.mjs';
 // V47 school-admin mark entry and teacher assignment. Not a CDC grade calculator.
 export function installExamWorkflows({getContext}){
@@ -18,6 +19,7 @@ export function installExamWorkflows({getContext}){
  $('loadExamData').onclick=()=>run('loadExamData','examDataStatus',async()=>{await populate();$('examDataStatus').textContent=cachedStudents.length+' students and '+cachedSubjects.length+' subjects loaded for this school'});
  $('marksStudent').onchange=updateMarkSubjects;
  $('marksTerm').onchange=()=>{$('iemisComponentPreview').replaceChildren()};
+ $('showGradePreview').onclick=()=>{const raw=$('gradePreviewPercent').value.trim(),out=$('gradePreviewResult');if(raw===''){out.textContent='Enter a percentage for a read-only example';return}const grade=previewGrade(Number(raw));out.textContent=grade?'V46 grade band example: '+grade.grade+' (GP '+(grade.point??'NG')+'). Not a saved result or GPA.':'Enter a valid percentage from 0 to 100'};
  $('marksSubject').onchange=()=>{$('iemisComponentPreview').replaceChildren()};
  $('previewIemisComponents').onclick=()=>{const root=$('iemisComponentPreview');root.replaceChildren();try{const student=cachedStudents.find(x=>x.id===$('marksStudent').value),subject=cachedSubjects.find(x=>x.id===$('marksSubject').value);if(!student||!subject||student.class!==subject.class)throw Error('Select a student and matching subject first');const fields=iemisComponentPreview(student.class,$('marksTerm').value,subject.name);const heading=document.createElement('p');heading.textContent='V46 IEMIS field structure — preview only; saving is not enabled here';root.append(heading);for(const field of fields){const line=document.createElement('p');line.textContent=field.label+(field.max===undefined?'':': maximum '+field.max)+(field.readonly?' (calculated)':'');root.append(line)}}catch(e){root.textContent=e.message}};
 
