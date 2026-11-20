@@ -88,6 +88,24 @@ try {
   });
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','marks','monthly:student-2:math'),{...adminRawMark,term:'monthly'}));
 
+  // Computer component rules must also reject inactive subject/assignment.
+  await env.withSecurityRulesDisabled(async ctx=>{
+    const root=ctx.firestore();
+    await setDoc(doc(root,'schools','school-a','subjects','computer'),{schoolId:'school-a',class:'9',name:'Computer',active:true});
+    await setDoc(doc(root,'schools','school-a','subject_assignments','student-2:computer'),{schoolId:'school-a',studentId:'student-2',subjectId:'computer',class:'9',active:true});
+  });
+  const computerMark={schoolId:'school-a',studentId:'student-2',subjectId:'computer',class:'9',term:'weekly',scores:{component_a:4,component_b:36,component_c:10}};
+  const computerRef=schoolDoc('admin-a','school-a','component_marks','weekly:student-2:computer');
+  await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','subjects','computer'),{active:false}));
+  await assertFails(setDoc(computerRef,computerMark));
+  await env.withSecurityRulesDisabled(async ctx=>{
+    const root=ctx.firestore();
+    await updateDoc(doc(root,'schools','school-a','subjects','computer'),{active:true});
+    await updateDoc(doc(root,'schools','school-a','subject_assignments','student-2:computer'),{active:false});
+  });
+  await assertFails(setDoc(computerRef,computerMark));
+  await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','subject_assignments','student-2:computer'),{active:true}));
+  await assertSucceeds(setDoc(computerRef,computerMark));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','missing-scope'),{score:20}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','wrong-scope'),{schoolId:'school-b',score:20}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{schoolId:'school-b'}));
