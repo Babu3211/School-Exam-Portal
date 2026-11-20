@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=path=>readFileSync(new URL(path,import.meta.url),'utf8');
+const hub=read('./index.html');
+const marks=read('./marks-entry.html');
+const save=read('./verified-small-class-mark-save.mjs');
+const config=JSON.parse(read('./firebase.json'));
+const blockers=[];
+if(/Development only — not live for schools/.test(hub))blockers.push('V47 dashboard is a development hub, not the integrated V46 feature-complete portal');
+if(/currently supports atomic Save for at most 3 students/.test(marks)||/complete.count>3/.test(save))blockers.push('Full-class atomic marks save is blocked for classes above three students');
+if(config.hosting?.public!=='public')blockers.push('V47 hosting public directory differs from expected build output');
+if(!blockers.length)throw new Error('Release gate needs fresh review: previous blockers changed; verify parity, emulator, hosting and data isolation');
+assert.ok(blockers.length>=2,'Known release blockers must be documented');
+console.error('V47 PRODUCTION RELEASE BLOCKED:\\n'+blockers.map(x=>' - '+x).join('\\n'));
+process.exitCode=1;
