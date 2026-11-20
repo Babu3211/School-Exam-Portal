@@ -17,6 +17,8 @@ jobs:
           node-version: '22'
       - name: V47 multi-school development navigation
         run: node scripts/test-v47-development-hub.mjs
+      - name: V47 read-only IEMIS component schema
+        run: node v47/test-iemis-component-preview.mjs
       - name: V47 school exam workflow safety
         run: node v47/test-school-exam-workflows-safety.mjs
       - name: School-scoped path validation
