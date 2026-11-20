@@ -31,7 +31,7 @@ assert.throws(()=>renderIemisGradeSheetPrint({...args,school:{...args.school,add
 assert.throws(()=>renderIemisGradeSheetPrint({...args,school:{...args.school,addressEnglish:42}}),/Invalid school address/);
 assert.throws(()=>renderIemisGradeSheetPrint({...args,school:{...args.school,nameEnglish:'x'.repeat(161)}}),/Valid school name/);
 
-for(const classNo of ['1','5','6','8','9','10'])for(const [term,v46term] of [['1st','first'],['final','annual']]){
+for(const classNo of ['1','2','3','4','5','6','7','8','9','10'])for(const [term,v46term] of [['1st','first'],['2nd','second'],['3rd','third'],['final','annual']]){
  const name='English',schema=iemisEntrySchema(classNo,v46term,name);
  const values=Object.fromEntries(schema.filter(field=>!field.readonly).map(field=>[field.key,field.key==='count'?'10':field.key==='obtained'?'35':String(field.max)]));
  const candidate={...args,classNo,term,subjects:[{id:'english',name,creditHour:4}],draftsBySubject:{english:{s1:{values,isAbsent:false,incompatible:false}}}};
