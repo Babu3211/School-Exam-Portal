@@ -6,6 +6,7 @@ export async function createSchoolMarkOnly({db,api,actor,schoolId,input}){
  const isAdmin=actor?.active===true&&actor.role==='school_admin'&&actor.schoolId===schoolId;
  const isTeacher=actor?.active===true&&actor.role==='teacher'&&actor.schoolId===schoolId&&typeof actor.uid==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(actor.uid);
  if(!isAdmin&&!isTeacher)throw new Error('School Admin or assigned Teacher permission required');
+ const originalIdentity={role:actor.role,active:actor.active,schoolId:actor.schoolId,uid:actor.uid};
  const entry=validateMarkEntry(input),id=markEntryId(entry);
  if(typeof api?.doc!=='function'||typeof api?.runTransaction!=='function')throw new TypeError('Missing Firestore transaction methods');
  const markRef=api.doc(db,'schools',schoolId,'marks',id);
@@ -22,6 +23,7 @@ export async function createSchoolMarkOnly({db,api,actor,schoolId,input}){
   if(['9','10'].includes(entry.class)&&subject.data().name==='Computer')throw new Error('Use Computer 4/36/10 component marks entry');
  if(!assignment.exists()||assignment.data().schoolId!==schoolId||assignment.data().active===false||assignment.data().studentId!==entry.studentId||assignment.data().subjectId!==entry.subjectId||assignment.data().class!==entry.class)throw new Error('Student subject assignment required');
   if(isTeacher&&(!teacherAssignment?.exists()||teacherAssignment.data().active!==true||teacherAssignment.data().schoolId!==schoolId||teacherAssignment.data().uid!==actor.uid||teacherAssignment.data().classId!==entry.class||teacherAssignment.data().subjectId!==entry.subjectId))throw new Error('Active teacher class/subject assignment required');
+  if(actor.role!==originalIdentity.role||actor.active!==originalIdentity.active||actor.schoolId!==originalIdentity.schoolId||actor.uid!==originalIdentity.uid)throw new Error('School identity changed during mark transaction');
   if(existing.exists()||component.exists())throw new Error('Mark already exists; overwrite blocked');
   tx.set(markRef,{...entry,schoolId});
  });
