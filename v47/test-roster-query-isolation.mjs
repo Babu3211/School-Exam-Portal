@@ -29,4 +29,11 @@ await assert.rejects(loadClassRoster({...base,pageSize:1,api:apiFor([['s1',{scho
 await assert.rejects(loadClassRoster({...base,api:apiFor([students[1],students[0]])}),/out-of-order/);
 await assert.rejects(loadClassRoster({...base,pageSize:1,api:apiFor([students[1],students[0]])}),/out-of-order/);
 await assert.rejects(loadClassRoster({...base,cursor:{id:'s2'},api:apiFor([students[0]])}),/out-of-order/);
+for(const cursor of [{}, {id:'../school-b'}, {id:''}, {id:12}, {id:'x'.repeat(129)}, 's1']){
+ let queries=0;
+ const api=apiFor(students),original=api.getDocs;
+ api.getDocs=async(...args)=>{queries++;return original(...args)};
+ await assert.rejects(loadClassRoster({...base,cursor,api}),/Invalid roster pagination cursor/);
+ assert.equal(queries,0,'Invalid cursor must be rejected before querying Firestore');
+}
 console.log('V47 roster query isolation tests passed');
