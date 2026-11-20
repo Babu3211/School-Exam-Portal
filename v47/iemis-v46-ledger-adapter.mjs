@@ -13,6 +13,9 @@ export function renderV46TenantLedger({schoolId,schoolName,schoolCode='',classNo
  if(typeof schoolCode!=='string'||schoolCode.length>64)throw Error('Invalid school code');
  if(typeof schoolName!=='string'||schoolName.length>160)throw Error('Invalid school name');
  if(subjects.some(sub=>typeof sub!=='string'&&(!sub||typeof sub!=='object')))throw Error('Invalid subject roster');
+ if(!subjects.length||subjects.length>30)throw Error('Subject roster size invalid');
+ if(!students.length||students.length>1500)throw Error('Student roster size invalid');
+ if(records.length>students.length*subjects.length)throw Error('Too many mark records for roster');
  for(const item of [...students,...records]){
   if(!item||item.schoolId!==schoolId)throw Error('Cross-school or unscoped ledger data');
  }
