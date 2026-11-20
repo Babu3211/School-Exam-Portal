@@ -13,12 +13,18 @@ permissions:
 jobs:
   structural:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install Firebase emulator test dependencies
+        run: npm install --no-package-lock --ignore-scripts --no-audit --no-fund
       - name: Check V47 JavaScript syntax
         run: find v47 -name '*.mjs' -print0 | xargs -0 -n1 node --check
       - name: Check Firestore rules structure
@@ -29,3 +35,5 @@ jobs:
         run: node v47/test-term-catalog.mjs
       - name: Check class marks draft completeness
         run: node v47/test-class-mark-draft-inspector.mjs
+      - name: Run Firestore security emulator tests
+        run: npm run test:v47:emulator
