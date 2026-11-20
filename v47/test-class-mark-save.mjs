@@ -38,6 +38,18 @@ function mock(overrides={}){
  assert.equal(writes[0][0],'marks/1st:s1:math');
  assert.equal(writes[1][1].schoolId,schoolId);
 }
+// Exact safe transaction boundary: three students are permitted, four are blocked.
+{
+ const {api,writes}=mock({
+  'students/s3':{schoolId,class:classId},
+  'subject_assignments/s3:math':{schoolId,class:classId,studentId:'s3',subjectId}
+ });
+ const result=await saveCompleteClassMarks({...args,db:{},api,
+  expectedStudentIds:['s1','s2','s3'],entries:[mark('s1'),mark('s2'),mark('s3')]});
+ assert.equal(result.saved,3);
+ assert.equal(writes.length,3);
+ assert.deepEqual(writes.map(([ref])=>ref),['marks/1st:s1:math','marks/1st:s2:math','marks/1st:s3:math']);
+}
 for(const [overrides,message] of [
  [{entries:[mark('s1')]},/Cannot save/],
  [{entries:[mark('s1'),mark('s1')]},/Duplicate student/],
