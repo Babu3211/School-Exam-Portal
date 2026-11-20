@@ -78,4 +78,49 @@ for(const mutate of [
  assert.equal(progressCalls,1);
  assert.equal(commitsAfterProgress,1,'No second commit after progress callback switches session');
 }
+// Maximum supported class size must be split into exactly 150 batches of
+// 10, with accurate progress and no silent omissions.
+{
+ const largeEntries=Array.from({length:1500},(_,i)=>({studentId:'s'+i,class:'9',date:'2026-11-18',present:i%2===0}));
+ let batches=0,staged=0,lastProgress;
+ const largeApi={
+  doc:(_db,...parts)=>parts.join('/'),
+  getDoc:async()=>({exists:()=>true,data:()=>({schoolId,class:'9'})}),
+  writeBatch:()=>{batches++;let pending=0;return {
+   set:()=>{pending++},
+   commit:async()=>{assert.equal(pending,10);staged+=pending}
+  }}
+ };
+ const result=await saveLoadedClassAttendance({
+  db:{},api:largeApi,actor:{...actor,uid:'admin-a'},schoolId,entries:largeEntries,
+  onProgress:p=>{lastProgress=p}
+ });
+ assert.equal(result.saved,1500);
+ assert.equal(result.total,1500);
+ assert.equal(batches,150);
+ assert.equal(staged,1500);
+ assert.equal(lastProgress.saved,1500);
+ assert.equal(lastProgress.savedIds.length,10);
+}
+// A failed batch at scale must report only confirmed commits, not attempted
+// writes or students in the failed batch.
+{
+ const largeEntries=Array.from({length:1500},(_,i)=>({studentId:'s'+i,class:'9',date:'2026-11-18',present:true}));
+ let attempts=0;
+ const largeApi={
+  doc:(_db,...parts)=>parts.join('/'),
+  getDoc:async()=>({exists:()=>true,data:()=>({schoolId,class:'9'})}),
+  writeBatch:()=>({set:()=>{},commit:async()=>{attempts++;if(attempts===75)throw new Error('simulated batch 75 failure')}})
+ };
+ await assert.rejects(saveLoadedClassAttendance({
+  db:{},api:largeApi,actor:{...actor,uid:'admin-a'},schoolId,entries:largeEntries
+ }),error=>{
+  assert.ok(error instanceof PartialAttendanceSaveError);
+  assert.equal(error.saved,740);
+  assert.equal(error.total,1500);
+  assert.match(error.cause.message,/batch 75 failure/);
+  return true;
+ });
+ assert.equal(attempts,75);
+}
 console.log('V47 attendance partial-save recovery contract passed');
