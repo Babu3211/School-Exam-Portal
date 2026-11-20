@@ -175,6 +175,13 @@ try {
   await assertFails(setDoc(schoolDoc('viewer-a','school-a','attendance','day-1'),{schoolId:'school-a'}));
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','attendance','2083-08-01_student-2'),{schoolId:'school-a',studentId:'student-2',class:'9',date:'2083-08-01',present:true}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','attendance','day-2'),{date:'2083-08-01'}));
+  // Admin attendance creation must verify the student's school and class,
+  // not merely a correctly formatted attendance document ID.
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','attendance','2083-08-02_missing-student'),{schoolId:'school-a',studentId:'missing-student',class:'9',date:'2083-08-02',present:true}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','attendance','2083-08-02_student-2'),{schoolId:'school-a',studentId:'student-2',class:'8',date:'2083-08-02',present:true}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','attendance','2083-08-02_student-2'),{schoolId:'school-b',studentId:'student-2',class:'9',date:'2083-08-02',present:true}));
+  await assertFails(setDoc(schoolDoc('admin-b','school-a','attendance','2083-08-02_student-2'),{schoolId:'school-a',studentId:'student-2',class:'9',date:'2083-08-02',present:true}));
+  await assertFails(setDoc(schoolDoc('super-a','school-a','attendance','2083-08-02_student-2'),{schoolId:'school-a',studentId:'student-2',class:'9',date:'2083-08-02',present:true}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','attendance','2083-08-01_student-2'),{schoolId:'school-b'}));
   // Existing attendance may only change the present flag, not its identity.
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','attendance','2083-08-01_student-2'),{present:false}));
