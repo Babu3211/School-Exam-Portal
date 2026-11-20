@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {renderIemisGradeSheetPrint} from './iemis-grade-sheet-print-preview.mjs';
+import {iemisEntrySchema} from '../iemis-entry.js';
+const students=[{id:'s1',nameEnglish:'<script>alert(1)</script>'}];
+const subjects=[{id:'english',name:'English & <Science>',creditHour:4}];
+const schema=iemisEntrySchema('1','first','English & <Science>');
+const draft={values:Object.fromEntries(schema.filter(x=>!x.readonly).map(x=>[x.key,x.key==='count'?'10':x.key==='obtained'?'35':String(x.max)])),isAbsent:false,incompatible:false};
+const args={school:{nameEnglish:'<img src=x onerror=alert(1)>',addressEnglish:'Main & School Road'},classNo:'1',term:'1st',students,subjects,draftsBySubject:{english:{s1:draft}},studentId:'s1'};
+const result=renderIemisGradeSheetPrint(args);
+assert.equal(result.ready,true);assert.match(result.html,/PREVIEW ONLY/);assert.match(result.html,/NOT VALID FOR OFFICIAL USE/);assert.match(result.html,/@page/);
+assert.match(result.html,/&lt;script&gt;/);assert.match(result.html,/&lt;img/);assert.match(result.html,/English &amp; &lt;Science&gt;/);
+assert.doesNotMatch(result.html,/<script>|<img/);
+const incomplete=renderIemisGradeSheetPrint({...args,draftsBySubject:{english:{}}});assert.equal(incomplete.ready,false);assert.equal(incomplete.html,null);
+assert.throws(()=>renderIemisGradeSheetPrint({...args,school:{nameEnglish:''}}),/school name/);
+console.log('V47 offline A4 grade sheet preview escaping, watermark and incomplete-class tests passed');
