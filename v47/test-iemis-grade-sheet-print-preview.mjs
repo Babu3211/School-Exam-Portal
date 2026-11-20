@@ -15,6 +15,7 @@ const sourceGrade=summary.totalGrade.grade;
 assert.match(result.html,new RegExp('<td>'+summary.obtained+' / '+summary.full+'</td>'));
 assert.match(result.html,new RegExp('<td>'+summary.totalGrade.point+'</td>'));
 assert.match(result.html,new RegExp('GPA: '+sheet.gpa));
+assert.match(result.html,new RegExp('<td>'+summary.inGrade.grade+'</td>'));
 assert.match(result.html,new RegExp('<td>'+sourceGrade.replace('+','\\+')+'</td>'));
 assert.doesNotMatch(result.html,/<td>—<\/td>/);assert.match(result.html,/PREVIEW ONLY/);assert.match(result.html,/NOT VALID FOR OFFICIAL USE/);assert.match(result.html,/@page/);
 assert.match(result.html,/Obtained \/ Full/);assert.match(result.html,/Grade Point/);
