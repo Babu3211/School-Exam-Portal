@@ -11,4 +11,7 @@ assert.match(workflow,/Classes 1–10 require the verified V46 CDC\/IEMIS compon
 assert.match(workflow,/api\.where\('class','==',klass\),api\.where\('term','==',term\),api\.orderBy\('__name__'\)/);
 assert.match(workflow,/api\.startAfter\(cursor\)/);
 assert.match(workflow,/refusing to display an incomplete ledger/);
+assert.match(workflow,/start\+=40/);
+assert.match(workflow,/x\.data\(\)\.schoolId===ctx\(\)\.schoolId/);
+assert.match(workflow,/\[Student record unavailable\]/);
 console.log('V47 exam workflow static safety checks passed');
