@@ -18,4 +18,5 @@ assert.equal(inspectIemisClassDraft({...args,drafts:Object.create({s1:valid,s2:v
 assert.throws(()=>inspectIemisClassDraft({...args,students:[{id:'x'.repeat(129)}],drafts:{}}),/invalid/);
 assert.throws(()=>inspectIemisClassDraft({...args,students:Array.from({length:1501},(_,i)=>({id:'s'+i})),drafts:{}}),/complete class roster/);
 assert.throws(()=>inspectIemisClassDraft({...args,drafts:{s1:valid,s2:valid,s3:valid,outsider:valid}}),/outside the selected class roster/);
+for(const id of ['../other','student/name','student name','x.y','x\\\\y'])assert.throws(()=>inspectIemisClassDraft({...args,students:[{id}],drafts:{}}),/invalid/);
 console.log('V47 offline IEMIS class-wide draft completeness tests passed');
