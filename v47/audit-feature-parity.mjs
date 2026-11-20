@@ -7,6 +7,7 @@ const has=p=>existsSync(resolve(root,p));
 const html=read('index.html'), rules=read('firestore.rules'), hosting=JSON.parse(read('firebase.json'));
 const block=name=>rules.split('match /'+name+'/{id} {')[1]?.split('match /')[0]??'';
 const rawMarks=block('marks'),computerMarks=block('component_marks');
+const writable=section=>[...section.matchAll(/allow\\s+([^:;]+):\\s*if\\s+([^;]+);/g)].some(m=>m[1].split(',').some(p=>['write','create','update','delete'].includes(p.trim()))&&m[2].trim()!=='false');
 const checks=[
  ['01','V47 landing is integrated portal',!/development hub|independent prototypes|development only/i.test(html)],
  ['02','Super Admin UI exists',has('admin.html')],
@@ -21,8 +22,8 @@ const checks=[
  ['11','Official grade ledger UI exists',has('grade-ledger.html')],
  ['12','Official grade sheet UI exists',has('grade-sheet.html')],
  ['13','Hosting output has index',typeof hosting.hosting?.public==='string'&&has(hosting.hosting.public+'/index.html')],
- ['14','Marks writes enabled',!!rawMarks&&!rawMarks.includes('allow create, update, delete: if false;')],
- ['15','Computer marks writes enabled',!!computerMarks&&!computerMarks.includes('allow create, update, delete: if false;')]
+ ['14','Marks writes enabled',writable(rawMarks)],
+ ['15','Computer marks writes enabled',writable(computerMarks)]
 ];
 let blockers=0;
 for(const [id,label,pass] of checks){console.log((pass?'PRESENT':'BLOCKED')+' '+id+' '+label);if(!pass)blockers++;}
