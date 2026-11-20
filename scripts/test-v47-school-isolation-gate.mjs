@@ -38,6 +38,17 @@ assert.ok(!rules.includes("matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}\\n"),'Truncated 
 const marksBlock=rules.split('match /marks/{id} {')[1]?.split('function teacherAttendanceAllowed')[0]??'';
 assert.match(marksBlock,/allow create, update, delete: if false;/,'Individual marks writes must remain blocked until audited publish');
 assert.ok(!/allow (?:create|update):/.test(marksBlock),'No alternate individual mark write permissions');
+assert.equal(rules.split('match /subject_assignments/{id}').length-1,1,'Subject assignment block must occur exactly once');
+assert.equal(rules.split('match /{collection}/{id}').length-1,1,'Generic collection rule must occur exactly once');
+assert.equal(rules.split('match /{document=**}').length-1,1,'Default-deny tail must occur exactly once');
+assert.match(rules,/data\.studentId\.matches\('\^\[A-Za-z0-9_-\]\{1,128\}\
+assert.ok(!rules.includes('}\n})'),'Malformed duplicate tail');
+console.log('V47 structural school isolation checks passed; emulator tests still required');
+\)/,'Student assignment ID regex must be complete');
+assert.match(rules,/data\.subjectId\.matches\('\^\[A-Za-z0-9_-\]\{1,128\}\
+assert.ok(!rules.includes('}\n})'),'Malformed duplicate tail');
+console.log('V47 structural school isolation checks passed; emulator tests still required');
+\)/,'Subject assignment ID regex must be complete');
 assert.ok(rules.trimEnd().endsWith('}'));
 assert.ok(!rules.includes('}\n})'),'Malformed duplicate tail');
 console.log('V47 structural school isolation checks passed; emulator tests still required');
