@@ -6,6 +6,7 @@ const read=name=>readFileSync(resolve(root,name),'utf8');
 const hub=read('index.html');
 const marks=read('marks-entry.html');
 const save=read('verified-small-class-mark-save.mjs');
+const rules=read('firestore.rules');
 const config=JSON.parse(read('firebase.json'));
 const blockers=[];
 const expectedProject='smss-exam-portal-v47';
@@ -25,6 +26,10 @@ if(/Development only|development workspace|independent prototypes/i.test(hub))
  blockers.push('V47 dashboard is still a development hub, not a feature-complete portal');
 if(/at most 3 students|max 3/i.test(marks)||/complete\.count\s*>\s*3/.test(save))
  blockers.push('Full-class marks save is limited to three students');
+// A per-document mark write permission bypasses the required complete-class save gate.
+const marksRule=rules.match(/match \/marks\/\{id\} \{([\s\S]*?)\n      \}/)?.[1]??'';
+if(/allow (?:create|update|write):/.test(marksRule))
+ blockers.push('Firestore marks rules still allow individual create/update writes outside a verified complete-class publish protocol');
 const publicDir=config.hosting?.public;
 if(typeof publicDir!=='string'||!publicDir||!existsSync(resolve(root,publicDir,'index.html')))
  blockers.push('Firebase Hosting output is missing its index.html');
