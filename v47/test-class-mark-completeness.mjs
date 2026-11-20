@@ -20,4 +20,14 @@ for(const invalid of ['   ',true,false,[],{},'0x10','1e2','Infinity','NaN','-1',
  assert.throws(()=>validateCompleteClassMarks({...args,entries:[mark('student-1'),mark('student-2',{practical:invalid})]}),/Marks must/,'Invalid practical score: '+String(invalid));
 }
 assert.equal(validateCompleteClassMarks({...args,entries:[mark('student-1',{theory:'0',practical:'10.5'}),mark('student-2',{theory:'.5',practical:0})]}).count,2);
+// Large-school boundary: validate all 1500 students without making any writes.
+const largeIds=Array.from({length:1500},(_,i)=>'student_'+String(i+1));
+const largeEntries=largeIds.map(id=>mark(id));
+const largeArgs={...args,expectedStudentIds:largeIds,entries:largeEntries};
+const largeResult=validateCompleteClassMarks(largeArgs);
+assert.equal(largeResult.count,1500);
+assert.equal(new Set(largeResult.entries.map(entry=>entry.studentId)).size,1500);
+assert.throws(()=>validateCompleteClassMarks({...largeArgs,entries:largeEntries.slice(0,-1)}),/Cannot save: 1 students/);
+assert.throws(()=>validateCompleteClassMarks({...largeArgs,entries:[...largeEntries.slice(0,-1),mark('student_1')]}),/Duplicate student/);
+assert.throws(()=>validateCompleteClassMarks({...largeArgs,entries:largeEntries.map((entry,i)=>i===1499?{...entry,theory:' '}:entry)}),/Marks must/);
 console.log('V47 class marks completeness checks passed');
