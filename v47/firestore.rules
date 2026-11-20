@@ -150,6 +150,10 @@ service cloud.firestore {
         return memberRole(sid, 'teacher')
           && validRawMark(sid, id)
           && assignment.get('active', false) == true
+          && assignment.get('schoolId', '') == sid
+          && assignment.get('uid', '') == request.auth.uid
+          && assignment.get('classId', '') == mark.class
+          && assignment.get('subjectId', '') == mark.subjectId
           && student.get('schoolId', '') == sid
           && student.get('class', '') == mark.class
           && subjectAssignment.get('schoolId', '') == sid
