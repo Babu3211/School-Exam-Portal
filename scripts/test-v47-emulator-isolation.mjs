@@ -81,7 +81,7 @@ try {
   }
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','subject_assignments','student-1:math'),validSubjectAssignment));
   const adminRawMark={schoolId:'school-a',studentId:'student-2',subjectId:'math',class:'9',term:'1st',theory:20,practical:10};
-  await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),adminRawMark));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),adminRawMark));
 
   // Regression: raw mark rules must reject inactive, mismatched or foreign assignments.
   await env.withSecurityRulesDisabled(async ctx=>{
@@ -103,7 +103,7 @@ try {
   await env.withSecurityRulesDisabled(async ctx=>{
     await updateDoc(doc(ctx.firestore(),'schools','school-a','subject_assignments','student-2:math'),{schoolId:'school-a'});
   });
-  await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','marks','monthly:student-2:math'),{...adminRawMark,term:'monthly'}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','monthly:student-2:math'),{...adminRawMark,term:'monthly'}));
 
   // Computer component rules must also reject inactive subject/assignment.
   await env.withSecurityRulesDisabled(async ctx=>{
@@ -142,10 +142,10 @@ try {
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','missing-scope'),{score:20}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','wrong-scope'),{schoolId:'school-b',score:20}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{schoolId:'school-b'}));
-  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{studentId:'student-2'}));
+  await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{studentId:'student-2'}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{studentId:'student-1'}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{theory:101}));
-  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{theory:25}));
+  await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{theory:25}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','final:student-2:math'),{...adminRawMark,term:'final',theory:-1}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','2nd:student-2:math'),{...adminRawMark,term:'2nd',extra:'forbidden'}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','wrong-id'),adminRawMark));
@@ -222,19 +222,19 @@ try {
     await setDoc(doc(ctx.firestore(),'schools','school-a','subjects','math'),{schoolId:'school-a',class:'9',name:'Mathematics',active:true});
   });
   const assignedMark={schoolId:'school-a',studentId:'student-1',subjectId:'math',class:'9',term:'1st',theory:20,practical:10};
-  await assertSucceeds(setDoc(schoolDoc('teacher-a','school-a','marks','1st:student-1:math'),assignedMark));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','1st:student-1:math'),assignedMark));
   // A forged teacher assignment payload at the correct document path must not grant marks access.
   for(const patch of [{schoolId:'school-b'},{uid:'outsider'},{classId:'8'},{subjectId:'science'},{active:false}]){
     await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','teacher_assignments','school-a:teacher-a:9:math'),patch));
     await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','3rd:student-1:math'),{...assignedMark,term:'3rd'}));
     await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','teacher_assignments','school-a:teacher-a:9:math'),{...teacherAssignment,active:true}));
   }
-  await assertSucceeds(setDoc(schoolDoc('teacher-a','school-a','marks','3rd:student-1:math'),{...assignedMark,term:'3rd'}));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','3rd:student-1:math'),{...assignedMark,term:'3rd'}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','2nd:student-1:math'),{...assignedMark,term:'2nd',subjectId:'science'}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','2nd:student-1:math'),{...assignedMark,term:'2nd',schoolId:'school-b'}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','2nd:student-1:math'),{...assignedMark,term:'2nd',class:'8'}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','forged-id'),{...assignedMark,term:'2nd'}));
-  await assertSucceeds(updateDoc(schoolDoc('teacher-a','school-a','marks','1st:student-1:math'),{theory:99})); // Assigned teacher may correct valid marks
+  await assertFails(updateDoc(schoolDoc('teacher-a','school-a','marks','1st:student-1:math'),{theory:99})); // Raw marks writes remain blocked for teachers
   await assertFails(deleteDoc(schoolDoc('teacher-a','school-a','marks','1st:student-1:math')));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','subjects','math'),{active:false}));
   await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','subjects','math'),{active:false}));
