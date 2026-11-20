@@ -11,11 +11,13 @@ export function validateAttendance(input){
  return {date,studentId,class:schoolClass,present:input.present};
 }
 export async function saveSchoolAttendance({db,api,actor,schoolId,input}){
- validateSchoolId(schoolId);if(!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin permission required');
+ validateSchoolId(schoolId);if(actor?.role!=='school_admin'||!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin permission required');
+ const identity={uid:actor.uid,role:actor.role,active:actor.active,schoolId:actor.schoolId};
  const attendance=validateAttendance(input);
  if(typeof api?.doc!=='function'||typeof api?.setDoc!=='function'||typeof api?.getDoc!=='function')throw new TypeError('Missing Firebase SDK');
  const student=await api.getDoc(api.doc(db,'schools',schoolId,'students',attendance.studentId));
  if(!student.exists()||student.data().schoolId!==schoolId||student.data().class!==attendance.class)throw new Error('Student roster changed or school mismatch');
+ if(actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId||!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin identity changed during attendance roster verification');
  const id=attendance.date+'_'+attendance.studentId;
  await api.setDoc(api.doc(db,'schools',schoolId,'attendance',id),{...attendance,schoolId});
  return {id,...attendance,schoolId};
