@@ -70,6 +70,8 @@ const twoRecords=twoStudents.flatMap(student=>twoSubjects.map(subject=>({...twoR
 const twoArgs={...args,classNo:1,students:twoStudents,subjects:twoSubjects,records:twoRecords};
 assert.deepEqual(renderCompleteV46TenantGradeLedger(twoArgs),renderV46TenantLedger({...twoArgs,mode:'grade'}));
 assert.throws(()=>renderCompleteV46TenantGradeLedger({...twoArgs,records:twoRecords.slice(0,-1)}),/Class marks incomplete/);
+assert.throws(()=>renderCompleteV46TenantGradeLedger({...twoArgs,records:twoRecords.map((r,i)=>i===0?{...r,scores:[...r.scores,{name:'Unexpected',fullMarks:10,obtained:10}]}:r)}),/IEMIS component schema mismatch/);
+assert.throws(()=>renderCompleteV46TenantGradeLedger({...twoArgs,records:twoRecords.map((r,i)=>i===0?{...r,scores:[r.scores[0],r.scores[0],r.scores[2]]}:r)}),/IEMIS component schema mismatch/);
 assert.throws(()=>renderCompleteV46TenantGradeLedger({...twoArgs,records:twoRecords.map((r,i)=>i===0?{...r,isAbsent:true}:r)}),/Class marks incomplete/);
 assert.throws(()=>renderCompleteV46TenantGradeLedger({...twoArgs,records:twoRecords.map((r,i)=>i===0?{...r,schoolId:'another_school'}:r)}),/Cross-school/);
 assert.throws(()=>renderCompleteV46TenantGradeLedger({...twoArgs,records:twoRecords.map((r,i)=>i===0?{...r,examId:'another_exam'}:r)}),/Foreign student or exam record/);
