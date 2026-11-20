@@ -10,7 +10,7 @@ function verifyTermGuards(source){
  const guards=[
   {name:'raw marks',pattern:/function\s+validRawMark\([^)]*\)\s*\{[\s\S]*?data\.term\s+in\s*(\[[^\]]+\])/},
   {name:'exam definitions',pattern:/function\s+validExamTerm\([^)]*\)\s*\{[\s\S]*?\bid\s+in\s*(\[[^\]]+\])/},
-  {name:'component marks',pattern:/function\s+validComponentMark\([^)]*\)\s*\{[\s\S]*?data\.term\s+in\s*(\[[^\]]+\])/},
+  {name:'component marks',pattern:/function\s+validComputerComponent\([^)]*\)\s*\{[\s\S]*?data\.term\s+in\s*(\[[^\]]+\])/},
  ];
  for(const {name,pattern} of guards){
   const match=source.match(pattern);
