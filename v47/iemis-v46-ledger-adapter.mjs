@@ -15,7 +15,6 @@ export function renderV46TenantLedger({schoolId,schoolName,schoolCode='',classNo
  if(subjects.some(sub=>typeof sub!=='string'&&(!sub||typeof sub!=='object')))throw Error('Invalid subject roster');
  if(!subjects.length||subjects.length>30)throw Error('Subject roster size invalid');
  if(!students.length||students.length>1500)throw Error('Student roster size invalid');
- if(records.length>students.length*subjects.length)throw Error('Too many mark records for roster');
  for(const item of [...students,...records]){
   if(!item||item.schoolId!==schoolId)throw Error('Cross-school or unscoped ledger data');
  }
@@ -30,6 +29,7 @@ export function renderV46TenantLedger({schoolId,schoolName,schoolCode='',classNo
   if(recordKeys.has(key))throw Error('Duplicate student subject marks');
   recordKeys.add(key);
  }
+ if(records.length>students.length*subjects.length)throw Error('Too many mark records for roster');
  const allowed=new Set(['creditFor','label','componentsFor','applicable']);
  if(Object.keys(options).some(k=>!allowed.has(k)))throw Error('Unexpected renderer option');
  return iemisLedger({mode,classNo:Number(classNo),annual:term==='final',subjects,students,records,examId,schoolName,schoolCode,...options});
