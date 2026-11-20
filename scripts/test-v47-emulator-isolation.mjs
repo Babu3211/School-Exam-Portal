@@ -47,6 +47,14 @@ try {
   const adminAttendance={schoolId:'school-a',studentId:'student-1',class:'9',date:'2026-11-20',present:true};
   await assertFails(setDoc(schoolDoc('super-a','school-a','attendance','2026-11-20_student-1'),adminAttendance));
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','attendance','2026-11-20_student-1'),adminAttendance));
+  await env.withSecurityRulesDisabled(async ctx=>{
+    await setDoc(doc(ctx.firestore(),'schools','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),{
+      schoolId:'school-a',uid:'teacher-a',classId:'9',subjectId:'attendance',active:true
+    });
+  });
+  await assertFails(updateDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-20_student-1'),{present:false}));
+  await assertSucceeds(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-21_student-1'),{...adminAttendance,date:'2026-11-21'}));
+  await assertFails(updateDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-21_student-1'),{present:false}));
   await assertFails(updateDoc(schoolDoc('super-a','school-a','attendance','2026-11-20_student-1'),{present:false}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','attendance','2026-11-20_student-1'),{present:false}));
   const valid={name:'Student Two',class:'9',schoolId:'school-a'};
