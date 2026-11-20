@@ -196,6 +196,7 @@ try {
   await assertFails(setDoc(schoolDoc('admin-a','school-b','members','forged-b'),{uid:'forged-b',schoolId:'school-b',role:'viewer',active:false}));
   await assertFails(setDoc(schoolDoc('viewer-a','school-a','members','forged'),{uid:'forged',schoolId:'school-a',role:'viewer',active:false}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','exams','1st'),{schoolId:'school-a',term:'final'}));
+  await assertFails(setDoc(schoolDoc('super-a','school-a','exams','monthly'),{schoolId:'school-a',term:'monthly'}));
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','exams','1st'),{schoolId:'school-a',term:'1st'}));
 
   // All six V47 exam terms must be writable by this school only.
@@ -275,7 +276,9 @@ try {
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{active:true}));
 
   const attendanceAssignment={schoolId:'school-a',uid:'teacher-a',classId:'9',subjectId:'attendance',active:false};
-  await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),attendanceAssignment));
+  await assertFails(setDoc(schoolDoc('super-a','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),attendanceAssignment));
+  await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),attendanceAssignment));  await assertFails(updateDoc(schoolDoc('super-a','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),{active:true}));
+
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1'),{schoolId:'school-a',studentId:'student-1',class:'9',date:'2026-11-18',present:true}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:attendance'),{active:true}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1'),{schoolId:'school-a',studentId:'student-1',class:'9',date:'2026-11-18',present:true,extra:'forbidden'}));
