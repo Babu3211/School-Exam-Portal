@@ -128,4 +128,25 @@ for(const examTerm of EXAM_TERMS){
   'marks/'+examTerm+':s1:math','marks/'+examTerm+':s2:math'
  ]);
 }
+// A revoked or switched school session cannot complete an in-flight atomic save.
+for(const mutate of [
+ a=>{a.active=false},
+ a=>{a.role='viewer'},
+ a=>{a.schoolId='school-b'},
+ a=>{a.uid='other-user'}
+]){
+ const changingActor={role:'school_admin',active:true,schoolId,uid:'admin-1'};
+ const {api,writes}=mock(),original=api.runTransaction;
+ api.runTransaction=(db,callback)=>original(db,async tx=>{
+  const get=tx.get;let changed=false;
+  tx.get=async ref=>{
+   const result=await get(ref);
+   if(!changed){changed=true;mutate(changingActor)}
+   return result;
+  };
+  return callback(tx);
+ });
+ await assert.rejects(saveCompleteClassMarks({...args,actor:changingActor,db:{},api}),/School identity changed/);
+ assert.equal(writes.length,0,'Revoked session must not write partial class marks');
+}
 console.log('V47 atomic class marks save contract checks passed');
