@@ -36,7 +36,7 @@ for(const overrides of [
  await assert.rejects(saveSchoolAttendance({db:{},api:state.api,actor,schoolId,input:entry('s2')}),/Student roster/);
  assert.equal(state.writes.length,0);
 }
-for(const badActor of [{role:'viewer',active:true,schoolId},{role:'school_admin',active:true,schoolId:'school-b'}]){
+for(const badActor of [{role:'viewer',active:true,schoolId},{role:'super_admin',active:true},{role:'school_admin',active:true,schoolId:'school-b'}]){
  const state=mock();
  await assert.rejects(saveClassAttendance({db:{},api:state.api,actor:badActor,schoolId,entries:[entry('s1')]}),/School Admin/);
  assert.equal(state.writes.length,0);
@@ -49,6 +49,25 @@ for(const badEntries of [
 ]){
  const state=mock();
  await assert.rejects(saveClassAttendance({db:{},api:state.api,actor,schoolId,entries:badEntries}));
+ assert.equal(state.writes.length,0);
+}
+// The single-student save must reject session changes while fetching the roster.
+for(const mutate of [
+ a=>{a.active=false},
+ a=>{a.role='viewer'},
+ a=>{a.schoolId='school-b'},
+ a=>{a.uid='other-admin'}
+]){
+ const changingActor={...actor,uid:'admin-a'};
+ const state=mock();
+ const originalGetDoc=state.api.getDoc;
+ state.api.getDoc=async ref=>{const result=await originalGetDoc(ref);mutate(changingActor);return result};
+ await assert.rejects(saveSchoolAttendance({db:{},api:state.api,actor:changingActor,schoolId,input:entry('s1')}),/identity changed/);
+ assert.equal(state.writes.length,0,'Revoked admin must not write single attendance');
+}
+{
+ const state=mock();
+ await assert.rejects(saveSchoolAttendance({db:{},api:state.api,actor:{role:'super_admin',active:true},schoolId,input:entry('s1')}),/School Admin/);
  assert.equal(state.writes.length,0);
 }
 console.log('V47 attendance student roster authorization tests passed');
