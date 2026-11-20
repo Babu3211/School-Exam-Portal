@@ -19,6 +19,8 @@ export async function saveSchoolAttendance({db,api,actor,schoolId,input}){
  if(!student.exists()||student.data().schoolId!==schoolId||student.data().class!==attendance.class)throw new Error('Student roster changed or school mismatch');
  if(actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId||!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin identity changed during attendance roster verification');
  const id=attendance.date+'_'+attendance.studentId;
- await api.setDoc(api.doc(db,'schools',schoolId,'attendance',id),{...attendance,schoolId});
+ const attendanceRef=api.doc(db,'schools',schoolId,'attendance',id);
+ if(actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId||!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin identity changed before attendance write');
+ await api.setDoc(attendanceRef,{...attendance,schoolId});
  return {id,...attendance,schoolId};
 }
