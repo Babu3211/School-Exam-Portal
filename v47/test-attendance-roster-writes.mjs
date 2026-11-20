@@ -70,4 +70,30 @@ for(const mutate of [
  await assert.rejects(saveSchoolAttendance({db:{},api:state.api,actor:{role:'super_admin',active:true},schoolId,input:entry('s1')}),/School Admin/);
  assert.equal(state.writes.length,0);
 }
+// Bulk saves must stop before a batch is created if a session changes during
+// roster reads; the same rule applies after the batch has been staged.
+for(const mutate of [
+ a=>{a.active=false},
+ a=>{a.role='viewer'},
+ a=>{a.schoolId='school-b'},
+ a=>{a.uid='other-admin'}
+]){
+ const duringRead={...actor,uid:'admin-a'};
+ const state=mock();
+ let batches=0;
+ const originalGet=state.api.getDoc,originalBatch=state.api.writeBatch;
+ state.api.getDoc=async ref=>{const result=await originalGet(ref);mutate(duringRead);return result};
+ state.api.writeBatch=()=>{batches++;return originalBatch()};
+ await assert.rejects(saveClassAttendance({db:{},api:state.api,actor:duringRead,schoolId,entries:[entry('s1'),entry('s2')]}),/identity changed during attendance roster verification/);
+ assert.equal(batches,0);
+ assert.equal(state.writes.length,0);
+
+ const duringStage={...actor,uid:'admin-a'};
+ const staged=mock();
+ let committed=0;
+ staged.api.writeBatch=()=>({set:()=>mutate(duringStage),commit:async()=>{committed++}});
+ await assert.rejects(saveClassAttendance({db:{},api:staged.api,actor:duringStage,schoolId,entries:[entry('s1'),entry('s2')]}),/identity changed before attendance batch commit/);
+ assert.equal(committed,0);
+ assert.equal(staged.writes.length,0);
+}
 console.log('V47 attendance student roster authorization tests passed');
