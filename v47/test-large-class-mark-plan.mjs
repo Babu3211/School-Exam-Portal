@@ -22,6 +22,9 @@ for(const bad of [
  {...fixture(4),entries:fixture(4).entries.slice(1)},
  {...fixture(4),entries:[...fixture(4).entries.slice(0,3),fixture(4).entries[0]]},
  {...fixture(4),actor:{active:true,role:'viewer',schoolId}},
+ {...fixture(4),actor:{active:true,role:'teacher',schoolId}},
+ {...fixture(4),actor:{active:true,role:'super_admin'}},
+ {...fixture(4),actor:{active:false,role:'school_admin',schoolId}},
  {...fixture(4),actor:{active:true,role:'school_admin',schoolId:'school-b'}},
 ])assert.throws(()=>planLargeClassMarks(bad));
 assert.throws(()=>planLargeClassMarks(fixture(1501)),/Class roster required/);
