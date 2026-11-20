@@ -57,7 +57,7 @@ function assertAllMarkWritesDenied(block,label){
 assertAllMarkWritesDenied(marksBlock,'Raw marks');
 assertAllMarkWritesDenied(componentBlock,'Computer component marks');
 for(const [label,block] of [['Raw marks',marksBlock],['Computer component marks',componentBlock]]){
- assert.throws(()=>assertAllMarkWritesDenied(block.replace(/allow\\s+(?:create|update|delete|write)[^;]*;/g,''),label),/explicitly deny write permissions/,
+ assert.throws(()=>assertAllMarkWritesDenied(block.replace(/allow\s+(?:create|update|delete|write)[^;]*;/g,''),label),/explicitly deny write permissions/,
   label+' test must reject missing write rules');
 }
 
