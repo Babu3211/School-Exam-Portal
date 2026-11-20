@@ -133,6 +133,19 @@ assert.ok(examBlock.includes("allow create: if memberRole(sid, 'school_admin')")
 assert.ok(!examBlock.includes('allow create: if canAdmin(sid)'),'Super admin must not bypass exam creation policy');
 const teacherAssignmentBlock=rules.split('match /teacher_assignments/{id} {')[1]?.split(/\n\s*match \/[^\n]+\{/)[0]??'';
 assert.ok(teacherAssignmentBlock,'Teacher assignment rules must exist');
+// Both teacher assignment create and reactivation must verify the UID and
+// school scope of the referenced teacher membership, not only its role.
+const assignmentCreate=teacherAssignmentBlock.match(/allow create: if ([\s\S]*?);/)?.[1]??'';
+const assignmentUpdate=teacherAssignmentBlock.match(/allow update: if ([\s\S]*?);/)?.[1]??'';
+for(const [label,condition] of [['create',assignmentCreate],['update',assignmentUpdate]]){
+ for(const required of [
+  ".data.get('uid', '') == request.resource.data.uid",
+  ".data.get('schoolId', '') == sid",
+  ".data.get('role', '') == 'teacher'",
+  ".data.get('active', false) == true"
+ ])assert.ok(condition.includes(required),'Teacher assignment '+label+' missing '+required);
+}
+
 assert.ok(teacherAssignmentBlock.includes("allow create: if memberRole(sid, 'school_admin')"),'Teacher assignment create must require school admin');
 assert.ok(teacherAssignmentBlock.includes("allow update: if memberRole(sid, 'school_admin')"),'Teacher assignment update must require school admin');
 assert.ok(!/allow (?:create|update): if canAdmin\(sid\)/.test(teacherAssignmentBlock),'Super admin must not bypass teacher assignment write policy');
