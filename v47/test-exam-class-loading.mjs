@@ -16,4 +16,7 @@ assert.match(s,/School or class changed while loading/);
 assert.match(s,/Ledger selection or school changed while loading/);
 assert.match(s,/School session changed while loading teacher assignments/);
 assert.match(s,/Teacher class or school changed while loading/);
+assert.match(s,/x\.active===true&&selected&&x\.class===selected\.class/);
+assert.match(s,/subject\.active!==true\)throw Error/);
+assert.match(s,/d\.data\(\)\.schoolId===schoolId&&d\.data\(\)\.class===klass&&d\.data\(\)\.active===true/);
 console.log('V47 class-scoped exam loading static checks passed');
