@@ -21,8 +21,8 @@ const checks=[
  ['11','Official grade ledger UI exists',has('grade-ledger.html')],
  ['12','Official grade sheet UI exists',has('grade-sheet.html')],
  ['13','Hosting output has index',typeof hosting.hosting?.public==='string'&&has(hosting.hosting.public+'/index.html')],
- ['14','Marks writes enabled',!/match \/marks\/\{id\} \{[\s\S]*?allow create, update, delete: if false;/.test(rules)],
- ['15','Computer marks writes enabled',!/match \/component_marks\/\{id\} \{[\s\S]*?allow create, update, delete: if false;/.test(rules)]
+ ['14','Marks writes enabled',!!rawMarks&&!rawMarks.includes('allow create, update, delete: if false;')],
+ ['15','Computer marks writes enabled',!!computerMarks&&!computerMarks.includes('allow create, update, delete: if false;')]
 ];
 let blockers=0;
 for(const [id,label,pass] of checks){console.log((pass?'PRESENT':'BLOCKED')+' '+id+' '+label);if(!pass)blockers++;}
