@@ -17,7 +17,8 @@ assert.match(result.html,new RegExp('<td>'+summary.totalGrade.point+'</td>'));
 assert.match(result.html,new RegExp('GPA: '+sheet.gpa));
 assert.match(result.html,new RegExp('<td>'+summary.inGrade.grade+'</td>'));
 assert.match(result.html,new RegExp('<td>'+sourceGrade.replace('+','\\+')+'</td>'));
-assert.match(result.html,/<td>—<\/td>/); // Primary class has no theory grade.assert.match(result.html,/PREVIEW ONLY/);assert.match(result.html,/NOT VALID FOR OFFICIAL USE/);assert.match(result.html,/@page/);
+assert.match(result.html,/<td>—<\/td>/); // Primary class has no theory grade.
+assert.match(result.html,/PREVIEW ONLY/);assert.match(result.html,/NOT VALID FOR OFFICIAL USE/);assert.match(result.html,/@page/);
 assert.match(result.html,/Obtained \/ Full/);assert.match(result.html,/Grade Point/);
 assert.match(result.html,/Internal Grade/);assert.match(result.html,/Theory Grade/);assert.match(result.html,/Total Grade/);
 assert.match(result.html,/noindex,nofollow/);
