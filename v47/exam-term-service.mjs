@@ -7,12 +7,15 @@ import {canAccessSchool} from './permissions.mjs';
 export async function createSchoolExamTerm({db,api,actor,schoolId,term}){
  validateSchoolId(schoolId);
  if(!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin permission required');
+ const identity={uid:actor.uid,role:actor.role,active:actor.active,schoolId:actor.schoolId};
  const id=validateExamTerm(term);
  if(typeof api?.doc!=='function'||typeof api?.runTransaction!=='function')throw new TypeError('Missing Firestore transaction methods');
  const ref=api.doc(db,'schools',schoolId,'exams',id);
  await api.runTransaction(db,async tx=>{
   const previous=await tx.get(ref);
   if(previous.exists())throw new Error('Exam term already exists');
+  if(!canAccessSchool(actor,schoolId,'write')||actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId)
+   throw new Error('School Admin identity changed during exam transaction');
   tx.set(ref,{schoolId,term:id});
  });
  return Object.freeze({id,schoolId,term:id});
