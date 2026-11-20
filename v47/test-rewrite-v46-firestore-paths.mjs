@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {rewriteV46FirestorePaths,V46_COLLECTIONS} from './rewrite-v46-firestore-paths.mjs';
+const source=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const result=rewriteV46FirestorePaths(source);
+assert.equal(result.collections.length,V46_COLLECTIONS.length);
+for(const name of V46_COLLECTIONS)assert.ok(result.collections.includes(name));
+assert.match(result.source,/collection\(db, "schools", activeSchoolId, "students"/);
+assert.match(result.source,/doc\(db, "schools", activeSchoolId, "school_settings"/);
+assert.doesNotMatch(result.source,/collection\(db\s*,\s*['"]students['"]/);
+assert.doesNotMatch(result.source,/doc\(db\s*,\s*['"]marks['"]/);
+assert.throws(()=>rewriteV46FirestorePaths(source+'\ncollection(db,"unknown_records")'),/Unreviewed V46/);
+assert.throws(()=>rewriteV46FirestorePaths('collection(db,"students")'),/Expected V46 collection/);
+console.log('V46 Firestore literal path staging rewrite checks passed; dynamic calls still require manual audit');
