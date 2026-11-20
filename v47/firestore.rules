@@ -247,11 +247,11 @@ service cloud.firestore {
             && get(studentPath).data.get('class','') == data.class;
         }
         allow get, list: if canRead(sid);
-        allow create: if (canAdmin(sid) && validAdminAttendance()) || teacherAttendanceAllowed(sid, id);
+        allow create: if (memberRole(sid, 'school_admin') && validAdminAttendance()) || teacherAttendanceAllowed(sid, id);
         allow update: if immutableSchool(sid)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['present'])
           && request.resource.data.present is bool
-          && (canAdmin(sid) || teacherAttendanceAllowed(sid, id));
+          && (memberRole(sid, 'school_admin') || teacherAttendanceAllowed(sid, id));
         allow delete: if false;
       }
       match /exams/{id} {
