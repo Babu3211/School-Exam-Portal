@@ -17,10 +17,29 @@ for(const [change,pattern] of [
  [{entries:[entry('s1'),entry('s1')]},/Duplicate/],
  [{entries:[entry('s1'),entry('s3')]},/not in selected/],
  [{actor:{role:'viewer',active:true,schoolId}},/School Admin/],
+ [{actor:{role:'super_admin',active:true}},/School Admin/],
  [{actor:{role:'school_admin',active:true,schoolId:'school-b'}},/School Admin/]
  ]){
  committed=[];
  await assert.rejects(saveVerifiedClassAttendance({...args,...change,db:{},api}),pattern);
  assert.equal(committed.length,0);
+}
+// A revoked admin session while student records load must not commit a batch.
+for(const mutate of [
+ a=>{a.active=false},
+ a=>{a.role='viewer'},
+ a=>{a.schoolId='school-b'},
+ a=>{a.uid='other-admin'}
+]){
+ const changingActor={...actor,uid:'admin-a'};
+ let batchCalls=0;
+ const racingApi={...api,
+  getDoc:async ref=>{const result=await api.getDoc(ref);mutate(changingActor);return result},
+  writeBatch:()=>{batchCalls++;return api.writeBatch()}
+ };
+ committed=[];
+ await assert.rejects(saveVerifiedClassAttendance({...args,actor:changingActor,db:{},api:racingApi}),/identity changed/);
+ assert.equal(batchCalls,0,'Revoked admin must not start attendance batch');
+ assert.equal(committed.length,0,'Revoked admin must not write attendance');
 }
 console.log('V47 verified attendance save contract checks passed');
