@@ -26,4 +26,6 @@ const missingTheory={...completeComputer,values:{...completeComputer.values,theo
 assert.deepEqual(inspectIemisClassDraft({...secondary,drafts:{s1:completeComputer,s2:missingTheory}}).invalid.map(x=>x.studentId),['s2']);
 const symbolDrafts={s1:valid,s2:valid,s3:valid};symbolDrafts[Symbol('foreign')]=valid;
 assert.throws(()=>inspectIemisClassDraft({...args,drafts:symbolDrafts}),/unsupported symbol keys/);
+const hiddenDrafts={s1:valid,s2:valid,s3:valid};Object.defineProperty(hiddenDrafts,'foreign',{value:valid,enumerable:false});
+assert.throws(()=>inspectIemisClassDraft({...args,drafts:hiddenDrafts}),/outside the selected class roster/);
 console.log('V47 offline IEMIS class-wide draft completeness tests passed');
