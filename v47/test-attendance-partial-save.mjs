@@ -47,4 +47,35 @@ for(const mutate of [
  assert.equal(started,1,'Revoked admin must not start another batch');
  assert.equal(completed,1,'Only the first attendance batch may commit');
 }
+// Progress callbacks run between batches. A UI session switch must not let
+// the remaining students be saved under a different admin identity.
+for(const mutate of [
+ a=>{a.active=false},
+ a=>{a.role='viewer'},
+ a=>{a.schoolId='school-b'},
+ a=>{a.uid='switched-admin'}
+]){
+ const changingActor={...actor,uid:'admin-a'};
+ let commitsAfterProgress=0,progressCalls=0;
+ const progressApi={
+  doc:(_db,...parts)=>parts.join('/'),
+  getDoc:async()=>({exists:()=>true,data:()=>({schoolId,class:'9'})}),
+  writeBatch:()=>({set:()=>{},commit:async()=>{commitsAfterProgress++}})
+ };
+ await assert.rejects(
+  saveLoadedClassAttendance({
+   db:{},api:progressApi,actor:changingActor,schoolId,entries,
+   onProgress:()=>{progressCalls++;mutate(changingActor)}
+  }),
+  error=>{
+   assert.ok(error instanceof PartialAttendanceSaveError);
+   assert.equal(error.saved,10);
+   assert.equal(error.total,11);
+   assert.match(error.cause.message,/identity changed/);
+   return true;
+  }
+ );
+ assert.equal(progressCalls,1);
+ assert.equal(commitsAfterProgress,1,'No second commit after progress callback switches session');
+}
 console.log('V47 attendance partial-save recovery contract passed');
