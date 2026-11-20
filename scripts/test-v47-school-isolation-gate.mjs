@@ -16,8 +16,7 @@ for(const token of [
  'match /{document=**} { allow read, write: if false; }',
  "request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')",
  "subjectAssignment.get('active', true) == true",
- 'teacherMarkAllowed(sid, id);','teacherAttendanceAllowed(sid, id);',
- 'canAdmin(sid) && validRawMark(sid, id)',
+ 'teacherAttendanceAllowed(sid, id);',
  "assignment.get('studentId','') == data.studentId",
  "assignment.get('subjectId','') == data.subjectId",
  "assignment.get('active',true) == true",
@@ -36,6 +35,9 @@ assert.equal(rules.split('match /exams/{id}').length-1,1,'Duplicated exam rule')
 assert.equal(rules.split('match /attendance/{id}').length-1,1,'Duplicated attendance rule');
 assert.ok(!rules.includes("matches('^[A-Za-z0-9_-]{1,128}\\n"),'Truncated regex');
 assert.ok(!rules.includes("matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}\\n"),'Truncated date regex');
+const marksBlock=rules.split('match /marks/{id} {')[1]?.split('function teacherAttendanceAllowed')[0]??'';
+assert.match(marksBlock,/allow create, update, delete: if false;/,'Individual marks writes must remain blocked until audited publish');
+assert.ok(!/allow (?:create|update):/.test(marksBlock),'No alternate individual mark write permissions');
 assert.ok(rules.trimEnd().endsWith('}'));
 assert.ok(!rules.includes('}\n})'),'Malformed duplicate tail');
 console.log('V47 structural school isolation checks passed; emulator tests still required');
