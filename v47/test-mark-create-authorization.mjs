@@ -78,4 +78,27 @@ for(const [overrides,message] of [
  assert.equal(result.id,'monthly:s1:math');
  assert.equal(writes.length,1);
 }
+// Reject a session whose role, school or active state changes while Firestore reads are in flight.
+for(const mutate of [
+ actor=>{actor.active=false},
+ actor=>{actor.role='viewer'},
+ actor=>{actor.schoolId='school-b'},
+ actor=>{actor.uid='another-user'}
+]){
+ const actor={role:'school_admin',active:true,schoolId,uid:'admin-1'};
+ const {api,writes}=mock();
+ const original=api.runTransaction;
+ api.runTransaction=(db,callback)=>original(db,async tx=>{
+  const get=tx.get;
+  let changed=false;
+  tx.get=async ref=>{
+   const result=await get(ref);
+   if(!changed){changed=true;mutate(actor)}
+   return result;
+  };
+  return callback(tx);
+ });
+ await assert.rejects(createSchoolMarkOnly({db:{},api,actor,schoolId,input}),/identity changed/);
+ assert.equal(writes.length,0);
+}
 console.log('V47 direct mark creation authorization checks passed');
