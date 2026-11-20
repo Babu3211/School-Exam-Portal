@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {assertV47ImportContext,attachV47SchoolId} from './v46-import-school-gate.mjs';
+const session={authorization:'firestore-verified-read',uid:'teacher-uid',schoolId:'school_A',role:'school_admin'};
+const ctx=assertV47ImportContext({session,schoolId:'school_A',collection:'students'});
+assert.deepEqual(ctx.path,['schools','school_A','students']);
+assert.equal(attachV47SchoolId({studentName:'Test'},ctx).schoolId,'school_A');
+assert.throws(()=>attachV47SchoolId({schoolId:'school_B'},ctx),/Cross-school/);
+assert.throws(()=>assertV47ImportContext({session,schoolId:'school_B',collection:'students'}),/Cross-school/);
+assert.throws(()=>assertV47ImportContext({session:{...session,role:'viewer'},schoolId:'school_A',collection:'students'}),/administrators/);
+assert.throws(()=>assertV47ImportContext({session:{...session,role:'teacher'},schoolId:'school_A',collection:'staff'}),/administrators/);
+assert.throws(()=>assertV47ImportContext({session:{...session,authorization:'unverified'},schoolId:'school_A',collection:'students'}),/Verified/);
+assert.throws(()=>assertV47ImportContext({session,schoolId:'school_A',collection:'user_roles'}),/Unreviewed/);
+assert.throws(()=>assertV47ImportContext({session,schoolId:'',collection:'students'}),/Valid/);
+console.log('PASS: V47 bulk import school isolation, roles and verification preflight');
