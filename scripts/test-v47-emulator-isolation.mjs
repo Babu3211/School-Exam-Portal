@@ -122,7 +122,7 @@ try {
   });
   await assertFails(setDoc(computerRef,computerMark));
   await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','subject_assignments','student-2:computer'),{active:true}));
-  await assertSucceeds(setDoc(computerRef,computerMark));
+  await assertFails(setDoc(computerRef,computerMark));
   // Boundary and authorization checks for the Computer 4/36/10 scheme.
   await assertFails(setDoc(schoolDoc('viewer-a','school-a','component_marks','3rd:student-2:computer'),{...computerMark,term:'3rd'}));
   await assertFails(setDoc(schoolDoc('admin-a','school-b','component_marks','3rd:student-2:computer'),{...computerMark,term:'3rd',schoolId:'school-b'}));
