@@ -22,6 +22,7 @@ export async function saveClassAttendance({db,api,actor,schoolId,entries}){
  if(actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId||!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin identity changed during attendance roster verification');
  const batch=api.writeBatch(db);
  for(const entry of validated)batch.set(api.doc(db,'schools',schoolId,'attendance',entry.date+'_'+entry.studentId),{...entry,schoolId});
+ if(actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId||!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin identity changed before attendance batch commit');
  await batch.commit();
  return {saved:validated.length,date,class:schoolClass};
 }
