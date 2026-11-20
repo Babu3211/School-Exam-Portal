@@ -24,4 +24,9 @@ assert.throws(()=>renderV46TenantLedger({...args,subjects:[null]}),/Invalid subj
 assert.throws(()=>renderV46TenantLedger({...args,records:[...records,{...records[0]}]}),/Duplicate student subject marks/);
 assert.throws(()=>renderV46TenantLedger({...args,records:[...records,{...records[0],subject:'ENGLISH'}]}),/Duplicate student subject marks/);
 assert.throws(()=>renderV46TenantLedger({...args,records:[{...records[0],subject:''}]}),/Record subject required/);
+assert.throws(()=>renderV46TenantLedger({...args,records:[{...records[0],schoolId:undefined}]}),/Cross-school/);
+assert.throws(()=>renderV46TenantLedger({...args,students:[{...students[0],schoolId:undefined}]}),/Cross-school/);
+assert.throws(()=>renderV46TenantLedger({...args,records:[{...records[0],examId:'other_exam'}]}),/Foreign student or exam record/);
+assert.throws(()=>renderV46TenantLedger({...args,students:[{...students[0],id:''}]}),/Student ID required/);
+assert.throws(()=>renderV46TenantLedger({...args,schoolId:'../other_school'}),/Valid school scope required/);
 console.log('V47 tenant-scoped V46 IEMIS renderer parity passed for 120 class/mode/term cases and isolation');
