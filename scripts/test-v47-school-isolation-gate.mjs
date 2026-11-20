@@ -70,6 +70,11 @@ for(const [label,block] of [['Raw marks',marksBlock],['Computer component marks'
  }
 }
 
+const teacherAssignmentBlock=rules.split('match /teacher_assignments/{id} {')[1]?.split('match /exams/{id}')[0]??'';
+assert.ok(teacherAssignmentBlock,'Teacher assignment rules must exist');
+assert.ok(teacherAssignmentBlock.includes("allow create: if memberRole(sid, 'school_admin')"),'Teacher assignment create must require school admin');
+assert.ok(teacherAssignmentBlock.includes("allow update: if memberRole(sid, 'school_admin')"),'Teacher assignment update must require school admin');
+assert.ok(!/allow (?:create|update): if canAdmin\(sid\)/.test(teacherAssignmentBlock),'Super admin must not bypass teacher assignment write policy');
 assert.equal(rules.split('match /subject_assignments/{id}').length-1,1,'Subject assignment block must occur exactly once');
 assert.equal(rules.split('match /{collection}/{id}').length-1,1,'Generic collection rule must occur exactly once');
 assert.equal(rules.split('match /{document=**}').length-1,1,'Default-deny tail must occur exactly once');
