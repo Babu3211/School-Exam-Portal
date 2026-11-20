@@ -44,6 +44,7 @@ $('loadClassMarks').onclick=async()=>{
  try{
   const roster=await loadCompleteClassRoster({db,api,actor,schoolId,classId});
   if(attempt!==epoch||classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value)return;
+  if(!auth?.currentUser?.uid||auth.currentUser.uid!==actor?.uid)throw new Error('Authentication changed during roster load');
   classMarkRoster=roster.students;classMarkContext={classId,term,subjectId};
   const body=$('classMarkRows');
   for(const student of roster.students){
