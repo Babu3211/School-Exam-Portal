@@ -14,5 +14,7 @@ for(const classNo of ['1','5','6','9','10'])for(const [term,v46term] of [['1st',
  assert.equal(partial.ready,false);assert.equal(partial.student,null);
  assert.throws(()=>previewIemisGradeSheet({...args,studentId:'outsider'}),/not in selected class/);
  assert.throws(()=>previewIemisGradeSheet({...args,studentId:'../other'}),/Valid student ID/);
+ assert.throws(()=>previewIemisGradeSheet({...args,studentId:'s1',subjects:[subjects[0],subjects[0]]}),/duplicate/);
+ assert.throws(()=>previewIemisGradeSheet({...args,studentId:'s1',draftsBySubject:{...draftsBySubject,outsider:{}}}),/Unexpected/);
 }
 console.log('V47 read-only grade sheet preview and class-completeness tests passed');
