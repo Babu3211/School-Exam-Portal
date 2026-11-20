@@ -4,6 +4,7 @@ import {readdirSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 const suites=[
  'test-idle-logout.mjs',
+ 'test-exam-async-isolation.mjs',
  'test-exam-class-loading.mjs',
  'test-session-lazy-load.mjs',
  'test-admin-attendance-safety.mjs',
