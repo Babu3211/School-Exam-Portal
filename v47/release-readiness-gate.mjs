@@ -30,18 +30,30 @@ if(/at most 3 students|max 3/i.test(marks)||/complete\.count\s*>\s*3/.test(save)
 const marksRule=rules.match(/match \/marks\/\{id\} \{([\s\S]*?)\n      \}/)?.[1]??'';
 if(!marksRule)
  blockers.push('Firestore marks security rule is missing or unreadable');
-if(/allow (?:create|update|write):/.test(marksRule))
- blockers.push('Firestore marks rules still allow individual create/update writes outside a verified complete-class publish protocol');
-if(/allow create, update, delete: if false;/.test(marksRule))
- blockers.push('Firestore marks writes are intentionally disabled until the audited complete-class publish workflow is implemented');
-// Computer 4/36/10 writes must be gated by the same complete-class publish protocol.
-const componentRule=rules.match(/match \/component_marks\/\{id\} \{([\s\S]*?)\n      \}/)?.[1]??'';
+// Firestore permission statements are OR-ed. Inspect combined and individual
+// write permissions rather than only matching "allow create:".
+function writePermissions(block){
+ return [...block.matchAll(/allow\\s+([^:;]+):\\s*if\\s+([^;]+);/g)]
+  .filter(match=>match[1].split(',').map(x=>x.trim()).some(x=>['write','create','update','delete'].includes(x)))
+  .map(match=>({permissions:match[1].trim(),condition:match[2].trim()}));
+}
+const rawWrites=writePermissions(marksRule);
+if(marksRule&&!rawWrites.length)
+ blockers.push('Firestore marks rules have no explicit write deny');
+if(rawWrites.some(rule=>rule.condition!=='false'))
+ blockers.push('Firestore marks rules contain a writable permission outside verified complete-class publication');
+if(rawWrites.length&&rawWrites.every(rule=>rule.condition==='false'))
+ blockers.push('Firestore marks writes are disabled until audited complete-class publication is implemented');
+const componentRule=rules.match(/match \/component_marks\/\\{id\\} \\{([\\s\\S]*?)\\n      \\}/)?.[1]??'';
 if(!componentRule)
  blockers.push('Computer component marks security rule is missing or unreadable');
-else if(/allow (?:create|update|write):\s*if\s*(?!false\s*;)/.test(componentRule))
- blockers.push('Computer component marks permit individual writes without verified complete-class publication');
-else if(/allow create:\s*if false;/.test(componentRule))
- blockers.push('Computer component marks saving is disabled until complete-class publish is implemented');
+const computerWrites=writePermissions(componentRule);
+if(componentRule&&!computerWrites.length)
+ blockers.push('Computer component marks have no explicit write deny');
+if(computerWrites.some(rule=>rule.condition!=='false'))
+ blockers.push('Computer component marks contain a writable permission outside verified complete-class publication');
+if(computerWrites.length&&computerWrites.every(rule=>rule.condition==='false'))
+ blockers.push('Computer component marks saving is disabled until complete-class publication is implemented');
 const publicDir=config.hosting?.public;
 if(typeof publicDir!=='string'||!publicDir||!existsSync(resolve(root,publicDir,'index.html')))
  blockers.push('Firebase Hosting output is missing its index.html');
