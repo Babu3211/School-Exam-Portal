@@ -10,7 +10,7 @@ for(const id of ['schoolId','email','password','login','logout','dashboard','sta
  assert.match(html,new RegExp('id="'+id+'"'),'Missing School Login element '+id);
 }
 assert.match(html,/type="password"/);
-assert.match(html,/src="\.\/school-login\.mjs"/);
+assert.match(html,/src="\.\/school-login\.mjs(?:\?[^"]*)?"/);
 assert.match(js,/smss-exam-portal-v47/);
 assert.match(js,/inMemoryPersistence/);
 assert.match(js,/getDoc\(api\.doc\(db,'schools',sid\)\)/);
