@@ -1,13 +1,12 @@
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
-import {saveVerifiedSmallClassMarks} from './verified-small-class-mark-save.mjs';
 import {inspectClassMarkDraft} from './class-mark-draft-inspector.mjs';
 const $=id=>document.getElementById(id),status=msg=>{$('message').textContent=msg};
 let auth,authSdk,api,db,actor,schoolId,epoch=0,busy=false,studentsLoaded=false,subjectsLoaded=false,loadedStudentClass=null,loadedSubjectClass=null;
 let classMarkRoster=[],classMarkContext=null;
 function reset(){classMarkRoster=[];classMarkContext=null;$('classMarkRows').replaceChildren();$('classMarkCount').textContent='';$('saveClassMarks').disabled=true;$('inspectClassMarks').disabled=true;$('draftCheckResult').textContent='';$('loadClassMarks').disabled=true;epoch++;studentsLoaded=false;subjectsLoaded=false;loadedStudentClass=null;loadedSubjectClass=null;actor=null;schoolId=null;$('work').hidden=true;$('logout').disabled=true;$('save').disabled=true;$('studentId').replaceChildren();$('subjectId').replaceChildren();}
-function lock(value){busy=value;for(const input of $('classMarkRows').querySelectorAll('input'))input.disabled=value;$('loadClassMarks').disabled=value||!actor||actor.role!=='school_admin';$('saveClassMarks').disabled=value||!actor||!classMarkContext||classMarkRoster.length>3;$('inspectClassMarks').disabled=value||!actor||!classMarkContext;for(const id of ['login','logout','loadStudents','loadSubjects','save','schoolClass','term','subjectId','studentId','theory','practical'])$(id).disabled=value||(['loadStudents','loadSubjects','save'].includes(id)&&!actor);if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('save').disabled=true;}}
+function lock(value){busy=value;for(const input of $('classMarkRows').querySelectorAll('input'))input.disabled=value;$('loadClassMarks').disabled=value||!actor||actor.role!=='school_admin';$('saveClassMarks').disabled=true;$('inspectClassMarks').disabled=value||!actor||!classMarkContext;for(const id of ['login','logout','loadStudents','loadSubjects','save','schoolClass','term','subjectId','studentId','theory','practical'])$(id).disabled=value||(['loadStudents','loadSubjects','save'].includes(id)&&!actor);if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('save').disabled=true;}}
 $('connect').onclick=async()=>{try{const config=JSON.parse($('config').value);if(config.projectId!=='smss-exam-portal-v47')throw new Error('Only V47 Firebase project allowed');const appSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js');authSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js');api=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js');const app=appSdk.initializeApp(config,'smss-v47-marks-entry');auth=authSdk.getAuth(app);await authSdk.setPersistence(auth,authSdk.inMemoryPersistence);db=api.getFirestore(app);$('connect').disabled=true;$('login').disabled=false;status('Connected to V47')}catch(e){status('Connection failed: '+e.message)}};
 $('login').onclick=async()=>{if(busy)return;reset();const attempt=epoch;lock(true);try{const id=validateSchoolId($('schoolId').value.trim());const credential=await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);$('password').value='';if(attempt!==epoch)return;const uid=credential.user.uid;const session=await verifySchoolSession({schoolId:id,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(attempt!==epoch||auth.currentUser?.uid!==uid||session.role!=='school_admin')throw new Error('School Admin required');const school=await api.getDoc(api.doc(db,'schools',id));if(attempt!==epoch||auth.currentUser?.uid!==uid||!school.exists()||school.data().active!==true)throw new Error('School inactive');actor={role:'school_admin',active:true,schoolId:id,uid};schoolId=id;$('heading').textContent='Raw mark — '+String(school.data().name??id);$('work').hidden=false;status('School Admin signed in. Load students and subjects before saving.')}catch(e){if(attempt===epoch){reset();try{await authSdk.signOut(auth)}catch{}status('Sign in failed: '+e.message)}}finally{lock(false)}};
 $('logout').onclick=async()=>{if(busy)return;lock(true);reset();try{await authSdk.signOut(auth);status('Signed out')}catch(e){status('Sign out failed: '+e.message)}finally{lock(false)}};
@@ -61,7 +60,7 @@ $('loadClassMarks').onclick=async()=>{
    }fragment.append(row);
   }
   body.append(fragment);
-  $('classMarkCount').textContent=roster.count+' students in full roster. '+(roster.count>3?'Save blocked: maximum 3 until emulator validation.':'All students must have both marks.');
+  $('classMarkCount').textContent=roster.count+' students in full roster. '+('Save/Publish disabled until audited complete-class workflow is ready.');
   status('Full class roster loaded. Check every student before saving.');
  }catch(e){invalidateClassMarks();status('Unable to load complete roster: '+e.message)}
  finally{if(attempt===epoch)lock(false)}
@@ -90,24 +89,4 @@ $('inspectClassMarks').onclick=()=>{
   status(result.ready?'Draft checked. This does not save or publish marks.':'Draft incomplete. No marks saved.');
  }catch(e){$('draftCheckResult').textContent=e.message;status('Draft validation failed. No marks saved.')}
 };
-$('saveClassMarks').onclick=async()=>{
- if(busy||!classMarkContext||actor?.role!=='school_admin')return;
- const context=classMarkContext,attempt=epoch,uid=actor.uid,selectedSchoolId=schoolId;
- if(context.classId!==$('schoolClass').value||context.term!==$('term').value||context.subjectId!==$('subjectId').value){invalidateClassMarks();status('Class, term or subject changed; reload roster');return}
- if(classMarkRoster.length>3){status('Save blocked: full class has more than 3 students. No marks saved.');return}
- const entries=collectClassMarkEntries();
- let inspection;
- try{inspection=inspectClassMarkDraft({schoolId,classId:context.classId,term:context.term,subjectId:context.subjectId,expectedStudentIds:classMarkRoster.map(s=>s.id),entries})}
- catch(error){status('Save blocked: '+error.message);return}
- $('draftCheckResult').textContent=inspection.summary+(inspection.invalid.length?' Invalid: '+inspection.invalid.slice(0,5).join('; '):'');
- if(!inspection.ready){status('Save blocked: '+inspection.summary);return}
-
- if(!confirm('Save marks for ALL '+entries.length+' students? Existing marks cannot be overwritten.'))return;
- lock(true);
- try{
-  if(attempt!==epoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||actor?.schoolId!==selectedSchoolId||schoolId!==selectedSchoolId)throw new Error('Authentication or school changed before save');
-  const result=await saveVerifiedSmallClassMarks({db,api,actor,schoolId:selectedSchoolId,...context,entries});
-  if(attempt===epoch){invalidateClassMarks();status('Atomic class marks saved: '+result.saved+' records (development only)')}
- }catch(e){if(attempt===epoch)status('Class marks NOT saved: '+e.message)}
- finally{if(attempt===epoch)lock(false)}
-};
+$('saveClassMarks').onclick=()=>status('Save/Publish disabled: secure complete-class workflow is not implemented. No marks saved.');
