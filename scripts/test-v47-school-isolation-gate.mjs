@@ -41,14 +41,9 @@ assert.ok(!/allow (?:create|update):/.test(marksBlock),'No alternate individual 
 assert.equal(rules.split('match /subject_assignments/{id}').length-1,1,'Subject assignment block must occur exactly once');
 assert.equal(rules.split('match /{collection}/{id}').length-1,1,'Generic collection rule must occur exactly once');
 assert.equal(rules.split('match /{document=**}').length-1,1,'Default-deny tail must occur exactly once');
-assert.match(rules,/data\.studentId\.matches\('\^\[A-Za-z0-9_-\]\{1,128\}\
-assert.ok(!rules.includes('}\n})'),'Malformed duplicate tail');
-console.log('V47 structural school isolation checks passed; emulator tests still required');
-\)/,'Student assignment ID regex must be complete');
-assert.match(rules,/data\.subjectId\.matches\('\^\[A-Za-z0-9_-\]\{1,128\}\
-assert.ok(!rules.includes('}\n})'),'Malformed duplicate tail');
-console.log('V47 structural school isolation checks passed; emulator tests still required');
-\)/,'Subject assignment ID regex must be complete');
+const assignmentBlock=rules.split('match /subject_assignments/{id} {')[1]?.split('match /{collection}/{id}')[0]??'';
+for(const field of ['studentId','subjectId'])
+ assert.ok(assignmentBlock.includes("data."+field+".matches('^[A-Za-z0-9_-]{1,128}$')"),'Truncated '+field+' regex');
 assert.ok(rules.trimEnd().endsWith('}'));
-assert.ok(!rules.includes('}\n})'),'Malformed duplicate tail');
+assert.ok(!rules.includes('}\\n})'),'Malformed duplicate tail');
 console.log('V47 structural school isolation checks passed; emulator tests still required');
