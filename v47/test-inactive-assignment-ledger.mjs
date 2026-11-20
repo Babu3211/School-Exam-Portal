@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {buildRawLedgerPreview} from './raw-ledger-preview.mjs';
+const base={schoolClass:'9',term:'1st',students:[{id:'s1',name:'Student One',class:'9'}],subjects:[{id:'math',name:'Mathematics',class:'9',active:true}],rawMarks:[],componentMarks:[],allPagesLoaded:true};
+const assignment={studentId:'s1',subjectId:'math',class:'9'};
+const active=buildRawLedgerPreview({...base,assignments:[{...assignment,active:true}]});
+assert.equal(active.summary.assignedPairs,1);
+assert.equal(active.summary.missingPairs,1);
+const inactive=buildRawLedgerPreview({...base,assignments:[{...assignment,active:false}]});
+assert.equal(inactive.summary.assignedPairs,0,'Inactive assignments must not count toward coverage');
+assert.equal(inactive.summary.missingPairs,0,'Inactive assignments must not generate missing marks');
+assert.ok(inactive.issues.includes('invalid_assignment'),'Inactive assignment should block diagnostic export');
+const legacy=buildRawLedgerPreview({...base,assignments:[assignment]});
+assert.equal(legacy.summary.assignedPairs,1,'Legacy assignments without active flag retain existing behavior');
+console.log('V47 inactive assignment ledger coverage tests passed');
