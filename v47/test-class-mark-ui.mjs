@@ -5,6 +5,13 @@ const js=readFileSync(new URL('./marks-entry-console.mjs',import.meta.url),'utf8
 import {EXAM_TERMS} from './term-catalog.mjs';
 const termOptions=[...html.matchAll(/<option value="([^"]+)">[^<]*<\/option>/g)].map(match=>match[1]);
 assert.deepEqual(termOptions,EXAM_TERMS,'Marks Entry dropdown must expose every supported exam term exactly once');
+const examsHtml=readFileSync(new URL('./exams.html',import.meta.url),'utf8');
+const examsJs=readFileSync(new URL('./exams-console.mjs',import.meta.url),'utf8');
+const examOptions=[...examsHtml.matchAll(/<option value="([^"]+)">[^<]*<\/option>/g)].map(match=>match[1]);
+assert.deepEqual(examOptions,EXAM_TERMS,'Exam Management dropdown must expose all six terms');
+assert.ok(examsJs.includes("import {EXAM_TERMS} from './term-catalog.mjs'"),'Exam Management must share term catalog');
+assert.ok(examsJs.includes('EXAM_TERMS.includes(doc.id)'),'Exam Management must list all configured terms');
+
 for(const id of ['classSaveArea','loadClassMarks','classMarkRows','classMarkCount','saveClassMarks'])assert.ok(html.includes('id="'+id+'"'),'Missing full-class UI: '+id);
 for(const snippet of [
  "import {loadCompleteClassRoster} from './complete-class-roster.mjs'",
