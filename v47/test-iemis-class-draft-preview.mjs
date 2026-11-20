@@ -19,4 +19,9 @@ assert.throws(()=>inspectIemisClassDraft({...args,students:[{id:'x'.repeat(129)}
 assert.throws(()=>inspectIemisClassDraft({...args,students:Array.from({length:1501},(_,i)=>({id:'s'+i})),drafts:{}}),/complete class roster/);
 assert.throws(()=>inspectIemisClassDraft({...args,drafts:{s1:valid,s2:valid,s3:valid,outsider:valid}}),/outside the selected class roster/);
 for(const id of ['../other','student/name','student name','x.y','x\\\\y'])assert.throws(()=>inspectIemisClassDraft({...args,students:[{id}],drafts:{}}),/invalid/);
+const secondary={classNo:'9',term:'final',subject:'Computer Science',students:[{id:'s1'},{id:'s2'}]};
+const completeComputer={values:{participation:'4',practical:'36',term:'10',theory:'50'},isAbsent:false,incompatible:false};
+assert.equal(inspectIemisClassDraft({...secondary,drafts:{s1:completeComputer,s2:completeComputer}}).complete,true);
+const missingTheory={...completeComputer,values:{...completeComputer.values,theory:''}};
+assert.deepEqual(inspectIemisClassDraft({...secondary,drafts:{s1:completeComputer,s2:missingTheory}}).invalid.map(x=>x.studentId),['s2']);
 console.log('V47 offline IEMIS class-wide draft completeness tests passed');
