@@ -30,6 +30,8 @@ if(/at most 3 students|max 3/i.test(marks)||/complete\.count\s*>\s*3/.test(save)
 const marksRule=rules.match(/match \/marks\/\{id\} \{([\s\S]*?)\n      \}/)?.[1]??'';
 if(/allow (?:create|update|write):/.test(marksRule))
  blockers.push('Firestore marks rules still allow individual create/update writes outside a verified complete-class publish protocol');
+if(/allow create, update, delete: if false;/.test(marksRule))
+ blockers.push('Firestore marks writes are intentionally disabled until the audited complete-class publish workflow is implemented');
 const publicDir=config.hosting?.public;
 if(typeof publicDir!=='string'||!publicDir||!existsSync(resolve(root,publicDir,'index.html')))
  blockers.push('Firebase Hosting output is missing its index.html');
