@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const s=readFileSync(new URL('./school-exam-workflows.mjs',import.meta.url),'utf8');
+assert.match(s,/const ledger=async\(\)=>\{const epoch=sessionEpoch,\{api,schoolId\}=ctx\(\)/);
+assert.match(s,/\$\('ledgerClass'\)\.onchange=\(\)=>\{sessionEpoch\+\+/);
+assert.match(s,/\$\('ledgerTerm'\)\.onchange=\(\)=>\{sessionEpoch\+\+/);
+assert.match(s,/if\(epoch!==sessionEpoch\|\|ctx\(\)\.schoolId!==schoolId/);
+assert.match(s,/reset:\(\)=>\{sessionEpoch\+\+/);
+assert.match(s,/for\(let page=0;page<30;page\+\+\)\{/);
+console.log('V47 async exam isolation static checks passed');
