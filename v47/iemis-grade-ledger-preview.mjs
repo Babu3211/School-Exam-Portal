@@ -9,7 +9,7 @@ export function previewIemisGradeLedger({classNo,term,students,subjects,draftsBy
   const id=item?.id;
   if(typeof id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(id)||names.has(id))throw Error('Invalid or duplicate subject ID');
   names.add(id);
-  if(typeof item.name!=='string'||!item.name.trim())throw Error('Subject name required');
+  if(typeof item.name!=='string'||!item.name.trim()||item.name.length>150)throw Error('Subject name required');
   const credit=typeof item.creditHour==='number'?item.creditHour:NaN;
   if(!Number.isFinite(credit)||credit<=0||credit>20)throw Error('Positive subject credit required');
   const ledger=previewIemisClassLedger({classNo,term,subject:item.name,students,drafts:draftsBySubject[id]});
