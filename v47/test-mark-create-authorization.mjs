@@ -41,4 +41,16 @@ for(const actor of [
  assert.equal(writes.length,1);
  assert.equal(writes[0][0],'marks/monthly:s1:math');
 }
+// A missing teacher assignment cannot be bypassed by a teacher UID.
+{
+ const {api,writes}=mock();
+ await assert.rejects(createSchoolMarkOnly({db:{},api,actor:{role:'teacher',active:true,schoolId,uid:'teacher-1'},schoolId,input}),/assignment/i);
+ assert.equal(writes.length,0);
+}
+// Invalid marks and missing subject assignments must fail before any write.
+for(const badInput of [{...input,theory:NaN},{...input,practical:-1},{...input,studentId:'../other'}]){
+ const {api,writes}=mock();
+ await assert.rejects(createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId},schoolId,input:badInput}));
+ assert.equal(writes.length,0);
+}
 console.log('V47 direct mark creation authorization checks passed');
