@@ -5,8 +5,13 @@ import {readFileSync} from 'node:fs';
 import {V46_COLLECTIONS} from './rewrite-v46-firestore-paths.mjs';
 const rules=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
 const required=[...V46_COLLECTIONS];
-const absent=required.filter(name=>!rules.includes('match /'+name+'/{'));
-for(const name of required)console.log((absent.includes(name)?'MISSING ':'PRESENT ')+name);
+// A V47 rule can cover a collection through an explicit match OR a narrowly
+// allowlisted wildcard. Counting only literal matches falsely reports gaps.
+const wildcardMatch=rules.match(/match \/\{collection\}\/\{id\} \{([\s\S]*?)\n      \}/)?.[1]??'';
+const wildcardAllowed=[...wildcardMatch.matchAll(/collection in \[([^\]]+)\]/g)].flatMap(m=>[...m[1].matchAll(/['"]([^'"]+)['"]/g)].map(x=>x[1]));
+const status=name=>rules.includes('match /'+name+'/{')?'EXPLICIT':wildcardAllowed.includes(name)?'ALLOWLISTED':'MISSING';
+const absent=required.filter(name=>status(name)==='MISSING');
+for(const name of required)console.log(status(name)+' '+name);
 const studentBlock=rules.match(/match \/students\/\{id\} \{([\s\S]*?)\n      \}/)?.[1]??'';
 const studentRestricted=studentBlock.includes("hasOnly(['name','class','rollNo','schoolId'])");
 if(studentRestricted)console.log('INCOMPATIBLE students: V47 write validator accepts only 4 fields; V46 Excel exports 26 columns');
