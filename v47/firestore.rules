@@ -334,8 +334,7 @@ service cloud.firestore {
           return data.keys().hasOnly(['schoolId','studentId','subjectId','class','active'])
             && data.keys().hasAll(['schoolId','studentId','subjectId','class'])
             && data.schoolId == sid
-            && data.studentId is string && data.studentId.matches('^[A-Za-z0-9_-]{1,128}
-            && exists(studentPath) && exists(subjectPath)
+            && data.studentId is string && data.studentId.matches('^[A-Za-z0-9_-]{1,128}            && exists(studentPath) && exists(subjectPath)
             && get(studentPath).data.get('schoolId','') == sid
             && get(studentPath).data.get('class','') == data.class
             && get(subjectPath).data.get('schoolId','') == sid
@@ -358,6 +357,122 @@ service cloud.firestore {
 }
 )
             && data.subjectId is string && data.subjectId.matches('^[A-Za-z0-9_-]{1,128}
+            && exists(studentPath) && exists(subjectPath)
+            && get(studentPath).data.get('schoolId','') == sid
+            && get(studentPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('schoolId','') == sid
+            && get(subjectPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('active',true) == true;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validAssignment();
+        allow update, delete: if false;
+      }
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','mark_settings','school_settings'] && canRead(sid);
+        allow create: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+            && data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && data.get('active',true) is bool
+            && id == data.studentId + ':' + data.subjectId
+            && exists(studentPath) && exists(subjectPath)
+            && get(studentPath).data.get('schoolId','') == sid
+            && get(studentPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('schoolId','') == sid
+            && get(subjectPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('active',true) == true;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validAssignment();
+        allow update, delete: if false;
+      }
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','mark_settings','school_settings'] && canRead(sid);
+        allow create: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+            && exists(studentPath) && exists(subjectPath)
+            && get(studentPath).data.get('schoolId','') == sid
+            && get(studentPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('schoolId','') == sid
+            && get(subjectPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('active',true) == true;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validAssignment();
+        allow update, delete: if false;
+      }
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','mark_settings','school_settings'] && canRead(sid);
+        allow create: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+            && data.subjectId is string && data.subjectId.matches('^[A-Za-z0-9_-]{1,128}            && exists(studentPath) && exists(subjectPath)
+            && get(studentPath).data.get('schoolId','') == sid
+            && get(studentPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('schoolId','') == sid
+            && get(subjectPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('active',true) == true;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validAssignment();
+        allow update, delete: if false;
+      }
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','mark_settings','school_settings'] && canRead(sid);
+        allow create: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+            && data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && data.get('active',true) is bool
+            && id == data.studentId + ':' + data.subjectId
+            && exists(studentPath) && exists(subjectPath)
+            && get(studentPath).data.get('schoolId','') == sid
+            && get(studentPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('schoolId','') == sid
+            && get(subjectPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('active',true) == true;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validAssignment();
+        allow update, delete: if false;
+      }
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','mark_settings','school_settings'] && canRead(sid);
+        allow create: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
             && exists(studentPath) && exists(subjectPath)
             && get(studentPath).data.get('schoolId','') == sid
             && get(studentPath).data.get('class','') == data.class
