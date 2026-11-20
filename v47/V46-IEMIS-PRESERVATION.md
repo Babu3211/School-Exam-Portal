@@ -34,3 +34,10 @@ The initial V47 school-admin `school-exam-workflows.mjs` has a provisional two-f
 - `iemis-grade-preview.mjs` projects the grade bands and final-grade point mapping from the root V46 `iemis-ledger.js` source.
 - `test-iemis-grade-preview.mjs` compares 10,001 percentage inputs and 4,001 grade-point inputs directly against V46 exports, plus invalid inputs. This does **not** verify V47 GPA, class-completeness, mark persistence, or Grade Sheet parity.
 - School Admin can view a standalone grade-band example; it never saves marks or calculates a student result.
+
+## V47 read-only calculation parity adapters (development only)
+
+- `iemis-summary-preview.mjs` mirrors the V46 `iemisSummary` calculation and tests absent, incomplete, primary learning achievement, nonannual internal, annual internal/theory and grade boundaries against the real V46 source.
+- `iemis-gpa-preview.mjs` mirrors `iemisGpa`, including credit-hour weighting, NG/incomplete fail-closed behavior, and primary vs annual distinction. Regression tests compare its output to V46.
+- `test-iemis-schema-source-parity.mjs` compares all Classes 1–10, four mapped terms and English/Computer field structures directly with V46 `iemisEntrySchema` (80 combinations).
+- These are isolated, read-only functions. **No class-wide IEMIS writer, grade ledger, grade sheet, print workflow, or production deployment is authorized by these tests.**
