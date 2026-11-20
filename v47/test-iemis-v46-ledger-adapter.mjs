@@ -38,7 +38,7 @@ assert.throws(()=>renderCompleteV46TenantGradeLedger({...args,schoolId:'another_
 for(const classNo of [1,2,3,4,5])for(const [term,v46term] of [['1st','first'],['2nd','second'],['3rd','third'],['final','annual']]){
  const schema=iemisEntrySchema(classNo,v46term,'English');
  const values=Object.fromEntries(schema.filter(field=>!field.readonly).map(field=>[field.key,field.key==='count'?'10':field.key==='obtained'?'35':String(field.max)]));
- const record=iemisEntryValues(schema,values);
+ const record=iemisEntryValues(schema,{values,isAbsent:false,incompatible:false});
  assert.equal(iemisSummary(record,{annual:term==='final',primary:true}).complete,true);
  const completeArgs={...args,classNo,term,records:[{...record,schoolId,studentId:'s1',examId,subject:'English'}]};
  const actual=renderCompleteV46TenantGradeLedger(completeArgs);
