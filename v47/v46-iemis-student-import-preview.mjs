@@ -34,3 +34,20 @@ export function previewV46IemisStudentImport({rows,schoolId,existingIemisIds=[]}
  issuedPreviews.add(preview);
  return preview;
 }
+
+// Class/section/search controls for the V47 Students Details preview UI.
+// Filtered rows are read-only views of the original validated preview.
+export function filterV46IemisStudentPreview(preview,{className='',section='',search='',status='all'}={}){
+ if(!preview||!issuedPreviews.has(preview))throw new TypeError('Validated import preview required');
+ if(!['all','new','skip'].includes(status))throw new Error('Invalid preview status filter');
+ const selectedClass=String(className).trim().toLowerCase();
+ const selectedSection=String(section).trim().toLowerCase();
+ const query=String(search).trim().toLowerCase();
+ return Object.freeze(preview.records.filter(record=>{
+  if(selectedClass&&record.class.toLowerCase()!==selectedClass)return false;
+  if(selectedSection&&record.section.toLowerCase()!==selectedSection)return false;
+  if(status!=='all'&&record.status!==status)return false;
+  if(query&&!([record.name,record.studentIemisId,record.excelData['Admission Number']].some(x=>x.toLowerCase().includes(query))))return false;
+  return true;
+ }));
+}
