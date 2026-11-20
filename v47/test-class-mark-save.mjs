@@ -97,6 +97,24 @@ for(const [overrides,message] of [
  await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),/Student subject assignment/);
  assert.equal(writes.length,0);
 }
+// Late failure in a three-student transaction must roll back ALL pending writes.
+for(const broken of [
+ {'students/s3':null},
+ {'students/s3':{schoolId:'school-b',class:classId}},
+ {'subject_assignments/s3:math':null},
+ {'subject_assignments/s3:math':{schoolId,class:classId,studentId:'s3',subjectId,active:false}},
+ {'marks/1st:s3:math':{schoolId}},
+ {'component_marks/1st:s3:math':{schoolId}}
+]){
+ const {api,writes}=mock({
+  'students/s3':{schoolId,class:classId},
+  'subject_assignments/s3:math':{schoolId,class:classId,studentId:'s3',subjectId},
+  ...broken
+ });
+ await assert.rejects(saveCompleteClassMarks({...args,db:{},api,
+  expectedStudentIds:['s1','s2','s3'],entries:[mark('s1'),mark('s2'),mark('s3')]}));
+ assert.equal(writes.length,0,'Late validation failure must not partially save first two students');
+}
 // Each supported term must save under its own scoped document ID.
 for(const examTerm of EXAM_TERMS){
  const {api,writes}=mock();
