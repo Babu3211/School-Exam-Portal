@@ -39,12 +39,19 @@ export function renderV46TenantLedger({schoolId,schoolName,schoolCode='',classNo
 // Official-looking grade output must never be generated from partial class records.
 // Call only after authorization and tenant scoping, and before offering print/export.
 export function renderCompleteV46TenantGradeLedger(args){
- const scoped=renderV46TenantLedger({...args,mode:'grade'});
  const {subjects,students,records,examId,term,classNo}=args;
+ // Validate tenant boundaries before indexing or rendering; never render partial grades.
+ if(!Array.isArray(subjects)||!Array.isArray(students)||!Array.isArray(records))throw Error('Ledger data arrays required');
  const names=subjects.map(s=>typeof s==='string'?s:s?.name).map(iemisSubjectKey);
  if(names.some(name=>!name)||new Set(names).size!==names.length)throw Error('Invalid or duplicate subject roster');
+ const index=new Map();
+ for(const record of records){
+  const key=JSON.stringify([record?.studentId,iemisSubjectKey(record?.subject)]);
+  if(index.has(key))throw Error('Duplicate student subject marks');
+  index.set(key,record);
+ }
  for(const student of students)for(const subject of names){
-  const record=records.find(r=>r.studentId===student.id&&r.examId===examId&&iemisSubjectKey(r.subject)===subject);
+  const record=index.get(JSON.stringify([student.id,subject]));
   if(!record||!iemisSummary(record,{annual:term==='final',primary:Number(classNo)<=5}).complete)throw Error('Class marks incomplete; verified grade ledger unavailable');
   const v46term=term==='final'?'annual':term==='1st'?'first':term==='2nd'?'second':'third';
   const schema=iemisEntrySchema(classNo,v46term,subject);
@@ -59,5 +66,5 @@ export function renderCompleteV46TenantGradeLedger(args){
    if(!['count','full','obtained'].includes(component.key)&&Number(score.fullMarks)!==component.max)throw Error('IEMIS component full marks mismatch');
   }
  }
- return scoped;
+ return renderV46TenantLedger({...args,mode:'grade'});
 }
