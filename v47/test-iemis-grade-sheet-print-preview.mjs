@@ -12,6 +12,7 @@ assert.equal(result.ready,true);
 const sourceGrade=previewIemisGradeSheet(args).student.subjects[0].summary.totalGrade.grade;
 assert.match(result.html,new RegExp('<td>'+sourceGrade.replace('+','\\+')+'</td>'));
 assert.doesNotMatch(result.html,/<td>—<\/td>/);assert.match(result.html,/PREVIEW ONLY/);assert.match(result.html,/NOT VALID FOR OFFICIAL USE/);assert.match(result.html,/@page/);
+assert.match(result.html,/Internal Grade/);assert.match(result.html,/Theory Grade/);assert.match(result.html,/Total Grade/);
 assert.match(result.html,/noindex,nofollow/);
 assert.match(result.html,/background-repeat:repeat/);assert.match(result.html,/background-size:240px 160px/);
 assert.match(result.html,/&lt;script&gt;/);assert.match(result.html,/&lt;img/);assert.match(result.html,/English &amp; &lt;Science&gt;/);
