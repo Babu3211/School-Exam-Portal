@@ -55,7 +55,8 @@ export function renderCompleteV46TenantGradeLedger(args){
    const key=iemisComponentKey(score?.name),component=expected.get(key);
    if(!component||found.has(key))throw Error('IEMIS component schema mismatch');
    found.add(key);
-   if(component.key!=='count'&&component.key!=='full'&&Number(score.fullMarks)!==component.max)throw Error('IEMIS component full marks mismatch');
+   if(key==='obtained'&&Number(classNo)<=5&&Number(score.fullMarks)!==Number(record.scores.find(x=>iemisComponentKey(x.name)==='count')?.fullMarks)*4)throw Error('IEMIS learning achievement full marks mismatch');
+   if(!['count','full','obtained'].includes(component.key)&&Number(score.fullMarks)!==component.max)throw Error('IEMIS component full marks mismatch');
   }
  }
  return scoped;
