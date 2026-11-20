@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {V46_STAFF_EXCEL_HEADERS,v46StaffExcelRow,schoolScopedV46StaffExcel} from './v46-staff-excel-schema.mjs';
+const v46=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const match=v46.match(/const staffExcelHeaders=(\[[^;]+\]);/);
+assert.ok(match,'V46 staff headers not found');
+const original=Function('return '+match[1])();
+assert.deepEqual(V46_STAFF_EXCEL_HEADERS,original,'Staff Excel columns differ from V46');
+const staff={schoolId:'school_A',staffId:'0007',name:'शिक्षक',nameEn:'Teacher',permanentAddress:'Kathmandu',levelCategory:'Secondary',appointmentDateBs:'2080-01-01',appointmentType:'Permanent',qualification:'Masters',subject:'Science',phone:'9800000000',status:'कार्यरत'};
+assert.deepEqual(v46StaffExcelRow(staff),['0007','शिक्षक','Teacher','Kathmandu','Secondary','2080-01-01','Permanent','Masters','Science','9800000000','कार्यरत']);
+const exportData=schoolScopedV46StaffExcel([staff],'school_A');
+assert.equal(exportData.headers.length,11);assert.equal(exportData.rows[0][0],'0007');
+assert.throws(()=>schoolScopedV46StaffExcel([staff],'school_B'),/Cross-school/);
+console.log('PASS: V46 staff Excel 11-column parity and cross-school export guard');
