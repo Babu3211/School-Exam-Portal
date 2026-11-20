@@ -4,10 +4,14 @@ import {loadClassRoster} from './attendance-roster.mjs';
 export async function loadCompleteClassRoster({db,api,actor,schoolId,classId,pageSize=100,maxStudents=1500}){
  if(!Number.isInteger(maxStudents)||maxStudents<1||maxStudents>1500)throw new RangeError('Roster cap must be 1–1500');
  if(!Number.isInteger(pageSize)||pageSize<1||pageSize>100)throw new RangeError('Page size must be 1–100');
+ const identity={uid:actor?.uid,role:actor?.role,active:actor?.active,schoolId:actor?.schoolId};
+ const checkIdentity=()=>{if(actor?.uid!==identity.uid||actor?.role!==identity.role||actor?.active!==identity.active||actor?.schoolId!==identity.schoolId)throw new Error('School membership changed during roster load');};
  const seen=new Set(),students=[];
  let cursor=null,previous=null,pages=0,lastId=null;
  do{
+  checkIdentity();
   const page=await loadClassRoster({db,api,actor,schoolId,schoolClass:classId,pageSize,cursor});
+  checkIdentity();
   pages++;
   if(pages>1501)throw new Error('Roster pagination exceeded safe bound');
   for(const student of page.students){
@@ -23,6 +27,7 @@ export async function loadCompleteClassRoster({db,api,actor,schoolId,classId,pag
    previous=page.cursor.id;cursor=page.cursor;
   }else cursor=null;
  }while(cursor);
+ checkIdentity();
  if(!students.length)throw new Error('Class has no students');
  return {students,studentIds:students.map(s=>s.id),count:students.length,pages};
 }
