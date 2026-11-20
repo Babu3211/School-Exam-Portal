@@ -3,6 +3,7 @@ import {spawnSync} from 'node:child_process';
 import {readdirSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 const suites=[
+ 'test-admin-attendance-safety.mjs',
  'test-iemis-component-preview.mjs',
  'test-school-exam-workflows-safety.mjs',
  'test-school-scope.mjs',
