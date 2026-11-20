@@ -50,7 +50,8 @@ for(const [change,pattern] of [
 for(const [change,pattern] of [
  [{},/Assignment missing/],
  [{'teacher_assignments/school-a:teacher-a:9:math':{schoolId:'school-b',uid,classId,subjectId,active:false}},/identity mismatch/],
- [{'teacher_assignments/school-a:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:false},'members/teacher-a':{schoolId,uid,role:'teacher',active:false}},/Active teacher membership/]
+ [{'teacher_assignments/school-a:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:false},'members/teacher-a':{schoolId,uid,role:'teacher',active:false}},/Active teacher membership/],
+ [{'teacher_assignments/school-a:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:false},'members/teacher-a':{schoolId,uid:'different-teacher',role:'teacher',active:true}},/Active teacher membership/]
  ]){
  const state=setup(change);
  await assert.rejects(setTeacherAssignmentActive({...base,api:state.api,active:true}),pattern);
