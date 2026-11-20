@@ -16,4 +16,7 @@ assert.match(s,/if\(epoch===sessionEpoch\)\$\(status\)\.textContent/);
 assert.match(s,/if\(btn\.disabled\)return/);
 assert.match(s,/School session changed before marks validation/);
 assert.match(s,/School session changed before teacher assignment/);
+assert.match(s,/\$\('ledgerTerm'\)\.onchange=\(\)=>\{sessionEpoch\+\+;ledgerRequest\+\+/);
+assert.match(s,/Ledger request invalidated during pagination/);
+assert.match(s,/Ledger request invalidated during lookup/);
 console.log('V47 async exam isolation static checks passed');
