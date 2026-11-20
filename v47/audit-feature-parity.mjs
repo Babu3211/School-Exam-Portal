@@ -5,7 +5,7 @@ const root=dirname(fileURLToPath(import.meta.url));
 const read=p=>readFileSync(resolve(root,p),'utf8');
 const has=p=>existsSync(resolve(root,p));
 const html=read('index.html'), rules=read('firestore.rules'), hosting=JSON.parse(read('firebase.json'));
-const block=name=>rules.split('match /'+name+'/{id} {')[1]?.split(/\\n\\s*match \\/[^\\n]+\\{/)[0]??'';
+const block=name=>rules.split('match /'+name+'/{id} {')[1]?.split('match /')[0]??'';
 const rawMarks=block('marks'),computerMarks=block('component_marks');
 const checks=[
  ['01','V47 landing is integrated portal',!/development hub|independent prototypes|development only/i.test(html)],
