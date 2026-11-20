@@ -15,4 +15,9 @@ assert.throws(()=>validateCompleteClassMarks({...args,expectedStudentIds:[],entr
 assert.throws(()=>validateCompleteClassMarks({...args,schoolId:'../other',entries:[mark('student-1')]}),/Invalid school ID/);
 assert.throws(()=>validateCompleteClassMarks({...args,expectedStudentIds:Array.from({length:1501},(_,i)=>'s'+i),entries:[]}),/Class roster required/);
 assert.throws(()=>validateCompleteClassMarks({...args,entries:Array.from({length:1501},(_,i)=>mark('s'+i))}),/Mark entries required/);
+for(const invalid of ['   ',true,false,[],{},'0x10','1e2','Infinity','NaN','-1','101']){
+ assert.throws(()=>validateCompleteClassMarks({...args,entries:[mark('student-1'),mark('student-2',{theory:invalid})]}),/Marks must/,'Invalid theory score: '+String(invalid));
+ assert.throws(()=>validateCompleteClassMarks({...args,entries:[mark('student-1'),mark('student-2',{practical:invalid})]}),/Marks must/,'Invalid practical score: '+String(invalid));
+}
+assert.equal(validateCompleteClassMarks({...args,entries:[mark('student-1',{theory:'0',practical:'10.5'}),mark('student-2',{theory:'.5',practical:0})]}).count,2);
 console.log('V47 class marks completeness checks passed');
