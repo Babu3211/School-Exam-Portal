@@ -8,7 +8,7 @@ export function renderIemisGradeSheetPrint({school,...args}){
  const student=result.student;
  const subjects=student.subjects.map((item,index)=>{
   const summary=item.summary??{};
-  return '<tr><td>'+String(index+1)+'</td><td>'+esc(args.subjects.find(s=>s.id===item.subjectId)?.name??item.subjectId)+'</td><td>'+esc(item.creditHour)+'</td><td>'+esc(summary.grade?.grade??summary.grade??'—')+'</td></tr>';
+  return '<tr><td>'+String(index+1)+'</td><td>'+esc(args.subjects.find(s=>s.id===item.subjectId)?.name??item.subjectId)+'</td><td>'+esc(item.creditHour)+'</td><td>'+esc(summary.totalGrade?.grade??'—')+'</td></tr>';
  }).join('');
  if(school.addressEnglish!==undefined&&(typeof school.addressEnglish!=='string'||school.addressEnglish.length>250))throw Error('Invalid school address');
  const name=esc(school.nameEnglish),address=esc(school.addressEnglish??'');
