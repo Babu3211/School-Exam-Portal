@@ -42,7 +42,19 @@ const componentBlock=rules.split('match /component_marks/{id} {')[1]?.split('mat
 assert.ok(componentBlock,'Computer component marks rule must exist');
 assert.ok(componentBlock.includes('allow create: if false;'),'Computer component mark create must remain blocked');
 assert.ok(componentBlock.includes('allow update, delete: if false;'),'Computer component mark update/delete must remain blocked');
-assert.ok(!/allow (?:create|update|write):\s*if\s*(?!false\s*;)/.test(componentBlock),'Computer marks must not have alternate individual write permissions');
+// Check every allow clause, including combined permissions (create, update, delete).
+// A second allow statement is OR-ed with the deny and can silently reopen writes.
+function assertAllMarkWritesDenied(block,label){
+ const clauses=[...block.matchAll(/allow\\s+([^:;]+):\\s*if\\s+([^;]+);/g)];
+ assert.ok(clauses.length>0,label+' must declare permissions');
+ for(const clause of clauses){
+  const permissions=clause[1].split(',').map(x=>x.trim());
+  if(permissions.some(x=>['write','create','update','delete'].includes(x)))
+   assert.equal(clause[2].trim(),'false',label+' contains an alternate writable permission: '+clause[0]);
+ }
+}
+assertAllMarkWritesDenied(marksBlock,'Raw marks');
+assertAllMarkWritesDenied(componentBlock,'Computer component marks');
 assert.equal(rules.split('match /subject_assignments/{id}').length-1,1,'Subject assignment block must occur exactly once');
 assert.equal(rules.split('match /{collection}/{id}').length-1,1,'Generic collection rule must occur exactly once');
 assert.equal(rules.split('match /{document=**}').length-1,1,'Default-deny tail must occur exactly once');
