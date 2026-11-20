@@ -103,12 +103,12 @@ service cloud.firestore {
         }
         allow get, list: if canAdmin(sid)
           || (memberRole(sid, 'teacher') && resource.data.get('uid', '') == request.auth.uid);
-        allow create: if canAdmin(sid) && validTeacherAssignment()
+        allow create: if memberRole(sid, 'school_admin') && validTeacherAssignment()
           && request.resource.data.active == false
           && exists(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid))
           && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('role', '') == 'teacher'
           && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('active', false) == true;
-        allow update: if canAdmin(sid) && validTeacherAssignment()
+        allow update: if memberRole(sid, 'school_admin') && validTeacherAssignment()
           && immutableSchool(sid)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active'])
           && (!request.resource.data.active
