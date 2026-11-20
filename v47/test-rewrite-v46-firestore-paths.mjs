@@ -4,6 +4,9 @@ import {rewriteV46FirestorePaths,V46_COLLECTIONS} from './rewrite-v46-firestore-
 const source=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const result=rewriteV46FirestorePaths(source);
 assert.equal(result.collections.length,V46_COLLECTIONS.length);
+assert.equal(result.dynamicCount,3);
+assert.match(result.source,/collection\(db, "schools", activeSchoolId, name\)/);
+assert.match(result.source,/doc\(db, "schools", activeSchoolId, name, item\.id\)/);
 for(const name of V46_COLLECTIONS)assert.ok(result.collections.includes(name));
 assert.match(result.source,/collection\(db, "schools", activeSchoolId, "students"/);
 assert.match(result.source,/doc\(db, "schools", activeSchoolId, "school_settings"/);
