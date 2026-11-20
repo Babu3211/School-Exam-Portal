@@ -41,7 +41,8 @@ assert.ok(js.includes("({...doc.data(),id:doc.id})"),'Document ID must override 
 assert.ok(js.includes("Authentication changed; sign in again"),'Roster load must check authenticated user');
 assert.ok(js.includes("$('schoolClass').onchange=()=>{invalidateClassMarks();"),'Class change must invalidate old roster, draft and inspection');
 assert.ok(js.includes("$('draftCheckResult').textContent='';$('inspectClassMarks').disabled=true;"),'Invalidation must clear draft and disable inspection');
-assert.ok(js.includes("if(!auth?.currentUser?.uid||auth.currentUser.uid!==actor?.uid)throw new Error('Authentication changed during roster load')"),'Roster completion must recheck authenticated identity');
+assert.ok(js.includes("subjectId=$('subjectId').value,uid=actor.uid,selectedSchoolId=schoolId"),'Roster load must capture original user and school');
+assert.ok(js.includes("if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId||actor?.schoolId!==selectedSchoolId)throw new Error('Authentication or school changed during roster load')"),'Roster completion must recheck user and school identity');
 assert.ok(js.includes("const attempt=epoch,schoolClass=$('schoolClass').value,uid=actor.uid,selectedSchoolId=schoolId"),'Options load must bind its school and user identity');
 assert.ok(js.includes("if(auth?.currentUser?.uid!==uid||actor.uid!==uid||schoolId!==selectedSchoolId)throw new Error('Authentication changed during options load')"),'Paginated options must recheck session after each fetch');
 assert.ok(js.includes("if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('Authentication changed during options load')"),'Options must recheck session before populating selectors');
