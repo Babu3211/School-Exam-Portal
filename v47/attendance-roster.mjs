@@ -6,6 +6,7 @@ export async function loadClassRoster({db,api,actor,schoolId,schoolClass,pageSiz
  if(!canAccessSchool(actor,schoolId,'read'))throw new Error('School membership required');
  if(!validSchoolClass(schoolClass))throw new Error('Invalid class');
  if(!Number.isInteger(pageSize)||pageSize<1||pageSize>100)throw new RangeError('Page size must be 1–100');
+ if(cursor!==null&&(typeof cursor?.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(cursor.id)))throw new TypeError('Invalid roster pagination cursor');
  for(const method of ['collection','query','where','orderBy','limit','getDocs','startAfter'])if(typeof api?.[method]!=='function')throw new TypeError('Missing Firebase SDK method: '+method);
  const constraints=[api.where('class','==',schoolClass),api.orderBy('__name__'),api.limit(pageSize+1)];
  if(cursor)constraints.push(api.startAfter(cursor));
