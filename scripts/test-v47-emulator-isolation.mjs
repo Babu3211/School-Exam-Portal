@@ -106,6 +106,15 @@ try {
   await assertFails(setDoc(computerRef,computerMark));
   await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','subject_assignments','student-2:computer'),{active:true}));
   await assertSucceeds(setDoc(computerRef,computerMark));
+  // Boundary and authorization checks for the Computer 4/36/10 scheme.
+  await assertFails(setDoc(schoolDoc('viewer-a','school-a','component_marks','3rd:student-2:computer'),{...computerMark,term:'3rd'}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-b','component_marks','3rd:student-2:computer'),{...computerMark,term:'3rd',schoolId:'school-b'}));
+  for(const [field,value] of [['component_a',5],['component_b',37],['component_c',11],['component_a',-1],['component_b',-1],['component_c',-1]]){
+    const scores={...computerMark.scores,[field]:value};
+    await assertFails(setDoc(schoolDoc('admin-a','school-a','component_marks','3rd:student-2:computer'),{...computerMark,term:'3rd',scores}));
+  }
+  await assertFails(updateDoc(computerRef,{scores:{component_a:0,component_b:0,component_c:0}}));
+  await assertFails(deleteDoc(computerRef));
   // Computer must not bypass 4/36/10 validation through the two-field raw marks collection.
   const computerRaw={schoolId:'school-a',studentId:'student-2',subjectId:'computer',class:'9',term:'2nd',theory:20,practical:10};
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','2nd:student-2:computer'),computerRaw));
