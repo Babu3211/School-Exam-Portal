@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {previewV46IemisStudentImport,V46_IEMIS_HEADERS} from './v46-iemis-student-import-preview.mjs';
+const schoolId='300160003';
+const rows=[{'IEMIS Code':schoolId,'School':'Sample School','Student IEMIS Id':'00001234','Student Name':'Aarohi Rai','Class':'6','Gender':'Female','Permanent Address':'Dhading'}, {'IEMIS Code':schoolId,'Student IEMIS Id':'00001234','Student Name':'Duplicate','Class':'6'}, {'IEMIS Code':'300160004','Student IEMIS Id':'00005678','Student Name':'Other School','Class':'6'}];
+const result=previewV46IemisStudentImport({rows,schoolId});
+assert.equal(V46_IEMIS_HEADERS.length,26);
+assert.equal(result.total,3);assert.equal(result.ready,1);assert.equal(result.skipped,2);
+assert.equal(result.records[0].studentIemisId,'00001234');
+assert.equal(result.records[0].permanentAddress,'Dhading');
+assert.ok(result.records[1].errors.includes('Duplicate ID within Excel'));
+assert.ok(result.records[2].errors.includes('School IEMIS mismatch'));
+const existing=previewV46IemisStudentImport({rows:[rows[0]],schoolId,existingIemisIds:['00001234']});
+assert.equal(existing.ready,0);assert.equal(existing.skipped,1);
+assert.throws(()=>previewV46IemisStudentImport({rows,schoolId:'school_A'}));
+console.log('PASS: V46 26-column IEMIS preview, leading zeros, duplicate and cross-school rejection');
