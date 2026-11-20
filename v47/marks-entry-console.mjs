@@ -48,7 +48,7 @@ $('loadClassMarks').onclick=async()=>{
   if(attempt!==epoch||classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value)return;
   if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId||actor?.schoolId!==selectedSchoolId)throw new Error('Authentication or school changed during roster load');
   classMarkRoster=roster.students;classMarkContext={classId,term,subjectId};
-  const body=$('classMarkRows');
+  const body=$('classMarkRows'),fragment=document.createDocumentFragment();
   for(const student of roster.students){
    const row=document.createElement('tr');row.dataset.studentId=student.id;
    const name=document.createElement('td');name.textContent=String(student.name??student.id);row.append(name);
@@ -56,8 +56,9 @@ $('loadClassMarks').onclick=async()=>{
     const td=document.createElement('td'),input=document.createElement('input');
     input.type='number';input.min='0';input.max='100';input.step='any';input.dataset.field=field;
     input.setAttribute('aria-label',field+' marks for '+student.id);td.append(input);row.append(td);
-   }body.append(row);
+   }fragment.append(row);
   }
+  body.append(fragment);
   $('classMarkCount').textContent=roster.count+' students in full roster. '+(roster.count>3?'Save blocked: maximum 3 until emulator validation.':'All students must have both marks.');
   status('Full class roster loaded. Check every student before saving.');
  }catch(e){invalidateClassMarks();status('Unable to load complete roster: '+e.message)}
