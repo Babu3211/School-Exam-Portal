@@ -22,5 +22,8 @@ for(const classNo of ['1','2','3','4','5','6','7','8','9','10'])for(const [term,
  assert.throws(()=>previewIemisGradeSheet({...args,students:[...students,{id:'s2',nameEnglish:'Duplicate'}]}),/duplicate/);
  assert.throws(()=>previewIemisGradeSheet({...args,studentId:'s1',draftsBySubject:{...draftsBySubject,outsider:{}}}),/Unexpected/);
  assert.throws(()=>previewIemisGradeSheet({...args,students:[]}),/complete class roster/);
+ const absentDraft={values:{},isAbsent:true,incompatible:false};
+ const absent=previewIemisGradeSheet({...args,draftsBySubject:{...draftsBySubject,eng:{...draftsBySubject.eng,s1:absentDraft}}});
+ assert.equal(absent.ready,false);assert.equal(absent.student,null);
 }
 console.log('V47 read-only grade sheet preview and class-completeness tests passed');
