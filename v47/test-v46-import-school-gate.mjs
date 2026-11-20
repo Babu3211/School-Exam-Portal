@@ -4,6 +4,9 @@ const session={authorization:'firestore-verified-read',uid:'teacher-uid',schoolI
 const ctx=assertV47ImportContext({session,schoolId:'school_A',collection:'students'});
 assert.deepEqual(ctx.path,['schools','school_A','students']);
 assert.equal(attachV47SchoolId({studentName:'Test'},ctx).schoolId,'school_A');
+assert.throws(()=>attachV47SchoolId({studentName:'Test'},{schoolId:'school_A',collection:'students'}),/Verified import context/);
+assert.throws(()=>attachV47SchoolId({studentName:'Test'},{...ctx}),/Verified import context/);
+assert.ok(Object.isFrozen(ctx.path),'School-scoped path must not be mutable');
 assert.throws(()=>attachV47SchoolId({schoolId:'school_B'},ctx),/Cross-school/);
 assert.throws(()=>assertV47ImportContext({session,schoolId:'school_B',collection:'students'}),/Cross-school/);
 assert.throws(()=>assertV47ImportContext({session:{...session,role:'viewer'},schoolId:'school_A',collection:'students'}),/administrators/);
