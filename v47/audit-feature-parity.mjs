@@ -5,6 +5,7 @@ const root=dirname(fileURLToPath(import.meta.url));
 const read=p=>readFileSync(resolve(root,p),'utf8');
 const has=p=>existsSync(resolve(root,p));
 const html=read('index.html'), rules=read('firestore.rules'), hosting=JSON.parse(read('firebase.json'));
+const schoolAdmin=has('school-admin.html')?read('school-admin.html'):'';
 const block=name=>rules.split('match /'+name+'/{id} {')[1]?.split('match /')[0]??'';
 const rawMarks=block('marks'),computerMarks=block('component_marks');
 const writable=section=>[...section.matchAll(/allow\s+([^:;]+):\s*if\s+([^;]+);/g)].some(m=>m[1].split(',').some(p=>['write','create','update','delete'].includes(p.trim()))&&m[2].trim()!=='false');
@@ -18,7 +19,7 @@ const checks=[
  ['07','Marks entry UI exists',has('marks-entry.html')],
  ['08','Computer marks UI exists',has('computer-marks.html')],
  ['09','Academic records UI exists',has('records.html')],
- ['10','Teacher assignment UI exists',has('teacher-assignments.html')],
+ ['10','Teacher assignment UI exists',has('teacher-assignments.html')||(/id="assignTeacher"/.test(schoolAdmin)&&/id="activateAssignment"/.test(schoolAdmin)&&/id="deactivateAssignment"/.test(schoolAdmin))],
  ['11','Official grade ledger UI exists',has('grade-ledger.html')],
  ['12','Official grade sheet UI exists',has('grade-sheet.html')],
  ['13','Hosting output has index',typeof hosting.hosting?.public==='string'&&has(hosting.hosting.public+'/index.html')],
