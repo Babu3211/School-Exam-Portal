@@ -12,4 +12,5 @@ assert.throws(()=>iemisComponentPreview('9','monthly','Computer Science'),/no ve
 assert.equal(iemisComponentPreview('6','1st','English')[2].name,'First Term Examination');
 assert.equal(iemisComponentPreview('9','3rd','English')[2].name,'Third Term Examination');
 assert.equal(iemisComponentPreview('9','final','English')[3].name,'TH (Theory)');
+for(const term of ['1st','2nd','3rd','final'])for(const c of ['1','5','6','8','9','10']){const subject=c==='9'||c==='10'?'Computer Science':'English';const fields=iemisComponentPreview(c,term,subject);assert.ok(fields.every(x=>typeof x.name==='string'&&typeof x.label==='string'));assert.ok(fields.every(x=>x.max===undefined||Number.isFinite(x.max)));}
 console.log('V47 read-only IEMIS schema preview checks passed');
