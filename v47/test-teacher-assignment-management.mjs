@@ -61,7 +61,7 @@ for(const [change,pattern] of [
  await setTeacherAssignmentActive({...base,api:state.api,active:false});
  assert.equal(state.records.get(state.key).active,false);
 }
-for(const badActor of [{role:'viewer',active:true,schoolId},{role:'school_admin',active:true,schoolId:'school-b'}]){
+for(const badActor of [{role:'viewer',active:true,schoolId},{role:'super_admin',active:true},{role:'school_admin',active:true,schoolId:'school-b'}]){
  const state=setup();
  await assert.rejects(createTeacherAssignment({...base,actor:badActor,api:state.api}),/School Admin/);
  assert.equal(state.writes.length,0);
@@ -76,4 +76,28 @@ for(const badActor of [{role:'viewer',active:true,schoolId},{role:'school_admin'
  await assert.rejects(setTeacherAssignmentActive({...base,api:state.api,active:'yes'}),/Active must be boolean/);
  assert.equal(state.writes.length,0);
 }
+// Assignment creation and activation must fail if the admin session changes
+// after the transaction has started, with no partial writes.
+for(const action of ['create','activate']){
+ for(const mutate of [
+  a=>{a.active=false},
+  a=>{a.role='viewer'},
+  a=>{a.schoolId='school-b'},
+  a=>{a.uid='other-admin'}
+ ]){
+  const changingActor={...actor};
+  const state=setup(action==='activate'?{[stateKey()]:{schoolId,uid,classId,subjectId,active:false}}:{});
+  const original=state.api.runTransaction;
+  state.api.runTransaction=(db,callback)=>original(db,async tx=>{
+   const get=tx.get;
+   let changed=false;
+   tx.get=async ref=>{const result=await get(ref);if(!changed){changed=true;mutate(changingActor)}return result};
+   return callback(tx);
+  });
+  const params={...base,actor:changingActor,api:state.api};
+  await assert.rejects(action==='create'?createTeacherAssignment(params):setTeacherAssignmentActive({...params,active:true}),/identity changed/);
+  assert.equal(state.writes.length,0,'Revoked admin must not change teacher assignments');
+ }
+}
+function stateKey(){return 'teacher_assignments/school-a:teacher-a:9:math'}
 console.log('V47 teacher assignment transaction tests passed');
