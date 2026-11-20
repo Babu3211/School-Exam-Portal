@@ -23,6 +23,7 @@ for(const classNo of ['1','5','6','9','10'])for(const [term,v46term] of [['1st',
  assert.throws(()=>previewIemisGradeLedger({...args,subjects:[subjects[0],subjects[0]]}),/duplicate/);
  assert.throws(()=>previewIemisGradeLedger({...args,subjects:[{...subjects[0],creditHour:0}]}),/Positive/);
  assert.throws(()=>previewIemisGradeLedger({...args,subjects:[{...subjects[0],creditHour:'4'}]}),/Positive/);
+ assert.throws(()=>previewIemisGradeLedger({...args,subjects:[{...subjects[0],creditHour:21}]}),/Positive/);
  assert.throws(()=>previewIemisGradeLedger({...args,draftsBySubject:{...draftsBySubject,foreign:{}}}),/Unexpected/);
 }
 console.log('V47 multi-subject grade ledger GPA source parity and incomplete-class checks passed');
