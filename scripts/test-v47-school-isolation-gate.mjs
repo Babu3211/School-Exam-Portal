@@ -45,7 +45,7 @@ assert.ok(componentBlock.includes('allow update, delete: if false;'),'Computer c
 // Check every allow clause, including combined permissions (create, update, delete).
 // A second allow statement is OR-ed with the deny and can silently reopen writes.
 function assertAllMarkWritesDenied(block,label){
- const clauses=[...block.matchAll(/allow\\s+([^:;]+):\\s*if\\s+([^;]+);/g)];
+ const clauses=[...block.matchAll(/allow\s+([^:;]+):\s*if\s+([^;]+);/g)];
  assert.ok(clauses.length>0,label+' must declare permissions');
  for(const clause of clauses){
   const permissions=clause[1].split(',').map(x=>x.trim());
