@@ -123,4 +123,30 @@ for(const mutate of [
  });
  assert.equal(attempts,75);
 }
+// At scale, a revoked school admin after the 74th committed batch must
+// prevent batch 75 from starting, preserving the exact 740 saved count.
+{
+ const largeEntries=Array.from({length:1500},(_,i)=>({studentId:'s'+i,class:'9',date:'2026-11-18',present:true}));
+ const changingActor={...actor,uid:'admin-a'};
+ let batchesStarted=0,commitsDone=0;
+ const revokingApi={
+  doc:(_db,...parts)=>parts.join('/'),
+  getDoc:async()=>({exists:()=>true,data:()=>({schoolId,class:'9'})}),
+  writeBatch:()=>{batchesStarted++;return {
+   set:()=>{},
+   commit:async()=>{commitsDone++;if(commitsDone===74)changingActor.active=false}
+  }}
+ };
+ await assert.rejects(saveLoadedClassAttendance({
+  db:{},api:revokingApi,actor:changingActor,schoolId,entries:largeEntries
+ }),error=>{
+  assert.ok(error instanceof PartialAttendanceSaveError);
+  assert.equal(error.saved,740);
+  assert.equal(error.total,1500);
+  assert.match(error.cause.message,/School Admin/);
+  return true;
+ });
+ assert.equal(batchesStarted,74,'Revoked admin must not start batch 75');
+ assert.equal(commitsDone,74);
+}
 console.log('V47 attendance partial-save recovery contract passed');
