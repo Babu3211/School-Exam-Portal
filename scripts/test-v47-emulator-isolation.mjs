@@ -123,6 +123,15 @@ try {
   await assertFails(setDoc(schoolDoc('viewer-a','school-a','members','forged'),{uid:'forged',schoolId:'school-a',role:'viewer',active:false}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','exams','1st'),{schoolId:'school-a',term:'final'}));
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','exams','1st'),{schoolId:'school-a',term:'1st'}));
+
+  // All six V47 exam terms must be writable by this school only.
+  for(const term of ['weekly','monthly','2nd','3rd','final']){
+    await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','exams',term),{schoolId:'school-a',term}));
+    await assertFails(setDoc(schoolDoc('viewer-a','school-a','exams',term),{schoolId:'school-a',term}));
+    await assertFails(setDoc(schoolDoc('admin-a','school-b','exams',term),{schoolId:'school-b',term}));
+  }
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','exams','midterm'),{schoolId:'school-a',term:'midterm'}));
+
   await assertFails(deleteDoc(schoolDoc('admin-a','school-a','exams','1st')));
   await assertSucceeds(getDoc(schoolDoc('super-a','school-b','students','student-1')));
   await assertFails(getDoc(schoolDoc('outsider','school-a','members','admin-a')));
