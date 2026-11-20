@@ -35,6 +35,26 @@ assert.equal(rules.split('match /exams/{id}').length-1,1,'Duplicated exam rule')
 assert.equal(rules.split('match /attendance/{id}').length-1,1,'Duplicated attendance rule');
 assert.ok(!rules.includes("matches('^[A-Za-z0-9_-]{1,128}\\n"),'Truncated regex');
 assert.ok(!rules.includes("matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}\\n"),'Truncated date regex');
+// A school suspension must revoke every member role, while preserving
+// super-admin oversight. Mutation checks prevent accidental bypasses.
+const activeMemberBlock=rules.split('function activeMember(sid) {')[1]?.split('\n    }')[0]??'';
+assert.ok(activeMemberBlock.includes('activeSchool(sid)'), 'Active membership must require an active school');
+assert.ok(activeMemberBlock.includes("get(memberPath(sid)).data.get('active', false) == true"),'Member must be active');
+assert.ok(activeMemberBlock.includes("get(memberPath(sid)).data.get('schoolId', '') == sid"),'Member must belong to requested school');
+const canReadBlock=rules.match(/function canRead\(sid\) \{ return ([^;]+); \}/)?.[1]??'';
+assert.equal(canReadBlock.trim(),'superAdmin() || activeMember(sid)','Read permission must not bypass active membership');
+for(const mutation of [
+ activeMemberBlock.replace('activeSchool(sid)','true'),
+ activeMemberBlock.replace("get(memberPath(sid)).data.get('active', false) == true",'true'),
+ activeMemberBlock.replace("get(memberPath(sid)).data.get('schoolId', '') == sid",'true')
+]){
+ assert.ok(mutation!==activeMemberBlock,'Security mutation must change member policy');
+ assert.ok(!(
+  mutation.includes('activeSchool(sid)')
+  && mutation.includes("get(memberPath(sid)).data.get('active', false) == true")
+  && mutation.includes("get(memberPath(sid)).data.get('schoolId', '') == sid")
+ ),'Mutated membership must fail active-school/identity checks');
+}
 const marksBlock=rules.split('match /marks/{id} {')[1]?.split('function teacherAttendanceAllowed')[0]??'';
 assert.match(marksBlock,/allow create, update, delete: if false;/,'Individual marks writes must remain blocked until audited publish');
 assert.ok(!/allow (?:create|update):/.test(marksBlock),'No alternate individual mark write permissions');
