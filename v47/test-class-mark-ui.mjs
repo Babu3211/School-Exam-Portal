@@ -45,4 +45,6 @@ assert.ok(js.includes("if(!auth?.currentUser?.uid||auth.currentUser.uid!==actor?
 assert.ok(js.includes("const attempt=epoch,schoolClass=$('schoolClass').value,uid=actor.uid,selectedSchoolId=schoolId"),'Options load must bind its school and user identity');
 assert.ok(js.includes("if(auth?.currentUser?.uid!==uid||actor.uid!==uid||schoolId!==selectedSchoolId)throw new Error('Authentication changed during options load')"),'Paginated options must recheck session after each fetch');
 assert.ok(js.includes("if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('Authentication changed during options load')"),'Options must recheck session before populating selectors');
+assert.ok(js.includes("$('classMarkRows').addEventListener('input',event=>"),'Draft inspection must be invalidated on edited marks');
+assert.ok(js.includes("Draft changed. Inspect again before saving."),'Old draft inspection must not appear current after edits');
 console.log('V47 full-class marks UI contract passed');
