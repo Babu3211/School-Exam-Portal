@@ -89,7 +89,7 @@ $('inspectClassMarks').onclick=()=>{
 };
 $('saveClassMarks').onclick=async()=>{
  if(busy||!classMarkContext||actor?.role!=='school_admin')return;
- const context=classMarkContext,attempt=epoch;
+ const context=classMarkContext,attempt=epoch,uid=actor.uid,selectedSchoolId=schoolId;
  if(context.classId!==$('schoolClass').value||context.term!==$('term').value||context.subjectId!==$('subjectId').value){invalidateClassMarks();status('Class, term or subject changed; reload roster');return}
  if(classMarkRoster.length>3){status('Save blocked: full class has more than 3 students. No marks saved.');return}
  const entries=collectClassMarkEntries();
@@ -102,8 +102,8 @@ $('saveClassMarks').onclick=async()=>{
  if(!confirm('Save marks for ALL '+entries.length+' students? Existing marks cannot be overwritten.'))return;
  lock(true);
  try{
-  if(!auth?.currentUser?.uid||auth.currentUser.uid!==actor.uid)throw new Error('Authentication changed');
-  const result=await saveVerifiedSmallClassMarks({db,api,actor,schoolId,...context,entries});
+  if(attempt!==epoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||actor?.schoolId!==selectedSchoolId||schoolId!==selectedSchoolId)throw new Error('Authentication or school changed before save');
+  const result=await saveVerifiedSmallClassMarks({db,api,actor,schoolId:selectedSchoolId,...context,entries});
   if(attempt===epoch){invalidateClassMarks();status('Atomic class marks saved: '+result.saved+' records (development only)')}
  }catch(e){if(attempt===epoch)status('Class marks NOT saved: '+e.message)}
  finally{if(attempt===epoch)lock(false)}
