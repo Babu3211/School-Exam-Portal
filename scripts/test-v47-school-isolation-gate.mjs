@@ -70,7 +70,7 @@ for(const [label,block] of [['Raw marks',marksBlock],['Computer component marks'
  }
 }
 
-const teacherAssignmentBlock=rules.split('match /teacher_assignments/{id} {')[1]?.split('match /exams/{id}')[0]??'';
+const teacherAssignmentBlock=rules.split('match /teacher_assignments/{id} {')[1]?.split(/\n\s*match \/[^\n]+\{/)[0]??'';
 assert.ok(teacherAssignmentBlock,'Teacher assignment rules must exist');
 assert.ok(teacherAssignmentBlock.includes("allow create: if memberRole(sid, 'school_admin')"),'Teacher assignment create must require school admin');
 assert.ok(teacherAssignmentBlock.includes("allow update: if memberRole(sid, 'school_admin')"),'Teacher assignment update must require school admin');
