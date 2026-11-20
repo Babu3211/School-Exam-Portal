@@ -1,7 +1,7 @@
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {loadMarksByClassTerm} from './marks-query.mjs';
-import {rawMarksCsv} from './marks-preview-export.mjs';
+import {excelWorkbook} from './excel-workbook.mjs';
 import {auditLoadedMarks} from './marks-audit.mjs';
 const $=id=>document.getElementById(id),status=message=>{$('message').textContent=message};
 let auth,authSdk,api,db,actor,schoolId,cursor=null,records=[],epoch=0,busy=false,loadingEpoch=null,hasMore=false;
@@ -56,14 +56,15 @@ $('export').onclick=async()=>{
  try{
   await confirmExportSession(expectedSchoolId,uid);
   if(current!==epoch||!actor||actor.uid!==uid||schoolId!==expectedSchoolId||$('schoolClass').value!==selectedClass||$('term').value!==selectedTerm||busy||hasMore)return;
-  const csv=rawMarksCsv(records);
-  const blob=new Blob(['\\uFEFF',csv],{type:'text/csv;charset=utf-8'});
+  const columns=['studentId','subjectId','class','term','theory','practical'];
+  const workbook=excelWorkbook(columns,records.map(record=>columns.map(key=>record[key])),{sheetName:'Raw Marks'});
+  const blob=workbook;
   const url=URL.createObjectURL(blob),link=document.createElement('a');
   try{
-   link.href=url;link.download='smss-v47-raw-marks-'+expectedSchoolId+'-'+selectedClass+'-'+selectedTerm+'.csv';
+   link.href=url;link.download='smss-v47-raw-marks-'+expectedSchoolId+'-'+selectedClass+'-'+selectedTerm+'.xlsx';
    document.body.append(link);link.click();
   }finally{link.remove();URL.revokeObjectURL(url)}
-  status('Exported '+records.length+' raw records (not official grades)');
+  status('Exported '+records.length+' Excel raw records (not official grades)');
  }catch(e){if(current===epoch)status('Export blocked: '+e.message)}
  finally{if(current===epoch)$('export').disabled=!actor||busy||hasMore||records.length===0||records.length>1500}
 };
