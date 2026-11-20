@@ -37,7 +37,7 @@ export async function setTeacherAssignmentActive({db,api,actor,schoolId,uid,clas
   if(typeof data.active!=='boolean')throw new Error('Assignment status invalid');
   if(active){
    const member=await tx.get(api.doc(db,'schools',schoolId,'members',uid));
-   if(!member.exists()||member.data().role!=='teacher'||member.data().active!==true||member.data().schoolId!==schoolId)throw new Error('Active teacher membership required');
+   if(!member.exists()||member.data().uid!==uid||member.data().role!=='teacher'||member.data().active!==true||member.data().schoolId!==schoolId)throw new Error('Active teacher membership required');
   }
   if(actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId||!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin identity changed during assignment transaction');
   tx.update(ref,{active});
