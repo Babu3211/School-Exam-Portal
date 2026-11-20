@@ -309,7 +309,8 @@ service cloud.firestore {
             && !exists(/databases/$(database)/documents/schools/$(sid)/marks/$(id));
         }
         allow get, list: if canRead(sid);
-        allow create: if canAdmin(sid) && validComputerComponent();
+        // Component marks also require the future complete-class publish gate.
+        allow create: if false;
         allow update, delete: if false;
       }
       match /subjects/{id} {
