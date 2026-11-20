@@ -25,3 +25,6 @@ Run `node v47/audit-v46-multischool-migration.mjs` to display blockers; nonzero 
 - Preserve V46 examination data semantics, including 9–10 Computer 4 / 36 / 10, and keep existing student and staff records intact. Any new terms or classes must be additive and must not change already verified V46 result logic.
 - For every adapted exam module, compare the V47 output against the same V46 fixtures before allowing a write or release. Require explicit pass/fail evidence for subject order, totals, NG, GPA, ledger and print/PDF output; no claim of IEMIS re-verification without an actual comparison.
 - Use a separate V47 Firebase project and school-scoped collections; never migrate live V46 data destructively or enable cross-school reads.
+
+## V46 collection inventory — migration coverage
+Run `node v47/inventory-v46-firestore.mjs` before and after porting. The V46 source contains direct references to these groups: students, staff, classes, subjects, marks, mark_settings, exams, attendance, user_roles, school_settings, school_public_branding, school_gallery, audit_logs, certificates, public_results, public_result_lookup and public_result_exams. All need a school-scope decision and matching Firestore rules. Public result lookup must never leak another school's records. A literal-call inventory is not a substitute for checking dynamic paths and transaction callbacks.
