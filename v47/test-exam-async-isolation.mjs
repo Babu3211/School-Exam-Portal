@@ -13,4 +13,7 @@ assert.match(s,/request=\+\+ledgerRequest/);
 assert.match(s,/request!==ledgerRequest/);
 assert.match(s,/rosterRequest\+\+;ledgerRequest\+\+/);
 assert.match(s,/if\(epoch===sessionEpoch\)\$\(status\)\.textContent/);
+assert.match(s,/if\(btn\.disabled\)return/);
+assert.match(s,/School session changed before marks validation/);
+assert.match(s,/School session changed before teacher assignment/);
 console.log('V47 async exam isolation static checks passed');
