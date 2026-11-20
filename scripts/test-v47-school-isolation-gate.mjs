@@ -70,6 +70,9 @@ for(const [label,block] of [['Raw marks',marksBlock],['Computer component marks'
  }
 }
 
+const examBlock=rules.split('match /exams/{id} {')[1]?.split(/\n\s*match \/[^\n]+\{/)[0]??'';
+assert.ok(examBlock.includes("allow create: if memberRole(sid, 'school_admin')"),'Exam creation must require school admin');
+assert.ok(!examBlock.includes('allow create: if canAdmin(sid)'),'Super admin must not bypass exam creation policy');
 const teacherAssignmentBlock=rules.split('match /teacher_assignments/{id} {')[1]?.split(/\n\s*match \/[^\n]+\{/)[0]??'';
 assert.ok(teacherAssignmentBlock,'Teacher assignment rules must exist');
 assert.ok(teacherAssignmentBlock.includes("allow create: if memberRole(sid, 'school_admin')"),'Teacher assignment create must require school admin');
