@@ -8,7 +8,7 @@ export class PartialAttendanceSaveError extends Error {
 // Multiple batches are NOT one atomic transaction. Stop immediately on failure and report partial progress.
 export async function saveLoadedClassAttendance({db,api,actor,schoolId,entries,onProgress=()=>{}}){
  validateSchoolId(schoolId);
- if(!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin permission required');
+ if(actor?.role!=='school_admin'||!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin permission required');
  if(!Array.isArray(entries)||entries.length===0||entries.length>1500)throw new RangeError('Enter 1–1500 selected students');
  const validated=entries.map(validateAttendance);
  const date=validated[0].date,schoolClass=validated[0].class,ids=new Set();
