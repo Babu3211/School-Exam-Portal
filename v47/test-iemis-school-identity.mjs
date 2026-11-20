@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {assertIemisSchoolId,createIemisSchoolRegistration} from './iemis-school-identity.mjs';
+import {readFileSync} from 'node:fs';
+const school=createIemisSchoolRegistration({iemisCode:'001234567',name:'Example Secondary School'});
+assert.equal(school.id,'001234567');assert.equal(school.iemisCode,school.id);assert.equal(school.active,false);
+assert.equal(assertIemisSchoolId('12345'),'12345');
+for(const invalid of [1234567,'abc12345','12','12345/another',''])assert.throws(()=>assertIemisSchoolId(invalid));
+const rules=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
+assert.match(rules,/return sid\.matches\('\^\[0-9\]\{5,20\}\$'\)/);
+assert.match(rules,/request\.resource\.data\.iemisCode == sid/);
+assert.match(rules,/request\.resource\.data\.keys\(\)\.hasAll\(\['id', 'name', 'iemisCode', 'active'\]\)/);
+console.log('PASS: school ID is IEMIS number, leading zeros preserved, registration rules enforce equality');
