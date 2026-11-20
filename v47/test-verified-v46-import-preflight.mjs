@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import {verifyV46ImportPreflight} from './verified-v46-import-preflight.mjs';
-const uid='firebaseUID123',schoolId='school_A';
+const uid='firebaseUID123',schoolId='001234567';
 const auth={currentUser:{uid}};
-const docs={'schools/school_A':{id:schoolId,active:true},['schools/'+schoolId+'/members/'+uid]:{uid,schoolId,role:'school_admin',active:true}};
+const docs={'schools/001234567':{id:schoolId,active:true},['schools/'+schoolId+'/members/'+uid]:{uid,schoolId,role:'school_admin',active:true}};
 const readDocument=async path=>docs[path]??null;
 const good=await verifyV46ImportPreflight({auth,schoolId,collection:'students',readDocument});
-assert.deepEqual(good.path,['schools','school_A','students']);
-await assert.rejects(verifyV46ImportPreflight({auth,schoolId:'school_B',collection:'students',readDocument}),/School unavailable/);
+assert.deepEqual(good.path,['schools','001234567','students']);
+await assert.rejects(verifyV46ImportPreflight({auth,schoolId:'009876543',collection:'students',readDocument}),/School unavailable/);
 await assert.rejects(verifyV46ImportPreflight({auth,schoolId,collection:'staff',readDocument:async path=>path.includes('/members/')?{...docs[path],role:'viewer'}:docs[path]}),/School administrator/);
 await assert.rejects(verifyV46ImportPreflight({auth,schoolId,collection:'staff',readDocument:async path=>path.includes('/members/')?{...docs[path],active:false}:docs[path]}),/Membership unavailable/);
 const switchingAuth={currentUser:{uid}};
