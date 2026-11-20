@@ -65,6 +65,29 @@ try {
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','marks','mark-1'),{schoolId:'school-a',score:20}));
   const adminRawMark={schoolId:'school-a',studentId:'student-2',subjectId:'math',class:'9',term:'1st',theory:20,practical:10};
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),adminRawMark));
+
+  // Regression: raw mark rules must reject inactive, mismatched or foreign assignments.
+  await env.withSecurityRulesDisabled(async ctx=>{
+    await updateDoc(doc(ctx.firestore(),'schools','school-a','subject_assignments','student-2:math'),{active:false});
+  });
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','monthly:student-2:math'),{...adminRawMark,term:'monthly'}));
+  await env.withSecurityRulesDisabled(async ctx=>{
+    await updateDoc(doc(ctx.firestore(),'schools','school-a','subject_assignments','student-2:math'),{active:true,studentId:'student-1'});
+  });
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','monthly:student-2:math'),{...adminRawMark,term:'monthly'}));
+  await env.withSecurityRulesDisabled(async ctx=>{
+    await updateDoc(doc(ctx.firestore(),'schools','school-a','subject_assignments','student-2:math'),{studentId:'student-2',subjectId:'science'});
+  });
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','monthly:student-2:math'),{...adminRawMark,term:'monthly'}));
+  await env.withSecurityRulesDisabled(async ctx=>{
+    await updateDoc(doc(ctx.firestore(),'schools','school-a','subject_assignments','student-2:math'),{subjectId:'math',schoolId:'school-b'});
+  });
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','monthly:student-2:math'),{...adminRawMark,term:'monthly'}));
+  await env.withSecurityRulesDisabled(async ctx=>{
+    await updateDoc(doc(ctx.firestore(),'schools','school-a','subject_assignments','student-2:math'),{schoolId:'school-a'});
+  });
+  await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','marks','monthly:student-2:math'),{...adminRawMark,term:'monthly'}));
+
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','missing-scope'),{score:20}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','marks','wrong-scope'),{schoolId:'school-b',score:20}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','marks','1st:student-2:math'),{schoolId:'school-b'}));
