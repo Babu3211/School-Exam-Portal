@@ -304,5 +304,18 @@ try {
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-20_student-1'),{...teacherAttendance,date:'2026-11-20'}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','members','teacher-a'),{active:true}));
 
+  // Suspended schools must lose member read/write access immediately.
+  await assertSucceeds(updateDoc(doc(db('super-a'),'schools','school-a'),{active:false}));
+  await assertFails(getDoc(schoolDoc('admin-a','school-a','students','student-1')));
+  await assertFails(getDoc(schoolDoc('viewer-a','school-a','students','student-1')));
+  await assertFails(getDoc(schoolDoc('teacher-a','school-a','students','student-1')));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','attendance','2026-11-22_student-1'),{...adminAttendance,date:'2026-11-22'}));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-22_student-1'),{...teacherAttendance,date:'2026-11-22'}));
+  // Super Admin retains oversight and may restore the school.
+  await assertSucceeds(getDoc(doc(db('super-a'),'schools','school-a')));
+  await assertSucceeds(updateDoc(doc(db('super-a'),'schools','school-a'),{active:true}));
+  await assertSucceeds(getDoc(schoolDoc('admin-a','school-a','students','student-1')));
+  await assertSucceeds(getDoc(schoolDoc('viewer-a','school-a','students','student-1')));
+
   console.log('V47 emulator isolation and role checks passed');
 } finally {await env.cleanup();}
