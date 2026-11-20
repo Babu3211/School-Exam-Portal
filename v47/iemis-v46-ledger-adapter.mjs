@@ -10,6 +10,9 @@ export function renderV46TenantLedger({schoolId,schoolName,schoolCode='',classNo
  if(!Number.isInteger(Number(classNo))||Number(classNo)<1||Number(classNo)>10)throw Error('Unsupported V46 IEMIS class');
  if(!Array.isArray(subjects)||!Array.isArray(students)||!Array.isArray(records))throw Error('Ledger data arrays required');
  if(typeof examId!=='string'||!examId)throw Error('Exam ID required');
+ if(typeof schoolCode!=='string'||schoolCode.length>64)throw Error('Invalid school code');
+ if(typeof schoolName!=='string'||schoolName.length>160)throw Error('Invalid school name');
+ if(subjects.some(sub=>typeof sub!=='string'&&(!sub||typeof sub!=='object')))throw Error('Invalid subject roster');
  for(const item of [...students,...records]){
   if(!item||item.schoolId!==schoolId)throw Error('Cross-school or unscoped ledger data');
  }
