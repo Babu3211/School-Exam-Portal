@@ -41,12 +41,12 @@ $('subjectId').onchange=()=>{invalidateClassMarks();lock(false)};
 $('loadClassMarks').onclick=async()=>{
  if(busy||actor?.role!=='school_admin'||!subjectsLoaded||loadedSubjectClass!==$('schoolClass').value||!$('subjectId').value){status('Load active class subjects first');return}
  if(!auth?.currentUser?.uid||auth.currentUser.uid!==actor.uid){status('Authentication changed; sign in again');return}
- const attempt=epoch,classId=$('schoolClass').value,term=$('term').value,subjectId=$('subjectId').value;
+ const attempt=epoch,classId=$('schoolClass').value,term=$('term').value,subjectId=$('subjectId').value,uid=actor.uid,selectedSchoolId=schoolId;
  invalidateClassMarks();lock(true);
  try{
   const roster=await loadCompleteClassRoster({db,api,actor,schoolId,classId});
   if(attempt!==epoch||classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value)return;
-  if(!auth?.currentUser?.uid||auth.currentUser.uid!==actor?.uid)throw new Error('Authentication changed during roster load');
+  if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId||actor?.schoolId!==selectedSchoolId)throw new Error('Authentication or school changed during roster load');
   classMarkRoster=roster.students;classMarkContext={classId,term,subjectId};
   const body=$('classMarkRows');
   for(const student of roster.students){
