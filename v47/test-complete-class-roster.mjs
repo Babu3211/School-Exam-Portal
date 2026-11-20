@@ -22,6 +22,9 @@ await assert.rejects(loadCompleteClassRoster({...base,api:mock([docs[0],docs[0],
 await assert.rejects(loadCompleteClassRoster({...base,api:mock([docs[1],docs[0],docs[2]])}),/pagination order changed/);
 await assert.rejects(loadCompleteClassRoster({...base,api:mock([docs[0],docs[2],docs[1]])}),/pagination order changed/);
 await assert.rejects(loadCompleteClassRoster({...base,api:mock([docs[0],['s2',{schoolId:'school-b',class:'9'}]])}),/Cross-school/);
+await assert.rejects(loadCompleteClassRoster({...base,pageSize:0,api:mock()}),/Page size/);
+await assert.rejects(loadCompleteClassRoster({...base,pageSize:101,api:mock()}),/Page size/);
+await assert.rejects(loadCompleteClassRoster({...base,pageSize:1.5,api:mock()}),/Page size/);
 await assert.rejects(loadCompleteClassRoster({...base,maxStudents:0,api:mock()}),/Roster cap/);
 await assert.rejects(loadCompleteClassRoster({...base,maxStudents:1501,api:mock()}),/Roster cap/);
 await assert.rejects(loadCompleteClassRoster({...base,actor:{role:'viewer',active:true,schoolId:'school-b'},api:mock()}),/School membership/);
