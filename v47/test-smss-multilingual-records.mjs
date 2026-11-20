@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {preserveRecordText,normalizeSearchText,matchesMultilingualSearch,preserveMultilingualRecord,MULTILINGUAL_INPUT_POLICY} from './smss-multilingual-records.mjs';
+const record={studentName:'  सीता तामाङ  ',studentNameNepali:'सीता तामाङ',fatherName:'राम तामाङ',school:'श्री जनज्योति विद्यालय',permanentAddress:'धादिङ',class:'कक्षा ६',rollNo:0};
+const saved=preserveMultilingualRecord(record);
+assert.equal(saved.studentName,'सीता तामाङ');
+assert.equal(saved.school,'श्री जनज्योति विद्यालय');
+assert.equal(saved.class,'कक्षा ६');
+assert.equal(saved.rollNo,0);
+assert.equal(record.studentName,'  सीता तामाङ  ');
+assert.ok(matchesMultilingualSearch(saved,'तामाङ'));
+assert.ok(matchesMultilingualSearch(saved,'धादिङ'));
+assert.ok(matchesMultilingualSearch(saved,'सीता'));
+assert.equal(matchesMultilingualSearch(saved,'Unknown'),false);
+assert.ok(matchesMultilingualSearch({nameEn:'Sita Tamang'},'sita'));
+assert.equal(preserveRecordText(' नेपाली '),'नेपाली');
+assert.equal(normalizeSearchText(' SCHOOL '),'school');
+assert.equal(MULTILINGUAL_INPUT_POLICY.transliteration,'Never automatic');
+console.log('PASS: Nepali Unicode preserved in records and searchable without changing class or roll');
