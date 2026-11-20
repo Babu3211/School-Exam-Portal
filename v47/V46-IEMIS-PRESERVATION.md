@@ -20,3 +20,11 @@ V46 is the verified source of truth for CDC/IEMIS 2083. Do not invent or substit
 
 ## Current status
 The initial V47 school-admin `school-exam-workflows.mjs` has a provisional two-field marks form and raw ledger. This is NOT CDC/IEMIS parity. Saving that simplified form for Classes 1–10 is explicitly blocked until the verified V46 component workflow is integrated and tested. Existing test-school records are not automatically migrated or modified.
+
+## V47 exam-term mapping and current safety boundary (2026-11-20)
+
+- V47 `1st` maps to V46 `first`, `2nd` to `second`, `3rd` to `third`, and `final` to `annual` for **read-only component field previews** only. These are display mappings, not proof of identical saved results.
+- `weekly` and `monthly` are V47 additions with no verified V46 component mapping for Classes 6–10; the preview refuses them instead of inventing marks structure.
+- V47 Classes 1–10 simplified marks saves remain blocked until the verified V46 component writer, complete-class validation, CDC calculations and tenant-scoped rules are integrated and emulator-tested.
+- The raw ledger is not a Grade Ledger and must not be used as a final result or Grade Sheet.
+- V47 Firestore rule and index changes require independent publication to the V47 Firebase project; hosting-only preview does not publish them.
