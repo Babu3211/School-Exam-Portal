@@ -33,7 +33,7 @@ if(!marksRule)
 // Firestore permission statements are OR-ed. Inspect combined and individual
 // write permissions rather than only matching "allow create:".
 function writePermissions(block){
- return [...block.matchAll(/allow\\s+([^:;]+):\\s*if\\s+([^;]+);/g)]
+ return [...block.matchAll(/allow\s+([^:;]+):\s*if\s+([^;]+);/g)]
   .filter(match=>match[1].split(',').map(x=>x.trim()).some(x=>['write','create','update','delete'].includes(x)))
   .map(match=>({permissions:match[1].trim(),condition:match[2].trim()}));
 }
@@ -44,7 +44,7 @@ if(rawWrites.some(rule=>rule.condition!=='false'))
  blockers.push('Firestore marks rules contain a writable permission outside verified complete-class publication');
 if(rawWrites.length&&rawWrites.every(rule=>rule.condition==='false'))
  blockers.push('Firestore marks writes are disabled until audited complete-class publication is implemented');
-const componentRule=rules.match(/match \/component_marks\/\\{id\\} \\{([\\s\\S]*?)\\n      \\}/)?.[1]??'';
+const componentRule=rules.match(/match \/component_marks\/\{id\} \{([\s\S]*?)\n      \}/)?.[1]??'';
 if(!componentRule)
  blockers.push('Computer component marks security rule is missing or unreadable');
 const computerWrites=writePermissions(componentRule);
