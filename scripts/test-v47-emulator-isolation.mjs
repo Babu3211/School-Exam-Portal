@@ -249,6 +249,13 @@ try {
   await assertFails(setDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{...teacherAssignment,schoolId:'school-b'}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),{...teacherAssignment,active:true}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','teacher_assignments','forged-id'),teacherAssignment));
+  // A forged member record at the correct document path must not authorize
+  // assignment creation. Restore the real member after each denied attempt.
+  for(const patch of [{uid:'other-teacher'},{schoolId:'school-b'},{role:'viewer'},{active:false}]){
+    await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','members','teacher-a'),patch));
+    await assertFails(setDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),teacherAssignment));
+    await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','school-a','members','teacher-a'),{uid:'teacher-a',schoolId:'school-a',role:'teacher',active:true}));
+  }
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','teacher_assignments','school-a:teacher-a:9:math'),teacherAssignment));
   await assertSucceeds(getDoc(schoolDoc('teacher-a','school-a','teacher_assignments','school-a:teacher-a:9:math')));
   await assertFails(getDoc(schoolDoc('viewer-a','school-a','teacher_assignments','school-a:teacher-a:9:math')));
