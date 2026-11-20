@@ -2,6 +2,7 @@
 // Never writes or replaces existing students, marks, attendance or results.
 import {assertIemisSchoolId} from './iemis-school-identity.mjs';
 export const V46_IEMIS_HEADERS=Object.freeze(['S.N','IEMIS Code','School','Student IEMIS Id','Student Name','Student Name in Nepali','Gender','Father Name','Mother Name','Class','Section','Year','Permanent Address','Temporary Address','DOB','Is Transferred','Mother Tongue','Disability Type','Age','Guardian Name','Guardian Contact Number','Admission Number','Date of Birth (A.D.)','Symbol Number','Birth Registration Number','NEB Registration Number']);
+const issuedPreviews=new WeakSet();
 const value=(r,k)=>String(r?.[k]??'').trim();
 export function normalizeV46IemisExcelRow(row){
  if(!row||typeof row!=='object'||Array.isArray(row))throw new TypeError('Excel row must be an object');
@@ -9,7 +10,7 @@ export function normalizeV46IemisExcelRow(row){
 }
 export function getReadyV46IemisRows(preview,{confirmed=false}={}){
  if(confirmed!==true)throw new Error('Admin confirmation required before import');
- if(!preview||!Array.isArray(preview.records))throw new TypeError('Validated import preview required');
+ if(!preview||!issuedPreviews.has(preview))throw new TypeError('Validated import preview required');
  return preview.records.filter(record=>record.status==='new').map(record=>({...record.excelData}));
 }
 export function previewV46IemisStudentImport({rows,schoolId,existingIemisIds=[]}={}){
@@ -29,5 +30,7 @@ export function previewV46IemisStudentImport({rows,schoolId,existingIemisIds=[]}
   if(studentIemisId)seen.add(studentIemisId);
   return Object.freeze({row:index+2,studentIemisId,name:value(row,'Student Name'),class:value(row,'Class'),section:value(row,'Section'),gender:value(row,'Gender'),permanentAddress:value(row,'Permanent Address'),schoolId,excelData,errors:Object.freeze(errors),status:errors.length?'skip':'new'});
  });
- return Object.freeze({schoolId,total:records.length,ready:records.filter(x=>x.status==='new').length,skipped:records.filter(x=>x.status==='skip').length,records:Object.freeze(records)});
+ const preview=Object.freeze({schoolId,total:records.length,ready:records.filter(x=>x.status==='new').length,skipped:records.filter(x=>x.status==='skip').length,records:Object.freeze(records)});
+ issuedPreviews.add(preview);
+ return preview;
 }
