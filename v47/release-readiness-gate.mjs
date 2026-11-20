@@ -32,6 +32,14 @@ if(/allow (?:create|update|write):/.test(marksRule))
  blockers.push('Firestore marks rules still allow individual create/update writes outside a verified complete-class publish protocol');
 if(/allow create, update, delete: if false;/.test(marksRule))
  blockers.push('Firestore marks writes are intentionally disabled until the audited complete-class publish workflow is implemented');
+// Computer 4/36/10 writes must be gated by the same complete-class publish protocol.
+const componentRule=rules.match(/match \/component_marks\/\{id\} \{([\s\S]*?)\n      \}/)?.[1]??'';
+if(!componentRule)
+ blockers.push('Computer component marks security rule is missing or unreadable');
+else if(/allow (?:create|update|write):\s*if\s*(?!false\s*;)/.test(componentRule))
+ blockers.push('Computer component marks permit individual writes without verified complete-class publication');
+else if(/allow create:\s*if false;/.test(componentRule))
+ blockers.push('Computer component marks saving is disabled until complete-class publish is implemented');
 const publicDir=config.hosting?.public;
 if(typeof publicDir!=='string'||!publicDir||!existsSync(resolve(root,publicDir,'index.html')))
  blockers.push('Firebase Hosting output is missing its index.html');
