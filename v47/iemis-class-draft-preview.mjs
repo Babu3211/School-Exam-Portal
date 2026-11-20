@@ -4,7 +4,7 @@ export function inspectIemisClassDraft({classNo,term,subject,students,drafts}){
  if(!Array.isArray(students)||students.length===0||students.length>1500)throw Error('A complete class roster is required');
  if(!drafts||typeof drafts!=='object'||Array.isArray(drafts))throw Error('Class marks drafts are required');
  const ids=students.map(s=>s?.id);
- if(ids.some(id=>typeof id!=='string'||!id.trim()||id.length>128)||new Set(ids).size!==ids.length)throw Error('Class roster contains invalid or duplicate student IDs');
+ if(ids.some(id=>typeof id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(id))||new Set(ids).size!==ids.length)throw Error('Class roster contains invalid or duplicate student IDs');
  const rosterIds=new Set(ids);
  const unknown=Object.keys(drafts).filter(id=>!rosterIds.has(id));
  if(unknown.length)throw Error('Marks drafts contain students outside the selected class roster');
