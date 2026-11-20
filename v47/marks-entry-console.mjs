@@ -63,6 +63,11 @@ $('loadClassMarks').onclick=async()=>{
  }catch(e){invalidateClassMarks();status('Unable to load complete roster: '+e.message)}
  finally{if(attempt===epoch)lock(false)}
 };
+// Any edit invalidates the previously displayed draft inspection.
+$('classMarkRows').addEventListener('input',event=>{
+ if(!event.target?.matches?.('input[data-field]'))return;
+ $('draftCheckResult').textContent='Draft changed. Inspect again before saving.';
+});
 function collectClassMarkEntries(){
  if(!classMarkContext)throw new Error('Load full roster first');
  const rows=new Map([...$('classMarkRows').children].map(row=>[row.dataset.studentId,row]));
