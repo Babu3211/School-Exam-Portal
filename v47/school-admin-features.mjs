@@ -24,7 +24,7 @@ export function installSchoolAdminFeatures({getContext}) {
  $('loadAttendance').onclick=()=>run('loadAttendance','attendanceStatus',attendance);
  const exams=async()=>{const items=await limited('exams');rows('examList',items,(el,x)=>el.textContent=x.term);status('examStatus',items.length+' exam terms')};
  $('loadExams').onclick=()=>run('loadExams','examStatus',exams);
- $('createExam').onclick=()=>run('createExam','examStatus',async()=>{const term=$('examTerm').value,{api,schoolId}=ctx();if(!['1st','2nd','final'].includes(term))throw Error('Invalid term');const ref=api.doc(collection('exams'),term);if((await api.getDoc(ref)).exists())throw Error('Exam term already exists');await api.setDoc(ref,{schoolId,term});await exams()});
+ $('createExam').onclick=()=>run('createExam','examStatus',async()=>{const term=$('examTerm').value,{api,schoolId}=ctx();if(!['weekly','monthly','1st','2nd','3rd','final'].includes(term))throw Error('Invalid term');const ref=api.doc(collection('exams'),term);if((await api.getDoc(ref)).exists())throw Error('Exam term already exists');await api.setDoc(ref,{schoolId,term});await exams()});
  $('refreshOverview').onclick=()=>run('refreshOverview','overviewStatus',async()=>{const names=['students','subjects','staff','members','attendance','exams'];const counts=await Promise.all(names.map(async n=>[n,(await limited(n)).length]));status('overviewStatus',counts.map(([n,v])=>n+': '+v+(v===200?'+':'')).join(' | ')+' (limited counts)')});
  return {refresh:async()=>{await Promise.allSettled([staff(),members(),assignments(),exams()])},reset:()=>{for(const id of ['staffList','memberList','assignmentList','attendanceList','examList'])$(id).replaceChildren()}};
 }
