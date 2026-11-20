@@ -6,6 +6,8 @@ on:
     paths:
       - 'v47/**'
       - 'scripts/test-v47-school-isolation-gate.mjs'
+      - 'scripts/test-v47-emulator-isolation.mjs'
+      - 'package.json'
       - '.github/workflows/v47-structural-checks.yml'
   workflow_dispatch:
 permissions:
