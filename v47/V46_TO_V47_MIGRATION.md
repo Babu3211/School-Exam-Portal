@@ -19,3 +19,9 @@
 7. Build a separate V47 hosting output and pass release-readiness and browser end-to-end tests. Deploy **only** V47 after verified acceptance; do not deploy or delete V46.
 
 Run `node v47/audit-v46-multischool-migration.mjs` to display blockers; nonzero exit is **expected** until every legacy access is safely migrated. Do not remove or bypass this gate merely to obtain green CI.
+
+## IEMIS-verified V46 acceptance lock
+- Treat the existing V46 subject definitions, subject order, class-specific component full marks, CDC grade/NG/GPA calculations, and IEMIS 2083 Mark Entry Ledger / Mark Ledger / Grade Ledger / Grade Sheet layouts as **immutable reference behavior** for V47. No speculative formula or subject replacement.
+- Preserve V46 examination data semantics, including 9–10 Computer 4 / 36 / 10, and keep existing student and staff records intact. Any new terms or classes must be additive and must not change already verified V46 result logic.
+- For every adapted exam module, compare the V47 output against the same V46 fixtures before allowing a write or release. Require explicit pass/fail evidence for subject order, totals, NG, GPA, ledger and print/PDF output; no claim of IEMIS re-verification without an actual comparison.
+- Use a separate V47 Firebase project and school-scoped collections; never migrate live V46 data destructively or enable cross-school reads.
