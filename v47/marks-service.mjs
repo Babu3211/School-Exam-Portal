@@ -9,7 +9,7 @@ export function validateMarkEntry(input){
  if(typeof studentId!=='string'||!ID.test(studentId))throw new Error('Invalid student ID');
  if(typeof subjectId!=='string'||!ID.test(subjectId))throw new Error('Invalid subject ID');
  if(!validSchoolClass(schoolClass))throw new Error('Invalid class');
- const validScore=value=>(typeof value==='number'&&Number.isFinite(value))||(typeof value==='string'&&value.trim()!==''&&/^(?:\\d+(?:\\.\\d+)?|\\.\\d+)$/.test(value.trim()));
+ const validScore=value=>(typeof value==='number'&&Number.isFinite(value))||(typeof value==='string'&&value.trim()!==''&&/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(value.trim()));
  if(!validScore(input.theory)||!validScore(input.practical))throw new Error('Marks must be finite numbers between 0 and 100');
  const theory=Number(input.theory),practical=Number(input.practical);
  if(theory<0||practical<0||theory>100||practical>100)throw new Error('Marks must be finite numbers between 0 and 100');
