@@ -21,4 +21,8 @@ assert.match(workflow,/subject\.data\(\)\.active!==true/);
 assert.match(workflow,/d\.data\(\)\.schoolId===ctx\(\)\.schoolId/);
 assert.match(workflow,/\[A-Za-z0-9_-\]/);
 assert.match(workflow,/theoryText\)/);
+assert.match(workflow,/import \{previewGrade\} from '\.\/iemis-grade-preview\.mjs'/);
+assert.match(workflow,/\$\('showGradePreview'\)\.onclick/);
+assert.match(workflow,/Not a saved result or GPA/);
+assert.match(workflow,/\$\('gradePreviewResult'\)\.textContent=''/);
 console.log('V47 exam workflow static safety checks passed');
