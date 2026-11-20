@@ -4,6 +4,7 @@ import {createSchoolStudent} from './student-service.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {nextPageState} from './pagination.mjs';
 import {excelWorkbook} from './excel-workbook.mjs';
+import {STUDENT_EXCEL_HEADERS,studentExcelRow} from './v46-student-excel-schema.mjs';
 const $=id=>document.getElementById(id);const status=msg=>{$('message').textContent=msg};let auth,authSdk,db,api,store,cursor=null,records=[],schoolId=null,loadEpoch=0,actor=null,loading=false,savingStudent=false,hasMore=false;
 function clear(){loadEpoch++;hasMore=false;$('exportExcel').disabled=true;loading=false;actor=null;$('createArea').hidden=true;store=null;cursor=null;records=[];schoolId=null;$('students').replaceChildren();$('recordsArea').hidden=true;$('next').disabled=true;$('count').textContent='';}
 $('connect').onclick=async()=>{try{const config=JSON.parse($('config').value);if(config.projectId!=='smss-exam-portal-v47')throw new Error('Only V47 Firebase project is supported');const appSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js');authSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js');api=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js');const app=appSdk.initializeApp(config,'smss-v47-students');auth=authSdk.getAuth(app);await authSdk.setPersistence(auth,authSdk.inMemoryPersistence);db=api.getFirestore(app);$('connect').disabled=true;$('login').disabled=false;status('V47 connected');}catch(e){status(e.message)}};
@@ -15,13 +16,12 @@ $('next').onclick=()=>load(false);
 
 $('createStudent').onclick=async()=>{if(savingStudent)return;try{if(actor?.role!=='school_admin')throw new Error('School Admin required');const button=$('createStudent');savingStudent=true;button.disabled=true;$('logout').disabled=true;$('login').disabled=true;try{const result=await createSchoolStudent({db,api,actor,schoolId,input:{name:$('newName').value,class:$('newClass').value,rollNo:$('newRoll').value}});$('newName').value='';$('newRoll').value='';loadEpoch++;loading=false;cursor=null;records=[];await load(true);status('Student saved: '+result.id)}finally{savingStudent=false;button.disabled=false;$('logout').disabled=false;$('login').disabled=false}}catch(e){status('Student not saved: '+e.message)}};
 
-const STUDENT_HEADERS=['Admission No.','Student Name','Date of Birth (B.S.)','Student IEMIS No.','Symbol No.','Class','S.N. / Roll No.','Result Code','Guardian','Contact'];
 function downloadExcel(blob,name){
  const url=URL.createObjectURL(blob),link=document.createElement('a');
  try{link.href=url;link.download=name;document.body.append(link);link.click()}finally{link.remove();URL.revokeObjectURL(url)}
 }
 $('sampleExcel').onclick=()=>{
- try{downloadExcel(excelWorkbook(STUDENT_HEADERS,[],{sheetName:'Student Sample'}),'smss-v47-students-sample.xlsx');status('Excel sample downloaded. Import is not yet enabled in V47.')}
+ try{downloadExcel(excelWorkbook(STUDENT_EXCEL_HEADERS,[STUDENT_EXCEL_HEADERS.map(()=> '')],{sheetName:'Students_Template'}),'smss-v47-students-sample.xlsx');status('Excel sample downloaded. Import is not yet enabled in V47.')}
  catch(e){status('Excel sample failed: '+e.message)}
 };
 $('exportExcel').onclick=async()=>{
@@ -34,8 +34,8 @@ $('exportExcel').onclick=async()=>{
    const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;
   }});
   if(epoch!==loadEpoch||auth?.currentUser?.uid!==uid||schoolId!==selectedSchool||!actor||hasMore||loading||savingStudent)throw new Error('School access or loaded records changed');
-  const rows=records.map(student=>[student.admissionNo??'',student.name??student.studentName??'',student.dobBs??'',student.iemisNo??'',student.symbolNo??'',student.class??student.className??'',student.rollNo??student.roll??'',student.resultCode??'',student.guardian??'',student.contact??'']);
-  downloadExcel(excelWorkbook(STUDENT_HEADERS,rows,{sheetName:'Students'}),'smss-v47-students-'+selectedSchool+'.xlsx');
+  const rows=records.map(studentExcelRow);
+  downloadExcel(excelWorkbook(STUDENT_EXCEL_HEADERS,rows,{sheetName:'Students'}),'smss-v47-students-'+selectedSchool+'.xlsx');
   status('Exported '+rows.length+' loaded student records to Excel. Not a complete school backup.');
  }catch(e){status('Excel export blocked: '+e.message)}
  finally{$('exportExcel').disabled=!actor||hasMore||loading||savingStudent||!records.length}
