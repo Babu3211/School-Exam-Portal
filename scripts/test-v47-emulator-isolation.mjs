@@ -176,6 +176,14 @@ try {
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','attendance','2083-08-01_student-2'),{schoolId:'school-a',studentId:'student-2',class:'9',date:'2083-08-01',present:true}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','attendance','day-2'),{date:'2083-08-01'}));
   await assertFails(updateDoc(schoolDoc('admin-a','school-a','attendance','2083-08-01_student-2'),{schoolId:'school-b'}));
+  // Existing attendance may only change the present flag, not its identity.
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','attendance','2083-08-01_student-2'),{present:false}));
+  await assertFails(updateDoc(schoolDoc('viewer-a','school-a','attendance','2083-08-01_student-2'),{present:true}));
+  await assertFails(updateDoc(schoolDoc('admin-a','school-a','attendance','2083-08-01_student-2'),{class:'8'}));
+  await assertFails(updateDoc(schoolDoc('admin-a','school-a','attendance','2083-08-01_student-2'),{studentId:'student-1'}));
+  await assertFails(updateDoc(schoolDoc('admin-a','school-a','attendance','2083-08-01_student-2'),{date:'2083-08-02'}));
+  await assertFails(updateDoc(schoolDoc('admin-a','school-a','attendance','2083-08-01_student-2'),{present:'absent'}));
+  await assertFails(deleteDoc(schoolDoc('admin-a','school-a','attendance','2083-08-01_student-2')));
   await assertFails(setDoc(schoolDoc('viewer-a','school-a','staff','staff-1'),{schoolId:'school-a'}));
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','staff','staff-1'),{schoolId:'school-a'}));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','staff','missing-scope'),{name:'Missing scope'}));
