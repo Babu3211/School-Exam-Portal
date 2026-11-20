@@ -177,7 +177,7 @@ service cloud.firestore {
           && data.subjectId is string
           && data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
           && data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
-          && data.term in ['1st','2nd','final']
+          && data.term in ['weekly','monthly','1st','2nd','3rd','final']
           && data.theory is number
           && data.practical is number
           && data.theory >= 0
@@ -248,7 +248,7 @@ service cloud.firestore {
       }
       match /exams/{id} {
         function validExamTerm() {
-          return id in ['1st', '2nd', 'final']
+          return id in ['weekly', 'monthly', '1st', '2nd', '3rd', 'final']
             && request.resource.data.keys().hasOnly(['schoolId', 'term'])
             && request.resource.data.keys().hasAll(['schoolId', 'term'])
             && request.resource.data.schoolId == sid
@@ -276,7 +276,7 @@ service cloud.firestore {
             && data.studentId is string && data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
             && data.subjectId is string && data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
             && data.class in ['9','10']
-            && data.term in ['1st','2nd','final']
+            && data.term in ['weekly','monthly','1st','2nd','3rd','final']
             && id == data.term + ':' + data.studentId + ':' + data.subjectId
             && data.scores is map
             && data.scores.keys().hasOnly(['component_a','component_b','component_c'])
