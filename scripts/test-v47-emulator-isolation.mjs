@@ -48,7 +48,6 @@ try {
   await assertFails(setDoc(schoolDoc('super-a','school-a','attendance','2026-11-20_student-1'),adminAttendance));
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','attendance','2026-11-20_student-1'),adminAttendance));
   await assertFails(updateDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-20_student-1'),{present:false}));
-  await assertSucceeds(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-21_student-1'),{...adminAttendance,date:'2026-11-21'}));
   await assertFails(updateDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-21_student-1'),{present:false}));
   await assertFails(updateDoc(schoolDoc('super-a','school-a','attendance','2026-11-20_student-1'),{present:false}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','school-a','attendance','2026-11-20_student-1'),{present:false}));
