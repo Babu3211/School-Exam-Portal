@@ -24,6 +24,8 @@ for(const snippet of [
  "if(!auth?.currentUser?.uid||auth.currentUser.uid!==actor.uid)",
  "invalidateClassMarks();status('Atomic class marks saved:"
 ])assert.ok(js.includes(snippet),'Missing full-class mark safeguard: '+snippet);
+assert.ok(js.includes("classMarkRoster=[...roster.students].sort("),'Class mark rows must be alphabetically sorted');
+assert.ok(js.includes('for(const student of classMarkRoster)'),'Rendered rows must use sorted roster');
 assert.ok(js.includes('document.createDocumentFragment()'),'Large class roster must use batched DOM rendering');
 assert.ok(js.includes('fragment.append(row)')&&js.includes('body.append(fragment)'),'Class rows must be appended in one batch');
 assert.ok(html.includes('An incomplete class cannot be saved'),'Incomplete-class warning missing');
