@@ -46,4 +46,23 @@ for(const [ids,entries,pattern] of [
  assert.equal(writes.length,0);
  assert.equal(transactions,0,'Large class must never enter a mark-writing transaction');
 }
+// Authorization must be rejected before even reading the school roster.
+for(const unauthorized of [
+ {role:'viewer',active:true,schoolId},
+ {role:'teacher',active:true,schoolId},
+ {role:'super_admin',active:true},
+ {role:'school_admin',active:false,schoolId},
+ {role:'school_admin',active:true,schoolId:'school-b'},
+ null
+]){
+ const {api,writes}=mock();
+ let reads=0,transactions=0;
+ const read=api.getDocs,transaction=api.runTransaction;
+ api.getDocs=async(...args)=>{reads++;return read(...args)};
+ api.runTransaction=async(...args)=>{transactions++;return transaction(...args)};
+ await assert.rejects(saveVerifiedSmallClassMarks({...base,actor:unauthorized,api,entries:[entry('s1'),entry('s2')]}),/School Admin permission/);
+ assert.equal(reads,0,'Unauthorized actor must not fetch student roster');
+ assert.equal(transactions,0,'Unauthorized actor must not write marks');
+ assert.equal(writes.length,0);
+}
 console.log('V47 verified small-class mark save tests passed');
