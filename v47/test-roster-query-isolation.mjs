@@ -36,4 +36,20 @@ for(const cursor of [{}, {id:'../school-b'}, {id:''}, {id:12}, {id:'x'.repeat(12
  await assert.rejects(loadClassRoster({...base,cursor,api}),/Invalid roster pagination cursor/);
  assert.equal(queries,0,'Invalid cursor must be rejected before querying Firestore');
 }
+// Session changes while Firestore is loading must invalidate the response.
+for(const mutate of [
+ a=>{a.active=false},
+ a=>{a.role='viewer'},
+ a=>{a.schoolId='school-b'},
+ a=>{a.uid='other-user'}
+]){
+ const changingActor={role:'school_admin',active:true,schoolId,uid:'admin-1'};
+ const api=apiFor(students),getDocs=api.getDocs;
+ api.getDocs=async(...args)=>{
+  const result=await getDocs(...args);
+  mutate(changingActor);
+  return result;
+ };
+ await assert.rejects(loadClassRoster({...base,actor:changingActor,api}),/School membership changed/);
+}
 console.log('V47 roster query isolation tests passed');
