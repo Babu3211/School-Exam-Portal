@@ -42,6 +42,9 @@ export function renderCompleteV46TenantGradeLedger(args){
  const {subjects,students,records,examId,term,classNo}=args;
  // Validate tenant boundaries before indexing or rendering; never render partial grades.
  if(!Array.isArray(subjects)||!Array.isArray(students)||!Array.isArray(records))throw Error('Ledger data arrays required');
+ if(typeof args.schoolId!=='string'||!/^[A-Za-z0-9_-]{1,64}$/.test(args.schoolId))throw Error('Valid school scope required');
+ if([...students,...records].some(item=>!item||item.schoolId!==args.schoolId))throw Error('Cross-school or unscoped ledger data');
+ if(records.some(record=>record.examId!==examId||!students.some(student=>student.id===record.studentId)))throw Error('Foreign student or exam record');
  const names=subjects.map(s=>typeof s==='string'?s:s?.name).map(iemisSubjectKey);
  if(names.some(name=>!name)||new Set(names).size!==names.length)throw Error('Invalid or duplicate subject roster');
  const index=new Map();
