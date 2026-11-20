@@ -41,4 +41,22 @@ await assert.rejects(loadCompleteClassRoster({...base,classId:'99',api:mock()}),
  const overflow=[...large,['s1501',{schoolId,class:'9',name:'Extra Student'}]];
  await assert.rejects(loadCompleteClassRoster({...base,pageSize:100,api:mock(overflow)}),/exceeds 1500/);
 }
+// A session revoked or reassigned while a page is in flight must not return a usable roster.
+for(const mutation of [
+ a=>{a.active=false},
+ a=>{a.role='viewer'},
+ a=>{a.schoolId='school-b'},
+ a=>{a.uid='other-user'}
+]){
+ const changingActor={role:'school_admin',active:true,schoolId,uid:'admin-1'};
+ const api=mock();
+ const getDocs=api.getDocs;
+ let first=true;
+ api.getDocs=async q=>{
+  const result=await getDocs(q);
+  if(first){first=false;mutation(changingActor)}
+  return result;
+ };
+ await assert.rejects(loadCompleteClassRoster({...base,actor:changingActor,api}),/School membership changed/);
+}
 console.log('V47 complete class roster pagination tests passed');
