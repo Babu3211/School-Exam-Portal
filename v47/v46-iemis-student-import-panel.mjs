@@ -10,7 +10,7 @@ export function mountV47IemisStudentPreview({container,rows,schoolId,existingIem
  const doc=container.ownerDocument;
  const root=doc.createElement('section');root.setAttribute('aria-label','IEMIS Student Import Preview');
  const title=doc.createElement('h3');title.textContent=UI_LABELS.students+' — '+UI_LABELS.preview;root.append(title);
- const summary=doc.createElement('p');summary.textContent=`Total: ${preview.total} | New: ${preview.ready} | Skipped: ${preview.skipped} | School IEMIS: ${schoolId}`;root.append(summary);
+ const summary=doc.createElement('p');summary.textContent=`Total: ${preview.total} | ${cloudChecked?'New':'Potential New'}: ${preview.ready} | Skipped: ${preview.skipped} | School IEMIS: ${schoolId}`;root.append(summary);
  const cloudNotice=doc.createElement('p');cloudNotice.setAttribute('role','status');cloudNotice.lang='ne';cloudNotice.textContent=cloudChecked?'हालको विद्यालयका विद्यार्थी विवरणसँग Duplicate जाँच गरिएको छ।':'सावधानी: हालको विद्यालयका विद्यार्थीको Cloud विवरण जाँचिएको छैन। New संख्या अन्तिम होइन; यो पूर्वावलोकन मात्र हो।';root.append(cloudNotice);
  const guidance=doc.createElement('p');guidance.textContent='यो पूर्वावलोकन मात्र हो। विद्यार्थी आयात गर्नुअघि विद्यालय र विवरण जाँच गर्नुहोस्।';root.append(guidance);
  const controls=doc.createElement('div');
@@ -20,7 +20,7 @@ export function mountV47IemisStudentPreview({container,rows,schoolId,existingIem
  const table=doc.createElement('table');const thead=doc.createElement('thead');const header=doc.createElement('tr');
  for(const name of ['Excel Row','Student IEMIS ID','Name','Class','Section','Gender','Permanent Address','Status / Reason']){const th=doc.createElement('th');th.textContent=name;header.append(th)}thead.append(header);table.append(thead);
  const body=doc.createElement('tbody');table.append(body);root.append(table);
- const draw=()=>{body.replaceChildren();for(const row of filterV46IemisStudentPreview(preview,{className:classInput.value,section:sectionInput.value,search:searchInput.value,status:statusSelect.value})){const tr=doc.createElement('tr');for(const item of [row.row,row.studentIemisId,row.name,row.class,row.section,row.gender,row.permanentAddress,row.errors.map(error=>error==='School IEMIS mismatch'?NEPALI_MESSAGES.schoolMismatch:error==='Student already exists'?NEPALI_MESSAGES.duplicate:error).join('; ')||'New']){const td=doc.createElement('td');td.textContent=String(item);tr.append(td)}body.append(tr)}};
+ const draw=()=>{body.replaceChildren();for(const row of filterV46IemisStudentPreview(preview,{className:classInput.value,section:sectionInput.value,search:searchInput.value,status:statusSelect.value})){const tr=doc.createElement('tr');for(const item of [row.row,row.studentIemisId,row.name,row.class,row.section,row.gender,row.permanentAddress,row.errors.map(error=>error==='School IEMIS mismatch'?NEPALI_MESSAGES.schoolMismatch:error==='Student already exists'?NEPALI_MESSAGES.duplicate:error).join('; ')||(cloudChecked?'New':'Pending Cloud Check')]){const td=doc.createElement('td');td.textContent=String(item);tr.append(td)}body.append(tr)}};
  for(const field of [classInput,sectionInput])field.addEventListener('input',draw);
  searchInput.addEventListener('input',draw);statusSelect.addEventListener('change',draw);
  container.replaceChildren(root);draw();return Object.freeze({preview,refresh:draw});
