@@ -72,7 +72,7 @@ for(const [label,block] of [['Raw marks',marksBlock],['Computer component marks'
 
 const attendanceBlock=rules.split('match /attendance/{id} {')[1]?.split(/\n\s*match \/[^\n]+\{/)[0]??'';
 assert.ok(attendanceBlock.includes("memberRole(sid, 'school_admin') && validAdminAttendance()"),'Attendance create must require school admin or assigned teacher');
-assert.ok(attendanceBlock.includes("memberRole(sid, 'school_admin') || teacherAttendanceAllowed(sid, id)"),'Attendance update must require school admin or assigned teacher');
+assert.ok(/allow update: if[\s\S]*?&& memberRole\(sid, 'school_admin'\);/.test(attendanceBlock),'Only school admin may update existing attendance');
 assert.ok(!/allow (?:create|update):[^;]*canAdmin\(sid\)/.test(attendanceBlock),'Super admin must not bypass attendance write policy');
 const examBlock=rules.split('match /exams/{id} {')[1]?.split(/\n\s*match \/[^\n]+\{/)[0]??'';
 assert.ok(examBlock.includes("allow create: if memberRole(sid, 'school_admin')"),'Exam creation must require school admin');
