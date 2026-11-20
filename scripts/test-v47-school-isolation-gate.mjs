@@ -94,6 +94,25 @@ const attendanceBlock=rules.split('match /attendance/{id} {')[1]?.split(/\n\s*ma
 assert.ok(attendanceBlock.includes("memberRole(sid, 'school_admin') && validAdminAttendance()"),'Attendance create must require school admin or assigned teacher');
 assert.ok(/allow update: if[\s\S]*?&& memberRole\(sid, 'school_admin'\);/.test(attendanceBlock),'Only school admin may update existing attendance');
 assert.ok(!/allow (?:create|update):[^;]*canAdmin\(sid\)/.test(attendanceBlock),'Super admin must not bypass attendance write policy');
+// Existing attendance must never be edited beyond the boolean present flag.
+// Check the full update predicate so a future refactor cannot silently permit
+// student/class/date reassignment or updates by other roles.
+const attendanceUpdate=attendanceBlock.match(/allow update: if ([\\s\\S]*?);/)?.[1]??'';
+for(const required of [
+ 'immutableSchool(sid)',
+ "request.resource.data.diff(resource.data).affectedKeys().hasOnly(['present'])",
+ 'request.resource.data.present is bool',
+ "memberRole(sid, 'school_admin')"
+])assert.ok(attendanceUpdate.includes(required),'Attendance update missing: '+required);
+for(const required of [
+ 'immutableSchool(sid)',
+ "request.resource.data.diff(resource.data).affectedKeys().hasOnly(['present'])",
+ 'request.resource.data.present is bool'
+]){
+ const mutated=attendanceUpdate.replace(required,'true');
+ assert.ok(mutated!==attendanceUpdate,'Mutation must change attendance update predicate');
+ assert.ok(!mutated.includes(required),'Mutation must remove required attendance protection');
+}
 const examBlock=rules.split('match /exams/{id} {')[1]?.split(/\n\s*match \/[^\n]+\{/)[0]??'';
 assert.ok(examBlock.includes("allow create: if memberRole(sid, 'school_admin')"),'Exam creation must require school admin');
 assert.ok(!examBlock.includes('allow create: if canAdmin(sid)'),'Super admin must not bypass exam creation policy');
