@@ -30,4 +30,22 @@ assert.throws(()=>renderIemisGradeSheetPrint({...args,school:{nameEnglish:''}}),
 assert.throws(()=>renderIemisGradeSheetPrint({...args,school:{...args.school,addressEnglish:'x'.repeat(251)}}),/Invalid school address/);
 assert.throws(()=>renderIemisGradeSheetPrint({...args,school:{...args.school,addressEnglish:42}}),/Invalid school address/);
 assert.throws(()=>renderIemisGradeSheetPrint({...args,school:{...args.school,nameEnglish:'x'.repeat(161)}}),/Valid school name/);
+
+for(const classNo of ['1','5','6','8','9','10'])for(const [term,v46term] of [['1st','first'],['final','annual']]){
+ const name='English',schema=iemisEntrySchema(classNo,v46term,name);
+ const values=Object.fromEntries(schema.filter(field=>!field.readonly).map(field=>[field.key,field.key==='count'?'10':field.key==='obtained'?'35':String(field.max)]));
+ const candidate={...args,classNo,term,subjects:[{id:'english',name,creditHour:4}],draftsBySubject:{english:{s1:{values,isAbsent:false,incompatible:false}}}};
+ const calculated=previewIemisGradeSheet(candidate);
+ const printed=renderIemisGradeSheetPrint(candidate);
+ assert.equal(printed.ready,calculated.ready,'readiness parity for class '+classNo+' term '+term);
+ if(!calculated.ready){assert.equal(printed.html,null);continue}
+ const subject=calculated.student.subjects[0].summary;
+ assert.match(printed.html,new RegExp('<td>'+subject.obtained+' / '+subject.full+'</td>'));
+ assert.ok(printed.html.includes('<td>'+subject.inGrade.grade+'</td>'));
+ assert.ok(printed.html.includes('<td>'+(subject.theoryGrade?.grade??'—')+'</td>'));
+ assert.ok(printed.html.includes('<td>'+subject.totalGrade.grade+'</td>'));
+ assert.ok(printed.html.includes('<td>'+subject.totalGrade.point+'</td>'));
+ assert.ok(printed.html.includes('GPA: '+calculated.student.gpa));
+}
+
 console.log('V47 offline A4 grade sheet preview escaping, watermark and incomplete-class tests passed');
