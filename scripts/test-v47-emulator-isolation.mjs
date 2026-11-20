@@ -326,6 +326,10 @@ try {
   await assertFails(getDoc(schoolDoc('teacher-a','school-a','students','student-1')));
   await assertFails(setDoc(schoolDoc('admin-a','school-a','attendance','2026-11-22_student-1'),{...adminAttendance,date:'2026-11-22'}));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-22_student-1'),{...teacherAttendance,date:'2026-11-22'}));
+  // Suspension must also block edits to attendance that existed before
+  // suspension, not just creation of new attendance documents.
+  await assertFails(updateDoc(schoolDoc('admin-a','school-a','attendance','2026-11-20_student-1'),{present:true}));
+  await assertFails(updateDoc(schoolDoc('teacher-a','school-a','attendance','2026-11-18_student-1'),{present:false}));
   // Suspension is scoped to one school; another school's admin remains active.
   await assertSucceeds(getDoc(schoolDoc('admin-b','school-b','students','student-1')));
   await assertFails(getDoc(schoolDoc('admin-a','school-b','students','student-1')));
