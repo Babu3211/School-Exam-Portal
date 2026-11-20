@@ -4,13 +4,15 @@ import {loadClassRoster} from './attendance-roster.mjs';
 export async function loadCompleteClassRoster({db,api,actor,schoolId,classId,pageSize=100,maxStudents=1500}){
  if(!Number.isInteger(maxStudents)||maxStudents<1||maxStudents>1500)throw new RangeError('Roster cap must be 1–1500');
  const seen=new Set(),students=[];
- let cursor=null,previous=null,pages=0;
+ let cursor=null,previous=null,pages=0,lastId=null;
  do{
   const page=await loadClassRoster({db,api,actor,schoolId,schoolClass:classId,pageSize,cursor});
   pages++;
   if(pages>1501)throw new Error('Roster pagination exceeded safe bound');
   for(const student of page.students){
    if(seen.has(student.id))throw new Error('Duplicate student across roster pages');
+   if(lastId!==null&&student.id<=lastId)throw new Error('Roster pagination order changed; reload class');
+   lastId=student.id;
    seen.add(student.id);students.push(student);
    if(students.length>maxStudents)throw new RangeError('Class roster exceeds '+maxStudents+' students');
   }
