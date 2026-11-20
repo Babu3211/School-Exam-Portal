@@ -41,6 +41,21 @@ const activeMemberBlock=rules.split('function activeMember(sid) {')[1]?.split('\
 assert.ok(activeMemberBlock.includes('activeSchool(sid)'), 'Active membership must require an active school');
 assert.ok(activeMemberBlock.includes("get(memberPath(sid)).data.get('active', false) == true"),'Member must be active');
 assert.ok(activeMemberBlock.includes("get(memberPath(sid)).data.get('schoolId', '') == sid"),'Member must belong to requested school');
+// All school-scoped role grants must inherit activeMember's school-status,
+// membership-active and UID checks. Otherwise suspension could be bypassed
+// by a direct role lookup even while read access is correctly denied.
+const memberRoleBlock=rules.match(/function memberRole\(sid, role\) \{([\s\S]*?)\n    \}/)?.[1]??'';
+assert.ok(memberRoleBlock.includes('activeMember(sid)'), 'Role grants must require active school membership');
+assert.ok(memberRoleBlock.includes("get(memberPath(sid)).data.get('role', '') == role"), 'Role grants must match the requested role');
+for(const mutation of [
+ memberRoleBlock.replace('activeMember(sid)', 'true'),
+ memberRoleBlock.replace("get(memberPath(sid)).data.get('role', '') == role", 'true')
+]){
+ assert.ok(mutation!==memberRoleBlock, 'Role mutation must alter the original rule');
+ assert.ok(!(mutation.includes('activeMember(sid)') &&
+   mutation.includes("get(memberPath(sid)).data.get('role', '') == role")),
+   'Mutated role grant must fail the membership/role assertions');
+}
 const canReadBlock=rules.match(/function canRead\(sid\) \{ return ([^;]+); \}/)?.[1]??'';
 assert.equal(canReadBlock.trim(),'superAdmin() || activeMember(sid)','Read permission must not bypass active membership');
 for(const mutation of [
