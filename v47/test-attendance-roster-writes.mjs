@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {saveClassAttendance} from './attendance-bulk.mjs';
 import {saveSchoolAttendance} from './attendance-service.mjs';
-const schoolId='school-a',actor={role:'school_admin',active:true,schoolId};
+const schoolId='12345678',actor={role:'school_admin',active:true,schoolId};
 const entry=id=>({studentId:id,class:'9',date:'2026-11-18',present:true});
 function mock(overrides={}){
  const records=new Map([['s1',{schoolId,class:'9'}],['s2',{schoolId,class:'9'}]]);
@@ -27,7 +27,7 @@ function mock(overrides={}){
 }
 for(const overrides of [
  {s2:null},
- {s2:{schoolId:'school-b',class:'9'}},
+ {s2:{schoolId:'87654321',class:'9'}},
  {s2:{schoolId,class:'8'}}
 ]){
  const state=mock(overrides);
@@ -36,7 +36,7 @@ for(const overrides of [
  await assert.rejects(saveSchoolAttendance({db:{},api:state.api,actor,schoolId,input:entry('s2')}),/Student roster/);
  assert.equal(state.writes.length,0);
 }
-for(const badActor of [{role:'viewer',active:true,schoolId},{role:'super_admin',active:true},{role:'school_admin',active:true,schoolId:'school-b'}]){
+for(const badActor of [{role:'viewer',active:true,schoolId},{role:'super_admin',active:true},{role:'school_admin',active:true,schoolId:'87654321'}]){
  const state=mock();
  await assert.rejects(saveClassAttendance({db:{},api:state.api,actor:badActor,schoolId,entries:[entry('s1')]}),/School Admin/);
  assert.equal(state.writes.length,0);
@@ -55,7 +55,7 @@ for(const badEntries of [
 for(const mutate of [
  a=>{a.active=false},
  a=>{a.role='viewer'},
- a=>{a.schoolId='school-b'},
+ a=>{a.schoolId='87654321'},
  a=>{a.uid='other-admin'}
 ]){
  const changingActor={...actor,uid:'admin-a'};
@@ -75,7 +75,7 @@ for(const mutate of [
 for(const mutate of [
  a=>{a.active=false},
  a=>{a.role='viewer'},
- a=>{a.schoolId='school-b'},
+ a=>{a.schoolId='87654321'},
  a=>{a.uid='other-admin'}
 ]){
  const changingActor={...actor,uid:'admin-a'};
@@ -97,7 +97,7 @@ for(const mutate of [
 for(const mutate of [
  a=>{a.active=false},
  a=>{a.role='viewer'},
- a=>{a.schoolId='school-b'},
+ a=>{a.schoolId='87654321'},
  a=>{a.uid='other-admin'}
 ]){
  const duringRead={...actor,uid:'admin-a'};
