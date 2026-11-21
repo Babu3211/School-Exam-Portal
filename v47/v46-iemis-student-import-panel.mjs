@@ -5,9 +5,12 @@
 import {previewV46IemisStudentImport,filterV46IemisStudentPreview} from './v46-iemis-student-import-preview.mjs';
 import {UI_LABELS,NEPALI_MESSAGES} from './smss-ui-language-policy.mjs';
 import {englishClassLabel} from './smss-english-ui-adapter.mjs';
-export function mountV47IemisStudentPreview({container,rows,schoolId,existingIemisIds=[],existingAdmissionNumbers=[],cloudChecked=false}){
+import {previewAgainstSchoolStudents} from './verified-student-import-preview.mjs';
+export function mountV47IemisStudentPreview({container,rows,schoolId,existingIemisIds=[],existingAdmissionNumbers=[],cloudChecked=false,verifiedPreview=null}){
  if(!container||typeof container.replaceChildren!=='function')throw new TypeError('DOM container required');
- const preview=previewV46IemisStudentImport({rows,schoolId,existingIemisIds,existingAdmissionNumbers});
+ if(cloudChecked&&!verifiedPreview)throw new Error('Verified cloud preview required; do not set cloudChecked manually');
+ if(verifiedPreview&&(verifiedPreview.cloudChecked!==true||verifiedPreview.schoolId!==schoolId||!verifiedPreview.preview))throw new Error('Invalid verified preview');
+ const preview=verifiedPreview?verifiedPreview.preview:previewV46IemisStudentImport({rows,schoolId,existingIemisIds,existingAdmissionNumbers});
  const doc=container.ownerDocument;
  const root=doc.createElement('section');root.setAttribute('aria-label','IEMIS Student Import Preview');
  const title=doc.createElement('h3');title.textContent=UI_LABELS.students+' — '+UI_LABELS.preview;root.append(title);
@@ -25,4 +28,11 @@ export function mountV47IemisStudentPreview({container,rows,schoolId,existingIem
  for(const field of [classInput,sectionInput])field.addEventListener('input',draw);
  searchInput.addEventListener('input',draw);statusSelect.addEventListener('change',draw);
  container.replaceChildren(root);draw();return Object.freeze({preview,refresh:draw});
+}
+
+// Host integration: verifies school-admin membership and complete student list before
+// rendering a Cloud Checked status. No save or delete controls are offered.
+export async function mountVerifiedV47IemisStudentPreview({container,rows,schoolId,auth,readDocument,readStudents}){
+ const verifiedPreview=await previewAgainstSchoolStudents({auth,schoolId,rows,readDocument,readStudents});
+ return mountV47IemisStudentPreview({container,rows,schoolId,cloudChecked:true,verifiedPreview});
 }
