@@ -42,6 +42,7 @@ jobs:
           node v47/test-preview-v46-mark-settings-migration.mjs
           node v47/test-preview-v46-primary-achievement-settings.mjs
           node v47/test-audit-v46-mark-settings-batch.mjs
+          node v47/test-configured-class-publication-preview.mjs
           node v47/test-discover-subject-exam-settings.mjs
           node v47/test-mark-summary-preview.mjs
           node v47/test-class-mark-coverage-preview.mjs
