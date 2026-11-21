@@ -72,7 +72,16 @@ $('classMarkRows').addEventListener('input',event=>{
 });
 function collectClassMarkEntries(){
  if(!classMarkContext)throw new Error('Load full roster first');
- const rows=new Map([...$('classMarkRows').children].map(row=>[row.dataset.studentId,row]));
+ const rendered=[...$('classMarkRows').children];
+ const expected=new Set(classMarkRoster.map(student=>student.id));
+ if(rendered.length!==expected.size)throw new Error('Class mark rows changed; reload the authoritative roster');
+ const rows=new Map();
+ for(const row of rendered){
+  const id=row.dataset.studentId;
+  if(!expected.has(id)||rows.has(id))throw new Error('Unexpected or duplicate student row; reload the class');
+  if(row.querySelectorAll('[data-field="theory"]').length!==1||row.querySelectorAll('[data-field="practical"]').length!==1)throw new Error('Invalid mark input row; reload the class');
+  rows.set(id,row);
+ }
  return classMarkRoster.map(student=>{
   const row=rows.get(student.id);
   return {studentId:student.id,class:classMarkContext.classId,term:classMarkContext.term,subjectId:classMarkContext.subjectId,
