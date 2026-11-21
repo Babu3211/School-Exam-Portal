@@ -32,12 +32,14 @@ service cloud.firestore {
         && request.resource.data.get('schoolId', '') == sid;
     }
     function validSchool(sid) {
-      return sid.matches('^[0-9]{5,20}(['id', 'name', 'iemisCode', 'active'])
+      return sid.matches('^[0-9]{5,20}$')
+        && request.resource.data.keys().hasOnly(['id', 'name', 'iemisCode', 'active'])
+        && request.resource.data.keys().hasAll(['id', 'name', 'iemisCode', 'active'])
         && request.resource.data.id == sid
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 3
         && request.resource.data.name.size() <= 160
-        && request.resource.data.get('iemisCode', '') is string
+        && request.resource.data.iemisCode is string
         && request.resource.data.iemisCode == sid
         && request.resource.data.active == false;
     }
