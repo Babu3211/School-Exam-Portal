@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import {teacherAttendanceAssignmentId,saveAssignedTeacherAttendance} from './teacher-attendance-service.mjs';
-const schoolId='school-a',uid='teacher-a',actor={role:'teacher',active:true,schoolId,uid};
+const schoolId='12345678',uid='teacher-a',actor={role:'teacher',active:true,schoolId,uid};
 const input={studentId:'s1',class:'9',date:'2026-11-18',present:true};
-const key='teacher_assignments/school-a:teacher-a:9:attendance';
+const key='teacher_assignments/12345678:teacher-a:9:attendance';
 function mock(overrides={}){
  const records=new Map([[key,{schoolId,uid,classId:'9',subjectId:'attendance',active:true}],['students/s1',{schoolId,class:'9'}]]);
  for(const [id,value] of Object.entries(overrides))value===null?records.delete(id):records.set(id,value);
@@ -19,7 +19,7 @@ function mock(overrides={}){
  };
  return {api,writes};
 }
-assert.equal(teacherAttendanceAssignmentId({schoolId,uid,classId:'9'}),'school-a:teacher-a:9:attendance');
+assert.equal(teacherAttendanceAssignmentId({schoolId,uid,classId:'9'}),'12345678:teacher-a:9:attendance');
 {
  const {api,writes}=mock();
  const result=await saveAssignedTeacherAttendance({db:{},api,actor,schoolId,input});
@@ -30,12 +30,12 @@ assert.equal(teacherAttendanceAssignmentId({schoolId,uid,classId:'9'}),'school-a
 for(const [overrides,pattern] of [
  [{[key]:null},/assignment required/],
  [{[key]:{schoolId,uid,classId:'9',subjectId:'attendance',active:false}},/assignment required/],
- [{[key]:{schoolId:'school-b',uid,classId:'9',subjectId:'attendance',active:true}},/assignment required/],
+ [{[key]:{schoolId:'87654321',uid,classId:'9',subjectId:'attendance',active:true}},/assignment required/],
  [{[key]:{schoolId,uid:'teacher-b',classId:'9',subjectId:'attendance',active:true}},/assignment required/],
  [{[key]:{schoolId,uid,classId:'8',subjectId:'attendance',active:true}},/assignment required/],
  [{[key]:{schoolId,uid,classId:'9',subjectId:'math',active:true}},/assignment required/],
  [{'students/s1':null},/Student missing/],
- [{'students/s1':{schoolId:'school-b',class:'9'}},/Student missing/],
+ [{'students/s1':{schoolId:'87654321',class:'9'}},/Student missing/],
  [{'students/s1':{schoolId,class:'8'}},/Student missing/],
  [{'attendance/2026-11-18_s1':{schoolId}},/Existing attendance/]
  ]){
@@ -46,7 +46,7 @@ for(const [overrides,pattern] of [
 for(const badActor of [
  {role:'viewer',active:true,schoolId,uid},
  {role:'teacher',active:false,schoolId,uid},
- {role:'teacher',active:true,schoolId:'school-b',uid},
+ {role:'teacher',active:true,schoolId:'87654321',uid},
  {role:'teacher',active:true,schoolId,uid:'../bad'},
  {role:'teacher',active:true,schoolId}
  ]){
@@ -68,12 +68,12 @@ for(const badId of ['../bad','', 'x'.repeat(129)]){
  assert.throws(()=>teacherAttendanceAssignmentId({schoolId,uid:badId,classId:'9'}),/Invalid teacher UID/);
 }
 assert.throws(()=>teacherAttendanceAssignmentId({schoolId,uid,classId:'99'}),/Invalid class/);
-assert.throws(()=>teacherAttendanceAssignmentId({schoolId:'../bad',uid,classId:'9'}),/Invalid school ID/);
+assert.throws(()=>teacherAttendanceAssignmentId({schoolId:'../bad',uid,classId:'9'}),/IEMIS number/);
 // Session changes after Firestore reads must never write attendance.
 for(const mutate of [
  a=>{a.active=false},
  a=>{a.role='viewer'},
- a=>{a.schoolId='school-b'},
+ a=>{a.schoolId='87654321'},
  a=>{a.uid='another-teacher'}
 ]){
  const changingActor={...actor};
