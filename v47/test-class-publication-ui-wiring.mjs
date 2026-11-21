@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const source=readFileSync(new URL('./marks-entry-console.mjs',import.meta.url),'utf8');
+const save=source.match(/\$\('saveClassMarks'\)\.onclick=([^\n]+)/)?.[0]??'';
+assert.match(source,/import \{prepareConfiguredClassPublication\} from '\.\/configured-class-publication-preview\.mjs'/);
+assert.match(source,/if\(result\.complete\)\{\s*const proposal=prepareConfiguredClassPublication/);
+assert.match(source,/reviewBatches\.length/);
+assert.match(source,/No data saved/);
+assert.match(save,/Save\/Publish disabled/);
+assert.doesNotMatch(save,/saveCompleteClassMarks|tx\.set|addDoc|setDoc/);
+console.log('V47 marks UI read-only full-class publication preview wiring passed');
