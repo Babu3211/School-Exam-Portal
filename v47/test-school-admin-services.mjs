@@ -55,6 +55,8 @@ await ok('12 reject nonexistent school activation',async()=>{await assert.reject
 await ok('13 activate existing school',async()=>{await setSchoolActive({db,api,actor:admin,schoolId:'12345',active:true});assert.equal(state.schools.get('12345').active,true)});
 await ok('14 reject viewer school listing',async()=>{await assert.rejects(listSchools({db,api,actor:viewer}))});
 await ok('15 school listing retains IEMIS document ID',async()=>{const result=await listSchools({db,api,actor:admin,pageSize:1});assert.equal(result.schools[0].id,'12345');assert.equal(result.hasMore,false)});
+await ok('15b reject missing Firebase list SDK',async()=>{await assert.rejects(listSchools({db,api:{collection:api.collection},actor:admin}))});
+await ok('15c reject invalid page size',async()=>{await assert.rejects(listSchools({db,api,actor:admin,pageSize:0}))});
 await ok('16 reject oversized page',async()=>{await assert.rejects(listSchools({db,api,actor:admin,pageSize:1000000}))});
 await ok('17 paginate with cursor without duplicates',async()=>{state.schools.set('23456',{...school,id:'23456',iemisCode:'23456'});const first=await listSchools({db,api,actor:admin,pageSize:1});assert.equal(first.hasMore,true);const second=await listSchools({db,api,actor:admin,pageSize:1,cursor:first.cursor});assert.equal(second.schools[0].id,'23456')});
 console.log('PASS '+checks+' V47 school admin service checks (mock SDK; Firebase emulator verification still required)');
