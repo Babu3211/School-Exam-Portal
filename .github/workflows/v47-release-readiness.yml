@@ -13,6 +13,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Verify complete V47 hosting bundle
+        run: |
+          node v47/build-hosting.mjs
+          test -f v47/dist/index.html
+          test -f v47/dist/school-login.html
+          test -f v47/dist/admin.html
+          test ! -f v47/dist/firestore.rules
       - name: Block production release until audited parity and large-class save
         run: npm run test:v47:release
       - name: Explain next steps
