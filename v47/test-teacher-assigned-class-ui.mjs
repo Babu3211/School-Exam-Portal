@@ -8,6 +8,8 @@ assert.match(html,/Read-only development view/);
 assert.match(html,/id="students"/);
 assert.match(ui,/config\.projectId!=='smss-exam-portal-v47'/);
 assert.match(ui,/authSdk\.inMemoryPersistence/);
+assert.match(ui,/\['login','logout','load','classId','subjectId','schoolId','email','password'\]/);
+assert.match(ui,/School selection changed/);
 assert.match(ui,/session\.role!=='teacher'/);
 assert.match(ui,/verifyTeacherSubjectAssignment/);
 assert.match(ui,/loadCompleteClassRoster/);
