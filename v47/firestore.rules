@@ -386,33 +386,17 @@ service cloud.firestore {
         allow get, list: if canRead(sid);
         allow create, update, delete: if false;
       }
-      // Only one immutable, explicitly scoped active configuration per document.
-      // Duplicate active configurations are rejected by the client discovery guard;
-      // cross-document uniqueness still requires an audited server-side workflow.
+      // One immutable configuration per class/subject/term. No updates or deletes.
       match /mark_settings/{id} {
-        function validComponent(component) {
-          return component is map
-            && component.keys().hasOnly(['key','name','fullMarks'])
-            && component.keys().hasAll(['key','name','fullMarks'])
-            && component.key is string
-            && component.key.matches('^[A-Za-z][A-Za-z0-9_-]{0,63}
-      match /{collection}/{id} {
-        allow get, list: if collection in ['staff','classes','school_settings'] && canRead(sid);
-        allow create: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && scopedRecord(sid);
-        allow update: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && immutableSchool(sid);
-        allow delete: if false;
-      }
-    }
-    match /{document=**} { allow read, write: if false; }
-  }
-}
-)
-            && component.name is string
-            && component.name.size() >= 1 && component.name.size() <= 160
-            && component.fullMarks is number
-            && component.fullMarks > 0 && component.fullMarks <= 100000;
+        function validComponent(c) {
+          return c is map
+            && c.keys().hasOnly(['key','name','fullMarks'])
+            && c.keys().hasAll(['key','name','fullMarks'])
+            && c.key is string && c.key.matches('^[A-Za-z][A-Za-z0-9_-]{0,63}$')
+            && c.name is string && c.name.size() >= 1 && c.name.size() <= 160
+            && c.fullMarks is number && c.fullMarks > 0 && c.fullMarks <= 100000;
         }
-        function validComponentList(items) {
+        function validComponents(items) {
           return items is list && items.size() >= 1 && items.size() <= 6
             && validComponent(items[0])
             && (items.size() < 2 || validComponent(items[1]))
@@ -437,36 +421,22 @@ service cloud.firestore {
             && (items.size() <= 5 || items[4].key != items[5].key);
         }
         function validNewSettings() {
-          let data = request.resource.data;
-          let subject = /databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId);
-          return data.keys().hasOnly(['id','schoolId','classId','subjectId','examId','active','components'])
-            && data.keys().hasAll(['id','schoolId','classId','subjectId','examId','active','components'])
-            && data.id == id && data.schoolId == sid
-            && data.classId in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
-            && data.subjectId is string && data.subjectId.matches('^[A-Za-z0-9_-]{1,128}
-      match /{collection}/{id} {
-        allow get, list: if collection in ['staff','classes','school_settings'] && canRead(sid);
-        allow create: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && scopedRecord(sid);
-        allow update: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && immutableSchool(sid);
-        allow delete: if false;
-      }
-    }
-    match /{document=**} { allow read, write: if false; }
-  }
-}
-)
-            && data.examId in ['weekly','monthly','1st','2nd','3rd','final']
-            && id == data.classId + '_' + data.subjectId + '_' + data.examId
-            && data.active == true
-            && validComponentList(data.components)
+          let d = request.resource.data;
+          let subject = /databases/$(database)/documents/schools/$(sid)/subjects/$(d.subjectId);
+          return d.keys().hasOnly(['id','schoolId','classId','subjectId','examId','active','components'])
+            && d.keys().hasAll(['id','schoolId','classId','subjectId','examId','active','components'])
+            && d.id == id && d.schoolId == sid
+            && d.classId in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && d.subjectId is string && d.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && d.examId in ['weekly','monthly','1st','2nd','3rd','final']
+            && id == d.classId + '_' + d.subjectId + '_' + d.examId
+            && d.active == true && validComponents(d.components)
             && exists(subject)
             && get(subject).data.get('schoolId','') == sid
-            && get(subject).data.get('class','') == data.classId
+            && get(subject).data.get('class','') == d.classId
             && get(subject).data.get('active',false) == true;
         }
         allow get, list: if canRead(sid);
-        // Create-once settings: existing grade meaning cannot be overwritten.
-        // The class/subject/exam key prevents a second active configuration.
         allow create: if memberRole(sid, 'school_admin') && validNewSettings();
         allow update, delete: if false;
       }
