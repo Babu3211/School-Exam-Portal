@@ -50,4 +50,5 @@ assert.match(ui,/name:subject\.subjectName/);
 assert.match(ui,/option\.textContent=subject\.name/);
 assert.match(ui,/student\.name\?\?student\.id/);
 assert.doesNotMatch(ui,/setDoc\(|addDoc\(|updateDoc\(|deleteDoc\(|runTransaction\(|writeBatch\(/);
+assert.match(ui,/const failedEpoch=epoch;try\\{await authSdk\\.signOut\\(auth\\)\\}catch\\{\\}if\\(epoch===failedEpoch\\)\\{lock\\(false\\)/);
 console.log('V47 teacher roster view requires live teacher assignment and contains no write operation');
