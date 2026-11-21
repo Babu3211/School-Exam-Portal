@@ -41,6 +41,8 @@ jobs:
           npm run test:v47:rules-iemis-syntax
           npm run test:v47:verified-import
           node v47/test-hosting-bundle.mjs
+      - name: Enforce V47 marks publication safety
+        run: node v47/test-production-marks-guard.mjs
       - name: Require dedicated V47 Firebase credential
         env:
           V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}
