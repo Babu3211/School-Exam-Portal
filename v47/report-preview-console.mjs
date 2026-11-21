@@ -76,6 +76,7 @@ $('logout').onclick=async()=>{
 $('summaryRun').onclick=()=>{
  if(!reportRows||!auth?.currentUser||loggingOut)return;
  try{
+  $('summaryRows').replaceChildren();
   const classNo=Number($('summaryClass').value),examId=$('summaryExam').value;
   const preview=previewV46MarkSummaries(reportRows,{classNo,examId,annual:$('summaryAnnual').checked});
   const body=$('summaryRows');body.replaceChildren();
@@ -87,5 +88,5 @@ $('summaryRun').onclick=()=>{
    body.append(tr);
   }
   $('summaryResult').textContent='Diagnostic only: '+preview.completeCount+'/'+preview.records.length+' mark records have complete grade inputs. Official GPA and publication disabled.';
- }catch(error){$('summaryResult').textContent='Unable to inspect: '+error.message}
+ }catch(error){$('summaryRows').replaceChildren();$('summaryResult').textContent='Unable to inspect: '+error.message}
 };
