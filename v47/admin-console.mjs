@@ -1,7 +1,7 @@
 import {onboardSchool} from './school-onboarding.mjs';
 import {listSchools} from './school-list-service.mjs';
 import {setSchoolActive} from './school-status-service.mjs';
-const $=id=>document.getElementById(id);let auth,db,api,actor=null,cursor=null,mutating=false,connecting=false,signingIn=false,sessionEpoch=0,refreshEpoch=0;
+const $=id=>document.getElementById(id);let auth,db,api,actor=null,cursor=null,mutating=false,connecting=false,signingIn=false,signingOut=false,sessionEpoch=0,refreshEpoch=0;
 const status=message=>{$('message').textContent=message};
 const cleanAuthError=error=>{const message=error?.message;if(typeof message==='string'&&['विद्यालयको IEMIS Code ५–२० अङ्कको हुनुपर्छ।','School ID र IEMIS Code एउटै हुनुपर्छ।','विद्यालयको नाम ३–१६० अक्षरको हुनुपर्छ।','Admin UID मान्य छैन।'].includes(message))return message;const code=String(error?.code??'');if(code.startsWith('auth/'))return 'प्रमाणीकरण असफल भयो। Email, Password वा अनुमति जाँच्नुहोस्।';if(code==='permission-denied'||code==='firestore/permission-denied')return 'अनुमति छैन। Super Admin अधिकार जाँच्नुहोस्।';if(code==='unavailable'||code==='firestore/unavailable')return 'सेवा अहिले उपलब्ध छैन। पुनः प्रयास गर्नुहोस्।';return 'अनुरोध पूरा भएन। विवरण जाँचेर पुनः प्रयास गर्नुहोस्।';};
 const showError=error=>status(cleanAuthError(error));
@@ -17,8 +17,8 @@ $('connect').onclick=async()=>{if(connecting||db)return;connecting=true;$('conne
  const app=appSdk.getApps().find(x=>x.name==='smss-v47-admin')??appSdk.initializeApp(config,'smss-v47-admin');const candidateAuth=authSdk.getAuth(app);await authSdk.setPersistence(candidateAuth,authSdk.inMemoryPersistence);auth=candidateAuth;db=api.getFirestore(app);
  authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clearAdmin();status('सत्र परिवर्तन भयो। फेरि साइन इन गर्नुहोस्।')}});
  $('connect').disabled=true;$('login').disabled=false;$('connection').textContent='V47 Project सँग जडान भयो।';
- $('login').onclick=async()=>{if(signingIn||mutating)return;signingIn=true;$('login').disabled=true;try{await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);$('password').value='';await verifyAdmin();}catch(e){clearAdmin();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}showError(e)}finally{$('password').value='';signingIn=false;$('login').disabled=false}};
- $('logout').onclick=async()=>{if(mutating){status('विद्यालयको परिवर्तन पूरा नभएसम्म पर्खनुहोस्।');return}await authSdk.signOut(auth);clearAdmin();status('सफलतापूर्वक साइन आउट भयो।')};
+ $('login').onclick=async()=>{if(signingIn||signingOut||mutating)return;signingIn=true;$('login').disabled=true;try{await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);$('password').value='';await verifyAdmin();}catch(e){clearAdmin();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}showError(e)}finally{$('password').value='';signingIn=false;$('login').disabled=false}};
+ $('logout').onclick=async()=>{if(mutating||signingIn||signingOut){status('हालको प्रक्रिया पूरा नभएसम्म पर्खनुहोस्।');return}signingOut=true;$('logout').disabled=true;try{await authSdk.signOut(auth);clearAdmin();status('सफलतापूर्वक साइन आउट भयो।')}catch(e){showError(e)}finally{signingOut=false;if(actor)$('logout').disabled=false}};
  status('जडान भयो। अधिकृत Super Admin बाट साइन इन गर्नुहोस्।');
  }catch(e){db=null;auth=null;api=null;showError(e);$('connect').disabled=false}finally{connecting=false}};
 async function verifyAdmin(){clearAdmin();const uid=auth.currentUser?.uid,verificationSession=sessionEpoch;if(!uid)throw new Error('पहिले साइन इन गर्नुहोस्।');
