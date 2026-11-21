@@ -17,7 +17,6 @@ export async function createV46ReadOnlyBridge({schoolId,auth,db,firestoreApi}){
  return Object.freeze({schoolId:context.schoolId,role:context.role,uid:context.uid,
   // Read-only parity endpoints for V46 school reports, branding and ledgers.
   listClasses:()=>records.list('classes'),
-  listUserRoles:()=>records.list('user_roles'),
   listMarkSettings:()=>records.list('mark_settings'),
   listCertificates:()=>records.list('certificates'),
   listPublicResultExams:()=>records.list('public_result_exams'),
@@ -25,7 +24,6 @@ export async function createV46ReadOnlyBridge({schoolId,auth,db,firestoreApi}){
   listPublicResults:()=>records.list('public_results'),
   listSchoolGallery:()=>records.list('school_gallery'),
   listSchoolPublicBranding:()=>records.list('school_public_branding'),
-  listAuditLogs:()=>records.list('audit_logs'),
   listStudents:()=>records.list('students'),
   listStaff:()=>records.list('staff'),
   listSubjects:()=>records.list('subjects'),
