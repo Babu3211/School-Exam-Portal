@@ -6,25 +6,25 @@ import {validateAttendance} from './attendance-service.mjs';
 import {assignmentRecord,assignmentKey} from './teacher-assignment.mjs';
 import {createTeacherAssignment,setTeacherAssignmentActive} from './teacher-assignment-management.mjs';
 
-const sid='school-a';
+const sid='12345678';
 for(const collection of ['students','staff','classes','subjects','subject_assignments','teacher_assignments','component_marks','exams','marks','attendance','mark_settings','school_settings','members']){
  assert.ok(COLLECTIONS.includes(collection),collection+' missing');
  assert.equal(schoolCollectionPath(sid,collection),'schools/'+sid+'/'+collection);
  assert.equal(schoolDocumentPath(sid,collection,'id_1'),'schools/'+sid+'/'+collection+'/id_1');
 }
 assert.equal(schoolDocumentPath(sid,'marks','1st:student-1:math'),'schools/'+sid+'/marks/1st:student-1:math');
-assert.equal(schoolDocumentPath(sid,'teacher_assignments','school-a:teacher-1:9:math'),'schools/'+sid+'/teacher_assignments/school-a:teacher-1:9:math');
+assert.equal(schoolDocumentPath(sid,'teacher_assignments','12345678:teacher-1:9:math'),'schools/'+sid+'/teacher_assignments/12345678:teacher-1:9:math');
 assert.throws(()=>schoolDocumentPath(sid,'students','student:1'),/Invalid document ID/);
-assert.throws(()=>schoolDocumentPath(sid,'marks','../school-b'),/Invalid document ID/);
+assert.throws(()=>schoolDocumentPath(sid,'marks','../87654321'),/Invalid document ID/);
 assert.throws(()=>schoolDocumentPath(sid,'teacher_assignments','a::b'),/Invalid document ID/);
 assert.deepEqual(validateStudent({name:'Student One',class:'9',rollNo:''}),{name:'Student One',class:'9'});
 assert.equal(markEntryId({studentId:'student-1',subjectId:'math',class:'9',term:'1st',theory:20,practical:10}),'1st:student-1:math');
 assert.deepEqual(validateAttendance({studentId:'student-1',class:'9',date:'2026-11-18',present:true}),{date:'2026-11-18',studentId:'student-1',class:'9',present:true});
 assert.deepEqual(assignmentRecord({schoolId:sid,uid:'teacher-1',classId:'9',subjectId:'math'}),{schoolId:sid,uid:'teacher-1',classId:'9',subjectId:'math',active:false});
-assert.equal(assignmentKey({schoolId:sid,uid:'teacher-1',classId:'9',subjectId:'math'}),'school-a:teacher-1:9:math');
+assert.equal(assignmentKey({schoolId:sid,uid:'teacher-1',classId:'9',subjectId:'math'}),'12345678:teacher-1:9:math');
 for(const collection of ['unscoped','../marks',''])assert.throws(()=>schoolCollectionPath(sid,collection));
 console.log('V47 app schema and school path contract checks passed');
 
 await assert.rejects(createTeacherAssignment({actor:{role:'viewer',active:true,schoolId:sid},schoolId:sid,uid:'teacher-1',classId:'9',subjectId:'math'}),/School Admin required/);
 await assert.rejects(setTeacherAssignmentActive({actor:{role:'teacher',active:true,schoolId:sid},schoolId:sid,uid:'teacher-1',classId:'9',subjectId:'math',active:true}),/School Admin required/);
-await assert.rejects(createTeacherAssignment({actor:{role:'school_admin',active:true,schoolId:'school-b'},schoolId:sid,uid:'teacher-1',classId:'9',subjectId:'math'}),/School Admin required/);
+await assert.rejects(createTeacherAssignment({actor:{role:'school_admin',active:true,schoolId:'87654321'},schoolId:sid,uid:'teacher-1',classId:'9',subjectId:'math'}),/School Admin required/);
