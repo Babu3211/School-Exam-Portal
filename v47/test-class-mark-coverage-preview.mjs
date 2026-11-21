@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {inspectClassMarkCoverage} from './class-mark-coverage-preview.mjs';
+const rows={exams:[{id:'exam1'}],students:[{id:'s1',className:'Class 6'},{id:'s2',class:'6'},{id:'s3',class:'7'}],marks:[{id:'m1',examId:'exam1',className:'Class 6',subject:'Math',studentId:'s1'}]};
+const a=inspectClassMarkCoverage(rows,{examId:'exam1',classNo:6,subject:'Math'});
+assert.deepEqual(a.missing,['s2']);assert.equal(a.complete,false);assert.equal(a.rosterCount,2);
+const b=inspectClassMarkCoverage({...rows,marks:[...rows.marks,{id:'m2',examId:'exam1',className:'Class 6',subject:'Math',studentId:'s2'}]},{examId:'exam1',classNo:6,subject:'Math'});
+assert.equal(b.complete,true);assert.equal(b.publicationAllowed,false);
+const c=inspectClassMarkCoverage({...rows,marks:[...rows.marks,{id:'m2',examId:'exam1',className:'Class 6',subject:'Math',studentId:'s1'},{id:'m3',examId:'exam1',className:'Class 6',subject:'Math',studentId:'outside'}]},{examId:'exam1',classNo:6,subject:'Math'});
+assert.deepEqual(c.duplicates,['m2']);assert.deepEqual(c.outsiders,['m3']);
+assert.throws(()=>inspectClassMarkCoverage(rows,{examId:'other',classNo:6,subject:'Math'}),/Verified exam/);
+console.log('V47 class mark coverage tests passed');
