@@ -40,6 +40,8 @@ assert.match(ui,/pagination stalled/);
 assert.match(ui,/Select a verified subject/);
 assert.match(ui,/\$\('load'\)\.disabled=true/);
 assert.match(ui,/for\(const subjectId of subjects\)/);
+assert.match(ui,/name:subject\.subjectName/);
+assert.match(ui,/option\.textContent=subject\.name/);
 assert.match(ui,/student\.name\?\?student\.id/);
 assert.doesNotMatch(ui,/setDoc\(|addDoc\(|updateDoc\(|deleteDoc\(|runTransaction\(|writeBatch\(/);
 console.log('V47 teacher roster view requires live teacher assignment and contains no write operation');
