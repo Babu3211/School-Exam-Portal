@@ -20,7 +20,8 @@ export function auditV46TenantIntegration(source){
  if(/\b(?:const|let|var)\s+firebaseConfig\s*=/.test(source))blockers.push('V46 Firebase configuration must be replaced with isolated V47 configuration');
  if(!/\bactiveSchoolId\b/.test(source))blockers.push('Authenticated activeSchoolId binding is missing');
  if(!/\bassertV47TenantCollection\b/.test(source))blockers.push('Dynamic collection guard must be available in the transformed module');
- return Object.freeze({ready:!blockers.length,blockers:Object.freeze(blockers)});
+ blockers.push('Verified Firebase Auth school membership, scoped permissions and V47 hosting have not been established by this source audit');
+ return Object.freeze({ready:false,blockers:Object.freeze(blockers)});
 }
 export function rewriteV46FirestorePaths(source){
  if(typeof source!=='string'||!source.length)throw new TypeError('V46 source required');
