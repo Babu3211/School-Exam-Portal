@@ -49,6 +49,13 @@ const unicodePreview=await previewAgainstSchoolStudents({auth,schoolId,rows:unic
  readStudents:async()=>[{schoolId,studentIemisNo:'e\u0301-101'}]});
 assert.equal(unicodePreview.preview.ready,0);
 assert.equal(unicodePreview.preview.skipped,1);
+for(const malformed of [{nested:true},['nested'],Number.POSITIVE_INFINITY,Number.MAX_SAFE_INTEGER+2,1n]){
+ await assert.rejects(previewAgainstSchoolStudents({auth,schoolId,rows,readDocument,
+  readStudents:async()=>[{schoolId,studentIemisId:malformed}]}),/Invalid existing student identity/);
+}
+const safeNumericLegacy=await previewAgainstSchoolStudents({auth,schoolId,rows,readDocument,
+ readStudents:async()=>[{schoolId,studentIemisId:1}]});
+assert.equal(safeNumericLegacy.preview.ready,2);
 const sessionDuringScan={currentUser:{uid}};
 let changedDuringScan=false;
 const scanningRecord={schoolId};
