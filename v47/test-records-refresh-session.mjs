@@ -8,4 +8,6 @@ assert.doesNotMatch(source,/\$\('refresh'\)\.onclick=\(\)=>\{epoch\+\+/);
 assert.doesNotMatch(source,/\$\('recordType'\)\.onchange=\(\)=>\{epoch\+\+/);
 assert.match(source,/generation!==loadGeneration/);
 assert.match(source,/loginEpoch!==epoch/);
+assert.match(source,/clear\(\);\$\('logout'\)\.disabled=false;const loginEpoch=epoch;/,'Sign out must be available to cancel pending login');
+assert.match(source,/if\(loginEpoch!==epoch\)\{if\(loginAuth\.currentUser\?\.uid===credential\.user\.uid\)await authSdk\.signOut\(loginAuth\);return\}/,'Stale school verification must cancel credentials');
 console.log('V47 records refresh preserves login epoch and rejects stale page responses');
