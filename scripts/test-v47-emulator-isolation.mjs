@@ -290,6 +290,9 @@ try {
     await assertFails(updateDoc(schoolDoc('admin-a','300160001','teacher_assignments','300160001:teacher-a:9:math'),{active:true}));
     await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','300160001','members','teacher-a'),{uid:'teacher-a',schoolId:'300160001',role:'teacher',active:true}));
   }
+  await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','300160001','subjects','math'),{active:false}));
+  await assertFails(updateDoc(schoolDoc('admin-a','300160001','teacher_assignments','300160001:teacher-a:9:math'),{active:true}));
+  await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','300160001','subjects','math'),{active:true}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','300160001','teacher_assignments','300160001:teacher-a:9:math'),{active:true}));
   await env.withSecurityRulesDisabled(async ctx=>{
     await setDoc(doc(ctx.firestore(),'schools','300160001','subject_assignments','student-1:math'),{schoolId:'300160001',studentId:'student-1',subjectId:'math',class:'9'});
