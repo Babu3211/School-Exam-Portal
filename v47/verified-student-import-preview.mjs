@@ -13,7 +13,15 @@ const str=x=>{
 const verifiedCloudPreviews=new WeakMap();
 const PREVIEW_MAX_AGE_MS=5*60*1000;
 export const verifiedPreviewOwner=value=>verifiedCloudPreviews.get(value)?.uid??null;
-export const isVerifiedCloudPreview=(value,rows)=>!!value&&typeof value==='object'&&verifiedCloudPreviews.has(value)&&verifiedCloudPreviews.get(value)?.rows===rows&&verifiedCloudPreviews.get(value)?.fingerprint===JSON.stringify(rows)&&Date.now()-verifiedCloudPreviews.get(value)?.verifiedAt>=0&&Date.now()-verifiedCloudPreviews.get(value)?.verifiedAt<=PREVIEW_MAX_AGE_MS;
+export const isVerifiedCloudPreview=(value,rows)=>{
+ const issued=value&&typeof value==='object'?verifiedCloudPreviews.get(value):null;
+ if(!issued||issued.rows!==rows)return false;
+ let fingerprint;
+ try{fingerprint=JSON.stringify(rows)}catch{return false}
+ if(fingerprint!==issued.fingerprint)return false;
+ const age=Date.now()-issued.verifiedAt;
+ return age>=0&&age<=PREVIEW_MAX_AGE_MS;
+};
 export async function previewAgainstSchoolStudents({auth,schoolId,rows,readDocument,readStudents}={}){
  if(typeof readStudents!=='function')throw new TypeError('School-scoped student reader required');
  const context=await verifyV46ImportPreflight({auth,schoolId,collection:'students',readDocument});
