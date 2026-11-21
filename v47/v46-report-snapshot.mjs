@@ -14,7 +14,8 @@ export function prepareV46ReportSnapshot(inputs){
    ids.add(doc.id);
    const data=doc.data();
    if(!data||typeof data!=='object'||Array.isArray(data))throw new Error('Invalid V46 report record: '+key+'/'+doc.id);
-   return Object.freeze({id:doc.id,...data,id:doc.id});
+   if(Object.hasOwn(data,'schoolId')&&data.schoolId!==inputs.schoolId)throw new Error('Cross-school V46 report record: '+key+'/'+doc.id);
+   return Object.freeze({...data,id:doc.id});
   }));
  }
  return Object.freeze(out);
