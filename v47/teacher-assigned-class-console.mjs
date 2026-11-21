@@ -41,7 +41,7 @@ $('login').onclick=async()=>{
  finally{lock(false)}
 };
 $('logout').onclick=async()=>{if(busy)return;lock(true);clear();try{await authSdk.signOut(auth);message('Signed out')}catch(e){message('Sign out failed: '+e.message)}finally{lock(false)}};
-$('classId').addEventListener('change',()=>{$('students').replaceChildren();$('count').textContent='';$('subjectId').replaceChildren();selectionEpoch++;lock(false)});
+$('classId').addEventListener('change',()=>{$('students').replaceChildren();$('count').textContent='';$('subjectId').replaceChildren();selectionEpoch++;if(!busy)lock(false)});
 $('subjectId').addEventListener('change',()=>{$('students').replaceChildren();$('count').textContent='';selectionEpoch++;lock(false)});
 $('loadAssignments').onclick=async()=>{
  if(busy||!actor)return;
@@ -81,8 +81,8 @@ $('loadAssignments').onclick=async()=>{
   }
   $('load').disabled=true;
   message(verified.length+' assigned subjects verified. Choose a subject and load the class.');
- }catch(e){if(request===epoch){$('subjectId').replaceChildren();message('Assigned subject load failed: '+e.message)}}
- finally{if(request===epoch)lock(false)}
+ }catch(e){if(request===epoch&&selection===selectionEpoch){$('subjectId').replaceChildren();message('Assigned subject load failed: '+e.message)}}
+ finally{lock(false)}
 };
 $('load').onclick=async()=>{
  if(busy||!actor)return;
@@ -102,6 +102,6 @@ $('load').onclick=async()=>{
    fragment.append(tr);
   }
   $('students').append(fragment);$('count').textContent=roster.count+' assigned-class students (read-only)';message('विद्यार्थी सूची लोड भयो। यो पृष्ठबाट अंक Save गर्न मिल्दैन।');
- }catch(e){if(request===epoch){$('students').replaceChildren();$('count').textContent='';message('Access denied or roster unavailable: '+e.message)}}
+ }catch(e){if(request===epoch&&selection===selectionEpoch){$('students').replaceChildren();$('count').textContent='';message('Access denied or roster unavailable: '+e.message)}}
  finally{if(request===epoch)lock(false)}
 };
