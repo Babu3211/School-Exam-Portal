@@ -8,7 +8,8 @@ for(const name of ['index.html','admin.html','school-login.html','school-login.m
 for(const name of names){
  assert(!name.startsWith('test-'),'Test module leaked: '+name);
  assert(!name.startsWith('firebase.'),'Firebase configuration leaked: '+name);
- assert(!['firebase.json','firestore.rules','firestore.indexes.json','build-hosting.mjs'].includes(name),'Private file leaked: '+name);
+ assert(!name.includes('..')&&!name.includes('/'),'Invalid public filename: '+name);
+ assert(!['firebase.json','firestore.rules','firestore.indexes.json','build-hosting.mjs','test-production-marks-guard.mjs','release-readiness-gate.mjs'].includes(name),'Private file leaked: '+name);
 }
 const hub=await readFile('v47/dist/index.html','utf8');
 assert(hub.includes('SMSS Exam Portal'),'Incorrect V47 homepage');
