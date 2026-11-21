@@ -32,6 +32,8 @@ jobs:
         run: node v47/test-hosting-bundle.mjs
       - name: Verify V47 Super Admin session isolation
         run: node v47/test-super-admin-session-guard.mjs
+      - name: Test V47 school onboarding and pagination
+        run: node v47/test-school-admin-services.mjs
       - name: Verify V47 Super Admin session security
         run: node v47/test-super-admin-session-guard.mjs
       - name: Enforce V47 marks publication safety
