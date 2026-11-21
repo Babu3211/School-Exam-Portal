@@ -46,7 +46,7 @@ assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[null]}),/first ro
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[[]]}),/first row/);
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[rows[0]],existingIemisIds:null}),/identity lists/);
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[rows[0]],existingAdmissionNumbers:{}}),/identity lists/);
-for(const malformed of [{nested:true},['nested'],Number.POSITIVE_INFINITY,Number.MAX_SAFE_INTEGER+2,1n]){
+for(const malformed of [{nested:true},['nested'],Number.POSITIVE_INFINITY,Number.MAX_SAFE_INTEGER+2,1n,true,false]){
  assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[rows[0]],existingIemisIds:[malformed]}),/Invalid existing student identity/);
  assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[rows[0]],existingAdmissionNumbers:[malformed]}),/Invalid existing student identity/);
 }
