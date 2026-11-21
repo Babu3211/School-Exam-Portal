@@ -74,9 +74,12 @@ $('loadAssignments').onclick=async()=>{
   }
   await revalidate();
   if(classId!==$('classId').value)throw new Error('Class changed');
+  $('subjectId').replaceChildren();
+  const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='Select a verified subject';$('subjectId').append(placeholder);
   for(const subjectId of verified.sort()){
    const option=document.createElement('option');option.value=subjectId;option.textContent=subjectId;$('subjectId').append(option);
   }
+  $('load').disabled=true;
   message(verified.length+' assigned subjects verified. Choose a subject and load the class.');
  }catch(e){if(request===epoch){$('subjectId').replaceChildren();message('Assigned subject load failed: '+e.message)}}
  finally{if(request===epoch)lock(false)}
