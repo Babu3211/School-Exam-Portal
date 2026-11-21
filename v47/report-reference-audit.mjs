@@ -20,7 +20,7 @@ export function auditV46ReportReferences(rows){
    if(!ids[collection].has(target))missing.push(Object.freeze({markId:mark.id,field,reference:target,collection}));
   }
   // V46 stores a subject name, not subjectId, in mark documents.
-  const subject=mark.subjectId??mark.subject;
+  const subject=mark.subject??mark.subjectId;
   if(subject===undefined||subject===null||subject==='')unchecked.push(Object.freeze({markId:mark.id,field:'subject',collection:'subjects'}));
   else if(typeof subject!=='string'||!subjectKey(subject))unchecked.push(Object.freeze({markId:mark.id,field:'subject',collection:'subjects'}));
   else if(!subjectNames.has(subjectKey(subject)))missing.push(Object.freeze({markId:mark.id,field:'subject',reference:subject,collection:'subjects'}));
