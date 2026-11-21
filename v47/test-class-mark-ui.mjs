@@ -65,4 +65,5 @@ assert.ok(js.includes("if(rendered.length!==expected.size)throw new Error('Class
 assert.ok(js.includes("if(!expected.has(id)||rows.has(id))throw new Error('Unexpected or duplicate student row"),'Duplicate or foreign rendered students must fail closed');
 assert.ok(js.includes("row.querySelectorAll('[data-field=\"theory\"]').length!==1"),'Each row must contain exactly one theory input');
 assert.ok(js.includes("row.querySelectorAll('[data-field=\"practical\"]').length!==1"),'Each row must contain exactly one practical input');
+assert.ok(js.includes("String(row.name??'').trim().toLowerCase()==='computer'"),'Class 9–10 Computer must be excluded from raw marks selection regardless of casing');
 console.log('V47 full-class marks UI contract passed');
