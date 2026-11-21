@@ -121,7 +121,7 @@ service cloud.firestore {
       match /students/{id} {
         function validStudent() {
           return id.matches('^[A-Za-z0-9_-]{1,128}$')
-            && request.resource.data.keys().hasOnly(['name','class','rollNo','schoolId'])
+            && request.resource.data.keys().hasOnly(['name','class','rollNo','schoolId','studentIemisId','admissionNo','studentNameNepali','gender','fatherName','motherName','section','permanentAddress','temporaryAddress','dob','dobAD','motherTongue','disabilityType','guardianName','phone','symbolNo','birthRegistrationNo','nebRegNo','sourceYear'])
             && request.resource.data.keys().hasAll(['name','class','schoolId'])
             && request.resource.data.name is string
             && request.resource.data.name.size() >= 2
@@ -130,6 +130,44 @@ service cloud.firestore {
             && request.resource.data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
             && request.resource.data.get('rollNo','') is string
             && request.resource.data.get('rollNo','').size() <= 30
+            && request.resource.data.get('studentIemisId','') is string
+            && request.resource.data.get('studentIemisId','').size() <= 128
+            && request.resource.data.get('admissionNo','') is string
+            && request.resource.data.get('admissionNo','').size() <= 128
+            && request.resource.data.get('studentNameNepali','') is string
+            && request.resource.data.get('studentNameNepali','').size() <= 500
+            && request.resource.data.get('gender','') is string
+            && request.resource.data.get('gender','').size() <= 500
+            && request.resource.data.get('fatherName','') is string
+            && request.resource.data.get('fatherName','').size() <= 500
+            && request.resource.data.get('motherName','') is string
+            && request.resource.data.get('motherName','').size() <= 500
+            && request.resource.data.get('section','') is string
+            && request.resource.data.get('section','').size() <= 500
+            && request.resource.data.get('permanentAddress','') is string
+            && request.resource.data.get('permanentAddress','').size() <= 500
+            && request.resource.data.get('temporaryAddress','') is string
+            && request.resource.data.get('temporaryAddress','').size() <= 500
+            && request.resource.data.get('dob','') is string
+            && request.resource.data.get('dob','').size() <= 500
+            && request.resource.data.get('dobAD','') is string
+            && request.resource.data.get('dobAD','').size() <= 500
+            && request.resource.data.get('motherTongue','') is string
+            && request.resource.data.get('motherTongue','').size() <= 500
+            && request.resource.data.get('disabilityType','') is string
+            && request.resource.data.get('disabilityType','').size() <= 500
+            && request.resource.data.get('guardianName','') is string
+            && request.resource.data.get('guardianName','').size() <= 500
+            && request.resource.data.get('phone','') is string
+            && request.resource.data.get('phone','').size() <= 500
+            && request.resource.data.get('symbolNo','') is string
+            && request.resource.data.get('symbolNo','').size() <= 500
+            && request.resource.data.get('birthRegistrationNo','') is string
+            && request.resource.data.get('birthRegistrationNo','').size() <= 500
+            && request.resource.data.get('nebRegNo','') is string
+            && request.resource.data.get('nebRegNo','').size() <= 500
+            && request.resource.data.get('sourceYear','') is string
+            && request.resource.data.get('sourceYear','').size() <= 500
             && scopedRecord(sid);
         }
         allow get, list: if canRead(sid);
