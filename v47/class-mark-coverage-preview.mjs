@@ -8,6 +8,7 @@ export function inspectClassMarkCoverage(rows,{examId,classNo,subject,section=nu
  const inSection=item=>section===null||key(item.section)===key(section);
  const roster=rows.students.filter(student=>classOf(student.className??student.class)===classNo&&inSection(student));
  const ids=new Set(roster.map(student=>student.id));
+ if(ids.size!==roster.length||roster.some(student=>typeof student.id!=='string'||!student.id))throw new Error('Invalid or duplicate student IDs in class roster');
  const selected=rows.marks.filter(mark=>mark.examId===examId&&classOf(mark.className??mark.class)===classNo&&key(mark.subject)===key(subject)&&inSection(mark));
  const covered=new Set(),duplicates=[],outsiders=[];
  for(const mark of selected){
