@@ -46,6 +46,11 @@ assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[null]}),/first ro
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[[]]}),/first row/);
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[rows[0]],existingIemisIds:null}),/identity lists/);
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[rows[0]],existingAdmissionNumbers:{}}),/identity lists/);
+const unicodeExisting=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'é-101','Student Name':'Unicode Student','Class':'6'}],existingIemisIds:['e\u0301-101']});
+assert.equal(unicodeExisting.skipped,1);
+assert.match(unicodeExisting.records[0].errors.join(' '),/already exists/);
+const unicodeAdmission=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Admission Number':'é-22','Student Name':'Unicode Student','Class':'6'}],existingAdmissionNumbers:['e\u0301-22']});
+assert.equal(unicodeAdmission.skipped,1);
 const invalidNames=['A','X'.repeat(161)];
 for(const name of invalidNames){
  const preview=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'90901','Student Name':name,'Class':'6'}]});
