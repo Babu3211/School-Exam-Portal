@@ -3,10 +3,12 @@ import {validateSchoolId} from './school-paths.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {inspectClassMarkDraft} from './class-mark-draft-inspector.mjs';
 import {iemisEntrySchema} from './iemis-entry.js';
+import {loadVerifiedSubjectExamSettings} from './verified-subject-exam-settings.mjs';
+import {inspectConfiguredClassMarks} from './configured-mark-preflight.mjs';
 const $=id=>document.getElementById(id),status=msg=>{$('message').textContent=msg};
 let auth,authSdk,api,db,actor,schoolId,epoch=0,busy=false,studentsLoaded=false,subjectsLoaded=false,loadedStudentClass=null,loadedSubjectClass=null;
-let classMarkRoster=[],classMarkContext=null,rosterRequest=0,optionRequest=0;
-function reset(){optionRequest++;rosterRequest++;classMarkRoster=[];classMarkContext=null;$('classMarkRows').replaceChildren();$('classMarkCount').textContent='';$('saveClassMarks').disabled=true;$('inspectClassMarks').disabled=true;$('draftCheckResult').textContent='';$('loadClassMarks').disabled=true;epoch++;studentsLoaded=false;subjectsLoaded=false;loadedStudentClass=null;loadedSubjectClass=null;actor=null;schoolId=null;$('work').hidden=true;$('logout').disabled=true;$('save').disabled=true;$('studentId').replaceChildren();$('subjectId').replaceChildren();}
+let classMarkRoster=[],classMarkContext=null,classMarkSettings=null,rosterRequest=0,optionRequest=0;
+function reset(){optionRequest++;rosterRequest++;classMarkRoster=[];classMarkContext=null;classMarkSettings=null;$('classMarkRows').replaceChildren();$('classMarkHeader').replaceChildren();$('classMarkCount').textContent='';$('saveClassMarks').disabled=true;$('inspectClassMarks').disabled=true;$('draftCheckResult').textContent='';$('loadClassMarks').disabled=true;epoch++;studentsLoaded=false;subjectsLoaded=false;loadedStudentClass=null;loadedSubjectClass=null;actor=null;schoolId=null;$('work').hidden=true;$('logout').disabled=true;$('save').disabled=true;$('studentId').replaceChildren();$('subjectId').replaceChildren();}
 function lock(value){busy=value;for(const input of $('classMarkRows').querySelectorAll('input'))input.disabled=value;$('loadClassMarks').disabled=value||!actor||actor.role!=='school_admin';$('saveClassMarks').disabled=true;$('inspectClassMarks').disabled=value||!actor||!classMarkContext;for(const id of ['login','logout','loadStudents','loadSubjects','save','schoolClass','term','subjectId','studentId','theory','practical'])$(id).disabled=value||(['loadStudents','loadSubjects','save'].includes(id)&&!actor);if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('save').disabled=true;}}
 $('connect').onclick=async()=>{try{const config=JSON.parse($('config').value);if(config.projectId!=='smss-exam-portal-v47')throw new Error('Only V47 Firebase project allowed');const appSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js');authSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js');api=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js');const app=appSdk.initializeApp(config,'smss-v47-marks-entry');auth=authSdk.getAuth(app);await authSdk.setPersistence(auth,authSdk.inMemoryPersistence);db=api.getFirestore(app);$('connect').disabled=true;$('login').disabled=false;status('Connected to V47')}catch(e){status('Connection failed: '+e.message)}};
 $('login').onclick=async()=>{if(busy)return;reset();const attempt=epoch;const loginAuth=auth;lock(true);try{const id=validateSchoolId($('schoolId').value.trim());const credential=await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);$('password').value='';if(attempt!==epoch){if(loginAuth.currentUser?.uid===credential.user.uid)await authSdk.signOut(loginAuth);return}const uid=credential.user.uid;const session=await verifySchoolSession({schoolId:id,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(attempt!==epoch){if(loginAuth.currentUser?.uid===uid)await authSdk.signOut(loginAuth);return}if(loginAuth.currentUser?.uid!==uid||session.role!=='school_admin')throw new Error('School Admin required');const school=await api.getDoc(api.doc(db,'schools',id));if(attempt!==epoch){if(loginAuth.currentUser?.uid===uid)await authSdk.signOut(loginAuth);return}if(loginAuth.currentUser?.uid!==uid||!school.exists()||school.data().active!==true)throw new Error('School inactive');actor={role:'school_admin',active:true,schoolId:id,uid};schoolId=id;$('heading').textContent='Raw mark — '+String(school.data().name??id);$('work').hidden=false;status('विद्यालय प्रशासकको लगइन सफल भयो। विद्यार्थी र विषय लोड गर्नुहोस्। हाल अंक Save/Publish बन्द छ।')}catch(e){if(attempt===epoch){reset();try{await authSdk.signOut(auth)}catch{}status('Sign in failed: '+e.message)}}finally{lock(false)}};
@@ -35,7 +37,7 @@ $('schoolClass').onchange=()=>{optionRequest++;invalidateClassMarks();studentsLo
 $('studentId').onchange=()=>lock(false);$('subjectId').onchange=()=>lock(false);
 $('save').onclick=()=>status('Individual mark saving is disabled. Use complete-class marks.');
 
-function invalidateClassMarks(){rosterRequest++;classMarkRoster=[];classMarkContext=null;$('classMarkRows').replaceChildren();$('classMarkCount').textContent='';$('draftCheckResult').textContent='';$('inspectClassMarks').disabled=true;$('saveClassMarks').disabled=true}
+function invalidateClassMarks(){rosterRequest++;classMarkRoster=[];classMarkContext=null;classMarkSettings=null;$('classMarkRows').replaceChildren();$('classMarkCount').textContent='';$('draftCheckResult').textContent='';$('inspectClassMarks').disabled=true;$('saveClassMarks').disabled=true}
 $('term').onchange=()=>{invalidateClassMarks();lock(false)};
 $('subjectId').onchange=()=>{invalidateClassMarks();lock(false)};
 $('loadClassMarks').onclick=async()=>{
@@ -44,20 +46,24 @@ $('loadClassMarks').onclick=async()=>{
  const attempt=epoch,classId=$('schoolClass').value,term=$('term').value,subjectId=$('subjectId').value,uid=actor.uid,selectedSchoolId=schoolId;
  invalidateClassMarks();const request=rosterRequest;lock(true);
  try{
+  const settingsId=$('markSettingsId').value.trim();
+  const settings=await loadVerifiedSubjectExamSettings({db,api,schoolId:selectedSchoolId,classId,subjectId,examId:term,settingsId,revalidate:async()=>{if(attempt!==epoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('School session changed');const verified=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(verified.role!=='school_admin')throw new Error('School Admin required');}});
   const roster=await loadCompleteClassRoster({db,api,actor,schoolId,classId});
   if(request!==rosterRequest||attempt!==epoch||classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value)return;
   if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId||actor?.schoolId!==selectedSchoolId)throw new Error('Authentication or school changed during roster load');
   // Display alphabetically without changing the authoritative roster IDs used for completeness checks.
+  classMarkSettings=settings;
+  const header=$('classMarkHeader');header.replaceChildren();for(const label of ['Student',...settings.components.map(c=>c.name+' / '+c.fullMarks)]){const th=document.createElement('th');th.textContent=label;header.append(th)}
   classMarkRoster=[...roster.students].sort((a,b)=>String(a.name??a.id).localeCompare(String(b.name??b.id),'en',{sensitivity:'base',numeric:true})||a.id.localeCompare(b.id));
   classMarkContext={classId,term,subjectId};
   const body=$('classMarkRows'),fragment=document.createDocumentFragment();
   for(const student of classMarkRoster){
    const row=document.createElement('tr');row.dataset.studentId=student.id;
    const name=document.createElement('td');name.textContent=String(student.name??student.id);row.append(name);
-   for(const field of ['theory','practical']){
+   for(const component of settings.components){
     const td=document.createElement('td'),input=document.createElement('input');
-    input.type='number';input.min='0';input.max='100';input.step='any';input.dataset.field=field;
-    input.setAttribute('aria-label',field+' marks for '+student.id);td.append(input);row.append(td);
+    input.type='number';input.min='0';input.max=String(component.fullMarks);input.step='any';input.dataset.field=component.key;
+    input.setAttribute('aria-label',component.name+' marks for '+student.id);td.append(input);row.append(td);
    }fragment.append(row);
   }
   body.append(fragment);
@@ -72,21 +78,15 @@ $('classMarkRows').addEventListener('input',event=>{
  $('draftCheckResult').textContent='Draft changed. Inspect again before saving.';
 });
 function collectClassMarkEntries(){
- if(!classMarkContext)throw new Error('Load full roster first');
- const rendered=[...$('classMarkRows').children];
- const expected=new Set(classMarkRoster.map(student=>student.id));
- if(rendered.length!==expected.size)throw new Error('Class mark rows changed; reload the authoritative roster');
- const rows=new Map();
- for(const row of rendered){
-  const id=row.dataset.studentId;
-  if(!expected.has(id)||rows.has(id))throw new Error('Unexpected or duplicate student row; reload the class');
-  if(row.querySelectorAll('[data-field="theory"]').length!==1||row.querySelectorAll('[data-field="practical"]').length!==1)throw new Error('Invalid mark input row; reload the class');
-  rows.set(id,row);
- }
+ if(!classMarkContext||!classMarkSettings)throw new Error('Load verified settings and full roster first');
+ const rendered=[...$('classMarkRows').children],expected=new Set(classMarkRoster.map(s=>s.id)),seen=new Map();
+ if(rendered.length!==expected.size)throw new Error('Class roster changed; reload');
+ for(const row of rendered){const id=row.dataset.studentId;if(!expected.has(id)||seen.has(id))throw new Error('Unexpected or duplicate student');seen.set(id,row)}
  return classMarkRoster.map(student=>{
-  const row=rows.get(student.id);
-  return {studentId:student.id,class:classMarkContext.classId,term:classMarkContext.term,subjectId:classMarkContext.subjectId,
-   theory:row?.querySelector('[data-field="theory"]')?.value??'',practical:row?.querySelector('[data-field="practical"]')?.value??''};
+  const row=seen.get(student.id),values={};
+  for(const component of classMarkSettings.components){const inputs=[...row.querySelectorAll('input[data-field]')].filter(input=>input.dataset.field===component.key);if(inputs.length!==1)throw new Error('Component fields changed; reload');values[component.key]=inputs[0].value}
+  if(row.querySelectorAll('input[data-field]').length!==classMarkSettings.components.length)throw new Error('Unexpected mark component field');
+  return {studentId:student.id,values};
  });
 }
 $('inspectClassMarks').onclick=()=>{
@@ -94,9 +94,10 @@ $('inspectClassMarks').onclick=()=>{
  const {classId,term,subjectId}=classMarkContext;
  if(classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value){invalidateClassMarks();status('Selection changed; reload roster');return}
  try{
-  const result=inspectClassMarkDraft({schoolId,classId,term,subjectId,expectedStudentIds:classMarkRoster.map(s=>s.id),entries:collectClassMarkEntries()});
-  $('draftCheckResult').textContent=result.summary+(result.missing.length?' Missing: '+result.missing.slice(0,8).join(', '):'')+(result.invalid.length?' Invalid: '+result.invalid.slice(0,4).join('; '):'');
-  status(result.ready?'Draft checked. This does not save or publish marks.':'Draft incomplete. No marks saved.');
+  if($('markSettingsId').value.trim()!==classMarkSettings.settingsId)throw new Error('Examination Settings changed; reload roster');
+  const result=inspectConfiguredClassMarks({schoolId,classId,examId:term,subjectId,settings:{...classMarkSettings,id:classMarkSettings.settingsId,active:true},expectedStudentIds:classMarkRoster.map(s=>s.id),drafts:collectClassMarkEntries()});
+  $('draftCheckResult').textContent=(result.complete?'All student marks valid.':'Class marks incomplete.')+(result.missing.length?' Missing: '+result.missing.slice(0,8).join(', '):'')+(result.invalid.length?' Invalid: '+result.invalid.slice(0,4).map(x=>x.studentId+': '+x.message).join('; '):'');
+  status(result.complete?'Draft checked. This does not save or publish marks.':'Draft incomplete. No marks saved.');
  }catch(e){$('draftCheckResult').textContent=e.message;status('अंक जाँच असफल भयो। कुनै अंक Save गरिएको छैन।')}
 };
 $('saveClassMarks').onclick=()=>status('Save/Publish disabled: secure complete-class workflow is not implemented. No marks saved.');
@@ -112,3 +113,5 @@ $('inspectIemisSchema').onclick=()=>{
   $('iemisSchemaStatus').textContent='V46 IEMIS component reference only; Save/Publish disabled.';
  }catch(error){$('iemisSchemaStatus').textContent=error.message}
 };
+
+$('markSettingsId').addEventListener('input',()=>{invalidateClassMarks();lock(false)});
