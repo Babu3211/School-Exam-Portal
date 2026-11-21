@@ -5,6 +5,7 @@ import {inspectClassMarkDraft} from './class-mark-draft-inspector.mjs';
 import {iemisEntrySchema} from './iemis-entry.js';
 import {discoverVerifiedSubjectExamSettings} from './discover-subject-exam-settings.mjs';
 import {inspectConfiguredClassMarks} from './configured-mark-preflight.mjs';
+import {prepareConfiguredClassPublication} from './configured-class-publication-preview.mjs';
 const $=id=>document.getElementById(id),status=msg=>{$('message').textContent=msg};
 let auth,authSdk,api,db,actor,schoolId,epoch=0,busy=false,studentsLoaded=false,subjectsLoaded=false,loadedStudentClass=null,loadedSubjectClass=null;
 let classMarkRoster=[],classMarkContext=null,classMarkSettings=null,rosterRequest=0,optionRequest=0;
@@ -110,6 +111,10 @@ $('inspectClassMarks').onclick=async()=>{
  try{
   const result=inspectConfiguredClassMarks({schoolId,classId,examId:term,subjectId,settings:classMarkSettings,expectedStudentIds:classMarkRoster.map(s=>s.id),drafts:collectClassMarkEntries()});
   $('draftCheckResult').textContent=(result.complete?'All student marks valid.':'Class marks incomplete.')+(result.missing.length?' Missing: '+result.missing.slice(0,8).join(', '):'')+(result.invalid.length?' Invalid: '+result.invalid.slice(0,4).map(x=>x.studentId+': '+x.message).join('; '):'');
+  if(result.complete){
+   const proposal=prepareConfiguredClassPublication({actor,schoolId,classId,subjectId,examId:term,settings:classMarkSettings,expectedStudentIds:classMarkRoster.map(s=>s.id),drafts:collectClassMarkEntries()});
+   $('draftCheckResult').textContent+=' Read-only publication review: '+proposal.rosterCount+' students; '+proposal.reviewBatches.length+' review groups. No data saved.';
+  }
   status(result.complete?'Draft checked. This does not save or publish marks.':'Draft incomplete. No marks saved.');
  }catch(e){$('draftCheckResult').textContent=e.message;status('अंक जाँच असफल भयो। कुनै अंक Save गरिएको छैन।')}
 };
