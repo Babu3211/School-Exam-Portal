@@ -6,7 +6,7 @@ import {inspectClassMarkCoverage} from './class-mark-coverage-preview.mjs';
 const $=id=>document.getElementById(id);
 let auth,authSdk,db,firestoreApi,epoch=0,busy=false,connecting=false,loginTask=null,loggingOut=false,reportRows=null;
 const status=message=>{$('message').textContent=message};
-function clear(){reportRows=null;$('summaryRows').replaceChildren();for(const id of ['summaryExam','summaryClass','summaryAnnual','summaryRun','coverageSubject','coverageRun'])$(id).disabled=true;$('summaryResult').textContent='Choose an exam and class after loading records.';$('coverageResult').textContent='Class-wide coverage not checked.';epoch++;$('report').hidden=true;$('counts').replaceChildren();$('school').textContent='';$('password').value=''}
+function clear(){reportRows=null;$('summaryRows').replaceChildren();for(const id of ['summaryExam','summaryClass','summaryAnnual','summaryRun','coverageSubject','coverageSection','coverageRun'])$(id).disabled=true;$('summaryResult').textContent='Choose an exam and class after loading records.';$('coverageResult').textContent='Class-wide coverage not checked.';epoch++;$('report').hidden=true;$('counts').replaceChildren();$('school').textContent='';$('password').value=''}
 function currentSession(requestEpoch,uid){return requestEpoch===epoch&&auth?.currentUser?.uid===uid}
 $('connect').onclick=async()=>{
  if(connecting||auth)return;
@@ -95,7 +95,7 @@ $('summaryRun').onclick=()=>{
 $('coverageRun').onclick=()=>{
  if(!reportRows||!auth?.currentUser||loggingOut)return;
  try{
-  const result=inspectClassMarkCoverage(reportRows,{examId:$('summaryExam').value,classNo:Number($('summaryClass').value),subject:$('coverageSubject').value});
+  const result=inspectClassMarkCoverage(reportRows,{examId:$('summaryExam').value,classNo:Number($('summaryClass').value),subject:$('coverageSubject').value,section:$('coverageSection').value.trim()||null});
   $('coverageResult').textContent='Read-only class check: '+result.rosterCount+' students, '+result.markCount+' marks; missing '+result.missing.length+', duplicate '+result.duplicates.length+', outsider '+result.outsiders.length+'. '+(result.complete?'Roster covered.':'Not complete.')+' Save and publication disabled.';
  }catch(error){$('coverageResult').textContent='Class coverage unavailable: '+error.message}
 };
