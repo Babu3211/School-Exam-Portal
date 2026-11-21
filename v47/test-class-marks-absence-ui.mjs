@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {inspectConfiguredClassMarks} from './configured-mark-preflight.mjs';
+const js=readFileSync(new URL('./marks-entry-console.mjs',import.meta.url),'utf8');
+assert.match(js,/absence\.type='checkbox'/);
+assert.match(js,/absence\.dataset\.absent='true'/);
+assert.match(js,/input\[data-field\],input\[data-absent\]/);
+assert.match(js,/input\.value='';input\.disabled=event\.target\.checked/);
+assert.match(js,/isAbsent:absentInputs\[0\]\.checked/);
+assert.match(js,/input\.matches\('input\[data-field\]'\)/);
+const base={schoolId:'12345',subjectId:'math',examId:'final',classId:'8',settings:{schoolId:'12345',subjectId:'math',examId:'final',classId:'8',active:true,components:[{key:'theory',name:'Theory',fullMarks:80},{key:'practical',name:'Practical',fullMarks:20}]},expectedStudentIds:['s1','s2']};
+const good=inspectConfiguredClassMarks({...base,drafts:[{studentId:'s1',values:{theory:'70',practical:'18'}},{studentId:'s2',isAbsent:true,values:{}}]});
+assert.equal(good.complete,true);assert.equal(good.ready[1].isAbsent,true);
+const bad=inspectConfiguredClassMarks({...base,drafts:[{studentId:'s1',values:{theory:'70',practical:'18'}},{studentId:'s2',isAbsent:true,values:{theory:'2'}}]});
+assert.equal(bad.complete,false);assert.match(bad.invalid[0].message,/Absent student/);
+console.log('V47 absence UI and complete-class draft preflight passed');
