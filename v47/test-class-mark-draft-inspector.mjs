@@ -44,4 +44,13 @@ for(const bad of [
  const x=inspectClassMarkDraft({...base,entries:[mark('s1',{theory:101}),mark('s2',{practical:-1})]});
  assert.equal(x.ready,false);assert.equal(x.invalid.length,2);
 }
+{
+ const x=inspectClassMarkDraft({...base,entries:[mark('s1',{subjectId:'science'}),mark('s2',{studentId:'s2',class:'8'})]});
+ assert.equal(x.ready,false);assert.equal(x.invalid.length,2);
+ assert.deepEqual(x.missing,[],'Invalid marks are reported separately from absent student rows');
+}
+{
+ const x=inspectClassMarkDraft({...base,entries:[mark('s1',{theory:'30.5',practical:'10'}),mark('s2')]});
+ assert.equal(x.ready,true,'Valid numeric strings should retain marks-service validation behavior');
+}
 console.log('V47 1500-student draft inspection tests passed');
