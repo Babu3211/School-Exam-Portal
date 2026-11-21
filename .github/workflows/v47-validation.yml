@@ -24,6 +24,7 @@ jobs:
           npm run test:v47:tenant-firestore
           npm run test:v47:v46-readonly-bridge
           npm run test:v47:records-session
+          node v47/test-redact-record-preview.mjs
           npm run test:v47:iemis-school-id
           npm run test:v47:structure
           npm run test:v47:terms
