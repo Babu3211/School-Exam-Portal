@@ -386,10 +386,53 @@ service cloud.firestore {
         allow get, list: if canRead(sid);
         allow create, update, delete: if false;
       }
+      // Only one immutable, explicitly scoped active configuration per document.
+      // Duplicate active configurations are rejected by the client discovery guard;
+      // cross-document uniqueness still requires an audited server-side workflow.
+      match /mark_settings/{id} {
+        function validMarkSettings() {
+          let data = request.resource.data;
+          return id.matches('^[A-Za-z0-9_-]{1,128}
+        allow get, list: if collection in ['staff','classes','school_settings'] && canRead(sid);
+        allow create: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+            && data.keys().hasOnly(['id','schoolId','subjectId','examId','classId','active','components'])
+            && data.keys().hasAll(['id','schoolId','subjectId','examId','classId','active','components'])
+            && data.id == id && data.schoolId == sid
+            && data.subjectId is string && data.subjectId.matches('^[A-Za-z0-9_-]{1,128}
+        allow get, list: if collection in ['staff','classes','school_settings'] && canRead(sid);
+        allow create: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+            && data.examId in ['weekly','monthly','1st','2nd','3rd','final']
+            && data.classId in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && data.active == true
+            && data.components is list
+            && data.components.size() > 0 && data.components.size() <= 50
+            && request.resource.size() < 20000;
+        }
+        allow get, list: if canRead(sid);
+        // Config changes can alter historical grade meaning. Until an audited
+        // settings-version migration exists, deny writes instead of silently changing marks.
+        allow create, update, delete: if false;
+      }
       match /{collection}/{id} {
-        allow get, list: if collection in ['staff','classes','mark_settings','school_settings'] && canRead(sid);
-        allow create: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && scopedRecord(sid);
-        allow update: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && immutableSchool(sid);
+        allow get, list: if collection in ['staff','classes','school_settings'] && canRead(sid);
+        allow create: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && immutableSchool(sid);
         allow delete: if false;
       }
     }
