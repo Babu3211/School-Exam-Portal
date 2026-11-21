@@ -2,11 +2,12 @@ import assert from 'node:assert/strict';
 import {verifyTeacherSubjectAssignment} from './verified-teacher-subject-assignment.mjs';
 const actor={uid:'teacher1',role:'teacher',active:true,schoolId:'12345'};
 let current={schoolId:'12345',uid:'teacher1',classId:'9',subjectId:'math',active:true};
-let exists=true,subjectExists=true,subject={schoolId:'12345',class:'9',active:true},reads=0,revalidations=0;
+let exists=true,subjectExists=true,subject={schoolId:'12345',class:'9',name:'Mathematics',active:true},reads=0,revalidations=0;
 const api={doc:(_db,...parts)=>parts.join('/'),getDoc:async path=>{reads++;if(path==='schools/12345/subjects/math')return {exists:()=>subjectExists,data:()=>subject};assert.equal(path,'schools/12345/teacher_assignments/12345:teacher1:9:math');return {exists:()=>exists,data:()=>current}}};
 const base={db:{},api,actor,schoolId:'12345',classId:'9',subjectId:'math',revalidate:async()=>{revalidations++}};
 const result=await verifyTeacherSubjectAssignment(base);
 assert.equal(result.verified,true);
+assert.equal(result.subjectName,'Mathematics');
 assert.equal(result.writeAuthorized,false);
 assert.equal(result.publicationAllowed,false);
 assert.equal(reads,2);
@@ -23,7 +24,7 @@ for(const bad of [
 ]){current=bad;await assert.rejects(()=>verifyTeacherSubjectAssignment(base),/inactive or mismatched/)}
 current={schoolId:'12345',uid:'teacher1',classId:'9',subjectId:'math',active:true};
 subjectExists=false;await assert.rejects(()=>verifyTeacherSubjectAssignment(base),/does not exist/);subjectExists=true;
-for(const invalid of [{...subject,active:false},{...subject,schoolId:'98765'},{...subject,class:'10'}]){subject=invalid;await assert.rejects(()=>verifyTeacherSubjectAssignment(base),/inactive or mismatched/)}
+for(const invalid of [{...subject,active:false},{...subject,schoolId:'98765'},{...subject,class:'10'},{...subject,name:''}]){subject=invalid;await assert.rejects(()=>verifyTeacherSubjectAssignment(base),/inactive or mismatched/)}
 subject={schoolId:'12345',class:'9',active:true};
 for(const badActor of [
  {...actor,role:'viewer'},
