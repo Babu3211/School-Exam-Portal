@@ -20,7 +20,7 @@ assert(rules.includes("request.resource.data.id == sid"),'School ID must match F
 assert(rules.includes("allow delete: if false;"),'School deletion must remain disabled');
 assert(source.includes("$('next').disabled=true;$('next').onclick=null;"),"Logout clears stale pagination");
 assert(source.includes("$('next').disabled=true;const result="),"Pagination disabled while request is pending");
-assert(source.includes("if(mutating||!actor||auth?.currentUser?.uid!==actor.uid)return;cursor=result.cursor;refresh()"),"Pagination checks active session");
+assert(source.includes("if(mutating||signingIn||signingOut||!actor||auth?.currentUser?.uid!==actor.uid)return;cursor=result.cursor;refresh()"),"Pagination checks active session");
 assert(source.includes("if(suppliedIemis!==schoolId)"),"IEMIS field must exactly match school ID");
 assert(source.includes("const showError=error=>status(cleanAuthError(error))"),"Error feedback is centralized and sanitized");
 assert(source.includes("'अनुमति छैन। Super Admin अधिकार जाँच्नुहोस्।'"),"Permission denial feedback is Nepali");
@@ -29,7 +29,7 @@ assert(source.includes("'सेवा अहिले उपलब्ध छै�
 assert(source.includes("'विद्यालय निष्क्रिय अवस्थामा दर्ता भयो। पुष्टि गरेपछि मात्र सक्रिय गर्नुहोस्।'"),"Registration confirmation is Nepali");
 assert(source.includes("'सफलतापूर्वक साइन आउट भयो।'"),"Logout feedback is Nepali");
 assert(source.includes("if(requestedRefresh!==refreshEpoch||requestedSession!==sessionEpoch)return;"),"Ignore stale refresh errors");
-assert(source.includes("$('refresh').onclick=()=>{if(mutating)return;"),"Block refresh during school mutations");
+assert(source.includes("$('refresh').onclick=()=>{if(mutating||signingIn||signingOut)return;"),"Block refresh during school mutations");
 assert(source.includes("$('refresh').disabled=true;$('next').disabled=true;"),"Block refresh and pagination during school mutations");
 assert(source.includes("$('refresh').disabled=false"),"Restore refresh after school mutation");
 assert(source.includes("const requestedActor=actor,requestedSession=sessionEpoch,requestedRefresh=++refreshEpoch;try{"),"Capture request epoch before try/catch");
@@ -39,7 +39,7 @@ assert(source.includes("if(requestedRefresh!==refreshEpoch||requestedSession!==s
 assert(!source.includes('status(e.message)'), 'Raw Firebase error messages must never be shown');
 assert(!source.includes('error?.message??'), 'Untrusted Firebase error messages must be sanitized');
 assert(source.includes("if(connecting||db)return;"),"Prevent duplicate Firebase initialization");
-assert(source.includes("if(signingIn||mutating)return;"),"Prevent concurrent sign-in");
+assert(source.includes("if(signingIn||signingOut||mutating)return;"),"Prevent concurrent sign-in");
 assert(source.includes("$('password').value='';signingIn=false;"),"Clear password after login failure");
 assert(source.includes("finally{connecting=false}"),"Release Firebase connection lock");
 assert(source.includes("$('login').disabled=true;try{"),"Disable login during verification");
