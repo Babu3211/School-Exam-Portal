@@ -28,4 +28,9 @@ assert(source.includes("'Email वा Password मिलेन।'"),"Authentica
 assert(source.includes("'सेवा अहिले उपलब्ध छैन। पुनः प्रयास गर्नुहोस्।'"),"Service unavailable feedback is Nepali");
 assert(source.includes("'विद्यालय निष्क्रिय अवस्थामा दर्ता भयो। पुष्टि गरेपछि मात्र सक्रिय गर्नुहोस्।'"),"Registration confirmation is Nepali");
 assert(source.includes("'सफलतापूर्वक साइन आउट भयो।'"),"Logout feedback is Nepali");
+assert(source.includes("if(requestedRefresh!==refreshEpoch||requestedSession!==sessionEpoch)return;"),"Ignore stale refresh errors");
+assert(source.includes("$('refresh').onclick=()=>{if(mutating)return;"),"Block refresh during school mutations");
+assert(source.includes("$('refresh').disabled=true;$('next').disabled=true;"),"Block refresh and pagination during school mutations");
+assert(source.includes("$('refresh').disabled=false"),"Restore refresh after school mutation");
+assert(source.includes("const requestedActor=actor,requestedSession=sessionEpoch,requestedRefresh=++refreshEpoch;try{"),"Capture request epoch before try/catch");
 console.log('PASS V47 Super Admin UID and school-list session guards');
