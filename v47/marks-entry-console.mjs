@@ -45,7 +45,7 @@ $('createExamSettings').onclick=async()=>{
  let settings;
  try{
   const lines=$('newSettingsComponents').value.split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
-  const components=lines.map(line=>{const parts=line.split(',').map(part=>part.trim());if(parts.length!==3)throw new Error('Use key,name,fullMarks on each line');return {key:parts[0],name:parts[1],fullMarks:Number(parts[2])}});
+  const components=lines.map(line=>{const parts=line.split(',').map(part=>part.trim());if(parts.length!==3||!parts[2]||!/^(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)$/.test(parts[2]))throw new Error('Use key,name,positive fullMarks on each line');return {key:parts[0],name:parts[1],fullMarks:Number(parts[2])}});
   settings=prepareNewSubjectExamSettings({schoolId:selectedSchoolId,classId,subjectId,examId,components});
   if(!window.confirm('Create immutable settings for '+classId+' / '+subjectId+' / '+examId+'? Existing settings cannot be changed.'))return;
  }catch(error){output.textContent='Settings invalid: '+error.message;return}
