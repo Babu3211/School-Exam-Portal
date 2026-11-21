@@ -27,6 +27,11 @@ assert.deepEqual(Object.keys(inputs),['schoolId','students','subjects','exams','
 assert.deepEqual(inputs.marks.path,['schools',schoolId,'marks']);
 assert.deepEqual(inputs.markSettings.path,['schools',schoolId,'mark_settings']);
 assert.equal(Object.isFrozen(inputs),true);
+const detachedLoad=bridge.loadExamReportRows;
+const detachedRows=await detachedLoad();
+assert.equal(detachedRows.schoolId,schoolId);
+assert.deepEqual(detachedRows.marks,[]);
+assert.equal(Object.isFrozen(detachedRows),true);
 const started=[];
 const pendingResolvers=new Map();
 const pendingApi={...firestoreApi,getDocs:path=>new Promise(resolve=>{started.push(path[2]);pendingResolvers.set(path[2],()=>resolve({docs:[],path}));})};
@@ -46,4 +51,5 @@ await assert.rejects(createV46ReadOnlyBridge({schoolId,auth:{currentUser:null},d
 auth.currentUser={uid:'anotherUser'};
 await assert.rejects(bridge.listStudents(),/Authentication changed/);
 await assert.rejects(bridge.loadExamReportInputs(),/Authentication changed/);
+await assert.rejects(detachedLoad(),/Authentication changed/);
 console.log('V46 read-only V47 bridge tests passed');
