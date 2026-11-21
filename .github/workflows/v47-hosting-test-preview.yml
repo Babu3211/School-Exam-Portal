@@ -1,11 +1,5 @@
 name: V47 isolated Hosting test preview
 on:
-  push:
-    branches:
-      - smss-v47-multischool-work
-    paths:
-      - 'v47/**'
-      - '.github/workflows/v47-hosting-test-preview.yml'
   workflow_dispatch:
 permissions:
   contents: read
@@ -31,6 +25,22 @@ jobs:
           test ! -f v47/dist/firestore.rules
           test ! -f v47/dist/firebase.json
           node -e 'const c=require("./v47/firebase.json");if(c.hosting.public!=="dist")process.exit(1)'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install isolated V47 test dependencies
+        run: npm install --no-package-lock --ignore-scripts
+      - name: Run V47 security and import checks before preview
+        run: |
+          npm run test:v47:syntax
+          npm run test:v47:emulator
+          npm run test:v47:rules-iemis-syntax
+          npm run test:v47:verified-import
+          node v47/test-hosting-bundle.mjs
       - name: Require dedicated V47 Firebase credential
         env:
           V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}
