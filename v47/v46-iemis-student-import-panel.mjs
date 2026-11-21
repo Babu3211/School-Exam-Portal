@@ -9,6 +9,7 @@ import {previewAgainstSchoolStudents,isVerifiedCloudPreview} from './verified-st
 export function mountV47IemisStudentPreview({container,rows,schoolId,existingIemisIds=[],existingAdmissionNumbers=[],cloudChecked=false,verifiedPreview=null}){
  if(!container||typeof container.replaceChildren!=='function')throw new TypeError('DOM container required');
  if(cloudChecked&&!verifiedPreview)throw new Error('Verified cloud preview required; do not set cloudChecked manually');
+ if(verifiedPreview&&cloudChecked!==true)throw new Error('Verified preview requires cloud checked display');
  if(verifiedPreview&&(!isVerifiedCloudPreview(verifiedPreview)||verifiedPreview.cloudChecked!==true||verifiedPreview.schoolId!==schoolId||!verifiedPreview.preview))throw new Error('Invalid verified preview');
  const preview=verifiedPreview?verifiedPreview.preview:previewV46IemisStudentImport({rows,schoolId,existingIemisIds,existingAdmissionNumbers});
  const doc=container.ownerDocument;
