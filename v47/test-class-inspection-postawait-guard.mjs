@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const js=readFileSync(new URL('./marks-entry-console.mjs',import.meta.url),'utf8');
+const start=js.indexOf("$('inspectClassMarks').onclick=async()=>");
+const end=js.indexOf("$('saveClassMarks').onclick",start);
+assert.ok(start>=0&&end>start);
+const handler=js.slice(start,end);
+const awaitSession=handler.indexOf('const verified=await verifySchoolSession(');
+const postAwaitGuard=handler.indexOf('if(busy||!classMarkContext||attempt!==epoch||request!==rosterRequest');
+const inspect=handler.indexOf('inspectConfiguredClassMarks(');
+const proposal=handler.indexOf('prepareConfiguredClassPublication(');
+assert.ok(awaitSession>=0&&postAwaitGuard>awaitSession&&inspect>postAwaitGuard&&proposal>inspect);
+assert.match(handler.slice(postAwaitGuard,inspect),/auth\?\.currentUser\?\.uid!==uid/);
+assert.match(handler.slice(postAwaitGuard,inspect),/actor\?\.uid!==uid/);
+assert.match(handler.slice(postAwaitGuard,inspect),/schoolId!==selectedSchoolId/);
+console.log('V47 post-await class inspection session guard wiring passed');
