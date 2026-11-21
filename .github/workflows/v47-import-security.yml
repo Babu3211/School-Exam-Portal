@@ -39,3 +39,6 @@ jobs:
 
       - name: Firestore rules emulator isolation checks
         run: npm run test:v47:emulator
+
+      - name: V46 student import record compatibility
+        run: npm run test:v47:student-import-record-adapter
