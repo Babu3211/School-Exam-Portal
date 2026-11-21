@@ -32,7 +32,736 @@ service cloud.firestore {
         && request.resource.data.get('schoolId', '') == sid;
     }
     function validSchool(sid) {
-      return sid.matches('^[0-9]{5,20}
+      return sid.matches('^[0-9]{5,20}        && request.resource.data.keys().hasAll(['id', 'name', 'iemisCode', 'active'])
+        && request.resource.data.id == sid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 3
+        && request.resource.data.name.size() <= 160
+        && request.resource.data.get('iemisCode', '') is string
+        && request.resource.data.iemisCode == sid
+        && request.resource.data.active == false;
+    }
+    match /v47_super_admins/{uid} { allow read, write: if false; }
+    match /schools/{sid} {
+      allow get: if canRead(sid);
+      allow list: if superAdmin();
+      allow create: if superAdmin() && validSchool(sid);
+      allow update: if superAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active'])
+        && request.resource.data.active is bool;
+      allow delete: if false;
+      match /members/{uid} {
+        function validMember() {
+          return request.resource.data.keys().hasOnly(['uid', 'schoolId', 'role', 'active'])
+            && request.resource.data.keys().hasAll(['uid', 'schoolId', 'role', 'active'])
+            && request.resource.data.uid == uid
+            && request.resource.data.schoolId == sid
+            && request.resource.data.role in ['school_admin', 'teacher', 'viewer']
+            && request.resource.data.active is bool;
+        }
+        allow get: if canAdmin(sid) || (loggedIn() && uid == request.auth.uid && activeMember(sid));
+        allow list: if canAdmin(sid);
+        // School Admin may provision only teacher/viewer memberships, never self-elevate.
+        function subordinateRole() {
+          return request.resource.data.role in ['teacher', 'viewer'];
+        }
+        function adminCanCreate() {
+          return memberRole(sid, 'school_admin') && uid != request.auth.uid
+            && validMember() && subordinateRole()
+            && request.resource.data.active == false;
+        }
+        function adminCanUpdate() {
+          return memberRole(sid, 'school_admin') && uid != request.auth.uid
+            && resource.data.get('role', '') in ['teacher', 'viewer']
+            && validMember() && subordinateRole()
+            && request.resource.data.uid == resource.data.uid
+            && request.resource.data.schoolId == resource.data.schoolId
+            && request.resource.data.role == resource.data.role
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active']);
+        }
+        allow create: if (superAdmin() && validMember()) || adminCanCreate();
+        allow update: if (superAdmin() && validMember()) || adminCanUpdate();
+        allow delete: if superAdmin();
+      }
+      // Teacher assignments are separate from student subject assignments.
+      // Provisioning is school-admin-only; teacher clients cannot self-assign.
+      match /teacher_assignments/{id} {
+        function validTeacherAssignment() {
+          return request.resource.data.keys().hasOnly(['schoolId','uid','classId','subjectId','active'])
+            && request.resource.data.keys().hasAll(['schoolId','uid','classId','subjectId','active'])
+            && request.resource.data.schoolId == sid
+            && request.resource.data.uid is string
+            && request.resource.data.uid.matches('^[A-Za-z0-9_-]{1,128}$')
+            && request.resource.data.classId in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && request.resource.data.subjectId is string
+            && request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && id == sid + ':' + request.resource.data.uid + ':' + request.resource.data.classId + ':' + request.resource.data.subjectId
+            && request.resource.data.active is bool;
+        }
+        allow get, list: if canAdmin(sid)
+          || (memberRole(sid, 'teacher') && resource.data.get('uid', '') == request.auth.uid);
+        allow create: if memberRole(sid, 'school_admin') && validTeacherAssignment()
+          && request.resource.data.active == false
+          && exists(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid))
+          && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('uid', '') == request.resource.data.uid
+          && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('schoolId', '') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('role', '') == 'teacher'
+          && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('active', false) == true;
+        allow update: if memberRole(sid, 'school_admin') && validTeacherAssignment()
+          && immutableSchool(sid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active'])
+          && (!request.resource.data.active
+            || (exists(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid))
+              && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('uid', '') == request.resource.data.uid
+          && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('schoolId', '') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('role', '') == 'teacher'
+              && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('active', false) == true));
+        allow delete: if false;
+      }
+      match /students/{id} {
+        function validStudent() {
+          return id.matches('^[A-Za-z0-9_-]{1,128}$')
+            && request.resource.data.keys().hasOnly(['name','class','rollNo','schoolId'])
+            && request.resource.data.keys().hasAll(['name','class','schoolId'])
+            && request.resource.data.name is string
+            && request.resource.data.name.size() >= 2
+            && request.resource.data.name.size() <= 160
+            && request.resource.data.class is string
+            && request.resource.data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && request.resource.data.get('rollNo','') is string
+            && request.resource.data.get('rollNo','').size() <= 30
+            && scopedRecord(sid);
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validStudent();
+        allow update: if canAdmin(sid) && validStudent() && immutableSchool(sid)
+          && request.resource.data.class == resource.data.class;
+        allow delete: if false;
+      }
+      function teacherMarkAllowed(sid, id) {
+        let mark = request.resource.data;
+        let assignmentPath = /databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + mark.class + ':' + mark.subjectId);
+        let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(mark.studentId);
+        let subjectAssignmentPath = /databases/$(database)/documents/schools/$(sid)/subject_assignments/$(mark.studentId + ':' + mark.subjectId);
+        let subjectPath = /databases/$(database)/documents/schools/$(sid)/subjects/$(mark.subjectId);
+        let assignment = get(assignmentPath).data;
+        let student = get(studentPath).data;
+        let subjectAssignment = get(subjectAssignmentPath).data;
+        let subject = get(subjectPath).data;
+        return memberRole(sid, 'teacher')
+          && validRawMark(sid, id)
+          && assignment.get('active', false) == true
+          && assignment.get('schoolId', '') == sid
+          && assignment.get('uid', '') == request.auth.uid
+          && assignment.get('classId', '') == mark.class
+          && assignment.get('subjectId', '') == mark.subjectId
+          && student.get('schoolId', '') == sid
+          && student.get('class', '') == mark.class
+          && subjectAssignment.get('schoolId', '') == sid
+          && subjectAssignment.get('studentId', '') == mark.studentId
+          && subjectAssignment.get('subjectId', '') == mark.subjectId
+          && subjectAssignment.get('class', '') == mark.class
+          && subjectAssignment.get('active', true) == true
+          && subject.get('active', false) == true
+          && subject.get('schoolId', '') == sid
+          && subject.get('class', '') == mark.class;
+      }
+      function validRawMark(sid, id) {
+        let data = request.resource.data;
+        let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(data.studentId);
+        let subjectPath = /databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId);
+        let assignmentPath = /databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId);
+        let student = get(studentPath).data;
+        let subject = get(subjectPath).data;
+        let assignment = get(assignmentPath).data;
+        return data.keys().hasOnly(['schoolId','studentId','subjectId','class','term','theory','practical'])
+          && data.keys().hasAll(['schoolId','studentId','subjectId','class','term','theory','practical'])
+          && data.schoolId == sid
+          && data.studentId is string
+          && data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
+          && data.subjectId is string
+          && data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
+          && data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+          && data.term in ['weekly','monthly','1st','2nd','3rd','final']
+          && data.theory is number
+          && data.practical is number
+          && data.theory >= 0
+          && data.theory <= 100
+          && data.practical >= 0
+          && data.practical <= 100
+          && id == data.term + ':' + data.studentId + ':' + data.subjectId
+          && student.get('schoolId','') == sid && subject.get('schoolId','') == sid && assignment.get('schoolId','') == sid
+          && student.get('class','') == data.class
+          && subject.get('class','') == data.class
+          && subject.get('active',false) == true
+          && !(data.class in ['9','10'] && subject.get('name','') == 'Computer')
+          && assignment.get('class','') == data.class
+          && assignment.get('studentId','') == data.studentId
+          && assignment.get('subjectId','') == data.subjectId
+          && assignment.get('active',true) == true;
+      }
+      // Fail closed: individual mark writes bypass complete-class validation.
+      // Re-enable only after an audited all-student publish protocol and emulator tests.
+      // Reads remain available to existing school members.
+      match /marks/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      function teacherAttendanceAllowed(sid, id) {
+        return memberRole(sid, 'teacher')
+          && request.resource.data.keys().hasOnly(['schoolId','studentId','class','date','present'])
+          && request.resource.data.keys().hasAll(['schoolId','studentId','class','date','present'])
+          && request.resource.data.schoolId == sid
+          && request.resource.data.studentId is string
+          && request.resource.data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
+          && request.resource.data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+          && request.resource.data.date is string
+          && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+          && request.resource.data.present is bool
+          && id == request.resource.data.date + '_' + request.resource.data.studentId
+          && exists(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance'))
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('active', false) == true
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('schoolId', '') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('uid', '') == request.auth.uid
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('classId', '') == request.resource.data.class
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('subjectId', '') == 'attendance'
+          && exists(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId))
+          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('schoolId', '') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('class', '') == request.resource.data.class;
+      }
+      match /attendance/{id} {
+        function validAdminAttendance() {
+          let data = request.resource.data;
+          let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(data.studentId);
+          return data.keys().hasOnly(['schoolId','studentId','class','date','present'])
+            && data.keys().hasAll(['schoolId','studentId','class','date','present'])
+            && data.schoolId == sid
+            && data.studentId is string
+            && data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && data.date is string
+            && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+            && data.present is bool
+            && id == data.date + '_' + data.studentId
+            && exists(studentPath)
+            && get(studentPath).data.get('schoolId','') == sid
+            && get(studentPath).data.get('class','') == data.class;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if (memberRole(sid, 'school_admin') && validAdminAttendance()) || teacherAttendanceAllowed(sid, id);
+        allow update: if immutableSchool(sid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['present'])
+          && request.resource.data.present is bool
+          && memberRole(sid, 'school_admin');
+        allow delete: if false;
+      }
+      match /exams/{id} {
+        function validExamTerm() {
+          return id in ['weekly', 'monthly', '1st', '2nd', '3rd', 'final']
+            && request.resource.data.keys().hasOnly(['schoolId', 'term'])
+            && request.resource.data.keys().hasAll(['schoolId', 'term'])
+            && request.resource.data.schoolId == sid
+            && request.resource.data.term == id;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if memberRole(sid, 'school_admin') && validExamTerm();
+        // Exam terms are create-only until audited dependent-record deletion is implemented.
+        allow update, delete: if false;
+      }
+      // Component marks are restricted to the approved Class 9–10 Computer split.
+      // A generic collection permission must never bypass these score limits.
+      match /component_marks/{id} {
+        function validComputerComponent() {
+          let data = request.resource.data;
+          let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(data.studentId);
+          let subjectPath = /databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId);
+          let assignmentPath = /databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId);
+          let student = get(studentPath).data;
+          let subject = get(subjectPath).data;
+          let assignment = get(assignmentPath).data;
+          return data.keys().hasOnly(['schoolId','studentId','subjectId','class','term','scores'])
+            && data.keys().hasAll(['schoolId','studentId','subjectId','class','term','scores'])
+            && data.schoolId == sid
+            && data.studentId is string && data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && data.subjectId is string && data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && data.class in ['9','10']
+            && data.term in ['weekly','monthly','1st','2nd','3rd','final']
+            && id == data.term + ':' + data.studentId + ':' + data.subjectId
+            && data.scores is map
+            && data.scores.keys().hasOnly(['component_a','component_b','component_c'])
+            && data.scores.keys().hasAll(['component_a','component_b','component_c'])
+            && data.scores.component_a is number && data.scores.component_a >= 0 && data.scores.component_a <= 4
+            && data.scores.component_b is number && data.scores.component_b >= 0 && data.scores.component_b <= 36
+            && data.scores.component_c is number && data.scores.component_c >= 0 && data.scores.component_c <= 10
+            && exists(studentPath)
+            && student.get('schoolId','') == sid
+            && student.get('class','') == data.class
+            && exists(subjectPath)
+            && subject.get('schoolId','') == sid
+            && subject.get('class','') == data.class
+            && subject.get('name','') == 'Computer'
+            && subject.get('active',false) == true
+            && exists(assignmentPath)
+            && assignment.get('schoolId','') == sid
+            && assignment.get('studentId','') == data.studentId
+            && assignment.get('subjectId','') == data.subjectId
+            && assignment.get('class','') == data.class
+            && assignment.get('active',true) == true
+            && !exists(/databases/$(database)/documents/schools/$(sid)/marks/$(id));
+        }
+        allow get, list: if canRead(sid);
+        // Component marks also require the future complete-class publish gate.
+        allow create: if false;
+        allow update, delete: if false;
+      }
+      match /subjects/{id} {
+        function validSubject() {
+          let data = request.resource.data;
+          return data.keys().hasAll(['schoolId','name','class','active'])
+            && data.schoolId == sid
+            && data.name is string && data.name.size() >= 2 && data.name.size() <= 160
+            && data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && data.active == true;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validSubject();
+        allow update, delete: if false;
+      }
+      match /subject_assignments/{id} {
+        function validAssignment() {
+          let data = request.resource.data;
+          let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(data.studentId);
+          let subjectPath = /databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId);
+          return data.keys().hasOnly(['schoolId','studentId','subjectId','class','active'])
+            && data.keys().hasAll(['schoolId','studentId','subjectId','class'])
+            && data.schoolId == sid
+            && data.studentId is string && data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && data.subjectId is string && data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && data.get('active',true) is bool
+            && id == data.studentId + ':' + data.subjectId
+            && exists(studentPath) && exists(subjectPath)
+            && get(studentPath).data.get('schoolId','') == sid
+            && get(studentPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('schoolId','') == sid
+            && get(subjectPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('active',true) == true;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validAssignment();
+        allow update, delete: if false;
+      }
+      // Legacy V46 collections: explicit, tenant-contained READ ONLY compatibility.
+      // Never grant write until each V46 schema and cross-school authorization is audited.
+      match /audit_logs/{id} {
+        allow get, list: if canAdmin(sid);
+        allow create, update, delete: if false;
+      }
+      match /certificates/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /school_public_branding/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /school_gallery/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /user_roles/{id} {
+        allow get, list: if canAdmin(sid);
+        allow create, update, delete: if false;
+      }
+      match /public_result_exams/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /public_result_lookup/{id} {
+        allow get, list: if canAdmin(sid);
+        allow create, update, delete: if false;
+      }
+      match /public_results/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','mark_settings','school_settings'] && canRead(sid);
+        allow create: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+        && request.resource.data.keys().hasOnly(['id', 'name', 'iemisCode', 'active'])
+        && request.resource.data.keys().hasAll(['id', 'name', 'active'])
+        && request.resource.data.id == sid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 3
+        && request.resource.data.name.size() <= 160
+        && request.resource.data.get('iemisCode', '') is string
+        && (request.resource.data.get('iemisCode', '') == ''
+            || request.resource.data.get('iemisCode', '').matches('^[0-9]{5,20}$'))
+        && request.resource.data.active == false;
+    }
+    match /v47_super_admins/{uid} { allow read, write: if false; }
+    match /schools/{sid} {
+      allow get: if canRead(sid);
+      allow list: if superAdmin();
+      allow create: if superAdmin() && validSchool(sid);
+      allow update: if superAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active'])
+        && request.resource.data.active is bool;
+      allow delete: if false;
+      match /members/{uid} {
+        function validMember() {
+          return request.resource.data.keys().hasOnly(['uid', 'schoolId', 'role', 'active'])
+            && request.resource.data.keys().hasAll(['uid', 'schoolId', 'role', 'active'])
+            && request.resource.data.uid == uid
+            && request.resource.data.schoolId == sid
+            && request.resource.data.role in ['school_admin', 'teacher', 'viewer']
+            && request.resource.data.active is bool;
+        }
+        allow get: if canAdmin(sid) || (loggedIn() && uid == request.auth.uid && activeMember(sid));
+        allow list: if canAdmin(sid);
+        // School Admin may provision only teacher/viewer memberships, never self-elevate.
+        function subordinateRole() {
+          return request.resource.data.role in ['teacher', 'viewer'];
+        }
+        function adminCanCreate() {
+          return memberRole(sid, 'school_admin') && uid != request.auth.uid
+            && validMember() && subordinateRole()
+            && request.resource.data.active == false;
+        }
+        function adminCanUpdate() {
+          return memberRole(sid, 'school_admin') && uid != request.auth.uid
+            && resource.data.get('role', '') in ['teacher', 'viewer']
+            && validMember() && subordinateRole()
+            && request.resource.data.uid == resource.data.uid
+            && request.resource.data.schoolId == resource.data.schoolId
+            && request.resource.data.role == resource.data.role
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active']);
+        }
+        allow create: if (superAdmin() && validMember()) || adminCanCreate();
+        allow update: if (superAdmin() && validMember()) || adminCanUpdate();
+        allow delete: if superAdmin();
+      }
+      // Teacher assignments are separate from student subject assignments.
+      // Provisioning is school-admin-only; teacher clients cannot self-assign.
+      match /teacher_assignments/{id} {
+        function validTeacherAssignment() {
+          return request.resource.data.keys().hasOnly(['schoolId','uid','classId','subjectId','active'])
+            && request.resource.data.keys().hasAll(['schoolId','uid','classId','subjectId','active'])
+            && request.resource.data.schoolId == sid
+            && request.resource.data.uid is string
+            && request.resource.data.uid.matches('^[A-Za-z0-9_-]{1,128}$')
+            && request.resource.data.classId in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && request.resource.data.subjectId is string
+            && request.resource.data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && id == sid + ':' + request.resource.data.uid + ':' + request.resource.data.classId + ':' + request.resource.data.subjectId
+            && request.resource.data.active is bool;
+        }
+        allow get, list: if canAdmin(sid)
+          || (memberRole(sid, 'teacher') && resource.data.get('uid', '') == request.auth.uid);
+        allow create: if memberRole(sid, 'school_admin') && validTeacherAssignment()
+          && request.resource.data.active == false
+          && exists(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid))
+          && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('uid', '') == request.resource.data.uid
+          && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('schoolId', '') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('role', '') == 'teacher'
+          && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('active', false) == true;
+        allow update: if memberRole(sid, 'school_admin') && validTeacherAssignment()
+          && immutableSchool(sid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active'])
+          && (!request.resource.data.active
+            || (exists(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid))
+              && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('uid', '') == request.resource.data.uid
+          && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('schoolId', '') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('role', '') == 'teacher'
+              && get(/databases/$(database)/documents/schools/$(sid)/members/$(request.resource.data.uid)).data.get('active', false) == true));
+        allow delete: if false;
+      }
+      match /students/{id} {
+        function validStudent() {
+          return id.matches('^[A-Za-z0-9_-]{1,128}$')
+            && request.resource.data.keys().hasOnly(['name','class','rollNo','schoolId'])
+            && request.resource.data.keys().hasAll(['name','class','schoolId'])
+            && request.resource.data.name is string
+            && request.resource.data.name.size() >= 2
+            && request.resource.data.name.size() <= 160
+            && request.resource.data.class is string
+            && request.resource.data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && request.resource.data.get('rollNo','') is string
+            && request.resource.data.get('rollNo','').size() <= 30
+            && scopedRecord(sid);
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validStudent();
+        allow update: if canAdmin(sid) && validStudent() && immutableSchool(sid)
+          && request.resource.data.class == resource.data.class;
+        allow delete: if false;
+      }
+      function teacherMarkAllowed(sid, id) {
+        let mark = request.resource.data;
+        let assignmentPath = /databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + mark.class + ':' + mark.subjectId);
+        let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(mark.studentId);
+        let subjectAssignmentPath = /databases/$(database)/documents/schools/$(sid)/subject_assignments/$(mark.studentId + ':' + mark.subjectId);
+        let subjectPath = /databases/$(database)/documents/schools/$(sid)/subjects/$(mark.subjectId);
+        let assignment = get(assignmentPath).data;
+        let student = get(studentPath).data;
+        let subjectAssignment = get(subjectAssignmentPath).data;
+        let subject = get(subjectPath).data;
+        return memberRole(sid, 'teacher')
+          && validRawMark(sid, id)
+          && assignment.get('active', false) == true
+          && assignment.get('schoolId', '') == sid
+          && assignment.get('uid', '') == request.auth.uid
+          && assignment.get('classId', '') == mark.class
+          && assignment.get('subjectId', '') == mark.subjectId
+          && student.get('schoolId', '') == sid
+          && student.get('class', '') == mark.class
+          && subjectAssignment.get('schoolId', '') == sid
+          && subjectAssignment.get('studentId', '') == mark.studentId
+          && subjectAssignment.get('subjectId', '') == mark.subjectId
+          && subjectAssignment.get('class', '') == mark.class
+          && subjectAssignment.get('active', true) == true
+          && subject.get('active', false) == true
+          && subject.get('schoolId', '') == sid
+          && subject.get('class', '') == mark.class;
+      }
+      function validRawMark(sid, id) {
+        let data = request.resource.data;
+        let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(data.studentId);
+        let subjectPath = /databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId);
+        let assignmentPath = /databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId);
+        let student = get(studentPath).data;
+        let subject = get(subjectPath).data;
+        let assignment = get(assignmentPath).data;
+        return data.keys().hasOnly(['schoolId','studentId','subjectId','class','term','theory','practical'])
+          && data.keys().hasAll(['schoolId','studentId','subjectId','class','term','theory','practical'])
+          && data.schoolId == sid
+          && data.studentId is string
+          && data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
+          && data.subjectId is string
+          && data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
+          && data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+          && data.term in ['weekly','monthly','1st','2nd','3rd','final']
+          && data.theory is number
+          && data.practical is number
+          && data.theory >= 0
+          && data.theory <= 100
+          && data.practical >= 0
+          && data.practical <= 100
+          && id == data.term + ':' + data.studentId + ':' + data.subjectId
+          && student.get('schoolId','') == sid && subject.get('schoolId','') == sid && assignment.get('schoolId','') == sid
+          && student.get('class','') == data.class
+          && subject.get('class','') == data.class
+          && subject.get('active',false) == true
+          && !(data.class in ['9','10'] && subject.get('name','') == 'Computer')
+          && assignment.get('class','') == data.class
+          && assignment.get('studentId','') == data.studentId
+          && assignment.get('subjectId','') == data.subjectId
+          && assignment.get('active',true) == true;
+      }
+      // Fail closed: individual mark writes bypass complete-class validation.
+      // Re-enable only after an audited all-student publish protocol and emulator tests.
+      // Reads remain available to existing school members.
+      match /marks/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      function teacherAttendanceAllowed(sid, id) {
+        return memberRole(sid, 'teacher')
+          && request.resource.data.keys().hasOnly(['schoolId','studentId','class','date','present'])
+          && request.resource.data.keys().hasAll(['schoolId','studentId','class','date','present'])
+          && request.resource.data.schoolId == sid
+          && request.resource.data.studentId is string
+          && request.resource.data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
+          && request.resource.data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+          && request.resource.data.date is string
+          && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+          && request.resource.data.present is bool
+          && id == request.resource.data.date + '_' + request.resource.data.studentId
+          && exists(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance'))
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('active', false) == true
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('schoolId', '') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('uid', '') == request.auth.uid
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('classId', '') == request.resource.data.class
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('subjectId', '') == 'attendance'
+          && exists(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId))
+          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('schoolId', '') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('class', '') == request.resource.data.class;
+      }
+      match /attendance/{id} {
+        function validAdminAttendance() {
+          let data = request.resource.data;
+          let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(data.studentId);
+          return data.keys().hasOnly(['schoolId','studentId','class','date','present'])
+            && data.keys().hasAll(['schoolId','studentId','class','date','present'])
+            && data.schoolId == sid
+            && data.studentId is string
+            && data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && data.date is string
+            && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+            && data.present is bool
+            && id == data.date + '_' + data.studentId
+            && exists(studentPath)
+            && get(studentPath).data.get('schoolId','') == sid
+            && get(studentPath).data.get('class','') == data.class;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if (memberRole(sid, 'school_admin') && validAdminAttendance()) || teacherAttendanceAllowed(sid, id);
+        allow update: if immutableSchool(sid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['present'])
+          && request.resource.data.present is bool
+          && memberRole(sid, 'school_admin');
+        allow delete: if false;
+      }
+      match /exams/{id} {
+        function validExamTerm() {
+          return id in ['weekly', 'monthly', '1st', '2nd', '3rd', 'final']
+            && request.resource.data.keys().hasOnly(['schoolId', 'term'])
+            && request.resource.data.keys().hasAll(['schoolId', 'term'])
+            && request.resource.data.schoolId == sid
+            && request.resource.data.term == id;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if memberRole(sid, 'school_admin') && validExamTerm();
+        // Exam terms are create-only until audited dependent-record deletion is implemented.
+        allow update, delete: if false;
+      }
+      // Component marks are restricted to the approved Class 9–10 Computer split.
+      // A generic collection permission must never bypass these score limits.
+      match /component_marks/{id} {
+        function validComputerComponent() {
+          let data = request.resource.data;
+          let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(data.studentId);
+          let subjectPath = /databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId);
+          let assignmentPath = /databases/$(database)/documents/schools/$(sid)/subject_assignments/$(data.studentId + ':' + data.subjectId);
+          let student = get(studentPath).data;
+          let subject = get(subjectPath).data;
+          let assignment = get(assignmentPath).data;
+          return data.keys().hasOnly(['schoolId','studentId','subjectId','class','term','scores'])
+            && data.keys().hasAll(['schoolId','studentId','subjectId','class','term','scores'])
+            && data.schoolId == sid
+            && data.studentId is string && data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && data.subjectId is string && data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && data.class in ['9','10']
+            && data.term in ['weekly','monthly','1st','2nd','3rd','final']
+            && id == data.term + ':' + data.studentId + ':' + data.subjectId
+            && data.scores is map
+            && data.scores.keys().hasOnly(['component_a','component_b','component_c'])
+            && data.scores.keys().hasAll(['component_a','component_b','component_c'])
+            && data.scores.component_a is number && data.scores.component_a >= 0 && data.scores.component_a <= 4
+            && data.scores.component_b is number && data.scores.component_b >= 0 && data.scores.component_b <= 36
+            && data.scores.component_c is number && data.scores.component_c >= 0 && data.scores.component_c <= 10
+            && exists(studentPath)
+            && student.get('schoolId','') == sid
+            && student.get('class','') == data.class
+            && exists(subjectPath)
+            && subject.get('schoolId','') == sid
+            && subject.get('class','') == data.class
+            && subject.get('name','') == 'Computer'
+            && subject.get('active',false) == true
+            && exists(assignmentPath)
+            && assignment.get('schoolId','') == sid
+            && assignment.get('studentId','') == data.studentId
+            && assignment.get('subjectId','') == data.subjectId
+            && assignment.get('class','') == data.class
+            && assignment.get('active',true) == true
+            && !exists(/databases/$(database)/documents/schools/$(sid)/marks/$(id));
+        }
+        allow get, list: if canRead(sid);
+        // Component marks also require the future complete-class publish gate.
+        allow create: if false;
+        allow update, delete: if false;
+      }
+      match /subjects/{id} {
+        function validSubject() {
+          let data = request.resource.data;
+          return data.keys().hasAll(['schoolId','name','class','active'])
+            && data.schoolId == sid
+            && data.name is string && data.name.size() >= 2 && data.name.size() <= 160
+            && data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && data.active == true;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validSubject();
+        allow update, delete: if false;
+      }
+      match /subject_assignments/{id} {
+        function validAssignment() {
+          let data = request.resource.data;
+          let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(data.studentId);
+          let subjectPath = /databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId);
+          return data.keys().hasOnly(['schoolId','studentId','subjectId','class','active'])
+            && data.keys().hasAll(['schoolId','studentId','subjectId','class'])
+            && data.schoolId == sid
+            && data.studentId is string && data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && data.subjectId is string && data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && data.get('active',true) is bool
+            && id == data.studentId + ':' + data.subjectId
+            && exists(studentPath) && exists(subjectPath)
+            && get(studentPath).data.get('schoolId','') == sid
+            && get(studentPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('schoolId','') == sid
+            && get(subjectPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('active',true) == true;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validAssignment();
+        allow update, delete: if false;
+      }
+      // Legacy V46 collections: explicit, tenant-contained READ ONLY compatibility.
+      // Never grant write until each V46 schema and cross-school authorization is audited.
+      match /audit_logs/{id} {
+        allow get, list: if canAdmin(sid);
+        allow create, update, delete: if false;
+      }
+      match /certificates/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /school_public_branding/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /school_gallery/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /user_roles/{id} {
+        allow get, list: if canAdmin(sid);
+        allow create, update, delete: if false;
+      }
+      match /public_result_exams/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /public_result_lookup/{id} {
+        allow get, list: if canAdmin(sid);
+        allow create, update, delete: if false;
+      }
+      match /public_results/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','mark_settings','school_settings'] && canRead(sid);
+        allow create: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','mark_settings','school_settings'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
         && request.resource.data.keys().hasAll(['id', 'name', 'iemisCode', 'active'])
         && request.resource.data.id == sid
         && request.resource.data.name is string
