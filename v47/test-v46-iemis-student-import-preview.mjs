@@ -59,6 +59,10 @@ for(const invalidCell of [{unexpected:true},['nested'],Number.POSITIVE_INFINITY,
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':Number.MAX_SAFE_INTEGER+2,'Student Name':'Valid Student','Class':'6'}]}),/unsafe integer/);
 const numericCell=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':90004,'Student Name':'Valid Student','Class':'6'}]});
 assert.equal(numericCell.ready,1,'Finite numeric spreadsheet cells remain supported');
+const validRow={'IEMIS Code':schoolId,'Student IEMIS Id':'90901','Student Name':'Valid Student','Class':'6'};
+assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[validRow,null]}),/row 3/);
+assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[validRow,[]]}),/row 3/);
+assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[validRow,{...validRow,'Class ':'6'}]}),/ambiguous Column/);
 const invalidNames=['A','X'.repeat(161)];
 for(const name of invalidNames){
  const preview=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'90901','Student Name':name,'Class':'6'}]});
