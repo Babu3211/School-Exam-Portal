@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import {previewAgainstSchoolStudents} from './verified-student-import-preview.mjs';
+import {prepareVerifiedStudentSave} from './verified-student-import-save-gate.mjs';
+const schoolId='300160003',uid='admin-1';
+const auth={currentUser:{uid}};
+const rows=[{'IEMIS Code':schoolId,'Student IEMIS Id':'00001','Student Name':'A','Class':'6'},
+ {'IEMIS Code':schoolId,'Student IEMIS Id':'00002','Student Name':'B','Class':'6'}];
+const readDocument=async path=>path==='schools/'+schoolId?{id:schoolId,active:true}:path==='schools/'+schoolId+'/members/'+uid?{uid,schoolId,role:'school_admin',active:true}:null;
+const readStudents=async()=>[{schoolId,studentIemisId:'00001'}];
+const verifiedPreview=await previewAgainstSchoolStudents({auth,schoolId,rows,readDocument,readStudents});
+const args={auth,schoolId,rows,verifiedPreview,readDocument};
+await assert.rejects(prepareVerifiedStudentSave(args),/Admin confirmation/);
+await assert.rejects(prepareVerifiedStudentSave({...args,confirmed:true,verifiedPreview:{...verifiedPreview}}),/Fresh verified/);
+await assert.rejects(prepareVerifiedStudentSave({...args,confirmed:true,schoolId:'999999999'}),/Fresh verified/);
+const prepared=await prepareVerifiedStudentSave({...args,confirmed:true});
+assert.equal(prepared.count,1);
+assert.equal(prepared.records[0]['Student IEMIS Id'],'00002');
+assert.equal(prepared.requiresTransactionalDuplicateRecheck,true);
+rows[1]['Student Name']='Changed';
+await assert.rejects(prepareVerifiedStudentSave({...args,confirmed:true}),/Fresh verified/);
+console.log('PASS: verified import save gate rejects unconfirmed, forged, cross-school and changed rows');
