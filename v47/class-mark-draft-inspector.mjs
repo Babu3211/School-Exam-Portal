@@ -1,4 +1,4 @@
-import {validateCompleteClassMarks} from './class-mark-completeness.mjs';
+import {validateMarkEntry} from './marks-service.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {validSchoolClass} from './class-catalog.mjs';
 import {validateExamTerm} from './term-catalog.mjs';
@@ -24,7 +24,8 @@ export function inspectClassMarkDraft({schoolId,classId,term,subjectId,expectedS
   if(seen.has(id)){duplicates.push(id);continue}
   seen.add(id);
   try{
-   validateCompleteClassMarks({schoolId,classId,term,subjectId,expectedStudentIds:[id],entries:[entry]});
+   const validated=validateMarkEntry(entry);
+   if(validated.class!==classId||validated.term!==term||validated.subjectId!==subjectId)throw new Error('Mixed class, term or subject');
   }catch(error){invalid.push(id+': '+error.message)}
  }
  for(const id of expected)if(!seen.has(id))missing.push(id);
