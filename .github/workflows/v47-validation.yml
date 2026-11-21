@@ -28,6 +28,7 @@ jobs:
           node v47/test-report-reference-audit.mjs
           node v47/test-iemis-ledger-parity.mjs
           node v47/test-mark-summary-preview.mjs
+          node v47/test-class-mark-coverage-preview.mjs
           npm run test:v47:v46-tenant-rewrite
           npm run test:v47:v46-excel-parity
           npm run test:v47:v46-student-schema
