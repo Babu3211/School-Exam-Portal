@@ -25,6 +25,15 @@ await assert.rejects(prepareVerifiedStudentSave({auth,schoolId,rows:oversizedRow
 const switchedAuth={currentUser:{uid}};
 const switchedPreview=await previewAgainstSchoolStudents({auth:switchedAuth,schoolId,rows,readDocument,readStudents});
 await assert.rejects(prepareVerifiedStudentSave({auth:switchedAuth,schoolId,rows,verifiedPreview:switchedPreview,confirmed:true,readDocument:async path=>{switchedAuth.currentUser={uid:'other'};return readDocument(path)}}),/Authentication changed/);
+const originalNow=Date.now;
+try{
+ Date.now=()=>originalNow()+5*60*1000+1;
+ await assert.rejects(prepareVerifiedStudentSave({...args,confirmed:true}),/Fresh verified/);
+}finally{Date.now=originalNow}
+const revokedDocument=async path=>path.endsWith('/members/'+uid)?{uid,schoolId,role:'school_admin',active:false}:readDocument(path);
+await assert.rejects(prepareVerifiedStudentSave({...args,confirmed:true,readDocument:revokedDocument}),/Membership unavailable/);
+const teacherDocument=async path=>path.endsWith('/members/'+uid)?{uid,schoolId,role:'teacher',active:true}:readDocument(path);
+await assert.rejects(prepareVerifiedStudentSave({...args,confirmed:true,readDocument:teacherDocument}),/administrator membership/);
 rows[1]['Student Name']='Changed';
 await assert.rejects(prepareVerifiedStudentSave({...args,confirmed:true}),/Fresh verified/);
 console.log('PASS: verified import save gate rejects unconfirmed, forged, cross-school and changed rows');
