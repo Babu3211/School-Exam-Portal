@@ -125,7 +125,7 @@ await ok('74 reject school snapshot with non-string ID',async()=>{await assert.r
 await ok('75 reject school snapshot with missing ID',async()=>{await assert.rejects(listSchools({db,api:{...api,getDocs:async()=>({docs:[{data:()=>school}]})},actor:admin}))});
 await ok('76 reject malformed Firestore docs object',async()=>{await assert.rejects(listSchools({db,api:{...api,getDocs:async()=>({docs:{length:1}})},actor:admin}))});
 await ok('77 accept inactive school listing',async()=>{const page=await listSchools({db,api,actor:admin,pageSize:10});assert.equal(page.schools.find(x=>x.id==='12345').active,false)});
-await ok('78 accept active school listing',async()=>{const page=await listSchools({db,api,actor:admin,pageSize:10});assert.equal(page.schools.find(x=>x.id==='23456').active,false)});
+await ok('78 accept active school listing',async()=>{await setSchoolActive({db,api,actor:admin,schoolId:'12345',active:true});const page=await listSchools({db,api,actor:admin,pageSize:10});assert.equal(page.schools.find(x=>x.id==='12345').active,true);await setSchoolActive({db,api,actor:admin,schoolId:'12345',active:false})});
 await ok('79 list leading-zero IEMIS school ID unchanged',async()=>{const page=await listSchools({db,api,actor:admin,pageSize:10});assert(page.schools.some(x=>x.id==='00123'&&x.iemisCode==='00123'))});
 await ok('80 list results do not expose member records',async()=>{const page=await listSchools({db,api,actor:admin,pageSize:10});assert(page.schools.every(x=>!('members' in x)))});
 
