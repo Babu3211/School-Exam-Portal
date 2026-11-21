@@ -11,6 +11,8 @@ export async function listSchools({db,api,actor,pageSize=30,cursor=null}){
  if(!Array.isArray(snapshot?.docs)||snapshot.docs.length>size+1)throw new RangeError('Unexpected result size');
  const page=snapshot.docs.slice(0,size);
  const seen=new Set();
- const schools=page.map(doc=>{if(typeof doc?.data!=='function')throw new Error('Invalid school snapshot');if(typeof doc?.id!=='string'||!/^\d{5,20}$/.test(doc.id))throw new Error('Invalid school document ID');if(seen.has(doc.id))throw new Error('Duplicate school document ID');seen.add(doc.id);const data=doc.data();if(!data||typeof data!=='object'||Array.isArray(data)||data.id!==doc.id||data.iemisCode!==doc.id||typeof data.name!=='string'||data.name.trim().length<3||data.name.length>160||typeof data.active!=='boolean')throw new Error('School registry identity mismatch');return {id:doc.id,iemisCode:data.iemisCode,name:data.name,active:data.active};});
+ let previousId=cursor?.id??null;
+ for(const doc of snapshot.docs){if(typeof doc?.id!=='string'||!/^\d{5,20}$/.test(doc.id))throw new Error('Invalid school document ID');if(seen.has(doc.id))throw new Error('Duplicate school document ID');if(previousId!==null&&doc.id<=previousId)throw new Error('School pagination order mismatch');seen.add(doc.id);previousId=doc.id;}
+ const schools=page.map(doc=>{if(typeof doc?.data!=='function')throw new Error('Invalid school snapshot');if(typeof doc?.id!=='string'||!/^\d{5,20}$/.test(doc.id))throw new Error('Invalid school document ID');const data=doc.data();if(!data||typeof data!=='object'||Array.isArray(data)||data.id!==doc.id||data.iemisCode!==doc.id||typeof data.name!=='string'||data.name.trim().length<3||data.name.length>160||typeof data.active!=='boolean')throw new Error('School registry identity mismatch');return {id:doc.id,iemisCode:data.iemisCode,name:data.name,active:data.active};});
  return {schools,hasMore:snapshot.docs.length>size,cursor:page.at(-1)??null};
 }
