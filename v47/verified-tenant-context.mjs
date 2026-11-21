@@ -21,6 +21,14 @@ export async function createVerifiedTenantContext({schoolId,auth,readDocument}){
    if(typeof id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(id))throw new Error('Invalid document ID');
    return ['schools',session.schoolId,assertV47TenantCollection(name),id];
   },
+  // Recheck active membership before sensitive write operations; never cache permission forever.
+  async revalidateWrite(){
+   ensureCurrent();
+   const latest=await verifySchoolSession({schoolId:session.schoolId,uid,readDocument});
+   ensureCurrent();
+   if(latest.role!=='school_admin')throw new Error('School Admin permission required');
+   return latest;
+  },
   assertRead(){return ensureCurrent()},
   assertWrite(){ensureCurrent();if(session.role!=='school_admin')throw new Error('School Admin permission required');return session}
  });
