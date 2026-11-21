@@ -9,7 +9,15 @@ export function normalizeV46StudentClass(value){
  const alias=raw.replace(/^CLASS\s*|^कक्षा\s*/i,'').trim();
  return alias==='NURSERY'?'ECD':alias;
 }
-const value=(r,k)=>String(r?.[k]??'').normalize('NFC').trim();
+const value=(r,k)=>{
+ const cell=r?.[k];
+ if(cell===null||cell===undefined)return '';
+ if(typeof cell==='object'||typeof cell==='function'||typeof cell==='symbol'||typeof cell==='bigint')
+  throw new TypeError('Excel cell must contain plain text, a finite number or a boolean: '+k);
+ if(typeof cell==='number'&&!Number.isFinite(cell))
+  throw new TypeError('Excel cell contains an invalid number: '+k);
+ return String(cell).normalize('NFC').trim();
+};
 export function validateV46IemisExcelHeaders(rows){
  if(!Array.isArray(rows)||!rows.length)throw new Error('Excel मा विद्यार्थी विवरण भेटिएन।');
  if(!rows[0]||typeof rows[0]!=='object'||Array.isArray(rows[0]))throw new TypeError('Excel first row must be an object');
