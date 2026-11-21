@@ -20,6 +20,11 @@ const changingRole=await make({readDocument:async path=>path==='schools/'+sid?sc
 liveRole='viewer';
 await assert.rejects(changingRole.revalidateRead(),/School role changed/);
 await assert.rejects(changingRole.revalidateWrite(),/School Admin permission required/);
+let promotedRole='viewer';
+const promoted=await make({readDocument:async path=>path==='schools/'+sid?school:{...member,role:promotedRole}});
+promotedRole='school_admin';
+await assert.rejects(promoted.revalidateWrite(),/School Admin permission required/);
+await assert.rejects(promoted.revalidateRead(),/School role changed/);
 assert.throws(()=>ctx.collectionSegments('members'),/Unreviewed V47 tenant collection/);
 assert.throws(()=>ctx.collectionSegments('../students'),/Unreviewed V47 tenant collection/);
 assert.throws(()=>ctx.documentSegments('students','../escape'),/Invalid document ID/);
