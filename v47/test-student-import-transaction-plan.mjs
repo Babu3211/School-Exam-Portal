@@ -39,6 +39,11 @@ const unicodeRows=[{'IEMIS Code':schoolId,'Student IEMIS Id':'é-101','Admission
 const unicodePreview=await previewAgainstSchoolStudents({auth,schoolId,rows:unicodeRows,readDocument,readStudents:async()=>[]});
 const unicodePrepared=await prepareVerifiedStudentSave({auth,schoolId,rows:unicodeRows,verifiedPreview:unicodePreview,readDocument,confirmed:true});
 assert.throws(()=>planStudentImportTransaction({prepared:unicodePrepared,existingStudents:[{schoolId,studentIemisNo:'e\u0301-101'}]}),/Duplicate Student IEMIS/);
+const unicodeAdmissionRows=[{'IEMIS Code':schoolId,'Admission Number':'é-22','Student Name':'Unicode Admission','Class':'6'}];
+const unicodeAdmissionPreview=await previewAgainstSchoolStudents({auth,schoolId,rows:unicodeAdmissionRows,readDocument,readStudents:async()=>[]});
+const unicodeAdmissionPrepared=await prepareVerifiedStudentSave({auth,schoolId,rows:unicodeAdmissionRows,verifiedPreview:unicodeAdmissionPreview,readDocument,confirmed:true});
+assert.throws(()=>planStudentImportTransaction({prepared:unicodeAdmissionPrepared,existingStudents:[{schoolId,admissionNo:'e\u0301-22'}]}),/Duplicate Admission/);
+
 
 assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{schoolId:'999999999'}]}),/Cross-school/);
 assert.throws(()=>planStudentImportTransaction({prepared:{...prepared,requiresTransactionalDuplicateRecheck:false},existingStudents}),/Verified prepared import/);
