@@ -146,4 +146,21 @@ await ok('93 reject school list page size Infinity',async()=>{await assert.rejec
 await ok('94 reject malformed school name containing only tabs',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,name:'\\t\\t\\t'},adminUid:'admin003'}))});
 await ok('95 school listing does not mutate stored IEMIS records',async()=>{const before=JSON.stringify([...state.schools]);await listSchools({db,api,actor:admin,pageSize:10});assert.equal(JSON.stringify([...state.schools]),before)});
 
+
+await ok('96 reject school registration with boolean name',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,name:true},adminUid:'admin003'}))});
+await ok('97 reject school registration with null name',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,name:null},adminUid:'admin003'}))});
+await ok('98 reject school registration with undefined name',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,name:undefined},adminUid:'admin003'}))});
+await ok('99 reject school registration with nested ID object',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,id:{value:'12345'}},adminUid:'admin003'}))});
+await ok('100 reject school registration with negative ID',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,id:'-12345'},adminUid:'admin003'}))});
+await ok('101 reject school registration with scientific ID',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,id:'1e2345'},adminUid:'admin003'}))});
+await ok('102 reject admin UID containing colon',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:school,adminUid:'admin:001'}))});
+await ok('103 reject admin UID containing newline',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:school,adminUid:'admin\\n001'}))});
+await ok('104 reject school status array',async()=>{await assert.rejects(setSchoolActive({db,api,actor:admin,schoolId:'12345',active:[]}))});
+await ok('105 reject school status object',async()=>{await assert.rejects(setSchoolActive({db,api,actor:admin,schoolId:'12345',active:{value:true}}))});
+await ok('106 reject school list page size null',async()=>{await assert.rejects(listSchools({db,api,actor:admin,pageSize:null}))});
+await ok('107 reject school list page size boolean',async()=>{await assert.rejects(listSchools({db,api,actor:admin,pageSize:true}))});
+await ok('108 reject school list page size object',async()=>{await assert.rejects(listSchools({db,api,actor:admin,pageSize:{value:1}}))});
+await ok('109 reject school registry list with array name',async()=>{const bad=makeDb();bad.schools.set('56789',{id:'56789',iemisCode:'56789',name:['School'],active:true});await assert.rejects(listSchools({db,api:mockApi(bad),actor:admin}))});
+await ok('110 reject school registry list with null active flag',async()=>{const bad=makeDb();bad.schools.set('56789',{id:'56789',iemisCode:'56789',name:'Valid',active:null});await assert.rejects(listSchools({db,api:mockApi(bad),actor:admin}))});
+
 console.log('PASS '+checks+' V47 school admin service checks (mock SDK; Firebase emulator verification still required)');
