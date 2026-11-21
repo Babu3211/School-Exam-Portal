@@ -51,6 +51,8 @@ assert.equal(unicodeExisting.skipped,1);
 assert.match(unicodeExisting.records[0].errors.join(' '),/already exists/);
 const unicodeAdmission=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Admission Number':'é-22','Student Name':'Unicode Student','Class':'6'}],existingAdmissionNumbers:['e\u0301-22']});
 assert.equal(unicodeAdmission.skipped,1);
+const blankExisting=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'90002','Student Name':'Valid Student','Class':'6'}],existingIemisIds:[null,undefined,'  '],existingAdmissionNumbers:[null]});
+assert.equal(blankExisting.ready,1,'Empty legacy identity values must not create false duplicates');
 const invalidNames=['A','X'.repeat(161)];
 for(const name of invalidNames){
  const preview=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'90901','Student Name':name,'Class':'6'}]});
