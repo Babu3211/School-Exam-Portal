@@ -65,4 +65,8 @@ assert(source.includes("catch(e){showError(e)}finally{signingOut=false;"),"Recov
 assert(source.includes("if(mutating||signingIn||signingOut)return;"),"Registration and refresh blocked during auth transitions");
 assert(source.includes("if(mutating||signingIn||signingOut||!actor||auth?.currentUser?.uid!==actor.uid)return;"),"Pagination blocked during auth transitions");
 assert(source.includes("if(mutating||signingIn||signingOut)return;if(!actor"),"School activation blocked during auth transitions");
+assert(source.includes("if(sessionEpoch===mutationSession&&actor===mutationActor&&auth?.currentUser?.uid===mutationActor.uid)showError(e)"),"Reject stale mutation error feedback");
+assert(source.includes("if(sessionEpoch===mutationSession&&actor===mutationActor&&auth?.currentUser?.uid===mutationActor.uid){button.disabled=false;"),"Do not re-enable stale activation button");
+assert(source.includes("if(sessionEpoch===mutationSession&&actor===mutationActor&&auth?.currentUser?.uid===mutationActor.uid){$('register').disabled=false;"),"Do not re-enable controls after logout");
+assert(source.includes("if(actor&&auth?.currentUser?.uid===actor.uid)showError(e)"),"Only show registration errors for current session");
 console.log('PASS V47 Super Admin UID and school-list session guards');
