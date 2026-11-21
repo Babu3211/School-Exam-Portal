@@ -21,7 +21,7 @@ assert.match(controller,/requestEpoch===epoch&&auth\?\.currentUser\?\.uid===uid/
 assert.match(controller,/if\(!currentSession\(current,credential\.user\.uid\)\)/);
 assert.doesNotMatch(controller,/signOutIfCurrent/);
 assert.match(controller,/loginTask=\(async\(\)=>\{/);
-assert.match(controller,/if\(loginTask\)await loginTask/);
+assert.match(controller,/if\(loginTask\)\{try\{await loginTask\}catch\{/);
 assert.match(controller,/if\(auth\)await authSdk\.signOut\(auth\)/);
 assert.match(controller,/rows\.publicationAllowed!==false\|\|rows\.complete!==false/);
 assert.match(controller,/authSdk\.inMemoryPersistence/);
