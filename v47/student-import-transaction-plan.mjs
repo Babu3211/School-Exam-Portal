@@ -3,10 +3,11 @@
 // A future writer must use a single transaction with authoritative school
 // membership and duplicate checks, and create-only operations.
 import {assertIemisSchoolId} from './iemis-school-identity.mjs';
+import {isVerifiedStudentSavePlan} from './verified-student-import-save-gate.mjs';
 
 const value=(record,key)=>String(record?.[key]??'').trim();
 export function planStudentImportTransaction({prepared,existingStudents}={}){
- if(!prepared||typeof prepared!=='object')throw new TypeError('Verified prepared import required');
+ if(!isVerifiedStudentSavePlan(prepared))throw new TypeError('Verified prepared import required');
  const schoolId=assertIemisSchoolId(prepared.schoolId);
  if(prepared.requiresTransactionalDuplicateRecheck!==true||!Array.isArray(prepared.records)||prepared.count!==prepared.records.length)
   throw new Error('Verified transaction-ready import required');
