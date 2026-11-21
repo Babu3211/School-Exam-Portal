@@ -29,6 +29,7 @@ jobs:
           node v47/test-iemis-ledger-parity.mjs
           node v47/test-iemis-entry-parity.mjs
           node v47/test-iemis-schema-ui.mjs
+          node v47/test-iemis-class-draft-preflight.mjs
           node v47/test-mark-summary-preview.mjs
           node v47/test-class-mark-coverage-preview.mjs
           npm run test:v47:v46-tenant-rewrite
