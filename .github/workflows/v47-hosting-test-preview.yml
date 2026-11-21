@@ -4,13 +4,8 @@ on:
     branches:
       - smss-v47-multischool-work
     paths:
-      - .github/workflows/v47-hosting-test-preview.yml
-      - v47/firebase.json
-      - v47/admin.html
-      - v47/admin-console.mjs
-      - v47/school-login.html
-      - v47/school-login.mjs
-      - v47/build-hosting.mjs
+      - 'v47/**'
+      - '.github/workflows/v47-hosting-test-preview.yml'
   workflow_dispatch:
 permissions:
   contents: read
