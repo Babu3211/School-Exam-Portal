@@ -7,6 +7,11 @@ for(const id of ['config','schoolId','email','password','login','logout','settin
 assert.match(html,/Read-only development view/);
 assert.match(js,/config\.projectId!=='smss-exam-portal-v47'/);
 assert.match(js,/authSdk\.inMemoryPersistence/);
+assert.match(js,/authSdk\.onAuthStateChanged\(auth,user=>/);
+assert.match(js,/if\(!user&&verifiedSchoolId!==null\)\{reset\(\)/);
+assert.match(js,/verifiedSchoolId=id/);
+assert.match(js,/\$\('schoolId'\)\.disabled=!!verifiedSchoolId/);
+assert.match(js,/\$\('login'\)\.disabled=!auth\|\|!!verifiedSchoolId/);
 assert.equal((js.match(/await verifySchoolSession/g)||[]).length,2);
 assert.match(js,/school\.iemisCode!==id/);
 assert.match(js,/school\.active!==true/);
