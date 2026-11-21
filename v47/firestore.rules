@@ -390,10 +390,70 @@ service cloud.firestore {
       // Duplicate active configurations are rejected by the client discovery guard;
       // cross-document uniqueness still requires an audited server-side workflow.
       match /mark_settings/{id} {
+        function validComponent(component) {
+          return component is map
+            && component.keys().hasOnly(['key','name','fullMarks'])
+            && component.keys().hasAll(['key','name','fullMarks'])
+            && component.key is string
+            && component.key.matches('^[A-Za-z][A-Za-z0-9_-]{0,63}
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','school_settings'] && canRead(sid);
+        allow create: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+            && component.name is string
+            && component.name.size() >= 1 && component.name.size() <= 160
+            && component.fullMarks is number
+            && component.fullMarks > 0 && component.fullMarks <= 100000;
+        }
+        function validComponentList(items) {
+          return items is list && items.size() >= 1 && items.size() <= 6
+            && validComponent(items[0])
+            && (items.size() < 2 || validComponent(items[1]))
+            && (items.size() < 3 || validComponent(items[2]))
+            && (items.size() < 4 || validComponent(items[3]))
+            && (items.size() < 5 || validComponent(items[4]))
+            && (items.size() < 6 || validComponent(items[5]));
+        }
+        function validNewSettings() {
+          let data = request.resource.data;
+          let subject = /databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId);
+          return data.keys().hasOnly(['id','schoolId','classId','subjectId','examId','active','components'])
+            && data.keys().hasAll(['id','schoolId','classId','subjectId','examId','active','components'])
+            && data.id == id && data.schoolId == sid
+            && data.classId in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && data.subjectId is string && data.subjectId.matches('^[A-Za-z0-9_-]{1,128}
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','school_settings'] && canRead(sid);
+        allow create: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+            && data.examId in ['weekly','monthly','first','second','third','final']
+            && id == data.classId + '_' + data.subjectId + '_' + data.examId
+            && data.active == true
+            && validComponentList(data.components)
+            && exists(subject)
+            && get(subject).data.get('schoolId','') == sid
+            && get(subject).data.get('class','') == data.classId
+            && get(subject).data.get('active',false) == true;
+        }
         allow get, list: if canRead(sid);
-        // Config changes can alter historical grade meaning. Until an audited
-        // settings-version migration exists, deny writes instead of silently changing marks.
-        allow create, update, delete: if false;
+        // Create-once settings: existing grade meaning cannot be overwritten.
+        // The class/subject/exam key prevents a second active configuration.
+        allow create: if memberRole(sid, 'school_admin') && validNewSettings();
+        allow update, delete: if false;
       }
       match /{collection}/{id} {
         allow get, list: if collection in ['staff','classes','school_settings'] && canRead(sid);
