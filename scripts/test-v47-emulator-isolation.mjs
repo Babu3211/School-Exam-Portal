@@ -280,6 +280,19 @@ try {
   await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','300160001','subjects','math'),{active:true}));
   await assertSucceeds(setDoc(schoolDoc('admin-a','300160001','teacher_assignments','300160001:teacher-a:9:math'),teacherAssignment));
   await assertSucceeds(getDoc(schoolDoc('teacher-a','300160001','teacher_assignments','300160001:teacher-a:9:math')));
+  // Attendance is a class duty, not a catalog subject. Provision it without
+  // inventing a subject called "attendance"; only the assigned teacher can create.
+  const attendanceDuty={...teacherAssignment,subjectId:'attendance'};
+  const dutyPath='300160001:teacher-a:9:attendance';
+  await assertSucceeds(setDoc(schoolDoc('admin-a','300160001','teacher_assignments',dutyPath),attendanceDuty));
+  await assertFails(setDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-21_student-1'),{...adminAttendance,date:'2026-11-21'}));
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','300160001','teacher_assignments',dutyPath),{active:true}));
+  await assertSucceeds(setDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-21_student-1'),{...adminAttendance,date:'2026-11-21'}));
+  await assertFails(setDoc(schoolDoc('viewer-a','300160001','attendance','2026-11-22_student-1'),{...adminAttendance,date:'2026-11-22'}));
+  await assertFails(setDoc(schoolDoc('teacher-a','300160002','attendance','2026-11-22_student-1'),{...adminAttendance,date:'2026-11-22',schoolId:'300160002'}));
+  await assertSucceeds(updateDoc(schoolDoc('admin-a','300160001','teacher_assignments',dutyPath),{active:false}));
+  await assertFails(setDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-22_student-1'),{...adminAttendance,date:'2026-11-22'}));
+
   // Teacher's assignment selector uses a uid-scoped paginated collection query.
   const ownAssignments=query(collection(db('teacher-a'),'schools','300160001','teacher_assignments'),where('uid','==','teacher-a'),orderBy('__name__'),limit(100));
   await assertSucceeds(getDocs(ownAssignments));
