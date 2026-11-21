@@ -197,4 +197,11 @@ await ok('138 activation returns school ID unchanged',async()=>{const bad=makeDb
 await ok('139 activation returns boolean status',async()=>{const bad=makeDb();bad.schools.set('56789',{id:'56789',iemisCode:'56789',name:'Valid School',active:false});const result=await setSchoolActive({db,api:mockApi(bad),actor:admin,schoolId:'56789',active:true});assert.strictEqual(result.active,true)});
 await ok('140 unchanged status preserves existing record',async()=>{const bad=makeDb();bad.schools.set('56789',{id:'56789',iemisCode:'56789',name:'Valid School',active:false});const before=JSON.stringify([...bad.schools]);await setSchoolActive({db,api:mockApi(bad),actor:admin,schoolId:'56789',active:false});assert.equal(JSON.stringify([...bad.schools]),before)});
 
+
+await ok('141 reject pagination cursor with missing ID',async()=>{await assert.rejects(listSchools({db,api,actor:admin,cursor:{}}))});
+await ok('142 reject pagination cursor with numeric ID',async()=>{await assert.rejects(listSchools({db,api,actor:admin,cursor:{id:12345}}))});
+await ok('143 reject pagination cursor with foreign path ID',async()=>{await assert.rejects(listSchools({db,api,actor:admin,cursor:{id:'../12345'}}))});
+await ok('144 reject pagination cursor with non-IEMIS ID',async()=>{await assert.rejects(listSchools({db,api,actor:admin,cursor:{id:'abcdef'}}))});
+await ok('145 accept pagination cursor with leading-zero IEMIS',async()=>{const page=await listSchools({db,api,actor:admin,pageSize:1});assert.equal(page.schools[0].id,'00123');const next=await listSchools({db,api,actor:admin,pageSize:1,cursor:page.cursor});assert.equal(next.schools[0].id,'12345')});
+
 console.log('PASS '+checks+' V47 school admin service checks (mock SDK; Firebase emulator verification still required)');
