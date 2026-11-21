@@ -23,7 +23,9 @@ $('connect').onclick=async()=>{
   api=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js');
   const app=appSdk.initializeApp(config,'smss-v47-teacher-roster');
   auth=authSdk.getAuth(app);await authSdk.setPersistence(auth,authSdk.inMemoryPersistence);
-  db=api.getFirestore(app);$('connect').disabled=true;$('login').disabled=false;message('Connected to V47');
+  db=api.getFirestore(app);
+  authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clear();message('प्रयोगकर्ता सत्र परिवर्तन भयो। पुनः लगइन गर्नुहोस्।')}if(!busy)lock(false)});
+  $('connect').disabled=true;$('login').disabled=false;message('Connected to V47');
  }catch(e){message('Connection failed: '+e.message)}
 };
 $('login').onclick=async()=>{
