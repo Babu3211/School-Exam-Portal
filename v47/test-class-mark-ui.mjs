@@ -18,8 +18,8 @@ for(const id of ['classSaveArea','loadClassMarks','classMarkRows','classMarkCoun
 for(const snippet of [
  "import {loadCompleteClassRoster} from './complete-class-roster.mjs'",
  "classMarkRoster.map(student=>",
- "theory:row?.querySelector",
- "practical:row?.querySelector",
+ "for(const component of classMarkSettings.components)",
+ "row.querySelectorAll('input[data-field]')",
  "if(!auth?.currentUser?.uid||auth.currentUser.uid!==actor.uid)",
 ])assert.ok(js.includes(snippet),'Missing full-class mark safeguard: '+snippet);
 assert.ok(js.includes("classMarkRoster=[...roster.students].sort("),'Class mark rows must be alphabetically sorted');
