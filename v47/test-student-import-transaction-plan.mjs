@@ -11,6 +11,12 @@ const prepared=await prepareVerifiedStudentSave({auth,schoolId,rows,verifiedPrev
 const existingStudents=[{schoolId,studentIemisNo:'00001',admissionNo:'A-1'}];
 const plan=planStudentImportTransaction({prepared,existingStudents});
 assert.equal(isVerifiedStudentTransactionPlan(plan),true);
+const planNow=Date.now;
+try {
+ Date.now=()=>planNow()+5*60*1000+1;
+ assert.equal(isVerifiedStudentTransactionPlan(plan),false);
+} finally {Date.now=planNow}
+assert.equal(isVerifiedStudentTransactionPlan(plan),true);
 assert.equal(isVerifiedStudentTransactionPlan({...plan}),false);
 assert.equal(isVerifiedStudentTransactionPlan(Object.freeze({schoolId,records:plan.records,createOnly:true})),false);
 assert.equal(plan.count,1);assert.equal(plan.createOnly,true);assert.equal(plan.transactionRequired,true);
