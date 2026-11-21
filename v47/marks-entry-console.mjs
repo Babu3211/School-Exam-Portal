@@ -8,10 +8,11 @@ import {inspectConfiguredClassMarks} from './configured-mark-preflight.mjs';
 import {prepareConfiguredClassPublication} from './configured-class-publication-preview.mjs';
 import {prepareNewSubjectExamSettings,createNewSubjectExamSettings} from './create-subject-exam-settings.mjs';
 import {buildClassMarksReviewPackage} from './class-marks-review-package.mjs';
+import {verifyClassMarksReviewPackage} from './verify-class-marks-review-package.mjs';
 const $=id=>document.getElementById(id),status=msg=>{$('message').textContent=msg};
 let auth,authSdk,api,db,actor,schoolId,epoch=0,busy=false,studentsLoaded=false,subjectsLoaded=false,loadedStudentClass=null,loadedSubjectClass=null;
 let classMarkRoster=[],classMarkContext=null,classMarkSettings=null,rosterRequest=0,optionRequest=0,reviewPackage=null;
-function reset(){reviewPackage=null;$('downloadClassReview').disabled=true;$('createExamSettings').disabled=true;$('settingsCreateResult').textContent='';$('iemisSchemaRows').replaceChildren();$('iemisSchemaStatus').textContent='';optionRequest++;rosterRequest++;classMarkRoster=[];classMarkContext=null;classMarkSettings=null;$('classMarkRows').replaceChildren();$('classMarkHeader').replaceChildren();$('classMarkCount').textContent='';$('saveClassMarks').disabled=true;$('inspectClassMarks').disabled=true;$('draftCheckResult').textContent='';$('loadClassMarks').disabled=true;epoch++;studentsLoaded=false;subjectsLoaded=false;loadedStudentClass=null;loadedSubjectClass=null;actor=null;schoolId=null;$('work').hidden=true;$('logout').disabled=true;$('save').disabled=true;$('studentId').replaceChildren();$('subjectId').replaceChildren();}
+function reset(){$('reviewFile').value='';$('reviewFile').disabled=true;$('verifyClassReview').disabled=true;$('reviewVerifyResult').textContent='';reviewPackage=null;$('downloadClassReview').disabled=true;$('createExamSettings').disabled=true;$('settingsCreateResult').textContent='';$('iemisSchemaRows').replaceChildren();$('iemisSchemaStatus').textContent='';optionRequest++;rosterRequest++;classMarkRoster=[];classMarkContext=null;classMarkSettings=null;$('classMarkRows').replaceChildren();$('classMarkHeader').replaceChildren();$('classMarkCount').textContent='';$('saveClassMarks').disabled=true;$('inspectClassMarks').disabled=true;$('draftCheckResult').textContent='';$('loadClassMarks').disabled=true;epoch++;studentsLoaded=false;subjectsLoaded=false;loadedStudentClass=null;loadedSubjectClass=null;actor=null;schoolId=null;$('work').hidden=true;$('logout').disabled=true;$('save').disabled=true;$('studentId').replaceChildren();$('subjectId').replaceChildren();}
 function lock(value){busy=value;$('createExamSettings').disabled=value||!actor||actor.role!=='school_admin'||!subjectsLoaded||loadedSubjectClass!==$('schoolClass').value||!$('subjectId').value;for(const input of $('classMarkRows').querySelectorAll('input'))input.disabled=value||(input.matches('input[data-field]')&&input.closest('tr')?.querySelector('input[data-absent]')?.checked===true);$('loadClassMarks').disabled=value||!actor||actor.role!=='school_admin';$('saveClassMarks').disabled=true;$('inspectClassMarks').disabled=value||!actor||!classMarkContext;for(const id of ['login','logout','loadStudents','loadSubjects','save','schoolClass','term','subjectId','studentId','theory','practical'])$(id).disabled=value||(['loadStudents','loadSubjects','save'].includes(id)&&!actor);if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('save').disabled=true;}}
 $('connect').onclick=async()=>{try{const config=JSON.parse($('config').value);if(config.projectId!=='smss-exam-portal-v47')throw new Error('Only V47 Firebase project allowed');const appSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js');authSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js');api=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js');const app=appSdk.initializeApp(config,'smss-v47-marks-entry');auth=authSdk.getAuth(app);await authSdk.setPersistence(auth,authSdk.inMemoryPersistence);db=api.getFirestore(app);$('connect').disabled=true;$('login').disabled=false;status('Connected to V47')}catch(e){status('Connection failed: '+e.message)}};
 $('login').onclick=async()=>{if(busy)return;reset();const attempt=epoch;const loginAuth=auth;lock(true);try{const id=validateSchoolId($('schoolId').value.trim());const credential=await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);$('password').value='';if(attempt!==epoch){if(loginAuth.currentUser?.uid===credential.user.uid)await authSdk.signOut(loginAuth);return}const uid=credential.user.uid;const session=await verifySchoolSession({schoolId:id,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(attempt!==epoch){if(loginAuth.currentUser?.uid===uid)await authSdk.signOut(loginAuth);return}if(loginAuth.currentUser?.uid!==uid||session.role!=='school_admin')throw new Error('School Admin required');const school=await api.getDoc(api.doc(db,'schools',id));if(attempt!==epoch){if(loginAuth.currentUser?.uid===uid)await authSdk.signOut(loginAuth);return}if(loginAuth.currentUser?.uid!==uid||!school.exists()||school.data().active!==true)throw new Error('School inactive');actor={role:'school_admin',active:true,schoolId:id,uid};schoolId=id;$('heading').textContent='Raw mark — '+String(school.data().name??id);$('work').hidden=false;status('विद्यालय प्रशासकको लगइन सफल भयो। विद्यार्थी र विषय लोड गर्नुहोस्। हाल अंक Save/Publish बन्द छ।')}catch(e){if(attempt===epoch){reset();try{await authSdk.signOut(auth)}catch{}status('Sign in failed: '+e.message)}}finally{lock(false)}};
@@ -67,7 +68,7 @@ $('createExamSettings').onclick=async()=>{
 };
 
 
-function invalidateClassMarks(){reviewPackage=null;$('downloadClassReview').disabled=true;rosterRequest++;classMarkRoster=[];classMarkContext=null;classMarkSettings=null;$('classMarkRows').replaceChildren();$('classMarkHeader').replaceChildren();$('classMarkCount').textContent='';$('draftCheckResult').textContent='';$('inspectClassMarks').disabled=true;$('saveClassMarks').disabled=true}
+function invalidateClassMarks(){$('reviewFile').value='';$('reviewFile').disabled=true;$('verifyClassReview').disabled=true;$('reviewVerifyResult').textContent='';reviewPackage=null;$('downloadClassReview').disabled=true;rosterRequest++;classMarkRoster=[];classMarkContext=null;classMarkSettings=null;$('classMarkRows').replaceChildren();$('classMarkHeader').replaceChildren();$('classMarkCount').textContent='';$('draftCheckResult').textContent='';$('inspectClassMarks').disabled=true;$('saveClassMarks').disabled=true}
 $('term').onchange=()=>{invalidateClassMarks();lock(false)};
 $('subjectId').onchange=()=>{invalidateClassMarks();lock(false)};
 $('loadClassMarks').onclick=async()=>{
@@ -109,6 +110,7 @@ $('classMarkRows').addEventListener('input',event=>{
  if(!event.target?.matches?.('input[data-field],input[data-absent]'))return;
  if(event.target.matches('input[data-absent]')){const row=event.target.closest('tr');for(const input of row.querySelectorAll('input[data-field]')){input.value='';input.disabled=event.target.checked}}
  reviewPackage=null;$('downloadClassReview').disabled=true;
+ $('reviewVerifyResult').textContent='';
  $('draftCheckResult').textContent='Draft changed. Inspect again before saving.';
 });
 function collectClassMarkEntries(){
@@ -155,6 +157,7 @@ $('inspectClassMarks').onclick=async()=>{
    $('draftCheckResult').textContent+=' Read-only publication review: '+proposal.rosterCount+' students; '+proposal.reviewBatches.length+' review groups. No data saved.';
    reviewPackage=buildClassMarksReviewPackage({actor,schoolId,classId,subjectId,examId:term,settings:classMarkSettings,expectedStudentIds,drafts});
    $('downloadClassReview').disabled=false;
+   $('reviewFile').disabled=false;$('verifyClassReview').disabled=false;
   }
   status(result.complete?'Draft checked. This does not save or publish marks.':'Draft incomplete. No marks saved.');
  }catch(e){$('draftCheckResult').textContent=e.message;status('अंक जाँच असफल भयो। कुनै अंक Save गरिएको छैन।')}
@@ -167,6 +170,26 @@ $('downloadClassReview').onclick=()=>{
  const link=document.createElement('a');link.href=url;link.download=reviewPackage.filename;link.click();
  setTimeout(()=>URL.revokeObjectURL(url),1000);
  status('Read-only review JSON downloaded locally. No marks saved or published.');
+};
+$('verifyClassReview').onclick=async()=>{
+ if(busy||!classMarkContext||!classMarkSettings||!$('reviewFile').files?.[0]){status('Select a JSON review file after inspecting class marks.');return}
+ const file=$('reviewFile').files[0],attempt=epoch,request=rosterRequest,uid=actor?.uid,selectedSchoolId=schoolId;
+ if(file.size>900000){$('reviewVerifyResult').textContent='Review file exceeds 900 KB';return}
+ const context={...classMarkContext};
+ lock(true);$('verifyClassReview').disabled=true;
+ try{
+  if(!uid||auth?.currentUser?.uid!==uid||actor?.role!=='school_admin')throw new Error('School Admin session required');
+  const json=await file.text();
+  const verified=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});
+  if(verified.role!=='school_admin')throw new Error('School Admin permission revoked');
+  const settings=await discoverVerifiedSubjectExamSettings({db,api,schoolId:selectedSchoolId,classId:context.classId,subjectId:context.subjectId,examId:context.term,revalidate:async()=>{const session=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(session.role!=='school_admin')throw new Error('School Admin required')}});
+  const roster=await loadCompleteClassRoster({db,api,actor,schoolId:selectedSchoolId,classId:context.classId});
+  const finalSession=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});
+  if(finalSession.role!=='school_admin'||attempt!==epoch||request!==rosterRequest||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId||context.classId!==$('schoolClass').value||context.term!==$('term').value||context.subjectId!==$('subjectId').value)throw new Error('School session or selection changed');
+  const result=verifyClassMarksReviewPackage({json,actor,schoolId:selectedSchoolId,classId:context.classId,subjectId:context.subjectId,examId:context.term,settings,expectedStudentIds:roster.studentIds});
+  $('reviewVerifyResult').textContent='Verified '+result.rosterCount+' students against current school records. Review only; nothing saved or published.';
+ }catch(error){if(attempt===epoch&&request===rosterRequest)$('reviewVerifyResult').textContent='Verification failed: '+error.message}
+ finally{if(attempt===epoch){lock(false);$('verifyClassReview').disabled=!classMarkContext||!$('reviewFile').files?.length}}
 };
 $('saveClassMarks').onclick=()=>status('Save/Publish disabled: secure complete-class workflow is not implemented. No marks saved.');
 
