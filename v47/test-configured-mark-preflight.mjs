@@ -4,6 +4,8 @@ const base={schoolId:'12345',subjectId:'computer',examId:'final',classId:'9',exp
 const settings={schoolId:'12345',subjectId:'computer',examId:'final',classId:'9',active:true,components:[{key:'participation',name:'Participation',fullMarks:7},{key:'practical',name:'Practical',fullMarks:63},{key:'term',name:'Term',fullMarks:30}]};
 const result=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',values:{participation:7,practical:63,term:30}},{studentId:'b',values:{participation:0,practical:0,term:0}}]});
 assert.equal(result.complete,true);assert.equal(result.ready[0].totalObtained,100);
+assert.deepEqual(result.ready[0].values,{participation:7,practical:63,term:30});
+assert.equal(Object.isFrozen(result.ready[0].values),true);
 assert.equal(result.publicationAllowed,false);
 const invalid=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',values:{participation:8,practical:63,term:30}},{studentId:'b',values:{participation:0,practical:0,term:0}}]});
 assert.equal(invalid.complete,false);assert.match(invalid.invalid[0].message,/Out of range/);
@@ -15,6 +17,8 @@ assert.throws(()=>inspectConfiguredClassMarks({...base,settings:{...settings,com
 const otherSubject={...settings,subjectId:'math',components:[{key:'theory',name:'Theory',fullMarks:80},{key:'project',name:'Project',fullMarks:20}]};
 const math=inspectConfiguredClassMarks({...base,subjectId:'math',settings:otherSubject,drafts:[{studentId:'a',values:{theory:80,project:20}},{studentId:'b',isAbsent:true}]});
 assert.equal(math.complete,true);
+assert.equal(math.ready[1].isAbsent,true);
+assert.equal(math.ready[1].values,undefined);
 const encoded=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',values:{participation:'0x7',practical:'63',term:'30'}},{studentId:'b',isAbsent:true}]});
 assert.equal(encoded.complete,false);
 const decimal=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',values:{participation:'6.5',practical:'62.25',term:'30'}},{studentId:'b',isAbsent:true}]});
