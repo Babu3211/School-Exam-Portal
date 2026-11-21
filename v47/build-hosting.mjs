@@ -1,10 +1,12 @@
 // V47-only static hosting build. No V46 files or Firebase writes.
-import {mkdir,readdir,copyFile,rm,readFile,writeFile} from 'node:fs/promises';
-import {join,extname} from 'node:path';
+import {mkdir,readdir,copyFile,rm,readFile} from 'node:fs/promises';
+import {extname} from 'node:path';
 const source=new URL('./',import.meta.url);
 const dist=new URL('./dist/',import.meta.url);
 await rm(dist,{recursive:true,force:true});
 await mkdir(dist,{recursive:true});
+const config=JSON.parse(await readFile(new URL('firebase.json',source),'utf8'));
+if(config.hosting?.public!=='dist')throw new Error('V47 Hosting must use config-relative dist; refusing unsafe build');
 const files=await readdir(source,{withFileTypes:true});
 let count=0;
 for(const file of files){
