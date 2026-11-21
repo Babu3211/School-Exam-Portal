@@ -84,4 +84,7 @@ await ok('37 list remains tenant-ID ordered',async()=>{const page=await listScho
 await ok('38 registration failures never create additional members',async()=>{assert.equal(state.members.size,1)});
 await ok('39 registration failures never create additional schools',async()=>{assert.equal(state.schools.size,2)});
 
+await ok('40 reject numeric IEMIS code',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,iemisCode:12345},adminUid:'admin003'}))});
+await ok('41 reject numeric school name',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,name:12345},adminUid:'admin003'}))});
+await ok('42 preserve leading-zero IEMIS code',async()=>{const leading={id:'00123',iemisCode:'00123',name:'Leading Zero School'};await onboardSchool({db,api,actor:admin,form:leading,adminUid:'admin004'});assert.equal(state.schools.get('00123').iemisCode,'00123')});
 console.log('PASS '+checks+' V47 school admin service checks (mock SDK; Firebase emulator verification still required)');
