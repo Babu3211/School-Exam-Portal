@@ -39,7 +39,7 @@ $('login').onclick=async()=>{
   if(id!==$('schoolId').value.trim())throw new Error('School selection changed');
   actor={uid:session.uid,role:'teacher',active:true,schoolId:id};schoolId=id;$('work').hidden=false;message('शिक्षकको लगइन सफल भयो। आफ्नो कक्षा र विषय छान्नुहोस्।');
  }catch(e){if(request===epoch){clear();try{await authSdk.signOut(auth)}catch{}message('Sign in failed: '+e.message)}}
- finally{lock(false)}
+ finally{if(request===epoch)lock(false)}
 };
 $('logout').onclick=async()=>{if(busy)return;lock(true);clear();try{await authSdk.signOut(auth);message('Signed out')}catch(e){message('Sign out failed: '+e.message)}finally{lock(false)}};
 $('classId').addEventListener('change',()=>{$('students').replaceChildren();$('count').textContent='';$('subjectId').replaceChildren();selectionEpoch++;if(!busy)lock(false)});
@@ -63,7 +63,7 @@ $('loadAssignments').onclick=async()=>{
    for(const document of snap.docs){
     const data=document.data();
     if(!document.id||document.id!==id+':'+uid+':'+data.classId+':'+data.subjectId||data.uid!==uid||data.schoolId!==id)throw new Error('Cross-school or forged teacher assignment');
-    if(data.active!==true||data.classId!==classId)continue;
+    if(data.active!==true||data.classId!==classId||data.subjectId==='attendance')continue;
     if(seen.has(data.subjectId))throw new Error('Duplicate active teacher subject assignment');
     seen.add(data.subjectId);subjects.push(data.subjectId);
    }
@@ -87,7 +87,7 @@ $('loadAssignments').onclick=async()=>{
   $('load').disabled=true;
   message(verified.length+' assigned subjects verified. Choose a subject and load the class.');
  }catch(e){if(request===epoch&&selection===selectionEpoch){$('subjectId').replaceChildren();message('Assigned subject load failed: '+e.message)}}
- finally{lock(false)}
+ finally{if(request===epoch)lock(false)}
 };
 $('load').onclick=async()=>{
  if(busy||!actor)return;
