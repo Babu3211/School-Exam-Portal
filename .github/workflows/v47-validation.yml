@@ -45,6 +45,7 @@ jobs:
           node v47/test-configured-class-publication-preview.mjs
           node v47/test-class-publication-ui-wiring.mjs
           node v47/test-class-inspection-postawait-guard.mjs
+          node v47/test-class-marks-same-snapshot.mjs
           node v47/test-discover-subject-exam-settings.mjs
           node v47/test-mark-summary-preview.mjs
           node v47/test-class-mark-coverage-preview.mjs
