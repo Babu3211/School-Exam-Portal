@@ -104,10 +104,11 @@ service cloud.firestore {
           || (memberRole(sid, 'teacher') && resource.data.get('uid', '') == request.auth.uid);
         function activeAssignedSubject() {
           let subjectPath = /databases/$(database)/documents/schools/$(sid)/subjects/$(request.resource.data.subjectId);
-          return exists(subjectPath)
+          return request.resource.data.subjectId == 'attendance'
+            || (exists(subjectPath)
             && get(subjectPath).data.get('schoolId', '') == sid
             && get(subjectPath).data.get('class', '') == request.resource.data.classId
-            && get(subjectPath).data.get('active', false) == true;
+            && get(subjectPath).data.get('active', false) == true);
         }
         allow create: if memberRole(sid, 'school_admin') && validTeacherAssignment()
           && activeAssignedSubject()
