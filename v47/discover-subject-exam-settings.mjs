@@ -4,6 +4,7 @@ import {validateConfiguredMarkComponents} from './configured-mark-preflight.mjs'
 export async function discoverVerifiedSubjectExamSettings({db,api,schoolId,subjectId,examId,classId,revalidate}){
  if(!db||!api||['collection','query','where','limit','getDocs'].some(k=>typeof api[k]!=='function')||typeof revalidate!=='function')throw new Error('Verified Firestore settings discovery required');
  for(const [key,value] of Object.entries({schoolId,subjectId,examId,classId}))if(typeof value!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(value))throw new Error('Invalid '+key);
+ if(!/^\d{5,20}$/.test(schoolId))throw new Error('Invalid IEMIS school ID');
  await revalidate();
  const scoped=api.query(api.collection(db,'schools',schoolId,'mark_settings'),api.where('subjectId','==',subjectId),api.where('examId','==',examId),api.where('classId','==',classId),api.where('active','==',true),api.limit(2));
  const snapshot=await api.getDocs(scoped);
@@ -12,7 +13,8 @@ export async function discoverVerifiedSubjectExamSettings({db,api,schoolId,subje
  const matches=[];
  for(const doc of snapshot.docs){
   const data=doc.data();
-  if(data?.schoolId!==schoolId||data?.subjectId!==subjectId||data?.examId!==examId||String(data?.classId)!==classId||data?.active!==true)continue;
+  if(data?.subjectId!==subjectId||data?.examId!==examId||String(data?.classId)!==classId||data?.active!==true)throw new Error('Examination settings query returned an unexpected record');
+  if(data?.schoolId!==schoolId)throw new Error('Examination settings belong to another school');
   if(typeof doc.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(doc.id)||data.id!==doc.id)throw new Error('Invalid examination settings identity');
   const components=validateConfiguredMarkComponents(data,{schoolId,subjectId,examId,classId});
   matches.push(Object.freeze({settingsId:doc.id,schoolId,subjectId,examId,classId,active:true,components}));
