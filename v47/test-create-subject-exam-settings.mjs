@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 import {prepareNewSubjectExamSettings,createNewSubjectExamSettings} from './create-subject-exam-settings.mjs';
 const settings=prepareNewSubjectExamSettings({schoolId:'12345',classId:'9',subjectId:'computer',examId:'final',components:[{key:'practical',name:'Practical',fullMarks:63},{key:'theory',name:'Theory',fullMarks:37}]});
 assert.equal(settings.id,'9_computer_final');
+for(const term of ['weekly','monthly','1st','2nd','3rd','final'])assert.equal(prepareNewSubjectExamSettings({...settings,examId:term}).examId,term);
 assert.equal(settings.components[0].fullMarks,63);
 assert.throws(()=>prepareNewSubjectExamSettings({...settings,components:[...settings.components,...settings.components,...settings.components,...settings.components]}),/duplicate|Duplicate|Maximum|Invalid/);
 assert.throws(()=>prepareNewSubjectExamSettings({...settings,schoolId:'abc'}));
