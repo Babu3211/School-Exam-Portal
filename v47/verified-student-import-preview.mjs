@@ -4,7 +4,7 @@ import {verifyV46ImportPreflight} from './verified-v46-import-preflight.mjs';
 import {previewV46IemisStudentImport} from './v46-iemis-student-import-preview.mjs';
 const str=x=>{
  if(x===null||x===undefined)return '';
- if(typeof x==='object'||typeof x==='function'||typeof x==='symbol'||typeof x==='bigint')
+ if(typeof x==='object'||typeof x==='function'||typeof x==='symbol'||typeof x==='bigint'||typeof x==='boolean')
   throw new TypeError('Invalid existing student identity type');
  if(typeof x==='number'&&(!Number.isFinite(x)||!Number.isSafeInteger(x)))
   throw new TypeError('Invalid existing student identity number');
