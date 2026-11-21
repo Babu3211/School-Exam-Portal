@@ -30,6 +30,17 @@ export async function createV46ReadOnlyBridge({schoolId,auth,db,firestoreApi}){
   listExams:()=>records.list('exams'),
   listAttendance:()=>records.list('attendance'),
   listMarks:()=>records.list('marks'),
+  // Raw school-scoped inputs for future V46 ledger/grade-sheet rendering.
+  // No GPA calculation or official result publication occurs here.
+  async loadExamReportInputs(){
+   const students=await records.list('students');
+   const subjects=await records.list('subjects');
+   const exams=await records.list('exams');
+   const marks=await records.list('marks');
+   const markSettings=await records.list('mark_settings');
+   await context.revalidateRead();
+   return Object.freeze({schoolId:context.schoolId,students,subjects,exams,marks,markSettings});
+  },
   // V46 report views can retrieve individual tenant-scoped records without writes.
   getMark:id=>records.get('marks',id),
   getExam:id=>records.get('exams',id),
