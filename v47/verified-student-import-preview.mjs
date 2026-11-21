@@ -3,6 +3,8 @@
 import {verifyV46ImportPreflight} from './verified-v46-import-preflight.mjs';
 import {previewV46IemisStudentImport} from './v46-iemis-student-import-preview.mjs';
 const str=x=>String(x??'').trim();
+const verifiedCloudPreviews=new WeakSet();
+export const isVerifiedCloudPreview=value=>!!value&&typeof value==='object'&&verifiedCloudPreviews.has(value);
 export async function previewAgainstSchoolStudents({auth,schoolId,rows,readDocument,readStudents}={}){
  if(typeof readStudents!=='function')throw new TypeError('School-scoped student reader required');
  const context=await verifyV46ImportPreflight({auth,schoolId,collection:'students',readDocument});
@@ -20,5 +22,7 @@ export async function previewAgainstSchoolStudents({auth,schoolId,rows,readDocum
   if(admission)existingAdmissionNumbers.push(admission);
  }
  const preview=previewV46IemisStudentImport({rows,schoolId,existingIemisIds,existingAdmissionNumbers});
- return Object.freeze({preview,cloudChecked:true,schoolId,existingCount:students.length});
+ const result=Object.freeze({preview,cloudChecked:true,schoolId,existingCount:students.length});
+ verifiedCloudPreviews.add(result);
+ return result;
 }
