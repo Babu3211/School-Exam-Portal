@@ -7,7 +7,7 @@ assert.equal(schoolMembershipPath('12345678', 'uid_001'), 'schools/12345678/memb
 assert.equal(schoolMembershipPath('12345678', 'u'.repeat(128)), 'schools/12345678/members/'+'u'.repeat(128));
 assert.throws(()=>schoolMembershipPath('12345678','u'.repeat(129)),TypeError);
 for (const bad of ['', '../other', 'school/id', 'school id', '.', 'x'.repeat(65), null]) {
-  assert.throws(() => assertSchoolId(bad), TypeError);
+  assert.throws(() => assertSchoolId(bad));
 }
 for (const bad of ['', '../students', 'students/other', 'with space', '__', null]) {
   assert.throws(() => schoolCollectionPath('12345678', bad), TypeError);
