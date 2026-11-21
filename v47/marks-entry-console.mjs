@@ -37,7 +37,7 @@ $('schoolClass').onchange=()=>{optionRequest++;invalidateClassMarks();studentsLo
 $('studentId').onchange=()=>lock(false);$('subjectId').onchange=()=>lock(false);
 $('save').onclick=()=>status('Individual mark saving is disabled. Use complete-class marks.');
 
-function invalidateClassMarks(){rosterRequest++;classMarkRoster=[];classMarkContext=null;classMarkSettings=null;$('classMarkRows').replaceChildren();$('classMarkCount').textContent='';$('draftCheckResult').textContent='';$('inspectClassMarks').disabled=true;$('saveClassMarks').disabled=true}
+function invalidateClassMarks(){rosterRequest++;classMarkRoster=[];classMarkContext=null;classMarkSettings=null;$('classMarkRows').replaceChildren();$('classMarkHeader').replaceChildren();$('classMarkCount').textContent='';$('draftCheckResult').textContent='';$('inspectClassMarks').disabled=true;$('saveClassMarks').disabled=true}
 $('term').onchange=()=>{invalidateClassMarks();lock(false)};
 $('subjectId').onchange=()=>{invalidateClassMarks();lock(false)};
 $('loadClassMarks').onclick=async()=>{
@@ -49,7 +49,7 @@ $('loadClassMarks').onclick=async()=>{
   const settingsId=$('markSettingsId').value.trim();
   const settings=await loadVerifiedSubjectExamSettings({db,api,schoolId:selectedSchoolId,classId,subjectId,examId:term,settingsId,revalidate:async()=>{if(attempt!==epoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('School session changed');const verified=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(verified.role!=='school_admin')throw new Error('School Admin required');}});
   const roster=await loadCompleteClassRoster({db,api,actor,schoolId,classId});
-  if(request!==rosterRequest||attempt!==epoch||classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value)return;
+  if(request!==rosterRequest||attempt!==epoch||classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value||settingsId!==$('markSettingsId').value.trim())return;
   if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId||actor?.schoolId!==selectedSchoolId)throw new Error('Authentication or school changed during roster load');
   // Display alphabetically without changing the authoritative roster IDs used for completeness checks.
   classMarkSettings=settings;
@@ -92,6 +92,7 @@ function collectClassMarkEntries(){
 $('inspectClassMarks').onclick=()=>{
  if(busy||!classMarkContext)return;
  const {classId,term,subjectId}=classMarkContext;
+ if(!actor||auth?.currentUser?.uid!==actor.uid||actor.schoolId!==schoolId){invalidateClassMarks();status('विद्यालयको लगइन परिवर्तन भयो। पुनः लगइन गर्नुहोस्।');return}
  if(classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value){invalidateClassMarks();status('Selection changed; reload roster');return}
  try{
   if($('markSettingsId').value.trim()!==classMarkSettings.settingsId)throw new Error('Examination Settings changed; reload roster');
