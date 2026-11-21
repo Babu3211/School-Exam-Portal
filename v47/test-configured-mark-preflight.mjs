@@ -31,4 +31,10 @@ const nonNumeric=inspectConfiguredClassMarks({...base,settings,drafts:[{studentI
 assert.equal(nonNumeric.complete,false);
 assert.match(inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',isAbsent:true,values:{participation:7}},{studentId:'b',isAbsent:true}]}).invalid[0].message,/Absent student/);
 assert.match(inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',isAbsent:'true'},{studentId:'b',isAbsent:true}]}).invalid[0].message,/absence flag/);
+assert.throws(()=>inspectConfiguredClassMarks({...base,settings:{...settings,components:[{key:'x',name:'X',fullMarks:100001}]},drafts:[]}),/Invalid/);
+for(const values of [[],null,{unexpected:''}]){
+ const malformed=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',isAbsent:true,values},{studentId:'b',isAbsent:true}]});
+ assert.equal(malformed.complete,false);
+ assert.match(malformed.invalid[0].message,/Invalid absent/);
+}
 console.log('V47 dynamic subject examination settings marks tests passed');
