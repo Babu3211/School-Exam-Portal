@@ -41,6 +41,7 @@ export function planStudentImportTransaction({prepared,existingStudents}={}){
   if(admission)newAdmissions.add(admission);
   return Object.freeze({...record,schoolId});
  });
+ if(!isVerifiedStudentSavePlan(prepared))throw new Error('Prepared import expired during transaction planning');
  const plan=Object.freeze({schoolId,uid:prepared.uid,path:Object.freeze(['schools',schoolId,'students']),
   records:Object.freeze(records),count:records.length,createOnly:true,transactionRequired:true});
  issuedTransactionPlans.set(plan,{issuedAt:Date.now()});
