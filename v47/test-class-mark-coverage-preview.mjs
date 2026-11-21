@@ -7,5 +7,9 @@ const b=inspectClassMarkCoverage({...rows,marks:[...rows.marks,{id:'m2',examId:'
 assert.equal(b.complete,true);assert.equal(b.publicationAllowed,false);
 const c=inspectClassMarkCoverage({...rows,marks:[...rows.marks,{id:'m2',examId:'exam1',className:'Class 6',subject:'Math',studentId:'s1'},{id:'m3',examId:'exam1',className:'Class 6',subject:'Math',studentId:'outside'}]},{examId:'exam1',classNo:6,subject:'Math'});
 assert.deepEqual(c.duplicates,['m2']);assert.deepEqual(c.outsiders,['m3']);
+const sectionRows={...rows,students:[{id:'a',class:'6',section:'A'},{id:'b',class:'6',section:'B'}],marks:[{id:'ma',examId:'exam1',className:'Class 6',section:'A',subject:'Math',studentId:'a'}]};
+assert.equal(inspectClassMarkCoverage(sectionRows,{examId:'exam1',classNo:6,subject:'Math',section:'A'}).complete,true);
+assert.deepEqual(inspectClassMarkCoverage(sectionRows,{examId:'exam1',classNo:6,subject:'Math',section:'B'}).missing,['b']);
+assert.throws(()=>inspectClassMarkCoverage(sectionRows,{examId:'exam1',classNo:6,subject:'Math',section:' '}),/Valid section/);
 assert.throws(()=>inspectClassMarkCoverage(rows,{examId:'other',classNo:6,subject:'Math'}),/Verified exam/);
 console.log('V47 class mark coverage tests passed');
