@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const js=readFileSync(new URL('./marks-entry-console.mjs',import.meta.url),'utf8');
+const start=js.indexOf("$('inspectClassMarks').onclick=async()=>"),end=js.indexOf("$('saveClassMarks').onclick",start);
+assert.ok(start>=0&&end>start);
+const h=js.slice(start,end);
+const settings=h.indexOf('const currentSettings=await discoverVerifiedSubjectExamSettings(');
+const roster=h.indexOf('const latestRoster=await loadCompleteClassRoster(');
+const comparison=h.indexOf('latestRoster.studentIds.some(id=>!loadedStudentIds.has(id))');
+const session=h.indexOf('const finalSession=await verifySchoolSession(');
+const guard=h.indexOf('if(busy||!classMarkContext||attempt!==epoch||request!==rosterRequest');
+const inspect=h.indexOf('inspectConfiguredClassMarks(');
+assert.ok(settings>=0&&roster>settings&&comparison>roster&&session>comparison&&guard>session&&inspect>guard);
+assert.match(h,/finalSession\.role!=='school_admin'/);
+assert.match(h,/Class roster changed; reload marks entry/);
+assert.match(h,/new Set\(classMarkRoster\.map\(student=>student\.id\)\)/);
+console.log('V47 marks inspection full-class roster refresh and session checks wired');
