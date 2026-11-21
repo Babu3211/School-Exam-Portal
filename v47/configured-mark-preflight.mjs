@@ -26,17 +26,17 @@ export function inspectConfiguredClassMarks({schoolId,subjectId,examId,classId,s
   if(!values||typeof values!=='object'||Array.isArray(values)||Object.keys(values).some(key=>!components.some(c=>c.key===key))){
    invalid.push(Object.freeze({studentId:row.studentId,message:'Unexpected or missing component values'}));continue;
   }
-  let total=0,error=null;
+  let total=0,error=null;const normalizedValues={};
   for(const c of components){
    const v=values[c.key];
    if(v===null||v===undefined||String(v).trim()===''){error='Missing '+c.name;break}
    const n=Number(v);
    if((typeof v!=='string'&&typeof v!=='number')||(typeof v==='string'&&!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(v.trim()))||!Number.isFinite(n)||n<0||n>c.fullMarks){error='Out of range '+c.name;break}
-   total+=n;
+   normalizedValues[c.key]=n;total+=n;
   }
   if(!Number.isFinite(total))error='Invalid total obtained marks';
   if(error)invalid.push(Object.freeze({studentId:row.studentId,message:error}));
-  else ready.push(Object.freeze({studentId:row.studentId,isAbsent:false,totalObtained:total}));
+  else ready.push(Object.freeze({studentId:row.studentId,isAbsent:false,values:Object.freeze(normalizedValues),totalObtained:total}));
  }
  for(const id of roster)if(!seen.has(id))missing.push(id);
  return Object.freeze({rosterCount:roster.size,components,ready:Object.freeze(ready),missing:Object.freeze(missing),invalid:Object.freeze(invalid),complete:ready.length===roster.size&&!missing.length&&!invalid.length,writeAuthorized:false,publicationAllowed:false});
