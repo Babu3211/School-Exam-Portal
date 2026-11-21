@@ -10,6 +10,7 @@ on:
       - v47/admin-console.mjs
       - v47/school-login.html
       - v47/school-login.mjs
+      - v47/build-hosting.mjs
   workflow_dispatch:
 permissions:
   contents: read
@@ -25,28 +26,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: smss-v47-multischool-work
-      - name: Enforce isolated V47 static preview boundary
-        shell: bash
+      - name: Build V47-only hosting distribution
         run: |
-          test -f v47/index.html
-          test -f v47/admin.html
-          test -f v47/school-login.html
-          test -f v47/school-login.mjs
-          test -f v47/firebase.json
-          node -e 'const c=require("./v47/firebase.json");if(c.hosting.public!=="public")process.exit(1)'
-          echo "V47 static development preview only. No V46 production deploy."
-      - name: Stage only V47 browser assets (no rules or private files)
-        run: |
-          mkdir -p v47/public
-          cp v47/*.html v47/*.mjs v47/public/
-          test -f v47/public/index.html
-          test -f v47/public/admin.html
-          test -f v47/public/admin-console.mjs
-          test -f v47/public/school-login.html
-          test -f v47/public/school-login.mjs
-          ! grep -q 'id="config"' v47/public/admin.html
-          grep -q 'V47_FIREBASE_CONFIG' v47/public/admin-console.mjs
-          test ! -f v47/public/firestore.rules
+          node v47/build-hosting.mjs
+          test -f v47/dist/index.html
+          test -f v47/dist/admin.html
+          test -f v47/dist/school-login.html
+          test -f v47/dist/school-login.mjs
+          test ! -f v47/dist/firestore.rules
+          test ! -f v47/dist/firebase.json
+          node -e 'const c=require("./v47/firebase.json");if(c.hosting.public!=="v47/dist")process.exit(1)'
       - name: Require dedicated V47 Firebase credential
         env:
           V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}
