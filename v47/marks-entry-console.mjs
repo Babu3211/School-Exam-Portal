@@ -109,7 +109,7 @@ $('loadClassMarks').onclick=async()=>{
 $('classMarkRows').addEventListener('input',event=>{
  if(!event.target?.matches?.('input[data-field],input[data-absent]'))return;
  if(event.target.matches('input[data-absent]')){const row=event.target.closest('tr');for(const input of row.querySelectorAll('input[data-field]')){input.value='';input.disabled=event.target.checked}}
- reviewPackage=null;$('downloadClassReview').disabled=true;
+ reviewPackage=null;$('downloadClassReview').disabled=true;$('reviewFile').value='';$('reviewFile').disabled=true;$('verifyClassReview').disabled=true;
  $('reviewVerifyResult').textContent='';
  $('draftCheckResult').textContent='Draft changed. Inspect again before saving.';
 });
