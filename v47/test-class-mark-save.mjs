@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {saveCompleteClassMarks} from './class-mark-save.mjs';
 import {EXAM_TERMS} from './term-catalog.mjs';
-const schoolId='school-a',classId='9',term='1st',subjectId='math';
+const schoolId='12345678',classId='9',term='1st',subjectId='math';
 const actor={role:'school_admin',active:true,schoolId};
 const mark=(studentId,overrides={})=>({studentId,class:classId,term,subjectId,theory:30,practical:10,...overrides});
 const args={actor,schoolId,classId,term,subjectId,expectedStudentIds:['s1','s2'],entries:[mark('s1'),mark('s2')]};
@@ -59,7 +59,7 @@ for(const [overrides,message] of [
  [{actor:{role:'teacher',active:true,schoolId}},/School Admin/],
  [{actor:{role:'super_admin',active:true}},/School Admin/],
  [{actor:{role:'school_admin',active:false,schoolId}},/School Admin/],
- [{actor:{role:'school_admin',active:true,schoolId:'school-b'}},/School Admin/],
+ [{actor:{role:'school_admin',active:true,schoolId:'87654321'}},/School Admin/],
  [{expectedStudentIds:Array.from({length:4},(_,i)=>'s'+i),entries:Array.from({length:4},(_,i)=>mark('s'+i))},/at most 3/]
  ]){
  const {api,writes}=mock();
@@ -69,7 +69,7 @@ for(const [overrides,message] of [
 for(const [overrides,message] of [
  [{'subjects/math':null},/Active subject/],
  [{'students/s2':null},/Student roster changed/],
- [{'students/s2':{schoolId:'school-b',class:classId}},/Student roster changed/],
+ [{'students/s2':{schoolId:'87654321',class:classId}},/Student roster changed/],
  [{'subject_assignments/s2:math':null},/Student subject assignment/],
  [{'marks/1st:s1:math':{schoolId}},/Existing mark/],
  [{'component_marks/1st:s1:math':{schoolId}},/Existing mark/]
@@ -80,9 +80,9 @@ for(const [overrides,message] of [
 }
 for(const [overrides,message] of [
  [{'subjects/math':{schoolId,class:classId,active:false,name:'Mathematics'}},/Active subject/],
- [{'subjects/math':{schoolId:'school-b',class:classId,active:true,name:'Mathematics'}},/Active subject/],
+ [{'subjects/math':{schoolId:'87654321',class:classId,active:true,name:'Mathematics'}},/Active subject/],
  [{'subjects/math':{schoolId,class:'8',active:true,name:'Mathematics'}},/Active subject/],
- [{'subject_assignments/s2:math':{schoolId:'school-b',class:classId,studentId:'s2',subjectId}},/Student subject assignment/],
+ [{'subject_assignments/s2:math':{schoolId:'87654321',class:classId,studentId:'s2',subjectId}},/Student subject assignment/],
  [{'subject_assignments/s2:math':{schoolId,class:'8',studentId:'s2',subjectId}},/Student subject assignment/],
  [{'subject_assignments/s2:math':{schoolId,class:classId,studentId:'s1',subjectId}},/Student subject assignment/]
  ]){
@@ -103,7 +103,7 @@ for(const [overrides,message] of [
 // Late failure in a three-student transaction must roll back ALL pending writes.
 for(const broken of [
  {'students/s3':null},
- {'students/s3':{schoolId:'school-b',class:classId}},
+ {'students/s3':{schoolId:'87654321',class:classId}},
  {'subject_assignments/s3:math':null},
  {'subject_assignments/s3:math':{schoolId,class:classId,studentId:'s3',subjectId,active:false}},
  {'marks/1st:s3:math':{schoolId}},
@@ -132,7 +132,7 @@ for(const examTerm of EXAM_TERMS){
 for(const mutate of [
  a=>{a.active=false},
  a=>{a.role='viewer'},
- a=>{a.schoolId='school-b'},
+ a=>{a.schoolId='87654321'},
  a=>{a.uid='other-user'}
 ]){
  const changingActor={role:'school_admin',active:true,schoolId,uid:'admin-1'};
