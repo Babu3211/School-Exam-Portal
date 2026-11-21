@@ -17,6 +17,6 @@ const math=inspectConfiguredClassMarks({...base,subjectId:'math',settings:otherS
 assert.equal(math.complete,true);
 const nonNumeric=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',values:{participation:true,practical:63,term:30}},{studentId:'b',isAbsent:true}]});
 assert.equal(nonNumeric.complete,false);
-assert.throws(()=>inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',isAbsent:true,values:{participation:7}},{studentId:'b',isAbsent:true}]}),/Absent student/);
-assert.throws(()=>inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',isAbsent:'true'},{studentId:'b',isAbsent:true}]}),/absence flag/);
+assert.match(inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',isAbsent:true,values:{participation:7}},{studentId:'b',isAbsent:true}]}).invalid[0].message,/Absent student/);
+assert.match(inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',isAbsent:'true'},{studentId:'b',isAbsent:true}]}).invalid[0].message,/absence flag/);
 console.log('V47 dynamic subject examination settings marks tests passed');
