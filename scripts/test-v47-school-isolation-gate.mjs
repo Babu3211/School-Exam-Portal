@@ -75,8 +75,8 @@ assert.match(marksBlock,/allow create, update, delete: if false;/,'Individual ma
 assert.ok(!/allow (?:create|update):/.test(marksBlock),'No alternate individual mark write permissions');
 const componentBlock=rules.split('match /component_marks/{id} {')[1]?.split('match /subjects/{id}')[0]??'';
 assert.ok(componentBlock,'Computer component marks rule must exist');
-assert.ok(componentBlock.includes('allow create: if false;'),'Computer component mark create must remain blocked');
-assert.ok(componentBlock.includes('allow update, delete: if false;'),'Computer component mark update/delete must remain blocked');
+assert.match(componentBlock,/allow create, update, delete: if false;/,'Computer component mark writes must remain blocked');
+// The combined deny above covers create, update, and delete; all clauses are audited below.
 // Check every allow clause, including combined permissions (create, update, delete).
 // A second allow statement is OR-ed with the deny and can silently reopen writes.
 function assertAllMarkWritesDenied(block,label){
