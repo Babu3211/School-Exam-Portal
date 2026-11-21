@@ -5,7 +5,7 @@ assert.match(s,/const ledger=async\(\)=>\{(?:clearVerifiedLedger\(\);)?const req
 assert.match(s,/\$('ledgerClass'\)\.onchange=\(\)=>\{clearVerifiedLedger\(\);sessionEpoch\+\+/);
 assert.match(s,/\$('ledgerTerm'\)\.onchange=\(\)=>\{clearVerifiedLedger\(\);sessionEpoch\+\+/);
 assert.match(s,/if\(epoch!==sessionEpoch\|\|ctx\(\)\.schoolId!==schoolId/);
-assert.match(s,/reset:\(\)=>\{sessionEpoch\+\+/);
+assert.match(s,/reset:\(\)=>\{clearVerifiedLedger\(\);sessionEpoch\+\+/);
 assert.match(s,/for\(let page=0;page<30;page\+\+\)\{/);
 assert.match(s,/request=\+\+rosterRequest/);
 assert.match(s,/request!==rosterRequest/);
