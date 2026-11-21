@@ -24,13 +24,19 @@ const features=[
 ];
 const inventory=features.map(f=>{
  const inV46=f.v46===null?null:f.v46.test(v46);
- const routes=f.v47.map(p=>({path:p,exists:existsSync(resolve(root,p)),linked:hub.includes('./'+p.replace(/^v47\//,''))}));
+ const routes=f.v47.map(p=>({path:p,exists:existsSync(resolve(root,p)),linked:p==='v47/index.html'||hub.includes('./'+p.replace(/^v47\//,''))}));
  const sourcePresent=routes.every(r=>r.exists&&r.linked);
  const prototype=f.production?f.production.test(f.name==='Dashboard'?hub:routes.filter(r=>r.exists).map(r=>read(r.path)).join('\n')):false;
  return {feature:f.name,v46Evidence:inV46,v47Routes:routes,sourcePresent,prototypeWarning:prototype,parityVerified:false};
 });
 const report={kind:'v46-to-v47-source-inventory',note:'Route existence is not functional parity. No production readiness is asserted.',features:inventory,missingRoutes:inventory.filter(x=>!x.sourcePresent).map(x=>x.feature),prototypeWarnings:inventory.filter(x=>x.prototypeWarning).map(x=>x.feature),functionalParityVerified:false};
-console.log(JSON.stringify(report,null,2));
+if(process.argv.includes('--json'))console.log(JSON.stringify(report,null,2));
+else {
+ console.log('V46 → V47 source inventory (not functional parity)');
+ for(const item of inventory)console.log((item.sourcePresent?'ROUTE FOUND':'ROUTE MISSING')+' | '+item.feature+(item.prototypeWarning?' | DEVELOPMENT ONLY':''));
+ console.log('Missing routes: '+(report.missingRoutes.join(', ')||'none'));
+ console.log('Functional parity verified: NO');
+}
 if(process.argv.includes('--require-parity')){
  console.error('Full V46/V47 parity cannot be established by source inspection; independent verification required.');
  process.exitCode=1;
