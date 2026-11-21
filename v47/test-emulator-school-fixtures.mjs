@@ -13,4 +13,7 @@ assert.ok(!source.includes('disabled-300160001dmin'),'School ID replacement corr
 assert.ok(source.includes("'300160003'"),'New school creation must use a numeric ID');
 assert.ok(source.includes("iemisCode:'300160003'"),'School create must include matching IEMIS code');
 assert.ok(!source.includes("assertSucceeds(setDoc(doc(db('super-a'),'schools','school-new')"),'Non-numeric school creation must not succeed');
+assert.ok(source.includes("iemisCode:'300160006'"),'Mismatched IEMIS registration negative test missing');
+assert.ok(source.includes("'schools','300160007'"),'Missing IEMIS code negative test missing');
+assert.ok(source.includes("'schools','300160008'"),'Unexpected registration field negative test missing');
 console.log('PASS: emulator school fixtures follow numeric IEMIS school ID contract');
