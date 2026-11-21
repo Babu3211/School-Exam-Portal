@@ -34,7 +34,7 @@ export async function createVerifiedTenantContext({schoolId,auth,readDocument}){
    ensureCurrent();
    const latest=await verifySchoolSession({schoolId:session.schoolId,uid,readDocument});
    ensureCurrent();
-   if(latest.role!=='school_admin')throw new Error('School Admin permission required');
+   if(session.role!=='school_admin'||latest.role!=='school_admin')throw new Error('School Admin permission required');
    return latest;
   },
   assertRead(){return ensureCurrent()}
