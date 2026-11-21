@@ -6,7 +6,7 @@ export function validateConfiguredMarkComponents(settings,{schoolId,subjectId,ex
  const seen=new Set(),components=[];
  for(const c of settings.components){
   const key=c?.key,name=c?.name,max=c?.fullMarks;
-  if(typeof key!=='string'||!/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(key)||seen.has(key)||typeof name!=='string'||!name.trim()||name.length>160||typeof max!=='number'||!Number.isFinite(max)||max<=0)throw new Error('Invalid or duplicate examination component setting');
+  if(typeof key!=='string'||!/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(key)||seen.has(key)||typeof name!=='string'||!name.trim()||name.length>160||typeof max!=='number'||!Number.isFinite(max)||max<=0||max>100000)throw new Error('Invalid or duplicate examination component setting');
   seen.add(key);components.push(Object.freeze({key,name,fullMarks:max}));
  }
  return Object.freeze(components);
@@ -21,7 +21,7 @@ export function inspectConfiguredClassMarks({schoolId,subjectId,examId,classId,s
   if(!row||!roster.has(row.studentId)||seen.has(row.studentId))throw new Error('Duplicate or out-of-roster mark draft');
   seen.add(row.studentId);
   if(row.isAbsent!==undefined&&typeof row.isAbsent!=='boolean'){invalid.push(Object.freeze({studentId:row.studentId,message:'Invalid absence flag'}));continue}
-  if(row.isAbsent===true){if(row.values&&Object.values(row.values).some(v=>v!==null&&v!==undefined&&String(v).trim()!=='')){invalid.push(Object.freeze({studentId:row.studentId,message:'Absent student cannot carry obtained marks'}));continue}ready.push(Object.freeze({studentId:row.studentId,isAbsent:true,totalObtained:0}));continue}
+  if(row.isAbsent===true){if(row.values!==undefined&&(!row.values||typeof row.values!=='object'||Array.isArray(row.values)||Object.keys(row.values).some(key=>!components.some(c=>c.key===key)))){invalid.push(Object.freeze({studentId:row.studentId,message:'Invalid absent student component values'}));continue}if(row.values&&Object.values(row.values).some(v=>v!==null&&v!==undefined&&String(v).trim()!=='')){invalid.push(Object.freeze({studentId:row.studentId,message:'Absent student cannot carry obtained marks'}));continue}ready.push(Object.freeze({studentId:row.studentId,isAbsent:true,totalObtained:0}));continue}
   const values=row.values;
   if(!values||typeof values!=='object'||Array.isArray(values)||Object.keys(values).some(key=>!components.some(c=>c.key===key))){
    invalid.push(Object.freeze({studentId:row.studentId,message:'Unexpected or missing component values'}));continue;
