@@ -45,4 +45,13 @@ assert.equal(typeof resolveRead,'function','Read request must reach Firestore be
 membershipActive=false;
 resolveRead({docs:[]});
 await assert.rejects(read,/Membership unavailable/);
+membershipActive=true;
+let resolveRoleRead;
+const rolePending=createVerifiedTenantFirestore({db:{},context,api:{...api,getDoc:()=>new Promise(resolve=>{resolveRoleRead=resolve})}});
+const roleRead=rolePending.get('students','abc_1');
+for(let attempt=0;attempt<20&&typeof resolveRoleRead!=='function';attempt++)await new Promise(resolve=>setImmediate(resolve));
+assert.equal(typeof resolveRoleRead,'function','Read request must reach Firestore before role change');
+membershipRole='teacher';
+resolveRoleRead({exists:()=>true});
+await assert.rejects(roleRead,/School role changed/);
 console.log('Verified V47 read-only tenant Firestore adapter tests passed');
