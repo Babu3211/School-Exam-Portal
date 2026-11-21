@@ -6,8 +6,14 @@ import {assertIemisSchoolId} from './iemis-school-identity.mjs';
 import {isVerifiedStudentSavePlan} from './verified-student-import-save-gate.mjs';
 
 const value=(record,key)=>String(record?.[key]??'').trim();
-const issuedTransactionPlans=new WeakSet();
-export const isVerifiedStudentTransactionPlan=value=>!!value&&typeof value==='object'&&issuedTransactionPlans.has(value);
+const issuedTransactionPlans=new WeakMap();
+const TRANSACTION_PLAN_MAX_AGE_MS=5*60*1000;
+export const isVerifiedStudentTransactionPlan=value=>{
+ const issued=value&&typeof value==='object'?issuedTransactionPlans.get(value):null;
+ if(!issued)return false;
+ const age=Date.now()-issued.issuedAt;
+ return age>=0&&age<=TRANSACTION_PLAN_MAX_AGE_MS;
+};
 export function planStudentImportTransaction({prepared,existingStudents}={}){
  if(!isVerifiedStudentSavePlan(prepared))throw new TypeError('Verified prepared import required');
  const schoolId=assertIemisSchoolId(prepared.schoolId);
@@ -37,6 +43,6 @@ export function planStudentImportTransaction({prepared,existingStudents}={}){
  });
  const plan=Object.freeze({schoolId,uid:prepared.uid,path:Object.freeze(['schools',schoolId,'students']),
   records:Object.freeze(records),count:records.length,createOnly:true,transactionRequired:true});
- issuedTransactionPlans.add(plan);
+ issuedTransactionPlans.set(plan,{issuedAt:Date.now()});
  return plan;
 }
