@@ -35,6 +35,10 @@ jobs:
         run: npm run test:v47:verified-import
       - name: IEMIS school identity validation
         run: npm run test:v47:iemis-school-id
+      - name: English UI labels and Nepali guidance
+        run: npm run test:v47:ui-language
+      - name: Multilingual student and staff record compatibility
+        run: npm run test:v47:multilingual-records
       - name: Verified student preview
         run: npm run test:v47:verified-student-preview
       - name: Firestore student preview adapter
