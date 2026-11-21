@@ -104,7 +104,11 @@ $('inspectClassMarks').onclick=async()=>{
   if(verified.role!=='school_admin'||attempt!==epoch||request!==rosterRequest||actor?.uid!==uid||schoolId!==selectedSchoolId||auth?.currentUser?.uid!==uid)throw new Error('School session changed during inspection');
   const currentSettings=await discoverVerifiedSubjectExamSettings({db,api,schoolId:selectedSchoolId,classId:classMarkContext.classId,subjectId:classMarkContext.subjectId,examId:classMarkContext.term,revalidate:async()=>{if(attempt!==epoch||request!==rosterRequest||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('School session changed');const session=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(session.role!=='school_admin')throw new Error('School Admin required');}});
   if(!classMarkSettings||currentSettings.settingsId!==classMarkSettings.settingsId||JSON.stringify(currentSettings.components)!==JSON.stringify(classMarkSettings.components))throw new Error('Subject examination settings changed; reload class marks');
- }catch(error){if(attempt===epoch&&request===rosterRequest){invalidateClassMarks();status('विद्यालयको अधिकार पुनः पुष्टि भएन। कक्षा पुनः लोड गर्नुहोस्।')}return}
+  const latestRoster=await loadCompleteClassRoster({db,api,actor,schoolId:selectedSchoolId,classId:classMarkContext.classId});
+  if(latestRoster.count!==classMarkRoster.length||latestRoster.studentIds.some(id=>!classMarkRoster.some(student=>student.id===id)))throw new Error('Class roster changed; reload marks entry');
+  const finalSession=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});
+  if(finalSession.role!=='school_admin')throw new Error('School Admin session revoked during roster refresh');
+ }catch(error){if(attempt===epoch&&request===rosterRequest){invalidateClassMarks();status('विद्यालयको अधिकार, विद्यार्थी सूची वा विषयको सेटिङ परिवर्तन भएको हुन सक्छ। कक्षा पुनः लोड गर्नुहोस्।')}return}
  finally{if(attempt===epoch)lock(false)}
  if(busy||!classMarkContext||attempt!==epoch||request!==rosterRequest||actor?.uid!==uid||schoolId!==selectedSchoolId||auth?.currentUser?.uid!==uid)return;
  const {classId,term,subjectId}=classMarkContext;
