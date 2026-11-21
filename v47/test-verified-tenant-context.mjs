@@ -9,7 +9,6 @@ const make=opts=>createVerifiedTenantContext({schoolId:sid,auth,readDocument,...
 const ctx=await make();
 assert.deepEqual(ctx.collectionSegments('students'),['schools',sid,'students']);
 assert.deepEqual(ctx.documentSegments('marks','mark_123'),['schools',sid,'marks','mark_123']);
-assert.equal(ctx.assertWrite().role,'school_admin');
 assert.equal((await ctx.revalidateWrite()).role,'school_admin');
 let membershipActive=true;
 const live=await make({readDocument:async path=>path==='schools/'+sid?school:{...member,active:membershipActive}});
@@ -30,12 +29,12 @@ await assert.rejects(make({readDocument:async p=>p==='schools/'+sid?school:{...m
 await assert.rejects(make({readDocument:async p=>p==='schools/'+sid?school:{...member,role:'super_admin'}}),/Membership unavailable/);
 const viewer=await make({readDocument:async p=>p==='schools/'+sid?school:{...member,role:'viewer'}});
 assert.deepEqual(viewer.collectionSegments('students'),['schools',sid,'students']);
-assert.throws(()=>viewer.assertWrite(),/School Admin permission required/);
+await assert.rejects(viewer.revalidateWrite(),/School Admin permission required/);
 const teacher=await make({readDocument:async p=>p==='schools/'+sid?school:{...member,role:'teacher'}});
-assert.throws(()=>teacher.assertWrite(),/School Admin permission required/);
+await assert.rejects(teacher.revalidateWrite(),/School Admin permission required/);
 auth.currentUser={uid:'otherUser'};
 assert.throws(()=>ctx.collectionSegments('students'),/Authentication changed/);
-assert.throws(()=>ctx.assertWrite(),/Authentication changed/);
+await assert.rejects(ctx.revalidateWrite(),/Authentication changed/);
 auth.currentUser={uid};
 await assert.rejects(make({readDocument:async p=>{auth.currentUser={uid:'otherUser'};return p==='schools/'+sid?school:member}}),/Authentication changed/);
 console.log('Verified V47 tenant context tests passed');
