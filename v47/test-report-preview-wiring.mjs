@@ -10,6 +10,10 @@ for(const id of ['config','connect','schoolId','email','password','login','logou
  assert.match(page,new RegExp('id="'+id+'"'));
 assert.match(controller,/createV46ReadOnlyBridge\(/);
 assert.match(controller,/bridge\.loadExamReportRows\(\)/);
+assert.match(controller,/function currentSession\(requestEpoch,uid\)/);
+assert.match(controller,/requestEpoch===epoch&&auth\?\.currentUser\?\.uid===uid/);
+assert.match(controller,/if\(!currentSession\(current,credential\.user\.uid\)\)/);
+assert.match(controller,/signOutIfCurrent\(credential\.user\.uid\)/);
 assert.match(controller,/rows\.publicationAllowed!==false\|\|rows\.complete!==false/);
 assert.match(controller,/authSdk\.inMemoryPersistence/);
 assert.match(controller,/config\.projectId!=='smss-exam-portal-v47'/);
