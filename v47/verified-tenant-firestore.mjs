@@ -15,16 +15,17 @@ export function createVerifiedTenantFirestore({db,api,context}){
     await context.revalidateRead();
     const constraints=[api.orderBy(api.documentId())];
     if(cursor!==null)constraints.push(api.startAfter(cursor));
-    constraints.push(api.limit(Math.min(pageSize,maxDocuments-all.length)));
+    const requested=Math.min(pageSize,maxDocuments-all.length);
+    constraints.push(api.limit(requested));
     const snapshot=await api.getDocs(api.query(collectionRef(name),...constraints));
     await context.revalidateRead();
     if(!snapshot||!Array.isArray(snapshot.docs))throw new Error('Invalid paginated Firestore response');
-    if(snapshot.docs.length>Math.min(pageSize,maxDocuments-all.length))throw new Error('Firestore page exceeded requested limit');
+    if(snapshot.docs.length>requested)throw new Error('Firestore page exceeded requested limit');
     for(const item of snapshot.docs){
-     if(!item||typeof item.id!=='string'||!item.id||item.id===cursor)throw new Error('Invalid Firestore pagination cursor');
+     if(!item||typeof item.id!=='string'||!item.id||(all.length&&item.id<=all.at(-1).id))throw new Error('Invalid Firestore pagination cursor');
      all.push(item);
     }
-    if(snapshot.docs.length<Math.min(pageSize,maxDocuments-(all.length-snapshot.docs.length)))break;
+    if(snapshot.docs.length<requested)break;
     if(all.length>=maxDocuments)throw new Error('Report pagination document limit reached; result incomplete');
     const next=snapshot.docs.at(-1).id;
     if(cursor!==null&&next<=cursor)throw new Error('Firestore pagination cursor did not advance');
