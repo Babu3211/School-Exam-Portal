@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {previewV46MarkSettingsMigration} from './preview-v46-mark-settings-migration.mjs';
+const legacy={classGroup:'9-10',subject:'Computer',components:[{name:'Participation',fullMarks:7},{name:'Practical/Project',fullMarks:63},{name:'Term',fullMarks:30}]};
+const args={legacy,schoolId:'12345',classId:'9',subjectId:'computer',examId:'final',verifiedSubjectName:'Computer'};
+const result=previewV46MarkSettingsMigration(args);
+assert.equal(result.writeAuthorized,false);
+assert.equal(result.requiresManualApproval,true);
+assert.deepEqual(result.settings.components.map(x=>x.fullMarks),[7,63,30]);
+assert.deepEqual(result.settings.components.map(x=>x.key),['component_1','component_2','component_3']);
+assert.equal(Object.isFrozen(result.settings.components[0]),true);
+await assert.rejects(async()=>previewV46MarkSettingsMigration({...args,examId:''}),/Explicit verified/);
+assert.throws(()=>previewV46MarkSettingsMigration({...args,classId:'6'}),/class group/);
+assert.throws(()=>previewV46MarkSettingsMigration({...args,verifiedSubjectName:'Math'}),/subject name/);
+assert.throws(()=>previewV46MarkSettingsMigration({...args,legacy:{...legacy,className:'10'}}),/another class/);
+assert.throws(()=>previewV46MarkSettingsMigration({...args,legacy:{...legacy,components:[{name:'Participation',fullMarks:0}]}}),/positive full marks/);
+console.log('V47 read-only V46 mark settings schema preview passed');
