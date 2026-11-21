@@ -1,12 +1,13 @@
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {verifyTeacherSubjectAssignment} from './verified-teacher-subject-assignment.mjs';
+import {verifyTeacherAttendanceDuty} from './verified-teacher-attendance-duty.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 const $=id=>document.getElementById(id);
 let auth,authSdk,api,db,actor=null,schoolId=null,epoch=0,selectionEpoch=0,busy=false;
 const message=text=>{$('message').textContent=text};
-function clear(){epoch++;selectionEpoch++;actor=null;schoolId=null;$('subjectId').replaceChildren();$('work').hidden=true;$('students').replaceChildren();$('count').textContent='';$('logout').disabled=true;$('load').disabled=true}
-function lock(value){busy=value;for(const id of ['login','logout','load','loadAssignments','classId','subjectId','schoolId','email','password'])$(id).disabled=value;if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('load').disabled=!actor||!$('subjectId').value;$('loadAssignments').disabled=!actor;$('schoolId').disabled=!!actor;$('email').disabled=!!actor;$('password').disabled=!!actor}}
+function clear(){epoch++;selectionEpoch++;actor=null;schoolId=null;$('subjectId').replaceChildren();$('work').hidden=true;$('students').replaceChildren();$('count').textContent='';$('logout').disabled=true;$('load').disabled=true;$('loadAttendance').disabled=true}
+function lock(value){busy=value;for(const id of ['login','logout','load','loadAttendance','loadAssignments','classId','subjectId','schoolId','email','password'])$(id).disabled=value;if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('load').disabled=!actor||!$('subjectId').value;$('loadAttendance').disabled=!actor;$('loadAssignments').disabled=!actor;$('schoolId').disabled=!!actor;$('email').disabled=!!actor;$('password').disabled=!!actor}}
 async function verifiedSession(uid,id){
  const session=await verifySchoolSession({schoolId:id,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null}});
  if(session.role!=='teacher')throw new Error('Active Teacher membership required');
@@ -108,4 +109,27 @@ $('load').onclick=async()=>{
   $('students').append(fragment);$('count').textContent=roster.count+' assigned-class students (read-only)';message('विद्यार्थी सूची लोड भयो। यो पृष्ठबाट अंक Save गर्न मिल्दैन।');
  }catch(e){if(request===epoch&&selection===selectionEpoch){$('students').replaceChildren();$('count').textContent='';message('Access denied or roster unavailable: '+e.message)}}
  finally{if(request===epoch)lock(false)}
+};
+
+$('loadAttendance').onclick=async()=>{
+ if(busy||!actor)return;
+ const request=epoch,selection=selectionEpoch,uid=actor.uid,id=schoolId,classId=$('classId').value;
+ $('students').replaceChildren();$('count').textContent='';lock(true);
+ const revalidate=async()=>{if(request!==epoch||selection!==selectionEpoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==id)throw new Error('School session or selection changed');await verifiedSession(uid,id)};
+ try{
+  await verifyTeacherAttendanceDuty({db,api,actor,schoolId:id,classId,revalidate});
+  const roster=await loadCompleteClassRoster({db,api,actor,schoolId:id,classId});
+  await revalidate();
+  await verifyTeacherAttendanceDuty({db,api,actor,schoolId:id,classId,revalidate});
+  if(request!==epoch||selection!==selectionEpoch||classId!==$('classId').value)throw new Error('Class changed');
+  const fragment=document.createDocumentFragment();
+  for(const student of [...roster.students].sort((a,b)=>String(a.name??a.id).localeCompare(String(b.name??b.id),'en',{sensitivity:'base',numeric:true})||a.id.localeCompare(b.id))){
+   const tr=document.createElement('tr');
+   for(const value of [student.name??student.id,student.class,student.id]){const td=document.createElement('td');td.textContent=String(value);tr.append(td)}
+   fragment.append(tr);
+  }
+  $('students').append(fragment);$('count').textContent=roster.count+' attendance-duty students (read-only)';
+  message('Attendance जिम्मेवारी प्रमाणित भयो। विद्यार्थी सूची मात्र देखाइएको छ; Save गर्न मिल्दैन।');
+ }catch(e){if(request===epoch&&selection===selectionEpoch){$('students').replaceChildren();$('count').textContent='';message('Attendance duty denied or roster unavailable: '+e.message)}}
+ finally{lock(false)}
 };
