@@ -25,6 +25,12 @@ assert.equal(result.preview.records[0].status,'skip');assert.equal(result.previe
 await assert.rejects(previewAgainstSchoolStudents({auth,schoolId,rows,readDocument,readStudents:async()=>[{schoolId:'999999999',studentIemisId:'00001'}]}),/Cross-school/);
 await assert.rejects(previewAgainstSchoolStudents({auth,schoolId,rows,readDocument,readStudents:async()=>({docs:[]})}),/Complete student array/);
 await assert.rejects(previewAgainstSchoolStudents({auth,schoolId,rows,readDocument,readStudents:null}),/reader required/);
+const legacyRows=[{'IEMIS Code':schoolId,'Student IEMIS Id':'00099','Student Name':'Legacy','Class':'6'}];
+const legacy=await previewAgainstSchoolStudents({auth,schoolId,rows:legacyRows,readDocument,
+ readStudents:async()=>[{schoolId,studentIemisNo:'00099'}]});
+assert.equal(legacy.preview.ready,0);
+assert.equal(legacy.preview.skipped,1);
+assert.match(legacy.preview.records[0].errors.join(' '),/already exists/);
 const teacherAuth={currentUser:{uid:'teacher-1'}};
 const teacherDocs=async path=>path==='schools/'+schoolId?{id:schoolId,active:true}:path==='schools/'+schoolId+'/members/teacher-1'?{uid:'teacher-1',schoolId,role:'teacher',active:true}:null;
 await assert.rejects(previewAgainstSchoolStudents({auth:teacherAuth,schoolId,rows,readDocument:teacherDocs,readStudents}),/administrator membership/);
