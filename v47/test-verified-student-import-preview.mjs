@@ -49,6 +49,15 @@ const unicodePreview=await previewAgainstSchoolStudents({auth,schoolId,rows:unic
  readStudents:async()=>[{schoolId,studentIemisNo:'e\u0301-101'}]});
 assert.equal(unicodePreview.preview.ready,0);
 assert.equal(unicodePreview.preview.skipped,1);
+const sessionDuringScan={currentUser:{uid}};
+let changedDuringScan=false;
+const scanningRecord={schoolId};
+Object.defineProperty(scanningRecord,'studentIemisId',{get(){
+ if(!changedDuringScan){changedDuringScan=true;sessionDuringScan.currentUser={uid:'another-user'};}
+ return 'another-id';
+}});
+await assert.rejects(previewAgainstSchoolStudents({auth:sessionDuringScan,schoolId,rows,readDocument,
+ readStudents:async()=>[scanningRecord]}),/Authentication changed during duplicate verification/);
 const teacherAuth={currentUser:{uid:'teacher-1'}};
 const teacherDocs=async path=>path==='schools/'+schoolId?{id:schoolId,active:true}:path==='schools/'+schoolId+'/members/teacher-1'?{uid:'teacher-1',schoolId,role:'teacher',active:true}:null;
 await assert.rejects(previewAgainstSchoolStudents({auth:teacherAuth,schoolId,rows,readDocument:teacherDocs,readStudents}),/administrator membership/);
