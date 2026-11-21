@@ -28,6 +28,8 @@ jobs:
         run: npm install --no-package-lock --ignore-scripts
       - name: Build isolated V47 static hosting
         run: node v47/build-hosting.mjs
+      - name: Test V47 isolated hosting bundle
+        run: node v47/test-hosting-bundle.mjs
       - name: Upload V47 hosting artifact
         uses: actions/upload-artifact@v4
         with:
