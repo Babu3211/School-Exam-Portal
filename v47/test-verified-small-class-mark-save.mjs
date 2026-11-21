@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {saveVerifiedSmallClassMarks} from './verified-small-class-mark-save.mjs';
-const schoolId='school-a',classId='9',term='1st',subjectId='math',actor={role:'school_admin',active:true,schoolId};
+const schoolId='12345678',classId='9',term='1st',subjectId='math',actor={role:'school_admin',active:true,schoolId};
 const entry=id=>({studentId:id,class:classId,term,subjectId,theory:30,practical:10});
 function mock(ids=['s1','s2']){
  const records=new Map([['subjects/math',{schoolId,class:classId,active:true,name:'Mathematics'}]]);
@@ -52,7 +52,7 @@ for(const unauthorized of [
  {role:'teacher',active:true,schoolId},
  {role:'super_admin',active:true},
  {role:'school_admin',active:false,schoolId},
- {role:'school_admin',active:true,schoolId:'school-b'},
+ {role:'school_admin',active:true,schoolId:'87654321'},
  null
 ]){
  const {api,writes}=mock();
@@ -69,7 +69,7 @@ for(const unauthorized of [
 for(const change of [
  actor=>{actor.active=false},
  actor=>{actor.role='viewer'},
- actor=>{actor.schoolId='school-b'},
+ actor=>{actor.schoolId='87654321'},
  actor=>{actor.uid='different-user'}
 ]){
  const changingActor={...actor,uid:'admin-a'};
