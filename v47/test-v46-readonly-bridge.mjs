@@ -30,6 +30,8 @@ assert.equal(Object.isFrozen(inputs),true);
 const detachedLoad=bridge.loadExamReportRows;
 const detachedRows=await detachedLoad();
 assert.equal(detachedRows.schoolId,schoolId);
+assert.equal(detachedRows.complete,false);
+assert.equal(detachedRows.publicationAllowed,false);
 assert.deepEqual(detachedRows.marks,[]);
 assert.equal(Object.isFrozen(detachedRows),true);
 const started=[];
