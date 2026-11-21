@@ -90,7 +90,16 @@ function collectClassMarkEntries(){
   return {studentId:student.id,values};
  });
 }
-$('inspectClassMarks').onclick=()=>{
+$('inspectClassMarks').onclick=async()=>{
+ if(busy||!classMarkContext)return;
+ const attempt=epoch,request=rosterRequest,uid=actor?.uid,selectedSchoolId=schoolId;
+ lock(true);
+ try{
+  if(!uid||auth?.currentUser?.uid!==uid)throw new Error('School session changed');
+  const verified=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});
+  if(verified.role!=='school_admin'||attempt!==epoch||request!==rosterRequest||actor?.uid!==uid||schoolId!==selectedSchoolId||auth?.currentUser?.uid!==uid)throw new Error('School session changed during inspection');
+ }catch(error){if(attempt===epoch&&request===rosterRequest){invalidateClassMarks();status('विद्यालयको अधिकार पुनः पुष्टि भएन। कक्षा पुनः लोड गर्नुहोस्।')}return}
+ finally{if(attempt===epoch)lock(false)}
  if(busy||!classMarkContext)return;
  const {classId,term,subjectId}=classMarkContext;
  if(!actor||auth?.currentUser?.uid!==actor.uid||actor.schoolId!==schoolId){invalidateClassMarks();status('विद्यालयको लगइन परिवर्तन भयो। पुनः लगइन गर्नुहोस्।');return}
