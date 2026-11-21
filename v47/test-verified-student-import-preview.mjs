@@ -12,6 +12,9 @@ const result=await previewAgainstSchoolStudents({auth,schoolId,rows,readDocument
 assert.equal(result.cloudChecked,true);
 assert.equal(isVerifiedCloudPreview(result,rows),true);
 assert.equal(isVerifiedCloudPreview(result,[...rows]),false);
+const originalNow=Date.now;
+try{Date.now=()=>originalNow()+5*60*1000+1;assert.equal(isVerifiedCloudPreview(result,rows),false)}finally{Date.now=originalNow}
+assert.equal(isVerifiedCloudPreview(result,rows),true);
 const alteredRows=rows.map(row=>({...row}));
 const altered=await previewAgainstSchoolStudents({auth,schoolId,rows:alteredRows,readDocument,readStudents});
 assert.equal(isVerifiedCloudPreview(altered,alteredRows),true);
