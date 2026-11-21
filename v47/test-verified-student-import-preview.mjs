@@ -44,6 +44,11 @@ assert.equal(conflictingAliases.preview.skipped,1);
 const conflictingAdmission=await previewAgainstSchoolStudents({auth,schoolId,rows:admissionRows,readDocument,
  readStudents:async()=>[{schoolId,admissionNumber:'OTHER',admissionNo:'A-77'}]});
 assert.equal(conflictingAdmission.preview.skipped,1);
+const unicodeRows=[{'IEMIS Code':schoolId,'Student IEMIS Id':'é-101','Student Name':'Unicode Student','Class':'6'}];
+const unicodePreview=await previewAgainstSchoolStudents({auth,schoolId,rows:unicodeRows,readDocument,
+ readStudents:async()=>[{schoolId,studentIemisNo:'e\u0301-101'}]});
+assert.equal(unicodePreview.preview.ready,0);
+assert.equal(unicodePreview.preview.skipped,1);
 const teacherAuth={currentUser:{uid:'teacher-1'}};
 const teacherDocs=async path=>path==='schools/'+schoolId?{id:schoolId,active:true}:path==='schools/'+schoolId+'/members/teacher-1'?{uid:'teacher-1',schoolId,role:'teacher',active:true}:null;
 await assert.rejects(previewAgainstSchoolStudents({auth:teacherAuth,schoolId,rows,readDocument:teacherDocs,readStudents}),/administrator membership/);
