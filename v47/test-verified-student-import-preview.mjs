@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {previewAgainstSchoolStudents} from './verified-student-import-preview.mjs';
+import {previewAgainstSchoolStudents,isVerifiedCloudPreview} from './verified-student-import-preview.mjs';
 const schoolId='300160003',uid='admin-1';
 const auth={currentUser:{uid}};
 const rows=[{'IEMIS Code':schoolId,'Student IEMIS Id':'00001','Student Name':'सीता','Class':'6'},{'IEMIS Code':schoolId,'Admission Number':'A-2','Student Name':'गीता','Class':'LKG'},{'IEMIS Code':schoolId,'Student IEMIS Id':'00003','Student Name':'राम','Class':'UKG'}];
@@ -9,7 +9,14 @@ const readStudents=async ({path,schoolId:scope,uid:reader})=>{
  return [{schoolId,studentIemisId:'00001',admissionNumber:'A-2'}];
 };
 const result=await previewAgainstSchoolStudents({auth,schoolId,rows,readDocument,readStudents});
-assert.equal(result.cloudChecked,true);assert.equal(result.existingCount,1);
+assert.equal(result.cloudChecked,true);
+assert.equal(isVerifiedCloudPreview(result,rows),true);
+assert.equal(isVerifiedCloudPreview(result,[...rows]),false);
+const alteredRows=rows.map(row=>({...row}));
+const altered=await previewAgainstSchoolStudents({auth,schoolId,rows:alteredRows,readDocument,readStudents});
+assert.equal(isVerifiedCloudPreview(altered,alteredRows),true);
+alteredRows[0]['Student Name']='Changed';
+assert.equal(isVerifiedCloudPreview(altered,alteredRows),false);assert.equal(result.existingCount,1);
 assert.equal(result.preview.ready,1);assert.equal(result.preview.skipped,2);
 assert.equal(result.preview.records[0].status,'skip');assert.equal(result.preview.records[1].status,'skip');
 await assert.rejects(previewAgainstSchoolStudents({auth,schoolId,rows,readDocument,readStudents:async()=>[{schoolId:'999999999',studentIemisId:'00001'}]}),/Cross-school/);
