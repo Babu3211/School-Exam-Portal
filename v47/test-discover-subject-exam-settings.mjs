@@ -12,5 +12,8 @@ assert.equal(result.settingsId,'setting1');assert.deepEqual(result.components.ma
 await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,subjectId:'math',api:{...api,getDocs:async()=>({docs:[]})}}),/No active/);
 await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,api:{...api,getDocs:async()=>({docs:[{id:'setting1',data:()=>record},{id:'setting2',data:()=>({...record,id:'setting2'})}]})}}),/Multiple active/);
 await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,api:{...api,getDocs:async()=>({docs:[{id:'wrong',data:()=>record}]})}}),/identity/);
+await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,schoolId:'school-alpha'}),/IEMIS school ID/);
+await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,api:{...api,getDocs:async()=>({docs:[{id:'setting1',data:()=>({...record,schoolId:'99999'})}]})}}),/another school/);
+await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,api:{...api,getDocs:async()=>({docs:[{id:'setting1',data:()=>({...record,subjectId:'math'})}]})}}),/unexpected record/);
 let count=0;await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,revalidate:async()=>{if(++count===2)throw new Error('Session changed')}}),/Session changed/);
 console.log('V47 automatic school subject examination settings discovery passed');
