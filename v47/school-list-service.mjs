@@ -3,7 +3,7 @@ import {validatePageSize} from './pagination.mjs';
 export async function listSchools({db,api,actor,pageSize=30,cursor=null}){
  if(!canManageSchools(actor))throw new Error('Super Admin required');
  const size=validatePageSize(pageSize);
- if(cursor!==null&&(typeof cursor?.id!=='string'||!/^\d{5,20}$/.test(cursor.id)))throw new TypeError('Invalid school pagination cursor');
+ if(cursor!==null&&(typeof cursor?.id!=='string'||!/^\d{5,20}$/.test(cursor.id)||typeof cursor?.data!=='function'))throw new TypeError('Invalid school pagination cursor');
  for(const name of ['collection','query','orderBy','limit','getDocs','startAfter'])if(typeof api?.[name]!=='function')throw new TypeError('Missing Firebase SDK method '+name);
  const constraints=[api.orderBy('__name__'),api.limit(size+1)];
  if(cursor)constraints.push(api.startAfter(cursor));
