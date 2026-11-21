@@ -131,5 +131,5 @@ $('loadAttendance').onclick=async()=>{
   $('students').append(fragment);$('count').textContent=roster.count+' attendance-duty students (read-only)';
   message('Attendance जिम्मेवारी प्रमाणित भयो। विद्यार्थी सूची मात्र देखाइएको छ; Save गर्न मिल्दैन।');
  }catch(e){if(request===epoch&&selection===selectionEpoch){$('students').replaceChildren();$('count').textContent='';message('Attendance duty denied or roster unavailable: '+e.message)}}
- finally{lock(false)}
+ finally{if(request===epoch)lock(false)}
 };
