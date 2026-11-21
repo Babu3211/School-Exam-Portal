@@ -38,4 +38,9 @@ assert(source.includes("if(actor&&user?.uid!==actor.uid)"),"Auth observer must r
 assert(source.includes("if(requestedRefresh!==refreshEpoch||requestedSession!==sessionEpoch)return;$('next').disabled=true;"),"Failed refresh disables pagination");
 assert(!source.includes('status(e.message)'), 'Raw Firebase error messages must never be shown');
 assert(!source.includes('error?.message??'), 'Untrusted Firebase error messages must be sanitized');
+assert(source.includes("if(connecting||auth)return;"),"Prevent duplicate Firebase initialization");
+assert(source.includes("if(signingIn||mutating)return;"),"Prevent concurrent sign-in");
+assert(source.includes("$('password').value='';signingIn=false;"),"Clear password after login failure");
+assert(source.includes("finally{connecting=false}"),"Release Firebase connection lock");
+assert(source.includes("$('login').disabled=true;try{"),"Disable login during verification");
 console.log('PASS V47 Super Admin UID and school-list session guards');
