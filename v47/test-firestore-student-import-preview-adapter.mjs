@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {createStudentPreviewFirestoreReaders,previewStudentsFromFirestore} from './firestore-student-import-preview-adapter.mjs';
+const schoolId='300160003',uid='admin-1',firestore={};
+const doc=(_, ...parts)=>parts.join('/');
+const collection=(_, ...parts)=>parts.join('/');
+const getDoc=async path=>({exists:()=>true,data:()=>path==='schools/'+schoolId?{id:schoolId,active:true}:{uid,schoolId,role:'school_admin',active:true}});
+const getDocs=async path=>{assert.equal(path,'schools/'+schoolId+'/students');return {docs:[{data:()=>({schoolId,studentIemisId:'00001'})}]}};
+const sdk={doc,getDoc,collection,getDocs};
+const readers=createStudentPreviewFirestoreReaders({firestore,...sdk});
+assert.equal((await readers.readStudents({schoolId,path:['schools',schoolId,'students']})).length,1);
+await assert.rejects(readers.readStudents({schoolId,path:['schools','999999999','students']}),/Cross-school/);
+await assert.rejects(readers.readDocument('schools/'+schoolId+'/students/x'),/Unsupported/);
+const rows=[{'IEMIS Code':schoolId,'Student IEMIS Id':'00001','Student Name':'सीता','Class':'6'},{'IEMIS Code':schoolId,'Student IEMIS Id':'00002','Student Name':'गीता','Class':'6'}];
+const result=await previewStudentsFromFirestore({auth:{currentUser:{uid}},schoolId,rows,firestore,sdk});
+assert.equal(result.preview.skipped,1);assert.equal(result.preview.ready,1);
+assert.equal(result.cloudChecked,true);
+console.log('PASS: Firestore read adapter, authenticated duplicate preview and cross-school path rejection');
