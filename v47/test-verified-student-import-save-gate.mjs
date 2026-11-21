@@ -3,8 +3,8 @@ import {previewAgainstSchoolStudents} from './verified-student-import-preview.mj
 import {prepareVerifiedStudentSave,isVerifiedStudentSavePlan} from './verified-student-import-save-gate.mjs';
 const schoolId='300160003',uid='admin-1';
 const auth={currentUser:{uid}};
-const rows=[{'IEMIS Code':schoolId,'Student IEMIS Id':'00001','Student Name':'A','Class':'6'},
- {'IEMIS Code':schoolId,'Student IEMIS Id':'00002','Student Name':'B','Class':'6'}];
+const rows=[{'IEMIS Code':schoolId,'Student IEMIS Id':'00001','Student Name':'Student A','Class':'6'},
+ {'IEMIS Code':schoolId,'Student IEMIS Id':'00002','Student Name':'Student B','Class':'6'}];
 const readDocument=async path=>path==='schools/'+schoolId?{id:schoolId,active:true}:path==='schools/'+schoolId+'/members/'+uid?{uid,schoolId,role:'school_admin',active:true}:null;
 const readStudents=async()=>[{schoolId,studentIemisId:'00001'}];
 const verifiedPreview=await previewAgainstSchoolStudents({auth,schoolId,rows,readDocument,readStudents});
@@ -27,7 +27,7 @@ try {
 assert.equal(prepared.count,1);
 assert.equal(prepared.records[0]['Student IEMIS Id'],'00002');
 assert.equal(prepared.requiresTransactionalDuplicateRecheck,true);
-const emptyRows=[{'IEMIS Code':schoolId,'Student IEMIS Id':'00001','Student Name':'A','Class':'6'}];
+const emptyRows=[{'IEMIS Code':schoolId,'Student IEMIS Id':'00001','Student Name':'Student A','Class':'6'}];
 const emptyPreview=await previewAgainstSchoolStudents({auth,schoolId,rows:emptyRows,readDocument,readStudents});
 await assert.rejects(prepareVerifiedStudentSave({auth,schoolId,rows:emptyRows,verifiedPreview:emptyPreview,readDocument,confirmed:true}),/No new students/);
 const oversizedRows=Array.from({length:401},(_,i)=>({'IEMIS Code':schoolId,'Student IEMIS Id':String(10000+i),'Student Name':'Student '+i,'Class':'6'}));
