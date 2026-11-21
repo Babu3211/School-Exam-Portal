@@ -1,8 +1,10 @@
+import {assertIemisSchoolId} from './iemis-school-identity.mjs';
 // V47-only conversion of verified school-scoped Firestore snapshots into V46 report rows.
 // Preserve V46 record fields and document IDs; do not calculate grades or publish results.
 const REQUIRED=Object.freeze(['students','subjects','exams','marks','markSettings']);
 export function prepareV46ReportSnapshot(inputs){
- if(!inputs||typeof inputs.schoolId!=='string'||!/^[0-9]{8,12}$/.test(inputs.schoolId))throw new Error('Verified IEMIS school ID required');
+ if(!inputs)throw new Error('Verified IEMIS school ID required');
+ assertIemisSchoolId(inputs.schoolId);
  const out={schoolId:inputs.schoolId};
  for(const key of REQUIRED){
   const snapshot=inputs[key];
