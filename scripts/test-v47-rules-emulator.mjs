@@ -142,8 +142,8 @@ try{
  await assertSucceeds(viewer.doc('schools/school_001/subject_assignments/s1:math').get());
  await assertFails(viewer.doc('schools/school_001/subject_assignments/s1:math').delete());
  await assertFails(admin.doc('schools/school_001/subject_assignments/s4:math').set({studentId:'s4',subjectId:'math',class:'9'}));
- await assertSucceeds(admin.doc('schools/school_001/marks/1st:s1:math').set(mark));
- await assertSucceeds(admin.doc('schools/school_001/marks/1st:s1:math').update({theory:34}));
+ await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').set(mark));
+ await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').update({theory:34}));
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:math').delete());
  await assertFails(admin.doc('schools/school_001/marks/1st:s1:inactive').set({...mark,subjectId:'inactive'}));
  await assertFails(admin.doc('schools/school_001/marks/final:s1:missingactive').set({...mark,term:'final',subjectId:'missingactive'}));
