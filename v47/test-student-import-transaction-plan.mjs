@@ -45,7 +45,7 @@ const unicodeAdmissionPrepared=await prepareVerifiedStudentSave({auth,schoolId,r
 assert.throws(()=>planStudentImportTransaction({prepared:unicodeAdmissionPrepared,existingStudents:[{schoolId,admissionNo:'e\u0301-22'}]}),/Duplicate Admission/);
 
 
-for(const malformed of [{nested:true},['nested'],Number.POSITIVE_INFINITY,Number.MAX_SAFE_INTEGER+2,1n]){
+for(const malformed of [{nested:true},['nested'],Number.POSITIVE_INFINITY,Number.MAX_SAFE_INTEGER+2,1n,true,false]){
  assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{schoolId,studentIemisId:malformed}]}),/Invalid existing student identity/);
 }
 assert.equal(planStudentImportTransaction({prepared,existingStudents:[{schoolId,studentIemisId:12345}]}).count,1);
