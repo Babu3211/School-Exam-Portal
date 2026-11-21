@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import {createTeacherAssignment,setTeacherAssignmentActive} from './teacher-assignment-management.mjs';
-const schoolId='school-a',uid='teacher-a',classId='9',subjectId='math';
+const schoolId='12345678',uid='teacher-a',classId='9',subjectId='math';
 const actor={role:'school_admin',active:true,schoolId,uid:'admin-a'};
 const base={schoolId,uid,classId,subjectId,actor,db:{}};
 function setup(overrides={}){
- const key='teacher_assignments/school-a:teacher-a:9:math';
+ const key='teacher_assignments/12345678:teacher-a:9:math';
  const records=new Map([['members/teacher-a',{schoolId,uid,role:'teacher',active:true}]]);
  for(const [id,value] of Object.entries(overrides))value===null?records.delete(id):records.set(id,value);
  const writes=[];
@@ -40,9 +40,9 @@ for(const [change,pattern] of [
  [{'members/teacher-a':null},/Active teacher membership/],
  [{'members/teacher-a':{schoolId,uid,role:'teacher',active:false}},/Active teacher membership/],
  [{'members/teacher-a':{schoolId,uid,role:'viewer',active:true}},/Active teacher membership/],
- [{'members/teacher-a':{schoolId:'school-b',uid,role:'teacher',active:true}},/Active teacher membership/],
+ [{'members/teacher-a':{schoolId:'87654321',uid,role:'teacher',active:true}},/Active teacher membership/],
  [{'members/teacher-a':{schoolId,uid:'imposter-teacher',role:'teacher',active:true}},/Active teacher membership/],
- [{'teacher_assignments/school-a:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:false}},/already exists/]
+ [{'teacher_assignments/12345678:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:false}},/already exists/]
  ]){
  const state=setup(change);
  await assert.rejects(createTeacherAssignment({...base,api:state.api}),pattern);
@@ -50,31 +50,31 @@ for(const [change,pattern] of [
 }
 for(const [change,pattern] of [
  [{},/Assignment missing/],
- [{'teacher_assignments/school-a:teacher-a:9:math':{schoolId:'school-b',uid,classId,subjectId,active:false}},/identity mismatch/],
- [{'teacher_assignments/school-a:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:false},'members/teacher-a':{schoolId,uid,role:'teacher',active:false}},/Active teacher membership/],
- [{'teacher_assignments/school-a:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:false},'members/teacher-a':{schoolId,uid:'different-teacher',role:'teacher',active:true}},/Active teacher membership/]
+ [{'teacher_assignments/12345678:teacher-a:9:math':{schoolId:'87654321',uid,classId,subjectId,active:false}},/identity mismatch/],
+ [{'teacher_assignments/12345678:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:false},'members/teacher-a':{schoolId,uid,role:'teacher',active:false}},/Active teacher membership/],
+ [{'teacher_assignments/12345678:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:false},'members/teacher-a':{schoolId,uid:'different-teacher',role:'teacher',active:true}},/Active teacher membership/]
  ]){
  const state=setup(change);
  await assert.rejects(setTeacherAssignmentActive({...base,api:state.api,active:true}),pattern);
  assert.equal(state.writes.length,0);
 }
 {
- const state=setup({'teacher_assignments/school-a:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:true},'members/teacher-a':null});
+ const state=setup({'teacher_assignments/12345678:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:true},'members/teacher-a':null});
  await setTeacherAssignmentActive({...base,api:state.api,active:false});
  assert.equal(state.records.get(state.key).active,false);
 }
-for(const badActor of [{role:'viewer',active:true,schoolId},{role:'super_admin',active:true},{role:'school_admin',active:true,schoolId:'school-b'}]){
+for(const badActor of [{role:'viewer',active:true,schoolId},{role:'super_admin',active:true},{role:'school_admin',active:true,schoolId:'87654321'}]){
  const state=setup();
  await assert.rejects(createTeacherAssignment({...base,actor:badActor,api:state.api}),/School Admin/);
  assert.equal(state.writes.length,0);
 }
 {
- const state=setup({'teacher_assignments/school-a:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:'yes'}});
+ const state=setup({'teacher_assignments/12345678:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:'yes'}});
  await assert.rejects(setTeacherAssignmentActive({...base,api:state.api,active:true}),/status invalid/);
  assert.equal(state.writes.length,0);
 }
 {
- const state=setup({'teacher_assignments/school-a:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:false}});
+ const state=setup({'teacher_assignments/12345678:teacher-a:9:math':{schoolId,uid,classId,subjectId,active:false}});
  await assert.rejects(setTeacherAssignmentActive({...base,api:state.api,active:'yes'}),/Active must be boolean/);
  assert.equal(state.writes.length,0);
 }
@@ -106,7 +106,7 @@ for(const action of ['create','activate']){
  for(const mutate of [
   a=>{a.active=false},
   a=>{a.role='viewer'},
-  a=>{a.schoolId='school-b'},
+  a=>{a.schoolId='87654321'},
   a=>{a.uid='other-admin'}
  ]){
   const changingActor={...actor};
@@ -123,5 +123,5 @@ for(const action of ['create','activate']){
   assert.equal(state.writes.length,0,'Revoked admin must not change teacher assignments');
  }
 }
-function stateKey(){return 'teacher_assignments/school-a:teacher-a:9:math'}
+function stateKey(){return 'teacher_assignments/12345678:teacher-a:9:math'}
 console.log('V47 teacher assignment transaction tests passed');
