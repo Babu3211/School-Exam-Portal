@@ -40,6 +40,10 @@ assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[{'Student Name':'
 const nepali=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'00991','Student Name':'सीता तामाङ','Class':'६'}]});
 assert.equal(nepali.ready,1);
 assert.equal(filterV46IemisStudentPreview(nepali,{search:'तामाङ'}).length,1);
+assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[null]}),/first row/);
+assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[[]]}),/first row/);
+assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[rows[0]],existingIemisIds:null}),/identity lists/);
+assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[rows[0]],existingAdmissionNumbers:{}}),/identity lists/);
 const invalidNames=['A','X'.repeat(161)];
 for(const name of invalidNames){
  const preview=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'90901','Student Name':name,'Class':'6'}]});
