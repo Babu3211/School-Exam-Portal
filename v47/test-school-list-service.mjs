@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {listSchools} from './school-list-service.mjs';
-const docs=Array.from({length:65},(_,i)=>({id:'school'+String(i+1).padStart(3,'0'),data(){return {name:'School '+i,active:i%2===0}}}));
+const docs=Array.from({length:65},(_,i)=>({id:String(10000000+i),data(){return {id:this.id,iemisCode:this.id,name:'School '+i,active:i%2===0}}}));
 const api={
  collection:(_db,path)=>path,
  orderBy:field=>({type:'order',field}),
