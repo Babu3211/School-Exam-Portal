@@ -20,6 +20,11 @@ const altered=await previewAgainstSchoolStudents({auth,schoolId,rows:alteredRows
 assert.equal(isVerifiedCloudPreview(altered,alteredRows),true);
 alteredRows[0]['Student Name']='Changed';
 assert.equal(isVerifiedCloudPreview(altered,alteredRows),false);assert.equal(result.existingCount,1);
+const nonSerializableRows=rows.map(row=>({...row}));
+const serializablePreview=await previewAgainstSchoolStudents({auth,schoolId,rows:nonSerializableRows,readDocument,readStudents});
+nonSerializableRows[0]['Unexpected Cell']=1n;
+assert.equal(isVerifiedCloudPreview(serializablePreview,nonSerializableRows),false,'Unserializable changed rows must invalidate preview');
+
 assert.equal(result.preview.ready,1);assert.equal(result.preview.skipped,2);
 assert.equal(result.preview.records[0].status,'skip');assert.equal(result.preview.records[1].status,'skip');
 await assert.rejects(previewAgainstSchoolStudents({auth,schoolId,rows,readDocument,readStudents:async()=>[{schoolId:'999999999',studentIemisId:'00001'}]}),/Cross-school/);
