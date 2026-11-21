@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {planStudentImportTransaction} from './student-import-transaction-plan.mjs';
+import {planStudentImportTransaction,isVerifiedStudentTransactionPlan} from './student-import-transaction-plan.mjs';
 import {previewAgainstSchoolStudents} from './verified-student-import-preview.mjs';
 import {prepareVerifiedStudentSave} from './verified-student-import-save-gate.mjs';
 const schoolId='300160003',uid='admin-1';
@@ -10,6 +10,9 @@ const verifiedPreview=await previewAgainstSchoolStudents({auth,schoolId,rows,rea
 const prepared=await prepareVerifiedStudentSave({auth,schoolId,rows,verifiedPreview,readDocument,confirmed:true});
 const existingStudents=[{schoolId,studentIemisNo:'00001',admissionNo:'A-1'}];
 const plan=planStudentImportTransaction({prepared,existingStudents});
+assert.equal(isVerifiedStudentTransactionPlan(plan),true);
+assert.equal(isVerifiedStudentTransactionPlan({...plan}),false);
+assert.equal(isVerifiedStudentTransactionPlan(Object.freeze({schoolId,records:plan.records,createOnly:true})),false);
 assert.equal(plan.count,1);assert.equal(plan.createOnly,true);assert.equal(plan.transactionRequired,true);
 assert.deepEqual(plan.path,['schools',schoolId,'students']);
 assert.equal(plan.records[0].schoolId,schoolId);
