@@ -7,7 +7,7 @@ assert.match(html,/NOT official CDC\/IEMIS results/);
 assert.match(html,/viewport/);
 assert.match(html,/grid-template-columns:repeat\(auto-fit/);
 assert.doesNotMatch(html,/<script|firebaseConfig|apiKey|password.*value=/i,'Landing page must be static and contain no credentials');
-const pages=['admin','school-admin','students','attendance','records','subjects','assignments','marks-entry','computer-marks','marks-preview','ledger-exceptions','exams'];
+const pages=['admin','school-admin','school-settings','students','attendance','records','teacher-assigned-class','subjects','assignments','marks-entry','computer-marks','marks-preview','report-preview','ledger-exceptions','exams'];
 for(const page of pages){
  assert.ok(html.includes('href="./'+page+'.html"'),'Missing navigation: '+page);
  assert.ok(existsSync(new URL('../v47/'+page+'.html',import.meta.url)),'Missing destination: '+page);
