@@ -32,6 +32,8 @@ membershipActive=true;
 let resolveRead;
 const pending=createVerifiedTenantFirestore({db:{},context,api:{...api,getDocs:()=>new Promise(resolve=>{resolveRead=resolve})}});
 const read=pending.list('students');
+for(let attempt=0;attempt<20&&typeof resolveRead!=='function';attempt++)await new Promise(resolve=>setImmediate(resolve));
+assert.equal(typeof resolveRead,'function','Read request must reach Firestore before revocation');
 membershipActive=false;
 resolveRead({docs:[]});
 await assert.rejects(read,/Membership unavailable/);
