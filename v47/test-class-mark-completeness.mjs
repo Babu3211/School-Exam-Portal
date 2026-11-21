@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {validateCompleteClassMarks} from './class-mark-completeness.mjs';
-const schoolId='school-a',classId='9',term='1st',subjectId='math';
+const schoolId='12345678',classId='9',term='1st',subjectId='math';
 const mark=(studentId,overrides={})=>({studentId,class:classId,term,subjectId,theory:30,practical:10,...overrides});
 const args={schoolId,classId,term,subjectId,expectedStudentIds:['student-1','student-2']};
 assert.equal(validateCompleteClassMarks({...args,entries:[mark('student-2'),mark('student-1')]}).count,2);
@@ -12,7 +12,7 @@ assert.throws(()=>validateCompleteClassMarks({...args,entries:[mark('student-1')
 assert.throws(()=>validateCompleteClassMarks({...args,entries:[mark('student-1'),mark('student-2',{theory:''})]}),/Marks must/);
 assert.throws(()=>validateCompleteClassMarks({...args,expectedStudentIds:['student-1','student-1'],entries:[mark('student-1')]}),/duplicate roster/);
 assert.throws(()=>validateCompleteClassMarks({...args,expectedStudentIds:[],entries:[]}),/Class roster required/);
-assert.throws(()=>validateCompleteClassMarks({...args,schoolId:'../other',entries:[mark('student-1')]}),/Invalid school ID/);
+assert.throws(()=>validateCompleteClassMarks({...args,schoolId:'../other',entries:[mark('student-1')]}),/School ID must be an IEMIS number string|Invalid school ID/);
 assert.throws(()=>validateCompleteClassMarks({...args,expectedStudentIds:Array.from({length:1501},(_,i)=>'s'+i),entries:[]}),/Class roster required/);
 assert.throws(()=>validateCompleteClassMarks({...args,entries:Array.from({length:1501},(_,i)=>mark('s'+i))}),/Mark entries required/);
 for(const invalid of ['   ',true,false,[],{},'0x10','1e2','Infinity','NaN','-1','101']){
