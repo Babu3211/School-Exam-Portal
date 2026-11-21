@@ -41,6 +41,8 @@ jobs:
           npm run test:v47:rules-iemis-syntax
           npm run test:v47:verified-import
           node v47/test-hosting-bundle.mjs
+      - name: Verify V47 Super Admin session isolation
+        run: node v47/test-super-admin-session-guard.mjs
       - name: Enforce V47 marks publication safety
         run: node v47/test-production-marks-guard.mjs
       - name: Require dedicated V47 Firebase credential
