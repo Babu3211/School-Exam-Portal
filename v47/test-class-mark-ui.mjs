@@ -58,4 +58,7 @@ assert.ok(js.includes("function reset(){optionRequest++;rosterRequest++"),'Reset
 assert.ok(js.includes("if(request!==optionRequest||attempt!==epoch||schoolClass!=="),'Old paginated options must be ignored');
 assert.ok(js.includes("if(request===optionRequest&&attempt===epoch)lock(false)"),'Old option loads must not unlock newer loads');
 assert.ok(js.includes("$('schoolClass').onchange=()=>{optionRequest++;invalidateClassMarks();"),'Class change must revoke pending options');
+assert.ok(js.includes("api.collection(db,'schools',selectedSchoolId,collection)"),'Paginated selectors must query the captured school, not mutable current school');
+assert.ok(js.includes("if(request!==optionRequest||attempt!==epoch||schoolClass!==$('schoolClass').value||auth?.currentUser?.uid!==uid"),'Selectors must recheck class, session and request token before rendering');
+assert.ok(js.includes("for(const row of page)if(row.schoolId!==selectedSchoolId||row.class!==schoolClass)"),'Each selector page must validate records against the captured school and class');
 console.log('V47 full-class marks UI contract passed');
