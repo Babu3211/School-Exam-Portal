@@ -13,7 +13,10 @@ const value=(r,k)=>String(r?.[k]??'').normalize('NFC').trim();
 export function validateV46IemisExcelHeaders(rows){
  if(!Array.isArray(rows)||!rows.length)throw new Error('Excel मा विद्यार्थी विवरण भेटिएन।');
  if(!rows[0]||typeof rows[0]!=='object'||Array.isArray(rows[0]))throw new TypeError('Excel first row must be an object');
- const headings=Object.keys(rows[0]).map(x=>x.trim());
+ const rawHeadings=Object.keys(rows[0]);
+ const headings=rawHeadings.map(x=>x.trim());
+ if(new Set(headings).size!==headings.length)throw new Error('Excel मा दोहोरिएका Column शीर्षक छन्।');
+ if(rawHeadings.some((heading,i)=>heading!==headings[i]))throw new Error('Excel Column शीर्षकको सुरु वा अन्त्यमा खाली ठाउँ हटाउनुहोस्।');
  const required=['IEMIS Code','Student Name','Class'];
  const missing=required.filter(x=>!headings.includes(x));
  if(!headings.includes('Student IEMIS Id')&&!headings.includes('Admission Number'))missing.push('Student IEMIS Id / Admission Number');
