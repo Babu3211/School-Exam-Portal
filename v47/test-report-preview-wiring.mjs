@@ -13,7 +13,7 @@ assert.match(controller,/bridge\.loadExamReportRows\(\)/);
 assert.match(controller,/function currentSession\(requestEpoch,uid\)/);
 assert.match(controller,/requestEpoch===epoch&&auth\?\.currentUser\?\.uid===uid/);
 assert.match(controller,/if\(!currentSession\(current,credential\.user\.uid\)\)/);
-assert.match(controller,/signOutIfCurrent\(credential\.user\.uid\)/);
+assert.doesNotMatch(controller,/signOutIfCurrent/);
 assert.match(controller,/rows\.publicationAllowed!==false\|\|rows\.complete!==false/);
 assert.match(controller,/authSdk\.inMemoryPersistence/);
 assert.match(controller,/config\.projectId!=='smss-exam-portal-v47'/);
