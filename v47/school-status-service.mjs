@@ -10,7 +10,7 @@ export async function setSchoolActive({db,api,actor,schoolId,active}){
   const snapshot=await tx.get(ref);
   if(!snapshot?.exists?.())throw new Error('School does not exist');
   const school=snapshot.data();
-  if(!school||school.id!==schoolId||school.iemisCode!==schoolId||typeof school.active!=='boolean')throw new Error('School registry identity mismatch');
+  if(!school||typeof school!=='object'||Array.isArray(school)||school.id!==schoolId||school.iemisCode!==schoolId||typeof school.name!=='string'||school.name.trim().length<3||school.name.length>160||typeof school.active!=='boolean')throw new Error('School registry identity mismatch');
   if(school.active===active)return;
   tx.update(ref,{active});
  });
