@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import {addSchoolMember} from '../v47/member-management.mjs';
 const writes=[];const api={doc:(_db,...parts)=>parts.join('/'),runTransaction:async(_db,fn)=>fn({get:async()=>({exists:()=>false}),set:(...args)=>writes.push(args)})};
-const args={db:{},api,actor:{active:true,role:'school_admin',schoolId:'school_001'},schoolId:'school_001',uid:'teacher123',role:'teacher'};
+const args={db:{},api,actor:{active:true,role:'school_admin',schoolId:'12345678'},schoolId:'12345678',uid:'teacher123',role:'teacher'};
 await addSchoolMember(args);
-assert.equal(writes[0][0],'schools/school_001/members/teacher123');
+assert.equal(writes[0][0],'schools/12345678/members/teacher123');
 await assert.rejects(()=>addSchoolMember({...args,role:'school_admin'}));
-await assert.rejects(()=>addSchoolMember({...args,schoolId:'school_002'}));
+await assert.rejects(()=>addSchoolMember({...args,schoolId:'87654321'}));
 assert.equal(writes.length,1);
 console.log('V47 school member creation boundaries passed');
