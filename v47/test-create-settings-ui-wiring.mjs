@@ -15,6 +15,8 @@ assert.match(handler,/selectedSubject\.data\(\)\.schoolId!==selectedSchoolId/);
 assert.match(handler,/selectedSubject\.data\(\)\.class!==classId/);
 assert.match(handler,/selectedSubject\.data\(\)\.active!==true/);
 assert.ok(handler.indexOf('selectedSubject=await api.getDoc')<handler.indexOf('createNewSubjectExamSettings('));
+assert.match(handler,/!parts\[2\]/);
+assert.match(handler,/positive fullMarks on each line/);
 const helper=readFileSync(new URL('./create-subject-exam-settings.mjs',import.meta.url),'utf8');
 assert.match(helper,/await api\.runTransaction\(db,async transaction=>/);
 assert.match(helper,/const existing=await transaction\.get\(ref\)/);
