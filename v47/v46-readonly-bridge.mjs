@@ -17,8 +17,8 @@ export async function createV46ReadOnlyBridge({schoolId,auth,db,firestoreApi}){
  const records=createVerifiedTenantFirestore({db,api:firestoreApi,context});
  const loadExamReportInputs=async()=>{
   const [students,subjects,exams,marks,markSettings]=await Promise.all([
-   records.list('students'),records.list('subjects'),records.list('exams'),
-   records.list('marks'),records.list('mark_settings')
+   records.listAll('students'),records.listAll('subjects'),records.listAll('exams'),
+   records.listAll('marks'),records.listAll('mark_settings')
   ]);
   await context.revalidateRead();
   return Object.freeze({schoolId:context.schoolId,students,subjects,exams,marks,markSettings});
@@ -42,8 +42,8 @@ export async function createV46ReadOnlyBridge({schoolId,auth,db,firestoreApi}){
   // Raw school-scoped inputs for future V46 ledger/grade-sheet rendering.
   // No GPA calculation or official result publication occurs here.
   loadExamReportInputs,
-  // Single Firestore getDocs queries may be incomplete for large schools.
-  // Explicitly label these rows as preview-only until full pagination is verified.
+  // Pagination now reads all pages or rejects on document cap. Publication remains
+  // disabled until V46 CDC/IEMIS calculations and full-class save are verified.
   loadExamReportRows:async()=>Object.freeze({...prepareV46ReportSnapshot(await loadExamReportInputs()),complete:false,publicationAllowed:false}),
   // V46 report views can retrieve individual tenant-scoped records without writes.
   getMark:id=>records.get('marks',id),
