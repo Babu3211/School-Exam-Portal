@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const rules=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
+const start=rules.indexOf('match /component_marks/{id} {');
+const end=rules.indexOf('match /subjects/{id} {',start);
+assert.ok(start>=0&&end>start,'Component marks rule must exist');
+const block=rules.slice(start,end);
+assert.match(block,/allow get, list: if canRead\(sid\);/);
+assert.match(block,/allow create, update, delete: if false;/);
+assert.doesNotMatch(block,/component_a|component_b|component_c|<= 4|<= 36|<= 10/);
+assert.equal((rules.match(/match \/component_marks\/\{id\}/g)||[]).length,1);
+console.log('V47 dynamic component marks rules remain read-only and free of fixed legacy limits');
