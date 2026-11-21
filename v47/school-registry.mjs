@@ -5,7 +5,7 @@ export function validateSchoolRegistration(input){
  const name=String(input.name??'').trim();
  if(name.length<3||name.length>160)throw new RangeError('Invalid school name');
  const iemis=String(input.iemisCode??'').trim();
- if(iemis&&!/^[0-9]{5,20}$/.test(iemis))throw new Error('Invalid IEMIS code');
+ if(iemis!==id)throw new Error('School ID and IEMIS Code must match');
  return {id,name,iemisCode:iemis,active:false};
 }
 
