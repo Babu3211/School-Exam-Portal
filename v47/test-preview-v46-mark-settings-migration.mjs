@@ -13,4 +13,8 @@ assert.throws(()=>previewV46MarkSettingsMigration({...args,classId:'6'}),/class 
 assert.throws(()=>previewV46MarkSettingsMigration({...args,verifiedSubjectName:'Math'}),/subject name/);
 assert.throws(()=>previewV46MarkSettingsMigration({...args,legacy:{...legacy,className:'10'}}),/another class/);
 assert.throws(()=>previewV46MarkSettingsMigration({...args,legacy:{...legacy,components:[{name:'Participation',fullMarks:0}]}}),/positive full marks/);
+assert.throws(()=>previewV46MarkSettingsMigration({...args,legacy:{...legacy,totalFullMarks:99}}),/total full marks mismatch/);
+assert.throws(()=>previewV46MarkSettingsMigration({...args,legacy:{...legacy,components:Array.from({length:7},(_,i)=>({name:'Part '+i,fullMarks:1}))}}),/six-part limit/);
+assert.throws(()=>previewV46MarkSettingsMigration({...args,legacy:{...legacy,components:[{name:'Oversize',fullMarks:5001}]}}),/positive full marks/);
+assert.throws(()=>previewV46MarkSettingsMigration({...args,classId:'1',legacy:{classGroup:'1-3',subject:'Computer',components:[{name:'No. of Learning Achievement',fullMarks:3},{name:'Full Marks',fullMarks:12},{name:'Obtained Learning Achievement',fullMarks:12}]}}),/dedicated IEMIS migration/);
 console.log('V47 read-only V46 mark settings schema preview passed');
