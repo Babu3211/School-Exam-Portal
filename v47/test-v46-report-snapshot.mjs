@@ -15,6 +15,7 @@ for(const invalid of ['1234','123456789012345678901',12345678])assert.throws(()=
 assert.throws(()=>prepareV46ReportSnapshot({...inputs,marks:undefined}),/Incomplete/);
 assert.throws(()=>prepareV46ReportSnapshot({...inputs,students:{docs:[doc('same',{}),doc('same',{})]}}),/Duplicate/);
 assert.throws(()=>prepareV46ReportSnapshot({...inputs,students:{docs:[doc('bad',null)]}}),/Invalid V46 report record/);
+for(const id of ['../foreign','', 'a'.repeat(129)])assert.throws(()=>prepareV46ReportSnapshot({...inputs,marks:{docs:[doc(id,{})]}}),/Invalid V46 report document/);
 assert.deepEqual(prepareV46ReportSnapshot({...inputs,students:{docs:[doc('safe',{id:'untrusted'})]}}).students,[{id:'safe'}]);
 assert.throws(()=>prepareV46ReportSnapshot({...inputs,students:{docs:[doc('foreign',{schoolId:'87654321'})]}}),/Cross-school/);
 assert.throws(()=>prepareV46ReportSnapshot({...inputs,marks:{docs:[doc('foreign_mark',{school_id:'87654321'})]}}),/Cross-school/);
