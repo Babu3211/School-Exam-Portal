@@ -35,7 +35,7 @@ $('login').onclick=async()=>{
   $('password').value='';
   if(!currentSession(current,credential.user.uid))return;
   const bridge=await createV46ReadOnlyBridge({schoolId,auth,db,firestoreApi});
-  if(current!==epoch){if(auth.currentUser?.uid===credential.user.uid)await authSdk.signOut(auth);return}
+  if(!currentSession(current,credential.user.uid))return;
   const rows=await bridge.loadExamReportRows();
   if(!currentSession(current,credential.user.uid))return;
   if(rows.publicationAllowed!==false||rows.complete!==false)throw new Error('Preview-only report protection missing');
