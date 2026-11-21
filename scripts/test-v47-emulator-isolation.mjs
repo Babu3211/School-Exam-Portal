@@ -1,6 +1,6 @@
 import {readFile} from 'node:fs/promises';
 import {initializeTestEnvironment, assertFails as firebaseAssertFails, assertSucceeds as firebaseAssertSucceeds} from '@firebase/rules-unit-testing';
-import {doc, getDoc, setDoc, updateDoc, deleteDoc} from 'firebase/firestore';
+import {doc, getDoc, setDoc, updateDoc, deleteDoc, collection, query, where, orderBy, limit, getDocs} from 'firebase/firestore';
 
 // Include the originating test line on failure; Firestore permission-denied logs alone are ambiguous.
 let assertionNumber=0;
@@ -280,6 +280,15 @@ try {
   await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','300160001','subjects','math'),{active:true}));
   await assertSucceeds(setDoc(schoolDoc('admin-a','300160001','teacher_assignments','300160001:teacher-a:9:math'),teacherAssignment));
   await assertSucceeds(getDoc(schoolDoc('teacher-a','300160001','teacher_assignments','300160001:teacher-a:9:math')));
+  // Teacher's assignment selector uses a uid-scoped paginated collection query.
+  const ownAssignments=query(collection(db('teacher-a'),'schools','300160001','teacher_assignments'),where('uid','==','teacher-a'),orderBy('__name__'),limit(100));
+  await assertSucceeds(getDocs(ownAssignments));
+  // A teacher must not enumerate all assignments or impersonate another teacher.
+  await assertFails(getDocs(query(collection(db('teacher-a'),'schools','300160001','teacher_assignments'),orderBy('__name__'),limit(100))));
+  await assertFails(getDocs(query(collection(db('teacher-a'),'schools','300160001','teacher_assignments'),where('uid','==','other-teacher'),orderBy('__name__'),limit(100))));
+  await assertFails(getDocs(query(collection(db('viewer-a'),'schools','300160001','teacher_assignments'),where('uid','==','teacher-a'),orderBy('__name__'),limit(100))));
+  await assertFails(getDocs(query(collection(db('teacher-a'),'schools','300160002','teacher_assignments'),where('uid','==','teacher-a'),orderBy('__name__'),limit(100))));
+
   await assertFails(getDoc(schoolDoc('viewer-a','300160001','teacher_assignments','300160001:teacher-a:9:math')));
   await assertFails(getDoc(schoolDoc('admin-b','300160001','teacher_assignments','300160001:teacher-a:9:math')));
   await assertFails(updateDoc(schoolDoc('teacher-a','300160001','teacher_assignments','300160001:teacher-a:9:math'),{active:true}));
