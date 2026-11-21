@@ -57,4 +57,9 @@ assert(source.includes("const mutationActor=actor,mutationSession=sessionEpoch;"
 assert(source.includes("actor:mutationActor,schoolId:school.id"),"Activation binds initiating actor");
 assert(source.includes("actor:mutationActor,form,adminUid"),"Registration binds initiating actor");
 assert(source.includes("if(sessionEpoch!==mutationSession||actor!==mutationActor||auth?.currentUser?.uid!==mutationActor.uid)return;"),"Stale mutation response cannot update a different session");
+assert(source.includes("signingOut=false"),"Track logout state");
+assert(source.includes("if(signingIn||signingOut||mutating)return;"),"Prevent login while signing out");
+assert(source.includes("if(mutating||signingIn||signingOut)"),"Prevent concurrent logout");
+assert(source.includes("await authSdk.signOut(auth);clearAdmin();"),"Clear admin after confirmed logout");
+assert(source.includes("catch(e){showError(e)}finally{signingOut=false;"),"Recover from logout errors");
 console.log('PASS V47 Super Admin UID and school-list session guards');
