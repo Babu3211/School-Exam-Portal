@@ -272,6 +272,12 @@ try {
     await assertFails(setDoc(schoolDoc('admin-a','300160001','teacher_assignments','300160001:teacher-a:9:math'),teacherAssignment));
     await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','300160001','members','teacher-a'),{uid:'teacher-a',schoolId:'300160001',role:'teacher',active:true}));
   }
+  // Assignment cannot be created for a missing, wrong-class or inactive subject.
+  await assertFails(setDoc(schoolDoc('admin-a','300160001','teacher_assignments','300160001:teacher-a:9:missing'),{...teacherAssignment,subjectId:'missing'}));
+  await assertFails(setDoc(schoolDoc('admin-a','300160001','teacher_assignments','300160001:teacher-a:10:math'),{...teacherAssignment,classId:'10'}));
+  await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','300160001','subjects','math'),{active:false}));
+  await assertFails(setDoc(schoolDoc('admin-a','300160001','teacher_assignments','300160001:teacher-a:9:math'),teacherAssignment));
+  await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','300160001','subjects','math'),{active:true}));
   await assertSucceeds(setDoc(schoolDoc('admin-a','300160001','teacher_assignments','300160001:teacher-a:9:math'),teacherAssignment));
   await assertSucceeds(getDoc(schoolDoc('teacher-a','300160001','teacher_assignments','300160001:teacher-a:9:math')));
   await assertFails(getDoc(schoolDoc('viewer-a','300160001','teacher_assignments','300160001:teacher-a:9:math')));
