@@ -46,6 +46,7 @@ jobs:
           node v47/test-class-marks-review-package.mjs
           node v47/test-verify-class-marks-review-package.mjs
           node v47/test-verified-teacher-subject-assignment.mjs
+          node v47/test-teacher-assigned-class-ui.mjs
           node v47/test-class-publication-ui-wiring.mjs
           node v47/test-class-inspection-postawait-guard.mjs
           node v47/test-class-marks-same-snapshot.mjs
