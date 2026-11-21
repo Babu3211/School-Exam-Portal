@@ -26,7 +26,7 @@ assert.match(controller,/loginTask=\(async\(\)=>\{/);
 assert.match(controller,/if\(loginTask\)\{try\{await loginTask\}catch\{/);
 assert.match(controller,/if\(auth\)await authSdk\.signOut\(auth\)/);
 assert.match(controller,/rows\.publicationAllowed!==false\|\|rows\.complete!==false/);
-assert.match(controller,/authSdk\.inMemoryPersistence/);
+assert.match(controller,/aSdk\.inMemoryPersistence/);
 assert.match(controller,/config\.projectId!=='smss-exam-portal-v47'/);
 assert.doesNotMatch(controller,/\b(?:setDoc|addDoc|updateDoc|deleteDoc|writeBatch)\s*\(/);
 assert.doesNotMatch(page,/\b(?:Save marks|Publish results|Print grade sheet)\b/i);
