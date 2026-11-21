@@ -25,6 +25,8 @@ export async function previewAgainstSchoolStudents({auth,schoolId,rows,readDocum
  const preview=previewV46IemisStudentImport({rows,schoolId,existingIemisIds,existingAdmissionNumbers});
  if(auth?.currentUser?.uid!==uid)throw new Error('Authentication changed during Excel validation');
  const result=Object.freeze({preview,cloudChecked:true,schoolId,existingCount:students.length});
- verifiedCloudPreviews.set(result,{rows,uid,fingerprint:JSON.stringify(rows),verifiedAt:Date.now()});
+ const fingerprint=JSON.stringify(rows);
+ if(auth?.currentUser?.uid!==uid)throw new Error('Authentication changed during preview fingerprinting');
+ verifiedCloudPreviews.set(result,{rows,uid,fingerprint,verifiedAt:Date.now()});
  return result;
 }
