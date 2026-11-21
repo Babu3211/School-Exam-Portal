@@ -18,10 +18,8 @@ export async function previewAgainstSchoolStudents({auth,schoolId,rows,readDocum
  for(const student of students){
   if(!student||typeof student!=='object'||Array.isArray(student))throw new TypeError('Invalid existing student');
   if(student.schoolId!==undefined&&str(student.schoolId)!==schoolId)throw new Error('Cross-school student record in lookup');
-  const id=[student.studentIemisId,student.studentIEMISId,student.iemisId,student.studentIemisNo,student.iemisStudentNo].map(str).find(Boolean)||'';
-  const admission=[student.admissionNumber,student.admissionNo].map(str).find(Boolean)||'';
-  if(id)existingIemisIds.push(id);
-  if(admission)existingAdmissionNumbers.push(admission);
+  for(const id of new Set([student.studentIemisId,student.studentIEMISId,student.iemisId,student.studentIemisNo,student.iemisStudentNo].map(str).filter(Boolean)))existingIemisIds.push(id);
+  for(const admission of new Set([student.admissionNumber,student.admissionNo].map(str).filter(Boolean)))existingAdmissionNumbers.push(admission);
  }
  const preview=previewV46IemisStudentImport({rows,schoolId,existingIemisIds,existingAdmissionNumbers});
  const result=Object.freeze({preview,cloudChecked:true,schoolId,existingCount:students.length});
