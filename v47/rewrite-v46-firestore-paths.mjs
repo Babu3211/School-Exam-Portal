@@ -11,6 +11,17 @@ export function assertV47TenantCollection(name){
  if(typeof name!=='string'||!V47_TENANT_COLLECTIONS.includes(name))throw new Error('Unreviewed V47 tenant collection: '+String(name));
  return name;
 }
+// Audit V46 source before anyone treats a transformed HTML file as a V47 app.
+// Replacing Firestore paths alone cannot safely migrate authentication or hosting.
+export function auditV46TenantIntegration(source){
+ if(typeof source!=='string'||!source.length)throw new TypeError('V46 source required');
+ const blockers=[];
+ if(/\\bconst\\s+ADMIN_UID\\s*=/.test(source))blockers.push('V46 hard-coded admin UID must be replaced by verified V47 school membership');
+ if(/\\b(?:const|let|var)\\s+firebaseConfig\\s*=/.test(source))blockers.push('V46 Firebase configuration must be replaced with isolated V47 configuration');
+ if(!/\\bactiveSchoolId\\b/.test(source))blockers.push('Authenticated activeSchoolId binding is missing');
+ if(!/\\bassertV47TenantCollection\\b/.test(source))blockers.push('Dynamic collection guard must be available in the transformed module');
+ return Object.freeze({ready:!blockers.length,blockers:Object.freeze(blockers)});
+}
 export function rewriteV46FirestorePaths(source){
  if(typeof source!=='string'||!source.length)throw new TypeError('V46 source required');
  const seen=new Set();
