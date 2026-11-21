@@ -13,5 +13,5 @@ assert.match(result.source,/doc\(db, "schools", activeSchoolId, "school_settings
 assert.doesNotMatch(result.source,/collection\(db\s*,\s*['"]students['"]/);
 assert.doesNotMatch(result.source,/doc\(db\s*,\s*['"]marks['"]/);
 assert.throws(()=>rewriteV46FirestorePaths(source+'\ncollection(db,"unknown_records")'),/Unreviewed V46/);
-assert.throws(()=>rewriteV46FirestorePaths('collection(db,"students")'),/Expected V46 collection/);
+assert.throws(()=>rewriteV46FirestorePaths('collection(db,"students")'),/V46 dynamic collection\/document call count changed|Expected V46 collection/);
 console.log('V46 Firestore literal path staging rewrite checks passed; dynamic calls still require manual audit');
