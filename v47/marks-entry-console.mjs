@@ -180,12 +180,16 @@ $('verifyClassReview').onclick=async()=>{
  try{
   if(!uid||auth?.currentUser?.uid!==uid||actor?.role!=='school_admin')throw new Error('School Admin session required');
   const json=await file.text();
+  if(attempt!==epoch||request!==rosterRequest||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('Session changed while reading review file');
   const verified=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});
   if(verified.role!=='school_admin')throw new Error('School Admin permission revoked');
   const settings=await discoverVerifiedSubjectExamSettings({db,api,schoolId:selectedSchoolId,classId:context.classId,subjectId:context.subjectId,examId:context.term,revalidate:async()=>{const session=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(session.role!=='school_admin')throw new Error('School Admin required')}});
   const roster=await loadCompleteClassRoster({db,api,actor,schoolId:selectedSchoolId,classId:context.classId});
   const finalSession=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});
   if(finalSession.role!=='school_admin'||attempt!==epoch||request!==rosterRequest||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId||context.classId!==$('schoolClass').value||context.term!==$('term').value||context.subjectId!==$('subjectId').value)throw new Error('School session or selection changed');
+  if(!classMarkSettings||JSON.stringify(settings.components)!==JSON.stringify(classMarkSettings.components)||settings.settingsId!==classMarkSettings.settingsId)throw new Error('Settings changed since marks entry was loaded');
+  const loadedIds=new Set(classMarkRoster.map(student=>student.id));
+  if(loadedIds.size!==roster.count||roster.studentIds.some(id=>!loadedIds.has(id)))throw new Error('Roster changed since marks entry was loaded');
   const result=verifyClassMarksReviewPackage({json,actor,schoolId:selectedSchoolId,classId:context.classId,subjectId:context.subjectId,examId:context.term,settings,expectedStudentIds:roster.studentIds});
   $('reviewVerifyResult').textContent='Verified '+result.rosterCount+' students against current school records. Review only; nothing saved or published.';
  }catch(error){if(attempt===epoch&&request===rosterRequest)$('reviewVerifyResult').textContent='Verification failed: '+error.message}
