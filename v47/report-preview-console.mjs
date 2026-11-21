@@ -5,7 +5,7 @@ import {previewV46MarkSummaries} from './mark-summary-preview.mjs';
 const $=id=>document.getElementById(id);
 let auth,authSdk,db,firestoreApi,epoch=0,busy=false,connecting=false,loginTask=null,loggingOut=false,reportRows=null;
 const status=message=>{$('message').textContent=message};
-function clear(){reportRows=null;for(const id of ['summaryExam','summaryClass','summaryAnnual','summaryRun'])$(id).disabled=true;$('summaryResult').textContent='Choose an exam and class after loading records.';epoch++;$('report').hidden=true;$('counts').replaceChildren();$('school').textContent='';$('password').value=''}
+function clear(){reportRows=null;$('summaryRows').replaceChildren();for(const id of ['summaryExam','summaryClass','summaryAnnual','summaryRun'])$(id).disabled=true;$('summaryResult').textContent='Choose an exam and class after loading records.';epoch++;$('report').hidden=true;$('counts').replaceChildren();$('school').textContent='';$('password').value=''}
 function currentSession(requestEpoch,uid){return requestEpoch===epoch&&auth?.currentUser?.uid===uid}
 $('connect').onclick=async()=>{
  if(connecting||auth)return;
@@ -78,6 +78,14 @@ $('summaryRun').onclick=()=>{
  try{
   const classNo=Number($('summaryClass').value),examId=$('summaryExam').value;
   const preview=previewV46MarkSummaries(reportRows,{classNo,examId,annual:$('summaryAnnual').checked});
+  const body=$('summaryRows');body.replaceChildren();
+  for(const item of preview.records){
+   const tr=document.createElement('tr');
+   for(const value of [item.studentId,item.subject,item.obtained,item.full,item.grade,item.complete?'Complete':'Incomplete']){
+    const td=document.createElement('td');td.textContent=value==null?'—':String(value);tr.append(td);
+   }
+   body.append(tr);
+  }
   $('summaryResult').textContent='Diagnostic only: '+preview.completeCount+'/'+preview.records.length+' mark records have complete grade inputs. Official GPA and publication disabled.';
  }catch(error){$('summaryResult').textContent='Unable to inspect: '+error.message}
 };
