@@ -17,6 +17,6 @@ export async function verifyTeacherSubjectAssignment({db,api,actor,schoolId,clas
  await revalidate();check();
  if(!subjectSnap?.exists?.())throw new Error('Assigned subject does not exist');
  const subject=subjectSnap.data();
- if(!subject||subject.schoolId!==schoolId||subject.class!==classId||subject.active!==true)throw new Error('Assigned subject inactive or mismatched');
- return Object.freeze({schoolId,classId,subjectId,uid:actor.uid,verified:true,writeAuthorized:false,publicationAllowed:false});
+ if(!subject||subject.schoolId!==schoolId||subject.class!==classId||subject.active!==true||typeof subject.name!=='string'||!subject.name.trim())throw new Error('Assigned subject inactive or mismatched');
+ return Object.freeze({schoolId,classId,subjectId,subjectName:subject.name.trim(),uid:actor.uid,verified:true,writeAuthorized:false,publicationAllowed:false});
 }
