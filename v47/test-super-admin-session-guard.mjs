@@ -18,4 +18,14 @@ assert(/allow list: if superAdmin\(\);/.test(rules),'School enumeration must req
 assert(rules.includes("request.resource.data.iemisCode == sid"),'School IEMIS code must match Firestore document ID');
 assert(rules.includes("request.resource.data.id == sid"),'School ID must match Firestore document ID');
 assert(rules.includes("allow delete: if false;"),'School deletion must remain disabled');
+assert(source.includes("$('next').disabled=true;$('next').onclick=null;"),"Logout clears stale pagination");
+assert(source.includes("$('next').disabled=true;const result="),"Pagination disabled while request is pending");
+assert(source.includes("if(mutating||!actor||auth?.currentUser?.uid!==actor.uid)return;cursor=result.cursor;refresh()"),"Pagination checks active session");
+assert(source.includes("if(suppliedIemis!==schoolId)"),"IEMIS field must exactly match school ID");
+assert(source.includes("const showError=error=>status("),"Error feedback is centralized");
+assert(source.includes("'अनुमति छैन। Super Admin अधिकार जाँच्नुहोस्।'"),"Permission denial feedback is Nepali");
+assert(source.includes("'Email वा Password मिलेन।'"),"Authentication error feedback is Nepali");
+assert(source.includes("'सेवा अहिले उपलब्ध छैन। पुनः प्रयास गर्नुहोस्।'"),"Service unavailable feedback is Nepali");
+assert(source.includes("'विद्यालय निष्क्रिय अवस्थामा दर्ता भयो। पुष्टि गरेपछि मात्र सक्रिय गर्नुहोस्।'"),"Registration confirmation is Nepali");
+assert(source.includes("'सफलतापूर्वक साइन आउट भयो।'"),"Logout feedback is Nepali");
 console.log('PASS V47 Super Admin UID and school-list session guards');
