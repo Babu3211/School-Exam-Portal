@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {redactRecordPreview} from './redact-record-preview.mjs';
+const result=JSON.parse(redactRecordPreview({name:'Student A',password:'123',apiKey:'abc',nested:{refreshToken:'xyz',score:98},records:[{secret:'s',subject:'Math'}]}));
+assert.equal(result.name,'Student A');
+assert.equal(result.password,'[REDACTED]');
+assert.equal(result.apiKey,'[REDACTED]');
+assert.equal(result.nested.refreshToken,'[REDACTED]');
+assert.equal(result.nested.score,98);
+assert.equal(result.records[0].secret,'[REDACTED]');
+assert.equal(result.records[0].subject,'Math');
+assert.equal(JSON.parse(redactRecordPreview({createdAt:{toDate:()=>new Date('2026-01-01T00:00:00Z')}})).createdAt,'2026-01-01T00:00:00.000Z');
+console.log('V47 records preview secret redaction checks passed');
