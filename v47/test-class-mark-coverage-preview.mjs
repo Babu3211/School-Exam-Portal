@@ -12,4 +12,6 @@ assert.equal(inspectClassMarkCoverage(sectionRows,{examId:'exam1',classNo:6,subj
 assert.deepEqual(inspectClassMarkCoverage(sectionRows,{examId:'exam1',classNo:6,subject:'Math',section:'B'}).missing,['b']);
 assert.throws(()=>inspectClassMarkCoverage(sectionRows,{examId:'exam1',classNo:6,subject:'Math',section:' '}),/Valid section/);
 assert.throws(()=>inspectClassMarkCoverage(rows,{examId:'other',classNo:6,subject:'Math'}),/Verified exam/);
+assert.throws(()=>inspectClassMarkCoverage({...rows,students:[...rows.students,rows.students[0]]},{examId:'exam1',classNo:6,subject:'Math'}),/duplicate student IDs/);
+assert.throws(()=>inspectClassMarkCoverage({...rows,students:[{class:'6'}]},{examId:'exam1',classNo:6,subject:'Math'}),/Invalid or duplicate student IDs/);
 console.log('V47 class mark coverage tests passed');
