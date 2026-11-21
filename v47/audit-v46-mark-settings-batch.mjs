@@ -12,9 +12,9 @@ export function auditV46MarkSettingsBatch({records,schoolId,examId}){
    if(!row||typeof row!=='object'||typeof row.classId!=='string'||typeof row.subjectId!=='string'||typeof row.verifiedSubjectName!=='string')throw new Error('Verified class and subject mapping required');
    const target=JSON.stringify([schoolId,row.classId,row.subjectId,examId]);
    if(targets.has(target))throw new Error('Duplicate target subject examination settings');
-   targets.add(target);
    const input={legacy:row.legacy,schoolId,classId:row.classId,subjectId:row.subjectId,examId,verifiedSubjectName:row.verifiedSubjectName};
    const preview=['1','2','3','4','5'].includes(row.classId)?previewV46PrimaryAchievementSettings(input):previewV46MarkSettingsMigration(input);
+   targets.add(target);
    previews.push(Object.freeze({index,classId:row.classId,subjectId:row.subjectId,kind:preview.requiresDedicatedIemisEntry?'primary-achievement':'component-marks',preview}));
   }catch(error){errors.push(Object.freeze({index,message:String(error?.message||error)}))}
  }
