@@ -31,7 +31,7 @@ export function inspectConfiguredClassMarks({schoolId,subjectId,examId,classId,s
    const v=values[c.key];
    if(v===null||v===undefined||String(v).trim()===''){error='Missing '+c.name;break}
    const n=Number(v);
-   if((typeof v!=='string'&&typeof v!=='number')||(typeof v==='string'&&!/^(?:\\d+(?:\\.\\d*)?|\\.\\d+)$/.test(v.trim()))||!Number.isFinite(n)||n<0||n>c.fullMarks){error='Out of range '+c.name;break}
+   if((typeof v!=='string'&&typeof v!=='number')||(typeof v==='string'&&!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(v.trim()))||!Number.isFinite(n)||n<0||n>c.fullMarks){error='Out of range '+c.name;break}
    total+=n;
   }
   if(!Number.isFinite(total))error='Invalid total obtained marks';
