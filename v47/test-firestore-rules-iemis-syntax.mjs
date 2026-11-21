@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const rules=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
-assert.match(rules,/sid\.matches\('\^\[0-9\]\{5,20\}\$'\)/);
-assert.doesNotMatch(rules,/sid\.matches\('\^\[0-9\]\{5,20\}\s*\n/);
-assert.match(rules,/function validSchool\(sid\)/);
-console.log('PASS: V47 school IEMIS rule pattern is complete');
+const school=rules.match(/function validSchool\(sid\)\s*\{([\s\S]*?)\n\s*\}/)?.[1];
+assert.ok(school,'validSchool(sid) must exist');
+assert.match(school,/sid\.matches\('\^\[0-9\]\{5,20\}\$'\)/);
+assert.match(school,/&&\s*request\.resource\.data\.keys\(\)\.hasAll/);
+assert.doesNotMatch(school,/sid\.matches\('\^\[0-9\]\{5,20\}(?!\$'\))/);
+assert.match(school,/request\.resource\.data\.iemisCode\s*==\s*sid/);
+console.log('PASS: validSchool IEMIS regex is closed and required fields are checked');
