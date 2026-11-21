@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {createSchoolMarkOnly} from './mark-create-service.mjs';
-const schoolId='school-a',classId='9',subjectId='math';
+const schoolId='12345678',classId='9',subjectId='math';
 const input={studentId:'s1',subjectId,class:classId,term:'monthly',theory:25,practical:10};
 function mock(overrides={}){
  const docs=new Map([
@@ -28,7 +28,7 @@ for(const actor of [
  {role:'super_admin',active:true},
  {role:'viewer',active:true,schoolId},
  {role:'school_admin',active:false,schoolId},
- {role:'school_admin',active:true,schoolId:'school-b'},
+ {role:'school_admin',active:true,schoolId:'87654321'},
  {role:'teacher',active:true,schoolId,uid:'teacher-1'}
 ]){
  const {api,writes}=mock();
@@ -58,9 +58,9 @@ for(const badInput of [{...input,theory:NaN},{...input,practical:-1},{...input,s
 for(const [overrides,message] of [
  [{'marks/monthly:s1:math':{schoolId}},/already exists/],
  [{'component_marks/monthly:s1:math':{schoolId}},/already exists/],
- [{'students/s1':{schoolId:'school-b',class:classId}},/Student missing/],
- [{'subjects/math':{schoolId:'school-b',class:classId,active:true,name:'Math'}},/Subject missing/],
- [{'subject_assignments/s1:math':{schoolId:'school-b',class:classId,studentId:'s1',subjectId,active:true}},/assignment required/],
+ [{'students/s1':{schoolId:'87654321',class:classId}},/Student missing/],
+ [{'subjects/math':{schoolId:'87654321',class:classId,active:true,name:'Math'}},/Subject missing/],
+ [{'subject_assignments/s1:math':{schoolId:'87654321',class:classId,studentId:'s1',subjectId,active:true}},/assignment required/],
  [{'subjects/math':{schoolId,class:classId,active:true,name:'Computer'}},/Computer 4.36.10/]
 ]){
  const {api,writes}=mock(overrides);
@@ -82,7 +82,7 @@ for(const [overrides,message] of [
 for(const mutate of [
  actor=>{actor.active=false},
  actor=>{actor.role='viewer'},
- actor=>{actor.schoolId='school-b'},
+ actor=>{actor.schoolId='87654321'},
  actor=>{actor.uid='another-user'}
 ]){
  const actor={role:'school_admin',active:true,schoolId,uid:'admin-1'};
