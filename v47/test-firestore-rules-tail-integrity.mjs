@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const rules=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
+assert.equal((rules.match(/match \/mark_settings\/\{id\}/g)||[]).length,1);
+assert.equal((rules.match(/match \/\{collection\}\/\{id\}/g)||[]).length,1);
+assert.equal((rules.match(/match \/\{document=\*\*\}/g)||[]).length,1);
+assert.equal((rules.match(/match \/databases\/\{database\}\/documents/g)||[]).length,1);
+const start=rules.indexOf('match /mark_settings/{id}'),end=rules.indexOf('match /{collection}/{id}',start);
+assert.ok(start>=0&&end>start);
+const block=rules.slice(start,end);
+assert.match(block,/function validNewSettings\(\)/);
+assert.match(block,/function validComponents\(items\)/);
+assert.match(block,/allow create: if memberRole\(sid, 'school_admin'\) && validNewSettings\(\)/);
+assert.match(block,/allow update, delete: if false/);
+assert.match(block,/d\.examId in \['weekly','monthly','1st','2nd','3rd','final'\]/);
+assert.ok(rules.trimEnd().endsWith('}'));
+assert.ok(!rules.includes('match /{collection}/{id}',rules.indexOf('match /{collection}/{id}')+1));
+console.log('V47 repaired Firestore rules tail has unique scoped matches; emulator compilation required');
