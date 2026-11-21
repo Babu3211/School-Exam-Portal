@@ -23,6 +23,15 @@ jobs:
           npm run test:v47:tenant-context
           npm run test:v47:tenant-firestore
           npm run test:v47:v46-readonly-bridge
+          npm run test:v47:v46-tenant-rewrite
+          npm run test:v47:v46-excel-parity
+          npm run test:v47:v46-student-schema
+          npm run test:v47:contract
+          npm run test:v47:scope
+          npm run test:v47:teacher-assignments
+          npm run test:v47:mark-create-auth
+          npm run test:v47:attendance-save
+          npm run test:v47:marks-save
           npm run test:v47:records-session
           node v47/test-records-refresh-session.mjs
           node v47/test-school-admin-login-cancel.mjs
