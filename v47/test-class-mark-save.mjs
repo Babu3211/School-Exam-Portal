@@ -90,11 +90,12 @@ for(const [overrides,message] of [
  await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),message);
  assert.equal(writes.length,0);
 }
-{
- const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name:'Computer'}});
- await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),/Computer 4\/36\/10/);
- assert.equal(writes.length,0);
+for(const name of ['Computer','computer','COMPUTER',' Computer ','cOmPuTeR']){
+ const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name}});
+ await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),/Computer 4\\/36\\/10/);
+ assert.equal(writes.length,0,'Computer component marks must never be saved as raw marks');
 }
+
 {
  const {api,writes}=mock({'subject_assignments/s2:math':{schoolId,class:classId,studentId:'s2',subjectId,active:false}});
  await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),/Student subject assignment/);
