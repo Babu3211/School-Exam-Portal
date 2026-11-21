@@ -4,7 +4,7 @@ assert.equal((rules.match(/match \/component_marks\/\{id\}/g)||[]).length,1);
 assert.equal((rules.match(/function validComputerComponent\(\)/g)||[]).length,1);
 for(const limit of ['component_a <= 4','component_b <= 36','component_c <= 10'])assert.ok(rules.includes(limit),'Missing score cap '+limit);
 assert.match(rules,/data\.class in \['9','10'\]/);
-assert.match(rules,/allow create: if canAdmin\(sid\) && validComputerComponent\(\)/);
+assert.match(rules,/match \/component_marks\/\{id\} \{[\s\S]*?allow create: if false;/);
 assert.match(rules,/!exists\(\/databases\/\$\(database\)\/documents\/schools\/\$\(sid\)\/marks\/\$\(id\)\)/);
 const generic=rules.slice(rules.indexOf('match /{collection}/{id}'));
 assert.doesNotMatch(generic,/['\"]component_marks['\"]/, 'Generic wildcard must not bypass component score validation');
