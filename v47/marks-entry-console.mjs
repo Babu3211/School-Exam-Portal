@@ -96,7 +96,7 @@ $('inspectClassMarks').onclick=()=>{
  if(classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value){invalidateClassMarks();status('Selection changed; reload roster');return}
  try{
   if($('markSettingsId').value.trim()!==classMarkSettings.settingsId)throw new Error('Examination Settings changed; reload roster');
-  const result=inspectConfiguredClassMarks({schoolId,classId,examId:term,subjectId,settings:{...classMarkSettings,id:classMarkSettings.settingsId,active:true},expectedStudentIds:classMarkRoster.map(s=>s.id),drafts:collectClassMarkEntries()});
+  const result=inspectConfiguredClassMarks({schoolId,classId,examId:term,subjectId,settings:classMarkSettings,expectedStudentIds:classMarkRoster.map(s=>s.id),drafts:collectClassMarkEntries()});
   $('draftCheckResult').textContent=(result.complete?'All student marks valid.':'Class marks incomplete.')+(result.missing.length?' Missing: '+result.missing.slice(0,8).join(', '):'')+(result.invalid.length?' Invalid: '+result.invalid.slice(0,4).map(x=>x.studentId+': '+x.message).join('; '):'');
   status(result.complete?'Draft checked. This does not save or publish marks.':'Draft incomplete. No marks saved.');
  }catch(e){$('draftCheckResult').textContent=e.message;status('अंक जाँच असफल भयो। कुनै अंक Save गरिएको छैन।')}
