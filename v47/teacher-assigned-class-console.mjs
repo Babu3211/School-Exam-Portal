@@ -3,10 +3,10 @@ import {verifyTeacherSubjectAssignment} from './verified-teacher-subject-assignm
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 const $=id=>document.getElementById(id);
-let auth,authSdk,api,db,actor=null,schoolId=null,epoch=0,busy=false;
+let auth,authSdk,api,db,actor=null,schoolId=null,epoch=0,selectionEpoch=0,busy=false;
 const message=text=>{$('message').textContent=text};
-function clear(){epoch++;actor=null;schoolId=null;$('work').hidden=true;$('students').replaceChildren();$('count').textContent='';$('logout').disabled=true;$('load').disabled=true}
-function lock(value){busy=value;for(const id of ['login','logout','load','classId','subjectId','schoolId','email','password'])$(id).disabled=value;if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('load').disabled=!actor}}
+function clear(){epoch++;selectionEpoch++;actor=null;schoolId=null;$('work').hidden=true;$('students').replaceChildren();$('count').textContent='';$('logout').disabled=true;$('load').disabled=true}
+function lock(value){busy=value;for(const id of ['login','logout','load','classId','subjectId','schoolId','email','password'])$(id).disabled=value;if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('load').disabled=!actor;$('schoolId').disabled=!!actor;$('email').disabled=!!actor;$('password').disabled=!!actor}}
 async function verifiedSession(uid,id){
  const session=await verifySchoolSession({schoolId:id,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null}});
  if(session.role!=='teacher')throw new Error('Active Teacher membership required');
@@ -41,18 +41,18 @@ $('login').onclick=async()=>{
  finally{lock(false)}
 };
 $('logout').onclick=async()=>{if(busy)return;lock(true);clear();try{await authSdk.signOut(auth);message('Signed out')}catch(e){message('Sign out failed: '+e.message)}finally{lock(false)}};
-for(const id of ['classId','subjectId'])$(id).addEventListener('change',()=>{$('students').replaceChildren();$('count').textContent='';epoch++});
+for(const id of ['classId','subjectId'])$(id).addEventListener('change',()=>{$('students').replaceChildren();$('count').textContent='';selectionEpoch++});
 $('load').onclick=async()=>{
  if(busy||!actor)return;
- const request=epoch,uid=actor.uid,id=schoolId,classId=$('classId').value,subjectId=$('subjectId').value.trim();
+ const request=epoch,selection=selectionEpoch,uid=actor.uid,id=schoolId,classId=$('classId').value,subjectId=$('subjectId').value.trim();
  $('students').replaceChildren();$('count').textContent='';lock(true);
- const revalidate=async()=>{if(request!==epoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==id)throw new Error('School session or selection changed');await verifiedSession(uid,id)};
+ const revalidate=async()=>{if(request!==epoch||selection!==selectionEpoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==id)throw new Error('School session or selection changed');await verifiedSession(uid,id)};
  try{
   await verifyTeacherSubjectAssignment({db,api,actor,schoolId:id,classId,subjectId,revalidate});
   const roster=await loadCompleteClassRoster({db,api,actor,schoolId:id,classId});
   await revalidate();
   await verifyTeacherSubjectAssignment({db,api,actor,schoolId:id,classId,subjectId,revalidate});
-  if(request!==epoch||classId!==$('classId').value||subjectId!==$('subjectId').value.trim())throw new Error('Selection changed');
+  if(request!==epoch||selection!==selectionEpoch||classId!==$('classId').value||subjectId!==$('subjectId').value.trim())throw new Error('Selection changed');
   const fragment=document.createDocumentFragment();
   for(const student of [...roster.students].sort((a,b)=>String(a.name??a.id).localeCompare(String(b.name??b.id),'en',{sensitivity:'base',numeric:true})||a.id.localeCompare(b.id))){
    const tr=document.createElement('tr');
