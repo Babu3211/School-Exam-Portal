@@ -17,6 +17,10 @@ for(const [method,collection] of Object.entries({listStudents:'students',listSta
 assert.deepEqual((await bridge.getStudent('stu1')).path,['schools',schoolId,'students','stu1']);
 assert.deepEqual((await bridge.getStaff('staff1')).path,['schools',schoolId,'staff','staff1']);
 assert.deepEqual((await bridge.getSchoolSettings('default')).path,['schools',schoolId,'school_settings','default']);
+for(const [method,collection] of Object.entries({getMark:'marks',getExam:'exams',getSubject:'subjects',getAttendance:'attendance',getMarkSettings:'mark_settings'})){
+ assert.deepEqual((await bridge[method]('report_1')).path,['schools',schoolId,collection,'report_1']);
+ await assert.rejects(bridge[method]('../other-school'),/Invalid document ID/);
+}
 assert.equal(Object.isFrozen(bridge),true);
 assert.equal(Object.hasOwn(bridge,'saveMarks'),false);
 assert.equal(Object.hasOwn(bridge,'deleteStudent'),false);
