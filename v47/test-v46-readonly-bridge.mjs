@@ -25,8 +25,9 @@ for(const [method,collection] of Object.entries({getMark:'marks',getExam:'exams'
 const inputs=await bridge.loadExamReportInputs();
 assert.equal(inputs.schoolId,schoolId);
 assert.deepEqual(Object.keys(inputs),['schoolId','students','subjects','exams','marks','markSettings']);
-assert.deepEqual(inputs.marks.path,['schools',schoolId,'marks']);
-assert.deepEqual(inputs.markSettings.path,['schools',schoolId,'mark_settings']);
+assert.deepEqual(inputs.marks.docs,[]);
+assert.deepEqual(inputs.markSettings.docs,[]);
+assert.equal(Object.isFrozen(inputs.marks.docs),true);
 assert.equal(Object.isFrozen(inputs),true);
 const detachedLoad=bridge.loadExamReportRows;
 const detachedRows=await detachedLoad();
