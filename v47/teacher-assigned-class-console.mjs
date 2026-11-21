@@ -51,21 +51,25 @@ $('loadAssignments').onclick=async()=>{
  try{
   await revalidate();
   const seen=new Set(),subjects=[];
-  let cursor=null;
+  let cursor=null,pages=0;
   do{
    const constraints=[api.where('uid','==',uid),api.orderBy('__name__'),api.limit(100)];
    if(cursor)constraints.push(api.startAfter(cursor));
    const snap=await api.getDocs(api.query(api.collection(db,'schools',id,'teacher_assignments'),...constraints));
    await revalidate();
+   if(!Array.isArray(snap?.docs)||snap.docs.length>100)throw new Error('Invalid teacher assignment page');
+   if(++pages>20)throw new Error('Teacher assignment pagination limit exceeded');
    for(const document of snap.docs){
     const data=document.data();
-    if(data.uid!==uid||data.schoolId!==id)throw new Error('Cross-school or forged teacher assignment');
+    if(!document.id||document.id!==id+':'+uid+':'+data.classId+':'+data.subjectId||data.uid!==uid||data.schoolId!==id)throw new Error('Cross-school or forged teacher assignment');
     if(data.active!==true||data.classId!==classId)continue;
     if(seen.has(data.subjectId))throw new Error('Duplicate active teacher subject assignment');
     seen.add(data.subjectId);subjects.push(data.subjectId);
    }
    if(subjects.length>300)throw new Error('Too many assigned subjects');
-   cursor=snap.docs.length===100?snap.docs.at(-1):null;
+   const next=snap.docs.length===100?snap.docs.at(-1):null;
+   if(next&&next.id===cursor?.id)throw new Error('Teacher assignment pagination stalled');
+   cursor=next;
   }while(cursor);
   const verified=[];
   for(const subjectId of subjects){
