@@ -13,5 +13,10 @@ export async function verifyTeacherSubjectAssignment({db,api,actor,schoolId,clas
  if(!snap?.exists?.())throw new Error('Teacher has no verified assignment for this class and subject');
  const data=snap.data();
  if(!data||data.schoolId!==schoolId||data.uid!==actor.uid||data.classId!==classId||data.subjectId!==subjectId||data.active!==true)throw new Error('Teacher assignment inactive or mismatched');
+ const subjectSnap=await api.getDoc(api.doc(db,'schools',schoolId,'subjects',subjectId));
+ await revalidate();check();
+ if(!subjectSnap?.exists?.())throw new Error('Assigned subject does not exist');
+ const subject=subjectSnap.data();
+ if(!subject||subject.schoolId!==schoolId||subject.class!==classId||subject.active!==true)throw new Error('Assigned subject inactive or mismatched');
  return Object.freeze({schoolId,classId,subjectId,uid:actor.uid,verified:true,writeAuthorized:false,publicationAllowed:false});
 }
