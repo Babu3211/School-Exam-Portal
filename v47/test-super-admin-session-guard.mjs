@@ -62,4 +62,7 @@ assert(source.includes("if(signingIn||signingOut||mutating)return;"),"Prevent lo
 assert(source.includes("if(mutating||signingIn||signingOut)"),"Prevent concurrent logout");
 assert(source.includes("await authSdk.signOut(auth);clearAdmin();"),"Clear admin after confirmed logout");
 assert(source.includes("catch(e){showError(e)}finally{signingOut=false;"),"Recover from logout errors");
+assert(source.includes("if(mutating||signingIn||signingOut)return;"),"Registration and refresh blocked during auth transitions");
+assert(source.includes("if(mutating||signingIn||signingOut||!actor||auth?.currentUser?.uid!==actor.uid)return;"),"Pagination blocked during auth transitions");
+assert(source.includes("if(mutating||signingIn||signingOut)return;if(!actor"),"School activation blocked during auth transitions");
 console.log('PASS V47 Super Admin UID and school-list session guards');
