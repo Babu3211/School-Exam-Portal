@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const js=readFileSync(new URL('./marks-entry-console.mjs',import.meta.url),'utf8');
+const start=js.indexOf("$('loadClassMarks').onclick=async()=>");
+const end=js.indexOf("// Any edit invalidates",start);
+assert.ok(start>=0&&end>start);
+const handler=js.slice(start,end);
+const settings=handler.indexOf('await discoverVerifiedSubjectExamSettings(');
+const roster=handler.indexOf('await loadCompleteClassRoster(');
+const session=handler.indexOf('const finalSession=await verifySchoolSession(');
+const render=handler.indexOf('classMarkSettings=settings;');
+assert.ok(settings>=0&&roster>settings&&session>roster&&render>session,'School Admin must be reverified after roster fetch and before rendering');
+assert.match(handler,/finalSession\.role!=='school_admin'/);
+assert.match(handler,/request!==rosterRequest\|\|attempt!==epoch/);
+assert.match(handler,/actor\?\.schoolId!==selectedSchoolId/);
+assert.match(js,/\$\('saveClassMarks'\)\.onclick=\(\)=>status\('Save\/Publish disabled/);
+console.log('V47 full roster session revalidation wiring passed');
