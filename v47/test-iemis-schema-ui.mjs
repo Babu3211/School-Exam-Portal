@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const root=new URL('./',import.meta.url);
+const html=readFileSync(new URL('marks-entry.html',root),'utf8');
+const js=readFileSync(new URL('marks-entry-console.mjs',root),'utf8');
+for(const id of ['iemisTerm','iemisSubject','inspectIemisSchema','iemisSchemaRows','iemisSchemaStatus'])assert.match(html,new RegExp('id="'+id+'"'));
+assert.match(js,/import \{iemisEntrySchema\} from '\.\/iemis-entry\.js'/);
+assert.match(js,/iemisEntrySchema\(classNo,/);
+assert.match(js,/auth\.currentUser\.uid!==actor\.uid/);
+assert.match(js,/tbody\.replaceChildren\(\)/);
+assert.match(js,/td\.textContent=String\(value\)/);
+assert.match(html,/Save\/Publish disabled|Save\/Publish is disabled/);
+console.log('V47 IEMIS schema preview wiring tests passed');
