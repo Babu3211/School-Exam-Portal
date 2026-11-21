@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('./marks-entry.html',import.meta.url),'utf8');
+const js=readFileSync(new URL('./marks-entry-console.mjs',import.meta.url),'utf8');
+assert.match(html,/id="markSettingsId"/);assert.match(html,/id="classMarkHeader"/);
+assert.match(js,/loadVerifiedSubjectExamSettings\(/);assert.match(js,/inspectConfiguredClassMarks\(/);
+assert.match(js,/settings\.components\.map\(c=>c\.name/);
+assert.match(js,/for\(const component of settings\.components\)/);
+assert.match(js,/for\(const component of classMarkSettings\.components\)/);
+assert.match(js,/if\(verified\.role!=='school_admin'\)/);
+assert.match(js,/classMarkSettings\.settingsId/);
+assert.match(js,/\$\('saveClassMarks'\)\.onclick=\(\)=>status\('Save\/Publish disabled/);
+console.log('V47 dynamic examination settings class marks UI wiring passed');
