@@ -31,6 +31,10 @@ jobs:
       - name: V46 IEMIS student Excel preview and normalization
         run: npm run test:v47:iemis-student-preview
 
+      - name: Authenticated V46 import preflight
+        run: npm run test:v47:verified-import
+      - name: IEMIS school identity validation
+        run: npm run test:v47:iemis-school-id
       - name: Verified student preview
         run: npm run test:v47:verified-student-preview
       - name: Firestore student preview adapter
