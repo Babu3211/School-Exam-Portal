@@ -10,7 +10,7 @@ export function normalizeV46StudentClass(value){
  return alias==='NURSERY'?'ECD':alias;
 }
 const value=(r,k)=>{
- const cell=r?.[k];
+ const cell=Object.hasOwn(r,k)?r[k]:undefined;
  if(cell===null||cell===undefined)return '';
  if(typeof cell==='object'||typeof cell==='function'||typeof cell==='symbol'||typeof cell==='bigint')
   throw new TypeError('Excel cell must contain plain text, a finite number or a boolean: '+k);
