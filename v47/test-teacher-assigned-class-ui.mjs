@@ -16,6 +16,8 @@ assert.match(ui,/\['login','logout','load','classId','subjectId','schoolId','ema
 assert.match(ui,/School selection changed/);
 assert.match(ui,/selectionEpoch\+\+/);
 assert.match(ui,/selection!==selectionEpoch/);
+assert.match(ui,/if\(!busy\)lock\(false\)/);
+assert.equal((ui.match(/finally\{lock\(false\)\}/g)||[]).length,2);
 assert.match(ui,/\$\('schoolId'\)\.disabled=!!actor/);
 assert.doesNotMatch(ui,/textContent='';epoch\+\+\}\);/);
 assert.match(ui,/session\.role!=='teacher'/);
