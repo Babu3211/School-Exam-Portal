@@ -430,6 +430,7 @@ service cloud.firestore {
             && d.subjectId is string && d.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
             && d.examId in ['weekly','monthly','1st','2nd','3rd','final']
             && id == d.classId + '_' + d.subjectId + '_' + d.examId
+            && id.size() <= 128
             && d.active == true && validComponents(d.components)
             && exists(subject)
             && get(subject).data.get('schoolId','') == sid
