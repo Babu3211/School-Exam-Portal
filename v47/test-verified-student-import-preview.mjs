@@ -55,7 +55,7 @@ for(const malformed of [{nested:true},['nested'],Number.POSITIVE_INFINITY,Number
 }
 const safeNumericLegacy=await previewAgainstSchoolStudents({auth,schoolId,rows,readDocument,
  readStudents:async()=>[{schoolId,studentIemisId:1}]});
-assert.equal(safeNumericLegacy.preview.ready,2);
+assert.equal(safeNumericLegacy.preview.ready,3,'Numeric 1 must not be confused with the distinct leading-zero ID 00001');
 const sessionDuringScan={currentUser:{uid}};
 let changedDuringScan=false;
 const scanningRecord={schoolId};
