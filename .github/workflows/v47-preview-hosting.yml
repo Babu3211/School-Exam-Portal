@@ -17,6 +17,22 @@ jobs:
           test -f v47/dist/school-login.html
           test ! -f v47/dist/firestore.rules
           node --check v47/school-login.mjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install V47 test dependencies
+        run: npm install --no-package-lock --ignore-scripts
+      - name: Require V47 security checks before preview
+        run: |
+          node v47/test-hosting-bundle.mjs
+          npm run test:v47:syntax
+          npm run test:v47:emulator
+          npm run test:v47:rules-iemis-syntax
+          npm run test:v47:verified-import
       - name: Check V47 deployment credentials
         env:
           V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}
