@@ -21,4 +21,12 @@ This checklist is for a school operator using an iPhone/Android with no laptop. 
 - [ ] IEMIS 2083 comparison as required by the school.
 - [ ] Known-good Hosting rollback release recorded.
 
-Only after those checks should the authorized operator approve merging PR #47 and running the gated Hosting-only release workflow. Legacy V44/V45 working branches can be retired **after** successful V46 live acceptance with recovery references preserved.
+PR #47 is already merged into `main`; do not merge it again. Only after the remaining checks have **independent evidence** should the authorized operator run the gated Hosting-only release workflow. An unverified backup or role test must never be marked `BACKUP-VERIFIED` or `ROLES-VERIFIED`.
+
+## 17 November 2026 release evidence update
+- On PR #61 commit `5c23c887ae1e130feb715faf9f28b3764a68cb6b`, five of six GitHub Actions workflows completed successfully.
+- `Validate V45 Final Integration (no deployment)` failed at its protected-file allowlist because it rejected `scripts/test-v46-class-normalization.mjs` on the new release-validation branch; later steps were skipped. This is **not** proof of a data failure or successful full validation.
+- The separate `V46 integration preservation gate` and `V46 non-IEMIS release readiness` completed successfully for that commit.
+- GitHub Actions tests do not establish that a recoverable production Firestore backup exists, that real school accounts were tested, or that Hosting rollback has been verified.
+- Keep PR #60 (divergent integration) and PR #61 (main-based test updates) unmerged until reviewed. Preserve `main` and existing live Hosting.
+- Before release: obtain a private backup inventory and isolated restore proof; test Admin/Teacher/Viewer with authorized accounts; record current Hosting release ID; verify approved `main` SHA; obtain production environment approval. **Do not paste student data, passwords or credentials into GitHub.** Legacy V44/V45 working branches can be retired **after** successful V46 live acceptance with recovery references preserved.

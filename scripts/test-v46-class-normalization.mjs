@@ -22,6 +22,13 @@ for (let n = 1; n <= 12; n++) {
 for (const input of ['ECD', 'ecd', 'Early Childhood Development']) {
   assert.equal(canonical(input), 'ECD', `ECD normalization failed for ${input}`);
 }
+for (const [input, expected] of [['Nursery', 'ECD'], ['ECD / Nursery', 'ECD'], ['LKG', 'LKG'], ['lkg', 'LKG'], ['Lower Kindergarten', 'LKG'], ['UKG', 'UKG'], ['ukg', 'UKG'], ['Upper Kindergarten', 'UKG']]) {
+  assert.equal(canonical(input), expected, `Early-years class normalization failed: ${input}`);
+}
+assert.notEqual(canonical('LKG'), canonical('UKG'), 'LKG and UKG must stay distinct');
+assert.ok(html.includes('const earlyYearsClasses=["ECD","LKG","UKG"]'), 'Early-years class order must be ECD, LKG, UKG');
+assert.ok(html.includes('const studentClasses=[...earlyYearsClasses,...classes.slice(1)]'), 'Student class selector must include early-years classes');
+assert.ok(html.includes('.sort(compareStudentsByName)'), 'Student management listing must use alphabetical name sort');
 assert.notEqual(canonical('Class 11'), canonical('Class 9'), 'Upper classes must remain distinct');
 assert.notEqual(canonical('Class 12'), canonical('Class 10'), 'Upper classes must remain distinct');
 console.log('V46 Teacher/student class normalization regression passed for ECD and Classes 1–12.');
