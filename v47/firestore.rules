@@ -440,7 +440,7 @@ service cloud.firestore {
   }
 }
 )
-            && data.examId in ['weekly','monthly','first','second','third','final']
+            && data.examId in ['weekly','monthly','1st','2nd','3rd','final']
             && id == data.classId + '_' + data.subjectId + '_' + data.examId
             && data.active == true
             && validComponentList(data.components)
