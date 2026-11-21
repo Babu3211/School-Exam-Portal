@@ -31,3 +31,6 @@ jobs:
 
       - name: Student import transaction plan
         run: npm run test:v47:student-import-transaction-plan
+
+      - name: Validate IEMIS school rules pattern
+        run: npm run test:v47:rules-iemis-syntax
