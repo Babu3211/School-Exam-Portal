@@ -31,6 +31,9 @@ const legacy=await previewAgainstSchoolStudents({auth,schoolId,rows:legacyRows,r
 assert.equal(legacy.preview.ready,0);
 assert.equal(legacy.preview.skipped,1);
 assert.match(legacy.preview.records[0].errors.join(' '),/already exists/);
+const blankAlias=await previewAgainstSchoolStudents({auth,schoolId,rows:legacyRows,readDocument,
+ readStudents:async()=>[{schoolId,studentIemisId:'',studentIemisNo:'00099'}]});
+assert.equal(blankAlias.preview.skipped,1);
 const teacherAuth={currentUser:{uid:'teacher-1'}};
 const teacherDocs=async path=>path==='schools/'+schoolId?{id:schoolId,active:true}:path==='schools/'+schoolId+'/members/teacher-1'?{uid:'teacher-1',schoolId,role:'teacher',active:true}:null;
 await assert.rejects(previewAgainstSchoolStudents({auth:teacherAuth,schoolId,rows,readDocument:teacherDocs,readStudents}),/administrator membership/);
