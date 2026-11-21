@@ -28,3 +28,6 @@ jobs:
         run: npm run test:v47:verified-panel
       - name: Verified student save gate
         run: npm run test:v47:verified-save-gate
+
+      - name: Student import transaction plan
+        run: npm run test:v47:student-import-transaction-plan
