@@ -6,6 +6,7 @@ on:
     paths:
       - 'v47/**'
       - 'package.json'
+      - 'scripts/test-v47-emulator-isolation.mjs'
       - '.github/workflows/v47-import-security.yml'
   workflow_dispatch:
 jobs:
@@ -25,8 +26,8 @@ jobs:
           java-version: '21'
       - name: Install Firebase test dependencies
         run: npm install --no-package-lock --ignore-scripts
-      - name: Check V47 module syntax
-        run: find v47 -name '*.mjs' -print0 | xargs -0 -n1 node --check
+      - name: Check V47 module and emulator syntax
+        run: npm run test:v47:syntax
       - name: Verified student preview
         run: npm run test:v47:verified-student-preview
       - name: Firestore student preview adapter
