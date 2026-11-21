@@ -58,6 +58,14 @@ Object.defineProperty(scanningRecord,'studentIemisId',{get(){
 }});
 await assert.rejects(previewAgainstSchoolStudents({auth:sessionDuringScan,schoolId,rows,readDocument,
  readStudents:async()=>[scanningRecord]}),/Authentication changed during duplicate verification/);
+const sessionDuringExcel={currentUser:{uid}};
+const excelRow={'IEMIS Code':schoolId,'Student IEMIS Id':'EXCEL-1','Class':'6'};
+Object.defineProperty(excelRow,'Student Name',{enumerable:true,get(){
+ sessionDuringExcel.currentUser={uid:'another-user'};
+ return 'Student Changed Session';
+}});
+await assert.rejects(previewAgainstSchoolStudents({auth:sessionDuringExcel,schoolId,rows:[excelRow],readDocument,
+ readStudents:async()=>[]}),/Authentication changed during Excel validation/);
 const teacherAuth={currentUser:{uid:'teacher-1'}};
 const teacherDocs=async path=>path==='schools/'+schoolId?{id:schoolId,active:true}:path==='schools/'+schoolId+'/members/teacher-1'?{uid:'teacher-1',schoolId,role:'teacher',active:true}:null;
 await assert.rejects(previewAgainstSchoolStudents({auth:teacherAuth,schoolId,rows,readDocument:teacherDocs,readStudents}),/administrator membership/);
