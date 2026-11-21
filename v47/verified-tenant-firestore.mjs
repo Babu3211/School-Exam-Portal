@@ -8,11 +8,9 @@ export function createVerifiedTenantFirestore({db,api,context}){
  return Object.freeze({
   async list(name){await context.revalidateRead();const result=await api.getDocs(collectionRef(name));await context.revalidateRead();return result},
   async listAll(name,{pageSize=250,maxDocuments=20000}={}){
-   if(!Number.isInteger(pageSize)||pageSize<1||pageSize>500||!Number.isInteger(maxDocuments)||maxDocuments<1)throw new RangeError('Invalid pagination limits');
+   if(!Number.isInteger(pageSize)||pageSize<1||pageSize>500||!Number.isSafeInteger(maxDocuments)||maxDocuments<1)throw new RangeError('Invalid pagination limits');
    if(typeof api.query!=='function'||typeof api.orderBy!=='function'||typeof api.documentId!=='function'||typeof api.limit!=='function'||typeof api.startAfter!=='function')throw new Error('Firestore pagination API required');
    const all=[];let cursor=null;
-   // A page ending early is only a complete result when the next cursor is empty.
-   // This avoids accepting partial mock/server responses as a full report.
    for(;;){
     await context.revalidateRead();
     const constraints=[api.orderBy(api.documentId())];
@@ -24,14 +22,10 @@ export function createVerifiedTenantFirestore({db,api,context}){
     if(!snapshot||!Array.isArray(snapshot.docs))throw new Error('Invalid paginated Firestore response');
     if(snapshot.docs.length>requested)throw new Error('Firestore page exceeded requested limit');
     for(const item of snapshot.docs){
-     if(!item||typeof item.id!=='string'||!item.id||(all.length&&item.id<=all.at(-1).id))throw new Error('Invalid Firestore pagination cursor');
+     if(!item||typeof item.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(item.id)||(all.length&&item.id<=all.at(-1).id))throw new Error('Invalid Firestore pagination cursor');
      all.push(item);
     }
-    if(snapshot.docs.length<requested){
-     // Firestore query limits normally fill pages until the last page; keep the
-     // explicit invariant that a nonempty page advances the cursor.
-     break;
-    }
+    if(snapshot.docs.length<requested)break;
     if(all.length>=maxDocuments){
      // Probe for one additional document: exactly maxDocuments is complete,
      // but maxDocuments+1 must fail rather than silently truncate a report.
