@@ -15,6 +15,11 @@ const live=await make({readDocument:async path=>path==='schools/'+sid?school:{..
 membershipActive=false;
 await assert.rejects(live.revalidateWrite(),/Membership unavailable/);
 membershipActive=true;
+let liveRole='school_admin';
+const changingRole=await make({readDocument:async path=>path==='schools/'+sid?school:{...member,role:liveRole}});
+liveRole='viewer';
+await assert.rejects(changingRole.revalidateRead(),/School role changed/);
+await assert.rejects(changingRole.revalidateWrite(),/School Admin permission required/);
 assert.throws(()=>ctx.collectionSegments('members'),/Unreviewed V47 tenant collection/);
 assert.throws(()=>ctx.collectionSegments('../students'),/Unreviewed V47 tenant collection/);
 assert.throws(()=>ctx.documentSegments('students','../escape'),/Invalid document ID/);
