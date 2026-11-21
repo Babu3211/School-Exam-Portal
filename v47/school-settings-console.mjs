@@ -38,7 +38,7 @@ $('login').onclick=async()=>{
   $('iemis').textContent=id;$('name').textContent=String(school.name);$('active').textContent='Active';$('role').textContent=session.role;
   verifiedSchoolId=id;verifiedUid=uid;$('schoolId').disabled=true;$('email').disabled=true;$('password').disabled=true;
   $('settings').hidden=false;message('विद्यालय विवरण प्रमाणित भयो। यो पृष्ठमा परिवर्तन गर्न मिल्दैन।');
- }catch(e){if(request===epoch){reset();try{await authSdk.signOut(auth)}catch{}message('School verification failed: '+e.message)}}
+ }catch(e){if(request===epoch){reset();lock(false);try{await authSdk.signOut(auth)}catch{}message('School verification failed: '+e.message)}}
  finally{if(request===epoch)lock(false)}
 };
 $('logout').onclick=async()=>{if(busy)return;reset();lock(true);try{await authSdk.signOut(auth);message('Signed out')}catch(e){message('Sign out failed: '+e.message)}finally{lock(false)}};
