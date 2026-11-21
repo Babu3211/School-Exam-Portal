@@ -25,7 +25,7 @@ for(const bad of [
 current={schoolId:'12345',uid:'teacher1',classId:'9',subjectId:'math',active:true};
 subjectExists=false;await assert.rejects(()=>verifyTeacherSubjectAssignment(base),/does not exist/);subjectExists=true;
 for(const invalid of [{...subject,active:false},{...subject,schoolId:'98765'},{...subject,class:'10'},{...subject,name:''}]){subject=invalid;await assert.rejects(()=>verifyTeacherSubjectAssignment(base),/inactive or mismatched/)}
-subject={schoolId:'12345',class:'9',active:true};
+subject={schoolId:'12345',class:'9',name:'Mathematics',active:true};
 for(const badActor of [
  {...actor,role:'viewer'},
  {...actor,role:'school_admin'},
