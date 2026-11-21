@@ -5,7 +5,6 @@ let auth,authSdk,db,firestoreApi,epoch=0,busy=false,connecting=false;
 const status=message=>{$('message').textContent=message};
 function clear(){epoch++;$('report').hidden=true;$('counts').replaceChildren();$('school').textContent='';$('password').value=''}
 function currentSession(requestEpoch,uid){return requestEpoch===epoch&&auth?.currentUser?.uid===uid}
-async function signOutIfCurrent(uid){if(auth?.currentUser?.uid===uid)await authSdk.signOut(auth)}
 $('connect').onclick=async()=>{
  if(connecting||auth)return;
  connecting=true;$('connect').disabled=true;
@@ -34,11 +33,11 @@ $('login').onclick=async()=>{
   const schoolId=assertIemisSchoolId($('schoolId').value.trim());
   const credential=await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);
   $('password').value='';
-  if(!currentSession(current,credential.user.uid)){await signOutIfCurrent(credential.user.uid);return}
+  if(!currentSession(current,credential.user.uid))return;
   const bridge=await createV46ReadOnlyBridge({schoolId,auth,db,firestoreApi});
   if(current!==epoch){if(auth.currentUser?.uid===credential.user.uid)await authSdk.signOut(auth);return}
   const rows=await bridge.loadExamReportRows();
-  if(!currentSession(current,credential.user.uid)){await signOutIfCurrent(credential.user.uid);return}
+  if(!currentSession(current,credential.user.uid))return;
   if(rows.publicationAllowed!==false||rows.complete!==false)throw new Error('Preview-only report protection missing');
   $('school').textContent='IEMIS School ID: '+rows.schoolId;
   for(const [label,key] of [['Students','students'],['Subjects','subjects'],['Exams','exams'],['Marks','marks'],['Mark Settings','markSettings']]){
