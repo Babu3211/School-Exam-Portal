@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {iemisGrade,iemisFinalGrade,iemisSubjectKey,iemisGpa,iemisSummary} from './iemis-ledger.js';
+assert.equal(iemisGrade(90).grade,'A+');
+assert.equal(iemisGrade(35).grade,'D');
+assert.equal(iemisGrade(34.99).grade,'NG');
+assert.equal(iemisGrade(-1),null);
+assert.equal(iemisFinalGrade(0).grade,'NG');
+assert.equal(iemisSubjectKey('Math'),'mathematics');
+assert.equal(iemisSubjectKey('गणित'),'mathematics');
+assert.equal(iemisGpa([{summary:{complete:true,totalGrade:{point:4}},creditHour:2}],{primary:true}),4);
+assert.equal(iemisGpa([{summary:{complete:false},creditHour:2}],{primary:true}),null);
+assert.equal(iemisSummary({isAbsent:true}).complete,false);
+console.log('V47 V46 IEMIS ledger parity smoke tests passed');
