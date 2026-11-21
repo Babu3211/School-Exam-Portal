@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {planLargeClassMarks} from './large-class-mark-plan.mjs';
-const schoolId='school-a',classId='9',term='monthly',subjectId='math';
+const schoolId='12345678',classId='9',term='monthly',subjectId='math';
 const actor={active:true,role:'school_admin',schoolId};
 function fixture(n){
  const expectedStudentIds=Array.from({length:n},(_,i)=>'s'+i);
@@ -25,7 +25,7 @@ for(const bad of [
  {...fixture(4),actor:{active:true,role:'teacher',schoolId}},
  {...fixture(4),actor:{active:true,role:'super_admin'}},
  {...fixture(4),actor:{active:false,role:'school_admin',schoolId}},
- {...fixture(4),actor:{active:true,role:'school_admin',schoolId:'school-b'}},
+ {...fixture(4),actor:{active:true,role:'school_admin',schoolId:'87654321'}},
 ])assert.throws(()=>planLargeClassMarks(bad));
 assert.throws(()=>planLargeClassMarks(fixture(1501)),/Class roster required/);
 console.log('V47 large-class read-only mark plan checks passed');
