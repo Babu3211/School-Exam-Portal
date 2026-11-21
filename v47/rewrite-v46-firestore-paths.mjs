@@ -6,6 +6,11 @@ export const V46_COLLECTIONS=Object.freeze([
  'public_result_exams','public_result_lookup','public_results','attendance'
 ]);
 export const V47_TENANT_COLLECTIONS=Object.freeze([...V46_COLLECTIONS]);
+// Guard dynamic backup/restore/dashboard paths; never trust arbitrary collection names.
+export function assertV47TenantCollection(name){
+ if(typeof name!=='string'||!V47_TENANT_COLLECTIONS.includes(name))throw new Error('Unreviewed V47 tenant collection: '+String(name));
+ return name;
+}
 export function rewriteV46FirestorePaths(source){
  if(typeof source!=='string'||!source.length)throw new TypeError('V46 source required');
  const seen=new Set();
@@ -18,7 +23,7 @@ export function rewriteV46FirestorePaths(source){
  // Scope these three call sites too; their allowlisted values require a separate review.
  let dynamicCount=0;
  const dynamicScoped=rewritten.replace(/\b(collection|doc)\(\s*db\s*,\s*name\b/g,(match,kind)=>{
-  dynamicCount++;return kind+'(db, "schools", activeSchoolId, name';
+  dynamicCount++;return kind+'(db, "schools", activeSchoolId, assertV47TenantCollection(name)';
  });
  if(dynamicCount!==3)throw new Error('V46 dynamic collection/document call count changed: '+dynamicCount);
  for(const name of V46_COLLECTIONS)if(!seen.has(name))throw new Error('Expected V46 collection not found: '+name);
