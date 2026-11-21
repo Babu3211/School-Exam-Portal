@@ -21,6 +21,14 @@ export async function createVerifiedTenantContext({schoolId,auth,readDocument}){
    if(typeof id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(id))throw new Error('Invalid document ID');
    return ['schools',session.schoolId,assertV47TenantCollection(name),id];
   },
+  // Recheck school and membership for every staged V46 read, including after asynchronous fetches.
+  async revalidateRead(){
+   ensureCurrent();
+   const latest=await verifySchoolSession({schoolId:session.schoolId,uid,readDocument});
+   ensureCurrent();
+   if(latest.role!==session.role)throw new Error('School role changed; sign in again');
+   return latest;
+  },
   // Recheck active membership before sensitive write operations; never cache permission forever.
   async revalidateWrite(){
    ensureCurrent();
