@@ -53,6 +53,9 @@ export function previewV46IemisStudentImport({rows,schoolId,existingIemisIds=[],
   const keys=Object.keys(row);
   if(keys.some(key=>key!==key.trim())||new Set(keys.map(key=>key.trim())).size!==keys.length)
    throw new Error('Excel row '+(i+2)+' contains ambiguous Column headings');
+  if(!['IEMIS Code','Student Name','Class'].every(key=>Object.hasOwn(row,key))||
+     (!Object.hasOwn(row,'Student IEMIS Id')&&!Object.hasOwn(row,'Admission Number')))
+   throw new Error('Excel row '+(i+2)+' is missing required Column headings');
  }
  const existing=new Set(existingIemisIds.map(x=>String(x??'').normalize('NFC').trim()).filter(Boolean));
  const existingAdmission=new Set(existingAdmissionNumbers.map(x=>String(x??'').normalize('NFC').trim()).filter(Boolean));
