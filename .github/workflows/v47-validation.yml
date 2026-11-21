@@ -33,6 +33,7 @@ jobs:
           node v47/test-configured-mark-preflight.mjs
           node v47/test-verified-subject-exam-settings.mjs
           node v47/test-computer-subject-selection.mjs
+          node v47/test-dynamic-class-marks-ui.mjs
           node v47/test-mark-summary-preview.mjs
           node v47/test-class-mark-coverage-preview.mjs
           npm run test:v47:v46-tenant-rewrite
