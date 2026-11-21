@@ -37,8 +37,8 @@ export function previewV46IemisStudentImport({rows,schoolId,existingIemisIds=[],
  if(!Array.isArray(rows))throw new TypeError('Excel rows array required');
  validateV46IemisExcelHeaders(rows);
  if(!Array.isArray(existingIemisIds)||!Array.isArray(existingAdmissionNumbers))throw new TypeError('Existing student identity lists required');
- const existing=new Set(existingIemisIds.map(x=>String(x).trim()).filter(Boolean));
- const existingAdmission=new Set(existingAdmissionNumbers.map(x=>String(x).trim()).filter(Boolean));
+ const existing=new Set(existingIemisIds.map(x=>String(x??'').normalize('NFC').trim()).filter(Boolean));
+ const existingAdmission=new Set(existingAdmissionNumbers.map(x=>String(x??'').normalize('NFC').trim()).filter(Boolean));
  const seen=new Set(),seenAdmission=new Set();
  const records=rows.map((row,index)=>{
   const excelData=normalizeV46IemisExcelRow(row);
