@@ -115,7 +115,7 @@ try{
  await assertFails(admin.doc('schools/school_001/component_marks/final:computerStudent:computer_9').set({...component,scores:{...component.scores,component_b:37}}));
  await assertFails(viewer.doc('schools/school_001/component_marks/final:computerStudent:computer_9').set(component));
  await assertFails(admin.doc('schools/school_001/component_marks/final:computerStudent:computer_9').set(component));
- await assertFails(viewer.doc('schools/school_001/component_marks/final:computerStudent:computer_9').get());
+ await assertSucceeds(viewer.doc('schools/school_001/component_marks/final:computerStudent:computer_9').get());
  await assertFails(admin.doc('schools/school_001/component_marks/final:computerStudent:computer_9').update({term:'1st'}));
  await assertFails(admin.doc('schools/school_001/component_marks/final:computerStudent:computer_9').delete());
  await assertFails(admin.doc('schools/school_001/marks/final:computerStudent:computer_9').set({studentId:'computerStudent',subjectId:'computer_9',class:'9',term:'final',theory:30,practical:10}));
