@@ -49,6 +49,7 @@ jobs:
           node v47/test-verified-teacher-attendance-duty.mjs
           node v47/test-teacher-assigned-class-ui.mjs
           node v47/audit-v46-feature-parity.mjs
+          node v47/test-audit-v46-feature-parity.mjs
           node v47/test-class-publication-ui-wiring.mjs
           node v47/test-class-inspection-postawait-guard.mjs
           node v47/test-class-marks-same-snapshot.mjs
