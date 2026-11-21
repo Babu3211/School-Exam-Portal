@@ -12,6 +12,10 @@ const args={auth,schoolId,rows,verifiedPreview,readDocument};
 await assert.rejects(prepareVerifiedStudentSave(args),/Admin confirmation/);
 await assert.rejects(prepareVerifiedStudentSave({...args,confirmed:true,verifiedPreview:{...verifiedPreview}}),/Fresh verified/);
 await assert.rejects(prepareVerifiedStudentSave({...args,confirmed:true,schoolId:'999999999'}),/Fresh verified/);
+const otherAuth={currentUser:{uid:'admin-2'}};
+const otherReadDocument=async path=>path==='schools/'+schoolId?{id:schoolId,active:true}:
+ path==='schools/'+schoolId+'/members/admin-2'?{uid:'admin-2',schoolId,role:'school_admin',active:true}:null;
+await assert.rejects(prepareVerifiedStudentSave({...args,auth:otherAuth,readDocument:otherReadDocument,confirmed:true}),/another account/);
 const prepared=await prepareVerifiedStudentSave({...args,confirmed:true});
 assert.equal(prepared.count,1);
 assert.equal(prepared.records[0]['Student IEMIS Id'],'00002');
