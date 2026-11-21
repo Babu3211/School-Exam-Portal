@@ -2,7 +2,7 @@
 // No Firebase writes. Host must provide a school-scoped Firestore reader.
 import {verifyV46ImportPreflight} from './verified-v46-import-preflight.mjs';
 import {previewV46IemisStudentImport} from './v46-iemis-student-import-preview.mjs';
-const str=x=>String(x??'').trim();
+const str=x=>String(x??'').normalize('NFC').trim();
 const verifiedCloudPreviews=new WeakMap();
 const PREVIEW_MAX_AGE_MS=5*60*1000;
 export const verifiedPreviewOwner=value=>verifiedCloudPreviews.get(value)?.uid??null;
@@ -21,6 +21,7 @@ export async function previewAgainstSchoolStudents({auth,schoolId,rows,readDocum
   for(const id of new Set([student.studentIemisId,student.studentIEMISId,student.iemisId,student.studentIemisNo,student.iemisStudentNo].map(str).filter(Boolean)))existingIemisIds.push(id);
   for(const admission of new Set([student.admissionNumber,student.admissionNo].map(str).filter(Boolean)))existingAdmissionNumbers.push(admission);
  }
+ if(auth?.currentUser?.uid!==uid)throw new Error('Authentication changed during duplicate verification');
  const preview=previewV46IemisStudentImport({rows,schoolId,existingIemisIds,existingAdmissionNumbers});
  const result=Object.freeze({preview,cloudChecked:true,schoolId,existingCount:students.length});
  verifiedCloudPreviews.set(result,{rows,uid,fingerprint:JSON.stringify(rows),verifiedAt:Date.now()});
