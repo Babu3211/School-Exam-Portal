@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {loadVerifiedSubjectExamSettings} from './verified-subject-exam-settings.mjs';
+const data={id:'setting_1',schoolId:'12345',subjectId:'computer',examId:'final',classId:'9',active:true,components:[{key:'lab',name:'Lab',fullMarks:70},{key:'written',name:'Written',fullMarks:30}]};
+let checks=0;const revalidate=async()=>{checks++};
+const api={doc:(_db,...parts)=>parts,getDoc:async ref=>{assert.deepEqual(ref,['schools','12345','mark_settings','setting_1']);return {exists:()=>true,data:()=>data}}};
+const base={db:{},api,schoolId:'12345',subjectId:'computer',examId:'final',classId:'9',settingsId:'setting_1',revalidate};
+const result=await loadVerifiedSubjectExamSettings(base);
+assert.equal(checks,2);assert.deepEqual(result.components.map(c=>c.fullMarks),[70,30]);
+await assert.rejects(()=>loadVerifiedSubjectExamSettings({...base,schoolId:'99999'}),/Verified subject/);
+await assert.rejects(()=>loadVerifiedSubjectExamSettings({...base,settingsId:'../bad'}),/Invalid settingsId/);
+await assert.rejects(()=>loadVerifiedSubjectExamSettings({...base,api:{...api,getDoc:async()=>({exists:()=>false})}}),/not found/);
+let phase=0;await assert.rejects(()=>loadVerifiedSubjectExamSettings({...base,revalidate:async()=>{if(++phase===2)throw new Error('Session revoked')}}),/Session revoked/);
+console.log('V47 tenant examination settings loader tests passed');
