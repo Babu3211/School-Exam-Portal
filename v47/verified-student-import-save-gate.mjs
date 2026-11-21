@@ -4,8 +4,14 @@
 import {isVerifiedCloudPreview,verifiedPreviewOwner} from './verified-student-import-preview.mjs';
 import {getReadyV46IemisRows} from './v46-iemis-student-import-preview.mjs';
 import {verifyV46ImportPreflight} from './verified-v46-import-preflight.mjs';
-const issuedSavePlans=new WeakSet();
-export const isVerifiedStudentSavePlan=value=>!!value&&typeof value==='object'&&issuedSavePlans.has(value);
+const issuedSavePlans=new WeakMap();
+const SAVE_PLAN_MAX_AGE_MS=5*60*1000;
+export const isVerifiedStudentSavePlan=value=>{
+ const issued=value&&typeof value==='object'?issuedSavePlans.get(value):null;
+ if(!issued)return false;
+ const age=Date.now()-issued.issuedAt;
+ return age>=0&&age<=SAVE_PLAN_MAX_AGE_MS;
+};
 
 export async function prepareVerifiedStudentSave({auth,schoolId,rows,verifiedPreview,confirmed=false,readDocument}={}){
  if(confirmed!==true)throw new Error('Admin confirmation required before import');
@@ -21,6 +27,6 @@ export async function prepareVerifiedStudentSave({auth,schoolId,rows,verifiedPre
  if(auth?.currentUser?.uid!==context.uid||!isVerifiedCloudPreview(verifiedPreview,rows))throw new Error('Import verification expired');
  const plan=Object.freeze({schoolId,uid:context.uid,path:context.path,records:Object.freeze(records),count:records.length,
   requiresTransactionalDuplicateRecheck:true});
- issuedSavePlans.add(plan);
+ issuedSavePlans.set(plan,{issuedAt:Date.now()});
  return plan;
 }
