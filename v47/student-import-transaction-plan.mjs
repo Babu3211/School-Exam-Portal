@@ -19,7 +19,7 @@ export function planStudentImportTransaction({prepared,existingStudents}={}){
  for(const record of existingStudents){
   if(!record||typeof record!=='object'||Array.isArray(record))throw new TypeError('Invalid existing student');
   if(record.schoolId!==undefined&&record.schoolId!==schoolId)throw new Error('Cross-school student data rejected');
-  const id=String(record.studentIemisId??record.studentIEMISId??record.iemisId??record.studentIemisNo??record.iemisStudentNo??'').trim();
+  const id=[record.studentIemisId,record.studentIEMISId,record.iemisId,record.studentIemisNo,record.iemisStudentNo].map(x=>String(x??'').trim()).find(Boolean)||'';
   const admission=String(record.admissionNumber??record.admissionNo??'').trim();
   if(id)ids.add(id);
   if(admission)admissions.add(admission);
