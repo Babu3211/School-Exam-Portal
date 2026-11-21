@@ -1,5 +1,6 @@
 import {createV46ReadOnlyBridge} from './v46-readonly-bridge.mjs';
 import {assertIemisSchoolId} from './iemis-school-identity.mjs';
+import {auditV46ReportReferences} from './report-reference-audit.mjs';
 const $=id=>document.getElementById(id);
 let auth,authSdk,db,firestoreApi,epoch=0,busy=false,connecting=false,loginTask=null,loggingOut=false;
 const status=message=>{$('message').textContent=message};
@@ -45,6 +46,8 @@ $('login').onclick=()=>{
    const tr=document.createElement('tr'),name=document.createElement('td'),count=document.createElement('td');
    name.textContent=label;count.textContent=String(rows[key].length);tr.append(name,count);$('counts').append(tr);
   }
+  const audit=auditV46ReportReferences(rows);
+  $('audit').textContent=audit.valid?'Mark references: no missing references detected ('+audit.checkedMarks+' checked).':'Mark references: '+audit.missing.length+' unresolved references across '+audit.checkedMarks+' marks. Review data before enabling results.';
   $('report').hidden=false;status('Read-only report inputs loaded. No results were published.');
  }catch(error){if(current===epoch){clear();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status('Report unavailable: '+error.message)}}
  finally{busy=false;$('login').disabled=!auth||loggingOut;if(!auth?.currentUser)$('logout').disabled=true}
