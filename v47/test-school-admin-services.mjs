@@ -59,4 +59,29 @@ await ok('15b reject missing Firebase list SDK',async()=>{await assert.rejects(l
 await ok('15c reject invalid page size',async()=>{await assert.rejects(listSchools({db,api,actor:admin,pageSize:0}))});
 await ok('16 reject oversized page',async()=>{await assert.rejects(listSchools({db,api,actor:admin,pageSize:1000000}))});
 await ok('17 paginate with cursor without duplicates',async()=>{state.schools.set('23456',{...school,id:'23456',iemisCode:'23456'});const first=await listSchools({db,api,actor:admin,pageSize:1});assert.equal(first.hasMore,true);const second=await listSchools({db,api,actor:admin,pageSize:1,cursor:first.cursor});assert.equal(second.schools[0].id,'23456')});
+
+// Additional negative-path and state-integrity cases.
+await ok('18 reject teacher school registration',async()=>{await assert.rejects(onboardSchool({db,api,actor:{role:'teacher',active:true,schoolId:'12345'},form:school,adminUid:'admin003'}))});
+await ok('19 reject null registration actor',async()=>{await assert.rejects(onboardSchool({db,api,actor:null,form:school,adminUid:'admin003'}))});
+await ok('20 reject numeric school ID',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,id:12345},adminUid:'admin003'}))});
+await ok('21 reject too-short IEMIS ID',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,id:'1234',iemisCode:'1234'},adminUid:'admin003'}))});
+await ok('22 reject too-long IEMIS ID',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,id:'123456789012345678901',iemisCode:'123456789012345678901'},adminUid:'admin003'}))});
+await ok('23 reject empty school name',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,name:'  '},adminUid:'admin003'}))});
+await ok('24 reject oversized school name',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,name:'x'.repeat(161)},adminUid:'admin003'}))});
+await ok('25 reject admin UID containing slash',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:school,adminUid:'bad/uid'}))});
+await ok('26 reject admin UID containing whitespace',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:school,adminUid:'bad uid'}))});
+await ok('27 reject admin UID over 128 characters',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:school,adminUid:'x'.repeat(129)}))});
+await ok('28 reject inactive Super Admin school activation',async()=>{await assert.rejects(setSchoolActive({db,api,actor:{...admin,active:false},schoolId:'12345',active:false}))});
+await ok('29 reject malformed school activation ID',async()=>{await assert.rejects(setSchoolActive({db,api,actor:admin,schoolId:'../12345',active:false}))});
+await ok('30 reject missing activation SDK',async()=>{await assert.rejects(setSchoolActive({db,api:{doc:api.doc},actor:admin,schoolId:'12345',active:false}))});
+await ok('31 deactivate existing school',async()=>{await setSchoolActive({db,api,actor:admin,schoolId:'12345',active:false});assert.equal(state.schools.get('12345').active,false)});
+await ok('32 deactivation preserves school identity',async()=>{assert.equal(state.schools.get('12345').iemisCode,'12345');assert.equal(state.schools.get('12345').name,'Sample School')});
+await ok('33 reject inactive Super Admin school listing',async()=>{await assert.rejects(listSchools({db,api,actor:{...admin,active:false}}))});
+await ok('34 reject fractional pagination size',async()=>{await assert.rejects(listSchools({db,api,actor:admin,pageSize:1.5}))});
+await ok('35 reject negative pagination size',async()=>{await assert.rejects(listSchools({db,api,actor:admin,pageSize:-1}))});
+await ok('36 reject string pagination size',async()=>{await assert.rejects(listSchools({db,api,actor:admin,pageSize:'1'}))});
+await ok('37 list remains tenant-ID ordered',async()=>{const page=await listSchools({db,api,actor:admin,pageSize:2});assert.deepEqual(page.schools.map(x=>x.id),['12345','23456'])});
+await ok('38 registration failures never create additional members',async()=>{assert.equal(state.members.size,1)});
+await ok('39 registration failures never create additional schools',async()=>{assert.equal(state.schools.size,2)});
+
 console.log('PASS '+checks+' V47 school admin service checks (mock SDK; Firebase emulator verification still required)');
