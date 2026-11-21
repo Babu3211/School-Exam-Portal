@@ -1,0 +1,18 @@
+// V47 verified student import save gate. Pure pre-write validation; NO Firestore writes.
+// The caller must recheck live duplicates and authorization inside its Firestore
+// transaction before creating students. Never use this as a replacement for rules.
+import {isVerifiedCloudPreview} from './verified-student-import-preview.mjs';
+import {getReadyV46IemisRows} from './v46-iemis-student-import-preview.mjs';
+import {verifyV46ImportPreflight} from './verified-v46-import-preflight.mjs';
+
+export async function prepareVerifiedStudentSave({auth,schoolId,rows,verifiedPreview,confirmed=false,readDocument}={}){
+ if(confirmed!==true)throw new Error('Admin confirmation required before import');
+ if(!isVerifiedCloudPreview(verifiedPreview,rows)||verifiedPreview.schoolId!==schoolId||verifiedPreview.cloudChecked!==true)
+  throw new Error('Fresh verified cloud preview required before import');
+ const context=await verifyV46ImportPreflight({auth,schoolId,collection:'students',readDocument});
+ if(auth?.currentUser?.uid!==context.uid)throw new Error('Authentication changed before import');
+ if(!isVerifiedCloudPreview(verifiedPreview,rows))throw new Error('Excel rows changed after verification');
+ const records=getReadyV46IemisRows(verifiedPreview.preview,{confirmed:true}).map(record=>Object.freeze({...record}));
+ return Object.freeze({schoolId,uid:context.uid,path:context.path,records:Object.freeze(records),count:records.length,
+  requiresTransactionalDuplicateRecheck:true});
+}
