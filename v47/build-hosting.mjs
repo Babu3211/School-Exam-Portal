@@ -1,0 +1,30 @@
+// V47-only static hosting build. No V46 files or Firebase writes.
+import {mkdir,readdir,copyFile,rm,readFile,writeFile} from 'node:fs/promises';
+import {join,extname} from 'node:path';
+const source=new URL('./',import.meta.url);
+const dist=new URL('./dist/',import.meta.url);
+await rm(dist,{recursive:true,force:true});
+await mkdir(dist,{recursive:true});
+const files=await readdir(source,{withFileTypes:true});
+let count=0;
+for(const file of files){
+ if(!file.isFile()||!['.html','.mjs','.css','.js','.svg','.png','.webp','.ico','.json'].includes(extname(file.name)))continue;
+ if(file.name.startsWith('firebase.')||file.name==='firebase.json'||file.name==='firebase.v47.json'||file.name==='firebase.test.json'||file.name==='firebase.emulator.json'||file.name==='firestore.indexes.json')continue;
+ if(file.name.startsWith('test-')||file.name==='firestore.rules'||file.name==='build-hosting.mjs')continue;
+ await copyFile(new URL(file.name,source),new URL(file.name,dist));
+ count++;
+}
+const required=['index.html','school-login.html','admin.html','school-admin.html','students.html','attendance.html'];
+for(const name of required){
+ if(!files.some(file=>file.name===name))throw new Error('Missing V47 hosting entry: '+name);
+}
+const htmlFiles=files.filter(file=>file.isFile()&&file.name.endsWith('.html'));
+const copied=new Set((await readdir(dist)));
+for(const file of htmlFiles){
+ const html=await readFile(new URL(file.name,source),'utf8');
+ for(const match of html.matchAll(/(?:src|href)\s*=\s*["']\.\/([^"'?#]+)["']/g)){
+  const asset=decodeURIComponent(match[1]);
+  if(!copied.has(asset))throw new Error(file.name+' references missing local asset '+asset);
+ }
+}
+console.log('V47 static hosting build complete:',count,'files; no V46 production changes');
