@@ -1,7 +1,7 @@
 import {createV46ReadOnlyBridge} from './v46-readonly-bridge.mjs';
 import {assertIemisSchoolId} from './iemis-school-identity.mjs';
 const $=id=>document.getElementById(id);
-let auth,authSdk,db,firestoreApi,epoch=0,busy=false,connecting=false;
+let auth,authSdk,db,firestoreApi,epoch=0,busy=false,connecting=false,loginTask=null;
 const status=message=>{$('message').textContent=message};
 function clear(){epoch++;$('report').hidden=true;$('counts').replaceChildren();$('school').textContent='';$('password').value=''}
 function currentSession(requestEpoch,uid){return requestEpoch===epoch&&auth?.currentUser?.uid===uid}
@@ -25,8 +25,9 @@ $('connect').onclick=async()=>{
  }catch(error){status(error.message);$('connect').disabled=false}
  finally{connecting=false}
 };
-$('login').onclick=async()=>{
+$('login').onclick=()=>{
  if(busy)return;
+ loginTask=(async()=>{
  busy=true;clear();const current=epoch;
  $('login').disabled=true;$('logout').disabled=false;
  try{
@@ -47,5 +48,15 @@ $('login').onclick=async()=>{
   $('report').hidden=false;status('Read-only report inputs loaded. No results were published.');
  }catch(error){if(current===epoch){clear();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status('Report unavailable: '+error.message)}}
  finally{busy=false;$('login').disabled=!auth;if(!auth?.currentUser)$('logout').disabled=true}
+ })();
 };
-$('logout').onclick=async()=>{clear();$('logout').disabled=true;try{if(auth)await authSdk.signOut(auth);status('Signed out')}catch(error){status(error.message)}};
+$('logout').onclick=async()=>{
+ clear();$('logout').disabled=true;$('login').disabled=true;
+ try{
+  // A pending sign-in may finish after signOut; wait and sign out again.
+  if(loginTask)await loginTask;
+  if(auth)await authSdk.signOut(auth);
+  status('Signed out');
+ }catch(error){status('Unable to sign out: '+error.message)}
+ finally{$('login').disabled=!auth}
+};
