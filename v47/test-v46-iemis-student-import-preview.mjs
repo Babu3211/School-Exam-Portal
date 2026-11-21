@@ -56,6 +56,7 @@ assert.equal(blankExisting.ready,1,'Empty legacy identity values must not create
 for(const invalidCell of [{unexpected:true},['nested'],Number.POSITIVE_INFINITY,NaN,1n]){
  assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'90003','Student Name':'Valid Student','Class':'6','Father Name':invalidCell}]}),/Excel cell/);
 }
+assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':Number.MAX_SAFE_INTEGER+2,'Student Name':'Valid Student','Class':'6'}]}),/unsafe integer/);
 const numericCell=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':90004,'Student Name':'Valid Student','Class':'6'}]});
 assert.equal(numericCell.ready,1,'Finite numeric spreadsheet cells remain supported');
 const invalidNames=['A','X'.repeat(161)];
