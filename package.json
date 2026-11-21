@@ -78,7 +78,8 @@
     "test:v47:student-import-transaction-plan": "node v47/test-student-import-transaction-plan.mjs",
     "test:v47:rules-iemis-syntax": "node v47/test-firestore-rules-iemis-syntax.mjs",
     "test:v47:student-import-record-adapter": "node v47/test-v46-student-import-record-adapter.mjs",
-    "test:v47:student-import-rules": "node v47/test-firestore-student-import-schema.mjs"
+    "test:v47:student-import-rules": "node v47/test-firestore-student-import-schema.mjs",
+    "test:v47:emulator-school-fixtures": "node v47/test-emulator-school-fixtures.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
