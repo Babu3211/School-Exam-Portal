@@ -63,4 +63,10 @@ const paginated=createVerifiedTenantFirestore({db:{},context,api:{...api,
 }});
 assert.deepEqual((await paginated.listAll('students',{pageSize:2})).docs.map(d=>d.id),['a','b','c']);
 await assert.rejects(paginated.listAll('students',{pageSize:0}),/pagination limits/);
+const paginationApi={...api,query:(ref,...constraints)=>({ref,constraints}),orderBy:field=>['orderBy',field],documentId:()=> '__name__',limit:n=>['limit',n],startAfter:id=>['startAfter',id]};
+const exactlyTwo=createVerifiedTenantFirestore({db:{},context,api:{...paginationApi,getDocs:async query=>query.constraints.some(c=>c[0]==='startAfter')?{docs:[]}:{docs:[{id:'a'},{id:'b'}]}}});
+assert.deepEqual((await exactlyTwo.listAll('students',{pageSize:2,maxDocuments:2})).docs.map(d=>d.id),['a','b']);
+const overflow=createVerifiedTenantFirestore({db:{},context,api:{...paginationApi,getDocs:async query=>query.constraints.some(c=>c[0]==='startAfter')?{docs:[{id:'c'}]}:{docs:[{id:'a'},{id:'b'}]}}});
+await assert.rejects(overflow.listAll('students',{pageSize:2,maxDocuments:2}),/document limit reached/);
+
 console.log('Verified V47 read-only tenant Firestore adapter tests passed');
