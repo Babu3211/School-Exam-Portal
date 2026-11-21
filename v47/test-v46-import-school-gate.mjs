@@ -13,5 +13,5 @@ assert.throws(()=>assertV47ImportContext({session:{...session,role:'viewer'},sch
 assert.throws(()=>assertV47ImportContext({session:{...session,role:'teacher'},schoolId:'001234567',collection:'staff'}),/administrators/);
 assert.throws(()=>assertV47ImportContext({session:{...session,authorization:'unverified'},schoolId:'001234567',collection:'students'}),/Verified/);
 assert.throws(()=>assertV47ImportContext({session,schoolId:'001234567',collection:'user_roles'}),/Unreviewed/);
-assert.throws(()=>assertV47ImportContext({session,schoolId:'',collection:'students'}),/Valid/);
+assert.throws(()=>assertV47ImportContext({session,schoolId:'',collection:'students'}),/IEMIS number/);
 console.log('PASS: V47 bulk import school isolation, roles and verification preflight');
