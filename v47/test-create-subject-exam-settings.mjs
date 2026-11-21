@@ -14,9 +14,9 @@ const block=rules.slice(rules.indexOf('match /mark_settings/{id}'),rules.indexOf
 assert.match(block,/allow create: if memberRole\(sid, 'school_admin'\) && validNewSettings\(\)/);
 assert.match(block,/allow update, delete: if false/);
 assert.match(block,/id == d\.classId \+ '_' \+ d\.subjectId \+ '_' \+ d\.examId/);
-assert.match(block,/get\(subject\)\.d\.get\('active',false\) == true/);
+assert.match(block,/get\(subject\)\.data\.get\('active',false\) == true/);
 let writes=0;
-const api={doc:(_db,...parts)=>parts.join('/'),setDoc:async(ref,data)=>{writes++;assert.equal(ref,'schools/12345/mark_settings/9_computer_final');assert.equal(d.id,settings.id)}};
+const api={doc:(_db,...parts)=>parts.join('/'),setDoc:async(ref,data)=>{writes++;assert.equal(ref,'schools/12345/mark_settings/9_computer_final');assert.equal(data.id,settings.id)}};
 const actor={role:'school_admin',active:true,schoolId:'12345',uid:'admin'};
 await createNewSubjectExamSettings({db:{},api,actor,settings});
 assert.equal(writes,1);
