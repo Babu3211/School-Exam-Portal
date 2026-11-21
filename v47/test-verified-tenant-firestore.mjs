@@ -54,4 +54,13 @@ assert.equal(typeof resolveRoleRead,'function','Read request must reach Firestor
 membershipRole='teacher';
 resolveRoleRead({exists:()=>true});
 await assert.rejects(roleRead,/School role changed/);
+membershipRole='viewer';
+const pages=[{docs:[{id:'a'},{id:'b'}]},{docs:[{id:'c'}]}];
+const paginated=createVerifiedTenantFirestore({db:{},context,api:{...api,
+ query:(ref,...constraints)=>({ref,constraints}),orderBy:field=>['orderBy',field],documentId:()=> '__name__',
+ limit:n=>['limit',n],startAfter:id=>['startAfter',id],
+ getDocs:async query=>{assert.deepEqual(query.ref,['schools',sid,'students']);return pages.shift();}
+}});
+assert.deepEqual((await paginated.listAll('students',{pageSize:2})).docs.map(d=>d.id),['a','b','c']);
+await assert.rejects(paginated.listAll('students',{pageSize:0}),/pagination limits/);
 console.log('Verified V47 read-only tenant Firestore adapter tests passed');
