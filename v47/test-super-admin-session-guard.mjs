@@ -33,4 +33,7 @@ assert(source.includes("$('refresh').onclick=()=>{if(mutating)return;"),"Block r
 assert(source.includes("$('refresh').disabled=true;$('next').disabled=true;"),"Block refresh and pagination during school mutations");
 assert(source.includes("$('refresh').disabled=false"),"Restore refresh after school mutation");
 assert(source.includes("const requestedActor=actor,requestedSession=sessionEpoch,requestedRefresh=++refreshEpoch;try{"),"Capture request epoch before try/catch");
+assert(source.includes("authSdk.onAuthStateChanged(auth,user=>"),"Firebase external signout must be observed");
+assert(source.includes("if(actor&&user?.uid!==actor.uid)"),"Auth observer must reject replaced UID");
+assert(source.includes("if(requestedRefresh!==refreshEpoch||requestedSession!==sessionEpoch)return;$('next').disabled=true;"),"Failed refresh disables pagination");
 console.log('PASS V47 Super Admin UID and school-list session guards');
