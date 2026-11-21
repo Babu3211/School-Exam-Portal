@@ -35,6 +35,11 @@ assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{scho
 assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{schoolId,admissionNumber:'OTHER',admissionNo:'A-2'}]}),/Duplicate Admission/);
 assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{schoolId,admissionNumber:'',admissionNo:'A-2'}]}),/Duplicate Admission/);
 assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{schoolId,admissionNo:'A-2'}]}),/Duplicate Admission/);
+const unicodeRows=[{'IEMIS Code':schoolId,'Student IEMIS Id':'é-101','Admission Number':'A-3','Student Name':'Unicode Student','Class':'6'}];
+const unicodePreview=await previewAgainstSchoolStudents({auth,schoolId,rows:unicodeRows,readDocument,readStudents:async()=>[]});
+const unicodePrepared=await prepareVerifiedStudentSave({auth,schoolId,rows:unicodeRows,verifiedPreview:unicodePreview,readDocument,confirmed:true});
+assert.throws(()=>planStudentImportTransaction({prepared:unicodePrepared,existingStudents:[{schoolId,studentIemisNo:'e\u0301-101'}]}),/Duplicate Student IEMIS/);
+
 assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{schoolId:'999999999'}]}),/Cross-school/);
 assert.throws(()=>planStudentImportTransaction({prepared:{...prepared,requiresTransactionalDuplicateRecheck:false},existingStudents}),/Verified prepared import/);
 console.log('PASS: verified-only create-only student import plan rejects forged plans and fresh duplicates');
