@@ -8,13 +8,6 @@ export function createVerifiedTenantFirestore({db,api,context}){
  return Object.freeze({
   async list(name){context.assertRead();const result=await api.getDocs(collectionRef(name));context.assertRead();return result},
   async get(name,id){context.assertRead();const result=await api.getDoc(documentRef(name,id));context.assertRead();return result},
-  async create(name,id,value){
-   if(typeof api.setDoc!=='function')throw new TypeError('Firestore create method required');
-   await context.revalidateWrite();
-   if(!value||typeof value!=='object'||Array.isArray(value)||value.schoolId!==context.schoolId)throw new Error('School-scoped record required');
-   const ref=documentRef(name,id);
-   await context.revalidateWrite();
-   return api.setDoc(ref,value);
-  }
- });
+  // Writes intentionally unavailable until create-only transaction and rules parity are verified.
+  async create(){throw new Error('Staged V46 record writes disabled pending verified transaction and rules parity');} });
 }
