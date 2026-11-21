@@ -3,7 +3,7 @@ import {verifyTeacherSubjectAssignment} from './verified-teacher-subject-assignm
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 const $=id=>document.getElementById(id);
-let auth,authSdk,api,db,actor=null,schoolId=null,epoch=0,busy=false,connected=false;
+let auth,authSdk,api,db,actor=null,schoolId=null,epoch=0,busy=false;
 const message=text=>{$('message').textContent=text};
 function clear(){epoch++;actor=null;schoolId=null;$('work').hidden=true;$('students').replaceChildren();$('count').textContent='';$('logout').disabled=true;$('load').disabled=true}
 function lock(value){busy=value;for(const id of ['login','logout','load','classId','subjectId','schoolId','email','password'])$(id).disabled=value;if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('load').disabled=!actor}}
@@ -22,7 +22,7 @@ $('connect').onclick=async()=>{
   api=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js');
   const app=appSdk.initializeApp(config,'smss-v47-teacher-roster');
   auth=authSdk.getAuth(app);await authSdk.setPersistence(auth,authSdk.inMemoryPersistence);
-  db=api.getFirestore(app);connected=true;$('connect').disabled=true;$('login').disabled=false;message('Connected to V47');
+  db=api.getFirestore(app);$('connect').disabled=true;$('login').disabled=false;message('Connected to V47');
  }catch(e){message('Connection failed: '+e.message)}
 };
 $('login').onclick=async()=>{
