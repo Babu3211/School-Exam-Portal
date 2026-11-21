@@ -13,6 +13,8 @@ assert.match(html,/id="loadAttendance" disabled/);
 assert.match(html,/<select id="subjectId">/);
 assert.match(ui,/config\.projectId!=='smss-exam-portal-v47'/);
 assert.match(ui,/authSdk\.inMemoryPersistence/);
+assert.match(ui,/authSdk\.onAuthStateChanged\(auth,user=>/);
+assert.match(ui,/if\(actor&&user\?\.uid!==actor\.uid\)\{clear\(\)/);
 assert.match(ui,/\['login','logout','load','loadAttendance','loadAssignments','classId','subjectId','schoolId','email','password'\]/);
 assert.match(ui,/School selection changed/);
 assert.match(ui,/selectionEpoch\+\+/);
