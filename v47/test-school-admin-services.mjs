@@ -87,4 +87,26 @@ await ok('39 registration failures never create additional schools',async()=>{as
 await ok('40 reject numeric IEMIS code',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,iemisCode:12345},adminUid:'admin003'}))});
 await ok('41 reject numeric school name',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,name:12345},adminUid:'admin003'}))});
 await ok('42 preserve leading-zero IEMIS code',async()=>{const leading={id:'00123',iemisCode:'00123',name:'Leading Zero School'};await onboardSchool({db,api,actor:admin,form:leading,adminUid:'admin004'});assert.equal(state.schools.get('00123').iemisCode,'00123')});
+
+await ok('43 reject IEMIS ID with spaces',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,id:' 12345'},adminUid:'admin003'}))});
+await ok('44 reject IEMIS ID with decimals',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,id:'123.45'},adminUid:'admin003'}))});
+await ok('45 reject IEMIS ID with plus sign',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,id:'+12345'},adminUid:'admin003'}))});
+await ok('46 reject IEMIS ID with slash',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,id:'12/345'},adminUid:'admin003'}))});
+await ok('47 reject IEMIS ID with non-ASCII digits',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,id:'१२३४५'},adminUid:'admin003'}))});
+await ok('48 reject IEMIS ID with newline',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,id:'12345\\n'},adminUid:'admin003'}))});
+await ok('49 reject IEMIS mismatch with leading zero',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,id:'012345',iemisCode:'12345'},adminUid:'admin003'}))});
+await ok('50 reject empty admin UID',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:school,adminUid:''}))});
+await ok('51 reject numeric admin UID',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:school,adminUid:123456}))});
+await ok('52 reject null school registration',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:null,adminUid:'admin003'}))});
+await ok('53 reject array school registration',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:[],adminUid:'admin003'}))});
+await ok('54 reject null school activation',async()=>{await assert.rejects(setSchoolActive({db,api,actor:admin,schoolId:'12345',active:null}))});
+await ok('55 reject viewer deactivation',async()=>{await assert.rejects(setSchoolActive({db,api,actor:viewer,schoolId:'12345',active:false}))});
+await ok('56 reject null school list actor',async()=>{await assert.rejects(listSchools({db,api,actor:null}))});
+await ok('57 reject unsafe huge page size',async()=>{await assert.rejects(listSchools({db,api,actor:admin,pageSize:Number.MAX_SAFE_INTEGER}))});
+await ok('58 reject malformed school document ID on listing',async()=>{const bad=makeDb();bad.schools.set('not-an-iemis',{id:'not-an-iemis',iemisCode:'not-an-iemis',name:'Invalid',active:false});await assert.rejects(listSchools({db,api:mockApi(bad),actor:admin}))});
+await ok('59 reject mismatched school registry IEMIS code on listing',async()=>{const bad=makeDb();bad.schools.set('56789',{id:'56789',iemisCode:'99999',name:'Invalid',active:false});await assert.rejects(listSchools({db,api:mockApi(bad),actor:admin}))});
+await ok('60 reject mismatched school registry ID on listing',async()=>{const bad=makeDb();bad.schools.set('56789',{id:'99999',iemisCode:'56789',name:'Invalid',active:false});await assert.rejects(listSchools({db,api:mockApi(bad),actor:admin}))});
+await ok('61 reject missing school registry data on listing',async()=>{const bad=makeDb();bad.schools.set('56789',null);await assert.rejects(listSchools({db,api:mockApi(bad),actor:admin}))});
+await ok('62 reject invalid school registry document with numeric ID field',async()=>{const bad=makeDb();bad.schools.set('56789',{id:56789,iemisCode:'56789',name:'Invalid',active:false});await assert.rejects(listSchools({db,api:mockApi(bad),actor:admin}))});
+
 console.log('PASS '+checks+' V47 school admin service checks (mock SDK; Firebase emulator verification still required)');
