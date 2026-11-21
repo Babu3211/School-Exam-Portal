@@ -109,10 +109,11 @@ $('inspectClassMarks').onclick=async()=>{
  if(!actor||auth?.currentUser?.uid!==actor.uid||actor.schoolId!==schoolId){invalidateClassMarks();status('विद्यालयको लगइन परिवर्तन भयो। पुनः लगइन गर्नुहोस्।');return}
  if(classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value){invalidateClassMarks();status('Selection changed; reload roster');return}
  try{
-  const result=inspectConfiguredClassMarks({schoolId,classId,examId:term,subjectId,settings:classMarkSettings,expectedStudentIds:classMarkRoster.map(s=>s.id),drafts:collectClassMarkEntries()});
+  const expectedStudentIds=classMarkRoster.map(student=>student.id),drafts=collectClassMarkEntries();
+  const result=inspectConfiguredClassMarks({schoolId,classId,examId:term,subjectId,settings:classMarkSettings,expectedStudentIds,drafts});
   $('draftCheckResult').textContent=(result.complete?'All student marks valid.':'Class marks incomplete.')+(result.missing.length?' Missing: '+result.missing.slice(0,8).join(', '):'')+(result.invalid.length?' Invalid: '+result.invalid.slice(0,4).map(x=>x.studentId+': '+x.message).join('; '):'');
   if(result.complete){
-   const proposal=prepareConfiguredClassPublication({actor,schoolId,classId,subjectId,examId:term,settings:classMarkSettings,expectedStudentIds:classMarkRoster.map(s=>s.id),drafts:collectClassMarkEntries()});
+   const proposal=prepareConfiguredClassPublication({actor,schoolId,classId,subjectId,examId:term,settings:classMarkSettings,expectedStudentIds,drafts});
    $('draftCheckResult').textContent+=' Read-only publication review: '+proposal.rosterCount+' students; '+proposal.reviewBatches.length+' review groups. No data saved.';
   }
   status(result.complete?'Draft checked. This does not save or publish marks.':'Draft incomplete. No marks saved.');
