@@ -13,6 +13,9 @@ export async function prepareVerifiedStudentSave({auth,schoolId,rows,verifiedPre
  if(auth?.currentUser?.uid!==context.uid)throw new Error('Authentication changed before import');
  if(!isVerifiedCloudPreview(verifiedPreview,rows))throw new Error('Excel rows changed after verification');
  const records=getReadyV46IemisRows(verifiedPreview.preview,{confirmed:true}).map(record=>Object.freeze({...record}));
+ if(records.length>400)throw new Error('Import requires smaller chunks (maximum 400 students per reviewed save)');
+ if(records.length===0)throw new Error('No new students available to import');
+ if(auth?.currentUser?.uid!==context.uid||!isVerifiedCloudPreview(verifiedPreview,rows))throw new Error('Import verification expired');
  return Object.freeze({schoolId,uid:context.uid,path:context.path,records:Object.freeze(records),count:records.length,
   requiresTransactionalDuplicateRecheck:true});
 }
