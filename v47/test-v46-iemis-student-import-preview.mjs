@@ -40,4 +40,15 @@ assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[{'Student Name':'
 const nepali=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'00991','Student Name':'सीता तामाङ','Class':'६'}]});
 assert.equal(nepali.ready,1);
 assert.equal(filterV46IemisStudentPreview(nepali,{search:'तामाङ'}).length,1);
+const invalidNames=['A','X'.repeat(161)];
+for(const name of invalidNames){
+ const preview=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'90901','Student Name':name,'Class':'6'}]});
+ assert.equal(preview.ready,0);
+ assert.match(preview.records[0].errors.join(' '),/Student name must be/);
+}
+for(const [field,value] of [['Student IEMIS Id','9'.repeat(129)],['Admission Number','A'.repeat(129)],['Father Name','P'.repeat(501)]]){
+ const preview=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'90001','Student Name':'Valid Student','Class':'6',[field]:value}]});
+ assert.equal(preview.ready,0);
+ assert.match(preview.records[0].errors.join(' '),/exceeds/);
+}
 console.log('PASS: V46 26-column IEMIS preview, leading zeros, duplicate and cross-school rejection');
