@@ -58,6 +58,18 @@ try {
   await assertFails(getDoc(schoolDoc('admin-b','school-a','students','student-1')));
   await assertSucceeds(getDoc(schoolDoc('teacher-a','school-a','students','student-1')));
   await assertSucceeds(getDoc(schoolDoc('viewer-a','school-a','students','student-1')));
+  // V46/IEMIS import schema: only authorized school admins may create extended records.
+  const imported={schoolId:'school-a',name:'Imported Student',class:'ECD',
+    studentIemisId:'0000123',admissionNo:'ADM-123',fatherName:'Parent',
+    permanentAddress:'Kathmandu',sourceYear:'2083'};
+  await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','students','import-schema-1'),imported));
+  await assertFails(setDoc(schoolDoc('viewer-a','school-a','students','import-schema-viewer'),imported));
+  await assertFails(setDoc(schoolDoc('teacher-a','school-a','students','import-schema-teacher'),imported));
+  await assertFails(setDoc(schoolDoc('admin-b','school-a','students','import-schema-cross'),imported));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','students','import-schema-invalid'),{...imported,unknownField:'no'}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','students','import-schema-invalid-type'),{...imported,admissionNo:42}));
+  await assertFails(setDoc(schoolDoc('admin-a','school-a','students','import-schema-invalid-scope'),{...imported,schoolId:'school-b'}));
+  await assertFails(deleteDoc(schoolDoc('admin-a','school-a','students','import-schema-1')));
   await assertFails(setDoc(schoolDoc('viewer-a','school-a','students','student-2'),valid));
   await assertFails(setDoc(schoolDoc('teacher-a','school-a','students','student-2'),valid));
   await assertSucceeds(setDoc(schoolDoc('admin-a','school-a','students','student-2'),valid));
