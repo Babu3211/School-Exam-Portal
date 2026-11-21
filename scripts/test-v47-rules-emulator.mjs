@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import {initializeTestEnvironment,assertFails,assertSucceeds as firebaseAssertSucceeds} from '@firebase/rules-unit-testing';
+import {initializeTestEnvironment,assertFails as firebaseAssertFails,assertSucceeds as firebaseAssertSucceeds} from '@firebase/rules-unit-testing';
+async function assertFails(operation){const callsite=new Error().stack?.split('\n')[2]?.trim()??'unknown';try{return await firebaseAssertFails(operation)}catch(error){console.error('Unexpected Firestore ALLOW at '+callsite);throw error}}
 async function assertSucceeds(operation){const callsite=new Error().stack?.split('\n')[2]?.trim()??'unknown';try{return await firebaseAssertSucceeds(operation)}catch(error){console.error('Unexpected Firestore permission failure at '+callsite);throw error}}
 
 import {readFileSync} from 'node:fs';
