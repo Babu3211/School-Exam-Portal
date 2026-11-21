@@ -54,13 +54,14 @@ $('loadClassMarks').onclick=async()=>{
   if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId||actor?.schoolId!==selectedSchoolId)throw new Error('Authentication or school changed during roster load');
   // Display alphabetically without changing the authoritative roster IDs used for completeness checks.
   classMarkSettings=settings;
-  const header=$('classMarkHeader');header.replaceChildren();for(const label of ['Student',...settings.components.map(c=>c.name+' / '+c.fullMarks)]){const th=document.createElement('th');th.textContent=label;header.append(th)}
+  const header=$('classMarkHeader');header.replaceChildren();for(const label of ['Student','Absent',...settings.components.map(c=>c.name+' / '+c.fullMarks)]){const th=document.createElement('th');th.textContent=label;header.append(th)}
   classMarkRoster=[...roster.students].sort((a,b)=>String(a.name??a.id).localeCompare(String(b.name??b.id),'en',{sensitivity:'base',numeric:true})||a.id.localeCompare(b.id));
   classMarkContext={classId,term,subjectId};
   const body=$('classMarkRows'),fragment=document.createDocumentFragment();
   for(const student of classMarkRoster){
    const row=document.createElement('tr');row.dataset.studentId=student.id;
    const name=document.createElement('td');name.textContent=String(student.name??student.id);row.append(name);
+   const absenceCell=document.createElement('td'),absence=document.createElement('input');absence.type='checkbox';absence.dataset.absent='true';absence.setAttribute('aria-label','Absent '+student.id);absenceCell.append(absence);row.append(absenceCell);
    for(const component of settings.components){
     const td=document.createElement('td'),input=document.createElement('input');
     input.type='number';input.min='0';input.max=String(component.fullMarks);input.step='any';input.dataset.field=component.key;
@@ -75,7 +76,8 @@ $('loadClassMarks').onclick=async()=>{
 };
 // Any edit invalidates the previously displayed draft inspection.
 $('classMarkRows').addEventListener('input',event=>{
- if(!event.target?.matches?.('input[data-field]'))return;
+ if(!event.target?.matches?.('input[data-field],input[data-absent]'))return;
+ if(event.target.matches('input[data-absent]')){const row=event.target.closest('tr');for(const input of row.querySelectorAll('input[data-field]')){input.value='';input.disabled=event.target.checked}}
  $('draftCheckResult').textContent='Draft changed. Inspect again before saving.';
 });
 function collectClassMarkEntries(){
@@ -87,7 +89,8 @@ function collectClassMarkEntries(){
   const row=seen.get(student.id),values={};
   for(const component of classMarkSettings.components){const inputs=[...row.querySelectorAll('input[data-field]')].filter(input=>input.dataset.field===component.key);if(inputs.length!==1)throw new Error('Component fields changed; reload');values[component.key]=inputs[0].value}
   if(row.querySelectorAll('input[data-field]').length!==classMarkSettings.components.length)throw new Error('Unexpected mark component field');
-  return {studentId:student.id,values};
+  const absentInputs=row.querySelectorAll('input[data-absent]');if(absentInputs.length!==1)throw new Error('Absence field changed; reload');
+  return {studentId:student.id,isAbsent:absentInputs[0].checked,values:absentInputs[0].checked?{}:values};
  });
 }
 $('inspectClassMarks').onclick=async()=>{
