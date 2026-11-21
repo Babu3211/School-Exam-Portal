@@ -58,7 +58,7 @@ await ok('15 school listing retains IEMIS document ID',async()=>{const result=aw
 await ok('15b reject missing Firebase list SDK',async()=>{await assert.rejects(listSchools({db,api:{collection:api.collection},actor:admin}))});
 await ok('15c reject invalid page size',async()=>{await assert.rejects(listSchools({db,api,actor:admin,pageSize:0}))});
 await ok('16 reject oversized page',async()=>{await assert.rejects(listSchools({db,api,actor:admin,pageSize:1000000}))});
-await ok('17 paginate with cursor without duplicates',async()=>{state.schools.set('23456',{...school,id:'23456',iemisCode:'23456'});const first=await listSchools({db,api,actor:admin,pageSize:1});assert.equal(first.hasMore,true);const second=await listSchools({db,api,actor:admin,pageSize:1,cursor:first.cursor});assert.equal(second.schools[0].id,'23456')});
+await ok('17 paginate with cursor without duplicates',async()=>{state.schools.set('23456',{...school,id:'23456',iemisCode:'23456',active:false});const first=await listSchools({db,api,actor:admin,pageSize:1});assert.equal(first.hasMore,true);const second=await listSchools({db,api,actor:admin,pageSize:1,cursor:first.cursor});assert.equal(second.schools[0].id,'23456')});
 
 // Additional negative-path and state-integrity cases.
 await ok('18 reject teacher school registration',async()=>{await assert.rejects(onboardSchool({db,api,actor:{role:'teacher',active:true,schoolId:'12345'},form:school,adminUid:'admin003'}))});
