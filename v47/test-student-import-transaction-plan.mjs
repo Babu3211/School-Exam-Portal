@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {planStudentImportTransaction} from './student-import-transaction-plan.mjs';
+const schoolId='300160003';
+const prepared={schoolId,uid:'admin-1',count:1,requiresTransactionalDuplicateRecheck:true,records:[{'IEMIS Code':schoolId,'Student IEMIS Id':'00002','Admission Number':'A-2','Student Name':'Student B','Class':'6'}]};
+const existingStudents=[{schoolId,studentIemisNo:'00001',admissionNo:'A-1'}];
+const plan=planStudentImportTransaction({prepared,existingStudents});
+assert.equal(plan.count,1);assert.equal(plan.createOnly,true);assert.equal(plan.transactionRequired,true);
+assert.deepEqual(plan.path,['schools',schoolId,'students']);
+assert.equal(plan.records[0].schoolId,schoolId);
+assert.equal(prepared.records[0].schoolId,undefined);
+assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{schoolId,studentIemisNo:'00002'}]}),/Duplicate Student IEMIS/);
+assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{schoolId,admissionNo:'A-2'}]}),/Duplicate Admission/);
+assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{schoolId:'999999999'}]}),/Cross-school/);
+assert.throws(()=>planStudentImportTransaction({prepared:{...prepared,requiresTransactionalDuplicateRecheck:false},existingStudents}),/Verified transaction-ready/);
+assert.throws(()=>planStudentImportTransaction({prepared:{...prepared,records:[...prepared.records,...prepared.records],count:2},existingStudents:[]}),/Duplicate Student IEMIS/);
+console.log('PASS: create-only student import plan checks school scope, fresh duplicates, and immutable source rows');
