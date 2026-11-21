@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const source=readFileSync(new URL('./records-console.mjs',import.meta.url),'utf8');
+assert.match(source,/function clear\(\)\{epoch\+\+;loadGeneration\+\+;/);
+assert.match(source,/\$\('refresh'\)\.onclick=\(\)=>\{loadGeneration\+\+;busy=false;/);
+assert.match(source,/\$\('recordType'\)\.onchange=\(\)=>\{loadGeneration\+\+;busy=false;/);
+assert.doesNotMatch(source,/\$\('refresh'\)\.onclick=\(\)=>\{epoch\+\+/);
+assert.doesNotMatch(source,/\$\('recordType'\)\.onchange=\(\)=>\{epoch\+\+/);
+assert.match(source,/generation!==loadGeneration/);
+assert.match(source,/loginEpoch!==epoch/);
+console.log('V47 records refresh preserves login epoch and rejects stale page responses');
