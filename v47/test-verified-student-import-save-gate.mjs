@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {previewAgainstSchoolStudents} from './verified-student-import-preview.mjs';
-import {prepareVerifiedStudentSave} from './verified-student-import-save-gate.mjs';
+import {prepareVerifiedStudentSave,isVerifiedStudentSavePlan} from './verified-student-import-save-gate.mjs';
 const schoolId='300160003',uid='admin-1';
 const auth={currentUser:{uid}};
 const rows=[{'IEMIS Code':schoolId,'Student IEMIS Id':'00001','Student Name':'A','Class':'6'},
@@ -17,6 +17,13 @@ const otherReadDocument=async path=>path==='schools/'+schoolId?{id:schoolId,acti
  path==='schools/'+schoolId+'/members/admin-2'?{uid:'admin-2',schoolId,role:'school_admin',active:true}:null;
 await assert.rejects(prepareVerifiedStudentSave({...args,auth:otherAuth,readDocument:otherReadDocument,confirmed:true}),/another account/);
 const prepared=await prepareVerifiedStudentSave({...args,confirmed:true});
+assert.equal(isVerifiedStudentSavePlan(prepared),true);
+assert.equal(isVerifiedStudentSavePlan({...prepared}),false);
+const planNow=Date.now;
+try {
+ Date.now=()=>planNow()+5*60*1000+1;
+ assert.equal(isVerifiedStudentSavePlan(prepared),false);
+} finally {Date.now=planNow}
 assert.equal(prepared.count,1);
 assert.equal(prepared.records[0]['Student IEMIS Id'],'00002');
 assert.equal(prepared.requiresTransactionalDuplicateRecheck,true);
