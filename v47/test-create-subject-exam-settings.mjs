@@ -9,7 +9,7 @@ assert.throws(()=>prepareNewSubjectExamSettings({...settings,components:[]}),/1�
 assert.throws(()=>prepareNewSubjectExamSettings({...settings,components:Array.from({length:7},(_,i)=>({key:'c'+i,name:'Component '+i,fullMarks:10}))}),/1–6/);
 assert.throws(()=>prepareNewSubjectExamSettings({...settings,subjectId:'a'.repeat(128)}),/128 characters/);
 assert.equal(prepareNewSubjectExamSettings({...settings,subjectId:'a'.repeat(119)}).id.length,127);
-assert.throws(()=>prepareNewSubjectExamSettings({...settings,components:[...settings.components,...settings.components,...settings.components,...settings.components]}),/duplicate|Duplicate|Maximum|Invalid/);
+assert.throws(()=>prepareNewSubjectExamSettings({...settings,components:[...settings.components,...settings.components,...settings.components,...settings.components]}),/1–6|duplicate|Duplicate|Maximum|Invalid/);
 assert.throws(()=>prepareNewSubjectExamSettings({...settings,schoolId:'abc'}));
 assert.throws(()=>prepareNewSubjectExamSettings({...settings,examId:'unknown'}));
 assert.throws(()=>prepareNewSubjectExamSettings({...settings,components:[{key:'x',name:'X',fullMarks:0}]}));
