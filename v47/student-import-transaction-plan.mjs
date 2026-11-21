@@ -5,7 +5,15 @@
 import {assertIemisSchoolId} from './iemis-school-identity.mjs';
 import {isVerifiedStudentSavePlan} from './verified-student-import-save-gate.mjs';
 
-const value=(record,key)=>String(record?.[key]??'').normalize('NFC').trim();
+const identity=x=>{
+ if(x===null||x===undefined)return '';
+ if(typeof x==='object'||typeof x==='function'||typeof x==='symbol'||typeof x==='bigint')
+  throw new TypeError('Invalid existing student identity type');
+ if(typeof x==='number'&&(!Number.isFinite(x)||!Number.isSafeInteger(x)))
+  throw new TypeError('Invalid existing student identity number');
+ return String(x).normalize('NFC').trim();
+};
+const value=(record,key)=>identity(record?.[key]);
 const issuedTransactionPlans=new WeakMap();
 const TRANSACTION_PLAN_MAX_AGE_MS=5*60*1000;
 export const isVerifiedStudentTransactionPlan=value=>{
@@ -25,8 +33,8 @@ export function planStudentImportTransaction({prepared,existingStudents}={}){
  for(const record of existingStudents){
   if(!record||typeof record!=='object'||Array.isArray(record))throw new TypeError('Invalid existing student');
   if(record.schoolId!==undefined&&record.schoolId!==schoolId)throw new Error('Cross-school student data rejected');
-  for(const id of [record.studentIemisId,record.studentIEMISId,record.iemisId,record.studentIemisNo,record.iemisStudentNo].map(x=>String(x??'').normalize('NFC').trim()).filter(Boolean))ids.add(id);
-  for(const admission of [record.admissionNumber,record.admissionNo].map(x=>String(x??'').normalize('NFC').trim()).filter(Boolean))admissions.add(admission);
+  for(const id of [record.studentIemisId,record.studentIEMISId,record.iemisId,record.studentIemisNo,record.iemisStudentNo].map(x=>identity(x)).filter(Boolean))ids.add(id);
+  for(const admission of [record.admissionNumber,record.admissionNo].map(x=>identity(x)).filter(Boolean))admissions.add(admission);
  }
  const newIds=new Set(),newAdmissions=new Set();
  const records=prepared.records.map(record=>{
