@@ -2,6 +2,7 @@ import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {inspectClassMarkDraft} from './class-mark-draft-inspector.mjs';
+import {iemisEntrySchema} from './iemis-entry.js';
 const $=id=>document.getElementById(id),status=msg=>{$('message').textContent=msg};
 let auth,authSdk,api,db,actor,schoolId,epoch=0,busy=false,studentsLoaded=false,subjectsLoaded=false,loadedStudentClass=null,loadedSubjectClass=null;
 let classMarkRoster=[],classMarkContext=null,rosterRequest=0,optionRequest=0;
@@ -99,3 +100,15 @@ $('inspectClassMarks').onclick=()=>{
  }catch(e){$('draftCheckResult').textContent=e.message;status('अंक जाँच असफल भयो। कुनै अंक Save गरिएको छैन।')}
 };
 $('saveClassMarks').onclick=()=>status('Save/Publish disabled: secure complete-class workflow is not implemented. No marks saved.');
+
+// Read-only V46 IEMIS component reference; no mark writes.
+$('inspectIemisSchema').onclick=()=>{
+ const tbody=$('iemisSchemaRows');tbody.replaceChildren();
+ if(!actor||!auth?.currentUser||auth.currentUser.uid!==actor.uid){$('iemisSchemaStatus').textContent='Sign in to the verified school first.';return;}
+ try{
+  const classNo=Number($('schoolClass').value);
+  const schema=iemisEntrySchema(classNo,$('iemisTerm').value,$('iemisSubject').value.trim());
+  for(const component of schema){const tr=document.createElement('tr');for(const value of [component.label,component.readonly?'Calculated':component.max??'Based on count']){const td=document.createElement('td');td.textContent=String(value);tr.append(td)}tbody.append(tr)}
+  $('iemisSchemaStatus').textContent='V46 IEMIS component reference only; Save/Publish disabled.';
+ }catch(error){$('iemisSchemaStatus').textContent=error.message}
+};
