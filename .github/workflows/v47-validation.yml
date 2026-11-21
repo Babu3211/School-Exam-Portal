@@ -24,6 +24,7 @@ jobs:
           npm run test:v47:tenant-firestore
           npm run test:v47:v46-readonly-bridge
           npm run test:v47:v46-report-snapshot
+          node v47/test-report-preview-wiring.mjs
           npm run test:v47:v46-tenant-rewrite
           npm run test:v47:v46-excel-parity
           npm run test:v47:v46-student-schema
