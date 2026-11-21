@@ -51,6 +51,7 @@ jobs:
           node v47/audit-v46-feature-parity.mjs
           node v47/test-audit-v46-feature-parity.mjs
           node v47/test-school-settings-ui.mjs
+          node v47/test-records-auth-switch.mjs
           node v47/test-class-publication-ui-wiring.mjs
           node v47/test-class-inspection-postawait-guard.mjs
           node v47/test-class-marks-same-snapshot.mjs
