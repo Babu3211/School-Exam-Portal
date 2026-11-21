@@ -5,11 +5,11 @@
 import {previewV46IemisStudentImport,filterV46IemisStudentPreview} from './v46-iemis-student-import-preview.mjs';
 import {UI_LABELS,NEPALI_MESSAGES} from './smss-ui-language-policy.mjs';
 import {englishClassLabel} from './smss-english-ui-adapter.mjs';
-import {previewAgainstSchoolStudents} from './verified-student-import-preview.mjs';
+import {previewAgainstSchoolStudents,isVerifiedCloudPreview} from './verified-student-import-preview.mjs';
 export function mountV47IemisStudentPreview({container,rows,schoolId,existingIemisIds=[],existingAdmissionNumbers=[],cloudChecked=false,verifiedPreview=null}){
  if(!container||typeof container.replaceChildren!=='function')throw new TypeError('DOM container required');
  if(cloudChecked&&!verifiedPreview)throw new Error('Verified cloud preview required; do not set cloudChecked manually');
- if(verifiedPreview&&(verifiedPreview.cloudChecked!==true||verifiedPreview.schoolId!==schoolId||!verifiedPreview.preview))throw new Error('Invalid verified preview');
+ if(verifiedPreview&&(!isVerifiedCloudPreview(verifiedPreview)||verifiedPreview.cloudChecked!==true||verifiedPreview.schoolId!==schoolId||!verifiedPreview.preview))throw new Error('Invalid verified preview');
  const preview=verifiedPreview?verifiedPreview.preview:previewV46IemisStudentImport({rows,schoolId,existingIemisIds,existingAdmissionNumbers});
  const doc=container.ownerDocument;
  const root=doc.createElement('section');root.setAttribute('aria-label','IEMIS Student Import Preview');
