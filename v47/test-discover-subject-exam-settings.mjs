@@ -3,13 +3,13 @@ import {discoverVerifiedSubjectExamSettings} from './discover-subject-exam-setti
 const base={schoolId:'12345',subjectId:'computer',examId:'final',classId:'9'};
 const record={id:'setting1',...base,active:true,components:[{key:'practical',name:'Practical',fullMarks:67},{key:'theory',name:'Theory',fullMarks:33}]};
 let checks=0;
-const api={collection:(_db,...path)=>path,getDocs:async path=>{assert.deepEqual(path,['schools','12345','mark_settings']);return {docs:[{id:'setting1',data:()=>record}]}}};
+const api={collection:(_db,...path)=>path,where:(field,operator,value)=>({field,operator,value}),limit:n=>({limit:n}),query:(path,...constraints)=>({path,constraints}),getDocs:async q=>{assert.deepEqual(q.path,['schools','12345','mark_settings']);assert.deepEqual(q.constraints,[{field:'subjectId',operator:'==',value:'computer'},{field:'examId',operator:'==',value:'final'},{field:'classId',operator:'==',value:'9'},{field:'active',operator:'==',value:true},{limit:2}]);return {docs:[{id:'setting1',data:()=>record}]}}};
 const args={db:{},api,...base,revalidate:async()=>{checks++}};
 await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,api:{getDocs:api.getDocs}}),/discovery required/);
 await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,api:{collection:api.collection}}),/discovery required/);
 const result=await discoverVerifiedSubjectExamSettings(args);
 assert.equal(result.settingsId,'setting1');assert.deepEqual(result.components.map(c=>c.fullMarks),[67,33]);assert.equal(checks,2);
-await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,subjectId:'math'}),/No active/);
+await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,subjectId:'math',api:{...api,getDocs:async()=>({docs:[]})}}),/No active/);
 await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,api:{...api,getDocs:async()=>({docs:[{id:'setting1',data:()=>record},{id:'setting2',data:()=>({...record,id:'setting2'})}]})}}),/Multiple active/);
 await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,api:{...api,getDocs:async()=>({docs:[{id:'wrong',data:()=>record}]})}}),/identity/);
 let count=0;await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,revalidate:async()=>{if(++count===2)throw new Error('Session changed')}}),/Session changed/);
