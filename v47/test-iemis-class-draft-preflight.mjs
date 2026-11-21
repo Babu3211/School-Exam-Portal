@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {inspectIemisClassDraft} from './iemis-class-draft-preflight.mjs';
+const args={classNo:9,term:'first',subject:'Computer Science',expectedStudentIds:['s1','s2']};
+const values={participation:'4',practical:'36',term:'10'};
+const full=inspectIemisClassDraft({...args,drafts:[{studentId:'s1',values},{studentId:'s2',values}]});
+assert.equal(full.complete,true);assert.equal(full.rosterCount,2);assert.equal(full.ready[0].totalFullMarks,50);assert.equal(full.writeAuthorized,false);
+const partial=inspectIemisClassDraft({...args,drafts:[{studentId:'s1',values}]});
+assert.deepEqual(partial.missing,['s2']);assert.equal(partial.complete,false);
+const invalid=inspectIemisClassDraft({...args,drafts:[{studentId:'s1',values:{...values,practical:'37'}},{studentId:'s2',values}]});
+assert.equal(invalid.invalid.length,1);assert.equal(invalid.complete,false);
+assert.throws(()=>inspectIemisClassDraft({...args,drafts:[{studentId:'s1',values},{studentId:'s1',values}]}),/Duplicate/);
+assert.throws(()=>inspectIemisClassDraft({...args,drafts:[{studentId:'other',values}]}),/out-of-roster/);
+const primary=inspectIemisClassDraft({classNo:1,term:'first',subject:'Nepali',expectedStudentIds:['s1'],drafts:[{studentId:'s1',values:{count:'10',obtained:'32'}}]});
+assert.equal(primary.complete,true);assert.equal(primary.ready[0].totalFullMarks,40);
+assert.throws(()=>inspectIemisClassDraft({...args,expectedStudentIds:['s1','s1'],drafts:[]}),/duplicate roster/);
+assert.throws(()=>inspectIemisClassDraft({...args,classNo:11,drafts:[]}),/1–10/);
+console.log('V47 full-class IEMIS component preflight tests passed');
