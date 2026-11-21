@@ -14,6 +14,8 @@ const value=(r,k)=>{
  if(cell===null||cell===undefined)return '';
  if(typeof cell==='object'||typeof cell==='function'||typeof cell==='symbol'||typeof cell==='bigint')
   throw new TypeError('Excel cell must contain plain text, a finite number or a boolean: '+k);
+ if(typeof cell==='number'&&Number.isInteger(cell)&&!Number.isSafeInteger(cell))
+  throw new TypeError('Excel cell contains an unsafe integer; format the ID as text: '+k);
  if(typeof cell==='number'&&!Number.isFinite(cell))
   throw new TypeError('Excel cell contains an invalid number: '+k);
  return String(cell).normalize('NFC').trim();
