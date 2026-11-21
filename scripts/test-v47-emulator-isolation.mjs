@@ -249,6 +249,9 @@ try {
   await assertFails(setDoc(doc(db('admin-a'),'schools','school-new'),{id:'school-new',name:'New School',active:false}));
   await assertFails(setDoc(doc(db('super-a'),'schools','300160004'),{id:'300160004',iemisCode:'300160004',name:'New School',active:true}));
   await assertFails(setDoc(doc(db('super-a'),'schools','300160005'),{id:'300160005',iemisCode:'300160006',name:'New School',active:false}));
+  await assertFails(setDoc(doc(db('super-a'),'schools','school-new'),{id:'school-new',iemisCode:'school-new',name:'New School',active:false}));
+  await assertFails(setDoc(doc(db('super-a'),'schools','300160007'),{id:'300160007',name:'New School',active:false}));
+  await assertFails(setDoc(doc(db('super-a'),'schools','300160008'),{id:'300160008',iemisCode:'300160008',name:'New School',active:false,unknown:'x'}));
   await assertSucceeds(setDoc(doc(db('super-a'),'schools','300160003'),{id:'300160003',iemisCode:'300160003',name:'New School',active:false}));
   await assertFails(deleteDoc(doc(db('super-a'),'schools','300160003')));
   await assertFails(updateDoc(doc(db('admin-a'),'schools','300160001'),{active:false}));
