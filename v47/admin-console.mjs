@@ -3,7 +3,8 @@ import {listSchools} from './school-list-service.mjs';
 import {setSchoolActive} from './school-status-service.mjs';
 const $=id=>document.getElementById(id);let auth,db,api,actor=null,cursor=null,mutating=false,sessionEpoch=0,refreshEpoch=0;
 const status=message=>{$('message').textContent=message};
-const showError=error=>status(error?.code==='permission-denied'?'अनुमति छैन। Super Admin अधिकार जाँच्नुहोस्।':error?.code==='auth/wrong-password'||error?.code==='auth/invalid-credential'?'Email वा Password मिलेन।':error?.code==='unavailable'?'सेवा अहिले उपलब्ध छैन। पुनः प्रयास गर्नुहोस्।':error?.message??'अज्ञात त्रुटि भयो।');
+const cleanAuthError=error=>{const code=String(error?.code??'');if(code.startsWith('auth/'))return 'प्रमाणीकरण असफल भयो। Email, Password वा अनुमति जाँच्नुहोस्।';if(code==='permission-denied'||code==='firestore/permission-denied')return 'अनुमति छैन। Super Admin अधिकार जाँच्नुहोस्।';if(code==='unavailable'||code==='firestore/unavailable')return 'सेवा अहिले उपलब्ध छैन। पुनः प्रयास गर्नुहोस्।';return 'अनुरोध पूरा भएन। विवरण जाँचेर पुनः प्रयास गर्नुहोस्।';};
+const showError=error=>status(cleanAuthError(error));
 function clearAdmin(){sessionEpoch++;refreshEpoch++;actor=null;cursor=null;$('adminArea').hidden=true;$('logout').disabled=true;$('identity').textContent='साइन इन भएको छैन';$('schools').replaceChildren();$('next').disabled=true;$('next').onclick=null;}
 const V47_FIREBASE_CONFIG=Object.freeze({apiKey:"AIzaSyCqwHormyNH4Z5F8V0xJpW9rJcJeCtM0cQ",authDomain:"smss-exam-portal-v47.firebaseapp.com",projectId:"smss-exam-portal-v47",storageBucket:"smss-exam-portal-v47.firebasestorage.app",messagingSenderId:"570404092283",appId:"1:570404092283:web:b51a0d654bb9aaa82325de"});
 const firebaseBase='https://www.gstatic.com/firebasejs/11.10.0/';
