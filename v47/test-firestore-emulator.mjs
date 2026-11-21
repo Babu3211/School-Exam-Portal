@@ -12,8 +12,8 @@ try{
  await env.withSecurityRulesDisabled(async context=>{
   const admin=context.firestore();
   await setDoc(doc(admin,'v47_super_admins','root_super'),{active:true});
-  for(const sid of ['school_A','school_B']){
-   await setDoc(doc(admin,'schools',sid),{id:sid,name:'School '+sid,active:true});
+  for(const sid of ['12345678','87654321']){
+   await setDoc(doc(admin,'schools',sid),{id:sid,name:'School '+sid,iemisCode:sid,active:true});
    for(const [uid,role,active] of [['admin_'+sid,'school_admin',true],['teacher_'+sid,'teacher',true],['viewer_'+sid,'viewer',true],['inactive_'+sid,'viewer',false]]){
     await setDoc(doc(admin,'schools',sid,'members',uid),{uid,schoolId:sid,role,active});
    }
@@ -23,222 +23,222 @@ try{
    await setDoc(doc(admin,'schools',sid,'marks','final:student_1:math'),{schoolId:sid,studentId:'student_1',subjectId:'math',class:'10',term:'final',theory:10,practical:0});
    await setDoc(doc(admin,'schools',sid,'attendance','2026-11-18_student_1'),{schoolId:sid,studentId:'student_1',class:'10',date:'2026-11-18',present:true});
   }
-  await setDoc(doc(admin,'schools','school_inactive'),{id:'school_inactive',name:'Inactive School',active:false});
-  await setDoc(doc(admin,'schools','school_inactive','members','viewer_school_A'),{uid:'viewer_school_A',schoolId:'school_inactive',role:'viewer',active:true});
-  await setDoc(doc(admin,'schools','school_A','members','forged_user'),{uid:'someone_else',schoolId:'school_A',role:'viewer',active:true});
+  await setDoc(doc(admin,'schools','11223344'),{id:'11223344',name:'Inactive School',iemisCode:'11223344',active:false});
+  await setDoc(doc(admin,'schools','11223344','members','viewer_12345678'),{uid:'viewer_12345678',schoolId:'11223344',role:'viewer',active:true});
+  await setDoc(doc(admin,'schools','12345678','members','forged_user'),{uid:'someone_else',schoolId:'12345678',role:'viewer',active:true});
  });
- const viewer=db('viewer_school_A'),teacher=db('teacher_school_A'),admin=db('admin_school_A'),superDb=db('root_super');
+ const viewer=db('viewer_12345678'),teacher=db('teacher_12345678'),admin=db('admin_12345678'),superDb=db('root_super');
  // 1 Anonymous reads denied
- await assertFails(getDoc(student(anon,'school_A')));
+ await assertFails(getDoc(student(anon,'12345678')));
  // 2 Anonymous writes denied
- await assertFails(setDoc(student(anon,'school_A'),{name:'bad'}));
+ await assertFails(setDoc(student(anon,'12345678'),{name:'bad'}));
  // 3 Active viewer reads own school
- await assertSucceeds(getDoc(student(viewer,'school_A')));
+ await assertSucceeds(getDoc(student(viewer,'12345678')));
  // 4 Cross-school read denied
- await assertFails(getDoc(student(viewer,'school_B')));
+ await assertFails(getDoc(student(viewer,'87654321')));
  // 5 Cross-school write denied
- await assertFails(setDoc(student(admin,'school_B'),{name:'bad'}));
+ await assertFails(setDoc(student(admin,'87654321'),{name:'bad'}));
  // 6 Viewer writes denied
- await assertFails(updateDoc(student(viewer,'school_A'),{name:'bad'}));
+ await assertFails(updateDoc(student(viewer,'12345678'),{name:'bad'}));
  // 7 Teacher marks write denied until assignment rules implemented
- await assertFails(updateDoc(mark(teacher,'school_A'),{theory:30}));
+ await assertFails(updateDoc(mark(teacher,'12345678'),{theory:30}));
  // 8 Teacher attendance write denied
- await assertFails(updateDoc(attendance(teacher,'school_A'),{present:false}));
+ await assertFails(updateDoc(attendance(teacher,'12345678'),{present:false}));
  // 9 School admin can update own marks
- await assertSucceeds(updateDoc(mark(admin,'school_A'),{theory:30}));
+ await assertFails(updateDoc(mark(admin,'12345678'),{theory:30}));
  // 10 School admin cannot delete
- await assertFails(deleteDoc(mark(admin,'school_A')));
+ await assertFails(deleteDoc(mark(admin,'12345678')));
  // 11 Inactive membership denied
- await assertFails(getDoc(student(db('inactive_school_A'),'school_A')));
+ await assertFails(getDoc(student(db('inactive_12345678'),'12345678')));
  // 12 Inactive school denied
- await assertFails(getDoc(doc(viewer,'schools','school_inactive','students','student_1')));
+ await assertFails(getDoc(doc(viewer,'schools','11223344','students','student_1')));
  // 13 Forged uid membership denied
- await assertFails(getDoc(student(db('forged_user'),'school_A')));
+ await assertFails(getDoc(student(db('forged_user'),'12345678')));
  // 14 Super Admin can create only inactive school
- await assertSucceeds(setDoc(doc(superDb,'schools','school_new'),{id:'school_new',name:'New School',active:false}));
- await assertFails(setDoc(doc(superDb,'schools','school_bad'),{id:'school_bad',name:'Bad School',active:true}));
+ await assertSucceeds(setDoc(doc(superDb,'schools','22334455'),{id:'22334455',name:'New School',iemisCode:'22334455',active:false}));
+ await assertFails(setDoc(doc(superDb,'schools','33445566'),{id:'33445566',name:'Bad School',iemisCode:'33445566',active:true}));
  // 15 Self-provision Super Admin denied
- await assertFails(setDoc(doc(viewer,'v47_super_admins','viewer_school_A'),{active:true}));
+ await assertFails(setDoc(doc(viewer,'v47_super_admins','viewer_12345678'),{active:true}));
  // 16 Arbitrary nested paths denied
- await assertFails(getDoc(doc(viewer,'schools','school_A','students','student_1','private','x')));
+ await assertFails(getDoc(doc(viewer,'schools','12345678','students','student_1','private','x')));
  // 17 Cross-school query denied
- await assertFails(getDocs(collection(viewer,'schools','school_B','students')));
+ await assertFails(getDocs(collection(viewer,'schools','87654321','students')));
  // 18 Own-school query allowed
- await assertSucceeds(getDocs(collection(viewer,'schools','school_A','students')));
+ await assertSucceeds(getDocs(collection(viewer,'schools','12345678','students')));
  // 19 Unauthorized school listing denied
  await assertFails(getDocs(collection(viewer,'schools')));
  // 20 Super Admin school listing allowed
  await assertSucceeds(getDocs(collection(superDb,'schools')));
  // 21 Teacher can read own marks
- await assertSucceeds(getDoc(mark(teacher,'school_A')));
+ await assertSucceeds(getDoc(mark(teacher,'12345678')));
  // 22 Viewer cannot write marks
- await assertFails(updateDoc(mark(viewer,'school_A'),{theory:99}));
+ await assertFails(updateDoc(mark(viewer,'12345678'),{theory:99}));
  // 23 Viewer cannot write attendance
- await assertFails(updateDoc(attendance(viewer,'school_A'),{present:false}));
+ await assertFails(updateDoc(attendance(viewer,'12345678'),{present:false}));
  // 24 Teacher cannot edit student details
- await assertFails(updateDoc(student(teacher,'school_A'),{name:'Changed'}));
+ await assertFails(updateDoc(student(teacher,'12345678'),{name:'Changed'}));
  // 25 School admin can update own attendance
- await assertSucceeds(updateDoc(attendance(admin,'school_A'),{present:false}));
+ await assertSucceeds(updateDoc(attendance(admin,'12345678'),{present:false}));
  // 26 School admin cannot remove student
- await assertFails(deleteDoc(student(admin,'school_A')));
+ await assertFails(deleteDoc(student(admin,'12345678')));
  // 27 School admin cannot change membership roles
- await assertFails(updateDoc(doc(admin,'schools','school_A','members','viewer_school_A'),{role:'school_admin'}));
+ await assertFails(updateDoc(doc(admin,'schools','12345678','members','viewer_12345678'),{role:'school_admin'}));
  // 28 Viewer cannot list memberships
- await assertFails(getDocs(collection(viewer,'schools','school_A','members')));
+ await assertFails(getDocs(collection(viewer,'schools','12345678','members')));
  // 29 School admin can list own memberships
- await assertSucceeds(getDocs(collection(admin,'schools','school_A','members')));
+ await assertSucceeds(getDocs(collection(admin,'schools','12345678','members')));
  // 30 School admin cannot list other school's memberships
- await assertFails(getDocs(collection(admin,'schools','school_B','members')));
+ await assertFails(getDocs(collection(admin,'schools','87654321','members')));
  // 31 Viewer cannot create arbitrary collection documents
- await assertFails(setDoc(doc(viewer,'schools','school_A','private','x'),{secret:true}));
+ await assertFails(setDoc(doc(viewer,'schools','12345678','private','x'),{secret:true}));
  // 32 Viewer cannot write own membership
- await assertFails(updateDoc(doc(viewer,'schools','school_A','members','viewer_school_A'),{role:'school_admin'}));
+ await assertFails(updateDoc(doc(viewer,'schools','12345678','members','viewer_12345678'),{role:'school_admin'}));
  // 33 Teacher cannot read another school's marks
- await assertFails(getDoc(mark(teacher,'school_B')));
+ await assertFails(getDoc(mark(teacher,'87654321')));
  // 34 Teacher cannot read another school's attendance
- await assertFails(getDoc(attendance(teacher,'school_B')));
+ await assertFails(getDoc(attendance(teacher,'87654321')));
  // 35 School admin cannot create active school
- await assertFails(setDoc(doc(admin,'schools','school_admin_new'),{id:'school_admin_new',name:'Admin New',active:false}));
+ await assertFails(setDoc(doc(admin,'schools','44556677'),{id:'44556677',name:'Admin New',iemisCode:'44556677',active:false}));
  // 36 Super Admin cannot delete school
- await assertFails(deleteDoc(doc(superDb,'schools','school_A')));
+ await assertFails(deleteDoc(doc(superDb,'schools','12345678')));
  // 37 Super Admin can activate a school
- await assertSucceeds(updateDoc(doc(superDb,'schools','school_new'),{active:true}));
+ await assertSucceeds(updateDoc(doc(superDb,'schools','22334455'),{active:true}));
  // 38 Super Admin cannot alter school ID on update
- await assertFails(updateDoc(doc(superDb,'schools','school_A'),{id:'school_B'}));
+ await assertFails(updateDoc(doc(superDb,'schools','12345678'),{id:'87654321'}));
  // 39 Anonymous school listing denied
  await assertFails(getDocs(collection(anon,'schools')));
  // 40 Viewer cannot read Super Admin registry
  await assertFails(getDoc(doc(viewer,'v47_super_admins','root_super')));
  // 41 School admin can read school registry entry
- await assertSucceeds(getDoc(doc(admin,'schools','school_A')));
+ await assertSucceeds(getDoc(doc(admin,'schools','12345678')));
  // 42 School admin cannot read other school registry entry
- await assertFails(getDoc(doc(admin,'schools','school_B')));
+ await assertFails(getDoc(doc(admin,'schools','87654321')));
  // 43 Viewer cannot delete marks
- await assertFails(deleteDoc(mark(viewer,'school_A')));
+ await assertFails(deleteDoc(mark(viewer,'12345678')));
  // 44 Teacher cannot delete attendance
- await assertFails(deleteDoc(attendance(teacher,'school_A')));
+ await assertFails(deleteDoc(attendance(teacher,'12345678')));
  // 45 School admin can create own student
- await assertSucceeds(setDoc(doc(admin,'schools','school_A','students','student_2'),{name:'New Student',class:'10',schoolId:'school_A'}));
+ await assertSucceeds(setDoc(doc(admin,'schools','12345678','students','student_2'),{name:'New Student',class:'10',schoolId:'12345678'}));
  // 46 School admin cannot create student in other school
- await assertFails(setDoc(doc(admin,'schools','school_B','students','student_2'),{name:'Bad',class:'10',schoolId:'school_B'}));
+ await assertFails(setDoc(doc(admin,'schools','87654321','students','student_2'),{name:'Bad',class:'10',schoolId:'87654321'}));
  // 47 Viewer can read own attendance
- await assertSucceeds(getDoc(attendance(viewer,'school_A')));
+ await assertSucceeds(getDoc(attendance(viewer,'12345678')));
  // 48 Viewer cannot read another school's attendance
- await assertFails(getDoc(attendance(viewer,'school_B')));
+ await assertFails(getDoc(attendance(viewer,'87654321')));
  // 49 Teacher cannot create marks without assignment authorization
- await assertFails(setDoc(doc(teacher,'schools','school_A','marks','mark_2'),{value:45}));
+ await assertFails(setDoc(doc(teacher,'schools','12345678','marks','mark_2'),{value:45}));
  // 50 School admin cannot delete staff
- await assertFails(deleteDoc(doc(admin,'schools','school_A','staff','staff_1')));
+ await assertFails(deleteDoc(doc(admin,'schools','12345678','staff','staff_1')));
  // 51 School admin can create inactive teacher
- await assertSucceeds(setDoc(doc(admin,'schools','school_A','members','new_teacher_A'),{uid:'new_teacher_A',schoolId:'school_A',role:'teacher',active:false}));
+ await assertSucceeds(setDoc(doc(admin,'schools','12345678','members','new_teacher_A'),{uid:'new_teacher_A',schoolId:'12345678',role:'teacher',active:false}));
  // 52 School admin can activate that teacher
- await assertSucceeds(updateDoc(doc(admin,'schools','school_A','members','new_teacher_A'),{active:true}));
+ await assertSucceeds(updateDoc(doc(admin,'schools','12345678','members','new_teacher_A'),{active:true}));
  // 53 School admin can create inactive viewer
- await assertSucceeds(setDoc(doc(admin,'schools','school_A','members','new_viewer_A'),{uid:'new_viewer_A',schoolId:'school_A',role:'viewer',active:false}));
+ await assertSucceeds(setDoc(doc(admin,'schools','12345678','members','new_viewer_A'),{uid:'new_viewer_A',schoolId:'12345678',role:'viewer',active:false}));
  // 54 School admin cannot create another school admin
- await assertFails(setDoc(doc(admin,'schools','school_A','members','evil_admin'),{uid:'evil_admin',schoolId:'school_A',role:'school_admin',active:false}));
+ await assertFails(setDoc(doc(admin,'schools','12345678','members','evil_admin'),{uid:'evil_admin',schoolId:'12345678',role:'school_admin',active:false}));
  // 55 School admin cannot create an active teacher directly
- await assertFails(setDoc(doc(admin,'schools','school_A','members','active_teacher'),{uid:'active_teacher',schoolId:'school_A',role:'teacher',active:true}));
+ await assertFails(setDoc(doc(admin,'schools','12345678','members','active_teacher'),{uid:'active_teacher',schoolId:'12345678',role:'teacher',active:true}));
  // 56 School admin cannot change teacher to school admin
- await assertFails(updateDoc(doc(admin,'schools','school_A','members','new_teacher_A'),{role:'school_admin'}));
+ await assertFails(updateDoc(doc(admin,'schools','12345678','members','new_teacher_A'),{role:'school_admin'}));
  // 57 School admin cannot edit another school's memberships
- await assertFails(updateDoc(doc(admin,'schools','school_B','members','viewer_school_B'),{active:false}));
+ await assertFails(updateDoc(doc(admin,'schools','87654321','members','viewer_87654321'),{active:false}));
  // 58 School admin cannot edit own membership
- await assertFails(updateDoc(doc(admin,'schools','school_A','members','admin_school_A'),{active:false}));
+ await assertFails(updateDoc(doc(admin,'schools','12345678','members','admin_12345678'),{active:false}));
  // 59 Viewer cannot create a membership
- await assertFails(setDoc(doc(viewer,'schools','school_A','members','viewer_created'),{uid:'viewer_created',schoolId:'school_A',role:'viewer',active:false}));
+ await assertFails(setDoc(doc(viewer,'schools','12345678','members','viewer_created'),{uid:'viewer_created',schoolId:'12345678',role:'viewer',active:false}));
  // 60 School admin cannot delete a teacher membership
- await assertFails(deleteDoc(doc(admin,'schools','school_A','members','new_teacher_A')));
+ await assertFails(deleteDoc(doc(admin,'schools','12345678','members','new_teacher_A')));
  // 61 School admin cannot assign a different uid inside membership
- await assertFails(setDoc(doc(admin,'schools','school_A','members','uid_mismatch'),{uid:'other_uid',schoolId:'school_A',role:'viewer',active:false}));
+ await assertFails(setDoc(doc(admin,'schools','12345678','members','uid_mismatch'),{uid:'other_uid',schoolId:'12345678',role:'viewer',active:false}));
  // 62 School admin cannot forge membership schoolId
- await assertFails(setDoc(doc(admin,'schools','school_A','members','wrong_school'),{uid:'wrong_school',schoolId:'school_B',role:'viewer',active:false}));
+ await assertFails(setDoc(doc(admin,'schools','12345678','members','wrong_school'),{uid:'wrong_school',schoolId:'87654321',role:'viewer',active:false}));
  // 63 School admin cannot assign super_admin role
- await assertFails(setDoc(doc(admin,'schools','school_A','members','new_super'),{uid:'new_super',schoolId:'school_A',role:'super_admin',active:false}));
+ await assertFails(setDoc(doc(admin,'schools','12345678','members','new_super'),{uid:'new_super',schoolId:'12345678',role:'super_admin',active:false}));
  // 64 School admin cannot change teacher uid
- await assertFails(updateDoc(doc(admin,'schools','school_A','members','new_teacher_A'),{uid:'changed_uid'}));
+ await assertFails(updateDoc(doc(admin,'schools','12345678','members','new_teacher_A'),{uid:'changed_uid'}));
  // 65 School admin cannot change teacher schoolId
- await assertFails(updateDoc(doc(admin,'schools','school_A','members','new_teacher_A'),{schoolId:'school_B'}));
+ await assertFails(updateDoc(doc(admin,'schools','12345678','members','new_teacher_A'),{schoolId:'87654321'}));
  // 66 School admin cannot add unexpected fields
- await assertFails(updateDoc(doc(admin,'schools','school_A','members','new_teacher_A'),{permissions:['all']}));
+ await assertFails(updateDoc(doc(admin,'schools','12345678','members','new_teacher_A'),{permissions:['all']}));
  // 67 Teacher cannot activate own membership
- await assertFails(updateDoc(doc(teacher,'schools','school_A','members','teacher_school_A'),{active:false}));
+ await assertFails(updateDoc(doc(teacher,'schools','12345678','members','teacher_12345678'),{active:false}));
  // 68 Viewer cannot deactivate own membership
- await assertFails(updateDoc(doc(viewer,'schools','school_A','members','viewer_school_A'),{active:false}));
+ await assertFails(updateDoc(doc(viewer,'schools','12345678','members','viewer_12345678'),{active:false}));
  // 69 School admin can deactivate own school's teacher
- await assertSucceeds(updateDoc(doc(admin,'schools','school_A','members','new_teacher_A'),{active:false}));
+ await assertSucceeds(updateDoc(doc(admin,'schools','12345678','members','new_teacher_A'),{active:false}));
  // 70 Deactivated teacher membership loses access
- await assertFails(getDoc(student(db('new_teacher_A'),'school_A')));
+ await assertFails(getDoc(student(db('new_teacher_A'),'12345678')));
  // 71 School admin cannot create a student claiming another school
- await assertFails(setDoc(doc(admin,'schools','school_A','students','forged_tenant'),{schoolId:'school_B',name:'Forged'}));
+ await assertFails(setDoc(doc(admin,'schools','12345678','students','forged_tenant'),{schoolId:'87654321',name:'Forged'}));
  // 72 School admin cannot reassign student to another school
- await assertFails(updateDoc(student(admin,'school_A'),{schoolId:'school_B'}));
+ await assertFails(updateDoc(student(admin,'12345678'),{schoolId:'87654321'}));
  // 73 School admin cannot create a mark claiming another school
- await assertFails(setDoc(doc(admin,'schools','school_A','marks','forged_tenant'),{schoolId:'school_B',value:10}));
+ await assertFails(setDoc(doc(admin,'schools','12345678','marks','forged_tenant'),{schoolId:'87654321',value:10}));
  // 74 School admin cannot reassign mark to another school
- await assertFails(updateDoc(mark(admin,'school_A'),{schoolId:'school_B'}));
+ await assertFails(updateDoc(mark(admin,'12345678'),{schoolId:'87654321'}));
  // 75 School admin cannot create attendance claiming another school
- await assertFails(setDoc(doc(admin,'schools','school_A','attendance','forged_tenant'),{schoolId:'school_B',status:'present'}));
+ await assertFails(setDoc(doc(admin,'schools','12345678','attendance','forged_tenant'),{schoolId:'87654321',status:'present'}));
  // 76 School admin cannot reassign attendance to another school
- await assertFails(updateDoc(attendance(admin,'school_A'),{schoolId:'school_B'}));
+ await assertFails(updateDoc(attendance(admin,'12345678'),{schoolId:'87654321'}));
  // 77 School admin cannot create staff claiming another school
- await assertFails(setDoc(doc(admin,'schools','school_A','staff','forged_tenant'),{schoolId:'school_B',name:'Forged'}));
+ await assertFails(setDoc(doc(admin,'schools','12345678','staff','forged_tenant'),{schoolId:'87654321',name:'Forged'}));
  // 78 School admin can create staff scoped to own school
- await assertSucceeds(setDoc(doc(admin,'schools','school_A','staff','scoped_staff'),{schoolId:'school_A',name:'Staff'}));
+ await assertSucceeds(setDoc(doc(admin,'schools','12345678','staff','scoped_staff'),{schoolId:'12345678',name:'Staff'}));
  // 79 School admin cannot reassign staff to another school
- await assertFails(updateDoc(doc(admin,'schools','school_A','staff','scoped_staff'),{schoolId:'school_B'}));
+ await assertFails(updateDoc(doc(admin,'schools','12345678','staff','scoped_staff'),{schoolId:'87654321'}));
  // 80 Viewer cannot modify staff
- await assertFails(updateDoc(doc(viewer,'schools','school_A','staff','scoped_staff'),{name:'Altered'}));
+ await assertFails(updateDoc(doc(viewer,'schools','12345678','staff','scoped_staff'),{name:'Altered'}));
  // 81 Explicit tenant identity cannot be removed from staff
- await assertFails(updateDoc(doc(admin,'schools','school_A','staff','scoped_staff'),{schoolId:null}));
+ await assertFails(updateDoc(doc(admin,'schools','12345678','staff','scoped_staff'),{schoolId:null}));
  // 82 Explicit tenant identity cannot be removed using deleteField
- await assertFails(updateDoc(doc(admin,'schools','school_A','staff','scoped_staff'),{schoolId:deleteField()}));
+ await assertFails(updateDoc(doc(admin,'schools','12345678','staff','scoped_staff'),{schoolId:deleteField()}));
  // 83 School admin can update staff while preserving schoolId
- await assertSucceeds(updateDoc(doc(admin,'schools','school_A','staff','scoped_staff'),{name:'Updated Staff'}));
+ await assertSucceeds(updateDoc(doc(admin,'schools','12345678','staff','scoped_staff'),{name:'Updated Staff'}));
  // 84 Staff with a different tenant cannot be created by superadmin either
- await assertFails(setDoc(doc(superDb,'schools','school_A','staff','forged_by_super'),{schoolId:'school_B',name:'Bad'}));
+ await assertFails(setDoc(doc(superDb,'schools','12345678','staff','forged_by_super'),{schoolId:'87654321',name:'Bad'}));
  // 85 School Admin creates own school's exam term with tenant identity
- await assertSucceeds(setDoc(doc(admin,'schools','school_A','exams','1st'),{schoolId:'school_A',term:'1st'}));
+ await assertSucceeds(setDoc(doc(admin,'schools','12345678','exams','1st'),{schoolId:'12345678',term:'1st'}));
  // 86 School Admin can list own school's exam terms
- await assertSucceeds(getDocs(collection(admin,'schools','school_A','exams')));
+ await assertSucceeds(getDocs(collection(admin,'schools','12345678','exams')));
  // 87 Viewer may read terms but cannot create them
- await assertSucceeds(getDoc(doc(viewer,'schools','school_A','exams','1st')));
- await assertFails(setDoc(doc(viewer,'schools','school_A','exams','2nd'),{schoolId:'school_A',term:'2nd'}));
+ await assertSucceeds(getDoc(doc(viewer,'schools','12345678','exams','1st')));
+ await assertFails(setDoc(doc(viewer,'schools','12345678','exams','2nd'),{schoolId:'12345678',term:'2nd'}));
  // 89 Teacher cannot create exam terms
- await assertFails(setDoc(doc(teacher,'schools','school_A','exams','2nd'),{schoolId:'school_A',term:'2nd'}));
+ await assertFails(setDoc(doc(teacher,'schools','12345678','exams','2nd'),{schoolId:'12345678',term:'2nd'}));
  // 90 Cross-school exam create is denied
- await assertFails(setDoc(doc(admin,'schools','school_B','exams','2nd'),{schoolId:'school_B',term:'2nd'}));
+ await assertFails(setDoc(doc(admin,'schools','87654321','exams','2nd'),{schoolId:'87654321',term:'2nd'}));
  // 91 Forged tenant identity denied
- await assertFails(setDoc(doc(admin,'schools','school_A','exams','2nd'),{schoolId:'school_B',term:'2nd'}));
+ await assertFails(setDoc(doc(admin,'schools','12345678','exams','2nd'),{schoolId:'87654321',term:'2nd'}));
  // 92 Exam deletion is denied even to School Admin
- await assertFails(deleteDoc(doc(admin,'schools','school_A','exams','1st')));
+ await assertFails(deleteDoc(doc(admin,'schools','12345678','exams','1st')));
  // 93 Existing exam term cannot have its tenant identity reassigned
- await assertFails(updateDoc(doc(admin,'schools','school_A','exams','1st'),{schoolId:'school_B'}));
+ await assertFails(updateDoc(doc(admin,'schools','12345678','exams','1st'),{schoolId:'87654321'}));
  // 94 Other-school exam reads are denied
- await assertFails(getDocs(collection(admin,'schools','school_B','exams')));
+ await assertFails(getDocs(collection(admin,'schools','87654321','exams')));
  // 95 Unknown exam term IDs are rejected by Firestore, not just the UI
- await assertFails(setDoc(doc(admin,'schools','school_A','exams','midterm'),{schoolId:'school_A',term:'midterm'}));
+ await assertFails(setDoc(doc(admin,'schools','12345678','exams','midterm'),{schoolId:'12345678',term:'midterm'}));
  // 96 The term field must match the document ID
- await assertFails(setDoc(doc(admin,'schools','school_A','exams','2nd'),{schoolId:'school_A',term:'final'}));
+ await assertFails(setDoc(doc(admin,'schools','12345678','exams','2nd'),{schoolId:'12345678',term:'final'}));
  // 97 Unrecognized exam fields are rejected
- await assertFails(setDoc(doc(admin,'schools','school_A','exams','2nd'),{schoolId:'school_A',term:'2nd',examName:'Extra'}));
+ await assertFails(setDoc(doc(admin,'schools','12345678','exams','2nd'),{schoolId:'12345678',term:'2nd',examName:'Extra'}));
  // 98 Existing term cannot be edited, even by its School Admin
- await assertFails(updateDoc(doc(admin,'schools','school_A','exams','1st'),{term:'2nd'}));
+ await assertFails(updateDoc(doc(admin,'schools','12345678','exams','1st'),{term:'2nd'}));
  // 100-105 Assigned teacher may correct scoped marks, but not alter record identity.
- await assertSucceeds(setDoc(doc(admin,'schools','school_A','teacher_assignments','school_A:teacher_school_A:10:math'),{schoolId:'school_A',uid:'teacher_school_A',classId:'10',subjectId:'math',active:false}));
- await assertFails(updateDoc(mark(teacher,'school_A'),{theory:31}));
- await assertSucceeds(updateDoc(doc(admin,'schools','school_A','teacher_assignments','school_A:teacher_school_A:10:math'),{active:true}));
- await assertSucceeds(updateDoc(mark(teacher,'school_A'),{theory:31}));
- await assertFails(updateDoc(mark(teacher,'school_A'),{studentId:'other_student'}));
- await assertFails(updateDoc(mark(teacher,'school_B'),{theory:32}));
+ await assertSucceeds(setDoc(doc(admin,'schools','12345678','teacher_assignments','12345678:teacher_12345678:10:math'),{schoolId:'12345678',uid:'teacher_12345678',classId:'10',subjectId:'math',active:false}));
+ await assertFails(updateDoc(mark(teacher,'12345678'),{theory:31}));
+ await assertSucceeds(updateDoc(doc(admin,'schools','12345678','teacher_assignments','12345678:teacher_12345678:10:math'),{active:true}));
+ await assertSucceeds(updateDoc(mark(teacher,'12345678'),{theory:31}));
+ await assertFails(updateDoc(mark(teacher,'12345678'),{studentId:'other_student'}));
+ await assertFails(updateDoc(mark(teacher,'87654321'),{theory:32}));
  // 106-111 Assigned attendance teacher may correct presence, not identity or another tenant.
- await assertSucceeds(setDoc(doc(admin,'schools','school_A','teacher_assignments','school_A:teacher_school_A:10:attendance'),{schoolId:'school_A',uid:'teacher_school_A',classId:'10',subjectId:'attendance',active:false}));
- await assertFails(updateDoc(attendance(teacher,'school_A'),{present:true}));
- await assertSucceeds(updateDoc(doc(admin,'schools','school_A','teacher_assignments','school_A:teacher_school_A:10:attendance'),{active:true}));
- await assertSucceeds(updateDoc(attendance(teacher,'school_A'),{present:true}));
- await assertFails(updateDoc(attendance(teacher,'school_A'),{date:'2026-11-19'}));
- await assertFails(updateDoc(attendance(teacher,'school_B'),{present:true}));
+ await assertSucceeds(setDoc(doc(admin,'schools','12345678','teacher_assignments','12345678:teacher_12345678:10:attendance'),{schoolId:'12345678',uid:'teacher_12345678',classId:'10',subjectId:'attendance',active:false}));
+ await assertFails(updateDoc(attendance(teacher,'12345678'),{present:true}));
+ await assertSucceeds(updateDoc(doc(admin,'schools','12345678','teacher_assignments','12345678:teacher_12345678:10:attendance'),{active:true}));
+ await assertSucceeds(updateDoc(attendance(teacher,'12345678'),{present:true}));
+ await assertFails(updateDoc(attendance(teacher,'12345678'),{date:'2026-11-19'}));
+ await assertFails(updateDoc(attendance(teacher,'87654321'),{present:true}));
  // 99 A second canonical term can be created independently
- await assertSucceeds(setDoc(doc(admin,'schools','school_A','exams','2nd'),{schoolId:'school_A',term:'2nd'}));
+ await assertSucceeds(setDoc(doc(admin,'schools','12345678','exams','2nd'),{schoolId:'12345678',term:'2nd'}));
  console.log('V47 Firestore emulator: 111 authorization assertions passed');
 }finally{await env.cleanup();}
