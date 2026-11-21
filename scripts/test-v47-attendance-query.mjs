@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';import {loadAttendanceByClassDate} from '../v47/attendance-query.mjs';
 const filters=[];const api={collection:(_db,...p)=>p.join('/'),where:(...args)=>{filters.push(args);return args},orderBy:x=>x,limit:x=>x,startAfter:x=>x,query:(ref,...args)=>({ref,args}),getDocs:async()=>({docs:[{id:'2026-11-16_s1',data:()=>({date:'2026-11-16',class:'6',studentId:'s1',present:true})}]})};
-const actor={role:'viewer',active:true,schoolId:'school_001'};const args={db:{},api,actor,schoolId:'school_001',schoolClass:'6',date:'2026-11-16'};
+const actor={role:'viewer',active:true,schoolId:'12345678'};const args={db:{},api,actor,schoolId:'12345678',schoolClass:'6',date:'2026-11-16'};
 const result=await loadAttendanceByClassDate(args);assert.equal(result.records.length,1);assert.deepEqual(filters,[['date','==','2026-11-16'],['class','==','6']]);
-await assert.rejects(()=>loadAttendanceByClassDate({...args,schoolId:'school_002'}));await assert.rejects(()=>loadAttendanceByClassDate({...args,date:'2026-02-30'}));await assert.rejects(()=>loadAttendanceByClassDate({...args,schoolClass:'13'}));console.log('V47 attendance filtered query tests passed');
+await assert.rejects(()=>loadAttendanceByClassDate({...args,schoolId:'87654321'}));await assert.rejects(()=>loadAttendanceByClassDate({...args,date:'2026-02-30'}));await assert.rejects(()=>loadAttendanceByClassDate({...args,schoolClass:'13'}));console.log('V47 attendance filtered query tests passed');
