@@ -12,7 +12,8 @@ export function normalizeV46StudentClass(value){
 const value=(r,k)=>String(r?.[k]??'').normalize('NFC').trim();
 export function validateV46IemisExcelHeaders(rows){
  if(!Array.isArray(rows)||!rows.length)throw new Error('Excel मा विद्यार्थी विवरण भेटिएन।');
- const headings=Object.keys(rows[0]??{}).map(x=>x.trim());
+ if(!rows[0]||typeof rows[0]!=='object'||Array.isArray(rows[0]))throw new TypeError('Excel first row must be an object');
+ const headings=Object.keys(rows[0]).map(x=>x.trim());
  const required=['IEMIS Code','Student Name','Class'];
  const missing=required.filter(x=>!headings.includes(x));
  if(!headings.includes('Student IEMIS Id')&&!headings.includes('Admission Number'))missing.push('Student IEMIS Id / Admission Number');
@@ -32,6 +33,7 @@ export function previewV46IemisStudentImport({rows,schoolId,existingIemisIds=[],
  assertIemisSchoolId(schoolId);
  if(!Array.isArray(rows))throw new TypeError('Excel rows array required');
  validateV46IemisExcelHeaders(rows);
+ if(!Array.isArray(existingIemisIds)||!Array.isArray(existingAdmissionNumbers))throw new TypeError('Existing student identity lists required');
  const existing=new Set(existingIemisIds.map(x=>String(x).trim()).filter(Boolean));
  const existingAdmission=new Set(existingAdmissionNumbers.map(x=>String(x).trim()).filter(Boolean));
  const seen=new Set(),seenAdmission=new Set();
