@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');
+const html=read('./school-settings.html'),js=read('./school-settings-console.mjs'),hub=read('./index.html');
+assert.match(hub,/href="\.\/school-settings\.html"/);
+for(const id of ['config','schoolId','email','password','login','logout','settings','iemis','name','active','role','message'])assert.match(html,new RegExp('id="'+id+'"'));
+assert.match(html,/Read-only development view/);
+assert.match(js,/config\.projectId!=='smss-exam-portal-v47'/);
+assert.match(js,/authSdk\.inMemoryPersistence/);
+assert.equal((js.match(/await verifySchoolSession/g)||[]).length,2);
+assert.match(js,/school\.iemisCode!==id/);
+assert.match(js,/school\.active!==true/);
+assert.match(js,/auth\.currentUser\?\.uid!==uid/);
+assert.match(js,/fresh\.role!==session\.role/);
+assert.match(js,/\$\('settings'\)\.hidden=false/);
+assert.doesNotMatch(js,/setDoc\(|addDoc\(|updateDoc\(|deleteDoc\(|runTransaction\(|writeBatch\(/);
+console.log('V47 school settings read-only source contract passed');
