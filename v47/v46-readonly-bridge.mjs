@@ -30,6 +30,12 @@ export async function createV46ReadOnlyBridge({schoolId,auth,db,firestoreApi}){
   listExams:()=>records.list('exams'),
   listAttendance:()=>records.list('attendance'),
   listMarks:()=>records.list('marks'),
+  // V46 report views can retrieve individual tenant-scoped records without writes.
+  getMark:id=>records.get('marks',id),
+  getExam:id=>records.get('exams',id),
+  getSubject:id=>records.get('subjects',id),
+  getAttendance:id=>records.get('attendance',id),
+  getMarkSettings:id=>records.get('mark_settings',id),
   getSchoolSettings:id=>records.get('school_settings',id),
   getStudent:id=>records.get('students',id),
   getStaff:id=>records.get('staff',id)
