@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {inspectClassMarkDraft} from './class-mark-draft-inspector.mjs';
-const schoolId='school-a',classId='9',term='1st',subjectId='math';
+const schoolId='12345678',classId='9',term='1st',subjectId='math';
 const mark=(studentId,overrides={})=>({studentId,class:classId,term,subjectId,theory:30,practical:10,...overrides});
 const base={schoolId,classId,term,subjectId,expectedStudentIds:['s1','s2']};
 {
