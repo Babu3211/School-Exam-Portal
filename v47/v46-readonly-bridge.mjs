@@ -33,11 +33,10 @@ export async function createV46ReadOnlyBridge({schoolId,auth,db,firestoreApi}){
   // Raw school-scoped inputs for future V46 ledger/grade-sheet rendering.
   // No GPA calculation or official result publication occurs here.
   async loadExamReportInputs(){
-   const students=await records.list('students');
-   const subjects=await records.list('subjects');
-   const exams=await records.list('exams');
-   const marks=await records.list('marks');
-   const markSettings=await records.list('mark_settings');
+   const [students,subjects,exams,marks,markSettings]=await Promise.all([
+    records.list('students'),records.list('subjects'),records.list('exams'),
+    records.list('marks'),records.list('mark_settings')
+   ]);
    await context.revalidateRead();
    return Object.freeze({schoolId:context.schoolId,students,subjects,exams,marks,markSettings});
   },
