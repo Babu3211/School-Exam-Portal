@@ -10,6 +10,11 @@ const verifiedPreview=await previewAgainstSchoolStudents({auth,schoolId,rows,rea
 const prepared=await prepareVerifiedStudentSave({auth,schoolId,rows,verifiedPreview,readDocument,confirmed:true});
 const existingStudents=[{schoolId,studentIemisNo:'00001',admissionNo:'A-1'}];
 const plan=planStudentImportTransaction({prepared,existingStudents});
+const expiredNow=Date.now;
+try {
+ Date.now=()=>expiredNow()+5*60*1000+1;
+ assert.throws(()=>planStudentImportTransaction({prepared,existingStudents}),/Verified prepared import/);
+} finally {Date.now=expiredNow}
 assert.equal(isVerifiedStudentTransactionPlan(plan),true);
 const planNow=Date.now;
 try {
