@@ -5,6 +5,8 @@ const settings=prepareNewSubjectExamSettings({schoolId:'12345',classId:'9',subje
 assert.equal(settings.id,'9_computer_final');
 for(const term of ['weekly','monthly','1st','2nd','3rd','final'])assert.equal(prepareNewSubjectExamSettings({...settings,examId:term}).examId,term);
 assert.equal(settings.components[0].fullMarks,63);
+assert.throws(()=>prepareNewSubjectExamSettings({...settings,subjectId:'a'.repeat(128)}),/128 characters/);
+assert.equal(prepareNewSubjectExamSettings({...settings,subjectId:'a'.repeat(119)}).id.length,127);
 assert.throws(()=>prepareNewSubjectExamSettings({...settings,components:[...settings.components,...settings.components,...settings.components,...settings.components]}),/duplicate|Duplicate|Maximum|Invalid/);
 assert.throws(()=>prepareNewSubjectExamSettings({...settings,schoolId:'abc'}));
 assert.throws(()=>prepareNewSubjectExamSettings({...settings,examId:'unknown'}));
@@ -14,6 +16,7 @@ const block=rules.slice(rules.indexOf('match /mark_settings/{id}'),rules.indexOf
 assert.match(block,/allow create: if memberRole\(sid, 'school_admin'\) && validNewSettings\(\)/);
 assert.match(block,/allow update, delete: if false/);
 assert.match(block,/id == d\.classId \+ '_' \+ d\.subjectId \+ '_' \+ d\.examId/);
+assert.match(block,/id\.size\(\) <= 128/);
 assert.match(block,/get\(subject\)\.data\.get\('active',false\) == true/);
 let writes=0,alreadyExists=false;
 const api={
