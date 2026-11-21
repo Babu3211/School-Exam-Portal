@@ -13,5 +13,5 @@ export async function loadVerifiedSubjectExamSettings({db,api,schoolId,subjectId
  const data=snap.data();
  if(!data||data.id!==settingsId)throw new Error('Subject examination settings identity mismatch');
  const components=validateConfiguredMarkComponents(data,{schoolId,subjectId,examId,classId});
- return Object.freeze({settingsId,schoolId,subjectId,examId,classId,components});
+ return Object.freeze({settingsId,schoolId,subjectId,examId,classId,active:true,components});
 }
