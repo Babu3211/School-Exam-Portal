@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const rules=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
+const settings=rules.match(/match \/mark_settings\/\{id\} \{([\s\S]*?)\n      \}/)?.[1];
+assert.ok(settings,'Explicit mark settings rule required');
+assert.match(settings,/allow get, list: if canRead\(sid\);/);
+assert.match(settings,/allow create, update, delete: if false;/);
+const generic=rules.match(/match \/\{collection\}\/\{id\} \{([\s\S]*?)\n      \}/)?.[1];
+assert.ok(generic);
+assert.doesNotMatch(generic,/mark_settings/,'Generic write rules must never allow mark settings edits');
+assert.equal((rules.match(/match \/mark_settings\/\{id\}/g)||[]).length,1);
+console.log('V47 mark settings protected from generic writes');
