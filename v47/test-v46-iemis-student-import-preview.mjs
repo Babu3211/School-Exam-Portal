@@ -33,7 +33,7 @@ const optionalRoll=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':sc
 assert.equal(optionalRoll.ready,1);
 assert.equal(optionalRoll.records[0].normalizedClass,'LKG');
 assert.equal(previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Admission Number':'A-17','Student Name':'Child','Class':'12'}],existingAdmissionNumbers:['A-17']}).skipped,1);
-assert.equal(previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student Name':'Missing Identity','Class':'ECD'}]}).skipped,1);
+assert.equal(previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'','Student Name':'Missing Identity','Class':'ECD'}]}).skipped,1);
 assert.equal(previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Admission Number':'A-19','Student Name':'Invalid','Class':'13'}]}).skipped,1);
 assert.equal(validateV46IemisExcelHeaders(rows),true);
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[{'Student Name':'सीता','Class':'6'}]}),/आवश्यक Column/);
