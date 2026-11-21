@@ -11,10 +11,10 @@ const controller=createRegistrationController({
   return result;
  }
 });
-const school=await controller.registerSchool({id:'schoolA',name:'Example School'});
+const school=await controller.registerSchool({id:'12345678',iemisCode:'12345678',name:'Example School'});
 assert.equal(school.active,false);
-await assert.rejects(()=>controller.registerSchool({id:'schoolA',name:'Example School'}));
-const member=await controller.provisionMember({uid:'adminA',schoolId:'schoolA',role:'school_admin'});
+await assert.rejects(()=>controller.registerSchool({id:'12345678',name:'Example School'}));
+const member=await controller.provisionMember({uid:'adminA',schoolId:'12345678',role:'school_admin'});
 assert.equal(member.active,false);
 assert.equal(data.size,2);
 console.log('V47 registration controller tests passed');
