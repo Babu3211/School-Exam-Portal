@@ -38,9 +38,13 @@ assert(source.includes("if(actor&&user?.uid!==actor.uid)"),"Auth observer must r
 assert(source.includes("if(requestedRefresh!==refreshEpoch||requestedSession!==sessionEpoch)return;$('next').disabled=true;"),"Failed refresh disables pagination");
 assert(!source.includes('status(e.message)'), 'Raw Firebase error messages must never be shown');
 assert(!source.includes('error?.message??'), 'Untrusted Firebase error messages must be sanitized');
-assert(source.includes("if(connecting||auth)return;"),"Prevent duplicate Firebase initialization");
+assert(source.includes("if(connecting||db)return;"),"Prevent duplicate Firebase initialization");
 assert(source.includes("if(signingIn||mutating)return;"),"Prevent concurrent sign-in");
 assert(source.includes("$('password').value='';signingIn=false;"),"Clear password after login failure");
 assert(source.includes("finally{connecting=false}"),"Release Firebase connection lock");
 assert(source.includes("$('login').disabled=true;try{"),"Disable login during verification");
+assert(source.includes("appSdk.getApps().find(x=>x.name==='smss-v47-admin')"),"Reconnect reuses existing named Firebase app");
+assert(source.includes("const candidateAuth=authSdk.getAuth(app)"),"Auth is not published before persistence succeeds");
+assert(source.includes("await authSdk.setPersistence(candidateAuth,authSdk.inMemoryPersistence);auth=candidateAuth;"),"Auth persistence completes before global assignment");
+assert(source.includes("db=null;auth=null;api=null;showError(e);"),"Failed connection clears incomplete client state");
 console.log('PASS V47 Super Admin UID and school-list session guards');
