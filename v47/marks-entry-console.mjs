@@ -56,6 +56,9 @@ $('createExamSettings').onclick=async()=>{
   const existing=await api.getDoc(api.doc(db,'schools',selectedSchoolId,'mark_settings',settings.id));
   await revalidate();
   if(existing.exists())throw new Error('Settings already exist. No changes made');
+  const selectedSubject=await api.getDoc(api.doc(db,'schools',selectedSchoolId,'subjects',subjectId));
+  await revalidate();
+  if(!selectedSubject.exists()||selectedSubject.data().schoolId!==selectedSchoolId||selectedSubject.data().class!==classId||selectedSubject.data().active!==true)throw new Error('Selected subject is no longer active in this class');
   await createNewSubjectExamSettings({db,api,actor,settings});
   if(attempt===epoch){invalidateClassMarks();output.textContent='Settings created. Reload full class marks to use them.'}
  }catch(error){if(attempt===epoch)output.textContent='Settings not created: '+error.message}
