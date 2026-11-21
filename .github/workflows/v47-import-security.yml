@@ -42,3 +42,6 @@ jobs:
 
       - name: V46 student import record compatibility
         run: npm run test:v47:student-import-record-adapter
+
+      - name: Firestore student import schema
+        run: npm run test:v47:student-import-rules
