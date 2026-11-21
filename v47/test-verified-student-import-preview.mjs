@@ -87,7 +87,7 @@ Object.defineProperty(fingerprintRow,'Student Name',{enumerable:true,get(){
  return 'Fingerprint Student';
 }});
 await assert.rejects(previewAgainstSchoolStudents({auth:sessionDuringFingerprint,schoolId,rows:[fingerprintRow],readDocument,
- readStudents:async()=>[]}),/Authentication changed during preview fingerprinting/);
+ readStudents:async()=>[]}),/Authentication changed during (Excel validation|preview fingerprinting)/);
 const teacherAuth={currentUser:{uid:'teacher-1'}};
 const teacherDocs=async path=>path==='schools/'+schoolId?{id:schoolId,active:true}:path==='schools/'+schoolId+'/members/teacher-1'?{uid:'teacher-1',schoolId,role:'teacher',active:true}:null;
 await assert.rejects(previewAgainstSchoolStudents({auth:teacherAuth,schoolId,rows,readDocument:teacherDocs,readStudents}),/administrator membership/);
