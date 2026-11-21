@@ -19,15 +19,15 @@ jobs:
           node --check v47/school-login.mjs
       - name: Check V47 deployment credentials
         env:
-          V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_V47 }}
+          V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}
         run: |
           if [ -z "$V47_SERVICE_ACCOUNT" ]; then
-            echo "::error::Missing FIREBASE_SERVICE_ACCOUNT_V47 repository secret; no deployment attempted."
+            echo "::error::Missing FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 repository secret; no deployment attempted."
             exit 1
           fi
       - name: Deploy to V47 preview channel only
         env:
-          V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_V47 }}
+          V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}
         run: |
           printf '%s' "$V47_SERVICE_ACCOUNT" > "$RUNNER_TEMP/v47-credentials.json"
           chmod 600 "$RUNNER_TEMP/v47-credentials.json"
