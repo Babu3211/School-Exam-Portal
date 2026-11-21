@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
-const schoolId='school-a',actor={role:'school_admin',active:true,schoolId},classId='9';
+const schoolId='12345678',actor={role:'school_admin',active:true,schoolId},classId='9';
 const base={db:{},actor,schoolId,classId,pageSize:2};
 const docs=[['s1',{schoolId,class:'9',name:'A'}],['s2',{schoolId,class:'9',name:'B'}],['s3',{schoolId,class:'9',name:'C'}]];
 function mock(rows=docs){
@@ -21,13 +21,13 @@ await assert.rejects(loadCompleteClassRoster({...base,api:mock([])}),/no student
 await assert.rejects(loadCompleteClassRoster({...base,api:mock([docs[0],docs[0],docs[2]])}),/duplicate roster document ID|Duplicate student/);
 await assert.rejects(loadCompleteClassRoster({...base,api:mock([docs[1],docs[0],docs[2]])}),/out-of-order|pagination order changed/);
 await assert.rejects(loadCompleteClassRoster({...base,api:mock([docs[0],docs[2],docs[1]])}),/out-of-order|pagination order changed/);
-await assert.rejects(loadCompleteClassRoster({...base,api:mock([docs[0],['s2',{schoolId:'school-b',class:'9'}]])}),/Cross-school/);
+await assert.rejects(loadCompleteClassRoster({...base,api:mock([docs[0],['s2',{schoolId:'87654321',class:'9'}]])}),/Cross-school/);
 await assert.rejects(loadCompleteClassRoster({...base,pageSize:0,api:mock()}),/Page size/);
 await assert.rejects(loadCompleteClassRoster({...base,pageSize:101,api:mock()}),/Page size/);
 await assert.rejects(loadCompleteClassRoster({...base,pageSize:1.5,api:mock()}),/Page size/);
 await assert.rejects(loadCompleteClassRoster({...base,maxStudents:0,api:mock()}),/Roster cap/);
 await assert.rejects(loadCompleteClassRoster({...base,maxStudents:1501,api:mock()}),/Roster cap/);
-await assert.rejects(loadCompleteClassRoster({...base,actor:{role:'viewer',active:true,schoolId:'school-b'},api:mock()}),/School membership/);
+await assert.rejects(loadCompleteClassRoster({...base,actor:{role:'viewer',active:true,schoolId:'87654321'},api:mock()}),/School membership/);
 await assert.rejects(loadCompleteClassRoster({...base,classId:'99',api:mock()}),/Invalid class/);
 // Verify the actual 1500-student supported boundary across multiple pages.
 {
@@ -45,7 +45,7 @@ await assert.rejects(loadCompleteClassRoster({...base,classId:'99',api:mock()}),
 for(const mutation of [
  a=>{a.active=false},
  a=>{a.role='viewer'},
- a=>{a.schoolId='school-b'},
+ a=>{a.schoolId='87654321'},
  a=>{a.uid='other-user'}
 ]){
  const changingActor={role:'school_admin',active:true,schoolId,uid:'admin-1'};
