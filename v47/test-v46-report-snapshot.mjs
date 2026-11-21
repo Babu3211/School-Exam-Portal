@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {prepareV46ReportSnapshot} from './v46-report-snapshot.mjs';
+const doc=(id,data)=>({id,data:()=>data});
+const empty={docs:[]};
+const inputs={schoolId:'12345678',students:{docs:[doc('student_1',{name:'Student A',rollNo:1})]},subjects:empty,exams:empty,marks:{docs:[doc('mark_1',{studentId:'student_1',marks:45})]},markSettings:empty};
+const rows=prepareV46ReportSnapshot(inputs);
+assert.deepEqual(rows.students,[{id:'student_1',name:'Student A',rollNo:1}]);
+assert.deepEqual(rows.marks,[{id:'mark_1',studentId:'student_1',marks:45}]);
+assert.ok(Object.isFrozen(rows)&&Object.isFrozen(rows.students)&&Object.isFrozen(rows.students[0]));
+assert.equal(rows.schoolId,'12345678');
+assert.equal(inputs.students.docs[0].id,'student_1');
+assert.throws(()=>prepareV46ReportSnapshot({...inputs,schoolId:'wrong'}),/IEMIS/);
+assert.throws(()=>prepareV46ReportSnapshot({...inputs,marks:undefined}),/Incomplete/);
+assert.throws(()=>prepareV46ReportSnapshot({...inputs,students:{docs:[doc('same',{}),doc('same',{})]}}),/Duplicate/);
+assert.throws(()=>prepareV46ReportSnapshot({...inputs,students:{docs:[doc('bad',null)]}}),/Invalid V46 report record/);
+assert.deepEqual(prepareV46ReportSnapshot({...inputs,students:{docs:[doc('safe',{id:'untrusted'})]}}).students,[{id:'safe'}]);
+console.log('V46 report snapshot conversion tests passed');
