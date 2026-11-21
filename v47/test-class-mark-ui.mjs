@@ -49,4 +49,9 @@ assert.ok(js.includes("if(auth?.currentUser?.uid!==uid||actor.uid!==uid||schoolI
 assert.ok(js.includes("if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('Authentication changed during options load')"),'Options must recheck session before populating selectors');
 assert.ok(js.includes("$('classMarkRows').addEventListener('input',event=>"),'Draft inspection must be invalidated on edited marks');
 assert.ok(js.includes("Draft changed. Inspect again before saving."),'Old draft inspection must not appear current after edits');
+assert.ok(js.includes('rosterRequest++;classMarkRoster=[]'),'Session reset and draft invalidation must revoke stale roster requests');
+assert.ok(js.includes('invalidateClassMarks();const request=rosterRequest;lock(true)'),'Roster load must capture its invalidation token');
+assert.ok(js.includes('if(request!==rosterRequest||attempt!==epoch||classId!=='),'Stale roster responses must not render after selection changes');
+assert.ok(js.includes('if(request===rosterRequest&&attempt===epoch){invalidateClassMarks();lock(false);'),'Current roster failures must unlock editor without clearing a newer request');
+assert.ok(js.includes('finally{if(request===rosterRequest&&attempt===epoch)lock(false)}'),'Old roster requests must not unlock a newer load');
 console.log('V47 full-class marks UI contract passed');
