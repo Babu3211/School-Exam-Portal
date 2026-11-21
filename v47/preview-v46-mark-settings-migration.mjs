@@ -10,10 +10,14 @@ export function previewV46MarkSettingsMigration({legacy,schoolId,classId,subject
  if(!legacy||!groups[legacy.classGroup]?.includes(classId))throw new Error('Legacy class group does not include target class');
  if(typeof legacy.className==='string'&&legacy.className.trim()&&legacy.className.trim()!==classId)throw new Error('Legacy class-specific setting belongs to another class');
  if(typeof legacy.subject!=='string'||!legacy.subject.trim()||typeof verifiedSubjectName!=='string'||legacy.subject.trim().toLocaleLowerCase('en')!==verifiedSubjectName.trim().toLocaleLowerCase('en'))throw new Error('Legacy subject name does not match verified subject');
- if(!Array.isArray(legacy.components)||legacy.components.length<1||legacy.components.length>50)throw new Error('Legacy components missing');
+ if(!Array.isArray(legacy.components)||legacy.components.length<1||legacy.components.length>6)throw new Error('Legacy components missing or exceed V46 six-part limit');
+ // V46 primary classes use achievement counts and derived full marks, not
+ // ordinary obtained-mark components. These need a dedicated IEMIS mapping.
+ if(['1-3','4-5'].includes(legacy.classGroup))throw new Error('Primary learning-achievement settings require dedicated IEMIS migration; ordinary marks conversion forbidden');
+ if(legacy.totalFullMarks!==undefined&&(!Number.isFinite(legacy.totalFullMarks)||Math.abs(legacy.components.reduce((n,c)=>n+Number(c?.fullMarks??NaN),0)-legacy.totalFullMarks)>0.000001))throw new Error('Legacy total full marks mismatch');
  const used=new Set();
  const components=legacy.components.map((part,index)=>{
-  if(!part||typeof part.name!=='string'||!part.name.trim()||typeof part.fullMarks!=='number'||!Number.isFinite(part.fullMarks)||part.fullMarks<=0)throw new Error('Legacy component needs a positive full marks value');
+  if(!part||typeof part.name!=='string'||!part.name.trim()||typeof part.fullMarks!=='number'||!Number.isFinite(part.fullMarks)||part.fullMarks<=0||part.fullMarks>5000)throw new Error('Legacy component needs a positive full marks value');
   const key='component_'+String(index+1);
   if(used.has(key))throw new Error('Duplicate generated component key');
   used.add(key);
