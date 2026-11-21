@@ -5,7 +5,7 @@ const rules=readFileSync(new URL('firestore.rules',import.meta.url),'utf8');
 assert(source.includes("auth.currentUser?.uid!==uid"),'Admin verification must detect identity change');
 assert(source.includes("actor={active:true,role:'super_admin',uid}"),'Admin actor must be UID bound');
 assert(source.includes("auth?.currentUser?.uid!==actor.uid"),'School list must check authenticated UID');
-assert(source.includes("auth?.currentUser?.uid!==actor?.uid"),'School list response must check authenticated UID');
+assert(source.includes("actor!==requestedActor||auth?.currentUser?.uid!==requestedActor.uid"),'School list response must reject stale actor and UID');
 assert(source.includes("function clearAdmin()"),'Admin session reset required');
 assert(source.includes("$('schools').replaceChildren()"),'Admin session reset must clear school data');
 assert(/match \/v47_super_admins\/\{uid\} \{ allow read, write: if false; \}/.test(rules),'Super Admin registry must be private');
