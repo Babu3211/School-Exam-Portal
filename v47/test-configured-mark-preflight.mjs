@@ -19,6 +19,10 @@ const encoded=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'
 assert.equal(encoded.complete,false);
 const decimal=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',values:{participation:'6.5',practical:'62.25',term:'30'}},{studentId:'b',isAbsent:true}]});
 assert.equal(decimal.complete,true);
+const exponential=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',values:{participation:'7e0',practical:'63',term:'30'}},{studentId:'b',isAbsent:true}]});
+assert.equal(exponential.complete,false);
+const whitespace=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',values:{participation:' 6.5 ',practical:'62.25',term:'30'}},{studentId:'b',isAbsent:true}]});
+assert.equal(whitespace.complete,true);
 const nonNumeric=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',values:{participation:true,practical:63,term:30}},{studentId:'b',isAbsent:true}]});
 assert.equal(nonNumeric.complete,false);
 assert.match(inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',isAbsent:true,values:{participation:7}},{studentId:'b',isAbsent:true}]}).invalid[0].message,/Absent student/);
