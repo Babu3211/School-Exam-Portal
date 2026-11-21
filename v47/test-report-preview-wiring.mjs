@@ -6,13 +6,16 @@ const controller=readFileSync(new URL('report-preview-console.mjs',root),'utf8')
 const hub=readFileSync(new URL('index.html',root),'utf8');
 assert.match(hub,/href="\.\/report-preview\.html"/);
 assert.match(page,/src="\.\/report-preview-console\.mjs"/);
-for(const id of ['config','connect','schoolId','email','password','login','logout','report','school','counts','message','summaryExam','summaryClass','summaryAnnual','summaryRun','summaryResult'])
+for(const id of ['config','connect','schoolId','email','password','login','logout','report','school','counts','message','summaryExam','summaryClass','summaryAnnual','summaryRun','summaryResult','summaryRows'])
  assert.match(page,new RegExp('id="'+id+'"'));
 assert.match(controller,/createV46ReadOnlyBridge\(/);
 assert.match(controller,/bridge\.loadExamReportRows\(\)/);
 assert.match(controller,/previewV46MarkSummaries\(reportRows/);
 assert.match(controller,/reportRows=rows/);
 assert.match(controller,/reportRows=null/);
+assert.match(controller,/\$\('summaryRows'\)\.replaceChildren\(\)/);
+assert.match(controller,/td\.textContent=value==null/);
+assert.doesNotMatch(controller,/\.innerHTML\s*=/);
 assert.match(controller,/function currentSession\(requestEpoch,uid\)/);
 assert.match(controller,/requestEpoch===epoch&&auth\?\.currentUser\?\.uid===uid/);
 assert.match(controller,/if\(!currentSession\(current,credential\.user\.uid\)\)/);
