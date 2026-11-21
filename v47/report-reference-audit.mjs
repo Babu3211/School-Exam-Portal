@@ -7,6 +7,8 @@ export function auditV46ReportReferences(rows){
  const subjectNames=new Set(rows.subjects.flatMap(item=>[item.subject,item.subjectName,item.name,item.id].map(subjectKey).filter(Boolean)));
  const missing=[];
  const unchecked=[];
+ const duplicates=[];
+ const seenMarks=new Map();
  for(const mark of rows.marks){
   if(!mark||typeof mark.id!=='string')throw new Error('Invalid mark record');
   for(const [field,collection] of REFERENCES){
@@ -24,6 +26,12 @@ export function auditV46ReportReferences(rows){
   if(subject===undefined||subject===null||subject==='')unchecked.push(Object.freeze({markId:mark.id,field:'subject',collection:'subjects'}));
   else if(typeof subject!=='string'||!subjectKey(subject))unchecked.push(Object.freeze({markId:mark.id,field:'subject',collection:'subjects'}));
   else if(!subjectNames.has(subjectKey(subject)))missing.push(Object.freeze({markId:mark.id,field:'subject',reference:subject,collection:'subjects'}));
+  // V46 uses one record per student/exam/subject/class/section; duplicate keys need review.
+  if(typeof mark.studentId==='string'&&typeof mark.examId==='string'&&subjectKey(subject)){
+   const key=JSON.stringify([mark.studentId,mark.examId,subjectKey(subject),String(mark.className??''),String(mark.section??'')]);
+   if(seenMarks.has(key))duplicates.push(Object.freeze({firstMarkId:seenMarks.get(key),markId:mark.id}));
+   else seenMarks.set(key,mark.id);
+  }
  }
- return Object.freeze({checkedMarks:rows.marks.length,missing:Object.freeze(missing),unchecked:Object.freeze(unchecked),valid:missing.length===0&&unchecked.length===0,publicationAllowed:false});
+ return Object.freeze({checkedMarks:rows.marks.length,missing:Object.freeze(missing),unchecked:Object.freeze(unchecked),duplicates:Object.freeze(duplicates),valid:missing.length===0&&unchecked.length===0&&duplicates.length===0,publicationAllowed:false});
 }
