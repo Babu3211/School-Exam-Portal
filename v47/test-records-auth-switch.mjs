@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const ui=readFileSync(new URL('./records-console.mjs',import.meta.url),'utf8');
+assert.match(ui,/authSdk\.onAuthStateChanged\(auth,user=>/);
+assert.match(ui,/if\(verifiedUid!==null&&user\?\.uid!==verifiedUid\)\{clear\(\)/);
+assert.match(ui,/verifiedUid=uid;store=createSchoolStore/);
+assert.match(ui,/verifiedUid=null;cursor=null/);
+assert.match(ui,/loginAuth\.currentUser\?\.uid!==uid\|\|verifiedUid!==uid/);
+assert.match(ui,/loadGeneration\+\+/);
+assert.match(ui,/store!==currentStore/);
+assert.match(ui,/\$\('records'\)\.replaceChildren\(\)/);
+console.log('V47 records auth-switch fail-closed source checks passed');
