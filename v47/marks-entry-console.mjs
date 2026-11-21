@@ -62,7 +62,7 @@ $('loadClassMarks').onclick=async()=>{
   body.append(fragment);
   $('classMarkCount').textContent=roster.count+' students in full roster. '+('Save/Publish disabled until audited complete-class workflow is ready.');
   status('Full class roster loaded. Check every student before saving.');
- }catch(e){if(request===rosterRequest&&attempt===epoch){invalidateClassMarks();status('Unable to load complete roster: '+e.message)}}
+ }catch(e){if(request===rosterRequest&&attempt===epoch){invalidateClassMarks();lock(false);status('Unable to load complete roster: '+e.message)}}
  finally{if(request===rosterRequest&&attempt===epoch)lock(false)}
 };
 // Any edit invalidates the previously displayed draft inspection.
