@@ -41,6 +41,8 @@ async function ok(name,fn){await fn();checks++;console.log('OK '+checks+' '+name
 await ok('1 reject viewer school registration',async()=>{await assert.rejects(onboardSchool({db,api,actor:viewer,form:school,adminUid:'admin001'}))});
 await ok('2 reject inactive Super Admin',async()=>{await assert.rejects(onboardSchool({db,api,actor:{...admin,active:false},form:school,adminUid:'admin001'}))});
 await ok('3 reject invalid IEMIS ID',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,id:'abc'},adminUid:'admin001'}))});
+await ok('3b reject missing IEMIS code',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,iemisCode:''},adminUid:'admin001'}))});
+await ok('3c reject mismatched IEMIS code',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,iemisCode:'99999'},adminUid:'admin001'}))});
 await ok('4 reject invalid admin UID',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:school,adminUid:'x'}))});
 await ok('5 reject missing transaction SDK',async()=>{await assert.rejects(onboardSchool({db,api:{doc:api.doc},actor:admin,form:school,adminUid:'admin001'}))});
 await ok('6 register school atomically',async()=>{await onboardSchool({db,api,actor:admin,form:school,adminUid:'admin001'});assert.equal(state.schools.size,1);assert.equal(state.members.size,1)});
