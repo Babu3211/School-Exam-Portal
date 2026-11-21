@@ -1,10 +1,10 @@
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 const $=id=>document.getElementById(id);
-let auth,authSdk,api,db,busy=false,epoch=0;
+let auth,authSdk,api,db,busy=false,epoch=0,verifiedSchoolId=null;
 const message=text=>{$('message').textContent=text};
-function reset(){epoch++;$('settings').hidden=true;for(const id of ['iemis','name','active','role'])$(id).textContent=''}
-function lock(value){busy=value;for(const id of ['login','logout','schoolId','email','password'])$(id).disabled=value;if(!value){$('login').disabled=!auth;$('logout').disabled=!auth?.currentUser}}
+function reset(){epoch++;verifiedSchoolId=null;$('settings').hidden=true;for(const id of ['iemis','name','active','role'])$(id).textContent=''}
+function lock(value){busy=value;for(const id of ['login','logout','schoolId','email','password'])$(id).disabled=value;if(!value){$('login').disabled=!auth||!!verifiedSchoolId;$('logout').disabled=!auth?.currentUser;$('schoolId').disabled=!!verifiedSchoolId;$('email').disabled=!!verifiedSchoolId;$('password').disabled=!!verifiedSchoolId}}
 $('connect').onclick=async()=>{
  if(auth)return;
  try{
@@ -15,7 +15,9 @@ $('connect').onclick=async()=>{
   api=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js');
   const app=appSdk.initializeApp(config,'smss-v47-school-settings');
   auth=authSdk.getAuth(app);await authSdk.setPersistence(auth,authSdk.inMemoryPersistence);
-  db=api.getFirestore(app);$('connect').disabled=true;lock(false);message('Connected to V47');
+  db=api.getFirestore(app);
+  authSdk.onAuthStateChanged(auth,user=>{if(!user&&verifiedSchoolId!==null){reset();message('सत्र समाप्त भयो। पुनः लगइन गर्नुहोस्।')}if(!busy)lock(false)});
+  $('connect').disabled=true;lock(false);message('Connected to V47');
  }catch(e){message('Connection failed: '+e.message)}
 };
 $('login').onclick=async()=>{
@@ -34,6 +36,7 @@ $('login').onclick=async()=>{
   if(request!==epoch||auth.currentUser?.uid!==uid||id!==$('schoolId').value.trim()||fresh.uid!==session.uid||fresh.role!==session.role)throw new Error('Session or school selection changed');
   if(!school||school.id!==id||school.iemisCode!==id||school.active!==true)throw new Error('Verified school settings unavailable');
   $('iemis').textContent=id;$('name').textContent=String(school.name);$('active').textContent='Active';$('role').textContent=session.role;
+  verifiedSchoolId=id;$('schoolId').disabled=true;$('email').disabled=true;$('password').disabled=true;
   $('settings').hidden=false;message('विद्यालय विवरण प्रमाणित भयो। यो पृष्ठमा परिवर्तन गर्न मिल्दैन।');
  }catch(e){if(request===epoch){reset();try{await authSdk.signOut(auth)}catch{}message('School verification failed: '+e.message)}}
  finally{if(request===epoch)lock(false)}
