@@ -2,7 +2,14 @@
 // No Firebase writes. Host must provide a school-scoped Firestore reader.
 import {verifyV46ImportPreflight} from './verified-v46-import-preflight.mjs';
 import {previewV46IemisStudentImport} from './v46-iemis-student-import-preview.mjs';
-const str=x=>String(x??'').normalize('NFC').trim();
+const str=x=>{
+ if(x===null||x===undefined)return '';
+ if(typeof x==='object'||typeof x==='function'||typeof x==='symbol'||typeof x==='bigint')
+  throw new TypeError('Invalid existing student identity type');
+ if(typeof x==='number'&&(!Number.isFinite(x)||!Number.isSafeInteger(x)))
+  throw new TypeError('Invalid existing student identity number');
+ return String(x).normalize('NFC').trim();
+};
 const verifiedCloudPreviews=new WeakMap();
 const PREVIEW_MAX_AGE_MS=5*60*1000;
 export const verifiedPreviewOwner=value=>verifiedCloudPreviews.get(value)?.uid??null;
