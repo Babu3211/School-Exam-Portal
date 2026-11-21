@@ -26,6 +26,10 @@ export async function createNewSubjectExamSettings({db,api,actor,settings}){
  await api.runTransaction(db,async transaction=>{
   const existing=await transaction.get(ref);
   if(existing.exists())throw new Error('Settings already exist. No changes made');
+  const subjectRef=api.doc(db,'schools',prepared.schoolId,'subjects',prepared.subjectId);
+  const subject=await transaction.get(subjectRef);
+  const subjectData=subject.exists()?subject.data():null;
+  if(!subjectData||subjectData.schoolId!==prepared.schoolId||subjectData.class!==prepared.classId||subjectData.active!==true)throw new Error('Selected subject is not active in this school and class');
   transaction.set(ref,prepared);
  });
  return Object.freeze({created:true,settingsId:prepared.id,schoolId:prepared.schoolId});
