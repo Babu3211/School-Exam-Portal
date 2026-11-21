@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('./marks-entry.html',import.meta.url),'utf8');
+const js=readFileSync(new URL('./marks-entry-console.mjs',import.meta.url),'utf8');
+for(const id of ['settingsCreateArea','newSettingsComponents','createExamSettings','settingsCreateResult'])assert.ok(html.includes('id="'+id+'"'));
+assert.match(js,/prepareNewSubjectExamSettings,createNewSubjectExamSettings/);
+const start=js.indexOf("$('createExamSettings').onclick=async()=>"),end=js.indexOf('function invalidateClassMarks()',start);
+assert.ok(start>=0&&end>start);
+const handler=js.slice(start,end);
+for(const pattern of [/window\.confirm/,/await revalidate\(\)/,/existing\.exists\(\)/,/createNewSubjectExamSettings\(\{db,api,actor,settings\}\)/,/invalidateClassMarks\(\)/])assert.match(handler,pattern);
+assert.ok(handler.indexOf('await revalidate()')<handler.indexOf('existing.exists()'));
+assert.ok(handler.indexOf('existing.exists()')<handler.indexOf('createNewSubjectExamSettings('));
+console.log('V47 create-once subject exam settings UI wired; emulator verification still required');
