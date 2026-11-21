@@ -7,11 +7,11 @@ const config=JSON.parse(await readFile(new URL('firebase.json',source),'utf8'));
 if(config.hosting?.public!=='dist')throw new Error('V47 Hosting must use isolated dist');
 const files=await readdir(source,{withFileTypes:true});
 const available=new Set(files.filter(f=>f.isFile()).map(f=>f.name));
-const required=['index.html','school-login.html','admin.html','school-admin.html','students.html','attendance.html'];
+const required=['index.html','school-login.html','school-login.mjs','admin.html','school-admin.html','students.html','attendance.html'];
 for(const name of required)if(!available.has(name))throw new Error('Missing entry: '+name);
 const blocked=name=>name.startsWith('test-')||name.startsWith('firebase.')||['firebase.json','firestore.rules','firestore.indexes.json','build-hosting.mjs'].includes(name);
 const assets=new Set();
-const queue=files.filter(f=>f.isFile()&&f.name.endsWith('.html')).map(f=>f.name);
+const queue=files.filter(f=>f.isFile()&&(f.name.endsWith('.html')||f.name==='school-login.mjs')).map(f=>f.name);
 const localRef=(ref,owner)=>{
  if(!ref.startsWith('./'))return;
  const name=decodeURIComponent(ref.slice(2).split(/[?#]/)[0]);
