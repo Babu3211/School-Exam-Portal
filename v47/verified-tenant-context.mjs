@@ -29,7 +29,7 @@ export async function createVerifiedTenantContext({schoolId,auth,readDocument}){
    if(latest.role!=='school_admin')throw new Error('School Admin permission required');
    return latest;
   },
-  assertRead(){return ensureCurrent()},
-  assertWrite(){ensureCurrent();if(session.role!=='school_admin')throw new Error('School Admin permission required');return session}
+  assertRead(){return ensureCurrent()}
+
  });
 }
