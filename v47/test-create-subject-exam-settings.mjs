@@ -15,10 +15,19 @@ assert.match(block,/allow create: if memberRole\(sid, 'school_admin'\) && validN
 assert.match(block,/allow update, delete: if false/);
 assert.match(block,/id == d\.classId \+ '_' \+ d\.subjectId \+ '_' \+ d\.examId/);
 assert.match(block,/get\(subject\)\.data\.get\('active',false\) == true/);
-let writes=0;
-const api={doc:(_db,...parts)=>parts.join('/'),setDoc:async(ref,data)=>{writes++;assert.equal(ref,'schools/12345/mark_settings/9_computer_final');assert.equal(data.id,settings.id)}};
+let writes=0,alreadyExists=false;
+const api={
+ doc:(_db,...parts)=>parts.join('/'),
+ runTransaction:async(_db,callback)=>callback({
+  get:async(ref)=>{assert.equal(ref,'schools/12345/mark_settings/9_computer_final');return {exists:()=>alreadyExists}},
+  set:(ref,data)=>{writes++;assert.equal(ref,'schools/12345/mark_settings/9_computer_final');assert.equal(data.id,settings.id)}
+ })
+};
 const actor={role:'school_admin',active:true,schoolId:'12345',uid:'admin'};
 await createNewSubjectExamSettings({db:{},api,actor,settings});
+assert.equal(writes,1);
+alreadyExists=true;
+await assert.rejects(()=>createNewSubjectExamSettings({db:{},api,actor,settings}),/already exist/);
 assert.equal(writes,1);
 await assert.rejects(()=>createNewSubjectExamSettings({db:{},api,actor:{...actor,role:'viewer'},settings}),/School Admin/);
 assert.equal(writes,1);
