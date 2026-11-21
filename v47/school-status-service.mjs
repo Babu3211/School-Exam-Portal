@@ -8,7 +8,10 @@ export async function setSchoolActive({db,api,actor,schoolId,active}){
  const ref=api.doc(db,'schools',schoolId);
  await api.runTransaction(db,async tx=>{
   const snapshot=await tx.get(ref);
-  if(!snapshot.exists())throw new Error('School does not exist');
+  if(!snapshot?.exists?.())throw new Error('School does not exist');
+  const school=snapshot.data();
+  if(!school||school.id!==schoolId||school.iemisCode!==schoolId||typeof school.active!=='boolean')throw new Error('School registry identity mismatch');
+  if(school.active===active)return;
   tx.update(ref,{active});
  });
  return {schoolId,active};
