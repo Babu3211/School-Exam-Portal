@@ -348,6 +348,33 @@ try {
   await assertFails(setDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-20_student-1'),{...teacherAttendance,date:'2026-11-20'}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','300160001','members','teacher-a'),{active:true}));
 
+  // Immutable subject examination settings: real Firestore Rules emulator checks.
+  const settingsPath=(uid,id='9_math_final',sid='300160001')=>schoolDoc(uid,sid,'mark_settings',id);
+  const settings={
+    id:'9_math_final',schoolId:'300160001',classId:'9',subjectId:'math',
+    examId:'final',active:true,components:[{key:'theory',name:'Theory',fullMarks:75},{key:'practical',name:'Practical',fullMarks:25}]
+  };
+  await assertFails(setDoc(settingsPath('viewer-a'),settings));
+  await assertFails(setDoc(settingsPath('teacher-a'),settings));
+  await assertFails(setDoc(settingsPath('admin-b'),settings));
+  await assertFails(setDoc(settingsPath('admin-a','9_math_final','300160002'),{...settings,schoolId:'300160002'}));
+  await assertFails(setDoc(settingsPath('admin-a'),{...settings,schoolId:'300160002'}));
+  await assertFails(setDoc(settingsPath('admin-a'),{...settings,examId:'1st'}));
+  await assertFails(setDoc(settingsPath('admin-a'),{...settings,components:[{key:'theory',name:'Theory',fullMarks:0}]}));
+  await assertFails(setDoc(settingsPath('admin-a'),{...settings,components:[{key:'theory',name:'Theory',fullMarks:50},{key:'theory',name:'Practical',fullMarks:50}]}));
+  await assertFails(setDoc(settingsPath('admin-a'),{...settings,components:[]}));
+  await assertFails(setDoc(settingsPath('admin-a'),{...settings,components:Array.from({length:7},(_,i)=>({key:'k'+i,name:'Part '+i,fullMarks:10}))}));
+  await assertFails(setDoc(settingsPath('admin-a'),{...settings,components:[{key:'theory',name:'Theory',fullMarks:75,extra:'bad'}]}));
+  await assertSucceeds(setDoc(settingsPath('admin-a'),settings));
+  await assertSucceeds(getDoc(settingsPath('viewer-a')));
+  await assertFails(updateDoc(settingsPath('admin-a'),{active:false}));
+  await assertFails(deleteDoc(settingsPath('admin-a')));
+  await assertFails(setDoc(settingsPath('admin-a'),settings));
+  await assertFails(setDoc(settingsPath('admin-a','9_math_1st'),{...settings,id:'9_math_1st',examId:'1st',subjectId:'missing'}));
+  await assertSucceeds(setDoc(settingsPath('admin-a','9_math_1st'),{...settings,id:'9_math_1st',examId:'1st'}));
+  await assertFails(setDoc(settingsPath('admin-a','9_math_2nd'),{...settings,id:'9_math_2nd',examId:'2nd',classId:'10'}));
+  await assertFails(setDoc(settingsPath('admin-a','9_math_3rd'),{...settings,id:'9_math_3rd',examId:'3rd',components:[{key:'x',name:'X',fullMarks:100001}]}));
+
   // Suspended schools must lose member read/write access immediately.
   await assertSucceeds(updateDoc(doc(db('super-a'),'schools','300160001'),{active:false}));
   await assertFails(getDoc(schoolDoc('admin-a','300160001','students','student-1')));
