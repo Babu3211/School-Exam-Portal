@@ -5,6 +5,7 @@ import {previewV46IemisStudentImport} from './v46-iemis-student-import-preview.m
 const str=x=>String(x??'').trim();
 const verifiedCloudPreviews=new WeakMap();
 const PREVIEW_MAX_AGE_MS=5*60*1000;
+export const verifiedPreviewOwner=value=>verifiedCloudPreviews.get(value)?.uid??null;
 export const isVerifiedCloudPreview=(value,rows)=>!!value&&typeof value==='object'&&verifiedCloudPreviews.has(value)&&verifiedCloudPreviews.get(value)?.rows===rows&&verifiedCloudPreviews.get(value)?.fingerprint===JSON.stringify(rows)&&Date.now()-verifiedCloudPreviews.get(value)?.verifiedAt>=0&&Date.now()-verifiedCloudPreviews.get(value)?.verifiedAt<=PREVIEW_MAX_AGE_MS;
 export async function previewAgainstSchoolStudents({auth,schoolId,rows,readDocument,readStudents}={}){
  if(typeof readStudents!=='function')throw new TypeError('School-scoped student reader required');
@@ -24,6 +25,6 @@ export async function previewAgainstSchoolStudents({auth,schoolId,rows,readDocum
  }
  const preview=previewV46IemisStudentImport({rows,schoolId,existingIemisIds,existingAdmissionNumbers});
  const result=Object.freeze({preview,cloudChecked:true,schoolId,existingCount:students.length});
- verifiedCloudPreviews.set(result,{rows,fingerprint:JSON.stringify(rows),verifiedAt:Date.now()});
+ verifiedCloudPreviews.set(result,{rows,uid,fingerprint:JSON.stringify(rows),verifiedAt:Date.now()});
  return result;
 }
