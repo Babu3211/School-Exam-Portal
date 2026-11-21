@@ -3,7 +3,7 @@ import {validateSchoolId} from './school-paths.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {inspectClassMarkDraft} from './class-mark-draft-inspector.mjs';
 import {iemisEntrySchema} from './iemis-entry.js';
-import {loadVerifiedSubjectExamSettings} from './verified-subject-exam-settings.mjs';
+import {discoverVerifiedSubjectExamSettings} from './discover-subject-exam-settings.mjs';
 import {inspectConfiguredClassMarks} from './configured-mark-preflight.mjs';
 const $=id=>document.getElementById(id),status=msg=>{$('message').textContent=msg};
 let auth,authSdk,api,db,actor,schoolId,epoch=0,busy=false,studentsLoaded=false,subjectsLoaded=false,loadedStudentClass=null,loadedSubjectClass=null;
@@ -46,10 +46,9 @@ $('loadClassMarks').onclick=async()=>{
  const attempt=epoch,classId=$('schoolClass').value,term=$('term').value,subjectId=$('subjectId').value,uid=actor.uid,selectedSchoolId=schoolId;
  invalidateClassMarks();const request=rosterRequest;lock(true);
  try{
-  const settingsId=$('markSettingsId').value.trim();
-  const settings=await loadVerifiedSubjectExamSettings({db,api,schoolId:selectedSchoolId,classId,subjectId,examId:term,settingsId,revalidate:async()=>{if(attempt!==epoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('School session changed');const verified=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(verified.role!=='school_admin')throw new Error('School Admin required');}});
+  const settings=await discoverVerifiedSubjectExamSettings({db,api,schoolId:selectedSchoolId,classId,subjectId,examId:term,revalidate:async()=>{if(attempt!==epoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('School session changed');const verified=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(verified.role!=='school_admin')throw new Error('School Admin required');}});
   const roster=await loadCompleteClassRoster({db,api,actor,schoolId,classId});
-  if(request!==rosterRequest||attempt!==epoch||classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value||settingsId!==$('markSettingsId').value.trim())return;
+  if(request!==rosterRequest||attempt!==epoch||classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value)return;
   if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId||actor?.schoolId!==selectedSchoolId)throw new Error('Authentication or school changed during roster load');
   // Display alphabetically without changing the authoritative roster IDs used for completeness checks.
   classMarkSettings=settings;
@@ -95,7 +94,6 @@ $('inspectClassMarks').onclick=()=>{
  if(!actor||auth?.currentUser?.uid!==actor.uid||actor.schoolId!==schoolId){invalidateClassMarks();status('विद्यालयको लगइन परिवर्तन भयो। पुनः लगइन गर्नुहोस्।');return}
  if(classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value){invalidateClassMarks();status('Selection changed; reload roster');return}
  try{
-  if($('markSettingsId').value.trim()!==classMarkSettings.settingsId)throw new Error('Examination Settings changed; reload roster');
   const result=inspectConfiguredClassMarks({schoolId,classId,examId:term,subjectId,settings:classMarkSettings,expectedStudentIds:classMarkRoster.map(s=>s.id),drafts:collectClassMarkEntries()});
   $('draftCheckResult').textContent=(result.complete?'All student marks valid.':'Class marks incomplete.')+(result.missing.length?' Missing: '+result.missing.slice(0,8).join(', '):'')+(result.invalid.length?' Invalid: '+result.invalid.slice(0,4).map(x=>x.studentId+': '+x.message).join('; '):'');
   status(result.complete?'Draft checked. This does not save or publish marks.':'Draft incomplete. No marks saved.');
@@ -115,4 +113,3 @@ $('inspectIemisSchema').onclick=()=>{
  }catch(error){$('iemisSchemaStatus').textContent=error.message}
 };
 
-$('markSettingsId').addEventListener('input',()=>{invalidateClassMarks();lock(false)});
