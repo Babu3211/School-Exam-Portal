@@ -5,5 +5,6 @@ const rows=[{'IEMIS Code':schoolId,'Student IEMIS Id':'00001','Student Name':'рд
 const container={replaceChildren(){throw new Error('Must not render without verified preview')}};
 assert.throws(()=>mountV47IemisStudentPreview({container,schoolId,rows,cloudChecked:true}),/Verified cloud preview required/);
 assert.throws(()=>mountV47IemisStudentPreview({container,schoolId,rows,cloudChecked:true,verifiedPreview:{cloudChecked:true,schoolId:'999999999',preview:{}}}),/Invalid verified preview/);
+assert.throws(()=>mountV47IemisStudentPreview({container,schoolId,rows,cloudChecked:true,verifiedPreview:{cloudChecked:true,schoolId,preview:{total:1,ready:1,skipped:0,rows:[]}}}),/Invalid verified preview/);
 await assert.rejects(mountVerifiedV47IemisStudentPreview({container,schoolId,rows,auth:{currentUser:{uid:'x'}},readDocument:async()=>null,readStudents:async()=>[]}),/School unavailable/);
 console.log('PASS: cloud-checked import preview requires verified school data and fails closed');
