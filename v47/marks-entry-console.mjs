@@ -25,7 +25,7 @@ async function loadOptions(collection,element,label){if(busy||!actor)return;if(c
   cursor=snap.docs.length===100?snap.docs.at(-1):null;
  }while(cursor);
  if(request!==optionRequest||attempt!==epoch||schoolClass!==$('schoolClass').value||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('Options selection changed during load');
- const filtered=collection==='students'?rows:rows.filter(row=>row.active===true&&!(('9'===schoolClass||'10'===schoolClass)&&String(row.name??'').trim().toLowerCase()==='computer'));
+ const filtered=collection==='students'?rows:rows.filter(row=>row.active===true);
  element.replaceChildren();if(collection==='students'){studentsLoaded=true;loadedStudentClass=schoolClass}else{subjectsLoaded=true;loadedSubjectClass=schoolClass}
  for(const row of filtered){const option=document.createElement('option');option.value=row.id;option.textContent=String(row.name??row.id)+' ('+row.id+')';element.append(option)}
  status(filtered.length+' '+label+' loaded. Development preview only; mark saving is disabled.');
