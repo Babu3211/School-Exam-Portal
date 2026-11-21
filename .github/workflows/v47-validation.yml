@@ -1,0 +1,45 @@
+name: V47 Multi-School Validation
+on:
+  push:
+    branches: [smss-v47-multischool-work]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  v47-unit-and-syntax:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: V47 syntax and tenant tests
+        run: |
+          npm run test:v47:syntax
+          npm run test:v47:tenant-context
+          npm run test:v47:tenant-firestore
+          npm run test:v47:v46-readonly-bridge
+          npm run test:v47:records-session
+          npm run test:v47:iemis-school-id
+          npm run test:v47:structure
+  v47-firestore-emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - name: Firestore school isolation tests
+        run: npm run test:v47:emulator
