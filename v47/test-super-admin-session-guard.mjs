@@ -22,9 +22,9 @@ assert(source.includes("$('next').disabled=true;$('next').onclick=null;"),"Logou
 assert(source.includes("$('next').disabled=true;const result="),"Pagination disabled while request is pending");
 assert(source.includes("if(mutating||!actor||auth?.currentUser?.uid!==actor.uid)return;cursor=result.cursor;refresh()"),"Pagination checks active session");
 assert(source.includes("if(suppliedIemis!==schoolId)"),"IEMIS field must exactly match school ID");
-assert(source.includes("const showError=error=>status("),"Error feedback is centralized");
+assert(source.includes("const showError=error=>status(cleanAuthError(error))"),"Error feedback is centralized and sanitized");
 assert(source.includes("'अनुमति छैन। Super Admin अधिकार जाँच्नुहोस्।'"),"Permission denial feedback is Nepali");
-assert(source.includes("'Email वा Password मिलेन।'"),"Authentication error feedback is Nepali");
+assert(source.includes("'प्रमाणीकरण असफल भयो। Email, Password वा अनुमति जाँच्नुहोस्।'"),"Authentication error feedback is Nepali");
 assert(source.includes("'सेवा अहिले उपलब्ध छैन। पुनः प्रयास गर्नुहोस्।'"),"Service unavailable feedback is Nepali");
 assert(source.includes("'विद्यालय निष्क्रिय अवस्थामा दर्ता भयो। पुष्टि गरेपछि मात्र सक्रिय गर्नुहोस्।'"),"Registration confirmation is Nepali");
 assert(source.includes("'सफलतापूर्वक साइन आउट भयो।'"),"Logout feedback is Nepali");
@@ -36,4 +36,6 @@ assert(source.includes("const requestedActor=actor,requestedSession=sessionEpoch
 assert(source.includes("authSdk.onAuthStateChanged(auth,user=>"),"Firebase external signout must be observed");
 assert(source.includes("if(actor&&user?.uid!==actor.uid)"),"Auth observer must reject replaced UID");
 assert(source.includes("if(requestedRefresh!==refreshEpoch||requestedSession!==sessionEpoch)return;$('next').disabled=true;"),"Failed refresh disables pagination");
+assert(!source.includes('status(e.message)'), 'Raw Firebase error messages must never be shown');
+assert(!source.includes('error?.message??'), 'Untrusted Firebase error messages must be sanitized');
 console.log('PASS V47 Super Admin UID and school-list session guards');
