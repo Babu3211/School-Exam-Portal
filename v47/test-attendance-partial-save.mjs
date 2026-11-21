@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {saveLoadedClassAttendance,PartialAttendanceSaveError} from './attendance-class-save.mjs';
-const schoolId='school-a',actor={role:'school_admin',active:true,schoolId};
+const schoolId='12345678',actor={role:'school_admin',active:true,schoolId};
 const entries=Array.from({length:11},(_,i)=>({studentId:'s'+i,class:'9',date:'2026-11-18',present:true}));
 let commits=0,progress=[];
 const api={
@@ -24,7 +24,7 @@ assert.equal(progress[0].savedIds.length,10);
 for(const mutate of [
  a=>{a.active=false},
  a=>{a.role='viewer'},
- a=>{a.schoolId='school-b'},
+ a=>{a.schoolId='87654321'},
  a=>{a.uid='different-admin'}
 ]){
  const changingActor={...actor,uid:'admin-a'};
@@ -52,7 +52,7 @@ for(const mutate of [
 for(const mutate of [
  a=>{a.active=false},
  a=>{a.role='viewer'},
- a=>{a.schoolId='school-b'},
+ a=>{a.schoolId='87654321'},
  a=>{a.uid='switched-admin'}
 ]){
  const changingActor={...actor,uid:'admin-a'};
