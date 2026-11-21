@@ -20,7 +20,8 @@ export function inspectConfiguredClassMarks({schoolId,subjectId,examId,classId,s
  for(const row of drafts){
   if(!row||!roster.has(row.studentId)||seen.has(row.studentId))throw new Error('Duplicate or out-of-roster mark draft');
   seen.add(row.studentId);
-  if(row.isAbsent===true){ready.push(Object.freeze({studentId:row.studentId,isAbsent:true,totalObtained:0}));continue}
+  if(row.isAbsent!==undefined&&typeof row.isAbsent!=='boolean')throw new Error('Invalid absence flag');
+  if(row.isAbsent===true){if(row.values&&Object.values(row.values).some(v=>v!==null&&v!==undefined&&String(v).trim()!==''))throw new Error('Absent student cannot carry obtained marks');ready.push(Object.freeze({studentId:row.studentId,isAbsent:true,totalObtained:0}));continue}
   const values=row.values;
   if(!values||typeof values!=='object'||Array.isArray(values)||Object.keys(values).some(key=>!components.some(c=>c.key===key))){
    invalid.push(Object.freeze({studentId:row.studentId,message:'Unexpected or missing component values'}));continue;
@@ -30,9 +31,10 @@ export function inspectConfiguredClassMarks({schoolId,subjectId,examId,classId,s
    const v=values[c.key];
    if(v===null||v===undefined||String(v).trim()===''){error='Missing '+c.name;break}
    const n=Number(v);
-   if(!Number.isFinite(n)||n<0||n>c.fullMarks){error='Out of range '+c.name;break}
+   if((typeof v!=='string'&&typeof v!=='number')||!Number.isFinite(n)||n<0||n>c.fullMarks){error='Out of range '+c.name;break}
    total+=n;
   }
+  if(!Number.isFinite(total))error='Invalid total obtained marks';
   if(error)invalid.push(Object.freeze({studentId:row.studentId,message:error}));
   else ready.push(Object.freeze({studentId:row.studentId,isAbsent:false,totalObtained:total}));
  }
