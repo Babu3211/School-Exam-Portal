@@ -1,10 +1,11 @@
 import {createV46ReadOnlyBridge} from './v46-readonly-bridge.mjs';
 import {assertIemisSchoolId} from './iemis-school-identity.mjs';
 import {auditV46ReportReferences} from './report-reference-audit.mjs';
+import {previewV46MarkSummaries} from './mark-summary-preview.mjs';
 const $=id=>document.getElementById(id);
-let auth,authSdk,db,firestoreApi,epoch=0,busy=false,connecting=false,loginTask=null,loggingOut=false;
+let auth,authSdk,db,firestoreApi,epoch=0,busy=false,connecting=false,loginTask=null,loggingOut=false,reportRows=null;
 const status=message=>{$('message').textContent=message};
-function clear(){epoch++;$('report').hidden=true;$('counts').replaceChildren();$('school').textContent='';$('password').value=''}
+function clear(){reportRows=null;for(const id of ['summaryExam','summaryClass','summaryAnnual','summaryRun'])$(id).disabled=true;$('summaryResult').textContent='Choose an exam and class after loading records.';epoch++;$('report').hidden=true;$('counts').replaceChildren();$('school').textContent='';$('password').value=''}
 function currentSession(requestEpoch,uid){return requestEpoch===epoch&&auth?.currentUser?.uid===uid}
 $('connect').onclick=async()=>{
  if(connecting||auth)return;
@@ -48,6 +49,12 @@ $('login').onclick=()=>{
   }
   const audit=auditV46ReportReferences(rows);
   $('audit').textContent=audit.valid?'Mark references: no missing, unchecked or duplicate entries ('+audit.checkedMarks+' marks inspected).':'Mark references: '+audit.missing.length+' unresolved, '+audit.unchecked.length+' unchecked fields, '+audit.duplicates.length+' duplicate entries across '+audit.checkedMarks+' marks. Review V46 data before enabling results.';
+  reportRows=rows;
+  const examSelect=$('summaryExam');examSelect.replaceChildren(new Option('Select exam',''));
+  for(const exam of rows.exams)examSelect.add(new Option(String(exam.examName||exam.termName||exam.name||exam.id),exam.id));
+  const classSelect=$('summaryClass');classSelect.replaceChildren(new Option('Select class',''));
+  for(let n=1;n<=10;n++)classSelect.add(new Option('Class '+n,String(n)));
+  for(const id of ['summaryExam','summaryClass','summaryAnnual','summaryRun'])$(id).disabled=false;
   $('report').hidden=false;status('Read-only report inputs loaded. No results were published.');
  }catch(error){if(current===epoch){clear();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status('Report unavailable: '+error.message)}}
  finally{busy=false;$('login').disabled=!auth||loggingOut;if(!auth?.currentUser)$('logout').disabled=true}
@@ -64,4 +71,13 @@ $('logout').onclick=async()=>{
   status('Signed out');
  }catch(error){status('Unable to sign out: '+error.message)}
  finally{loggingOut=false;$('login').disabled=!auth;loginTask=null}
+};
+
+$('summaryRun').onclick=()=>{
+ if(!reportRows||!auth?.currentUser||loggingOut)return;
+ try{
+  const classNo=Number($('summaryClass').value),examId=$('summaryExam').value;
+  const preview=previewV46MarkSummaries(reportRows,{classNo,examId,annual:$('summaryAnnual').checked});
+  $('summaryResult').textContent='Diagnostic only: '+preview.completeCount+'/'+preview.records.length+' mark records have complete grade inputs. Official GPA and publication disabled.';
+ }catch(error){$('summaryResult').textContent='Unable to inspect: '+error.message}
 };
