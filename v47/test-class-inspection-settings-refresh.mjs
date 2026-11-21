@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const js=readFileSync(new URL('./marks-entry-console.mjs',import.meta.url),'utf8');
+const start=js.indexOf("$('inspectClassMarks').onclick=async()=>");
+const end=js.indexOf("$('saveClassMarks').onclick",start);
+assert.ok(start>=0&&end>start);
+const handler=js.slice(start,end);
+const refresh=handler.indexOf('const currentSettings=await discoverVerifiedSubjectExamSettings(');
+const check=handler.indexOf('currentSettings.settingsId!==classMarkSettings.settingsId');
+const components=handler.indexOf('JSON.stringify(currentSettings.components)!==JSON.stringify(classMarkSettings.components)');
+const guard=handler.indexOf('if(busy||!classMarkContext||attempt!==epoch||request!==rosterRequest');
+const inspect=handler.indexOf('inspectConfiguredClassMarks(');
+assert.ok(refresh>=0&&check>refresh&&components>check&&guard>components&&inspect>guard);
+assert.match(handler,/Subject examination settings changed; reload class marks/);
+assert.match(handler,/if\(session\.role!=='school_admin'\)throw new Error/);
+console.log('V47 class inspection refreshes active subject settings and rejects stale limits');
