@@ -70,6 +70,10 @@ assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[validRow,[]]}),/r
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[validRow,{...validRow,'Class ':'6'}]}),/ambiguous Column/);
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[validRow,{'IEMIS Code':schoolId,'Student IEMIS Id':'90902','Student Name':'Other Student'}]}),/row 3 is missing required/);
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[validRow,{'IEMIS Code':schoolId,'Student Name':'Other Student','Class':'6'}]}),/row 3 is missing required/);
+const inheritedIdentity=Object.assign(Object.create({'Student IEMIS Id':'INHERITED-1'}),{'IEMIS Code':schoolId,'Student Name':'Inherited Student','Class':'6','Admission Number':''});
+const inheritedPreview=previewV46IemisStudentImport({schoolId,rows:[inheritedIdentity]});
+assert.equal(inheritedPreview.ready,0,'Inherited IEMIS ID must not satisfy student identity requirement');
+assert.equal(normalizeV46IemisExcelRow(inheritedIdentity)['Student IEMIS Id'],'');
 const mixedIdentityRows=previewV46IemisStudentImport({schoolId,rows:[
  {'IEMIS Code':schoolId,'Student IEMIS Id':'90911','Student Name':'First Student','Class':'6'},
  {'IEMIS Code':schoolId,'Admission Number':'A-90912','Student Name':'Second Student','Class':'6'}
