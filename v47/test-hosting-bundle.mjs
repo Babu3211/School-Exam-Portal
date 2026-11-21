@@ -14,13 +14,13 @@ const hub=await readFile('v47/dist/index.html','utf8');
 assert(hub.includes('SMSS Exam Portal'),'Incorrect V47 homepage');
 for(const name of names.filter(n=>n.endsWith('.html'))){
  const html=await readFile('v47/dist/'+name,'utf8');
- assert(!/babu3211\\.github\\.io\\/School-Exam-Portal|exam-portal-smss-95016\\.web\\.app/i.test(html),'V46 production URL leaked: '+name);
- for(const match of html.matchAll(/(?:src|href)\\s*=\\s*["']\\.\\/([^"'?#]+)["']/g))
+ assert(!/babu3211\.github\.io\/School-Exam-Portal|exam-portal-smss-95016\.web\.app/i.test(html),'V46 production URL leaked: '+name);
+ for(const match of html.matchAll(/(?:src|href)\s*=\s*["']\.\/([^"'?#]+)["']/g))
   assert(names.includes(match[1]),name+' links missing file '+match[1]);
 }
 for(const name of names.filter(n=>n.endsWith('.mjs'))){
  const code=await readFile('v47/dist/'+name,'utf8');
- for(const match of code.matchAll(/(?:\\bfrom\\s*|\\bimport\\s*\\(|\\bimport\\s*)["']\\.\\/([^"']+)["']/g))
+ for(const match of code.matchAll(/(?:\bfrom\s*|\bimport\s*\(|\bimport\s*)["']\.\/([^"']+)["']/g))
   assert(names.includes(match[1].split(/[?#]/)[0]),name+' imports missing module '+match[1]);
 }
 console.log('PASS V47 isolated hosting bundle smoke test ('+names.length+' public files)');
