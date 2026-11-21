@@ -78,7 +78,7 @@ const fingerprintRow={'IEMIS Code':schoolId,'Student IEMIS Id':'FP-1','Student N
 let fingerprintReads=0;
 Object.defineProperty(fingerprintRow,'Student Name',{enumerable:true,get(){
  fingerprintReads++;
- if(fingerprintReads>=4)sessionDuringFingerprint.currentUser={uid:'another-user'};
+ if(fingerprintReads>=3)sessionDuringFingerprint.currentUser={uid:'another-user'};
  return 'Fingerprint Student';
 }});
 await assert.rejects(previewAgainstSchoolStudents({auth:sessionDuringFingerprint,schoolId,rows:[fingerprintRow],readDocument,
