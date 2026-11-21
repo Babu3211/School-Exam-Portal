@@ -3,10 +3,10 @@ import {verifyTeacherSubjectAssignment} from './verified-teacher-subject-assignm
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 const $=id=>document.getElementById(id);
-let auth,authSdk,api,db,actor=null,schoolId=null,epoch=0,busy=false;
+let auth,authSdk,api,db,actor=null,schoolId=null,epoch=0,busy=false,connected=false;
 const message=text=>{$('message').textContent=text};
 function clear(){epoch++;actor=null;schoolId=null;$('work').hidden=true;$('students').replaceChildren();$('count').textContent='';$('logout').disabled=true;$('load').disabled=true}
-function lock(value){busy=value;for(const id of ['login','logout','load','classId','subjectId'])$(id).disabled=value;if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('load').disabled=!actor}}
+function lock(value){busy=value;for(const id of ['login','logout','load','classId','subjectId','schoolId','email','password'])$(id).disabled=value;if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('load').disabled=!actor}}
 async function verifiedSession(uid,id){
  const session=await verifySchoolSession({schoolId:id,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null}});
  if(session.role!=='teacher')throw new Error('Active Teacher membership required');
@@ -22,7 +22,7 @@ $('connect').onclick=async()=>{
   api=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js');
   const app=appSdk.initializeApp(config,'smss-v47-teacher-roster');
   auth=authSdk.getAuth(app);await authSdk.setPersistence(auth,authSdk.inMemoryPersistence);
-  db=api.getFirestore(app);$('connect').disabled=true;$('login').disabled=false;message('Connected to V47');
+  db=api.getFirestore(app);connected=true;$('connect').disabled=true;$('login').disabled=false;message('Connected to V47');
  }catch(e){message('Connection failed: '+e.message)}
 };
 $('login').onclick=async()=>{
@@ -35,6 +35,7 @@ $('login').onclick=async()=>{
   if(request!==epoch)throw new Error('Login changed');
   const session=await verifiedSession(credential.user.uid,id);
   if(request!==epoch)throw new Error('Login changed');
+  if(id!==$('schoolId').value.trim())throw new Error('School selection changed');
   actor={uid:session.uid,role:'teacher',active:true,schoolId:id};schoolId=id;$('work').hidden=false;message('शिक्षकको लगइन सफल भयो। आफ्नो कक्षा र विषय छान्नुहोस्।');
  }catch(e){if(request===epoch){clear();try{await authSdk.signOut(auth)}catch{}message('Sign in failed: '+e.message)}}
  finally{lock(false)}
