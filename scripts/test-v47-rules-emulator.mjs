@@ -99,11 +99,11 @@ try{
  await assertFails(superDb.doc('schools/invalid_iemis').set({id:'invalid_iemis',name:'Invalid IEMIS',iemisCode:'123abc',active:false}));
  await assertFails(superDb.doc('schools/active_on_create').set({id:'active_on_create',name:'Active School',iemisCode:'',active:true}));
  await assertFails(superDb.doc('schools/extra_field').set({id:'extra_field',name:'Extra Field School',iemisCode:'',active:false,role:'super_admin'}));
- await assertSucceeds(superDb.doc('schools/new_school').set({id:'new_school',name:'New School',iemisCode:'123456789',active:false}));
- await assertSucceeds(superDb.doc('schools/new_school').update({active:true}));
- await assertFails(superDb.doc('schools/new_school').update({name:'Changed School'}));
- await assertFails(superDb.doc('schools/new_school').update({iemisCode:'987654321'}));
- await assertFails(superDb.doc('schools/new_school').update({role:'super_admin'}));
+ await assertSucceeds(superDb.doc('schools/123456789').set({id:'123456789',name:'New School',iemisCode:'123456789',active:false}));
+ await assertSucceeds(superDb.doc('schools/123456789').update({active:true}));
+ await assertFails(superDb.doc('schools/123456789').update({name:'Changed School'}));
+ await assertFails(superDb.doc('schools/123456789').update({iemisCode:'987654321'}));
+ await assertFails(superDb.doc('schools/123456789').update({role:'super_admin'}));
  await assertFails(outsider.doc('v47_super_admins/super1').get());
  await assertFails(admin.doc('v47_super_admins/super1').get());
  await assertFails(superDb.doc('v47_super_admins/super1').update({active:false}));
