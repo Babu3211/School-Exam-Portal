@@ -1,10 +1,12 @@
 import {createV46ReadOnlyBridge} from './v46-readonly-bridge.mjs';
 import {assertIemisSchoolId} from './iemis-school-identity.mjs';
 const $=id=>document.getElementById(id);
-let auth,authSdk,db,firestoreApi,epoch=0,busy=false;
+let auth,authSdk,db,firestoreApi,epoch=0,busy=false,connecting=false;
 const status=message=>{$('message').textContent=message};
 function clear(){epoch++;$('report').hidden=true;$('counts').replaceChildren();$('school').textContent='';$('password').value=''}
 $('connect').onclick=async()=>{
+ if(connecting||auth)return;
+ connecting=true;$('connect').disabled=true;
  try{
   const config=JSON.parse($('config').value);
   if(config.projectId!=='smss-exam-portal-v47')throw new Error('V47 Firebase project required');
@@ -19,7 +21,8 @@ $('connect').onclick=async()=>{
   db=fSdk.getFirestore(app);
   $('connect').disabled=true;$('login').disabled=false;
   status('V47 connected. Sign in to inspect your school.');
- }catch(error){status(error.message)}
+ }catch(error){status(error.message);$('connect').disabled=false}
+ finally{connecting=false}
 };
 $('login').onclick=async()=>{
  if(busy)return;
@@ -42,6 +45,6 @@ $('login').onclick=async()=>{
   }
   $('report').hidden=false;status('Read-only report inputs loaded. No results were published.');
  }catch(error){if(current===epoch){clear();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status('Report unavailable: '+error.message)}}
- finally{busy=false;$('login').disabled=false;if(!auth?.currentUser)$('logout').disabled=true}
+ finally{busy=false;$('login').disabled=!auth;if(!auth?.currentUser)$('logout').disabled=true}
 };
 $('logout').onclick=async()=>{clear();$('logout').disabled=true;try{if(auth)await authSdk.signOut(auth);status('Signed out')}catch(error){status(error.message)}};
