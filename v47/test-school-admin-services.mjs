@@ -129,4 +129,21 @@ await ok('78 accept active school listing',async()=>{await setSchoolActive({db,a
 await ok('79 list leading-zero IEMIS school ID unchanged',async()=>{const page=await listSchools({db,api,actor:admin,pageSize:10});assert(page.schools.some(x=>x.id==='00123'&&x.iemisCode==='00123'))});
 await ok('80 list results do not expose member records',async()=>{const page=await listSchools({db,api,actor:admin,pageSize:10});assert(page.schools.every(x=>!('members' in x)))});
 
+
+await ok('81 reject non-string IEMIS code with boolean',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,iemisCode:true},adminUid:'admin003'}))});
+await ok('82 reject null IEMIS code',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,iemisCode:null},adminUid:'admin003'}))});
+await ok('83 reject undefined IEMIS code',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,iemisCode:undefined},adminUid:'admin003'}))});
+await ok('84 reject object school name',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,name:{}},adminUid:'admin003'}))});
+await ok('85 reject array school name',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,name:['School']},adminUid:'admin003'}))});
+await ok('86 reject blank IEMIS code with whitespace',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,iemisCode:' 12345 '},adminUid:'admin003'}))});
+await ok('87 reject malformed admin UID with period',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:school,adminUid:'admin.001'}))});
+await ok('88 reject admin UID with at sign',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:school,adminUid:'admin@001'}))});
+await ok('89 reject school status string false',async()=>{await assert.rejects(setSchoolActive({db,api,actor:admin,schoolId:'12345',active:'false'}))});
+await ok('90 reject school status number zero',async()=>{await assert.rejects(setSchoolActive({db,api,actor:admin,schoolId:'12345',active:0}))});
+await ok('91 reject invalid school ID for status update',async()=>{await assert.rejects(setSchoolActive({db,api,actor:admin,schoolId:'',active:true}))});
+await ok('92 reject school list page size NaN',async()=>{await assert.rejects(listSchools({db,api,actor:admin,pageSize:NaN}))});
+await ok('93 reject school list page size Infinity',async()=>{await assert.rejects(listSchools({db,api,actor:admin,pageSize:Infinity}))});
+await ok('94 reject malformed school name containing only tabs',async()=>{await assert.rejects(onboardSchool({db,api,actor:admin,form:{...school,name:'\\t\\t\\t'},adminUid:'admin003'}))});
+await ok('95 school listing does not mutate stored IEMIS records',async()=>{const before=JSON.stringify([...state.schools]);await listSchools({db,api,actor:admin,pageSize:10});assert.equal(JSON.stringify([...state.schools]),before)});
+
 console.log('PASS '+checks+' V47 school admin service checks (mock SDK; Firebase emulator verification still required)');
