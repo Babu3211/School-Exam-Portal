@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {inspectConfiguredClassMarks} from './configured-mark-preflight.mjs';
+const base={schoolId:'12345',subjectId:'computer',examId:'final',classId:'9',expectedStudentIds:['a','b']};
+const settings={schoolId:'12345',subjectId:'computer',examId:'final',classId:'9',active:true,components:[{key:'participation',name:'Participation',fullMarks:7},{key:'practical',name:'Practical',fullMarks:63},{key:'term',name:'Term',fullMarks:30}]};
+const result=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',values:{participation:7,practical:63,term:30}},{studentId:'b',values:{participation:0,practical:0,term:0}}]});
+assert.equal(result.complete,true);assert.equal(result.ready[0].totalObtained,100);
+assert.equal(result.publicationAllowed,false);
+const invalid=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',values:{participation:8,practical:63,term:30}},{studentId:'b',values:{participation:0,practical:0,term:0}}]});
+assert.equal(invalid.complete,false);assert.match(invalid.invalid[0].message,/Out of range/);
+const missing=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',values:{participation:7,practical:63,term:30}}]});
+assert.deepEqual(missing.missing,['b']);
+assert.throws(()=>inspectConfiguredClassMarks({...base,settings:{...settings,schoolId:'99999'},drafts:[]}),/Verified subject/);
+assert.throws(()=>inspectConfiguredClassMarks({...base,settings:{...settings,components:[...settings.components,settings.components[0]]},drafts:[]}),/duplicate/);
+assert.throws(()=>inspectConfiguredClassMarks({...base,settings:{...settings,components:[{key:'x',name:'X',fullMarks:0}]},drafts:[]}),/Invalid/);
+const otherSubject={...settings,subjectId:'math',components:[{key:'theory',name:'Theory',fullMarks:80},{key:'project',name:'Project',fullMarks:20}]};
+const math=inspectConfiguredClassMarks({...base,subjectId:'math',settings:otherSubject,drafts:[{studentId:'a',values:{theory:80,project:20}},{studentId:'b',isAbsent:true}]});
+assert.equal(math.complete,true);
+console.log('V47 dynamic subject examination settings marks tests passed');
