@@ -29,4 +29,16 @@ for(const file of htmlFiles){
   if(!copied.has(asset))throw new Error(file.name+' references missing local asset '+asset);
  }
 }
+// Every relative ESM dependency must be shipped; fail instead of publishing a broken page.
+for(const file of files.filter(item=>item.isFile()&&item.name.endsWith('.mjs')&&copied.has(item.name))){
+ const code=await readFile(new URL(file.name,source),'utf8');
+ const imports=[...code.matchAll(/(?:\\bfrom\\s*|\\bimport\\s*\\(|\\bimport\\s*)['"]([^'"]+)['"]/g)];
+ for(const match of imports){
+  const dependency=match[1];
+  if(!dependency.startsWith('./'))continue;
+  const name=dependency.slice(2).split(/[?#]/)[0];
+  if(!name||name.includes('/')||!copied.has(name))
+   throw new Error(file.name+' imports missing V47 browser module '+dependency);
+ }
+}
 console.log('V47 static hosting build complete:',count,'files; no V46 production changes');
