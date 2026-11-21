@@ -28,6 +28,9 @@ jobs:
         run: npm install --no-package-lock --ignore-scripts
       - name: Check V47 module and emulator syntax
         run: npm run test:v47:syntax
+      - name: V46 IEMIS student Excel preview and normalization
+        run: npm run test:v47:iemis-student-preview
+
       - name: Verified student preview
         run: npm run test:v47:verified-student-preview
       - name: Firestore student preview adapter
