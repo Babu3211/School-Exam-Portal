@@ -11,6 +11,8 @@ assert(source.includes('sessionEpoch!==verificationSession||auth.currentUser?.ui
 assert(source.includes('sessionEpoch++;refreshEpoch++;'),'Session reset must invalidate pending requests');
 assert(source.includes("function clearAdmin()"),'Admin session reset required');
 assert(source.includes("$('schools').replaceChildren()"),'Admin session reset must clear school data');
+assert(source.includes("if(!confirm('विद्यालय '+school.id+' को सक्रिय/निष्क्रिय अवस्था परिवर्तन गर्ने हो?'))return;if(!actor||auth?.currentUser?.uid!==actor.uid)"),'School status change must recheck identity after confirmation');
+assert(source.includes("if(!confirm('यो विद्यालय निष्क्रिय अवस्थामा दर्ता गरी पहिलो Admin तोक्ने हो?'))return;if(!actor||auth?.currentUser?.uid!==actor.uid)"),'School registration must recheck identity after confirmation');
 assert(/match \/v47_super_admins\/\{uid\} \{ allow read, write: if false; \}/.test(rules),'Super Admin registry must be private');
 assert(/allow list: if superAdmin\(\);/.test(rules),'School enumeration must require Super Admin');
 console.log('PASS V47 Super Admin UID and school-list session guards');
