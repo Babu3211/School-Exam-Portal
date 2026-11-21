@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {rewriteV46FirestorePaths,V46_COLLECTIONS,assertV47TenantCollection} from './rewrite-v46-firestore-paths.mjs';
+import {rewriteV46FirestorePaths,V46_COLLECTIONS,assertV47TenantCollection,auditV46TenantIntegration} from './rewrite-v46-firestore-paths.mjs';
 const source=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const result=rewriteV46FirestorePaths(source);
 assert.equal(result.collections.length,V46_COLLECTIONS.length);
@@ -17,4 +17,10 @@ assert.throws(()=>rewriteV46FirestorePaths('collection(db,"students")'),/V46 dyn
 for(const name of V46_COLLECTIONS)assert.equal(assertV47TenantCollection(name),name);
 for(const name of ['members','schools','unknown','../students','',null,undefined])assert.throws(()=>assertV47TenantCollection(name),/Unreviewed V47 tenant collection/);
 assert.equal((result.source.match(/assertV47TenantCollection\(name\)/g)||[]).length,3);
+const integrationAudit=auditV46TenantIntegration(result.source);
+assert.equal(integrationAudit.ready,false,'Path rewriting alone must not be treated as V47 integration');
+assert.ok(integrationAudit.blockers.some(x=>x.includes('admin UID')));
+assert.ok(integrationAudit.blockers.some(x=>x.includes('Firebase configuration')));
+assert.ok(integrationAudit.blockers.some(x=>x.includes('activeSchoolId')));
+assert.equal(auditV46TenantIntegration('const activeSchoolId="12345678"; function assertV47TenantCollection(){}').ready,true);
 console.log('V46 Firestore literal path staging rewrite checks passed; dynamic calls still require manual audit');
