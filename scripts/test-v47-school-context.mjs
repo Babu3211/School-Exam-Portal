@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import {resolveSchoolContext} from '../v47/school-context.mjs';
-const member={role:'school_admin',schoolId:'school_001',active:true};
-assert.equal(resolveSchoolContext(member,'school_001').schoolId,'school_001');
-assert.throws(()=>resolveSchoolContext(member,'school_002'));
-assert.throws(()=>resolveSchoolContext({...member,active:false},'school_001'));
-assert.throws(()=>resolveSchoolContext({...member,role:'unexpected'},'school_001'));
-assert.equal(resolveSchoolContext({role:'super_admin',active:true},'school_002').schoolId,'school_002');
+const member={role:'school_admin',schoolId:'12345678',active:true};
+assert.equal(resolveSchoolContext(member,'12345678').schoolId,'12345678');
+assert.throws(()=>resolveSchoolContext(member,'87654321'));
+assert.throws(()=>resolveSchoolContext({...member,active:false},'12345678'));
+assert.throws(()=>resolveSchoolContext({...member,role:'unexpected'},'12345678'));
+assert.equal(resolveSchoolContext({role:'super_admin',active:true},'87654321').schoolId,'87654321');
 console.log('School context tests passed');
