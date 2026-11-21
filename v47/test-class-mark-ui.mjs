@@ -44,9 +44,9 @@ assert.ok(js.includes("$('schoolClass').onchange=()=>{invalidateClassMarks();"),
 assert.ok(js.includes("$('draftCheckResult').textContent='';$('inspectClassMarks').disabled=true;"),'Invalidation must clear draft and disable inspection');
 assert.ok(js.includes("subjectId=$('subjectId').value,uid=actor.uid,selectedSchoolId=schoolId"),'Roster load must capture original user and school');
 assert.ok(js.includes("if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId||actor?.schoolId!==selectedSchoolId)throw new Error('Authentication or school changed during roster load')"),'Roster completion must recheck user and school identity');
-assert.ok(js.includes("const attempt=epoch,schoolClass=$('schoolClass').value,uid=actor.uid,selectedSchoolId=schoolId"),'Options load must bind its school and user identity');
+assert.ok(js.includes("const request=++optionRequest,attempt=epoch,schoolClass=$('schoolClass').value,uid=actor.uid,selectedSchoolId=schoolId"),'Options load must bind its school and user identity');
 assert.ok(js.includes("if(auth?.currentUser?.uid!==uid||actor.uid!==uid||schoolId!==selectedSchoolId)throw new Error('Authentication changed during options load')"),'Paginated options must recheck session after each fetch');
-assert.ok(js.includes("if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('Authentication changed during options load')"),'Options must recheck session before populating selectors');
+assert.ok(js.includes("if(request!==optionRequest||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('Options selection changed during load')"),'Options must recheck session before populating selectors');
 assert.ok(js.includes("$('classMarkRows').addEventListener('input',event=>"),'Draft inspection must be invalidated on edited marks');
 assert.ok(js.includes("Draft changed. Inspect again before saving."),'Old draft inspection must not appear current after edits');
 assert.ok(js.includes('rosterRequest++;classMarkRoster=[]'),'Session reset and draft invalidation must revoke stale roster requests');
@@ -54,4 +54,8 @@ assert.ok(js.includes('invalidateClassMarks();const request=rosterRequest;lock(t
 assert.ok(js.includes('if(request!==rosterRequest||attempt!==epoch||classId!=='),'Stale roster responses must not render after selection changes');
 assert.ok(js.includes('if(request===rosterRequest&&attempt===epoch){invalidateClassMarks();lock(false);'),'Current roster failures must unlock editor without clearing a newer request');
 assert.ok(js.includes('finally{if(request===rosterRequest&&attempt===epoch)lock(false)}'),'Old roster requests must not unlock a newer load');
+assert.ok(js.includes("function reset(){optionRequest++;rosterRequest++"),'Reset must invalidate option loads');
+assert.ok(js.includes("if(request!==optionRequest||attempt!==epoch||schoolClass!=="),'Old paginated options must be ignored');
+assert.ok(js.includes("if(request===optionRequest&&attempt===epoch)lock(false)"),'Old option loads must not unlock newer loads');
+assert.ok(js.includes("$('schoolClass').onchange=()=>{optionRequest++;invalidateClassMarks();"),'Class change must revoke pending options');
 console.log('V47 full-class marks UI contract passed');
