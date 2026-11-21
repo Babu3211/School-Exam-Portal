@@ -15,6 +15,14 @@ export async function createV46ReadOnlyBridge({schoolId,auth,db,firestoreApi}){
  };
  const context=await createVerifiedTenantContext({schoolId,auth,readDocument});
  const records=createVerifiedTenantFirestore({db,api:firestoreApi,context});
+ const loadExamReportInputs=async()=>{
+  const [students,subjects,exams,marks,markSettings]=await Promise.all([
+   records.list('students'),records.list('subjects'),records.list('exams'),
+   records.list('marks'),records.list('mark_settings')
+  ]);
+  await context.revalidateRead();
+  return Object.freeze({schoolId:context.schoolId,students,subjects,exams,marks,markSettings});
+ };
  return Object.freeze({schoolId:context.schoolId,role:context.role,uid:context.uid,
   // Read-only parity endpoints for V46 school reports, branding and ledgers.
   listClasses:()=>records.list('classes'),
@@ -33,15 +41,8 @@ export async function createV46ReadOnlyBridge({schoolId,auth,db,firestoreApi}){
   listMarks:()=>records.list('marks'),
   // Raw school-scoped inputs for future V46 ledger/grade-sheet rendering.
   // No GPA calculation or official result publication occurs here.
-  async loadExamReportInputs(){
-   const [students,subjects,exams,marks,markSettings]=await Promise.all([
-    records.list('students'),records.list('subjects'),records.list('exams'),
-    records.list('marks'),records.list('mark_settings')
-   ]);
-   await context.revalidateRead();
-   return Object.freeze({schoolId:context.schoolId,students,subjects,exams,marks,markSettings});
-  },
-  async loadExamReportRows(){return prepareV46ReportSnapshot(await this.loadExamReportInputs())},
+  loadExamReportInputs,
+  loadExamReportRows:async()=>prepareV46ReportSnapshot(await loadExamReportInputs()),
   // V46 report views can retrieve individual tenant-scoped records without writes.
   getMark:id=>records.get('marks',id),
   getExam:id=>records.get('exams',id),
