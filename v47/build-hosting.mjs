@@ -32,7 +32,7 @@ for(const file of htmlFiles){
 // Every relative ESM dependency must be shipped; fail instead of publishing a broken page.
 for(const file of files.filter(item=>item.isFile()&&item.name.endsWith('.mjs')&&copied.has(item.name))){
  const code=await readFile(new URL(file.name,source),'utf8');
- const imports=[...code.matchAll(/(?:\\bfrom\\s*|\\bimport\\s*\\(|\\bimport\\s*)['"]([^'"]+)['"]/g)];
+ const imports=[...code.matchAll(/(?:\bfrom\s*|\bimport\s*\(|\bimport\s*)['"]([^'"]+)['"]/g)];
  for(const match of imports){
   const dependency=match[1];
   if(!dependency.startsWith('./'))continue;
