@@ -2,9 +2,11 @@ import {validateSchoolId} from './school-paths.mjs';
 export function validateSchoolRegistration(input){
  if(!input||typeof input!=='object'||Array.isArray(input))throw new TypeError('Invalid school');
  const id=validateSchoolId(input.id);
- const name=String(input.name??'').trim();
+ if(typeof input.name!=='string')throw new TypeError('School name must be text');
+ const name=input.name.trim();
  if(name.length<3||name.length>160)throw new RangeError('Invalid school name');
- const iemis=String(input.iemisCode??'').trim();
+ if(typeof input.iemisCode!=='string')throw new TypeError('IEMIS Code must be text');
+ const iemis=input.iemisCode;
  if(iemis!==id)throw new Error('School ID and IEMIS Code must match');
  return {id,name,iemisCode:iemis,active:false};
 }
