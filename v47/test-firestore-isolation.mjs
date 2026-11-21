@@ -69,10 +69,10 @@ try {
   await assertFails(getDocs(collection(db('teacherA'),'schools')));
   await assertSucceeds(getDocs(collection(db('adminA'),'schools/12345678/students')));
   await assertFails(getDocs(collection(db('adminA'),'schools/87654321/students')));
-  await assertSucceeds(setDoc(doc(db('root'),school('22334455')),{id:'22334455',name:'School C',active:false}));
+  await assertSucceeds(setDoc(doc(db('root'),school('22334455')),{id:'22334455',name:'School C',iemisCode:'22334455',active:false}));
   await assertFails(setDoc(doc(db('root'),school('33445566')),{id:'33445566',name:'School D',active:true}));
   await assertFails(setDoc(doc(db('root'),school('44556677')),{id:'44556677',name:'School E',iemisCode:'bad',active:false}));
-  await assertSucceeds(setDoc(doc(db('root'),school('55667788')),{id:'55667788',name:'School F',iemisCode:'123456789',active:false}));
+  await assertSucceeds(setDoc(doc(db('root'),school('55667788')),{id:'55667788',name:'School F',iemisCode:'55667788',active:false}));
   await assertSucceeds(setDoc(doc(db('root'),member('55667788','firstAdmin')),{uid:'firstAdmin',schoolId:'55667788',role:'school_admin',active:true}));
   await assertFails(getDoc(doc(db('firstAdmin'),student('55667788','s1'))));
   await assertSucceeds(updateDoc(doc(db('root'),school('55667788')),{active:true}));
