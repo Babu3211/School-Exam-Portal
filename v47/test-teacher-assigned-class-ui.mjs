@@ -19,7 +19,7 @@ assert.match(ui,/selectionEpoch\+\+/);
 assert.match(ui,/selection!==selectionEpoch/);
 assert.match(ui,/if\(!busy\)lock\(false\)/);
 assert.equal((ui.match(/finally\{lock\(false\)\}/g)||[]).length,1);
-assert.equal((ui.match(/finally\{if\(request===epoch\)lock\(false\)\}/g)||[]).length,3);
+assert.equal((ui.match(/finally\{if\(request===epoch\)lock\(false\)\}/g)||[]).length,4);
 assert.match(ui,/\$\('schoolId'\)\.disabled=!!actor/);
 assert.doesNotMatch(ui,/textContent='';epoch\+\+\}\);/);
 assert.match(ui,/session\.role!=='teacher'/);
