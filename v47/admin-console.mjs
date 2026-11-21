@@ -8,19 +8,19 @@ const showError=error=>status(cleanAuthError(error));
 function clearAdmin(){sessionEpoch++;refreshEpoch++;actor=null;cursor=null;$('adminArea').hidden=true;$('logout').disabled=true;$('identity').textContent='साइन इन भएको छैन';$('schools').replaceChildren();$('next').disabled=true;$('next').onclick=null;}
 const V47_FIREBASE_CONFIG=Object.freeze({apiKey:"AIzaSyCqwHormyNH4Z5F8V0xJpW9rJcJeCtM0cQ",authDomain:"smss-exam-portal-v47.firebaseapp.com",projectId:"smss-exam-portal-v47",storageBucket:"smss-exam-portal-v47.firebasestorage.app",messagingSenderId:"570404092283",appId:"1:570404092283:web:b51a0d654bb9aaa82325de"});
 const firebaseBase='https://www.gstatic.com/firebasejs/11.10.0/';
-$('connect').onclick=async()=>{if(connecting||auth)return;connecting=true;$('connect').disabled=true;try{
+$('connect').onclick=async()=>{if(connecting||db)return;connecting=true;$('connect').disabled=true;try{
  const config=V47_FIREBASE_CONFIG;
  if(config.projectId!=='smss-exam-portal-v47')throw new Error('V47 Firebase Project मात्र प्रयोग गर्न मिल्छ।');
  const appSdk=await import(firebaseBase+'firebase-app.js');
  const authSdk=await import(firebaseBase+'firebase-auth.js');
  api=await import(firebaseBase+'firebase-firestore.js');
- const app=appSdk.initializeApp(config,'smss-v47-admin');auth=authSdk.getAuth(app);await authSdk.setPersistence(auth,authSdk.inMemoryPersistence);db=api.getFirestore(app);
+ const app=appSdk.getApps().find(x=>x.name==='smss-v47-admin')??appSdk.initializeApp(config,'smss-v47-admin');const candidateAuth=authSdk.getAuth(app);await authSdk.setPersistence(candidateAuth,authSdk.inMemoryPersistence);auth=candidateAuth;db=api.getFirestore(app);
  authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clearAdmin();status('सत्र परिवर्तन भयो। फेरि साइन इन गर्नुहोस्।')}});
  $('connect').disabled=true;$('login').disabled=false;$('connection').textContent='V47 Project सँग जडान भयो।';
  $('login').onclick=async()=>{if(signingIn||mutating)return;signingIn=true;$('login').disabled=true;try{await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);$('password').value='';await verifyAdmin();}catch(e){clearAdmin();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}showError(e)}finally{$('password').value='';signingIn=false;$('login').disabled=false}};
  $('logout').onclick=async()=>{if(mutating){status('विद्यालयको परिवर्तन पूरा नभएसम्म पर्खनुहोस्।');return}await authSdk.signOut(auth);clearAdmin();status('सफलतापूर्वक साइन आउट भयो।')};
  status('जडान भयो। अधिकृत Super Admin बाट साइन इन गर्नुहोस्।');
- }catch(e){showError(e);$('connect').disabled=false}finally{connecting=false}};
+ }catch(e){db=null;auth=null;api=null;showError(e);$('connect').disabled=false}finally{connecting=false}};
 async function verifyAdmin(){clearAdmin();const uid=auth.currentUser?.uid,verificationSession=sessionEpoch;if(!uid)throw new Error('पहिले साइन इन गर्नुहोस्।');
  // This document is intentionally client-unreadable: authorization is verified by a harmless scoped query.
  await api.getDocs(api.query(api.collection(db,'schools'),api.limit(1)));
