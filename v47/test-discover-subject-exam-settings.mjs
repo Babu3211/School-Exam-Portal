@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {discoverVerifiedSubjectExamSettings} from './discover-subject-exam-settings.mjs';
+const base={schoolId:'12345',subjectId:'computer',examId:'final',classId:'9'};
+const record={id:'setting1',...base,active:true,components:[{key:'practical',name:'Practical',fullMarks:67},{key:'theory',name:'Theory',fullMarks:33}]};
+let checks=0;
+const api={collection:(_db,...path)=>path,getDocs:async path=>{assert.deepEqual(path,['schools','12345','mark_settings']);return {docs:[{id:'setting1',data:()=>record}]}}};
+const args={db:{},api,...base,revalidate:async()=>{checks++}};
+const result=await discoverVerifiedSubjectExamSettings(args);
+assert.equal(result.settingsId,'setting1');assert.deepEqual(result.components.map(c=>c.fullMarks),[67,33]);assert.equal(checks,2);
+await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,subjectId:'math'}),/No active/);
+await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,api:{...api,getDocs:async()=>({docs:[{id:'setting1',data:()=>record},{id:'setting2',data:()=>({...record,id:'setting2'})}]})}}),/Multiple active/);
+await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,api:{...api,getDocs:async()=>({docs:[{id:'wrong',data:()=>record}]})}}),/identity/);
+let count=0;await assert.rejects(()=>discoverVerifiedSubjectExamSettings({...args,revalidate:async()=>{if(++count===2)throw new Error('Session changed')}}),/Session changed/);
+console.log('V47 automatic school subject examination settings discovery passed');
