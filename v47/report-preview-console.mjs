@@ -56,9 +56,9 @@ $('logout').onclick=async()=>{
  clear();$('logout').disabled=true;$('login').disabled=true;
  try{
   // A pending sign-in may finish after signOut; wait and sign out again.
-  if(loginTask)await loginTask;
+  if(loginTask){try{await loginTask}catch{ /* still sign out after a failed login */ }}
   if(auth)await authSdk.signOut(auth);
   status('Signed out');
  }catch(error){status('Unable to sign out: '+error.message)}
- finally{loggingOut=false;$('login').disabled=!auth}
+ finally{loggingOut=false;$('login').disabled=!auth;loginTask=null}
 };
