@@ -26,6 +26,16 @@ jobs:
           npm run test:v47:records-session
           npm run test:v47:iemis-school-id
           npm run test:v47:structure
+          npm run test:v47:terms
+          npm run test:v47:term-rules
+          npm run test:v47:exam-service
+          npm run test:v47:marks-complete
+          npm run test:v47:large-class-plan
+          npm run test:v47:mark-draft
+          npm run test:v47:attendance-complete
+          npm run test:v47:ui-language
+          npm run test:v47:student-import-rules
+          npm run test:v47:rules-iemis-syntax
   v47-firestore-emulator:
     runs-on: ubuntu-latest
     timeout-minutes: 20
