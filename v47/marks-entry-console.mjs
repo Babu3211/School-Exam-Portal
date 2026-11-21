@@ -104,7 +104,7 @@ $('inspectClassMarks').onclick=async()=>{
   if(verified.role!=='school_admin'||attempt!==epoch||request!==rosterRequest||actor?.uid!==uid||schoolId!==selectedSchoolId||auth?.currentUser?.uid!==uid)throw new Error('School session changed during inspection');
  }catch(error){if(attempt===epoch&&request===rosterRequest){invalidateClassMarks();status('विद्यालयको अधिकार पुनः पुष्टि भएन। कक्षा पुनः लोड गर्नुहोस्।')}return}
  finally{if(attempt===epoch)lock(false)}
- if(busy||!classMarkContext)return;
+ if(busy||!classMarkContext||attempt!==epoch||request!==rosterRequest||actor?.uid!==uid||schoolId!==selectedSchoolId||auth?.currentUser?.uid!==uid)return;
  const {classId,term,subjectId}=classMarkContext;
  if(!actor||auth?.currentUser?.uid!==actor.uid||actor.schoolId!==schoolId){invalidateClassMarks();status('विद्यालयको लगइन परिवर्तन भयो। पुनः लगइन गर्नुहोस्।');return}
  if(classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value){invalidateClassMarks();status('Selection changed; reload roster');return}
