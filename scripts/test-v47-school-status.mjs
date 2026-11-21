@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {setSchoolActive} from '../v47/school-status-service.mjs';
 const changes=[];let exists=true;
-const api={doc:(_db,...segments)=>segments.join('/'),runTransaction:async(_db,fn)=>fn({get:async()=>({exists:()=>exists}),update:(...args)=>changes.push(args)})};
+const api={doc:(_db,...segments)=>segments.join('/'),runTransaction:async(_db,fn)=>fn({get:async()=>({exists:()=>exists,data:()=>({id:'12345678',iemisCode:'12345678',name:'Sample School',active:false})}),update:(...args)=>changes.push(args)})};
 const actor={role:'super_admin',active:true};
 await assert.rejects(()=>setSchoolActive({db:{},api,actor:{role:'school_admin',active:true},schoolId:'12345678',active:true}));
 assert.equal(changes.length,0);
