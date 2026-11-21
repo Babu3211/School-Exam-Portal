@@ -63,6 +63,8 @@ const validRow={'IEMIS Code':schoolId,'Student IEMIS Id':'90901','Student Name':
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[validRow,null]}),/row 3/);
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[validRow,[]]}),/row 3/);
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[validRow,{...validRow,'Class ':'6'}]}),/ambiguous Column/);
+assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[validRow,{'IEMIS Code':schoolId,'Student IEMIS Id':'90902','Student Name':'Other Student'}]}),/row 3 is missing required/);
+assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[validRow,{'IEMIS Code':schoolId,'Student Name':'Other Student','Class':'6'}]}),/row 3 is missing required/);
 const invalidNames=['A','X'.repeat(161)];
 for(const name of invalidNames){
  const preview=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'90901','Student Name':name,'Class':'6'}]});
