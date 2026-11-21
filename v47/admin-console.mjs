@@ -14,6 +14,7 @@ $('connect').onclick=async()=>{try{
  const authSdk=await import(firebaseBase+'firebase-auth.js');
  api=await import(firebaseBase+'firebase-firestore.js');
  const app=appSdk.initializeApp(config,'smss-v47-admin');auth=authSdk.getAuth(app);await authSdk.setPersistence(auth,authSdk.inMemoryPersistence);db=api.getFirestore(app);
+ authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clearAdmin();status('सत्र परिवर्तन भयो। फेरि साइन इन गर्नुहोस्।')}});
  $('connect').disabled=true;$('login').disabled=false;$('connection').textContent='V47 Project सँग जडान भयो।';
  $('login').onclick=async()=>{try{await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);$('password').value='';await verifyAdmin();}catch(e){clearAdmin();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}showError(e)}};
  $('logout').onclick=async()=>{if(mutating){status('विद्यालयको परिवर्तन पूरा नभएसम्म पर्खनुहोस्।');return}await authSdk.signOut(auth);clearAdmin();status('सफलतापूर्वक साइन आउट भयो।')};
