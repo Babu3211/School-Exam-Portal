@@ -44,7 +44,7 @@ export function getReadyV46IemisRows(preview,{confirmed=false}={}){
 }
 const legacyIdentity=x=>{
  if(x===null||x===undefined)return '';
- if(typeof x==='object'||typeof x==='function'||typeof x==='symbol'||typeof x==='bigint')
+ if(typeof x==='object'||typeof x==='function'||typeof x==='symbol'||typeof x==='bigint'||typeof x==='boolean')
   throw new TypeError('Invalid existing student identity type');
  if(typeof x==='number'&&(!Number.isFinite(x)||!Number.isSafeInteger(x)))
   throw new TypeError('Invalid existing student identity number');
