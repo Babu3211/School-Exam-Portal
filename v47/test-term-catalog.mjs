@@ -10,12 +10,12 @@ for(const term of EXAM_TERMS){
  const entry={studentId:'student_1',subjectId:'math',class:'9',term,theory:30,practical:10};
  assert.equal(validateMarkEntry(entry).term,term);
  assert.equal(markEntryId(entry),`${term}:student_1:math`);
- const schoolA=schoolDocumentPath('school-a','marks',markEntryId(entry));
- const schoolB=schoolDocumentPath('school-b','marks',markEntryId(entry));
+ const schoolA=schoolDocumentPath('12345678','marks',markEntryId(entry));
+ const schoolB=schoolDocumentPath('87654321','marks',markEntryId(entry));
  assert.notEqual(schoolA,schoolB,'Marks must be isolated by school');
  assert.ok(!markPaths.has(schoolA),'Distinct exam terms must not overwrite marks');
  markPaths.add(schoolA);
- const full={schoolId:'school-a',classId:'9',term,subjectId:'math',expectedStudentIds:['student_1','student_2']};
+ const full={schoolId:'12345678',classId:'9',term,subjectId:'math',expectedStudentIds:['student_1','student_2']};
  assert.equal(validateCompleteClassMarks({...full,entries:[entry,{...entry,studentId:'student_2'}]}).count,2);
  assert.throws(()=>validateCompleteClassMarks({...full,entries:[entry]}),/Cannot save: 1 students/);
  assert.throws(()=>validateCompleteClassMarks({...full,entries:[entry,{...entry,studentId:'student_2',term:'1st'===term?'2nd':'1st'}]}),/Mixed class, term or subject/);
