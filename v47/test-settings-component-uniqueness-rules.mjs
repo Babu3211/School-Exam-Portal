@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {prepareNewSubjectExamSettings} from './create-subject-exam-settings.mjs';
 const rules=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
-const start=rules.indexOf('function validComponentList(items)');
+const start=rules.indexOf('function validComponents(items)');
 const end=rules.indexOf('function validNewSettings()',start);
 assert.ok(start>=0&&end>start);
 const block=rules.slice(start,end);
