@@ -5,8 +5,8 @@ import {validateSchoolId} from './school-paths.mjs';
 const $=id=>document.getElementById(id);
 let auth,authSdk,api,db,actor=null,schoolId=null,epoch=0,selectionEpoch=0,busy=false;
 const message=text=>{$('message').textContent=text};
-function clear(){epoch++;selectionEpoch++;actor=null;schoolId=null;$('work').hidden=true;$('students').replaceChildren();$('count').textContent='';$('logout').disabled=true;$('load').disabled=true}
-function lock(value){busy=value;for(const id of ['login','logout','load','classId','subjectId','schoolId','email','password'])$(id).disabled=value;if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('load').disabled=!actor;$('schoolId').disabled=!!actor;$('email').disabled=!!actor;$('password').disabled=!!actor}}
+function clear(){epoch++;selectionEpoch++;actor=null;schoolId=null;$('subjectId').replaceChildren();$('work').hidden=true;$('students').replaceChildren();$('count').textContent='';$('logout').disabled=true;$('load').disabled=true}
+function lock(value){busy=value;for(const id of ['login','logout','load','loadAssignments','classId','subjectId','schoolId','email','password'])$(id).disabled=value;if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('load').disabled=!actor||!$('subjectId').value;$('loadAssignments').disabled=!actor;$('schoolId').disabled=!!actor;$('email').disabled=!!actor;$('password').disabled=!!actor}}
 async function verifiedSession(uid,id){
  const session=await verifySchoolSession({schoolId:id,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null}});
  if(session.role!=='teacher')throw new Error('Active Teacher membership required');
@@ -41,7 +41,46 @@ $('login').onclick=async()=>{
  finally{lock(false)}
 };
 $('logout').onclick=async()=>{if(busy)return;lock(true);clear();try{await authSdk.signOut(auth);message('Signed out')}catch(e){message('Sign out failed: '+e.message)}finally{lock(false)}};
-for(const id of ['classId','subjectId'])$(id).addEventListener('change',()=>{$('students').replaceChildren();$('count').textContent='';selectionEpoch++});
+$('classId').addEventListener('change',()=>{$('students').replaceChildren();$('count').textContent='';$('subjectId').replaceChildren();selectionEpoch++;lock(false)});
+$('subjectId').addEventListener('change',()=>{$('students').replaceChildren();$('count').textContent='';selectionEpoch++;lock(false)});
+$('loadAssignments').onclick=async()=>{
+ if(busy||!actor)return;
+ const request=epoch,selection=selectionEpoch,uid=actor.uid,id=schoolId,classId=$('classId').value;
+ $('subjectId').replaceChildren();$('students').replaceChildren();$('count').textContent='';lock(true);
+ const revalidate=async()=>{if(request!==epoch||selection!==selectionEpoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==id)throw new Error('School session or selection changed');await verifiedSession(uid,id)};
+ try{
+  await revalidate();
+  const seen=new Set(),subjects=[];
+  let cursor=null;
+  do{
+   const constraints=[api.where('uid','==',uid),api.orderBy('__name__'),api.limit(100)];
+   if(cursor)constraints.push(api.startAfter(cursor));
+   const snap=await api.getDocs(api.query(api.collection(db,'schools',id,'teacher_assignments'),...constraints));
+   await revalidate();
+   for(const document of snap.docs){
+    const data=document.data();
+    if(data.uid!==uid||data.schoolId!==id)throw new Error('Cross-school or forged teacher assignment');
+    if(data.active!==true||data.classId!==classId)continue;
+    if(seen.has(data.subjectId))throw new Error('Duplicate active teacher subject assignment');
+    seen.add(data.subjectId);subjects.push(data.subjectId);
+   }
+   if(subjects.length>300)throw new Error('Too many assigned subjects');
+   cursor=snap.docs.length===100?snap.docs.at(-1):null;
+  }while(cursor);
+  const verified=[];
+  for(const subjectId of subjects){
+   await verifyTeacherSubjectAssignment({db,api,actor,schoolId:id,classId,subjectId,revalidate});
+   verified.push(subjectId);
+  }
+  await revalidate();
+  if(classId!==$('classId').value)throw new Error('Class changed');
+  for(const subjectId of verified.sort()){
+   const option=document.createElement('option');option.value=subjectId;option.textContent=subjectId;$('subjectId').append(option);
+  }
+  message(verified.length+' assigned subjects verified. Choose a subject and load the class.');
+ }catch(e){if(request===epoch){$('subjectId').replaceChildren();message('Assigned subject load failed: '+e.message)}}
+ finally{if(request===epoch)lock(false)}
+};
 $('load').onclick=async()=>{
  if(busy||!actor)return;
  const request=epoch,selection=selectionEpoch,uid=actor.uid,id=schoolId,classId=$('classId').value,subjectId=$('subjectId').value.trim();
