@@ -11,7 +11,7 @@ const firestoreApi={
 };
 const bridge=await createV46ReadOnlyBridge({schoolId,auth,db:{},firestoreApi});
 assert.equal(bridge.role,'viewer');
-for(const [method,collection] of Object.entries({listStudents:'students',listStaff:'staff',listSubjects:'subjects',listExams:'exams',listAttendance:'attendance',listMarks:'marks'})){
+for(const [method,collection] of Object.entries({listStudents:'students',listStaff:'staff',listSubjects:'subjects',listExams:'exams',listAttendance:'attendance',listMarks:'marks',listClasses:'classes',listUserRoles:'user_roles',listMarkSettings:'mark_settings',listCertificates:'certificates',listPublicResultExams:'public_result_exams',listPublicResultLookup:'public_result_lookup',listPublicResults:'public_results',listSchoolGallery:'school_gallery',listSchoolPublicBranding:'school_public_branding',listAuditLogs:'audit_logs'})){
  assert.deepEqual((await bridge[method]()).path,['schools',schoolId,collection]);
 }
 assert.deepEqual((await bridge.getStudent('stu1')).path,['schools',schoolId,'students','stu1']);
