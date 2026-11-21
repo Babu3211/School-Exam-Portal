@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {auditV46ReportReferences} from './report-reference-audit.mjs';
+const rows={students:[{id:'s1'}],subjects:[{id:'sub1'}],exams:[{id:'exam1'}],marks:[{id:'m1',studentId:'s1',subjectId:'sub1',examId:'exam1'}]};
+const good=auditV46ReportReferences(rows);
+assert.deepEqual(good.missing,[]);
+assert.equal(good.checkedMarks,1);
+assert.equal(good.valid,true);
+assert.equal(good.publicationAllowed,false);
+assert.equal(Object.isFrozen(good.missing),true);
+const broken=auditV46ReportReferences({...rows,marks:[{id:'m2',studentId:'other-school-student',subjectId:'sub1',examId:'missing'}]});
+assert.deepEqual(broken.missing,[{markId:'m2',field:'studentId',reference:'other-school-student',collection:'students'},{markId:'m2',field:'examId',reference:'missing',collection:'exams'}]);
+assert.equal(broken.valid,false);
+assert.equal(broken.publicationAllowed,false);
+assert.equal(auditV46ReportReferences({...rows,marks:[{id:'legacy'}]}).valid,true);
+assert.throws(()=>auditV46ReportReferences({...rows,marks:null}),/Complete report/);
+assert.throws(()=>auditV46ReportReferences({...rows,marks:[{id:'m',studentId:{id:'s1'}}]}),/Invalid mark reference/);
+console.log('V47 V46 report reference audit tests passed');
