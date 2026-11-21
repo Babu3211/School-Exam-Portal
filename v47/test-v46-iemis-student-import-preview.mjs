@@ -53,6 +53,11 @@ const unicodeAdmission=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code
 assert.equal(unicodeAdmission.skipped,1);
 const blankExisting=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'90002','Student Name':'Valid Student','Class':'6'}],existingIemisIds:[null,undefined,'  '],existingAdmissionNumbers:[null]});
 assert.equal(blankExisting.ready,1,'Empty legacy identity values must not create false duplicates');
+for(const invalidCell of [{unexpected:true},['nested'],Number.POSITIVE_INFINITY,NaN,1n]){
+ assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'90003','Student Name':'Valid Student','Class':'6','Father Name':invalidCell}]}),/Excel cell/);
+}
+const numericCell=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':90004,'Student Name':'Valid Student','Class':'6'}]});
+assert.equal(numericCell.ready,1,'Finite numeric spreadsheet cells remain supported');
 const invalidNames=['A','X'.repeat(161)];
 for(const name of invalidNames){
  const preview=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'90901','Student Name':name,'Class':'6'}]});
