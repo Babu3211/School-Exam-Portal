@@ -21,4 +21,5 @@ assert.match(js,/auth\.currentUser\?\.uid!==uid/);
 assert.match(js,/fresh\.role!==session\.role/);
 assert.match(js,/\$\('settings'\)\.hidden=false/);
 assert.doesNotMatch(js,/setDoc\(|addDoc\(|updateDoc\(|deleteDoc\(|runTransaction\(|writeBatch\(/);
+assert.match(js,/const failedEpoch=epoch;try\{await authSdk\.signOut\(auth\)\}catch\{\}if\(epoch===failedEpoch\)\{lock\(false\)/);
 console.log('V47 school settings read-only source contract passed');
