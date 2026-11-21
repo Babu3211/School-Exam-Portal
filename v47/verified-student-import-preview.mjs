@@ -17,7 +17,7 @@ export async function previewAgainstSchoolStudents({auth,schoolId,rows,readDocum
  for(const student of students){
   if(!student||typeof student!=='object'||Array.isArray(student))throw new TypeError('Invalid existing student');
   if(student.schoolId!==undefined&&str(student.schoolId)!==schoolId)throw new Error('Cross-school student record in lookup');
-  const id=str(student.studentIemisId??student.studentIEMISId??student.iemisId??student.studentIemisNo??student.iemisStudentNo);
+  const id=[student.studentIemisId,student.studentIEMISId,student.iemisId,student.studentIemisNo,student.iemisStudentNo].map(str).find(Boolean)||'';
   const admission=str(student.admissionNumber??student.admissionNo);
   if(id)existingIemisIds.push(id);
   if(admission)existingAdmissionNumbers.push(admission);
