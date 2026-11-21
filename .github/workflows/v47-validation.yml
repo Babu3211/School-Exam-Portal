@@ -37,6 +37,7 @@ jobs:
           node v47/test-class-marks-session-revalidation.mjs
           node v47/test-class-mark-inspection-session.mjs
           node v47/test-class-marks-absence-ui.mjs
+          node v47/test-dynamic-component-rules.mjs
           node v47/test-discover-subject-exam-settings.mjs
           node v47/test-mark-summary-preview.mjs
           node v47/test-class-mark-coverage-preview.mjs
