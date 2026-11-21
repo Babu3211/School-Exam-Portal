@@ -8,6 +8,7 @@ export function prepareNewSubjectExamSettings({schoolId,classId,subjectId,examId
  if(typeof subjectId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(subjectId))throw new Error('Invalid subject');
  if(!['weekly','monthly','1st','2nd','3rd','final'].includes(examId))throw new Error('Invalid examination term');
  const id=classId+'_'+subjectId+'_'+examId;
+ if(id.length>128)throw new Error('Settings document ID exceeds 128 characters');
  const normalized=validateConfiguredMarkComponents({schoolId,classId,subjectId,examId,active:true,components},{schoolId,classId,subjectId,examId});
  if(normalized.length>6)throw new Error('Maximum six configured components per subject');
  if(new Set(normalized.map(c=>c.key)).size!==normalized.length)throw new Error('Duplicate component keys');
