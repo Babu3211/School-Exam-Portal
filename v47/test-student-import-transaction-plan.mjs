@@ -20,6 +20,8 @@ assert.equal(prepared.records[0].schoolId,undefined);
 assert.throws(()=>planStudentImportTransaction({prepared:{...prepared},existingStudents}),/Verified prepared import/);
 assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{schoolId,studentIemisId:'',studentIemisNo:'00002'}]}),/Duplicate Student IEMIS/);
 assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{schoolId,studentIemisNo:'00002'}]}),/Duplicate Student IEMIS/);
+assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{schoolId,studentIemisId:'OTHER',studentIemisNo:'00002'}]}),/Duplicate Student IEMIS/);
+assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{schoolId,admissionNumber:'OTHER',admissionNo:'A-2'}]}),/Duplicate Admission/);
 assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{schoolId,admissionNumber:'',admissionNo:'A-2'}]}),/Duplicate Admission/);
 assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{schoolId,admissionNo:'A-2'}]}),/Duplicate Admission/);
 assert.throws(()=>planStudentImportTransaction({prepared,existingStudents:[{schoolId:'999999999'}]}),/Cross-school/);
