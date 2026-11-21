@@ -228,14 +228,14 @@ try{
  await assertSucceeds(setDoc(doc(admin,'schools','12345678','teacher_assignments','12345678:teacher_12345678:10:math'),{schoolId:'12345678',uid:'teacher_12345678',classId:'10',subjectId:'math',active:false}));
  await assertFails(updateDoc(mark(teacher,'12345678'),{theory:31}));
  await assertSucceeds(updateDoc(doc(admin,'schools','12345678','teacher_assignments','12345678:teacher_12345678:10:math'),{active:true}));
- await assertSucceeds(updateDoc(mark(teacher,'12345678'),{theory:31}));
+ await assertFails(updateDoc(mark(teacher,'12345678'),{theory:31}));
  await assertFails(updateDoc(mark(teacher,'12345678'),{studentId:'other_student'}));
  await assertFails(updateDoc(mark(teacher,'87654321'),{theory:32}));
  // 106-111 Assigned attendance teacher may correct presence, not identity or another tenant.
  await assertSucceeds(setDoc(doc(admin,'schools','12345678','teacher_assignments','12345678:teacher_12345678:10:attendance'),{schoolId:'12345678',uid:'teacher_12345678',classId:'10',subjectId:'attendance',active:false}));
  await assertFails(updateDoc(attendance(teacher,'12345678'),{present:true}));
  await assertSucceeds(updateDoc(doc(admin,'schools','12345678','teacher_assignments','12345678:teacher_12345678:10:attendance'),{active:true}));
- await assertSucceeds(updateDoc(attendance(teacher,'12345678'),{present:true}));
+ await assertFails(updateDoc(attendance(teacher,'12345678'),{present:true}));
  await assertFails(updateDoc(attendance(teacher,'12345678'),{date:'2026-11-19'}));
  await assertFails(updateDoc(attendance(teacher,'87654321'),{present:true}));
  // 99 A second canonical term can be created independently
