@@ -15,11 +15,16 @@ export function prepareNewSubjectExamSettings({schoolId,classId,subjectId,examId
 }
 export async function createNewSubjectExamSettings({db,api,actor,settings}){
  if(actor?.role!=='school_admin'||actor?.active!==true||actor?.schoolId!==settings?.schoolId||!actor.uid)throw new Error('School Admin required');
- if(typeof api?.doc!=='function'||typeof api?.setDoc!=='function')throw new Error('Firestore create API required');
+ if(typeof api?.doc!=='function'||typeof api?.runTransaction!=='function')throw new Error('Firestore create API required');
  const prepared=prepareNewSubjectExamSettings(settings);
  if(settings.id!==prepared.id)throw new Error('Settings document ID mismatch');
- // Firestore Rules allow only create, not update. A second setDoc fails closed.
+ // Read-before-write in a transaction prevents overwriting existing settings,
+ // even if production Firestore Rules have not yet been deployed.
  const ref=api.doc(db,'schools',prepared.schoolId,'mark_settings',prepared.id);
- await api.setDoc(ref,prepared);
+ await api.runTransaction(db,async transaction=>{
+  const existing=await transaction.get(ref);
+  if(existing.exists())throw new Error('Settings already exist. No changes made');
+  transaction.set(ref,prepared);
+ });
  return Object.freeze({created:true,settingsId:prepared.id,schoolId:prepared.schoolId});
 }
