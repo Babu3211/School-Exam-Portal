@@ -2,6 +2,7 @@
 // No legacy V46 config, admin UID, raw writes or automatic data migration.
 import {createVerifiedTenantContext} from './verified-tenant-context.mjs';
 import {createVerifiedTenantFirestore} from './verified-tenant-firestore.mjs';
+import {prepareV46ReportSnapshot} from './v46-report-snapshot.mjs';
 export async function createV46ReadOnlyBridge({schoolId,auth,db,firestoreApi}){
  if(!auth?.currentUser?.uid||!db||!firestoreApi)throw new Error('Authenticated V47 Firebase services required');
  const {doc,getDoc}=firestoreApi;
@@ -40,6 +41,7 @@ export async function createV46ReadOnlyBridge({schoolId,auth,db,firestoreApi}){
    await context.revalidateRead();
    return Object.freeze({schoolId:context.schoolId,students,subjects,exams,marks,markSettings});
   },
+  async loadExamReportRows(){return prepareV46ReportSnapshot(await this.loadExamReportInputs())},
   // V46 report views can retrieve individual tenant-scoped records without writes.
   getMark:id=>records.get('marks',id),
   getExam:id=>records.get('exams',id),
