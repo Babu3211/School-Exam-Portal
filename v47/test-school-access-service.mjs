@@ -15,7 +15,7 @@ assert.equal((await loadSchoolAccess({...args,schoolId:'12345678'})).role,'teach
 assert.equal((await loadSchoolAccess({...args,schoolId:'87654321'})).canRead,false);
 await assert.rejects(()=>loadSchoolAccess({...args,schoolId:'12345678',uid:'userB'}),/does not match/);
 assert.equal((await loadSchoolAccess({...args,schoolId:'11223344'})).canRead,false);
-await assert.rejects(()=>loadSchoolAccess({...args,schoolId:'../87654321'}),TypeError);
+await assert.rejects(()=>loadSchoolAccess({...args,schoolId:'../87654321'}),/IEMIS number/);
 await assert.rejects(()=>loadSchoolAccess({...args,schoolId:'12345678',isSuperAdmin:true}),/server-side/);
 await assert.rejects(()=>loadSchoolAccess({...args,auth:{currentUser:null},schoolId:'12345678'}),/does not match/);
 const inactiveDocs=new Map(docs);
