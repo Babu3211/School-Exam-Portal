@@ -47,7 +47,7 @@ $('login').onclick=()=>{
    name.textContent=label;count.textContent=String(rows[key].length);tr.append(name,count);$('counts').append(tr);
   }
   const audit=auditV46ReportReferences(rows);
-  $('audit').textContent=audit.valid?'Mark references: no missing or unchecked references ('+audit.checkedMarks+' marks inspected).':'Mark references: '+audit.missing.length+' unresolved, '+audit.unchecked.length+' unchecked fields across '+audit.checkedMarks+' marks. Review V46 schema before enabling results.';
+  $('audit').textContent=audit.valid?'Mark references: no missing, unchecked or duplicate entries ('+audit.checkedMarks+' marks inspected).':'Mark references: '+audit.missing.length+' unresolved, '+audit.unchecked.length+' unchecked fields, '+audit.duplicates.length+' duplicate entries across '+audit.checkedMarks+' marks. Review V46 data before enabling results.';
   $('report').hidden=false;status('Read-only report inputs loaded. No results were published.');
  }catch(error){if(current===epoch){clear();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status('Report unavailable: '+error.message)}}
  finally{busy=false;$('login').disabled=!auth||loggingOut;if(!auth?.currentUser)$('logout').disabled=true}
