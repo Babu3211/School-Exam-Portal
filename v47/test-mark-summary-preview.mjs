@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {previewV46MarkSummaries} from './mark-summary-preview.mjs';
-const rows={marks:[
+const rows={exams:[{id:'e1'},{id:'e2'}],marks:[
  {id:'m1',studentId:'s1',examId:'e1',className:'Class 1',subject:'Math',scores:[{name:'No. of Learning Achievement',obtained:10},{name:'Obtained Learning Achievement',obtained:32}]},
  {id:'m2',studentId:'s2',examId:'e1',className:'Class 1',subject:'Math',scores:[]},
  {id:'m3',studentId:'s3',examId:'e2',className:'Class 1',subject:'Math',scores:[]},
@@ -16,4 +16,5 @@ assert.equal(preview.official,false);
 assert.ok(Object.isFrozen(preview.records)&&Object.isFrozen(preview.records[0]));
 assert.throws(()=>previewV46MarkSummaries(rows,{classNo:11,examId:'e1'}),/Verified class/);
 assert.throws(()=>previewV46MarkSummaries(rows,{classNo:1}),/Verified class/);
+assert.throws(()=>previewV46MarkSummaries(rows,{classNo:1,examId:'other-school-exam'}),/verified school report snapshot/);
 console.log('V47 read-only mark summary preview tests passed');
