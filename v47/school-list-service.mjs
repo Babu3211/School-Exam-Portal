@@ -9,6 +9,6 @@ export async function listSchools({db,api,actor,pageSize=30,cursor=null}){
  const snapshot=await api.getDocs(api.query(api.collection(db,'schools'),...constraints));
  if(!Array.isArray(snapshot?.docs)||snapshot.docs.length>size+1)throw new RangeError('Unexpected result size');
  const page=snapshot.docs.slice(0,size);
- const schools=page.map(doc=>{if(typeof doc?.data!=='function')throw new Error('Invalid school snapshot');if(typeof doc?.id!=='string'||!/^\d{5,20}$/.test(doc.id))throw new Error('Invalid school document ID');const data=doc.data();if(!data||typeof data!=='object'||Array.isArray(data)||data.id!==doc.id||data.iemisCode!==doc.id||typeof data.name!=='string'||data.name.trim().length<3||data.name.length>160||typeof data.active!=='boolean')throw new Error('School registry identity mismatch');return {...data,id:doc.id};});
+ const schools=page.map(doc=>{if(typeof doc?.data!=='function')throw new Error('Invalid school snapshot');if(typeof doc?.id!=='string'||!/^\d{5,20}$/.test(doc.id))throw new Error('Invalid school document ID');const data=doc.data();if(!data||typeof data!=='object'||Array.isArray(data)||data.id!==doc.id||data.iemisCode!==doc.id||typeof data.name!=='string'||data.name.trim().length<3||data.name.length>160||typeof data.active!=='boolean')throw new Error('School registry identity mismatch');return {id:doc.id,iemisCode:data.iemisCode,name:data.name,active:data.active};});
  return {schools,hasMore:snapshot.docs.length>size,cursor:page.at(-1)??null};
 }
