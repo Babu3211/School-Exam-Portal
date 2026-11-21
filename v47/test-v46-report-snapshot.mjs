@@ -17,5 +17,6 @@ assert.throws(()=>prepareV46ReportSnapshot({...inputs,students:{docs:[doc('same'
 assert.throws(()=>prepareV46ReportSnapshot({...inputs,students:{docs:[doc('bad',null)]}}),/Invalid V46 report record/);
 assert.deepEqual(prepareV46ReportSnapshot({...inputs,students:{docs:[doc('safe',{id:'untrusted'})]}}).students,[{id:'safe'}]);
 assert.throws(()=>prepareV46ReportSnapshot({...inputs,students:{docs:[doc('foreign',{schoolId:'87654321'})]}}),/Cross-school/);
+assert.throws(()=>prepareV46ReportSnapshot({...inputs,marks:{docs:[doc('foreign_mark',{school_id:'87654321'})]}}),/Cross-school/);
 assert.deepEqual(prepareV46ReportSnapshot({...inputs,students:{docs:[doc('local',{schoolId:'12345678'})]}}).students,[{schoolId:'12345678',id:'local'}]);
 console.log('V46 report snapshot conversion tests passed');
