@@ -38,7 +38,7 @@ $('login').onclick=async()=>{
   if(request!==epoch)throw new Error('Login changed');
   if(id!==$('schoolId').value.trim())throw new Error('School selection changed');
   actor={uid:session.uid,role:'teacher',active:true,schoolId:id};schoolId=id;$('work').hidden=false;message('शिक्षकको लगइन सफल भयो। आफ्नो कक्षा र विषय छान्नुहोस्।');
- }catch(e){if(request===epoch){clear();lock(false);try{await authSdk.signOut(auth)}catch{}message('Sign in failed: '+e.message)}}
+ }catch(e){if(request===epoch){clear();const failedEpoch=epoch;try{await authSdk.signOut(auth)}catch{}if(epoch===failedEpoch){lock(false);message('Sign in failed: '+e.message)}}}
  finally{if(request===epoch)lock(false)}
 };
 $('logout').onclick=async()=>{if(busy)return;lock(true);clear();try{await authSdk.signOut(auth);message('Signed out')}catch(e){message('Sign out failed: '+e.message)}finally{lock(false)}};
