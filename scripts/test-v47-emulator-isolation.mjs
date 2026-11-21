@@ -381,6 +381,7 @@ try {
   await assertFails(getDoc(schoolDoc('viewer-a','300160001','students','student-1')));
   await assertFails(getDoc(schoolDoc('teacher-a','300160001','students','student-1')));
   await assertFails(setDoc(schoolDoc('admin-a','300160001','attendance','2026-11-22_student-1'),{...adminAttendance,date:'2026-11-22'}));
+  await assertFails(setDoc(settingsPath('admin-a','9_math_monthly'),{...settings,id:'9_math_monthly',examId:'monthly'}));
   await assertFails(setDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-22_student-1'),{...teacherAttendance,date:'2026-11-22'}));
   // Suspension must also block edits to attendance that existed before
   // suspension, not just creation of new attendance documents.
