@@ -49,6 +49,7 @@ jobs:
           node v47/test-class-inspection-settings-refresh.mjs
           node v47/test-class-inspection-roster-refresh.mjs
           node v47/test-create-subject-exam-settings.mjs
+          node v47/test-create-settings-ui-wiring.mjs
           node v47/test-discover-subject-exam-settings.mjs
           node v47/test-mark-summary-preview.mjs
           node v47/test-class-mark-coverage-preview.mjs
