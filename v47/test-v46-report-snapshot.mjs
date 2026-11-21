@@ -10,6 +10,8 @@ assert.ok(Object.isFrozen(rows)&&Object.isFrozen(rows.students)&&Object.isFrozen
 assert.equal(rows.schoolId,'12345678');
 assert.equal(inputs.students.docs[0].id,'student_1');
 assert.throws(()=>prepareV46ReportSnapshot({...inputs,schoolId:'wrong'}),/IEMIS/);
+for(const valid of ['12345','12345678901234567890'])assert.equal(prepareV46ReportSnapshot({...inputs,schoolId:valid}).schoolId,valid);
+for(const invalid of ['1234','123456789012345678901',12345678])assert.throws(()=>prepareV46ReportSnapshot({...inputs,schoolId:invalid}),/IEMIS/);
 assert.throws(()=>prepareV46ReportSnapshot({...inputs,marks:undefined}),/Incomplete/);
 assert.throws(()=>prepareV46ReportSnapshot({...inputs,students:{docs:[doc('same',{}),doc('same',{})]}}),/Duplicate/);
 assert.throws(()=>prepareV46ReportSnapshot({...inputs,students:{docs:[doc('bad',null)]}}),/Invalid V46 report record/);
