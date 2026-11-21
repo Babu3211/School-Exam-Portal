@@ -109,4 +109,24 @@ await ok('60 reject mismatched school registry ID on listing',async()=>{const ba
 await ok('61 reject missing school registry data on listing',async()=>{const bad=makeDb();bad.schools.set('56789',null);await assert.rejects(listSchools({db,api:mockApi(bad),actor:admin}))});
 await ok('62 reject invalid school registry document with numeric ID field',async()=>{const bad=makeDb();bad.schools.set('56789',{id:56789,iemisCode:'56789',name:'Invalid',active:false});await assert.rejects(listSchools({db,api:mockApi(bad),actor:admin}))});
 
+
+await ok('63 reject missing school name on listing',async()=>{const bad=makeDb();bad.schools.set('56789',{id:'56789',iemisCode:'56789',active:false});await assert.rejects(listSchools({db,api:mockApi(bad),actor:admin}))});
+await ok('64 reject numeric school name on listing',async()=>{const bad=makeDb();bad.schools.set('56789',{id:'56789',iemisCode:'56789',name:123,active:false});await assert.rejects(listSchools({db,api:mockApi(bad),actor:admin}))});
+await ok('65 reject empty school name on listing',async()=>{const bad=makeDb();bad.schools.set('56789',{id:'56789',iemisCode:'56789',name:'  ',active:false});await assert.rejects(listSchools({db,api:mockApi(bad),actor:admin}))});
+await ok('66 reject too-long school name on listing',async()=>{const bad=makeDb();bad.schools.set('56789',{id:'56789',iemisCode:'56789',name:'x'.repeat(161),active:false});await assert.rejects(listSchools({db,api:mockApi(bad),actor:admin}))});
+await ok('67 reject missing school active flag on listing',async()=>{const bad=makeDb();bad.schools.set('56789',{id:'56789',iemisCode:'56789',name:'Valid'});await assert.rejects(listSchools({db,api:mockApi(bad),actor:admin}))});
+await ok('68 reject string school active flag on listing',async()=>{const bad=makeDb();bad.schools.set('56789',{id:'56789',iemisCode:'56789',name:'Valid',active:'true'});await assert.rejects(listSchools({db,api:mockApi(bad),actor:admin}))});
+await ok('69 reject array school data on listing',async()=>{const bad=makeDb();bad.schools.set('56789',[]);await assert.rejects(listSchools({db,api:mockApi(bad),actor:admin}))});
+await ok('70 reject absent school snapshot',async()=>{await assert.rejects(listSchools({db,api:{...api,getDocs:async()=>null},actor:admin}))});
+await ok('71 reject missing school docs array',async()=>{await assert.rejects(listSchools({db,api:{...api,getDocs:async()=>({})},actor:admin}))});
+await ok('72 reject oversized Firestore snapshot',async()=>{await assert.rejects(listSchools({db,api:{...api,getDocs:async()=>({docs:Array(3).fill({id:'12345',data:()=>school})})},actor:admin,pageSize:1}))});
+await ok('73 reject school snapshot without data function',async()=>{await assert.rejects(listSchools({db,api:{...api,getDocs:async()=>({docs:[{id:'12345'}]})},actor:admin}))});
+await ok('74 reject school snapshot with non-string ID',async()=>{await assert.rejects(listSchools({db,api:{...api,getDocs:async()=>({docs:[{id:12345,data:()=>school}]})},actor:admin}))});
+await ok('75 reject school snapshot with missing ID',async()=>{await assert.rejects(listSchools({db,api:{...api,getDocs:async()=>({docs:[{data:()=>school}]})},actor:admin}))});
+await ok('76 reject malformed Firestore docs object',async()=>{await assert.rejects(listSchools({db,api:{...api,getDocs:async()=>({docs:{length:1}})},actor:admin}))});
+await ok('77 accept inactive school listing',async()=>{const page=await listSchools({db,api,actor:admin,pageSize:10});assert.equal(page.schools.find(x=>x.id==='12345').active,false)});
+await ok('78 accept active school listing',async()=>{const page=await listSchools({db,api,actor:admin,pageSize:10});assert.equal(page.schools.find(x=>x.id==='23456').active,false)});
+await ok('79 list leading-zero IEMIS school ID unchanged',async()=>{const page=await listSchools({db,api,actor:admin,pageSize:10});assert(page.schools.some(x=>x.id==='00123'&&x.iemisCode==='00123'))});
+await ok('80 list results do not expose member records',async()=>{const page=await listSchools({db,api,actor:admin,pageSize:10});assert(page.schools.every(x=>!('members' in x)))});
+
 console.log('PASS '+checks+' V47 school admin service checks (mock SDK; Firebase emulator verification still required)');
