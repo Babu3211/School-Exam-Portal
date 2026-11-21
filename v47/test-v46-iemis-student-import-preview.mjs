@@ -65,6 +65,11 @@ assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[validRow,[]]}),/r
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[validRow,{...validRow,'Class ':'6'}]}),/ambiguous Column/);
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[validRow,{'IEMIS Code':schoolId,'Student IEMIS Id':'90902','Student Name':'Other Student'}]}),/row 3 is missing required/);
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[validRow,{'IEMIS Code':schoolId,'Student Name':'Other Student','Class':'6'}]}),/row 3 is missing required/);
+const mixedIdentityRows=previewV46IemisStudentImport({schoolId,rows:[
+ {'IEMIS Code':schoolId,'Student IEMIS Id':'90911','Student Name':'First Student','Class':'6'},
+ {'IEMIS Code':schoolId,'Admission Number':'A-90912','Student Name':'Second Student','Class':'6'}
+]});
+assert.equal(mixedIdentityRows.ready,2,'Later rows may use Admission Number instead of Student IEMIS Id');
 const invalidNames=['A','X'.repeat(161)];
 for(const name of invalidNames){
  const preview=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'90901','Student Name':name,'Class':'6'}]});
