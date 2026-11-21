@@ -52,7 +52,7 @@ assert(source.includes("if(schoolName.length<3||schoolName.length>160)"),"Valida
 assert(source.includes("if(!/^[A-Za-z0-9_-]{6,128}$/.test(adminUid))"),"Validate school admin UID before confirmation");
 assert(source.includes("if(typeof message==='string'&&["),"Only show whitelisted validation messages");
 assert(source.includes("const form={id:schoolId,name:schoolName,iemisCode:schoolId};"),"Reuse validated school name");
-assert(source.includes("form,adminUid});cursor=null;"),"Reuse validated school admin UID");
+assert(source.includes("form,adminUid});if(sessionEpoch!==mutationSession"),"Reuse validated school admin UID");
 assert(source.includes("const mutationActor=actor,mutationSession=sessionEpoch;"),"Capture mutation session before async write");
 assert(source.includes("actor:mutationActor,schoolId:school.id"),"Activation binds initiating actor");
 assert(source.includes("actor:mutationActor,form,adminUid"),"Registration binds initiating actor");
