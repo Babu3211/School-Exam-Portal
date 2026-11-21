@@ -11,6 +11,7 @@ const config=JSON.parse(read('firebase.json'));
 const blockers=[];
 const expectedProject='smss-exam-portal-v47';
 const projectFiles=['.firebaserc','firebase.json'];
+if(config.hosting?.public!=='dist')blockers.push('V47 hosting must use config-relative dist');
 for(const filename of projectFiles){
  const full=resolve(root,filename);
  if(filename==='.firebaserc'&&existsSync(full)){
@@ -55,7 +56,7 @@ if(computerWrites.some(rule=>rule.condition!=='false'))
 if(computerWrites.length&&computerWrites.every(rule=>rule.condition==='false'))
  blockers.push('Computer component marks saving is disabled until complete-class publication is implemented');
 const publicDir=config.hosting?.public;
-if(typeof publicDir!=='string'||!publicDir||!existsSync(resolve(root,publicDir,'index.html')))
+if(typeof publicDir!=='string'||publicDir!=='dist'||!existsSync(resolve(root,'dist','index.html')))
  blockers.push('Firebase Hosting output is missing its index.html');
 if(!blockers.length)
  blockers.push('No independently verified feature-parity, emulator and deployment approvals recorded; manual release sign-off required');
