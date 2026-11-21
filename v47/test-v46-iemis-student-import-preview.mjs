@@ -51,4 +51,6 @@ for(const [field,value] of [['Student IEMIS Id','9'.repeat(129)],['Admission Num
  assert.equal(preview.ready,0);
  assert.match(preview.records[0].errors.join(' '),/exceeds/);
 }
+const validBoundary=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'8'.repeat(128),'Student Name':'A'.repeat(160),'Class':'6','Father Name':'P'.repeat(500)}]});
+assert.equal(validBoundary.ready,1,'Maximum permitted Firestore field sizes must remain importable');
 console.log('PASS: V46 26-column IEMIS preview, leading zeros, duplicate and cross-school rejection');
