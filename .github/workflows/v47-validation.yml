@@ -43,6 +43,7 @@ jobs:
           node v47/test-preview-v46-primary-achievement-settings.mjs
           node v47/test-audit-v46-mark-settings-batch.mjs
           node v47/test-configured-class-publication-preview.mjs
+          node v47/test-class-marks-review-package.mjs
           node v47/test-class-publication-ui-wiring.mjs
           node v47/test-class-inspection-postawait-guard.mjs
           node v47/test-class-marks-same-snapshot.mjs
