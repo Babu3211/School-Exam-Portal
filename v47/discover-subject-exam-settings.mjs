@@ -2,12 +2,13 @@ import {validateConfiguredMarkComponents} from './configured-mark-preflight.mjs'
 // Find the unique active settings record for a verified school/class/exam/subject.
 // Fail closed on zero or multiple matches. No default marks or hardcoded Computer maxima.
 export async function discoverVerifiedSubjectExamSettings({db,api,schoolId,subjectId,examId,classId,revalidate}){
- if(!db||!api||['collection','getDocs'].some(k=>typeof api[k]!=='function')||typeof revalidate!=='function')throw new Error('Verified Firestore settings discovery required');
+ if(!db||!api||['collection','query','where','limit','getDocs'].some(k=>typeof api[k]!=='function')||typeof revalidate!=='function')throw new Error('Verified Firestore settings discovery required');
  for(const [key,value] of Object.entries({schoolId,subjectId,examId,classId}))if(typeof value!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(value))throw new Error('Invalid '+key);
  await revalidate();
- const snapshot=await api.getDocs(api.collection(db,'schools',schoolId,'mark_settings'));
+ const scoped=api.query(api.collection(db,'schools',schoolId,'mark_settings'),api.where('subjectId','==',subjectId),api.where('examId','==',examId),api.where('classId','==',classId),api.where('active','==',true),api.limit(2));
+ const snapshot=await api.getDocs(scoped);
  await revalidate();
- if(!Array.isArray(snapshot?.docs)||snapshot.docs.length>500)throw new Error('Examination settings list too large or invalid');
+ if(!Array.isArray(snapshot?.docs)||snapshot.docs.length>2)throw new Error('Examination settings list too large or invalid');
  const matches=[];
  for(const doc of snapshot.docs){
   const data=doc.data();
