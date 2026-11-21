@@ -18,6 +18,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install Firebase test dependencies
+        run: npm install --no-package-lock --ignore-scripts
       - name: Check V47 module syntax
         run: find v47 -name '*.mjs' -print0 | xargs -0 -n1 node --check
       - name: Verified student preview
@@ -34,3 +36,6 @@ jobs:
 
       - name: Validate IEMIS school rules pattern
         run: npm run test:v47:rules-iemis-syntax
+
+      - name: Firestore rules emulator isolation checks
+        run: npm run test:v47:emulator
