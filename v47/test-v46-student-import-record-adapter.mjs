@@ -20,4 +20,10 @@ assert.equal(student.schoolId,schoolId);
 assert.equal(rows[0].schoolId,undefined);
 assert.equal(Object.isFrozen(student),true);
 assert.throws(()=>adaptVerifiedV46StudentImport({...plan}),/Verified create-only/);
+const originalNow=Date.now;
+try {
+ Date.now=()=>originalNow()+5*60*1000+1;
+ assert.throws(()=>adaptVerifiedV46StudentImport(plan),/Verified create-only/);
+} finally {Date.now=originalNow}
+assert.equal(adaptVerifiedV46StudentImport(plan)[0].schoolId,schoolId);
 console.log('PASS: authenticated V46 Excel records map to school-scoped V47 schema without writes');
