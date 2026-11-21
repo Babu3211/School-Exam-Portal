@@ -23,4 +23,33 @@ assert.ok(integrationAudit.blockers.some(x=>x.includes('admin UID')));
 assert.ok(integrationAudit.blockers.some(x=>x.includes('Firebase configuration')));
 assert.ok(integrationAudit.blockers.some(x=>x.includes('activeSchoolId')));
 assert.equal(auditV46TenantIntegration('const activeSchoolId="12345678"; function assertV47TenantCollection(){}').ready,true);
+
+// Fifteen audit cases: actual migration hazards and fail-closed outcomes.
+const safe='const activeSchoolId="12345678"; function assertV47TenantCollection(){}';
+const auditCases=[
+ ['hardcoded admin',safe+' const ADMIN_UID="legacy";','admin UID'],
+ ['spaced admin',safe+' const   ADMIN_UID = "legacy";','admin UID'],
+ ['legacy const config',safe+' const firebaseConfig={};','Firebase configuration'],
+ ['legacy let config',safe+' let firebaseConfig={};','Firebase configuration'],
+ ['legacy var config',safe+' var firebaseConfig={};','Firebase configuration'],
+ ['missing school binding','function assertV47TenantCollection(){}','activeSchoolId'],
+ ['missing collection guard','const activeSchoolId="12345678";','Dynamic collection guard'],
+ ['both legacy hazards',safe+' const ADMIN_UID="legacy"; let firebaseConfig={};','admin UID'],
+ ['missing both bindings','const value=1;','activeSchoolId'],
+ ['bare identifier boundary',safe+' const ADMIN_UID_SUFFIX=1;',null],
+ ['config identifier boundary',safe+' const firebaseConfigOther={};',null],
+ ['guard present',safe,null],
+ ['whitespace variation',safe.replace('const activeSchoolId','let activeSchoolId'),null],
+ ['admin with newline',safe+' const\nADMIN_UID="legacy";','admin UID'],
+ ['config with newline',safe+' const\nfirebaseConfig={};','Firebase configuration']
+];
+assert.equal(auditCases.length,15);
+for(const [label,input,expected] of auditCases){
+ const audit=auditV46TenantIntegration(input);
+ assert.equal(audit.ready,expected===null,label);
+ if(expected)assert.ok(audit.blockers.some(b=>b.includes(expected)),label);
+}
+assert.throws(()=>auditV46TenantIntegration(''),/V46 source required/);
+assert.throws(()=>auditV46TenantIntegration(null),/V46 source required/);
+
 console.log('V46 Firestore literal path staging rewrite checks passed; dynamic calls still require manual audit');
