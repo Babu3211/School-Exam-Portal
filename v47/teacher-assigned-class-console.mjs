@@ -42,7 +42,7 @@ $('login').onclick=async()=>{
 };
 $('logout').onclick=async()=>{if(busy)return;lock(true);clear();try{await authSdk.signOut(auth);message('Signed out')}catch(e){message('Sign out failed: '+e.message)}finally{lock(false)}};
 $('classId').addEventListener('change',()=>{$('students').replaceChildren();$('count').textContent='';$('subjectId').replaceChildren();selectionEpoch++;if(!busy)lock(false)});
-$('subjectId').addEventListener('change',()=>{$('students').replaceChildren();$('count').textContent='';selectionEpoch++;lock(false)});
+$('subjectId').addEventListener('change',()=>{$('students').replaceChildren();$('count').textContent='';selectionEpoch++;if(!busy)lock(false)});
 $('loadAssignments').onclick=async()=>{
  if(busy||!actor)return;
  const request=epoch,selection=selectionEpoch,uid=actor.uid,id=schoolId,classId=$('classId').value;
