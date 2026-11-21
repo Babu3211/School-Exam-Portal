@@ -240,7 +240,7 @@ try{
   await assertFails(admin.doc('schools/school_002/attendance/2026-11-20_'+studentId).set({date:'2026-11-20',studentId,class:className,schoolId:'school_001',present:true}));
   await assertFails(admin.doc(studentPath).update({class:'9'}));
   await assertFails(admin.doc(studentPath).delete());
-  await assertSucceeds(admin.doc(markPath).update({theory:31})); // Valid same-school admin correction
+  await assertFails(admin.doc(markPath).update({theory:31})); // Marks writes remain closed until verified full-class publish
   await assertFails(admin.doc(markPath).delete());
   await assertFails(admin.doc(attendancePath).delete());
   await assertFails(viewer.doc(subjectPath).update({active:false}));
