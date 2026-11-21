@@ -43,7 +43,14 @@ export function previewV46IemisStudentImport({rows,schoolId,existingIemisIds=[],
   const errors=[];
   if(iemisCode!==schoolId)errors.push('School IEMIS mismatch');
   if(!studentIemisId&&!admissionNo)errors.push('Student IEMIS ID or Admission Number required');
-  if(!value(row,'Student Name'))errors.push('Student name missing');
+  const studentName=value(row,'Student Name');
+  if(!studentName)errors.push('Student name missing');
+  else if(studentName.length<2||studentName.length>160)errors.push('Student name must be 2–160 characters');
+  if(studentIemisId.length>128)errors.push('Student IEMIS ID exceeds 128 characters');
+  if(admissionNo.length>128)errors.push('Admission Number exceeds 128 characters');
+  for(const header of ['Student Name in Nepali','Gender','Father Name','Mother Name','Section','Permanent Address','Temporary Address','DOB','Date of Birth (A.D.)','Mother Tongue','Disability Type','Guardian Name','Guardian Contact Number','Symbol Number','Birth Registration Number','NEB Registration Number','Year']){
+   if(excelData[header].length>500)errors.push(header+' exceeds 500 characters');
+  }
   if(!className)errors.push('Class missing');
   else if(!supportedClasses.has(className))errors.push('Unsupported class');
   if(studentIemisId&&seen.has(studentIemisId))errors.push('Duplicate ID within Excel');
