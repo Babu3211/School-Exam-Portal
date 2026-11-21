@@ -54,7 +54,7 @@ const unicodePreview=await previewAgainstSchoolStudents({auth,schoolId,rows:unic
  readStudents:async()=>[{schoolId,studentIemisNo:'e\u0301-101'}]});
 assert.equal(unicodePreview.preview.ready,0);
 assert.equal(unicodePreview.preview.skipped,1);
-for(const malformed of [{nested:true},['nested'],Number.POSITIVE_INFINITY,Number.MAX_SAFE_INTEGER+2,1n]){
+for(const malformed of [{nested:true},['nested'],Number.POSITIVE_INFINITY,Number.MAX_SAFE_INTEGER+2,1n,true,false]){
  await assert.rejects(previewAgainstSchoolStudents({auth,schoolId,rows,readDocument,
   readStudents:async()=>[{schoolId,studentIemisId:malformed}]}),/Invalid existing student identity/);
 }
