@@ -47,4 +47,10 @@ assert(source.includes("appSdk.getApps().find(x=>x.name==='smss-v47-admin')"),"R
 assert(source.includes("const candidateAuth=authSdk.getAuth(app)"),"Auth is not published before persistence succeeds");
 assert(source.includes("await authSdk.setPersistence(candidateAuth,authSdk.inMemoryPersistence);auth=candidateAuth;"),"Auth persistence completes before global assignment");
 assert(source.includes("db=null;auth=null;api=null;showError(e);"),"Failed connection clears incomplete client state");
+assert(source.includes("const schoolName=$('schoolName').value.trim(),adminUid=$('adminUid').value.trim();"),"Read registration fields before confirmation");
+assert(source.includes("if(schoolName.length<3||schoolName.length>160)"),"Validate school name before confirmation");
+assert(source.includes("if(!/^[A-Za-z0-9_-]{6,128}$/.test(adminUid))"),"Validate school admin UID before confirmation");
+assert(source.includes("if(typeof message==='string'&&["),"Only show whitelisted validation messages");
+assert(source.includes("const form={id:schoolId,name:schoolName,iemisCode:schoolId};"),"Reuse validated school name");
+assert(source.includes("form,adminUid});cursor=null;"),"Reuse validated school admin UID");
 console.log('PASS V47 Super Admin UID and school-list session guards');
