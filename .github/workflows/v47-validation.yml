@@ -25,6 +25,7 @@ jobs:
           npm run test:v47:v46-readonly-bridge
           npm run test:v47:records-session
           node v47/test-redact-record-preview.mjs
+          node v47/test-marks-login-cancel-ui.mjs
           npm run test:v47:iemis-school-id
           npm run test:v47:structure
           npm run test:v47:terms
