@@ -46,6 +46,11 @@ assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[null]}),/first ro
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[[]]}),/first row/);
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[rows[0]],existingIemisIds:null}),/identity lists/);
 assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[rows[0]],existingAdmissionNumbers:{}}),/identity lists/);
+for(const malformed of [{nested:true},['nested'],Number.POSITIVE_INFINITY,Number.MAX_SAFE_INTEGER+2,1n]){
+ assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[rows[0]],existingIemisIds:[malformed]}),/Invalid existing student identity/);
+ assert.throws(()=>previewV46IemisStudentImport({schoolId,rows:[rows[0]],existingAdmissionNumbers:[malformed]}),/Invalid existing student identity/);
+}
+assert.equal(previewV46IemisStudentImport({schoolId,rows:[rows[0]],existingIemisIds:[12345]}).ready,1);
 const unicodeExisting=previewV46IemisStudentImport({schoolId,rows:[{'IEMIS Code':schoolId,'Student IEMIS Id':'é-101','Student Name':'Unicode Student','Class':'6'}],existingIemisIds:['e\u0301-101']});
 assert.equal(unicodeExisting.skipped,1);
 assert.match(unicodeExisting.records[0].errors.join(' '),/already exists/);
