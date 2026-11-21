@@ -21,6 +21,12 @@ for(const [method,collection] of Object.entries({getMark:'marks',getExam:'exams'
  assert.deepEqual((await bridge[method]('report_1')).path,['schools',schoolId,collection,'report_1']);
  await assert.rejects(bridge[method]('../other-school'),/Invalid document ID/);
 }
+const inputs=await bridge.loadExamReportInputs();
+assert.equal(inputs.schoolId,schoolId);
+assert.deepEqual(Object.keys(inputs),['schoolId','students','subjects','exams','marks','markSettings']);
+assert.deepEqual(inputs.marks.path,['schools',schoolId,'marks']);
+assert.deepEqual(inputs.markSettings.path,['schools',schoolId,'mark_settings']);
+assert.equal(Object.isFrozen(inputs),true);
 assert.equal(Object.isFrozen(bridge),true);
 assert.equal(Object.hasOwn(bridge,'saveMarks'),false);
 assert.equal(Object.hasOwn(bridge,'deleteStudent'),false);
@@ -30,4 +36,5 @@ assert.ok(calls.every(([kind,...path])=>path[0]==='schools'&&path[1]===schoolId)
 await assert.rejects(createV46ReadOnlyBridge({schoolId,auth:{currentUser:null},db:{},firestoreApi}),/Authenticated V47/);
 auth.currentUser={uid:'anotherUser'};
 await assert.rejects(bridge.listStudents(),/Authentication changed/);
+await assert.rejects(bridge.loadExamReportInputs(),/Authentication changed/);
 console.log('V46 read-only V47 bridge tests passed');
