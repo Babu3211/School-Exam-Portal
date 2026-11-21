@@ -12,13 +12,13 @@ const api={
  }
 };
 const actor={role:'super_admin',active:true};
-const form={id:'school001',name:'Example Secondary School'};
+const form={id:'12345678',iemisCode:'12345678',name:'Example Secondary School'};
 const created=await onboardSchool({db:{},api,actor,form,adminUid:'teacher123'});
 assert.equal(created.school.active,false);
-assert.equal(docs.get('schools/school001/members/teacher123').role,'school_admin');
+assert.equal(docs.get('schools/12345678/members/teacher123').role,'school_admin');
 assert.equal(docs.size,2);
 await assert.rejects(()=>onboardSchool({db:{},api,actor,form,adminUid:'teacher123'}),/already registered/);
 assert.equal(docs.size,2);
-await assert.rejects(()=>onboardSchool({db:{},api,actor:{role:'viewer',active:true},form:{...form,id:'school002'},adminUid:'teacher123'}));
+await assert.rejects(()=>onboardSchool({db:{},api,actor:{role:'viewer',active:true},form:{...form,id:'87654321'},adminUid:'teacher123'}));
 assert.equal(docs.size,2);
 console.log('V47 atomic school onboarding tests passed');
