@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const s=readFileSync(new URL('./school-exam-workflows.mjs',import.meta.url),'utf8');
-assert.match(s,/const ledger=async\(\)=>\{const request=\+\+ledgerRequest,epoch=sessionEpoch,/);
+assert.match(s,/const ledger=async\(\)=>\{(?:clearVerifiedLedger\(\);)?const request=\+\+ledgerRequest,epoch=sessionEpoch,/);
 assert.match(s,/\$\('ledgerClass'\)\.onchange=\(\)=>\{sessionEpoch\+\+/);
 assert.match(s,/\$\('ledgerTerm'\)\.onchange=\(\)=>\{sessionEpoch\+\+/);
 assert.match(s,/if\(epoch!==sessionEpoch\|\|ctx\(\)\.schoolId!==schoolId/);
