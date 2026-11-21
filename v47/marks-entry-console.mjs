@@ -96,6 +96,6 @@ $('inspectClassMarks').onclick=()=>{
   const result=inspectClassMarkDraft({schoolId,classId,term,subjectId,expectedStudentIds:classMarkRoster.map(s=>s.id),entries:collectClassMarkEntries()});
   $('draftCheckResult').textContent=result.summary+(result.missing.length?' Missing: '+result.missing.slice(0,8).join(', '):'')+(result.invalid.length?' Invalid: '+result.invalid.slice(0,4).join('; '):'');
   status(result.ready?'Draft checked. This does not save or publish marks.':'Draft incomplete. No marks saved.');
- }catch(e){$('draftCheckResult').textContent=e.message;status('Draft validation failed. No marks saved.')}
+ }catch(e){$('draftCheckResult').textContent=e.message;status('अंक जाँच असफल भयो। कुनै अंक Save गरिएको छैन।')}
 };
 $('saveClassMarks').onclick=()=>status('Save/Publish disabled: secure complete-class workflow is not implemented. No marks saved.');
