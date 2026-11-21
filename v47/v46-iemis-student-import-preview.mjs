@@ -42,6 +42,14 @@ export function getReadyV46IemisRows(preview,{confirmed=false}={}){
  if(!preview||!issuedPreviews.has(preview))throw new TypeError('Validated import preview required');
  return preview.records.filter(record=>record.status==='new').map(record=>({...record.excelData}));
 }
+const legacyIdentity=x=>{
+ if(x===null||x===undefined)return '';
+ if(typeof x==='object'||typeof x==='function'||typeof x==='symbol'||typeof x==='bigint')
+  throw new TypeError('Invalid existing student identity type');
+ if(typeof x==='number'&&(!Number.isFinite(x)||!Number.isSafeInteger(x)))
+  throw new TypeError('Invalid existing student identity number');
+ return String(x).normalize('NFC').trim();
+};
 export function previewV46IemisStudentImport({rows,schoolId,existingIemisIds=[],existingAdmissionNumbers=[]}={}){
  assertIemisSchoolId(schoolId);
  if(!Array.isArray(rows))throw new TypeError('Excel rows array required');
@@ -57,8 +65,8 @@ export function previewV46IemisStudentImport({rows,schoolId,existingIemisIds=[],
      (!Object.hasOwn(row,'Student IEMIS Id')&&!Object.hasOwn(row,'Admission Number')))
    throw new Error('Excel row '+(i+2)+' is missing required Column headings');
  }
- const existing=new Set(existingIemisIds.map(x=>String(x??'').normalize('NFC').trim()).filter(Boolean));
- const existingAdmission=new Set(existingAdmissionNumbers.map(x=>String(x??'').normalize('NFC').trim()).filter(Boolean));
+ const existing=new Set(existingIemisIds.map(legacyIdentity).filter(Boolean));
+ const existingAdmission=new Set(existingAdmissionNumbers.map(legacyIdentity).filter(Boolean));
  const seen=new Set(),seenAdmission=new Set();
  const records=rows.map((row,index)=>{
   const excelData=normalizeV46IemisExcelRow(row);
