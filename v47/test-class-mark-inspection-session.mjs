@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const source=readFileSync(new URL('./marks-entry-console.mjs',import.meta.url),'utf8');
+const start=source.indexOf("$('inspectClassMarks').onclick=async()=>");
+const end=source.indexOf("$('saveClassMarks').onclick=",start);
+assert.ok(start>=0&&end>start,'Inspector must be async');
+const handler=source.slice(start,end);
+assert.match(handler,/await verifySchoolSession\(/);
+assert.match(handler,/verified\.role!=='school_admin'/);
+assert.match(handler,/request!==rosterRequest/);
+assert.match(handler,/auth\?\.currentUser\?\.uid!==uid/);
+assert.ok(handler.indexOf('await verifySchoolSession(')<handler.indexOf('inspectConfiguredClassMarks('),'Authorization must precede draft inspection');
+assert.match(handler,/invalidateClassMarks\(\)/);
+console.log('V47 class mark inspection session security wiring passed');
