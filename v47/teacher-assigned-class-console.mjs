@@ -73,15 +73,15 @@ $('loadAssignments').onclick=async()=>{
   }while(cursor);
   const verified=[];
   for(const subjectId of subjects){
-   await verifyTeacherSubjectAssignment({db,api,actor,schoolId:id,classId,subjectId,revalidate});
-   verified.push(subjectId);
+   const subject=await verifyTeacherSubjectAssignment({db,api,actor,schoolId:id,classId,subjectId,revalidate});
+   verified.push({id:subjectId,name:subject.subjectName});
   }
   await revalidate();
   if(classId!==$('classId').value)throw new Error('Class changed');
   $('subjectId').replaceChildren();
   const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='Select a verified subject';$('subjectId').append(placeholder);
-  for(const subjectId of verified.sort()){
-   const option=document.createElement('option');option.value=subjectId;option.textContent=subjectId;$('subjectId').append(option);
+  for(const subject of verified.sort((a,b)=>a.name.localeCompare(b.name,'en',{sensitivity:'base'})||a.id.localeCompare(b.id))){
+   const option=document.createElement('option');option.value=subject.id;option.textContent=subject.name;$('subjectId').append(option);
   }
   $('load').disabled=true;
   message(verified.length+' assigned subjects verified. Choose a subject and load the class.');
