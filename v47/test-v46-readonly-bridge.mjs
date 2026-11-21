@@ -27,6 +27,15 @@ assert.deepEqual(Object.keys(inputs),['schoolId','students','subjects','exams','
 assert.deepEqual(inputs.marks.path,['schools',schoolId,'marks']);
 assert.deepEqual(inputs.markSettings.path,['schools',schoolId,'mark_settings']);
 assert.equal(Object.isFrozen(inputs),true);
+const started=[];
+const pendingResolvers=new Map();
+const pendingApi={...firestoreApi,getDocs:path=>new Promise(resolve=>{started.push(path[2]);pendingResolvers.set(path[2],()=>resolve({docs:[],path}));})};
+const parallelBridge=await createV46ReadOnlyBridge({schoolId,auth,db:{},firestoreApi:pendingApi});
+const parallelReport=parallelBridge.loadExamReportInputs();
+for(let i=0;i<30&&started.length<5;i++)await new Promise(resolve=>setImmediate(resolve));
+assert.deepEqual([...started].sort(),['students','subjects','exams','marks','mark_settings'].sort(),'All five report reads should begin without waiting for previous reads');
+for(const resolve of pendingResolvers.values())resolve();
+assert.equal((await parallelReport).schoolId,schoolId);
 assert.equal(Object.isFrozen(bridge),true);
 assert.equal(Object.hasOwn(bridge,'saveMarks'),false);
 assert.equal(Object.hasOwn(bridge,'deleteStudent'),false);
