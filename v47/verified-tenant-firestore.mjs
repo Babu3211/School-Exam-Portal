@@ -27,8 +27,15 @@ export function createVerifiedTenantFirestore({db,api,context}){
     }
     if(snapshot.docs.length<requested)break;
     if(all.length>=maxDocuments){
-     // A full final page does not prove there are no more documents.
-     throw new Error('Report pagination document limit reached; result incomplete');
+     // Probe for one additional document: exactly maxDocuments is complete,
+     // but maxDocuments+1 must fail rather than silently truncate a report.
+     const next=snapshot.docs.at(-1).id;
+     await context.revalidateRead();
+     const probe=await api.getDocs(api.query(collectionRef(name),api.orderBy(api.documentId()),api.startAfter(next),api.limit(1)));
+     await context.revalidateRead();
+     if(!probe||!Array.isArray(probe.docs)||probe.docs.length>1)throw new Error('Invalid pagination probe response');
+     if(probe.docs.length)throw new Error('Report pagination document limit reached; result incomplete');
+     break;
     }
     const next=snapshot.docs.at(-1).id;
     if(cursor!==null&&next<=cursor)throw new Error('Firestore pagination cursor did not advance');
