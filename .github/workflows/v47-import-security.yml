@@ -26,6 +26,14 @@ jobs:
           java-version: '21'
       - name: Install Firebase test dependencies
         run: npm install --no-package-lock --ignore-scripts
+      - name: Build isolated V47 static hosting
+        run: node v47/build-hosting.mjs
+      - name: Upload V47 hosting artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: v47-hosting-dist
+          path: v47/dist/
+          retention-days: 7
       - name: Check V47 module and emulator syntax
         run: npm run test:v47:syntax
       - name: V46 IEMIS student Excel preview and normalization
