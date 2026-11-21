@@ -66,6 +66,16 @@ Object.defineProperty(excelRow,'Student Name',{enumerable:true,get(){
 }});
 await assert.rejects(previewAgainstSchoolStudents({auth:sessionDuringExcel,schoolId,rows:[excelRow],readDocument,
  readStudents:async()=>[]}),/Authentication changed during Excel validation/);
+const sessionDuringFingerprint={currentUser:{uid}};
+const fingerprintRow={'IEMIS Code':schoolId,'Student IEMIS Id':'FP-1','Student Name':'Fingerprint Student','Class':'6'};
+let fingerprintReads=0;
+Object.defineProperty(fingerprintRow,'Student Name',{enumerable:true,get(){
+ fingerprintReads++;
+ if(fingerprintReads>=3)sessionDuringFingerprint.currentUser={uid:'another-user'};
+ return 'Fingerprint Student';
+}});
+await assert.rejects(previewAgainstSchoolStudents({auth:sessionDuringFingerprint,schoolId,rows:[fingerprintRow],readDocument,
+ readStudents:async()=>[]}),/Authentication changed during preview fingerprinting/);
 const teacherAuth={currentUser:{uid:'teacher-1'}};
 const teacherDocs=async path=>path==='schools/'+schoolId?{id:schoolId,active:true}:path==='schools/'+schoolId+'/members/teacher-1'?{uid:'teacher-1',schoolId,role:'teacher',active:true}:null;
 await assert.rejects(previewAgainstSchoolStudents({auth:teacherAuth,schoolId,rows,readDocument:teacherDocs,readStudents}),/administrator membership/);
