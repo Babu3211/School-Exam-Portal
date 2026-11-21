@@ -13,4 +13,8 @@ assert.ok(school.includes("request.resource.data.iemisCode == sid"));
 assert.ok(school.includes("request.resource.data.active == false"));
 assert.ok(!school.includes("sid.matches('^[0-9]{5,20}("),'Corrupt school pattern');
 assert.equal((school.match(/'/g)||[]).length%2,0,'Unbalanced single quotes in school rule');
+assert.equal((rules.match(/match \/schools\/\{sid\}/g)||[]).length,1,'Duplicate school rule blocks are forbidden');
+assert.equal((rules.match(/service cloud\.firestore/g)||[]).length,1,'Exactly one Firestore service required');
+assert.equal((rules.match(/match \/\{document=\*\*\}/g)||[]).length,1,'Exactly one fallback deny rule required');
+assert.ok(rules.trimEnd().endsWith('}'),'Rules must close');
 console.log('PASS: V47 school registration rules structural regression');
