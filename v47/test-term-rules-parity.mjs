@@ -21,7 +21,7 @@ assert.equal(new Set(EXAM_TERMS).size,EXAM_TERMS.length,'Duplicate exam term');
 // Component marks are currently read-only; no independent term guard is needed until an audited publish path exists.
 const componentBlock=rules.split('match /component_marks/{id} {')[1]?.split('match /subjects/{id}')[0]??'';
 assert.ok(componentBlock,'Component mark collection must exist');
-const writes=[...componentBlock.matchAll(/allow\\s+([^:;]+):\\s*if\\s*([^;]+);/g)].filter(m=>m[1].split(',').some(p=>['write','create','update','delete'].includes(p.trim())));
+const writes=[...componentBlock.matchAll(/allow\s+([^:;]+):\s*if\s*([^;]+);/g)].filter(m=>m[1].split(',').some(p=>['write','create','update','delete'].includes(p.trim())));
 assert.ok(writes.length,'Component marks must explicitly deny writes');
 for(const clause of writes)assert.equal(clause[2].trim(),'false','Component marks must remain read-only');
 verifyTermGuards(rules);
