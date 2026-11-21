@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const ui=readFileSync(new URL('./teacher-assigned-class-console.mjs',import.meta.url),'utf8');
+const html=readFileSync(new URL('./teacher-assigned-class.html',import.meta.url),'utf8');
+const hub=readFileSync(new URL('./index.html',import.meta.url),'utf8');
+assert.match(hub,/href="\.\/teacher-assigned-class\.html"/);
+assert.match(html,/Read-only development view/);
+assert.match(html,/id="students"/);
+assert.match(ui,/config\.projectId!=='smss-exam-portal-v47'/);
+assert.match(ui,/authSdk\.inMemoryPersistence/);
+assert.match(ui,/session\.role!=='teacher'/);
+assert.match(ui,/verifyTeacherSubjectAssignment/);
+assert.match(ui,/loadCompleteClassRoster/);
+assert.match(ui,/await revalidate\(\)/);
+assert.equal((ui.match(/await verifyTeacherSubjectAssignment/g)||[]).length,2);
+assert.match(ui,/student\.name\?\?student\.id/);
+assert.doesNotMatch(ui,/setDoc\(|addDoc\(|updateDoc\(|deleteDoc\(|runTransaction\(|writeBatch\(/);
+console.log('V47 teacher roster view requires live teacher assignment and contains no write operation');
