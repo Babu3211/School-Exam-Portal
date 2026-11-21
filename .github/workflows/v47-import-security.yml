@@ -1,0 +1,30 @@
+name: V47 Import Security Checks
+on:
+  push:
+    branches:
+      - smss-v47-multischool-work
+    paths:
+      - 'v47/**'
+      - 'package.json'
+      - '.github/workflows/v47-import-security.yml'
+  workflow_dispatch:
+jobs:
+  import-security:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check V47 module syntax
+        run: find v47 -name '*.mjs' -print0 | xargs -0 -n1 node --check
+      - name: Verified student preview
+        run: npm run test:v47:verified-student-preview
+      - name: Firestore student preview adapter
+        run: npm run test:v47:firestore-student-preview
+      - name: Verified import panel
+        run: npm run test:v47:verified-panel
+      - name: Verified student save gate
+        run: npm run test:v47:verified-save-gate
