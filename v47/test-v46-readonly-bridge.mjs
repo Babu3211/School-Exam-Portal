@@ -7,7 +7,8 @@ const firestoreApi={
  doc:(_db,...path)=>{calls.push(['doc',...path]);return path},
  collection:(_db,...path)=>{calls.push(['collection',...path]);return path},
  getDoc:async path=>({exists:()=>true,data:()=>path.length===2?{id:schoolId,active:true}:{uid,schoolId,role:'viewer',active:true},path}),
- getDocs:async path=>({docs:[],path})
+ query:(path,...constraints)=>({path,constraints}),orderBy:field=>['orderBy',field],documentId:()=> '__name__',limit:n=>['limit',n],startAfter:id=>['startAfter',id],
+ getDocs:async query=>({docs:[],path:query.path??query})
 };
 const bridge=await createV46ReadOnlyBridge({schoolId,auth,db:{},firestoreApi});
 assert.equal(bridge.role,'viewer');
@@ -36,7 +37,7 @@ assert.deepEqual(detachedRows.marks,[]);
 assert.equal(Object.isFrozen(detachedRows),true);
 const started=[];
 const pendingResolvers=new Map();
-const pendingApi={...firestoreApi,getDocs:path=>new Promise(resolve=>{started.push(path[2]);pendingResolvers.set(path[2],()=>resolve({docs:[],path}));})};
+const pendingApi={...firestoreApi,getDocs:query=>new Promise(resolve=>{const path=query.path??query;started.push(path[2]);pendingResolvers.set(path[2],()=>resolve({docs:[],path}));})};
 const parallelBridge=await createV46ReadOnlyBridge({schoolId,auth,db:{},firestoreApi:pendingApi});
 const parallelReport=parallelBridge.loadExamReportInputs();
 for(let i=0;i<30&&started.length<5;i++)await new Promise(resolve=>setImmediate(resolve));
