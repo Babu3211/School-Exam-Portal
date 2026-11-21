@@ -16,8 +16,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - name: V47 syntax and tenant tests
         run: |
           npm run test:v47:syntax
@@ -35,11 +34,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - name: Firestore school isolation tests
         run: npm run test:v47:emulator
