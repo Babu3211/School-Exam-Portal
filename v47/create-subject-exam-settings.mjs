@@ -6,7 +6,7 @@ export function prepareNewSubjectExamSettings({schoolId,classId,subjectId,examId
  validateSchoolId(schoolId);
  if(!['ECD','LKG','UKG',...Array.from({length:12},(_,i)=>String(i+1))].includes(classId))throw new Error('Invalid class');
  if(typeof subjectId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(subjectId))throw new Error('Invalid subject');
- if(!['weekly','monthly','first','second','third','final'].includes(examId))throw new Error('Invalid examination term');
+ if(!['weekly','monthly','1st','2nd','3rd','final'].includes(examId))throw new Error('Invalid examination term');
  const id=classId+'_'+subjectId+'_'+examId;
  const normalized=validateConfiguredMarkComponents({schoolId,classId,subjectId,examId,active:true,components},{schoolId,classId,subjectId,examId});
  if(normalized.length>6)throw new Error('Maximum six configured components per subject');
