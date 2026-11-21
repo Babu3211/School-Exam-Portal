@@ -419,7 +419,22 @@ service cloud.firestore {
             && (items.size() < 3 || validComponent(items[2]))
             && (items.size() < 4 || validComponent(items[3]))
             && (items.size() < 5 || validComponent(items[4]))
-            && (items.size() < 6 || validComponent(items[5]));
+            && (items.size() < 6 || validComponent(items[5]))
+            && (items.size() <= 1 || items[0].key != items[1].key)
+            && (items.size() <= 2 || items[0].key != items[2].key)
+            && (items.size() <= 3 || items[0].key != items[3].key)
+            && (items.size() <= 4 || items[0].key != items[4].key)
+            && (items.size() <= 5 || items[0].key != items[5].key)
+            && (items.size() <= 2 || items[1].key != items[2].key)
+            && (items.size() <= 3 || items[1].key != items[3].key)
+            && (items.size() <= 4 || items[1].key != items[4].key)
+            && (items.size() <= 5 || items[1].key != items[5].key)
+            && (items.size() <= 3 || items[2].key != items[3].key)
+            && (items.size() <= 4 || items[2].key != items[4].key)
+            && (items.size() <= 5 || items[2].key != items[5].key)
+            && (items.size() <= 4 || items[3].key != items[4].key)
+            && (items.size() <= 5 || items[3].key != items[5].key)
+            && (items.size() <= 5 || items[4].key != items[5].key);
         }
         function validNewSettings() {
           let data = request.resource.data;
