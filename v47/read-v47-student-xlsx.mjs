@@ -16,7 +16,8 @@ async function unzip(buffer){
  let eocd=-1;
  for(let i=bytes.length-22;i>=Math.max(0,bytes.length-65557);i--)if(u32(view,i)===0x06054b50){eocd=i;break;}
  if(eocd<0)throw new Error('Invalid XLSX central directory');
- const count=u16(view,eocd+10),directory=u32(view,eocd+16);
+ const count=u16(view,eocd+10),directory=u32(view,eocd+16),directorySize=u32(view,eocd+12);
+ if(u16(view,eocd+4)!==0||u16(view,eocd+6)!==0||u16(view,eocd+8)!==count||count===0||directorySize>bytes.length||directory+directorySize>eocd)throw new Error('Invalid XLSX central directory');
  if(count>MAX_ENTRIES||directory>=bytes.length)throw new Error('Unexpected workbook structure');
  const files=new Map();let offset=directory;
  for(let i=0;i<count;i++){
@@ -27,9 +28,10 @@ async function unzip(buffer){
   const name=decoder.decode(bytes.subarray(offset+46,offset+46+nameLength));
   offset+=46+nameLength+extra+comment;
   if(!['xl/worksheets/sheet1.xml','xl/sharedStrings.xml'].includes(name))continue;
-  if(flags&1||![0,8].includes(method)||uncompressed>MAX_XML)throw new Error('Unsupported or oversized Excel entry');
+  if((flags&1)||![0,8].includes(method)||uncompressed>MAX_XML)throw new Error('Unsupported or oversized Excel entry');
+  if(u16(view,local+8)!==method||u16(view,local+6)&1)throw new Error('Mismatched XLSX ZIP entry');
   const start=local+30+u16(view,local+26)+u16(view,local+28);
-  if(start+compressed>bytes.length)throw new Error('Truncated XLSX');
+  if(start+compressed>directory||start+compressed>bytes.length)throw new Error('Truncated XLSX');
   let output;
   if(method===0)output=bytes.subarray(start,start+compressed);
   else {
