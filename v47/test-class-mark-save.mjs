@@ -249,4 +249,16 @@ for(const [label,path,value] of malformedTransactionCases){
  assert.equal(writes.length,0,label+' must not save any mark');
 }
 
+// Existing mark snapshots without data() still represent existing marks.
+for(const target of ['marks/1st:s2:math','component_marks/1st:s2:math']){
+ const {api,writes}=mock();
+ const original=api.runTransaction;
+ api.runTransaction=(db,callback)=>original(db,tx=>{
+  const get=tx.get;
+  tx.get=async ref=>ref===target?{exists:()=>true}:get(ref);
+  return callback(tx);
+ });
+ await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),/Existing mark/);
+ assert.equal(writes.length,0);
+}
 console.log('V47 atomic class marks save contract checks passed');
