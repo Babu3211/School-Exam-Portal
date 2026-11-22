@@ -28,7 +28,7 @@ docs.set('schools/'+schoolId+'/subjects/subject_1',{schoolId:'987654321',class:'
 await assert.rejects(create(),/Subject missing/);
 assert.equal(writes.length,0);
 docs.set('schools/'+schoolId+'/subjects/subject_1',{schoolId,class:'9',active:true});
-await assert.rejects(create({actor:{...actor,uid:''}}),/UID required/);
+await assert.rejects(create({actor:{...actor,uid:''}}),/School Admin required/);
 await assert.rejects(create({actor:{...actor,role:'viewer'}}),/School Admin required/);
 assert.equal(writes.length,0);
 const changedActor={...actor};
