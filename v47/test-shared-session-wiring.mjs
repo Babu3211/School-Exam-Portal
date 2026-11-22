@@ -45,6 +45,7 @@ const teacherHtml=read('teacher-assigned-class.html');
 assert.doesNotMatch(teacherHtml,/id="config"/,'Teacher roster must not require manual Firebase JSON');
 const assignmentsCode=read('assignments-console.mjs');
 assert.match(assignmentsCode,/data\.schoolId!==selectedSchoolId\|\|data\.class!==schoolClass/,'Assignment options must reject cross-school and wrong-class records');
+assert.match(assignmentsCode,/rows\.filter\(row=>row\.active!==false&&\(collection!=='subjects'\|\|row\.active===true\)\)/,'Inactive students and subjects must not be selectable');
 assert.match(assignmentsCode,/collection==='students'\?1500:500/,'Assignment option lists must enforce bounded class size');
 assert.match(assignmentsCode,/auth\.currentUser\?\.uid===actor\?\.uid&&schoolId===actor\?\.schoolId/,'Post-write status must not display under a changed school session');
 assert.match(assignmentsCode,/request!==loadRequest/,'Assignment loading must reject superseded roster requests');
