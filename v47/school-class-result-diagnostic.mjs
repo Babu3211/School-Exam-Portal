@@ -25,5 +25,6 @@ export async function loadSchoolClassResultDiagnostic({db,api,actor,schoolId,sch
  const preview=await previewCompleteSchoolClass({db,api,actor,schoolId,schoolClass,term,students,subjects,records:marks.records,hasMore:marks.hasMore});
  check();
  const publication=assessClassPublicationReadiness({actor,schoolId,schoolClass,term,students,subjects,records:marks.records,coverage:preview.coverage});
+ check();
  return {...preview,publication,readPages:{subjects:subjectRoster.pages,students:roster.pages,marks:marks.pages},diagnosticOnly:true};
 }
