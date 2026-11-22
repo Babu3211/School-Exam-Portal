@@ -16,6 +16,6 @@ assert.equal(canManageSchools(admin),false);
 assert.equal(canManageSchools(superAdmin),true);
 assert.equal(canAccessSchool({...admin,active:false},'300160001'),false);
 assert.equal(canAccessSchool({...admin,uid:undefined},'300160001','read'),false);
-assert.equal(canAccessSchool(admin,'300160001','read'),false);
+assert.equal(canAccessSchool(admin,'school_001','read'),false);
 assert.equal(canManageSchools({...superAdmin,uid:undefined}),false);
 console.log('V47 role boundary tests passed');
