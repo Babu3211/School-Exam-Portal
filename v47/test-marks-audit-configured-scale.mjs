@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {auditLoadedMarks} from './marks-audit.mjs';
+const context={schoolClass:'9',term:'final'};
+const row={studentId:'s1',subjectId:'computer',class:'9',term:'final',theory:360,practical:140};
+const ok=auditLoadedMarks([row],context);
+assert.equal(ok.issueCount,0,'raw audit must not invent a 100-mark ceiling');
+assert.equal(ok.complete,false,'raw audit cannot certify class completeness');
+assert.deepEqual(auditLoadedMarks([{...row,theory:-1}],context).issues.map(x=>x.code),['invalid_theory']);
+assert.deepEqual(auditLoadedMarks([{...row,practical:Infinity}],context).issues.map(x=>x.code),['invalid_practical']);
+assert.deepEqual(auditLoadedMarks([row,row],context).issues.map(x=>x.code),['duplicate_student_subject']);
+assert.deepEqual(auditLoadedMarks([{...row,term:'1st'}],context).issues.map(x=>x.code),['wrong_class_or_term']);
+console.log('Raw mark audit supports arbitrary configured marks without claiming completeness');
