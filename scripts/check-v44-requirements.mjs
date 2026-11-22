@@ -389,3 +389,30 @@ assert.equal(fakePassword.value,"");
 must(html.includes('finally{clearLoginSecret();loginButton.disabled=false') && (html.includes('if(!user){clearLoginSecret();') || html.includes('if(!user){idleSession.stop();void userActivity.onAuth(null);clearLoginSecret();')),"Password reset must run after login attempts and sign-out.");
 
 console.log("V44 requirement regression checks passed.");
+
+// Execute the real preview parser with no database APIs available.
+{
+ const start=html.indexOf('let validatedRestoreBackup=null,restorePlan=null;');
+ const end=html.indexOf('async function runFirebaseRestore()',start);
+ const source=html.slice(start,end);
+ const preview=async backup=>{
+  const controls={restoreFirebaseMessage:{textContent:''},restorePreview:{textContent:''},runFirebaseRestore:{disabled:true},restoreBackupFile:{files:[{size:1024,text:async()=>JSON.stringify(backup)}]}};
+  const harness=new Function('document','requireAdmin','auth','ADMIN_UID','safeNoticeError','console',source+';return {run:previewFirebaseRestore,state:()=>restorePlan};')({getElementById:id=>controls[id]},()=>{}, {currentUser:{uid:'synthetic-admin'}},'synthetic-admin',e=>e.message,{error(){}});
+  await harness.run();return {plan:harness.state(),controls};
+ };
+ const backup={format:'SMSS-Firestore-Backup',version:1,collections:{students:[{id:'test-student',data:{studentName:'Synthetic Student'}}],audit_logs:[{id:'test-audit',data:{action:'test'}}]},documents:{school_settings:{main:{iemisCode:'TEST-ONLY'}}}};
+ const result=await preview(backup);
+ assert.equal(result.plan.total,2);assert.equal(result.controls.runFirebaseRestore.disabled,false);
+ assert.match(result.controls.restorePreview.textContent,/Audit Log: 1/);
+ assert.equal(result.plan.counts.audit_logs,undefined,'Audit logs must never enter the restore write plan');
+ assert.equal((await preview({...backup,collections:{...backup.collections,audit_logs:{}}})).plan,null);
+ assert.equal((await preview({...backup,collections:{...backup.collections,unknown:[]}})).plan,null);
+ assert.equal((await preview({...backup,collections:{students:[...backup.collections.students,...backup.collections.students]}})).plan,null);
+ const legacy=await preview({...backup,collections:{students:backup.collections.students}});assert.equal(legacy.plan.total,2);
+ if(process.env.SMSS_BACKUP_CHECK_PATH){
+  const actual=await preview(JSON.parse(await readFile(process.env.SMSS_BACKUP_CHECK_PATH,'utf8')));
+  assert.ok(actual.plan);assert.equal(actual.controls.runFirebaseRestore.disabled,false);
+  console.log('Actual downloaded backup parser passed; restorable records:',actual.plan.total);
+ }
+ console.log('Backup preview accepts exported audit logs without replaying them; invalid/unknown/duplicate documents rejected.');
+}

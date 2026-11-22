@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v52-iemis-viewer-readonly-20261122';
+const CACHE_NAME = 'smss-pwa-v52-backup-preview-20261122';
 const APP_SHELL = [
   './',
   './index.html',
