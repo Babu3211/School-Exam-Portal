@@ -3,11 +3,12 @@ import {validatePageSize} from './pagination.mjs';
 // Preserve the authority that began each asynchronous page read. A change in
 // school, role, account or active state must invalidate the result before it
 // reaches the UI, including mutations during document materialization.
+function validAdminUid(actor){return typeof actor?.uid==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(actor.uid)}
 function adminSnapshot(actor){
  return {uid:actor?.uid,role:actor?.role,active:actor?.active,schoolId:actor?.schoolId};
 }
 function assertAdminSnapshot(actor,schoolId,initial){
- if(actor?.active!==true||!['super_admin','school_admin'].includes(actor.role)||
+ if(!validAdminUid(actor)||actor?.active!==true||!['super_admin','school_admin'].includes(actor.role)||
    (actor.role==='school_admin'&&actor.schoolId!==schoolId)||
    actor.uid!==initial.uid||actor.role!==initial.role||
    actor.active!==initial.active||actor.schoolId!==initial.schoolId)
