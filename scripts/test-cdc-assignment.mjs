@@ -241,7 +241,23 @@ function verifyBilingualUnits(subject, countsByGrade) {
   }
 }
 verifyBilingualUnits('science', {4:[5,5,3,6,3,14,8,5],5:[6,6,4,3,3,10,13,4]});
-verifyBilingualUnits('socialstudies', {4:[4,5,5,3,4,5,6],5:[4,5,5,4,3,5,6]});
-console.log('Grades 4 and 5: 98 science and 64 social studies bilingual indicators verified');
+w.ledgerSubjectsForClass=()=>['socialstudies'];
+for (const [grade,counts] of Object.entries({4:[4,5,5,3,4,5,6],5:[4,5,5,4,3,5,6]})) {
+  current.subjectAssignments=[{className:grade,subject:'socialstudies'}];
+  choice('class',grade);
+  choice('subject','socialstudies');
+  assert.equal(field('subject').selectedOptions[0].text,'सामाजिक अध्ययन तथा मानवमूल्य शिक्षा');
+  assert.ok(field('unitEn').parentElement.hidden && field('topicAlt').parentElement.hidden);
+  const units=[...w.document.querySelectorAll('#cdcUnitSuggestions option')];
+  assert.equal(units.length,counts.length);
+  units.forEach((unit,i)=>{
+    assert.doesNotMatch(unit.text,/[a-z]/i);
+    choice('unit',unit.value);
+    const topics=[...w.document.querySelectorAll('#cdcTopicSuggestions option')];
+    assert.equal(topics.length,counts[i]);
+    assert.ok(topics.every(option=>/[अ-ह]/u.test(option.value)&&!/[a-z]/i.test(option.text+option.value)));
+  });
+}
+console.log('Grades 4 and 5: 98 bilingual science and 64 Nepali social studies indicators verified');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
