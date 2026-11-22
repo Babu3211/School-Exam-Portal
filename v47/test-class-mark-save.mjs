@@ -186,4 +186,29 @@ for(const [theoryFullMarks,practicalFullMarks] of [[4,36],[20,7],[29,9]]){
  await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),/exceed/);
  assert.equal(writes.length,0);
 }
+
+// Fifteen negative save-contract cases must fail before any Firestore write.
+const negativeSaveCases=[
+ ['missing actor', {actor:null}, /School Admin/],
+ ['missing actor UID', {actor:{role:'school_admin',active:true,schoolId}}, /School Admin/],
+ ['blank actor UID', {actor:{uid:'  ',role:'school_admin',active:true,schoolId}}, /School Admin/],
+ ['inactive admin', {actor:{...actor,active:false}}, /School Admin/],
+ ['viewer', {actor:{...actor,role:'viewer'}}, /School Admin/],
+ ['teacher', {actor:{...actor,role:'teacher'}}, /School Admin/],
+ ['foreign school', {actor:{...actor,schoolId:'87654321'}}, /School Admin/],
+ ['missing student', {entries:[mark('s1')]}, /Cannot save/],
+ ['duplicate student', {entries:[mark('s1'),mark('s1')]}, /Duplicate student/],
+ ['foreign student', {entries:[mark('s1'),mark('outsider')]}, /not in selected/],
+ ['wrong class', {entries:[mark('s1'),mark('s2',{class:'8'})]}, /Mixed class/],
+ ['wrong term', {entries:[mark('s1'),mark('s2',{term:'final'})]}, /Mixed class/],
+ ['wrong subject', {entries:[mark('s1'),mark('s2',{subjectId:'science'})]}, /Mixed class/],
+ ['invalid score', {entries:[mark('s1'),mark('s2',{theory:'NaN'})]}, /Marks must/],
+ ['invalid selected subject', {subjectId:'../math'}, /Invalid selected subject ID/]
+];
+assert.equal(negativeSaveCases.length,15);
+for(const [label,overrides,expected] of negativeSaveCases){
+ const {api,writes}=mock();
+ await assert.rejects(saveCompleteClassMarks({...args,db:{},api,...overrides}),expected,label);
+ assert.equal(writes.length,0,label+' must not write any marks');
+}
 console.log('V47 atomic class marks save contract checks passed');
