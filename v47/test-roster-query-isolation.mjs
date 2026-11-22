@@ -29,6 +29,19 @@ await assert.rejects(loadClassRoster({...base,pageSize:1,api:apiFor([['s1',{scho
 await assert.rejects(loadClassRoster({...base,api:apiFor([students[1],students[0]])}),/out-of-order/);
 await assert.rejects(loadClassRoster({...base,pageSize:1,api:apiFor([students[1],students[0]])}),/out-of-order/);
 await assert.rejects(loadClassRoster({...base,cursor:{id:'s2'},api:apiFor([students[0]])}),/out-of-order/);
+{
+ let actualCursor=null;
+ const api=apiFor([students[1]]);
+ api.startAfter=id=>{
+  actualCursor=id;
+  assert.equal(typeof id,'string','Firestore startAfter must receive a document ID string');
+  return id;
+ };
+ const second=await loadClassRoster({...base,cursor:{id:'s1',name:'First',schoolId},api});
+ assert.equal(actualCursor,'s1');
+ assert.deepEqual(second.students.map(student=>student.id),['s2']);
+}
+
 for(const cursor of [{}, {id:'../87654321'}, {id:''}, {id:12}, {id:'x'.repeat(129)}, 's1']){
  let queries=0;
  const api=apiFor(students),original=api.getDocs;
