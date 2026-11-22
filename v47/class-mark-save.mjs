@@ -22,18 +22,26 @@ export async function saveCompleteClassMarks({db,api,actor,schoolId,classId,term
  const subjectRef=doc('subjects',subjectId);
  await api.runTransaction(db,async tx=>{
   const subject=await tx.get(subjectRef);
-  if(!subject.exists()||subject.data().schoolId!==schoolId||subject.data().class!==classId||subject.data().active!==true)throw new Error('Active subject required');
-  if(Array.isArray(subject.data().components)&&subject.data().components.length)throw new Error('Configured subject requires Assessment Settings component marks; raw marks cannot be saved');
-  for(const entry of complete.entries)validateSubjectMarkLimits(subject.data(),entry);
+  if(!subject||typeof subject.exists!=='function'||typeof subject.data!=='function'||!subject.exists())throw new Error('Active subject required');
+  const settings=subject.data();
+  if(!settings||typeof settings!=='object'||Array.isArray(settings)||settings.schoolId!==schoolId||settings.class!==classId||settings.active!==true)throw new Error('Active subject required');
+  if(Array.isArray(settings.components)&&settings.components.length)throw new Error('Configured subject requires Assessment Settings component marks; raw marks cannot be saved');
+  for(const entry of complete.entries)validateSubjectMarkLimits(settings,entry);
   const snapshots=await Promise.all(refs.map(async r=>{
    const [student,assignment,mark,component]=await Promise.all([tx.get(r.student),tx.get(r.subjectAssignment),tx.get(r.mark),tx.get(r.component)]);
    return {student,assignment,mark,component};
   }));
+  const present=snap=>snap&&typeof snap.exists==='function'&&typeof snap.data==='function'&&snap.exists()===true;
   for(let i=0;i<refs.length;i++){
    const {entry}=refs[i],{student,assignment,mark,component}=snapshots[i];
-   if(!student.exists()||student.data().schoolId!==schoolId||student.data().class!==classId)throw new Error('Student roster changed');
-   if(!assignment.exists()||assignment.data().schoolId!==schoolId||assignment.data().active===false||assignment.data().studentId!==entry.studentId||assignment.data().subjectId!==subjectId||assignment.data().class!==classId)throw new Error('Student subject assignment missing');
-   if(mark.exists()||component.exists())throw new Error('Existing mark cannot be overwritten');
+   if(!present(student))throw new Error('Student roster changed');
+   const studentData=student.data();
+   if(!studentData||typeof studentData!=='object'||Array.isArray(studentData)||studentData.schoolId!==schoolId||studentData.class!==classId)throw new Error('Student roster changed');
+   if(!present(assignment))throw new Error('Student subject assignment missing');
+   const assignmentData=assignment.data();
+   if(!assignmentData||typeof assignmentData!=='object'||Array.isArray(assignmentData)||assignmentData.schoolId!==schoolId||assignmentData.active===false||assignmentData.studentId!==entry.studentId||assignmentData.subjectId!==subjectId||assignmentData.class!==classId)throw new Error('Student subject assignment missing');
+   if(present(mark)||present(component))throw new Error('Existing mark cannot be overwritten');
+   if(!mark||typeof mark.exists!=='function'||!component||typeof component.exists!=='function')throw new Error('Mark existence could not be verified');
   }
   if(actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId)throw new Error('School identity changed during class marks transaction');
   for(const r of refs)tx.set(r.mark,{...r.entry,schoolId});
