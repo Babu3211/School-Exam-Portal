@@ -28,6 +28,8 @@ for(const name of ['students-console.mjs','attendance-console.mjs','school-setti
 }
 const marks=read('marks-entry-console.mjs');
 assert.match(marks,/onAuthStateChanged\(auth,user=>\{if\(actor&&user\?\.uid!==actor\.uid\)\{reset\(\)/,'Mark entry must clear stale review and roster after auth change');
+assert.match(marks,/roster\.students\.some\(student=>student\.active!==true\)/,'Initial class marks roster must reject inactive students');
+assert.match(marks,/latestRoster\.students\.some\(student=>student\.active!==true\)/,'Class marks review must recheck inactive students');
 const marksHtml=read('marks-entry.html');
 assert.doesNotMatch(marks,/inMemoryPersistence|initializeApp\(/,'Marks module must not create a second Firebase app');
 assert.doesNotMatch(marksHtml,/id="config"/,'Manual Firebase JSON must remain removed');
