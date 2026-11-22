@@ -1,0 +1,36 @@
+name: V47 preview build
+on:
+  push:
+    branches: [smss-v47-multischool-work]
+    paths:
+      - 'v47/**'
+      - '.github/workflows/v47-preview-build.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check preview build and dashboard
+        run: |
+          node --check v47/build-preview.mjs
+          node --check v47/dashboard-console.mjs
+      - name: Build V47 preview only
+        run: node v47/build-preview.mjs
+      - name: Verify V47 project and development warning
+        run: |
+          test -s v47/dist/index.html
+          test -s v47/dist/dashboard-console.mjs
+          test -s v47/dist/v47-firebase-config.mjs
+          grep -q 'Development only' v47/dist/index.html
+          grep -q "projectId:'smss-exam-portal-v47'" v47/dist/v47-firebase-config.mjs
+          test ! -e v47/dist/firestore.rules
+          test ! -e v47/dist/.firebaserc
+          test ! -e v47/dist/release-readiness-gate.mjs
+          test ! -e v47/dist/test-school-store-isolation.mjs
