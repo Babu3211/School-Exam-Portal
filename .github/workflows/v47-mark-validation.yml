@@ -1,0 +1,31 @@
+name: V47 mark validation
+on:
+  push:
+    branches: [smss-v47-multischool-work]
+    paths:
+      - 'v47/subject-mark-limits.mjs'
+      - 'v47/marks-service.mjs'
+      - 'v47/mark-create-service.mjs'
+      - 'v47/class-mark-save.mjs'
+      - 'v47/test-subject-mark-limits.mjs'
+      - 'v47/test-mark-create-authorization.mjs'
+      - 'v47/test-class-mark-save.mjs'
+      - '.github/workflows/v47-mark-validation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate examination full marks
+        run: node v47/test-subject-mark-limits.mjs
+      - name: Validate individual marks authorization
+        run: node v47/test-mark-create-authorization.mjs
+      - name: Validate atomic class marks
+        run: node v47/test-class-mark-save.mjs
