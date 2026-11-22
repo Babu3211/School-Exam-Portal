@@ -1,9 +1,11 @@
-const CACHE_NAME = 'smss-pwa-v51-class6-ledger-20261115';
+const CACHE_NAME = 'smss-pwa-v52-iemis-transfer-20261122';
 const APP_SHELL = [
   './',
   './index.html',
   './iemis-ledger.js',
   './iemis-entry.js',
+  './iemis-transfer-export.js',
+  './iemis-importer/transfer.js',
   './iemis-ledger.js?v=20261115-class6-ledger',
   './iemis-entry.js?v=20261115-class6-ledger',
   './cdc-question-paper.js',
