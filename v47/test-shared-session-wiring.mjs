@@ -11,7 +11,7 @@ assert.match(client,/smss-exam-portal-v47/,'V47 project isolation must be explic
 assert.match(client,/startVerifiedSchoolActivity/,'New verified logins must reset idle clock');
 assert.match(client,/enforceSchoolIdle/,'Shared idle enforcement required');
 assert.match(client,/auth\.currentUser&&\(!Number\.isFinite\(previous\)\|\|previous<=0/,'Missing or invalid idle timestamp must reject restored login');
-for(const name of ['dashboard-console.mjs','students-console.mjs','attendance-console.mjs','school-settings-console.mjs','marks-entry-console.mjs','school-admin-console.mjs','records-console.mjs']){
+for(const name of ['dashboard-console.mjs','students-console.mjs','attendance-console.mjs','school-settings-console.mjs','marks-entry-console.mjs','school-admin-console.mjs','records-console.mjs','subjects-console.mjs']){
  const code=read(name);
  assert.match(code,/connectSchoolFirebase/,'Shared client required: '+name);
  assert.match(code,/verifySchoolSession/,'Membership verification required: '+name);
@@ -32,6 +32,8 @@ assert.doesNotMatch(marks,/inMemoryPersistence|initializeApp\(/,'Marks module mu
 assert.doesNotMatch(marksHtml,/id="config"/,'Manual Firebase JSON must remain removed');
 assert.match(marksHtml,/id="save" disabled/,'Raw marks save must stay disabled');
 assert.match(marksHtml,/id="saveClassMarks" disabled/,'Class publication must stay disabled');
+const subjectsHtml=read('subjects.html');
+assert.doesNotMatch(subjectsHtml,/id="config"/,'Subjects must not require manual Firebase JSON');
 const recordsHtml=read('records.html');
 assert.doesNotMatch(recordsHtml,/id="config"/,'Records must not require manual Firebase JSON');
 const schoolAdminHtml=read('school-admin.html');
