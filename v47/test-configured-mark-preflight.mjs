@@ -56,3 +56,8 @@ for(const id of [' ','../student','student/id','student:id','student.id','a'.rep
 for(const draft of [null,undefined,[],42,'a',true,{studentId:123,values:{}}]){
  assert.throws(()=>inspectConfiguredClassMarks({...base,settings,drafts:[draft,{studentId:'b',isAbsent:true}]}),/Duplicate or out-of-roster mark draft/);
 }
+
+// The tenant must be the official numeric IEMIS school code, not a generic document key.
+for(const schoolId of ['school_a','1234','123456789012345678901','12-345','१२३४५']){
+ assert.throws(()=>inspectConfiguredClassMarks({...base,schoolId,settings:{...settings,schoolId},drafts:[]}),/Verified subject examination settings required/);
+}
