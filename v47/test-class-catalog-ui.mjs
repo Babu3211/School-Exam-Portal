@@ -9,7 +9,7 @@ for(const cls of SCHOOL_CLASSES){
  assert.equal(validSchoolClass(cls),true);
  assert.equal(validateStudent({name:'Test Student',class:cls}).class,cls);
  assert.equal(validateAttendance({date:'2026-11-18',studentId:'student_1',class:cls,present:true}).class,cls);
- assert.equal(validateSchoolSubject({id:'subject_1',name:'English',class:cls}).class,cls);
+ assert.equal(validateSchoolSubject({id:'subject_1',name:'English',class:cls,creditHour:4,theoryFullMarks:60,practicalFullMarks:40}).class,cls);
 }
 for(const name of ['students.html','attendance.html','marks-entry.html','subjects.html','marks-preview.html','assignments.html']){
  const html=readFileSync(new URL('./'+name,import.meta.url),'utf8');
