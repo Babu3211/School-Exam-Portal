@@ -4,7 +4,8 @@ import {validateMarkEntry,markEntryId} from './marks-service.mjs';
 // Transactionally create a raw mark; never overwrite an existing record.
 export async function createSchoolMarkOnly({db,api,actor,schoolId,input}){
  validateSchoolId(schoolId);
- const isAdmin=actor?.active===true&&actor.role==='school_admin'&&actor.schoolId===schoolId;
+ const verifiedUid=typeof actor?.uid==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(actor.uid);
+ const isAdmin=verifiedUid&&actor.active===true&&actor.role==='school_admin'&&actor.schoolId===schoolId;
  const isTeacher=actor?.active===true&&actor.role==='teacher'&&actor.schoolId===schoolId&&typeof actor.uid==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(actor.uid);
  if(!isAdmin&&!isTeacher)throw new Error('School Admin or assigned Teacher permission required');
  const originalIdentity={role:actor.role,active:actor.active,schoolId:actor.schoolId,uid:actor.uid};

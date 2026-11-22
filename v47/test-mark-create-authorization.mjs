@@ -29,6 +29,7 @@ for(const actor of [
  {role:'viewer',active:true,schoolId},
  {role:'school_admin',active:false,schoolId},
  {role:'school_admin',active:true,schoolId:'87654321'},
+ {role:'school_admin',active:true,schoolId},
  {role:'teacher',active:true,schoolId,uid:'teacher-1'}
 ]){
  const {api,writes}=mock();
@@ -37,7 +38,7 @@ for(const actor of [
 }
 {
  const {api,writes}=mock();
- const result=await createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId},schoolId,input});
+ const result=await createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId,uid:'admin-1'},schoolId,input});
  assert.equal(result.id,'monthly:s1:math');
  assert.equal(writes.length,1);
  assert.equal(writes[0][0],'marks/monthly:s1:math');
@@ -45,7 +46,7 @@ for(const actor of [
 // Subjects without configured components retain their existing raw-mark path.
 for(const name of ['Computer','Computer Science','Nepali','Mathematics','New Optional Subject']){
  const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name,theoryFullMarks:100,practicalFullMarks:100}});
- await createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId},schoolId,input});
+ await createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId,uid:'admin-1'},schoolId,input});
  assert.equal(writes.length,1,'Subject name alone must not force a hardcoded assessment scheme');
 }
 // A subject's own non-default configured limits allow valid marks and reject over-limit marks.
@@ -55,13 +56,13 @@ for(const [name,theoryFullMarks,practicalFullMarks,validTheory,validPractical] o
 ]){
  const subject={schoolId,class:classId,active:true,name,theoryFullMarks,practicalFullMarks};
  const {api,writes}=mock({'subjects/math':subject});
- await createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId},schoolId,input:{...input,theory:validTheory,practical:validPractical}});
+ await createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId,uid:'admin-1'},schoolId,input:{...input,theory:validTheory,practical:validPractical}});
  assert.equal(writes.length,1,'Configured full marks must permit valid marks for '+name);
 }
 // Missing or incomplete Examination Settings must fail closed for every subject.
 for(const settings of [{}, {theoryFullMarks:100}, {practicalFullMarks:100}]){
  const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name:'Any Subject',...settings}});
- await assert.rejects(createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId},schoolId,input}),/full marks required/);
+ await assert.rejects(createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId,uid:'admin-1'},schoolId,input}),/full marks required/);
  assert.equal(writes.length,0);
 }
 // A missing teacher assignment cannot be bypassed by a teacher UID.
@@ -73,7 +74,7 @@ for(const settings of [{}, {theoryFullMarks:100}, {practicalFullMarks:100}]){
 // Invalid marks and missing subject assignments must fail before any write.
 for(const badInput of [{...input,theory:NaN},{...input,practical:-1},{...input,studentId:'../other'}]){
  const {api,writes}=mock();
- await assert.rejects(createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId},schoolId,input:badInput}));
+ await assert.rejects(createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId,uid:'admin-1'},schoolId,input:badInput}));
  assert.equal(writes.length,0);
 }
 // Existing marks, cross-school records, and configured component marks for ANY subject cannot be bypassed.
@@ -88,7 +89,7 @@ for(const [overrides,message] of [
  [{'subjects/math':{schoolId,class:classId,active:true,name:'New Optional Subject',theoryFullMarks:100,practicalFullMarks:100,components:[{name:'Project',fullMarks:73}]}},/Configured subject requires Assessment Settings/]
 ]){
  const {api,writes}=mock(overrides);
- await assert.rejects(createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId},schoolId,input}),message);
+ await assert.rejects(createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId,uid:'admin-1'},schoolId,input}),message);
  assert.equal(writes.length,0,'No records may be written on rejected marks');
 }
 // A valid, assigned teacher is allowed to create only their assigned mark.
@@ -128,7 +129,7 @@ for(const mutate of [
 // Every subject must obey its own configured limits, not a Computer-only scale.
 for(const [name,theoryFullMarks,practicalFullMarks] of [['Computer',4,36],['Nepali',20,10],['New Optional Subject',24,6]]){
  const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name,theoryFullMarks,practicalFullMarks}});
- await assert.rejects(createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId},schoolId,input}),/exceed/);
+ await assert.rejects(createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId,uid:'admin-1'},schoolId,input}),/exceed/);
  assert.equal(writes.length,0);
 }
 console.log('V47 direct mark creation authorization checks passed');

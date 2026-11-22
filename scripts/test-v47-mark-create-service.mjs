@@ -6,6 +6,7 @@ const args={db:{},api,actor,schoolId:'12345678',input};
 assert.equal((await createSchoolMarkOnly(args)).id,'1st:s1:math');assert.equal(docs.size,4);
 await assert.rejects(()=>createSchoolMarkOnly(args),/already exists/);assert.equal(docs.size,4);
 await assert.rejects(()=>createSchoolMarkOnly({...args,actor:{...actor,role:'viewer'}}));
+await assert.rejects(()=>createSchoolMarkOnly({...args,actor:{...actor,uid:undefined}}),/permission/);
 await assert.rejects(()=>createSchoolMarkOnly({...args,schoolId:'87654321'}));assert.equal(transactions,2);
 docs.delete('schools/12345678/subject_assignments/s1:math');
 await assert.rejects(()=>createSchoolMarkOnly({...args,input:{...input,term:'final'}}),/assignment required/);
