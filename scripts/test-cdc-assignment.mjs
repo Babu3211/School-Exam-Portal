@@ -42,6 +42,12 @@ const dom=new JSDOM('<select id="entryClass"><option>Class 5</option></select>',
 const w=dom.window;
 const current={...teacher};
 let serverRole=teacher;
+let nextId=0;
+let readSchool;
+let denyWrite=false;
+const observations=new Map();
+const recordData=(path)=>({data:()=>observations.get(path)});
+
 Object.assign(w,{
   auth:{currentUser:{uid:'teacher'}},currentSchoolSettings:{academicYear:'2083'},currentUserRole:current,
   marksStudents:[{...student,id:'one',name:'Test One'},{...student,id:'two',name:'Test Two'},{...student,id:'outside',name:'Outside',section:'B'}],
@@ -51,7 +57,28 @@ Object.assign(w,{
   SmssIemisTransfer:{key:value=>String(value).toLowerCase(),subjectKey:value=>String(value).toLowerCase()},
   attendanceAdToBs:v=>v,attendanceBsToAd:v=>v==='2083-13-01'?'invalid':v,attendanceNepalTodayAD:()=>'2083-08-07',
   attendanceDigitsToEnglish:v=>v.replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d))),attendancePad:v=>String(v).padStart(2,'0'),
-  db:{},doc:()=>({}),getDocFromServer:async()=>({data:()=>serverRole})
+  db:{},
+  collection:(_,name)=>name,
+  doc:(base,name,id)=>base==='cdc_observations'
+    ? {path:base+'/'+(name??++nextId),id:String(name??nextId)} : {path:name+'/'+id},
+  getDocFromServer:async ref=>ref.path==='user_roles/teacher'
+    ? {data:()=>serverRole} : recordData(ref.path),
+  serverTimestamp:()=>({toMillis:()=>nextId}),
+  setDoc:async(ref,data)=>{
+    assert.match(ref.path,/^cdc_observations\//);
+    if(denyWrite||observations.has(ref.path)) throw Error('Permission denied');
+    observations.set(ref.path,data);
+  },
+  where:(...filter)=>filter,
+  query:(name,...filters)=>({name,filters}),
+  getDocsFromServer:async ({name,filters})=>{
+    assert.equal(name,'cdc_observations');
+    assert.deepEqual(Object.fromEntries(filters.map(([name,op,value])=>{assert.equal(op,'==');return [name,value];})),{
+      studentId:field('student').value,className:'5',subject:'Mathematics',section:'A',academicYear:'2083',period:'First Term'
+    });
+    if(readSchool) await readSchool.promise;
+    return {docs:[...observations.keys()].filter(path=>filters.every(([key,,value])=>observations.get(path)[key]===value)).map(recordData)};
+  }
 });
 w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
 w.eval(html.slice(html.indexOf('const cdcCoreSubjects'),html.indexOf('let iemisEntryGrid'))+'\nopenCdcAssessment();');
@@ -69,17 +96,49 @@ field('date').value='२०८३-८-२';
 await field('save').onclick();
 assert.match(field('classProgress').textContent,/1\/2/);
 assert.match(field('history').textContent,/2083-08-02/);
+await field('saveSchool').onclick();
+assert.match(field('status').textContent,/विद्यालयमा सुरक्षित भयो/);
+assert.match(field('schoolRows').textContent,/Synthetic evidence/);
+await field('save').onclick();
+await field('saveSchool').onclick();
+assert.equal(observations.size,1);
+assert.match(field('status').textContent,/विद्यालयमा सुरक्षित भयो/);
+assert.equal([...observations.values()][0].level,3);
+let finishRead;
+readSchool={promise:new Promise(resolve=>{finishRead=resolve;})};
+const pendingRead=field('readSchool').onclick();
 await field('next').onclick();
+finishRead();
+await pendingRead;
+assert.equal(field('schoolRows').rows.length,0);
+readSchool=undefined;
 assert.equal(field('student').value,'two');assert.equal(field('evidence').value,'');
 field('progressRows').querySelector('button').click();
 assert.equal(field('evidence').value,'Synthetic evidence');
 field('new').click();field('evidence').value='Follow-up';
 await field('save').onclick();
 assert.equal(field('history').rows.length,2);
+await field('saveSchool').onclick();
+assert.match(field('status').textContent,/सिकाइ स्तर/);
+assert.equal(observations.size,1);
+field('level').value='4';
+await field('save').onclick();
+denyWrite=true;
+await field('saveSchool').onclick();
+assert.match(field('status').textContent,/पुष्टि भएन/);
+assert.equal(observations.size,1);
+denyWrite=false;
+await field('saveSchool').onclick();
+assert.equal(observations.size,2);
+assert.match(field('schoolRows').textContent,/Follow-up/);
+field('evidence').value='Unsaved changes';
+await field('saveSchool').onclick();
+assert.match(field('status').textContent,/पहिले/);
+assert.equal(observations.size,2);
 const before=JSON.stringify(w.localStorage);
 serverRole={...teacher,subjectAssignments:[]};
 field('evidence').value='Must not save';await field('save').onclick();
 assert.match(field('status').textContent,/तोकिएको छैन/);
 assert.equal(JSON.stringify(w.localStorage),before);
 dom.window.close();
-console.log('CDC form: bilingual lookup, editable Nepali date, progress, history and revoked assignment passed');
+console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');

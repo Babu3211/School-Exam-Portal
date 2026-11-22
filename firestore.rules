@@ -389,7 +389,8 @@ service cloud.firestore {
         data.keys().hasOnly(['studentId', 'className', 'subject', 'section',
           'academicYear', 'period', 'unit', 'unitEn', 'topic', 'topicAlt',
           'date', 'level', 'method', 'evidence', 'feedback', 'createdBy', 'createdAt']) &&
-        data.studentId is string && data.studentId.matches('^[^/]{1,1500}$') &&
+        data.studentId is string && data.studentId.size() > 0 && data.studentId.size() <= 1500 &&
+        data.studentId.matches('^[^/]+$') && !(data.studentId in ['.', '..']) &&
         data.className is string && data.className.matches('^(Class |कक्षा )?[1-5१-५]$') &&
         data.subject is string && data.subject.size() > 0 && data.subject.size() <= 180 &&
         data.section is string && data.section.size() <= 40 &&

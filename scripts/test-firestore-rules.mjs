@@ -378,8 +378,6 @@ try {
   await actualSave(edits,"grid-context",{id:"format-exam-1",academicYear:"2083"},"1",formatTeacher);
   if(cache.some(r=>r.totalObtained!==18))throw new Error("Real transaction update did not reload new marks");
 
-  console.log("Firestore Security Rules emulator tests passed.");
-
   // CDC uses an independent collection and verifies the student's stored section.
   const cdcUid = 'cdc-assigned-teacher';
   await testEnv.withSecurityRulesDisabled(async context => {
@@ -397,6 +395,14 @@ try {
     createdBy:cdcUid,createdAt:serverTimestamp()};
   await assertSucceeds(setDoc(cdc('valid'),observation));
   await assertSucceeds(getDoc(cdc('valid')));
+  const cdcQuery=(section,subject='Mathematics')=>query(collection(cdcDb,'cdc_observations'),
+    where('studentId','==','cdc-test-a'),where('className','==','5'),where('section','==',section),
+    where('subject','==',subject),where('academicYear','==','2083'),where('period','==','First Term'));
+  const visible=await assertSucceeds(getDocs(cdcQuery('A')));
+  if(visible.size!==1) throw Error('Assigned teacher could not retrieve the saved CDC observation');
+  await assertFails(getDocs(cdcQuery('B')));
+  await assertFails(getDocs(cdcQuery('A','English')));
+  await assertFails(setDoc(cdc('invalid-student-path'),{...observation,studentId:'students/cdc-test-a'}));
   await assertFails(setDoc(cdc('wrong-student'),{...observation,studentId:'cdc-test-b'}));
   await assertFails(setDoc(cdc('wrong-subject'),{...observation,subject:'English'}));
   await assertFails(setDoc(cdc('wrong-level'),{...observation,level:5}));
@@ -406,6 +412,7 @@ try {
   await assertSucceeds(getDoc(cdc('valid',adminCdcDb)));
   await assertFails(setDoc(cdc('admin-create',adminCdcDb),{...observation,createdBy:ADMIN}));
   await assertFails(getDoc(cdc('valid',testEnv.unauthenticatedContext().firestore())));
+  console.log('Firestore Security Rules emulator tests passed, including CDC observation access.');
 } finally {
   await testEnv.cleanup();
 }

@@ -427,7 +427,7 @@ import {initUserActivity} from "./user-activity.js?v=20261112-final";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
 import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut,createUserWithEmailAndPassword,deleteUser,sendPasswordResetEmail} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 
-import {getFirestore,collection,addDoc,getDocs,doc,getDoc,getDocFromServer,setDoc,updateDoc,deleteDoc,serverTimestamp,query,where,writeBatch,runTransaction,orderBy,limit} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import {getFirestore,collection,addDoc,getDocs,getDocsFromServer,doc,getDoc,getDocFromServer,setDoc,updateDoc,deleteDoc,serverTimestamp,query,where,writeBatch,runTransaction,orderBy,limit} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 function safeNoticeError(error,fallback="प्रणालीमा समस्या आयो।"){const raw=String(error?.code||error?.message||fallback);return raw.replace(/firebase|firestore/gi,"प्रणाली").slice(0,240);}
 
 const firebaseConfig={apiKey:"AIzaSyDOwR82MTwBK1BRb-5wSVX2-EITCzJ1A5c",authDomain:"exam-portal-smss-95016.firebaseapp.com",projectId:"exam-portal-smss-95016",storageBucket:"exam-portal-smss-95016.firebasestorage.app",messagingSenderId:"86041985011",appId:"1:86041985011:web:e3806d74f2ae39d97c5c86"};
@@ -2374,7 +2374,7 @@ function parseCdcBilingualCatalog(text) {
   });
 }
 
-// CDC observations are a separate browser draft, never an examination score.
+// CDC observations use a separate Firestore collection and browser drafts.
 function openCdcAssessment() {
   if (!auth.currentUser) return;
   document.getElementById('cdcAssessmentDialog')?.remove();
@@ -2382,7 +2382,7 @@ function openCdcAssessment() {
   dialog.id = 'cdcAssessmentDialog';
   dialog.style.cssText = 'width:min(720px,94vw);max-height:90vh;border:1px solid #ccd9ea;border-radius:16px;padding:24px';
   dialog.innerHTML = `<h2>CDC सिकाइ मूल्याङ्कन</h2>
-    <p>विद्यार्थीको सिकाइ उपलब्धि, देखिएको प्रगति र थप सहयोग अभिलेख गर्नुहोस्। मस्यौदा यही ब्राउजरमा रहन्छ।</p>
+    <p>विद्यार्थीको सिकाइ उपलब्धि, देखिएको प्रगति र थप सहयोग अभिलेख गर्नुहोस्। मस्यौदा यही ब्राउजरमा रहन्छ। विद्यालयमा सुरक्षित गरेपछि अनुमति भएका प्रयोगकर्ताले अभिलेख हेर्न सक्छन्।</p>
     <div class="fields">
       <label>कक्षा <select data-cdc="class"></select></label>
       <label>विषय <select data-cdc="subject"></select></label>
@@ -2418,8 +2418,14 @@ function openCdcAssessment() {
     <datalist id="cdcMethodSuggestions"><option>रुजुसूची</option><option>रुब्रिक्स</option><option>श्रेणीमापन</option><option>मौखिक प्रश्न</option><option>अवलोकन फाराम</option></datalist>
     <label>देखिएको सिकाइ र प्रमाण <textarea data-cdc="evidence" rows="3" maxlength="2000" style="width:100%"></textarea></label>
     <label>पृष्ठपोषण र थप सहयोग <textarea data-cdc="feedback" rows="3" maxlength="2000" style="width:100%"></textarea></label>
+    <section>
+      <h3>विद्यालयको मूल्याङ्कन अभिलेख</h3>
+      <button class="btn alt" data-cdc="readSchool" type="button">अभिलेख हेर्नुहोस्</button>
+      <p data-cdc="schoolStatus" role="status"></p>
+      <div class="tablewrap"><table><thead><tr><th>एकाइ / Unit</th><th>सिकाइ उपलब्धि / Learning outcome</th><th>मिति (वि.सं.)</th><th>मूल्याङ्कन साधन</th><th>सिकाइ स्तर</th><th>सिकाइ प्रमाण</th><th>सुधारात्मक सहयोग</th></tr></thead><tbody data-cdc="schoolRows"></tbody></table></div>
+    </section>
     <p data-cdc="status" role="status"></p>
-    <div class="toolbar"><button class="btn" data-cdc="save" type="button">मस्यौदा राख्नुहोस्</button><button class="btn alt" data-cdc="new" type="button">थप अवलोकन</button><button class="btn alt" data-cdc="next" type="button">अर्को विद्यार्थी</button><button class="btn alt" data-cdc="close" type="button">बन्द गर्नुहोस्</button></div>`;
+    <div class="toolbar"><button class="btn" data-cdc="save" type="button">मस्यौदा राख्नुहोस्</button><button class="btn" data-cdc="saveSchool" type="button">मस्यौदा विद्यालयमा सुरक्षित गर्नुहोस्</button><button class="btn alt" data-cdc="new" type="button">थप अवलोकन</button><button class="btn alt" data-cdc="next" type="button">अर्को विद्यार्थी</button><button class="btn alt" data-cdc="close" type="button">बन्द गर्नुहोस्</button></div>`;
   const field = name => dialog.querySelector('[data-cdc="'+name+'"]');
   const owner = auth.currentUser.uid;
   const year = String(currentSchoolSettings.academicYear || '2083');
@@ -2522,8 +2528,102 @@ function openCdcAssessment() {
       for (const value of [item.date, item.method, item.level, item.evidence, item.feedback]) row.insertCell().textContent = value || '—';
     }
   };
+  let schoolReadSequence = 0;
+  let schoolSavePending = false;
+  const canShow = () => dialog.isConnected && dialog.open && auth.currentUser?.uid===owner;
+  const schoolSelection = () => {
+    const [,,cl,subject,studentId,period] = scope();
+    const student = marksStudents.find(st=>st.id===studentId);
+    if(!student || !cl || !subject || classNoFromName(student.class??student.className)!==cl) return null;
+    return {studentId,className:String(student.class??student.className),subject,
+      section:String(student.section??''),academicYear:year,period};
+  };
+  const clearSchoolResults = () => {
+    schoolReadSequence++;
+    field('schoolRows').replaceChildren();
+    field('schoolStatus').textContent='';
+    field('readSchool').disabled=!schoolSelection();
+    field('saveSchool').disabled=readOnly||schoolSavePending||!schoolSelection();
+  };
+  field('readSchool').onclick=async()=>{
+    const selection=schoolSelection();
+    if(!selection||!canShow()) return;
+    clearSchoolResults();
+    const request=schoolReadSequence;
+    const isLatest=()=>canShow()&&request===schoolReadSequence;
+    field('readSchool').disabled=true;
+    field('schoolStatus').textContent='विद्यालयको अभिलेख पढ्दै…';
+    try {
+      const filters=Object.entries(selection).map(([name,value])=>where(name,'==',value));
+      const result=await getDocsFromServer(query(collection(db,'cdc_observations'),...filters));
+      if(!isLatest()) return;
+      const items=result.docs.map(record=>record.data()).sort((a,b)=>
+        b.date.localeCompare(a.date)||(b.createdAt?.toMillis()??0)-(a.createdAt?.toMillis()??0));
+      for(const item of items) {
+        const row=field('schoolRows').insertRow();
+        for(const value of [[item.unit,item.unitEn].filter(Boolean).join(' / '),
+          [item.topic,item.topicAlt].filter(Boolean).join(' / '),item.date,item.method,item.level,item.evidence,item.feedback]) {
+          row.insertCell().textContent=value||'—';
+        }
+      }
+      field('schoolStatus').textContent=items.length
+        ? `यस विद्यार्थी, विषय र अवधिमा ${items.length} अवलोकन छन्।` : 'यस छनोटमा विद्यालयको अभिलेख छैन।';
+    } catch {
+      if(isLatest()) field('schoolStatus').textContent='विद्यालयको अभिलेख पढ्न सकिएन। जडान र अनुमति जाँच्नुहोस्।';
+    } finally {
+      if(isLatest()) field('readSchool').disabled=false;
+    }
+  };
+  field('saveSchool').onclick=async()=>{
+    const selection=schoolSelection();
+    if(readOnly||schoolSavePending||!selection||!canShow()) return;
+    const status=field('status');
+    const savingKey=key();
+    const isCurrent=()=>canShow()&&key()===savingKey;
+    schoolSavePending=true;
+    field('saveSchool').disabled=true;
+    try {
+      const draft=readRecord();
+      const title=titleValue();
+      const values={unit:unitValue(),unitEn:field('unitEn').value.trim(),topicAlt:field('topicAlt').value.trim(),
+        date:field('date').value.trim(),level:field('level').value,method:field('method').value,
+        evidence:field('evidence').value,feedback:field('feedback').value};
+      if(appendObservation||!title||!draft.evidence||Object.entries(values).some(([name,value])=>(draft[name]||'')!==value)) {
+        status.textContent='पहिले देखिएको विवरण मस्यौदामा राख्नुहोस्।';return;
+      }
+      if(!['1','2','3','4'].includes(draft.level)) {
+        status.textContent='सिकाइ स्तर १ देखि ४ सम्म छानेर मस्यौदा राख्नुहोस्।';return;
+      }
+      const observations=collection(db,'cdc_observations');
+      const observation=draft.schoolId ? doc(observations,draft.schoolId) : doc(observations);
+      if(!draft.schoolId) {
+        draft.schoolId=observation.id;
+        localStorage.setItem(savingKey,JSON.stringify(draft));
+      }
+      status.textContent='विद्यालयमा सुरक्षित गर्दै…';
+      const payload={...selection,...values,topic:title,level:Number(draft.level),createdBy:owner};
+      try {
+        await setDoc(observation,{...payload,createdAt:serverTimestamp()});
+      } catch(error) {
+        if(!canShow()) return;
+        // If the first attempt committed, the immutable record confirms the retry.
+        const existing=(await getDocFromServer(observation)).data();
+        if(!existing||!Object.entries(payload).every(([name,value])=>existing[name]===value)) throw error;
+      }
+      if(isCurrent()) {
+        status.textContent='विद्यार्थीको मूल्याङ्कन विद्यालयमा सुरक्षित भयो।';
+        await field('readSchool').onclick();
+      }
+    } catch {
+      if(isCurrent()) status.textContent='विद्यालयमा सुरक्षित भएको पुष्टि भएन। मस्यौदाबाट फेरि प्रयास गर्नुहोस्।';
+    } finally {
+      schoolSavePending=false;
+      if(canShow()) field('saveSchool').disabled=!schoolSelection();
+    }
+  };
   const load = () => {
     appendObservation = false;
+    clearSchoolResults();
     const chosenUnit = [field('unit').value,field('unitEn').value];
     let record = {};
     field('status').textContent = '';
@@ -2691,6 +2791,9 @@ function openCdcAssessment() {
       const record={date:normalized,unit:field('unit').value.trim(),unitEn:field('unitEn').value.trim(),topicAlt:alternate,level:field('level').value,
         method:field('method').value,evidence:field('evidence').value,feedback:field('feedback').value,
         history:appendObservation&&last.evidence?[...earlier,last]:earlier};
+      if(last.schoolId&&!appendObservation&&Object.keys(record).every(name=>name==='history'||record[name]===(last[name]||''))) {
+        record.schoolId=last.schoolId;
+      }
       localStorage.setItem(key(),JSON.stringify(record));
       appendObservation=false;
       field('date').value=normalized;
@@ -4008,7 +4111,7 @@ document.addEventListener("change",e=>{if(["reportType","reportClass"].includes(
 window.loadDashboardData=loadDashboardData;window.loadReportsData=loadReportsData;
 
 void loadPublicSchoolBranding();
-onAuthStateChanged(auth,async user=>{if(!user){idleSession.stop();void userActivity.onAuth(null);clearLoginSecret();currentUserRole=null;shell.style.display="none";gate.style.display="flex";return;}try{if(user.uid===ADMIN_UID)currentUserRole={roles:["admin"],active:true};else if(!currentUserRole||currentUserRole.uid!==user.uid){const rs=await getDoc(doc(db,"user_roles",user.uid));if(!rs.exists()||rs.data().active!==true)throw new Error("सक्रिय User Role भेटिएन।");currentUserRole={uid:user.uid,...rs.data()};}gate.style.display="none";shell.style.display="flex";statusBox.textContent="";idleSession.start(user);void userActivity.onAuth(user);const signedInName=String(isAdmin()?"Babukrishna Khanal":(currentUserRole?.displayName||user.displayName||user.email?.split("@")[0]||"User")).trim();const topName=document.getElementById("topUserName"),topGreeting=document.getElementById("topGreeting"),topAvatar=document.getElementById("topAvatar");if(topName)topName.textContent=signedInName;if(topGreeting)topGreeting.textContent=`नमस्ते ${signedInName} ज्यू, परीक्षा पोर्टलमा स्वागत छ।`;if(topAvatar)topAvatar.textContent=(signedInName.replace(/\s+/g," ").charAt(0)||"U").toUpperCase();window.renderSmssUserActivity();applyRoleNavigation();await loadSchoolSettings();/* Refresh the active screen after role permissions are resolved. The shared render() path loads every module, including attendance and marks, rather than maintaining incomplete admin/teacher startup lists. */render(window.currentPage||"dashboard");}catch(err){console.error("Role authentication failed",err);currentUserRole=null;await signOut(auth);shell.style.display="none";gate.style.display="flex";errorBox.textContent=safeNoticeError(err)||"User Role जाँच हुन सकेन।";}});
+onAuthStateChanged(auth,async user=>{if(!user){document.getElementById("cdcAssessmentDialog")?.remove();idleSession.stop();void userActivity.onAuth(null);clearLoginSecret();currentUserRole=null;shell.style.display="none";gate.style.display="flex";return;}try{if(user.uid===ADMIN_UID)currentUserRole={roles:["admin"],active:true};else if(!currentUserRole||currentUserRole.uid!==user.uid){const rs=await getDoc(doc(db,"user_roles",user.uid));if(!rs.exists()||rs.data().active!==true)throw new Error("सक्रिय User Role भेटिएन।");currentUserRole={uid:user.uid,...rs.data()};}gate.style.display="none";shell.style.display="flex";statusBox.textContent="";idleSession.start(user);void userActivity.onAuth(user);const signedInName=String(isAdmin()?"Babukrishna Khanal":(currentUserRole?.displayName||user.displayName||user.email?.split("@")[0]||"User")).trim();const topName=document.getElementById("topUserName"),topGreeting=document.getElementById("topGreeting"),topAvatar=document.getElementById("topAvatar");if(topName)topName.textContent=signedInName;if(topGreeting)topGreeting.textContent=`नमस्ते ${signedInName} ज्यू, परीक्षा पोर्टलमा स्वागत छ।`;if(topAvatar)topAvatar.textContent=(signedInName.replace(/\s+/g," ").charAt(0)||"U").toUpperCase();window.renderSmssUserActivity();applyRoleNavigation();await loadSchoolSettings();/* Refresh the active screen after role permissions are resolved. The shared render() path loads every module, including attendance and marks, rather than maintaining incomplete admin/teacher startup lists. */render(window.currentPage||"dashboard");}catch(err){console.error("Role authentication failed",err);currentUserRole=null;await signOut(auth);shell.style.display="none";gate.style.display="flex";errorBox.textContent=safeNoticeError(err)||"User Role जाँच हुन सकेन।";}});
 </script>
 <script type="module" src="./cdc-question-paper.js"></script>
 
