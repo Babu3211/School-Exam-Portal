@@ -17,4 +17,11 @@ await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,records:[{...reco
 await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,records:[{...records[0],class:'10'}]}));
 const missing={...api,getDoc:async()=>({exists:()=>false})};
 await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,api:missing,records:[records[0]]}));
+await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,records:[records[0],records[0]]}),/Duplicate/);
+await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,records:[{...records[0],isAbsent:true}]}),/Absent/);
+await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,records:[{...records[0],studentId:'../other'}]}),/Invalid student/);
+const zeroInternal={...api,getDoc:async()=>({exists:()=>true,data:()=>({schoolId,class:'9',active:true,theoryFullMarks:100,practicalFullMarks:0})})};
+await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,api:zeroInternal,records:[records[0]]}),/positive numeric/);
+const foreign={...api,getDoc:async()=>({exists:()=>true,data:()=>({schoolId:'99999999',class:'9',active:true,theoryFullMarks:60,practicalFullMarks:40})})};
+await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,api:foreign,records:[records[0]]}),/not active/);
 console.log('School-scoped V46 diagnostic result preview checks passed');
