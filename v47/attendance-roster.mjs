@@ -7,7 +7,10 @@ export async function loadClassRoster({db,api,actor,schoolId,schoolClass,pageSiz
  const identity={uid:actor.uid,role:actor.role,active:actor.active,schoolId:actor.schoolId};
  if(!validSchoolClass(schoolClass))throw new Error('Invalid class');
  if(!Number.isInteger(pageSize)||pageSize<1||pageSize>100)throw new RangeError('Page size must be 1–100');
- if(cursor!==null&&(typeof cursor?.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(cursor.id)))throw new TypeError('Invalid roster pagination cursor');
+ if(cursor!==null&&(typeof cursor?.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(cursor.id)||
+  cursor.ref?.path!==undefined&&cursor.ref.path!=='schools/'+schoolId+'/students/'+cursor.id||
+  cursor.schoolId!==undefined&&cursor.schoolId!==schoolId||
+  cursor.class!==undefined&&cursor.class!==schoolClass))throw new TypeError('Invalid roster pagination cursor');
  for(const method of ['collection','query','where','orderBy','limit','getDocs','startAfter'])if(typeof api?.[method]!=='function')throw new TypeError('Missing Firebase SDK method: '+method);
  const constraints=[api.where('class','==',schoolClass),api.orderBy('__name__'),api.limit(pageSize+1)];
  // Ordered by document ID: Firestore startAfter expects the ordered ID value,
@@ -20,7 +23,7 @@ export async function loadClassRoster({db,api,actor,schoolId,schoolClass,pageSiz
  const ids=new Set();
  let lastId=cursor?.id??null;
  for(const d of docs){
-  if(!d||typeof d.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||ids.has(d.id))throw new Error('Invalid or duplicate roster document ID');
+  if(!d||d.ref?.path!==undefined&&d.ref.path!=='schools/'+schoolId+'/students/'+d.id||typeof d.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||ids.has(d.id))throw new Error('Invalid or duplicate roster document ID');
   if(lastId!==null&&d.id<=lastId)throw new Error('Roster query returned out-of-order document IDs');
   ids.add(d.id);lastId=d.id;
  }
