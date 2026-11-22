@@ -53,8 +53,10 @@ async function unzip(buffer){
  return files;
 }
 export async function readV47StudentXlsx(file){
- if(!file||typeof file.arrayBuffer!=='function'||!Number.isFinite(file.size)||file.size>MAX_FILE)throw new RangeError('Excel file must be 2 MB or smaller');
- const files=await unzip(await file.arrayBuffer()),sheet=files.get('xl/worksheets/sheet1.xml');
+ if(!file||typeof file.arrayBuffer!=='function'||!Number.isSafeInteger(file.size)||file.size<22||file.size>MAX_FILE)throw new RangeError('Excel file must be 2 MB or smaller');
+ const buffer=await file.arrayBuffer();
+ if(!(buffer instanceof ArrayBuffer)||buffer.byteLength!==file.size)throw new Error('Excel file size mismatch');
+ const files=await unzip(buffer),sheet=files.get('xl/worksheets/sheet1.xml');
  if(!sheet)throw new Error('Missing worksheet');
  const shared=files.get('xl/sharedStrings.xml');
  const strings=shared?descendants(xml(shared),'si').map(si=>descendants(si,'t').map(t=>t.textContent??'').join('')):[];
