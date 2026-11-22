@@ -2455,6 +2455,11 @@ function ledgerComponentsForSubject(group,subject,className,exam){
  if(thFull>0)parts.unshift({name:'TH (Theory)',fullMarks:thFull});
  return parts;
 }
+async function ensureExcelJS(){
+ if(window.ExcelJS)return window.ExcelJS;
+ await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';sc.onload=resolve;sc.onerror=()=>reject(new Error('Excel export library load भएन। Internet जाँच गर्नुहोस्।'));document.head.appendChild(sc)});
+ if(!window.ExcelJS)throw new Error('Excel export library उपलब्ध भएन।');return window.ExcelJS;
+}
 function getIemisTransferGrid(fromLedger=false){
   const className=document.getElementById(fromLedger?'ledgerViewClass':'entryClass')?.value;
   const examId=document.getElementById(fromLedger?'ledgerViewExam':'entryExam')?.value;
@@ -2494,11 +2499,6 @@ document.addEventListener('click',event=>{
  if(event.target.closest('#exportIemisLedgerExcel'))exportIemisTransferExcel(true,false);
  if(event.target.closest('#sampleIemisLedgerExcel'))exportIemisTransferExcel(true,true);
 });
-async function ensureExcelJS(){
- if(window.ExcelJS)return window.ExcelJS;
- await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';sc.onload=resolve;sc.onerror=()=>reject(new Error('Excel export library load भएन। Internet जाँच गर्नुहोस्।'));document.head.appendChild(sc)});
- if(!window.ExcelJS)throw new Error('Excel export library उपलब्ध भएन।');return window.ExcelJS;
-}
 async function exportMarksLedgerExcel(){
  const cl=document.getElementById('entryClass')?.value||document.getElementById('ledgerViewClass')?.value;
  const examId=document.getElementById('entryExam')?.value||document.getElementById('ledgerViewExam')?.value;
