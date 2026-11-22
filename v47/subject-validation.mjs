@@ -17,5 +17,7 @@ export function validateSchoolSubject(input){
   if(!Number.isFinite(number)||number<0)throw new Error('Invalid Examination Settings full marks: '+key);
   marks[key]=number;
  }
- return {id,name:name.trim(),class:input.class,active:input.active??true,...marks};
+ const credit=Number(input.creditHour);
+ if(input.creditHour===undefined||input.creditHour===null||input.creditHour===''||!Number.isFinite(credit)||credit<=0||credit>100)throw new Error('Valid subject credit hours required for V46 GPA');
+ return {id,name:name.trim(),class:input.class,active:input.active??true,creditHour:credit,...marks};
 }
