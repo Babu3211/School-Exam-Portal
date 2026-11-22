@@ -28,7 +28,7 @@ async function expireIdle(){
  if(!verified||expiring)return false;
  if(Date.now()-lastActivity<MAX_IDLE_MS&&await enforceSchoolIdle(auth,authSdk))return false;
  expiring=true;sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();
- try{sessionStorage.removeItem(SCHOOL_SELECTION_KEY);if(auth)await authSdk.signOut(auth)}catch{}
+ try{if(auth)await authSdk.signOut(auth)}catch{}
  message('एक घण्टा निष्क्रिय भएपछि Login समाप्त भयो। फेरि Login गर्नुहोस्।');
  expiring=false;return true;
 }
@@ -50,7 +50,7 @@ document.querySelectorAll('[data-school-module]').forEach(link=>link.addEventLis
   if(destination.origin!==location.origin)throw Error('External navigation blocked');
   destination.searchParams.set('schoolId',current.schoolId);
   location.assign(destination.href);
- }catch(e){clear();message('विद्यालय अनुमति फेरि जाँच्न आवश्यक छ: '+e.message)}
+ }catch(e){sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();message('विद्यालय अनुमति फेरि जाँच्न आवश्यक छ: '+e.message)}
  finally{checkingLink=false}
 }));
 for(const eventName of ['pointerdown','keydown'])document.addEventListener(eventName,()=>{
@@ -61,7 +61,7 @@ for(const eventName of ['pointerdown','keydown'])document.addEventListener(event
 },{passive:true,capture:true});
 $('dashboardConnect').onclick=async()=>{if(busy||auth)return;busy=true;$('dashboardConnect').disabled=true;try{
  ({auth,authSdk,db,api}=await connectSchoolFirebase());
- authSdk.onAuthStateChanged(auth,user=>{if(verified&&user?.uid!==verified.uid){clear();message('Login सत्र परिवर्तन भयो। फेरि प्रमाणित गर्नुहोस्।')}});
+ authSdk.onAuthStateChanged(auth,user=>{if(verified&&user?.uid!==verified.uid){sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();message('Login सत्र परिवर्तन भयो। फेरि प्रमाणित गर्नुहोस्।')}});
  $('dashboardLogin').disabled=false;message('V47 Firebase जडान भयो।');await restoreVerifiedSchool();
  }catch(e){message('जडान असफल: '+e.message);$('dashboardConnect').disabled=false}finally{busy=false}};
 $('dashboardLogin').onclick=async()=>{if(busy||!auth)return;busy=true;$('dashboardLogin').disabled=true;clear();try{
