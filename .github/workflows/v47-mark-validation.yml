@@ -32,6 +32,9 @@ on:
       - 'v47/school-class-result-diagnostic.mjs'
       - 'v47/class-publication-preflight.mjs'
       - 'v47/test-class-publication-preflight.mjs'
+      - 'v47/test-marks-release-safety.mjs'
+      - 'v47/firestore.rules'
+      - 'v47/release-readiness-gate.mjs'
       - 'v47/marks-service.mjs'
       - 'v47/test-unbounded-mark-entry.mjs'
       - 'v47/mark-create-service.mjs'
@@ -52,6 +55,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify release remains fail-closed
+        run: node v47/test-marks-release-safety.mjs
       - name: Verify class publication safety preflight
         run: node v47/test-class-publication-preflight.mjs
       - name: Verify legacy subject credit-hour repair
