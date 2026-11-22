@@ -13,6 +13,10 @@ await assert.rejects(()=>loadCompleteSchoolSubjects({...base,api:missingCredit})
 const invalidCredit={...api,getDocs:async()=>({docs:[{id:'a',data:()=>({schoolId,class:'9',active:true,creditHour:0})}]})};
 await assert.rejects(()=>loadCompleteSchoolSubjects({...base,api:invalidCredit}),/creditHour missing/);
 await assert.rejects(()=>loadCompleteSchoolSubjects({...base,maxSubjects:2}),/bound/);
+const excessiveCredit={...api,getDocs:async()=>({docs:[{id:'a',data:()=>({schoolId,class:'9',active:true,creditHour:101})}]})};
+await assert.rejects(()=>loadCompleteSchoolSubjects({...base,api:excessiveCredit}),/creditHour missing/);
+const invalidLookahead={...api,getDocs:async()=>({docs:[{id:'a',data:()=>({schoolId,class:'9',active:true,creditHour:4})},{id:'b',data:()=>({schoolId,class:'9',active:true,creditHour:4})},{id:'c',data:()=>({schoolId,class:'9',active:true,creditHour:0})}]})};
+await assert.rejects(()=>loadCompleteSchoolSubjects({...base,api:invalidLookahead}),/lookahead/);
 await assert.rejects(()=>loadCompleteSchoolSubjects({...base,actor:{...actor,schoolId:'99999999'}}),/membership/);
 const bad={...api,getDocs:async()=>({docs:[{id:'a',data:()=>({schoolId:'99999999',class:'9',active:true})}]})};
 await assert.rejects(()=>loadCompleteSchoolSubjects({...base,api:bad}),/Foreign/);
