@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('./school-admin.html',import.meta.url),'utf8');
+const js=readFileSync(new URL('./school-admin-console.mjs',import.meta.url),'utf8');
+assert.match(html,/id="toggleFoundMember" disabled/);
+assert.match(js,/foundMember=null,lookupRequest=0/);
+assert.match(js,/foundMember=null;\$\('toggleFoundMember'\)\.disabled=true/);
+assert.match(js,/if\(request!==lookupRequest\|\|session\.epoch!==sessionEpoch/);
+assert.match(js,/\$\('toggleFoundMember'\)\.disabled=!member\|\|!\['teacher','viewer'\]\.includes\(member\.role\)/);
+assert.match(js,/if\(!\['teacher','viewer'\]\.includes\(member\.role\)\)return/);
+assert.match(js,/setSchoolMemberActive\(\{db,api,actor:session\.actor,schoolId:session\.schoolId,uid:member\.uid,active:!member\.active\}\)/);
+assert.match(js,/assertSameAdmin\(session\);\n  foundMember=null;lookupRequest\+\+/);
+console.log('V47 lookup member status controls require confirmation, scoped role, and fresh session');
