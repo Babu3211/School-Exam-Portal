@@ -22,7 +22,10 @@ $('connect').onclick=async()=>{
   $('login').disabled=false;
   const requestedSchool=new URL(location.href).searchParams.get('schoolId');
   if(requestedSchool)$('schoolId').value=assertIemisSchoolId(requestedSchool);
-  status(auth.currentUser?'V47 session भेटियो। विद्यालय प्रमाणित गर्नुहोस्।':'V47 connected. Sign in to inspect your school.');
+  status(auth.currentUser?'V47 session भेटियो। विद्यालय पुनः प्रमाणित गर्दै…':'V47 connected. Sign in to inspect your school.');
+  // Dashboard already passes the selected IEMIS school in its verified link.
+  // Reuse that Firebase login, but always reload live school membership and records.
+  if(requestedSchool&&auth.currentUser)queueMicrotask(()=>$('login').click());
  }catch(error){status(error.message);$('connect').disabled=false}
  finally{connecting=false}
 };
