@@ -54,6 +54,8 @@ on:
       - 'v47/test-verified-small-class-mark-save.mjs'
       - 'v47/verified-class-mark-staging.mjs'
       - 'v47/test-verified-class-mark-staging.mjs'
+      - 'v47/class-mark-staging-integrity.mjs'
+      - 'v47/test-class-mark-staging-integrity.mjs'
       - 'v47/class-mark-staging-plan.mjs'
       - 'v47/test-class-mark-staging-plan.mjs'
       - 'v47/class-mark-save.mjs'
@@ -83,6 +85,8 @@ jobs:
           node --check v47/test-class-mark-completeness.mjs
           node --check v47/verified-class-mark-staging.mjs
           node --check v47/test-verified-class-mark-staging.mjs
+          node --check v47/class-mark-staging-integrity.mjs
+          node --check v47/test-class-mark-staging-integrity.mjs
           node --check v47/class-mark-staging-plan.mjs
           node --check v47/test-class-mark-staging-plan.mjs
           node --check v47/class-mark-save.mjs
@@ -161,6 +165,8 @@ jobs:
         run: node v47/test-class-mark-completeness.mjs
       - name: Validate 1500-student read-only staging plan
         run: node v47/test-class-mark-staging-plan.mjs
+      - name: Verify 1500-student staging manifest integrity
+        run: node v47/test-class-mark-staging-integrity.mjs
       - name: Validate authoritative 1500-student staging preparation
         run: node v47/test-verified-class-mark-staging.mjs
       - name: Validate atomic class marks
