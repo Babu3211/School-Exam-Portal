@@ -199,5 +199,28 @@ for (const [grade, expectedCounts] of [['4',[7,5,4,5,5,4,5,4,4,5,4,4,4,4,5,4]],[
   });
 }
 console.log('CDC English form: all 33 units and 156 indicators for Grades 4 and 5 passed');
+for (const grade of ['4','5']) {
+  current.subjectAssignments=[{className:grade,subject:'Nepali'}];
+  choice('class',grade);
+  choice('subject','Nepali');
+  assert.equal(field('unitEn').parentElement.hidden,true);
+  const units=[...w.document.querySelectorAll('#cdcUnitSuggestions option')].map(option=>option.value);
+  assert.equal(units.length,15);
+  for (const unit of units) {
+    assert.ok(!/[a-z]/i.test(unit));
+    choice('unit',unit);
+    const outcomes=[...w.document.querySelectorAll('#cdcTopicSuggestions option')].map(option=>option.value);
+    assert.deepEqual(outcomes.map(text=>text.split(' — ')[0]),['सुनाइ','बोलाइ','पढाइ','लेखाइ','शब्दभण्डार','भाषिक संरचना']);
+    assert.ok(outcomes.every(text=>!/[a-z]/i.test(text)));
+  }
+  const stories=units.filter(unit=>unit.endsWith('कथा (सामाजिक)'));
+  assert.equal(stories.length,2);
+  const firstIndicator=unit=>{
+    choice('unit',unit);
+    return w.document.querySelector('#cdcTopicSuggestions option').value;
+  };
+  assert.notEqual(firstIndicator(stories[0]),firstIndicator(stories[1]));
+}
+console.log('CDC Nepali form: all 30 areas and 180 indicators for Grades 4 and 5 passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
