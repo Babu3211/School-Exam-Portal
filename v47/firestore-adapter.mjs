@@ -13,15 +13,15 @@ export function createSchoolStore({db,api,member,schoolId,assertSession}){
  async function listPage(name,{pageSize=100,cursor=null}={}){
   checkSession();
   const size=validatePageSize(pageSize);
+  const previousId=cursor?.id??null;
+  if(cursor!==null&&(typeof previousId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(previousId)))
+   throw new Error('Invalid pagination cursor');
   const constraints=[api.orderBy('__name__'),api.limit(size+1)];
-  if(cursor)constraints.push(api.startAfter(cursor));
+  if(cursor)constraints.push(api.startAfter(previousId));
   const snapshot=await api.getDocs(api.query(collectionRef(name),...constraints));
   checkSession();
   const docs=snapshot?.docs;
   if(!Array.isArray(docs)||docs.length>size+1)throw new RangeError('Unexpected query result size');
-  const previousId=cursor?.id??null;
-  if(cursor!==null&&(typeof previousId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(previousId)))
-   throw new Error('Invalid pagination cursor');
   let lastId=previousId;
   const materialized=docs.map(d=>{
    if(!d||typeof d.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)
