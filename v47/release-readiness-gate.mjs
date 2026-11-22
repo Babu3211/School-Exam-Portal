@@ -5,8 +5,6 @@ const root=dirname(fileURLToPath(import.meta.url));
 const read=name=>readFileSync(resolve(root,name),'utf8');
 const hub=read('index.html');
 const marks=read('marks-entry.html');
-if(/id="(?:theory|practical)"[^>]*max="100"/.test(marks))
- blockers.push('Raw marks draft UI still hardcodes a 100-point maximum');
 const save=read('verified-small-class-mark-save.mjs');
 const rules=read('firestore.rules');
 const markParser=read('marks-service.mjs');
@@ -15,6 +13,8 @@ const singleMarkSave=read('mark-create-service.mjs');
 const classMarkSave=read('class-mark-save.mjs');
 const config=JSON.parse(read('firebase.json'));
 const blockers=[];
+if(/id="(?:theory|practical)"[^>]*max="100"/.test(marks))
+ blockers.push('Raw marks draft UI still hardcodes a 100-point maximum');
 // The maximum for every subject must come from persisted Examination Settings.
 if(/theory\s*>\s*100|practical\s*>\s*100/.test(markParser))
  blockers.push('Mark entry still has a hardcoded 100-point maximum');
