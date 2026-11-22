@@ -72,4 +72,14 @@ for(const mutate of [
  }}]})};
  await assert.rejects(loadCompleteSchoolSubjects({...base,actor:changing,api:revoked}),/membership changed/);
 }
+// Three-page pagination must neither skip nor duplicate the lookahead subject.
+const allIds=['a','b','c','d','e'];
+const multi={...api,getDocs:async q=>{
+ const after=q.find(x=>x&&typeof x==='object'&&x.id)?.id;
+ const start=after?allIds.indexOf(after)+1:0;
+ return {docs:allIds.slice(start,start+3).map(id=>row(id,good))};
+}};
+const full=await loadCompleteSchoolSubjects({...base,api:multi,maxSubjects:5});
+assert.deepEqual(full.subjects.map(s=>s.id),allIds);
+assert.equal(full.pages,3);
 console.log('V47 school subject roster pagination and tenant checks passed');
