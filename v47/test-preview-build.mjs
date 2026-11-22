@@ -1,4 +1,4 @@
-import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,existsSync,rmSync,cpSync} from 'node:fs';
+import {mkdtempSync,writeFileSync,readFileSync,existsSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
@@ -12,16 +12,19 @@ function run(files){
   for(const [name,content] of Object.entries(files))writeFileSync(join(root,name),content);
   writeFileSync(join(root,'build-preview.mjs'),source);
   const result=spawnSync(process.execPath,[join(root,'build-preview.mjs')],{encoding:'utf8'});
-  return {status:result.status,output:result.stdout+result.stderr,dist:existsSync(join(root,'dist'))?Object.fromEntries(['index.html','dashboard-console.mjs','v47-firebase-config.mjs','unused.mjs','PREVIEW-ONLY.txt'].map(name=>[name,existsSync(join(root,'dist',name))])):null};
+  return {status:result.status,output:result.stdout+result.stderr,dist:existsSync(join(root,'dist'))?Object.fromEntries(['index.html','dashboard-console.mjs','v47-firebase-config.mjs','unused.mjs','students.html','students-console.mjs','PREVIEW-ONLY.txt'].map(name=>[name,existsSync(join(root,'dist',name))])):null};
  }finally{rmSync(root,{recursive:true,force:true})}
 }
 const base={
- 'index.html':'<p>Development only</p><script type="module" src="./dashboard-console.mjs"></script>',
+ 'index.html':'<p>Development only</p><a href="./students.html">Students</a><script type="module" src="./dashboard-console.mjs"></script>',
+ 'students.html':'<script type="module" src="./students-console.mjs"></script>',
+ 'students-console.mjs':"import './v47-firebase-config.mjs';",
  'dashboard-console.mjs':"import {V47_FIREBASE_CONFIG} from './v47-firebase-config.mjs';",
  'v47-firebase-config.mjs':"export const V47_FIREBASE_CONFIG={projectId:'smss-exam-portal-v47'};",
  'unused.mjs':"import {readFileSync} from 'node:fs';"
 };
-const ok=run(base);assert.equal(ok.status,0,ok.output);assert.equal(ok.dist['index.html'],true);assert.equal(ok.dist['dashboard-console.mjs'],true);assert.equal(ok.dist['v47-firebase-config.mjs'],true);assert.equal(ok.dist['unused.mjs'],false);assert.equal(ok.dist['PREVIEW-ONLY.txt'],true);
+const ok=run(base);assert.equal(ok.status,0,ok.output);assert.equal(ok.dist['index.html'],true);assert.equal(ok.dist['dashboard-console.mjs'],true);assert.equal(ok.dist['v47-firebase-config.mjs'],true);assert.equal(ok.dist['unused.mjs'],false);assert.equal(ok.dist['students.html'],true);assert.equal(ok.dist['students-console.mjs'],true);assert.equal(ok.dist['PREVIEW-ONLY.txt'],true);
+const missingPage=run({...base,'index.html':'<p>Development only</p><a href="./missing.html">Missing</a><script type="module" src="./dashboard-console.mjs"></script>'});assert.notEqual(missingPage.status,0);assert.match(missingPage.output,/missing or invalid asset/);
 const missing=run({...base,'dashboard-console.mjs':"import './missing.mjs';"});assert.notEqual(missing.status,0);assert.match(missing.output,/missing or invalid asset/);
 const wrongProject=run({...base,'v47-firebase-config.mjs':"export const config={projectId:'v46-production'};"});assert.notEqual(wrongProject.status,0);assert.match(wrongProject.output,/non-V47 Firebase/);
 const nodeOnly=run({...base,'dashboard-console.mjs':"import {readFileSync} from 'node:fs'; import './v47-firebase-config.mjs';"});assert.notEqual(nodeOnly.status,0);assert.match(nodeOnly.output,/Node-only module/);
