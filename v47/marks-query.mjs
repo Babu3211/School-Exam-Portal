@@ -10,7 +10,7 @@ export async function loadMarksByClassTerm({db,api,actor,schoolId,schoolClass,te
  if(!Number.isInteger(pageSize)||pageSize<1||pageSize>100)throw new RangeError('Page size must be 1–100');
  for(const method of ['collection','query','where','orderBy','limit','getDocs','startAfter'])if(typeof api?.[method]!=='function')throw new TypeError('Missing Firebase SDK: '+method);
  const identity={uid:actor?.uid,schoolId:actor?.schoolId,role:actor?.role,active:actor?.active};
- if(cursor!==null&&(typeof cursor?.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(cursor.id)))throw new Error('Invalid marks cursor');
+ if(cursor!==null&&(typeof cursor?.id!=='string'||!/^[A-Za-z0-9_:-]{1,256}$/.test(cursor.id)))throw new Error('Invalid marks cursor');
  const filters=[api.where('class','==',schoolClass),api.where('term','==',term),api.orderBy('__name__'),api.limit(pageSize+1)];
  if(cursor)filters.push(api.startAfter(cursor));
  const snap=await api.getDocs(api.query(api.collection(db,'schools',schoolId,'marks'),...filters));
@@ -19,7 +19,7 @@ export async function loadMarksByClassTerm({db,api,actor,schoolId,schoolClass,te
  if(!Array.isArray(docs)||docs.length>pageSize+1)throw new RangeError('Unexpected result size');
  const ids=new Set();let previous=cursor?.id??null;
  for(const d of docs){
-  if(typeof d.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||ids.has(d.id)||previous!==null&&d.id<=previous)throw new Error('Invalid marks page order');
+  if(typeof d.id!=='string'||!/^[A-Za-z0-9_:-]{1,256}$/.test(d.id)||ids.has(d.id)||previous!==null&&d.id<=previous)throw new Error('Invalid marks page order');
   ids.add(d.id);previous=d.id;
   const data=d.data();
   if(!data||typeof data!=='object'||data.schoolId!==schoolId||data.class!==schoolClass||data.term!==term)throw new Error('Foreign or mismatched marks record');
