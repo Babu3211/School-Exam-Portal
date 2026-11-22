@@ -134,13 +134,14 @@ service cloud.firestore {
       match /students/{id} {
         function validStudent() {
           return id.matches('^[A-Za-z0-9_-]{1,128}$')
-            && request.resource.data.keys().hasOnly(['name','class','rollNo','schoolId','studentIemisId','admissionNo','studentNameNepali','gender','fatherName','motherName','section','permanentAddress','temporaryAddress','dob','dobAD','motherTongue','disabilityType','guardianName','phone','symbolNo','birthRegistrationNo','nebRegNo','sourceYear'])
+            && request.resource.data.keys().hasOnly(['name','class','rollNo','schoolId','studentIemisId','admissionNo','studentNameNepali','gender','fatherName','motherName','section','permanentAddress','temporaryAddress','dob','dobAD','motherTongue','disabilityType','guardianName','phone','symbolNo','birthRegistrationNo','nebRegNo','sourceYear','active'])
             && request.resource.data.keys().hasAll(['name','class','schoolId'])
             && request.resource.data.name is string
             && request.resource.data.name.size() >= 2
             && request.resource.data.name.size() <= 160
             && request.resource.data.class is string
             && request.resource.data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && request.resource.data.get('active',true) == true
             && request.resource.data.get('rollNo','') is string
             && request.resource.data.get('rollNo','').size() <= 30
             && request.resource.data.get('studentIemisId','') is string
