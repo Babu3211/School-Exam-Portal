@@ -42,7 +42,10 @@ for(const bad of [
 }
 {
  const x=inspectClassMarkDraft({...base,entries:[mark('s1',{theory:101}),mark('s2',{practical:-1})]});
- assert.equal(x.ready,false);assert.equal(x.invalid.length,2);
+ assert.equal(x.ready,false);assert.equal(x.invalid.length,1);
+ assert.match(x.invalid[0],/s2/,'Negative marks must be rejected');
+ const unboundedDraft=inspectClassMarkDraft({...base,entries:[mark('s1',{theory:101}),mark('s2')]});
+ assert.equal(unboundedDraft.ready,true,'Draft inspection cannot assume a fixed 100-mark maximum; Examination Settings enforce configured maxima before publication');
 }
 {
  const x=inspectClassMarkDraft({...base,entries:[mark('s1',{subjectId:'science'}),mark('s2',{studentId:'s2',class:'8'})]});
