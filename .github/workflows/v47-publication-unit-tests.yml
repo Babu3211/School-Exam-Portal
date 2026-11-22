@@ -1,0 +1,42 @@
+name: V47 Marks Publication Unit Tests (No Deployment)
+on:
+  workflow_dispatch:
+  push:
+    branches: [smss-v47-multischool-work]
+    paths:
+      - 'v47/server-*.mjs'
+      - 'v47/configured-*.mjs'
+      - 'v47/test-server-*.mjs'
+      - 'v47/test-configured-*.mjs'
+      - '.github/workflows/v47-publication-unit-tests.yml'
+permissions:
+  contents: read
+concurrency:
+  group: v47-publication-unit-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  publication-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check publication validation and official-reader regression tests
+        run: |
+          set -euo pipefail
+          node v47/test-server-publication-pointer-plan.mjs
+          node v47/test-server-class-review-confirmation.mjs
+          node v47/test-server-staged-class-integrity.mjs
+          node v47/test-server-publication-transition-preflight.mjs
+          node v47/test-server-official-marks-reader.mjs
+      - name: Explain test scope
+        if: always()
+        run: |
+          {
+            echo '## Publication unit tests'
+            echo 'These tests exercise pure validation functions only.'
+            echo 'They do not test Firestore transactions, emulator rules, browser behavior, CDC/IEMIS parity or V47 production readiness.'
+            echo 'No deployment or production data writes occur in this workflow.'
+          } >> "$GITHUB_STEP_SUMMARY"
