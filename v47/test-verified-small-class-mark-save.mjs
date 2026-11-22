@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import {saveVerifiedSmallClassMarks} from './verified-small-class-mark-save.mjs';
-const schoolId='12345678',classId='9',term='1st',subjectId='math',actor={role:'school_admin',active:true,schoolId};
+const schoolId='12345678',classId='9',term='1st',subjectId='math',actor={uid:'admin-a',role:'school_admin',active:true,schoolId};
 const entry=id=>({studentId:id,class:classId,term,subjectId,theory:30,practical:10});
 function mock(ids=['s1','s2']){
- const records=new Map([['subjects/math',{schoolId,class:classId,active:true,name:'Mathematics'}]]);
+ const records=new Map([['subjects/math',{schoolId,class:classId,active:true,name:'Mathematics',theoryFullMarks:100,practicalFullMarks:100}]]);
  for(const id of ids){records.set('students/'+id,{schoolId,class:classId});records.set('subject_assignments/'+id+':math',{schoolId,class:classId,studentId:id,subjectId});}
  const writes=[];
  const api={
