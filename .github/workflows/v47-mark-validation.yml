@@ -37,6 +37,8 @@ on:
       - 'v47/test-marks-release-safety.mjs'
       - 'v47/firestore.rules'
       - 'v47/release-readiness-gate.mjs'
+      - 'v47/permissions.mjs'
+      - 'v47/test-permissions.mjs'
       - 'v47/marks-service.mjs'
       - 'v47/test-unbounded-mark-entry.mjs'
       - 'v47/mark-create-service.mjs'
@@ -70,6 +72,8 @@ jobs:
           node --check v47/verified-small-class-mark-save.mjs
           node --check v47/class-mark-save.mjs
           node --check v47/test-class-mark-save.mjs
+          node --check v47/permissions.mjs
+          node --check v47/test-permissions.mjs
           node --check v47/marks-query.mjs
           node --check v47/complete-class-marks-query.mjs
           node --check v47/test-complete-class-marks-query.mjs
@@ -79,6 +83,8 @@ jobs:
           node --check v47/class-publication-preflight.mjs
           node --check v47/test-marks-release-safety.mjs
           node --check v47/test-school-result-preview.mjs
+      - name: Verify permission operation and tenant boundaries
+        run: node v47/test-permissions.mjs
       - name: Verify release remains fail-closed
         run: node v47/test-marks-release-safety.mjs
       - name: Verify class publication safety preflight
