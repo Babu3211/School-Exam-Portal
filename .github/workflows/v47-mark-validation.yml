@@ -22,6 +22,7 @@ on:
       - 'v47/test-large-class-marks-coverage.mjs'
       - 'v47/complete-class-result-preview.mjs'
       - 'v47/test-complete-class-result-preview.mjs'
+      - 'v47/marks-query.mjs'
       - 'v47/complete-class-marks-query.mjs'
       - 'v47/test-complete-class-marks-query.mjs'
       - 'v47/complete-school-subjects.mjs'
@@ -58,6 +59,10 @@ jobs:
           node-version: '22'
       - name: Syntax-check V47 mark and result modules
         run: |
+          node --check v47/marks-query.mjs
+          node --check v47/complete-class-marks-query.mjs
+          node --check v47/test-complete-class-marks-query.mjs
+          node --check v47/test-large-class-marks-coverage.mjs
           node --check v47/school-result-preview.mjs
           node --check v47/complete-class-result-preview.mjs
           node --check v47/class-publication-preflight.mjs
