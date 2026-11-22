@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
-const schoolId='12345678',actor={role:'school_admin',active:true,schoolId},classId='9';
+const schoolId='12345678',actor={uid:'admin-1',role:'school_admin',active:true,schoolId},classId='9';
 const base={db:{},actor,schoolId,classId,pageSize:2};
 const docs=[['s1',{schoolId,class:'9',name:'A'}],['s2',{schoolId,class:'9',name:'B'}],['s3',{schoolId,class:'9',name:'C'}]];
 function mock(rows=docs){
@@ -58,5 +58,33 @@ for(const mutation of [
   return result;
  };
  await assert.rejects(loadCompleteClassRoster({...base,actor:changingActor,api}),/School membership changed/);
+}
+// Reject malformed snapshots and roster data without exposing partial pages.
+for(const malformed of [null,undefined,{}]){
+ const bad={...mock(),getDocs:async()=>malformed};
+ await assert.rejects(loadCompleteClassRoster({...base,api:bad}),/Unexpected result size/);
+}
+for(const malformed of [null,undefined,[]]){
+ const bad={...mock(),getDocs:async()=>({docs:[{id:'s1',data:()=>malformed}]})};
+ await assert.rejects(loadCompleteClassRoster({...base,api:bad}),/Cross-school or wrong-class/);
+}
+let materializations=0;
+const once={...mock(),getDocs:async()=>({docs:[{id:'s1',data:()=>{
+ materializations++;
+ return materializations===1?{schoolId,class:'9',name:'A'}:{schoolId:'99999999',class:'9'};
+}}]})};
+const stable=await loadCompleteClassRoster({...base,api:once});
+assert.equal(materializations,1);
+assert.equal(stable.count,1);
+for(const mutation of [a=>{a.active=false},a=>{a.uid='other-user'},a=>{a.schoolId='99999999'},a=>{a.role='viewer'}]){
+ const changingActor={...actor};
+ const bad={...mock(),getDocs:async()=>({docs:[{id:'s1',data:()=>{
+  mutation(changingActor);
+  return {schoolId,class:'9',name:'A'};
+ }}]})};
+ await assert.rejects(loadCompleteClassRoster({...base,actor:changingActor,api:bad}),/membership changed/i);
+}
+for(const uid of [undefined,null,'','  ']){
+ await assert.rejects(loadCompleteClassRoster({...base,actor:{...actor,uid},api:mock()}),/School membership required/);
 }
 console.log('V47 complete class roster pagination tests passed');
