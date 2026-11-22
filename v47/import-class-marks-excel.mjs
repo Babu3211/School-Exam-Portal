@@ -32,9 +32,9 @@ export async function readSmssMarksExcel(file,{settings,schoolId,classId,subject
  const parseXml=source=>{const doc=new DOMParser().parseFromString(source,'application/xml');if(doc.getElementsByTagName('parsererror').length)throw new Error('Invalid Excel XML');return doc};
  const xml=parseXml(sheet);
  const shared=parts.has('xl/sharedStrings.xml')?[...parseXml(parts.get('xl/sharedStrings.xml')).getElementsByTagName('si')].map(si=>[...si.getElementsByTagName('t')].map(t=>t.textContent??'').join('')):[];
- const parsed=[...xml.getElementsByTagName('row')].map(row=>{
+ const parsed=[...xml.getElementsByTagName('row')].map((row,rowIndex)=>{
   const values=[],rowNumber=Number(row.getAttribute('r'));
-  if(!Number.isInteger(rowNumber)||rowNumber<1||rowNumber>1501)throw new Error('Invalid Excel row number');
+  if(!Number.isInteger(rowNumber)||rowNumber!==rowIndex+1||rowNumber>1501)throw new Error('Missing or reordered Excel row');
   for(const cell of row.getElementsByTagName('c')){
    const ref=cell.getAttribute('r')??'',match=/^([A-Z]{1,3})([0-9]+)$/.exec(ref);
    if(!match||Number(match[2])!==rowNumber)throw new Error('Invalid Excel cell reference');
@@ -58,7 +58,7 @@ export async function readSmssMarksExcel(file,{settings,schoolId,classId,subject
  const roster=new Map(students.map(s=>[s.id,String(s.name??s.id)])),seen=new Set(),drafts=[];
  if(roster.size!==students.length)throw new Error('Duplicate student in authoritative roster');
  for(const row of parsed.slice(1)){
-  if(row.length!==headers.length||!roster.has(row[0])||seen.has(row[0]))throw new Error('Unknown, duplicate or incomplete student in Excel');
+  if(row.length>headers.length||!roster.has(row[0])||seen.has(row[0]))throw new Error('Unknown, duplicate or incomplete student in Excel');
   if(row[1]!==roster.get(row[0]))throw new Error('Student name does not match current school roster for '+row[0]);
   seen.add(row[0]);const flag=String(row[2]).trim().toLowerCase();
   if(!['yes','no'].includes(flag))throw new Error('Absent column must be Yes or No');
