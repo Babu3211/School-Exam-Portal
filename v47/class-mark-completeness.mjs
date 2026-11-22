@@ -13,6 +13,7 @@ export function validateCompleteClassMarks({schoolId,classId,term,subjectId,expe
   if(!validId(id)||expected.has(id))throw new Error('Invalid or duplicate roster student ID');
   expected.add(id);
  }
+ if(typeof subjectId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(subjectId))throw new Error('Invalid selected subject ID');
  const seen=new Set(),validated=[];
  for(const raw of entries){
   const entry=validateMarkEntry(raw);
