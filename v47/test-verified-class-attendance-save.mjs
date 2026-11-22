@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {saveVerifiedClassAttendance} from './verified-class-attendance-save.mjs';
-const schoolId='12345678',classId='9',date='2026-11-18',actor={role:'school_admin',active:true,schoolId};
+const schoolId='12345678',classId='9',date='2026-11-18',actor={uid:'admin-123',role:'school_admin',active:true,schoolId};
 const entry=(studentId,present=true)=>({studentId,class:classId,date,present});
 const args={schoolId,classId,date,actor,expectedStudentIds:['s1','s2'],entries:[entry('s1'),entry('s2',false)]};
 let committed=[];
