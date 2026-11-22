@@ -22,7 +22,7 @@ export async function saveCompleteClassMarks({db,api,actor,schoolId,classId,term
  await api.runTransaction(db,async tx=>{
   const subject=await tx.get(subjectRef);
   if(!subject.exists()||subject.data().schoolId!==schoolId||subject.data().class!==classId||subject.data().active!==true)throw new Error('Active subject required');
-  if(['9','10'].includes(classId)&&/^computer(?:\s+science)?$/i.test(String(subject.data().name??'').trim()))throw new Error('Computer requires Assessment Settings component marks; raw marks cannot be saved');
+  if(Array.isArray(subject.data().components)&&subject.data().components.length)throw new Error('Configured subject requires Assessment Settings component marks; raw marks cannot be saved');
   const snapshots=await Promise.all(refs.map(async r=>{
    const [student,assignment,mark,component]=await Promise.all([tx.get(r.student),tx.get(r.subjectAssignment),tx.get(r.mark),tx.get(r.component)]);
    return {student,assignment,mark,component};
