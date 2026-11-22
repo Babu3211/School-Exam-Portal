@@ -8,10 +8,20 @@ const readDocument=async path=>{const snap=await api.getDoc(api.doc(db,...path.s
 function message(value){$('dashboardStatus').textContent=value}
 function lock(){for(const link of document.querySelectorAll('[data-school-module]')){const allowed=!!verified;link.setAttribute('aria-disabled',String(!allowed));link.tabIndex=allowed?0:-1;link.classList.toggle('locked',!allowed)}$('schoolIdentity').textContent=verified?verified.name+' · '+verified.schoolId+' · '+verified.role:'No school verified';$('dashboardLogout').disabled=!verified}
 function clear(){verified=null;lock()}
+let expiring=false;
+async function expireIdle(){
+ if(!verified||expiring||Date.now()-lastActivity<MAX_IDLE_MS)return false;
+ expiring=true;clear();
+ try{if(auth)await authSdk.signOut(auth)}catch{}
+ message('एक घण्टा निष्क्रिय भएपछि Login समाप्त भयो। फेरि Login गर्नुहोस्।');
+ expiring=false;return true;
+}
+setInterval(()=>{void expireIdle()},30*1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)void expireIdle()});
 document.querySelectorAll('[data-school-module]').forEach(link=>link.addEventListener('click',async event=>{
  event.preventDefault();
  if(!verified||checkingLink){message('पहिले विद्यालयको Login प्रमाणित गर्नुहोस्।');return}
- if(Date.now()-lastActivity>=MAX_IDLE_MS){clear();try{await authSdk.signOut(auth)}catch{}message('एक घण्टा निष्क्रिय भएपछि Login समाप्त भयो।');return}
+ if(await expireIdle())return;
  checkingLink=true;
  try{
   const current=verified;
@@ -26,7 +36,11 @@ document.querySelectorAll('[data-school-module]').forEach(link=>link.addEventLis
  }catch(e){clear();message('विद्यालय अनुमति फेरि जाँच्न आवश्यक छ: '+e.message)}
  finally{checkingLink=false}
 }));
-for(const eventName of ['pointerdown','keydown'])document.addEventListener(eventName,()=>{if(verified)lastActivity=Date.now()},{passive:true});
+for(const eventName of ['pointerdown','keydown'])document.addEventListener(eventName,()=>{
+ if(!verified)return;
+ if(Date.now()-lastActivity>=MAX_IDLE_MS){void expireIdle();return}
+ lastActivity=Date.now();
+},{passive:true,capture:true});
 $('dashboardConnect').onclick=async()=>{if(busy||auth)return;busy=true;$('dashboardConnect').disabled=true;try{
  const base='https://www.gstatic.com/firebasejs/11.10.0/';
  const appSdk=await import(base+'firebase-app.js');authSdk=await import(base+'firebase-auth.js');api=await import(base+'firebase-firestore.js');
