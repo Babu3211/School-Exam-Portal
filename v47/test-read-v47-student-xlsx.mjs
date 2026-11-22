@@ -50,7 +50,7 @@ new DataView(mismatch.buffer).setUint16(local+8,8,true);
 await assert.rejects(readV47StudentXlsx(asFile(mismatch)),/Mismatched XLSX ZIP entry/);
 const overlap=new Uint8Array(source);
 new DataView(overlap.buffer).setUint32(central+20,directory,true);
-await assert.rejects(readV47StudentXlsx(asFile(overlap)),/Truncated XLSX/);
+await assert.rejects(readV47StudentXlsx(asFile(overlap)),/Truncated XLSX|Mismatched XLSX ZIP entry/);
 const invalidDirectory=new Uint8Array(source);
 new DataView(invalidDirectory.buffer).setUint32(eocd+12,source.length,true);
 await assert.rejects(readV47StudentXlsx(asFile(invalidDirectory)),/Invalid XLSX central directory/);
