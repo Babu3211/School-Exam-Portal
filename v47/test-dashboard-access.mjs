@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {schoolDashboardAccess} from './dashboard-access.mjs';
+for(const role of ['school_admin','teacher','viewer'])assert.equal(schoolDashboardAccess(role,'module'),true);
+assert.equal(schoolDashboardAccess('school_admin','school-admin'),true);
+for(const role of ['teacher','viewer',null,'super_admin',''])assert.equal(schoolDashboardAccess(role,'school-admin'),false);
+assert.equal(schoolDashboardAccess(undefined,'module'),false);
+const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
+const js=readFileSync(new URL('./dashboard-console.mjs',import.meta.url),'utf8');
+assert.match(html,/data-school-module data-required-role="school_admin"/);
+assert.match(js,/import \{schoolDashboardAccess\} from '\.\/dashboard-access\.mjs'/);
+assert.match(js,/const allowed=!!verified&&schoolDashboardAccess/);
+assert.match(js,/if\(!schoolDashboardAccess\(verified\.role/);
+assert.match(js,/if\(!schoolDashboardAccess\(session\.role/);
+assert.match(js,/verifySchoolSession\(\{schoolId:current\.schoolId,uid:current\.uid,readDocument\}\)/);
+console.log('V47 School Admin navigation is role-gated and reverified; other modules remain visible');
