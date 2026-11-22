@@ -2691,7 +2691,7 @@ function openCdcAssessment() {
     options('level',[['','छान्नुहोस्'],...[1,2,3,4].map((n,i)=>[String(n),levels[i] ? n+' — '+levels[i] : String(n)])]);
     field('guide').href = Number(cl)<=3 ? 'https://moecdc.gov.np/content/644/student-assessment-guide-for-basic-level-class/' : 'https://moecdc.gov.np/content/646/guide-to-student-assessment-in-basic-level/';
     field('curriculumSource').href = Number(cl)<=3
-      ? 'https://learning.cehrd.gov.np/mod/resource/view.php?forceview=1&id=1259'
+      ? 'https://nmhss.edu.np/wp-content/uploads/2025/01/Basic-Level-Class-1-3.pdf'
       : 'https://moecdc.gov.np/content/203/basic-education-curriculum-2078-grade-4-5-compulsory/';
     const registered = cl ? ledgerSubjectsForClass(cl,entryClassGroup(cl)) : [];
     const curriculum = Number(cl)<=3 ? cdcPrimarySubjects : cdcUpperPrimarySubjects;
