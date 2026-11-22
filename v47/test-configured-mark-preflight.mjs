@@ -74,3 +74,9 @@ assert.equal(inheritedResult.complete,false);
 assert.match(inheritedResult.invalid[0].message,/Missing Participation/);
 const mixedValues=Object.assign(Object.create({participation:7}),{practical:63,term:30});
 assert.equal(inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',values:mixedValues},{studentId:'b',isAbsent:true}]}).complete,false);
+
+// Absent students cannot hide component marks on an inherited prototype.
+const absentInherited=Object.create({participation:7});
+const absentInheritedReview=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',isAbsent:true,values:absentInherited},{studentId:'b',isAbsent:true}]});
+assert.equal(absentInheritedReview.complete,false);
+assert.match(absentInheritedReview.invalid[0].message,/Absent student cannot carry obtained marks/);
