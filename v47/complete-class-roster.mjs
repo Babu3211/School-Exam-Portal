@@ -13,7 +13,8 @@ export async function loadCompleteClassRoster({db,api,actor,schoolId,classId,pag
   const page=await loadClassRoster({db,api,actor,schoolId,schoolClass:classId,pageSize,cursor});
   checkIdentity();
   pages++;
-  if(pages>1501)throw new Error('Roster pagination exceeded safe bound');
+  if(pages>Math.ceil(maxStudents/pageSize)+1)throw new Error('Roster pagination exceeded safe bound');
+  if(!Array.isArray(page?.students)||page.students.length>pageSize)throw new Error('Invalid roster page');
   for(const student of page.students){
    if(seen.has(student.id))throw new Error('Duplicate student across roster pages');
    if(lastId!==null&&student.id<=lastId)throw new Error('Roster pagination order changed; reload class');
