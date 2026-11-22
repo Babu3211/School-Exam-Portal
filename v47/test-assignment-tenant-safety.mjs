@@ -31,4 +31,14 @@ docs.set('schools/'+schoolId+'/subjects/subject_1',{schoolId,class:'9',active:tr
 await assert.rejects(create({actor:{...actor,uid:''}}),/UID required/);
 await assert.rejects(create({actor:{...actor,role:'viewer'}}),/School Admin required/);
 assert.equal(writes.length,0);
+const changedActor={...actor};
+const changingApi={...api,runTransaction:async(_db,callback)=>{
+ const tx={
+  get:async path=>{changedActor.active=false;return {exists:()=>docs.has(path),data:()=>docs.get(path)}},
+  set:()=>{throw new Error('Mutation must never be attempted')}
+ };
+ return callback(tx);
+}};
+await assert.rejects(create({actor:changedActor,api:changingApi}),/identity changed during assignment creation/);
+assert.equal(writes.length,0,'Identity changes must not write');
 console.log('PASS: assignment transaction enforces tenant and verified actor identity');
