@@ -18,7 +18,7 @@ assert.match(read('exams-console.mjs'),/session.role!=='school_admin'/);
 assert.match(read('exams-console.mjs'),/await reverifyAdmin\(\);const result=/);
 assert.match(read('exams-console.mjs'),/connectSchoolFirebase|smss-exam-portal-v47/);
 assert.match(read('school-firebase-client.mjs'),/V47_FIREBASE_CONFIG\.projectId!=='smss-exam-portal-v47'/);
-assert.match(read('student-service.mjs'),/\{\.\.\.student,schoolId\}/);
+assert.match(read('student-service.mjs'),/\{\.\.\.student,schoolId,active:true\}/);
 assert.match(read('attendance-service.mjs'),/\{\.\.\.attendance,schoolId\}/);
 assert.match(read('attendance-bulk.mjs'),/\{\.\.\.entry,schoolId\}/);
 console.log('V47 real console membership integration contract passed');
