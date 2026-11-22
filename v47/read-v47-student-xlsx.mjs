@@ -32,8 +32,12 @@ async function unzip(buffer){
   if(!['xl/worksheets/sheet1.xml','xl/sharedStrings.xml'].includes(name))continue;
   if(files.has(name))throw new Error('Duplicate XLSX worksheet entry');
   if((flags&1)||![0,8].includes(method)||uncompressed>MAX_XML)throw new Error('Unsupported or oversized Excel entry');
-  if(u16(view,local+8)!==method||u16(view,local+6)&1)throw new Error('Mismatched XLSX ZIP entry');
-  const start=local+30+u16(view,local+26)+u16(view,local+28);
+  if(u16(view,local+8)!==method||u16(view,local+6)!==flags)throw new Error('Mismatched XLSX ZIP entry');
+  const localNameLength=u16(view,local+26),localExtraLength=u16(view,local+28);
+  if(local+30+localNameLength+localExtraLength>directory)throw new Error('Invalid ZIP local entry');
+  const localName=decoder.decode(bytes.subarray(local+30,local+30+localNameLength));
+  if(localName!==name)throw new Error('Mismatched XLSX ZIP filename');
+  const start=local+30+localNameLength+localExtraLength;
   if(start+compressed>directory||start+compressed>bytes.length)throw new Error('Truncated XLSX');
   let output;
   if(method===0)output=bytes.subarray(start,start+compressed);
