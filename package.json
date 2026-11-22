@@ -26,6 +26,9 @@
     "test:v46-marks-class-alias-queries": "node scripts/test-v46-marks-class-alias-queries.mjs",
     "test:v46-attendance-load-failure": "node scripts/test-v46-attendance-load-failure.mjs",
     "test:v46-marks-load-failure": "node scripts/test-v46-marks-load-failure.mjs",
+    "test:user-activity-rules": "firebase emulators:exec --project smss-v46-activity-test --only firestore \"node scripts/test-user-activity-rules.mjs\"",
+    "test:v46-delete-controls": "node scripts/test-v46-delete-controls.mjs",
+    "test:iemis-transfer": "node scripts/test-iemis-transfer.mjs && node scripts/test-iemis-importer-dom.mjs",
     "test:v47:structure": "node scripts/test-v47-school-isolation-gate.mjs",
     "test:v47:release": "node v47/release-readiness-gate.mjs",
     "test:v47:emulator": "firebase emulators:exec --project smss-v47-isolation-test --config v47/firebase.test.json --only firestore \"node scripts/test-v47-emulator-isolation.mjs\"",
@@ -57,8 +60,6 @@
     "test:v47:class-mark-ui": "node v47/test-class-mark-ui.mjs",
     "test:v47:mark-draft": "node v47/test-class-mark-draft-inspector.mjs",
     "test:v47:syntax": "find v47 -name '*.mjs' -print0 | xargs -0 -n1 node --check && node --check scripts/test-v47-school-isolation-gate.mjs && node --check scripts/test-v47-emulator-isolation.mjs",
-    "test:user-activity-rules": "firebase emulators:exec --project smss-v46-activity-test --only firestore \"node scripts/test-user-activity-rules.mjs\"",
-    "test:v46-delete-controls": "node scripts/test-v46-delete-controls.mjs",
     "test:v47:terms": "node v47/test-term-catalog.mjs",
     "test:v47:term-rules": "node v47/test-term-rules-parity.mjs",
     "test:v47:large-class-plan": "node v47/test-large-class-mark-plan.mjs",
@@ -128,6 +129,7 @@
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
     "firebase": "^11.0.0",
-    "firebase-tools": "^14.0.0"
+    "firebase-tools": "^14.0.0",
+    "jsdom": "^26.1.0"
   }
 }
