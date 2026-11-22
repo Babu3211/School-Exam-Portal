@@ -47,7 +47,9 @@ export async function saveVerifiedCompleteClassDraft({
  const settings={...settingsSnap.data(),settingsId:id};
  validateConfiguredMarkComponents(settings,{schoolId,classId,subjectId,examId});
  const originalComponents=JSON.stringify(settings.components);
- const roster=await loadCompleteClassRoster({db,api,actor,schoolId,classId});
+ let roster;
+ try{roster=await loadCompleteClassRoster({db,api,actor,schoolId,classId})}
+ catch(error){check();throw error}
  check();
  if(roster.students.some(student=>!isActiveEnrolledStudent(student)))
   throw Error('Inactive student in complete class roster');
