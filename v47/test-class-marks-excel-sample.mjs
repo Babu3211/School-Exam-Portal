@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {buildClassMarksExcelSample} from './class-marks-excel-sample.mjs';
+const scope={schoolId:'12345',classId:'9',subjectId:'computer',examId:'final'};
+const settings={...scope,active:true,components:[{key:'internal',name:'Internal',fullMarks:4},{key:'theory',name:'Theory',fullMarks:36},{key:'practical',name:'Practical',fullMarks:10}]};
+const students=Array.from({length:1500},(_,i)=>({id:'student'+i,name:'Student '+i,active:true}));
+const workbook=buildClassMarksExcelSample({...scope,settings,students});
+assert.equal(workbook.type,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+const bytes=new Uint8Array(await workbook.arrayBuffer());
+assert.equal(String.fromCharCode(...bytes.slice(0,4)),'PK\u0003\u0004');
+assert.ok(bytes.length>10000);
+assert.throws(()=>buildClassMarksExcelSample({...scope,settings,students:[students[0],students[0]]}),/Invalid or inactive/);
+assert.throws(()=>buildClassMarksExcelSample({...scope,settings,students:[{...students[0],active:false}]}),/Invalid or inactive/);
+assert.throws(()=>buildClassMarksExcelSample({...scope,settings:{...settings,schoolId:'99999'},students}),/Verified subject examination settings/);
+console.log('V47 class Excel sample: 1500 roster rows, configured component maxima, tenant and duplicate guards');
