@@ -2,6 +2,8 @@
 const decoder=new TextDecoder('utf-8',{fatal:true});
 const u16=(v,i)=>v.getUint16(i,true),u32=(v,i)=>v.getUint32(i,true);
 const MAX_FILE=2_000_000,MAX_XML=1_500_000,MAX_ENTRIES=100;
+const crcTable=Array.from({length:256},(_,n)=>{let c=n;for(let i=0;i<8;i++)c=(c&1)?0xedb88320^(c>>>1):c>>>1;return c>>>0;});
+function crc32(bytes){let c=0xffffffff;for(const b of bytes)c=crcTable[(c^b)&255]^(c>>>8);return (c^0xffffffff)>>>0;}
 function xml(text){
  if(typeof DOMParser==='undefined')throw new Error('Browser XML parser unavailable');
  const doc=new DOMParser().parseFromString(text,'application/xml');
@@ -22,7 +24,7 @@ async function unzip(buffer){
  const files=new Map();let offset=directory;
  for(let i=0;i<count;i++){
   if(offset+46>bytes.length||u32(view,offset)!==0x02014b50)throw new Error('Invalid ZIP directory');
-  const flags=u16(view,offset+8),method=u16(view,offset+10),compressed=u32(view,offset+20),uncompressed=u32(view,offset+24);
+  const flags=u16(view,offset+8),method=u16(view,offset+10),checksum=u32(view,offset+16),compressed=u32(view,offset+20),uncompressed=u32(view,offset+24);
   const nameLength=u16(view,offset+28),extra=u16(view,offset+30),comment=u16(view,offset+32),local=u32(view,offset+42);
   if(offset+46+nameLength+extra+comment>bytes.length||local+30>bytes.length||u32(view,local)!==0x04034b50)throw new Error('Invalid ZIP entry');
   const name=decoder.decode(bytes.subarray(offset+46,offset+46+nameLength));
@@ -43,6 +45,7 @@ async function unzip(buffer){
    output=new Uint8Array(size);let pos=0;for(const part of parts){output.set(part,pos);pos+=part.length;}
   }
   if(output.length!==uncompressed)throw new Error('Invalid XLSX entry size');
+  if(crc32(output)!==checksum)throw new Error('Invalid XLSX entry checksum');
   files.set(name,decoder.decode(output));
  }
  return files;
