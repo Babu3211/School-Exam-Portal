@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v52-iemis-transfer-20261122';
+const CACHE_NAME = 'smss-pwa-v52-iemis-transfer-order-20261122';
 const APP_SHELL = [
   './',
   './index.html',

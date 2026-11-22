@@ -419,7 +419,7 @@ document.addEventListener("click",e=>{const pageButton=e.target.closest("[data-p
 </script>
 <script type="module">
 import "./iemis-importer/transfer.js";
-import {buildIemisTransferExport,renderIemisTransferLedger} from "./iemis-transfer-export.js";
+import {buildIemisTransferExport,renderIemisTransferLedger,planIemisPortalImport} from "./iemis-transfer-export.js";
 import {iemisLegacyTheory,iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisLedger,iemisComponentKey,iemisDisplaySubject} from "./iemis-ledger.js?v=20261115-class6-ledger";
 import {IemisEntryGrid,iemisEntrySchema,iemisEntryBatches,normalizeIemisEntryScores} from "./iemis-entry.js?v=20261115-class6-ledger";
 import {initIdleLogout} from "./idle-logout.js?v=20261112-final";
@@ -2078,11 +2078,11 @@ function validateAchievementInput(row,input,totalInput){const count=Math.max(0,N
 function isComputerSubject(subject){const s=String(subject||'').toLowerCase();return s.includes('computer')||s.includes('कम्प्युटर')||s.includes('कम्प्युटर विज्ञान')}
 function selectedEntrySetting(){const group=document.getElementById('entryClass')?.value;const subject=document.getElementById('entrySubject')?.value;const g=entryClassGroup(group);const matches=marksSettings.filter(x=>x.classGroup===g&&canonicalSubjectKey(x.subject)===canonicalSubjectKey(subject));const classNo=String(canonicalStudentClass(group)||'').replace(/[^0-9]/g,'');const base=matches.find(x=>String(x.className||'')===classNo)||matches.find(x=>!x.className); if(!base)return null;let parts=(base.components||[]).filter(c=>!/^TH\b|THEORY/i.test(String(c.name||''))).map(c=>({...c}));if(g==='1-3'||g==='4-5'){const count=Number(parts[0]?.fullMarks)||0;parts=[{name:'No. of Learning Achievement',fullMarks:count},{name:'Full Marks',fullMarks:count*4},{name:'Obtained Learning Achievement',fullMarks:count*4}];}const internalFull=parts.reduce((a,c)=>a+Number(c.fullMarks||0),0);const examId=document.getElementById('entryExam')?.value;const selectedExam=marksExams.find(x=>x.id===examId);const isFinalTerm=!!selectedExam&&smssExamTermKey(selectedExam)==='annual';const thFull=isFinalTerm?((g==='6-8'||(g==='9-10'&&isComputerSubject(subject)))?50:(g==='9-10'?75:0)):0;if(thFull>0)parts.push({name:'TH (Theory)',fullMarks:thFull});return {...base,components:parts,internalFullMarks:internalFull,theoryFullMarks:thFull,totalFullMarks:parts.reduce((a,c)=>a+Number(c.fullMarks||0),0)}}
 function entryClassGroup(c){const raw=String(c??'').replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d)));const digits=raw.replace(/[^0-9]/g,'');if(!digits)return '';const n=Number(digits);return n>=1&&n<=3?'1-3':n<=5?'4-5':n<=8?'6-8':n<=10?'9-10':''}
-function fillEntrySubjects(){const cl=document.getElementById('entryClass')?.value,sel=document.getElementById('entrySubject');if(!sel)return;const group=entryClassGroup(cl),classNo=String(canonicalStudentClass(cl)||'').replace(/[^0-9]/g,'');const relevant=marksSettings.filter(x=>x.classGroup===group&&(!x.className||String(x.className)===classNo));const exact=relevant.filter(x=>String(x.className||'')===classNo);const chosen=exact.length?exact:relevant.filter(x=>!x.className);const unique=new Map();if(isAdmin()||roleHas('viewer')){chosen.forEach(x=>{const key=canonicalSubjectKey(x.subject);if(key&&!unique.has(key))unique.set(key,key==='हाम्रो धुनिबेँशी'?'हाम्रो धुनिबेँशी':x.subject);});}else{const assigned=(currentUserRole?.subjectAssignments||[]).filter(x=>canonicalStudentClass(x.className)===canonicalStudentClass(cl)).map(x=>String(x.subject||'').trim()).filter(Boolean);assigned.forEach(sub=>{const key=canonicalSubjectKey(sub);if(key&&chosen.some(x=>canonicalSubjectKey(x.subject)===key)&&!unique.has(key))unique.set(key,key==='हाम्रो धुनिबेँशी'?'हाम्रो धुनिबेँशी':sub);});}const subjects=[...unique.values()];sel.innerHTML=subjects.length?subjects.map(x=>`<option value="${examEsc(x)}">${examEsc(subjectEnglishLabel(x))}</option>`).join(''):'<option value="">No assessment settings for this class</option>';}
+function fillEntrySubjects(){const cl=document.getElementById('entryClass')?.value,sel=document.getElementById('entrySubject');if(!sel)return;const group=entryClassGroup(cl),classNo=String(canonicalStudentClass(cl)||'').replace(/[^0-9]/g,'');const relevant=marksSettings.filter(x=>x.classGroup===group&&(!x.className||String(x.className)===classNo));const exact=relevant.filter(x=>String(x.className||'')===classNo);const chosen=exact.length?exact:relevant.filter(x=>!x.className);const unique=new Map();if(isAdmin()||roleHas('viewer')){chosen.forEach(x=>{const key=canonicalSubjectKey(x.subject);if(key&&!unique.has(key))unique.set(key,key==='हाम्रो धुनिबेँशी'?'हाम्रो धुनिबेँशी':x.subject);});}else{const assigned=(currentUserRole?.subjectAssignments||[]).filter(x=>canonicalStudentClass(x.className)===canonicalStudentClass(cl)).map(x=>String(x.subject||'').trim()).filter(Boolean);assigned.forEach(sub=>{const key=canonicalSubjectKey(sub);if(key&&chosen.some(x=>canonicalSubjectKey(x.subject)===key)&&!unique.has(key))unique.set(key,key==='हाम्रो धुनिबेँशी'?'हाम्रो धुनिबेँशी':sub);});}const subjects=globalThis.SmssIemisTransfer.orderSubjects([...unique.values()],cl);sel.innerHTML=subjects.length?subjects.map(x=>`<option value="${examEsc(x)}">${examEsc(subjectEnglishLabel(x))}</option>`).join(''):'<option value="">No assessment settings for this class</option>';}
 
 async function loadMarksLedgerPage(){requireAdmin();const examSel=document.getElementById('ledgerViewExam');if(!examSel)return;const msg=document.getElementById('ledgerViewMessage');try{const [ss,es,ms,settings,cs]=await Promise.all([getDocs(collection(db,'students')),getDocs(collection(db,'exams')),getDocs(collection(db,'marks')),getDocs(collection(db,'mark_settings')),getDocs(collection(db,'classes'))]);cachedClasses=cs.docs.map(d=>({id:d.id,...d.data()}));marksStudents=ss.docs.map(d=>({id:d.id,...d.data()}));marksExams=es.docs.map(d=>({id:d.id,...d.data()}));existingMarks=ms.docs.map(d=>({id:d.id,...d.data()}));marksSettings=settings.docs.map(d=>({id:d.id,...d.data()}));refreshIemisLedgerFilters();refreshLedgerExamOptions();if(msg)msg.textContent=`${marksStudents.length} students and ${existingMarks.length} marks records loaded.`;}catch(err){console.error(err);if(msg)msg.textContent=`Unable to load ledger: ${safeNoticeError(err)}`;}}
 window.loadMarksLedgerPage=loadMarksLedgerPage;
-function ledgerSubjectsForClass(cl,group){const no=classNoFromName(cl),fromClass=classSubjectNames(no,group),hasRegistry=(cachedClasses||[]).some(x=>classNoFromName(x.className)===no);const base=hasRegistry?fromClass:(ledgerSubjectOrder[group]||[]);const result=new Map();base.forEach(v=>{const k=canonicalSubjectKey(v);if(k&&!result.has(k))result.set(k,v)});return [...result.values()];}
+function ledgerSubjectsForClass(cl,group){const no=classNoFromName(cl),fromClass=classSubjectNames(no,group),hasRegistry=(cachedClasses||[]).some(x=>classNoFromName(x.className)===no);const base=hasRegistry?fromClass:(ledgerSubjectOrder[group]||[]);const result=new Map();base.forEach(v=>{const k=canonicalSubjectKey(v);if(k&&!result.has(k))result.set(k,v)});return globalThis.SmssIemisTransfer.orderSubjects([...result.values()],cl);}
 function refreshIemisLedgerFilters(){
  for(const [id,values,empty] of [['ledgerViewYear',marksExams.map(x=>String(x.academicYear||'')),'All Years'],['ledgerViewSection',marksStudents.map(x=>String(x.section||'')),'All']]){const el=document.getElementById(id);if(!el)continue;const previous=el.value;el.innerHTML='<option value="">'+empty+'</option>'+[...new Set(values.filter(Boolean))].sort().map(x=>`<option value="${examEsc(x)}">${examEsc(x)}</option>`).join('');if([...el.options].some(x=>x.value===previous))el.value=previous;}
 }
@@ -2358,7 +2358,7 @@ function mountIemisEntryGrid(){
   const group=entryClassGroup(cl),registry=(isAdmin()||roleHas('viewer'))?cachedClasses.filter(c=>c.active!==false&&canonicalStudentClass(c.className)===canonicalStudentClass(cl)).map(c=>c.subject||c.subjectName):(currentUserRole?.subjectAssignments||[]).filter(a=>canonicalStudentClass(a.className)===canonicalStudentClass(cl)).map(a=>a.subject);
   const options=registry.length?registry:[...document.getElementById('entrySubject').options].map(o=>o.value);
   const subjects=[...new Set(options.filter(s=>s&&(roleHas('viewer')||canTeachSubject(cl,s))))];
-  const order=(ledgerSubjectOrder[group]||[]).map(iemisSubjectKey);subjects.sort((a,b)=>{const ai=order.indexOf(iemisSubjectKey(a)),bi=order.indexOf(iemisSubjectKey(b));return (ai<0?999:ai)-(bi<0?999:bi);});
+  subjects.splice(0,subjects.length,...globalThis.SmssIemisTransfer.orderSubjects(subjects,cl));
   if(!subjects.length)throw new Error('यो कक्षामा तोकिएका विषय भेटिएनन्।');
   const students=marksStudents.filter(st=>canonicalStudentClass(st.class??st.className)===canonicalStudentClass(cl)&&st.active!==false&&subjects.some(sub=>roleHas('viewer')?iemisEntryVisible(st,sub,cl,examId):iemisEntryAllowed(st,sub,cl,examId))).sort((a,b)=>Number(studentRollNo(a)||999999)-Number(studentRollNo(b)||999999));
   const context=iemisEntryContext(),uid=auth.currentUser.uid;
@@ -2425,7 +2425,7 @@ const ledgerComponentLabels = {
  ]
 };
 function ledgerGroupForClass(cl){return entryClassGroup(cl)}
-function ledgerStudentReg(st){return st.iemisNumber||st.iemisNo||st.registrationNo||st.regdNo||st.regNo||st.studentIemisNumber||""}
+function ledgerStudentReg(st){return st.studentIemisNo||st.iemisStudentNo||st.iemisNumber||st.iemisNo||st.registrationNo||st.regdNo||st.regNo||st.studentIemisNumber||""}
 function ledgerSymbol(st){return st.symbolNo||st.symbolNumber||st.examSymbolNo||""}
 function ledgerSubjectSetting(group,subject){
  const cl=document.getElementById('ledgerViewClass')?.value||document.getElementById('entryClass')?.value;
@@ -2481,11 +2481,11 @@ function getIemisTransferGrid(fromLedger=false){
    roll:studentRollNo
   });
 }
-async function exportIemisTransferExcel(fromLedger=false,sample=false){
+async function exportIemisTransferExcel(fromLedger=false,sample=false,requireIdentifiers=true){
  try{
   const grid=getIemisTransferGrid(fromLedger);
   if(!grid.rows.length)throw new Error('Export गर्न विद्यार्थी भेटिएनन्।');
-  if(!sample&&grid.rows.some(row=>!row[2]&&!row[3]))throw new Error('Regd. No. वा Symbol No. खाली छ। विद्यार्थी पहिचान पूरा गरेर export गर्नुहोस्।');
+  if(requireIdentifiers&&!sample&&grid.rows.some(row=>!row[2]&&!row[3]))throw new Error('Regd. No. वा Symbol No. खाली छ। विद्यार्थी पहिचान पूरा गरेर export गर्नुहोस्।');
   const X=await ensureExcelJS();
   const buffer=await globalThis.SmssIemisTransfer.makeWorkbook(X,grid,sample);
   const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),url=URL.createObjectURL(blob);
@@ -2499,9 +2499,9 @@ document.addEventListener('click',event=>{
  if(event.target.closest('#exportIemisLedgerExcel'))exportIemisTransferExcel(true,false);
  if(event.target.closest('#sampleIemisLedgerExcel'))exportIemisTransferExcel(true,true);
 });
-async function exportMarksLedgerExcel(){
- const cl=document.getElementById('entryClass')?.value||document.getElementById('ledgerViewClass')?.value;
- const examId=document.getElementById('entryExam')?.value||document.getElementById('ledgerViewExam')?.value;
+async function exportLegacyMarksLedgerExcel(fromLedger=false,sample=false){
+ const cl=document.getElementById(fromLedger?'ledgerViewClass':'entryClass')?.value;
+ const examId=document.getElementById(fromLedger?'ledgerViewExam':'entryExam')?.value;
  const msg=document.getElementById('marksEntryMessage')||document.getElementById('ledgerViewMessage');
  const say=t=>{if(msg)msg.textContent=t};
  if(!cl||!examId){say('Select a Class and Examination before exporting the Excel Ledger.');return}
@@ -2519,13 +2519,13 @@ async function exportMarksLedgerExcel(){
   const componentsBySubject=subjects.map(sub=>ledgerComponentsForSubject(group,sub,cl,exam));
   const cols=[{header:'S.N',key:'sn',width:7},{header:'Student Name',key:'name',width:27},{header:'Regd. No.',key:'reg',width:23},{header:'Symbol No.',key:'symbol',width:14}];
   subjects.forEach((sub,si)=>componentsBySubject[si].forEach((component,ci)=>cols.push({header:`${ledgerEnglishLabel(component.name)} (${component.fullMarks})`,key:`s${si}_${ci}`,width:18})));
-  ws.columns=cols;
-  const header1=['S.N','Student Name','Regd. No.','Symbol No.'];subjects.forEach(sub=>header1.push(subjectEnglishLabel(sub)));ws.addRow(header1);
+  ws.columns=cols.map(({header,...column})=>column);
+  const header1=['S.N','Student Name','Regd. No.','Symbol No.'];subjects.forEach((sub,si)=>header1.push(...Array(componentsBySubject[si].length).fill(subjectEnglishLabel(sub))));ws.addRow(header1);
   const header2=['','','',''];componentsBySubject.forEach(list=>list.forEach(c=>header2.push(`${ledgerEnglishLabel(c.name)} / ${c.fullMarks}`)));ws.addRow(header2);
   ['A','B','C','D'].forEach(c=>ws.mergeCells(`${c}1:${c}2`));
   let col=5;componentsBySubject.forEach(list=>{if(list.length>0){ws.mergeCells(1,col,1,col+list.length-1);col+=list.length;}});
   const students=marksStudents.filter(st=>canonicalStudentClass(st.class??st.className??'')===canonicalStudentClass(cl)).sort((a,b)=>Number(studentRollNo(a)||999999)-Number(studentRollNo(b)||999999));
-  const marksFor=(studentId,subject)=>existingMarks.find(m=>m.studentId===studentId&&m.examId===examId&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(subject));
+  const marksFor=(studentId,subject)=>sample?undefined:existingMarks.find(m=>m.studentId===studentId&&m.examId===examId&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(subject));
   students.forEach((st,idx)=>{
    const row=[onlineResultDigits(studentRollNo(st)||idx+1),st.studentNameEnglish||st.nameEnglish||st.nameEn||englishDisplayText(st.studentName||st.name||''),ledgerStudentReg(st),ledgerSymbol(st)];
    subjects.forEach((sub,si)=>{
@@ -2563,9 +2563,20 @@ async function exportMarksLedgerExcel(){
  finally{if(btn){btn.disabled=false;btn.textContent=btn.id==='exportLedgerPageExcel'?'Export Ledger Excel':'Export Marks Ledger to Excel'}}
 }
 
+async function exportMarksLedgerExcel(fromLedger=false,sample=false){
+ const cl=document.getElementById(fromLedger?'ledgerViewClass':'entryClass')?.value;
+ const exam=marksExams.find(x=>x.id===document.getElementById(fromLedger?'ledgerViewExam':'entryExam')?.value);
+ const number=Number(classNoFromName(cl)),term=globalThis.SmssIemisTransfer.termKey(smssExamTermKey(exam||{}));
+ if(number<1||number>10||!['first','second','third','final'].includes(term))return exportLegacyMarksLedgerExcel(fromLedger,sample);
+
+ // Both download buttons use the same two-row IEMIS XLSX schema.
+ // A review ledger may show missing IDs; the importer still requires identity.
+ return exportIemisTransferExcel(fromLedger,sample,false);
+}
+
 document.addEventListener('click',e=>{if(e.target?.id==='exportLedgerExcel')exportMarksLedgerExcel()});
 document.addEventListener('click',e=>{
- if(e.target?.closest('#exportLedgerPageExcel'))exportMarksLedgerExcel();
+ if(e.target?.closest('#exportLedgerPageExcel'))exportMarksLedgerExcel(true);
  if(e.target?.closest('#printLedgerPage'))printCurrentMarksLedger();
 });
 function printCurrentMarksLedger(){
@@ -2660,12 +2671,37 @@ async function importStaff(file){
  const batch=writeBatch(db);for(const d of finalPrepared){const ref=doc(collection(db,'staff'));const staffId='MSS-STF-'+ref.id.slice(0,8).toUpperCase();batch.set(ref,{...d,staffId,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});}await batch.commit();
  await writeAuditLog('staff','import','bulk',`${finalPrepared.length} imported; ${duplicates.length} duplicates; ${invalid.length} invalid`);await loadStaff();setStaffMessage(`${finalPrepared.length} शिक्षक/कर्मचारी Import भए। प्रत्येकको ID स्वतः बन्यो। Duplicate ${duplicates.length}, त्रुटिपूर्ण ${invalid.length} पङ्क्ति Skip भए।`);
 }
-function makeLedgerSample(){const cl=document.getElementById('entryClass')?.value,examId=document.getElementById('entryExam')?.value;if(!cl||!examId){entryMsg('Sample Ledger बनाउन पहिले Class र Examination छान्नुहोस्।',true);return}const oldStudents=marksStudents;marksStudents=[];const oldMarks=existingMarks;existingMarks=[];exportMarksLedgerExcel().finally(()=>{marksStudents=oldStudents;existingMarks=oldMarks})}
+function makeLedgerSample(){return exportMarksLedgerExcel(false,true)}
+async function importIemisMarksWorkbook(buffer,cl,exam){
+ const X=await ensureExcelJS(),file=await globalThis.SmssIemisTransfer.workbookData(X,buffer),grid=getIemisTransferGrid(false);
+ const students=marksStudents.filter(st=>st.active!==false&&canonicalStudentClass(st.class??st.className)===canonicalStudentClass(cl));
+ const proposed=planIemisPortalImport(file,grid,students,exam.id),plans=[];let skipped=0;
+ for(const data of proposed){
+  const subject=ledgerSubjectsForClass(cl,entryClassGroup(cl)).find(s=>globalThis.SmssIemisTransfer.subjectKey(s)===globalThis.SmssIemisTransfer.subjectKey(data.subject));
+  if(!subject)throw Error('Import विषय कक्षामा भेटिएन।');
+  if(existingMarks.some(m=>m.studentId===data.studentId&&m.examId===exam.id&&canonicalSubjectKey(m.subject)===canonicalSubjectKey(subject))){skipped++;continue;}
+  const student=students.find(st=>st.id===data.studentId);
+  plans.push({...data,subject,className:cl,section:student.section||'',academicYear:exam.academicYear||'2083',termKey:smssExamTermKey(exam),termName:exam.termName||smssTermLabel(smssExamTermKey(exam))});
+ }
+ if(!plans.length)throw Error(`नयाँ Marks भेटिएन। पहिलेका ${skipped} रेकर्ड सुरक्षित राखिए।`);
+ if(!confirm(`IEMIS Excel Import Preview\nनयाँ विद्यार्थी/विषय रेकर्ड: ${plans.length}\nपहिलेका रेकर्ड Skip: ${skipped}\nपुराना Marks परिवर्तन हुँदैनन्। Import गर्ने?`))return;
+ if(!confirm('अन्तिम पुष्टि: विद्यार्थी, विषय र प्राप्ताङ्क जाँचिसकेपछि मात्र OK थिच्नुहोस्।'))return;
+ // The file is validated in full before any write; new records remain atomic.
+ if(plans.length>450)throw Error('एकपटकमा ४५० भन्दा बढी रेकर्ड Import गर्न मिल्दैन। फाइल छुट्याउनुहोस्।');
+ const batch=writeBatch(db);
+ for(const data of plans)batch.set(doc(collection(db,'marks')),{...data,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});
+ await batch.commit();
+ const auditOk=await writeAuditLog('marks','import',exam.id,`${plans.length} IEMIS Excel records; ${skipped} existing records skipped`);
+ await loadMarksEntry();entryMsg(`${plans.length} रेकर्ड Import भयो। पहिलेका ${skipped} रेकर्ड सुरक्षित छन्।${auditOk?'':' Audit Log सुरक्षित भएन; Admin लाई जानकारी दिनुहोस्।'}`,!auditOk);
+}
+
 async function importMarksLedger(file){
  if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw Error('Admin login आवश्यक छ।');
  const cl=document.getElementById('entryClass').value,examId=document.getElementById('entryExam').value,exam=marksExams.find(x=>x.id===examId);
  if(!cl||!examId||!exam||canonicalStudentClass(exam.className)!==canonicalStudentClass(cl))throw Error('पहिले मिल्ने Class र Examination छान्नुहोस्।');
- const X=await ensureSheetJS(),buf=await file.arrayBuffer(),wb=X.read(buf,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],rows=X.utils.sheet_to_json(ws,{header:1,defval:''});
+ const X=await ensureSheetJS(),buf=await file.arrayBuffer(),wb=X.read(buf,{type:'array'});
+ if(wb.SheetNames.includes('Context')&&wb.SheetNames.includes('Marks'))return importIemisMarksWorkbook(buf,cl,exam);
+ const ws=wb.Sheets[wb.SheetNames[0]],rows=X.utils.sheet_to_json(ws,{header:1,defval:''});
  const group=ledgerGroupForClass(cl),subjects=ledgerSubjectsForClass(cl,group),achievement=['1-3','4-5'].includes(group);
  const settings=subjects.map(sub=>ledgerSubjectSetting(group,sub));
  const plans=[],plannedKeys=new Set(),existingKeys=new Set(existingMarks.filter(m=>m.examId===examId).map(m=>`${m.studentId}::${canonicalSubjectKey(m.subject)}`));
