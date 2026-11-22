@@ -40,10 +40,12 @@ try {
   await assertSucceeds(setDoc(doc(db('adminA'),student('12345678','s2')),{name:'Allowed',class:'6',schoolId:'12345678'}));
   await assertFails(setDoc(doc(db('adminA'),student('87654321','s2')),{name:'Forbidden'}));
   await assertFails(setDoc(doc(db('teacherA'),student('12345678','s3')),{name:'Not yet assigned'}));
-  await assertSucceeds(setDoc(doc(db('adminA'),'schools/12345678/subjects/math'),{schoolId:'12345678',name:'Mathematics',class:'6',active:true}));
+  await assertFails(setDoc(doc(db('adminA'),'schools/12345678/subjects/math'),{schoolId:'12345678',name:'Mathematics',class:'6',active:true}));
+  await assertSucceeds(setDoc(doc(db('adminA'),'schools/12345678/subjects/math'),{schoolId:'12345678',name:'Mathematics',class:'6',active:true,creditHour:4,theoryFullMarks:60,practicalFullMarks:40}));
   await assertSucceeds(setDoc(doc(db('adminA'),'schools/12345678/subject_assignments/s1:math'),{schoolId:'12345678',studentId:'s1',subjectId:'math',class:'6'}));
   await assertSucceeds(setDoc(doc(db('adminA'),'schools/12345678/students/s9'),{name:'Computer Student',class:'9',schoolId:'12345678'}));
-  await assertSucceeds(setDoc(doc(db('adminA'),'schools/12345678/subjects/computer'),{schoolId:'12345678',name:'Computer',class:'9',active:true}));
+  await assertFails(setDoc(doc(db('adminA'),'schools/12345678/subjects/computer'),{schoolId:'12345678',name:'Computer',class:'9',active:true}));
+  await assertSucceeds(setDoc(doc(db('adminA'),'schools/12345678/subjects/computer'),{schoolId:'12345678',name:'Computer',class:'9',active:true,creditHour:2,theoryFullMarks:40,practicalFullMarks:60}));
   await assertSucceeds(setDoc(doc(db('adminA'),'schools/12345678/subject_assignments/s9:computer'),{schoolId:'12345678',studentId:'s9',subjectId:'computer',class:'9'}));
   await assertSucceeds(getDoc(doc(db('teacherA'),'schools/12345678/subject_assignments/s1:math')));
   await assertFails(setDoc(doc(db('teacherA'),'schools/12345678/subject_assignments/a2'),{uid:'teacherA'}));
