@@ -9,10 +9,21 @@ export async function loadMarksByClassTerm({db,api,actor,schoolId,schoolClass,te
  validateExamTerm(term);
  if(!Number.isInteger(pageSize)||pageSize<1||pageSize>100)throw new RangeError('Page size must be 1–100');
  for(const method of ['collection','query','where','orderBy','limit','getDocs','startAfter'])if(typeof api?.[method]!=='function')throw new TypeError('Missing Firebase SDK: '+method);
+ const identity={uid:actor?.uid,schoolId:actor?.schoolId,role:actor?.role,active:actor?.active};
+ if(cursor!==null&&(typeof cursor?.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(cursor.id)))throw new Error('Invalid marks cursor');
  const filters=[api.where('class','==',schoolClass),api.where('term','==',term),api.orderBy('__name__'),api.limit(pageSize+1)];
  if(cursor)filters.push(api.startAfter(cursor));
  const snap=await api.getDocs(api.query(api.collection(db,'schools',schoolId,'marks'),...filters));
+ if(!canAccessSchool(actor,schoolId,'read')||Object.keys(identity).some(key=>actor?.[key]!==identity[key]))throw new Error('School membership changed during marks query');
  const docs=snap.docs;
  if(!Array.isArray(docs)||docs.length>pageSize+1)throw new RangeError('Unexpected result size');
- return {records:docs.slice(0,pageSize).map(d=>({...d.data(),id:d.id})),hasMore:docs.length>pageSize,cursor:docs.slice(0,pageSize).at(-1)??null};
+ const ids=new Set();let previous=cursor?.id??null;
+ for(const d of docs){
+  if(typeof d.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||ids.has(d.id)||previous!==null&&d.id<=previous)throw new Error('Invalid marks page order');
+  ids.add(d.id);previous=d.id;
+  const data=d.data();
+  if(data.schoolId!==schoolId||data.class!==schoolClass||data.term!==term)throw new Error('Foreign or mismatched marks record');
+ }
+ const page=docs.slice(0,pageSize);
+ return {records:page.map(d=>({...d.data(),id:d.id})),hasMore:docs.length>pageSize,cursor:page.at(-1)??null};
 }
