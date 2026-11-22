@@ -34,6 +34,7 @@ export async function loadCompleteSchoolSubjects({db,api,actor,schoolId,schoolCl
   for(const d of page){
    const data=d.data();
    if(data.active!==true)throw new Error('Inactive subject requires verified exclusion policy');
+   if(typeof data.creditHour!=='number'||!Number.isFinite(data.creditHour)||data.creditHour<=0)throw new Error('Subject creditHour missing or invalid in Firestore: '+d.id);
    subjects.push({...data,id:d.id});
    if(subjects.length>maxSubjects)throw new RangeError('Subject roster exceeds configured bound');
   }
