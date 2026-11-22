@@ -1,6 +1,6 @@
 import {initializeTestEnvironment,assertFails,assertSucceeds} from '@firebase/rules-unit-testing';
 import {readFileSync} from 'node:fs';
-import {doc,getDoc,setDoc,updateDoc,deleteDoc,deleteField,collection,getDocs} from 'firebase/firestore';
+import {doc,getDoc,setDoc,updateDoc,deleteDoc,deleteField,collection,getDocs,serverTimestamp} from 'firebase/firestore';
 const rules=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
 const env=await initializeTestEnvironment({projectId:'smss-v47-emulator-tests',firestore:{rules,host:'127.0.0.1',port:8187}});
 const db=(uid)=>env.authenticatedContext(uid).firestore();
@@ -240,5 +240,52 @@ try{
  await assertFails(updateDoc(attendance(teacher,'87654321'),{present:true}));
  // 99 A second canonical term can be created independently
  await assertSucceeds(setDoc(doc(admin,'schools','12345678','exams','2nd'),{schoolId:'12345678',term:'2nd'}));
- console.log('V47 Firestore emulator: 111 authorization assertions passed');
+
+ // Complete-class draft is an isolated, revision-checked document.
+ // No rule permits these entries to become official marks or results.
+ await env.withSecurityRulesDisabled(async context=>{
+  const db=context.firestore();
+  await setDoc(doc(db,'schools','12345678','subjects','computer'),{
+    schoolId:'12345678',name:'Computer',class:'9',active:true
+  });
+  await setDoc(doc(db,'schools','12345678','mark_settings','9_computer_final'),{
+    id:'9_computer_final',schoolId:'12345678',classId:'9',subjectId:'computer',
+    examId:'final',active:true,components:[
+      {key:'participation',name:'Participation',fullMarks:7},
+      {key:'practical',name:'Practical',fullMarks:63},
+      {key:'term',name:'Term',fullMarks:30}
+    ]
+  });
+ });
+ const draft=(database,sid='12345678')=>doc(database,'schools',sid,'class_mark_drafts','9_computer_final');
+ const entries=[{studentId:'s1',isAbsent:false,values:{participation:7,practical:63,term:30},totalObtained:100}];
+ const validDraft={format:'smss-v47-complete-class-draft-v1',state:'draft',
+   schoolId:'12345678',classId:'9',subjectId:'computer',examId:'final',
+   settingsId:'9_computer_final',rosterCount:1,revision:1,
+   updatedBy:'admin_12345678',updatedAt:serverTimestamp(),entries};
+ await assertFails(setDoc(draft(anon),validDraft));
+ await assertFails(setDoc(draft(viewer),{...validDraft,updatedBy:'viewer_12345678'}));
+ await assertFails(setDoc(draft(teacher),{...validDraft,updatedBy:'teacher_12345678'}));
+ await assertFails(setDoc(draft(db('admin_87654321')),{...validDraft,updatedBy:'admin_87654321'}));
+ await assertFails(setDoc(draft(admin,'87654321'),{...validDraft,schoolId:'87654321'}));
+ await assertFails(setDoc(draft(admin),{...validDraft,schoolId:'87654321'}));
+ await assertFails(setDoc(draft(admin),{...validDraft,settingsId:'wrong'}));
+ await assertFails(setDoc(draft(admin),{...validDraft,revision:2}));
+ await assertFails(setDoc(draft(admin),{...validDraft,entries:[],rosterCount:1}));
+ await assertFails(setDoc(draft(admin),{...validDraft,updatedAt:'forged'}));
+ await assertFails(setDoc(draft(admin),{...validDraft,official:true}));
+ await assertSucceeds(setDoc(draft(admin),validDraft));
+ await assertSucceeds(getDoc(draft(viewer)));
+ await assertFails(getDoc(draft(db('admin_87654321'))));
+ await assertFails(updateDoc(draft(viewer),{revision:2,updatedAt:serverTimestamp()}));
+ await assertFails(updateDoc(draft(teacher),{revision:2,updatedAt:serverTimestamp()}));
+ await assertFails(updateDoc(draft(admin),{revision:3,updatedAt:serverTimestamp()}));
+ await assertFails(updateDoc(draft(admin),{state:'published',revision:2,updatedAt:serverTimestamp()}));
+ await assertFails(updateDoc(draft(admin),{schoolId:'87654321',revision:2,updatedAt:serverTimestamp()}));
+ await assertSucceeds(updateDoc(draft(admin),{revision:2,updatedBy:'admin_12345678',updatedAt:serverTimestamp(),entries}));
+ await assertFails(deleteDoc(draft(admin)));
+ await assertFails(setDoc(mark(admin,'12345678'),{schoolId:'12345678',studentId:'s1',value:42}));
+ await assertFails(setDoc(doc(admin,'schools','12345678','component_marks','9:s1:computer'),{schoolId:'12345678',studentId:'s1',value:42}));
+
+ console.log('V47 Firestore emulator: 111 existing assertions plus isolated class-draft create/update/deny assertions passed');
 }finally{await env.cleanup();}
