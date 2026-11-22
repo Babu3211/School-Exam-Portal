@@ -72,4 +72,15 @@ await assert.rejects(overflow.listAll('students',{pageSize:2,maxDocuments:2}),/d
 const badId=createVerifiedTenantFirestore({db:{},context,api:{...paginationApi,getDocs:async()=>({docs:[{id:'../foreign'}]})}});
 await assert.rejects(badId.listAll('students',{pageSize:2}),/pagination cursor/);
 
+// A well-formed document ID does not authorize a document from another school.
+const crossTenant=createVerifiedTenantFirestore({db:{},context,api:{
+ ...paginationApi,getDocs:async()=>({docs:[{id:'s1',ref:{path:'schools/87654321/students/s1'}}]})
+}});
+await assert.rejects(crossTenant.listAll('students',{pageSize:2}),/Cross-tenant paginated/);
+const crossTenantProbe=createVerifiedTenantFirestore({db:{},context,api:{
+ ...paginationApi,getDocs:async query=>query.constraints.some(c=>c[0]==='startAfter')
+ ?{docs:[{id:'s2',ref:{path:'schools/87654321/students/s2'}}]}
+ :{docs:[{id:'s1',ref:{path:'schools/'+sid+'/students/s1'}}]}
+}});
+await assert.rejects(crossTenantProbe.listAll('students',{pageSize:1,maxDocuments:1}),/Cross-tenant paginated/);
 console.log('Verified V47 read-only tenant Firestore adapter tests passed');
