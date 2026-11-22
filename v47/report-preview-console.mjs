@@ -28,11 +28,11 @@ $('connect').onclick=async()=>{
 $('login').onclick=()=>{
  if(busy||loggingOut)return;
  loginTask=(async()=>{
- busy=true;clear();const current=epoch;
+ busy=true;clear();const current=epoch;let freshSignIn=false;
  $('login').disabled=true;$('logout').disabled=false;
  try{
   const schoolId=assertIemisSchoolId($('schoolId').value.trim());
-  const freshSignIn=!auth.currentUser;
+  freshSignIn=!auth.currentUser;
   const credential=freshSignIn?await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value):{user:auth.currentUser};
   if(freshSignIn)startVerifiedSchoolActivity();
   if(!await enforceSchoolIdle(auth,authSdk))throw new Error('Login expired due to inactivity');
@@ -57,7 +57,7 @@ $('login').onclick=()=>{
   for(let n=1;n<=12;n++)classSelect.add(new Option('Class '+n,String(n)));
   for(const id of ['summaryExam','summaryClass','summaryAnnual','summaryRun','coverageSection','coverageSubject','coverageRun'])$(id).disabled=false;
   $('report').hidden=false;status('Read-only report inputs loaded. No results were published.');
- }catch(error){if(current===epoch){clear();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status('Report unavailable: '+error.message)}}
+ }catch(error){if(current===epoch){clear();try{if(freshSignIn&&auth?.currentUser)await authSdk.signOut(auth)}catch{}status('Report unavailable: '+error.message)}}
  finally{busy=false;$('login').disabled=!auth||loggingOut;if(!auth?.currentUser)$('logout').disabled=true}
  })();
 };
