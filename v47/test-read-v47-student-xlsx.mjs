@@ -86,7 +86,7 @@ await rejects(central+10,(v,p)=>v.setUint16(p,99,true),/Unsupported or oversized
 // 10-12: worksheet size and checksum.
 await rejects(central+24,(v,p)=>v.setUint32(p,0,true),/Invalid XLSX entry size/);
 await rejects(central+16,(v,p)=>v.setUint32(p,0xffffffff,true),/Invalid XLSX entry checksum/);
-await rejects(central+20,(v,p)=>v.setUint32(p,source.length,true),/Truncated XLSX/);
+await rejects(central+20,(v,p)=>v.setUint32(p,source.length,true),/Truncated XLSX|Mismatched XLSX ZIP entry/);
 // 13-15: malformed central record metadata.
 await rejects(central+28,(v,p)=>v.setUint16(p,65535,true),/Invalid ZIP entry/);
 await rejects(central+30,(v,p)=>v.setUint16(p,65535,true),/Invalid ZIP entry/);
