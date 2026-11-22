@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import {validateMarkEntry,markEntryId,saveSchoolMark} from '../v47/marks-service.mjs';
-const input={studentId:'s1',subjectId:'math',class:'6',term:'1st',theory:35,practical:8},actor={role:'school_admin',active:true,schoolId:'12345678'};
+const input={studentId:'s1',subjectId:'math',class:'6',term:'1st',theory:35,practical:8},actor={uid:'admin-a',role:'school_admin',active:true,schoolId:'12345678'};
 assert.deepEqual(validateMarkEntry(input),input);assert.equal(markEntryId(input),'1st:s1:math');
 for(const bad of [{...input,term:'midterm'},{...input,class:'13'},{...input,theory:-1},{...input,theory:'abc'},{...input,practical:''},{...input,subjectId:'a/b'}])assert.throws(()=>validateMarkEntry(bad));
-const docs=new Map([['schools/12345678/students/s1',{class:'6',schoolId:'12345678'}],['schools/12345678/subjects/math',{class:'6',active:true,schoolId:'12345678'}],['schools/12345678/subject_assignments/s1:math',{studentId:'s1',subjectId:'math',class:'6',schoolId:'12345678'}]]);
+const docs=new Map([['schools/12345678/students/s1',{class:'6',schoolId:'12345678'}],['schools/12345678/subjects/math',{class:'6',active:true,schoolId:'12345678',theoryFullMarks:40,practicalFullMarks:10}],['schools/12345678/subject_assignments/s1:math',{studentId:'s1',subjectId:'math',class:'6',schoolId:'12345678'}]]);
 let setDocCalls=0,transactionCalls=0;
 const api={doc:(_db,...p)=>p.join('/'),setDoc:async()=>{setDocCalls++;throw new Error('Unsafe upsert invoked')},runTransaction:async(_db,fn)=>{transactionCalls++;const pending=[];await fn({get:async ref=>({exists:()=>docs.has(ref),data:()=>docs.get(ref)}),set:(ref,data)=>pending.push([ref,data])});for(const [ref,data]of pending)docs.set(ref,data)}};
 const args={db:{},api,actor,schoolId:'12345678',input};

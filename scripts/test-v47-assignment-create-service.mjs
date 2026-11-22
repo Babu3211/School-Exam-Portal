@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import {createSubjectAssignment} from '../v47/assignment-create-service.mjs';
 import {subjectAssignmentId} from '../v47/assignment-validation.mjs';
-const docs=new Map([['schools/12345678/students/s1',{class:'6'}],['schools/12345678/subjects/math_6',{class:'6',active:true}]]);
+const docs=new Map([['schools/12345678/students/s1',{class:'6',schoolId:'12345678'}],['schools/12345678/subjects/math_6',{class:'6',active:true,schoolId:'12345678'}]]);
 const api={doc:(_db,...p)=>p.join('/'),runTransaction:async(_db,callback)=>{const writes=[];await callback({get:async ref=>({exists:()=>docs.has(ref),data:()=>docs.get(ref)}),set:(ref,value)=>writes.push([ref,value])});for(const [ref,value]of writes)docs.set(ref,value)}};
-const actor={role:'school_admin',active:true,schoolId:'12345678'},input={studentId:'s1',subjectId:'math_6',class:'6'},args={db:{},api,actor,schoolId:'12345678',input};
+const actor={uid:'admin-a',role:'school_admin',active:true,schoolId:'12345678'},input={studentId:'s1',subjectId:'math_6',class:'6'},args={db:{},api,actor,schoolId:'12345678',input};
 assert.equal(subjectAssignmentId(input),'s1:math_6');
 assert.notEqual(subjectAssignmentId({studentId:'a_b',subjectId:'c',class:'6'}),subjectAssignmentId({studentId:'a',subjectId:'b_c',class:'6'}));
 assert.equal((await createSubjectAssignment(args)).id,'s1:math_6');assert.equal(docs.size,3);
