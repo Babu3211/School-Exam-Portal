@@ -32,6 +32,9 @@ assert.doesNotMatch(marks,/inMemoryPersistence|initializeApp\(/,'Marks module mu
 assert.doesNotMatch(marksHtml,/id="config"/,'Manual Firebase JSON must remain removed');
 assert.match(marksHtml,/id="save" disabled/,'Raw marks save must stay disabled');
 assert.match(marksHtml,/id="saveClassMarks" disabled/,'Class publication must stay disabled');
+const hub=read('index.html');
+assert.match(hub,/Students, Attendance, School Settings and Raw Marks Entry can reuse the shared session/);
+assert.doesNotMatch(hub,/currently ask you to sign in again/);
 const dashboard=read('dashboard-console.mjs');
 assert.match(dashboard,/destination\.searchParams\.set\('schoolId',current\.schoolId\)/);
 assert.match(dashboard,/MAX_IDLE_MS=60\*60\*1000/);
