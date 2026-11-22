@@ -38,3 +38,6 @@ $('login').onclick=async()=>{
  finally{if(request===epoch)lock(false)}
 };
 $('logout').onclick=async()=>{if(busy)return;reset();lock(true);try{await authSdk.signOut(auth);message('Signed out')}catch(e){message('Sign out failed: '+e.message)}finally{lock(false)}};
+
+// Automatically resume a dashboard-selected school; authorization is rechecked on this page.
+if(requestedSchool)queueMicrotask(()=>$('connect').click());
