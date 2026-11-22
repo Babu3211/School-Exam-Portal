@@ -36,8 +36,10 @@ $('inspectRepair').onclick=async()=>{
 $('applyRepair').onclick=async()=>{
  if(busy||!inspected||!actor)return;
  const selected=inspected,attempt=epoch;
+ if(auth.currentUser?.uid!==actor.uid){invalidateInspection();status('सत्र परिवर्तन भएको छ। फेरि Login गर्नुहोस्।');return}
  if(selected.id!==$('repairSubjectId').value.trim()||Number($('repairCreditHour').value)!==selected.creditHour||selected.schoolId!==schoolId||selected.uid!==actor.uid){invalidateInspection();status('फेरि विषय जाँच गर्नुहोस्।');return}
  if(!window.confirm('यो विषयमा '+selected.creditHour+' Credit Hours एकपटक मात्र थप्ने हो। जारी राख्ने?'))return;
+ if(attempt!==epoch||auth.currentUser?.uid!==selected.uid){invalidateInspection();return}
  lock(true);
  try{
   await addMissingSubjectCreditHour({db,api,actor,schoolId,subjectId:selected.id,creditHour:selected.creditHour});
