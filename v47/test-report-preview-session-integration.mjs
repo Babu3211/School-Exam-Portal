@@ -15,4 +15,6 @@ assert.doesNotMatch(html,/id="config"/,'No pasted Firebase configuration request
 assert.doesNotMatch(js,/JSON\.parse\(\$\('config'\)/,'No user-supplied Firebase project accepted');
 assert.match(html,/id="coverageRun"/,'Roster coverage controls remain available');
 assert.match(js,/coverageSubject/,'Coverage inspection must be enabled on verified load');
+assert.match(js,/if\(requestedSchool&&auth\.currentUser\)queueMicrotask\(\(\)=>\$\('login'\)\.click\(\)\)/,'Dashboard report navigation reuses an existing school session');
+assert.match(js,/getDocFromServer\(ref\)/,'Every report rendering action revalidates membership from Firestore server');
 console.log('V47 shared school session report preview integration checks passed (static only)');
