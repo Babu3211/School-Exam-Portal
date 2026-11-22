@@ -21,14 +21,15 @@ export async function loadCompleteSchoolSubjects({db,api,actor,schoolId,schoolCl
   if(!Array.isArray(docs)||docs.length>pageSize+1)throw new Error('Invalid subject page');
   const loaded=[];
   let pageLastId=lastId;
-  for(const d of docs){
+  for(let index=0;index<docs.length;index++){
+   const d=docs[index];
    if(typeof d?.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||pageLastId!==null&&d.id<=pageLastId)throw new Error('Subject pagination order invalid');
    pageLastId=d.id;
    if(typeof d.data!=='function')throw new Error('Malformed subject record');
    const data=d.data();
    if(!data||typeof data!=='object'||Array.isArray(data))throw new Error('Malformed subject record');
    if(data.schoolId!==schoolId||data.class!==schoolClass)throw new Error('Foreign subject in roster');
-   if(data.active!==true)throw new Error(docs.indexOf(d)>=pageSize?'Inactive subject in lookahead':'Inactive subject requires verified exclusion policy');
+   if(data.active!==true)throw new Error(index>=pageSize?'Inactive subject in lookahead':'Inactive subject requires verified exclusion policy');
    if(typeof data.creditHour!=='number'||!Number.isFinite(data.creditHour)||data.creditHour<=0||data.creditHour>100)throw new Error((docs.indexOf(d)>=pageSize?'Subject creditHour missing or invalid in lookahead: ':'Subject creditHour missing or invalid in Firestore: ')+d.id);
    loaded.push({...data,id:d.id});
   }
