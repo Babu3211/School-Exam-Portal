@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {saveCompleteClassMarks} from './class-mark-save.mjs';
 import {EXAM_TERMS} from './term-catalog.mjs';
 const schoolId='12345678',classId='9',term='1st',subjectId='math';
-const actor={role:'school_admin',active:true,schoolId};
+const actor={uid:'admin-1',role:'school_admin',active:true,schoolId};
 const mark=(studentId,overrides={})=>({studentId,class:classId,term,subjectId,theory:30,practical:10,...overrides});
 const args={actor,schoolId,classId,term,subjectId,expectedStudentIds:['s1','s2'],entries:[mark('s1'),mark('s2')]};
 function mock(overrides={}){
@@ -55,11 +55,13 @@ for(const [overrides,message] of [
  [{entries:[mark('s1'),mark('s1')]},/Duplicate student/],
  [{entries:[mark('s1'),mark('s2',{subjectId:'science'})]},/Mixed class/],
  [{entries:[mark('s1'),mark('s2',{theory:''})]},/Marks must/],
- [{actor:{role:'viewer',active:true,schoolId}},/School Admin/],
- [{actor:{role:'teacher',active:true,schoolId}},/School Admin/],
- [{actor:{role:'super_admin',active:true}},/School Admin/],
- [{actor:{role:'school_admin',active:false,schoolId}},/School Admin/],
- [{actor:{role:'school_admin',active:true,schoolId:'87654321'}},/School Admin/],
+ [{actor:{uid:'viewer-1',role:'viewer',active:true,schoolId}},/School Admin/],
+ [{actor:{uid:'teacher-1',role:'teacher',active:true,schoolId}},/School Admin/],
+ [{actor:{uid:'super-1',role:'super_admin',active:true}},/School Admin/],
+ [{actor:{uid:'admin-1',role:'school_admin',active:false,schoolId}},/School Admin/],
+ [{actor:{uid:'admin-1',role:'school_admin',active:true,schoolId:'87654321'}},/School Admin/],
+ [{actor:{role:'school_admin',active:true,schoolId}},/School Admin/],
+ [{actor:{uid:' ',role:'school_admin',active:true,schoolId}},/School Admin/],
  [{expectedStudentIds:Array.from({length:4},(_,i)=>'s'+i),entries:Array.from({length:4},(_,i)=>mark('s'+i))},/at most 3/]
  ]){
  const {api,writes}=mock();
