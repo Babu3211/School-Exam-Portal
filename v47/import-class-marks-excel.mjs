@@ -39,7 +39,7 @@ export async function readSmssMarksExcel(file,{settings,schoolId,classId,subject
   if(!['yes','no'].includes(flag))throw new Error('Absent column must be Yes or No');
   const absent=flag==='yes',values={};
   components.forEach((c,i)=>{values[c.key]=row[i+3]??''});
-  if(!absent){for(const c of components){const v=String(values[c.key]).trim();if(!/^(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)$/.test(v)||Number(v)>c.fullMarks)throw new Error('Missing or invalid '+c.name+' marks for '+row[0]);values[c.key]=v}}
+  if(!absent){for(const c of components){const v=String(values[c.key]).trim();if(!/^(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)$/.test(v)||Number(v)>c.fullMarks)throw new Error('Missing or invalid '+c.name+' marks for '+row[0]);values[c.key]=v}}
   if(absent&&Object.values(values).some(v=>String(v).trim()!==''))throw new Error('Absent student cannot have marks');
   drafts.push({studentId:row[0],isAbsent:absent,values:absent?{}:values});
  }
