@@ -15,5 +15,5 @@ for(const page of pages){
  assert.ok(html.includes('href="./'+page+'.html"'),'Missing navigation: '+page);
  assert.ok(existsSync(new URL('../v47/'+page+'.html',import.meta.url)),'Missing destination: '+page);
 }
-assert.equal((html.match(/class="tile"/g)||[]).length,pages.length,'No duplicate or omitted modules');
+assert.equal((html.match(/class="tile(?: locked)?"/g)||[]).length,pages.length,'No duplicate or omitted modules');
 console.log('V47 development hub navigation and non-production safety checks passed');
