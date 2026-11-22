@@ -2383,6 +2383,10 @@ function openCdcAssessment() {
     <p><a data-cdc="guide" target="_blank" rel="noopener">CDC मूल्याङ्कन मार्गदर्शन</a> · <a data-cdc="curriculumSource" target="_blank" rel="noopener">एकाइ र सिकाइ उपलब्धिको स्रोत</a></p>
     <label>सुरक्षित मूल्याङ्कन <select data-cdc="records"></select></label>
     <p data-cdc="summary" class="hint"></p>
+    <details><summary>यस उपलब्धिको विद्यार्थीगत प्रगति</summary>
+      <p data-cdc="classProgress" role="status"></p>
+      <div class="tablewrap"><table><thead><tr><th>विद्यार्थी</th><th>मस्यौदा</th><th>पछिल्लो मिति</th><th>सिकाइ स्तर</th></tr></thead><tbody data-cdc="progressRows"></tbody></table></div>
+    </details>
     <label>विषयक्षेत्र वा एकाइ (नेपाली) <input list="cdcUnitSuggestions" data-cdc="unit" maxlength="180"></label>
     <label>सिकाइ उपलब्धि / Learning outcome <input list="cdcTopicSuggestions" data-cdc="topic" maxlength="180" placeholder="मार्गदर्शनबाट मूल्याङ्कन गर्ने उपलब्धि लेख्नुहोस्"></label>
     <label>एकाइको अंग्रेजी नाम / Unit in English <input list="cdcUnitSuggestions" data-cdc="unitEn" maxlength="180"></label>
@@ -2419,7 +2423,11 @@ function openCdcAssessment() {
     try { return JSON.parse(localStorage.getItem(catalogKey()) || '{}').rows || []; }
     catch { return []; }
   };
-  const key = () => storagePrefix + JSON.stringify([...scope(),field('topic').value.trim()]);
+  const key = (studentId=field('student').value) => {
+    const parts=scope();
+    parts[4]=studentId;
+    return storagePrefix + JSON.stringify([...parts,field('topic').value.trim()]);
+  };
   const normalizeTitle = value => String(value || '').normalize('NFC').trim().replace(/\s+/g,' ').toLowerCase();
   let topicAliases = new Map();
   const refreshRecords = () => {
@@ -2462,6 +2470,31 @@ function openCdcAssessment() {
     field('records').value = topics.includes(field('topic').value.trim()) ? field('topic').value.trim() : '';
     field('summary').textContent = topics.length ? `यस विद्यार्थी, विषय र अवधिमा ${topics.length} मूल्याङ्कन मस्यौदा छन्।` : 'यस छनोटमा मूल्याङ्कन मस्यौदा छैन।';
   };
+  const refreshClassProgress = () => {
+    const body=field('progressRows');
+    body.replaceChildren();
+    if(!field('topic').value.trim()){
+      field('classProgress').textContent='प्रगति हेर्न सिकाइ उपलब्धि छान्नुहोस्।';
+      return;
+    }
+    let recorded=0;
+    const roster=[...field('student').options];
+    for(const student of roster){
+      let observation={};
+      try { observation=JSON.parse(localStorage.getItem(key(student.value)) || '{}'); } catch {}
+      const entered=Boolean(observation.evidence);
+      if(entered) recorded++;
+      const row=body.insertRow();
+      const open=document.createElement('button');
+      open.type='button';
+      open.className='btn alt';
+      open.textContent=student.text;
+      open.onclick=()=>{field('student').value=student.value;load();};
+      row.insertCell().append(open);
+      for(const value of [entered?'राखिएको':'बाँकी',observation.date,observation.level]) row.insertCell().textContent=value||'—';
+    }
+    field('classProgress').textContent=`${recorded}/${roster.length} विद्यार्थीको मस्यौदा राखिएको छ।`;
+  };
   const today = () => attendanceAdToBs(attendanceNepalTodayAD());
   const readRecord = () => JSON.parse(localStorage.getItem(key()) || '{}');
   let appendObservation = false;
@@ -2491,6 +2524,7 @@ function openCdcAssessment() {
     field('date').value = record.date || today();
     showHistory(record);
     refreshRecords();
+    refreshClassProgress();
   };
   const resetTopic = () => { field('topic').value=''; load(); };
   const units = () => {
@@ -2638,6 +2672,7 @@ function openCdcAssessment() {
       field('date').value=normalized;
       showHistory(record);
       refreshRecords();
+      refreshClassProgress();
       field('status').textContent='विद्यार्थीको मूल्याङ्कन मस्यौदा राखियो।';
     } catch {field('status').textContent='Assignment पुष्टि गर्न वा मस्यौदा राख्न सकिएन। फेरि प्रयास गर्नुहोस्।';}
     finally { field('save').disabled = readOnly || !field('subject').value || !field('student').value; }
