@@ -87,4 +87,37 @@ for(const mutation of [a=>{a.active=false},a=>{a.uid='other-user'},a=>{a.schoolI
 for(const uid of [undefined,null,'','  ']){
  await assert.rejects(loadCompleteClassRoster({...base,actor:{...actor,uid},api:mock()}),/School membership required/);
 }
+// Verify no class roster is returned if the last page revokes the actor.
+for(const mutation of [a=>{a.active=false},a=>{a.uid='other-user'},a=>{a.schoolId='99999999'}]){
+ const changingActor={...actor};
+ const original=mock();
+ let calls=0;
+ const lastPage={...original,getDocs:async q=>{
+  const response=await original.getDocs(q);
+  calls++;
+  if(calls===2)mutation(changingActor);
+  return response;
+ }};
+ await assert.rejects(loadCompleteClassRoster({...base,actor:changingActor,api:lastPage}),/membership changed/i);
+ assert.equal(calls,2);
+}
+// All roster document accessors must be read exactly once, including the lookahead record.
+{
+ const counts=new Map();
+ const rows=[['s1','A'],['s2','B'],['s3','C']];
+ const original=mock();
+ const oncePages={...original,getDocs:async q=>{
+  const c=q.find(x=>x?.cursor)?.cursor;
+  const start=c?rows.findIndex(([id])=>id===c.id)+1:0;
+  return {docs:rows.slice(start,start+3).map(([id,name])=>({id,data:()=>{
+   counts.set(id,(counts.get(id)??0)+1);
+   return {schoolId,class:'9',name};
+  }}))};
+ }};
+ const loaded=await loadCompleteClassRoster({...base,api:oncePages});
+ assert.deepEqual(loaded.studentIds,['s1','s2','s3']);
+ assert.equal(counts.get('s1'),1);
+ assert.equal(counts.get('s2'),1);
+ assert.equal(counts.get('s3'),2); // lookahead on page 1, then included on page 2
+}
 console.log('V47 complete class roster pagination tests passed');
