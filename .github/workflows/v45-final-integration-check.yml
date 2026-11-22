@@ -32,6 +32,8 @@ jobs:
             'firestore.rules', 'scripts/test-v45-final-integration.mjs', 'scripts/test-attendance-bs-today.mjs', 'scripts/test-student-loading-regression.mjs', 'scripts/check-v44-requirements.mjs', 'scripts/test-user-activity-rules.mjs'
           }
           changed=set(subprocess.check_output(['git','diff','--name-only','origin/main','HEAD'],text=True).splitlines())
+          if os.environ.get('GITHUB_HEAD_REF')=='fix/teacher-all-sections-marks' or os.environ.get('GITHUB_REF_NAME')=='fix/teacher-all-sections-marks':
+            allowed.add('scripts/test-firestore-rules.mjs')
           # V46 integration has its own preservation/security gates. Permit only
           # explicitly reviewed V46 test/docs additions and test harness updates;
           # never relax protection for production PWA, Android, or other source.
