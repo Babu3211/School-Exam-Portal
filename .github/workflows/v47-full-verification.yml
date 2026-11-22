@@ -41,6 +41,18 @@ jobs:
           status=$?
           cat v47-release-gate.log
           echo "Release gate exit status: $status"
+          {
+            echo "## V47 release readiness"
+            echo ""
+            echo "Release gate exit code: **$status** (nonzero means deployment blocked)."
+            echo ""
+            echo "### Release gate findings"
+            echo '```text'
+            cat v47-release-gate.log
+            echo '```'
+            echo ""
+            echo "No deployment was attempted by this workflow."
+          } >> "$GITHUB_STEP_SUMMARY"
           exit 0
       - uses: actions/upload-artifact@v4
         if: always()
