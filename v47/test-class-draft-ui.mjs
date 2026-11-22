@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('./marks-entry.html',import.meta.url),'utf8');
+const source=readFileSync(new URL('./marks-entry-console.mjs',import.meta.url),'utf8');
+const safety=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
+assert.match(html,/id="saveClassDraft" disabled/);
+assert.match(html,/id="classDraftStatus"/);
+assert.match(html,/DRAFTS are NOT official marks/);
+assert.match(html,/id="saveClassMarks" disabled/);
+assert.match(html,/id="save" disabled/);
+assert.match(source,/import \{saveVerifiedCompleteClassDraft\} from '\.\/save-verified-class-draft\.mjs'/);
+assert.match(source,/import \{completeClassDraftId\} from '\.\/complete-class-draft-document\.mjs'/);
+assert.match(source,/enforceSchoolIdle\(/);
+assert.match(source,/classDraftRevision=null/);
+assert.match(source,/expectedRevision=classDraftRevision/);
+assert.match(source,/classDraftRevision=priorDraft\?\.revision\?\?0/);
+assert.match(source,/const draftSnap=await api\.getDoc/);
+assert.match(source,/actor\?\.role!=='school_admin'/);
+assert.match(source,/reviewPackage=null;\$\('saveClassDraft'\)\.disabled=true/);
+assert.match(source,/\$\('saveClassDraft'\)\.onclick=async\(\)=>/);
+assert.match(source,/window\.confirm\(/);
+assert.match(source,/saveVerifiedCompleteClassDraft\(/);
+assert.match(source,/savedDraft|saved\.rosterCount/);
+assert.match(source,/\$\('saveClassMarks'\)\.onclick=\(\)=>status\('Save\/Publish disabled/);
+assert.match(safety,/match \/class_mark_drafts\/\{id\}/);
+for(const name of ['marks','component_marks']){
+ const start=safety.indexOf('match /'+name+'/{id}');
+ assert(start>=0);
+ const s=safety.slice(start,safety.indexOf('\n      }',start));
+ assert.match(s,/allow create, update, delete: if false;/);
+}
+assert.doesNotMatch(source,/\.writeBatch\(|\.setDoc\(|\.deleteDoc\(/,'No browser bypass of configured draft transaction');
+console.log('PASS V47 Class Draft UI: complete roster, revision CAS, authorizing transaction, no official Save/Publish');

@@ -21,6 +21,12 @@ assert.match(rules,/data\.practical <= 100/);
 assert.match(rules,/teacherMarkAllowed\(sid, id\)/);
 assert.match(rules,/teacherAttendanceAllowed\(sid, id\)/);
 assert.match(rules,/allow delete: if false;/);
-assert.ok(rules.length<30000,'Unexpected rules expansion');
+assert.ok(rules.length<34000,'Unexpected Firestore rules expansion');
+assert.equal((rules.match(/match \/class_mark_drafts\/\{id\}/g)||[]).length,1,
+  'Exactly one bounded non-official draft collection required');
+assert.match(rules,/request\.resource\.data\.revision == resource\.data\.get\('revision', 0\) \+ 1/,
+  'Draft updates must use compare-and-swap revision');
+assert.match(rules,/d\.state == 'draft'/,'Draft collection may not publish results');
+assert.equal((rules.match(/match \/\{document=\*\*\}/g)||[]).length,1,'Default deny must remain unique');
 assert.ok(rules.trimEnd().endsWith('}'),'Rules missing final closing brace');
 console.log('V47 current Firestore rules structural contract passed; emulator authorization remains mandatory');
