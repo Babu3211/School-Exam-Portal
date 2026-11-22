@@ -1,3 +1,4 @@
+import {V47_FIREBASE_CONFIG} from './v47-firebase-config.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 const $=id=>document.getElementById(id);
@@ -8,7 +9,7 @@ function lock(value){busy=value;for(const id of ['login','logout','schoolId','em
 $('connect').onclick=async()=>{
  if(auth)return;
  try{
-  const config=JSON.parse($('config').value);
+  const config=V47_FIREBASE_CONFIG;
   if(config.projectId!=='smss-exam-portal-v47')throw new Error('V47 Firebase project required');
   const appSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js');
   authSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js');
