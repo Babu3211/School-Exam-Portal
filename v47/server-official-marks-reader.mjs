@@ -24,12 +24,13 @@ export function resolveOfficialClassMarks({schoolId,classId,subjectId,examId,poi
  for(const row of entries){
   if(!row||typeof row!=='object'||Array.isArray(row)||row.publicationId!==pointer.publicationId||
    typeof row.studentId!=='string'||!segment.test(row.studentId)||seen.has(row.studentId)||
-   typeof row.isAbsent!=='boolean')throw new Error('Invalid or duplicate official marks row');
+   typeof row.isAbsent!=='boolean'||
+   Object.keys(row).sort().join(',')!=='isAbsent,publicationId,studentId,totalObtained,values')throw new Error('Invalid or duplicate official marks row');
   if(row.isAbsent){
    if(row.values!==null||row.totalObtained!==0)throw new Error('Invalid absent marks row');
   }else{
    if(!row.values||typeof row.values!=='object'||Array.isArray(row.values)||
-    Object.keys(row.values).length===0||Object.values(row.values).some(v=>typeof v!=='number'||!Number.isFinite(v)||v<0)||
+    Object.keys(row.values).length===0||Object.keys(row.values).some(k=>!/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(k))||Object.values(row.values).some(v=>typeof v!=='number'||!Number.isFinite(v)||v<0)||
     typeof row.totalObtained!=='number'||!Number.isFinite(row.totalObtained)||
     Math.abs(Object.values(row.values).reduce((sum,v)=>sum+v,0)-row.totalObtained)>1e-7)throw new Error('Invalid official component marks');
   }
