@@ -83,6 +83,8 @@ jobs:
         run: node v47/test-complete-school-staff-excel.mjs
       - name: V47 school student browser static integration
         run: node scripts/test-v47-students-console-static.mjs
+      - name: Verified school dashboard aggregate counts
+        run: node v47/test-dashboard-stats.mjs
       - name: V47 school isolation gate
         run: node scripts/test-v47-school-isolation-gate.mjs
       - name: V47 school academic records read-only UI

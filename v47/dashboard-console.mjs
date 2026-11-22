@@ -3,6 +3,7 @@ import {validateSchoolId} from './school-paths.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {schoolDashboardAccess} from './dashboard-access.mjs';
 import {schoolProfileView} from './school-settings-profile.mjs';
+import {loadVerifiedSchoolStats,dashboardStatsText} from './dashboard-stats.mjs';
 const $=id=>document.getElementById(id);
 let auth,authSdk,db,api,verified=null,busy=false,checkingLink=false,lastActivity=Date.now();
 const MAX_IDLE_MS=60*60*1000;
@@ -15,8 +16,39 @@ async function verifiedSchoolLabel(schoolId,registryName){
  return [profile.nameEnglish,profile.nameNepali,profile.addressEnglish,profile.addressNepali].filter(Boolean).join(' · ');
 }
 function message(value){$('dashboardStatus').textContent=value}
-function lock(){for(const link of document.querySelectorAll('[data-school-module]')){const allowed=!!verified&&schoolDashboardAccess(verified.role,link.dataset.requiredRole==='school_admin'?'school-admin':'module');link.setAttribute('aria-disabled',String(!allowed));link.tabIndex=allowed?0:-1;link.classList.toggle('locked',!allowed)}$('schoolIdentity').textContent=verified?verified.name+' · '+verified.schoolId+' · '+verified.role:'No school verified';$('schoolAccessMode').textContent=!verified?'Login required to view school modules.':verified.role==='viewer'?'Viewer — पढ्न र रिपोर्ट हेर्न मात्र मिल्छ। Add, Edit, Delete वा Save अनुमति छैन।':verified.role==='teacher'?'Teacher — तोकिएको कक्षा र विषयमा मात्र अनुमति अनुसार काम गर्न मिल्छ।':'School Admin — विद्यालयको व्यवस्थापन गर्न मिल्छ; प्रत्येक Module ले अनुमति पुनः जाँच्छ।';$('dashboardLogout').disabled=!verified}
-function clear(){verified=null;lock()}
+function lock(){for(const link of document.querySelectorAll('[data-school-module]')){const allowed=!!verified&&schoolDashboardAccess(verified.role,link.dataset.requiredRole==='school_admin'?'school-admin':'module');link.setAttribute('aria-disabled',String(!allowed));link.tabIndex=allowed?0:-1;link.classList.toggle('locked',!allowed)}$('schoolIdentity').textContent=verified?verified.name+' · '+verified.schoolId+' · '+verified.role:'No school verified';$('schoolAccessMode').textContent=!verified?'Login required to view school modules.':verified.role==='viewer'?'Viewer — पढ्न र रिपोर्ट हेर्न मात्र मिल्छ। Add, Edit, Delete वा Save अनुमति छैन।':verified.role==='teacher'?'Teacher — तोकिएको कक्षा र विषयमा मात्र अनुमति अनुसार काम गर्न मिल्छ।':'School Admin — विद्यालयको व्यवस्थापन गर्न मिल्छ; प्रत्येक Module ले अनुमति पुनः जाँच्छ।';$('dashboardLogout').disabled=!verified;$('dashboardRefreshStats').disabled=!verified}
+let statsRequest=0;
+function clear(){statsRequest++;verified=null;$('dashboardStats').textContent='विद्यालय प्रमाणित गरेपछि विवरण देखिन्छ।';lock()}
+async function refreshStats(){
+ if(!verified||!api||!db||!auth)return;
+ const selected=verified,request=++statsRequest;
+ $('dashboardRefreshStats').disabled=true;
+ $('dashboardStats').textContent='विद्यालयका विवरण पढिँदैछन्…';
+ const assertSession=()=>{
+  if(request!==statsRequest||verified!==selected||auth?.currentUser?.uid!==selected.uid)
+   throw new Error('Login or school changed while loading dashboard');
+ };
+ try{
+  if(!await enforceSchoolIdle(auth,authSdk))throw new Error('Login expired');
+  assertSession();
+  const loaded=await loadVerifiedSchoolStats({
+   schoolId:selected.schoolId,uid:selected.uid,role:selected.role,readDocument,assertSession,
+   readCount:async(name,{activeOnly=false}={})=>{
+    const collection=api.collection(db,'schools',selected.schoolId,name);
+    const query=activeOnly?api.query(collection,api.where('active','==',true)):collection;
+    const snap=await api.getCountFromServer(query);
+    return snap.data().count;
+   }
+  });
+  assertSession();
+  $('dashboardStats').textContent=dashboardStatsText(loaded);
+ }catch(error){
+  if(request===statsRequest&&verified===selected)
+   $('dashboardStats').textContent='विद्यालय विवरण उपलब्ध भएन: '+error.message;
+ }finally{if(request===statsRequest)$('dashboardRefreshStats').disabled=!verified}
+}
+$('dashboardRefreshStats').onclick=()=>{void refreshStats()};
+
 async function restoreVerifiedSchool(){
  const saved=sessionStorage.getItem(SCHOOL_SELECTION_KEY);
  if(!saved||!auth?.currentUser)return;
@@ -30,7 +62,7 @@ async function restoreVerifiedSchool(){
   if(auth.currentUser?.uid!==uid)throw Error('Login changed during profile load');
   verified={uid,schoolId,role:session.role,name:label};
   $('dashboardSchool').value=schoolId;lastActivity=Date.now();lock();
-  message('पहिले प्रमाणित विद्यालयको Session पुनः जाँचियो।');
+  message('पहिले प्रमाणित विद्यालयको Session पुनः जाँचियो।');void refreshStats();
  }catch(e){sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();message('विद्यालय फेरि Login गर्नुहोस्: '+e.message)}
 }
 let expiring=false;
@@ -87,7 +119,7 @@ $('dashboardLogin').onclick=async()=>{if(busy||!auth)return;busy=true;$('dashboa
  const label=await verifiedSchoolLabel(schoolId,String(school.name??schoolId));
  if(auth.currentUser?.uid!==uid)throw Error('Login changed during profile load');
  verified={uid,schoolId,role:session.role,name:label};sessionStorage.setItem(SCHOOL_SELECTION_KEY,schoolId);startVerifiedSchoolActivity();lastActivity=Date.now();lock();
- message('विद्यालय प्रमाणित भयो। साझा Session समर्थित Module मा पुनः Password आवश्यक पर्दैन।');
+ message('विद्यालय प्रमाणित भयो। साझा Session समर्थित Module मा पुनः Password आवश्यक पर्दैन।');void refreshStats();
  }catch(e){sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();try{await authSdk.signOut(auth)}catch{}message('Login असफल: '+e.message)}finally{busy=false;$('dashboardLogin').disabled=!auth}};
 $('dashboardLogout').onclick=async()=>{if(busy)return;clear();sessionStorage.removeItem(SCHOOL_SELECTION_KEY);try{if(auth)await authSdk.signOut(auth);message('Logout सफल भयो।')}catch(e){message('Logout असफल: '+e.message)}};
 lock();
