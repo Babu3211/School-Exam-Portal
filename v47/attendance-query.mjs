@@ -13,7 +13,11 @@ export async function loadAttendanceByClassDate({db,api,actor,schoolId,schoolCla
  for(const method of ['collection','query','where','orderBy','limit','getDocs','startAfter'])if(typeof api?.[method]!=='function')throw new TypeError('Missing Firebase SDK method: '+method);
  const constraints=[api.where('date','==',date),api.where('class','==',schoolClass),api.orderBy('__name__'),api.limit(pageSize+1)];
  if(cursor!==null){
-  if(typeof cursor?.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(cursor.id))throw new Error('Invalid attendance pagination cursor');
+  if(typeof cursor?.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(cursor.id)||
+    cursor.ref?.path!==undefined&&cursor.ref.path!=='schools/'+schoolId+'/attendance/'+cursor.id||
+    cursor.schoolId!==undefined&&cursor.schoolId!==schoolId||
+    cursor.date!==undefined&&cursor.date!==date||cursor.class!==undefined&&cursor.class!==schoolClass)
+   throw new Error('Invalid attendance pagination cursor');
   constraints.push(api.startAfter(cursor.id));
  }
  const snapshot=await api.getDocs(api.query(api.collection(db,'schools',schoolId,'attendance'),...constraints));
@@ -23,7 +27,8 @@ export async function loadAttendanceByClassDate({db,api,actor,schoolId,schoolCla
  let previous=cursor?.id??null;
  const records=[];
  for(const d of docs){
-  if(!d||typeof d.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||
+  if(!d||d.ref?.path!==undefined&&d.ref.path!=='schools/'+schoolId+'/attendance/'+d.id||
+    typeof d.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||
    (previous!==null&&d.id<=previous)||typeof d.data!=='function')throw new Error('Malformed or out-of-order attendance result');
   previous=d.id;
   const data=d.data();
