@@ -32,6 +32,7 @@ document.querySelectorAll('[data-school-module]').forEach(link=>link.addEventLis
   if(verified!==current||school?.active!==true)throw Error('School inactive');
   const destination=new URL(link.getAttribute('href'),location.href);
   if(destination.origin!==location.origin)throw Error('External navigation blocked');
+  destination.searchParams.set('schoolId',current.schoolId);
   location.assign(destination.href);
  }catch(e){clear();message('विद्यालय अनुमति फेरि जाँच्न आवश्यक छ: '+e.message)}
  finally{checkingLink=false}
@@ -55,7 +56,7 @@ $('dashboardLogin').onclick=async()=>{if(busy||!auth)return;busy=true;$('dashboa
  const school=await readDocument('schools/'+schoolId);
  if(auth.currentUser?.uid!==uid||school?.active!==true)throw Error('School session changed');
  verified={uid,schoolId,role:session.role,name:String(school.name??schoolId)};lastActivity=Date.now();lock();
- message('विद्यालय प्रमाणित भयो। प्रत्येक Module मा छुट्टै Login आवश्यक छ; साझा सत्र एकीकरण अझै बाँकी छ।');
+ message('विद्यालय प्रमाणित भयो। साझा Session समर्थित Module मा पुनः Password आवश्यक पर्दैन।');
  }catch(e){clear();try{await authSdk.signOut(auth)}catch{}message('Login असफल: '+e.message)}finally{busy=false;$('dashboardLogin').disabled=!auth}};
 $('dashboardLogout').onclick=async()=>{if(busy)return;clear();try{if(auth)await authSdk.signOut(auth);message('Logout सफल भयो।')}catch(e){message('Logout असफल: '+e.message)}};
 lock();
