@@ -12,7 +12,7 @@ export function auditLoadedMarks(records,{schoolClass,term}){
   const key=JSON.stringify([studentId,subjectId]);
   if(seen.has(key))issues.push({index,code:'duplicate_student_subject'});else seen.add(key);
   if(r.class!==schoolClass||r.term!==term)issues.push({index,code:'wrong_class_or_term'});
-  for(const field of ['theory','practical'])if(typeof r[field]!=='number'||!Number.isFinite(r[field])||r[field]<0||r[field]>100)issues.push({index,code:'invalid_'+field});
+  for(const field of ['theory','practical'])if(typeof r[field]!=='number'||!Number.isFinite(r[field])||r[field]<0)issues.push({index,code:'invalid_'+field});
  }
  return {checked:records.length,issueCount:issues.length,issues,complete:false};
 }
