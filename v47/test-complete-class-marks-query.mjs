@@ -119,4 +119,8 @@ const {readFileSync}=await import('node:fs');
 const loader=readFileSync(new URL('./complete-class-marks-query.mjs',import.meta.url),'utf8');
 assert.match(loader,/typeof page\.hasMore!=='boolean'/);
 assert.match(loader,/Marks terminal cursor mismatch/);
+for(const document of [null,{id:'a'},{id:'a',data:null},{id:'a',data:42}]){
+ const broken={...api,getDocs:async()=>({docs:[document]})};
+ await assert.rejects(loadAllClassMarks({...base,api:broken}),/Invalid marks page order|Malformed marks document/);
+}
 console.log('V47 complete class marks pagination checks passed');
