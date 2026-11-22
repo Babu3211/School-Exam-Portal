@@ -23,13 +23,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
-      - name: Install locked dependencies
-        run: npm ci
+      - name: Install test dependencies (lockfile required for npm ci)
+        run: |
+          set -euo pipefail
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            echo 'WARNING: package-lock.json absent; this non-deploying test run uses an unlocked npm install.'
+            npm install --no-save --no-package-lock --no-audit --no-fund
+          fi
       - name: Run complete V47 regression and Firestore emulator suite
         run: |
           set -o pipefail
