@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {loadAllClassMarks} from './complete-class-marks-query.mjs';
+import {loadMarksByClassTerm} from './marks-query.mjs';
 const schoolId='12345678',actor={uid:'admin',schoolId,role:'school_admin',active:true};
 const calls=[];
 const api={collection:(_db,...path)=>path.join('/'),where:(...x)=>x,orderBy:(...x)=>x,limit:n=>n,startAfter:x=>x,query:(...x)=>x,getDocs:async query=>{calls.push(query[0]);const after=query.find(x=>x&&typeof x==='object'&&x.id)?.id;const ids=after==='b'?['c']:['a','b','c'];return {docs:ids.map(id=>({id,data:()=>({schoolId,studentId:id,subjectId:'math',class:'9',term:'final'})}))}}};
@@ -68,7 +69,7 @@ const badPage={...api,getDocs:async()=>({docs:['a','b','c'].map(id=>({id,data:()
 await assert.rejects(()=>loadAllClassMarks({...base,api:badPage,maxRecords:1}),/safe read limit/);
 const excessive={...api,getDocs:async()=>({docs:Array.from({length:4},(_,i)=>({id:'a'+i,data:()=>({schoolId,class:'9',term:'final'})}))})};
 await assert.rejects(()=>loadAllClassMarks({...base,api:excessive}),/Unexpected result size/);
-const unordered={...api,getDocs:async()=>({docs:['b','a'].map(id=>({id,data:()=>({schoolId,class:'9',term:'final'})}))})};
+const unordered={...api,getDocs:async()=>({docs:['b','a'].map(id=>({id,data:()=>({schoolId,class:'9',term:'final',studentId:id,subjectId:'math'})}))})};
 await assert.rejects(()=>loadAllClassMarks({...base,api:unordered}),/Invalid marks page order/);
 for(const uid of [undefined,null,'','  ']){
  const missingIdentity={...actor,uid};
@@ -76,6 +77,26 @@ for(const uid of [undefined,null,'','  ']){
 }
 const unauthorized={...actor,schoolId:'87654321'};
 await assert.rejects(()=>loadAllClassMarks({...base,actor:unauthorized}),/membership/i);
+
+// School/class/term cursor must be scoped to the current mark query.
+for(const cursor of [
+ {id:'final:s1:math',ref:{path:'schools/87654321/marks/final:s1:math'}},
+ {id:'final:s1:math',schoolId:'87654321'},
+ {id:'final:s1:math',class:'8'},
+ {id:'final:s1:math',term:'monthly'}
+]){
+ let reads=0;
+ const cursorApi={...api,getDocs:async()=>{reads++;return {docs:[]}}};
+ await assert.rejects(()=>loadMarksByClassTerm({...base,api:cursorApi,cursor}),/Invalid marks cursor/);
+ assert.equal(reads,0,'Foreign marks cursor must fail before querying');
+}
+{
+ const foreignSnapshot={...api,getDocs:async()=>({docs:[{
+  id:'final:s1:math',ref:{path:'schools/87654321/marks/final:s1:math'},
+  data:()=>({schoolId,class:'9',term:'final',studentId:'s1',subjectId:'math'})
+ }]})};
+ await assert.rejects(()=>loadMarksByClassTerm({...base,api:foreignSnapshot}),/Invalid marks page order/);
+}
 
 // Simulate a full 1,500-student × 20-subject ledger across 300 Firestore pages.
 {
