@@ -18,7 +18,7 @@ export function inspectConfiguredClassMarks({schoolId,subjectId,examId,classId,s
  for(const id of expectedStudentIds){if(typeof id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(id)||roster.has(id))throw new Error('Invalid or duplicate student in roster');roster.add(id)}
  const seen=new Set(),missing=[],invalid=[],ready=[];
  for(const row of drafts){
-  if(!row||!roster.has(row.studentId)||seen.has(row.studentId))throw new Error('Duplicate or out-of-roster mark draft');
+  if(!row||typeof row!=='object'||Array.isArray(row)||typeof row.studentId!=='string'||!roster.has(row.studentId)||seen.has(row.studentId))throw new Error('Duplicate or out-of-roster mark draft');
   seen.add(row.studentId);
   if(row.isAbsent!==undefined&&typeof row.isAbsent!=='boolean'){invalid.push(Object.freeze({studentId:row.studentId,message:'Invalid absence flag'}));continue}
   if(row.isAbsent===true){if(row.values!==undefined&&(!row.values||typeof row.values!=='object'||Array.isArray(row.values)||Object.keys(row.values).some(key=>!components.some(c=>c.key===key)))){invalid.push(Object.freeze({studentId:row.studentId,message:'Invalid absent student component values'}));continue}if(row.values&&Object.values(row.values).some(v=>v!==null&&v!==undefined&&String(v).trim()!=='')){invalid.push(Object.freeze({studentId:row.studentId,message:'Absent student cannot carry obtained marks'}));continue}ready.push(Object.freeze({studentId:row.studentId,isAbsent:true,totalObtained:0}));continue}
