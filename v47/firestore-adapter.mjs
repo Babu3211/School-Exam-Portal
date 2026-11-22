@@ -5,6 +5,8 @@ import {checkedRecords} from './record-limits.mjs';
 // Inject Firebase modular SDK methods: no credentials, network calls, or global Firebase state here.
 export function createSchoolStore({db,api,member,schoolId,assertSession}){
  const ctx=resolveSchoolContext(member,schoolId);
+ if(typeof member?.uid!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(member.uid))
+  throw new Error('Authenticated school member required');
  if(assertSession!==undefined&&typeof assertSession!=='function')throw new TypeError('Session verifier must be a function');
  const identity={uid:member?.uid,role:member?.role,active:member?.active,schoolId:member?.schoolId};
  const checkSession=()=>{
