@@ -22,7 +22,7 @@ export async function loadMarksByClassTerm({db,api,actor,schoolId,schoolClass,te
   if(typeof d.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||ids.has(d.id)||previous!==null&&d.id<=previous)throw new Error('Invalid marks page order');
   ids.add(d.id);previous=d.id;
   const data=d.data();
-  if(data.schoolId!==schoolId||data.class!==schoolClass||data.term!==term)throw new Error('Foreign or mismatched marks record');
+  if(!data||typeof data!=='object'||data.schoolId!==schoolId||data.class!==schoolClass||data.term!==term)throw new Error('Foreign or mismatched marks record');
  }
  const page=docs.slice(0,pageSize);
  return {records:page.map(d=>({...d.data(),id:d.id})),hasMore:docs.length>pageSize,cursor:page.at(-1)??null};
