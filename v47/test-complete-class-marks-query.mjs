@@ -64,7 +64,7 @@ for(const revoke of [a=>{a.active=false},a=>{a.schoolId='99999999'},a=>{a.role='
  }}]})};
  await assert.rejects(()=>loadAllClassMarks({...base,actor:changingActor,api:lateRevoke}),/membership changed/i);
 }
-const badPage={...api,getDocs:async()=>({docs:['a','b','c'].map(id=>({id,data:()=>({schoolId,class:'9',term:'final'})}))})};
+const badPage={...api,getDocs:async()=>({docs:['a','b','c'].map(id=>({id,data:()=>({schoolId,class:'9',term:'final',studentId:id,subjectId:'math'})}))})};
 await assert.rejects(()=>loadAllClassMarks({...base,api:badPage,maxRecords:1}),/safe read limit/);
 const excessive={...api,getDocs:async()=>({docs:Array.from({length:4},(_,i)=>({id:'a'+i,data:()=>({schoolId,class:'9',term:'final'})}))})};
 await assert.rejects(()=>loadAllClassMarks({...base,api:excessive}),/Unexpected result size/);
