@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {validateSchoolSubject} from './subject-validation.mjs';
-const base={id:'math',name:'Mathematics',class:'9',theoryFullMarks:'75',practicalFullMarks:'25'};
+const base={id:'math',name:'Mathematics',class:'9',creditHour:'4',theoryFullMarks:'75',practicalFullMarks:'25'};
 assert.equal(validateSchoolSubject(base).theoryFullMarks,75);
 assert.equal(validateSchoolSubject({...base,theoryFullMarks:'125.5',practicalFullMarks:'.5'}).theoryFullMarks,125.5);
 assert.equal(validateSchoolSubject({...base,theoryFullMarks:0,practicalFullMarks:'0'}).practicalFullMarks,0);
