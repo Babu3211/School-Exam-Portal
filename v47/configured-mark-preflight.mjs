@@ -28,6 +28,7 @@ export function inspectConfiguredClassMarks({schoolId,subjectId,examId,classId,s
   }
   let total=0,error=null;const normalizedValues={};
   for(const c of components){
+   if(!Object.prototype.hasOwnProperty.call(values,c.key)){error='Missing '+c.name;break}
    const v=values[c.key];
    if(v===null||v===undefined||String(v).trim()===''){error='Missing '+c.name;break}
    const n=Number(v);
