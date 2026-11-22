@@ -26,13 +26,26 @@ export async function readSmssMarksExcel(file,{settings,schoolId,classId,subject
  if(offset+4>bytes.length||view.getUint32(offset,true)!==0x02014b50)throw new Error('Incomplete Excel ZIP directory');
  const sheet=parts.get('xl/worksheets/sheet1.xml');
  if(!sheet||!parts.has('xl/workbook.xml'))throw new Error('Not an SMSS Excel sample workbook');
- const xml=new DOMParser().parseFromString(sheet,'application/xml');
- if(xml.querySelector('parsererror'))throw new Error('Invalid Excel worksheet XML');
- const parsed=[...xml.getElementsByTagName('row')].map(row=>[...row.getElementsByTagName('c')].map(cell=>{
-  if(cell.getAttribute('t')==='inlineStr')return cell.getElementsByTagName('t')[0]?.textContent??'';
-  if(cell.getElementsByTagName('f').length)throw new Error('Excel formulas are not permitted in marks import');
-  return cell.getElementsByTagName('v')[0]?.textContent??'';
- }));
+ const parseXml=source=>{const doc=new DOMParser().parseFromString(source,'application/xml');if(doc.getElementsByTagName('parsererror').length)throw new Error('Invalid Excel XML');return doc};
+ const xml=parseXml(sheet);
+ const shared=parts.has('xl/sharedStrings.xml')?[...parseXml(parts.get('xl/sharedStrings.xml')).getElementsByTagName('si')].map(si=>[...si.getElementsByTagName('t')].map(t=>t.textContent??'').join('')):[];
+ const parsed=[...xml.getElementsByTagName('row')].map(row=>{
+  const values=[],rowNumber=Number(row.getAttribute('r'));
+  if(!Number.isInteger(rowNumber)||rowNumber<1||rowNumber>1501)throw new Error('Invalid Excel row number');
+  for(const cell of row.getElementsByTagName('c')){
+   const ref=cell.getAttribute('r')??'',match=/^([A-Z]{1,3})([0-9]+)$/.exec(ref);
+   if(!match||Number(match[2])!==rowNumber)throw new Error('Invalid Excel cell reference');
+   let index=0;for(const letter of match[1])index=index*26+letter.charCodeAt(0)-64;index--;
+   if(index<0||index>52||Object.hasOwn(values,index))throw new Error('Duplicate or excessive Excel column');
+   if(cell.getElementsByTagName('f').length)throw new Error('Excel formulas are not permitted in marks import');
+   const type=cell.getAttribute('t');
+   if(type==='inlineStr')values[index]=[...cell.getElementsByTagName('t')].map(t=>t.textContent??'').join('');
+   else if(type==='s'){const n=Number(cell.getElementsByTagName('v')[0]?.textContent);if(!Number.isInteger(n)||n<0||n>=shared.length)throw new Error('Invalid shared Excel string');values[index]=shared[n]}
+   else if(type==='str'||type===null||type==='n')values[index]=cell.getElementsByTagName('v')[0]?.textContent??'';
+   else throw new Error('Unsupported Excel cell type');
+  }
+  return values;
+ });
  if(!parsed.length||parsed.length>1501)throw new Error('Excel roster must contain 1–1500 students');
  const components=settings?.components;
  if(settings?.schoolId!==schoolId||String(settings?.classId)!==classId||settings?.subjectId!==subjectId||settings?.examId!==examId||settings?.active!==true||!Array.isArray(components))throw new Error('Verified Examination Settings required');
