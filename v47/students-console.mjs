@@ -13,8 +13,8 @@ import {checkExistingStudentIemisIds} from './student-import-duplicate-preflight
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 const optionalFields=Object.keys(STUDENT_OPTIONAL_FIELDS).filter(key=>key!=='rollNo');
 for(const key of optionalFields){const label=document.createElement('label');label.textContent=key.replace(/([A-Z])/g,' $1').replace(/^./,x=>x.toUpperCase());const input=document.createElement('input');input.dataset.studentField=key;input.maxLength=STUDENT_OPTIONAL_FIELDS[key];label.append(input);document.getElementById('additionalStudentFields').append(label)}
-const $=id=>document.getElementById(id);const status=msg=>{$('message').textContent=msg};let auth,authSdk,db,api,store,cursor=null,records=[],schoolId=null,loadEpoch=0,actor=null,loading=false,savingStudent=false,hasMore=false;
-function clear(){loadEpoch++;hasMore=false;$('exportExcel').disabled=true;loading=false;actor=null;$('createArea').hidden=true;$('importArea').hidden=true;$('importResults').replaceChildren();$('importSummary').textContent='';store=null;cursor=null;records=[];schoolId=null;$('students').replaceChildren();$('recordsArea').hidden=true;$('next').disabled=true;$('count').textContent='';}
+const $=id=>document.getElementById(id);const status=msg=>{$('message').textContent=msg};let auth,authSdk,db,api,store,cursor=null,records=[],schoolId=null,loadEpoch=0,actor=null,loading=false,savingStudent=false,hasMore=false,previewRequest=0;
+function clear(){previewRequest++;$('previewImport').disabled=false;loadEpoch++;hasMore=false;$('exportExcel').disabled=true;loading=false;actor=null;$('createArea').hidden=true;$('importArea').hidden=true;$('importResults').replaceChildren();$('importSummary').textContent='';store=null;cursor=null;records=[];schoolId=null;$('students').replaceChildren();$('recordsArea').hidden=true;$('next').disabled=true;$('count').textContent='';}
 $('connect').onclick=async()=>{try{({auth,authSdk,db,api}=await connectSchoolFirebase());authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clear();$('logout').disabled=true;status('प्रयोगकर्ता सत्र परिवर्तन भयो। विद्यार्थी विवरण हटाइएको छ। पुनः लगइन गर्नुहोस्।')}});$('connect').disabled=true;$('login').disabled=false;if(requestedSchool){try{$('schoolId').value=validateSchoolId(requestedSchool);if(auth.currentUser)queueMicrotask(()=>$('login').click())}catch(e){status('Invalid school selection: '+e.message)}}status('V47 connected');}catch(e){status(e.message)}};
 $('login').onclick=async()=>{clear();const attempt=loadEpoch;try{schoolId=validateSchoolId($('schoolId').value.trim());const freshSignIn=!auth.currentUser;const credential=freshSignIn?await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value):{user:auth.currentUser};$('password').value='';const uid=credential.user.uid;const selectedSchool=schoolId;const session=await verifySchoolSession({schoolId:selectedSchool,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(attempt!==loadEpoch||auth.currentUser?.uid!==uid||schoolId!==selectedSchool)throw new Error('Authentication changed during verification');const school=await api.getDoc(api.doc(db,'schools',selectedSchool));if(attempt!==loadEpoch||!school.exists()||school.data().active!==true||auth.currentUser?.uid!==uid)throw new Error('School inactive or unavailable');const member={uid,role:session.role,active:true,schoolId:selectedSchool};actor=member;if(freshSignIn)startVerifiedSchoolActivity();$('createArea').hidden=member.role!=='school_admin';$('importArea').hidden=member.role!=='school_admin';store=createSchoolStore({db,api,member,schoolId,assertSession:()=>{if(auth?.currentUser?.uid!==uid||actor!==member||schoolId!==selectedSchool)throw new Error('School session changed; sign in again');}});$('heading').textContent='Students — '+String(school.data().name??schoolId);$('recordsArea').hidden=false;$('logout').disabled=false;await load(true);}catch(e){if(attempt===loadEpoch){clear();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status(e.message)}}};
 $('logout').onclick=async()=>{if(savingStudent){status('Wait for student save to finish before signing out');return}clear();try{await authSdk.signOut(auth);$('logout').disabled=true;status('Signed out')}catch(e){status(e.message)}};
@@ -26,6 +26,7 @@ $('createStudent').onclick=async()=>{if(savingStudent)return;try{if(actor?.role!
 
 
 $('previewImport').onclick=async()=>{
+ const request=++previewRequest;
  $('importResults').replaceChildren();$('importSummary').textContent='';
  try{
   if(actor?.role!=='school_admin'||auth?.currentUser?.uid!==actor.uid||actor.schoolId!==schoolId)throw new Error('School Admin sign-in required');
@@ -38,8 +39,8 @@ $('previewImport').onclick=async()=>{
    existing=await checkExistingStudentIemisIds({store,accepted:report.accepted,assertSession:()=>{
     if(epoch!==loadEpoch||actor!==selectedActor||schoolId!==selectedSchool||auth?.currentUser?.uid!==uid)throw new Error('School session changed during preview');
    }});
-  }finally{$('previewImport').disabled=false}
-  if(epoch!==loadEpoch||actor!==selectedActor||schoolId!==selectedSchool||auth?.currentUser?.uid!==uid)return;
+  }finally{if(request===previewRequest)$('previewImport').disabled=false}
+  if(request!==previewRequest||epoch!==loadEpoch||actor!==selectedActor||schoolId!==selectedSchool||auth?.currentUser?.uid!==uid)return;
   for(const duplicate of existing.duplicates){const match=report.accepted.find(item=>item.student.studentIemisId===duplicate.studentIemisId);report.errors.push({row:match?.row??'?',error:'Student IEMIS Id already exists in this school'});}
   report.ready=report.errors.length===0;
   $('importSummary').textContent=report.accepted.length+' valid spreadsheet rows; '+report.errors.length+' errors; '+existing.scanned+' existing students checked. Preview only — no students saved.';
@@ -49,7 +50,7 @@ $('previewImport').onclick=async()=>{
   }
   if(report.errors.length>100)status('Only the first 100 validation errors are shown');
   else status(report.ready?'Preview valid. Import save remains disabled.':'Correct the spreadsheet errors before import.');
- }catch(e){$('importSummary').textContent='Preview rejected: '+e.message;status('Preview failed: '+e.message)}
+ }catch(e){if(request===previewRequest){$('importSummary').textContent='Preview rejected: '+e.message;status('Preview failed: '+e.message)}}
 };
 
 function downloadExcel(blob,name){
