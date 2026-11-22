@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {setSchoolMemberActive} from './member-status-service.mjs';
+const schoolId='12345',uid='teacher_123',actor={uid:'admin_123',role:'school_admin',active:true,schoolId};
+let state={uid,schoolId,role:'teacher',active:false},writes=0;
+const api={doc:(db,...parts)=>parts,runTransaction:async(db,fn)=>fn({get:async()=>({exists:()=>true,data:()=>({...state})}),update:(ref,change)=>{writes++;state={...state,...change}}})};
+const input={db:{},api,actor,schoolId,uid};
+await setSchoolMemberActive({...input,active:true,expectedActive:false});
+assert.equal(state.active,true);assert.equal(writes,1);
+await assert.rejects(()=>setSchoolMemberActive({...input,active:false,expectedActive:false}),/Member status changed/);
+assert.equal(state.active,true);assert.equal(writes,1);
+await setSchoolMemberActive({...input,active:false,expectedActive:true});
+assert.equal(state.active,false);assert.equal(writes,2);
+await assert.rejects(()=>setSchoolMemberActive({...input,active:true,expectedActive:'false'}),/Expected active/);
+await assert.rejects(()=>setSchoolMemberActive({...input,actor:{...actor,role:'viewer'},active:true}),/School Admin/);
+console.log('V47 member status transactions reject stale expected states without writes');
