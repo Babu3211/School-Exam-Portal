@@ -45,11 +45,16 @@ $('findMember').onclick=async()=>{
 };
 $('toggleFoundMember').onclick=async()=>{
  if(busy||loggingIn||signingOut||!foundMember)return;
- const session=requireCurrentAdmin(),member=foundMember;
- if(!['teacher','viewer'].includes(member.role))return;
- if(!confirm((member.active?'Deactivate ':'Activate ')+member.role+' '+member.uid+'?'))return;
- assertSameAdmin(session);busy=true;$('toggleFoundMember').disabled=true;$('findMember').disabled=true;$('logout').disabled=true;
+ const session=requireCurrentAdmin(),member=foundMember,request=lookupRequest;
+ if(!['teacher','viewer'].includes(member.role)||$('findMemberUid').value.trim()!==member.uid)return;
+ busy=true;$('toggleFoundMember').disabled=true;$('findMember').disabled=true;$('logout').disabled=true;
  try{
+  const latest=await findSchoolMember({db,api,actor:session.actor,schoolId:session.schoolId,uid:member.uid});
+  assertSameAdmin(session);
+  if(request!==lookupRequest||foundMember!==member||$('findMemberUid').value.trim()!==member.uid)throw new Error('Member selection changed; search again');
+  if(!latest||latest.role!==member.role||latest.active!==member.active)throw new Error('Member status changed; search again');
+  if(!confirm((member.active?'Deactivate ':'Activate ')+member.role+' '+member.uid+'?'))return;
+  assertSameAdmin(session);
   await setSchoolMemberActive({db,api,actor:session.actor,schoolId:session.schoolId,uid:member.uid,active:!member.active});
   assertSameAdmin(session);
   foundMember=null;lookupRequest++;$('memberLookupResult').textContent='सदस्यको अवस्था परिवर्तन भयो। पुनः खोजेर पुष्टि गर्नुहोस्।';
