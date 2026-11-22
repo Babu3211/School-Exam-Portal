@@ -21,6 +21,26 @@ assert.equal(commits,2);
 assert.equal(progress.length,1);
 assert.equal(progress[0].saved,10);
 assert.equal(progress[0].savedIds.length,10);
+
+// A failure before the first successful batch must still identify every
+// pending student, rather than falling back to a generic error.
+{
+ const firstBatchApi={
+  doc:(_db,...parts)=>parts.join('/'),
+  getDoc:async()=>({exists:()=>true,data:()=>({schoolId,class:'9'})}),
+  writeBatch:()=>({set:()=>{},commit:async()=>{throw new Error('first batch offline')}})
+ };
+ await assert.rejects(saveLoadedClassAttendance({
+  db:{},api:firstBatchApi,actor:{...actor,uid:'admin-a'},schoolId,entries
+ }),error=>{
+  assert.ok(error instanceof PartialAttendanceSaveError);
+  assert.equal(error.saved,0);
+  assert.equal(error.total,11);
+  assert.deepEqual(error.remainingStudentIds,entries.map(e=>e.studentId));
+  assert.match(error.cause.message,/first batch offline/);
+  return true;
+ });
+}
 // If an admin loses permission after the first committed chunk, report exactly
 // the committed count and never start a second batch.
 for(const mutate of [
