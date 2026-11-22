@@ -1,0 +1,35 @@
+name: V47 Student XLSX Import Safety
+on:
+  push:
+    branches: [smss-v47-multischool-work]
+    paths:
+      - 'v47/read-v47-student-xlsx.mjs'
+      - 'v47/test-read-v47-student-xlsx.mjs'
+      - 'v47/excel-workbook.mjs'
+      - 'v47/v46-student-excel-schema.mjs'
+      - '.github/workflows/v47-student-xlsx.yml'
+  pull_request:
+    paths:
+      - 'v47/read-v47-student-xlsx.mjs'
+      - 'v47/test-read-v47-student-xlsx.mjs'
+      - 'v47/excel-workbook.mjs'
+      - 'v47/v46-student-excel-schema.mjs'
+      - '.github/workflows/v47-student-xlsx.yml'
+permissions:
+  contents: read
+jobs:
+  xlsx-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax checks
+        run: |
+          node --check v47/read-v47-student-xlsx.mjs
+          node --check v47/test-read-v47-student-xlsx.mjs
+          node --check v47/excel-workbook.mjs
+      - name: XLSX preview safety regression tests
+        run: node v47/test-read-v47-student-xlsx.mjs
