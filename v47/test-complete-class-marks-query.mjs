@@ -57,4 +57,30 @@ for(const uid of [undefined,null,'','  ']){
 }
 const unauthorized={...actor,schoolId:'87654321'};
 await assert.rejects(()=>loadAllClassMarks({...base,actor:unauthorized}),/membership/i);
+
+// Simulate a full 1,500-student × 20-subject ledger across 300 Firestore pages.
+{
+ const total=30000, pageSize=100;
+ const ids=Array.from({length:total},(_,i)=>'mark_'+String(i).padStart(5,'0'));
+ let requests=0;
+ const bulkApi={...api,getDocs:async query=>{
+  requests++;
+  const cursor=query.find(x=>x&&typeof x==='object'&&typeof x.id==='string');
+  const start=cursor?ids.indexOf(cursor.id)+1:0;
+  if(start<0)throw new Error('Unknown test cursor');
+  const batch=ids.slice(start,start+pageSize+1);
+  return {docs:batch.map((id,i)=>({id,data:()=>({
+   schoolId,class:'9',term:'final',
+   studentId:'student_'+String(Math.floor((start+i)/20)+1),
+   subjectId:'subject_'+String((start+i)%20+1)
+  })}))};
+ }};
+ const full=await loadAllClassMarks({...base,api:bulkApi,pageSize,maxRecords:total});
+ assert.equal(full.count,total);
+ assert.equal(full.pages,300);
+ assert.equal(requests,300);
+ assert.equal(full.records[0].id,ids[0]);
+ assert.equal(full.records.at(-1).id,ids.at(-1));
+ assert.equal(full.diagnosticOnly,true);
+}
 console.log('V47 complete class marks pagination checks passed');
