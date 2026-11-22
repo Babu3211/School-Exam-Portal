@@ -12,6 +12,8 @@ await assert.rejects(saveLoadedClassAttendance({db:{},api,actor,schoolId,entries
  assert.ok(e instanceof PartialAttendanceSaveError);
  assert.equal(e.saved,10);
  assert.equal(e.total,11);
+ assert.deepEqual(e.remainingStudentIds,['s10']);
+ assert.ok(Object.isFrozen(e.remainingStudentIds));
  assert.match(e.cause.message,/simulated/);
  return true;
 });
@@ -40,6 +42,7 @@ for(const mutate of [
    assert.ok(error instanceof PartialAttendanceSaveError);
    assert.equal(error.saved,10);
    assert.equal(error.total,11);
+   assert.deepEqual(error.remainingStudentIds,['s10']);
    assert.match(error.cause.message,/School Admin/);
    return true;
   }
@@ -71,6 +74,7 @@ for(const mutate of [
    assert.ok(error instanceof PartialAttendanceSaveError);
    assert.equal(error.saved,10);
    assert.equal(error.total,11);
+   assert.deepEqual(error.remainingStudentIds,['s10']);
    assert.match(error.cause.message,/identity changed/);
    return true;
   }
@@ -118,6 +122,9 @@ for(const mutate of [
   assert.ok(error instanceof PartialAttendanceSaveError);
   assert.equal(error.saved,740);
   assert.equal(error.total,1500);
+  assert.equal(error.remainingStudentIds.length,760);
+  assert.equal(error.remainingStudentIds[0],'s740');
+  assert.equal(error.remainingStudentIds.at(-1),'s1499');
   assert.match(error.cause.message,/batch 75 failure/);
   return true;
  });
@@ -143,6 +150,9 @@ for(const mutate of [
   assert.ok(error instanceof PartialAttendanceSaveError);
   assert.equal(error.saved,740);
   assert.equal(error.total,1500);
+  assert.equal(error.remainingStudentIds.length,760);
+  assert.equal(error.remainingStudentIds[0],'s740');
+  assert.equal(error.remainingStudentIds.at(-1),'s1499');
   assert.match(error.cause.message,/School Admin/);
   return true;
  });
