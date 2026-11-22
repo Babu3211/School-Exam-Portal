@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {planOfficialPublicationPointerSwitch} from './server-publication-pointer-plan.mjs';
+const scope={schoolId:'12345',classId:'9',subjectId:'computer',examId:'final'};
+const stagedVerification={...scope,valid:true,rosterCount:1500,batchCount:15,digest:'a'.repeat(64),writeAuthorized:false,publicationAllowed:false};
+const args={currentPointer:null,stagedVerification,publicationId:'pub_00000001',actorUid:'admin123'};
+const first=planOfficialPublicationPointerSwitch(args);
+assert.equal(first.previousPublicationId,null);assert.equal(first.requiresAtomicCompareAndSwap,true);
+assert.equal(first.publicationAllowed,false);assert.equal(first.writeAuthorized,false);
+const old={...scope,publicationId:'pub_00000001'};
+const second=planOfficialPublicationPointerSwitch({...args,currentPointer:old,expectedPreviousId:'pub_00000001',publicationId:'pub_00000002'});
+assert.equal(second.previousPublicationId,'pub_00000001');
+assert.throws(()=>planOfficialPublicationPointerSwitch({...args,currentPointer:old,publicationId:'pub_00000002'}),/Concurrent publication/);
+assert.throws(()=>planOfficialPublicationPointerSwitch({...args,currentPointer:old,expectedPreviousId:'pub_00000001'}),/cannot replace itself/);
+assert.throws(()=>planOfficialPublicationPointerSwitch({...args,currentPointer:{...old,schoolId:'67890'},expectedPreviousId:'pub_00000001',publicationId:'pub_00000002'}),/scope mismatch/);
+assert.throws(()=>planOfficialPublicationPointerSwitch({...args,stagedVerification:{...stagedVerification,rosterCount:1499}}),/Complete staged class/);
+assert.throws(()=>planOfficialPublicationPointerSwitch({...args,stagedVerification:{...stagedVerification,publicationAllowed:true}}),/Complete staged class/);
+assert.throws(()=>planOfficialPublicationPointerSwitch({...args,actorUid:''}),/Verified admin UID/);
+console.log('V47 official publication pointer plan: scoped CAS, previous pointer, conflicts and incomplete batches rejected; no writes');
