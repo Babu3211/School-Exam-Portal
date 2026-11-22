@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 const ui=readFileSync(new URL('./records-console.mjs',import.meta.url),'utf8');
 assert.match(ui,/authSdk\.onAuthStateChanged\(auth,user=>/);
 assert.match(ui,/if\(verifiedUid!==null&&user\?\.uid!==verifiedUid\)\{clear\(\)/);
-assert.match(ui,/verifiedUid=uid;store=createSchoolStore/);
+assert.match(ui,/verifiedUid=uid;if\(freshSignIn\)startVerifiedSchoolActivity\(\);store=createSchoolStore/,'Verified user and activity tracking must precede creating the scoped store');
 assert.match(ui,/verifiedUid=null;cursor=null/);
 assert.match(ui,/loginAuth\.currentUser\?\.uid!==uid\|\|verifiedUid!==uid/);
 assert.match(ui,/loadGeneration\+\+/);
