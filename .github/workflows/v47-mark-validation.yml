@@ -98,6 +98,23 @@ jobs:
         run: node v47/test-permissions.mjs
       - name: Verify release remains fail-closed
         run: node v47/test-marks-release-safety.mjs
+      - name: Verify production release gate blocks incomplete V47
+        shell: bash
+        run: |
+          set +e
+          node v47/release-readiness-gate.mjs > /tmp/v47-release-gate.log 2>&1
+          status=$?
+          set -e
+          cat /tmp/v47-release-gate.log
+          if [ "$status" -eq 0 ]; then
+            echo "ERROR: Unapproved V47 release gate passed" >&2
+            exit 1
+          fi
+          grep -q 'V47 PRODUCTION RELEASE BLOCKED' /tmp/v47-release-gate.log
+          grep -q 'Full-class marks save is limited' /tmp/v47-release-gate.log
+          grep -q 'Firestore marks writes are disabled' /tmp/v47-release-gate.log
+          grep -q 'Computer component marks saving is disabled' /tmp/v47-release-gate.log
+
       - name: Verify class publication safety preflight
         run: node v47/test-class-publication-preflight.mjs
       - name: Verify legacy subject credit-hour repair
