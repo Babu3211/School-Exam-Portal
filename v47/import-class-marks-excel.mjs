@@ -1,6 +1,9 @@
 import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
 // Browser-side XLSX import for SMSS templates edited in Excel or LibreOffice.
 // Supports ZIP stored and deflated entries; never executes workbook formulas.
+export function isAllowedMarksExcelZipPart(name){
+ return typeof name==='string'&&/^(?:xl\/(?:worksheets\/sheet1\.xml|workbook\.xml|sharedStrings\.xml)|\[Content_Types\]\.xml|_rels\/\.rels|xl\/_rels\/workbook\.xml\.rels)$/.test(name);
+}
 export async function readSmssMarksExcel(file,{settings,schoolId,classId,subjectId,examId,students}){
  if(!file||!(/\.xlsx$/i.test(file.name??''))||file.size>4_000_000)throw new Error('Select a valid Excel .xlsx file (maximum 4 MB)');
  const bytes=new Uint8Array(await file.arrayBuffer()),decoder=new TextDecoder('utf-8',{fatal:true});
@@ -14,7 +17,7 @@ export async function readSmssMarksExcel(file,{settings,schoolId,classId,subject
   if(flags&9||![0,8].includes(method)||end>bytes.length||uncompressed>8_000_000)throw new Error('Unsupported, encrypted or oversized Excel workbook');
   const name=decoder.decode(bytes.slice(offset+30,offset+30+nameSize));
   if(parts.has(name)||parts.size>128)throw new Error('Invalid Excel workbook contents');
-  if(!/^(?:xl\/(?:worksheets\/sheet1\.xml|workbook\.xml|sharedStrings\.xml)|\[Content_Types\]\.xml|_rels\/\.rels|xl\/_rels\/workbook\.xml\.rels)$/.test(name)){
+  if(!isAllowedMarksExcelZipPart(name)){
    offset=end;continue;
   }
   let payload=bytes.slice(start,end);
