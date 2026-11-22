@@ -23,6 +23,7 @@ export function createVerifiedTenantFirestore({db,api,context}){
     if(snapshot.docs.length>requested)throw new Error('Firestore page exceeded requested limit');
     for(const item of snapshot.docs){
      if(!item||typeof item.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(item.id)||(all.length&&item.id<=all.at(-1).id))throw new Error('Invalid Firestore pagination cursor');
+     if(item.ref?.path!==undefined&&item.ref.path!==context.collectionSegments(name).join('/')+'/'+item.id)throw new Error('Cross-tenant paginated Firestore record');
      all.push(item);
     }
     if(snapshot.docs.length<requested)break;
@@ -34,6 +35,7 @@ export function createVerifiedTenantFirestore({db,api,context}){
      const probe=await api.getDocs(api.query(collectionRef(name),api.orderBy(api.documentId()),api.startAfter(next),api.limit(1)));
      await context.revalidateRead();
      if(!probe||!Array.isArray(probe.docs)||probe.docs.length>1)throw new Error('Invalid pagination probe response');
+     if(probe.docs.length&&probe.docs[0]?.ref?.path!==undefined&&probe.docs[0].ref.path!==context.collectionSegments(name).join('/')+'/'+probe.docs[0].id)throw new Error('Cross-tenant paginated Firestore record');
      if(probe.docs.length)throw new Error('Report pagination document limit reached; result incomplete');
      break;
     }
