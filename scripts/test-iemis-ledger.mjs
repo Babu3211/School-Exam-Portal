@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,writeFileSync} from 'node:fs';
 import {iemisLegacyTheory,iemisGrade,iemisFinalGrade,iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisLedger,iemisDisplaySubject} from '../iemis-ledger.js';
 
 // Synthetic identities only. Academic vectors reproduce the verified IEMIS examples.
@@ -60,6 +60,7 @@ const student=common.students[0];student.class='6';
 const perSubject=parts.map((x,i)=>({subject:subjects[i],missing:false,totalFull:100,pct:x.summary.obtained,grade:x.summary.totalGrade}));
 const dependencies={iemisLegacyTheory,activeResultRows:[{student,perSubject}],document:{getElementById:id=>id==='gradeSheetView'?box:{value:'synthetic-exam'}},resultExams:[{id:'synthetic-exam',academicYear:'2082'}],resultMarks:records,resultClasses:subjects.map((subject,i)=>({className:'6',subject,creditHour:credits[i],active:true})),currentSchoolSettings:{schoolName:'Test School',iemisCode:'TEST'},englishDisplayText:String,classNoFromName:String,onlineResultDigits:String,smssTermLabelEnglish:()=> 'Final Term',smssExamTermKey:()=> 'annual',canonicalStudentClass:String,canonicalSubjectKey:iemisSubjectKey,studentOptionalSelectionComplete:()=>true,isComputerSubject:s=>/computer/i.test(s),resultEsc:s=>String(s??''),subjectEnglishLabel:String,schoolPrintName:()=> 'Test School',schoolPrintAddress:()=> 'Test Address',schoolLogoPrintMarkup:()=> '',gradeForPercent:iemisGrade,resultGradeBands:[],iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisDisplaySubject};
 new Function(...Object.keys(dependencies),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(dependencies));
+const printReportFixture=box.innerHTML;
 assert.match(box.innerHTML,/<td colspan="4"[^>]*>GRADE POINT AVERAGE = 2.93/);
 assert.ok(box.innerHTML.indexOf('ONE CREDIT HOUR EQUALS 36')<box.innerHTML.indexOf('DETAILS OF GRADE SHEET'));
 assert.match(box.innerHTML,/COMPUTER SCIENCE\(TH\)<br>COMPUTER SCIENCE\(IN\)/);
@@ -103,19 +104,34 @@ console.log('New Class V achievement Grade Sheet and mixed-cohort isolation pass
 
 // Populated IEMIS 2083 Class I First/Second/Final reference; synthetic identity only.
 const primarySubjects=['Nepali','English','Mathematics','Serophero','Hamro Dhunibeshi'];
+let primaryPrintFixture;
 const annualCredits=[5,4,4,8,5], achievementMarks=[10,9,8,11,10];
-for(const [year,term,expectedCredits,hours] of [
+for(const classNo of [1,2,3,4,5])for(const [year,term,expectedCredits,hours] of [
+ ['2083-2084','first',[2.5,2,2,4,2.5],26],
  ['2083','first',[2.5,2,2,4,2.5],26],
  ['2083','annual',annualCredits,26],
  ['2082','first',annualCredits,30],
  ['2083','second',[2.5,2,2,4,2.5],26],
  ['2083','third',annualCredits,30]
 ]){
- const config=primarySubjects.map((subject,i)=>({className:'1',subject,creditHour:annualCredits[i],active:true}));
+ const config=primarySubjects.map((subject,i)=>({className:String(classNo),subject,creditHour:annualCredits[i],active:true}));
  const before=structuredClone(config);
  const fixture={...dependencies,smssExamTermKey:()=>term,resultExams:[{id:'synthetic-exam',academicYear:year}],resultClasses:config,resultMarks:[],
-  activeResultRows:[{student:{...student,class:'1'},perSubject:primarySubjects.map((subject,i)=>({subject,missing:false,pct:achievementMarks[i]/12*100,grade:iemisGrade(achievementMarks[i]/12*100)}))}]};
+  activeResultRows:[{student:{...student,class:String(classNo)},perSubject:primarySubjects.map((subject,i)=>({subject,missing:false,pct:achievementMarks[i]/12*100,grade:iemisGrade(achievementMarks[i]/12*100)}))}]};
  new Function(...Object.keys(fixture),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(fixture));
+ assert.match(box.innerHTML,new RegExp('GRADE '+['','I','II','III','IV','V'][classNo]));
+ if(classNo===2&&year==='2083'&&term==='second'){
+  const bandsStart=html.indexOf('const resultGradeBands=');
+  const bandsEnd=html.indexOf('function gradeForPercent',bandsStart);
+  const resultGradeBands=new Function(html.slice(bandsStart,bandsEnd)+';return resultGradeBands;')();
+  const printData={...fixture,resultGradeBands,smssTermLabelEnglish:()=> 'Second Term'};
+  new Function(...Object.keys(printData),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(printData));
+  primaryPrintFixture=box.innerHTML;
+  const notePosition=primaryPrintFixture.indexOf('ONE CREDIT HOUR EQUALS 26 HOURS');
+  const gpaPosition=primaryPrintFixture.indexOf('GRADE POINT AVERAGE (GPA): 3.54');
+  assert.ok(gpaPosition>=0&&gpaPosition<primaryPrintFixture.indexOf('</table>'),'Primary GPA stays inside the marks table');
+  assert.ok(notePosition>gpaPosition&&notePosition<primaryPrintFixture.indexOf('DETAILS OF GRADE SHEET'),'Credit-hours note precedes the grading key');
+ }
  const firstTable=box.innerHTML.match(/<table[^>]*>[\s\S]*?<\/table>/)[0];
  const rows=[...firstTable.matchAll(/<tr>([\s\S]*?)<\/tr>/g)].slice(1,6);
  const shown=rows.map(row=>Number([...row[1].matchAll(/<td[^>]*>([^<]*)<\/td>/g)][1][1]));
@@ -125,4 +141,171 @@ for(const [year,term,expectedCredits,hours] of [
  assert.ok(box.innerHTML.includes('ONE CREDIT HOUR EQUALS '+hours+' HOURS.'));
  assert.deepEqual(config,before,'Report rendering must not change stored credits');
 }
-console.log('Class I 2083 First/Second/Final credits, totals, GPA 3.54, footnote and historical/unverified-term isolation passed.');
+console.log('Classes I–V 2083 First/Second/Final credits, totals, GPA 3.54, footnote and historical/unverified-term isolation passed.');
+
+// Regression from the saved and reloaded Class II 2083 Second Term sample.
+const classTwoRecords=primarySubjects.map((subject,i)=>({
+ studentId:'synthetic-1',examId:'synthetic-exam',subject,assessmentType:'learning-achievement',
+ scores:[
+  {name:'No. of Learning Achievement',fullMarks:3,obtained:3},
+  {name:'Full Marks',fullMarks:12,obtained:null},
+  {name:'Obtained Learning Achievement',fullMarks:12,obtained:achievementMarks[i]}
+ ]
+}));
+const classTwoLedger={...common,classNo:2,annual:false,academicYear:'2083',term:'second',
+ subjects:primarySubjects,records:classTwoRecords,creditFor:subject=>annualCredits[primarySubjects.indexOf(subject)]/2};
+const classTwoMarks=iemisLedger({...classTwoLedger,mode:'number'});
+const classTwoGrades=iemisLedger({...classTwoLedger,mode:'grade'});
+for(const report of [classTwoMarks,classTwoGrades]){
+ assert.deepEqual(report.subjects,primarySubjects);
+ assert.doesNotMatch(report.head,/rowspan|<th>IN<\/th>|<th>TH<\/th>/);
+}
+const trailingCells=(report,n)=>[...report.body.matchAll(/<td>([^<]*)<\/td>/g)].slice(-n).map(m=>m[1]);
+assert.deepEqual(trailingCells(classTwoMarks,5),['10','9','8','11','10']);
+assert.deepEqual(trailingCells(classTwoGrades,6),['A','B+','B','A+','A','3.54']);
+console.log('Class II Second Term live sample: marks, grades, subject order and GPA reproduced.');
+
+// School-authorized populated Class VI vectors, with synthetic identity only.
+const sixSubjects=subjects.slice(1),sixCredits=[5,5,5,5,5,3,4];
+const sixInternal=[41,39,36,45,37,42,40],sixTheory=[40,38,35,42,36,41,39];
+for(const classNo of [6,7,8])for(const term of ['first','second','annual']){
+ const annual=term==='annual';
+ const rs=sixSubjects.map((subject,i)=>({studentId:'synthetic-1',examId:'synthetic-exam',subject,scores:[{name:'Internal',fullMarks:50,obtained:sixInternal[i]},...(annual?[{name:'TH (Theory)',fullMarks:50,obtained:sixTheory[i]}]:[])]}));
+ const config=sixSubjects.map((subject,i)=>({className:String(classNo),subject,creditHour:sixCredits[i],active:true}));
+ const before=structuredClone({rs,config});
+ const per=rs.map(r=>{const v=iemisSummary(r,{annual});return {subject:r.subject,missing:false,totalFull:v.full,pct:v.obtained/v.full*100,grade:v.totalGrade};});
+ const d={...dependencies,smssExamTermKey:()=>term,resultExams:[{id:'synthetic-exam',academicYear:'2083'}],resultClasses:config,resultMarks:rs,activeResultRows:[{student:{...student,class:String(classNo)},perSubject:per}]};
+ const render=()=>new Function(...Object.keys(d),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(d));
+ render();
+ assert.match(box.innerHTML,new RegExp('GRADE '+({6:'VI',7:'VII',8:'VIII'}[classNo])));
+ const annualLedger=iemisLedger({...common,classNo,annual,term,academicYear:'2083',subjects:sixSubjects,records:rs,mode:'grade',creditFor:s=>sixCredits[sixSubjects.indexOf(s)]});
+ assert.match(annualLedger.body,annual?/>3.42<\/td>/:/>3.48<\/td>/);
+ assert.match(box.innerHTML,annual?/GRADE POINT AVERAGE = 3.42/:/GRADE POINT AVERAGE \(GPA\): 3.48/);
+ assert.match(box.innerHTML,/ONE CREDIT HOUR EQUALS 32 HOURS/);
+ if(!annual){
+  assert.doesNotMatch(box.innerHTML,/FINAL GRADE|\(TH\)|\(IN\)|Annual Examination only/);
+  const table=box.innerHTML.match(/<table[^>]*>[\s\S]*?<\/table>/)[0];
+  const shown=[...table.matchAll(/<tr>([\s\S]*?)<\/tr>/g)].slice(1,8).map(row=>Number([...row[1].matchAll(/<td[^>]*>([^<]*)<\/td>/g)][1][1]));
+  assert.deepEqual(shown,[2.5,2.5,2.5,2.5,2.5,1.5,2]);
+  assert.equal(shown.reduce((a,b)=>a+b,0),16);
+  per[0]={...per[0],missing:true,pct:null,grade:null};render();
+  assert.match(box.innerHTML,/Pending — marks and Credit Hour/);
+  per[0]={...per[0],missing:false,pct:0,grade:iemisGrade(0)};render();
+  assert.match(box.innerHTML,/Not Graded — one or more subjects are NG/);
+ }
+ assert.deepEqual({rs,config},before,'Rendering must not mutate source marks or annual credits');
+}
+console.log('Classes VI–VIII 2083 First/Second GPA 3.48, Final GPA 3.42, credits 16/32, missing/NG and data immutability passed.');
+
+// Verified 2083 Class VI non-final ledgers: one column per subject and GPA.
+const termRecords=sixSubjects.map((subject,i)=>({studentId:'synthetic-1',examId:'synthetic-exam',subject,scores:[{name:'Internal',fullMarks:50,obtained:sixInternal[i]}]}));
+const termOptions={...common,subjects:sixSubjects,records:termRecords,annual:false,academicYear:'2083',creditFor:s=>sixCredits[sixSubjects.indexOf(s)]};
+const untouched=structuredClone(termRecords);
+for(const classNo of [6,7,8])for(const term of ['first','second']){
+ const grades=iemisLedger({...termOptions,classNo,term,mode:'grade'});
+ assert.doesNotMatch(grades.head,/<th>IN<\/th>|<th>Total<\/th>|rowspan/);
+ assert.match(grades.body,/>3.48<\/td>/);
+ const marks=iemisLedger({...termOptions,classNo,term,mode:'number'});
+ assert.deepEqual(marks.subjects,term==='first'?sixSubjects:[...sixSubjects].reverse());
+ assert.doesNotMatch(marks.head,/<th>IN<\/th>|rowspan/);
+ assert.equal((grades.body.match(/<td>/g)||[]).length,16);
+ for(const mutate of [
+  rs=>rs.slice(1),
+  rs=>rs.map((r,i)=>i?r:{...r,isAbsent:true}),
+  rs=>rs.map((r,i)=>i?r:{...r,scores:[{name:'Internal',fullMarks:50,obtained:0}]}),
+  rs=>rs.map((r,i)=>i?r:{...r,scores:[{name:'Internal',fullMarks:50,obtained:''}]})
+ ]){
+  const missing=iemisLedger({...termOptions,classNo,term,mode:'grade',records:mutate(termRecords)});
+  assert.match(missing.body,/<td>—<\/td><\/tr>$/,'Incomplete/absent/NG must not get numeric GPA');
+ }
+}
+for(const override of [{academicYear:'2082'},{term:'third'},{classNo:11},{classNo:12}]){
+ const legacy=iemisLedger({...termOptions,term:'first',mode:'grade',...override});
+ assert.match(legacy.head,/<th>IN<\/th><th>Total<\/th>/);
+ assert.match(legacy.body,/<td>—<\/td><\/tr>$/);
+}
+assert.deepEqual(termRecords,untouched);
+console.log('School-approved VI–VIII term ledgers: columns, order, GPA, absence/NG/missing and historical/class isolation passed.');
+
+
+// Populated Class IX 2083 reference: no student identifiers.
+const nineSubjects=['Nepali','English','Mathematics','Science & Technology','Social Studies','OPT.I ENVIRONMENT SCIENCE (2041)','OPT.II COMPUTER SCIENCE (3031)'];
+let secondaryPrintFixture;
+const nineCredits=[5,5,5,5,4,4,4],nineIn=[21,20,20,23,20,22,41],nineTh=[60,58,55,65,57,62,40];
+for(const classNo of [9,10])for(const term of ['first','second','annual']){
+ const annual=term==='annual';
+ const rs=nineSubjects.map((subject,i)=>({studentId:'synthetic-1',examId:'synthetic-exam',subject,scores:[{name:'Internal',fullMarks:i===6?50:25,obtained:nineIn[i]},...(annual?[{name:'TH (Theory)',fullMarks:i===6?50:75,obtained:nineTh[i]}]:[])]}));
+ const configs=nineSubjects.map((subject,i)=>({className:String(classNo),subject,creditHour:nineCredits[i],active:true}));
+ const before=structuredClone({rs,configs});
+ const perSubject=rs.map(r=>{const v=iemisSummary(r,{annual});return {subject:r.subject,missing:false,totalFull:v.full,pct:v.obtained/v.full*100,grade:v.totalGrade};});
+ const d={...dependencies,smssExamTermKey:()=>term,resultExams:[{id:'synthetic-exam',academicYear:'2083'}],resultClasses:configs,resultMarks:rs,activeResultRows:[{student:{...student,class:String(classNo),nebRegNo:'TEST-NEB'},perSubject}]};
+ const render=()=>new Function(...Object.keys(d),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(d));
+ render();
+ if(classNo===9&&annual){
+  const bandsStart=html.indexOf('const resultGradeBands=');
+  const bandsEnd=html.indexOf('function gradeForPercent',bandsStart);
+  const resultGradeBands=new Function(html.slice(bandsStart,bandsEnd)+';return resultGradeBands;')();
+  const printData={...d,resultGradeBands};
+  new Function(...Object.keys(printData),html.slice(start,end)+';showGradeSheet("synthetic-1");')(...Object.values(printData));
+  secondaryPrintFixture=box.innerHTML;
+ }
+ assert.match(box.innerHTML,new RegExp('GRADE '+(classNo===9?'IX':'X')));
+ assert.match(box.innerHTML,annual?/GRADE POINT AVERAGE = 3.48/:/GRADE POINT AVERAGE \(GPA\): 3.66/);
+ assert.match(box.innerHTML,/ONE CREDIT HOUR EQUALS 32 HOURS/);
+ if(!annual){
+  const table=box.innerHTML.match(/<table[^>]*>[\s\S]*?<\/table>/)[0];
+  assert.doesNotMatch(table,/FINAL GRADE|REMARKS|\(IN\)|\(TH\)/);
+  assert.ok(table.indexOf('>GRADE<')<table.indexOf('>GRADE POINT (GP)<'));
+  const cells=[...table.matchAll(/<tr>([\s\S]*?)<\/tr>/g)].slice(1,8).map(r=>[...r[1].matchAll(/<td[^>]*>([^<]*)<\/td>/g)]);
+  assert.deepEqual(cells.map(row=>Number(row[1][1])),[1.25,1.25,1.25,1.25,1,1,2]);
+  assert.match(box.innerHTML,/NEB REG NO/);assert.match(box.innerHTML,/TEST-NEB/);
+  perSubject[0]={...perSubject[0],missing:true,pct:null,grade:null};render();
+  assert.match(box.innerHTML,/Pending — marks and Credit Hour/);
+ }
+ const options={...common,classNo,annual,term,academicYear:'2083',subjects:nineSubjects,records:rs,mode:'grade',creditFor:s=>nineCredits[nineSubjects.indexOf(s)]};
+ const ledger=iemisLedger(options);
+ assert.match(ledger.body,annual?/>3.48<\/td>/:/>3.66<\/td>/);
+ if(!annual){
+  assert.doesNotMatch(ledger.head,/<th>IN<\/th>|<th>Total<\/th>/);
+  const marks=iemisLedger({...options,mode:'number'});
+  assert.deepEqual(marks.subjects,[...nineSubjects].reverse());
+  assert.doesNotMatch(marks.head,/<th>IN<\/th>|rowspan/);
+  assert.ok(marks.body.endsWith(nineIn.slice().reverse().map(v=>'<td>'+v+'</td>').join('')+'</tr>'));
+  assert.match(iemisLedger({...options,mode:'number',academicYear:'2082'}).head,/<th>IN<\/th>/);
+  const alternate=rs.map((r,i)=>i===6?{...r,scores:[{name:'Internal',fullMarks:50,obtained:30}]}:r);
+  assert.match(iemisLedger({...options,records:alternate}).body,/>3.48<\/td>/,'Computer term credit must weigh 2/9, not 4/32');
+  const absent=rs.map((r,i)=>i?r:{...r,isAbsent:true});
+  assert.match(iemisLedger({...options,records:absent}).body,/<td>—<\/td><\/tr>$/);
+  assert.match(iemisLedger({...options,academicYear:'2082'}).body,/<td>—<\/td><\/tr>$/);
+ }
+ assert.deepEqual({rs,configs},before);
+}
+console.log('Classes IX–X term credits9/GPA3.66, Final GPA3.48, subject weighting, columns and data safety passed.');
+
+// Online print must use the published sheet's own school branding.
+const printStart=html.indexOf('function printOnlineResult()');
+const printEnd=html.indexOf('async function resultPublicationDocId',printStart);
+for(const label of ['TEST SECONDARY SCHOOL','विद्यालय & School <East> "A" (Campus)']){
+ let printed='',closed=false;
+ const sheet={outerHTML:'<div class="official-grade-sheet">Synthetic report</div>',getAttribute:()=>label,querySelector:()=>null};
+ new Function('document','window','onlineResultStatus',html.slice(printStart,printEnd)+';printOnlineResult();')({querySelector:()=>sheet},{open:()=>({document:{write:s=>printed=s,close:()=>closed=true}})},()=>{throw Error('Unexpected print error');});
+ const encoded=printed.match(/background-image:url\((data:image\/svg\+xml,[^)]*)\)/)?.[1];
+ assert.ok(encoded);assert.equal(closed,true);
+ const svg=decodeURIComponent(encoded.split(',').slice(1).join(','));
+ const escaped=label.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ assert.ok(svg.includes('>'+escaped+'</text>'));
+ assert.doesNotMatch(svg,/Mahadevasthan/);
+ assert.match(printed,/background-repeat:repeat/);assert.match(printed,/@page\{size:A4 portrait;margin:10mm\}/);
+ assert.match(printed,/Synthetic report/);
+}
+console.log('Online print keeps published school branding, Unicode/escaping, repeated watermark and A4 settings.');
+
+for(const [output,markup] of [[process.env.SMSS_GRADE_PRINT_FIXTURE,printReportFixture],[process.env.SMSS_PRIMARY_PRINT_FIXTURE,primaryPrintFixture],[process.env.SMSS_SECONDARY_PRINT_FIXTURE,secondaryPrintFixture]]){
+ if(!output)continue;
+ assert.ok(markup);
+ const sheet={outerHTML:markup,getAttribute:()=> 'Test School',querySelector:()=>null};
+ const print=new Function('document','window','onlineResultStatus',html.slice(printStart,printEnd)+';printOnlineResult();');
+ const document={querySelector:()=>sheet};
+ const popup={document:{write:markup=>writeFileSync(output,markup),close(){}}};
+ print(document,{open:()=>popup},message=>{throw new Error(message);});
+}

@@ -8,10 +8,10 @@ const serviceWorker = await readFile("sw.js", "utf8");
 const workflow = await readFile(".github/workflows/v44-quality-check.yml", "utf8");
 
 const must = (condition, message) => assert.ok(condition, message);
-
-must(html.includes("function editSubjectCatalog(id)") && html.includes("function archiveSubjectCatalog(id)") && html.includes("function restoreSubjectCatalog(id)"), "Subject Bank must support edit, safe archive and restore.");
-must(html.includes('data-subject-edit=') && html.includes('data-subject-archive=') && html.includes('data-subject-restore='), "Subject Bank must show edit, archive and restore actions.");
-must(html.includes('updateDoc(doc(db,"subjects",id),{active:false,archivedAt:serverTimestamp()') && html.includes('updateDoc(doc(db,"subjects",id),{active:true,restoredAt:serverTimestamp()'), "Subject removal must be reversible soft-archive, not permanent deletion.");
+must(html.includes("function editSubjectCatalog(id)") && html.includes("function archiveSubjectCatalog(id)") && html.includes("function confirmPermanentDeletion(label)"), "Subject Bank must support editing and double-confirmed deletion.");
+must(html.includes("data-subject-edit=") && html.includes("data-subject-archive=") && html.includes(">Delete</button>"), "Subject Bank must show edit and Delete actions.");
+must(html.includes('await deleteDoc(doc(db,"subjects",id))') && html.includes('if(used)throw new Error(') && html.includes('writeAuditLog("subjects","delete",id,'), "Subject deletion must check linked classes, physically delete and audit.");
+must(html.includes('await deleteDoc(doc(db,"subjects",id))') && html.includes('if(used)throw new Error(') && html.includes('writeAuditLog("subjects","delete",id,'), "Subject Delete must check linked classes and record audit.");
 must(html.includes('updateDoc(doc(db,"subjects",editId),{name,code,updatedAt:serverTimestamp()') && html.includes('await writeAuditLog("subjects","update",editId,name)'), "Subject Bank edits must update Firebase and write an audit log.");
 must(html.includes('id="subjectCatalogCancel"') && html.includes('पुराना Marks तथा कक्षागत अभिलेख मेटिँदैनन्'), "Subject Bank editing must explain historical-data preservation and allow cancellation.");
 must(html.includes("function normalizeSaveButtons") && html.includes("button.textContent='Save'") && html.includes("button.dataset.smssSaveAction='1'"), "Save/Submit actions must display only the Save label.");
@@ -221,7 +221,7 @@ must(rules.includes("request.resource.data.actorUid == request.auth.uid") && rul
 must(rules.includes("request.resource.data.detail.size() <= 240") && rules.includes("request.resource.data.actorName.size() <= 100"), "Audit log text fields must have strict size limits.");
 must(rules.includes("allow update, delete: if false;"), "Audit logs must remain append-only.");
 must(manifest.includes('"name": "SMSS Exam Portal"') && manifest.includes('"display": "standalone"'), "PWA manifest must preserve the V44 installable app identity.");
-must(/smss-pwa-v(?:44|45|46|47|48|49|50|51)/.test(serviceWorker) && serviceWorker.includes("./cdc-question-paper.js"), "Service worker must preserve PWA caching and include the new V45 module.");
+must(/smss-pwa-v(?:44|45|46|47|48|49|50|51|52)/.test(serviceWorker) && serviceWorker.includes("./cdc-question-paper.js"), "Service worker must preserve PWA caching and include the new V45 module.");
 must(workflow.includes("deploy-live:") && workflow.includes("needs: quality-and-rules"), "Live deployment must depend on successful V44 quality and Firestore Rules tests.");
 must(workflow.includes("Deploy tested Firestore Security Rules") && workflow.includes("firebase-tools@14 deploy --only firestore:rules"), "Production deployment must apply the tested Firestore Security Rules before Hosting.");
 must(workflow.includes("github.event_name == 'push'") && workflow.includes("github.ref == 'refs/heads/main'") && workflow.includes("github.event.head_commit.message == 'release: deploy approved V45 to production [deploy-v45-live]'"), "Automatic live deployment must be push-only, main-only and gated by the explicit approved V45 release commit.");
@@ -334,6 +334,7 @@ must(html.includes('id="studentOptional1"') && html.includes('id="studentOptiona
 must(html.includes("if(e.target.id==='studentClass')renderStudentOptionalSubjects(e.target.value,false)"), "Changing a student's class must refresh and clear the optional-subject choices.");
 must(html.includes('renderStudentOptionalSubjects(document.getElementById("studentClass")?.value||classes[0],false)'), "Resetting a student form must hide stale optional-subject selectors.");
 must(html.includes("if(chosen&&!choices.some"), "An optional subject, when selected, must match the configured choices.");
+must(html.includes("sel.required=false;"), "Optional subject selectors must not block saving a student when no optional subject is selected.");
 must(html.includes("canonicalSubjectKey(data.optionalSubject1)===canonicalSubjectKey(data.optionalSubject2)"), "The same subject cannot be selected for both optional slots.");
 
 must(html.includes("optionalSubject1:document.getElementById") && html.includes("optionalSubject2:document.getElementById"), "Student Optional I/II selections must be saved to the student record.");
@@ -388,3 +389,30 @@ assert.equal(fakePassword.value,"");
 must(html.includes('finally{clearLoginSecret();loginButton.disabled=false') && (html.includes('if(!user){clearLoginSecret();') || html.includes('if(!user){idleSession.stop();void userActivity.onAuth(null);clearLoginSecret();')),"Password reset must run after login attempts and sign-out.");
 
 console.log("V44 requirement regression checks passed.");
+
+// Execute the real preview parser with no database APIs available.
+{
+ const start=html.indexOf('let validatedRestoreBackup=null,restorePlan=null;');
+ const end=html.indexOf('async function runFirebaseRestore()',start);
+ const source=html.slice(start,end);
+ const preview=async backup=>{
+  const controls={restoreFirebaseMessage:{textContent:''},restorePreview:{textContent:''},runFirebaseRestore:{disabled:true},restoreBackupFile:{files:[{size:1024,text:async()=>JSON.stringify(backup)}]}};
+  const harness=new Function('document','requireAdmin','auth','ADMIN_UID','safeNoticeError','console',source+';return {run:previewFirebaseRestore,state:()=>restorePlan};')({getElementById:id=>controls[id]},()=>{}, {currentUser:{uid:'synthetic-admin'}},'synthetic-admin',e=>e.message,{error(){}});
+  await harness.run();return {plan:harness.state(),controls};
+ };
+ const backup={format:'SMSS-Firestore-Backup',version:1,collections:{students:[{id:'test-student',data:{studentName:'Synthetic Student'}}],audit_logs:[{id:'test-audit',data:{action:'test'}}]},documents:{school_settings:{main:{iemisCode:'TEST-ONLY'}}}};
+ const result=await preview(backup);
+ assert.equal(result.plan.total,2);assert.equal(result.controls.runFirebaseRestore.disabled,false);
+ assert.match(result.controls.restorePreview.textContent,/Audit Log: 1/);
+ assert.equal(result.plan.counts.audit_logs,undefined,'Audit logs must never enter the restore write plan');
+ assert.equal((await preview({...backup,collections:{...backup.collections,audit_logs:{}}})).plan,null);
+ assert.equal((await preview({...backup,collections:{...backup.collections,unknown:[]}})).plan,null);
+ assert.equal((await preview({...backup,collections:{students:[...backup.collections.students,...backup.collections.students]}})).plan,null);
+ const legacy=await preview({...backup,collections:{students:backup.collections.students}});assert.equal(legacy.plan.total,2);
+ if(process.env.SMSS_BACKUP_CHECK_PATH){
+  const actual=await preview(JSON.parse(await readFile(process.env.SMSS_BACKUP_CHECK_PATH,'utf8')));
+  assert.ok(actual.plan);assert.equal(actual.controls.runFirebaseRestore.disabled,false);
+  console.log('Actual downloaded backup parser passed; restorable records:',actual.plan.total);
+ }
+ console.log('Backup preview accepts exported audit logs without replaying them; invalid/unknown/duplicate documents rejected.');
+}

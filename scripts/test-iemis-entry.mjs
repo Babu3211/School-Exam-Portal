@@ -72,3 +72,45 @@ const stale=persistence();await assert.rejects(()=>stale.save(stale.plans,'diffe
 const partial=persistence({failBatch:2});let failure;try{await partial.save(partial.plans,'context',{id:'exam-test'},'1','teacher-test');}catch(error){failure=error;}assert.equal(failure.savedKeys.length,10);assert.equal(partial.saved.size,10);assert.match(failure.message,/10\/23/);
 const conflict=persistence({initial:new Map([['old-record',{scores:[{name:'changed',obtained:9}]}]])});conflict.plans[0].old={id:'old-record',section:'A',scores:[{name:'previous',obtained:8}]};await assert.rejects(()=>conflict.save([conflict.plans[0]],'context',{id:'exam-test'},'1','teacher-test'),/overwrite/);assert.equal(conflict.counts().writes,0);
 console.log('All 1–5/6–8/9–10 term schemas, editable grid plans, absence, learning totals, dirty-only saves, transactions, conflict and partial-save tests passed.');
+
+// New settings and template defaults must agree with the approved Computer grid.
+const computerSource=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const extractFunction=name=>{const start=computerSource.indexOf('function '+name+'(');assert.ok(start>=0);const end=computerSource.indexOf('\nfunction ',start+1);return computerSource.slice(start,end);};
+const defaultParts=new Function(extractFunction('isComputerSubject')+';'+extractFunction('defaultMarkParts')+';return defaultMarkParts;')();
+for(const subject of ['Computer Science','OPT.II COMPUTER SCIENCE (3031)','कम्प्युटर विज्ञान']){
+ assert.deepEqual(defaultParts('9-10',subject).map(c=>c.fullMarks),[4,36,10]);
+}
+assert.deepEqual(defaultParts('9-10','Mathematics').map(c=>c.fullMarks),[3,16,6]);
+const labelsStart=computerSource.indexOf('const ledgerComponentLabels = '),labelsEnd=computerSource.indexOf('\nfunction ledgerGroupForClass',labelsStart);
+const templateLabels=new Function(computerSource.slice(labelsStart,labelsEnd)+';return ledgerComponentLabels;')();
+assert.deepEqual(templateLabels['9-10'].slice(18,21),['Participation(4)','Practical/Project(36)','First Term Examination(10)']);
+for(const cl of [9,10])for(const term of ['first','second','annual']){
+ const schema=iemisEntrySchema(cl,term,'Computer Science');
+ const values=Object.fromEntries(schema.map(c=>[c.key,String(c.max)]));
+ for(const c of schema)assert.throws(()=>iemisEntryValues(schema,{values:{...values,[c.key]:String(c.max+1)},isAbsent:false}),/enter a mark/);
+ const historical={scores:schema.map((c,i)=>({name:c.name,fullMarks:[3,41,6,50][i],obtained:[3,40,6,45][i]}))};
+ const before=structuredClone(historical);
+ const draft=iemisEntryDraft(historical,schema);
+ assert.equal(draft.incompatible,true);
+ assert.throws(()=>iemisEntryValues(schema,draft),/custom assessment/);
+ assert.deepEqual(normalizeIemisEntryScores(cl,term,'Computer Science',historical.scores),before.scores);
+ assert.deepEqual(historical,before);
+}
+console.log('Computer defaults, Excel labels, all component bounds and historical-record preservation passed.');
+
+const historicalStart=computerSource.indexOf('function historicalComputerComponents(');
+const historicalEnd=computerSource.indexOf('function renderEntryStudents()',historicalStart);
+const readHistoricalComponents=new Function('isComputerSubject','iemisComponentKey',computerSource.slice(historicalStart,historicalEnd)+';return historicalComputerComponents;')(name=>/computer/i.test(name),name=>({'Participation':'participation','Practical/Project':'practical','First Term Examination':'term','Second Term Examination':'term','Total of Term':'term','TH (Theory)':'theory'}[name]));
+for(const term of ['first','second','annual']){
+ const subject='Computer Science';
+ const schema=iemisEntrySchema(9,term,subject);
+ const oldLimits=[3,41,6,50].slice(0,schema.length);
+ const scores=schema.map((c,i)=>({name:c.name,fullMarks:oldLimits[i],obtained:oldLimits[i]}));
+ const snapshot=structuredClone(scores);
+ assert.deepEqual(readHistoricalComponents({scores},'9-10',subject,term).map(c=>c.fullMarks),oldLimits);
+ assert.equal(readHistoricalComponents({scores},'6-8',subject,term),null);
+ assert.equal(readHistoricalComponents({scores},'9-10','Mathematics',term),null);
+ assert.equal(readHistoricalComponents({scores:scores.map((c,i)=>({...c,fullMarks:schema[i].max}))},'9-10',subject,term),null);
+ assert.deepEqual(scores,snapshot);
+}
+console.log('Single-subject editor recognizes original IX/X Computer assessment limits.');

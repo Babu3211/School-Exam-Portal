@@ -1,0 +1,25 @@
+name: V46 Delete Safety Checks (no deployment)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'scripts/test-v46-delete-controls.mjs'
+      - 'package.json'
+      - '.github/workflows/v46-delete-safety-check.yml'
+permissions:
+  contents: read
+jobs:
+  static-delete-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify double confirmations and linked-record guards
+        run: npm run test:v46-delete-controls
+      - name: Verify existing V46 preservation checks
+        run: npm run test:v46-preservation
+      - name: Verify existing PWA upgrade checks
+        run: npm run test:pwa

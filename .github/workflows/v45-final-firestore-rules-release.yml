@@ -1,9 +1,21 @@
-name: Release verified SMSS V45 Firestore Rules only
+name: Release verified SMSS V46 Firestore Rules only
 on:
   workflow_dispatch:
     inputs:
       confirmation:
-        description: 'Type DEPLOY-V45-RULES after production security review'
+        description: 'Type DEPLOY-V46-RULES after security review'
+        required: true
+        type: string
+      expected_commit:
+        description: 'Full 40-character approved main commit SHA'
+        required: true
+        type: string
+      backup_confirmation:
+        description: 'Type BACKUP-VERIFIED only after checking accessible production backup and rollback plan'
+        required: true
+        type: string
+      roles_confirmation:
+        description: 'Type ROLES-VERIFIED after checking Admin, Teacher and Viewer assignments'
         required: true
         type: string
 permissions:
@@ -13,17 +25,46 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify-and-deploy-rules:
-    if: ${{ github.event.inputs.confirmation == 'DEPLOY-V45-RULES' }}
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 25
     steps:
+      - name: Validate release inputs with clear errors (no deployment on mismatch)
+        env:
+          RELEASE_REF: ${{ github.ref }}
+          RELEASE_CONFIRMATION: ${{ inputs.confirmation }}
+          BACKUP_CONFIRMATION: ${{ inputs.backup_confirmation }}
+          ROLES_CONFIRMATION: ${{ inputs.roles_confirmation }}
+        run: |
+          set -euo pipefail
+          if [ "$RELEASE_REF" != "refs/heads/main" ]; then
+            echo "::error::Select the main branch. No rules were deployed."
+            exit 1
+          fi
+          if [ "$RELEASE_CONFIRMATION" != "DEPLOY-V46-RULES" ]; then
+            echo "::error::confirmation must be DEPLOY-V46-RULES. No rules were deployed."
+            exit 1
+          fi
+          if [ "$BACKUP_CONFIRMATION" != "BACKUP-VERIFIED" ]; then
+            echo "::error::Production backup must be independently verified before deployment. No rules were deployed."
+            exit 1
+          fi
+          if [ "$ROLES_CONFIRMATION" != "ROLES-VERIFIED" ]; then
+            echo "::error::Admin, Teacher and Viewer role assignments must be verified before deployment. No rules were deployed."
+            exit 1
+          fi
       - uses: actions/checkout@v4
         with:
-          ref: smss-v45-final-integration
+          ref: main
           persist-credentials: false
-      - name: Confirm approved final source
-        run: test "$(git branch --show-current)" = 'smss-v45-final-integration'
+      - name: Confirm approved main commit
+        env:
+          APPROVED_SHA: ${{ inputs.expected_commit }}
+        run: |
+          set -euo pipefail
+          test "${#APPROVED_SHA}" -eq 40
+          test "$(git rev-parse HEAD)" = "$APPROVED_SHA"
+          node -e 'const c=require("./firebase.json");if(c.firestore?.rules!=="firestore.rules")process.exit(1)'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -33,6 +74,8 @@ jobs:
         run: |
           npm run test:rules
           npm run test:viewer
+          npm run test:v46-preservation
+          node scripts/test-v46-viewer-class-exam-readonly.mjs
           npx firebase emulators:exec --only firestore --project smss-v45-activity-test 'node scripts/test-user-activity-rules.mjs'
       - name: Deploy Firestore Rules only (never modify documents)
         env:

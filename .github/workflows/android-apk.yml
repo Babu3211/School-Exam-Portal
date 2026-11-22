@@ -1,6 +1,10 @@
 name: Build downloadable SMSS Android APK
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'android-app/**'
+      - '.github/workflows/android-apk.yml'
   push:
     paths:
       - 'android-app/**'
@@ -32,6 +36,9 @@ jobs:
           npm install --no-audit --no-fund
           npx cap add android
           npx cap sync android
+      - name: Install guarded Android blank-screen relaunch recovery
+        working-directory: android-app
+        run: node scripts/patch-relaunch-recovery.mjs
       - name: Build Android debug APK (testing and direct download)
         working-directory: android-app/android
         run: |

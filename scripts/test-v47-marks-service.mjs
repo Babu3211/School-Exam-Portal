@@ -11,5 +11,5 @@ assert.equal((await saveSchoolMark(args)).id,'1st:s1:math');assert.equal(docs.si
 await assert.rejects(()=>saveSchoolMark(args),/already exists/);
 for(const role of ['teacher','viewer'])await assert.rejects(()=>saveSchoolMark({...args,actor:{...actor,role}}));
 await assert.rejects(()=>saveSchoolMark({...args,schoolId:'87654321'}));
-assert.equal(setDocCalls,0);assert.equal(transactionCalls,2);
+assert.equal(setDocCalls,0);assert.equal(transactionCalls,3,'Two Admin checks and one unassigned Teacher attempt must run read-only transactions; Viewer and foreign-school writes are denied before a transaction');
 console.log('V47 legacy marks entry now uses create-only transaction');

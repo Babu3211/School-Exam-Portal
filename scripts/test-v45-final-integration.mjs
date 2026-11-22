@@ -24,3 +24,14 @@ assert.ok(rules.includes('request.resource.data.uid == request.auth.uid'),'User 
 assert.ok(activity.includes('activeWithin(x.updatedAt,120000)'),'Presence freshness required');
 assert.ok(idle.includes('if(now()-Math.max(lastActivity,read())>=idleMs)'),'Expired session must not be extended');
 console.log('V45 approved dashboard and user activity integration checks passed');
+
+const roleFunction=html.match(/const roleHas=r=>\{[\s\S]*?\n\};/)?.[0];
+assert.ok(roleFunction,'Role resolution must distinguish Admin and Viewer');
+const resolveRole=(admin,currentUserRole)=>new Function('isAdmin','currentUserRole','normalizeRoleKey',roleFunction+';return roleHas;')(()=>admin,currentUserRole,String);
+const adminRole=resolveRole(true,null);
+assert.equal(adminRole('viewer'),false,'Admin must not trigger the read-only Viewer guards');
+assert.equal(adminRole('subject_teacher'),true,'Admin retains inherited action permissions');
+assert.equal(resolveRole(false,{active:true,roles:['viewer']})('viewer'),true,'Active Viewer remains read-only');
+assert.equal(resolveRole(false,{active:true,roles:['subject_teacher']})('viewer'),false,'Teacher remains subject to existing assignment checks');
+assert.equal(resolveRole(false,{active:false,roles:['viewer']})('viewer'),false,'Inactive user has no Viewer role');
+console.log('Admin Mark Entry and Viewer read-only reproduction passed.');
