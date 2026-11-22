@@ -2359,9 +2359,8 @@ function ledgerComponentsForSubject(group,subject,className,exam){
  const sourceParts=(setting?.components?.length?setting.components:defaultMarkParts(group,subject));
  const theoryPart=sourceParts.find(c=>/^TH\b|THEORY/i.test(String(c.name||'')));
  const parts=sourceParts.filter(c=>!/^TH\b|THEORY/i.test(String(c.name||''))).map(c=>({name:String(c.name||'Assessment'),fullMarks:Number(c.fullMarks)||0}));
- const expectedTheoryFull=(group==='6-8'||(group==='9-10'&&isComputerSubject(subject)))?50:(group==='9-10'?75:0);
  const isAnnual=!!exam&&smssExamTermKey(exam)==='annual';
- const thFull=isAnnual?(Number(theoryPart?.fullMarks)||expectedTheoryFull):0;
+ const thFull=isAnnual&&theoryPart?Number(theoryPart.fullMarks):0;
  if(thFull>0)parts.unshift({name:'TH (Theory)',fullMarks:thFull});
  return parts;
 }
