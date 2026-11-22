@@ -48,4 +48,22 @@ for(const size of [1,500]){
  assert.equal(checked.publicationAllowed,false);
 }
 
+
+// Marks must use the school's Examination Settings, including Computer
+// configurations that are not the historical fixed 4/36/10 split.
+for(const components of [
+ [{key:'theory',name:'Theory',fullMarks:40},{key:'practical',name:'Practical',fullMarks:60}],
+ [{key:'internal',name:'Internal',fullMarks:4},{key:'written',name:'Written',fullMarks:36},{key:'practical',name:'Practical',fullMarks:10}]
+]){
+ const ids=expectedStudentIds.slice(0,2);
+ const values=Object.fromEntries(components.map(c=>[c.key,c.fullMarks]));
+ const configured={...input,expectedStudentIds:ids,drafts:ids.map(studentId=>({studentId,values:{...values}})),settings:{...input.settings,components}};
+ const reviewed=fingerprintConfiguredClassReview(configured);
+ const approved=Object.fromEntries(['format','schoolId','classId','subjectId','examId','settingsRevision','rosterRevision','digestAlgorithm','digest'].map(k=>[k,reviewed[k]]));
+ const pages=JSON.parse(JSON.stringify(planConfiguredPublicationStaging(configured).batches));
+ assert.equal(verifyPublicationTransition({...base,authoritativeInput:configured,confirmation:approved,stagedBatches:pages}).rosterCount,2);
+ const excessive={...configured,drafts:[{studentId:ids[0],values:{...values,[components[0].key]:components[0].fullMarks+1}},configured.drafts[1]]};
+ assert.throws(()=>verifyPublicationTransition({...base,authoritativeInput:excessive,confirmation:approved,stagedBatches:pages}),/Complete verified class review/);
+}
+
 console.log('V47 publication preflight: 1/500/1500 rows, bounded batches, actor binding, stale review, incomplete stage and CAS conflict checks; no writes');
