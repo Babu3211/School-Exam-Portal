@@ -16,9 +16,18 @@ while(queue.length){
  if(!allowed.test(name)||!all.has(name))throw Error('Missing or invalid browser asset: '+name);
  files.add(name);
  const ext=extname(name);
- if(!['.html','.css','.mjs','.js'].includes(ext))continue;
+ if(!['.html','.css','.mjs','.js','.webmanifest'].includes(ext))continue;
  const source=readFileSync(join(root,name),'utf8');
  const dependencies=[];
+ if(ext==='.webmanifest'){
+  let manifest;
+  try{manifest=JSON.parse(source)}catch{throw Error('Invalid PWA manifest JSON: '+name)}
+  if(!manifest||typeof manifest!=='object'||!Array.isArray(manifest.icons)||!manifest.icons.length)throw Error('PWA manifest icons required: '+name);
+  for(const icon of manifest.icons){
+   if(typeof icon?.src!=='string'||!icon.src.startsWith('./'))throw Error('Invalid local PWA icon: '+name);
+   dependencies.push(icon.src.slice(2));
+  }
+ }
  if(ext==='.html'||ext==='.css'){
   for(const m of source.matchAll(/(?:src|href)=["']\.\/([^"'?#]+)["']/g))dependencies.push(m[1]);
   for(const m of source.matchAll(/url\(\s*["']?\.\/([^)'"?#]+)["']?\s*\)/g))dependencies.push(m[1]);
