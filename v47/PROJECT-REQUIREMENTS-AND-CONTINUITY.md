@@ -31,7 +31,7 @@ Updated: 2026-11-22. Source: user's project conversations and explicit instructi
 - V47 working branch: smss-v47-multischool-work
 - V47 Firebase project: smss-exam-portal-v47
 - Existing V47 modules include configured marks preflight, complete-class preview, JSON review verification, server-only fingerprint/confirmation/staging/pointer plans, official marks readers, school-scoped membership and teacher assignment, and Excel workbook writer.
-- Existing V47 Marks Entry currently has **development-only** class review and XLSX download; **official Save/Publish is disabled**. Development hub is not full V46 dashboard parity.
+- Existing V47 Marks Entry has development-only full-class XLSX sample download and XLSX draft import plus review export; **official Save/Publish is disabled**. XLSX import requires current roster, active settings, complete marks, and school-admin session; it has not been browser/E2E verified. Development hub is not full V46 dashboard parity.
 - V47 Firestore rules currently deny official marks writes. **Do not call marks publication complete** based only on plans, validators or Excel exports.
 - Excel work: v47/excel-workbook.mjs, v47/class-review-excel.mjs, v47/test-class-review-excel.mjs; reuse these. An older class-review-csv.mjs exists as leftover development code: it is **not a user requirement**, and must not be reintroduced into UI or test priorities.
 - Release tracking: GitHub issue #78 and v47/release-readiness-gate.mjs. A commit is not proof of CI or browser success.
