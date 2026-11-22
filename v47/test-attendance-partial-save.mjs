@@ -196,6 +196,8 @@ for(const mutate of [
  assert.match(ui,/attendanceReviewRequired=false/);
  assert.match(ui,/attendanceReviewRequired&&!result\.hasMore&&records\.length>0/);
  assert.match(ui,/load\(true,true\)/);
+ assert.match(ui,/\$\('schoolClass'\)\.disabled=attendanceReviewRequired/);
+ assert.match(ui,/\$\('date'\)\.disabled=attendanceReviewRequired/);
  assert.match(ui,/if\(e\?\.name==='PartialAttendanceSaveError'\)attendanceReviewRequired=true/);
 }
 console.log('V47 attendance partial-save recovery contract passed');
