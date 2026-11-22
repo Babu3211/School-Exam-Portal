@@ -24,4 +24,15 @@ for(const actor of [superAdmin,admin,teacher,viewer]){
 assert.equal(canManageSchools(superAdmin),true);
 for(const actor of [admin,teacher,viewer,{...superAdmin,active:false},null])
  assert.equal(canManageSchools(actor),false);
+for(const actor of [superAdmin,admin,teacher,viewer]){
+ for(const uid of [null,undefined,'',' ',42]){
+  assert.equal(canAccessSchool({...actor,uid},sid,'read'),false);
+  assert.equal(canAccessSchool({...actor,uid},sid,'write'),false);
+  assert.equal(canManageSchools({...actor,uid}),false);
+ }
+ for(const invalidSchool of ['',null,undefined,'../other','1234','1'.repeat(21)]){
+  assert.equal(canAccessSchool(actor,invalidSchool,'read'),false);
+  assert.equal(canAccessSchool(actor,invalidSchool,'write'),false);
+ }
+}
 console.log('V47 permission operation and tenant isolation checks passed');
