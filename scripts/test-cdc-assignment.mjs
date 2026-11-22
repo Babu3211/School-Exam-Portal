@@ -263,22 +263,28 @@ for (const [grade,counts] of Object.entries({4:[4,5,5,3,4,5,6],5:[4,5,5,4,3,5,6]
 console.log('Grades 4 and 5: 98 bilingual science and 64 Nepali social studies indicators verified');
 // Exercise school saves and reads in every national subject, independently of local drafts.
 const upperSubjects=['english','nepali','mathematics','science','socialstudies','healthphysicalcreativeart'];
-w.ledgerSubjectsForClass=()=>upperSubjects;
-current.subjectAssignments=['4','5'].flatMap(className=>upperSubjects.map(subject=>({className,subject,section:'A'})));
+const lowerSubjects=['english','nepali','mathematics','serophero'];
+const grades=['1','2','3','4','5'];
+w.ledgerSubjectsForClass=grade=>Number(grade)<=3 ? lowerSubjects : upperSubjects;
+current.subjectAssignments=grades.flatMap(className=>w.ledgerSubjectsForClass(className).map(subject=>({className,subject,section:'A'})));
 serverRole=current;
-w.marksStudents.push({id:'four',class:'4',section:'A',name:'Test Four'});
-for (const grade of ['4','5']) {
+for (const grade of grades) {
+  if (![...field('class').options].some(option=>option.value===grade)) field('class').append(new w.Option('Class '+grade,grade));
+  const first='sample-'+grade, second=first+'-peer';
+  w.marksStudents.push(...[first,second].map(id=>({id,class:grade,section:'A',name:id})));
   choice('class',grade);
-  for (const subject of upperSubjects) {
+  for (const subject of w.ledgerSubjectsForClass(grade)) {
     choice('subject',subject);
+    choice('student',first);
     choice('period','Final Term');
     const unit=w.document.querySelector('#cdcUnitSuggestions option').value;
     choice(subject==='english'?'unitEn':'unit',unit);
     choice('topic',w.document.querySelector('#cdcTopicSuggestions option').value);
     const levelNames=[...field('level').options].slice(1).map(option=>option.text).join(' ');
-    const nepaliOnly=['nepali','socialstudies'].includes(subject);
-    assert.equal(/[अ-ह]/u.test(levelNames),subject!=='english');
-    assert.equal(/[a-z]/i.test(levelNames),!nepaliOnly);
+    const nepaliOnly=['nepali','socialstudies','serophero'].includes(subject);
+    assert.equal(/[अ-ह]/u.test(levelNames),Number(grade)>=4&&subject!=='english');
+    assert.equal(/[a-z]/i.test(levelNames),Number(grade)>=4&&!nepaliOnly);
+    if (Number(grade)<=3) assert.equal(levelNames,'1 2 3 4');
     const evidence=grade+' '+subject+' sample';
     field('evidence').value=evidence;
     field('level').value='3';
@@ -298,13 +304,12 @@ for (const grade of ['4','5']) {
     assert.equal(cells[4].textContent,'3');
     assert.equal(cells[5].textContent,evidence);
     if (nepaliOnly) assert.doesNotMatch(cells[0].textContent+cells[1].textContent,/[a-z]/i);
-    if (grade==='5') {
-      choice('student','two');
-      await field('readSchool').onclick();
-      assert.equal(field('schoolRows').rows.length,0);
-    }
+    if (subject==='english') assert.doesNotMatch(cells[0].textContent+cells[1].textContent,/[अ-ह]/u);
+    choice('student',second);
+    await field('readSchool').onclick();
+    assert.equal(field('schoolRows').rows.length,0);
   }
 }
-console.log('All 12 Grade 4–5 subject selections: rating language, school save, draft-independent read and record isolation passed');
+console.log('All 24 Grade 1–5 subject selections: rating language, school save, draft-independent read and record isolation passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
