@@ -18,7 +18,7 @@ export function resolveVerifiedOfficialClassMarks({settings,expectedStudentIds,.
  const limits=new Map(components.map(c=>[c.key,c.fullMarks]));
  for(const row of result.entries){
   if(!roster.has(row.studentId))throw new Error('Published marks include a foreign or inactive student');
-  if(row.isAbsent)continue;
+  if(row.isAbsent){if(row.totalObtained!==0||row.values!==null)throw new Error('Invalid published absence');continue;}
   const keys=Object.keys(row.values);
   if(keys.length!==limits.size||keys.some(key=>!limits.has(key)))throw new Error('Published component keys differ from Examination Settings');
   for(const [key,max] of limits){
