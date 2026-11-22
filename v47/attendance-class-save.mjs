@@ -6,8 +6,9 @@ export class PartialAttendanceSaveError extends Error {
  constructor(saved,total,cause,remainingStudentIds=[]){super('Attendance partly saved: '+saved+' of '+total+' records. Remaining records were not saved.');this.name='PartialAttendanceSaveError';this.saved=saved;this.total=total;this.remainingStudentIds=Object.freeze([...remainingStudentIds]);this.cause=cause;}
 }
 // Multiple batches are NOT one atomic transaction. Stop immediately on failure and report partial progress.
-export async function saveLoadedClassAttendance({db,api,actor,schoolId,entries,onProgress=()=>{}}){
+export async function saveLoadedClassAttendance({db,api,actor,schoolId,entries,onProgress=()=>{},assertSession=()=>{}}){
  validateSchoolId(schoolId);
+ if(typeof assertSession!=='function')throw new TypeError('Attendance session verifier required');
  if(actor?.role!=='school_admin'||!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin permission required');
  if(!Array.isArray(entries)||entries.length===0||entries.length>1500)throw new RangeError('Enter 1–1500 selected students');
  const identity={uid:actor.uid,role:actor.role,active:actor.active,schoolId:actor.schoolId};
@@ -18,6 +19,8 @@ export async function saveLoadedClassAttendance({db,api,actor,schoolId,entries,o
  for(let offset=0;offset<validated.length;offset+=10){
   const chunk=validated.slice(offset,offset+10);
   try{
+   // Auth may change between 10-record commits even if the actor object is unchanged.
+   assertSession();
    if(actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId||!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin identity changed during class attendance save');
    await saveClassAttendance({db,api,actor,schoolId,entries:chunk});
   }
