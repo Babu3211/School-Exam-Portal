@@ -37,4 +37,7 @@ checks.push(
 const blocked=checks.filter(([,pass])=>!pass);
 const report={project:'SMSS V47',branch:'smss-v47-multischool-work',productionReady:false,checks:checks.map(([name,pass,reason])=>({name,status:pass?'STATIC_CHECK_OK':'BLOCKED',reason:pass?'Static evidence only; not a runtime test':reason})),blockingCount:blocked.length};
 console.log(JSON.stringify(report,null,2));
-if(blocked.length)process.exitCode=1;
+// A zero-blocker static scan cannot certify the live portal, Firestore
+// publication, emulator behavior, or V46 feature parity. Fail closed until
+// independently verified runtime evidence and release approval exist.
+if(!report.productionReady)process.exitCode=1;
