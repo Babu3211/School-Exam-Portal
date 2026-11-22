@@ -18,6 +18,15 @@ const bounded=await loadAllClassMarks({...base,maxRecords:30000});
 assert.equal(bounded.count,3);
 const bad={...api,getDocs:async()=>({docs:[{id:'a',data:()=>({schoolId,class:'10',term:'final'})}]})};
 await assert.rejects(()=>loadAllClassMarks({...base,api:bad}),/Foreign or mismatched marks record/);
+for(const malformedIdentity of [
+ {studentId:undefined,subjectId:'math'},
+ {studentId:'../other',subjectId:'math'},
+ {studentId:'s1',subjectId:undefined},
+ {studentId:'s1',subjectId:'../other'}
+]){
+ const invalid={...api,getDocs:async()=>({docs:[{id:'a',data:()=>({schoolId,class:'9',term:'final',...malformedIdentity})}]})};
+ await assert.rejects(()=>loadAllClassMarks({...base,api:invalid}),/Invalid marks student or subject identity/);
+}
 for(const missingSnapshot of [null,undefined,{}]){
  const missingApi={...api,getDocs:async()=>missingSnapshot};
  await assert.rejects(()=>loadAllClassMarks({...base,api:missingApi}),/Unexpected result size/);
