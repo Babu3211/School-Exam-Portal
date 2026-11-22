@@ -38,6 +38,9 @@ jobs:
               '.github/workflows/iemis-transfer-check.yml',
               'scripts/test-iemis-transfer.mjs', 'scripts/test-iemis-importer-dom.mjs'})
             allowed.update(path for path in changed if path.startswith('iemis-importer/'))
+          if os.environ.get('GITHUB_HEAD_REF')=='fix/iemis-order-computer':
+            allowed.update({'iemis-transfer-export.js','iemis-importer/transfer.js',
+              'scripts/test-iemis-transfer.mjs','sw.js'})
 
           if os.environ.get('GITHUB_HEAD_REF')=='fix/teacher-all-sections-marks' or os.environ.get('GITHUB_REF_NAME')=='fix/teacher-all-sections-marks':
             allowed.add('scripts/test-firestore-rules.mjs')
