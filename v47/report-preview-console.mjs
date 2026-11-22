@@ -54,8 +54,8 @@ $('login').onclick=()=>{
   const examSelect=$('summaryExam');examSelect.replaceChildren(new Option('Select exam',''));
   for(const exam of rows.exams)examSelect.add(new Option(String(exam.examName||exam.termName||exam.name||exam.id),exam.id));
   const classSelect=$('summaryClass');classSelect.replaceChildren(new Option('Select class',''));
-  for(let n=1;n<=10;n++)classSelect.add(new Option('Class '+n,String(n)));
-  for(const id of ['summaryExam','summaryClass','summaryAnnual','summaryRun'])$(id).disabled=false;
+  for(let n=1;n<=12;n++)classSelect.add(new Option('Class '+n,String(n)));
+  for(const id of ['summaryExam','summaryClass','summaryAnnual','summaryRun','coverageSection','coverageSubject','coverageRun'])$(id).disabled=false;
   $('report').hidden=false;status('Read-only report inputs loaded. No results were published.');
  }catch(error){if(current===epoch){clear();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status('Report unavailable: '+error.message)}}
  finally{busy=false;$('login').disabled=!auth||loggingOut;if(!auth?.currentUser)$('logout').disabled=true}
