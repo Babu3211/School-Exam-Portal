@@ -159,4 +159,16 @@ for(const mutate of [
  assert.equal(batchesStarted,74,'Revoked admin must not start batch 75');
  assert.equal(commitsDone,74);
 }
+
+// UI must keep already-saved selections out of a retry and give Nepali
+// guidance for remaining students. This is a static UI contract, not a browser test.
+{
+ const {readFileSync}=await import('node:fs');
+ const ui=readFileSync(new URL('./attendance-console.mjs',import.meta.url),'utf8');
+ assert.match(ui,/for\(const id of savedIds\)rosterSelections\.delete\(id\)/);
+ assert.match(ui,/e\?\.name==='PartialAttendanceSaveError'/);
+ assert.match(ui,/e\.remainingStudentIds\.length/);
+ assert.match(ui,/आंशिक रूपमा सुरक्षित/);
+ assert.match(ui,/पुनः प्रयास गर्नुअघि Attendance सूची जाँच्नुहोस्/);
+}
 console.log('V47 attendance partial-save recovery contract passed');
