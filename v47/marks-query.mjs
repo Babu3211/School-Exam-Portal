@@ -15,7 +15,7 @@ export async function loadMarksByClassTerm({db,api,actor,schoolId,schoolClass,te
  if(cursor)filters.push(api.startAfter(cursor));
  const snap=await api.getDocs(api.query(api.collection(db,'schools',schoolId,'marks'),...filters));
  if(!canAccessSchool(actor,schoolId,'read')||Object.keys(identity).some(key=>actor?.[key]!==identity[key]))throw new Error('School membership changed during marks query');
- const docs=snap.docs;
+ const docs=snap?.docs;
  if(!Array.isArray(docs)||docs.length>pageSize+1)throw new RangeError('Unexpected result size');
  const ids=new Set(),validated=[];let previous=cursor?.id??null;
  for(const d of docs){
