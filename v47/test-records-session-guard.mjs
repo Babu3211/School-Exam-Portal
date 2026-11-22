@@ -13,13 +13,13 @@ const store=createSchoolStore({db:{},api,member,schoolId:sid,assertSession:()=>{
 const pending=store.listPage('students',{pageSize:30});
 assert.equal(queryCalls,1);
 signedIn=false;
-resolveQuery({docs:[{id:'s1',data:()=>({name:'Test Student'})}]});
+resolveQuery({docs:[{id:'s1',data:()=>({schoolId:sid,name:'Test Student'})}]});
 await assert.rejects(pending,/Authentication changed/);
 await assert.rejects(store.listPage('students',{pageSize:30}),/Authentication changed/);
 assert.equal(queryCalls,1,'No new query after sign out');
 signedIn=true;
 const next=store.listPage('students',{pageSize:30});
-resolveQuery({docs:[{id:'s2',data:()=>({name:'Another Student'})}]});
+resolveQuery({docs:[{id:'s2',data:()=>({schoolId:sid,name:'Another Student'})}]});
 const result=await next;
 assert.equal(result.records.length,1);
 assert.equal(result.records[0].id,'s2');
