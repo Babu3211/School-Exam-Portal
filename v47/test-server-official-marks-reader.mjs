@@ -15,6 +15,8 @@ rejects({pointer:{...pointer,schoolId:'67890'}},/pointer scope/);
 rejects({publication:{...publication,schoolId:'67890'}},/Publication scope/);
 rejects({publication:{...publication,digest:'b'.repeat(64)}},/Committed publication/);
 rejects({entries:entries.slice(0,499)},/roster incomplete/);
+rejects({entries:[...entries.slice(0,499),{...entries[499],schoolId:'67890'}]},/Invalid or duplicate/);
+rejects({entries:[...entries.slice(0,499),{...entries[499],values:{'invalid key':1},totalObtained:1}]},/component marks/);
 rejects({entries:[...entries.slice(0,499),entries[0]]},/duplicate/);
 rejects({entries:[...entries.slice(0,499),{...entries[499],publicationId:'pub_00000002'}]},/Invalid or duplicate/);
 rejects({entries:[...entries.slice(0,499),{...entries[499],totalObtained:50}]},/component marks/);
