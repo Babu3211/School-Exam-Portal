@@ -1,8 +1,8 @@
 // Offline, read-only bridge to the verified V46 IEMIS ledger renderer.
 // The caller must provide a roster and records already authorized and scoped to ONE school.
 // No Firebase access, writes, or fallback to global V46 collections.
-import {iemisLedger,iemisSubjectKey,iemisSummary,iemisComponentKey} from '../iemis-ledger.js';
-import {iemisEntrySchema} from '../iemis-entry.js';
+import {iemisLedger,iemisSubjectKey,iemisSummary,iemisComponentKey} from './iemis-ledger.js';
+import {iemisEntrySchema} from './iemis-entry.js';
 export function renderV46TenantLedger({schoolId,schoolName,schoolCode='',classNo,term,mode='number',subjects,students,records,examId,...options}){
  if(typeof schoolId!=='string'||!/^[A-Za-z0-9_-]{1,64}$/.test(schoolId))throw Error('Valid school scope required');
  if(typeof schoolName!=='string'||!schoolName.trim())throw Error('School name required');

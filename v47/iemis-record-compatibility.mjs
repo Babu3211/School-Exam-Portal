@@ -1,6 +1,6 @@
 // Read-only structural check; never upgrades simplified V47 marks into V46 IEMIS scores.
-import {iemisEntrySchema} from '../iemis-entry.js';
-import {iemisComponentKey} from '../iemis-ledger.js';
+import {iemisEntrySchema} from './iemis-entry.js';
+import {iemisComponentKey} from './iemis-ledger.js';
 export function inspectV46IemisRecord(record,{schoolId,classNo,term,subject,examId}){
  if(!record||record.schoolId!==schoolId||!record.studentId||record.examId!==examId)return {compatible:false,reason:'Record is outside the authorized school/exam scope'};
  if(typeof schoolId!=='string'||!/^[A-Za-z0-9_-]{1,64}$/.test(schoolId)||typeof examId!=='string'||!examId)return {compatible:false,reason:'Invalid school or exam identity'};

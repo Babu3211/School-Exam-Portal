@@ -2,7 +2,7 @@
 // Never queries Firebase, writes marks, or synthesizes component scores from raw theory/practical.
 import {inspectV46IemisRecord} from './iemis-record-compatibility.mjs';
 import {renderCompleteV46TenantGradeLedger} from './iemis-v46-ledger-adapter.mjs';
-import {iemisSubjectKey} from '../iemis-ledger.js';
+import {iemisSubjectKey} from './iemis-ledger.js';
 export function renderAuthorizedV46ClassGradeLedger({schoolId,schoolName,schoolCode='',classNo,term,examId,students,subjects,records}){
  if(!Array.isArray(students)||!Array.isArray(subjects)||!Array.isArray(records))throw Error('Authorized complete class snapshot required');
  if(!students.length||!subjects.length)throw Error('Class roster and subjects required');
