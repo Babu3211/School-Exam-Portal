@@ -80,3 +80,10 @@ const absentInherited=Object.create({participation:7});
 const absentInheritedReview=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',isAbsent:true,values:absentInherited},{studentId:'b',isAbsent:true}]});
 assert.equal(absentInheritedReview.complete,false);
 assert.match(absentInheritedReview.invalid[0].message,/Absent student cannot carry obtained marks/);
+
+
+// Server review and Firestore creation agree on the supported count of components.
+const six=Array.from({length:6},(_,i)=>({key:'part'+i,name:'Part '+i,fullMarks:10}));
+const sixRows=[{studentId:'a',values:Object.fromEntries(six.map(x=>[x.key,10]))},{studentId:'b',isAbsent:true}];
+assert.equal(inspectConfiguredClassMarks({...base,settings:{...settings,components:six},drafts:sixRows}).complete,true);
+assert.throws(()=>inspectConfiguredClassMarks({...base,settings:{...settings,components:[...six,{key:'seventh',name:'Seventh',fullMarks:10}]},drafts:sixRows}),/Active component settings required/);
