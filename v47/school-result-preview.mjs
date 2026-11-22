@@ -11,7 +11,7 @@ export async function previewSchoolRawMarksWithV46({db,api,actor,schoolId,school
  if(!validSchoolClass(schoolClass))throw new Error('Invalid class');
  validateExamTerm(term);
  if(term!=='final'||![6,7,8,9,10].includes(Number(schoolClass)))throw new Error('Diagnostic V46 mapping currently limited to final-term Classes 6–10');
- if(!Array.isArray(records)||records.length===0||records.length>1500)throw new Error('Nonempty raw marks page required; incomplete class cannot be certified');
+ if(!Array.isArray(records)||records.length===0||records.length>30000)throw new Error('Nonempty raw marks page required; incomplete class cannot be certified');
  if(typeof api?.doc!=='function'||typeof api?.getDoc!=='function')throw new TypeError('Missing Firestore read SDK');
  const identity={uid:actor?.uid,role:actor?.role,schoolId:actor?.schoolId,active:actor?.active};
  const check=()=>{if(!canAccessSchool(actor,schoolId,'read')||Object.keys(identity).some(key=>actor?.[key]!==identity[key]))throw new Error('School membership changed during marks preview');};
