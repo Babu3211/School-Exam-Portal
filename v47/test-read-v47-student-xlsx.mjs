@@ -21,8 +21,19 @@ for(let i=source.length-22;i>=0;i--){
 }
 assert.ok(eocd>=0,'Workbook must contain ZIP end directory');
 const view=new DataView(source.buffer,source.byteOffset,source.byteLength);
-const central=view.getUint32(eocd+16,true);
-assert.equal(view.getUint32(central,true),0x02014b50);
+const directory=view.getUint32(eocd+16,true);
+let central=directory;
+let sheetEntry=-1;
+const utf8=new TextDecoder();
+for(let i=0;i<view.getUint16(eocd+10,true);i++){
+ assert.equal(view.getUint32(central,true),0x02014b50);
+ const nameLength=view.getUint16(central+28,true);
+ const name=utf8.decode(source.subarray(central+46,central+46+nameLength));
+ if(name==='xl/worksheets/sheet1.xml')sheetEntry=central;
+ central+=46+nameLength+view.getUint16(central+30,true)+view.getUint16(central+32,true);
+}
+assert.ok(sheetEntry>=0,'Workbook must contain sheet1.xml');
+central=sheetEntry;
 const corrupted=new Uint8Array(source);
 corrupted[central]=0;
 await assert.rejects(readV47StudentXlsx(asFile(corrupted)),/Invalid ZIP directory/);
