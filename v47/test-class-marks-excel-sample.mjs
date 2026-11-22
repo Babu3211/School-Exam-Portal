@@ -8,6 +8,8 @@ assert.equal(workbook.type,'application/vnd.openxmlformats-officedocument.spread
 const bytes=new Uint8Array(await workbook.arrayBuffer());
 assert.equal(String.fromCharCode(...bytes.slice(0,4)),'PK\u0003\u0004');
 assert.ok(bytes.length>10000);
+const legacy=buildClassMarksExcelSample({...scope,settings,students:[{id:'old_student',name:'Legacy Student'}]});
+assert.equal(legacy.type,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 assert.throws(()=>buildClassMarksExcelSample({...scope,settings,students:[students[0],students[0]]}),/Invalid or inactive/);
 assert.throws(()=>buildClassMarksExcelSample({...scope,settings,students:[{...students[0],active:false}]}),/Invalid or inactive/);
 assert.throws(()=>buildClassMarksExcelSample({...scope,settings:{...settings,schoolId:'99999'},students}),/Verified subject examination settings/);
