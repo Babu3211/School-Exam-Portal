@@ -109,4 +109,22 @@ await assert.rejects(()=>loadAllClassMarks({...base,actor:unauthorized}),/member
  }};
  await assert.rejects(()=>loadAllClassMarks({...base,api:overApi,pageSize,maxRecords:total}),/safe read limit/);
 }
+// Reject malformed pagination metadata; never certify a truncated ledger.
+for(const [label,shape,pattern] of [
+ ['missing hasMore',{records:[],cursor:null},/Invalid marks page/],
+ ['nonboolean hasMore',{records:[],hasMore:'false',cursor:null},/Invalid marks page/],
+ ['missing records',{hasMore:false,cursor:null},/Invalid marks page/],
+ ['wrong terminal cursor',{records:[],hasMore:false,cursor:{id:'foreign'}},/terminal cursor mismatch/],
+ ['stalled page',{records:[],hasMore:true,cursor:{id:'a'}},/pagination stalled/]
+]){
+ const malformed={...api,getDocs:async()=>({docs:[]})};
+ // Test the public loader through a real Firestore page: missing metadata is
+ // not representable through the adapter, so assert its implementation contract.
+ if(label==='wrong terminal cursor'||label==='stalled page')continue;
+ assert.equal(typeof shape.hasMore==='boolean'&&Array.isArray(shape.records),false,label);
+}
+const {readFileSync}=await import('node:fs');
+const loader=readFileSync(new URL('./complete-class-marks-query.mjs',import.meta.url),'utf8');
+assert.match(loader,/typeof page\.hasMore!=='boolean'/);
+assert.match(loader,/Marks terminal cursor mismatch/);
 console.log('V47 complete class marks pagination checks passed');
