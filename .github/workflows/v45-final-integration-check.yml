@@ -93,7 +93,7 @@ jobs:
           if os.environ.get('GITHUB_HEAD_REF')=='fix/backup-audit-preview':
             allowed.add('sw.js')
           if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-cdc-assessment':
-            allowed.add('scripts/test-cdc-assignment.mjs')
+            allowed.update({'scripts/test-cdc-assignment.mjs','scripts/test-firestore-rules.mjs'})
           unexpected=changed-allowed
           assert not unexpected, f'Unexpected changes to protected V44/IEMIS files: {sorted(unexpected)}'
           print('Approved dashboard and IEMIS source files remain protected.')

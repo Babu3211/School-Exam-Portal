@@ -379,6 +379,33 @@ try {
   if(cache.some(r=>r.totalObtained!==18))throw new Error("Real transaction update did not reload new marks");
 
   console.log("Firestore Security Rules emulator tests passed.");
+
+  // CDC uses an independent collection and verifies the student's stored section.
+  const cdcUid = 'cdc-assigned-teacher';
+  await testEnv.withSecurityRulesDisabled(async context => {
+    const db = context.firestore();
+    await setDoc(doc(db,'user_roles',cdcUid),{active:true,roles:['subject_teacher'],
+      subjectAssignmentKeys:['5::Mathematics'],subjectAssignmentSectionKeys:['5::Mathematics::A']});
+    await setDoc(doc(db,'students','cdc-test-a'),{class:'5',section:'A',active:true});
+    await setDoc(doc(db,'students','cdc-test-b'),{class:'5',section:'B',active:true});
+  });
+  const cdcDb=testEnv.authenticatedContext(cdcUid).firestore();
+  const cdc=(id,db=cdcDb)=>doc(db,'cdc_observations',id);
+  const observation={studentId:'cdc-test-a',className:'5',subject:'Mathematics',section:'A',academicYear:'2083',
+    period:'First Term',unit:'नाप',unitEn:'Measurement',topic:'लम्बाइ नाप्ने',topicAlt:'Measure length',
+    date:'2083-08-07',level:3,method:'अवलोकन',evidence:'Synthetic evidence',feedback:'',
+    createdBy:cdcUid,createdAt:serverTimestamp()};
+  await assertSucceeds(setDoc(cdc('valid'),observation));
+  await assertSucceeds(getDoc(cdc('valid')));
+  await assertFails(setDoc(cdc('wrong-student'),{...observation,studentId:'cdc-test-b'}));
+  await assertFails(setDoc(cdc('wrong-subject'),{...observation,subject:'English'}));
+  await assertFails(setDoc(cdc('wrong-level'),{...observation,level:5}));
+  await assertFails(updateDoc(cdc('valid'),{evidence:'Overwrite'}));
+  await assertFails(deleteDoc(cdc('valid')));
+  const adminCdcDb=testEnv.authenticatedContext(ADMIN).firestore();
+  await assertSucceeds(getDoc(cdc('valid',adminCdcDb)));
+  await assertFails(setDoc(cdc('admin-create',adminCdcDb),{...observation,createdBy:ADMIN}));
+  await assertFails(getDoc(cdc('valid',testEnv.unauthenticatedContext().firestore())));
 } finally {
   await testEnv.cleanup();
 }
