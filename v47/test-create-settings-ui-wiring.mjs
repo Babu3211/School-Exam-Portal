@@ -21,10 +21,10 @@ const helper=readFileSync(new URL('./create-subject-exam-settings.mjs',import.me
 assert.match(helper,/await api\.runTransaction\(db,async transaction=>/);
 assert.match(helper,/const existing=await transaction\.get\(ref\)/);
 assert.match(helper,/if\(existing\.exists\(\)\)throw new Error/);
-assert.match(helper,/const subject=await transaction\\.get\\(subjectRef\\)/);
-assert.match(helper,/subjectData\\.schoolId!==prepared\\.schoolId/);
-assert.match(helper,/subjectData\\.class!==prepared\\.classId/);
-assert.match(helper,/subjectData\\.active!==true/);
+assert.match(helper,/const subject=await transaction\.get\(subjectRef\)/);
+assert.match(helper,/subjectData\.schoolId!==prepared\.schoolId/);
+assert.match(helper,/subjectData\.class!==prepared\.classId/);
+assert.match(helper,/subjectData\.active!==true/);
 assert.match(helper,/transaction\.set\(ref,prepared\)/);
 assert.ok(helper.indexOf('transaction.get(ref)')<helper.indexOf('transaction.set(ref,prepared)'));
 console.log('V47 create-once exam settings UI and transactional no-overwrite guard wired; emulator verification still required');

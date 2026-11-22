@@ -12,6 +12,6 @@ const guard=h.indexOf('if(busy||!classMarkContext||attempt!==epoch||request!==ro
 const inspect=h.indexOf('inspectConfiguredClassMarks(');
 assert.ok(settings>=0&&roster>settings&&comparison>roster&&session>comparison&&guard>session&&inspect>guard);
 assert.match(h,/finalSession\.role!=='school_admin'/);
-assert.match(h,/Class roster changed; reload marks entry/);
+assert.match(h,/Class roster changed or contains inactive student; reload marks entry/);
 assert.match(h,/new Set\(classMarkRoster\.map\(student=>student\.id\)\)/);
 console.log('V47 marks inspection full-class roster refresh and session checks wired');
