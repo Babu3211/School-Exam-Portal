@@ -23,13 +23,14 @@ async function unzip(buffer){
  if(count>MAX_ENTRIES||directory>=bytes.length)throw new Error('Unexpected workbook structure');
  const files=new Map();let offset=directory;
  for(let i=0;i<count;i++){
-  if(offset+46>bytes.length||u32(view,offset)!==0x02014b50)throw new Error('Invalid ZIP directory');
+  if(offset+46>directory+directorySize||u32(view,offset)!==0x02014b50)throw new Error('Invalid ZIP directory');
   const flags=u16(view,offset+8),method=u16(view,offset+10),checksum=u32(view,offset+16),compressed=u32(view,offset+20),uncompressed=u32(view,offset+24);
   const nameLength=u16(view,offset+28),extra=u16(view,offset+30),comment=u16(view,offset+32),local=u32(view,offset+42);
-  if(offset+46+nameLength+extra+comment>bytes.length||local+30>bytes.length||u32(view,local)!==0x04034b50)throw new Error('Invalid ZIP entry');
+  if(offset+46+nameLength+extra+comment>directory+directorySize||local+30>directory||u32(view,local)!==0x04034b50)throw new Error('Invalid ZIP entry');
   const name=decoder.decode(bytes.subarray(offset+46,offset+46+nameLength));
   offset+=46+nameLength+extra+comment;
   if(!['xl/worksheets/sheet1.xml','xl/sharedStrings.xml'].includes(name))continue;
+  if(files.has(name))throw new Error('Duplicate XLSX worksheet entry');
   if((flags&1)||![0,8].includes(method)||uncompressed>MAX_XML)throw new Error('Unsupported or oversized Excel entry');
   if(u16(view,local+8)!==method||u16(view,local+6)&1)throw new Error('Mismatched XLSX ZIP entry');
   const start=local+30+u16(view,local+26)+u16(view,local+28);
@@ -48,6 +49,7 @@ async function unzip(buffer){
   if(crc32(output)!==checksum)throw new Error('Invalid XLSX entry checksum');
   files.set(name,decoder.decode(output));
  }
+ if(offset!==directory+directorySize)throw new Error('Invalid XLSX directory length');
  return files;
 }
 export async function readV47StudentXlsx(file){
