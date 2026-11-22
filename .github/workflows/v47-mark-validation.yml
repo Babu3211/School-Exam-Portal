@@ -37,6 +37,8 @@ on:
       - 'v47/test-marks-release-safety.mjs'
       - 'v47/firestore.rules'
       - 'v47/release-readiness-gate.mjs'
+      - 'v47/firestore-adapter.mjs'
+      - 'v47/test-school-store-isolation.mjs'
       - 'v47/student-service.mjs'
       - 'v47/student-validation.mjs'
       - 'v47/test-student-create-roster.mjs'
@@ -91,6 +93,8 @@ jobs:
           node --check v47/test-class-mark-staging-plan.mjs
           node --check v47/class-mark-save.mjs
           node --check v47/test-class-mark-save.mjs
+          node --check v47/firestore-adapter.mjs
+          node --check v47/test-school-store-isolation.mjs
           node --check v47/student-service.mjs
           node --check v47/test-student-create-roster.mjs
           node --check v47/permissions.mjs
@@ -104,6 +108,8 @@ jobs:
           node --check v47/class-publication-preflight.mjs
           node --check v47/test-marks-release-safety.mjs
           node --check v47/test-school-result-preview.mjs
+      - name: Verify tenant isolation in shared school records
+        run: node v47/test-school-store-isolation.mjs
       - name: Verify student creation and roster compatibility
         run: node v47/test-student-create-roster.mjs
       - name: Verify permission operation and tenant boundaries
