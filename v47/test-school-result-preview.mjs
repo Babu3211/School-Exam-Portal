@@ -4,7 +4,7 @@ const schoolId='12345678',actor={schoolId,role:'school_admin',active:true};
 let paths=[];
 const api={doc:(_db,...parts)=>parts.join('/'),getDoc:async path=>{paths.push(path);return {exists:()=>true,data:()=>({schoolId,class:'9',active:true,theoryFullMarks:60,practicalFullMarks:40})}}};
 const base={db:{},api,actor,schoolId,schoolClass:'9',term:'final'};
-const records=[{studentId:'s1',subjectId:'math',class:'9',term:'final',theory:48,practical:32},{studentId:'s2',subjectId:'math',class:'9',term:'final',theory:60,practical:40}];
+const records=[{schoolId,studentId:'s1',subjectId:'math',class:'9',term:'final',theory:48,practical:32},{schoolId,studentId:'s2',subjectId:'math',class:'9',term:'final',theory:60,practical:40}];
 const result=await previewSchoolRawMarksWithV46({...base,records});
 assert.equal(result.length,2);
 assert.equal(result[0].summary.obtained,80);
@@ -16,6 +16,7 @@ await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,schoolClass:'1',r
 await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,schoolId:'87654321',records:[]}));
 await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,records:[{...records[0],theory:61}]}));
 await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,records:[{...records[0],class:'10'}]}));
+await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,records:[{...records[0],schoolId:'99999999'}]}),/outside selected/);
 const missing={...api,getDoc:async()=>({exists:()=>false})};
 await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,api:missing,records:[records[0]]}));
 await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,records:[records[0],records[0]]}),/Duplicate/);
