@@ -1,13 +1,14 @@
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,touchSchoolActivity} from './school-firebase-client.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
+import {schoolDashboardAccess} from './dashboard-access.mjs';
 const $=id=>document.getElementById(id);
 let auth,authSdk,db,api,verified=null,busy=false,checkingLink=false,lastActivity=Date.now();
 const MAX_IDLE_MS=60*60*1000;
 const SCHOOL_SELECTION_KEY='smss-v47-dashboard-school';
 const readDocument=async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null};
 function message(value){$('dashboardStatus').textContent=value}
-function lock(){for(const link of document.querySelectorAll('[data-school-module]')){const allowed=!!verified;link.setAttribute('aria-disabled',String(!allowed));link.tabIndex=allowed?0:-1;link.classList.toggle('locked',!allowed)}$('schoolIdentity').textContent=verified?verified.name+' · '+verified.schoolId+' · '+verified.role:'No school verified';$('schoolAccessMode').textContent=!verified?'Login required to view school modules.':verified.role==='viewer'?'Viewer — पढ्न र रिपोर्ट हेर्न मात्र मिल्छ। Add, Edit, Delete वा Save अनुमति छैन।':verified.role==='teacher'?'Teacher — तोकिएको कक्षा र विषयमा मात्र अनुमति अनुसार काम गर्न मिल्छ।':'School Admin — विद्यालयको व्यवस्थापन गर्न मिल्छ; प्रत्येक Module ले अनुमति पुनः जाँच्छ।';$('dashboardLogout').disabled=!verified}
+function lock(){for(const link of document.querySelectorAll('[data-school-module]')){const allowed=!!verified&&schoolDashboardAccess(verified.role,link.dataset.requiredRole==='school_admin'?'school-admin':'module');link.setAttribute('aria-disabled',String(!allowed));link.tabIndex=allowed?0:-1;link.classList.toggle('locked',!allowed)}$('schoolIdentity').textContent=verified?verified.name+' · '+verified.schoolId+' · '+verified.role:'No school verified';$('schoolAccessMode').textContent=!verified?'Login required to view school modules.':verified.role==='viewer'?'Viewer — पढ्न र रिपोर्ट हेर्न मात्र मिल्छ। Add, Edit, Delete वा Save अनुमति छैन।':verified.role==='teacher'?'Teacher — तोकिएको कक्षा र विषयमा मात्र अनुमति अनुसार काम गर्न मिल्छ।':'School Admin — विद्यालयको व्यवस्थापन गर्न मिल्छ; प्रत्येक Module ले अनुमति पुनः जाँच्छ।';$('dashboardLogout').disabled=!verified}
 function clear(){verified=null;lock()}
 async function restoreVerifiedSchool(){
  const saved=sessionStorage.getItem(SCHOOL_SELECTION_KEY);
@@ -37,6 +38,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)void expir
 document.querySelectorAll('[data-school-module]').forEach(link=>link.addEventListener('click',async event=>{
  event.preventDefault();
  if(!verified||checkingLink){message('पहिले विद्यालयको Login प्रमाणित गर्नुहोस्।');return}
+ if(!schoolDashboardAccess(verified.role,link.dataset.requiredRole==='school_admin'?'school-admin':'module')){message('यो Module खोल्न School Admin अनुमति आवश्यक छ।');return}
  if(await expireIdle())return;
  checkingLink=true;
  try{
@@ -44,6 +46,7 @@ document.querySelectorAll('[data-school-module]').forEach(link=>link.addEventLis
   if(auth?.currentUser?.uid!==current.uid)throw Error('Login session changed');
   const session=await verifySchoolSession({schoolId:current.schoolId,uid:current.uid,readDocument});
   if(verified!==current||auth.currentUser?.uid!==current.uid||session.role!==current.role)throw Error('School membership changed');
+  if(!schoolDashboardAccess(session.role,link.dataset.requiredRole==='school_admin'?'school-admin':'module'))throw Error('School Admin permission required');
   const school=await readDocument('schools/'+current.schoolId);
   if(verified!==current||school?.active!==true)throw Error('School inactive');
   const destination=new URL(link.getAttribute('href'),location.href);
