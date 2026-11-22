@@ -82,5 +82,12 @@ await assert.rejects(()=>loadAllClassMarks({...base,actor:unauthorized}),/member
  assert.equal(full.records[0].id,ids[0]);
  assert.equal(full.records.at(-1).id,ids.at(-1));
  assert.equal(full.diagnosticOnly,true);
+ const extraIds=[...ids,'mark_30000'];
+ const overApi={...bulkApi,getDocs:async query=>{
+  const cursor=query.find(x=>x&&typeof x==='object'&&typeof x.id==='string');
+  const start=cursor?extraIds.indexOf(cursor.id)+1:0;
+  return {docs:extraIds.slice(start,start+pageSize+1).map(id=>({id,data:()=>({schoolId,class:'9',term:'final',studentId:'student_1',subjectId:'subject_1'})}))};
+ }};
+ await assert.rejects(()=>loadAllClassMarks({...base,api:overApi,pageSize,maxRecords:total}),/safe read limit/);
 }
 console.log('V47 complete class marks pagination checks passed');
