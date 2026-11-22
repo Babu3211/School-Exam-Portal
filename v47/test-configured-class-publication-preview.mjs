@@ -25,3 +25,18 @@ assert.equal(absent.orderedEntries.find(r=>r.isAbsent).values,null);
 assert.throws(()=>prepareConfiguredClassPublication({...args,actor:{...actor,role:'viewer'}}),/Verified school admin/);
 assert.throws(()=>prepareConfiguredClassPublication({...args,schoolId:'67890'}),/Verified school admin/);
 console.log('V47 configured full-class publication preview tests passed');
+
+// Full supported class size must remain reviewable without allowing writes.
+const largeRoster=Array.from({length:1500},(_,i)=>'student'+String(i).padStart(4,'0'));
+const largeDrafts=largeRoster.map(studentId=>({studentId,values:{theory:63,practical:37}}));
+const large=prepareConfiguredClassPublication({...args,expectedStudentIds:largeRoster,drafts:largeDrafts});
+assert.equal(large.complete,true);
+assert.equal(large.rosterCount,1500);
+assert.equal(large.reviewBatches.length,15);
+assert.equal(large.reviewBatches.reduce((count,batch)=>count+batch.length,0),1500);
+assert.equal(large.writeAuthorized,false);
+assert.equal(large.publicationAllowed,false);
+assert.throws(()=>prepareConfiguredClassPublication({...args,expectedStudentIds:[...largeRoster,'student1500'],drafts:largeDrafts}),/Complete authoritative class roster required/);
+for(const uid of [' ','admin/other','admin.name','a'.repeat(129)]){
+ assert.throws(()=>prepareConfiguredClassPublication({...args,actor:{...actor,uid}}),/Verified school admin required/);
+}
