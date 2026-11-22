@@ -23,7 +23,7 @@ async function loadMembersPage(){
   const page=await listSchoolMembersPage({db,api,actor:requestActor,schoolId:requestSchool,cursor});
   if(current!==sessionEpoch||request!==memberRequest||actor!==requestActor||schoolId!==requestSchool||auth.currentUser?.uid!==requestActor.uid)return;
   const tbody=$('members');
-  for(const member of page.records){const tr=document.createElement('tr');for(const value of [member.uid,member.role,member.active?'Yes':'No']){const td=document.createElement('td');td.textContent=String(value);tr.append(td)}if(['teacher','viewer'].includes(member.role)){const td=document.createElement('td');const btn=document.createElement('button');btn.textContent=member.active?'Deactivate':'Activate';btn.onclick=async()=>{if(busy)return;const session=requireCurrentAdmin();if(!confirm((member.active?'Deactivate ':'Activate ')+member.role+' '+member.uid+'?'))return;assertSameAdmin(session);busy=true;btn.disabled=true;$('logout').disabled=true;try{await setSchoolMemberActive({db,api,actor:session.actor,schoolId:session.schoolId,uid:member.uid,active:!member.active});await refresh()}catch(e){status(e.message)}finally{busy=false;btn.disabled=false;$('logout').disabled=false}};td.append(btn);tr.append(td)}tbody.append(tr)}
+  for(const member of page.records){const tr=document.createElement('tr');for(const value of [member.uid,member.role,member.active?'Yes':'No']){const td=document.createElement('td');td.textContent=String(value);tr.append(td)}if(['teacher','viewer'].includes(member.role)){const td=document.createElement('td');const btn=document.createElement('button');btn.textContent=member.active?'Deactivate':'Activate';btn.onclick=async()=>{if(busy)return;const session=requireCurrentAdmin();if(!confirm((member.active?'Deactivate ':'Activate ')+member.role+' '+member.uid+'?'))return;assertSameAdmin(session);busy=true;btn.disabled=true;$('logout').disabled=true;try{await setSchoolMemberActive({db,api,actor:session.actor,schoolId:session.schoolId,uid:member.uid,active:!member.active,expectedActive:member.active});await refresh()}catch(e){status(e.message)}finally{busy=false;btn.disabled=false;$('logout').disabled=false}};td.append(btn);tr.append(td)}tbody.append(tr)}
   memberCursor=page.nextCursor;memberHasMore=page.hasMore;
   status('Loaded '+tbody.children.length+' members'+(page.hasMore?' — more available':''));
  }catch(e){if(current===sessionEpoch&&request===memberRequest)status(e.message)}
@@ -55,7 +55,7 @@ $('toggleFoundMember').onclick=async()=>{
   if(!latest||latest.role!==member.role||latest.active!==member.active)throw new Error('Member status changed; search again');
   if(!confirm((member.active?'Deactivate ':'Activate ')+member.role+' '+member.uid+'?'))return;
   assertSameAdmin(session);
-  await setSchoolMemberActive({db,api,actor:session.actor,schoolId:session.schoolId,uid:member.uid,active:!member.active});
+  await setSchoolMemberActive({db,api,actor:session.actor,schoolId:session.schoolId,uid:member.uid,active:!member.active,expectedActive:member.active});
   assertSameAdmin(session);
   foundMember=null;lookupRequest++;$('memberLookupResult').textContent='सदस्यको अवस्था परिवर्तन भयो। पुनः खोजेर पुष्टि गर्नुहोस्।';
   await refresh();
