@@ -26,6 +26,7 @@ export async function loadMarksByClassTerm({db,api,actor,schoolId,schoolClass,te
   if(typeof data.studentId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(data.studentId)||typeof data.subjectId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(data.subjectId))throw new Error('Invalid marks student or subject identity');
   validated.push({...data,id:d.id});
  }
+ if(!canAccessSchool(actor,schoolId,'read')||Object.keys(identity).some(key=>actor?.[key]!==identity[key]))throw new Error('School membership changed during marks query');
  const page=docs.slice(0,pageSize);
  return {records:validated.slice(0,pageSize),hasMore:docs.length>pageSize,cursor:page.at(-1)??null};
 }
