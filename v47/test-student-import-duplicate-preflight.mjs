@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {checkExistingStudentIemisIds} from './student-import-duplicate-preflight.mjs';
+const rows=Array.from({length:250},(_,i)=>({id:'student_'+String(i).padStart(4,'0'),studentIemisId:String(100000+i)}));
+const calls=[];
+const store={async listPage(name,{pageSize,cursor}){assert.equal(name,'students');assert.equal(pageSize,100);calls.push(cursor?.id??null);const offset=cursor?Number(cursor.id.slice(-4))+1:0;const page=rows.slice(offset,offset+pageSize);return {records:page,hasMore:offset+pageSize<rows.length,cursor:page.length?{id:page.at(-1).id}:null}}};
+const accepted=[{student:{studentIemisId:'100120'}},{student:{studentIemisId:'100249'}}];
+const result=await checkExistingStudentIemisIds({store,accepted,assertSession:()=>{}});
+assert.equal(result.scanned,250);assert.equal(result.duplicates.length,2);assert.equal(calls.length,3);
+assert.deepEqual(result.duplicates.map(d=>d.studentIemisId),['100120','100249']);
+assert.deepEqual(await checkExistingStudentIemisIds({store,accepted:[{student:{name:'No ID'}}]}),{duplicates:[],scanned:0,complete:true});
+await assert.rejects(checkExistingStudentIemisIds({store,accepted,maxRecords:200}),RangeError);
+let checks=0;
+await assert.rejects(checkExistingStudentIemisIds({store,accepted,assertSession:()=>{if(++checks===2)throw new Error('Session changed')}}),/Session changed/);
+console.log('V47 existing student IEMIS preflight passed');
