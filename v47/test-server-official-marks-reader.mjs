@@ -24,4 +24,17 @@ rejects({entries:[...entries.slice(0,499),{...entries[499],publicationId:'pub_00
 rejects({entries:[...entries.slice(0,499),{...entries[499],totalObtained:50}]},/component marks/);
 assert.equal(resolveOfficialClassMarks({...args,entries:[...entries.slice(0,499),{...entries[499],isAbsent:true,values:null,totalObtained:0}]}).entries[499].totalObtained,0);
 rejects({entries:[...entries.slice(0,499),{...entries[499],isAbsent:true,values:null,totalObtained:null}]},/absent marks/);
+
+const largePointer={...pointer,rosterCount:1500};
+const largePublication={...publication,rosterCount:1500};
+const largeEntries=Array.from({length:1500},(_,i)=>({
+ publicationId:pointer.publicationId,studentId:'student'+String(i).padStart(4,'0'),
+ isAbsent:false,values:{theory:35,practical:10},totalObtained:45
+}));
+const large=resolveOfficialClassMarks({...scope,pointer:largePointer,publication:largePublication,entries:largeEntries});
+assert.equal(large.entries.length,1500);
+assert.equal(large.entries[1499].studentId,'student1499');
+assert.throws(()=>resolveOfficialClassMarks({...scope,pointer:largePointer,publication:largePublication,entries:largeEntries.slice(0,1499)}),/roster incomplete/);
+assert.throws(()=>resolveOfficialClassMarks({...scope,pointer:{...largePointer,rosterCount:1501},publication:{...largePublication,rosterCount:1501},entries:[...largeEntries,largeEntries[0]]}),/roster incomplete/);
+
 console.log('V47 official marks reader: 500 rows, committed pointer only, staging/partial/cross-tenant rejected');
