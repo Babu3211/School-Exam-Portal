@@ -10,6 +10,7 @@ export async function previewSchoolRawMarksWithV46({db,api,actor,schoolId,school
  if(!canAccessSchool(actor,schoolId,'read'))throw new Error('School membership required');
  if(!validSchoolClass(schoolClass))throw new Error('Invalid class');
  validateExamTerm(term);
+ if(term!=='final'||![6,7,8,9,10].includes(Number(schoolClass)))throw new Error('Diagnostic V46 mapping currently limited to final-term Classes 6–10');
  if(!Array.isArray(records)||records.length>1500)throw new Error('Invalid raw marks page');
  if(typeof api?.doc!=='function'||typeof api?.getDoc!=='function')throw new TypeError('Missing Firestore read SDK');
  const cache=new Map(),results=[];
@@ -25,7 +26,7 @@ export async function previewSchoolRawMarksWithV46({db,api,actor,schoolId,school
   }
   const subject=cache.get(record.subjectId);
   const components=[{key:'practical',name:'Internal',fullMarks:subject.practicalFullMarks},{key:'theory',name:'TH (Theory)',fullMarks:subject.theoryFullMarks}];
-  const summary=previewV46SubjectResult({components,obtained:{practical:record.practical,theory:record.theory},annual:term==='final'});
+  const summary=previewV46SubjectResult({components,obtained:{practical:record.practical,theory:record.theory},annual:true});
   results.push({studentId:record.studentId,subjectId:record.subjectId,summary});
  }
  return results;
