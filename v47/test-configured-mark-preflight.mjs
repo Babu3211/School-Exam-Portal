@@ -51,3 +51,8 @@ for(const key of ['schoolId','subjectId','examId','classId']){
 for(const id of [' ','../student','student/id','student:id','student.id','a'.repeat(129),null,123]){
  assert.throws(()=>inspectConfiguredClassMarks({...base,settings,expectedStudentIds:['a',id],drafts:[]}),/Invalid or duplicate student in roster/);
 }
+
+// Malformed draft containers must fail before a publication review can be marked complete.
+for(const draft of [null,undefined,[],42,'a',true,{studentId:123,values:{}}]){
+ assert.throws(()=>inspectConfiguredClassMarks({...base,settings,drafts:[draft,{studentId:'b',isAbsent:true}]}),/Duplicate or out-of-roster mark draft/);
+}
