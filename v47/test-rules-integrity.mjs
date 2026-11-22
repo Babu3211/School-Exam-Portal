@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const rules=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
+const emulatorConfig=JSON.parse(readFileSync(new URL('./firebase.emulator.json',import.meta.url),'utf8'));
+assert.equal(emulatorConfig.firestore?.rules,'firestore.rules','The V47 emulator rules file must resolve relative to v47/firebase.emulator.json');
+assert.equal(readFileSync(new URL(emulatorConfig.firestore.rules,import.meta.url),'utf8'),rules,'The V47 emulator must use isolated V47 rules, never V46 production rules');
 for(const fragment of [
  "rules_version = '2';","match /schools/{sid}","match /members/{uid}",
  "match /students/{id}","match /marks/{id}","match /attendance/{id}",
