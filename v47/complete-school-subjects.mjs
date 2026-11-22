@@ -22,7 +22,7 @@ export async function loadCompleteSchoolSubjects({db,api,actor,schoolId,schoolCl
   const loaded=[];
   let pageLastId=lastId;
   for(const d of docs){
-   if(typeof d?.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||lastId!==null&&d.id<=pageLastId)throw new Error('Subject pagination order invalid');
+   if(typeof d?.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||pageLastId!==null&&d.id<=pageLastId)throw new Error('Subject pagination order invalid');
    pageLastId=d.id;
    if(typeof d.data!=='function')throw new Error('Malformed subject record');
    const data=d.data();
