@@ -17,6 +17,7 @@ export async function prepareVerifiedClassMarkStaging({db,api,actor,schoolId,cla
  };
  const roster=await loadCompleteClassRoster({db,api,actor,schoolId,classId});
  verify();
+ if(roster.students.some(student=>student.active!==true))throw new Error('Inactive student in authoritative class roster');
  const subjectRef=api.doc(db,'schools',schoolId,'subjects',subjectId);
  const snap=await api.getDoc(subjectRef);
  verify();
