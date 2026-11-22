@@ -211,3 +211,37 @@ for(const mutate of [
  assert.match(ui,/if\(e\?\.name==='PartialAttendanceSaveError'\)\{attendanceReviewRequired=true;attendanceReviewInProgress=false;/);
 }
 console.log('V47 attendance partial-save recovery contract passed');
+
+// A Firebase account switch can occur without mutating the cached actor object.
+// The next batch must consult the live session and stop, preserving the exact
+// committed count rather than uploading marks under a different principal.
+{
+ let userIsCurrent=true,committed=0;
+ const changingAuthApi={
+  doc:(_db,...parts)=>parts.join('/'),
+  getDoc:async()=>({exists:()=>true,data:()=>({schoolId,class:'9'})}),
+  writeBatch:()=>({set:()=>{},commit:async()=>{committed++}})
+ };
+ await assert.rejects(saveLoadedClassAttendance({
+  db:{},api:changingAuthApi,actor:{...actor},schoolId,entries,
+  assertSession:()=>{if(!userIsCurrent)throw new Error('Firebase account changed')},
+  onProgress:()=>{userIsCurrent=false}
+ }),error=>{
+  assert.ok(error instanceof PartialAttendanceSaveError);
+  assert.equal(error.saved,10);
+  assert.equal(error.total,11);
+  assert.deepEqual(error.remainingStudentIds,['s10']);
+  assert.match(error.cause.message,/Firebase account changed/);
+  return true;
+ });
+ assert.equal(committed,1,'Only the first batch may be committed');
+}
+await assert.rejects(saveLoadedClassAttendance({
+ db:{},api:{},actor:{...actor},schoolId,entries,assertSession:true
+}),/Attendance session verifier required/);
+{
+ const {readFileSync}=await import('node:fs');
+ const ui=readFileSync(new URL('./attendance-console.mjs',import.meta.url),'utf8');
+ assert.match(ui,/assertSession:\(\)=>\{if\(auth\?\.currentUser\?\.uid!==uid/);
+ assert.match(ui,/button\.disabled=actor\?\.role!=='school_admin'/);
+}
