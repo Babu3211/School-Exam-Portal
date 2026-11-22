@@ -18,5 +18,6 @@ rejects({entries:entries.slice(0,499)},/roster incomplete/);
 rejects({entries:[...entries.slice(0,499),entries[0]]},/duplicate/);
 rejects({entries:[...entries.slice(0,499),{...entries[499],publicationId:'pub_00000002'}]},/Invalid or duplicate/);
 rejects({entries:[...entries.slice(0,499),{...entries[499],totalObtained:50}]},/component marks/);
-rejects({entries:[...entries.slice(0,499),{...entries[499],isAbsent:true,values:null,totalObtained:0}]},/absent marks/);
+assert.equal(resolveOfficialClassMarks({...args,entries:[...entries.slice(0,499),{...entries[499],isAbsent:true,values:null,totalObtained:0}]}).entries[499].totalObtained,0);
+rejects({entries:[...entries.slice(0,499),{...entries[499],isAbsent:true,values:null,totalObtained:null}]},/absent marks/);
 console.log('V47 official marks reader: 500 rows, committed pointer only, staging/partial/cross-tenant rejected');
