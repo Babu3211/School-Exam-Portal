@@ -201,6 +201,7 @@ for(const mutate of [
  assert.match(ui,/if\(review\)\{attendanceReviewInProgress=true/);
  assert.match(ui,/function reset\(\)\{attendanceReviewInProgress=false/);
  assert.match(ui,/async function load\(reset=false,review=false\)\{if\(savingAttendance\|\|!store/);
+ assert.match(ui,/savingAttendance=true;epoch\+\+;busy=false;\$\('next'\)\.disabled=true;rosterEpoch\+\+;rosterBusy=false;const button=\$\('bulkSave'\)/);
  assert.match(ui,/const button=\$\('save'\);savingAttendance=true;epoch\+\+;busy=false;\$\('next'\)\.disabled=true/);
  assert.match(ui,/\$\('bulkSave'\)\.onclick=async\(\)=>\{if\(savingAttendance\)return;savingAttendance=true;epoch\+\+;busy=false;\$\('next'\)\.disabled=true/);
  assert.match(ui,/if\(!attendanceReviewRequired&&!savingAttendance\)/);
