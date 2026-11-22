@@ -10,6 +10,7 @@ const checks=[
  ['V47 marks Firestore rules deny unverified writes',()=>/match \/marks\/\{id\}/.test(read('firestore.rules'))&&/allow (?:write|create|update): if false/.test(read('firestore.rules'))],
  ['V47 grade sheet UI is implemented',()=>{try{return read('grade-sheet.html').includes('iemis')}catch{return false}}],
  ['V47 grade ledger UI is implemented',()=>{try{return read('grade-ledger.html').includes('iemis')}catch{return false}}],
+ ['V47 marks entry Save and Publish are enabled',()=>!/id="(?:save|publish)"[^>]*disabled/.test(read('marks-entry.html'))],
  ['V47 main dashboard is not a development hub',()=>!/Development only|development workspace|independent prototypes/i.test(read('index.html'))],
  ['Full class mark-save limit removed',()=>!/complete\\.count\\s*>\\s*3/.test(read('verified-small-class-mark-save.mjs'))],
 ];
