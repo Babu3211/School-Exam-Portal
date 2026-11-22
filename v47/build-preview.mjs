@@ -32,10 +32,11 @@ while(queue.length){
   for(const m of source.matchAll(/(?:src|href)=["']\.\/([^"'?#]+)["']/g))dependencies.push(m[1]);
   for(const m of source.matchAll(/url\(\s*["']?\.\/([^)'"?#]+)["']?\s*\)/g))dependencies.push(m[1]);
  }
- if(ext==='.mjs'||ext==='.js'){
+ if(ext==='.html'||ext==='.mjs'||ext==='.js'){
+  // Follow inline HTML module imports as well as external JavaScript imports.
   for(const m of source.matchAll(/\b(?:import|export)\s*(?:[^'";]*?\s+from\s*)?['"]\.\/([^'"]+)['"]/g))dependencies.push(m[1]);
   for(const m of source.matchAll(/\bimport\(\s*['"]\.\/([^'"]+)['"]\s*\)/g))dependencies.push(m[1]);
-  if(/(?:from\s*['"]node:|import\s*['"]node:)/.test(source))throw Error('Node-only module reached from browser: '+name);
+  if((ext==='.mjs'||ext==='.js')&&/(?:from\s*['"]node:|import\s*['"]node:)/.test(source))throw Error('Node-only module reached from browser: '+name);
  }
  for(const dependency of dependencies){
   if(!allowed.test(dependency)||!all.has(dependency))throw Error(name+' references missing or invalid asset '+dependency);

@@ -12,7 +12,7 @@ function run(files){
   for(const [name,content] of Object.entries(files))writeFileSync(join(root,name),content);
   writeFileSync(join(root,'build-preview.mjs'),source);
   const result=spawnSync(process.execPath,[join(root,'build-preview.mjs')],{encoding:'utf8'});
-  return {status:result.status,output:result.stdout+result.stderr,dist:existsSync(join(root,'dist'))?Object.fromEntries(['index.html','dashboard-console.mjs','v47-firebase-config.mjs','unused.mjs','students.html','students-console.mjs','manifest.webmanifest','dev-icon.svg','PREVIEW-ONLY.txt'].map(name=>[name,existsSync(join(root,'dist',name))])):null};
+  return {status:result.status,output:result.stdout+result.stderr,dist:existsSync(join(root,'dist'))?Object.fromEntries(['index.html','dashboard-console.mjs','v47-firebase-config.mjs','unused.mjs','students.html','students-console.mjs','student-import-preview.html','student-import-helper.mjs','manifest.webmanifest','dev-icon.svg','PREVIEW-ONLY.txt'].map(name=>[name,existsSync(join(root,'dist',name))])):null};
  }finally{rmSync(root,{recursive:true,force:true})}
 }
 const base={
@@ -26,6 +26,20 @@ const base={
  'unused.mjs':"import {readFileSync} from 'node:fs';"
 };
 const ok=run(base);assert.equal(ok.status,0,ok.output);assert.equal(ok.dist['index.html'],true);assert.equal(ok.dist['dashboard-console.mjs'],true);assert.equal(ok.dist['v47-firebase-config.mjs'],true);assert.equal(ok.dist['unused.mjs'],false);assert.equal(ok.dist['students.html'],true);assert.equal(ok.dist['students-console.mjs'],true);assert.equal(ok.dist['PREVIEW-ONLY.txt'],true);assert.equal(ok.dist['manifest.webmanifest'],true);assert.equal(ok.dist['dev-icon.svg'],true);
+const inline=run({...base,
+ 'students.html':'<a href="./student-import-preview.html">Excel</a><script type="module" src="./students-console.mjs"></script>',
+ 'student-import-preview.html':'<script type="module">import {preview} from "./student-import-helper.mjs"; void preview;</script>',
+ 'student-import-helper.mjs':'export const preview=true;'
+});
+assert.equal(inline.status,0,inline.output);
+assert.equal(inline.dist['student-import-preview.html'],true);
+assert.equal(inline.dist['student-import-helper.mjs'],true,'Inline HTML module dependencies must be included');
+const missingInline=run({...base,
+ 'students.html':'<a href="./student-import-preview.html">Excel</a><script type="module" src="./students-console.mjs"></script>',
+ 'student-import-preview.html':'<script type="module">import {preview} from "./missing-inline-module.mjs";</script>'
+});
+assert.notEqual(missingInline.status,0);
+assert.match(missingInline.output,/references missing or invalid asset/);
 const manifestOnly=run({...base,'index.html':base['index.html'].replace('<link rel="icon" href="./dev-icon.svg">','')});assert.equal(manifestOnly.status,0,manifestOnly.output);assert.equal(manifestOnly.dist['dev-icon.svg'],true,'Manifest icon must be included even without HTML icon link');
 const invalidManifest=run({...base,'manifest.webmanifest':'{not json'});assert.notEqual(invalidManifest.status,0);assert.match(invalidManifest.output,/Invalid PWA manifest JSON/);
 const remoteIcon=run({...base,'manifest.webmanifest':JSON.stringify({icons:[{src:'https://example.com/icon.svg'}]})});assert.notEqual(remoteIcon.status,0);assert.match(remoteIcon.output,/Invalid local PWA icon/);

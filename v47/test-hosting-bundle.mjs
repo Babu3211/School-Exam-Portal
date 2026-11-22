@@ -3,7 +3,7 @@ import {readdir,readFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 execFileSync(process.execPath,['v47/build-hosting.mjs'],{stdio:'inherit'});
 const names=await readdir('v47/dist');
-for(const name of ['index.html','admin.html','school-login.html','school-login.mjs','students.html','attendance.html','manifest.webmanifest','dev-icon.svg'])
+for(const name of ['index.html','admin.html','school-login.html','school-login.mjs','students.html','attendance.html','student-import-preview.html','v46-iemis-student-import-panel.mjs','require-xlsx-preview-file.mjs','manifest.webmanifest','dev-icon.svg'])
  assert(names.includes(name),'Missing public entry '+name);
 for(const name of names){
  assert(!name.startsWith('test-')&&!name.startsWith('build-')&&!name.startsWith('release-')&&!name.startsWith('server-')&&!name.startsWith('audit-'),'Private development module leaked: '+name);
@@ -21,6 +21,8 @@ for(const name of names.filter(n=>n.endsWith('.html'))){
  assert(!/babu3211\.github\.io\/School-Exam-Portal|exam-portal-smss-95016\.web\.app/i.test(html),'V46 production URL leaked: '+name);
  for(const match of html.matchAll(/(?:src|href)\s*=\s*["']\.\/([^"'?#]+)["']/g))
   assert(names.includes(match[1]),name+' links missing file '+match[1]);
+ for(const match of html.matchAll(/(?:\bfrom\s*|\bimport\s*\(|\bimport\s*)["']\.\/([^"']+)["']/g))
+  assert(names.includes(match[1].split(/[?#]/)[0]),name+' inline module missing file '+match[1]);
 }
 for(const name of names.filter(n=>n.endsWith('.mjs'))){
  const code=await readFile('v47/dist/'+name,'utf8');

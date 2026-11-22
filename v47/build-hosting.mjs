@@ -38,6 +38,8 @@ while(queue.length){
   }
  }else if(ext==='.html'){
   for(const m of code.matchAll(/(?:src|href)\s*=\s*["'](\.\/[^"'?#]+)["']/g))localRef(m[1],name);
+  // Inline <script type="module"> imports also need to be copied.
+  for(const m of code.matchAll(/(?:\bfrom\s*|\bimport\s*\(|\bimport\s*)["'](\.\/[^"']+)["']/g))localRef(m[1],name);
  }else if(ext==='.mjs'||ext==='.js'){
   if(/(?:from\s*['"]node:|import\s*['"]node:)/.test(code))throw new Error('Node-only import reachable in V47 hosting: '+name);
   for(const m of code.matchAll(/(?:\bfrom\s*|\bimport\s*\(|\bimport\s*)["']([^"']+)["']/g))localRef(m[1],name);
