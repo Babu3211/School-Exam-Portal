@@ -23,6 +23,9 @@ on:
       - 'v47/test-complete-class-result-preview.mjs'
       - 'v47/complete-class-marks-query.mjs'
       - 'v47/test-complete-class-marks-query.mjs'
+      - 'v47/complete-school-subjects.mjs'
+      - 'v47/test-complete-school-subjects.mjs'
+      - 'v47/school-class-result-diagnostic.mjs'
       - 'v47/marks-service.mjs'
       - 'v47/test-unbounded-mark-entry.mjs'
       - 'v47/mark-create-service.mjs'
@@ -43,6 +46,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify complete school subject roster
+        run: node v47/test-complete-school-subjects.mjs
       - name: Verify complete school marks pagination
         run: node v47/test-complete-class-marks-query.mjs
       - name: Verify complete class V46 GPA diagnostic
