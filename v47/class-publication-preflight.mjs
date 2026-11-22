@@ -6,7 +6,7 @@ import {verifyClassMarksCoverage} from './class-marks-coverage.mjs';
 // Read-only preflight. This does not authorize saving or publishing marks.
 export function assessClassPublicationReadiness({actor,schoolId,schoolClass,term,students,subjects,records,coverage}){
  validateSchoolId(schoolId);
- if(!canAccessSchool(actor,schoolId,'read'))throw new Error('School membership required');
+ if(typeof actor?.uid!=='string'||!actor.uid.trim()||!canAccessSchool(actor,schoolId,'read'))throw new Error('School membership required');
  if(!validSchoolClass(schoolClass))throw new Error('Invalid class');
  validateExamTerm(term);
  const blockers=[];
