@@ -35,3 +35,20 @@ assert.equal(verifyClassMarksReviewPackage({...base,expectedStudentIds:largeIds,
 assert.throws(()=>buildClassMarksReviewPackage({...base,expectedStudentIds:[...largeIds,'extra'],drafts:[...largeDrafts,{studentId:'extra',values:{theory:55,practical:20}}]}));
 assert.throws(()=>verify(' '.repeat(900001)),/too large/);
 console.log('V47 review import revalidation checks complete class, tenant, component limits and tampering; no writes');
+
+// At the 1500-student boundary, a changed mark, roster identity, or approval flag must fail closed.
+const largeVerify=json=>verifyClassMarksReviewPackage({...base,expectedStudentIds:largeIds,json});
+for(const mutate of [
+ obj=>obj.entries[1499].values.theory=54,
+ obj=>obj.entries[1499].totalObtained=74,
+ obj=>obj.entries[1499].studentId='outsider',
+ obj=>obj.entries[1499].isAbsent=true,
+ obj=>obj.entries[1499].values=null,
+ obj=>obj.entries.reverse(),
+ obj=>obj.publicationAllowed=true
+]){
+ const changed=JSON.parse(large.json);
+ mutate(changed);
+ assert.throws(()=>largeVerify(JSON.stringify(changed)));
+}
+assert.throws(()=>verifyClassMarksReviewPackage({...base,expectedStudentIds:largeIds,json:large.json,actor:{...actor,schoolId:'67890'}}));
