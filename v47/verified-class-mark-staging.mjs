@@ -2,6 +2,7 @@ import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {planCompleteClassMarkStaging} from './class-mark-staging-plan.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {canAccessSchool} from './permissions.mjs';
+import {verifyClassMarkStagingPlan} from './class-mark-staging-integrity.mjs';
 
 // Prepare only: authoritative Firestore roster, no client-provided roster shortcut.
 // This must never write staging documents or mark records.
@@ -33,6 +34,8 @@ export async function prepareVerifiedClassMarkStaging({db,api,actor,schoolId,cla
   schoolId,classId,term,subjectId,expectedStudentIds:roster.studentIds,
   entries,subjectSettings:settings,chunkSize
  });
+ verify();
+ verifyClassMarkStagingPlan(plan);
  verify();
  return Object.freeze({...plan,rosterPages:roster.pages});
 }
