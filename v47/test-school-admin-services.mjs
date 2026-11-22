@@ -3,7 +3,7 @@ import {onboardSchool} from './school-onboarding.mjs';
 import {setSchoolActive} from './school-status-service.mjs';
 import {listSchools} from './school-list-service.mjs';
 
-const admin={role:'super_admin',active:true};
+const admin={uid:'super123',role:'super_admin',active:true};
 const viewer={role:'viewer',active:true,schoolId:'12345'};
 const school={id:'12345',name:'Sample School',iemisCode:'12345'};
 const makeDb=()=>({schools:new Map(),members:new Map(),updates:[]});
