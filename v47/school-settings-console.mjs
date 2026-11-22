@@ -1,4 +1,4 @@
-import {connectSchoolFirebase} from './school-firebase-client.mjs';
+import {connectSchoolFirebase,touchSchoolActivity} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
@@ -32,7 +32,7 @@ $('login').onclick=async()=>{
   if(request!==epoch||auth.currentUser?.uid!==uid||id!==$('schoolId').value.trim()||fresh.uid!==session.uid||fresh.role!==session.role)throw new Error('Session or school selection changed');
   if(!school||school.id!==id||school.iemisCode!==id||school.active!==true)throw new Error('Verified school settings unavailable');
   $('iemis').textContent=id;$('name').textContent=String(school.name);$('active').textContent='Active';$('role').textContent=session.role;
-  verifiedSchoolId=id;verifiedUid=uid;$('schoolId').disabled=true;$('email').disabled=true;$('password').disabled=true;
+  touchSchoolActivity();verifiedSchoolId=id;verifiedUid=uid;$('schoolId').disabled=true;$('email').disabled=true;$('password').disabled=true;
   $('settings').hidden=false;message('विद्यालय विवरण प्रमाणित भयो। यो पृष्ठमा परिवर्तन गर्न मिल्दैन।');
  }catch(e){if(request===epoch){reset();const failedEpoch=epoch;try{await authSdk.signOut(auth)}catch{}if(epoch===failedEpoch){lock(false);message('School verification failed: '+e.message)}}}
  finally{if(request===epoch)lock(false)}
