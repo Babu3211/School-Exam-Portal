@@ -19,11 +19,16 @@ export async function loadCompleteSchoolSubjects({db,api,actor,schoolId,schoolCl
   verify();
   if(!Array.isArray(snap.docs)||snap.docs.length>pageSize+1)throw new Error('Invalid subject page');
   const page=snap.docs.slice(0,pageSize);
-  for(const d of snap.docs){
+  for(const d of page){
    if(typeof d.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||lastId!==null&&d.id<=lastId)throw new Error('Subject pagination order invalid');
    lastId=d.id;
    const data=d.data();
    if(data.schoolId!==schoolId||data.class!==schoolClass)throw new Error('Foreign subject in roster');
+  }
+  if(snap.docs.length>pageSize){
+   const extra=snap.docs[pageSize];
+   if(typeof extra?.id!=='string'||extra.id<=lastId)throw new Error('Invalid subject lookahead cursor');
+   if(extra.data().schoolId!==schoolId||extra.data().class!==schoolClass)throw new Error('Foreign subject in lookahead');
   }
   for(const d of page){
    const data=d.data();
