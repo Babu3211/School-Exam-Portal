@@ -54,9 +54,16 @@ await assert.rejects(readV47StudentXlsx(asFile(overlap)),/Truncated XLSX|Mismatc
 const invalidDirectory=new Uint8Array(source);
 new DataView(invalidDirectory.buffer).setUint32(eocd+12,source.length,true);
 await assert.rejects(readV47StudentXlsx(asFile(invalidDirectory)),/Invalid XLSX central directory/);
+// ZIP requires central and local headers to agree before a payload CRC can
+// be checked. Assert both independent validation layers, not one ambiguous error.
 const badChecksum=new Uint8Array(source);
 new DataView(badChecksum.buffer).setUint32(central+16,0,true);
-await assert.rejects(readV47StudentXlsx(asFile(badChecksum)),/Invalid XLSX entry checksum/);
+await assert.rejects(readV47StudentXlsx(asFile(badChecksum)),/Mismatched XLSX ZIP entry/);
+const pairedBadChecksum=new Uint8Array(source);
+const pairedHeaders=new DataView(pairedBadChecksum.buffer);
+pairedHeaders.setUint32(central+16,0,true);
+pairedHeaders.setUint32(local+14,0,true);
+await assert.rejects(readV47StudentXlsx(asFile(pairedBadChecksum)),/Invalid XLSX entry checksum/);
 const corruptWorksheet=new Uint8Array(source);
 const worksheetData=local+30+view.getUint16(local+26,true)+view.getUint16(local+28,true);
 corruptWorksheet[worksheetData+Math.min(20,view.getUint32(central+20,true)-1)]^=1;
@@ -85,7 +92,7 @@ await rejects(local+6,(v,p)=>v.setUint16(p,1,true),/Mismatched XLSX ZIP entry/);
 await rejects(central+10,(v,p)=>v.setUint16(p,99,true),/Unsupported or oversized Excel entry/);
 // 10-12: worksheet size and checksum.
 await rejects(central+24,(v,p)=>v.setUint32(p,0,true),/Invalid XLSX entry size/);
-await rejects(central+16,(v,p)=>v.setUint32(p,0xffffffff,true),/Invalid XLSX entry checksum/);
+await rejects(central+16,(v,p)=>v.setUint32(p,0xffffffff,true),/Mismatched XLSX ZIP entry/);
 await rejects(central+20,(v,p)=>v.setUint32(p,source.length,true),/Truncated XLSX|Mismatched XLSX ZIP entry/);
 // 13-15: malformed central record metadata.
 await rejects(central+28,(v,p)=>v.setUint16(p,65535,true),/Invalid ZIP entry/);
