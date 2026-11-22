@@ -19,6 +19,7 @@ on:
       - 'v47/test-marks-audit-configured-scale.mjs'
       - 'v47/class-marks-coverage.mjs'
       - 'v47/test-class-marks-coverage.mjs'
+      - 'v47/test-large-class-marks-coverage.mjs'
       - 'v47/complete-class-result-preview.mjs'
       - 'v47/test-complete-class-result-preview.mjs'
       - 'v47/complete-class-marks-query.mjs'
@@ -76,6 +77,8 @@ jobs:
         run: node v47/test-complete-class-marks-query.mjs
       - name: Verify complete class V46 GPA diagnostic
         run: node v47/test-complete-class-result-preview.mjs
+      - name: Verify 1500-student 20-subject marks coverage
+        run: node v47/test-large-class-marks-coverage.mjs
       - name: Verify complete class roster coverage
         run: node v47/test-class-marks-coverage.mjs
       - name: Verify raw audit configured marks
