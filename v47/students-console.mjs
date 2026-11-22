@@ -45,7 +45,7 @@ $('previewImport').onclick=async()=>{
    }});
   }finally{if(request===previewRequest)$('previewImport').disabled=false}
   if(request!==previewRequest||epoch!==loadEpoch||actor!==selectedActor||schoolId!==selectedSchool||auth?.currentUser?.uid!==uid)return;
-  for(const duplicate of existing.duplicates){const match=report.accepted.find(item=>item.student.studentIemisId===duplicate.studentIemisId);report.errors.push({row:match?.row??'?',error:'Student IEMIS Id already exists in this school'});}
+  for(const duplicate of existing.duplicates){report.errors.push({row:duplicate.row,error:duplicate.kind+' already exists in this school'});}
   report.ready=report.errors.length===0;
   $('importSummary').textContent=report.accepted.length+' valid spreadsheet rows; '+report.errors.length+' errors; '+existing.scanned+' existing students checked. Preview only — no students saved.';
   for(const item of report.errors.slice(0,100)){
