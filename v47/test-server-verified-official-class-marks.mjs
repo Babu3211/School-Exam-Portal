@@ -16,4 +16,11 @@ rejects({entries:entries.map((r,i)=>i? r:{...r,values:{...r.values,theory:37},to
 rejects({entries:entries.map((r,i)=>i?r:{...r,values:{theory:35,practical:9},totalObtained:44})},/component keys differ/);
 rejects({settings:{...settings,components:[{key:'theory',name:'Theory',fullMarks:30},...settings.components.slice(1)]}},/exceeds Examination Settings/);
 rejects({settings:{...settings,schoolId:'67890'}},/Verified subject examination settings/);
+// Alternate Computer component settings must be authoritative, not fixed 4/36/10.
+const alternateSettings={...settings,components:[{key:'written',name:'Written',fullMarks:80},{key:'practical',name:'Practical',fullMarks:20}]};
+const alternateEntries=entries.map(row=>({...row,values:{written:75,practical:18},totalObtained:93}));
+assert.equal(resolveVerifiedOfficialClassMarks({...args,settings:alternateSettings,entries:alternateEntries}).rosterCount,1500);
+rejects({settings:alternateSettings},/component keys differ/);
+rejects({settings:alternateSettings,entries:alternateEntries.map((row,i)=>i?row:{...row,values:{written:81,practical:18},totalObtained:99})},/exceeds Examination Settings/);
+assert.equal(resolveVerifiedOfficialClassMarks({...args,entries:entries.map((row,i)=>i?row:{...row,isAbsent:true,values:null,totalObtained:0})}).entries[0].isAbsent,true);
 console.log('V47 verified official class marks: 1500 students, roster and dynamic component limits enforced');
