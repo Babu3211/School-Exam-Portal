@@ -1,4 +1,4 @@
-import {V47_FIREBASE_CONFIG} from './v47-firebase-config.mjs';
+import {connectSchoolFirebase} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 const $=id=>document.getElementById(id);
@@ -9,14 +9,7 @@ function lock(value){busy=value;for(const id of ['login','logout','schoolId','em
 $('connect').onclick=async()=>{
  if(auth)return;
  try{
-  const config=V47_FIREBASE_CONFIG;
-  if(config.projectId!=='smss-exam-portal-v47')throw new Error('V47 Firebase project required');
-  const appSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js');
-  authSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js');
-  api=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js');
-  const app=appSdk.initializeApp(config,'smss-v47-school-settings');
-  auth=authSdk.getAuth(app);await authSdk.setPersistence(auth,authSdk.inMemoryPersistence);
-  db=api.getFirestore(app);
+  ({auth,authSdk,db,api}=await connectSchoolFirebase());
   authSdk.onAuthStateChanged(auth,user=>{if(verifiedUid!==null&&user?.uid!==verifiedUid){reset();message('प्रयोगकर्ता सत्र परिवर्तन भयो। पुनः लगइन गर्नुहोस्।')}if(!busy)lock(false)});
   $('connect').disabled=true;lock(false);message('Connected to V47');
  }catch(e){message('Connection failed: '+e.message)}
