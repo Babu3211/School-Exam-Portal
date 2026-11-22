@@ -5,6 +5,8 @@ import {canAccessSchool} from './permissions.mjs';
 export async function loadAttendanceByClassDate({db,api,actor,schoolId,schoolClass,date,pageSize=100,cursor=null}){
  validateSchoolId(schoolId);
  if(!canAccessSchool(actor,schoolId,'read'))throw new Error('School membership required');
+ const identity={uid:actor?.uid,role:actor?.role,active:actor?.active,schoolId:actor?.schoolId};
+ const recheck=()=>{if(!canAccessSchool(actor,schoolId,'read')||actor?.uid!==identity.uid||actor?.role!==identity.role||actor?.active!==identity.active||actor?.schoolId!==identity.schoolId)throw new Error('School membership changed during attendance query')};
  if(!validSchoolClass(schoolClass))throw new Error('Invalid class');
  validateAttendance({date,studentId:'probe',class:schoolClass,present:true});
  if(!Number.isInteger(pageSize)||pageSize<1||pageSize>100)throw new RangeError('Page size must be 1–100');
@@ -15,7 +17,7 @@ export async function loadAttendanceByClassDate({db,api,actor,schoolId,schoolCla
   constraints.push(api.startAfter(cursor.id));
  }
  const snapshot=await api.getDocs(api.query(api.collection(db,'schools',schoolId,'attendance'),...constraints));
- if(!canAccessSchool(actor,schoolId,'read'))throw new Error('School membership changed during attendance query');
+ recheck();
  const docs=snapshot?.docs;
  if(!Array.isArray(docs)||docs.length>pageSize+1)throw new RangeError('Unexpected result size');
  let previous=cursor?.id??null;
@@ -29,6 +31,6 @@ export async function loadAttendanceByClassDate({db,api,actor,schoolId,schoolCla
    data.class!==schoolClass||data.date!==date)throw new Error('Cross-school or wrong-class attendance record');
   if(records.length<pageSize)records.push({...data,id:d.id});
  }
- if(!canAccessSchool(actor,schoolId,'read'))throw new Error('School membership changed during attendance query');
+ recheck();
  return {records,hasMore:docs.length>pageSize,cursor:docs.slice(0,pageSize).at(-1)??null};
 }
