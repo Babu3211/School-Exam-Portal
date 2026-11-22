@@ -42,6 +42,12 @@ for(const actor of [
  assert.equal(writes.length,1);
  assert.equal(writes[0][0],'marks/monthly:s1:math');
 }
+// Subjects without configured components retain their existing raw-mark path.
+for(const name of ['Computer','Computer Science','Nepali','Mathematics','New Optional Subject']){
+ const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name}});
+ await createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId},schoolId,input});
+ assert.equal(writes.length,1,'Subject name alone must not force a hardcoded assessment scheme');
+}
 // A missing teacher assignment cannot be bypassed by a teacher UID.
 {
  const {api,writes}=mock();
@@ -54,7 +60,7 @@ for(const badInput of [{...input,theory:NaN},{...input,practical:-1},{...input,s
  await assert.rejects(createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId},schoolId,input:badInput}));
  assert.equal(writes.length,0);
 }
-// Existing marks, cross-school records, and special Computer marks cannot be overwritten or bypassed.
+// Existing marks, cross-school records, and configured component marks for ANY subject cannot be bypassed.
 for(const [overrides,message] of [
  [{'marks/monthly:s1:math':{schoolId}},/already exists/],
  [{'component_marks/monthly:s1:math':{schoolId}},/already exists/],
