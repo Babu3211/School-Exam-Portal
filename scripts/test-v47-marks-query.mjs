@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict';import {loadMarksByClassTerm} from '../v47/marks-query.mjs';
-const actor={role:'viewer',active:true,schoolId:'12345678'};const filters=[];const api={collection:(_db,...p)=>p.join('/'),where:(...args)=>{filters.push(args);return args},orderBy:k=>['orderBy',k],limit:n=>['limit',n],startAfter:x=>['after',x],query:(...parts)=>parts,getDocs:async()=>({docs:[{id:'1st:s1:math',data:()=>({studentId:'s1',theory:30})}]})};
+const actor={uid:'viewer-a',role:'viewer',active:true,schoolId:'12345678'};const filters=[];const api={collection:(_db,...p)=>p.join('/'),where:(...args)=>{filters.push(args);return args},orderBy:k=>['orderBy',k],limit:n=>['limit',n],startAfter:x=>['after',x],query:(...parts)=>parts,getDocs:async()=>({docs:[{id:'1st:s1:math',data:()=>({studentId:'s1',subjectId:'math',class:'6',term:'1st',schoolId:'12345678',theory:30})}]})};
 const args={db:{},api,actor,schoolId:'12345678',schoolClass:'6',term:'1st'};
 const result=await loadMarksByClassTerm(args);assert.equal(result.records.length,1);assert.deepEqual(filters,[['class','==','6'],['term','==','1st']]);
-for(const bad of [{schoolId:'87654321'},{schoolClass:'13'},{term:'midterm'},{pageSize:101},{actor:{...actor,active:false}}])await assert.rejects(()=>loadMarksByClassTerm({...args,...bad}));
-let requestedLimit=0,usedCursor=false;const pagingApi={...api,limit:n=>{requestedLimit=n;return ['limit',n]},startAfter:()=>{usedCursor=true;return ['after','cursor']},getDocs:async()=>({docs:Array.from({length:3},(_,i)=>({id:'mark'+i,data:()=>({studentId:'s'+i})}))})};
-const page=await loadMarksByClassTerm({...args,api:pagingApi,pageSize:2,cursor:'previous'});assert.equal(requestedLimit,3);assert.equal(usedCursor,true);assert.equal(page.records.length,2);assert.equal(page.hasMore,true);assert.equal(page.cursor.id,'mark1');
+for(const bad of [{schoolId:'87654321'},{schoolClass:'13'},{term:'midterm'},{pageSize:101},{actor:{...actor,active:false}},{actor:{...actor,uid:undefined}}])await assert.rejects(()=>loadMarksByClassTerm({...args,...bad}));
+let requestedLimit=0,usedCursor=false;const pagingApi={...api,limit:n=>{requestedLimit=n;return ['limit',n]},startAfter:()=>{usedCursor=true;return ['after','cursor']},getDocs:async()=>({docs:Array.from({length:3},(_,i)=>({id:'mark'+i,data:()=>({studentId:'s'+i,subjectId:'math',schoolId:'12345678',class:'6',term:'1st'})}))})};
+const page=await loadMarksByClassTerm({...args,api:pagingApi,pageSize:2,cursor:{id:'mark-previous',schoolId:'12345678',class:'6',term:'1st'}});assert.equal(requestedLimit,3);assert.equal(usedCursor,true);assert.equal(page.records.length,2);assert.equal(page.hasMore,true);assert.equal(page.cursor.id,'mark1');
+const foreignApi={...api,getDocs:async()=>({docs:[{id:'1st:s1:math',data:()=>({studentId:'s1',subjectId:'math',schoolId:'87654321',class:'6',term:'1st'})}]})};
+await assert.rejects(()=>loadMarksByClassTerm({...args,api:foreignApi}),/Foreign or mismatched/);
+const switching={...actor},switchedApi={...api,getDocs:async()=>{switching.uid='another-user';return {docs:[]}}};
+await assert.rejects(()=>loadMarksByClassTerm({...args,actor:switching,api:switchedApi}),/membership changed/);
 console.log('V47 school-scoped marks query tests passed');

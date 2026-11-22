@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';import {createSubjectAssignment} from '../v47/subject-assignment-create-service.mjs';
-const docs=new Map([['schools/12345678/students/s1',{class:'6'}],['schools/12345678/subjects/math_6',{class:'6',active:true}]]);
+const docs=new Map([['schools/12345678/students/s1',{class:'6',schoolId:'12345678'}],['schools/12345678/subjects/math_6',{class:'6',active:true,schoolId:'12345678'}]]);
 const api={doc:(_db,...parts)=>parts.join('/'),runTransaction:async(_db,callback)=>{const writes=[];await callback({get:async ref=>({exists:()=>docs.has(ref),data:()=>docs.get(ref)}),set:(ref,value)=>writes.push([ref,value])});for(const [ref,value]of writes)docs.set(ref,value)}};
 const actor={uid:'admin-a',role:'school_admin',active:true,schoolId:'12345678'},input={studentId:'s1',subjectId:'math_6',class:'6'};
 const args={db:{},api,actor,schoolId:'12345678',input};
-assert.equal((await createSubjectAssignment(args)).id,'s1_math_6');
-assert.equal(docs.get('schools/12345678/subject_assignments/s1_math_6').class,'6');
+assert.equal((await createSubjectAssignment(args)).id,'s1:math_6');
+assert.equal(docs.get('schools/12345678/subject_assignments/s1:math_6').class,'6');assert.equal(docs.get('schools/12345678/subject_assignments/s1:math_6').schoolId,'12345678');
 await assert.rejects(()=>createSubjectAssignment(args),/already exists/);
 await assert.rejects(()=>createSubjectAssignment({...args,actor:{...actor,role:'viewer'}}));
 await assert.rejects(()=>createSubjectAssignment({...args,schoolId:'87654321'}));
 docs.get('schools/12345678/subjects/math_6').active=false;
 await assert.rejects(()=>createSubjectAssignment({...args,input:{studentId:'s1',subjectId:'math_6',class:'6'}}),/Subject inactive/);
+await assert.rejects(()=>createSubjectAssignment({...args,actor:{...actor,uid:undefined}}),/School Admin required/);
 console.log('V47 subject assignment create-only service tests passed');
