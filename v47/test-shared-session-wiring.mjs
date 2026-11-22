@@ -28,6 +28,9 @@ for(const name of ['students-console.mjs','attendance-console.mjs','school-setti
 }
 const studentCode=read('students-console.mjs');
 assert.match(studentCode,/onAuthStateChanged\(auth,user=>\{if\(actor&&user\?\.uid!==actor\.uid\)\{clear\(\)/,'Student screen must remove stale records when account changes');
+assert.match(studentCode,/const attempt=loadEpoch;try\{schoolId=/,'Student login must capture the session epoch');
+assert.match(studentCode,/attempt!==loadEpoch\|\|auth\.currentUser\?\.uid!==uid/,'Student login must reject superseded verification');
+assert.match(studentCode,/catch\(e\)\{if\(attempt===loadEpoch\)\{clear\(\)/,'Superseded student login errors must not clear a newer session');
 const marks=read('marks-entry-console.mjs');
 assert.match(marks,/onAuthStateChanged\(auth,user=>\{if\(actor&&user\?\.uid!==actor\.uid\)\{reset\(\)/,'Mark entry must clear stale review and roster after auth change');
 assert.match(marks,/roster\.students\.some\(student=>student\.active!==true\)/,'Initial class marks roster must reject inactive students');
