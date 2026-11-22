@@ -56,7 +56,7 @@ assert.ok(js.includes('invalidateClassMarks();const request=rosterRequest;lock(t
 assert.ok(js.includes('if(request!==rosterRequest||attempt!==epoch||classId!=='),'Stale roster responses must not render after selection changes');
 assert.ok(js.includes('if(request===rosterRequest&&attempt===epoch){invalidateClassMarks();lock(false);'),'Current roster failures must unlock editor without clearing a newer request');
 assert.ok(js.includes('finally{if(request===rosterRequest&&attempt===epoch)lock(false)}'),'Old roster requests must not unlock a newer load');
-assert.ok(js.includes("function reset(){$('importClassExcelFile').value='';"),'Reset must invalidate option loads');
+assert.ok(js.includes('function reset(){')&&js.includes('optionRequest++;rosterRequest++'),'Reset must invalidate option loads');
 assert.ok(js.includes("if(request!==optionRequest||attempt!==epoch||schoolClass!=="),'Old paginated options must be ignored');
 assert.ok(js.includes("if(request===optionRequest&&attempt===epoch)lock(false)"),'Old option loads must not unlock newer loads');
 assert.ok(js.includes("$('schoolClass').onchange=()=>{optionRequest++;invalidateClassMarks();"),'Class change must revoke pending options');

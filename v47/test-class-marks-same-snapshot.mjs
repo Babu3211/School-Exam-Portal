@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('./marks-entry-console.mjs',import.meta.url),'utf8');
 const start=source.indexOf("$('inspectClassMarks').onclick=async()=>");
-const end=source.indexOf("$('saveClassMarks').onclick",start);
+const end=source.indexOf("$('downloadClassReview').onclick",start);
 assert.ok(start>=0&&end>start);
 const handler=source.slice(start,end);
 assert.match(handler,/const expectedStudentIds=classMarkRoster\.map\(student=>student\.id\),drafts=collectClassMarkEntries\(\);/);

@@ -4,6 +4,7 @@ import {buildClassReviewExcel} from './class-review-excel.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
 import {completeClassDraftId} from './complete-class-draft-document.mjs';
 import {saveVerifiedCompleteClassDraft} from './save-verified-class-draft.mjs';
+import {verifyStoredCompleteClassDraft} from './restore-complete-class-draft.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
@@ -91,35 +92,38 @@ $('loadClassMarks').onclick=async()=>{
   const draftDocId=completeClassDraftId({classId,subjectId,examId:term});
   const draftSnap=await api.getDoc(api.doc(db,'schools',selectedSchoolId,'class_mark_drafts',draftDocId));
   const priorDraft=draftSnap.exists()?draftSnap.data():null;
-  if(priorDraft&&(priorDraft.schoolId!==selectedSchoolId||priorDraft.classId!==classId||
-     priorDraft.subjectId!==subjectId||priorDraft.examId!==term||priorDraft.settingsId!==draftDocId||
-     priorDraft.state!=='draft'||!Number.isSafeInteger(priorDraft.revision)||priorDraft.revision<1))
-    throw new Error('Stored draft scope or revision invalid');
+  const restoredDraft=priorDraft?verifyStoredCompleteClassDraft({
+   schoolId:selectedSchoolId,classId,subjectId,examId:term,settings,
+   expectedStudentIds:roster.studentIds,stored:priorDraft
+  }):null;
   const finalSession=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});
   if(finalSession.role!=='school_admin')throw new Error('School Admin session revoked during roster load');
   if(request!==rosterRequest||attempt!==epoch||classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value)return;
   if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId||actor?.schoolId!==selectedSchoolId)throw new Error('Authentication or school changed during roster load');
   // Display alphabetically without changing the authoritative roster IDs used for completeness checks.
-  classDraftRevision=priorDraft?.revision??0;
-  $('classDraftStatus').textContent=classDraftRevision?'Existing draft revision '+classDraftRevision+' loaded; inspect all marks before replacing it.':'No prior draft; inspect all marks before saving a new draft.';
+  classDraftRevision=restoredDraft?.revision??0;
+  $('classDraftStatus').textContent=restoredDraft?'Previously saved full-class Draft Revision '+classDraftRevision+' restored. Check all marks before updating.':'No prior Draft. Inspect all marks before saving.';
   classMarkSettings=settings;
   const header=$('classMarkHeader');header.replaceChildren();for(const label of ['Student','Absent',...settings.components.map(c=>c.name+' / '+c.fullMarks)]){const th=document.createElement('th');th.textContent=label;header.append(th)}
   classMarkRoster=[...roster.students].sort((a,b)=>String(a.name??a.id).localeCompare(String(b.name??b.id),'en',{sensitivity:'base',numeric:true})||a.id.localeCompare(b.id));
+  const restoredById=new Map(restoredDraft?.entries.map(entry=>[entry.studentId,entry])??[]);
   classMarkContext={classId,term,subjectId};
   const body=$('classMarkRows'),fragment=document.createDocumentFragment();
   for(const student of classMarkRoster){
    const row=document.createElement('tr');row.dataset.studentId=student.id;
    const name=document.createElement('td');name.textContent=String(student.name??student.id);row.append(name);
-   const absenceCell=document.createElement('td'),absence=document.createElement('input');absence.type='checkbox';absence.dataset.absent='true';absence.setAttribute('aria-label','Absent '+student.id);absenceCell.append(absence);row.append(absenceCell);
+   const saved=restoredById.get(student.id);
+   const absenceCell=document.createElement('td'),absence=document.createElement('input');absence.type='checkbox';absence.dataset.absent='true';absence.checked=saved?.isAbsent===true;absence.setAttribute('aria-label','Absent '+student.id);absenceCell.append(absence);row.append(absenceCell);
    for(const component of settings.components){
     const td=document.createElement('td'),input=document.createElement('input');
     input.type='number';input.min='0';input.max=String(component.fullMarks);input.step='any';input.dataset.field=component.key;
+    if(saved){input.value=saved.isAbsent?'':String(saved.values[component.key]);input.disabled=saved.isAbsent}
     input.setAttribute('aria-label',component.name+' marks for '+student.id);td.append(input);row.append(td);
    }fragment.append(row);
   }
   body.append(fragment);
   $('downloadClassTemplateExcel').disabled=false;$('importClassExcelFile').disabled=false;
-  $('classMarkCount').textContent=roster.count+' students in full roster. Draft Save available after inspection; official Save/Publish remains disabled.';
+  $('classMarkCount').textContent=roster.count+' students in full roster. '+(restoredDraft?'Saved Draft restored. ':'')+'Draft Save available after inspection; official Save/Publish remains disabled.';
   status('कक्षाका विद्यार्थी लोड भए। सबैको अंक जाँच्न सकिन्छ, तर Save/Publish बन्द छ।');
  }catch(e){if(request===rosterRequest&&attempt===epoch){invalidateClassMarks();lock(false);status('Unable to load complete roster: '+e.message)}}
  finally{if(request===rosterRequest&&attempt===epoch)lock(false)}

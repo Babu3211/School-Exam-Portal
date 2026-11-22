@@ -13,7 +13,9 @@ assert.match(source,/import \{completeClassDraftId\} from '\.\/complete-class-dr
 assert.match(source,/enforceSchoolIdle\(/);
 assert.match(source,/classDraftRevision=null/);
 assert.match(source,/expectedRevision=classDraftRevision/);
-assert.match(source,/classDraftRevision=priorDraft\?\.revision\?\?0/);
+assert.match(source,/classDraftRevision=restoredDraft\?\.revision\?\?0/);
+assert.match(source,/verifyStoredCompleteClassDraft\(/);
+assert.match(source,/restoredById\.get\(student\.id\)/);
 assert.match(source,/const draftSnap=await api\.getDoc/);
 assert.match(source,/actor\?\.role!=='school_admin'/);
 assert.match(source,/reviewPackage=null;\$\('saveClassDraft'\)\.disabled=true/);
