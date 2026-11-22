@@ -50,6 +50,20 @@ jobs:
             echo ''
             echo 'The workflow never deploys or writes production Firestore data.'
           } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v47-regression-logs
+          path: v47-full-tests.log
+          if-no-files-found: ignore
+  feature-parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - name: Capture static V47 feature parity evidence
         if: always()
         run: |
@@ -67,7 +81,6 @@ jobs:
         with:
           name: v47-verification-logs
           path: |
-            v47-full-tests.log
             v47-feature-evidence.json
             v47-feature-evidence-error.log
           if-no-files-found: ignore
