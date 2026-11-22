@@ -192,7 +192,7 @@ $('verifyClassReview').onclick=async()=>{
   if(finalSession.role!=='school_admin'||attempt!==epoch||request!==rosterRequest||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId||context.classId!==$('schoolClass').value||context.term!==$('term').value||context.subjectId!==$('subjectId').value)throw new Error('School session or selection changed');
   if(!classMarkSettings||JSON.stringify(settings.components)!==JSON.stringify(classMarkSettings.components)||settings.settingsId!==classMarkSettings.settingsId)throw new Error('Settings changed since marks entry was loaded');
   const loadedIds=new Set(classMarkRoster.map(student=>student.id));
-  if(loadedIds.size!==roster.count||roster.studentIds.some(id=>!loadedIds.has(id)))throw new Error('Roster changed since marks entry was loaded');
+  if(roster.students.some(student=>student.active!==true)||loadedIds.size!==roster.count||roster.studentIds.some(id=>!loadedIds.has(id)))throw new Error('Roster changed or contains inactive student since marks entry was loaded');
   const result=verifyClassMarksReviewPackage({json,actor,schoolId:selectedSchoolId,classId:context.classId,subjectId:context.subjectId,examId:context.term,settings,expectedStudentIds:roster.studentIds});
   if(attempt!==epoch||request!==rosterRequest||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('School session changed after review validation');
   $('reviewVerifyResult').textContent='Verified '+result.rosterCount+' students against current school records. Review only; nothing saved or published.';
