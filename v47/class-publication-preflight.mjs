@@ -2,6 +2,7 @@ import {validateSchoolId} from './school-paths.mjs';
 import {canAccessSchool} from './permissions.mjs';
 import {validSchoolClass} from './class-catalog.mjs';
 import {validateExamTerm} from './term-catalog.mjs';
+import {verifyClassMarksCoverage} from './class-marks-coverage.mjs';
 // Read-only preflight. This does not authorize saving or publishing marks.
 export function assessClassPublicationReadiness({actor,schoolId,schoolClass,term,students,subjects,records,coverage}){
  validateSchoolId(schoolId);
@@ -13,6 +14,12 @@ export function assessClassPublicationReadiness({actor,schoolId,schoolClass,term
  if(!Array.isArray(subjects)||!subjects.length)blockers.push('Complete subject roster unavailable');
  if(!Array.isArray(records))blockers.push('Marks records unavailable');
  if(!coverage?.complete)blockers.push('Full-class marks coverage not verified');
+ if(Array.isArray(students)&&students.length&&Array.isArray(subjects)&&subjects.length&&Array.isArray(records)){
+  try{
+   const verified=verifyClassMarksCoverage({students,subjects,records,schoolClass,term});
+   if(!coverage?.complete||coverage.studentCount!==verified.studentCount||coverage.subjectCount!==verified.subjectCount||coverage.recordCount!==verified.recordCount)blockers.push('Coverage metadata does not match verified marks');
+  }catch(error){blockers.push('Full-class marks verification failed: '+error.message)}
+ }
  if(Array.isArray(students)&&students.some(s=>s.schoolId!==schoolId||s.class!==schoolClass||s.active!==true))blockers.push('Student roster contains inactive or foreign students');
  if(Array.isArray(subjects))for(const subject of subjects){
   if(subject.schoolId!==schoolId||subject.class!==schoolClass||subject.active!==true)blockers.push('Subject roster contains inactive or foreign subjects');
