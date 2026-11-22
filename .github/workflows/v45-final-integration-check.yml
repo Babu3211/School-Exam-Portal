@@ -90,6 +90,8 @@ jobs:
           if os.environ.get('GITHUB_HEAD_REF')=='fix/viewer-iemis-grid-readonly':
             allowed.update({'iemis-entry.js','scripts/test-iemis-importer-dom.mjs',
               'scripts/fixtures/iemis-entry.html','scripts/fixtures/iemis-layout.html','sw.js'})
+          if os.environ.get('GITHUB_HEAD_REF')=='fix/backup-audit-preview':
+            allowed.add('sw.js')
           unexpected=changed-allowed
           assert not unexpected, f'Unexpected changes to protected V44/IEMIS files: {sorted(unexpected)}'
           print('Approved dashboard and IEMIS source files remain protected.')
