@@ -8,6 +8,10 @@ const base={schoolId,classId,term,subjectId,expectedStudentIds:ids,entries,subje
 const plan=planCompleteClassMarkStaging(base);
 assert.equal(plan.studentCount,1500);
 assert.equal(plan.chunkCount,8);
+assert.equal(plan.chunks[0].firstStudentId,ids[0]);
+assert.equal(plan.chunks.at(-1).lastStudentId,ids.at(-1));
+assert.equal(plan.chunks[0].lastStudentId,ids[199]);
+assert.equal(plan.chunks[1].firstStudentId,ids[200]);
 assert.deepEqual(plan.chunks.map(x=>x.count),[200,200,200,200,200,200,200,100]);
 assert.deepEqual(plan.chunks.flatMap(x=>x.rows.map(r=>r.studentId)),ids);
 assert.equal(plan.canPublish,false);
