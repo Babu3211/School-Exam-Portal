@@ -36,6 +36,11 @@ Updated: 2026-11-22. Source: user's project conversations and explicit instructi
 - Excel work: v47/excel-workbook.mjs, v47/class-review-excel.mjs, v47/test-class-review-excel.mjs; reuse these. An older class-review-csv.mjs exists as leftover development code: it is **not a user requirement**, and must not be reintroduced into UI or test priorities.
 - Release tracking: GitHub issue #78 and v47/release-readiness-gate.mjs. A commit is not proof of CI or browser success.
 
+## Verified contract and live blocker (2026-11-22)
+- Examination Settings allow **1–6** components per subject consistently across Firestore Rules, settings creation, and class mark validation. This is a component count limit; configured marks themselves remain dynamic.
+- Direct evaluation of V47 validation logic accepted complete 1/500/1500-student rows and rejected incomplete rosters and a seventh component. These are NOT Firestore/Browser E2E runs.
+- Firestore `/marks` and `/component_marks` writes remain denied; official Save/Publish on the V47 development UI is disabled. A trusted, audited publication executor and V46 feature parity remain deployment blockers. Do not simply loosen Firestore rules.
+
 ## Working procedure for every 'continue'
 1. Read this record and inspect actual GitHub branch state, tests, blockers and prior commits.
 2. Select the **highest-impact unfinished V46-to-V47 integration**, not another duplicate export/validator/prototype.
