@@ -66,3 +66,11 @@ for(const schoolId of ['school_a','1234','123456789012345678901','12-345','резре
 for(const extra of [{schoolId:'99999'},{publicationAllowed:true},{approved:true},{role:'super_admin'}]){
  assert.throws(()=>inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',isAbsent:true,...extra},{studentId:'b',isAbsent:true}]}),/Duplicate or out-of-roster mark draft/);
 }
+
+// Inherited prototype marks must not masquerade as entered marks.
+const inheritedValues=Object.create({participation:7,practical:63,term:30});
+const inheritedResult=inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',values:inheritedValues},{studentId:'b',isAbsent:true}]});
+assert.equal(inheritedResult.complete,false);
+assert.match(inheritedResult.invalid[0].message,/Missing Participation/);
+const mixedValues=Object.assign(Object.create({participation:7}),{practical:63,term:30});
+assert.equal(inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',values:mixedValues},{studentId:'b',isAbsent:true}]}).complete,false);
