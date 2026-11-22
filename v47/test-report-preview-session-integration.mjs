@@ -10,7 +10,8 @@ assert.match(js,/createV46ReadOnlyBridge\(/,'Verified tenant-scoped report read 
 assert.match(js,/currentSession\(current,credential\.user\.uid\)/,'Async login must reject replaced auth sessions');
 assert.match(js,/authSdk\.onAuthStateChanged\(/,'Report must invalidate when auth changes');
 assert.match(js,/verifiedUid:credential\.user\.uid/,'Loaded preview must bind to the authenticated user');
-assert.match(js,/if\(freshSignIn&&auth\?\.currentUser\)await authSdk\.signOut\(auth\)/,'Failed report authorization must not log out a pre-existing shared school session');
+assert.match(js,/signedUid=credential\.user\.uid/,'Failed login cleanup must be bound to the signed-in identity');
+assert.match(js,/if\(freshSignIn&&signedUid&&auth\?\.currentUser\?\.uid===signedUid\)await authSdk\.signOut\(auth\)/,'Failed report authorization must not log out a different shared school session');
 assert.doesNotMatch(html,/id="config"/,'No pasted Firebase configuration requested');
 assert.doesNotMatch(js,/JSON\.parse\(\$\('config'\)/,'No user-supplied Firebase project accepted');
 assert.match(html,/id="coverageRun"/,'Roster coverage controls remain available');
