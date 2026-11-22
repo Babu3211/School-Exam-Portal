@@ -2338,6 +2338,15 @@ function cdcVerifiedUnits(className,subject) {
   ];
   if (Number(className)===1&&key==='mathematics') return [cdcSeroferoUnits[1],cdcSeroferoUnits[2],cdcSeroferoUnits[3],cdcSeroferoUnits[6],cdcSeroferoUnits[8]];
   if (['2','3'].includes(String(className))&&key==='mathematics') return [["ज्यामिति","Geometry"],["सङ्ख्याको ज्ञान","Number concepts"],["गणितका आधारभूत क्रिया","Basic operations"],["नाप","Measurement"],["साधारण ग्राफ","Simple graphs"]];
+  if (['4','5'].includes(String(className))&&key==='socialstudies') return [
+    ["हामी र हाम्रो समुदाय","We and our community"],
+    ["हाम्रा मानवीय मूल्यमान्यता","Our human values"],
+    ["नागरिक चेतना, कर्तव्य र अधिकार","Civic awareness, duties and rights"],
+    ["सामाजिक समस्या र समाधान","Social problems and solutions"],
+    ["हाम्रो विगत","Our past"],
+    ["हाम्रा आर्थिक क्रियाकलाप","Our economic activities"],
+    ["हाम्रो पृथ्वी","Our Earth"]
+  ];
   if (['4','5'].includes(String(className))&&key==='science') return [
     ["वैज्ञानिक सिकाइ","Scientific learning"],
     ["सूचना तथा सञ्चार प्रविधि","Information and communication technology"],
@@ -3105,6 +3114,75 @@ const cdcVerifiedOutcomes = {
     ["Writing","Write neatly and legibly"]
   ],
   // CDC 2083 Student Assessment Guide, Annex 3(c).
+  // CDC 2083 Annex 3(d), Social Studies and Human Values Education.
+  '4:socialstudies': [
+    ["हामी र हाम्रो समुदाय","नजिकका छिमेकीसँगको सम्बन्ध चिन्ने र एकअर्कालाई सघाउने","Describe relationships with close neighbours and exchange help"],
+    ["हामी र हाम्रो समुदाय","छिमेकीसँग उचित व्यवहार देखाउने","Treat neighbours considerately"],
+    ["हामी र हाम्रो समुदाय","छिमेकीका काम र पेसा बताई सम्मान गर्ने","Describe and respect neighbours’ work and occupations"],
+    ["हामी र हाम्रो समुदाय","पेसा र व्यवसायमा चाहिने सामग्री चिन्ने, सुरक्षित चलाउने र जतन गर्ने","Identify occupational tools and materials, use them safely and care for them"],
+    ["हाम्रा मानवीय मूल्यमान्यता","मान्यजनको सम्मान गर्ने र उनीहरूबाट सिक्ने","Show respect for elders and draw inspiration from them"],
+    ["हाम्रा मानवीय मूल्यमान्यता","असल बानी दैनिक व्यवहारमा देखाउने","Develop good habits and practise them daily"],
+    ["हाम्रा मानवीय मूल्यमान्यता","समुदायका भाषा, पहिरन, जीवनशैली र पर्व चिन्ने र सम्मान गर्ने","Recognize and respect the community’s languages, clothing, ways of life and festivals"],
+    ["हाम्रा मानवीय मूल्यमान्यता","आफ्नो जन्मस्थानको महत्त्व बताई अपनत्व देखाउने","Explain why your birthplace matters and show a sense of belonging"],
+    ["हाम्रा मानवीय मूल्यमान्यता","राष्ट्रिय विभूतिको परिचय दिने र तिनबाट लिएको प्रेरणा बताउने","Introduce national figures and describe how they inspire you"],
+    ["नागरिक चेतना, कर्तव्य र अधिकार","आफू र परिवारको सुरक्षा किन चाहिन्छ भनी बताउने र सावधानी अपनाउने","Explain the need for personal and family safety and take precautions"],
+    ["नागरिक चेतना, कर्तव्य र अधिकार","आफ्ना अधिकारबारे सचेत रहने र कर्तव्य निभाउने","Recognize your rights and fulfil your duties"],
+    ["नागरिक चेतना, कर्तव्य र अधिकार","स्थानीय सार्वजनिक सम्पदा चिन्ने, सदुपयोग गर्ने र जोगाउन सघाउने","Identify local public assets, use them responsibly and help protect them"],
+    ["नागरिक चेतना, कर्तव्य र अधिकार","समुदायका सबै व्यक्तिसँग समान व्यवहार गर्ने","Treat people in the community equally"],
+    ["नागरिक चेतना, कर्तव्य र अधिकार","स्थानीय निकायका सेवा चिन्ने र उपयोग गर्ने","Identify and use services offered by local agencies"],
+    ["सामाजिक समस्या र समाधान","असल समाजको अर्थ र विशेषता बताउने","Describe a good society and its characteristics"],
+    ["सामाजिक समस्या र समाधान","सामाजिक समस्या चिन्ने र समाधान सुझाउने","Identify social problems and suggest solutions"],
+    ["सामाजिक समस्या र समाधान","टोलका संस्थाले सामाजिक समस्या समाधानमा गरेको काम बताउने","Describe how neighbourhood organizations help solve social problems"],
+    ["हाम्रो विगत","परिवार र छिमेकीको विगतबारे बताउने","Recount the past of your family and neighbours"],
+    ["हाम्रो विगत","आफ्नो गाउँठाउँको नाम र त्यसको कारण बताउने","Give the name of your locality and explain its origin"],
+    ["हाम्रो विगत","समुदायको विकासमा योगदान दिने व्यक्तिको भूमिका बताउने","Describe the roles of people who helped develop the community"],
+    ["हाम्रो विगत","पुर्खाले गरेको योगदान चिन्ने र कदर गर्ने","Identify and appreciate the contributions of ancestors"],
+    ["हाम्रा आर्थिक क्रियाकलाप","समुदायका मानिसका काम चिन्ने र कदर गर्ने","Identify and value the work people do in the community"],
+    ["हाम्रा आर्थिक क्रियाकलाप","स्थानीय उत्पादन चिन्ने र प्रयोग गर्ने","Identify and use goods grown or made locally"],
+    ["हाम्रा आर्थिक क्रियाकलाप","समुदायका आर्थिक गतिविधि हेरेर विवरण प्रस्तुत गर्ने","Observe local economic activities and report what you find"],
+    ["हाम्रा आर्थिक क्रियाकलाप","दैनिक प्रयोगका वस्तु किफायतसँग चलाउने","Use everyday goods economically"],
+    ["हाम्रा आर्थिक क्रियाकलाप","स्थानीय बजारका कारोबार हेर्ने र महत्त्व बताउने","Observe transactions at a local market and explain their importance"],
+    ["हाम्रो पृथ्वी","पृथ्वीको छोटो परिचय दिने","Give a brief description of Earth"],
+    ["हाम्रो पृथ्वी","पृथ्वीबाट प्राप्त हुने स्रोत चिन्ने","Identify resources that Earth provides"],
+    ["हाम्रो पृथ्वी","आफ्नो स्थानीय तहको भूगोल, जनसङ्ख्या र रहनसहन बताउने","Describe the geography, population and social life of your municipality"],
+    ["हाम्रो पृथ्वी","विपद्को अर्थ बताउने र सावधानी अपनाउने","Explain what a disaster is and take precautions"],
+    ["हाम्रो पृथ्वी","गाउँ वा टोल र विद्यालयको स्थान चिन्ने र नक्साका मुख्य कुरा बताउने","Locate your neighbourhood and school and identify key map features"],
+    ["हाम्रो पृथ्वी","स्थानीय तह र जिल्लाको नक्सा उतारी सङ्केत राख्ने","Trace maps of your municipality and district and mark them with symbols"]
+  ],
+  '5:socialstudies': [
+    ["हामी र हाम्रो समुदाय","समुदायको विकासका काम चिन्ने र तिनको महत्त्व बताउने","Identify community development activities and explain their value"],
+    ["हामी र हाम्रो समुदाय","सामुदायिक काममा सहभागी हुने र सघाउने","Take part in and support community activities"],
+    ["हामी र हाम्रो समुदाय","सामाजिक सम्बन्ध किन चाहिन्छ भनी बताउने र राम्रो सम्बन्ध बनाउने उपाय अपनाउने","Explain why social relationships matter and practise ways to build them"],
+    ["हामी र हाम्रो समुदाय","स्थानीय पेसा र व्यवसाय चिन्ने, मुख्य काम बताउने र सम्मान गर्ने","Identify local occupations and businesses, describe their main tasks and show respect for them"],
+    ["हाम्रा मानवीय मूल्यमान्यता","स्थानीय परम्परागत मान्यता र चलन चिन्ने","Identify traditional beliefs and practices in the community"],
+    ["हाम्रा मानवीय मूल्यमान्यता","स्थानीय भाषा, पहिरन, रहनसहन, मेला र जात्राको परिचय र महत्त्व बताउने","Describe local languages, dress, ways of life, fairs and processions and explain their significance"],
+    ["हाम्रा मानवीय मूल्यमान्यता","समुदायका प्रेरणादायी व्यक्तिको पहिचान गरी योगदान खोज्ने","Identify inspiring community members and investigate their contributions"],
+    ["हाम्रा मानवीय मूल्यमान्यता","अनुशासन र सदाचार व्यवहारमा देखाउने","Practise discipline and good conduct"],
+    ["हाम्रा मानवीय मूल्यमान्यता","राष्ट्रिय विभूतिको परिचय दिई उनीहरूबाट प्रेरणा लिने","Describe national figures and draw inspiration from them"],
+    ["नागरिक चेतना, कर्तव्य र अधिकार","प्राकृतिक र सांस्कृतिक सम्पदा जोगाउन र संवर्धन गर्न भएका स्थानीय काम खोज्ने","Investigate local efforts to conserve and promote natural and cultural heritage"],
+    ["नागरिक चेतना, कर्तव्य र अधिकार","परम्परादेखि चलिआएका असल सामाजिक नियम पालना गर्ने","Follow beneficial traditional social rules"],
+    ["नागरिक चेतना, कर्तव्य र अधिकार","साथीबीचका साना विवाद मिलाई शान्त वातावरण बनाउन सघाउने","Resolve minor disputes between friends and help maintain peace"],
+    ["नागरिक चेतना, कर्तव्य र अधिकार","सडक सुरक्षाका नियम पालना गर्ने र अरूलाई सचेत गराउने","Follow road safety and traffic rules and raise awareness among others"],
+    ["नागरिक चेतना, कर्तव्य र अधिकार","आफू र परिवारलाई सुरक्षा दिने निकाय चिन्ने","Identify agencies that support personal and family safety"],
+    ["सामाजिक समस्या र समाधान","असल समाज निर्माणमा आफ्नो तर्फबाट सघाउने","Contribute to building a good society"],
+    ["सामाजिक समस्या र समाधान","मदिरा वा लागुपदार्थ सेवनका असर बताउने र सजग रहने","Explain the effects of alcohol or drug use and stay alert to the risks"],
+    ["सामाजिक समस्या र समाधान","चोरी र डकैतीबाट सुरक्षित रहने उपाय अपनाउने","Practise ways to stay safe from theft and robbery"],
+    ["सामाजिक समस्या र समाधान","सामाजिक समस्या समाधान गर्ने संस्थाको योगदान बताउने","Describe contributions of organizations that address social problems"],
+    ["हाम्रो विगत","आफ्नो समुदायको पहिले र अहिलेको अवस्था बताउने","Describe your community in the past and present"],
+    ["हाम्रो विगत","स्थानीय ऐतिहासिक वस्तु खोज्ने र संरक्षणमा भाग लिने","Find historical objects in the community and help preserve them"],
+    ["हाम्रो विगत","नेपाल नामको उत्पत्तिसँग जोडिएका किंवदन्ती सुनाउने","Recount different legends about the origin of Nepal’s name"],
+    ["हाम्रा आर्थिक क्रियाकलाप","स्थानीय मानिसको श्रमको सम्मान गर्ने र काममा सघाउने","Respect and support the work of people in your community"],
+    ["हाम्रा आर्थिक क्रियाकलाप","स्थानीय तहका आर्थिक गतिविधि चिन्ने र महत्त्व बताउने","Identify economic activities in your municipality and explain their importance"],
+    ["हाम्रा आर्थिक क्रियाकलाप","स्थानीय उत्पादनको सूची बनाई बेचिने बजारको नाम बताउने","List local products and name the markets where they are sold"],
+    ["हाम्रा आर्थिक क्रियाकलाप","नेपालका प्रमुख आर्थिक गतिविधि बताउने","Describe Nepal’s main economic activities"],
+    ["हाम्रा आर्थिक क्रियाकलाप","स्वदेशमा उत्पादित वस्तुको प्रयोगबारे सचेत रहने","Show awareness of using goods grown or made in Nepal"],
+    ["हाम्रो पृथ्वी","सौर्यमण्डल, ग्रह र उपग्रह चिनाउने","Introduce the solar system, planets and satellites"],
+    ["हाम्रो पृथ्वी","पृथ्वीको बनोट बताउने","Describe the structure of Earth"],
+    ["हाम्रो पृथ्वी","नेपालको भूआकृति, हावापानी, वनस्पति, जनसङ्ख्या र सामाजिक जीवन बताउने","Describe Nepal’s landforms, climate, vegetation, population and social life"],
+    ["हाम्रो पृथ्वी","स्थानीय विपद् चिन्ने र सावधानी अपनाउने","Identify local disaster risks and take precautions"],
+    ["हाम्रो पृथ्वी","आफ्नो प्रदेशको नक्सा उतारी जिल्ला र स्थानीय तह देखाउने","Trace a map of your province and mark your district and municipality"],
+    ["हाम्रो पृथ्वी","नेपालको नक्सा पढ्ने र प्रयोग गर्ने","Read and use a map of Nepal"]
+  ],
   // Grade-specific science indicators from CDC 2083, Annex 3(e).
   '4:science': [
     ["वैज्ञानिक सिकाइ","अवलोकन, वर्गीकरण र परीक्षण गरेर तिनको महत्त्व बताउने","Observe, classify and test, then explain why each activity matters"],
