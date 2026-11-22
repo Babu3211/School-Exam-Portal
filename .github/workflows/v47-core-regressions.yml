@@ -1,0 +1,47 @@
+name: V47 Core Regression Checks
+on:
+  push:
+    branches: [smss-v47-multischool-work]
+    paths:
+      - 'v47/**'
+      - 'scripts/test-v47-school-isolation-gate.mjs'
+      - 'package.json'
+      - '.github/workflows/v47-core-regressions.yml'
+  pull_request:
+    paths:
+      - 'v47/**'
+      - 'scripts/test-v47-school-isolation-gate.mjs'
+      - 'package.json'
+      - '.github/workflows/v47-core-regressions.yml'
+permissions:
+  contents: read
+jobs:
+  core-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: V47 module syntax
+        run: find v47 -name '*.mjs' -print0 | xargs -0 -n1 node --check
+      - name: Tenant isolation and identity
+        run: |
+          npm run test:v47:scope
+          npm run test:v47:tenant-context
+          npm run test:v47:tenant-firestore
+          npm run test:v47:iemis-school-id
+      - name: Marks and attendance integrity
+        run: |
+          npm run test:v47:subject-mark-limits
+          npm run test:v47:marks-complete
+          npm run test:v47:marks-save
+          npm run test:v47:attendance-complete
+          npm run test:v47:attendance-save
+      - name: Student import and V46 parity
+        run: |
+          npm run test:v47:v46-student-schema
+          npm run test:v47:v46-excel-parity
+          npm run test:v47:student-import-duplicates
+          npm run test:v47:student-xlsx-reader
