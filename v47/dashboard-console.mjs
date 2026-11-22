@@ -1,4 +1,4 @@
-import {V47_FIREBASE_CONFIG} from './v47-firebase-config.mjs';
+import {connectSchoolFirebase} from './school-firebase-client.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 const $=id=>document.getElementById(id);
@@ -42,11 +42,7 @@ for(const eventName of ['pointerdown','keydown'])document.addEventListener(event
  lastActivity=Date.now();
 },{passive:true,capture:true});
 $('dashboardConnect').onclick=async()=>{if(busy||auth)return;busy=true;$('dashboardConnect').disabled=true;try{
- const base='https://www.gstatic.com/firebasejs/11.10.0/';
- const appSdk=await import(base+'firebase-app.js');authSdk=await import(base+'firebase-auth.js');api=await import(base+'firebase-firestore.js');
- if(V47_FIREBASE_CONFIG.projectId!=='smss-exam-portal-v47')throw Error('Wrong Firebase project');
- const app=appSdk.getApps().find(a=>a.name==='smss-v47-dashboard')??appSdk.initializeApp(V47_FIREBASE_CONFIG,'smss-v47-dashboard');
- auth=authSdk.getAuth(app);await authSdk.setPersistence(auth,authSdk.inMemoryPersistence);db=api.getFirestore(app);
+ ({auth,authSdk,db,api}=await connectSchoolFirebase());
  authSdk.onAuthStateChanged(auth,user=>{if(verified&&user?.uid!==verified.uid){clear();message('Login सत्र परिवर्तन भयो। फेरि प्रमाणित गर्नुहोस्।')}});
  $('dashboardLogin').disabled=false;message('V47 Firebase जडान भयो।');
  }catch(e){message('जडान असफल: '+e.message);$('dashboardConnect').disabled=false}finally{busy=false}};
