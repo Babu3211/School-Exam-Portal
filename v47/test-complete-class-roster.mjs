@@ -120,4 +120,8 @@ for(const mutation of [a=>{a.active=false},a=>{a.uid='other-user'},a=>{a.schoolI
  assert.equal(counts.get('s2'),1);
  assert.equal(counts.get('s3'),2); // lookahead on page 1, then included on page 2
 }
+for(const doc of [null,undefined,{id:'s1'},{id:'s1',data:null},{id:'s1',data:123}]){
+ const malformed={...mock(),getDocs:async()=>({docs:[doc]})};
+ await assert.rejects(loadCompleteClassRoster({...base,api:malformed}),/Invalid or duplicate roster document ID|Malformed roster document/);
+}
 console.log('V47 complete class roster pagination tests passed');
