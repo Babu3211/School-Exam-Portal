@@ -15,7 +15,7 @@ $('login').onclick=async()=>{if(busy||loggingIn||signingOut)return;loggingIn=tru
 $('logout').onclick=async()=>{if(signingOut)return;if(busy){status('Wait for member save to finish');return}signingOut=true;sessionEpoch++;actor=null;$('schoolArea').hidden=true;$('logout').disabled=true;$('login').disabled=true;try{await authSdk.signOut(auth);status('Signed out')}catch(e){status(e.message)}finally{signingOut=false;$('login').disabled=false}};
 async function refresh(){if(memberLoading)return;memberRequest++;memberCursor=null;memberHasMore=false;$('moreMembers').disabled=true;$('members').replaceChildren();await loadMembersPage();}
 async function loadMembersPage(){
- if(!actor||memberLoading||busy)return;
+ if(!actor||memberLoading)return;
  const current=sessionEpoch,request=memberRequest,requestActor=actor,requestSchool=schoolId,cursor=memberCursor;
  memberLoading=true;$('refresh').disabled=true;$('moreMembers').disabled=true;
  try{
