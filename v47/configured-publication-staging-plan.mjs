@@ -35,3 +35,22 @@ export function planConfiguredPublicationStaging(input) {
   warning:'READ-ONLY PLAN: no staging writes, official marks or publication pointer are created.'
  });
 }
+
+/**
+ * Rebuild a staging manifest from authoritative server-reloaded inputs and
+ * compare every field before accepting it for *review*. This does not grant
+ * write permission or validate the caller's authentication.
+ */
+export function verifyConfiguredPublicationStagingPlan({plan,...authoritativeInput}) {
+ if(!plan||typeof plan!=='object'||Array.isArray(plan))throw new Error('Staging plan required');
+ const expected=planConfiguredPublicationStaging(authoritativeInput);
+ if(JSON.stringify(plan)!==JSON.stringify(expected))throw new Error('Staging plan differs from authoritative class snapshot');
+ return Object.freeze({
+  valid:true,
+  schoolId:expected.schoolId,
+  rosterCount:expected.rosterCount,
+  batchCount:expected.batches.length,
+  writeAuthorized:false,
+  publicationAllowed:false
+ });
+}
