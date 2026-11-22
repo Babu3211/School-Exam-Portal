@@ -45,6 +45,10 @@ for(const revoke of [a=>{a.active=false},a=>{a.schoolId='99999999'},a=>{a.role='
  const revoked={...api,getDocs:async query=>{revoke(changingActor);return api.getDocs(query)}};
  await assert.rejects(()=>loadAllClassMarks({...base,actor:changingActor,api:revoked}),/membership changed/i);
 }
+const excessive={...api,getDocs:async()=>({docs:Array.from({length:4},(_,i)=>({id:'a'+i,data:()=>({schoolId,class:'9',term:'final'})}))})};
+await assert.rejects(()=>loadAllClassMarks({...base,api:excessive}),/Unexpected result size/);
+const unordered={...api,getDocs:async()=>({docs:['b','a'].map(id=>({id,data:()=>({schoolId,class:'9',term:'final'})}))})};
+await assert.rejects(()=>loadAllClassMarks({...base,api:unordered}),/Invalid marks page order/);
 const unauthorized={...actor,schoolId:'87654321'};
 await assert.rejects(()=>loadAllClassMarks({...base,actor:unauthorized}),/membership/i);
 console.log('V47 complete class marks pagination checks passed');
