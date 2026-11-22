@@ -18,11 +18,12 @@ export async function loadClassRoster({db,api,actor,schoolId,schoolClass,pageSiz
  const ids=new Set();
  let lastId=cursor?.id??null;
  for(const d of docs){
-  if(typeof d.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||ids.has(d.id))throw new Error('Invalid or duplicate roster document ID');
+  if(!d||typeof d.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||ids.has(d.id))throw new Error('Invalid or duplicate roster document ID');
   if(lastId!==null&&d.id<=lastId)throw new Error('Roster query returned out-of-order document IDs');
   ids.add(d.id);lastId=d.id;
  }
  const students=docs.map(d=>{
+  if(typeof d.data!=='function')throw new Error('Malformed roster document');
   const data=d.data();
   if(!data||typeof data!=='object'||Array.isArray(data)||data.schoolId!==schoolId||data.class!==schoolClass)throw new Error('Cross-school or wrong-class roster record');
   return {...data,id:d.id};
