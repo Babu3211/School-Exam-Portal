@@ -3,7 +3,7 @@ import {createSchoolSubject} from './subject-create-service.mjs';
 import {createSchoolMarkOnly} from './mark-create-service.mjs';
 import {saveSchoolAttendance} from './attendance-service.mjs';
 import {saveClassAttendance} from './attendance-bulk.mjs';
-const actor={role:'school_admin',active:true,schoolId:'12345678'};
+const actor={uid:'admin-a',role:'school_admin',active:true,schoolId:'12345678'};
 const writes=[];
 let subjectCreateMode=true;
 let existingMark=false;

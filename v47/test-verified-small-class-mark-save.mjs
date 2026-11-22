@@ -11,7 +11,7 @@ function mock(ids=['s1','s2']){
   collection:(_db,...parts)=>parts.join('/'),where:(...x)=>x,orderBy:x=>x,limit:x=>x,startAfter:x=>({cursor:x}),query:(...x)=>x,
   getDocs:async q=>{
    const cursor=q.find(x=>x?.cursor)?.cursor;
-   const start=cursor?ids.indexOf(cursor.id)+1:0;
+   const start=cursor?ids.indexOf(cursor)+1:0;
    const limit=q.find(x=>typeof x==='number')??101;
    return {docs:ids.slice(start,start+limit).map(id=>({id,data:()=>records.get('students/'+id)}))};
   },

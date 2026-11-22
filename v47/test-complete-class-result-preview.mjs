@@ -6,7 +6,7 @@ const subjects=[{id:'math',class:'9',active:true,creditHour:4},{id:'science',cla
 const records=students.flatMap((student,index)=>subjects.map(subject=>({schoolId,studentId:student.id,subjectId:subject.id,class:'9',term:'final',theory:index?60:48,practical:index?40:32})));
 const calls=[];
 const api={doc:(_db,...path)=>path.join('/'),getDoc:async path=>{calls.push(path);return {exists:()=>true,data:()=>({schoolId,class:'9',active:true,theoryFullMarks:60,practicalFullMarks:40})}}};
-const base={db:{},api,actor:{schoolId,role:'school_admin',active:true},schoolId,schoolClass:'9',term:'final',students,subjects,records};
+const base={db:{},api,actor:{uid:'admin-a',schoolId,role:'school_admin',active:true},schoolId,schoolClass:'9',term:'final',students,subjects,records};
 const preview=await previewCompleteSchoolClass(base);
 assert.equal(preview.diagnosticOnly,true);
 assert.equal(preview.coverage.recordCount,4);

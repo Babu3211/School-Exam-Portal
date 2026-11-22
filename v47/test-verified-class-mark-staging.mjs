@@ -12,7 +12,7 @@ const api={
  where:(...parts)=>parts,
  orderBy:(...parts)=>parts,
  limit:n=>n,
- startAfter:doc=>({after:doc.id}),
+ startAfter:id=>({after:id}),
  getDocs:async query=>{
   reads++;
   assert.equal(query[0],'schools/'+schoolId+'/students');

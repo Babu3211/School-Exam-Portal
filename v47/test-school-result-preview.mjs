@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {previewSchoolRawMarksWithV46} from './school-result-preview.mjs';
-const schoolId='12345678',actor={schoolId,role:'school_admin',active:true};
+const schoolId='12345678',actor={uid:'admin-a',schoolId,role:'school_admin',active:true};
 let paths=[];
 const api={doc:(_db,...parts)=>parts.join('/'),getDoc:async path=>{paths.push(path);return {exists:()=>true,data:()=>({schoolId,class:'9',active:true,theoryFullMarks:60,practicalFullMarks:40})}}};
 const base={db:{},api,actor,schoolId,schoolClass:'9',term:'final'};

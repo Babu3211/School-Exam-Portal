@@ -6,7 +6,7 @@ const api={doc:(_db,...parts)=>parts,getDoc:async ref=>{assert.deepEqual(ref,['s
 const base={db:{},api,schoolId:'12345',subjectId:'computer',examId:'final',classId:'9',settingsId:'setting_1',revalidate};
 const result=await loadVerifiedSubjectExamSettings(base);
 assert.equal(checks,2);assert.deepEqual(result.components.map(c=>c.fullMarks),[70,30]);
-await assert.rejects(()=>loadVerifiedSubjectExamSettings({...base,schoolId:'99999'}),/Verified subject/);
+await assert.rejects(()=>loadVerifiedSubjectExamSettings({...base,schoolId:'99999',api:{...api,getDoc:async ref=>{assert.deepEqual(ref,['schools','99999','mark_settings','setting_1']);return {exists:()=>true,data:()=>data};}}}),/Verified subject/);
 await assert.rejects(()=>loadVerifiedSubjectExamSettings({...base,settingsId:'../bad'}),/Invalid settingsId/);
 await assert.rejects(()=>loadVerifiedSubjectExamSettings({...base,api:{...api,getDoc:async()=>({exists:()=>false})}}),/not found/);
 let phase=0;await assert.rejects(()=>loadVerifiedSubjectExamSettings({...base,revalidate:async()=>{if(++phase===2)throw new Error('Session revoked')}}),/Session revoked/);
