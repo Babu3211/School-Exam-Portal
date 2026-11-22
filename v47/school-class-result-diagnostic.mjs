@@ -18,7 +18,9 @@ export async function loadSchoolClassResultDiagnostic({db,api,actor,schoolId,sch
  check();
  const marks=await loadAllClassMarks({db,api,actor,schoolId,schoolClass,term,maxRecords});
  check();
- const students=roster.students.map(s=>({...s,active:true}));
+ // Do not silently convert inactive or unverified students to active.
+ const students=roster.students;
+ if(students.some(s=>s.active!==true||s.schoolId!==schoolId||s.class!==schoolClass))throw new Error('Roster includes inactive or foreign students');
  const preview=await previewCompleteSchoolClass({db,api,actor,schoolId,schoolClass,term,students,subjects,records:marks.records,hasMore:marks.hasMore});
  check();
  return {...preview,readPages:{students:roster.pages,marks:marks.pages},diagnosticOnly:true};
