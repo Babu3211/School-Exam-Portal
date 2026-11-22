@@ -26,6 +26,8 @@ for(const name of ['students-console.mjs','attendance-console.mjs','school-setti
  assert.match(code,/const freshSignIn=!auth\.currentUser/,'Must distinguish fresh login from restored session: '+name);
  assert.match(code,/if\(freshSignIn\)startVerifiedSchoolActivity\(\)/,'Restoring a session must not reset idle expiry: '+name);
 }
+const studentCode=read('students-console.mjs');
+assert.match(studentCode,/onAuthStateChanged\(auth,user=>\{if\(actor&&user\?\.uid!==actor\.uid\)\{clear\(\)/,'Student screen must remove stale records when account changes');
 const marks=read('marks-entry-console.mjs');
 assert.match(marks,/onAuthStateChanged\(auth,user=>\{if\(actor&&user\?\.uid!==actor\.uid\)\{reset\(\)/,'Mark entry must clear stale review and roster after auth change');
 assert.match(marks,/roster\.students\.some\(student=>student\.active!==true\)/,'Initial class marks roster must reject inactive students');
