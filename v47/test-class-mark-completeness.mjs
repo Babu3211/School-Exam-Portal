@@ -35,4 +35,47 @@ assert.equal(new Set(largeResult.entries.map(entry=>entry.studentId)).size,1500)
 assert.throws(()=>validateCompleteClassMarks({...largeArgs,entries:largeEntries.slice(0,-1)}),/Cannot save: 1 students/);
 assert.throws(()=>validateCompleteClassMarks({...largeArgs,entries:[...largeEntries.slice(0,-1),mark('student_1')]}),/Duplicate student/);
 assert.throws(()=>validateCompleteClassMarks({...largeArgs,entries:largeEntries.map((entry,i)=>i===1499?{...entry,theory:' '}:entry)}),/Marks must/);
+
+// Additional fail-closed regression matrix for full-class roster and mark identity.
+const invalidRosterIds=[
+ null,undefined,'',' ','../student','student/id','student:id','student.id',
+ 'a'.repeat(129),123,{},[]
+];
+for(const badId of invalidRosterIds){
+ assert.throws(()=>validateCompleteClassMarks({
+  ...args,expectedStudentIds:['student-1',badId],entries:[mark('student-1'),mark('student-2')]
+ }),/Invalid or duplicate roster student ID/);
+}
+for(const badSubject of [null,undefined,'',' ','../math','math/science','math:science','m'.repeat(129)]){
+ assert.throws(()=>validateCompleteClassMarks({...args,subjectId:badSubject,entries:[mark('student-1'),mark('student-2')]}),/Invalid selected subject ID/);
+}
+for(const badEntries of [null,undefined,{},'not an array']){
+ assert.throws(()=>validateCompleteClassMarks({...args,entries:badEntries}),/Mark entries required/);
+}
+for(const badRoster of [null,undefined,{},'student-1']){
+ assert.throws(()=>validateCompleteClassMarks({...args,expectedStudentIds:badRoster}),/Class roster required/);
+}
+for(const mismatch of [
+ {class:'8'},{term:'final'},{subjectId:'science'},
+ {studentId:'outsider'}
+]){
+ assert.throws(()=>validateCompleteClassMarks({
+  ...args,entries:[mark('student-1'),mark('student-2',mismatch)]
+ }),/Mixed class|not in selected/);
+}
+for(const badStudentId of [null,undefined,'','../other','s/2',123]){
+ assert.throws(()=>validateCompleteClassMarks({
+  ...args,entries:[mark('student-1'),mark('student-2',{studentId:badStudentId})]
+ }),/Invalid student ID/);
+}
+for(const badSubjectId of [null,undefined,'','../other','math/extra',123]){
+ assert.throws(()=>validateCompleteClassMarks({
+  ...args,entries:[mark('student-1'),mark('student-2',{subjectId:badSubjectId})]
+ }),/Invalid subject ID/);
+}
+assert.deepEqual(
+ validateCompleteClassMarks({...args,entries:[mark('student-2'),mark('student-1')]}).entries.map(x=>x.studentId),
+ ['student-2','student-1'],
+ 'Validation must preserve submitted order without silently remapping student marks'
+);
 console.log('V47 class marks completeness checks passed');
