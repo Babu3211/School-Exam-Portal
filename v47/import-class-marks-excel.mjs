@@ -32,12 +32,14 @@ export async function readSmssMarksExcel(file,{settings,schoolId,classId,subject
  if(parsed[0].length!==headers.length||headers.some((h,i)=>parsed[0][i]!==h))throw new Error('Excel columns differ from current Examination Settings');
  if(!Array.isArray(students)||students.length!==parsed.length-1||students.some(s=>s.active!==true))throw new Error('Excel roster differs from current class');
  const roster=new Set(students.map(s=>s.id)),seen=new Set(),drafts=[];
+ if(roster.size!==students.length)throw new Error('Duplicate student in authoritative roster');
  for(const row of parsed.slice(1)){
   if(row.length!==headers.length||!roster.has(row[0])||seen.has(row[0]))throw new Error('Unknown, duplicate or incomplete student in Excel');
   seen.add(row[0]);const flag=String(row[2]).trim().toLowerCase();
   if(!['yes','no'].includes(flag))throw new Error('Absent column must be Yes or No');
   const absent=flag==='yes',values={};
   components.forEach((c,i)=>{values[c.key]=row[i+3]??''});
+  if(!absent){for(const c of components){const v=String(values[c.key]).trim();if(!/^(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)$/.test(v)||Number(v)>c.fullMarks)throw new Error('Missing or invalid '+c.name+' marks for '+row[0]);values[c.key]=v}}
   if(absent&&Object.values(values).some(v=>String(v).trim()!==''))throw new Error('Absent student cannot have marks');
   drafts.push({studentId:row[0],isAbsent:absent,values:absent?{}:values});
  }
