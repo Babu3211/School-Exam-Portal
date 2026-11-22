@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import {listSchoolMembers} from '../v47/member-list-service.mjs';
-const api={collection:(_db,...p)=>p.join('/'),query:(...x)=>x,limit:x=>x,getDocs:async()=>({docs:[{id:'teacher123',data:()=>({uid:'spoof',role:'teacher'})}]})};
-const args={db:{},api,actor:{active:true,role:'school_admin',schoolId:'12345678'},schoolId:'12345678'};
-await assert.rejects(()=>listSchoolMembers({...args,actor:{active:true,role:'viewer',schoolId:'12345678'}}));
+const api={collection:(_db,...p)=>p.join('/'),query:(...x)=>x,limit:x=>x,getDocs:async()=>({docs:[{id:'teacher123',data:()=>({uid:'teacher123',role:'teacher',schoolId:'12345678',active:true})}]})};
+const args={db:{},api,actor:{uid:'admin123',active:true,role:'school_admin',schoolId:'12345678'},schoolId:'12345678'};
+await assert.rejects(()=>listSchoolMembers({...args,actor:{uid:'viewer123',active:true,role:'viewer',schoolId:'12345678'}}));
+await assert.rejects(()=>listSchoolMembers({...args,actor:{active:true,role:'school_admin',schoolId:'12345678'}}),/Admin access required/);
 assert.equal((await listSchoolMembers(args))[0].uid,'teacher123');
+const wrongSchool={...api,getDocs:async()=>({docs:[{id:'teacher123',data:()=>({uid:'teacher123',role:'teacher',schoolId:'87654321',active:true})}]})};
+await assert.rejects(()=>listSchoolMembers({...args,api:wrongSchool}),/Cross-school or malformed member record/);
+const spoof={...api,getDocs:async()=>({docs:[{id:'teacher123',data:()=>({uid:'spoof',role:'teacher',schoolId:'12345678',active:true})}]})};
+await assert.rejects(()=>listSchoolMembers({...args,api:spoof}),/Cross-school or malformed member record/);
 console.log('V47 school member list authorization passed');

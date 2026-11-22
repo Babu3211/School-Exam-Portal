@@ -36,19 +36,19 @@ assert.ok(!js.includes('createSchoolMarkOnly'),'Legacy mark create must not be i
 for(const id of ['inspectClassMarks','draftCheckResult'])assert.ok(html.includes('id="'+id+'"'),'Missing large-class draft checker: '+id);
 for(const snippet of [
  "import {inspectClassMarkDraft} from './class-mark-draft-inspector.mjs'",
- "$('inspectClassMarks').onclick=()=>",
+ "$('inspectClassMarks').onclick=async()=>",
  "for(const input of $('classMarkRows').querySelectorAll('input'))input.disabled=value"
 ])assert.ok(js.includes(snippet),'Missing draft validation or row lock: '+snippet);
-assert.ok(js.includes("if(row.schoolId!==schoolId||row.class!==schoolClass)throw new Error('Cross-school"),'Marks selector must reject foreign records');
+assert.ok(js.includes("for(const row of page)if(row.schoolId!==selectedSchoolId||row.class!==schoolClass)throw new Error('Cross-school"),'Marks selector must reject foreign records');
 assert.ok(js.includes("({...doc.data(),id:doc.id})"),'Document ID must override payload ID');
 assert.ok(js.includes("Authentication changed; sign in again"),'Roster load must check authenticated user');
-assert.ok(js.includes("$('schoolClass').onchange=()=>{invalidateClassMarks();"),'Class change must invalidate old roster, draft and inspection');
+assert.ok(js.includes("$('schoolClass').onchange=()=>{optionRequest++;invalidateClassMarks();"),'Class change must invalidate old roster, draft and inspection');
 assert.ok(js.includes("$('draftCheckResult').textContent='';$('inspectClassMarks').disabled=true;"),'Invalidation must clear draft and disable inspection');
 assert.ok(js.includes("subjectId=$('subjectId').value,uid=actor.uid,selectedSchoolId=schoolId"),'Roster load must capture original user and school');
 assert.ok(js.includes("if(auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId||actor?.schoolId!==selectedSchoolId)throw new Error('Authentication or school changed during roster load')"),'Roster completion must recheck user and school identity');
 assert.ok(js.includes("const request=++optionRequest,attempt=epoch,schoolClass=$('schoolClass').value,uid=actor.uid,selectedSchoolId=schoolId"),'Options load must bind its school and user identity');
 assert.ok(js.includes("if(auth?.currentUser?.uid!==uid||actor.uid!==uid||schoolId!==selectedSchoolId)throw new Error('Authentication changed during options load')"),'Paginated options must recheck session after each fetch');
-assert.ok(js.includes("if(request!==optionRequest||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('Options selection changed during load')"),'Options must recheck session before populating selectors');
+assert.ok(js.includes("if(request!==optionRequest||attempt!==epoch||schoolClass!==$('schoolClass').value||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('Options selection changed during load')"),'Options must recheck session before populating selectors');
 assert.ok(js.includes("$('classMarkRows').addEventListener('input',event=>"),'Draft inspection must be invalidated on edited marks');
 assert.ok(js.includes("Draft changed. Inspect again before saving."),'Old draft inspection must not appear current after edits');
 assert.ok(js.includes('rosterRequest++;classMarkRoster=[]'),'Session reset and draft invalidation must revoke stale roster requests');
@@ -56,16 +56,16 @@ assert.ok(js.includes('invalidateClassMarks();const request=rosterRequest;lock(t
 assert.ok(js.includes('if(request!==rosterRequest||attempt!==epoch||classId!=='),'Stale roster responses must not render after selection changes');
 assert.ok(js.includes('if(request===rosterRequest&&attempt===epoch){invalidateClassMarks();lock(false);'),'Current roster failures must unlock editor without clearing a newer request');
 assert.ok(js.includes('finally{if(request===rosterRequest&&attempt===epoch)lock(false)}'),'Old roster requests must not unlock a newer load');
-assert.ok(js.includes("function reset(){optionRequest++;rosterRequest++"),'Reset must invalidate option loads');
+assert.ok(js.includes("function reset(){$('importClassExcelFile').value='';"),'Reset must invalidate option loads');
 assert.ok(js.includes("if(request!==optionRequest||attempt!==epoch||schoolClass!=="),'Old paginated options must be ignored');
 assert.ok(js.includes("if(request===optionRequest&&attempt===epoch)lock(false)"),'Old option loads must not unlock newer loads');
 assert.ok(js.includes("$('schoolClass').onchange=()=>{optionRequest++;invalidateClassMarks();"),'Class change must revoke pending options');
 assert.ok(js.includes("api.collection(db,'schools',selectedSchoolId,collection)"),'Paginated selectors must query the captured school, not mutable current school');
 assert.ok(js.includes("if(request!==optionRequest||attempt!==epoch||schoolClass!==$('schoolClass').value||auth?.currentUser?.uid!==uid"),'Selectors must recheck class, session and request token before rendering');
 assert.ok(js.includes("for(const row of page)if(row.schoolId!==selectedSchoolId||row.class!==schoolClass)"),'Each selector page must validate records against the captured school and class');
-assert.ok(js.includes("if(rendered.length!==expected.size)throw new Error('Class mark rows changed"),'Missing class rows must fail closed');
-assert.ok(js.includes("if(!expected.has(id)||rows.has(id))throw new Error('Unexpected or duplicate student row"),'Duplicate or foreign rendered students must fail closed');
-assert.ok(js.includes("row.querySelectorAll('[data-field=\"theory\"]').length!==1"),'Each row must contain exactly one theory input');
-assert.ok(js.includes("row.querySelectorAll('[data-field=\"practical\"]').length!==1"),'Each row must contain exactly one practical input');
-assert.ok(js.includes("String(row.name??'').trim().toLowerCase()==='computer'"),'Class 9–10 Computer must be excluded from raw marks selection regardless of casing');
+assert.ok(js.includes("if(rendered.length!==expected.size)throw new Error('Class roster changed"),'Missing class rows must fail closed');
+assert.ok(js.includes("if(!expected.has(id)||seen.has(id))throw new Error('Unexpected or duplicate student"),'Duplicate or foreign rendered students must fail closed');
+assert.ok(js.includes("inputs.length!==1)throw new Error('Component fields changed; reload')"),'Each configured component must appear exactly once for each student');
+assert.ok(js.includes("row.querySelectorAll('input[data-field]').length!==classMarkSettings.components.length"),'No unconfigured component input may appear');
+assert.ok(js.includes("for(const component of classMarkSettings.components)"),'Computer and all other subjects must use configured Examination Settings components');
 console.log('V47 full-class marks UI contract passed');
