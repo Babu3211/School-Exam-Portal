@@ -79,4 +79,13 @@ for(const docs of [
  assert.equal(page.hasMore,true);
  assert.equal(reads,2,'Lookahead and visible member must be read exactly once');
 }
+// A role flag is not sufficient without a validated Firebase UID.
+for(const list of [listSchoolMembers,listSchoolMembersPage]){
+ for(const invalidUid of [undefined,null,'','invalid/uid']){
+  let queries=0;
+  const api=makeApi(async()=>{queries++;return {docs}});
+  await assert.rejects(()=>list({db:{},api,actor:{...actor(),uid:invalidUid},schoolId,pageSize:2}),/Admin access/);
+  assert.equal(queries,0,'Unauthorized list must not reach Firestore');
+ }
+}
 console.log('V47 school member listing: session races, revoked roles, cross-school data, lookahead and cursor guards passed');
