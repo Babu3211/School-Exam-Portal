@@ -30,7 +30,7 @@ duplicate[1].entries[0].studentId=duplicate[0].entries[0].studentId;
 assert.throws(()=>verifyPublicationTransition({...base,stagedBatches:duplicate}),/duplicated or altered/);
 assert.throws(()=>verifyPublicationTransition({...base,authoritativeInput:{...input,schoolId:'67890'}}),/Verified school admin/);
 assert.throws(()=>verifyPublicationTransition({...base,authoritativeInput:{...input,rosterRevision:'r2'}}),/stale or altered/);
-const old={...scope,publicationId:'pub_00000000'};
+const old={...scope,publicationId:'pub_00000000',digest:'a'.repeat(64),rosterCount:1500};
 assert.throws(()=>verifyPublicationTransition({...base,currentPointer:old}),/Concurrent publication/);
 assert.equal(verifyPublicationTransition({...base,currentPointer:old,expectedPreviousId:old.publicationId}).previousPublicationId,old.publicationId);
 
