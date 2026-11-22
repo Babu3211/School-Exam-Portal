@@ -41,7 +41,9 @@ assert.doesNotMatch(computerHtml,/id="config"/,'Computer components must not req
 const teacherHtml=read('teacher-assigned-class.html');
 assert.doesNotMatch(teacherHtml,/id="config"/,'Teacher roster must not require manual Firebase JSON');
 const assignmentsCode=read('assignments-console.mjs');
-assert.match(assignmentsCode,/data\.schoolId!==schoolId\|\|data\.class!==schoolClass/,'Assignment options must reject cross-school and wrong-class records');
+assert.match(assignmentsCode,/data\.schoolId!==selectedSchoolId\|\|data\.class!==schoolClass/,'Assignment options must reject cross-school and wrong-class records');
+assert.match(assignmentsCode,/request!==loadRequest/,'Assignment loading must reject superseded roster requests');
+assert.match(assignmentsCode,/loadRequest\+\+;studentsLoaded=false/,'Class changes must invalidate pending roster loads');
 assert.match(assignmentsCode,/onAuthStateChanged\(auth,user=>/,'Assignment screen must invalidate changed auth');
 assert.match(assignmentsCode,/const session=await verifySchoolSession\(\{schoolId,uid:actor\.uid/,'Assignment write must reverify school membership');
 assert.match(assignmentsCode,/session\.role!=='school_admin'/,'Assignment write must reject non-admin');
