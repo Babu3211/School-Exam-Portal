@@ -24,6 +24,16 @@ checks.push(
  ['Official grade sheet',!/Official grade sheets, printing and publication are disabled/i.test(reports),'Official grade sheet/print still disabled'],
  ['Production PWA identity',!/Development|Dev/.test(manifest.name+' '+manifest.short_name),'PWA manifest still development-branded']
 );
+// A green static check is only a presence indicator, never proof of working behavior.
+const attendanceJs=read('attendance-console.mjs');
+checks.push(
+ ['Attendance defaults to Nepal date',/\$\('date'\)\.value=nepalGregorianDate\(\)/.test(attendanceJs),'Attendance default date is not initialized'],
+ ['Attendance teacher assignment gate',/saveAssignedTeacherAttendance/.test(attendanceJs),'Assigned teacher attendance service not connected'],
+ ['Attendance partial-save warning',/partial.save|chunks of 10/i.test(attendance),'Partial-save risk must be disclosed'],
+ ['Viewer attendance read-only',/Viewer is read-only/.test(attendance),'Viewer read-only disclosure missing'],
+ ['Student roll number optional',/Roll Number \(optional\)/.test(students),'Student roll number is unexpectedly required'],
+ ['ECD and Classes 11–12', ['ECD','11','12'].every(x=>students.includes('value="'+x+'"')),'Student class options incomplete']
+);
 const blocked=checks.filter(([,pass])=>!pass);
 const report={project:'SMSS V47',branch:'smss-v47-multischool-work',productionReady:false,checks:checks.map(([name,pass,reason])=>({name,status:pass?'STATIC_CHECK_OK':'BLOCKED',reason:pass?'Static evidence only; not a runtime test':reason})),blockingCount:blocked.length};
 console.log(JSON.stringify(report,null,2));
