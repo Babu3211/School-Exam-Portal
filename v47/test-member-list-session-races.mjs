@@ -51,4 +51,32 @@ await assert.rejects(()=>listSchoolMembersPage({
  db:{},api:makeApi(),actor:actor(),schoolId,pageSize:2,
  cursor:{id:'../wrong',data:()=>({schoolId,uid:'../wrong'})}
 }),/Invalid pagination cursor/);
+// Reject inconsistent role/status data and all forms of ordering drift.
+for(const data of [
+ {uid:'teacher_1',schoolId,role:'owner',active:true},
+ {uid:'teacher_1',schoolId,role:'viewer',active:'yes'}
+]){
+ await assert.rejects(()=>listSchoolMembersPage({
+  db:{},actor:actor(),schoolId,pageSize:2,api:makeApi(async()=>({
+   docs:[{id:'teacher_1',data:()=>data}]
+  }))
+ }),/Cross-school or malformed/);
+}
+for(const docs of [
+ [member('teacher_2'),member('teacher_1')],
+ [member('teacher_1'),member('teacher_1')],
+ [member('teacher_1'),member('teacher_1',otherSchoolId)]
+]){
+ await assert.rejects(()=>listSchoolMembersPage({
+  db:{},actor:actor(),schoolId,pageSize:2,api:makeApi(async()=>({docs}))
+ }),/out-of-order/);
+}
+{
+ let reads=0;
+ const docs=[member('teacher_1',schoolId,()=>reads++),member('teacher_2',schoolId,()=>reads++)];
+ const page=await listSchoolMembersPage({db:{},actor:actor(),schoolId,pageSize:1,api:makeApi(async()=>({docs}))});
+ assert.equal(page.records.length,1);
+ assert.equal(page.hasMore,true);
+ assert.equal(reads,2,'Lookahead and visible member must be read exactly once');
+}
 console.log('V47 school member listing: session races, revoked roles, cross-school data, lookahead and cursor guards passed');
