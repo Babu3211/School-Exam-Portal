@@ -92,8 +92,8 @@ for(const [overrides,message] of [
 }
 for(const name of ['Computer','Computer Science','Mathematics','Nepali','New Optional Subject']){
  const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name,components:[{name:'Custom Assessment',fullMarks:37}]}});
- await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),/Computer 4\/36\/10/);
- assert.equal(writes.length,0,'Computer component marks must never be saved as raw marks');
+ await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),/Configured subject requires Assessment Settings/);
+ assert.equal(writes.length,0,'Configured component marks must never be saved as raw marks');
 }
 
 {
