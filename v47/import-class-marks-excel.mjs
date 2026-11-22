@@ -12,7 +12,10 @@ export async function readSmssMarksExcel(file,{settings,schoolId,classId,subject
   const start=offset+30+nameSize+extraSize,end=start+size;
   if(flags&9||![0,8].includes(method)||end>bytes.length||uncompressed>8_000_000)throw new Error('Unsupported, encrypted or oversized Excel workbook');
   const name=decoder.decode(bytes.slice(offset+30,offset+30+nameSize));
-  if(parts.has(name)||parts.size>16)throw new Error('Invalid Excel workbook contents');
+  if(parts.has(name)||parts.size>128)throw new Error('Invalid Excel workbook contents');
+  if(!/^(?:xl\\/(?:worksheets\\/sheet1\\.xml|workbook\\.xml|sharedStrings\\.xml)|\\[Content_Types\\]\\.xml|_rels\\/\\.rels|xl\\/_rels\\/workbook\\.xml\\.rels)$/.test(name)){
+   offset=end;continue;
+  }
   let payload=bytes.slice(start,end);
   if(method===8){
    if(typeof DecompressionStream!=='function')throw new Error('This browser cannot read compressed Excel files');
