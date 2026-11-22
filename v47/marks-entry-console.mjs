@@ -1,3 +1,4 @@
+import {readSmssMarksExcel} from './import-class-marks-excel.mjs';
 import {buildClassMarksExcelSample} from './class-marks-excel-sample.mjs';
 import {buildClassReviewExcel} from './class-review-excel.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity} from './school-firebase-client.mjs';
@@ -16,8 +17,8 @@ const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 const $=id=>document.getElementById(id),status=msg=>{$('message').textContent=msg};
 let auth,authSdk,api,db,actor,schoolId,epoch=0,busy=false,studentsLoaded=false,subjectsLoaded=false,loadedStudentClass=null,loadedSubjectClass=null;
 let classMarkRoster=[],classMarkContext=null,classMarkSettings=null,rosterRequest=0,optionRequest=0,reviewPackage=null;
-function reset(){$('downloadClassTemplateExcel').disabled=true;$('reviewFile').value='';$('reviewFile').disabled=true;$('verifyClassReview').disabled=true;$('reviewVerifyResult').textContent='';reviewPackage=null;$('downloadClassReview').disabled=true;$('downloadClassReviewExcel').disabled=true;$('createExamSettings').disabled=true;$('settingsCreateResult').textContent='';$('iemisSchemaRows').replaceChildren();$('iemisSchemaStatus').textContent='';optionRequest++;rosterRequest++;classMarkRoster=[];classMarkContext=null;classMarkSettings=null;$('classMarkRows').replaceChildren();$('classMarkHeader').replaceChildren();$('classMarkCount').textContent='';$('saveClassMarks').disabled=true;$('inspectClassMarks').disabled=true;$('draftCheckResult').textContent='';$('loadClassMarks').disabled=true;epoch++;studentsLoaded=false;subjectsLoaded=false;loadedStudentClass=null;loadedSubjectClass=null;actor=null;schoolId=null;$('work').hidden=true;$('logout').disabled=true;$('save').disabled=true;$('studentId').replaceChildren();$('subjectId').replaceChildren();}
-function lock(value){busy=value;$('downloadClassTemplateExcel').disabled=value||!classMarkContext||!classMarkRoster.length;$('downloadClassReview').disabled=value||!reviewPackage;$('downloadClassReviewExcel').disabled=value||!reviewPackage;$('reviewFile').disabled=value||!classMarkContext;$('verifyClassReview').disabled=value||!classMarkContext||!$('reviewFile').files?.length;$('createExamSettings').disabled=value||!actor||actor.role!=='school_admin'||!subjectsLoaded||loadedSubjectClass!==$('schoolClass').value||!$('subjectId').value;for(const input of $('classMarkRows').querySelectorAll('input'))input.disabled=value||(input.matches('input[data-field]')&&input.closest('tr')?.querySelector('input[data-absent]')?.checked===true);$('loadClassMarks').disabled=value||!actor||actor.role!=='school_admin';$('saveClassMarks').disabled=true;$('inspectClassMarks').disabled=value||!actor||!classMarkContext;for(const id of ['login','logout','loadStudents','loadSubjects','save','schoolClass','term','subjectId','studentId','theory','practical'])$(id).disabled=value||(['loadStudents','loadSubjects','save'].includes(id)&&!actor);if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('save').disabled=true;}}
+function reset(){$('importClassExcelFile').value='';$('importClassExcelFile').disabled=true;$('importClassExcel').disabled=true;$('downloadClassTemplateExcel').disabled=true;$('reviewFile').value='';$('reviewFile').disabled=true;$('verifyClassReview').disabled=true;$('reviewVerifyResult').textContent='';reviewPackage=null;$('downloadClassReview').disabled=true;$('downloadClassReviewExcel').disabled=true;$('createExamSettings').disabled=true;$('settingsCreateResult').textContent='';$('iemisSchemaRows').replaceChildren();$('iemisSchemaStatus').textContent='';optionRequest++;rosterRequest++;classMarkRoster=[];classMarkContext=null;classMarkSettings=null;$('classMarkRows').replaceChildren();$('classMarkHeader').replaceChildren();$('classMarkCount').textContent='';$('saveClassMarks').disabled=true;$('inspectClassMarks').disabled=true;$('draftCheckResult').textContent='';$('loadClassMarks').disabled=true;epoch++;studentsLoaded=false;subjectsLoaded=false;loadedStudentClass=null;loadedSubjectClass=null;actor=null;schoolId=null;$('work').hidden=true;$('logout').disabled=true;$('save').disabled=true;$('studentId').replaceChildren();$('subjectId').replaceChildren();}
+function lock(value){busy=value;$('importClassExcelFile').disabled=value||!classMarkContext;$('importClassExcel').disabled=value||!classMarkContext||!$('importClassExcelFile').files?.length;$('downloadClassTemplateExcel').disabled=value||!classMarkContext||!classMarkRoster.length;$('downloadClassReview').disabled=value||!reviewPackage;$('downloadClassReviewExcel').disabled=value||!reviewPackage;$('reviewFile').disabled=value||!classMarkContext;$('verifyClassReview').disabled=value||!classMarkContext||!$('reviewFile').files?.length;$('createExamSettings').disabled=value||!actor||actor.role!=='school_admin'||!subjectsLoaded||loadedSubjectClass!==$('schoolClass').value||!$('subjectId').value;for(const input of $('classMarkRows').querySelectorAll('input'))input.disabled=value||(input.matches('input[data-field]')&&input.closest('tr')?.querySelector('input[data-absent]')?.checked===true);$('loadClassMarks').disabled=value||!actor||actor.role!=='school_admin';$('saveClassMarks').disabled=true;$('inspectClassMarks').disabled=value||!actor||!classMarkContext;for(const id of ['login','logout','loadStudents','loadSubjects','save','schoolClass','term','subjectId','studentId','theory','practical'])$(id).disabled=value||(['loadStudents','loadSubjects','save'].includes(id)&&!actor);if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('save').disabled=true;}}
 $('connect').onclick=async()=>{try{({auth,authSdk,db,api}=await connectSchoolFirebase());authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){reset();status('प्रयोगकर्ता सत्र परिवर्तन भयो। अंक समीक्षा फेरि सुरु गर्न लगइन गर्नुहोस्।')}});$('connect').disabled=true;$('login').disabled=false;if(requestedSchool){$('schoolId').value=validateSchoolId(requestedSchool);if(auth.currentUser)queueMicrotask(()=>$('login').click())}status('Connected to V47')}catch(e){status('Connection failed: '+e.message)}};
 $('login').onclick=async()=>{if(busy)return;reset();const attempt=epoch;const loginAuth=auth;lock(true);try{const id=validateSchoolId($('schoolId').value.trim());const freshSignIn=!auth.currentUser;const credential=freshSignIn?await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value):{user:auth.currentUser};$('password').value='';if(attempt!==epoch){if(loginAuth.currentUser?.uid===credential.user.uid)await authSdk.signOut(loginAuth);return}const uid=credential.user.uid;const session=await verifySchoolSession({schoolId:id,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(attempt!==epoch){if(loginAuth.currentUser?.uid===uid)await authSdk.signOut(loginAuth);return}if(loginAuth.currentUser?.uid!==uid||session.role!=='school_admin')throw new Error('School Admin required');const school=await api.getDoc(api.doc(db,'schools',id));if(attempt!==epoch){if(loginAuth.currentUser?.uid===uid)await authSdk.signOut(loginAuth);return}if(loginAuth.currentUser?.uid!==uid||!school.exists()||school.data().active!==true)throw new Error('School inactive');actor={role:'school_admin',active:true,schoolId:id,uid};if(freshSignIn)startVerifiedSchoolActivity();schoolId=id;$('heading').textContent='Raw mark — '+String(school.data().name??id);$('work').hidden=false;status('विद्यालय प्रशासकको लगइन सफल भयो। विद्यार्थी र विषय लोड गर्नुहोस्। हाल अंक Save/Publish बन्द छ।')}catch(e){if(attempt===epoch){reset();try{await authSdk.signOut(auth)}catch{}status('Sign in failed: '+e.message)}}finally{lock(false)}};
 $('logout').onclick=async()=>{if(busy)return;lock(true);reset();try{await authSdk.signOut(auth);status('Signed out')}catch(e){status('Sign out failed: '+e.message)}finally{lock(false)}};
@@ -72,7 +73,7 @@ $('createExamSettings').onclick=async()=>{
 };
 
 
-function invalidateClassMarks(){$('downloadClassTemplateExcel').disabled=true;$('reviewFile').value='';$('reviewFile').disabled=true;$('verifyClassReview').disabled=true;$('reviewVerifyResult').textContent='';reviewPackage=null;$('downloadClassReview').disabled=true;$('downloadClassReviewExcel').disabled=true;rosterRequest++;classMarkRoster=[];classMarkContext=null;classMarkSettings=null;$('classMarkRows').replaceChildren();$('classMarkHeader').replaceChildren();$('classMarkCount').textContent='';$('draftCheckResult').textContent='';$('inspectClassMarks').disabled=true;$('saveClassMarks').disabled=true}
+function invalidateClassMarks(){$('importClassExcelFile').value='';$('importClassExcelFile').disabled=true;$('importClassExcel').disabled=true;$('downloadClassTemplateExcel').disabled=true;$('reviewFile').value='';$('reviewFile').disabled=true;$('verifyClassReview').disabled=true;$('reviewVerifyResult').textContent='';reviewPackage=null;$('downloadClassReview').disabled=true;$('downloadClassReviewExcel').disabled=true;rosterRequest++;classMarkRoster=[];classMarkContext=null;classMarkSettings=null;$('classMarkRows').replaceChildren();$('classMarkHeader').replaceChildren();$('classMarkCount').textContent='';$('draftCheckResult').textContent='';$('inspectClassMarks').disabled=true;$('saveClassMarks').disabled=true}
 $('term').onchange=()=>{invalidateClassMarks();lock(false)};
 $('subjectId').onchange=()=>{invalidateClassMarks();lock(false)};
 $('loadClassMarks').onclick=async()=>{
@@ -105,7 +106,7 @@ $('loadClassMarks').onclick=async()=>{
    }fragment.append(row);
   }
   body.append(fragment);
-  $('downloadClassTemplateExcel').disabled=false;
+  $('downloadClassTemplateExcel').disabled=false;$('importClassExcelFile').disabled=false;
   $('classMarkCount').textContent=roster.count+' students in full roster. '+('Save/Publish disabled until audited complete-class workflow is ready.');
   status('कक्षाका विद्यार्थी लोड भए। सबैको अंक जाँच्न सकिन्छ, तर Save/Publish बन्द छ।');
  }catch(e){if(request===rosterRequest&&attempt===epoch){invalidateClassMarks();lock(false);status('Unable to load complete roster: '+e.message)}}
@@ -176,6 +177,39 @@ $('downloadClassReview').onclick=()=>{
  const link=document.createElement('a');link.href=url;link.download=reviewPackage.filename;link.click();
  setTimeout(()=>URL.revokeObjectURL(url),1000);
  status('Read-only review JSON downloaded locally. No marks saved or published.');
+};
+$('importClassExcelFile').onchange=()=>lock(false);
+$('importClassExcel').onclick=async()=>{
+ if(busy||!classMarkContext||!classMarkSettings||actor?.role!=='school_admin'||auth?.currentUser?.uid!==actor.uid||!$('importClassExcelFile').files?.[0])return;
+ const attempt=epoch,request=rosterRequest,uid=actor.uid,selectedSchoolId=schoolId;
+ const context={...classMarkContext},file=$('importClassExcelFile').files[0];
+ lock(true);
+ try{
+  const verified=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});
+  if(verified.role!=='school_admin')throw new Error('School Admin permission changed');
+  const currentSettings=await discoverVerifiedSubjectExamSettings({db,api,schoolId:selectedSchoolId,classId:context.classId,subjectId:context.subjectId,examId:context.term,revalidate:async()=>{if(attempt!==epoch||request!==rosterRequest||auth?.currentUser?.uid!==uid)throw new Error('Session changed')}});
+  const roster=await loadCompleteClassRoster({db,api,actor,schoolId:selectedSchoolId,classId:context.classId});
+  if(roster.students.some(s=>s.active!==true)||roster.count!==classMarkRoster.length||
+   roster.studentIds.some(id=>!classMarkRoster.some(s=>s.id===id))||
+   currentSettings.settingsId!==classMarkSettings.settingsId||
+   JSON.stringify(currentSettings.components)!==JSON.stringify(classMarkSettings.components))throw new Error('Roster or settings changed; reload');
+  const drafts=await readSmssMarksExcel(file,{schoolId:selectedSchoolId,classId:context.classId,subjectId:context.subjectId,examId:context.term,settings:currentSettings,students:roster.students});
+  const result=inspectConfiguredClassMarks({schoolId:selectedSchoolId,classId:context.classId,subjectId:context.subjectId,examId:context.term,settings:currentSettings,expectedStudentIds:roster.studentIds,drafts});
+  if(!result.complete)throw new Error('Excel marks incomplete or invalid: '+result.invalid.slice(0,3).map(x=>x.studentId+': '+x.message).join('; '));
+  if(attempt!==epoch||request!==rosterRequest||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId||
+   context.classId!==$('schoolClass').value||context.subjectId!==$('subjectId').value||context.term!==$('term').value)throw new Error('Session or selection changed');
+  const byId=new Map(drafts.map(d=>[d.studentId,d]));
+  for(const row of $('classMarkRows').children){
+   const draft=byId.get(row.dataset.studentId),absent=row.querySelector('input[data-absent]');
+   absent.checked=draft.isAbsent;
+   for(const input of row.querySelectorAll('input[data-field]')){input.value=draft.isAbsent?'':String(draft.values[input.dataset.field]);input.disabled=draft.isAbsent}
+  }
+  reviewPackage=null;$('downloadClassReview').disabled=true;$('downloadClassReviewExcel').disabled=true;
+  $('reviewFile').value='';$('reviewVerifyResult').textContent='';
+  $('draftCheckResult').textContent='Excel imported into local draft for '+drafts.length+' students. Inspect again. Nothing saved.';
+  status('Excel बाट '+drafts.length+' विद्यार्थीको अंक Draft मा भरियो। Save गरिएको छैन।');
+ }catch(e){if(attempt===epoch&&request===rosterRequest)status('Excel Import असफल: '+e.message)}
+ finally{if(attempt===epoch){lock(false)}}
 };
 $('downloadClassTemplateExcel').onclick=()=>{
  if(busy||actor?.role!=='school_admin'||actor.active!==true||actor.schoolId!==schoolId||auth?.currentUser?.uid!==actor.uid||!classMarkContext||!classMarkSettings||!classMarkRoster.length){status('कक्षाको विद्यार्थी र Examination Settings पुनः लोड गर्नुहोस्।');return}
