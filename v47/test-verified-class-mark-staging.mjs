@@ -42,5 +42,9 @@ await assert.rejects(prepareVerifiedClassMarkStaging({...base,api:{...api,getDoc
 await assert.rejects(prepareVerifiedClassMarkStaging({...base,api:{...api,getDocs:async q=>({docs:[{id:'student_0001',data:()=>({schoolId,class:classId,active:false})}]})}}),/Inactive student/);
 const changing={...actor};
 await assert.rejects(prepareVerifiedClassMarkStaging({...base,actor:changing,api:{...api,getDoc:async()=>{changing.active=false;return {exists:()=>true,data:()=>settings}}}}),/identity changed/);
+await assert.rejects(prepareVerifiedClassMarkStaging({...base,subjectId:'../foreign'}),/Invalid subject ID/);
+await assert.rejects(prepareVerifiedClassMarkStaging({...base,api:{...api,getDoc:async()=>({exists:()=>true,data:()=>({...settings,id:'wrong'})})}}),/Invalid Examination Settings/);
+const revokedInAccessor={...actor};
+await assert.rejects(prepareVerifiedClassMarkStaging({...base,actor:revokedInAccessor,api:{...api,getDoc:async()=>({exists:()=>true,data:()=>{revokedInAccessor.active=false;return settings}})}}),/identity changed/);
 assert.equal(writes,0);
 console.log('V47 authoritative 1500-student read-only staging preparation checks passed');
