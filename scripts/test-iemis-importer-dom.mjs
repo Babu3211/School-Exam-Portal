@@ -45,6 +45,13 @@ assert.ok(edits>=3,'Native input/change events must be dispatched');
 assert.deepEqual([...window.document.querySelectorAll('tbody input[type=number]')].map(e=>e.value),['0','23','8']);
 assert.equal(window.document.querySelector('tbody input[type=checkbox]').checked,true,'Imported students must be selected for the native Save');
 assert.match($('status').textContent,/IEMIS मा अंक जाँचेर/);
+// Export and Copy must read the current native form, including newly filled marks.
+let copied='';Object.defineProperty(window.navigator,'clipboard',{value:{writeText:async text=>{copied=text;}}});
+await $('copy').onclick();assert.match(copied,/FALSE\t0\t23\t8$/);assert.equal($('paste').value,copied);
+let downloadName='';window.URL.createObjectURL=()=> 'blob:synthetic';window.URL.revokeObjectURL=()=>{};
+window.HTMLAnchorElement.prototype.click=function(){downloadName=this.download;};
+await $('export').onclick();assert.match(downloadName,/_Current\.xlsx$/);
+await $('sample').onclick();assert.match(downloadName,/_Sample\.xlsx$/);
 // A concurrent page edit after Preview blocks every import write.
 await $('read').onclick();
 $('paste').value='7\tSynthetic Student\tTEST-REG\t001\tFALSE\t1\t24\t9';
@@ -61,6 +68,24 @@ assert.equal(host.hidden,false);
 await new Promise(resolve=>window.setTimeout(resolve,50));
 dom.window.close();
 console.log('Importer DOM reads live headings, previews XLSX, fills native controls, selects students, preserves Save ownership and rejects stale previews');
+
+// Route-independent detection for a separate primary Mark Entry screen.
+// This is a synthetic adapter fixture, not proof of the live Class 5 layout.
+{
+ const primaryHtml=html.replace('TEST-SCHOOL |','999999999 |').replace('<option>6</option>','<option>5</option>').replace('Participation(4)','No. Of Learning Achievement').replace('Practical/Project(36)','Full Marks').replace('First Term Examination(10)','Obtained Learning Achievement');
+ const primaryDom=new JSDOM(primaryHtml,{url:'https://emis.cehrd.gov.np/separate-primary-form',runScripts:'outside-only',pretendToBeVisual:true});
+ const w=primaryDom.window;w.requestAnimationFrame=cb=>w.setTimeout(()=>cb(0),0);w.cancelAnimationFrame=id=>w.clearTimeout(id);Object.defineProperty(w.HTMLElement.prototype,'innerText',{get(){return this.textContent;}});
+ const attach=w.Element.prototype.attachShadow;w.Element.prototype.attachShadow=function(opts){return attach.call(this,{...opts,mode:'open'});};
+ w.ExcelJS=globalThis.ExcelJS;w.eval(readFileSync('iemis-importer/transfer.js','utf8'));w.eval(readFileSync('iemis-importer/content.js','utf8'));
+ const h=w.document.getElementById('smss-exam-importer'),r=h.shadowRoot;
+ assert.equal(h.hidden,false);assert.equal(r.querySelector('.panel').hidden,false,'A recognized form automatically opens the panel');
+ assert.match(r.getElementById('context').textContent,/Class 5/);assert.equal(r.getElementById('sample').disabled,false);
+ const head=r.querySelector('.head');head.dispatchEvent(new w.MouseEvent('pointerdown',{clientX:200,clientY:100,bubbles:true}));head.dispatchEvent(new w.MouseEvent('pointermove',{clientX:260,clientY:180,bubbles:true}));head.dispatchEvent(new w.MouseEvent('pointerup',{bubbles:true}));
+ assert.notEqual(h.style.left,'');assert.notEqual(h.style.top,'');
+ assert.equal(w.document.querySelector('tbody input[type=number]').value,'','Dragging never writes marks');
+ primaryDom.window.close();
+}
+console.log('Current Excel export, blank sample, Copy Rows, automatic primary-form detection and dragging passed');
 
 // Reproduce the live Viewer bug: valid saved scores must not become N/A.
 {

@@ -21,7 +21,7 @@
       <div class="body">
         <p class="instructions">IEMIS मा कक्षा र Term छानेर Load गर्नुहोस् र चाहिने विषयको checkbox छान्नुहोस्। त्यसपछि Read Form थिच्नुहोस्। शीर्ष भाग समातेर यो बाकस सार्न सकिन्छ।</p>
         <div class="context" id="context">Mark Entry form पढ्न बाँकी छ।</div>
-        <div class="tools"><button id="read" type="button">Read Form</button><button id="sample" class="light" type="button" disabled>Download Sample Excel</button></div>
+        <div class="tools"><button id="read" type="button">Read Form</button><button id="sample" class="light" type="button" disabled>Download Sample Excel</button><button id="export" class="light" type="button" disabled>Export Current Excel</button><button id="copy" class="light" type="button" disabled>Copy Rows</button></div>
         <label class="label" for="file">Import Excel (.xlsx)</label><input id="file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
         <details><summary>Copy / Paste from Excel</summary><p class="instructions">Marks sheet बाट heading बाहेक विद्यार्थीका चारवटै विवरण र अंकका column सँगै copy गरेर यहाँ paste गर्नुहोस्। खुलेको form कै column क्रम चाहिन्छ।</p><textarea id="paste" aria-label="Paste Excel rows" placeholder="Paste Excel rows here"></textarea><button id="use-paste" class="light" type="button">Use Pasted Rows</button></details>
         <label class="replace label"><input id="replace" type="checkbox">Replace Existing Values</label>
@@ -86,24 +86,31 @@
     return {context, columns, rows, cells};
   }
   function fingerprint(value) { return JSON.stringify({context: value.context, columns: value.columns, rows: value.rows}); }
-  async function downloadSample() {
+  async function downloadSample(blank = true) {
     const current = readForm();
-    const data = await transfer.makeWorkbook(globalThis.ExcelJS, current, true);
+    const data = await transfer.makeWorkbook(globalThis.ExcelJS, current, blank);
     const url = URL.createObjectURL(new Blob([data], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
-    const link = document.createElement('a'); link.href = url; link.download = `IEMIS_${current.context.year}_Class${transfer.classKey(current.context.className)}_${transfer.termKey(current.context.term)}_Sample.xlsx`;
+    const link = document.createElement('a'); link.href = url; link.download = `IEMIS_${current.context.year}_Class${transfer.classKey(current.context.className)}_${transfer.termKey(current.context.term)}_${blank?'Sample':'Current'}.xlsx`;
     link.click(); setTimeout(() => URL.revokeObjectURL(url), 1500);
-    message('खुलेको कक्षा र Term को Excel Sample डाउनलोड भयो। Context र heading जस्ताको तस्तै राख्नुहोस्।');
+    message(blank?'खुलेको कक्षा र Term को Excel Sample डाउनलोड भयो। Context र heading जस्ताको तस्तै राख्नुहोस्।':'खुलेको IEMIS form मा देखिएका अंकको Excel डाउनलोड भयो।');
   }
   const safe = action => async () => {
     try { await action(); } catch (error) {resetPlan(); message(error.message || 'काम पूरा भएन। फेरि जाँच गर्नुहोस्।', true);}
   };
   $('read').onclick = safe(() => {
-    grid = readForm(); sourceVersion = fingerprint(grid); file = null; resetPlan(); $('preview').disabled = true; $('sample').disabled = false;
+    grid = readForm(); sourceVersion = fingerprint(grid); file = null; resetPlan(); $('preview').disabled = true; $('sample').disabled = false; $('export').disabled = false; $('copy').disabled = false;
     $('file').value = ''; $('paste').value = '';
     $('context').textContent = `School ${grid.context.schoolCode} · ${grid.context.year}\nClass ${grid.context.className} · ${grid.context.term} · Section ${grid.context.section}\n${grid.rows.length} students · ${new Set(grid.columns.map(c => c.subject)).size} subjects`;
     message('Form पढियो। Sample डाउनलोड गर्नुहोस् वा SMSS बाट export गरिएको Excel छान्नुहोस्।');
   });
-  $('sample').onclick = safe(downloadSample);
+  $('sample').onclick = safe(() => downloadSample(true));
+  $('export').onclick = safe(() => downloadSample(false));
+  $('copy').onclick = safe(async () => {
+    const current=readForm();const text=current.rows.map(row=>row.map(v=>typeof v==='boolean'?String(v).toUpperCase():String(v??'')).join('\t')).join('\n');
+    $('paste').value=text;$('paste').closest('details').open=true;
+    if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text);message('खुलेको form का विद्यार्थी विवरण र अंक Copy भए।');}
+    else{$('paste').focus();$('paste').select();message('Rows तयार छन्। छानिएको text Copy गर्नुहोस्।');}
+  });
   $('file').onchange = safe(async () => {
     resetPlan(); file = null; $('preview').disabled = true;
     const input = $('file').files[0];
@@ -173,26 +180,30 @@
   });
   $('clear').onclick = () => {file = null; resetPlan(); $('file').value = ''; $('paste').value = ''; $('preview').disabled = true; message('Import खाली भयो। IEMIS मा भरिएका अंक त्यहीँ जाँच्नुहोस्।');};
   const panel = shadow.querySelector('.panel'), launcher = shadow.querySelector('.launch');
-  launcher.onclick = () => {panel.hidden = false; launcher.hidden = true;};
+  let dragged=false;
+  launcher.onclick = () => {if(dragged){dragged=false;return;} panel.hidden = false; launcher.hidden = true;};
   $('minimize').onclick = () => {panel.hidden = true; launcher.hidden = false;};
   const head = shadow.querySelector('.head');
-  head.addEventListener('pointerdown', event => {
-    if (event.target.closest('button')) return;
+  const addDrag=target=>target.addEventListener('pointerdown', event => {
+    if (event.target.closest('button') && target!==launcher) return;
+    dragged=false;const startX=event.clientX,startY=event.clientY;
     const bounds = host.getBoundingClientRect(), dx = event.clientX - bounds.left, dy = event.clientY - bounds.top;
-    head.setPointerCapture(event.pointerId);
+    target.setPointerCapture?.(event.pointerId);
     const move = event => {
+      if(Math.abs(event.clientX-startX)+Math.abs(event.clientY-startY)>5)dragged=true;
       host.style.right = 'auto';
       host.style.left = Math.max(0, Math.min(innerWidth - host.offsetWidth, event.clientX - dx)) + 'px';
       host.style.top = Math.max(0, Math.min(innerHeight - 48, event.clientY - dy)) + 'px';
     };
-    head.addEventListener('pointermove', move);
-    head.addEventListener('pointerup', () => head.removeEventListener('pointermove', move), {once: true});
-    head.addEventListener('pointercancel', () => head.removeEventListener('pointermove', move), {once: true});
+    target.addEventListener('pointermove', move);
+    target.addEventListener('pointerup', () => target.removeEventListener('pointermove', move), {once: true});
+    target.addEventListener('pointercancel', () => target.removeEventListener('pointermove', move), {once: true});
   });
+  addDrag(head);addDrag(launcher);
   document.addEventListener('change', event => {
     if (applying) return;
     if (event.target.matches('#ddlYear,#ddlClass,#ddlTerm,#ddlSections')) {
-      readingContext = 'changed'; resetPlan(); grid = null; $('sample').disabled = true; message('छनोट फेरियो। IEMIS मा Load गरेर फेरि Read Form गर्नुहोस्।');
+      readingContext = 'changed'; resetPlan(); grid = null; $('sample').disabled = true; $('export').disabled = true; $('copy').disabled = true; message('छनोट फेरियो। IEMIS मा Load गरेर फेरि Read Form गर्नुहोस्।');
     }
   }, true);
   document.addEventListener('click', event => {
@@ -207,10 +218,12 @@
   let scheduled = false;
   const updateVisibility = () => {
     scheduled = false;
-    const inExam = location.pathname.startsWith('/result-processing/');
+    const inExam = /result-processing|exam/i.test(location.pathname);
     const examLink = document.querySelector('a[href="/result-processing/result-entry"]');
-    host.hidden = !inExam && !examLink?.getBoundingClientRect().height;
-    if (!location.pathname.includes('result-entry')) {resetPlan(); grid = null;}
+    const examMenu=[...document.querySelectorAll('nav a,nav button,aside a,aside button')].some(e=>/manage.?exam|exam.?management|mark.?entry/i.test(e.textContent)&&e.getBoundingClientRect().height);
+    const markTable=[...document.querySelectorAll('table')].some(t=>/Student Name/.test(t.tHead?.innerText||'')&&/Regd\. No\./.test(t.tHead.innerText));
+    host.hidden = !inExam && !examLink?.getBoundingClientRect().height && !examMenu && !markTable;
+    if(markTable&&!grid&&!file&&!applying&&readingContext!=='changed'){panel.hidden=false;launcher.hidden=true;void $('read').onclick();}
   };
   new MutationObserver(() => {if (!scheduled) {scheduled = true; requestAnimationFrame(updateVisibility);}}).observe(document.body, {childList: true, subtree: true});
   updateVisibility();
