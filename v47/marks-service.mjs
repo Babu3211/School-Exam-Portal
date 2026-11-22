@@ -5,10 +5,11 @@ import {validateExamTerm} from './term-catalog.mjs';
 const ID=/^[A-Za-z0-9_-]{1,128}$/;
 export function validateMarkEntry(input){
  if(!input||typeof input!=='object'||Array.isArray(input))throw new TypeError('Mark entry required');
- const {studentId,subjectId}=input,schoolClass=input.class,term=validateExamTerm(input.term);
+ const {studentId,subjectId}=input,schoolClass=input.class;
  if(typeof studentId!=='string'||!ID.test(studentId))throw new Error('Invalid student ID');
  if(typeof subjectId!=='string'||!ID.test(subjectId))throw new Error('Invalid subject ID');
  if(!validSchoolClass(schoolClass))throw new Error('Invalid class');
+ const term=validateExamTerm(input.term);
  const validScore=value=>(typeof value==='number'&&Number.isFinite(value))||(typeof value==='string'&&value.trim()!==''&&/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(value.trim()));
  if(!validScore(input.theory)||!validScore(input.practical))throw new Error('Marks must be finite non-negative numbers; maximum is defined in Examination Settings');
  const theory=Number(input.theory),practical=Number(input.practical);
