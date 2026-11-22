@@ -6,7 +6,7 @@ import {validateSchoolId} from './school-paths.mjs';
 // Emulator verifies a larger all-or-nothing write design. Never chunk marks.
 export async function saveVerifiedSmallClassMarks({db,api,actor,schoolId,classId,term,subjectId,entries}){
  validateSchoolId(schoolId);
- if(actor?.active!==true||actor?.role!=='school_admin'||actor?.schoolId!==schoolId)throw new Error('School Admin permission required');
+ if(actor?.active!==true||actor?.role!=='school_admin'||actor?.schoolId!==schoolId||typeof actor?.uid!=='string'||!actor.uid.trim())throw new Error('School Admin permission required');
  const originalUid=actor.uid;
  const roster=await loadCompleteClassRoster({db,api,actor,schoolId,classId});
  if(actor.active!==true||actor.role!=='school_admin'||actor.schoolId!==schoolId||actor.uid!==originalUid)throw new Error('School Admin identity changed during roster load');
