@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createSchoolExamTerm,deleteSchoolExamTerm} from './exam-term-service.mjs';
 const writes=[];let exists=false;
 const api={doc:(_db,...parts)=>parts.join('/'),runTransaction:async(_db,fn)=>fn({get:async()=>({exists:()=>exists}),set:(path,data)=>writes.push({path,data})})};
-const admin={role:'school_admin',active:true,schoolId:'12345678'};
+const admin={uid:'admin-123',role:'school_admin',active:true,schoolId:'12345678'};
 for(const term of EXAM_TERMS){
  const result=await createSchoolExamTerm({db:{},api,actor:admin,schoolId:'12345678',term});
  assert.equal(result.id,term);
