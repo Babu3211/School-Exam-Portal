@@ -21,6 +21,8 @@ jobs:
         run: |
           node --check v47/build-preview.mjs
           node --check v47/dashboard-console.mjs
+      - name: Verify shared school session wiring
+        run: node v47/test-shared-session-wiring.mjs
       - name: Test preview build with isolated fixtures
         run: node v47/test-preview-build.mjs
       - name: Build V47 preview only
