@@ -2315,7 +2315,7 @@ const cdcSeroferoUnits = [
 function cdcVerifiedUnits(className,subject) {
   const key = cdcAssessmentSubjectKey(subject);
   if (Number(className)<=3&&key==='serophero') return cdcSeroferoUnits;
-  if (Number(className)===1&&key==='mathematics') return [cdcSeroferoUnits[2],cdcSeroferoUnits[3],cdcSeroferoUnits[6],cdcSeroferoUnits[8]];
+  if (Number(className)===1&&key==='mathematics') return [cdcSeroferoUnits[1],cdcSeroferoUnits[2],cdcSeroferoUnits[3],cdcSeroferoUnits[6],cdcSeroferoUnits[8]];
   if (Number(className)>=4&&key==='mathematics') return [
     ['ज्यामिति','Geometry'], ['अङ्कगणित','Arithmetic'], ['नाप','Measurement'],
     ['तथ्याङ्कशास्त्र','Statistics'], ['बीजगणित','Algebra']
@@ -2343,8 +2343,10 @@ const cdcVerifiedOutcomes = {
     ['म र मेरो परिवार','परिवारका सदस्यहरूको नाता र अभिवादन','Identify family relationships and greet appropriately'],
     ['म र मेरो परिवार','परिवारका सदस्यका मुख्य काम','Describe the main work of family members']
   ],
-  // Class 1 Mathematics assessment record, 2076 curriculum, pp. 138–143.
+  // Class 1 Mathematics assessment record, 2076 curriculum.
   '1:mathematics': [
+    ['मेरो दैनिक जीवन','दैनिक काम कुन समयमा गरिन्छ बताउने','Tell when daily activities take place'],
+    ['मेरो दैनिक जीवन','हप्ताका दिन भन्ने र लेख्ने','Say and write the days of the week'],
     ['हाम्रो समुदाय','देवनागरीमा २१–१०० गन्ने, पढ्ने, लेख्ने र तुलना गर्ने','Count, read, write and compare 21–100 in Devanagari notation'],
     ['हाम्रो समुदाय','देवनागरीमा एकदेखि बीससम्म अक्षरमा पढ्ने र लेख्ने','Read and write one to twenty in words in Devanagari'],
     ['हाम्रो समुदाय','हिन्दु-अरबी अङ्कमा 21–100 गन्ने, पढ्ने, लेख्ने र तुलना गर्ने','Count, read, write and compare 21–100 in Hindu–Arabic notation'],
