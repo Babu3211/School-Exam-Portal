@@ -1,4 +1,4 @@
-import {connectSchoolFirebase} from './school-firebase-client.mjs';
+import {connectSchoolFirebase,touchSchoolActivity} from './school-firebase-client.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 const $=id=>document.getElementById(id);
@@ -55,7 +55,7 @@ $('dashboardLogin').onclick=async()=>{if(busy||!auth)return;busy=true;$('dashboa
  const session=await verifySchoolSession({schoolId,uid,readDocument});
  const school=await readDocument('schools/'+schoolId);
  if(auth.currentUser?.uid!==uid||school?.active!==true)throw Error('School session changed');
- verified={uid,schoolId,role:session.role,name:String(school.name??schoolId)};lastActivity=Date.now();lock();
+ verified={uid,schoolId,role:session.role,name:String(school.name??schoolId)};touchSchoolActivity();lastActivity=Date.now();lock();
  message('विद्यालय प्रमाणित भयो। साझा Session समर्थित Module मा पुनः Password आवश्यक पर्दैन।');
  }catch(e){clear();try{await authSdk.signOut(auth)}catch{}message('Login असफल: '+e.message)}finally{busy=false;$('dashboardLogin').disabled=!auth}};
 $('dashboardLogout').onclick=async()=>{if(busy)return;clear();try{if(auth)await authSdk.signOut(auth);message('Logout सफल भयो।')}catch(e){message('Logout असफल: '+e.message)}};
