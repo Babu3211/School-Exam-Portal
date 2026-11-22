@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {addMissingSubjectCreditHour} from './legacy-subject-credit-repair.mjs';
+const schoolId='12345678',actor={uid:'admin',role:'school_admin',schoolId,active:true};
+let data={schoolId,active:true,name:'Math',class:'9',theoryFullMarks:75,practicalFullMarks:25};
+let writes=0;
+const api={doc:(_db,...path)=>path.join('/'),runTransaction:async(_db,fn)=>fn({get:async()=>({exists:()=>true,data:()=>({...data})}),update:(path,patch)=>{assert.equal(path,'schools/12345678/subjects/math');assert.deepEqual(patch,{creditHour:4});writes++;data={...data,...patch}}})};
+const base={db:{},api,actor,schoolId,subjectId:'math',creditHour:4};
+assert.equal((await addMissingSubjectCreditHour(base)).updated,true);
+assert.equal(writes,1);
+await assert.rejects(()=>addMissingSubjectCreditHour(base),/already exists/);
+assert.equal(writes,1);
+await assert.rejects(()=>addMissingSubjectCreditHour({...base,creditHour:0}),/Valid credit/);
+await assert.rejects(()=>addMissingSubjectCreditHour({...base,actor:{...actor,role:'viewer'}}),/School Admin/);
+await assert.rejects(()=>addMissingSubjectCreditHour({...base,actor:{...actor,schoolId:'99999999'}}),/School Admin/);
+console.log('V47 one-time legacy subject credit repair checks passed');
