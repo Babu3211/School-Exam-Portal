@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {execFileSync} from "node:child_process";
 const base=process.env.V47_BASE_REF || "origin/main";
-const output=execFileSync("git",["diff","--name-only",base+"...HEAD"],{encoding:"utf8"});
+// Compare the final files against the current production branch, not the merge-base.
+// Three-dot history flags safely restored V46 files as changes even when contents match.
+const output=execFileSync("git",["diff","--name-only",base,"HEAD"],{encoding:"utf8"});
 const changed=output.trim().split("\n").filter(Boolean);
 assert.ok(changed.length>0,"No V47 changes found");
 const allowed=path=>
