@@ -44,4 +44,4 @@ assert.throws(()=>verifyConfiguredPublicationStagingPlan({...base,plan:foreign})
 const elevated=structuredClone(a);
 elevated.writeAuthorized=true;
 assert.throws(()=>verifyConfiguredPublicationStagingPlan({...base,plan:elevated}),/differs/);
-assert.throws(()=>verifyConfiguredPublicationStagingPlan({...base,plan:a,expectedStudentIds:ids.slice(1)}),/Complete verified class review required/);
+assert.throws(()=>verifyConfiguredPublicationStagingPlan({...base,plan:a,expectedStudentIds:ids.slice(1)}),/out-of-roster/);
