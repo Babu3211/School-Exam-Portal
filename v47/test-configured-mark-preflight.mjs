@@ -61,3 +61,8 @@ for(const draft of [null,undefined,[],42,'a',true,{studentId:123,values:{}}]){
 for(const schoolId of ['school_a','1234','123456789012345678901','12-345','१२३४५']){
  assert.throws(()=>inspectConfiguredClassMarks({...base,schoolId,settings:{...settings,schoolId},drafts:[]}),/Verified subject examination settings required/);
 }
+
+// Unexpected draft fields (including cross-tenant or publication flags) cannot be smuggled into review.
+for(const extra of [{schoolId:'99999'},{publicationAllowed:true},{approved:true},{role:'super_admin'}]){
+ assert.throws(()=>inspectConfiguredClassMarks({...base,settings,drafts:[{studentId:'a',isAbsent:true,...extra},{studentId:'b',isAbsent:true}]}),/Duplicate or out-of-roster mark draft/);
+}
