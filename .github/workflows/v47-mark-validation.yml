@@ -17,6 +17,8 @@ on:
       - 'v47/test-school-result-preview.mjs'
       - 'v47/marks-audit.mjs'
       - 'v47/test-marks-audit-configured-scale.mjs'
+      - 'v47/class-marks-coverage.mjs'
+      - 'v47/test-class-marks-coverage.mjs'
       - 'v47/marks-service.mjs'
       - 'v47/test-unbounded-mark-entry.mjs'
       - 'v47/mark-create-service.mjs'
@@ -37,6 +39,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify complete class roster coverage
+        run: node v47/test-class-marks-coverage.mjs
       - name: Verify raw audit configured marks
         run: node v47/test-marks-audit-configured-scale.mjs
       - name: Verify school-scoped V46 result preview
