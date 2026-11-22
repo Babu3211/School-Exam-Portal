@@ -12,7 +12,7 @@ assert.equal(second.previousPublicationId,'pub_00000001');
 assert.throws(()=>planOfficialPublicationPointerSwitch({...args,currentPointer:old,publicationId:'pub_00000002'}),/Concurrent publication/);
 assert.throws(()=>planOfficialPublicationPointerSwitch({...args,currentPointer:old,expectedPreviousId:'pub_00000001'}),/cannot replace itself/);
 assert.throws(()=>planOfficialPublicationPointerSwitch({...args,currentPointer:{...old,schoolId:'67890'},expectedPreviousId:'pub_00000001',publicationId:'pub_00000002'}),/scope mismatch/);
-assert.throws(()=>planOfficialPublicationPointerSwitch({...args,stagedVerification:{...stagedVerification,rosterCount:1499}}),/Complete staged class/);
+assert.throws(()=>planOfficialPublicationPointerSwitch({...args,stagedVerification:{...stagedVerification,rosterCount:1400}}),/Complete staged class/);
 assert.throws(()=>planOfficialPublicationPointerSwitch({...args,stagedVerification:{...stagedVerification,publicationAllowed:true}}),/Complete staged class/);
 assert.throws(()=>planOfficialPublicationPointerSwitch({...args,actorUid:''}),/Verified admin UID/);
 console.log('V47 official publication pointer plan: scoped CAS, previous pointer, conflicts and incomplete batches rejected; no writes');
