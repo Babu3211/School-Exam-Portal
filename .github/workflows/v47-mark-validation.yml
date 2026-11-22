@@ -30,6 +30,8 @@ on:
       - 'v47/test-legacy-subject-credit-repair.mjs'
       - 'v47/subject-validation.mjs'
       - 'v47/school-class-result-diagnostic.mjs'
+      - 'v47/class-publication-preflight.mjs'
+      - 'v47/test-class-publication-preflight.mjs'
       - 'v47/marks-service.mjs'
       - 'v47/test-unbounded-mark-entry.mjs'
       - 'v47/mark-create-service.mjs'
@@ -50,6 +52,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify class publication safety preflight
+        run: node v47/test-class-publication-preflight.mjs
       - name: Verify legacy subject credit-hour repair
         run: node v47/test-legacy-subject-credit-repair.mjs
       - name: Verify subject Examination Settings decimal inputs
