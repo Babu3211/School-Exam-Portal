@@ -13,8 +13,8 @@ export async function loadAllClassMarks({db,api,actor,schoolId,schoolClass,term,
   const page=await loadMarksByClassTerm({db,api,actor,schoolId,schoolClass,term,pageSize,cursor});
   verify();
   pages++;
-  if(pages>30001)throw new Error('Marks pagination exceeded safety bound');
-  if(!Array.isArray(page.records))throw new Error('Invalid marks page');
+  if(pages>Math.ceil(maxRecords/pageSize)+1)throw new Error('Marks pagination exceeded safety bound');
+  if(!Array.isArray(page.records)||page.records.length>pageSize)throw new Error('Invalid marks page');
   for(const record of page.records){
    if(typeof record.id!=='string'||!record.id||seen.has(record.id))throw new Error('Duplicate or invalid marks document');
    if(previous!==null&&record.id<=previous)throw new Error('Marks pagination order changed');
