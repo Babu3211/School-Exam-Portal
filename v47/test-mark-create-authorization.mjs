@@ -51,12 +51,18 @@ for(const name of ['Computer','Computer Science','Nepali','Mathematics','New Opt
 // A subject's own non-default configured limits allow valid marks and reject over-limit marks.
 for(const [name,theoryFullMarks,practicalFullMarks,validTheory,validPractical] of [
  ['Computer',4,36,4,36],['Nepali',23.5,7.25,23.5,7.25],
- ['New Optional Subject','70','30',70,30]
+ ['New Optional Subject','70','30',70,30],['New Subject',300,120,300,120]
 ]){
  const subject={schoolId,class:classId,active:true,name,theoryFullMarks,practicalFullMarks};
  const {api,writes}=mock({'subjects/math':subject});
  await createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId},schoolId,input:{...input,theory:validTheory,practical:validPractical}});
  assert.equal(writes.length,1,'Configured full marks must permit valid marks for '+name);
+}
+// Missing or incomplete Examination Settings must fail closed for every subject.
+for(const settings of [{}, {theoryFullMarks:100}, {practicalFullMarks:100}]){
+ const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name:'Any Subject',...settings}});
+ await assert.rejects(createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId},schoolId,input}),/full marks required/);
+ assert.equal(writes.length,0);
 }
 // A missing teacher assignment cannot be bypassed by a teacher UID.
 {
