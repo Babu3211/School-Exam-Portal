@@ -11,6 +11,7 @@ assert.equal(result[0].summary.obtained,80);
 assert.equal(result[0].summary.full,100);
 assert.deepEqual(paths,['schools/12345678/subjects/math']);
 await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,term:'1st',records:[]}));
+await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,records:[]}),/Nonempty/);
 await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,schoolClass:'1',records:[]}));
 await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,schoolId:'87654321',records:[]}));
 await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,records:[{...records[0],theory:61}]}));
