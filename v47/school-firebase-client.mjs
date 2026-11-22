@@ -9,6 +9,9 @@ export function touchSchoolActivity(){
  sessionStorage.setItem(ACTIVITY_KEY,String(now));
  return true;
 }
+export function startVerifiedSchoolActivity(){
+ sessionStorage.setItem(ACTIVITY_KEY,String(Date.now()));
+}
 export async function enforceSchoolIdle(auth,authSdk){
  const previous=Number(sessionStorage.getItem(ACTIVITY_KEY));
  if(previous&&Date.now()-previous>=IDLE_LIMIT){
