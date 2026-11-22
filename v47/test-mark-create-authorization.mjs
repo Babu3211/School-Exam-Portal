@@ -109,4 +109,10 @@ for(const mutate of [
  await assert.rejects(createSchoolMarkOnly({db:{},api,actor,schoolId,input}),/identity changed/);
  assert.equal(writes.length,0);
 }
+// Every subject must obey its own configured limits, not a Computer-only scale.
+for(const [name,theoryFullMarks,practicalFullMarks] of [['Computer',4,36],['Nepali',20,10],['New Optional Subject',24,6]]){
+ const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name,theoryFullMarks,practicalFullMarks}});
+ await assert.rejects(createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId},schoolId,input}),/exceed/);
+ assert.equal(writes.length,0);
+}
 console.log('V47 direct mark creation authorization checks passed');
