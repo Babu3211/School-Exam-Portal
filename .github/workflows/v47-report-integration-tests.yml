@@ -1,0 +1,52 @@
+name: V47 Report Integration Regression (No Deployment)
+on:
+  workflow_dispatch:
+  push:
+    branches: [smss-v47-multischool-work]
+    paths:
+      - 'v47/report-preview*'
+      - 'v47/mark-summary-preview.mjs'
+      - 'v47/class-mark-coverage-preview.mjs'
+      - 'v47/v46-report-snapshot.mjs'
+      - 'v47/verified-school-session.mjs'
+      - 'v47/school-scope.mjs'
+      - 'v47/school-membership.mjs'
+      - 'v47/iemis-ledger.js'
+      - 'v47/test-report-preview-*.mjs'
+      - 'v47/test-mark-summary-preview.mjs'
+      - 'v47/test-class-mark-coverage-preview.mjs'
+      - 'v47/test-v46-report-snapshot.mjs'
+      - '.github/workflows/v47-report-integration-tests.yml'
+permissions:
+  contents: read
+jobs:
+  report-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify JavaScript syntax
+        run: |
+          set -euo pipefail
+          node --check v47/report-preview-console.mjs
+          node --check v47/mark-summary-preview.mjs
+          node --check v47/test-report-preview-live-access.mjs
+      - name: Run report integration regressions
+        run: |
+          set -euo pipefail
+          node v47/test-v46-report-snapshot.mjs
+          node v47/test-mark-summary-preview.mjs
+          node v47/test-class-mark-coverage-preview.mjs
+          node v47/test-report-preview-session-integration.mjs
+          node v47/test-report-preview-live-access.mjs
+      - name: State verification limitations
+        if: always()
+        run: |
+          {
+            echo '## V47 read-only report integration'
+            echo 'This job runs actual Node tests and syntax validation; it does not deploy.'
+            echo 'A green result does not certify Firebase emulator rules, browser login, actual Firestore snapshots, CDC/IEMIS official grades or full V46 parity.'
+          } >> "$GITHUB_STEP_SUMMARY"
