@@ -15,6 +15,12 @@ This directory is **V47-only**, not part of the approved V46 production deployme
 ## Current implementation
 `school-scope.mjs` validates identifiers and builds school-specific paths. Run `node v47/test-school-scope.mjs` locally. This is a preliminary guard, **not** authorization: it does not replace Firestore rules.
 
+## V46 result-calculation parity — mandatory
+- V46's IEMIS-tested CDC grade, GPA, NG, pass/fail, mark ledger, grade ledger, and grade-sheet behavior is the **only approved calculation baseline**. Do not independently recreate or substitute a new grading scale in V47.
+- Examination Settings may configure arbitrary full marks per subject and component; the percentage normalization helper is **not** a replacement for V46's grade/GPA algorithm.
+- Before V47 publication, identify and reuse the exact V46 calculation implementation, adapt only school-scoped data access, and compare identical fixtures across V46 and V47 for classes 1, 6, 9 and all supported terms. Any difference blocks release.
+- Never edit or redeploy V46 production while integrating the calculation into V47.
+
 ## Next required gates
 1. Design and emulator-test V47 tenant membership rules including Super Admin and teacher assignment boundaries.
 2. Implement school registry, school selection, and tenant-scoped queries; eliminate any legacy top-level collection accesses in V47.
