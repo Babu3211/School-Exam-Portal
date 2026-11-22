@@ -5,6 +5,7 @@ on:
     paths:
       - 'v47/subject-mark-limits.mjs'
       - 'v47/marks-service.mjs'
+      - 'v47/test-unbounded-mark-entry.mjs'
       - 'v47/mark-create-service.mjs'
       - 'v47/class-mark-save.mjs'
       - 'v47/test-subject-mark-limits.mjs'
@@ -23,6 +24,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Validate unrestricted mark parsing
+        run: node v47/test-unbounded-mark-entry.mjs
       - name: Validate examination full marks
         run: node v47/test-subject-mark-limits.mjs
       - name: Validate individual marks authorization
