@@ -10,7 +10,7 @@ export async function previewCompleteSchoolClass({students,subjects,records,hasM
  const credits=new Map();
  for(const subject of subjects){
   const credit=subject.creditHour;
-  if(typeof credit!=='number'||!Number.isFinite(credit)||credit<=0)throw new Error('Valid subject credit hours required');
+  if(typeof credit!=='number'||!Number.isFinite(credit)||credit<=0||credit>100)throw new Error('Valid subject credit hours required');
   credits.set(subject.id,credit);
  }
  const byStudent=new Map(students.map(student=>[student.id,[]]));
