@@ -6,7 +6,7 @@ import {auditV46ReportReferences} from './report-reference-audit.mjs';
 import {previewV46MarkSummaries} from './mark-summary-preview.mjs';
 import {inspectClassMarkCoverage} from './class-mark-coverage-preview.mjs';
 const $=id=>document.getElementById(id);
-let auth,authSdk,db,firestoreApi,epoch=0,busy=false,connecting=false,loginTask=null,loggingOut=false,reportRows=null;
+let auth,authSdk,db,firestoreApi,epoch=0,busy=false,connecting=false,loginTask=null,loggingOut=false,reportRows=null,verifyingReport=false;
 const status=message=>{$('message').textContent=message};
 function clear(){reportRows=null;$('summaryRows').replaceChildren();for(const id of ['summaryExam','summaryClass','summaryAnnual','summaryRun','coverageSubject','coverageSection','coverageRun'])$(id).disabled=true;$('summaryResult').textContent='Choose an exam and class after loading records.';$('coverageResult').textContent='Class-wide coverage not checked.';epoch++;$('report').hidden=true;$('counts').replaceChildren();$('school').textContent='';$('password').value=''}
 function currentSession(requestEpoch,uid){return requestEpoch===epoch&&auth?.currentUser?.uid===uid}
@@ -78,7 +78,8 @@ $('logout').onclick=async()=>{
 // The preview is a cached snapshot. Check live membership and inactivity before
 // each interaction; do not display a cached school result after role revocation.
 async function withVerifiedReportSnapshot(render){
- if(!reportRows||busy||loggingOut||!auth?.currentUser)return;
+ if(!reportRows||busy||loggingOut||verifyingReport||!auth?.currentUser)return;
+ verifyingReport=true;
  const snapshot=reportRows,requestEpoch=epoch,uid=snapshot.verifiedUid;
  try{
   if(!currentSession(requestEpoch,uid))throw new Error('Login session changed');
@@ -99,8 +100,12 @@ async function withVerifiedReportSnapshot(render){
    clear();
    status('विद्यालयको अनुमति पुनः जाँच्न सकिएन। फेरि Login गर्नुहोस्: '+error.message);
   }
- }
+ }finally{verifyingReport=false}
 }
+
+document.addEventListener('visibilitychange',()=>{
+ if(!document.hidden&&reportRows)void withVerifiedReportSnapshot(()=>{});
+});
 
 $('summaryRun').onclick=()=>withVerifiedReportSnapshot(rows=>{
  try{
