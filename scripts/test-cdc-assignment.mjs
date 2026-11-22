@@ -87,7 +87,7 @@ const choice=(name,value)=>{field(name).value=value;field(name).onchange();};
 assert.match(field('curriculumSource').href,/moecdc\.gov\.np\/content\/203\//);
 field('class').append(new w.Option('Class 1','1'));
 choice('class','1');
-assert.match(field('curriculumSource').href,/Basic-Level-Class-1-3\.pdf$/);
+assert.match(field('curriculumSource').href,/Curriculum_vtgf727\.pdf$/);
 choice('class','5');
 assert.deepEqual([...field('student').options].map(o=>o.value),['one','two']);
 assert.equal(field('date').value,'2083-08-07');

@@ -2315,7 +2315,7 @@ const cdcSeroferoUnits = [
 function cdcVerifiedUnits(className,subject) {
   const key = cdcAssessmentSubjectKey(subject);
   if (Number(className)<=3&&key==='serophero') return cdcSeroferoUnits;
-  if (Number(className)===1&&key==='mathematics') return [cdcSeroferoUnits[3],cdcSeroferoUnits[6],cdcSeroferoUnits[8]];
+  if (Number(className)===1&&key==='mathematics') return [cdcSeroferoUnits[2],cdcSeroferoUnits[3],cdcSeroferoUnits[6],cdcSeroferoUnits[8]];
   if (Number(className)>=4&&key==='mathematics') return [
     ['ज्यामिति','Geometry'], ['अङ्कगणित','Arithmetic'], ['नाप','Measurement'],
     ['तथ्याङ्कशास्त्र','Statistics'], ['बीजगणित','Algebra']
@@ -2343,8 +2343,16 @@ const cdcVerifiedOutcomes = {
     ['म र मेरो परिवार','परिवारका सदस्यहरूको नाता र अभिवादन','Identify family relationships and greet appropriately'],
     ['म र मेरो परिवार','परिवारका सदस्यका मुख्य काम','Describe the main work of family members']
   ],
-  // Class 1 Mathematics assessment record, 2076 curriculum, pp. 140–143.
+  // Class 1 Mathematics assessment record, 2076 curriculum, pp. 138–143.
   '1:mathematics': [
+    ['हाम्रो समुदाय','देवनागरीमा २१–१०० गन्ने, पढ्ने, लेख्ने र तुलना गर्ने','Count, read, write and compare 21–100 in Devanagari notation'],
+    ['हाम्रो समुदाय','देवनागरीमा एकदेखि बीससम्म अक्षरमा पढ्ने र लेख्ने','Read and write one to twenty in words in Devanagari'],
+    ['हाम्रो समुदाय','हिन्दु-अरबी अङ्कमा 21–100 गन्ने, पढ्ने, लेख्ने र तुलना गर्ने','Count, read, write and compare 21–100 in Hindu–Arabic notation'],
+    ['हाम्रो समुदाय','हिन्दु-अरबी पद्धतिमा एकदेखि बीससम्म अक्षरमा पढ्ने र लेख्ने','Read and write one to twenty in words in Hindu–Arabic notation'],
+    ['हाम्रो समुदाय','वस्तु प्रयोग गरी २० सम्मका सङ्ख्यालाई जोर वा बिजोर छुट्याउने','Use objects to sort numbers up to 20 as even or odd'],
+    ['हाम्रो समुदाय','योगफल १० सम्म आउने गरी दुई सङ्ख्या जोड्ने','Add two numbers with a sum up to 10'],
+    ['हाम्रो समुदाय','योगफल २० सम्म आउने गरी बढीमा तीन सङ्ख्या जोड्ने','Add up to three numbers with a sum up to 20'],
+    ['हाम्रो समुदाय','अमानक एकाइले वस्तु नापेर अग्लो–होचो र लामो–छोटो छुट्याउने','Measure with informal units to compare height and length'],
     ['हाम्रो विद्यालय','पहिलोदेखि दसौँसम्मको क्रम चिन्ने','Recognize positions from first to tenth'],
     ['हाम्रो विद्यालय','हात नलिई १०० सम्मको योगफल आउने गरी दुई सङ्ख्या जोड्ने','Add two numbers up to a total of 100 without regrouping'],
     ['हाम्रो विद्यालय','वस्तु प्रयोग गरेर १० सम्मको घटाउ देखाउने','Use objects to demonstrate subtraction within 10'],
@@ -2708,7 +2716,7 @@ function openCdcAssessment() {
     options('level',[['','छान्नुहोस्'],...[1,2,3,4].map((n,i)=>[String(n),levels[i] ? n+' — '+levels[i] : String(n)])]);
     field('guide').href = Number(cl)<=3 ? 'https://moecdc.gov.np/content/644/student-assessment-guide-for-basic-level-class/' : 'https://moecdc.gov.np/content/646/guide-to-student-assessment-in-basic-level/';
     field('curriculumSource').href = Number(cl)<=3
-      ? 'https://nmhss.edu.np/wp-content/uploads/2025/01/Basic-Level-Class-1-3.pdf'
+      ? 'https://giwmscdnone.gov.np/media/pdf_upload/Basic%20Level%20%28Grade%201-%203%29%20Curriculum_vtgf727.pdf'
       : 'https://moecdc.gov.np/content/203/basic-education-curriculum-2078-grade-4-5-compulsory/';
     const registered = cl ? ledgerSubjectsForClass(cl,entryClassGroup(cl)) : [];
     const curriculum = Number(cl)<=3 ? cdcPrimarySubjects : cdcUpperPrimarySubjects;
