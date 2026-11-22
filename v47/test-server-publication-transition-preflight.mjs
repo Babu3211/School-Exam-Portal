@@ -26,4 +26,19 @@ assert.throws(()=>verifyPublicationTransition({...base,authoritativeInput:{...in
 const old={...scope,publicationId:'pub_00000000'};
 assert.throws(()=>verifyPublicationTransition({...base,currentPointer:old}),/Concurrent publication/);
 assert.equal(verifyPublicationTransition({...base,currentPointer:old,expectedPreviousId:old.publicationId}).previousPublicationId,old.publicationId);
-console.log('V47 publication preflight: 1500 rows, 15 batches, actor binding, stale review, incomplete stage and CAS conflict checks; no writes');
+
+// Boundary coverage: one-student and 500-student classes use the same
+// complete review, staged verification and compare-and-swap preflight.
+for(const size of [1,500]){
+ const ids=expectedStudentIds.slice(0,size);
+ const smaller={...input,expectedStudentIds:ids,drafts:input.drafts.slice(0,size)};
+ const smallerReview=fingerprintConfiguredClassReview(smaller);
+ const smallerConfirmation=Object.fromEntries(['format','schoolId','classId','subjectId','examId','settingsRevision','rosterRevision','digestAlgorithm','digest'].map(k=>[k,smallerReview[k]]));
+ const smallerBatches=JSON.parse(JSON.stringify(planConfiguredPublicationStaging(smaller).batches));
+ const checked=verifyPublicationTransition({...base,authoritativeInput:smaller,confirmation:smallerConfirmation,stagedBatches:smallerBatches});
+ assert.equal(checked.rosterCount,size);
+ assert.equal(checked.batchCount,Math.ceil(size/100));
+ assert.equal(checked.publicationAllowed,false);
+}
+
+console.log('V47 publication preflight: 1/500/1500 rows, bounded batches, actor binding, stale review, incomplete stage and CAS conflict checks; no writes');
