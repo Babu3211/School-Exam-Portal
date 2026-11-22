@@ -18,6 +18,10 @@ const bounded=await loadAllClassMarks({...base,maxRecords:30000});
 assert.equal(bounded.count,3);
 const bad={...api,getDocs:async()=>({docs:[{id:'a',data:()=>({schoolId,class:'10',term:'final'})}]})};
 await assert.rejects(()=>loadAllClassMarks({...base,api:bad}),/Foreign or mismatched marks record/);
+for(const malformed of [null,undefined]){
+ const broken={...api,getDocs:async()=>({docs:[{id:'a',data:()=>malformed}]})};
+ await assert.rejects(()=>loadAllClassMarks({...base,api:broken}),/Foreign or mismatched marks record/);
+}
 const unauthorized={...actor,schoolId:'87654321'};
 await assert.rejects(()=>loadAllClassMarks({...base,actor:unauthorized}),/membership/i);
 console.log('V47 complete class marks pagination checks passed');
