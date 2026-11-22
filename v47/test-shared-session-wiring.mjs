@@ -4,6 +4,14 @@ import {dirname,join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=dirname(fileURLToPath(import.meta.url));
 const read=name=>readFileSync(join(root,name),'utf8');
+// V46 parity migration guard: never bring the single-school production Firebase
+// identity into any browser module when porting V46 functionality.
+const browserModules=['dashboard-console.mjs','students-console.mjs','attendance-console.mjs','school-settings-console.mjs','marks-entry-console.mjs','school-admin-console.mjs','records-console.mjs','subjects-console.mjs','exams-console.mjs','assignments-console.mjs','teacher-assigned-class-console.mjs','computer-marks-console.mjs'];
+for(const name of browserModules){
+ const source=read(name);
+ assert.doesNotMatch(source,/exam-portal-smss-95016|AIzaSyDOwR82MTwBK1BRb-5wSVX2-EITCzJ1A5c|K6uSLmqg0vWCtCuzwtxKzFpQMu62/,'V46 production credentials or admin identity must never be ported to V47: '+name);
+ assert.doesNotMatch(source,/initializeApp\s*\(/,'V47 browser module must use the shared tenant Firebase client: '+name);
+}
 const client=read('school-firebase-client.mjs');
 assert.match(client,/browserSessionPersistence/,'Shared session must persist across page navigation');
 assert.match(client,/authStateReady\(\)/,'Auth must finish restoring before use');
