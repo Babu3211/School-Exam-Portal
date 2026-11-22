@@ -357,7 +357,9 @@ jobs:
         run: node scripts/test-v47-v46-marks-schema-compat.mjs
       - name: V47 isolated runtime entrypoint and production guard
         if: success() || failure()
-        run: node scripts/test-v47-isolated-runtime-contract.mjs
+        run: |
+          node scripts/test-v47-isolated-runtime-contract.mjs
+          node scripts/test-v47-isolated-project-guard.mjs
       - name: V47 complete school registration and invitation transaction flow
         if: success() || failure()
         run: node scripts/test-v47-onboarding-full-flow.mjs
