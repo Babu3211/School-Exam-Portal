@@ -36,6 +36,10 @@ $('previewImport').onclick=async()=>{
   $('previewImport').disabled=true;
   let existing={duplicates:[],scanned:0};
   try{
+   const freshSession=await verifySchoolSession({schoolId:selectedSchool,uid,readDocument:async path=>{
+    const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;
+   }});
+   if(freshSession.role!=='school_admin')throw new Error('School Admin permission changed');
    existing=await checkExistingStudentIemisIds({store,accepted:report.accepted,assertSession:()=>{
     if(epoch!==loadEpoch||actor!==selectedActor||schoolId!==selectedSchool||auth?.currentUser?.uid!==uid)throw new Error('School session changed during preview');
    }});
