@@ -5,9 +5,11 @@ const api={doc:(_db,...path)=>path.join('/'),runTransaction:async(_db,callback)=
 const form={id:'12345678',iemisCode:'12345678',name:'Sample School'};
 await assert.rejects(()=>registerSchool({db:{},api,actor:{active:true,role:'viewer'},form}));
 assert.equal(writes.length,0);
-const result=await registerSchool({db:{},api,actor:{active:true,role:'super_admin'},form});
+await assert.rejects(()=>registerSchool({db:{},api,actor:{active:true,role:'super_admin'},form}),/Only active Super Admin/);
+assert.equal(writes.length,0,'Missing Super Admin UID must not write');
+const result=await registerSchool({db:{},api,actor:{uid:'super123',active:true,role:'super_admin'},form});
 assert.equal(result.active,false);assert.equal(writes[0][0],'schools/12345678');
 exists=true;
-await assert.rejects(()=>registerSchool({db:{},api,actor:{active:true,role:'super_admin'},form}),/already exists/);
+await assert.rejects(()=>registerSchool({db:{},api,actor:{uid:'super123',active:true,role:'super_admin'},form}),/already exists/);
 assert.equal(writes.length,1);
 console.log('V47 registration service authorization and duplicate prevention passed');

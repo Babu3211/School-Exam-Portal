@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';import {saveLoadedClassAttendance,PartialAttendanceSaveError} from '../v47/attendance-class-save.mjs';
-const actor={role:'school_admin',active:true,schoolId:'12345678'};const entries=Array.from({length:23},(_,i)=>({date:'2026-11-16',class:'6',studentId:'s'+i,present:i%2===0}));
+const actor={uid:'admin-a',role:'school_admin',active:true,schoolId:'12345678'};const entries=Array.from({length:23},(_,i)=>({date:'2026-11-16',class:'6',studentId:'s'+i,present:i%2===0}));
 let commits=0,failOn=0;const sizes=[];const api={doc:(_db,...p)=>p.join('/'),getDoc:async()=>({exists:()=>true,data:()=>({schoolId:'12345678',class:'6'})}),writeBatch:()=>{let count=0;return {set:()=>{count++},commit:async()=>{commits++;if(commits===failOn)throw Error('network');sizes.push(count)}}}};
 const progress=[];const args={db:{},api,actor,schoolId:'12345678',entries,onProgress:p=>progress.push(p)};
 assert.deepEqual(await saveLoadedClassAttendance(args),{saved:23,total:23,date:'2026-11-16',class:'6'});assert.deepEqual(sizes,[10,10,3]);assert.deepEqual(progress.map(p=>p.saved),[10,20,23]);
 const before=commits;for(const invalid of [[entries[0],entries[0]],[entries[0],{...entries[1],class:'7'}],[entries[0],{...entries[1],present:'yes'}],[]])await assert.rejects(()=>saveLoadedClassAttendance({...args,entries:invalid}));assert.equal(commits,before);
-await assert.rejects(()=>saveLoadedClassAttendance({...args,actor:{...actor,role:'viewer'}}));await assert.rejects(()=>saveLoadedClassAttendance({...args,schoolId:'87654321'}));
+await assert.rejects(()=>saveLoadedClassAttendance({...args,actor:{...actor,uid:undefined}}),/School Admin permission required/);await assert.rejects(()=>saveLoadedClassAttendance({...args,actor:{...actor,role:'viewer'}}));await assert.rejects(()=>saveLoadedClassAttendance({...args,schoolId:'87654321'}));
 commits=0;failOn=2;const seen=[];await assert.rejects(()=>saveLoadedClassAttendance({...args,onProgress:p=>seen.push(p)}),e=>e instanceof PartialAttendanceSaveError&&e.saved===10&&e.total===23);assert.equal(commits,2);assert.deepEqual(seen.map(p=>p.saved),[10]);
 commits=0;failOn=1;await assert.rejects(()=>saveLoadedClassAttendance(args),/network/);assert.equal(commits,1,'Stop on first batch failure');
 commits=0;failOn=0;await assert.rejects(()=>saveLoadedClassAttendance({...args,entries:Array.from({length:1501},(_,i)=>({...entries[0],studentId:'s'+i}))}),/1500/);assert.equal(commits,0,'Oversized request must not write');

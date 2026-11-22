@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {saveClassAttendance} from './attendance-bulk.mjs';
 import {saveSchoolAttendance} from './attendance-service.mjs';
-const schoolId='12345678',actor={role:'school_admin',active:true,schoolId};
+const schoolId='12345678',actor={uid:'admin-a',role:'school_admin',active:true,schoolId};
 const entry=id=>({studentId:id,class:'9',date:'2026-11-18',present:true});
 function mock(overrides={}){
  const records=new Map([['s1',{schoolId,class:'9'}],['s2',{schoolId,class:'9'}]]);
@@ -36,7 +36,7 @@ for(const overrides of [
  await assert.rejects(saveSchoolAttendance({db:{},api:state.api,actor,schoolId,input:entry('s2')}),/Student roster/);
  assert.equal(state.writes.length,0);
 }
-for(const badActor of [{role:'viewer',active:true,schoolId},{role:'super_admin',active:true},{role:'school_admin',active:true,schoolId:'87654321'}]){
+for(const badActor of [{role:'viewer',active:true,schoolId},{role:'super_admin',active:true},{role:'school_admin',active:true,schoolId:'87654321'},{role:'school_admin',active:true,schoolId}]){
  const state=mock();
  await assert.rejects(saveClassAttendance({db:{},api:state.api,actor:badActor,schoolId,entries:[entry('s1')]}),/School Admin/);
  assert.equal(state.writes.length,0);

@@ -6,7 +6,8 @@ const admin={uid:'admin-1',role:'school_admin',schoolId:sid,active:true};
 const teacher={uid:'teacher-1',role:'teacher',schoolId:sid,active:true};
 const viewer={uid:'viewer-1',role:'viewer',schoolId:sid,active:true};
 for(const actor of [superAdmin,admin,teacher,viewer])assert.equal(canAccessSchool(actor,sid,'read'),true);
-for(const actor of [superAdmin,admin])assert.equal(canAccessSchool(actor,sid,'write'),true);
+assert.equal(canAccessSchool(admin,sid,'write'),true);
+assert.equal(canAccessSchool(superAdmin,sid,'write'),false,'Super Admin cannot directly edit tenant academic records');
 for(const actor of [teacher,viewer])assert.equal(canAccessSchool(actor,sid,'write'),false);
 for(const operation of ['delete','create','update','publish','admin','',null,undefined,42]){
  if(operation===undefined)continue; // undefined means the documented default read

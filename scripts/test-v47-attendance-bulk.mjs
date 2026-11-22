@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';import {saveClassAttendance} from '../v47/attendance-bulk.mjs';
-const actor={role:'school_admin',active:true,schoolId:'12345678'};
+const actor={uid:'admin-a',role:'school_admin',active:true,schoolId:'12345678'};
 const entries=[{date:'2026-11-16',class:'1',studentId:'s1',present:true},{date:'2026-11-16',class:'1',studentId:'s2',present:false}];
 let committed=0;const writes=[];const api={doc:(_db,...p)=>p.join('/'),getDoc:async()=>({exists:()=>true,data:()=>({schoolId:'12345678',class:'1'})}),writeBatch:()=>({set:(ref,data)=>writes.push({ref,data}),commit:async()=>{committed++}})};
 const args={db:{},api,actor,schoolId:'12345678',entries};
 assert.deepEqual(await saveClassAttendance(args),{saved:2,date:'2026-11-16',class:'1'});assert.equal(committed,1);assert.equal(writes.length,2);assert.equal(writes[0].ref,'schools/12345678/attendance/2026-11-16_s1');assert.equal(writes[0].data.schoolId,'12345678');
 for(const bad of [[entries[0],entries[0]],[entries[0],{...entries[1],class:'2'}],[entries[0],{...entries[1],present:'yes'}],[],Array.from({length:11},(_,i)=>({...entries[0],studentId:'s'+i}))])await assert.rejects(()=>saveClassAttendance({...args,entries:bad}));
 assert.equal(committed,1,'Invalid batches must not write');
+await assert.rejects(()=>saveClassAttendance({...args,actor:{...actor,uid:undefined}}),/School Admin permission required/);
 for(const role of ['viewer','teacher'])await assert.rejects(()=>saveClassAttendance({...args,actor:{...actor,role}}));
 await assert.rejects(()=>saveClassAttendance({...args,schoolId:'87654321'}));
 console.log('V47 class attendance batch tests passed');
