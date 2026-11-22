@@ -31,7 +31,7 @@ for(const name of ['students-console.mjs','attendance-console.mjs','school-setti
  assert.match(code,/const requestedSchool=new URL\(location\.href\)\.searchParams\.get\('schoolId'\)/,'Dashboard school ID must be initialized: '+name);
  assert.match(code,/if\(requestedSchool\)queueMicrotask\(\(\)=>\$\('connect'\)\.click\(\)\)/,'Dashboard-linked module must auto-connect: '+name);
  assert.match(code,/auth\.currentUser/,'Existing session must be checked: '+name);
- assert.match(code,/const freshSignIn=!auth\.currentUser/,'Must distinguish fresh login from restored session: '+name);
+ assert.match(code,/(?:const\s+)?freshSignIn=!auth\.currentUser/,'Must distinguish fresh login from restored session: '+name);
  assert.match(code,/if\(freshSignIn\)startVerifiedSchoolActivity\(\)/,'Restoring a session must not reset idle expiry: '+name);
 }
 const studentCode=read('students-console.mjs');
@@ -41,9 +41,9 @@ assert.match(studentCode,/attempt!==loadEpoch\|\|auth\.currentUser\?\.uid!==uid/
 assert.match(studentCode,/catch\(e\)\{if\(attempt===loadEpoch\)\{clear\(\)/,'Superseded student login errors must not clear a newer session');
 const marks=read('marks-entry-console.mjs');
 assert.match(marks,/onAuthStateChanged\(auth,user=>\{if\(actor&&user\?\.uid!==actor\.uid\)\{reset\(\)/,'Mark entry must clear stale review and roster after auth change');
-assert.match(marks,/roster\.students\.some\(student=>student\.active!==true\)/,'Initial class marks roster must reject inactive students');
-assert.match(marks,/latestRoster\.students\.some\(student=>student\.active!==true\)/,'Class marks review must recheck inactive students');
-assert.match(marks,/roster\.students\.some\(student=>student\.active!==true\)\|\|loadedIds\.size!==roster\.count/,'Downloaded marks review must reject inactive students');
+assert.match(marks,/roster\.students\.some\(student=>!isActiveEnrolledStudent\(student\)\)/,'Initial class marks roster must reject inactive students');
+assert.match(marks,/latestRoster\.students\.some\(student=>!isActiveEnrolledStudent\(student\)\)/,'Class marks review must recheck inactive students');
+assert.match(marks,/roster\.students\.some\(student=>!isActiveEnrolledStudent\(student\)\)\|\|loadedIds\.size!==roster\.count/,'Downloaded marks review must reject inactive students');
 const marksHtml=read('marks-entry.html');
 assert.doesNotMatch(marks,/inMemoryPersistence|initializeApp\(/,'Marks module must not create a second Firebase app');
 assert.doesNotMatch(marksHtml,/id="config"/,'Manual Firebase JSON must remain removed');
