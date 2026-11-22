@@ -50,6 +50,15 @@ jobs:
             echo ''
             echo 'The workflow never deploys or writes production Firestore data.'
           } >> "$GITHUB_STEP_SUMMARY"
+      - name: Capture static V47 feature parity evidence
+        if: always()
+        run: |
+          if node v47/release-evidence-report.mjs > v47-feature-evidence.json 2> v47-feature-evidence-error.log; then
+            echo 'Static feature evidence: no blockers reported (manual acceptance still required).' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Static feature evidence: blockers detected; see artifact.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -s v47-feature-evidence-error.log ]; then cat v47-feature-evidence-error.log; fi
       - name: Check release blockers (deployment remains disabled)
         if: always()
         run: |
@@ -80,4 +89,6 @@ jobs:
           path: |
             v47-release-gate.log
             v47-full-tests.log
+            v47-feature-evidence.json
+            v47-feature-evidence-error.log
           if-no-files-found: ignore
