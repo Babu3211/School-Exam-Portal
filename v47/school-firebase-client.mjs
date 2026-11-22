@@ -14,9 +14,9 @@ export function startVerifiedSchoolActivity(){
 }
 export async function enforceSchoolIdle(auth,authSdk){
  const previous=Number(sessionStorage.getItem(ACTIVITY_KEY));
- if(previous&&Date.now()-previous>=IDLE_LIMIT){
+ if(auth.currentUser&&(!Number.isFinite(previous)||previous<=0||Date.now()-previous>=IDLE_LIMIT||previous>Date.now()+60*1000)){
   sessionStorage.removeItem(ACTIVITY_KEY);
-  if(auth.currentUser)await authSdk.signOut(auth);
+  await authSdk.signOut(auth);
   return false;
  }
  return true;
