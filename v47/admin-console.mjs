@@ -1,4 +1,5 @@
 import {onboardSchool} from './school-onboarding.mjs';
+import {V47_FIREBASE_CONFIG} from './v47-firebase-config.mjs';
 import {listSchools} from './school-list-service.mjs';
 import {setSchoolActive} from './school-status-service.mjs';
 const $=id=>document.getElementById(id);let auth,db,api,actor=null,cursor=null,mutating=false,connecting=false,signingIn=false,signingOut=false,sessionEpoch=0,refreshEpoch=0;
@@ -6,7 +7,6 @@ const status=message=>{$('message').textContent=message};
 const cleanAuthError=error=>{const message=error?.message;if(typeof message==='string'&&['विद्यालयको IEMIS Code ५–२० अङ्कको हुनुपर्छ।','School ID र IEMIS Code एउटै हुनुपर्छ।','विद्यालयको नाम ३–१६० अक्षरको हुनुपर्छ।','Admin UID मान्य छैन।'].includes(message))return message;const code=String(error?.code??'');if(code.startsWith('auth/'))return 'प्रमाणीकरण असफल भयो। Email, Password वा अनुमति जाँच्नुहोस्।';if(code==='permission-denied'||code==='firestore/permission-denied')return 'अनुमति छैन। Super Admin अधिकार जाँच्नुहोस्।';if(code==='unavailable'||code==='firestore/unavailable')return 'सेवा अहिले उपलब्ध छैन। पुनः प्रयास गर्नुहोस्।';return 'अनुरोध पूरा भएन। विवरण जाँचेर पुनः प्रयास गर्नुहोस्।';};
 const showError=error=>status(cleanAuthError(error));
 function clearAdmin(){sessionEpoch++;refreshEpoch++;actor=null;cursor=null;$('adminArea').hidden=true;$('logout').disabled=true;$('identity').textContent='साइन इन भएको छैन';$('schools').replaceChildren();$('next').disabled=true;$('next').onclick=null;}
-const V47_FIREBASE_CONFIG=Object.freeze({apiKey:"AIzaSyCqwHormyNH4Z5F8V0xJpW9rJcJeCtM0cQ",authDomain:"smss-exam-portal-v47.firebaseapp.com",projectId:"smss-exam-portal-v47",storageBucket:"smss-exam-portal-v47.firebasestorage.app",messagingSenderId:"570404092283",appId:"1:570404092283:web:b51a0d654bb9aaa82325de"});
 const firebaseBase='https://www.gstatic.com/firebasejs/11.10.0/';
 $('connect').onclick=async()=>{if(connecting||db)return;connecting=true;$('connect').disabled=true;try{
  const config=V47_FIREBASE_CONFIG;
