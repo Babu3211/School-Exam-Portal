@@ -1,0 +1,17 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SMSS V47 — Staff / Teachers</title>
+<style>body{margin:0;background:#f4f7fb;color:#183650;font:15px system-ui,sans-serif}main{max-width:980px;margin:auto;padding:18px}section{background:white;border:1px solid #dbe5ef;border-radius:12px;padding:18px;margin:14px 0}input,button{font:inherit;padding:10px;border:1px solid #b8c9d9;border-radius:7px;max-width:100%;box-sizing:border-box}label{display:block;margin:9px 0}button{background:#175eb5;color:white;cursor:pointer;margin:4px}button:disabled{opacity:.5;cursor:default}table{width:100%;border-collapse:collapse}td,th{padding:10px;border-bottom:1px solid #dbe5ef;text-align:left}.warn{background:#fff5dc;padding:12px;border-radius:8px}#message{white-space:pre-wrap}</style></head>
+<body><main><h1>SMSS V47 — Staff / Teachers</h1>
+<p><a href="./index.html">Dashboard</a></p><p class="warn">Read-only verified school staff roster. Teacher and Viewer can view and export but cannot change records. Staff record export does not create Firebase user accounts or expose passwords. V46 production is unaffected.</p>
+<section><h2>School Login</h2><button id="connect">Connect to V47</button>
+<label>School IEMIS ID<input id="schoolId" inputmode="numeric" pattern="[0-9]{5,20}" minlength="5" maxlength="20" autocomplete="off"></label>
+<label>Email<input id="email" type="email" autocomplete="username"></label>
+<label>Password<input id="password" type="password" autocomplete="current-password"></label>
+<button id="login" disabled>Verify School Login</button><button id="logout" disabled>Sign out</button></section>
+<section id="records" hidden><h2 id="heading">Staff</h2><p id="mode"></p>
+<button id="refresh">Refresh</button><button id="next" disabled>Load more</button>
+<button id="exportAll" disabled>Export Entire School Staff (.xlsx)</button>
+<p id="count"></p><div style="overflow:auto"><table><thead><tr><th>Employee ID</th><th>Name (English)</th><th>नाम (नेपाली)</th><th>Position</th><th>Email</th></tr></thead><tbody id="staffRows"></tbody></table></div>
+<p lang="ne">यो सुविधाले एउटा विद्यालयका सबै Staff/Teacher विवरण अधिकतम ५,००० रेकर्डसम्म Excel (.xlsx) मा निकाल्छ। अपूर्ण सूचीको फाइल बनाइँदैन। पुरानो V46 Excel स्तम्भ क्रम सुरक्षित राखिएको छ। यो Firestore Database Backup होइन।</p></section>
+<p id="message" role="status" aria-live="polite">V47 मा जडान गर्न बाँकी छ।</p>
+</main><script type="module" src="./staff-console.mjs"></script></body></html>
