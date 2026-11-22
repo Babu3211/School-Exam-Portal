@@ -1,10 +1,10 @@
 // Build an isolated, non-deploying V47 browser preview from reachable assets only.
-import {readdirSync,readFileSync,mkdirSync,writeFileSync,copyFileSync,rmSync,existsSync} from 'node:fs';
+import {readdirSync,readFileSync,mkdirSync,writeFileSync,copyFileSync,rmSync} from 'node:fs';
 import {join,dirname,extname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=dirname(fileURLToPath(import.meta.url)),dest=join(root,'dist');
 const all=new Set(readdirSync(root,{withFileTypes:true}).filter(e=>e.isFile()).map(e=>e.name));
-const files=new Set(),queue=[...all].filter(name=>name.endsWith('.html')||name.endsWith('.css')||name.endsWith('.webmanifest'));
+const files=new Set(),queue=['index.html'];
 const allowed=/^[A-Za-z0-9][A-Za-z0-9_.-]*\.(?:html|css|mjs|js|json|webmanifest|png|svg|ico|jpg|jpeg|webp)$/;
 if(!all.has('index.html')||!all.has('dashboard-console.mjs')||!all.has('v47-firebase-config.mjs'))throw Error('Required V47 files missing');
 const config=readFileSync(join(root,'v47-firebase-config.mjs'),'utf8');
@@ -21,6 +21,7 @@ while(queue.length){
  const dependencies=[];
  if(ext==='.html'||ext==='.css'){
   for(const m of source.matchAll(/(?:src|href)=["']\.\/([^"'?#]+)["']/g))dependencies.push(m[1]);
+  for(const m of source.matchAll(/url\(\s*["']?\.\/([^)'"?#]+)["']?\s*\)/g))dependencies.push(m[1]);
  }
  if(ext==='.mjs'||ext==='.js'){
   for(const m of source.matchAll(/\b(?:import|export)\s*(?:[^'";]*?\s+from\s*)?['"]\.\/([^'"]+)['"]/g))dependencies.push(m[1]);
