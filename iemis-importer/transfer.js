@@ -37,6 +37,16 @@
     if (/term.*examination|total of term/i.test(text)) return 'term';
     return key(text);
   }
+  // Registry insertion order must never determine an IEMIS subject column.
+  function orderSubjects(values, className) {
+    const n = Number(classKey(className));
+    if (!Number.isInteger(n) || n < 1 || n > 10) return [...values];
+    const order = n <= 3 ? ['nepali','english','mathematics','serophero','hamrodhunibeshi'] : n <= 8 ?
+      ['nepali','english','mathematics','science','socialstudies','healthphysicalcreativeart','hamrodhunibeshi'] :
+      ['nepali','english','mathematics','science','socialstudies','environmentalscience','computerscience','additionalmathematics'];
+    const rank = value => {const i = order.indexOf(subjectKey(value)); return i < 0 ? order.length : i;};
+    return [...values].sort((a,b) => rank(a) - rank(b));
+  }
   function classKey(value) {
     const text = clean(value);
     return text.match(/\d+/)?.[0].replace(/^0+(?=\d)/, '') || key(text);
@@ -153,7 +163,10 @@
       if (seenColumns.has(id)) error('Excel मा विषय/component दोहोरिएको छ।');
       seenColumns.add(id);
       if (!target) error('IEMIS मा यो विषय/component भेटिएन: ' + c.subject + ' / ' + c.label);
-      if (maximum(c.label) !== maximum(target.label)) error('विषयको पूर्णाङ्क मिलेन: ' + c.subject + ' / ' + c.label);
+      if (maximum(c.label) !== maximum(target.label)) {
+        const computer = subjectKey(c.subject) === 'computerscience' && ['9','10'].includes(classKey(grid.context.className));
+        error('विषयको पूर्णाङ्क मिलेन: ' + c.subject + ' / ' + c.label + (computer ? '। विद्यालयले स्वीकृत गरेको Computer ४/३६/१० र खुलेको IEMIS form को पूर्णाङ्क फरक छ। IEMIS मा सही संरचना भएपछि पुनः Import गर्नुहोस्; अंक स्वतः रूपान्तरण गरिएको छैन।' : ''));
+      }
       return {source: c, target, kind: componentKey(c.label)};
     });
     const lookup = index => {
@@ -214,5 +227,5 @@
     if (!changes.length) error('परिवर्तन गर्नुपर्ने नयाँ अंक भेटिएन।');
     return {changes, students: seenStudents.size};
   }
-  scope.SmssIemisTransfer = Object.freeze({metadata, identity, clean, key, classKey, termKey, subjectKey, componentKey, maximum, columnKey, normalizeContext, workbookData, makeWorkbook, parsePaste, makePlan});
+  scope.SmssIemisTransfer = Object.freeze({metadata, identity, clean, key, classKey, termKey, subjectKey, componentKey, orderSubjects, maximum, columnKey, normalizeContext, workbookData, makeWorkbook, parsePaste, makePlan});
 })(globalThis);
