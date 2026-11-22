@@ -1,3 +1,4 @@
+import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
 import {excelWorkbook} from './excel-workbook.mjs';
 import {validateConfiguredMarkComponents} from './configured-mark-preflight.mjs';
 
@@ -9,7 +10,7 @@ export function buildClassMarksExcelSample({schoolId,classId,subjectId,examId,se
  const seen=new Set(),rows=[];
  for(const student of students){
   const id=student?.id;
-  if(typeof id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(id)||seen.has(id)||student.active!==true)throw new Error('Invalid or inactive student in class roster');
+  if(typeof id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(id)||seen.has(id)||!isActiveEnrolledStudent(student))throw new Error('Invalid or inactive student in class roster');
   seen.add(id);
   rows.push([id,String(student.name??id),'No',...components.map(()=>'')]);
  }
