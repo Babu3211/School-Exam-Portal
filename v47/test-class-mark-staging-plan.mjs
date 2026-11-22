@@ -3,7 +3,7 @@ import {planCompleteClassMarkStaging} from './class-mark-staging-plan.mjs';
 const schoolId='12345678',classId='9',term='final',subjectId='computer';
 const ids=Array.from({length:1500},(_,i)=>'student_'+String(i+1).padStart(4,'0'));
 const entries=ids.map(studentId=>({studentId,class:classId,term,subjectId,theory:27,practical:33})).reverse();
-const subjectSettings={schoolId,class:classId,active:true,theoryFullMarks:40,practicalFullMarks:60};
+const subjectSettings={schoolId,class:classId,active:true,creditHour:2,theoryFullMarks:40,practicalFullMarks:60};
 const base={schoolId,classId,term,subjectId,expectedStudentIds:ids,entries,subjectSettings};
 const plan=planCompleteClassMarkStaging(base);
 assert.equal(plan.studentCount,1500);
@@ -27,6 +27,8 @@ for(const [label,changes,pattern] of [
  ['inactive subject',{subjectSettings:{...subjectSettings,active:false}},/Active subject/],
  ['invalid max',{subjectSettings:{...subjectSettings,theoryFullMarks:20}},/exceed/],
  ['components',{subjectSettings:{...subjectSettings,components:[{key:'theory',fullMarks:40}]}},/Component assessment/],
+ ['missing credit hours',{subjectSettings:{...subjectSettings,creditHour:undefined}},/credit hours/],
+ ['malformed components',{subjectSettings:{...subjectSettings,components:{theory:40}}},/Component assessment/],
  ['bad chunk',{chunkSize:201},/chunk size/]
 ]){
  assert.throws(()=>planCompleteClassMarkStaging({...base,...changes}),pattern,label);
