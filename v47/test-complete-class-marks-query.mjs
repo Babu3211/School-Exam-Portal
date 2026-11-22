@@ -22,6 +22,15 @@ for(const malformed of [null,undefined]){
  const broken={...api,getDocs:async()=>({docs:[{id:'a',data:()=>malformed}]})};
  await assert.rejects(()=>loadAllClassMarks({...base,api:broken}),/Foreign or mismatched marks record/);
 }
+const colonIds=['final:s1:math','final:s2:math','final:s3:math'];
+const colonApi={...api,getDocs:async query=>{
+ const after=query.find(x=>x&&typeof x==='object'&&x.id)?.id;
+ const ids=after===colonIds[1]?[colonIds[2]]:colonIds;
+ return {docs:ids.map(id=>({id,data:()=>({schoolId,studentId:id.split(':')[1],subjectId:'math',class:'9',term:'final'})}))};
+}};
+const colonResult=await loadAllClassMarks({...base,api:colonApi});
+assert.deepEqual(colonResult.records.map(r=>r.id),colonIds);
+assert.equal(colonResult.pages,2);
 const unauthorized={...actor,schoolId:'87654321'};
 await assert.rejects(()=>loadAllClassMarks({...base,actor:unauthorized}),/membership/i);
 console.log('V47 complete class marks pagination checks passed');
