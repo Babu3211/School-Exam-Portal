@@ -82,4 +82,8 @@ const multi={...api,getDocs:async q=>{
 const full=await loadCompleteSchoolSubjects({...base,api:multi,maxSubjects:5});
 assert.deepEqual(full.subjects.map(s=>s.id),allIds);
 assert.equal(full.pages,3);
+// A repeated object reference must not confuse lookahead position.
+const repeated=row('a',good);
+const duplicatedReference={...api,getDocs:async()=>({docs:[repeated,repeated]})};
+await assert.rejects(loadCompleteSchoolSubjects({...base,api:duplicatedReference}),/pagination order/);
 console.log('V47 school subject roster pagination and tenant checks passed');
