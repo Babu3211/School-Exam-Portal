@@ -31,6 +31,11 @@ const colonApi={...api,getDocs:async query=>{
 const colonResult=await loadAllClassMarks({...base,api:colonApi});
 assert.deepEqual(colonResult.records.map(r=>r.id),colonIds);
 assert.equal(colonResult.pages,2);
+let reads=0;
+const changing={...api,getDocs:async()=>({docs:[{id:'a',data:()=>{reads++;return reads===1?{schoolId,class:'9',term:'final',studentId:'s1',subjectId:'math'}:{schoolId:'99999999',class:'9',term:'final'};}}]})};
+const once=await loadAllClassMarks({...base,api:changing});
+assert.equal(reads,1,'Firestore document must be materialized only once');
+assert.equal(once.records[0].schoolId,schoolId);
 const unauthorized={...actor,schoolId:'87654321'};
 await assert.rejects(()=>loadAllClassMarks({...base,actor:unauthorized}),/membership/i);
 console.log('V47 complete class marks pagination checks passed');
