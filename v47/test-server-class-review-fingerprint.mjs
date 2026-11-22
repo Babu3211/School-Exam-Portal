@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import {fingerprintConfiguredClassReview} from './server-class-review-fingerprint.mjs';
+const schoolId='12345',classId='9',subjectId='computer',examId='final';
+const settings={schoolId,classId,subjectId,examId,active:true,components:[{key:'theory',name:'Theory',fullMarks:36},{key:'practical',name:'Practical',fullMarks:10},{key:'internal',name:'Internal',fullMarks:4}]};
+const base={actor:{uid:'admin_123',schoolId,role:'school_admin',active:true},schoolId,classId,subjectId,examId,settings,settingsRevision:'settings-2',rosterRevision:'roster-1'};
+function make(n){const expectedStudentIds=Array.from({length:n},(_,i)=>'s'+String(i).padStart(4,'0'));return {...base,expectedStudentIds,drafts:expectedStudentIds.map(studentId=>({studentId,values:{theory:30,practical:8,internal:4}}))}}
+const input=make(1500),one=fingerprintConfiguredClassReview(input);
+assert.equal(one.rosterCount,1500);
+assert.match(one.digest,/^[a-f0-9]{64}$/);
+assert.equal(one.publicationAllowed,false);
+assert.equal(one.writeAuthorized,false);
+assert.equal(fingerprintConfiguredClassReview({...input,drafts:[...input.drafts].reverse()}).digest,one.digest);
+assert.notEqual(fingerprintConfiguredClassReview({...input,rosterRevision:'roster-2'}).digest,one.digest);
+assert.notEqual(fingerprintConfiguredClassReview({...input,settingsRevision:'settings-3'}).digest,one.digest);
+const changed=make(1500);changed.drafts[0].values.theory=29;
+assert.notEqual(fingerprintConfiguredClassReview(changed).digest,one.digest);
+const limits={...settings,components:[{key:'theory',name:'Theory',fullMarks:40},...settings.components.slice(1)]};
+assert.notEqual(fingerprintConfiguredClassReview({...input,settings:limits}).digest,one.digest);
+await assert.rejects(async()=>fingerprintConfiguredClassReview({...input,rosterRevision:''}),/Authoritative rosterRevision/);
+await assert.rejects(async()=>fingerprintConfiguredClassReview({...input,drafts:input.drafts.slice(1)}),/Complete verified class review/);
+await assert.rejects(async()=>fingerprintConfiguredClassReview({...input,actor:{...base.actor,role:'teacher'}}),/Verified school admin/);
+console.log('V47 SHA-256 review digest: 1500 students, deterministic ordering, revisions, marks, settings and role guards');
