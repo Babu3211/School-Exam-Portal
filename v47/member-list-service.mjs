@@ -58,8 +58,9 @@ export async function listSchoolMembersPage({db,api,actor,schoolId,pageSize=100,
  if(!Array.isArray(snapshot?.docs)||snapshot.docs.length>size+1)throw new RangeError('Unexpected member page size');
  let lastId=cursor?.id??null;
  const materialized=snapshot.docs.map(doc=>{
-  if(!doc||typeof doc.id!=='string'||lastId!==null&&doc.id<=lastId||
-     doc.ref?.path!==undefined&&doc.ref.path!=='schools/'+schoolId+'/members/'+doc.id)
+  if(doc?.ref?.path!==undefined&&doc.ref.path!=='schools/'+schoolId+'/members/'+doc.id)
+   throw new Error('Cross-school or malformed member path');
+  if(!doc||typeof doc.id!=='string'||lastId!==null&&doc.id<=lastId)
    throw new Error('Malformed or out-of-order member page');
   lastId=doc.id;
   return checkedMember(doc,schoolId);
