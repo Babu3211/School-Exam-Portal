@@ -49,6 +49,27 @@ for(const cursor of [{}, {id:'../87654321'}, {id:''}, {id:12}, {id:'x'.repeat(12
  await assert.rejects(loadClassRoster({...base,cursor,api}),/Invalid roster pagination cursor/);
  assert.equal(queries,0,'Invalid cursor must be rejected before querying Firestore');
 }
+// Cursor may carry a server snapshot or an app-level school/class context.
+// Reject stale cursors from another tenant or class before any network read.
+for(const cursor of [
+ {id:'s1',ref:{path:'schools/87654321/students/s1'}},
+ {id:'s1',schoolId:'87654321'},
+ {id:'s1',class:'8'}
+]){
+ let reads=0;
+ const api=apiFor(students),getDocs=api.getDocs;
+ api.getDocs=async(...args)=>{reads++;return getDocs(...args)};
+ await assert.rejects(loadClassRoster({...base,cursor,api}),/Invalid roster pagination cursor/);
+ assert.equal(reads,0);
+}
+{
+ const foreignPath={...apiFor(students),getDocs:async()=>({docs:[{
+  id:'s3',ref:{path:'schools/87654321/students/s3'},
+  data:()=>({schoolId,class:'9',name:'Forged same-school data'})
+ }]})};
+ await assert.rejects(loadClassRoster({...base,api:foreignPath}),/Invalid or duplicate roster document ID/);
+}
+
 // Session changes while Firestore is loading must invalidate the response.
 for(const mutate of [
  a=>{a.active=false},
