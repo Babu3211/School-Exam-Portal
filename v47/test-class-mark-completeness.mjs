@@ -78,4 +78,9 @@ assert.deepEqual(
  ['student-2','student-1'],
  'Validation must preserve submitted order without silently remapping student marks'
 );
+for(const malformedEntry of [null,undefined,[],[mark('student-2')],{},'not an entry',123]){
+ assert.throws(()=>validateCompleteClassMarks({
+  ...args,entries:[mark('student-1'),malformedEntry]
+ }),/Mark entry required|Invalid student ID/,'Malformed marks payload must be rejected');
+}
 console.log('V47 class marks completeness checks passed');
