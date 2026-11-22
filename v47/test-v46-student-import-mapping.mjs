@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {STUDENT_EXCEL_HEADERS} from './v46-student-excel-schema.mjs';
+import {mapV46StudentExcelRows} from './v46-student-import-mapping.mjs';
+const row=()=>STUDENT_EXCEL_HEADERS.map(()=> '');
+const put=(r,name,value)=>{r[STUDENT_EXCEL_HEADERS.indexOf(name)]=value;return r};
+const first=put(put(put(put(row(),'IEMIS Code','12345'),'Student Name','Sample Student'),'Class','9'),'Student IEMIS Id','98765');
+const ok=mapV46StudentExcelRows({headers:STUDENT_EXCEL_HEADERS,rows:[first],schoolId:'12345'});
+assert.equal(ok.ready,true);assert.equal(ok.accepted[0].student.studentIemisId,'98765');
+const cross=[...first];put(cross,'IEMIS Code','99999');
+assert.equal(mapV46StudentExcelRows({headers:STUDENT_EXCEL_HEADERS,rows:[cross],schoolId:'12345'}).ready,false);
+const duplicate=mapV46StudentExcelRows({headers:STUDENT_EXCEL_HEADERS,rows:[first,first],schoolId:'12345'});
+assert.equal(duplicate.accepted.length,1);assert.equal(duplicate.errors.length,1);
+const invalid=[...first];put(invalid,'Class','99');
+assert.equal(mapV46StudentExcelRows({headers:STUDENT_EXCEL_HEADERS,rows:[invalid],schoolId:'12345'}).ready,false);
+assert.throws(()=>mapV46StudentExcelRows({headers:['Name'],rows:[first],schoolId:'12345'}),/columns/);
+assert.throws(()=>mapV46StudentExcelRows({headers:STUDENT_EXCEL_HEADERS,rows:Array(1501).fill(first),schoolId:'12345'}),RangeError);
+console.log('V46 student Excel import mapping checks passed');
