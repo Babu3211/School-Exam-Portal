@@ -2703,11 +2703,24 @@ function openCdcAssessment() {
     return parts;
   };
   const normalizeTitle = cdcNormalizeTitle;
-  const titleValue = () => field('topic').value.trim();
+  const subjectLanguage = subject => {
+    const key = cdcAssessmentSubjectKey(subject);
+    if(key==='english') return 'en';
+    return ['nepali','serophero'].includes(key) ? 'ne' : 'both';
+  };
+  const language = () => subjectLanguage(field('subject').value);
+  const localized = (ne,en) => language()==='both' ? [...new Set([ne,en].filter(Boolean))].join(' / ')
+    : language()==='en' ? en||ne : ne||en;
+  const titleValue = () => {
+    const title = field('topic').value.trim();
+    const matches = topicAliases.get(normalizeTitle(title));
+    return matches?.size===1 ? [...matches][0] : title;
+  };
   const unitValue = () => field('unit').value.trim();
   const key = () => storagePrefix + JSON.stringify([...studentScope(),titleValue(),normalizeTitle(unitValue())]);
   const readRecord = studentId => cdcStoredObservation(localStorage,storagePrefix,studentScope(studentId),titleValue(),unitValue());
   let topicAliases = new Map();
+  let topicTranslations = new Map();
   const refreshRecords = () => {
     topicAliases = new Map();
     const prefix = storagePrefix + JSON.stringify(scope()).slice(0,-1) + ',';
@@ -2735,18 +2748,23 @@ function openCdcAssessment() {
     for(const {unit,ne,en} of getCatalog()) {
       if(normalizeTitle(unit)===sourceUnit && !sharedTopics.has(ne)) sharedTopics.set(ne,en);
     }
+    topicTranslations = sharedTopics;
     const suggestions = [];
     for(const [title,alternate] of sharedTopics) {
       for(const alias of [title,alternate].filter(Boolean)) {
         const normalized = normalizeTitle(alias);
         if(!topicAliases.has(normalized)) topicAliases.set(normalized,new Set());
         topicAliases.get(normalized).add(title);
-        suggestions.push(new Option([title,alternate].filter(Boolean).join(' / '),alias));
+        if(language()==='both') suggestions.push(new Option(localized(title,alternate),alias));
       }
+    }
+    if(language()!=='both') for(const [title,alternate] of sharedTopics) {
+      const display=localized(title,alternate);
+      suggestions.push(new Option(display,display));
     }
     dialog.querySelector('#cdcTopicSuggestions').replaceChildren(...suggestions);
     const savedOptions=[...topics].sort((a,b)=>a[1][0].localeCompare(b[1][0],'ne')).map(([value,[title,unit,alt]])=>[
-      value,[unit,[title,alt].filter(Boolean).join(' / ')].filter(Boolean).join(' · ')
+      value,[localized(unit,units().find(([ne])=>normalizeTitle(ne)===normalizeTitle(unit))?.[1]),localized(title,alt)].filter(Boolean).join(' · ')
     ]);
     options('records',[['','नयाँ सिकाइ उपलब्धि'],...savedOptions]);
     field('records').value = topics.has(JSON.stringify([titleValue(),sourceUnit])) ? JSON.stringify([titleValue(),sourceUnit]) : '';
@@ -2820,8 +2838,8 @@ function openCdcAssessment() {
         b.date.localeCompare(a.date)||(b.createdAt?.toMillis()??0)-(a.createdAt?.toMillis()??0));
       for(const item of items) {
         const row=field('schoolRows').insertRow();
-        for(const value of [[item.unit,item.unitEn].filter(Boolean).join(' / '),
-          [item.topic,item.topicAlt].filter(Boolean).join(' / '),item.date,item.method,item.level,item.evidence,item.feedback]) {
+        for(const value of [localized(item.unit,item.unitEn),
+          localized(item.topic,item.topicAlt),item.date,item.method,item.level,item.evidence,item.feedback]) {
           row.insertCell().textContent=value||'—';
         }
       }
@@ -2889,13 +2907,15 @@ function openCdcAssessment() {
     refreshRecords();
     const requested = field('topic').value.trim();
     const matches = topicAliases.get(normalizeTitle(requested));
-    if(matches?.size===1) field('topic').value = [...matches][0];
+    if(matches?.size===1) {
+      const canonical=[...matches][0];
+      field('topic').value = language()==='en' ? localized(canonical,topicTranslations.get(canonical)) : canonical;
+    }
     try { if(field('topic').value.trim()) record = readRecord(); }
     catch { field('status').textContent = 'मस्यौदा पढ्न सकिएन।'; }
     for(const name of ['unit','unitEn','topicAlt','level','method','evidence','feedback']) field(name).value = record[name] || '';
     if(!record.unit) [field('unit').value,field('unitEn').value]=chosenUnit;
-    field('topicAlt').value ||= [...dialog.querySelector('#cdcTopicSuggestions').options]
-      .find(option=>option.value!==field('topic').value && option.label.startsWith(field('topic').value+' / '))?.value || '';
+    field('topicAlt').value ||= topicTranslations.get(titleValue()) || '';
     field('date').value = record.date || today();
     showHistory(record);
     refreshRecords();
@@ -2918,8 +2938,8 @@ function openCdcAssessment() {
   for(const input of ['unit','unitEn']) field(input).onchange=()=>{
     const other = input==='unit' ? 'unitEn' : 'unit';
     const selectedUnit=units().find(names=>names.some(name=>normalizeTitle(name)===normalizeTitle(field(input).value)));
-    if(input==='unitEn' && !selectedUnit) return;
-    field(other).value='';
+    if(input==='unitEn' && !selectedUnit && language()!=='en') return;
+    field(other).value=input==='unitEn' && !selectedUnit ? field(input).value : '';
     matchUnit(input);
     load();
   };
@@ -2929,10 +2949,20 @@ function openCdcAssessment() {
       ? `सुझावमा ${verifiedUnits.length} एकाइ छन्। सिकाइ उपलब्धि स्रोतबाट लेख्नुहोस्।`
       : 'यस विषयका एकाइको सुझाव उपलब्ध छैन। एकाइ र सिकाइ उपलब्धि सम्बन्धित स्रोतबाट लेख्नुहोस्।';
     dialog.querySelector('#cdcUnitSuggestions').replaceChildren(...units().flatMap(([ne,en])=>[
-      new Option(ne+' / '+en,ne),new Option(ne+' / '+en,en)
+      ...(language()==='both' ? [...new Set([ne,en])].map(value=>new Option(localized(ne,en),value)) :
+        [new Option(localized(ne,en),localized(ne,en))])
     ]));
   }
   function refreshStudents() {
+    field('unit').parentElement.hidden=language()==='en';
+    field('unit').parentElement.firstChild.textContent=language()==='ne' ? 'एकाइ ' : 'एकाइ (नेपाली) ';
+    field('unitEn').parentElement.firstChild.textContent=language()==='en' ? 'Unit ' : 'Unit in English ';
+    field('topic').parentElement.firstChild.textContent=language()==='en' ? 'Learning outcome '
+      : language()==='ne' ? 'सिकाइ उपलब्धि ' : 'सिकाइ उपलब्धि / Learning outcome ';
+    field('topic').placeholder=language()==='en' ? 'Enter a learning outcome' : 'सिकाइ उपलब्धि लेख्नुहोस्';
+    field('unitEn').parentElement.hidden=language()==='ne';
+    field('topicAlt').parentElement.hidden=language()!=='both';
+    field('catalogPanel').hidden=readOnly||language()!=='both';
     field('catalogText').value='';
     field('catalogSource').value='';
     field('catalogStatus').textContent='';
@@ -2959,7 +2989,8 @@ function openCdcAssessment() {
     const registered = cl ? ledgerSubjectsForClass(cl,entryClassGroup(cl)) : [];
     const curriculum = Number(cl)<=3 ? cdcPrimarySubjects : cdcUpperPrimarySubjects;
     const subjects = curriculum.flatMap(([key,ne,en])=>{
-      const label = ne+' / '+en;
+      const mode=subjectLanguage(key);
+      const label = mode==='en' ? en : mode==='ne' ? ne : ne+' / '+en;
       const matches = registered.filter(subject=>cdcAssessmentSubjectKey(subject)===key);
       const assigned = matches.find(subject=>readOnly||cdcTeacherAssignment(currentUserRole,cl,subject));
       if(assigned) return [[assigned,label]];
@@ -2987,7 +3018,6 @@ function openCdcAssessment() {
     field('date').value=today();
     field('status').textContent='थप अवलोकन लेखेर मस्यौदा राख्नुहोस्।';
   };
-  field('catalogPanel').hidden=readOnly;
   field('catalogSave').onclick=async()=>{
     const className=field('class').value, subject=field('subject').value;
     const targetKey=catalogKey();
@@ -3023,7 +3053,7 @@ function openCdcAssessment() {
     const [title,unit]=JSON.parse(selected);
     field('topic').value=title;
     field('unit').value=unit;
-    field('unitEn').value='';
+    field('unitEn').value=units().find(([ne])=>normalizeTitle(ne)===unit)?.[1] || (language()==='en' ? unit : '');
     load();
   };
   field('level').disabled=readOnly;
@@ -3052,7 +3082,7 @@ function openCdcAssessment() {
       try { verified = /^\d{4}-\d{1,2}-\d{1,2}$/.test(supplied) && attendanceAdToBs(attendanceBsToAd(normalized))===normalized; } catch {}
       if(!verified){field('status').textContent='मान्य नेपाली मिति YYYY-MM-DD ढाँचामा राख्नुहोस्।';return;}
       refreshRecords();
-      const title = field('topic').value.trim();
+      const title = titleValue();
       const alternate = field('topicAlt').value.trim();
       const assignedTitles = topicAliases.get(normalizeTitle(alternate));
       if(alternate && assignedTitles && [...assignedTitles].some(existing=>existing!==title)){

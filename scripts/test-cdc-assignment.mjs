@@ -150,5 +150,36 @@ serverRole={...teacher,subjectAssignments:[]};
 field('evidence').value='Must not save';await field('save').onclick();
 assert.match(field('status').textContent,/तोकिएको छैन/);
 assert.equal(JSON.stringify(w.localStorage),before);
+current.subjectAssignments=[
+  {className:'1',subject:'English'},
+  {className:'1',subject:'Nepali'},
+  {className:'1',subject:'serophero'}
+];
+serverRole=current;
+w.marksStudents.push({id:'english-student',class:'1',section:'A',name:'Test English'});
+w.ledgerSubjectsForClass=()=>['English','Nepali','serophero'];
+choice('class','1');
+assert.deepEqual([...field('subject').options].map(option=>option.text),['नेपाली','English','हाम्रो सेरोफेरो']);
+choice('subject','English');
+assert.equal(field('unit').parentElement.hidden,true);
+assert.equal(field('topicAlt').parentElement.hidden,true);
+choice('unitEn','Alphabet');
+const englishOutcome='Copy, recognize and distinguish sounds';
+assert.equal(w.document.querySelector('#cdcTopicSuggestions option').value,englishOutcome);
+choice('topic',englishOutcome);
+assert.equal(field('topic').value,englishOutcome);
+field('evidence').value='English evidence';
+await field('save').onclick();
+assert.match(field('records').selectedOptions[0].text,/Alphabet/);
+field('topic').value='';
+field('topic').onchange();
+choice('topic',englishOutcome);
+assert.equal(field('evidence').value,'English evidence');
+choice('subject','Nepali');
+assert.equal(field('unitEn').parentElement.hidden,true);
+choice('subject','serophero');
+choice('unit','म र मेरो परिवार');
+assert.equal(field('topicAlt').parentElement.hidden,true);
+assert.match(w.document.querySelector('#cdcTopicSuggestions option').value,/परिवार/);
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
