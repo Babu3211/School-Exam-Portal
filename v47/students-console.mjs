@@ -42,3 +42,6 @@ $('exportExcel').onclick=async()=>{
  }catch(e){status('Excel export blocked: '+e.message)}
  finally{$('exportExcel').disabled=!actor||hasMore||loading||savingStudent||!records.length}
 };
+
+// Automatically resume a dashboard-selected school; authorization is rechecked on this page.
+if(requestedSchool)queueMicrotask(()=>$('connect').click());
