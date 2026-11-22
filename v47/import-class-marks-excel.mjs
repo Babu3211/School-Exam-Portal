@@ -15,6 +15,7 @@ export async function readSmssMarksExcel(file,{settings,schoolId,classId,subject
   if(parts.has(name)||parts.size>16)throw new Error('Invalid Excel workbook contents');
   parts.set(name,decoder.decode(bytes.slice(start,end)));offset=end;
  }
+ if(offset+4>bytes.length||view.getUint32(offset,true)!==0x02014b50)throw new Error('Incomplete Excel ZIP directory');
  const sheet=parts.get('xl/worksheets/sheet1.xml');
  if(!sheet||!parts.has('xl/workbook.xml'))throw new Error('Not an SMSS Excel sample workbook');
  const xml=new DOMParser().parseFromString(sheet,'application/xml');
@@ -29,7 +30,7 @@ export async function readSmssMarksExcel(file,{settings,schoolId,classId,subject
  if(settings?.schoolId!==schoolId||String(settings?.classId)!==classId||settings?.subjectId!==subjectId||settings?.examId!==examId||settings?.active!==true||!Array.isArray(components))throw new Error('Verified Examination Settings required');
  const headers=['Student ID','Student Name','Absent (Yes/No)',...components.map(c=>c.name+' (max '+c.fullMarks+')')];
  if(parsed[0].length!==headers.length||headers.some((h,i)=>parsed[0][i]!==h))throw new Error('Excel columns differ from current Examination Settings');
- if(!Array.isArray(students)||students.length!==parsed.length-1)throw new Error('Excel roster differs from current class');
+ if(!Array.isArray(students)||students.length!==parsed.length-1||students.some(s=>s.active!==true))throw new Error('Excel roster differs from current class');
  const roster=new Set(students.map(s=>s.id)),seen=new Set(),drafts=[];
  for(const row of parsed.slice(1)){
   if(row.length!==headers.length||!roster.has(row[0])||seen.has(row[0]))throw new Error('Unknown, duplicate or incomplete student in Excel');
