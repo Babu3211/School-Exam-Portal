@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {assessClassPublicationReadiness} from './class-publication-preflight.mjs';
+const schoolId='12345678',actor={uid:'admin',schoolId,role:'school_admin',active:true};
+const base={actor,schoolId,schoolClass:'9',term:'final',students:[{id:'s1',schoolId,class:'9',active:true}],subjects:[{id:'math',schoolId,class:'9',active:true,creditHour:4}],records:[{studentId:'s1',subjectId:'math'}],coverage:{complete:true}};
+const ok=assessClassPublicationReadiness(base);
+assert.equal(ok.ready,false);
+assert.equal(ok.diagnosticOnly,true);
+assert.equal(ok.blockers.length,1);
+assert.match(ok.blockers[0],/writes remain disabled/);
+assert.equal(ok.studentCount,1);
+const missing=assessClassPublicationReadiness({...base,subjects:[{...base.subjects[0],creditHour:undefined}],coverage:{complete:false}});
+assert(missing.blockers.some(x=>x.includes('Missing credit hours')));
+assert(missing.blockers.some(x=>x.includes('coverage')));
+const other=assessClassPublicationReadiness({...base,term:'monthly'});
+assert(other.blockers.some(x=>x.includes('mapping not verified')));
+assert.throws(()=>assessClassPublicationReadiness({...base,actor:{...actor,schoolId:'87654321'}}),/membership/);
+console.log('V47 class publication preflight blockers checked');
