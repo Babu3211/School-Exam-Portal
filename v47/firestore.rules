@@ -329,15 +329,26 @@ service cloud.firestore {
       match /subjects/{id} {
         function validSubject() {
           let data = request.resource.data;
-          return data.keys().hasAll(['schoolId','name','class','active'])
+          return data.keys().hasAll(['schoolId','name','class','active','creditHour','theoryFullMarks','practicalFullMarks'])
             && data.schoolId == sid
+            && data.creditHour is number && data.creditHour > 0 && data.creditHour <= 100
+            && data.theoryFullMarks is number && data.theoryFullMarks >= 0
+            && data.practicalFullMarks is number && data.practicalFullMarks >= 0
             && data.name is string && data.name.size() >= 2 && data.name.size() <= 160
             && data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
             && data.active == true;
         }
         allow get, list: if canRead(sid);
         allow create: if canAdmin(sid) && validSubject();
-        allow update, delete: if false;
+        // Existing subjects may be missing creditHour. School Admin may add only
+        // this missing field; no other subject or marks configuration may change.
+        allow update: if canAdmin(sid)
+          && resource.data.get('schoolId','') == sid
+          && !resource.data.keys().hasAny(['creditHour'])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['creditHour'])
+          && request.resource.data.creditHour is number
+          && request.resource.data.creditHour > 0 && request.resource.data.creditHour <= 100;
+        allow delete: if false;
       }
       match /subject_assignments/{id} {
         function validAssignment() {
