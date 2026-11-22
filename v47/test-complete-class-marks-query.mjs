@@ -36,6 +36,11 @@ const changing={...api,getDocs:async()=>({docs:[{id:'a',data:()=>{reads++;return
 const once=await loadAllClassMarks({...base,api:changing});
 assert.equal(reads,1,'Firestore document must be materialized only once');
 assert.equal(once.records[0].schoolId,schoolId);
+for(const revoke of [a=>{a.active=false},a=>{a.schoolId='99999999'},a=>{a.role='revoked'}]){
+ const changingActor={...actor};
+ const revoked={...api,getDocs:async query=>{revoke(changingActor);return api.getDocs(query)}};
+ await assert.rejects(()=>loadAllClassMarks({...base,actor:changingActor,api:revoked}),/membership changed/i);
+}
 const unauthorized={...actor,schoolId:'87654321'};
 await assert.rejects(()=>loadAllClassMarks({...base,actor:unauthorized}),/membership/i);
 console.log('V47 complete class marks pagination checks passed');
