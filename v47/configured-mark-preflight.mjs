@@ -15,7 +15,7 @@ export function inspectConfiguredClassMarks({schoolId,subjectId,examId,classId,s
  const components=validateConfiguredMarkComponents(settings,{schoolId,subjectId,examId,classId});
  if(!Array.isArray(expectedStudentIds)||expectedStudentIds.length===0||expectedStudentIds.length>1500||!Array.isArray(drafts)||drafts.length>1500)throw new Error('Complete authoritative class roster required');
  const roster=new Set();
- for(const id of expectedStudentIds){if(typeof id!=='string'||!id.trim()||roster.has(id))throw new Error('Invalid or duplicate student in roster');roster.add(id)}
+ for(const id of expectedStudentIds){if(typeof id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(id)||roster.has(id))throw new Error('Invalid or duplicate student in roster');roster.add(id)}
  const seen=new Set(),missing=[],invalid=[],ready=[];
  for(const row of drafts){
   if(!row||!roster.has(row.studentId)||seen.has(row.studentId))throw new Error('Duplicate or out-of-roster mark draft');
