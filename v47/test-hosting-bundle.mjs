@@ -3,7 +3,7 @@ import {readdir,readFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 execFileSync(process.execPath,['v47/build-hosting.mjs'],{stdio:'inherit'});
 const names=await readdir('v47/dist');
-for(const name of ['index.html','admin.html','school-login.html','school-login.mjs','students.html','staff.html','staff-console.mjs','attendance.html','student-import-preview.html','v46-iemis-student-import-panel.mjs','require-xlsx-preview-file.mjs','manifest.webmanifest','dev-icon.svg'])
+for(const name of ['index.html','admin.html','school-login.html','school-login.mjs','students.html','staff.html','staff-console.mjs','grade-ledger.html','grade-sheet.html','grade-report-console.mjs','attendance.html','student-import-preview.html','v46-iemis-student-import-panel.mjs','require-xlsx-preview-file.mjs','manifest.webmanifest','dev-icon.svg'])
  assert(names.includes(name),'Missing public entry '+name);
 for(const name of names){
  assert(!name.startsWith('test-')&&!name.startsWith('build-')&&!name.startsWith('release-')&&!name.startsWith('server-')&&!name.startsWith('audit-'),'Private development module leaked: '+name);

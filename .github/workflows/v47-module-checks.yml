@@ -79,6 +79,8 @@ jobs:
         run: node scripts/test-v47-admin-console-static.mjs
       - name: V47 school admin console static integration
         run: node scripts/test-v47-school-admin-console-static.mjs
+      - name: Browser verified Grade Ledger and Grade Sheet read-only routes
+        run: node v47/test-grade-report-browser-ui.mjs
       - name: Existing-school Staff Employee ID duplicate preflight
         run: node v47/test-staff-import-duplicate-preflight.mjs
       - name: V46 Staff Excel preview and no-write contract
