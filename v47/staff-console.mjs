@@ -7,6 +7,7 @@ import {excelWorkbook} from './excel-workbook.mjs';
 import {v46StaffExcelRow} from './v46-staff-excel-schema.mjs';
 import {readV47StudentXlsx} from './read-v47-student-xlsx.mjs';
 import {previewV46StaffExcelRows} from './staff-excel-preview.mjs';
+import {checkExistingStaffEmployeeIds} from './staff-import-duplicate-preflight.mjs';
 const $=id=>document.getElementById(id);
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 let auth,authSdk,db,api,actor=null,store=null,schoolId=null,epoch=0,busy=false,loading=false,exporting=false,previewBusy=false,previewToken=0,cursor=null,seen=new Set(),hasMore=false;
@@ -114,6 +115,11 @@ $('previewStaffImport').onclick=async()=>{
   const cells=await readV47StudentXlsx(file,{columns:11,maxDataRows:1500});
   assertSession();
   const result=previewV46StaffExcelRows({schoolId:selectedSchool,cells});
+  const existing=await checkExistingStaffEmployeeIds({
+   store:selectedStore,preview:result,assertSession,
+   onProgress:count=>{assertSession();$('staffImportSummary').textContent=count+' existing Staff checked for duplicates...';}
+  });
+  assertSession();
   const after=await verifySchoolSession({schoolId:selectedSchool,uid,readDocument});
   assertSession();
   if(after.role!=='school_admin'||after.role!==before.role)throw new Error('School Admin role changed');
@@ -125,9 +131,13 @@ $('previewStaffImport').onclick=async()=>{
    $('staffImportRows').append(tr);
   }
   const details=[...result.errors.map(item=>'Row '+item.row+': '+item.error),
+                 ...existing.duplicates.map(item=>'Row '+item.row+': Employee ID '+item.employeeId+' already exists in this school'),
                  ...result.warnings.map(item=>'Row '+item.row+': '+item.warning)];
-  $('staffImportSummary').textContent=result.rows.length+' records read; '+result.errors.length+
-   ' errors; '+result.warnings.length+' warnings. Preview only — NOTHING saved.'+
+  $('staffImportSummary').textContent=result.rows.length+' Excel rows; '+existing.scanned+
+   ' existing school Staff checked; '+result.errors.length+' Excel errors; '+
+   existing.duplicates.length+' matching existing Employee IDs; '+result.warnings.length+
+   ' warnings. '+(existing.ready?'No conflicts found in this preflight. ':'Resolve conflicts before future import. ')+
+   'Preview only — NOTHING saved.'+
    (details.length?' First issues: '+details.slice(0,8).join(' | '):'');
  }catch(e){
   if(token===epoch&&review===previewToken&&actor===selectedActor)

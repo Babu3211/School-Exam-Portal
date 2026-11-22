@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {previewV46StaffExcelRows} from './staff-excel-preview.mjs';
+import {V46_STAFF_EXCEL_HEADERS} from './v46-staff-excel-schema.mjs';
+import {checkExistingStaffEmployeeIds} from './staff-import-duplicate-preflight.mjs';
+const schoolId='300160003';
+const row=id=>[id,'शिक्षक','Teacher','Kathmandu','Secondary','','','','','','Active'];
+const preview=previewV46StaffExcelRows({schoolId,cells:[[...V46_STAFF_EXCEL_HEADERS],row('0007'),row('0009')]});
+function storeFor(ids,school=schoolId){
+ const records=ids.map((staffId,i)=>({id:'st'+String(i+1).padStart(4,'0'),schoolId:school,staffId}));
+ return {schoolId,async listPage(name,{pageSize,cursor}){
+  assert.equal(name,'staff');assert.equal(pageSize,100);
+  const start=cursor?Number(cursor.id.slice(2)):0;
+  const recordsInPage=records.slice(start,start+pageSize);
+  return {records:recordsInPage,hasMore:start+recordsInPage.length<records.length,cursor:recordsInPage.at(-1)??null};
+ }};
+}
+let checks=0;
+const result=await checkExistingStaffEmployeeIds({store:storeFor(['0007','0008']),preview,assertSession:()=>checks++});
+assert.equal(result.scanned,2);
+assert.equal(result.duplicates.length,1);
+assert.deepEqual(result.duplicates[0],{row:2,employeeId:'0007'});
+assert.equal(result.ready,false);
+assert.equal(result.scannedAll,true);
+assert.equal(result.writeAuthorized,false);
+assert.equal(result.databaseChanged,false);
+assert(checks>=4);
+const clear=await checkExistingStaffEmployeeIds({store:storeFor(['0020']),preview,assertSession:()=>{}});
+assert.equal(clear.ready,true);
+assert.equal(clear.duplicates.length,0);
+await assert.rejects(checkExistingStaffEmployeeIds({store:storeFor(['0007']),preview:{...preview,schoolId:'999999999'},assertSession:()=>{}}),/matching-school/);
+await assert.rejects(checkExistingStaffEmployeeIds({store:storeFor(['0012'],'999999999'),preview,assertSession:()=>{}}),/cross-school/i);
+await assert.rejects(checkExistingStaffEmployeeIds({store:storeFor(['0007','0007']),preview,assertSession:()=>{}}),/already exist/);
+await assert.rejects(checkExistingStaffEmployeeIds({store:storeFor([]),preview,assertSession:()=>{throw Error('logout')}}),/logout/);
+let changed=false;
+await assert.rejects(checkExistingStaffEmployeeIds({store:storeFor(['0007']),preview,assertSession:()=>{if(changed)throw Error('School changed')},onProgress:()=>{changed=true}}),/School changed/);
+const ui=readFileSync(new URL('./staff-console.mjs',import.meta.url),'utf8');
+assert.match(ui,/checkExistingStaffEmployeeIds\(/);
+assert.match(ui,/existing\.duplicates/);
+assert.match(ui,/before\.role!=='school_admin'/);
+assert.match(ui,/after\.role!=='school_admin'/);
+assert.doesNotMatch(ui,/\.setDoc\(|\.addDoc\(|\.updateDoc\(/);
+console.log('PASS V47 live Staff Employee ID duplicate preflight: bounded tenant scan and zero writes');
