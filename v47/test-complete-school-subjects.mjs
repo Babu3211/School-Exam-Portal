@@ -22,4 +22,54 @@ const bad={...api,getDocs:async()=>({docs:[{id:'a',data:()=>({schoolId:'99999999
 await assert.rejects(()=>loadCompleteSchoolSubjects({...base,api:bad}),/Foreign/);
 const inactive={...api,getDocs:async()=>({docs:[{id:'a',data:()=>({schoolId,class:'9',active:false})}]})};
 await assert.rejects(()=>loadCompleteSchoolSubjects({...base,api:inactive}),/Inactive/);
+
+// 18 fail-closed subject roster and tenant cases, including lookahead records.
+const row=(id,data)=>({id,data:()=>data});
+const good={schoolId,class:'9',active:true,creditHour:4};
+const badCases=[
+ ['null snapshot',null,/Invalid subject page/],
+ ['missing docs',{},/Invalid subject page/],
+ ['non-array docs',{docs:{}},/Invalid subject page/],
+ ['null subject',{docs:[row('a',null)]},/Malformed subject/],
+ ['array subject',{docs:[row('a',[])]},/Malformed subject/],
+ ['missing accessor',{docs:[{id:'a'}]},/Malformed subject/],
+ ['invalid id',{docs:[row('../a',good)]},/pagination order/],
+ ['duplicate ids',{docs:[row('a',good),row('a',good)]},/pagination order/],
+ ['out of order',{docs:[row('b',good),row('a',good)]},/pagination order/],
+ ['wrong class',{docs:[row('a',{...good,class:'8'})]},/Foreign subject/],
+ ['foreign school',{docs:[row('a',{...good,schoolId:'87654321'})]},/Foreign subject/],
+ ['inactive subject',{docs:[row('a',{...good,active:false})]},/Inactive subject/],
+ ['missing credit',{docs:[row('a',{...good,creditHour:undefined})]},/creditHour/],
+ ['negative credit',{docs:[row('a',{...good,creditHour:-1})]},/creditHour/],
+ ['lookahead foreign',{docs:[row('a',good),row('b',good),row('c',{...good,schoolId:'87654321'})]},/Foreign subject/],
+ ['lookahead inactive',{docs:[row('a',good),row('b',good),row('c',{...good,active:false})]},/lookahead/],
+ ['lookahead missing credit',{docs:[row('a',good),row('b',good),row('c',{...good,creditHour:undefined})]},/lookahead/],
+ ['oversized page',{docs:[row('a',good),row('b',good),row('c',good),row('d',good)]},/Invalid subject page/]
+];
+assert.equal(badCases.length,18);
+for(const [label,snapshot,pattern] of badCases){
+ const failing={...api,getDocs:async()=>snapshot};
+ await assert.rejects(loadCompleteSchoolSubjects({...base,api:failing}),pattern,label);
+}
+for(const uid of [null,undefined,'','  ']){
+ await assert.rejects(loadCompleteSchoolSubjects({...base,actor:{...actor,uid}}),/School membership required/);
+}
+let dataCalls=0;
+const stable={...api,getDocs:async()=>({docs:[{id:'a',data:()=>{
+ dataCalls++;
+ return dataCalls===1?good:{...good,schoolId:'87654321'};
+}}]})};
+const once=await loadCompleteSchoolSubjects({...base,api:stable});
+assert.equal(once.count,1);
+assert.equal(dataCalls,1,'Each subject must be materialized once');
+for(const mutate of [
+ a=>{a.uid='other'},a=>{a.active=false},a=>{a.role='viewer';a.schoolId='87654321'}
+]){
+ const changing={...actor};
+ const revoked={...api,getDocs:async()=>({docs:[{id:'a',data:()=>{
+  mutate(changing);
+  return good;
+ }}]})};
+ await assert.rejects(loadCompleteSchoolSubjects({...base,actor:changing,api:revoked}),/membership changed/);
+}
 console.log('V47 school subject roster pagination and tenant checks passed');
