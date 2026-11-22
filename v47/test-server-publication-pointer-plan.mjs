@@ -6,7 +6,7 @@ const args={currentPointer:null,stagedVerification,publicationId:'pub_00000001',
 const first=planOfficialPublicationPointerSwitch(args);
 assert.equal(first.previousPublicationId,null);assert.equal(first.requiresAtomicCompareAndSwap,true);
 assert.equal(first.publicationAllowed,false);assert.equal(first.writeAuthorized,false);
-const old={...scope,publicationId:'pub_00000001'};
+const old={...scope,publicationId:'pub_00000001',digest:'a'.repeat(64),rosterCount:1500};
 const second=planOfficialPublicationPointerSwitch({...args,currentPointer:old,expectedPreviousId:'pub_00000001',publicationId:'pub_00000002'});
 assert.equal(second.previousPublicationId,'pub_00000001');
 assert.throws(()=>planOfficialPublicationPointerSwitch({...args,currentPointer:old,publicationId:'pub_00000002'}),/Concurrent publication/);
@@ -18,4 +18,6 @@ assert.throws(()=>planOfficialPublicationPointerSwitch({...args,actorUid:''}),/V
 assert.throws(()=>planOfficialPublicationPointerSwitch({...args,stagedVerification:{...stagedVerification,schoolId:'other_school'}}),/IEMIS publication school ID/);
 assert.throws(()=>planOfficialPublicationPointerSwitch({...args,stagedVerification:{...stagedVerification,subjectId:'../../marks'}}),/Invalid publication scope/);
 assert.throws(()=>planOfficialPublicationPointerSwitch({...args,currentPointer:{...scope}}),/Invalid current publication ID/);
+assert.throws(()=>planOfficialPublicationPointerSwitch({...args,currentPointer:{...old,digest:'corrupt'},expectedPreviousId:old.publicationId,publicationId:'pub_00000002'}),/Invalid current publication metadata/);
+assert.throws(()=>planOfficialPublicationPointerSwitch({...args,currentPointer:{...old,rosterCount:0},expectedPreviousId:old.publicationId,publicationId:'pub_00000002'}),/Invalid current publication metadata/);
 console.log('V47 official publication pointer plan: scoped CAS, previous pointer, conflicts and incomplete batches rejected; no writes');
