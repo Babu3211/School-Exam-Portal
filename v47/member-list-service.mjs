@@ -18,7 +18,8 @@ function checkedMember(doc,schoolId){
   throw new Error('Malformed school member document');
  const data=doc.data();
  if(!data||typeof data!=='object'||Array.isArray(data)||
-   data.schoolId!==schoolId||data.uid!==doc.id)
+   data.schoolId!==schoolId||data.uid!==doc.id||
+   !['school_admin','teacher','viewer'].includes(data.role)||typeof data.active!=='boolean')
   throw new Error('Cross-school or malformed member record');
  return Object.freeze({uid:doc.id,role:data.role,active:data.active});
 }
@@ -55,10 +56,16 @@ export async function listSchoolMembersPage({db,api,actor,schoolId,pageSize=100,
  const snapshot=await api.getDocs(api.query(api.collection(db,'schools',schoolId,'members'),...constraints));
  assertAdminSnapshot(actor,schoolId,identity);
  if(!Array.isArray(snapshot?.docs)||snapshot.docs.length>size+1)throw new RangeError('Unexpected member page size');
- const visible=snapshot.docs.slice(0,size);
- const records=visible.map(doc=>checkedMember(doc,schoolId));
- // Validate the lookahead document too; it must not disclose a foreign school.
- if(snapshot.docs.length>size)checkedMember(snapshot.docs.at(-1),schoolId);
+ let lastId=cursor?.id??null;
+ const materialized=snapshot.docs.map(doc=>{
+  if(!doc||typeof doc.id!=='string'||lastId!==null&&doc.id<=lastId||
+     doc.ref?.path!==undefined&&doc.ref.path!=='schools/'+schoolId+'/members/'+doc.id)
+   throw new Error('Malformed or out-of-order member page');
+  lastId=doc.id;
+  return checkedMember(doc,schoolId);
+ });
  assertAdminSnapshot(actor,schoolId,identity);
- return Object.freeze({records:Object.freeze(records),hasMore:snapshot.docs.length>size,nextCursor:snapshot.docs.length>size?visible.at(-1):null});
+ const records=materialized.slice(0,size);
+ const hasMore=snapshot.docs.length>size;
+ return Object.freeze({records:Object.freeze(records),hasMore,nextCursor:hasMore?snapshot.docs[size-1]:null});
 }
