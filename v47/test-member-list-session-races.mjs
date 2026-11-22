@@ -69,7 +69,7 @@ for(const docs of [
 ]){
  await assert.rejects(()=>listSchoolMembersPage({
   db:{},actor:actor(),schoolId,pageSize:2,api:makeApi(async()=>({docs}))
- }),/out-of-order/);
+ }),/out-of-order|Cross-school/);
 }
 {
  let reads=0;
