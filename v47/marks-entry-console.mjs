@@ -5,6 +5,7 @@ import {connectSchoolFirebase,startVerifiedSchoolActivity} from './school-fireba
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
+import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
 import {inspectClassMarkDraft} from './class-mark-draft-inspector.mjs';
 import {iemisEntrySchema} from './iemis-entry.js';
 import {discoverVerifiedSubjectExamSettings} from './discover-subject-exam-settings.mjs';
@@ -84,7 +85,7 @@ $('loadClassMarks').onclick=async()=>{
  try{
   const settings=await discoverVerifiedSubjectExamSettings({db,api,schoolId:selectedSchoolId,classId,subjectId,examId:term,revalidate:async()=>{if(attempt!==epoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('School session changed');const verified=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(verified.role!=='school_admin')throw new Error('School Admin required');}});
   const roster=await loadCompleteClassRoster({db,api,actor,schoolId:selectedSchoolId,classId});
-  if(roster.students.some(student=>student.active!==true))throw new Error('Class roster includes inactive student; correct enrollment before marks entry');
+  if(roster.students.some(student=>!isActiveEnrolledStudent(student)))throw new Error('Class roster includes inactive student; correct enrollment before marks entry');
   const finalSession=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});
   if(finalSession.role!=='school_admin')throw new Error('School Admin session revoked during roster load');
   if(request!==rosterRequest||attempt!==epoch||classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value)return;
@@ -145,7 +146,7 @@ $('inspectClassMarks').onclick=async()=>{
   if(!classMarkSettings||currentSettings.settingsId!==classMarkSettings.settingsId||JSON.stringify(currentSettings.components)!==JSON.stringify(classMarkSettings.components))throw new Error('Subject examination settings changed; reload class marks');
   const latestRoster=await loadCompleteClassRoster({db,api,actor,schoolId:selectedSchoolId,classId:classMarkContext.classId});
   const loadedStudentIds=new Set(classMarkRoster.map(student=>student.id));
-  if(latestRoster.students.some(student=>student.active!==true)||latestRoster.count!==loadedStudentIds.size||latestRoster.studentIds.some(id=>!loadedStudentIds.has(id)))throw new Error('Class roster changed or contains inactive student; reload marks entry');
+  if(latestRoster.students.some(student=>!isActiveEnrolledStudent(student))||latestRoster.count!==loadedStudentIds.size||latestRoster.studentIds.some(id=>!loadedStudentIds.has(id)))throw new Error('Class roster changed or contains inactive student; reload marks entry');
   const finalSession=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});
   if(finalSession.role!=='school_admin')throw new Error('School Admin session revoked during roster refresh');
  }catch(error){if(attempt===epoch&&request===rosterRequest){invalidateClassMarks();status('विद्यालयको अधिकार, विद्यार्थी सूची वा विषयको सेटिङ परिवर्तन भएको हुन सक्छ। कक्षा पुनः लोड गर्नुहोस्।')}return}
@@ -189,7 +190,7 @@ $('importClassExcel').onclick=async()=>{
   if(verified.role!=='school_admin')throw new Error('School Admin permission changed');
   const currentSettings=await discoverVerifiedSubjectExamSettings({db,api,schoolId:selectedSchoolId,classId:context.classId,subjectId:context.subjectId,examId:context.term,revalidate:async()=>{if(attempt!==epoch||request!==rosterRequest||auth?.currentUser?.uid!==uid)throw new Error('Session changed')}});
   const roster=await loadCompleteClassRoster({db,api,actor,schoolId:selectedSchoolId,classId:context.classId});
-  if(roster.students.some(s=>s.active!==true)||roster.count!==classMarkRoster.length||
+  if(roster.students.some(s=>!isActiveEnrolledStudent(s))||roster.count!==classMarkRoster.length||
    roster.studentIds.some(id=>!classMarkRoster.some(s=>s.id===id))||
    currentSettings.settingsId!==classMarkSettings.settingsId||
    JSON.stringify(currentSettings.components)!==JSON.stringify(classMarkSettings.components))throw new Error('Roster or settings changed; reload');
@@ -254,7 +255,7 @@ $('verifyClassReview').onclick=async()=>{
   if(finalSession.role!=='school_admin'||attempt!==epoch||request!==rosterRequest||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId||context.classId!==$('schoolClass').value||context.term!==$('term').value||context.subjectId!==$('subjectId').value)throw new Error('School session or selection changed');
   if(!classMarkSettings||JSON.stringify(settings.components)!==JSON.stringify(classMarkSettings.components)||settings.settingsId!==classMarkSettings.settingsId)throw new Error('Settings changed since marks entry was loaded');
   const loadedIds=new Set(classMarkRoster.map(student=>student.id));
-  if(roster.students.some(student=>student.active!==true)||loadedIds.size!==roster.count||roster.studentIds.some(id=>!loadedIds.has(id)))throw new Error('Roster changed or contains inactive student since marks entry was loaded');
+  if(roster.students.some(student=>!isActiveEnrolledStudent(student))||loadedIds.size!==roster.count||roster.studentIds.some(id=>!loadedIds.has(id)))throw new Error('Roster changed or contains inactive student since marks entry was loaded');
   const result=verifyClassMarksReviewPackage({json,actor,schoolId:selectedSchoolId,classId:context.classId,subjectId:context.subjectId,examId:context.term,settings,expectedStudentIds:roster.studentIds});
   if(attempt!==epoch||request!==rosterRequest||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('School session changed after review validation');
   $('reviewVerifyResult').textContent='Verified '+result.rosterCount+' students against current school records. Review only; nothing saved or published.';
