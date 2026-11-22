@@ -20,9 +20,10 @@ export async function loadCompleteSchoolSubjects({db,api,actor,schoolId,schoolCl
   const docs=snap?.docs;
   if(!Array.isArray(docs)||docs.length>pageSize+1)throw new Error('Invalid subject page');
   const loaded=[];
+  let pageLastId=lastId;
   for(const d of docs){
-   if(typeof d?.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||lastId!==null&&d.id<=lastId)throw new Error('Subject pagination order invalid');
-   lastId=d.id;
+   if(typeof d?.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)||lastId!==null&&d.id<=pageLastId)throw new Error('Subject pagination order invalid');
+   pageLastId=d.id;
    if(typeof d.data!=='function')throw new Error('Malformed subject record');
    const data=d.data();
    if(!data||typeof data!=='object'||Array.isArray(data))throw new Error('Malformed subject record');
@@ -42,7 +43,7 @@ export async function loadCompleteSchoolSubjects({db,api,actor,schoolId,schoolCl
    cursor=docs[pageSize-1];
    if(!cursor)throw new Error('Subject pagination stalled');
    lastId=cursor.id;
-  }else cursor=null;
+  }else{lastId=pageLastId;cursor=null;}
  }while(cursor);
  verify();
  if(!subjects.length)throw new Error('No active subjects in class');
