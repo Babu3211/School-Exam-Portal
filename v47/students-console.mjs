@@ -9,6 +9,7 @@ import {excelWorkbook} from './excel-workbook.mjs';
 import {STUDENT_EXCEL_HEADERS,studentExcelRow} from './v46-student-excel-schema.mjs';
 import {mapV46StudentExcelRows} from './v46-student-import-mapping.mjs';
 import {parsePastedStudentTable} from './pasted-student-table.mjs';
+import {checkExistingStudentIemisIds} from './student-import-duplicate-preflight.mjs';
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 const optionalFields=Object.keys(STUDENT_OPTIONAL_FIELDS).filter(key=>key!=='rollNo');
 for(const key of optionalFields){const label=document.createElement('label');label.textContent=key.replace(/([A-Z])/g,' $1').replace(/^./,x=>x.toUpperCase());const input=document.createElement('input');input.dataset.studentField=key;input.maxLength=STUDENT_OPTIONAL_FIELDS[key];label.append(input);document.getElementById('additionalStudentFields').append(label)}
@@ -24,13 +25,24 @@ $('next').onclick=()=>load(false);
 $('createStudent').onclick=async()=>{if(savingStudent)return;try{if(actor?.role!=='school_admin'||auth?.currentUser?.uid!==actor.uid||actor.schoolId!==schoolId)throw new Error('School Admin sign-in required');const button=$('createStudent');savingStudent=true;button.disabled=true;$('logout').disabled=true;$('login').disabled=true;try{const selectedActor=actor,selectedSchool=schoolId,uid=auth.currentUser.uid;const freshSession=await verifySchoolSession({schoolId:selectedSchool,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(freshSession.role!=='school_admin'||actor!==selectedActor||schoolId!==selectedSchool||auth.currentUser?.uid!==uid)throw new Error('School Admin permission changed before save');const result=await createSchoolStudent({db,api,actor,schoolId,input:{name:$('newName').value,class:$('newClass').value,rollNo:$('newRoll').value,...Object.fromEntries([...document.querySelectorAll('[data-student-field]')].map(input=>[input.dataset.studentField,input.value]))}});$('newName').value='';$('newRoll').value='';for(const input of document.querySelectorAll('[data-student-field]'))input.value='';loadEpoch++;loading=false;cursor=null;records=[];await load(true);status('Student saved: '+result.id)}finally{savingStudent=false;button.disabled=false;$('logout').disabled=false;$('login').disabled=false}}catch(e){status('Student not saved: '+e.message)}};
 
 
-$('previewImport').onclick=()=>{
+$('previewImport').onclick=async()=>{
  $('importResults').replaceChildren();$('importSummary').textContent='';
  try{
   if(actor?.role!=='school_admin'||auth?.currentUser?.uid!==actor.uid||actor.schoolId!==schoolId)throw new Error('School Admin sign-in required');
   const cells=parsePastedStudentTable($('importPaste').value);
   const report=mapV46StudentExcelRows({headers:cells[0],rows:cells.slice(1),schoolId});
-  $('importSummary').textContent=report.accepted.length+' valid rows; '+report.errors.length+' errors. Preview only — no students saved.';
+  const epoch=loadEpoch,selectedActor=actor,selectedSchool=schoolId,uid=auth.currentUser.uid;
+  $('previewImport').disabled=true;
+  let existing={duplicates:[],scanned:0};
+  try{
+   existing=await checkExistingStudentIemisIds({store,accepted:report.accepted,assertSession:()=>{
+    if(epoch!==loadEpoch||actor!==selectedActor||schoolId!==selectedSchool||auth?.currentUser?.uid!==uid)throw new Error('School session changed during preview');
+   }});
+  }finally{$('previewImport').disabled=false}
+  if(epoch!==loadEpoch||actor!==selectedActor||schoolId!==selectedSchool||auth?.currentUser?.uid!==uid)return;
+  for(const duplicate of existing.duplicates){const match=report.accepted.find(item=>item.student.studentIemisId===duplicate.studentIemisId);report.errors.push({row:match?.row??'?',error:'Student IEMIS Id already exists in this school'});}
+  report.ready=report.errors.length===0;
+  $('importSummary').textContent=report.accepted.length+' valid spreadsheet rows; '+report.errors.length+' errors; '+existing.scanned+' existing students checked. Preview only — no students saved.';
   for(const item of report.errors.slice(0,100)){
    const tr=document.createElement('tr'),row=document.createElement('td'),detail=document.createElement('td');
    row.textContent=String(item.row);detail.textContent=item.error;tr.append(row,detail);$('importResults').append(tr);
