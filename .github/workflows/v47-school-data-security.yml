@@ -1,0 +1,61 @@
+name: V47 School Data Security Regressions (No Deployment)
+on:
+  workflow_dispatch:
+  push:
+    branches: [smss-v47-multischool-work]
+    paths:
+      - 'v47/attendance-*'
+      - 'v47/firestore-adapter.mjs'
+      - 'v47/member-list-service.mjs'
+      - 'v47/school-context.mjs'
+      - 'v47/school-paths.mjs'
+      - 'v47/student-enrollment-status.mjs'
+      - 'v47/test-member-*.mjs'
+      - 'v47/test-records-*.mjs'
+      - 'v47/test-attendance-*.mjs'
+      - 'v47/test-complete-class-roster.mjs'
+      - 'v47/test-roster-query-isolation.mjs'
+      - 'package.json'
+      - '.github/workflows/v47-school-data-security.yml'
+permissions:
+  contents: read
+jobs:
+  school-data-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check source and test syntax
+        run: |
+          set -euo pipefail
+          node --check v47/member-list-service.mjs
+          node --check v47/firestore-adapter.mjs
+          node --check v47/attendance-query.mjs
+          node --check v47/attendance-console.mjs
+          node --check v47/test-member-list-session-races.mjs
+          node --check v47/test-records-member-races.mjs
+          node --check v47/test-attendance-pagination-session.mjs
+          node --check v47/test-attendance-shared-session.mjs
+      - name: Run real Node security regressions (no emulator or writes)
+        run: |
+          set -euo pipefail
+          node v47/test-member-pagination.mjs
+          node v47/test-member-list-session-races.mjs
+          node v47/test-records-session-guard.mjs
+          node v47/test-records-member-races.mjs
+          node v47/test-roster-query-isolation.mjs
+          node v47/test-complete-class-roster.mjs
+          node v47/test-attendance-pagination-session.mjs
+          node v47/test-attendance-shared-session.mjs
+      - name: Describe E2E limitation
+        if: always()
+        run: |
+          {
+            echo '## V47 School Data Security'
+            echo 'These are actual Node regression tests on the working branch.'
+            echo 'No production data, Firebase Hosting, or GitHub main branch is changed.'
+            echo 'A green result is NOT Firestore Emulator, Browser E2E or production-release approval.'
+          } >> "$GITHUB_STEP_SUMMARY"
