@@ -1,6 +1,7 @@
 import {connectSchoolFirebase} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
+const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 const $=id=>document.getElementById(id);
 let auth,authSdk,api,db,busy=false,epoch=0,verifiedSchoolId=null,verifiedUid=null;
 const message=text=>{$('message').textContent=text};
@@ -12,6 +13,7 @@ $('connect').onclick=async()=>{
   ({auth,authSdk,db,api}=await connectSchoolFirebase());
   authSdk.onAuthStateChanged(auth,user=>{if(verifiedUid!==null&&user?.uid!==verifiedUid){reset();message('प्रयोगकर्ता सत्र परिवर्तन भयो। पुनः लगइन गर्नुहोस्।')}if(!busy)lock(false)});
   $('connect').disabled=true;lock(false);message('Connected to V47');
+  if(requestedSchool){try{$('schoolId').value=validateSchoolId(requestedSchool);if(auth.currentUser)queueMicrotask(()=>$('login').click())}catch(e){message('Invalid school selection: '+e.message)}}
  }catch(e){message('Connection failed: '+e.message)}
 };
 $('login').onclick=async()=>{
@@ -19,7 +21,7 @@ $('login').onclick=async()=>{
  reset();const request=epoch;lock(true);
  try{
   const id=validateSchoolId($('schoolId').value.trim());
-  const credential=await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);
+  const credential=auth.currentUser?{user:auth.currentUser}:await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);
   $('password').value='';
   if(request!==epoch)throw new Error('Session changed');
   const uid=credential.user.uid;
