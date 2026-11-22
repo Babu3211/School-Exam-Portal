@@ -1,0 +1,29 @@
+name: IEMIS Excel transfer and importer checks
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'iemis-importer/**'
+      - 'iemis-transfer-export.js'
+      - 'scripts/test-iemis*'
+      - 'index.html'
+      - 'sw.js'
+      - '.github/workflows/iemis-transfer-check.yml'
+permissions:
+  contents: read
+jobs:
+  excel-transfer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-package-lock --no-audit --no-fund
+      - run: npm run test:iemis-transfer
+      - run: npm run test:iemis
+      - run: npm run test:pwa
+      - run: npm run test:v45
+      - run: node scripts/check-inline-js.mjs
+      - run: node scripts/test-v46-preservation.mjs

@@ -27,11 +27,13 @@
     "test:v46-attendance-load-failure": "node scripts/test-v46-attendance-load-failure.mjs",
     "test:v46-marks-load-failure": "node scripts/test-v46-marks-load-failure.mjs",
     "test:user-activity-rules": "firebase emulators:exec --project smss-v46-activity-test --only firestore \"node scripts/test-user-activity-rules.mjs\"",
-    "test:v46-delete-controls": "node scripts/test-v46-delete-controls.mjs"
+    "test:v46-delete-controls": "node scripts/test-v46-delete-controls.mjs",
+    "test:iemis-transfer": "node scripts/test-iemis-transfer.mjs && node scripts/test-iemis-importer-dom.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
     "firebase": "^11.0.0",
-    "firebase-tools": "^14.0.0"
+    "firebase-tools": "^14.0.0",
+    "jsdom": "^26.1.0"
   }
 }

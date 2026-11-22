@@ -32,6 +32,13 @@ jobs:
             'firestore.rules', 'scripts/test-v45-final-integration.mjs', 'scripts/test-attendance-bs-today.mjs', 'scripts/test-student-loading-regression.mjs', 'scripts/check-v44-requirements.mjs', 'scripts/test-user-activity-rules.mjs'
           }
           changed=set(subprocess.check_output(['git','diff','--name-only','origin/main','HEAD'],text=True).splitlines())
+          # Excel transfer introduces an isolated IEMIS extension and its regressions.
+          if os.environ.get('GITHUB_HEAD_REF')=='feat/iemis-exam-importer':
+            allowed.update({'iemis-transfer-export.js', 'package.json', 'sw.js',
+              '.github/workflows/iemis-transfer-check.yml',
+              'scripts/test-iemis-transfer.mjs', 'scripts/test-iemis-importer-dom.mjs'})
+            allowed.update(path for path in changed if path.startswith('iemis-importer/'))
+
           if os.environ.get('GITHUB_HEAD_REF')=='fix/teacher-all-sections-marks' or os.environ.get('GITHUB_REF_NAME')=='fix/teacher-all-sections-marks':
             allowed.add('scripts/test-firestore-rules.mjs')
           # V46 integration has its own preservation/security gates. Permit only
