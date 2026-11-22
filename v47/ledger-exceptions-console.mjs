@@ -3,14 +3,60 @@ import {validateSchoolId} from './school-paths.mjs';
 import {buildRawLedgerPreview} from './raw-ledger-preview.mjs';
 import {excelWorkbook} from './excel-workbook.mjs';
 import {validateLedgerReviewPage} from './ledger-review-page-guard.mjs';
+import {connectSchoolFirebase,startVerifiedSchoolActivity} from './school-firebase-client.mjs';
+import {verifySchoolSession} from './verified-school-session.mjs';
 const $=id=>document.getElementById(id),status=message=>{$('message').textContent=message};
 let auth,authSdk,api,db,actor,schoolId,epoch=0,busy=false,preview=null;
 function reset(){epoch++;actor=null;schoolId=null;preview=null;busy=false;$('cancel').disabled=true;$('work').hidden=true;$('logout').disabled=true;$('export').disabled=true;$('rows').replaceChildren();$('summary').textContent='No review loaded';$('issues').textContent='';}
 function lock(value){busy=value;$('cancel').disabled=!value;$('load').disabled=value||!actor;$('export').disabled=value||!preview||!actor;$('logout').disabled=!actor;$('schoolClass').disabled=value;$('term').disabled=value;}
-$('connect').onclick=async()=>{try{const config=JSON.parse($('config').value);if(config.projectId!=='smss-exam-portal-v47')throw new Error('Only V47 Firebase project allowed');const appSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js');authSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js');api=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js');const app=appSdk.initializeApp(config,'smss-v47-ledger-exceptions');auth=authSdk.getAuth(app);await authSdk.setPersistence(auth,authSdk.inMemoryPersistence);db=api.getFirestore(app);authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){reset();status('Login changed. Sign in again')}});$('connect').disabled=true;$('login').disabled=false;status('Connected to V47')}catch(e){status('Connection failed: '+e.message)}};
-$('login').onclick=async()=>{if(busy||!auth)return;reset();const attempt=epoch;$('login').disabled=true;try{const id=validateSchoolId($('schoolId').value.trim());const credential=await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);$('password').value='';if(attempt!==epoch)return;const school=await api.getDoc(api.doc(db,'schools',id));if(attempt!==epoch)return;if(!school.exists()||school.data().active!==true)throw new Error('School inactive');const member=await api.getDoc(api.doc(db,'schools',id,'members',credential.user.uid));if(attempt!==epoch)return;if(!member.exists()||member.data().active!==true||member.data().uid!==credential.user.uid||member.data().schoolId!==id||!['school_admin','teacher','viewer'].includes(member.data().role))throw new Error('Active school membership required');actor={schoolId:id,role:member.data().role,active:true,uid:credential.user.uid};schoolId=id;$('heading').textContent='Missing marks — '+String(school.data().name??id);$('work').hidden=false;lock(false);status('Signed in. Select class and term, then review.')}catch(e){if(attempt===epoch){reset();try{await authSdk.signOut(auth)}catch{}status('Sign in failed: '+e.message)}}finally{$('login').disabled=false}};
+$('connect').onclick=async()=>{try{
+ ({auth,authSdk,db,api}=await connectSchoolFirebase());
+ authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){reset();status('Login changed. Sign in again')}});
+ $('connect').disabled=true;$('login').disabled=false;
+ status('Connected to isolated V47 Firebase');
+}catch(error){status('Connection failed: '+error.message)}};
+$('login').onclick=async()=>{
+ if(busy||!auth)return;
+ reset();const attempt=epoch;$('login').disabled=true;
+ let freshSignIn=false,loginUid=null;
+ try{
+  const id=validateSchoolId($('schoolId').value.trim());
+  freshSignIn=!auth.currentUser;
+  const credential=freshSignIn
+   ?await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value)
+   :{user:auth.currentUser};
+  $('password').value='';
+  loginUid=credential.user.uid;
+  if(attempt!==epoch){if(freshSignIn&&auth.currentUser?.uid===loginUid)await authSdk.signOut(auth);return}
+  const session=await verifySchoolSession({schoolId:id,uid:loginUid,readDocument:async path=>{
+   const snap=await api.getDoc(api.doc(db,...path.split('/')));
+   return snap.exists()?snap.data():null;
+  }});
+  if(attempt!==epoch||auth.currentUser?.uid!==loginUid){if(freshSignIn&&auth.currentUser?.uid===loginUid)await authSdk.signOut(auth);return}
+  if(!['school_admin','teacher','viewer'].includes(session.role))throw new Error('School membership required');
+  const school=await api.getDoc(api.doc(db,'schools',id));
+  if(attempt!==epoch||auth.currentUser?.uid!==loginUid)return;
+  if(!school.exists()||school.data().active!==true||school.data().id!==id)throw new Error('School unavailable');
+  actor={schoolId:id,role:session.role,active:true,uid:loginUid};schoolId=id;
+  if(freshSignIn)startVerifiedSchoolActivity();
+  $('heading').textContent='Missing marks — '+String(school.data().name??id);
+  $('work').hidden=false;lock(false);
+  status('Signed in. Select class and term, then review.');
+ }catch(error){
+  if(attempt===epoch){reset();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status('Sign in failed: '+error.message)}
+ }finally{$('login').disabled=false}
+};
 $('logout').onclick=async()=>{reset();try{await authSdk.signOut(auth);status('Signed out')}catch(e){status('Sign out failed: '+e.message)}};
-async function confirmMembership(expectedSchoolId,expectedUid){const [school,member]=await Promise.all([api.getDoc(api.doc(db,'schools',expectedSchoolId)),api.getDoc(api.doc(db,'schools',expectedSchoolId,'members',expectedUid))]);if(auth?.currentUser?.uid!==expectedUid||!school.exists()||school.data().active!==true||!member.exists()||member.data().active!==true||member.data().uid!==expectedUid||member.data().schoolId!==expectedSchoolId||member.data().role!==actor?.role||!['school_admin','teacher','viewer'].includes(member.data().role))throw new Error('School access changed; sign in again');return true}
+async function confirmMembership(expectedSchoolId,expectedUid){
+ const session=await verifySchoolSession({schoolId:expectedSchoolId,uid:expectedUid,readDocument:async path=>{
+  const snap=await api.getDoc(api.doc(db,...path.split('/')));
+  return snap.exists()?snap.data():null;
+ }});
+ if(auth?.currentUser?.uid!==expectedUid||actor?.uid!==expectedUid||
+  actor?.schoolId!==expectedSchoolId||actor?.role!==session.role)
+  throw new Error('School access changed; sign in again');
+ return true;
+}
 const REVIEW_LIMITS=Object.freeze({students:2000,subjects:300,subject_assignments:20000,marks:20000,component_marks:20000});
 async function fetchAll(collection,schoolClass,term,attempt){const expectedActor=actor,expectedSchoolId=schoolId,expectedUid=actor?.uid;const maxRecords=REVIEW_LIMITS[collection];if(!maxRecords)throw new Error('Unsupported review collection');let cursor=null,rows=[];do{const filters=[api.where('class','==',schoolClass)];if(collection==='marks'||collection==='component_marks')filters.push(api.where('term','==',term));filters.push(api.orderBy('__name__'),api.limit(100));if(cursor)filters.push(api.startAfter(cursor));const snap=await api.getDocs(api.query(api.collection(db,'schools',schoolId,collection),...filters));if(attempt!==epoch||actor!==expectedActor||schoolId!==expectedSchoolId||auth?.currentUser?.uid!==expectedUid||$('schoolClass').value!==schoolClass||$('term').value!==term)throw new Error('Review changed or signed out');const checked=validateLedgerReviewPage({docs:snap.docs,schoolId:expectedSchoolId,schoolClass,term,collection,previousId:cursor?.id??null});rows.push(...checked);$('summary').textContent='Loading '+collection+': '+rows.length+' records read (maximum '+maxRecords+' for '+collection+')…';if(rows.length>maxRecords)throw new Error('Review exceeds '+maxRecords+' '+collection+' records; export disabled to avoid incomplete results');if(attempt!==epoch||actor!==expectedActor||schoolId!==expectedSchoolId||auth?.currentUser?.uid!==expectedUid)throw new Error('Review session changed');cursor=snap.docs.length===100?snap.docs.at(-1):null}while(cursor);return rows}
 $('cancel').onclick=()=>{if(!busy)return;epoch++;preview=null;lock(false);$('rows').replaceChildren();$('summary').textContent='Review cancelled; no partial results retained';$('issues').textContent='';status('Review cancelled. No records modified.')};
