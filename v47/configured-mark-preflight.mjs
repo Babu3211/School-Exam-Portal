@@ -1,7 +1,7 @@
 // School/subject/exam settings must be loaded from the verified tenant, not supplied by a student draft.
 // No fixed Computer 4/36/10 limits: every component uses the school's configured full marks.
 export function validateConfiguredMarkComponents(settings,{schoolId,subjectId,examId,classId}={}){
- if(!settings||settings.schoolId!==schoolId||settings.subjectId!==subjectId||settings.examId!==examId||String(settings.classId)!==String(classId))throw new Error('Verified subject examination settings required');
+ if(![schoolId,subjectId,examId,classId].every(id=>typeof id==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(id))||!settings||settings.schoolId!==schoolId||settings.subjectId!==subjectId||settings.examId!==examId||String(settings.classId)!==classId)throw new Error('Verified subject examination settings required');
  if(settings.active!==true||!Array.isArray(settings.components)||settings.components.length===0||settings.components.length>50)throw new Error('Active component settings required');
  const seen=new Set(),components=[];
  for(const c of settings.components){
