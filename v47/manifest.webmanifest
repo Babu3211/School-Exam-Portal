@@ -1,0 +1,20 @@
+{
+  "id": "./",
+  "name": "SMSS Exam Portal V47 — Development",
+  "short_name": "SMSS V47 Dev",
+  "description": "Isolated multi-school development preview. Not for official school use.",
+  "lang": "en",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f2f7fd",
+  "theme_color": "#124e91",
+  "icons": [
+    {
+      "src": "./dev-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
