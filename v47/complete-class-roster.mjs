@@ -14,7 +14,7 @@ export async function loadCompleteClassRoster({db,api,actor,schoolId,classId,pag
   checkIdentity();
   pages++;
   if(pages>Math.ceil(maxStudents/pageSize)+1)throw new Error('Roster pagination exceeded safe bound');
-  if(!Array.isArray(page?.students)||page.students.length>pageSize)throw new Error('Invalid roster page');
+  if(!Array.isArray(page?.students)||page.students.length>pageSize||typeof page.hasMore!=='boolean')throw new Error('Invalid roster page');
   for(const student of page.students){
    if(seen.has(student.id))throw new Error('Duplicate student across roster pages');
    if(lastId!==null&&student.id<=lastId)throw new Error('Roster pagination order changed; reload class');
@@ -26,7 +26,10 @@ export async function loadCompleteClassRoster({db,api,actor,schoolId,classId,pag
    if(!page.students.length||!page.cursor||page.cursor.id===previous)throw new Error('Roster pagination stalled');
    if(page.cursor.id!==lastId)throw new Error('Roster cursor does not match last student');
    previous=page.cursor.id;cursor=page.cursor;
-  }else cursor=null;
+  }else{
+   if(page.cursor!==null&&page.cursor?.id!==lastId)throw new Error('Roster terminal cursor mismatch');
+   cursor=null;
+  }
  }while(cursor);
  checkIdentity();
  if(!students.length)throw new Error('Class has no students');
