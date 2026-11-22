@@ -15,7 +15,7 @@ export function planCompleteClassMarkStaging({schoolId,classId,term,subjectId,ex
   throw new Error('Component assessment staging requires separately verified component mapping');
  for(const entry of complete.entries)validateSubjectMarkLimits(subjectSettings,entry);
  // Normalize order independently of UI entry order. Never silently drop a row.
- const ordered=[...complete.entries].sort((a,b)=>a.studentId.localeCompare(b.studentId,'en'));
+ const ordered=[...complete.entries].sort((a,b)=>a.studentId<b.studentId?-1:a.studentId>b.studentId?1:0);
  const chunks=[];
  for(let start=0;start<ordered.length;start+=chunkSize){
   const rows=ordered.slice(start,start+chunkSize).map(row=>Object.freeze({...row,schoolId}));
