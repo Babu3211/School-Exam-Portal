@@ -2687,7 +2687,11 @@ function openCdcAssessment() {
   function refreshSubjects() {
     const cl = field('class').value;
     field('levelRow').hidden = !cl;
-    const levels = Number(cl)>=4 ? ['आधारभूतभन्दा कम','आधारभूत','दक्ष','उच्च'] : [];
+    // CDC Class 4–5 Student Assessment Guide 2083, Table 2.
+    const levels = Number(cl)>=4 ? [
+      'आधारभूतभन्दा कम / Below basic', 'आधारभूत / Basic',
+      'दक्ष / Proficient', 'उच्च / Advanced'
+    ] : [];
     options('level',[['','छान्नुहोस्'],...[1,2,3,4].map((n,i)=>[String(n),levels[i] ? n+' — '+levels[i] : String(n)])]);
     field('guide').href = Number(cl)<=3 ? 'https://moecdc.gov.np/content/644/student-assessment-guide-for-basic-level-class/' : 'https://moecdc.gov.np/content/646/guide-to-student-assessment-in-basic-level/';
     field('curriculumSource').href = Number(cl)<=3
