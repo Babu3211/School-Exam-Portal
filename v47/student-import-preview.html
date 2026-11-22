@@ -2,33 +2,126 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SMSS V47 — Students Details Import Preview</title>
 <style>body{font:16px system-ui,sans-serif;max-width:1100px;margin:auto;padding:24px;background:#f3f7fc;color:#162c45}main{background:white;padding:24px;border-radius:14px}label{display:inline-grid;gap:6px;margin:8px 14px 8px 0}input,button{font:inherit;padding:10px;border:1px solid #9fb3c9;border-radius:8px}button{background:#155ba1;color:white;cursor:pointer}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:10px;border-bottom:1px solid #dce6f0;text-align:left}th{background:#eaf2fa}#preview{overflow-x:auto}.note{color:#365877}#error{color:#a51d27}</style>
 </head><body><main><h1>Students Details — Import Excel</h1>
-<p class="note" lang="ne">यो V47 को सुरक्षित परीक्षण पृष्ठ हो। यहाँ फाइल हेर्न र जाँच्न मात्र मिल्छ; कुनै विद्यार्थी Firebase मा Save हुँदैन।</p>
+<p class="note" lang="ne">यो V47 को सुरक्षित परीक्षण पृष्ठ हो। विद्यालय प्रशासकले पहिले Students पृष्ठबाट Login गर्नुपर्छ। विद्यालयको वास्तविक विद्यार्थी सूचीसँग Duplicate जाँच गरेपछि मात्र Preview देखाइन्छ; कुनै विद्यार्थी Firebase मा Save हुँदैन।</p>
+<p><a href="./students.html">Back to School Students / Login</a></p>
 <form id="importForm"><label>School IEMIS ID<input id="schoolId" inputmode="numeric" pattern="[0-9]{5,20}" required placeholder="School IEMIS Number"></label>
 <label>Excel File<input id="excelFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required></label>
-<button type="submit">Preview Students</button></form>
-<p class="note" lang="ne">विद्यालयको IEMIS नम्बर Excel को “IEMIS Code” सँग मिल्नुपर्छ। Roll Number खाली भए पनि Preview गर्न मिल्छ।</p>
+<button type="submit" id="previewButton" disabled>Check School &amp; Preview Excel</button></form>
+<p class="note" lang="ne">केवल .xlsx (अधिकतम २ MB, १५०० विद्यार्थी) प्रयोग गर्नुहोस्। चयन गरिएको विद्यालयमा School Admin अनुमति अनिवार्य छ। Excel मा विद्यालयको IEMIS नम्बर मिल्नुपर्छ; जाँचले आधिकारिक विद्यार्थी डेटा परिवर्तन गर्दैन।</p>
+<p id="sessionStatus" role="status" lang="ne">विद्यालयको Login जाँच हुँदैछ।</p>
 <p id="error" role="alert" lang="ne"></p><div id="preview" aria-live="polite"></div>
 </main>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script type="module">
-import {mountV47IemisStudentPreview} from './v46-iemis-student-import-panel.mjs';
+import {connectSchoolFirebase} from './school-firebase-client.mjs';
+import {verifySchoolSession} from './verified-school-session.mjs';
+import {createSchoolStore} from './firestore-adapter.mjs';
 import {readXlsxPreviewBytes} from './require-xlsx-preview-file.mjs';
-const form=document.getElementById('importForm'),error=document.getElementById('error');
-form.addEventListener('submit',async event=>{
- event.preventDefault();error.textContent='';document.getElementById('preview').replaceChildren();
+import {readV47StudentXlsx} from './read-v47-student-xlsx.mjs';
+import {rowsFromV46IemisXlsxTable} from './iemis-preview-xlsx-rows.mjs';
+import {previewAgainstSchoolStudents} from './verified-student-import-preview.mjs';
+import {mountV47IemisStudentPreview} from './v46-iemis-student-import-panel.mjs';
+const $=id=>document.getElementById(id);
+const form=$('importForm'),button=$('previewButton'),schoolField=$('schoolId'),error=$('error');
+let connection=null,epoch=0,activeUid=null;
+const requestedSchool=new URL(location.href).searchParams.get('schoolId');
+if(requestedSchool)schoolField.value=requestedSchool;
+function invalidate(){
+ epoch++;
+ $('preview').replaceChildren();
+ button.disabled=!connection?.auth?.currentUser;
+}
+schoolField.addEventListener('input',invalidate);
+$('excelFile').addEventListener('change',invalidate);
+function assertCurrent({uid,schoolId,attempt}){
+ if(attempt!==epoch||connection?.auth?.currentUser?.uid!==uid||schoolField.value.trim()!==schoolId)
+  throw new Error('विद्यालय वा Login परिवर्तन भयो। पुनः Preview गर्नुहोस्।');
+}
+async function readSchoolRoster({store,assertSession}){
+ const students=[];let cursor=null,pages=0;
+ do{
+  assertSession();
+  const page=await store.listPage('students',{pageSize:100,cursor});
+  assertSession();
+  if(!Array.isArray(page.records)||students.length+page.records.length>20000)
+   throw new Error('विद्यालय विद्यार्थी सूचीको सीमा नाघ्यो।');
+  students.push(...page.records);pages++;
+  if(pages>201)throw new Error('विद्यार्थी सूचीका पृष्ठ अत्यधिक छन्।');
+  if(page.hasMore&&(!page.cursor?.id||page.cursor.id===cursor?.id||page.records.length===0))
+   throw new Error('विद्यार्थी सूचीको Pagination अगाडि बढेन।');
+  cursor=page.hasMore?page.cursor:null;
+ }while(cursor);
+ return students;
+}
+async function start(){
  try{
-  const file=document.getElementById('excelFile').files[0];
-  if(!file)throw Error('Excel फाइल छान्नुहोस्।');
-  // Require real XLSX ZIP bytes. SheetJS can otherwise parse renamed CSV files.
-  const safeBytes=await readXlsxPreviewBytes(file);
-  if(!window.XLSX)throw Error('Excel पढ्ने सुविधा लोड भएन। इन्टरनेट जाँच्नुहोस्।');
-  const book=window.XLSX.read(safeBytes,{type:'array',raw:false,sheetRows:5002});
-  const sheet=book.Sheets[book.SheetNames[0]];
-  if(!sheet)throw Error('Excel मा Sheet भेटिएन।');
-  const rows=window.XLSX.utils.sheet_to_json(sheet,{defval:'',raw:false});
-  if(!rows.length)throw Error('Excel मा विद्यार्थी विवरण भेटिएन।');
-  if(rows.length>5000)throw Error('एकपटकमा ५००० भन्दा धेरै विद्यार्थी Preview गर्न मिल्दैन।');
-  mountV47IemisStudentPreview({container:document.getElementById('preview'),rows,schoolId:document.getElementById('schoolId').value.trim()});
- }catch(e){error.textContent='पूर्वावलोकन तयार भएन: '+e.message;}
+  connection=await connectSchoolFirebase();
+  activeUid=connection.auth.currentUser?.uid??null;
+  connection.authSdk.onAuthStateChanged(connection.auth,user=>{
+   if(user?.uid!==activeUid){
+    activeUid=user?.uid??null;
+    invalidate();
+    $('sessionStatus').textContent=activeUid?'Login परिवर्तन भयो। पुनः विद्यार्थी जाँच गर्नुहोस्।':'Login सकियो। Students पृष्ठबाट फेरि Login गर्नुहोस्।';
+   }
+  });
+  if(!activeUid)throw new Error('पहिले Students पृष्ठमा School Admin Login गर्नुहोस्।');
+  button.disabled=false;
+  $('sessionStatus').textContent='Login प्राप्त भयो। Excel Preview अघि विद्यालय अनुमति र सम्पूर्ण विद्यार्थी सूची जाँचिनेछ।';
+ }catch(e){
+  button.disabled=true;
+  $('sessionStatus').textContent='Login उपलब्ध छैन: '+e.message;
+ }
+}
+form.addEventListener('submit',async event=>{
+ event.preventDefault();
+ const attempt=++epoch;
+ error.textContent='';
+ $('preview').replaceChildren();
+ button.disabled=true;
+ try{
+  const {auth,db,api}=connection??{};
+  const uid=auth?.currentUser?.uid;
+  const schoolId=schoolField.value.trim();
+  if(!uid)throw new Error('School Admin Login आवश्यक छ।');
+  if(!/^[0-9]{5,20}$/.test(schoolId))throw new Error('विद्यालयको मान्य IEMIS नम्बर छान्नुहोस्।');
+  const file=$('excelFile').files?.[0];
+  // Verify the actual XLSX ZIP signature before parsing and forbid CSV/XLS.
+  const buffer=await readXlsxPreviewBytes(file);
+  if(buffer.byteLength>2_000_000)throw new Error('२ MB भन्दा सानो Excel फाइल छान्नुहोस्।');
+  assertCurrent({uid,schoolId,attempt});
+  const table=await readV47StudentXlsx({size:buffer.byteLength,arrayBuffer:async()=>buffer});
+  const rows=rowsFromV46IemisXlsxTable(table);
+  assertCurrent({uid,schoolId,attempt});
+  const readDocument=async path=>{
+   const snapshot=await api.getDoc(api.doc(db,...path.split('/')));
+   return snapshot.exists()?snapshot.data():null;
+  };
+  const session=await verifySchoolSession({schoolId,uid,readDocument});
+  if(session.role!=='school_admin')throw new Error('यो विद्यालयका School Admin लाई मात्र अनुमति छ।');
+  assertCurrent({uid,schoolId,attempt});
+  const assertSession=()=>assertCurrent({uid,schoolId,attempt});
+  const store=createSchoolStore({db,api,schoolId,member:{uid,schoolId,role:session.role,active:true},assertSession});
+  const verified=await previewAgainstSchoolStudents({
+   auth,schoolId,rows,readDocument,
+   readStudents:async ({schoolId:scope,uid:reader,path})=>{
+    if(scope!==schoolId||reader!==uid||path.join('/')!=='schools/'+schoolId+'/students')
+     throw new Error('विद्यालय विद्यार्थी सूचीको सीमा मिलेन।');
+    return readSchoolRoster({store,assertSession});
+   }
+  });
+  assertSession();
+  const latest=await verifySchoolSession({schoolId,uid,readDocument});
+  if(latest.role!=='school_admin')throw new Error('School Admin अनुमति परिवर्तन भयो।');
+  assertSession();
+  mountV47IemisStudentPreview({container:$('preview'),rows,schoolId,cloudChecked:true,verifiedPreview:verified});
+  $('sessionStatus').textContent='विद्यालय अनुमति र '+verified.existingCount+' विद्यार्थी जाँचियो। यो केवल Preview हो; Save भएको छैन।';
+ }catch(e){
+  if(attempt===epoch){
+   $('preview').replaceChildren();
+   error.textContent='पूर्वावलोकन तयार भएन: '+e.message;
+  }
+ }finally{
+  if(attempt===epoch)button.disabled=!connection?.auth?.currentUser;
+ }
 });
+void start();
 </script></body></html>
