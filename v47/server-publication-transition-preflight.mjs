@@ -9,6 +9,7 @@ export function verifyPublicationTransition({
  authoritativeInput,stagedBatches,confirmation,currentPointer,
  expectedPreviousId=null,publicationId,actorUid
 }){
+ if(typeof actorUid!=='string'||actorUid!==authoritativeInput?.actor?.uid)throw new Error('Publication actor differs from verified school admin');
  const review=verifyClassReviewConfirmation({confirmation,authoritativeInput});
  const staged=verifyCompleteStagedClass({
   authoritativeInput,stagedBatches,reviewDigest:review.digest
