@@ -3,7 +3,7 @@ import {prepareVerifiedClassMarkStaging} from './verified-class-mark-staging.mjs
 const schoolId='12345678',classId='9',term='final',subjectId='computer';
 const actor={uid:'admin',role:'school_admin',schoolId,active:true};
 const ids=Array.from({length:1500},(_,i)=>'student_'+String(i+1).padStart(4,'0'));
-const settings={schoolId,class:classId,active:true,theoryFullMarks:40,practicalFullMarks:60};
+const settings={schoolId,class:classId,active:true,creditHour:2,theoryFullMarks:40,practicalFullMarks:60};
 const entries=ids.map(studentId=>({studentId,subjectId,class:classId,term,theory:20,practical:30}));
 let writes=0,reads=0;
 const api={
@@ -42,6 +42,7 @@ await assert.rejects(prepareVerifiedClassMarkStaging({...base,api:{...api,getDoc
 await assert.rejects(prepareVerifiedClassMarkStaging({...base,api:{...api,getDocs:async q=>({docs:[{id:'student_0001',data:()=>({schoolId,class:classId,active:false})}]})}}),/Inactive student/);
 const changing={...actor};
 await assert.rejects(prepareVerifiedClassMarkStaging({...base,actor:changing,api:{...api,getDoc:async()=>{changing.active=false;return {exists:()=>true,data:()=>settings}}}}),/identity changed/);
+await assert.rejects(prepareVerifiedClassMarkStaging({...base,api:{...api,getDoc:async()=>({exists:()=>true,data:()=>({...settings,creditHour:null})})}}),/credit hours/);
 await assert.rejects(prepareVerifiedClassMarkStaging({...base,subjectId:'../foreign'}),/Invalid subject ID/);
 await assert.rejects(prepareVerifiedClassMarkStaging({...base,api:{...api,getDoc:async()=>({exists:()=>true,data:()=>({...settings,id:'wrong'})})}}),/Invalid Examination Settings/);
 const revokedInAccessor={...actor};
