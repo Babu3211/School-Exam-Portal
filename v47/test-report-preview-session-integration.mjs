@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const root=new URL('.',import.meta.url);
+const js=readFileSync(new URL('report-preview-console.mjs',root),'utf8');
+const html=readFileSync(new URL('report-preview.html',root),'utf8');
+assert.match(js,/connectSchoolFirebase\(/,'Report uses shared V47 school Firebase app');
+assert.match(js,/startVerifiedSchoolActivity\(/,'Fresh login starts school activity timer');
+assert.match(js,/enforceSchoolIdle\(/,'Existing login must pass idle timeout');
+assert.match(js,/createV46ReadOnlyBridge\(/,'Verified tenant-scoped report read is mandatory');
+assert.match(js,/currentSession\(current,credential\.user\.uid\)/,'Async login must reject replaced auth sessions');
+assert.match(js,/authSdk\.onAuthStateChanged\(/,'Report must invalidate when auth changes');
+assert.match(js,/verifiedUid:credential\.user\.uid/,'Loaded preview must bind to the authenticated user');
+assert.doesNotMatch(html,/id="config"/,'No pasted Firebase configuration requested');
+assert.doesNotMatch(js,/JSON\.parse\(\$\('config'\)/,'No user-supplied Firebase project accepted');
+assert.match(html,/id="coverageRun"/,'Roster coverage controls remain available');
+assert.match(js,/coverageSubject','Coverage inspection must be enabled on verified load');
+console.log('V47 shared school session report preview integration checks passed (static only)');
