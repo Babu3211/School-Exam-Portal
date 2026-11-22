@@ -26,6 +26,8 @@ on:
       - 'v47/complete-school-subjects.mjs'
       - 'v47/test-complete-school-subjects.mjs'
       - 'v47/test-subject-decimal-input.mjs'
+      - 'v47/legacy-subject-credit-repair.mjs'
+      - 'v47/test-legacy-subject-credit-repair.mjs'
       - 'v47/subject-validation.mjs'
       - 'v47/school-class-result-diagnostic.mjs'
       - 'v47/marks-service.mjs'
@@ -48,6 +50,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify legacy subject credit-hour repair
+        run: node v47/test-legacy-subject-credit-repair.mjs
       - name: Verify subject Examination Settings decimal inputs
         run: node v47/test-subject-decimal-input.mjs
       - name: Verify complete school subject roster
