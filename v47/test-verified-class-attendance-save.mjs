@@ -38,7 +38,7 @@ for(const mutate of [
   writeBatch:()=>{batchCalls++;return api.writeBatch()}
  };
  committed=[];
- await assert.rejects(saveVerifiedClassAttendance({...args,actor:changingActor,db:{},api:racingApi}),/identity changed/);
+ await assert.rejects(saveVerifiedClassAttendance({...args,actor:changingActor,db:{},api:racingApi}),error=>error?.name==='PartialAttendanceSaveError'&&error.saved===0&&/identity changed/.test(error.cause?.message??''));
  assert.equal(batchCalls,0,'Revoked admin must not start attendance batch');
  assert.equal(committed.length,0,'Revoked admin must not write attendance');
 }
@@ -55,7 +55,7 @@ for(const mutate of [
   set:()=>mutate(changingActor),
   commit:async()=>{commitCalls++}
  })};
- await assert.rejects(saveVerifiedClassAttendance({...args,actor:changingActor,db:{},api:racingApi}),/identity changed before attendance batch commit/);
+ await assert.rejects(saveVerifiedClassAttendance({...args,actor:changingActor,db:{},api:racingApi}),error=>error?.name==='PartialAttendanceSaveError'&&error.saved===0&&/identity changed before attendance batch commit/.test(error.cause?.message??''));
  assert.equal(commitCalls,0,'Revoked admin must not commit a staged batch');
 }
 console.log('V47 verified attendance save contract checks passed');
