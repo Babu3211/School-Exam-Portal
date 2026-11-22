@@ -10,7 +10,7 @@ const features=[
  {name:'Dashboard',v46:/dashboard/i,v47:['v47/index.html'],production:/development hub|development workspace|independent prototypes/i},
  {name:'School settings',v46:/school settings/i,v47:['v47/school-settings.html']},
  {name:'Student records',v46:/student/i,v47:['v47/students.html']},
- {name:'Teacher and staff records',v46:/teacher|staff/i,v47:['v47/teacher-staff.html']},
+ {name:'Teacher and staff records',v46:/teacher|staff/i,v47:['v47/staff.html']},
  {name:'Attendance',v46:/attendance/i,v47:['v47/attendance.html']},
  {name:'Exam management',v46:/exam/i,v47:['v47/exams.html']},
  {name:'Marks entry',v46:/mark/i,v47:['v47/marks-entry.html'],production:/read.only|development|disabled/i},

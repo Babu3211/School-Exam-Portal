@@ -1,0 +1,51 @@
+
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {excelWorkbook} from './excel-workbook.mjs';
+import {readV47StudentXlsx} from './read-v47-student-xlsx.mjs';
+import {V46_STAFF_EXCEL_HEADERS} from './v46-staff-excel-schema.mjs';
+import {previewV46StaffExcelRows} from './staff-excel-preview.mjs';
+const schoolId='300160003',headers=[...V46_STAFF_EXCEL_HEADERS];
+const row=(id,en='Teacher',ne='शिक्षक')=>[id,ne,en,'Kathmandu','Secondary','2081-01-01','Permanent','MA','Science','09800000000','कार्यरत'];
+const good=previewV46StaffExcelRows({schoolId,cells:[headers,row('00007'),row('00008','Second Teacher','')]});
+assert.equal(good.ready,true);assert.equal(good.rows.length,2);
+assert.equal(good.rows[0].employeeId,'00007');
+assert.equal(good.rows[0].nameEnglish,'Teacher');
+assert.equal(good.rows[0].nameNepali,'शिक्षक');
+assert.equal(good.rows[1].nameNepali,'');
+assert.equal(good.accountsCreated,false);
+assert.equal(good.databaseChanged,false);
+assert.equal(good.writeAuthorized,false);
+assert.equal(good.warnings.length,0);
+const missingEnglish=previewV46StaffExcelRows({schoolId,cells:[headers,row('00009','','शिक्षक')]});
+assert.equal(missingEnglish.ready,true);
+assert.match(missingEnglish.warnings[0].warning,/English/);
+const duplicate=previewV46StaffExcelRows({schoolId,cells:[headers,row('00007'),row('00007')]});
+assert.equal(duplicate.ready,false);
+assert.match(duplicate.errors[0].error,/Duplicate/);
+assert.throws(()=>previewV46StaffExcelRows({schoolId,cells:[['Employee ID','Wrong'],row('00001')]}),/exactly/);
+assert.throws(()=>previewV46StaffExcelRows({schoolId:'OTHER_SCHOOL',cells:[headers]}),/School ID|IEMIS/);
+assert.equal(previewV46StaffExcelRows({schoolId,cells:[headers,row('00010'),Array(11).fill('')]}).rows.length,1);
+assert.equal(previewV46StaffExcelRows({schoolId,cells:[headers,row('00011','','')]}).ready,false);
+assert.throws(()=>previewV46StaffExcelRows({schoolId,cells:[headers,...Array.from({length:1501},(_,i)=>row(String(i)))]}),/1500/);
+const blob=excelWorkbook(headers,[row('00007')],{sheetName:'Staff'});
+const bytes=await blob.arrayBuffer();
+assert(new Uint8Array(bytes)[0]===80);
+await assert.rejects(readV47StudentXlsx({size:bytes.byteLength,arrayBuffer:async()=>bytes},{columns:27}),/dimensions/);
+await assert.rejects(readV47StudentXlsx({size:bytes.byteLength,arrayBuffer:async()=>bytes},{columns:0}),/dimensions/);
+if(typeof DOMParser==='undefined'){
+ await assert.rejects(readV47StudentXlsx({size:bytes.byteLength,arrayBuffer:async()=>bytes},{columns:11}),/XML parser unavailable/);
+}
+const page=readFileSync(new URL('./staff.html',import.meta.url),'utf8');
+const src=readFileSync(new URL('./staff-console.mjs',import.meta.url),'utf8');
+for(const key of ['staffImportArea','staffImportFile','previewStaffImport','staffImportSummary','staffImportRows'])
+ assert.match(page,new RegExp('id="'+key+'"'));
+assert.match(src,/previewV46StaffExcelRows\(/);
+assert.match(src,/readV47StudentXlsx\(file,\{columns:11,maxDataRows:1500\}\)/);
+assert.match(src,/before\.role!=='school_admin'/);
+assert.match(src,/after\.role!=='school_admin'/);
+assert.match(src,/actor\.role!=='school_admin'/);
+assert.match(src,/previewToken\+\+/);
+assert.doesNotMatch(src,/createUserWithEmailAndPassword|\.setDoc\(|\.addDoc\(|\.updateDoc\(/);
+assert.doesNotMatch(src,/\.csv/);
+console.log('PASS V47 V46 staff Excel preview: exact 11 columns, zero writes, 1500 cap, duplicate and admin-only review');

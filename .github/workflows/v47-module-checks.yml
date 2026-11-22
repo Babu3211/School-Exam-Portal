@@ -79,6 +79,8 @@ jobs:
         run: node scripts/test-v47-admin-console-static.mjs
       - name: V47 school admin console static integration
         run: node scripts/test-v47-school-admin-console-static.mjs
+      - name: V46 Staff Excel preview and no-write contract
+        run: node v47/test-staff-excel-preview.mjs
       - name: Complete-school staff Excel and school-scope checks
         run: node v47/test-complete-school-staff-excel.mjs
       - name: V47 school student browser static integration

@@ -56,7 +56,12 @@ async function unzip(buffer){
  if(offset!==directory+directorySize)throw new Error('Invalid XLSX directory length');
  return files;
 }
-export async function readV47StudentXlsx(file){
+// Shared, bounded single-worksheet XLSX parser: the V46 Staff preview uses 11
+// columns while the existing Student preview retains its 26-column default.
+export async function readV47StudentXlsx(file,{columns=26,maxDataRows=1500}={}){
+ if(!Number.isSafeInteger(columns)||columns<1||columns>26||
+    !Number.isSafeInteger(maxDataRows)||maxDataRows<1||maxDataRows>1500)
+  throw new RangeError('Invalid XLSX preview dimensions');
  if(!file||typeof file.arrayBuffer!=='function'||!Number.isSafeInteger(file.size)||file.size<22||file.size>MAX_FILE)throw new RangeError('Excel file must be 2 MB or smaller');
  const buffer=await file.arrayBuffer();
  if(!(buffer instanceof ArrayBuffer)||buffer.byteLength!==file.size)throw new Error('Excel file size mismatch');
@@ -67,15 +72,15 @@ export async function readV47StudentXlsx(file){
  const rows=[];let previousRow=0;
  for(const row of descendants(xml(sheet),'row')){
   const rowNumber=Number(row.getAttribute('r'));
-  if(!Number.isSafeInteger(rowNumber)||rowNumber<=previousRow||rowNumber>1501)throw new Error('Invalid Excel row reference');
+  if(!Number.isSafeInteger(rowNumber)||rowNumber<=previousRow||rowNumber>maxDataRows+1)throw new Error('Invalid Excel row reference');
   previousRow=rowNumber;
-  if(rows.length>=1501)throw new RangeError('Maximum 1500 student rows per preview');
+  if(rows.length>=maxDataRows+1)throw new RangeError('Maximum '+maxDataRows+' data rows per preview');
   const cells=[];let previous=0;
   for(const cell of children(row,'c')){
    const ref=cell.getAttribute('r')??'',letters=/^[A-Z]+/.exec(ref)?.[0];
    if(!letters||ref!==letters+rowNumber)throw new Error('Invalid Excel cell reference');
    let index=0;for(const ch of letters)index=index*26+ch.charCodeAt(0)-64;
-   if(index<1||index>26||index<=previous)throw new Error('Unexpected Excel column');
+   if(index<1||index>columns||index<=previous)throw new Error('Unexpected Excel column');
    while(cells.length<index-1)cells.push('');
    if(children(cell,'f').length)throw new Error('Formula cells are not supported');
    const kind=cell.getAttribute('t'),raw=children(cell,'v')[0]?.textContent??'';
@@ -86,8 +91,8 @@ export async function readV47StudentXlsx(file){
    else throw new Error('Unsupported Excel cell type');
    cells.push(value);previous=index;
   }
-  while(cells.length<26)cells.push('');
-  while(rows.length<rowNumber-1)rows.push(Array(26).fill(''));
+  while(cells.length<columns)cells.push('');
+  while(rows.length<rowNumber-1)rows.push(Array(columns).fill(''));
   rows.push(cells);
  }
  if(!rows.length)throw new Error('Empty Excel sheet');

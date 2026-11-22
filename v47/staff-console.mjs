@@ -5,13 +5,17 @@ import {createSchoolStore} from './firestore-adapter.mjs';
 import {collectCompleteSchoolStaffExport} from './complete-school-staff-excel.mjs';
 import {excelWorkbook} from './excel-workbook.mjs';
 import {v46StaffExcelRow} from './v46-staff-excel-schema.mjs';
+import {readV47StudentXlsx} from './read-v47-student-xlsx.mjs';
+import {previewV46StaffExcelRows} from './staff-excel-preview.mjs';
 const $=id=>document.getElementById(id);
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
-let auth,authSdk,db,api,actor=null,store=null,schoolId=null,epoch=0,busy=false,loading=false,exporting=false,cursor=null,seen=new Set(),hasMore=false;
+let auth,authSdk,db,api,actor=null,store=null,schoolId=null,epoch=0,busy=false,loading=false,exporting=false,previewBusy=false,previewToken=0,cursor=null,seen=new Set(),hasMore=false;
 const status=s=>{$('message').textContent=s;};
 const readDocument=async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;};
 function reset(){
- epoch++;actor=null;store=null;schoolId=null;cursor=null;seen=new Set();hasMore=false;loading=false;
+ epoch++;previewToken++;actor=null;
+ $('staffImportArea').hidden=true;$('staffImportFile').value='';
+ $('staffImportRows').replaceChildren();$('staffImportSummary').textContent='No Excel file reviewed';store=null;schoolId=null;cursor=null;seen=new Set();hasMore=false;loading=false;
  $('records').hidden=true;$('staffRows').replaceChildren();$('count').textContent='';
  $('next').disabled=true;$('exportAll').disabled=true;$('logout').disabled=true;
 }
@@ -53,7 +57,7 @@ $('login').onclick=async()=>{
   if(freshSignIn)startVerifiedSchoolActivity();
   $('heading').textContent='Staff — '+String(school.name??selectedSchool);
   $('mode').textContent=member.role==='viewer'?'Viewer — Read-only':member.role==='teacher'?'Teacher — Read-only':'School Admin — staff Excel read-only';
-  $('records').hidden=false;$('logout').disabled=false;$('exportAll').disabled=false;
+  $('records').hidden=false;$('staffImportArea').hidden=member.role!=='school_admin';$('logout').disabled=false;$('exportAll').disabled=false;
   busy=false;await loadPage(true);
  }catch(e){
   if(request===epoch){reset();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status('Login असफल: '+e.message)}
@@ -87,6 +91,52 @@ async function loadPage(resetPage=false){
  }catch(e){if(token===epoch){hasMore=false;$('next').disabled=true;status('Staff विवरण लोड भएन: '+e.message)}}
  finally{if(token===epoch){loading=false;$('refresh').disabled=false;$('next').disabled=!hasMore;$('exportAll').disabled=!actor||exporting;}}
 }
+$('staffImportFile').onchange=()=>{
+ previewToken++;$('staffImportRows').replaceChildren();
+ $('staffImportSummary').textContent='Excel changed. Review the selected file again.';
+};
+$('previewStaffImport').onclick=async()=>{
+ if(previewBusy||!actor||actor.role!=='school_admin')return;
+ const token=epoch,review=++previewToken,selectedActor=actor,selectedStore=store,selectedSchool=schoolId,uid=actor.uid;
+ const file=$('staffImportFile').files?.[0];previewBusy=true;$('previewStaffImport').disabled=true;
+ $('staffImportRows').replaceChildren();$('staffImportSummary').textContent='Checking staff Excel...';
+ const assertSession=()=>{assertCurrent(token,selectedActor,selectedStore,selectedSchool,uid);
+  if(review!==previewToken)throw new Error('Excel selection changed');
+ };
+ try{
+  assertSession();
+  if(!file||typeof file.name!=='string'||!/\\.xlsx$/i.test(file.name))
+   throw new Error('केवल Excel (.xlsx) फाइल छान्नुहोस्।');
+  if(!await enforceSchoolIdle(auth,authSdk))throw new Error('Login समय समाप्त भयो');
+  const before=await verifySchoolSession({schoolId:selectedSchool,uid,readDocument});
+  assertSession();
+  if(before.role!=='school_admin')throw new Error('School Admin permission required');
+  const cells=await readV47StudentXlsx(file,{columns:11,maxDataRows:1500});
+  assertSession();
+  const result=previewV46StaffExcelRows({schoolId:selectedSchool,cells});
+  const after=await verifySchoolSession({schoolId:selectedSchool,uid,readDocument});
+  assertSession();
+  if(after.role!=='school_admin'||after.role!==before.role)throw new Error('School Admin role changed');
+  for(const item of result.rows.slice(0,1500)){
+   const tr=document.createElement('tr');
+   for(const value of [item.row,item.employeeId,item.nameEnglish,item.nameNepali]){
+    const td=document.createElement('td');td.textContent=String(value);tr.append(td);
+   }
+   $('staffImportRows').append(tr);
+  }
+  const details=[...result.errors.map(item=>'Row '+item.row+': '+item.error),
+                 ...result.warnings.map(item=>'Row '+item.row+': '+item.warning)];
+  $('staffImportSummary').textContent=result.rows.length+' records read; '+result.errors.length+
+   ' errors; '+result.warnings.length+' warnings. Preview only — NOTHING saved.'+
+   (details.length?' First issues: '+details.slice(0,8).join(' | '):'');
+ }catch(e){
+  if(token===epoch&&review===previewToken&&actor===selectedActor)
+   $('staffImportSummary').textContent='Excel preview failed: '+e.message+' — no records modified.';
+ }finally{
+  previewBusy=false;
+  if(token===epoch)$('previewStaffImport').disabled=!actor||actor.role!=='school_admin';
+ }
+};
 $('refresh').onclick=()=>loadPage(true);
 $('next').onclick=()=>loadPage(false);
 $('exportAll').onclick=async()=>{

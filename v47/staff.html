@@ -13,5 +13,13 @@
 <button id="exportAll" disabled>Export Entire School Staff (.xlsx)</button>
 <p id="count"></p><div style="overflow:auto"><table><thead><tr><th>Employee ID</th><th>Name (English)</th><th>नाम (नेपाली)</th><th>Position</th><th>Email</th></tr></thead><tbody id="staffRows"></tbody></table></div>
 <p lang="ne">यो सुविधाले एउटा विद्यालयका सबै Staff/Teacher विवरण अधिकतम ५,००० रेकर्डसम्म Excel (.xlsx) मा निकाल्छ। अपूर्ण सूचीको फाइल बनाइँदैन। पुरानो V46 Excel स्तम्भ क्रम सुरक्षित राखिएको छ। यो Firestore Database Backup होइन।</p></section>
+<section id="staffImportArea" hidden>
+<h2>V46 Staff Excel (.xlsx) Preview — School Admin</h2>
+<p lang="ne">पुरानो V46 को ११-स्तम्भ Excel फाइल पढेर त्रुटि जाँच्ने सुविधा हो। अहिले कुनै Staff, Teacher Account, Password वा User Role सुरक्षित गरिँदैन। विद्यालयका पहिल्यै भएका कर्मचारीसँग Duplicate जाँच गर्न र Import Save गर्न बाँकी छ।</p>
+<label>Select Staff Excel (.xlsx)<input id="staffImportFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label>
+<button id="previewStaffImport" type="button">Review Excel (no save)</button>
+<p id="staffImportSummary" role="status" aria-live="polite">No Excel file reviewed</p>
+<div style="overflow:auto"><table><thead><tr><th>Excel Row</th><th>Employee ID</th><th>Name (English)</th><th>Name (Nepali)</th></tr></thead><tbody id="staffImportRows"></tbody></table></div>
+</section>
 <p id="message" role="status" aria-live="polite">V47 मा जडान गर्न बाँकी छ।</p>
 </main><script type="module" src="./staff-console.mjs"></script></body></html>
