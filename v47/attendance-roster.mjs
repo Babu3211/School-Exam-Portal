@@ -10,7 +10,9 @@ export async function loadClassRoster({db,api,actor,schoolId,schoolClass,pageSiz
  if(cursor!==null&&(typeof cursor?.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(cursor.id)))throw new TypeError('Invalid roster pagination cursor');
  for(const method of ['collection','query','where','orderBy','limit','getDocs','startAfter'])if(typeof api?.[method]!=='function')throw new TypeError('Missing Firebase SDK method: '+method);
  const constraints=[api.where('class','==',schoolClass),api.orderBy('__name__'),api.limit(pageSize+1)];
- if(cursor)constraints.push(api.startAfter(cursor));
+ // Ordered by document ID: Firestore startAfter expects the ordered ID value,
+ // not the materialized student object returned as our UI pagination cursor.
+ if(cursor)constraints.push(api.startAfter(cursor.id));
  const snap=await api.getDocs(api.query(api.collection(db,'schools',schoolId,'students'),...constraints));
  if(!canAccessSchool(actor,schoolId,'read')||actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId)throw new Error('School membership changed during roster query');
  const docs=snap?.docs;
