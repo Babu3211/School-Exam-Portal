@@ -2315,6 +2315,7 @@ const cdcSeroferoUnits = [
 function cdcVerifiedUnits(className,subject) {
   const key = cdcAssessmentSubjectKey(subject);
   if (Number(className)<=3&&key==='serophero') return cdcSeroferoUnits;
+  if (Number(className)===1&&key==='english') return [['वर्णमाला','Alphabet']];
   if (Number(className)===1&&key==='mathematics') return [cdcSeroferoUnits[1],cdcSeroferoUnits[2],cdcSeroferoUnits[3],cdcSeroferoUnits[6],cdcSeroferoUnits[8]];
   if (Number(className)>=4&&key==='mathematics') return [
     ['ज्यामिति','Geometry'], ['अङ्कगणित','Arithmetic'], ['नाप','Measurement'],
@@ -2364,6 +2365,33 @@ const cdcVerifiedOutcomes = {
     ['मेरो सिर्जना','वरपरका त्रिभुज, चतुर्भुज र वृत्त छुट्याउने','Recognize triangles, quadrilaterals and circles around you'],
     ['सञ्चार प्रविधि र बजार','चल्तीका नेपाली सिक्का र रु. १०० सम्मका नोट चिन्ने','Identify circulating Nepali coins and notes up to Rs 100'],
     ['सञ्चार प्रविधि र बजार','चित्रग्राफ पढेर जानकारी बताउने','Read a pictograph and communicate its information']
+  ],
+  // Class 1 English assessment record, 2076 curriculum, Annex 3(a).
+  '1:english': [
+    ["वर्णमाला","सुनेका ध्वनि दोहोर्‍याउने, चिन्ने र छुट्याउने","Copy, recognize and distinguish sounds"],
+    ["वर्णमाला","सुरु, बीच वा अन्त्यमा उस्तै ध्वनि भएका शब्द चिन्ने","Find words sharing a beginning, middle or ending sound"],
+    ["वर्णमाला","छुट्टाछुट्टै ध्वनि जोडेर एक अक्षरखण्डको शब्द बनाउने","Combine separate sounds into a one-syllable word"],
+    ["वर्णमाला","तुक मिल्ने शब्द चिन्ने र भन्ने","Spot and produce words that rhyme"],
+    ["वर्णमाला","चित्रको वस्तुसँग त्यसको सुरुको ध्वनि मिलाउने","Match a picture to its object's first sound"],
+    ["वर्णमाला","सुनेको ध्वनिसँग छापिएको अक्षर मिलाउने","Name the printed letter for a spoken sound"],
+    ["वर्णमाला","सुनेको शब्दसँग छापिएको शब्द मिलाउने","Match a word heard aloud to its written form"],
+    ["वर्णमाला","शब्द र सरल अभिव्यक्ति चिनेर बुझ्ने","Recognize and understand words and simple phrases"],
+    ["वर्णमाला","सुनेको सामग्री वा शिक्षकलाई बोली वा इशाराले प्रतिक्रिया दिने","Respond to the recording or teacher with words or gestures"],
+    ["वर्णमाला","ध्वनि र शब्दको नक्कल गरी उच्चारण गर्ने","Repeat and produce sounds and words aloud"],
+    ["वर्णमाला","पहिलो ध्वनिमा शब्दको बाँकी ध्वनि जोड्ने","Join a word's starting sound to its remaining sound pattern"],
+    ["वर्णमाला","कक्षाअनुसारका शब्द सही उच्चारण गर्ने","Say grade-level words with accurate pronunciation"],
+    ["वर्णमाला","छोटा र सरल प्रश्न सोध्ने तथा जवाफ दिने","Pose and answer brief, simple questions"],
+    ["वर्णमाला","शिक्षक वा रेकर्डिङ सुनेर गीत गाउने वा लयमा भन्ने","Sing or chant after hearing a teacher or recording"],
+    ["वर्णमाला","साना र ठूला अङ्ग्रेजी अक्षर पढ्ने","Read lowercase and uppercase letters"],
+    ["वर्णमाला","ध्वनि जोडेर शब्द र वाक्य पढ्ने","Combine sounds to read words and sentences"],
+    ["वर्णमाला","चित्रको सहायताले परिचित शब्द पढ्ने","Identify and read familiar words with picture cues"],
+    ["वर्णमाला","मिल्दो तुक र तालमा कविता वा लयात्मक पाठ भन्ने","Recite rhymes and chants with the right sound pattern and beat"],
+    ["वर्णमाला","कक्षाअनुसारका शब्दको अर्थ बुझ्ने","Explain or recognize the meaning of grade-level vocabulary"],
+    ["वर्णमाला","रेखा, वक्र र वृत्त कोर्न पेन्सिल ठीकसँग समात्ने","Grip a pencil properly to draw lines, curves and circles"],
+    ["वर्णमाला","रेखा र ढाँचा कोर्दै आँखा र हातको तालमेल विकास गर्ने","Coordinate hand and eye movements by drawing lines and patterns"],
+    ["वर्णमाला","अक्षरको खाका उतार्ने र आफैँ लेख्ने","Trace letters and then write them"],
+    ["वर्णमाला","साना र ठूला अक्षर उचित आकारमा बनाउने","Form lowercase and uppercase letters with consistent shape and size"],
+    ["वर्णमाला","सफा र बुझिने हस्तलेखन देखाउने","Write by hand clearly and legibly"]
   ],
   '5:mathematics': [
     ['ज्यामिति','वर्गजालमा लम्ब र समानान्तर रेखा','Draw perpendicular and parallel lines on a square grid']
