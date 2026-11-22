@@ -67,4 +67,29 @@ await assert.rejects(readV47StudentXlsx(asFile(shortDirectory)),/Invalid ZIP dir
 const longDirectory=new Uint8Array(source);
 new DataView(longDirectory.buffer).setUint32(eocd+12,view.getUint32(eocd+12,true)+1,true);
 await assert.rejects(readV47StudentXlsx(asFile(longDirectory)),/Invalid XLSX central directory|Invalid XLSX directory length/);
+
+// Additional independent corruption cases: keep the import preview fail-closed.
+const mutate=(position,write)=>{const copy=new Uint8Array(source);write(new DataView(copy.buffer),position,copy);return asFile(copy);};
+const rejects=async(position,write,pattern)=>assert.rejects(readV47StudentXlsx(mutate(position,write)),pattern);
+// 1-3: ZIP header and directory integrity.
+await rejects(0,(_v,p,b)=>{b[p]=0},/Invalid XLSX ZIP/);
+await rejects(eocd,(_v,p,b)=>{b[p]=0},/Invalid XLSX central directory/);
+await rejects(eocd+8,(v,p)=>v.setUint16(p,0,true),/Invalid XLSX central directory/);
+// 4-6: unsupported split archives and directory location.
+await rejects(eocd+4,(v,p)=>v.setUint16(p,1,true),/Invalid XLSX central directory/);
+await rejects(eocd+6,(v,p)=>v.setUint16(p,1,true),/Invalid XLSX central directory/);
+await rejects(eocd+16,(v,p)=>v.setUint32(p,source.length,true),/Invalid XLSX central directory|Unexpected workbook structure/);
+// 7-9: worksheet entry boundaries and encryption.
+await rejects(central+42,(v,p)=>v.setUint32(p,directory,true),/Invalid ZIP entry/);
+await rejects(local+6,(v,p)=>v.setUint16(p,1,true),/Mismatched XLSX ZIP entry/);
+await rejects(central+10,(v,p)=>v.setUint16(p,99,true),/Unsupported or oversized Excel entry/);
+// 10-12: worksheet size and checksum.
+await rejects(central+24,(v,p)=>v.setUint32(p,0,true),/Invalid XLSX entry size/);
+await rejects(central+16,(v,p)=>v.setUint32(p,0xffffffff,true),/Invalid XLSX entry checksum/);
+await rejects(central+20,(v,p)=>v.setUint32(p,source.length,true),/Truncated XLSX/);
+// 13-15: malformed central record metadata.
+await rejects(central+28,(v,p)=>v.setUint16(p,65535,true),/Invalid ZIP entry/);
+await rejects(central+30,(v,p)=>v.setUint16(p,65535,true),/Invalid ZIP entry/);
+await rejects(central+32,(v,p)=>v.setUint16(p,65535,true),/Invalid ZIP entry/);
+
 console.log('V47 student XLSX reader ZIP safety regression checks passed');
