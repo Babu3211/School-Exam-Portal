@@ -13,6 +13,8 @@ on:
       - 'v47/test-v46-iemis-parity.mjs'
       - 'v47/v46-result-adapter.mjs'
       - 'v47/test-v46-result-adapter.mjs'
+      - 'v47/school-result-preview.mjs'
+      - 'v47/test-school-result-preview.mjs'
       - 'v47/marks-service.mjs'
       - 'v47/test-unbounded-mark-entry.mjs'
       - 'v47/mark-create-service.mjs'
@@ -33,6 +35,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify school-scoped V46 result preview
+        run: node v47/test-school-result-preview.mjs
       - name: Verify V46 result adapter
         run: node v47/test-v46-result-adapter.mjs
       - name: Verify V46 IEMIS grading baseline
