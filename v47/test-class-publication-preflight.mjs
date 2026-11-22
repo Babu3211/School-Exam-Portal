@@ -33,4 +33,13 @@ assert(missing.blockers.some(x=>x.includes('coverage')));
 const other=assessClassPublicationReadiness({...base,term:'monthly'});
 assert(other.blockers.some(x=>x.includes('mapping not verified')));
 assert.throws(()=>assessClassPublicationReadiness({...base,actor:{...actor,schoolId:'87654321'}}),/membership/);
+for(const uid of [undefined,null,'','  ']){
+ assert.throws(()=>assessClassPublicationReadiness({...base,actor:{...actor,uid}}),/School membership required/);
+}
+for(const role of ['viewer','teacher','school_admin','super_admin']){
+ const validActor={...actor,role};
+ const diagnostic=assessClassPublicationReadiness({...base,actor:validActor});
+ assert.equal(diagnostic.ready,false,'No role may bypass release readiness');
+ assert.equal(diagnostic.diagnosticOnly,true);
+}
 console.log('V47 class publication preflight blockers checked');
