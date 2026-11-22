@@ -3,7 +3,8 @@ export function validateSubjectMarkLimits(subject,entry){
  const fields=[['theory','theoryFullMarks'],['practical','practicalFullMarks']];
  for(const [scoreKey,limitKey] of fields){
   const raw=subject?.[limitKey];
-  if(raw===undefined||raw===null||raw==='')continue; // legacy subjects retain existing behavior
+  if(raw===undefined)continue; // legacy subjects without this field retain existing behavior
+  if(raw===null||raw==='')throw new Error('Invalid Examination Settings full marks: '+limitKey);
   if(typeof raw!=='number'&&typeof raw!=='string')throw new Error('Invalid Examination Settings full marks: '+limitKey);
   if(typeof raw==='string'&&!/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(raw.trim()))throw new Error('Invalid Examination Settings full marks: '+limitKey);
   const limit=Number(raw);
