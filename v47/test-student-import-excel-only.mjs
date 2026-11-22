@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {readXlsxPreviewBytes} from './require-xlsx-preview-file.mjs';
+const data=Uint8Array.from([0x50,0x4b,0x03,0x04,0,1,2,3]);
+const make=(name,bytes=data)=>({name,size:bytes.byteLength,arrayBuffer:async()=>bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength)});
+assert.equal((await readXlsxPreviewBytes(make('students.xlsx'))).byteLength,8);
+assert.equal((await readXlsxPreviewBytes(make('STUDENTS.XLSX'))).byteLength,8);
+for(const name of ['students.csv','students.xls','students.xlsm','students.xlsx.csv','students'])await assert.rejects(()=>readXlsxPreviewBytes(make(name)),/केवल Excel/);
+for(const bytes of [Uint8Array.from([99,115,118,44,49,50,51,52]),Uint8Array.from([0x50,0x4b,0x05,0x06,0,0,0,0])])
+ await assert.rejects(()=>readXlsxPreviewBytes(make('renamed.xlsx',bytes)),/XLSX ZIP/);
+await assert.rejects(()=>readXlsxPreviewBytes({name:'oversized.xlsx',size:5*1024*1024+1,arrayBuffer:()=>{throw new Error('Should never read oversized file')}}),/५ MB/);
+await assert.rejects(()=>readXlsxPreviewBytes({...make('truncated.xlsx'),size:9}),/आकार मिलेन/);
+await assert.rejects(()=>readXlsxPreviewBytes(null),/केवल Excel/);
+const html=readFileSync(new URL('./student-import-preview.html',import.meta.url),'utf8');
+assert.match(html,/accept=".xlsx,application\/vnd.openxmlformats-officedocument.spreadsheetml.sheet"/);
+assert.match(html,/readXlsxPreviewBytes\(file\)/);
+assert.match(html,/sheetRows:5002/,'Preview must not parse an unlimited number of worksheet rows');
+assert.doesNotMatch(html,/\.xls,\.csv|xlsx\|xls\|csv|CSV फाइल मात्र/,'User-facing import must be XLSX only');
+assert.doesNotMatch(html,/firebase\.firestore|api\.setDoc\(|\bwriteBatch\(/,'Read-only preview must not silently save');
+console.log('V47 IEMIS Student Preview: XLSX-only size/signature validation, bounded rows, no CSV or saves');

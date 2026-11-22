@@ -4,7 +4,7 @@
 </head><body><main><h1>Students Details — Import Excel</h1>
 <p class="note" lang="ne">यो V47 को सुरक्षित परीक्षण पृष्ठ हो। यहाँ फाइल हेर्न र जाँच्न मात्र मिल्छ; कुनै विद्यार्थी Firebase मा Save हुँदैन।</p>
 <form id="importForm"><label>School IEMIS ID<input id="schoolId" inputmode="numeric" pattern="[0-9]{5,20}" required placeholder="School IEMIS Number"></label>
-<label>Excel File<input id="excelFile" type="file" accept=".xlsx,.xls,.csv" required></label>
+<label>Excel File<input id="excelFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required></label>
 <button type="submit">Preview Students</button></form>
 <p class="note" lang="ne">विद्यालयको IEMIS नम्बर Excel को “IEMIS Code” सँग मिल्नुपर्छ। Roll Number खाली भए पनि Preview गर्न मिल्छ।</p>
 <p id="error" role="alert" lang="ne"></p><div id="preview" aria-live="polite"></div>
@@ -12,16 +12,17 @@
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script type="module">
 import {mountV47IemisStudentPreview} from './v46-iemis-student-import-panel.mjs';
+import {readXlsxPreviewBytes} from './require-xlsx-preview-file.mjs';
 const form=document.getElementById('importForm'),error=document.getElementById('error');
 form.addEventListener('submit',async event=>{
  event.preventDefault();error.textContent='';document.getElementById('preview').replaceChildren();
  try{
   const file=document.getElementById('excelFile').files[0];
   if(!file)throw Error('Excel फाइल छान्नुहोस्।');
-  if(!/\.(xlsx|xls|csv)$/i.test(file.name))throw Error('Excel वा CSV फाइल मात्र छान्नुहोस्।');
-  if(file.size>5*1024*1024)throw Error('फाइल ५ MB भन्दा ठूलो छ। सानो फाइल प्रयोग गर्नुहोस्।');
+  // Require real XLSX ZIP bytes. SheetJS can otherwise parse renamed CSV files.
+  const safeBytes=await readXlsxPreviewBytes(file);
   if(!window.XLSX)throw Error('Excel पढ्ने सुविधा लोड भएन। इन्टरनेट जाँच्नुहोस्।');
-  const book=window.XLSX.read(await file.arrayBuffer(),{type:'array',raw:false});
+  const book=window.XLSX.read(safeBytes,{type:'array',raw:false,sheetRows:5002});
   const sheet=book.Sheets[book.SheetNames[0]];
   if(!sheet)throw Error('Excel मा Sheet भेटिएन।');
   const rows=window.XLSX.utils.sheet_to_json(sheet,{defval:'',raw:false});
