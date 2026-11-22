@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {validateSubjectMarkLimits} from './subject-mark-limits.mjs';
 for(const name of ['Computer','Nepali','Mathematics','New Optional Subject']){
- for(const [theoryFullMarks,practicalFullMarks] of [[4,36],[23,7],[70,30],[0,100]]){
+ for(const [theoryFullMarks,practicalFullMarks] of [[4,36],[23,7],[70,30],[0,100],[120,280],[2500,500]]){
   const subject={name,theoryFullMarks,practicalFullMarks};
   assert.equal(validateSubjectMarkLimits(subject,{theory:theoryFullMarks,practical:practicalFullMarks}),true);
   assert.throws(()=>validateSubjectMarkLimits(subject,{theory:theoryFullMarks+1,practical:0}),/exceed/);
@@ -23,4 +23,8 @@ for(const score of [undefined,null,NaN,Infinity,-1,'', '2', {}, []]){
 }
 for(const value of [null,undefined,0,''])assert.throws(()=>validateSubjectMarkLimits(value,{theory:0,practical:0}),/required/);
 assert.throws(()=>validateSubjectMarkLimits({theoryFullMarks:20},null),/required/);
+for(const [theoryFullMarks,practicalFullMarks] of [[1000,2000],[5000,0]]){
+ assert.equal(validateSubjectMarkLimits({theoryFullMarks,practicalFullMarks},{theory:theoryFullMarks,practical:practicalFullMarks}),true);
+ assert.throws(()=>validateSubjectMarkLimits({theoryFullMarks,practicalFullMarks},{theory:theoryFullMarks+1,practical:0}),/exceed/);
+}
 console.log('V47 configured full marks validation passed');
