@@ -8,6 +8,7 @@ import {nextPageState} from './pagination.mjs';
 import {excelWorkbook} from './excel-workbook.mjs';
 import {STUDENT_EXCEL_HEADERS,studentExcelRow} from './v46-student-excel-schema.mjs';
 import {mapV46StudentExcelRows} from './v46-student-import-mapping.mjs';
+import {parsePastedStudentTable} from './pasted-student-table.mjs';
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 const optionalFields=Object.keys(STUDENT_OPTIONAL_FIELDS).filter(key=>key!=='rollNo');
 for(const key of optionalFields){const label=document.createElement('label');label.textContent=key.replace(/([A-Z])/g,' $1').replace(/^./,x=>x.toUpperCase());const input=document.createElement('input');input.dataset.studentField=key;input.maxLength=STUDENT_OPTIONAL_FIELDS[key];label.append(input);document.getElementById('additionalStudentFields').append(label)}
@@ -27,9 +28,7 @@ $('previewImport').onclick=()=>{
  $('importResults').replaceChildren();$('importSummary').textContent='';
  try{
   if(actor?.role!=='school_admin'||auth?.currentUser?.uid!==actor.uid||actor.schoolId!==schoolId)throw new Error('School Admin sign-in required');
-  const lines=$('importPaste').value.trim().split(/\r?\n/);
-  if(lines.length>1501)throw new RangeError('Maximum 1500 students per preview');
-  const cells=lines.map(line=>line.split('\t'));
+  const cells=parsePastedStudentTable($('importPaste').value);
   const report=mapV46StudentExcelRows({headers:cells[0],rows:cells.slice(1),schoolId});
   $('importSummary').textContent=report.accepted.length+' valid rows; '+report.errors.length+' errors. Preview only — no students saved.';
   for(const item of report.errors.slice(0,100)){
