@@ -191,5 +191,9 @@ for(const mutate of [
  assert.match(ui,/Attendance Save असफल/);
  assert.match(ui,/नेटवर्क त्रुटि हुँदा Save भइसकेको पनि हुन सक्छ/);
  assert.match(ui,/पुनः प्रयास गर्नुअघि Attendance सूची Reload गरी जाँच्नुहोस्/);
+ assert.match(ui,/if\(attendanceReviewRequired\)/);
+ assert.match(ui,/if\(review\)attendanceReviewRequired=false/);
+ assert.match(ui,/load\(true,true\)/);
+ assert.match(ui,/if\(e\?\.name==='PartialAttendanceSaveError'\)attendanceReviewRequired=true/);
 }
 console.log('V47 attendance partial-save recovery contract passed');
