@@ -14,4 +14,17 @@ assert.equal(summary.complete,true);
 assert.equal(iemisGpa([{summary,creditHour:4}],{annual:true}), (40*summary.inGrade.point+60*summary.theoryGrade.point)/100);
 assert.equal(iemisGpa([{summary,creditHour:4}],{annual:false}),null);
 assert.equal(iemisGpa([{summary:{...summary,complete:false},creditHour:4}],{annual:true}),null);
+const primary=iemisSummary({scores:[{name:'No. of Learning Achievement',obtained:25},{name:'Obtained Learning Achievement',obtained:80}]},{primary:true});
+assert.equal(primary.full,100);
+assert.equal(primary.obtained,80);
+assert.equal(primary.totalGrade.grade,'A');
+assert.equal(iemisGpa([{summary:primary,creditHour:4}],{primary:true}),3.6);
+const ng=iemisSummary({scores:[{name:'Participation',fullMarks:4,obtained:0},{name:'Practical/Project',fullMarks:36,obtained:0},{name:'TH (Theory)',fullMarks:60,obtained:60}]},{annual:true});
+assert.equal(ng.inGrade.grade,'NG');
+assert.equal(iemisGpa([{summary:ng,creditHour:4}],{annual:true}),null);
+for(const scale of [1,2,5,10]){
+ const scaled=iemisSummary({scores:record.scores.map(item=>({...item,fullMarks:item.fullMarks*scale,obtained:item.obtained*scale}))},{annual:true});
+ assert.equal(scaled.totalGrade.grade,summary.totalGrade.grade);
+ assert.equal(iemisGpa([{summary:scaled,creditHour:4}],{annual:true}),iemisGpa([{summary,creditHour:4}],{annual:true}));
+}
 console.log('V47 reused V46 IEMIS grade and GPA regression checks passed');
