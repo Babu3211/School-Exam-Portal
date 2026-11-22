@@ -43,4 +43,14 @@ await assert.rejects(readV47StudentXlsx(asFile(oversized)),/oversized Excel entr
 const encrypted=new Uint8Array(source);
 new DataView(encrypted.buffer).setUint16(central+8,1,true);
 await assert.rejects(readV47StudentXlsx(asFile(encrypted)),/Unsupported or oversized Excel entry/);
+const mismatch=new Uint8Array(source);
+const local=view.getUint32(central+42,true);
+new DataView(mismatch.buffer).setUint16(local+8,8,true);
+await assert.rejects(readV47StudentXlsx(asFile(mismatch)),/Mismatched XLSX ZIP entry/);
+const overlap=new Uint8Array(source);
+new DataView(overlap.buffer).setUint32(central+20,directory,true);
+await assert.rejects(readV47StudentXlsx(asFile(overlap)),/Truncated XLSX/);
+const invalidDirectory=new Uint8Array(source);
+new DataView(invalidDirectory.buffer).setUint32(eocd+12,source.length,true);
+await assert.rejects(readV47StudentXlsx(asFile(invalidDirectory)),/Invalid XLSX central directory/);
 console.log('V47 student XLSX reader ZIP safety regression checks passed');
