@@ -11,7 +11,9 @@ assert.match(html,/\.\/marks-entry\.html#classSaveArea/,'Configured component ma
 assert.doesNotMatch(html,/id="component_[abc]"|max="(?:4|36|10)"/,'Retired Computer UI must not expose fixed marks inputs');
 assert.match(js,/\$\('save'\)\.disabled=true/,'Legacy save must remain disabled');
 assert.doesNotMatch(js,/\bcreateComputerComponentMark\b|\bsetDoc\(|\bwriteBatch\(/,'Retired form must not load a write path');
-assert.match(js,/loadedStudentClass!==\$\('schoolClass'\)\.value\|\|loadedSubjectClass!==\$\('schoolClass'\)\.value/);
+assert.match(js,/authSdk\.onAuthStateChanged\(auth,user=>/,'Auth change must invalidate legacy roster state');
+assert.match(js,/data\.schoolId!==schoolId\|\|data\.class!==schoolClass/,'Cross-school roster records must be rejected');
+assert.match(js,/schoolClass!==\$\('schoolClass'\)\.value\|\|!actor\|\|auth\?\.currentUser\?\.uid!==actor\.uid/,'Stale or swapped login must not render roster');
 assert.doesNotMatch(js,/localStorage|sessionStorage|innerHTML|eval\(/);
 assert.match(js,/finally\{if\(attempt===epoch\)lock\(false\)\}/);
 assert.match(js,/schoolClass!==\$\('schoolClass'\)\.value/);
