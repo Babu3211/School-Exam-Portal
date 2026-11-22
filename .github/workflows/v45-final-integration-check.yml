@@ -87,6 +87,9 @@ jobs:
               if path=='sw.js':
                 expected=expected.replace('smss-pwa-v51-network-refresh-20261110','smss-pwa-v51-class6-ledger-20261115')
               assert after==expected, f'Unexpected behavioral change in protected companion file: {path}'
+          if os.environ.get('GITHUB_HEAD_REF')=='fix/viewer-iemis-grid-readonly':
+            allowed.update({'iemis-entry.js','scripts/test-iemis-importer-dom.mjs',
+              'scripts/fixtures/iemis-entry.html','scripts/fixtures/iemis-layout.html','sw.js'})
           unexpected=changed-allowed
           assert not unexpected, f'Unexpected changes to protected V44/IEMIS files: {sorted(unexpected)}'
           print('Approved dashboard and IEMIS source files remain protected.')

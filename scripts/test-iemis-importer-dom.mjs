@@ -61,3 +61,30 @@ assert.equal(host.hidden,false);
 await new Promise(resolve=>window.setTimeout(resolve,50));
 dom.window.close();
 console.log('Importer DOM reads live headings, previews XLSX, fills native controls, selects students, preserves Save ownership and rejects stale previews');
+
+// Reproduce the live Viewer bug: valid saved scores must not become N/A.
+{
+const {IemisEntryGrid}=await import('../iemis-entry.js');
+const viewDom=new JSDOM('<div id="grid"></div>');
+const root=viewDom.window.document.getElementById('grid');let writes=0;
+const students=[{id:'viewer-test',studentName:'Synthetic Student',studentIemisNo:'TEST-ONLY'}];
+const records=[{studentId:'viewer-test',examId:'test-exam',subject:'Nepali',scores:[{name:'Participation',fullMarks:3,obtained:0},{name:'Practical/Project',fullMarks:16,obtained:15},{name:'First Term Examination',fullMarks:6,obtained:6}]}];
+const options={classNo:9,term:'first',examId:'test-exam',subjects:['Nepali','English'],students,records,canEdit:()=>false,canView:()=>true,onSave:()=>{writes++;}};
+const viewer=new IemisEntryGrid(root,options);viewer.selectedSubjects.add(0);viewer.selectedSubjects.add(1);viewer.render();
+assert.deepEqual([...root.querySelectorAll('[data-grid-sj="0"][type="number"]')].map(i=>i.value),['0','15','6']);
+assert.ok([...root.querySelectorAll('[type="number"]')].every(i=>i.readOnly));
+assert.ok([...root.querySelectorAll('[data-grid-absent]')].every(i=>i.disabled));
+assert.ok([...root.querySelectorAll('[data-grid-sj="1"][type="number"]')].every(i=>i.value===''),'Missing marks remain blank');
+const input=root.querySelector('[data-grid-key="participation"]');input.value='2';input.dispatchEvent(new viewDom.window.Event('input',{bubbles:true}));
+assert.equal(viewer.draft(0,0).values.participation,'0','Viewer input events cannot change saved drafts');
+await viewer.save();assert.equal(writes,0);
+viewer.draft(0,0).dirty=true;assert.throws(()=>viewer.pending(),/Assignment changed/);viewer.destroy();
+const teacher=new IemisEntryGrid(root,{...options,canEdit:(_st,sub)=>sub==='Nepali',canView:(_st,sub)=>sub==='Nepali'});
+teacher.selectedSubjects.add(0);teacher.selectedSubjects.add(1);teacher.render();
+assert.equal(root.querySelectorAll('[data-grid-sj="1"][type="number"]').length,0,'Unassigned subject remains hidden');
+assert.ok(root.textContent.includes('N/A'));
+assert.ok([...root.querySelectorAll('[data-grid-sj="0"][type="number"]')].every(i=>!i.readOnly),'Assigned teacher retains editing');
+teacher.destroy();viewDom.window.close();
+console.log('Viewer saved/zero/missing marks display, readonly inputs, disabled absence, rejected edits/saves and teacher subject isolation passed');
+
+}
