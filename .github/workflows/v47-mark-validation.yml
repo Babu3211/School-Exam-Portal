@@ -40,6 +40,8 @@ on:
       - 'v47/marks-service.mjs'
       - 'v47/test-unbounded-mark-entry.mjs'
       - 'v47/mark-create-service.mjs'
+      - 'v47/class-mark-completeness.mjs'
+      - 'v47/test-class-mark-completeness.mjs'
       - 'v47/class-mark-save.mjs'
       - 'v47/test-subject-mark-limits.mjs'
       - 'v47/test-mark-create-authorization.mjs'
@@ -102,5 +104,7 @@ jobs:
         run: node v47/test-subject-mark-limits.mjs
       - name: Validate individual marks authorization
         run: node v47/test-mark-create-authorization.mjs
+      - name: Validate full 1500-student class marks completeness
+        run: node v47/test-class-mark-completeness.mjs
       - name: Validate atomic class marks
         run: node v47/test-class-mark-save.mjs
