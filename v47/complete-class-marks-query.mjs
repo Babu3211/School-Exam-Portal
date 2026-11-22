@@ -14,7 +14,7 @@ export async function loadAllClassMarks({db,api,actor,schoolId,schoolClass,term,
   verify();
   pages++;
   if(pages>Math.ceil(maxRecords/pageSize)+1)throw new Error('Marks pagination exceeded safety bound');
-  if(!Array.isArray(page.records)||page.records.length>pageSize)throw new Error('Invalid marks page');
+  if(!page||typeof page.hasMore!=='boolean'||!Array.isArray(page.records)||page.records.length>pageSize)throw new Error('Invalid marks page');
   for(const record of page.records){
    if(typeof record.id!=='string'||!record.id||seen.has(record.id))throw new Error('Duplicate or invalid marks document');
    if(previous!==null&&record.id<=previous)throw new Error('Marks pagination order changed');
@@ -25,7 +25,10 @@ export async function loadAllClassMarks({db,api,actor,schoolId,schoolClass,term,
   if(page.hasMore){
    if(!page.records.length||!page.cursor||page.cursor.id!==previous)throw new Error('Marks pagination stalled');
    cursor=page.cursor;
-  }else cursor=null;
+  }else{
+   if(page.cursor!==null&&page.cursor?.id!==previous)throw new Error('Marks terminal cursor mismatch');
+   cursor=null;
+  }
  }while(cursor);
  verify();
  return {records,count:records.length,pages,hasMore:false,diagnosticOnly:true};
