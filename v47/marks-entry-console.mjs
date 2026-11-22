@@ -81,6 +81,7 @@ $('loadClassMarks').onclick=async()=>{
  try{
   const settings=await discoverVerifiedSubjectExamSettings({db,api,schoolId:selectedSchoolId,classId,subjectId,examId:term,revalidate:async()=>{if(attempt!==epoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('School session changed');const verified=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(verified.role!=='school_admin')throw new Error('School Admin required');}});
   const roster=await loadCompleteClassRoster({db,api,actor,schoolId:selectedSchoolId,classId});
+  if(roster.students.some(student=>student.active!==true))throw new Error('Class roster includes inactive student; correct enrollment before marks entry');
   const finalSession=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});
   if(finalSession.role!=='school_admin')throw new Error('School Admin session revoked during roster load');
   if(request!==rosterRequest||attempt!==epoch||classId!==$('schoolClass').value||term!==$('term').value||subjectId!==$('subjectId').value)return;
@@ -140,7 +141,7 @@ $('inspectClassMarks').onclick=async()=>{
   if(!classMarkSettings||currentSettings.settingsId!==classMarkSettings.settingsId||JSON.stringify(currentSettings.components)!==JSON.stringify(classMarkSettings.components))throw new Error('Subject examination settings changed; reload class marks');
   const latestRoster=await loadCompleteClassRoster({db,api,actor,schoolId:selectedSchoolId,classId:classMarkContext.classId});
   const loadedStudentIds=new Set(classMarkRoster.map(student=>student.id));
-  if(latestRoster.count!==loadedStudentIds.size||latestRoster.studentIds.some(id=>!loadedStudentIds.has(id)))throw new Error('Class roster changed; reload marks entry');
+  if(latestRoster.students.some(student=>student.active!==true)||latestRoster.count!==loadedStudentIds.size||latestRoster.studentIds.some(id=>!loadedStudentIds.has(id)))throw new Error('Class roster changed or contains inactive student; reload marks entry');
   const finalSession=await verifySchoolSession({schoolId:selectedSchoolId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});
   if(finalSession.role!=='school_admin')throw new Error('School Admin session revoked during roster refresh');
  }catch(error){if(attempt===epoch&&request===rosterRequest){invalidateClassMarks();status('विद्यालयको अधिकार, विद्यार्थी सूची वा विषयको सेटिङ परिवर्तन भएको हुन सक्छ। कक्षा पुनः लोड गर्नुहोस्।')}return}
