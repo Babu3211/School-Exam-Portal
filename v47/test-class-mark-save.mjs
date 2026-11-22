@@ -211,4 +211,42 @@ for(const [label,overrides,expected] of negativeSaveCases){
  await assert.rejects(saveCompleteClassMarks({...args,db:{},api,...overrides}),expected,label);
  assert.equal(writes.length,0,label+' must not write any marks');
 }
+
+// Eighteen transaction-integrity cases: malformed data must never create partial marks.
+const malformedTransactionCases=[
+ ['missing subject data', 'subjects/math', undefined],
+ ['null subject data', 'subjects/math', null],
+ ['array subject data', 'subjects/math', []],
+ ['foreign subject data', 'subjects/math', {schoolId:'87654321',class:classId,active:true}],
+ ['wrong class subject data', 'subjects/math', {schoolId,class:'8',active:true}],
+ ['inactive subject data', 'subjects/math', {schoolId,class:classId,active:false}],
+ ['missing student data', 'students/s2', undefined],
+ ['null student data', 'students/s2', null],
+ ['array student data', 'students/s2', []],
+ ['foreign student data', 'students/s2', {schoolId:'87654321',class:classId}],
+ ['wrong class student data', 'students/s2', {schoolId,class:'8'}],
+ ['missing assignment data', 'subject_assignments/s2:math', undefined],
+ ['null assignment data', 'subject_assignments/s2:math', null],
+ ['array assignment data', 'subject_assignments/s2:math', []],
+ ['foreign assignment data', 'subject_assignments/s2:math', {schoolId:'87654321',class:classId,studentId:'s2',subjectId}],
+ ['wrong assignment student', 'subject_assignments/s2:math', {schoolId,class:classId,studentId:'s1',subjectId}],
+ ['wrong assignment subject', 'subject_assignments/s2:math', {schoolId,class:classId,studentId:'s2',subjectId:'science'}],
+ ['inactive assignment', 'subject_assignments/s2:math', {schoolId,class:classId,studentId:'s2',subjectId,active:false}]
+];
+assert.equal(malformedTransactionCases.length,18);
+for(const [label,path,value] of malformedTransactionCases){
+ const {api,writes}=mock();
+ const original=api.runTransaction;
+ api.runTransaction=(db,callback)=>original(db,tx=>{
+  const get=tx.get;
+  tx.get=async ref=>{
+   const snap=await get(ref);
+   return ref===path?{exists:()=>true,data:()=>value}:snap;
+  };
+  return callback(tx);
+ });
+ await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),undefined,label);
+ assert.equal(writes.length,0,label+' must not save any mark');
+}
+
 console.log('V47 atomic class marks save contract checks passed');
