@@ -14,7 +14,7 @@ assert.deepEqual(calls,['schools/12345678/marks','schools/12345678/marks']);
 await assert.rejects(()=>loadAllClassMarks({...base,maxRecords:2}),/safe read limit/);
 await assert.rejects(()=>loadAllClassMarks({...base,pageSize:101}),/page size/);
 const bad={...api,getDocs:async()=>({docs:[{id:'a',data:()=>({schoolId,class:'10',term:'final'})}]})};
-await assert.rejects(()=>loadAllClassMarks({...base,api:bad}),/Unexpected marks class/);
+await assert.rejects(()=>loadAllClassMarks({...base,api:bad}),/Foreign or mismatched marks record/);
 const unauthorized={...actor,schoolId:'87654321'};
 await assert.rejects(()=>loadAllClassMarks({...base,actor:unauthorized}),/membership/i);
 console.log('V47 complete class marks pagination checks passed');
