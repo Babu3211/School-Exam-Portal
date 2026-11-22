@@ -34,6 +34,22 @@ jobs:
         run: |
           set -o pipefail
           npm run test:v47 2>&1 | tee v47-full-tests.log
+      - name: Publish regression result to job summary
+        if: always()
+        run: |
+          {
+            echo '## V47 regression suite'
+            echo ''
+            if [ ! -f v47-full-tests.log ]; then
+              echo 'Result: **NOT RUN** — dependency installation or setup failed.'
+            elif grep -Eq '(^|[[:space:]])(not ok|FAIL|Error:|AssertionError)' v47-full-tests.log; then
+              echo 'Result: **FAILURES DETECTED** — inspect the saved test log.'
+            else
+              echo 'Test log captured; inspect the workflow step conclusion for authoritative PASS/FAIL.'
+            fi
+            echo ''
+            echo 'The workflow never deploys or writes production Firestore data.'
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Check release blockers (deployment remains disabled)
         if: always()
         run: |
