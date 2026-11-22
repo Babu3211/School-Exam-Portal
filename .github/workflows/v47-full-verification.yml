@@ -37,8 +37,11 @@ jobs:
       - name: Check release blockers (deployment remains disabled)
         if: always()
         run: |
-          npm run test:v47:release > v47-release-gate.log 2>&1
-          status=$?
+          if npm run test:v47:release > v47-release-gate.log 2>&1; then
+            status=0
+          else
+            status=$?
+          fi
           cat v47-release-gate.log
           echo "Release gate exit status: $status"
           {
