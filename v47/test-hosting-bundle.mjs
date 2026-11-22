@@ -3,14 +3,17 @@ import {readdir,readFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 execFileSync(process.execPath,['v47/build-hosting.mjs'],{stdio:'inherit'});
 const names=await readdir('v47/dist');
-for(const name of ['index.html','admin.html','school-login.html','school-login.mjs','students.html','attendance.html'])
+for(const name of ['index.html','admin.html','school-login.html','school-login.mjs','students.html','attendance.html','manifest.webmanifest','dev-icon.svg'])
  assert(names.includes(name),'Missing public entry '+name);
 for(const name of names){
- assert(!name.startsWith('test-'),'Test module leaked: '+name);
+ assert(!name.startsWith('test-')&&!name.startsWith('build-')&&!name.startsWith('release-')&&!name.startsWith('server-')&&!name.startsWith('audit-'),'Private development module leaked: '+name);
  assert(!name.startsWith('firebase.'),'Firebase configuration leaked: '+name);
  assert(!name.includes('..')&&!name.includes('/'),'Invalid public filename: '+name);
  assert(!['firebase.json','firestore.rules','firestore.indexes.json','build-hosting.mjs','test-production-marks-guard.mjs','release-readiness-gate.mjs'].includes(name),'Private file leaked: '+name);
 }
+const manifest=JSON.parse(await readFile('v47/dist/manifest.webmanifest','utf8'));
+assert(Array.isArray(manifest.icons)&&manifest.icons.length>0,'V47 PWA must retain its icons');
+for(const icon of manifest.icons){assert(typeof icon.src==='string'&&icon.src.startsWith('./'),'External V47 manifest icon forbidden');assert(names.includes(icon.src.slice(2)),'PWA icon missing from hosting bundle: '+icon.src)}
 const hub=await readFile('v47/dist/index.html','utf8');
 assert(hub.includes('SMSS Exam Portal'),'Incorrect V47 homepage');
 for(const name of names.filter(n=>n.endsWith('.html'))){

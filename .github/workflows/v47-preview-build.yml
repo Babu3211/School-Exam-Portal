@@ -56,3 +56,12 @@ jobs:
           path: v47/dist/
           if-no-files-found: error
           retention-days: 3
+      - name: Build verified V47 Hosting review artifact (no deployment)
+        run: node v47/test-hosting-bundle.mjs
+      - name: Upload V47 Hosting review files (no live channel)
+        uses: actions/upload-artifact@v4
+        with:
+          name: v47-hosting-review
+          path: v47/dist/
+          if-no-files-found: error
+          retention-days: 3

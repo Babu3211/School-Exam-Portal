@@ -98,6 +98,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Build and smoke-test V47-only Hosting output (never deploy)
+        run: |
+          node v47/test-hosting-bundle.mjs
+          test -s v47/dist/index.html
+          test ! -e v47/dist/firestore.rules
       - name: Check release blockers (deployment remains disabled)
         if: always()
         run: |
