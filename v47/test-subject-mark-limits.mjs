@@ -12,6 +12,8 @@ for(const [theoryFullMarks,practicalFullMarks] of [['4','36'],['23.5','7.25'],['
  assert.equal(validateSubjectMarkLimits({theoryFullMarks,practicalFullMarks},{theory:Number(theoryFullMarks),practical:Number(practicalFullMarks)}),true);
  assert.throws(()=>validateSubjectMarkLimits({theoryFullMarks,practicalFullMarks},{theory:Number(theoryFullMarks)+1,practical:0}),/exceed/);
 }
-for(const invalid of [-1,'oops',Infinity,{},'10 marks'])assert.throws(()=>validateSubjectMarkLimits({theoryFullMarks:invalid},{theory:0,practical:0}),/Invalid/);
+for(const invalid of [-1,'oops',Infinity,{},'10 marks',null,'',NaN,'-2','1e3'])assert.throws(()=>validateSubjectMarkLimits({theoryFullMarks:invalid},{theory:0,practical:0}),/Invalid/);
+assert.equal(validateSubjectMarkLimits({theoryFullMarks:0,practicalFullMarks:0},{theory:0,practical:0}),true);
+assert.throws(()=>validateSubjectMarkLimits({theoryFullMarks:0},{theory:1,practical:0}),/exceed/);
 assert.equal(validateSubjectMarkLimits({name:'Legacy'},{theory:25,practical:10}),true);
 console.log('V47 configured full marks validation passed');
