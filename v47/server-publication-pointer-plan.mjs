@@ -7,13 +7,17 @@ export function planOfficialPublicationPointerSwitch({currentPointer,stagedVerif
   !Number.isSafeInteger(stagedVerification.rosterCount)||stagedVerification.rosterCount<1||stagedVerification.rosterCount>1500||
   !Number.isSafeInteger(stagedVerification.batchCount)||stagedVerification.batchCount!==Math.ceil(stagedVerification.rosterCount/100))
   throw new Error('Complete staged class verification required');
- for(const key of ['schoolId','classId','subjectId','examId']){
-  if(typeof stagedVerification[key]!=='string'||!stagedVerification[key])throw new Error('Missing publication scope: '+key);
+ if(typeof stagedVerification.schoolId!=='string'||!/^[0-9]{5,20}$/.test(stagedVerification.schoolId))throw new Error('Invalid IEMIS publication school ID');
+ for(const key of ['classId','subjectId','examId']){
+  if(typeof stagedVerification[key]!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(stagedVerification[key]))throw new Error('Invalid publication scope: '+key);
  }
  if(typeof publicationId!=='string'||!/^[A-Za-z0-9_-]{8,128}$/.test(publicationId))throw new Error('Invalid server-owned publication ID');
  if(typeof actorUid!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(actorUid))throw new Error('Verified admin UID required');
  if(expectedPreviousId!==null&&(typeof expectedPreviousId!=='string'||!/^[A-Za-z0-9_-]{8,128}$/.test(expectedPreviousId)))throw new Error('Invalid previous publication ID');
  if(currentPointer!==null&&(!currentPointer||typeof currentPointer!=='object'||Array.isArray(currentPointer)))throw new Error('Invalid current publication pointer');
+ if(currentPointer!==null&&(
+  typeof currentPointer.publicationId!=='string'||!/^[A-Za-z0-9_-]{8,128}$/.test(currentPointer.publicationId)
+ ))throw new Error('Invalid current publication ID');
  const previous=currentPointer?.publicationId??null;
  if(previous!==expectedPreviousId)throw new Error('Concurrent publication detected; reload before committing');
  if(previous===publicationId)throw new Error('Publication ID cannot replace itself');
