@@ -112,6 +112,17 @@ for(const [name,theoryFullMarks,practicalFullMarks,theory,practical] of [
  assert.equal(result.saved,2);
  assert.equal(writes.length,2);
 }
+// If only one student's mark exceeds the subject limit, no class mark is saved.
+for(const [name,theoryFullMarks,practicalFullMarks,good,bad] of [
+ ['Computer',4,36,{theory:4,practical:36},{theory:5,practical:36}],
+ ['Nepali',23.5,7.25,{theory:23.5,practical:7.25},{theory:23.5,practical:7.26}],
+ ['New Optional Subject',70,30,{theory:70,practical:30},{theory:71,practical:30}]
+]){
+ const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name,theoryFullMarks,practicalFullMarks}});
+ const entries=[mark('s1',good),mark('s2',bad)];
+ await assert.rejects(saveCompleteClassMarks({...args,entries,db:{},api}),/exceed/);
+ assert.equal(writes.length,0,'One invalid mark must block the entire class transaction');
+}
 // Late failure in a three-student transaction must roll back ALL pending writes.
 for(const broken of [
  {'students/s3':null},
