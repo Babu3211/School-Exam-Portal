@@ -1,6 +1,6 @@
 const ROLES=new Set(['super_admin','school_admin','teacher','viewer']);
 export function canAccessSchool(member,schoolId,operation='read'){
- if(!member||member.active!==true||typeof schoolId!=='string')return false;
+ if(!member||member.active!==true||typeof schoolId!=='string'||!['read','write'].includes(operation))return false;
  if(member.role==='super_admin')return true;
  if(member.schoolId!==schoolId||!ROLES.has(member.role))return false;
  if(operation==='read')return true;
