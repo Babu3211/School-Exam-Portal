@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {loadClassRoster} from './attendance-roster.mjs';
-const schoolId='12345678',schoolClass='9',actor={role:'school_admin',active:true,schoolId};
+const schoolId='12345678',schoolClass='9',actor={uid:'admin-1',role:'school_admin',active:true,schoolId};
 function apiFor(records){
  return {
   where:(...x)=>x,orderBy:x=>x,limit:x=>x,startAfter:x=>x,
