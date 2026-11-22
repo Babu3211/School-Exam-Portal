@@ -19,7 +19,8 @@ for(const name of ['dashboard-console.mjs','students-console.mjs','attendance-co
 }
 for(const name of ['students-console.mjs','attendance-console.mjs','school-settings-console.mjs']){
  const code=read(name);
- assert.match(code,/requestedSchool/,'Dashboard school selection must be recognized: '+name);
+ assert.match(code,/const requestedSchool=new URL\(location\.href\)\.searchParams\.get\('schoolId'\)/,'Dashboard school ID must be initialized: '+name);
+ assert.match(code,/if\(requestedSchool\)queueMicrotask\(\(\)=>\$\('connect'\)\.click\(\)\)/,'Dashboard-linked module must auto-connect: '+name);
  assert.match(code,/auth\.currentUser/,'Existing session must be checked: '+name);
  assert.match(code,/const freshSignIn=!auth\.currentUser/,'Must distinguish fresh login from restored session: '+name);
  assert.match(code,/if\(freshSignIn\)startVerifiedSchoolActivity\(\)/,'Restoring a session must not reset idle expiry: '+name);
