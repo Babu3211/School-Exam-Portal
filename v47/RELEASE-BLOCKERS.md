@@ -33,3 +33,25 @@ Commit `8124ec9372b22be3c7e789c74b7f8f0534aa450c` completed **six of six workflo
 - Multi-School Development — 44349440459
 
 Offline pagination simulations now cover 1,500 records in one school and 30 schools with 500 records each (15,000 simulated records total). These are correctness simulations, **not** live Firestore performance, billing-quota, or cross-school production tests. Browser sign-in, real two-school isolation, V46 feature parity, and real-scale Spark quota measurements remain open release gates.
+
+
+## Non-duplicative release audit — 2026-11-22
+
+Earlier **historical** successful CI runs documented above (2026-11-18) must not be confused with a successful run for the current branch head. Current head CI has not been independently verified.
+
+Source-verified current blockers:
+- `index.html` is still explicitly a **Development Hub**, not a complete V46-equivalent dashboard.
+- `marks-entry.html` still disables Save.
+- `class-mark-save.mjs` still rejects classes over three students.
+- `class-mark-staging-plan.mjs`, `verified-class-mark-staging.mjs`, and `class-mark-staging-integrity.mjs` are read-only preparations; they do **not** write or publish marks.
+- `release-readiness-gate.mjs` intentionally exits nonzero. Preserve it.
+
+**Next execution order (avoid repetitive micro-fixes):**
+1. Retrieve actual current GitHub Actions run and job logs; fix real failures, not speculative test assertions.
+2. Inventory V46 production routes/features against V47 pages, and prioritize direct reuse/adaptation of working V46 UI.
+3. Wire real tenant-scoped login, school context, and roles into the reused screens; test two schools.
+4. Design and emulator-test Spark-compatible complete-class staging + manifest commit + read visibility, including interrupted uploads and roster changes. Never enable raw mark writes as a shortcut.
+5. Validate V46 IEMIS/CDC results, configurable subject components, attendance, Excel import/export, mobile/PWA, viewer read-only, and large rosters.
+6. Require green CI at the release commit, browser tests, backups and explicit deployment approval.
+
+**Stop rule:** No further isolated staging-validation commits without a reproducible failing test. No V47 deployment while any release blocker remains. Never change V46 `main` without explicit permission.
