@@ -21,6 +21,8 @@ for(const name of ['students-console.mjs','attendance-console.mjs','school-setti
  const code=read(name);
  assert.match(code,/requestedSchool/,'Dashboard school selection must be recognized: '+name);
  assert.match(code,/auth\.currentUser/,'Existing session must be checked: '+name);
+ assert.match(code,/const freshSignIn=!auth\.currentUser/,'Must distinguish fresh login from restored session: '+name);
+ assert.match(code,/if\(freshSignIn\)startVerifiedSchoolActivity\(\)/,'Restoring a session must not reset idle expiry: '+name);
 }
 const dashboard=read('dashboard-console.mjs');
 assert.match(dashboard,/destination\.searchParams\.set\('schoolId',current\.schoolId\)/);
