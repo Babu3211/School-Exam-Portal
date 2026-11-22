@@ -10,4 +10,8 @@ assert.match(js,/\$\('toggleFoundMember'\)\.disabled=!member\|\|!\['teacher','vi
 assert.match(js,/if\(!\['teacher','viewer'\]\.includes\(member\.role\)\)return/);
 assert.match(js,/setSchoolMemberActive\(\{db,api,actor:session\.actor,schoolId:session\.schoolId,uid:member\.uid,active:!member\.active\}\)/);
 assert.match(js,/assertSameAdmin\(session\);\n  foundMember=null;lookupRequest\+\+/);
+assert.match(js,/const latest=await findSchoolMember\(\{db,api,actor:session\.actor,schoolId:session\.schoolId,uid:member\.uid\}\)/);
+assert.match(js,/latest\.role!==member\.role\|\|latest\.active!==member\.active/);
+assert.match(js,/request!==lookupRequest\|\|foundMember!==member/);
+assert.match(js,/\$\('findMemberUid'\)\.value\.trim\(\)!==member\.uid/);
 console.log('V47 lookup member status controls require confirmation, scoped role, and fresh session');
