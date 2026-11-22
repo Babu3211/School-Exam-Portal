@@ -14,13 +14,14 @@ export function assessClassPublicationReadiness({actor,schoolId,schoolClass,term
  if(!Array.isArray(subjects)||!subjects.length)blockers.push('Complete subject roster unavailable');
  if(!Array.isArray(records))blockers.push('Marks records unavailable');
  if(!coverage?.complete)blockers.push('Full-class marks coverage not verified');
+ if(coverage?.complete&&(!Number.isSafeInteger(coverage.studentCount)||!Number.isSafeInteger(coverage.subjectCount)||!Number.isSafeInteger(coverage.recordCount)))blockers.push('Coverage counts are missing or invalid');
  if(Array.isArray(students)&&students.length&&Array.isArray(subjects)&&subjects.length&&Array.isArray(records)){
   try{
    const verified=verifyClassMarksCoverage({students,subjects,records,schoolClass,term});
    if(!coverage?.complete||coverage.studentCount!==verified.studentCount||coverage.subjectCount!==verified.subjectCount||coverage.recordCount!==verified.recordCount)blockers.push('Coverage metadata does not match verified marks');
   }catch(error){blockers.push('Full-class marks verification failed: '+error.message)}
  }
- if(Array.isArray(records)&&records.some(r=>r.schoolId!==schoolId))blockers.push('Marks contain foreign or unscoped school records');
+ if(Array.isArray(records)&&records.some(r=>!r||r.schoolId!==schoolId))blockers.push('Marks contain foreign or unscoped school records');
  if(Array.isArray(students)&&students.some(s=>s.schoolId!==schoolId||s.class!==schoolClass||s.active!==true))blockers.push('Student roster contains inactive or foreign students');
  if(Array.isArray(subjects))for(const subject of subjects){
   if(subject.schoolId!==schoolId||subject.class!==schoolClass||subject.active!==true)blockers.push('Subject roster contains inactive or foreign subjects');
