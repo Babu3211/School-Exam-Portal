@@ -7,7 +7,7 @@ import {validateSchoolId} from './school-paths.mjs';
 import {canAccessSchool} from './permissions.mjs';
 // Read-only diagnostic orchestration. The caller must supply a verified, complete
 // active subject roster; no results are persisted or certified for publication.
-export async function loadSchoolClassResultDiagnostic({db,api,actor,schoolId,schoolClass,term,maxStudents=1500,maxRecords=1500}){
+export async function loadSchoolClassResultDiagnostic({db,api,actor,schoolId,schoolClass,term,maxStudents=1500,maxRecords=30000}){
  validateSchoolId(schoolId);
  if(!canAccessSchool(actor,schoolId,'read'))throw new Error('School membership required');
  const identity={uid:actor?.uid,schoolId:actor?.schoolId,role:actor?.role,active:actor?.active};
