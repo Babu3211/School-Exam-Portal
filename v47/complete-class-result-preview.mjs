@@ -25,7 +25,8 @@ export async function previewCompleteSchoolClass({students,subjects,records,hasM
   const entries=byStudent.get(student.id);
   if(entries.length!==subjects.length)throw new Error('Incomplete student result');
   const gpa=previewV46Gpa({subjects:entries,annual:true});
-  const ordered=subjects.map(subject=>subjectResults.get(student.id).find(entry=>entry.subjectId===subject.id));
+  const subjectIndex=new Map(subjectResults.get(student.id).map(entry=>[entry.subjectId,entry]));
+  const ordered=subjects.map(subject=>subjectIndex.get(subject.id));
   if(ordered.some(entry=>!entry))throw new Error('Missing subject result in diagnostic ledger');
   results.push({studentId:student.id,gpa,complete:true,graded:gpa!==null,subjects:ordered});
  }
