@@ -58,13 +58,16 @@ export async function readV47StudentXlsx(file){
  if(!sheet)throw new Error('Missing worksheet');
  const shared=files.get('xl/sharedStrings.xml');
  const strings=shared?descendants(xml(shared),'si').map(si=>descendants(si,'t').map(t=>t.textContent??'').join('')):[];
- const rows=[];
+ const rows=[];let previousRow=0;
  for(const row of descendants(xml(sheet),'row')){
+  const rowNumber=Number(row.getAttribute('r'));
+  if(!Number.isSafeInteger(rowNumber)||rowNumber<=previousRow||rowNumber>1501)throw new Error('Invalid Excel row reference');
+  previousRow=rowNumber;
   if(rows.length>=1501)throw new RangeError('Maximum 1500 student rows per preview');
   const cells=[];let previous=0;
   for(const cell of children(row,'c')){
    const ref=cell.getAttribute('r')??'',letters=/^[A-Z]+/.exec(ref)?.[0];
-   if(!letters)throw new Error('Invalid Excel cell reference');
+   if(!letters||ref!==letters+rowNumber)throw new Error('Invalid Excel cell reference');
    let index=0;for(const ch of letters)index=index*26+ch.charCodeAt(0)-64;
    if(index<1||index>26||index<=previous)throw new Error('Unexpected Excel column');
    while(cells.length<index-1)cells.push('');
@@ -78,6 +81,7 @@ export async function readV47StudentXlsx(file){
    cells.push(value);previous=index;
   }
   while(cells.length<26)cells.push('');
+  while(rows.length<rowNumber-1)rows.push(Array(26).fill(''));
   rows.push(cells);
  }
  if(!rows.length)throw new Error('Empty Excel sheet');
