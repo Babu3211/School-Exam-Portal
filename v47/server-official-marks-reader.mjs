@@ -26,7 +26,7 @@ export function resolveOfficialClassMarks({schoolId,classId,subjectId,examId,poi
    typeof row.studentId!=='string'||!segment.test(row.studentId)||seen.has(row.studentId)||
    typeof row.isAbsent!=='boolean')throw new Error('Invalid or duplicate official marks row');
   if(row.isAbsent){
-   if(row.values!==null||row.totalObtained!==null)throw new Error('Invalid absent marks row');
+   if(row.values!==null||row.totalObtained!==0)throw new Error('Invalid absent marks row');
   }else{
    if(!row.values||typeof row.values!=='object'||Array.isArray(row.values)||
     Object.keys(row.values).length===0||Object.values(row.values).some(v=>typeof v!=='number'||!Number.isFinite(v)||v<0)||
