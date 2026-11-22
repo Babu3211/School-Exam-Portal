@@ -222,5 +222,22 @@ for (const grade of ['4','5']) {
   assert.notEqual(firstIndicator(stories[0]),firstIndicator(stories[1]));
 }
 console.log('CDC Nepali form: all 30 areas and 180 indicators for Grades 4 and 5 passed');
+w.ledgerSubjectsForClass=()=>['science'];
+for (const [grade,counts] of [['4',[5,5,3,6,3,14,8,5]],['5',[6,6,4,3,3,10,13,4]]]) {
+  current.subjectAssignments=[{className:grade,subject:'science'}];
+  choice('class',grade);
+  choice('subject','science');
+  const units=[...w.document.querySelectorAll('#cdcUnitSuggestions option')].map(option=>option.value);
+  assert.equal(units.length,16);
+  counts.forEach((count,i)=>{
+    choice('unitEn',units[2*i+1]);
+    assert.equal(field('unit').value,units[2*i]);
+    const options=[...w.document.querySelectorAll('#cdcTopicSuggestions option')];
+    assert.equal(options.length,2*count);
+    assert.equal(new Set(options.map(option=>option.value)).size,2*count);
+    assert.ok(options.every(option=>/[अ-ह]/u.test(option.text)&&/[a-z]/i.test(option.text)));
+  });
+}
+console.log('Grades 4 and 5 science: 98 bilingual indicators verified in the assessment form');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
