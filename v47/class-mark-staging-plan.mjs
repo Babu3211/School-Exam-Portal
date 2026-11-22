@@ -14,12 +14,13 @@ export function planCompleteClassMarkStaging({schoolId,classId,term,subjectId,ex
  if(Array.isArray(subjectSettings.components)&&subjectSettings.components.length)
   throw new Error('Component assessment staging requires separately verified component mapping');
  for(const entry of complete.entries)validateSubjectMarkLimits(subjectSettings,entry);
+ if(!Number.isInteger(complete.count)||complete.count!==expectedStudentIds.length)throw new Error('Incomplete class marks plan');
  // Normalize order independently of UI entry order. Never silently drop a row.
  const ordered=[...complete.entries].sort((a,b)=>a.studentId<b.studentId?-1:a.studentId>b.studentId?1:0);
  const chunks=[];
  for(let start=0;start<ordered.length;start+=chunkSize){
   const rows=ordered.slice(start,start+chunkSize).map(row=>Object.freeze({...row,schoolId}));
-  chunks.push(Object.freeze({index:chunks.length,offset:start,count:rows.length,rows:Object.freeze(rows)}));
+  chunks.push(Object.freeze({index:chunks.length,offset:start,count:rows.length,firstStudentId:rows[0].studentId,lastStudentId:rows.at(-1).studentId,rows:Object.freeze(rows)}));
  }
  if(chunks.reduce((sum,chunk)=>sum+chunk.count,0)!==complete.count)
   throw new Error('Staging plan lost marks');
