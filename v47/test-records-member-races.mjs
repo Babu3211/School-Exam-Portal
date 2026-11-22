@@ -20,6 +20,9 @@ const sdk=(getDocs)=>({
  })
 });
 const makeStore=(actor,api=sdk())=>createSchoolStore({db:{},api,member:actor,schoolId});
+for(const uid of [undefined,null,'','user/other']){
+ assert.throws(()=>makeStore({...member(),uid}),/Authenticated school member required/);
+}
 {
  const store=makeStore(member());
  const a=await store.listPage('students',{pageSize:100});
