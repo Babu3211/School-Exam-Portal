@@ -34,7 +34,7 @@ assert.match(ui,/const roster=await loadCompleteClassRoster/);
 assert.match(ui,/const finalSession=await verifySchoolSession/);
 assert.match(ui,/reviewVerifyResult/);
 assert.match(ui,/Settings changed since marks entry was loaded/);
-assert.match(ui,/Roster changed since marks entry was loaded/);
+assert.match(ui,/Roster changed or contains inactive student since marks entry was loaded/);
 assert.match(ui,/Session changed while reading review file/);
 const lock=ui.slice(ui.indexOf('function lock(value)'),ui.indexOf("$('connect').onclick"));
 assert.match(lock,/\$\('downloadClassReview'\)\.disabled=value\|\|!reviewPackage/);
