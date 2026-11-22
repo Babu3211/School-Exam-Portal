@@ -9,6 +9,8 @@ on:
       - 'v47/subjects.html'
       - 'v47/subjects-console.mjs'
       - 'v47/test-subject-configured-marks.mjs'
+      - 'v47/v46-iemis-ledger.js'
+      - 'v47/test-v46-iemis-parity.mjs'
       - 'v47/marks-service.mjs'
       - 'v47/test-unbounded-mark-entry.mjs'
       - 'v47/mark-create-service.mjs'
@@ -29,6 +31,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify V46 IEMIS grading baseline
+        run: node v47/test-v46-iemis-parity.mjs
       - name: Validate subject full-mark creation
         run: node v47/test-subject-configured-marks.mjs
       - name: Validate unrestricted mark parsing
