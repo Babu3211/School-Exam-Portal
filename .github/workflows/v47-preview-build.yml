@@ -39,6 +39,9 @@ jobs:
           test -s v47/dist/index.html
           test -s v47/dist/dashboard-console.mjs
           test -s v47/dist/v47-firebase-config.mjs
+          test -s v47/dist/manifest.webmanifest
+          test -s v47/dist/dev-icon.svg
+          grep -q 'SMSS Exam Portal V47' v47/dist/manifest.webmanifest
           grep -q 'Development only' v47/dist/index.html
           grep -q "projectId:'smss-exam-portal-v47'" v47/dist/v47-firebase-config.mjs
           test ! -e v47/dist/firestore.rules
