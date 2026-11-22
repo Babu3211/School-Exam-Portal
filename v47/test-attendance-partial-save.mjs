@@ -194,6 +194,7 @@ for(const mutate of [
  assert.match(ui,/if\(attendanceReviewRequired\)/);
  assert.match(ui,/if\(attendanceReviewRequired\)throw new Error\('अघिल्लो Bulk Save/);
  assert.match(ui,/\$\('bulkSave'\)\.onclick=async\(\)=>\{if\(savingAttendance\)return;savingAttendance=true/);
+ assert.match(ui,/const button=\$\('bulkSave'\);button\.disabled=true;\$\('logout'\)\.disabled=true;\$\('login'\)\.disabled=true;\$\('save'\)\.disabled=true/);
  assert.match(ui,/if\(review\)\{if\(result\.hasMore\)/);
  assert.match(ui,/attendanceReviewRequired=false/);
  assert.match(ui,/attendanceReviewRequired&&!result\.hasMore&&records\.length>0/);
