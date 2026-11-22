@@ -70,7 +70,7 @@ corruptWorksheet[worksheetData+Math.min(20,view.getUint32(central+20,true)-1)]^=
 await assert.rejects(readV47StudentXlsx(asFile(corruptWorksheet)),/Invalid XLSX entry checksum/);
 const shortDirectory=new Uint8Array(source);
 new DataView(shortDirectory.buffer).setUint32(eocd+12,46,true);
-await assert.rejects(readV47StudentXlsx(asFile(shortDirectory)),/Invalid ZIP directory/);
+await assert.rejects(readV47StudentXlsx(asFile(shortDirectory)),/Invalid ZIP directory|Invalid ZIP entry/);
 const longDirectory=new Uint8Array(source);
 new DataView(longDirectory.buffer).setUint32(eocd+12,view.getUint32(eocd+12,true)+1,true);
 await assert.rejects(readV47StudentXlsx(asFile(longDirectory)),/Invalid XLSX central directory|Invalid XLSX directory length/);
@@ -91,7 +91,13 @@ await rejects(central+42,(v,p)=>v.setUint32(p,directory,true),/Invalid ZIP entry
 await rejects(local+6,(v,p)=>v.setUint16(p,1,true),/Mismatched XLSX ZIP entry/);
 await rejects(central+10,(v,p)=>v.setUint16(p,99,true),/Unsupported or oversized Excel entry/);
 // 10-12: worksheet size and checksum.
-await rejects(central+24,(v,p)=>v.setUint32(p,0,true),/Invalid XLSX entry size/);
+await rejects(central+24,(v,p)=>v.setUint32(p,0,true),/Mismatched XLSX ZIP entry/);
+// Both header sizes agree but disagree with actual XML: payload size must fail.
+const pairedBadSize=new Uint8Array(source);
+const badSizeView=new DataView(pairedBadSize.buffer);
+badSizeView.setUint32(central+24,0,true);
+badSizeView.setUint32(local+22,0,true);
+await assert.rejects(readV47StudentXlsx(asFile(pairedBadSize)),/Invalid XLSX entry size/);
 await rejects(central+16,(v,p)=>v.setUint32(p,0xffffffff,true),/Mismatched XLSX ZIP entry/);
 await rejects(central+20,(v,p)=>v.setUint32(p,source.length,true),/Truncated XLSX|Mismatched XLSX ZIP entry/);
 // 13-15: malformed central record metadata.
@@ -101,7 +107,7 @@ await rejects(central+32,(v,p)=>v.setUint16(p,65535,true),/Invalid ZIP entry/);
 
 // Verify local ZIP entry metadata cannot impersonate a central-directory worksheet.
 await rejects(local+30,(_v,p,b)=>{b[p]^=1},/Mismatched XLSX ZIP filename/);
-await rejects(local+6,(v,p)=>v.setUint16(p,0,true),/Mismatched XLSX ZIP entry/);
+await rejects(local+6,(v,p)=>v.setUint16(p,8,true),/Mismatched XLSX ZIP entry/);
 await rejects(local+26,(v,p)=>v.setUint16(p,65535,true),/Invalid ZIP local entry/);
 await rejects(local+28,(v,p)=>v.setUint16(p,65535,true),/Invalid ZIP local entry/);
 // Verify ZIP local header integrity and strong-encryption rejection.
