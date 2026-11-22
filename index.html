@@ -2315,7 +2315,7 @@ const cdcSeroferoUnits = [
 function cdcVerifiedUnits(className,subject) {
   const key = cdcAssessmentSubjectKey(subject);
   if (Number(className)<=3&&key==='serophero') return cdcSeroferoUnits;
-  if (Number(className)===1&&key==='english') return [['वर्णमाला','Alphabet']];
+  if (Number(className)===1&&key==='english') return [['वर्णमाला','Alphabet'], ...cdcSeroferoUnits.slice(0,2)];
   if (Number(className)===1&&key==='mathematics') return [cdcSeroferoUnits[1],cdcSeroferoUnits[2],cdcSeroferoUnits[3],cdcSeroferoUnits[6],cdcSeroferoUnits[8]];
   if (Number(className)>=4&&key==='mathematics') return [
     ['ज्यामिति','Geometry'], ['अङ्कगणित','Arithmetic'], ['नाप','Measurement'],
@@ -2391,7 +2391,42 @@ const cdcVerifiedOutcomes = {
     ["वर्णमाला","रेखा र ढाँचा कोर्दै आँखा र हातको तालमेल विकास गर्ने","Coordinate hand and eye movements by drawing lines and patterns"],
     ["वर्णमाला","अक्षरको खाका उतार्ने र आफैँ लेख्ने","Trace letters and then write them"],
     ["वर्णमाला","साना र ठूला अक्षर उचित आकारमा बनाउने","Form lowercase and uppercase letters with consistent shape and size"],
-    ["वर्णमाला","सफा र बुझिने हस्तलेखन देखाउने","Write by hand clearly and legibly"]
+    ["वर्णमाला","सफा र बुझिने हस्तलेखन देखाउने","Write by hand clearly and legibly"],
+    ["म र मेरो परिवार","सुनेका ध्वनि दोहोर्‍याउने, चिन्ने र छुट्याउने","Copy, recognize and distinguish sounds"],
+    ["म र मेरो परिवार","छुट्टाछुट्टै ध्वनि जोडेर एक अक्षरखण्डको शब्द बनाउने","Combine separate sounds into a one-syllable word"],
+    ["म र मेरो परिवार","सुनेको सामग्री वा शिक्षकलाई बोली वा इशाराले प्रतिक्रिया दिने","Respond to the recording or teacher with words or gestures"],
+    ["म र मेरो परिवार","सुनेर चित्र बनाउने वा जोडा मिलाउने जस्ता काम गर्ने","Complete listening activities such as drawing and matching"],
+    ["म र मेरो परिवार","ध्वनि र शब्दको नक्कल गरी उच्चारण गर्ने","Repeat and produce sounds and words aloud"],
+    ["म र मेरो परिवार","कक्षाअनुसारका शब्द सही उच्चारण गर्ने","Say grade-level words with accurate pronunciation"],
+    ["म र मेरो परिवार","छोटा शब्द वा पदावलीमा आफ्नो नाम, ठेगाना वा परिवारबारे बताउने","Use short phrases to give basic personal details"],
+    ["म र मेरो परिवार","छोटा र सरल प्रश्न सोध्ने तथा जवाफ दिने","Pose and answer brief, simple questions"],
+    ["म र मेरो परिवार","शिक्षक वा रेकर्डिङ सुनेर गीत गाउने वा लयमा भन्ने","Sing or chant after hearing a teacher or recording"],
+    ["म र मेरो परिवार","ध्वनि जोडेर शब्द र वाक्य पढ्ने","Combine sounds to read words and sentences"],
+    ["म र मेरो परिवार","चित्रको सहायताले परिचित शब्द पढ्ने","Identify and read familiar words with picture cues"],
+    ["म र मेरो परिवार","मिल्दो तुक र तालमा कविता वा लयात्मक पाठ भन्ने","Recite rhymes and chants with the right sound pattern and beat"],
+    ["म र मेरो परिवार","कक्षाअनुसारका शब्दको अर्थ बुझ्ने","Explain or recognize the meaning of grade-level vocabulary"],
+    ["म र मेरो परिवार","शब्द, सरल वाक्य र छोटा अनुच्छेद सही पढ्ने","Read words, simple sentences and short passages accurately"],
+    ["म र मेरो परिवार","रेखा, वक्र र वृत्त कोर्न पेन्सिल ठीकसँग समात्ने","Grip a pencil properly to draw lines, curves and circles"],
+    ["म र मेरो परिवार","रेखा र ढाँचा कोर्दै आँखा र हातको तालमेल विकास गर्ने","Coordinate hand and eye movements by drawing lines and patterns"],
+    ["म र मेरो परिवार","अक्षरको खाका उतार्ने र आफैँ लेख्ने","Trace letters and then write them"],
+    ["म र मेरो परिवार","सफा र बुझिने हस्तलेखन देखाउने","Write by hand clearly and legibly"],
+    ["मेरो दैनिक जीवन","तुक मिल्ने शब्द चिन्ने र भन्ने","Spot and produce words that rhyme"],
+    ["मेरो दैनिक जीवन","सुनेको शब्दसँग छापिएको शब्द मिलाउने","Match a word heard aloud to its written form"],
+    ["मेरो दैनिक जीवन","शब्द र सरल अभिव्यक्ति चिनेर बुझ्ने","Recognize and understand words and simple phrases"],
+    ["मेरो दैनिक जीवन","सुनेको सामग्री वा शिक्षकलाई बोली वा इशाराले प्रतिक्रिया दिने","Respond to the recording or teacher with words or gestures"],
+    ["मेरो दैनिक जीवन","सुनेर चित्र बनाउने वा जोडा मिलाउने जस्ता काम गर्ने","Complete listening activities such as drawing and matching"],
+    ["मेरो दैनिक जीवन","ध्वनि र शब्दको नक्कल गरी उच्चारण गर्ने","Repeat and produce sounds and words aloud"],
+    ["मेरो दैनिक जीवन","कक्षाअनुसारका शब्द सही उच्चारण गर्ने","Say grade-level words with accurate pronunciation"],
+    ["मेरो दैनिक जीवन","छोटा र सरल प्रश्न सोध्ने तथा जवाफ दिने","Pose and answer brief, simple questions"],
+    ["मेरो दैनिक जीवन","शिक्षक वा रेकर्डिङ सुनेर गीत गाउने वा लयमा भन्ने","Sing or chant after hearing a teacher or recording"],
+    ["मेरो दैनिक जीवन","ध्वनि जोडेर शब्द र वाक्य पढ्ने","Combine sounds to read words and sentences"],
+    ["मेरो दैनिक जीवन","चित्रको सहायताले परिचित शब्द पढ्ने","Identify and read familiar words with picture cues"],
+    ["मेरो दैनिक जीवन","मिल्दो तुक र तालमा कविता वा लयात्मक पाठ भन्ने","Recite rhymes and chants with the right sound pattern and beat"],
+    ["मेरो दैनिक जीवन","कक्षाअनुसारका शब्दको अर्थ बुझ्ने","Explain or recognize the meaning of grade-level vocabulary"],
+    ["मेरो दैनिक जीवन","शब्द, सरल वाक्य र छोटा अनुच्छेद सही पढ्ने","Read words, simple sentences and short passages accurately"],
+    ["मेरो दैनिक जीवन","शब्दको हिज्जे मिलाएर लेख्ने","Spell the words correctly in writing"],
+    ["मेरो दैनिक जीवन","सरल पदावली र वाक्य आफैँ लेख्ने","Write simple phrases and sentences independently"],
+    ["मेरो दैनिक जीवन","सफा र बुझिने हस्तलेखन देखाउने","Write by hand clearly and legibly"]
   ],
   '5:mathematics': [
     ['ज्यामिति','वर्गजालमा लम्ब र समानान्तर रेखा','Draw perpendicular and parallel lines on a square grid']
