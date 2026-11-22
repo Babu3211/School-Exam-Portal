@@ -18,6 +18,8 @@ export async function prepareVerifiedClassMarkStaging({db,api,actor,schoolId,cla
  const roster=await loadCompleteClassRoster({db,api,actor,schoolId,classId});
  verify();
  if(roster.students.some(student=>student.active!==true))throw new Error('Inactive student in authoritative class roster');
+ if(typeof subjectId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(subjectId))
+  throw new Error('Invalid subject ID');
  const subjectRef=api.doc(db,'schools',schoolId,'subjects',subjectId);
  const snap=await api.getDoc(subjectRef);
  verify();
@@ -25,7 +27,7 @@ export async function prepareVerifiedClassMarkStaging({db,api,actor,schoolId,cla
   throw new Error('Active subject Examination Settings required');
  const settings=snap.data();
  verify();
- if(!settings||typeof settings!=='object'||Array.isArray(settings)||settings.id&&settings.id!==subjectId)
+ if(!settings||typeof settings!=='object'||Array.isArray(settings)||(settings.id!==undefined&&settings.id!==subjectId))
   throw new Error('Invalid Examination Settings');
  const plan=planCompleteClassMarkStaging({
   schoolId,classId,term,subjectId,expectedStudentIds:roster.studentIds,
