@@ -17,6 +17,7 @@ assert.throws(()=>validateStudent({name:'Test Student',class:'9',fatherName:{uns
 assert.throws(()=>validateStudent({name:'Test Student',class:'99'}),RangeError);
 const columns=studentExcelRow({...result,schoolId:'12345'});
 assert.equal(columns.length,STUDENT_EXCEL_HEADERS.length);
+assert.equal(columns[STUDENT_EXCEL_HEADERS.indexOf('IEMIS Code')],'12345');
 assert.equal(columns[STUDENT_EXCEL_HEADERS.indexOf('Student IEMIS Id')],'1234567890');
 assert.equal(columns[STUDENT_EXCEL_HEADERS.indexOf('Father Name')],'Parent');
 assert.equal(columns[STUDENT_EXCEL_HEADERS.indexOf('Admission Number')],'');
