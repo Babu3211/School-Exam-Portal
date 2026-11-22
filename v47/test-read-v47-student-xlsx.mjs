@@ -92,4 +92,9 @@ await rejects(central+28,(v,p)=>v.setUint16(p,65535,true),/Invalid ZIP entry/);
 await rejects(central+30,(v,p)=>v.setUint16(p,65535,true),/Invalid ZIP entry/);
 await rejects(central+32,(v,p)=>v.setUint16(p,65535,true),/Invalid ZIP entry/);
 
+// Verify local ZIP entry metadata cannot impersonate a central-directory worksheet.
+await rejects(local+30,(_v,p,b)=>{b[p]^=1},/Mismatched XLSX ZIP filename/);
+await rejects(local+6,(v,p)=>v.setUint16(p,0,true),/Mismatched XLSX ZIP entry/);
+await rejects(local+26,(v,p)=>v.setUint16(p,65535,true),/Invalid ZIP local entry/);
+await rejects(local+28,(v,p)=>v.setUint16(p,65535,true),/Invalid ZIP local entry/);
 console.log('V47 student XLSX reader ZIP safety regression checks passed');
