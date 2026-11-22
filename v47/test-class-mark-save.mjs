@@ -7,7 +7,7 @@ const mark=(studentId,overrides={})=>({studentId,class:classId,term,subjectId,th
 const args={actor,schoolId,classId,term,subjectId,expectedStudentIds:['s1','s2'],entries:[mark('s1'),mark('s2')]};
 function mock(overrides={}){
  const records=new Map([
-  ['subjects/math',{schoolId,class:classId,active:true,name:'Mathematics'}],
+  ['subjects/math',{schoolId,class:classId,active:true,name:'Mathematics',theoryFullMarks:100,practicalFullMarks:100}],
   ...['s1','s2'].flatMap(id=>[
    ['students/'+id,{schoolId,class:classId}],
    ['subject_assignments/'+id+':math',{schoolId,class:classId,studentId:id,subjectId}]
@@ -91,7 +91,7 @@ for(const [overrides,message] of [
  assert.equal(writes.length,0);
 }
 for(const name of ['Computer','Computer Science','Mathematics','Nepali','New Optional Subject']){
- const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name,components:[{name:'Custom Assessment',fullMarks:37}]}});
+ const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name,theoryFullMarks:100,practicalFullMarks:100,components:[{name:'Custom Assessment',fullMarks:37}]}});
  await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),/Configured subject requires Assessment Settings/);
  assert.equal(writes.length,0,'Configured component marks must never be saved as raw marks');
 }
