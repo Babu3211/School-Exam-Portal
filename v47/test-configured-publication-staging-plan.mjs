@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {planConfiguredPublicationStaging} from './configured-publication-staging-plan.mjs';
+import {planConfiguredPublicationStaging,verifyConfiguredPublicationStagingPlan} from './configured-publication-staging-plan.mjs';
 const schoolId='12345',classId='9',subjectId='computer',examId='final';
 const actor={uid:'admin1',active:true,role:'school_admin',schoolId};
 const settings={active:true,schoolId,classId,subjectId,examId,components:[{key:'theory',name:'Theory',fullMarks:63},{key:'practical',name:'Practical',fullMarks:37}]};
@@ -26,3 +26,22 @@ const absent=planConfiguredPublicationStaging({...base,expectedStudentIds:['s0']
 assert.equal(absent.batches[0].entries[0].values,null);
 assert.equal(absent.batches[0].entries[0].totalObtained,0);
 console.log('V47 read-only staging plan: deterministic 1500-student boundary, missing/foreign/role guards');
+
+const verified=verifyConfiguredPublicationStagingPlan({...base,plan:a});
+assert.equal(verified.valid,true);
+assert.equal(verified.batchCount,15);
+assert.equal(verified.writeAuthorized,false);
+assert.equal(verified.publicationAllowed,false);
+const altered=structuredClone(a);
+altered.batches[14].entries[99].values.theory=1;
+assert.throws(()=>verifyConfiguredPublicationStagingPlan({...base,plan:altered}),/differs/);
+const removed=structuredClone(a);
+removed.batches.pop();
+assert.throws(()=>verifyConfiguredPublicationStagingPlan({...base,plan:removed}),/differs/);
+const foreign=structuredClone(a);
+foreign.schoolId='67890';
+assert.throws(()=>verifyConfiguredPublicationStagingPlan({...base,plan:foreign}),/differs/);
+const elevated=structuredClone(a);
+elevated.writeAuthorized=true;
+assert.throws(()=>verifyConfiguredPublicationStagingPlan({...base,plan:elevated}),/differs/);
+assert.throws(()=>verifyConfiguredPublicationStagingPlan({...base,plan:a,expectedStudentIds:ids.slice(1)}),/Complete verified class review required/);
