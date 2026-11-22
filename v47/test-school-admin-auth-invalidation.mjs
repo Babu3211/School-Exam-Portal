@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const source=readFileSync(new URL('./school-admin-console.mjs',import.meta.url),'utf8');
+assert.match(source,/onAuthStateChanged\(auth,user=>/);
+assert.match(source,/if\(actor&&user\?\.uid!==actor\.uid\)/);
+assert.match(source,/sessionEpoch\+\+;actor=null;/);
+assert.match(source,/\$\('schoolArea'\)\.hidden=true/);
+assert.match(source,/if\(current!==sessionEpoch\|\|actor!==requestActor/);
+assert.match(source,/if\(current!==sessionEpoch\|\|loginAuth\.currentUser\?\.uid!==uid\)/);
+console.log('V47 School Admin auth change invalidates privileged UI and pending requests');
