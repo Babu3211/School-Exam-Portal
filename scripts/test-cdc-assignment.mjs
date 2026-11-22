@@ -181,5 +181,23 @@ choice('subject','serophero');
 choice('unit','म र मेरो परिवार');
 assert.equal(field('topicAlt').parentElement.hidden,true);
 assert.match(w.document.querySelector('#cdcTopicSuggestions option').value,/परिवार/);
+for (const [grade, expectedCounts] of [['4',[7,5,4,5,5,4,5,4,4,5,4,4,4,4,5,4]],['5',[7,6,5,6,4,5,4,4,5,4,5,4,5,5,5,4,5]]]) {
+  current.subjectAssignments=[{className:grade,subject:'English'}];
+  if (![...field('class').options].some(option=>option.value===grade)) field('class').append(new w.Option('Class '+grade,grade));
+  choice('class',grade);
+  choice('subject','English');
+  const units=[...w.document.querySelectorAll('#cdcUnitSuggestions option')].map(option=>option.value);
+  assert.equal(units.length,expectedCounts.length);
+  units.forEach((unit,index)=>{
+    assert.ok(unit.startsWith('Unit '+(index+1)+': '));
+    choice('unitEn',unit);
+    const outcomes=[...w.document.querySelectorAll('#cdcTopicSuggestions option')].map(option=>option.value);
+    assert.equal(outcomes.length,expectedCounts[index]);
+    assert.equal(new Set(outcomes).size,outcomes.length);
+    assert.deepEqual([...new Set(outcomes.map(text=>text.split(' — ')[0]))],['Listening','Speaking','Reading','Writing']);
+    assert.ok(outcomes.every(text=>!/[\u0900-\u097F]/u.test(text)));
+  });
+}
+console.log('CDC English form: all 33 units and 156 indicators for Grades 4 and 5 passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
