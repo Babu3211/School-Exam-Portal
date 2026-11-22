@@ -17,13 +17,14 @@ export async function loadMarksByClassTerm({db,api,actor,schoolId,schoolClass,te
  if(!canAccessSchool(actor,schoolId,'read')||Object.keys(identity).some(key=>actor?.[key]!==identity[key]))throw new Error('School membership changed during marks query');
  const docs=snap.docs;
  if(!Array.isArray(docs)||docs.length>pageSize+1)throw new RangeError('Unexpected result size');
- const ids=new Set();let previous=cursor?.id??null;
+ const ids=new Set(),validated=[];let previous=cursor?.id??null;
  for(const d of docs){
   if(typeof d.id!=='string'||!/^[A-Za-z0-9_:-]{1,256}$/.test(d.id)||ids.has(d.id)||previous!==null&&d.id<=previous)throw new Error('Invalid marks page order');
   ids.add(d.id);previous=d.id;
   const data=d.data();
-  if(!data||typeof data!=='object'||data.schoolId!==schoolId||data.class!==schoolClass||data.term!==term)throw new Error('Foreign or mismatched marks record');
+  if(!data||typeof data!=='object'||Array.isArray(data)||data.schoolId!==schoolId||data.class!==schoolClass||data.term!==term)throw new Error('Foreign or mismatched marks record');
+  validated.push({...data,id:d.id});
  }
  const page=docs.slice(0,pageSize);
- return {records:page.map(d=>({...d.data(),id:d.id})),hasMore:docs.length>pageSize,cursor:page.at(-1)??null};
+ return {records:validated.slice(0,pageSize),hasMore:docs.length>pageSize,cursor:page.at(-1)??null};
 }
