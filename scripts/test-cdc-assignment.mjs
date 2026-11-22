@@ -241,6 +241,7 @@ function verifyBilingualUnits(subject, countsByGrade) {
   }
 }
 verifyBilingualUnits('science', {4:[5,5,3,6,3,14,8,5],5:[6,6,4,3,3,10,13,4]});
+verifyBilingualUnits('healthphysicalcreativeart', {4:[5,6,6,10,5,4,10,12,6,7,7,5,3],5:[5,6,6,10,5,4,10,12,6,7,8,6,3]});
 w.ledgerSubjectsForClass=()=>['socialstudies'];
 for (const [grade,counts] of Object.entries({4:[4,5,5,3,4,5,6],5:[4,5,5,4,3,5,6]})) {
   current.subjectAssignments=[{className:grade,subject:'socialstudies'}];
