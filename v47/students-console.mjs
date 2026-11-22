@@ -11,13 +11,14 @@ import {mapV46StudentExcelRows} from './v46-student-import-mapping.mjs';
 import {parsePastedStudentTable} from './pasted-student-table.mjs';
 import {checkExistingStudentIemisIds} from './student-import-duplicate-preflight.mjs';
 import {readV47StudentXlsx} from './read-v47-student-xlsx.mjs';
+import {collectCompleteSchoolStudentExport} from './complete-school-student-excel.mjs';
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 const optionalFields=Object.keys(STUDENT_OPTIONAL_FIELDS).filter(key=>key!=='rollNo');
 for(const key of optionalFields){const label=document.createElement('label');label.textContent=key.replace(/([A-Z])/g,' $1').replace(/^./,x=>x.toUpperCase());const input=document.createElement('input');input.dataset.studentField=key;input.maxLength=STUDENT_OPTIONAL_FIELDS[key];label.append(input);document.getElementById('additionalStudentFields').append(label)}
-const $=id=>document.getElementById(id);const status=msg=>{$('message').textContent=msg};let auth,authSdk,db,api,store,cursor=null,records=[],schoolId=null,loadEpoch=0,actor=null,loading=false,savingStudent=false,hasMore=false,previewRequest=0;
-function clear(){previewRequest++;$('previewImport').disabled=false;loadEpoch++;hasMore=false;$('exportExcel').disabled=true;loading=false;actor=null;$('createArea').hidden=true;$('importArea').hidden=true;$('iemisPreviewLink').href='./student-import-preview.html';$('importResults').replaceChildren();$('importSummary').textContent='';store=null;cursor=null;records=[];schoolId=null;$('students').replaceChildren();$('recordsArea').hidden=true;$('next').disabled=true;$('count').textContent='';}
+const $=id=>document.getElementById(id);const status=msg=>{$('message').textContent=msg};let auth,authSdk,db,api,store,cursor=null,records=[],schoolId=null,loadEpoch=0,actor=null,loading=false,savingStudent=false,hasMore=false,previewRequest=0,exportingAllStudents=false;
+function clear(){previewRequest++;$('previewImport').disabled=false;loadEpoch++;hasMore=false;$('exportExcel').disabled=true;$('exportAllExcel').disabled=true;loading=false;actor=null;$('createArea').hidden=true;$('importArea').hidden=true;$('iemisPreviewLink').href='./student-import-preview.html';$('importResults').replaceChildren();$('importSummary').textContent='';store=null;cursor=null;records=[];schoolId=null;$('students').replaceChildren();$('recordsArea').hidden=true;$('next').disabled=true;$('count').textContent='';}
 $('connect').onclick=async()=>{try{({auth,authSdk,db,api}=await connectSchoolFirebase());authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clear();$('logout').disabled=true;status('प्रयोगकर्ता सत्र परिवर्तन भयो। विद्यार्थी विवरण हटाइएको छ। पुनः लगइन गर्नुहोस्।')}});$('connect').disabled=true;$('login').disabled=false;if(requestedSchool){try{$('schoolId').value=validateSchoolId(requestedSchool);if(auth.currentUser)queueMicrotask(()=>$('login').click())}catch(e){status('Invalid school selection: '+e.message)}}status('V47 connected');}catch(e){status(e.message)}};
-$('login').onclick=async()=>{clear();const attempt=loadEpoch;try{schoolId=validateSchoolId($('schoolId').value.trim());const freshSignIn=!auth.currentUser;const credential=freshSignIn?await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value):{user:auth.currentUser};$('password').value='';const uid=credential.user.uid;const selectedSchool=schoolId;const session=await verifySchoolSession({schoolId:selectedSchool,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(attempt!==loadEpoch||auth.currentUser?.uid!==uid||schoolId!==selectedSchool)throw new Error('Authentication changed during verification');const school=await api.getDoc(api.doc(db,'schools',selectedSchool));if(attempt!==loadEpoch||!school.exists()||school.data().active!==true||auth.currentUser?.uid!==uid)throw new Error('School inactive or unavailable');const member={uid,role:session.role,active:true,schoolId:selectedSchool};actor=member;if(freshSignIn)startVerifiedSchoolActivity();$('createArea').hidden=member.role!=='school_admin';$('importArea').hidden=member.role!=='school_admin';$('iemisPreviewLink').href='./student-import-preview.html?schoolId='+encodeURIComponent(selectedSchool);store=createSchoolStore({db,api,member,schoolId,assertSession:()=>{if(auth?.currentUser?.uid!==uid||actor!==member||schoolId!==selectedSchool)throw new Error('School session changed; sign in again');}});$('heading').textContent='Students — '+String(school.data().name??schoolId);$('recordsArea').hidden=false;$('logout').disabled=false;await load(true);}catch(e){if(attempt===loadEpoch){clear();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status(e.message)}}};
+$('login').onclick=async()=>{clear();const attempt=loadEpoch;try{schoolId=validateSchoolId($('schoolId').value.trim());const freshSignIn=!auth.currentUser;const credential=freshSignIn?await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value):{user:auth.currentUser};$('password').value='';const uid=credential.user.uid;const selectedSchool=schoolId;const session=await verifySchoolSession({schoolId:selectedSchool,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(attempt!==loadEpoch||auth.currentUser?.uid!==uid||schoolId!==selectedSchool)throw new Error('Authentication changed during verification');const school=await api.getDoc(api.doc(db,'schools',selectedSchool));if(attempt!==loadEpoch||!school.exists()||school.data().active!==true||auth.currentUser?.uid!==uid)throw new Error('School inactive or unavailable');const member={uid,role:session.role,active:true,schoolId:selectedSchool};actor=member;if(freshSignIn)startVerifiedSchoolActivity();$('createArea').hidden=member.role!=='school_admin';$('importArea').hidden=member.role!=='school_admin';$('iemisPreviewLink').href='./student-import-preview.html?schoolId='+encodeURIComponent(selectedSchool);store=createSchoolStore({db,api,member,schoolId,assertSession:()=>{if(auth?.currentUser?.uid!==uid||actor!==member||schoolId!==selectedSchool)throw new Error('School session changed; sign in again');}});$('heading').textContent='Students — '+String(school.data().name??schoolId);$('recordsArea').hidden=false;$('logout').disabled=false;$('exportAllExcel').disabled=false;await load(true);}catch(e){if(attempt===loadEpoch){clear();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status(e.message)}}};
 $('logout').onclick=async()=>{if(savingStudent){status('Wait for student save to finish before signing out');return}clear();try{await authSdk.signOut(auth);$('logout').disabled=true;status('Signed out')}catch(e){status(e.message)}};
 async function load(reset=false){if(!store||loading)return;const epoch=loadEpoch;loading=true;$('next').disabled=true;$('exportExcel').disabled=true;try{const result=await store.listPage('students',{pageSize:50,cursor:reset?null:cursor});if(epoch!==loadEpoch||!actor||auth?.currentUser?.uid!==actor.uid)return;const state=nextPageState(reset?[]:records,result.records,result.hasMore);records=state.records;cursor=result.cursor;hasMore=state.hasMore;$('exportExcel').disabled=hasMore||records.length===0;const tbody=$('students');tbody.replaceChildren();for(const student of records){const tr=document.createElement('tr');for(const value of [student.id,student.name??student.studentName??'',student.class??student.className??'',student.rollNo??student.roll??'']){const td=document.createElement('td');td.textContent=String(value);tr.append(td)}tbody.append(tr)}$('count').textContent=records.length+' students loaded';$('next').disabled=!state.hasMore;status('Student records loaded from '+schoolId);}catch(e){if(epoch===loadEpoch){$('next').disabled=true;$('exportExcel').disabled=true;status('Unable to load students: '+e.message)}}finally{if(epoch===loadEpoch)loading=false}}
 $('refresh').onclick=()=>{loadEpoch++;loading=false;cursor=null;records=[];hasMore=false;$('exportExcel').disabled=true;load(true)};
@@ -82,6 +83,50 @@ $('exportExcel').onclick=async()=>{
   status('Exported '+rows.length+' loaded student records to Excel. Not a complete school backup.');
  }catch(e){status('Excel export blocked: '+e.message)}
  finally{$('exportExcel').disabled=!actor||hasMore||loading||savingStudent||!records.length}
+};
+
+// Complete school Excel export is an authenticated, read-only operation.
+// It scans paginated school-scoped records independently of the 50-row table.
+$('exportAllExcel').onclick=async()=>{
+ if(exportingAllStudents||!actor||!store)return;
+ const epoch=loadEpoch,selectedActor=actor,selectedSchool=schoolId,uid=auth?.currentUser?.uid,selectedStore=store;
+ exportingAllStudents=true;
+ $('exportAllExcel').disabled=true;
+ const assertSession=()=>{
+  if(epoch!==loadEpoch||!selectedActor||actor!==selectedActor||store!==selectedStore||
+     schoolId!==selectedSchool||auth?.currentUser?.uid!==uid||!uid)
+   throw new Error('विद्यालय वा Login परिवर्तन भयो। Excel Export रोकियो।');
+ };
+ const readDocument=async path=>{
+  const snap=await api.getDoc(api.doc(db,...path.split('/')));
+  return snap.exists()?snap.data():null;
+ };
+ try{
+  assertSession();
+  const before=await verifySchoolSession({schoolId:selectedSchool,uid,readDocument});
+  assertSession();
+  if(before.role!==selectedActor.role)throw new Error('विद्यालय अनुमति परिवर्तन भयो।');
+  const result=await collectCompleteSchoolStudentExport({
+   store:selectedStore,assertSession,
+   onProgress:count=>{assertSession();status('विद्यालयका '+count+' विद्यार्थी Excel Export का लागि जाँचिँदैछन्।');}
+  });
+  assertSession();
+  // Reverify live membership after the potentially long multi-page query.
+  const after=await verifySchoolSession({schoolId:selectedSchool,uid,readDocument});
+  assertSession();
+  if(after.role!==before.role)throw new Error('विद्यालय अनुमति परिवर्तन भयो।');
+  const file=excelWorkbook(STUDENT_EXCEL_HEADERS,result.rows,{sheetName:'Students'});
+  assertSession();
+  downloadExcel(file,'smss-v47-all-students-'+selectedSchool+'.xlsx');
+  status(result.count+' विद्यार्थी Excel (.xlsx) मा Export भए। यो दैनिक परिवर्तनशील सूची हो, आधिकारिक Database Backup होइन।');
+ }catch(e){
+  if(epoch===loadEpoch&&actor===selectedActor&&schoolId===selectedSchool)
+   status('सम्पूर्ण विद्यार्थी Excel Export रोकियो: '+e.message);
+ }finally{
+  exportingAllStudents=false;
+  if(epoch===loadEpoch&&actor===selectedActor&&schoolId===selectedSchool)
+   $('exportAllExcel').disabled=false;
+ }
 };
 
 // Automatically resume a dashboard-selected school; authorization is rechecked on this page.
