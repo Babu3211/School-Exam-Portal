@@ -11,8 +11,11 @@ export function planCompleteClassMarkStaging({schoolId,classId,term,subjectId,ex
  if(!subjectSettings||typeof subjectSettings!=='object'||Array.isArray(subjectSettings)
   ||subjectSettings.schoolId!==schoolId||subjectSettings.class!==classId
   ||subjectSettings.active!==true)throw new Error('Active subject Examination Settings required');
- if(Array.isArray(subjectSettings.components)&&subjectSettings.components.length)
+ if(subjectSettings.components!==undefined&&(!Array.isArray(subjectSettings.components)||subjectSettings.components.length))
   throw new Error('Component assessment staging requires separately verified component mapping');
+ if(typeof subjectSettings.creditHour!=='number'||!Number.isFinite(subjectSettings.creditHour)
+  ||subjectSettings.creditHour<=0||subjectSettings.creditHour>100)
+  throw new Error('Valid subject credit hours required for V46 GPA');
  for(const entry of complete.entries)validateSubjectMarkLimits(subjectSettings,entry);
  if(!Number.isInteger(complete.count)||complete.count!==expectedStudentIds.length)throw new Error('Incomplete class marks plan');
  // Normalize order independently of UI entry order. Never silently drop a row.
