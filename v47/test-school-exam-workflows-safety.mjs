@@ -46,4 +46,12 @@ assert.match(workflow,/componentChecks=rows\.map\(x=>inspectV46IemisRecord/);
 assert.match(workflow,/compatibleCount=componentChecks\.filter\(x=>x\.compatible\)\.length/);
 assert.match(workflow,/V46 component-compatible records \(structure only\)/);
 assert.match(workflow,/CDC\/IEMIS Grade\/GPA not enabled/);
+const loginPage=readFileSync(new URL('./school-login.html',import.meta.url),'utf8');
+for(const id of ['marksTheory','marksPractical']){
+ assert.match(loginPage,new RegExp('id="'+id+'"[^>]*min="0"'));
+ assert.doesNotMatch(loginPage,new RegExp('id="'+id+'"[^>]*max="100"'),'Marks input must not impose a fixed 100-point maximum');
+}
+assert.match(loginPage,/Check configured marks \(no save\)/);
+assert.match(loginPage,/Theory marks \(Examination Settings\)/);
+assert.match(loginPage,/Practical marks \(Examination Settings\)/);
 console.log('V47 exam workflow static safety checks passed');

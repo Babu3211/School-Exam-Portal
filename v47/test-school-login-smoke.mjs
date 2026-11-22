@@ -19,6 +19,8 @@ assert.match(js,/school_settings','profile'/);
 assert.match(js,/profileSnap\.data\(\)\.schoolId!==sid/);
 for(const id of ['schoolNameNepali','schoolAddressEnglish','schoolAddressNepali'])assert.match(html,new RegExp('id="'+id+'"'));
 assert.doesNotMatch(js,/schoolIdValid/);
+for(const id of ['marksTheory','marksPractical'])assert.doesNotMatch(html,new RegExp('id="'+id+'"[^>]*max="100"'));
+assert.match(html,/id="saveMarks">Check configured marks \(no save\)/);
 
 assert.match(js,/getDoc\(api\.doc\(db,'schools',sid\)\)/);
 assert.match(js,/getDoc\(api\.doc\(db,'schools',sid,'members',uid\)\)/);
