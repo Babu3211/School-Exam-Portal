@@ -46,3 +46,8 @@ for(const key of ['schoolId','subjectId','examId','classId']){
   assert.throws(()=>inspectConfiguredClassMarks({...base,[key]:value,settings:badSettings,drafts:[]}),/Verified subject examination settings required/);
  }
 }
+
+// A draft must not bypass the school roster with unsafe Firestore document IDs.
+for(const id of [' ','../student','student/id','student:id','student.id','a'.repeat(129),null,123]){
+ assert.throws(()=>inspectConfiguredClassMarks({...base,settings,expectedStudentIds:['a',id],drafts:[]}),/Invalid or duplicate student in roster/);
+}
