@@ -12,7 +12,7 @@ export function validateSchoolSubject(input){
   const value=input[key];
   if(value===undefined||value===null||value==='')throw new Error('Examination Settings full marks required: '+key);
   if(typeof value!=='number'&&typeof value!=='string')throw new Error('Invalid Examination Settings full marks: '+key);
-  if(typeof value==='string'&&!/^(?:\\d+(?:\\.\\d+)?|\\.\\d+)$/.test(value.trim()))throw new Error('Invalid Examination Settings full marks: '+key);
+  if(typeof value==='string'&&!/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(value.trim()))throw new Error('Invalid Examination Settings full marks: '+key);
   const number=Number(value);
   if(!Number.isFinite(number)||number<0)throw new Error('Invalid Examination Settings full marks: '+key);
   marks[key]=number;
