@@ -29,6 +29,7 @@ export async function loadCompleteSchoolSubjects({db,api,actor,schoolId,schoolCl
    const extra=snap.docs[pageSize];
    if(typeof extra?.id!=='string'||extra.id<=lastId)throw new Error('Invalid subject lookahead cursor');
    if(extra.data().schoolId!==schoolId||extra.data().class!==schoolClass)throw new Error('Foreign subject in lookahead');
+   if(extra.data().active!==true)throw new Error('Inactive subject in lookahead');
   }
   for(const d of page){
    const data=d.data();
