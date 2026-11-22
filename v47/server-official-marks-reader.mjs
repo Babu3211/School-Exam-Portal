@@ -6,7 +6,11 @@ const segment=/^[A-Za-z0-9_-]{1,128}$/;
 export function resolveOfficialClassMarks({schoolId,classId,subjectId,examId,pointer,publication,entries}){
  if(typeof schoolId!=='string'||!/^[0-9]{5,20}$/.test(schoolId)||
   ![classId,subjectId,examId].every(v=>typeof v==='string'&&segment.test(v)))throw new Error('Invalid official result scope');
- if(pointer===null||pointer===undefined)return Object.freeze({published:false,schoolId,classId,subjectId,examId,entries:Object.freeze([])});
+ if(pointer===null||pointer===undefined){
+  if(publication!==null&&publication!==undefined||!Array.isArray(entries)||entries.length!==0)
+   throw new Error('Unpublished class must not expose orphan publication or marks');
+  return Object.freeze({published:false,schoolId,classId,subjectId,examId,entries:Object.freeze([])});
+ }
  if(!pointer||typeof pointer!=='object'||Array.isArray(pointer)||!id.test(pointer.publicationId??''))throw new Error('Invalid official pointer');
  for(const key of ['schoolId','classId','subjectId','examId']){
   if(pointer[key]!==({schoolId,classId,subjectId,examId})[key])throw new Error('Official pointer scope mismatch');
