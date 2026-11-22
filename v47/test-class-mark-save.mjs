@@ -101,6 +101,17 @@ for(const name of ['Computer','Computer Science','Mathematics','Nepali','New Opt
  await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),/Student subject assignment/);
  assert.equal(writes.length,0);
 }
+// The whole class may save with custom subject-specific full marks.
+for(const [name,theoryFullMarks,practicalFullMarks,theory,practical] of [
+ ['Computer',4,36,4,36],['Nepali','23.5','7.25',23.5,7.25],
+ ['New Optional Subject',70,30,70,30]
+]){
+ const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name,theoryFullMarks,practicalFullMarks}});
+ const entries=[mark('s1',{theory,practical}),mark('s2',{theory,practical})];
+ const result=await saveCompleteClassMarks({...args,entries,db:{},api});
+ assert.equal(result.saved,2);
+ assert.equal(writes.length,2);
+}
 // Late failure in a three-student transaction must roll back ALL pending writes.
 for(const broken of [
  {'students/s3':null},
