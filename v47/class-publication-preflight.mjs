@@ -22,8 +22,9 @@ export function assessClassPublicationReadiness({actor,schoolId,schoolClass,term
   }catch(error){blockers.push('Full-class marks verification failed: '+error.message)}
  }
  if(Array.isArray(records)&&records.some(r=>!r||r.schoolId!==schoolId))blockers.push('Marks contain foreign or unscoped school records');
- if(Array.isArray(students)&&students.some(s=>s.schoolId!==schoolId||s.class!==schoolClass||s.active!==true))blockers.push('Student roster contains inactive or foreign students');
+ if(Array.isArray(students)&&students.some(s=>!s||s.schoolId!==schoolId||s.class!==schoolClass||s.active!==true))blockers.push('Student roster contains inactive or foreign students');
  if(Array.isArray(subjects))for(const subject of subjects){
+  if(!subject){blockers.push('Subject roster contains malformed entries');continue}
   if(subject.schoolId!==schoolId||subject.class!==schoolClass||subject.active!==true)blockers.push('Subject roster contains inactive or foreign subjects');
   if(typeof subject.creditHour!=='number'||!Number.isFinite(subject.creditHour)||subject.creditHour<=0||subject.creditHour>100)blockers.push('Missing credit hours: '+String(subject.id));
   if(Array.isArray(subject.components)&&subject.components.length)blockers.push('Component mapping not verified: '+String(subject.id));
