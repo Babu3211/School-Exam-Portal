@@ -19,8 +19,9 @@ export async function loadMarksByClassTerm({db,api,actor,schoolId,schoolClass,te
  if(!Array.isArray(docs)||docs.length>pageSize+1)throw new RangeError('Unexpected result size');
  const ids=new Set(),validated=[];let previous=cursor?.id??null;
  for(const d of docs){
-  if(typeof d.id!=='string'||!/^[A-Za-z0-9_:-]{1,256}$/.test(d.id)||ids.has(d.id)||previous!==null&&d.id<=previous)throw new Error('Invalid marks page order');
+  if(!d||typeof d.id!=='string'||!/^[A-Za-z0-9_:-]{1,256}$/.test(d.id)||ids.has(d.id)||previous!==null&&d.id<=previous)throw new Error('Invalid marks page order');
   ids.add(d.id);previous=d.id;
+  if(typeof d.data!=='function')throw new Error('Malformed marks document');
   const data=d.data();
   if(!data||typeof data!=='object'||Array.isArray(data)||data.schoolId!==schoolId||data.class!==schoolClass||data.term!==term)throw new Error('Foreign or mismatched marks record');
   if(typeof data.studentId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(data.studentId)||typeof data.subjectId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(data.subjectId))throw new Error('Invalid marks student or subject identity');
