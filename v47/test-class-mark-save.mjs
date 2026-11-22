@@ -104,13 +104,19 @@ for(const name of ['Computer','Computer Science','Mathematics','Nepali','New Opt
 // The whole class may save with custom subject-specific full marks.
 for(const [name,theoryFullMarks,practicalFullMarks,theory,practical] of [
  ['Computer',4,36,4,36],['Nepali','23.5','7.25',23.5,7.25],
- ['New Optional Subject',70,30,70,30]
+ ['New Optional Subject',70,30,70,30],['New Subject',350,150,350,150]
 ]){
  const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name,theoryFullMarks,practicalFullMarks}});
  const entries=[mark('s1',{theory,practical}),mark('s2',{theory,practical})];
  const result=await saveCompleteClassMarks({...args,entries,db:{},api});
  assert.equal(result.saved,2);
  assert.equal(writes.length,2);
+}
+// An absent or partial settings record cannot silently fall back to default full marks.
+for(const settings of [{},{theoryFullMarks:100},{practicalFullMarks:100}]){
+ const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name:'Any Subject',...settings}});
+ await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),/full marks required/);
+ assert.equal(writes.length,0);
 }
 // If only one student's mark exceeds the subject limit, no class mark is saved.
 for(const [name,theoryFullMarks,practicalFullMarks,good,bad] of [
