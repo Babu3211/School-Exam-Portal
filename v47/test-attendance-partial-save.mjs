@@ -188,7 +188,8 @@ for(const mutate of [
  assert.match(ui,/for\(const id of savedIds\)rosterSelections\.delete\(id\)/);
  assert.match(ui,/e\?\.name==='PartialAttendanceSaveError'/);
  assert.match(ui,/e\.remainingStudentIds\.length/);
- assert.match(ui,/आंशिक रूपमा सुरक्षित/);
- assert.match(ui,/पुनः प्रयास गर्नुअघि Attendance सूची जाँच्नुहोस्/);
+ assert.match(ui,/Attendance Save असफल/);
+ assert.match(ui,/नेटवर्क त्रुटि हुँदा Save भइसकेको पनि हुन सक्छ/);
+ assert.match(ui,/पुनः प्रयास गर्नुअघि Attendance सूची Reload गरी जाँच्नुहोस्/);
 }
 console.log('V47 attendance partial-save recovery contract passed');
