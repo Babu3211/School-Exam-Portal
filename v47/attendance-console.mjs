@@ -8,6 +8,7 @@ import {loadClassRoster} from './attendance-roster.mjs';
 import {loadAttendanceByClassDate} from './attendance-query.mjs';
 import {nepalGregorianDate} from './nepal-date.mjs';
 import {validateSchoolId} from './school-paths.mjs';
+const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 const $=id=>document.getElementById(id),status=message=>{$('message').textContent=message};
 let auth,authSdk,db,api,actor,schoolId,store,signingIn=false,cursor=null,records=[],epoch=0,busy=false,rosterEpoch=0,rosterCursor=null,rosterStudents=[],rosterBusy=false,rosterSelections=new Map(),savingAttendance=false;
 function clear(){rosterEpoch++;rosterCursor=null;rosterStudents=[];rosterSelections.clear();rosterBusy=false;$('bulkArea').hidden=true;$('rosterRows').replaceChildren();$('rosterCount').textContent='';$('rosterNext').disabled=true;epoch++;busy=false;actor=null;schoolId=null;store=null;cursor=null;records=[];$('rows').replaceChildren();$('work').hidden=true;$('writeArea').hidden=true;$('next').disabled=true;$('count').textContent=''}
