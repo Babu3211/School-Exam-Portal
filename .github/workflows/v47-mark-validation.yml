@@ -52,6 +52,8 @@ on:
       - 'v47/attendance-roster.mjs'
       - 'v47/verified-small-class-mark-save.mjs'
       - 'v47/test-verified-small-class-mark-save.mjs'
+      - 'v47/class-mark-staging-plan.mjs'
+      - 'v47/test-class-mark-staging-plan.mjs'
       - 'v47/class-mark-save.mjs'
       - 'v47/test-subject-mark-limits.mjs'
       - 'v47/test-mark-create-authorization.mjs'
@@ -77,6 +79,8 @@ jobs:
           node --check v47/test-verified-small-class-mark-save.mjs
           node --check v47/class-mark-completeness.mjs
           node --check v47/test-class-mark-completeness.mjs
+          node --check v47/class-mark-staging-plan.mjs
+          node --check v47/test-class-mark-staging-plan.mjs
           node --check v47/class-mark-save.mjs
           node --check v47/test-class-mark-save.mjs
           node --check v47/student-service.mjs
@@ -151,6 +155,8 @@ jobs:
         run: node v47/test-complete-class-roster.mjs
       - name: Validate full 1500-student class marks completeness
         run: node v47/test-class-mark-completeness.mjs
+      - name: Validate 1500-student read-only staging plan
+        run: node v47/test-class-mark-staging-plan.mjs
       - name: Validate atomic class marks
         run: node v47/test-class-mark-save.mjs
       - name: Verify authoritative roster before small-class save
