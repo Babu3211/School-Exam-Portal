@@ -19,6 +19,9 @@ on:
       - '.github/workflows/v47-school-data-security.yml'
 permissions:
   contents: read
+concurrency:
+  group: v47-school-data-security-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   school-data-security:
     runs-on: ubuntu-latest
