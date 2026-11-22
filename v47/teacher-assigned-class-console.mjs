@@ -1,8 +1,10 @@
+import {connectSchoolFirebase,startVerifiedSchoolActivity} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {verifyTeacherSubjectAssignment} from './verified-teacher-subject-assignment.mjs';
 import {verifyTeacherAttendanceDuty} from './verified-teacher-attendance-duty.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {validateSchoolId} from './school-paths.mjs';
+const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 const $=id=>document.getElementById(id);
 let auth,authSdk,api,db,actor=null,schoolId=null,epoch=0,selectionEpoch=0,busy=false;
 const message=text=>{$('message').textContent=text};
@@ -14,32 +16,19 @@ async function verifiedSession(uid,id){
  if(auth?.currentUser?.uid!==uid)throw new Error('Authentication changed');
  return session;
 }
-$('connect').onclick=async()=>{
- try{
-  const config=JSON.parse($('config').value);
-  if(config.projectId!=='smss-exam-portal-v47')throw new Error('V47 Firebase project required');
-  const appSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js');
-  authSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js');
-  api=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js');
-  const app=appSdk.initializeApp(config,'smss-v47-teacher-roster');
-  auth=authSdk.getAuth(app);await authSdk.setPersistence(auth,authSdk.inMemoryPersistence);
-  db=api.getFirestore(app);
-  authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clear();message('प्रयोगकर्ता सत्र परिवर्तन भयो। पुनः लगइन गर्नुहोस्।')}if(!busy)lock(false)});
-  $('connect').disabled=true;$('login').disabled=false;message('Connected to V47');
- }catch(e){message('Connection failed: '+e.message)}
-};
+$('connect').onclick=async()=>{try{({auth,authSdk,db,api}=await connectSchoolFirebase());authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clear();message('प्रयोगकर्ता सत्र परिवर्तन भयो। पुनः लगइन गर्नुहोस्।')}if(!busy)lock(false)});$('connect').disabled=true;$('login').disabled=false;if(requestedSchool){$('schoolId').value=validateSchoolId(requestedSchool);if(auth.currentUser)queueMicrotask(()=>$('login').click())}message('Connected to V47')}catch(e){message('Connection failed: '+e.message)}};
 $('login').onclick=async()=>{
  if(busy||!auth)return;
  clear();const request=epoch;lock(true);
  try{
   const id=validateSchoolId($('schoolId').value.trim());
-  const credential=await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);
+  const freshSignIn=!auth.currentUser;const credential=freshSignIn?await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value):{user:auth.currentUser};
   $('password').value='';
   if(request!==epoch)throw new Error('Login changed');
   const session=await verifiedSession(credential.user.uid,id);
   if(request!==epoch)throw new Error('Login changed');
   if(id!==$('schoolId').value.trim())throw new Error('School selection changed');
-  actor={uid:session.uid,role:'teacher',active:true,schoolId:id};schoolId=id;$('work').hidden=false;message('शिक्षकको लगइन सफल भयो। आफ्नो कक्षा र विषय छान्नुहोस्।');
+  actor={uid:session.uid,role:'teacher',active:true,schoolId:id};if(freshSignIn)startVerifiedSchoolActivity();schoolId=id;$('work').hidden=false;message('शिक्षकको लगइन सफल भयो। आफ्नो कक्षा र विषय छान्नुहोस्।');
  }catch(e){if(request===epoch){clear();const failedEpoch=epoch;try{await authSdk.signOut(auth)}catch{}if(epoch===failedEpoch){lock(false);message('Sign in failed: '+e.message)}}}
  finally{if(request===epoch)lock(false)}
 };
@@ -135,3 +124,5 @@ $('loadAttendance').onclick=async()=>{
  }catch(e){if(request===epoch&&selection===selectionEpoch){$('students').replaceChildren();$('count').textContent='';message('Attendance duty denied or roster unavailable: '+e.message)}}
  finally{if(request===epoch)lock(false)}
 };
+
+if(requestedSchool)queueMicrotask(()=>$('connect').click());
