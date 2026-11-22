@@ -1,1 +1,32 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SMSS V47 — School Settings (Read Only)</title><style>body{font:16px system-ui,sans-serif;background:#f2f7fd;color:#193550;margin:0}main{max-width:760px;margin:auto;padding:20px}section{background:#fff;padding:20px;border:1px solid #d8e5f1;border-radius:12px;margin:16px 0}label{display:block;margin:12px 0}input,textarea,button{font:inherit;padding:9px;max-width:100%;box-sizing:border-box}button{background:#1764b2;color:white;border:0;border-radius:6px}button:disabled{opacity:.5}dt{font-weight:bold;margin-top:12px}dd{margin:4px 0 10px}p.warning{background:#fff0d0;padding:12px;border-radius:8px}</style></head><body><main><h1>SMSS V47 — School Settings</h1><p><a href="./index.html">Development hub</a></p><p class="warning">Read-only development view. Settings are retrieved only from the verified school. No changes are saved.</p><section><p>Dedicated V47 Firebase connection. No configuration paste required.</p><button id="connect">Connect</button><label>School IEMIS ID <input id="schoolId" inputmode="numeric" pattern="[0-9]{5,20}" minlength="5" maxlength="20"></label><label>Email <input id="email" type="email"></label><label>Password <input id="password" type="password"></label><button id="login" disabled>Verify school and view settings</button><button id="logout" disabled>Sign out</button></section><section id="settings" hidden><h2>Verified school details</h2><dl><dt>School IEMIS ID</dt><dd id="iemis"></dd><dt>School name</dt><dd id="name"></dd><dt>School status</dt><dd id="active"></dd><dt>Signed-in role</dt><dd id="role"></dd></dl></section><p id="message" role="status" aria-live="polite">Connect to the separate V47 Firebase project.</p></main><script type="module" src="./school-settings-console.mjs"></script></body></html>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SMSS V47 — School Settings</title>
+<style>
+body{font:16px system-ui,sans-serif;background:#f2f7fd;color:#193550;margin:0}main{max-width:780px;margin:auto;padding:20px}
+section{background:#fff;padding:20px;border:1px solid #d8e5f1;border-radius:12px;margin:16px 0}
+label{display:block;margin:12px 0}input,button{font:inherit;padding:10px;max-width:100%;box-sizing:border-box}
+input{display:block;width:100%;margin-top:5px;border:1px solid #b8c9d9;border-radius:7px}
+button{background:#1764b2;color:white;border:0;border-radius:6px;cursor:pointer;margin:4px}button:disabled{opacity:.5;cursor:default}
+dt{font-weight:bold;margin-top:12px}dd{margin:4px 0 10px}
+.warning{background:#fff0d0;padding:12px;border-radius:8px}
+</style></head><body><main>
+<h1>SMSS Exam Portal V47 — School Settings</h1>
+<p><a href="./index.html">Dashboard</a></p>
+<p class="warning">Settings for the verified school only. School IEMIS ID and activation are managed by the Super Admin and cannot be changed here. V47 is not yet production-ready.</p>
+<section><button id="connect">Connect to V47</button>
+<label>School IEMIS ID <input id="schoolId" inputmode="numeric" pattern="[0-9]{5,20}" minlength="5" maxlength="20"></label>
+<label>Email <input id="email" type="email" autocomplete="username"></label>
+<label>Password <input id="password" type="password" autocomplete="current-password"></label>
+<button id="login" disabled>Verify school login</button><button id="logout" disabled>Sign out</button></section>
+<section id="settings" hidden><h2>Verified school details</h2>
+<dl><dt>School IEMIS ID</dt><dd id="iemis"></dd><dt>Registered school name</dt><dd id="name"></dd>
+<dt>School status</dt><dd id="active"></dd><dt>Signed-in role</dt><dd id="role"></dd></dl>
+<h3>School name and address</h3>
+<p id="profileAccess">Teacher and Viewer accounts can see these details but cannot save changes.</p>
+<label>School name (English)<input id="nameEnglish" maxlength="160" autocomplete="off"></label>
+<label>विद्यालयको नाम (नेपाली)<input id="nameNepali" maxlength="160" autocomplete="off" lang="ne"></label>
+<label>Address (English)<input id="addressEnglish" maxlength="300" autocomplete="off"></label>
+<label>ठेगाना (नेपाली)<input id="addressNepali" maxlength="300" autocomplete="off" lang="ne"></label>
+<button id="saveProfile" disabled hidden>Save School Settings</button></section>
+<p id="message" role="status" aria-live="polite">Connect to the separate V47 Firebase project.</p>
+</main><script type="module" src="./school-settings-console.mjs"></script></body></html>

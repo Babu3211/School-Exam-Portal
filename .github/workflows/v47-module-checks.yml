@@ -61,6 +61,8 @@ jobs:
         run: node scripts/test-v47-version-info.mjs
       - name: Atomic school onboarding
         run: node scripts/test-v47-school-onboarding.mjs
+      - name: Verified bilingual school settings (admin-only)
+        run: node v47/test-school-settings-profile.mjs
       - name: School member management
         run: node scripts/test-v47-member-management.mjs
       - name: Super Admin school list
