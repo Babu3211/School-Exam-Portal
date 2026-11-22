@@ -26,7 +26,7 @@ function checkedMember(doc,schoolId){
 }
 export async function listSchoolMembers({db,api,actor,schoolId,pageSize=100}){
  validateSchoolId(schoolId);
- if(actor?.active!==true||!['super_admin','school_admin'].includes(actor.role)||actor.role==='school_admin'&&actor.schoolId!==schoolId)throw new Error('Admin access required');
+ if(!validAdminUid(actor)||actor?.active!==true||!['super_admin','school_admin'].includes(actor.role)||actor.role==='school_admin'&&actor.schoolId!==schoolId)throw new Error('Admin access required');
  const identity=adminSnapshot(actor);
  const size=validatePageSize(pageSize);
  for(const method of ['collection','query','limit','getDocs'])if(typeof api?.[method]!=='function')throw new TypeError('Missing Firebase SDK');
@@ -46,7 +46,7 @@ export async function listSchoolMembers({db,api,actor,schoolId,pageSize=100}){
  */
 export async function listSchoolMembersPage({db,api,actor,schoolId,pageSize=100,cursor=null}){
  validateSchoolId(schoolId);
- if(actor?.active!==true||!['super_admin','school_admin'].includes(actor.role)||(actor.role==='school_admin'&&actor.schoolId!==schoolId))throw new Error('Admin access required');
+ if(!validAdminUid(actor)||actor?.active!==true||!['super_admin','school_admin'].includes(actor.role)||(actor.role==='school_admin'&&actor.schoolId!==schoolId))throw new Error('Admin access required');
  const identity=adminSnapshot(actor);
  const size=validatePageSize(pageSize);
  for(const method of ['collection','query','orderBy','limit','getDocs','documentId'])if(typeof api?.[method]!=='function')throw new TypeError('Missing Firebase pagination SDK');
