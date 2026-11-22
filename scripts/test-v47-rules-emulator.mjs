@@ -225,7 +225,7 @@ try{
   const markPath='schools/300160001/marks/1st:'+studentId+':'+subjectId;
   const attendancePath='schools/300160001/attendance/2026-11-20_'+studentId;
   await assertSucceeds(admin.doc(studentPath).set({name:'Early Learner '+className,class:className,schoolId:'300160001'}));
-  await assertSucceeds(admin.doc(subjectPath).set({name:'Early Learning',class:className,active:true,schoolId:'300160001'}));
+  await assertSucceeds(admin.doc(subjectPath).set({name:'Early Learning',class:className,active:true,schoolId:'300160001',creditHour:1,theoryFullMarks:80,practicalFullMarks:20}));
   await assertSucceeds(admin.doc(assignmentPath).set({studentId,subjectId,class:className,schoolId:'300160001'}));
   await assertFails(admin.doc(markPath).set({studentId,subjectId,class:className,term:'1st',theory:30,practical:10,schoolId:'300160001'}));
   await assertSucceeds(admin.doc(attendancePath).set({date:'2026-11-20',studentId,class:className,present:true,schoolId:'300160001'}));
