@@ -16,4 +16,10 @@ for(const invalid of [-1,'oops',Infinity,{},'10 marks',null,'',NaN,'-2','1e3'])a
 assert.equal(validateSubjectMarkLimits({theoryFullMarks:0,practicalFullMarks:0},{theory:0,practical:0}),true);
 assert.throws(()=>validateSubjectMarkLimits({theoryFullMarks:0},{theory:1,practical:0}),/exceed/);
 assert.equal(validateSubjectMarkLimits({name:'Legacy'},{theory:25,practical:10}),true);
+for(const score of [undefined,null,NaN,Infinity,-1,'', '2', {}, []]){
+ assert.throws(()=>validateSubjectMarkLimits({theoryFullMarks:20},{theory:score,practical:0}),/Invalid entered theory/);
+ assert.throws(()=>validateSubjectMarkLimits({practicalFullMarks:10},{theory:0,practical:score}),/Invalid entered practical/);
+}
+for(const value of [null,undefined,0,''])assert.throws(()=>validateSubjectMarkLimits(value,{theory:0,practical:0}),/required/);
+assert.throws(()=>validateSubjectMarkLimits({theoryFullMarks:20},null),/required/);
 console.log('V47 configured full marks validation passed');
