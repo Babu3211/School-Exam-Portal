@@ -17,7 +17,7 @@ await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,schoolId:'8765432
 await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,records:[{...records[0],theory:61}]}));
 await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,records:[{...records[0],class:'10'}]}));
 await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,records:[{...records[0],schoolId:'99999999'}]}),/outside selected/);
-for(const mutate of [a=>{a.active=false},a=>{a.schoolId='99999999'},a=>{a.role='viewer'}]){
+for(const mutate of [a=>{a.active=false},a=>{a.schoolId='99999999'},a=>{a.role='revoked'}]){
  const changingActor={...actor};
  const revokedApi={...api,getDoc:async path=>{mutate(changingActor);return api.getDoc(path)}};
  await assert.rejects(()=>previewSchoolRawMarksWithV46({...base,actor:changingActor,api:revokedApi,records:[records[0]]}),/membership changed/);
