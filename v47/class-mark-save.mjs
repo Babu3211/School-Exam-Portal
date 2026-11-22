@@ -40,8 +40,8 @@ export async function saveCompleteClassMarks({db,api,actor,schoolId,classId,term
    if(!present(assignment))throw new Error('Student subject assignment missing');
    const assignmentData=assignment.data();
    if(!assignmentData||typeof assignmentData!=='object'||Array.isArray(assignmentData)||assignmentData.schoolId!==schoolId||assignmentData.active===false||assignmentData.studentId!==entry.studentId||assignmentData.subjectId!==subjectId||assignmentData.class!==classId)throw new Error('Student subject assignment missing');
-   if(present(mark)||present(component))throw new Error('Existing mark cannot be overwritten');
    if(!mark||typeof mark.exists!=='function'||!component||typeof component.exists!=='function')throw new Error('Mark existence could not be verified');
+   if(mark.exists()!==false||component.exists()!==false)throw new Error('Existing mark cannot be overwritten');
   }
   if(actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId)throw new Error('School identity changed during class marks transaction');
   for(const r of refs)tx.set(r.mark,{...r.entry,schoolId});
