@@ -1,3 +1,4 @@
+import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
 import {createV46ReadOnlyBridge} from './v46-readonly-bridge.mjs';
 import {assertIemisSchoolId} from './iemis-school-identity.mjs';
 import {auditV46ReportReferences} from './report-reference-audit.mjs';
@@ -12,19 +13,15 @@ $('connect').onclick=async()=>{
  if(connecting||auth)return;
  connecting=true;$('connect').disabled=true;
  try{
-  const config=JSON.parse($('config').value);
-  if(config.projectId!=='smss-exam-portal-v47')throw new Error('V47 Firebase project required');
-  const [appSdk,aSdk,fSdk]=await Promise.all([
-   import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js'),
-   import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js'),
-   import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js')
-  ]);
-  const app=appSdk.initializeApp(config,'smss-v47-report-preview');
-  authSdk=aSdk;firestoreApi=fSdk;auth=aSdk.getAuth(app);
-  await aSdk.setPersistence(auth,aSdk.inMemoryPersistence);
-  db=fSdk.getFirestore(app);
-  $('connect').disabled=true;$('login').disabled=false;
-  status('V47 connected. Sign in to inspect your school.');
+  const connected=await connectSchoolFirebase();
+  ({auth,authSdk,db}=connected);firestoreApi=connected.api;
+  authSdk.onAuthStateChanged(auth,user=>{
+   if(reportRows&&(!user||user.uid!==reportRows.verifiedUid)){clear();status('विद्यालयको Login फेरिएको छ। पुनः प्रमाणित गर्नुहोस्।')}
+  });
+  $('login').disabled=false;
+  const requestedSchool=new URL(location.href).searchParams.get('schoolId');
+  if(requestedSchool)$('schoolId').value=assertIemisSchoolId(requestedSchool);
+  status(auth.currentUser?'V47 session भेटियो। विद्यालय प्रमाणित गर्नुहोस्।':'V47 connected. Sign in to inspect your school.');
  }catch(error){status(error.message);$('connect').disabled=false}
  finally{connecting=false}
 };
@@ -35,7 +32,10 @@ $('login').onclick=()=>{
  $('login').disabled=true;$('logout').disabled=false;
  try{
   const schoolId=assertIemisSchoolId($('schoolId').value.trim());
-  const credential=await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);
+  const freshSignIn=!auth.currentUser;
+  const credential=freshSignIn?await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value):{user:auth.currentUser};
+  if(freshSignIn)startVerifiedSchoolActivity();
+  if(!await enforceSchoolIdle(auth,authSdk))throw new Error('Login expired due to inactivity');
   $('password').value='';
   if(!currentSession(current,credential.user.uid))return;
   const bridge=await createV46ReadOnlyBridge({schoolId,auth,db,firestoreApi});
@@ -50,7 +50,7 @@ $('login').onclick=()=>{
   }
   const audit=auditV46ReportReferences(rows);
   $('audit').textContent=audit.valid?'Mark references: no missing, unchecked or duplicate entries ('+audit.checkedMarks+' marks inspected).':'Mark references: '+audit.missing.length+' unresolved, '+audit.unchecked.length+' unchecked fields, '+audit.duplicates.length+' duplicate entries across '+audit.checkedMarks+' marks. Review V46 data before enabling results.';
-  reportRows=rows;
+  reportRows={...rows,verifiedUid:credential.user.uid};
   const examSelect=$('summaryExam');examSelect.replaceChildren(new Option('Select exam',''));
   for(const exam of rows.exams)examSelect.add(new Option(String(exam.examName||exam.termName||exam.name||exam.id),exam.id));
   const classSelect=$('summaryClass');classSelect.replaceChildren(new Option('Select class',''));
