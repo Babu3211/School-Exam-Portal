@@ -4,6 +4,11 @@ on:
     branches: [smss-v47-multischool-work]
     paths:
       - 'v47/subject-mark-limits.mjs'
+      - 'v47/subject-validation.mjs'
+      - 'v47/subject-create-service.mjs'
+      - 'v47/subjects.html'
+      - 'v47/subjects-console.mjs'
+      - 'v47/test-subject-configured-marks.mjs'
       - 'v47/marks-service.mjs'
       - 'v47/test-unbounded-mark-entry.mjs'
       - 'v47/mark-create-service.mjs'
@@ -24,6 +29,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Validate subject full-mark creation
+        run: node v47/test-subject-configured-marks.mjs
       - name: Validate unrestricted mark parsing
         run: node v47/test-unbounded-mark-entry.mjs
       - name: Validate examination full marks
