@@ -32,6 +32,9 @@ assert.doesNotMatch(marks,/inMemoryPersistence|initializeApp\(/,'Marks module mu
 assert.doesNotMatch(marksHtml,/id="config"/,'Manual Firebase JSON must remain removed');
 assert.match(marksHtml,/id="save" disabled/,'Raw marks save must stay disabled');
 assert.match(marksHtml,/id="saveClassMarks" disabled/,'Class publication must stay disabled');
+const computerCode=read('computer-marks-console.mjs');
+assert.match(computerCode,/\$\('save'\)\.disabled=true/,'Legacy fixed-limit Computer marks must never be enabled');
+assert.doesNotMatch(computerCode,/createComputerComponentMark\(/,'Legacy fixed-limit Computer marks must not be written');
 const computerHtml=read('computer-marks.html');
 assert.doesNotMatch(computerHtml,/id="config"/,'Computer components must not require manual Firebase JSON');
 const teacherHtml=read('teacher-assigned-class.html');
