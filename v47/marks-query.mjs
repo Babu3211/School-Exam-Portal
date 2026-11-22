@@ -4,7 +4,7 @@ import {validSchoolClass} from './class-catalog.mjs';
 import {validateExamTerm} from './term-catalog.mjs';
 export async function loadMarksByClassTerm({db,api,actor,schoolId,schoolClass,term,pageSize=50,cursor=null}){
  validateSchoolId(schoolId);
- if(!canAccessSchool(actor,schoolId,'read'))throw new Error('School membership required');
+ if(typeof actor?.uid!=='string'||!actor.uid.trim()||!canAccessSchool(actor,schoolId,'read'))throw new Error('School membership required');
  if(!validSchoolClass(schoolClass))throw new Error('Invalid class');
  validateExamTerm(term);
  if(!Number.isInteger(pageSize)||pageSize<1||pageSize>100)throw new RangeError('Page size must be 1–100');
