@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {listSchoolMembersPage} from './member-list-service.mjs';
-const schoolId='12345',actor={active:true,role:'school_admin',schoolId};
+const schoolId='12345',actor={uid:'admin123',active:true,role:'school_admin',schoolId};
 const docs=Array.from({length:205},(_,i)=>{const id='member'+String(i).padStart(3,'0');return {id,data:()=>({uid:id,schoolId,role:'teacher',active:true})}});
 const api={collection:(...x)=>x,documentId:()=> '__name__',orderBy:(x)=>({kind:'order',x}),startAfter:x=>({kind:'after',x}),limit:n=>({kind:'limit',n}),query:(path,...constraints)=>({path,constraints}),getDocs:async q=>{const after=q.constraints.find(x=>x.kind==='after')?.x;const start=after?docs.findIndex(x=>x.id===after.id)+1:0;return {docs:docs.slice(start,start+q.constraints.find(x=>x.kind==='limit').n)}}};
 const base={db:{},api,actor,schoolId,pageSize:100};
@@ -17,4 +17,6 @@ await assert.rejects(()=>listSchoolMembersPage({...base,schoolId:'67890'}),/Admi
 await assert.rejects(()=>listSchoolMembersPage({...base,cursor:{id:'member001'}}),/Invalid pagination cursor/);
 const cross={...api,getDocs:async()=>({docs:[{id:'foreign',data:()=>({uid:'foreign',schoolId:'67890',role:'teacher',active:true})}]})};
 await assert.rejects(()=>listSchoolMembersPage({...base,api:cross}),/Cross-school/);
+await assert.rejects(()=>listSchoolMembersPage({...base,actor:{role:'school_admin',active:true,schoolId}}),/Admin access/);
+await assert.rejects(()=>listSchoolMembersPage({...base,actor:{...actor,uid:'../invalid'}}),/Admin access/);
 console.log('V47 paginated members: 205 records, role/tenant/cursor guards');
