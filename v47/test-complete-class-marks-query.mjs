@@ -18,7 +18,11 @@ const bounded=await loadAllClassMarks({...base,maxRecords:30000});
 assert.equal(bounded.count,3);
 const bad={...api,getDocs:async()=>({docs:[{id:'a',data:()=>({schoolId,class:'10',term:'final'})}]})};
 await assert.rejects(()=>loadAllClassMarks({...base,api:bad}),/Foreign or mismatched marks record/);
-for(const malformed of [null,undefined]){
+for(const missingSnapshot of [null,undefined,{}]){
+ const missingApi={...api,getDocs:async()=>missingSnapshot};
+ await assert.rejects(()=>loadAllClassMarks({...base,api:missingApi}),/Unexpected result size/);
+}
+for(const malformed of [null,undefined,[]]){
  const broken={...api,getDocs:async()=>({docs:[{id:'a',data:()=>malformed}]})};
  await assert.rejects(()=>loadAllClassMarks({...base,api:broken}),/Foreign or mismatched marks record/);
 }
