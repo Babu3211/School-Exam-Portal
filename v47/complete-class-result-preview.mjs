@@ -23,7 +23,7 @@ export async function previewCompleteSchoolClass({students,subjects,records,hasM
   const entries=byStudent.get(student.id);
   if(entries.length!==subjects.length)throw new Error('Incomplete student result');
   const gpa=previewV46Gpa({subjects:entries,annual:true});
-  results.push({studentId:student.id,gpa,complete:true});
+  results.push({studentId:student.id,gpa,complete:true,graded:gpa!==null});
  }
  return {coverage,results,diagnosticOnly:true};
 }
