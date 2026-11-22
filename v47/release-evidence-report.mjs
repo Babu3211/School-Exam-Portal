@@ -11,6 +11,19 @@ const checks=[
  ['Hosting target',hosting.hosting?.public==='dist','V47 Hosting must point at dist'],
  ['School-scoped security rules',/function activeMember\(sid\)/.test(rules)&&/function canRead\(sid\)/.test(rules),'School membership and scoped read helpers must exist']
 ];
+const students=read('students.html'),attendance=read('attendance.html'),admin=read('admin.html'),schoolAdmin=read('school-admin.html'),exams=read('exams.html'),reports=read('report-preview.html'),manifest=JSON.parse(read('manifest.webmanifest'));
+checks.push(
+ ['Student entry exists',/Save Student/.test(students),'Student entry form not found'],
+ ['Student Excel preview',/Excel Preview/.test(students),'V46-compatible student Excel preview not found'],
+ ['Attendance school scope',/school-scoped attendance/i.test(attendance),'Attendance school-scope evidence missing'],
+ ['Attendance atomic save',!/failure can leave earlier chunks saved/i.test(attendance),'Partial attendance saves are explicitly possible'],
+ ['Super Admin school registration',/Register inactive school and Admin/.test(admin),'Super Admin registration form missing'],
+ ['IEMIS school identity',/IEMIS Code \(must match School ID\)/.test(admin),'IEMIS school ID validation UI missing'],
+ ['Teacher and Viewer roles',/value="teacher"/.test(schoolAdmin)&&/value="viewer"/.test(schoolAdmin),'Teacher/Viewer management missing'],
+ ['All required exam terms', ['Weekly','Monthly','1st','2nd','3rd','Final'].every(x=>exams.includes(x)),'One or more exam terms missing'],
+ ['Official grade sheet',!/Official grade sheets, printing and publication are disabled/i.test(reports),'Official grade sheet/print still disabled'],
+ ['Production PWA identity',!/Development|Dev/.test(manifest.name+' '+manifest.short_name),'PWA manifest still development-branded']
+);
 const blocked=checks.filter(([,pass])=>!pass);
 const report={project:'SMSS V47',branch:'smss-v47-multischool-work',productionReady:false,checks:checks.map(([name,pass,reason])=>({name,status:pass?'STATIC_CHECK_OK':'BLOCKED',reason:pass?'Static evidence only; not a runtime test':reason})),blockingCount:blocked.length};
 console.log(JSON.stringify(report,null,2));
