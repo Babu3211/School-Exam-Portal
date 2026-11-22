@@ -74,7 +74,8 @@ Object.assign(w,{
   getDocsFromServer:async ({name,filters})=>{
     assert.equal(name,'cdc_observations');
     assert.deepEqual(Object.fromEntries(filters.map(([name,op,value])=>{assert.equal(op,'==');return [name,value];})),{
-      studentId:field('student').value,className:'5',subject:'Mathematics',section:'A',academicYear:'2083',period:'First Term'
+      studentId:field('student').value,className:field('class').value,subject:field('subject').value,
+      section:'A',academicYear:'2083',period:field('period').value
     });
     if(readSchool) await readSchool.promise;
     return {docs:[...observations.keys()].filter(path=>filters.every(([key,,value])=>observations.get(path)[key]===value)).map(recordData)};
@@ -260,5 +261,50 @@ for (const [grade,counts] of Object.entries({4:[4,5,5,3,4,5,6],5:[4,5,5,4,3,5,6]
   });
 }
 console.log('Grades 4 and 5: 98 bilingual science and 64 Nepali social studies indicators verified');
+// Exercise school saves and reads in every national subject, independently of local drafts.
+const upperSubjects=['english','nepali','mathematics','science','socialstudies','healthphysicalcreativeart'];
+w.ledgerSubjectsForClass=()=>upperSubjects;
+current.subjectAssignments=['4','5'].flatMap(className=>upperSubjects.map(subject=>({className,subject,section:'A'})));
+serverRole=current;
+w.marksStudents.push({id:'four',class:'4',section:'A',name:'Test Four'});
+for (const grade of ['4','5']) {
+  choice('class',grade);
+  for (const subject of upperSubjects) {
+    choice('subject',subject);
+    choice('period','Final Term');
+    const unit=w.document.querySelector('#cdcUnitSuggestions option').value;
+    choice(subject==='english'?'unitEn':'unit',unit);
+    choice('topic',w.document.querySelector('#cdcTopicSuggestions option').value);
+    const levelNames=[...field('level').options].slice(1).map(option=>option.text).join(' ');
+    const nepaliOnly=['nepali','socialstudies'].includes(subject);
+    assert.equal(/[अ-ह]/u.test(levelNames),subject!=='english');
+    assert.equal(/[a-z]/i.test(levelNames),!nepaliOnly);
+    const evidence=grade+' '+subject+' sample';
+    field('evidence').value=evidence;
+    field('level').value='3';
+    const count=observations.size;
+    await field('save').onclick();
+    await field('saveSchool').onclick();
+    assert.equal(observations.size,count+1);
+    assert.equal([...observations.values()].at(-1).level,3);
+    choice('period','Second Term');
+    await field('readSchool').onclick();
+    assert.equal(field('schoolRows').rows.length,0);
+    w.localStorage.clear();
+    choice('period','Final Term');
+    await field('readSchool').onclick();
+    assert.equal(field('schoolRows').rows.length,1);
+    const cells=field('schoolRows').rows[0].cells;
+    assert.equal(cells[4].textContent,'3');
+    assert.equal(cells[5].textContent,evidence);
+    if (nepaliOnly) assert.doesNotMatch(cells[0].textContent+cells[1].textContent,/[a-z]/i);
+    if (grade==='5') {
+      choice('student','two');
+      await field('readSchool').onclick();
+      assert.equal(field('schoolRows').rows.length,0);
+    }
+  }
+}
+console.log('All 12 Grade 4–5 subject selections: rating language, school save, draft-independent read and record isolation passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
