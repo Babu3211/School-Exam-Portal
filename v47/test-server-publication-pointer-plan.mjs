@@ -15,4 +15,7 @@ assert.throws(()=>planOfficialPublicationPointerSwitch({...args,currentPointer:{
 assert.throws(()=>planOfficialPublicationPointerSwitch({...args,stagedVerification:{...stagedVerification,rosterCount:1400}}),/Complete staged class/);
 assert.throws(()=>planOfficialPublicationPointerSwitch({...args,stagedVerification:{...stagedVerification,publicationAllowed:true}}),/Complete staged class/);
 assert.throws(()=>planOfficialPublicationPointerSwitch({...args,actorUid:''}),/Verified admin UID/);
+assert.throws(()=>planOfficialPublicationPointerSwitch({...args,stagedVerification:{...stagedVerification,schoolId:'other_school'}}),/IEMIS publication school ID/);
+assert.throws(()=>planOfficialPublicationPointerSwitch({...args,stagedVerification:{...stagedVerification,subjectId:'../../marks'}}),/Invalid publication scope/);
+assert.throws(()=>planOfficialPublicationPointerSwitch({...args,currentPointer:{...scope}}),/Invalid current publication ID/);
 console.log('V47 official publication pointer plan: scoped CAS, previous pointer, conflicts and incomplete batches rejected; no writes');
