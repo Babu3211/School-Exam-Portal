@@ -13,5 +13,5 @@ assert.match(js,/verifiedUid:credential\.user\.uid/,'Loaded preview must bind to
 assert.doesNotMatch(html,/id="config"/,'No pasted Firebase configuration requested');
 assert.doesNotMatch(js,/JSON\.parse\(\$\('config'\)/,'No user-supplied Firebase project accepted');
 assert.match(html,/id="coverageRun"/,'Roster coverage controls remain available');
-assert.match(js,/coverageSubject','Coverage inspection must be enabled on verified load');
+assert.match(js,/coverageSubject/,'Coverage inspection must be enabled on verified load');
 console.log('V47 shared school session report preview integration checks passed (static only)');
