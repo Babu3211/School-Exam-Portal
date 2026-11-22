@@ -3,7 +3,7 @@ import {previewCompleteSchoolClass} from './complete-class-result-preview.mjs';
 const schoolId='12345678';
 const students=[{id:'s1',class:'9',active:true},{id:'s2',class:'9',active:true}];
 const subjects=[{id:'math',class:'9',active:true,creditHour:4},{id:'science',class:'9',active:true,creditHour:3}];
-const records=students.flatMap((student,index)=>subjects.map(subject=>({studentId:student.id,subjectId:subject.id,class:'9',term:'final',theory:index?60:48,practical:index?40:32})));
+const records=students.flatMap((student,index)=>subjects.map(subject=>({schoolId,studentId:student.id,subjectId:subject.id,class:'9',term:'final',theory:index?60:48,practical:index?40:32})));
 const calls=[];
 const api={doc:(_db,...path)=>path.join('/'),getDoc:async path=>{calls.push(path);return {exists:()=>true,data:()=>({schoolId,class:'9',active:true,theoryFullMarks:60,practicalFullMarks:40})}}};
 const base={db:{},api,actor:{schoolId,role:'school_admin',active:true},schoolId,schoolClass:'9',term:'final',students,subjects,records};
