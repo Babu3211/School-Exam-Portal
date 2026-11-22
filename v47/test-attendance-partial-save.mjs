@@ -192,7 +192,9 @@ for(const mutate of [
  assert.match(ui,/नेटवर्क त्रुटि हुँदा Save भइसकेको पनि हुन सक्छ/);
  assert.match(ui,/पुनः प्रयास गर्नुअघि Attendance सूची Reload गरी जाँच्नुहोस्/);
  assert.match(ui,/if\(attendanceReviewRequired\)/);
- assert.match(ui,/if\(review\)attendanceReviewRequired=false/);
+ assert.match(ui,/if\(review\)\{if\(result\.hasMore\)/);
+ assert.match(ui,/attendanceReviewRequired=false/);
+ assert.match(ui,/attendanceReviewRequired&&!result\.hasMore&&records\.length>0/);
  assert.match(ui,/load\(true,true\)/);
  assert.match(ui,/if\(e\?\.name==='PartialAttendanceSaveError'\)attendanceReviewRequired=true/);
 }
