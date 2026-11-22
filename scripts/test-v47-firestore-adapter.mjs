@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import {createSchoolStore} from '../v47/firestore-adapter.mjs';
 const calls=[];
-const api={collection:(_db,p)=>p,doc:(_db,p)=>p,orderBy:x=>['orderBy',x],limit:x=>['limit',x],startAfter:x=>['startAfter',x],query:(...a)=>a,getDocs:async q=>{calls.push(q);return {docs:[{id:'one',data:()=>({name:'A',id:'forged'})},{id:'two',data:()=>({name:'B'})}]}}};
-const store=createSchoolStore({db:{},api,member:{active:true,role:'school_admin',schoolId:'12345678'},schoolId:'12345678'});
+const api={collection:(_db,p)=>p,doc:(_db,p)=>p,orderBy:x=>['orderBy',x],limit:x=>['limit',x],startAfter:x=>['startAfter',x],query:(...a)=>a,getDocs:async q=>{calls.push(q);return {docs:[{id:'one',data:()=>({name:'A',id:'forged',schoolId:'12345678'})},{id:'two',data:()=>({name:'B',schoolId:'12345678'})}]}}};
+const store=createSchoolStore({db:{},api,member:{uid:'admin-123',active:true,role:'school_admin',schoolId:'12345678'},schoolId:'12345678'});
 assert.equal(store.documentRef('students','student1'),'schools/12345678/students/student1');
 const page=await store.listPage('students',{pageSize:1});
 assert.equal(page.records.length,1);assert.equal(page.records[0].id,'one');assert.equal(page.hasMore,true);
 assert.equal(calls[0][0],'schools/12345678/students');
 assert.throws(()=>store.collectionRef('invalid'));
-assert.throws(()=>createSchoolStore({db:{},api,member:{active:true,role:'school_admin',schoolId:'12345678'},schoolId:'87654321'}));
+assert.throws(()=>createSchoolStore({db:{},api,member:{uid:'admin-123',active:true,role:'school_admin',schoolId:'12345678'},schoolId:'87654321'}));
 console.log('V47 Firestore adapter scoping and pagination passed');
