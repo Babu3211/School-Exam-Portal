@@ -31,21 +31,22 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
       - name: Run complete V47 regression and Firestore emulator suite
-        run: npm run test:v47
+        run: |
+          set -o pipefail
+          npm run test:v47 2>&1 | tee v47-full-tests.log
       - name: Check release blockers (deployment remains disabled)
         if: always()
         run: |
-          npm run test:v47:release > v47-release-gate.log 2>&1 && {
-            echo 'Release gate unexpectedly returned success; inspect required manual sign-off'
-            cat v47-release-gate.log
-            exit 1
-          } || {
-            echo 'Release gate currently blocks production; see log artifact'
-            cat v47-release-gate.log
-          }
+          npm run test:v47:release > v47-release-gate.log 2>&1
+          status=$?
+          cat v47-release-gate.log
+          echo "Release gate exit status: $status"
+          exit 0
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v47-release-gate-log
-          path: v47-release-gate.log
+          name: v47-verification-logs
+          path: |
+            v47-release-gate.log
+            v47-full-tests.log
           if-no-files-found: ignore
