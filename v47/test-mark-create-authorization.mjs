@@ -5,7 +5,7 @@ const input={studentId:'s1',subjectId,class:classId,term:'monthly',theory:25,pra
 function mock(overrides={}){
  const docs=new Map([
   ['students/s1',{schoolId,class:classId}],
-  ['subjects/math',{schoolId,class:classId,active:true,name:'Math'}],
+  ['subjects/math',{schoolId,class:classId,active:true,name:'Math',theoryFullMarks:100,practicalFullMarks:100}],
   ['subject_assignments/s1:math',{schoolId,class:classId,studentId:'s1',subjectId,active:true}]
  ]);
  for(const [key,value] of Object.entries(overrides))value===null?docs.delete(key):docs.set(key,value);
@@ -44,7 +44,7 @@ for(const actor of [
 }
 // Subjects without configured components retain their existing raw-mark path.
 for(const name of ['Computer','Computer Science','Nepali','Mathematics','New Optional Subject']){
- const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name}});
+ const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name,theoryFullMarks:100,practicalFullMarks:100}});
  await createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId},schoolId,input});
  assert.equal(writes.length,1,'Subject name alone must not force a hardcoded assessment scheme');
 }
@@ -77,9 +77,9 @@ for(const [overrides,message] of [
  [{'students/s1':{schoolId:'87654321',class:classId}},/Student missing/],
  [{'subjects/math':{schoolId:'87654321',class:classId,active:true,name:'Math'}},/Subject missing/],
  [{'subject_assignments/s1:math':{schoolId:'87654321',class:classId,studentId:'s1',subjectId,active:true}},/assignment required/],
- [{'subjects/math':{schoolId,class:classId,active:true,name:'Computer',components:[{name:'Custom',fullMarks:47}]}},/Configured subject requires Assessment Settings/],
- [{'subjects/math':{schoolId,class:classId,active:true,name:'Nepali',components:[{name:'Internal',fullMarks:12}]}},/Configured subject requires Assessment Settings/],
- [{'subjects/math':{schoolId,class:classId,active:true,name:'New Optional Subject',components:[{name:'Project',fullMarks:73}]}},/Configured subject requires Assessment Settings/]
+ [{'subjects/math':{schoolId,class:classId,active:true,name:'Computer',theoryFullMarks:100,practicalFullMarks:100,components:[{name:'Custom',fullMarks:47}]}},/Configured subject requires Assessment Settings/],
+ [{'subjects/math':{schoolId,class:classId,active:true,name:'Nepali',theoryFullMarks:100,practicalFullMarks:100,components:[{name:'Internal',fullMarks:12}]}},/Configured subject requires Assessment Settings/],
+ [{'subjects/math':{schoolId,class:classId,active:true,name:'New Optional Subject',theoryFullMarks:100,practicalFullMarks:100,components:[{name:'Project',fullMarks:73}]}},/Configured subject requires Assessment Settings/]
 ]){
  const {api,writes}=mock(overrides);
  await assert.rejects(createSchoolMarkOnly({db:{},api,actor:{role:'school_admin',active:true,schoolId},schoolId,input}),message);
