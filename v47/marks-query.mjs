@@ -23,6 +23,7 @@ export async function loadMarksByClassTerm({db,api,actor,schoolId,schoolClass,te
   ids.add(d.id);previous=d.id;
   const data=d.data();
   if(!data||typeof data!=='object'||Array.isArray(data)||data.schoolId!==schoolId||data.class!==schoolClass||data.term!==term)throw new Error('Foreign or mismatched marks record');
+  if(typeof data.studentId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(data.studentId)||typeof data.subjectId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(data.subjectId))throw new Error('Invalid marks student or subject identity');
   validated.push({...data,id:d.id});
  }
  const page=docs.slice(0,pageSize);
