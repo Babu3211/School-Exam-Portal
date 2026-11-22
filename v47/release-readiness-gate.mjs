@@ -7,8 +7,22 @@ const hub=read('index.html');
 const marks=read('marks-entry.html');
 const save=read('verified-small-class-mark-save.mjs');
 const rules=read('firestore.rules');
+const markParser=read('marks-service.mjs');
+const markLimits=read('subject-mark-limits.mjs');
+const singleMarkSave=read('mark-create-service.mjs');
+const classMarkSave=read('class-mark-save.mjs');
 const config=JSON.parse(read('firebase.json'));
 const blockers=[];
+// The maximum for every subject must come from persisted Examination Settings.
+if(/theory\s*>\s*100|practical\s*>\s*100/.test(markParser))
+ blockers.push('Mark entry still has a hardcoded 100-point maximum');
+if(!/full marks required/.test(markLimits)||!/theoryFullMarks/.test(markLimits)||!/practicalFullMarks/.test(markLimits))
+ blockers.push('Both full-mark values must be required from Examination Settings');
+for(const [name,source] of [['individual',singleMarkSave],['class',classMarkSave]]){
+ if(!/validateSubjectMarkLimits\(subject\.data\(\)/.test(source))
+  blockers.push(name+' mark saving does not validate persisted subject full marks');
+}
+
 const expectedProject='smss-exam-portal-v47';
 const projectFiles=['.firebaserc','firebase.json'];
 if(config.hosting?.public!=='dist')blockers.push('V47 hosting must use config-relative dist');
