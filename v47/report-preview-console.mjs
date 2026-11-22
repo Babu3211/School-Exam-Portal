@@ -1,5 +1,6 @@
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
 import {createV46ReadOnlyBridge} from './v46-readonly-bridge.mjs';
+import {verifySchoolSession} from './verified-school-session.mjs';
 import {assertIemisSchoolId} from './iemis-school-identity.mjs';
 import {auditV46ReportReferences} from './report-reference-audit.mjs';
 import {previewV46MarkSummaries} from './mark-summary-preview.mjs';
@@ -74,12 +75,38 @@ $('logout').onclick=async()=>{
  finally{loggingOut=false;$('login').disabled=!auth;loginTask=null}
 };
 
-$('summaryRun').onclick=()=>{
- if(!reportRows||!auth?.currentUser||loggingOut)return;
+// The preview is a cached snapshot. Check live membership and inactivity before
+// each interaction; do not display a cached school result after role revocation.
+async function withVerifiedReportSnapshot(render){
+ if(!reportRows||busy||loggingOut||!auth?.currentUser)return;
+ const snapshot=reportRows,requestEpoch=epoch,uid=snapshot.verifiedUid;
+ try{
+  if(!currentSession(requestEpoch,uid))throw new Error('Login session changed');
+  if(!await enforceSchoolIdle(auth,authSdk))throw new Error('Login expired');
+  const session=await verifySchoolSession({
+   schoolId:snapshot.schoolId,uid,
+   readDocument:async path=>{
+    const ref=firestoreApi.doc(db,...path.split('/'));
+    const doc=await firestoreApi.getDocFromServer(ref);
+    return doc.exists()?doc.data():null;
+   }
+  });
+  if(session.schoolId!==snapshot.schoolId||!currentSession(requestEpoch,uid)||reportRows!==snapshot)
+   throw new Error('Verified school session changed');
+  render(snapshot);
+ }catch(error){
+  if(reportRows===snapshot){
+   clear();
+   status('विद्यालयको अनुमति पुनः जाँच्न सकिएन। फेरि Login गर्नुहोस्: '+error.message);
+  }
+ }
+}
+
+$('summaryRun').onclick=()=>withVerifiedReportSnapshot(rows=>{
  try{
   $('summaryRows').replaceChildren();
   const classNo=Number($('summaryClass').value),examId=$('summaryExam').value;
-  const preview=previewV46MarkSummaries(reportRows,{classNo,examId,annual:$('summaryAnnual').checked});
+  const preview=previewV46MarkSummaries(rows,{classNo,examId,annual:$('summaryAnnual').checked});
   const body=$('summaryRows');body.replaceChildren();
   for(const item of preview.records){
    const tr=document.createElement('tr');
@@ -90,12 +117,11 @@ $('summaryRun').onclick=()=>{
   }
   $('summaryResult').textContent='Diagnostic only: '+preview.completeCount+'/'+preview.records.length+' mark records have complete grade inputs. Official GPA and publication disabled.';
  }catch(error){$('summaryRows').replaceChildren();$('summaryResult').textContent='Unable to inspect: '+error.message}
-};
+});
 
-$('coverageRun').onclick=()=>{
- if(!reportRows||!auth?.currentUser||loggingOut)return;
+$('coverageRun').onclick=()=>withVerifiedReportSnapshot(rows=>{
  try{
-  const result=inspectClassMarkCoverage(reportRows,{examId:$('summaryExam').value,classNo:Number($('summaryClass').value),subject:$('coverageSubject').value,section:$('coverageSection').value.trim()||null});
+  const result=inspectClassMarkCoverage(rows,{examId:$('summaryExam').value,classNo:Number($('summaryClass').value),subject:$('coverageSubject').value,section:$('coverageSection').value.trim()||null});
   $('coverageResult').textContent='Read-only class check: '+result.rosterCount+' students, '+result.markCount+' marks; missing '+result.missing.length+', duplicate '+result.duplicates.length+', outsider '+result.outsiders.length+'. '+(result.complete?'Roster covered.':'Not complete.')+' Save and publication disabled.';
  }catch(error){$('coverageResult').textContent='Class coverage unavailable: '+error.message}
-};
+});
