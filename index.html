@@ -2634,7 +2634,7 @@ function openCdcAssessment() {
     try { if(field('topic').value.trim()) record = readRecord(); }
     catch { field('status').textContent = 'मस्यौदा पढ्न सकिएन।'; }
     for(const name of ['unit','unitEn','topicAlt','level','method','evidence','feedback']) field(name).value = record[name] || '';
-    if(requested && !record.unit) [field('unit').value,field('unitEn').value]=chosenUnit;
+    if(!record.unit) [field('unit').value,field('unitEn').value]=chosenUnit;
     field('topicAlt').value ||= [...dialog.querySelector('#cdcTopicSuggestions').options]
       .find(option=>option.value!==field('topic').value && option.label.startsWith(field('topic').value+' / '))?.value || '';
     field('date').value = record.date || today();
@@ -2642,7 +2642,10 @@ function openCdcAssessment() {
     refreshRecords();
     refreshClassProgress();
   };
-  const resetTopic = () => { field('topic').value=''; load(); };
+  const resetTopic = () => {
+    for(const name of ['topic','unit','unitEn']) field(name).value='';
+    load();
+  };
   const units = () => {
     const pairs = new Map(cdcVerifiedUnits(field('class').value,field('subject').value));
     for(const {unit,unitEn} of getCatalog()) if(!pairs.has(unit)) pairs.set(unit,unitEn);
@@ -2653,7 +2656,14 @@ function openCdcAssessment() {
     if(pair) [field('unit').value,field('unitEn').value]=pair;
     refreshRecords();
   };
-  for(const input of ['unit','unitEn']) field(input).onchange=()=>matchUnit(input);
+  for(const input of ['unit','unitEn']) field(input).onchange=()=>{
+    const other = input==='unit' ? 'unitEn' : 'unit';
+    const selectedUnit=units().find(names=>names.some(name=>normalizeTitle(name)===normalizeTitle(field(input).value)));
+    if(input==='unitEn' && !selectedUnit) return;
+    field(other).value='';
+    matchUnit(input);
+    load();
+  };
   function refreshUnitSuggestions() {
     const verifiedUnits = units();
     field('unitCoverage').textContent = verifiedUnits.length
