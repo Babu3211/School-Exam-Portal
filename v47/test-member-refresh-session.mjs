@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const source=readFileSync(new URL('./school-admin-console.mjs',import.meta.url),'utf8');
+assert.match(source,/async function refresh\(\)\{memberRequest\+\+;/);
+assert.match(source,/if\(memberLoading\)\{memberRefreshPending=true;return\}/);
+assert.match(source,/if\(memberRefreshPending\)\{memberRefreshPending=false;if\(actor&&auth\?\.currentUser\?\.uid===actor\.uid\)void loadMembersPage\(\)/);
+assert.match(source,/signingOut=true;sessionEpoch\+\+;memberRequest\+\+;memberRefreshPending=false;/);
+assert.match(source,/if\(current!==sessionEpoch\|\|request!==memberRequest\|\|actor!==requestActor/);
+assert.match(source,/memberCursor=page\.nextCursor;memberHasMore=page\.hasMore/);
+console.log('V47 member refresh queues while loading and is invalidated on logout');
