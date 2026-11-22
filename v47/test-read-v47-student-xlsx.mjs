@@ -10,4 +10,26 @@ assert.ok(bytes.byteLength>500);
 if(typeof DOMParser==='undefined'){
  await assert.rejects(readV47StudentXlsx({size:bytes.byteLength,arrayBuffer:async()=>bytes}),/Browser XML parser unavailable/);
 }
-console.log('V47 student XLSX reader input safety checks passed');
+// The generated workbook is a real ZIP. Reject corrupt directory entries, oversized
+// uncompressed declarations and unsupported compression before any import preview.
+const asFile=data=>({size:data.byteLength,arrayBuffer:async()=>data.buffer.slice(data.byteOffset,data.byteOffset+data.byteLength)});
+const source=new Uint8Array(bytes);
+const endSignature=[0x50,0x4b,0x05,0x06];
+let eocd=-1;
+for(let i=source.length-22;i>=0;i--){
+ if(endSignature.every((value,j)=>source[i+j]===value)){eocd=i;break;}
+}
+assert.ok(eocd>=0,'Workbook must contain ZIP end directory');
+const view=new DataView(source.buffer,source.byteOffset,source.byteLength);
+const central=view.getUint32(eocd+16,true);
+assert.equal(view.getUint32(central,true),0x02014b50);
+const corrupted=new Uint8Array(source);
+corrupted[central]=0;
+await assert.rejects(readV47StudentXlsx(asFile(corrupted)),/Invalid ZIP directory/);
+const oversized=new Uint8Array(source);
+new DataView(oversized.buffer).setUint32(central+24,1_500_001,true);
+await assert.rejects(readV47StudentXlsx(asFile(oversized)),/oversized Excel entry/);
+const encrypted=new Uint8Array(source);
+new DataView(encrypted.buffer).setUint16(central+8,1,true);
+await assert.rejects(readV47StudentXlsx(asFile(encrypted)),/Unsupported or oversized Excel entry/);
+console.log('V47 student XLSX reader ZIP safety regression checks passed');
