@@ -2327,6 +2327,7 @@ function cdcVerifiedUnits(className,subject) {
     ["चराचुरुङ्गी र जनावर","Birds and Animals"]
   ];
   if (Number(className)===1&&key==='mathematics') return [cdcSeroferoUnits[1],cdcSeroferoUnits[2],cdcSeroferoUnits[3],cdcSeroferoUnits[6],cdcSeroferoUnits[8]];
+  if (['2','3'].includes(String(className))&&key==='mathematics') return [["ज्यामिति","Geometry"],["सङ्ख्याको ज्ञान","Number concepts"],["गणितका आधारभूत क्रिया","Basic operations"],["नाप","Measurement"],["साधारण ग्राफ","Simple graphs"]];
   if (Number(className)>=4&&key==='mathematics') return [
     ['ज्यामिति','Geometry'], ['अङ्कगणित','Arithmetic'], ['नाप','Measurement'],
     ['तथ्याङ्कशास्त्र','Statistics'], ['बीजगणित','Algebra']
@@ -2905,6 +2906,56 @@ const cdcVerifiedOutcomes = {
     ["हाम्रो वरपरको संसार","वर्गाकार कागजबाट चरा वा सजावटको वस्तु बनाउने"],
     ["हाम्रो वरपरको संसार","बग्ने पानी र चल्ने हावाको शक्ति प्रयोग हुने उदाहरण दिने"],
     ["हाम्रो वरपरको संसार","पानी जोगाउने उपाय बताउने"]
+  ],
+  '2:mathematics': [
+    ["ज्यामिति","वस्तु जोडेर त्रिभुज र चतुर्भुज बनाउने","Build triangles and quadrilaterals with objects"],
+    ["ज्यामिति","त्रिभुज, चतुर्भुज र वृत्तको खाका उतार्ने","Trace triangles, quadrilaterals and circles"],
+    ["ज्यामिति","भुजा र कुना हेरेर त्रिभुज र चतुर्भुज छुट्याउने","Distinguish triangles and quadrilaterals by their sides and corners"],
+    ["सङ्ख्याको ज्ञान","तीन अङ्कसम्मका सङ्ख्याको स्थानमान देखाउने","Show place values in numbers of up to three digits"],
+    ["सङ्ख्याको ज्ञान","१०० सम्मका सङ्ख्या देवनागरी र हिन्दु–अरबी पद्धतिमा अक्षरमा लेख्ने","Write numbers through 100 in words using both systems"],
+    ["सङ्ख्याको ज्ञान","तीन अङ्कसम्मका जोर र बिजोर सङ्ख्या छुट्याउने","Identify even and odd numbers of up to three digits"],
+    ["सङ्ख्याको ज्ञान","तीन अङ्कसम्मका सङ्ख्या तुलना गरी क्रममा मिलाउने","Compare and order numbers of up to three digits"],
+    ["सङ्ख्याको ज्ञान","सिङ्गो, आधा र एक चौथाइको आधारमा वस्तु तुलना गर्ने","Compare objects as wholes, halves and quarters"],
+    ["गणितका आधारभूत क्रिया","योगफल १,००० सम्म आउने गरी बढीमा तीन सङ्ख्या जोड्ने","Add up to three numbers with a total no greater than 1,000"],
+    ["गणितका आधारभूत क्रिया","तीन अङ्कसम्मका सङ्ख्या घटाउने","Subtract numbers of up to three digits"],
+    ["गणितका आधारभूत क्रिया","दोहोरिने जोड र गुणनको सम्बन्ध देखाउने","Relate repeated addition to multiplication"],
+    ["गणितका आधारभूत क्रिया","१० सम्मका गुणन तालिका बनाउने","Build multiplication tables through 10"],
+    ["गणितका आधारभूत क्रिया","गुणन तालिकाको सहायताले दुई अङ्कसम्मको सङ्ख्यालाई १० सम्मको सङ्ख्याले निःशेष भाग गर्ने","Use times tables to divide a number of up to two digits exactly by a divisor up to 10"],
+    ["नाप","घडीमा घण्टा र मिनेट पढ्ने","Read hours and minutes on a clock"],
+    ["नाप","पात्रोमा साल, महिना, गते र बार पढ्ने","Read the year, month, date and weekday on a calendar"],
+    ["नाप","रु. १,००० सम्मका सिक्का र नोट चिन्ने","Identify coins and notes valued up to Rs 1,000"],
+    ["नाप","एउटै मुद्रा एकाइमा साटफेर नगरी जोड र घटाउ गर्ने","Add and subtract money in one unit without regrouping"],
+    ["नाप","वस्तुको लम्बाइ सेन्टिमिटरमा अनुमान गरी नाप्ने","Estimate and measure length in centimetres"],
+    ["नाप","ग्राम र किलोग्रामको सम्बन्ध देखाएर ढकले तौलने","Relate grams to kilograms and weigh with standard weights"],
+    ["नाप","भाँडाको क्षमता अनुमान र नाप गरी तुलना गर्ने","Estimate, measure and compare container capacity"],
+    ["नाप","वर्गाकार वा आयताकार सतहको क्षेत्रफल हेरेर तुलना गर्ने","Compare the areas of square or rectangular surfaces by observation"],
+    ["साधारण ग्राफ","तालिकाबाट जानकारी निकाल्ने","Read information from a table"],
+    ["साधारण ग्राफ","चित्रग्राफबाट सङ्ख्या गनेर तालिकामा राख्ने","Count values in a pictograph and enter them in a table"]
+  ],
+  '3:mathematics': [
+    ["ज्यामिति","किनारा वा रेखाखण्ड नाप्ने र दिइएको लम्बाइको रेखाखण्ड कोर्ने","Measure edges and draw a segment of a given length"],
+    ["ज्यामिति","वस्तुमा कोण चिन्ने, बनाउने, नाम दिने र तुलना गर्ने","Find, construct, name and compare angles"],
+    ["ज्यामिति","समकोण चिन्ने","Identify right angles"],
+    ["ज्यामिति","त्रिभुज र चतुर्भुज बनाउने तथा वर्गाकार र आयताकार सतह चिन्ने","Construct triangles and quadrilaterals and identify square and rectangular faces"],
+    ["सङ्ख्याको ज्ञान","पाँच अङ्कसम्मका सङ्ख्याको स्थानमान देखाउने","Identify place values in numbers of up to five digits"],
+    ["सङ्ख्याको ज्ञान","चार अङ्कसम्मका सङ्ख्या बढ्दो वा घट्दो क्रममा मिलाउने","Arrange numbers of up to four digits in ascending or descending order"],
+    ["सङ्ख्याको ज्ञान","स्थानीय सङ्ख्याङ्कमा २० सम्मका सङ्ख्या चिन्ने","Recognize numbers through 20 in local notation"],
+    ["सङ्ख्याको ज्ञान","आधा, चौथाइ र तिहाइका भिन्न वस्तु वा चित्रबाट देखाउने","Model halves, quarters and thirds with objects or pictures"],
+    ["सङ्ख्याको ज्ञान","चित्रबाट दुई भिन्न तुलना गर्ने","Compare two fractions using pictures"],
+    ["सङ्ख्याको ज्ञान","सङ्ख्याको ढाँचा चिन्ने","Recognize number patterns"],
+    ["गणितका आधारभूत क्रिया","योगफल १०,००० सम्म आउने गरी बढीमा तीन सङ्ख्या जोड्ने","Add up to three numbers with a total no greater than 10,000"],
+    ["गणितका आधारभूत क्रिया","जोड र घटाउको सम्बन्ध देखाएर चार अङ्कसम्मका सङ्ख्या घटाउने","Use the relationship between addition and subtraction and subtract numbers of up to four digits"],
+    ["गणितका आधारभूत क्रिया","तीन अङ्कसम्मको सङ्ख्यालाई दुई अङ्कसम्मको सङ्ख्याले गुणन गर्ने","Multiply a number of up to three digits by one of up to two digits"],
+    ["गणितका आधारभूत क्रिया","तीन अङ्कसम्मको सङ्ख्यालाई १० सम्मको सङ्ख्याले भाग गर्ने","Divide a number of up to three digits by a divisor up to 10"],
+    ["नाप","घडीमा घण्टा, मिनेट र सेकेन्ड पढ्ने","Read hours, minutes and seconds on a clock"],
+    ["नाप","समयका एकाइको सम्बन्ध बताउने र काममा लागेको समय निकाल्ने","Relate units of time and work out elapsed time"],
+    ["नाप","रुपैयाँ र पैसा रूपान्तरण गरी रकम जोड्ने वा घटाउने","Convert between rupees and paisa and add or subtract amounts"],
+    ["नाप","मिटर, सेन्टिमिटर र मिलिमिटरबीच रूपान्तरण गर्ने","Convert between metres, centimetres and millimetres"],
+    ["नाप","वस्तुको लम्बाइ अनुमान गरेर नापी जाँच्ने","Check an estimate of length by measuring"],
+    ["नाप","तौल अनुमान र नाप गर्ने तथा किलोग्रामलाई ग्राममा बदल्ने","Estimate and measure mass and convert kilograms to grams"],
+    ["नाप","लिटर र मिलिलिटरमा क्षमता नाप्ने र एउटै एकाइमा जोड वा घटाउ गर्ने","Measure capacity and add or subtract in a single unit"],
+    ["नाप","वर्ग कोष गनेर वर्ग वा आयतको क्षेत्रफल निकाल्ने","Find the area of a square or rectangle by counting unit squares"],
+    ["साधारण ग्राफ","सङ्केत प्रयोग भएको चित्रग्राफ पढ्ने र बनाउने","Read and make a pictograph using symbols"]
   ],
   '5:mathematics': [
     ['ज्यामिति','वर्गजालमा लम्ब र समानान्तर रेखा','Draw perpendicular and parallel lines on a square grid']
