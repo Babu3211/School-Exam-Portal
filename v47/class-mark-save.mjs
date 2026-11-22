@@ -8,7 +8,7 @@ import {markEntryId} from './marks-service.mjs';
 // Larger classes require a separately audited server-side workflow.
 export async function saveCompleteClassMarks({db,api,actor,schoolId,classId,term,subjectId,expectedStudentIds,entries}){
  validateSchoolId(schoolId);
- if(actor?.active!==true||actor?.role!=='school_admin'||actor?.schoolId!==schoolId)throw new Error('School Admin permission required');
+ if(actor?.active!==true||actor?.role!=='school_admin'||actor?.schoolId!==schoolId||typeof actor?.uid!=='string'||!actor.uid.trim())throw new Error('School Admin permission required');
  const identity={uid:actor.uid,role:actor.role,active:actor.active,schoolId:actor.schoolId};
  const complete=validateCompleteClassMarks({schoolId,classId,term,subjectId,expectedStudentIds,entries});
  if(complete.count>3)throw new RangeError('Atomic class marks save supports at most 3 students; no records saved');
