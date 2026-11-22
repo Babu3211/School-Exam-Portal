@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {buildClassReviewExcel} from './class-review-excel.mjs';
+const review={format:'smss-v47-class-mark-review-v1',schoolId:'12345',classId:'9',subjectId:'computer',examId:'final',rosterCount:2,componentLimits:[{key:'theory',name:'Theory',fullMarks:36},{key:'practical',name:'Practical',fullMarks:10}],entries:[{studentId:'s1',isAbsent:false,values:{theory:34,practical:9},totalObtained:43},{studentId:'s2',isAbsent:true,values:null,totalObtained:0}],writeAuthorized:false,publicationAllowed:false};
+const workbook=buildClassReviewExcel({json:JSON.stringify(review),studentNames:{s1:'Student One',s2:'Student Two'}});
+assert.equal(workbook.type,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+const bytes=new Uint8Array(await workbook.arrayBuffer());
+assert.equal(String.fromCharCode(...bytes.slice(0,4)),'PK\u0003\u0004');
+assert.ok(bytes.length>500);
+assert.throws(()=>buildClassReviewExcel({json:JSON.stringify({...review,publicationAllowed:true})}),/read-only review/);
+console.log('V47 class marks review exports genuine XLSX ZIP workbook, not CSV');
