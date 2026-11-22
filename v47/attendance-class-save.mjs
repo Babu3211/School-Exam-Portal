@@ -21,7 +21,7 @@ export async function saveLoadedClassAttendance({db,api,actor,schoolId,entries,o
    if(actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId||!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin identity changed during class attendance save');
    await saveClassAttendance({db,api,actor,schoolId,entries:chunk});
   }
-  catch(cause){if(saved===0)throw cause;throw new PartialAttendanceSaveError(saved,validated.length,cause,validated.slice(offset).map(entry=>entry.studentId));}
+  catch(cause){throw new PartialAttendanceSaveError(saved,validated.length,cause,validated.slice(offset).map(entry=>entry.studentId));}
   saved+=chunk.length;
   try{onProgress({saved,total:validated.length,savedIds:chunk.map(e=>e.studentId)});}catch(error){/* UI callback failures must not turn a committed batch into a misleading save failure. */}
  }
