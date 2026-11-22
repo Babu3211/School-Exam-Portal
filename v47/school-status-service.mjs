@@ -5,10 +5,12 @@ export async function setSchoolActive({db,api,actor,schoolId,active}){
  validateSchoolId(schoolId);
  if(typeof active!=='boolean')throw new TypeError('Active must be boolean');
  if(typeof api?.doc!=='function'||typeof api?.runTransaction!=='function')throw new TypeError('Missing Firebase SDK');
+ const creatorUid=actor.uid;
  const ref=api.doc(db,'schools',schoolId);
  await api.runTransaction(db,async tx=>{
   const snapshot=await tx.get(ref);
   if(!snapshot?.exists?.())throw new Error('School does not exist');
+  if(!canManageSchools(actor)||actor.uid!==creatorUid)throw new Error('Super Admin identity changed during school activation');
   const school=snapshot.data();
   if(!school||typeof school!=='object'||Array.isArray(school)||school.id!==schoolId||school.iemisCode!==schoolId||typeof school.name!=='string'||school.name.trim().length<3||school.name.length>160||typeof school.active!=='boolean')throw new Error('School registry identity mismatch');
   if(school.active===active)return;
