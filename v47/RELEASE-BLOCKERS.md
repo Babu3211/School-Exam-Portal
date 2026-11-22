@@ -55,3 +55,15 @@ Source-verified current blockers:
 6. Require green CI at the release commit, browser tests, backups and explicit deployment approval.
 
 **Stop rule:** No further isolated staging-validation commits without a reproducible failing test. No V47 deployment while any release blocker remains. Never change V46 `main` without explicit permission.
+
+
+## V46-to-V47 UI source comparison — 2026-11-22
+
+Directly inspected **V46 `main/index.html`** (493,155 characters), **V46 `main/manifest.webmanifest`** (557 characters), and V47 development branch `index.html` (4,048 characters) and `students.html` (3,104 characters).
+
+- V46 is an integrated single-page portal with sidebar, menus and existing school workflows; V47's current index is a link-based development workspace. The latter is not a migrated production dashboard.
+- V46 ships an installable PWA manifest (`SMSS Exam Portal`, standalone, 192/512 icons). Equivalent V47 installed-app parity has **not** been established.
+- V47 Students currently exposes a **manual Firebase config JSON textarea** and an IEMIS-invalid example `school_001` for school ID. Replace this prototype onboarding with V47-project-only configuration and authenticated school selection before calling the UI integrated.
+- Do not copy V46's hard-coded single-school Firebase settings into V47. Adapt its UI and features behind tenant-scoped V47 services.
+
+**Next implementation target:** V47 project-only Firebase bootstrap, shared authenticated school context, then V46 feature screens. Do not spend another iteration on read-only marks staging assertions.
