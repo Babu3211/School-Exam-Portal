@@ -150,4 +150,10 @@ for(const mutate of [
  await assert.rejects(saveCompleteClassMarks({...args,actor:changingActor,db:{},api}),/School identity changed/);
  assert.equal(writes.length,0,'Revoked session must not write partial class marks');
 }
+// Reject any configured full-marks violation before writing the class.
+for(const [theoryFullMarks,practicalFullMarks] of [[4,36],[20,7],[29,9]]){
+ const {api,writes}=mock({'subjects/math':{schoolId,class:classId,active:true,name:'Any Subject',theoryFullMarks,practicalFullMarks}});
+ await assert.rejects(saveCompleteClassMarks({...args,db:{},api}),/exceed/);
+ assert.equal(writes.length,0);
+}
 console.log('V47 atomic class marks save contract checks passed');
