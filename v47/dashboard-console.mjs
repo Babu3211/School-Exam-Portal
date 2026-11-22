@@ -2,11 +2,18 @@ import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,touc
 import {validateSchoolId} from './school-paths.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {schoolDashboardAccess} from './dashboard-access.mjs';
+import {schoolProfileView} from './school-settings-profile.mjs';
 const $=id=>document.getElementById(id);
 let auth,authSdk,db,api,verified=null,busy=false,checkingLink=false,lastActivity=Date.now();
 const MAX_IDLE_MS=60*60*1000;
 const SCHOOL_SELECTION_KEY='smss-v47-dashboard-school';
 const readDocument=async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null};
+async function verifiedSchoolLabel(schoolId,registryName){
+ const settings=await readDocument('schools/'+schoolId+'/school_settings/profile');
+ if(settings&&settings.schoolId!==schoolId)throw new Error('Cross-school profile rejected');
+ const profile=schoolProfileView(settings,registryName);
+ return [profile.nameEnglish,profile.nameNepali,profile.addressEnglish,profile.addressNepali].filter(Boolean).join(' · ');
+}
 function message(value){$('dashboardStatus').textContent=value}
 function lock(){for(const link of document.querySelectorAll('[data-school-module]')){const allowed=!!verified&&schoolDashboardAccess(verified.role,link.dataset.requiredRole==='school_admin'?'school-admin':'module');link.setAttribute('aria-disabled',String(!allowed));link.tabIndex=allowed?0:-1;link.classList.toggle('locked',!allowed)}$('schoolIdentity').textContent=verified?verified.name+' · '+verified.schoolId+' · '+verified.role:'No school verified';$('schoolAccessMode').textContent=!verified?'Login required to view school modules.':verified.role==='viewer'?'Viewer — पढ्न र रिपोर्ट हेर्न मात्र मिल्छ। Add, Edit, Delete वा Save अनुमति छैन।':verified.role==='teacher'?'Teacher — तोकिएको कक्षा र विषयमा मात्र अनुमति अनुसार काम गर्न मिल्छ।':'School Admin — विद्यालयको व्यवस्थापन गर्न मिल्छ; प्रत्येक Module ले अनुमति पुनः जाँच्छ।';$('dashboardLogout').disabled=!verified}
 function clear(){verified=null;lock()}
@@ -19,7 +26,9 @@ async function restoreVerifiedSchool(){
   const session=await verifySchoolSession({schoolId,uid,readDocument});
   const school=await readDocument('schools/'+schoolId);
   if(auth.currentUser?.uid!==uid||school?.active!==true)throw Error('School unavailable');
-  verified={uid,schoolId,role:session.role,name:String(school.name??schoolId)};
+  const label=await verifiedSchoolLabel(schoolId,String(school.name??schoolId));
+  if(auth.currentUser?.uid!==uid)throw Error('Login changed during profile load');
+  verified={uid,schoolId,role:session.role,name:label};
   $('dashboardSchool').value=schoolId;lastActivity=Date.now();lock();
   message('पहिले प्रमाणित विद्यालयको Session पुनः जाँचियो।');
  }catch(e){sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();message('विद्यालय फेरि Login गर्नुहोस्: '+e.message)}
@@ -75,7 +84,9 @@ $('dashboardLogin').onclick=async()=>{if(busy||!auth)return;busy=true;$('dashboa
  const session=await verifySchoolSession({schoolId,uid,readDocument});
  const school=await readDocument('schools/'+schoolId);
  if(auth.currentUser?.uid!==uid||school?.active!==true)throw Error('School session changed');
- verified={uid,schoolId,role:session.role,name:String(school.name??schoolId)};sessionStorage.setItem(SCHOOL_SELECTION_KEY,schoolId);startVerifiedSchoolActivity();lastActivity=Date.now();lock();
+ const label=await verifiedSchoolLabel(schoolId,String(school.name??schoolId));
+ if(auth.currentUser?.uid!==uid)throw Error('Login changed during profile load');
+ verified={uid,schoolId,role:session.role,name:label};sessionStorage.setItem(SCHOOL_SELECTION_KEY,schoolId);startVerifiedSchoolActivity();lastActivity=Date.now();lock();
  message('विद्यालय प्रमाणित भयो। साझा Session समर्थित Module मा पुनः Password आवश्यक पर्दैन।');
  }catch(e){sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();try{await authSdk.signOut(auth)}catch{}message('Login असफल: '+e.message)}finally{busy=false;$('dashboardLogin').disabled=!auth}};
 $('dashboardLogout').onclick=async()=>{if(busy)return;clear();sessionStorage.removeItem(SCHOOL_SELECTION_KEY);try{if(auth)await authSdk.signOut(auth);message('Logout सफल भयो।')}catch(e){message('Logout असफल: '+e.message)}};

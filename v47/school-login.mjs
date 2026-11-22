@@ -1,4 +1,6 @@
 import {installIdleLogout} from './idle-logout.mjs';
+import {validateSchoolId} from './school-paths.mjs';
+import {schoolProfileView} from './school-settings-profile.mjs';
 import {installSchoolAdminFeatures} from './school-admin-features.mjs';
 import {installExamWorkflows} from './school-exam-workflows.mjs';
 const $=id=>document.getElementById(id);
@@ -56,8 +58,7 @@ $('addStudent').onclick=async()=>{if(!verifiedSchool||busy)return;busy=true;$('a
 
 const adminFeatures=installSchoolAdminFeatures({getContext:()=>verifiedSchool?{schoolId:verifiedSchool,api,db}:null});
 const examWorkflows=installExamWorkflows({getContext:()=>verifiedSchool?{schoolId:verifiedSchool,api,db}:null});
-const schoolIdValid=id=>/^[A-Za-z0-9_-]{3,64}$/.test(id);
-function reset(){if(stopIdleLogout){stopIdleLogout();stopIdleLogout=null}verifiedSchool=null;for(const id of ['marksStudent','marksSubject','teacherSubject','assignmentStudent','assignmentSubject']){const el=$(id);if(el)el.replaceChildren()}adminFeatures.reset();examWorkflows.reset();$('studentList').replaceChildren();$('studentCount').textContent='Not loaded';studentStatus('');$('subjectList').replaceChildren();$('subjectCount').textContent='Not loaded';subjectStatus(''); $('dashboard').hidden=true;$('loginArea').hidden=false;$('password').value='';$('uid').textContent='';$('schoolName').textContent='';$('currentSchoolId').textContent='';$('role').textContent=''; }
+function reset(){if(stopIdleLogout){stopIdleLogout();stopIdleLogout=null}verifiedSchool=null;for(const id of ['marksStudent','marksSubject','teacherSubject','assignmentStudent','assignmentSubject']){const el=$(id);if(el)el.replaceChildren()}adminFeatures.reset();examWorkflows.reset();$('studentList').replaceChildren();$('studentCount').textContent='Not loaded';studentStatus('');$('subjectList').replaceChildren();$('subjectCount').textContent='Not loaded';subjectStatus(''); $('dashboard').hidden=true;$('loginArea').hidden=false;$('password').value='';$('uid').textContent='';$('schoolName').textContent='';for(const id of ['schoolNameNepali','schoolAddressEnglish','schoolAddressNepali'])$(id).textContent='';$('currentSchoolId').textContent='';$('role').textContent=''; }
 async function signOut(){if(auth?.currentUser)await authSdk.signOut(auth);reset()}
 async function initialize(){if(auth)return;
  if(config.projectId!=='smss-exam-portal-v47')throw new Error('V47 Firebase project required');
@@ -68,7 +69,7 @@ async function initialize(){if(auth)return;
  auth=authSdk.getAuth(app);await authSdk.setPersistence(auth,authSdk.inMemoryPersistence);db=api.getFirestore(app);
 }
 $('login').onclick=async()=>{if(busy)return;busy=true;$('login').disabled=true;
- try{const sid=$('schoolId').value.trim();if(!schoolIdValid(sid))throw new Error('Enter a valid School ID');
+ try{const sid=validateSchoolId($('schoolId').value.trim());
  const email=$('email').value.trim();const password=$('password').value;
  if(!email||!password)throw new Error('Enter email and password');
  await initialize();await signOut();await authSdk.signInWithEmailAndPassword(auth,email,password);$('password').value='';
@@ -81,7 +82,14 @@ $('login').onclick=async()=>{if(busy)return;busy=true;$('login').disabled=true;
  if(!memberSnap.exists())throw new Error('No school membership');
  const member=memberSnap.data();
  if(member.uid!==uid||member.schoolId!==sid||member.active!==true||member.role!=='school_admin')throw new Error('Active School Admin membership required');
- $('schoolName').textContent=school.name||sid;$('currentSchoolId').textContent=sid;$('role').textContent='School Admin';$('uid').textContent=uid;
+ const profileSnap=await api.getDoc(api.doc(db,'schools',sid,'school_settings','profile'));
+ if(profileSnap.exists()&&profileSnap.data().schoolId!==sid)throw new Error('Cross-school settings rejected');
+ const profile=schoolProfileView(profileSnap.exists()?profileSnap.data():{},school.name||sid);
+ $('schoolName').textContent=profile.nameEnglish;
+ $('schoolNameNepali').textContent=profile.nameNepali;
+ $('schoolAddressEnglish').textContent=profile.addressEnglish;
+ $('schoolAddressNepali').textContent=profile.addressNepali;
+ $('currentSchoolId').textContent=sid;$('role').textContent='School Admin';$('uid').textContent=uid;
  verifiedSchool=sid;stopIdleLogout=installIdleLogout({onTimeout:async()=>{await signOut();status('Signed out after one hour of inactivity')}});$('loginArea').hidden=true;$('dashboard').hidden=false;status('School Admin access verified for '+sid);await loadStudents();await loadSubjects();await adminFeatures.refresh();await examWorkflows.refresh();
  }catch(error){try{await signOut()}catch{}status(error?.code==='permission-denied'?'Access denied: check school membership and Firestore rules':(error?.message||'Sign-in failed'))}
  finally{busy=false;$('login').disabled=false}};

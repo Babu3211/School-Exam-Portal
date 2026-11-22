@@ -13,6 +13,13 @@ assert.match(html,/type="password"/);
 assert.match(html,/src="\.\/school-login\.mjs(?:\?[^"]*)?"/);
 assert.match(js,/smss-exam-portal-v47/);
 assert.match(js,/inMemoryPersistence/);
+assert.match(js,/validateSchoolId\(/);
+assert.match(js,/schoolProfileView\(/);
+assert.match(js,/school_settings','profile'/);
+assert.match(js,/profileSnap\.data\(\)\.schoolId!==sid/);
+for(const id of ['schoolNameNepali','schoolAddressEnglish','schoolAddressNepali'])assert.match(html,new RegExp('id="'+id+'"'));
+assert.doesNotMatch(js,/schoolIdValid/);
+
 assert.match(js,/getDoc\(api\.doc\(db,'schools',sid\)\)/);
 assert.match(js,/getDoc\(api\.doc\(db,'schools',sid,'members',uid\)\)/);
 assert.match(js,/school\.active!==true/);
