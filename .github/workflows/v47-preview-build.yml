@@ -25,6 +25,8 @@ jobs:
         run: node v47/test-shared-session-wiring.mjs
       - name: Test configurable Examination Settings marks validation
         run: node v47/test-configurable-class-marks.mjs
+      - name: Test subject assignment tenant safety
+        run: node v47/test-assignment-tenant-safety.mjs
       - name: Test preview build with isolated fixtures
         run: node v47/test-preview-build.mjs
       - name: Build V47 preview only
