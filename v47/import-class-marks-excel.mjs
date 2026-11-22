@@ -1,3 +1,4 @@
+import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
 // Browser-side XLSX import for SMSS templates edited in Excel or LibreOffice.
 // Supports ZIP stored and deflated entries; never executes workbook formulas.
 export async function readSmssMarksExcel(file,{settings,schoolId,classId,subjectId,examId,students}){
@@ -13,7 +14,7 @@ export async function readSmssMarksExcel(file,{settings,schoolId,classId,subject
   if(flags&9||![0,8].includes(method)||end>bytes.length||uncompressed>8_000_000)throw new Error('Unsupported, encrypted or oversized Excel workbook');
   const name=decoder.decode(bytes.slice(offset+30,offset+30+nameSize));
   if(parts.has(name)||parts.size>128)throw new Error('Invalid Excel workbook contents');
-  if(!/^(?:xl\\/(?:worksheets\\/sheet1\\.xml|workbook\\.xml|sharedStrings\\.xml)|\\[Content_Types\\]\\.xml|_rels\\/\\.rels|xl\\/_rels\\/workbook\\.xml\\.rels)$/.test(name)){
+  if(!/^(?:xl\/(?:worksheets\/sheet1\.xml|workbook\.xml|sharedStrings\.xml)|\[Content_Types\]\.xml|_rels\/\.rels|xl\/_rels\/workbook\.xml\.rels)$/.test(name)){
    offset=end;continue;
   }
   let payload=bytes.slice(start,end);
@@ -54,7 +55,7 @@ export async function readSmssMarksExcel(file,{settings,schoolId,classId,subject
  if(settings?.schoolId!==schoolId||String(settings?.classId)!==classId||settings?.subjectId!==subjectId||settings?.examId!==examId||settings?.active!==true||!Array.isArray(components))throw new Error('Verified Examination Settings required');
  const headers=['Student ID','Student Name','Absent (Yes/No)',...components.map(c=>c.name+' (max '+c.fullMarks+')')];
  if(parsed[0].length!==headers.length||headers.some((h,i)=>parsed[0][i]!==h))throw new Error('Excel columns differ from current Examination Settings');
- if(!Array.isArray(students)||students.length!==parsed.length-1||students.some(s=>s.active!==true))throw new Error('Excel roster differs from current class');
+ if(!Array.isArray(students)||students.length!==parsed.length-1||students.some(s=>!isActiveEnrolledStudent(s)))throw new Error('Excel roster differs from current class');
  const roster=new Map(students.map(s=>[s.id,String(s.name??s.id)])),seen=new Set(),drafts=[];
  if(roster.size!==students.length)throw new Error('Duplicate student in authoritative roster');
  for(const row of parsed.slice(1)){
