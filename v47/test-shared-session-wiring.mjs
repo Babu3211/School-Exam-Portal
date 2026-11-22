@@ -10,6 +10,7 @@ assert.match(client,/authStateReady\(\)/,'Auth must finish restoring before use'
 assert.match(client,/smss-exam-portal-v47/,'V47 project isolation must be explicit');
 assert.match(client,/startVerifiedSchoolActivity/,'New verified logins must reset idle clock');
 assert.match(client,/enforceSchoolIdle/,'Shared idle enforcement required');
+assert.match(client,/auth\.currentUser&&\(!Number\.isFinite\(previous\)\|\|previous<=0/,'Missing or invalid idle timestamp must reject restored login');
 for(const name of ['dashboard-console.mjs','students-console.mjs','attendance-console.mjs','school-settings-console.mjs']){
  const code=read(name);
  assert.match(code,/connectSchoolFirebase/,'Shared client required: '+name);
