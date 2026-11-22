@@ -4,7 +4,7 @@ import {verifyClassMarkStagingPlan} from './class-mark-staging-integrity.mjs';
 const schoolId='12345678',classId='9',term='final',subjectId='computer';
 const ids=Array.from({length:1500},(_,i)=>'s'+String(i+1).padStart(4,'0'));
 const entries=ids.map(studentId=>({studentId,class:classId,term,subjectId,theory:20,practical:30}));
-const settings={schoolId,class:classId,active:true,theoryFullMarks:40,practicalFullMarks:60};
+const settings={schoolId,class:classId,active:true,creditHour:2,theoryFullMarks:40,practicalFullMarks:60};
 const plan=planCompleteClassMarkStaging({schoolId,classId,term,subjectId,expectedStudentIds:ids,entries,subjectSettings:settings});
 assert.deepEqual(verifyClassMarkStagingPlan(plan),{valid:true,studentCount:1500,chunkCount:8,diagnosticOnly:true,canPublish:false});
 const clone=()=>structuredClone(plan);
