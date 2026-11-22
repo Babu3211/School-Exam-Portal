@@ -171,6 +171,8 @@ jobs:
         run: node scripts/test-v47-ledger-exceptions-export.mjs
       - name: V47 read-only missing marks review UI
         run: node scripts/test-v47-ledger-exceptions-console-static.mjs
+      - name: V47 missing marks paginated tenant integrity guard
+        run: node scripts/test-v47-ledger-review-page-guard.mjs
       - name: V47 missing marks Firestore index coverage
         run: node scripts/test-v47-ledger-query-indexes.mjs
       - name: Existing V46 preservation gate
