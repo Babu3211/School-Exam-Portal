@@ -1,7 +1,6 @@
 import {connectSchoolFirebase,startVerifiedSchoolActivity} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
-import {createComputerComponentMark} from './computer-component-create-service.mjs';
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 const $=id=>document.getElementById(id),status=message=>{$('message').textContent=message};
 let auth,authSdk,api,db,actor,schoolId,epoch=0,busy=false,studentsLoaded=false,subjectsLoaded=false,loadedStudentClass=null,loadedSubjectClass=null;
@@ -14,8 +13,8 @@ async function load(collection,elementId){if(busy||!actor)return;const attempt=e
 $('loadStudents').onclick=()=>load('students','studentId');$('loadSubjects').onclick=()=>load('subjects','subjectId');
 $('schoolClass').onchange=()=>{studentsLoaded=false;subjectsLoaded=false;loadedStudentClass=null;loadedSubjectClass=null;$('studentId').replaceChildren();$('subjectId').replaceChildren();lock(false)};
 $('studentId').onchange=()=>lock(false);$('subjectId').onchange=()=>lock(false);
-// This legacy entry uses fixed 4/36/10 limits and must not write marks.
-// Re-enable only after replacing it with Examination Settings-driven validation.
+// Retired component form: configured marks entry is in marks-entry.html.
+// No write adapter is imported here and Save remains disabled.
 $('save').onclick=()=>status('यो पुरानो निश्चित अंक सीमा भएको फारामबाट अंक सुरक्षित गर्न मिल्दैन। Examination Settings अनुसारको नयाँ प्रविष्टि प्रयोग गर्नुहोस्।');
 
 if(requestedSchool)queueMicrotask(()=>$('connect').click());
