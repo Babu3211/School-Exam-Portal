@@ -4,7 +4,7 @@ import {validSchoolClass} from './class-catalog.mjs';
 import {validateExamTerm} from './term-catalog.mjs';
 const ID=/^[A-Za-z0-9_-]{1,128}$/;
 export function validateMarkEntry(input){
- if(!input||typeof input!=='object')throw new TypeError('Mark entry required');
+ if(!input||typeof input!=='object'||Array.isArray(input))throw new TypeError('Mark entry required');
  const {studentId,subjectId}=input,schoolClass=input.class,term=validateExamTerm(input.term);
  if(typeof studentId!=='string'||!ID.test(studentId))throw new Error('Invalid student ID');
  if(typeof subjectId!=='string'||!ID.test(subjectId))throw new Error('Invalid subject ID');
