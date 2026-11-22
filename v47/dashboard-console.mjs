@@ -14,7 +14,7 @@ async function restoreVerifiedSchool(){
  if(!saved||!auth?.currentUser)return;
  try{
   const schoolId=validateSchoolId(saved),uid=auth.currentUser.uid;
-  if(!await enforceSchoolIdle(auth,authSdk))return;
+  if(!await enforceSchoolIdle(auth,authSdk)){sessionStorage.removeItem(SCHOOL_SELECTION_KEY);return;}
   const session=await verifySchoolSession({schoolId,uid,readDocument});
   const school=await readDocument('schools/'+schoolId);
   if(auth.currentUser?.uid!==uid||school?.active!==true)throw Error('School unavailable');
@@ -75,3 +75,5 @@ $('dashboardLogin').onclick=async()=>{if(busy||!auth)return;busy=true;$('dashboa
  }catch(e){clear();try{await authSdk.signOut(auth)}catch{}message('Login असफल: '+e.message)}finally{busy=false;$('dashboardLogin').disabled=!auth}};
 $('dashboardLogout').onclick=async()=>{if(busy)return;clear();sessionStorage.removeItem(SCHOOL_SELECTION_KEY);try{if(auth)await authSdk.signOut(auth);message('Logout सफल भयो।')}catch(e){message('Logout असफल: '+e.message)}};
 lock();
+
+if(sessionStorage.getItem(SCHOOL_SELECTION_KEY))queueMicrotask(()=>$('dashboardConnect').click());
