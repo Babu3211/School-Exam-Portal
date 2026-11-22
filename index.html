@@ -2315,7 +2315,7 @@ const cdcSeroferoUnits = [
 function cdcVerifiedUnits(className,subject) {
   const key = cdcAssessmentSubjectKey(subject);
   if (Number(className)<=3&&key==='serophero') return cdcSeroferoUnits;
-  if (Number(className)===1&&key==='mathematics') return [['हाम्रो विद्यालय','Our school']];
+  if (Number(className)===1&&key==='mathematics') return [cdcSeroferoUnits[3],cdcSeroferoUnits[6],cdcSeroferoUnits[8]];
   if (Number(className)>=4&&key==='mathematics') return [
     ['ज्यामिति','Geometry'], ['अङ्कगणित','Arithmetic'], ['नाप','Measurement'],
     ['तथ्याङ्कशास्त्र','Statistics'], ['बीजगणित','Algebra']
@@ -2343,12 +2343,17 @@ const cdcVerifiedOutcomes = {
     ['म र मेरो परिवार','परिवारका सदस्यहरूको नाता र अभिवादन','Identify family relationships and greet appropriately'],
     ['म र मेरो परिवार','परिवारका सदस्यका मुख्य काम','Describe the main work of family members']
   ],
-  // Class 1 Mathematics assessment record, 2076 curriculum, pp. 140–141.
+  // Class 1 Mathematics assessment record, 2076 curriculum, pp. 140–143.
   '1:mathematics': [
     ['हाम्रो विद्यालय','पहिलोदेखि दसौँसम्मको क्रम चिन्ने','Recognize positions from first to tenth'],
     ['हाम्रो विद्यालय','हात नलिई १०० सम्मको योगफल आउने गरी दुई सङ्ख्या जोड्ने','Add two numbers up to a total of 100 without regrouping'],
     ['हाम्रो विद्यालय','वस्तु प्रयोग गरेर १० सम्मको घटाउ देखाउने','Use objects to demonstrate subtraction within 10'],
-    ['हाम्रो विद्यालय','वस्तु प्रयोग गरेर २० सम्मको घटाउ देखाउने','Use objects to demonstrate subtraction within 20']
+    ['हाम्रो विद्यालय','वस्तु प्रयोग गरेर २० सम्मको घटाउ देखाउने','Use objects to demonstrate subtraction within 20'],
+    ['हाम्रो विद्यालय','सापटी नलिई दुई अङ्कसम्मका सङ्ख्या घटाउने','Subtract numbers of up to two digits without borrowing'],
+    ['मेरो सिर्जना','सिधा र बाङ्गा रेखा चिन्ने, उतार्ने र कोर्ने','Identify, trace and draw straight and curved lines'],
+    ['मेरो सिर्जना','वरपरका त्रिभुज, चतुर्भुज र वृत्त छुट्याउने','Recognize triangles, quadrilaterals and circles around you'],
+    ['सञ्चार प्रविधि र बजार','चल्तीका नेपाली सिक्का र रु. १०० सम्मका नोट चिन्ने','Identify circulating Nepali coins and notes up to Rs 100'],
+    ['सञ्चार प्रविधि र बजार','चित्रग्राफ पढेर जानकारी बताउने','Read a pictograph and communicate its information']
   ],
   '5:mathematics': [
     ['ज्यामिति','वर्गजालमा लम्ब र समानान्तर रेखा','Draw perpendicular and parallel lines on a square grid']
