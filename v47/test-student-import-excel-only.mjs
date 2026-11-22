@@ -16,7 +16,9 @@ assert.match(html,/accept=".xlsx,application\/vnd.openxmlformats-officedocument.
 assert.match(html,/readXlsxPreviewBytes\(file\)/);
 assert.match(html,/readV47StudentXlsx\(/,'Preview must use the bounded first-party XLSX reader');
 const reader=readFileSync(new URL('./read-v47-student-xlsx.mjs',import.meta.url),'utf8');
-assert.match(reader,/rowNumber>1501/,'First-party XLSX reader must bound worksheet rows to 1500 students');
+assert.match(reader,/maxDataRows=1500/,'Default Student XLSX preview requires a 1500-row limit');
+assert.match(reader,/rowNumber>maxDataRows\+1/,'Parameterized XLSX reader must enforce the configured row limit');
+assert.match(reader,/maxDataRows>1500/,'XLSX row limit must not exceed 1500');
 assert.match(reader,/MAX_FILE=2_000_000/,'First-party XLSX reader must enforce its file-size cap');
 assert.doesNotMatch(html,/\.xls,\.csv|xlsx\|xls\|csv|CSV फाइल मात्र/,'User-facing import must be XLSX only');
 assert.doesNotMatch(html,/firebase\.firestore|api\.setDoc\(|\bwriteBatch\(/,'Read-only preview must not silently save');

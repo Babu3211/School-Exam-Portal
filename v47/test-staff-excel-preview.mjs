@@ -41,6 +41,7 @@ const src=readFileSync(new URL('./staff-console.mjs',import.meta.url),'utf8');
 for(const key of ['staffImportArea','staffImportFile','previewStaffImport','staffImportSummary','staffImportRows'])
  assert.match(page,new RegExp('id="'+key+'"'));
 assert.match(src,/previewV46StaffExcelRows\(/);
+assert(src.includes('!/\.xlsx$/i.test(file.name)'),'Only valid .xlsx extensions must be accepted');
 assert.match(src,/readV47StudentXlsx\(file,\{columns:11,maxDataRows:1500\}\)/);
 assert.match(src,/before\.role!=='school_admin'/);
 assert.match(src,/after\.role!=='school_admin'/);

@@ -105,7 +105,7 @@ $('previewStaffImport').onclick=async()=>{
  };
  try{
   assertSession();
-  if(!file||typeof file.name!=='string'||!/\\.xlsx$/i.test(file.name))
+  if(!file||typeof file.name!=='string'||!/\.xlsx$/i.test(file.name))
    throw new Error('केवल Excel (.xlsx) फाइल छान्नुहोस्।');
   if(!await enforceSchoolIdle(auth,authSdk))throw new Error('Login समय समाप्त भयो');
   const before=await verifySchoolSession({schoolId:selectedSchool,uid,readDocument});
