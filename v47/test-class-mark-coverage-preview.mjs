@@ -14,4 +14,7 @@ assert.throws(()=>inspectClassMarkCoverage(sectionRows,{examId:'exam1',classNo:6
 assert.throws(()=>inspectClassMarkCoverage(rows,{examId:'other',classNo:6,subject:'Math'}),/Verified exam/);
 assert.throws(()=>inspectClassMarkCoverage({...rows,students:[...rows.students,rows.students[0]]},{examId:'exam1',classNo:6,subject:'Math'}),/duplicate student IDs/);
 assert.throws(()=>inspectClassMarkCoverage({...rows,students:[{class:'6'}]},{examId:'exam1',classNo:6,subject:'Math'}),/Invalid or duplicate student IDs/);
+const higher={exams:[{id:'final'}],students:[{id:'eleven1',class:'Class 11'},{id:'twelve1',class:'Class 12'}],marks:[{id:'e11',examId:'final',class:'Class 11',subject:'Computer',studentId:'eleven1'},{id:'e12',examId:'final',class:'Class 12',subject:'Computer',studentId:'twelve1'}]};
+assert.equal(inspectClassMarkCoverage(higher,{examId:'final',classNo:11,subject:'Computer'}).complete,true);
+assert.equal(inspectClassMarkCoverage(higher,{examId:'final',classNo:12,subject:'Computer'}).complete,true);
 console.log('V47 class mark coverage tests passed');
