@@ -18,7 +18,7 @@ assert.equal(allowed({...teacher,subjectAssignments:[]},'5','Mathematics',studen
 assert.equal(allowed({...teacher,subjectAssignments:[{...task,section:'ALL'}]},'5','Mathematics',{...student,section:'B'}),true);
 console.log('CDC teacher assignment and section checks passed');
 
-const catalogSource = html.slice(html.indexOf('function parseCdcBilingualCatalog'),html.indexOf('// CDC observations'));
+const catalogSource = html.slice(html.indexOf('const cdcNormalizeTitle'),html.indexOf('// CDC observations'));
 const parseCatalog = new Function(catalogSource+'return parseCdcBilingualCatalog;')();
 const bilingual = ['नाप','Measurement','लम्बाइ नाप्ने','Measure length'].join('\t');
 assert.deepEqual(parseCatalog(bilingual),[{unit:'नाप',unitEn:'Measurement',ne:'लम्बाइ नाप्ने',en:'Measure length'}]);
@@ -26,3 +26,13 @@ assert.throws(()=>parseCatalog(bilingual+'\n'+bilingual),/दोहोरिए�
 assert.throws(()=>parseCatalog('Measurement\tनाप\tलम्बाइ नाप्ने\tMeasure length'),/क्रम/);
 assert.throws(()=>parseCatalog('नाप\tMeasurement'),/चारवटा/);
 console.log('CDC bilingual catalog accepts paired titles and rejects malformed or duplicate rows');
+const readObservation=new Function(catalogSource+'return cdcStoredObservation;')();
+const draftScope=['teacher','2083','5','Math','student','First Term'];
+const drafts=new Map();
+const storage={getItem:key=>drafts.get(key)??null};
+const prefix='smss-cdc-draft:';
+drafts.set(prefix+JSON.stringify([...draftScope,'Practice']),JSON.stringify({unit:'Geometry',evidence:'legacy'}));
+drafts.set(prefix+JSON.stringify([...draftScope,'Practice','arithmetic']),JSON.stringify({unit:'Arithmetic',evidence:'separate'}));
+assert.equal(readObservation(storage,prefix,draftScope,'Practice',' Geometry ').evidence,'legacy');
+assert.equal(readObservation(storage,prefix,draftScope,'Practice','Arithmetic').evidence,'separate');
+assert.deepEqual(readObservation(storage,prefix,draftScope,'Practice','Statistics'),{});

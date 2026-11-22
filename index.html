@@ -2346,6 +2346,15 @@ const cdcVerifiedOutcomes = {
     ['ज्यामिति','वर्गजालमा लम्ब र समानान्तर रेखा','Draw perpendicular and parallel lines on a square grid']
   ]
 };
+const cdcNormalizeTitle = value => String(value || '').normalize('NFC').trim().replace(/\s+/g,' ').toLowerCase();
+function cdcStoredObservation(storage, prefix, scope, title, unit) {
+  const legacyKey=prefix+JSON.stringify([...scope,title]);
+  const exact=storage.getItem(prefix+JSON.stringify([...scope,title,cdcNormalizeTitle(unit)]));
+  if(exact!==null) return JSON.parse(exact);
+  const legacy=JSON.parse(storage.getItem(legacyKey)||'{}');
+  return cdcNormalizeTitle(legacy.unit)===cdcNormalizeTitle(unit) ? legacy : {};
+}
+
 function parseCdcBilingualCatalog(text) {
   const lines = text.trim().split(/\r?\n/).filter(line=>line.trim());
   if (!text.trim() || lines.length>1500) throw Error('१ देखि १५०० पङ्क्तिसम्म राख्नुहोस्।');
@@ -2357,7 +2366,7 @@ function parseCdcBilingualCatalog(text) {
     if(!/[\u0900-\u097f]/.test(unit)||!/[\u0900-\u097f]/.test(ne)||!/[a-z]/i.test(unitEn)||!/[a-z]/i.test(en))
       throw Error(`पङ्क्ति ${index+1} मा नेपाली र English स्तम्भको क्रम जाँच्नुहोस्।`);
     for(const title of [ne,en]){
-      const normalized=title.toLowerCase().replace(/\s+/g,' ');
+      const normalized=JSON.stringify([unit,title].map(cdcNormalizeTitle));
       if(seen.has(normalized)) throw Error(`पङ्क्ति ${index+1} को उपलब्धि दोहोरिएको छ।`);
       seen.set(normalized,index);
     }
@@ -2423,17 +2432,21 @@ function openCdcAssessment() {
     try { return JSON.parse(localStorage.getItem(catalogKey()) || '{}').rows || []; }
     catch { return []; }
   };
-  const key = (studentId=field('student').value) => {
+  const studentScope = (studentId=field('student').value) => {
     const parts=scope();
     parts[4]=studentId;
-    return storagePrefix + JSON.stringify([...parts,field('topic').value.trim()]);
+    return parts;
   };
-  const normalizeTitle = value => String(value || '').normalize('NFC').trim().replace(/\s+/g,' ').toLowerCase();
+  const normalizeTitle = cdcNormalizeTitle;
+  const titleValue = () => field('topic').value.trim();
+  const unitValue = () => field('unit').value.trim();
+  const key = () => storagePrefix + JSON.stringify([...studentScope(),titleValue(),normalizeTitle(unitValue())]);
+  const readRecord = studentId => cdcStoredObservation(localStorage,storagePrefix,studentScope(studentId),titleValue(),unitValue());
   let topicAliases = new Map();
   const refreshRecords = () => {
     topicAliases = new Map();
     const prefix = storagePrefix + JSON.stringify(scope()).slice(0,-1) + ',';
-    const topics = [], sharedTopics = new Map();
+    const topics = new Map(), sharedTopics = new Map();
     const sourceUnit = normalizeTitle(field('unit').value);
     const [uid,academicYear,cl,subject,,period] = scope();
     try {
@@ -2441,10 +2454,12 @@ function openCdcAssessment() {
         const stored = localStorage.key(i);
         if(!stored?.startsWith(storagePrefix)) continue;
         const parts = JSON.parse(stored.slice(storagePrefix.length));
-        if(!Array.isArray(parts)||parts.length!==7||typeof parts[6]!=='string') continue;
-        if (stored.startsWith(prefix)) topics.push(parts[6]);
+        if(!Array.isArray(parts)||![7,8].includes(parts.length)||typeof parts[6]!=='string') continue;
+        const record = JSON.parse(localStorage.getItem(stored) || '{}');
+        const unit = record.unit || '';
+        if (stored.startsWith(prefix)) topics.set(JSON.stringify([parts[6],normalizeTitle(unit)]),[parts[6],unit,record.topicAlt || '']);
         if(parts[0]===uid&&parts[1]===academicYear&&parts[2]===cl&&parts[3]===subject&&parts[5]===period) {
-          const record = JSON.parse(localStorage.getItem(stored) || '{}');
+          if(normalizeTitle(unit)!==sourceUnit) continue;
           if(!sharedTopics.has(parts[6])||record.topicAlt) sharedTopics.set(parts[6],record.topicAlt || '');
         }
       }
@@ -2465,10 +2480,12 @@ function openCdcAssessment() {
       }
     }
     dialog.querySelector('#cdcTopicSuggestions').replaceChildren(...suggestions);
-    topics.sort((a,b)=>a.localeCompare(b,'ne'));
-    options('records',[['','नयाँ सिकाइ उपलब्धि'],...topics.map(topic=>[topic,[topic,sharedTopics.get(topic)].filter(Boolean).join(' / ')])]);
-    field('records').value = topics.includes(field('topic').value.trim()) ? field('topic').value.trim() : '';
-    field('summary').textContent = topics.length ? `यस विद्यार्थी, विषय र अवधिमा ${topics.length} मूल्याङ्कन मस्यौदा छन्।` : 'यस छनोटमा मूल्याङ्कन मस्यौदा छैन।';
+    const savedOptions=[...topics].sort((a,b)=>a[1][0].localeCompare(b[1][0],'ne')).map(([value,[title,unit,alt]])=>[
+      value,[unit,[title,alt].filter(Boolean).join(' / ')].filter(Boolean).join(' · ')
+    ]);
+    options('records',[['','नयाँ सिकाइ उपलब्धि'],...savedOptions]);
+    field('records').value = topics.has(JSON.stringify([titleValue(),sourceUnit])) ? JSON.stringify([titleValue(),sourceUnit]) : '';
+    field('summary').textContent = topics.size ? `यस विद्यार्थी, विषय र अवधिमा ${topics.size} मूल्याङ्कन मस्यौदा छन्।` : 'यस छनोटमा मूल्याङ्कन मस्यौदा छैन।';
   };
   const refreshClassProgress = () => {
     const body=field('progressRows');
@@ -2481,7 +2498,7 @@ function openCdcAssessment() {
     const roster=[...field('student').options];
     for(const student of roster){
       let observation={};
-      try { observation=JSON.parse(localStorage.getItem(key(student.value)) || '{}'); } catch {}
+      try { observation=readRecord(student.value); } catch {}
       const entered=Boolean(observation.evidence);
       if(entered) recorded++;
       const row=body.insertRow();
@@ -2496,7 +2513,6 @@ function openCdcAssessment() {
     field('classProgress').textContent=`${recorded}/${roster.length} विद्यार्थीको मस्यौदा राखिएको छ।`;
   };
   const today = () => attendanceAdToBs(attendanceNepalTodayAD());
-  const readRecord = () => JSON.parse(localStorage.getItem(key()) || '{}');
   let appendObservation = false;
   const showHistory = record => {
     const history = field('history');
@@ -2628,7 +2644,15 @@ function openCdcAssessment() {
   field('today').disabled=readOnly;
   field('new').disabled=readOnly;
   field('topic').onchange=load;
-  field('records').onchange=()=>{field('topic').value=field('records').value;load();};
+  field('records').onchange=()=>{
+    const selected=field('records').value;
+    if(!selected){resetTopic();return;}
+    const [title,unit]=JSON.parse(selected);
+    field('topic').value=title;
+    field('unit').value=unit;
+    field('unitEn').value='';
+    load();
+  };
   field('level').disabled=readOnly;
   field('method').readOnly=readOnly;
   for(const name of ['unit','unitEn','topicAlt']) field(name).readOnly=readOnly;
