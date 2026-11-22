@@ -1,0 +1,51 @@
+name: V47 Full Verification (No Deployment)
+on:
+  workflow_dispatch:
+  push:
+    branches: [smss-v47-multischool-work]
+    paths:
+      - 'v47/**'
+      - 'scripts/test-v47-*.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/v47-full-verification.yml'
+permissions:
+  contents: read
+concurrency:
+  group: v47-full-verification-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  full-v47:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run complete V47 regression and Firestore emulator suite
+        run: npm run test:v47
+      - name: Check release blockers (deployment remains disabled)
+        if: always()
+        run: |
+          npm run test:v47:release > v47-release-gate.log 2>&1 && {
+            echo 'Release gate unexpectedly returned success; inspect required manual sign-off'
+            cat v47-release-gate.log
+            exit 1
+          } || {
+            echo 'Release gate currently blocks production; see log artifact'
+            cat v47-release-gate.log
+          }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v47-release-gate-log
+          path: v47-release-gate.log
+          if-no-files-found: ignore
