@@ -22,6 +22,9 @@ export function planOfficialPublicationPointerSwitch({currentPointer,stagedVerif
  if(previous!==expectedPreviousId)throw new Error('Concurrent publication detected; reload before committing');
  if(previous===publicationId)throw new Error('Publication ID cannot replace itself');
  if(currentPointer!==null){
+  if(typeof currentPointer.digest!=='string'||!/^[a-f0-9]{64}$/.test(currentPointer.digest)||
+   !Number.isSafeInteger(currentPointer.rosterCount)||currentPointer.rosterCount<1||currentPointer.rosterCount>1500)
+   throw new Error('Invalid current publication metadata');
   for(const key of ['schoolId','classId','subjectId','examId']){
    if(currentPointer[key]!==stagedVerification[key])throw new Error('Publication pointer scope mismatch');
   }
