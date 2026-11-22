@@ -41,6 +41,12 @@ Updated: 2026-11-22. Source: user's project conversations and explicit instructi
 - Direct evaluation of V47 validation logic accepted complete 1/500/1500-student rows and rejected incomplete rosters and a seventh component. These are NOT Firestore/Browser E2E runs.
 - Firestore `/marks` and `/component_marks` writes remain denied; official Save/Publish on the V47 development UI is disabled. A trusted, audited publication executor and V46 feature parity remain deployment blockers. Do not simply loosen Firestore rules.
 
+## Roster E2E blocking issues corrected on branch (2026-11-22)
+- Fixed `v47/attendance-roster.mjs` to pass `cursor.id` to Firestore `startAfter` when ordering by document ID. Previously it passed the materialized student object, breaking multi-page class reads. `v47/test-complete-class-roster.mjs` and `v47/test-roster-query-isolation.mjs` now defend this behavior.
+- Aligned full-class Marks Entry with Firestore's student schema: a missing student `active` field is treated as active (V46 legacy records); explicit `active:false` and malformed active values remain rejected. Applied across initial load, re-review, Excel import and review verification; regression test registered in `test:v47`.
+- Direct JavaScript execution of fetched code and tests returned 33 roster-isolation assertions PASS, 92 complete-roster assertions PASS, and 16 active-status contract cases PASS. These are **in-memory JavaScript test executions**, NOT a Firebase Emulator or real browser E2E pass; full CI has no confirmed successful run.
+- Official Save/Publish remains disabled; no permission rule relaxation, V46 deployment, live V47 deployment, or real student data mutation occurred.
+
 ## Working procedure for every 'continue'
 1. Read this record and inspect actual GitHub branch state, tests, blockers and prior commits.
 2. Select the **highest-impact unfinished V46-to-V47 integration**, not another duplicate export/validator/prototype.
