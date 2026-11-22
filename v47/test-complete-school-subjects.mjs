@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {loadCompleteSchoolSubjects} from './complete-school-subjects.mjs';
 const schoolId='12345678',actor={uid:'u1',schoolId,role:'school_admin',active:true};
 let calls=0;
-const api={collection:(_db,...path)=>path.join('/'),where:(...x)=>x,orderBy:(...x)=>x,limit:n=>n,startAfter:x=>x,query:(...x)=>x,getDocs:async q=>{calls++;assert.equal(q[0],'schools/12345678/subjects');const ids=calls===1?['a','b','c']:['c'];return {docs:ids.map(id=>({id,data:()=>({schoolId,class:'9',active:true,creditHour:4})}))}}};
+const api={collection:(_db,...path)=>path.join('/'),where:(...x)=>x,orderBy:(...x)=>x,limit:n=>n,startAfter:x=>x,query:(...x)=>x,getDocs:async q=>{calls++;assert.equal(q[0],'schools/12345678/subjects');const after=q.find(x=>x&&typeof x==='object'&&x.id)?.id;const ids=after==='b'?['c']:['a','b','c'];return {docs:ids.map(id=>({id,data:()=>({schoolId,class:'9',active:true,creditHour:4})}))}}};
 const base={db:{},api,actor,schoolId,schoolClass:'9',pageSize:2};
 const result=await loadCompleteSchoolSubjects(base);
 assert.deepEqual(result.subjects.map(s=>s.id),['a','b','c']);
