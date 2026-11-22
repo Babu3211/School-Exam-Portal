@@ -38,3 +38,11 @@ for(const values of [[],null,{unexpected:''}]){
  assert.match(malformed.invalid[0].message,/Invalid absent/);
 }
 console.log('V47 dynamic subject examination settings marks tests passed');
+
+// Missing or malformed context must never be accepted even when settings share the same missing value.
+for(const key of ['schoolId','subjectId','examId','classId']){
+ for(const value of [undefined,null,'','../other','bad/id']){
+  const badSettings={...settings,[key]:value};
+  assert.throws(()=>inspectConfiguredClassMarks({...base,[key]:value,settings:badSettings,drafts:[]}),/Verified subject examination settings required/);
+ }
+}
