@@ -31,10 +31,11 @@ export async function readSmssMarksExcel(file,{settings,schoolId,classId,subject
  const headers=['Student ID','Student Name','Absent (Yes/No)',...components.map(c=>c.name+' (max '+c.fullMarks+')')];
  if(parsed[0].length!==headers.length||headers.some((h,i)=>parsed[0][i]!==h))throw new Error('Excel columns differ from current Examination Settings');
  if(!Array.isArray(students)||students.length!==parsed.length-1||students.some(s=>s.active!==true))throw new Error('Excel roster differs from current class');
- const roster=new Set(students.map(s=>s.id)),seen=new Set(),drafts=[];
+ const roster=new Map(students.map(s=>[s.id,String(s.name??s.id)])),seen=new Set(),drafts=[];
  if(roster.size!==students.length)throw new Error('Duplicate student in authoritative roster');
  for(const row of parsed.slice(1)){
   if(row.length!==headers.length||!roster.has(row[0])||seen.has(row[0]))throw new Error('Unknown, duplicate or incomplete student in Excel');
+  if(row[1]!==roster.get(row[0]))throw new Error('Student name does not match current school roster for '+row[0]);
   seen.add(row[0]);const flag=String(row[2]).trim().toLowerCase();
   if(!['yes','no'].includes(flag))throw new Error('Absent column must be Yes or No');
   const absent=flag==='yes',values={};
