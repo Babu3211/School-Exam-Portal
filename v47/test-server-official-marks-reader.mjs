@@ -6,6 +6,8 @@ const publication={...pointer,state:'committed'};
 const entries=Array.from({length:500},(_,i)=>({publicationId:pointer.publicationId,studentId:'student'+String(i).padStart(4,'0'),isAbsent:false,values:{theory:35,practical:10},totalObtained:45}));
 const args={...scope,pointer,publication,entries};
 assert.equal(resolveOfficialClassMarks({...scope,pointer:null,publication:null,entries:[]}).published,false);
+assert.throws(()=>resolveOfficialClassMarks({...scope,pointer:null,publication:{state:'staging'},entries:[]}),/orphan publication/);
+assert.throws(()=>resolveOfficialClassMarks({...scope,pointer:null,publication:null,entries:[{studentId:'s1'}]}),/orphan publication/);
 const official=resolveOfficialClassMarks(args);
 assert.equal(official.published,true);assert.equal(official.entries.length,500);
 assert.equal(official.entries[0].studentId,'student0000');
