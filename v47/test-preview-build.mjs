@@ -26,6 +26,9 @@ const base={
  'unused.mjs':"import {readFileSync} from 'node:fs';"
 };
 const ok=run(base);assert.equal(ok.status,0,ok.output);assert.equal(ok.dist['index.html'],true);assert.equal(ok.dist['dashboard-console.mjs'],true);assert.equal(ok.dist['v47-firebase-config.mjs'],true);assert.equal(ok.dist['unused.mjs'],false);assert.equal(ok.dist['students.html'],true);assert.equal(ok.dist['students-console.mjs'],true);assert.equal(ok.dist['PREVIEW-ONLY.txt'],true);assert.equal(ok.dist['manifest.webmanifest'],true);assert.equal(ok.dist['dev-icon.svg'],true);
+const manifestOnly=run({...base,'index.html':base['index.html'].replace('<link rel="icon" href="./dev-icon.svg">','')});assert.equal(manifestOnly.status,0,manifestOnly.output);assert.equal(manifestOnly.dist['dev-icon.svg'],true,'Manifest icon must be included even without HTML icon link');
+const invalidManifest=run({...base,'manifest.webmanifest':'{not json'});assert.notEqual(invalidManifest.status,0);assert.match(invalidManifest.output,/Invalid PWA manifest JSON/);
+const remoteIcon=run({...base,'manifest.webmanifest':JSON.stringify({icons:[{src:'https://example.com/icon.svg'}]})});assert.notEqual(remoteIcon.status,0);assert.match(remoteIcon.output,/Invalid local PWA icon/);
 const missingIcon=run(Object.fromEntries(Object.entries(base).filter(([name])=>name!=='dev-icon.svg')));assert.notEqual(missingIcon.status,0);assert.match(missingIcon.output,/missing or invalid asset/);
 const missingPage=run({...base,'index.html':'<p>Development only</p><a href="./missing.html">Missing</a><script type="module" src="./dashboard-console.mjs"></script>'});assert.notEqual(missingPage.status,0);assert.match(missingPage.output,/missing or invalid asset/);
 const missing=run({...base,'dashboard-console.mjs':"import './missing.mjs';"});assert.notEqual(missing.status,0);assert.match(missing.output,/missing or invalid asset/);
