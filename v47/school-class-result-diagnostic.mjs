@@ -1,3 +1,4 @@
+import {assessClassPublicationReadiness} from './class-publication-preflight.mjs';
 import {loadCompleteSchoolSubjects} from './complete-school-subjects.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {loadAllClassMarks} from './complete-class-marks-query.mjs';
@@ -23,5 +24,6 @@ export async function loadSchoolClassResultDiagnostic({db,api,actor,schoolId,sch
  if(students.some(s=>s.active!==true||s.schoolId!==schoolId||s.class!==schoolClass))throw new Error('Roster includes inactive or foreign students');
  const preview=await previewCompleteSchoolClass({db,api,actor,schoolId,schoolClass,term,students,subjects,records:marks.records,hasMore:marks.hasMore});
  check();
- return {...preview,readPages:{subjects:subjectRoster.pages,students:roster.pages,marks:marks.pages},diagnosticOnly:true};
+ const publication=assessClassPublicationReadiness({actor,schoolId,schoolClass,term,students,subjects,records:marks.records,coverage:preview.coverage});
+ return {...preview,publication,readPages:{subjects:subjectRoster.pages,students:roster.pages,marks:marks.pages},diagnosticOnly:true};
 }
