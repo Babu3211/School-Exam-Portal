@@ -10,7 +10,7 @@ export async function createSubjectAssignment({db,api,actor,schoolId,input}){
  const ref=(collection,key)=>api.doc(db,'schools',schoolId,collection,key);
  await api.runTransaction(db,async tx=>{
   const [student,subject,existing]=await Promise.all([tx.get(ref('students',assignment.studentId)),tx.get(ref('subjects',assignment.subjectId)),tx.get(ref('subject_assignments',id))]);
-  if(!student.exists()||student.data().schoolId!==schoolId||student.data().class!==assignment.class)throw new Error('Student missing or wrong class');
+  if(!student.exists()||student.data().schoolId!==schoolId||student.data().class!==assignment.class||student.data().active===false)throw new Error('Student missing or wrong class');
   if(!subject.exists()||subject.data().schoolId!==schoolId||subject.data().class!==assignment.class||subject.data().active!==true)throw new Error('Subject missing, inactive or wrong class');
   if(existing.exists())throw new Error('Assignment already exists');
   if(!canAccessSchool(actor,schoolId,'write')||Object.keys(identity).some(key=>actor?.[key]!==identity[key]))throw new Error('School Admin identity changed during assignment creation');
