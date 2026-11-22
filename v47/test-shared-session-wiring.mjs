@@ -42,4 +42,6 @@ assert.match(dashboard,/await enforceSchoolIdle\(auth,authSdk\)/,'Dashboard must
 assert.match(dashboard,/if\(!touchSchoolActivity\(\)\)/,'Dashboard interaction must not revive expired session');
 assert.match(dashboard,/sessionStorage\.removeItem\(SCHOOL_SELECTION_KEY\)/,'School selection must clear on logout or expiry');
 assert.match(dashboard,/restoreVerifiedSchool\(\)/,'Dashboard must restore verified school after navigation');
+assert.match(dashboard,/onAuthStateChanged\(auth,user=>\{if\(verified&&user\?\.uid!==verified\.uid\)\{sessionStorage\.removeItem\(SCHOOL_SELECTION_KEY\)/,'Auth changes must clear stale school selection');
+assert.match(dashboard,/catch\(e\)\{sessionStorage\.removeItem\(SCHOOL_SELECTION_KEY\);clear\(\);message\('विद्यालय अनुमति/,'School membership failure must clear stale selection');
 console.log('PASS: V47 shared school session wiring checks');
