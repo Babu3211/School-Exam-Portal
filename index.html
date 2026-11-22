@@ -2315,7 +2315,7 @@ const cdcSeroferoUnits = [
 function cdcVerifiedUnits(className,subject) {
   const key = cdcAssessmentSubjectKey(subject);
   if (Number(className)<=3&&key==='serophero') return cdcSeroferoUnits;
-  if (Number(className)===1&&key==='english') return [['वर्णमाला','Alphabet'], ...cdcSeroferoUnits.slice(0,2)];
+  if (Number(className)===1&&key==='english') return [['वर्णमाला','Alphabet'], ...cdcSeroferoUnits.slice(0,2), cdcSeroferoUnits[3]];
   if (Number(className)===1&&key==='mathematics') return [cdcSeroferoUnits[1],cdcSeroferoUnits[2],cdcSeroferoUnits[3],cdcSeroferoUnits[6],cdcSeroferoUnits[8]];
   if (Number(className)>=4&&key==='mathematics') return [
     ['ज्यामिति','Geometry'], ['अङ्कगणित','Arithmetic'], ['नाप','Measurement'],
@@ -2426,7 +2426,28 @@ const cdcVerifiedOutcomes = {
     ["मेरो दैनिक जीवन","शब्द, सरल वाक्य र छोटा अनुच्छेद सही पढ्ने","Read words, simple sentences and short passages accurately"],
     ["मेरो दैनिक जीवन","शब्दको हिज्जे मिलाएर लेख्ने","Spell the words correctly in writing"],
     ["मेरो दैनिक जीवन","सरल पदावली र वाक्य आफैँ लेख्ने","Write simple phrases and sentences independently"],
-    ["मेरो दैनिक जीवन","सफा र बुझिने हस्तलेखन देखाउने","Write by hand clearly and legibly"]
+    ["मेरो दैनिक जीवन","सफा र बुझिने हस्तलेखन देखाउने","Write by hand clearly and legibly"],
+    ["हाम्रो विद्यालय","शब्द र सरल अभिव्यक्ति चिनेर बुझ्ने","Recognize and understand words and simple phrases"],
+    ["हाम्रो विद्यालय","सुनेको सामग्री वा शिक्षकलाई बोली वा इशाराले प्रतिक्रिया दिने","Respond to the recording or teacher with words or gestures"],
+    ["हाम्रो विद्यालय","सरल निर्देशन र प्रश्नमा प्रतिक्रिया दिने","Respond to straightforward instructions and questions"],
+    ["हाम्रो विद्यालय","सुनेर चित्र बनाउने वा जोडा मिलाउने जस्ता काम गर्ने","Complete listening activities such as drawing and matching"],
+    ["हाम्रो विद्यालय","ध्वनि र शब्दको नक्कल गरी उच्चारण गर्ने","Repeat and produce sounds and words aloud"],
+    ["हाम्रो विद्यालय","कक्षाअनुसारका शब्द सही उच्चारण गर्ने","Say grade-level words with accurate pronunciation"],
+    ["हाम्रो विद्यालय","छोटा र सरल प्रश्न सोध्ने तथा जवाफ दिने","Pose and answer brief, simple questions"],
+    ["हाम्रो विद्यालय","शिक्षक वा रेकर्डिङ सुनेर गीत गाउने वा लयमा भन्ने","Sing or chant after hearing a teacher or recording"],
+    ["हाम्रो विद्यालय","ध्वनि जोडेर शब्द र वाक्य पढ्ने","Combine sounds to read words and sentences"],
+    ["हाम्रो विद्यालय","चित्रको सहायताले परिचित शब्द पढ्ने","Identify and read familiar words with picture cues"],
+    ["हाम्रो विद्यालय","मिल्दो तुक र तालमा कविता वा लयात्मक पाठ भन्ने","Recite rhymes and chants with the right sound pattern and beat"],
+    ["हाम्रो विद्यालय","कक्षाअनुसारका शब्दको अर्थ बुझ्ने","Explain or recognize the meaning of grade-level vocabulary"],
+    ["हाम्रो विद्यालय","शब्द, सरल वाक्य र छोटा अनुच्छेद सही पढ्ने","Read words, simple sentences and short passages accurately"],
+    ["हाम्रो विद्यालय","सरल वाक्यबाट चाहिएको जानकारी निकाल्ने","Find a requested detail in a simple sentence"],
+    ["हाम्रो विद्यालय","बायाँबाट दायाँ सोझो लाइनमा शब्दबीच मिल्दो खाली ठाउँ राखेर लेख्ने","Write left to right on one line with even gaps between words"],
+    ["हाम्रो विद्यालय","परिचित अक्षर, बारम्बार आउने शब्द र पदावली सही सार्ने र फेरि लेख्ने","Copy and reproduce letters and common familiar words and phrases accurately"],
+    ["हाम्रो विद्यालय","अक्षर मिलाएर शब्द बनाउने र शब्द मिलाएर सरल वाक्य बनाउने","Arrange letters into words and order words to build a simple sentence"],
+    ["हाम्रो विद्यालय","शब्दको हिज्जे मिलाएर लेख्ने","Spell the words correctly in writing"],
+    ["हाम्रो विद्यालय","सरल पदावली र वाक्य आफैँ लेख्ने","Write simple phrases and sentences independently"],
+    ["हाम्रो विद्यालय","आफ्नो नाम, ठेगाना, उमेरजस्ता आधारभूत जानकारी लेख्ने","Write basic personal details such as name, address and age"],
+    ["हाम्रो विद्यालय","सफा र बुझिने हस्तलेखन देखाउने","Write by hand clearly and legibly"]
   ],
   '5:mathematics': [
     ['ज्यामिति','वर्गजालमा लम्ब र समानान्तर रेखा','Draw perpendicular and parallel lines on a square grid']
