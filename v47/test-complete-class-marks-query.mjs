@@ -51,6 +51,10 @@ const excessive={...api,getDocs:async()=>({docs:Array.from({length:4},(_,i)=>({i
 await assert.rejects(()=>loadAllClassMarks({...base,api:excessive}),/Unexpected result size/);
 const unordered={...api,getDocs:async()=>({docs:['b','a'].map(id=>({id,data:()=>({schoolId,class:'9',term:'final'})}))})};
 await assert.rejects(()=>loadAllClassMarks({...base,api:unordered}),/Invalid marks page order/);
+for(const uid of [undefined,null,'','  ']){
+ const missingIdentity={...actor,uid};
+ await assert.rejects(()=>loadAllClassMarks({...base,actor:missingIdentity}),/School membership required/);
+}
 const unauthorized={...actor,schoolId:'87654321'};
 await assert.rejects(()=>loadAllClassMarks({...base,actor:unauthorized}),/membership/i);
 console.log('V47 complete class marks pagination checks passed');
