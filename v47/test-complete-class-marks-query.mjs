@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {loadAllClassMarks} from './complete-class-marks-query.mjs';
 const schoolId='12345678',actor={uid:'admin',schoolId,role:'school_admin',active:true};
 const calls=[];
-const api={collection:(_db,...path)=>path.join('/'),where:(...x)=>x,orderBy:(...x)=>x,limit:n=>n,startAfter:x=>x,query:(...x)=>x,getDocs:async query=>{calls.push(query[0]);const n=calls.length;const ids=n===1?['a','b','c']:['c'];return {docs:ids.map(id=>({id,data:()=>({schoolId,studentId:id,subjectId:'math',class:'9',term:'final'})}))}}};
+const api={collection:(_db,...path)=>path.join('/'),where:(...x)=>x,orderBy:(...x)=>x,limit:n=>n,startAfter:x=>x,query:(...x)=>x,getDocs:async query=>{calls.push(query[0]);const after=query.find(x=>x&&typeof x==='object'&&x.id)?.id;const ids=after==='b'?['c']:['a','b','c'];return {docs:ids.map(id=>({id,data:()=>({schoolId,studentId:id,subjectId:'math',class:'9',term:'final'})}))}}};
 const base={db:{},api,actor,schoolId,schoolClass:'9',term:'final',pageSize:2};
 const result=await loadAllClassMarks(base);
 assert.deepEqual(result.records.map(r=>r.id),['a','b','c']);
