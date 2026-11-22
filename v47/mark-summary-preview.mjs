@@ -4,7 +4,7 @@ import {iemisSummary} from './iemis-ledger.js';
 export function previewV46MarkSummaries(rows,{classNo,annual=false,examId}={}){
  if(!rows||!Array.isArray(rows.marks)||!Array.isArray(rows.exams)||!Number.isInteger(classNo)||classNo<1||classNo>12||typeof annual!=='boolean'||typeof examId!=='string'||!examId)throw new Error('Verified class, term and exam selection required');
  if(!rows.exams.some(exam=>exam.id===examId))throw new Error('Exam is not in the verified school report snapshot');
- const classOf=value=>{const match=String(value??'').match(/(?:^|\\b)(\\d{1,2})(?:\\b|$)/);return match?Number(match[1]):null};
+ const classOf=value=>{const match=String(value??'').match(/(?:^|\b)(\d{1,2})(?:\b|$)/);return match?Number(match[1]):null};
  const selected=rows.marks.filter(mark=>mark.examId===examId&&classOf(mark.className??mark.class)===classNo);
  const summaries=selected.map(mark=>{
   const summary=iemisSummary(mark,{annual,primary:classNo<=5});
