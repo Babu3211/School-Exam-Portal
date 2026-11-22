@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {createSchoolStore} from './firestore-adapter.mjs';
 const sid='12345678';
-const member={schoolId:sid,role:'viewer',active:true};
+const member={uid:'viewer123',schoolId:sid,role:'viewer',active:true};
 let signedIn=true,resolveQuery,queryCalls=0;
 const api={
  collection:(_db,path)=>path,doc:(_db,path)=>path,
