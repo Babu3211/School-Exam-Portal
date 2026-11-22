@@ -1,13 +1,40 @@
 import {validateSchoolId} from './school-paths.mjs';
 import {validatePageSize} from './pagination.mjs';
+// Preserve the authority that began each asynchronous page read. A change in
+// school, role, account or active state must invalidate the result before it
+// reaches the UI, including mutations during document materialization.
+function adminSnapshot(actor){
+ return {uid:actor?.uid,role:actor?.role,active:actor?.active,schoolId:actor?.schoolId};
+}
+function assertAdminSnapshot(actor,schoolId,initial){
+ if(actor?.active!==true||!['super_admin','school_admin'].includes(actor.role)||
+   (actor.role==='school_admin'&&actor.schoolId!==schoolId)||
+   actor.uid!==initial.uid||actor.role!==initial.role||
+   actor.active!==initial.active||actor.schoolId!==initial.schoolId)
+  throw new Error('Admin session changed during member listing');
+}
+function checkedMember(doc,schoolId){
+ if(!doc||typeof doc.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(doc.id)||typeof doc.data!=='function')
+  throw new Error('Malformed school member document');
+ const data=doc.data();
+ if(!data||typeof data!=='object'||Array.isArray(data)||
+   data.schoolId!==schoolId||data.uid!==doc.id)
+  throw new Error('Cross-school or malformed member record');
+ return Object.freeze({uid:doc.id,role:data.role,active:data.active});
+}
 export async function listSchoolMembers({db,api,actor,schoolId,pageSize=100}){
  validateSchoolId(schoolId);
  if(actor?.active!==true||!['super_admin','school_admin'].includes(actor.role)||actor.role==='school_admin'&&actor.schoolId!==schoolId)throw new Error('Admin access required');
+ const identity=adminSnapshot(actor);
  const size=validatePageSize(pageSize);
  for(const method of ['collection','query','limit','getDocs'])if(typeof api?.[method]!=='function')throw new TypeError('Missing Firebase SDK');
- const docs=(await api.getDocs(api.query(api.collection(db,'schools',schoolId,'members'),api.limit(size)))).docs;
+ const snapshot=await api.getDocs(api.query(api.collection(db,'schools',schoolId,'members'),api.limit(size)));
+ assertAdminSnapshot(actor,schoolId,identity);
+ const docs=snapshot?.docs;
  if(!Array.isArray(docs)||docs.length>size)throw new RangeError('Unexpected result size');
- return docs.map(doc=>({...doc.data(),uid:doc.id}));
+ const result=docs.map(doc=>checkedMember(doc,schoolId));
+ assertAdminSnapshot(actor,schoolId,identity);
+ return result;
 }
 
 /**
@@ -18,18 +45,20 @@ export async function listSchoolMembers({db,api,actor,schoolId,pageSize=100}){
 export async function listSchoolMembersPage({db,api,actor,schoolId,pageSize=100,cursor=null}){
  validateSchoolId(schoolId);
  if(actor?.active!==true||!['super_admin','school_admin'].includes(actor.role)||(actor.role==='school_admin'&&actor.schoolId!==schoolId))throw new Error('Admin access required');
+ const identity=adminSnapshot(actor);
  const size=validatePageSize(pageSize);
  for(const method of ['collection','query','orderBy','limit','getDocs','documentId'])if(typeof api?.[method]!=='function')throw new TypeError('Missing Firebase pagination SDK');
- if(cursor!==null&&(typeof cursor!=='object'||typeof cursor.id!=='string'||typeof cursor.data!=='function'))throw new TypeError('Invalid pagination cursor');
+ if(cursor!==null&&(typeof cursor!=='object'||typeof cursor.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(cursor.id)||typeof cursor.data!=='function'||cursor.ref?.path!==undefined&&cursor.ref.path!=='schools/'+schoolId+'/members/'+cursor.id))throw new TypeError('Invalid pagination cursor');
+ if(cursor!==null){checkedMember(cursor,schoolId);assertAdminSnapshot(actor,schoolId,identity)}
  if(cursor!==null&&typeof api.startAfter!=='function')throw new TypeError('Missing Firestore cursor SDK');
  const constraints=[api.orderBy(api.documentId()),...(cursor===null?[]:[api.startAfter(cursor)]),api.limit(size+1)];
  const snapshot=await api.getDocs(api.query(api.collection(db,'schools',schoolId,'members'),...constraints));
+ assertAdminSnapshot(actor,schoolId,identity);
  if(!Array.isArray(snapshot?.docs)||snapshot.docs.length>size+1)throw new RangeError('Unexpected member page size');
  const visible=snapshot.docs.slice(0,size);
- const records=visible.map(doc=>{
-  const data=doc.data();
-  if(!data||data.schoolId!==schoolId||data.uid!==doc.id)throw new Error('Cross-school or malformed member record');
-  return Object.freeze({uid:doc.id,role:data.role,active:data.active});
- });
+ const records=visible.map(doc=>checkedMember(doc,schoolId));
+ // Validate the lookahead document too; it must not disclose a foreign school.
+ if(snapshot.docs.length>size)checkedMember(snapshot.docs.at(-1),schoolId);
+ assertAdminSnapshot(actor,schoolId,identity);
  return Object.freeze({records:Object.freeze(records),hasMore:snapshot.docs.length>size,nextCursor:snapshot.docs.length>size?visible.at(-1):null});
 }
