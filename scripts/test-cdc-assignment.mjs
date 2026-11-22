@@ -36,3 +36,50 @@ drafts.set(prefix+JSON.stringify([...draftScope,'Practice','arithmetic']),JSON.s
 assert.equal(readObservation(storage,prefix,draftScope,'Practice',' Geometry ').evidence,'legacy');
 assert.equal(readObservation(storage,prefix,draftScope,'Practice','Arithmetic').evidence,'separate');
 assert.deepEqual(readObservation(storage,prefix,draftScope,'Practice','Statistics'),{});
+
+const {JSDOM}=await import('jsdom');
+const dom=new JSDOM('<select id="entryClass"><option>Class 5</option></select>',{url:'https://test.example',runScripts:'outside-only'});
+const w=dom.window;
+const current={...teacher};
+let serverRole=teacher;
+Object.assign(w,{
+  auth:{currentUser:{uid:'teacher'}},currentSchoolSettings:{academicYear:'2083'},currentUserRole:current,
+  marksStudents:[{...student,id:'one',name:'Test One'},{...student,id:'two',name:'Test Two'},{...student,id:'outside',name:'Outside',section:'B'}],
+  isAdmin:()=>false,roleHas:role=>current.roles.includes(role),
+  classNoFromName:value=>String(value).match(/\d+/)?.[0],entrySubjectKey:value=>String(value).trim().toLowerCase(),
+  ledgerSubjectsForClass:()=>['Mathematics','Computer'],entryClassGroup:()=>'4-5',
+  SmssIemisTransfer:{key:value=>String(value).toLowerCase(),subjectKey:value=>String(value).toLowerCase()},
+  attendanceAdToBs:v=>v,attendanceBsToAd:v=>v==='2083-13-01'?'invalid':v,attendanceNepalTodayAD:()=>'2083-08-07',
+  attendanceDigitsToEnglish:v=>v.replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d))),attendancePad:v=>String(v).padStart(2,'0'),
+  db:{},doc:()=>({}),getDocFromServer:async()=>({data:()=>serverRole})
+});
+w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
+w.eval(html.slice(html.indexOf('const cdcCoreSubjects'),html.indexOf('let iemisEntryGrid'))+'\nopenCdcAssessment();');
+const field=name=>w.document.querySelector('[data-cdc="'+name+'"]');
+const choice=(name,value)=>{field(name).value=value;field(name).onchange();};
+assert.deepEqual([...field('student').options].map(o=>o.value),['one','two']);
+assert.equal(field('date').value,'2083-08-07');
+choice('unitEn','Geometry');
+assert.equal(field('unit').value,'ज्यामिति');
+choice('topic','Draw perpendicular and parallel lines on a square grid');
+assert.match(field('topic').value,/वर्गजाल/);
+field('evidence').value='Synthetic evidence';
+field('level').value='3';
+field('date').value='२०८३-८-२';
+await field('save').onclick();
+assert.match(field('classProgress').textContent,/1\/2/);
+assert.match(field('history').textContent,/2083-08-02/);
+await field('next').onclick();
+assert.equal(field('student').value,'two');assert.equal(field('evidence').value,'');
+field('progressRows').querySelector('button').click();
+assert.equal(field('evidence').value,'Synthetic evidence');
+field('new').click();field('evidence').value='Follow-up';
+await field('save').onclick();
+assert.equal(field('history').rows.length,2);
+const before=JSON.stringify(w.localStorage);
+serverRole={...teacher,subjectAssignments:[]};
+field('evidence').value='Must not save';await field('save').onclick();
+assert.match(field('status').textContent,/तोकिएको छैन/);
+assert.equal(JSON.stringify(w.localStorage),before);
+dom.window.close();
+console.log('CDC form: bilingual lookup, editable Nepali date, progress, history and revoked assignment passed');
