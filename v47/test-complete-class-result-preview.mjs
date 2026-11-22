@@ -11,7 +11,7 @@ const preview=await previewCompleteSchoolClass(base);
 assert.equal(preview.diagnosticOnly,true);
 assert.equal(preview.coverage.recordCount,4);
 assert.equal(preview.results.length,2);
-assert.equal(preview.results[0].gpa,3.6);
+assert.ok(Math.abs(preview.results[0].gpa-3.6)<1e-12,'Weighted GPA should equal 3.6 within floating-point precision');
 assert.equal(preview.results[1].gpa,4);
 assert.equal(preview.results[0].graded,true);
 assert.deepEqual(preview.results[0].subjects.map(s=>s.subjectId),['math','science']);
