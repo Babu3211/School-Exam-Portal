@@ -9,6 +9,6 @@ await assert.rejects(()=>createSubjectAssignment(args),/already exists/);
 await assert.rejects(()=>createSubjectAssignment({...args,actor:{...actor,role:'viewer'}}));
 await assert.rejects(()=>createSubjectAssignment({...args,schoolId:'87654321'}));
 docs.get('schools/12345678/subjects/math_6').active=false;
-await assert.rejects(()=>createSubjectAssignment({...args,input:{studentId:'s1',subjectId:'math_6',class:'6'}}),/Subject inactive/);
+await assert.rejects(()=>createSubjectAssignment({...args,input:{studentId:'s1',subjectId:'math_6',class:'6'}}),/Subject missing, inactive or wrong class/);
 await assert.rejects(()=>createSubjectAssignment({...args,actor:{...actor,uid:undefined}}),/School Admin required/);
 console.log('V47 subject assignment create-only service tests passed');
