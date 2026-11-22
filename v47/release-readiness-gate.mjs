@@ -5,6 +5,8 @@ const root=dirname(fileURLToPath(import.meta.url));
 const read=name=>readFileSync(resolve(root,name),'utf8');
 const hub=read('index.html');
 const marks=read('marks-entry.html');
+if(/id="(?:theory|practical)"[^>]*max="100"/.test(marks))
+ blockers.push('Raw marks draft UI still hardcodes a 100-point maximum');
 const save=read('verified-small-class-mark-save.mjs');
 const rules=read('firestore.rules');
 const markParser=read('marks-service.mjs');
