@@ -19,7 +19,7 @@ export function mapV46StudentExcelRows({headers,rows,schoolId}){
   headers.some((value,i)=>String(value??'').trim()!==STUDENT_EXCEL_HEADERS[i]))
   throw new Error('V46 student Excel columns do not match the official template');
  if(!Array.isArray(rows)||rows.length>1500)throw new RangeError('Maximum 1500 student rows per preview');
- const accepted=[],errors=[],seen=new Set();
+ const accepted=[],errors=[],seen=new Set(),seenAdmissions=new Set();
  for(let i=0;i<rows.length;i++){
   const row=rows[i];
   if(!Array.isArray(row)||row.length!==headers.length){errors.push({row:i+2,error:'Invalid column count'});continue}
@@ -32,7 +32,10 @@ export function mapV46StudentExcelRows({headers,rows,schoolId}){
    const student=validateStudent(input);
    const iemis=student.studentIemisId;
    if(iemis&&seen.has(iemis))throw new Error('Duplicate Student IEMIS Id in spreadsheet');
+   const admission=student.admissionNo;
+   if(admission&&seenAdmissions.has(admission))throw new Error('Duplicate Admission Number in spreadsheet');
    if(iemis)seen.add(iemis);
+   if(admission)seenAdmissions.add(admission);
    accepted.push({row:i+2,student});
   }catch(error){errors.push({row:i+2,error:String(error.message).slice(0,200)})}
  }
