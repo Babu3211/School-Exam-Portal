@@ -4,10 +4,10 @@ const schoolId='12345678',actor={uid:'admin-1',role:'school_admin',active:true,s
 const base={db:{},actor,schoolId,classId,pageSize:2};
 const docs=[['s1',{schoolId,class:'9',name:'A'}],['s2',{schoolId,class:'9',name:'B'}],['s3',{schoolId,class:'9',name:'C'}]];
 function mock(rows=docs){
- return {collection:(_db,...p)=>p.join('/'),where:(...a)=>a,orderBy:x=>x,limit:x=>x,startAfter:cursor=>({cursor}),
+ return {collection:(_db,...p)=>p.join('/'),where:(...a)=>a,orderBy:x=>x,limit:x=>x,startAfter:cursor=>{assert.equal(typeof cursor,'string','Firestore document-ID cursor must be a string, not a student object');return {cursor}},
  query:(...a)=>a,getDocs:async q=>{
   const c=q.find(x=>x?.cursor)?.cursor;
-  const offset=c?rows.findIndex(x=>x[0]===c.id)+1:0;
+  const offset=c?rows.findIndex(x=>x[0]===c)+1:0;
   const limit=Number(q.find(x=>typeof x==='number')??3);
   return {docs:rows.slice(offset,offset+limit).map(([id,data])=>({id,data:()=>data}))};
  }};
@@ -108,7 +108,7 @@ for(const mutation of [a=>{a.active=false},a=>{a.uid='other-user'},a=>{a.schoolI
  const original=mock();
  const oncePages={...original,getDocs:async q=>{
   const c=q.find(x=>x?.cursor)?.cursor;
-  const start=c?rows.findIndex(([id])=>id===c.id)+1:0;
+  const start=c?rows.findIndex(([id])=>id===c)+1:0;
   return {docs:rows.slice(start,start+3).map(([id,name])=>({id,data:()=>{
    counts.set(id,(counts.get(id)??0)+1);
    return {schoolId,class:'9',name};
