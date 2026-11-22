@@ -197,7 +197,9 @@ for(const mutate of [
  assert.match(ui,/const button=\$\('bulkSave'\);button\.disabled=true;\$\('logout'\)\.disabled=true;\$\('login'\)\.disabled=true;\$\('save'\)\.disabled=true/);
  assert.match(ui,/if\(review\)\{if\(result\.hasMore\)/);
  assert.match(ui,/attendanceReviewRequired=false/);
- assert.match(ui,/attendanceReviewRequired&&!result\.hasMore&&records\.length>0/);
+ assert.match(ui,/attendanceReviewRequired&&attendanceReviewInProgress&&!result\.hasMore&&records\.length>0/);
+ assert.match(ui,/if\(review\)\{attendanceReviewInProgress=true/);
+ assert.match(ui,/function reset\(\)\{attendanceReviewInProgress=false/);
  assert.match(ui,/load\(true,true\)/);
  assert.match(ui,/\$\('schoolClass'\)\.disabled=attendanceReviewRequired/);
  assert.match(ui,/\$\('date'\)\.disabled=attendanceReviewRequired/);
