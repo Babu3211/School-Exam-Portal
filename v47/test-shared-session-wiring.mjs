@@ -38,4 +38,8 @@ assert.doesNotMatch(hub,/currently ask you to sign in again/);
 const dashboard=read('dashboard-console.mjs');
 assert.match(dashboard,/destination\.searchParams\.set\('schoolId',current\.schoolId\)/);
 assert.match(dashboard,/MAX_IDLE_MS=60\*60\*1000/);
+assert.match(dashboard,/await enforceSchoolIdle\(auth,authSdk\)/,'Dashboard must honor shared idle expiry');
+assert.match(dashboard,/if\(!touchSchoolActivity\(\)\)/,'Dashboard interaction must not revive expired session');
+assert.match(dashboard,/sessionStorage\.removeItem\(SCHOOL_SELECTION_KEY\)/,'School selection must clear on logout or expiry');
+assert.match(dashboard,/restoreVerifiedSchool\(\)/,'Dashboard must restore verified school after navigation');
 console.log('PASS: V47 shared school session wiring checks');
