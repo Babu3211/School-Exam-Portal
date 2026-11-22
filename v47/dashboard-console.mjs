@@ -1,4 +1,4 @@
-import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
+import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,touchSchoolActivity} from './school-firebase-client.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 const $=id=>document.getElementById(id);
@@ -25,8 +25,9 @@ async function restoreVerifiedSchool(){
 }
 let expiring=false;
 async function expireIdle(){
- if(!verified||expiring||Date.now()-lastActivity<MAX_IDLE_MS)return false;
- expiring=true;clear();
+ if(!verified||expiring)return false;
+ if(Date.now()-lastActivity<MAX_IDLE_MS&&await enforceSchoolIdle(auth,authSdk))return false;
+ expiring=true;sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();
  try{sessionStorage.removeItem(SCHOOL_SELECTION_KEY);if(auth)await authSdk.signOut(auth)}catch{}
  message('एक घण्टा निष्क्रिय भएपछि Login समाप्त भयो। फेरि Login गर्नुहोस्।');
  expiring=false;return true;
@@ -55,6 +56,7 @@ document.querySelectorAll('[data-school-module]').forEach(link=>link.addEventLis
 for(const eventName of ['pointerdown','keydown'])document.addEventListener(eventName,()=>{
  if(!verified)return;
  if(Date.now()-lastActivity>=MAX_IDLE_MS){void expireIdle();return}
+ if(!touchSchoolActivity()){void expireIdle();return}
  lastActivity=Date.now();
 },{passive:true,capture:true});
 $('dashboardConnect').onclick=async()=>{if(busy||auth)return;busy=true;$('dashboardConnect').disabled=true;try{
@@ -72,7 +74,7 @@ $('dashboardLogin').onclick=async()=>{if(busy||!auth)return;busy=true;$('dashboa
  if(auth.currentUser?.uid!==uid||school?.active!==true)throw Error('School session changed');
  verified={uid,schoolId,role:session.role,name:String(school.name??schoolId)};sessionStorage.setItem(SCHOOL_SELECTION_KEY,schoolId);startVerifiedSchoolActivity();lastActivity=Date.now();lock();
  message('विद्यालय प्रमाणित भयो। साझा Session समर्थित Module मा पुनः Password आवश्यक पर्दैन।');
- }catch(e){clear();try{await authSdk.signOut(auth)}catch{}message('Login असफल: '+e.message)}finally{busy=false;$('dashboardLogin').disabled=!auth}};
+ }catch(e){sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();try{await authSdk.signOut(auth)}catch{}message('Login असफल: '+e.message)}finally{busy=false;$('dashboardLogin').disabled=!auth}};
 $('dashboardLogout').onclick=async()=>{if(busy)return;clear();sessionStorage.removeItem(SCHOOL_SELECTION_KEY);try{if(auth)await authSdk.signOut(auth);message('Logout सफल भयो।')}catch(e){message('Logout असफल: '+e.message)}};
 lock();
 
