@@ -12,4 +12,21 @@ assert.equal(result.active,false);assert.equal(writes[0][0],'schools/12345678');
 exists=true;
 await assert.rejects(()=>registerSchool({db:{},api,actor:{uid:'super123',active:true,role:'super_admin'},form}),/already exists/);
 assert.equal(writes.length,1);
+// Authentication or permission changes during the transaction must not write.
+for(const mutate of [
+ admin=>{admin.active=false},
+ admin=>{admin.role='viewer'},
+ admin=>{admin.uid='different_admin'}
+]){
+ const current={uid:'super123',active:true,role:'super_admin'},pending=[];
+ const racingApi={doc:api.doc,runTransaction:async(_db,fn)=>fn({
+  get:async()=>{mutate(current);return {exists:()=>false}},
+  set:(...args)=>pending.push(args)
+ })};
+ await assert.rejects(()=>registerSchool({
+  db:{},api:racingApi,actor:current,
+  form:{...form,id:'87654321',iemisCode:'87654321'}
+ }),/identity changed/);
+ assert.equal(pending.length,0,'Failed authorization must not stage a school');
+}
 console.log('V47 registration service authorization and duplicate prevention passed');
