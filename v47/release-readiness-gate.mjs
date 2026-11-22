@@ -21,7 +21,7 @@ if(/theory\s*>\s*100|practical\s*>\s*100/.test(markParser))
 if(!/full marks required/.test(markLimits)||!/theoryFullMarks/.test(markLimits)||!/practicalFullMarks/.test(markLimits))
  blockers.push('Both full-mark values must be required from Examination Settings');
 for(const [name,source] of [['individual',singleMarkSave],['class',classMarkSave]]){
- if(!/validateSubjectMarkLimits\(subject\.data\(\)/.test(source))
+ if(!/validateSubjectMarkLimits\(\s*(?:subject\.data\(\)|settings)\s*,/.test(source))
   blockers.push(name+' mark saving does not validate persisted subject full marks');
 }
 
