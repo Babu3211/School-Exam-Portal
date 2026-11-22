@@ -14,7 +14,7 @@ const api={
   return {docs:docs.slice(start,start+q.constraints.find(x=>x.type==='limit').n)};
  }
 };
-const actor={role:'super_admin',active:true};
+const actor={uid:'super123',role:'super_admin',active:true};
 const args={db:{},api,actor,pageSize:30};
 const a=await listSchools(args);
 assert.equal(a.schools.length,30);assert.equal(a.hasMore,true);
@@ -25,4 +25,20 @@ assert.equal(c.schools.length,5);assert.equal(c.hasMore,false);
 assert.equal(new Set([...a.schools,...b.schools,...c.schools].map(x=>x.id)).size,65);
 await assert.rejects(()=>listSchools({...args,actor:{role:'viewer',active:true}}),/Super Admin/);
 await assert.rejects(()=>listSchools({...args,pageSize:0}),RangeError);
+for(const mutate of [
+ a=>{a.uid='switched'},a=>{a.role='viewer'},a=>{a.active=false}
+]){
+ const current={...actor},raced={...api,getDocs:async q=>{mutate(current);return api.getDocs(q)}};
+ await assert.rejects(()=>listSchools({...args,actor:current,api:raced}),/identity changed/);
+}
+for(const mutate of [
+ a=>{a.uid='switched'},a=>{a.role='viewer'},a=>{a.active=false}
+]){
+ const current={...actor};
+ const raced={...api,getDocs:async()=>({docs:[{
+  id:'10000000',data:()=>{mutate(current);return {id:'10000000',iemisCode:'10000000',name:'Example School',active:true}}
+ }]})};
+ await assert.rejects(()=>listSchools({...args,actor:current,api:raced}),/identity changed/);
+}
+await assert.rejects(()=>listSchools({...args,actor:{role:'super_admin',active:true}}),/Super Admin/);
 console.log('V47 Super Admin school pagination tests passed');
