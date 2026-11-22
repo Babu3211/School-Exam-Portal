@@ -200,6 +200,8 @@ for(const mutate of [
  assert.match(ui,/attendanceReviewRequired&&attendanceReviewInProgress&&!result\.hasMore&&records\.length>0/);
  assert.match(ui,/if\(review\)\{attendanceReviewInProgress=true/);
  assert.match(ui,/function reset\(\)\{attendanceReviewInProgress=false/);
+ assert.match(ui,/async function load\(reset=false,review=false\)\{if\(savingAttendance\|\|!store/);
+ assert.match(ui,/if\(!attendanceReviewRequired&&!savingAttendance\)/);
  assert.match(ui,/load\(true,true\)/);
  assert.match(ui,/\$\('schoolClass'\)\.disabled=attendanceReviewRequired/);
  assert.match(ui,/\$\('date'\)\.disabled=attendanceReviewRequired/);
