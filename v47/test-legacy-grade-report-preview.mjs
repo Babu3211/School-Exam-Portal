@@ -9,6 +9,12 @@ const args={schoolId,school,classNo,term,students,subjects,records},r=prepareLeg
 assert.equal(r.rosterCount,2);assert.equal(r.previewOnly,true);
 assert.equal(r.publicationAllowed,false);assert.equal(r.writeAuthorized,false);
 assert.equal(r.summary.complete,true);assert.match(r.ledger.head,/Final GPA/);
+const legacyStudent={...students[0]};delete legacyStudent.active;
+const legacyReport=prepareLegacyGradeReport({...args,students:[legacyStudent,students[1]]});
+assert.equal(legacyReport.rosterCount,2,'Legacy V46 students with missing active field remain enrolled');
+assert.equal(legacyReport.printFor('s1').ready,true);
+assert.throws(()=>prepareLegacyGradeReport({...args,students:[{...students[0],active:false},students[1]]}),/inactive/);
+assert.throws(()=>prepareLegacyGradeReport({...args,students:[{...students[0],active:'true'},students[1]]}),/inactive/);
 const sheet=r.printFor('s1');assert.equal(sheet.ready,true);assert.match(sheet.html,/background-repeat:repeat/);assert.match(sheet.html,/Test &amp; &lt;School&gt;/);assert.match(sheet.html,/NOT VALID FOR OFFICIAL USE/);
 const bytes=new Uint8Array(await legacyGradePreviewExcel(r).arrayBuffer());assert.deepEqual([...bytes.slice(0,2)],[80,75]);assert.match(new TextDecoder().decode(bytes),/NOT FOR OFFICIAL USE/);
 for(const [input,pattern] of [

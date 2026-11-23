@@ -1,6 +1,7 @@
 // V47 read-only V46 IEMIS Grade Ledger/Sheet adapter.
 // No fallback from raw theory/practical records, no Firestore write.
 import {validateSchoolId} from './school-paths.mjs';
+import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
 import {renderAuthorizedV46ClassGradeLedger} from './iemis-authorized-class-ledger.mjs';
 import {iemisEntrySchema,iemisEntryDraft} from './iemis-entry.js';
 import {iemisSubjectKey} from './iemis-ledger.js';
@@ -15,7 +16,7 @@ export function prepareLegacyGradeReport({schoolId,school,classNo,term,students,
  if(!Array.isArray(students)||students.length<1||students.length>1500||!Array.isArray(subjects)||subjects.length<1||subjects.length>30||!Array.isArray(records)||records.length!==students.length*subjects.length)throw Error('Complete class and subject marks required');
  const ids=new Set(),subs=new Map(),draftsBySubject=Object.create(null),seen=new Set();
  for(const st of students){
-  if(!st||st.schoolId!==schoolId||String(st.class)!==String(classNo)||st.active!==true||
+  if(!st||st.schoolId!==schoolId||String(st.class)!==String(classNo)||!isActiveEnrolledStudent(st)||
     typeof st.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(st.id)||ids.has(st.id))throw Error('Foreign, inactive or duplicate student');
   ids.add(st.id);
  }
