@@ -19,7 +19,7 @@ export function prepareCdcSourceCatalog(register,{grade}={}){
   if(!item||!Array.isArray(item.grades)||!item.grades.length||
    item.grades.some(g=>!Number.isInteger(g)||g<1||g>12)||
    typeof item.subject!=='string'||!item.subject.trim()||item.subject.length>220||
-   typeof item.version!=='string'||item.version.length>20||
+   typeof item.version!=='string'||item.version.length>100||
    typeof item.status!=='string'||item.status.length>75||!officialUrl(item.url))
    throw Error('Invalid or non-CDC source #'+(index+1));
   return Object.freeze({subject:item.subject,grades:Object.freeze([...item.grades]),version:item.version,
