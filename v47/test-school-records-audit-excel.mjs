@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {collectSchoolAuditExcel,AUDIT_COLLECTIONS} from './school-records-audit-excel.mjs';
+import {collectSchoolAuditExcel,AUDIT_COLLECTIONS,isSensitiveSchoolAuditField} from './school-records-audit-excel.mjs';
 const schoolId='300160003',actor={uid:'adminA',role:'school_admin',active:true,schoolId};
 const data={
  students:[{id:'s1',schoolId,name:'=FORMULA',password:'secret'}, {id:'s2',schoolId,name:'नमूना'}],
@@ -41,6 +41,29 @@ assert.match(content,/\[REDACTED\]/);
 assert.doesNotMatch(content,/secret/);
 assert.doesNotMatch(content,/<f>/);
 assert.equal(AUDIT_COLLECTIONS.includes('class_mark_drafts'),true);
+for(const key of [
+ 'password','teacherPassword','login_password','temporary_password','PASSWORD_HASH',
+ 'firebaseRefreshToken','OAuth_access_token','api_key','private_key','client_secret',
+ 'authCredentials','otp','pinCode','security_answer','recoveryCode','mfa_code'
+])assert.equal(isSensitiveSchoolAuditField(key),true,'Credential-like field not redacted: '+key);
+for(const key of ['name','nameEnglish','email','rollNumber','schoolId','examId','creditHour','accessMode'])
+ assert.equal(isSensitiveSchoolAuditField(key),false,'Non-secret field incorrectly masked: '+key);
+const nested=await call({records:{students:[{
+ id:'private',schoolId,name:'Expected Staff',
+ teacherPassword:'teacher-credential-sentinel',
+ login_password:'login-credential-sentinel',
+ profile:{authCredentials:{token:'embedded-token-sentinel'},private_key:'private-key-sentinel',
+  detail:[{recoveryCode:'backup-code-sentinel',name:'harmless-visibility'}]},
+ groups:[{api_key:'api-key-sentinel',description:'visible-description'}]
+}]}});
+assert.equal(nested.redactedFields,6);
+const nestedXml=new TextDecoder().decode(new Uint8Array(await nested.blob.arrayBuffer()));
+for(const secret of ['teacher-credential-sentinel','login-credential-sentinel','embedded-token-sentinel',
+ 'private-key-sentinel','backup-code-sentinel','api-key-sentinel'])
+ assert.doesNotMatch(nestedXml,new RegExp(secret),'Secret leaked from audit: '+secret);
+assert.match(nestedXml,/harmless-visibility/);
+assert.match(nestedXml,/visible-description/);
+
 const call=({records={},...extra}={})=>collectSchoolAuditExcel({
  store:source(records).store,schoolId,actor,assertSession:()=>{},
  collections:['students'],pageSize:1,createdAt:'2026-11-23T00:00:00.000Z',...extra

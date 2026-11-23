@@ -10,7 +10,14 @@ export const AUDIT_COLLECTIONS=Object.freeze([
 ]);
 export const AUDIT_MAX_RECORDS=20000;
 const CELL_CHARACTERS=24000,MAX_EXCEL_ROWS=48000;
-const SENSITIVE=/^(?:password|passwordHash|passcode|secret|token|refreshToken|accessToken|apiKey|privateKey)$/i;
+// Historical staff imports and connected data can use names like teacherPassword,
+// login_password or FirebaseRefreshToken. Redact those as well as nested credentials.
+export function isSensitiveSchoolAuditField(key){
+ if(typeof key!=='string'||!key)return false;
+ const normalized=key.replace(/[^A-Za-z0-9]/g,'').toLowerCase();
+ return /password|passwd|passcode|secret|token|credentials?|privatekey|apikey|securityanswer|recoverycode|recoverykey|otp|pincode|authcode|twofactor|mfacode/.test(normalized)
+  || normalized==='pin'||normalized==='accesskey';
+}
 const HEADERS=Object.freeze(['Collection','Document ID','Part','Parts','JSON Segment']);
 function splitText(text){
  const parts=[];
@@ -74,7 +81,7 @@ export async function collectSchoolAuditExcel({
     if(count>maxPerCollection||total>maxTotalRecords)
      throw RangeError('School records exceed configured Excel limit; no partial export');
     const json=JSON.stringify(record,(key,value)=>{
-     if(key&&SENSITIVE.test(key)){redacted++;return '[REDACTED]'}
+     if(key&&isSensitiveSchoolAuditField(key)){redacted++;return '[REDACTED]'}
      if(typeof value==='bigint'||typeof value==='function'||typeof value==='symbol')
       throw Error('Unsupported Firestore value in School Records audit');
      return value;
