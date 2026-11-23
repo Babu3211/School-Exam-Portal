@@ -7,6 +7,8 @@ on:
       - 'cdc-question-paper.js'
       - 'cdc-question-autogen.mjs'
       - 'cdc-question-excel.mjs'
+      - 'cdc-verified-computer-grids.mjs'
+      - 'scripts/test-cdc-verified-computer-grids.mjs'
       - 'scripts/test-cdc-question-excel.mjs'
       - 'cdc-exact-grid.mjs'
       - 'cdc-question-grid-engine.mjs'
@@ -40,6 +42,8 @@ jobs:
           node --check cdc-question-paper.js
           node --check cdc-question-autogen.mjs
           node --check cdc-question-excel.mjs
+          node --check cdc-verified-computer-grids.mjs
+          node --check scripts/test-cdc-verified-computer-grids.mjs
           node --check scripts/test-cdc-question-excel.mjs
           node --check cdc-exact-grid.mjs
           node --check scripts/test-cdc-exact-grid.mjs
@@ -51,6 +55,8 @@ jobs:
         run: npm run test:question-paper
       - name: Test Excel question-bank headers and bilingual import validation
         run: node scripts/test-cdc-question-excel.mjs
+      - name: Verify authentic CDC Computer Science Grade 9 and 10 grid transcriptions
+        run: node scripts/test-cdc-verified-computer-grids.mjs
       - name: Test exact unit-grid random paper across grades 6-10
         run: node scripts/test-cdc-exact-grid.mjs
       - name: Test real generated paper UI and bilingual print
