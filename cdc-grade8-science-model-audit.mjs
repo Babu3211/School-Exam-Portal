@@ -127,3 +127,19 @@ export function compareGrade8SciencePracticeBank({grade,subject,questions}={}){
   bankIncludesOnlyPracticeMaterial:true
  };
 }
+
+/**
+ * Historical 2078 MODEL format only, offered for PRACTICE composition.
+ * It never includes verifiedBy/unitGrid and must not enable CDC Exact.
+ */
+export function getGrade8ScienceHistoricalPracticePattern({grade,subject,fullMarks=50}={}){
+ const audit=checkGrade8Science2078Model({grade,subject});
+ if(!audit||Number(fullMarks)!==50)return null;
+ return {
+  fullMarks:50,durationMinutes:120,
+  pattern:audit.model.groups.map(g=>({type:g.code,count:g.count,marks:g.marksEach})),
+  practiceOnly:true,currentCdcExactApproved:false,
+  sourceVersion:'२०७८ historical model (२०८३ source review pending)',
+  sourceUrl:audit.model.archivedCdcCatalogUrl
+ };
+}
