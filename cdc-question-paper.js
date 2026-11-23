@@ -306,6 +306,12 @@ function renderTopics() {
  bundledPracticeQuestions=bundledPracticeQuestions.map(q=>({
   ...q,topicId:byUnitTopic.get(keyFor(q.unitCode,q.unitTitle,q.topicName))||q.topicId
  }));
+ // Imported Excel/JSON questions may retain legacy custom IDs. Match a
+ // question to the SELECTED CDC unit/topic by unit code/title/name without
+ // altering Firestore IDs; otherwise the exact allocator rejects valid rows.
+ questionRows=questionRows.map(q=>({
+  ...q,topicId:byUnitTopic.get(keyFor(q.unitCode,q.unitTitle,q.topicName))||q.topicId
+ }));
  questionRows.forEach(q=>{
   if(!q.topicName)return;
   const key=keyFor(q.unitCode,q.unitTitle,q.topicName);
