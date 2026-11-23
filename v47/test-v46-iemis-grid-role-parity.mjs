@@ -12,7 +12,7 @@ assert.equal(normalize(v47),normalize(root),'V47 IEMIS Grid must exactly preserv
 const sample=[
  ['1','first','English',['count','full','obtained'],null],
  ['6','first','Science',['participation','practical','term'],[4,36,10]],
- ['9','annual','Computer',['participation','practical','term'],[4,36,10]],
+ ['9','annual','Computer',['participation','practical','term','theory'],[4,36,10,50]],
  ['9','first','English',['participation','practical','term'],[3,16,6]]
 ];
 for(const [classNo,term,subject,keys,maxima] of sample){
@@ -56,9 +56,9 @@ for(const [classNo,term,subject,keys,maxima] of sample){
 const primary=iemisEntryValues(iemisEntrySchema('1','first','English'),{values:{count:'10',obtained:'35'},isAbsent:false});
 assert.equal(primary.totalFullMarks,40);
 assert.equal(primary.totalObtained,35);
-const comp=iemisEntryValues(iemisEntrySchema('9','annual','Computer'),{values:{participation:4,practical:36,term:10},isAbsent:false});
-assert.equal(comp.totalFullMarks,50);
-assert.equal(comp.totalObtained,50);
+const comp=iemisEntryValues(iemisEntrySchema('9','annual','Computer'),{values:{participation:4,practical:36,term:10,theory:50},isAbsent:false});
+assert.equal(comp.totalFullMarks,100);
+assert.equal(comp.totalObtained,100);
 assert.deepEqual(iemisGrade(90),{grade:'A+',point:4,remark:'Outstanding'});
 assert.deepEqual(iemisGrade(34.999),{grade:'NG',point:null,remark:'Not Graded'});
 console.log('PASS V47 exact V46 IEMIS source + Viewer/Teacher/Admin read-only Grid parity (Class 1,6,9)');
