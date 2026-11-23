@@ -263,30 +263,49 @@ function setBuilderPattern(pattern, fullMarks, duration) {
   if (duration) $("qpPaperDuration").value = duration;
 }
 function renderTopics() {
-  const box = $("qpTopicList"), select = $("qpQuestionTopic");
-  if (!box || !select) return;
-  const topics = curriculumRows.flatMap(unit => (unit.topics || []).map((name,index) => ({id:unit.id+"_"+index,unitId:unit.id,unitCode:String(unit.unitCode||""),unitTitle:unit.unitTitle,topicName:String(name)})));
-  const known=new Set(topics.map(x=>x.id)),byName=new Map(topics.map(x=>[normal(x.topicName),x.id]));
-  for(const unit of bundledPracticeUnits)for(const [index,name] of (unit.topics||[]).entries()){
-    const key=normal(name);if(byName.has(key))continue;
-    const id=unit.id+"_"+index;known.add(id);byName.set(key,id);
-    topics.push({id,unitId:unit.id,unitCode:String(unit.unitCode||""),unitTitle:unit.unitTitle,topicName:String(name)});
+ const box=$("qpTopicList"),picker=$("qpQuestionTopic");
+ if(!box||!picker)return;
+ const keyFor=(code,title,topic)=>{
+  const group=String(code||"").trim()?"unit:"+String(code).trim():"title:"+normal(title);
+  return group+"::"+normal(topic);
+ };
+ const topics=curriculumRows.flatMap(unit=>(unit.topics||[]).map((topic,index)=>({
+  id:unit.id+"_"+index,unitId:unit.id,unitCode:String(unit.unitCode||""),
+  unitTitle:unit.unitTitle,topicName:String(topic)
+ })));
+ const known=new Set(topics.map(x=>x.id));
+ const byUnitTopic=new Map(topics.map(x=>[keyFor(x.unitCode,x.unitTitle,x.topicName),x.id]));
+ for(const unit of bundledPracticeUnits){
+  for(const [index,name]of(unit.topics||[]).entries()){
+   const key=keyFor(unit.unitCode,unit.unitTitle,name);
+   if(byUnitTopic.has(key))continue;
+   const id=unit.id+"_"+index;
+   byUnitTopic.set(key,id);known.add(id);
+   topics.push({id,unitId:unit.id,unitCode:String(unit.unitCode||""),
+    unitTitle:unit.unitTitle,topicName:String(name)});
   }
-  bundledPracticeQuestions=bundledPracticeQuestions.map(q=>({...q,topicId:byName.get(normal(q.topicName))||q.topicId}));
-  questionRows.forEach(q=>{
-    const key=String(q.topicId||("custom_"+normal((q.unitTitle||"")+"::"+q.topicName)));
-    if(q.topicName&&!known.has(key)&&!byName.has(normal(q.topicName))){
-      known.add(key);byName.set(normal(q.topicName),key);
-      topics.push({id:key,unitId:q.unitId||"",unitCode:String(q.unitCode||""),unitTitle:q.unitTitle||"शिक्षकले थपेको Topic",topicName:String(q.topicName)});
-    }
-  });
-  $("qpTopicCount").textContent = topics.length+" Topic";
-  if (!topics.length) {
-    box.innerHTML = '<p class="qp-hint">अहिलेसम्म Topic छैन। तल प्रश्न थप्दा आफूले चाहेको Topic लेख्नुहोस्; सुरक्षित भएपछि यहीँ छान्न मिल्छ।</p>';
-    select.innerHTML = ""; return;
-  }
-  box.innerHTML = topics.map(x=>`<label class="qp-topic"><input type="checkbox" data-qp-topic data-unit-code="${esc(x.unitCode||"")}" value="${esc(x.id)}" checked><span><b>${esc(x.topicName)}</b><small class="qp-hint"> · ${esc(x.unitTitle||"एकाइ नतोकिएको")}</small></span></label>`).join("");
-  select.innerHTML = topics.map(x=>'<option value="'+esc(x.topicName)+'">').join("");
+ }
+ // Preserve the unit identity: two units may contain the same topic name.
+ bundledPracticeQuestions=bundledPracticeQuestions.map(q=>({
+  ...q,topicId:byUnitTopic.get(keyFor(q.unitCode,q.unitTitle,q.topicName))||q.topicId
+ }));
+ questionRows.forEach(q=>{
+  if(!q.topicName)return;
+  const key=keyFor(q.unitCode,q.unitTitle,q.topicName);
+  if(byUnitTopic.has(key))return;
+  const id=String(q.topicId||"custom_"+normal((q.unitTitle||"")+"::"+q.topicName));
+  if(known.has(id))return;
+  known.add(id);byUnitTopic.set(key,id);
+  topics.push({id,unitId:q.unitId||"",unitCode:String(q.unitCode||""),
+   unitTitle:q.unitTitle||"शिक्षकले थपेको Topic",topicName:String(q.topicName)});
+ });
+ $("qpTopicCount").textContent=topics.length+" Topic";
+ if(!topics.length){
+  box.innerHTML='<p class="qp-hint">यस कक्षा/विषयको Topic र समीक्षा गरिएको प्रश्न बैंक उपलब्ध छैन।</p>';
+  picker.innerHTML="";return;
+ }
+ box.innerHTML=topics.map(x=>`<label class="qp-topic"><input type="checkbox" data-qp-topic data-unit-code="${esc(x.unitCode||"")}" value="${esc(x.id)}" checked><span><b>${esc(x.topicName)}</b><small class="qp-hint"> · ${esc(x.unitTitle||"एकाइ नतोकिएको")}</small></span></label>`).join("");
+ picker.innerHTML=topics.map(x=>'<option value="'+esc(x.topicName)+'">').join("");
 }
 function renderQuestionRows() {
   const body = $("qpQuestionRows"); if (!body) return;
