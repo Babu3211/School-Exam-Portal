@@ -1,0 +1,41 @@
+name: V46 Question Paper Auto Generator (Development Only)
+on:
+  push:
+    branches:
+      - feat/v46-question-autogen-grid-safe-2083
+    paths:
+      - 'cdc-question-paper.js'
+      - 'cdc-question-autogen.mjs'
+      - 'data/cdc-*science*'
+      - 'scripts/test-cdc-question-autogen.mjs'
+      - 'scripts/test-question-paper-content.mjs'
+      - 'scripts/test-cdc-assignment.mjs'
+      - 'package.json'
+      - 'sw.js'
+      - '.github/workflows/v46-question-autogen-dev.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: v46-question-autogen-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  question-paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check question paper module and pure engine syntax
+        run: |
+          node --check cdc-question-paper.js
+          node --check cdc-question-autogen.mjs
+          node --check scripts/test-cdc-question-autogen.mjs
+      - name: Test original bank, full marks and bilingual correctness
+        run: npm run test:question-paper
+      - name: Test assigned teacher question-paper access
+        run: node scripts/test-cdc-assignment.mjs
+      - name: Check V46 preservation
+        run: npm run test:v46-preservation
