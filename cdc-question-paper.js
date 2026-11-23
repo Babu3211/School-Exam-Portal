@@ -842,10 +842,33 @@ function updateAutoGridStatus(){
  if(!el)return;
  if(!bp?.unitGrid?.length){
   const grouped=getCdcOptionalMathGuide({grade:gradeNumber(selectedClass),subject:selectedSubject});
-  el.textContent=grouped&&target===75?
-   "मूल CDC २०८२ Grid स्वतः उपलब्ध: ११ Objective (११ अङ्क), १२ WCA (४० अङ्क), ४ CCA (२४ अङ्क), जम्मा ७५ अङ्क।"+
-   " प्रत्येक संयुक्त प्रश्नमा २–४ उपप्रश्न चाहिन्छ। पुरानो Generator ले यो संरचना सुरक्षित रूपमा बनाउन नसक्ने भएकाले Exact मोड रोकिएको छ।":
-   target+" अंकको मूल CDC Unit-wise Grid का सबै अङ्कभार पङ्क्ति प्रणालीमा अझै प्रमाणित छैनन्। गलत प्रश्नपत्र नबनोस् भनेर Exact मोड रोकिएको छ।";
+  if(grouped&&target===75){
+   const unitNeeds=grouped.areas.map(area=>{
+    const reviewed=questionRows.filter(q=>q.reviewStatus==="teacher_reviewed"&&
+     q.reviewedBy&&q.status!=="archived"&&q.gradeNumber===gradeNumber(selectedClass)&&
+     q.subject===selectedSubject&&Array.isArray(q.subquestions)&&
+     q.subquestions.every(s=>String(s.unitCode)===area.unitCode));
+    return {unit:area.unitCode,
+     obj:reviewed.filter(q=>q.group==="objective").length,
+     wca:reviewed.filter(q=>q.group==="WCA").length,
+     objNeed:area.objectiveCount,wcaNeed:area.wcaQuestionCount};
+   });
+   const ccaCount=questionRows.filter(q=>q.group==="CCA"&&q.reviewStatus==="teacher_reviewed"&&
+    q.reviewedBy&&q.gradeNumber===gradeNumber(selectedClass)&&q.subject===selectedSubject&&
+    q.status!=="archived"&&Array.isArray(q.subquestions)&&
+    new Set(q.subquestions.map(s=>String(s.unitCode))).size>=2).length;
+   const short=unitNeeds.filter(q=>q.obj<q.objNeed||q.wca<q.wcaNeed);
+   const countsReady=!short.length&&ccaCount>=4;
+   el.textContent=countsReady?
+    "मूल CDC २०८२ Grid सेट छ: ११ Objective, १२ WCA, ४ CCA = ७५ अङ्क। "+
+    "प्रारम्भिक प्रश्न संख्या पुगेको छ; Generate गर्दा Unit अङ्क, उपप्रश्न, संज्ञानात्मक वितरण र दोहोरिने प्रश्न पूर्ण रूपमा जाँचिन्छ।":
+    "मूल CDC २०८२ Grid स्वतः सेट छ। संयुक्त समीक्षित प्रश्न अझै कम छन्: CCA "+
+    ccaCount+"/4"+(short.length?
+     "; Unit "+short.slice(0,6).map(q=>q.unit+" Objective "+q.obj+"/"+q.objNeed+
+      ", WCA "+q.wca+"/"+q.wcaNeed).join("; "):"")+
+    "। अपूरो वा अनुमानित प्रश्नपत्र बनाइँदैन।";
+  }else el.textContent=target+
+   " अंकको मूल CDC Unit-wise Grid का सबै अङ्कभार पङ्क्ति प्रणालीमा अझै प्रमाणित छैनन्। गलत प्रश्नपत्र नबनोस् भनेर Exact मोड रोकिएको छ।";
   return;
  }
  try{
