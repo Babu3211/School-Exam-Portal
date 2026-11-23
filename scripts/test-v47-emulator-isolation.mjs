@@ -345,6 +345,7 @@ try {
 
   await assertFails(deleteDoc(schoolDoc('admin-a','300160001','teacher_assignments','300160001:teacher-a:9:math')));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','300160001','members','teacher-a'),{active:false}));
+  await assertFails(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{present:false}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','300160001','teacher_assignments','300160001:teacher-a:9:math'),{active:false}));
   await assertFails(updateDoc(schoolDoc('admin-a','300160001','teacher_assignments','300160001:teacher-a:9:math'),{active:true}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','300160001','members','teacher-a'),{active:true}));
@@ -359,7 +360,13 @@ try {
   await assertFails(setDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{schoolId:'300160001',studentId:'student-1',class:'9',date:'2026-11-18',present:true,extra:'forbidden'}));
   const teacherAttendance={schoolId:'300160001',studentId:'student-1',class:'9',date:'2026-11-18',present:true};
   await assertSucceeds(setDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),teacherAttendance));
-  await assertFails(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{present:false})); // Teachers create attendance; only school admins may correct it.
+  await assertSucceeds(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{present:false}));
+  await assertSucceeds(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{present:true}));
+  await assertFails(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{studentId:'different'}));
+  await assertFails(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{class:'8'}));
+  await assertFails(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{date:'2026-11-19'}));
+  await assertFails(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{schoolId:'300160002'}));
+  await assertFails(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{unexpected:'denied'}));
   await assertFails(deleteDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1')));
   await assertFails(setDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19',class:'8'}));
   await assertFails(setDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19',schoolId:'300160002'}));
@@ -373,6 +380,7 @@ try {
     await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),'schools','300160001','teacher_assignments','300160001:teacher-a:9:attendance'),{schoolId:'300160001',uid:'teacher-a',classId:'9',subjectId:'attendance',active:true}));
   }
   await assertSucceeds(updateDoc(schoolDoc('admin-a','300160001','teacher_assignments','300160001:teacher-a:9:attendance'),{active:false}));
+  await assertFails(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{present:false}));
   await assertFails(setDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-19_student-1'),{...teacherAttendance,date:'2026-11-19'}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','300160001','teacher_assignments','300160001:teacher-a:9:attendance'),{active:true}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','300160001','members','teacher-a'),{active:false}));
