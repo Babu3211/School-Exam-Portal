@@ -33,12 +33,13 @@ jobs:
           node v47/test-server-official-marks-reader.mjs
           node v47/test-server-verified-official-class-marks.mjs
           node v47/test-server-publication-staging-executor.mjs
+          node v47/test-server-publication-authoritative-preflight.mjs
       - name: Explain test scope
         if: always()
         run: |
           {
             echo '## Publication unit tests'
-            echo 'These tests exercise pure validation functions only.'
+            echo 'These tests exercise validation, mocked staged transactions, and trusted read-only publication preflight.'
             echo 'They do not test Firestore transactions, emulator rules, browser behavior, CDC/IEMIS parity or V47 production readiness.'
             echo 'No deployment or production data writes occur in this workflow.'
           } >> "$GITHUB_STEP_SUMMARY"
