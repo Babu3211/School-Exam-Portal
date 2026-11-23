@@ -6,6 +6,8 @@ on:
     paths:
       - 'cdc-question-paper.js'
       - 'cdc-question-autogen.mjs'
+      - 'cdc-question-excel.mjs'
+      - 'scripts/test-cdc-question-excel.mjs'
       - 'cdc-exact-grid.mjs'
       - 'cdc-question-grid-engine.mjs'
       - 'scripts/test-cdc-exact-grid.mjs'
@@ -37,6 +39,8 @@ jobs:
         run: |
           node --check cdc-question-paper.js
           node --check cdc-question-autogen.mjs
+          node --check cdc-question-excel.mjs
+          node --check scripts/test-cdc-question-excel.mjs
           node --check cdc-exact-grid.mjs
           node --check scripts/test-cdc-exact-grid.mjs
           node --check scripts/test-cdc-question-autogen.mjs
@@ -45,6 +49,8 @@ jobs:
         run: npm install --no-package-lock --no-audit --no-fund
       - name: Test original bank, full marks and bilingual correctness
         run: npm run test:question-paper
+      - name: Test Excel question-bank headers and bilingual import validation
+        run: node scripts/test-cdc-question-excel.mjs
       - name: Test exact unit-grid random paper across grades 6-10
         run: node scripts/test-cdc-exact-grid.mjs
       - name: Test real generated paper UI and bilingual print
