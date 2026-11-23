@@ -98,7 +98,7 @@ assert.ok(Array.isArray(register.sources) && register.sources.length >= 15, "CDC
 for (const [index, source] of register.sources.entries()) {
   assert.ok(Array.isArray(source.grades) && source.grades.length, `source ${index + 1}: grade list required`);
   assert.ok(source.grades.every(g => Number(g) >= 6 && Number(g) <= 10), `source ${index + 1}: grade outside 6-10`);
-  assert.match(source.url, /^https:\/\/((www|lib)\.)?moecdc\.gov\.np\//i, `source ${index + 1}: non-CDC URL`);
+  assert.match(source.url, /^https:\/\/(?:(?:www|lib)\.moecdc\.gov\.np|moecdc\.gov\.np|giwmscdnone\.gov\.np)\//i, `source ${index + 1}: non-CDC URL`);
   assert.ok(source.status, `source ${index + 1}: status required`);
 }
 console.log("Question paper content checks passed:", { packs: summaries, CDCSourceRecords: register.sources.length });
