@@ -3,6 +3,7 @@
 // Not a public API and never touches V46; release remains blocked.
 import {officialClassPointerId} from './server-publication-authoritative-preflight.mjs';
 import {resolveOfficialClassMarks} from './server-official-marks-reader.mjs';
+import {computePublishedPagesDigest} from './server-publication-content-digest.mjs';
 
 const schoolIdPattern=/^[0-9]{5,20}$/;
 const segment=/^[A-Za-z0-9_-]{1,128}$/;
@@ -51,6 +52,9 @@ export async function loadCommittedOfficialClassMarks({firestore,schoolId,classI
      audit.approvedBy!==publication.approvedBy||audit.digest!==pointer.digest||
      audit.rosterCount!==pointer.rosterCount||
      publication.digest!==pointer.digest||publication.rosterCount!==pointer.rosterCount||
+     typeof pointer.contentDigest!=='string'||!/^[a-f0-9]{64}$/.test(pointer.contentDigest)||
+     publication.contentDigest!==pointer.contentDigest||
+     audit.contentDigest!==pointer.contentDigest||
      !Number.isInteger(publication.batchCount)||publication.batchCount<1||publication.batchCount>15||
      manifest.format!=='smss-v47-verified-staging-manifest-v1'||
      manifest.state!=='staged_verified_not_published'||manifest.publicationId!==publicationId||
@@ -64,7 +68,7 @@ export async function loadCommittedOfficialClassMarks({firestore,schoolId,classI
     if(record[key]!==expected)throw new Error('Cross-school official publication scope mismatch');
    }
   }
-  const entries=[];
+  const entries=[],storedPages=[];
   for(let i=0;i<publication.batchCount;i++){
    const page=value(await tx.get(ref('marks_staging',publicationId,'batches','b'+String(i).padStart(4,'0'))));
    if(!page||fieldNames(page)!==pageFields||
@@ -76,6 +80,7 @@ export async function loadCommittedOfficialClassMarks({firestore,schoolId,classI
       page.firstStudentId!==page.entries[0]?.studentId||
       page.lastStudentId!==page.entries.at(-1)?.studentId)
     throw new Error('Missing, altered or out-of-order official staging page: '+i);
+   storedPages.push(page);
    for(const row of page.entries){
     if(!row||fieldNames(row)!=='isAbsent,studentId,totalObtained,values'||
        (entries.length&&row.studentId<=entries.at(-1).studentId))
@@ -83,6 +88,8 @@ export async function loadCommittedOfficialClassMarks({firestore,schoolId,classI
     entries.push({...row,publicationId});
    }
   }
+  if(computePublishedPagesDigest(storedPages)!==pointer.contentDigest)
+   throw new Error('Published marks content digest mismatch');
   return resolveOfficialClassMarks({...scope,pointer,publication,entries});
  });
 }

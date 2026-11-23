@@ -114,6 +114,12 @@ try{
  await secondPage.delete();
  await assert.rejects(loadCommittedOfficialClassMarks({firestore:db,...scope,actorUid}),/staging page/);
  await secondPage.set(savedPage);
+ const validLookingTamper=structuredClone(savedPage);
+ validLookingTamper.entries[0].values.internal=3;
+ validLookingTamper.entries[0].totalObtained=47;
+ await secondPage.set(validLookingTamper);
+ await assert.rejects(loadCommittedOfficialClassMarks({firestore:db,...scope,actorUid}),/content digest mismatch/);
+ await secondPage.set(savedPage);
  // No legacy marks or per-student official rows are accidentally overwritten.
  assert.equal((await db.collection(path('marks')).get()).size,0);
  await assert.rejects(commitTrustedOfficialClassPublication(options),/Concurrent publication/);
