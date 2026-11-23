@@ -58,7 +58,7 @@ export function renderCdcCompositePaper(paper,{escapeHtml,answerKey=false}={}){
   '<span>Year: '+esc(paper.academicYear)+'</span><span>Time: '+esc(paper.durationMinutes)+
   ' minutes</span><span>FM: '+esc(paper.fullMarks)+'</span></div></div>';
  const note='<p style="font-size:12px;color:#444;margin:10px 0">'+
-  'CDC 2082 Specification Grid structure — SMSS school-reviewed questions (not a CDC published question paper)'+
+  'CDC 2082 Grid structure — SMSS original calculated practice questions. NOT CDC-published; teacher answer and curriculum review required.'+
   '</p>';
  return '<section '+(answerKey?'':'id="qpPrintArea"')+
   ' class="qp-paper-preview" style="font-family:Arial,sans-serif">'+
