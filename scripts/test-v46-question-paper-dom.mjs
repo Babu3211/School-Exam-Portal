@@ -106,12 +106,12 @@ const validRow={
  questionType:'short',marks:2,cognitiveLevel:'knowledge',
  questionText:'पदार्थ के हो?',answer:'उत्तर'
 };
-const delayed=importHarness.importJson({
+const delayedBulkImport=importHarness.importJson({
  name:'questions.json',size:100,text:()=>slowRead
 });
 importHarness.switchClass('Class 9');
 finishRead(JSON.stringify({questions:[validRow]}));
-await assert.rejects(delayed,/परिवर्तन भयो|आयात रोकियो/);
+await assert.rejects(delayedBulkImport,/परिवर्तन भयो|आयात रोकियो/);
 assert.equal(capturedWrites.length,0,'A stale file must never write to Firestore');
 assert.ok(!loadedMessages.includes('committed'),
  'A class switch during file parsing must block all commits');
