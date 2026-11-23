@@ -16,13 +16,14 @@ export function createSchoolStore({db,api,member,schoolId,assertSession}){
   if(assertSession)assertSession();
  };
  for(const method of ['collection','doc','getDocs','query','limit','orderBy','startAfter'])if(typeof api?.[method]!=='function')throw new TypeError('Missing Firebase SDK method: '+method);
+ const validRecordId=(name,id)=>{try{schoolDocumentPath(ctx.schoolId,name,id);return true}catch{return false}};
  function collectionRef(name){return api.collection(db,schoolCollectionPath(ctx.schoolId,name));}
  function documentRef(name,id){return api.doc(db,schoolDocumentPath(ctx.schoolId,name,id));}
  async function listPage(name,{pageSize=100,cursor=null}={}){
   checkSession();
   const size=validatePageSize(pageSize);
   const previousId=cursor?.id??null;
-  if(cursor!==null&&(typeof previousId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(previousId)||
+  if(cursor!==null&&(!validRecordId(name,previousId)||
     cursor.ref?.path!==undefined&&cursor.ref.path!==schoolCollectionPath(ctx.schoolId,name)+'/'+previousId||
     cursor.schoolId!==undefined&&cursor.schoolId!==ctx.schoolId))
    throw new Error('Invalid pagination cursor');
@@ -34,7 +35,7 @@ export function createSchoolStore({db,api,member,schoolId,assertSession}){
   if(!Array.isArray(docs)||docs.length>size+1)throw new RangeError('Unexpected query result size');
   let lastId=previousId;
   const materialized=docs.map(d=>{
-   if(!d||d.ref?.path!==undefined&&d.ref.path!==schoolCollectionPath(ctx.schoolId,name)+'/'+d.id||typeof d.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(d.id)
+   if(!d||d.ref?.path!==undefined&&d.ref.path!==schoolCollectionPath(ctx.schoolId,name)+'/'+d.id||!validRecordId(name,d.id)
     ||lastId!==null&&d.id<=lastId||typeof d.data!=='function')
     throw new Error('Malformed or out-of-order school record');
    lastId=d.id;
