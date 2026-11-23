@@ -70,7 +70,7 @@ assert.throws(()=>buildAutomaticQuestionPaper({questions:questions.filter(x=>x.g
  blueprint:bp,requireExactGrid:true,rng}),/full marks|Grid/);
 assert.throws(()=>buildAutomaticQuestionPaper({questions:questions.filter(x=>x.gradeNumber===8),
  topicIds:['topic_1','topic_2'],fullMarks:6,language:'ne',
- blueprint:null,requireExactGrid:true,rng}),/Grid/);
+ blueprint:null,requireExactGrid:true,rng}),/grid/i);
 assert.throws(()=>buildAutomaticQuestionPaper({questions:questions.filter(x=>x.gradeNumber===8),
  topicIds:['topic_1'],fullMarks:6,language:'ne',
  blueprint:bp,requireExactGrid:true,rng}),/Unit 2|topic|reviewed|Grid/);
