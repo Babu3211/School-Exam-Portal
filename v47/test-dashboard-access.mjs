@@ -16,4 +16,17 @@ assert.match(js,/const allowed=!!verified&&schoolDashboardAccess/);
 assert.match(js,/if\(!schoolDashboardAccess\(verified\.role/);
 assert.match(js,/if\(!schoolDashboardAccess\(session\.role/);
 assert.match(js,/verifySchoolSession\(\{schoolId:current\.schoolId,uid:current\.uid,readDocument\}\)/);
+// The V46-style sidebar and quick menu reuse the SAME gated module anchors
+// as the existing dashboard. A decorative href alone is not access control.
+assert.match(html,/class="portal-sidebar"/);
+assert.match(html,/aria-label="Quick Menu"/);
+for(const name of ['Student Record','Manage Exam','Teacher | Staff','Reports','Settings','Grade Ledger (Preview)','Grade Sheet (Preview)'])
+ assert.ok(html.includes(name),'Dashboard navigation missing: '+name);
+for(const route of ['students.html','attendance.html','staff.html','exams.html','marks-entry.html','grade-ledger.html','grade-sheet.html','school-settings.html']){
+ const matches=[...html.matchAll(new RegExp('<a([^>]*?)href="\\./'+route.replace('.','\\.')+'"','g'))];
+ assert.ok(matches.length>=2,'Sidebar and Quick Menu must share route '+route);
+ assert.ok(matches.every(m=>m[1].includes('data-school-module')),'School module missing verification gate: '+route);
+}
+assert.ok(html.includes('data-required-role="school_admin"'),'Admin-only module must be explicit');
+assert.ok(html.includes('Marks Entry (Preview)')&&html.includes('Grade Sheet (Preview)'),'Draft results must not appear officially published');
 console.log('V47 School Admin navigation is role-gated and reverified; other modules remain visible');
