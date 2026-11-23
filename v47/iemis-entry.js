@@ -1,5 +1,5 @@
-// V46 source: main/iemis-entry.js blob cc944b23748d20ce9048d042ea40f8251f69b4da.
-// Calculation/entry parity reference only; no V47 write authorization.
+// V46 source: root/iemis-entry.js (verified 2083 IEMIS reference).
+// V47 read-only parity copy, not a Firestore publication permission.
 import {iemisEscape as esc,iemisSubjectKey,iemisComponentKey} from './iemis-ledger.js';
 
 export function iemisEntrySchema(classNo,term,subject='') {
@@ -69,6 +69,7 @@ export class IemisEntryGrid {
   draft(si,sj){const key=this.key(si,sj);if(!this.drafts.has(key))this.drafts.set(key,iemisEntryDraft(this.record(si,sj),this.schema(sj)));return this.drafts.get(key);}
   schema(sj){return iemisEntrySchema(this.options.classNo,this.options.term,this.options.subjects[sj]);}
   allowed(si,sj){return this.options.canEdit(this.options.students[si],this.options.subjects[sj]);}
+  visible(si,sj){return this.options.canView?this.options.canView(this.options.students[si],this.options.subjects[sj]):this.allowed(si,sj);}
   message(text,bad=false){this.options.message?.(text,bad);}
   render(){
     const {subjects,students}=this.options,label=s=>this.options.subjectLabel?this.options.subjectLabel(s):s,selected=[...this.selectedSubjects].sort((a,b)=>a-b);
@@ -78,13 +79,14 @@ export class IemisEntryGrid {
     const body=students.map((st,i)=>{
       const identity=[i+1,st.studentNameEnglish||st.nameEnglish||st.studentName||st.name||'',st.studentIemisNo||st.iemisStudentNo||st.registrationNo||st.iemisNumber||'',st.symbolNo||st.symbolNumber||st.examSymbolNo||''];
       return `<tr data-grid-row="${i}"><td><input aria-label="Select ${esc(identity[1])}" type="checkbox" data-grid-student="${i}" ${this.selectedStudents.has(st.id)?'checked':''}></td>`+identity.map(v=>'<td>'+esc(v)+'</td>').join('')+selected.map(j=>{
-        const schema=this.schema(j);if(!this.allowed(i,j))return `<td colspan="${schema.length+1}">N/A</td>`;
+        const schema=this.schema(j);if(!this.visible(i,j))return `<td colspan="${schema.length+1}">N/A</td>`;
+        const readOnly=!this.allowed(i,j);
         const d=this.draft(i,j);if(d.incompatible)return `<td colspan="${schema.length+1}">Custom assessment — use single-subject view</td>`;
         const data=`data-grid-si="${i}" data-grid-sj="${j}"`;
-        return `<td><input aria-label="${esc(identity[1])} ${esc(label(subjects[j]))} IsAbsent" type="checkbox" data-grid-absent ${data} ${d.isAbsent?'checked':''}></td>`+schema.map(c=>{
+        return `<td><input aria-label="${esc(identity[1])} ${esc(label(subjects[j]))} IsAbsent" type="checkbox" data-grid-absent ${data} ${d.isAbsent?'checked':''} ${readOnly?'disabled':''}></td>`+schema.map(c=>{
           if(c.readonly)return `<td><span data-grid-full ${data}>${Math.max(0,Number(d.values.count)||0)*4}</span></td>`;
           const max=c.key==='obtained'?Math.max(0,Number(d.values.count)||0)*4:c.max;
-          return `<td><input aria-label="${esc(identity[1])} ${esc(label(subjects[j]))} ${esc(c.label)}" type="number" min="0" ${max!==undefined?`max="${max}"`:''} step="${schema[0].key==='count'?'1':'any'}" placeholder="0" data-grid-key="${c.key}" ${data} value="${esc(d.values[c.key])}" ${d.isAbsent?'disabled':''} style="width:90px;min-width:75px"></td>`;
+          return `<td><input aria-label="${esc(identity[1])} ${esc(label(subjects[j]))} ${esc(c.label)}" type="number" min="0" ${max!==undefined?`max="${max}"`:''} step="${schema[0].key==='count'?'1':'any'}" placeholder="0" data-grid-key="${c.key}" ${data} value="${esc(d.values[c.key])}" ${d.isAbsent?'disabled':''} ${readOnly?'readonly aria-readonly="true"':''} style="width:90px;min-width:75px"></td>`;
         }).join('');
       }).join('')+'</tr>';
     }).join('');

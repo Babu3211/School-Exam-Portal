@@ -19,6 +19,8 @@ jobs:
         run: node scripts/test-v47-regression-baseline.mjs
       - name: V47 multi-school development navigation
         run: node scripts/test-v47-development-hub.mjs
+      - name: V46-V47 IEMIS Grid exact source and role parity
+        run: node v47/test-v46-iemis-grid-role-parity.mjs
       - name: V47 read-only IEMIS component schema
         run: node v47/test-iemis-component-preview.mjs
       - name: V47 school exam workflow safety
