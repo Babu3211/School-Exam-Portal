@@ -18,7 +18,7 @@ export async function saveClassAttendance({db,api,actor,schoolId,entries}){
  }
  if(typeof api?.getDoc!=='function')throw new TypeError('Student roster verification requires getDoc');
  const snapshots=await Promise.all(validated.map(e=>api.getDoc(api.doc(db,'schools',schoolId,'students',e.studentId))));
- for(let i=0;i<validated.length;i++)if(!snapshots[i].exists()||snapshots[i].data().schoolId!==schoolId||snapshots[i].data().class!==schoolClass)throw new Error('Student roster changed or school mismatch');
+ for(let i=0;i<validated.length;i++)if(!snapshots[i].exists()||snapshots[i].data().schoolId!==schoolId||snapshots[i].data().class!==schoolClass||snapshots[i].data().active===false)throw new Error('Student roster changed or school mismatch');
  if(actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId||!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin identity changed during attendance roster verification');
  const batch=api.writeBatch(db);
  for(const entry of validated)batch.set(api.doc(db,'schools',schoolId,'attendance',entry.date+'_'+entry.studentId),{...entry,schoolId});

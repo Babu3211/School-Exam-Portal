@@ -16,7 +16,7 @@ export async function saveSchoolAttendance({db,api,actor,schoolId,input}){
  const attendance=validateAttendance(input);
  if(typeof api?.doc!=='function'||typeof api?.setDoc!=='function'||typeof api?.getDoc!=='function')throw new TypeError('Missing Firebase SDK');
  const student=await api.getDoc(api.doc(db,'schools',schoolId,'students',attendance.studentId));
- if(!student.exists()||student.data().schoolId!==schoolId||student.data().class!==attendance.class)throw new Error('Student roster changed or school mismatch');
+ if(!student.exists()||student.data().schoolId!==schoolId||student.data().class!==attendance.class||student.data().active===false)throw new Error('Student roster changed or school mismatch');
  if(actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId||!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin identity changed during attendance roster verification');
  const id=attendance.date+'_'+attendance.studentId;
  const attendanceRef=api.doc(db,'schools',schoolId,'attendance',id);

@@ -28,7 +28,8 @@ function mock(overrides={}){
 for(const overrides of [
  {s2:null},
  {s2:{schoolId:'87654321',class:'9'}},
- {s2:{schoolId,class:'8'}}
+ {s2:{schoolId,class:'8'}},
+ {s2:{schoolId,class:'9',active:false}}
 ]){
  const state=mock(overrides);
  await assert.rejects(saveClassAttendance({db:{},api:state.api,actor,schoolId,entries:[entry('s1'),entry('s2')]}),/Student roster/);
