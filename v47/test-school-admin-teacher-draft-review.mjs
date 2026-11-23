@@ -197,6 +197,24 @@ for(const mutation of [
  await assert.rejects(async()=>teacherDraftReviewExcel({...result,publicationAllowed:true}));
  await assert.rejects(async()=>teacherDraftReviewExcel({...result,entries:[result.entries[0],result.entries[0],result.entries[2]]}));
  await assert.rejects(async()=>teacherDraftReviewExcel({...result,entries:result.entries.slice(0,2)}));
+ await assert.rejects(async()=>teacherDraftReviewExcel({...result,components:[
+  result.components[0],result.components[0]
+ ]}));
+ await assert.rejects(async()=>teacherDraftReviewExcel({...result,entries:[
+  {...result.entries[0],values:{...result.entries[0].values,extra:1}},
+  ...result.entries.slice(1)
+ ]}));
+ await assert.rejects(async()=>teacherDraftReviewExcel({...result,entries:[
+  {...result.entries[0],isAbsent:true,totalObtained:0},
+  ...result.entries.slice(1)
+ ]}));
+ const absent={...result,entries:[
+  {...result.entries[0],isAbsent:true,values:null,totalObtained:0},
+  ...result.entries.slice(1)
+ ]};
+ const absentExcel=teacherDraftReviewExcel(absent);
+ assert.equal(absentExcel.count,3);
+ assert.match(new TextDecoder().decode(await absentExcel.blob.arrayBuffer()),/Yes/);
  await assert.rejects(async()=>teacherDraftReviewExcel({...result,entries:[
   {...result.entries[0],totalObtained:999},...result.entries.slice(1)
  ]}));

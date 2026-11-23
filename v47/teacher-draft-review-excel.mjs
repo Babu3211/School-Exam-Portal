@@ -14,7 +14,17 @@ export function teacherDraftReviewExcel(review){
     !Array.isArray(review.entries)||review.entries.length!==review.rosterCount||
     !Array.isArray(review.components)||!review.components.length||review.components.length>6)
   throw Error('Incomplete verified Teacher Draft Review');
- const seen=new Set();
+ const seen=new Set(),componentKeys=new Set();
+ for(const component of review.components){
+  if(!component||typeof component.key!=='string'||
+     !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(component.key)||
+     componentKeys.has(component.key)||typeof component.name!=='string'||
+     !component.name.trim()||component.name.length>160||
+     typeof component.fullMarks!=='number'||!Number.isFinite(component.fullMarks)||
+     component.fullMarks<=0||component.fullMarks>100000)
+   throw Error('Invalid or duplicate verified component settings');
+  componentKeys.add(component.key);
+ }
  const headers=['School IEMIS ID','Class','Subject','Exam Term','Teacher UID',
   'Draft Revision','Student ID','Student Name','Absent',
   ...review.components.map(c=>String(c.name)+' / '+String(c.fullMarks)),
@@ -24,7 +34,12 @@ export function teacherDraftReviewExcel(review){
      seen.has(entry.studentId)||typeof entry.studentName!=='string'||
      typeof entry.isAbsent!=='boolean')throw Error('Invalid or duplicate verified student');
   seen.add(entry.studentId);
-  if(!entry.isAbsent&&(!entry.values||typeof entry.values!=='object'))throw Error('Missing verified component values');
+  if(!entry.isAbsent&&(!entry.values||typeof entry.values!=='object'||Array.isArray(entry.values)||
+      Object.keys(entry.values).length!==componentKeys.size||
+      Object.keys(entry.values).some(key=>!componentKeys.has(key))))
+   throw Error('Missing or unexpected verified component values');
+  if(entry.isAbsent&&entry.values!==null&&entry.values!==undefined)
+   throw Error('Absent student must not carry obtained component marks');
   const values=review.components.map(c=>{
    if(typeof c.key!=='string'||!/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(c.key)||
       !Number.isFinite(c.fullMarks)||c.fullMarks<=0)throw Error('Invalid verified component');
