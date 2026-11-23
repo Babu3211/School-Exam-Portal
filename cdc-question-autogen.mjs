@@ -153,7 +153,8 @@ function fillSubset(pool,target,maxCount,rng){
 }
 export function buildAutomaticQuestionPaper({
  questions,topicIds,fullMarks,language='ne',blueprint=null,rng=Math.random,
- requireExactGrid=false,previousSignature='',attemptsRemaining=20
+ requireExactGrid=false,previousSignature='',attemptsRemaining=20,
+ gradeNumber=null,subject=null
 }){
  ensureRandom(rng);
  if(!['ne','en','both'].includes(language))throw Error('Choose Nepali, English or Both');
@@ -181,7 +182,7 @@ export function buildAutomaticQuestionPaper({
  let selected=null,gridAudit=null;
  if(requireExactGrid){
   const audit=allocateExactCdcUnitGrid({blueprint,fullMarks,eligible,
-   selectedTopicIds:topicIds,previousSignature,rng});
+   selectedTopicIds:topicIds,previousSignature,rng,gradeNumber,subject});
   selected=[...audit.questions];
   gridAudit=audit;
  }else if(pattern){
@@ -227,7 +228,8 @@ export function buildAutomaticQuestionPaper({
   if(attemptsRemaining<=0)
    throw Error('No different question paper can be drawn from this question bank. Add more reviewed questions or choose other topics.');
   return buildAutomaticQuestionPaper({questions,topicIds,fullMarks,language,
-   blueprint,rng,requireExactGrid,previousSignature,attemptsRemaining:attemptsRemaining-1});
+   blueprint,rng,requireExactGrid,previousSignature,attemptsRemaining:attemptsRemaining-1,
+   gradeNumber,subject});
  }
  const order={mcq:0,short:1,long:2};
  const sorted=selected.map(q=>inLanguage(q,language,rng))
