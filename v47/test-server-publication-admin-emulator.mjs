@@ -120,6 +120,15 @@ try{
  await secondPage.set(validLookingTamper);
  await assert.rejects(loadCommittedOfficialClassMarks({firestore:db,...scope,actorUid}),/content digest mismatch/);
  await secondPage.set(savedPage);
+ // A valid publication must stop serving results if live student/settings
+ // records no longer match the complete approved class.
+ const settingsRef=db.doc(path('mark_settings',identifier));
+ await settingsRef.update({'components.0.fullMarks':3});
+ await assert.rejects(loadCommittedOfficialClassMarks({firestore:db,...scope,actorUid}),/exceeds Examination Settings/);
+ await settingsRef.update({'components.0.fullMarks':4});
+ await studentRef.update({active:false});
+ await assert.rejects(loadCommittedOfficialClassMarks({firestore:db,...scope,actorUid}),/Inactive|roster/);
+ await studentRef.update({active:true});
  // No legacy marks or per-student official rows are accidentally overwritten.
  assert.equal((await db.collection(path('marks')).get()).size,0);
  await assert.rejects(commitTrustedOfficialClassPublication(options),/Concurrent publication/);

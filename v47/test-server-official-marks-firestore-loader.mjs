@@ -5,7 +5,7 @@ import {officialClassPointerId} from './server-publication-authoritative-preflig
 
 const scope={schoolId:'12345',classId:'9',subjectId:'computer',examId:'final'};
 const uid='admin_1',publicationId='pub_00000001',digest='a'.repeat(64),count=101;
-const root='schools/'+scope.schoolId;
+const root='schools/'+scope.schoolId,settingsId='9_computer_final';
 const path=(...parts)=>root+'/'+parts.join('/');
 const rows=Array.from({length:count},(_,i)=>({
  studentId:'s'+String(i).padStart(4,'0'),isAbsent:false,
@@ -24,6 +24,13 @@ function fixture(){
  const publication={...scope,publicationId,state:'committed',digest,contentDigest,rosterCount:count,
    batchCount:2,approvedBy:uid,previousPublicationId:null,committedAt:'2026-11-23'};
  put(root,{id:scope.schoolId,active:true});
+ put(path('subjects','computer'),{schoolId:scope.schoolId,class:'9',active:true});
+ put(path('mark_settings',settingsId),{id:settingsId,...scope,active:true,components:[
+  {key:'internal',name:'Internal',fullMarks:4},
+  {key:'written',name:'Written',fullMarks:36},
+  {key:'practical',name:'Practical',fullMarks:10}
+ ]});
+ for(const row of rows)put(path('students',row.studentId),{schoolId:scope.schoolId,class:'9',active:true});
  put(path('members',uid),{uid,schoolId:scope.schoolId,active:true,role:'school_admin'});
  put(path('official_marks_pointers',pointerId),pointer);
  put(path('official_marks_publications',publicationId),publication);
@@ -48,10 +55,19 @@ function fixture(){
  let reads=0,transactions=0;
  const firestore={
   doc:p=>({path:p}),
+  collection:q=>({where:(field,op,klass)=>({orderBy:order=>({limit:n=>({query:q,field,op,klass,order,n})})})}),
   runTransaction:async callback=>{
    transactions++;
    const tx={get:async ref=>{
     reads++;
+    if(ref.query){
+     if(ref.query!==path('students')||ref.field!=='class'||ref.op!=='=='||
+        ref.order!=='__name__'||ref.n!==1501)throw Error('Invalid roster query');
+     return {docs:[...docs.entries()]
+      .filter(([key,v])=>key.startsWith(path('students')+'/')&&v.class===ref.klass)
+      .sort(([a],[b])=>a.localeCompare(b))
+      .map(([key,v])=>({id:key.slice(path('students').length+1),ref:{path:key},data:()=>structuredClone(v)}))};
+    }
     return {exists:docs.has(ref.path),data:()=>structuredClone(docs.get(ref.path))};
    }};
    return callback(tx);
@@ -69,8 +85,8 @@ const run=(h,overrides={})=>loadCommittedOfficialClassMarks({
  assert.equal(result.entries.length,count);
  assert.equal(result.entries[0].totalObtained,48);
  assert.equal(h.transactions,1);
- assert.equal(h.reads,6+2);
- assert.equal(h.docs.size,8);
+ assert.equal(h.reads,11);
+ assert.equal(h.docs.size,8+2+count);
 }
 {
  const h=fixture();
@@ -100,11 +116,18 @@ for(const mutate of [
   row.values.internal=3;row.totalObtained=47;},
  h=>h.docs.get(path('official_marks_pointers',h.pointerId)).schoolId='67890',
  h=>h.docs.get(path('members',uid)).schoolId='67890',
- h=>h.docs.get(root).active=false
+ h=>h.docs.get(root).active=false,
+ h=>h.docs.get(path('subjects','computer')).active=false,
+ h=>h.docs.get(path('mark_settings',settingsId)).components[0].fullMarks=3,
+ h=>h.docs.get(path('students','s0000')).active=false,
+ h=>h.docs.get(path('students','s0000')).class='10',
+ h=>h.docs.delete(path('students','s0000')),
+ h=>h.docs.set(path('students','s9999'),{schoolId:scope.schoolId,class:'9',active:true}),
+ h=>h.docs.get(path('students','s0000')).schoolId='87654'
 ]){
  const h=fixture();mutate(h);
  await assert.rejects(run(h),'Tampered committed marks must never be returned');
 }
 await assert.rejects(run(fixture(),{schoolId:'67890'}),/membership/);
 await assert.rejects(run(fixture(),{classId:'../9'}),/Verified/);
-console.log('PASS trusted official marks Firestore loader: 101 rows, Viewer, unpublished, revoked membership, 12 tamper/cross-school refusals; no public API or writes');
+console.log('PASS trusted official marks Firestore loader: 101 rows, Viewer, unpublished, revoked membership, 19 tamper/cross-school/settings/roster refusals; no public API or writes');

@@ -12,6 +12,12 @@ const docs=new Map(),set=(p,v)=>docs.set(p,structuredClone(v));
 const rows=Array.from({length:101},(_,i)=>({studentId:'s'+String(i).padStart(4,'0'),isAbsent:false,
  values:{internal:4,written:35,practical:9},totalObtained:48}));
 set(root,{id:scope.schoolId,active:true,status:'active'});
+set(path('subjects','computer'),{schoolId:scope.schoolId,class:'9',active:true});
+set(path('mark_settings','9_computer_final'),{id:'9_computer_final',...scope,active:true,components:[
+ {key:'internal',name:'Internal',fullMarks:4},
+ {key:'written',name:'Written',fullMarks:36},
+ {key:'practical',name:'Practical',fullMarks:10}]});
+for(const row of rows)set(path('students',row.studentId),{schoolId:scope.schoolId,class:'9',active:true});
 set(path('members',uid),{uid,schoolId:scope.schoolId,role:'viewer',active:true});
 const pointerId=officialClassPointerId(scope);
 const contentDigest=computePublishedPagesDigest(Array.from({length:2},(_,i)=>{
@@ -36,9 +42,19 @@ for(let i=0;i<2;i++){
 let lookups=0;
 const firestore={
  doc:p=>({path:p,get:async()=>({exists:docs.has(p),data:()=>structuredClone(docs.get(p))})}),
- collection:()=>({}),
+ collection:q=>({where:(field,op,klass)=>({orderBy:order=>({limit:n=>({query:q,field,op,klass,order,n})})})}),
  runTransaction:async callback=>callback({
-  get:async ref=>{lookups++;return {exists:docs.has(ref.path),data:()=>structuredClone(docs.get(ref.path))};}
+  get:async ref=>{
+   lookups++;
+   if(ref.query){
+    assert.equal(ref.query,path('students'));assert.equal(ref.field,'class');assert.equal(ref.op,'==');
+    assert.equal(ref.order,'__name__');assert.equal(ref.n,1501);
+    return {docs:[...docs.entries()].filter(([key,v])=>key.startsWith(path('students')+'/')&&v.class===ref.klass)
+     .sort(([a],[b])=>a.localeCompare(b))
+     .map(([key,v])=>({id:key.slice(path('students').length+1),ref:{path:key},data:()=>structuredClone(v)}))};
+   }
+   return {exists:docs.has(ref.path),data:()=>structuredClone(docs.get(ref.path))};
+  }
  })
 };
 const auth={verifyIdToken:async(t,checkRevoked)=>{
@@ -58,7 +74,7 @@ try{
  assert.equal(body.result.entries.length,101);
  assert.deepEqual(body.result.entries[0].values,{internal:4,written:35,practical:9});
  assert.equal(body.cdcGradeApproved,false);
- assert.equal(lookups,8);
+ assert.equal(lookups,11);
  assert.equal((await get(params,null)).status,401,'No bearer token');
  assert.equal((await get(params,'revoked')).status,403,'Revoked token');
  assert.equal((await get(params,'anon')).status,403,'Anonymous account');
@@ -78,6 +94,11 @@ try{
  docs.get(path('marks_staging',publicationId,'batches','b0001')).entries[0].values.internal=3;
  docs.get(path('marks_staging',publicationId,'batches','b0001')).entries[0].totalObtained=47;
  assert.equal((await get()).status,403,'Reject valid-looking tampered marks by immutable content hash');
+ docs.get(path('mark_settings','9_computer_final')).components[0].fullMarks=3;
+ assert.equal((await get()).status,403,'Changed official component limits refused');
+ docs.get(path('mark_settings','9_computer_final')).components[0].fullMarks=4;
+ docs.get(path('students','s0000')).active=false;
+ assert.equal((await get()).status,403,'Inactive published student refused');
  console.log('PASS V47 official marks HTTP: 101 real-shaped component marks, scoped Viewer, revoked token/role, unpublished state, tamper refusal; read-only');
 }finally{
  await new Promise((resolve,reject)=>server.close(e=>e?reject(e):resolve()));

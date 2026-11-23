@@ -4,6 +4,9 @@
 import {officialClassPointerId} from './server-publication-authoritative-preflight.mjs';
 import {resolveOfficialClassMarks} from './server-official-marks-reader.mjs';
 import {computePublishedPagesDigest} from './server-publication-content-digest.mjs';
+import {resolveVerifiedOfficialClassMarks} from './server-verified-official-class-marks.mjs';
+import {completeClassDraftId} from './complete-class-draft-document.mjs';
+import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
 
 const schoolIdPattern=/^[0-9]{5,20}$/;
 const segment=/^[A-Za-z0-9_-]{1,128}$/;
@@ -25,7 +28,7 @@ export async function loadCommittedOfficialClassMarks({firestore,schoolId,classI
  if(!schoolIdPattern.test(schoolId??'')||!classes.has(classId)||
     !segment.test(subjectId??'')||!terms.has(examId)||!segment.test(actorUid??''))
   throw new Error('Verified school, class, subject, term and user ID required');
- if(typeof firestore?.doc!=='function'||typeof firestore?.runTransaction!=='function')
+ if(typeof firestore?.doc!=='function'||typeof firestore?.collection!=='function'||typeof firestore?.runTransaction!=='function')
   throw new TypeError('Trusted Firebase Admin Firestore required');
  const scope={schoolId,classId,subjectId,examId};
  const ref=(...path)=>firestore.doc(['schools',schoolId,...path].join('/'));
@@ -90,6 +93,32 @@ export async function loadCommittedOfficialClassMarks({firestore,schoolId,classI
   }
   if(computePublishedPagesDigest(storedPages)!==pointer.contentDigest)
    throw new Error('Published marks content digest mismatch');
-  return resolveOfficialClassMarks({...scope,pointer,publication,entries});
+  // Reverify the live roster and dynamic subject settings inside this same
+  // Firestore transaction: a published hash alone cannot prove current eligibility.
+  const settingsId=completeClassDraftId(scope);
+  const subject=value(await tx.get(ref('subjects',subjectId)));
+  const settings=value(await tx.get(ref('mark_settings',settingsId)));
+  if(!subject||subject.schoolId!==schoolId||subject.class!==classId||subject.active!==true)
+   throw new Error('Published subject inactive or changed');
+  if(!settings||settings.id!==settingsId||settings.schoolId!==schoolId)
+   throw new Error('Verified Examination Settings unavailable');
+  const rosterQuery=firestore.collection(['schools',schoolId,'students'].join('/'))
+   .where('class','==',classId).orderBy('__name__').limit(1501);
+  const snapshot=await tx.get(rosterQuery);
+  if(!Array.isArray(snapshot?.docs)||snapshot.docs.length<1||
+     snapshot.docs.length>1500||snapshot.docs.length!==pointer.rosterCount)
+   throw new Error('Published class roster differs from live roster');
+  const expectedStudentIds=[];
+  for(const doc of snapshot.docs){
+   const student=doc.data();
+   if(typeof doc.id!=='string'||!segment.test(doc.id)||
+      doc.ref?.path!==['schools',schoolId,'students',doc.id].join('/')||
+      !student||student.schoolId!==schoolId||student.class!==classId||
+      !isActiveEnrolledStudent(student)||
+      (expectedStudentIds.length&&doc.id<=expectedStudentIds.at(-1)))
+    throw new Error('Inactive, mismatched or foreign published student');
+   expectedStudentIds.push(doc.id);
+  }
+  return resolveVerifiedOfficialClassMarks({...scope,pointer,publication,entries,settings,expectedStudentIds});
  });
 }
