@@ -347,10 +347,13 @@ service cloud.firestore {
         }
         allow get, list: if canRead(sid);
         allow create: if (memberRole(sid, 'school_admin') && validAdminAttendance()) || teacherAttendanceAllowed(sid, id);
+        // Assigned Teachers may correct ONLY Present/Absent for an enrolled
+        // student in their active, same-school attendance class. Identity,
+        // class, date, tenant and any extra fields are immutable.
         allow update: if immutableSchool(sid)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['present'])
           && request.resource.data.present is bool
-          && memberRole(sid, 'school_admin');
+          && (memberRole(sid, 'school_admin') || teacherAttendanceAllowed(sid, id));
         allow delete: if false;
       }
       match /exams/{id} {

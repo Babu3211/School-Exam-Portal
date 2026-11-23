@@ -235,9 +235,19 @@ try{
  await assertSucceeds(setDoc(doc(admin,'schools','12345678','teacher_assignments','12345678:teacher_12345678:10:attendance'),{schoolId:'12345678',uid:'teacher_12345678',classId:'10',subjectId:'attendance',active:false}));
  await assertFails(updateDoc(attendance(teacher,'12345678'),{present:true}));
  await assertSucceeds(updateDoc(doc(admin,'schools','12345678','teacher_assignments','12345678:teacher_12345678:10:attendance'),{active:true}));
- await assertFails(updateDoc(attendance(teacher,'12345678'),{present:true}));
+ // Assigned Teacher can correct only the Present/Absent field of the right class.
+ await assertSucceeds(updateDoc(attendance(teacher,'12345678'),{present:true}));
+ await assertSucceeds(updateDoc(attendance(teacher,'12345678'),{present:false}));
  await assertFails(updateDoc(attendance(teacher,'12345678'),{date:'2026-11-19'}));
+ await assertFails(updateDoc(attendance(teacher,'12345678'),{class:'9'}));
+ await assertFails(updateDoc(attendance(teacher,'12345678'),{studentId:'other_student'}));
+ await assertFails(updateDoc(attendance(teacher,'12345678'),{schoolId:'87654321'}));
+ await assertFails(updateDoc(attendance(teacher,'12345678'),{official:true}));
  await assertFails(updateDoc(attendance(teacher,'87654321'),{present:true}));
+ const attendanceAssignment=doc(admin,'schools','12345678','teacher_assignments','12345678:teacher_12345678:10:attendance');
+ await assertSucceeds(updateDoc(attendanceAssignment,{active:false}));
+ await assertFails(updateDoc(attendance(teacher,'12345678'),{present:true}));
+ await assertSucceeds(updateDoc(attendanceAssignment,{active:true}));
  // 99 A second canonical term can be created independently
  await assertSucceeds(setDoc(doc(admin,'schools','12345678','exams','2nd'),{schoolId:'12345678',term:'2nd'}));
 

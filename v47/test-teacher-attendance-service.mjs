@@ -11,7 +11,11 @@ function mock(overrides={}){
   doc:(_db,...parts)=>parts.slice(2).join('/'),
   runTransaction:async(_db,callback)=>{
    const pending=[];
-   const tx={get:async ref=>({exists:()=>records.has(ref),data:()=>records.get(ref)}),set:(ref,value)=>pending.push([ref,value])};
+   const tx={
+    get:async ref=>({exists:()=>records.has(ref),data:()=>records.get(ref)}),
+    set:(ref,value)=>pending.push([ref,value]),
+    update:(ref,patch)=>{if(!records.has(ref))throw Error('Cannot update nonexistent attendance');pending.push([ref,{...records.get(ref),...patch}])}
+   };
    const result=await callback(tx);
    for(const [ref,value] of pending){writes.push([ref,value]);records.set(ref,value);}
    return result;
@@ -27,6 +31,46 @@ assert.equal(teacherAttendanceAssignmentId({schoolId,uid,classId:'9'}),'12345678
  assert.equal(writes.length,1);
  assert.equal(writes[0][1].schoolId,schoolId);
 }
+// Assigned teachers can now correct ONLY an existing attendance presence.
+// There is no permission to change its student, class, date, school or format.
+{
+ const key='attendance/2026-11-18_s1';
+ const prior={schoolId,studentId:'s1',class:'9',date:'2026-11-18',present:false};
+ const {api,writes}=mock({[key]:prior});
+ const result=await saveAssignedTeacherAttendance({db:{},api,actor,schoolId,input});
+ assert.equal(result.present,true);
+ assert.equal(writes.length,1);
+ assert.equal(writes[0][0],key);
+ assert.deepEqual(writes[0][1],{...prior,present:true});
+}
+for(const invalid of [
+ {schoolId:'87654321',studentId:'s1',class:'9',date:'2026-11-18',present:false},
+ {schoolId,studentId:'s2',class:'9',date:'2026-11-18',present:false},
+ {schoolId,studentId:'s1',class:'8',date:'2026-11-18',present:false},
+ {schoolId,studentId:'s1',class:'9',date:'2026-11-19',present:false},
+ {schoolId,studentId:'s1',class:'9',date:'2026-11-18',present:false,official:true}
+]){
+ const {api,writes}=mock({'attendance/2026-11-18_s1':invalid});
+ await assert.rejects(saveAssignedTeacherAttendance({db:{},api,actor,schoolId,input}),/identity or format mismatch/);
+ assert.equal(writes.length,0);
+}
+{
+ let uid=actor.uid,reads=0;
+ const {api,writes}=mock({'attendance/2026-11-18_s1':{
+  schoolId,studentId:'s1',class:'9',date:'2026-11-18',present:false
+ }});
+ const before=api.runTransaction;
+ api.runTransaction=(db,cb)=>before(db,async tx=>{
+  const original=tx.get;tx.get=async ref=>{reads++;const result=await original(ref);if(reads===1)uid='different-account';return result};
+  return cb(tx);
+ });
+ await assert.rejects(saveAssignedTeacherAttendance({
+  db:{},api,actor,schoolId,input,assertSession:()=>{if(uid!==actor.uid)throw Error('Firebase account changed')}
+ }),/Firebase account changed/);
+ assert.equal(writes.length,0);
+}
+await assert.rejects(saveAssignedTeacherAttendance({db:{},api:mock().api,actor,schoolId,input,assertSession:true}),/Live teacher session verifier/);
+
 for(const [overrides,pattern] of [
  [{[key]:null},/assignment required/],
  [{[key]:{schoolId,uid,classId:'9',subjectId:'attendance',active:false}},/assignment required/],

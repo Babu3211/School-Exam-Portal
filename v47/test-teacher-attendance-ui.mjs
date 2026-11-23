@@ -10,7 +10,9 @@ for(const token of [
  "if(actor?.role==='school_admin'){const select=document.createElement('select')",
  "if(actor?.role!=='school_admin')throw new Error('School Admin required')"
 ])assert.ok(js.includes(token),'Missing teacher attendance UI contract: '+token);
-assert.ok(js.includes("Teachers cannot edit or overwrite this record."),'Teacher save confirmation missing');
+assert.ok(js.includes("Present/Absent मात्र सच्याउन मिल्छ"),'Teacher correction confirmation missing');
+assert.ok(js.includes("assertSession:()=>{if(auth?.currentUser?.uid!==uid"),'Teacher correction must check live session');
+assert.ok(html.includes("may create or correct one student's Present/Absent"),'Assigned teacher correction notice missing');
 assert.ok(js.includes("auth.currentUser.uid!==actor.uid"),'Authentication change protection missing');
 for(const id of ['schoolClass','date','studentId','present'])assert.ok(js.includes("$('"+id+"').disabled=true"),'Save-time field lock missing: '+id);
 assert.ok(html.includes('active class attendance assignment'),'Teacher UI warning missing');
