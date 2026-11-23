@@ -154,7 +154,7 @@ function fillSubset(pool,target,maxCount,rng){
 export function buildAutomaticQuestionPaper({
  questions,topicIds,fullMarks,language='ne',blueprint=null,rng=Math.random,
  requireExactGrid=false,previousSignature='',attemptsRemaining=20,
- gradeNumber=null,subject=null
+ gradeNumber=null,subject=null,avoidSignatures=[]
 }){
  ensureRandom(rng);
  if(!['ne','en','both'].includes(language))throw Error('Choose Nepali, English or Both');
@@ -165,6 +165,9 @@ export function buildAutomaticQuestionPaper({
   throw Error('Select 1–40 distinct topics');
  if(!Array.isArray(questions)||questions.length>5000)
   throw Error('Question bank is unavailable or too large');
+ if(!Array.isArray(avoidSignatures)||avoidSignatures.length>30||
+    avoidSignatures.some(sig=>typeof sig!=='string'||sig.length>12000))
+  throw Error('Invalid saved question-paper signatures');
  const chosenIds=new Set(topicIds),eligible=[],known=new Set();
  for(const q of questions){
   if(!q||!chosenIds.has(q.topicId)||q.status==='archived'||!validatedQuestion(q,language))continue;
@@ -182,7 +185,7 @@ export function buildAutomaticQuestionPaper({
  let selected=null,gridAudit=null;
  if(requireExactGrid){
   const audit=allocateExactCdcUnitGrid({blueprint,fullMarks,eligible,
-   selectedTopicIds:topicIds,previousSignature,rng,gradeNumber,subject});
+   selectedTopicIds:topicIds,previousSignature,rng,gradeNumber,subject,avoidSignatures});
   selected=[...audit.questions];
   gridAudit=audit;
  }else if(pattern){
@@ -224,12 +227,12 @@ export function buildAutomaticQuestionPaper({
   selected.reduce((sum,q)=>sum+Number(q.marks),0)!==fullMarks)
   throw Error('Question paper quality verification failed');
  const signature=selected.map(q=>String(q.id)).sort().join('|');
- if(!requireExactGrid&&previousSignature&&signature===previousSignature){
+ if(!requireExactGrid&&[previousSignature,...avoidSignatures].includes(signature)){
   if(attemptsRemaining<=0)
    throw Error('No different question paper can be drawn from this question bank. Add more reviewed questions or choose other topics.');
   return buildAutomaticQuestionPaper({questions,topicIds,fullMarks,language,
    blueprint,rng,requireExactGrid,previousSignature,attemptsRemaining:attemptsRemaining-1,
-   gradeNumber,subject});
+   gradeNumber,subject,avoidSignatures});
  }
  const order={mcq:0,short:1,long:2};
  const sorted=selected.map(q=>inLanguage(q,language,rng))
