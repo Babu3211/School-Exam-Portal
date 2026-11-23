@@ -9,6 +9,22 @@ const NEPALI=/[\u0900-\u097f]/;
 export const isSupportedScienceSubject=s=>/^(?:विज्ञान(?: तथा प्रविधि)?|अनिवार्य विज्ञान(?: तथा प्रविधि)?|science|science and technology|science & technology|general science)$/i.test(String(s||'').trim().replace(/\s+/g,' '));
 const scienceSubject=isSupportedScienceSubject;
 const normalize=s=>String(s??'').trim().toLocaleLowerCase().replace(/\s+/g,' ');
+// CDC cognitive distribution is measured by MARKS, not by the number of
+// questions: a 5-mark application question weighs five times a 1-mark MCQ.
+export function cognitiveMarkDistribution(questions,fullMarks){
+ if(!Array.isArray(questions)||!Number.isSafeInteger(fullMarks)||fullMarks<1||fullMarks>500)
+  throw Error('Valid questions and full marks are required for cognitive audit');
+ const totals=Object.fromEntries(LEVELS.map(level=>[level,0]));
+ let sum=0;
+ for(const q of questions){
+  const marks=Number(q?.marks);
+  if(!LEVELS.includes(q?.cognitiveLevel)||!Number.isSafeInteger(marks)||marks<1||marks>100)
+   throw Error('Question has an invalid cognitive level or marks');
+  totals[q.cognitiveLevel]+=marks;sum+=marks;
+ }
+ if(sum!==fullMarks)throw Error('Cognitive marks total does not match paper full marks');
+ return Object.fromEntries(LEVELS.map(level=>[level,100*totals[level]/fullMarks]));
+}
 function shuffled(items,rng){
  const a=[...items];for(let i=a.length-1;i>0;i--){const k=Math.floor(rng()*(i+1));[a[i],a[k]]=[a[k],a[i]]}return a;
 }
