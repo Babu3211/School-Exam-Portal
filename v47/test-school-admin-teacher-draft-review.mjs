@@ -177,6 +177,30 @@ for(const mutation of [
  };
  await assert.rejects(loadSchoolAdminTeacherDraftReview(f.args),/Enrollment changed|inactive/);
 }
+
+{
+ const f=fixture();
+ const result=await loadSchoolAdminTeacherDraftReview(f.args);
+ const {teacherDraftReviewExcel}=await import('./teacher-draft-review-excel.mjs');
+ const file=teacherDraftReviewExcel(result);
+ assert.equal(file.count,3);
+ assert.equal(file.official,false);
+ assert.match(file.filename,/\.xlsx$/);
+ const bytes=new Uint8Array(await file.blob.arrayBuffer());
+ assert.equal(String.fromCharCode(...bytes.slice(0,2)),'PK');
+ const raw=new TextDecoder().decode(bytes);
+ assert.match(raw,/DRAFT ONLY/);
+ assert.match(raw,/Student Name/);
+ assert.match(raw,/Project \/ 17/);
+ assert.match(raw,/Examination \/ 83/);
+ assert.match(raw,/NOT OFFICIAL/);
+ await assert.rejects(async()=>teacherDraftReviewExcel({...result,publicationAllowed:true}));
+ await assert.rejects(async()=>teacherDraftReviewExcel({...result,entries:[result.entries[0],result.entries[0],result.entries[2]]}));
+ await assert.rejects(async()=>teacherDraftReviewExcel({...result,entries:result.entries.slice(0,2)}));
+ await assert.rejects(async()=>teacherDraftReviewExcel({...result,entries:[
+  {...result.entries[0],totalObtained:999},...result.entries.slice(1)
+ ]}));
+}
 const html=readFileSync(new URL('./teacher-draft-review.html',import.meta.url),'utf8');
 const ui=readFileSync(new URL('./teacher-draft-review-console.mjs',import.meta.url),'utf8');
 const schoolAdminHtml=readFileSync(new URL('./school-admin.html',import.meta.url),'utf8');
@@ -185,6 +209,10 @@ assert.match(html,/read-only/);
 assert.match(html,/id="reviewRows"/);
 assert.match(ui,/loadSchoolAdminTeacherDraftReview/);
 assert.match(ui,/enforceSchoolIdle/);
+assert.match(html,/id="exportDraft"/);
+assert.match(ui,/teacherDraftReviewExcel/);
+assert.match(ui,/fresh.revision!==revision/);
+assert.match(ui,/await loadSchoolAdminTeacherDraftReview/);
 assert.match(ui,/\$\('schoolId'\)\.disabled=true/);
 assert.match(ui,/\$\('schoolId'\)\.value\.trim\(\)!==id/);
 assert.doesNotMatch(ui,/\.(?:setDoc|updateDoc|addDoc|deleteDoc|runTransaction)\s*\(/);

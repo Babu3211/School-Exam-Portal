@@ -3,12 +3,14 @@ import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} fro
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {loadSchoolAdminTeacherDraftReview} from './school-admin-teacher-draft-review.mjs';
+import {teacherDraftReviewExcel} from './teacher-draft-review-excel.mjs';
 const $=id=>document.getElementById(id);
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
-let auth,authSdk,db,api,actor=null,schoolId=null,epoch=0,busy=false,requestId=0;
+let auth,authSdk,db,api,actor=null,schoolId=null,epoch=0,busy=false,requestId=0,verifiedSelection=null,verifiedRevision=null;
 const status=msg=>{$('loginStatus').textContent=msg};
 function clearReview(msg=''){
- requestId++;$('reviewHeader').replaceChildren();$('reviewRows').replaceChildren();
+ requestId++;verifiedSelection=null;verifiedRevision=null;$('exportDraft').disabled=true;
+ $('reviewHeader').replaceChildren();$('reviewRows').replaceChildren();
  $('reviewStatus').textContent=msg;
 }
 function clearSession(){
@@ -109,10 +111,45 @@ $('review').onclick=async()=>{
    rows.append(tr);
   }
   check();$('reviewHeader').append(header);$('reviewRows').append(rows);
+  verifiedSelection=Object.freeze({...selection});verifiedRevision=result.revision;
+  $('exportDraft').disabled=false;
   $('reviewStatus').textContent='प्रमाणित Draft Revision '+result.revision+' · '+result.rosterCount+
    ' विद्यार्थी · '+result.subjectName+' · Read-only, NOT official/published.';
  }catch(e){if(current===epoch&&request===requestId){
   clearReview('Review रोकियो: '+e.message+' पुनः प्रमाणित गरेर खोल्नुहोस्।');
  }}finally{busy=false;$('review').disabled=!actor}
+};
+$('exportDraft').onclick=async()=>{
+ if(busy||!actor||!verifiedSelection||verifiedRevision===null)return;
+ busy=true;$('exportDraft').disabled=true;
+ const current=epoch,request=requestId,selected=actor,id=schoolId,
+  selection=verifiedSelection,revision=verifiedRevision;
+ const check=()=>{
+  if(epoch!==current||requestId!==request||actor!==selected||schoolId!==id||
+     auth?.currentUser?.uid!==selected.uid||$('schoolId').value.trim()!==id||
+     Object.entries(selection).some(([field,value])=>$(field).value.trim()!==value))
+   throw Error('Session or Draft selection changed');
+ };
+ try{
+  check();
+  if(!await enforceSchoolIdle(auth,authSdk))throw Error('Login expired');
+  check();await reverifyAdmin(selected.uid,id);check();
+  // A fresh authoritative read prevents exporting a cached, now revoked Draft.
+  const fresh=await loadSchoolAdminTeacherDraftReview({
+   db,api,auth,actor:selected,schoolId:id,...selection,assertSession:check
+  });
+  check();
+  if(!fresh.found||fresh.revision!==revision)throw Error('Draft revision changed; review again');
+  const file=teacherDraftReviewExcel(fresh);
+  check();
+  const url=URL.createObjectURL(file.blob),a=document.createElement('a');
+  try{
+   check();a.href=url;a.download=file.filename;document.body.append(a);a.click();
+  }finally{a.remove();URL.revokeObjectURL(url)}
+  $('reviewStatus').textContent='Draft Excel: '+file.count+
+   ' विद्यार्थी · Revision '+revision+' · NOT OFFICIAL / NOT PUBLISHED.';
+ }catch(e){if(current===epoch&&request===requestId)
+  clearReview('Excel Export रोकियो: '+e.message+'। फेरि Draft Review गर्नुहोस्।');
+ }finally{busy=false;$('exportDraft').disabled=!verifiedSelection||verifiedRevision===null}
 };
 if(requestedSchool)queueMicrotask(()=>$('connect').click());
