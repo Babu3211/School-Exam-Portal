@@ -442,6 +442,7 @@ async function loadCurrentData() {
  renderTopics();renderQuestionRows();
  $("qpAutoSourceStatus").textContent=bundledPracticeStatus;
  verifiedQuestionSelection={className,subject,section,request};
+ updateAutoGridStatus();
  const badge=$("qpBlueprintBadge");
  if(currentBlueprint){
   badge.textContent="Admin-entered Grid · "+(currentBlueprint.curriculumVersion||"संस्करण");
@@ -631,6 +632,20 @@ async function generatePaper() {
   const coverage=Object.entries(cognitiveActual).map(([key,value])=>levelLabel(key)+" "+value+"%").join(" · ");
   message("प्रश्नपत्र तयार भयो। "+questions.length+" प्रश्न, "+fullMarks+" अङ्क। संज्ञानात्मक वितरण: "+coverage+(missingAnswerCount?"। "+missingAnswerCount+" प्रश्नको उत्तर संकेत बाँकी छ":"। सबै प्रश्नको उत्तर संकेत उपलब्ध छ")+". Save वा Print गर्न सक्नुहुन्छ।");
 }
+function blueprintForFullMarks(fullMarks){
+ return blueprintRows
+  .filter(bp=>bp.active!==false&&Number(bp.fullMarks)===fullMarks)
+  .sort((a,b)=>Number(b.updatedAt?.seconds||0)-Number(a.updatedAt?.seconds||0))[0]||null;
+}
+function updateAutoGridStatus(){
+ const target=Number($("qpPaperFullMarks")?.value);
+ const blueprint=blueprintForFullMarks(target);
+ const element=$("qpAutoGridStatus");
+ if(!element)return;
+ element.textContent=blueprint&&Array.isArray(blueprint.unitGrid)&&blueprint.unitGrid.length?
+  target+" अंकको CDC Unit-wise Grid Admin ले स्रोत हेरेर राखेका छन्। मूल Grid र उत्तरकुञ्जिका शिक्षकले जाँच्नुहोस्।":
+  target+" अंकको समीक्षा गरिएको CDC Unit-wise Grid भेटिएन। Exact मोडमा प्रश्नपत्र रोकिन्छ; अभ्यास अलग छान्न सकिन्छ।";
+}
 async function generateSmartPaper(){
  if(!verifiedQuestionSelection||verifiedQuestionSelection.request!==questionDataLoadEpoch||
   verifiedQuestionSelection.className!==selectedClass||
@@ -640,7 +655,13 @@ async function generateSmartPaper(){
  if(!selectedClass||!selectedSubject||!roleCanTeach(selectedClass,selectedSubject,selectedSection))
   throw Error("कक्षा/विषय/Section मा प्रश्नपत्र बनाउन अनुमति छैन।");
  const topicIds=selectedTopicIds(),target=Number($("qpPaperFullMarks").value);
- const language=$("qpAutoLanguage").value;
+ const language=$("qpAutoLanguage").value,mode=$("qpAutoMode").value;
+ const strict=mode==="cdc",selectedBlueprint=strict?blueprintForFullMarks(target):null;
+ if(strict&&!selectedBlueprint)
+  throw Error("यो कक्षा/विषय/पूर्णाङ्कको CDC Unit-wise Grid भेटिएन। Admin ले आधिकारिक Grid बाट सही विवरण राखेपछि मात्र Exact प्रश्नपत्र बनाउन सकिन्छ।");
+ const autoScope=JSON.stringify([selectedClass,selectedSubject,selectedSection,
+  target,language,mode,topicIds.slice().sort(),selectedBlueprint?.id||""]);
+ const previousSignature=lastAutoSignature?.scope===autoScope?lastAutoSignature.signature:"";
  const selection=verifiedQuestionSelection,sessionUid=auth.currentUser?.uid,
   paperTitle=$("qpPaperTitle").value.trim(),academicYear=$("qpPaperYear").value.trim(),
   durationMinutes=Number($("qpPaperDuration").value);
@@ -649,7 +670,8 @@ async function generateSmartPaper(){
   throw Error("प्रश्नपत्रको नाम, शैक्षिक वर्ष वा परीक्षा समय अमान्य छ।");
  const planned=buildAutomaticQuestionPaper({
   questions:[...questionRows,...bundledPracticeQuestions],
-  topicIds,fullMarks:target,language,blueprint:currentBlueprint
+  topicIds,fullMarks:target,language,
+  blueprint:selectedBlueprint,requireExactGrid:strict,previousSignature
  });
  const header=await schoolHeader();
  // A slow school-profile read must not allow an earlier class, subject, user,
@@ -660,6 +682,7 @@ async function generateSmartPaper(){
    selectedSection!==selection.section||!roleCanTeach(selectedClass,selectedSubject,selectedSection)||
    Number($("qpPaperFullMarks").value)!==target||
    $("qpAutoLanguage").value!==language||
+   $("qpAutoMode").value!==mode||
    $("qpPaperTitle").value.trim()!==paperTitle||
    $("qpPaperYear").value.trim()!==academicYear||
    Number($("qpPaperDuration").value)!==durationMinutes||
@@ -677,13 +700,15 @@ async function generateSmartPaper(){
   subject:selectedSubject,section:selectedSection,
   paperTitle,academicYear,
   durationMinutes,fullMarks:target,
-  curriculumVersion:planned.blueprintMatched?(currentBlueprint?.curriculumVersion||"Admin-entered grid"):
+  curriculumVersion:planned.exactGridMatched?(selectedBlueprint?.curriculumVersion||"Reviewed CDC Unit Grid"):
    "SMSS मौलिक अभ्यास — शिक्षक समीक्षा आवश्यक",
-  blueprintId:planned.blueprintMatched?currentBlueprint?.id||null:null,
-  cognitiveDistribution:planned.blueprintMatched?currentBlueprint?.cognitiveDistribution||null:null,
+  blueprintId:planned.exactGridMatched?selectedBlueprint?.id||null:null,
+  cognitiveDistribution:planned.exactGridMatched?selectedBlueprint?.cognitiveDistribution||null:null,
   topicIds,
   qualityReport:{questionCount:planned.questionCount,topicCounts,cognitiveActual,
-   missingAnswerCount:0,selectedTopicCount:topicIds.length,teacherReviewRequired:true},
+   missingAnswerCount:0,selectedTopicCount:topicIds.length,
+   exactGridMatched:planned.exactGridMatched,sourceUrl:planned.gridAudit?.sourceUrl||"",
+   gridVersion:planned.gridAudit?.gridVersion||"",teacherReviewRequired:true},
   questions:planned.questions.map((q,i)=>({
    questionId:q.id,questionText:q.questionText,questionType:q.questionType,
    marks:Number(q.marks),options:q.options||[],cognitiveLevel:q.cognitiveLevel,
@@ -693,9 +718,10 @@ async function generateSmartPaper(){
  };
  $("qpAutoReviewed").checked=false;
  renderPaperPreview();
+ lastAutoSignature={scope:autoScope,signature:planned.signature};
  updateAutoReviewActions();
- const note=planned.blueprintMatched?
-  "Admin ले राखेको Grid का प्रश्न प्रकार र अंक मिलाइएका छन्; CDC स्रोत शिक्षकले पुष्टि गर्नुपर्छ।":
+ const note=planned.exactGridMatched?
+  "CDC बाट उतारिएको Unit-wise Grid अनुसार Unit, प्रश्न संख्या, प्रकार, अङ्क र संज्ञानात्मक स्तर मिलेको छ; शिक्षकले मूल स्रोत पुष्टि गर्नुपर्छ।":
   "यो Custom Practice Draft हो, आधिकारिक CDC Grid को प्रमाणित प्रश्नपत्र होइन।";
  message("Auto Paper तयार: "+planned.questionCount+" प्रश्न, "+target+
   " पूर्णाङ्क, "+topicIds.length+" Topic, भाषा "+language+". "+note);
