@@ -68,4 +68,8 @@ assert.ok(js.includes("if(!expected.has(id)||seen.has(id))throw new Error('Unexp
 assert.ok(js.includes("inputs.length!==1)throw new Error('Component fields changed; reload')"),'Each configured component must appear exactly once for each student');
 assert.ok(js.includes("row.querySelectorAll('input[data-field]').length!==classMarkSettings.components.length"),'No unconfigured component input may appear');
 assert.ok(js.includes("for(const component of classMarkSettings.components)"),'Computer and all other subjects must use configured Examination Settings components');
+assert.ok(js.includes("if(saved.rosterReverified!==true)"),'UI must not claim confirmed Draft without post-commit verification');
+assert.ok(js.includes("ClassDraftPostSaveReviewError"),'UI must distinguish acknowledged Draft commits from uncertain final checks');
+assert.ok(js.includes("classDraftRevision=null;"),'Unknown Draft state must disable a blind retry');
+assert.ok(html.includes('saved revision before retrying'),'Draft post-save instructions missing');
 console.log('V47 full-class marks UI contract passed');

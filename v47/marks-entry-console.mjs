@@ -309,6 +309,7 @@ $('saveClassDraft').onclick=async()=>{
   });
   if(attempt!==epoch||request!==rosterRequest||actor!==selectedActor||schoolId!==selectedSchoolId||
      auth?.currentUser?.uid!==selectedActor.uid)return;
+  if(saved.rosterReverified!==true)throw Error('Saved Draft requires final verification');
   classDraftRevision=saved.revision;reviewPackage=null;
   $('downloadClassReview').disabled=true;$('downloadClassReviewExcel').disabled=true;
   $('saveClassDraft').disabled=true;
@@ -318,9 +319,11 @@ $('saveClassDraft').onclick=async()=>{
  }catch(error){
   if(attempt===epoch&&request===rosterRequest&&actor===selectedActor){
    reviewPackage=null;$('saveClassDraft').disabled=true;
-   $('classDraftStatus').textContent='Draft Save रोकियो: '+error.message+
-     '। कक्षा र Examination Settings पुनः लोड गरेर जाँच्नुहोस्।';
-   status('अंकको Draft सुरक्षित भएन। आधिकारिक नतिजामा परिवर्तन गरिएको छैन।');
+   classDraftRevision=null;
+   $('classDraftStatus').textContent=error.name==='ClassDraftPostSaveReviewError'
+     ? 'Draft Revision '+error.revision+' को Commit पुष्टि भएको छ, तर अन्तिम विद्यार्थी सूची/Revision जाँच असफल भयो। फेरि Save नगरी पहिले कक्षा Reload गरेर सुरक्षित Draft र Revision जाँच्नुहोस्। कारण: '+(error.cause?.message??error.message)
+     : 'Draft Save को स्थिति पुष्टि भएन: '+error.message+'। Network समस्या भए Save भइसकेको हुन सक्छ। फेरि Save गर्नु अघि कक्षा Reload गरी Revision जाँच्नुहोस्।';
+   status('आधिकारिक Marks/Grade मा परिवर्तन भएको छैन। Draft Save को अवस्था जाँच्नुपर्छ; तुरुन्त दोहोर्‍याएर Save नगर्नुहोस्।');
   }
  }finally{if(attempt===epoch)lock(false)}
 };

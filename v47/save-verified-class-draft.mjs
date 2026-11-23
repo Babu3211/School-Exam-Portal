@@ -7,6 +7,19 @@ import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
 import {validateConfiguredMarkComponents} from './configured-mark-preflight.mjs';
 import {completeClassDraftId,prepareCompleteClassDraft} from './complete-class-draft-document.mjs';
 import {validateSchoolId} from './school-paths.mjs';
+/** The transaction was acknowledged, but the current roster/session/saved
+ * revision cannot be confirmed. Never treat this as rollback or retry blindly. */
+export class ClassDraftPostSaveReviewError extends Error {
+ constructor({revision,rosterCount,cause}){
+  super('Class Draft revision '+revision+' may be saved, but post-commit verification failed; reload the class and saved revision before retrying.');
+  this.name='ClassDraftPostSaveReviewError';
+  this.revision=revision;
+  this.rosterCount=rosterCount;
+  this.committed=true;
+  this.reviewRequired=true;
+  this.cause=cause;
+ }
+}
 export async function saveVerifiedCompleteClassDraft({
  db,api,auth,actor,schoolId,classId,subjectId,examId,drafts,expectedRevision=0
 }){
@@ -92,10 +105,39 @@ export async function saveVerifiedCompleteClassDraft({
   check();
   tx.set(draftRef,{...planned.data,updatedAt:api.serverTimestamp()});
  });
- check();
+ // The write transaction has returned successfully. Network, auth or roster
+ // errors here cannot undo that commit. Re-read the exact written revision
+ // and the class membership; only then report a verified successful Draft.
+ try{
+  check();
+  const [savedSnap,freshRoster]=await Promise.all([
+   api.getDoc(draftRef),
+   loadCompleteClassRoster({db,api,actor,schoolId,classId})
+  ]);
+  check();
+  if(!savedSnap?.exists())throw Error('Committed Draft document missing');
+  const persisted=savedSnap.data();
+  if(persisted?.format!==planned.data.format||
+     persisted?.state!=='draft'||persisted?.schoolId!==schoolId||
+     persisted?.classId!==classId||persisted?.subjectId!==subjectId||
+     persisted?.examId!==examId||persisted?.settingsId!==id||
+     persisted?.updatedBy!==uid||persisted?.rosterCount!==planned.rosterCount||
+     persisted?.revision!==planned.data.revision||
+     JSON.stringify(persisted.entries)!==JSON.stringify(planned.data.entries))
+   throw Error('Persisted class Draft revision or entries changed after commit');
+  if(freshRoster.studentIds.length!==roster.studentIds.length||
+     freshRoster.studentIds.some((studentId,i)=>studentId!==roster.studentIds[i])||
+     freshRoster.students.some(student=>!isActiveEnrolledStudent(student)))
+   throw Error('Class roster changed during Draft Save');
+  await verify();
+  check();
+ }catch(cause){
+  throw new ClassDraftPostSaveReviewError({revision:planned.data.revision,
+   rosterCount:planned.rosterCount,cause});
+ }
  return Object.freeze({
   schoolId,classId,subjectId,examId,rosterCount:planned.rosterCount,
-  savedDraft:true,revision:planned.data.revision,updatedBy:uid,
+  savedDraft:true,rosterReverified:true,revision:planned.data.revision,updatedBy:uid,
   officialMarksWritten:false,publicationAllowed:false
  });
 }

@@ -89,6 +89,60 @@ for(const [override,regex] of [
  await assert.rejects(saveVerifiedCompleteClassDraft({...context,auth,api:f.api}),/session changed|Authentication changed|roster/i);
  assert.equal(f.writes.length,0);
 }
+// The successful Draft commit must be independently re-read and the
+// complete class roster verified after committing.
+{
+ const f=fixture(),before=f.api.getDocs;
+ let rosterReads=0,docReads=0;
+ f.api.getDocs=async (...args)=>{rosterReads++;return before(...args)};
+ const getDoc=f.api.getDoc;
+ f.api.getDoc=async key=>{if(key==='schools/'+schoolId+'/class_mark_drafts/9_computer_final')docReads++;return getDoc(key)};
+ const result=await saveVerifiedCompleteClassDraft({...context,api:f.api});
+ assert.equal(result.rosterReverified,true);
+ assert.equal(rosterReads,2);
+ assert.equal(docReads,1);
+ assert.equal(f.writes.length,1);
+}
+// Successful commits cannot be called rolled back when a final network read,
+// enrollment change, or Firebase identity switch prevents verification.
+for(const state of ['offline','enrollment','auth-switched','tampered-revision']){
+ const f=fixture(),auth={currentUser:{uid}};
+ let wrote=false;
+ const oldTx=f.api.runTransaction;
+ f.api.runTransaction=async (...args)=>{const result=await oldTx(...args);wrote=true;
+  if(state==='enrollment')f.store.set('schools/'+schoolId+'/students/s5',{schoolId,class:classId,active:true,name:'late-student'});
+  if(state==='auth-switched')auth.currentUser={uid:'different-account'};
+  if(state==='tampered-revision')f.store.get('schools/'+schoolId+'/class_mark_drafts/9_computer_final').revision=77;
+  return result;
+ };
+ const oldGetDoc=f.api.getDoc;
+ f.api.getDoc=async key=>{
+  if(wrote&&state==='offline'&&key.endsWith('/class_mark_drafts/9_computer_final'))throw Error('post-commit network unavailable');
+  return oldGetDoc(key);
+ };
+ // This mock enumerates the actual store so newly enrolled children appear.
+ if(state==='enrollment')f.api.getDocs=async()=>({docs:[...f.store.entries()]
+  .filter(([key,data])=>key.startsWith('schools/'+schoolId+'/students/')&&data.class===classId)
+  .map(([key,data])=>({id:key.split('/').at(-1),data:()=>data}))});
+ await assert.rejects(saveVerifiedCompleteClassDraft({...context,api:f.api,auth}),e=>{
+  assert.equal(e.name,'ClassDraftPostSaveReviewError',state);
+  assert.equal(e.committed,true,state);
+  assert.equal(e.reviewRequired,true,state);
+  assert.equal(e.revision,1,state);
+  assert.equal(e.rosterCount,4,state);
+  return true;
+ });
+ assert.equal(f.writes.length,1,'Committed class Draft must not be misrepresented as failed: '+state);
+}
+{
+ const f=fixture();
+ const getDoc=f.api.getDoc;
+ let txStarted=false;
+ f.api.runTransaction=async (...args)=>{txStarted=true;throw Error('transaction network unavailable')};
+ await assert.rejects(saveVerifiedCompleteClassDraft({...context,api:f.api}),/transaction network unavailable/);
+ assert.equal(txStarted,true);
+ assert.equal(f.writes.length,0);
+}
 const source=readFileSync(new URL('./save-verified-class-draft.mjs',import.meta.url),'utf8');
 assert.doesNotMatch(source,/['"]marks['"]|['"]component_marks['"]|publishedAt|gradeSheet/);
 assert.match(source,/runTransaction/);
