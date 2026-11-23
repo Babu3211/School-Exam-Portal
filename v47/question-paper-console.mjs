@@ -201,6 +201,17 @@ function initializeQuestionSelection(pack,indices){
  $('practiceTypeFilter').value='';$('practiceSelection').hidden=false;
  showQuestionChoices();
 }
+$('restoreRecommendedPractice').onclick=()=>{
+ if(!practicePack||!actor)return;
+ selectedQuestions=new Set(recommendedPracticeIndices(practicePack));
+ invalidateSelectedPreview();showQuestionChoices();
+ status('अभ्यास प्रश्नको पहिलेकै नमुना छनोट पुनः राखियो। Preview फेरि Update गर्नुहोस्।');
+};
+$('clearPracticeSelection').onclick=()=>{
+ if(!practicePack||!actor)return;
+ selectedQuestions.clear();invalidateSelectedPreview();showQuestionChoices();
+ status('प्रश्न छनोट खाली गरिएको छ। कुनै प्रश्नपत्र Save गरिएको छैन।');
+};
 $('practiceUnitFilter').onchange=showQuestionChoices;
 $('practiceTypeFilter').onchange=showQuestionChoices;
 $('updatePractice').onclick=async()=>{

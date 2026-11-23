@@ -20,6 +20,12 @@ for(const grade of [8,10]){
  assert.equal(paper.official,false);
  assert.equal(paper.questionCount,4);
  assert.equal(paper.totalMarks,review.totalMarks);
+ const printHtml=printReadOnlyPracticePaper({paper});
+ assert.match(printHtml,/data:image\/svg\+xml/);
+ assert.match(printHtml,/background-repeat:repeat/);
+ assert.match(printHtml,/break-inside:auto/);
+ assert.doesNotMatch(printHtml,/\.sheet\{break-inside:avoid\}/,'Whole paper must paginate across A4 sheets');
+ assert.match(printHtml,/UNREVIEWED ORIGINAL PRACTICE/);
  assert.match(printReadOnlyPracticePaper({paper}),/NOT AN OFFICIAL CDC QUESTION PAPER/);
  assert.equal(summarizeOriginalPracticeSelection(pack,[]).valid,false);
  assert.throws(()=>summarizeOriginalPracticeSelection(pack,[0,0]),/duplicate/);
@@ -30,7 +36,7 @@ for(const grade of [8,10]){
  assert.throws(()=>listOriginalPracticeChoices(modified),/Only preserved V46/);
 }
 const js=get('./question-paper-console.mjs'),html=get('./question-paper.html');
-for(const id of ['practiceSelection','practiceUnitFilter','practiceTypeFilter','practiceQuestionList',
+for(const id of ['restoreRecommendedPractice','clearPracticeSelection','practiceSelection','practiceUnitFilter','practiceTypeFilter','practiceQuestionList',
  'practiceSelectionCount','updatePractice'])assert.match(html,new RegExp('id="'+id+'"'));
 assert.match(js,/listOriginalPracticeChoices\(/);
 assert.match(js,/summarizeOriginalPracticeSelection\(/);
@@ -40,6 +46,10 @@ assert.match(js,/invalidateSelectedPreview\(\)/);
 assert.match(js,/verifyAgain\(request,member\)/);
 assert.match(js,/pack!==practicePack/);
 assert.match(js,/description\.textContent=/);
+assert.match(js,/restoreRecommendedPractice/);
+assert.match(js,/clearPracticeSelection/);
+assert.match(js,/selectedQuestions\.clear\(\)/);
+assert.match(js,/new Set\(recommendedPracticeIndices\(practicePack\)\)/);
 assert.match(js,/maximum|Maximum 40/);
 assert.doesNotMatch(js,/\.setDoc\(|\.addDoc\(|\.updateDoc\(|\.deleteDoc\(|\.writeBatch\(/);
 assert.doesNotMatch(html,/Official Question Paper Generator|Publish Questions/);

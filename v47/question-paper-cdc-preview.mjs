@@ -107,9 +107,14 @@ export function printReadOnlyPracticePaper({paper,showAnswers=false}){
     (showAnswers?'<p class="answer">Teacher-review answer: '+esc(q.answer)+'</p>':'')+'</li>';
  }).join('');
  if(marks!==paper.totalMarks)throw Error('Practice marks changed after preview');
+ const watermark='data:image/svg+xml,'+encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="390" height="225" viewBox="0 0 390 225">'+
+  '<g transform="rotate(-23 195 112)"><text x="25" y="120" font-family="Arial,sans-serif"'+
+  ' font-size="27" font-weight="bold" fill="#b91c1c" opacity=".13">UNREVIEWED PRACTICE</text></g></svg>'
+ );
  return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow">'+
  '<title>UNREVIEWED SMSS Practice Paper</title>'+
- '<style>@page{size:A4;margin:14mm}body{font:14px system-ui,sans-serif;color:#172238}.sheet{position:relative;isolation:isolate;min-height:255mm}.sheet:before{content:"UNREVIEWED PRACTICE";position:absolute;inset:0;z-index:-1;opacity:.10;font-size:40px;transform:rotate(-20deg);pointer-events:none}.warning{border:2px solid #b81c1c;padding:10px;text-align:center}h1,h2,p{text-align:center}ol{padding-left:25px}ol>li{margin:13px 0}.answer{background:#f0f2f7;text-align:left;padding:5px}@media print{.sheet{break-inside:avoid}}</style></head><body><main class="sheet">'+
+ '<style>@page{size:A4;margin:14mm}html,body{margin:0}body{font:14px system-ui,sans-serif;color:#172238;background-image:url("'+watermark+'");background-repeat:repeat;background-size:390px 225px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.sheet{position:relative;min-height:255mm}.warning{border:2px solid #b81c1c;padding:10px;text-align:center;background:#fff}h1,h2,p{text-align:center}ol{padding-left:25px}ol>li{margin:13px 0;break-inside:avoid;page-break-inside:avoid}.answer{background:#f0f2f7;text-align:left;padding:5px}@media print{.sheet{break-inside:auto;page-break-inside:auto}}</style></head><body><main class="sheet">'+
  '<h1>'+esc(paper.schoolName)+'</h1><h2>Class '+esc(paper.grade)+' · '+esc(paper.subject)+'</h2>'+
  '<p class="warning">UNREVIEWED ORIGINAL PRACTICE — NOT AN OFFICIAL CDC QUESTION PAPER</p>'+
  '<p>Questions: '+esc(paper.questionCount)+' | Total marks: '+esc(paper.totalMarks)+
