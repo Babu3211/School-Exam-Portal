@@ -983,6 +983,7 @@ async function generateOptionalMathCompositePaper(guide){
     cognitiveLevel:String(s.cognitiveLevel),
     textNe:String(s.textNe||""),textEn:String(s.textEn||""),
     answerNe:String(s.answerNe||""),answerEn:String(s.answerEn||""),
+    ...(s.correctOption?{correctOption:String(s.correctOption)}:{}),
     ...(Array.isArray(s.optionsNe)?{optionsNe:[...s.optionsNe]}:{}),
     ...(Array.isArray(s.optionsEn)?{optionsEn:[...s.optionsEn]}:{})
    }))
