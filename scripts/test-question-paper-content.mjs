@@ -73,6 +73,10 @@ for (const grade of [8, 10]) {
 
 
 assert.equal(register.schemaVersion, 1, "CDC source register schema");
+assert.match(questionBuilder, /id="qpQuestionExcelTemplateBtn"/);
+assert.match(questionBuilder, /id="qpQuestionExcelFile"/);
+assert.match(questionBuilder, /ExcelJS/);
+assert.match(appShell, /cdc-question-excel\.mjs/);
 assert.ok(Array.isArray(register.sources) && register.sources.length >= 15, "CDC source register must contain grade-wise sources");
 for (const [index, source] of register.sources.entries()) {
   assert.ok(Array.isArray(source.grades) && source.grades.length, `source ${index + 1}: grade list required`);
