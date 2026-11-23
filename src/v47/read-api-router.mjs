@@ -8,6 +8,7 @@ import {createV47MarksHttpHandler} from "./marks-http-handler.mjs";
 import {createV47AttendanceHttpHandler} from "./attendance-http-handler.mjs";
 import {createV47RecordsHttpHandler} from "./records-http-handler.mjs";
 import {createV47OfficialMarksHttpHandler} from "./official-marks-http-handler.mjs";
+import {createV47PublicationReviewHttpHandler} from "./publication-review-http-handler.mjs";
 export function createV47ReadApiRouter({auth,firestore}) {
  const handlers=new Map([
   ["/api/v47/schools",createV47SchoolsHttpHandler({auth,firestore})],
@@ -16,6 +17,7 @@ export function createV47ReadApiRouter({auth,firestore}) {
   // Instantiate the transaction-only official reader only for its own route.
   // Legacy read handlers also run with minimal read-only test adapters.
   ["/api/v47/official-marks",request=>createV47OfficialMarksHttpHandler({auth,firestore})(request)],
+  ["/api/v47/publication-review",request=>createV47PublicationReviewHttpHandler({auth,firestore})(request)],
   ["/api/v47/attendance",createV47AttendanceHttpHandler({auth,firestore})],
   ["/api/v47/records",createV47RecordsHttpHandler({auth,firestore})]
  ]);

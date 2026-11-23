@@ -11,6 +11,7 @@ import {commitTrustedOfficialClassPublication} from './server-official-publicati
 import {fingerprintConfiguredClassReview} from './server-class-review-fingerprint.mjs';
 import {officialClassPointerId} from './server-publication-authoritative-preflight.mjs';
 import {loadCommittedOfficialClassMarks} from './server-official-marks-firestore-loader.mjs';
+import {createV47PublicationReviewHttpHandler} from '../src/v47/publication-review-http-handler.mjs';
 const allowedHosts=['127.0.0.1:8081','localhost:8081','[::1]:8081'];
 const localEmulator=allowedHosts.includes(process.env.FIRESTORE_EMULATOR_HOST);
 if(!localEmulator){
@@ -60,6 +61,21 @@ try{
  assert.equal(authoritative.settings.components[1].fullMarks,36);
  assert.equal(authoritative.settings.components[2].fullMarks,10);
  const review=fingerprintConfiguredClassReview(authoritative);
+ // Actual Admin SDK read-only review endpoint, no approval or writes.
+ const publicationReview=createV47PublicationReviewHttpHandler({
+  auth:{verifyIdToken:async(token,revoked)=>{
+   assert.equal(revoked,true);
+   if(token==='revoked')throw Error('Revoked');
+   return {uid:token,firebase:{sign_in_provider:'password'}};
+  }},
+  firestore:db
+ });
+ const approvedReview=await publicationReview({method:'GET',headers:{authorization:'Bearer '+actorUid},query:scope});
+ assert.equal(approvedReview.status,200);
+ assert.equal(approvedReview.body.review.digest,review.digest);
+ assert.equal(approvedReview.body.publishAuthorized,false);
+ assert.equal((await publicationReview({method:'GET',headers:{authorization:'Bearer viewer1'},query:scope})).status,403);
+
  const confirmation=Object.fromEntries(
   ['format','schoolId','classId','subjectId','examId','settingsRevision','rosterRevision','digestAlgorithm','digest'].map(k=>[k,review[k]])
  );
