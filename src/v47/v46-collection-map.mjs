@@ -7,6 +7,9 @@ import {assertSchoolId} from "./tenant-domain.mjs";
 export const V46_COLLECTION_POLICY=Object.freeze({
  audit_logs:"tenant-server-managed",
  attendance:"tenant-private",
+ // V46 CDC classroom observations contain identifiable student assessments;
+ // school-scoped and private, never a public-results publishing collection.
+ cdc_observations:"tenant-private",
  certificates:"tenant-private",
  classes:"tenant-private",
  exams:"tenant-private",
