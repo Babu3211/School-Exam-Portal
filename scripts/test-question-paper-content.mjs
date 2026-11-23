@@ -70,6 +70,12 @@ for (const [grade, url] of [
 }
 
 
+const archivedGrade8=register.sources.find(s=>s.grades.length===1&&s.grades[0]===8&&
+ s.version.includes('२०७८')&&s.url.includes('id=13717'));
+assert.ok(archivedGrade8,'Historic CDC Grade8 Science Model and marking key must be tracked');
+assert.match(archivedGrade8.status,/requires_visual_and_current_2082_grid_reconciliation/,
+ 'Historical source must not be silently used as 2083 CDC Exact');
+assert.ok(!archivedGrade8.unitGrid,'Historic grid/model discrepancy may not create fabricated rows');
 const questionBuilder = readFileSync(new URL("../cdc-question-paper.js", import.meta.url), "utf8");
 const appShell = readFileSync(new URL("../sw.js", import.meta.url), "utf8");
 const fs = await import("node:fs");
@@ -101,6 +107,7 @@ assert.match(questionBuilder, /id="qpQuestionExcelFile"/);
 assert.match(questionBuilder, /ExcelJS/);
 assert.match(appShell, /cdc-question-excel\.mjs/);
 assert.match(appShell, /cdc-grid-source-index\.mjs/);
+assert.match(appShell, /cdc-grade8-science-model-audit\.mjs/);
 assert.match(appShell, /cdc-optional-math-composite\.mjs/);
 assert.match(appShell, /cdc-optional-math-original-practice\.mjs/);
 assert.match(appShell, /cdc-optional-math-render\.mjs/);
