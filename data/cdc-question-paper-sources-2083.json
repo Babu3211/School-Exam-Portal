@@ -441,6 +441,17 @@
       "status": "official_CDC_2082_area_and_group_totals_transcribed_composite_WCA_CCA_not_yet_supported",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/Specification%20Grid%20and%20Model%20Question-G9-Opt.%20Math-web_nrbp00y.pdf",
       "note": "Official government PDF page 1 verified: 75 marks, 3h, 11 objective 1-mark items (11), 12 WCA grouped questions (40), 4 CCA cross-content grouped questions (24), 6 content areas marks 17/17/20/7/7/7, domains K16% U24% A40% HA20%, each composite question 2-4 subquestions. Existing flat MCQ/short/long allocator MUST NOT claim CDC compliance. Teacher needs no manual Excel grid entry; grouped-question generation remains disabled."
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "ऐच्छिक गणित",
+      "kind": "specification_grid_model_questions_and_answer_key",
+      "version": "2083",
+      "status": "official_CDC_2083_model_page_checked_secondary_pdf_grid_crosschecked_original_attachment_pending",
+      "url": "https://moecdc.gov.np/content/659/class-10th-optional-mathematics-specification-table--model/",
+      "note": "CDC official page dated 23 Asar 2083 confirms newer Grade10 Optional Mathematics Grid, Model Question and Marking Scheme. Secondary-hosted PDF reproduces 2083 model with 11 Objective, 12 WCA, 4 CCA, 75 marks/3hr, area marks 17/17/20/7/7/7, identical to 2082 published specification. Exact original 2083 government PDF attachment unavailable in machine-readable page; do not label PDF copy as government authenticated. SMSS only creates original practice questions, not official CDC questions."
     }
   ],
   "completion": {
@@ -458,7 +469,8 @@
     "grade10SciencePracticePack": "seed-file-created-admin-import-available-2080-textbook-reference-check-2082-modified-book-and-grid",
     "sourceCorrection": "A Grade 10 textbook PDF (1692097269.pdf) was wrongly tagged as Grade 9 in an old source-register entry. Removed the Grade 9 entry; keep actual Grade 9 packs blocked until original Grade 9 textbook and grid are checked.",
     "verifiedOptionalComputerGrid": "Official Grade 9/10 Computer Science grid PDFs transcribed unit/type/marks/cognitive levels for 50-mark paper; development only, source checked, teacher answer review required; other subjects not configured.",
-    "optionalMath2082": "Official Grade 9/10 Optional Math source area totals and WCA/CCA composite question groups verified and bundled; exact automated grouped question generation pending. Not equivalent to simple MCQ/Short/Long."
+    "optionalMath2082": "Official Grade 9/10 Optional Math source area totals and WCA/CCA composite question groups verified and bundled; exact automated grouped question generation pending. Not equivalent to simple MCQ/Short/Long.",
+    "grade10OptionalMathModel2083": "Grade10 CDC 2083 publication confirmed. Secondary-hosted model PDF table compared against 2082 original government grid: all group counts, group marks, 6 area marks, cognitive percentage identical; original CDC 2083 PDF download not yet independently accessed. Printer follows CDC Q1(A-K), Q2-13, Q14-17."
   },
   "practicePacks": [
     {
