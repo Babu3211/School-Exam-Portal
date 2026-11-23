@@ -751,6 +751,17 @@ async function generateSmartPaper(){
  const autoScope=JSON.stringify([selectedClass,selectedSubject,selectedSection,
   target,language,mode,topicIds.slice().sort(),selectedBlueprint?.id||""]);
  const previousSignature=lastAutoSignature?.scope===autoScope?lastAutoSignature.signature:"";
+ // Exclude matching papers already saved for this class, subject, section and
+ // full marks (up to the 30 history rows loaded for the current teacher).
+ // This survives page refresh; do not silently recycle a previous paper.
+ const avoidSignatures=[...new Set(savedPapers.filter(p=>
+  p.className===selectedClass&&p.subject===selectedSubject&&
+  p.section===selectedSection&&Number(p.fullMarks)===target)
+  .map(p=>{
+   if(!Array.isArray(p.questions)||!p.questions.length||
+      p.questions.some(q=>!String(q?.questionId||"").trim()))return "";
+   return p.questions.map(q=>String(q.questionId)).sort().join("|");
+  }).filter(Boolean))].slice(0,30);
  const selection=verifiedQuestionSelection,sessionUid=auth.currentUser?.uid,
   paperTitle=$("qpPaperTitle").value.trim(),academicYear=$("qpPaperYear").value.trim(),
   durationMinutes=Number($("qpPaperDuration").value);
@@ -761,7 +772,8 @@ async function generateSmartPaper(){
   questions:[...questionRows,...bundledPracticeQuestions],
   topicIds,fullMarks:target,language,
   blueprint:selectedBlueprint,requireExactGrid:strict,previousSignature,
-  gradeNumber:gradeNumber(selectedClass),subject:selectedSubject
+  gradeNumber:gradeNumber(selectedClass),subject:selectedSubject,
+  avoidSignatures
  });
  const header=await schoolHeader();
  // A slow school-profile read must not allow an earlier class, subject, user,
