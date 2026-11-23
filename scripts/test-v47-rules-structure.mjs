@@ -35,8 +35,8 @@ for(const guard of [
  'function teacherMayReadDraft()',
  'get(duty).data.get(\'active\',false) == true',
  "get(currentTeacherAssignment()).data.get('active', false) == true",
- "get(config).data.get('active',false) == true",
- "request.resource.data.revision == resource.data.get('revision',0) + 1",
+ "get(config).data.get('active', false) == true",
+ "request.resource.data.revision == resource.data.get('revision', 0) + 1",
  'allow delete: if false;'
 ])assert.ok(teacherDraftBlock.includes(guard),'Teacher Draft rule missing '+guard);
 assert.equal((rules.match(/match \/teacher_mark_drafts\/\{teacherUid\}/g)||[]).length,1,
