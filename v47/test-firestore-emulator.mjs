@@ -305,6 +305,59 @@ try{
  await assertFails(setDoc(mark(admin,'12345678'),{schoolId:'12345678',studentId:'s1',value:42}));
  await assertFails(setDoc(doc(admin,'schools','12345678','component_marks','9:s1:computer'),{schoolId:'12345678',studentId:'s1',value:42}));
 
+ // A Teacher owns ONLY their own verified subject/class DRAFT. This does
+ // not grant any official marks write, publication or cross-teacher access.
+ await env.withSecurityRulesDisabled(async context=>{
+  await setDoc(doc(context.firestore(),'schools','12345678','teacher_assignments',
+   '12345678:teacher_12345678:9:computer'),{
+   schoolId:'12345678',uid:'teacher_12345678',classId:'9',subjectId:'computer',active:true
+  });
+ });
+ const teacherDraft=(database,uid='teacher_12345678',sid='12345678')=>
+  doc(database,'schools',sid,'teacher_mark_drafts',uid,'class_drafts','9_computer_final');
+ const teacherEntries=[{studentId:'s1',isAbsent:false,
+  values:{participation:7,practical:63,term:30},totalObtained:100}];
+ const teacherPayload={format:'smss-v47-teacher-class-draft-v1',
+  state:'draft',schoolId:'12345678',classId:'9',subjectId:'computer',examId:'final',
+  settingsId:'9_computer_final',rosterCount:1,revision:1,
+  updatedBy:'teacher_12345678',updatedAt:serverTimestamp(),entries:teacherEntries};
+ await assertFails(setDoc(teacherDraft(anon),teacherPayload));
+ await assertFails(setDoc(teacherDraft(viewer),teacherPayload));
+ await assertFails(setDoc(teacherDraft(admin),teacherPayload));
+ await assertFails(setDoc(teacherDraft(db('admin_87654321')),teacherPayload));
+ await assertFails(setDoc(teacherDraft(teacher,'anotherTeacher'),teacherPayload));
+ await assertFails(setDoc(teacherDraft(teacher),{...teacherPayload,updatedBy:'admin_12345678'}));
+ await assertFails(setDoc(teacherDraft(teacher),{...teacherPayload,schoolId:'87654321'}));
+ await assertFails(setDoc(teacherDraft(teacher),{...teacherPayload,revision:2}));
+ await assertFails(setDoc(teacherDraft(teacher),{...teacherPayload,entries:[]}));
+ await assertFails(setDoc(teacherDraft(teacher),{...teacherPayload,state:'published'}));
+ await assertFails(setDoc(teacherDraft(teacher),{...teacherPayload,updatedAt:'fake'}));
+ await assertSucceeds(setDoc(teacherDraft(teacher),teacherPayload));
+ await assertSucceeds(getDoc(teacherDraft(teacher)));
+ await assertSucceeds(getDoc(teacherDraft(admin)));
+ await assertSucceeds(getDoc(teacherDraft(superDb)));
+ await assertFails(getDoc(teacherDraft(viewer)));
+ await assertFails(getDoc(teacherDraft(anon)));
+ await assertFails(getDoc(teacherDraft(db('admin_87654321'))));
+ await assertFails(getDoc(teacherDraft(teacher,'anotherTeacher')));
+ await assertFails(getDocs(collection(teacher,'schools','12345678','teacher_mark_drafts',
+   'teacher_12345678','class_drafts')));
+ await assertFails(updateDoc(teacherDraft(viewer),{revision:2,updatedAt:serverTimestamp()}));
+ await assertFails(updateDoc(teacherDraft(admin),{revision:2,updatedAt:serverTimestamp()}));
+ await assertFails(updateDoc(teacherDraft(teacher),{revision:3,updatedAt:serverTimestamp()}));
+ await assertFails(updateDoc(teacherDraft(teacher),{state:'published',revision:2,updatedAt:serverTimestamp()}));
+ await assertFails(updateDoc(teacherDraft(teacher),{classId:'10',revision:2,updatedAt:serverTimestamp()}));
+ await assertFails(updateDoc(teacherDraft(teacher),{schoolId:'87654321',revision:2,updatedAt:serverTimestamp()}));
+ await assertSucceeds(updateDoc(teacherDraft(teacher),{revision:2,updatedAt:serverTimestamp(),entries:teacherEntries}));
+ const teacherAssign=doc(admin,'schools','12345678','teacher_assignments',
+  '12345678:teacher_12345678:9:computer');
+ await assertSucceeds(updateDoc(teacherAssign,{active:false}));
+ await assertFails(updateDoc(teacherDraft(teacher),{revision:3,updatedAt:serverTimestamp()}));
+ await assertSucceeds(updateDoc(teacherAssign,{active:true}));
+ await assertSucceeds(updateDoc(teacherDraft(teacher),{revision:3,updatedAt:serverTimestamp()}));
+ await assertFails(deleteDoc(teacherDraft(teacher)));
+ await assertFails(setDoc(mark(teacher,'12345678'),{schoolId:'12345678',studentId:'s1',value:44}));
+
  // Server-side staged marks must NEVER leak through client Firestore rules.
  // Verified staging manifest is also hidden from all client roles.
  // Seed a realistic staged batch as a trusted emulator Admin SDK would.
