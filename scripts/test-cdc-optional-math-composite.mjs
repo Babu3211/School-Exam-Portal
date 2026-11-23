@@ -11,7 +11,7 @@ const crossParts=[
 ];
 function fixture(grade,subject,version){
  const topics=optionalMathAreaTopics(grade,subject).map(x=>x.id+'_0');
- const out=[],put=(group,units,marks,index)=>{
+ const out=[],put=(group,units,index)=>{
   const parts=units.map(([unitCode,mark],part)=>({
    unitCode:String(unitCode),marks:mark,cognitiveLevel:'knowledge',
    textNe:'कृत्रिम '+grade+' '+group+' '+index+' भाग '+part+' विकल्प '+version+' के हो?',
