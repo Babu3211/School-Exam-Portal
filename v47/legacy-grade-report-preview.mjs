@@ -50,9 +50,18 @@ export function prepareLegacyGradeReport({schoolId,school,classNo,term,students,
   subjects:subjects.map(s=>s.name),records,
   creditFor:name=>subs.get(iemisSubjectKey(name))?.creditHour??0,
   componentsFor:name=>iemisEntrySchema(classNo,termMap[term],name)};
+ // A 1,500-student school must not render three large tables on every
+ // preview request. Keep V46 verification eager, render each additional mode
+ // only when the corresponding page actually asks for it, then cache it.
+ const ledgerCache=new Map([['grade',ledger]]);
+ const renderMode=mode=>{
+  if(!ledgerCache.has(mode))ledgerCache.set(mode,renderV46TenantLedger({...completeInput,term,mode,academicYear:'2083'}));
+  return ledgerCache.get(mode);
+ };
  const ledgers=Object.freeze({grade:ledger,
-  number:renderV46TenantLedger({...completeInput,term,mode:'number',academicYear:'2083'}),
-  entry:renderV46TenantLedger({...completeInput,term,mode:'entry',academicYear:'2083'})});
+  get number(){return renderMode('number')},
+  get entry(){return renderMode('entry')}});
+
  const recordIndex=new Map(records.map(r=>[JSON.stringify([r.studentId,iemisSubjectKey(r.subject)]),r]));
  const excelFor=mode=>{
   if(!['number','entry'].includes(mode))throw Error('Unsupported ledger Excel mode');
