@@ -45,3 +45,33 @@ jobs:
             echo 'They do not replace real Firebase Admin SDK emulator transactions, browser behavior, CDC/IEMIS parity or V47 production readiness.'
             echo 'No deployment or production data writes occur in this workflow.'
           } >> "$GITHUB_STEP_SUMMARY"
+  publication-admin-emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install Firestore emulator and Admin SDK dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: Run real Firebase Admin SDK publication transaction on isolated emulator
+        env:
+          NODE_OPTIONS: --unhandled-rejections=strict
+        run: |
+          npx firebase emulators:exec --config v47/firebase.v47.json \
+            --project smss-v47-marks-local-ci --only firestore \
+            "node v47/test-server-publication-admin-emulator.mjs"
+      - name: Explain boundary
+        if: always()
+        run: |
+          {
+            echo '## Isolated Firebase Admin SDK publication emulator'
+            echo 'Real transaction reads, 101-student school-scoped staging and atomic pointer/header/audit are exercised only in a local emulator.'
+            echo 'No hosting deployment, real Firebase credentials or production Firestore writes.'
+            echo 'This is NOT full CDC/IEMIS parity, browser E2E, transaction-load approval for 1500 students or production release.'
+          } >> "$GITHUB_STEP_SUMMARY"
