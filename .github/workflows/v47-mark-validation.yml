@@ -129,7 +129,8 @@ jobs:
             exit 1
           fi
           grep -q 'V47 PRODUCTION RELEASE BLOCKED' /tmp/v47-release-gate.log
-          grep -q 'Full-class marks save is limited' /tmp/v47-release-gate.log
+          grep -q 'Legacy official mark service is limited to three students' /tmp/v47-release-gate.log
+          grep -q 'full-class Draft covers up to 1500 but is NOT official Marks Publication' /tmp/v47-release-gate.log
           grep -q 'Firestore marks writes are disabled' /tmp/v47-release-gate.log
           grep -q 'Computer component marks saving is disabled' /tmp/v47-release-gate.log
 
