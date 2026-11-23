@@ -252,6 +252,353 @@ service cloud.firestore {
           && assignment.get('subjectId','') == data.subjectId
           && assignment.get('active',true) == true;
       }
+      // Teacher marks are unapproved DRAFTS in an isolated per-teacher path.
+      // A Teacher can modify ONLY their own assigned class/subject/term and
+      // never official marks, an admin draft, or another teacher's draft.
+      // Rules cannot validate every entry: publication stays DISABLED.
+      match /teacher_mark_drafts/{teacherUid} {
+        allow read, write: if false;
+        match /class_drafts/{id} {
+          function currentTeacherAssignment() {
+            return /databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + teacherUid + ':' + request.resource.data.classId + ':' + request.resource.data.subjectId);
+          }
+          function validTeacherDraft() {
+            let d = request.resource.data;
+            let config = /databases/$(database)/documents/schools/$(sid)/mark_settings/$(id);
+            let subject = /databases/$(database)/documents/schools/$(sid)/subjects/$(d.subjectId);
+            return d.keys().hasOnly(['format','state','schoolId','classId','subjectId','examId',
+                'settingsId','rosterCount','revision','updatedBy','updatedAt','entries'])
+              && d.keys().hasAll(['format','state','schoolId','classId','subjectId','examId',
+                'settingsId','rosterCount','revision','updatedBy','updatedAt','entries'])
+              && d.format == 'smss-v47-teacher-class-draft-v1'
+              && d.state == 'draft'
+              && d.schoolId == sid
+              && d.classId in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+              && d.subjectId is string && d.subjectId.matches('^[A-Za-z0-9_-]{1,128}
+      // Security Rules cannot inspect all 1,500 component scores; independent
+      // authoritative review remains required before any future publication.
+      match /class_mark_drafts/{id} {
+        function validClassDraft() {
+          let d = request.resource.data;
+          let config = /databases/$(database)/documents/schools/$(sid)/mark_settings/$(id);
+          return d.keys().hasOnly(['format','state','schoolId','classId','subjectId','examId',
+              'settingsId','rosterCount','revision','updatedBy','updatedAt','entries'])
+            && d.keys().hasAll(['format','state','schoolId','classId','subjectId','examId',
+              'settingsId','rosterCount','revision','updatedBy','updatedAt','entries'])
+            && d.format == 'smss-v47-complete-class-draft-v1'
+            && d.state == 'draft'
+            && d.schoolId == sid
+            && d.classId in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && d.subjectId is string && d.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && d.examId in ['weekly','monthly','1st','2nd','3rd','final']
+            && id == d.classId + '_' + d.subjectId + '_' + d.examId
+            && id.size() <= 128 && d.settingsId == id
+            && d.rosterCount is int && d.rosterCount >= 1 && d.rosterCount <= 1500
+            && d.entries is list && d.entries.size() == d.rosterCount
+            && d.revision is int && d.revision >= 1 && d.revision <= 1000000001
+            && d.updatedBy == request.auth.uid
+            && d.updatedAt == request.time
+            && exists(config)
+            && get(config).data.get('id', '') == id
+            && get(config).data.get('schoolId', '') == sid
+            && get(config).data.get('classId', '') == d.classId
+            && get(config).data.get('subjectId', '') == d.subjectId
+            && get(config).data.get('examId', '') == d.examId
+            && get(config).data.get('active', false) == true;
+        }
+        // Drafts contain unpublished assessment scores: do not expose them to
+        // teachers or Viewers. Super Admin may audit; only School Admin writes.
+        allow get, list: if canAdmin(sid);
+        allow create: if memberRole(sid, 'school_admin')
+          && validClassDraft() && request.resource.data.revision == 1;
+        allow update: if memberRole(sid, 'school_admin')
+          && resource.data.get('schoolId', '') == sid
+          && resource.data.get('state', '') == 'draft'
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['entries','rosterCount','revision','updatedBy','updatedAt'])
+          && request.resource.data.revision == resource.data.get('revision', 0) + 1
+          && validClassDraft();
+        allow delete: if false;
+      }
+      // Fail closed: individual mark writes bypass complete-class validation.
+      // Re-enable only after an audited all-student publish protocol and emulator tests.
+      // Reads remain available to existing school members.
+      match /marks/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      function teacherAttendanceAllowed(sid, id) {
+        return memberRole(sid, 'teacher')
+          && request.resource.data.keys().hasOnly(['schoolId','studentId','class','date','present'])
+          && request.resource.data.keys().hasAll(['schoolId','studentId','class','date','present'])
+          && request.resource.data.schoolId == sid
+          && request.resource.data.studentId is string
+          && request.resource.data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
+          && request.resource.data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+          && request.resource.data.date is string
+          && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+          && request.resource.data.present is bool
+          && id == request.resource.data.date + '_' + request.resource.data.studentId
+          && exists(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance'))
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('active', false) == true
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('schoolId', '') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('uid', '') == request.auth.uid
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('classId', '') == request.resource.data.class
+          && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('subjectId', '') == 'attendance'
+          && exists(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId))
+          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('schoolId', '') == sid
+          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('class', '') == request.resource.data.class;
+      }
+      match /attendance/{id} {
+        function validAdminAttendance() {
+          let data = request.resource.data;
+          let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(data.studentId);
+          return data.keys().hasOnly(['schoolId','studentId','class','date','present'])
+            && data.keys().hasAll(['schoolId','studentId','class','date','present'])
+            && data.schoolId == sid
+            && data.studentId is string
+            && data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && data.date is string
+            && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+            && data.present is bool
+            && id == data.date + '_' + data.studentId
+            && exists(studentPath)
+            && get(studentPath).data.get('schoolId','') == sid
+            && get(studentPath).data.get('class','') == data.class;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if (memberRole(sid, 'school_admin') && validAdminAttendance()) || teacherAttendanceAllowed(sid, id);
+        // Assigned Teachers may correct ONLY Present/Absent for an enrolled
+        // student in their active, same-school attendance class. Identity,
+        // class, date, tenant and any extra fields are immutable.
+        allow update: if immutableSchool(sid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['present'])
+          && request.resource.data.present is bool
+          && (memberRole(sid, 'school_admin') || teacherAttendanceAllowed(sid, id));
+        allow delete: if false;
+      }
+      match /exams/{id} {
+        function validExamTerm() {
+          return id in ['weekly', 'monthly', '1st', '2nd', '3rd', 'final']
+            && request.resource.data.keys().hasOnly(['schoolId', 'term'])
+            && request.resource.data.keys().hasAll(['schoolId', 'term'])
+            && request.resource.data.schoolId == sid
+            && request.resource.data.term == id;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if memberRole(sid, 'school_admin') && validExamTerm();
+        // Exam terms are create-only until audited dependent-record deletion is implemented.
+        allow update, delete: if false;
+      }
+      // Dynamic components are defined by each school's verified subject/exam settings.
+      // No fixed Computer maxima or alternate per-student write path is permitted.
+      // A complete-class audited server publication gate is still required.
+      match /component_marks/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /subjects/{id} {
+        function validSubject() {
+          let data = request.resource.data;
+          return data.keys().hasAll(['schoolId','name','class','active','creditHour','theoryFullMarks','practicalFullMarks'])
+            && data.schoolId == sid
+            && data.creditHour is number && data.creditHour > 0 && data.creditHour <= 100
+            && data.theoryFullMarks is number && data.theoryFullMarks >= 0
+            && data.practicalFullMarks is number && data.practicalFullMarks >= 0
+            && data.name is string && data.name.size() >= 2 && data.name.size() <= 160
+            && data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && data.active == true;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validSubject();
+        // Existing subjects may be missing creditHour. School Admin may add only
+        // this missing field; no other subject or marks configuration may change.
+        allow update: if canAdmin(sid)
+          && resource.data.get('schoolId','') == sid
+          && !resource.data.keys().hasAny(['creditHour'])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['creditHour'])
+          && request.resource.data.creditHour is number
+          && request.resource.data.creditHour > 0 && request.resource.data.creditHour <= 100;
+        allow delete: if false;
+      }
+      match /subject_assignments/{id} {
+        function validAssignment() {
+          let data = request.resource.data;
+          let studentPath = /databases/$(database)/documents/schools/$(sid)/students/$(data.studentId);
+          let subjectPath = /databases/$(database)/documents/schools/$(sid)/subjects/$(data.subjectId);
+          return data.keys().hasOnly(['schoolId','studentId','subjectId','class','active'])
+            && data.keys().hasAll(['schoolId','studentId','subjectId','class'])
+            && data.schoolId == sid
+            && data.studentId is string && data.studentId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && data.subjectId is string && data.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && data.class in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && data.get('active',true) is bool
+            && id == data.studentId + ':' + data.subjectId
+            && exists(studentPath) && exists(subjectPath)
+            && get(studentPath).data.get('schoolId','') == sid
+            && get(studentPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('schoolId','') == sid
+            && get(subjectPath).data.get('class','') == data.class
+            && get(subjectPath).data.get('active',true) == true;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if canAdmin(sid) && validAssignment();
+        allow update, delete: if false;
+      }
+      // Legacy V46 collections: explicit, tenant-contained READ ONLY compatibility.
+      // Never grant write until each V46 schema and cross-school authorization is audited.
+      match /audit_logs/{id} {
+        allow get, list: if canAdmin(sid);
+        allow create, update, delete: if false;
+      }
+      match /certificates/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /school_public_branding/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /school_gallery/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /user_roles/{id} {
+        allow get, list: if canAdmin(sid);
+        allow create, update, delete: if false;
+      }
+      match /public_result_exams/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      match /public_result_lookup/{id} {
+        allow get, list: if canAdmin(sid);
+        allow create, update, delete: if false;
+      }
+      match /public_results/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
+      // One immutable configuration per class/subject/term. No updates or deletes.
+      match /mark_settings/{id} {
+        function validComponent(c) {
+          return c is map
+            && c.keys().hasOnly(['key','name','fullMarks'])
+            && c.keys().hasAll(['key','name','fullMarks'])
+            && c.key is string && c.key.matches('^[A-Za-z][A-Za-z0-9_-]{0,63}$')
+            && c.name is string && c.name.size() >= 1 && c.name.size() <= 160
+            && c.fullMarks is number && c.fullMarks > 0 && c.fullMarks <= 100000;
+        }
+        function validComponents(items) {
+          return items is list && items.size() >= 1 && items.size() <= 6
+            && validComponent(items[0])
+            && (items.size() < 2 || validComponent(items[1]))
+            && (items.size() < 3 || validComponent(items[2]))
+            && (items.size() < 4 || validComponent(items[3]))
+            && (items.size() < 5 || validComponent(items[4]))
+            && (items.size() < 6 || validComponent(items[5]))
+            && (items.size() <= 1 || items[0].key != items[1].key)
+            && (items.size() <= 2 || items[0].key != items[2].key)
+            && (items.size() <= 3 || items[0].key != items[3].key)
+            && (items.size() <= 4 || items[0].key != items[4].key)
+            && (items.size() <= 5 || items[0].key != items[5].key)
+            && (items.size() <= 2 || items[1].key != items[2].key)
+            && (items.size() <= 3 || items[1].key != items[3].key)
+            && (items.size() <= 4 || items[1].key != items[4].key)
+            && (items.size() <= 5 || items[1].key != items[5].key)
+            && (items.size() <= 3 || items[2].key != items[3].key)
+            && (items.size() <= 4 || items[2].key != items[4].key)
+            && (items.size() <= 5 || items[2].key != items[5].key)
+            && (items.size() <= 4 || items[3].key != items[4].key)
+            && (items.size() <= 5 || items[3].key != items[5].key)
+            && (items.size() <= 5 || items[4].key != items[5].key);
+        }
+        function validNewSettings() {
+          let d = request.resource.data;
+          let subject = /databases/$(database)/documents/schools/$(sid)/subjects/$(d.subjectId);
+          return d.keys().hasOnly(['id','schoolId','classId','subjectId','examId','active','components'])
+            && d.keys().hasAll(['id','schoolId','classId','subjectId','examId','active','components'])
+            && d.id == id && d.schoolId == sid
+            && d.classId in ['ECD','LKG','UKG','1','2','3','4','5','6','7','8','9','10','11','12']
+            && d.subjectId is string && d.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && d.examId in ['weekly','monthly','1st','2nd','3rd','final']
+            && id == d.classId + '_' + d.subjectId + '_' + d.examId
+            && id.size() <= 128
+            && d.active == true && validComponents(d.components)
+            && exists(subject)
+            && get(subject).data.get('schoolId','') == sid
+            && get(subject).data.get('class','') == d.classId
+            && get(subject).data.get('active',false) == true;
+        }
+        allow get, list: if canRead(sid);
+        allow create: if memberRole(sid, 'school_admin') && validNewSettings();
+        allow update, delete: if false;
+      }
+      // Trusted-server-only publication staging: no client (including Super
+      // Admin) can read, list, alter, or publish partial staged marks. The
+      // Firebase Admin SDK may write via its separately protected credentials.
+      match /marks_staging/{publicationId} {
+        allow read, write: if false;
+        match /batches/{batchId} {
+          allow read, write: if false;
+        }
+      }
+      match /{collection}/{id} {
+        allow get, list: if collection in ['staff','classes','school_settings'] && canRead(sid);
+        allow create: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && scopedRecord(sid);
+        allow update: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && immutableSchool(sid);
+        allow delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+              && d.examId in ['weekly','monthly','1st','2nd','3rd','final']
+              && id == d.classId + '_' + d.subjectId + '_' + d.examId
+              && id.size() <= 128 && d.settingsId == id
+              && d.rosterCount is int && d.rosterCount >= 1 && d.rosterCount <= 1500
+              && d.entries is list && d.entries.size() == d.rosterCount
+              && d.revision is int && d.revision >= 1 && d.revision <= 1000000001
+              && d.updatedBy == teacherUid
+              && d.updatedAt == request.time
+              && exists(config)
+              && get(config).data.get('id', '') == id
+              && get(config).data.get('schoolId', '') == sid
+              && get(config).data.get('classId', '') == d.classId
+              && get(config).data.get('subjectId', '') == d.subjectId
+              && get(config).data.get('examId', '') == d.examId
+              && get(config).data.get('active', false) == true
+              && exists(subject)
+              && get(subject).data.get('schoolId', '') == sid
+              && get(subject).data.get('class', '') == d.classId
+              && get(subject).data.get('active', false) == true
+              && exists(currentTeacherAssignment())
+              && get(currentTeacherAssignment()).data.get('uid', '') == teacherUid
+              && get(currentTeacherAssignment()).data.get('schoolId', '') == sid
+              && get(currentTeacherAssignment()).data.get('classId', '') == d.classId
+              && get(currentTeacherAssignment()).data.get('subjectId', '') == d.subjectId
+              && get(currentTeacherAssignment()).data.get('active', false) == true;
+          }
+          allow get: if canAdmin(sid) ||
+            (memberRole(sid, 'teacher') && request.auth.uid == teacherUid
+             && resource.data.get('schoolId', '') == sid);
+          // Teacher queries other teachers' draft collections are forbidden.
+          allow list: if canAdmin(sid);
+          allow create: if memberRole(sid, 'teacher') && request.auth.uid == teacherUid
+            && validTeacherDraft() && request.resource.data.revision == 1;
+          allow update: if memberRole(sid, 'teacher') && request.auth.uid == teacherUid
+            && resource.data.get('schoolId', '') == sid
+            && resource.data.get('updatedBy', '') == teacherUid
+            && resource.data.get('state', '') == 'draft'
+            && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['entries','rosterCount','revision','updatedAt'])
+            && request.resource.data.revision == resource.data.get('revision', 0) + 1
+            && validTeacherDraft();
+          allow delete: if false;
+        }
+      }
       // Complete-class DRAFT only. These rows are NOT official marks or grades.
       // Security Rules cannot inspect all 1,500 component scores; independent
       // authoritative review remains required before any future publication.
