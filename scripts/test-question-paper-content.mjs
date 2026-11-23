@@ -48,6 +48,16 @@ assert.match(grade10Pack.sourceTitle, /Grade 10/, "Grade 10 source title must id
 assert.ok(Array.isArray(register.practicePacks) && register.practicePacks.some(p => p.grade === 10 && p.subject === "विज्ञान तथा प्रविधि"), "Grade 10 science pack must be listed in source register");
 assert.ok(!register.practicePacks.some(p => p.grade === 9 && p.subject === "विज्ञान तथा प्रविधि"), "Grade 9 pack must stay blocked until its source/topic mismatch is resolved");
 assert.match(String(register.completion.grade9SciencePracticePack || ""), /blocked-not-importable/, "Grade 9 pack block must be documented");
+assert.ok(!register.sources.some(s=>s.grades.includes(9) &&
+ s.url==="https://moecdc.gov.np/storage/gallery/1692097269.pdf"),
+ "Grade 10 textbook PDF must never be listed as Grade 9 CDC textbook");
+const grade9Economics=register.sources.find(s=>
+ s.grades.length===1&&s.grades[0]===9&&
+ s.subject==="ऐच्छिक अर्थशास्त्र"&&
+ s.url==="https://moecdc.gov.np/content/452/septemo-schedule-and-sample-questions-2082--class/");
+assert.ok(grade9Economics,"CDC Grade 9 Economics grid source must be tracked");
+assert.match(grade9Economics.status,/grid_content_not_yet_extracted/,
+ "Official source existence is NOT sufficient to mark the Grid as transcribed");
 for (const [grade, url] of [
   [9, "https://moecdc.gov.np/content/278/specialization-schedule-class-class-9-science-and/"],
   [10, "https://moecdc.gov.np/content/273/specialization-schedule-class-10-science-and-technology/"]
