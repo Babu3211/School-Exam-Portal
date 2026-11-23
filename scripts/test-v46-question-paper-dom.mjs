@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {JSDOM} from 'jsdom';
-import {readBundledScienceBank,buildAutomaticQuestionPaper} from '../cdc-question-autogen.mjs';
+import {readBundledScienceBank,buildAutomaticQuestionPaper,cognitiveMarkDistribution} from '../cdc-question-autogen.mjs';
 const source=readFileSync(new URL('../cdc-question-paper.js',import.meta.url),'utf8');
 const code=(start,end)=>{
  const a=source.indexOf(start),b=source.indexOf(end,a+start.length);
@@ -62,7 +62,7 @@ const make=(overrides={})=>{
   'schoolHeader','gradeNumber','renderPaperPreview','message','selectedClass',
   'selectedSubject','selectedSection','questionDataLoadEpoch',
   'verifiedQuestionSelection','questionRows','bundledPracticeQuestions',
-  'currentBlueprint','auth','blueprintRows'];
+  'currentBlueprint','auth','blueprintRows','cognitiveMarkDistribution'];
  const fn=new Function(...params,'let generatedPaper=null,lastAutoSignature=null;\n'+
   code('function updateAutoReviewActions()','function renderPaperPreview(')+
   code('function blueprintForFullMarks(','async function generateSmartPaper()')+
@@ -73,7 +73,7 @@ const make=(overrides={})=>{
   props.schoolHeader,v=>Number(String(v).match(/[0-9]+/)?.[0]||0),
   ()=>{},msg=>{lastMessage=msg},
   'Class 10','Science and Technology','A',props.questionDataLoadEpoch,
-  props.verifiedQuestionSelection,[],bank.questions,null,props.auth,[]);
+  props.verifiedQuestionSelection,[],bank.questions,null,props.auth,[],cognitiveMarkDistribution);
 };
 const live=make();
 await live.run();
@@ -84,6 +84,17 @@ assert.equal(paper.questions.reduce((n,q)=>n+Number(q.marks),0),3);
 assert.equal(new Set(paper.questions.map(q=>q.topicName)).size,3);
 assert.ok(paper.questions.every(q=>q.questionText.includes('\n')));
 assert.equal(paper.qualityReport.teacherReviewRequired,true);
+const uneven=cognitiveMarkDistribution([
+ {marks:1,cognitiveLevel:'knowledge'},
+ {marks:5,cognitiveLevel:'application'}
+],6);
+assert.ok(Math.abs(uneven.knowledge-100/6)<1e-10,'1-mark question must be 1/6 of the paper');
+assert.ok(Math.abs(uneven.application-500/6)<1e-10,'5-mark question must be 5/6 of the paper');
+assert.equal(uneven.understanding,0);
+assert.throws(()=>cognitiveMarkDistribution([
+ {marks:1,cognitiveLevel:'knowledge'}
+],6),/total does not match/);
+assert.ok(Math.abs(Object.values(paper.qualityReport.cognitiveActual).reduce((a,b)=>a+b,0)-100)<1e-9);
 assert.equal($('qpSavePaperBtn').disabled,true,'Teacher review needed before saving');
 assert.equal($('qpPrintPaperBtn').disabled,true,'Teacher review needed before printing');
 assert.equal($('qpAnswerKeyBtn').disabled,true,'Teacher review needed before answer key');
@@ -100,6 +111,7 @@ assert.equal($('qpPrintPaperBtn').disabled,false);
 assert.equal($('qpAnswerKeyBtn').disabled,false);
 assert.match(lastMessage,/पूर्णाङ्क/);
 renderPaperPreview(paper);
+assert.match($('qpPaperPreview').textContent,/संज्ञानात्मक अङ्कभार/);
 // Exercise persisted per-question Grid provenance and the teacher-only table.
 const sample={...paper,questions:paper.questions.map((q,i)=>({
  ...q,gridEvidence:{questionId:q.questionId,unitCode:String(i+1),
