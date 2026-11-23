@@ -94,7 +94,7 @@ async function createStaged(count){
  const stage=await stageTrustedClassMarks(options);
  assert.equal(stage.staged,true);
  assert.equal(stage.publicationAllowed,false);
- return {...h,options};
+ return Object.assign(h,{options});
 }
 for(const size of [1,101,500,1500]){
  const h=await createStaged(size);
