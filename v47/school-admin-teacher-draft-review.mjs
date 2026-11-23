@@ -81,6 +81,7 @@ export async function loadSchoolAdminTeacherDraftReview({
  check();
  if(roster.count!==freshRoster.count||
   roster.studentIds.some((id,i)=>id!==freshRoster.studentIds[i])||
+  roster.students.some((student,i)=>JSON.stringify(student)!==JSON.stringify(freshRoster.students[i]))||
   freshRoster.students.some(student=>!isActiveEnrolledStudent(student)))
   throw Error('Enrollment changed during Teacher Draft Review');
  if(!latestSettings||JSON.stringify(latestSettings)!==JSON.stringify(settingsDoc))
