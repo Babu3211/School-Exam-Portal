@@ -19,7 +19,7 @@ for(const grade of [8,10]){
   assert.equal(paper.questions.length,langTopics.length);
   assert.equal(paper.questions.reduce((n,q)=>n+q.marks,0),langTopics.length);
   assert.ok(paper.questions.every(q=>language==='en'?!/[\u0900-\u097f]/.test(q.questionText):
-    /[\u0900-\u097f]/.test(q.questionText)&&q.questionText.includes('\\n')));
+    /[\u0900-\u097f]/.test(q.questionText)&&q.questionText.includes(String.fromCharCode(10))));
   for(const q of paper.questions){
    const original=translated.questions.find(item=>item.id===q.id);
    assert.equal(q.options[q.correctOption.charCodeAt(0)-65].split(' / ')[0],
