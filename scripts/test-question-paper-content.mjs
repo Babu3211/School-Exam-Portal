@@ -83,6 +83,13 @@ for (const grade of [8, 10]) {
 
 
 assert.equal(register.schemaVersion, 1, "CDC source register schema");
+for(const grade of [9,10]){
+ const rows=register.sources.filter(s=>s.grades.length===1&&s.grades[0]===grade&&
+ s.subject==='ऐच्छिक कम्प्युटर विज्ञान'&&
+ s.status.includes('unitwise_transcribed'));
+ assert.equal(rows.length,1,'Exactly one CDC government PDF Grid source per Computer Science grade');
+ assert.match(rows[0].url,/^https:\/\/giwmscdnone\.gov\.np\/media\/pdf_upload\//);
+}
 assert.match(questionBuilder, /id="qpQuestionExcelTemplateBtn"/);
 assert.match(questionBuilder, /id="qpQuestionExcelFile"/);
 assert.match(questionBuilder, /ExcelJS/);
