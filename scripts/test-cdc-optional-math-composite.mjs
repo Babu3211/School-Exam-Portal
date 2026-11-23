@@ -23,6 +23,7 @@ function fixture(grade,subject,version){
    id:'synthetic-g'+grade+'-'+group+'-'+index+'-'+version,
    gradeNumber:grade,subject,reviewStatus:'teacher_reviewed',
    reviewedBy:'fixture-teacher',status:'active',group,
+   variantFamily:'synthetic-g'+grade+'-'+group+'-'+index,
    topicId:topics[units[0][0]-1],
    contextNe:group==='objective'?'':'सन्दर्भ: कृत्रिम प्रश्न '+index+' संस्करण '+version,
    contextEn:group==='objective'?'':'Context: synthetic question '+index+' version '+version,
