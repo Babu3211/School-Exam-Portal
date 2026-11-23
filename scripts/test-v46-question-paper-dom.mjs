@@ -38,6 +38,9 @@ assert.match(source,/async function downloadCdcGridExcelTemplate\(\)/);
 assert.match(source,/parseCdcGridExcelSheet\(sheet\)/);
 assert.match(source,/assertQuestionBankImportScope\(scope\);[\s\S]*?\$\("qpBpUnitGrid"\)\.value=json/);
 assert.match(source,/\$\("qpBpSourceReviewed"\)\.checked=false/);
+assert.match(source,/getBundledComputerGrid\(\{grade,subject,fullMarks:50\}\)/);
+assert.match(source,/bundledComputerUnitTopics\(grade,subject\)/);
+assert.match(source,/gridOrigin==="bundled_official_cdc_pdf"/);
 assert.match(source,/async function importQuestionBankExcel\(file\)/);
 assert.match(source,/const scope=captureQuestionBankImportScope\(\)/);
 assert.match(source,/return importQuestionBankRows\(rows,scope\);/);
@@ -190,7 +193,8 @@ const make=(overrides={})=>{
   'schoolHeader','gradeNumber','renderPaperPreview','message','selectedClass',
   'selectedSubject','selectedSection','questionDataLoadEpoch',
   'verifiedQuestionSelection','questionRows','bundledPracticeQuestions',
-  'currentBlueprint','auth','blueprintRows','cognitiveMarkDistribution','savedPapers'];
+  'currentBlueprint','auth','blueprintRows','cognitiveMarkDistribution','savedPapers',
+  'getBundledComputerGrid'];
  const fn=new Function(...params,'let generatedPaper=null,lastAutoSignature=null;\n'+
   code('function updateAutoReviewActions()','function renderPaperPreview(')+
   code('function blueprintForFullMarks(','async function generateSmartPaper()')+
@@ -201,7 +205,7 @@ const make=(overrides={})=>{
   props.schoolHeader,v=>Number(String(v).match(/[0-9]+/)?.[0]||0),
   ()=>{},msg=>{lastMessage=msg},
   'Class 10','Science and Technology','A',props.questionDataLoadEpoch,
-  props.verifiedQuestionSelection,[],bank.questions,null,props.auth,[],cognitiveMarkDistribution,props.savedPapers||[]);
+  props.verifiedQuestionSelection,[],bank.questions,null,props.auth,[],cognitiveMarkDistribution,props.savedPapers||[],()=>null);
 };
 const live=make();
 await live.run();
