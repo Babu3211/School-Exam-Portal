@@ -14,11 +14,19 @@ function shuffle(pool,rng){
   const x=Math.floor(rng()*(i+1));[arr[i],arr[x]]=[arr[x],arr[i]];
  }return arr;
 }
-export function validateExactCdcUnitGrid(blueprint,fullMarks,{strict=true}={}){
+export function validateExactCdcUnitGrid(blueprint,fullMarks,{
+ strict=true,gradeNumber=null,subject=null
+}={}){
  if(!blueprint||Number(blueprint.fullMarks)!==fullMarks)
   throw Error('CDC Grid for this exact class, subject and full marks is not configured');
  if(!Number.isSafeInteger(fullMarks)||fullMarks<=0||fullMarks>500)
   throw Error('Invalid full marks for CDC Grid');
+ if(gradeNumber!==null&&(!Number.isSafeInteger(gradeNumber)||
+  gradeNumber<6||gradeNumber>10||Number(blueprint.gradeNumber)!==gradeNumber))
+  throw Error('CDC Grid belongs to a different class');
+ if(subject!==null&&String(blueprint.subject||'').trim().toLocaleLowerCase()!==
+  String(subject||'').trim().toLocaleLowerCase())
+  throw Error('CDC Grid belongs to a different subject');
  const entries=blueprint.unitGrid;
  if(!Array.isArray(entries)||!entries.length||entries.length>120)
   throw Error('CDC unit-wise Grid has not been transcribed and checked; official generation is blocked');
@@ -43,6 +51,20 @@ export function validateExactCdcUnitGrid(blueprint,fullMarks,{strict=true}={}){
  const total=slots.reduce((sum,x)=>sum+x.marks,0);
  if(total!==fullMarks)
   throw Error('CDC unit-wise marks total '+total+' does not match '+fullMarks);
+ if(blueprint.cognitiveDistribution){
+  const distribution=blueprint.cognitiveDistribution;
+  const declared=['knowledge','understanding','application','higher'];
+  if(declared.some(level=>!Number.isFinite(Number(distribution[level]))||
+   Number(distribution[level])<0||Number(distribution[level])>100)||
+   declared.reduce((sum,level)=>sum+Number(distribution[level]),0)!==100)
+   throw Error('CDC Grid cognitive percentages must total 100');
+  for(const level of declared){
+   const actual=slots.filter(x=>x.cognitiveLevel===level)
+    .reduce((sum,x)=>sum+x.marks,0)*100/fullMarks;
+   if(Math.abs(actual-Number(distribution[level]))>1)
+    throw Error('CDC Grid cognitive mark distribution differs for '+level);
+  }
+ }
  if(!Array.isArray(blueprint.pattern)||!blueprint.pattern.length)
   throw Error('CDC Grid aggregate question pattern missing');
  const patternCounts=new Map();
@@ -68,9 +90,10 @@ export function validateExactCdcUnitGrid(blueprint,fullMarks,{strict=true}={}){
  * required row, or a new paper cannot differ, refuse instead of weakening Grid.
  */
 export function allocateExactCdcUnitGrid({
- blueprint,fullMarks,eligible,selectedTopicIds,previousSignature='',rng=Math.random
+ blueprint,fullMarks,eligible,selectedTopicIds,previousSignature='',rng=Math.random,
+ gradeNumber=null,subject=null
 }){
- const grid=validateExactCdcUnitGrid(blueprint,fullMarks);
+ const grid=validateExactCdcUnitGrid(blueprint,fullMarks,{gradeNumber,subject});
  if(!Array.isArray(eligible)||eligible.length>5000||!eligible.length)
   throw Error('No curated questions available for the CDC Grid');
  if(!Array.isArray(selectedTopicIds)||!selectedTopicIds.length)
