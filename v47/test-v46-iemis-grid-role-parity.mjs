@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {JSDOM} from 'jsdom';
 import {IemisEntryGrid,iemisEntrySchema,iemisEntryValues} from './iemis-entry.js';
 import {iemisGrade} from './iemis-ledger.js';
 // Compare V47 directly to the V46 source, not an independent guessed formula.
@@ -20,7 +19,9 @@ for(const [classNo,term,subject,keys,maxima] of sample){
  const schema=iemisEntrySchema(classNo,term,subject);
  assert.deepEqual(schema.map(x=>x.key),keys);
  if(maxima)assert.deepEqual(schema.map(x=>x.max),maxima);
- const dom=new JSDOM('<!doctype html><div id="grid"></div>'),mount=dom.window.document.getElementById('grid');
+ // The module-check job deliberately has no npm install; use the same
+ // rendered HTML and the actual IemisEntryGrid event handler without a DOM library.
+ const mount={innerHTML:'',addEventListener(){},removeEventListener(){},querySelectorAll(){return []}};
  const options={classNo,term,subjects:[subject],students:[{id:'s1',nameEnglish:'Student One'}],records:[],examId:'1st',message:()=>{}};
  const grid=permissions=>{
   const instance=new IemisEntryGrid(mount,{...options,...permissions});
@@ -29,24 +30,27 @@ for(const [classNo,term,subject,keys,maxima] of sample){
  const viewer=grid({canView:()=>true,canEdit:()=>false});
  assert.equal(viewer.visible(0,0),true,'View permission must not depend on Edit permission');
  assert.equal(viewer.allowed(0,0),false);
- const absent=mount.querySelector('[data-grid-absent]');
- assert(absent&&absent.disabled,'Absent must be read-only');
- const fields=[...mount.querySelectorAll('[data-grid-key]')];
- assert.equal(fields.length,schema.filter(x=>!x.readonly).length);
- assert(fields.every(x=>x.readOnly&&x.getAttribute('aria-readonly')==='true'),'Viewer marks must be read-only');
- fields[0].value='9';viewer.change({target:fields[0]});
+ const fields=(mount.innerHTML.match(/data-grid-key=/g)||[]).length;
+ assert.equal(fields,schema.filter(x=>!x.readonly).length);
+ assert.match(mount.innerHTML,/data-grid-absent[^>]*disabled/,'Viewer absence field must be disabled');
+ assert.equal((mount.innerHTML.match(/readonly aria-readonly="true"/g)||[]).length,fields,
+  'All Viewer mark fields must be rendered read-only');
+ const field={dataset:{gridSi:'0',gridSj:'0',gridKey:keys[0]},matches:()=>false,
+  hasAttribute:name=>name==='data-grid-si',value:'9'};
+ viewer.change({target:field});
  assert.deepEqual(viewer.pending(),[],'Forced DOM event must not create pending mark save');
  viewer.destroy();
  const teacher=grid({canView:()=>true,canEdit:()=>false});
- assert.equal(mount.querySelectorAll('[data-grid-key][readonly]').length,fields.length);
+ assert.equal((mount.innerHTML.match(/readonly aria-readonly="true"/g)||[]).length,fields);
  teacher.destroy();
  const hidden=grid({canView:()=>false,canEdit:()=>false});
- assert.match(mount.textContent,/N\/A/);
- assert.equal(mount.querySelectorAll('[data-grid-key]').length,0);
+ assert.match(mount.innerHTML,/N\/A/);
+ assert.doesNotMatch(mount.innerHTML,/data-grid-key=/);
  hidden.destroy();
  const admin=grid({canView:()=>true,canEdit:()=>true});
- assert.equal(mount.querySelectorAll('[data-grid-key][readonly]').length,0);
- assert.equal(mount.querySelector('[data-grid-absent]').disabled,false);
+ assert.doesNotMatch(mount.innerHTML,/readonly aria-readonly="true"/);
+ assert.match(mount.innerHTML,/data-grid-absent/);
+ assert.doesNotMatch(mount.innerHTML,/data-grid-absent[^>]*disabled/);
  admin.destroy();
 }
 const primary=iemisEntryValues(iemisEntrySchema('1','first','English'),{values:{count:'10',obtained:'35'},isAbsent:false});
