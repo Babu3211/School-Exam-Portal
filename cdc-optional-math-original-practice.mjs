@@ -70,6 +70,23 @@ const part=(unit,seed,marks)=>{
  return {unitCode:String(unit),marks,cognitiveLevel:'knowledge',
   textNe:ne,textEn:en,answerNe:answer,answerEn:answer};
 };
+// Supply four unambiguous numeric/algebraic alternatives for every
+// one-mark objective problem. Since these are original mathematical
+// exercises, alternatives are calculated locally from the answer string,
+// not invented claims about a CDC-published MCQ.
+function originalObjectiveChoices(answer,seed){
+ const matches=[...String(answer).matchAll(/-?\d+/g)];
+ if(!matches.length)throw Error('Objective answer has no numeric component');
+ const last=matches[matches.length-1],n=Number(last[0]);
+ if(!Number.isSafeInteger(n))throw Error('Objective numerical answer out of range');
+ const offset=last.index;
+ const wrong=[1,2,3].map(delta=>String(answer).slice(0,offset)+
+  String(n+delta)+String(answer).slice(offset+last[0].length));
+ const position=seed%4,opts=[...wrong];
+ opts.splice(position,0,String(answer));
+ if(opts.length!==4||new Set(opts).size!==4)throw Error('Duplicate MCQ options');
+ return {optionsNe:opts,optionsEn:[...opts],correctOption:'ABCD'[position]};
+}
 const slotQuestions=({grade,subject,version})=>{
  const topics=optionalMathAreaTopics(grade,subject);
  const rows=[];
@@ -87,6 +104,7 @@ const slotQuestions=({grade,subject,version})=>{
    // An objective here is an exact one-mark short-answer task; no fabricated
    // distractors are presented as legitimate CDC multiple-choice items.
    if(!answer)throw Error('Empty one-mark answer');
+   Object.assign(subquestions[0],originalObjectiveChoices(answer,seed));
   }
   rows.push({id:'smss-optional-math-'+grade+'-'+slot+'-v'+version,
    variantFamily:'smss-optional-math-'+grade+'-'+slot,
