@@ -164,6 +164,8 @@ function pageShell() {
         <div class="qp-field"><label for="qpBpDuration">समय (मिनेट)</label><input id="qpBpDuration" type="number" min="15" max="360" required value="120"></div>
         <div class="qp-field"><label for="qpBpMcqCount">MCQ प्रश्न संख्या</label><input id="qpBpMcqCount" type="number" min="0" max="100" value="10"></div>
         <div class="qp-field"><label for="qpBpMcqMarks">प्रति MCQ अङ्क</label><input id="qpBpMcqMarks" type="number" min="1" max="20" value="1"></div>
+        <div class="qp-field"><label for="qpBpVeryShortCount">अति छोटो (VSQ) संख्या</label><input id="qpBpVeryShortCount" type="number" min="0" max="100" value="0"></div>
+        <div class="qp-field"><label for="qpBpVeryShortMarks">प्रति VSQ अङ्क</label><input id="qpBpVeryShortMarks" type="number" min="1" max="20" value="1"></div>
         <div class="qp-field"><label for="qpBpShortCount">छोटो उत्तर प्रश्न संख्या</label><input id="qpBpShortCount" type="number" min="0" max="100" value="6"></div>
         <div class="qp-field"><label for="qpBpShortMarks">प्रति छोटो प्रश्न अङ्क</label><input id="qpBpShortMarks" type="number" min="1" max="30" value="5"></div>
         <div class="qp-field"><label for="qpBpLongCount">लामो उत्तर प्रश्न संख्या</label><input id="qpBpLongCount" type="number" min="0" max="100" value="1"></div>
@@ -198,7 +200,7 @@ function pageShell() {
       <summary>३. थप प्रश्न बैंक व्यवस्थापन (ऐच्छिक — प्रश्न नटाइपी Generate गर्न सकिन्छ)</summary>
       <form id="qpQuestionForm" class="qp-grid">
         <div class="qp-field"><label for="qpQuestionUnit">एकाइ / पाठ (ऐच्छिक)</label><input id="qpQuestionUnit" maxlength="180" placeholder="आफूले चाहेको एकाइ"></div><div class="qp-field"><label for="qpQuestionTopic">आफूले चाहेको Topic</label><input id="qpQuestionTopic" list="qpTopicSuggestions" maxlength="180" required placeholder="Topic को नाम लेख्नुहोस्"><datalist id="qpTopicSuggestions"></datalist></div>
-        <div class="qp-field"><label for="qpQuestionType">प्रश्नको प्रकार</label><select id="qpQuestionType"><option value="mcq">बहुविकल्पीय (MCQ)</option><option value="short">छोटो उत्तर</option><option value="long">लामो उत्तर</option></select></div>
+        <div class="qp-field"><label for="qpQuestionType">प्रश्नको प्रकार</label><select id="qpQuestionType"><option value="mcq">बहुविकल्पीय (MCQ)</option><option value="very_short">अति छोटो उत्तर (VSQ)</option><option value="short">छोटो उत्तर</option><option value="long">लामो उत्तर</option></select></div>
         <div class="qp-field"><label for="qpQuestionMarks">पूर्णाङ्क</label><input id="qpQuestionMarks" type="number" min="1" max="100" required value="1"></div>
         <div class="qp-field"><label for="qpQuestionLevel">संज्ञानात्मक स्तर</label><select id="qpQuestionLevel"><option value="knowledge">ज्ञान (Knowledge)</option><option value="understanding">बोध (Understanding)</option><option value="application">प्रयोग (Application)</option><option value="higher">उच्च क्षमता (Higher Ability)</option></select></div>
         <div class="qp-field" style="grid-column:1/-1"><label for="qpQuestionText">प्रश्न (नेपाली वा English)</label><textarea id="qpQuestionText" required maxlength="3000"></textarea></div>
@@ -232,6 +234,8 @@ function pageShell() {
         <div class="qp-field"><label for="qpAutoMode">प्रश्नपत्रको ढाँचा</label><select id="qpAutoMode"><option value="cdc">CDC Unit-wise Grid EXACT</option><option value="practice">अभ्यास मात्र (CDC Grid होइन)</option></select></div>
         <div class="qp-field"><label for="qpPaperMcqCount">MCQ संख्या</label><input id="qpPaperMcqCount" type="number" min="0" max="100" value="10"></div>
         <div class="qp-field"><label for="qpPaperMcqMarks">MCQ प्रति अङ्क</label><input id="qpPaperMcqMarks" type="number" min="1" max="20" value="1"></div>
+        <div class="qp-field"><label for="qpPaperVeryShortCount">अति छोटो (VSQ) संख्या</label><input id="qpPaperVeryShortCount" type="number" min="0" max="100" value="0"></div>
+        <div class="qp-field"><label for="qpPaperVeryShortMarks">प्रति VSQ अङ्क</label><input id="qpPaperVeryShortMarks" type="number" min="1" max="20" value="1"></div>
         <div class="qp-field"><label for="qpPaperShortCount">छोटो प्रश्न संख्या</label><input id="qpPaperShortCount" type="number" min="0" max="100" value="6"></div>
         <div class="qp-field"><label for="qpPaperShortMarks">छोटो प्रश्न प्रति अङ्क</label><input id="qpPaperShortMarks" type="number" min="1" max="30" value="5"></div>
         <div class="qp-field"><label for="qpPaperLongCount">लामो प्रश्न संख्या</label><input id="qpPaperLongCount" type="number" min="0" max="100" value="1"></div>
@@ -265,7 +269,7 @@ function shuffle(items) {
   return a;
 }
 function questionTypeLabel(type) {
-  return ({mcq:"MCQ",short:"छोटो उत्तर",long:"लामो उत्तर"})[type] || type;
+  return ({mcq:"MCQ",very_short:"अति छोटो उत्तर (VSQ)",short:"छोटो उत्तर",long:"लामो उत्तर"})[type] || type;
 }
 function levelLabel(level) {
   return ({knowledge:"ज्ञान",understanding:"बोध",application:"प्रयोग",higher:"उच्च क्षमता"})[level] || level || "—";
@@ -273,13 +277,14 @@ function levelLabel(level) {
 function getPattern(prefix) {
   return [
     {type:"mcq",count:Number($(prefix+"McqCount")?.value || 0),marks:Number($(prefix+"McqMarks")?.value || 1)},
+    {type:"very_short",count:Number($(prefix+"VeryShortCount")?.value || 0),marks:Number($(prefix+"VeryShortMarks")?.value || 1)},
     {type:"short",count:Number($(prefix+"ShortCount")?.value || 0),marks:Number($(prefix+"ShortMarks")?.value || 1)},
     {type:"long",count:Number($(prefix+"LongCount")?.value || 0),marks:Number($(prefix+"LongMarks")?.value || 1)}
   ];
 }
 function setBuilderPattern(pattern, fullMarks, duration) {
   const byType = Object.fromEntries((pattern || []).map(x => [x.type, x]));
-  for (const [type, key] of [["mcq","Mcq"],["short","Short"],["long","Long"]]) {
+  for (const [type, key] of [["mcq","Mcq"],["very_short","VeryShort"],["short","Short"],["long","Long"]]) {
     const p = byType[type] || {count:0,marks:1};
     if ($("qpPaper"+key+"Count")) $("qpPaper"+key+"Count").value = p.count ?? 0;
     if ($("qpPaper"+key+"Marks")) $("qpPaper"+key+"Marks").value = p.marksEach ?? p.marks ?? 1;
@@ -366,7 +371,7 @@ function renderPaperPreview(paper = generatedPaper) {
      renderCdcCompositePaper(paper,{escapeHtml:esc});
     return;
   }
-  const groups = ["mcq","short","long"];
+  const groups = ["mcq","very_short","short","long"];
   let number = 0;
   const report=paper.qualityReport||null;
   const reportHtml=report?'<div class="qp-hint" style="border:1px solid #dce5f1;border-radius:8px;padding:9px;margin-bottom:10px"><b>शिक्षक समीक्षा:</b> '+esc(report.questionCount)+' प्रश्न · '+esc(report.selectedTopicCount)+' Topic · '+esc(report.missingAnswerCount)+' प्रश्नमा उत्तर संकेत बाँकी। संज्ञानात्मक अङ्कभार: '+Object.entries(report.cognitiveActual||{}).map(([k,v])=>esc(levelLabel(k))+' '+esc(Math.round(Number(v)*100)/100)+'%').join(' · ')+'</div>':"";
@@ -702,7 +707,7 @@ function allocateQuestions() {
       if(targets[q.cognitiveLevel]>0)targets[q.cognitiveLevel]--;
     }
   }
-  return chosen.sort((a,b)=>["mcq","short","long"].indexOf(a.questionType)-["mcq","short","long"].indexOf(b.questionType));
+  return chosen.sort((a,b)=>["mcq","very_short","short","long"].indexOf(a.questionType)-["mcq","very_short","short","long"].indexOf(b.questionType));
 }
 async function schoolHeader() {
   try {
@@ -742,7 +747,7 @@ function inspectAdminUnitGrid(){
 }
 function reviewAdminUnitGrid(){
  const {calculated}=inspectAdminUnitGrid();
- const shortType=t=>({mcq:"MCQ",short:"छोटो",long:"लामो"})[t]||t;
+ const shortType=t=>({mcq:"MCQ",very_short:"अति छोटो",short:"छोटो",long:"लामो"})[t]||t;
  const lines=calculated.pattern.map(p=>shortType(p.type)+" "+
   p.count+"×"+p.marks+"="+p.count*p.marks);
  $("qpBpGridAnalysis").textContent="Grid बाट "+calculated.questionCount+
@@ -1647,7 +1652,7 @@ document.addEventListener("change",async event=>{
   if(t.id==="qpSection"){questionDataLoadEpoch++;verifiedQuestionSelection=null;selectedSection=t.value;generatedPaper=null;if(selectedClass&&selectedSubject)try{await loadCurrentData();message("Section अनुसार Topic र प्रश्न बैंक लोड भए।");}catch(err){message("डेटा लोड भएन: "+(err.code||err.message),true);}}
   if(t.matches?.("[data-qp-topic]")||
     ["qpAutoLanguage","qpAutoMode","qpPaperFullMarks","qpPaperDuration","qpPaperTitle",
-     "qpPaperYear","qpPaperMcqCount","qpPaperMcqMarks","qpPaperShortCount",
+     "qpPaperYear","qpPaperMcqCount","qpPaperMcqMarks","qpPaperVeryShortCount","qpPaperVeryShortMarks","qpPaperShortCount",
      "qpPaperShortMarks","qpPaperLongCount","qpPaperLongMarks"].includes(t.id)){
     if(generatedPaper){
       invalidateGeneratedQuestionPaper();
