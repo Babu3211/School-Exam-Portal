@@ -92,11 +92,10 @@ for(const mutation of [
  await assert.rejects(loadSchoolAdminTeacherDraftReview({...f.args,assertSession:()=>{throw Error('Changed tab')}}));
 }
 {
- let switched=false;
- const f=fixture({afterRead:({ref,reads,data})=>{
-  if(!switched&&ref===draftPath&&reads>10){
-   switched=true;data.get(draftPath).revision=2;
-  }
+ let draftReads=0;
+ const f=fixture({afterRead:({ref,data})=>{
+  if(ref===draftPath&&++draftReads===2)
+   data.get(draftPath).revision=2;
  }});
  // Never claim a successful review when its revision changes during verification.
  await assert.rejects(loadSchoolAdminTeacherDraftReview(f.args));
