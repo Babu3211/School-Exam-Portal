@@ -45,12 +45,12 @@ export async function assignTeacherOnTrustedServer({adminSession,input,firestore
  const subjectRef=canonical&&subjectId!=="attendance"
    ?firestore.doc(`schools/${assignment.schoolId}/subjects/${subjectId}`):null;
  await firestore.runTransaction(async tx=>{
-   const schoolSnapshot=await tx.get(schoolRef);
-   const school=schoolSnapshot.exists?schoolSnapshot.data():null;
-   if(!school || (canonical
-      ? school.active!==true||school.id!==assignment.schoolId
-      : school.status!=="active"))
-    throw new Error("Active school required for teacher assignment");
+   if(canonical){
+     const schoolSnapshot=await tx.get(schoolRef);
+     const school=schoolSnapshot.exists?schoolSnapshot.data():null;
+     if(!school || school.active!==true || school.id!==assignment.schoolId)
+      throw new Error("Active canonical school required for teacher assignment");
+   }
    const adminMembership=await tx.get(adminRef);
    const adminRecord=adminMembership.exists?adminMembership.data():null;
    const canonicalAdmin=adminRecord && !Object.hasOwn(adminRecord,"roles") &&
@@ -85,8 +85,10 @@ export async function assignTeacherOnTrustedServer({adminSession,input,firestore
         subject.class!==assignment.classId || subject.active!==true)
       throw new Error("Active scoped subject required for teacher assignment");
    }
-   const existing=await tx.get(assignmentRef);
-   if(existing.exists)throw new Error("Teacher assignment already exists");
+   if(canonical){
+     const existing=await tx.get(assignmentRef);
+     if(existing.exists)throw new Error("Teacher assignment already exists");
+   }
    // A new canonical assignment is NOT active until the School Admin
    // explicitly enables it; this mirrors V47 Firestore create rules.
    tx.set(assignmentRef,record);
