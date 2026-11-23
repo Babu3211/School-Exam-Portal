@@ -1,0 +1,307 @@
+{
+  "schemaVersion": 1,
+  "origin": "Original English translations authored for SMSS of one existing Nepali MCQ per CDC-textbook-derived science unit. Not official CDC model question translations.",
+  "reviewRequired": true,
+  "translations": {
+    "8:1": {
+      "questionTextEn": "What is the scientific process of carefully observing an object or event to collect information?",
+      "optionsEn": [
+        "Observation",
+        "Guessing",
+        "Conclusion",
+        "Survey"
+      ],
+      "answerEn": "Observation is the careful collection of information using senses or instruments."
+    },
+    "8:2": {
+      "questionTextEn": "Which online service helps people search for information on websites?",
+      "optionsEn": [
+        "Search engine",
+        "Printer",
+        "Keyboard",
+        "Speaker"
+      ],
+      "answerEn": "A search engine helps find web pages and online information."
+    },
+    "8:3": {
+      "questionTextEn": "What is the basic structural and functional unit of living organisms?",
+      "optionsEn": [
+        "Cell",
+        "Organ",
+        "Tissue",
+        "Organ system"
+      ],
+      "answerEn": "The cell is the basic structural and functional unit of living organisms."
+    },
+    "8:4": {
+      "questionTextEn": "What is a system of interactions between living and non-living components of an area called?",
+      "optionsEn": [
+        "Ecosystem",
+        "Population",
+        "Species",
+        "Food item"
+      ],
+      "answerEn": "An ecosystem consists of interacting living and non-living components."
+    },
+    "8:5": {
+      "questionTextEn": "What is the process by which green plants make their own food called?",
+      "optionsEn": [
+        "Photosynthesis",
+        "Respiration",
+        "Excretion",
+        "Transpiration"
+      ],
+      "answerEn": "Green plants make food by photosynthesis using light, water and carbon dioxide."
+    },
+    "8:6": {
+      "questionTextEn": "What is a push or pull that can change the motion or shape of an object called?",
+      "optionsEn": [
+        "Force",
+        "Energy",
+        "Mass",
+        "Density"
+      ],
+      "answerEn": "A force is a push or pull that can change an object's motion or shape."
+    },
+    "8:7": {
+      "questionTextEn": "Which form of energy is mainly stored in the cooking gas used as fuel?",
+      "optionsEn": [
+        "Chemical energy",
+        "Sound energy",
+        "Light energy",
+        "Magnetic energy"
+      ],
+      "answerEn": "Fuel stores chemical energy that is released during combustion."
+    },
+    "8:8": {
+      "questionTextEn": "Under which condition can electric current flow through a circuit?",
+      "optionsEn": [
+        "Closed circuit",
+        "Open circuit",
+        "Broken wire",
+        "Open switch"
+      ],
+      "answerEn": "A complete or closed conducting path allows current to flow."
+    },
+    "8:9": {
+      "questionTextEn": "What is a pure substance formed by the chemical combination of two or more elements in a fixed ratio?",
+      "optionsEn": [
+        "Compound",
+        "Mixture",
+        "Metal",
+        "Solution only"
+      ],
+      "answerEn": "A compound contains chemically combined elements in a fixed proportion."
+    },
+    "8:10": {
+      "questionTextEn": "Which two conditions are mainly needed for iron to rust?",
+      "optionsEn": [
+        "Oxygen and water or moisture",
+        "Nitrogen and light",
+        "Carbon and sound",
+        "Helium and heat"
+      ],
+      "answerEn": "Rust forms when iron reacts in the presence of oxygen and moisture."
+    },
+    "8:11": {
+      "questionTextEn": "Approximately how long does the Earth take to complete one revolution around the Sun?",
+      "optionsEn": [
+        "365 days",
+        "24 hours",
+        "30 days",
+        "12 hours"
+      ],
+      "answerEn": "The Earth completes one revolution in approximately 365 days and 6 hours."
+    },
+    "10:1": {
+      "questionTextEn": "What is a scientific hypothesis?",
+      "optionsEn": [
+        "A possible explanation that can be tested",
+        "A final conclusion",
+        "An instrument",
+        "A measurement"
+      ],
+      "answerEn": "A hypothesis is a testable possible explanation."
+    },
+    "10:2": {
+      "questionTextEn": "What is mainly considered in the modern classification of living organisms?",
+      "optionsEn": [
+        "Shared characteristics and evolutionary relationships",
+        "Colour",
+        "Size alone",
+        "Habitat alone"
+      ],
+      "answerEn": "Modern classification uses shared characteristics and evolutionary relationships."
+    },
+    "10:3": {
+      "questionTextEn": "Which member of a honeybee colony is primarily responsible for laying eggs?",
+      "optionsEn": [
+        "Queen bee",
+        "Worker bee",
+        "Drone",
+        "Larva"
+      ],
+      "answerEn": "The queen bee primarily lays eggs in the colony."
+    },
+    "10:4": {
+      "questionTextEn": "Where is hereditary information mainly stored?",
+      "optionsEn": [
+        "In DNA",
+        "In blood plasma",
+        "In the cell wall",
+        "In digestive juice"
+      ],
+      "answerEn": "Genes in DNA carry hereditary information."
+    },
+    "10:5": {
+      "questionTextEn": "Which organ pumps blood through the human body?",
+      "optionsEn": [
+        "Heart",
+        "Lungs",
+        "Kidneys",
+        "Liver"
+      ],
+      "answerEn": "The heart pumps blood throughout the body."
+    },
+    "10:6": {
+      "questionTextEn": "Which is a producer in a food chain?",
+      "optionsEn": [
+        "Green plants",
+        "Tiger",
+        "Mushroom",
+        "Human"
+      ],
+      "answerEn": "Green plants produce food through photosynthesis."
+    },
+    "10:7": {
+      "questionTextEn": "What is the SI unit of velocity?",
+      "optionsEn": [
+        "m/s",
+        "m/s²",
+        "N",
+        "kg"
+      ],
+      "answerEn": "The SI unit of velocity is metres per second (m/s)."
+    },
+    "10:8": {
+      "questionTextEn": "What is the SI unit of pressure?",
+      "optionsEn": [
+        "Pascal",
+        "Joule",
+        "Watt",
+        "Coulomb"
+      ],
+      "answerEn": "The SI unit of pressure is pascal (Pa), equal to N/m²."
+    },
+    "10:9": {
+      "questionTextEn": "Which instrument measures temperature?",
+      "optionsEn": [
+        "Thermometer",
+        "Barometer",
+        "Ammeter",
+        "Hydrometer"
+      ],
+      "answerEn": "A thermometer is used to measure temperature."
+    },
+    "10:10": {
+      "questionTextEn": "What type of wave is sound?",
+      "optionsEn": [
+        "Mechanical wave",
+        "Electromagnetic wave",
+        "Light wave",
+        "Wave requiring no medium"
+      ],
+      "answerEn": "Sound is a mechanical wave and requires a medium to propagate."
+    },
+    "10:11": {
+      "questionTextEn": "What is the SI unit of electric current?",
+      "optionsEn": [
+        "Ampere",
+        "Volt",
+        "Ohm",
+        "Watt"
+      ],
+      "answerEn": "The SI unit of electric current is ampere (A)."
+    },
+    "10:12": {
+      "questionTextEn": "Which celestial body is at the centre of our solar system?",
+      "optionsEn": [
+        "Sun",
+        "Earth",
+        "Moon",
+        "Jupiter"
+      ],
+      "answerEn": "The Sun is at the centre of the solar system."
+    },
+    "10:13": {
+      "questionTextEn": "What is the term for the address of a resource on the web?",
+      "optionsEn": [
+        "URL",
+        "CPU",
+        "RAM",
+        "USB"
+      ],
+      "answerEn": "A URL identifies the address of a web resource."
+    },
+    "10:14": {
+      "questionTextEn": "On which basis are elements arranged in the modern periodic table?",
+      "optionsEn": [
+        "Atomic number",
+        "Density",
+        "Colour",
+        "Atomic size"
+      ],
+      "answerEn": "The modern periodic table is arranged by increasing atomic number."
+    },
+    "10:15": {
+      "questionTextEn": "What is formed from reactants during a chemical reaction?",
+      "optionsEn": [
+        "Products",
+        "Only mixtures",
+        "Always elements",
+        "Only energy"
+      ],
+      "answerEn": "Chemical reactions convert reactants into products."
+    },
+    "10:16": {
+      "questionTextEn": "What is the role of oxygen in combustion?",
+      "optionsEn": [
+        "Supports combustion",
+        "Stops combustion",
+        "Acts only as fuel",
+        "Only changes colour"
+      ],
+      "answerEn": "Oxygen supports the combustion of fuels."
+    },
+    "10:17": {
+      "questionTextEn": "Which metal is liquid at normal room temperature?",
+      "optionsEn": [
+        "Mercury",
+        "Iron",
+        "Copper",
+        "Aluminium"
+      ],
+      "answerEn": "Mercury is liquid at ordinary room temperature."
+    },
+    "10:18": {
+      "questionTextEn": "Which elements are present in hydrocarbons?",
+      "optionsEn": [
+        "Carbon and hydrogen",
+        "Carbon and oxygen",
+        "Hydrogen and nitrogen",
+        "Carbon and sulphur"
+      ],
+      "answerEn": "Hydrocarbons contain carbon and hydrogen."
+    },
+    "10:19": {
+      "questionTextEn": "How does soap help to remove greasy dirt?",
+      "optionsEn": [
+        "Its molecules interact with both oil and water",
+        "By magnetic attraction",
+        "By forming a metal",
+        "By forming an acid"
+      ],
+      "answerEn": "Soap molecules have parts that interact with water and oily substances."
+    }
+  }
+}

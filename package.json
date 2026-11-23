@@ -5,7 +5,7 @@
   "scripts": {
     "test:viewer": "firebase emulators:exec --project smss-v44-rules-test --only firestore \"node scripts/test-viewer-permissions.mjs\"",
     "test:rules": "firebase emulators:exec --project smss-v44-rules-test --only firestore \"node scripts/test-firestore-rules.mjs\"",
-    "test:question-paper": "node scripts/test-question-paper-content.mjs",
+    "test:question-paper": "node scripts/test-question-paper-content.mjs && node scripts/test-cdc-question-autogen.mjs",
     "test:iemis": "node scripts/test-iemis-ledger.mjs && node scripts/test-iemis-entry.mjs",
     "test:pwa": "node scripts/test-pwa-upgrade.mjs",
     "test:v45": "node scripts/test-v45-ui.mjs && node scripts/test-dropdown-language.mjs",
@@ -28,7 +28,8 @@
     "test:v46-marks-load-failure": "node scripts/test-v46-marks-load-failure.mjs",
     "test:user-activity-rules": "firebase emulators:exec --project smss-v46-activity-test --only firestore \"node scripts/test-user-activity-rules.mjs\"",
     "test:v46-delete-controls": "node scripts/test-v46-delete-controls.mjs",
-    "test:iemis-transfer": "node scripts/test-iemis-transfer.mjs && node scripts/test-iemis-importer-dom.mjs"
+    "test:iemis-transfer": "node scripts/test-iemis-transfer.mjs && node scripts/test-iemis-importer-dom.mjs",
+    "test:question-paper-autogen": "node scripts/test-cdc-question-autogen.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",

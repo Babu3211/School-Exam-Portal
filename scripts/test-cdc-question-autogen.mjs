@@ -9,6 +9,23 @@ for(const grade of [8,10]){
  const b=readBundledScienceBank(pack,{grade,subject:'विज्ञान तथा प्रविधि'});
  assert.equal(b.questions.length,grade===8?55:57);
  assert.equal(b.units.length,grade===8?11:19);
+ const translationRegister=src('cdc-science-bilingual-mcq-v1.json');
+ const translated=readBundledScienceBank(pack,{grade,subject:'Science',bilingual:translationRegister.translations});
+ assert.equal(translated.questions.filter(q=>q.questionTextEn).length,b.units.length);
+ const langTopics=translated.units.slice(0,grade===8?5:8).map(x=>x.id+'_0');
+ for(const language of ['en','both']){
+  const paper=buildAutomaticQuestionPaper({questions:translated.questions,
+   topicIds:langTopics,fullMarks:langTopics.length,language,rng});
+  assert.equal(paper.questions.length,langTopics.length);
+  assert.equal(paper.questions.reduce((n,q)=>n+q.marks,0),langTopics.length);
+  assert.ok(paper.questions.every(q=>language==='en'?!/[\u0900-\u097f]/.test(q.questionText):
+    /[\u0900-\u097f]/.test(q.questionText)&&q.questionText.includes('\\n')));
+  for(const q of paper.questions){
+   const original=translated.questions.find(item=>item.id===q.id);
+   assert.equal(q.options[q.correctOption.charCodeAt(0)-65].split(' / ')[0],
+    language==='both'?original.options[0]:original.optionsEn[0]);
+  }
+ }
  const topicIds=b.units.map(x=>x.id+'_0');
  for(const target of [25,50]){
   const p=buildAutomaticQuestionPaper({questions:b.questions,topicIds,fullMarks:target,rng});
