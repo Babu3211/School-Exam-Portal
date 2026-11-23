@@ -42,7 +42,7 @@ if(config.hosting?.target&&typeof config.hosting.target!=='string')
 if(/Development only|development workspace|independent prototypes/i.test(hub))
  blockers.push('V47 dashboard is still a development hub, not a feature-complete portal');
 if(/at most 3 students|max 3/i.test(marks)||/complete\.count\s*>\s*3/.test(save))
- blockers.push('Full-class marks save is limited to three students');
+ blockers.push('Legacy official mark service is limited to three students; the new full-class Draft covers up to 1500 but is NOT official Marks Publication');
 // A per-document mark write permission bypasses the required complete-class save gate.
 const marksRule=rules.match(/match \/marks\/\{id\} \{([\s\S]*?)\n      \}/)?.[1]??'';
 if(!marksRule)

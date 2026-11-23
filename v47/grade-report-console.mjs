@@ -5,13 +5,13 @@ import {loadVerifiedLegacyGradeReport} from './verified-legacy-grade-report.mjs'
 import {legacyGradePreviewExcel} from './legacy-grade-report-preview.mjs';
 const $=id=>document.getElementById(id),status=s=>{$('message').textContent=s};
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
-let auth,authSdk,api,db,actor=null,schoolId=null,sessionSeq=0,reviewSeq=0,loading=false,busy=false,report=null;
+let auth,authSdk,api,db,actor=null,schoolId=null,sessionSeq=0,reviewSeq=0,sheetSeq=0,loading=false,busy=false,report=null;
 const readDocument=async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null};
 function clearReview(){
- reviewSeq++;report=null;$('cancel').disabled=true;$('ledgerArea').hidden=true;$('sheetArea').hidden=true;
+ reviewSeq++;sheetSeq++;report=null;$('cancel').disabled=true;$('ledgerArea').hidden=true;$('sheetArea').hidden=true;
  $('student').replaceChildren();$('student').disabled=true;$('gradeOutput').replaceChildren();
  $('previewSheet').disabled=true;$('printSheet').disabled=true;$('exportExcel').disabled=true;
- $('sheetFrame').removeAttribute('srcdoc');$('sheetStatus').textContent='';
+ $('sheetFrame').onload=null;delete $('sheetFrame').dataset.loadedStudent;$('sheetFrame').removeAttribute('srcdoc');$('sheetStatus').textContent='';
  $('progress').textContent='No complete-class preview loaded.';
 }
 function clearSession(){sessionSeq++;clearReview();actor=null;schoolId=null;$('reportArea').hidden=true;$('logout').disabled=true}
@@ -59,13 +59,21 @@ $('logout').onclick=async()=>{clearSession();try{if(auth)await authSdk.signOut(a
 $('schoolClass').onchange=clearReview;$('term').onchange=clearReview;
 $('cancel').onclick=()=>{clearReview();status('Read-only review cancelled. कुनै अंक परिवर्तन गरिएको छैन।')};
 function showSheet(){
- if(!report)return;
+ const seq=++sheetSeq,frame=$('sheetFrame'),studentId=$('student').value;
+ frame.onload=null;delete frame.dataset.loadedStudent;$('printSheet').disabled=true;
+ if(!report){frame.removeAttribute('srcdoc');return}
  try{
-  const doc=report.printFor($('student').value);
-  if(!doc.ready){$('printSheet').disabled=true;$('sheetFrame').removeAttribute('srcdoc');$('sheetStatus').textContent=doc.reason;return}
-  $('sheetFrame').srcdoc=doc.html;$('printSheet').disabled=false;
-  $('sheetStatus').textContent='PREVIEW ONLY — NOT VALID FOR OFFICIAL USE';
- }catch(e){$('printSheet').disabled=true;$('sheetFrame').removeAttribute('srcdoc');$('sheetStatus').textContent=e.message}
+  const doc=report.printFor(studentId);
+  if(!doc.ready){frame.removeAttribute('srcdoc');$('sheetStatus').textContent=doc.reason;return}
+  $('sheetStatus').textContent='Watermarked preview loading. Not valid for official use.';
+  frame.onload=()=>{
+   if(sheetSeq!==seq||!report||$('student').value!==studentId)return;
+   frame.dataset.loadedStudent=studentId;
+   $('printSheet').disabled=false;
+   $('sheetStatus').textContent='PREVIEW ONLY — NOT VALID FOR OFFICIAL USE';
+  };
+  frame.srcdoc=doc.html;
+ }catch(e){frame.removeAttribute('srcdoc');$('sheetStatus').textContent=e.message}
 }
 $('load').onclick=async()=>{
  if(loading||busy||!actor)return;
@@ -95,9 +103,13 @@ $('printSheet').onclick=async()=>{
  const seq=sessionSeq,review=reviewSeq,member=actor,klass=$('schoolClass').value,term=$('term').value;
  try{
   await verifyAgain(member,seq,review,klass,term);
-  const print=report.printFor($('student').value);
+  const frame=$('sheetFrame'),studentId=$('student').value;
+  if($('printSheet').disabled||frame.dataset.loadedStudent!==studentId)
+   throw Error('Grade Sheet preview is not loaded for this student');
+  const print=report.printFor(studentId);
   if(!print.ready)throw Error(print.reason);
-  $('sheetFrame').contentWindow?.print();
+  if(!frame.contentWindow)throw Error('Print frame unavailable');
+  frame.contentWindow.focus();frame.contentWindow.print();
  }catch(e){clearReview();status('Print blocked: '+e.message)}
 };
 $('exportExcel').onclick=async()=>{

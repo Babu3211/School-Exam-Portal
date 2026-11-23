@@ -8,7 +8,8 @@ for(const name of ['grade-ledger','grade-sheet']){
  assert.match(html,/grade-report-console\.mjs/);
  for(const id of ['schoolId','email','password','login','logout','schoolClass','term','load','cancel','gradeOutput','exportExcel','student','previewSheet','printSheet','sheetFrame'])
   assert.match(html,new RegExp('id="'+id+'"'));
- assert.match(html,/sandbox="allow-same-origin"/);
+ assert.match(html,/sandbox="allow-same-origin allow-modals"/);
+ assert.doesNotMatch(html,/allow-scripts/);
  assert.doesNotMatch(html,/firebaseConfig|apiKey|password[^>]*value=/);
  assert.match(hub,new RegExp('href="\\./'+name+'\\.html"'));
 }
@@ -18,6 +19,10 @@ assert.match(ui,/await verifyAgain\(/);
 assert.match(ui,/enforceSchoolIdle\(/);
 assert.match(ui,/clearReview\(/);
 assert.match(ui,/srcdoc/);
+assert.match(ui,/frame\.onload=/);
+assert.match(ui,/sheetSeq!==seq/);
+assert.match(ui,/frame\.dataset\.loadedStudent!==studentId/);
+assert.match(ui,/frame\.contentWindow\.print\(\)/);
 assert.match(ui,/legacyGradePreviewExcel\(/);
 assert.match(ui,/\.xlsx/);
 assert.match(read,/loadCompleteClassRoster\(/);

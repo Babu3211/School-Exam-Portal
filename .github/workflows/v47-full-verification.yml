@@ -80,6 +80,11 @@ jobs:
             status=$?
             echo 'Static feature evidence: blockers detected; see artifact.' >> "$GITHUB_STEP_SUMMARY"
           fi
+          if [ -s v47-feature-evidence.json ]; then
+            echo '### V47 parity blockers (static audit only)' >> "$GITHUB_STEP_SUMMARY"
+            node --input-type=module -e "import {readFileSync} from 'node:fs'; const r=JSON.parse(readFileSync('v47-feature-evidence.json','utf8')); for(const c of r.checks.filter(x=>x.status==='BLOCKED'))console.log('- **'+c.name+'**: '+c.reason); console.log('Production ready: **NO** — independent browser E2E verification still required.');" >> "$GITHUB_STEP_SUMMARY"
+            cat v47-feature-evidence.json
+          fi
           if [ -s v47-feature-evidence-error.log ]; then cat v47-feature-evidence-error.log; fi
           exit "$status"
       - uses: actions/upload-artifact@v4
