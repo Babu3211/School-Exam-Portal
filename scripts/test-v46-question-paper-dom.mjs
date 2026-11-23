@@ -15,7 +15,7 @@ const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>'
 const normal=s=>String(s||'').trim().toLocaleLowerCase().replace(/\s+/g,' ');
 for(const id of ['qpClass','qpSubject','qpSection','qpPaperFullMarks','qpAutoLanguage',
  'qpSmartGenerateBtn','qpGenerateBtn','qpTopicSelectAll','qpTopicClearAll',
- 'qpSavePaperBtn','qpPrintPaperBtn','qpAnswerKeyBtn','qpPaperPreview','qpAutoReviewed'])
+ 'qpSavePaperBtn','qpPrintPaperBtn','qpAnswerKeyBtn','qpPaperPreview','qpAutoReviewed','qpAutoMode','qpAutoGridStatus'])
  assert.ok($(id),'Expected actual DOM control '+id);
 assert.deepEqual([...$('qpAutoLanguage').options].map(x=>x.value),['ne','en','both']);
 assert.equal($('qpSavePaperBtn').disabled,true,'No paper saved before generation');
@@ -34,6 +34,7 @@ assert.equal($('qpTopicCount').textContent,'19 Topic');
 const checkboxes=[...dom.window.document.querySelectorAll('[data-qp-topic]')];
 for(const [i,input]of checkboxes.entries())input.checked=i<3;
 $('qpAutoLanguage').value='both';$('qpPaperFullMarks').value='3';
+$('qpAutoMode').value='practice';
 const renderPaperPreview=new Function('$','esc','questionTypeLabel','levelLabel','generatedPaper',
  code('function renderPaperPreview(','function printPaper(')+'return renderPaperPreview;')(
  $,escape,t=>({mcq:'MCQ',short:'Short',long:'Long'})[t]||t,x=>x,null);
@@ -51,9 +52,10 @@ const make=(overrides={})=>{
   'schoolHeader','gradeNumber','renderPaperPreview','message','selectedClass',
   'selectedSubject','selectedSection','questionDataLoadEpoch',
   'verifiedQuestionSelection','questionRows','bundledPracticeQuestions',
-  'currentBlueprint','auth'];
- const fn=new Function(...params,'let generatedPaper=null;\n'+
+  'currentBlueprint','auth','blueprintRows'];
+ const fn=new Function(...params,'let generatedPaper=null,lastAutoSignature=null;\n'+
   code('function updateAutoReviewActions()','function renderPaperPreview(')+
+  code('function blueprintForFullMarks(','async function generateSmartPaper()')+
   code('async function generateSmartPaper()','async function savePaper()')+
   'return {run:generateSmartPaper,getPaper:()=>generatedPaper};');
  return fn($,props.roleCanTeach,buildAutomaticQuestionPaper,
@@ -61,7 +63,7 @@ const make=(overrides={})=>{
   props.schoolHeader,v=>Number(String(v).match(/[0-9]+/)?.[0]||0),
   ()=>{},msg=>{lastMessage=msg},
   'Class 10','Science and Technology','A',props.questionDataLoadEpoch,
-  props.verifiedQuestionSelection,[],bank.questions,null,props.auth);
+  props.verifiedQuestionSelection,[],bank.questions,null,props.auth,[]);
 };
 const live=make();
 await live.run();
