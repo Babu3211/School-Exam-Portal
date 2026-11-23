@@ -78,7 +78,7 @@ function inspectItem(q,guide,language,areaCodes){
  if(total>12||type==='CCA'&&total<3||type==='WCA'&&total<2)return null;
  const areas=mapOf(areaCodes),cognitive=mapOf(LEVELS);
  for(const sub of q.subquestions){areas[n(sub.unitCode)]+=sub.marks;cognitive[sub.cognitiveLevel]+=sub.marks;}
- return {question:q,group:type,id:n(q.id),topicId:n(q.topicId),areas,cognitive,
+ return {question:q,group:type,id:n(q.id),family:n(q.variantFamily)||n(q.id),topicId:n(q.topicId),areas,cognitive,
   unitCode:type==='CCA'?null:touched[0],marks:total};
 }
 export function inspectCdcOptionalMathPaper({
@@ -136,7 +136,7 @@ export function inspectCdcOptionalMathPaper({
  const targetAreas=Object.fromEntries(guide.areas.map(x=>[String(x.unitCode),x.totalMarks]));
  const targetCognition=Object.fromEntries(LEVELS.map(l=>[l,guide.cognitiveDistribution[l]*.75]));
  const tolerance=guide.compositeRules.cognitiveMarksTolerance;
- const used=new Set(),seenTopics=new Set(),chosen=new Array(slots.length),
+ const used=new Set(),usedFamilies=new Set(),seenTopics=new Set(),chosen=new Array(slots.length),
   currentAreas=mapOf(areaCodes),currentCog=mapOf(LEVELS),
   groupMarks=mapOf(GROUPS),groupCounts=mapOf(GROUPS);
  if([previousSignature,...avoidSignatures].some(s=>typeof s!=='string'||s.length>12000))
@@ -155,17 +155,17 @@ export function inspectCdcOptionalMathPaper({
   }
   const {i,slot,pool}=order[step];
   for(const q of pool){
-   if(used.has(q.id))continue;
+   if(used.has(q.id)||usedFamilies.has(q.family))continue;
    if(groupMarks[slot.group]+q.marks>
      (slot.group==='objective'?11:slot.group==='WCA'?40:24))continue;
    if(areaCodes.some(code=>currentAreas[code]+q.areas[code]>targetAreas[code]))continue;
    if(LEVELS.some(l=>currentCog[l]+q.cognitive[l]>targetCognition[l]+tolerance))continue;
-   used.add(q.id);chosen[i]=q;groupMarks[q.group]+=q.marks;groupCounts[q.group]++;
+   used.add(q.id);usedFamilies.add(q.family);chosen[i]=q;groupMarks[q.group]+=q.marks;groupCounts[q.group]++;
    for(const code of areaCodes)currentAreas[code]+=q.areas[code];
    for(const l of LEVELS)currentCog[l]+=q.cognitive[l];
    seenTopics.add(q.topicId);
    if(search(step+1))return true;
-   chosen[i]=null;used.delete(q.id);groupMarks[q.group]-=q.marks;groupCounts[q.group]--;
+   chosen[i]=null;used.delete(q.id);usedFamilies.delete(q.family);groupMarks[q.group]-=q.marks;groupCounts[q.group]--;
    for(const code of areaCodes)currentAreas[code]-=q.areas[code];
    for(const l of LEVELS)currentCog[l]-=q.cognitive[l];
    if(!chosen.some(x=>x?.topicId===q.topicId))seenTopics.delete(q.topicId);
