@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('./school-admin.html',import.meta.url),'utf8');
 const js=readFileSync(new URL('./school-admin-console.mjs',import.meta.url),'utf8');
 for(const id of ['exportSchoolSnapshot','snapshotStatus'])assert.match(html,new RegExp('id="'+id+'"'));
-assert.match(html,/\\.xlsx/);
+assert.match(html,/\.xlsx/);
 assert.match(html,/पूर्ण Firestore Backup होइन/);
 assert.match(js,/collectSchoolAuditExcel\(/);
 assert.match(js,/createSchoolStore\(/);
