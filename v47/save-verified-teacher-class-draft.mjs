@@ -114,7 +114,9 @@ export async function saveVerifiedTeacherClassDraft({
    throw Error('Committed Teacher Draft revision or contents changed');
   if(latestRoster.studentIds.length!==roster.studentIds.length||
    latestRoster.studentIds.some((v,i)=>v!==roster.studentIds[i])||
-   latestRoster.students.some(student=>!isActiveEnrolledStudent(student)))
+   latestRoster.students.some((student,i)=>
+    JSON.stringify(student)!==JSON.stringify(roster.students[i])||
+    !isActiveEnrolledStudent(student)))
    throw Error('Teacher class enrollment changed during Draft Save');
   await verifyAssignment();
  }catch(cause){

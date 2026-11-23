@@ -114,13 +114,15 @@ for(const kind of ['revoked assignment','viewer membership','inactive school','c
  await assert.rejects(saveVerifiedTeacherClassDraft({...source,api:f.api}));
  assert.equal(f.writes.length,0,'No teacher Draft after '+kind);
 }
-for(const issue of ['network','post-enrollment','post-login']){
+for(const issue of ['network','post-enrollment','post-name-change','post-active-change','post-login']){
  const f=fixture(),auth={currentUser:{uid}};
  const tx=f.api.runTransaction;
  let committed=false;
  f.api.runTransaction=async(...args)=>{
   const res=await tx(...args);committed=true;
   if(issue==='post-enrollment')f.data.set('schools/'+schoolId+'/students/s4',{schoolId,class:classId,active:true,name:'new'});
+  if(issue==='post-name-change')f.data.get('schools/'+schoolId+'/students/s2').name='changed after save';
+  if(issue==='post-active-change')f.data.get('schools/'+schoolId+'/students/s2').active=false;
   if(issue==='post-login')auth.currentUser={uid:'intruder'};
   return res;
  };
