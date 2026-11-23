@@ -98,3 +98,8 @@ assert.match(page,/generatedPaper=null/);
 assert.match(page,/Topic, भाषा वा प्रश्नपत्र विवरण परिवर्तन/);
 assert.match(page,/CDC प्रकाशित नमुना होइन/);
 console.log('PASS subject-scoped source isolation, changing selection invalidation and printed draft caution');
+
+assert.match(page,/verifiedQuestionSelection=null/);
+assert.match(page,/verifiedQuestionSelection\.request!==questionDataLoadEpoch/);
+assert.match(page,/verifiedQuestionSelection=\{className,subject,section,request\}/);
+console.log('PASS rejected stale subject/class/section loads before generating question paper');

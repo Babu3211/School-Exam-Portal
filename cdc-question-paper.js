@@ -22,7 +22,7 @@ const normal = value => String(value || "").trim().toLocaleLowerCase().replace(/
 const isAdmin = () => !!auth.currentUser && auth.currentUser.uid === ADMIN_UID;
 let role = null, classSubjects = [], curriculumRows = [], questionRows = [], blueprintRows = [], savedPapers = [], generatedPaper = null;
 let selectedClass = "", selectedSubject = "", selectedSection = "", currentBlueprint = null;
-let bundledPracticeUnits=[],bundledPracticeQuestions=[],bundledPracticeStatus="",questionDataLoadEpoch=0;
+let bundledPracticeUnits=[],bundledPracticeQuestions=[],bundledPracticeStatus="",questionDataLoadEpoch=0,verifiedQuestionSelection=null;
 
 function message(text, error = false) {
   const el = $("qpMessage");
@@ -385,6 +385,7 @@ async function loadBundledPracticeBank(){
 async function loadCurrentData() {
   if (!selectedClass || !selectedSubject) return;
   const request=++questionDataLoadEpoch,className=selectedClass,subject=selectedSubject,section=selectedSection;
+  verifiedQuestionSelection=null;
   const stillCurrent=()=>request===questionDataLoadEpoch&&selectedClass===className&&selectedSubject===subject&&selectedSection===section;
   const g=gradeNumber(selectedClass);
   const [curr, questions, blueprints] = await Promise.all([
@@ -402,6 +403,7 @@ async function loadCurrentData() {
   if(!stillCurrent())return;
   renderTopics();renderQuestionRows();
   $("qpAutoSourceStatus").textContent=bundledPracticeStatus;
+  verifiedQuestionSelection={className,subject,section,request};
   const badge=$("qpBlueprintBadge");
   if(currentBlueprint){
     badge.textContent="CDC Grid · "+(currentBlueprint.curriculumVersion||"संस्करण");
@@ -580,6 +582,11 @@ async function generatePaper() {
   message("प्रश्नपत्र तयार भयो। "+questions.length+" प्रश्न, "+fullMarks+" अङ्क। संज्ञानात्मक वितरण: "+coverage+(missingAnswerCount?"। "+missingAnswerCount+" प्रश्नको उत्तर संकेत बाँकी छ":"। सबै प्रश्नको उत्तर संकेत उपलब्ध छ")+". Save वा Print गर्न सक्नुहुन्छ।");
 }
 async function generateSmartPaper(){
+ if(!verifiedQuestionSelection||verifiedQuestionSelection.request!==questionDataLoadEpoch||
+  verifiedQuestionSelection.className!==selectedClass||
+  verifiedQuestionSelection.subject!==selectedSubject||
+  verifiedQuestionSelection.section!==selectedSection)
+  throw Error("यो कक्षा/विषय/Section को प्रश्न बैंक लोड भएको छैन। फेरि लोड गर्नुहोस्।");
  if(!selectedClass||!selectedSubject||!roleCanTeach(selectedClass,selectedSubject,selectedSection))
   throw Error("कक्षा/विषय/Section मा प्रश्नपत्र बनाउन अनुमति छैन।");
  const topicIds=selectedTopicIds(),target=Number($("qpPaperFullMarks").value);
@@ -898,6 +905,7 @@ if(window.currentPage==="question-papers"&&document.getElementById("questionPape
 document.addEventListener("change",async event=>{
   const t=event.target;
   if(t.id==="qpClass"){
+    questionDataLoadEpoch++;verifiedQuestionSelection=null;
     selectedClass=t.value;selectedSubject="";selectedSection="";generatedPaper=null;savedPapers=[];$("qpPaperRows").innerHTML='<tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr>';
     $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;$("qpAnswerKeyBtn").disabled=true;
     const opts=classSubjects.filter(x=>x.className===selectedClass);
@@ -909,6 +917,7 @@ document.addEventListener("change",async event=>{
     renderTopics();renderQuestionRows();message("अब विषय छान्नुहोस्।");
   }
   if(t.id==="qpSubject"){
+    questionDataLoadEpoch++;verifiedQuestionSelection=null;
     selectedSubject=t.value;selectedSection="";generatedPaper=null;savedPapers=[];$("qpPaperRows").innerHTML='<tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr>';
     $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;$("qpAnswerKeyBtn").disabled=true;
     curriculumRows=[];questionRows=[];bundledPracticeUnits=[];bundledPracticeQuestions=[];
@@ -918,7 +927,7 @@ document.addEventListener("change",async event=>{
     if(sections.length===1){selectedSection=sections[0];$("qpSection").value=selectedSection;}
     if(selectedClass&&selectedSubject&&sections.length===1)try{await loadCurrentData();message("CDC Topic, प्रश्न बैंक र Blueprint लोड भए।");}catch(err){console.error(err);message("डेटा लोड भएन: "+(err.code||err.message),true);}else if(sections.length>1)message("कृपया Section छान्नुहोस्।");
   }
-  if(t.id==="qpSection"){selectedSection=t.value;generatedPaper=null;if(selectedClass&&selectedSubject)try{await loadCurrentData();message("Section अनुसार Topic र प्रश्न बैंक लोड भए।");}catch(err){message("डेटा लोड भएन: "+(err.code||err.message),true);}}
+  if(t.id==="qpSection"){questionDataLoadEpoch++;verifiedQuestionSelection=null;selectedSection=t.value;generatedPaper=null;if(selectedClass&&selectedSubject)try{await loadCurrentData();message("Section अनुसार Topic र प्रश्न बैंक लोड भए।");}catch(err){message("डेटा लोड भएन: "+(err.code||err.message),true);}}
   if(t.matches?.("[data-qp-topic]")||
     ["qpAutoLanguage","qpPaperFullMarks","qpPaperDuration","qpPaperTitle",
      "qpPaperYear","qpPaperMcqCount","qpPaperMcqMarks","qpPaperShortCount",
