@@ -1,7 +1,7 @@
 import { getApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
 import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSubject,isQuestionReadyForLanguage,cognitiveMarkDistribution} from "./cdc-question-autogen.mjs";
 import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
-import {QUESTION_EXCEL_FIELDS,parseQuestionExcelSheet} from "./cdc-question-excel.mjs";
+import {QUESTION_EXCEL_FIELDS,parseQuestionExcelSheet,CDC_GRID_EXCEL_FIELDS,parseCdcGridExcelSheet} from "./cdc-question-excel.mjs";
 import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 import {
@@ -169,7 +169,7 @@ function pageShell() {
         <div class="qp-field" style="grid-column:1/-1"><label for="qpBpSourceUrl">आधिकारिक CDC स्रोत URL</label><input id="qpBpSourceUrl" type="url" maxlength="500" required></div>
         <div class="qp-field" style="grid-column:1/-1"><label for="qpBpUnitGrid">मूल CDC Grid अनुसार Unit–Level–Question Type–Marks (JSON, Admin मात्र)</label><textarea id="qpBpUnitGrid" rows="5" required maxlength="20000" placeholder='[{"unitCode":"1","type":"mcq","marks":1,"count":2,"cognitiveLevel":"knowledge"}]'></textarea>
           <p class="qp-hint">माथिको JSON केवल ढाँचाको उदाहरण हो, CDC को आधिकारिक वितरण होइन। सम्बन्धित कक्षा/विषयको CDC दस्तावेजबाट वास्तविक पङ्क्ति पुष्टि गरेर मात्र राख्नुहोस्। शिक्षकले प्रश्न टाइप गर्नुपर्दैन।</p>
-          <div class="qp-actions"><label class="qp-btn alt" for="qpBpGridFile">समीक्षा गरिएको CDC Grid JSON File छान्नुहोस्</label><input class="qp-hidden" id="qpBpGridFile" type="file" accept=".json,application/json">
+          <div class="qp-actions"><button class="qp-btn alt" id="qpBpGridExcelTemplateBtn" type="button">CDC Grid Excel Sample (.xlsx)</button><label class="qp-btn alt" for="qpBpGridExcelFile">Admin: Import Reviewed Grid Excel</label><input class="qp-hidden" id="qpBpGridExcelFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"><label class="qp-btn alt" for="qpBpGridFile">CDC Grid JSON (पुरानो विकल्प)</label><input class="qp-hidden" id="qpBpGridFile" type="file" accept=".json,application/json">
           <button class="qp-btn alt" type="button" id="qpBpAnalyzeGrid">Grid का अंक/प्रकार स्वतः गणना</button></div>
           <p class="qp-hint" id="qpBpGridAnalysis" role="status">असली Grid पङ्क्ति ल्याएपछि Preview गर्नुहोस्; गलत जम्मा भए Save हुनेछैन।</p>
           <label class="qp-topic"><input id="qpBpSourceReviewed" type="checkbox" required>मूल CDC Grid का Unit, प्रश्न संख्या, प्रकार, अङ्क र संज्ञानात्मक स्तर मैले जाँचेर मिलाएको छु।</label>
@@ -1188,6 +1188,59 @@ async function questionExcelLibrary(){
  }).catch(error=>{questionExcelLoader=null;throw error;});
  return questionExcelLoader;
 }
+async function downloadCdcGridExcelTemplate(){
+ if(!isAdmin())throw Error("CDC Grid Excel Template Admin का लागि मात्र हो।");
+ const ExcelJS=await questionExcelLibrary(),workbook=new ExcelJS.Workbook();
+ workbook.creator="SMSS Exam Portal";
+ const sheet=workbook.addWorksheet("CDC Unit Grid");
+ sheet.addRow(CDC_GRID_EXCEL_FIELDS.map(x=>x[1]));
+ sheet.views=[{state:"frozen",ySplit:1}];
+ sheet.getRow(1).font={bold:true,color:{argb:"FFFFFFFF"}};
+ sheet.getRow(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF234F91"}};
+ for(let i=0;i<CDC_GRID_EXCEL_FIELDS.length;i++)
+  sheet.getColumn(i+1).width=[17,21,25,21,24][i];
+ const guide=workbook.addWorksheet("Instructions");
+ for(const sentence of [
+  "SMSS CDC Unit Grid — Admin reviewed source only",
+  "यी Header नबदल्नुहोस्। CDC को वास्तविक विशिष्टीकरण तालिकाबाट मात्र पङ्क्ति भर्नुहोस्।",
+  "Unit Code: 1, 2 ... | Question Type: mcq / short / long",
+  "Marks Per Question र Question Count पूर्ण सङ्ख्या हुन्।",
+  "Cognitive Level: knowledge / understanding / application / higher",
+  "Admin ले Portal मा सही Class, Subject छान्नुपर्छ।",
+  "Grid Excel Import पछि पूर्णाङ्क र प्रतिशत गणना हुन्छ; त्यतिबेला कुनै Firebase Save हुँदैन।",
+  "मूल CDC स्रोत URL र Version राखेर पङ्क्तिगत पुनः जाँच गरेपछि मात्र Review checkbox चयन गर्नुहोस्।",
+  "यहाँ कुनै अनुमानित CDC प्रश्न सङ्ख्या वा अङ्क राखिएको छैन।"
+ ])guide.addRow([sentence]);
+ guide.getColumn(1).width=112;guide.getRow(1).font={bold:true,size:14};
+ const output=await workbook.xlsx.writeBuffer();
+ const url=URL.createObjectURL(new Blob([output],{
+  type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+ }));
+ const link=document.createElement("a");
+ link.href=url;link.download="SMSS_CDC_Unit_Grid_Sample.xlsx";link.click();
+ URL.revokeObjectURL(url);
+}
+async function importCdcGridExcel(file){
+ const scope=captureQuestionBankImportScope();
+ if(!/\\.xlsx$/i.test(file.name||"")||file.size>1000000)
+  throw Error("CDC Grid १ MB सम्मको .xlsx फाइल मात्र स्वीकार हुन्छ।");
+ const ExcelJS=await questionExcelLibrary(),workbook=new ExcelJS.Workbook();
+ await workbook.xlsx.load(await file.arrayBuffer());
+ const sheet=workbook.getWorksheet("CDC Unit Grid");
+ if(!sheet)throw Error("Excel मा CDC Unit Grid नामको Sheet छैन।");
+ const rows=parseCdcGridExcelSheet(sheet);
+ const calculated=aggregateExactCdcGrid(rows);
+ const json=JSON.stringify(rows,null,2);
+ if(json.length>20000)throw Error("CDC Grid डेटा 20KB सीमा नाघ्यो।");
+ // During asynchronous loading a new class/subject/login invalidates this
+ // spreadsheet. No source row is allowed to leak into another class.
+ assertQuestionBankImportScope(scope);
+ $("qpBpUnitGrid").value=json;
+ $("qpBpFullMarks").value=String(calculated.fullMarks);
+ $("qpBpSourceReviewed").checked=false;
+ reviewAdminUnitGrid();
+ $("qpBpGridAnalysis").textContent+=" Excel को डेटा मात्र पढिएको हो; मूल CDC दस्तावेज जाँचपछि मात्र Review/Save गर्नुहोस्।";
+}
 async function downloadQuestionExcelTemplate(){
  if(!isAdmin())throw Error("Question Bank Excel Sample Admin का लागि मात्र हो।");
  const ExcelJS=await questionExcelLibrary(),workbook=new ExcelJS.Workbook();
@@ -1301,6 +1354,12 @@ document.addEventListener("change",async event=>{
   if(t.id==="qpPaperFullMarks"||t.id==="qpAutoMode"||t.id==="qpAutoLanguage"||
      t.matches?.("[data-qp-topic]"))updateAutoGridStatus();
   if(t.id==="qpAutoReviewed")updateAutoReviewActions();
+  if(t.id==="qpBpGridExcelFile"&&t.files?.[0]){
+    try{await importCdcGridExcel(t.files[0]);}
+    catch(err){console.error("CDC Grid Excel import failed",err);
+      $("qpBpGridAnalysis").textContent="CDC Grid Excel आयात भएन: "+err.message;}
+    finally{t.value="";}
+  }
   if(t.id==="qpBpGridFile"&&t.files?.[0]){
     try{
       if(t.files[0].size>20000)throw Error("Grid JSON फाइल 20KB भन्दा ठूलो छ।");
@@ -1344,6 +1403,7 @@ document.addEventListener("click",async event=>{
   const t=event.target.closest("button");if(!t)return;
   try{
     if(t.id==="qpTemplateBtn")downloadTemplate();
+    if(t.id==="qpBpGridExcelTemplateBtn")await downloadCdcGridExcelTemplate();
     if(t.id==="qpQuestionExcelTemplateBtn")await downloadQuestionExcelTemplate();
     if(t.id==="qpQuestionTemplateBtn")downloadQuestionTemplate();
     if(t.id==="qpGrade8SciencePackBtn")await loadGrade8SciencePack();
