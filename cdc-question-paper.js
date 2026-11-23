@@ -1222,7 +1222,7 @@ async function downloadCdcGridExcelTemplate(){
 }
 async function importCdcGridExcel(file){
  const scope=captureQuestionBankImportScope();
- if(!/\\.xlsx$/i.test(file.name||"")||file.size>1000000)
+ if(!/\.xlsx$/i.test(file.name||"")||file.size>1000000)
   throw Error("CDC Grid १ MB सम्मको .xlsx फाइल मात्र स्वीकार हुन्छ।");
  const ExcelJS=await questionExcelLibrary(),workbook=new ExcelJS.Workbook();
  await workbook.xlsx.load(await file.arrayBuffer());
