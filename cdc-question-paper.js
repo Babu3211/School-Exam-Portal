@@ -913,15 +913,38 @@ async function importTopics(file) {
   }
   await loadCurrentData();message(saved+" वटा CDC एकाइ आयात/अपडेट भए।");
 }
+// Capture the exact school class/subject/section before asynchronous file
+// parsing. A late Excel or JSON read must never import into another class.
+function captureQuestionBankImportScope(){
+ if(!isAdmin()||!auth.currentUser?.uid)
+  throw Error("प्रश्न बैंक आयात Admin का लागि मात्र हो।");
+ if(!selectedClass||!selectedSubject)
+  throw Error("पहिले कक्षा र विषय छान्नुहोस्।");
+ const scope={className:selectedClass,subject:selectedSubject,section:selectedSection,
+  epoch:questionDataLoadEpoch,uid:auth.currentUser.uid};
+ assertQuestionBankImportScope(scope);
+ return scope;
+}
+function assertQuestionBankImportScope(scope){
+ if(!scope||!isAdmin()||!auth.currentUser||
+  auth.currentUser.uid!==scope.uid||selectedClass!==scope.className||
+  selectedSubject!==scope.subject||selectedSection!==scope.section||
+  questionDataLoadEpoch!==scope.epoch||
+  verifiedQuestionSelection?.request!==scope.epoch||
+  verifiedQuestionSelection?.className!==scope.className||
+  verifiedQuestionSelection?.subject!==scope.subject||
+  verifiedQuestionSelection?.section!==scope.section)
+  throw Error("Excel/JSON पढ्दा Login, कक्षा, विषय वा Section परिवर्तन भयो। आयात रोकियो; सही छनोटबाट फेरि आयात गर्नुहोस्।");
+}
 async function importQuestionBank(file) {
+  const scope=captureQuestionBankImportScope();
   if(!/\.json$/i.test(file.name||""))throw Error("JSON फाइल मात्र यहाँ आयात हुन्छ।");
   if(file.size>1500000)throw Error("JSON प्रश्न बैंक फाइल धेरै ठूलो छ।");
   const raw=JSON.parse(await file.text());
-  return importQuestionBankRows(Array.isArray(raw)?raw:raw?.questions);
+  return importQuestionBankRows(Array.isArray(raw)?raw:raw?.questions,scope);
 }
-async function importQuestionBankRows(rows) {
-  if(!isAdmin())throw new Error("प्रश्न बैंकको सामूहिक आयात Admin का लागि मात्र हो।");
-  if(!selectedClass||!selectedSubject)throw new Error("पहिले कक्षा र विषय छान्नुहोस्।");
+async function importQuestionBankRows(rows,scope) {
+  assertQuestionBankImportScope(scope);
   if(!Array.isArray(rows)||!rows.length||rows.length>500)throw new Error("Excel/JSON मा १–५०० प्रश्न हुनुपर्छ।");
   const known=new Set(questionRows.map(q=>normal(q.topicId+"::"+q.questionType+"::"+q.marks+"::"+q.questionText)));
   const payloads=[];
@@ -977,21 +1000,29 @@ async function importQuestionBankRows(rows) {
     if(known.has(fingerprint)){duplicates++;continue;}
     known.add(fingerprint);
     payloads.push({
-      gradeNumber:gradeNumber(selectedClass),className:selectedClass,subject:selectedSubject,section:selectedSection,
+      gradeNumber:gradeNumber(scope.className),className:scope.className,subject:scope.subject,section:scope.section,
       unitId,unitCode,unitTitle:resolvedUnitTitle,topicId,topicName,questionType,marks,cognitiveLevel,
       questionText,questionTextEn,options,optionsEn,correctOption,answer,answerEn,
       sourceTitle,sourceUrl,sourceStatus:"imported_question_teacher_review_required",
-      createdBy:auth.currentUser.uid,createdByName:String(role?.displayName||"Admin").slice(0,100),
+      createdBy:scope.uid,createdByName:String(role?.displayName||"Admin").slice(0,100),
       createdAt:serverTimestamp(),status:"active"
     });
   }
+  // Fail before any database write if a different selection was opened
+  // while parsing or validating the rows.
+  assertQuestionBankImportScope(scope);
   if(!payloads.length){message("नयाँ प्रश्न भेटिएन; "+duplicates+" दोहोरिएका प्रश्न छोडिए।");return;}
   const batch=writeBatch(db);
   for(const payload of payloads)batch.set(doc(collection(db,"question_bank")),payload);
+  assertQuestionBankImportScope(scope);
   await batch.commit();
-  await logQuestionActivity("question_bank_import","bulk",selectedClass+" "+selectedSubject+" · "+payloads.length+" questions");
-  await loadCurrentData();
-  message(payloads.length+" प्रश्न आयात भए; "+duplicates+" दोहोरिएका प्रश्न छोडिए।");
+  await logQuestionActivity("question_bank_import","bulk",scope.className+" "+scope.subject+" · "+payloads.length+" questions");
+  // Do not overwrite the newly selected class UI after an async commit.
+  if(selectedClass===scope.className&&selectedSubject===scope.subject&&
+     selectedSection===scope.section&&auth.currentUser?.uid===scope.uid)
+    await loadCurrentData();
+  message(payloads.length+" प्रश्न "+scope.className+" / "+scope.subject+
+   " मा आयात भए; "+duplicates+" दोहोरिएका प्रश्न छोडिए।");
 }
 async function loadGrade8SciencePack() {
   if(!isAdmin())throw new Error("CDC अभ्यास प्याक Admin ले मात्र लोड गर्न सक्छ।");
@@ -1184,7 +1215,7 @@ async function downloadQuestionExcelTemplate(){
  URL.revokeObjectURL(url);
 }
 async function importQuestionBankExcel(file){
- if(!isAdmin())throw Error("Question Bank Excel Import Admin का लागि मात्र हो।");
+ const scope=captureQuestionBankImportScope();
  if(!/\.xlsx$/i.test(file.name||"")||file.size>5000000)
   throw Error("५ MB सम्मको .xlsx फाइल मात्र आयात गर्नुहोस्।");
  const ExcelJS=await questionExcelLibrary(),book=new ExcelJS.Workbook();
@@ -1192,7 +1223,7 @@ async function importQuestionBankExcel(file){
  const sheet=book.getWorksheet("Question Bank");
  if(!sheet)throw Error("Excel मा Question Bank नामको Sheet आवश्यक छ।");
  const rows=parseQuestionExcelSheet(sheet);
- return importQuestionBankRows(rows);
+ return importQuestionBankRows(rows,scope);
 }
 function downloadQuestionTemplate() {
   downloadJson("SMSS_Question_Bank_Template.json",{
