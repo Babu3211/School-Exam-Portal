@@ -59,6 +59,8 @@ assert.match(source,/allowFormulaVerifiedDraft:true/);
 assert.match(source,/inspectCdcOptionalMathPaper\(\{/);
 assert.match(source,/renderCdcCompositePaper\(paper,\{escapeHtml:esc\}\)/);
 assert.match(source,/return generateOptionalMathCompositePaper\(grouped\)/);
+assert.match(source,/const compound=target===75\?getCdcOptionalMathGuide/);
+assert.match(source,/message\("CDC को ६ वटा ऐच्छिक गणित Unit स्वतः चयन भए/);
 assert.match(source,/paper\.questionFormat==="cdc_optional_math_composite"/);
 assert.match(source,/q\.reviewStatus==="teacher_reviewed"/);
 assert.match(source,/if\(strict&&target===75\)\{/);
