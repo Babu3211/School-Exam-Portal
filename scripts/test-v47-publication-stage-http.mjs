@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {once} from 'node:events';
 import {createV47ApiServer} from '../src/v47/node-api-server.mjs';
+import {officialClassPointerId} from '../v47/server-publication-authoritative-preflight.mjs';
+import {loadCommittedOfficialClassMarks} from '../v47/server-official-marks-firestore-loader.mjs';
 const scope={schoolId:'12345678',classId:'9',subjectId:'computer',examId:'final'};
 const sid=scope.schoolId,actorUid='admin1',prefix='schools/'+sid,docId='9_computer_final';
 const docs=new Map(),clone=structuredClone,put=(p,d)=>docs.set(p,clone(d));
@@ -107,5 +109,50 @@ try{
  const stageTwo=await post();assert.equal(stageTwo.status,202);
  const second=(await stageTwo.json()).stage.publicationId;
  assert.notEqual(second,value.stage.publicationId,'Server owns unique publication IDs');
- console.log('PASS V47 staging HTTP: 101 students, explicit fresh review, token/role/tenant checks, server-owned IDs, zero official writes');
+ // The default server NEVER enables official publish, even with an admin token.
+ const commitData={scope,confirmation,publicationId:value.stage.publicationId,
+  expectedPreviousId:null,confirmPublish:'PUBLISH OFFICIAL MARKS'};
+ const callCommit=async (baseUrl,body=commitData,token=actorUid,method='POST')=>fetch(
+  baseUrl+'/api/v47/publication/commit',{
+   method,headers:{authorization:'Bearer '+token,'content-type':'application/json'},
+   body:method==='GET'?undefined:JSON.stringify(body)
+  });
+ assert.equal((await callCommit(origin)).status,503,'Default server must NOT publish');
+ assert.equal([...docs.keys()].some(p=>p.includes('/official_marks_pointers/')),false);
+ const enabled=createV47ApiServer({auth,firestore,publicationEnabled:true});
+ try{
+  enabled.listen(0,'127.0.0.1');await once(enabled,'listening');
+  const approvedOrigin='http://127.0.0.1:'+enabled.address().port;
+  assert.equal((await callCommit(approvedOrigin,{...commitData,confirmPublish:true})).status,400);
+  assert.equal((await callCommit(approvedOrigin,commitData,'viewer1')).status,403);
+  assert.equal((await callCommit(approvedOrigin,commitData,'revoked')).status,403);
+  assert.equal((await callCommit(approvedOrigin,commitData,'anon')).status,403);
+  assert.equal((await callCommit(approvedOrigin,{...commitData,expectedPreviousId:'pub_ghostid'})).status,403);
+  assert.equal((await callCommit(approvedOrigin,{...commitData,scope:{...scope,schoolId:'87654321'}})).status,403);
+  assert.equal((await callCommit(approvedOrigin,commitData,actorUid,'GET')).status,405);
+  assert.equal([...docs.keys()].some(p=>p.includes('/official_marks_pointers/')),false);
+  docs.get(prefix+'/class_mark_drafts/'+docId).revision=2;
+  assert.equal((await callCommit(approvedOrigin)).status,403,'Changed draft invalidates consent');
+  docs.get(prefix+'/class_mark_drafts/'+docId).revision=1;
+  const official=await callCommit(approvedOrigin);
+  assert.equal(official.status,200,'Explicit enabled server with valid full-class approval may publish');
+  const out=await official.json();
+  assert.equal(out.result.committed,true);
+  assert.equal(out.result.rosterCount,101);
+  assert.equal(out.officialPublished,true);
+  assert.equal(out.cdcGradeApproved,false);
+  const pointer=docs.get(prefix+'/official_marks_pointers/'+officialClassPointerId(scope));
+  assert.equal(pointer.publicationId,value.stage.publicationId);
+  assert.equal(docs.get(prefix+'/official_marks_publications/'+value.stage.publicationId).state,'committed');
+  assert.equal(docs.get(prefix+'/official_marks_audit/'+value.stage.publicationId).action,'official_class_marks_publish');
+  const shown=await loadCommittedOfficialClassMarks({firestore,...scope,actorUid:'viewer1'});
+  assert.equal(shown.published,true);
+  assert.equal(shown.entries.length,101);
+  assert.equal((await callCommit(approvedOrigin)).status,403,'Same publication ID may not be committed twice');
+  assert.equal(docs.get(prefix+'/official_marks_pointers/'+officialClassPointerId(scope)).publicationId,value.stage.publicationId);
+  console.log('PASS V47 opt-in publication HTTP: 101-row staging, CAS pointer/header/audit, Viewer read, stale/duplicate/foreign/revoked denied');
+ }finally{
+  await new Promise((resolve,reject)=>enabled.close(e=>e?reject(e):resolve()));
+ }
+ console.log('PASS V47 staging HTTP: 101 students, explicit fresh review, token/role/tenant checks, server-owned IDs, default publication disabled');
 }finally{await new Promise((resolve,reject)=>server.close(e=>e?reject(e):resolve()))}

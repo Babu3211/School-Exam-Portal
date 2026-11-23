@@ -15,6 +15,7 @@ on:
       - 'src/v47/publication-review-http-handler.mjs'
       - 'scripts/test-v47-publication-review-http.mjs'
       - 'src/v47/node-publication-stage-handler.mjs'
+      - 'src/v47/node-publication-commit-handler.mjs'
       - 'src/v47/node-api-server.mjs'
       - 'scripts/test-v47-publication-stage-http.mjs'
 permissions:

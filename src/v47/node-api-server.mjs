@@ -8,7 +8,8 @@ import {createV47NodeStudentWriteHandler} from "./node-student-write-handler.mjs
 import {createV47NodeOnboardingHandler} from "./node-onboarding-handler.mjs";
 import {createV47NodeTeacherAssignmentHandler} from "./node-teacher-assignment-handler.mjs";
 import {createV47NodePublicationStageHandler} from "./node-publication-stage-handler.mjs";
-export function createV47ApiServer({auth,firestore}) {
+import {createV47NodePublicationCommitHandler} from "./node-publication-commit-handler.mjs";
+export function createV47ApiServer({auth,firestore,publicationEnabled=false}) {
  const read=createV47NodeReadHandler({auth,firestore});
  const write=createV47NodeStudentWriteHandler({auth,firestore});
  const onboard=createV47NodeOnboardingHandler({auth,firestore});
@@ -16,8 +17,15 @@ export function createV47ApiServer({auth,firestore}) {
  // Legacy isolated-read test adapters omit Admin SDK transactions. Instantiate
  // this write-capable staging handler only when its explicit route is called.
  const stage=(req,res)=>createV47NodePublicationStageHandler({auth,firestore})(req,res);
+ // Final commit is disabled unless the explicitly configured trusted server
+ // opts in; the browser, static Hosting and existing runtimes cannot enable it.
+ const publish=(req,res)=>createV47NodePublicationCommitHandler({
+  auth,firestore,publicationEnabled
+ })(req,res);
  return createServer((request,response)=>{
-  const task=request.url==="/api/v47/publication/stage"
+  const task=request.url==="/api/v47/publication/commit"
+   ? publish(request,response)
+   : request.url==="/api/v47/publication/stage"
    ? stage(request,response)
    : request.url==="/api/v47/teachers/assign"
    ? assignTeacher(request,response)

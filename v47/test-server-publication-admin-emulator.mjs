@@ -13,6 +13,7 @@ import {officialClassPointerId} from './server-publication-authoritative-preflig
 import {loadCommittedOfficialClassMarks} from './server-official-marks-firestore-loader.mjs';
 import {createV47PublicationReviewHttpHandler} from '../src/v47/publication-review-http-handler.mjs';
 import {createV47NodePublicationStageHandler} from '../src/v47/node-publication-stage-handler.mjs';
+import {createV47NodePublicationCommitHandler} from '../src/v47/node-publication-commit-handler.mjs';
 const allowedHosts=['127.0.0.1:8081','localhost:8081','[::1]:8081'];
 const localEmulator=allowedHosts.includes(process.env.FIRESTORE_EMULATOR_HOST);
 if(!localEmulator){
@@ -177,6 +178,39 @@ try{
  assert.equal(pointerAfter.data().publicationId,publicationId);
  // A second tenant's existing membership never grants access to this scope.
  await assert.rejects(reader.loadAuthoritative({schoolId:'87654321',uid:actorUid}),/Cross-school/);
+ // Default final-commit API is disabled, even with real Admin SDK and token.
+ const publishAuth={verifyIdToken:async(token,checkRevoked)=>{
+  assert.equal(checkRevoked,true);
+  return {uid:token,firebase:{sign_in_provider:'password'}};
+ }};
+ const publishInput={scope,confirmation,publicationId:stageHttpId,
+  expectedPreviousId:publicationId,confirmPublish:'PUBLISH OFFICIAL MARKS'};
+ const requestPublish=()=>{
+  return {url:'/api/v47/publication/commit',method:'POST',
+   headers:{authorization:'Bearer '+actorUid,'content-type':'application/json'},
+   async *[Symbol.asyncIterator](){yield Buffer.from(JSON.stringify(publishInput));}};
+ };
+ const getResponse=()=>({writableEnded:false,headersSent:false,setHeader(){},
+  end(value){this.body=JSON.parse(value);this.writableEnded=true;}});
+ const disabledCommit=createV47NodePublicationCommitHandler({auth:publishAuth,firestore:db});
+ const disabledRes=getResponse();
+ await disabledCommit(requestPublish(),disabledRes);
+ assert.equal(disabledRes.statusCode,503);
+ assert.equal((await pointerRef.get()).data().publicationId,publicationId);
+ // Explicitly enable ONLY this isolated test handler, never V47 production.
+ const approvedCommit=createV47NodePublicationCommitHandler({
+  auth:publishAuth,firestore:db,publicationEnabled:true
+ });
+ const committedRes=getResponse();
+ await approvedCommit(requestPublish(),committedRes);
+ assert.equal(committedRes.statusCode,200);
+ assert.equal(committedRes.body.result.committed,true);
+ assert.equal((await pointerRef.get()).data().publicationId,stageHttpId);
+ assert.equal((await db.doc(path('official_marks_publications',stageHttpId)).get()).data().state,'committed');
+ assert.equal((await loadCommittedOfficialClassMarks({firestore:db,...scope,actorUid})).entries.length,101);
+ const duplicateCommit=getResponse();
+ await approvedCommit(requestPublish(),duplicateCommit);
+ assert.equal(duplicateCommit.statusCode,403,'CAS and reuse must refuse duplicate HTTP commit');
  console.log('PASS real Firebase Admin Firestore emulator: 101-student configured 4/36/10 staging, two pages, transaction-scoped full roster, CAS pointer/header/audit, official 101-row reader, active Viewer, revoked membership, missing page and inactive-student refusals');
 }finally{
  await deleteApp(app);
