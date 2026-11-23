@@ -45,3 +45,31 @@ export function dashboardStatsText(value){
   return label+': '+count;
  }).join(' · ');
 }
+
+/**
+ * Refresh dashboard aggregates when a verified school tab returns to focus,
+ * without polling Firestore in the background. Neither a school ID nor
+ * activity data is persisted here. This does NOT count online users.
+ */
+export function createForegroundStatsGate(minIntervalMs=60_000){
+ if(!Number.isSafeInteger(minIntervalMs)||minIntervalMs<1000)
+  throw new TypeError('Valid foreground refresh interval required');
+ let key=null,at=-1;
+ const valid=({schoolId,uid,now})=>typeof schoolId==='string'&&schoolId.length>0&&
+  typeof uid==='string'&&uid.length>0&&Number.isFinite(now)&&now>=0;
+ return Object.freeze({
+  seed(input){
+   if(!valid(input))throw new TypeError('Verified school session required');
+   key=input.schoolId+'\u0000'+input.uid;at=input.now;
+  },
+  shouldRefresh(input){
+   if(input?.visible!==true||!valid(input))return false;
+   const selected=input.schoolId+'\u0000'+input.uid;
+   if(selected!==key||input.now<at||input.now-at>=minIntervalMs){
+    key=selected;at=input.now;return true;
+   }
+   return false;
+  },
+  reset(){key=null;at=-1;}
+ });
+}

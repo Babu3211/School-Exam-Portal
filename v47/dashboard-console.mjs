@@ -4,9 +4,10 @@ import {verifySchoolSession} from './verified-school-session.mjs';
 import {schoolDashboardAccess} from './dashboard-access.mjs';
 import {schoolProfileView} from './school-settings-profile.mjs';
 import {schoolSatelliteMapLinks} from './dashboard-school-map.mjs';
-import {loadVerifiedSchoolStats,dashboardStatsText} from './dashboard-stats.mjs';
+import {loadVerifiedSchoolStats,dashboardStatsText,createForegroundStatsGate} from './dashboard-stats.mjs';
 const $=id=>document.getElementById(id);
 let auth,authSdk,db,api,verified=null,busy=false,checkingLink=false,lastActivity=Date.now();
+const foregroundStatsGate=createForegroundStatsGate();
 const MAX_IDLE_MS=60*60*1000;
 const SCHOOL_SELECTION_KEY='smss-v47-dashboard-school';
 const readDocument=async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null};
@@ -47,7 +48,7 @@ function showMetricCards(stats){
 let statsRequest=0;
 let mapRequest=0;
 function resetSchoolMap(){mapRequest++;$('schoolMapFrame').removeAttribute('src');$('schoolMapFrame').hidden=true;$('schoolMapOpen').removeAttribute('href');$('schoolMapOpen').hidden=true;}
-function clear(){resetSchoolMap();statsRequest++;verified=null;resetMetricCards();$('dashboardStats').textContent='विद्यालय प्रमाणित गरेपछि विवरण देखिन्छ।';lock()}
+function clear(){resetSchoolMap();statsRequest++;foregroundStatsGate.reset();verified=null;resetMetricCards();$('dashboardStats').textContent='विद्यालय प्रमाणित गरेपछि विवरण देखिन्छ।';lock()}
 async function refreshStats(){
  if(!verified||!api||!db||!auth)return;
  const selected=verified,request=++statsRequest;
@@ -114,6 +115,7 @@ async function restoreVerifiedSchool(){
   const label=await verifiedSchoolLabel(schoolId,String(school.name??schoolId));
   if(auth.currentUser?.uid!==uid)throw Error('Login changed during profile load');
   verified={uid,schoolId,role:session.role,name:label.label,map:label.map};
+  foregroundStatsGate.seed({schoolId,uid,now:Date.now()});
   $('dashboardSchool').value=schoolId;lastActivity=Date.now();lock();
   message('पहिले प्रमाणित विद्यालयको Session पुनः जाँचियो।');void refreshStats();
  }catch(e){sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();message('विद्यालय फेरि Login गर्नुहोस्: '+e.message)}
@@ -129,6 +131,23 @@ async function expireIdle(){
 }
 setInterval(()=>{void expireIdle()},30*1000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)void expireIdle()});
+// No recurring aggregate polling: a verified tab rechecks after returning from
+// another tab/window, at most once per minute, preserving Firebase Spark quota.
+async function refreshOnForeground(){
+ if(document.hidden||!verified||!auth?.currentUser)return;
+ const selected=verified;
+ if(auth.currentUser.uid!==selected.uid){void expireIdle();return}
+ if(!foregroundStatsGate.shouldRefresh({
+  visible:true,schoolId:selected.schoolId,uid:selected.uid,now:Date.now()
+ }))return;
+ if(await expireIdle())return;
+ if(verified!==selected||auth?.currentUser?.uid!==selected.uid)return;
+ await refreshStats();
+}
+window.addEventListener('focus',()=>{void refreshOnForeground()});
+document.addEventListener('visibilitychange',()=>{
+ if(!document.hidden)void refreshOnForeground();
+});
 document.querySelectorAll('[data-school-module]').forEach(link=>link.addEventListener('click',async event=>{
  event.preventDefault();
  if(!verified||checkingLink){message('पहिले विद्यालयको Login प्रमाणित गर्नुहोस्।');return}
@@ -171,7 +190,7 @@ $('dashboardLogin').onclick=async()=>{if(busy||!auth)return;busy=true;$('dashboa
  if(auth.currentUser?.uid!==uid||school?.active!==true)throw Error('School session changed');
  const label=await verifiedSchoolLabel(schoolId,String(school.name??schoolId));
  if(auth.currentUser?.uid!==uid)throw Error('Login changed during profile load');
- verified={uid,schoolId,role:session.role,name:label.label,map:label.map};sessionStorage.setItem(SCHOOL_SELECTION_KEY,schoolId);startVerifiedSchoolActivity();lastActivity=Date.now();lock();
+ verified={uid,schoolId,role:session.role,name:label.label,map:label.map};foregroundStatsGate.seed({schoolId,uid,now:Date.now()});sessionStorage.setItem(SCHOOL_SELECTION_KEY,schoolId);startVerifiedSchoolActivity();lastActivity=Date.now();lock();
  message('विद्यालय प्रमाणित भयो। साझा Session समर्थित Module मा पुनः Password आवश्यक पर्दैन।');void refreshStats();
  }catch(e){sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();try{await authSdk.signOut(auth)}catch{}message('Login असफल: '+e.message)}finally{busy=false;$('dashboardLogin').disabled=!auth}};
 $('dashboardLogout').onclick=async()=>{if(busy)return;clear();sessionStorage.removeItem(SCHOOL_SELECTION_KEY);try{if(auth)await authSdk.signOut(auth);message('Logout सफल भयो।')}catch(e){message('Logout असफल: '+e.message)}};

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {loadVerifiedSchoolStats,dashboardStatsText,DASHBOARD_STATS_COLLECTIONS} from './dashboard-stats.mjs';
+import {loadVerifiedSchoolStats,dashboardStatsText,DASHBOARD_STATS_COLLECTIONS,createForegroundStatsGate} from './dashboard-stats.mjs';
 const schoolId='300160003',uid='user1',counts={students:384,staff:23,subjects:12,exams:6,members:27,activeMembers:24};
 const make=(role,memberOverride={})=>{
  const member={schoolId,uid,role,active:true,...memberOverride};
@@ -47,3 +47,20 @@ assert.match(src,/if\(adminOnly&&stats\.role!=='school_admin'\)/);
 assert.match(src,/resetMetricCards\(\);\$\('dashboardStats'\)\.textContent/);
 assert.match(src,/showMetricCards\(loaded\)/);
 console.log('PASS V47 dashboard counts: verified tenant, role-limited members, session revocation, no online-user claims');
+
+const foreground=createForegroundStatsGate(60_000);
+const a0={schoolId,uid,now:100_000,visible:true};
+foreground.seed(a0);
+assert.equal(foreground.shouldRefresh({...a0,now:110_000}),false,'No immediate duplicate queries');
+assert.equal(foreground.shouldRefresh({...a0,now:200_000,visible:false}),false,'No background polling');
+assert.equal(foreground.shouldRefresh({...a0,now:160_000}),true,'Foreground after throttle refreshes');
+assert.equal(foreground.shouldRefresh({...a0,now:160_001}),false,'Focus and visibility events deduplicated');
+assert.equal(foreground.shouldRefresh({...a0,uid:'other',now:160_002}),true,'New session is separately scoped');
+foreground.reset();
+assert.equal(foreground.shouldRefresh({...a0,now:160_003}),true,'Logout clears previous session');
+assert.throws(()=>createForegroundStatsGate(0),/interval/);
+assert.equal(foreground.shouldRefresh({...a0,now:NaN}),false);
+assert.match(src,/window\.addEventListener\('focus'/);
+assert.match(src,/refreshOnForeground\(\)/);
+assert.match(src,/foregroundStatsGate\.reset\(\)/);
+assert.match(src,/foregroundStatsGate\.seed\(/);
