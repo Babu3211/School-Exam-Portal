@@ -3,7 +3,7 @@
 <link rel="preload" href="./cdc-source-register-2083.json" as="fetch">
 <link rel="preload" href="./cdc-grade8-science-practice-pack-v1.json" as="fetch">
 <link rel="preload" href="./cdc-grade10-science-practice-pack-v1.json" as="fetch">
-<style>body{font:15px system-ui,sans-serif;color:#193754;background:#f1f6fb;margin:0}main{max-width:1100px;margin:auto;padding:18px}section{background:#fff;border:1px solid #d8e2ee;border-radius:11px;padding:16px;margin:13px 0}.warn{background:#fff3da;border:1px solid #d7ae62;border-radius:9px;padding:13px}label{display:inline-flex;flex-direction:column;margin:5px;gap:5px}input,button,select{font:inherit;border:1px solid #b9cadc;border-radius:7px;padding:9px}button{background:#175da7;color:white;cursor:pointer}button:disabled{opacity:.5}ul{padding-left:22px}li{margin:9px 0}.source{padding:10px;border-bottom:1px solid #e2e9f2}.source small{display:block;color:#51677b;margin:3px 0}iframe{width:100%;height:680px;border:1px solid #c8d3de;background:#fff}a{color:#145495}</style></head><body><main>
+<style>body{font:15px system-ui,sans-serif;color:#193754;background:#f1f6fb;margin:0}main{max-width:1100px;margin:auto;padding:18px}section{background:#fff;border:1px solid #d8e2ee;border-radius:11px;padding:16px;margin:13px 0}.warn{background:#fff3da;border:1px solid #d7ae62;border-radius:9px;padding:13px}label{display:inline-flex;flex-direction:column;margin:5px;gap:5px}input,button,select{font:inherit;border:1px solid #b9cadc;border-radius:7px;padding:9px}button{background:#175da7;color:white;cursor:pointer}button:disabled{opacity:.5}ul{padding-left:22px}li{margin:9px 0}.source{padding:10px;border-bottom:1px solid #e2e9f2}.source small{display:block;color:#51677b;margin:3px 0}.practiceChoices{max-height:360px;overflow-y:auto;border:1px solid #dbe5f0;border-radius:8px;padding:8px}.practiceChoice{display:flex;align-items:flex-start;gap:8px;padding:8px;margin:0;border-bottom:1px solid #e7edf4}.practiceChoice input{flex:0 0 auto}.practiceChoice span{line-height:1.5}iframe{width:100%;height:680px;border:1px solid #c8d3de;background:#fff}a{color:#145495}</style></head><body><main>
 <header><h1>SMSS V47 — Question Paper Resources</h1><p><a href="./index.html">Dashboard</a> · Teacher-review materials from the preserved V46 CDC source register</p></header>
 <p class="warn"><strong>DEVELOPMENT — READ-ONLY PREVIEW, NOT OFFICIAL QUESTION PAPER GENERATION.</strong> V46 has a separate question bank, blueprint editor, assignments and saves. Those features are NOT migrated here. The linked CDC materials may be older or supplementary. Grades 8 and 10 Science practice sets contain original SMSS questions needing teacher review, not verified model papers or answer keys. Grade 9 Science pack remains blocked due incorrect source attribution.</p>
 <section><h2>Verified School Login</h2>
@@ -25,6 +25,15 @@
 <button id="preview8" type="button">Class 8 Science Practice</button>
 <button id="preview10" type="button">Class 10 Science Practice</button>
 <label><input id="showAnswers" type="checkbox">Include unapproved teacher-review answers</label>
+<section id="practiceSelection" hidden>
+<h3>Choose Original Practice Questions (Unapproved)</h3>
+<p lang="ne">प्रश्न छानेर पूर्वावलोकन बनाउन सकिन्छ। शिक्षकले पाठ्यक्रम र Specification Grid जाँचेर मात्र प्रयोग गर्नुहोस्। छनोटले Firestore मा कुनै प्रश्नपत्र Save गर्दैन।</p>
+<label>Curriculum Unit<select id="practiceUnitFilter"><option value="">All curriculum units</option></select></label>
+<label>Question Type<select id="practiceTypeFilter"><option value="">All types</option><option value="mcq">Multiple Choice</option><option value="short">Short Answer</option><option value="long">Long Answer</option></select></label>
+<p id="practiceSelectionCount" role="status" aria-live="polite">No practice questions selected.</p>
+<div id="practiceQuestionList" class="practiceChoices"></div>
+<button id="updatePractice" type="button" disabled>Update Unapproved Preview</button>
+</section>
 <button id="printPractice" type="button" disabled>Print Unreviewed Practice Preview</button>
 <p id="paperStatus" role="status" aria-live="polite">No practice preview prepared.</p>
 <iframe id="paperFrame" sandbox="allow-same-origin" title="Unreviewed Original Practice Questions"></iframe>

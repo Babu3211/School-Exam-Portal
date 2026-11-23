@@ -4,14 +4,19 @@ import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} fro
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {prepareCdcSourceCatalog,prepareReadOnlyPracticePaper,recommendedPracticeIndices,printReadOnlyPracticePaper} from './question-paper-cdc-preview.mjs';
+import {listOriginalPracticeChoices,summarizeOriginalPracticeSelection,MAX_PRACTICE_SELECTION} from './practice-question-selection.mjs';
 const $=id=>document.getElementById(id);
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 const status=text=>{$('message').textContent=text};
-let auth,authSdk,db,api,actor=null,school=null,schoolId=null,register=null,paper=null;
+let auth,authSdk,db,api,actor=null,school=null,schoolId=null,register=null,paper=null,practicePack=null,practiceChoices=[],selectedQuestions=new Set();
 const PRACTICE_PACK_FILE=Object.freeze({8:'cdc-grade8-science-practice-pack-v1.json',10:'cdc-grade10-science-practice-pack-v1.json'});
 let epoch=0,previewVersion=0,busy=false,loading=false;
 function clearPreview(){
- previewVersion++;paper=null;$('paperFrame').onload=null;$('paperFrame').removeAttribute('srcdoc');
+ previewVersion++;paper=null;practicePack=null;practiceChoices=[];selectedQuestions.clear();
+ $('practiceSelection').hidden=true;$('practiceQuestionList').replaceChildren();
+ $('practiceUnitFilter').replaceChildren();$('practiceTypeFilter').value='';
+ $('updatePractice').disabled=true;$('practiceSelectionCount').textContent='No practice questions selected.';
+ $('paperFrame').onload=null;$('paperFrame').removeAttribute('srcdoc');
  $('paperFrame').dataset.loadedVersion='';$('printPractice').disabled=true;
  $('paperStatus').textContent='No practice preview prepared.';
 }
@@ -127,6 +132,7 @@ async function loadPractice(grade){
   if(result.grade!==grade)throw Error('Practice grade mismatch');
   await verifyAgain(request,member);
   if(version!==previewVersion)throw Error('Practice selection changed');
+  initializeQuestionSelection(pack,indices);
   paper=result;displayPaper();
   status('Original SMSS अभ्यास प्रश्नको पूर्वावलोकन तयार छ। Teacher Review आवश्यक छ।');
  }catch(e){
@@ -138,6 +144,87 @@ async function loadPractice(grade){
 }
 $('preview8').onclick=()=>loadPractice(8);
 $('preview10').onclick=()=>loadPractice(10);
+
+function invalidateSelectedPreview(){
+ previewVersion++;paper=null;
+ const frame=$('paperFrame');
+ frame.onload=null;frame.removeAttribute('srcdoc');delete frame.dataset.loadedVersion;
+ $('printPractice').disabled=true;
+ $('paperStatus').textContent='Selection changed. Review the selected questions before printing.';
+}
+function selectionSummary(){
+ if(!practicePack)return;
+ const selected=[...selectedQuestions].sort((a,b)=>a-b);
+ const sum=summarizeOriginalPracticeSelection(practicePack,selected);
+ $('updatePractice').disabled=!sum.valid||busy||loading;
+ $('practiceSelectionCount').textContent=sum.selected+' selected / '+sum.totalMarks+
+  ' marks. Maximum '+sum.maxQuestions+' questions and '+sum.maxMarks+
+  ' marks. '+(sum.valid?'Click Update Unapproved Preview to apply changes.':'Select at least one question within the limits.');
+}
+function showQuestionChoices(){
+ if(!practicePack||!actor)return;
+ const unit=$('practiceUnitFilter').value,type=$('practiceTypeFilter').value;
+ const parent=$('practiceQuestionList');parent.replaceChildren();
+ for(const item of practiceChoices){
+  if(unit&&item.unitCode!==unit||type&&item.questionType!==type)continue;
+  const label=document.createElement('label');label.className='practiceChoice';
+  const input=document.createElement('input');input.type='checkbox';
+  input.checked=selectedQuestions.has(item.index);
+  input.setAttribute('aria-label','Select original practice question '+(item.index+1));
+  const description=document.createElement('span');
+  description.textContent='#'+(item.index+1)+' · '+item.unitTitle+' · '+item.topicName+
+   ' · '+item.questionType.toUpperCase()+' · '+item.marks+' marks · '+item.questionText;
+  input.onchange=()=>{
+   if(input.checked&&selectedQuestions.size>=MAX_PRACTICE_SELECTION){
+    input.checked=false;
+    $('practiceSelectionCount').textContent='Maximum 40 original practice questions can be selected.';
+    return;
+   }
+   if(input.checked)selectedQuestions.add(item.index);
+   else selectedQuestions.delete(item.index);
+   invalidateSelectedPreview();selectionSummary();
+  };
+  label.append(input,description);parent.append(label);
+ }
+ selectionSummary();
+}
+function initializeQuestionSelection(pack,indices){
+ practicePack=pack;
+ practiceChoices=listOriginalPracticeChoices(pack);
+ selectedQuestions=new Set(indices);
+ const unitFilter=$('practiceUnitFilter');unitFilter.replaceChildren();
+ const all=document.createElement('option');all.value='';all.textContent='All curriculum units';unitFilter.append(all);
+ for(const unit of pack.units){
+  const o=document.createElement('option');o.value=String(unit.unitCode);
+  o.textContent=String(unit.unitCode)+' · '+unit.unitTitle;unitFilter.append(o);
+ }
+ $('practiceTypeFilter').value='';$('practiceSelection').hidden=false;
+ showQuestionChoices();
+}
+$('practiceUnitFilter').onchange=showQuestionChoices;
+$('practiceTypeFilter').onchange=showQuestionChoices;
+$('updatePractice').onclick=async()=>{
+ if(busy||loading||!practicePack||!actor)return;
+ const request=epoch,member=actor,pack=practicePack,version=previewVersion;
+ const selected=[...selectedQuestions].sort((a,b)=>a-b);
+ const summary=summarizeOriginalPracticeSelection(pack,selected);
+ if(!summary.valid){selectionSummary();return}
+ busy=true;$('updatePractice').disabled=true;
+ try{
+  await verifyAgain(request,member);
+  if(pack!==practicePack||version!==previewVersion)throw Error('Practice selection changed while verifying');
+  const fresh=prepareReadOnlyPracticePaper({schoolId:member.schoolId,schoolName:String(school.name??''),
+    pack,questionIndices:selected});
+  assertSame(request,member);
+  if(fresh.grade!==pack.gradeNumber||version!==previewVersion||pack!==practicePack)
+   throw Error('Practice selection changed before preview');
+  paper=fresh;displayPaper();
+  status('छनोट गरेका मौलिक अभ्यास प्रश्नको पूर्वावलोकन तयार भयो। यो आधिकारिक प्रश्नपत्र होइन।');
+ }catch(e){
+  if(request===epoch&&actor===member){invalidateSelectedPreview();status('अभ्यास प्रश्नको चयन रोकियो: '+e.message)}
+ }finally{busy=false;if(request===epoch)selectionSummary()}
+};
+
 $('showAnswers').onchange=()=>{if(paper)displayPaper()};
 $('printPractice').onclick=async()=>{
  if(!paper||$('printPractice').disabled||!actor)return;
