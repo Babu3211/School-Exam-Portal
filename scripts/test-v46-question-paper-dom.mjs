@@ -125,31 +125,19 @@ await assert.rejects(pending,/परिवर्तन भयो/);
 assert.equal(delayed.getPaper(),null,'Changing topics during school read cannot generate a stale paper');
 // Same topic name in two CDC units must remain TWO distinct selectable
 // topics, never silently use another unit's exam questions.
-const repeatTopicRender=new Function('
+const repeatTopicRender=new Function(
+ '$','esc','normal','curriculumRows',
  'bundledPracticeUnits','bundledPracticeQuestions','questionRows',
  code('function renderTopics() {','function renderQuestionRows() {')+
- 'return renderTopics;')($,escape,normal,[
-  {id:'curr1',unitCode:'1',unitTitle:'Motion',topics:['Force']},
-  {id:'curr2',unitCode:'2',unitTitle:'Energy',topics:['Force']}
- ],[],[],[]);
+ 'return renderTopics;'
+)($,escape,normal,[
+ {id:'curr1',unitCode:'1',unitTitle:'Motion',topics:['Force']},
+ {id:'curr2',unitCode:'2',unitTitle:'Energy',topics:['Force']}
+],[],[],[]);
 repeatTopicRender();
 const repeatNodes=[...dom.window.document.querySelectorAll('[data-qp-topic]')];
 assert.equal(repeatNodes.length,2,'Equal topic names from different units must remain separate');
 assert.deepEqual(repeatNodes.map(x=>x.dataset.unitCode),['1','2']);
 assert.notEqual(repeatNodes[0].value,repeatNodes[1].value);
 dom.window.close();
-console.log('PASS V46 DOM auto question paper: class 10, unit choices, bilingual 3 marks, buttons, printed answers and warnings, role, stale selection');
-,'esc','normal','curriculumRows',
- 'bundledPracticeUnits','bundledPracticeQuestions','questionRows',
- code('function renderTopics() {','function renderQuestionRows() {')+
- 'return renderTopics;')($,escape,normal,[
-  {id:'curr1',unitCode:'1',unitTitle:'Motion',topics:['Force']},
-  {id:'curr2',unitCode:'2',unitTitle:'Energy',topics:['Force']}
- ],[],[],[]);
-repeatTopicRender();
-const repeatNodes=[...dom.window.document.querySelectorAll('[data-qp-topic]')];
-assert.equal(repeatNodes.length,2,'Equal topic names from different units must remain separate');
-assert.deepEqual(repeatNodes.map(x=>x.dataset.unitCode),['1','2']);
-assert.notEqual(repeatNodes[0].value,repeatNodes[1].value);
-dom.window.close();
-console.log('PASS V46 DOM auto question paper: class 10, unit choices, bilingual 3 marks, buttons, printed answers and warnings, role, stale selection');
+console.log('PASS V46 DOM auto question paper: class 10, unit choices, bilingual, review gate, random practice and topic-unit isolation');
