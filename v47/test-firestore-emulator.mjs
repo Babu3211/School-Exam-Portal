@@ -22,6 +22,8 @@ try{
    await setDoc(doc(admin,'schools',sid,'subject_assignments','student_1:math'),{schoolId:sid,studentId:'student_1',subjectId:'math',class:'10'});
    await setDoc(doc(admin,'schools',sid,'marks','final:student_1:math'),{schoolId:sid,studentId:'student_1',subjectId:'math',class:'10',term:'final',theory:10,practical:0});
    await setDoc(doc(admin,'schools',sid,'attendance','2026-11-18_student_1'),{schoolId:sid,studentId:'student_1',class:'10',date:'2026-11-18',present:true});
+   // CDC per-student evidence is read-only until its full V46 schema is reviewed.
+   await setDoc(doc(admin,'schools',sid,'cdc_observations','obs_1'),{schoolId:sid,studentId:'student_1',subject:'math',period:'final',level:'Achieved'});
   }
   await setDoc(doc(admin,'schools','11223344'),{id:'11223344',name:'Inactive School',iemisCode:'11223344',active:false});
   await setDoc(doc(admin,'schools','11223344','members','viewer_12345678'),{uid:'viewer_12345678',schoolId:'11223344',role:'viewer',active:true});
@@ -65,6 +67,17 @@ try{
  await assertFails(getDocs(collection(viewer,'schools','87654321','students')));
  // 18 Own-school query allowed
  await assertSucceeds(getDocs(collection(viewer,'schools','12345678','students')));
+ // CDC observations must remain private to their school and fully read-only
+ // even to School Admin until the assessment-write contract is reviewed.
+ const ownCdc=doc(viewer,'schools','12345678','cdc_observations','obs_1');
+ await assertSucceeds(getDoc(ownCdc));
+ await assertSucceeds(getDocs(collection(teacher,'schools','12345678','cdc_observations')));
+ await assertFails(getDoc(doc(viewer,'schools','87654321','cdc_observations','obs_1')));
+ await assertFails(getDoc(doc(anon,'schools','12345678','cdc_observations','obs_1')));
+ await assertFails(setDoc(doc(admin,'schools','12345678','cdc_observations','new_observation'),{schoolId:'12345678',studentId:'student_1'}));
+ await assertFails(updateDoc(doc(admin,'schools','12345678','cdc_observations','obs_1'),{level:'Changed'}));
+ await assertFails(deleteDoc(doc(admin,'schools','12345678','cdc_observations','obs_1')));
+ await assertFails(setDoc(doc(viewer,'schools','12345678','cdc_observations','new_observation'),{schoolId:'12345678'}));
  // 19 Unauthorized school listing denied
  await assertFails(getDocs(collection(viewer,'schools')));
  // 20 Super Admin school listing allowed
