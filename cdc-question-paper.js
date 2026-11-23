@@ -1012,14 +1012,16 @@ document.addEventListener("change",async event=>{
     $("qpSection").innerHTML='<option value="">Section छान्नुहोस्</option>';
     curriculumRows=[];questionRows=[];bundledPracticeUnits=[];bundledPracticeQuestions=[];
     bundledPracticeStatus="";$("qpAutoSourceStatus").textContent="विषय छान्नुहोस्।";
+    $("qpAutoGridStatus").textContent="कक्षा/विषय छान्नुहोस्।";
     renderTopics();renderQuestionRows();message("अब विषय छान्नुहोस्।");
   }
   if(t.id==="qpSubject"){
     questionDataLoadEpoch++;verifiedQuestionSelection=null;
     selectedSubject=t.value;selectedSection="";generatedPaper=null;savedPapers=[];$("qpPaperRows").innerHTML='<tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr>';
     $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;$("qpAnswerKeyBtn").disabled=true;
-    curriculumRows=[];questionRows=[];bundledPracticeUnits=[];bundledPracticeQuestions=[];
-    renderTopics();renderQuestionRows();
+    curriculumRows=[];questionRows=[];blueprintRows=[];currentBlueprint=null;
+    bundledPracticeUnits=[];bundledPracticeQuestions=[];
+    renderTopics();renderQuestionRows();$("qpAutoGridStatus").textContent="Section छान्नुहोस्।";
     const sections=[...new Set(classSubjects.filter(x=>x.className===selectedClass&&x.subject===selectedSubject).map(x=>String(x.section||"")))];
     $("qpSection").innerHTML='<option value="">Section छान्नुहोस्</option>'+sections.map(x=>'<option value="'+esc(x)+'">'+esc(x||"सबै Section / लागू")+'</option>').join("");
     if(sections.length===1){selectedSection=sections[0];$("qpSection").value=selectedSection;}
@@ -1027,7 +1029,7 @@ document.addEventListener("change",async event=>{
   }
   if(t.id==="qpSection"){questionDataLoadEpoch++;verifiedQuestionSelection=null;selectedSection=t.value;generatedPaper=null;if(selectedClass&&selectedSubject)try{await loadCurrentData();message("Section अनुसार Topic र प्रश्न बैंक लोड भए।");}catch(err){message("डेटा लोड भएन: "+(err.code||err.message),true);}}
   if(t.matches?.("[data-qp-topic]")||
-    ["qpAutoLanguage","qpPaperFullMarks","qpPaperDuration","qpPaperTitle",
+    ["qpAutoLanguage","qpAutoMode","qpPaperFullMarks","qpPaperDuration","qpPaperTitle",
      "qpPaperYear","qpPaperMcqCount","qpPaperMcqMarks","qpPaperShortCount",
      "qpPaperShortMarks","qpPaperLongCount","qpPaperLongMarks"].includes(t.id)){
     if(generatedPaper){
@@ -1035,6 +1037,7 @@ document.addEventListener("change",async event=>{
       message("Topic, भाषा वा प्रश्नपत्र विवरण परिवर्तन भयो। नयाँ प्रश्नपत्र बनाउनुहोस्।");
     }
   }
+  if(t.id==="qpPaperFullMarks"||t.id==="qpAutoMode")updateAutoGridStatus();
   if(t.id==="qpAutoReviewed")updateAutoReviewActions();
   if(t.id==="qpQuestionType")toggleMcqFields();
   if(t.id==="qpImportFile"&&t.files?.[0]){
