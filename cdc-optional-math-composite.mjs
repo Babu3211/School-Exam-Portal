@@ -8,6 +8,7 @@
  * not specify every subquestion's exact mark in the area summary; the curated
  * bank must provide and the engine must validate each subquestion explicitly.
  */
+import {isOriginalMathOfflineDraft} from './cdc-optional-math-original-practice.mjs';
 const GROUPS=['objective','WCA','CCA'];
 const LEVELS=['knowledge','understanding','application','higher'];
 const NEPALI=/[\u0900-\u097f]/;
@@ -53,9 +54,13 @@ const present=(item,lang)=>{
  return !!ne&&NEPALI.test(ne)&&!!en&&!NEPALI.test(en)&&
   !!answerNe&&!!answerEn&&!NEPALI.test(answerEn);
 };
-function inspectItem(q,guide,language,areaCodes){
+function inspectItem(q,guide,language,areaCodes,allowFormulaVerifiedDraft=false){
+ const reviewed=q?.reviewStatus==='teacher_reviewed'&&n(q?.reviewedBy);
+ const checkedOffline=allowFormulaVerifiedDraft&&isOriginalMathOfflineDraft(q)&&
+  q?.reviewStatus==='formula_verified_draft'&&
+  q?.provenance==='smss_offline_original_maths_v1'&&q?.teacherReviewRequired===true;
  if(!q||!n(q.id)||!n(q.topicId)||!GROUPS.includes(q.group)||
-   q.status==='archived'||q.reviewStatus!=='teacher_reviewed'||!n(q.reviewedBy)||
+   q.status==='archived'||(!reviewed&&!checkedOffline)||
    q.gradeNumber!==guide.gradeNumber||n(q.subject)!==n(guide.subject)||
    !Array.isArray(q.subquestions))
   return null;
@@ -97,7 +102,8 @@ function inspectItem(q,guide,language,areaCodes){
 }
 export function inspectCdcOptionalMathPaper({
  guide,questions,selectedTopicIds,language='ne',previousSignature='',
- avoidSignatures=[],rng=Math.random,maxSearchVisits=120000
+ avoidSignatures=[],rng=Math.random,maxSearchVisits=120000,
+ allowFormulaVerifiedDraft=false
 }){
  const areaCodes=validateGuide(guide);
  if(!['ne','en','both'].includes(language)||!Array.isArray(questions)||questions.length>5000||
@@ -112,7 +118,7 @@ export function inspectCdcOptionalMathPaper({
  const eligible=[],ids=new Set(),texts=new Set();
  for(const row of questions){
   if(!topics.has(row?.topicId))continue;
-  const q=inspectItem(row,guide,language,areaCodes);
+  const q=inspectItem(row,guide,language,areaCodes,allowFormulaVerifiedDraft);
   if(!q)continue;
   if(ids.has(q.id))throw Error('Repeated composite question ID in bank');
   ids.add(q.id);
