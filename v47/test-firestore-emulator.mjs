@@ -296,10 +296,19 @@ try{
  await assertFails(setDoc(doc(admin,'schools','12345678','component_marks','9:s1:computer'),{schoolId:'12345678',studentId:'s1',value:42}));
 
  // Server-side staged marks must NEVER leak through client Firestore rules.
+ // Verified staging manifest is also hidden from all client roles.
  // Seed a realistic staged batch as a trusted emulator Admin SDK would.
  const stageDoc=(database,sid='12345678')=>doc(database,'schools',sid,'marks_staging','pub_00000001','batches','b0000');
+ const stageManifest=(database,sid='12345678')=>doc(database,'schools',sid,'marks_staging','pub_00000001');
  const stageCollection=(database,sid='12345678')=>collection(database,'schools',sid,'marks_staging','pub_00000001','batches');
  await env.withSecurityRulesDisabled(async context=>{
+  await setDoc(stageManifest(context.firestore()),{
+   format:'smss-v47-verified-staging-manifest-v1',state:'staged_verified_not_published',
+   schoolId:'12345678',publicationId:'pub_00000001',classId:'9',subjectId:'computer',
+   examId:'final',digest:'a'.repeat(64),rosterCount:1,batchCount:1,
+   verifiedBy:'admin_12345678',settingsRevision:'s1',rosterRevision:'r1',
+   writeAuthorized:false,publicationAllowed:false
+  });
   await setDoc(stageDoc(context.firestore()),{
    format:'smss-v47-staged-page-v1',schoolId:'12345678',
    publicationId:'pub_00000001',classId:'9',subjectId:'computer',
@@ -309,6 +318,10 @@ try{
   });
  });
  for(const userDb of [anon,viewer,teacher,admin,superDb,db('admin_87654321')]){
+  await assertFails(getDoc(stageManifest(userDb)));
+  await assertFails(setDoc(stageManifest(userDb),{state:'committed'}));
+  await assertFails(updateDoc(stageManifest(userDb),{state:'committed'}));
+  await assertFails(deleteDoc(stageManifest(userDb)));
   await assertFails(getDoc(stageDoc(userDb)));
   await assertFails(getDocs(stageCollection(userDb)));
   await assertFails(setDoc(stageDoc(userDb),{schoolId:'12345678',official:true}));
@@ -316,5 +329,5 @@ try{
   await assertFails(deleteDoc(stageDoc(userDb)));
  }
  await assertFails(getDoc(stageDoc(admin,'87654321')));
- console.log('V47 Firestore emulator: existing checks plus 31 explicit server-only staged-marks read/write denials passed');
+ console.log('V47 Firestore emulator: existing checks plus 55 explicit server-only staging manifest/page read/write denials passed');
 }finally{await env.cleanup();}

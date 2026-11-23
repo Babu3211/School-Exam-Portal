@@ -89,6 +89,26 @@ export async function stageTrustedClassMarks({
  }
  const checked=verifyCompleteStagedClass({authoritativeInput:fresh,stagedBatches:pages,reviewDigest:latest.digest});
  await requireAdmin();
+ // A separate, durable manifest exists ONLY after every stored page passes
+ // authoritative roster, component, digest and membership verification.
+ // It is not a publication pointer and cannot be read by Firebase clients.
+ const manifest={
+  format:'smss-v47-verified-staging-manifest-v1',
+  state:'staged_verified_not_published',schoolId,publicationId,
+  classId:checked.classId,subjectId:checked.subjectId,examId:checked.examId,
+  settingsRevision:latest.settingsRevision,rosterRevision:latest.rosterRevision,
+  digest:checked.digest,rosterCount:checked.rosterCount,batchCount:checked.batchCount,
+  verifiedBy:actorUid,writeAuthorized:false,publicationAllowed:false
+ };
+ const manifestRef=api.doc(db,'schools',schoolId,'marks_staging',publicationId);
+ await api.runTransaction(db,async tx=>{
+  if(typeof tx?.get!=='function'||typeof tx?.set!=='function')throw TypeError('Trusted Firestore transaction required');
+  const snap=await tx.get(manifestRef);
+  if(snapExists(snap)){
+   if(JSON.stringify(dataOf(snap))!==JSON.stringify(manifest))
+    throw Error('Existing staged manifest conflicts with authoritative verification');
+  }else tx.set(manifestRef,manifest);
+ });
  return Object.freeze({staged:true,schoolId,publicationId,classId:checked.classId,
   subjectId:checked.subjectId,examId:checked.examId,rosterCount:checked.rosterCount,
   batchCount:checked.batchCount,existingPages:reused,digest:checked.digest,

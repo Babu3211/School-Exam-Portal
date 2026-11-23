@@ -34,18 +34,35 @@ const complete=await stageTrustedClassMarks(makeOptions(stage,{onProgress:p=>pro
 assert.equal(complete.staged,true);assert.equal(complete.rosterCount,1500);
 assert.equal(complete.batchCount,15);assert.equal(complete.existingPages,0);
 assert.equal(complete.publicationAllowed,false);assert.equal(complete.writeAuthorized,false);
-assert.equal(stage.docs.size,15);assert.equal(progress.at(-1).staged,1500);
-assert.ok([...stage.docs.keys()].every(path=>path.startsWith('schools/12345/marks_staging/pub_00000001/batches/')));
+assert.equal(stage.docs.size,16);assert.equal(progress.at(-1).staged,1500);
+const manifestPath='schools/12345/marks_staging/pub_00000001';
+const manifest=stage.docs.get(manifestPath);
+assert.equal(manifest.state,'staged_verified_not_published');
+assert.equal(manifest.rosterCount,1500);assert.equal(manifest.batchCount,15);
+assert.equal(manifest.digest,complete.digest);
+assert.equal(manifest.publicationAllowed,false);
+assert.ok([...stage.docs.keys()].every(path=>path===manifestPath||path.startsWith(manifestPath+'/batches/')));
 assert.ok([...stage.docs.keys()].every(path=>!path.includes('/marks/')&&!path.includes('pointers')));
 const again=await stageTrustedClassMarks(makeOptions(stage));
 assert.equal(again.existingPages,15,'Idempotent restart must not duplicate staging documents');
-assert.equal(stage.docs.size,15);
+assert.equal(stage.docs.size,16);
 const interrupted=makeStore();interrupted.setFailure(3);
 await assert.rejects(stageTrustedClassMarks(makeOptions(interrupted)),/staging network interrupted/);
 assert.equal(interrupted.docs.size,2,'Failed staging must remain invisible and resumable');
 interrupted.setFailure(0);
 assert.equal((await stageTrustedClassMarks(makeOptions(interrupted))).existingPages,2);
-assert.equal(interrupted.docs.size,15);
+assert.equal(interrupted.docs.size,16);
+const manifestFailure=makeStore();manifestFailure.setFailure(16);
+await assert.rejects(stageTrustedClassMarks(makeOptions(manifestFailure)),/staging network interrupted/);
+assert.equal(manifestFailure.docs.size,15,'No verified manifest before final transaction succeeds');
+assert.equal(manifestFailure.docs.has(manifestPath),false);
+manifestFailure.setFailure(0);
+assert.equal((await stageTrustedClassMarks(makeOptions(manifestFailure))).existingPages,15);
+assert.equal(manifestFailure.docs.get(manifestPath).state,'staged_verified_not_published');
+const badManifest=makeStore();
+await stageTrustedClassMarks(makeOptions(badManifest));
+badManifest.docs.get(manifestPath).digest='b'.repeat(64);
+await assert.rejects(stageTrustedClassMarks(makeOptions(badManifest)),/manifest conflicts/);
 const tampered=makeStore();
 await stageTrustedClassMarks(makeOptions(tampered));
 const first=[...tampered.docs.keys()][0],wrong=tampered.docs.get(first);
@@ -61,6 +78,7 @@ await assert.rejects(stageTrustedClassMarks(makeOptions(switched,{loadAuthoritat
  loads++;return loads===1?input:{...input,rosterRevision:'roster_2'};
 }})),/changed during staging/);
 assert.equal(switched.docs.size,15,'Stale staged pages must not become official marks');
+assert.equal(switched.docs.has(manifestPath),false,'Stale class must not create verified manifest');
 for(const bad of [
  {schoolId:'wrong'}, {publicationId:'../other'}, {actorUid:'../other'},
  {verifyAdmin:async()=>({...actor,role:'viewer',schoolActive:true})},
