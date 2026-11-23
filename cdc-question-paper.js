@@ -1,5 +1,5 @@
 import { getApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
-import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSubject,supportsQuestionLanguage,cognitiveMarkDistribution} from "./cdc-question-autogen.mjs";
+import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSubject,isQuestionReadyForLanguage,cognitiveMarkDistribution} from "./cdc-question-autogen.mjs";
 import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
 import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
@@ -736,10 +736,7 @@ function updateAutoGridStatus(){
  try{
   const selected=selectedTopicIds(),language=$("qpAutoLanguage").value;
   const bank=[...questionRows,...bundledPracticeQuestions].filter(q=>
-   supportsQuestionLanguage(q,language)&&String(q.answer||q.answerEn||"").trim()&&
-   (q.questionType!=="mcq"||(Array.isArray(q.options)&&q.options.length===4&&
-    ["A","B","C","D"].includes(q.correctOption)&&
-    (language!=="both"||(Array.isArray(q.optionsEn)&&q.optionsEn.length===4)))));
+   isQuestionReadyForLanguage(q,language));
   const result=inspectExactCdcGridAvailability({
    blueprint:bp,fullMarks:target,eligible:bank,selectedTopicIds:selected
   });
