@@ -16,7 +16,8 @@ const normal=s=>String(s||'').trim().toLocaleLowerCase().replace(/\s+/g,' ');
 for(const id of ['qpClass','qpSubject','qpSection','qpPaperFullMarks','qpAutoLanguage',
  'qpSmartGenerateBtn','qpGenerateBtn','qpTopicSelectAll','qpTopicClearAll','qpSelectGridUnits',
  'qpSavePaperBtn','qpPrintPaperBtn','qpAnswerKeyBtn','qpPaperPreview','qpAutoReviewed','qpAutoMode','qpAutoGridStatus',
- 'qpOfficialGridSource',
+ 'qpOfficialGridSource','qpBpVeryShortCount','qpBpVeryShortMarks',
+ 'qpPaperVeryShortCount','qpPaperVeryShortMarks',
  'qpQuestionExcelTemplateBtn','qpQuestionExcelFile','qpQuestionTemplateBtn','qpQuestionImportFile',
  'qpBpGridExcelTemplateBtn','qpBpGridExcelFile','qpBpGridFile'])
  assert.ok($(id),'Expected actual DOM control '+id);
@@ -48,6 +49,10 @@ assert.match(source,/heading\.textContent="CDC वेबसाइटमा य�
 assert.match(source,/pdfSource\.appendChild\(heading\)/);
 assert.match(source,/getCdcOptionalMathGuide\(\{grade,subject\}\)/);
 assert.match(source,/compareGrade8SciencePracticeBank\(\{/);
+assert.match(source,/value="very_short">अति छोटो उत्तर/);
+assert.match(source,/\{type:"very_short",count:Number\(\$\(prefix\+"VeryShortCount"\)/);
+assert.match(source,/const groups = \["mcq","very_short","short","long"\]/);
+assert.match(source,/\["mcq","very_short","short","long"\]\.indexOf/);
 assert.match(source,/grade8ScienceModelAudit\.model\.archivedCdcCatalogUrl/);
 assert.match(source,/२०८२ मूल CDC Grid/);
 assert.match(source,/grade8Audit\.missingTypes\.map/);
