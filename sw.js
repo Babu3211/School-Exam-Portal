@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v53-question-autogen-review-20261123';
+const CACHE_NAME = 'smss-pwa-v54-question-excel-20261123';
 const APP_SHELL = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const APP_SHELL = [
   './iemis-entry.js?v=20261122-viewer-readonly',
   './cdc-question-paper.js',
   './cdc-question-autogen.mjs',
+  './cdc-question-excel.mjs',
   './data/cdc-science-bilingual-mcq-v1.json',
   './data/cdc-grade8-science-practice-pack-v1.json',
   './data/cdc-grade10-science-practice-pack-v1.json',
