@@ -2,7 +2,7 @@ import {allocateExactCdcUnitGrid,validateExactCdcUnitGrid} from './cdc-exact-gri
 // Pure, dependency-free paper planner for V46. Original locally bundled
 // questions are NOT CDC-published model questions. No external AI or billing.
 // Never silently translate a question or invent a missing answer key.
-const TYPES=['mcq','short','long'];
+const TYPES=['mcq','very_short','short','long'];
 const LEVELS=['knowledge','understanding','application','higher'];
 const NEPALI=/[\u0900-\u097f]/;
 // Do not mistake Computer Science for Science and Technology.
@@ -285,7 +285,7 @@ export function buildAutomaticQuestionPaper({
    blueprint,rng,requireExactGrid,previousSignature,attemptsRemaining:attemptsRemaining-1,
    gradeNumber,subject,avoidSignatures});
  }
- const order={mcq:0,short:1,long:2};
+ const order={mcq:0,very_short:1,short:2,long:3};
  const sorted=selected.map(q=>inLanguage(q,language,rng))
   .sort((a,b)=>order[a.questionType]-order[b.questionType]);
  return {questions:sorted,fullMarks,language,
