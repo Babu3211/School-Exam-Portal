@@ -408,5 +408,25 @@ try{
   await assertFails(deleteDoc(stageDoc(userDb)));
  }
  await assertFails(getDoc(stageDoc(admin,'87654321')));
- console.log('V47 Firestore emulator: existing checks plus 55 explicit server-only staging manifest/page read/write denials passed');
+ // Publishing three linked records uses an Admin SDK transaction only;
+ // no browser (even Super Admin) may infer, read or overwrite a pointer.
+ const protectedOfficial=(database,collectionName,sid='12345678')=>
+  doc(database,'schools',sid,collectionName,'pub_00000001');
+ const officialCollections=['official_marks_pointers','official_marks_publications','official_marks_audit'];
+ await env.withSecurityRulesDisabled(async context=>{
+  const root=context.firestore();
+  for(const name of officialCollections)
+   await setDoc(protectedOfficial(root,name),{schoolId:'12345678',publicationId:'pub_00000001',digest:'a'.repeat(64)});
+ });
+ for(const userDb of [anon,viewer,teacher,admin,superDb,db('admin_87654321')]){
+  for(const name of officialCollections){
+   const ref=protectedOfficial(userDb,name);
+   await assertFails(getDoc(ref));
+   await assertFails(getDocs(collection(userDb,'schools','12345678',name)));
+   await assertFails(setDoc(protectedOfficial(userDb,name,'87654321'),{schoolId:'87654321',publicationId:'pub_00000001'}));
+   await assertFails(updateDoc(ref,{digest:'b'.repeat(64)}));
+   await assertFails(deleteDoc(ref));
+  }
+ }
+ console.log('V47 Firestore emulator: staging plus official publication pointer/header/audit are server-only for all browser roles');
 }finally{await env.cleanup();}

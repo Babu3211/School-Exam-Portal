@@ -599,6 +599,18 @@ service cloud.firestore {
         allow create: if memberRole(sid, 'school_admin') && validNewSettings();
         allow update, delete: if false;
       }
+      // Pointer, committed header and immutable audit belong to the trusted
+      // server transaction. No browser role may read or manipulate them until
+      // a verified tenant-specific Official Results API is released.
+      match /official_marks_pointers/{id} {
+        allow read, write: if false;
+      }
+      match /official_marks_publications/{id} {
+        allow read, write: if false;
+      }
+      match /official_marks_audit/{id} {
+        allow read, write: if false;
+      }
       // Trusted-server-only publication staging: no client (including Super
       // Admin) can read, list, alter, or publish partial staged marks. The
       // Firebase Admin SDK may write via its separately protected credentials.
