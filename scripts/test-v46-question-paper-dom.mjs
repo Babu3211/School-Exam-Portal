@@ -16,6 +16,7 @@ const normal=s=>String(s||'').trim().toLocaleLowerCase().replace(/\s+/g,' ');
 for(const id of ['qpClass','qpSubject','qpSection','qpPaperFullMarks','qpAutoLanguage',
  'qpSmartGenerateBtn','qpGenerateBtn','qpTopicSelectAll','qpTopicClearAll','qpSelectGridUnits',
  'qpSavePaperBtn','qpPrintPaperBtn','qpAnswerKeyBtn','qpPaperPreview','qpAutoReviewed','qpAutoMode','qpAutoGridStatus',
+ 'qpOfficialGridSource',
  'qpQuestionExcelTemplateBtn','qpQuestionExcelFile','qpQuestionTemplateBtn','qpQuestionImportFile',
  'qpBpGridExcelTemplateBtn','qpBpGridExcelFile','qpBpGridFile'])
  assert.ok($(id),'Expected actual DOM control '+id);
@@ -41,6 +42,8 @@ assert.match(source,/\$\("qpBpSourceReviewed"\)\.checked=false/);
 assert.match(source,/getBundledComputerGrid\(\{grade,subject,fullMarks:50\}\)/);
 assert.match(source,/bundledComputerUnitTopics\(grade,subject\)/);
 assert.match(source,/gridOrigin==="bundled_official_cdc_pdf"/);
+assert.match(source,/pdfSource\.appendChild\(link\)/);
+assert.match(source,/officialComputerGrid\?\.originalGovernmentPdf/);
 assert.match(source,/async function importQuestionBankExcel\(file\)/);
 assert.match(source,/const scope=captureQuestionBankImportScope\(\)/);
 assert.match(source,/return importQuestionBankRows\(rows,scope\);/);
