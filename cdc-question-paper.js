@@ -427,7 +427,11 @@ async function loadCurrentData() {
  if(!stillCurrent())return;
  curriculumRows=curr.docs.map(d=>({id:d.id,...d.data()}))
   .sort((a,b)=>String(a.unitCode||"").localeCompare(String(b.unitCode||""),undefined,{numeric:true}));
- questionRows=questions.docs.map(d=>({id:d.id,...d.data()}))
+ const codeByUnit=new Map(curr.docs.map(d=>[d.id,String(d.data().unitCode||"").trim()]));
+ questionRows=questions.docs.map(d=>({
+   id:d.id,...d.data(),
+   unitCode:String(d.data().unitCode||codeByUnit.get(d.data().unitId)||"").trim()
+ }))
   .sort((a,b)=>Number(b.createdAt?.seconds||0)-Number(a.createdAt?.seconds||0));
  blueprintRows=blueprints.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.active!==false);
  currentBlueprint=blueprintRows.sort((a,b)=>Number(b.updatedAt?.seconds||0)-Number(a.updatedAt?.seconds||0))[0]||null;
@@ -535,12 +539,23 @@ async function saveBlueprint(event) {
   const total=pattern.reduce((sum,x)=>sum+x.count*x.marks,0);
   const fullMarks=Number($("qpBpFullMarks").value);
   if(total!==fullMarks)throw new Error("प्रश्न ढाँचाको जम्मा अङ्क "+total+" छ; पूर्णाङ्क "+fullMarks+" हुनुपर्छ।");
+  if($("qpBpSourceReviewed").checked!==true)
+   throw Error("मूल CDC Grid को Unit, प्रश्न संख्या, अङ्क र संज्ञानात्मक स्तर मिलाएको पुष्टि गर्नुहोस्।");
+  let unitGrid;
+  try{unitGrid=JSON.parse($("qpBpUnitGrid").value.trim());}
+  catch{throw Error("CDC Unit-wise Grid JSON मान्य छैन।");}
+  validateExactCdcUnitGrid({
+    fullMarks,pattern,unitGrid,sourceUrl,
+    curriculumVersion:$("qpBpVersion").value.trim(),
+    verifiedBy:auth.currentUser.uid
+  },fullMarks);
   const subjectHash=Array.from(normal(selectedSubject)).reduce((hash,ch)=>(hash*31+ch.charCodeAt(0))>>>0,7).toString(36);
-  const id="g"+gradeNumber(selectedClass)+"_s"+subjectHash;
+  // Keep separate CDC grids per full mark; never overwrite old V46 records.
+  const id="g"+gradeNumber(selectedClass)+"_s"+subjectHash+"_m"+fullMarks;
   await setDoc(doc(db,"cdc_blueprints",id),{
     gradeNumber:gradeNumber(selectedClass),className:selectedClass,subject:selectedSubject,
     curriculumVersion:$("qpBpVersion").value.trim(),fullMarks,durationMinutes:Number($("qpBpDuration").value),
-    pattern, cognitiveDistribution:distribution,sourceTitle:$("qpBpSourceTitle").value.trim(),sourceUrl,
+    pattern,unitGrid,cognitiveDistribution:distribution,sourceTitle:$("qpBpSourceTitle").value.trim(),sourceUrl,
     active:true,verifiedBy:auth.currentUser.uid,verifiedAt:serverTimestamp(),
     updatedBy:auth.currentUser.uid,updatedAt:serverTimestamp()
   });
