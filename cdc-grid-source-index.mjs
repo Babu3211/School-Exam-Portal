@@ -6,7 +6,7 @@
 const specs=new Set(['specification_grid','specification_grid_and_model_questions',
  'specification_grid_model_questions_and_answer_key']);
 const normal=s=>String(s||'').normalize('NFKC').toLocaleLowerCase()
- .replace(/[^\\p{L}\\p{N}]+/gu,' ').trim();
+ .replace(/[^\p{L}\p{M}\p{N}]+/gu,' ').trim();
 export function cdcSubjectKey(subject){
  const s=normal(subject);
  if(!s)return '';
@@ -29,7 +29,7 @@ export function cdcSubjectKey(subject){
 function eligibleSource(source,grade,key){
  if(!source||!Array.isArray(source.grades)||!source.grades.includes(grade)||
   !specs.has(source.kind)||!key||
-  !/^https:\/\/(?:www\.)?moecdc\.gov\.np\//i.test(source.url||''))return false;
+  !/^https:\/\/(?:(?:www|lib)\.moecdc\.gov\.np|moecdc\.gov\.np|giwmscdnone\.gov\.np)\//i.test(source.url||''))return false;
  const name=normal(source.subject);
  // Broad multi-subject catalogues and generic grids are NOT specific evidence.
  if(String(source.subject||'').includes(' / ')||name.includes('विषयगत पाठ्यक्रम'))return false;
@@ -45,6 +45,7 @@ const score=(s,grade)=>{
  if(s.grades.length===1)p+=8;
  if(String(s.status||'').includes('official_current'))p+=6;
  if(String(s.status||'').includes('content_not_yet_extracted'))p+=4;
+ if(String(s.status||'').includes('unitwise_transcribed'))p+=10;
  const y=String(s.version||'').match(/20(?:7[0-9]|8[0-9])/);
  if(y)p+=Number(y[0])-2070;
  if(s.kind==='specification_grid_model_questions_and_answer_key')p+=2;
