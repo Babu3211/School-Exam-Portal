@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {readBundledScienceBank,buildAutomaticQuestionPaper,supportsQuestionLanguage} from '../cdc-question-autogen.mjs';
+import {readBundledScienceBank,buildAutomaticQuestionPaper,supportsQuestionLanguage,isQuestionReadyForLanguage} from '../cdc-question-autogen.mjs';
 const src=p=>JSON.parse(readFileSync(new URL('../data/'+p,import.meta.url),'utf8'));
 let state=0;
 const rng=()=>((state=(state*1664525+1013904223)>>>0)/4294967296);
@@ -83,6 +83,36 @@ assert.throws(()=>buildAutomaticQuestionPaper({questions:[],topicIds:['topic'],
  fullMarks:10.5}),/whole number/);
 assert.equal(supportsQuestionLanguage({questionText:'परिकल्पना के हो?'},'en'),false);
 assert.equal(supportsQuestionLanguage({questionText:'Define force.'},'en'),true);
+// Incomplete English translations must never silently use Nepali answers
+// or choices, including when the paper asks for two languages.
+const bilingualBase={
+ id:'translated',topicId:'unit1',unitCode:'1',questionType:'mcq',marks:1,
+ cognitiveLevel:'knowledge',questionText:'पानी के हो?',
+ questionTextEn:'What is water?',options:['पानी','माटो','हावा','आगो'],
+ optionsEn:['Water','Soil','Air','Fire'],correctOption:'A',
+ answer:'पानी',answerEn:'Water',status:'active'
+};
+for(const language of ['en','both']){
+ assert.equal(isQuestionReadyForLanguage(bilingualBase,language),true);
+ for(const bad of [
+  {...bilingualBase,answerEn:''},
+  {...bilingualBase,optionsEn:[]},
+  {...bilingualBase,optionsEn:['पानी','Soil','Air','Fire']}
+ ]){
+  assert.equal(isQuestionReadyForLanguage(bad,language),false);
+  assert.throws(()=>buildAutomaticQuestionPaper({questions:[bad],
+   topicIds:['unit1'],fullMarks:1,language,rng}),/No reviewed questions|lacks valid/);
+ }
+}
+const englishOriginal={...bilingualBase,questionText:'What is water?',
+ questionTextEn:'',options:['Water','Soil','Air','Fire'],optionsEn:[],
+ answer:'Water',answerEn:''};
+assert.equal(isQuestionReadyForLanguage(englishOriginal,'en'),true);
+const translationReady=buildAutomaticQuestionPaper({questions:[bilingualBase],
+ topicIds:['unit1'],fullMarks:1,language:'both',rng});
+assert.match(translationReady.questions[0].answer,/Water/);
+console.log('PASS translated questions require complete English options and answer key');
+
 console.log('PASS V46 original practice paper auto planner: Grades 8/10 25/50 marks, all topics, valid answer keys, exact reference-grid pattern, language fails closed');
 
 const page=readFileSync(new URL('../cdc-question-paper.js',import.meta.url),'utf8');
