@@ -1314,6 +1314,19 @@ window.loadQuestionPaperModule=loadQuestionPaperModule;
 // Module scripts may finish after the user opens the page; initialize the existing view then.
 if(window.currentPage==="question-papers"&&document.getElementById("questionPaperRoot"))void loadQuestionPaperModule();
 
+// CDC Grid approval is tied to the exact reviewed rows, source, version
+// and full marks. Editing any of them revokes the earlier approval.
+function invalidateCdcGridSourceReview(){
+ const reviewed=$("qpBpSourceReviewed");
+ if(reviewed)reviewed.checked=false;
+ const status=$("qpBpStatus");
+ if(status)status.textContent="Grid वा स्रोत बदलियो। मूल CDC तालिकासँग पुनः जाँच गरेर मात्र Save गर्नुहोस्।";
+}
+document.addEventListener("input",event=>{
+ if(["qpBpUnitGrid","qpBpFullMarks","qpBpVersion","qpBpSourceTitle",
+     "qpBpSourceUrl"].includes(event.target?.id))
+  invalidateCdcGridSourceReview();
+});
 document.addEventListener("change",async event=>{
   const t=event.target;
   if(t.id==="qpClass"){
