@@ -301,9 +301,22 @@ service cloud.firestore {
               && get(currentTeacherAssignment()).data.get('subjectId', '') == d.subjectId
               && get(currentTeacherAssignment()).data.get('active', false) == true;
           }
-          allow get: if canAdmin(sid) ||
-            (memberRole(sid, 'teacher') && request.auth.uid == teacherUid
-             && resource.data.get('schoolId', '') == sid);
+          // Revoking an assignment must revoke access to previously saved
+          // teacher marks too, not only future writes.
+          function teacherMayReadDraft(){
+            let d = resource.data;
+            let duty = /databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + teacherUid + ':' + d.classId + ':' + d.subjectId);
+            return memberRole(sid, 'teacher') && request.auth.uid == teacherUid
+              && d.get('schoolId','') == sid && d.get('updatedBy','') == teacherUid
+              && d.get('state','') == 'draft'
+              && exists(duty)
+              && get(duty).data.get('active',false) == true
+              && get(duty).data.get('uid','') == teacherUid
+              && get(duty).data.get('schoolId','') == sid
+              && get(duty).data.get('classId','') == d.classId
+              && get(duty).data.get('subjectId','') == d.subjectId;
+          }
+          allow get: if canAdmin(sid) || teacherMayReadDraft();
           // Teacher queries other teachers' draft collections are forbidden.
           allow list: if canAdmin(sid);
           allow create: if memberRole(sid, 'teacher') && request.auth.uid == teacherUid

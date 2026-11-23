@@ -32,7 +32,9 @@ for(const guard of [
  'request.auth.uid == teacherUid',
  "d.format == 'smss-v47-teacher-class-draft-v1'",
  "d.state == 'draft'",
- "get(assignment).data.get('active',false) == true",
+ 'function teacherMayReadDraft()',
+ 'get(duty).data.get(\'active\',false) == true',
+ "get(currentTeacherAssignment()).data.get('active', false) == true",
  "get(config).data.get('active',false) == true",
  "request.resource.data.revision == resource.data.get('revision',0) + 1",
  'allow delete: if false;'

@@ -352,8 +352,11 @@ try{
  const teacherAssign=doc(admin,'schools','12345678','teacher_assignments',
   '12345678:teacher_12345678:9:computer');
  await assertSucceeds(updateDoc(teacherAssign,{active:false}));
+ await assertFails(getDoc(teacherDraft(teacher)));
+ await assertSucceeds(getDoc(teacherDraft(admin)));
  await assertFails(updateDoc(teacherDraft(teacher),{revision:3,updatedAt:serverTimestamp()}));
  await assertSucceeds(updateDoc(teacherAssign,{active:true}));
+ await assertSucceeds(getDoc(teacherDraft(teacher)));
  await assertSucceeds(updateDoc(teacherDraft(teacher),{revision:3,updatedAt:serverTimestamp()}));
  await assertFails(deleteDoc(teacherDraft(teacher)));
  await assertFails(setDoc(mark(teacher,'12345678'),{schoolId:'12345678',studentId:'s1',value:44}));
