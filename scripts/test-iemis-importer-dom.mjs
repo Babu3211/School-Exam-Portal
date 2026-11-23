@@ -12,7 +12,7 @@ const html = `<!doctype html><body>
   <table><thead><tr><th rowspan="2"></th><th rowspan="2">S.N</th><th rowspan="2">Student Name</th><th rowspan="2">Regd. No.</th><th rowspan="2">Symbol No.</th><th colspan="4">Nepali</th></tr>
   <tr><th>IsAbsent</th><th>Participation(4)</th><th>Practical/Project(36)</th><th>First Term Examination(10)</th></tr></thead><tbody>
   <tr><td><input type="checkbox"></td><td>7</td><td>Synthetic Student</td><td>TEST-REG</td><td>001</td><td><input type="checkbox"></td><td><input type="number" min="0"></td><td><input type="number" min="0"></td><td><input type="number" min="0"></td></tr>
-  </tbody></table></body>`;
+  </tbody></table><div><label><input type="checkbox" checked>Nepali</label><label><input type="checkbox">English</label></div></body>`;
 // Use digits-only school identifiers, exactly as on the observed IEMIS form.
 const dom = new JSDOM(html.replace('TEST-SCHOOL |','999999999 |'), {url:'https://emis.cehrd.gov.np/result-processing/result-entry',runScripts:'outside-only',pretendToBeVisual:true});
 const window = dom.window;
@@ -21,7 +21,9 @@ window.cancelAnimationFrame=id=>window.clearTimeout(id);
 Object.defineProperty(window.HTMLElement.prototype,'innerText',{get(){return this.textContent;}});
 const originalAttach = window.Element.prototype.attachShadow;
 window.Element.prototype.attachShadow=function(options){return originalAttach.call(this,{...options,mode:'open'});};
-window.ExcelJS=globalThis.ExcelJS;
+window.setImmediate=setImmediate;
+window.TextEncoder=TextEncoder;window.TextDecoder=TextDecoder;
+window.eval(readFileSync('iemis-importer/vendor/exceljs.min.js','utf8'));
 window.eval(readFileSync('iemis-importer/transfer.js','utf8'));
 window.eval(readFileSync('iemis-importer/content.js','utf8'));
 const host=window.document.getElementById('smss-exam-importer'),root=host.shadowRoot;
@@ -36,7 +38,40 @@ const grid={context:{schoolCode:'999999999',year:'2083',className:'Class 6',term
 const bytes=await globalThis.SmssIemisTransfer.makeWorkbook(globalThis.ExcelJS,grid);
 Object.defineProperty($('file'),'files',{value:[{name:'marks.xlsx',size:bytes.byteLength,arrayBuffer:async()=>bytes}],configurable:true});
 await $('file').onchange();assert.equal($('preview').disabled,false);
-await $('preview').onclick();assert.equal($('apply').disabled,false);assert.equal($('preview-table').querySelectorAll('tbody tr').length,3);
+await $('preview').onclick();assert.equal($('apply').disabled,false);assert.equal($('editor').querySelectorAll('tbody tr').length,1);
+assert.equal($('editor').querySelector('th[colspan="4"]').textContent,'Nepali');
+assert.deepEqual([...$('editor').querySelectorAll('table + .subjects label')].map(label=>label.textContent.trim()),['Nepali','English']);
+assert.deepEqual([...$('editor').querySelectorAll('.subjects input')].map(box=>box.checked),[true,false]);
+const field = c => $('editor').querySelector('[data-col="'+c+'"]');
+assert.equal(field(6).value,'23');
+assert.equal(window.document.querySelector('tbody input[type=number]').value,'');
+field(6).value='22';field(6).dispatchEvent(new window.Event('input'));
+assert.equal($('apply').disabled,true);
+const pasteEvent = new window.Event('paste',{bubbles:true,cancelable:true});
+Object.defineProperty(pasteEvent,'clipboardData',{value:{getData:()=> '23\t8'}});
+field(6).dispatchEvent(pasteEvent);
+assert.equal(field(6).value,'23');
+await $('preview').onclick();
+assert.equal($('apply').disabled,false);
+let downloaded;
+window.Blob = globalThis.Blob;
+window.URL.createObjectURL = blob => {downloaded = blob;return 'blob:test';};
+window.HTMLAnchorElement.prototype.click = () => {};
+window.URL.revokeObjectURL = () => {};
+await $('export').onclick();
+const exported = await globalThis.SmssIemisTransfer.workbookData(globalThis.ExcelJS,await downloaded.arrayBuffer());
+assert.deepEqual(exported.rows[0].slice(5),['0','23','8']);
+await $('sample').onclick();
+const sampleBook = new globalThis.ExcelJS.Workbook();
+await sampleBook.xlsx.load(await downloaded.arrayBuffer());
+assert.equal(sampleBook.getWorksheet('Marks').getCell('F3').text,'');
+sampleBook.getWorksheet('Marks').getCell('F3').value=0;
+const filledSample=await sampleBook.xlsx.writeBuffer();
+Object.defineProperty($('file'),'files',{value:[{name:'sample.xlsx',size:filledSample.byteLength,arrayBuffer:async()=>filledSample}],configurable:true});
+await $('file').onchange();
+assert.equal(field(5).value,'0');
+assert.equal($('apply').disabled,true);
+$('numbers').checked=true;$('paste').value='0\t23\t8';await $('use-paste').onclick();await $('preview').onclick();$('numbers').checked=false;
 let saved=0;window.document.getElementById('native-save').onclick=()=>saved++;
 let edits=0;window.document.querySelector('table').addEventListener('input',()=>edits++);
 await $('apply').onclick();

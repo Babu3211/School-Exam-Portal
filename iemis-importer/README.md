@@ -14,7 +14,7 @@ Extract the extension ZIP, open `chrome://extensions` (or `edge://extensions`), 
 
 २. **Exam Importer → Read Form → Download Sample Excel** बाट यही form को `.xlsx` Sample निकाल्नुहोस्। Context र Marks sheet का heading नबदल्नुहोस्। विद्यार्थीका अंक मात्र भर्नुहोस्। SMSS को **Export IEMIS Excel** बाट आएको फाइल पनि यहीँ छान्न सकिन्छ।
 
-३. **Import Excel → Preview** मा विद्यार्थी पहिचान, विषय, पूर्णाङ्क र परिवर्तन जाँच्नुहोस्। Excel बाट copy/paste गर्दा Marks sheet का heading बाहेक विद्यार्थीका चारवटै विवरण र अंकका column सँगै छान्नुहोस्।
+३. खुलेको तालिकामा सीधै अंक लेख्न वा पहिलो अंकको कोठा छानेर Excel को आयताकार क्षेत्र पेस्ट गर्न सकिन्छ। **Copy Rows** ले विद्यार्थी विवरणसहित तालिकाका अंक कपी गर्छ। Excel छान्दा मिलेको विद्यार्थी र विषयमा अंक देखिन्छ। **Preview** मा पहेँलो कोठा जाँच्नुहोस्। **Import Excel → Preview** मा विद्यार्थी पहिचान, विषय, पूर्णाङ्क र परिवर्तन जाँच्नुहोस्। Excel बाट copy/paste गर्दा Marks sheet का heading बाहेक विद्यार्थीका चारवटै विवरण र अंकका column सँगै छान्नुहोस्।
 
 ४. पहिलेको अंक बदल्नु छ भने मात्र **Replace Existing Values** छान्नुहोस्। **Fill IEMIS Form** पछि IEMIS मा फेरि अंक जाँचेर त्यहाँकै **Save** थिच्नुहोस्। Save सफल भएपछि Reload गरेर पुष्टि गर्नुहोस्।
 
@@ -24,6 +24,6 @@ Extract the extension ZIP, open `chrome://extensions` (or `edge://extensions`), 
 
 ## Scope
 
-The manifest runs only on `https://emis.cehrd.gov.np/`. It requests no network, credential, storage, clipboard, or background permissions. Excel parsing uses bundled ExcelJS 4.4.0, under its included MIT license. Pasted text is read only from the importer's textarea.
+The manifest runs only on `https://emis.cehrd.gov.np/`. It requests no network, credential, storage, clipboard, or background permissions. Excel parsing uses bundled ExcelJS 4.4.0, under its included MIT license. The editor reads pasted text from the user's paste event. Copy Rows writes to the clipboard on request.
 
 The table adapter verifies the observed S.N / Student Name / Regd. No. / Symbol No. identity columns and reads subject components and maxima from the current form. An unknown layout fails with a message. It does not infer missing marks or rescale different assessment maxima.
