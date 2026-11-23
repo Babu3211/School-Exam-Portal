@@ -405,7 +405,8 @@ service cloud.firestore {
           && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + request.resource.data.class + ':attendance')).data.get('subjectId', '') == 'attendance'
           && exists(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId))
           && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('schoolId', '') == sid
-          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('class', '') == request.resource.data.class;
+          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('class', '') == request.resource.data.class
+          && get(/databases/$(database)/documents/schools/$(sid)/students/$(request.resource.data.studentId)).data.get('active', true) == true;
       }
       match /attendance/{id} {
         function validAdminAttendance() {
@@ -423,7 +424,8 @@ service cloud.firestore {
             && id == data.date + '_' + data.studentId
             && exists(studentPath)
             && get(studentPath).data.get('schoolId','') == sid
-            && get(studentPath).data.get('class','') == data.class;
+            && get(studentPath).data.get('class','') == data.class
+            && get(studentPath).data.get('active',true) == true;
         }
         allow get, list: if canRead(sid);
         allow create: if (memberRole(sid, 'school_admin') && validAdminAttendance()) || teacherAttendanceAllowed(sid, id);
@@ -433,7 +435,10 @@ service cloud.firestore {
         allow update: if immutableSchool(sid)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['present'])
           && request.resource.data.present is bool
-          && (memberRole(sid, 'school_admin') || teacherAttendanceAllowed(sid, id));
+          // Even editing an existing record requires a CURRENT enrolled student.
+          // Do not permit correcting a withdrawn/transferred student's old row.
+          && (memberRole(sid, 'school_admin') && validAdminAttendance()
+              || teacherAttendanceAllowed(sid, id));
         allow delete: if false;
       }
       match /exams/{id} {

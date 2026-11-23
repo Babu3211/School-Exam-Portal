@@ -124,6 +124,14 @@ assert.ok(!/allow (?:create|update):[^;]*canAdmin\(sid\)/.test(attendanceBlock),
 // student/class/date reassignment or updates by other roles.
 const attendanceUpdate=attendanceBlock.match(/allow update: if ([\s\S]*?);/)?.[1]??'';
 assert.ok(attendanceUpdate.includes('teacherAttendanceAllowed(sid, id)'),'Teacher correction must have an assignment gate');
+assert.ok(attendanceUpdate.includes("memberRole(sid, 'school_admin') && validAdminAttendance()"),
+ 'Admin edits must reverify current enrolled student, not merely active membership');
+const teacherRoster=rules.split('function teacherAttendanceAllowed(sid, id) {')[1]?.split('\n      }')[0]??'';
+const adminRoster=attendanceBlock.split('function validAdminAttendance() {')[1]?.split('\n        }')[0]??'';
+assert.ok(teacherRoster.includes(".data.get('active', true) == true"),
+ 'Assigned teacher must not correct withdrawn student attendance');
+assert.ok(adminRoster.includes(".data.get('active',true) == true"),
+ 'School Admin must not correct withdrawn student attendance');
 for(const required of [
  'immutableSchool(sid)',
  "request.resource.data.diff(resource.data).affectedKeys().hasOnly(['present'])",

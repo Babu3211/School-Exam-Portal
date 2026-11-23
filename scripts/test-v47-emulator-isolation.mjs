@@ -50,6 +50,24 @@ try {
   await assertFails(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-20_student-1'),{present:false}));
   await assertFails(updateDoc(schoolDoc('super-a','300160001','attendance','2026-11-20_student-1'),{present:false}));
   await assertSucceeds(updateDoc(schoolDoc('admin-a','300160001','attendance','2026-11-20_student-1'),{present:false}));
+  // A previously saved row must not remain editable after a student is
+  // withdrawn or transferred, although historical reads are still allowed.
+  const adminAttendanceRef=schoolDoc('admin-a','300160001','attendance','2026-11-20_student-1');
+  await env.withSecurityRulesDisabled(async ctx=>
+    updateDoc(doc(ctx.firestore(),'schools','300160001','students','student-1'),{active:false})
+  );
+  await assertFails(updateDoc(adminAttendanceRef,{present:true}));
+  await assertFails(setDoc(schoolDoc('admin-a','300160001','attendance','2026-11-23_student-1'),{...adminAttendance,date:'2026-11-23'}));
+  await assertSucceeds(getDoc(adminAttendanceRef));
+  await env.withSecurityRulesDisabled(async ctx=>
+    updateDoc(doc(ctx.firestore(),'schools','300160001','students','student-1'),{active:true,class:'8'})
+  );
+  await assertFails(updateDoc(adminAttendanceRef,{present:true}));
+  await env.withSecurityRulesDisabled(async ctx=>
+    updateDoc(doc(ctx.firestore(),'schools','300160001','students','student-1'),{class:'9'})
+  );
+  await assertSucceeds(updateDoc(adminAttendanceRef,{present:true}),
+    'Restored active enrollment may edit attendance');
   const valid={name:'Student Two',class:'9',schoolId:'300160001'};
   await assertSucceeds(getDoc(schoolDoc('admin-a','300160001','students','student-1')));
   await assertFails(getDoc(schoolDoc('admin-a','300160002','students','student-1')));
@@ -362,6 +380,16 @@ try {
   await assertSucceeds(setDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),teacherAttendance));
   await assertSucceeds(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{present:false}));
   await assertSucceeds(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{present:true}));
+  // An active assignment does not authorize correcting withdrawn students.
+  await env.withSecurityRulesDisabled(async ctx=>
+    updateDoc(doc(ctx.firestore(),'schools','300160001','students','student-1'),{active:false})
+  );
+  await assertFails(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{present:false}));
+  await assertFails(setDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-24_student-1'),{...teacherAttendance,date:'2026-11-24'}));
+  await env.withSecurityRulesDisabled(async ctx=>
+    updateDoc(doc(ctx.firestore(),'schools','300160001','students','student-1'),{active:true})
+  );
+  await assertSucceeds(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{present:false}));
   await assertFails(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{studentId:'different'}));
   await assertFails(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{class:'8'}));
   await assertFails(updateDoc(schoolDoc('teacher-a','300160001','attendance','2026-11-18_student-1'),{date:'2026-11-19'}));
