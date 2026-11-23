@@ -90,6 +90,12 @@ for(const grade of [9,10]){
  assert.equal(rows.length,1,'Exactly one CDC government PDF Grid source per Computer Science grade');
  assert.match(rows[0].url,/^https:\/\/giwmscdnone\.gov\.np\/media\/pdf_upload\//);
 }
+const latestMath=o=>o.sources.find(s=>s.grades.length===1&&s.grades[0]===10&&
+ s.subject==='ऐच्छिक गणित'&&s.version==='2083');
+assert.ok(latestMath(register),'Official CDC 2083 Optional Math model reference required');
+assert.equal(latestMath(register).url,'https://moecdc.gov.np/content/659/class-10th-optional-mathematics-specification-table--model/');
+assert.match(latestMath(register).status,/original_attachment_pending/,
+ 'Secondary PDF replica must not be misrepresented as an independently authenticated original');
 assert.match(questionBuilder, /id="qpQuestionExcelTemplateBtn"/);
 assert.match(questionBuilder, /id="qpQuestionExcelFile"/);
 assert.match(questionBuilder, /ExcelJS/);
