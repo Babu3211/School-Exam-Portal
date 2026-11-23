@@ -48,19 +48,18 @@ const ExcelJS=browser.window.ExcelJS;
 assert.ok(ExcelJS?.Workbook,'Local browser ExcelJS library must expose Workbook');
 const book=new ExcelJS.Workbook();
 const work=book.addWorksheet('Question Bank');
-work.addRow(headers);
-work.addRow(row);
+// ExcelJS UMD is evaluated inside a browser realm; build its input
+// arrays in that same realm (host Node arrays are not instanceof window.Array).
+work.addRow(browser.window.Array.from(headers));
+work.addRow(browser.window.Array.from(row));
+assert.equal(work.getRow(1).getCell(1).text,'Unit Code',
+ 'Sample header must exist before exporting XLSX');
 const packed=await book.xlsx.writeBuffer();
 assert.ok(packed.byteLength>100,'Real Excel export must contain file bytes');
 const reopened=new ExcelJS.Workbook();
 await reopened.xlsx.load(new browser.window.Uint8Array(packed));
-console.log('XLSX bytes type',packed.constructor?.name,packed.byteLength,
- Array.from(new browser.window.Uint8Array(packed).slice(0,4)));
-console.log('Workbook original row count',work.rowCount,work.getRow(1).getCell(1).text);
 const loadedSheet=reopened.getWorksheet('Question Bank');
-console.log('XLSX parser diagnostics',{rowCount:loadedSheet?.rowCount,
- actualRowCount:loadedSheet?.actualRowCount,lastRow:loadedSheet?.lastRow?.number,
- sheetName:loadedSheet?.name,firstHeader:loadedSheet?.getRow(1).getCell(1).text});
+assert.equal(loadedSheet.rowCount,2,'XLSX reload must retain two data rows');
 const reread=parseQuestionExcelSheet(loadedSheet);
 assert.equal(reread.length,1);
 assert.equal(reread[0].answerEn,'Three');
