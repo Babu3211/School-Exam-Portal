@@ -991,8 +991,15 @@ async function importQuestionBankRows(rows,scope) {
        sourceTitle.length>200||sourceUrl.length>500||
        sourceUrl&&!/^https:\/\//i.test(sourceUrl))
       throw Error("प्रश्न "+(index+1)+": अङ्क, अनुवाद, विकल्प वा स्रोत विवरण अमान्य छ।");
-    // A partial translation can remain a draft bank item, but the automatic
-    // generator will refuse it in English/Both until all answers exist.
+    // Keep answers mandatory: without an answer key an imported bank item
+    // can never become a reviewed automatic paper in any language.
+    if(!answer)throw Error("प्रश्न "+(index+1)+": प्रश्नको उत्तरकुञ्जिका अनिवार्य छ।");
+    // Do not accept copied Nepali text as an English translation.
+    const containsNepali=value=>/[\u0900-\u097f]/.test(value);
+    if((questionTextEn&&containsNepali(questionTextEn))||
+       (answerEn&&containsNepali(answerEn))||
+       optionsEn.some(containsNepali))
+      throw Error("प्रश्न "+(index+1)+": English अनुवादमा नेपाली पाठ भेटियो। सही अनुवाद आवश्यक छ।");
     if(questionTextEn&&!answerEn)throw Error("प्रश्न "+(index+1)+": English प्रश्नसँग English उत्तर आवश्यक छ।");
     if(questionType==="mcq"&&questionTextEn&&optionsEn.length!==4)
       throw Error("प्रश्न "+(index+1)+": English MCQ का चारै विकल्प आवश्यक छन्।");
