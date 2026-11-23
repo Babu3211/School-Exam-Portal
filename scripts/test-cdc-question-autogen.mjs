@@ -126,3 +126,11 @@ assert.match(page,/loadBundledPracticeBank\(\{grade,subject\}\)/);
 assert.match(page,/if\(!stillCurrent\(\)\)return;/);
 assert.doesNotMatch(page,/async function loadBundledPracticeBank\(\)\{/);
 console.log('PASS V46 read-only async practice load prevents stale class data, review gate required before paper output');
+
+const scoped=readBundledScienceBank(src('cdc-grade8-science-practice-pack-v1.json'),{
+ grade:8,subject:'Science'
+});
+assert.throws(()=>buildAutomaticQuestionPaper({questions:scoped.questions,
+ topicIds:scoped.units.slice(0,2).map(x=>x.id+'_0'),
+ fullMarks:2,language:'ne',gradeNumber:7,subject:'Science'}),/No reviewed/);
+console.log('PASS classroom grade isolation of preloaded bank');

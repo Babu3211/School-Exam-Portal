@@ -105,3 +105,48 @@ assert.equal(shortage.candidateReady,false);
 assert.ok(shortage.rows.some(row=>row.unitCode==='2'&&row.missing>0));
 assert.ok(shortage.missingTopics.includes('topic_2'));
 console.log('PASS V46 read-only teacher availability forecast with exact CDC grid per-unit shortfall');
+
+import {aggregateExactCdcGrid} from '../cdc-exact-grid.mjs';
+const mixed=[
+ {unitCode:'1',type:'short',marks:2,count:1,cognitiveLevel:'knowledge'},
+ {unitCode:'1',type:'short',marks:3,count:1,cognitiveLevel:'application'},
+ {unitCode:'2',type:'mcq',marks:1,count:2,cognitiveLevel:'understanding'}
+];
+const agg=aggregateExactCdcGrid(mixed);
+assert.equal(agg.fullMarks,7);
+assert.equal(agg.questionCount,4);
+assert.deepEqual(agg.pattern,[
+ {type:'mcq',marks:1,count:2},
+ {type:'short',marks:2,count:1},
+ {type:'short',marks:3,count:1}
+]);
+assert.equal(Object.values(agg.distribution).reduce((a,b)=>a+b,0),100);
+const mixedBp={...bp,gradeNumber:8,subject:'Science',
+ fullMarks:7,unitGrid:mixed,pattern:agg.pattern,
+ cognitiveDistribution:agg.distribution};
+const mixedBank=[];
+for(const [i,slot] of mixed.entries())for(let k=0;k<5;k++)mixedBank.push({
+ id:'mixed_'+i+'_'+k,gradeNumber:8,subject:'Science',
+ unitCode:slot.unitCode,topicId:'topic_'+slot.unitCode,
+ questionText:'प्रश्नका फरक रूप '+i+' / '+k+'?',
+ questionType:slot.type,marks:slot.marks,cognitiveLevel:slot.cognitiveLevel,
+ options:slot.type==='mcq'?['A','B','C','D']:[],
+ correctOption:slot.type==='mcq'?'B':'',answer:'उत्तर',status:'active'
+});
+const mixedPaper=buildAutomaticQuestionPaper({questions:mixedBank,
+ topicIds:['topic_1','topic_2'],fullMarks:7,
+ language:'ne',blueprint:mixedBp,requireExactGrid:true,
+ gradeNumber:8,subject:'Science',rng});
+assert.equal(mixedPaper.exactGridMatched,true);
+assert.equal(mixedPaper.questions.filter(q=>q.questionType==='short').length,2);
+assert.deepEqual(mixedPaper.questions.filter(q=>q.questionType==='short').map(q=>q.marks).sort(),[2,3]);
+assert.equal(mixedPaper.questions.reduce((a,q)=>a+q.marks,0),7);
+assert.throws(()=>buildAutomaticQuestionPaper({questions:mixedBank,
+ topicIds:['topic_1','topic_2'],fullMarks:7,
+ language:'ne',blueprint:mixedBp,requireExactGrid:true,
+ gradeNumber:9,subject:'Science',rng}),/different class/);
+assert.throws(()=>buildAutomaticQuestionPaper({questions:mixedBank,
+ topicIds:['topic_1','topic_2'],fullMarks:7,
+ language:'ne',blueprint:mixedBp,requireExactGrid:true,
+ gradeNumber:8,subject:'Mathematics',rng}),/different subject/);
+console.log('PASS varied-mark CDC Grid slots, aggregate auto-derive, school subject and class isolation');

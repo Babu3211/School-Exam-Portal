@@ -171,6 +171,13 @@ export function buildAutomaticQuestionPaper({
  const chosenIds=new Set(topicIds),eligible=[],known=new Set();
  for(const q of questions){
   if(!q||!chosenIds.has(q.topicId)||q.status==='archived'||!validatedQuestion(q,language))continue;
+  // The classroom bank is scoped by class and subject on Firestore, but
+  // recheck rows here too. Never mix a similarly named topic from another
+  // grade/subject, including stale local snapshots and imported packs.
+  if(gradeNumber!==null&&q.gradeNumber!==undefined&&
+     Number(q.gradeNumber)!==gradeNumber)continue;
+  if(subject!==null&&q.subject!==undefined&&
+     String(q.subject).trim().toLocaleLowerCase()!==String(subject).trim().toLocaleLowerCase())continue;
   const key=normalize(q.questionText);
   if(known.has(key))continue;
   known.add(key);eligible.push(q);
@@ -178,7 +185,10 @@ export function buildAutomaticQuestionPaper({
  if(!eligible.length)throw Error('No reviewed questions in the selected language and topics');
  for(const topic of topicIds)if(!eligible.some(q=>q.topicId===topic))
   throw Error('Selected topic lacks valid '+language+' questions: '+topic);
- const pattern=exactBlueprint(blueprint,fullMarks);
+ // A real unit grid may contain e.g. short-answer questions with both
+ // 2 and 3 marks. Its aggregate pattern is checked by the exact-grid
+ // validator; the legacy one-mark-per-type editor must not reject it.
+ const pattern=requireExactGrid?null:exactBlueprint(blueprint,fullMarks);
  if(requireExactGrid&&(!blueprint||!Array.isArray(blueprint.unitGrid)||
    !blueprint.unitGrid.length))
   throw Error('Official CDC question paper blocked: exact unit-wise grid is not reviewed and configured for this class/subject/full marks');

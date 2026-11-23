@@ -199,3 +199,36 @@ export function inspectExactCdcGridAvailability({
   missingTopics:Object.freeze(missingTopics),rows:Object.freeze(rows)
  });
 }
+
+// Derive a complete aggregate pattern directly from an independently
+// reviewed unit-wise CDC grid. Never make teachers type repeated marks and
+// counts; importantly, the same question type may have different marks.
+export function aggregateExactCdcGrid(unitGrid){
+ if(!Array.isArray(unitGrid)||!unitGrid.length||unitGrid.length>120)
+  throw Error('Unit-wise Grid is required');
+ const counts=new Map(),levelMarks={knowledge:0,understanding:0,application:0,higher:0};
+ const allowedTypes=new Set(['mcq','short','long']);
+ let fullMarks=0,questionCount=0;
+ for(const [i,row]of unitGrid.entries()){
+  const {type,cognitiveLevel}=row||{};
+  const marks=Number(row?.marks),count=Number(row?.count);
+  if(!allowedTypes.has(type)||!(cognitiveLevel in levelMarks)||
+    !/^[0-9]{1,3}$/.test(String(row?.unitCode||''))||
+    !Number.isSafeInteger(marks)||marks<1||marks>100||
+    !Number.isSafeInteger(count)||count<1||count>80)
+   throw Error('Invalid unit-wise grid row '+(i+1));
+  const key=type+'::'+marks;
+  counts.set(key,(counts.get(key)||0)+count);
+  levelMarks[cognitiveLevel]+=marks*count;
+  fullMarks+=marks*count;questionCount+=count;
+  if(fullMarks>500||questionCount>80)throw Error('CDC full marks or question count limit exceeded');
+ }
+ const pattern=[...counts].map(([key,count])=>{
+  const [type,marks]=key.split('::');
+  return {type,marks:Number(marks),count};
+ }).sort((a,b)=>['mcq','short','long'].indexOf(a.type)-
+ ['mcq','short','long'].indexOf(b.type)||a.marks-b.marks);
+ const distribution=Object.fromEntries(Object.entries(levelMarks).map(([level,marks])=>
+  [level,100*marks/fullMarks]));
+ return Object.freeze({pattern,distribution,fullMarks,questionCount});
+}
