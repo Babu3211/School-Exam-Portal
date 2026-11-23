@@ -23,6 +23,9 @@ assert.equal($('qpSourceDetails').open,false,'Long CDC source lists should be co
 assert.equal($('qpManualQuestions').open,false,'No typing required for the teacher default path');
 assert.ok($('qpQuestionForm'),'Existing manual bank form must be preserved for admins');
 assert.match(source,/async function importQuestionBankExcel\(file\)/);
+assert.match(source,/const scope=captureQuestionBankImportScope\(\)/);
+assert.match(source,/return importQuestionBankRows\(rows,scope\);/);
+assert.match(source,/assertQuestionBankImportScope\(scope\);[\s\S]*?await batch.commit\(\);/);
 assert.match(source,/return importQuestionBankRows\(rows\);/);
 assert.match(source,/parseQuestionExcelSheet\(sheet\)/);
 assert.match(source,/questionText,questionTextEn,options,optionsEn,correctOption,answer,answerEn/);
@@ -34,6 +37,42 @@ assert.ok($('qpPaperComposer')&&$('qpTopicCard')&&$('qpSavedPapers'));
 assert.equal($('qpSavePaperBtn').disabled,true,'No paper saved before generation');
 assert.match(source,/const historyReady=await loadPaperHistory\(\{required:true\}\)/);
 assert.match(source,/if\(!historyReady\|\|!stillCurrent\(\)\)return;/);
+// Active class/section and login cannot change between selecting a file
+// and committing up to 500 questions to the database.
+const importSafety=new Function(`
+ let selectedClass='Class 10',selectedSubject='Science and Technology',
+  selectedSection='A',questionDataLoadEpoch=4;
+ let verifiedQuestionSelection={
+  className:'Class 10',subject:'Science and Technology',section:'A',request:4
+ };
+ const auth={currentUser:{uid:'admin-test'}};
+ const isAdmin=()=>true;
+ `+code('function captureQuestionBankImportScope()','async function importQuestionBank(file)')+`
+ return {capture:captureQuestionBankImportScope,
+  verify:assertQuestionBankImportScope,
+  switchClass:value=>{selectedClass=value;questionDataLoadEpoch++;},
+  switchSection:value=>{selectedSection=value;questionDataLoadEpoch++;},
+  logout:()=>{auth.currentUser=null;},
+  revertSelection:()=>{selectedClass='Class 10';selectedSection='A';},
+  makeFresh:()=>{verifiedQuestionSelection={
+   className:selectedClass,subject:selectedSubject,section:selectedSection,
+   request:questionDataLoadEpoch};}
+ }; `)();
+const captured=importSafety.capture();
+importSafety.verify(captured);
+importSafety.switchClass('Class 9');
+assert.throws(()=>importSafety.verify(captured),/परिवर्तन भयो|आयात रोकियो/);
+importSafety.revertSelection();
+importSafety.makeFresh();
+assert.throws(()=>importSafety.verify(captured),/परिवर्तन भयो|आयात रोकियो/,
+ 'Returning to the old class after another request must not resurrect stale files');
+const renewed=importSafety.capture();
+importSafety.switchSection('B');
+assert.throws(()=>importSafety.verify(renewed),/परिवर्तन भयो|आयात रोकियो/);
+importSafety.logout();
+assert.throws(()=>importSafety.verify(renewed),/परिवर्तन भयो|आयात रोकियो/);
+console.log('PASS Import class, section, request epoch and user session race guards');
+
 const pack=JSON.parse(readFileSync(new URL('../data/cdc-grade10-science-practice-pack-v1.json',import.meta.url),'utf8'));
 assert.equal(/[\u0D00-\u0D7F]/.test(JSON.stringify(pack)),false,'No Malayalam-script typo in Nepali source');
 const translated=JSON.parse(readFileSync(new URL('../data/cdc-science-bilingual-mcq-v1.json',import.meta.url),'utf8'));
