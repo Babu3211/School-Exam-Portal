@@ -124,7 +124,19 @@ assert.equal(capturedWrites[0][1].className,'Class 10');
 assert.equal(capturedWrites[0][1].subject,'Science and Technology');
 assert.equal(capturedWrites[0][1].section,'A');
 assert.ok(loadedMessages.includes('committed'));
-console.log('PASS delayed JSON bulk import is atomic with class switch; valid import retains original scope');
+const writesBeforeInvalid=capturedWrites.length;
+for(const invalid of [
+ {...validRow,answer:''},
+ {...validRow,questionTextEn:'पदार्थ के हो?',answerEn:'Matter'}
+]){
+ await assert.rejects(()=>buildBulkHarness().importJson({
+  name:'questions.json',size:100,
+  text:async()=>JSON.stringify({questions:[invalid]})
+ }),/उत्तरकुञ्जिका|English अनुवाद/);
+}
+assert.equal(capturedWrites.length,writesBeforeInvalid,
+ 'Missing answers and untranslated English must fail before any Firestore write');
+console.log('PASS delayed JSON bulk import is atomic with class switch; invalid answers blocked');
 
 
 const pack=JSON.parse(readFileSync(new URL('../data/cdc-grade10-science-practice-pack-v1.json',import.meta.url),'utf8'));
