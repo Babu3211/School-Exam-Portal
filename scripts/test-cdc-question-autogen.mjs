@@ -26,6 +26,20 @@ for(const grade of [8,10]){
     language==='both'?original.options[0]:original.optionsEn[0]);
   }
  }
+ // Translation provenance must be bound to the exact original question,
+ // not merely to a unit number, so a revised question cannot receive a
+ // different question's answer key.
+ {
+  const forged=structuredClone(pack);
+  const first=forged.questions.find(x=>x.questionType==='mcq');
+  first.questionText='A different Nepali question with a new answer';
+  assert.throws(()=>readBundledScienceBank(forged,{grade,subject:'science',
+   bilingual:translationRegister.translations}),/Bilingual source question/);
+  const alteredOptions=structuredClone(pack);
+  alteredOptions.questions.find(x=>x.questionType==='mcq').options[1]='बदलिएको विकल्प';
+  assert.throws(()=>readBundledScienceBank(alteredOptions,{grade,subject:'science',
+   bilingual:translationRegister.translations}),/Bilingual source question/);
+ }
  const topicIds=b.units.map(x=>x.id+'_0');
  for(const target of [25,50]){
   const p=buildAutomaticQuestionPaper({questions:b.questions,topicIds,fullMarks:target,rng});

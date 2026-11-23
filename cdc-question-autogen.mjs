@@ -57,6 +57,13 @@ export function readBundledScienceBank(pack,{grade,subject,bilingual={}}){
     translation.optionsEn.some(o=>!String(o||'').trim())||
     !String(translation.answerEn||'').trim()))
    throw Error('Invalid bilingual material for '+translationKey);
+  // Prevent a translated question/answer from silently attaching to a changed
+  // or reordered Nepali MCQ after a textbook/source revision.
+  if(translation&&(translation.originalQuestionNe!==text||
+     !Array.isArray(translation.originalOptionsNe)||
+     JSON.stringify(translation.originalOptionsNe)!==JSON.stringify(q.options)||
+     translation.originalCorrectOption!==q.correctOption))
+   throw Error('Bilingual source question no longer matches Nepali original at '+translationKey);
   rows.push({
    id:'builtIn_'+grade+'_'+i,gradeNumber:grade,
    unitId:unit.id,unitTitle:unit.unitTitle,
