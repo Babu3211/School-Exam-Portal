@@ -55,7 +55,9 @@ const present=(item,lang)=>{
 };
 function inspectItem(q,guide,language,areaCodes){
  if(!q||!n(q.id)||!n(q.topicId)||!GROUPS.includes(q.group)||
-   q.status==='archived'||!Array.isArray(q.subquestions))
+   q.status==='archived'||q.reviewStatus!=='teacher_reviewed'||!n(q.reviewedBy)||
+   q.gradeNumber!==guide.gradeNumber||n(q.subject)!==n(guide.subject)||
+   !Array.isArray(q.subquestions))
   return null;
  const type=q.group;
  if(type==='objective'&&q.subquestions.length!==1)return null;
@@ -93,13 +95,16 @@ export function inspectCdcOptionalMathPaper({
   throw Error('Invalid composite paper bank, language or selected topics');
  rngFloat(rng);
  const topics=new Set(selectedTopicIds);
- const eligible=[],ids=new Set();
+ const eligible=[],ids=new Set(),texts=new Set();
  for(const row of questions){
   if(!topics.has(row?.topicId))continue;
   const q=inspectItem(row,guide,language,areaCodes);
   if(!q)continue;
   if(ids.has(q.id))throw Error('Repeated composite question ID in bank');
-  ids.add(q.id);eligible.push(q);
+  ids.add(q.id);
+  const contentSignature=(n(row.contextNe)+'|'+row.subquestions.map(s=>n(s.textNe)).join('|')).toLowerCase();
+  if(texts.has(contentSignature))continue;
+  texts.add(contentSignature);eligible.push(q);
  }
  const areaRows=guide.areas.map(area=>{
   const code=String(area.unitCode);
@@ -134,6 +139,8 @@ export function inspectCdcOptionalMathPaper({
  const used=new Set(),seenTopics=new Set(),chosen=new Array(slots.length),
   currentAreas=mapOf(areaCodes),currentCog=mapOf(LEVELS),
   groupMarks=mapOf(GROUPS),groupCounts=mapOf(GROUPS);
+ if([previousSignature,...avoidSignatures].some(s=>typeof s!=='string'||s.length>12000))
+  throw Error('Invalid previous composite question-paper signature');
  const blocked=new Set([previousSignature,...avoidSignatures].filter(Boolean));
  let visits=0,found=false;
  const search=step=>{
