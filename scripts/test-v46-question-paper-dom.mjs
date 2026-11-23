@@ -50,6 +50,8 @@ assert.match(source,/getCdcOptionalMathGuide\(\{grade,subject\}\)/);
 assert.match(source,/optionalMathAreaTopics\(grade,subject\)/);
 assert.match(source,/CDC २०८२ · Objective\/WCA\/CCA/);
 assert.match(source,/async function generateOptionalMathCompositePaper\(guide\)/);
+assert.match(source,/originalOptionalMathPracticeBank\(\{/);
+assert.match(source,/allowFormulaVerifiedDraft:true/);
 assert.match(source,/inspectCdcOptionalMathPaper\(\{/);
 assert.match(source,/renderCdcCompositePaper\(paper,\{escapeHtml:esc\}\)/);
 assert.match(source,/return generateOptionalMathCompositePaper\(grouped\)/);
