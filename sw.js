@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v59-math-original-practice-20261123';
+const CACHE_NAME = 'smss-pwa-v60-grade10-model-grid-2083';
 const APP_SHELL = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ const APP_SHELL = [
   './cdc-question-excel.mjs',
   './cdc-verified-computer-grids.mjs',
   './cdc-optional-math-2082.mjs',
+  './cdc-optional-math-model-compare.mjs',
   './cdc-optional-math-composite.mjs',
   './cdc-optional-math-original-practice.mjs',
   './cdc-optional-math-render.mjs',
