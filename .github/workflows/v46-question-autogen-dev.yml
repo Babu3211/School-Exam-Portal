@@ -18,6 +18,8 @@ on:
       - 'scripts/test-cdc-optional-math-composite.mjs'
       - 'scripts/test-v46-optional-math-ui.mjs'
       - 'cdc-grid-source-index.mjs'
+      - 'cdc-grade8-science-model-audit.mjs'
+      - 'scripts/test-cdc-grade8-science-model-audit.mjs'
       - 'scripts/test-cdc-grid-source-index.mjs'
       - 'scripts/test-cdc-optional-math-2082.mjs'
       - 'scripts/test-cdc-verified-computer-grids.mjs'
@@ -65,6 +67,8 @@ jobs:
           node --check scripts/test-cdc-optional-math-composite.mjs
           node --check scripts/test-v46-optional-math-ui.mjs
           node --check cdc-grid-source-index.mjs
+          node --check cdc-grade8-science-model-audit.mjs
+          node --check scripts/test-cdc-grade8-science-model-audit.mjs
           node --check scripts/test-cdc-grid-source-index.mjs
           node --check scripts/test-cdc-optional-math-2082.mjs
           node --check scripts/test-cdc-verified-computer-grids.mjs
@@ -79,6 +83,8 @@ jobs:
         run: npm run test:question-paper
       - name: Test Excel question-bank headers and bilingual import validation
         run: node scripts/test-cdc-question-excel.mjs
+      - name: Audit CDC historical Grade 8 Science Model and real question-bank gaps
+        run: node scripts/test-cdc-grade8-science-model-audit.mjs
       - name: Verify automatic CDC Grid source detection for Grade 6-10 subjects
         run: node scripts/test-cdc-grid-source-index.mjs
       - name: Verify 54 original bilingual formula-checked Optional Maths practice questions
