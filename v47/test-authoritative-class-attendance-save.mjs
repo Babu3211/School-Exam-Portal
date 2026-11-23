@@ -33,4 +33,11 @@ for(const forbidden of [{...actor,role:'viewer'},{...actor,role:'teacher'},{...a
  await assert.rejects(saveAuthoritativeClassAttendance({db:{},api:guardedApi,actor:forbidden,schoolId,classId,date,entries}),/School Admin permission required/);
 }
 assert.equal(reads,0,'Unauthorized actors must not read the authoritative roster');
+let checks=0;
+await saveAuthoritativeClassAttendance({db:{},api,actor,schoolId,classId,date,entries,assertSession:()=>{checks++}});
+assert.ok(checks>=3,'Live session must be checked before roster, after roster and before save');
+await assert.rejects(saveAuthoritativeClassAttendance({db:{},api,actor,schoolId,classId,date,entries,assertSession:true}),/Attendance session verifier required/);
+let rosterReads=0;
+await assert.rejects(saveAuthoritativeClassAttendance({db:{},api:{...api,getDocs:async()=>{rosterReads++;return api.getDocs()}},actor,schoolId,classId,date,entries,assertSession:()=>{throw new Error('Firebase account switched')}}),/Firebase account switched/);
+assert.equal(rosterReads,0,'Switched account must not read roster');
 console.log('Authoritative attendance: incomplete rejected, complete atomic small-class save, cross-school blocked');
