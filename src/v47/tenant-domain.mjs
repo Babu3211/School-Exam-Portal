@@ -6,7 +6,7 @@ export const SCHOOL_STATUS = Object.freeze({ACTIVE:"active",SUSPENDED:"suspended
 export const SUBSCRIPTION_STATUS = Object.freeze({FREE:"free",PAID:"paid",DUE:"due",GRACE:"grace",EXPIRED:"expired"});
 // Legacy isolated prototype IDs remain readable; production V47 uses numeric
 // 5–20 digit IEMIS school IDs. Never accept slashes, dots or whitespace.
-const ID_PATTERN=/^(?:[0-9]{5,20}|[a-zA-Z0-9_-]{8,64})$/;
+const ID_PATTERN=/^(?:[0-9]{5,20}|(?=.*[A-Za-z_-])[A-Za-z0-9_-]{8,64})$/;
 export function assertSchoolId(schoolId) {
   if (typeof schoolId!=="string" || !ID_PATTERN.test(schoolId)) throw new TypeError("Invalid immutable school ID");
   return schoolId;
