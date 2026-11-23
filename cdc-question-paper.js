@@ -1,5 +1,5 @@
 import { getApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
-import {readBundledScienceBank,buildAutomaticQuestionPaper} from "./cdc-question-autogen.mjs";
+import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSubject} from "./cdc-question-autogen.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc,
@@ -22,7 +22,7 @@ const normal = value => String(value || "").trim().toLocaleLowerCase().replace(/
 const isAdmin = () => !!auth.currentUser && auth.currentUser.uid === ADMIN_UID;
 let role = null, classSubjects = [], curriculumRows = [], questionRows = [], blueprintRows = [], savedPapers = [], generatedPaper = null;
 let selectedClass = "", selectedSubject = "", selectedSection = "", currentBlueprint = null;
-let bundledPracticeUnits=[],bundledPracticeQuestions=[],bundledPracticeStatus="";
+let bundledPracticeUnits=[],bundledPracticeQuestions=[],bundledPracticeStatus="",questionDataLoadEpoch=0;
 
 function message(text, error = false) {
   const el = $("qpMessage");
@@ -304,6 +304,8 @@ function renderPaperPreview(paper = generatedPaper) {
       <h3>${esc(paper.paperTitle)}</h3><b>${esc(paper.className)} · ${esc(paper.subject)}</b>
       <div style="display:flex;justify-content:space-between;gap:8px;margin-top:12px"><span>शैक्षिक वर्ष: ${esc(paper.academicYear)}</span><span>समय: ${esc(paper.durationMinutes)} मिनेट</span><span>पूर्णाङ्क: ${esc(paper.fullMarks)}</span></div>
     </div>
+    ${paper.questions.some(q=>String(q.questionId||"").startsWith("builtIn_"))?
+      '<p style="font-size:12px;font-weight:bold;color:#7a3700;padding:8px;border:1px solid #c48740">अभ्यास प्रश्नपत्र — CDC प्रकाशित नमुना होइन। शिक्षकले Grid, तथ्य र उत्तर जाँचेर मात्र प्रयोग गर्नुहोस्।</p>':""}
     ${groups.map(type=>{const list=paper.questions.filter(q=>q.questionType===type);if(!list.length)return "";return `<h3 style="text-align:left;margin-top:16px">${esc(questionTypeLabel(type))}</h3>${list.map(q=>{number++;return `<div class="qp-q"><div style="display:flex;justify-content:space-between;gap:10px"><b>${number}. ${esc(q.questionText)}</b><b>[${esc(q.marks)}]</b></div>${type==="mcq"?'<div style="margin-left:18px">'+(q.options||[]).map((o,i)=>'<div>'+String.fromCharCode(65+i)+'. '+esc(o)+'</div>').join("")+'</div>':""}</div>`;}).join("")}`;}).join("")}
     <div style="text-align:center;margin-top:25px;font-weight:700">— प्रश्नपत्र समाप्त —</div>
   </div>`;
@@ -356,7 +358,7 @@ async function loadClassSubjects() {
 async function loadBundledPracticeBank(){
  bundledPracticeUnits=[];bundledPracticeQuestions=[];bundledPracticeStatus="";
  const grade=gradeNumber(selectedClass),subject=normal(selectedSubject);
- if(![8,10].includes(grade)||(!subject.includes("विज्ञान")&&!subject.includes("science"))){
+ if(![8,10].includes(grade)||!isSupportedScienceSubject(selectedSubject)){
   bundledPracticeStatus="यो कक्षा/विषयको पूर्वलोड गरिएको सामग्री अझै तयार छैन। विद्यमान विद्यालय प्रश्न बैंकबाट मात्र प्रश्नपत्र बनाउँछ; काल्पनिक CDC प्रश्न बनाउँदैन।";
   return;
  }
@@ -382,18 +384,22 @@ async function loadBundledPracticeBank(){
 
 async function loadCurrentData() {
   if (!selectedClass || !selectedSubject) return;
+  const request=++questionDataLoadEpoch,className=selectedClass,subject=selectedSubject,section=selectedSection;
+  const stillCurrent=()=>request===questionDataLoadEpoch&&selectedClass===className&&selectedSubject===subject&&selectedSection===section;
   const g=gradeNumber(selectedClass);
   const [curr, questions, blueprints] = await Promise.all([
     getDocs(query(collection(db,"cdc_curriculum"),where("gradeNumber","==",g),where("subject","==",selectedSubject))),
     getDocs(query(collection(db,"question_bank"),where("className","==",selectedClass),where("subject","==",selectedSubject),where("section","==",selectedSection))),
     getDocs(query(collection(db,"cdc_blueprints"),where("gradeNumber","==",g),where("subject","==",selectedSubject)))
   ]);
+  if(!stillCurrent())return;
   curriculumRows=curr.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.unitCode||"").localeCompare(String(b.unitCode||""),undefined,{numeric:true}));
   questionRows=questions.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.createdAt?.seconds||0).localeCompare(String(a.createdAt?.seconds||0)));
   blueprintRows=blueprints.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.active!==false);
   currentBlueprint=blueprintRows.sort((a,b)=>String(b.updatedAt?.seconds||0).localeCompare(String(a.updatedAt?.seconds||0)))[0]||null;
   $("qpCurriculumVersion").value=curriculumRows[0]?.curriculumVersion||"CDC संस्करण Topic सूचीअनुसार";
   await loadBundledPracticeBank();
+  if(!stillCurrent())return;
   renderTopics();renderQuestionRows();
   $("qpAutoSourceStatus").textContent=bundledPracticeStatus;
   const badge=$("qpBlueprintBadge");
@@ -913,6 +919,19 @@ document.addEventListener("change",async event=>{
     if(selectedClass&&selectedSubject&&sections.length===1)try{await loadCurrentData();message("CDC Topic, प्रश्न बैंक र Blueprint लोड भए।");}catch(err){console.error(err);message("डेटा लोड भएन: "+(err.code||err.message),true);}else if(sections.length>1)message("कृपया Section छान्नुहोस्।");
   }
   if(t.id==="qpSection"){selectedSection=t.value;generatedPaper=null;if(selectedClass&&selectedSubject)try{await loadCurrentData();message("Section अनुसार Topic र प्रश्न बैंक लोड भए।");}catch(err){message("डेटा लोड भएन: "+(err.code||err.message),true);}}
+  if(t.matches?.("[data-qp-topic]")||
+    ["qpAutoLanguage","qpPaperFullMarks","qpPaperDuration","qpPaperTitle",
+     "qpPaperYear","qpPaperMcqCount","qpPaperMcqMarks","qpPaperShortCount",
+     "qpPaperShortMarks","qpPaperLongCount","qpPaperLongMarks"].includes(t.id)){
+    if(generatedPaper){
+      generatedPaper=null;
+      $("qpSavePaperBtn").disabled=true;
+      $("qpPrintPaperBtn").disabled=true;
+      $("qpAnswerKeyBtn").disabled=true;
+      renderPaperPreview(null);
+      message("Topic, भाषा वा प्रश्नपत्र विवरण परिवर्तन भयो। नयाँ प्रश्नपत्र बनाउनुहोस्।");
+    }
+  }
   if(t.id==="qpQuestionType")toggleMcqFields();
   if(t.id==="qpImportFile"&&t.files?.[0]){
     try{await importTopics(t.files[0]);}catch(err){message("आयात भएन: "+(err.code||err.message),true);}finally{t.value="";}

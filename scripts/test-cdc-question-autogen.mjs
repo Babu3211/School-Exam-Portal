@@ -85,3 +85,16 @@ assert.match(page,/blueprintId:planned\.blueprintMatched/);
 assert.match(sw,/cdc-question-autogen\.mjs/);
 assert.match(sw,/cdc-science-bilingual-mcq-v1\.json/);
 console.log('PASS V46 Browser auto builder wiring, role-safety and offline packaging');
+
+import {isSupportedScienceSubject} from '../cdc-question-autogen.mjs';
+for(const label of ['Science','Science and Technology','Science & Technology','विज्ञान तथा प्रविधि'])
+ assert.equal(isSupportedScienceSubject(label),true,label);
+for(const label of ['Computer Science','Computer','ऐच्छिक कम्प्युटर विज्ञान','Social Science','Science of computing'])
+ assert.equal(isSupportedScienceSubject(label),false,label);
+assert.throws(()=>readBundledScienceBank(src('cdc-grade8-science-practice-pack-v1.json'),
+ {grade:8,subject:'Computer Science'}),/No curated/);
+assert.match(page,/questionDataLoadEpoch/);
+assert.match(page,/generatedPaper=null/);
+assert.match(page,/Topic, भाषा वा प्रश्नपत्र विवरण परिवर्तन/);
+assert.match(page,/CDC प्रकाशित नमुना होइन/);
+console.log('PASS subject-scoped source isolation, changing selection invalidation and printed draft caution');

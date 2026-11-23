@@ -4,7 +4,9 @@
 const TYPES=['mcq','short','long'];
 const LEVELS=['knowledge','understanding','application','higher'];
 const NEPALI=/[\u0900-\u097f]/;
-const scienceSubject=s=>/(?:विज्ञान|science)/i.test(String(s||''));
+// Do not mistake Computer Science for Science and Technology.
+export const isSupportedScienceSubject=s=>/^(?:विज्ञान(?: तथा प्रविधि)?|अनिवार्य विज्ञान(?: तथा प्रविधि)?|science|science and technology|science & technology|general science)$/i.test(String(s||'').trim().replace(/\s+/g,' '));
+const scienceSubject=isSupportedScienceSubject;
 const normalize=s=>String(s??'').trim().toLocaleLowerCase().replace(/\s+/g,' ');
 function shuffled(items,rng){
  const a=[...items];for(let i=a.length-1;i>0;i--){const k=Math.floor(rng()*(i+1));[a[i],a[k]]=[a[k],a[i]]}return a;
