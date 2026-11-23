@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "SMSS Exam Portal V47 — Development",
-  "short_name": "SMSS V47 Dev",
-  "description": "Isolated multi-school development preview. Not for official school use.",
+  "name": "SMSS Exam Portal",
+  "short_name": "SMSS Exam Portal",
+  "description": "SMSS Exam Portal — multi-school edition",
   "lang": "en",
   "start_url": "./",
   "scope": "./",
@@ -11,10 +11,17 @@
   "theme_color": "#124e91",
   "icons": [
     {
-      "src": "./dev-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any"
     }
-  ]
+  ],
+  "orientation": "any"
 }
