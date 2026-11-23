@@ -9,7 +9,27 @@ for(const field of ['studentName','studentIemisNo','fatherName','motherName','gu
 }
 const original={schoolId:'school_A',studentName:'Example',studentIemisNo:'001234',admissionNo:'0001',sourceClass:'Class 1',class:'1',guardianName:'Parent',phone:'9800000000'};
 const projected=projectV46StudentRecord(original,{schoolId:'school_A'});
-assert.equal(projected.studentIemisNo,'001234');assert.equal(projected.admissionNo,'0001');assert.equal(projected.sourceClass,'Class 1');
+assert.equal(projected.studentIemisNo,'001234');
+const modern={
+ schoolId:'school_A',id:'st007',class:'9',nameEnglish:'Modern English Student',
+ nameNepali:'नेपाली नाम',studentIemisNo:'0000009',admissionNo:'001',active:true
+};
+const modernProjected=projectV46StudentRecord(modern,{schoolId:'school_A'});
+assert.equal(modernProjected.nameEnglish,'Modern English Student');
+assert.equal(modernProjected.id,'st007','Preserve document identity for read-only ledgers');
+assert.equal(modernProjected.nameNepali,'नेपाली नाम');
+assert.equal(modernProjected.studentIemisNo,'0000009');
+assert.equal(modernProjected.schoolId,'school_A');
+assert.equal(modernProjected.name,undefined);
+const legacyBilingual=projectV46StudentRecord({
+ schoolId:'school_A',studentName:'Original V46',studentNameEnglish:'English First',
+ studentNameNepali:'नेपाली',class:'1'
+},{schoolId:'school_A'});
+assert.equal(legacyBilingual.studentName,'Original V46');
+assert.equal(legacyBilingual.studentNameEnglish,'English First');
+assert.equal(legacyBilingual.studentNameNepali,'नेपाली');
+assert.equal(modern.nameEnglish,'Modern English Student','Source record must never be altered');
+assert.equal(projected.admissionNo,'0001');assert.equal(projected.sourceClass,'Class 1');
 assert.throws(()=>projectV46StudentRecord(original,{schoolId:'school_B'}),/Cross-school/);
 assert.throws(()=>projectV46StudentRecord(original,{schoolId:''}),/Valid school/);
 console.log('PASS: V46 student field compatibility and cross-school rejection (pure test)');

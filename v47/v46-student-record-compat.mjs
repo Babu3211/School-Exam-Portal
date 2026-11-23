@@ -1,7 +1,7 @@
 // V46 compatibility: retain the original student document field names when reading V47.
 // This is a read-only projection; it does not authorize importing or overwriting students.
 export const V46_STUDENT_FIELDS=Object.freeze([
- 'studentName','studentNameNepali','gender','fatherName','motherName','class','section',
+ 'id','studentName','studentNameEnglish','nameEnglish','nameEn','name','studentNameNepali','nameNepali','gender','fatherName','motherName','class','section',
  'iemisCode','school','studentIemisNo','iemisStudentNo','sourceYear','sourceClass',
  'permanentAddress','temporaryAddress','dob','dobAD','isTransferred','motherTongue',
  'disabilityType','age','guardianName','phone','admissionNo','symbolNo','symbolNumber',
