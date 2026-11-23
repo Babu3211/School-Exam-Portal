@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {getCdcOptionalMathGuide,optionalMathAreaTopics} from '../cdc-optional-math-2082.mjs';
 import {inspectCdcOptionalMathPaper} from '../cdc-optional-math-composite.mjs';
+import {renderCdcCompositePaper} from '../cdc-optional-math-render.mjs';
 
 const levels=['knowledge','understanding','application','higher'];
 const targets={knowledge:12,understanding:18,application:30,higher:15};
@@ -64,6 +65,29 @@ for(const grade of [9,10]){
  assert.deepEqual(result.groupMarks,{objective:11,WCA:40,CCA:24});
  assert.deepEqual(Object.values(result.areaMarks),[17,17,20,7,7,7]);
  assert.deepEqual(result.cognitiveMarks,targets);
+ const paper={questionFormat:'cdc_optional_math_composite',
+  language:'both',schoolName:'कृत्रिम विद्यालय',schoolAddress:'काठमाडौँ',
+  paperTitle:'कृत्रिम परीक्षा',className:'Class '+grade,subject,
+  academicYear:'2083',durationMinutes:180,fullMarks:75,
+  questions:result.questions};
+ const escapeHtml=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+  .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+ const preview=renderCdcCompositePaper(paper,{escapeHtml});
+ const answer=renderCdcCompositePaper(paper,{escapeHtml,answerKey:true});
+ assert.match(preview,/id="qpPrintArea"/);
+ assert.match(preview,/Within Content Area/);
+ assert.match(preview,/Cross Content Area/);
+ assert.match(preview,/FM: 75/);
+ assert.match(preview,/कृत्रिम/);
+ assert.match(preview,/Synthetic/);
+ assert.match(answer,/Teacher Answer Key/);
+ assert.match(answer,/Synthetic answer/);
+ assert.doesNotMatch(answer,/id="qpPrintArea"/);
+ const dangerous=structuredClone(paper);
+ dangerous.questions[0].subquestions[0].textNe='<script>alert("hack")</script> नेपाली';
+ const safePreview=renderCdcCompositePaper(dangerous,{escapeHtml});
+ assert.doesNotMatch(safePreview,/<script>/);
+ assert.match(safePreview,/&lt;script&gt;/);
  assert.equal(result.teacherReviewRequired,true);
  assert.equal(result.sourceApprovedByCdc,false);
  assert.equal(new Set(result.questions.map(x=>x.id)).size,27);
