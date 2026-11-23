@@ -23,7 +23,7 @@ for(let i=0;i<101;i++){
 set(base+'/class_mark_drafts/'+classId,{format:'smss-v47-complete-class-draft-v1',state:'draft',
  ...scope,settingsId:classId,rosterCount:101,revision:1,updatedBy:uid,
  updatedAt:'synthetic-test',entries});
-let writes=0,readCount=0;
+let writes=0,readCount=0,reviewTransactions=0;
 const snap=p=>({id:p.split('/').at(-1),ref:{path:p},exists:docs.has(p),data:()=>structuredClone(docs.get(p))});
 const makeQuery=(p,k=null,v=null,n=1501)=>({
  where:(field,op,value)=>{assert.equal(field,'class');assert.equal(op,'==');return makeQuery(p,field,value,n)},
@@ -33,7 +33,10 @@ const makeQuery=(p,k=null,v=null,n=1501)=>({
   .sort(([a],[b])=>a.localeCompare(b)).slice(0,n).map(([q])=>snap(q))}}
 });
 const firestore={doc:p=>({path:p,get:async()=>{readCount++;return snap(p)}}),
- collection:p=>makeQuery(p),runTransaction:async fn=>fn({get:async ref=>ref.get(),set:()=>{writes++}})};
+ collection:p=>makeQuery(p),runTransaction:async fn=>{
+  reviewTransactions++;
+  return fn({get:async ref=>ref.get(),set:()=>{writes++}});
+ }};
 const auth={verifyIdToken:async(token,checkRevoked)=>{
  assert.equal(checkRevoked,true);
  if(token==='revoked')throw Error('revoked');
@@ -60,6 +63,7 @@ try{
  assert.equal(JSON.stringify(body).includes('Synthetic 0'),false,'Student data not returned');
  const originalDigest=body.review.digest;
  assert.ok(readCount>=6,'School, member, subject, settings, draft and complete class query must be read');
+ assert.equal(reviewTransactions,1,'A full class review must use one Firestore read transaction');
  assert.equal(writes,0);
  assert.equal((await get(qs,null)).status,401);
  assert.equal((await get(qs,'viewer1')).status,403,'Viewer cannot request publication review');

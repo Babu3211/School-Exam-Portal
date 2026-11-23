@@ -35,8 +35,15 @@ export function createV47PublicationReviewHttpHandler({auth,firestore}){
    // School, membership, subject, examination settings, ALL class students
    // and stored complete-class draft are reloaded server-side, never supplied
    // by the caller. This endpoint has no write methods.
-   const authoritative=await readers.loadAuthoritative({schoolId:scope.schoolId,uid:actorUid});
-   const review=fingerprintConfiguredClassReview(authoritative);
+   // A single consistent Firestore transaction prevents a role revocation
+   // or roster/settings edit between individual reads from creating a review
+   // against a mixture of class revisions.
+   const review=await firestore.runTransaction(async transaction=>{
+    const authoritative=await readers.loadTransactionalAuthoritative({
+     ...scope,schoolId:scope.schoolId,uid:actorUid,transaction
+    });
+    return fingerprintConfiguredClassReview(authoritative);
+   });
    return {status:200,body:{
     review,
     readOnly:true,stageAuthorized:false,publishAuthorized:false,
