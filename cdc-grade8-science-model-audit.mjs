@@ -107,10 +107,22 @@ export function compareGrade8SciencePracticeBank({grade,subject,questions}={}){
   missingAtLeast:Math.max(0,g.count-have[g.code]),
   marksEach:g.marksEach
  }));
+ const missingCognition=model.model.groups.flatMap(g=>
+  model.model.cognitiveLevels.map((level,i)=>{
+   const matching=questions.filter(q=>
+    q?.questionType===g.code&&Number(q.marks)===g.marksEach&&
+    q.cognitiveLevel===level&&
+    typeof q.questionText==='string'&&q.questionText.trim()&&
+    typeof q.answer==='string'&&q.answer.trim()).length;
+   return {group:g.code,level,required:g.cognitionCounts[i],
+    matching,missingAtLeast:Math.max(0,g.cognitionCounts[i]-matching)};
+  }).filter(row=>row.missingAtLeast>0)
+ );
  return {...model,
   practiceQuestionCount:questions.length,
   compatibleBankCounts:have,
   missingTypes:lacking.filter(g=>g.missingAtLeast>0),
+  missingCognition,
   readyForExactGeneration:false,
   bankIncludesOnlyPracticeMaterial:true
  };
