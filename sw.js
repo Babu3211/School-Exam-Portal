@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v54-question-excel-20261123';
+const CACHE_NAME = 'smss-pwa-v55-official-computer-grid-20261123';
 const APP_SHELL = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const APP_SHELL = [
   './cdc-question-paper.js',
   './cdc-question-autogen.mjs',
   './cdc-question-excel.mjs',
+  './cdc-verified-computer-grids.mjs',
   './data/cdc-science-bilingual-mcq-v1.json',
   './data/cdc-grade8-science-practice-pack-v1.json',
   './data/cdc-grade10-science-practice-pack-v1.json',
