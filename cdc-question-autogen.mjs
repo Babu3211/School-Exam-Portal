@@ -1,4 +1,4 @@
-import {allocateExactCdcUnitGrid} from './cdc-exact-grid.mjs';
+import {allocateExactCdcUnitGrid,validateExactCdcUnitGrid} from './cdc-exact-grid.mjs';
 // Pure, dependency-free paper planner for V46. Original locally bundled
 // questions are NOT CDC-published model questions. No external AI or billing.
 // Never silently translate a question or invent a missing answer key.
@@ -168,6 +168,14 @@ export function buildAutomaticQuestionPaper({
  if(!Array.isArray(avoidSignatures)||avoidSignatures.length>30||
     avoidSignatures.some(sig=>typeof sig!=='string'||sig.length>12000))
   throw Error('Invalid saved question-paper signatures');
+ // Class/subject/full-marks compatibility is checked BEFORE filtering the
+ // bank. A forged cross-class request must fail as a scope error even when no
+ // question from the wrong class survives bank filtering.
+ if(requireExactGrid){
+  if(!blueprint?.unitGrid?.length)
+   throw Error('Official CDC question paper blocked: exact unit-wise Grid is missing');
+  validateExactCdcUnitGrid(blueprint,fullMarks,{gradeNumber,subject});
+ }
  const chosenIds=new Set(topicIds),eligible=[],known=new Set();
  for(const q of questions){
   if(!q||!chosenIds.has(q.topicId)||q.status==='archived'||!validatedQuestion(q,language))continue;
