@@ -3934,6 +3934,7 @@ function openCdcAssessment() {
       <div class="tablewrap"><table><thead><tr><th>विद्यार्थी</th><th>मस्यौदा</th><th>पछिल्लो मिति</th><th>सिकाइ स्तर</th></tr></thead><tbody data-cdc="progressRows"></tbody></table></div>
     </details>
     <label>विषयक्षेत्र वा एकाइ (नेपाली) <input list="cdcUnitSuggestions" data-cdc="unit" maxlength="180"></label>
+    <label data-cdc="outcomePickerLabel">पाठ्यक्रमबाट उपलब्धि छान्नुहोस् <select data-cdc="outcomePicker"></select></label>
     <label>सिकाइ उपलब्धि / Learning outcome <input list="cdcTopicSuggestions" data-cdc="topic" maxlength="180" placeholder="मार्गदर्शनबाट मूल्याङ्कन गर्ने उपलब्धि लेख्नुहोस्"></label>
     <label>एकाइको अंग्रेजी नाम / Unit in English <input list="cdcUnitSuggestions" data-cdc="unitEn" maxlength="180"></label>
     <label>सिकाइ उपलब्धिको अर्को भाषा / Alternate language <input data-cdc="topicAlt" maxlength="180" placeholder="नेपाली वा English शीर्षक"></label>
@@ -4020,8 +4021,15 @@ function openCdcAssessment() {
         }
       }
     } catch { field('status').textContent = 'मस्यौदा सूची पढ्न सकिएन।'; }
-    for(const [unit,ne,en] of cdcVerifiedOutcomes[cl+':'+cdcAssessmentSubjectKey(subject)] || []) {
-      if(normalizeTitle(unit)===sourceUnit && !sharedTopics.has(ne)) sharedTopics.set(ne,en);
+    const official = (cdcVerifiedOutcomes[cl+':'+cdcAssessmentSubjectKey(subject)] || [])
+      .filter(([unit])=>normalizeTitle(unit)===sourceUnit);
+    const english = language()==='en';
+    field('outcomePickerLabel').hidden=!official.length;
+    field('outcomePickerLabel').firstChild.textContent=english ? 'Curriculum learning outcomes ' : 'पाठ्यक्रमका सिकाइ उपलब्धि ';
+    options('outcomePicker',[['',english ? 'Select a learning outcome' : 'उपलब्धि छान्नुहोस्'],
+      ...official.map(([,ne,en])=>[ne,localized(ne,en)])]);
+    for(const [,ne,en] of official) {
+      if(!sharedTopics.has(ne)) sharedTopics.set(ne,en);
     }
     for(const {unit,ne,en} of getCatalog()) {
       if(normalizeTitle(unit)===sourceUnit && !sharedTopics.has(ne)) sharedTopics.set(ne,en);
@@ -4041,6 +4049,7 @@ function openCdcAssessment() {
       suggestions.push(new Option(display,display));
     }
     dialog.querySelector('#cdcTopicSuggestions').replaceChildren(...suggestions);
+    field('outcomePicker').value=official.some(([,title])=>title===titleValue()) ? titleValue() : '';
     const savedOptions=[...topics].sort((a,b)=>a[1][0].localeCompare(b[1][0],'ne')).map(([value,[title,unit,alt]])=>[
       value,[localized(unit,units().find(([ne])=>normalizeTitle(ne)===normalizeTitle(unit))?.[1]),localized(title,alt)].filter(Boolean).join(' · ')
     ]);
@@ -4209,13 +4218,13 @@ function openCdcAssessment() {
     return [...pairs];
   };
   const matchUnit = input => {
-    const pair = units().find(names=>names.some(name=>normalizeTitle(name)===normalizeTitle(field(input).value)));
+    const pair = field(input).value.trim() && units().find(names=>names.some(name=>normalizeTitle(name)===normalizeTitle(field(input).value)));
     if(pair) [field('unit').value,field('unitEn').value]=pair;
     refreshRecords();
   };
   for(const input of ['unit','unitEn']) field(input).onchange=()=>{
     const other = input==='unit' ? 'unitEn' : 'unit';
-    const selectedUnit=units().find(names=>names.some(name=>normalizeTitle(name)===normalizeTitle(field(input).value)));
+    const selectedUnit=field(input).value.trim() && units().find(names=>names.some(name=>normalizeTitle(name)===normalizeTitle(field(input).value)));
     if(input==='unitEn' && !selectedUnit && language()!=='en') return;
     field(other).value=input==='unitEn' && !selectedUnit ? field(input).value : '';
     matchUnit(input);
@@ -4224,7 +4233,7 @@ function openCdcAssessment() {
   function refreshUnitSuggestions() {
     const verifiedUnits = units();
     field('unitCoverage').textContent = verifiedUnits.length
-      ? `सुझावमा ${verifiedUnits.length} एकाइ छन्। सिकाइ उपलब्धि स्रोतबाट लेख्नुहोस्।`
+      ? `सुझावमा ${verifiedUnits.length} एकाइ छन्। एकाइ छानेपछि सम्बन्धित उपलब्धि हेर्नुहोस्।`
       : 'यस विषयका एकाइको सुझाव उपलब्ध छैन। एकाइ र सिकाइ उपलब्धि सम्बन्धित स्रोतबाट लेख्नुहोस्।';
     dialog.querySelector('#cdcUnitSuggestions').replaceChildren(...units().flatMap(([ne,en])=>[
       ...(language()==='both' ? [...new Set([ne,en])].map(value=>new Option(localized(ne,en),value)) :
@@ -4262,6 +4271,7 @@ function openCdcAssessment() {
   function refreshSubjects() {
     const cl = field('class').value;
     field('levelRow').hidden = !cl;
+    field('guide').textContent = Number(cl)<=3 ? 'विद्यार्थी मूल्याङ्कन मार्गदर्शन २०७६ (कक्षा १–३)' : 'विद्यार्थी मूल्याङ्कन मार्गदर्शन २०८३ (कक्षा ४–५)';
     field('guide').href = Number(cl)<=3 ? 'https://moecdc.gov.np/content/644/student-assessment-guide-for-basic-level-class/' : 'https://moecdc.gov.np/content/646/guide-to-student-assessment-in-basic-level/';
     field('curriculumSource').href = Number(cl)<=3
       ? 'https://giwmscdnone.gov.np/media/pdf_upload/Basic%20Level%20%28Grade%201-%203%29%20Curriculum_vtgf727.pdf'
@@ -4326,6 +4336,11 @@ function openCdcAssessment() {
   field('date').readOnly=readOnly;
   field('today').disabled=readOnly;
   field('new').disabled=readOnly;
+  field('outcomePicker').onchange=()=>{
+    const option=field('outcomePicker').selectedOptions[0];
+    field('topic').value=option?.value ? (language()==='en' ? option.text : option.value) : '';
+    load();
+  };
   field('topic').onchange=load;
   field('records').onchange=()=>{
     const selected=field('records').value;

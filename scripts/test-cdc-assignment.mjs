@@ -279,7 +279,12 @@ for (const grade of grades) {
     choice('period','Final Term');
     const unit=w.document.querySelector('#cdcUnitSuggestions option').value;
     choice(subject==='english'?'unitEn':'unit',unit);
-    choice('topic',w.document.querySelector('#cdcTopicSuggestions option').value);
+    const picker=field('outcomePicker');
+    assert.equal(field('outcomePickerLabel').hidden,false);
+    assert.match(field('guide').textContent,Number(grade)<=3 ? /२०७६/ : /२०८३/);
+    choice('outcomePicker',picker.options[1].value);
+    assert.equal(picker.selectedIndex,1);
+    assert.ok(field('topic').value.trim());
     const levelNames=[...field('level').options].slice(1).map(option=>option.text).join(' ');
     const nepaliOnly=['nepali','socialstudies','serophero'].includes(subject);
     assert.equal(/[अ-ह]/u.test(levelNames),Number(grade)>=4&&subject!=='english');
