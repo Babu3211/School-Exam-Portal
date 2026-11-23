@@ -18,6 +18,14 @@ for(const id of ['qpClass','qpSubject','qpSection','qpPaperFullMarks','qpAutoLan
  'qpSavePaperBtn','qpPrintPaperBtn','qpAnswerKeyBtn','qpPaperPreview','qpAutoReviewed','qpAutoMode','qpAutoGridStatus'])
  assert.ok($(id),'Expected actual DOM control '+id);
 assert.deepEqual([...$('qpAutoLanguage').options].map(x=>x.value),['ne','en','both']);
+assert.equal($('qpSourceDetails').open,false,'Long CDC source lists should be collapsed by default');
+assert.equal($('qpManualQuestions').open,false,'No typing required for the teacher default path');
+assert.ok($('qpQuestionForm'),'Existing manual bank form must be preserved for admins');
+const css=dom.window.document.querySelector('style').textContent;
+assert.match(css,/#qpTopicCard\{order:1\}/);
+assert.match(css,/#qpPaperComposer\{order:2\}/);
+assert.ok($('qpPaperComposer')&&$('qpTopicCard')&&$('qpSavedPapers'));
+
 assert.equal($('qpSavePaperBtn').disabled,true,'No paper saved before generation');
 const pack=JSON.parse(readFileSync(new URL('../data/cdc-grade10-science-practice-pack-v1.json',import.meta.url),'utf8'));
 assert.equal(/[\u0D00-\u0D7F]/.test(JSON.stringify(pack)),false,'No Malayalam-script typo in Nepali source');

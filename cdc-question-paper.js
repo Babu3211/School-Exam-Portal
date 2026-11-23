@@ -56,7 +56,13 @@ function roleCanTeach(className, subject, section = "") {
 function pageShell() {
   return `
   <style>
-    .qp-wrap{display:grid;gap:14px}.qp-card{background:#fff;border:1px solid #dce5f1;border-radius:14px;padding:16px;box-shadow:0 4px 14px rgba(22,48,84,.04)}
+    .qp-wrap{display:grid;gap:14px}
+    /* Put the four teacher actions before optional admin/manual tooling. */
+    #qpTopicCard{order:1}#qpPaperComposer{order:2}#qpBankList{order:3}
+    #qpBankEditor{order:4}#qpCdcReferences{order:5}#qpCatalogAdmin{order:6}
+    #qpSavedPapers{order:7}
+    .qp-collapsible{margin-top:10px}.qp-collapsible summary{cursor:pointer;color:#2447a7;font-weight:750;padding:8px 0}
+    .qp-card{background:#fff;border:1px solid #dce5f1;border-radius:14px;padding:16px;box-shadow:0 4px 14px rgba(22,48,84,.04)}
     .qp-card h3{margin:0 0 10px;color:#193b69}.qp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
     .qp-field{display:flex;flex-direction:column;gap:5px}.qp-field label{font-size:12px;font-weight:750;color:#42536b}
     .qp-field input,.qp-field select,.qp-field textarea{width:100%;border:1px solid #cbd6e4;border-radius:9px;padding:10px;font:inherit;background:#fff;min-width:0}
@@ -87,6 +93,8 @@ function pageShell() {
 
     <div class="qp-card" id="qpCdcReferences">
       <div class="qp-section-title"><h3>CDC आधिकारिक नमुना प्रश्नपत्र तथा विशिष्टीकरण स्रोत</h3><span class="qp-badge">CDC स्रोत</span></div>
+      <details class="qp-collapsible" id="qpSourceDetails">
+       <summary>कक्षा ६–१० का CDC स्रोत र पाठ्यपुस्तक खोल्नुहोस्</summary>
       <p class="qp-hint">तलका कागजातहरू प्रश्नपत्रको ढाँचा, प्रश्नको प्रकार र मूल्याङ्कन मापदण्ड जाँच्नका लागि हुन्। कक्षा/विषयअनुसार लागू संस्करण फरक हुन सक्छ; प्रणालीले स्रोत पुष्टि नभएको ढाँचालाई CDC प्रमाणित भनेर प्रयोग गर्दैन।</p>
       <p class="qp-hint"><b>कक्षा ८ विज्ञान तथा प्रविधि:</b> CDC पाठ्यपुस्तकका ११ एकाइमा आधारित ५५ वटा मौलिक अभ्यास प्रश्न/उत्तर प्याक उपलब्ध छ। Admin ले कक्षा ८ को विज्ञान विषय छानेर “CDC अभ्यास प्याक लोड” गर्न सक्छ। यी CDC का प्रकाशित नमुना प्रश्न होइनन्; औपचारिक परीक्षामा प्रयोग गर्नुअघि विषय शिक्षकले समीक्षा गर्नुपर्छ।</p>
       <p class="qp-hint"><b>कक्षा १० विज्ञान तथा प्रविधि:</b> CDC को २०८० पुस्तकका १९ एकाइमा आधारित ५७ वटा मौलिक अभ्यास प्रश्न (MCQ, छोटो र लामो उत्तर) को प्याक उपलब्ध छ। Admin ले कक्षा १० को विज्ञान विषय छानेर अभ्यास प्याक लोड गर्न सक्छ। CDC Library मा परिमार्जित २०८२ पुस्तकको अभिलेख पनि भएकाले हाल लागू पुस्तक र विशिष्टीकरण Grid सँग शिक्षकले मिलान गर्नुपर्छ। यी CDC का प्रकाशित नमुना प्रश्न होइनन्।</p>
@@ -122,6 +130,7 @@ function pageShell() {
         </ul></div>
       </div>
       <p class="qp-hint">नोट: यी स्रोतहरू CDC का उपलब्ध प्रकाशनअनुसार अद्यावधिक गरिएका छन्। सबै कक्षा/विषयका अध्यायगत Topic र प्रश्न/उत्तर बैंकको पूर्ण आयात तथा जाँच अझै बाँकी छ; पुराना Grid लाई नयाँ संस्करणसँग नमिसाउनुहोस्।</p>
+      </details>
     </div>
 
     <div class="qp-card" id="qpCatalogAdmin">
@@ -164,15 +173,16 @@ function pageShell() {
       </form>
     </div>
 
-    <div class="qp-card">
+    <div class="qp-card" id="qpTopicCard">
       <div class="qp-section-title"><h3>२. CDC Topic छान्नुहोस्</h3><span class="qp-badge" id="qpTopicCount">० Topic</span></div>
       <div class="qp-actions"><button class="qp-btn alt" type="button" id="qpSelectGridUnits">CDC Grid का Unit छान्नुहोस्</button><button class="qp-btn alt" type="button" id="qpTopicSelectAll">सबै Topic चयन</button><button class="qp-btn alt" type="button" id="qpTopicClearAll">Topic चयन हटाउनुहोस्</button></div>
       <p class="qp-hint">शिक्षकले प्रश्न बैंकमा आफैँ थपेका Topic र उपलब्ध पाठ्यक्रम सूचीबाट आफूले चाहेका Topic छान्नुहोस्। कुनै पूर्वलोड गरिएको सूची आवश्यक छैन।</p>
       <div id="qpTopicList" class="qp-topic-list"><p class="qp-hint">कक्षा र विषय छान्नुहोस्।</p></div>
     </div>
 
-    <div class="qp-card">
-      <h3>३. प्रश्न बैंकमा प्रश्न थप्नुहोस्</h3>
+    <div class="qp-card" id="qpBankEditor">
+      <details class="qp-collapsible" id="qpManualQuestions">
+      <summary>३. थप प्रश्न बैंक व्यवस्थापन (ऐच्छिक — प्रश्न नटाइपी Generate गर्न सकिन्छ)</summary>
       <form id="qpQuestionForm" class="qp-grid">
         <div class="qp-field"><label for="qpQuestionUnit">एकाइ / पाठ (ऐच्छिक)</label><input id="qpQuestionUnit" maxlength="180" placeholder="आफूले चाहेको एकाइ"></div><div class="qp-field"><label for="qpQuestionTopic">आफूले चाहेको Topic</label><input id="qpQuestionTopic" list="qpTopicSuggestions" maxlength="180" required placeholder="Topic को नाम लेख्नुहोस्"><datalist id="qpTopicSuggestions"></datalist></div>
         <div class="qp-field"><label for="qpQuestionType">प्रश्नको प्रकार</label><select id="qpQuestionType"><option value="mcq">बहुविकल्पीय (MCQ)</option><option value="short">छोटो उत्तर</option><option value="long">लामो उत्तर</option></select></div>
@@ -190,14 +200,15 @@ function pageShell() {
       <p class="qp-hint">Topic को नाम CDC सूचीमा जस्ताको तस्तै लेख्दा प्रश्न आधिकारिक एकाइसँग जोडिन्छ। नयाँ Topic भए शिक्षकले आफ्नै नाम लेख्न सक्नुहुन्छ। Auto Generate ले उपलब्ध प्रश्न बैंकबाट प्रश्नपत्र मिलाउँछ; प्रश्न आफैँबाट नयाँ सिर्जना गर्दैन। बाह्य AI/API वा शुल्क प्रयोग हुँदैन।</p>
       <div class="qp-actions"><button class="qp-btn alt" id="qpQuestionTemplateBtn" type="button">प्रश्न बैंक JSON नमुना</button><label class="qp-btn alt" for="qpQuestionImportFile">Admin: प्रश्न बैंक JSON आयात</label><input id="qpQuestionImportFile" class="qp-hidden" type="file" accept=".json,application/json"><button class="qp-btn alt qp-hidden" id="qpGrade8SciencePackBtn" type="button">Admin: कक्षा ८ विज्ञान CDC अभ्यास प्याक लोड</button><button class="qp-btn alt qp-hidden" id="qpGrade10SciencePackBtn" type="button">Admin: कक्षा १० विज्ञान अभ्यास प्याक (शिक्षक समीक्षा)</button></div>
       <p class="qp-hint">प्रश्न बैंक JSON आयात गर्दा हाल छानिएको कक्षा, विषय र Section मा मात्र प्रश्न थपिन्छ। दोहोरिएका प्रश्नहरू छुट्याइन्छ।</p>
+      </details>
     </div>
 
-    <div class="qp-card">
+    <div class="qp-card" id="qpBankList">
       <div class="qp-section-title"><h3>४. प्रश्न बैंक</h3><button class="qp-btn alt" id="qpRefreshBtn" type="button">Refresh</button></div>
       <div class="qp-table-wrap"><table class="qp-table"><thead><tr><th>Topic</th><th>प्रश्न</th><th>प्रकार</th><th>स्तर</th><th>अङ्क</th><th>थप्ने शिक्षक</th><th>कार्य</th></tr></thead><tbody id="qpQuestionRows"><tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr></tbody></table></div>
     </div>
 
-    <div class="qp-card">
+    <div class="qp-card" id="qpPaperComposer">
       <div class="qp-section-title"><h3>५. स्वचालित प्रश्नपत्र तयार गर्नुहोस्</h3><span id="qpBlueprintBadge" class="qp-badge">Custom Pattern</span></div>
       <div class="qp-grid">
         <div class="qp-field"><label for="qpPaperTitle">परीक्षाको नाम</label><input id="qpPaperTitle" maxlength="120" value="त्रैमासिक परीक्षा"></div>
@@ -222,7 +233,7 @@ function pageShell() {
       <div id="qpPaperPreview" style="margin-top:14px"><p class="qp-hint">Topic छानेर प्रश्नपत्र Auto Generate गर्नुहोस्।</p></div>
     </div>
 
-    <div class="qp-card">
+    <div class="qp-card" id="qpSavedPapers">
       <div class="qp-section-title"><h3>६. सुरक्षित प्रश्नपत्र अभिलेख</h3><button class="qp-btn alt" id="qpPaperReloadBtn" type="button">Refresh</button></div>
       <div class="qp-table-wrap"><table class="qp-table"><thead><tr><th>परीक्षा</th><th>कक्षा</th><th>विषय</th><th>पूर्णाङ्क</th><th>समय</th><th>मिति</th><th>कार्य</th></tr></thead><tbody id="qpPaperRows"><tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr></tbody></table></div>
     </div>
