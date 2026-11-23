@@ -28,15 +28,18 @@ await assert.rejects(loadCompleteClassRoster({...base,api:mock([])}),/no student
   ['s2',{schoolId,class:'9',name:'Legacy active (field omitted)'}],
   ['s3',{schoolId,class:'9',name:'Enrolled',active:true}]
  ];
- const activeOnly=await loadCompleteClassRoster({...base,api:mock(mixed)});
+ const activeOnly=await loadCompleteClassRoster({...base,api:mock(mixed),activeOnly:true});
+ const raw=await loadCompleteClassRoster({...base,api:mock(mixed)});
+ assert.deepEqual(raw.studentIds,['s1','s2','s3'],'Marks staging retains inactive students for strict refusal');
  assert.deepEqual(activeOnly.studentIds,['s2','s3']);
  assert.equal(activeOnly.excludedInactive,1);
  assert.equal(activeOnly.count,2);
  assert.equal(activeOnly.pages,2);
- await assert.rejects(loadCompleteClassRoster({...base,api:mock([
+ await assert.rejects(loadCompleteClassRoster({...base,activeOnly:true,api:mock([
   ['s1',{schoolId,class:'9',active:false}],
   ['s2',{schoolId,class:'9',active:false}]
  ])}),/no active students/);
+ await assert.rejects(loadCompleteClassRoster({...base,activeOnly:'yes',api:mock(mixed)}),/Active-only roster option/);
 }
 
 await assert.rejects(loadCompleteClassRoster({...base,api:mock([docs[0],docs[0],docs[2]])}),/duplicate roster document ID|Duplicate student/);

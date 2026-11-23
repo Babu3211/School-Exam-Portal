@@ -47,7 +47,7 @@ export async function saveAuthoritativeClassAttendance({db,api,actor,schoolId,cl
  const identity={uid:actor?.uid,role:actor?.role,active:actor?.active,schoolId:actor?.schoolId};
  if(actor?.role!=='school_admin'||actor?.active!==true||actor?.schoolId!==schoolId||typeof actor?.uid!=='string'||!actor.uid.trim())
   throw new Error('School Admin permission required');
- const roster=await loadCompleteClassRoster({db,api,actor,schoolId,classId});
+ const roster=await loadCompleteClassRoster({db,api,actor,schoolId,classId,activeOnly:true});
  assertSession?.();
  if(actor?.uid!==identity.uid||actor?.role!==identity.role||actor?.active!==identity.active||actor?.schoolId!==identity.schoolId)
   throw new Error('School Admin identity changed during roster verification');
@@ -59,7 +59,7 @@ export async function saveAuthoritativeClassAttendance({db,api,actor,schoolId,cl
  // A post-commit network/session failure is a REVIEW state, not a failed write.
  try{
   assertSession?.();
-  const after=await loadCompleteClassRoster({db,api,actor,schoolId,classId});
+  const after=await loadCompleteClassRoster({db,api,actor,schoolId,classId,activeOnly:true});
   assertSession?.();
   if(after.studentIds.length!==roster.studentIds.length||
      after.studentIds.some((id,index)=>id!==roster.studentIds[index])||

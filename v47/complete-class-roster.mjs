@@ -2,7 +2,8 @@ import {loadClassRoster} from './attendance-roster.mjs';
 import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
 // Reads every page from the verified school/class collection. Do not use
 // a manually selected subset as the authoritative roster.
-export async function loadCompleteClassRoster({db,api,actor,schoolId,classId,pageSize=100,maxStudents=1500}){
+export async function loadCompleteClassRoster({db,api,actor,schoolId,classId,pageSize=100,maxStudents=1500,activeOnly=false}){
+ if(typeof activeOnly!=='boolean')throw new TypeError('Active-only roster option must be boolean');
  if(!Number.isInteger(maxStudents)||maxStudents<1||maxStudents>1500)throw new RangeError('Roster cap must be 1–1500');
  if(!Number.isInteger(pageSize)||pageSize<1||pageSize>100)throw new RangeError('Page size must be 1–100');
  const identity={uid:actor?.uid,role:actor?.role,active:actor?.active,schoolId:actor?.schoolId};
@@ -37,7 +38,9 @@ export async function loadCompleteClassRoster({db,api,actor,schoolId,classId,pag
  // exclude deactivated students from the attendance-eligible roster.
  // Filtering inside each paginated page would skip lookahead/cursor records.
  if(!students.length)throw new Error('Class has no students');
- const eligible=students.filter(isActiveEnrolledStudent);
+ // Marks staging MUST still see inactive students so its strict validation
+ // can reject them; attendance explicitly opts into active-only selection.
+ const eligible=activeOnly?students.filter(isActiveEnrolledStudent):students;
  if(!eligible.length)throw new Error('Class has no active students for attendance');
  return {students:eligible,studentIds:eligible.map(s=>s.id),
   count:eligible.length,pages,excludedInactive:students.length-eligible.length};
