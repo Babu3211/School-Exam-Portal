@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {validateExactCdcUnitGrid,allocateExactCdcUnitGrid} from '../cdc-exact-grid.mjs';
+import {validateExactCdcUnitGrid,allocateExactCdcUnitGrid,inspectExactCdcGridAvailability} from '../cdc-exact-grid.mjs';
 import {buildAutomaticQuestionPaper} from '../cdc-question-autogen.mjs';
 let state=731;
 const rng=()=>((state=(Math.imul(state,1664525)+1013904223)>>>0)/4294967296);
@@ -90,3 +90,18 @@ assert.throws(()=>buildAutomaticQuestionPaper({questions:single,topicIds:['topic
  fullMarks:6,language:'ne',blueprint:bp,requireExactGrid:true,
  previousSignature:only.signature,rng}),/different paper|alternatives/);
 console.log('PASS V46 CDC exact unit/level/type/marks: 6-10 synthetic fixtures, 125 random papers, no consecutive repeats, no unsafe fallback');
+
+const preview=inspectExactCdcGridAvailability({
+ blueprint:bp,fullMarks:6,eligible:questions.filter(x=>x.gradeNumber===8),
+ selectedTopicIds:['topic_1','topic_2']});
+assert.equal(preview.candidateReady,true);
+assert.equal(preview.gridQuestionCount,4);
+assert.equal(preview.missingQuestionCount,0);
+const shortage=inspectExactCdcGridAvailability({
+ blueprint:bp,fullMarks:6,
+ eligible:questions.filter(x=>x.gradeNumber===8&&x.unitCode==='1'),
+ selectedTopicIds:['topic_1','topic_2']});
+assert.equal(shortage.candidateReady,false);
+assert.ok(shortage.rows.some(row=>row.unitCode==='2'&&row.missing>0));
+assert.ok(shortage.missingTopics.includes('topic_2'));
+console.log('PASS V46 read-only teacher availability forecast with exact CDC grid per-unit shortfall');

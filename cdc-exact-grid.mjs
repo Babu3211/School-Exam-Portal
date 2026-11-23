@@ -147,3 +147,51 @@ export function allocateExactCdcUnitGrid({
  return Object.freeze({questions:Object.freeze(chosen),signature:signature(chosen),
   gridSummary:grid,slotEvidence:Object.freeze(stats),officialGridMismatch:false});
 }
+
+// A READ-ONLY preflight for teachers before clicking Generate. It describes
+// per-unit shortfalls without falsely declaring a paper officially approved.
+// Final eligibility, no-repeat, topic coverage and exact matching are ALWAYS
+// rechecked by allocateExactCdcUnitGrid.
+export function inspectExactCdcGridAvailability({
+ blueprint,fullMarks,eligible,selectedTopicIds
+}){
+ const grid=validateExactCdcUnitGrid(blueprint,fullMarks);
+ if(!Array.isArray(eligible)||!Array.isArray(selectedTopicIds))
+  throw Error('Valid topic list and verified bank snapshot are required');
+ const topics=new Set(selectedTopicIds);
+ const dedup=new Set();
+ const bank=eligible.filter(q=>{
+  if(!q||!q.id||!topics.has(q.topicId)||q.status==='archived'||!q.questionText)return false;
+  const hash=String(q.questionText).trim().toLocaleLowerCase().replace(/\s+/g,' ');
+  if(dedup.has(hash))return false;
+  dedup.add(hash);return true;
+ });
+ const grouped=new Map();
+ for(const slot of grid.slots){
+  const k=[slot.unitCode,slot.cognitiveLevel,slot.type,slot.marks].join('::');
+  const previous=grouped.get(k);
+  if(previous){previous.required++;continue}
+  grouped.set(k,{unitCode:slot.unitCode,cognitiveLevel:slot.cognitiveLevel,
+   questionType:slot.type,marks:slot.marks,required:1,available:0});
+ }
+ const rows=[...grouped.values()].map(row=>{
+  const available=bank.filter(q=>
+   String(q.unitCode||'').trim()===row.unitCode&&
+   q.cognitiveLevel===row.cognitiveLevel&&q.questionType===row.questionType&&
+   Number(q.marks)===row.marks);
+  return Object.freeze({...row,available:available.length,
+   missing:Math.max(0,row.required-available.length)});
+ });
+ const missingTopics=[...topics].filter(topic=>
+  !bank.some(q=>q.topicId===topic&&rows.some(row=>
+   String(q.unitCode||'').trim()===row.unitCode&&
+   q.questionType===row.questionType&&q.cognitiveLevel===row.cognitiveLevel&&
+   Number(q.marks)===row.marks)));
+ const missing=rows.reduce((sum,row)=>sum+row.missing,0);
+ return Object.freeze({
+  candidateReady:missing===0&&missingTopics.length===0&&
+   topics.size>0&&topics.size<=grid.slots.length,
+  fullMarks,gridQuestionCount:grid.slots.length,missingQuestionCount:missing,
+  missingTopics:Object.freeze(missingTopics),rows:Object.freeze(rows)
+ });
+}

@@ -1,6 +1,6 @@
 import { getApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
-import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSubject} from "./cdc-question-autogen.mjs";
-import {validateExactCdcUnitGrid} from "./cdc-exact-grid.mjs";
+import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSubject,supportsQuestionLanguage} from "./cdc-question-autogen.mjs";
+import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc,
@@ -640,13 +640,39 @@ function blueprintForFullMarks(fullMarks){
 }
 function updateAutoGridStatus(){
  const target=Number($("qpPaperFullMarks")?.value);
- const blueprint=blueprintForFullMarks(target);
- const element=$("qpAutoGridStatus");
- if(!element)return;
- element.textContent=blueprint&&Array.isArray(blueprint.unitGrid)&&blueprint.unitGrid.length?
-  target+" अंकको CDC Unit-wise Grid Admin ले स्रोत हेरेर राखेका छन्। मूल Grid र उत्तरकुञ्जिका शिक्षकले जाँच्नुहोस्।":
-  target+" अंकको समीक्षा गरिएको CDC Unit-wise Grid भेटिएन। Exact मोडमा प्रश्नपत्र रोकिन्छ; अभ्यास अलग छान्न सकिन्छ।";
+ const bp=blueprintForFullMarks(target),el=$("qpAutoGridStatus");
+ if(!el)return;
+ if(!bp?.unitGrid?.length){
+  el.textContent=target+" अंकको समीक्षा गरिएको CDC Unit-wise Grid छैन। Exact मोडमा प्रश्नपत्र रोकिन्छ।";
+  return;
+ }
+ try{
+  const selected=selectedTopicIds(),language=$("qpAutoLanguage").value;
+  const bank=[...questionRows,...bundledPracticeQuestions].filter(q=>
+   supportsQuestionLanguage(q,language)&&String(q.answer||q.answerEn||"").trim()&&
+   (q.questionType!=="mcq"||(Array.isArray(q.options)&&q.options.length===4&&
+    ["A","B","C","D"].includes(q.correctOption)&&
+    (language!=="both"||(Array.isArray(q.optionsEn)&&q.optionsEn.length===4)))));
+  const result=inspectExactCdcGridAvailability({
+   blueprint:bp,fullMarks:target,eligible:bank,selectedTopicIds:selected
+  });
+  if(result.candidateReady){
+   el.textContent="प्रारम्भिक CDC Grid उपलब्धता: "+result.gridQuestionCount+
+    " प्रश्नका Unit/प्रकार/अङ्क मिल्ने पर्याप्त प्रश्न भेटिए। Generate गर्दा पूर्ण Grid र नयाँ Set फेरि जाँचिन्छ।";
+  }else{
+   const missing=result.rows.filter(row=>row.missing>0).slice(0,4).map(row=>
+    "Unit "+row.unitCode+" / "+row.questionType+" / "+row.marks+
+    " अंक / "+row.cognitiveLevel+": "+row.missing+" प्रश्न कम");
+   el.textContent="CDC Grid अनुसार प्रश्न बैंक अपूरो: "+
+    (missing.join("; ")||"छानिएका Topic सबै Grid सँग मिलेनन्")+
+    (result.missingTopics.length?"। अन्य Topic आवश्यक: "+result.missingTopics.length:"")+
+    "। अनुमोदन नगरिएको प्रश्न बनाएर अभाव पूरा गरिँदैन।";
+  }
+ }catch(e){
+  el.textContent="CDC Grid जाँच: "+e.message;
+ }
 }
+
 async function generateSmartPaper(){
  if(!verifiedQuestionSelection||verifiedQuestionSelection.request!==questionDataLoadEpoch||
   verifiedQuestionSelection.className!==selectedClass||
@@ -1039,7 +1065,8 @@ document.addEventListener("change",async event=>{
       message("Topic, भाषा वा प्रश्नपत्र विवरण परिवर्तन भयो। नयाँ प्रश्नपत्र बनाउनुहोस्।");
     }
   }
-  if(t.id==="qpPaperFullMarks"||t.id==="qpAutoMode")updateAutoGridStatus();
+  if(t.id==="qpPaperFullMarks"||t.id==="qpAutoMode"||t.id==="qpAutoLanguage"||
+     t.matches?.("[data-qp-topic]"))updateAutoGridStatus();
   if(t.id==="qpAutoReviewed")updateAutoReviewActions();
   if(t.id==="qpQuestionType")toggleMcqFields();
   if(t.id==="qpImportFile"&&t.files?.[0]){
@@ -1090,11 +1117,13 @@ document.addEventListener("click",async event=>{
         throw Error("CDC Grid का सबै अनिवार्य Unit Topic सूचीमा भेटिएनन्। प्रश्नपत्र बनाइएको छैन।");
       }
       if(generatedPaper)invalidateGeneratedQuestionPaper();
+      updateAutoGridStatus();
       message("CDC Grid का "+selectedUnits.size+" Unit चयन गरिए। चाहिएका Topic जाँचेर Generate गर्नुहोस्।");
     }
     if(t.id==="qpTopicSelectAll"||t.id==="qpTopicClearAll"){
       document.querySelectorAll("[data-qp-topic]").forEach(input=>input.checked=t.id==="qpTopicSelectAll");
       if(generatedPaper)invalidateGeneratedQuestionPaper();
+      updateAutoGridStatus();
   }
     if(t.id==="qpSavePaperBtn")await savePaper();
     if(t.id==="qpPrintPaperBtn")printPaper(generatedPaper,false);
