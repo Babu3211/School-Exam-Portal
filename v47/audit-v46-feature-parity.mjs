@@ -16,7 +16,7 @@ const features=[
  {name:'Marks entry',v46:/mark/i,v47:['v47/marks-entry.html'],production:/read.only|development|disabled/i},
  {name:'Grade ledger',v46:/grade ledger/i,v47:['v47/grade-ledger.html'],production:/not valid for official use|development preview/i},
  {name:'Grade sheet',v46:/grade sheet/i,v47:['v47/grade-sheet.html'],production:/not valid for official use|development preview/i},
- {name:'Question paper',v46:/question paper/i,v47:['v47/question-paper.html']},
+ {name:'Question paper',v46:/question paper/i,v47:['v47/question-paper.html'],production:/READ-ONLY PREVIEW|not official question paper generation/i},
  {name:'PWA install',v46:/manifest|serviceWorker/i,v47:['v47/manifest.webmanifest']},
  {name:'Super Admin',v46:null,v47:['v47/admin.html']},
  {name:'School Admin',v46:null,v47:['v47/school-admin.html']},

@@ -25,6 +25,8 @@ jobs:
         run: node v47/test-v46-iemis-grid-role-parity.mjs
       - name: V47 read-only IEMIS component schema
         run: node v47/test-iemis-component-preview.mjs
+      - name: V47 read-only CDC Question Paper source and practice print previews
+        run: node v47/test-question-paper-cdc-preview.mjs && node v47/test-question-paper-browser-ui.mjs
       - name: V47 school exam workflow safety
         run: node v47/test-school-exam-workflows-safety.mjs
       - name: School-scoped path validation

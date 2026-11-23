@@ -1,0 +1,870 @@
+{
+  "schemaVersion": 1,
+  "packId": "cdc-grade10-science-practice-v1",
+  "gradeNumber": 10,
+  "canonicalSubject": "विज्ञान तथा प्रविधि",
+  "curriculumVersion": "CDC Science and Technology Grade 10, First Edition 2023 (2080); CDC grade 10 textbook listing 2082",
+  "sourceTitle": "Science and Technology, Grade 10 — Curriculum Development Centre",
+  "sourceUrl": "https://moecdc.gov.np/storage/gallery/1692097269.pdf",
+  "sourceNote": "The 19 unit titles are transcribed from the CDC Grade 10 Science and Technology textbook contents. Question text and answer guidance are newly authored for SMSS and are not copied CDC model questions. Teacher review is required before formal examination use. Use the grade-specific CDC specification grid for official marks and question distribution.",
+  "status": "curriculum_based_original_practice_questions_teacher_review_required",
+  "units": [
+    {
+      "unitCode": "1",
+      "unitTitle": "वैज्ञानिक सिकाइ",
+      "topics": [
+        "वैज्ञानिक सिकाइ"
+      ]
+    },
+    {
+      "unitCode": "2",
+      "unitTitle": "सजीवहरूको वर्गीकरण",
+      "topics": [
+        "सजीवहरूको वर्गीकरण"
+      ]
+    },
+    {
+      "unitCode": "3",
+      "unitTitle": "मौरी",
+      "topics": [
+        "मौरी"
+      ]
+    },
+    {
+      "unitCode": "4",
+      "unitTitle": "वंशाणुगतता",
+      "topics": [
+        "वंशाणुगतता"
+      ]
+    },
+    {
+      "unitCode": "5",
+      "unitTitle": "शारीरिक संरचना तथा जीवन प्रक्रिया",
+      "topics": [
+        "शारीरिक संरचना तथा जीवन प्रक्रिया"
+      ]
+    },
+    {
+      "unitCode": "6",
+      "unitTitle": "प्रकृति तथा वातावरण",
+      "topics": [
+        "प्रकृति तथा वातावरण"
+      ]
+    },
+    {
+      "unitCode": "7",
+      "unitTitle": "गति र बल",
+      "topics": [
+        "गति र बल"
+      ]
+    },
+    {
+      "unitCode": "8",
+      "unitTitle": "चाप",
+      "topics": [
+        "चाप"
+      ]
+    },
+    {
+      "unitCode": "9",
+      "unitTitle": "ताप",
+      "topics": [
+        "ताप"
+      ]
+    },
+    {
+      "unitCode": "10",
+      "unitTitle": "तरङ्ग",
+      "topics": [
+        "तरङ्ग"
+      ]
+    },
+    {
+      "unitCode": "11",
+      "unitTitle": "विद्युत् तथा चुम्बकत्व",
+      "topics": [
+        "विद्युत् तथा चुम्बकत्व"
+      ]
+    },
+    {
+      "unitCode": "12",
+      "unitTitle": "ब्रह्माण्ड",
+      "topics": [
+        "ब्रह्माण्ड"
+      ]
+    },
+    {
+      "unitCode": "13",
+      "unitTitle": "सूचना तथा सञ्चार प्रविधि",
+      "topics": [
+        "सूचना तथा सञ्चार प्रविधि"
+      ]
+    },
+    {
+      "unitCode": "14",
+      "unitTitle": "तत्वहरूको वर्गीकरण",
+      "topics": [
+        "तत्वहरूको वर्गीकरण"
+      ]
+    },
+    {
+      "unitCode": "15",
+      "unitTitle": "रासायनिक प्रतिक्रिया",
+      "topics": [
+        "रासायनिक प्रतिक्रिया"
+      ]
+    },
+    {
+      "unitCode": "16",
+      "unitTitle": "ग्यासहरू",
+      "topics": [
+        "ग्यासहरू"
+      ]
+    },
+    {
+      "unitCode": "17",
+      "unitTitle": "धातु र अधातु",
+      "topics": [
+        "धातु र अधातु"
+      ]
+    },
+    {
+      "unitCode": "18",
+      "unitTitle": "हाइड्रोकार्बन र यसका यौगिक",
+      "topics": [
+        "हाइड्रोकार्बन र यसका यौगिक"
+      ]
+    },
+    {
+      "unitCode": "19",
+      "unitTitle": "दैनिक जीवनमा प्रयोग हुने रसायनहरू",
+      "topics": [
+        "दैनिक जीवनमा प्रयोग हुने रसायनहरू"
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "unitCode": "1",
+      "topicName": "वैज्ञानिक सिकाइ",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "परिकल्पना भन्नाले के बुझिन्छ?",
+      "options": [
+        "परीक्षण गर्न सकिने सम्भावित व्याख्या",
+        "अन्तिम निष्कर्ष",
+        "उपकरण",
+        "मापन"
+      ],
+      "correctOption": "A",
+      "answer": "परिकल्पना परीक्षण गर्न सकिने सम्भावित व्याख्या हो।"
+    },
+    {
+      "unitCode": "1",
+      "topicName": "वैज्ञानिक सिकाइ",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "वैज्ञानिक अध्ययनका मुख्य चरण लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "अवलोकन, प्रश्न/समस्या, परिकल्पना, प्रयोग/तथ्य सङ्कलन, विश्लेषण, निष्कर्ष र प्रतिवेदन।"
+    },
+    {
+      "unitCode": "1",
+      "topicName": "वैज्ञानिक सिकाइ",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "पानी प्रदूषणको अध्ययन गर्ने योजना बनाउनुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "स्थान र नमुना छनोट, सुरक्षित सङ्कलन, pH/रङ/गन्ध परीक्षण, तथ्य तालिकीकरण, तुलना, निष्कर्ष र सुधार सुझावसहित प्रतिवेदन।"
+    },
+    {
+      "unitCode": "2",
+      "topicName": "सजीवहरूको वर्गीकरण",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "आधुनिक वर्गीकरणमा मुख्यतः कुन आधार प्रयोग गरिन्छ?",
+      "options": [
+        "साझा लक्षण र പരിണामिक सम्बन्ध",
+        "रङ",
+        "आकार मात्र",
+        "बसोबास मात्र"
+      ],
+      "correctOption": "A",
+      "answer": "जीवहरूको साझा लक्षण र പരിണामिक सम्बन्ध वर्गीकरणका आधार हुन्।"
+    },
+    {
+      "unitCode": "2",
+      "topicName": "सजीवहरूको वर्गीकरण",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "द्विनाम पद्धति के हो?",
+      "options": [],
+      "correctOption": "",
+      "answer": "वैज्ञानिक नाम दुई शब्दको हुन्छ: वंश र जाति। वंशको पहिलो अक्षर ठूलो, जातिको सानो र छाप्दा italic लेखिन्छ।"
+    },
+    {
+      "unitCode": "2",
+      "topicName": "सजीवहरूको वर्गीकरण",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "पाँच जगत वर्गीकरणका आधार र उपयोगिता लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "कोशिकाको प्रकार/सङ्ख्या, पोषण, संगठन र प्रजननका आधारमा वर्गीकरण गरिन्छ। यसले पहिचान, विविधता अध्ययन र संरक्षणमा सहयोग गर्छ।"
+    },
+    {
+      "unitCode": "3",
+      "topicName": "मौरी",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "घारमा अण्डा पार्ने मुख्य मौरी कुन हो?",
+      "options": [
+        "रानी मौरी",
+        "कामदार",
+        "भाले",
+        "लार्भा"
+      ],
+      "correctOption": "A",
+      "answer": "रानी मौरीको प्रमुख काम अण्डा पार्नु हो।"
+    },
+    {
+      "unitCode": "3",
+      "topicName": "मौरी",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "मौरीले परागसेचनमा कसरी सहयोग गर्छ?",
+      "options": [],
+      "correctOption": "",
+      "answer": "फूलबाट रस/पराग लिँदा परागकण शरीरमा टाँसिन्छ र अर्को फूलमा पुगेर परागसेचन गराउँछ।"
+    },
+    {
+      "unitCode": "3",
+      "topicName": "मौरी",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "रानी, भाले र कामदार मौरीका काम तथा मौरीपालनका उपयोग लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "रानी अण्डा पार्छे; भाले प्रजननमा सहभागी हुन्छ; कामदारले खाना खोज्ने, लार्भा स्याहार्ने, घार बनाउने र सुरक्षा गर्छ। मह/मैन र परागसेचनबाट लाभ हुन्छ।"
+    },
+    {
+      "unitCode": "4",
+      "topicName": "वंशाणुगतता",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "वंशाणुगत सूचना मुख्यतः कहाँ हुन्छ?",
+      "options": [
+        "DNA मा",
+        "रक्त प्लाज्मामा",
+        "कोशिका भित्तामा",
+        "पाचन रसमा"
+      ],
+      "correctOption": "A",
+      "answer": "DNA मा रहेका जीनले वंशाणुगत सूचना बोकेका हुन्छन्।"
+    },
+    {
+      "unitCode": "4",
+      "topicName": "वंशाणुगतता",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "जीन र गुणसूत्रबीच सम्बन्ध लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "जीन DNA को निश्चित खण्ड हो र गुणसूत्रमा निश्चित स्थानमा रहन्छ। गुणसूत्र DNA र प्रोटिनबाट बनेको हुन्छ।"
+    },
+    {
+      "unitCode": "4",
+      "topicName": "वंशाणुगतता",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "वंशाणुगतता र वातावरणले गुणमा पार्ने प्रभाव उदाहरणसहित लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "रक्त समूह/आँखाको रङमा जीनको प्रभाव हुन्छ; उचाइ, स्वास्थ्य र सीपमा पोषण, व्यायाम र वातावरणको पनि प्रभाव हुन्छ।"
+    },
+    {
+      "unitCode": "5",
+      "topicName": "शारीरिक संरचना तथा जीवन प्रक्रिया",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "मानव शरीरमा रगत पम्प गर्ने अङ्ग कुन हो?",
+      "options": [
+        "मुटु",
+        "फोक्सो",
+        "मिर्गौला",
+        "कलेजो"
+      ],
+      "correctOption": "A",
+      "answer": "मुटुले रगत शरीरभरि पम्प गर्छ।"
+    },
+    {
+      "unitCode": "5",
+      "topicName": "शारीरिक संरचना तथा जीवन प्रक्रिया",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "श्वासप्रश्वास र कोशिकीय श्वसनबीच फरक लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "श्वासप्रश्वासले ग्यास आदानप्रदान गर्छ; कोशिकीय श्वसनमा कोषभित्र खाद्य पदार्थबाट ऊर्जा मुक्त हुन्छ।"
+    },
+    {
+      "unitCode": "5",
+      "topicName": "शारीरिक संरचना तथा जीवन प्रक्रिया",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "मुखदेखि सानो आन्द्रासम्म पाचन प्रक्रिया वर्णन गर्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "मुखमा चपाइ/लारले पाचन सुरु गर्छ; अन्ननलीले आमाशयमा पुर्‍याउँछ; आमाशयमा अम्ल/इन्जाइमले पाचन गर्छ; सानो आन्द्रामा पाचन पूरा र पोषक तत्त्व अवशोषण हुन्छ।"
+    },
+    {
+      "unitCode": "6",
+      "topicName": "प्रकृति तथा वातावरण",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "खाद्य शृङ्खलामा उत्पादक कुन हो?",
+      "options": [
+        "हरियो वनस्पति",
+        "बाघ",
+        "च्याउ",
+        "मानिस"
+      ],
+      "correctOption": "A",
+      "answer": "हरियो वनस्पतिले प्रकाश संश्लेषणबाट खाना बनाउँछ।"
+    },
+    {
+      "unitCode": "6",
+      "topicName": "प्रकृति तथा वातावरण",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "जैविक विविधता संरक्षणका दुई उपाय लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "बासस्थान संरक्षण, अवैध सिकार/वन फँडानी नियन्त्रण, संरक्षित क्षेत्र र समुदाय सहभागिता।"
+    },
+    {
+      "unitCode": "6",
+      "topicName": "प्रकृति तथा वातावरण",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "वन विनाशका वातावरणीय असर व्याख्या गर्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "बासस्थान नष्ट, जैविक विविधता घट्ने, माटो कटान/पहिरो, जलचक्रमा असर र कार्बन सञ्चय घट्ने हुन्छ।"
+    },
+    {
+      "unitCode": "7",
+      "topicName": "गति र बल",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "वेगको SI एकाइ कुन हो?",
+      "options": [
+        "m/s",
+        "m/s²",
+        "N",
+        "kg"
+      ],
+      "correctOption": "A",
+      "answer": "वेगको SI एकाइ m/s हो।"
+    },
+    {
+      "unitCode": "7",
+      "topicName": "गति र बल",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "दूरी र विस्थापनबीच फरक लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "दूरी वास्तविक बाटोको कुल लम्बाइ र अदिश हो; विस्थापन सुरु र अन्तिम स्थानबीचको दिशासहितको छोटो दूरी हो।"
+    },
+    {
+      "unitCode": "7",
+      "topicName": "गति र बल",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "न्यूटनको दोस्रो नियमबाट 2 kg वस्तुमा 3 m/s² त्वरणका लागि बल निकाल्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "F=ma=2×3=6 N। परिणामी बल द्रव्यमान र त्वरणको गुणनफल हो।"
+    },
+    {
+      "unitCode": "8",
+      "topicName": "चाप",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "चापको SI एकाइ कुन हो?",
+      "options": [
+        "पास्कल",
+        "जुल",
+        "वाट",
+        "कुलम्ब"
+      ],
+      "correctOption": "A",
+      "answer": "चापको SI एकाइ पास्कल (N/m²) हो।"
+    },
+    {
+      "unitCode": "8",
+      "topicName": "चाप",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "तीक्ष्ण चक्कुले सजिलै काट्नुको कारण लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "धारको क्षेत्रफल सानो हुँदा समान बलले बढी चाप उत्पन्न गर्छ।"
+    },
+    {
+      "unitCode": "8",
+      "topicName": "चाप",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "तरलमा गहिराइ बढ्दा चाप किन बढ्छ?",
+      "options": [],
+      "correctOption": "",
+      "answer": "माथिको तरल स्तम्भको तौल बढ्ने भएकाले चाप बढ्छ। P=ρgh अनुसार घनत्व र g स्थिर हुँदा गहिराइ h बढेसँगै चाप बढ्छ।"
+    },
+    {
+      "unitCode": "9",
+      "topicName": "ताप",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "तापक्रम मापन गर्ने उपकरण कुन हो?",
+      "options": [
+        "थर्मोमिटर",
+        "ब्यारोमिटर",
+        "अमीटर",
+        "हाइड्रोमिटर"
+      ],
+      "correctOption": "A",
+      "answer": "थर्मोमिटरले तापक्रम मापन गर्छ।"
+    },
+    {
+      "unitCode": "9",
+      "topicName": "ताप",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "ताप र तापक्रमबीच फरक लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "ताप ऊर्जा स्थानान्तरण हो, एकाइ जुल; तापक्रम तातोपन/चिसोपनको मापन हो, SI एकाइ केल्भिन।"
+    },
+    {
+      "unitCode": "9",
+      "topicName": "ताप",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "चालन, संवहन र विकिरण तुलना गर्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "चालनमा कणको स्थानान्तरणबिना ऊर्जा सर्छ; संवहनमा तरल/ग्यासको बहावबाट; विकिरणमा माध्यमबिना विद्युत्चुम्बकीय तरङ्गबाट।"
+    },
+    {
+      "unitCode": "10",
+      "topicName": "तरङ्ग",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "ध्वनि कुन प्रकारको तरङ्ग हो?",
+      "options": [
+        "यान्त्रिक",
+        "विद्युत्चुम्बकीय",
+        "प्रकाश",
+        "माध्यमबिनाको"
+      ],
+      "correctOption": "A",
+      "answer": "ध्वनिलाई फैलिन माध्यम आवश्यक पर्छ।"
+    },
+    {
+      "unitCode": "10",
+      "topicName": "तरङ्ग",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "आवृत्ति र आवर्तकालको सम्बन्ध लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "f=1/T र T=1/f; आवृत्ति र आवर्तकाल व्युत्क्रम अनुपाती हुन्छन्।"
+    },
+    {
+      "unitCode": "10",
+      "topicName": "तरङ्ग",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "तरङ्गको वेग, आवृत्ति र तरङ्गदैर्ध्यको सम्बन्ध व्याख्या गर्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "v=fλ। एउटै माध्यममा वेग स्थिर हुँदा आवृत्ति बढेमा तरङ्गदैर्ध्य घट्छ।"
+    },
+    {
+      "unitCode": "11",
+      "topicName": "विद्युत् तथा चुम्बकत्व",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "विद्युत् धाराको SI एकाइ कुन हो?",
+      "options": [
+        "एम्पियर",
+        "भोल्ट",
+        "ओम",
+        "वाट"
+      ],
+      "correctOption": "A",
+      "answer": "विद्युत् धाराको SI एकाइ एम्पियर हो।"
+    },
+    {
+      "unitCode": "11",
+      "topicName": "विद्युत् तथा चुम्बकत्व",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "श्रृङ्खला र समानान्तर परिपथबीच फरक लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "श्रृङ्खलामा एउटै बाटो र एउटै धारा हुन्छ; समानान्तरमा धेरै शाखा र प्रत्येक शाखामा समान विभवान्तर हुन्छ।"
+    },
+    {
+      "unitCode": "11",
+      "topicName": "विद्युत् तथा चुम्बकत्व",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "ओमको नियमबाट 12 V र 4 Ω हुँदा धारा निकाल्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "I=V/R=12/4=3 A। ओमको नियम V=IR हो।"
+    },
+    {
+      "unitCode": "12",
+      "topicName": "ब्रह्माण्ड",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "सौर्यमण्डलको केन्द्रमा कुन पिण्ड छ?",
+      "options": [
+        "सूर्य",
+        "पृथ्वी",
+        "चन्द्रमा",
+        "बृहस्पति"
+      ],
+      "correctOption": "A",
+      "answer": "सूर्यको गुरुत्वाकर्षणले ग्रहहरूलाई कक्षामा राख्छ।"
+    },
+    {
+      "unitCode": "12",
+      "topicName": "ब्रह्माण्ड",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "तारा र ग्रहबीच दुई फरक लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "ताराले आफ्नै प्रकाश उत्सर्जन गर्छ; ग्रहले प्रकाश परावर्तन गर्छ र ताराको परिक्रमा गर्छ।"
+    },
+    {
+      "unitCode": "12",
+      "topicName": "ब्रह्माण्ड",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "दिन–रात र ऋतु परिवर्तनका कारण छुट्याएर लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "दिन–रात पृथ्वीको अक्षीय घूर्णनले हुन्छ; ऋतु पृथ्वीको अक्ष झुकाव र सूर्य वरिपрिको परिक्रमाले हुन्छ।"
+    },
+    {
+      "unitCode": "13",
+      "topicName": "सूचना तथा सञ्चार प्रविधि",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "वेबसाइटको ठेगाना जनाउने प्रणाली कुन हो?",
+      "options": [
+        "URL",
+        "CPU",
+        "RAM",
+        "USB"
+      ],
+      "correctOption": "A",
+      "answer": "URL ले वेब स्रोतको ठेगाना जनाउँछ।"
+    },
+    {
+      "unitCode": "13",
+      "topicName": "सूचना तथा सञ्चार प्रविधि",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "फिसिङ के हो? एउटा सावधानी लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "नक्कली सन्देश/वेबसाइटबाट गोप्य सूचना चोर्ने प्रयास फिसिङ हो। अपरिचित लिंक नखोल्ने र ठेगाना जाँच्ने।"
+    },
+    {
+      "unitCode": "13",
+      "topicName": "सूचना तथा सञ्चार प्रविधि",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "AI का दुई उपयोग र दुई जोखिम लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "स्वास्थ्य/शिक्षामा विश्लेषण र व्यक्तिगत सिकाइ उपयोग हुन्; गलत/पक्षपाती नतिजा, गोपनीयता हनन र नक्कली सामग्री जोखिम हुन्।"
+    },
+    {
+      "unitCode": "14",
+      "topicName": "तत्वहरूको वर्गीकरण",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "आधुनिक आवर्त सारणी कुन आधारमा क्रमबद्ध छ?",
+      "options": [
+        "परमाणु क्रमाङ्क",
+        "घनत्व",
+        "रङ",
+        "परमाणु आकार"
+      ],
+      "correctOption": "A",
+      "answer": "आधुनिक आवर्त सारणी बढ्दो परमाणु क्रमाङ्कअनुसार छ।"
+    },
+    {
+      "unitCode": "14",
+      "topicName": "तत्वहरूको वर्गीकरण",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "समूह र आवर्तको अर्थ लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "ठाडा स्तम्भ समूह र तेर्सा पङ्क्ति आवर्त हुन्। एउटै समूहका तत्वमा संयोजक इलेक्ट्रोन समान हुन सक्छन्।"
+    },
+    {
+      "unitCode": "14",
+      "topicName": "तत्वहरूको वर्गीकरण",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "धातु र अधातुका चार गुण तुलना गर्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "धातु प्रायः चम्किला, तन्य, पिटेर पात बनाउन सकिने र सुचालक हुन्छन्; अधातु प्रायः भंगुर र कुचालक हुन्छन्। ग्रेफाइट अपवाद हो।"
+    },
+    {
+      "unitCode": "15",
+      "topicName": "रासायनिक प्रतिक्रिया",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "रासायनिक प्रतिक्रियामा अभिकारकबाट के बन्छ?",
+      "options": [
+        "उत्पादन",
+        "मिश्रण मात्र",
+        "तत्व सधैँ",
+        "ऊर्जा मात्र"
+      ],
+      "correctOption": "A",
+      "answer": "रासायनिक परिवर्तनमा नयाँ पदार्थ उत्पादन बन्छ।"
+    },
+    {
+      "unitCode": "15",
+      "topicName": "रासायनिक प्रतिक्रिया",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "रासायनिक समीकरण सन्तुलित किन गर्नुपर्छ?",
+      "options": [],
+      "correctOption": "",
+      "answer": "द्रव्यमान संरक्षणअनुसार दुवैतर्फ प्रत्येक तत्वका परमाणुको सङ्ख्या बराबर हुनुपर्छ।"
+    },
+    {
+      "unitCode": "15",
+      "topicName": "रासायनिक प्रतिक्रिया",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "उदासीनीकरण प्रतिक्रिया उदाहरणसहित लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "अम्ल र क्षारबाट नुन र पानी बन्छ: HCl+NaOH→NaCl+H₂O।"
+    },
+    {
+      "unitCode": "16",
+      "topicName": "ग्यासहरू",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "अक्सिजनले दहनमा के भूमिका खेल्छ?",
+      "options": [
+        "दहनलाई सहयोग",
+        "दहन रोक्ने",
+        "इन्धन मात्र",
+        "रङ परिवर्तन"
+      ],
+      "correctOption": "A",
+      "answer": "अक्सिजन दहनलाई सहयोग गर्ने ग्यास हो।"
+    },
+    {
+      "unitCode": "16",
+      "topicName": "ग्यासहरू",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "CO₂ को एउटा प्रयोग र एउटा परीक्षण लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "अग्निनियन्त्रकमा प्रयोग हुन्छ; चुनपानीमा पठाउँदा दूधिया बनाउँछ।"
+    },
+    {
+      "unitCode": "16",
+      "topicName": "ग्यासहरू",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "ग्यासको चाप तापक्रम र आयतनसँग कसरी सम्बन्धित छ?",
+      "options": [],
+      "correctOption": "",
+      "answer": "स्थिर आयतनमा P∝T; स्थिर तापक्रममा निश्चित ग्यासको P∝1/V। कुन परिमाण स्थिर छ भन्ने उल्लेख गर्नुपर्छ।"
+    },
+    {
+      "unitCode": "17",
+      "topicName": "धातु र अधातु",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "कोठाको तापक्रममा तरल धातु कुन हो?",
+      "options": [
+        "पारा",
+        "फलाम",
+        "तामा",
+        "एल्युमिनियम"
+      ],
+      "correctOption": "A",
+      "answer": "पारा सामान्य कोठाको तापक्रममा तरल हुन्छ।"
+    },
+    {
+      "unitCode": "17",
+      "topicName": "धातु र अधातु",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "फलाममा खिया लाग्न आवश्यक अवस्था लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "अक्सिजन र पानी/आर्द्रता आवश्यक हुन्छन्।"
+    },
+    {
+      "unitCode": "17",
+      "topicName": "धातु र अधातु",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "धातु क्षय रोक्ने तीन उपाय लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "रङ/तेलले पानी र अक्सिजन रोक्छ; ग्याल्भनाइजेसनले जस्ताको तह दिन्छ; मिश्रधातुले क्षय प्रतिरोध बढाउँछ।"
+    },
+    {
+      "unitCode": "18",
+      "topicName": "हाइड्रोकार्बन र यसका यौगिक",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "हाइड्रोकार्बनमा कुन तत्व हुन्छन्?",
+      "options": [
+        "कार्बन र हाइड्रोजन",
+        "कार्बन र अक्सिजन",
+        "हाइड्रोजन र नाइट्रोजन",
+        "कार्बन र सल्फर"
+      ],
+      "correctOption": "A",
+      "answer": "हाइड्रोकार्बन कार्बन र हाइड्रोजनबाट बनेका हुन्छन्।"
+    },
+    {
+      "unitCode": "18",
+      "topicName": "हाइड्रोकार्बन र यसका यौगिक",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "सन्तृप्त र असन्तृप्त हाइड्रोकार्बनबीच फरक लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "सन्तृप्तमा कार्बनबीच एकल बन्ध मात्र हुन्छ; असन्तृप्तमा कम्तीमा एक द्वि वा त्रिबन्ध हुन्छ।"
+    },
+    {
+      "unitCode": "18",
+      "topicName": "हाइड्रोकार्बन र यसका यौगिक",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "मिथेनको पूर्ण र अपूर्ण दहन तुलना गर्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "पूर्ण दहन: CH₄+2O₂→CO₂+2H₂O। अक्सिजन कम हुँदा CO वा कार्बन र पानी बन्न सक्छ; CO विषाक्त हुन्छ।"
+    },
+    {
+      "unitCode": "19",
+      "topicName": "दैनिक जीवनमा प्रयोग हुने रसायनहरू",
+      "questionType": "mcq",
+      "marks": 1,
+      "cognitiveLevel": "knowledge",
+      "questionText": "साबुनले तेलिलो मैलो हटाउन कसरी सहयोग गर्छ?",
+      "options": [
+        "तेल र पानीसँग अन्तरक्रिया गर्ने अणु संरचना",
+        "चुम्बकीय गुण",
+        "धातु बन्ने",
+        "अम्ल बनाउने"
+      ],
+      "correctOption": "A",
+      "answer": "साबुनका अणुमा पानीतर्फ र तेलतर्फ आकर्षित हुने भाग हुन्छन्।"
+    },
+    {
+      "unitCode": "19",
+      "topicName": "दैनिक जीवनमा प्रयोग हुने रसायनहरू",
+      "questionType": "short",
+      "marks": 2,
+      "cognitiveLevel": "understanding",
+      "questionText": "घरायसी रसायन प्रयोग गर्दा दुई सुरक्षा सावधानी लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "लेबल पढ्ने; रसायन नमिसाउने; पञ्जा लगाउने; हावा आवतजावत राख्ने र बालबालिकाबाट टाढा राख्ने।"
+    },
+    {
+      "unitCode": "19",
+      "topicName": "दैनिक जीवनमा प्रयोग हुने रसायनहरू",
+      "questionType": "long",
+      "marks": 4,
+      "cognitiveLevel": "application",
+      "questionText": "घरायसी/कृषि रसायनका फाइदा र सम्भावित हानि लेख्नुहोस्।",
+      "options": [],
+      "correctOption": "",
+      "answer": "मलले पोषण र कीटनाशकले बाली जोगाउँछ; सफाइ रसायनले सरसफाइ गर्छ। गलत प्रयोगले प्रदूषण/स्वास्थ्य जोखिम ल्याउँछ; मात्रा, PPE, भण्डारण र विसर्जनमा ध्यान दिनुपर्छ।"
+    }
+  ]
+}

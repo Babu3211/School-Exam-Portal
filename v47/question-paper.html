@@ -1,0 +1,32 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>SMSS V47 — Question Paper Resources (Read-only Preview)</title><link rel="manifest" href="./manifest.webmanifest">
+<link rel="preload" href="./cdc-source-register-2083.json" as="fetch">
+<link rel="preload" href="./cdc-grade8-science-practice-pack-v1.json" as="fetch">
+<link rel="preload" href="./cdc-grade10-science-practice-pack-v1.json" as="fetch">
+<style>body{font:15px system-ui,sans-serif;color:#193754;background:#f1f6fb;margin:0}main{max-width:1100px;margin:auto;padding:18px}section{background:#fff;border:1px solid #d8e2ee;border-radius:11px;padding:16px;margin:13px 0}.warn{background:#fff3da;border:1px solid #d7ae62;border-radius:9px;padding:13px}label{display:inline-flex;flex-direction:column;margin:5px;gap:5px}input,button,select{font:inherit;border:1px solid #b9cadc;border-radius:7px;padding:9px}button{background:#175da7;color:white;cursor:pointer}button:disabled{opacity:.5}ul{padding-left:22px}li{margin:9px 0}.source{padding:10px;border-bottom:1px solid #e2e9f2}.source small{display:block;color:#51677b;margin:3px 0}iframe{width:100%;height:680px;border:1px solid #c8d3de;background:#fff}a{color:#145495}</style></head><body><main>
+<header><h1>SMSS V47 — Question Paper Resources</h1><p><a href="./index.html">Dashboard</a> · Teacher-review materials from the preserved V46 CDC source register</p></header>
+<p class="warn"><strong>DEVELOPMENT — READ-ONLY PREVIEW, NOT OFFICIAL QUESTION PAPER GENERATION.</strong> V46 has a separate question bank, blueprint editor, assignments and saves. Those features are NOT migrated here. The linked CDC materials may be older or supplementary. Grades 8 and 10 Science practice sets contain original SMSS questions needing teacher review, not verified model papers or answer keys. Grade 9 Science pack remains blocked due incorrect source attribution.</p>
+<section><h2>Verified School Login</h2>
+<button id="connect" type="button">Connect to V47</button>
+<label>School IEMIS ID<input id="schoolId" inputmode="numeric" pattern="[0-9]{5,20}" minlength="5" maxlength="20" autocomplete="off"></label>
+<label>Email<input id="email" type="email" autocomplete="username"></label>
+<label>Password<input id="password" type="password" autocomplete="current-password"></label>
+<button id="login" type="button" disabled>Verify School Login</button>
+<button id="logout" type="button" disabled>Sign out</button>
+<p id="identity">No verified school</p></section>
+<section id="resourceArea" hidden>
+<h2>CDC Reference Catalog (V46 Sources)</h2>
+<p lang="ne">यो स्रोत सूची मात्र हो। मूल CDC वेबसाइट खोलेर पाठ्यक्रम, विषय, वर्ष र Specification Grid विद्यालयले पुनः पुष्टि गर्नुपर्छ। सूचीमा भएको स्रोतलाई २०८३ को पूर्ण पाठ्यक्रम वा तयार प्रश्नपत्र नठान्नुहोस्।</p>
+<label>Class<select id="grade"><option value="">Classes 6–10 (all sources)</option><option value="6">Class 6</option><option value="7">Class 7</option><option value="8">Class 8</option><option value="9">Class 9</option><option value="10">Class 10</option></select></label>
+<p id="sourceStatus" role="status" aria-live="polite">No sources loaded.</p>
+<div id="sourceList"></div>
+<h2>Original Science Practice Questions</h2>
+<p lang="ne">Class 8 र Class 10 का V46 मा पहिले भएका अभ्यास प्रश्न मात्र देखाइन्छ। Grade 9 Science स्रोत नमिलेका कारण उपलब्ध छैन। आधिकारिक प्रश्नपत्र, परीक्षा Blueprint र उत्तरकुञ्जी प्रमाणीकरण बाँकी छ।</p>
+<button id="preview8" type="button">Class 8 Science Practice</button>
+<button id="preview10" type="button">Class 10 Science Practice</button>
+<label><input id="showAnswers" type="checkbox">Include unapproved teacher-review answers</label>
+<button id="printPractice" type="button" disabled>Print Unreviewed Practice Preview</button>
+<p id="paperStatus" role="status" aria-live="polite">No practice preview prepared.</p>
+<iframe id="paperFrame" sandbox="allow-same-origin" title="Unreviewed Original Practice Questions"></iframe>
+</section><p id="message" role="status" aria-live="polite">विद्यालयको Login प्रमाणित गर्नुहोस्।</p>
+</main><script type="module" src="./question-paper-console.mjs"></script></body></html>
