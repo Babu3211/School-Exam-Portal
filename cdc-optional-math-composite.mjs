@@ -74,6 +74,20 @@ function inspectItem(q,guide,language,areaCodes){
    q.subquestions[0].options?.length&&
    (q.subquestions[0].options.length!==4||
     !['A','B','C','D'].includes(q.subquestions[0].correctOption))))return null;
+ // A one-mark objective may be open-response or four-choice MCQ. When
+ // choices exist, all requested-language options and the correct option
+ // must be present; never print an untranslated set under an English paper.
+ for(const sub of q.subquestions){
+  const hasChoices=sub.optionsNe!==undefined||sub.optionsEn!==undefined;
+  if(!hasChoices)continue;
+  if(!['A','B','C','D'].includes(sub.correctOption))return null;
+  const native=Array.isArray(sub.optionsNe)&&sub.optionsNe.length===4&&
+   sub.optionsNe.every(x=>n(x));
+  const english=Array.isArray(sub.optionsEn)&&sub.optionsEn.length===4&&
+   sub.optionsEn.every(x=>n(x)&&!NEPALI.test(n(x)));
+  if(language==='ne'&&!native||language==='en'&&!english||
+   language==='both'&&(!native||!english))return null;
+ }
  const total=sum(q.subquestions,s=>s.marks);
  if(total>12||type==='CCA'&&total<3||type==='WCA'&&total<2)return null;
  const areas=mapOf(areaCodes),cognitive=mapOf(LEVELS);
