@@ -81,7 +81,11 @@ await approved.run();
 assert.equal($('qpAutoReviewed').checked,false,'New generation invalidates earlier review');
 $('qpAutoReviewed').checked=true;
 const reviewActionSource=code('function updateAutoReviewActions()','function invalidateGeneratedQuestionPaper()');
-const approve=new Function('
+const approve=new Function('$','generatedPaper',reviewActionSource+'return updateAutoReviewActions;')($,approved.getPaper());
+approve();
+assert.equal($('qpSavePaperBtn').disabled,false);
+assert.equal($('qpPrintPaperBtn').disabled,false);
+assert.equal($('qpAnswerKeyBtn').disabled,false);
 assert.match(lastMessage,/पूर्णाङ्क/);
 renderPaperPreview(paper);
 const preview=$('qpPaperPreview').querySelector('#qpPrintArea');
