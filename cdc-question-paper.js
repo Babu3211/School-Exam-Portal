@@ -1252,7 +1252,7 @@ async function importQuestionBankRows(rows,scope) {
     const marks=Number(row.marks);
     const cognitiveLevel=String(row.cognitiveLevel||"");
     if(!topicName||topicName.length>180||!questionText||questionText.length>3000||
-      !["mcq","short","long"].includes(questionType)||!Number.isFinite(marks)||marks<1||marks>100||
+      !["mcq","very_short","short","long"].includes(questionType)||!Number.isFinite(marks)||marks<1||marks>100||
       !["knowledge","understanding","application","higher"].includes(cognitiveLevel))
       throw new Error("प्रश्न "+(index+1)+" मा Topic/प्रश्न/प्रकार/अङ्क/संज्ञानात्मक स्तर अमान्य छ।");
     const unitTitle=String(row.unitTitle||"CDC विषयगत पाठ").trim().slice(0,180);
@@ -1376,7 +1376,7 @@ async function loadGrade8SciencePack() {
     const topicId=unitMeta.id+"_"+topicIndex;
     const fingerprint=normal(topicId+"::"+q.questionType+"::"+q.marks+"::"+q.questionText);
     if(existingKeys.has(fingerprint)){duplicates++;continue;}
-    if(!["mcq","short","long"].includes(q.questionType)||!["knowledge","understanding","application","higher"].includes(q.cognitiveLevel)||!String(q.questionText||"").trim())
+    if(!["mcq","very_short","short","long"].includes(q.questionType)||!["knowledge","understanding","application","higher"].includes(q.cognitiveLevel)||!String(q.questionText||"").trim())
       throw new Error("प्रश्न प्याकमा अमान्य प्रश्न भेटियो।");
     if(q.questionType==="mcq"&&(!Array.isArray(q.options)||q.options.length!==4||!["A","B","C","D"].includes(q.correctOption)))
       throw new Error("MCQ विकल्प/उत्तरकुञ्जिका अपूर्ण छ।");
@@ -1447,7 +1447,7 @@ async function loadGrade10SciencePack() {
     const topicId=unitMeta.id+"_"+topicIndex;
     const fingerprint=normal(topicId+"::"+q.questionType+"::"+q.marks+"::"+q.questionText);
     if(existingKeys.has(fingerprint)){duplicates++;continue;}
-    if(!["mcq","short","long"].includes(q.questionType)||!["knowledge","understanding","application","higher"].includes(q.cognitiveLevel)||!String(q.questionText||"").trim()||!String(q.answer||"").trim()||Number(q.marks)<1)
+    if(!["mcq","very_short","short","long"].includes(q.questionType)||!["knowledge","understanding","application","higher"].includes(q.cognitiveLevel)||!String(q.questionText||"").trim()||!String(q.answer||"").trim()||Number(q.marks)<1)
       throw new Error("अभ्यास प्याकमा प्रश्न/उत्तर/अङ्क/स्तर अमान्य छ।");
     if(q.questionType==="mcq"&&(!Array.isArray(q.options)||q.options.length!==4||q.options.some(x=>!String(x).trim())||!["A","B","C","D"].includes(q.correctOption)))
       throw new Error("MCQ विकल्प/उत्तरकुञ्जिका अपूर्ण छ।");
@@ -1498,7 +1498,7 @@ async function downloadCdcGridExcelTemplate(){
  for(const sentence of [
   "SMSS CDC Unit Grid — Admin reviewed source only",
   "यी Header नबदल्नुहोस्। CDC को वास्तविक विशिष्टीकरण तालिकाबाट मात्र पङ्क्ति भर्नुहोस्।",
-  "Unit Code: 1, 2 ... | Question Type: mcq / short / long",
+  "Unit Code: 1, 2 ... | Question Type: mcq / very_short / short / long",
   "Marks Per Question र Question Count पूर्ण सङ्ख्या हुन्।",
   "Cognitive Level: knowledge / understanding / application / higher",
   "Admin ले Portal मा सही Class, Subject छान्नुपर्छ।",
@@ -1553,7 +1553,7 @@ async function downloadQuestionExcelTemplate(){
   "SMSS V46 Question Bank Excel",
   "Question Bank sheet मा पहिलो Row को Header नबदल्नुहोस्।",
   "Class, Subject र Section Portal मा छानेपछि मात्र Admin ले Import गर्नुहोस्।",
-  "Question Type: mcq, short, long | Cognitive Level: knowledge, understanding, application, higher",
+  "Question Type: mcq, very_short, short, long | Cognitive Level: knowledge, understanding, application, higher",
   "Marks र Correct Option (MCQ: A/B/C/D) सही राख्नुहोस्।",
   "एउटै Topic विभिन्न Unit मा छ भने Unit Code अनिवार्य राख्नुहोस्।",
   "English प्रश्न राखे English उत्तर र MCQ का चार English विकल्प पनि राख्नुहोस्।",
