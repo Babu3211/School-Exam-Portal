@@ -17,12 +17,39 @@ async function verifiedSchoolLabel(schoolId,registryName){
 }
 function message(value){$('dashboardStatus').textContent=value}
 function lock(){for(const link of document.querySelectorAll('[data-school-module]')){const allowed=!!verified&&schoolDashboardAccess(verified.role,link.dataset.requiredRole==='school_admin'?'school-admin':'module');link.setAttribute('aria-disabled',String(!allowed));link.tabIndex=allowed?0:-1;link.classList.toggle('locked',!allowed)}$('schoolIdentity').textContent=verified?verified.name+' · '+verified.schoolId+' · '+verified.role:'No school verified';$('schoolAccessMode').textContent=!verified?'Login required to view school modules.':verified.role==='viewer'?'Viewer — पढ्न र रिपोर्ट हेर्न मात्र मिल्छ। Add, Edit, Delete वा Save अनुमति छैन।':verified.role==='teacher'?'Teacher — तोकिएको कक्षा र विषयमा मात्र अनुमति अनुसार काम गर्न मिल्छ।':'School Admin — विद्यालयको व्यवस्थापन गर्न मिल्छ; प्रत्येक Module ले अनुमति पुनः जाँच्छ।';$('dashboardLogout').disabled=!verified;$('dashboardRefreshStats').disabled=!verified}
+const DASHBOARD_METRICS=Object.freeze(['students','staff','subjects','exams','members','activeMembers']);
+function resetMetricCards(){
+ $('dashboardMetricCards').hidden=true;
+ for(const name of DASHBOARD_METRICS){
+  const node=document.querySelector('[data-metric="'+name+'"]');
+  if(node)node.textContent='—';
+ }
+ for(const card of document.querySelectorAll('[data-admin-metric]'))card.hidden=true;
+ $('dashboardStats').hidden=false;
+}
+function showMetricCards(stats){
+ // Never infer online users from membership records. Non-admins get no member counts.
+ for(const name of DASHBOARD_METRICS){
+  const adminOnly=name==='members'||name==='activeMembers';
+  const card=document.querySelector('[data-metric="'+name+'"]')?.closest('.metric-card');
+  if(adminOnly&&stats.role!=='school_admin'){if(card)card.hidden=true;continue}
+  const count=stats[name];
+  if(!Number.isSafeInteger(count)||count<0)throw new Error('Invalid verified dashboard count: '+name);
+  const node=document.querySelector('[data-metric="'+name+'"]');
+  if(node)node.textContent=String(count);
+  if(card)card.hidden=false;
+ }
+ $('dashboardMetricCards').hidden=false;
+ $('dashboardStats').hidden=true;
+}
+
 let statsRequest=0;
-function clear(){statsRequest++;verified=null;$('dashboardStats').textContent='विद्यालय प्रमाणित गरेपछि विवरण देखिन्छ।';lock()}
+function clear(){statsRequest++;verified=null;resetMetricCards();$('dashboardStats').textContent='विद्यालय प्रमाणित गरेपछि विवरण देखिन्छ।';lock()}
 async function refreshStats(){
  if(!verified||!api||!db||!auth)return;
  const selected=verified,request=++statsRequest;
  $('dashboardRefreshStats').disabled=true;
+ resetMetricCards();
  $('dashboardStats').textContent='विद्यालयका विवरण पढिँदैछन्…';
  const assertSession=()=>{
   if(request!==statsRequest||verified!==selected||auth?.currentUser?.uid!==selected.uid)
@@ -42,6 +69,7 @@ async function refreshStats(){
   });
   assertSession();
   $('dashboardStats').textContent=dashboardStatsText(loaded);
+  showMetricCards(loaded);
  }catch(error){
   if(request===statsRequest&&verified===selected)
    $('dashboardStats').textContent='विद्यालय विवरण उपलब्ध भएन: '+error.message;
