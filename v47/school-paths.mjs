@@ -1,5 +1,5 @@
 import {assertIemisSchoolId} from './iemis-school-identity.mjs';
-export const COLLECTIONS = Object.freeze(['students','staff','classes','subjects','subject_assignments','teacher_assignments','component_marks','exams','marks','attendance','mark_settings','school_settings','members']);
+export const COLLECTIONS = Object.freeze(['students','staff','classes','subjects','subject_assignments','teacher_assignments','component_marks','exams','marks','attendance','mark_settings','school_settings','members','class_mark_drafts']);
 const COLON_IDS=new Set(['marks','component_marks','teacher_assignments','subject_assignments']);
 export function validateSchoolId(id){return assertIemisSchoolId(id);}
 export function schoolCollectionPath(id,name){validateSchoolId(id);if(!COLLECTIONS.includes(name))throw new Error('Unsupported collection');return 'schools/'+id+'/'+name;}

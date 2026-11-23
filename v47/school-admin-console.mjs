@@ -1,4 +1,6 @@
-import {connectSchoolFirebase,startVerifiedSchoolActivity} from './school-firebase-client.mjs';
+import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
+import {createSchoolStore} from './firestore-adapter.mjs';
+import {collectSchoolAuditExcel} from './school-records-audit-excel.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {getSchoolDetails} from './school-detail-service.mjs';
 import {listSchoolMembersPage} from './member-list-service.mjs';
@@ -8,7 +10,7 @@ import {setSchoolMemberActive} from './member-status-service.mjs';
 import {createTeacherAssignment,setTeacherAssignmentActive} from './teacher-assignment-management.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
-const $=id=>document.getElementById(id);const status=msg=>{$('message').textContent=msg};let auth,authSdk,db,api,actor=null,schoolId=null,sessionEpoch=0,busy=false,loggingIn=false,signingOut=false,memberCursor=null,memberHasMore=false,memberLoading=false,memberRequest=0,memberRefreshPending=false,foundMember=null,lookupRequest=0;
+const $=id=>document.getElementById(id);const status=msg=>{$('message').textContent=msg};let auth,authSdk,db,api,actor=null,schoolId=null,sessionEpoch=0,busy=false,loggingIn=false,signingOut=false,memberCursor=null,memberHasMore=false,memberLoading=false,memberRequest=0,memberRefreshPending=false,foundMember=null,lookupRequest=0,snapshotBusy=false;
 function requireCurrentAdmin(){if(!actor||actor.role!=='school_admin'||actor.active!==true||actor.schoolId!==schoolId||auth?.currentUser?.uid!==actor.uid)throw new Error('विद्यालय प्रशासकको सत्र समाप्त भयो। फेरि लगइन गर्नुहोस्।');return {actor,schoolId,epoch:sessionEpoch}}
 function assertSameAdmin(session){requireCurrentAdmin();if(session.epoch!==sessionEpoch||session.actor!==actor||session.schoolId!==schoolId)throw new Error('School session changed; retry after sign in')}
 $('connect').onclick=async()=>{try{({auth,authSdk,db,api}=await connectSchoolFirebase());authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){sessionEpoch++;memberRequest++;memberRefreshPending=false;lookupRequest++;foundMember=null;$('toggleFoundMember').disabled=true;$('memberLookupResult').textContent='';memberCursor=null;memberHasMore=false;$('moreMembers').disabled=true;actor=null;$('schoolArea').hidden=true;$('logout').disabled=true;status('Login परिवर्तन भयो। School Admin फेरि प्रमाणित गर्नुहोस्।')}});$('connect').disabled=true;$('login').disabled=false;if(requestedSchool){$('schoolId').value=validateSchoolId(requestedSchool);if(auth.currentUser)queueMicrotask(()=>$('login').click())}status('Connected to V47')}catch(e){status(e.message)}};
@@ -83,5 +85,58 @@ async function assignmentAction(kind){
 $('assignTeacher').onclick=()=>assignmentAction('Create');
 $('activateAssignment').onclick=()=>assignmentAction('Activate');
 $('deactivateAssignment').onclick=()=>assignmentAction('Deactivate');
+
+
+// Read-only Excel audit, NOT an atomic or restorable Firestore database backup.
+$('exportSchoolSnapshot').onclick=async()=>{
+ if(snapshotBusy||busy||loggingIn||signingOut||!actor)return;
+ const session=requireCurrentAdmin();
+ if(!window.confirm('सम्बन्धित विद्यालयका विद्यार्थी, Staff, अंक, सेटिङ तथा सदस्यको गोप्य विवरण सहितको Excel Audit बनाउने हो? फाइल सुरक्षित राख्नुहोस्। यो Firestore Database Backup होइन।'))return;
+ snapshotBusy=true;busy=true;$('exportSchoolSnapshot').disabled=true;$('logout').disabled=true;
+ const check=()=>assertSameAdmin(session);
+ const readDocument=async path=>{
+  check();
+  const snap=await api.getDoc(api.doc(db,...path.split('/')));
+  check();
+  return snap.exists()?snap.data():null;
+ };
+ try{
+  if(!await enforceSchoolIdle(auth,authSdk))throw Error('Login समय समाप्त भयो');
+  check();
+  const before=await verifySchoolSession({schoolId:session.schoolId,uid:session.actor.uid,readDocument});
+  check();
+  if(before.role!=='school_admin')throw Error('School Admin membership changed');
+  const store=createSchoolStore({
+   db,api,member:session.actor,schoolId:session.schoolId,assertSession:check
+  });
+  const result=await collectSchoolAuditExcel({
+   store,actor:session.actor,schoolId:session.schoolId,assertSession:check,
+   onProgress:({collection,count,total})=>{
+    check();$('snapshotStatus').textContent=collection+': '+count+' records. Total '+total+'; verifying complete pages…';
+   }
+  });
+  check();
+  const after=await verifySchoolSession({schoolId:session.schoolId,uid:session.actor.uid,readDocument});
+  check();
+  if(after.role!==before.role)throw Error('School Admin role changed');
+  if(!await enforceSchoolIdle(auth,authSdk))throw Error('Login समय समाप्त भयो');
+  check();
+  const url=URL.createObjectURL(result.blob),anchor=document.createElement('a');
+  try{
+   anchor.href=url;anchor.download=result.filename;document.body.append(anchor);anchor.click();
+  }finally{anchor.remove();URL.revokeObjectURL(url)}
+  $('snapshotStatus').textContent=result.recordCount+' विद्यालय अभिलेख '+result.filename+
+   ' मा Audit गरिएको छ। संवेदनशील Field '+result.redactedFields+
+   ' ठाउँमा REDACTED छ। यो पूर्ण Firestore Backup होइन; Restore सुविधा उपलब्ध छैन।';
+ }catch(e){
+  try{check();$('snapshotStatus').textContent='Excel Audit रोकियो: '+e.message+'। अपूर्ण फाइल निकालिएको छैन।';}
+  catch{}
+ }finally{
+  snapshotBusy=false;busy=false;
+  if(actor===session.actor&&sessionEpoch===session.epoch){
+   $('exportSchoolSnapshot').disabled=false;$('logout').disabled=false;
+  }
+ }
+};
 
 if(requestedSchool)queueMicrotask(()=>$('connect').click());

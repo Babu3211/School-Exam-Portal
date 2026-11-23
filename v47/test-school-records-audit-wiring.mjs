@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('./school-admin.html',import.meta.url),'utf8');
+const js=readFileSync(new URL('./school-admin-console.mjs',import.meta.url),'utf8');
+for(const id of ['exportSchoolSnapshot','snapshotStatus'])assert.match(html,new RegExp('id="'+id+'"'));
+assert.match(html,/\\.xlsx/);
+assert.match(html,/पूर्ण Firestore Backup होइन/);
+assert.match(js,/collectSchoolAuditExcel\(/);
+assert.match(js,/createSchoolStore\(/);
+assert.match(js,/enforceSchoolIdle\(/);
+assert.match(js,/verifySchoolSession\(/);
+assert.match(js,/before\.role!=='school_admin'/);
+assert.match(js,/after\.role!==before\.role/);
+assert.match(js,/window\.confirm\(/);
+assert.match(js,/assertSameAdmin\(session\)/);
+assert.doesNotMatch(js,/\.csv/);
+console.log('PASS School Admin V47 XLSX audit guarded by login, school membership, role and non-restore warning');
