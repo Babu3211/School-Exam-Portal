@@ -2288,15 +2288,17 @@ const cdcUpperPrimarySubjects = [...cdcCoreSubjects,
   ['socialstudies','सामाजिक अध्ययन तथा मानवमूल्य शिक्षा','Social Studies and Human Values Education'],
   ['healthphysicalcreativeart','स्वास्थ्य, शारीरिक तथा सिर्जनात्मक कला','Health, Physical Education and Creative Arts'],
   cdcLocalSubject];
+const cdcSubjectAliases = new Map();
+for (const [key,ne,en] of [...cdcPrimarySubjects,...cdcUpperPrimarySubjects]) {
+  for (const name of [ne,en]) cdcSubjectAliases.set(globalThis.SmssIemisTransfer.key(name),key);
+}
+for (const name of ['Local','Local Subject','Our Dhunibesi','स्थानीय विषय','स्थानीय','मातृभाषा']) {
+  cdcSubjectAliases.set(globalThis.SmssIemisTransfer.key(name),cdcLocalSubject[0]);
+}
+cdcSubjectAliases.set('healthphysicalandcreativearts','healthphysicalcreativeart');
 function cdcAssessmentSubjectKey(value) {
-  const compact = globalThis.SmssIemisTransfer.key(value);
-  const aliases = {
-    local:'hamrodhunibeshi', localsubject:'hamrodhunibeshi', ourdhunibesi:'hamrodhunibeshi',
-    'स्थानीयविषय':'hamrodhunibeshi', 'स्थानीय':'hamrodhunibeshi', 'मातृभाषा':'hamrodhunibeshi',
-    'अङ्ग्रेजी':'english', 'हाम्रोसेरोफेरो':'serophero', socialstudiesandhumanvalueseducation:'socialstudies',
-    healthphysicalandcreativearts:'healthphysicalcreativeart'
-  };
-  return aliases[compact] || globalThis.SmssIemisTransfer.subjectKey(value);
+  const transfer=globalThis.SmssIemisTransfer;
+  return cdcSubjectAliases.get(transfer.key(value)) || transfer.subjectKey(value);
 }
 
 // Theme names checked against the integrated curriculum and the 2083 guide.

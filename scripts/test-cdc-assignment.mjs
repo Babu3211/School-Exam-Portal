@@ -54,7 +54,6 @@ Object.assign(w,{
   isAdmin:()=>false,roleHas:role=>current.roles.includes(role),
   classNoFromName:value=>String(value).match(/\d+/)?.[0],entrySubjectKey:value=>String(value).trim().toLowerCase(),
   ledgerSubjectsForClass:()=>['Mathematics','Computer'],entryClassGroup:()=>'4-5',
-  SmssIemisTransfer:{key:value=>String(value).toLowerCase(),subjectKey:value=>String(value).toLowerCase()},
   attendanceAdToBs:v=>v,attendanceBsToAd:v=>v==='2083-13-01'?'invalid':v,attendanceNepalTodayAD:()=>'2083-08-07',
   attendanceDigitsToEnglish:v=>v.replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d))),attendancePad:v=>String(v).padStart(2,'0'),
   db:{},
@@ -82,6 +81,7 @@ Object.assign(w,{
   }
 });
 w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
+w.eval(readFileSync('iemis-importer/transfer.js','utf8'));
 w.eval(html.slice(html.indexOf('const cdcCoreSubjects'),html.indexOf('let iemisEntryGrid'))+'\nopenCdcAssessment();');
 const field=name=>w.document.querySelector('[data-cdc="'+name+'"]');
 const choice=(name,value)=>{field(name).value=value;field(name).onchange();};
@@ -311,5 +311,26 @@ for (const grade of grades) {
   }
 }
 console.log('All 24 Grade 1–5 subject selections: rating language, school save, draft-independent read and record isolation passed');
+// The registry spelling is the Firestore subject key; localize only the menu label.
+for (const [grade,registered,label] of [
+  ['1','Our Surroundings','हाम्रो सेरोफेरो'],['2','हाम्रो सेरोफेरो','हाम्रो सेरोफेरो'],
+  ['3','Nepali (1021)','नेपाली'],['4','English (1011)','English'],
+  ['5','सामाजिक अध्ययन','सामाजिक अध्ययन तथा मानवमूल्य शिक्षा'],
+  ['5','Social Studies and Human Values Education','सामाजिक अध्ययन तथा मानवमूल्य शिक्षा'],
+  ['5','Science & Technology','विज्ञान तथा प्रविधि / Science and Technology'],
+  ...['स्थानीय विषय','मातृभाषा','स्थानीय','मातृभाषा वा स्थानीय विषय','Local Subject',
+      'Mother Tongue or Local Subject','Our Dhunibesi'].map(name=>['4',name,'मातृभाषा वा स्थानीय विषय / Mother Tongue or Local Subject'])
+]) {
+  w.ledgerSubjectsForClass=()=>[registered];
+  current.subjectAssignments=[{className:grade,subject:registered,section:'A'}];
+  choice('class',grade);
+  assert.deepEqual([...field('subject').options].map(option=>[option.value,option.text]),[[registered,label]]);
+  if (label==='हाम्रो सेरोफेरो') {
+    choice('unit','म र मेरो परिवार');
+    const topic=w.document.querySelector('#cdcTopicSuggestions option');
+    assert.ok(topic && /[अ-ह]/u.test(topic.value) && !/[a-z]/i.test(topic.text));
+  }
+}
+console.log('Real registry spellings, local subjects and IEMIS-coded subject labels passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
