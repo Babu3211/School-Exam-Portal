@@ -40,8 +40,10 @@ jobs:
           test -s v47/dist/dashboard-console.mjs
           test -s v47/dist/v47-firebase-config.mjs
           test -s v47/dist/manifest.webmanifest
-          test -s v47/dist/dev-icon.svg
-          grep -q 'SMSS Exam Portal V47' v47/dist/manifest.webmanifest
+          test -s v47/dist/icon-192.png
+          test -s v47/dist/icon-512.png
+          test -s v47/dist/apple-touch-icon.png
+          node --input-type=module -e "import {readFileSync} from 'node:fs'; const app=JSON.parse(readFileSync('v47/dist/manifest.webmanifest','utf8')); if(app.name!=='SMSS Exam Portal'||app.short_name!=='SMSS Exam Portal')process.exit(1);"
           grep -q 'Development only' v47/dist/index.html
           grep -q "projectId:'smss-exam-portal-v47'" v47/dist/v47-firebase-config.mjs
           test ! -e v47/dist/firestore.rules
