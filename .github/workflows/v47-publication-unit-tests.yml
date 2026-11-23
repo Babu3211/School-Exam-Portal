@@ -64,6 +64,7 @@ jobs:
       - name: Run real Firebase Admin SDK publication transaction on isolated emulator
         env:
           NODE_OPTIONS: --unhandled-rejections=strict
+          V47_REQUIRE_PUBLICATION_EMULATOR: 'true'
         run: |
           npx firebase emulators:exec --config v47/firebase.v47.json \
             --project smss-v47-marks-local-ci --only firestore \

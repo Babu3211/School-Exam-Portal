@@ -5,15 +5,20 @@ import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 // Admin SDK intentionally lives in the isolated v47-runtime package, not V46.
 const requireV47=createRequire(new URL('../v47-runtime/package.json',import.meta.url));
-const {initializeApp,deleteApp}=requireV47('firebase-admin/app');
-const {getFirestore}=requireV47('firebase-admin/firestore');
-import {createAdminClassPublicationReaders} from './server-publication-authoritative-loader.mjs';
+ import {createAdminClassPublicationReaders} from './server-publication-authoritative-loader.mjs';
 import {stageTrustedClassMarks} from './server-publication-staging-executor.mjs';
 import {commitTrustedOfficialClassPublication} from './server-official-publication-commit.mjs';
 import {fingerprintConfiguredClassReview} from './server-class-review-fingerprint.mjs';
 import {officialClassPointerId} from './server-publication-authoritative-preflight.mjs';
 const allowedHosts=['127.0.0.1:8081','localhost:8081','[::1]:8081'];
-if(!allowedHosts.includes(process.env.FIRESTORE_EMULATOR_HOST))throw Error('REFUSING to run without local Firestore emulator on port 8081');
+const localEmulator=allowedHosts.includes(process.env.FIRESTORE_EMULATOR_HOST);
+if(!localEmulator){
+ if(process.env.V47_REQUIRE_PUBLICATION_EMULATOR==='true')
+  throw Error('Required local Firestore emulator unavailable; refusing to skip security E2E');
+ console.log('SKIP publication Admin SDK emulator E2E in ordinary unit runner (dedicated emulator job REQUIRED)');
+}else{
+const {initializeApp,deleteApp}=requireV47('firebase-admin/app');
+const {getFirestore}=requireV47('firebase-admin/firestore');
 const app=initializeApp({projectId:'smss-v47-marks-local-ci'},'v47-marks-local-ci');
 const db=getFirestore(app);
 const schoolId='12345678',classId='9',subjectId='computer',examId='final',actorUid='admin1';
@@ -101,4 +106,5 @@ try{
  console.log('PASS real Firebase Admin Firestore emulator: 101-student configured 4/36/10 staging, two pages, transaction-scoped full roster, CAS pointer/header/audit, revoked membership and inactive-student refusals');
 }finally{
  await deleteApp(app);
+}
 }
