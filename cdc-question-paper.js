@@ -3,6 +3,7 @@ import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSub
 import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
 import {getBundledComputerGrid,bundledComputerUnitTopics} from "./cdc-verified-computer-grids.mjs";
 import {findCdcGridSources} from "./cdc-grid-source-index.mjs";
+import {compareGrade8SciencePracticeBank} from "./cdc-grade8-science-model-audit.mjs";
 import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-math-2082.mjs";
 import {CDC_G10_OPTIONAL_MATH_2083_MODEL,compareCdc2083MathModelToBundledGrid} from "./cdc-optional-math-model-compare.mjs";
 import {inspectCdcOptionalMathPaper} from "./cdc-optional-math-composite.mjs";
@@ -530,6 +531,9 @@ async function loadCurrentData() {
  const officialOptionalMathGuide=getCdcOptionalMathGuide({grade,subject});
  const grade10ModelAudit=grade===10&&officialOptionalMathGuide?
   compareCdc2083MathModelToBundledGrid():null;
+ const grade8ScienceModelAudit=compareGrade8SciencePracticeBank({
+  grade,subject,questions:bundled.questions
+ });
  // WCA/CCA questions with 2-4 subquestions cannot be represented by the
  // simple exact allocator. Do not let a flat admin blueprint falsely claim
  // official CDC mathematics compliance for the 75-mark paper.
@@ -548,7 +552,11 @@ async function loadCurrentData() {
   (grade10ModelAudit?.matches?
     " कक्षा १० को २०८३ नमुना प्रश्नको उपलब्ध प्रतिसँग २०८२ Grid को वितरण मिल्छ।":"")+
   " SMSS मौलिक अभ्यास Draft CDC प्रकाशित प्रश्न होइनन्; Save/Print अघि शिक्षक समीक्षा अनिवार्य छ।":
-  bundled.status;
+  grade8ScienceModelAudit?
+   bundled.status+" CDC २०७८ नमुना प्रश्नको ५० अङ्क/३० प्रश्नको ढाँचा भेटिएको छ, "+
+   "तर २०८२ को मूल Grid तथा २०७८ अभिलेखको ४०/५० अङ्क अन्तरको स्रोत जाँच बाँकी छ। "+
+   "त्यसैले यो अभ्यास बैंकलाई CDC Exact प्रश्नपत्र मानिएको छैन।":
+   bundled.status;
  $("qpCurriculumVersion").value=curriculumRows[0]?.curriculumVersion||"CDC संस्करण Topic सूचीअनुसार";
  renderTopics();renderQuestionRows();
  $("qpAutoSourceStatus").textContent=bundledPracticeStatus;
@@ -585,6 +593,9 @@ async function loadCurrentData() {
   if(grade10ModelAudit)addLink(
    CDC_G10_OPTIONAL_MATH_2083_MODEL.governmentPublicationUrl,
    "कक्षा १० CDC २०८३ Model Question र उत्तरकुञ्जिका (आधिकारिक पृष्ठ)");
+  if(grade8ScienceModelAudit)addLink(
+   grade8ScienceModelAudit.model.archivedCdcCatalogUrl,
+   "कक्षा ८ विज्ञान २०७८ Grid / Model / Answer Key (CDC Library)");
   sources.forEach((item,i)=>addLink(item.sourceUrl,
    "CDC स्रोत "+(i+1)+" ("+item.gridVersion+")"));
  }
@@ -611,6 +622,13 @@ async function loadCurrentData() {
    (grade10ModelAudit?.matches?
     " कक्षा १० को २०८३ Model Question को उपलब्ध प्रतिमा ११ Objective, १२ WCA, ४ CCA र छवटै विषयक्षेत्रको अङ्कभार मिलेको छ। मूल २०८३ PDF attachment प्रत्यक्ष प्रमाणीकरण बाँकी छ।":"")+
    " SMSS मौलिक अभ्यास Draft Generate हुन्छ; CDC प्रकाशित प्रश्न होइन। शिक्षकले उत्तरकुञ्जिका जाँचेर मात्र Save/Print गर्नुहोस्।";
+ }else if(grade8ScienceModelAudit){
+  badge.textContent="Grade 8 Science · CDC २०७८ Model जाँच";
+  $("qpPatternHint").textContent="CDC अभिलेखमा कक्षा ८ विज्ञानको २०७८ नमुना प्रश्न भेटिएको छ: "+
+   "१० MCQ (१०), ८ अति छोटो (८), ८ छोटो (१६), ४ लामो (१६) = ५० अङ्क। "+
+   "पुरानो सरकारी PDF का Grid र Model कुल अङ्कमा अन्तर छ र २०८२ मूल CDC Grid अझै जाँचिएको छैन। "+
+   "अहिलेको ५५ प्रश्नको अभ्यास बैंकमा १ अङ्क अति छोटो, २ अङ्क छोटो तथा ४ अङ्क लामा प्रश्न अपूरा छन्।"+
+   " यसलाई २०८३ CDC Exact प्रश्नपत्र नमान्नुहोस्।";
  }else{
   badge.textContent="Custom Pattern";
   $("qpPatternHint").textContent="यस विषयको जाँचिएको CDC Grid आयात गरिएको छैन। Custom Pattern लाई CDC आधिकारिक नमान्नुहोस्।";
