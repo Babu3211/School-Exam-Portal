@@ -103,3 +103,12 @@ assert.match(page,/verifiedQuestionSelection=null/);
 assert.match(page,/verifiedQuestionSelection\.request!==questionDataLoadEpoch/);
 assert.match(page,/verifiedQuestionSelection=\{className,subject,section,request\}/);
 console.log('PASS rejected stale subject/class/section loads before generating question paper');
+
+assert.match(page,/function updateAutoReviewActions\(/);
+assert.match(page,/function invalidateGeneratedQuestionPaper\(/);
+assert.match(page,/id="qpAutoReviewed"/);
+assert.match(page,/if\(generatedPaper\.qualityReport\?\.teacherReviewRequired/);
+assert.match(page,/loadBundledPracticeBank\(\{grade,subject\}\)/);
+assert.match(page,/if\(!stillCurrent\(\)\)return;/);
+assert.doesNotMatch(page,/async function loadBundledPracticeBank\(\)\{/);
+console.log('PASS V46 read-only async practice load prevents stale class data, review gate required before paper output');

@@ -209,6 +209,7 @@ function pageShell() {
       <p class="qp-hint" id="qpPatternHint">CDC Grid आयात गरिएको छैन भने शिक्षकले Custom Pattern राख्न सक्नुहुन्छ। कुल प्रश्नको अङ्क पूर्णाङ्कसँग मिल्नुपर्छ।</p>
       <p class="qp-hint" id="qpAutoSourceStatus" role="status">उपलब्ध प्रश्न बैंक जाँचिँदैछ।</p>
       <p class="qp-hint">एक क्लिकमा: कक्षा/विषय, Topic, पूर्णाङ्क र भाषा छान्नुहोस्। उपलब्ध मौलिक अभ्यास प्रश्नबाट ठीक पूर्णाङ्कको Draft तयार हुनेछ। पर्याप्त जाँचिएका प्रश्न नभए गलत प्रश्नपत्र बनाइँदैन। CDC Grid को लागू संस्करण शिक्षकले पुष्टि गर्नुपर्छ।</p>
+      <label class="qp-topic" style="margin-top:9px;background:#fff8e9;align-items:center"><input id="qpAutoReviewed" type="checkbox"><span>मैले तयार भएको प्रश्नपत्र, पूर्णाङ्क, लागू CDC विशिष्टीकरण तालिका र उत्तरकुञ्जिका पढेर जाँच गरेको छु। <b>जाँच नगरी Save वा Print हुँदैन।</b></span></label>
       <div class="qp-actions"><button class="qp-btn" id="qpSmartGenerateBtn" type="button">एक क्लिकमा Auto Question Paper</button><button class="qp-btn alt" id="qpGenerateBtn" type="button">म्यानुअल Pattern Generate</button><button class="qp-btn alt" id="qpSavePaperBtn" type="button" disabled>प्रश्नपत्र Save</button><button class="qp-btn alt" id="qpPrintPaperBtn" type="button" disabled>प्रश्नपत्र Print / PDF</button><button class="qp-btn alt" id="qpAnswerKeyBtn" type="button" disabled>उत्तरकुञ्जिका Print / PDF</button></div>
       <div id="qpPaperPreview" style="margin-top:14px"><p class="qp-hint">Topic छानेर प्रश्नपत्र Auto Generate गर्नुहोस्।</p></div>
     </div>
@@ -288,6 +289,17 @@ function renderQuestionRows() {
     <td>${q.createdBy===auth.currentUser?.uid||isAdmin()?'<button class="qp-btn danger" type="button" data-qp-delete-question="'+esc(q.id)+'">Delete</button>':'—'}</td>
   </tr>`).join("");
 }
+function updateAutoReviewActions(){
+ const ready=!!generatedPaper&&(!generatedPaper.qualityReport?.teacherReviewRequired||
+  $("qpAutoReviewed")?.checked===true);
+ for(const id of ["qpSavePaperBtn","qpPrintPaperBtn","qpAnswerKeyBtn"])if($(id))$(id).disabled=!ready;
+}
+function invalidateGeneratedQuestionPaper(){
+ generatedPaper=null;
+ if($("qpAutoReviewed"))$("qpAutoReviewed").checked=false;
+ updateAutoReviewActions();
+ renderPaperPreview(null);
+}
 function renderPaperPreview(paper = generatedPaper) {
   const box = $("qpPaperPreview"); if (!box) return;
   if (!paper) { box.innerHTML='<p class="qp-hint">Topic छानेर प्रश्नपत्र Auto Generate गर्नुहोस्।</p>'; return; }
@@ -312,6 +324,10 @@ function renderPaperPreview(paper = generatedPaper) {
 }
 function printPaper(paper = generatedPaper, includeAnswers = false) {
   if (!paper) return;
+  if(paper.qualityReport?.teacherReviewRequired&&$("qpAutoReviewed")?.checked!==true){
+   message("प्रश्नपत्र र उत्तरकुञ्जिका समीक्षा पुष्टि गरेपछि मात्र Print गर्न मिल्छ।",true);
+   return;
+  }
   const area = $("qpPaperPreview")?.querySelector("#qpPrintArea");
   if (!area) return;
   const w = window.open("", "_blank", "width=900,height=900");
@@ -355,13 +371,11 @@ async function loadClassSubjects() {
 }
 // Local original practice sources require no Admin import or Firestore write.
 // Absence of a checked source never triggers invented questions or a fake grid.
-async function loadBundledPracticeBank(){
- bundledPracticeUnits=[];bundledPracticeQuestions=[];bundledPracticeStatus="";
- const grade=gradeNumber(selectedClass),subject=normal(selectedSubject);
- if(![8,10].includes(grade)||!isSupportedScienceSubject(selectedSubject)){
-  bundledPracticeStatus="यो कक्षा/विषयको पूर्वलोड गरिएको सामग्री अझै तयार छैन। विद्यमान विद्यालय प्रश्न बैंकबाट मात्र प्रश्नपत्र बनाउँछ; काल्पनिक CDC प्रश्न बनाउँदैन।";
-  return;
- }
+async function loadBundledPracticeBank({grade,subject}){
+ // Strictly return a snapshot. A previous request must never mutate the
+ // active class, topic list or bank after the user switches selections.
+ if(![8,10].includes(grade)||!isSupportedScienceSubject(subject))
+  return {units:[],questions:[],status:"यस कक्षा/विषयको पूर्वलोड गरिएको प्रश्न बैंक अझै तयार छैन। विद्यालय प्रश्न बैंकबाट मात्र बनाइन्छ; काल्पनिक CDC प्रश्न सिर्जना हुँदैन।"};
  try{
   const [a,b]=await Promise.all([
    fetch("./data/cdc-grade"+grade+"-science-practice-pack-v1.json",{cache:"no-store"}),
@@ -371,50 +385,63 @@ async function loadBundledPracticeBank(){
   const [pack,translations]=await Promise.all([a.json(),b.json()]);
   if(translations.schemaVersion!==1||translations.reviewRequired!==true)
    throw Error("अनुवादको प्रमाणित संरचना छैन");
-  const safe=readBundledScienceBank(pack,{grade,subject:selectedSubject,bilingual:translations.translations});
-  bundledPracticeUnits=safe.units;bundledPracticeQuestions=safe.questions;
-  bundledPracticeStatus="कक्षा "+grade+" विज्ञान: "+safe.units.length+" Unit, "+
-    safe.questions.length+" मौलिक नेपाली प्रश्न स्वतः उपलब्ध। English/दुवै भाषाका "+
+  const safe=readBundledScienceBank(pack,{grade,subject,bilingual:translations.translations});
+  return {units:safe.units,questions:safe.questions,
+   status:"कक्षा "+grade+" विज्ञान: "+safe.units.length+" Unit, "+
+    safe.questions.length+" मौलिक नेपाली प्रश्न। English/दुवै भाषाका "+
     safe.questions.filter(q=>q.questionTextEn).length+
-    " MCQ मात्र समीक्षा गरिएका छन्। यी CDC का प्रकाशित Model Question होइनन्; शिक्षक समीक्षा आवश्यक छ।";
+    " MCQ मात्र उपलब्ध छन्। CDC प्रकाशित Model Question होइनन्; शिक्षक समीक्षा आवश्यक।"};
  }catch(e){
-  bundledPracticeStatus="अभ्यास स्रोत लोड हुन सकेन: "+e.message+"। नयाँ प्रश्न अनुमान गरेर बनाइँदैन।";
+  return {units:[],questions:[],
+   status:"अभ्यास स्रोत लोड हुन सकेन: "+e.message+
+   "। प्रमाणित सामग्री नभई प्रश्न अनुमान गरेर बनाइँदैन।"};
  }
 }
 
 async function loadCurrentData() {
-  if (!selectedClass || !selectedSubject) return;
-  const request=++questionDataLoadEpoch,className=selectedClass,subject=selectedSubject,section=selectedSection;
-  verifiedQuestionSelection=null;
-  const stillCurrent=()=>request===questionDataLoadEpoch&&selectedClass===className&&selectedSubject===subject&&selectedSection===section;
-  const g=gradeNumber(selectedClass);
-  const [curr, questions, blueprints] = await Promise.all([
-    getDocs(query(collection(db,"cdc_curriculum"),where("gradeNumber","==",g),where("subject","==",selectedSubject))),
-    getDocs(query(collection(db,"question_bank"),where("className","==",selectedClass),where("subject","==",selectedSubject),where("section","==",selectedSection))),
-    getDocs(query(collection(db,"cdc_blueprints"),where("gradeNumber","==",g),where("subject","==",selectedSubject)))
-  ]);
-  if(!stillCurrent())return;
-  curriculumRows=curr.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.unitCode||"").localeCompare(String(b.unitCode||""),undefined,{numeric:true}));
-  questionRows=questions.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.createdAt?.seconds||0).localeCompare(String(a.createdAt?.seconds||0)));
-  blueprintRows=blueprints.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.active!==false);
-  currentBlueprint=blueprintRows.sort((a,b)=>String(b.updatedAt?.seconds||0).localeCompare(String(a.updatedAt?.seconds||0)))[0]||null;
-  $("qpCurriculumVersion").value=curriculumRows[0]?.curriculumVersion||"CDC संस्करण Topic सूचीअनुसार";
-  await loadBundledPracticeBank();
-  if(!stillCurrent())return;
-  renderTopics();renderQuestionRows();
-  $("qpAutoSourceStatus").textContent=bundledPracticeStatus;
-  verifiedQuestionSelection={className,subject,section,request};
-  const badge=$("qpBlueprintBadge");
-  if(currentBlueprint){
-    badge.textContent="CDC Grid · "+(currentBlueprint.curriculumVersion||"संस्करण");
-    $("qpPatternHint").textContent="CDC Grid अनुसार प्रश्न प्रकार/संख्या स्वतः भरिएको छ। विषयगत Grid स्रोत Admin ले पुष्टि गरेको हुनुपर्छ।";
-    setBuilderPattern(currentBlueprint.pattern,currentBlueprint.fullMarks,currentBlueprint.durationMinutes);
-  }else{
-    badge.textContent="Custom Pattern";
-    $("qpPatternHint").textContent="यस विषयको CDC Grid आयात गरिएको छैन। अहिले Custom Pattern मात्र प्रयोग हुन्छ; यसलाई CDC आधिकारिक नमुना भनेर नमान्नुहोस्।";
-  }
-  await loadPaperHistory();
+ if(!selectedClass||!selectedSubject)return;
+ const request=++questionDataLoadEpoch,className=selectedClass,
+  subject=selectedSubject,section=selectedSection;
+ verifiedQuestionSelection=null;
+ const stillCurrent=()=>request===questionDataLoadEpoch&&
+  selectedClass===className&&selectedSubject===subject&&selectedSection===section;
+ const grade=gradeNumber(className);
+ const [curr,questions,blueprints,bundled]=await Promise.all([
+  getDocs(query(collection(db,"cdc_curriculum"),
+   where("gradeNumber","==",grade),where("subject","==",subject))),
+  getDocs(query(collection(db,"question_bank"),
+   where("className","==",className),where("subject","==",subject),where("section","==",section))),
+  getDocs(query(collection(db,"cdc_blueprints"),
+   where("gradeNumber","==",grade),where("subject","==",subject))),
+  loadBundledPracticeBank({grade,subject})
+ ]);
+ // Source-specific asynchronous requests cannot overwrite another class.
+ if(!stillCurrent())return;
+ curriculumRows=curr.docs.map(d=>({id:d.id,...d.data()}))
+  .sort((a,b)=>String(a.unitCode||"").localeCompare(String(b.unitCode||""),undefined,{numeric:true}));
+ questionRows=questions.docs.map(d=>({id:d.id,...d.data()}))
+  .sort((a,b)=>Number(b.createdAt?.seconds||0)-Number(a.createdAt?.seconds||0));
+ blueprintRows=blueprints.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.active!==false);
+ currentBlueprint=blueprintRows.sort((a,b)=>Number(b.updatedAt?.seconds||0)-Number(a.updatedAt?.seconds||0))[0]||null;
+ bundledPracticeUnits=bundled.units;
+ bundledPracticeQuestions=bundled.questions;
+ bundledPracticeStatus=bundled.status;
+ $("qpCurriculumVersion").value=curriculumRows[0]?.curriculumVersion||"CDC संस्करण Topic सूचीअनुसार";
+ renderTopics();renderQuestionRows();
+ $("qpAutoSourceStatus").textContent=bundledPracticeStatus;
+ verifiedQuestionSelection={className,subject,section,request};
+ const badge=$("qpBlueprintBadge");
+ if(currentBlueprint){
+  badge.textContent="Admin-entered Grid · "+(currentBlueprint.curriculumVersion||"संस्करण");
+  $("qpPatternHint").textContent="Admin ले स्रोतका आधारमा राखेको Grid अनुसार प्रश्नको प्रकार, संख्या र अङ्क भरिएको छ। औपचारिक CDC मिलानका लागि शिक्षकले मूल Grid पुनः जाँच्नुहोस्।";
+  setBuilderPattern(currentBlueprint.pattern,currentBlueprint.fullMarks,currentBlueprint.durationMinutes);
+ }else{
+  badge.textContent="Custom Pattern";
+  $("qpPatternHint").textContent="यस विषयको जाँचिएको CDC Grid आयात गरिएको छैन। Custom Pattern लाई CDC आधिकारिक नमान्नुहोस्।";
+ }
+ await loadPaperHistory();
 }
+
 async function loadPaperHistory() {
   const body=$("qpPaperRows");if(!body)return;
   try{
@@ -577,7 +604,7 @@ async function generatePaper() {
     createdBy:auth.currentUser.uid
   };
   renderPaperPreview();
-  $("qpSavePaperBtn").disabled=false;$("qpPrintPaperBtn").disabled=false;$("qpAnswerKeyBtn").disabled=false;
+  updateAutoReviewActions();
   const coverage=Object.entries(cognitiveActual).map(([key,value])=>levelLabel(key)+" "+value+"%").join(" · ");
   message("प्रश्नपत्र तयार भयो। "+questions.length+" प्रश्न, "+fullMarks+" अङ्क। संज्ञानात्मक वितरण: "+coverage+(missingAnswerCount?"। "+missingAnswerCount+" प्रश्नको उत्तर संकेत बाँकी छ":"। सबै प्रश्नको उत्तर संकेत उपलब्ध छ")+". Save वा Print गर्न सक्नुहुन्छ।");
 }
@@ -641,8 +668,9 @@ async function generateSmartPaper(){
   })),
   createdBy:auth.currentUser.uid
  };
+ $("qpAutoReviewed").checked=false;
  renderPaperPreview();
- for(const id of ["qpSavePaperBtn","qpPrintPaperBtn","qpAnswerKeyBtn"])$(id).disabled=false;
+ updateAutoReviewActions();
  const note=planned.blueprintMatched?
   "Admin ले राखेको Grid का प्रश्न प्रकार र अंक मिलाइएका छन्; CDC स्रोत शिक्षकले पुष्टि गर्नुपर्छ।":
   "यो Custom Practice Draft हो, आधिकारिक CDC Grid को प्रमाणित प्रश्नपत्र होइन।";
@@ -652,6 +680,8 @@ async function generateSmartPaper(){
 
 async function savePaper() {
   if(!generatedPaper)throw new Error("पहिले प्रश्नपत्र Auto Generate गर्नुहोस्।");
+  if(generatedPaper.qualityReport?.teacherReviewRequired&&$("qpAutoReviewed")?.checked!==true)
+   throw Error("प्रश्नपत्र र उत्तरकुञ्जिका समीक्षा पुष्टि नगरी Save गर्न मिल्दैन।");
   // Persist only the paper schema; preview qualityReport and local id stay in memory.
   const paperFields=["schoolName","schoolAddress","gradeNumber","className","subject","section","paperTitle","academicYear","durationMinutes","fullMarks","curriculumVersion","blueprintId","cognitiveDistribution","topicIds","questions"];
   const payload=Object.fromEntries(paperFields.filter(key=>generatedPaper[key]!==undefined).map(key=>[key,generatedPaper[key]]));
@@ -952,14 +982,11 @@ document.addEventListener("change",async event=>{
      "qpPaperYear","qpPaperMcqCount","qpPaperMcqMarks","qpPaperShortCount",
      "qpPaperShortMarks","qpPaperLongCount","qpPaperLongMarks"].includes(t.id)){
     if(generatedPaper){
-      generatedPaper=null;
-      $("qpSavePaperBtn").disabled=true;
-      $("qpPrintPaperBtn").disabled=true;
-      $("qpAnswerKeyBtn").disabled=true;
-      renderPaperPreview(null);
+      invalidateGeneratedQuestionPaper();
       message("Topic, भाषा वा प्रश्नपत्र विवरण परिवर्तन भयो। नयाँ प्रश्नपत्र बनाउनुहोस्।");
     }
   }
+  if(t.id==="qpAutoReviewed")updateAutoReviewActions();
   if(t.id==="qpQuestionType")toggleMcqFields();
   if(t.id==="qpImportFile"&&t.files?.[0]){
     try{await importTopics(t.files[0]);}catch(err){message("आयात भएन: "+(err.code||err.message),true);}finally{t.value="";}
@@ -989,8 +1016,10 @@ document.addEventListener("click",async event=>{
     if(t.id==="qpGrade10SciencePackBtn")await loadGrade10SciencePack();
     if(t.id==="qpGenerateBtn")await generatePaper();
     if(t.id==="qpSmartGenerateBtn")await generateSmartPaper();
-    if(t.id==="qpTopicSelectAll"||t.id==="qpTopicClearAll")
+    if(t.id==="qpTopicSelectAll"||t.id==="qpTopicClearAll"){
       document.querySelectorAll("[data-qp-topic]").forEach(input=>input.checked=t.id==="qpTopicSelectAll");
+      if(generatedPaper)invalidateGeneratedQuestionPaper();
+  }
     if(t.id==="qpSavePaperBtn")await savePaper();
     if(t.id==="qpPrintPaperBtn")printPaper(generatedPaper,false);
     if(t.id==="qpAnswerKeyBtn")printPaper(generatedPaper,true);
