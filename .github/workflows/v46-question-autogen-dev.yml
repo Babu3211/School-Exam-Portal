@@ -10,6 +10,7 @@ on:
       - 'cdc-verified-computer-grids.mjs'
       - 'cdc-optional-math-2082.mjs'
       - 'cdc-optional-math-composite.mjs'
+      - 'cdc-optional-math-render.mjs'
       - 'scripts/test-cdc-optional-math-composite.mjs'
       - 'cdc-grid-source-index.mjs'
       - 'scripts/test-cdc-grid-source-index.mjs'
@@ -51,6 +52,7 @@ jobs:
           node --check cdc-verified-computer-grids.mjs
           node --check cdc-optional-math-2082.mjs
           node --check cdc-optional-math-composite.mjs
+          node --check cdc-optional-math-render.mjs
           node --check scripts/test-cdc-optional-math-composite.mjs
           node --check cdc-grid-source-index.mjs
           node --check scripts/test-cdc-grid-source-index.mjs
