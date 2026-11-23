@@ -12,6 +12,7 @@ import {fingerprintConfiguredClassReview} from './server-class-review-fingerprin
 import {officialClassPointerId} from './server-publication-authoritative-preflight.mjs';
 import {loadCommittedOfficialClassMarks} from './server-official-marks-firestore-loader.mjs';
 import {createV47PublicationReviewHttpHandler} from '../src/v47/publication-review-http-handler.mjs';
+import {createV47NodePublicationStageHandler} from '../src/v47/node-publication-stage-handler.mjs';
 const allowedHosts=['127.0.0.1:8081','localhost:8081','[::1]:8081'];
 const localEmulator=allowedHosts.includes(process.env.FIRESTORE_EMULATOR_HOST);
 if(!localEmulator){
@@ -79,6 +80,29 @@ try{
  const confirmation=Object.fromEntries(
   ['format','schoolId','classId','subjectId','examId','settingsRevision','rosterRevision','digestAlgorithm','digest'].map(k=>[k,review[k]])
  );
+ // Exercise the real Admin SDK staging endpoint (not only its pure executor).
+ // It must stage 101 rows with an unpredictable ID, but never publish.
+ const stageHandler=createV47NodePublicationStageHandler({
+  auth:{verifyIdToken:async(token,revoked)=>{
+   assert.equal(revoked,true);
+   return {uid:token,firebase:{sign_in_provider:'password'}};
+  }},firestore:db
+ });
+ const stageRequest={
+  url:'/api/v47/publication/stage',method:'POST',
+  headers:{authorization:'Bearer '+actorUid,'content-type':'application/json'},
+  async *[Symbol.asyncIterator](){yield Buffer.from(JSON.stringify({scope,confirmation,confirmStage:true}));}
+ };
+ const stageReply={writableEnded:false,headersSent:false,setHeader(){},
+  end(value){this.body=JSON.parse(value);this.writableEnded=true;}};
+ await stageHandler(stageRequest,stageReply);
+ assert.equal(stageReply.statusCode,202);
+ assert.equal(stageReply.body.stage.rosterCount,count);
+ assert.equal(stageReply.body.stage.publicationAllowed,false);
+ const stageHttpId=stageReply.body.stage.publicationId;
+ assert.equal((await db.doc(path('marks_staging',stageHttpId)).get()).exists,true);
+ assert.equal((await db.doc(path('official_marks_pointers',officialClassPointerId(scope))).get()).exists,false);
+
  const publicationId='pub_00000001';
  const options={...reader,confirmation,publicationId};
  const stage=await stageTrustedClassMarks(options);

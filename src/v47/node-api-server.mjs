@@ -7,13 +7,19 @@ import {createV47NodeReadHandler} from "./read-api-router.mjs";
 import {createV47NodeStudentWriteHandler} from "./node-student-write-handler.mjs";
 import {createV47NodeOnboardingHandler} from "./node-onboarding-handler.mjs";
 import {createV47NodeTeacherAssignmentHandler} from "./node-teacher-assignment-handler.mjs";
+import {createV47NodePublicationStageHandler} from "./node-publication-stage-handler.mjs";
 export function createV47ApiServer({auth,firestore}) {
  const read=createV47NodeReadHandler({auth,firestore});
  const write=createV47NodeStudentWriteHandler({auth,firestore});
  const onboard=createV47NodeOnboardingHandler({auth,firestore});
  const assignTeacher=createV47NodeTeacherAssignmentHandler({auth,firestore});
+ // Legacy isolated-read test adapters omit Admin SDK transactions. Instantiate
+ // this write-capable staging handler only when its explicit route is called.
+ const stage=(req,res)=>createV47NodePublicationStageHandler({auth,firestore})(req,res);
  return createServer((request,response)=>{
-  const task=request.url==="/api/v47/teachers/assign"
+  const task=request.url==="/api/v47/publication/stage"
+   ? stage(request,response)
+   : request.url==="/api/v47/teachers/assign"
    ? assignTeacher(request,response)
    : request.url==="/api/v47/students/write"
    ? write(request,response)

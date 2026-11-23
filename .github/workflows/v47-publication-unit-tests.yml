@@ -14,6 +14,9 @@ on:
       - 'scripts/test-v47-official-marks-http.mjs'
       - 'src/v47/publication-review-http-handler.mjs'
       - 'scripts/test-v47-publication-review-http.mjs'
+      - 'src/v47/node-publication-stage-handler.mjs'
+      - 'src/v47/node-api-server.mjs'
+      - 'scripts/test-v47-publication-stage-http.mjs'
 permissions:
   contents: read
 concurrency:
@@ -39,6 +42,7 @@ jobs:
           node v47/test-server-official-marks-firestore-loader.mjs
           node scripts/test-v47-official-marks-http.mjs
           node scripts/test-v47-publication-review-http.mjs
+          node scripts/test-v47-publication-stage-http.mjs
           node v47/test-server-verified-official-class-marks.mjs
           node v47/test-server-publication-staging-executor.mjs
           node v47/test-server-publication-authoritative-preflight.mjs
