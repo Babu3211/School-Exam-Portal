@@ -48,6 +48,10 @@ for(const key of [
 ])assert.equal(isSensitiveSchoolAuditField(key),true,'Credential-like field not redacted: '+key);
 for(const key of ['name','nameEnglish','email','rollNumber','schoolId','examId','creditHour','accessMode'])
  assert.equal(isSensitiveSchoolAuditField(key),false,'Non-secret field incorrectly masked: '+key);
+const call=({records={},...extra}={})=>collectSchoolAuditExcel({
+ store:source(records).store,schoolId,actor,assertSession:()=>{},
+ collections:['students'],pageSize:1,createdAt:'2026-11-23T00:00:00.000Z',...extra
+});
 const nested=await call({records:{students:[{
  id:'private',schoolId,name:'Expected Staff',
  teacherPassword:'teacher-credential-sentinel',
@@ -64,10 +68,7 @@ for(const secret of ['teacher-credential-sentinel','login-credential-sentinel','
 assert.match(nestedXml,/harmless-visibility/);
 assert.match(nestedXml,/visible-description/);
 
-const call=({records={},...extra}={})=>collectSchoolAuditExcel({
- store:source(records).store,schoolId,actor,assertSession:()=>{},
- collections:['students'],pageSize:1,createdAt:'2026-11-23T00:00:00.000Z',...extra
-});
+
 await assert.rejects(call({actor:{...actor,role:'viewer'}}),/School Admin/);
 await assert.rejects(call({actor:{...actor,schoolId:'123456789'}}),/School Admin/);
 await assert.rejects(call({store:{schoolId:'123456789',listPage:async()=>({records:[],hasMore:false})}}),/same-school/);
