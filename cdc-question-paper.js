@@ -1,5 +1,6 @@
 import { getApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
 import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSubject} from "./cdc-question-autogen.mjs";
+import {validateExactCdcUnitGrid} from "./cdc-exact-grid.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc,
@@ -23,6 +24,7 @@ const isAdmin = () => !!auth.currentUser && auth.currentUser.uid === ADMIN_UID;
 let role = null, classSubjects = [], curriculumRows = [], questionRows = [], blueprintRows = [], savedPapers = [], generatedPaper = null;
 let selectedClass = "", selectedSubject = "", selectedSection = "", currentBlueprint = null;
 let bundledPracticeUnits=[],bundledPracticeQuestions=[],bundledPracticeStatus="",questionDataLoadEpoch=0,verifiedQuestionSelection=null;
+let lastAutoSignature=null;
 
 function message(text, error = false) {
   const el = $("qpMessage");
@@ -154,6 +156,10 @@ function pageShell() {
         <div class="qp-field"><label for="qpBpVersion">Grid संस्करण</label><input id="qpBpVersion" maxlength="100" required placeholder="CDC Grid 2082"></div>
         <div class="qp-field"><label for="qpBpSourceTitle">Grid स्रोत शीर्षक</label><input id="qpBpSourceTitle" maxlength="180" required></div>
         <div class="qp-field" style="grid-column:1/-1"><label for="qpBpSourceUrl">आधिकारिक CDC स्रोत URL</label><input id="qpBpSourceUrl" type="url" maxlength="500" required></div>
+        <div class="qp-field" style="grid-column:1/-1"><label for="qpBpUnitGrid">मूल CDC Grid अनुसार Unit–Level–Question Type–Marks (JSON, Admin मात्र)</label><textarea id="qpBpUnitGrid" rows="5" required maxlength="20000" placeholder='[{"unitCode":"1","type":"mcq","marks":1,"count":2,"cognitiveLevel":"knowledge"}]'></textarea>
+          <p class="qp-hint">माथिको JSON केवल ढाँचाको उदाहरण हो, CDC को आधिकारिक वितरण होइन। सम्बन्धित कक्षा/विषयको CDC दस्तावेजबाट वास्तविक पङ्क्ति पुष्टि गरेर मात्र राख्नुहोस्। शिक्षकले प्रश्न टाइप गर्नुपर्दैन।</p>
+          <label class="qp-topic"><input id="qpBpSourceReviewed" type="checkbox" required>मूल CDC Grid का Unit, प्रश्न संख्या, प्रकार, अङ्क र संज्ञानात्मक स्तर मैले जाँचेर मिलाएको छु।</label>
+        </div>
         <div class="qp-actions" style="grid-column:1/-1"><button class="qp-btn" type="submit">यो कक्षा/विषयको Blueprint सुरक्षित गर्नुहोस्</button><span class="qp-hint" id="qpBpStatus"></span></div>
       </form>
     </div>
@@ -199,6 +205,7 @@ function pageShell() {
         <div class="qp-field"><label for="qpPaperDuration">समय (मिनेट)</label><input id="qpPaperDuration" type="number" min="15" max="360" value="120"></div>
         <div class="qp-field"><label for="qpPaperFullMarks">पूर्णाङ्क</label><input id="qpPaperFullMarks" type="number" min="1" max="500" value="50"></div>
         <div class="qp-field"><label for="qpAutoLanguage">प्रश्नपत्रको भाषा</label><select id="qpAutoLanguage"><option value="ne">नेपाली मात्र</option><option value="en">English only</option><option value="both">नेपाली + English दुवै</option></select></div>
+        <div class="qp-field"><label for="qpAutoMode">प्रश्नपत्रको ढाँचा</label><select id="qpAutoMode"><option value="cdc">CDC Unit-wise Grid EXACT</option><option value="practice">अभ्यास मात्र (CDC Grid होइन)</option></select></div>
         <div class="qp-field"><label for="qpPaperMcqCount">MCQ संख्या</label><input id="qpPaperMcqCount" type="number" min="0" max="100" value="10"></div>
         <div class="qp-field"><label for="qpPaperMcqMarks">MCQ प्रति अङ्क</label><input id="qpPaperMcqMarks" type="number" min="1" max="20" value="1"></div>
         <div class="qp-field"><label for="qpPaperShortCount">छोटो प्रश्न संख्या</label><input id="qpPaperShortCount" type="number" min="0" max="100" value="6"></div>
@@ -208,6 +215,7 @@ function pageShell() {
       </div>
       <p class="qp-hint" id="qpPatternHint">CDC Grid आयात गरिएको छैन भने शिक्षकले Custom Pattern राख्न सक्नुहुन्छ। कुल प्रश्नको अङ्क पूर्णाङ्कसँग मिल्नुपर्छ।</p>
       <p class="qp-hint" id="qpAutoSourceStatus" role="status">उपलब्ध प्रश्न बैंक जाँचिँदैछ।</p>
+      <p class="qp-hint" id="qpAutoGridStatus" role="status">CDC Exact मोडमा सम्बन्धित कक्षा, विषय र पूर्णाङ्कको समीक्षित Unit-wise Grid चाहिन्छ।</p>
       <p class="qp-hint">एक क्लिकमा: कक्षा/विषय, Topic, पूर्णाङ्क र भाषा छान्नुहोस्। उपलब्ध मौलिक अभ्यास प्रश्नबाट ठीक पूर्णाङ्कको Draft तयार हुनेछ। पर्याप्त जाँचिएका प्रश्न नभए गलत प्रश्नपत्र बनाइँदैन। CDC Grid को लागू संस्करण शिक्षकले पुष्टि गर्नुपर्छ।</p>
       <label class="qp-topic" style="margin-top:9px;background:#fff8e9;align-items:center"><input id="qpAutoReviewed" type="checkbox"><span>मैले तयार भएको प्रश्नपत्र, पूर्णाङ्क, लागू CDC विशिष्टीकरण तालिका र उत्तरकुञ्जिका पढेर जाँच गरेको छु। <b>जाँच नगरी Save वा Print हुँदैन।</b></span></label>
       <div class="qp-actions"><button class="qp-btn" id="qpSmartGenerateBtn" type="button">एक क्लिकमा Auto Question Paper</button><button class="qp-btn alt" id="qpGenerateBtn" type="button">म्यानुअल Pattern Generate</button><button class="qp-btn alt" id="qpSavePaperBtn" type="button" disabled>प्रश्नपत्र Save</button><button class="qp-btn alt" id="qpPrintPaperBtn" type="button" disabled>प्रश्नपत्र Print / PDF</button><button class="qp-btn alt" id="qpAnswerKeyBtn" type="button" disabled>उत्तरकुञ्जिका Print / PDF</button></div>
