@@ -1,6 +1,7 @@
 import { getApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
 import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSubject,isQuestionReadyForLanguage,cognitiveMarkDistribution} from "./cdc-question-autogen.mjs";
 import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
+import {QUESTION_EXCEL_FIELDS,parseQuestionExcelSheet} from "./cdc-question-excel.mjs";
 import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 import {
@@ -202,7 +203,7 @@ function pageShell() {
         <div class="qp-actions" style="grid-column:1/-1"><button class="qp-btn" type="submit">प्रश्न बैंकमा सुरक्षित गर्नुहोस्</button><button class="qp-btn alt" type="reset">खाली गर्नुहोस्</button></div>
       </form>
       <p class="qp-hint">Topic को नाम CDC सूचीमा जस्ताको तस्तै लेख्दा प्रश्न आधिकारिक एकाइसँग जोडिन्छ। नयाँ Topic भए शिक्षकले आफ्नै नाम लेख्न सक्नुहुन्छ। Auto Generate ले उपलब्ध प्रश्न बैंकबाट प्रश्नपत्र मिलाउँछ; प्रश्न आफैँबाट नयाँ सिर्जना गर्दैन। बाह्य AI/API वा शुल्क प्रयोग हुँदैन।</p>
-      <div class="qp-actions"><button class="qp-btn alt" id="qpQuestionTemplateBtn" type="button">प्रश्न बैंक JSON नमुना</button><label class="qp-btn alt" for="qpQuestionImportFile">Admin: प्रश्न बैंक JSON आयात</label><input id="qpQuestionImportFile" class="qp-hidden" type="file" accept=".json,application/json"><button class="qp-btn alt qp-hidden" id="qpGrade8SciencePackBtn" type="button">Admin: कक्षा ८ विज्ञान CDC अभ्यास प्याक लोड</button><button class="qp-btn alt qp-hidden" id="qpGrade10SciencePackBtn" type="button">Admin: कक्षा १० विज्ञान अभ्यास प्याक (शिक्षक समीक्षा)</button></div>
+      <div class="qp-actions"><button class="qp-btn alt" id="qpQuestionExcelTemplateBtn" type="button">Question Bank Excel Sample (.xlsx)</button><label class="qp-btn alt" for="qpQuestionExcelFile">Admin: Import Excel (.xlsx)</label><input id="qpQuestionExcelFile" class="qp-hidden" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"><button class="qp-btn alt" id="qpQuestionTemplateBtn" type="button">JSON नमुना (पुरानो विकल्प)</button><label class="qp-btn alt" for="qpQuestionImportFile">Admin: JSON आयात</label><input id="qpQuestionImportFile" class="qp-hidden" type="file" accept=".json,application/json"><button class="qp-btn alt qp-hidden" id="qpGrade8SciencePackBtn" type="button">Admin: कक्षा ८ विज्ञान CDC अभ्यास प्याक लोड</button><button class="qp-btn alt qp-hidden" id="qpGrade10SciencePackBtn" type="button">Admin: कक्षा १० विज्ञान अभ्यास प्याक (शिक्षक समीक्षा)</button></div>
       <p class="qp-hint">प्रश्न बैंक JSON आयात गर्दा हाल छानिएको कक्षा, विषय र Section मा मात्र प्रश्न थपिन्छ। दोहोरिएका प्रश्नहरू छुट्याइन्छ।</p>
       </details>
     </div>
@@ -913,11 +914,15 @@ async function importTopics(file) {
   await loadCurrentData();message(saved+" वटा CDC एकाइ आयात/अपडेट भए।");
 }
 async function importQuestionBank(file) {
+  if(!/\.json$/i.test(file.name||""))throw Error("JSON फाइल मात्र यहाँ आयात हुन्छ।");
+  if(file.size>1500000)throw Error("JSON प्रश्न बैंक फाइल धेरै ठूलो छ।");
+  const raw=JSON.parse(await file.text());
+  return importQuestionBankRows(Array.isArray(raw)?raw:raw?.questions);
+}
+async function importQuestionBankRows(rows) {
   if(!isAdmin())throw new Error("प्रश्न बैंकको सामूहिक आयात Admin का लागि मात्र हो।");
   if(!selectedClass||!selectedSubject)throw new Error("पहिले कक्षा र विषय छान्नुहोस्।");
-  const raw=JSON.parse(await file.text());
-  const rows=Array.isArray(raw)?raw:raw?.questions;
-  if(!Array.isArray(rows)||!rows.length||rows.length>500)throw new Error("JSON मा १–५०० प्रश्न हुनुपर्छ।");
+  if(!Array.isArray(rows)||!rows.length||rows.length>500)throw new Error("Excel/JSON मा १–५०० प्रश्न हुनुपर्छ।");
   const known=new Set(questionRows.map(q=>normal(q.topicId+"::"+q.questionType+"::"+q.marks+"::"+q.questionText)));
   const payloads=[];
   let duplicates=0;
@@ -933,23 +938,49 @@ async function importQuestionBank(file) {
       !["knowledge","understanding","application","higher"].includes(cognitiveLevel))
       throw new Error("प्रश्न "+(index+1)+" मा Topic/प्रश्न/प्रकार/अङ्क/संज्ञानात्मक स्तर अमान्य छ।");
     const unitTitle=String(row.unitTitle||"CDC विषयगत पाठ").trim().slice(0,180);
-    const curriculumUnit=curriculumRows.find(unit=>(unit.topics||[]).some(t=>normal(t)===normal(topicName)));
+    const requestedCode=String(row.unitCode||"").trim();
+    const matched=curriculumRows.filter(unit=>
+      (!requestedCode||String(unit.unitCode||"").trim()===requestedCode)&&
+      (unit.topics||[]).some(t=>normal(t)===normal(topicName)));
+    if(matched.length>1)throw Error("प्रश्न "+(index+1)+": एउटै Topic धेरै Unit मा छ। Excel मा Unit Code अनिवार्य छ।");
+    const curriculumUnit=matched[0]||null;
+    if(requestedCode&&!curriculumUnit&&curriculumRows.some(u=>
+      String(u.unitCode||"").trim()===requestedCode))
+      throw Error("प्रश्न "+(index+1)+": छानिएको Unit Code मा यो Topic छैन।");
     const unitId=curriculumUnit?.id||"teacher_custom";
     const resolvedUnitTitle=curriculumUnit?.unitTitle||unitTitle;
+    const unitCode=String(curriculumUnit?.unitCode||requestedCode).trim();
     const topicId=curriculumUnit
       ? curriculumUnit.id+"_"+(curriculumUnit.topics||[]).findIndex(t=>normal(t)===normal(topicName))
-      : "custom_"+normal(resolvedUnitTitle+"::"+topicName);
+      : "custom_"+normal(unitCode+"::"+resolvedUnitTitle+"::"+topicName);
     const options=questionType==="mcq"?(Array.isArray(row.options)?row.options.map(x=>String(x).trim()):[]):[];
-    const correctOption=questionType==="mcq"?String(row.correctOption||""):"";
+    const correctOption=questionType==="mcq"?String(row.correctOption||"").trim().toUpperCase():"";
+    const questionTextEn=String(row.questionTextEn||"").trim();
+    const answer=String(row.answer||"").trim(),answerEn=String(row.answerEn||"").trim();
+    const optionsEn=questionType==="mcq"&&Array.isArray(row.optionsEn)?
+      row.optionsEn.map(x=>String(x||"").trim()):[];
+    const sourceUrl=String(row.sourceUrl||"").trim(),sourceTitle=String(row.sourceTitle||"").trim();
     if(questionType==="mcq"&&(options.length!==4||options.some(x=>!x||x.length>500)||!["A","B","C","D"].includes(correctOption)))
       throw new Error("MCQ प्रश्न "+(index+1)+" मा चार विकल्प र सही विकल्प A/B/C/D आवश्यक छ।");
+    if(!Number.isSafeInteger(marks)||questionTextEn.length>3000||answer.length>3000||
+       answerEn.length>3000||optionsEn.length!==0&&optionsEn.length!==4||
+       optionsEn.some(x=>!x||x.length>500)||
+       sourceTitle.length>200||sourceUrl.length>500||
+       sourceUrl&&!/^https:\/\//i.test(sourceUrl))
+      throw Error("प्रश्न "+(index+1)+": अङ्क, अनुवाद, विकल्प वा स्रोत विवरण अमान्य छ।");
+    // A partial translation can remain a draft bank item, but the automatic
+    // generator will refuse it in English/Both until all answers exist.
+    if(questionTextEn&&!answerEn)throw Error("प्रश्न "+(index+1)+": English प्रश्नसँग English उत्तर आवश्यक छ।");
+    if(questionType==="mcq"&&questionTextEn&&optionsEn.length!==4)
+      throw Error("प्रश्न "+(index+1)+": English MCQ का चारै विकल्प आवश्यक छन्।");
     const fingerprint=normal(topicId+"::"+questionType+"::"+marks+"::"+questionText);
     if(known.has(fingerprint)){duplicates++;continue;}
     known.add(fingerprint);
     payloads.push({
       gradeNumber:gradeNumber(selectedClass),className:selectedClass,subject:selectedSubject,section:selectedSection,
-      unitId,unitTitle:resolvedUnitTitle,topicId,topicName,questionType,marks,cognitiveLevel,questionText,
-      options,correctOption,answer:String(row.answer||"").trim().slice(0,3000),
+      unitId,unitCode,unitTitle:resolvedUnitTitle,topicId,topicName,questionType,marks,cognitiveLevel,
+      questionText,questionTextEn,options,optionsEn,correctOption,answer,answerEn,
+      sourceTitle,sourceUrl,sourceStatus:"imported_question_teacher_review_required",
       createdBy:auth.currentUser.uid,createdByName:String(role?.displayName||"Admin").slice(0,100),
       createdAt:serverTimestamp(),status:"active"
     });
@@ -1104,6 +1135,65 @@ async function loadGrade10SciencePack() {
   await loadCurrentData();
   message("कक्षा १० विज्ञान अभ्यास प्याक: "+newUnits+" नयाँ एकाइ, "+newQuestions+" नयाँ प्रश्न थपिए; "+duplicates+" दोहोरिएका प्रश्न छोडिए। यी मौलिक अभ्यास प्रश्न हुन्—औपचारिक परीक्षाअघि विषय शिक्षकले समीक्षा गर्नुपर्छ।");
 }
+// Reuse the ExcelJS browser bundle already stored in the repository.
+// Load only when Admin asks for an .xlsx file; no paid API or external CDN.
+let questionExcelLoader=null;
+async function questionExcelLibrary(){
+ if(window.ExcelJS?.Workbook)return window.ExcelJS;
+ if(!questionExcelLoader)questionExcelLoader=new Promise((resolve,reject)=>{
+  const s=document.createElement("script");
+  s.src="./iemis-importer/vendor/exceljs.min.js";s.async=true;
+  s.onload=()=>window.ExcelJS?.Workbook?resolve(window.ExcelJS):
+   reject(Error("ExcelJS उपलब्ध भएन।"));
+  s.onerror=()=>reject(Error("Excel फाइल पढ्ने स्थानीय Library लोड भएन।"));
+  document.head.appendChild(s);
+ }).catch(error=>{questionExcelLoader=null;throw error;});
+ return questionExcelLoader;
+}
+async function downloadQuestionExcelTemplate(){
+ if(!isAdmin())throw Error("Question Bank Excel Sample Admin का लागि मात्र हो।");
+ const ExcelJS=await questionExcelLibrary(),workbook=new ExcelJS.Workbook();
+ workbook.creator="SMSS Exam Portal";
+ const sheet=workbook.addWorksheet("Question Bank");
+ sheet.addRow(QUESTION_EXCEL_FIELDS.map(x=>x[1]));
+ sheet.views=[{state:"frozen",ySplit:1}];
+ sheet.getRow(1).font={bold:true,color:{argb:"FFFFFFFF"}};
+ sheet.getRow(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF234F91"}};
+ for(const [i,[field]]of QUESTION_EXCEL_FIELDS.entries())
+  sheet.getColumn(i+1).width=/questionText|answer|sourceUrl/i.test(field)?39:
+   /option/i.test(field)?22:18;
+ const guide=workbook.addWorksheet("Instructions");
+ for(const text of [
+  "SMSS V46 Question Bank Excel",
+  "Question Bank sheet मा पहिलो Row को Header नबदल्नुहोस्।",
+  "Class, Subject र Section Portal मा छानेपछि मात्र Admin ले Import गर्नुहोस्।",
+  "Question Type: mcq, short, long | Cognitive Level: knowledge, understanding, application, higher",
+  "Marks र Correct Option (MCQ: A/B/C/D) सही राख्नुहोस्।",
+  "एउटै Topic विभिन्न Unit मा छ भने Unit Code अनिवार्य राख्नुहोस्।",
+  "English प्रश्न राखे English उत्तर र MCQ का चार English विकल्प पनि राख्नुहोस्।",
+  "CDC प्रकाशित प्रश्न नहोउन्जेल आधिकारिक Model Question दाबी नगर्नुहोस्।",
+  "Source Title/URL राखे समीक्षा र उत्पत्ति जाँच गर्न सजिलो हुन्छ।"
+ ])guide.addRow([text]);
+ guide.getColumn(1).width=105;
+ guide.getRow(1).font={bold:true,size:14};
+ const bytes=await workbook.xlsx.writeBuffer(),blob=new Blob([bytes],{
+  type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+ });
+ const url=URL.createObjectURL(blob),link=document.createElement("a");
+ link.href=url;link.download="SMSS_Question_Bank_Sample.xlsx";link.click();
+ URL.revokeObjectURL(url);
+}
+async function importQuestionBankExcel(file){
+ if(!isAdmin())throw Error("Question Bank Excel Import Admin का लागि मात्र हो।");
+ if(!/\.xlsx$/i.test(file.name||"")||file.size>5000000)
+  throw Error("५ MB सम्मको .xlsx फाइल मात्र आयात गर्नुहोस्।");
+ const ExcelJS=await questionExcelLibrary(),book=new ExcelJS.Workbook();
+ await book.xlsx.load(await file.arrayBuffer());
+ const sheet=book.getWorksheet("Question Bank");
+ if(!sheet)throw Error("Excel मा Question Bank नामको Sheet आवश्यक छ।");
+ const rows=parseQuestionExcelSheet(sheet);
+ return importQuestionBankRows(rows);
+}
 function downloadQuestionTemplate() {
   downloadJson("SMSS_Question_Bank_Template.json",{
     questions:[{
@@ -1191,6 +1281,11 @@ document.addEventListener("change",async event=>{
   if(t.id==="qpImportFile"&&t.files?.[0]){
     try{await importTopics(t.files[0]);}catch(err){message("आयात भएन: "+(err.code||err.message),true);}finally{t.value="";}
   }
+  if(t.id==="qpQuestionExcelFile"&&t.files?.[0]){
+    try{await importQuestionBankExcel(t.files[0]);}
+    catch(err){console.error("Question bank Excel import failed",err);message("Excel आयात भएन: "+(err.code||err.message),true);}
+    finally{t.value="";}
+  }
   if(t.id==="qpQuestionImportFile"&&t.files?.[0]){
     try{await importQuestionBank(t.files[0]);}catch(err){console.error("Question bank import failed",err);message("प्रश्न आयात भएन: "+(err.code||err.message),true);}finally{t.value="";}
   }
@@ -1211,6 +1306,7 @@ document.addEventListener("click",async event=>{
   const t=event.target.closest("button");if(!t)return;
   try{
     if(t.id==="qpTemplateBtn")downloadTemplate();
+    if(t.id==="qpQuestionExcelTemplateBtn")await downloadQuestionExcelTemplate();
     if(t.id==="qpQuestionTemplateBtn")downloadQuestionTemplate();
     if(t.id==="qpGrade8SciencePackBtn")await loadGrade8SciencePack();
     if(t.id==="qpGrade10SciencePackBtn")await loadGrade10SciencePack();
