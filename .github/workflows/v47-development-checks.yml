@@ -243,6 +243,9 @@ jobs:
       - name: test-v47-school-session
         if: success() || failure()
         run: node scripts/test-v47-school-session.mjs
+      - name: V47 canonical numeric school and single-role server parity
+        if: success() || failure()
+        run: node scripts/test-v47-canonical-school-session.mjs
       - name: test-v47-firestore-onboarding-adapter
         if: success() || failure()
         run: node scripts/test-v47-firestore-onboarding-adapter.mjs

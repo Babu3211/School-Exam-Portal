@@ -16,13 +16,30 @@ export async function loadVerifiedSchoolSession({idToken,schoolId,auth,firestore
  const uid=decoded.uid;
  // Direct school membership lookup avoids cross-tenant collection queries.
  const schoolSnapshot=await firestore.doc(`schools/${schoolId}`).get();
- if(!schoolSnapshot.exists || schoolSnapshot.data()?.status!=="active")
+ const school=schoolSnapshot.exists?schoolSnapshot.data():null;
+ // The V47 browser/rules schema uses active:true, while the isolated
+ // prototype uses status:"active". Reject conflicting or explicit inactive
+ // signals; never allow a status string to override active:false.
+ if(!school || (Object.hasOwn(school,"id") && school.id!==schoolId) ||
+    (Object.hasOwn(school,"active") && school.active!==true) ||
+    (Object.hasOwn(school,"status") && school.status!=="active") ||
+    (school.active!==true && school.status!=="active"))
    throw new Error("School is not active");
  const snapshot=await firestore.doc(`schools/${schoolId}/members/${uid}`).get();
  const data=snapshot.exists?snapshot.data():null;
  if(data && ((Object.hasOwn(data,"uid") && data.uid!==uid) ||
   (Object.hasOwn(data,"schoolId") && data.schoolId!==schoolId)))
   throw new Error("School membership identity mismatch");
- const memberships=data?[{...data,uid,schoolId}]:[];
+ // Canonical browser/rules membership: {uid,schoolId,role,active}.
+ // Prototype server membership: {uid,schoolId,roles:[...],active}.
+ // Reject ambiguous mixes instead of silently elevating a Viewer/Teacher.
+ let normalized=data;
+ if(data && Object.hasOwn(data,"role")){
+   if(Object.hasOwn(data,"roles") ||
+      !["school_admin","teacher","viewer"].includes(data.role))
+     throw new Error("Conflicting or invalid school membership roles");
+   normalized={...data,roles:[data.role]};
+ }
+ const memberships=normalized?[{...normalized,uid,schoolId}]:[];
  return resolveSchoolSession({authUid:uid,schoolId,serverMemberships:memberships});
 }

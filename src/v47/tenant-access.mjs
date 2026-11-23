@@ -4,7 +4,9 @@
  * security rules and trusted server operations before connecting live data.
  */
 import {assertSchoolId} from "./tenant-domain.mjs";
-const ROLES=new Set(["school_admin","class_teacher","subject_teacher","viewer"]);
+// Canonical V47 stores one "role". "teacher" is read-only in this legacy
+// API: assigned-class teacher writes must use their dedicated verified path.
+const ROLES=new Set(["school_admin","class_teacher","subject_teacher","teacher","viewer"]);
 export function normalizeMembership({uid,schoolId,roles,active=true}) {
   if(typeof uid!=="string" || !uid.trim()) throw new TypeError("UID required");
   assertSchoolId(schoolId);

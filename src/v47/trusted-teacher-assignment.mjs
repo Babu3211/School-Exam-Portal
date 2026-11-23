@@ -36,17 +36,28 @@ export async function assignTeacherOnTrustedServer({adminSession,input,firestore
  await firestore.runTransaction(async tx=>{
    const adminMembership=await tx.get(adminRef);
    const adminRecord=adminMembership.exists?adminMembership.data():null;
+   const canonicalAdmin=adminRecord && !Object.hasOwn(adminRecord,"roles") &&
+      adminRecord.role==="school_admin";
+   const legacyAdmin=adminRecord && !Object.hasOwn(adminRecord,"role") &&
+      Array.isArray(adminRecord.roles) &&
+      adminRecord.roles.includes("school_admin") &&
+      !adminRecord.roles.includes("viewer");
    if(!adminRecord || (Object.hasOwn(adminRecord,"uid") && adminRecord.uid!==adminSession.uid) ||
       (Object.hasOwn(adminRecord,"schoolId") && adminRecord.schoolId!==assignment.schoolId) ||
-      adminRecord.active!==true || !Array.isArray(adminRecord.roles) ||
-      !adminRecord.roles.includes("school_admin") || adminRecord.roles.includes("viewer"))
+      adminRecord.active!==true || !(canonicalAdmin||legacyAdmin))
      throw new Error("Active school admin membership required");
    const membership=await tx.get(memberRef);
    const member=membership.exists?membership.data():null;
+   // Canonical V47 has a single "teacher" role, with subject-specific
+   // permission enforced by the assignment record; never trust client roles.
+   const canonicalTeacher=member && !Object.hasOwn(member,"roles") &&
+      member.role==="teacher";
+   const legacyTeacher=member && !Object.hasOwn(member,"role") &&
+      Array.isArray(member.roles) && member.roles.includes(assignment.kind) &&
+      !member.roles.includes("viewer");
    if(!member || (Object.hasOwn(member,"uid") && member.uid!==assignment.uid) ||
       (Object.hasOwn(member,"schoolId") && member.schoolId!==assignment.schoolId) ||
-      member.active!==true || !Array.isArray(member.roles) ||
-      !member.roles.includes(assignment.kind) || member.roles.includes("viewer"))
+      member.active!==true || !(canonicalTeacher||legacyTeacher))
      throw new Error("Active teacher membership with matching role required");
    tx.set(assignmentRef,assignment);
  });
