@@ -13,7 +13,7 @@ function clearReview(msg=''){
 }
 function clearSession(){
  epoch++;actor=null;schoolId=null;clearReview('विद्यालय प्रशासकको सत्र प्रमाणित गर्न आवश्यक छ।');
- $('reviewArea').hidden=true;$('logout').disabled=true;
+ $('reviewArea').hidden=true;$('logout').disabled=true;$('schoolId').disabled=false;
 }
 const readDocument=async path=>{
  const snap=await api.getDoc(api.doc(db,...path.split('/')));
@@ -55,7 +55,7 @@ $('login').onclick=async()=>{
   await reverifyAdmin(user.uid,id);
   if(current!==epoch||id!==$('schoolId').value.trim())throw Error('School selection changed');
   actor={uid:user.uid,role:'school_admin',active:true,schoolId:id};
-  schoolId=id;if(!existing)startVerifiedSchoolActivity();
+  schoolId=id;$('schoolId').disabled=true;if(!existing)startVerifiedSchoolActivity();
   $('reviewArea').hidden=false;$('logout').disabled=false;
   $('adminBack').href='./school-admin.html?schoolId='+encodeURIComponent(id);
   status('School Admin verified for school '+id+'. Reviews are read-only.');
@@ -81,7 +81,7 @@ $('review').onclick=async()=>{
   subjectId:$('subjectId').value.trim(),examId:$('examId').value
  };
  const check=()=>{
-  if(current!==epoch||request!==requestId||actor!==selected||schoolId!==id||
+  if(current!==epoch||request!==requestId||actor!==selected||schoolId!==id||$('schoolId').value.trim()!==id||
    auth?.currentUser?.uid!==selected.uid||
    Object.entries(selection).some(([field,value])=>$(field).value.trim()!==value))
    throw Error('Login or selection changed; reload Draft');

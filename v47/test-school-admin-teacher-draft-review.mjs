@@ -100,6 +100,16 @@ for(const mutation of [
  // Never claim a successful review when its revision changes during verification.
  await assert.rejects(loadSchoolAdminTeacherDraftReview(f.args));
 }
+{
+ let seenDraft=false;
+ const f=fixture({afterRead:({ref,data})=>{
+  if(ref===draftPath&&!seenDraft){
+   seenDraft=true;data.get(assignmentPath).active=false;
+  }
+ }});
+ await assert.rejects(loadSchoolAdminTeacherDraftReview(f.args),
+  /assignment|Teacher|inactive|revoked/i);
+}
 const html=readFileSync(new URL('./teacher-draft-review.html',import.meta.url),'utf8');
 const ui=readFileSync(new URL('./teacher-draft-review-console.mjs',import.meta.url),'utf8');
 const schoolAdminHtml=readFileSync(new URL('./school-admin.html',import.meta.url),'utf8');
@@ -108,6 +118,8 @@ assert.match(html,/read-only/);
 assert.match(html,/id="reviewRows"/);
 assert.match(ui,/loadSchoolAdminTeacherDraftReview/);
 assert.match(ui,/enforceSchoolIdle/);
+assert.match(ui,/\$\('schoolId'\)\.disabled=true/);
+assert.match(ui,/\$\('schoolId'\)\.value\.trim\(\)!==id/);
 assert.doesNotMatch(ui,/\.(?:setDoc|updateDoc|addDoc|deleteDoc|runTransaction)\s*\(/);
 assert.match(schoolAdminHtml,/teacher-draft-review\.html/);
 assert.match(index,/data-required-role="school_admin"[^>]*href="\.\/teacher-draft-review\.html"/);
