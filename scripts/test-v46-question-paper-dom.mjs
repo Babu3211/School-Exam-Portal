@@ -62,7 +62,7 @@ const make=(overrides={})=>{
   'schoolHeader','gradeNumber','renderPaperPreview','message','selectedClass',
   'selectedSubject','selectedSection','questionDataLoadEpoch',
   'verifiedQuestionSelection','questionRows','bundledPracticeQuestions',
-  'currentBlueprint','auth','blueprintRows','cognitiveMarkDistribution'];
+  'currentBlueprint','auth','blueprintRows','cognitiveMarkDistribution','savedPapers'];
  const fn=new Function(...params,'let generatedPaper=null,lastAutoSignature=null;\n'+
   code('function updateAutoReviewActions()','function renderPaperPreview(')+
   code('function blueprintForFullMarks(','async function generateSmartPaper()')+
@@ -73,12 +73,20 @@ const make=(overrides={})=>{
   props.schoolHeader,v=>Number(String(v).match(/[0-9]+/)?.[0]||0),
   ()=>{},msg=>{lastMessage=msg},
   'Class 10','Science and Technology','A',props.questionDataLoadEpoch,
-  props.verifiedQuestionSelection,[],bank.questions,null,props.auth,[],cognitiveMarkDistribution);
+  props.verifiedQuestionSelection,[],bank.questions,null,props.auth,[],cognitiveMarkDistribution,props.savedPapers||[]);
 };
 const live=make();
 await live.run();
 const paper=live.getPaper();
 assert.ok(paper);
+// A fresh session must not regenerate question IDs that were already saved.
+const samePaperHistory={
+ className:'Class 10',subject:'Science and Technology',section:'A',fullMarks:3,
+ questions:paper.questions.map(q=>({questionId:q.questionId}))
+};
+await assert.rejects(()=>make({savedPapers:[samePaperHistory]}).run(),
+ /different question paper|No different|alternatives|question bank/i);
+await make({savedPapers:[{...samePaperHistory,className:'Class 9'}]}).run();
 assert.equal(paper.questions.length,3);
 assert.equal(paper.questions.reduce((n,q)=>n+Number(q.marks),0),3);
 assert.equal(new Set(paper.questions.map(q=>q.topicName)).size,3);
