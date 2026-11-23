@@ -21,7 +21,24 @@ assert.match(rules,/data\.practical <= 100/);
 assert.match(rules,/teacherMarkAllowed\(sid, id\)/);
 assert.match(rules,/teacherAttendanceAllowed\(sid, id\)/);
 assert.match(rules,/allow delete: if false;/);
-assert.ok(rules.length<34000,'Unexpected Firestore rules expansion');
+// Added one small, explicit teacher-only draft collection. Keep a strict size
+// ceiling AND require its role, assignment and publication isolation guards.
+assert.ok(rules.length<40000,'Unexpected Firestore rules expansion');
+const teacherDraftBlock=rules.split('match /teacher_mark_drafts/{teacherUid} {')[1]?.split('      // Complete-class DRAFT only.')[0]??'';
+assert.ok(teacherDraftBlock.length>1500&&teacherDraftBlock.length<7000,
+ 'Exactly one bounded teacher-only class draft block required');
+for(const guard of [
+ "memberRole(sid, 'teacher')",
+ 'request.auth.uid == teacherUid',
+ "d.format == 'smss-v47-teacher-class-draft-v1'",
+ "d.state == 'draft'",
+ "get(assignment).data.get('active',false) == true",
+ "get(config).data.get('active',false) == true",
+ "request.resource.data.revision == resource.data.get('revision',0) + 1",
+ 'allow delete: if false;'
+])assert.ok(teacherDraftBlock.includes(guard),'Teacher Draft rule missing '+guard);
+assert.equal((rules.match(/match \/teacher_mark_drafts\/\{teacherUid\}/g)||[]).length,1,
+ 'Teacher class draft path must not be duplicated');
 assert.equal((rules.match(/match \/class_mark_drafts\/\{id\}/g)||[]).length,1,
   'Exactly one bounded non-official draft collection required');
 assert.match(rules,/request\.resource\.data\.revision == resource\.data\.get\('revision', 0\) \+ 1/,
