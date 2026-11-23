@@ -44,6 +44,7 @@ const prelude=[
  "const $=id=>doc.getElementById(id);",
  "const roleCanTeach=allow,selectedTopicIds=()=>topics;",
  "const inspectCdcOptionalMathPaper=inspection,schoolHeader=header;",
+ "const originalOptionalMathPracticeBank=offlineBank;",
  "const gradeNumber=s=>Number(String(s).match(/[0-9]+/)?.[0]||0);",
  "const auth={currentUser:{uid:'teacher-fixture'}};",
  "let selectedClass='Class 9',selectedSubject='Optional Mathematics',selectedSection='A';",
@@ -56,7 +57,7 @@ const prelude=[
  "const message=msg=>logs.push(msg);"
 ].join('\n')+'\n';
 const factory=new Function('doc','allow','topics','inspection','header','logs',
- 'guide',prelude+liveFunction+
+ 'guide','offlineBank',prelude+liveFunction+
  'return {run:()=>generateOptionalMathCompositePaper(guide),'+
  'getPaper:()=>generatedPaper,signature:()=>lastAutoSignature,'+
  'counters:()=>[renderCount,reviewCount],'+
@@ -70,7 +71,8 @@ function make(options={}){
  let resolveHeader;
  const header=options.delayed?()=>new Promise(resolve=>{resolveHeader=resolve;}):
   async()=>({schoolName:'Test School',schoolAddress:'Nepal'});
- const api=factory(doc,options.allow||(()=>true),topics,inspect,header,logs,guide);
+ const api=factory(doc,options.allow||(()=>true),topics,inspect,header,logs,guide,
+  ()=>({questions:[]}));
  return {...api,inspections,logs,doc,
   finish:()=>resolveHeader?.({schoolName:'Test School',schoolAddress:'Nepal'})};
 }
