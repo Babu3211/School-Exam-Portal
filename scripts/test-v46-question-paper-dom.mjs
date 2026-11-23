@@ -162,6 +162,22 @@ const pack=JSON.parse(readFileSync(new URL('../data/cdc-grade10-science-practice
 assert.equal(/[\u0D00-\u0D7F]/.test(JSON.stringify(pack)),false,'No Malayalam-script typo in Nepali source');
 const translated=JSON.parse(readFileSync(new URL('../data/cdc-science-bilingual-mcq-v1.json',import.meta.url),'utf8'));
 const bank=readBundledScienceBank(pack,{grade:10,subject:'Science and Technology',bilingual:translated.translations});
+// Existing Excel bank rows must reuse the official CDC topic checkbox ID.
+const compUnit={id:'cdc_official_computer_g9_u1',unitCode:'1',
+ unitTitle:'Computer System',topics:['Computer System']};
+const importedComputerQuestions=[{id:'q-existing',topicId:'custom_old',
+ unitCode:'1',unitTitle:'Computer System',topicName:'Computer System',
+ questionText:'प्रश्न'}];
+const computerTopicMapping=new Function('$','esc','normal','curriculumRows',
+ 'bundledPracticeUnits','bundledPracticeQuestions','questionRows',
+ code('function renderTopics() {','function renderQuestionRows() {')+
+ 'renderTopics();return questionRows;')(
+ $,escape,normal,[],[compUnit],[],importedComputerQuestions);
+assert.equal(computerTopicMapping[0].topicId,'cdc_official_computer_g9_u1_0',
+ 'An imported bank question must use the official CDC unit checkbox ID');
+assert.equal(importedComputerQuestions[0].topicId,'custom_old',
+ 'The mapping must not modify existing saved Firestore question rows');
+
 const renderTopics=new Function('$','esc','normal','curriculumRows',
  'bundledPracticeUnits','bundledPracticeQuestions','questionRows',
  code('function renderTopics() {','function renderQuestionRows() {')+
