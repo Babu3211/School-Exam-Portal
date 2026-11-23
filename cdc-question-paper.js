@@ -548,8 +548,9 @@ async function saveBlueprint(event) {
   validateExactCdcUnitGrid({
     fullMarks,pattern,unitGrid,sourceUrl,
     curriculumVersion:$("qpBpVersion").value.trim(),
-    verifiedBy:auth.currentUser.uid
-  },fullMarks);
+    verifiedBy:auth.currentUser.uid,gradeNumber:gradeNumber(selectedClass),
+    subject:selectedSubject,cognitiveDistribution:distribution
+  },fullMarks,{gradeNumber:gradeNumber(selectedClass),subject:selectedSubject});
   const subjectHash=Array.from(normal(selectedSubject)).reduce((hash,ch)=>(hash*31+ch.charCodeAt(0))>>>0,7).toString(36);
   // Keep separate CDC grids per full mark; never overwrite old V46 records.
   const id="g"+gradeNumber(selectedClass)+"_s"+subjectHash+"_m"+fullMarks;
@@ -671,7 +672,8 @@ async function generateSmartPaper(){
  const planned=buildAutomaticQuestionPaper({
   questions:[...questionRows,...bundledPracticeQuestions],
   topicIds,fullMarks:target,language,
-  blueprint:selectedBlueprint,requireExactGrid:strict,previousSignature
+  blueprint:selectedBlueprint,requireExactGrid:strict,previousSignature,
+  gradeNumber:gradeNumber(selectedClass),subject:selectedSubject
  });
  const header=await schoolHeader();
  // A slow school-profile read must not allow an earlier class, subject, user,
