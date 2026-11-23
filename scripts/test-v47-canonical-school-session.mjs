@@ -16,7 +16,8 @@ const docs=new Map([
  [root,{id:sid,active:true}],
  [root+'/members/'+uid,{uid,schoolId:sid,active:true,role:'school_admin'}],
  [root+'/members/'+tid,{uid:tid,schoolId:sid,active:true,role:'teacher'}],
- [root+'/members/viewer1',{uid:'viewer1',schoolId:sid,active:true,role:'viewer'}]
+ [root+'/members/viewer1',{uid:'viewer1',schoolId:sid,active:true,role:'viewer'}],
+ [root+'/subjects/computer',{schoolId:sid,class:'9',name:'Computer',active:true}]
 ]);
 const firestore={
  doc:path=>({path,get:async()=>({exists:docs.has(path),data:()=>structuredClone(docs.get(path))})}),
@@ -45,15 +46,31 @@ assert.equal(mayAccessSchool({...viewer,active:true},sid,'read'),true);
 assert.equal(mayAccessSchool({...viewer,active:true},sid,'write'),false);
 
 const input={schoolId:sid,teacherUid:tid,classId:'9',subjectId:'computer',
- kind:'subject_teacher',terms:['first','final']};
+ kind:'subject_teacher',terms:['1st','final']};
 const created=await assignTeacherOnTrustedServer({adminSession:admin,input,firestore});
 assert.equal(created.schoolId,sid);
-assert.equal(docs.get(root+'/assignments/'+created.id).uid,tid);
+assert.equal(created.id,sid+':'+tid+':9:computer');
+assert.equal(created.active,false);
+assert.equal(docs.get(root+'/teacher_assignments/'+created.id).uid,tid);
+assert.equal(docs.get(root+'/teacher_assignments/'+created.id).active,false);
+assert.equal(docs.has(root+'/assignments/'+tid+'_9_computer'),false);
+await assert.rejects(assignTeacherOnTrustedServer({adminSession:admin,input,firestore}),/already exists/);
 await assert.rejects(assignTeacherOnTrustedServer({adminSession:teacher,input,firestore}),/school admin/);
 await assert.rejects(assignTeacherOnTrustedServer({adminSession:viewer,input,firestore}),/school admin/);
 await assert.rejects(assignTeacherOnTrustedServer({adminSession:admin,input:{...input,schoolId:'87654321'},firestore}),/school admin/);
 
 const adminPath=root+'/members/'+uid;
+// Canonical subject must belong to this same school/class and remain active.
+docs.delete(root+'/teacher_assignments/'+created.id);
+docs.get(root+'/subjects/computer').active=false;
+await assert.rejects(assignTeacherOnTrustedServer({adminSession:admin,input,firestore}),/Active scoped subject/);
+docs.get(root+'/subjects/computer').active=true;
+const attendanceDuty=await assignTeacherOnTrustedServer({adminSession:admin,input:{
+  schoolId:sid,teacherUid:tid,classId:'9',kind:'class_teacher',terms:['1st']
+},firestore});
+assert.equal(attendanceDuty.subjectId,'attendance');
+assert.equal(attendanceDuty.active,false);
+assert.ok(docs.has(root+'/teacher_assignments/'+sid+':'+tid+':9:attendance'));
 docs.set(adminPath,{...docs.get(adminPath),active:false});
 await assert.rejects(login(uid),/No active membership/);
 await assert.rejects(assignTeacherOnTrustedServer({adminSession:admin,input,firestore}),/admin membership/);
