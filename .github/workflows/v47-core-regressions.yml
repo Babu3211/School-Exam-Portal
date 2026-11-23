@@ -39,6 +39,7 @@ jobs:
           npm run test:v47:marks-save
           node v47/test-save-verified-class-draft.mjs
           node v47/test-verified-teacher-class-draft.mjs
+          node v47/test-teacher-assigned-class-ui.mjs
           npm run test:v47:attendance-complete
           npm run test:v47:attendance-save
       - name: Student import and V46 parity
