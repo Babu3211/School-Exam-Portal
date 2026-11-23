@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v57-cdc-source-index-20261123';
+const CACHE_NAME = 'smss-pwa-v58-optional-math-composite-20261123';
 const APP_SHELL = [
   './',
   './index.html',
@@ -13,6 +13,8 @@ const APP_SHELL = [
   './cdc-question-excel.mjs',
   './cdc-verified-computer-grids.mjs',
   './cdc-optional-math-2082.mjs',
+  './cdc-optional-math-composite.mjs',
+  './cdc-optional-math-render.mjs',
   './cdc-grid-source-index.mjs',
   './data/cdc-question-paper-sources-2083.json',
   './data/cdc-science-bilingual-mcq-v1.json',
