@@ -27,3 +27,33 @@ export function prepareTeacherClassDraft({actor,schoolId,classId,subjectId,examI
  return Object.freeze({docId,data:Object.freeze(data),rosterCount:inspected.rosterCount,
   publicationAllowed:false,writeAuthorized:false});
 }
+
+export function verifyStoredTeacherClassDraft({actor,schoolId,classId,subjectId,examId,settings,expectedStudentIds,stored}){
+ if(!stored||typeof stored!=='object'||Array.isArray(stored))throw Error('Teacher Draft document required');
+ const keys=['format','state','schoolId','classId','subjectId','examId','settingsId',
+  'rosterCount','revision','updatedBy','updatedAt','entries'];
+ if(Object.keys(stored).sort().join(',')!==keys.sort().join(','))
+  throw Error('Unexpected Teacher Draft fields');
+ if(stored.format!==TEACHER_DRAFT_FORMAT||stored.state!=='draft'||
+  stored.schoolId!==schoolId||stored.classId!==classId||stored.subjectId!==subjectId||
+  stored.examId!==examId||stored.settingsId!==completeClassDraftId({classId,subjectId,examId})||
+  stored.updatedBy!==actor?.uid)
+  throw Error('Teacher Draft identity or school mismatch');
+ if(!Number.isSafeInteger(stored.revision)||stored.revision<1||
+  !Array.isArray(stored.entries)||stored.entries.length!==stored.rosterCount)
+  throw Error('Invalid Teacher Draft revision or roster count');
+ const drafts=stored.entries.map(row=>{
+  if(!row||typeof row!=='object'||Array.isArray(row)||
+   Object.keys(row).sort().join(',')!=='isAbsent,studentId,totalObtained,values')
+   throw Error('Malformed Teacher Draft student row');
+  if(row.isAbsent===true&&row.values!==null)throw Error('Invalid absent Teacher Draft');
+  return {studentId:row.studentId,isAbsent:row.isAbsent,values:row.isAbsent?{}:row.values};
+ });
+ const reconstructed=prepareTeacherClassDraft({actor,schoolId,classId,subjectId,examId,
+  settings,expectedStudentIds,drafts,expectedRevision:stored.revision-1});
+ if(reconstructed.data.rosterCount!==stored.rosterCount||
+  JSON.stringify(reconstructed.data.entries)!==JSON.stringify(stored.entries))
+  throw Error('Teacher Draft stored totals, marks or roster altered');
+ return Object.freeze({revision:stored.revision,entries:Object.freeze(reconstructed.data.entries),
+  rosterCount:stored.rosterCount,previewOnly:true,publicationAllowed:false});
+}
