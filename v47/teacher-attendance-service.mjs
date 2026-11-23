@@ -25,7 +25,7 @@ export async function saveAssignedTeacherAttendance({db,api,actor,schoolId,input
  const assignmentRef=doc('teacher_assignments',teacherAttendanceAssignmentId({schoolId,uid:actor.uid,classId:entry.class}));
  const studentRef=doc('students',entry.studentId);
  const attendanceRef=doc('attendance',entry.date+'_'+entry.studentId);
- await api.runTransaction(db,async tx=>{
+ const corrected=await api.runTransaction(db,async tx=>{
   const [assignment,student,previous]=await Promise.all([tx.get(assignmentRef),tx.get(studentRef),tx.get(attendanceRef)]);
   check();
   if(!assignment.exists()||assignment.data().schoolId!==schoolId||assignment.data().uid!==actor.uid||assignment.data().classId!==entry.class||assignment.data().subjectId!=='attendance'||assignment.data().active!==true)throw new Error('Active teacher attendance assignment required');
@@ -49,6 +49,6 @@ export async function saveAssignedTeacherAttendance({db,api,actor,schoolId,input
   }
   return corrected;
  });
- check();
- return {id:entry.date+'_'+entry.studentId,...entry,schoolId};
+ // Do not turn a committed transaction into an apparent failure if auth changes after commit.
+ return {id:entry.date+'_'+entry.studentId,...entry,schoolId,corrected};
 }

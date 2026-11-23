@@ -107,12 +107,23 @@ for(const [label,block] of [['Raw marks',marksBlock],['Computer component marks'
 
 const attendanceBlock=rules.split('match /attendance/{id} {')[1]?.split(/\n\s*match \/[^\n]+\{/)[0]??'';
 assert.ok(attendanceBlock.includes("memberRole(sid, 'school_admin') && validAdminAttendance()"),'Attendance create must require school admin or assigned teacher');
-assert.ok(/allow update: if[\s\S]*?&& memberRole\(sid, 'school_admin'\);/.test(attendanceBlock),'Only school admin may update existing attendance');
+assert.ok(attendanceBlock.includes("(memberRole(sid, 'school_admin') || teacherAttendanceAllowed(sid, id))"),
+ 'Only School Admin or an actively assigned Teacher may correct existing presence');
+assert.ok(rules.includes('function teacherAttendanceAllowed(sid, id) {'),'Assignment helper required');
+const teacherDuty=rules.split('function teacherAttendanceAllowed(sid, id) {')[1]?.split('\n      }')[0]??'';
+for(const needed of [
+ "memberRole(sid, 'teacher')",
+ "request.resource.data.keys().hasOnly(['schoolId','studentId','class','date','present'])",
+ 'teacher_assignments/',
+ "get('active', false) == true",
+ "get('class', '') == request.resource.data.class"
+])assert.ok(teacherDuty.includes(needed),'Assigned Teacher correction missing '+needed);
 assert.ok(!/allow (?:create|update):[^;]*canAdmin\(sid\)/.test(attendanceBlock),'Super admin must not bypass attendance write policy');
 // Existing attendance must never be edited beyond the boolean present flag.
 // Check the full update predicate so a future refactor cannot silently permit
 // student/class/date reassignment or updates by other roles.
 const attendanceUpdate=attendanceBlock.match(/allow update: if ([\s\S]*?);/)?.[1]??'';
+assert.ok(attendanceUpdate.includes('teacherAttendanceAllowed(sid, id)'),'Teacher correction must have an assignment gate');
 for(const required of [
  'immutableSchool(sid)',
  "request.resource.data.diff(resource.data).affectedKeys().hasOnly(['present'])",

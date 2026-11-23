@@ -267,7 +267,13 @@ try{
  await assertSucceeds(admin.doc(teacherSubject).update({active:true}));
  await assertFails(teacher.doc('schools/300160001/attendance/2026-11-23_s1').set({date:'2026-11-23',studentId:'s1',class:'9',schoolId:'300160001',present:true}));
  await assertSucceeds(teacher.doc('schools/300160001/attendance/2026-11-23_s1').set({date:'2026-11-23',studentId:'s1',class:'1',schoolId:'300160001',present:true}));
- await assertFails(teacher.doc('schools/300160001/attendance/2026-11-23_s1').update({present:false})); // Only school admins may correct saved attendance
+ await assertSucceeds(teacher.doc('schools/300160001/attendance/2026-11-23_s1').update({present:false}));
+ await assertSucceeds(teacher.doc('schools/300160001/attendance/2026-11-23_s1').update({present:true}));
+ await assertFails(teacher.doc('schools/300160001/attendance/2026-11-23_s1').update({studentId:'anotherStudent'}));
+ await assertFails(teacher.doc('schools/300160001/attendance/2026-11-23_s1').update({class:'9'}));
+ await assertFails(teacher.doc('schools/300160001/attendance/2026-11-23_s1').update({date:'2026-11-24'}));
+ await assertFails(teacher.doc('schools/300160001/attendance/2026-11-23_s1').update({schoolId:'300160002'}));
+ await assertFails(teacher.doc('schools/300160001/attendance/2026-11-23_s1').update({extra:'forbidden'}));
  await assertFails(teacher.doc('schools/300160001/attendance/2026-11-23_s1').delete());
  await assertFails(teacher.doc('schools/300160001/marks/2nd:s1:math').set({schoolId:'300160001',studentId:'s1',subjectId:'math',class:'1',term:'2nd',theory:30,practical:10}));
  await assertFails(teacher.doc('schools/300160001/marks/2nd:s1:math').update({theory:35}));
@@ -275,6 +281,7 @@ try{
  await assertFails(teacher.doc('schools/300160002/attendance/2026-11-23_s1').set({date:'2026-11-23',studentId:'s1',class:'1',schoolId:'300160001',present:true}));
  await assertFails(teacher.doc('schools/300160002/marks/2nd:s1:math').set({studentId:'s1',subjectId:'math',class:'1',term:'2nd',theory:30,practical:10}));
  await assertSucceeds(admin.doc(teacherClass).update({active:false}));
+ await assertFails(teacher.doc('schools/300160001/attendance/2026-11-23_s1').update({present:false}));
  await assertFails(teacher.doc('schools/300160001/attendance/2026-11-24_s1').set({date:'2026-11-24',studentId:'s1',class:'1',schoolId:'300160001',present:true}));
  await assertSucceeds(admin.doc(teacherSubject).update({active:false}));
  await assertFails(teacher.doc('schools/300160001/marks/final:s1:math').set({studentId:'s1',subjectId:'math',class:'1',term:'final',theory:30,practical:10}));

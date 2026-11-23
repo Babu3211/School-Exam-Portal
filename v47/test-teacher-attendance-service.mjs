@@ -28,6 +28,7 @@ assert.equal(teacherAttendanceAssignmentId({schoolId,uid,classId:'9'}),'12345678
  const {api,writes}=mock();
  const result=await saveAssignedTeacherAttendance({db:{},api,actor,schoolId,input});
  assert.equal(result.id,'2026-11-18_s1');
+ assert.equal(result.corrected,false);
  assert.equal(writes.length,1);
  assert.equal(writes[0][1].schoolId,schoolId);
 }
@@ -39,6 +40,7 @@ assert.equal(teacherAttendanceAssignmentId({schoolId,uid,classId:'9'}),'12345678
  const {api,writes}=mock({[key]:prior});
  const result=await saveAssignedTeacherAttendance({db:{},api,actor,schoolId,input});
  assert.equal(result.present,true);
+ assert.equal(result.corrected,true);
  assert.equal(writes.length,1);
  assert.equal(writes[0][0],key);
  assert.deepEqual(writes[0][1],{...prior,present:true});
@@ -61,7 +63,7 @@ for(const invalid of [
  }});
  const before=api.runTransaction;
  api.runTransaction=(db,cb)=>before(db,async tx=>{
-  const original=tx.get;tx.get=async ref=>{reads++;const result=await original(ref);if(reads===1)uid='different-account';return result};
+  const original=tx.get;tx.get=async ref=>{const n=++reads;const result=await original(ref);if(n===1)uid='different-account';return result};
   return cb(tx);
  });
  await assert.rejects(saveAssignedTeacherAttendance({
