@@ -45,6 +45,16 @@ assert.equal(teacherAttendanceAssignmentId({schoolId,uid,classId:'9'}),'12345678
  assert.equal(writes[0][0],key);
  assert.deepEqual(writes[0][1],{...prior,present:true});
 }
+// An inactive former student must also be rejected on the correction path.
+// The transaction must not mutate the previously persisted attendance row.
+{
+ const prior={schoolId,studentId:'s1',class:'9',date:'2026-11-18',present:false};
+ const {api,writes}=mock({'students/s1':{schoolId,class:'9',active:false},
+  'attendance/2026-11-18_s1':prior});
+ await assert.rejects(saveAssignedTeacherAttendance({db:{},api,actor,schoolId,input}),/inactive/);
+ assert.equal(writes.length,0);
+}
+
 for(const invalid of [
  {schoolId:'87654321',studentId:'s1',class:'9',date:'2026-11-18',present:false},
  {schoolId,studentId:'s2',class:'9',date:'2026-11-18',present:false},
@@ -83,6 +93,7 @@ for(const [overrides,pattern] of [
  [{'students/s1':null},/Student missing/],
  [{'students/s1':{schoolId:'87654321',class:'9'}},/Student missing/],
  [{'students/s1':{schoolId,class:'8'}},/Student missing/],
+ [{'students/s1':{schoolId,class:'9',active:false}},/Student missing/],
  [{'attendance/2026-11-18_s1':{schoolId}},/Existing attendance/]
  ]){
  const {api,writes}=mock(overrides);

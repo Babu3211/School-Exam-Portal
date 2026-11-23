@@ -29,7 +29,7 @@ export async function saveAssignedTeacherAttendance({db,api,actor,schoolId,input
   const [assignment,student,previous]=await Promise.all([tx.get(assignmentRef),tx.get(studentRef),tx.get(attendanceRef)]);
   check();
   if(!assignment.exists()||assignment.data().schoolId!==schoolId||assignment.data().uid!==actor.uid||assignment.data().classId!==entry.class||assignment.data().subjectId!=='attendance'||assignment.data().active!==true)throw new Error('Active teacher attendance assignment required');
-  if(!student.exists()||student.data().schoolId!==schoolId||student.data().class!==entry.class)throw new Error('Student missing or belongs to another school/class');
+  if(!student.exists()||student.data().schoolId!==schoolId||student.data().class!==entry.class||student.data().active===false)throw new Error('Student missing, inactive or belongs to another school/class');
   check();
   let corrected=false;
   if(previous.exists()){
