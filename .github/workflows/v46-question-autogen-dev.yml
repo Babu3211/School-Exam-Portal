@@ -10,6 +10,8 @@ on:
       - 'cdc-verified-computer-grids.mjs'
       - 'cdc-optional-math-2082.mjs'
       - 'cdc-optional-math-composite.mjs'
+      - 'cdc-optional-math-original-practice.mjs'
+      - 'scripts/test-cdc-optional-math-original-practice.mjs'
       - 'cdc-optional-math-render.mjs'
       - 'scripts/test-cdc-optional-math-composite.mjs'
       - 'scripts/test-v46-optional-math-ui.mjs'
@@ -53,6 +55,8 @@ jobs:
           node --check cdc-verified-computer-grids.mjs
           node --check cdc-optional-math-2082.mjs
           node --check cdc-optional-math-composite.mjs
+          node --check cdc-optional-math-original-practice.mjs
+          node --check scripts/test-cdc-optional-math-original-practice.mjs
           node --check cdc-optional-math-render.mjs
           node --check scripts/test-cdc-optional-math-composite.mjs
           node --check scripts/test-v46-optional-math-ui.mjs
@@ -73,6 +77,8 @@ jobs:
         run: node scripts/test-cdc-question-excel.mjs
       - name: Verify automatic CDC Grid source detection for Grade 6-10 subjects
         run: node scripts/test-cdc-grid-source-index.mjs
+      - name: Verify 54 original bilingual formula-checked Optional Maths practice questions
+        run: node scripts/test-cdc-optional-math-original-practice.mjs
       - name: Test composite 2082 Optional Mathematics WCA CCA paper solver
         run: node scripts/test-cdc-optional-math-composite.mjs
       - name: Verify CDC Grade 9 and 10 Optional Mathematics grouped 2082 grid
