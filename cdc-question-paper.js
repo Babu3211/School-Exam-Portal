@@ -1,5 +1,5 @@
 import { getApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
-import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSubject,supportsQuestionLanguage} from "./cdc-question-autogen.mjs";
+import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSubject,supportsQuestionLanguage,cognitiveMarkDistribution} from "./cdc-question-autogen.mjs";
 import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
 import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
@@ -348,7 +348,7 @@ function renderPaperPreview(paper = generatedPaper) {
   const groups = ["mcq","short","long"];
   let number = 0;
   const report=paper.qualityReport||null;
-  const reportHtml=report?'<div class="qp-hint" style="border:1px solid #dce5f1;border-radius:8px;padding:9px;margin-bottom:10px"><b>शिक्षक समीक्षा:</b> '+esc(report.questionCount)+' प्रश्न · '+esc(report.selectedTopicCount)+' Topic · '+esc(report.missingAnswerCount)+' प्रश्नमा उत्तर संकेत बाँकी। संज्ञानात्मक वितरण: '+Object.entries(report.cognitiveActual||{}).map(([k,v])=>esc(levelLabel(k))+' '+esc(v)+'%').join(' · ')+'</div>':"";
+  const reportHtml=report?'<div class="qp-hint" style="border:1px solid #dce5f1;border-radius:8px;padding:9px;margin-bottom:10px"><b>शिक्षक समीक्षा:</b> '+esc(report.questionCount)+' प्रश्न · '+esc(report.selectedTopicCount)+' Topic · '+esc(report.missingAnswerCount)+' प्रश्नमा उत्तर संकेत बाँकी। संज्ञानात्मक अङ्कभार: '+Object.entries(report.cognitiveActual||{}).map(([k,v])=>esc(levelLabel(k))+' '+esc(Math.round(Number(v)*100)/100)+'%').join(' · ')+'</div>':"";
   const audit=paper.questions.map((q,index)=>({index:index+1,...q.gridEvidence}))
     .filter(q=>q.unitCode&&q.questionId);
   const gridAuditHtml=audit.length?
@@ -668,16 +668,14 @@ async function generatePaper() {
   const questions=allocateQuestions();
   const fullMarks=Number($("qpPaperFullMarks").value);
   const header=await schoolHeader();
-  const levelCounts={knowledge:0,understanding:0,application:0,higher:0};
   const topicCounts={};
   let missingAnswerCount=0;
   for(const q of questions){
-    if(levelCounts[q.cognitiveLevel]!==undefined)levelCounts[q.cognitiveLevel]++;
     topicCounts[q.topicName]=(topicCounts[q.topicName]||0)+1;
     if(!String(q.answer||"").trim()&&!q.correctOption)missingAnswerCount++;
   }
   const totalQuestions=questions.length;
-  const cognitiveActual=Object.fromEntries(Object.entries(levelCounts).map(([key,count])=>[key,totalQuestions?Math.round(count*100/totalQuestions):0]));
+  const cognitiveActual=cognitiveMarkDistribution(questions,fullMarks);
   generatedPaper={
     ...header,gradeNumber:gradeNumber(selectedClass),className:selectedClass,subject:selectedSubject,section:selectedSection,
     qualityReport:{questionCount:totalQuestions,topicCounts,cognitiveActual,missingAnswerCount,selectedTopicCount:selectedTopicIds().length},
@@ -780,13 +778,11 @@ async function generateSmartPaper(){
    Number($("qpPaperDuration").value)!==durationMinutes||
    JSON.stringify(selectedTopicIds())!==JSON.stringify(topicIds))
   throw Error("प्रश्नपत्र बनाउँदा Login, कक्षा वा छनोट परिवर्तन भयो। पुनः Generate गर्नुहोस्।");
- const topicCounts={},levels={knowledge:0,understanding:0,application:0,higher:0};
+ const topicCounts={};
  for(const q of planned.questions){
   topicCounts[q.topicName]=(topicCounts[q.topicName]||0)+1;
-  levels[q.cognitiveLevel]++;
  }
- const cognitiveActual=Object.fromEntries(Object.entries(levels)
-  .map(([k,count])=>[k,Math.round(100*count/planned.questionCount)]));
+ const cognitiveActual=cognitiveMarkDistribution(planned.questions,target);
  generatedPaper={
   ...header,gradeNumber:gradeNumber(selectedClass),className:selectedClass,
   subject:selectedSubject,section:selectedSection,
