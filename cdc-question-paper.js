@@ -2,6 +2,7 @@ import { getApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.j
 import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSubject,isQuestionReadyForLanguage,cognitiveMarkDistribution} from "./cdc-question-autogen.mjs";
 import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
 import {getBundledComputerGrid,bundledComputerUnitTopics} from "./cdc-verified-computer-grids.mjs";
+import {findCdcGridSources} from "./cdc-grid-source-index.mjs";
 import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-math-2082.mjs";
 import {QUESTION_EXCEL_FIELDS,parseQuestionExcelSheet,CDC_GRID_EXCEL_FIELDS,parseCdcGridExcelSheet} from "./cdc-question-excel.mjs";
 import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
@@ -462,6 +463,29 @@ async function loadBundledPracticeBank({grade,subject}){
  }
 }
 
+// Static CDC source index: read-only and cached per page. No Firestore writes,
+// Excel template or teacher re-entry required. If unavailable, do not block
+// access to an already saved question bank or a verified bundled blueprint.
+let cdcGridSourceRequest=null;
+async function loadCdcGridSourceRegister(){
+ if(!cdcGridSourceRequest)cdcGridSourceRequest=fetch(
+  "./data/cdc-question-paper-sources-2083.json",{cache:"force-cache"})
+  .then(response=>{
+   if(!response.ok)throw Error("CDC स्रोत सूची उपलब्ध छैन");
+   return response.json();
+  })
+  .then(index=>{
+   if(index?.schemaVersion!==1||!Array.isArray(index.sources))
+    throw Error("CDC स्रोत सूचीको संरचना मिलेन");
+   return index;
+  })
+  .catch(error=>{
+   console.warn("CDC source register unavailable",error);
+   cdcGridSourceRequest=null;
+   return null;
+  });
+ return cdcGridSourceRequest;
+}
 async function loadCurrentData() {
  if(!selectedClass||!selectedSubject)return;
  const request=++questionDataLoadEpoch,className=selectedClass,
@@ -470,14 +494,15 @@ async function loadCurrentData() {
  const stillCurrent=()=>request===questionDataLoadEpoch&&
   selectedClass===className&&selectedSubject===subject&&selectedSection===section;
  const grade=gradeNumber(className);
- const [curr,questions,blueprints,bundled]=await Promise.all([
+ const [curr,questions,blueprints,bundled,cdcSourceRegister]=await Promise.all([
   getDocs(query(collection(db,"cdc_curriculum"),
    where("gradeNumber","==",grade),where("subject","==",subject))),
   getDocs(query(collection(db,"question_bank"),
    where("className","==",className),where("subject","==",subject),where("section","==",section))),
   getDocs(query(collection(db,"cdc_blueprints"),
    where("gradeNumber","==",grade),where("subject","==",subject))),
-  loadBundledPracticeBank({grade,subject})
+  loadBundledPracticeBank({grade,subject}),
+  loadCdcGridSourceRegister()
  ]);
  // Source-specific asynchronous requests cannot overwrite another class.
  if(!stillCurrent())return;
@@ -517,15 +542,33 @@ async function loadCurrentData() {
   pdfSource.replaceChildren();
   const officialSource=officialComputerGrid?.originalGovernmentPdf?
    officialComputerGrid:officialOptionalMathGuide;
+  const sources=findCdcGridSources(cdcSourceRegister,grade,subject).slice(0,4);
+  const heading=document.createElement("span");
   if(officialSource?.sourceUrl){
-   const link=document.createElement("a");
-   link.href=officialSource.sourceUrl;link.target="_blank";
-   link.rel="noopener noreferrer";
-   link.textContent="कक्षा "+grade+
-    (officialComputerGrid?" कम्प्युटर विज्ञान":" ऐच्छिक गणित")+
-    " — मूल CDC विशिष्टीकरण PDF हेर्नुहोस्";
-   pdfSource.appendChild(link);
+   heading.textContent="CDC मूल तालिकाबाट विषयगत ढाँचा पहिल्यै सेट छ। ";
+  }else if(sources.length){
+   heading.textContent="CDC वेबसाइटमा यस विषयको Grid स्रोत भेटियो; पूरा Unit-wise अङ्कभार प्रणालीमा अझै प्रमाणित भएको छैन। ";
+  }else{
+   heading.textContent="यस विषयको मिल्ने CDC विशिष्टीकरण स्रोत सूचीमा छैन; अनुमानित Grid प्रयोग हुँदैन।";
   }
+  pdfSource.appendChild(heading);
+  // Prefer the already reviewed and preloaded government's original PDF
+  // for Computer Science and the separate WCA/CCA Optional Mathematics guide.
+  const urls=new Set();
+  const addLink=(url,label)=>{
+   if(typeof url!=="string"||!/^https:\/\/(?:giwmscdnone\.gov\.np|(?:www\.|lib\.)?moecdc\.gov\.np)\//i.test(url)||
+      urls.has(url))return;
+   urls.add(url);
+   const link=document.createElement("a");
+   link.href=url;link.target="_blank";link.rel="noopener noreferrer";
+   link.textContent=label;
+   link.style.marginRight="12px";
+   pdfSource.appendChild(link);
+  };
+  if(officialSource?.sourceUrl)addLink(officialSource.sourceUrl,
+   "मूल CDC "+(officialComputerGrid?"Computer Science":"Optional Mathematics")+" PDF");
+  sources.forEach((item,i)=>addLink(item.sourceUrl,
+   "CDC स्रोत "+(i+1)+" ("+item.gridVersion+")"));
  }
  // Generation must wait for saved-paper history to finish loading.
  // Otherwise a rapid click can repeat a paper from the previous session.
@@ -793,7 +836,7 @@ function updateAutoGridStatus(){
   el.textContent=grouped&&target===75?
    "मूल CDC २०८२ Grid स्वतः उपलब्ध: ११ Objective (११ अङ्क), १२ WCA (४० अङ्क), ४ CCA (२४ अङ्क), जम्मा ७५ अङ्क।"+
    " प्रत्येक संयुक्त प्रश्नमा २–४ उपप्रश्न चाहिन्छ। पुरानो Generator ले यो संरचना सुरक्षित रूपमा बनाउन नसक्ने भएकाले Exact मोड रोकिएको छ।":
-   target+" अंकको समीक्षा गरिएको CDC Unit-wise Grid छैन। Exact मोडमा प्रश्नपत्र रोकिन्छ।";
+   target+" अंकको मूल CDC Unit-wise Grid का सबै अङ्कभार पङ्क्ति प्रणालीमा अझै प्रमाणित छैनन्। गलत प्रश्नपत्र नबनोस् भनेर Exact मोड रोकिएको छ।";
   return;
  }
  try{
@@ -836,7 +879,7 @@ async function generateSmartPaper(){
   }))throw Error("CDC ऐच्छिक गणितको २०८२ Grid स्वतः सेट छ; तर WCA/CCA का २–४ उपप्रश्नको संयुक्त ढाँचा नबनी"+
   " MCQ/Short/Long बाट Exact प्रश्नपत्र बनाउनु गलत हुन्छ। अहिले सुरक्षित रूपमा रोकिएको छ।");
  if(strict&&!selectedBlueprint)
-  throw Error("यो कक्षा/विषय/पूर्णाङ्कको CDC Unit-wise Grid भेटिएन। Admin ले आधिकारिक Grid बाट सही विवरण राखेपछि मात्र Exact प्रश्नपत्र बनाउन सकिन्छ।");
+  throw Error("यस कक्षा/विषय/पूर्णाङ्कको मूल CDC Grid का सबै पङ्क्ति अझै प्रणालीमा प्रमाणित छैनन्। सही Grid नभई Exact प्रश्नपत्र बनाइँदैन।");
  const autoScope=JSON.stringify([selectedClass,selectedSubject,selectedSection,
   target,language,mode,topicIds.slice().sort(),selectedBlueprint?.id||""]);
  const previousSignature=lastAutoSignature?.scope===autoScope?lastAutoSignature.signature:"";
