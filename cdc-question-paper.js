@@ -872,6 +872,90 @@ function updateAutoGridStatus(){
  }
 }
 
+// The Grade 9/10 CDC 2082 Optional Math layout contains composite WCA
+// and CCA questions with 2–4 subparts, unlike the old MCQ/Short/Long engine.
+// All inputs below must be teacher-reviewed; a CDN grid alone is insufficient.
+async function generateOptionalMathCompositePaper(guide){
+ const selection=verifiedQuestionSelection,sessionUid=auth.currentUser?.uid,
+  className=selectedClass,subject=selectedSubject,section=selectedSection;
+ const topicIds=selectedTopicIds();
+ const target=Number($("qpPaperFullMarks").value),durationMinutes=Number($("qpPaperDuration").value);
+ const language=$("qpAutoLanguage").value,mode=$("qpAutoMode").value;
+ const paperTitle=$("qpPaperTitle").value.trim(),academicYear=$("qpPaperYear").value.trim();
+ if(!selection||selection.request!==questionDataLoadEpoch||
+    selection.className!==className||selection.subject!==subject||
+    selection.section!==section||!sessionUid||
+    !roleCanTeach(className,subject,section)||!topicIds.length||
+    target!==75||durationMinutes!==180||mode!=="cdc"||
+    !paperTitle||!academicYear)
+  throw Error("CDC ऐच्छिक गणितको कक्षा, विषय, चयन, ७५ अङ्क वा १८० मिनेट जाँच्नुहोस्।");
+ const scope=JSON.stringify([className,subject,section,target,language,mode,
+  guide.sourceVersion,topicIds.slice().sort()]);
+ const previousSignature=lastAutoSignature?.scope===scope?lastAutoSignature.signature:"";
+ const avoidSignatures=[...new Set(savedPapers.filter(p=>
+  p.className===className&&p.subject===subject&&p.section===section&&
+  p.questionFormat==="cdc_optional_math_composite"&&Number(p.fullMarks)===75)
+  .map(p=>Array.isArray(p.questions)&&p.questions.every(q=>q?.questionId)?
+   p.questions.map(q=>String(q.questionId)).sort().join("|"):"").filter(Boolean))].slice(0,30);
+ const proposed=inspectCdcOptionalMathPaper({
+  guide,questions:questionRows,selectedTopicIds:topicIds,language,
+  previousSignature,avoidSignatures,rng:Math.random,maxSearchVisits:120000
+ });
+ if(!proposed.ready){
+  const missing=proposed.areaRows.filter(row=>
+   row.objectiveAvailable<row.objectiveRequired||row.wcaAvailable<row.wcaRequired);
+  throw Error("CDC २०८२ ऐच्छिक गणित: समीक्षित संयुक्त प्रश्न बैंक अपूरो। "+
+   "CCA "+proposed.crossAvailable+"/4;"+
+   (missing.length?" Unit कमी: "+missing.map(x=>x.unitCode+
+    " (Objective "+x.objectiveAvailable+"/"+x.objectiveRequired+
+    ", WCA "+x.wcaAvailable+"/"+x.wcaRequired+")").join("; "):"")+
+   "। अपूरो प्रश्नपत्र बनाइँदैन।");
+ }
+ const header=await schoolHeader();
+ if(auth.currentUser?.uid!==sessionUid||verifiedQuestionSelection!==selection||
+    selection.request!==questionDataLoadEpoch||
+    selectedClass!==className||selectedSubject!==subject||selectedSection!==section||
+    !roleCanTeach(className,subject,section)||
+    $("qpAutoLanguage").value!==language||$("qpAutoMode").value!==mode||
+    Number($("qpPaperFullMarks").value)!==75||
+    Number($("qpPaperDuration").value)!==180||
+    $("qpPaperTitle").value.trim()!==paperTitle||
+    $("qpPaperYear").value.trim()!==academicYear||
+    JSON.stringify(selectedTopicIds())!==JSON.stringify(topicIds))
+  throw Error("प्रश्नपत्र बनाउँदा Login वा कक्षा/विषय/Topic परिवर्तन भयो। पुनः Generate गर्नुहोस्।");
+ generatedPaper={
+  ...header,gradeNumber:gradeNumber(className),className,subject,section,
+  paperTitle,academicYear,durationMinutes,fullMarks:75,
+  curriculumVersion:"CDC Optional Mathematics Specification Grid 2082",
+  questionFormat:"cdc_optional_math_composite",language,sourceUrl:guide.sourceUrl,
+  topicIds,blueprintId:null,cognitiveDistribution:guide.cognitiveDistribution,
+  qualityReport:{
+   questionCount:27,selectedTopicCount:topicIds.length,missingAnswerCount:0,
+   cognitiveActual:proposed.cognitiveMarks,exactGridMatched:true,
+   sourceUrl:guide.sourceUrl,gridVersion:guide.sourceVersion,
+   teacherReviewRequired:true
+  },
+  questions:proposed.questions.map((q,index)=>({
+   questionId:String(q.id),number:index+1,group:q.group,
+   contextNe:String(q.contextNe||""),contextEn:String(q.contextEn||""),
+   subquestions:q.subquestions.map(s=>({
+    unitCode:String(s.unitCode),marks:Number(s.marks),
+    cognitiveLevel:String(s.cognitiveLevel),
+    textNe:String(s.textNe||""),textEn:String(s.textEn||""),
+    answerNe:String(s.answerNe||""),answerEn:String(s.answerEn||""),
+    ...(Array.isArray(s.optionsNe)?{optionsNe:[...s.optionsNe]}:{}),
+    ...(Array.isArray(s.optionsEn)?{optionsEn:[...s.optionsEn]}:{})
+   }))
+  })),
+  createdBy:sessionUid
+ };
+ $("qpAutoReviewed").checked=false;
+ renderPaperPreview();
+ lastAutoSignature={scope,signature:proposed.signature};
+ updateAutoReviewActions();
+ message("CDC २०८२ ऐच्छिक गणित: २७ संयुक्त प्रश्न, ७५ अङ्क, सबै विषयक्षेत्र र संज्ञानात्मक वितरण मिल्यो।"+
+  " उत्तरकुञ्जिका शिक्षकले जाँचेर मात्र Save वा Print गर्नुहोस्।");
+}
 async function generateSmartPaper(){
  if(!verifiedQuestionSelection||verifiedQuestionSelection.request!==questionDataLoadEpoch||
   verifiedQuestionSelection.className!==selectedClass||
@@ -883,10 +967,12 @@ async function generateSmartPaper(){
  const topicIds=selectedTopicIds(),target=Number($("qpPaperFullMarks").value);
  const language=$("qpAutoLanguage").value,mode=$("qpAutoMode").value;
  const strict=mode==="cdc",selectedBlueprint=strict?blueprintForFullMarks(target):null;
- if(strict&&target===75&&getCdcOptionalMathGuide({
+ if(strict&&target===75){
+  const grouped=getCdcOptionalMathGuide({
    grade:gradeNumber(selectedClass),subject:selectedSubject
-  }))throw Error("CDC ऐच्छिक गणितको २०८२ Grid स्वतः सेट छ; तर WCA/CCA का २–४ उपप्रश्नको संयुक्त ढाँचा नबनी"+
-  " MCQ/Short/Long बाट Exact प्रश्नपत्र बनाउनु गलत हुन्छ। अहिले सुरक्षित रूपमा रोकिएको छ।");
+  });
+  if(grouped)return generateOptionalMathCompositePaper(grouped);
+ }
  if(strict&&!selectedBlueprint)
   throw Error("यस कक्षा/विषय/पूर्णाङ्कको मूल CDC Grid का सबै पङ्क्ति अझै प्रणालीमा प्रमाणित छैनन्। सही Grid नभई Exact प्रश्नपत्र बनाइँदैन।");
  const autoScope=JSON.stringify([selectedClass,selectedSubject,selectedSection,
