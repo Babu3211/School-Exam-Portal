@@ -68,7 +68,7 @@ try{
   });
  const before=txWrites;
  assert.equal((await post({scope,confirmation,confirmStage:false})).status,400);
- assert.equal((await post({scope,confirmation,confirmStage:true,studentMarks:marks})).status,400);
+ assert.equal((await post({scope,confirmation,confirmStage:true,studentMarks:marks})).status,413,'Oversized browser marks payload rejected before parsing');
  assert.equal((await post({scope:{...scope,schoolId:'87654321'},confirmation,confirmStage:true})).status,403);
  assert.equal((await post(undefined,'viewer1')).status,403);
  assert.equal((await post(undefined,'revoked')).status,403);
