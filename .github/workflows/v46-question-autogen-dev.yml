@@ -33,6 +33,8 @@ jobs:
           node --check cdc-question-paper.js
           node --check cdc-question-autogen.mjs
           node --check scripts/test-cdc-question-autogen.mjs
+      - name: Install test-only dependencies
+        run: npm ci --no-audit --no-fund
       - name: Test original bank, full marks and bilingual correctness
         run: npm run test:question-paper
       - name: Test assigned teacher question-paper access

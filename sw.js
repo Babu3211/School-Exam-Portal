@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v52-backup-preview-20261122';
+const CACHE_NAME = 'smss-pwa-v53-question-autogen-review-20261123';
 const APP_SHELL = [
   './',
   './index.html',
@@ -9,6 +9,8 @@ const APP_SHELL = [
   './iemis-ledger.js?v=20261115-class6-ledger',
   './iemis-entry.js?v=20261122-viewer-readonly',
   './cdc-question-paper.js',
+  './cdc-question-autogen.mjs',
+  './data/cdc-science-bilingual-mcq-v1.json',
   './data/cdc-grade8-science-practice-pack-v1.json',
   './data/cdc-grade10-science-practice-pack-v1.json',
   './manifest.webmanifest',

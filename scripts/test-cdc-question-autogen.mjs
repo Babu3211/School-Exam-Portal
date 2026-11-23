@@ -70,3 +70,18 @@ assert.throws(()=>buildAutomaticQuestionPaper({questions:[],topicIds:['topic'],
 assert.equal(supportsQuestionLanguage({questionText:'परिकल्पना के हो?'},'en'),false);
 assert.equal(supportsQuestionLanguage({questionText:'Define force.'},'en'),true);
 console.log('PASS V46 original practice paper auto planner: Grades 8/10 25/50 marks, all topics, valid answer keys, exact reference-grid pattern, language fails closed');
+
+const page=readFileSync(new URL('../cdc-question-paper.js',import.meta.url),'utf8');
+const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
+for(const id of ['qpSmartGenerateBtn','qpAutoLanguage','qpTopicSelectAll','qpTopicClearAll','qpAutoSourceStatus'])
+ assert.ok(page.includes('id="'+id+'"'),'Missing auto builder control '+id);
+assert.match(page,/readBundledScienceBank\(/);
+assert.match(page,/buildAutomaticQuestionPaper\(/);
+assert.match(page,/async function generateSmartPaper\(/);
+assert.match(page,/async function loadBundledPracticeBank\(/);
+assert.match(page,/roleCanTeach\(selectedClass,selectedSubject,selectedSection\)/);
+assert.match(page,/teacherReviewRequired:true/);
+assert.match(page,/blueprintId:planned\.blueprintMatched/);
+assert.match(sw,/cdc-question-autogen\.mjs/);
+assert.match(sw,/cdc-science-bilingual-mcq-v1\.json/);
+console.log('PASS V46 Browser auto builder wiring, role-safety and offline packaging');
