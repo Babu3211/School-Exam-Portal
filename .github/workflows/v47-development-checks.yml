@@ -17,6 +17,9 @@ on:
       - '.github/workflows/v47-development-checks.yml'
 permissions:
   contents: read
+concurrency:
+  group: v47-development-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   v47-isolated-tests:
     runs-on: ubuntu-latest

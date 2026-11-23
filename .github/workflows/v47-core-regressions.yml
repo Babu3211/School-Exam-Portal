@@ -15,6 +15,9 @@ on:
       - '.github/workflows/v47-core-regressions.yml'
 permissions:
   contents: read
+concurrency:
+  group: v47-core-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   core-regressions:
     runs-on: ubuntu-latest

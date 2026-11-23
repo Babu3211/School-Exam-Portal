@@ -9,6 +9,9 @@ on:
       - 'scripts/test-v47-emulator-isolation.mjs'
       - '.github/workflows/v47-import-security.yml'
   workflow_dispatch:
+concurrency:
+  group: v47-import-security-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   import-security:
     runs-on: ubuntu-latest

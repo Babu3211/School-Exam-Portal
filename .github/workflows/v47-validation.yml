@@ -7,6 +7,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: v47-validation-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   v47-unit-and-syntax:
     runs-on: ubuntu-latest
