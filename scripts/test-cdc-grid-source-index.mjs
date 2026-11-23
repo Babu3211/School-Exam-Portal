@@ -16,7 +16,7 @@ const examples=[
  [9,'ऐच्छिक कम्प्युटर विज्ञान','optional_computer'],
  [10,'Optional Computer Science','optional_computer'],
  [10,'ऐच्छिक अर्थशास्त्र','optional_economics'],
- [10,'Health and Physical Education','health']
+
 ];
 for(const [grade,subject,key] of examples){
  assert.equal(cdcSubjectKey(subject),key,subject+' maps to CDC subject');
@@ -28,6 +28,9 @@ for(const [grade,subject,key] of examples){
  assert.equal(new Set(sources.map(x=>x.sourceUrl)).size,sources.length);
  assert.ok(sources.every(x=>/^https:\/\/(?:www\.|lib\.)?moecdc\.gov\.np\/|^https:\/\/giwmscdnone\.gov\.np\//i.test(x.sourceUrl)));
 }
+assert.equal(cdcSubjectKey('Health and Physical Education'),'health');
+assert.deepEqual(findCdcGridSources(register,10,'Health and Physical Education'),[],
+ 'The official health curriculum is NOT a specification Grid; do not label it as such');
 for(const grade of [9,10]){
  const computer=findCdcGridSources(register,grade,'Optional Computer Science');
  assert.ok(computer.some(x=>x.sourceUrl.startsWith('https://giwmscdnone.gov.np/')),
