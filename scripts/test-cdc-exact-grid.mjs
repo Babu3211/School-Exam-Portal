@@ -150,3 +150,33 @@ assert.throws(()=>buildAutomaticQuestionPaper({questions:mixedBank,
  language:'ne',blueprint:mixedBp,requireExactGrid:true,
  gradeNumber:8,subject:'Mathematics',rng}),/different subject/);
 console.log('PASS varied-mark CDC Grid slots, aggregate auto-derive, school subject and class isolation');
+
+const overlapGrid={...bp,fullMarks:4,
+ unitGrid:[
+  {unitCode:'1',type:'mcq',marks:1,count:2,cognitiveLevel:'knowledge'},
+  {unitCode:'2',type:'short',marks:2,count:1,cognitiveLevel:'understanding'}
+ ],
+ pattern:[{type:'mcq',count:2,marks:1},{type:'short',count:1,marks:2}]};
+const onlyOneMcq={
+ id:'m1',unitCode:'1',topicId:'topic_1',questionType:'mcq',marks:1,
+ cognitiveLevel:'knowledge',questionText:'के साझा प्रश्न हो?',answer:'क',
+ options:['क','ख','ग','घ'],correctOption:'A',status:'active'
+};
+const onlyOneShort={
+ id:'s1',unitCode:'2',topicId:'topic_2',questionType:'short',marks:2,
+ cognitiveLevel:'understanding',questionText:'छोटो प्रश्न के हो?',answer:'उत्तर',status:'active'
+};
+const insufficient=inspectExactCdcGridAvailability({
+ blueprint:overlapGrid,fullMarks:4,
+ eligible:[onlyOneMcq,onlyOneShort],
+ selectedTopicIds:['topic_1','topic_2']
+});
+assert.equal(insufficient.candidateReady,false,'Two MCQ slots cannot use one question ID twice');
+const complete=inspectExactCdcGridAvailability({
+ blueprint:overlapGrid,fullMarks:4,
+ eligible:[onlyOneMcq,{...onlyOneMcq,id:'m2',questionText:'दोस्रो फरक प्रश्न हो?'},onlyOneShort],
+ selectedTopicIds:['topic_1','topic_2']
+});
+assert.equal(complete.candidateReady,true);
+assert.equal(complete.allocationError,null);
+console.log('PASS teacher read-only Grid preflight checks globally distinct question allocation');

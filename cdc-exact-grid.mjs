@@ -192,9 +192,25 @@ export function inspectExactCdcGridAvailability({
    q.questionType===row.questionType&&q.cognitiveLevel===row.cognitiveLevel&&
    Number(q.marks)===row.marks)));
  const missing=rows.reduce((sum,row)=>sum+row.missing,0);
+ // Per-row counts alone are insufficient: a question may be the only match
+ // for TWO slots, or selected topics may be mutually incompatible. Verify
+ // an actual globally distinct-paper allocation before showing Ready.
+ let allocationError=null;
+ const superficiallyReady=missing===0&&missingTopics.length===0&&
+   topics.size>0&&topics.size<=grid.slots.length;
+ if(superficiallyReady){
+  try{
+   allocateExactCdcUnitGrid({
+    blueprint,fullMarks,eligible:bank,selectedTopicIds,
+    rng:()=>0.48179
+   });
+  }catch(error){
+   allocationError=String(error?.message||error);
+  }
+ }
  return Object.freeze({
-  candidateReady:missing===0&&missingTopics.length===0&&
-   topics.size>0&&topics.size<=grid.slots.length,
+  candidateReady:superficiallyReady&&!allocationError,
+  allocationError,
   fullMarks,gridQuestionCount:grid.slots.length,missingQuestionCount:missing,
   missingTopics:Object.freeze(missingTopics),rows:Object.freeze(rows)
  });
