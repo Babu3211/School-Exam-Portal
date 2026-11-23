@@ -2,12 +2,12 @@ name: Preview V46 Hosting without changing live
 on:
   push:
     branches:
-      - smss-v46-integration
+      - preview/v46-cdc-pr77-7485fcc
 permissions:
   contents: read
   pull-requests: read
 concurrency:
-  group: smss-v46-hosting-preview
+  group: v46-cdc-pr77-preview
   cancel-in-progress: true
 jobs:
   preview:
@@ -15,6 +15,9 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: 7485fcc47f12a99a4c3c7a7cff75c6f62724ef25
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -32,7 +35,7 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
           projectId: exam-portal-smss-95016
-          channelId: v46-preview
+          channelId: v46-cdc-pr77
           expires: 7d
           entryPoint: .
       - name: Confirm live channel was not targeted
