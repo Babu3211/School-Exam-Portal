@@ -91,7 +91,7 @@ export function validateExactCdcUnitGrid(blueprint,fullMarks,{
  */
 export function allocateExactCdcUnitGrid({
  blueprint,fullMarks,eligible,selectedTopicIds,previousSignature='',rng=Math.random,
- gradeNumber=null,subject=null
+ gradeNumber=null,subject=null,avoidSignatures=[]
 }){
  const grid=validateExactCdcUnitGrid(blueprint,fullMarks,{gradeNumber,subject});
  if(!Array.isArray(eligible)||eligible.length>5000||!eligible.length)
@@ -99,6 +99,10 @@ export function allocateExactCdcUnitGrid({
  if(!Array.isArray(selectedTopicIds)||!selectedTopicIds.length)
   throw Error('Select textbook units/topics before generation');
  const selected=new Set(selectedTopicIds);
+ if(!Array.isArray(avoidSignatures)||avoidSignatures.length>30||
+  avoidSignatures.some(s=>typeof s!=='string'||s.length>12000))
+  throw Error('Invalid saved-question-paper exclusion list');
+ const blocked=new Set([...avoidSignatures,previousSignature].filter(Boolean));
  const bySlot=grid.slots.map((slot,index)=>{
   const candidates=shuffle(eligible.filter(q=>selected.has(q.topicId)&&
    unitOf(q)===slot.unitCode&&q.questionType===slot.type&&
@@ -122,7 +126,7 @@ export function allocateExactCdcUnitGrid({
    throw Error('CDC Grid search exceeded safe limit; choose fewer topics or improve question bank');
   if(step===ordered.length){
    if([...requiredTopics].some(id=>!seenTopic.has(id)))return false;
-   if(previousSignature&&signature(chosen)===previousSignature)return false;
+   if(blocked.has(signature(chosen)))return false;
    found=true;return true;
   }
   const {index,candidates}=ordered[step];
@@ -136,8 +140,8 @@ export function allocateExactCdcUnitGrid({
   return false;
  };
  search(0);
- if(!found)throw Error(previousSignature?
-  'No different paper is possible with this exact CDC Grid and available questions; add reviewed alternatives':
+ if(!found)throw Error(blocked.size?
+  'No different paper is possible with this exact CDC Grid and saved-paper history; add reviewed alternatives':
   'Selected topics cannot satisfy every CDC unit, cognitive and mark requirement. Choose compatible topics or add reviewed questions.');
  const stats=grid.slots.map((slot,i)=>({
   unitCode:slot.unitCode,cognitiveLevel:slot.cognitiveLevel,
