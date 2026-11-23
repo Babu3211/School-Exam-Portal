@@ -5,6 +5,7 @@ import {getBundledComputerGrid,bundledComputerUnitTopics} from "./cdc-verified-c
 import {findCdcGridSources} from "./cdc-grid-source-index.mjs";
 import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-math-2082.mjs";
 import {inspectCdcOptionalMathPaper} from "./cdc-optional-math-composite.mjs";
+import {originalOptionalMathPracticeBank} from "./cdc-optional-math-original-practice.mjs";
 import {renderCdcCompositePaper} from "./cdc-optional-math-render.mjs";
 import {QUESTION_EXCEL_FIELDS,parseQuestionExcelSheet,CDC_GRID_EXCEL_FIELDS,parseCdcGridExcelSheet} from "./cdc-question-excel.mjs";
 import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
@@ -541,7 +542,7 @@ async function loadCurrentData() {
   officialComputerGrid.unitNames.length+" Unit स्वतः तयार छन्। प्रश्नपत्रका लागि पर्याप्त समीक्षा गरिएका प्रश्न अझै आवश्यक छन्।":
   officialOptionalMathGuide?
   "CDC २०८२ ऐच्छिक गणित: ६ विषयक्षेत्र, ७५ अङ्क, ११ Objective + १२ WCA + ४ CCA प्रश्न।"+
-  " मिश्रित उपप्रश्नको स्वचालित जनरेटर अझै तयार छैन; Exact प्रश्नपत्र नबनाइनेछ।":
+  " SMSS का मौलिक गणनामा आधारित अभ्यास Draft उपलब्ध छन्। यी CDC प्रकाशित प्रश्न होइनन्; Save/Print अघि शिक्षक समीक्षा अनिवार्य छ।":
   bundled.status;
  $("qpCurriculumVersion").value=curriculumRows[0]?.curriculumVersion||"CDC संस्करण Topic सूचीअनुसार";
  renderTopics();renderQuestionRows();
@@ -843,6 +844,9 @@ function updateAutoGridStatus(){
  if(!bp?.unitGrid?.length){
   const grouped=getCdcOptionalMathGuide({grade:gradeNumber(selectedClass),subject:selectedSubject});
   if(grouped&&target===75){
+   const originalDraftBank=originalOptionalMathPracticeBank({
+    grade:gradeNumber(selectedClass),subject:selectedSubject
+   });
    const unitNeeds=grouped.areas.map(area=>{
     const reviewed=questionRows.filter(q=>q.reviewStatus==="teacher_reviewed"&&
      q.reviewedBy&&q.status!=="archived"&&q.gradeNumber===gradeNumber(selectedClass)&&
@@ -859,6 +863,12 @@ function updateAutoGridStatus(){
     new Set(q.subquestions.map(s=>String(s.unitCode))).size>=2).length;
    const short=unitNeeds.filter(q=>q.obj<q.objNeed||q.wca<q.wcaNeed);
    const countsReady=!short.length&&ccaCount>=4;
+   if(originalDraftBank.questions.length===54){
+    el.textContent="मूल CDC २०८२ Grid को ७५ अङ्क स्वतः सेट छ। "+
+     "SMSS का ५४ मौलिक गणनात्मक अभ्यास प्रश्नबाट २७ प्रश्नको Draft स्वतः तयार हुन्छ।"+
+     " यो CDC प्रकाशित प्रश्नपत्र होइन; Save/Print अघि शिक्षक समीक्षा अनिवार्य छ।";
+    return;
+   }
    el.textContent=countsReady?
     "मूल CDC २०८२ Grid सेट छ: ११ Objective, १२ WCA, ४ CCA = ७५ अङ्क। "+
     "प्रारम्भिक प्रश्न संख्या पुगेको छ; Generate गर्दा Unit अङ्क, उपप्रश्न, संज्ञानात्मक वितरण र दोहोरिने प्रश्न पूर्ण रूपमा जाँचिन्छ।":
@@ -920,9 +930,15 @@ async function generateOptionalMathCompositePaper(guide){
   p.questionFormat==="cdc_optional_math_composite"&&Number(p.fullMarks)===75)
   .map(p=>Array.isArray(p.questions)&&p.questions.every(q=>q?.questionId)?
    p.questions.map(q=>String(q.questionId)).sort().join("|"):"").filter(Boolean))].slice(0,30);
+ // SMSS offline original formula-checked questions are practice drafts;
+ // final human review is mandatory and no CDC model-question origin is claimed.
+ const offlineDraft=originalOptionalMathPracticeBank({
+  grade:gradeNumber(className),subject
+ });
  const proposed=inspectCdcOptionalMathPaper({
-  guide,questions:questionRows,selectedTopicIds:topicIds,language,
-  previousSignature,avoidSignatures,rng:Math.random,maxSearchVisits:120000
+  guide,questions:[...questionRows,...offlineDraft.questions],selectedTopicIds:topicIds,language,
+  previousSignature,avoidSignatures,rng:Math.random,maxSearchVisits:120000,
+  allowFormulaVerifiedDraft:true
  });
  if(!proposed.ready){
   const missing=proposed.areaRows.filter(row=>
@@ -951,6 +967,7 @@ async function generateOptionalMathCompositePaper(guide){
   paperTitle,academicYear,durationMinutes,fullMarks:75,
   curriculumVersion:"CDC Optional Mathematics Specification Grid 2082",
   questionFormat:"cdc_optional_math_composite",language,sourceUrl:guide.sourceUrl,
+  questionOrigin:"SMSS original formula-checked practice, not CDC published questions",
   topicIds,blueprintId:null,cognitiveDistribution:guide.cognitiveDistribution,
   qualityReport:{
    questionCount:27,selectedTopicCount:topicIds.length,missingAnswerCount:0,
@@ -976,8 +993,8 @@ async function generateOptionalMathCompositePaper(guide){
  renderPaperPreview();
  lastAutoSignature={scope,signature:proposed.signature};
  updateAutoReviewActions();
- message("CDC २०८२ ऐच्छिक गणित: २७ संयुक्त प्रश्न, ७५ अङ्क, सबै विषयक्षेत्र र संज्ञानात्मक वितरण मिल्यो।"+
-  " उत्तरकुञ्जिका शिक्षकले जाँचेर मात्र Save वा Print गर्नुहोस्।");
+ message("SMSS मौलिक अभ्यास Draft: CDC २०८२ Grid अनुसार २७ संयुक्त प्रश्न, ७५ अङ्क र संज्ञानात्मक वितरण मिल्यो।"+
+  " यी CDC प्रकाशित प्रश्न होइनन्। शिक्षकले गणितीय तथ्य, उत्तरकुञ्जिका र कक्षा उपयुक्तता जाँचेर मात्र Save/Print गर्नुहोस्।");
 }
 async function generateSmartPaper(){
  if(!verifiedQuestionSelection||verifiedQuestionSelection.request!==questionDataLoadEpoch||
@@ -1093,7 +1110,7 @@ async function savePaper() {
   if(generatedPaper.qualityReport?.teacherReviewRequired&&$("qpAutoReviewed")?.checked!==true)
    throw Error("प्रश्नपत्र र उत्तरकुञ्जिका समीक्षा पुष्टि नगरी Save गर्न मिल्दैन।");
   // Persist only the paper schema; preview qualityReport and local id stay in memory.
-  const paperFields=["schoolName","schoolAddress","gradeNumber","className","subject","section","paperTitle","academicYear","durationMinutes","fullMarks","curriculumVersion","blueprintId","cognitiveDistribution","topicIds","questions","questionFormat","language","sourceUrl"];
+  const paperFields=["schoolName","schoolAddress","gradeNumber","className","subject","section","paperTitle","academicYear","durationMinutes","fullMarks","curriculumVersion","blueprintId","cognitiveDistribution","topicIds","questions","questionFormat","language","sourceUrl","questionOrigin"];
   const payload=Object.fromEntries(paperFields.filter(key=>generatedPaper[key]!==undefined).map(key=>[key,generatedPaper[key]]));
   Object.assign(payload,{createdBy:auth.currentUser.uid,createdAt:serverTimestamp(),status:"draft"});
   const ref=await addDoc(collection(db,"question_papers"),payload);
