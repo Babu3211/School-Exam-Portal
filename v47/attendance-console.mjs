@@ -4,6 +4,7 @@ import {createSchoolStore} from './firestore-adapter.mjs';
 import {saveSchoolAttendance} from './attendance-service.mjs';
 import {saveAssignedTeacherAttendance} from './teacher-attendance-service.mjs';
 import {saveLoadedClassAttendance} from './attendance-class-save.mjs';
+import {saveAuthoritativeClassAttendance} from './verified-class-attendance-save.mjs';
 import {loadClassRoster} from './attendance-roster.mjs';
 import {loadAttendanceByClassDate} from './attendance-query.mjs';
 import {nepalGregorianDate} from './nepal-date.mjs';
@@ -31,6 +32,65 @@ $('schoolClass').addEventListener('change',()=>{if(savingAttendance)return;roste
 function markAll(value){if(savingAttendance||actor?.role!=='school_admin')return;for(const student of rosterStudents)rosterSelections.set(student.id,value);renderRoster()}
 $('allPresent').onclick=()=>markAll('true');$('allAbsent').onclick=()=>markAll('false');
 $('bulkSave').onclick=async()=>{if(savingAttendance)return;savingAttendance=true;epoch++;busy=false;$('next').disabled=true;rosterEpoch++;rosterBusy=false;const button=$('bulkSave');button.disabled=true;$('logout').disabled=true;$('login').disabled=true;$('save').disabled=true;$('schoolClass').disabled=true;$('date').disabled=true;$('rosterLoad').disabled=true;$('rosterNext').disabled=true;$('allPresent').disabled=true;$('allAbsent').disabled=true;try{if(actor?.role!=='school_admin')throw new Error('School Admin required');if(!auth?.currentUser?.uid||auth.currentUser.uid!==actor.uid)throw new Error('Authentication changed; sign in again');const selected=rosterStudents.filter(s=>rosterSelections.has(s.id));if(!selected.length)throw new Error('Select students before saving');if(attendanceReviewRequired){status('अघिल्लो Save को स्थिति अनिश्चित छ। पहिले Attendance सूची Reload गरी पुष्टि गर्नुहोस्।');return;}const date=$('date').value,schoolClass=$('schoolClass').value;if(!confirm('Overwrite attendance for '+selected.length+' selected students on '+date+'? Saves run in groups of 10; a later failure may leave earlier groups saved.')){status('Save cancelled');return}const uid=actor.uid,selectedSchool=schoolId;const session=await verifySchoolSession({schoolId:selectedSchool,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(session.role!=='school_admin'||schoolId!==selectedSchool||auth?.currentUser?.uid!==uid)throw new Error('School Admin permission changed');const entries=selected.map(student=>({date,class:schoolClass,studentId:student.id,present:rosterSelections.get(student.id)==='true'}));savingAttendance=true;$('logout').disabled=true;$('login').disabled=true;$('save').disabled=true;renderRoster();const result=await saveLoadedClassAttendance({db,api,actor,schoolId,entries,onProgress:({saved,total,savedIds})=>{for(const id of savedIds)rosterSelections.delete(id);status('Saved '+saved+' of '+total+' attendance records')},assertSession:()=>{if(auth?.currentUser?.uid!==uid||schoolId!==selectedSchool||actor?.uid!==uid||actor?.role!=='school_admin')throw new Error('School login changed before attendance batch')}});attendanceReviewRequired=false;renderRoster();reset();status('Saved '+result.saved+' of '+result.total+' attendance records')}catch(e){if(e?.name==='PartialAttendanceSaveError'){attendanceReviewRequired=true;attendanceReviewInProgress=false;}renderRoster();status(e?.name==='PartialAttendanceSaveError' ? 'Attendance Save असफल: '+e.saved+' / '+e.total+' विद्यार्थीको Save पुष्टि भयो। '+e.remainingStudentIds.length+' विद्यार्थीको Save पुष्टि हुन बाँकी छ। बाँकी चयन सुरक्षित छ। नेटवर्क त्रुटि हुँदा Save भइसकेको पनि हुन सक्छ; पुनः प्रयास गर्नुअघि Attendance सूची Reload गरी जाँच्नुहोस्। कारण: '+(e.cause?.message??e.message) : 'Attendance save incomplete: '+e.message+' Review remaining selections and retry.')}finally{savingAttendance=false;renderRoster();$('logout').disabled=!actor;$('login').disabled=!auth;$('save').disabled=!['school_admin','teacher'].includes(actor?.role);button.disabled=actor?.role!=='school_admin';$('schoolClass').disabled=attendanceReviewRequired;$('date').disabled=attendanceReviewRequired;$('rosterLoad').disabled=false;$('rosterNext').disabled=false;$('allPresent').disabled=false;$('allAbsent').disabled=false}};
+
+
+/** Save an explicitly completed class only after a second authoritative Firestore roster check.
+ * Large classes still save in batches of 10, NOT as one atomic transaction.
+ */
+$('verifiedSave').onclick=async()=>{
+ if(savingAttendance)return;
+ const wasLoadingRoster=rosterBusy,moreRosterPages=!$('rosterNext').disabled;
+ savingAttendance=true;epoch++;busy=false;$('next').disabled=true;rosterEpoch++;rosterBusy=false;
+ const button=$('verifiedSave');
+ for(const id of ['verifiedSave','bulkSave','save','logout','login','schoolClass','date','rosterLoad','rosterNext','allPresent','allAbsent'])$(id).disabled=true;
+ renderRoster();
+ let succeeded=false;
+ try{
+  if(actor?.role!=='school_admin')throw new Error('School Admin required');
+  if(attendanceReviewRequired)throw new Error('अघिल्लो Save को स्थिति अनिश्चित छ। पहिले Attendance का सबै पृष्ठ Reload गरी पुष्टि गर्नुहोस्।');
+  if(!auth?.currentUser?.uid||auth.currentUser.uid!==actor.uid)throw new Error('Authentication changed; sign in again');
+  if(wasLoadingRoster||moreRosterPages||rosterStudents.length===0)throw new Error('पूरा कक्षाको Attendance Save गर्न सबै विद्यार्थीका पृष्ठ Load गर्नुहोस्।');
+  if(!rosterStudents.every(student=>rosterSelections.has(student.id))||rosterSelections.size!==rosterStudents.length)
+   throw new Error('पूरा कक्षाको Attendance Save गर्न प्रत्येक विद्यार्थी Present वा Absent छान्नुहोस्।');
+  const date=$('date').value,classId=$('schoolClass').value,selectedSchool=schoolId,selectedActor=actor,uid=actor.uid;
+  const count=rosterStudents.length;
+  if(!confirm('पूरा कक्षाका '+count+' विद्यार्थीको '+date+' को Attendance सच्याएर Save गर्ने? १० जनाभन्दा बढी भए Save आंशिक हुन सक्छ।')){status('Save cancelled');return}
+  const session=await verifySchoolSession({schoolId:selectedSchool,uid,readDocument:async path=>{
+   const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;
+  }});
+  if(session.role!=='school_admin'||schoolId!==selectedSchool||actor!==selectedActor||auth?.currentUser?.uid!==uid)
+   throw new Error('School Admin permission changed');
+  const entries=rosterStudents.map(student=>({date,class:classId,studentId:student.id,present:rosterSelections.get(student.id)==='true'}));
+  const result=await saveAuthoritativeClassAttendance({db,api,actor,schoolId:selectedSchool,classId,date,entries,
+   assertSession:()=>{
+    if(auth?.currentUser?.uid!==uid||schoolId!==selectedSchool||actor!==selectedActor||actor?.role!=='school_admin'||actor?.active!==true)
+     throw new Error('School session changed during complete-class attendance save');
+   },
+   onProgress:({saved,total,savedIds})=>{
+    for(const id of savedIds)rosterSelections.delete(id);
+    status('पूरा कक्षा Save: '+saved+' / '+total+' विद्यार्थी');
+   }
+  });
+  attendanceReviewRequired=false;succeeded=true;
+  status('पूरा कक्षाको Attendance सुरक्षित: '+result.saved+' / '+result.total);
+ }catch(e){
+  if(e?.name==='PartialAttendanceSaveError'){attendanceReviewRequired=true;attendanceReviewInProgress=false;}
+  status(e?.name==='PartialAttendanceSaveError'
+   ? 'Attendance Save असफल: '+e.saved+' / '+e.total+' को Save पुष्टि भयो; '+e.remainingStudentIds.length+' विद्यार्थी बाँकी छन्। नेटवर्क त्रुटि हुँदा Save भइसकेको पनि हुन सक्छ। पुनः प्रयास गर्नुअघि Attendance सूची Reload गरी जाँच्नुहोस्। कारण: '+(e.cause?.message??e.message)
+   : 'पूर्ण कक्षा Save हुन सकेन: '+e.message);
+ }finally{
+  savingAttendance=false;renderRoster();
+  $('logout').disabled=!actor;$('login').disabled=!auth;
+  $('save').disabled=!['school_admin','teacher'].includes(actor?.role);
+  $('bulkSave').disabled=actor?.role!=='school_admin';button.disabled=actor?.role!=='school_admin';
+  $('schoolClass').disabled=attendanceReviewRequired;$('date').disabled=attendanceReviewRequired;
+  $('rosterLoad').disabled=false;$('rosterNext').disabled=false;
+  // Only a verified, completed roster has no additional pages.
+  $('rosterNext').disabled=moreRosterPages?false:true;
+  $('allPresent').disabled=false;$('allAbsent').disabled=false;
+  if(succeeded)reset();
+ }
+};
 
 // Automatically resume a dashboard-selected school; authorization is rechecked on this page.
 if(requestedSchool)queueMicrotask(()=>$('connect').click());
