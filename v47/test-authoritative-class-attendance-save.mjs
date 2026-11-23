@@ -40,4 +40,33 @@ await assert.rejects(saveAuthoritativeClassAttendance({db:{},api,actor,schoolId,
 let rosterReads=0;
 await assert.rejects(saveAuthoritativeClassAttendance({db:{},api:{...api,getDocs:async()=>{rosterReads++;return api.getDocs()}},actor,schoolId,classId,date,entries,assertSession:()=>{throw new Error('Firebase account switched')}}),/Firebase account switched/);
 assert.equal(rosterReads,0,'Switched account must not read roster');
-console.log('Authoritative attendance: incomplete rejected, complete atomic small-class save, cross-school blocked');
+
+/* A verified roster of 11 is not atomic: if batch two fails, only the first
+ * ten may be reported as confirmed. Never silently treat this as success. */
+{
+ const elevenIds=Array.from({length:11},(_,i)=>'s'+String(i).padStart(3,'0'));
+ let attempts=0,complete=0;
+ const progress=[];
+ const extendedApi={...api,
+  getDocs:async()=>({docs:elevenIds.map(id=>({id,data:()=>({schoolId,class:classId})}))}),
+  writeBatch:()=>({set:()=>{},commit:async()=>{attempts++;if(attempts===2)throw new Error('second attendance batch unavailable');complete++}})
+ };
+ await assert.rejects(saveAuthoritativeClassAttendance({
+  db:{},api:extendedApi,actor,schoolId,classId,date,
+  entries:elevenIds.map(studentId=>({studentId,class:classId,date,present:false})),
+  onProgress:p=>progress.push(p)
+ }),e=>{
+  assert.equal(e.name,'PartialAttendanceSaveError');
+  assert.equal(e.saved,10);
+  assert.equal(e.total,11);
+  assert.deepEqual(e.remainingStudentIds,['s010']);
+  assert.match(e.cause?.message??'',/second attendance batch unavailable/);
+  return true;
+ });
+ assert.equal(attempts,2);
+ assert.equal(complete,1);
+ assert.equal(progress.length,1);
+ assert.equal(progress[0].saved,10);
+}
+
+console.log('Authoritative attendance: complete roster, permissions, live session and partial-batch failure verified');

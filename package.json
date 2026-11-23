@@ -48,7 +48,7 @@
     "test:v47:mark-parser": "node v47/test-unbounded-mark-entry.mjs",
     "test:v47:mark-create-auth": "node v47/test-mark-create-authorization.mjs",
     "test:v47:attendance-complete": "node v47/test-class-attendance-completeness.mjs",
-    "test:v47:attendance-save": "node v47/test-verified-class-attendance-save.mjs",
+    "test:v47:attendance-save": "node v47/test-verified-class-attendance-save.mjs && node v47/test-authoritative-class-attendance-save.mjs",
     "test:v47:teacher-assignments": "node v47/test-teacher-assignment-management.mjs",
     "test:v47:attendance-roster": "node v47/test-attendance-roster-writes.mjs",
     "test:v47:roster-query": "node v47/test-roster-query-isolation.mjs",
