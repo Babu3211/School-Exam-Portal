@@ -25,31 +25,56 @@ export function renderCdcCompositePaper(paper,{escapeHtml,answerKey=false}={}){
    throw Error('CDC composite print group does not match exact grid');
   return {group,title,items};
  });
- let questionNumber=0;
- const html=groups.map(({group,title,items})=>
-  '<h3 style="text-align:left;margin-top:18px">'+esc(title)+'</h3>'+
-  items.map(q=>{
-   const no=++questionNumber,mark=q.subquestions.reduce((a,s)=>a+s.marks,0);
+ // CDC Grade 9/10 Model Question layout:
+ // Q1 is a SINGLE objective question with parts A–K, not Q1–Q11.
+ // WCA are Q2–Q13, CCA are Q14–Q17. There are 27 scored items but
+ // 17 numbered main questions. Align print and answer key exactly.
+ const optionsHtml=sub=>{
+  const options=paper.language==='en'?sub.optionsEn:sub.optionsNe;
+  if(answerKey||!Array.isArray(options)||options.length!==4)return '';
+  return '<div style="padding-left:18px">'+options.map((value,i)=>
+   '<div>'+String.fromCharCode(97+i)+'. '+esc(value)+
+   (paper.language==='both'&&Array.isArray(sub.optionsEn)?
+    ' / '+esc(sub.optionsEn[i]||''):'')+'</div>').join('')+'</div>';
+ };
+ const objective=groups.find(x=>x.group==='objective');
+ const within=groups.find(x=>x.group==='WCA');
+ const cross=groups.find(x=>x.group==='CCA');
+ const objectiveHtml='<h3 style="text-align:left;margin-top:18px">'+
+   esc(objective.title)+'</h3>'+
+  '<div class="qp-q" style="break-inside:avoid;page-break-inside:avoid">'+
+  '<b>1. '+(answerKey?'Teacher Answer Key — ':'')+
+  'Objective Questions [11]</b>'+
+  objective.items.map((q,i)=>{
+   const sub=q.subquestions[0];
+   const prompt=esc(text(sub,answerKey?'answer':'text'));
+   const key=answerKey&&sub.correctOption?
+    ' (Correct option: '+esc(sub.correctOption)+')':'';
+   return '<div style="margin:10px 0 10px 18px;white-space:pre-line">'+
+    '<b>'+String.fromCharCode(65+i)+'.</b> '+prompt+key+
+    (answerKey?'':' <b>[1]</b>')+optionsHtml(sub)+'</div>';
+  }).join('')+'</div>';
+ const groupedHtml=(group,startingNumber)=>
+  '<h3 style="text-align:left;margin-top:18px">'+esc(group.title)+'</h3>'+
+  group.items.map((q,index)=>{
+   const number=startingNumber+index;
+   const mark=q.subquestions.reduce((total,s)=>total+Number(s.marks),0);
    const context=text(q,'context').trim();
-   const prompt=context?'<p style="white-space:pre-line;margin:5px 0">'+esc(context)+'</p>':'';
-   const subs=q.subquestions.map((s,i)=>{
-    const label=String.fromCharCode(97+i)+')';
-    const words=text(s,answerKey?'answer':'text');
-    const suffix=answerKey?'':' <strong>['+esc(s.marks)+']</strong>';
-    const optsSource=paper.language==='en'?s.optionsEn:s.optionsNe;
-   const opts=(!answerKey&&Array.isArray(optsSource)&&optsSource.length===4)?
-     '<div style="padding-left:10px">'+optsSource.map((o,index)=>
-      '<div>'+String.fromCharCode(65+index)+'. '+esc(o)+
-       (paper.language==='both'&&Array.isArray(s.optionsEn)?' / '+esc(s.optionsEn[index]||''):'')+
-       '</div>').join('')+'</div>':'';
-    return '<li style="white-space:pre-line;margin:6px 0">'+esc(label)+' '+
-     esc(words)+suffix+opts+'</li>';
-   }).join('');
+   const contextHtml=context?'<p style="white-space:pre-line;margin:5px 0">'+
+    esc(context)+'</p>':'';
+   const subparts=q.subquestions.map((sub,i)=>
+    '<li style="margin:6px 0;white-space:pre-line">'+
+    String.fromCharCode(97+i)+'. '+
+    esc(text(sub,answerKey?'answer':'text'))+
+    (answerKey?'':' <b>['+esc(sub.marks)+']</b>')+
+    optionsHtml(sub)+'</li>').join('');
    return '<div class="qp-q" style="break-inside:avoid;page-break-inside:avoid;margin:13px 0">'+
-    '<b>'+esc(no)+'. '+(answerKey?'[Answer Key] ':'')+
-    '<span>['+esc(mark)+']</span></b>'+prompt+
-    '<ol style="list-style:none;padding-left:16px;margin:5px 0">'+subs+'</ol></div>';
-  }).join('')).join('');
+    '<b>'+esc(number)+'. '+(answerKey?'[Answer Key] ':'')+
+    '<span>['+esc(mark)+']</span></b>'+contextHtml+
+    '<ol style="list-style:none;padding-left:16px;margin:5px 0">'+subparts+
+    '</ol></div>';
+  }).join('');
+ const html=objectiveHtml+groupedHtml(within,2)+groupedHtml(cross,14);
  const header='<div style="text-align:center;border-bottom:1px solid #222;padding-bottom:12px">'+
   '<h2>'+esc(paper.schoolName||'विद्यालय')+'</h2><p>'+esc(paper.schoolAddress||'')+'</p>'+
   '<h3>'+esc(paper.paperTitle||'प्रश्नपत्र')+(answerKey?' — Teacher Answer Key':'')+'</h3>'+
