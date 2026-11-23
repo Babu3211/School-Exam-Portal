@@ -53,7 +53,10 @@ work.addRow(row);
 const packed=await book.xlsx.writeBuffer();
 assert.ok(packed.byteLength>100,'Real Excel export must contain file bytes');
 const reopened=new ExcelJS.Workbook();
-await reopened.xlsx.load(packed);
+await reopened.xlsx.load(new browser.window.Uint8Array(packed));
+console.log('XLSX bytes type',packed.constructor?.name,packed.byteLength,
+ Array.from(new browser.window.Uint8Array(packed).slice(0,4)));
+console.log('Workbook original row count',work.rowCount,work.getRow(1).getCell(1).text);
 const loadedSheet=reopened.getWorksheet('Question Bank');
 console.log('XLSX parser diagnostics',{rowCount:loadedSheet?.rowCount,
  actualRowCount:loadedSheet?.actualRowCount,lastRow:loadedSheet?.lastRow?.number,
