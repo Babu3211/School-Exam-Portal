@@ -24,6 +24,16 @@ assert.equal($('qpSourceDetails').open,false,'Long CDC source lists should be co
 assert.equal($('qpManualQuestions').open,false,'No typing required for the teacher default path');
 assert.ok($('qpQuestionForm'),'Existing manual bank form must be preserved for admins');
 assert.match(source,/async function importCdcGridExcel\(file\)/);
+assert.match(source,/function invalidateCdcGridSourceReview\(\)/);
+assert.match(source,/\["qpBpUnitGrid","qpBpFullMarks","qpBpVersion","qpBpSourceTitle"/);
+const revokeGridApproval=new Function('$',
+ code('function invalidateCdcGridSourceReview()','document.addEventListener("input"')+
+ 'return invalidateCdcGridSourceReview;')($);
+$('qpBpSourceReviewed').checked=true;
+revokeGridApproval();
+assert.equal($('qpBpSourceReviewed').checked,false,
+ 'Editing the reviewed Grid must revoke the previous school-admin signoff');
+assert.match($('qpBpStatus').textContent,/पुनः जाँच/);
 assert.match(source,/async function downloadCdcGridExcelTemplate\(\)/);
 assert.match(source,/parseCdcGridExcelSheet\(sheet\)/);
 assert.match(source,/assertQuestionBankImportScope\(scope\);[\s\S]*?\$\("qpBpUnitGrid"\)\.value=json/);
