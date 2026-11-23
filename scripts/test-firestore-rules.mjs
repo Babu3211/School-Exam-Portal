@@ -1,4 +1,6 @@
 import {iemisEntrySchema,iemisEntryValues,iemisEntryBatches} from "../iemis-entry.js";
+import assert from 'node:assert/strict';
+import { JSDOM } from 'jsdom';
 import { readFile } from "node:fs/promises";
 import {
   initializeTestEnvironment,
@@ -6,7 +8,7 @@ import {
   assertFails
 } from "@firebase/rules-unit-testing";
 import {
-  doc, getDoc, getDocs, collection, setDoc, updateDoc, deleteDoc,
+  doc, getDoc, getDocs, getDocFromServer, getDocsFromServer, collection, setDoc, updateDoc, deleteDoc,
   serverTimestamp, query, where, runTransaction
 } from "firebase/firestore";
 
@@ -412,6 +414,66 @@ try {
   await assertSucceeds(getDoc(cdc('valid',adminCdcDb)));
   await assertFails(setDoc(cdc('admin-create',adminCdcDb),{...observation,createdBy:ADMIN}));
   await assertFails(getDoc(cdc('valid',testEnv.unauthenticatedContext().firestore())));
+  // Use the actual assessment form and Firestore SDK in separate browser sessions.
+  const subject='सामाजिक अध्ययन तथा मानवमूल्य शिक्षा';
+  const teacherRole={active:true,roles:['subject_teacher'],
+    subjectAssignments:[{className:'5',subject,section:'A'}],
+    subjectAssignmentKeys:['5::'+subject],subjectAssignmentSectionKeys:['5::'+subject+'::A']};
+  const writer='cdc-form-teacher', reader='cdc-form-colleague';
+  await testEnv.withSecurityRulesDisabled(async context=>{
+    for(const uid of [writer,reader]) await setDoc(doc(context.firestore(),'user_roles',uid),teacherRole);
+  });
+  const transfer=await readFile('iemis-importer/transfer.js','utf8');
+  const formCode=application.slice(application.indexOf('const cdcCoreSubjects'),application.indexOf('let iemisEntryGrid'));
+  async function openTeacherForm(uid) {
+    const db=testEnv.authenticatedContext(uid).firestore();
+    const role=(await getDocFromServer(doc(db,'user_roles',uid))).data();
+    const dom=new JSDOM('<select id="entryClass"><option>Class 5</option></select>',{url:'https://test.example',runScripts:'outside-only'});
+    const w=dom.window;
+    w.eval(transfer);
+    Object.assign(w,{auth:{currentUser:{uid}},currentSchoolSettings:{academicYear:'2083'},currentUserRole:role,
+      db,doc,collection,query,where,getDocFromServer,getDocsFromServer,serverTimestamp,
+      // The SDK runs in Node; give it a plain object from its own JavaScript realm.
+      setDoc:(ref,data)=>setDoc(ref,{...data}),
+      isAdmin:()=>false,roleHas:key=>role.roles.includes(key),entryClassGroup:()=>'4-5',
+      ledgerSubjectsForClass:()=>[subject],classNoFromName:w.SmssIemisTransfer.classKey,entrySubjectKey:w.SmssIemisTransfer.subjectKey,
+      marksStudents:['A','B'].map(section=>({id:'cdc-test-'+section.toLowerCase(),class:'5',section,active:true})),
+      attendanceAdToBs:v=>v,attendanceBsToAd:v=>v,attendanceNepalTodayAD:()=>'2083-08-07',
+      attendanceDigitsToEnglish:String,attendancePad:v=>String(v).padStart(2,'0')});
+    w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
+    w.eval(formCode+'\nopenCdcAssessment();');
+    const field=name=>w.document.querySelector('[data-cdc="'+name+'"]');
+    const choose=(name,value)=>{field(name).value=value;field(name).onchange();};
+    assert.deepEqual([...field('student').options].map(option=>option.value),['cdc-test-a']);
+    assert.equal(field('subject').value,subject);
+    return {dom,field,choose};
+  }
+  const session=await openTeacherForm(writer);
+  try {
+    const {field,choose,dom}=session;
+    choose('unit',dom.window.document.querySelector('#cdcUnitSuggestions option').value);
+    choose('topic',dom.window.document.querySelector('#cdcTopicSuggestions option').value);
+    field('evidence').value='Community project sample';
+    field('level').value='3';
+    await field('save').onclick();
+    await field('saveSchool').onclick();
+    assert.match(field('status').textContent,/विद्यालयमा सुरक्षित भयो/);
+  } finally {session.dom.window.close();}
+  const colleague=await openTeacherForm(reader);
+  try {
+    const {field,choose,dom}=colleague;
+    assert.equal(dom.window.localStorage.length,0);
+    await field('readSchool').onclick();
+    const rows=field('schoolRows').rows;
+    assert.equal(rows.length,1);
+    assert.equal(rows[0].cells[4].textContent,'3');
+    assert.equal(rows[0].cells[5].textContent,'Community project sample');
+    assert.doesNotMatch(rows[0].cells[1].textContent,/[a-z]/i);
+    choose('period','Second Term');
+    await field('readSchool').onclick();
+    assert.equal(rows.length,0);
+  } finally {colleague.dom.window.close();}
+  console.log('CDC form shared save and independent teacher read passed with Firestore emulator rules.');
   console.log('Firestore Security Rules emulator tests passed, including CDC observation access.');
 } finally {
   await testEnv.cleanup();
