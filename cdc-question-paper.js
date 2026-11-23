@@ -2,6 +2,7 @@ import { getApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.j
 import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSubject,isQuestionReadyForLanguage,cognitiveMarkDistribution} from "./cdc-question-autogen.mjs";
 import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
 import {getBundledComputerGrid,bundledComputerUnitTopics} from "./cdc-verified-computer-grids.mjs";
+import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-math-2082.mjs";
 import {QUESTION_EXCEL_FIELDS,parseQuestionExcelSheet,CDC_GRID_EXCEL_FIELDS,parseCdcGridExcelSheet} from "./cdc-question-excel.mjs";
 import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
@@ -490,15 +491,23 @@ async function loadCurrentData() {
   .sort((a,b)=>Number(b.createdAt?.seconds||0)-Number(a.createdAt?.seconds||0));
  blueprintRows=blueprints.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.active!==false);
  const officialComputerGrid=getBundledComputerGrid({grade,subject,fullMarks:50});
- currentBlueprint=officialComputerGrid||
-  blueprintRows.sort((a,b)=>Number(b.updatedAt?.seconds||0)-Number(a.updatedAt?.seconds||0))[0]||null;
+ const officialOptionalMathGuide=getCdcOptionalMathGuide({grade,subject});
+ // WCA/CCA questions with 2-4 subquestions cannot be represented by the
+ // simple exact allocator. Do not let a flat admin blueprint falsely claim
+ // official CDC mathematics compliance for the 75-mark paper.
+ currentBlueprint=officialComputerGrid||(!officialOptionalMathGuide?
+  blueprintRows.sort((a,b)=>Number(b.updatedAt?.seconds||0)-Number(a.updatedAt?.seconds||0))[0]||null:null);
  // Read-only CDC unit titles shipped with the portal. Teachers can select
  // units immediately; no spreadsheet import or school database write is needed.
- bundledPracticeUnits=[...bundled.units,...bundledComputerUnitTopics(grade,subject)];
+ bundledPracticeUnits=[...bundled.units,...bundledComputerUnitTopics(grade,subject),
+  ...optionalMathAreaTopics(grade,subject)];
  bundledPracticeQuestions=bundled.questions;
  bundledPracticeStatus=officialComputerGrid?
   "कक्षा "+grade+" Computer Science: CDC को ५० अङ्क/२५ प्रश्नको आधिकारिक Unit-wise Grid र "+
   officialComputerGrid.unitNames.length+" Unit स्वतः तयार छन्। प्रश्नपत्रका लागि पर्याप्त समीक्षा गरिएका प्रश्न अझै आवश्यक छन्।":
+  officialOptionalMathGuide?
+  "CDC २०८२ ऐच्छिक गणित: ६ विषयक्षेत्र, ७५ अङ्क, ११ Objective + १२ WCA + ४ CCA प्रश्न।"+
+  " मिश्रित उपप्रश्नको स्वचालित जनरेटर अझै तयार छैन; Exact प्रश्नपत्र नबनाइनेछ।":
   bundled.status;
  $("qpCurriculumVersion").value=curriculumRows[0]?.curriculumVersion||"CDC संस्करण Topic सूचीअनुसार";
  renderTopics();renderQuestionRows();
@@ -506,17 +515,25 @@ async function loadCurrentData() {
  const pdfSource=$("qpOfficialGridSource");
  if(pdfSource){
   pdfSource.replaceChildren();
-  if(officialComputerGrid?.originalGovernmentPdf){
+  const officialSource=officialComputerGrid?.originalGovernmentPdf?
+   officialComputerGrid:officialOptionalMathGuide;
+  if(officialSource?.sourceUrl){
    const link=document.createElement("a");
-   link.href=officialComputerGrid.sourceUrl;link.target="_blank";
+   link.href=officialSource.sourceUrl;link.target="_blank";
    link.rel="noopener noreferrer";
-   link.textContent="कक्षा "+grade+" कम्प्युटर विज्ञान — मूल CDC विशिष्टीकरण PDF हेर्नुहोस्";
+   link.textContent="कक्षा "+grade+
+    (officialComputerGrid?" कम्प्युटर विज्ञान":" ऐच्छिक गणित")+
+    " — मूल CDC विशिष्टीकरण PDF हेर्नुहोस्";
    pdfSource.appendChild(link);
   }
  }
  // Generation must wait for saved-paper history to finish loading.
  // Otherwise a rapid click can repeat a paper from the previous session.
  verifiedQuestionSelection=null;
+ if(officialOptionalMathGuide){
+  $("qpPaperFullMarks").value=String(officialOptionalMathGuide.fullMarks);
+  $("qpPaperDuration").value=String(officialOptionalMathGuide.durationMinutes);
+ }
  updateAutoGridStatus();
  const badge=$("qpBlueprintBadge");
  if(currentBlueprint){
@@ -526,6 +543,11 @@ async function loadCurrentData() {
    "आधिकारिक CDC PDF का सबै Unit, प्रश्न प्रकार, अङ्क र संज्ञानात्मक स्तर पहिले नै सेट छन्। Excel/JSON भर्नु पर्दैन। पर्याप्त समीक्षा गरिएका प्रश्न नभए गलत प्रश्नपत्र बन्द रहन्छ।":
    "Admin ले स्रोतका आधारमा राखेको Grid अनुसार प्रश्नको प्रकार, संख्या र अङ्क भरिएको छ। औपचारिक CDC मिलानका लागि शिक्षकले मूल Grid पुनः जाँच्नुहोस्।";
   setBuilderPattern(currentBlueprint.pattern,currentBlueprint.fullMarks,currentBlueprint.durationMinutes);
+ }else if(officialOptionalMathGuide){
+  badge.textContent="CDC २०८२ · Objective/WCA/CCA";
+  $("qpPatternHint").textContent="आधिकारिक ७५ अङ्कको ऐच्छिक गणित तालिका र ६ विषयक्षेत्र स्वतः लोड छन्।"+
+   " CDC अनुसार WCA/CCA का २–४ उपप्रश्न र मिश्रित संज्ञानात्मक तह चाहिन्छ; पुरानो साधारण Generator ले यो ढाँचा बनाउन सक्दैन।"+
+   " त्यसैले Exact मोड रोकिएको छ, विद्यार्थीका लागि गलत CDC प्रश्नपत्र दिइँदैन।";
  }else{
   badge.textContent="Custom Pattern";
   $("qpPatternHint").textContent="यस विषयको जाँचिएको CDC Grid आयात गरिएको छैन। Custom Pattern लाई CDC आधिकारिक नमान्नुहोस्।";
@@ -754,10 +776,10 @@ function blueprintForFullMarks(fullMarks){
  // Verified official CDC computer grids take precedence ONLY for their
  // exact Grade 9/10 optional Computer Science 50-mark examination.
  // Every other subject/full marks retains its existing school settings.
- const official=getBundledComputerGrid({
-  grade:gradeNumber(selectedClass),subject:selectedSubject,fullMarks
- });
+ const grade=gradeNumber(selectedClass),subject=selectedSubject;
+ const official=getBundledComputerGrid({grade,subject,fullMarks});
  if(official)return official;
+ if(fullMarks===75&&getCdcOptionalMathGuide({grade,subject}))return null;
  return blueprintRows
   .filter(bp=>bp.active!==false&&Number(bp.fullMarks)===fullMarks)
   .sort((a,b)=>Number(b.updatedAt?.seconds||0)-Number(a.updatedAt?.seconds||0))[0]||null;
@@ -767,7 +789,11 @@ function updateAutoGridStatus(){
  const bp=blueprintForFullMarks(target),el=$("qpAutoGridStatus");
  if(!el)return;
  if(!bp?.unitGrid?.length){
-  el.textContent=target+" अंकको समीक्षा गरिएको CDC Unit-wise Grid छैन। Exact मोडमा प्रश्नपत्र रोकिन्छ।";
+  const grouped=getCdcOptionalMathGuide({grade:gradeNumber(selectedClass),subject:selectedSubject});
+  el.textContent=grouped&&target===75?
+   "मूल CDC २०८२ Grid स्वतः उपलब्ध: ११ Objective (११ अङ्क), १२ WCA (४० अङ्क), ४ CCA (२४ अङ्क), जम्मा ७५ अङ्क।"+
+   " प्रत्येक संयुक्त प्रश्नमा २–४ उपप्रश्न चाहिन्छ। पुरानो Generator ले यो संरचना सुरक्षित रूपमा बनाउन नसक्ने भएकाले Exact मोड रोकिएको छ।":
+   target+" अंकको समीक्षा गरिएको CDC Unit-wise Grid छैन। Exact मोडमा प्रश्नपत्र रोकिन्छ।";
   return;
  }
  try{
@@ -805,6 +831,10 @@ async function generateSmartPaper(){
  const topicIds=selectedTopicIds(),target=Number($("qpPaperFullMarks").value);
  const language=$("qpAutoLanguage").value,mode=$("qpAutoMode").value;
  const strict=mode==="cdc",selectedBlueprint=strict?blueprintForFullMarks(target):null;
+ if(strict&&target===75&&getCdcOptionalMathGuide({
+   grade:gradeNumber(selectedClass),subject:selectedSubject
+  }))throw Error("CDC ऐच्छिक गणितको २०८२ Grid स्वतः सेट छ; तर WCA/CCA का २–४ उपप्रश्नको संयुक्त ढाँचा नबनी"+
+  " MCQ/Short/Long बाट Exact प्रश्नपत्र बनाउनु गलत हुन्छ। अहिले सुरक्षित रूपमा रोकिएको छ।");
  if(strict&&!selectedBlueprint)
   throw Error("यो कक्षा/विषय/पूर्णाङ्कको CDC Unit-wise Grid भेटिएन। Admin ले आधिकारिक Grid बाट सही विवरण राखेपछि मात्र Exact प्रश्नपत्र बनाउन सकिन्छ।");
  const autoScope=JSON.stringify([selectedClass,selectedSubject,selectedSection,
