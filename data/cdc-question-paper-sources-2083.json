@@ -429,6 +429,18 @@
       "status": "official_CDC_pdf_grid_unitwise_transcribed_dev_teacher_review_required",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/Computer%20Science%20grid_9080yt7.pdf",
       "note": "Original government PDF: Full marks 50, 2 hours; 5 units, 25 questions; MCQ 10×1, short 10×2, long 5×4; 20/30/30/20 cognitive distribution. Exact row grid bundled for V46 dev; teacher review required."
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "ऐच्छिक गणित",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2082 (CDC decision 2082/04/16)",
+      "status": "official_CDC_2082_area_and_group_totals_transcribed_composite_WCA_CCA_not_yet_supported",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/Specification%20Grid%20and%20Model%20Question-G9-Opt.%20Math-web_nrbp00y.pdf",
+      "note": "Official government PDF page 1 verified: 75 marks, 3h, 11 objective 1-mark items (11), 12 WCA grouped questions (40), 4 CCA cross-content grouped questions (24), 6 content areas marks 17/17/20/7/7/7, domains K16% U24% A40% HA20%, each composite question 2-4 subquestions. Existing flat MCQ/short/long allocator MUST NOT claim CDC compliance. Teacher needs no manual Excel grid entry; grouped-question generation remains disabled."
     }
   ],
   "completion": {
@@ -445,7 +457,8 @@
     "officialBlueprintCoverage": "partial-only-verified-subject-grade-grid-can-be-set-by-admin",
     "grade10SciencePracticePack": "seed-file-created-admin-import-available-2080-textbook-reference-check-2082-modified-book-and-grid",
     "sourceCorrection": "A Grade 10 textbook PDF (1692097269.pdf) was wrongly tagged as Grade 9 in an old source-register entry. Removed the Grade 9 entry; keep actual Grade 9 packs blocked until original Grade 9 textbook and grid are checked.",
-    "verifiedOptionalComputerGrid": "Official Grade 9/10 Computer Science grid PDFs transcribed unit/type/marks/cognitive levels for 50-mark paper; development only, source checked, teacher answer review required; other subjects not configured."
+    "verifiedOptionalComputerGrid": "Official Grade 9/10 Computer Science grid PDFs transcribed unit/type/marks/cognitive levels for 50-mark paper; development only, source checked, teacher answer review required; other subjects not configured.",
+    "optionalMath2082": "Official Grade 9/10 Optional Math source area totals and WCA/CCA composite question groups verified and bundled; exact automated grouped question generation pending. Not equivalent to simple MCQ/Short/Long."
   },
   "practicePacks": [
     {
