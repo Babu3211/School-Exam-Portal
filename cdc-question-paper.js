@@ -1685,27 +1685,49 @@ document.addEventListener("click",async event=>{
     }
     if(t.id==="qpSmartGenerateBtn")await generateSmartPaper();
     if(t.id==="qpSelectGridUnits"){
-      const target=Number($("qpPaperFullMarks").value),
-       bp=blueprintForFullMarks(target);
-      if(!bp?.unitGrid?.length)throw Error("यस कक्षा/विषय/पूर्णाङ्कको CDC Unit-wise Grid छैन। Admin बाट स्रोतअनुसार Grid राख्नुहोस्।");
-      const required=new Map();
-      for(const line of bp.unitGrid)required.set(String(line.unitCode),
-       (required.get(String(line.unitCode))||0)+Number(line.count));
-      const selectedUnits=new Set();
-      document.querySelectorAll("[data-qp-topic]").forEach(input=>{
+      const target=Number($("qpPaperFullMarks").value);
+      const compound=target===75?getCdcOptionalMathGuide({
+       grade:gradeNumber(selectedClass),subject:selectedSubject
+      }):null;
+      if(compound){
+       // CDC 2082/2083 Model requires all six content areas.
+       // Select ONE available topic per required Unit, without the teacher
+       // having to import or manually retype a CDC Grid.
+       const required=new Set(compound.areas.map(a=>String(a.unitCode)));
+       const chosen=new Set();
+       document.querySelectorAll("[data-qp-topic]").forEach(input=>{
         const code=String(input.dataset.unitCode||"");
-        // Select the first available Topic per required Unit. Teacher can add
-        // more topics later if the exact grid has enough question slots.
+        input.checked=required.has(code)&&!chosen.has(code);
+        if(input.checked)chosen.add(code);
+       });
+       if([...required].some(code=>!chosen.has(code))){
+        document.querySelectorAll("[data-qp-topic]").forEach(input=>input.checked=false);
+        throw Error("CDC ऐच्छिक गणितका सबै छवटा Unit भेटिएनन्। गलत प्रश्नपत्र रोकियो।");
+       }
+       if(generatedPaper)invalidateGeneratedQuestionPaper();
+       updateAutoGridStatus();
+       message("CDC को ६ वटा ऐच्छिक गणित Unit स्वतः चयन भए। भाषा छानेर Auto Generate गर्नुहोस्।");
+      }else{
+       const bp=blueprintForFullMarks(target);
+       if(!bp?.unitGrid?.length)
+        throw Error("यस कक्षा/विषय/पूर्णाङ्कको CDC Unit-wise Grid अझै प्रमाणित भएको छैन।");
+       const required=new Map();
+       for(const line of bp.unitGrid)required.set(String(line.unitCode),
+        (required.get(String(line.unitCode))||0)+Number(line.count));
+       const selectedUnits=new Set();
+       document.querySelectorAll("[data-qp-topic]").forEach(input=>{
+        const code=String(input.dataset.unitCode||"");
         input.checked=required.has(code)&&!selectedUnits.has(code);
         if(input.checked)selectedUnits.add(code);
-      });
-      if([...required.keys()].some(code=>!selectedUnits.has(code))){
+       });
+       if([...required.keys()].some(code=>!selectedUnits.has(code))){
         document.querySelectorAll("[data-qp-topic]").forEach(input=>input.checked=false);
         throw Error("CDC Grid का सबै अनिवार्य Unit Topic सूचीमा भेटिएनन्। प्रश्नपत्र बनाइएको छैन।");
+       }
+       if(generatedPaper)invalidateGeneratedQuestionPaper();
+       updateAutoGridStatus();
+       message("CDC Grid का "+selectedUnits.size+" Unit चयन गरिए। चाहिएका Topic जाँचेर Generate गर्नुहोस्।");
       }
-      if(generatedPaper)invalidateGeneratedQuestionPaper();
-      updateAutoGridStatus();
-      message("CDC Grid का "+selectedUnits.size+" Unit चयन गरिए। चाहिएका Topic जाँचेर Generate गर्नुहोस्।");
     }
     if(t.id==="qpTopicSelectAll"||t.id==="qpTopicClearAll"){
       document.querySelectorAll("[data-qp-topic]").forEach(input=>input.checked=t.id==="qpTopicSelectAll");
