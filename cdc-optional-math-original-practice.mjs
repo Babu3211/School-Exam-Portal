@@ -12,6 +12,11 @@ import {getCdcOptionalMathGuide,optionalMathAreaTopics} from './cdc-optional-mat
 const WCA=[[3,3,3],[3,3,4],[4,4,4],[3],[3],[3]];
 const CCA=[[[1,3],[2,3]],[[1,3],[3,3]],[[2,1],[3,2],[4,3]],[[5,3],[6,3]]];
 const levelTargets={knowledge:12,understanding:18,application:30,higher:15};
+const issuedOfflineDrafts=new WeakSet();
+export function isOriginalMathOfflineDraft(row){
+ return !!row&&typeof row==='object'&&issuedOfflineDrafts.has(row);
+}
+
 const units=['Algebra','Trigonometry','Geometry','Vectors','Statistics','Limit and Continuity'];
 const triples=[[3,4,5],[5,12,13],[8,15,17],[7,24,25]];
 const part=(unit,seed,marks)=>{
@@ -108,6 +113,7 @@ const slotQuestions=({grade,subject,version})=>{
   item.cognitiveLevel=level;used[level]+=item.marks;
  }
  if(JSON.stringify(used)!==JSON.stringify(levelTargets))throw Error('Incorrect CDC cognitive totals');
+ for(const item of rows)issuedOfflineDrafts.add(item);
  return rows;
 };
 export function originalOptionalMathPracticeBank({grade,subject}){
