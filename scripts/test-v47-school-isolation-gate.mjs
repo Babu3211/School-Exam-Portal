@@ -107,8 +107,8 @@ for(const [label,block] of [['Raw marks',marksBlock],['Computer component marks'
 
 const attendanceBlock=rules.split('match /attendance/{id} {')[1]?.split(/\n\s*match \/[^\n]+\{/)[0]??'';
 assert.ok(attendanceBlock.includes("memberRole(sid, 'school_admin') && validAdminAttendance()"),'Attendance create must require school admin or assigned teacher');
-assert.ok(attendanceBlock.includes("(memberRole(sid, 'school_admin') || teacherAttendanceAllowed(sid, id))"),
- 'Only School Admin or an actively assigned Teacher may correct existing presence');
+assert.match(attendanceBlock,/memberRole\(sid, 'school_admin'\) && validAdminAttendance\(\)[\s\S]*?\|\| teacherAttendanceAllowed\(sid, id\)/,
+ 'Only a roster-verified School Admin or assigned Teacher may correct existing presence');
 assert.ok(rules.includes('function teacherAttendanceAllowed(sid, id) {'),'Assignment helper required');
 const teacherDuty=rules.split('function teacherAttendanceAllowed(sid, id) {')[1]?.split('\n      }')[0]??'';
 for(const needed of [
