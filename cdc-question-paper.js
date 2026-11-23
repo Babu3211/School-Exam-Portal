@@ -4,6 +4,7 @@ import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
 import {getBundledComputerGrid,bundledComputerUnitTopics} from "./cdc-verified-computer-grids.mjs";
 import {findCdcGridSources} from "./cdc-grid-source-index.mjs";
 import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-math-2082.mjs";
+import {CDC_G10_OPTIONAL_MATH_2083_MODEL,compareCdc2083MathModelToBundledGrid} from "./cdc-optional-math-model-compare.mjs";
 import {inspectCdcOptionalMathPaper} from "./cdc-optional-math-composite.mjs";
 import {originalOptionalMathPracticeBank} from "./cdc-optional-math-original-practice.mjs";
 import {renderCdcCompositePaper} from "./cdc-optional-math-render.mjs";
@@ -527,6 +528,8 @@ async function loadCurrentData() {
  blueprintRows=blueprints.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.active!==false);
  const officialComputerGrid=getBundledComputerGrid({grade,subject,fullMarks:50});
  const officialOptionalMathGuide=getCdcOptionalMathGuide({grade,subject});
+ const grade10ModelAudit=grade===10&&officialOptionalMathGuide?
+  compareCdc2083MathModelToBundledGrid():null;
  // WCA/CCA questions with 2-4 subquestions cannot be represented by the
  // simple exact allocator. Do not let a flat admin blueprint falsely claim
  // official CDC mathematics compliance for the 75-mark paper.
@@ -542,7 +545,9 @@ async function loadCurrentData() {
   officialComputerGrid.unitNames.length+" Unit स्वतः तयार छन्। प्रश्नपत्रका लागि पर्याप्त समीक्षा गरिएका प्रश्न अझै आवश्यक छन्।":
   officialOptionalMathGuide?
   "CDC २०८२ ऐच्छिक गणित: ६ विषयक्षेत्र, ७५ अङ्क, ११ Objective + १२ WCA + ४ CCA प्रश्न।"+
-  " SMSS का मौलिक गणनामा आधारित अभ्यास Draft उपलब्ध छन्। यी CDC प्रकाशित प्रश्न होइनन्; Save/Print अघि शिक्षक समीक्षा अनिवार्य छ।":
+  (grade10ModelAudit?.matches?
+    " कक्षा १० को २०८३ नमुना प्रश्नको उपलब्ध प्रतिसँग २०८२ Grid को वितरण मिल्छ।":"")+
+  " SMSS मौलिक अभ्यास Draft CDC प्रकाशित प्रश्न होइनन्; Save/Print अघि शिक्षक समीक्षा अनिवार्य छ।":
   bundled.status;
  $("qpCurriculumVersion").value=curriculumRows[0]?.curriculumVersion||"CDC संस्करण Topic सूचीअनुसार";
  renderTopics();renderQuestionRows();
@@ -577,6 +582,9 @@ async function loadCurrentData() {
   };
   if(officialSource?.sourceUrl)addLink(officialSource.sourceUrl,
    "मूल CDC "+(officialComputerGrid?"Computer Science":"Optional Mathematics")+" PDF");
+  if(grade10ModelAudit)addLink(
+   CDC_G10_OPTIONAL_MATH_2083_MODEL.governmentPublicationUrl,
+   "कक्षा १० CDC २०८३ Model Question र उत्तरकुञ्जिका (आधिकारिक पृष्ठ)");
   sources.forEach((item,i)=>addLink(item.sourceUrl,
    "CDC स्रोत "+(i+1)+" ("+item.gridVersion+")"));
  }
@@ -597,10 +605,12 @@ async function loadCurrentData() {
    "Admin ले स्रोतका आधारमा राखेको Grid अनुसार प्रश्नको प्रकार, संख्या र अङ्क भरिएको छ। औपचारिक CDC मिलानका लागि शिक्षकले मूल Grid पुनः जाँच्नुहोस्।";
   setBuilderPattern(currentBlueprint.pattern,currentBlueprint.fullMarks,currentBlueprint.durationMinutes);
  }else if(officialOptionalMathGuide){
-  badge.textContent="CDC २०८२ · Objective/WCA/CCA";
-  $("qpPatternHint").textContent="आधिकारिक ७५ अङ्कको ऐच्छिक गणित तालिका र ६ विषयक्षेत्र स्वतः लोड छन्।"+
-   " CDC अनुसार WCA/CCA का २–४ उपप्रश्न र मिश्रित संज्ञानात्मक तह चाहिन्छ; पुरानो साधारण Generator ले यो ढाँचा बनाउन सक्दैन।"+
-   " त्यसैले Exact मोड रोकिएको छ, विद्यार्थीका लागि गलत CDC प्रश्नपत्र दिइँदैन।";
+  badge.textContent=grade10ModelAudit?.matches?
+   "CDC २०८२ Grid · २०८३ Model तुलना":"CDC २०८२ · Objective/WCA/CCA";
+  $("qpPatternHint").textContent="CDC को ७५ अङ्कको ऐच्छिक गणित तालिका स्वतः सेट छ।"+
+   (grade10ModelAudit?.matches?
+    " कक्षा १० को २०८३ Model Question को उपलब्ध प्रतिमा ११ Objective, १२ WCA, ४ CCA र छवटै विषयक्षेत्रको अङ्कभार मिलेको छ। मूल २०८३ PDF attachment प्रत्यक्ष प्रमाणीकरण बाँकी छ।":"")+
+   " SMSS मौलिक अभ्यास Draft Generate हुन्छ; CDC प्रकाशित प्रश्न होइन। शिक्षकले उत्तरकुञ्जिका जाँचेर मात्र Save/Print गर्नुहोस्।";
  }else{
   badge.textContent="Custom Pattern";
   $("qpPatternHint").textContent="यस विषयको जाँचिएको CDC Grid आयात गरिएको छैन। Custom Pattern लाई CDC आधिकारिक नमान्नुहोस्।";
@@ -909,6 +919,8 @@ function updateAutoGridStatus(){
 // and CCA questions with 2–4 subparts, unlike the old MCQ/Short/Long engine.
 // All inputs below must be teacher-reviewed; a CDN grid alone is insufficient.
 async function generateOptionalMathCompositePaper(guide){
+ if(guide.gradeNumber===10&&!compareCdc2083MathModelToBundledGrid().matches)
+  throw Error("CDC कक्षा १० नयाँ Model Question र पुरानो Grid को अङ्कभार नमिले। Generate रोकियो।");
  const selection=verifiedQuestionSelection,sessionUid=auth.currentUser?.uid,
   className=selectedClass,subject=selectedSubject,section=selectedSection;
  const topicIds=selectedTopicIds();
