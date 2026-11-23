@@ -36,8 +36,9 @@ export function renderCdcCompositePaper(paper,{escapeHtml,answerKey=false}={}){
     const label=String.fromCharCode(97+i)+')';
     const words=text(s,answerKey?'answer':'text');
     const suffix=answerKey?'':' <strong>['+esc(s.marks)+']</strong>';
-    const opts=(!answerKey&&Array.isArray(s.optionsNe)&&s.optionsNe.length===4)?
-     '<div style="padding-left:10px">'+s.optionsNe.map((o,index)=>
+    const optsSource=paper.language==='en'?s.optionsEn:s.optionsNe;
+   const opts=(!answerKey&&Array.isArray(optsSource)&&optsSource.length===4)?
+     '<div style="padding-left:10px">'+optsSource.map((o,index)=>
       '<div>'+String.fromCharCode(65+index)+'. '+esc(o)+
        (paper.language==='both'&&Array.isArray(s.optionsEn)?' / '+esc(s.optionsEn[index]||''):'')+
        '</div>').join('')+'</div>':'';
