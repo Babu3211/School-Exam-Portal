@@ -142,3 +142,8 @@ assert.match(page,/function inspectAdminUnitGrid\(/);
 assert.match(page,/const pattern=calculated\.pattern,distribution=calculated\.distribution/);
 assert.match(page,/if\(calculated\.fullMarks!==Number/);
 console.log('PASS CDC Grid import, derived mark count/level and mismatch refusal wiring');
+
+assert.match(page,/id="qpGridAudit"/);
+assert.match(page,/gridEvidence:\{questionId:String\(q\.id\)/);
+assert.match(page,/if\(planned\.exactGridMatched&&\(!evidence/);
+console.log('PASS saved-paper per-question exact CDC unit/type/cognitive evidence and teacher-only grid audit');

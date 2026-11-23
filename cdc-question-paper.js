@@ -349,7 +349,19 @@ function renderPaperPreview(paper = generatedPaper) {
   let number = 0;
   const report=paper.qualityReport||null;
   const reportHtml=report?'<div class="qp-hint" style="border:1px solid #dce5f1;border-radius:8px;padding:9px;margin-bottom:10px"><b>शिक्षक समीक्षा:</b> '+esc(report.questionCount)+' प्रश्न · '+esc(report.selectedTopicCount)+' Topic · '+esc(report.missingAnswerCount)+' प्रश्नमा उत्तर संकेत बाँकी। संज्ञानात्मक वितरण: '+Object.entries(report.cognitiveActual||{}).map(([k,v])=>esc(levelLabel(k))+' '+esc(v)+'%').join(' · ')+'</div>':"";
-  box.innerHTML = reportHtml+
+  const audit=paper.questions.map((q,index)=>({index:index+1,...q.gridEvidence}))
+    .filter(q=>q.unitCode&&q.questionId);
+  const gridAuditHtml=audit.length?
+   '<div id="qpGridAudit" class="qp-hint" style="border:1px solid #cbd5e1;border-radius:8px;padding:10px;margin-bottom:10px">'+
+   '<b>CDC Grid मिलान — शिक्षकको आन्तरिक समीक्षा (विद्यार्थीको Print मा नजाने)</b>'+
+   '<div class="qp-table-wrap"><table class="qp-table"><thead><tr><th>क्रम</th><th>Unit</th><th>प्रकार</th><th>अंक</th><th>संज्ञानात्मक स्तर</th></tr></thead><tbody>'+
+   audit.map(q=>'<tr><td>'+esc(q.index)+'</td><td>'+esc(q.unitCode)+'</td><td>'+
+     esc(questionTypeLabel(q.questionType))+'</td><td>'+esc(q.marks)+'</td><td>'+
+     esc(levelLabel(q.cognitiveLevel))+'</td></tr>').join("")+
+   '</tbody><tfoot><tr><th colspan="3">जम्मा पूर्णाङ्क</th><th>'+
+   esc(audit.reduce((sum,q)=>sum+Number(q.marks),0))+
+   '</th><th>Grid अनुसार पुनः जाँच आवश्यक</th></tr></tfoot></table></div></div>':"";
+  box.innerHTML = reportHtml+gridAuditHtml+
    (paper.questions.some(q=>String(q.questionId||"").startsWith("builtIn_"))?
     '<p class="qp-hint" style="background:#fff3df;padding:8px"><b>SMSS अभ्यास प्रश्नपत्र (CDC को प्रकाशित नमुना होइन):</b> शिक्षकले लागू पाठ्यक्रम, Grid, प्रश्न र उत्तर जाँचेर मात्र प्रयोग गर्नुहोस्।</p>':"")+
     `<div id="qpPrintArea" class="qp-paper-preview">
@@ -789,11 +801,22 @@ async function generateSmartPaper(){
    missingAnswerCount:0,selectedTopicCount:topicIds.length,
    exactGridMatched:planned.exactGridMatched,sourceUrl:planned.gridAudit?.sourceUrl||"",
    gridVersion:planned.gridAudit?.gridVersion||"",teacherReviewRequired:true},
-  questions:planned.questions.map((q,i)=>({
-   questionId:q.id,questionText:q.questionText,questionType:q.questionType,
-   marks:Number(q.marks),options:q.options||[],cognitiveLevel:q.cognitiveLevel,
-   topicName:q.topicName,answer:q.answer||"",correctOption:q.correctOption||"",number:i+1
-  })),
+  questions:planned.questions.map((q,i)=>{
+   const evidence=planned.gridAudit?.slotEvidence?.find(row=>row.questionId===String(q.id));
+   if(planned.exactGridMatched&&(!evidence||
+      evidence.questionType!==q.questionType||evidence.marks!==Number(q.marks)||
+      evidence.cognitiveLevel!==q.cognitiveLevel))
+    throw Error("CDC Grid प्रमाणसँग प्रश्न मिलेन; Generate रोकियो।");
+   return {
+    questionId:q.id,questionText:q.questionText,questionType:q.questionType,
+    marks:Number(q.marks),options:q.options||[],cognitiveLevel:q.cognitiveLevel,
+    topicName:q.topicName,answer:q.answer||"",correctOption:q.correctOption||"",
+    ...(evidence?{gridEvidence:{questionId:String(q.id),unitCode:evidence.unitCode,
+      questionType:evidence.questionType,marks:evidence.marks,
+      cognitiveLevel:evidence.cognitiveLevel,topicId:evidence.topicId}}:{}),
+    number:i+1
+   };
+  }),
   createdBy:auth.currentUser.uid
  };
  $("qpAutoReviewed").checked=false;

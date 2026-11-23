@@ -100,6 +100,21 @@ assert.equal($('qpPrintPaperBtn').disabled,false);
 assert.equal($('qpAnswerKeyBtn').disabled,false);
 assert.match(lastMessage,/पूर्णाङ्क/);
 renderPaperPreview(paper);
+// Exercise persisted per-question Grid provenance and the teacher-only table.
+const sample={...paper,questions:paper.questions.map((q,i)=>({
+ ...q,gridEvidence:{questionId:q.questionId,unitCode:String(i+1),
+  questionType:q.questionType,marks:Number(q.marks),
+  cognitiveLevel:q.cognitiveLevel,topicId:'unit'+i}
+}))};
+renderPaperPreview(sample);
+const audit=$('qpPaperPreview').querySelector('#qpGridAudit');
+assert.ok(audit,'Teacher must see per-unit mark/type/level Grid evidence');
+assert.match(audit.textContent,/जम्मा पूर्णाङ्क/);
+assert.equal(audit.querySelectorAll('tbody tr').length,paper.questions.length);
+assert.equal(audit.querySelector('tfoot th:nth-child(2)').textContent.trim(),'3');
+assert.equal($('qpPaperPreview').querySelector('#qpPrintArea #qpGridAudit'),null,
+ 'Grid audit must stay outside the student print area');
+renderPaperPreview(paper);
 const preview=$('qpPaperPreview').querySelector('#qpPrintArea');
 assert.ok(preview);
 assert.match(preview.textContent,/CDC प्रकाशित नमुना होइन/);
