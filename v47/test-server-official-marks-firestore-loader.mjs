@@ -62,7 +62,7 @@ const run=(h,overrides={})=>loadCommittedOfficialClassMarks({
  assert.equal(result.entries.length,count);
  assert.equal(result.entries[0].totalObtained,48);
  assert.equal(h.transactions,1);
- assert.equal(h.reads,7+2);
+ assert.equal(h.reads,6+2);
  assert.equal(h.docs.size,8);
 }
 {
