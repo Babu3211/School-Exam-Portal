@@ -373,6 +373,51 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    function canWriteCdcObservation(data) {
+      let student = get(/databases/$(database)/documents/students/$(data.studentId)).data;
+      return !isAdmin() && !isViewer() &&
+        hasRole('subject_teacher') &&
+        teacherSubjectAccess(data.className, data.subject, data.section) &&
+        studentBelongsToClass(data.studentId, data.className) &&
+        student.get('section', '') == data.section;
+    }
+
+    function validCdcObservation(data) {
+      return data.keys().hasAll(['studentId', 'className', 'subject', 'section',
+          'academicYear', 'period', 'unit', 'unitEn', 'topic', 'topicAlt',
+          'date', 'level', 'method', 'evidence', 'feedback', 'createdBy', 'createdAt']) &&
+        data.keys().hasOnly(['studentId', 'className', 'subject', 'section',
+          'academicYear', 'period', 'unit', 'unitEn', 'topic', 'topicAlt',
+          'date', 'level', 'method', 'evidence', 'feedback', 'createdBy', 'createdAt']) &&
+        data.studentId is string && data.studentId.size() > 0 && data.studentId.size() <= 1500 &&
+        data.studentId.matches('^[^/]+$') && !(data.studentId in ['.', '..']) &&
+        data.className is string && data.className.matches('^(Class |कक्षा )?[1-5१-५]$') &&
+        data.subject is string && data.subject.size() > 0 && data.subject.size() <= 180 &&
+        data.section is string && data.section.size() <= 40 &&
+        data.academicYear is string && data.academicYear.matches('^[0-9]{4}$') &&
+        data.period in ['First Term','Second Term','Final Term'] &&
+        data.date is string && data.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[0-2])$') &&
+        data.level is int && data.level >= 1 && data.level <= 4 &&
+        data.unit is string && data.unit.size() <= 180 &&
+        data.unitEn is string && data.unitEn.size() <= 180 &&
+        data.topic is string && data.topic.size() > 0 && data.topic.size() <= 180 &&
+        data.topicAlt is string && data.topicAlt.size() <= 180 &&
+        data.method is string && data.method.size() <= 180 &&
+        data.evidence is string && data.evidence.size() > 0 && data.evidence.size() <= 2000 &&
+        data.feedback is string && data.feedback.size() <= 2000 &&
+        data.createdBy == request.auth.uid && data.createdAt == request.time;
+    }
+
+    match /cdc_observations/{documentId} {
+      allow read: if isAdmin() || isViewer() ||
+        (signedIn() && (teacherAllSectionsAccess(resource.data.className, resource.data.subject) ||
+          teacherSubjectAccess(resource.data.className, resource.data.subject, resource.data.section)));
+      // Reassessment appends a separate observation so previous evidence remains available.
+      allow create: if signedIn() && validCdcObservation(request.resource.data) &&
+        canWriteCdcObservation(request.resource.data);
+      allow update, delete: if false;
+    }
+
     function validDailyAttendance(data) {
       return data.keys().hasAll([
           'date', 'className', 'attendanceType', 'subject', 'students',
