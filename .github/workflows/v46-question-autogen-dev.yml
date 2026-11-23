@@ -12,6 +12,7 @@ on:
       - 'cdc-optional-math-composite.mjs'
       - 'cdc-optional-math-render.mjs'
       - 'scripts/test-cdc-optional-math-composite.mjs'
+      - 'scripts/test-v46-optional-math-ui.mjs'
       - 'cdc-grid-source-index.mjs'
       - 'scripts/test-cdc-grid-source-index.mjs'
       - 'scripts/test-cdc-optional-math-2082.mjs'
@@ -54,6 +55,7 @@ jobs:
           node --check cdc-optional-math-composite.mjs
           node --check cdc-optional-math-render.mjs
           node --check scripts/test-cdc-optional-math-composite.mjs
+          node --check scripts/test-v46-optional-math-ui.mjs
           node --check cdc-grid-source-index.mjs
           node --check scripts/test-cdc-grid-source-index.mjs
           node --check scripts/test-cdc-optional-math-2082.mjs
@@ -79,6 +81,8 @@ jobs:
         run: node scripts/test-cdc-verified-computer-grids.mjs
       - name: Test exact unit-grid random paper across grades 6-10
         run: node scripts/test-cdc-exact-grid.mjs
+      - name: Test real Optional Mathematics teacher one-click generation and stale request guards
+        run: node scripts/test-v46-optional-math-ui.mjs
       - name: Test real generated paper UI and bilingual print
         run: node scripts/test-v46-question-paper-dom.mjs
       - name: Test assigned teacher question-paper access
