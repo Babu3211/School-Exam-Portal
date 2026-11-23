@@ -48,6 +48,17 @@ assert.match(grade10Pack.sourceTitle, /Grade 10/, "Grade 10 source title must id
 assert.ok(Array.isArray(register.practicePacks) && register.practicePacks.some(p => p.grade === 10 && p.subject === "विज्ञान तथा प्रविधि"), "Grade 10 science pack must be listed in source register");
 assert.ok(!register.practicePacks.some(p => p.grade === 9 && p.subject === "विज्ञान तथा प्रविधि"), "Grade 9 pack must stay blocked until its source/topic mismatch is resolved");
 assert.match(String(register.completion.grade9SciencePracticePack || ""), /blocked-not-importable/, "Grade 9 pack block must be documented");
+for (const [grade, url] of [
+  [9, "https://moecdc.gov.np/content/278/specialization-schedule-class-class-9-science-and/"],
+  [10, "https://moecdc.gov.np/content/273/specialization-schedule-class-10-science-and-technology/"]
+]) {
+  const source = register.sources.find(s => s.url === url && s.grades.length === 1 && s.grades[0] === grade);
+  assert.ok(source, `Grade ${grade} official CDC science grid source must be registered`);
+  assert.match(source.status, /grid_content_not_yet_extracted/,
+    `Grade ${grade} must remain unverified until full official Grid transcription`);
+  assert.ok(!source.unitGrid, `Grade ${grade} must not ship speculative question/mark rows`);
+}
+
 
 const questionBuilder = readFileSync(new URL("../cdc-question-paper.js", import.meta.url), "utf8");
 const appShell = readFileSync(new URL("../sw.js", import.meta.url), "utf8");
