@@ -96,6 +96,7 @@ for(const language of ['en','both']){
  assert.equal(isQuestionReadyForLanguage(bilingualBase,language),true);
  for(const bad of [
   {...bilingualBase,answerEn:''},
+  {...bilingualBase,questionTextEn:'पानी के हो?'},
   {...bilingualBase,optionsEn:[]},
   {...bilingualBase,optionsEn:['पानी','Soil','Air','Fire']}
  ]){
