@@ -35,4 +35,29 @@ formulas.getRow=n=>{
 };
 assert.throws(()=>parseQuestionExcelSheet(formulas),/formulas are not allowed/);
 assert.throws(()=>parseQuestionExcelSheet(sheet([headers,...Array.from({length:502},()=>row)])),/at most 500/);
+// Round-trip a genuine XLSX workbook using the browser ExcelJS bundle
+// already shipped locally by SMSS (not only a fake worksheet adapter).
+import {readFileSync} from 'node:fs';
+import {JSDOM} from 'jsdom';
+const browser=new JSDOM('<!doctype html><html><body></body></html>',{
+ url:'https://example.test/',runScripts:'outside-only'
+});
+browser.window.eval(readFileSync(
+ new URL('../iemis-importer/vendor/exceljs.min.js',import.meta.url),'utf8'));
+const ExcelJS=browser.window.ExcelJS;
+assert.ok(ExcelJS?.Workbook,'Local browser ExcelJS library must expose Workbook');
+const book=new ExcelJS.Workbook();
+const work=book.addWorksheet('Question Bank');
+work.addRow(headers);
+work.addRow(row);
+const packed=await book.xlsx.writeBuffer();
+assert.ok(packed.byteLength>100,'Real Excel export must contain file bytes');
+const reopened=new ExcelJS.Workbook();
+await reopened.xlsx.load(packed);
+const reread=parseQuestionExcelSheet(reopened.getWorksheet('Question Bank'));
+assert.equal(reread.length,1);
+assert.equal(reread[0].answerEn,'Three');
+assert.equal(reread[0].unitCode,'1');
+browser.window.close();
+console.log('PASS genuine XLSX write/read round-trip through locally bundled ExcelJS');
 console.log('PASS V46 Excel question bank headers, bilingual fields, formula refusal and row limits');
