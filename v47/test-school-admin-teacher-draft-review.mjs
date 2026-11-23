@@ -110,6 +110,32 @@ for(const mutation of [
  await assert.rejects(loadSchoolAdminTeacherDraftReview(f.args),
   /assignment|Teacher|inactive|revoked/i);
 }
+{
+ // The roster IDs alone are insufficient: enrollment/name/status changes
+ // between the two paginated reads must invalidate a review.
+ let rosterReads=0;
+ const f=fixture();
+ const original=f.args.api.getDocs;
+ f.args.api.getDocs=async query=>{
+  const result=await original(query);
+  if(++rosterReads===2)
+   f.data.get('schools/'+schoolId+'/students/s2').name='Changed during review';
+  return result;
+ };
+ await assert.rejects(loadSchoolAdminTeacherDraftReview(f.args),/Enrollment changed/);
+}
+{
+ let rosterReads=0;
+ const f=fixture();
+ const original=f.args.api.getDocs;
+ f.args.api.getDocs=async query=>{
+  const result=await original(query);
+  if(++rosterReads===2)
+   f.data.get('schools/'+schoolId+'/students/s2').active=false;
+  return result;
+ };
+ await assert.rejects(loadSchoolAdminTeacherDraftReview(f.args),/Enrollment changed|inactive/);
+}
 const html=readFileSync(new URL('./teacher-draft-review.html',import.meta.url),'utf8');
 const ui=readFileSync(new URL('./teacher-draft-review-console.mjs',import.meta.url),'utf8');
 const schoolAdminHtml=readFileSync(new URL('./school-admin.html',import.meta.url),'utf8');
