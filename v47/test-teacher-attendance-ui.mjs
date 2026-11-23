@@ -22,6 +22,8 @@ assert.ok(html.includes('Neither button is atomic for more than 10 students'),'D
 assert.ok(js.includes("rosterSelections.clear();renderRoster();reset()"),'Date change must discard previous day selections');
 assert.ok(js.includes("AttendancePostSaveReviewError"),'Post-commit roster uncertainty must require review');
 assert.ok(js.includes("if(result.rosterReverified!==true)"),'Complete save UI must require verified final roster');
+assert.ok(html.includes('Changing the date clears old attendance selections.'),'Date-reset instructions missing');
+assert.ok(html.includes('acknowledged commits are not rolled back'),'Never promise atomic rollback');
 
 for(const contract of [
  "import {saveAuthoritativeClassAttendance} from './verified-class-attendance-save.mjs'",

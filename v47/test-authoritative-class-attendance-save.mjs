@@ -136,4 +136,69 @@ for(const changedIds of [['s1','s2','s3'],['s2']]){
  assert.equal(commits,1);
 }
 
+// Exercise real paginated authoritative reads for the 1,500-student limit,
+// not a mocked "one page contains every student" shortcut.
+{
+ const roster=Array.from({length:1500},(_,i)=>'s'+String(i+1).padStart(4,'0'));
+ const entries=roster.map(studentId=>({studentId,class:classId,date,present:true}));
+ const fixture=()=>({
+  ...api,
+  limit:n=>({kind:'limit',n}),
+  startAfter:id=>({kind:'after',id}),
+  query:(...args)=>args,
+  getDocs:async query=>{
+   const after=query.find(x=>x?.kind==='after')?.id;
+   const limit=query.find(x=>x?.kind==='limit')?.n??101;
+   const start=after?roster.indexOf(after)+1:0;
+   if(after&&start===0)throw Error('Unknown roster cursor');
+   return {docs:roster.slice(start,start+limit).map(id=>({
+    id,data:()=>({schoolId,class:classId})
+   }))};
+  }
+ });
+ let pages=0,commits=0,records=0;
+ const largeApi=fixture(),original=largeApi.getDocs;
+ largeApi.getDocs=async query=>{pages++;return original(query)};
+ largeApi.writeBatch=()=>{let staged=0;return {set:()=>{staged++},commit:async()=>{commits++;records+=staged}}};
+ const result=await saveAuthoritativeClassAttendance({
+  db:{},api:largeApi,actor,schoolId,classId,date,entries
+ });
+ assert.equal(result.saved,1500);
+ assert.equal(result.rosterReverified,true);
+ assert.equal(records,1500);
+ assert.equal(commits,150,'Existing safe chunk-of-10 commits must not be silently replaced');
+ assert.equal(pages,30,'15 ordered pages before and 15 ordered pages after the save');
+}
+// A student enrolled during the 150th commit must cause an explicit REVIEW
+// outcome, even though all 1500 original writes were acknowledged.
+{
+ const originalIds=Array.from({length:1500},(_,i)=>'s'+String(i+1).padStart(4,'0'));
+ let ids=originalIds,commits=0;
+ const largeApi={...api,
+  limit:n=>({kind:'limit',n}),
+  startAfter:id=>({kind:'after',id}),
+  query:(...args)=>args,
+  getDocs:async query=>{
+   const after=query.find(x=>x?.kind==='after')?.id;
+   const size=query.find(x=>x?.kind==='limit')?.n??101;
+   const from=after?ids.indexOf(after)+1:0;
+   return {docs:ids.slice(from,from+size).map(id=>({id,data:()=>({schoolId,class:classId})}))};
+  },
+  writeBatch:()=>({set:()=>{},commit:async()=>{
+   commits++;
+   if(commits===150)ids=[...originalIds,'s1501'];
+  }})
+ };
+ await assert.rejects(saveAuthoritativeClassAttendance({
+  db:{},api:largeApi,actor,schoolId,classId,date,
+  entries:originalIds.map(studentId=>({studentId,class:classId,date,present:false}))
+ }),err=>{
+  assert.equal(err.name,'AttendancePostSaveReviewError');
+  assert.equal(err.saved,1500);
+  assert.equal(err.reviewRequired,true);
+  assert.match(err.cause?.message??'',/exceeds 1500/);
+  return true;
+ });
+ assert.equal(commits,150);
+}
 console.log('Authoritative attendance: complete roster, permissions, live session and partial-batch failure verified');
