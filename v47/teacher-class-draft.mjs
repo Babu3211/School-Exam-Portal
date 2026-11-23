@@ -52,8 +52,27 @@ export function verifyStoredTeacherClassDraft({actor,schoolId,classId,subjectId,
  const reconstructed=prepareTeacherClassDraft({actor,schoolId,classId,subjectId,examId,
   settings,expectedStudentIds,drafts,expectedRevision:stored.revision-1});
  if(reconstructed.data.rosterCount!==stored.rosterCount||
-  JSON.stringify(reconstructed.data.entries)!==JSON.stringify(stored.entries))
+  !sameTeacherDraftEntries(reconstructed.data.entries,stored.entries))
   throw Error('Teacher Draft stored totals, marks or roster altered');
  return Object.freeze({revision:stored.revision,entries:Object.freeze(reconstructed.data.entries),
   rosterCount:stored.rosterCount,previewOnly:true,publicationAllowed:false});
+}
+
+// Firestore map key order is not an integrity primitive. Compare every
+// student field and configured numeric component semantically instead.
+export function sameTeacherDraftEntries(left,right){
+ if(!Array.isArray(left)||!Array.isArray(right)||left.length!==right.length)return false;
+ const keys=obj=>obj&&typeof obj==='object'&&!Array.isArray(obj)?Object.keys(obj).sort().join(','):null;
+ for(let i=0;i<left.length;i++){
+  const a=left[i],b=right[i];
+  if(keys(a)!=='isAbsent,studentId,totalObtained,values'||keys(b)!=='isAbsent,studentId,totalObtained,values'||
+   a.studentId!==b.studentId||a.isAbsent!==b.isAbsent||
+   typeof a.totalObtained!=='number'||!Number.isFinite(a.totalObtained)||
+   a.totalObtained!==b.totalObtained)return false;
+  if(a.isAbsent){if(a.values!==null||b.values!==null)return false;continue}
+  if(keys(a.values)===null||keys(a.values)!==keys(b.values))return false;
+  for(const field of Object.keys(a.values))if(typeof a.values[field]!=='number'||
+   !Number.isFinite(a.values[field])||a.values[field]!==b.values[field])return false;
+ }
+ return true;
 }

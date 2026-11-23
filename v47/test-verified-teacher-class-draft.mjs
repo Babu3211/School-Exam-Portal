@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {prepareTeacherClassDraft,TEACHER_DRAFT_FORMAT} from './teacher-class-draft.mjs';
+import {prepareTeacherClassDraft,TEACHER_DRAFT_FORMAT,verifyStoredTeacherClassDraft,sameTeacherDraftEntries} from './teacher-class-draft.mjs';
 import {saveVerifiedTeacherClassDraft} from './save-verified-teacher-class-draft.mjs';
 
 const schoolId='12345678',classId='9',subjectId='computer',examId='final',uid='teacherA';
@@ -55,6 +55,19 @@ assert.equal(prepared.data.format,TEACHER_DRAFT_FORMAT);
 assert.equal(prepared.data.rosterCount,3);
 assert.equal(prepared.publicationAllowed,false);
 assert.equal(prepared.data.entries[0].totalObtained,98);
+const sortedStored={...prepared.data,updatedAt:{seconds:1},
+ entries:prepared.data.entries.map(row=>({
+  values:row.isAbsent?null:Object.fromEntries(Object.entries(row.values).reverse()),
+  totalObtained:row.totalObtained,studentId:row.studentId,isAbsent:row.isAbsent
+ }))};
+const restored=verifyStoredTeacherClassDraft({...source,settings:{...settings,settingsId:'9_computer_final'},
+ expectedStudentIds:ids,stored:sortedStored});
+assert.equal(restored.revision,1);
+assert.ok(sameTeacherDraftEntries(prepared.data.entries,sortedStored.entries));
+assert.equal(sameTeacherDraftEntries(prepared.data.entries,
+ sortedStored.entries.map((v,i)=>i?{...v,totalObtained:v.totalObtained+1}:v)),false);
+assert.throws(()=>verifyStoredTeacherClassDraft({...source,settings:{...settings,settingsId:'9_computer_final'},
+ expectedStudentIds:ids,stored:{...sortedStored,entries:sortedStored.entries.map((v,i)=>i?{...v,totalObtained:v.totalObtained+1}:v)}}),/altered/);
 assert.throws(()=>prepareTeacherClassDraft({...source,actor:{...actor,role:'viewer'},settings:{...settings,settingsId:'9_computer_final'},expectedStudentIds:ids}),/Teacher/);
 assert.throws(()=>prepareTeacherClassDraft({...source,settings:{...settings,settingsId:'9_computer_final'},expectedStudentIds:ids,drafts:drafts.slice(1)}),/Complete/);
 {

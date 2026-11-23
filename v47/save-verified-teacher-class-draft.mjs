@@ -6,7 +6,7 @@ import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
 import {validateConfiguredMarkComponents} from './configured-mark-preflight.mjs';
 import {completeClassDraftId} from './complete-class-draft-document.mjs';
-import {prepareTeacherClassDraft} from './teacher-class-draft.mjs';
+import {prepareTeacherClassDraft,sameTeacherDraftEntries} from './teacher-class-draft.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 
 export class TeacherDraftPostSaveReviewError extends Error {
@@ -110,7 +110,7 @@ export async function saveVerifiedTeacherClassDraft({
   const persisted=savedSnap.data();
   if(persisted?.revision!==planned.data.revision||persisted?.format!==planned.data.format||
    persisted?.schoolId!==schoolId||persisted?.updatedBy!==uid||
-   JSON.stringify(persisted.entries)!==JSON.stringify(planned.data.entries))
+   !sameTeacherDraftEntries(persisted.entries,planned.data.entries))
    throw Error('Committed Teacher Draft revision or contents changed');
   if(latestRoster.studentIds.length!==roster.studentIds.length||
    latestRoster.studentIds.some((v,i)=>v!==roster.studentIds[i])||
