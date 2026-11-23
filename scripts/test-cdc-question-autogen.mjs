@@ -95,7 +95,7 @@ assert.match(page,/async function generateSmartPaper\(/);
 assert.match(page,/async function loadBundledPracticeBank\(/);
 assert.match(page,/roleCanTeach\(selectedClass,selectedSubject,selectedSection\)/);
 assert.match(page,/teacherReviewRequired:true/);
-assert.match(page,/blueprintId:planned\.blueprintMatched/);
+assert.match(page,/blueprintId:planned\.exactGridMatched/);
 assert.match(sw,/cdc-question-autogen\.mjs/);
 assert.match(sw,/cdc-science-bilingual-mcq-v1\.json/);
 console.log('PASS V46 Browser auto builder wiring, role-safety and offline packaging');
