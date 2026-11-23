@@ -56,7 +56,7 @@ export function validateExactCdcUnitGrid(blueprint,fullMarks,{
   const declared=['knowledge','understanding','application','higher'];
   if(declared.some(level=>!Number.isFinite(Number(distribution[level]))||
    Number(distribution[level])<0||Number(distribution[level])>100)||
-   declared.reduce((sum,level)=>sum+Number(distribution[level]),0)!==100)
+   Math.abs(declared.reduce((sum,level)=>sum+Number(distribution[level]),0)-100)>1e-7)
    throw Error('CDC Grid cognitive percentages must total 100');
   for(const level of declared){
    const actual=slots.filter(x=>x.cognitiveLevel===level)
