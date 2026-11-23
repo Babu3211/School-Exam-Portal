@@ -3,7 +3,7 @@ import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSub
 import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
 import {getBundledComputerGrid,bundledComputerUnitTopics} from "./cdc-verified-computer-grids.mjs";
 import {findCdcGridSources} from "./cdc-grid-source-index.mjs";
-import {compareGrade8SciencePracticeBank} from "./cdc-grade8-science-model-audit.mjs";
+import {compareGrade8SciencePracticeBank,getGrade8ScienceHistoricalPracticePattern} from "./cdc-grade8-science-model-audit.mjs";
 import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-math-2082.mjs";
 import {CDC_G10_OPTIONAL_MATH_2083_MODEL,compareCdc2083MathModelToBundledGrid} from "./cdc-optional-math-model-compare.mjs";
 import {inspectCdcOptionalMathPaper} from "./cdc-optional-math-composite.mjs";
@@ -634,6 +634,12 @@ async function loadCurrentData() {
    "पुरानो सरकारी PDF का Grid र Model कुल अङ्कमा अन्तर छ र २०८२ मूल CDC Grid अझै जाँचिएको छैन। "+
    "अहिलेको ५५ प्रश्नको अभ्यास बैंकमा १ अङ्क अति छोटो, २ अङ्क छोटो तथा ४ अङ्क लामा प्रश्न अपूरा छन्।"+
    " यसलाई २०८३ CDC Exact प्रश्नपत्र नमान्नुहोस्।";
+  const historicalPattern=getGrade8ScienceHistoricalPracticePattern({grade,subject});
+  if(historicalPattern){
+   setBuilderPattern(historicalPattern.pattern,historicalPattern.fullMarks,
+    historicalPattern.durationMinutes);
+   $("qpAutoMode").value="practice";
+  }
  }else{
   badge.textContent="Custom Pattern";
   $("qpPatternHint").textContent="यस विषयको जाँचिएको CDC Grid आयात गरिएको छैन। Custom Pattern लाई CDC आधिकारिक नमान्नुहोस्।";
@@ -1057,7 +1063,11 @@ async function generateSmartPaper(){
   throw Error("कक्षा/विषय/Section मा प्रश्नपत्र बनाउन अनुमति छैन।");
  const topicIds=selectedTopicIds(),target=Number($("qpPaperFullMarks").value);
  const language=$("qpAutoLanguage").value,mode=$("qpAutoMode").value;
- const strict=mode==="cdc",selectedBlueprint=strict?blueprintForFullMarks(target):null;
+ const strict=mode==="cdc",
+  historicalPractice=!strict?getGrade8ScienceHistoricalPracticePattern({
+   grade:gradeNumber(selectedClass),subject:selectedSubject,fullMarks:target
+  }):null,
+  selectedBlueprint=strict?blueprintForFullMarks(target):historicalPractice;
  if(strict&&target===75){
   const grouped=getCdcOptionalMathGuide({
    grade:gradeNumber(selectedClass),subject:selectedSubject
