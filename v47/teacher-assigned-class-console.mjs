@@ -1,4 +1,9 @@
-import {connectSchoolFirebase,startVerifiedSchoolActivity} from './school-firebase-client.mjs';
+import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
+import {discoverVerifiedSubjectExamSettings} from './discover-subject-exam-settings.mjs';
+import {inspectConfiguredClassMarks} from './configured-mark-preflight.mjs';
+import {verifyStoredTeacherClassDraft} from './teacher-class-draft.mjs';
+import {saveVerifiedTeacherClassDraft} from './save-verified-teacher-class-draft.mjs';
+import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {verifyTeacherSubjectAssignment} from './verified-teacher-subject-assignment.mjs';
 import {verifyTeacherAttendanceDuty} from './verified-teacher-attendance-duty.mjs';
@@ -7,9 +12,10 @@ import {validateSchoolId} from './school-paths.mjs';
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 const $=id=>document.getElementById(id);
 let auth,authSdk,api,db,actor=null,schoolId=null,epoch=0,selectionEpoch=0,busy=false;
+let draftContext=null,draftInspected=false,draftEpoch=0;
 const message=text=>{$('message').textContent=text};
-function clear(){epoch++;selectionEpoch++;actor=null;schoolId=null;$('subjectId').replaceChildren();$('work').hidden=true;$('students').replaceChildren();$('count').textContent='';$('logout').disabled=true;$('load').disabled=true;$('loadAttendance').disabled=true}
-function lock(value){busy=value;for(const id of ['login','logout','load','loadAttendance','loadAssignments','classId','subjectId','schoolId','email','password'])$(id).disabled=value;if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('load').disabled=!actor||!$('subjectId').value;$('loadAttendance').disabled=!actor;$('loadAssignments').disabled=!actor;$('schoolId').disabled=!!actor;$('email').disabled=!!actor;$('password').disabled=!!actor}}
+function clear(){clearTeacherDraft();epoch++;selectionEpoch++;actor=null;schoolId=null;$('subjectId').replaceChildren();$('work').hidden=true;$('students').replaceChildren();$('count').textContent='';$('logout').disabled=true;$('load').disabled=true;$('loadAttendance').disabled=true}
+function lock(value){busy=value;lockTeacherDraft(value);for(const id of ['login','logout','load','loadAttendance','loadAssignments','classId','subjectId','schoolId','email','password'])$(id).disabled=value;if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('load').disabled=!actor||!$('subjectId').value;$('loadAttendance').disabled=!actor;$('loadAssignments').disabled=!actor;$('schoolId').disabled=!!actor;$('email').disabled=!!actor;$('password').disabled=!!actor}}
 async function verifiedSession(uid,id){
  const session=await verifySchoolSession({schoolId:id,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null}});
  if(session.role!=='teacher')throw new Error('Active Teacher membership required');
@@ -33,12 +39,12 @@ $('login').onclick=async()=>{
  finally{if(request===epoch)lock(false)}
 };
 $('logout').onclick=async()=>{if(busy)return;lock(true);clear();try{await authSdk.signOut(auth);message('Signed out')}catch(e){message('Sign out failed: '+e.message)}finally{lock(false)}};
-$('classId').addEventListener('change',()=>{$('students').replaceChildren();$('count').textContent='';$('subjectId').replaceChildren();selectionEpoch++;if(!busy)lock(false)});
-$('subjectId').addEventListener('change',()=>{$('students').replaceChildren();$('count').textContent='';selectionEpoch++;if(!busy)lock(false)});
+$('classId').addEventListener('change',()=>{clearTeacherDraft();$('students').replaceChildren();$('count').textContent='';$('subjectId').replaceChildren();selectionEpoch++;if(!busy)lock(false)});
+$('subjectId').addEventListener('change',()=>{clearTeacherDraft();$('students').replaceChildren();$('count').textContent='';selectionEpoch++;if(!busy)lock(false)});
 $('loadAssignments').onclick=async()=>{
  if(busy||!actor)return;
  const request=epoch,selection=selectionEpoch,uid=actor.uid,id=schoolId,classId=$('classId').value;
- $('subjectId').replaceChildren();$('students').replaceChildren();$('count').textContent='';lock(true);
+ clearTeacherDraft();$('subjectId').replaceChildren();$('students').replaceChildren();$('count').textContent='';lock(true);
  const revalidate=async()=>{if(request!==epoch||selection!==selectionEpoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==id)throw new Error('School session or selection changed');await verifiedSession(uid,id)};
  try{
   await revalidate();
@@ -123,6 +129,175 @@ $('loadAttendance').onclick=async()=>{
   message('Attendance जिम्मेवारी प्रमाणित भयो। विद्यार्थी सूची मात्र देखाइएको छ; Save गर्न मिल्दैन।');
  }catch(e){if(request===epoch&&selection===selectionEpoch){$('students').replaceChildren();$('count').textContent='';message('Attendance duty denied or roster unavailable: '+e.message)}}
  finally{if(request===epoch)lock(false)}
+};
+
+function clearTeacherDraft(){
+ draftEpoch++;draftContext=null;draftInspected=false;
+ $('teacherDraftRows').replaceChildren();$('teacherDraftHeader').replaceChildren();
+ $('teacherDraftStatus').textContent='';
+ $('inspectTeacherDraft').disabled=true;$('saveTeacherDraft').disabled=true;
+}
+function lockTeacherDraft(value){
+ $('teacherDraftArea').hidden=!actor;
+ $('draftTerm').disabled=value||!actor;
+ $('loadTeacherDraft').disabled=value||!actor||!$('subjectId').value;
+ $('inspectTeacherDraft').disabled=value||!draftContext;
+ $('saveTeacherDraft').disabled=value||!draftContext||!draftInspected;
+ for(const input of $('teacherDraftRows').querySelectorAll('input'))input.disabled=value||
+  (input.matches('input[data-component]')&&input.closest('tr')?.querySelector('input[data-absent]')?.checked===true);
+}
+$('draftTerm').onchange=()=>{clearTeacherDraft();if(!busy)lock(false)};
+$('teacherDraftRows').addEventListener('input',event=>{
+ if(!event.target?.matches?.('input[data-component],input[data-absent]'))return;
+ if(event.target.matches('input[data-absent]')){
+  const row=event.target.closest('tr');
+  for(const input of row.querySelectorAll('input[data-component]')){
+   input.value='';input.disabled=event.target.checked;
+  }
+ }
+ draftInspected=false;$('saveTeacherDraft').disabled=true;
+ $('teacherDraftStatus').textContent='Draft changed. Validate all students again.';
+});
+function collectTeacherDraft(){
+ if(!draftContext||!actor||actor.role!=='teacher'||auth?.currentUser?.uid!==actor.uid)
+  throw Error('Teacher Login or Draft context missing');
+ const rows=[...$('teacherDraftRows').children],seen=new Map();
+ if(rows.length!==draftContext.students.length)throw Error('Student rows changed; reload');
+ for(const row of rows){
+  if(!row.dataset.studentId||seen.has(row.dataset.studentId))throw Error('Duplicate student row');
+  seen.set(row.dataset.studentId,row);
+ }
+ return draftContext.students.map(student=>{
+  const row=seen.get(student.id);
+  if(!row)throw Error('Missing student row '+student.id);
+  const absent=row.querySelectorAll('input[data-absent]');
+  if(absent.length!==1)throw Error('Missing student absence value');
+  const values={};
+  for(const component of draftContext.settings.components){
+   const input=[...row.querySelectorAll('input[data-component]')].filter(el=>el.dataset.component===component.key);
+   if(input.length!==1)throw Error('Invalid subject component fields');
+   values[component.key]=input[0].value;
+  }
+  if(row.querySelectorAll('input[data-component]').length!==draftContext.settings.components.length)
+   throw Error('Unexpected subject marks fields');
+  return {studentId:student.id,isAbsent:absent[0].checked,
+   values:absent[0].checked?{}:values};
+ });
+}
+$('loadTeacherDraft').onclick=async()=>{
+ if(busy||!actor||actor.role!=='teacher'||!$('subjectId').value)return;
+ clearTeacherDraft();
+ const current=++draftEpoch,request=epoch,selection=selectionEpoch,
+  uid=actor.uid,id=schoolId,classId=$('classId').value,
+  subjectId=$('subjectId').value,examId=$('draftTerm').value;
+ lock(true);$('teacherDraftStatus').textContent='विद्यालय, Assignment, Examination Settings र पूरा कक्षा जाँच हुँदैछ…';
+ const revalidate=async()=>{
+  if(current!==draftEpoch||request!==epoch||selection!==selectionEpoch||
+   auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==id||
+   classId!==$('classId').value||subjectId!==$('subjectId').value||examId!==$('draftTerm').value)
+   throw Error('Teacher Login or selected class changed');
+  await verifiedSession(uid,id);
+ };
+ try{
+  if(!await enforceSchoolIdle(auth,authSdk))throw Error('Teacher session expired');
+  await verifyTeacherSubjectAssignment({db,api,actor,schoolId:id,classId,subjectId,revalidate});
+  const settings=await discoverVerifiedSubjectExamSettings({
+   db,api,schoolId:id,classId,subjectId,examId,revalidate});
+  const roster=await loadCompleteClassRoster({db,api,actor,schoolId:id,classId});
+  await revalidate();
+  if(roster.students.some(s=>!isActiveEnrolledStudent(s)))throw Error('Inactive student in class roster');
+  const path=api.doc(db,'schools',id,'teacher_mark_drafts',uid,
+   'class_drafts',settings.settingsId);
+  const snap=await api.getDoc(path);
+  await revalidate();
+  const restored=snap?.exists?.()?verifyStoredTeacherClassDraft({
+   actor,schoolId:id,classId,subjectId,examId,settings,
+   expectedStudentIds:roster.studentIds,stored:snap.data()}):null;
+  await verifyTeacherSubjectAssignment({db,api,actor,schoolId:id,classId,subjectId,revalidate});
+  await revalidate();
+  if(current!==draftEpoch)return;
+  const students=[...roster.students].sort((a,b)=>
+   String(a.name??a.id).localeCompare(String(b.name??b.id),'en',{numeric:true})||a.id.localeCompare(b.id));
+  draftContext={schoolId:id,classId,subjectId,examId,settings,students,revision:restored?.revision??0};
+  const previous=new Map(restored?.entries.map(row=>[row.studentId,row])??[]);
+  const header=$('teacherDraftHeader');header.replaceChildren();
+  for(const text of ['Student','Absent',...settings.components.map(c=>c.name+' / '+c.fullMarks)]){
+   const th=document.createElement('th');th.textContent=text;header.append(th);
+  }
+  const fragment=document.createDocumentFragment();
+  for(const student of students){
+   const tr=document.createElement('tr');tr.dataset.studentId=student.id;
+   const label=document.createElement('td');label.textContent=student.name??student.id;tr.append(label);
+   const prior=previous.get(student.id);
+   const absenceCell=document.createElement('td'),absent=document.createElement('input');
+   absent.type='checkbox';absent.dataset.absent='1';absent.checked=prior?.isAbsent===true;
+   absent.setAttribute('aria-label','Absent '+student.id);absenceCell.append(absent);tr.append(absenceCell);
+   for(const component of settings.components){
+    const td=document.createElement('td'),input=document.createElement('input');
+    input.type='number';input.step='any';input.min='0';input.max=String(component.fullMarks);
+    input.dataset.component=component.key;input.setAttribute('aria-label',component.name+' '+student.id);
+    if(prior&&!prior.isAbsent)input.value=String(prior.values[component.key]);
+    input.disabled=prior?.isAbsent===true;td.append(input);tr.append(td);
+   }
+   fragment.append(tr);
+  }
+  $('teacherDraftRows').append(fragment);
+  $('teacherDraftStatus').textContent=roster.count+' विद्यार्थी, '+settings.components.length+
+    ' Examination Settings Components। '+(restored?'Draft Revision '+restored.revision+' सुरक्षित छ।':'नयाँ Draft।')+
+    ' सबै अंक भरेपछि Validate गर्नुहोस्। यो आधिकारिक नतिजा होइन।';
+ }catch(e){if(current===draftEpoch&&request===epoch){clearTeacherDraft();$('teacherDraftStatus').textContent='Teacher Draft खोल्न सकिएन: '+e.message}}
+ finally{if(request===epoch)lock(false)}
+};
+$('inspectTeacherDraft').onclick=()=>{
+ if(busy||!draftContext||!actor||actor.uid!==auth?.currentUser?.uid)return;
+ const c=draftContext;
+ if(c.schoolId!==schoolId||c.classId!==$('classId').value||
+  c.subjectId!==$('subjectId').value||c.examId!==$('draftTerm').value){
+  clearTeacherDraft();return;
+ }
+ try{
+  const result=inspectConfiguredClassMarks({schoolId:c.schoolId,classId:c.classId,
+   subjectId:c.subjectId,examId:c.examId,settings:c.settings,
+   expectedStudentIds:c.students.map(s=>s.id),drafts:collectTeacherDraft()});
+  draftInspected=result.complete;
+  $('teacherDraftStatus').textContent=result.complete?
+   'सबै '+result.rosterCount+' विद्यार्थीका अंक मिलेको छ। Teacher Draft मात्र Save गर्न मिल्छ।':
+   'Draft अपूर्ण छ: '+result.missing.length+' छुटेका र '+result.invalid.length+' अमान्य अंक।';
+ }catch(e){draftInspected=false;$('teacherDraftStatus').textContent='Draft जाँच असफल: '+e.message}
+ lockTeacherDraft(false);
+};
+$('saveTeacherDraft').onclick=async()=>{
+ if(busy||!draftContext||!draftInspected||actor?.role!=='teacher')return;
+ const c=draftContext,request=epoch,current=draftEpoch,selectedActor=actor;
+ if(!confirm('यो कक्षाका सबै विद्यार्थीको अंक Teacher DRAFT मा मात्र Save गर्ने हो। आधिकारिक नतिजा प्रकाशित हुँदैन। अगाडि बढ्ने?'))return;
+ let drafts;
+ try{drafts=collectTeacherDraft()}catch(e){$('teacherDraftStatus').textContent=e.message;return}
+ lock(true);
+ $('teacherDraftStatus').textContent='सम्पूर्ण कक्षाको Teacher Draft सुरक्षित गर्न पुनः प्रमाणित हुँदैछ…';
+ try{
+  if(!await enforceSchoolIdle(auth,authSdk))throw Error('Teacher session expired');
+  if(epoch!==request||draftEpoch!==current||actor!==selectedActor||
+   auth?.currentUser?.uid!==selectedActor.uid)throw Error('Teacher Login changed');
+  const saved=await saveVerifiedTeacherClassDraft({db,api,auth,actor:selectedActor,
+   schoolId:c.schoolId,classId:c.classId,subjectId:c.subjectId,
+   examId:c.examId,drafts,expectedRevision:c.revision});
+  if(epoch!==request||draftEpoch!==current||actor!==selectedActor||
+   auth?.currentUser?.uid!==selectedActor.uid)return;
+  if(saved.rosterReverified!==true)throw Error('Teacher Draft verification incomplete');
+  c.revision=saved.revision;draftInspected=false;
+  $('teacherDraftStatus').textContent=saved.rosterCount+' विद्यार्थीको Teacher Draft Revision '+
+   saved.revision+' सुरक्षित र पुनः जाँच भयो। आधिकारिक Marks/Grade अपरिवर्तित छन्।';
+  message('Teacher Draft सुरक्षित भयो। फेरि Save गर्नुअघि अंक पुनः Validate गर्नुहोस्।');
+ }catch(e){
+  if(epoch===request&&draftEpoch===current){
+   clearTeacherDraft();
+   $('teacherDraftStatus').textContent=
+    (e.name==='TeacherDraftPostSaveReviewError'
+     ? 'Draft Revision '+e.revision+' Commit भएको छ, तर अन्तिम जाँच असफल भयो। '
+     : 'Draft Save को स्थिति पुष्टि भएन। ')+
+    'पुनः Save नगर्नुहोस्; पहिले कक्षा र सुरक्षित Revision Reload गरी जाँच्नुहोस्। कारण: '+(e.cause?.message??e.message);
+  }
+ }finally{if(epoch===request)lock(false)}
 };
 
 if(requestedSchool)queueMicrotask(()=>$('connect').click());
