@@ -70,6 +70,27 @@ function fixture({noDraft=false,afterRead}={}){
  assert.equal(result.found,false);
  assert.equal(result.publicationAllowed,false);
 }
+{
+ // A Draft appearing after the first missing read must not be reported absent.
+ let reads=0;
+ const f=fixture({noDraft:true,afterRead:({ref,data})=>{
+  if(ref===draftPath&&++reads===2)
+   data.set(draftPath,{...structuredClone(planned.data),updatedAt:{seconds:1}});
+ }});
+ await assert.rejects(loadSchoolAdminTeacherDraftReview(f.args),/Draft or enrollment changed/);
+}
+{
+ // An enrollment change during a missing-Draft lookup must also fail closed.
+ const f=fixture({noDraft:true});
+ let pages=0;
+ const original=f.args.api.getDocs;
+ f.args.api.getDocs=async query=>{
+  const page=await original(query);
+  if(++pages===2)f.data.get('schools/'+schoolId+'/students/s1').name='changed';
+  return page;
+ };
+ await assert.rejects(loadSchoolAdminTeacherDraftReview(f.args),/Draft or enrollment changed/);
+}
 for(const mutation of [
  f=>{f.auth.currentUser={uid:'intruder'}},
  f=>{f.data.get('schools/'+schoolId+'/members/'+adminUid).role='viewer'},

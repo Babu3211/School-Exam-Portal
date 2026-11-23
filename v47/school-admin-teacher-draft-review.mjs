@@ -64,6 +64,23 @@ export async function loadSchoolAdminTeacherDraftReview({
  const stored=await readDocument(draftPath);
  await verifyDuty();
  if(!stored){
+  // A missing Draft is also a time-sensitive result: do not report "not found"
+  // if it appears, or the roster/settings/duty change during this lookup.
+  const [freshRoster,latestSettings,latestDraft]=await Promise.all([
+   loadCompleteClassRoster({db,api,actor,schoolId,classId}),
+   readDocument(settingsPath),readDocument(draftPath)
+  ]);
+  check();
+  if(latestDraft||
+   roster.count!==freshRoster.count||
+   roster.studentIds.some((id,i)=>id!==freshRoster.studentIds[i])||
+   roster.students.some((student,i)=>JSON.stringify(student)!==JSON.stringify(freshRoster.students[i]))||
+   freshRoster.students.some(student=>!isActiveEnrolledStudent(student)))
+   throw Error('Teacher Draft or enrollment changed during lookup; reload');
+  if(!latestSettings||JSON.stringify(latestSettings)!==JSON.stringify(settingsDoc))
+   throw Error('Examination Settings changed during Teacher Draft lookup');
+  await verifyDuty();
+  check();
   return Object.freeze({found:false,schoolId,teacherUid,classId,subjectId,examId,
    subjectName:duty.subjectName,rosterCount:roster.count,entries:Object.freeze([]),
    reviewOnly:true,officialMarksWritten:false,publicationAllowed:false});
