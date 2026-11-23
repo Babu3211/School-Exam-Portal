@@ -9,6 +9,9 @@ on:
       - 'v47/test-server-*.mjs'
       - 'v47/test-configured-*.mjs'
       - '.github/workflows/v47-publication-unit-tests.yml'
+      - 'src/v47/official-marks-http-handler.mjs'
+      - 'src/v47/read-api-router.mjs'
+      - 'scripts/test-v47-official-marks-http.mjs'
 permissions:
   contents: read
 concurrency:
@@ -32,6 +35,7 @@ jobs:
           node v47/test-server-publication-transition-preflight.mjs
           node v47/test-server-official-marks-reader.mjs
           node v47/test-server-official-marks-firestore-loader.mjs
+          node scripts/test-v47-official-marks-http.mjs
           node v47/test-server-verified-official-class-marks.mjs
           node v47/test-server-publication-staging-executor.mjs
           node v47/test-server-publication-authoritative-preflight.mjs
