@@ -1,5 +1,6 @@
 import { getApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
 import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSubject,supportsQuestionLanguage} from "./cdc-question-autogen.mjs";
+import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
 import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 import {
@@ -167,6 +168,9 @@ function pageShell() {
         <div class="qp-field" style="grid-column:1/-1"><label for="qpBpSourceUrl">आधिकारिक CDC स्रोत URL</label><input id="qpBpSourceUrl" type="url" maxlength="500" required></div>
         <div class="qp-field" style="grid-column:1/-1"><label for="qpBpUnitGrid">मूल CDC Grid अनुसार Unit–Level–Question Type–Marks (JSON, Admin मात्र)</label><textarea id="qpBpUnitGrid" rows="5" required maxlength="20000" placeholder='[{"unitCode":"1","type":"mcq","marks":1,"count":2,"cognitiveLevel":"knowledge"}]'></textarea>
           <p class="qp-hint">माथिको JSON केवल ढाँचाको उदाहरण हो, CDC को आधिकारिक वितरण होइन। सम्बन्धित कक्षा/विषयको CDC दस्तावेजबाट वास्तविक पङ्क्ति पुष्टि गरेर मात्र राख्नुहोस्। शिक्षकले प्रश्न टाइप गर्नुपर्दैन।</p>
+          <div class="qp-actions"><label class="qp-btn alt" for="qpBpGridFile">समीक्षा गरिएको CDC Grid JSON File छान्नुहोस्</label><input class="qp-hidden" id="qpBpGridFile" type="file" accept=".json,application/json">
+          <button class="qp-btn alt" type="button" id="qpBpAnalyzeGrid">Grid का अंक/प्रकार स्वतः गणना</button></div>
+          <p class="qp-hint" id="qpBpGridAnalysis" role="status">असली Grid पङ्क्ति ल्याएपछि Preview गर्नुहोस्; गलत जम्मा भए Save हुनेछैन।</p>
           <label class="qp-topic"><input id="qpBpSourceReviewed" type="checkbox" required>मूल CDC Grid का Unit, प्रश्न संख्या, प्रकार, अङ्क र संज्ञानात्मक स्तर मैले जाँचेर मिलाएको छु।</label>
         </div>
         <div class="qp-actions" style="grid-column:1/-1"><button class="qp-btn" type="submit">यो कक्षा/विषयको Blueprint सुरक्षित गर्नुहोस्</button><span class="qp-hint" id="qpBpStatus"></span></div>
@@ -555,26 +559,44 @@ async function saveUnit(event) {
   await logQuestionActivity("cdc_topic_import",ref.id,selectedClass+" "+selectedSubject+" · "+topics.length+" topics");
   $("qpUnitForm").reset();await loadCurrentData();message("CDC एकाइ र Topic सूची सुरक्षित भयो।");
 }
+// Read the reviewed CDC unit rows without changing school data.
+function inspectAdminUnitGrid(){
+ let entries;
+ try{entries=JSON.parse($("qpBpUnitGrid").value.trim());}
+ catch{throw Error("CDC Unit-wise Grid JSON फाइल वा Data ठीक छैन।");}
+ const calculated=aggregateExactCdcGrid(entries);
+ if(calculated.fullMarks!==Number($("qpBpFullMarks").value))
+  throw Error("Grid को जम्मा "+calculated.fullMarks+" छ, छानिएको पूर्णाङ्क "+
+    $("qpBpFullMarks").value+" छ। वास्तविक CDC Grid अनुसार मिलाउनुहोस्।");
+ return {entries,calculated};
+}
+function reviewAdminUnitGrid(){
+ const {calculated}=inspectAdminUnitGrid();
+ const shortType=t=>({mcq:"MCQ",short:"छोटो",long:"लामो"})[t]||t;
+ const lines=calculated.pattern.map(p=>shortType(p.type)+" "+
+  p.count+"×"+p.marks+"="+p.count*p.marks);
+ $("qpBpGridAnalysis").textContent="Grid बाट "+calculated.questionCount+
+  " प्रश्न, "+calculated.fullMarks+" पूर्णाङ्क: "+lines.join(" · ")+
+  "। संज्ञानात्मक अंक-वितरण: "+
+  Object.entries(calculated.distribution).map(([k,v])=>levelLabel(k)+": "+v.toFixed(2)+"%").join(" · ")+
+  "। मूल CDC दस्तावेजसँग जाँच गरेपछि मात्र Save गर्नुहोस्।";
+ return calculated;
+}
+
 async function saveBlueprint(event) {
   event.preventDefault();
   if(!isAdmin())throw new Error("CDC Blueprint व्यवस्थापन Admin का लागि मात्र हो।");
   if(!selectedClass||!selectedSubject)throw new Error("पहिले कक्षा र विषय छान्नुहोस्।");
   const sourceUrl=$("qpBpSourceUrl").value.trim();
   if(!/^https:\/\/(www\.)?moecdc\.gov\.np\//i.test(sourceUrl)&&!/^https:\/\/lib\.moecdc\.gov\.np\//i.test(sourceUrl))throw new Error("CDC को आधिकारिक URL राख्नुहोस्।");
-  const distribution={
-    knowledge:Number($("qpBpKnowledge").value),understanding:Number($("qpBpUnderstanding").value),
-    application:Number($("qpBpApplication").value),higher:Number($("qpBpHigher").value)
-  };
-  if(Object.values(distribution).reduce((a,b)=>a+b,0)!==100)throw new Error("संज्ञानात्मक स्तरको प्रतिशत जम्मा १०० हुनुपर्छ।");
-  const pattern=getPattern("qpBp");
-  const total=pattern.reduce((sum,x)=>sum+x.count*x.marks,0);
-  const fullMarks=Number($("qpBpFullMarks").value);
-  if(total!==fullMarks)throw new Error("प्रश्न ढाँचाको जम्मा अङ्क "+total+" छ; पूर्णाङ्क "+fullMarks+" हुनुपर्छ।");
   if($("qpBpSourceReviewed").checked!==true)
    throw Error("मूल CDC Grid को Unit, प्रश्न संख्या, अङ्क र संज्ञानात्मक स्तर मिलाएको पुष्टि गर्नुहोस्।");
-  let unitGrid;
-  try{unitGrid=JSON.parse($("qpBpUnitGrid").value.trim());}
-  catch{throw Error("CDC Unit-wise Grid JSON मान्य छैन।");}
+  // Derive the exact aggregate and cognitive distributions from unit rows.
+  // Do not require redundant manual type counts that cannot represent a
+  // legitimate Grid mixing 2/3/4-mark questions of one question type.
+  const {entries:unitGrid,calculated}=inspectAdminUnitGrid();
+  const fullMarks=calculated.fullMarks;
+  const pattern=calculated.pattern,distribution=calculated.distribution;
   validateExactCdcUnitGrid({
     fullMarks,pattern,unitGrid,sourceUrl,
     curriculumVersion:$("qpBpVersion").value.trim(),
@@ -1098,6 +1120,20 @@ document.addEventListener("change",async event=>{
   if(t.id==="qpPaperFullMarks"||t.id==="qpAutoMode"||t.id==="qpAutoLanguage"||
      t.matches?.("[data-qp-topic]"))updateAutoGridStatus();
   if(t.id==="qpAutoReviewed")updateAutoReviewActions();
+  if(t.id==="qpBpGridFile"&&t.files?.[0]){
+    try{
+      if(t.files[0].size>20000)throw Error("Grid JSON फाइल 20KB भन्दा ठूलो छ।");
+      const source=await t.files[0].text();
+      const data=JSON.parse(source);
+      const rows=Array.isArray(data)?data:data?.unitGrid;
+      if(!Array.isArray(rows))throw Error("Grid फाइलमा unitGrid सूची आवश्यक छ।");
+      $("qpBpUnitGrid").value=JSON.stringify(rows,null,2);
+      $("qpBpSourceReviewed").checked=false;
+      $("qpBpGridAnalysis").textContent="Grid JSON पढियो; CDC स्रोत मिलाएर Analyze गर्नुहोस्।";
+      reviewAdminUnitGrid();
+    }catch(error){$("qpBpGridAnalysis").textContent="Grid Import असफल: "+error.message;}
+    finally{t.value="";}
+  }
   if(t.id==="qpQuestionType")toggleMcqFields();
   if(t.id==="qpImportFile"&&t.files?.[0]){
     try{await importTopics(t.files[0]);}catch(err){message("आयात भएन: "+(err.code||err.message),true);}finally{t.value="";}
@@ -1126,6 +1162,10 @@ document.addEventListener("click",async event=>{
     if(t.id==="qpGrade8SciencePackBtn")await loadGrade8SciencePack();
     if(t.id==="qpGrade10SciencePackBtn")await loadGrade10SciencePack();
     if(t.id==="qpGenerateBtn")await generatePaper();
+    if(t.id==="qpBpAnalyzeGrid"){
+      if(!isAdmin())throw Error("CDC Grid Review Admin ले मात्र गर्न सक्छ।");
+      reviewAdminUnitGrid();
+    }
     if(t.id==="qpSmartGenerateBtn")await generateSmartPaper();
     if(t.id==="qpSelectGridUnits"){
       const target=Number($("qpPaperFullMarks").value),

@@ -134,3 +134,11 @@ assert.throws(()=>buildAutomaticQuestionPaper({questions:scoped.questions,
  topicIds:scoped.units.slice(0,2).map(x=>x.id+'_0'),
  fullMarks:2,language:'ne',gradeNumber:7,subject:'Science'}),/No reviewed/);
 console.log('PASS classroom grade isolation of preloaded bank');
+
+assert.match(page,/aggregateExactCdcGrid\(/);
+assert.match(page,/id="qpBpGridFile"/);
+assert.match(page,/id="qpBpAnalyzeGrid"/);
+assert.match(page,/function inspectAdminUnitGrid\(/);
+assert.match(page,/const pattern=calculated\.pattern,distribution=calculated\.distribution/);
+assert.match(page,/if\(calculated\.fullMarks!==Number/);
+console.log('PASS CDC Grid import, derived mark count/level and mismatch refusal wiring');
