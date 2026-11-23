@@ -905,8 +905,23 @@ function updateAutoGridStatus(){
      "; Unit "+short.slice(0,6).map(q=>q.unit+" Objective "+q.obj+"/"+q.objNeed+
       ", WCA "+q.wca+"/"+q.wcaNeed).join("; "):"")+
     "। अपूरो वा अनुमानित प्रश्नपत्र बनाइँदैन।";
-  }else el.textContent=target+
-   " अंकको मूल CDC Unit-wise Grid का सबै अङ्कभार पङ्क्ति प्रणालीमा अझै प्रमाणित छैनन्। गलत प्रश्नपत्र नबनोस् भनेर Exact मोड रोकिएको छ।";
+  }else{
+   const grade8Audit=target===50?compareGrade8SciencePracticeBank({
+    grade:gradeNumber(selectedClass),subject:selectedSubject,
+    questions:[...questionRows,...bundledPracticeQuestions]
+   }):null;
+   if(grade8Audit){
+    const missing=grade8Audit.missingTypes.map(row=>
+     ({very_short:"अति छोटा",short:"छोटा",long:"लामा",mcq:"MCQ"}[row.group]||row.group)+
+     " "+row.marksEach+" अङ्कका "+row.missingAtLeast+" प्रश्न कम");
+    el.textContent="कक्षा ८ विज्ञान: CDC २०७८ नमुना ढाँचा १० MCQ, ८ अति छोटा, ८ छोटा, ४ लामा "+
+     "(५० अङ्क) हो। अहिले मिल्ने प्रश्नको अभाव: "+
+     (missing.join("; ")||"प्रकार पूरा भए पनि संज्ञानात्मक तह/एकाइ तथा मूल स्रोत पुष्टि बाँकी")+
+     "। २०७८ स्रोतका Grid/Model अङ्कमा अन्तर र २०८२ मूल PDF जाँच बाँकी।"+
+     " विद्यालयमा २०८३ CDC Exact भनेर प्रिन्ट गरिँदैन।";
+   }else el.textContent=target+
+    " अंकको मूल CDC Unit-wise Grid का सबै अङ्कभार पङ्क्ति प्रणालीमा अझै प्रमाणित छैनन्। गलत प्रश्नपत्र नबनोस् भनेर Exact मोड रोकिएको छ।";
+  }
   return;
  }
  try{
