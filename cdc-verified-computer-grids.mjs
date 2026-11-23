@@ -427,6 +427,7 @@ export function bundledComputerUnitTopics(grade,subject){
  const grid=getBundledComputerGrid({grade,subject,fullMarks:50});
  if(!grid)return [];
  return grid.unitNames.map((unitTitle,i)=>({
+  id:'cdc_official_computer_g'+grade+'_u'+(i+1),
   unitCode:String(i+1),unitTitle,topics:[unitTitle],
   sourceTitle:grid.sourceTitle,sourceUrl:grid.sourceUrl,
   provenance:'CDC official specification grid - unit names'
