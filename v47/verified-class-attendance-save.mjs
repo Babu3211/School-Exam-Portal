@@ -48,7 +48,8 @@ export async function saveAuthoritativeClassAttendance({db,api,actor,schoolId,cl
   const after=await loadCompleteClassRoster({db,api,actor,schoolId,classId});
   assertSession?.();
   if(after.studentIds.length!==roster.studentIds.length||
-     after.studentIds.some((id,index)=>id!==roster.studentIds[index]))
+     after.studentIds.some((id,index)=>id!==roster.studentIds[index])||
+     after.students.some((student,index)=>JSON.stringify(student)!==JSON.stringify(roster.students[index])))
    throw new Error('Student roster changed during attendance save');
  }catch(cause){
   throw new AttendancePostSaveReviewError(result.saved,result.total,cause);

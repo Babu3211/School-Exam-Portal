@@ -104,6 +104,36 @@ for(const changedIds of [['s1','s2','s3'],['s2']]){
  assert.equal(commits,1,'Confirmed writes must not be reported as rolled back');
  assert.equal(reads,2);
 }
+// A student record changing while attendance is being committed must
+// invalidate full-class verification even if every student ID stays the same.
+for(const change of [
+ student=>{student.name='Changed during save'},
+ student=>{student.active=false}
+]){
+ let reads=0,commits=0;
+ const rosterData=students.map(id=>({schoolId,class:classId,name:id,active:true}));
+ const changingApi={...api,
+  getDocs:async()=>{
+   reads++;
+   if(reads===2)change(rosterData[0]);
+   return {docs:students.map((id,index)=>({
+    id,data:()=>structuredClone(rosterData[index])
+   }))};
+  },
+  writeBatch:()=>({set:()=>{},commit:async()=>{commits++}})
+ };
+ await assert.rejects(saveAuthoritativeClassAttendance({
+  db:{},api:changingApi,actor,schoolId,classId,date,entries
+ }),error=>{
+  assert.equal(error.name,'AttendancePostSaveReviewError');
+  assert.equal(error.saved,2);
+  assert.equal(error.reviewRequired,true);
+  assert.match(error.cause?.message??'',/roster changed/);
+  return true;
+ });
+ assert.equal(commits,1,'Acknowledged attendance must not be reported as rolled back');
+ assert.equal(reads,2);
+}
 // The last roster read may fail after the last batch succeeds. This requires
 // explicit human review; it must not silently become a success or a retry.
 {
