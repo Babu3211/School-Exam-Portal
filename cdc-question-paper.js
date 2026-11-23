@@ -1,6 +1,7 @@
 import { getApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
 import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSubject,isQuestionReadyForLanguage,cognitiveMarkDistribution} from "./cdc-question-autogen.mjs";
 import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
+import {getBundledComputerGrid,bundledComputerUnitTopics} from "./cdc-verified-computer-grids.mjs";
 import {QUESTION_EXCEL_FIELDS,parseQuestionExcelSheet,CDC_GRID_EXCEL_FIELDS,parseCdcGridExcelSheet} from "./cdc-question-excel.mjs";
 import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
@@ -481,10 +482,17 @@ async function loadCurrentData() {
  }))
   .sort((a,b)=>Number(b.createdAt?.seconds||0)-Number(a.createdAt?.seconds||0));
  blueprintRows=blueprints.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.active!==false);
- currentBlueprint=blueprintRows.sort((a,b)=>Number(b.updatedAt?.seconds||0)-Number(a.updatedAt?.seconds||0))[0]||null;
- bundledPracticeUnits=bundled.units;
+ const officialComputerGrid=getBundledComputerGrid({grade,subject,fullMarks:50});
+ currentBlueprint=officialComputerGrid||
+  blueprintRows.sort((a,b)=>Number(b.updatedAt?.seconds||0)-Number(a.updatedAt?.seconds||0))[0]||null;
+ // Read-only CDC unit titles shipped with the portal. Teachers can select
+ // units immediately; no spreadsheet import or school database write is needed.
+ bundledPracticeUnits=[...bundled.units,...bundledComputerUnitTopics(grade,subject)];
  bundledPracticeQuestions=bundled.questions;
- bundledPracticeStatus=bundled.status;
+ bundledPracticeStatus=officialComputerGrid?
+  "कक्षा "+grade+" Computer Science: CDC को ५० अङ्क/२५ प्रश्नको आधिकारिक Unit-wise Grid र "+
+  officialComputerGrid.unitNames.length+" Unit स्वतः तयार छन्। प्रश्नपत्रका लागि पर्याप्त समीक्षा गरिएका प्रश्न अझै आवश्यक छन्।":
+  bundled.status;
  $("qpCurriculumVersion").value=curriculumRows[0]?.curriculumVersion||"CDC संस्करण Topic सूचीअनुसार";
  renderTopics();renderQuestionRows();
  $("qpAutoSourceStatus").textContent=bundledPracticeStatus;
@@ -494,8 +502,11 @@ async function loadCurrentData() {
  updateAutoGridStatus();
  const badge=$("qpBlueprintBadge");
  if(currentBlueprint){
-  badge.textContent="Admin-entered Grid · "+(currentBlueprint.curriculumVersion||"संस्करण");
-  $("qpPatternHint").textContent="Admin ले स्रोतका आधारमा राखेको Grid अनुसार प्रश्नको प्रकार, संख्या र अङ्क भरिएको छ। औपचारिक CDC मिलानका लागि शिक्षकले मूल Grid पुनः जाँच्नुहोस्।";
+  badge.textContent=currentBlueprint.gridOrigin==="bundled_official_cdc_pdf"?
+   "Official CDC PDF Grid · "+grade:"Admin-entered Grid · "+(currentBlueprint.curriculumVersion||"संस्करण");
+  $("qpPatternHint").textContent=currentBlueprint.gridOrigin==="bundled_official_cdc_pdf"?
+   "आधिकारिक CDC PDF का सबै Unit, प्रश्न प्रकार, अङ्क र संज्ञानात्मक स्तर पहिले नै सेट छन्। Excel/JSON भर्नु पर्दैन। पर्याप्त समीक्षा गरिएका प्रश्न नभए गलत प्रश्नपत्र बन्द रहन्छ।":
+   "Admin ले स्रोतका आधारमा राखेको Grid अनुसार प्रश्नको प्रकार, संख्या र अङ्क भरिएको छ। औपचारिक CDC मिलानका लागि शिक्षकले मूल Grid पुनः जाँच्नुहोस्।";
   setBuilderPattern(currentBlueprint.pattern,currentBlueprint.fullMarks,currentBlueprint.durationMinutes);
  }else{
   badge.textContent="Custom Pattern";
@@ -722,6 +733,13 @@ async function generatePaper() {
   message("प्रश्नपत्र तयार भयो। "+questions.length+" प्रश्न, "+fullMarks+" अङ्क। संज्ञानात्मक वितरण: "+coverage+(missingAnswerCount?"। "+missingAnswerCount+" प्रश्नको उत्तर संकेत बाँकी छ":"। सबै प्रश्नको उत्तर संकेत उपलब्ध छ")+". Save वा Print गर्न सक्नुहुन्छ।");
 }
 function blueprintForFullMarks(fullMarks){
+ // Verified official CDC computer grids take precedence ONLY for their
+ // exact Grade 9/10 optional Computer Science 50-mark examination.
+ // Every other subject/full marks retains its existing school settings.
+ const official=getBundledComputerGrid({
+  grade:gradeNumber(selectedClass),subject:selectedSubject,fullMarks
+ });
+ if(official)return official;
  return blueprintRows
   .filter(bp=>bp.active!==false&&Number(bp.fullMarks)===fullMarks)
   .sort((a,b)=>Number(b.updatedAt?.seconds||0)-Number(a.updatedAt?.seconds||0))[0]||null;
