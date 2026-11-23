@@ -28,6 +28,14 @@ export const CDC_G10_OPTIONAL_MATH_2083_MODEL=Object.freeze({
  cognitivePercent:Object.freeze({knowledge:16,understanding:24,application:40,higher:20}),
  modelNumbering:Object.freeze({objectiveQuestionNumber:1,
   objectiveParts:Object.freeze(['A','B','C','D','E','F','G','H','I','J','K']),
+  objectiveCognitiveByPart:Object.freeze([
+   'knowledge','application','application','knowledge','higher',
+   'application','knowledge','higher','understanding','understanding','understanding'
+  ]),
+  objectiveAreaByPart:Object.freeze(['1','1','2','2','2','3','3','3','4','6','5']),
+  withinContentAreaByMainQuestion:Object.freeze([
+   '1','1','1','2','2','2','3','3','3','4','5','6'
+  ]),
   withinContentQuestionNumbers:Object.freeze([2,3,4,5,6,7,8,9,10,11,12,13]),
   crossContentQuestionNumbers:Object.freeze([14,15,16,17])})
 });
@@ -53,6 +61,17 @@ export function compareCdc2083MathModelToBundledGrid(){
  const modelNumberCount=observed.modelNumbering.objectiveParts.length+
   observed.modelNumbering.withinContentQuestionNumbers.length+
   observed.modelNumbering.crossContentQuestionNumbers.length;
+ const n=observed.modelNumbering;
+ const unitObjectiveCounts=observed.contentAreaCodes.map(code=>
+  n.objectiveAreaByPart.filter(unit=>unit===code).length);
+ const unitWcaCounts=observed.contentAreaCodes.map(code=>
+  n.withinContentAreaByMainQuestion.filter(unit=>unit===code).length);
+ same('modelObjectiveUnitCounts',unitObjectiveCounts,observed.areaObjectiveCounts);
+ same('modelWcaUnitCounts',unitWcaCounts,observed.areaWcaCounts);
+ same('modelObjectiveCognitiveCounts',[
+  ...['knowledge','understanding','application','higher'].map(level=>
+   n.objectiveCognitiveByPart.filter(value=>value===level).length)
+ ],[3,3,3,2]);
  same('questionItems',count,modelNumberCount);
  same('numberedMainQuestions',[
   observed.modelNumbering.objectiveQuestionNumber,
