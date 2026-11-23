@@ -16,12 +16,18 @@ const normal=s=>String(s||'').trim().toLocaleLowerCase().replace(/\s+/g,' ');
 for(const id of ['qpClass','qpSubject','qpSection','qpPaperFullMarks','qpAutoLanguage',
  'qpSmartGenerateBtn','qpGenerateBtn','qpTopicSelectAll','qpTopicClearAll','qpSelectGridUnits',
  'qpSavePaperBtn','qpPrintPaperBtn','qpAnswerKeyBtn','qpPaperPreview','qpAutoReviewed','qpAutoMode','qpAutoGridStatus',
- 'qpQuestionExcelTemplateBtn','qpQuestionExcelFile','qpQuestionTemplateBtn','qpQuestionImportFile'])
+ 'qpQuestionExcelTemplateBtn','qpQuestionExcelFile','qpQuestionTemplateBtn','qpQuestionImportFile',
+ 'qpBpGridExcelTemplateBtn','qpBpGridExcelFile','qpBpGridFile'])
  assert.ok($(id),'Expected actual DOM control '+id);
 assert.deepEqual([...$('qpAutoLanguage').options].map(x=>x.value),['ne','en','both']);
 assert.equal($('qpSourceDetails').open,false,'Long CDC source lists should be collapsed by default');
 assert.equal($('qpManualQuestions').open,false,'No typing required for the teacher default path');
 assert.ok($('qpQuestionForm'),'Existing manual bank form must be preserved for admins');
+assert.match(source,/async function importCdcGridExcel\(file\)/);
+assert.match(source,/async function downloadCdcGridExcelTemplate\(\)/);
+assert.match(source,/parseCdcGridExcelSheet\(sheet\)/);
+assert.match(source,/assertQuestionBankImportScope\(scope\);[\s\S]*?\$\("qpBpUnitGrid"\)\.value=json/);
+assert.match(source,/\$\("qpBpSourceReviewed"\)\.checked=false/);
 assert.match(source,/async function importQuestionBankExcel\(file\)/);
 assert.match(source,/const scope=captureQuestionBankImportScope\(\)/);
 assert.match(source,/return importQuestionBankRows\(rows,scope\);/);
