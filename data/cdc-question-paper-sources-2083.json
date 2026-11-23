@@ -358,8 +358,20 @@
       "subject": "विज्ञान तथा प्रविधि",
       "kind": "specification_grid",
       "version": "2082",
-      "status": "official",
-      "url": "https://moecdc.gov.np/content/278/specialization-schedule-class-class-9-science-and/"
+      "status": "official_CDC_page_linked_grid_content_not_yet_extracted",
+      "url": "https://moecdc.gov.np/content/278/specialization-schedule-class-class-9-science-and/",
+      "note": "Official CDC Grade 9 science grid page located; exact unit/question/marks/cognitive rows are not yet transcribed or independently checked."
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "specification_grid",
+      "version": "2082",
+      "status": "official_CDC_page_linked_grid_content_not_yet_extracted",
+      "url": "https://moecdc.gov.np/content/273/specialization-schedule-class-10-science-and-technology/",
+      "note": "Official CDC Grade 10 science grid page located; do not enable Exact mode until row-by-row transcription and school review."
     },
     {
       "grades": [
