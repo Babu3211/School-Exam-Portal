@@ -19,6 +19,10 @@ assert.ok(html.includes('active class attendance assignment'),'Teacher UI warnin
 assert.ok(html.includes('Viewer is read-only'),'Viewer UI warning missing');
 assert.ok(html.includes('id="verifiedSave"'),'Complete class action must be visible');
 assert.ok(html.includes('Neither button is atomic for more than 10 students'),'Do not misrepresent large-class atomicity');
+assert.ok(js.includes("rosterSelections.clear();renderRoster();reset()"),'Date change must discard previous day selections');
+assert.ok(js.includes("AttendancePostSaveReviewError"),'Post-commit roster uncertainty must require review');
+assert.ok(js.includes("if(result.rosterReverified!==true)"),'Complete save UI must require verified final roster');
+
 for(const contract of [
  "import {saveAuthoritativeClassAttendance} from './verified-class-attendance-save.mjs'",
  "$('verifiedSave').onclick=async()=>",

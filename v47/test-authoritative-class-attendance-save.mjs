@@ -69,4 +69,71 @@ assert.equal(rosterReads,0,'Switched account must not read roster');
  assert.equal(progress[0].saved,10);
 }
 
+// Successful saves require a second, authoritative class roster read.
+{
+ let reads=0,writes=0;
+ const sameApi={...api,
+  getDocs:async()=>{reads++;return api.getDocs()},
+  writeBatch:()=>({set:()=>{},commit:async()=>{writes++}})
+ };
+ const result=await saveAuthoritativeClassAttendance({db:{},api:sameApi,actor,schoolId,classId,date,entries});
+ assert.equal(result.rosterReverified,true);
+ assert.equal(writes,1);
+ assert.equal(reads,2,'Read entire class both before and after acknowledged writes');
+}
+// Student enrolled or transferred after first roster verification. The write
+// succeeded, but full-class completion must NEVER be claimed.
+for(const changedIds of [['s1','s2','s3'],['s2']]){
+ let reads=0,commits=0;
+ const changingApi={...api,
+  getDocs:async()=>{
+   reads++;
+   const ids=reads===1?students:changedIds;
+   return {docs:ids.map(id=>({id,data:()=>({schoolId,class:classId})}))};
+  },
+  writeBatch:()=>({set:()=>{},commit:async()=>{commits++}})
+ };
+ await assert.rejects(saveAuthoritativeClassAttendance({db:{},api:changingApi,actor,schoolId,classId,date,entries}),error=>{
+  assert.equal(error.name,'AttendancePostSaveReviewError');
+  assert.equal(error.saved,2);
+  assert.equal(error.total,2);
+  assert.equal(error.reviewRequired,true);
+  assert.match(error.cause?.message??'',/roster changed/);
+  return true;
+ });
+ assert.equal(commits,1,'Confirmed writes must not be reported as rolled back');
+ assert.equal(reads,2);
+}
+// The last roster read may fail after the last batch succeeds. This requires
+// explicit human review; it must not silently become a success or a retry.
+{
+ let reads=0,commits=0;
+ const offlineApi={...api,
+  getDocs:async()=>{reads++;if(reads===2)throw Error('final roster offline');return api.getDocs()},
+  writeBatch:()=>({set:()=>{},commit:async()=>{commits++}})
+ };
+ await assert.rejects(saveAuthoritativeClassAttendance({db:{},api:offlineApi,actor,schoolId,classId,date,entries}),e=>{
+  assert.equal(e.name,'AttendancePostSaveReviewError');
+  assert.equal(e.saved,2);
+  assert.match(e.cause?.message??'',/final roster offline/);
+  return true;
+ });
+ assert.equal(commits,1);
+}
+// A session switch after the successful commit but before final verification
+// also demands manual review and must never claim the batch was rolled back.
+{
+ let checks=0,commits=0;
+ const changedAuthApi={...api,writeBatch:()=>({set:()=>{},commit:async()=>{commits++}})};
+ await assert.rejects(saveAuthoritativeClassAttendance({db:{},api:changedAuthApi,actor,schoolId,classId,date,entries,
+  assertSession:()=>{checks++;if(checks>=4)throw Error('Firebase user switched after commit')}
+ }),e=>{
+  assert.equal(e.name,'AttendancePostSaveReviewError');
+  assert.equal(e.saved,2);
+  assert.match(e.cause?.message??'',/user switched after commit/);
+  return true;
+ });
+ assert.equal(commits,1);
+}
+
 console.log('Authoritative attendance: complete roster, permissions, live session and partial-batch failure verified');
