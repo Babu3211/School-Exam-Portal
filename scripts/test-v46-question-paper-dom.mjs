@@ -14,7 +14,7 @@ const $=id=>dom.window.document.getElementById(id);
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const normal=s=>String(s||'').trim().toLocaleLowerCase().replace(/\s+/g,' ');
 for(const id of ['qpClass','qpSubject','qpSection','qpPaperFullMarks','qpAutoLanguage',
- 'qpSmartGenerateBtn','qpGenerateBtn','qpTopicSelectAll','qpTopicClearAll',
+ 'qpSmartGenerateBtn','qpGenerateBtn','qpTopicSelectAll','qpTopicClearAll','qpSelectGridUnits',
  'qpSavePaperBtn','qpPrintPaperBtn','qpAnswerKeyBtn','qpPaperPreview','qpAutoReviewed','qpAutoMode','qpAutoGridStatus'])
  assert.ok($(id),'Expected actual DOM control '+id);
 assert.deepEqual([...$('qpAutoLanguage').options].map(x=>x.value),['ne','en','both']);
@@ -31,6 +31,8 @@ renderTopics();
 assert.equal(dom.window.document.querySelectorAll('[data-qp-topic]').length,19);
 assert.equal(dom.window.document.querySelectorAll('[data-qp-topic]:checked').length,19);
 assert.equal($('qpTopicCount').textContent,'19 Topic');
+assert.equal(dom.window.document.querySelector('[data-qp-topic]').dataset.unitCode,'1');
+assert.match(source,/if\(t.id==="qpSelectGridUnits"\)/);
 const checkboxes=[...dom.window.document.querySelectorAll('[data-qp-topic]')];
 for(const [i,input]of checkboxes.entries())input.checked=i<3;
 $('qpAutoLanguage').value='both';$('qpPaperFullMarks').value='3';

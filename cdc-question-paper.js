@@ -166,7 +166,7 @@ function pageShell() {
 
     <div class="qp-card">
       <div class="qp-section-title"><h3>२. CDC Topic छान्नुहोस्</h3><span class="qp-badge" id="qpTopicCount">० Topic</span></div>
-      <div class="qp-actions"><button class="qp-btn alt" type="button" id="qpTopicSelectAll">सबै Topic चयन</button><button class="qp-btn alt" type="button" id="qpTopicClearAll">Topic चयन हटाउनुहोस्</button></div>
+      <div class="qp-actions"><button class="qp-btn alt" type="button" id="qpSelectGridUnits">CDC Grid का Unit छान्नुहोस्</button><button class="qp-btn alt" type="button" id="qpTopicSelectAll">सबै Topic चयन</button><button class="qp-btn alt" type="button" id="qpTopicClearAll">Topic चयन हटाउनुहोस्</button></div>
       <p class="qp-hint">शिक्षकले प्रश्न बैंकमा आफैँ थपेका Topic र उपलब्ध पाठ्यक्रम सूचीबाट आफूले चाहेका Topic छान्नुहोस्। कुनै पूर्वलोड गरिएको सूची आवश्यक छैन।</p>
       <div id="qpTopicList" class="qp-topic-list"><p class="qp-hint">कक्षा र विषय छान्नुहोस्।</p></div>
     </div>
@@ -265,19 +265,19 @@ function setBuilderPattern(pattern, fullMarks, duration) {
 function renderTopics() {
   const box = $("qpTopicList"), select = $("qpQuestionTopic");
   if (!box || !select) return;
-  const topics = curriculumRows.flatMap(unit => (unit.topics || []).map((name,index) => ({id:unit.id+"_"+index,unitId:unit.id,unitTitle:unit.unitTitle,topicName:String(name)})));
+  const topics = curriculumRows.flatMap(unit => (unit.topics || []).map((name,index) => ({id:unit.id+"_"+index,unitId:unit.id,unitCode:String(unit.unitCode||""),unitTitle:unit.unitTitle,topicName:String(name)})));
   const known=new Set(topics.map(x=>x.id)),byName=new Map(topics.map(x=>[normal(x.topicName),x.id]));
   for(const unit of bundledPracticeUnits)for(const [index,name] of (unit.topics||[]).entries()){
     const key=normal(name);if(byName.has(key))continue;
     const id=unit.id+"_"+index;known.add(id);byName.set(key,id);
-    topics.push({id,unitId:unit.id,unitTitle:unit.unitTitle,topicName:String(name)});
+    topics.push({id,unitId:unit.id,unitCode:String(unit.unitCode||""),unitTitle:unit.unitTitle,topicName:String(name)});
   }
   bundledPracticeQuestions=bundledPracticeQuestions.map(q=>({...q,topicId:byName.get(normal(q.topicName))||q.topicId}));
   questionRows.forEach(q=>{
     const key=String(q.topicId||("custom_"+normal((q.unitTitle||"")+"::"+q.topicName)));
     if(q.topicName&&!known.has(key)&&!byName.has(normal(q.topicName))){
       known.add(key);byName.set(normal(q.topicName),key);
-      topics.push({id:key,unitId:q.unitId||"",unitTitle:q.unitTitle||"शिक्षकले थपेको Topic",topicName:String(q.topicName)});
+      topics.push({id:key,unitId:q.unitId||"",unitCode:String(q.unitCode||""),unitTitle:q.unitTitle||"शिक्षकले थपेको Topic",topicName:String(q.topicName)});
     }
   });
   $("qpTopicCount").textContent = topics.length+" Topic";
@@ -285,7 +285,7 @@ function renderTopics() {
     box.innerHTML = '<p class="qp-hint">अहिलेसम्म Topic छैन। तल प्रश्न थप्दा आफूले चाहेको Topic लेख्नुहोस्; सुरक्षित भएपछि यहीँ छान्न मिल्छ।</p>';
     select.innerHTML = ""; return;
   }
-  box.innerHTML = topics.map(x=>`<label class="qp-topic"><input type="checkbox" data-qp-topic value="${esc(x.id)}" checked><span><b>${esc(x.topicName)}</b><small class="qp-hint"> · ${esc(x.unitTitle||"एकाइ नतोकिएको")}</small></span></label>`).join("");
+  box.innerHTML = topics.map(x=>`<label class="qp-topic"><input type="checkbox" data-qp-topic data-unit-code="${esc(x.unitCode||"")}" value="${esc(x.id)}" checked><span><b>${esc(x.topicName)}</b><small class="qp-hint"> · ${esc(x.unitTitle||"एकाइ नतोकिएको")}</small></span></label>`).join("");
   select.innerHTML = topics.map(x=>'<option value="'+esc(x.topicName)+'">').join("");
 }
 function renderQuestionRows() {
@@ -1068,6 +1068,28 @@ document.addEventListener("click",async event=>{
     if(t.id==="qpGrade10SciencePackBtn")await loadGrade10SciencePack();
     if(t.id==="qpGenerateBtn")await generatePaper();
     if(t.id==="qpSmartGenerateBtn")await generateSmartPaper();
+    if(t.id==="qpSelectGridUnits"){
+      const target=Number($("qpPaperFullMarks").value),
+       bp=blueprintForFullMarks(target);
+      if(!bp?.unitGrid?.length)throw Error("यस कक्षा/विषय/पूर्णाङ्कको CDC Unit-wise Grid छैन। Admin बाट स्रोतअनुसार Grid राख्नुहोस्।");
+      const required=new Map();
+      for(const line of bp.unitGrid)required.set(String(line.unitCode),
+       (required.get(String(line.unitCode))||0)+Number(line.count));
+      const selectedUnits=new Set();
+      document.querySelectorAll("[data-qp-topic]").forEach(input=>{
+        const code=String(input.dataset.unitCode||"");
+        // Select the first available Topic per required Unit. Teacher can add
+        // more topics later if the exact grid has enough question slots.
+        input.checked=required.has(code)&&!selectedUnits.has(code);
+        if(input.checked)selectedUnits.add(code);
+      });
+      if([...required.keys()].some(code=>!selectedUnits.has(code))){
+        document.querySelectorAll("[data-qp-topic]").forEach(input=>input.checked=false);
+        throw Error("CDC Grid का सबै अनिवार्य Unit Topic सूचीमा भेटिएनन्। प्रश्नपत्र बनाइएको छैन।");
+      }
+      if(generatedPaper)invalidateGeneratedQuestionPaper();
+      message("CDC Grid का "+selectedUnits.size+" Unit चयन गरिए। चाहिएका Topic जाँचेर Generate गर्नुहोस्।");
+    }
     if(t.id==="qpTopicSelectAll"||t.id==="qpTopicClearAll"){
       document.querySelectorAll("[data-qp-topic]").forEach(input=>input.checked=t.id==="qpTopicSelectAll");
       if(generatedPaper)invalidateGeneratedQuestionPaper();
