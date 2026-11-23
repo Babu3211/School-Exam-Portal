@@ -15,7 +15,7 @@ const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>'
 const normal=s=>String(s||'').trim().toLocaleLowerCase().replace(/\s+/g,' ');
 for(const id of ['qpClass','qpSubject','qpSection','qpPaperFullMarks','qpAutoLanguage',
  'qpSmartGenerateBtn','qpGenerateBtn','qpTopicSelectAll','qpTopicClearAll',
- 'qpSavePaperBtn','qpPrintPaperBtn','qpAnswerKeyBtn','qpPaperPreview'])
+ 'qpSavePaperBtn','qpPrintPaperBtn','qpAnswerKeyBtn','qpPaperPreview','qpAutoReviewed'])
  assert.ok($(id),'Expected actual DOM control '+id);
 assert.deepEqual([...$('qpAutoLanguage').options].map(x=>x.value),['ne','en','both']);
 assert.equal($('qpSavePaperBtn').disabled,true,'No paper saved before generation');
@@ -53,6 +53,7 @@ const make=(overrides={})=>{
   'verifiedQuestionSelection','questionRows','bundledPracticeQuestions',
   'currentBlueprint','auth'];
  const fn=new Function(...params,'let generatedPaper=null;\n'+
+  code('function updateAutoReviewActions()','function renderPaperPreview(')+
   code('async function generateSmartPaper()','async function savePaper()')+
   'return {run:generateSmartPaper,getPaper:()=>generatedPaper};');
  return fn($,props.roleCanTeach,buildAutomaticQuestionPaper,
@@ -71,6 +72,53 @@ assert.equal(paper.questions.reduce((n,q)=>n+Number(q.marks),0),3);
 assert.equal(new Set(paper.questions.map(q=>q.topicName)).size,3);
 assert.ok(paper.questions.every(q=>q.questionText.includes('\n')));
 assert.equal(paper.qualityReport.teacherReviewRequired,true);
+assert.equal($('qpSavePaperBtn').disabled,true,'Teacher review needed before saving');
+assert.equal($('qpPrintPaperBtn').disabled,true,'Teacher review needed before printing');
+assert.equal($('qpAnswerKeyBtn').disabled,true,'Teacher review needed before answer key');
+$('qpAutoReviewed').checked=true;
+const approved=make();
+await approved.run();
+assert.equal($('qpAutoReviewed').checked,false,'New generation invalidates earlier review');
+$('qpAutoReviewed').checked=true;
+const reviewActionSource=code('function updateAutoReviewActions()','function invalidateGeneratedQuestionPaper()');
+const approve=new Function('
+assert.match(lastMessage,/पूर्णाङ्क/);
+renderPaperPreview(paper);
+const preview=$('qpPaperPreview').querySelector('#qpPrintArea');
+assert.ok(preview);
+assert.match(preview.textContent,/CDC प्रकाशित नमुना होइन/);
+assert.match(preview.textContent,/Science and Technology/);
+assert.match(preview.textContent,/पूर्णाङ्क: 3/);
+let generatedPrint='',printCount=0;
+const fakeWindow={open:()=>({
+ document:{write:s=>{generatedPrint=s},close:()=>{}},
+ focus:()=>{},print:()=>{printCount++}
+})};
+const printPaper=new Function('$','esc','message','window','generatedPaper',
+ code('function printPaper(','async function loadClassSubjects()')+'return printPaper;')(
+ $,escape,()=>{},fakeWindow,null);
+printPaper(approved.getPaper(),true);
+assert.equal(printCount,1);
+assert.match(generatedPrint,/white-space:pre-line/);
+assert.match(generatedPrint,/CDC प्रकाशित नमुना होइन/);
+assert.match(generatedPrint,/उत्तरकुञ्जिका/);
+assert.match(generatedPrint,/Test School/);
+const viewer=make({roleCanTeach:()=>false});
+await assert.rejects(viewer.run(),/अनुमति/);
+const stale=make({verifiedQuestionSelection:{className:'Class 10',subject:'Science and Technology',section:'A',request:0}});
+await assert.rejects(stale.run(),/लोड भएको छैन/);
+let resumeHeader;
+const delayed=make({schoolHeader:()=>new Promise(res=>{resumeHeader=res})});
+const pending=delayed.run();
+const classBefore=dom.window.document.querySelector('[data-qp-topic]:checked');
+classBefore.checked=false;
+resumeHeader({schoolName:'Too late'});
+await assert.rejects(pending,/परिवर्तन भयो/);
+assert.equal(delayed.getPaper(),null,'Changing topics during school read cannot generate a stale paper');
+dom.window.close();
+console.log('PASS V46 DOM auto question paper: class 10, unit choices, bilingual 3 marks, buttons, printed answers and warnings, role, stale selection');
+,'generatedPaper',reviewActionSource+'return updateAutoReviewActions;')($,approved.getPaper());
+approve();
 assert.equal($('qpSavePaperBtn').disabled,false);
 assert.equal($('qpPrintPaperBtn').disabled,false);
 assert.equal($('qpAnswerKeyBtn').disabled,false);
