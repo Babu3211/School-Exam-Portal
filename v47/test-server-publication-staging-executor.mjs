@@ -74,5 +74,7 @@ for(const bad of [
 const hosting=readFileSync(new URL('./build-hosting.mjs',import.meta.url),'utf8');
 assert.match(hosting,/name\.startsWith\('server-'\)/,'No trusted server publication code in browser bundle');
 const rules=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
-assert.doesNotMatch(rules,/match \/marks_staging\//,'Client write path must remain denied by default');
+assert.match(rules,/match \/marks_staging\/\{publicationId\}/,'Explicit trusted-only staging path required');
+assert.match(rules,/match \/batches\/\{batchId\}/,'Stage batch path must be denied');
+assert.match(rules,/match \/batches\/\{batchId\} \{\s*allow read, write: if false;/,'No client may access staged batches');
 console.log('PASS trusted-server staging: 1500 rows, verified admin, resumable 15 batches, tamper/revision/revocation fail closed; never publishes');

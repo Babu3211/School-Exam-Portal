@@ -510,6 +510,15 @@ service cloud.firestore {
         allow create: if memberRole(sid, 'school_admin') && validNewSettings();
         allow update, delete: if false;
       }
+      // Trusted-server-only publication staging: no client (including Super
+      // Admin) can read, list, alter, or publish partial staged marks. The
+      // Firebase Admin SDK may write via its separately protected credentials.
+      match /marks_staging/{publicationId} {
+        allow read, write: if false;
+        match /batches/{batchId} {
+          allow read, write: if false;
+        }
+      }
       match /{collection}/{id} {
         allow get, list: if collection in ['staff','classes','school_settings'] && canRead(sid);
         allow create: if collection in ['staff','classes','school_settings'] && canAdmin(sid) && scopedRecord(sid);
