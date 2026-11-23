@@ -27,6 +27,8 @@ assert.match(css,/#qpPaperComposer\{order:2\}/);
 assert.ok($('qpPaperComposer')&&$('qpTopicCard')&&$('qpSavedPapers'));
 
 assert.equal($('qpSavePaperBtn').disabled,true,'No paper saved before generation');
+assert.match(source,/const historyReady=await loadPaperHistory\(\{required:true\}\)/);
+assert.match(source,/if\(!historyReady\|\|!stillCurrent\(\)\)return;/);
 const pack=JSON.parse(readFileSync(new URL('../data/cdc-grade10-science-practice-pack-v1.json',import.meta.url),'utf8'));
 assert.equal(/[\u0D00-\u0D7F]/.test(JSON.stringify(pack)),false,'No Malayalam-script typo in Nepali source');
 const translated=JSON.parse(readFileSync(new URL('../data/cdc-science-bilingual-mcq-v1.json',import.meta.url),'utf8'));
@@ -135,6 +137,43 @@ assert.equal(audit.querySelector('tfoot th:nth-child(2)').textContent.trim(),'3'
 assert.equal($('qpPaperPreview').querySelector('#qpPrintArea #qpGridAudit'),null,
  'Grid audit must stay outside the student print area');
 renderPaperPreview(paper);
+// Simulate two history responses returning out of order after a class switch.
+const pendingHistory=[];
+const history=new Function('$','getDocs','query','collection','where','limit',
+ 'db','auth','isAdmin','esc',`
+ let selectedClass='Class 10',selectedSubject='Science and Technology',selectedSection='A';
+ let questionDataLoadEpoch=1,paperHistoryLoadEpoch=0,savedPapers=[],
+  verifiedQuestionSelection={request:1};
+ `+code('async function loadPaperHistory(','function allocateQuestions() {')+`
+ return {
+  run:loadPaperHistory,
+  switchClass:value=>{selectedClass=value;questionDataLoadEpoch++;verifiedQuestionSelection=null;},
+  state:()=>({savedPapers,verifiedQuestionSelection})
+ };
+ `)($,()=>new Promise((resolve,reject)=>pendingHistory.push({resolve,reject})),
+ (...args)=>args,()=>null,(...args)=>args,n=>n,{}, {currentUser:{uid:'admin'}},
+ ()=>true,escape);
+const oldHistory=history.run({required:true});
+history.switchClass('Class 9');
+const newHistory=history.run({required:true});
+pendingHistory[1].resolve({docs:[{id:'new-grade9',data:()=>({
+ className:'Class 9',subject:'Science and Technology',section:'A',
+ paperTitle:'New grade paper',fullMarks:50,durationMinutes:90,createdAt:{seconds:100}
+})}]});
+assert.equal(await newHistory,true);
+pendingHistory[0].resolve({docs:[{id:'old-grade10',data:()=>({
+ className:'Class 10',subject:'Science and Technology',section:'A',
+ paperTitle:'Old grade paper',fullMarks:50,durationMinutes:90,createdAt:{seconds:200}
+})}]});
+assert.equal(await oldHistory,false);
+assert.deepEqual(history.state().savedPapers.map(p=>p.id),['new-grade9'],
+ 'Late old-grade history must not overwrite the current selection');
+const brokenHistory=history.run({required:true});
+pendingHistory[2].reject(new Error('history unavailable'));
+await assert.rejects(()=>brokenHistory,/history unavailable/);
+assert.equal(history.state().verifiedQuestionSelection,null,
+ 'Failed history fetch must prevent unchecked paper generation');
+assert.deepEqual(history.state().savedPapers,[]);
 const preview=$('qpPaperPreview').querySelector('#qpPrintArea');
 assert.ok(preview);
 assert.match(preview.textContent,/CDC प्रकाशित नमुना होइन/);
