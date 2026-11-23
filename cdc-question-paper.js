@@ -316,8 +316,8 @@ function printPaper(paper = generatedPaper, includeAnswers = false) {
   if (!area) return;
   const w = window.open("", "_blank", "width=900,height=900");
   if (!w) { message("Print खोल्न Popup अनुमति दिनुहोस्।", true); return; }
-  const answerSheet = includeAnswers ? '<section style="page-break-before:always;font-family:Arial,sans-serif;padding:24px;color:#111"><h2>'+esc(paper.schoolName||"विद्यालय")+'</h2><h3>'+esc(paper.paperTitle||"प्रश्नपत्र")+' — उत्तरकुञ्जिका (शिक्षक प्रति)</h3><p>कक्षा: '+esc(paper.className)+' · विषय: '+esc(paper.subject)+'</p><ol>'+paper.questions.map(q=>'<li style="margin:10px 0;line-height:1.6"><b>'+esc(q.questionText)+'</b><br>उत्तर: '+esc(q.answer|| (q.correctOption ? "सही विकल्प "+q.correctOption : "उत्तर संकेत उपलब्ध छैन"))+'</li>').join("")+'</ol></section>' : "";
-  w.document.write('<!doctype html><html lang="ne"><head><meta charset="utf-8"><title>'+esc(paper.paperTitle)+'</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h2,h3{text-align:center}.qp-q{margin:14px 0;line-height:1.7}@page{size:A4;margin:18mm}</style></head><body>'+area.outerHTML+answerSheet+'</body></html>');
+  const answerSheet = includeAnswers ? '<section style="page-break-before:always;font-family:Arial,sans-serif;padding:24px;color:#111"><h2>'+esc(paper.schoolName||"विद्यालय")+'</h2><h3>'+esc(paper.paperTitle||"प्रश्नपत्र")+' — उत्तरकुञ्जिका (शिक्षक प्रति)</h3><p>कक्षा: '+esc(paper.className)+' · विषय: '+esc(paper.subject)+'</p><ol>'+paper.questions.map(q=>'<li style="margin:10px 0;line-height:1.6;white-space:pre-line"><b>'+esc(q.questionText)+'</b><br>उत्तर: '+esc(q.answer|| (q.correctOption ? "सही विकल्प "+q.correctOption : "उत्तर संकेत उपलब्ध छैन"))+'</li>').join("")+'</ol></section>' : "";
+  w.document.write('<!doctype html><html lang="ne"><head><meta charset="utf-8"><title>'+esc(paper.paperTitle)+'</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h2,h3{text-align:center}.qp-q{margin:14px 0;line-height:1.7}.qp-q b{white-space:pre-line}@page{size:A4;margin:18mm}</style></head><body>'+area.outerHTML+answerSheet+'</body></html>');
   w.document.close();
   w.focus();
   w.print();
@@ -591,11 +591,30 @@ async function generateSmartPaper(){
   throw Error("कक्षा/विषय/Section मा प्रश्नपत्र बनाउन अनुमति छैन।");
  const topicIds=selectedTopicIds(),target=Number($("qpPaperFullMarks").value);
  const language=$("qpAutoLanguage").value;
+ const selection=verifiedQuestionSelection,sessionUid=auth.currentUser?.uid,
+  paperTitle=$("qpPaperTitle").value.trim(),academicYear=$("qpPaperYear").value.trim(),
+  durationMinutes=Number($("qpPaperDuration").value);
+ if(!sessionUid||!paperTitle||!academicYear||
+    !Number.isSafeInteger(durationMinutes)||durationMinutes<15||durationMinutes>360)
+  throw Error("प्रश्नपत्रको नाम, शैक्षिक वर्ष वा परीक्षा समय अमान्य छ।");
  const planned=buildAutomaticQuestionPaper({
   questions:[...questionRows,...bundledPracticeQuestions],
   topicIds,fullMarks:target,language,blueprint:currentBlueprint
  });
  const header=await schoolHeader();
+ // A slow school-profile read must not allow an earlier class, subject, user,
+ // topic or paper configuration to be reused after the UI has switched.
+ if(auth.currentUser?.uid!==sessionUid||verifiedQuestionSelection!==selection||
+   verifiedQuestionSelection?.request!==questionDataLoadEpoch||
+   selectedClass!==selection.className||selectedSubject!==selection.subject||
+   selectedSection!==selection.section||!roleCanTeach(selectedClass,selectedSubject,selectedSection)||
+   Number($("qpPaperFullMarks").value)!==target||
+   $("qpAutoLanguage").value!==language||
+   $("qpPaperTitle").value.trim()!==paperTitle||
+   $("qpPaperYear").value.trim()!==academicYear||
+   Number($("qpPaperDuration").value)!==durationMinutes||
+   JSON.stringify(selectedTopicIds())!==JSON.stringify(topicIds))
+  throw Error("प्रश्नपत्र बनाउँदा Login, कक्षा वा छनोट परिवर्तन भयो। पुनः Generate गर्नुहोस्।");
  const topicCounts={},levels={knowledge:0,understanding:0,application:0,higher:0};
  for(const q of planned.questions){
   topicCounts[q.topicName]=(topicCounts[q.topicName]||0)+1;
@@ -606,8 +625,8 @@ async function generateSmartPaper(){
  generatedPaper={
   ...header,gradeNumber:gradeNumber(selectedClass),className:selectedClass,
   subject:selectedSubject,section:selectedSection,
-  paperTitle:$("qpPaperTitle").value.trim(),academicYear:$("qpPaperYear").value.trim(),
-  durationMinutes:Number($("qpPaperDuration").value),fullMarks:target,
+  paperTitle,academicYear,
+  durationMinutes,fullMarks:target,
   curriculumVersion:planned.blueprintMatched?(currentBlueprint?.curriculumVersion||"Admin-entered grid"):
    "SMSS मौलिक अभ्यास — शिक्षक समीक्षा आवश्यक",
   blueprintId:planned.blueprintMatched?currentBlueprint?.id||null:null,
