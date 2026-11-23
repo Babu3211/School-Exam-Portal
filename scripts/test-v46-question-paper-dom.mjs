@@ -56,6 +56,8 @@ assert.match(source,/\["mcq","very_short","short","long"\]\.indexOf/);
 assert.match(source,/grade8ScienceModelAudit\.model\.archivedCdcCatalogUrl/);
 assert.match(source,/२०८२ मूल CDC Grid/);
 assert.match(source,/grade8Audit\.missingTypes\.map/);
+assert.match(source,/getGrade8ScienceHistoricalPracticePattern\(\{/);
+assert.match(source,/\$\("qpAutoMode"\)\.value="practice"/);
 assert.match(source,/compareCdc2083MathModelToBundledGrid\(\)/);
 assert.match(source,/CDC_G10_OPTIONAL_MATH_2083_MODEL\.governmentPublicationUrl/);
 assert.match(source,/optionalMathAreaTopics\(grade,subject\)/);
@@ -244,7 +246,8 @@ const make=(overrides={})=>{
   'selectedSubject','selectedSection','questionDataLoadEpoch',
   'verifiedQuestionSelection','questionRows','bundledPracticeQuestions',
   'currentBlueprint','auth','blueprintRows','cognitiveMarkDistribution','savedPapers',
-  'getBundledComputerGrid','getCdcOptionalMathGuide'];
+  'getBundledComputerGrid','getCdcOptionalMathGuide',
+  'getGrade8ScienceHistoricalPracticePattern'];
  const fn=new Function(...params,'let generatedPaper=null,lastAutoSignature=null;\n'+
   code('function updateAutoReviewActions()','function renderPaperPreview(')+
   code('function blueprintForFullMarks(','async function generateSmartPaper()')+
@@ -255,7 +258,7 @@ const make=(overrides={})=>{
   props.schoolHeader,v=>Number(String(v).match(/[0-9]+/)?.[0]||0),
   ()=>{},msg=>{lastMessage=msg},
   'Class 10','Science and Technology','A',props.questionDataLoadEpoch,
-  props.verifiedQuestionSelection,[],bank.questions,null,props.auth,[],cognitiveMarkDistribution,props.savedPapers||[],()=>null,()=>null);
+  props.verifiedQuestionSelection,[],bank.questions,null,props.auth,[],cognitiveMarkDistribution,props.savedPapers||[],()=>null,()=>null,()=>null);
 };
 const live=make();
 await live.run();
