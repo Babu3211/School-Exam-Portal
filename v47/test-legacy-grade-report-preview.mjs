@@ -9,6 +9,17 @@ const args={schoolId,school,classNo,term,students,subjects,records},r=prepareLeg
 assert.equal(r.rosterCount,2);assert.equal(r.previewOnly,true);
 assert.equal(r.publicationAllowed,false);assert.equal(r.writeAuthorized,false);
 assert.equal(r.summary.complete,true);assert.match(r.ledger.head,/Final GPA/);
+assert.deepEqual(r.ledgers.grade,r.ledger,'Existing grade ledger must remain unchanged');
+assert.match(r.ledgers.number.head,/School Name/);
+assert.match(r.ledgers.entry.head,/IsAbsent/);
+assert.match(r.ledgers.entry.body,/Alpha/);
+assert.match(r.ledgers.number.body,/Alpha/);
+for(const mode of ['number','entry']){
+ const bytes=new Uint8Array(await legacyGradePreviewExcel(r,mode).arrayBuffer());
+ assert.deepEqual([...bytes.slice(0,2)],[80,75],'Real XLSX ZIP header required: '+mode);
+ assert.match(new TextDecoder().decode(bytes),/NOT FOR OFFICIAL USE/,'Excel warning missing: '+mode);
+}
+assert.throws(()=>legacyGradePreviewExcel(r,'publish'),/mode/);
 const legacyStudent={...students[0]};delete legacyStudent.active;
 const legacyReport=prepareLegacyGradeReport({...args,students:[legacyStudent,students[1]]});
 assert.equal(legacyReport.rosterCount,2,'Legacy V46 students with missing active field remain enrolled');

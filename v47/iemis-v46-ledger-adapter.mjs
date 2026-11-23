@@ -31,9 +31,16 @@ export function renderV46TenantLedger({schoolId,schoolName,schoolCode='',classNo
   recordKeys.add(key);
  }
  if(records.length>students.length*subjects.length)throw Error('Too many mark records for roster');
- const allowed=new Set(['creditFor','label','componentsFor','applicable']);
+ const allowed=new Set(['creditFor','label','componentsFor','applicable','academicYear']);
  if(Object.keys(options).some(k=>!allowed.has(k)))throw Error('Unexpected renderer option');
- return iemisLedger({mode,classNo:Number(classNo),annual:term==='final',subjects,students,records,examId,schoolName,schoolCode,...options});
+ // Only the explicit academic-year path opts in to V46's source term names.
+ // Legacy callers without academicYear preserve their old renderer output.
+ const {academicYear}=options;
+ if(academicYear!==undefined&&(typeof academicYear!=='string'||!/^[0-9]{4}$/.test(academicYear)))
+  throw Error('Valid IEMIS academic year required');
+ const sourceTerm=academicYear===undefined?undefined:({'1st':'first','2nd':'second','3rd':'third','final':'annual'}[term]);
+ return iemisLedger({mode,classNo:Number(classNo),annual:term==='final',
+  subjects,students,records,examId,schoolName,schoolCode,term:sourceTerm,...options});
 }
 
 // Official-looking grade output must never be generated from partial class records.

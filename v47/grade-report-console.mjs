@@ -4,6 +4,7 @@ import {validateSchoolId} from './school-paths.mjs';
 import {loadVerifiedLegacyGradeReport} from './verified-legacy-grade-report.mjs';
 import {legacyGradePreviewExcel} from './legacy-grade-report-preview.mjs';
 const $=id=>document.getElementById(id),status=s=>{$('message').textContent=s};
+const reportMode=['number','entry'].includes(document.documentElement.dataset.report)?document.documentElement.dataset.report:'grade';
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 let auth,authSdk,api,db,actor=null,schoolId=null,sessionSeq=0,reviewSeq=0,sheetSeq=0,loading=false,busy=false,report=null;
 const readDocument=async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null};
@@ -89,7 +90,9 @@ $('load').onclick=async()=>{
   $('progress').textContent=data.rosterCount+' students / '+data.subjectCount+' subjects — all compatible mark records checked.';
   // iemisLedger HTML cells are escaped by the original V46 rendering module.
   const table=document.createElement('table'),thead=document.createElement('thead'),tbody=document.createElement('tbody');
-  thead.innerHTML=data.ledger.head;tbody.innerHTML=data.ledger.body;table.append(thead,tbody);
+  const selectedLedger=data.ledgers?.[reportMode];
+  if(!selectedLedger)throw Error('Verified V46 ledger mode missing');
+  thead.innerHTML=selectedLedger.head;tbody.innerHTML=selectedLedger.body;table.append(thead,tbody);
   $('gradeOutput').replaceChildren(table);$('ledgerArea').hidden=false;$('exportExcel').disabled=false;
   for(const st of data.students){const option=document.createElement('option');option.value=st.id;option.textContent=String(st.nameEnglish??st.name??st.id);$('student').append(option)}
   $('student').disabled=false;$('previewSheet').disabled=false;$('sheetArea').hidden=false;showSheet();
@@ -118,13 +121,13 @@ $('exportExcel').onclick=async()=>{
  $('exportExcel').disabled=true;
  try{
   await verifyAgain(member,seq,review,klass,term);
-  const blob=legacyGradePreviewExcel(report);
+  const blob=legacyGradePreviewExcel(report,reportMode);
   const url=URL.createObjectURL(blob),link=document.createElement('a');
   try{
-   link.href=url;link.download='smss-v47-UNAPPROVED-grade-ledger-'+member.schoolId+'-'+klass+'-'+term+'.xlsx';
+   link.href=url;link.download='smss-v47-UNAPPROVED-'+({grade:'grade-ledger',number:'mark-ledger',entry:'mark-entry-ledger'}[reportMode])+'-'+member.schoolId+'-'+klass+'-'+term+'.xlsx';
    document.body.append(link);link.click();
   }finally{link.remove();URL.revokeObjectURL(url)}
-  status('Excel पूर्वावलोकन निकालियो। आधिकारिक Grade Ledger होइन।');
+  status('Excel पूर्वावलोकन निकालियो। यो आधिकारिक Ledger होइन।');
  }catch(e){if(seq===sessionSeq&&review===reviewSeq){clearReview();status('Excel Export blocked: '+e.message)}}
  finally{if(seq===sessionSeq)$('exportExcel').disabled=!report}
 };

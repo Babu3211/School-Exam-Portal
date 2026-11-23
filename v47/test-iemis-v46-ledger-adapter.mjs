@@ -76,4 +76,15 @@ assert.throws(()=>renderCompleteV46TenantGradeLedger({...twoArgs,records:twoReco
 assert.throws(()=>renderCompleteV46TenantGradeLedger({...twoArgs,records:twoRecords.map((r,i)=>i===0?{...r,isAbsent:true}:r)}),/Class marks incomplete/);
 assert.throws(()=>renderCompleteV46TenantGradeLedger({...twoArgs,records:twoRecords.map((r,i)=>i===0?{...r,schoolId:'another_school'}:r)}),/Cross-school/);
 assert.throws(()=>renderCompleteV46TenantGradeLedger({...twoArgs,records:twoRecords.map((r,i)=>i===0?{...r,examId:'another_exam'}:r)}),/Foreign student or exam record/);
+// V46 IEMIS 2083 special class 6-10 layouts use source term names
+// 'first'/'second', not the V47 UI labels '1st'/'2nd'.
+for(const klass of [1,6,9])for(const [term,v46term] of [['1st','first'],['2nd','second'],['final','annual']]){
+ const base={schoolId,schoolName:'School',schoolCode:'001',classNo:klass,
+  term,academicYear:'2083',mode:'number',subjects,students,records,examId};
+ const observed=renderV46TenantLedger(base);
+ const expected=iemisLedger({mode:'number',classNo:klass,annual:term==='final',academicYear:'2083',
+  term:v46term,subjects,students,records,examId,schoolName:'School',schoolCode:'001'});
+ assert.deepEqual(observed,expected,'2083 V46 number ledger source parity '+klass+'/'+term);
+}
+assert.throws(()=>renderV46TenantLedger({...args,academicYear:'2083 extra'}),/academic year/);
 console.log('V47 V46 IEMIS parity: 120 renderer combinations, 40 complete grade cases, multi-student subject completeness and tenant isolation passed');

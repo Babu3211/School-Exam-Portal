@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const get=name=>readFileSync(new URL(name,import.meta.url),'utf8');
 const ui=get('./grade-report-console.mjs'),read=get('./verified-legacy-grade-report.mjs'),hub=get('./index.html');
-for(const name of ['grade-ledger','grade-sheet']){
+for(const name of ['grade-ledger','grade-sheet','mark-ledger','mark-entry-ledger']){
  const html=get('./'+name+'.html');
  assert.match(html,/DEVELOPMENT PREVIEW — NOT VALID FOR OFFICIAL USE/);
  assert.match(html,/grade-report-console\.mjs/);
@@ -35,4 +35,15 @@ assert.doesNotMatch(ui,/\.setDoc\(|\.addDoc\(|\.updateDoc\(|\.runTransaction\(|\
 assert.doesNotMatch(ui,/\.csv/);
 for(const path of ['iemis-v46-ledger-adapter.mjs','iemis-authorized-class-ledger.mjs','iemis-record-compatibility.mjs'])
  assert.doesNotMatch(get('./'+path),/from '\.\.\/iemis-(?:entry|ledger)\.js'/,'Grade preview must only import deployed V47-local V46 parity copy');
-console.log('PASS verified IEMIS Grade Ledger/Sheet browser routes, tenant session guard, no saving, only preview XLSX');
+assert.match(ui,/const reportMode=\['number','entry'\]\.includes/);
+assert.match(ui,/data\.ledgers\?\.\[reportMode\]/);
+assert.match(ui,/legacyGradePreviewExcel\(report,reportMode\)/);
+for(const [name,type] of [['mark-ledger','number'],['mark-entry-ledger','entry']]){
+ const html=get('./'+name+'.html');
+ assert.match(html,new RegExp('data-report="'+type+'"'));
+ assert.match(html,/PREVIEW ONLY — NOT VALID FOR OFFICIAL USE/);
+ const links=[...hub.matchAll(new RegExp('<a[^>]+href="\\./'+name+'\\.html"','g'))];
+ assert.ok(links.length>=2,'Sidebar and Quick Menu route missing: '+name);
+ assert.ok(links.every(m=>m[0].includes('data-school-module')),'School authorization gate missing: '+name);
+}
+console.log('PASS V46-compatible Mark/Entry/Grade Ledger and Grade Sheet read-only browser routes');

@@ -3,8 +3,9 @@
 import {validateSchoolId} from './school-paths.mjs';
 import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
 import {renderAuthorizedV46ClassGradeLedger} from './iemis-authorized-class-ledger.mjs';
+import {renderV46TenantLedger} from './iemis-v46-ledger-adapter.mjs';
 import {iemisEntrySchema,iemisEntryDraft} from './iemis-entry.js';
-import {iemisSubjectKey} from './iemis-ledger.js';
+import {iemisSubjectKey,iemisComponentKey,iemisSummary} from './iemis-ledger.js';
 import {previewIemisGradeLedger} from './iemis-grade-ledger-preview.mjs';
 import {renderIemisGradeSheetPrint} from './iemis-grade-sheet-print-preview.mjs';
 import {excelWorkbook} from './excel-workbook.mjs';
@@ -42,13 +43,50 @@ export function prepareLegacyGradeReport({schoolId,school,classNo,term,students,
  }
  if(seen.size!==students.length*subjects.length)throw Error('Incomplete class marks');
  const ledger=renderAuthorizedV46ClassGradeLedger({schoolId,schoolName:school.nameEnglish,schoolCode:schoolId,classNo,term,examId:term,students,subjects:subjects.map(s=>s.name),records});
+ // All extra modes run only after the original complete-class, tenant, and
+ // V46 component validation above. Nothing in these modes writes or publishes.
+ const completeInput={schoolId,schoolName:school.nameEnglish,schoolCode:schoolId,classNo,
+  term:termMap[term],academicYear:'2083',examId:term,students,
+  subjects:subjects.map(s=>s.name),records,
+  creditFor:name=>subs.get(iemisSubjectKey(name))?.creditHour??0,
+  componentsFor:name=>iemisEntrySchema(classNo,termMap[term],name)};
+ const ledgers=Object.freeze({grade:ledger,
+  number:renderV46TenantLedger({...completeInput,term,mode:'number',academicYear:'2083'}),
+  entry:renderV46TenantLedger({...completeInput,term,mode:'entry',academicYear:'2083'})});
+ const recordIndex=new Map(records.map(r=>[JSON.stringify([r.studentId,iemisSubjectKey(r.subject)]),r]));
+ const excelFor=mode=>{
+  if(!['number','entry'].includes(mode))throw Error('Unsupported ledger Excel mode');
+  const cols=subjects.flatMap(sub=>mode==='number'?[sub.name+' Obtained',sub.name+' Full']:
+   [sub.name+' IsAbsent',...iemisEntrySchema(classNo,termMap[term],sub.name).map(c=>sub.name+' '+c.label)]);
+  const headers=['PREVIEW ONLY — NOT FOR OFFICIAL USE','Class','Term','Student ID','Student Name',...cols];
+  const rows=students.map(student=>{
+   const values=subjects.flatMap(sub=>{
+    const record=recordIndex.get(JSON.stringify([student.id,iemisSubjectKey(sub.name)]));
+    if(!record)throw Error('Incomplete verified ledger Excel roster');
+    if(mode==='number'){
+     const summary=iemisSummary(record,{annual:term==='final',primary:Number(classNo)<=5});
+     if(!summary.complete)throw Error('Incomplete number ledger cannot be exported');
+     return [summary.obtained??'—',summary.full];
+    }
+    return [record.isAbsent?'Yes':'No',...iemisEntrySchema(classNo,termMap[term],sub.name).map(component=>{
+     const score=record.scores.find(x=>iemisComponentKey(x.name)===component.key);
+     if(!score)throw Error('Missing V46 IEMIS ledger component');
+     return component.readonly?score.fullMarks:(score.obtained??'—');
+    })];
+   });
+   return [schoolId,String(classNo),term,student.id,student.nameEnglish??student.name??'',...values];
+  });
+  return excelWorkbook(headers,rows,{sheetName:mode==='number'?'Unapproved Mark Ledger':'Unapproved Entry Ledger'});
+ };
  const summary=previewIemisGradeLedger({classNo,term,students,subjects,draftsBySubject});
  if(!summary.complete)throw Error('Incomplete V46 grade preview');
  const printFor=studentId=>renderIemisGradeSheetPrint({school,classNo,term,students,subjects,draftsBySubject,studentId});
- return Object.freeze({schoolId,school,classNo:String(classNo),term,students,subjects,rosterCount:students.length,subjectCount:subjects.length,ledger,summary,printFor,previewOnly:true,writeAuthorized:false,publicationAllowed:false});
+ return Object.freeze({schoolId,school,classNo:String(classNo),term,students,subjects,rosterCount:students.length,subjectCount:subjects.length,ledger,ledgers,excelFor,summary,printFor,previewOnly:true,writeAuthorized:false,publicationAllowed:false});
 }
-export function legacyGradePreviewExcel(result){
+export function legacyGradePreviewExcel(result,mode='grade'){
  if(result?.previewOnly!==true||result.publicationAllowed!==false||result.writeAuthorized!==false||result.summary?.complete!==true)throw Error('Complete read-only grade preview required');
+ if(!['grade','number','entry'].includes(mode))throw Error('Unapproved ledger mode required');
+ if(mode!=='grade'){if(typeof result.excelFor!=='function')throw Error('Complete ledger export unavailable');return result.excelFor(mode)}
  const headers=['PREVIEW ONLY — NOT FOR OFFICIAL USE','Class','Term','Student ID','Student Name',...result.subjects.flatMap(s=>[s.name+' Grade',s.name+' Point']),'GPA (Unapproved)'];
  const rows=result.summary.rows.map(st=>[result.schoolId,result.classNo,result.term,st.studentId,st.studentName,...st.subjects.flatMap(x=>[x.summary?.totalGrade?.grade??'—',x.summary?.totalGrade?.point??'—']),Number.isFinite(st.gpa)?st.gpa:'—']);
  return excelWorkbook(headers,rows,{sheetName:'Unapproved Grade Ledger'});
