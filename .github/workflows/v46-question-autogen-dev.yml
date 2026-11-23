@@ -10,6 +10,7 @@ on:
       - 'cdc-question-grid-engine.mjs'
       - 'scripts/test-cdc-exact-grid.mjs'
       - 'data/cdc-*science*'
+      - 'data/cdc-question-paper-sources-2083.json'
       - 'scripts/test-cdc-question-autogen.mjs'
       - 'scripts/test-v46-question-paper-dom.mjs'
       - 'scripts/test-question-paper-content.mjs'
