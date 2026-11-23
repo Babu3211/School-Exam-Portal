@@ -73,6 +73,60 @@ importSafety.logout();
 assert.throws(()=>importSafety.verify(renewed),/परिवर्तन भयो|आयात रोकियो/);
 console.log('PASS Import class, section, request epoch and user session race guards');
 
+// Exercise the actual async JSON bulk importer, not only its helper. A
+// delayed file read followed by a class switch must produce ZERO Firestore writes.
+const capturedWrites=[],loadedMessages=[];
+const buildBulkHarness=()=>new Function('normal','serverTimestamp','writeBatch',
+ 'doc','collection','logQuestionActivity','loadCurrentData','message','db',`
+ let selectedClass='Class 10',selectedSubject='Science and Technology',selectedSection='A',
+  questionDataLoadEpoch=1;
+ let verifiedQuestionSelection={
+  className:'Class 10',subject:'Science and Technology',section:'A',request:1
+ };
+ let questionRows=[],curriculumRows=[],role={displayName:'Admin'};
+ const auth={currentUser:{uid:'admin-001'}};
+ const isAdmin=()=>true;
+ const gradeNumber=s=>Number(String(s).match(/\\d+/)?.[0]||0);
+ `+code('function captureQuestionBankImportScope()','async function loadGrade8SciencePack()')+`
+ return {
+  importJson:importQuestionBank,
+  switchClass:value=>{selectedClass=value;questionDataLoadEpoch++;verifiedQuestionSelection=null;},
+  className:()=>selectedClass
+ };
+ `)(normal,()=>({}),
+ ()=>({set:(...args)=>capturedWrites.push(args),
+  commit:async()=>{loadedMessages.push('committed');}}),
+ (...args)=>({args}),(...args)=>({args}),
+ async()=>{},async()=>{},msg=>loadedMessages.push(msg),{});
+const importHarness=buildBulkHarness();
+let finishRead;
+const slowRead=new Promise(resolve=>{finishRead=resolve});
+const validRow={
+ unitCode:'1',unitTitle:'Matter',topicName:'Matter',
+ questionType:'short',marks:2,cognitiveLevel:'knowledge',
+ questionText:'पदार्थ के हो?',answer:'उत्तर'
+};
+const delayed=importHarness.importJson({
+ name:'questions.json',size:100,text:()=>slowRead
+});
+importHarness.switchClass('Class 9');
+finishRead(JSON.stringify({questions:[validRow]}));
+await assert.rejects(delayed,/परिवर्तन भयो|आयात रोकियो/);
+assert.equal(capturedWrites.length,0,'A stale file must never write to Firestore');
+assert.ok(!loadedMessages.includes('committed'),
+ 'A class switch during file parsing must block all commits');
+const freshHarness=buildBulkHarness();
+await freshHarness.importJson({
+ name:'questions.json',size:100,text:async()=>JSON.stringify({questions:[validRow]})
+});
+assert.equal(capturedWrites.length,1,'Correct import must write exactly one question');
+assert.equal(capturedWrites[0][1].className,'Class 10');
+assert.equal(capturedWrites[0][1].subject,'Science and Technology');
+assert.equal(capturedWrites[0][1].section,'A');
+assert.ok(loadedMessages.includes('committed'));
+console.log('PASS delayed JSON bulk import is atomic with class switch; valid import retains original scope');
+
+
 const pack=JSON.parse(readFileSync(new URL('../data/cdc-grade10-science-practice-pack-v1.json',import.meta.url),'utf8'));
 assert.equal(/[\u0D00-\u0D7F]/.test(JSON.stringify(pack)),false,'No Malayalam-script typo in Nepali source');
 const translated=JSON.parse(readFileSync(new URL('../data/cdc-science-bilingual-mcq-v1.json',import.meta.url),'utf8'));
