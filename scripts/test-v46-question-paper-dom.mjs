@@ -47,6 +47,8 @@ assert.match(source,/findCdcGridSources\(cdcSourceRegister,grade,subject\)/);
 assert.match(source,/heading\.textContent="CDC वेबसाइटमा यस विषयको Grid स्रोत भेटियो/);
 assert.match(source,/pdfSource\.appendChild\(heading\)/);
 assert.match(source,/getCdcOptionalMathGuide\(\{grade,subject\}\)/);
+assert.match(source,/compareCdc2083MathModelToBundledGrid\(\)/);
+assert.match(source,/CDC_G10_OPTIONAL_MATH_2083_MODEL\.governmentPublicationUrl/);
 assert.match(source,/optionalMathAreaTopics\(grade,subject\)/);
 assert.match(source,/CDC २०८२ · Objective\/WCA\/CCA/);
 assert.match(source,/async function generateOptionalMathCompositePaper\(guide\)/);
