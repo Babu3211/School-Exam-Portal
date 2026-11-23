@@ -102,19 +102,32 @@ export function supportsQuestionLanguage(q,language){
  if(language==='both')return !!english&&!!nepali&&NEPALI.test(nepali);
  return false;
 }
-function validatedQuestion(q,language){
+// The preview and generator share this eligibility test. Translated
+// questions must never fall back to untranslated answers or MCQ options.
+export function isQuestionReadyForLanguage(q,language){
  if(!q||!TYPES.includes(q.questionType)||!LEVELS.includes(q.cognitiveLevel)||
   !Number.isSafeInteger(Number(q.marks))||Number(q.marks)<1||Number(q.marks)>100||
   !String(q.topicId||'').trim()||!String(q.questionText||'').trim()||
   !supportsQuestionLanguage(q,language))return false;
- const text=language==='en'?(q.questionTextEn||q.questionText):q.questionText;
- const options=language==='en'?(q.optionsEn?.length===4?q.optionsEn:q.options):q.options;
- if(!String(text).trim()||!String(q.answer||q.answerEn||'').trim())return false;
- if(q.questionType==='mcq'&&(!Array.isArray(options)||options.length!==4||
-  options.some(x=>!String(x||'').trim())||!['A','B','C','D'].includes(q.correctOption)))return false;
- if(language==='both'&&q.questionType==='mcq'&&(!Array.isArray(q.optionsEn)||
-  q.optionsEn.length!==4||q.optionsEn.some(x=>!String(x||'').trim())))return false;
- return true;
+ const original=String(q.questionText).trim();
+ const translated=language==='en'||language==='both';
+ const needsEnglishTranslation=translated&&NEPALI.test(original);
+ const text=language==='en'?(q.questionTextEn||original):original;
+ const answer=language==='ne'?String(q.answer||'').trim():
+  String(needsEnglishTranslation?q.answerEn:(q.answerEn||q.answer)||'').trim();
+ if(!String(text).trim()||!answer||(translated&&NEPALI.test(answer)))return false;
+ if(language==='both'&&(!String(q.answer||'').trim()||!String(q.answerEn||'').trim()))return false;
+ if(q.questionType!=='mcq')return true;
+ if(!['A','B','C','D'].includes(q.correctOption))return false;
+ const nativeOptions=q.options;
+ if(!Array.isArray(nativeOptions)||nativeOptions.length!==4||
+  nativeOptions.some(o=>!String(o||'').trim()))return false;
+ if(needsEnglishTranslation||language==='both'){
+  if(!Array.isArray(q.optionsEn)||q.optionsEn.length!==4||
+   q.optionsEn.some(o=>!String(o||'').trim()||NEPALI.test(String(o))))return false;
+ }
+ return language!=='en'||needsEnglishTranslation||
+  nativeOptions.every(o=>!NEPALI.test(String(o)));
 }
 function inLanguage(q,language,rng){
  const original=String(q.questionText).trim(),en=String(q.questionTextEn||'').trim();
@@ -194,7 +207,7 @@ export function buildAutomaticQuestionPaper({
  }
  const chosenIds=new Set(topicIds),eligible=[],known=new Set();
  for(const q of questions){
-  if(!q||!chosenIds.has(q.topicId)||q.status==='archived'||!validatedQuestion(q,language))continue;
+  if(!q||!chosenIds.has(q.topicId)||q.status==='archived'||!isQuestionReadyForLanguage(q,language))continue;
   // The classroom bank is scoped by class and subject on Firestore, but
   // recheck rows here too. Never mix a similarly named topic from another
   // grade/subject, including stale local snapshots and imported packs.
