@@ -10,6 +10,7 @@ const api={
  where:(...args)=>args,
  orderBy:(...args)=>args,
  limit:(...args)=>args,
+ startAfter:(...args)=>args,
  getDocs:async()=>({docs:students.map(id=>({id,data:()=>({schoolId,class:classId})})),size:2,empty:false}),
  doc:(_db,...parts)=>parts.join('/'),
  getDoc:async()=>({exists:()=>true,data:()=>({schoolId,class:classId})}),
