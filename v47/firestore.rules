@@ -284,7 +284,9 @@ service cloud.firestore {
             && get(config).data.get('examId', '') == d.examId
             && get(config).data.get('active', false) == true;
         }
-        allow get, list: if canRead(sid);
+        // Drafts contain unpublished assessment scores: do not expose them to
+        // teachers or Viewers. Super Admin may audit; only School Admin writes.
+        allow get, list: if canAdmin(sid);
         allow create: if memberRole(sid, 'school_admin')
           && validClassDraft() && request.resource.data.revision == 1;
         allow update: if memberRole(sid, 'school_admin')

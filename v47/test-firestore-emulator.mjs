@@ -275,8 +275,16 @@ try{
  await assertFails(setDoc(draft(admin),{...validDraft,updatedAt:'forged'}));
  await assertFails(setDoc(draft(admin),{...validDraft,official:true}));
  await assertSucceeds(setDoc(draft(admin),validDraft));
- await assertSucceeds(getDoc(draft(viewer)));
+ await assertSucceeds(getDoc(draft(admin)));
+ await assertSucceeds(getDoc(draft(superDb)));
+ await assertFails(getDoc(draft(viewer)));
+ await assertFails(getDoc(draft(teacher)));
+ await assertFails(getDoc(draft(anon)));
  await assertFails(getDoc(draft(db('admin_87654321'))));
+ await assertFails(getDocs(collection(viewer,'schools','12345678','class_mark_drafts')));
+ await assertFails(getDocs(collection(teacher,'schools','12345678','class_mark_drafts')));
+ await assertSucceeds(getDocs(collection(admin,'schools','12345678','class_mark_drafts')));
+ await assertFails(getDocs(collection(db('admin_87654321'),'schools','12345678','class_mark_drafts')));
  await assertFails(updateDoc(draft(viewer),{revision:2,updatedAt:serverTimestamp()}));
  await assertFails(updateDoc(draft(teacher),{revision:2,updatedAt:serverTimestamp()}));
  await assertFails(updateDoc(draft(admin),{revision:3,updatedAt:serverTimestamp()}));

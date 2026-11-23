@@ -25,6 +25,11 @@ assert.match(source,/saveVerifiedCompleteClassDraft\(/);
 assert.match(source,/savedDraft|saved\.rosterCount/);
 assert.match(source,/\$\('saveClassMarks'\)\.onclick=\(\)=>status\('Save\/Publish disabled/);
 assert.match(safety,/match \/class_mark_drafts\/\{id\}/);
+const draftStart=safety.indexOf('match /class_mark_drafts/{id} {');
+const draftEnd=safety.indexOf('\n      }',draftStart);
+const draftRules=safety.slice(draftStart,draftEnd);
+assert.match(draftRules,/allow get, list: if canAdmin\(sid\);/,'Unpublished class scores may be read only by School Admin or Super Admin');
+assert.doesNotMatch(draftRules,/allow get, list: if canRead\(sid\);/,'Teacher/Viewer may not read private mark drafts');
 for(const name of ['marks','component_marks']){
  const start=safety.indexOf('match /'+name+'/{id}');
  assert(start>=0);
