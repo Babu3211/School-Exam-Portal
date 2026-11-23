@@ -15,6 +15,8 @@ export async function saveVerifiedClassAttendance({db,api,actor,schoolId,classId
 // larger classes still use non-atomic chunks and must NOT be advertised as atomic.
 export async function saveAuthoritativeClassAttendance({db,api,actor,schoolId,classId,date,entries,onProgress}){
  const identity={uid:actor?.uid,role:actor?.role,active:actor?.active,schoolId:actor?.schoolId};
+ if(actor?.role!=='school_admin'||actor?.active!==true||actor?.schoolId!==schoolId||typeof actor?.uid!=='string'||!actor.uid.trim())
+  throw new Error('School Admin permission required');
  const roster=await loadCompleteClassRoster({db,api,actor,schoolId,classId});
  if(actor?.uid!==identity.uid||actor?.role!==identity.role||actor?.active!==identity.active||actor?.schoolId!==identity.schoolId)
   throw new Error('School Admin identity changed during roster verification');
