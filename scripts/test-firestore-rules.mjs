@@ -1,4 +1,6 @@
 import {iemisEntrySchema,iemisEntryValues,iemisEntryBatches} from "../iemis-entry.js";
+import assert from 'node:assert/strict';
+import { JSDOM } from 'jsdom';
 import { readFile } from "node:fs/promises";
 import {
   initializeTestEnvironment,
@@ -6,7 +8,7 @@ import {
   assertFails
 } from "@firebase/rules-unit-testing";
 import {
-  doc, getDoc, getDocs, collection, setDoc, updateDoc, deleteDoc,
+  doc, getDoc, getDocs, getDocFromServer, getDocsFromServer, collection, setDoc, updateDoc, deleteDoc,
   serverTimestamp, query, where, runTransaction
 } from "firebase/firestore";
 
@@ -378,7 +380,101 @@ try {
   await actualSave(edits,"grid-context",{id:"format-exam-1",academicYear:"2083"},"1",formatTeacher);
   if(cache.some(r=>r.totalObtained!==18))throw new Error("Real transaction update did not reload new marks");
 
-  console.log("Firestore Security Rules emulator tests passed.");
+  // CDC uses an independent collection and verifies the student's stored section.
+  const cdcUid = 'cdc-assigned-teacher';
+  await testEnv.withSecurityRulesDisabled(async context => {
+    const db = context.firestore();
+    await setDoc(doc(db,'user_roles',cdcUid),{active:true,roles:['subject_teacher'],
+      subjectAssignmentKeys:['5::Mathematics'],subjectAssignmentSectionKeys:['5::Mathematics::A']});
+    await setDoc(doc(db,'students','cdc-test-a'),{class:'5',section:'A',active:true});
+    await setDoc(doc(db,'students','cdc-test-b'),{class:'5',section:'B',active:true});
+  });
+  const cdcDb=testEnv.authenticatedContext(cdcUid).firestore();
+  const cdc=(id,db=cdcDb)=>doc(db,'cdc_observations',id);
+  const observation={studentId:'cdc-test-a',className:'5',subject:'Mathematics',section:'A',academicYear:'2083',
+    period:'First Term',unit:'नाप',unitEn:'Measurement',topic:'लम्बाइ नाप्ने',topicAlt:'Measure length',
+    date:'2083-08-07',level:3,method:'अवलोकन',evidence:'Synthetic evidence',feedback:'',
+    createdBy:cdcUid,createdAt:serverTimestamp()};
+  await assertSucceeds(setDoc(cdc('valid'),observation));
+  await assertSucceeds(getDoc(cdc('valid')));
+  const cdcQuery=(section,subject='Mathematics')=>query(collection(cdcDb,'cdc_observations'),
+    where('studentId','==','cdc-test-a'),where('className','==','5'),where('section','==',section),
+    where('subject','==',subject),where('academicYear','==','2083'),where('period','==','First Term'));
+  const visible=await assertSucceeds(getDocs(cdcQuery('A')));
+  if(visible.size!==1) throw Error('Assigned teacher could not retrieve the saved CDC observation');
+  await assertFails(getDocs(cdcQuery('B')));
+  await assertFails(getDocs(cdcQuery('A','English')));
+  await assertFails(setDoc(cdc('invalid-student-path'),{...observation,studentId:'students/cdc-test-a'}));
+  await assertFails(setDoc(cdc('wrong-student'),{...observation,studentId:'cdc-test-b'}));
+  await assertFails(setDoc(cdc('wrong-subject'),{...observation,subject:'English'}));
+  await assertFails(setDoc(cdc('wrong-level'),{...observation,level:5}));
+  await assertFails(updateDoc(cdc('valid'),{evidence:'Overwrite'}));
+  await assertFails(deleteDoc(cdc('valid')));
+  const adminCdcDb=testEnv.authenticatedContext(ADMIN).firestore();
+  await assertSucceeds(getDoc(cdc('valid',adminCdcDb)));
+  await assertFails(setDoc(cdc('admin-create',adminCdcDb),{...observation,createdBy:ADMIN}));
+  await assertFails(getDoc(cdc('valid',testEnv.unauthenticatedContext().firestore())));
+  // Use the actual assessment form and Firestore SDK in separate browser sessions.
+  const subject='सामाजिक अध्ययन तथा मानवमूल्य शिक्षा';
+  const teacherRole={active:true,roles:['subject_teacher'],
+    subjectAssignments:[{className:'5',subject,section:'A'}],
+    subjectAssignmentKeys:['5::'+subject],subjectAssignmentSectionKeys:['5::'+subject+'::A']};
+  const writer='cdc-form-teacher', reader='cdc-form-colleague';
+  await testEnv.withSecurityRulesDisabled(async context=>{
+    for(const uid of [writer,reader]) await setDoc(doc(context.firestore(),'user_roles',uid),teacherRole);
+  });
+  const transfer=await readFile('iemis-importer/transfer.js','utf8');
+  const formCode=application.slice(application.indexOf('const cdcCoreSubjects'),application.indexOf('let iemisEntryGrid'));
+  async function openTeacherForm(uid) {
+    const db=testEnv.authenticatedContext(uid).firestore();
+    const role=(await getDocFromServer(doc(db,'user_roles',uid))).data();
+    const dom=new JSDOM('<select id="entryClass"><option>Class 5</option></select>',{url:'https://test.example',runScripts:'outside-only'});
+    const w=dom.window;
+    w.eval(transfer);
+    Object.assign(w,{auth:{currentUser:{uid}},currentSchoolSettings:{academicYear:'2083'},currentUserRole:role,
+      db,doc,collection,query,where,getDocFromServer,getDocsFromServer,serverTimestamp,
+      // The SDK runs in Node; give it a plain object from its own JavaScript realm.
+      setDoc:(ref,data)=>setDoc(ref,{...data}),
+      isAdmin:()=>false,roleHas:key=>role.roles.includes(key),entryClassGroup:()=>'4-5',
+      ledgerSubjectsForClass:()=>[subject],classNoFromName:w.SmssIemisTransfer.classKey,entrySubjectKey:w.SmssIemisTransfer.subjectKey,
+      marksStudents:['A','B'].map(section=>({id:'cdc-test-'+section.toLowerCase(),class:'5',section,active:true})),
+      attendanceAdToBs:v=>v,attendanceBsToAd:v=>v,attendanceNepalTodayAD:()=>'2083-08-07',
+      attendanceDigitsToEnglish:String,attendancePad:v=>String(v).padStart(2,'0')});
+    w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
+    w.eval(formCode+'\nopenCdcAssessment();');
+    const field=name=>w.document.querySelector('[data-cdc="'+name+'"]');
+    const choose=(name,value)=>{field(name).value=value;field(name).onchange();};
+    assert.deepEqual([...field('student').options].map(option=>option.value),['cdc-test-a']);
+    assert.equal(field('subject').value,subject);
+    return {dom,field,choose};
+  }
+  const session=await openTeacherForm(writer);
+  try {
+    const {field,choose,dom}=session;
+    choose('unit',dom.window.document.querySelector('#cdcUnitSuggestions option').value);
+    choose('topic',dom.window.document.querySelector('#cdcTopicSuggestions option').value);
+    field('evidence').value='Community project sample';
+    field('level').value='3';
+    await field('save').onclick();
+    await field('saveSchool').onclick();
+    assert.match(field('status').textContent,/विद्यालयमा सुरक्षित भयो/);
+  } finally {session.dom.window.close();}
+  const colleague=await openTeacherForm(reader);
+  try {
+    const {field,choose,dom}=colleague;
+    assert.equal(dom.window.localStorage.length,0);
+    await field('readSchool').onclick();
+    const rows=field('schoolRows').rows;
+    assert.equal(rows.length,1);
+    assert.equal(rows[0].cells[4].textContent,'3');
+    assert.equal(rows[0].cells[5].textContent,'Community project sample');
+    assert.doesNotMatch(rows[0].cells[1].textContent,/[a-z]/i);
+    choose('period','Second Term');
+    await field('readSchool').onclick();
+    assert.equal(rows.length,0);
+  } finally {colleague.dom.window.close();}
+  console.log('CDC form shared save and independent teacher read passed with Firestore emulator rules.');
+  console.log('Firestore Security Rules emulator tests passed, including CDC observation access.');
 } finally {
   await testEnv.cleanup();
 }

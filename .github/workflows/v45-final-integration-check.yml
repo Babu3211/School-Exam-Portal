@@ -92,6 +92,8 @@ jobs:
               'scripts/fixtures/iemis-entry.html','scripts/fixtures/iemis-layout.html','sw.js'})
           if os.environ.get('GITHUB_HEAD_REF')=='fix/backup-audit-preview':
             allowed.add('sw.js')
+          if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-cdc-assessment':
+            allowed.update({'scripts/test-cdc-assignment.mjs','scripts/test-firestore-rules.mjs'})
           unexpected=changed-allowed
           assert not unexpected, f'Unexpected changes to protected V44/IEMIS files: {sorted(unexpected)}'
           print('Approved dashboard and IEMIS source files remain protected.')
@@ -118,6 +120,7 @@ jobs:
       - name: JavaScript syntax and approved dashboard regression
         run: |
           node scripts/check-inline-js.mjs
+          if test -f scripts/test-cdc-assignment.mjs; then node scripts/test-cdc-assignment.mjs; fi
           node --check user-activity.js
           node --check idle-logout.js
           node scripts/check-v44-requirements.mjs
