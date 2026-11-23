@@ -1,8 +1,23 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {GRADE8_SCIENCE_MODEL_2078,checkGrade8Science2078Model,
- compareGrade8SciencePracticeBank} from '../cdc-grade8-science-model-audit.mjs';
+ compareGrade8SciencePracticeBank,getGrade8ScienceHistoricalPracticePattern} from '../cdc-grade8-science-model-audit.mjs';
 const src=GRADE8_SCIENCE_MODEL_2078;
+const historical=getGrade8ScienceHistoricalPracticePattern({
+ grade:8,subject:'Science and Technology',fullMarks:50
+});
+assert.ok(historical);
+assert.equal(historical.practiceOnly,true);
+assert.equal(historical.currentCdcExactApproved,false);
+assert.equal(historical.pattern.reduce((total,p)=>total+p.count*p.marks,0),50);
+assert.equal(historical.pattern.reduce((total,p)=>total+p.count,0),30);
+assert.deepEqual(historical.pattern.map(p=>p.type),
+ ['mcq','very_short','short','long']);
+assert.equal(historical.durationMinutes,120);
+assert.equal(getGrade8ScienceHistoricalPracticePattern({
+ grade:8,subject:'Science and Technology',fullMarks:25}),null);
+assert.equal(getGrade8ScienceHistoricalPracticePattern({
+ grade:9,subject:'Science and Technology',fullMarks:50}),null);
 assert.equal(src.version,'2078');
 assert.equal(src.fullCurrentCdcAttachmentVisuallyInspected,false);
 assert.equal(src.currentVersionApproved,false);
