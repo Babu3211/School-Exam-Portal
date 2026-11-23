@@ -59,6 +59,8 @@ jobs:
           java-version: '21'
       - name: Install Firestore emulator and Admin SDK dependencies
         run: npm install --no-package-lock --no-audit --no-fund
+      - name: Install isolated V47 server dependencies
+        run: npm install --prefix v47-runtime --no-package-lock --no-audit --no-fund
       - name: Run real Firebase Admin SDK publication transaction on isolated emulator
         env:
           NODE_OPTIONS: --unhandled-rejections=strict

@@ -2,8 +2,11 @@
 // Fail closed unless the CLI launched this exact isolated emulator. No Firebase
 // production credentials, hosting, HTTP API, or real student data are used.
 import assert from 'node:assert/strict';
-import {initializeApp,deleteApp} from 'firebase-admin/app';
-import {getFirestore} from 'firebase-admin/firestore';
+import {createRequire} from 'node:module';
+// Admin SDK intentionally lives in the isolated v47-runtime package, not V46.
+const requireV47=createRequire(new URL('../v47-runtime/package.json',import.meta.url));
+const {initializeApp,deleteApp}=requireV47('firebase-admin/app');
+const {getFirestore}=requireV47('firebase-admin/firestore');
 import {createAdminClassPublicationReaders} from './server-publication-authoritative-loader.mjs';
 import {stageTrustedClassMarks} from './server-publication-staging-executor.mjs';
 import {commitTrustedOfficialClassPublication} from './server-official-publication-commit.mjs';
