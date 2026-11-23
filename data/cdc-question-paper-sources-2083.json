@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "title": "SMSS CDC Question Paper Source Register",
-  "checkedOn": "2026-11-08",
+  "checkedOn": "2026-11-23",
   "note": "Official CDC references only. A source link is not a substitute for extracting and validating its complete topic list, specification grid, model questions and answer key. Older grids are marked supplementary.",
   "sources": [
     {
@@ -401,12 +401,12 @@
       "grades": [
         9
       ],
-      "subject": "विज्ञान तथा प्रविधि",
-      "kind": "textbook_table_of_contents_and_original_practice_pack",
-      "version": "2080 textbook contents; supplementary only",
-      "status": "teacher_review_required_not_current_2082_grid",
-      "url": "https://moecdc.gov.np/storage/gallery/1692097269.pdf",
-      "note": "Used for the 19-unit, 38-question original practice pack. Questions are not CDC-published model questions. CDC's 2082 textbook and Grade 9 science specification grid must be checked separately."
+      "subject": "ऐच्छिक अर्थशास्त्र",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2082",
+      "status": "official_CDC_page_linked_grid_content_not_yet_extracted",
+      "url": "https://moecdc.gov.np/content/452/septemo-schedule-and-sample-questions-2082--class/",
+      "note": "CDC published this Grade 9 Economics 2082 grid and sample page on 12 Asoj 2083. Exact questions and mark/unit allocations remain untranscribed; not eligible for automatic official generation."
     }
   ],
   "completion": {
@@ -422,7 +422,7 @@
     "otherGradeSubjectPacks": "pending",
     "officialBlueprintCoverage": "partial-only-verified-subject-grade-grid-can-be-set-by-admin",
     "grade10SciencePracticePack": "seed-file-created-admin-import-available-2080-textbook-reference-check-2082-modified-book-and-grid",
-    "sourceCorrection": "The 19-unit 2080 textbook contents PDF at 1692097269.pdf is explicitly Grade 10. A draft previously labelled Grade 9 was blocked and deleted; Grade 9 topics must be re-extracted from the actual Grade 9 textbook and grid."
+    "sourceCorrection": "A Grade 10 textbook PDF (1692097269.pdf) was wrongly tagged as Grade 9 in an old source-register entry. Removed the Grade 9 entry; keep actual Grade 9 packs blocked until original Grade 9 textbook and grid are checked."
   },
   "practicePacks": [
     {
