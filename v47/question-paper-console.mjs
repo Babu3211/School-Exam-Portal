@@ -8,6 +8,7 @@ const $=id=>document.getElementById(id);
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 const status=text=>{$('message').textContent=text};
 let auth,authSdk,db,api,actor=null,school=null,schoolId=null,register=null,paper=null;
+const PRACTICE_PACK_FILE=Object.freeze({8:'cdc-grade8-science-practice-pack-v1.json',10:'cdc-grade10-science-practice-pack-v1.json'});
 let epoch=0,previewVersion=0,busy=false,loading=false;
 function clearPreview(){
  previewVersion++;paper=null;$('paperFrame').onload=null;$('paperFrame').removeAttribute('srcdoc');
@@ -115,7 +116,9 @@ async function loadPractice(grade){
  loading=true;$('preview8').disabled=true;$('preview10').disabled=true;
  try{
   await verifyAgain(request,member);
-  const pack=await fetchJson('cdc-grade'+grade+'-science-practice-pack-v1.json');
+  const file=PRACTICE_PACK_FILE[grade];
+  if(!file)throw Error('Only verified V46 Grade 8/10 practice references are available');
+  const pack=await fetchJson(file);
   assertSame(request,member);
   const indices=recommendedPracticeIndices(pack);
   const result=prepareReadOnlyPracticePaper({
