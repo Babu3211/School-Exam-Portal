@@ -1,3 +1,4 @@
+import {allocateExactCdcUnitGrid} from './cdc-exact-grid.mjs';
 // Pure, dependency-free paper planner for V46. Original locally bundled
 // questions are NOT CDC-published model questions. No external AI or billing.
 // Never silently translate a question or invent a missing answer key.
@@ -65,7 +66,7 @@ export function readBundledScienceBank(pack,{grade,subject,bilingual={}}){
      translation.originalCorrectOption!==q.correctOption))
    throw Error('Bilingual source question no longer matches Nepali original at '+translationKey);
   rows.push({
-   id:'builtIn_'+grade+'_'+i,gradeNumber:grade,
+   id:'builtIn_'+grade+'_'+i,gradeNumber:grade,unitCode:String(q.unitCode),
    unitId:unit.id,unitTitle:unit.unitTitle,
    topicId:unit.id+'_0',topicName:String(q.topicName),
    questionType:q.questionType,marks,cognitiveLevel:q.cognitiveLevel,
@@ -119,7 +120,9 @@ function inLanguage(q,language,rng){
  return normalized;
 }
 function exactBlueprint(blueprint,fullMarks){
- if(!blueprint||Number(blueprint.fullMarks)!==fullMarks)return null;
+ if(!blueprint)return null;
+ if(Number(blueprint.fullMarks)!==fullMarks)
+  throw Error('Selected full marks do not match the configured CDC reference Grid; choose the correct Grid');
  const pattern=blueprint.pattern;
  if(!Array.isArray(pattern)||!pattern.length||pattern.length>12)
   throw Error('Invalid configured CDC reference grid');
@@ -149,7 +152,8 @@ function fillSubset(pool,target,maxCount,rng){
  return null;
 }
 export function buildAutomaticQuestionPaper({
- questions,topicIds,fullMarks,language='ne',blueprint=null,rng=Math.random
+ questions,topicIds,fullMarks,language='ne',blueprint=null,rng=Math.random,
+ requireExactGrid=false,previousSignature='',attemptsRemaining=20
 }){
  ensureRandom(rng);
  if(!['ne','en','both'].includes(language))throw Error('Choose Nepali, English or Both');
@@ -171,8 +175,16 @@ export function buildAutomaticQuestionPaper({
  for(const topic of topicIds)if(!eligible.some(q=>q.topicId===topic))
   throw Error('Selected topic lacks valid '+language+' questions: '+topic);
  const pattern=exactBlueprint(blueprint,fullMarks);
- let selected=null;
- if(pattern){
+ if(requireExactGrid&&(!blueprint||!Array.isArray(blueprint.unitGrid)||
+   !blueprint.unitGrid.length))
+  throw Error('Official CDC question paper blocked: exact unit-wise grid is not reviewed and configured for this class/subject/full marks');
+ let selected=null,gridAudit=null;
+ if(requireExactGrid){
+  const audit=allocateExactCdcUnitGrid({blueprint,fullMarks,eligible,
+   selectedTopicIds:topicIds,previousSignature,rng});
+  selected=[...audit.questions];
+  gridAudit=audit;
+ }else if(pattern){
   const used=new Set(),result=[],covered=new Set();
   for(const p of pattern){
    const pool=shuffled(eligible.filter(q=>q.questionType===p.type&&Number(q.marks)===p.marks),rng);
@@ -210,12 +222,26 @@ export function buildAutomaticQuestionPaper({
   new Set(selected.map(q=>normalize(q.questionText))).size!==selected.length||
   selected.reduce((sum,q)=>sum+Number(q.marks),0)!==fullMarks)
   throw Error('Question paper quality verification failed');
+ const signature=selected.map(q=>String(q.id)).sort().join('|');
+ if(!requireExactGrid&&previousSignature&&signature===previousSignature){
+  if(attemptsRemaining<=0)
+   throw Error('No different question paper can be drawn from this question bank. Add more reviewed questions or choose other topics.');
+  return buildAutomaticQuestionPaper({questions,topicIds,fullMarks,language,
+   blueprint,rng,requireExactGrid,previousSignature,attemptsRemaining:attemptsRemaining-1});
+ }
  const order={mcq:0,short:1,long:2};
  const sorted=selected.map(q=>inLanguage(q,language,rng))
   .sort((a,b)=>order[a.questionType]-order[b.questionType]);
  return {questions:sorted,fullMarks,language,
-  blueprintMatched:!!pattern,allTopicsCovered:true,teacherReviewRequired:true,
-  sourceStatus:pattern?'admin_entered_cdc_grid_reference_not_independently_verified':
+  signature,gridAudit:gridAudit?{
+   sourceUrl:gridAudit.gridSummary.sourceUrl,
+   gridVersion:gridAudit.gridSummary.gridVersion,
+   slotEvidence:gridAudit.slotEvidence
+  }:null,
+  blueprintMatched:!!pattern,exactGridMatched:!!gridAudit,
+  allTopicsCovered:true,teacherReviewRequired:true,
+  sourceStatus:gridAudit?'admin_reviewed_unit_cdc_grid_transcription_needs_school_final_review':
+   pattern?'admin_entered_type_only_cdc_grid_reference_not_exact_unit_grid':
    'original_practice_custom_full_marks_not_cdc_grid',
   questionCount:sorted.length,topicCount:topicIds.length};
 }
