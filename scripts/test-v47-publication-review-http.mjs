@@ -59,7 +59,7 @@ try{
  assert.equal(body.readOnly,true);
  assert.equal(JSON.stringify(body).includes('Synthetic 0'),false,'Student data not returned');
  const originalDigest=body.review.digest;
- assert.ok(readCount>105,'Every student must be scanned');
+ assert.ok(readCount>=6,'School, member, subject, settings, draft and complete class query must be read');
  assert.equal(writes,0);
  assert.equal((await get(qs,null)).status,401);
  assert.equal((await get(qs,'viewer1')).status,403,'Viewer cannot request publication review');
