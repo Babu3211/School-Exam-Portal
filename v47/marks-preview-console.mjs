@@ -5,12 +5,13 @@ import {excelWorkbook} from './excel-workbook.mjs';
 import {auditLoadedMarks} from './marks-audit.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity} from './school-firebase-client.mjs';
 const $=id=>document.getElementById(id),status=message=>{$('message').textContent=message};
+const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 let auth,authSdk,api,db,actor,schoolId,cursor=null,records=[],epoch=0,busy=false,loadingEpoch=null,hasMore=false;
 function clear(){epoch++;actor=null;schoolId=null;cursor=null;records=[];busy=false;loadingEpoch=null;hasMore=false;$('work').hidden=true;$('rows').replaceChildren();$('count').textContent='';$('audit').textContent='Raw data audit not run';$('next').disabled=true;$('export').disabled=true;$('logout').disabled=true;}
 $('connect').onclick=async()=>{try{
  ({auth,authSdk,db,api}=await connectSchoolFirebase());
  authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clear();status('Login changed. Sign in again')}});
- $('connect').disabled=true;$('login').disabled=false;status('Connected to V47');
+ $('connect').disabled=true;$('login').disabled=false;if(requestedSchool){try{$('schoolId').value=validateSchoolId(requestedSchool)}catch(e){status('विद्यालय ID अमान्य: '+e.message);return}}status('Connected to V47');
 }catch(error){status('Connection failed: '+error.message)}};
 $('login').onclick=async()=>{
  if($('login').disabled)return;
@@ -77,3 +78,5 @@ $('export').onclick=async()=>{
  }catch(e){if(current===epoch)status('Export blocked: '+e.message)}
  finally{if(current===epoch)$('export').disabled=!actor||busy||hasMore||records.length===0||records.length>1500}
 };
+
+if(requestedSchool)queueMicrotask(()=>$('connect').click());
