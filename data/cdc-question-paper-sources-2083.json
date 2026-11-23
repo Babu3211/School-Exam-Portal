@@ -452,6 +452,17 @@
       "status": "official_CDC_2083_model_page_checked_secondary_pdf_grid_crosschecked_original_attachment_pending",
       "url": "https://moecdc.gov.np/content/659/class-10th-optional-mathematics-specification-table--model/",
       "note": "CDC official page dated 23 Asar 2083 confirms newer Grade10 Optional Mathematics Grid, Model Question and Marking Scheme. Secondary-hosted PDF reproduces 2083 model with 11 Objective, 12 WCA, 4 CCA, 75 marks/3hr, area marks 17/17/20/7/7/7, identical to 2082 published specification. Exact original 2083 government PDF attachment unavailable in machine-readable page; do not label PDF copy as government authenticated. SMSS only creates original practice questions, not official CDC questions."
+    },
+    {
+      "grades": [
+        8
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "historical_model_question_and_answer_key_reference",
+      "version": "२०७८ / CDC Library archive published २०८०",
+      "status": "official_CDC_library_old_model_50_government_archive_pdf_text_grid_40_requires_visual_and_current_2082_grid_reconciliation",
+      "url": "https://lib.moecdc.gov.np/catalog/opac_css/index.php?id=13717&lvl=notice_display",
+      "note": "CDC catalog identifies a 12-page 2078 Grade8 Science grid, bilingual Model Question and Answer Key. Dhangadhi government archive search-readable PDF contains 'grid 40' but model '50' within the Grade8 Science pages, and screenshot retrieval failed. Independent 2078 model synopsis reports 50 marks, 2 hours, 10 MCQ(1), 8 very short(1), 8 short(2), 4 long(4), 30 items and 11 unit areas. This record is historical reference ONLY. No verified 2083 Grid row is transcribed or approved; do not automatically use this for the current CDC exact generator."
     }
   ],
   "completion": {
@@ -470,7 +481,8 @@
     "sourceCorrection": "A Grade 10 textbook PDF (1692097269.pdf) was wrongly tagged as Grade 9 in an old source-register entry. Removed the Grade 9 entry; keep actual Grade 9 packs blocked until original Grade 9 textbook and grid are checked.",
     "verifiedOptionalComputerGrid": "Official Grade 9/10 Computer Science grid PDFs transcribed unit/type/marks/cognitive levels for 50-mark paper; development only, source checked, teacher answer review required; other subjects not configured.",
     "optionalMath2082": "Official Grade 9/10 Optional Math source area totals and WCA/CCA composite question groups verified and bundled; exact automated grouped question generation pending. Not equivalent to simple MCQ/Short/Long.",
-    "grade10OptionalMathModel2083": "Grade10 CDC 2083 publication confirmed. Secondary-hosted model PDF table compared against 2082 original government grid: all group counts, group marks, 6 area marks, cognitive percentage identical; original CDC 2083 PDF download not yet independently accessed. Printer follows CDC Q1(A-K), Q2-13, Q14-17."
+    "grade10OptionalMathModel2083": "Grade10 CDC 2083 publication confirmed. Secondary-hosted model PDF table compared against 2082 original government grid: all group counts, group marks, 6 area marks, cognitive percentage identical; original CDC 2083 PDF download not yet independently accessed. Printer follows CDC Q1(A-K), Q2-13, Q14-17.",
+    "grade8ScienceModelArchive2078": "Model 2078 four-group format 50/30 documented from CDC catalog, municipality archive text and independent synopsis; 11 unit weights staged for comparative audit. Municipality archive text contains Grid 40 vs Model 50 inconsistency; direct 2082 CDC primary PDF not visually available. Grade8 existing 55-item bank has 22 1-mark MCQs, 22 5-mark short and 11 10-mark long (missing 8×1 very short, 8×2 short, 4×4 long). CDC Exact remains blocked pending reconciliation, teacher review and bank expansion."
   },
   "practicePacks": [
     {
