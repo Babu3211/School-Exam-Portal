@@ -6,7 +6,7 @@
 const specs=new Set(['specification_grid','specification_grid_and_model_questions',
  'specification_grid_model_questions_and_answer_key']);
 const normal=s=>String(s||'').normalize('NFKC').toLocaleLowerCase()
- .replace(/[.,()[\]–—_/-]/g,' ').replace(/\s+/g,' ').trim();
+ .replace(/[^\\p{L}\\p{N}]+/gu,' ').trim();
 export function cdcSubjectKey(subject){
  const s=normal(subject);
  if(!s)return '';
@@ -32,7 +32,7 @@ function eligibleSource(source,grade,key){
   !/^https:\/\/(?:www\.)?moecdc\.gov\.np\//i.test(source.url||''))return false;
  const name=normal(source.subject);
  // Broad multi-subject catalogues and generic grids are NOT specific evidence.
- if(name.includes(' / ')||name.includes('विषयगत पाठ्यक्रम'))return false;
+ if(String(source.subject||'').includes(' / ')||name.includes('विषयगत पाठ्यक्रम'))return false;
  const sourceKey=cdcSubjectKey(source.subject);
  if(sourceKey!==key)return false;
  // Do not accidentally label an optional subject as compulsory.
