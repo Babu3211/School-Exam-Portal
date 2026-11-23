@@ -22,9 +22,9 @@
       <div class="body">
         <p class="instructions">IEMIS मा कक्षा र Term छानेर Load गर्नुहोस् र चाहिने विषयको checkbox छान्नुहोस्। त्यसपछि Read Form थिच्नुहोस्। शीर्ष भाग समातेर यो बाकस सार्न सकिन्छ।</p>
         <div class="context" id="context">Mark Entry form पढ्न बाँकी छ।</div>
-        <div class="tools"><button id="read" type="button">Read Form</button><button id="sample" class="light" type="button" disabled>Download Sample Excel</button></div>
+        <div class="tools"><button id="read" type="button">Read Form</button><button id="sample" class="light" type="button" disabled>Download Sample Excel</button><button id="export" class="light" type="button" disabled>Export Marks Excel</button></div>
         <label class="label" for="file">Import Excel (.xlsx)</label><input id="file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
-        <details><summary>Copy / Paste from Excel</summary><p class="instructions">Marks sheet बाट heading बाहेक विद्यार्थीका चारवटै विवरण र अंकका column सँगै copy गरेर यहाँ paste गर्नुहोस्। खुलेको form कै column क्रम चाहिन्छ।</p><textarea id="paste" aria-label="Paste Excel rows" placeholder="Paste Excel rows here"></textarea><button id="use-paste" class="light" type="button">Use Pasted Rows</button></details>
+        <details><summary>Copy / Paste from Excel</summary><p class="instructions">Marks sheet को पूरा तालिका यहाँ पेस्ट गर्नुहोस्। अंक मात्र भए Marks only छान्नुहोस् र सबै विद्यार्थीका अंक यही क्रममा राख्नुहोस्। IsAbsent र Full Marks छोड्नुहोस्।</p><textarea id="paste" aria-label="Paste Excel rows" placeholder="Paste Excel rows here"></textarea><label><input id="numbers" type="checkbox"> Marks only · तालिकाकै विद्यार्थी र विषयक्रम</label><button id="use-paste" class="light" type="button">Use Pasted Rows</button></details>
         <div id="editor" aria-label="Mark Entry"></div><button class="light" id="copy" type="button" disabled>Copy Rows</button><label class="replace label"><input id="replace" type="checkbox">Replace Existing Values</label>
         <p class="instructions">खाली cell ले पहिलेको अंक बदल्दैन। पहिल्यै अंक भएको ठाउँ बदल्न माथिको विकल्प छानेर Preview जाँच्नुहोस्। Import ले form मा अंक भर्छ। स्थायी रूपमा सुरक्षित गर्न IEMIS कै Save बटन थिच्नुहोस्।</p>
         <div class="tools"><button id="preview" type="button" disabled>Preview</button><button id="apply" class="red" type="button" disabled>Fill IEMIS Form</button><button id="clear" class="light" type="button">Clear Import</button></div>
@@ -123,13 +123,14 @@
     return {context, columns, rows, cells, table: layout, subjects:subjectLists(table,columns)};
   }
   function fingerprint(value) { return JSON.stringify({context: value.context, columns: value.columns, rows: value.rows}); }
-  async function downloadSample() {
+  async function downloadExcel(blank) {
     const current = readForm();
-    const data = await transfer.makeWorkbook(globalThis.ExcelJS, current, true);
+    if (fingerprint(current) !== sourceVersion) throw new Error('Form फेरिएको छ। फेरि Read Form गर्नुहोस्।');
+    const data = await transfer.makeWorkbook(globalThis.ExcelJS, {...current, rows:displayRows()}, blank);
     const url = URL.createObjectURL(new Blob([data], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
-    const link = document.createElement('a'); link.href = url; link.download = `IEMIS_${current.context.year}_Class${transfer.classKey(current.context.className)}_${transfer.termKey(current.context.term)}_Sample.xlsx`;
+    const link = document.createElement('a'); link.href = url; link.download = `IEMIS_${current.context.year}_Class${transfer.classKey(current.context.className)}_${transfer.termKey(current.context.term)}_${blank ? 'Sample' : 'Marks'}.xlsx`;
     link.click(); setTimeout(() => URL.revokeObjectURL(url), 1500);
-    message('खुलेको कक्षा र Term को Excel Sample डाउनलोड भयो। Context र heading जस्ताको तस्तै राख्नुहोस्।');
+    message(blank ? 'खुलेको फारामको खाली Sample डाउनलोड भयो।' : 'तालिकाका अंक Excel मा Export भयो।');
   }
   const safe = action => async () => {
     try { await action(); } catch (error) {resetPlan(); message(error.message || 'काम पूरा भएन। फेरि जाँच गर्नुहोस्।', true);}
@@ -148,6 +149,15 @@
     resetPlan();
     $('preview').disabled = false;
   }
+  function displayedValue(r,c) {
+    if (c < 4) return grid.rows[r][c];
+    const column = grid.columns[c-4];
+    if (transfer.componentKey(column.label) === 'full' && !grid.cells[r][c].unavailable) {
+      const count = grid.columns.findIndex(other => other.subject === column.subject && transfer.componentKey(other.label) === 'count');
+      if (count >= 0 && file.rows[r][count+4] !== '' && /^\d+$/.test(file.rows[r][count+4])) return Number(file.rows[r][count+4])*4;
+    }
+    return file.rows[r][c] !== '' ? file.rows[r][c] : grid.rows[r][c];
+  }
   function renderEditor() {
     const table = document.createElement('table');
     for (const [section, target] of [[grid.table.tHead,table.createTHead()], [grid.table.tBodies[0],table.createTBody()]]) {
@@ -164,14 +174,14 @@
           col += cell.colSpan;
           const native = cell.querySelector('input');
           if (!native || section === grid.table.tHead && native.type !== 'checkbox') {
-            td.textContent = cell.textContent.trim();
+            td.textContent = section !== grid.table.tHead && c >= 4 ? displayedValue(r,c) : cell.textContent.trim();
             continue;
           }
           const input = document.createElement('input');
           const editable = section !== grid.table.tHead && c >= 4 && !grid.cells[r][c].readonly && !grid.cells[r][c].disabled && !grid.cells[r][c].unavailable;
           input.type = native.type === 'checkbox' ? 'checkbox' : 'text';
           const staged = editable && file.rows[r][c] !== '';
-          const value = staged ? file.rows[r][c] : native.type === 'checkbox' ? native.checked : native.value;
+          const value = section !== grid.table.tHead && c >= 4 ? displayedValue(r,c) : native.type === 'checkbox' ? native.checked : native.value;
           if (input.type === 'checkbox') input.checked = value === true || value === 'true';
           else input.value = value;
           td.classList.toggle('changed', staged);
@@ -215,18 +225,22 @@
       message('अंक टाँसियो। तालिकामा जाँचेर Preview थिच्नुहोस्।');
     } catch (error) {resetPlan(); message(error.message,true);}
   });
+  function displayRows() {
+    return grid.rows.map((row,r) => row.map((_,c) => displayedValue(r,c)));
+  }
   $('copy').onclick = safe(async () => {
-    const rows = grid.rows.map((row,r) => row.map((v,c) => c >= 4 && file.rows[r][c] !== '' ? file.rows[r][c] : v).join('\t'));
+    const rows = displayRows().map(row => row.join('\t'));
     await navigator.clipboard.writeText(rows.join('\n'));
     message('विद्यार्थी विवरण र अंक कपी भयो।');
   });
   $('read').onclick = safe(() => {
     grid = readForm(); sourceVersion = fingerprint(grid); startDraft(); renderEditor();
-    $('sample').disabled = false; $('copy').disabled = false; $('file').value = ''; $('paste').value = '';
+    $('export').disabled = false; $('sample').disabled = false; $('copy').disabled = false; $('file').value = ''; $('paste').value = '';
     $('context').textContent = `School ${grid.context.schoolCode} · ${grid.context.year} · Class ${grid.context.className} · ${grid.context.term} · Section ${grid.context.section}`;
     message('Form पढियो। तालिकामा अंक टाइप वा पेस्ट गर्नुहोस्, वा Excel छान्नुहोस्।');
   });
-  $('sample').onclick = safe(downloadSample);
+  $('sample').onclick = safe(() => downloadExcel(true));
+  $('export').onclick = safe(() => downloadExcel(false));
   function stage(source) {
     const matched = transfer.makePlan(source,grid,true);
     for (const change of matched.changes) {
@@ -248,10 +262,11 @@
   });
   $('use-paste').onclick = safe(() => {
     if (!grid) throw new Error('पहिले Read Form थिच्नुहोस्।');
-    stage(transfer.parsePaste($('paste').value, grid));
+    stage(transfer.parsePaste($('paste').value, grid, $('numbers').checked));
   });
   $('replace').onchange = resetPlan;
   $('paste').oninput = resetPlan;
+  $('numbers').onchange = resetPlan;
   $('preview').onclick = safe(() => {
     resetPlan(); const current = readForm();
     if (fingerprint(current) !== sourceVersion) throw new Error('IEMIS form परिवर्तन भएको छ। फेरि Read Form गर्नुहोस्।');
@@ -303,7 +318,7 @@
   });
   function forgetForm() {
     revision++; grid = null; file = null; resetPlan(); $('editor').replaceChildren();
-    for (const id of ['sample','preview','copy']) $(id).disabled = true;
+    for (const id of ['sample','export','preview','copy']) $(id).disabled = true;
     $('context').textContent = 'Mark Entry form पढ्न बाँकी छ।';
   }
   $('clear').onclick = () => {

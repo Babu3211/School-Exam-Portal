@@ -59,6 +59,12 @@ const unrelated = structuredClone(target);unrelated.cells[0][5].unavailable=true
 const ambiguous = {...target,rows:[...target.rows,...target.rows],cells:[...target.cells,...target.cells]};assert.throws(()=>transfer.makePlan(roundtrip,ambiguous),/दोहोरिएको/);
 assert.equal(transfer.makePlan(transfer.parsePaste(roundtrip.rows.map(r=>r.join('\t')).join('\n'),target),target).changes.length,3);
 assert.throws(()=>transfer.parsePaste('0\t24\t8',target),/विद्यार्थी column/);
+const matrix = transfer.parsePaste('0\t24\t8',target,true);
+assert.deepEqual(transfer.makePlan(matrix,target).changes.map(c=>c.value),[0,24,8]);
+assert.throws(()=>transfer.parsePaste('1\t2',target,true),/column/);
+const wholeTable = [[...transfer.identity,'Nepali','','',''],['','','','',...target.columns.map(c=>c.label)],roundtrip.rows[0]].map(row=>row.join('\t')).join('\n');
+assert.deepEqual(transfer.parsePaste(wholeTable,target).rows,roundtrip.rows);
+assert.throws(()=>transfer.parsePaste(wholeTable.replace('Participation','Other'),target),/क्रम/);
 const formulaBook = new ExcelJS.Workbook();await formulaBook.xlsx.load(data);formulaBook.getWorksheet('Marks').getCell('F3').value={formula:'1+1',result:2};
 await assert.rejects(()=>formulaBook.xlsx.writeBuffer().then(b=>transfer.workbookData(ExcelJS,b)),/Formula/);
 assert.equal(transfer.subjectKey('OPT.II COMPUTER SCIENCE (3031)'),transfer.subjectKey('ऐच्छिक द्वितीय: कम्प्युटर विज्ञान'));

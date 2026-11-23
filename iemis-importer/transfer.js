@@ -117,6 +117,7 @@
     info.addRow(['निर्देशन', 'Context र heading नबदल्नुहोस्। खाली अंक खाली नै रहन्छ। Regd. No. वा Symbol No. बाट विद्यार्थी मिलाइन्छ।']);
     info.columns = [{width: 26}, {width: 90}];
     const sheet = book.addWorksheet('Marks', {views: [{state: 'frozen', xSplit: 4, ySplit: 2}]});
+    book.views = [{activeTab: 1}];
     sheet.addRow([...identity, ...grid.columns.map(c => c.subject)]);
     sheet.addRow(['', '', '', '', ...grid.columns.map(c => c.label)]);
     for (let col = 1; col <= 4; col++) sheet.mergeCells(1, col, 2, col);
@@ -127,7 +128,7 @@
       if (end > start) sheet.mergeCells(1, start, 1, end);
       start = end + 1;
     }
-    grid.rows.forEach(row => sheet.addRow(row.map((value, i) => blank && i >= 4 ? '' : String(value ?? ''))));
+    grid.rows.forEach(row => sheet.addRow(row.map((value, i) => blank && i >= 4 && clean(value) !== 'N/A' ? '' : String(value ?? ''))));
     sheet.columns.forEach((col, i) => { col.width = i === 1 ? 30 : i < 4 ? 23 : 23; col.numFmt = '@'; });
     sheet.eachRow((row, rowNo) => row.eachCell({includeEmpty: true}, cell => {
       cell.alignment = {vertical: 'middle', wrapText: true};
@@ -141,9 +142,28 @@
     sheet.pageSetup = {orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, printTitlesRow: '1:2'};
     return book.xlsx.writeBuffer();
   }
-  function parsePaste(text, grid) {
+  function parsePaste(text, grid, numbersOnly = false) {
     const lines = String(text).replace(/\r\n?/g, '\n').replace(/\n+$/, '').split('\n');
     const rows = lines.map(line => line.split('\t'));
+    if (numbersOnly) {
+      const positions = grid.columns.flatMap((c,i) => ['absent','full'].includes(componentKey(c.label)) ? [] : [i+4]);
+      if (rows.length !== grid.rows.length || rows.some(row => row.length !== positions.length)) error('सबै विद्यार्थी र अंकका column तालिकाकै क्रममा चाहिन्छ। IsAbsent र Full Marks हटाउनुहोस्।');
+      const aligned = rows.map((row,r) => {
+        const values = [...grid.rows[r].slice(0,4), ...grid.columns.map(() => '')];
+        positions.forEach((c,i) => {values[c] = row[i];});
+        return values;
+      });
+      return {context:{...grid.context}, columns:grid.columns.map((c,i) => ({...c,index:i+4})), rows:aligned};
+    }
+    if (identity.every((heading,i) => clean(rows[0][i]) === heading)) {
+      const [subjects, labels] = rows.splice(0,2);
+      if (!labels || subjects.length !== grid.columns.length+4 || labels.length !== subjects.length) error('Paste गरिएको heading खुलेको form सँग मिलेन।');
+      let subject = '';
+      grid.columns.forEach((column,i) => {
+        subject = clean(subjects[i+4]) || subject;
+        if (subject !== clean(column.subject) || clean(labels[i+4]) !== clean(column.label)) error('Paste को विषय वा अंकको column क्रम मिलेन।');
+      });
+    }
     if (rows.length > 5000 || rows.some(row => row.length !== grid.columns.length + 4)) error('Marks sheet का heading बाहेक सबै ४ विद्यार्थी column र अंक column सँगै Copy/Paste गर्नुहोस्।');
     return {context: {...grid.context}, columns: grid.columns.map((c, i) => ({...c, index: i + 4})), rows};
   }
