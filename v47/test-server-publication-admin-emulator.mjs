@@ -10,6 +10,7 @@ import {stageTrustedClassMarks} from './server-publication-staging-executor.mjs'
 import {commitTrustedOfficialClassPublication} from './server-official-publication-commit.mjs';
 import {fingerprintConfiguredClassReview} from './server-class-review-fingerprint.mjs';
 import {officialClassPointerId} from './server-publication-authoritative-preflight.mjs';
+import {loadCommittedOfficialClassMarks} from './server-official-marks-firestore-loader.mjs';
 const allowedHosts=['127.0.0.1:8081','localhost:8081','[::1]:8081'];
 const localEmulator=allowedHosts.includes(process.env.FIRESTORE_EMULATOR_HOST);
 if(!localEmulator){
@@ -71,6 +72,8 @@ try{
  const pointerId=officialClassPointerId(scope);
  const pointerRef=db.doc(path('official_marks_pointers',pointerId));
  assert.equal((await pointerRef.get()).exists,false,'A completed stage is not official');
+ const unpublished=await loadCommittedOfficialClassMarks({firestore:db,...scope,actorUid});
+ assert.equal(unpublished.published,false,'Staged marks are never official before pointer commit');
  // Test invalid admin and data changes BEFORE the actual commit.
  const memberRef=db.doc(path('members',actorUid));
  await memberRef.update({active:false});
@@ -96,6 +99,21 @@ try{
  assert.equal(headerSnap.data().state,'committed');
  assert.equal(auditSnap.data().action,'official_class_marks_publish');
  assert.equal(auditSnap.data().approvedBy,actorUid);
+ const official=await loadCommittedOfficialClassMarks({firestore:db,...scope,actorUid});
+ assert.equal(official.published,true);
+ assert.equal(official.entries.length,count);
+ assert.deepEqual(official.entries[0].values,{internal:4,written:35,practical:9});
+ // An active Viewer may read the committed result but never unpublished staging.
+ await put(path('members','viewer1'),{uid:'viewer1',role:'viewer',schoolId,active:true});
+ assert.equal((await loadCommittedOfficialClassMarks({firestore:db,...scope,actorUid:'viewer1'})).rosterCount,count);
+ await db.doc(path('members','viewer1')).update({active:false});
+ await assert.rejects(loadCommittedOfficialClassMarks({firestore:db,...scope,actorUid:'viewer1'}),/membership/);
+ // A missing page must fail closed even when a pointer and header exist.
+ const secondPage=db.doc(path('marks_staging',publicationId,'batches','b0001'));
+ const savedPage=(await secondPage.get()).data();
+ await secondPage.delete();
+ await assert.rejects(loadCommittedOfficialClassMarks({firestore:db,...scope,actorUid}),/staging page/);
+ await secondPage.set(savedPage);
  // No legacy marks or per-student official rows are accidentally overwritten.
  assert.equal((await db.collection(path('marks')).get()).size,0);
  await assert.rejects(commitTrustedOfficialClassPublication(options),/Concurrent publication/);
@@ -103,7 +121,7 @@ try{
  assert.equal(pointerAfter.data().publicationId,publicationId);
  // A second tenant's existing membership never grants access to this scope.
  await assert.rejects(reader.loadAuthoritative({schoolId:'87654321',uid:actorUid}),/Cross-school/);
- console.log('PASS real Firebase Admin Firestore emulator: 101-student configured 4/36/10 staging, two pages, transaction-scoped full roster, CAS pointer/header/audit, revoked membership and inactive-student refusals');
+ console.log('PASS real Firebase Admin Firestore emulator: 101-student configured 4/36/10 staging, two pages, transaction-scoped full roster, CAS pointer/header/audit, official 101-row reader, active Viewer, revoked membership, missing page and inactive-student refusals');
 }finally{
  await deleteApp(app);
 }
