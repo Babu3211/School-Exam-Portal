@@ -13,7 +13,9 @@ export function createV47ReadApiRouter({auth,firestore}) {
   ["/api/v47/schools",createV47SchoolsHttpHandler({auth,firestore})],
   ["/api/v47/dashboard",createV47DashboardHttpHandler({auth,firestore})],
   ["/api/v47/marks",createV47MarksHttpHandler({auth,firestore})],
-  ["/api/v47/official-marks",createV47OfficialMarksHttpHandler({auth,firestore})],
+  // Instantiate the transaction-only official reader only for its own route.
+  // Legacy read handlers also run with minimal read-only test adapters.
+  ["/api/v47/official-marks",request=>createV47OfficialMarksHttpHandler({auth,firestore})(request)],
   ["/api/v47/attendance",createV47AttendanceHttpHandler({auth,firestore})],
   ["/api/v47/records",createV47RecordsHttpHandler({auth,firestore})]
  ]);
