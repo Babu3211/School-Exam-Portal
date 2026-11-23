@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SMSS V47 — School Admin Teacher Draft Review</title>
+<style>
+body{font:15px system-ui,sans-serif;background:#f3f7fc;color:#183650;margin:0}main{max-width:1100px;margin:auto;padding:18px}
+section{background:white;padding:17px;border:1px solid #dbe5ee;border-radius:11px;margin:15px 0}
+label{display:block;margin:10px 0}input,select,button{font:inherit;padding:9px;max-width:100%;box-sizing:border-box}
+button{background:#175eb5;color:white;border:0;border-radius:7px;cursor:pointer}button:disabled{opacity:.55}
+.warn{background:#fff2db;padding:14px;border-radius:9px;line-height:1.6}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.scroll{overflow:auto;max-height:65vh}table{width:100%;border-collapse:collapse;white-space:nowrap}td,th{padding:8px;border-bottom:1px solid #dce5ef;text-align:left}
+th{position:sticky;top:0;background:#eaf2fd}a{color:#175eb5}
+</style></head>
+<body><main><h1>Teacher Class Marks Draft — School Admin Review</h1>
+<p><a href="./index.html">Dashboard</a> · <a id="adminBack" href="./school-admin.html">School Admin</a></p>
+<p class="warn" lang="ne">यो शिक्षकले सुरक्षित गरेको पूरा कक्षाको <strong>Draft मात्र जाँच्ने</strong> पृष्ठ हो। शिक्षकको सक्रिय नियुक्ति, विद्यालय, विद्यार्थी सूची र Examination Settings फेरि प्रमाणित गरिन्छ। यसबाट आधिकारिक Marks Save, Grade Sheet, GPA, Approval वा Publish हुँदैन।</p>
+<section><h2>School Admin Login</h2>
+<button id="connect">Connect to V47</button>
+<div class="fields">
+<label>School IEMIS ID <input id="schoolId" inputmode="numeric" autocomplete="off"></label>
+<label>Admin Email <input id="email" type="email" autocomplete="username"></label>
+<label>Password <input id="password" type="password" autocomplete="current-password"></label>
+</div><button id="login" disabled>Verify School Admin</button>
+<button id="logout" disabled>Sign out</button>
+<p id="loginStatus" role="status" aria-live="polite">Connect and verify an active School Admin account.</p></section>
+<section id="reviewArea" hidden><h2>Find Teacher Draft</h2>
+<div class="fields">
+<label>Teacher Firebase UID <input id="teacherUid" autocomplete="off" maxlength="128"></label>
+<label>Class <select id="classId"><option>ECD</option><option>LKG</option><option>UKG</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></label>
+<label>Subject ID <input id="subjectId" autocomplete="off" maxlength="128"></label>
+<label>Exam Term <select id="examId"><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="1st">1st Term</option><option value="2nd">2nd Term</option><option value="3rd">3rd Term</option><option value="final">Final Term</option></select></label>
+</div>
+<button id="review" type="button">Verify and load read-only Draft</button>
+<p id="reviewStatus" role="status" aria-live="polite">Choose the Teacher, Class, Subject and Term.</p>
+<div class="scroll"><table aria-label="Verified Teacher Draft read-only marks"><thead><tr id="reviewHeader"></tr></thead><tbody id="reviewRows"></tbody></table></div>
+</section></main><script type="module" src="./teacher-draft-review-console.mjs"></script></body></html>
