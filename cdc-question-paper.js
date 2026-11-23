@@ -25,7 +25,7 @@ const isAdmin = () => !!auth.currentUser && auth.currentUser.uid === ADMIN_UID;
 let role = null, classSubjects = [], curriculumRows = [], questionRows = [], blueprintRows = [], savedPapers = [], generatedPaper = null;
 let selectedClass = "", selectedSubject = "", selectedSection = "", currentBlueprint = null;
 let bundledPracticeUnits=[],bundledPracticeQuestions=[],bundledPracticeStatus="",questionDataLoadEpoch=0,verifiedQuestionSelection=null;
-let lastAutoSignature=null;
+let lastAutoSignature=null,paperHistoryLoadEpoch=0;
 
 function message(text, error = false) {
   const el = $("qpMessage");
@@ -487,7 +487,9 @@ async function loadCurrentData() {
  $("qpCurriculumVersion").value=curriculumRows[0]?.curriculumVersion||"CDC संस्करण Topic सूचीअनुसार";
  renderTopics();renderQuestionRows();
  $("qpAutoSourceStatus").textContent=bundledPracticeStatus;
- verifiedQuestionSelection={className,subject,section,request};
+ // Generation must wait for saved-paper history to finish loading.
+ // Otherwise a rapid click can repeat a paper from the previous session.
+ verifiedQuestionSelection=null;
  updateAutoGridStatus();
  const badge=$("qpBlueprintBadge");
  if(currentBlueprint){
@@ -498,18 +500,41 @@ async function loadCurrentData() {
   badge.textContent="Custom Pattern";
   $("qpPatternHint").textContent="यस विषयको जाँचिएको CDC Grid आयात गरिएको छैन। Custom Pattern लाई CDC आधिकारिक नमान्नुहोस्।";
  }
- await loadPaperHistory();
+ const historyReady=await loadPaperHistory({required:true});
+ if(!historyReady||!stillCurrent())return;
+ verifiedQuestionSelection={className,subject,section,request};
 }
 
-async function loadPaperHistory() {
-  const body=$("qpPaperRows");if(!body)return;
-  try{
-    let snap;
-    if(isAdmin()) snap=await getDocs(query(collection(db,"question_papers"),where("className","==",selectedClass),where("subject","==",selectedSubject),where("section","==",selectedSection),limit(30)));
-    else snap=await getDocs(query(collection(db,"question_papers"),where("className","==",selectedClass),where("subject","==",selectedSubject),where("section","==",selectedSection),where("createdBy","==",auth.currentUser.uid),limit(30)));
-    savedPapers=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.createdAt?.seconds||0).localeCompare(String(a.createdAt?.seconds||0)));
-    body.innerHTML=savedPapers.length?savedPapers.map(p=>`<tr><td>${esc(p.paperTitle)}</td><td>${esc(p.className)}</td><td>${esc(p.subject)}</td><td>${esc(p.fullMarks)}</td><td>${esc(p.durationMinutes)} min</td><td>${esc(p.createdAt?.toDate?p.createdAt.toDate().toLocaleDateString("ne-NP"):"—")}</td><td><button class="qp-btn alt" type="button" data-qp-print-saved="${esc(p.id)}">प्रश्नपत्र</button> <button class="qp-btn alt" type="button" data-qp-answer-saved="${esc(p.id)}">उत्तरकुञ्जिका</button> ${isAdmin()||p.createdBy===auth.currentUser.uid?'<button class="qp-btn danger" type="button" data-qp-delete-paper="'+esc(p.id)+'">Delete</button>':""}</td></tr>`).join(""):'<tr><td colspan="7">अहिलेसम्म प्रश्नपत्र सुरक्षित गरिएको छैन।</td></tr>';
-  }catch(err){console.error("Question paper history failed",err);body.innerHTML='<tr><td colspan="7">प्रश्नपत्र सूची लोड भएन: '+esc(err.code||err.message)+'</td></tr>';}
+async function loadPaperHistory({required=false}={}) {
+ const body=$("qpPaperRows");if(!body)return false;
+ const className=selectedClass,subject=selectedSubject,section=selectedSection;
+ const userId=auth.currentUser?.uid,request=questionDataLoadEpoch;
+ const token=++paperHistoryLoadEpoch,admin=isAdmin();
+ const stillCurrent=()=>token===paperHistoryLoadEpoch&&
+  request===questionDataLoadEpoch&&selectedClass===className&&
+  selectedSubject===subject&&selectedSection===section&&
+  auth.currentUser?.uid===userId;
+ try{
+  if(!userId)throw Error("Login आवश्यक छ।");
+  const filters=[where("className","==",className),
+   where("subject","==",subject),where("section","==",section)];
+  if(!admin)filters.push(where("createdBy","==",userId));
+  const snap=await getDocs(query(collection(db,"question_papers"),...filters,limit(30)));
+  // An older class/section request must never replace the current history.
+  if(!stillCurrent())return false;
+  savedPapers=snap.docs.map(d=>({id:d.id,...d.data()}))
+   .sort((a,b)=>Number(b.createdAt?.seconds||0)-Number(a.createdAt?.seconds||0));
+  body.innerHTML=savedPapers.length?savedPapers.map(p=>`<tr><td>${esc(p.paperTitle)}</td><td>${esc(p.className)}</td><td>${esc(p.subject)}</td><td>${esc(p.fullMarks)}</td><td>${esc(p.durationMinutes)} min</td><td>${esc(p.createdAt?.toDate?p.createdAt.toDate().toLocaleDateString("ne-NP"):"—")}</td><td><button class="qp-btn alt" type="button" data-qp-print-saved="${esc(p.id)}">प्रश्नपत्र</button> <button class="qp-btn alt" type="button" data-qp-answer-saved="${esc(p.id)}">उत्तरकुञ्जिका</button> ${admin||p.createdBy===userId?'<button class="qp-btn danger" type="button" data-qp-delete-paper="'+esc(p.id)+'">Delete</button>':""}</td></tr>`).join(""):'<tr><td colspan="7">अहिलेसम्म प्रश्नपत्र सुरक्षित गरिएको छैन।</td></tr>';
+  return true;
+ }catch(err){
+  if(!stillCurrent())return false;
+  console.error("Question paper history failed",err);
+  savedPapers=[];
+  verifiedQuestionSelection=null;
+  body.innerHTML='<tr><td colspan="7">प्रश्नपत्र अभिलेख लोड भएन: '+esc(err.code||err.message)+'</td></tr>';
+  if(required)throw err;
+  return false;
+ }
 }
 function allocateQuestions() {
   const topics=selectedTopicIds();
