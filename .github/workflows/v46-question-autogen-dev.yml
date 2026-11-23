@@ -9,6 +9,8 @@ on:
       - 'cdc-question-excel.mjs'
       - 'cdc-verified-computer-grids.mjs'
       - 'cdc-optional-math-2082.mjs'
+      - 'cdc-optional-math-model-compare.mjs'
+      - 'scripts/test-cdc-optional-math-model-compare.mjs'
       - 'cdc-optional-math-composite.mjs'
       - 'cdc-optional-math-original-practice.mjs'
       - 'scripts/test-cdc-optional-math-original-practice.mjs'
@@ -54,6 +56,8 @@ jobs:
           node --check cdc-question-excel.mjs
           node --check cdc-verified-computer-grids.mjs
           node --check cdc-optional-math-2082.mjs
+          node --check cdc-optional-math-model-compare.mjs
+          node --check scripts/test-cdc-optional-math-model-compare.mjs
           node --check cdc-optional-math-composite.mjs
           node --check cdc-optional-math-original-practice.mjs
           node --check scripts/test-cdc-optional-math-original-practice.mjs
@@ -81,6 +85,8 @@ jobs:
         run: node scripts/test-cdc-optional-math-original-practice.mjs
       - name: Test composite 2082 Optional Mathematics WCA CCA paper solver
         run: node scripts/test-cdc-optional-math-composite.mjs
+      - name: Compare Grade 10 CDC 2083 Model Question and printed groups with 2082 original grid
+        run: node scripts/test-cdc-optional-math-model-compare.mjs
       - name: Verify CDC Grade 9 and 10 Optional Mathematics grouped 2082 grid
         run: node scripts/test-cdc-optional-math-2082.mjs
       - name: Verify authentic CDC Computer Science Grade 9 and 10 grid transcriptions
