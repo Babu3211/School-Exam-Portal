@@ -3,7 +3,7 @@
  * This is a transcription checker, NOT a claim that a manually entered grid
  * or any question was independently published/approved by Nepal CDC.
  */
-const types=new Set(['mcq','short','long']);
+const types=new Set(['mcq','very_short','short','long']);
 const levels=new Set(['knowledge','understanding','application','higher']);
 const official=/^https:\/\/(?:www\.)?(?:moecdc\.gov\.np|lib\.moecdc\.gov\.np|giwmscdnone\.gov\.np)\//i;
 const signature=questions=>questions.map(q=>String(q.id)).sort().join('|');
@@ -223,7 +223,7 @@ export function aggregateExactCdcGrid(unitGrid){
  if(!Array.isArray(unitGrid)||!unitGrid.length||unitGrid.length>120)
   throw Error('Unit-wise Grid is required');
  const counts=new Map(),levelMarks={knowledge:0,understanding:0,application:0,higher:0};
- const allowedTypes=new Set(['mcq','short','long']);
+ const allowedTypes=new Set(['mcq','very_short','short','long']);
  let fullMarks=0,questionCount=0;
  for(const [i,row]of unitGrid.entries()){
   const {type,cognitiveLevel}=row||{};
@@ -242,8 +242,8 @@ export function aggregateExactCdcGrid(unitGrid){
  const pattern=[...counts].map(([key,count])=>{
   const [type,marks]=key.split('::');
   return {type,marks:Number(marks),count};
- }).sort((a,b)=>['mcq','short','long'].indexOf(a.type)-
- ['mcq','short','long'].indexOf(b.type)||a.marks-b.marks);
+ }).sort((a,b)=>['mcq','very_short','short','long'].indexOf(a.type)-
+ ['mcq','very_short','short','long'].indexOf(b.type)||a.marks-b.marks);
  const distribution=Object.fromEntries(Object.entries(levelMarks).map(([level,marks])=>
   [level,100*marks/fullMarks]));
  return Object.freeze({pattern,distribution,fullMarks,questionCount});
