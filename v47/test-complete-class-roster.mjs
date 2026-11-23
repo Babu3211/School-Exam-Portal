@@ -16,8 +16,29 @@ const result=await loadCompleteClassRoster({...base,api:mock()});
 assert.deepEqual(result.studentIds,['s1','s2','s3']);
 assert.equal(result.count,3);
 assert.equal(result.pages,2);
+assert.equal(result.excludedInactive,0);
 await assert.rejects(loadCompleteClassRoster({...base,api:mock(),maxStudents:2}),/exceeds 2/);
 await assert.rejects(loadCompleteClassRoster({...base,api:mock([])}),/no students/);
+// Inactive/withdrawn students must not be assigned attendance, even when a
+// class query contains both archived and active student documents. Page
+// lookahead still uses the full ordered raw roster and must not skip s3.
+{
+ const mixed=[
+  ['s1',{schoolId,class:'9',name:'Withdrawn',active:false}],
+  ['s2',{schoolId,class:'9',name:'Legacy active (field omitted)'}],
+  ['s3',{schoolId,class:'9',name:'Enrolled',active:true}]
+ ];
+ const activeOnly=await loadCompleteClassRoster({...base,api:mock(mixed)});
+ assert.deepEqual(activeOnly.studentIds,['s2','s3']);
+ assert.equal(activeOnly.excludedInactive,1);
+ assert.equal(activeOnly.count,2);
+ assert.equal(activeOnly.pages,2);
+ await assert.rejects(loadCompleteClassRoster({...base,api:mock([
+  ['s1',{schoolId,class:'9',active:false}],
+  ['s2',{schoolId,class:'9',active:false}]
+ ])}),/no active students/);
+}
+
 await assert.rejects(loadCompleteClassRoster({...base,api:mock([docs[0],docs[0],docs[2]])}),/duplicate roster document ID|Duplicate student/);
 await assert.rejects(loadCompleteClassRoster({...base,api:mock([docs[1],docs[0],docs[2]])}),/out-of-order|pagination order changed/);
 await assert.rejects(loadCompleteClassRoster({...base,api:mock([docs[0],docs[2],docs[1]])}),/out-of-order|pagination order changed/);
@@ -124,4 +145,8 @@ for(const doc of [null,undefined,{id:'s1'},{id:'s1',data:null},{id:'s1',data:123
  const malformed={...mock(),getDocs:async()=>({docs:[doc]})};
  await assert.rejects(loadCompleteClassRoster({...base,api:malformed}),/Invalid or duplicate roster document ID|Malformed roster document/);
 }
-console.log('V47 complete class roster pagination tests passed');
+const {readFileSync}=await import('node:fs');
+const attendanceUI=readFileSync(new URL('./attendance-console.mjs',import.meta.url),'utf8');
+assert.match(attendanceUI,/result\.students\.filter\(isActiveEnrolledStudent\)/,
+ 'Attendance selection table excludes deactivated students before Save');
+console.log('V47 complete class roster pagination and inactive student exclusion tests passed');

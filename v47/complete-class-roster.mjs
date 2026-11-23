@@ -1,4 +1,5 @@
 import {loadClassRoster} from './attendance-roster.mjs';
+import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
 // Reads every page from the verified school/class collection. Do not use
 // a manually selected subset as the authoritative roster.
 export async function loadCompleteClassRoster({db,api,actor,schoolId,classId,pageSize=100,maxStudents=1500}){
@@ -32,6 +33,12 @@ export async function loadCompleteClassRoster({db,api,actor,schoolId,classId,pag
   }
  }while(cursor);
  checkIdentity();
+ // Consume EVERY raw class document for stable Firestore cursors, then
+ // exclude deactivated students from the attendance-eligible roster.
+ // Filtering inside each paginated page would skip lookahead/cursor records.
  if(!students.length)throw new Error('Class has no students');
- return {students,studentIds:students.map(s=>s.id),count:students.length,pages};
+ const eligible=students.filter(isActiveEnrolledStudent);
+ if(!eligible.length)throw new Error('Class has no active students for attendance');
+ return {students:eligible,studentIds:eligible.map(s=>s.id),
+  count:eligible.length,pages,excludedInactive:students.length-eligible.length};
 }

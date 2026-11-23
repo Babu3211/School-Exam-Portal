@@ -24,6 +24,36 @@ assert.equal(success.saved,2);
 assert.equal(committed,1,'Complete class must commit in one batch for <=10 students');
 assert.equal(staged.length,2);
 assert.ok(staged.every(([,value])=>value.schoolId===schoolId));
+// A withdrawn student left in a class collection must be excluded before
+// the FIRST attendance write; legacy records without active stay eligible.
+{
+ const all=[
+  ['s1',{schoolId,class:classId,active:false}],
+  ['s2',{schoolId,class:classId}],
+  ['s3',{schoolId,class:classId,active:true}]
+ ];
+ let writes=0;
+ const mixedApi={...api,
+  getDocs:async()=>({docs:all.map(([id,data])=>({id,data:()=>data}))}),
+  getDoc:async ref=>{
+   const row=all.find(([id])=>ref.endsWith('/'+id));
+   return {exists:()=>!!row,data:()=>row?.[1]};
+  },
+  writeBatch:()=>({set:()=>{},commit:async()=>{writes++}})
+ };
+ const activeEntries=['s2','s3'].map(studentId=>({studentId,class:classId,date,present:true}));
+ await assert.rejects(saveAuthoritativeClassAttendance({
+  db:{},api:mixedApi,actor,schoolId,classId,date,
+  entries:all.map(([studentId])=>({studentId,class:classId,date,present:true}))
+ }),/not in selected class|incomplete/);
+ assert.equal(writes,0,'A stale UI selection containing inactive student must not write');
+ const approved=await saveAuthoritativeClassAttendance({
+  db:{},api:mixedApi,actor,schoolId,classId,date,entries:activeEntries
+ });
+ assert.equal(approved.saved,2);
+ assert.equal(writes,1);
+ assert.equal(approved.rosterReverified,true);
+}
 const otherSchool={...actor,schoolId:'87654321'};
 await assert.rejects(saveAuthoritativeClassAttendance({db:{},api,actor:otherSchool,schoolId,classId,date,entries}),/School Admin|School membership|permission/i);
 assert.equal(committed,1,'Cross-school identity must never commit');
