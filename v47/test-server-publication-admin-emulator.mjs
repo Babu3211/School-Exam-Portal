@@ -123,9 +123,10 @@ try{
  // A valid publication must stop serving results if live student/settings
  // records no longer match the complete approved class.
  const settingsRef=db.doc(path('mark_settings',identifier));
- await settingsRef.update({'components.0.fullMarks':3});
+ const savedSettings=(await settingsRef.get()).data();
+ await settingsRef.update({components:[{...savedSettings.components[0],fullMarks:3},...savedSettings.components.slice(1)]});
  await assert.rejects(loadCommittedOfficialClassMarks({firestore:db,...scope,actorUid}),/exceeds Examination Settings/);
- await settingsRef.update({'components.0.fullMarks':4});
+ await settingsRef.update({components:savedSettings.components});
  await studentRef.update({active:false});
  await assert.rejects(loadCommittedOfficialClassMarks({firestore:db,...scope,actorUid}),/Inactive|roster/);
  await studentRef.update({active:true});
