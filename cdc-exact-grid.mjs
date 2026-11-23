@@ -5,7 +5,7 @@
  */
 const types=new Set(['mcq','short','long']);
 const levels=new Set(['knowledge','understanding','application','higher']);
-const official=/^https:\/\/(?:www\.)?(?:moecdc\.gov\.np|lib\.moecdc\.gov\.np)\//i;
+const official=/^https:\/\/(?:www\.)?(?:moecdc\.gov\.np|lib\.moecdc\.gov\.np|giwmscdnone\.gov\.np)\//i;
 const signature=questions=>questions.map(q=>String(q.id)).sort().join('|');
 const key=(type,marks)=>type+':'+marks;
 function unitOf(q){return String(q.unitCode||'').trim();}
