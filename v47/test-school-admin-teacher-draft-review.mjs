@@ -91,6 +91,26 @@ function fixture({noDraft=false,afterRead}={}){
  };
  await assert.rejects(loadSchoolAdminTeacherDraftReview(f.args),/Draft or enrollment changed/);
 }
+{
+ // Missing-Draft response must not be trusted if Examination Settings change.
+ let settingsReads=0;
+ const f=fixture({noDraft:true,afterRead:({ref,data})=>{
+  if(ref==='schools/'+schoolId+'/mark_settings/'+draftId&&++settingsReads===2)
+   data.get(ref).components[0].fullMarks=18;
+ }});
+ await assert.rejects(loadSchoolAdminTeacherDraftReview(f.args),/Examination Settings changed/);
+}
+{
+ // A teacher's revoked assignment must not produce an apparently verified
+ // missing-Draft response.
+ let draftReads=0;
+ const f=fixture({noDraft:true,afterRead:({ref,data})=>{
+  if(ref===draftPath&&++draftReads===2)
+   data.get(assignmentPath).active=false;
+ }});
+ await assert.rejects(loadSchoolAdminTeacherDraftReview(f.args),
+  /assignment|Teacher|inactive|revoked/i);
+}
 for(const mutation of [
  f=>{f.auth.currentUser={uid:'intruder'}},
  f=>{f.data.get('schools/'+schoolId+'/members/'+adminUid).role='viewer'},
