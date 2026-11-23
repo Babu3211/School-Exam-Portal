@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v61-grade8-science-model-audit-2083';
+const CACHE_NAME = 'smss-pwa-v62-grade8-vsq-exact-grid-2083';
 const APP_SHELL = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const APP_SHELL = [
   './iemis-entry.js?v=20261122-viewer-readonly',
   './cdc-question-paper.js',
   './cdc-question-autogen.mjs',
+  './cdc-exact-grid.mjs',
   './cdc-question-excel.mjs',
   './cdc-verified-computer-grids.mjs',
   './cdc-optional-math-2082.mjs',
