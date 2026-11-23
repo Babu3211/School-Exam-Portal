@@ -116,6 +116,10 @@ export function isQuestionReadyForLanguage(q,language){
  const answer=language==='ne'?String(q.answer||'').trim():
   String(needsEnglishTranslation?q.answerEn:(q.answerEn||q.answer)||'').trim();
  if(!String(text).trim()||!answer||(translated&&NEPALI.test(answer)))return false;
+ // A Nepali string pasted into the English-translation field is not a
+ // reviewed English question even when the field itself is nonempty.
+ if(language==='en'&&NEPALI.test(String(text)))return false;
+ if(language==='both'&&NEPALI.test(String(q.questionTextEn||'')))return false;
  if(language==='both'&&(!String(q.answer||'').trim()||!String(q.answerEn||'').trim()))return false;
  if(q.questionType!=='mcq')return true;
  if(!['A','B','C','D'].includes(q.correctOption))return false;
