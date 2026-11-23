@@ -26,7 +26,7 @@ assert.match(source,/async function importQuestionBankExcel\(file\)/);
 assert.match(source,/const scope=captureQuestionBankImportScope\(\)/);
 assert.match(source,/return importQuestionBankRows\(rows,scope\);/);
 assert.match(source,/assertQuestionBankImportScope\(scope\);[\s\S]*?await batch.commit\(\);/);
-assert.match(source,/return importQuestionBankRows\(rows\);/);
+assert.match(source,/return importQuestionBankRows\(rows,scope\);/);
 assert.match(source,/parseQuestionExcelSheet\(sheet\)/);
 assert.match(source,/questionText,questionTextEn,options,optionsEn,correctOption,answer,answerEn/);
 const css=dom.window.document.querySelector('style').textContent;
