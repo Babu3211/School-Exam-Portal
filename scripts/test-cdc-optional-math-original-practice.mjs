@@ -18,6 +18,17 @@ for(const grade of [9,10]){
   assert.ok(pack.questions.every(q=>q.reviewStatus==='formula_verified_draft'));
   assert.ok(pack.questions.every(q=>q.provenance==='smss_offline_original_maths_v1'));
   assert.ok(pack.questions.every(q=>q.subquestions.every(s=>s.answerNe&&s.answerEn)));
+  const objective=pack.questions.filter(q=>q.group==='objective');
+  assert.equal(objective.length,22,'11 one-mark MCQ problems across two variants');
+  for(const q of objective){
+   const part=q.subquestions[0];
+   assert.equal(part.optionsNe.length,4);
+   assert.equal(part.optionsEn.length,4);
+   assert.equal(new Set(part.optionsNe).size,4);
+   assert.ok(['A','B','C','D'].includes(part.correctOption));
+   assert.equal(part.optionsNe['ABCD'.indexOf(part.correctOption)],part.answerNe);
+   assert.equal(part.optionsEn['ABCD'.indexOf(part.correctOption)],part.answerEn);
+  }
   const selected=inspectCdcOptionalMathPaper({
    guide,questions:pack.questions,selectedTopicIds:topicIds,
    language:'both',allowFormulaVerifiedDraft:true,rng:()=>0.4
