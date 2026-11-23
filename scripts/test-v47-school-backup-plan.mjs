@@ -4,6 +4,8 @@ const a=planV47SchoolBackup({schoolId:"school_2083_a"});
 const b=planV47SchoolBackup({schoolId:"school_2083_b"});
 assert.equal(a.state,"PLAN_ONLY_NO_EXPORT_OR_RESTORE");
 assert.ok(a.collections.length>=8);
+assert.ok(a.collections.some(item=>item.name==="cdc_observations"&&item.path==="schools/school_2083_a/cdc_observations"));
+assert.equal(planV47SchoolBackup({schoolId:"school_2083_b",collections:["cdc_observations"]}).collections[0].path,"schools/school_2083_b/cdc_observations");
 assert.ok(a.collections.every(item=>item.path.startsWith("schools/school_2083_a/")&&item.readOnly));
 assert.ok(b.collections.every(item=>item.path.startsWith("schools/school_2083_b/")));
 assert.ok(a.excluded.includes("user_roles"));

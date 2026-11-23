@@ -510,6 +510,12 @@ service cloud.firestore {
         allow get, list: if canAdmin(sid);
         allow create, update, delete: if false;
       }
+      // Per-student CDC assessment evidence remains tenant-contained;
+      // no web writes until an audited assessment schema is implemented.
+      match /cdc_observations/{id} {
+        allow get, list: if canRead(sid);
+        allow create, update, delete: if false;
+      }
       match /certificates/{id} {
         allow get, list: if canRead(sid);
         allow create, update, delete: if false;

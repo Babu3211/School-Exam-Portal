@@ -8,6 +8,9 @@ for(const name of collections) {
  const expression=new RegExp("match\\s+/"+name+"/\\{id\\}\\s*\\{");
  assert.match(rules,expression,"Missing explicit tenant rules for "+name);
 }
+const cdcBlock=rules.match(/match \/cdc_observations\/\{id\} \{([\s\S]*?)\n      \}/)?.[1]??"";
+assert.match(cdcBlock,/allow read: if member\(schoolId\);/,"CDC student observations must be school-private");
+assert.match(cdcBlock,/allow (?:create, update, delete|write): if false;/,"CDC student observations must not be writable before schema review");
 assert.match(rules,/function schoolActive\(schoolId\)/);
 assert.match(rules,/function member\(schoolId\)[\s\S]*?schoolActive\(schoolId\)/);
 assert.match(rules,/match \/\{document=\*\*\} \{ allow read, write: if false; \}/);

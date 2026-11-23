@@ -271,6 +271,12 @@ service cloud.firestore {
         allow create, update: if admin(schoolId);
         allow delete: if false;
       }
+      // CDC student-level observations are private to this school. This draft
+      // does not authorize any writes or a live V46 data migration.
+      match /cdc_observations/{id} {
+        allow read: if member(schoolId);
+        allow create, update, delete: if false;
+      }
       match /certificates/{id} {
         allow read: if member(schoolId);
         allow create, update: if admin(schoolId);

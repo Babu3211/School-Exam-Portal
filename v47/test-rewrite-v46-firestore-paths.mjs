@@ -4,6 +4,8 @@ import {rewriteV46FirestorePaths,V46_COLLECTIONS,assertV47TenantCollection,audit
 const source=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const result=rewriteV46FirestorePaths(source);
 assert.equal(result.collections.length,V46_COLLECTIONS.length);
+assert.ok(result.collections.includes("cdc_observations"));
+assert.match(result.source,/collection\(db, "schools", activeSchoolId, 'cdc_observations'\)/);
 assert.equal(result.dynamicCount,3);
 assert.match(result.source,/collection\(db, "schools", activeSchoolId, assertV47TenantCollection\(name\)\)/);
 assert.match(result.source,/doc\(db, "schools", activeSchoolId, assertV47TenantCollection\(name\),\s*item\.id\)/);
