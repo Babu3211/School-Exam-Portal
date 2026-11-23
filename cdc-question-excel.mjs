@@ -104,7 +104,7 @@ export function parseCdcGridExcelSheet(sheet){
   const [unitCode,type,markText,countText,cognitiveLevel]=values;
   const marks=Number(markText),count=Number(countText);
   if(!/^[0-9]{1,3}$/.test(unitCode)||
-     !['mcq','short','long'].includes(type.toLowerCase())||
+     !['mcq','very_short','short','long'].includes(type.toLowerCase())||
      !/^[0-9]+$/.test(markText)||!Number.isSafeInteger(marks)||marks<1||marks>100||
      !/^[0-9]+$/.test(countText)||!Number.isSafeInteger(count)||count<1||count>80||
      !['knowledge','understanding','application','higher'].includes(cognitiveLevel.toLowerCase()))
