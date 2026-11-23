@@ -54,7 +54,11 @@ const packed=await book.xlsx.writeBuffer();
 assert.ok(packed.byteLength>100,'Real Excel export must contain file bytes');
 const reopened=new ExcelJS.Workbook();
 await reopened.xlsx.load(packed);
-const reread=parseQuestionExcelSheet(reopened.getWorksheet('Question Bank'));
+const loadedSheet=reopened.getWorksheet('Question Bank');
+console.log('XLSX parser diagnostics',{rowCount:loadedSheet?.rowCount,
+ actualRowCount:loadedSheet?.actualRowCount,lastRow:loadedSheet?.lastRow?.number,
+ sheetName:loadedSheet?.name,firstHeader:loadedSheet?.getRow(1).getCell(1).text});
+const reread=parseQuestionExcelSheet(loadedSheet);
 assert.equal(reread.length,1);
 assert.equal(reread[0].answerEn,'Three');
 assert.equal(reread[0].unitCode,'1');
