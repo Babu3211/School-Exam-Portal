@@ -232,6 +232,7 @@ function pageShell() {
       </div>
       <p class="qp-hint" id="qpPatternHint">CDC Grid आयात गरिएको छैन भने शिक्षकले Custom Pattern राख्न सक्नुहुन्छ। कुल प्रश्नको अङ्क पूर्णाङ्कसँग मिल्नुपर्छ।</p>
       <p class="qp-hint" id="qpAutoSourceStatus" role="status">उपलब्ध प्रश्न बैंक जाँचिँदैछ।</p>
+      <p class="qp-hint" id="qpOfficialGridSource"></p>
       <p class="qp-hint" id="qpAutoGridStatus" role="status">CDC Exact मोडमा सम्बन्धित कक्षा, विषय र पूर्णाङ्कको समीक्षित Unit-wise Grid चाहिन्छ।</p>
       <p class="qp-hint">एक क्लिकमा: कक्षा/विषय, Topic, पूर्णाङ्क र भाषा छान्नुहोस्। उपलब्ध मौलिक अभ्यास प्रश्नबाट ठीक पूर्णाङ्कको Draft तयार हुनेछ। पर्याप्त जाँचिएका प्रश्न नभए गलत प्रश्नपत्र बनाइँदैन। CDC Grid को लागू संस्करण शिक्षकले पुष्टि गर्नुपर्छ।</p>
       <label class="qp-topic" style="margin-top:9px;background:#fff8e9;align-items:center"><input id="qpAutoReviewed" type="checkbox"><span>मैले तयार भएको प्रश्नपत्र, पूर्णाङ्क, लागू CDC विशिष्टीकरण तालिका र उत्तरकुञ्जिका पढेर जाँच गरेको छु। <b>जाँच नगरी Save वा Print हुँदैन।</b></span></label>
@@ -502,6 +503,17 @@ async function loadCurrentData() {
  $("qpCurriculumVersion").value=curriculumRows[0]?.curriculumVersion||"CDC संस्करण Topic सूचीअनुसार";
  renderTopics();renderQuestionRows();
  $("qpAutoSourceStatus").textContent=bundledPracticeStatus;
+ const pdfSource=$("qpOfficialGridSource");
+ if(pdfSource){
+  pdfSource.replaceChildren();
+  if(officialComputerGrid?.originalGovernmentPdf){
+   const link=document.createElement("a");
+   link.href=officialComputerGrid.sourceUrl;link.target="_blank";
+   link.rel="noopener noreferrer";
+   link.textContent="कक्षा "+grade+" कम्प्युटर विज्ञान — मूल CDC विशिष्टीकरण PDF हेर्नुहोस्";
+   pdfSource.appendChild(link);
+  }
+ }
  // Generation must wait for saved-paper history to finish loading.
  // Otherwise a rapid click can repeat a paper from the previous session.
  verifiedQuestionSelection=null;
