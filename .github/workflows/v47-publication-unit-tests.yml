@@ -31,6 +31,7 @@ jobs:
           node v47/test-server-staged-class-integrity.mjs
           node v47/test-server-publication-transition-preflight.mjs
           node v47/test-server-official-marks-reader.mjs
+          node v47/test-server-official-marks-firestore-loader.mjs
           node v47/test-server-verified-official-class-marks.mjs
           node v47/test-server-publication-staging-executor.mjs
           node v47/test-server-publication-authoritative-preflight.mjs
