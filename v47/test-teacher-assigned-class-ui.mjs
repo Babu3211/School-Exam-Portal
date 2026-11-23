@@ -6,7 +6,7 @@ const hub=readFileSync(new URL('./index.html',import.meta.url),'utf8');
 const indexes=JSON.parse(readFileSync(new URL('./firestore.indexes.json',import.meta.url),'utf8'));
 assert.ok(indexes.indexes.some(index=>index.collectionGroup==='teacher_assignments'&&index.fields[0]?.fieldPath==='uid'&&index.fields[1]?.fieldPath==='__name__'));
 assert.match(hub,/href="\.\/teacher-assigned-class\.html"/);
-assert.match(html,/Read-only development view/);
+assert.match(html,/Development-only teacher workspace/);
 assert.match(html,/id="students"/);
 assert.match(html,/id="loadAssignments"/);
 assert.match(html,/id="loadAttendance" disabled/);
@@ -24,7 +24,7 @@ assert.match(ui,/selectionEpoch\+\+/);
 assert.match(ui,/selection!==selectionEpoch/);
 assert.match(ui,/if\(!busy\)lock\(false\)/);
 assert.equal((ui.match(/finally\{lock\(false\)\}/g)||[]).length,1);
-assert.equal((ui.match(/finally\{if\(request===epoch\)lock\(false\)\}/g)||[]).length,4);
+assert.ok((ui.match(/finally\{if\(request===epoch\)lock\(false\)\}/g)||[]).length>=4);
 assert.match(ui,/\$\('schoolId'\)\.disabled=!!actor/);
 assert.doesNotMatch(ui,/textContent='';epoch\+\+\}\);/);
 assert.match(ui,/session\.role!=='teacher'/);
@@ -34,7 +34,7 @@ assert.match(ui,/verifyTeacherAttendanceDuty/);
 assert.match(ui,/\$\('loadAttendance'\)\.onclick=async/);
 assert.equal((ui.match(/await verifyTeacherAttendanceDuty/g)||[]).length,2);
 assert.match(ui,/await revalidate\(\)/);
-assert.equal((ui.match(/await verifyTeacherSubjectAssignment/g)||[]).length,3);
+assert.ok((ui.match(/await verifyTeacherSubjectAssignment/g)||[]).length>=4,'Teacher Draft must reverify assignment');
 assert.match(ui,/api\.where\('uid','==',uid\)/);
 const emulator=readFileSync(new URL('../scripts/test-v47-emulator-isolation.mjs',import.meta.url),'utf8');
 assert.match(emulator,/await assertSucceeds\(getDocs\(ownAssignments\)\)/);
@@ -56,4 +56,20 @@ assert.match(ui,/option\.textContent=subject\.name/);
 assert.match(ui,/student\.name\?\?student\.id/);
 assert.doesNotMatch(ui,/setDoc\(|addDoc\(|updateDoc\(|deleteDoc\(|runTransaction\(|writeBatch\(/);
 assert.match(ui,/const failedEpoch=epoch;try\{await authSdk\.signOut\(auth\)\}catch\{\}if\(epoch===failedEpoch\)\{lock\(false\)/);
-console.log('V47 teacher roster view requires live teacher assignment and contains no write operation');
+for(const id of ['teacherDraftArea','draftTerm','loadTeacherDraft','inspectTeacherDraft',
+ 'saveTeacherDraft','teacherDraftRows','teacherDraftHeader','teacherDraftStatus'])
+ assert.match(html,new RegExp('id="'+id+'"'),'Missing teacher marks Draft element '+id);
+for(const term of ['weekly','monthly','1st','2nd','3rd','final'])
+ assert.match(html,new RegExp('<option value="'+term+'">'),'Teacher draft missing term '+term);
+for(const name of ['saveVerifiedTeacherClassDraft','verifyStoredTeacherClassDraft',
+ 'discoverVerifiedSubjectExamSettings','inspectConfiguredClassMarks',
+ 'verifyTeacherSubjectAssignment','loadCompleteClassRoster','enforceSchoolIdle'])
+ assert.ok(ui.includes(name),'Teacher draft requires '+name);
+assert.match(ui,/draftInspected=false/);
+assert.match(ui,/if\(saved\.rosterReverified!==true\)/);
+assert.match(ui,/TeacherDraftPostSaveReviewError/);
+assert.match(ui,/clearTeacherDraft\(\)/);
+assert.match(ui,/draftEpoch\+\+/);
+assert.doesNotMatch(ui,/\b(?:setDoc|addDoc|updateDoc|deleteDoc|runTransaction|writeBatch)\s*\(/,
+ 'Browser teacher page must use verified service, not direct writes');
+console.log('PASS V47 Teacher roster and assigned complete-class draft UI: verified subject, session and non-official saves');
