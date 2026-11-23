@@ -7,6 +7,7 @@ on:
       - 'cdc-question-paper.js'
       - 'cdc-question-autogen.mjs'
       - 'cdc-question-excel.mjs'
+      - 'scripts/test-cdc-very-short.mjs'
       - 'cdc-verified-computer-grids.mjs'
       - 'cdc-optional-math-2082.mjs'
       - 'cdc-optional-math-model-compare.mjs'
@@ -56,6 +57,7 @@ jobs:
           node --check cdc-question-paper.js
           node --check cdc-question-autogen.mjs
           node --check cdc-question-excel.mjs
+          node --check scripts/test-cdc-very-short.mjs
           node --check cdc-verified-computer-grids.mjs
           node --check cdc-optional-math-2082.mjs
           node --check cdc-optional-math-model-compare.mjs
@@ -97,6 +99,8 @@ jobs:
         run: node scripts/test-cdc-optional-math-2082.mjs
       - name: Verify authentic CDC Computer Science Grade 9 and 10 grid transcriptions
         run: node scripts/test-cdc-verified-computer-grids.mjs
+      - name: Test Grade 8 CDC Very Short Question bank Excel, exact grid, bilingual generation
+        run: node scripts/test-cdc-very-short.mjs
       - name: Test exact unit-grid random paper across grades 6-10
         run: node scripts/test-cdc-exact-grid.mjs
       - name: Test real Optional Mathematics teacher one-click generation and stale request guards
