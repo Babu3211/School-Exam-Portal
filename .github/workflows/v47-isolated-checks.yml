@@ -42,5 +42,5 @@ jobs:
           java-version: '21'
       - name: Install Firebase test dependencies
         run: npm install --no-package-lock --no-audit --no-fund
-      - name: V47 school-isolation Firestore rules emulator tests
-        run: npx firebase emulators:exec --project smss-v47-emulator-tests --only firestore --config v47/firebase.emulator.json "node v47/test-firestore-emulator.mjs"
+      - name: V47 school-isolation + 1500-student real class Draft Firestore emulator tests
+        run: npx firebase emulators:exec --project smss-v47-emulator-tests --only firestore --config v47/firebase.emulator.json "node v47/test-firestore-emulator.mjs && node v47/test-class-draft-service-emulator.mjs"

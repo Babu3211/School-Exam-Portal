@@ -4,7 +4,7 @@ import {readdirSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 // Discover every offline suite so newly added tests cannot silently be skipped.
 // Emulator suites run in dedicated workflows with Firebase services available.
-const exclusions=new Set(['test-firestore-emulator.mjs','test-firestore-isolation.mjs']);
+const exclusions=new Set(['test-firestore-emulator.mjs','test-firestore-isolation.mjs','test-class-draft-service-emulator.mjs']);
 const suites=readdirSync(fileURLToPath(new URL('.',import.meta.url)))
  .filter(name=>/^test-.*\.mjs$/.test(name)&&!exclusions.has(name))
  .sort();
