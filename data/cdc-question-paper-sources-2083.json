@@ -407,6 +407,28 @@
       "status": "official_CDC_page_linked_grid_content_not_yet_extracted",
       "url": "https://moecdc.gov.np/content/452/septemo-schedule-and-sample-questions-2082--class/",
       "note": "CDC published this Grade 9 Economics 2082 grid and sample page on 12 Asoj 2083. Exact questions and mark/unit allocations remain untranscribed; not eligible for automatic official generation."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक कम्प्युटर विज्ञान",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2082",
+      "status": "official_CDC_pdf_grid_unitwise_transcribed_dev_teacher_review_required",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/2082-04-29%20Specification%20grid%20and%20Model%20Questions-Computer%20Science%20Grade%209_khtkxrc.pdf",
+      "note": "Original government PDF: Full marks 50, 2 hours; 7 units, 25 questions; MCQ 10×1, short 10×2, long 5×4; 20/30/30/20 cognitive distribution. Exact row grid bundled for V46 dev, no real student data modified."
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "ऐच्छिक कम्प्युटर विज्ञान",
+      "kind": "specification_grid",
+      "version": "2083 CDC publication listing",
+      "status": "official_CDC_pdf_grid_unitwise_transcribed_dev_teacher_review_required",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/Computer%20Science%20grid_9080yt7.pdf",
+      "note": "Original government PDF: Full marks 50, 2 hours; 5 units, 25 questions; MCQ 10×1, short 10×2, long 5×4; 20/30/30/20 cognitive distribution. Exact row grid bundled for V46 dev; teacher review required."
     }
   ],
   "completion": {
@@ -422,7 +444,8 @@
     "otherGradeSubjectPacks": "pending",
     "officialBlueprintCoverage": "partial-only-verified-subject-grade-grid-can-be-set-by-admin",
     "grade10SciencePracticePack": "seed-file-created-admin-import-available-2080-textbook-reference-check-2082-modified-book-and-grid",
-    "sourceCorrection": "A Grade 10 textbook PDF (1692097269.pdf) was wrongly tagged as Grade 9 in an old source-register entry. Removed the Grade 9 entry; keep actual Grade 9 packs blocked until original Grade 9 textbook and grid are checked."
+    "sourceCorrection": "A Grade 10 textbook PDF (1692097269.pdf) was wrongly tagged as Grade 9 in an old source-register entry. Removed the Grade 9 entry; keep actual Grade 9 packs blocked until original Grade 9 textbook and grid are checked.",
+    "verifiedOptionalComputerGrid": "Official Grade 9/10 Computer Science grid PDFs transcribed unit/type/marks/cognitive levels for 50-mark paper; development only, source checked, teacher answer review required; other subjects not configured."
   },
   "practicePacks": [
     {
