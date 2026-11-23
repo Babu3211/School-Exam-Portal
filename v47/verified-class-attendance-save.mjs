@@ -2,6 +2,20 @@ import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {validateCompleteClassAttendance} from './class-attendance-completeness.mjs';
 import {saveLoadedClassAttendance} from './attendance-class-save.mjs';
 
+// Compare complete Firestore roster values independent of object key insertion
+// order; a mere property-order difference must not create a false REVIEW.
+function stableRosterValue(value){
+ if(Array.isArray(value))return value.map(stableRosterValue);
+ if(value&&typeof value==='object'){
+  if(typeof value.toMillis==='function')return {timestampMillis:value.toMillis()};
+  if(typeof value.path==='string'&&typeof value.id==='string')return {documentPath:value.path};
+  return Object.fromEntries(Object.keys(value).sort().map(key=>[key,stableRosterValue(value[key])]));
+ }
+ return value;
+}
+function sameRosterRecord(a,b){
+ return JSON.stringify(stableRosterValue(a))===JSON.stringify(stableRosterValue(b));
+}
 // Every write batch may be acknowledged even if the class roster changes
 // while saving. An acknowledged write is never misreported as a failed write,
 // but the result MUST remain unverified until the complete roster is checked.
@@ -49,7 +63,7 @@ export async function saveAuthoritativeClassAttendance({db,api,actor,schoolId,cl
   assertSession?.();
   if(after.studentIds.length!==roster.studentIds.length||
      after.studentIds.some((id,index)=>id!==roster.studentIds[index])||
-     after.students.some((student,index)=>JSON.stringify(student)!==JSON.stringify(roster.students[index])))
+     after.students.some((student,index)=>!sameRosterRecord(student,roster.students[index])))
    throw new Error('Student roster changed during attendance save');
  }catch(cause){
   throw new AttendancePostSaveReviewError(result.saved,result.total,cause);

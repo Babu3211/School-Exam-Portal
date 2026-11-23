@@ -104,6 +104,27 @@ for(const changedIds of [['s1','s2','s3'],['s2']]){
  assert.equal(commits,1,'Confirmed writes must not be reported as rolled back');
  assert.equal(reads,2);
 }
+// Field ordering is not a semantic enrollment change. Avoid false REVIEW
+// after a successful write when Firestore returns equivalent data with a
+// different property insertion order.
+{
+ let reads=0,commits=0;
+ const sameValues={schoolId,class:classId,name:'Student'};
+ const reorderedApi={...api,
+  getDocs:async()=>{
+   reads++;
+   const reordered=reads===1?sameValues:{name:'Student',class:classId,schoolId};
+   return {docs:students.map(id=>({id,data:()=>({...reordered})}))};
+  },
+  writeBatch:()=>({set:()=>{},commit:async()=>{commits++}})
+ };
+ const result=await saveAuthoritativeClassAttendance({
+  db:{},api:reorderedApi,actor,schoolId,classId,date,entries
+ });
+ assert.equal(result.rosterReverified,true);
+ assert.equal(reads,2);
+ assert.equal(commits,1);
+}
 // A student record changing while attendance is being committed must
 // invalidate full-class verification even if every student ID stays the same.
 for(const change of [
