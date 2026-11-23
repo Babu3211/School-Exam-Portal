@@ -4,6 +4,8 @@ import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
 import {getBundledComputerGrid,bundledComputerUnitTopics} from "./cdc-verified-computer-grids.mjs";
 import {findCdcGridSources} from "./cdc-grid-source-index.mjs";
 import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-math-2082.mjs";
+import {inspectCdcOptionalMathPaper} from "./cdc-optional-math-composite.mjs";
+import {renderCdcCompositePaper} from "./cdc-optional-math-render.mjs";
 import {QUESTION_EXCEL_FIELDS,parseQuestionExcelSheet,CDC_GRID_EXCEL_FIELDS,parseCdcGridExcelSheet} from "./cdc-question-excel.mjs";
 import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
@@ -356,6 +358,11 @@ function invalidateGeneratedQuestionPaper(){
 function renderPaperPreview(paper = generatedPaper) {
   const box = $("qpPaperPreview"); if (!box) return;
   if (!paper) { box.innerHTML='<p class="qp-hint">Topic छानेर प्रश्नपत्र Auto Generate गर्नुहोस्।</p>'; return; }
+  if(paper.questionFormat==="cdc_optional_math_composite"){
+    box.innerHTML='<p class="qp-hint"><b>CDC २०८२ अनुसार संरचना मिलेको विद्यालय प्रश्नपत्र:</b> WCA/CCA र उत्तरहरू शिक्षकले पुनः जाँचेर मात्र Save/Print गर्नुहोस्। CDC प्रकाशित Model Question होइन।</p>'+
+     renderCdcCompositePaper(paper,{escapeHtml:esc});
+    return;
+  }
   const groups = ["mcq","short","long"];
   let number = 0;
   const report=paper.qualityReport||null;
@@ -397,7 +404,9 @@ function printPaper(paper = generatedPaper, includeAnswers = false) {
   if (!area) return;
   const w = window.open("", "_blank", "width=900,height=900");
   if (!w) { message("Print खोल्न Popup अनुमति दिनुहोस्।", true); return; }
-  const answerSheet = includeAnswers ? '<section style="page-break-before:always;font-family:Arial,sans-serif;padding:24px;color:#111"><h2>'+esc(paper.schoolName||"विद्यालय")+'</h2><h3>'+esc(paper.paperTitle||"प्रश्नपत्र")+' — उत्तरकुञ्जिका (शिक्षक प्रति)</h3><p>कक्षा: '+esc(paper.className)+' · विषय: '+esc(paper.subject)+'</p><ol>'+paper.questions.map(q=>'<li style="margin:10px 0;line-height:1.6;white-space:pre-line"><b>'+esc(q.questionText)+'</b><br>उत्तर: '+esc(q.answer|| (q.correctOption ? "सही विकल्प "+q.correctOption : "उत्तर संकेत उपलब्ध छैन"))+'</li>').join("")+'</ol></section>' : "";
+  const answerSheet = includeAnswers&&paper.questionFormat==="cdc_optional_math_composite"?
+   '<div style="page-break-before:always">'+renderCdcCompositePaper(paper,{escapeHtml:esc,answerKey:true})+'</div>':
+   includeAnswers ? '<section style="page-break-before:always;font-family:Arial,sans-serif;padding:24px;color:#111"><h2>'+esc(paper.schoolName||"विद्यालय")+'</h2><h3>'+esc(paper.paperTitle||"प्रश्नपत्र")+' — उत्तरकुञ्जिका (शिक्षक प्रति)</h3><p>कक्षा: '+esc(paper.className)+' · विषय: '+esc(paper.subject)+'</p><ol>'+paper.questions.map(q=>'<li style="margin:10px 0;line-height:1.6;white-space:pre-line"><b>'+esc(q.questionText)+'</b><br>उत्तर: '+esc(q.answer|| (q.correctOption ? "सही विकल्प "+q.correctOption : "उत्तर संकेत उपलब्ध छैन"))+'</li>').join("")+'</ol></section>' : "";
   w.document.write('<!doctype html><html lang="ne"><head><meta charset="utf-8"><title>'+esc(paper.paperTitle)+'</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h2,h3{text-align:center}.qp-q{margin:14px 0;line-height:1.7}.qp-q b{white-space:pre-line}@page{size:A4;margin:18mm}</style></head><body>'+area.outerHTML+answerSheet+'</body></html>');
   w.document.close();
   w.focus();
@@ -975,7 +984,7 @@ async function savePaper() {
   if(generatedPaper.qualityReport?.teacherReviewRequired&&$("qpAutoReviewed")?.checked!==true)
    throw Error("प्रश्नपत्र र उत्तरकुञ्जिका समीक्षा पुष्टि नगरी Save गर्न मिल्दैन।");
   // Persist only the paper schema; preview qualityReport and local id stay in memory.
-  const paperFields=["schoolName","schoolAddress","gradeNumber","className","subject","section","paperTitle","academicYear","durationMinutes","fullMarks","curriculumVersion","blueprintId","cognitiveDistribution","topicIds","questions"];
+  const paperFields=["schoolName","schoolAddress","gradeNumber","className","subject","section","paperTitle","academicYear","durationMinutes","fullMarks","curriculumVersion","blueprintId","cognitiveDistribution","topicIds","questions","questionFormat","language","sourceUrl"];
   const payload=Object.fromEntries(paperFields.filter(key=>generatedPaper[key]!==undefined).map(key=>[key,generatedPaper[key]]));
   Object.assign(payload,{createdBy:auth.currentUser.uid,createdAt:serverTimestamp(),status:"draft"});
   const ref=await addDoc(collection(db,"question_papers"),payload);
