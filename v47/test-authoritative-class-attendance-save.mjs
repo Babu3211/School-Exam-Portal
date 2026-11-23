@@ -27,4 +27,10 @@ assert.ok(staged.every(([,value])=>value.schoolId===schoolId));
 const otherSchool={...actor,schoolId:'87654321'};
 await assert.rejects(saveAuthoritativeClassAttendance({db:{},api,actor:otherSchool,schoolId,classId,date,entries}),/School Admin|School membership|permission/i);
 assert.equal(committed,1,'Cross-school identity must never commit');
+let reads=0;
+const guardedApi={...api,getDocs:async(...args)=>{reads++;return api.getDocs(...args)}};
+for(const forbidden of [{...actor,role:'viewer'},{...actor,role:'teacher'},{...actor,active:false},{...actor,uid:''}]){
+ await assert.rejects(saveAuthoritativeClassAttendance({db:{},api:guardedApi,actor:forbidden,schoolId,classId,date,entries}),/School Admin permission required/);
+}
+assert.equal(reads,0,'Unauthorized actors must not read the authoritative roster');
 console.log('Authoritative attendance: incomplete rejected, complete atomic small-class save, cross-school blocked');
