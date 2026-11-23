@@ -1,4 +1,5 @@
 import {readSmssMarksExcel} from './import-class-marks-excel.mjs';
+import {planClassMarksGridPaste} from './class-marks-grid-paste.mjs';
 import {buildClassMarksExcelSample} from './class-marks-excel-sample.mjs';
 import {buildClassReviewExcel} from './class-review-excel.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
@@ -144,6 +145,57 @@ $('classMarkRows').addEventListener('input',event=>{
  $('reviewVerifyResult').textContent='';
  $('draftCheckResult').textContent='Draft changed. Inspect again before saving.';
 });
+// Spreadsheet-style Ctrl+V: one or more rows and columns of numeric cells.
+// Never trusts imported student IDs or clipboard headers. Read-only roles
+// cannot edit; validation is all-or-nothing before touching the local draft.
+$('classMarkRows').addEventListener('paste',event=>{
+ const start=event.target;
+ if(!start?.matches?.('input[data-field]')||!classMarkContext||!classMarkSettings||
+    busy||actor?.role!=='school_admin'||actor?.active!==true||
+    actor?.schoolId!==schoolId||auth?.currentUser?.uid!==actor.uid)return;
+ const value=event.clipboardData?.getData('text/plain');
+ if(typeof value!=='string'||!(value.includes('\t')||/\r|\n/.test(value)))return;
+ event.preventDefault();
+ try{
+  const context=classMarkContext;
+  if(context.classId!==$('schoolClass').value||context.term!==$('term').value||
+     context.subjectId!==$('subjectId').value)
+   throw Error('Class, subject or term changed; reload');
+  const rendered=[...$('classMarkRows').children];
+  if(rendered.length!==classMarkRoster.length)throw Error('Class roster changed; reload');
+  const rows=rendered.map((tr,i)=>{
+   if(tr.dataset.studentId!==classMarkRoster[i]?.id)
+    throw Error('Student row changed; reload class');
+   const absent=tr.querySelectorAll('input[data-absent]'),fields=tr.querySelectorAll('input[data-field]');
+   if(absent.length!==1||fields.length!==classMarkSettings.components.length)
+    throw Error('Marks grid changed; reload class');
+   for(let k=0;k<fields.length;k++){
+    if(fields[k].dataset.field!==classMarkSettings.components[k].key||
+       fields[k].disabled!==absent[0].checked)
+     throw Error('Configured mark field changed; reload class');
+   }
+   return {id:tr.dataset.studentId,absent:absent[0].checked};
+  });
+  const startTr=start.closest('tr'),startRowIndex=rendered.indexOf(startTr);
+  const inputNodes=[...startTr.querySelectorAll('input[data-field]')];
+  const startComponentIndex=inputNodes.indexOf(start);
+  const planned=planClassMarksGridPaste({text:value,studentRows:rows,
+   components:classMarkSettings.components,startRowIndex,startComponentIndex});
+  // All cells pass settings and bounds checks; now update local form only.
+  for(const cell of planned.updates){
+   const input=rendered[cell.rowIndex].querySelectorAll('input[data-field]')[cell.componentIndex];
+   input.value=cell.value;
+  }
+  start.dispatchEvent(new Event('input',{bubbles:true}));
+  $('draftCheckResult').textContent=planned.cells+' mark cells pasted for '+planned.rows+
+   ' student rows. Review the entire class again before Draft Save. Nothing published.';
+  status('Excel बाट '+planned.cells+' अंक Paste भयो। पूर्ण कक्षा जाँचपछि मात्र Draft Save गर्न मिल्छ।');
+ }catch(error){
+  $('draftCheckResult').textContent='Paste rejected; no cells changed: '+error.message;
+  status('Paste असफल: '+error.message);
+ }
+});
+
 function collectClassMarkEntries(){
  if(!classMarkContext||!classMarkSettings)throw new Error('Load verified settings and full roster first');
  const rendered=[...$('classMarkRows').children],expected=new Set(classMarkRoster.map(s=>s.id)),seen=new Map();

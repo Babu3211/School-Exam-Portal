@@ -40,6 +40,7 @@ jobs:
           npm run test:v47:subject-mark-limits
           npm run test:v47:marks-complete
           npm run test:v47:marks-save
+          node v47/test-class-marks-grid-paste.mjs
           node v47/test-save-verified-class-draft.mjs
           node v47/test-verified-teacher-class-draft.mjs
           node v47/test-school-admin-teacher-draft-review.mjs
