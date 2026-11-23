@@ -9,6 +9,8 @@ on:
       - 'cdc-question-excel.mjs'
       - 'cdc-verified-computer-grids.mjs'
       - 'cdc-optional-math-2082.mjs'
+      - 'cdc-grid-source-index.mjs'
+      - 'scripts/test-cdc-grid-source-index.mjs'
       - 'scripts/test-cdc-optional-math-2082.mjs'
       - 'scripts/test-cdc-verified-computer-grids.mjs'
       - 'scripts/test-cdc-question-excel.mjs'
@@ -46,6 +48,8 @@ jobs:
           node --check cdc-question-excel.mjs
           node --check cdc-verified-computer-grids.mjs
           node --check cdc-optional-math-2082.mjs
+          node --check cdc-grid-source-index.mjs
+          node --check scripts/test-cdc-grid-source-index.mjs
           node --check scripts/test-cdc-optional-math-2082.mjs
           node --check scripts/test-cdc-verified-computer-grids.mjs
           node --check scripts/test-cdc-question-excel.mjs
@@ -59,6 +63,8 @@ jobs:
         run: npm run test:question-paper
       - name: Test Excel question-bank headers and bilingual import validation
         run: node scripts/test-cdc-question-excel.mjs
+      - name: Verify automatic CDC Grid source detection for Grade 6-10 subjects
+        run: node scripts/test-cdc-grid-source-index.mjs
       - name: Verify CDC Grade 9 and 10 Optional Mathematics grouped 2082 grid
         run: node scripts/test-cdc-optional-math-2082.mjs
       - name: Verify authentic CDC Computer Science Grade 9 and 10 grid transcriptions
