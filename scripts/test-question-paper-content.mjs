@@ -94,6 +94,8 @@ assert.match(questionBuilder, /id="qpQuestionExcelTemplateBtn"/);
 assert.match(questionBuilder, /id="qpQuestionExcelFile"/);
 assert.match(questionBuilder, /ExcelJS/);
 assert.match(appShell, /cdc-question-excel\.mjs/);
+assert.match(appShell, /cdc-grid-source-index\.mjs/);
+assert.match(appShell, /data\/cdc-question-paper-sources-2083\.json/);
 assert.ok(Array.isArray(register.sources) && register.sources.length >= 15, "CDC source register must contain grade-wise sources");
 for (const [index, source] of register.sources.entries()) {
   assert.ok(Array.isArray(source.grades) && source.grades.length, `source ${index + 1}: grade list required`);
