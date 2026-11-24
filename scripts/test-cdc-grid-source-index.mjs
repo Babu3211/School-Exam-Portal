@@ -126,3 +126,17 @@ assert.equal(optionalFingerprints.length,3);
 assert.deepEqual(optionalFingerprints.map(s=>s.optionalRetrievalEvidence.resource).sort(),['optional-computer','optional-economics','optional-math']);
 for(const s of optionalFingerprints){const e=s.optionalRetrievalEvidence;assert.match(e.sha256,/^[a-f0-9]{64}$/);assert.ok(e.pages>0&&e.byteCount>0&&e.firstPageRendered);assert.equal(e.currentCdcExactApproved,false);assert.equal(e.verifiedGridRows,false);assert.ok(s.grades.includes(9));}
 console.log('PASS optional source fingerprints; no automatic approval');
+
+const mathTextSource=register.sources.find(s=>s.optionalRetrievalEvidence?.resource==='optional-math');
+const mathText=mathTextSource.structuralTextReview;
+const {getCdcOptionalMathGuide:readMathSourceGuide}=await import('../cdc-optional-math-2082.mjs');
+const mathTextGuide=readMathSourceGuide({grade:9,subject:'Optional Mathematics'});
+assert.equal(mathText.sha256,mathTextSource.optionalRetrievalEvidence.sha256);
+assert.equal(mathTextGuide.fullMarks,mathText.fullMarks);
+assert.equal(mathTextGuide.areas.reduce((n,a)=>n+a.workHours,0),mathText.workingHours);
+assert.deepEqual(mathTextGuide.questionGroups.map(g=>g.totalMarks),mathText.groupMarks);
+assert.deepEqual(['knowledge','understanding','application','higher'].map(k=>mathTextGuide.cognitiveDistribution[k]),mathText.cognitivePercent);
+for(const e of mathText.readableAreaHours){const area=mathTextGuide.areas.find(a=>a.unitCode===e.unitCode);assert.equal(area.workHours,e.hours);if(e.totalMarks!==undefined)assert.equal(area.totalMarks,e.totalMarks);}
+assert.equal(mathText.visualCellReviewComplete,false);
+assert.equal(mathText.officialExamApproved,false);
+console.log('PASS optional mathematics original PDF extracted totals cross-check; full visual/current edition approval pending');

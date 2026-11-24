@@ -507,6 +507,51 @@
         "firstPageRendered": true,
         "currentCdcExactApproved": false,
         "verifiedGridRows": false
+      },
+      "structuralTextReview": {
+        "reviewedOn": "2026-11-24",
+        "runId": 45420998387,
+        "pdfPage": 1,
+        "sha256": "4bf6d5f47ca75cef224f27311c9ca3acad9bb76b2757f0c28c13bde559f3e396",
+        "method": "Comparison of original fingerprint-matched PDF page 1 layout text with existing guide; only unambiguous numeric totals recorded",
+        "fullMarks": 75,
+        "workingHours": 128,
+        "groupMarks": [
+          11,
+          40,
+          24
+        ],
+        "cognitivePercent": [
+          16,
+          24,
+          40,
+          20
+        ],
+        "readableAreaHours": [
+          {
+            "unitCode": "3",
+            "hours": 36,
+            "totalMarks": 20
+          },
+          {
+            "unitCode": "4",
+            "hours": 11,
+            "totalMarks": 7
+          },
+          {
+            "unitCode": "5",
+            "hours": 10
+          },
+          {
+            "unitCode": "6",
+            "hours": 12,
+            "totalMarks": 7
+          }
+        ],
+        "visualCellReviewComplete": false,
+        "currentEditionConfirmed": false,
+        "teacherReviewComplete": false,
+        "officialExamApproved": false
       }
     },
     {

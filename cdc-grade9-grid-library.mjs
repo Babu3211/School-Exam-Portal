@@ -26,6 +26,11 @@ export function grade9GridLibrary(register){
    add('Question groups',['Group','Count','Marks'],m.questionGroups.map(g=>[g.code,g.questionCount,g.totalMarks]));
    add('Area / cognitive marks',['Area','Objective K/U/A/HA','WCA K/U/A/HA','CCA K/U/A/HA','Total'],m.areas.map(a=>[a.unitTitle,...['objective','WCA','CCA'].map(g=>a.marksByGroup[g].join(' / ')),a.totalMarks]));
    add('Cognitive allocation (%)',['K','U','A','HA'],[levels.map(k=>m.cognitiveDistribution[k])]);
+   const textReview=entries.find(x=>x.structuralTextReview)?.structuralTextReview;
+   if(textReview){
+    status='Original 2082 PDF extracted totals matched; independent complete visual and teacher review pending';
+    add('Original PDF text cross-check',['Field','Marks / hours / percentage'],[['Full marks',textReview.fullMarks],['Working hours',textReview.workingHours],['Objective / WCA / CCA',textReview.groupMarks.join(' / ')],['K / U / A / HA (%)',textReview.cognitivePercent.join(' / ')]]);
+   }
   }else if(key==='optional_computer'){
    const c=getBundledComputerGrid({grade:9,subject,fullMarks:50});fullMarks=c.fullMarks;durationMinutes=c.durationMinutes;
    status='Official structural transcription; teacher review pending';
