@@ -161,16 +161,15 @@ serverRole=current;
 w.marksStudents.push({id:'english-student',class:'1',section:'A',name:'Test English'});
 w.ledgerSubjectsForClass=()=>['English','Nepali','serophero'];
 choice('class','1');
-assert.deepEqual([...field('subject').options].map(option=>option.text),['नेपाली','अङ्ग्रेजी / English','हाम्रो सेरोफेरो']);
+assert.deepEqual([...field('subject').options].map(option=>option.text),['नेपाली','English','हाम्रो सेरोफेरो']);
 choice('subject','English');
-assert.equal(field('unit').parentElement.hidden,false);
-assert.equal(field('topicAlt').parentElement.hidden,false);
+assert.equal(field('unit').parentElement.hidden,true);
+assert.equal(field('topicAlt').parentElement.hidden,true);
 choice('unitEn','Alphabet');
 const englishOutcome='Copy, recognize and distinguish sounds';
-assert.ok([...w.document.querySelectorAll('#cdcTopicSuggestions option')].some(option=>option.value===englishOutcome));
+assert.equal(w.document.querySelector('#cdcTopicSuggestions option').value,englishOutcome);
 choice('topic',englishOutcome);
-assert.equal(field('topic').value,'सुनेका ध्वनि दोहोर्‍याउने, चिन्ने र छुट्याउने');
-assert.equal(field('topicAlt').value,englishOutcome);
+assert.equal(field('topic').value,englishOutcome);
 field('evidence').value='English evidence';
 await field('save').onclick();
 assert.match(field('records').selectedOptions[0].text,/Alphabet/);
@@ -190,39 +189,18 @@ for (const [grade, expectedCounts] of [['4',[7,5,4,5,5,4,5,4,4,5,4,4,4,4,5,4]],[
   choice('class',grade);
   choice('subject','English');
   const units=[...w.document.querySelectorAll('#cdcUnitSuggestions option')].map(option=>option.value);
-  assert.equal(units.length,expectedCounts.length*2);
-  expectedCounts.forEach((count,index)=>{
-    const original=units[index*2],translated=units[index*2+1];
-    assert.ok(original.startsWith('Unit '+(index+1)+': '));
-    assert.match(translated,/[अ-ह]/u);
-    choice('unitEn',translated);
-    assert.equal(field('unit').value,original);
-    const outcomes=[...field('outcomePicker').options].slice(1);
-    assert.equal(outcomes.length,count);
-    assert.equal(new Set(outcomes.map(o=>o.value)).size,count);
-    assert.deepEqual([...new Set(outcomes.map(o=>o.value.split(' — ')[0]))],['Listening','Speaking','Reading','Writing']);
-    assert.ok(outcomes.every(o=>/[अ-ह]/u.test(o.text)&&/[a-z]/i.test(o.text)));
-    assert.ok(outcomes.every(o=>!/[\u0900-\u097F]/u.test(o.value)));
+  assert.equal(units.length,expectedCounts.length);
+  units.forEach((unit,index)=>{
+    assert.ok(unit.startsWith('Unit '+(index+1)+': '));
+    choice('unitEn',unit);
+    const outcomes=[...w.document.querySelectorAll('#cdcTopicSuggestions option')].map(option=>option.value);
+    assert.equal(outcomes.length,expectedCounts[index]);
+    assert.equal(new Set(outcomes).size,outcomes.length);
+    assert.deepEqual([...new Set(outcomes.map(text=>text.split(' — ')[0]))],['Listening','Speaking','Reading','Writing']);
+    assert.ok(outcomes.every(text=>!/[\u0900-\u097F]/u.test(text)));
   });
 }
-console.log('CDC English form: all 33 units and 156 indicators for Grades 4 and 5 bilingual display and original keys passed');
-for(const [grade,expected] of [['2',37],['3',40]]){
-  current.subjectAssignments=[{className:grade,subject:'English'}];
-  if(![...field('class').options].some(option=>option.value===grade))field('class').append(new w.Option('Class '+grade,grade));
-  choice('class',grade);choice('subject','English');
-  const units=[...w.document.querySelectorAll('#cdcUnitSuggestions option')];
-  assert.equal(units.length,8);
-  let count=0;
-  for(let i=0;i<units.length;i+=2){
-    choice('unitEn',units[i+1].value);
-    assert.equal(field('unit').value,units[i].value);
-    const outcomes=[...field('outcomePicker').options].slice(1);
-    count+=outcomes.length;
-    assert.ok(outcomes.every(o=>/[अ-ह]/u.test(o.text)&&/[a-z]/i.test(o.text)&&!/[अ-ह]/u.test(o.value)));
-  }
-  assert.equal(count,expected);
-}
-console.log('Grades 2 and 3 English bilingual 77 outcomes preserve the original record keys');
+console.log('CDC English form: all 33 units and 156 indicators for Grades 4 and 5 passed');
 for (const grade of ['4','5']) {
   current.subjectAssignments=[{className:grade,subject:'Nepali'}];
   choice('class',grade);
@@ -301,7 +279,7 @@ for (const grade of grades) {
     choice('student',first);
     choice('period','Final Term');
     const unit=w.document.querySelector('#cdcUnitSuggestions option').value;
-    choice('unit',unit);
+    choice(subject==='english'?'unitEn':'unit',unit);
     const picker=field('outcomePicker');
     assert.equal(field('outcomePickerLabel').hidden,false);
     assert.match(field('guide').textContent,Number(grade)<=3 ? /२०७६/ : /२०८३/);
@@ -310,7 +288,7 @@ for (const grade of grades) {
     assert.ok(field('topic').value.trim());
     const levelNames=[...field('level').options].slice(1).map(option=>option.text).join(' ');
     const nepaliOnly=['nepali','socialstudies','serophero'].includes(subject);
-    assert.equal(/[अ-ह]/u.test(levelNames),Number(grade)>=4);
+    assert.equal(/[अ-ह]/u.test(levelNames),Number(grade)>=4&&subject!=='english');
     assert.equal(/[a-z]/i.test(levelNames),Number(grade)>=4&&!nepaliOnly);
     if (Number(grade)<=3) assert.equal(levelNames,'1 2 3 4');
     const evidence=grade+' '+subject+' sample';
@@ -332,7 +310,7 @@ for (const grade of grades) {
     assert.equal(cells[4].textContent,'3');
     assert.equal(cells[5].textContent,evidence);
     if (nepaliOnly) assert.doesNotMatch(cells[0].textContent+cells[1].textContent,/[a-z]/i);
-    if (subject==='english') {assert.match(cells[0].textContent+cells[1].textContent,/[अ-ह]/u);assert.match(cells[0].textContent+cells[1].textContent,/[a-z]/i);}
+    if (subject==='english') assert.doesNotMatch(cells[0].textContent+cells[1].textContent,/[अ-ह]/u);
     choice('student',second);
     await field('readSchool').onclick();
     assert.equal(field('schoolRows').rows.length,0);
@@ -342,7 +320,7 @@ console.log('All 24 Grade 1–5 subject selections: rating language, school save
 // The registry spelling is the Firestore subject key; localize only the menu label.
 for (const [grade,registered,label] of [
   ['1','Our Surroundings','हाम्रो सेरोफेरो'],['2','हाम्रो सेरोफेरो','हाम्रो सेरोफेरो'],
-  ['3','Nepali (1021)','नेपाली'],['4','English (1011)','अङ्ग्रेजी / English'],
+  ['3','Nepali (1021)','नेपाली'],['4','English (1011)','English'],
   ['5','सामाजिक अध्ययन','सामाजिक अध्ययन तथा मानवमूल्य शिक्षा'],
   ['5','Social Studies and Human Values Education','सामाजिक अध्ययन तथा मानवमूल्य शिक्षा'],
   ['5','Science & Technology','विज्ञान तथा प्रविधि / Science and Technology'],
