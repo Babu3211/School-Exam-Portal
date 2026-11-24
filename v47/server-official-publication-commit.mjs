@@ -4,7 +4,7 @@
 // transaction. This module never accesses V46/main or accepts client actor data.
 import {loadTrustedPublicationPreflight,officialClassPointerId} from './server-publication-authoritative-preflight.mjs';
 import {verifyPublicationTransition} from './server-publication-transition-preflight.mjs';
-import {computePublishedPagesDigest} from './server-publication-content-digest.mjs';
+import {computePublishedPagesDigest,computeOfficialSettingsDigest} from './server-publication-content-digest.mjs';
 
 const exists=s=>typeof s?.exists==='function'?s.exists():s?.exists===true;
 const value=s=>exists(s)?s.data():null;
@@ -108,18 +108,19 @@ export async function commitTrustedOfficialClassPublication({
   // Bind the immutable persisted page CONTENT to the atomic publication.
   // A later valid-looking score change must not silently become official.
   const contentDigest=computePublishedPagesDigest(pages);
+  const settingsDigest=computeOfficialSettingsDigest(authoritativeInput.settings,scope);
   transaction.set(publicationRef,{
-   ...scope,publicationId,state:'committed',digest:checked.digest,contentDigest,
+   ...scope,publicationId,state:'committed',digest:checked.digest,contentDigest,settingsDigest,
    rosterCount:checked.rosterCount,batchCount:checked.batchCount,
    previousPublicationId:checked.previousPublicationId,
    approvedBy:actorUid,committedAt
   });
   transaction.set(pointerRef,{
-   ...scope,publicationId,digest:checked.digest,contentDigest,rosterCount:checked.rosterCount
+   ...scope,publicationId,digest:checked.digest,contentDigest,settingsDigest,rosterCount:checked.rosterCount
   });
   transaction.set(auditRef,{
    ...scope,publicationId,previousPublicationId:checked.previousPublicationId,
-   digest:checked.digest,contentDigest,rosterCount:checked.rosterCount,approvedBy:actorUid,
+   digest:checked.digest,contentDigest,settingsDigest,rosterCount:checked.rosterCount,approvedBy:actorUid,
    action:'official_class_marks_publish',committedAt
   });
   return Object.freeze({

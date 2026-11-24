@@ -3,7 +3,7 @@
 // Not a public API and never touches V46; release remains blocked.
 import {officialClassPointerId} from './server-publication-authoritative-preflight.mjs';
 import {resolveOfficialClassMarks} from './server-official-marks-reader.mjs';
-import {computePublishedPagesDigest} from './server-publication-content-digest.mjs';
+import {computePublishedPagesDigest,computeOfficialSettingsDigest} from './server-publication-content-digest.mjs';
 import {resolveVerifiedOfficialClassMarks} from './server-verified-official-class-marks.mjs';
 import {completeClassDraftId} from './complete-class-draft-document.mjs';
 import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
@@ -58,6 +58,8 @@ export async function loadCommittedOfficialClassMarks({firestore,schoolId,classI
      typeof pointer.contentDigest!=='string'||!/^[a-f0-9]{64}$/.test(pointer.contentDigest)||
      publication.contentDigest!==pointer.contentDigest||
      audit.contentDigest!==pointer.contentDigest||
+     typeof pointer.settingsDigest!=='string'||!/^[a-f0-9]{64}$/.test(pointer.settingsDigest)||
+     publication.settingsDigest!==pointer.settingsDigest||audit.settingsDigest!==pointer.settingsDigest||
      !Number.isInteger(publication.batchCount)||publication.batchCount<1||publication.batchCount>15||
      manifest.format!=='smss-v47-verified-staging-manifest-v1'||
      manifest.state!=='staged_verified_not_published'||manifest.publicationId!==publicationId||
@@ -119,6 +121,11 @@ export async function loadCommittedOfficialClassMarks({firestore,schoolId,classI
     throw new Error('Inactive, mismatched or foreign published student');
    expectedStudentIds.push(doc.id);
   }
-  return resolveVerifiedOfficialClassMarks({...scope,pointer,publication,entries,settings,expectedStudentIds});
+  const verified=resolveVerifiedOfficialClassMarks({...scope,pointer,publication,entries,settings,expectedStudentIds});
+  // Even if all obtained marks still fit, changed full marks or component
+  // ordering would change grading. Require a freshly reviewed publication.
+  if(computeOfficialSettingsDigest(settings,scope)!==pointer.settingsDigest)
+   throw new Error('Published Examination Settings changed; review and republish required');
+  return verified;
  });
 }

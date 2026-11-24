@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {loadCommittedOfficialClassMarks} from './server-official-marks-firestore-loader.mjs';
-import {computePublishedPagesDigest} from './server-publication-content-digest.mjs';
+import {computePublishedPagesDigest,computeOfficialSettingsDigest} from './server-publication-content-digest.mjs';
 import {officialClassPointerId} from './server-publication-authoritative-preflight.mjs';
 
 const scope={schoolId:'12345',classId:'9',subjectId:'computer',examId:'final'};
@@ -20,23 +20,25 @@ function fixture(){
    lastStudentId:chunk.at(-1).studentId,entries:chunk};
  });
  const contentDigest=computePublishedPagesDigest(pages);
- const pointer={...scope,publicationId,digest,contentDigest,rosterCount:count};
- const publication={...scope,publicationId,state:'committed',digest,contentDigest,rosterCount:count,
-   batchCount:2,approvedBy:uid,previousPublicationId:null,committedAt:'2026-11-23'};
- put(root,{id:scope.schoolId,active:true});
- put(path('subjects','computer'),{schoolId:scope.schoolId,class:'9',active:true});
- put(path('mark_settings',settingsId),{id:settingsId,...scope,active:true,components:[
+ const settings={id:settingsId,...scope,active:true,components:[
   {key:'internal',name:'Internal',fullMarks:4},
   {key:'written',name:'Written',fullMarks:36},
   {key:'practical',name:'Practical',fullMarks:10}
- ]});
+ ]};
+ const settingsDigest=computeOfficialSettingsDigest(settings,scope);
+ const pointer={...scope,publicationId,digest,contentDigest,settingsDigest,rosterCount:count};
+ const publication={...scope,publicationId,state:'committed',digest,contentDigest,settingsDigest,rosterCount:count,
+   batchCount:2,approvedBy:uid,previousPublicationId:null,committedAt:'2026-11-23'};
+ put(root,{id:scope.schoolId,active:true});
+ put(path('subjects','computer'),{schoolId:scope.schoolId,class:'9',active:true});
+ put(path('mark_settings',settingsId),settings);
  for(const row of rows)put(path('students',row.studentId),{schoolId:scope.schoolId,class:'9',active:true});
  put(path('members',uid),{uid,schoolId:scope.schoolId,active:true,role:'school_admin'});
  put(path('official_marks_pointers',pointerId),pointer);
  put(path('official_marks_publications',publicationId),publication);
  put(path('official_marks_audit',publicationId),{
    ...scope,publicationId,approvedBy:uid,action:'official_class_marks_publish',
-   digest,contentDigest,rosterCount:count
+   digest,contentDigest,settingsDigest,rosterCount:count
  });
  put(path('marks_staging',publicationId),{
    format:'smss-v47-verified-staging-manifest-v1',state:'staged_verified_not_published',
@@ -119,6 +121,10 @@ for(const mutate of [
  h=>h.docs.get(root).active=false,
  h=>h.docs.get(path('subjects','computer')).active=false,
  h=>h.docs.get(path('mark_settings',settingsId)).components[0].fullMarks=3,
+ h=>h.docs.get(path('mark_settings',settingsId)).components[0].fullMarks=5,
+ h=>h.docs.get(path('mark_settings',settingsId)).components.reverse(),
+ h=>delete h.docs.get(path('official_marks_pointers',h.pointerId)).settingsDigest,
+ h=>h.docs.get(path('official_marks_audit',publicationId)).settingsDigest='b'.repeat(64),
  h=>h.docs.get(path('students','s0000')).active=false,
  h=>h.docs.get(path('students','s0000')).class='10',
  h=>h.docs.delete(path('students','s0000')),
@@ -130,4 +136,4 @@ for(const mutate of [
 }
 await assert.rejects(run(fixture(),{schoolId:'67890'}),/membership/);
 await assert.rejects(run(fixture(),{classId:'../9'}),/Verified/);
-console.log('PASS trusted official marks Firestore loader: 101 rows, Viewer, unpublished, revoked membership, 19 tamper/cross-school/settings/roster refusals; no public API or writes');
+console.log('PASS trusted official marks Firestore loader: 101 rows, Viewer, unpublished, revoked membership, tamper/cross-school/settings/roster refusals; no public API or writes');

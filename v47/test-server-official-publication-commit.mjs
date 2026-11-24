@@ -3,6 +3,7 @@ import {stageTrustedClassMarks} from './server-publication-staging-executor.mjs'
 import {fingerprintConfiguredClassReview} from './server-class-review-fingerprint.mjs';
 import {commitTrustedOfficialClassPublication} from './server-official-publication-commit.mjs';
 import {officialClassPointerId} from './server-publication-authoritative-preflight.mjs';
+import {computeOfficialSettingsDigest} from './server-publication-content-digest.mjs';
 import {resolveOfficialClassMarks} from './server-official-marks-reader.mjs';
 
 const scope={schoolId:'12345',classId:'9',subjectId:'computer',examId:'final'};
@@ -86,6 +87,9 @@ for(const size of [1,101,500,1500]){
  assert.equal(pointer.publicationId,publicationId);
  assert.equal(publication.state,'committed');
  assert.equal(publication.digest,pointer.digest);
+ assert.equal(pointer.settingsDigest,computeOfficialSettingsDigest(h.input.settings,scope));
+ assert.equal(publication.settingsDigest,pointer.settingsDigest);
+ assert.equal(audit.settingsDigest,pointer.settingsDigest);
  assert.equal(audit.action,'official_class_marks_publish');
  assert.equal(audit.approvedBy,actor.uid);
  const rows=Array.from({length:Math.ceil(size/100)},(_,i)=>

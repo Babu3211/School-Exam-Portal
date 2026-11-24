@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {once} from 'node:events';
 import {createV47ApiServer} from '../src/v47/node-api-server.mjs';
-import {computePublishedPagesDigest} from '../v47/server-publication-content-digest.mjs';
+import {computePublishedPagesDigest,computeOfficialSettingsDigest} from '../v47/server-publication-content-digest.mjs';
 import {officialClassPointerId} from '../v47/server-publication-authoritative-preflight.mjs';
 
 const scope={schoolId:'12345678',classId:'9',subjectId:'computer',examId:'final'};
@@ -20,15 +20,16 @@ set(path('mark_settings','9_computer_final'),{id:'9_computer_final',...scope,act
 for(const row of rows)set(path('students',row.studentId),{schoolId:scope.schoolId,class:'9',active:true});
 set(path('members',uid),{uid,schoolId:scope.schoolId,role:'viewer',active:true});
 const pointerId=officialClassPointerId(scope);
+const settingsDigest=computeOfficialSettingsDigest(docs.get(path('mark_settings','9_computer_final')),scope);
 const contentDigest=computePublishedPagesDigest(Array.from({length:2},(_,i)=>{
  const chunk=rows.slice(i*100,(i+1)*100);
  return {index:i,count:chunk.length,firstStudentId:chunk[0].studentId,
   lastStudentId:chunk.at(-1).studentId,entries:chunk};
 }));
-set(path('official_marks_pointers',pointerId),{...scope,publicationId,digest,contentDigest,rosterCount:101});
-set(path('official_marks_publications',publicationId),{...scope,publicationId,digest,contentDigest,rosterCount:101,
+set(path('official_marks_pointers',pointerId),{...scope,publicationId,digest,contentDigest,settingsDigest,rosterCount:101});
+set(path('official_marks_publications',publicationId),{...scope,publicationId,digest,contentDigest,settingsDigest,rosterCount:101,
  state:'committed',batchCount:2,approvedBy:'admin1'});
-set(path('official_marks_audit',publicationId),{...scope,publicationId,digest,contentDigest,rosterCount:101,
+set(path('official_marks_audit',publicationId),{...scope,publicationId,digest,contentDigest,settingsDigest,rosterCount:101,
  approvedBy:'admin1',action:'official_class_marks_publish'});
 set(path('marks_staging',publicationId),{...scope,publicationId,digest,rosterCount:101,
  format:'smss-v47-verified-staging-manifest-v1',state:'staged_verified_not_published',
@@ -96,6 +97,13 @@ try{
  assert.equal((await get()).status,403,'Reject valid-looking tampered marks by immutable content hash');
  docs.get(path('mark_settings','9_computer_final')).components[0].fullMarks=3;
  assert.equal((await get()).status,403,'Changed official component limits refused');
+ docs.get(path('mark_settings','9_computer_final')).components[0].fullMarks=4;
+ // Restore the original rows before testing a valid-looking increase in full marks.
+ docs.get(path('marks_staging',publicationId,'batches','b0001')).entries[0].values.internal=4;
+ docs.get(path('marks_staging',publicationId,'batches','b0001')).entries[0].totalObtained=48;
+ assert.equal((await get()).status,200);
+ docs.get(path('mark_settings','9_computer_final')).components[0].fullMarks=5;
+ assert.equal((await get()).status,403,'Changed full marks must be rejected even when obtained marks remain within range');
  docs.get(path('mark_settings','9_computer_final')).components[0].fullMarks=4;
  docs.get(path('students','s0000')).active=false;
  assert.equal((await get()).status,403,'Inactive published student refused');
