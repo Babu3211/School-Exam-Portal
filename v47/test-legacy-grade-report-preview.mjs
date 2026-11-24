@@ -58,8 +58,9 @@ for(const klass of ['6','7','8','9','10'])for(const exam of ['1st','2nd','final'
  const input={schoolId,school,classNo:klass,term:exam,students:roster,subjects:catalog,publications:published};
  const report=prepareCommittedIemisReport(input);
  assert.equal(report.summary.complete,true);assert.equal(report.previewOnly,true);
- assert.equal(report.summary.rows[0].gpa,4);
- assert.match(report.printFor('s1').html,/NOT VALID FOR OFFICIAL USE/);
+ assert.equal(report.summary.rows[0].gpa,exam==='final'?4:null);
+ if(exam==='final')assert.match(report.printFor('s1').html,/NOT VALID FOR OFFICIAL USE/);
+ else assert.equal(report.printFor('s1').ready,false,'V46 non-final GPA is intentionally unavailable');
  const alter=fn=>{const copy=structuredClone(input);fn(copy);return copy};
  for(const fn of [
   a=>a.publications.pop(),
