@@ -420,6 +420,48 @@ try {
   await assertSucceeds(getDoc(cdc('valid',adminCdcDb)));
   await assertFails(setDoc(cdc('admin-create',adminCdcDb),{...observation,createdBy:ADMIN}));
   await assertFails(getDoc(cdc('valid',testEnv.unauthenticatedContext().firestore())));
+  // Binary indicator evidence is separate from the established 1–4 level records.
+  const seroUid='cdc-sero-assigned',seroViewer='cdc-sero-viewer',seroSubject='हाम्रो सेरोफेरो';
+  await testEnv.withSecurityRulesDisabled(async context=>{
+    const d=context.firestore();
+    await setDoc(doc(d,'user_roles',seroUid),{active:true,roles:['subject_teacher'],
+      subjectAssignmentKeys:['1::'+seroSubject],subjectAssignmentSectionKeys:['1::'+seroSubject+'::A']});
+    await setDoc(doc(d,'user_roles',seroViewer),{active:true,roles:['viewer']});
+    await setDoc(doc(d,'students','sero-test-a'),{class:'1',section:'A',active:true});
+    await setDoc(doc(d,'students','sero-test-b'),{class:'1',section:'B',active:true});
+    await setDoc(doc(d,'students','sero-test-inactive'),{class:'1',section:'A',active:false});
+  });
+  const seroDb=testEnv.authenticatedContext(seroUid).firestore();
+  const seroRef=(id,d=seroDb)=>doc(d,'cdc_serofero_indicators',id);
+  const seroData={studentId:'sero-test-a',className:'1',subject:seroSubject,section:'A',academicYear:'2083',
+    period:'First Term',unit:'म र मेरो परिवार',outcomeId:'cdc2076-g1-1',stage:'regular',
+    date:'2083-08-07',indicators:[true,false,true,false],createdBy:seroUid,createdAt:serverTimestamp()};
+  await assertSucceeds(setDoc(seroRef('regular'),seroData));
+  await assertSucceeds(setDoc(seroRef('support'),{...seroData,stage:'support',indicators:[true,true,true,true]}));
+  await assertSucceeds(setDoc(seroRef('zero'),{...seroData,indicators:[false,false,false,false]}));
+  await assertSucceeds(getDoc(seroRef('regular')));
+  const seroQuery=query(collection(seroDb,'cdc_serofero_indicators'),
+    ...Object.entries({studentId:'sero-test-a',className:'1',subject:seroSubject,section:'A',academicYear:'2083',period:'First Term'}).map(([k,v])=>where(k,'==',v)));
+  assert.equal((await assertSucceeds(getDocs(seroQuery))).size,3);
+  for(const [id,patch] of Object.entries({
+    incomplete:{indicators:[true,false,true]}, nonBoolean:{indicators:[true,false,true,1]},
+    extra:{indicators:[true,false,true,false,true]}, fakeScore:{level:4},
+    wrongSection:{studentId:'sero-test-b',section:'B'}, inactive:{studentId:'sero-test-inactive'},
+    wrongSubject:{subject:'Mathematics'}, wrongYear:{academicYear:'2084'},
+    wrongStage:{stage:'other'}, wrongAuthor:{createdBy:cdcUid}, badId:{outcomeId:'other'},
+    badDate:{date:'2083-13-01'}
+  })) await assertFails(setDoc(seroRef(id),{...seroData,...patch}));
+  await assertFails(updateDoc(seroRef('regular'),{indicators:[true,true,true,true]}));
+  await assertFails(deleteDoc(seroRef('regular')));
+  await assertFails(getDoc(seroRef('regular',cdcDb)));
+  const seroViewerDb=testEnv.authenticatedContext(seroViewer).firestore();
+  await assertSucceeds(getDoc(seroRef('regular',seroViewerDb)));
+  await assertFails(setDoc(seroRef('viewer-write',seroViewerDb),{...seroData,createdBy:seroViewer}));
+  await assertSucceeds(getDoc(seroRef('regular',adminCdcDb)));
+  await assertFails(setDoc(seroRef('admin-write',adminCdcDb),{...seroData,createdBy:ADMIN}));
+  await assertFails(getDoc(seroRef('regular',testEnv.unauthenticatedContext().firestore())));
+  await assertFails(setDoc(cdc('binary-in-legacy',seroDb),seroData));
+  console.log('Our Surroundings binary evidence: scope, four booleans, read-only roles, append-only writes and legacy separation passed');
   // Use the actual assessment form and Firestore SDK in separate browser sessions.
   const subject='सामाजिक अध्ययन तथा मानवमूल्य शिक्षा';
   const teacherRole={active:true,roles:['subject_teacher'],
