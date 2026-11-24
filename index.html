@@ -4321,6 +4321,21 @@ function parseCdcBilingualCatalog(text) {
    const band=percentage===null?null:bands.find(([min])=>percentage>=min);
    return {assessed,total,expected:known.size,percentage,grade:band?.[1]??null,point:band?.[2]??null,complete:known.size>0&&assessed===known.size};
  }
+ // Attendance records are evidence of recorded class days, not proof of
+ // the complete school operating calendar. Conflicting dates remain unresolved.
+ function cdcAttendanceSummary(records,selection){
+   const dates=new Map();
+   for(const row of records){
+     if(row.academicYear!==selection.academicYear||row.className!==selection.className||row.attendanceType!=='daily'||!/^\d{4}-\d{2}-\d{2}$/.test(row.date||''))continue;
+     if(!dates.has(row.date))dates.set(row.date,new Set());
+     for(const st of Array.isArray(row.students)?row.students:[]){
+       if(st.studentId===selection.studentId&&['present','absent','leave'].includes(st.status))dates.get(row.date).add(st.status);
+     }
+   }
+   const present=[...dates.values()].filter(s=>s.size===1&&s.has('present')).length;
+   const assessed=[...dates.values()].filter(s=>s.size===1).length;
+   return {recordedDays:dates.size,present,assessed,unresolved:dates.size-assessed,percentage:assessed?100*present/assessed:null};
+ }
  function openCdcAssessment(context = null) {
   if (!auth.currentUser) return;
   document.getElementById('cdcAssessmentDialog')?.remove();
@@ -4352,7 +4367,7 @@ function parseCdcBilingualCatalog(text) {
     <datalist id="cdcUnitSuggestions"></datalist>
     <p data-cdc="unitCoverage" class="hint"></p>
     <section data-cdc="annex3" hidden><div class="toolbar"><button type="button" class="btn alt" data-cdc="gridRead" id="cdcGridRead">Load / Refresh Records</button><span data-cdc="gridStatus" role="status" class="hint"></span></div><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><div class="tablewrap"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Print / Save PDF</button><p data-cdc="printStatus" role="status" class="hint"></p></section>
-    <section data-cdc="annualProgress" hidden class="panel"><h3>प्रगति प्रतिवेदन — अनुसूची ४ / Annual Progress</h3><p data-cdc="progressIdentity"></p><button type="button" class="btn alt" id="cdcReadProgress" data-cdc="readProgress">View Annual Progress</button><p data-cdc="annualStatus" role="status" class="hint"></p><div class="tablewrap"><table><thead><tr><th>क्र. सं.</th><th>विषय</th><th>पाठ्यघण्टा</th><th>सिकाइ उपलब्धि सङ्ख्या</th><th>समग्र उपलब्धिस्तर</th><th>कैफियत</th></tr></thead><tbody data-cdc="annualRows"></tbody></table></div><p class="hint">उपस्थिति: हाजिरी अभिलेखसँग जोड्न बाँकी। यो समीक्षा प्रति हो।</p><p>कक्षा शिक्षक __________　 प्रधानाध्यापक __________　 मिति __________</p></section>
+    <section data-cdc="annualProgress" hidden class="panel"><h3>प्रगति प्रतिवेदन — अनुसूची ४ / Annual Progress</h3><p data-cdc="progressIdentity"></p><button type="button" class="btn alt" id="cdcReadProgress" data-cdc="readProgress">View Annual Progress</button><p data-cdc="annualStatus" role="status" class="hint"></p><div class="tablewrap"><table><thead><tr><th>क्र. सं.</th><th>विषय</th><th>पाठ्यघण्टा</th><th>सिकाइ उपलब्धि सङ्ख्या</th><th>समग्र उपलब्धिस्तर</th><th>कैफियत</th></tr></thead><tbody data-cdc="annualRows"></tbody></table></div><p data-cdc="annualAttendance" class="hint">उपस्थिति: अभिलेख लोड गर्नुहोस्।</p><p class="hint">विद्यालय सञ्चालन दिन विद्यालयको प्रमाणित पात्रोबाट पुष्टि गर्नुपर्छ। यो समीक्षा प्रति हो।</p><p>कक्षा शिक्षक __________　 प्रधानाध्यापक __________　 मिति __________</p></section>
     <details data-cdc="catalogPanel"><summary>द्विभाषिक उपलब्धि सूची थप्नुहोस्</summary>
       <p class="hint">स्रोतबाट पुष्टि गरेका चार स्तम्भ Excel बाट प्रतिलिपि गर्नुहोस्। क्रम: नेपाली एकाइ, English unit, नेपाली उपलब्धि, English outcome। शीर्षक पङ्क्ति छोड्नुहोस्।</p>
       <textarea data-cdc="catalogText" aria-label="द्विभाषिक उपलब्धि सूची" rows="4" maxlength="1100000" style="width:100%"></textarea>
@@ -4670,6 +4685,7 @@ function parseCdcBilingualCatalog(text) {
     annualReadSequence++;
     field('annualRows').replaceChildren();
     field('annualStatus').textContent='';
+    field('annualAttendance').textContent='उपस्थिति: अभिलेख लोड गर्नुहोस्।';
     const selection=schoolSelection();
     const visible=!!context&&Number(field('class').value)>=4&&Number(field('class').value)<=5;
     field('annualProgress').hidden=!visible;
@@ -4688,6 +4704,15 @@ function parseCdcBilingualCatalog(text) {
     const st=assessmentStudents.find(s=>s.id===selection.studentId);
     const registry=context.subjectsFor(grade);
     try{
+      const attendancePromise=(async()=>{
+        if(!readOnly&&(!roleHas('class_teacher')||typeof classTeacherNames!=='function'||!classTeacherNames().includes(selection.className)))return 'उपस्थिति: हाजिरी हेर्ने अनुमति छैन।';
+        try{
+          const snapshot=await getDocsFromServer(query(collection(db,'attendance'),where('className','==',selection.className),where('attendanceType','==','daily'),where('academicYear','==',year)));
+          const result=cdcAttendanceSummary(snapshot.docs.map(d=>d.data()),selection);
+          if(!result.recordedDays)return 'उपस्थिति: दैनिक हाजिरी अभिलेख छैन।';
+          return 'उपस्थिति: अभिलेख भएका कक्षा दिन '+result.recordedDays+' | विद्यार्थीको पुष्टि भएको हाजिरी दिन '+result.assessed+' | उपस्थित दिन '+result.present+' | अभिलेखअनुसार प्रतिशत '+(result.percentage===null?'—':result.percentage.toFixed(2)+'%')+(result.unresolved?' | अपूर्ण वा विवादित दिन '+result.unresolved:'');
+        }catch{return 'उपस्थिति: हाजिरी अभिलेख पढ्न सकिएन।';}
+      })();
       const rows=await Promise.all(cdcUpperPrimarySubjects.map(async ([key,ne,en],i)=>{
         const label=key==='english'?en:ne;
         const hours=[5,5,5,5,5,3,4][i];
@@ -4704,7 +4729,9 @@ function parseCdcBilingualCatalog(text) {
           return [i+1,label,hours,result.assessed,gradeText,result.percentage===null?'अभिलेख छैन':result.percentage.toFixed(2)+'% · '+(result.complete?'सूचीअनुसार पूर्ण':result.expected?('प्रारम्भिक '+result.assessed+'/'+result.expected):'स्थानीय सूची पुष्टि बाँकी')];
         }catch{return [i+1,label,hours,'—','—','अभिलेख पढ्न सकिएन'];}
       }));
+      const attendance=await attendancePromise;
       if(!isCurrent())return;
+      field('annualAttendance').textContent=attendance;
       for(const values of rows){const row=field('annualRows').insertRow();for(const value of values)row.insertCell().textContent=String(value);}
       field('annualStatus').textContent='सबै अवधिको पछिल्लो वैध अङ्कनबाट प्रति उपलब्धि एक पटक गणना। अपूर्ण सूचीको ग्रेड प्रारम्भिक मात्र हो।';
     }finally{if(isCurrent())field('readProgress').disabled=false;}
