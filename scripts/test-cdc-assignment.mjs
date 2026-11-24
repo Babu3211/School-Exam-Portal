@@ -83,7 +83,7 @@ Object.assign(w,{
 w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
 w.eval(readFileSync('iemis-importer/transfer.js','utf8'));
 // Capture the lexical catalogue in the same eval that initializes the page.
-const legacyForms=w.eval(html.slice(html.indexOf('const cdcCoreSubjects'),html.indexOf('let iemisEntryGrid'))+'\nopenCdcAssessment();\ncdcLegacyMathRubrics;');
+const legacyForms=w.eval(html.slice(html.indexOf('const cdcCoreSubjects'),html.indexOf('let iemisEntryGrid'))+'\nwindow.__testSeroApproved=cdcSeroGuideApproved;\nwindow.__testSeroEntryForm=cdcSeroGuideEntryForm;\nopenCdcAssessment();\ncdcLegacyMathRubrics;');
 const field=name=>w.document.querySelector('[data-cdc="'+name+'"]');
 const choice=(name,value)=>{field(name).value=value;field(name).onchange();};
 const references=field('referenceLibrary');
@@ -1251,6 +1251,57 @@ for(const grade of ['2','3']){
   assert.equal(seroPrintCount,1);
  }
 }
+// Test-only approval injection: production approval set must remain empty.
+assert.equal(w.__testSeroApproved.size,0);
+const unitUnderTest='मेरो दैनिक जीवन';
+const keyUnderTest='2:'+unitUnderTest;
+assert.equal(w.__testSeroEntryForm('2',unitUnderTest,'2083'),null);
+w.__testSeroApproved.add(keyUnderTest);
+const prepared=w.__testSeroEntryForm('2',unitUnderTest,'2083');
+assert.equal(prepared.start,7);
+assert.equal(prepared.groups.length,6);
+assert.deepEqual(Array.from(prepared.mainRows,r=>r.span),[4,8,8,8,8,4]);
+assert.deepEqual(Array.from(prepared.mainRows,r=>r.first),[true,true,false,true,false,true]);
+assert.equal(w.__testSeroEntryForm('2',unitUnderTest,'2084'),null);
+current.subjectAssignments=[{className:'Class 2',subject:'serophero',section:'A'}];
+serverRole={...current};
+w.getDocs=async()=>({docs:[{id:'sero-review-2',data:()=>({class:'Class 2',section:'A',name:'Synthetic Review Student'})}]});
+const priorBinaryRead=w.getDocsFromServer;
+w.getDocsFromServer=async args=>{
+ if(args.name!=='cdc_serofero_indicators')return priorBinaryRead(args);
+ const filters=Object.fromEntries(args.filters.map(([k,op,v])=>{assert.equal(op,'==');return [k,v];}));
+ assert.deepEqual(filters,{studentId:'sero-review-2',className:'Class 2',subject:field('subject').value,section:'A',academicYear:'2083',period:field('period').value,unit:unitUnderTest});
+ return {docs:[...binaryRecords.values()].filter(record=>Object.entries(filters).every(([k,v])=>record[k]===v)).map(record=>({data:()=>record}))};
+};
+await w.loadCdcAssessmentPage();
+choice('unit',unitUnderTest);
+assert.equal(field('annexRows').rows.length,24);
+assert.equal(field('annexRows').rows[4].cells[0].rowSpan,8);
+assert.equal(seroControls('score').length,6);
+assert.equal(seroControls('save').length,0);
+await field('gridRead').onclick();
+assert.equal(seroControls('save').length,6);
+for(let i=8;i<12;i++){const control=seroControls('indicator')[i];control.value=i===8?'no':'yes';control.onchange();}
+seroControls('date')[2].value='2083-08-07';
+await seroControls('save')[2].onclick();
+assert.equal(binaryRecords.size,3);
+const newRecord=[...binaryRecords.values()].at(-1);
+assert.equal(newRecord.outcomeId,'cdc2076-g2-9');
+assert.equal(JSON.stringify(newRecord.indicators),'[false,true,true,true]');
+await field('gridRead').onclick();
+assert.equal(seroControls('score')[2].textContent,'३');
+assert.equal(seroControls('score')[1].textContent,'—');
+field('printForm').onclick();
+assert.equal(seroPrintCount,2);
+const multiPrint=new JSDOM(seroMarkup).window.document;
+assert.equal(multiPrint.querySelector('tbody').rows.length,24);
+assert.equal(multiPrint.querySelector('tbody').rows[4].cells[0].rowSpan,8);
+assert.equal(multiPrint.querySelectorAll('input,select,button').length,0);
+assert.match(multiPrint.querySelector('tfoot').textContent,/पूरा: १ \/ ६/);
+assert.equal(observations.size,beforeSero);
+w.__testSeroApproved.delete(keyUnderTest);
+w.getDocsFromServer=priorBinaryRead;
+assert.equal(w.__testSeroApproved.size,0);
 current.subjectAssignments=[{className:'Class 1',subject:'serophero',section:'A'}];
 serverRole={...current};
 w.getDocs=async()=>({docs:[{id:'sero-1',data:()=>({class:'Class 1',section:'A',name:'Synthetic Student'})}]});
