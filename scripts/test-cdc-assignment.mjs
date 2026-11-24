@@ -337,5 +337,22 @@ for (const [grade,registered,label] of [
   }
 }
 console.log('Real registry spellings, local subjects and IEMIS-coded subject labels passed');
+// Standalone assessment route is a sibling of Marks Entry and requires no marks or exams.
+assert.match(html,/<summary>[^\n]*Manage Exam<\/summary>[^\n]*data-page="cdc-assessment"/);
+assert.doesNotMatch(html,/id="openCdcAssessment"/);
+current.subjectAssignments=[{className:'Class 5',subject:'Mathematics',section:'A'},{className:'Class 9',subject:'Mathematics',section:'A'}];
+w.rolePageAllowed=page=>page==='cdc-assessment';
+w.getDocs=async request=>{
+  assert.equal(request.name,'students');
+  assert.deepEqual(Array.from(request.filters[0]),['class','==','Class 5']);
+  return {docs:[{id:'primary',data:()=>({class:'Class 5',section:'A',name:'Primary'})},{id:'other',data:()=>({class:'Class 5',section:'B',name:'Other'})}]};
+};
+const host=w.document.createElement('div');host.id='cdcAssessmentPage';w.document.body.append(host);
+await w.loadCdcAssessmentPage();
+assert.equal(host.querySelector('#cdcAssessmentDialog').tagName,'SECTION');
+assert.deepEqual([...field('class').options].map(o=>o.value),['5']);
+assert.deepEqual([...field('student').options].map(o=>o.value),['primary']);
+assert.equal(field('close').hidden,true);
+console.log('Standalone assessment navigation, primary-only assignment reads and inline display passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
