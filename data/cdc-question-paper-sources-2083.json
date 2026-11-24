@@ -485,6 +485,17 @@
       "status": "official_CDC_publication_page_only_grid_rows_not_transcribed",
       "url": "https://moecdc.gov.np/content/276/specialization-table-2081-work-conduct-and-accounting/",
       "note": "Official CDC publication page located. Complete PDF unit/cognitive marks and grade 9 model-question allocation not yet independently transcribed. Source listing is not an approved exact examination blueprint."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "historical_specification_grid_and_model_questions",
+      "version": "२०७८",
+      "status": "historical_CDC_government_pdf_75_marks_40_questions_2026_screenshot_timeout_2082_revised_grid_not_verified",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11167_Specification%20Grid%20%28Grade%209%29%20Compulsory%20Science%20and%20Technology_nk1kpta.pdf",
+      "note": "Original government PDF text examined: 75 marks, 40 questions (10 MCQ,9 very short,14 short,7 long), cognitive marks 12/22/22/19, 19 unit mark totals. Screenshot request timed out. CDC confirms the compulsory Grade9 Science Grid was revised for 2082, so this old layout is NOT an approved 2083 Exact blueprint."
     }
   ],
   "completion": {
@@ -505,7 +516,8 @@
     "optionalMath2082": "Official Grade 9/10 Optional Math source area totals and WCA/CCA composite question groups verified and bundled; exact automated grouped question generation pending. Not equivalent to simple MCQ/Short/Long.",
     "grade10OptionalMathModel2083": "Grade10 CDC 2083 publication confirmed. Secondary-hosted model PDF table compared against 2082 original government grid: all group counts, group marks, 6 area marks, cognitive percentage identical; original CDC 2083 PDF download not yet independently accessed. Printer follows CDC Q1(A-K), Q2-13, Q14-17.",
     "grade8ScienceModelArchive2078": "Model 2078 four-group format 50/30 documented from CDC catalog, municipality archive text and independent synopsis; 11 unit weights staged for comparative audit. Municipality archive text contains Grid 40 vs Model 50 inconsistency; direct 2082 CDC primary PDF not visually available. Grade8 existing 55-item bank has 22 1-mark MCQs, 22 5-mark short and 11 10-mark long (missing 8×1 very short, 8×2 short, 4×4 long). CDC Exact remains blocked pending reconciliation, teacher review and bank expansion.",
-    "grade9AllSubjects": "Nine-subject audit covers 5 compulsory subjects and 4 known electives (actual school electives must be checked against School Settings). Government pages found for Nepali/English/Math/Science/Social, 2081 Accounting, 2082 Optional Economics, Optional Mathematics and Optional Computer Science. Only Computer and Optional Maths Grid transcriptions bundled, both need proper reviewed paper banks and teacher testing. Never deploy Grade9 question-paper claims until gate closes."
+    "grade9AllSubjects": "Nine-subject audit covers 5 compulsory subjects and 4 known electives (actual school electives must be checked against School Settings). Government pages found for Nepali/English/Math/Science/Social, 2081 Accounting, 2082 Optional Economics, Optional Mathematics and Optional Computer Science. Only Computer and Optional Maths Grid transcriptions bundled, both need proper reviewed paper banks and teacher testing. Never deploy Grade9 question-paper claims until gate closes.",
+    "grade9ScienceArchivedGrid": "2078 archived CDC PDF transcribed for comparison: 75 marks, 40 items, 19 units. Original screenshot failed; 2082 revised Science Grid primary table remains unverified. Legacy Grid blocked from 2083 exact-paper generation."
   },
   "practicePacks": [
     {
