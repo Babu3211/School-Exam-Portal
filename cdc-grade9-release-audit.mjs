@@ -49,7 +49,11 @@ export function auditGrade9Release({
  const optional=new Set(GRADE9_OPTIONAL_SUBJECTS.map(x=>x.key));
  const offered=Array.isArray(offeredSubjects)?
   new Set(offeredSubjects.map(scopeKey).filter(Boolean)):null;
- const unknown=offered&&[...offered].filter(key=>!GRADES.some(s=>s.key===key));
+ const unknown=offeredSubjects&&[
+  ...offeredSubjects.map(String).map(name=>({name,key:scopeKey(name)}))
+   .filter(item=>!item.key||!GRADES.some(s=>s.key===item.key))
+   .map(item=>item.name)
+ ];
  const selected=GRADES.filter(s=>!optional.has(s.key)||!offered||offered.has(s.key));
  const checks=selected.map(s=>{
   const sources=findCdcGridSources(register,9,s.labelNe);
