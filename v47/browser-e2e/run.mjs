@@ -210,7 +210,14 @@ try{
    assert.equal(await legacy.getByRole('button').count(),0);
    assert.equal(await page.locator('#schools tr').filter({hasText:newSchoolId}).getByRole('button',{name:'Deactivate'}).count(),1);
    assert.equal((await db.doc('schools/legacy-browser-fixture').get()).data().active,true);
-   console.log('PASS Super Admin account creation, inactive registration, blocked inactive login, activation and new-school login; malformed legacy registry shown read-only');
+   // Simulate returning after a suspended one-hour browser tab.
+   await page.evaluate(()=>{const original=Date.now.bind(Date);Date.now=()=>original()+3600001;document.dispatchEvent(new Event('visibilitychange'));});
+   await wait(page,()=>document.getElementById('adminArea').hidden);
+   assert.equal(await page.locator('#schools tr').count(),0);
+   assert.equal(await page.locator('#superLoginFields').isVisible(),true);
+   await wait(page,()=>!document.getElementById('login').disabled);
+   assert.match(await page.locator('#message').textContent(),/१ घण्टा निष्क्रिय/);
+   console.log('PASS Super Admin account creation, inactive registration, blocked inactive login, activation and new-school login; malformed legacy registry shown read-only; idle session locked');
   }finally{await context.close()}
  }
  console.log('PASS real Chromium: 2 schools, 4 accounts, wrong-school login denied, shared session, Spark Grade Ledger, watermarked Grade Sheet, XLSX, logout; third school onboarding');

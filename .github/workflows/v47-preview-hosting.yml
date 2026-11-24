@@ -48,7 +48,7 @@ jobs:
         run: node v47/test-super-admin-session-guard.mjs
       - name: Enforce V47 marks publication safety
         run: node v47/test-production-marks-guard.mjs
-      # Gate single IEMIS input, school registry review and Super Admin onboarding on real browser testing.
+      # Gate Super Admin onboarding, single IEMIS input and one-hour idle logout on real browser testing.
       - name: Install Chromium E2E dependencies
         run: |
           npm install --no-package-lock --no-audit --no-fund --no-save firebase@11.10.0 esbuild@0.25.5 playwright@1.52.0

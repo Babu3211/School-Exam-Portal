@@ -69,4 +69,8 @@ assert(source.includes("if(sessionEpoch===mutationSession&&actor===mutationActor
 assert(source.includes("if(sessionEpoch===mutationSession&&actor===mutationActor&&auth?.currentUser?.uid===mutationActor.uid){button.disabled=false;"),"Do not re-enable stale activation button");
 assert(source.includes("if(sessionEpoch===mutationSession&&actor===mutationActor&&auth?.currentUser?.uid===mutationActor.uid){$('register').disabled=false;"),"Do not re-enable controls after logout");
 assert(source.includes("if(actor&&auth?.currentUser?.uid===actor.uid)showError(e)"),"Only show registration errors for current session");
+assert(source.includes("installIdleLogout({timeoutMs:60*60*1000"),"Super Admin idle timeout must be one hour");
+assert(source.includes("stopIdle?.();stopIdle=null;"),"Logout stops the idle guard");
+assert(source.includes("signingOut=true;$('login').disabled=true;clearAdmin();"),"Idle expiry immediately clears admin UI");
+assert(source.includes("await api.getDocsFromServer(api.query(api.collection(db,'schools'),api.limit(1)))"),"Super Admin privilege is checked on the server, never cached");
 console.log('PASS V47 Super Admin UID and school-list session guards');

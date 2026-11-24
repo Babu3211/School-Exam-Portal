@@ -1,3 +1,4 @@
+import {installIdleLogout} from './idle-logout.mjs';
 import {createIsolatedAdminAccount} from './first-admin-account.mjs';
 import {loadPlatformSchoolCounts} from './super-admin-dashboard.mjs';
 import {estimateSparkDay} from './spark-capacity.mjs';
@@ -9,8 +10,8 @@ const $=id=>document.getElementById(id);let auth,db,api,actor=null,cursor=null,m
 const status=message=>{$('message').textContent=message};
 const cleanAuthError=error=>{const message=error?.message;if(typeof message==='string'&&['विद्यालयको IEMIS Code ५–२० अङ्कको हुनुपर्छ।','School ID र IEMIS Code एउटै हुनुपर्छ।','विद्यालयको नाम ३–१६० अक्षरको हुनुपर्छ।','Admin UID मान्य छैन।'].includes(message))return message;const code=String(error?.code??'');if(code==='auth/invalid-credential'||code==='auth/wrong-password'||code==='auth/user-not-found')return 'V47 Email वा Password मिलेन। V47 Authentication मा खाता दर्ता भएको जाँच्नुहोस्।';if(code==='auth/operation-not-allowed')return 'V47 Firebase Authentication मा Email/Password sign-in सक्षम गर्नुपर्छ।';if(code==='auth/user-disabled')return 'यो V47 खाता निष्क्रिय छ। Firebase project owner लाई सम्पर्क गर्नुहोस्।';if(code==='auth/network-request-failed')return 'Internet वा Firebase जडान असफल भयो। पुनः प्रयास गर्नुहोस्।';if(code.startsWith('auth/'))return 'प्रमाणीकरण असफल भयो। Email, Password वा अनुमति जाँच्नुहोस्।';if(code==='permission-denied'||code==='firestore/permission-denied')return 'अनुमति छैन। Super Admin अधिकार जाँच्नुहोस्।';if(code==='unavailable'||code==='firestore/unavailable')return 'सेवा अहिले उपलब्ध छैन। पुनः प्रयास गर्नुहोस्।';return 'अनुरोध पूरा भएन। विवरण जाँचेर पुनः प्रयास गर्नुहोस्।';};
 const showError=error=>status(cleanAuthError(error));
-let countsEpoch=0;
-function clearAdmin(){$('newAdminPassword').value='';$('newAdminEmail').value='';$('adminUid').value='';$('accountStatus').textContent='';$('newAdminAccount').open=false;countsEpoch++;$('platformCounts').textContent='School counts not loaded.';$('quotaResult').textContent='';sessionEpoch++;refreshEpoch++;actor=null;cursor=null;document.body.classList.remove('super-verified');$('superLoginFields').hidden=false;$('logout').hidden=true;$('adminArea').hidden=true;$('logout').disabled=true;$('identity').textContent='साइन इन भएको छैन';$('schools').replaceChildren();$('next').disabled=true;$('next').onclick=null;}
+let countsEpoch=0,stopIdle=null,signOutForIdle=null;
+function clearAdmin(){stopIdle?.();stopIdle=null;$('newAdminPassword').value='';$('newAdminEmail').value='';$('adminUid').value='';$('accountStatus').textContent='';$('newAdminAccount').open=false;countsEpoch++;$('platformCounts').textContent='School counts not loaded.';$('quotaResult').textContent='';sessionEpoch++;refreshEpoch++;actor=null;cursor=null;document.body.classList.remove('super-verified');$('superLoginFields').hidden=false;$('logout').hidden=true;$('adminArea').hidden=true;$('logout').disabled=true;$('identity').textContent='साइन इन भएको छैन';$('schools').replaceChildren();$('next').disabled=true;$('next').onclick=null;}
 const firebaseBase='https://www.gstatic.com/firebasejs/11.10.0/';
 $('connect').onclick=async()=>{if(connecting||db)return;connecting=true;$('connect').disabled=true;$('connect').hidden=true;try{
  const config=V47_FIREBASE_CONFIG;
@@ -33,7 +34,7 @@ $('connect').onclick=async()=>{if(connecting||db)return;connecting=true;$('conne
   $('accountStatus').textContent='Creating account…';
   try{
    const result=await createIsolatedAdminAccount({appSdk,authSdk,config,actor:selected,email,password,assertCurrent:()=>{if(!current())throw Error('Session changed')},
-    verifyPrivilege:()=>api.getDocs(api.query(api.collection(db,'schools'),api.limit(1)))});
+    verifyPrivilege:()=>api.getDocsFromServer(api.query(api.collection(db,'schools'),api.limit(1)))});
    if(!current())return;
    $('adminUid').value=result.uid;
    $('accountStatus').textContent='V47 account created. UID filled. Register the school inactive, then activate after verifying the school.';
@@ -42,14 +43,23 @@ $('connect').onclick=async()=>{if(connecting||db)return;connecting=true;$('conne
  };
 
  $('login').onclick=async()=>{if(signingIn||signingOut||mutating)return;signingIn=true;$('login').disabled=true;try{await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);$('password').value='';await verifyAdmin();}catch(e){clearAdmin();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}showError(e)}finally{$('password').value='';signingIn=false;$('login').disabled=false}};
+ signOutForIdle=()=>authSdk.signOut(auth);
  $('logout').onclick=async()=>{if(mutating||signingIn||signingOut){status('हालको प्रक्रिया पूरा नभएसम्म पर्खनुहोस्।');return}signingOut=true;$('logout').disabled=true;try{await authSdk.signOut(auth);clearAdmin();status('सफलतापूर्वक साइन आउट भयो।')}catch(e){showError(e)}finally{signingOut=false;if(actor)$('logout').disabled=false}};
  status('जडान भयो। अधिकृत Super Admin बाट साइन इन गर्नुहोस्।');
  }catch(e){db=null;auth=null;api=null;showError(e);$('connect').disabled=false;$('connect').hidden=false}finally{connecting=false}};
 async function verifyAdmin(){clearAdmin();const uid=auth.currentUser?.uid,verificationSession=sessionEpoch;if(!uid)throw new Error('पहिले साइन इन गर्नुहोस्।');
  // This document is intentionally client-unreadable: authorization is verified by a harmless scoped query.
- await api.getDocs(api.query(api.collection(db,'schools'),api.limit(1)));
+ await api.getDocsFromServer(api.query(api.collection(db,'schools'),api.limit(1)));
  if(sessionEpoch!==verificationSession||auth.currentUser?.uid!==uid)throw new Error('Super Admin पुष्टि भइरहँदा सत्र परिवर्तन भयो।');
- actor={active:true,role:'super_admin',uid};document.body.classList.add('super-verified');$('superLoginFields').hidden=true;$('logout').hidden=false;$('identity').textContent='प्रमाणित Super Admin: '+uid;$('logout').disabled=false;$('adminArea').hidden=false;status('Super Admin को अनुमति पुष्टि भयो।');await refresh();void refreshCounts();}
+ actor={active:true,role:'super_admin',uid};document.body.classList.add('super-verified');$('superLoginFields').hidden=true;$('logout').hidden=false;$('identity').textContent='प्रमाणित Super Admin: '+uid;$('logout').disabled=false;$('adminArea').hidden=false;status('Super Admin को अनुमति पुष्टि भयो।');
+ stopIdle=installIdleLogout({timeoutMs:60*60*1000,onTimeout:()=>{
+  // Lock and clear the UI synchronously even if a request is in flight.
+  // Epoch checks prevent delayed responses from restoring this expired session.
+  signingOut=true;$('login').disabled=true;clearAdmin();$('email').value='';$('password').value='';
+  status('१ घण्टा निष्क्रिय भएकाले सत्र बन्द भयो। फेरि Login गर्नुहोस्।');
+  void Promise.resolve().then(()=>signOutForIdle()).catch(()=>status('सत्रको UI बन्द भयो; Firebase sign-out पुष्टि हुन सकेन। पेज पुनः खोल्नुहोस्।')).finally(()=>{signingOut=false;$('login').disabled=false});
+ }});
+ await refresh();void refreshCounts();}
 async function refreshCounts(){
  const selected=actor,request=++countsEpoch;
  if(!selected)return;
