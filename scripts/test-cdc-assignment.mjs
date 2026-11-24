@@ -1046,7 +1046,7 @@ for(const grade of ['1','2','3','4','5']){
  assert.equal(rows.length,({'1':11,'2':10,'3':10,'4':16,'5':17})[grade]);
 }
 choice('summaryClass','4');choice('summarySubject','english');
-assert.equal(summaryRows().find(row=>row.cells[1]?.textContent.includes('Describing Location')).cells[3].textContent,'20');
+assert.equal(summaryRows().find(row=>row.cells[1]?.textContent==='Unit 7: Locations').cells[3].textContent,'20');
 choice('summaryClass','5');choice('summarySubject','hamrodhunibeshi');
 assert.match(field('themeSummaryRows').textContent,/Source catalogue is not yet available/);
 assert.equal(field('class').value,entryClassBefore);
