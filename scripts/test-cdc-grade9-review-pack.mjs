@@ -23,7 +23,7 @@ const refs=[
  ['English',a=>[...grade9EnglishReferenceBank(a).questions.filter(q=>q.slot!=='reading2'),...grade9EnglishPracticeReading2(a)],'en',180,10],
  ['Mathematics',a=>grade9CompulsoryMathReferenceBank(a).questions,'both',180,16],
  ['Science and Technology',a=>grade9ScienceSchoolReferenceBank(a).questions,'both',180,40],
- ['Social Studies',a=>grade9SocialReferenceBank(a).questions,'both',180,24],
+ ['Social Studies',a=>grade9SocialReferenceBank(a).questions,'ne',180,24],
  ['Environmental Science',a=>grade9EnvironmentReferenceBank(a).questions,'both',135,22]
 ];
 for(const [subject,provider,language,durationMinutes,count] of refs){
@@ -37,6 +37,12 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
   assert.equal(result.readyForLive,false);assert.notEqual(result.signature,previousSignature);
   assert.match(result.text,/REFERENCE DRAFT — NOT FOR EXAM/);
   assert.match(result.answerText,/INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY/);
+  if(subject==='Social Studies'){
+   assert.match(result.text,/कक्षा ९ · सामाजिक अध्ययन/);
+   assert.doesNotMatch(result.text,/Option A:|OR \/ अथवा B:/);
+   assert.doesNotMatch(result.text,/[0-9]/);
+  }
+  if(subject==='English')assert.match(result.text,/सामान्य निर्देशन: प्रश्न ध्यानपूर्वक पढ्नुहोस्/);
   assert.ok(result.answerCount>=count,subject+' answer coverage');
   assert.doesNotMatch(result.answerText,/\bundefined\b/);
   previousSignature=result.signature;

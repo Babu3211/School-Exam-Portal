@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v111-paper-schematic-figures';
+const CACHE_NAME = 'smss-pwa-v112-grade9-language-policy';
 const APP_SHELL = [
   './',
   './index.html',

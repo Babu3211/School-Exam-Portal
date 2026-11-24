@@ -37,6 +37,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  const lines=['REFERENCE DRAFT — NOT FOR EXAM / सन्दर्भ समीक्षा मात्र',language==='ne'?'कक्षा ९ · '+paperSubjectLabel(subject,language)+' · पूर्णाङ्क: '+p.fullMarks+' · समय: '+p.durationMinutes+' मिनेट':'Grade 9 · '+subject+' · '+p.fullMarks+' marks · '+p.durationMinutes+' minutes','Current CDC Grid approval and teacher review pending.',result.referenceLabel||'',''];
  const answers=['INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY / उत्तरकुञ्जिका समीक्षा मात्र',(language==='ne'?'कक्षा ९ · '+paperSubjectLabel(subject,language):'Grade 9 · '+subject),'Not an official CDC marking scheme. Review model answers and partial credit before use.',''];
  const figures=[];
+ if(key==='english')lines.push('सामान्य निर्देशन: प्रश्न ध्यानपूर्वक पढ्नुहोस्। तोकिएको अङ्क र निर्देशनअनुसार उत्तर अङ्ग्रेजीमा लेख्नुहोस्।','General instructions: Read each question carefully and answer in English as directed.','');
  let answerCount=0;
  const answer=(label,value,marks)=>{
   const text=String(value??'').trim();
@@ -69,7 +70,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   if(g.questionType==='mcq')for(const [j,o] of (g.options||[]).entries())lines.push('  '+paperOptionLabel(j,language)+'. '+choose(o,g.optionsEn?.[j]));
   if(Array.isArray(g.mapChoices)){
    for(const [j,c] of g.mapChoices.entries()){
-    lines.push((j===0?'Option A: ':'OR / अथवा B: ')+choose(c.textNe,c.textEn)+' [7]');
+    lines.push((language==='ne'?(j===0?'विकल्प क: ':'अथवा ख: '):(j===0?'Option A: ':'OR / अथवा B: '))+choose(c.textNe,c.textEn)+' [7]');
     answer((i+1)+'.'+paperOptionLabel(j,language),choose(c.answerNe,c.answerEn)+' — '+c.labels.map(l=>choose(l.ne,l.en)).join('; '),7);
    }
   }else if(!parts.length){

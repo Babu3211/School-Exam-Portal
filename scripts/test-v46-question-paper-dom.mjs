@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {JSDOM} from 'jsdom';
+import {grade9RequiredPaperLanguage} from '../cdc-grid-source-index.mjs';
 import {paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS,buildQuestionPaperDocx,questionFigure} from '../cdc-optional-math-render.mjs';
 import {readBundledScienceBank,buildAutomaticQuestionPaper,cognitiveMarkDistribution} from '../cdc-question-autogen.mjs';
 const source=readFileSync(new URL('../cdc-question-paper.js',import.meta.url),'utf8');
@@ -23,6 +24,16 @@ for(const id of ['qpClass','qpSubject','qpSection','qpPaperFullMarks','qpAutoLan
  'qpBpGridExcelTemplateBtn','qpBpGridExcelFile','qpBpGridFile'])
  assert.ok($(id),'Expected actual DOM control '+id);
 assert.deepEqual([...$('qpAutoLanguage').options].map(x=>x.value),['ne','en','both']);
+const policyHarness=new Function('$','grade9RequiredPaperLanguage','gradeNumber','selectedClass','selectedSubject',code('function applyGrade9LanguagePolicy()','function selectedTopicIds()')+'return applyGrade9LanguagePolicy;');
+for(const [subject,expected] of [['Social Studies','ne'],['Nepali','ne'],['Mathematics','both'],['Science and Technology','both'],['English','en']]){
+ policyHarness($,grade9RequiredPaperLanguage,()=>9,'Class 9',subject)();
+ assert.equal($('qpAutoLanguage').value,expected);
+ assert.equal($('qpAutoLanguage').disabled,true);
+ assert.deepEqual([...$('qpAutoLanguage').options].filter(x=>!x.disabled).map(x=>x.value),[expected]);
+}
+policyHarness($,grade9RequiredPaperLanguage,()=>10,'Class 10','Science and Technology')();
+assert.equal($('qpAutoLanguage').disabled,false);
+assert.ok([...$('qpAutoLanguage').options].every(x=>!x.disabled));
 assert.equal($('qpSourceDetails').open,false,'Long CDC source lists should be collapsed by default');
 assert.equal($('qpManualQuestions').open,false,'No typing required for the teacher default path');
 assert.ok($('qpQuestionForm'),'Existing manual bank form must be preserved for admins');
@@ -427,7 +438,7 @@ assert.notEqual(repeatNodes[0].value,repeatNodes[1].value);
 console.log('PASS V46 DOM auto question paper: class 10, unit choices, bilingual, review gate, random practice and topic-unit isolation');
 
  // Exercise the real reference UI functions with the actual page shell.
- const referenceHarness=new Function('$',`
+ const referenceHarness=new Function('$','grade9RequiredPaperLanguage',`
  const auth={currentUser:{uid:'teacher-synthetic'}};
  let selectedClass='Class 9',selectedSubject='Science and Technology',selectedSection='A',questionDataLoadEpoch=1;
  let verifiedQuestionSelection={className:selectedClass,subject:selectedSubject,section:selectedSection,request:1};
@@ -438,7 +449,8 @@ console.log('PASS V46 DOM auto question paper: class 10, unit choices, bilingual
  const invalidateGeneratedQuestionPaper=()=>{for(const id of ['qpSavePaperBtn','qpPrintPaperBtn','qpAnswerKeyBtn'])$(id).disabled=true;};
  `+code('const referencePreviewHistory=new Map();','async function generateSmartPaper()')+`
  return {generate:generateReferenceDraftPreview,clear:clearReferenceDraftPreview,fail:()=>{next={ready:false,reason:'Insufficient topics'};},logout:()=>{auth.currentUser=null;}};
- `)($);
+ `)($,grade9RequiredPaperLanguage);
+ $('qpAutoLanguage').value='both';
  assert.ok($('qpReferenceAnswerReview').hidden);
  referenceHarness.generate();
  assert.equal($('qpReferenceAnswerReview').hidden,false);

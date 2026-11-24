@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {cdcSubjectKey,findCdcGridSources} from '../cdc-grid-source-index.mjs';
+import {cdcSubjectKey,findCdcGridSources,grade9RequiredPaperLanguage} from '../cdc-grid-source-index.mjs';
 const register=JSON.parse(readFileSync(new URL(
  '../data/cdc-question-paper-sources-2083.json',import.meta.url),'utf8'));
 const examples=[
@@ -82,3 +82,11 @@ for(const s of retrieved){
  assert.ok(findCdcGridSources(register,9,s.subject).some(x=>x.sourceUrl===s.url&&x.sourceOnly&&!x.verifiedGridRows));
 }
 console.log('PASS five full government PDF retrieval fingerprints; source evidence only, no automatic approval');
+
+assert.equal(cdcSubjectKey('Computer Science'),'optional_computer');
+for(const subject of ['Nepali','नेपाली','Social Studies','सामाजिक अध्ययन','हाम्रो सेरोफेरो'])assert.equal(grade9RequiredPaperLanguage(9,subject),'ne');
+for(const subject of ['Mathematics','Science and Technology','Optional Mathematics','Computer Science','Environmental Science','Economics'])assert.equal(grade9RequiredPaperLanguage(9,subject),'both');
+assert.equal(grade9RequiredPaperLanguage(9,'English'),'en');
+assert.equal(grade9RequiredPaperLanguage(10,'Social Studies'),null);
+assert.equal(grade9RequiredPaperLanguage(9,''),null);
+console.log('PASS Grade 9 school language policy and existing grades preserved');

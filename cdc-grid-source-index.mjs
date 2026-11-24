@@ -17,8 +17,9 @@ export function cdcSubjectKey(subject){
   if(/(computer|कम्प्युटर|कम्प्यूटर)/.test(s))return 'optional_computer';
   if(/(econom|अर्थशास्त्र)/.test(s))return 'optional_economics';
  }
+ if(/(computer|कम्प्युटर|कम्प्यूटर)/.test(s))return 'optional_computer';
  if(/(science|विज्ञान)/.test(s))return 'science';
- if(/(social|सामाजिक)/.test(s))return 'social';
+ if(/(social|सामाजिक|hamro sero fero|हाम्रो सेरोफेरो|हाम्रो सेरो फेरो)/.test(s))return 'social';
  if(/(health|physical|स्वास्थ्य|शारीरिक)/.test(s))return 'health';
  if(/(math|गणित)/.test(s))return 'math';
  if(/(english|अंग्रेजी|अङ्ग्रेजी)/.test(s))return 'english';
@@ -65,4 +66,13 @@ export function findCdcGridSources(register,grade,subject){
  const seen=new Set();
  return results.filter(s=>{if(seen.has(s.sourceUrl))return false;
   seen.add(s.sourceUrl);return true});
+}
+
+// School language policy for NEW Grade 9 papers. Keep the tested English
+// reading/writing/grammar assessment itself in English, with Nepali support
+// instructions. Other grades and historical saved documents are untouched.
+export function grade9RequiredPaperLanguage(grade,subject){
+ if(Number(grade)!==9||!String(subject||'').trim())return null;
+ const key=cdcSubjectKey(subject);
+ return key==='nepali'||key==='social'?'ne':key==='english'?'en':'both';
 }
