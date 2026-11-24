@@ -1,3 +1,6 @@
+import {readV47StudentXlsx} from './read-v47-student-xlsx.mjs';
+import {excelWorkbook} from './excel-workbook.mjs';
+import {TEACHER_ACCOUNT_HEADERS,MAX_TEACHER_ACCOUNTS,validateTeacherAccountRows,provisionTeacherAccountBatch} from './teacher-account-excel.mjs';
 import {createIsolatedSchoolMemberAccount} from './first-admin-account.mjs';
 import {V47_FIREBASE_CONFIG} from './v47-firebase-config.mjs';
 import {neError} from './nepali-feedback.mjs';
@@ -14,7 +17,7 @@ import {createTeacherAssignment,setTeacherAssignmentActive} from './teacher-assi
 import {validateSchoolId} from './school-paths.mjs';
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 const $=id=>document.getElementById(id);const status=msg=>{$('message').textContent=msg};let auth,authSdk,db,api,actor=null,schoolId=null,sessionEpoch=0,busy=false,loggingIn=false,signingOut=false,memberCursor=null,memberHasMore=false,memberLoading=false,memberRequest=0,memberRefreshPending=false,foundMember=null,lookupRequest=0,snapshotBusy=false;
-function clearMemberAccount(){for(const id of ['newMemberEmail','newMemberPassword','memberUid'])$(id).value='';$('memberAccountStatus').textContent='';$('newMemberAccount').open=false;}
+function clearMemberAccount(){for(const id of ['newMemberEmail','newMemberPassword','memberUid'])$(id).value='';$('memberAccountStatus').textContent='';$('newMemberAccount').open=false;clearTeacherBatch();}
 function requireCurrentAdmin(){if(!actor||actor.role!=='school_admin'||actor.active!==true||actor.schoolId!==schoolId||auth?.currentUser?.uid!==actor.uid)throw new Error('विद्यालय प्रशासकको सत्र समाप्त भयो। फेरि लगइन गर्नुहोस्।');return {actor,schoolId,epoch:sessionEpoch}}
 function assertSameAdmin(session){requireCurrentAdmin();if(session.epoch!==sessionEpoch||session.actor!==actor||session.schoolId!==schoolId)throw new Error('School session changed; retry after sign in')}
 $('connect').onclick=async()=>{try{({auth,authSdk,db,api}=await connectSchoolFirebase());authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clearMemberAccount();sessionEpoch++;memberRequest++;memberRefreshPending=false;lookupRequest++;foundMember=null;$('toggleFoundMember').disabled=true;$('memberLookupResult').textContent='';memberCursor=null;memberHasMore=false;$('moreMembers').disabled=true;actor=null;$('schoolArea').hidden=true;$('logout').disabled=true;status('Login परिवर्तन भयो। School Admin फेरि प्रमाणित गर्नुहोस्।')}});$('connect').disabled=true;$('login').disabled=false;if(requestedSchool){$('schoolId').value=validateSchoolId(requestedSchool);if(auth.currentUser)queueMicrotask(()=>$('login').click())}status('V47 मा जडान भयो।')}catch(e){status(neError(e))}};
@@ -171,5 +174,99 @@ $('exportSchoolSnapshot').onclick=async()=>{
   }
  }
 };
+
+
+let teacherBatchEpoch=0,teacherBatchRows=null,teacherBatchSession=null;
+function clearTeacherBatch(){
+ teacherBatchEpoch++;teacherBatchRows=null;teacherBatchSession=null;
+ if(!$('teacherBatchFile'))return;
+ $('teacherBatchFile').value='';$('teacherBatchRows').replaceChildren();
+ $('teacherBatchStatus').textContent='';$('teacherBatchCreate').disabled=true;
+ $('teacherBatchPreview').disabled=false;$('teacherBatchFile').disabled=false;
+}
+function renderTeacherBatchRow(row){
+ const tr=document.createElement('tr');
+ for(const value of [row.row,row.name,row.email,row.uid??'',row.status==='inactive'?'निष्क्रिय सदस्यता बन्यो':row.status==='check'?'खाता र सदस्यता जाँच्नुहोस्':'तयार']){
+  const td=document.createElement('td');td.textContent=String(value);tr.append(td);
+ }
+ return tr;
+}
+if($('teacherBatchFile')){
+ $('teacherBatchFile').onchange=()=>{
+  teacherBatchEpoch++;teacherBatchRows=null;teacherBatchSession=null;
+  $('teacherBatchRows').replaceChildren();$('teacherBatchStatus').textContent='';
+  $('teacherBatchCreate').disabled=true;$('teacherBatchPreview').disabled=false;
+ };
+ $('teacherBatchSample').onclick=()=>{
+  if(!actor||busy||loggingIn||signingOut)return;
+  try{
+   requireCurrentAdmin();
+   const blob=excelWorkbook(TEACHER_ACCOUNT_HEADERS,[['','','']],{sheetName:'Teacher_Accounts'});
+   const url=URL.createObjectURL(blob),a=document.createElement('a');
+   try{a.href=url;a.download='smss-v47-teacher-accounts.xlsx';document.body.append(a);a.click()}
+   finally{a.remove();URL.revokeObjectURL(url)}
+  }catch{$('teacherBatchStatus').textContent='Excel नमुना तयार भएन।'}
+ };
+ $('teacherBatchPreview').onclick=async()=>{
+  if(!actor||busy||loggingIn||signingOut)return;
+  const file=$('teacherBatchFile').files?.[0],attempt=++teacherBatchEpoch;
+  teacherBatchRows=null;teacherBatchSession=null;$('teacherBatchCreate').disabled=true;
+  $('teacherBatchRows').replaceChildren();$('teacherBatchPreview').disabled=true;
+  const session=requireCurrentAdmin();
+  const check=()=>{assertSameAdmin(session);if(attempt!==teacherBatchEpoch)throw Error('Excel परिवर्तन भयो।')};
+  try{
+   if(!file||!file.name.toLowerCase().endsWith('.xlsx'))throw Error('मान्य .xlsx फाइल छान्नुहोस्।');
+   if(!await enforceSchoolIdle(auth,authSdk))throw Error('Login समय समाप्त भयो।');
+   check();
+   const rows=validateTeacherAccountRows(await readV47StudentXlsx(file,{columns:3,maxDataRows:MAX_TEACHER_ACCOUNTS}));
+   check();
+   teacherBatchRows=rows;teacherBatchSession=session;
+   for(const row of rows)$('teacherBatchRows').append(renderTeacherBatchRow({row:row.row,name:row.name,email:row.email}));
+   $('teacherBatchStatus').textContent=rows.length+' शिक्षकको विवरण तयार भयो। कुनै खाता बनेको छैन।';
+   $('teacherBatchCreate').disabled=false;
+  }catch(e){if(attempt===teacherBatchEpoch)$('teacherBatchStatus').textContent='Excel पूर्वावलोकन असफल। शीर्षक, फाइल, इमेल र पासवर्ड जाँच्नुहोस्। '+(e?.message?.startsWith('पङ्क्ति ')?e.message:'')}
+  finally{if(attempt===teacherBatchEpoch){$('teacherBatchFile').value='';$('teacherBatchPreview').disabled=false}}
+ };
+ $('teacherBatchCreate').onclick=async()=>{
+  if(!actor||busy||loggingIn||signingOut||!teacherBatchRows||!teacherBatchSession)return;
+  const session=teacherBatchSession,rows=teacherBatchRows,attempt=teacherBatchEpoch;
+  const check=()=>{assertSameAdmin(session);if(attempt!==teacherBatchEpoch)throw Error('Excel परिवर्तन भयो।')};
+  try{check()}catch{clearTeacherBatch();return}
+  if(!confirm(session.schoolId+' विद्यालयका '+rows.length+' शिक्षकको नयाँ खाता र निष्क्रिय सदस्यता बनाउने हो? पहिलेदेखिको खातालाई परिवर्तन गरिँदैन।'))return;
+  teacherBatchRows=null;teacherBatchSession=null;busy=true;
+  const controls=['teacherBatchCreate','teacherBatchPreview','teacherBatchFile','teacherBatchSample','createMemberAccount','add','role','login','logout'];
+  for(const id of controls)$(id).disabled=true;
+  $('memberUid').value='';$('newMemberPassword').value='';
+  $('teacherBatchRows').replaceChildren();
+  $('teacherBatchStatus').textContent='शिक्षक खाता सिर्जना हुँदैछ…';
+  const verifyPrivilege=async()=>{
+   if(!await enforceSchoolIdle(auth,authSdk))throw Error('Login expired');
+   check();
+   const membership=await verifySchoolSession({schoolId:session.schoolId,uid:session.actor.uid,readDocument:async path=>{
+    check();const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));check();return snap.exists()?snap.data():null;
+   }});
+   check();if(membership.role!=='school_admin')throw Error('School Admin permission required');
+  };
+  try{
+   const appSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js');
+   check();
+   const result=await provisionTeacherAccountBatch({rows,actor:session.actor,schoolId:session.schoolId,assertCurrent:check,verifyPrivilege,
+    createAccount:({email,password,role})=>createIsolatedSchoolMemberAccount({appSdk,authSdk,config:V47_FIREBASE_CONFIG,actor:session.actor,schoolId:session.schoolId,role,email,password,assertCurrent:check,verifyPrivilege}),
+    addMember:({uid,role})=>addSchoolMember({db,api,actor:session.actor,schoolId:session.schoolId,uid,role}),
+    onResult:row=>{check();$('teacherBatchRows').append(renderTeacherBatchRow(row))}
+   });
+   check();
+   $('teacherBatchStatus').textContent=result.created+' निष्क्रिय सदस्यता बन्यो। '+(result.stopped?'प्रक्रिया रोकियो। '+result.remaining+' पङ्क्ति बाँकी छन्। पुनः प्रयास गर्नुअघि Firebase खाता र सदस्यता जाँच्नुहोस्।':'सदस्यता प्रमाणित गरेर अलग्गै सक्रिय गर्नुहोस्।');
+   await refresh();
+  }catch{
+   if(attempt===teacherBatchEpoch&&actor===session.actor)$('teacherBatchStatus').textContent='प्रक्रिया रोकियो। केही खाता बनिसकेको हुन सक्छ; पुनः प्रयास गर्नुअघि Firebase Authentication र सदस्यता जाँच्नुहोस्।';
+  }finally{
+   busy=false;
+   for(const id of controls)$(id).disabled=false;
+   $('teacherBatchCreate').disabled=true;
+   $('logout').disabled=!actor;
+  }
+ };
+}
 
 if(requestedSchool)queueMicrotask(()=>$('connect').click());
