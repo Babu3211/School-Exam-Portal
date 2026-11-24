@@ -636,7 +636,11 @@ const beforePreview=observations.size;
 await w.loadCdcAssessmentPage();
 for(const [unit,count,page,editable] of [
  ['म र मेरो परिवार',8,103,true],['मेरो दैनिक जीवन',12,104,true],
- ['हाम्रो समुदाय',13,105,false],['हाम्रो विद्यालय',13,106,false]
+ ['हाम्रो समुदाय',13,105,false],['हाम्रो विद्यालय',13,106,false],
+ ['हाम्रो वातावरण',14,107,true],['मेरो सिर्जना',14,108,false],
+ ['बोध र वाणी',15,109,false],['हाम्रो संस्कृति',15,110,true],
+ ['सूचना प्रविधि र बजार',15,111,false],['हाम्रो क्रियाकलाप',15,112,false],
+ ['हाम्रो वरपरको संसार',16,113,false]
 ]){
  choice('unit',unit);
  assert.equal(field('annex3').hidden,false,unit);
@@ -648,6 +652,18 @@ for(const [unit,count,page,editable] of [
  assert.equal(field('annexRows').querySelectorAll('button,input,select,textarea').length,0);
 }
 assert.equal(observations.size,beforePreview);
+choice('unit','हाम्रो वातावरण');
+assert.match(field('annexRows').rows[4].cells[0].textContent,/क वर्ण/);
+choice('unit','बोध र वाणी');
+assert.equal(field('annexUnit').textContent,'रुचि र बानी');
+assert.match(field('annexRows').rows[4].cells[0].textContent,/ञ/);
+choice('unit','सूचना प्रविधि र बजार');
+assert.equal(field('annexUnit').textContent,'सञ्चार प्रविधि र बजार');
+choice('unit','हाम्रो क्रियाकलाप');
+assert.equal(field('annexUnit').textContent,'हाम्रा क्रियाकलाप');
+assert.match(field('annexRows').rows[8].cells[0].textContent,/ध्वनि/);
+choice('unit','हाम्रो वरपरको संसार');
+assert.match(field('annexRows').rows[5].cells[0].textContent,/संयुक्त/);
 choice('unit','मेरो दैनिक जीवन');
 await field('gridRead').onclick();
 assert.match(field('schoolStatus').textContent,/अवलोकन|अभिलेख छैन/);
@@ -668,6 +684,6 @@ await w.loadCdcAssessmentPage();
 choice('unit','म र मेरो परिवार');
 assert.equal(field('annex3').hidden,true);
 assert.equal(observations.size,beforePreview+1);
-console.log('Grade 1 Nepali four themes, 46 outcomes, safe stage entry, source review and year isolation passed');
+console.log('Grade 1 Nepali eleven themes, 150 outcome rows, safe stage entry, source review and year isolation passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
