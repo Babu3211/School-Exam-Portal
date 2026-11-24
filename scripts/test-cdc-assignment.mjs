@@ -1037,11 +1037,25 @@ assert.equal(field('themeSummaryFoot').rows[0].cells[3].textContent,'१०८')
 assert.equal(field('themeSummaryRows').rows.length,10);
 assert.equal(field('seroCurriculumReference').hidden,false);
 assert.match(field('seroCurriculumTotal').textContent,/कक्षा १.*२५/);
+// The 2082 revised curriculum is a separate 2084 reference, not a source of
+// 2083 marks. Verify all twenty pending theme rows, not just the first grade.
 for(const grade of ['2','3']){
  choice('summaryClass',grade);choice('summarySubject','serophero');
  assert.equal(field('seroCurriculumReference').hidden,false);
  assert.match(field('seroCurriculumTotal').textContent,/२५/);
- assert.ok(summaryRows().every(row=>row.cells[3].textContent==='—'));
+ const pending=summaryRows();
+ assert.equal(pending.length,10,'All ten 2083 themes must remain visible for Class '+grade);
+ assert.equal(new Set(pending.map(row=>row.cells[1].textContent.trim())).size,10);
+ for(const row of pending){
+  assert.equal(row.cells[2].textContent,'—','Do not substitute curriculum or 2084 counts');
+  assert.equal(row.cells[3].textContent,'—','Unverified full marks must stay unknown');
+ }
+ assert.equal(coverageRow(grade,'serophero').cells[2].textContent,'० / १०');
+ assert.equal(coverageRow(grade,'serophero').cells[3].textContent,'—');
+ assert.equal(coverageRow(grade,'serophero').cells[4].textContent,'—');
+ assert.equal(field('class').value,entryClassBefore);
+ assert.equal(field('subject').value,entrySubjectBefore);
+ assert.equal(field('student').value,entryStudentBefore);
 }
 choice('summaryClass','1');choice('summarySubject','english');
 assert.equal(field('seroCurriculumReference').hidden,true);
