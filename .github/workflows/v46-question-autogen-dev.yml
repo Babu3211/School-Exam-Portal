@@ -36,6 +36,7 @@ on:
       - 'cdc-grade9-english-seen-reference.mjs'
       - 'cdc-grade9-english-seen-prose-data.mjs'
       - 'scripts/test-cdc-grade9-english-seen-prose.mjs'
+      - 'scripts/prepare-grade9-seen-prose.py'
       - 'scripts/test-cdc-grade9-english-reference-bank.mjs'
       - 'cdc-grade9-compulsory-math-grouped.mjs'
       - 'cdc-grade9-compulsory-math-reference-bank.mjs'

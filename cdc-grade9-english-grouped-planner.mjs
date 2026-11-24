@@ -25,7 +25,7 @@ const writingGenres=[
 ];
 const slotNames=['reading1','reading2','reading3','reading4','writing1','writing2','writing3','writing4','transformation','contextual_mcq'];
 const cleanEnglish=x=>!!str(x)&&/[A-Za-z]/.test(x)&&!/\p{Script=Devanagari}/u.test(x);
-const sourceOK=q=>q.sourceKind==='textbook'&&str(q.sourceTitle)&&str(q.sourceEdition)&&Number.isSafeInteger(q.sourcePage)&&q.sourcePage>0&&/^https:\/\/(?:www\.|lib\.)?moecdc\.gov\.np\/|^https:\/\/giwmscdn(?:one|two)\.gov\.np\//i.test(str(q.sourceUrl));
+const sourceOK=q=>q.sourceKind==='textbook'&&str(q.sourceTitle)&&str(q.sourceEdition)&&Number.isSafeInteger(q.sourcePage)&&q.sourcePage>0&&/^https:\/\/(?:www\.|lib\.)?moecdc\.gov\.np\/|^https:\/\/giwmscdn(?:one|two)\.gov\.np\/|^https:\/\/learning\.cehrd\.gov\.np\/moodle\/pluginfile\.php\/188\/mod_resource\/content\/2\/English%20grade%209\.pdf$/i.test(str(q.sourceUrl));
 const fourOptions=q=>Array.isArray(q.options)&&q.options.length===4&&q.options.every(cleanEnglish)&&new Set(q.options.map(norm)).size===4&&['A','B','C','D'].includes(q.correctOption)&&norm(q.answer)===norm(q.options['ABCD'.indexOf(q.correctOption)]);
 // The chart says "about" a word count, not a precise tolerance. ±25% is an
 // explicit SMSS editorial filter, not an additional claimed CDC rule.

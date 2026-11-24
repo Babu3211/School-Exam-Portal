@@ -16,7 +16,7 @@ jobs:
   prepare:
     if: github.ref == 'refs/heads/feat/v46-question-autogen-grid-safe-2083'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
         with:
@@ -25,7 +25,9 @@ jobs:
         with:
           node-version: '22'
       - name: Retrieve bounded original literary excerpts
-        run: python3 scripts/prepare-grade9-seen-prose.py
+        run: |
+          command -v pdftotext || (sudo apt-get update && sudo apt-get install -y poppler-utils)
+          python3 scripts/prepare-grade9-seen-prose.py
       - name: Verify actual full reference drafts
         run: |
           node scripts/test-cdc-grade9-english-reference-bank.mjs

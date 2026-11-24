@@ -93,7 +93,7 @@ export function englishSeenProseDrafts({grade,subject,units}={}){
  return PUBLIC_DOMAIN_SEEN_PROSE.map((row,v)=>({
   id:'smss_eng_seen2_'+v,gradeNumber:9,subject,unitCode:u.unitCode,unitId:u.id,unitTitle:u.unitTitle,topicId:u.id+'_1',topicName:u.topics[1],slot:'reading2',marks:10,genre:'story',
   text:'Read this excerpt from The Ant and the Grasshopper by W. Somerset Maugham (part '+(v+1)+') and answer the questions.',
-  passage:row.passage,items:sets[v].map(x=>({...x})),sourceKind:'textbook',sourceTitle:'English Grade 9',sourceEdition:'2025 updated edition',sourceUrl:SEEN_BOOK,sourcePage:108+v,
+  passage:row.passage,items:sets[v].map(x=>({...x})),sourceKind:'textbook',sourceTitle:'English Grade 9',sourceEdition:row.sourceUrl===SEEN_BOOK?'2025 updated edition':'Grade 9 government-hosted edition; edition check pending',sourceUrl:row.sourceUrl,sourcePage:row.sourcePage,
   originalSourceUrl:"https://www.fadedpage.com/books/20181237/html.php",sourcePassageSha256:row.sha256,passageRights:'public_domain_original',originalPublicationYear:1924,
   status:'active',bundled:true,teacherReviewRequired:true,reviewStatus:'draft',officialCdcQuestion:false,sourceStatus:'SMSS_original_reference_draft'
  }));

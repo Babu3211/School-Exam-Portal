@@ -1,66 +1,94 @@
-"""Fetch two bounded, public-domain original literary excerpts.
-No CDC textbook pages or editorial exercises are redistributed.
-Run only for the noncommercial school reference-bank build; no Firestore writes.
+"""Prepare only two bounded excerpts of Maugham's 1924 public-domain story.
+The Grade 9 textbook identifies this story and includes both passages.
+No other textbook/editorial material is saved or published. Read-only to
+school data; local temporary PDF/text removed on exit. No rights bypasses.
 """
-from html.parser import HTMLParser
-from urllib.request import Request, urlopen
-from urllib.parse import urlsplit, parse_qs
-import json, re, hashlib
+from urllib.request import Request, build_opener, HTTPRedirectHandler
+from urllib.parse import urlsplit
+import json, re, hashlib, subprocess, tempfile
 from pathlib import Path
 
-SOURCE = "https://www.fadedpage.com/link.php?file=20181237.html"
+SOURCES = [
+    "https://giwmscdntwo.gov.np/media/pdf_upload/5.%20Reduced-class%209%20English%20final_5hjggyv.pdf",
+    "https://learning.cehrd.gov.np/moodle/pluginfile.php/188/mod_resource/content/2/English%20grade%209.pdf",
+    "https://moecdc.gov.np/storage/gallery/1688289325.pdf"
+]
 WINDOWS = [
     ("He had begun life decently enough", "very nice jewellery."),
     ("But when circumstances forced George", "They spent a happy month there."),
 ]
+ALLOWED = {"giwmscdntwo.gov.np", "giwmscdnone.gov.np", "learning.cehrd.gov.np", "moecdc.gov.np", "www.moecdc.gov.np"}
+CAP = 35 * 1024 * 1024
 
-class Plain(HTMLParser):
-    def __init__(self):
-        super().__init__(convert_charrefs=True)
-        self.parts = []
-        self.skip = 0
-    def handle_starttag(self, tag, attrs):
-        if tag in ("script","style"): self.skip += 1
-        if tag in ("p","div","br","h1","h2","h3"): self.parts.append(" ")
-    def handle_endtag(self, tag):
-        if tag in ("script","style"): self.skip = max(0,self.skip-1)
-        if tag in ("p","div","h1","h2","h3"): self.parts.append(" ")
-    def handle_data(self, data):
-        if not self.skip: self.parts.append(data)
+def checked_url(url):
+    u = urlsplit(url)
+    if u.scheme != "https" or u.hostname not in ALLOWED or u.username or u.password:
+        raise ValueError("Unapproved PDF source or redirect")
+    return url
 
-def extract(html):
-    p = Plain()
-    p.feed(html)
-    text = re.sub(r"\s+", " ", "".join(p.parts)).strip()
-    if "Somerset Maugham" not in text or "public domain" not in text.lower() or "20181237" not in text:
-        raise ValueError("Unexpected source or missing rights notice")
+class SafeRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return super().redirect_request(req, fp, code, msg, headers, checked_url(newurl))
+
+def clean(raw):
+    raw = raw.replace("\u00ad", "").replace("\u2013", "-").replace("\u2011", "-")
+    # Strip running headers and standalone printed page numbers, not prose.
+    raw = re.sub(r"(?im)^\s*(?:English\s*9(?:\s+\d{1,3})?|\d{1,3}\s+English\s*9|\d{1,3})\s*$", " ", raw)
+    raw = re.sub(r"(?<=\w)-\s*\n\s*(?=\w)", "-", raw)
+    return re.sub(r"\s+", " ", raw).strip()
+
+def extract(raw, source):
+    text = clean(raw)
+    if not re.search(r"The Ant and the\s+Grasshopper", text, re.I) or not re.search(r"Somerset\s+Maugham", text, re.I):
+        raise ValueError("Missing expected textbook story/title/author")
     excerpts = []
-    for start, end in WINDOWS:
+    for v, (start, end) in enumerate(WINDOWS):
         if text.count(start) != 1:
-            raise ValueError("Missing or ambiguous start: "+start)
+            raise ValueError("Missing or ambiguous story window "+str(v+1))
         first = text.index(start)
         last = text.index(end, first) + len(end)
         passage = text[first:last]
         words = len(passage.split())
         if not 150 <= words <= 250 or not re.search(r"\bGeorge\b", passage) or not re.search(r"\bTom\b", passage):
-            raise ValueError("Unexpected source content or length: "+str(words))
-        excerpts.append({"passage": passage, "wordCount": words, "sha256": hashlib.sha256(passage.encode()).hexdigest()})
+            raise ValueError("Unexpected source content or length for window "+str(v+1)+": "+str(words))
+        if re.search(r"\bEnglish\s+9\b|\bReading\s+I\b|\bPronunciation\b",passage):
+            raise ValueError("Textbook editorial/header contamination")
+        required = [("Europe","borrowed","jewellery"),("Cronshaw","Monte Carlo","cheque")][v]
+        if not all(x.lower() in passage.lower() for x in required):
+            raise ValueError("Missing key evidence for question items")
+        excerpts.append({"passage":passage,"wordCount":words,"sha256":hashlib.sha256(passage.encode()).hexdigest(),"sourceUrl":source,"sourcePage":108+v})
     if excerpts[0]["passage"] == excerpts[1]["passage"]:
         raise ValueError("Duplicate excerpt")
     return excerpts
 
+def retrieve(source):
+    opener = build_opener(SafeRedirect())
+    request = Request(checked_url(source), headers={"User-Agent":"SMSS school reference preparation/1.0","Accept":"application/pdf"})
+    with opener.open(request, timeout=25) as response:
+        checked_url(response.geturl())
+        raw = response.read(CAP+1)
+    if len(raw)>CAP or not raw.startswith(b"%PDF-"):
+        raise ValueError("Not an expected bounded PDF")
+    with tempfile.TemporaryDirectory() as tmp:
+        pdf=Path(tmp)/"book.pdf"
+        pdf.write_bytes(raw)
+        for mode in ("-raw","-layout"):
+            result=subprocess.run(["pdftotext",mode,str(pdf),"-"],check=True,capture_output=True,timeout=25)
+            try:
+                return extract(result.stdout.decode("utf-8"),source)
+            except ValueError as e:
+                print("PDF extraction mode",mode,"rejected:",str(e))
+        raise ValueError("Neither extraction mode passed source validation")
+
 if __name__ == "__main__":
-    request = Request(SOURCE, headers={"User-Agent": "SMSS school reference preparation/1.0"})
-    with urlopen(request, timeout=30) as response:
-        final = urlsplit(response.geturl())
-        same_book = final.path == "/books/20181237/html.php" or (final.path == "/link.php" and parse_qs(final.query).get("file") == ["20181237.html"])
-        if final.scheme != "https" or final.hostname not in {"www.fadedpage.com", "fadedpage.com"} or not same_book:
-            raise ValueError("Unexpected source location: "+final.hostname+final.path)
-        print("Source location:", final.hostname+final.path)
-        raw = response.read(4_000_001)
-    if len(raw) > 4_000_000:
-        raise ValueError("Source exceeds size cap")
-    excerpts = extract(raw.decode("utf-8-sig"))
-    body = "// Generated from the public-domain original; see scripts/prepare-grade9-seen-prose.py.\nexport const PUBLIC_DOMAIN_SEEN_PROSE = "+json.dumps(excerpts, ensure_ascii=False, indent=2)+";\n"
-    Path("cdc-grade9-english-seen-prose-data.mjs").write_text(body, encoding="utf-8")
-    print("Prepared two source excerpts:", [e["wordCount"] for e in excerpts])
+    for source in SOURCES:
+        try:
+            excerpts=retrieve(source)
+            break
+        except (OSError, ValueError, subprocess.SubprocessError) as e:
+            print("Source unavailable or rejected:",urlsplit(source).hostname,str(e))
+    else:
+        raise SystemExit("No verified passage retrieved. The missing seen group remains blocked.")
+    body="// Two bounded excerpts of the 1924 original story, with source metadata.\nexport const PUBLIC_DOMAIN_SEEN_PROSE = "+json.dumps(excerpts,ensure_ascii=False,indent=2)+";\n"
+    Path("cdc-grade9-english-seen-prose-data.mjs").write_text(body,encoding="utf-8")
+    print("Prepared source-checked excerpt lengths:",[e["wordCount"] for e in excerpts])
