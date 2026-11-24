@@ -8,7 +8,7 @@ from urllib.parse import urlsplit, parse_qs
 import json, re, hashlib
 from pathlib import Path
 
-SOURCE = "https://www.fadedpage.com/link.php?file=20190248.html"
+SOURCE = "https://www.fadedpage.com/link.php?file=20181237.html"
 WINDOWS = [
     ("He had begun life decently enough", "very nice jewellery."),
     ("But when circumstances forced George", "They spent a happy month there."),
@@ -32,12 +32,12 @@ def extract(html):
     p = Plain()
     p.feed(html)
     text = re.sub(r"\s+", " ", "".join(p.parts)).strip()
-    if "Somerset Maugham" not in text or "public domain" not in text.lower() or "20190248" not in text:
+    if "Somerset Maugham" not in text or "public domain" not in text.lower() or "20181237" not in text:
         raise ValueError("Unexpected source or missing rights notice")
     excerpts = []
     for start, end in WINDOWS:
         if text.count(start) != 1:
-            raise ValueError("Missing or ambiguous start")
+            raise ValueError("Missing or ambiguous start: "+start)
         first = text.index(start)
         last = text.index(end, first) + len(end)
         passage = text[first:last]
@@ -53,12 +53,12 @@ if __name__ == "__main__":
     request = Request(SOURCE, headers={"User-Agent": "SMSS school reference preparation/1.0"})
     with urlopen(request, timeout=30) as response:
         final = urlsplit(response.geturl())
-        same_book = final.path == "/books/20190248/html.php" or (final.path == "/link.php" and parse_qs(final.query).get("file") == ["20190248.html"])
+        same_book = final.path == "/books/20181237/html.php" or (final.path == "/link.php" and parse_qs(final.query).get("file") == ["20181237.html"])
         if final.scheme != "https" or final.hostname not in {"www.fadedpage.com", "fadedpage.com"} or not same_book:
             raise ValueError("Unexpected source location: "+final.hostname+final.path)
         print("Source location:", final.hostname+final.path)
-        raw = response.read(2_000_001)
-    if len(raw) > 2_000_000:
+        raw = response.read(4_000_001)
+    if len(raw) > 4_000_000:
         raise ValueError("Source exceeds size cap")
     excerpts = extract(raw.decode("utf-8-sig"))
     body = "// Generated from the public-domain original; see scripts/prepare-grade9-seen-prose.py.\nexport const PUBLIC_DOMAIN_SEEN_PROSE = "+json.dumps(excerpts, ensure_ascii=False, indent=2)+";\n"

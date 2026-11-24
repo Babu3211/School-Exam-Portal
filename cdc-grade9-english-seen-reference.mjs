@@ -2,7 +2,7 @@
  * updated edition (2025), printed pp. 8–9 and 45–46. These are original
  * literary works, not a reproduction of CDC's textbook exercises.
  * Source-specific SMSS questions are newly written and unreviewed.
- * The 10-mark seen prose group still requires an authorized passage.
+ * The 10-mark seen prose groups use validated excerpts of the 1924 story, when retrieved from the identified public-domain collection.
  */
 import {PUBLIC_DOMAIN_SEEN_PROSE} from './cdc-grade9-english-seen-prose-data.mjs';
 export const SEEN_BOOK="https://giwmscdnone.gov.np/media/pdf_upload/5.%20Reduced-class%209%20English%20final_5hjggyv.pdf";
@@ -94,7 +94,7 @@ export function englishSeenProseDrafts({grade,subject,units}={}){
   id:'smss_eng_seen2_'+v,gradeNumber:9,subject,unitCode:u.unitCode,unitId:u.id,unitTitle:u.unitTitle,topicId:u.id+'_1',topicName:u.topics[1],slot:'reading2',marks:10,genre:'story',
   text:'Read this excerpt from The Ant and the Grasshopper by W. Somerset Maugham (part '+(v+1)+') and answer the questions.',
   passage:row.passage,items:sets[v].map(x=>({...x})),sourceKind:'textbook',sourceTitle:'English Grade 9',sourceEdition:'2025 updated edition',sourceUrl:SEEN_BOOK,sourcePage:108+v,
-  originalSourceUrl:"https://www.fadedpage.com/books/20190248/html.php",sourcePassageSha256:row.sha256,passageRights:'public_domain_original',originalPublicationYear:1924,
+  originalSourceUrl:"https://www.fadedpage.com/books/20181237/html.php",sourcePassageSha256:row.sha256,passageRights:'public_domain_original',originalPublicationYear:1924,
   status:'active',bundled:true,teacherReviewRequired:true,reviewStatus:'draft',officialCdcQuestion:false,sourceStatus:'SMSS_original_reference_draft'
  }));
 }
