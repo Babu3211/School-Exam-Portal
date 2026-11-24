@@ -73,7 +73,7 @@ Object.assign(w,{
   getDocsFromServer:async ({name,filters})=>{
     assert.equal(name,'cdc_observations');
     assert.deepEqual(Object.fromEntries(filters.map(([name,op,value])=>{assert.equal(op,'==');return [name,value];})),{
-      studentId:field('student').value,className:({three:'Class 3',primary:'Class 5','nepali-1':'Class 1','nepali-2':'Class 2','nepali-3':'Class 3','english-1':'Class 1'})[field('student').value]||field('class').value,subject:field('subject').value,
+      studentId:field('student').value,className:({three:'Class 3',primary:'Class 5','nepali-1':'Class 1','nepali-2':'Class 2','nepali-3':'Class 3','english-1':'Class 1','english-2':'Class 2'})[field('student').value]||field('class').value,subject:field('subject').value,
       section:'A',academicYear:w.currentSchoolSettings.academicYear,...(filters.some(([key])=>key==='period')?{period:field('period').value}:{})
     });
     if(readSchool) await readSchool.promise;
@@ -863,5 +863,60 @@ await w.loadCdcAssessmentPage();
 choice('unitEn','Alphabet');
 assert.equal(field('annex3').hidden,true);
 console.log('Grade 1 English eleven thematic forms, 225 outcomes, English-only skill groups, original record keys and year isolation passed');
+// Grade 2 theme forms use source-specific subsets, not every skill outcome.
+w.currentSchoolSettings.academicYear='2083';
+current.subjectAssignments=[{className:'Class 2',subject:'English',section:'A'}];
+serverRole={...current};
+w.getDocs=async()=>({docs:[{id:'english-2',data:()=>({class:'Class 2',section:'A',name:'Synthetic Grade 2 English'})}]});
+await w.loadCdcAssessmentPage();
+const beforeEnglish2=observations.size;
+let english2Count=0;
+for(const [unit,groups] of [
+ ['Me and My Family',[9,5,7,7]],['My daily life',[8,6,9,8]],['My school',[7,5,8,8]],
+ ['Our environment',[7,6,8,8]],['My Belongings',[6,6,8,8]],['Our culture',[6,6,8,9]]
+]){
+ choice('unitEn',unit);
+ const count=groups.reduce((a,b)=>a+b,0);
+ english2Count+=count;
+ assert.equal(field('annex3').hidden,false,unit);
+ assert.match(field('annexIdentity').textContent,/Grade: 2/);
+ assert.equal(field('annexRows').rows.length,count,unit);
+ assert.equal(field('outcomePicker').options.length,count+1,unit);
+ assert.equal(new Set([...field('outcomePicker').options].slice(1).map(o=>o.value)).size,count);
+ assert.doesNotMatch(field('annexTable').textContent,/[\u0900-\u097f]/u);
+ assert.doesNotMatch(field('annexUnit').textContent,/[\u0900-\u097f]/u);
+ let offset=0;
+ for(const [i,skill] of ['Listening','Speaking','Reading','Writing'].entries()){
+   const row=field('annexRows').rows[offset];
+   assert.equal(row.cells[1].textContent,skill);
+   assert.equal(row.cells[1].rowSpan,groups[i]);
+   offset+=groups[i];
+ }
+ if(unit==='My daily life')assert.match(field('annexStatus').textContent,/repeats handwriting/);
+ await field('gridRead').onclick();
+ assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,count*2,unit);
+ assert.equal(field('printForm').disabled,false,unit);
+}
+assert.equal(english2Count,173);
+assert.equal(observations.size,beforeEnglish2);
+choice('unitEn','Me and My Family');
+await field('gridRead').onclick();
+const english2Row=field('annexRows').rows[0];
+english2Row.querySelector('[data-cdc-grid-edit="regular"]').click();
+english2Row.querySelector('[data-cdc-grid-editor="level"]').value='3';
+await english2Row.querySelector('[data-cdc-grid-save="regular"]').onclick();
+assert.equal(observations.size,beforeEnglish2+1);
+assert.equal([...observations.values()].at(-1).unit,'Me and My Family');
+assert.equal([...observations.values()].at(-1).topic,'Distinguish sounds that you hear');
+assert.equal([...observations.values()].at(-1).className,'Class 2');
+assert.match(field('annexFoot').textContent,/1 \/ 28/);
+choice('unitEn','Listening');
+assert.equal(field('annex3').hidden,true);
+assert.ok(field('outcomePicker').options.length>1);
+w.currentSchoolSettings.academicYear='2084';
+await w.loadCdcAssessmentPage();
+choice('unitEn','Me and My Family');
+assert.equal(field('annex3').hidden,true);
+console.log('Grade 2 English six thematic forms, 173 unique outcome rows, English-only stage entry, legacy skill/year isolation passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
