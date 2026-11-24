@@ -156,6 +156,7 @@ assert.match(readFileSync(new URL('../sw.js',import.meta.url),'utf8'),/cdc-grade
 console.log('PASS Grade9 English eighteen textbook units and chart arithmetic; no false exact paper');
 
 const {grade9NepaliPracticeBank,NEPALI_BOOK_PAGE,NEPALI_CORRECTION_NOTICE}=await import('../cdc-grade9-nepali-practice.mjs');
+const {NEPALI_2082_BOOK}=await import('../cdc-grade9-nepali-textbook-reference.mjs');
 for(const subject of ['Compulsory Nepali','अनिवार्य नेपाली']){
  const p=grade9NepaliPracticeBank({grade:9,subject});
  assert.equal(p.units.length,16);assert.equal(p.questions.length,48);
@@ -163,7 +164,8 @@ for(const subject of ['Compulsory Nepali','अनिवार्य नेपा
  assert.equal(new Set(p.questions.map(q=>q.questionText)).size,48);
  assert.equal(p.exactGridVerified,false);
  for(const u of p.units){
-  assert.equal(u.sourceUrl,NEPALI_BOOK_PAGE);
+  assert.equal(u.sourceUrl,NEPALI_2082_BOOK);
+  assert.ok(Number.isInteger(u.sourcePage)&&u.sourcePage>0);
   assert.match(u.provenance,/review pending/);
   const qs=p.questions.filter(q=>q.unitId===u.id);
   assert.deepEqual(qs.map(q=>q.marks),[1,2,5]);
