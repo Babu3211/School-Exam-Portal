@@ -129,3 +129,13 @@ for (const [index, source] of register.sources.entries()) {
   assert.ok(source.status, `source ${index + 1}: status required`);
 }
 console.log("Question paper content checks passed:", { packs: summaries, CDCSourceRecords: register.sources.length });
+
+// Independent model references are provenance only, never part of the official CDC source array.
+assert.ok(Array.isArray(register.independentReferences)&&register.independentReferences.length>=12);
+for(const entry of register.independentReferences){
+ assert.equal(entry.officialGrid,false);
+ assert.deepEqual(entry.grades,[9]);
+ assert.ok(entry.status&&entry.note);
+ assert.match(entry.url,/^https:\\/\\//);
+ assert.ok(!register.sources.some(s=>s.url===entry.url&&s.subject===entry.subject));
+}
