@@ -3,7 +3,7 @@ import {readFileSync,existsSync} from 'node:fs';
 const html=readFileSync(new URL('../v47/index.html',import.meta.url),'utf8');
 assert.match(html,/SMSS Exam Portal — V47/);
 assert.match(html,/Development only — not live for schools/);
-assert.match(html,/NOT official CDC\/IEMIS results/);
+assert.match(html,/आधिकारिक CDC\/IEMIS नतिजा होइनन्/);
 assert.match(html,/viewport/);
 assert.match(html,/grid-template-columns:repeat\(auto-fit/);
 const scriptTags=[...html.matchAll(/<script\b[^>]*>/gi)].map(match=>match[0]);

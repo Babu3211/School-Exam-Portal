@@ -13,12 +13,12 @@
 <label>Password<input id="password" type="password" autocomplete="current-password"></label>
 <button id="login" type="button" disabled>Verify School Login</button>
 <button id="logout" type="button" disabled>Sign out</button>
-<p id="identity">No verified school</p></section>
+<p id="identity">विद्यालय प्रमाणित भएको छैन।</p></section>
 <section id="resourceArea" hidden>
 <h2>CDC Reference Catalog (V46 Sources)</h2>
 <p lang="ne">यो स्रोत सूची मात्र हो। मूल CDC वेबसाइट खोलेर पाठ्यक्रम, विषय, वर्ष र Specification Grid विद्यालयले पुनः पुष्टि गर्नुपर्छ। सूचीमा भएको स्रोतलाई २०८३ को पूर्ण पाठ्यक्रम वा तयार प्रश्नपत्र नठान्नुहोस्।</p>
 <label>Class<select id="grade"><option value="">Classes 6–10 (all sources)</option><option value="6">Class 6</option><option value="7">Class 7</option><option value="8">Class 8</option><option value="9">Class 9</option><option value="10">Class 10</option></select></label>
-<p id="sourceStatus" role="status" aria-live="polite">No sources loaded.</p>
+<p id="sourceStatus" role="status" aria-live="polite">स्रोत सामग्री लोड भएको छैन।</p>
 <div id="sourceList"></div>
 <h2>Original Science Practice Questions</h2>
 <p lang="ne">Class 8 र Class 10 का V46 मा पहिले भएका अभ्यास प्रश्न मात्र देखाइन्छ। Grade 9 Science स्रोत नमिलेका कारण उपलब्ध छैन। आधिकारिक प्रश्नपत्र, परीक्षा Blueprint र उत्तरकुञ्जी प्रमाणीकरण बाँकी छ।</p>
@@ -30,14 +30,14 @@
 <p lang="ne">प्रश्न छानेर पूर्वावलोकन बनाउन सकिन्छ। शिक्षकले पाठ्यक्रम र Specification Grid जाँचेर मात्र प्रयोग गर्नुहोस्। छनोटले Firestore मा कुनै प्रश्नपत्र Save गर्दैन।</p>
 <label>Curriculum Unit<select id="practiceUnitFilter"><option value="">All curriculum units</option></select></label>
 <label>Question Type<select id="practiceTypeFilter"><option value="">All types</option><option value="mcq">Multiple Choice</option><option value="short">Short Answer</option><option value="long">Long Answer</option></select></label>
-<p id="practiceSelectionCount" role="status" aria-live="polite">No practice questions selected.</p>
+<p id="practiceSelectionCount" role="status" aria-live="polite">अभ्यास प्रश्न छानिएको छैन।</p>
 <div id="practiceQuestionList" class="practiceChoices"></div>
 <button id="restoreRecommendedPractice" type="button">Restore Recommended Sample</button>
 <button id="clearPracticeSelection" type="button">Clear Selection</button>
 <button id="updatePractice" type="button" disabled>Update Unapproved Preview</button>
 </section>
 <button id="printPractice" type="button" disabled>Print Unreviewed Practice Preview</button>
-<p id="paperStatus" role="status" aria-live="polite">No practice preview prepared.</p>
+<p id="paperStatus" role="status" aria-live="polite">अभ्यास प्रश्नको पूर्वावलोकन तयार भएको छैन।</p>
 <iframe id="paperFrame" sandbox="allow-same-origin" title="Unreviewed Original Practice Questions"></iframe>
 </section><p id="message" role="status" aria-live="polite">विद्यालयको Login प्रमाणित गर्नुहोस्।</p>
 </main><script type="module" src="./question-paper-console.mjs"></script></body></html>

@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../v47/ledger-exceptions.html',import.meta.url),'utf8');
 const code=readFileSync(new URL('../v47/ledger-exceptions-console.mjs',import.meta.url),'utf8');
 const shared=readFileSync(new URL('../v47/school-firebase-client.mjs',import.meta.url),'utf8');
-assert.match(html,/read-only development diagnostics/i);
+assert.match(html,/परीक्षणका लागि हेर्न मात्र मिल्ने जाँच प्रतिवेदन/);
 assert.match(html,/ledger-exceptions-console\.mjs/);
 assert.doesNotMatch(html,/id="config"/,'Do not require manual Firebase configuration JSON');
 assert.match(code,/connectSchoolFirebase/);
