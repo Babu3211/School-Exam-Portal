@@ -319,6 +319,36 @@ def stage_grid_page_images(preview_dir):
     index.write_text(html.replace("</body>","".join(parts)+"</body>"),encoding="utf-8")
     (folder/"manifest.json").write_text(json.dumps({"currentCdcExactApproved":False,"documents":entries},ensure_ascii=False,indent=2),encoding="utf-8")
 
+def audit_optional_grid_pdf(source, output_dir):
+    """Read registered optional-subject documents for source identification.
+    Do not certify subject scope, edition, or numerical cells from a filename.
+    """
+    subject=source["subject"]; url=source["url"]
+    entry={"subject":subject,"url":url,"status":"unavailable","currentCdcExactApproved":False}
+    try:
+        if urlsplit(url).hostname!="giwmscdnone.gov.np" or not urlsplit(url).path.lower().endswith(".pdf"):
+            raise ValueError("Expected registered official government PDF")
+        final,ctype,data=get(url,32*1024*1024)
+        if not data.startswith(b"%PDF-") or b"%%EOF" not in data[-4096:]:
+            raise ValueError("Incomplete PDF")
+        with tempfile.TemporaryDirectory() as tmp:
+            pdf=Path(tmp)/"source.pdf";pdf.write_bytes(data)
+            info=subprocess.run(["pdfinfo",str(pdf)],check=True,capture_output=True,text=True,timeout=20).stdout
+            pages=int(re.search(r"(?m)^Pages:\s+(\d+)",info).group(1))
+            if not 1<=pages<=150: raise ValueError("Unexpected page count")
+            digest=hashlib.sha256(data).hexdigest()
+            out=output_dir/digest[:16];out.mkdir(parents=True,exist_ok=True)
+            text=subprocess.run(["pdftotext","-f","1","-l",str(min(3,pages)),"-layout",str(pdf),"-"],check=True,capture_output=True,text=True,timeout=30).stdout
+            (out/"first-pages.txt").write_text(text,encoding="utf-8")
+            subprocess.run(["pdftoppm","-f","1","-l","1","-r","150","-png",str(pdf),str(out/"grid")],check=True,capture_output=True,timeout=60)
+            entry.update(finalUrl=final,contentType=ctype,sha256=digest,byteCount=len(data),pages=pages,firstPageRendered=True,status="full_pdf_retrieved_visual_review_required")
+            # Preserve compact numerical evidence, not model questions.
+            first=text.split("\f",1)[0]
+            entry["numericRows"]=[line.strip()[:240] for line in first.splitlines() if len(re.findall(r"\d+",line))>=3][:45]
+    except (OSError,ValueError,AttributeError,subprocess.SubprocessError) as err:
+        entry["reason"]=str(err)[:200]
+    return entry
+
 if __name__=="__main__":
     ap=argparse.ArgumentParser()
     ap.add_argument("--output")
@@ -357,6 +387,12 @@ if __name__=="__main__":
     with ThreadPoolExecutor(max_workers=5) as pool:
         report["fullDocumentReview"]=list(pool.map(lambda url:read_compulsory_pdf(url,out.parent/"extracted"),targets))
     report["fullDocumentsRead"]=sum(r["status"]=="full_pdf_read_needs_grid_review" for r in report["fullDocumentReview"])
+    register=json.loads((Path(__file__).resolve().parent.parent/"data/cdc-question-paper-sources-2083.json").read_text(encoding="utf-8"))
+    optional=[source for source in register["sources"] if 9 in source.get("grades",[]) and source.get("subject") in {"ऐच्छिक कम्प्युटर विज्ञान","ऐच्छिक गणित","ऐच्छिक अर्थशास्त्र"} and source.get("kind")=="specification_grid_and_model_questions" and urlsplit(source.get("url","")).hostname=="giwmscdnone.gov.np" and urlsplit(source.get("url","")).path.lower().endswith(".pdf")]
+    if len(optional)!=3: raise ValueError("Unexpected optional-subject official PDF inventory")
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        report["optionalDocumentReview"]=list(pool.map(lambda source:audit_optional_grid_pdf(source,out.parent/"optional-extracted"),optional))
+    report["optionalDocumentsRead"]=sum(r["status"]=="full_pdf_retrieved_visual_review_required" for r in report["optionalDocumentReview"])
     out.write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
     print(json.dumps(report,ensure_ascii=False,indent=2))
     print("No Grid approval is granted by this audit.")
