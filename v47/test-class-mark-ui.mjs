@@ -26,7 +26,7 @@ assert.ok(js.includes("classMarkRoster=[...roster.students].sort("),'Class mark 
 assert.ok(js.includes('for(const student of classMarkRoster)'),'Rendered rows must use sorted roster');
 assert.ok(js.includes('document.createDocumentFragment()'),'Large class roster must use batched DOM rendering');
 assert.ok(js.includes('fragment.append(row)')&&js.includes('body.append(fragment)'),'Class rows must be appended in one batch');
-assert.ok(html.includes('An incomplete class cannot be saved'),'Incomplete-class warning missing');
+assert.ok(html.includes('अपूर्ण कक्षाको मस्यौदा सुरक्षित गर्न मिल्दैन।'),'Incomplete-class warning missing');
 assert.ok(html.includes('Save/Publish unavailable — development'),'Save button must disclose unavailability');
 assert.ok(js.includes("$('saveClassMarks').disabled=true"),'Save button must always remain disabled');
 assert.ok(!js.includes('saveVerifiedSmallClassMarks'),'Marks editor must not invoke blocked Firestore writes');
@@ -71,5 +71,5 @@ assert.ok(js.includes("for(const component of classMarkSettings.components)"),'C
 assert.ok(js.includes("if(saved.rosterReverified!==true)"),'UI must not claim confirmed Draft without post-commit verification');
 assert.ok(js.includes("ClassDraftPostSaveReviewError"),'UI must distinguish acknowledged Draft commits from uncertain final checks');
 assert.ok(js.includes("classDraftRevision=null;"),'Unknown Draft state must disable a blind retry');
-assert.ok(html.includes('saved revision before retrying'),'Draft post-save instructions missing');
+assert.ok(html.includes('पुनः प्रयास गर्नुअघि कक्षा लोड गरी सुरक्षित संस्करण जाँच्नुहोस्।'),'Draft post-save instructions missing');
 console.log('V47 full-class marks UI contract passed');

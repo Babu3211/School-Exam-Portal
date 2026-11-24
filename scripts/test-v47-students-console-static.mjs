@@ -3,5 +3,5 @@ assert.match(js,/loadEpoch\+\+;loading=false;cursor=null;records=\[\];await load
 assert.match(js,/if\(savingStudent\)return;try\{if\(actor\?\.role/);
 assert.match(js,/savingStudent=true;button\.disabled=true;\$\('logout'\)\.disabled=true/);
 assert.match(js,/finally\{savingStudent=false;button\.disabled=false/);
-assert.match(js,/if\(savingStudent\)\{status\('Wait for student save/);
+assert.match(js,/if\(savingStudent\)\{status\('विद्यार्थी विवरण सुरक्षित गर्ने प्रक्रिया पूरा भएपछि लगआउट गर्नुहोस्/);
 console.log('V47 read-only students UI static checks passed');
