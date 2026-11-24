@@ -43,6 +43,7 @@ jobs:
           mkdir -p preview-public
           SMSS_REVIEW_PACK_DIR=preview-public node scripts/test-cdc-grade9-review-pack.mjs
           cp preview-public/grade9-teacher-review.html preview-public/index.html
+          printf '%s\n' "$GITHUB_SHA" > preview-public/review-revision.txt
           cp index.html preview-public/app-shell.html
           cp manifest.webmanifest cdc-question-paper.js cdc-*.mjs preview-public/
           cp -r data preview-public/data
@@ -89,19 +90,47 @@ jobs:
           set -euo pipefail
           [[ "$PREVIEW_URL" == https://exam-portal-smss-95016--*.web.app ]]
           mkdir -p "$RUNNER_TEMP/preview"
-          curl -fsSL --retry 5 -D "$RUNNER_TEMP/preview/headers.txt" "$PREVIEW_URL/" -o "$RUNNER_TEMP/preview/index.html"
-          cmp preview-public/index.html "$RUNNER_TEMP/preview/index.html"
-          grep -i '^content-security-policy:' "$RUNNER_TEMP/preview/headers.txt" | grep -F "connect-src 'none'" | grep -F "script-src 'none'"
-          grep -F 'REVIEW ONLY' "$RUNNER_TEMP/preview/index.html"
+          # A preview channel may briefly serve the preceding release at an
+          # edge after deployment. Retry only a bounded number of times;
+          # never relax the exact byte comparison or isolation checks.
+          verify_asset() {
+            local source="$1" route="$2" target="$3" attempt
+            mkdir -p "$(dirname "$target")"
+            for attempt in 1 2 3 4 5 6; do
+              if curl -fsSL --max-time 25 --retry 1 -H 'Cache-Control: no-cache' \
+                  -D "$target.headers" "$PREVIEW_URL$route?revision=$GITHUB_SHA&check=$attempt" -o "$target" \
+                && cmp -s "$source" "$target"; then
+                return 0
+              fi
+              echo "Preview content not current: $route (attempt $attempt)"
+              if [ "$attempt" -lt 6 ]; then sleep 5; fi
+            done
+            echo "::error::Exact preview comparison failed for $route"
+            sha256sum "$source" "$target" 2>/dev/null || true
+            return 1
+          }
+          verify_asset preview-public/review-revision.txt /review-revision.txt "$RUNNER_TEMP/preview/review-revision.txt"
+          verify_asset preview-public/index.html / "$RUNNER_TEMP/preview/index.html"
+          grep -i '^content-security-policy:' "$RUNNER_TEMP/preview/index.html.headers" | grep -F "connect-src 'none'" | grep -F "script-src 'none'"
+          grep -qF 'REVIEW ONLY' "$RUNNER_TEMP/preview/index.html"
           if grep -Eq 'initializeApp\(|firebaseConfig|<script|<form' "$RUNNER_TEMP/preview/index.html"; then
             echo 'Unexpected authentication or executable UI in review page'; exit 1
           fi
           for file in sw.js app-worker-source.js app-shell.html manifest.webmanifest grade9-teacher-review.html review-manifest.json cdc-question-paper.js cdc-*.mjs data/cdc-*.json; do
             target="$RUNNER_TEMP/preview/$file"
-            mkdir -p "$(dirname "$target")"
-            curl -fsSL --retry 5 "$PREVIEW_URL/$file" -o "$target"
-            cmp "preview-public/$file" "$target"
+            verify_asset "preview-public/$file" "/$file" "$target"
           done
+          # Check the ordinary unversioned root as well, so the published link
+          # is only reported after the actual landing page is current.
+          matched=false
+          for attempt in 1 2 3 4 5 6; do
+            if curl -fsSL --max-time 25 -H 'Cache-Control: no-cache' "$PREVIEW_URL/" -o "$RUNNER_TEMP/preview/root.html" && cmp -s preview-public/index.html "$RUNNER_TEMP/preview/root.html"; then
+              matched=true; break
+            fi
+            if [ "$attempt" -lt 6 ]; then sleep 5; fi
+          done
+          test "$matched" = true
+          echo "Verified revision: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
           echo "Teacher review URL: $PREVIEW_URL" >> "$GITHUB_STEP_SUMMARY"
           echo "Read-only synthetic review page, scripts and database connections blocked by CSP. Real account, backup, and release approval remain separate prerequisites." >> "$GITHUB_STEP_SUMMARY"
 # No live channel, rules deployment, billing change, or school-data write.
