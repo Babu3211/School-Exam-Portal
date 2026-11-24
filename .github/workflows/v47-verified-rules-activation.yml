@@ -55,6 +55,6 @@ jobs:
           # Verify the dedicated credential, root admin account, and previous ruleset before changing policy.
           node v47/diagnostics/check-live-access.mjs --before-rules-deploy
           # Rules only: no hosting, indexes, document writes, account modifications or billing.
-          npx --yes firebase-tools@14.21.0 deploy --only firestore:rules --project smss-exam-portal-v47 --config v47/firebase.v47.json --non-interactive
+          node v47/diagnostics/activate-reviewed-rules.mjs
           node v47/diagnostics/check-live-access.mjs
           echo 'Reviewed V47 Firestore rules activated and verified. No V46 resources, school documents, user accounts, billing or production hosting changed. Official publication and production release remain separately gated.' >> "$GITHUB_STEP_SUMMARY"
