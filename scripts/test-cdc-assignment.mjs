@@ -86,6 +86,21 @@ w.eval(readFileSync('iemis-importer/transfer.js','utf8'));
 const legacyForms=w.eval(html.slice(html.indexOf('const cdcCoreSubjects'),html.indexOf('let iemisEntryGrid'))+'\nopenCdcAssessment();\ncdcLegacyMathRubrics;');
 const field=name=>w.document.querySelector('[data-cdc="'+name+'"]');
 const choice=(name,value)=>{field(name).value=value;field(name).onchange();};
+const references=field('referenceLibrary');
+assert.ok(references);
+for(const name of ['guidePdf13','guidePdf45','guideOfficial13','guideOfficial45','guideCurriculum13','guideMirror45']){
+ const link=field(name);
+ assert.ok(references.contains(link),name);
+ assert.equal(link.target,'_blank');
+ assert.ok(link.rel.split(' ').includes('noopener'));
+ assert.equal(new URL(link.href).protocol,'https:');
+}
+assert.match(field('guidePdf13').href,/STUDENTS-EVALUATION-GRADE-1-3\.pdf$/);
+assert.match(field('guidePdf45').href,/^https:\/\/learning\.cehrd\.gov\.np\/pluginfile\.php\/106343\//);
+assert.match(field('guideOfficial13').href,/\/644\//);
+assert.match(field('guideOfficial45').href,/\/646\//);
+console.log('Both CDC assessment guide reference PDFs and official source links visible together');
+
 assert.match(field('curriculumSource').href,/moecdc\.gov\.np\/content\/203\//);
 field('class').append(new w.Option('Class 1','1'));
 choice('class','1');
