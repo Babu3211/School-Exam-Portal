@@ -636,11 +636,11 @@ const beforePreview=observations.size;
 await w.loadCdcAssessmentPage();
 for(const [unit,count,page,editable] of [
  ['म र मेरो परिवार',8,103,true],['मेरो दैनिक जीवन',12,104,true],
- ['हाम्रो समुदाय',13,105,true],['हाम्रो विद्यालय',13,106,false],
- ['हाम्रो वातावरण',14,107,true],['मेरो सिर्जना',14,108,false],
- ['बोध र वाणी',15,109,false],['हाम्रो संस्कृति',15,110,true],
- ['सूचना प्रविधि र बजार',15,111,true],['हाम्रो क्रियाकलाप',15,112,false],
- ['हाम्रो वरपरको संसार',16,113,false]
+ ['हाम्रो समुदाय',13,105,true],['हाम्रो विद्यालय',13,106,true],
+ ['हाम्रो वातावरण',14,107,true],['मेरो सिर्जना',14,108,true],
+ ['बोध र वाणी',15,109,true],['हाम्रो संस्कृति',15,110,true],
+ ['सूचना प्रविधि र बजार',15,111,true],['हाम्रो क्रियाकलाप',15,112,true],
+ ['हाम्रो वरपरको संसार',16,113,true]
 ]){
  choice('unit',unit);
  assert.equal(field('annex3').hidden,false,unit);
@@ -650,6 +650,12 @@ for(const [unit,count,page,editable] of [
  assert.equal(field('gridRead').hidden,!editable);
  assert.equal(field('printForm').disabled,true);
  assert.equal(field('annexRows').querySelectorAll('button,input,select,textarea').length,0);
+ const titles=[...field('outcomePicker').options].slice(1).map(o=>o.value);
+ assert.equal(titles.length,count,unit);
+ assert.equal(new Set(titles).size,count,unit);
+ await field('gridRead').onclick();
+ assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,2*count,unit);
+ assert.equal(field('printForm').disabled,false,unit);
 }
 assert.equal(observations.size,beforePreview);
 choice('unit','हाम्रो वातावरण');
@@ -685,17 +691,36 @@ assert.equal(field('unit').value,'हाम्रो विद्यालय');
 assert.equal(field('annexUnit').textContent,'मेरो विद्यालय');
 assert.match(field('annexRows').rows[3].cells[0].textContent,/^ऐ, ओ, औ/);
 assert.equal(field('annexRows').querySelectorAll('button,input,select,textarea').length,0);
+const oldSchoolTopic='ए, ओ, औ, अं र अः स्वर वर्ण चिन्ने र उच्चारण गर्ने';
+const newSchoolTopic='ऐ, ओ, औ, अं र अः स्वर वर्ण चिन्ने र उच्चारण गर्ने';
+const oldKey='cdc_observations/synthetic-legacy-nepali-school';
+observations.set(oldKey,{...[...observations.values()].at(-1),unit:'हाम्रो विद्यालय',topic:oldSchoolTopic,level:2});
+await field('gridRead').onclick();
+assert.match(field('annexStatus').textContent,/फरक पुरानो शीर्षकका 1 अभिलेख/);
+assert.match(field('schoolRows').textContent,/ए, ओ, औ/);
+const correctedRow=field('annexRows').rows[3];
+assert.equal(correctedRow.cells[3].textContent,'');
+assert.ok([...field('outcomePicker').options].some(o=>o.value===newSchoolTopic));
+assert.ok(![...field('outcomePicker').options].some(o=>o.value===oldSchoolTopic));
+correctedRow.querySelector('[data-cdc-grid-edit="regular"]').click();
+correctedRow.querySelector('[data-cdc-grid-editor="level"]').value='4';
+await correctedRow.querySelector('[data-cdc-grid-save="regular"]').onclick();
+assert.equal(observations.get(oldKey).level,2);
+assert.equal(observations.get(oldKey).topic,oldSchoolTopic);
+assert.equal([...observations.values()].at(-1).topic,newSchoolTopic);
+assert.equal([...observations.values()].at(-1).level,4);
+assert.match(field('annexFoot').textContent,/1 \/ 13/);
 choice('unit','सञ्चार प्रविधि र बजार');
 assert.equal(field('unit').value,'सूचना प्रविधि र बजार');
 await field('gridRead').onclick();
 assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,30);
 assert.ok([...w.document.querySelectorAll('#cdcUnitSuggestions option')].some(o=>o.value==='रुचि र बानी'));
-assert.equal(observations.size,beforePreview+1);
+assert.equal(observations.size,beforePreview+3);
 w.currentSchoolSettings.academicYear='2084';
 await w.loadCdcAssessmentPage();
 choice('unit','म र मेरो परिवार');
 assert.equal(field('annex3').hidden,true);
-assert.equal(observations.size,beforePreview+1);
-console.log('Grade 1 Nepali eleven themes, 150 outcome rows, safe stage entry, source review and year isolation passed');
+assert.equal(observations.size,beforePreview+3);
+console.log('Grade 1 Nepali eleven editable themes, 150 outcome rows, corrected key isolation, safe stage entry and year isolation passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
