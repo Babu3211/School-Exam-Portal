@@ -95,12 +95,60 @@ def probe(url):
     except (OSError,ValueError) as err:
         return {"url":url,"status":"unavailable_or_redirect_not_allowed","reason":str(err)[:200]}
 
+# These publication and library links were located in the public CDC catalogue.
+# A listing date does not establish the edition of its attached PDF.
+OFFICIAL_RECORDS = [
+    ("Nepali","https://moecdc.gov.np/content/282/specification-grid--9---10--compulsory-nepali/","11168"),
+    ("English","https://moecdc.gov.np/content/280/specification-grid--grade-9--10--compulsory-english/","11169"),
+    ("Mathematics","https://moecdc.gov.np/content/281/","11170"),
+    ("Science and Technology","https://moecdc.gov.np/content/278/specialization-schedule-class-class-9-science-and/","11167"),
+    ("Social Studies","https://www.moecdc.gov.np/content/277/specialization-schedule-social-study--class-9-/","11166"),
+]
+class AttachmentParser(HTMLParser):
+    def __init__(self,base):
+        super().__init__(convert_charrefs=True)
+        self.base=base; self.links=[]
+    def handle_starttag(self,tag,attrs):
+        for name,value in attrs:
+            if name not in ("href","src","data","data-url","data-src","data-file","data-pdf") or not value:
+                continue
+            url=urljoin(self.base,value)
+            if not urlsplit(url).path.lower().endswith(".pdf"):
+                continue
+            try: checked(url)
+            except ValueError: continue
+            if url not in self.links: self.links.append(url)
+
+def official_record(record):
+    subject,page,resource=record
+    urls=[page,"https://lib.moecdc.gov.np/elibrary/?r="+resource]
+    result={"subject":subject,"records":[],"officialGridApproved":False}
+    for url in urls:
+        entry={"url":url,"status":"record_unavailable"}
+        try:
+            final,ctype,data=get(url,4*1024*1024)
+            entry.update(finalUrl=final,contentType=ctype)
+            if data.startswith(b"%PDF-"):
+                entry["status"]="pdf_header_detected_needs_visual_grid_review"
+            else:
+                p=AttachmentParser(final)
+                p.feed(data.decode("utf-8",errors="replace"))
+                entry["status"]="public_attachment_candidates" if p.links else "record_without_visible_pdf"
+                entry["probes"]=[probe(link) for link in p.links[:6]]
+        except (OSError,ValueError) as err:
+            entry["reason"]=str(err)[:200]
+        result["records"].append(entry)
+    return result
+
 def selftest():
     data='<table><tr><td>26</td><td>९</td><td>Science</td><td><a href="https://moecdc.gov.np/test.pdf">Download</a><button onclick="location.href=\'https://giwmscdnone.gov.np/test.pdf\'">View</button><a href="javascript:alert(1)">X</a><a href="https://unknown.invalid/x">X</a></td></tr><tr><td>34</td><td>१०</td><td>Not grade nine</td></tr></table>'
     result=parse(data,CATALOG)
     assert list(result)==[26] and len(result[26]["links"])==2
     assert all(x.startswith("https://") for x in result[26]["links"])
-    print("PASS parser grade scope, literal links, and public source allowlist")
+    parser=AttachmentParser("https://moecdc.gov.np/content/278/")
+    parser.feed('<iframe src="https://giwmscdnone.gov.np/media/a.pdf"></iframe><a href="/storage/b.pdf">File</a><a href="https://unknown.invalid/c.pdf">Untrusted</a>')
+    assert parser.links==["https://giwmscdnone.gov.np/media/a.pdf","https://moecdc.gov.np/storage/b.pdf"]
+    print("PASS parser grade scope, public source allowlist, and official attachment extraction")
 
 if __name__=="__main__":
     ap=argparse.ArgumentParser()
@@ -119,6 +167,15 @@ if __name__=="__main__":
             report["rows"].append(row)
     except (OSError,ValueError) as err:
         report["catalogError"]=str(err)[:300]
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        report["officialRecords"]=list(pool.map(official_record,OFFICIAL_RECORDS))
+    report["pdfHeaderCandidates"]=sum(
+        e.get("status")=="pdf_header_detected_needs_visual_grid_review"
+        for group in report["officialRecords"]
+        for r in group["records"]
+        for e in [r,*r.get("probes",[])]
+    )+sum(p.get("status")=="pdf_header_detected_needs_visual_grid_review" for row in report["rows"] for p in row.get("probes",[]))
+    report["result"]="attachment_candidates_require_visual_review" if report["pdfHeaderCandidates"] else "no_pdf_attachment_retrieved"
     out=Path(args.output);out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
     print(json.dumps(report,ensure_ascii=False,indent=2))
