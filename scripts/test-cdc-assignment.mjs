@@ -372,6 +372,22 @@ await field('save').onclick();
 assert.match(field('status').textContent,/मस्यौदा राखियो/);
 assert.equal(field('history').rows.length,2);
 console.log('CDC Annex 3 staged assessment and legacy observation preservation passed');
+for(const [subject,unit,count] of [
+  ['Mathematics','ज्यामिति',8],
+  ['Social Studies and Human Values Education','हामी र हाम्रो समुदाय',8],
+  ['Science and Technology','वैज्ञानिक सिकाइ',6],
+  ['Health, Physical Education and Creative Arts','व्यक्तिगत स्वच्छता',7]
+]){
+  current.subjectAssignments=[{className:'Class 5',subject,section:'A'}];
+  serverRole={...current};
+  await w.loadCdcAssessmentPage();
+  choice('unit',unit);
+  assert.equal(field('annex3').hidden,false,subject);
+  assert.ok(field('annexRows').rows.length,subject);
+  assert.equal(field('annexRows').rows[0].cells.length,count,subject);
+  assert.equal([...field('annexFoot').rows[0].cells].reduce((n,cell)=>n+cell.colSpan,0),count,subject);
+}
+console.log('CDC subject-specific annex column counts passed');
 console.log('Standalone assessment navigation, primary-only assignment reads and inline display passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
