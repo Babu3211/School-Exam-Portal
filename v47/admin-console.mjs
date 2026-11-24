@@ -1,3 +1,5 @@
+import {loadPlatformSchoolCounts} from './super-admin-dashboard.mjs';
+import {estimateSparkDay} from './spark-capacity.mjs';
 import {onboardSchool} from './school-onboarding.mjs';
 import {V47_FIREBASE_CONFIG} from './v47-firebase-config.mjs';
 import {listSchools} from './school-list-service.mjs';
@@ -6,7 +8,8 @@ const $=id=>document.getElementById(id);let auth,db,api,actor=null,cursor=null,m
 const status=message=>{$('message').textContent=message};
 const cleanAuthError=error=>{const message=error?.message;if(typeof message==='string'&&['विद्यालयको IEMIS Code ५–२० अङ्कको हुनुपर्छ।','School ID र IEMIS Code एउटै हुनुपर्छ।','विद्यालयको नाम ३–१६० अक्षरको हुनुपर्छ।','Admin UID मान्य छैन।'].includes(message))return message;const code=String(error?.code??'');if(code.startsWith('auth/'))return 'प्रमाणीकरण असफल भयो। Email, Password वा अनुमति जाँच्नुहोस्।';if(code==='permission-denied'||code==='firestore/permission-denied')return 'अनुमति छैन। Super Admin अधिकार जाँच्नुहोस्।';if(code==='unavailable'||code==='firestore/unavailable')return 'सेवा अहिले उपलब्ध छैन। पुनः प्रयास गर्नुहोस्।';return 'अनुरोध पूरा भएन। विवरण जाँचेर पुनः प्रयास गर्नुहोस्।';};
 const showError=error=>status(cleanAuthError(error));
-function clearAdmin(){sessionEpoch++;refreshEpoch++;actor=null;cursor=null;$('adminArea').hidden=true;$('logout').disabled=true;$('identity').textContent='साइन इन भएको छैन';$('schools').replaceChildren();$('next').disabled=true;$('next').onclick=null;}
+let countsEpoch=0;
+function clearAdmin(){countsEpoch++;$('platformCounts').textContent='School counts not loaded.';$('quotaResult').textContent='';sessionEpoch++;refreshEpoch++;actor=null;cursor=null;$('adminArea').hidden=true;$('logout').disabled=true;$('identity').textContent='साइन इन भएको छैन';$('schools').replaceChildren();$('next').disabled=true;$('next').onclick=null;}
 const firebaseBase='https://www.gstatic.com/firebasejs/11.10.0/';
 $('connect').onclick=async()=>{if(connecting||db)return;connecting=true;$('connect').disabled=true;try{
  const config=V47_FIREBASE_CONFIG;
@@ -25,7 +28,30 @@ async function verifyAdmin(){clearAdmin();const uid=auth.currentUser?.uid,verifi
  // This document is intentionally client-unreadable: authorization is verified by a harmless scoped query.
  await api.getDocs(api.query(api.collection(db,'schools'),api.limit(1)));
  if(sessionEpoch!==verificationSession||auth.currentUser?.uid!==uid)throw new Error('Super Admin पुष्टि भइरहँदा सत्र परिवर्तन भयो।');
- actor={active:true,role:'super_admin',uid};$('identity').textContent='प्रमाणित Super Admin: '+uid;$('logout').disabled=false;$('adminArea').hidden=false;status('Super Admin को अनुमति पुष्टि भयो।');await refresh();}
+ actor={active:true,role:'super_admin',uid};$('identity').textContent='प्रमाणित Super Admin: '+uid;$('logout').disabled=false;$('adminArea').hidden=false;status('Super Admin को अनुमति पुष्टि भयो।');await refresh();void refreshCounts();}
+async function refreshCounts(){
+ const selected=actor,request=++countsEpoch;
+ if(!selected)return;
+ const check=()=>{if(actor!==selected||auth?.currentUser?.uid!==selected.uid||request!==countsEpoch)throw Error('Session changed')};
+ $('refreshCounts').disabled=true;
+ try{const counts=await loadPlatformSchoolCounts({db,api,actor:selected,assertSession:check});check();
+ $('platformCounts').textContent='Total schools: '+counts.totalSchools+' · Active: '+counts.activeSchools+' · Inactive: '+counts.inactiveSchools;
+ }catch{if(request===countsEpoch)$('platformCounts').textContent='Verified school totals unavailable.'}
+ finally{if(request===countsEpoch)$('refreshCounts').disabled=false}
+}
+$('refreshCounts').onclick=()=>void refreshCounts();
+$('estimateQuota').onclick=()=>{
+ if(!actor||auth?.currentUser?.uid!==actor.uid)return;
+ try{
+ const num=id=>{const s=$(id).value.trim();if(!s)throw Error('Enter every scenario value');return Number(s)};
+ const result=estimateSparkDay({schools:num('quotaSchools'),studentsPerSchool:num('quotaStudents'),
+ attendancePerStudent:num('quotaAttendance'),otherReadsPerSchool:num('quotaReads'),otherWritesPerSchool:num('quotaWrites'),
+ dashboardUsersPerSchool:num('quotaUsers'),activityHours:num('quotaHours')});
+ $('quotaResult').textContent='Estimated reads: '+result.reads.toLocaleString()+' / 50,000; writes: '+result.writes.toLocaleString()+
+ ' / 20,000 (attendance '+result.attendanceWrites.toLocaleString()+', activity '+result.heartbeatWrites.toLocaleString()+'). '+
+ (result.withinEstimatedDailyQuota?'Within entered scenario only.':'Estimated quota exceeded.')+' Actual rule reads, retries and storage must be checked in Firebase.';
+ }catch(e){$('quotaResult').textContent=e.message}
+};
 async function refresh(){if(!actor||auth?.currentUser?.uid!==actor.uid){clearAdmin();status('सत्र परिवर्तन भयो। फेरि Sign in गर्नुहोस्।');return}const requestedActor=actor,requestedSession=sessionEpoch,requestedRefresh=++refreshEpoch;try{$('next').disabled=true;const result=await listSchools({db,api,actor:requestedActor,pageSize:30,cursor});if(requestedRefresh!==refreshEpoch||sessionEpoch!==requestedSession)return;if(actor!==requestedActor||auth?.currentUser?.uid!==requestedActor.uid)throw new Error('विद्यालय सूची लिँदा सत्र परिवर्तन भयो।');const tbody=$('schools');tbody.replaceChildren();for(const school of result.schools){const tr=document.createElement('tr');for(const value of [school.id,school.name,school.active?'Active':'Inactive']){const td=document.createElement('td');td.textContent=String(value??'');tr.append(td)}const td=document.createElement('td'),button=document.createElement('button');button.textContent=school.active?'Deactivate':'Activate';button.onclick=async()=>{if(mutating||signingIn||signingOut)return;if(!actor||auth?.currentUser?.uid!==actor.uid){clearAdmin();status('सत्र परिवर्तन भयो। फेरि Sign in गर्नुहोस्।');return}if(!confirm('विद्यालय '+school.id+' को सक्रिय/निष्क्रिय अवस्था परिवर्तन गर्ने हो?'))return;if(!actor||auth?.currentUser?.uid!==actor.uid){clearAdmin();status('सत्र परिवर्तन भयो। फेरि Sign in गर्नुहोस्।');return}const mutationActor=actor,mutationSession=sessionEpoch;mutating=true;button.disabled=true;$('register').disabled=true;$('logout').disabled=true;$('refresh').disabled=true;$('next').disabled=true;try{await setSchoolActive({db,api,actor:mutationActor,schoolId:school.id,active:!school.active});if(sessionEpoch!==mutationSession||actor!==mutationActor||auth?.currentUser?.uid!==mutationActor.uid)return;cursor=null;await refresh()}catch(e){if(sessionEpoch===mutationSession&&actor===mutationActor&&auth?.currentUser?.uid===mutationActor.uid)showError(e)}finally{mutating=false;if(sessionEpoch===mutationSession&&actor===mutationActor&&auth?.currentUser?.uid===mutationActor.uid){button.disabled=false;$('register').disabled=false;$('logout').disabled=false;$('refresh').disabled=false}}};td.append(button);tr.append(td);tbody.append(tr)}$('next').disabled=!result.hasMore;$('next').onclick=()=>{if(mutating||signingIn||signingOut||!actor||auth?.currentUser?.uid!==actor.uid)return;cursor=result.cursor;refresh()};status(result.schools.length+' वटा विद्यालय लोड भए।');}catch(e){if(requestedRefresh!==refreshEpoch||requestedSession!==sessionEpoch)return;$('next').disabled=true;if(!actor||auth?.currentUser?.uid!==actor.uid){clearAdmin();status('सत्र परिवर्तन भयो। फेरि Sign in गर्नुहोस्।')}else showError(e)}}
-$('refresh').onclick=()=>{if(mutating||signingIn||signingOut)return;cursor=null;refresh()};
+$('refresh').onclick=()=>{if(mutating||signingIn||signingOut)return;cursor=null;refresh();void refreshCounts()};
 $('register').onclick=async()=>{if(mutating||signingIn||signingOut)return;if(!actor||auth?.currentUser?.uid!==actor.uid){clearAdmin();status('सत्र परिवर्तन भयो। फेरि Sign in गर्नुहोस्।');return}try{const schoolId=$('schoolId').value.trim();const suppliedIemis=$('iemis').value.trim();if(!/^[0-9]{5,20}$/.test(schoolId))throw new Error('विद्यालयको IEMIS Code ५–२० अङ्कको हुनुपर्छ।');if(suppliedIemis!==schoolId)throw new Error('School ID र IEMIS Code एउटै हुनुपर्छ।');const schoolName=$('schoolName').value.trim(),adminUid=$('adminUid').value.trim();if(schoolName.length<3||schoolName.length>160)throw new Error('विद्यालयको नाम ३–१६० अक्षरको हुनुपर्छ।');if(!/^[A-Za-z0-9_-]{6,128}$/.test(adminUid))throw new Error('Admin UID मान्य छैन।');if(!confirm('यो विद्यालय निष्क्रिय अवस्थामा दर्ता गरी पहिलो Admin तोक्ने हो?'))return;if(!actor||auth?.currentUser?.uid!==actor.uid){clearAdmin();status('सत्र परिवर्तन भयो। फेरि Sign in गर्नुहोस्।');return}const form={id:schoolId,name:schoolName,iemisCode:schoolId};const mutationActor=actor,mutationSession=sessionEpoch;mutating=true;$('register').disabled=true;$('logout').disabled=true;$('refresh').disabled=true;$('next').disabled=true;try{await onboardSchool({db,api,actor:mutationActor,form,adminUid});if(sessionEpoch!==mutationSession||actor!==mutationActor||auth?.currentUser?.uid!==mutationActor.uid)return;cursor=null;await refresh();status('विद्यालय निष्क्रिय अवस्थामा दर्ता भयो। पुष्टि गरेपछि मात्र सक्रिय गर्नुहोस्।')}finally{mutating=false;if(sessionEpoch===mutationSession&&actor===mutationActor&&auth?.currentUser?.uid===mutationActor.uid){$('register').disabled=false;$('logout').disabled=false;$('refresh').disabled=false}}}catch(e){if(actor&&auth?.currentUser?.uid===actor.uid)showError(e)}};
