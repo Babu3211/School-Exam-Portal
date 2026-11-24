@@ -19,9 +19,11 @@ const genreSets={
 const sourceOK=q=>q.sourceKind==='textbook'&&str(q.sourceTitle)&&str(q.sourceEdition)&&
  /^https:\/\/(?:[a-z0-9-]+\.)*(?:moecdc\.gov\.np|giwmscdnone\.gov\.np|giwmscdntwo\.gov\.np)\//i.test(str(q.sourceUrl))&&
  Number.isSafeInteger(q.sourcePage)&&q.sourcePage>0;
-function matches(q,s,subject,topics){
+function matches(q,s,subject,topics,allowDraft=false){
+ const reviewed=q?.reviewStatus==='teacher_reviewed'&&str(q.reviewedBy);
+ const draft=allowDraft&&!seenSkills.has(s.skill)&&q?.bundled===true&&q?.reviewStatus==='draft'&&q?.teacherReviewRequired===true&&q?.officialCdcQuestion===false&&q?.sourceStatus==='SMSS_original_reference_draft';
  if(!q||q.gradeNumber!==9||str(q.subject)!==str(subject)||q.status==='archived'||
-  !str(q.id)||!topics.has(q.topicId)||q.reviewStatus!=='teacher_reviewed'||!str(q.reviewedBy)||
+  !str(q.id)||!topics.has(q.topicId)||(!reviewed&&!draft)||
   q.skill!==s.skill||q.cognitiveLevel!==s.cognitiveLevel||q.marks!==s.marksPerChoice||
   !str(q.text)||!str(q.answer)||!/\p{Script=Devanagari}/u.test(q.text))return false;
  if(seenSkills.has(s.skill)&&!sourceOK(q))return false;
@@ -37,14 +39,14 @@ const shuffle=(a,rng)=>{
  const b=[...a];for(let i=b.length-1;i>0;i--){const n=rng();if(!Number.isFinite(n)||n<0||n>=1)throw Error('Invalid random source');const j=Math.floor(n*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;
 };
 const paperSignature=groups=>groups.flatMap(g=>g.choices.map(c=>str(c.id))).sort().join('|');
-export function planNepali2078ReferencePaper({grade,subject,fullMarks=75,durationMinutes=180,questions=[],selectedTopicIds=[],previousSignature='',avoidSignatures=[],rng=Math.random,maxVisits=100000}={}){
+export function planNepali2078ReferencePaper({grade,subject,fullMarks=75,durationMinutes=180,questions=[],selectedTopicIds=[],previousSignature='',avoidSignatures=[],rng=Math.random,maxVisits=100000,allowOriginalReferenceDraft=false}={}){
  if(grade!==9||cdcSubjectKey(subject)!=='nepali'||fullMarks!==75||durationMinutes!==180)throw Error('Grade 9 Nepali 75-mark 180-minute reference required');
  if(!Array.isArray(questions)||questions.length>5000||!Array.isArray(selectedTopicIds)||!Array.isArray(avoidSignatures)||avoidSignatures.length>30||
   avoidSignatures.some(x=>typeof x!=='string')||!Number.isSafeInteger(maxVisits)||maxVisits<1||maxVisits>200000)throw Error('Invalid reference bank or saved-paper exclusions');
  const ref=getNepali2078Reference(),topics=new Set(selectedTopicIds.filter(x=>typeof x==='string'&&x.trim()));
  const cells=[],groups=ref.slots.map(s=>({number:s.number,skill:s.skill,cognitiveLevel:s.cognitiveLevel,answerCount:s.answerCount,marks:s.marks,choices:new Array(s.offered)}));
  for(const [i,s]of ref.slots.entries()){
-  const candidates=questions.filter(q=>matches(q,s,subject,topics));
+  const candidates=questions.filter(q=>matches(q,s,subject,topics,allowOriginalReferenceDraft));
   for(let j=0;j<s.offered;j++){
    const genres=genreSets[s.skill]?.[j];
    const pool=candidates.filter(q=>!genres||genres.includes(q.genre));
