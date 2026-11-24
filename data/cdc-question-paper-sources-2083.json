@@ -542,6 +542,17 @@
       "status": "official_CDC_curriculum_reference_not_a_grid",
       "url": "https://moecdc.gov.np/content/53/environment-science-class-4/",
       "note": "CDC Grade 9 optional Environmental Science curriculum listing. Not a verified specification grid or model question; do not substitute compulsory Science."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक वातावरण विज्ञान",
+      "kind": "CDC_textbook",
+      "version": "2025 first edition; updated curriculum 2081",
+      "status": "official_textbook_contents_text_extracted_grid_not_verified",
+      "url": "https://giwmscdntwo.gov.np/media/pdf_upload/Class%209%20Environment%20science_English%20Version_zgnagog.pdf",
+      "note": "New textbook contents list nine units; older 2076 curriculum listed ten areas. Textbook is not specification grid; visual screenshot unavailable; exact marks allocation remains unverified."
     }
   ],
   "completion": {
