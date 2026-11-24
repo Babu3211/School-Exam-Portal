@@ -23,7 +23,45 @@ const triples=[[3,4,5],[5,12,13],[8,15,17],[7,24,25]];
 const grade9Part=(unit,seed,marks,level)=>{
  const a=2+seed%31,b=2+seed%7,c=1+seed%5,mode=seed%4;
  let ne,en,ans,skill;
- if(unit===3){
+ if(unit===1){
+  const kind=seed%5;
+  if(kind===0){
+   const d=a+c;
+   ne='f(x) = '+b+'x + '+c+' भए f(x) = '+(b*d+c)+' को पूर्वप्रतिबिम्ब निकाल्नुहोस्।';
+   en='For f(x) = '+b+'x + '+c+', find the preimage of '+(b*d+c)+'.';ans=String(d);skill='function_preimage';
+  }else if(kind===1){
+   ne='x² + '+(a+b)+'x + '+(a*b)+' लाई x + '+a+' ले भाग गर्दा भागफल निकाल्नुहोस्।';
+   en='Find the quotient when x² + '+(a+b)+'x + '+(a*b)+' is divided by x + '+a+'.';ans='x + '+b;skill='polynomial_division';
+  }else if(kind===2){
+   ne='A = [['+a+', '+b+'], ['+c+', '+(a+1)+']] र B = [['+c+', '+(b+1)+'], ['+a+', '+b+']] भए A + B को दोस्रो पङ्क्तिको पहिलो अवयव निकाल्नुहोस्।';
+   en='Given A = [['+a+', '+b+'], ['+c+', '+(a+1)+']] and B = [['+c+', '+(b+1)+'], ['+a+', '+b+']], find the entry in row 2, column 1 of A + B.';ans=String(c+a);skill='matrix_addition';
+  }else if(kind===3){
+   const k=a+c;
+   ne='वास्तविक सङ्ख्यामा '+b+'x + '+c+' ≤ '+(b*k+c)+' असमानताको समाधान अन्तराल लेख्नुहोस्।';
+   en='Over the real numbers, solve '+b+'x + '+c+' ≤ '+(b*k+c)+' and express the solution as an interval.';ans='(−∞, '+k+']';skill='linear_inequality_interval';
+  }else{
+   ne='√'+(a*a*b)+' लाई सरल रूपमा लेख्नुहोस्; पूर्ण वर्ग गुणनखण्ड निकाल्नुहोस्।';
+   en='Simplify √'+(a*a*b)+' by extracting a perfect-square factor.';const factors={2:[1,2],3:[1,3],4:[2,1],5:[1,5],6:[1,6],7:[1,7],8:[2,2]};const [m,n]=factors[b];ans=n===1?String(a*m):(a*m)+'√'+n;skill='surd_simplification';
+  }
+ }else if(unit===2){
+  if(mode===0){
+   const n=1+seed%23;
+   ne=(n*15)+'° लाई रेडियनमा बदल्नुहोस्।';
+   en='Convert '+(n*15)+'° into radians.';ans=n+'π/12';skill='angle_conversion';
+  }else if(mode===1){
+   const n=1+seed%11,r=12*a;
+   ne='अर्धव्यास '+r+' cm र केन्द्रीय कोण '+n+'π/12 रेडियन भएको वृत्तको चापको लम्बाइ निकाल्नुहोस्।';
+   en='Find the arc length of a circle with radius '+r+' cm and central angle '+n+'π/12 radians.';ans=(a*n)+'π cm';skill='arc_length';
+  }else if(mode===2){
+   const op=2*a,hyp=a*a+1;
+   ne='θ न्यूनकोण हो र sin θ = '+op+'/'+hyp+' भए cos θ निकाल्नुहोस्।';
+   en='If θ is acute and sin θ = '+op+'/'+hyp+', find cos θ using the Pythagorean identity.';ans=(a*a-1)+'/'+hyp;skill='pythagorean_identity';
+  }else{
+   const ang=1+seed%89;
+   ne='sin(90° − θ) = cos θ प्रयोग गरी sin '+(90-ang)+'° लाई θ = '+ang+'° को cosine का रूपमा लेख्नुहोस्।';
+   en='Using the complementary-angle identity, express sin '+(90-ang)+'° as the cosine of its complementary angle.';ans='cos '+ang+'°';skill='complementary_angle';
+  }
+ }else if(unit===3){
   if(mode===0){
    const x=a+b,y=c+2*b;
    ne='A('+a+','+c+') र B('+x+','+y+') जोड्ने रेखाको ढलान पत्ता लगाउनुहोस्।';
@@ -68,9 +106,20 @@ const grade9Part=(unit,seed,marks,level)=>{
    ne=values+' को variance निकाल्नुहोस् (N ले भाग गर्ने सूत्र प्रयोग गर्नुहोस्)।';
    en='Find the population variance of '+values+'.';ans=String(b*b);skill='variance';
   }
- }else if(unit===6&&mode===3){
-  ne='lim (x→'+a+') (x² − '+(a*a)+')/(x − '+a+') निकाल्नुहोस्।';
-  en='Evaluate lim(x→'+a+') (x² − '+(a*a)+')/(x − '+a+').';ans=String(2*a);skill='algebraic_limit';
+ }else if(unit===6){
+  if(mode===0){
+   ne='lim (x→'+a+') ('+b+'x² + '+c+') निकाल्नुहोस्।';
+   en='Evaluate lim(x→'+a+') ('+b+'x² + '+c+').';ans=String(b*a*a+c);skill='polynomial_limit';
+  }else if(mode===1){
+   ne='lim (x→'+a+') (x² − '+(a*a)+')/(x − '+a+') निकाल्नुहोस्।';
+   en='Evaluate lim(x→'+a+') (x² − '+(a*a)+')/(x − '+a+').';ans=String(2*a);skill='algebraic_limit';
+  }else if(mode===2){
+   ne='f(x) = (x − '+a+')(x + '+b+')/(x − '+a+') को x → '+a+' मा सीमान्त मान निकाल्नुहोस्।';
+   en='Find the limit of (x − '+a+')(x + '+b+')/(x − '+a+') as x approaches '+a+'.';ans=String(a+b);skill='cancelled_factor_limit';
+  }else{
+   ne='lim (x→'+a+') (x³ − '+(a*a*a)+')/(x − '+a+') निकाल्नुहोस्।';
+   en='Evaluate lim(x→'+a+') (x³ − '+(a*a*a)+')/(x − '+a+').';ans=String(3*a*a);skill='cubic_limit';
+  }
  }else return null;
  return {unitCode:String(unit),marks,cognitiveLevel:level,textNe:ne,textEn:en,answerNe:ans,answerEn:ans,curriculumSkill:skill};
 };

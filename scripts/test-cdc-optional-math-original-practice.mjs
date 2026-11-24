@@ -80,3 +80,12 @@ assert.ok(grade9.some(p=>p.curriculumSkill==='standard_deviation'));
 assert.ok(grade9.some(p=>p.curriculumSkill==='parallel_vectors'));
 assert.ok(grade9.some(p=>p.curriculumSkill==='rotation'));
 console.log('PASS Grade 9 geometry, vectors and statistics aligned to curriculum pp. 3–5; Grade 10 behavior unchanged');
+
+// All Grade 9 content areas use grade-specific curriculum-aligned exercises.
+assert.ok(grade9.every(p=>p.curriculumSkill));
+for(const unit of ['1','2','6'])assert.ok(new Set(grade9.filter(p=>p.unitCode===unit).map(p=>p.curriculumSkill)).size>=3,'Skill coverage for '+unit);
+assert.ok(grade9.some(p=>p.curriculumSkill==='matrix_addition'));
+assert.ok(grade9.some(p=>p.curriculumSkill==='polynomial_division'));
+assert.ok(grade9.some(p=>p.curriculumSkill==='arc_length'));
+assert.ok(grade9.some(p=>p.curriculumSkill==='pythagorean_identity'));
+console.log('PASS all six Grade 9 optional math content areas use grade-specific original curriculum exercises');
