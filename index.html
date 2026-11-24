@@ -4602,6 +4602,33 @@ const cdcPrimaryDailyLifeRubrics = [
    return Object.entries(cdcRevisedMathForms).filter(([key])=>key.startsWith(grade+':'))
      .flatMap(([key,form])=>form.rows.map(([,ne,en])=>[key.slice(2),ne,en]));
  }
+// CDC 2076 Nepali, printed p.102: grouped outcome / aspect / instrument review.
+// The source text extraction is not a visually verified transcription. Keep
+// instrument-level ratings read-only until the assessment/annual mapping is audited.
+const cdcPrimaryNepaliFamilyPreview=[
+ {ne:'प्रसङ्गअनुसार कुराकानी, संवाद र प्रश्नोत्तर गर्ने',en:'Use appropriate language in conversation and questions',tools:[
+ ['मौखिक अभिव्यक्ति','Oral expression','कुराकानी','Conversation'],
+ ['मौखिक अभिव्यक्ति','Oral expression','हाउभाउ र कथनको अवलोकन','Observe gestures and speech'],
+ ['मौखिक अभिव्यक्ति','Oral expression','छलफल','Discussion'],
+ ['मौखिक अभिव्यक्ति','Oral expression','प्रश्नोत्तर','Questions and answers'],
+ ['श्रुतिवर्णन','Oral description','अवलोकन','Observation']]},
+ {ne:'परिवारमा चल्ने शब्द चिन्ने र प्रयोग गर्ने',en:'Recognize and use family vocabulary',tools:[
+ ['शब्दभण्डार','Vocabulary','शब्दसूची','Word list'],['शब्दभण्डार','Vocabulary','अभ्यास र प्रयोग','Practice and use']]},
+ {ne:'सङ्केत जोडेर आकृति र चित्र बनाउने',en:'Join marks to make shapes and pictures',tools:[
+ ['पुनरुत्पादन','Reproduction','ढाँचा लेखन','Pattern writing'],['पुनरुत्पादन','Reproduction','रङ भर्ने','Colouring']]},
+ {ne:'पाठका दैनिक प्रयोगका शब्द सुनेर दोहोर्‍याउने',en:'Listen to and repeat familiar words',tools:[
+ ['ध्वनि र वर्ण','Sounds and letters','श्रवण र उच्चारण','Listening and pronunciation'],['शब्दभण्डार','Vocabulary','परियोजना कार्य','Project work']]},
+ {ne:'चित्र, शीर्षक र पाठको सन्दर्भबाट छलफल तथा प्रश्नोत्तर गर्ने',en:'Discuss and answer questions using pictures, titles and context',tools:[
+ ['पठनबोध','Reading comprehension','छलफल र प्रश्नोत्तर','Discussion and questions'],['पठनबोध','Reading comprehension','वर्णन','Description']]},
+ {ne:'पाठको परिवेश, पात्र र सन्दर्भ चिन्ने तथा तुलना गर्ने',en:'Identify and compare setting, characters and context',tools:[
+ ['पठनबोध','Reading comprehension','सूचना प्रयोग','Use information'],['पठनबोध','Reading comprehension','छलफल र प्रश्नोत्तर','Discussion and questions'],['पठनबोध','Reading comprehension','तुलना','Comparison']]},
+ {ne:'चित्र र त्यससँग मिल्ने शब्द चिनेर प्रश्नोत्तर गर्ने',en:'Match pictures with words and answer questions',tools:[
+ ['दृश्यबोध','Visual comprehension','चित्र','Pictures'],['दृश्यबोध','Visual comprehension','श्रव्यदृश्य सामग्री','Audiovisual material']]},
+ {ne:'उचित पदसङ्गति र चिह्न प्रयोग गरी मौखिक तथा लिखित अभिव्यक्ति दिने',en:'Use appropriate agreement and punctuation in speech and writing',tools:[
+ ['चिह्न, काल र सङ्गति','Punctuation, tense and agreement','मौखिक प्रयोग','Oral use']]},
+ {ne:'कार्यपुस्तिकाका क्रियाकलापबाट विषयवस्तुको सिकाइ परीक्षण गर्ने',en:'Assess learning through workbook activities',tools:[
+ ['मापन','Assessment','मौखिक तथा लिखित कार्य','Oral and written tasks']]}
+];
  const cdcVerifiedOutcomes = {
   '1:serophero': [
     ['म र मेरो परिवार','आफू र परिवारको परिचय','Introduce yourself and your family'],
@@ -6254,6 +6281,7 @@ function parseCdcBilingualCatalog(text) {
   const revisedPrimaryYear=/^\d{4}$/.test(year)&&Number(year)>=2084;
   const primaryRevisedForm=()=>revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics'?cdcRevisedMathForms[field('class').value+':'+field('unit').value]:null;
   const primaryLegacyForm=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics'?cdcLegacyMathRubrics[field('class').value+':'+field('unit').value]:null;
+  const primaryNepaliPreview=()=>context&&!revisedPrimaryYear&&field('class').value==='1'&&cdcAssessmentSubjectKey(field('subject').value)==='nepali'&&field('unit').value==='म र मेरो परिवार';
   const isPrimaryRubric=()=>!!primaryRevisedForm()||!!primaryLegacyForm();
   const hasAnnexGrid=()=>!!context&&(isPrimaryRubric()||(Number(field('class').value)>=4&&['nepali','english','mathematics','socialstudies','science','healthphysicalcreativeart'].includes(cdcAssessmentSubjectKey(field('subject').value))));
   // Enter a single stage in the official date/rating columns. Never overwrite a
@@ -6316,7 +6344,9 @@ function parseCdcBilingualCatalog(text) {
   field('gridRead').onclick=()=>field('readSchool').onclick();
   const renderAnnex=()=>{
     const panel=field('annex3'),enabled=hasAnnexGrid(),en=language()==='en';
-    panel.hidden=!enabled;field('stageRow').hidden=!enabled;
+    const preview=primaryNepaliPreview();
+    panel.hidden=!enabled&&!preview;field('stageRow').hidden=!enabled;field('gridRead').hidden=!!preview;
+    if(preview){field('printForm').disabled=true;renderPrimaryNepaliPreview();return;}
     field('printForm').disabled=!enabled||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('unit').value.trim();
     if(!enabled)return;
     if(primaryLegacyForm()){renderPrimaryLegacy();return;}
@@ -6368,6 +6398,26 @@ function parseCdcBilingualCatalog(text) {
     field('annexStatus').textContent=en?'Draft layout using existing outcome catalogue. Select a row to enter the observation; read school records to populate ratings. Unclassified legacy records are not assigned to either stage.':'हालको उपलब्धि सूचीमा आधारित प्रारम्भिक ढाँचा। उपलब्धि छानेर मूल्याङ्कन गर्नुहोस्; विद्यालयको अभिलेख पढेपछि अङ्क देखिन्छ। चरण नखुलेका पुराना अभिलेख छुट्टै रहन्छन्।';
     field('annexSign').textContent=en?'Teacher signature __________  Date __________  Parent signature __________  Date __________':'शिक्षकको दस्तखत __________  मिति __________  अभिभावकको दस्तखत __________  मिति __________';
   };
+  function renderPrimaryNepaliPreview(){
+    const en=language()==='en',label=(ne,eng)=>en?eng:ne;
+    field('annexTitle').textContent=label('मूल्याङ्कन अभिलेख — नेपाली (समीक्षा प्रति)','Nepali assessment record — review copy');
+    field('annexIdentity').textContent=label('कक्षा: १   विद्यार्थी: ','Grade: 1   Student: ')+(field('student').selectedOptions[0]?.text||'');
+    field('annexUnit').textContent=localized('म र मेरो परिवार','Me and my family');
+    field('annexHead').innerHTML='<tr><th rowspan="2">'+label('सिकाइ उपलब्धि','Learning outcome')+'</th><th rowspan="2">'+label('परीक्षण गर्ने पक्ष','Assessment aspect')+'</th><th rowspan="2">'+label('साधन','Instrument')+'</th><th colspan="2">'+label('नियमित पढाइको मूल्याङ्कन','Regular assessment')+'</th><th colspan="2">'+label('थप सहायतापछिको मूल्याङ्कन','Assessment after support')+'</th><th rowspan="2">'+label('कैफियत','Remarks')+'</th></tr><tr><th>'+label('मिति','Date')+'</th><th>'+label('अङ्क','Rating')+'</th><th>'+label('मिति','Date')+'</th><th>'+label('अङ्क','Rating')+'</th></tr>';
+    const body=field('annexRows');body.replaceChildren();
+    for(const outcome of cdcPrimaryNepaliFamilyPreview){
+      for(const [i,[aspect,aspectEn,tool,toolEn]] of outcome.tools.entries()){
+        const row=body.insertRow();
+        if(i===0){const cell=row.insertCell();cell.rowSpan=outcome.tools.length;cell.textContent=localized(outcome.ne,outcome.en);}
+        row.insertCell().textContent=localized(aspect,aspectEn);
+        row.insertCell().textContent=localized(tool,toolEn);
+        for(let j=0;j<5;j++)row.insertCell();
+      }
+    }
+    field('annexFoot').replaceChildren();
+    field('annexSign').textContent=label('अभिभावकको दस्तखत __________   शिक्षकको दस्तखत र मिति __________','Parent signature __________   Teacher signature and date __________');
+    field('annexStatus').textContent=label('CDC २०७६, मुद्रित पृष्ठ १०२ — ९ उपलब्धि, २० साधन पङ्क्ति। कार्यगत द्विभाषिक रूपान्तरण। तालिका समीक्षा मात्र; साधनगत अङ्कन र स्रोत दृश्य मिलान बाँकी। पुरानो उपलब्धि अभिलेख यथावत् छ।','CDC 2076, printed p.102 — 9 outcomes, 20 instrument rows. Working translation. Table preview only: instrument rating and visual verification pending. Existing outcome records are unchanged.');
+  }
   function renderPrimaryLegacy(){
     const form=primaryLegacyForm(),grade=field('class').value,unit=field('unit').value;
     const st=assessmentStudents.find(s=>s.id===field('student').value);
