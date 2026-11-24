@@ -29,3 +29,28 @@ for(const q of p.questions){
  if(q.skill==='unseen_passage')assert.match(q.components[4].text,/वाक्यमा प्रयोग/);
 }
 console.log('PASS contextual grammar task format and required transformation/vocabulary categories in authored Nepali drafts');
+
+const {grade9NepaliPracticeSummaryDrafts}=await import('../cdc-grade9-nepali-reference-bank.mjs');
+const {buildGrade9ReferencePreview,referencePreviewTopics}=await import('../cdc-grade9-reference-preview.mjs');
+const {assertGrade9ExamPaperMatches}=await import('../cdc-grade9-paper-grid-guard.mjs');
+const summary=grade9NepaliPracticeSummaryDrafts({grade,subject});
+assert.equal(summary.length,2);
+const all=[...p.questions,...summary],allTopics=referencePreviewTopics({grade,subject,questions:all});
+const practiceArgs={...args,fullMarks:75,durationMinutes:180,language:'ne',questions:all,selectedTopicIds:allTopics,allowOriginalSummaryPractice:true,rng:()=>.42};
+assert.equal(plan({...practiceArgs,allowOriginalSummaryPractice:false}).ready,false);
+const a=plan(practiceArgs);
+assert.equal(a.ready,true,a.reason);
+assert.equal(a.practiceSubstitution,true);
+assert.equal(a.paper.groups.length,20);
+assert.equal(a.paper.groups.reduce((n,g)=>n+g.marks,0),75);
+assert.equal(a.paper.groups[14].choices[0].practiceSubstitution,true);
+assert.equal(a.readyForLive,false);
+assert.throws(()=>assertGrade9ExamPaperMatches(a.paper),/verified subject/);
+const b=buildGrade9ReferencePreview(practiceArgs);
+assert.equal(b.ready,true,b.reason);
+assert.match(b.text,/मौलिक अपठित गद्यांश/);
+assert.match(b.text,/बुँदाटिपोट/);
+assert.match(b.text,/विकल्पमध्ये/);
+assert.equal(b.readyForLive,false);
+assert.notEqual(buildGrade9ReferencePreview({...practiceArgs,previousSignature:b.signature,rng:()=>.61}).signature,b.signature);
+console.log('PASS 75-mark Nepali practice review preview, explicit original summary substitution, all optional choices, official exam still blocked');

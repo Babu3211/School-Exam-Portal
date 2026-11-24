@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v94-grade9-nepali-textbook-reference-2083';
+const CACHE_NAME = 'smss-pwa-v95-grade9-nepali-summary-practice-2083';
 const APP_SHELL = [
   './',
   './index.html',

@@ -49,3 +49,20 @@ export function grade9NepaliReferenceBank({grade,subject}={}){
  }));
  return {units,questions:[...questions,...nepaliTextbookReferenceDrafts({grade,subject,units})],coveredMarks:71,teacherReviewRequired:true,exactGridVerified:false};
 }
+
+/** Original substitute for the source-dependent summary slot. Practice only:
+ * this is not a seen textbook passage and cannot certify the CDC structure. */
+export function grade9NepaliPracticeSummaryDrafts({grade,subject}={}){
+ const {units}=grade9NepaliPracticeBank({grade,subject});
+ if(!units.length)return [];
+ const u=units[5],s=getNepali2078Reference().slots[14];
+ const passages=[
+ ['विद्यालयको करेसाबारीमा विद्यार्थीहरूले पालैपालो काम गर्ने योजना बनाए। पहिले उनीहरूले खाली ठाउँ सफा गरे र माटो तयार पारे। स्थानीय मौसमअनुसार तरकारीका बिउ छानेर रोपे। पानी बचाउन बिहान सिँचाइ गर्ने र सुक्खा पातले माटो छोप्ने अभ्यास गरे। भान्साबाट निस्कने कुहिने फोहोरलाई कम्पोस्ट मलमा परिणत गरे। प्रत्येक समूहले आफ्नो काम र बिरुवाको वृद्धि अभिलेखमा राख्यो। उत्पादन भएको तरकारी विद्यालयको खाजामा प्रयोग गरियो। यस कामबाट विद्यार्थीले श्रमको सम्मान, स्रोतको बचत र समूहमा जिम्मेवारी बाँड्ने बानी सिके।','विद्यालयको करेसाबारीको तयारी; पानी बचत र कम्पोस्ट; कामको अभिलेख तथा उत्पादनको उपयोग; सहकार्य र जिम्मेवारीको सिकाइ।','विद्यार्थीले योजना बनाएर विद्यालयमा तरकारी खेती गरे। पानी बचत, कम्पोस्ट र अभिलेखबाट स्रोतको सदुपयोग गरी उत्पादन खाजामा लगाए। उनीहरूले सहकार्य र जिम्मेवारी सिके।'],
+ ['टोलका बासिन्दाले सार्वजनिक पुस्तकालय सञ्चालन गर्न सानो समिति बनाए। स्थानीय परिवारले पढिसकेका उपयोगी पुस्तक दान गरे। स्वयंसेवकले पुस्तकलाई विषयअनुसार छुट्याएर सूची तयार पारे। बालबालिकालाई हरेक शनिबार कथा पढ्ने र आफ्नो विचार सुनाउने अवसर दिइयो। पुस्तक हराउन नदिन उधारो अभिलेख राखियो र पुराना पुस्तक मर्मत गरियो। समिति सदस्यहरूले खर्च र कार्यक्रमको विवरण नियमित रूपमा सार्वजनिक गरे। पढ्न रुचि नभएका बालबालिकालाई पनि साथीहरूसँग सहभागी गराइयो। यस प्रयासले पढ्ने बानी, साझा सम्पत्तिप्रतिको जिम्मेवारी र समुदायबीचको सहयोग बढायो।','समिति र पुस्तक दान; वर्गीकरण तथा उधारो अभिलेख; साप्ताहिक सहभागिता र पुस्तक मर्मत; पारदर्शिता, अध्ययन र सामुदायिक सहयोग।','टोलले दान र स्वयंसेवाबाट सार्वजनिक पुस्तकालय चलायो। व्यवस्थित अभिलेख, कथा कार्यक्रम र पारदर्शी सञ्चालनले बालबालिकाको अध्ययन, जिम्मेवारी र सामुदायिक सहयोग बढायो।']
+ ];
+ return passages.map(([passage,notes,summary],i)=>{
+  const text='मौलिक अभ्यास गद्यांश पढी बुँदाटिपोट र सारांश लेख्नुहोस्। (सन्दर्भ अभ्यास '+(i+1)+')';
+  const components=[{text:'चार मुख्य बुँदा टिप्नुहोस्।',answer:notes,marks:2},{text:'मूल भाव नबिगारी करिब एक तिहाइमा सारांश लेख्नुहोस्।',answer:summary,marks:2}];
+  return {id:'smss_nep_summary_practice_'+i,gradeNumber:9,subject,unitCode:u.unitCode,unitId:u.id,unitTitle:u.unitTitle,topicId:u.id+'_1',topicName:u.topics[1],skill:s.skill,cognitiveLevel:s.cognitiveLevel,marks:4,questionType:'grouped_reference',text,questionText:text,questionTextEn:text,passage,components,answer:notes+' / '+summary,answerEn:notes+' / '+summary,sourceKind:'original_unseen',practiceSubstitution:true,status:'active',bundled:true,teacherReviewRequired:true,reviewStatus:'draft',officialCdcQuestion:false,sourceStatus:'SMSS_original_reference_draft'};
+ });
+}

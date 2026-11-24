@@ -13,7 +13,7 @@ import {compareGrade8SciencePracticeBank,getGrade8ScienceHistoricalPracticePatte
 import {grade8ScienceOriginalSupplement} from "./cdc-grade8-science-original-supplement.mjs";
 import {grade9ScienceSchoolReferenceBank} from "./cdc-grade9-science-school-reference.mjs";
 import {grade9ScienceOriginalBank} from "./cdc-grade9-science-original-practice.mjs";
-import {grade9NepaliReferenceBank} from "./cdc-grade9-nepali-reference-bank.mjs";
+import {grade9NepaliReferenceBank,grade9NepaliPracticeSummaryDrafts} from "./cdc-grade9-nepali-reference-bank.mjs";
 import {grade9NepaliPracticeBank} from "./cdc-grade9-nepali-practice.mjs";
 import {grade9EnglishReferenceBank} from "./cdc-grade9-english-reference-bank.mjs";
 import {grade9EnglishPracticeBank,auditEnglishChart} from "./cdc-grade9-english-practice.mjs";
@@ -479,7 +479,7 @@ async function loadBundledPracticeBank({grade,subject}){
  const science=grade9ScienceOriginalBank({grade,subject});
  if(science.units.length){const ref=grade9ScienceSchoolReferenceBank({grade,subject});return {units:science.units,questions:[...science.questions,...ref.questions],status:"Grade 9 Science: 76 original exercises and 80 bilingual school-reference variants; 75-mark full-year review only. Current CDC Grid not verified."};}
  const nepali=grade9NepaliPracticeBank({grade,subject});
- if(nepali.units.length){const ref=grade9NepaliReferenceBank({grade,subject});return {units:nepali.units,questions:[...nepali.questions,...ref.questions],status:"कक्षा ९ नेपाली: ४८ अभ्यास र ५४ मौलिक सन्दर्भ समूह, ७१ अङ्कको संरचना; ४ अङ्कको सारांश पाठांश र वर्तमान CDC Grid पुष्टि बाँकी।"};}
+ if(nepali.units.length){const ref=grade9NepaliReferenceBank({grade,subject});return {units:nepali.units,questions:[...nepali.questions,...ref.questions,...grade9NepaliPracticeSummaryDrafts({grade,subject})],status:"कक्षा ९ नेपाली: ४८ अभ्यास, ५४ सन्दर्भ समूह र २ मौलिक सारांश अभ्यास; ७५ अङ्कको समीक्षा संरचना। पाठगत सारांश र वर्तमान CDC Grid पुष्टि बाँकी।"};}
  const english=grade9EnglishPracticeBank({grade,subject});
  if(english.units.length){const ref=grade9EnglishReferenceBank({grade,subject});return {units:english.units,questions:[...english.questions,...ref.questions],status:"Grade 9 English: 54 original exercises plus "+ref.questions.length+" reference groups; "+(ref.questions.some(q=>q.slot==="reading2")?"75-mark reference structure; teacher review and current model confirmation required.":"65 marks prepared; original seen prose retrieval pending.")+" Not a CDC Exact examination."};}
  const math=grade9CompulsoryMathPracticeBank({grade,subject});
@@ -1182,6 +1182,7 @@ function selectReferenceDraftTopics(){
  for(const input of document.querySelectorAll("[data-qp-topic]"))input.checked=ids.has(input.value);
  $("qpPaperFullMarks").value="75";$("qpPaperDuration").value=String(grade9EnvironmentReferenceBank({grade:9,subject:selectedSubject}).questions.length?135:180);
  if(auditEnglishChart({grade:9,subject:selectedSubject}))$("qpAutoLanguage").value="en";
+ if(grade9NepaliPracticeBank({grade:9,subject:selectedSubject}).units.length)$("qpAutoLanguage").value="ne";
  invalidateGeneratedQuestionPaper();
  clearReferenceDraftPreview();refreshReferenceDraftActions();updateAutoGridStatus();
  message("सन्दर्भ प्रश्नका उपलब्ध Topic छानिए। यो CDC Exact परीक्षा होइन।");

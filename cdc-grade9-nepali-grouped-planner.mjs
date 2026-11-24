@@ -19,14 +19,15 @@ const genreSets={
 const sourceOK=q=>q.sourceKind==='textbook'&&str(q.sourceTitle)&&str(q.sourceEdition)&&
  /^https:\/\/(?:[a-z0-9-]+\.)*(?:moecdc\.gov\.np|giwmscdnone\.gov\.np|giwmscdntwo\.gov\.np)\//i.test(str(q.sourceUrl))&&
  Number.isSafeInteger(q.sourcePage)&&q.sourcePage>0;
-function matches(q,s,subject,topics,allowDraft=false){
+function matches(q,s,subject,topics,allowDraft=false,allowSummaryPractice=false){
+ const originalSummary=allowDraft&&allowSummaryPractice&&s.skill==='notes_and_summary'&&q?.sourceKind==='original_unseen'&&q?.practiceSubstitution===true;
  const reviewed=q?.reviewStatus==='teacher_reviewed'&&str(q.reviewedBy);
- const draft=allowDraft&&(!seenSkills.has(s.skill)||(s.skill!=='notes_and_summary'&&q?.sourceEvidence==='textbook_text_checked_original_questions'&&sourceOK(q)))&&q?.bundled===true&&q?.reviewStatus==='draft'&&q?.teacherReviewRequired===true&&q?.officialCdcQuestion===false&&q?.sourceStatus==='SMSS_original_reference_draft';
+ const draft=allowDraft&&(originalSummary||!seenSkills.has(s.skill)||(s.skill!=='notes_and_summary'&&q?.sourceEvidence==='textbook_text_checked_original_questions'&&sourceOK(q)))&&q?.bundled===true&&q?.reviewStatus==='draft'&&q?.teacherReviewRequired===true&&q?.officialCdcQuestion===false&&q?.sourceStatus==='SMSS_original_reference_draft';
  if(!q||q.gradeNumber!==9||str(q.subject)!==str(subject)||q.status==='archived'||
   !str(q.id)||!topics.has(q.topicId)||(!reviewed&&!draft)||
   q.skill!==s.skill||q.cognitiveLevel!==s.cognitiveLevel||q.marks!==s.marksPerChoice||
   !str(q.text)||!str(q.answer)||!/\p{Script=Devanagari}/u.test(q.text))return false;
- if(seenSkills.has(s.skill)&&!sourceOK(q))return false;
+ if(seenSkills.has(s.skill)&&!originalSummary&&!sourceOK(q))return false;
  if(['grammar_passage','unseen_passage','notes_and_summary'].includes(s.skill)){
   if(!str(q.passage)||words(q.passage)>(s.skill==='unseen_passage'?150:125))return false;
   if(s.skill==='unseen_passage'&&q.sourceKind!=='original_unseen')return false;
@@ -39,14 +40,14 @@ const shuffle=(a,rng)=>{
  const b=[...a];for(let i=b.length-1;i>0;i--){const n=rng();if(!Number.isFinite(n)||n<0||n>=1)throw Error('Invalid random source');const j=Math.floor(n*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;
 };
 const paperSignature=groups=>groups.flatMap(g=>g.choices.map(c=>str(c.id))).sort().join('|');
-export function planNepali2078ReferencePaper({grade,subject,fullMarks=75,durationMinutes=180,questions=[],selectedTopicIds=[],previousSignature='',avoidSignatures=[],rng=Math.random,maxVisits=100000,allowOriginalReferenceDraft=false}={}){
+export function planNepali2078ReferencePaper({grade,subject,fullMarks=75,durationMinutes=180,questions=[],selectedTopicIds=[],previousSignature='',avoidSignatures=[],rng=Math.random,maxVisits=100000,allowOriginalReferenceDraft=false,allowOriginalSummaryPractice=false}={}){
  if(grade!==9||cdcSubjectKey(subject)!=='nepali'||fullMarks!==75||durationMinutes!==180)throw Error('Grade 9 Nepali 75-mark 180-minute reference required');
  if(!Array.isArray(questions)||questions.length>5000||!Array.isArray(selectedTopicIds)||!Array.isArray(avoidSignatures)||avoidSignatures.length>30||
   avoidSignatures.some(x=>typeof x!=='string')||!Number.isSafeInteger(maxVisits)||maxVisits<1||maxVisits>200000)throw Error('Invalid reference bank or saved-paper exclusions');
  const ref=getNepali2078Reference(),topics=new Set(selectedTopicIds.filter(x=>typeof x==='string'&&x.trim()));
  const cells=[],groups=ref.slots.map(s=>({number:s.number,skill:s.skill,cognitiveLevel:s.cognitiveLevel,answerCount:s.answerCount,marks:s.marks,choices:new Array(s.offered)}));
  for(const [i,s]of ref.slots.entries()){
-  const candidates=questions.filter(q=>matches(q,s,subject,topics,allowOriginalReferenceDraft));
+  const candidates=questions.filter(q=>matches(q,s,subject,topics,allowOriginalReferenceDraft,allowOriginalSummaryPractice));
   for(let j=0;j<s.offered;j++){
    const genres=genreSets[s.skill]?.[j];
    const pool=candidates.filter(q=>!genres||genres.includes(q.genre));
@@ -71,6 +72,7 @@ export function planNepali2078ReferencePaper({grade,subject,fullMarks=75,duratio
    ids.add(id);texts.add(text);topicCounts.set(q.topicId,(topicCounts.get(q.topicId)||0)+1);
    groups[i].choices[j]={id,text:q.text,answer:q.answer,marks:q.marks,topicId:q.topicId,genre:q.genre||null,
     ...(q.passage?{passage:q.passage}:{}),
+    ...(q.practiceSubstitution===true?{practiceSubstitution:true}:{}),
     ...(q.components?{components:q.components.map(p=>({text:p.text,answer:p.answer,marks:p.marks}))}:{}),
     ...(q.sourceKind==='textbook'?{sourceKind:q.sourceKind,sourceTitle:q.sourceTitle,sourceEdition:q.sourceEdition,sourceUrl:q.sourceUrl,sourcePage:q.sourcePage}:{})};
    if(solve(step+1))return true;
@@ -80,7 +82,8 @@ export function planNepali2078ReferencePaper({grade,subject,fullMarks=75,duratio
   return false;
  };
  if(!solve(0))return missing('No distinct complete reference paper satisfies every topic and saved-set exclusion');
- const paper={gradeNumber:9,subject,fullMarks,durationMinutes,language:'ne',groups};
+ const paper={gradeNumber:9,subject,fullMarks,durationMinutes,language:'ne',groups,referenceOnly:true};
  const checked=checkNepali2078GroupedDraft(paper);
- return {ready:true,paper,signature:paperSignature(groups),...checked,readyForLive:false,sourceUrl:ref.sourceUrl,referenceOnly:true};
+ const practiceSubstitution=groups.some(g=>g.choices.some(c=>c.practiceSubstitution===true));
+ return {ready:true,paper,signature:paperSignature(groups),...checked,readyForLive:false,sourceUrl:ref.sourceUrl,referenceOnly:true,practiceSubstitution,referenceLabel:practiceSubstitution?'नेपाली ७५ अङ्कको अभ्यास संरचना: सारांशमा मौलिक अपठित गद्यांश प्रयोग गरिएको छ, मूल पाठगत अंश होइन। CDC Exact होइन।':''};
 }

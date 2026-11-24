@@ -7,7 +7,8 @@ import {planSocial2078ReferencePaper} from './cdc-grade9-social-reference-planne
 import {planGrade9EnglishReferencePaper} from './cdc-grade9-english-grouped-planner.mjs';
 import {planEnvironmentSchoolReference} from './cdc-grade9-environment-reference-bank.mjs';
 import {planScienceSchoolReference} from './cdc-grade9-science-school-reference.mjs';
-const planners={science:planScienceSchoolReference,optional_environment:planEnvironmentSchoolReference,math:planGrade9MathReference,social:planSocial2078ReferencePaper,english:planGrade9EnglishReferencePaper};
+import {planNepali2078ReferencePaper} from './cdc-grade9-nepali-grouped-planner.mjs';
+const planners={nepali:planNepali2078ReferencePaper,science:planScienceSchoolReference,optional_environment:planEnvironmentSchoolReference,math:planGrade9MathReference,social:planSocial2078ReferencePaper,english:planGrade9EnglishReferencePaper};
 const draft=q=>q?.gradeNumber===9&&q.bundled===true&&q.reviewStatus==='draft'&&q.teacherReviewRequired===true&&q.officialCdcQuestion===false&&q.sourceStatus==='SMSS_original_reference_draft'&&q.status!=='archived';
 export function referencePreviewTopics({grade,subject,questions=[]}={}){
  if(grade!==9||!Object.hasOwn(planners,cdcSubjectKey(subject)))return [];
@@ -20,11 +21,12 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  if(fullMarks!==75||durationMinutes!==requiredDuration)throw Error('This reference requires 75 marks and '+requiredDuration+' minutes');
  if(!['ne','en','both'].includes(language))throw Error('Select a language');
  if(key==='english'&&language!=='en')throw Error('English assessment must be in English');
+ if(key==='nepali'&&language!=='ne')throw Error('Nepali assessment must be in Nepali');
  if(!Array.isArray(questions)||questions.length>5000||!Array.isArray(selectedTopicIds)||!selectedTopicIds.length||new Set(selectedTopicIds).size!==selectedTopicIds.length)throw Error('Select distinct reference topics');
  const bank=questions.filter(q=>draft(q)&&q.subject===subject);
  const known=new Set(referencePreviewTopics({grade,subject,questions:bank}));
  if(selectedTopicIds.some(id=>!known.has(id)))throw Error('A selected topic has no reference group; select available reference topics');
- const result=planners[key]({grade,subject,fullMarks,durationMinutes,language,questions:bank,selectedTopicIds,previousSignature,rng,allowOriginalReferenceDraft:true});
+ const result=planners[key]({grade,subject,fullMarks,durationMinutes,language,questions:bank,selectedTopicIds,previousSignature,rng,allowOriginalReferenceDraft:true,allowOriginalSummaryPractice:key==='nepali'});
  if(!result.ready)return {ready:false,reason:result.reason,missing:result.shortages||result.shortage||[],referenceOnly:true,currentCdcExactApproved:false,readyForLive:false};
  if(result.currentCdcExactApproved!==false||result.paper.referenceOnly!==true||result.readyForLive!==false)throw Error('Unexpected reference preview state');
  const p=result.paper,groups=p.groups||p.questions;
@@ -32,6 +34,16 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  const choose=(ne,en)=>key==='english'||language==='en'?String(en||ne||''):language==='ne'?String(ne||en||''):[ne,en].filter(Boolean).join(' / ');
  const lines=['REFERENCE DRAFT — NOT FOR EXAM / सन्दर्भ समीक्षा मात्र','Grade 9 · '+subject+' · '+p.fullMarks+' marks · '+p.durationMinutes+' minutes','Current CDC Grid approval and teacher review pending.',result.referenceLabel||'',''];
  for(const [i,g] of groups.entries()){
+  if(key==='nepali'){
+   lines.push((i+1)+'. '+g.choices.length+' विकल्पमध्ये '+g.answerCount+' वटाको उत्तर दिनुहोस्। ['+g.marks+']');
+   for(const [j,c] of g.choices.entries()){
+    lines.push('  '+String.fromCharCode(65+j)+'. '+c.text+' ['+c.marks+']');
+    if(c.passage)lines.push(c.passage);
+    if(c.practiceSubstitution)lines.push('मौलिक अभ्यास — पाठगत उद्धरण होइन।');
+    for(const [k,x] of (c.components||[]).entries())lines.push('    '+String.fromCharCode(97+k)+') '+x.text+' ['+x.marks+']');
+   }
+   lines.push('');continue;
+  }
   const parts=g.subquestions||g.items||[];
   const marks=g.marks??parts.reduce((s,x)=>s+Number(x.marks||0),0);
   lines.push((i+1)+'. '+(key==='english'?g.text:choose(g.contextNe||g.questionText,g.contextEn||g.questionTextEn))+' ['+marks+']');
