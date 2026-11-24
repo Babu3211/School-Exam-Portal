@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import {mkdirSync,writeFileSync} from 'node:fs';
+import {mkdirSync,writeFileSync,readFileSync} from 'node:fs';
+import {grade9GridLibrary} from '../cdc-grade9-grid-library.mjs';
 import {join} from 'node:path';
 import {buildGrade9ReferencePreview,referencePreviewTopics} from '../cdc-grade9-reference-preview.mjs';
 import {grade9NepaliReferenceBank,grade9NepaliPracticeSummaryDrafts} from '../cdc-grade9-nepali-reference-bank.mjs';
@@ -129,13 +130,31 @@ for(const r of records){
 assert.equal(files.length,32);
 assert.equal(new Set(files.map(([name])=>name)).size,32);
 const rows=records.map(r=>'<tr><td>'+esc(r.subject)+'</td><td>'+r.set+'</td><td>'+r.fullMarks+'</td><td><a href="'+r.paperPath+'">Questions</a> · <a href="'+r.answerPath+'">Answer key</a></td></tr>').join('');
-const index=page('SMSS Grade 9 review pack','<h1>SMSS Grade 9 — teacher review pack</h1>'+warning+'<p>Eight subjects, two distinct draft sets each. Open one paper at a time to review or print it. Answer keys are separate. Six subjects use reference patterns; two use verified structural grids. All require teacher review. No school data or release approval.</p><table><thead><tr><th>Subject</th><th>Set</th><th>Marks</th><th>Review files</th></tr></thead><tbody>'+rows+'</tbody></table>');
+const gridRegister=JSON.parse(readFileSync(new URL('../data/cdc-question-paper-sources-2083.json',import.meta.url),'utf8'));
+const gridLibrary=grade9GridLibrary(gridRegister);
+assert.equal(gridLibrary.length,11);
+const gridSections=gridLibrary.map(item=>{
+ const tables=item.tables.map(t=>'<h3>'+esc(t.title)+'</h3><div style="overflow-x:auto"><table><thead><tr>'+t.columns.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+t.rows.map(r=>'<tr>'+r.map(c=>'<td>'+esc(c??'—')+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>').join('');
+ const sources=item.sources.map(s=>'<p><a href="'+esc(s.url)+'" target="_blank" rel="noopener noreferrer">'+(s.kind==='curriculum'?'CDC curriculum (not Grid)':s.url.toLowerCase().endsWith('.pdf')?'Open original PDF':'Open CDC source')+'</a> · '+esc(s.version)+' · '+esc(s.status)+'</p>').join('');
+ return '<section id="'+esc(item.key)+'"><h2>'+esc(item.subject)+'</h2><p>'+esc(item.status)+'</p>'+(item.fullMarks!==null?'<p>Full marks: '+item.fullMarks+(item.durationMinutes!==null?' · Minutes: '+item.durationMinutes:'')+'</p>':'')+(tables||'<p>No numerical Grid verified. Do not infer missing rows.</p>')+(sources||'<p>No official source registered.</p>')+'</section>';
+}).join('');
+const gridPage=page('SMSS Class 9 CDC Grid Library','<nav><a href="grade9-teacher-review.html">Review question papers</a></nav><h1>Class 9 — CDC Grid Library</h1>'+warning+'<p>Read-only source comparison. Original PDFs open on the official CDC website; current applicability and teacher approval remain separate.</p><nav>'+gridLibrary.map(item=>'<a href="#'+esc(item.key)+'">'+esc(item.subject)+'</a>').join('')+'</nav>'+gridSections);
+noExecutable(gridPage);
+for(const item of gridLibrary){
+ assert.ok(gridPage.includes('id="'+item.key+'"'));
+ assert.ok(gridPage.includes(esc(item.status)));
+ assert.equal(item.currentCdcExactApproved,false);
+ for(const src of item.sources)assert.ok(gridPage.includes(esc(src.url)));
+}
+const index=page('SMSS Grade 9 review pack','<h1>SMSS Grade 9 — teacher review pack</h1>'+warning+'<p><a href="grade9-cdc-grid-library.html">Open Class 9 CDC Grid Library (11 subjects)</a></p><p>Eight subjects, two distinct draft sets each. Open one paper at a time to review or print it. Answer keys are separate. Six subjects use reference patterns; two use verified structural grids. All require teacher review. No school data or release approval.</p><table><thead><tr><th>Subject</th><th>Set</th><th>Marks</th><th>Review files</th></tr></thead><tbody>'+rows+'</tbody></table>');
 noExecutable(index);
+assert.ok(index.includes('href="grade9-cdc-grid-library.html"'));
 for(const [name] of files)assert.ok(index.includes('href="'+name+'"'));
 if(out){
  mkdirSync(join(out,'papers'),{recursive:true});
  for(const [name,html] of files)writeFileSync(join(out,name),html,'utf8');
  writeFileSync(join(out,'grade9-teacher-review.html'),index,'utf8');
+ writeFileSync(join(out,'grade9-cdc-grid-library.html'),gridPage,'utf8');
  writeFileSync(join(out,'review-manifest.json'),JSON.stringify({grade,academicYear:2083,readyForLive:false,schoolDataIncluded:false,records:records.map(({html,...r})=>r)},null,2),'utf8');
 }
 console.log('PASS all 8 subjects, 16 distinct review drafts and 32 separate question/answer pages; six reference-only subjects remain blocked; no production writes.');

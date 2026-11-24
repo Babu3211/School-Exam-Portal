@@ -121,7 +121,7 @@ jobs:
           shopt -s nullglob
           paper_files=(preview-public/papers/*.html)
           test "${#paper_files[@]}" -eq 32
-          for source in preview-public/sw.js preview-public/app-worker-source.js preview-public/app-shell.html preview-public/manifest.webmanifest preview-public/grade9-teacher-review.html preview-public/review-manifest.json preview-public/cdc-question-paper.js preview-public/cdc-*.mjs preview-public/data/cdc-*.json "${paper_files[@]}"; do
+          for source in preview-public/sw.js preview-public/app-worker-source.js preview-public/app-shell.html preview-public/manifest.webmanifest preview-public/grade9-teacher-review.html preview-public/grade9-cdc-grid-library.html preview-public/review-manifest.json preview-public/cdc-question-paper.js preview-public/cdc-*.mjs preview-public/data/cdc-*.json "${paper_files[@]}"; do
             file="${source#preview-public/}"
             target="$RUNNER_TEMP/preview/$file"
             verify_asset "$source" "/$file" "$target"
