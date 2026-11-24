@@ -577,7 +577,7 @@ current.subjectAssignments=[{className:'Class 2',subject:'Mathematics',section:'
 serverRole={...current};
 w.getDocs=async()=>({docs:[{id:'math-2',data:()=>({class:'Class 2',section:'A',name:'Synthetic grade 2'})}]});
 await w.loadCdcAssessmentPage();
-for(const [unit,count,page] of [['मेरो सिर्जना',3,149],['सञ्चार प्रविधि र बजार',4,150]]){
+for(const [unit,count,page] of [['मेरो सिर्जना',3,149],['सञ्चार प्रविधि र बजार',4,150],['हाम्रो विद्यालय',5,147],['सङ्ख्याको ज्ञान',4,151],['गणितका आधारभूत क्रिया',4,152]]){
  choice('unit',unit);
  assert.equal(field('annex3').hidden,false);
  assert.equal(field('annexRows').rows.length,count*4);
@@ -585,6 +585,16 @@ for(const [unit,count,page] of [['मेरो सिर्जना',3,149],['�
  assert.equal(field('outcomePicker').options.length,count+1);
  assert.match(field('annexStatus').textContent,new RegExp(String(page)));
 }
-console.log('Grade 2 current-year legacy rubric theme structure passed');
+current.subjectAssignments=[{className:'Class 3',subject:'Mathematics',section:'A'}];
+serverRole={...current};
+w.getDocs=async()=>({docs:[{id:'three',data:()=>({class:'Class 3',section:'A',name:'Grade 3 synthetic'})}]});
+await w.loadCdcAssessmentPage();
+choice('unit','हाम्रो समुदाय');
+assert.equal(field('annexRows').rows.length,24);
+assert.equal(field('outcomePicker').options.length,7);
+assert.match(field('annexRows').textContent,/७०००/);
+assert.match(field('annexRows').textContent,/९९९९/);
+assert.match(field('annexStatus').textContent,/154/);
+console.log('Seven current-year mathematics rubric themes and source-specific criteria passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
