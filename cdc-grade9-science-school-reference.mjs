@@ -61,8 +61,10 @@ export function grade9ScienceSchoolReferenceBank({grade,subject}={}){
  const questions=rows.flatMap(([unitCode,questionType,cognitiveLevel,...variants],i)=>variants.map(([questionText,questionTextEn,answer,answerEn,options=[],optionsEn=[],correctOption=''],v)=>{const u=units[unitCode-1];return {id:'smss_sci_school9_'+i+'_'+v,variantFamily:'smss_sci_school9_'+i,gradeNumber:9,subject,unitCode:String(unitCode),unitId:u.id,unitTitle:u.unitTitle,topicId:u.id+'_0',topicName:u.topics[0],questionType,cognitiveLevel,marks:weight[questionType],questionText,questionTextEn,answer,answerEn,options,optionsEn,correctOption,status:'active',bundled:true,reviewStatus:'draft',teacherReviewRequired:true,officialCdcQuestion:false,sourceStatus:'SMSS_original_reference_draft'};}));
  return {units,questions};
 }
-export function planScienceSchoolReference({grade,subject,fullMarks,durationMinutes,language,questions=[],selectedTopicIds=[],previousSignature='',rng=Math.random}={}){
+export function planScienceSchoolReference({grade,subject,fullMarks,durationMinutes,language,questions=[],selectedTopicIds=[],previousSignature='',avoidSignatures=[],rng=Math.random}={}){
  if(grade!==9||cdcSubjectKey(subject)!=='science'||fullMarks!==75||durationMinutes!==180||!['ne','en','both'].includes(language))throw Error('Science school reference requires Grade 9, 75 marks and 180 minutes');
+ if(!Array.isArray(avoidSignatures)||avoidSignatures.length>30||avoidSignatures.some(x=>typeof x!=='string'||x.length>20000))throw Error('Invalid reference paper history');
+ const banned=new Set([previousSignature,...avoidSignatures].filter(Boolean));
  const known=grade9ScienceSchoolReferenceBank({grade,subject}).questions;
  const ids=new Set(selectedTopicIds),approved=new Map(known.map(q=>[q.id,q]));
  // Immutable original bank: reject tampered records instead of accepting
@@ -76,10 +78,15 @@ export function planScienceSchoolReference({grade,subject,fullMarks,durationMinu
  const shortages=families.flatMap((f,i)=>f.length?[]:['group '+(i+1)]);
  const fail=reason=>({ready:false,reason,shortages,currentCdcExactApproved:false,readyForLive:false});
  if(shortages.length||ids.size!==19)return fail('Select all 19 available reference unit topics for the full-year school pattern');
- for(let attempt=0;attempt<2;attempt++){
-  const selected=families.map(f=>{const n=rng();if(!Number.isFinite(n)||n<0||n>=1)throw Error('Invalid random source');return f[(Math.floor(n*f.length)+attempt)%f.length];});
+ // Start from a random mixed-radix combination, then enumerate distinct
+ // combinations up to the number of exclusions + 1. A constant random
+ // source cannot trap the generator in two alternating papers.
+ const offsets=families.map(f=>{const n=rng();if(!Number.isFinite(n)||n<0||n>=1)throw Error('Invalid random source');return Math.floor(n*f.length);});
+ for(let attempt=0;attempt<=banned.size;attempt++){
+  let carry=attempt;
+  const selected=families.map((f,i)=>{const n=offsets[i]+carry;carry=Math.floor(n/f.length);return f[n%f.length];});
   const signature=selected.map(q=>q.id).sort().join('|');
-  if(signature===previousSignature)continue;
+  if(banned.has(signature))continue;
   const totals=Array(19).fill(0),actual=Object.fromEntries(Object.keys(weight).map(t=>[t,[0,0,0,0]]));
   for(const q of selected){totals[Number(q.unitCode)-1]+=q.marks;actual[q.questionType][levels.indexOf(q.cognitiveLevel)]++;}
   if(selected.length!==40||JSON.stringify(totals)!==JSON.stringify(unitMarks)||Object.keys(counts).some(t=>JSON.stringify(counts[t])!==JSON.stringify(actual[t])))throw Error('Science school reference allocation mismatch');

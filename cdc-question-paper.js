@@ -1158,7 +1158,12 @@ async function generateOptionalMathCompositePaper(guide){
  message("SMSS मौलिक अभ्यास Draft: CDC २०८२ Grid अनुसार २७ संयुक्त प्रश्न, ७५ अङ्क र संज्ञानात्मक वितरण मिल्यो।"+
   " यी CDC प्रकाशित प्रश्न होइनन्। शिक्षकले गणितीय तथ्य, उत्तरकुञ्जिका र कक्षा उपयुक्तता जाँचेर मात्र Save/Print गर्नुहोस्।");
 }
-let lastReferencePreview=null;
+const referencePreviewHistory=new Map();
+const rememberReferencePreview=(scope,signature)=>{
+ const next=[signature,...(referencePreviewHistory.get(scope)||[]).filter(x=>x!==signature)].slice(0,30);
+ referencePreviewHistory.delete(scope);referencePreviewHistory.set(scope,next);
+ while(referencePreviewHistory.size>20)referencePreviewHistory.delete(referencePreviewHistory.keys().next().value);
+};
 function clearReferenceDraftPreview(){
  const box=$("qpReferenceDraftPreview");
  if(box){box.hidden=true;box.textContent="";}
@@ -1190,14 +1195,14 @@ function selectReferenceDraftTopics(){
 function generateReferenceDraftPreview(){
  assertReferencePreviewScope();
  const topicIds=selectedTopicIds(),language=$("qpAutoLanguage").value;
- const scope=JSON.stringify([auth.currentUser.uid,selectedClass,selectedSubject,selectedSection,language,topicIds.slice().sort()]);
- const result=buildGrade9ReferencePreview({grade:9,subject:selectedSubject,fullMarks:Number($("qpPaperFullMarks").value),durationMinutes:Number($("qpPaperDuration").value),language,questions:bundledPracticeQuestions,selectedTopicIds:topicIds,previousSignature:lastReferencePreview?.scope===scope?lastReferencePreview.signature:""});
+ const scope=JSON.stringify([auth.currentUser.uid,selectedClass,selectedSubject,selectedSection,75]);
+ const result=buildGrade9ReferencePreview({grade:9,subject:selectedSubject,fullMarks:Number($("qpPaperFullMarks").value),durationMinutes:Number($("qpPaperDuration").value),language,questions:bundledPracticeQuestions,selectedTopicIds:topicIds,avoidSignatures:referencePreviewHistory.get(scope)||[]});
  const box=$("qpReferenceDraftPreview");
  if(!result.ready){box.textContent="Reference draft unavailable: "+result.reason;box.hidden=false;return;}
  // Clear any prior official generation, then display only inert text.
  invalidateGeneratedQuestionPaper();
  box.textContent=result.text;box.hidden=false;
- lastReferencePreview={scope,signature:result.signature};
+ rememberReferencePreview(scope,result.signature);
  message("सन्दर्भ Draft तयार। वर्तमान CDC Grid पुष्टि बाँकी — परीक्षा Save/Print बन्द।");
 }
 async function generateSmartPaper(){

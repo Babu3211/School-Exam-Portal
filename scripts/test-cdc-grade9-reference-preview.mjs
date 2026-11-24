@@ -49,3 +49,26 @@ assert.equal(ev.readyForLive,false);
 console.log('PASS offline English full reference practice, explicit original reading replacement, official gate unchanged');
 
 // The pack test checks all six reference subjects, two distinct sets and answer coverage.
+
+const {grade9ScienceSchoolReferenceBank}=await import('../cdc-grade9-science-school-reference.mjs');
+const {grade9EnvironmentReferenceBank}=await import('../cdc-grade9-environment-reference-bank.mjs');
+const {grade9NepaliReferenceBank,grade9NepaliPracticeSummaryDrafts}=await import('../cdc-grade9-nepali-reference-bank.mjs');
+for(const [subject,questions,language,duration] of [
+ ['Science and Technology',grade9ScienceSchoolReferenceBank({grade,subject:'Science and Technology'}).questions,'both',180],
+ ['Environmental Science',grade9EnvironmentReferenceBank({grade,subject:'Environmental Science'}).questions,'both',135],
+ ['Nepali',[...grade9NepaliReferenceBank({grade,subject:'Nepali'}).questions,...grade9NepaliPracticeSummaryDrafts({grade,subject:'Nepali'})],'ne',180],
+ ['English',all,'en',180],
+ ['Mathematics',grade9CompulsoryMathReferenceBank({grade,subject:'Mathematics'}).questions,'both',180],
+ ['Social Studies',grade9SocialReferenceBank({grade,subject:'Social Studies'}).questions,'both',180]
+]){
+ const history=[],args={grade,subject,questions,language,durationMinutes:duration,fullMarks:75,selectedTopicIds:topics({grade,subject,questions}),rng:()=>.39};
+ for(let i=0;i<(subject==='Science and Technology'?31:4);i++){
+  const r=build({...args,avoidSignatures:history.slice(-30)});
+  assert.equal(r.ready,true,subject+' '+r.reason);assert.ok(!history.includes(r.signature),subject+' repeated an older draft');history.push(r.signature);
+  assert.equal(r.readyForLive,false);
+ }
+ assert.throws(()=>build({...args,avoidSignatures:Array(31).fill('x')}),/Invalid reference paper history/);
+}
+assert.match(ui,/avoidSignatures:referencePreviewHistory\.get\(scope\)/);
+assert.match(ui,/\.slice\(0,30\)/);
+console.log('PASS six reference subjects exclude earlier session drafts; science exercises 31 distinct papers even with constant RNG');

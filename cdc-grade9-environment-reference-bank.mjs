@@ -27,8 +27,10 @@ export function grade9EnvironmentReferenceBank({grade,subject}={}){
 const pattern=[['very_short',1,11],['short',5,8],['long',8,3]];
 const shuffle=(a,rng)=>{const b=[...a];for(let i=b.length-1;i>0;i--){const v=rng();if(!(v>=0&&v<1))throw Error('Invalid random source');const j=Math.floor(v*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
 const normalized=x=>String(x||'').normalize('NFC').trim().replace(/\s+/g,' ');
-export function planEnvironmentSchoolReference({grade,subject,fullMarks,durationMinutes,language,questions=[],selectedTopicIds=[],previousSignature='',rng=Math.random}={}){
+export function planEnvironmentSchoolReference({grade,subject,fullMarks,durationMinutes,language,questions=[],selectedTopicIds=[],previousSignature='',avoidSignatures=[],rng=Math.random}={}){
  if(grade!==9||cdcSubjectKey(subject)!=='optional_environment'||fullMarks!==75||durationMinutes!==135||!['ne','en','both'].includes(language))throw Error('Environment school reference requires Grade 9, 75 marks, 135 minutes');
+ if(!Array.isArray(avoidSignatures)||avoidSignatures.length>30||avoidSignatures.some(x=>typeof x!=='string'||x.length>20000))throw Error('Invalid reference paper history');
+ const banned=new Set([previousSignature,...avoidSignatures].filter(Boolean));
  const topics=new Set(selectedTopicIds);
  const bank=questions.filter(q=>q?.gradeNumber===9&&q.subject===subject&&topics.has(q.topicId)&&q.bundled===true&&q.reviewStatus==='draft'&&q.teacherReviewRequired===true&&q.officialCdcQuestion===false&&q.sourceStatus==='SMSS_original_reference_draft'&&q.status!=='archived'&&q.id&&normalized(q.questionText)&&normalized(q.questionTextEn)&&normalized(q.answer)&&normalized(q.answerEn));
  const pools=pattern.map(([type,marks,count])=>({type,marks,count,bank:bank.filter(q=>q.questionType===type&&q.marks===marks)}));
@@ -37,10 +39,11 @@ export function planEnvironmentSchoolReference({grade,subject,fullMarks,duration
  if(!topics.size||shortages.length)return fail('Insufficient selected questions for the school model pattern');
  // 11 one-mark slots can cover all nine unit topics. Prefer still-uncovered
  // topics while choosing other types too. Randomize separately each attempt.
- for(let attempt=0;attempt<80;attempt++){
+ for(let attempt=0;attempt<160;attempt++){
   const chosen=[],used=new Set(),texts=new Set(),covered=new Set();
   for(const p of pools){
-   const pool=shuffle(p.bank,rng);
+   const shuffled=shuffle(p.bank,rng),offset=attempt%Math.max(1,shuffled.length);
+   const pool=[...shuffled.slice(offset),...shuffled.slice(0,offset)];
    for(let i=0;i<p.count;i++){
     const candidates=pool.filter(q=>!used.has(q.id)&&!texts.has(normalized(q.questionTextEn)));
     const q=candidates.find(q=>!covered.has(q.topicId))||candidates[0];if(!q)break;
@@ -48,7 +51,7 @@ export function planEnvironmentSchoolReference({grade,subject,fullMarks,duration
    }
   }
   const signature=chosen.map(q=>q.id).sort().join('|');
-  if(chosen.length!==22||chosen.reduce((n,q)=>n+q.marks,0)!==75||[...topics].some(t=>!covered.has(t))||signature===previousSignature)continue;
+  if(chosen.length!==22||chosen.reduce((n,q)=>n+q.marks,0)!==75||[...topics].some(t=>!covered.has(t))||banned.has(signature))continue;
   if(pattern.some(([type,marks,count])=>chosen.filter(q=>q.questionType===type&&q.marks===marks).length!==count))continue;
   return {ready:true,paper:{gradeNumber:9,subject,fullMarks,durationMinutes,language,questions:chosen,referenceOnly:true},signature,currentCdcExactApproved:false,readyForLive:false,referenceOnly:true,sourceUrl:'https://anyflip.com/jwxmu/hsyg/basic/101-150',referenceLabel:'School model aggregate pattern only; no verified CDC unit or cognitive distribution.'};
  }

@@ -14,7 +14,7 @@ export function referencePreviewTopics({grade,subject,questions=[]}={}){
  if(grade!==9||!Object.hasOwn(planners,cdcSubjectKey(subject)))return [];
  return [...new Set(questions.filter(q=>draft(q)&&q.subject===subject&&typeof q.topicId==='string'&&q.topicId.trim()).map(q=>q.topicId))];
 }
-export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMinutes,language,questions=[],selectedTopicIds=[],previousSignature='',rng=Math.random}={}){
+export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMinutes,language,questions=[],selectedTopicIds=[],previousSignature='',avoidSignatures=[],rng=Math.random}={}){
  const key=cdcSubjectKey(subject);
  if(grade!==9||!Object.hasOwn(planners,key))throw Error('No review-only reference generator for this grade and subject');
  const requiredDuration=key==='optional_environment'?135:180;
@@ -23,10 +23,11 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  if(key==='english'&&language!=='en')throw Error('English assessment must be in English');
  if(key==='nepali'&&language!=='ne')throw Error('Nepali assessment must be in Nepali');
  if(!Array.isArray(questions)||questions.length>5000||!Array.isArray(selectedTopicIds)||!selectedTopicIds.length||new Set(selectedTopicIds).size!==selectedTopicIds.length)throw Error('Select distinct reference topics');
+ if(!Array.isArray(avoidSignatures)||avoidSignatures.length>30||avoidSignatures.some(x=>typeof x!=='string'||x.length>20000)||typeof previousSignature!=='string'||previousSignature.length>20000)throw Error('Invalid reference paper history');
  const bank=questions.filter(q=>draft(q)&&q.subject===subject);
  const known=new Set(referencePreviewTopics({grade,subject,questions:bank}));
  if(selectedTopicIds.some(id=>!known.has(id)))throw Error('A selected topic has no reference group; select available reference topics');
- const result=planners[key]({grade,subject,fullMarks,durationMinutes,language,questions:bank,selectedTopicIds,previousSignature,rng,allowOriginalReferenceDraft:true,allowOriginalSummaryPractice:key==='nepali',allowOriginalReadingPractice:key==='english',currentCurriculumMapPractice:key==='social'});
+ const result=planners[key]({grade,subject,fullMarks,durationMinutes,language,questions:bank,selectedTopicIds,previousSignature,avoidSignatures,rng,allowOriginalReferenceDraft:true,allowOriginalSummaryPractice:key==='nepali',allowOriginalReadingPractice:key==='english',currentCurriculumMapPractice:key==='social'});
  if(!result.ready)return {ready:false,reason:result.reason,missing:result.shortages||result.shortage||[],referenceOnly:true,currentCdcExactApproved:false,readyForLive:false};
  if(result.currentCdcExactApproved!==false||result.paper.referenceOnly!==true||result.readyForLive!==false)throw Error('Unexpected reference preview state');
  const p=result.paper,groups=p.groups||p.questions;
