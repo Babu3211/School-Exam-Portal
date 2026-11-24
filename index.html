@@ -7470,6 +7470,15 @@ function parseCdcBilingualCatalog(text) {
  }
  // Read-only catalogue totals. Count scored outcomes, not individual rubric indicators.
 // Raw assessment maximum is not the term exam full mark or final weighted grade.
+// Counts from visually inspected CDC 2076 curriculum Annex 3(d) sample forms.
+// Distinct from the student assessment guide; do not enable entry from these counts.
+// PDF viewer pages 145, 148, 150, 151 (printed 138, 141, 143, 144).
+const cdcSeroferoCurriculumCounts={
+  'हाम्रो विद्यालय':{groups:2,indicators:12,page:145},
+  'मेरो सिर्जना':{groups:2,indicators:12,page:148},
+  'सञ्चार प्रविधि र बजार':{groups:2,indicators:8,page:150},
+  'हाम्रो वरपरको संसार':{groups:3,indicators:8,page:151}
+};
 function cdcThemeMarkRows(grade,subject,year){
   grade=String(grade);
   const key=cdcAssessmentSubjectKey(subject),lower=Number(grade)<=3,revised=Number(year)>=2084;
@@ -7499,7 +7508,10 @@ function cdcThemeMarkRows(grade,subject,year){
   }else if(lower&&key==='serophero'){
     for(const [unit,en] of cdcVerifiedUnits(grade,key)){
       const form=cdcSeroferoReferenceForms[grade]?.[unit];
-      add(unit,'',form?.groups.length,form?(form.referenceOnly?'review':'mapped'):'pending',form?form.groups.length*4:null);
+      const sample=grade==='1'?cdcSeroferoCurriculumCounts[unit]:null;
+      if(form)add(unit,'',form.groups.length,form.referenceOnly?'review':'mapped',form.groups.reduce((n,g)=>n+g[1].length,0));
+      else if(sample)add(unit,'',sample.groups,'curriculum',sample.indicators);
+      else add(unit,'',null,'pending',null);
     }
   }else if(!lower){
     const catalogue=cdcVerifiedOutcomes[grade+':'+key]||[];
@@ -7554,6 +7566,7 @@ function openCdcAssessment(context = null) {
           <p style="margin:4px 0">विद्यार्थी मूल्याङ्कन मार्गदर्शन २०७६</p>
           <a data-cdc="guidePdf13" class="btn alt" href="https://ggess.edu.np/wp-content/uploads/2021/06/STUDENTS-EVALUATION-GRADE-1-3.pdf" target="_blank" rel="noopener noreferrer">Open PDF</a>
           <a data-cdc="guideOfficial13" href="https://moecdc.gov.np/content/644/student-assessment-guide-for-basic-level-class/" target="_blank" rel="noopener noreferrer">CDC source</a>
+          <a data-cdc="guideCurriculumMirror13" href="https://www.collegenp.com/uploads/pdf/2020/03/syllabus-for-compulsory-subjects-from-grade-one-to-three-2076.pdf#page=145" target="_blank" rel="noopener noreferrer">Curriculum Annex 3(d) — alternate copy</a>
           <a data-cdc="guideCurriculum13" href="https://giwmscdnone.gov.np/media/pdf_upload/Basic%20Level%20%28Grade%201-%203%29%20Curriculum_vtgf727.pdf" target="_blank" rel="noopener noreferrer">Curriculum PDF</a>
         </div>
         <div style="flex:1 1 230px">
@@ -8513,7 +8526,7 @@ function openCdcAssessment(context = null) {
     for(const text of [label('क्र.स.','SN'),label('थिम / एकाइ','Theme / Unit'),label('सिकाइ उपलब्धि सङ्ख्या','Number of Learning Achievements'),label('पूर्णाङ्क','Full Marks'),...(key==='serophero'?[label('सूचक सङ्ख्या','Indicators')]:[]),label('स्रोत अवस्था','Source Status')]){
       const th=document.createElement('th');th.textContent=text;header.append(th);
     }
-    const statuses={mapped:label('प्रणालीको स्रोत सूची','Mapped catalogue'),review:label('समीक्षा फाराम','Review form'),pending:label('पुष्टि बाँकी','Pending source'),revised:label('परिमार्जित सूची','Revised catalogue')};
+    const statuses={mapped:label('प्रणालीको स्रोत सूची','Mapped catalogue'),review:label('समीक्षा फाराम','Review form'),curriculum:label('पाठ्यक्रम नमुना — मार्गदर्शन मिलान बाँकी','Curriculum sample — guide comparison pending'),pending:label('पुष्टि बाँकी','Pending source'),revised:label('परिमार्जित सूची','Revised catalogue')};
     for(const [i,row] of rows.entries()){
       const tr=body.insertRow();
       const name=ne?row.unit:en?row.en||row.unit:[...new Set([row.unit,row.en].filter(Boolean))].join(' / ');
@@ -8536,7 +8549,7 @@ function openCdcAssessment(context = null) {
       for(const [key,ne,en] of subjects){
         const mode=subjectLanguage(key),digits=n=>mode==='ne'?String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]):String(n);
         const label=(a,b)=>mode==='ne'?a:mode==='en'?b:a+' / '+b;
-        const rows=cdcThemeMarkRows(grade,key,year),known=rows.filter(row=>row.count!==null),review=known.filter(row=>row.status==='review').length;
+        const rows=cdcThemeMarkRows(grade,key,year),known=rows.filter(row=>row.count!==null),review=known.filter(row=>['review','curriculum'].includes(row.status)).length;
         const total=known.reduce((sum,row)=>sum+row.count,0);
         const status=!rows.length?label('स्रोत सूची बाँकी','No source catalogue'):known.length!==rows.length?label('आंशिक सूची','Partial catalogue'):label('सूचीकृत — अन्तिम प्रमाणीकरण बाँकी','Mapped — final verification pending');
         const tr=put(['Class '+grade,mode==='ne'?ne:mode==='en'?en:ne+' / '+en,rows.length?digits(known.length)+' / '+digits(rows.length):'—',known.length?digits(total):'—',known.length?digits(total*4):'—',status+(review?' ('+digits(review)+' '+label('समीक्षा फाराम','review forms')+')':'')]);
