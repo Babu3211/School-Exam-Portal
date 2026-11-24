@@ -389,7 +389,7 @@ for(const [subject,unit,count] of [
 }
 console.log('CDC subject-specific annex column counts passed');
 console.log('Standalone assessment navigation, primary-only assignment reads and inline display passed');
-// Grade 3 daily life theme pilot follows the printed four-indicator table structure.
+// Grade 3 revised Annex 3 theme uses one row per outcome and the fixed full-theme denominator.
 current.subjectAssignments=[{className:'Class 3',subject:'Mathematics',section:'A'}];
 serverRole={...current};
 w.getDocs=async request=>{
@@ -400,12 +400,11 @@ w.getDocs=async request=>{
 await w.loadCdcAssessmentPage();
 choice('unit','मेरो दैनिक जीवन');
 assert.equal(field('annex3').hidden,false);
-assert.equal(field('annexRows').rows.length,12);
-assert.equal(field('annexRows').rows[0].cells[0].rowSpan,12);
-assert.equal(field('annexRows').rows[0].cells[1].rowSpan,4);
+assert.equal(field('annexRows').rows.length,3);
 assert.equal(field('annexRows').rows[0].cells.length,8);
-assert.match(field('annexRows').rows[0].cells[2].textContent,/\(4\)$/);
-assert.match(field('annexRows').rows[3].textContent,/\(1\)$/);
+assert.equal(field('annexFoot').rows[0].cells[0].rowSpan,2);
+assert.match(field('annexFoot').textContent,/3 × 4/);
+assert.match(field('annexStatus').textContent,/215/);
 assert.match(field('annexFoot').textContent,/0 \/ 3/);
 field('annexRows').querySelector('button').click();
 assert.match(field('topic').value,/घडी/);
@@ -417,8 +416,16 @@ assert.match(field('status').textContent,/विद्यालयमा सु�
 assert.match(field('schoolStatus').textContent,/1 अवलोकन/);
 assert.equal([...observations.values()].at(-1).className,'Class 3');
 assert.equal([...observations.values()].at(-1).stage,'regular');
-assert.match(field('annexFoot').textContent,/75\.00%/);
+assert.doesNotMatch(field('annexFoot').textContent,/75\.00%/);
 assert.match(field('annexFoot').textContent,/1 \/ 3/);
+for(let i=1;i<3;i++){
+  field('annexRows').rows[i].querySelector('button').click();
+  field('stage').value='regular';field('level').value='3';field('evidence').value='Synthetic assessment '+i;
+  await field('save').onclick();await field('saveSchool').onclick();
+  assert.match(field('status').textContent,/विद्यालयमा सुरक्षित भयो/);
+}
+assert.match(field('annexFoot').textContent,/75\.00%/);
+assert.match(field('annexFoot').textContent,/3 \/ 3/);
 assert.equal(field('revisedCurriculumSource').hidden,false);
 assert.match(field('revisedCurriculumSource').href,/id=1259$/);
 assert.equal(field('printForm').disabled,false);
@@ -435,6 +442,22 @@ assert.doesNotMatch(printDoc.body.textContent,/Synthetic clock reading/);
 choice('unit','नाप');
 assert.equal(field('printForm').disabled,true);
 assert.equal(field('annex3').hidden,true);
-console.log('Grade 3 verified theme rubric structure, rating save and assessed-only percentage passed');
+for(const [grade,unit,count,page] of [
+ ['1','म र मेरो परिवार',4,202],['1','मेरो दैनिक जीवन',2,203],
+ ['2','म र मेरो परिवार',5,207],['2','मेरो दैनिक जीवन',2,208],
+ ['3','म र मेरो परिवार',6,214],['3','मेरो दैनिक जीवन',3,215]
+]){
+ current.subjectAssignments=[{className:'Class '+grade,subject:'Mathematics',section:'A'}];
+ serverRole={...current};
+ w.getDocs=async request=>({docs:[{id:'math-'+grade,data:()=>({class:'Class '+grade,section:'A',name:'Synthetic grade '+grade})}]});
+ await w.loadCdcAssessmentPage();choice('unit',unit);
+ assert.equal(field('annex3').hidden,false,grade+unit);
+ assert.equal(field('annexRows').rows.length,count,grade+unit);
+ assert.equal(field('annexRows').rows[0].cells.length,8);
+ assert.match(field('annexStatus').textContent,new RegExp(String(page)));
+ assert.ok(field('annexFoot').textContent.includes(count+' × 4'));
+ assert.equal(field('printForm').disabled,true);
+}
+console.log('Six revised mathematics forms, fixed denominator, saved ratings and print isolation passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
