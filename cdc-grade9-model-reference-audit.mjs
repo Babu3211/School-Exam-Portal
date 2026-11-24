@@ -6,7 +6,7 @@ import {cdcSubjectKey} from './cdc-grid-source-index.mjs';
 import {getNepali2078Reference} from './cdc-grade9-nepali-model-2078.mjs';
 import {auditGrade9ScienceArchive} from './cdc-grade9-science-archive-audit.mjs';
 import {auditEnglishChart} from './cdc-grade9-english-practice.mjs';
-import {auditCompulsoryMathArchive} from './cdc-grade9-compulsory-math-practice.mjs';
+import {getGrade9MathReference} from './cdc-grade9-compulsory-math-grouped.mjs';
 const refs={
  nepali:{url:'https://science-playground.com/learn/grade-9-nepali/papers?from=explained',sourceType:'third-party model summary',year:'2080 grid claimed by publisher',areas:[['Vocabulary',6],['Spelling',3],['Language structure',15],['Reading comprehension',8],['Guided writing',4],['Functional writing',4],['Note taking',2],['Summary',3],['Text comprehension',12],['Interpretation',4],['Critical response',7],['Essay',7]],modelCount:24,minutes:180,limitations:['Original CDC grid not inspected','Seen textbook passages, grouped tasks and alternatives still needed']},
  social:{url:'https://riviera.edu.np/storage/newfiles/sz6EjaHjK75ANpCvsVindqTnqLRlidKFQp81Spva.pdf',officialArchiveUrl:'https://giwmscdnone.gov.np/media/pdf_upload/RS11166_Specification%20Grid%20%28Grade%209%29%20Compulsory%20Social%20Studies%20%281%29_jlqxsmn.pdf',sourceType:'CDC 2078 feedback copy, school mirror page 1 visually inspected',year:'2078',minutes:180,modelCount:24,groups:[['very_short',11,1],['short',9,4],['long',4,7]],limitations:['Feedback copy, not verified current approved grid','Historical unit order differs from new practice outline','Map alternative required','Grid and model unit allocation need reconciliation']},
@@ -50,8 +50,8 @@ export function auditGrade9ModelReference({grade,subject,questions=[]}={}){
   r={url:s.sourceUrl,sourceType:'CDC 9–10 chart, included model grade 10',year:'current grade 9 applicability pending',minutes:180,areas:[['Reading',40],['Writing',24],['Grammar',11]],limitations:['Grade 9 model and complete seen/unseen groups required','Half-mark items need grouped format']};
  }
  if(k==='math'){
-  const s=auditCompulsoryMathArchive({grade,subject});if(!s)return null;
-  r={url:s.sourceUrl,sourceType:'government historical chart',year:'2078',minutes:180,modelCount:16,itemCount:49,areas:s.areas.map(a=>[a.nameEn,a.marks]),limitations:['Current revision not verified','Grouped question and subquestion structure required']};
+  const s=getGrade9MathReference({grade,subject});if(!s)return null;
+  r={url:s.sourceUrl,sourceType:'government historical chart; mirror page 1 visually checked',mirrorUrl:s.mirrorUrl,areaDetails:s.areas,year:'2078',minutes:180,modelCount:16,itemCount:49,areas:s.areas.map(a=>[a.nameEn,a.marks]),limitations:['Current revision not verified','Grouped question and subquestion structure required']};
  }
  if(!r)return null;
  const total=r.groups?groupMarks(r.groups):sum(r.areas.map(a=>a[1]));

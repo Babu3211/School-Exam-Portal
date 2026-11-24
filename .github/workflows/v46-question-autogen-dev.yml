@@ -25,6 +25,8 @@ on:
       - 'cdc-grade9-nepali-model-2078.mjs'
       - 'cdc-grade9-nepali-grouped-planner.mjs'
       - 'cdc-grade9-english-grouped-planner.mjs'
+      - 'cdc-grade9-compulsory-math-grouped.mjs'
+      - 'scripts/test-cdc-grade9-compulsory-math-grouped.mjs'
       - 'scripts/test-cdc-grade9-english-grouped-planner.mjs'
       - 'scripts/test-cdc-grade9-nepali-grouped-planner.mjs'
       - 'scripts/test-cdc-grade9-nepali-model-2078.mjs'
@@ -99,6 +101,8 @@ jobs:
           node --check cdc-grade9-nepali-model-2078.mjs
           node --check cdc-grade9-nepali-grouped-planner.mjs
           node --check cdc-grade9-english-grouped-planner.mjs
+          node --check cdc-grade9-compulsory-math-grouped.mjs
+          node --check scripts/test-cdc-grade9-compulsory-math-grouped.mjs
           node --check scripts/test-cdc-grade9-english-grouped-planner.mjs
           node --check scripts/test-cdc-grade9-nepali-grouped-planner.mjs
           node --check scripts/test-cdc-grade9-nepali-model-2078.mjs
@@ -153,6 +157,8 @@ jobs:
         run: node scripts/test-cdc-grade9-nepali-grouped-planner.mjs
       - name: Verify English grouped reference and official comprehension and grammar distribution
         run: node scripts/test-cdc-grade9-english-grouped-planner.mjs
+      - name: Verify compulsory mathematics grouped reference area item and cognitive marks
+        run: node scripts/test-cdc-grade9-compulsory-math-grouped.mjs
       - name: Verify automatic CDC Grid source detection for Grade 6-10 subjects
         run: node scripts/test-cdc-grid-source-index.mjs
       - name: Verify 54 original bilingual formula-checked Optional Maths practice questions
