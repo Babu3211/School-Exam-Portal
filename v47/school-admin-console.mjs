@@ -1,3 +1,4 @@
+import {matchTeacherStaff,readTeacherStaffRoster,addLinkedTeacherMember} from './teacher-staff-link.mjs';
 import {readV47StudentXlsx} from './read-v47-student-xlsx.mjs';
 import {excelWorkbook} from './excel-workbook.mjs';
 import {TEACHER_ACCOUNT_HEADERS,MAX_TEACHER_ACCOUNTS,validateTeacherAccountRows,provisionTeacherAccountBatch} from './teacher-account-excel.mjs';
@@ -176,9 +177,9 @@ $('exportSchoolSnapshot').onclick=async()=>{
 };
 
 
-let teacherBatchEpoch=0,teacherBatchRows=null,teacherBatchSession=null;
+let teacherBatchEpoch=0,teacherBatchRows=null,teacherBatchSession=null,teacherBatchMatches=null;
 function clearTeacherBatch(){
- teacherBatchEpoch++;teacherBatchRows=null;teacherBatchSession=null;
+ teacherBatchEpoch++;teacherBatchRows=null;teacherBatchSession=null;teacherBatchMatches=null;
  if(!$('teacherBatchFile'))return;
  $('teacherBatchFile').value='';$('teacherBatchRows').replaceChildren();
  $('teacherBatchStatus').textContent='';$('teacherBatchCreate').disabled=true;
@@ -186,14 +187,14 @@ function clearTeacherBatch(){
 }
 function renderTeacherBatchRow(row){
  const tr=document.createElement('tr');
- for(const value of [row.row,row.name,row.email,row.uid??'',row.status==='inactive'?'निष्क्रिय सदस्यता बन्यो':row.status==='check'?'खाता र सदस्यता जाँच्नुहोस्':'तयार']){
+ for(const value of [row.row,row.name,row.email,row.uid??'',row.staffStatus==='matched'?'Staff matched':row.staffStatus==='conflict'?'Staff conflict':row.staffStatus==='unmatched'?'No Staff match':'',row.status==='inactive'?'निष्क्रिय सदस्यता बन्यो':row.status==='check'?'खाता र सदस्यता जाँच्नुहोस्':'तयार']){
   const td=document.createElement('td');td.textContent=String(value);tr.append(td);
  }
  return tr;
 }
 if($('teacherBatchFile')){
  $('teacherBatchFile').onchange=()=>{
-  teacherBatchEpoch++;teacherBatchRows=null;teacherBatchSession=null;
+  teacherBatchEpoch++;teacherBatchRows=null;teacherBatchSession=null;teacherBatchMatches=null;
   $('teacherBatchRows').replaceChildren();$('teacherBatchStatus').textContent='';
   $('teacherBatchCreate').disabled=true;$('teacherBatchPreview').disabled=false;
  };
@@ -210,7 +211,7 @@ if($('teacherBatchFile')){
  $('teacherBatchPreview').onclick=async()=>{
   if(!actor||busy||loggingIn||signingOut)return;
   const file=$('teacherBatchFile').files?.[0],attempt=++teacherBatchEpoch;
-  teacherBatchRows=null;teacherBatchSession=null;$('teacherBatchCreate').disabled=true;
+  teacherBatchRows=null;teacherBatchSession=null;teacherBatchMatches=null;$('teacherBatchCreate').disabled=true;
   $('teacherBatchRows').replaceChildren();$('teacherBatchPreview').disabled=true;
   const session=requireCurrentAdmin();
   const check=()=>{assertSameAdmin(session);if(attempt!==teacherBatchEpoch)throw Error('Excel परिवर्तन भयो।')};
@@ -220,20 +221,27 @@ if($('teacherBatchFile')){
    check();
    const rows=validateTeacherAccountRows(await readV47StudentXlsx(file,{columns:3,maxDataRows:MAX_TEACHER_ACCOUNTS}));
    check();
-   teacherBatchRows=rows;teacherBatchSession=session;
-   for(const row of rows)$('teacherBatchRows').append(renderTeacherBatchRow({row:row.row,name:row.name,email:row.email}));
-   $('teacherBatchStatus').textContent=rows.length+' शिक्षकको विवरण तयार भयो। कुनै खाता बनेको छैन।';
-   $('teacherBatchCreate').disabled=false;
+   const verifyRead=async path=>{check();const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));check();return snap.exists()?snap.data():null;};
+   const verified=await verifySchoolSession({schoolId:session.schoolId,uid:session.actor.uid,readDocument:verifyRead});
+   if(verified.role!=='school_admin')throw Error('School Admin required');
+   const store=createSchoolStore({db,api:{...api,getDocs:api.getDocsFromServer},member:session.actor,schoolId:session.schoolId,assertSession:check});
+   const roster=await readTeacherStaffRoster({store,assertCurrent:check});
+   const matches=matchTeacherStaff(rows,roster,session.schoolId);
+   check();teacherBatchRows=rows;teacherBatchSession=session;teacherBatchMatches=matches;
+   for(let i=0;i<rows.length;i++)$('teacherBatchRows').append(renderTeacherBatchRow({row:rows[i].row,name:rows[i].name,email:rows[i].email,staffStatus:matches[i].status}));
+   const conflicts=matches.filter(m=>m.status==='conflict').length,matched=matches.filter(m=>m.status==='matched').length;
+   $('teacherBatchStatus').textContent=rows.length+' शिक्षकको विवरण तयार भयो। '+matched+' Staff मिले; '+conflicts+' विवादित; '+(rows.length-matched-conflicts)+' Staff भेटिएनन्। कुनै खाता बनेको छैन।';
+   $('teacherBatchCreate').disabled=conflicts>0;
   }catch(e){if(attempt===teacherBatchEpoch)$('teacherBatchStatus').textContent='Excel पूर्वावलोकन असफल। शीर्षक, फाइल, इमेल र पासवर्ड जाँच्नुहोस्। '+(e?.message?.startsWith('पङ्क्ति ')?e.message:'')}
   finally{if(attempt===teacherBatchEpoch){$('teacherBatchFile').value='';$('teacherBatchPreview').disabled=false}}
  };
  $('teacherBatchCreate').onclick=async()=>{
-  if(!actor||busy||loggingIn||signingOut||!teacherBatchRows||!teacherBatchSession)return;
-  const session=teacherBatchSession,rows=teacherBatchRows,attempt=teacherBatchEpoch;
+  if(!actor||busy||loggingIn||signingOut||!teacherBatchRows||!teacherBatchSession||!teacherBatchMatches||teacherBatchMatches.some(m=>m.status==='conflict'))return;
+  const session=teacherBatchSession,rows=teacherBatchRows,matches=teacherBatchMatches,attempt=teacherBatchEpoch;
   const check=()=>{assertSameAdmin(session);if(attempt!==teacherBatchEpoch)throw Error('Excel परिवर्तन भयो।')};
   try{check()}catch{clearTeacherBatch();return}
-  if(!confirm(session.schoolId+' विद्यालयका '+rows.length+' शिक्षकको नयाँ खाता र निष्क्रिय सदस्यता बनाउने हो? पहिलेदेखिको खातालाई परिवर्तन गरिँदैन।'))return;
-  teacherBatchRows=null;teacherBatchSession=null;busy=true;
+  if(!confirm(session.schoolId+' विद्यालयका '+rows.length+' शिक्षकको नयाँ खाता र निष्क्रिय सदस्यता बनाउने हो? मिलेका Staff मा Email र UID जोडिन्छ; नमिलेका Staff मा कुनै परिवर्तन हुँदैन। पहिलेदेखिको खातालाई परिवर्तन गरिँदैन।'))return;
+  teacherBatchRows=null;teacherBatchSession=null;teacherBatchMatches=null;busy=true;
   const controls=['teacherBatchCreate','teacherBatchPreview','teacherBatchFile','teacherBatchSample','createMemberAccount','add','role','login','logout'];
   for(const id of controls)$(id).disabled=true;
   $('memberUid').value='';$('newMemberPassword').value='';
@@ -250,10 +258,19 @@ if($('teacherBatchFile')){
   try{
    const appSdk=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js');
    check();
+   await verifyPrivilege();
+   const store=createSchoolStore({db,api:{...api,getDocs:api.getDocsFromServer},member:session.actor,schoolId:session.schoolId,assertSession:check});
+   const latest=matchTeacherStaff(rows,await readTeacherStaffRoster({store,assertCurrent:check}),session.schoolId);
+   if(JSON.stringify(latest)!==JSON.stringify(matches))throw Error('Staff सूची परिवर्तन भयो।');
+   let index=0;
    const result=await provisionTeacherAccountBatch({rows,actor:session.actor,schoolId:session.schoolId,assertCurrent:check,verifyPrivilege,
     createAccount:({email,password,role})=>createIsolatedSchoolMemberAccount({appSdk,authSdk,config:V47_FIREBASE_CONFIG,actor:session.actor,schoolId:session.schoolId,role,email,password,assertCurrent:check,verifyPrivilege}),
-    addMember:({uid,role})=>addSchoolMember({db,api,actor:session.actor,schoolId:session.schoolId,uid,role}),
-    onResult:row=>{check();$('teacherBatchRows').append(renderTeacherBatchRow(row))}
+    addMember:({uid,role})=>{
+     const match=matches[index];
+     if(match.status==='matched')return addLinkedTeacherMember({db,api,actor:session.actor,schoolId:session.schoolId,uid,match,assertCurrent:check});
+     return addSchoolMember({db,api,actor:session.actor,schoolId:session.schoolId,uid,role});
+    },
+    onResult:row=>{check();$('teacherBatchRows').append(renderTeacherBatchRow({...row,staffStatus:matches[index++].status}))}
    });
    check();
    $('teacherBatchStatus').textContent=result.created+' निष्क्रिय सदस्यता बन्यो। '+(result.stopped?'प्रक्रिया रोकियो। '+result.remaining+' पङ्क्ति बाँकी छन्। पुनः प्रयास गर्नुअघि Firebase खाता र सदस्यता जाँच्नुहोस्।':'सदस्यता प्रमाणित गरेर अलग्गै सक्रिय गर्नुहोस्।');
