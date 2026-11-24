@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v110-landscape-docx-2083';
+const CACHE_NAME = 'smss-pwa-v111-paper-schematic-figures';
 const APP_SHELL = [
   './',
   './index.html',

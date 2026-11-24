@@ -1,7 +1,7 @@
 /** Review-only connection to shipped reference question banks.
  * Does not certify the current CDC Grid, set generatedPaper, save or print.
  */
-import {paperDigits,paperSubjectLabel,paperOptionLabel,paperDisplayText} from './cdc-optional-math-render.mjs';
+import {paperDigits,paperSubjectLabel,paperOptionLabel,paperDisplayText,questionFigure} from './cdc-optional-math-render.mjs';
 import {cdcSubjectKey} from './cdc-grid-source-index.mjs';
 import {planGrade9MathReference} from './cdc-grade9-compulsory-math-grouped.mjs';
 import {planSocial2078ReferencePaper} from './cdc-grade9-social-reference-planner.mjs';
@@ -36,6 +36,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  const choose=(ne,en)=>key==='english'||language==='en'?String(en||ne||''):language==='ne'?String(ne||en||''):[ne,en].filter(Boolean).join(' / ');
  const lines=['REFERENCE DRAFT — NOT FOR EXAM / सन्दर्भ समीक्षा मात्र',language==='ne'?'कक्षा ९ · '+paperSubjectLabel(subject,language)+' · पूर्णाङ्क: '+p.fullMarks+' · समय: '+p.durationMinutes+' मिनेट':'Grade 9 · '+subject+' · '+p.fullMarks+' marks · '+p.durationMinutes+' minutes','Current CDC Grid approval and teacher review pending.',result.referenceLabel||'',''];
  const answers=['INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY / उत्तरकुञ्जिका समीक्षा मात्र',(language==='ne'?'कक्षा ९ · '+paperSubjectLabel(subject,language):'Grade 9 · '+subject),'Not an official CDC marking scheme. Review model answers and partial credit before use.',''];
+ const figures=[];
  let answerCount=0;
  const answer=(label,value,marks)=>{
   const text=String(value??'').trim();
@@ -59,6 +60,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
    }
    lines.push('');continue;
   }
+  const figure=questionFigure(g,language);if(figure)figures.push({number:i+1,html:figure});
   const parts=g.subquestions||g.items||[];
   const marks=g.marks??parts.reduce((s,x)=>s+Number(x.marks||0),0);
   lines.push((i+1)+'. '+(key==='english'?g.text:choose(g.contextNe||g.questionText,g.contextEn||g.questionTextEn))+' ['+marks+']');
@@ -80,5 +82,5 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   }
   lines.push('');
  }
- return {ready:true,referenceOnly:true,currentCdcExactApproved:false,readyForLive:false,signature:result.signature,groupCount:groups.length,text:paperDisplayText(lines.join('\n'),language,subject),answerText:paperDisplayText(answers.join('\n'),language,subject),answerCount,sourceUrl:result.sourceUrl};
+ return {ready:true,referenceOnly:true,currentCdcExactApproved:false,readyForLive:false,signature:result.signature,groupCount:groups.length,text:paperDisplayText(lines.join('\n'),language,subject),answerText:paperDisplayText(answers.join('\n'),language,subject),answerCount,figures,sourceUrl:result.sourceUrl};
 }

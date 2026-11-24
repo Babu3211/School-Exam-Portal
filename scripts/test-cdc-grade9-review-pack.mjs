@@ -40,7 +40,7 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
   assert.ok(result.answerCount>=count,subject+' answer coverage');
   assert.doesNotMatch(result.answerText,/\bundefined\b/);
   previousSignature=result.signature;
-  records.push({subject,set:i+1,language,fullMarks:75,durationMinutes,groupCount:count,sourceUrl:result.sourceUrl,status:'Reference only — current CDC approval pending',signature:result.signature,answerCount:result.answerCount,html:'<pre>'+esc(result.text)+'</pre><details><summary>Teacher answer review / उत्तरकुञ्जिका</summary><pre>'+esc(result.answerText)+'</pre></details>'});
+  records.push({subject,set:i+1,language,fullMarks:75,durationMinutes,groupCount:count,sourceUrl:result.sourceUrl,status:'Reference only — current CDC approval pending',signature:result.signature,answerCount:result.answerCount,html:'<pre>'+esc(result.text)+'</pre>'+result.figures.map(f=>'<div class="question"><b>'+esc(paperDigits(f.number,language))+'.</b>'+f.html+'</div>').join('')+'<details><summary>Teacher answer review / उत्तरकुञ्जिका</summary><pre>'+esc(result.answerText)+'</pre></details>'});
  }
 }
 {
@@ -77,6 +77,8 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
  }
 }
 assert.equal(records.length,16);
+assert.ok(records.filter(r=>r.subject==='Mathematics').every(r=>r.html.includes('<svg')),'Math review papers must retain matching schematic figures');
+assert.ok(records.filter(r=>r.subject==='Mathematics').every(r=>r.html.includes('not to scale')));
 assert.equal(new Set(records.map(r=>r.subject)).size,8);
 assert.equal(new Set(records.map(r=>r.subject+'|'+r.signature)).size,16);
 assert.ok(records.every(r=>r.status.includes('pending')));

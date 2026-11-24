@@ -28,7 +28,7 @@ import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-mat
 import {CDC_G10_OPTIONAL_MATH_2083_MODEL,compareCdc2083MathModelToBundledGrid} from "./cdc-optional-math-model-compare.mjs";
 import {inspectCdcOptionalMathPaper} from "./cdc-optional-math-composite.mjs";
 import {originalOptionalMathPracticeBank} from "./cdc-optional-math-original-practice.mjs";
-import {renderCdcCompositePaper,paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS,buildQuestionPaperDocx} from "./cdc-optional-math-render.mjs";
+import {renderCdcCompositePaper,paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS,buildQuestionPaperDocx,questionFigure} from "./cdc-optional-math-render.mjs";
 import {QUESTION_EXCEL_FIELDS,parseQuestionExcelSheet,CDC_GRID_EXCEL_FIELDS,parseCdcGridExcelSheet} from "./cdc-question-excel.mjs";
 import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
@@ -420,7 +420,7 @@ function renderPaperPreview(paper = generatedPaper) {
     </div>
     ${paper.questions.some(q=>String(q.questionId||"").startsWith("builtIn_"))?
       '<p style="font-size:12px;font-weight:bold;color:#7a3700;padding:8px;border:1px solid #c48740">अभ्यास प्रश्नपत्र — CDC प्रकाशित नमुना होइन। शिक्षकले Grid, तथ्य र उत्तर जाँचेर मात्र प्रयोग गर्नुहोस्।</p>':""}
-    <div class="qp-paper-body">${groups.map(type=>{const list=paper.questions.filter(q=>q.questionType===type);if(!list.length)return "";return `<h3 style="text-align:left;margin-top:16px">${esc(questionTypeLabel(type))}</h3>${list.map(q=>{number++;return `<div class="qp-q"><div style="display:flex;justify-content:space-between;gap:10px"><b>${display(number)}. ${display(q.questionText)}</b><b>[${display(q.marks)}]</b></div>${type==="mcq"?'<div style="margin-left:18px">'+(q.options||[]).map((o,i)=>'<div>'+paperOptionLabel(i,paper.language)+'. '+display(o)+'</div>').join("")+'</div>':""}</div>`;}).join("")}`;}).join("")}
+    <div class="qp-paper-body">${groups.map(type=>{const list=paper.questions.filter(q=>q.questionType===type);if(!list.length)return "";return `<h3 style="text-align:left;margin-top:16px">${esc(questionTypeLabel(type))}</h3>${list.map(q=>{number++;return `<div class="qp-q"><div style="display:flex;justify-content:space-between;gap:10px"><b>${display(number)}. ${display(q.questionText)}</b><b>[${display(q.marks)}]</b></div>${questionFigure(q,paper.language)}${type==="mcq"?'<div style="margin-left:18px">'+(q.options||[]).map((o,i)=>'<div>'+paperOptionLabel(i,paper.language)+'. '+display(o)+'</div>').join("")+'</div>':""}</div>`;}).join("")}`;}).join("")}
     </div><div class="qp-paper-end" style="text-align:center;margin-top:25px;font-weight:700">— प्रश्नपत्र समाप्त —</div>
   </div>`;
 }

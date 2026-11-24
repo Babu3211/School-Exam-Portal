@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {JSDOM} from 'jsdom';
-import {paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS,buildQuestionPaperDocx} from '../cdc-optional-math-render.mjs';
+import {paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS,buildQuestionPaperDocx,questionFigure} from '../cdc-optional-math-render.mjs';
 import {readBundledScienceBank,buildAutomaticQuestionPaper,cognitiveMarkDistribution} from '../cdc-question-autogen.mjs';
 const source=readFileSync(new URL('../cdc-question-paper.js',import.meta.url),'utf8');
 const code=(start,end)=>{
@@ -236,9 +236,9 @@ const checkboxes=[...dom.window.document.querySelectorAll('[data-qp-topic]')];
 for(const [i,input]of checkboxes.entries())input.checked=i<3;
 $('qpAutoLanguage').value='both';$('qpPaperFullMarks').value='3';
 $('qpAutoMode').value='practice';
-const renderPaperPreview=new Function('$','esc','questionTypeLabel','levelLabel','generatedPaper','paperDigits','paperSubjectLabel','paperClassLabel','paperOptionLabel','paperDisplayText',
+const renderPaperPreview=new Function('$','esc','questionTypeLabel','levelLabel','generatedPaper','paperDigits','paperSubjectLabel','paperClassLabel','paperOptionLabel','paperDisplayText','questionFigure',
  code('function renderPaperPreview(','function printPaper(')+'return renderPaperPreview;')(
- $,escape,t=>({mcq:'MCQ',short:'Short',long:'Long'})[t]||t,x=>x,null,paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperDisplayText);
+ $,escape,t=>({mcq:'MCQ',short:'Short',long:'Long'})[t]||t,x=>x,null,paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperDisplayText,questionFigure);
 let lastMessage='';
 const make=(overrides={})=>{
  const props={

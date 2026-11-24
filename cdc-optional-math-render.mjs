@@ -149,3 +149,31 @@ export function buildQuestionPaperDocx(area){
  ['_rels/.rels',xml+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'],
  ['word/document.xml',xml+'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+content+'</w:body></w:document>']]);
 }
+
+
+// Offline schematic illustrations tied to explicit question wording. The
+// labels reproduce givens only; unknown quantities are never solved here.
+export function questionFigure(question,language='both'){
+ const en=String(question?.contextEn||question?.questionTextEn||question?.textEn||'');
+ const label=s=>paperDigits(s,language).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const txt=(x,y,value)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" stroke="none" fill="#111" font-size="13">'+label(value)+'</text>';
+ const triangle=(a,b,c,theta=false)=>'<path d="M48 18V116H218Z M48 104H60V116" />'+txt(24,69,a)+txt(133,134,b)+txt(153,53,c)+(theta?txt(194,110,'θ'):'');
+ let match,body='',caption='';
+ if((match=/^The perpendicular sides of a right triangle are (\d+) cm and (\d+) cm\./.exec(en))){
+  body=triangle(match[1]+' cm',match[2]+' cm','?');caption='समकोण त्रिभुज / Right triangle';
+ }else if((match=/^In a right triangle, opposite to θ is (\d+), adjacent is (\d+) and hypotenuse is (\d+)\./.exec(en))){
+  body=triangle(match[1],match[2],match[3],true);caption='समकोण त्रिभुज / Right triangle';
+ }else if((match=/^A circular pond has radius (\d+) m\./.exec(en))){
+  body='<circle cx="130" cy="71" r="51"/><path d="M130 71H181"/><circle cx="130" cy="71" r="2" fill="#111"/>'+txt(155,63,match[1]+' m');caption='वृत्त / Circle';
+ }else if((match=/^A rectangular garden is (\d+) m long and (\d+) m wide\./.exec(en))){
+  body='<rect x="38" y="30" width="190" height="82"/>'+txt(133,23,match[1]+' m')+txt(256,75,match[2]+' m');caption='आयत / Rectangle';
+ }else if((match=/^In triangle ABC, angle A=(\d+)° and B=(\d+)°\./.exec(en))){
+  body='<path d="M135 20L40 115H230Z"/>'+txt(135,14,'C')+txt(31,130,'A')+txt(239,130,'B')+txt(75,106,match[1]+'°')+txt(193,106,match[2]+'°');caption='त्रिभुज / Triangle';
+ }else if(/^Why does a longer effort arm reduce the force needed in a lever\?/.test(en)){
+  body='<path d="M24 60H248 M89 61L72 107H106Z M39 34V56 M34 49L39 56L44 49 M227 34V56 M222 49L227 56L232 49"/>'+txt(39,25,language==='ne'?'भार':'Load')+txt(224,25,language==='ne'?'प्रयास':'Effort')+txt(89,125,language==='ne'?'आधारबिन्दु':'Fulcrum');caption='उत्तोलक / Lever';
+ }
+ if(!body)return '';
+ const name=language==='ne'?caption.split(' / ')[0]:language==='en'?caption.split(' / ')[1]:caption;
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" width="280" height="145" viewBox="0 0 280 145" role="img" aria-label="'+label(name)+'"><rect width="280" height="145" fill="white" stroke="none"/><g fill="none" stroke="#111" stroke-width="1.5" font-family="Arial,Nirmala UI,sans-serif">'+body+'</g></svg>';
+ return '<figure class="qp-figure" style="margin:6px 0;text-align:center;break-inside:avoid">'+svg+'<figcaption style="font-size:9pt">'+label(name)+' — '+(language==='ne'?'मापनअनुसार होइन':language==='en'?'not to scale':'मापनअनुसार होइन / not to scale')+'</figcaption></figure>';
+}

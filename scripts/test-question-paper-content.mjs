@@ -134,7 +134,9 @@ console.log("Question paper content checks passed:", { packs: summaries, CDCSour
 assert.ok(Array.isArray(register.independentReferences)&&register.independentReferences.length>=12);
 for(const entry of register.independentReferences){
  assert.equal(entry.officialGrid,false);
- assert.deepEqual(entry.grades,[9]);
+ if(entry.kind==='historical_CDC_SEE_grid_school_mirror'){
+  assert.deepEqual(entry.grades,[10]);assert.equal(entry.referenceCrosscheck.currentGrade9Approved,false);assert.equal(entry.referenceCrosscheck.grade9AggregateOnly,true);
+ }else assert.deepEqual(entry.grades,[9]);
  assert.ok(entry.status&&entry.note);
  assert.equal(new URL(entry.url).protocol,'https:');
  assert.ok(!register.sources.some(s=>s.url===entry.url&&s.subject===entry.subject));
