@@ -153,9 +153,10 @@
       ],
       "subject": "विज्ञान तथा प्रविधि",
       "kind": "specification_grid",
-      "version": "2082",
+      "version": "Publication listed 2082-05-08; PDF edition unconfirmed",
       "status": "official",
-      "url": "https://moecdc.gov.np/category/specialization-schedule--g-/?page=6"
+      "url": "https://moecdc.gov.np/category/specialization-schedule--g-/?page=6",
+      "note": "CDC publication listing. Listing date is not evidence of a revised grid; the separate government RS11167 PDF is titled 2078."
     },
     {
       "grades": [
@@ -357,10 +358,10 @@
       ],
       "subject": "विज्ञान तथा प्रविधि",
       "kind": "specification_grid",
-      "version": "2082",
+      "version": "Publication listed 2082-05-08; PDF edition unconfirmed",
       "status": "official_CDC_page_linked_grid_content_not_yet_extracted",
       "url": "https://moecdc.gov.np/content/278/specialization-schedule-class-class-9-science-and/",
-      "note": "Official CDC Grade 9 science grid page located; exact unit/question/marks/cognitive rows are not yet transcribed or independently checked."
+      "note": "Official CDC Grade 9 science grid page located; exact unit/question/marks/cognitive rows are not yet transcribed or independently checked. Listing date is not evidence of a revised grid; the separate government RS11167 PDF is titled 2078."
     },
     {
       "grades": [
@@ -746,9 +747,9 @@
       "subject": "विज्ञान तथा प्रविधि",
       "kind": "historical_specification_grid_and_model_questions",
       "version": "२०७८",
-      "status": "historical_CDC_government_pdf_75_marks_40_questions_2026_screenshot_timeout_2082_revised_grid_not_verified",
+      "status": "historical_CDC_government_pdf_2078_current_applicability_unconfirmed",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11167_Specification%20Grid%20%28Grade%209%29%20Compulsory%20Science%20and%20Technology_nk1kpta.pdf",
-      "note": "Original government PDF text examined: 75 marks, 40 questions (10 MCQ,9 very short,14 short,7 long), cognitive marks 12/22/22/19, 19 unit mark totals. Screenshot request timed out. CDC confirms the compulsory Grade9 Science Grid was revised for 2082, so this old layout is NOT an approved 2083 Exact blueprint."
+      "note": "Government PDF explicitly titled 2078: 75 marks, 40 questions, 19 units. The official publication listing dated 2082-05-08 does not establish a revised edition. Current 2083 applicability is unconfirmed."
     },
     {
       "grades": [
@@ -1244,10 +1245,10 @@
       ],
       "subject": "विज्ञान तथा प्रविधि",
       "kind": "specification_grid_and_model_questions",
-      "version": "PDF edition applicability pending",
+      "version": "2078 (PDF title); current applicability pending",
       "status": "official_government_full_PDF_retrieved_grid_review_pending",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11167_Specification%20Grid%20(Grade%209)%20Compulsory%20Science%20and%20Technology_nk1kpta.pdf",
-      "note": "Legacy-font grid and checklist; not proof of revised 2082 grid.",
+      "note": "Government PDF title and unit/mark text checked again on 2026-11-24. The official listing date is 2082-05-08; a separate revised Grid has not been established. Screenshot request timed out.",
       "retrievalEvidence": {
         "resource": "11167",
         "pages": 10,

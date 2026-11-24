@@ -1,14 +1,14 @@
 /**
  * Grade 9 Compulsory Science: ARCHIVED 2078 Grid + Model arithmetic audit.
- * NOT the updated 2082/2083 examination Grid.
+ * NOT confirmed as the applicable school-year-2083 examination Grid.
  *
  * Official archival file listed through the government PDF CDN:
  * https://giwmscdnone.gov.np/media/pdf_upload/RS11167_Specification%20Grid%20%28Grade%209%29%20Compulsory%20Science%20and%20Technology_nk1kpta.pdf
  *
  * Original PDF text was inspected but screenshot request timed out, therefore
- * mark the archive as text-verified ONLY. A CDC 2082 Grade 9 Science Grid
- * publication exists and is known to be revised; it has not been fully
- * independently transcribed. The older marks are for comparative audit, NOT
+ * mark the government PDF as text-verified ONLY. The CDC publication page
+ * is dated 2082-05-08, but a distinct revised grid has not been established.
+ * The older marks are for comparative audit, NOT
  * to create a CDC Exact 2083 school examination blueprint.
  */
 export const ARCHIVED_G9_SCIENCE_2078=Object.freeze({
@@ -60,9 +60,9 @@ export function auditGrade9ScienceArchive({grade,subject}={}){
  return Object.freeze({
   grade,subject,archivedModel:data,oldModelMarks:marksByGroup,
   oldCognitiveMarks:levels,oldGroupedMarks:grouped,
-  publicationFound:true,full2082GridInspected:false,
+  publicationFound:true,publicationDateBS:'2082-05-08',separateRevisedGridConfirmed:false,full2082GridInspected:false,
   currentCdcExactApproved:false,currentQuestionBankVerified:false,
   readyForLive:false,teacherReviewRequired:true,
-  note:'2078 CDC government PDF is only a historical reference; revised 2082 source must be checked first'
+  note:'2078 CDC government PDF is a historical reference; the 2082 listing date alone does not establish a revised edition or current applicability'
  });
 }
