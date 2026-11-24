@@ -73,7 +73,7 @@ Object.assign(w,{
   getDocsFromServer:async ({name,filters})=>{
     assert.equal(name,'cdc_observations');
     assert.deepEqual(Object.fromEntries(filters.map(([name,op,value])=>{assert.equal(op,'==');return [name,value];})),{
-      studentId:field('student').value,className:field('class').value,subject:field('subject').value,
+      studentId:field('student').value,className:({three:'Class 3',primary:'Class 5'})[field('student').value]||field('class').value,subject:field('subject').value,
       section:'A',academicYear:'2083',period:field('period').value
     });
     if(readSchool) await readSchool.promise;
@@ -413,6 +413,10 @@ field('stage').value='regular';field('level').value='3';field('evidence').value=
 await field('save').onclick();
 assert.match(field('status').textContent,/मस्यौदा राखियो/);
 await field('saveSchool').onclick();
+assert.match(field('status').textContent,/विद्यालयमा सुरक्षित भयो/);
+assert.match(field('schoolStatus').textContent,/1 अवलोकन/);
+assert.equal([...observations.values()].at(-1).className,'Class 3');
+assert.equal([...observations.values()].at(-1).stage,'regular');
 assert.match(field('annexFoot').textContent,/75\.00%/);
 assert.match(field('annexFoot').textContent,/1 \/ 3/);
 choice('unit','नाप');
