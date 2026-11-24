@@ -10,7 +10,7 @@ import {createV47NodeTeacherAssignmentHandler} from "./node-teacher-assignment-h
 import {createV47NodePublicationStageHandler} from "./node-publication-stage-handler.mjs";
 import {createV47NodePublicationCommitHandler} from "./node-publication-commit-handler.mjs";
 import {createV47NodeAtomicAttendanceHandler} from "./node-atomic-attendance-handler.mjs";
-export function createV47ApiServer({auth,firestore,publicationEnabled=false,atomicAttendanceEnabled=false}) {
+export function createV47ApiServer({auth,firestore,publicationEnabled=false,atomicAttendanceEnabled=false,staticHandler=null}) {
  const atomicAttendance=createV47NodeAtomicAttendanceHandler({auth,firestore,atomicAttendanceEnabled});
  const read=createV47NodeReadHandler({auth,firestore});
  const write=createV47NodeStudentWriteHandler({auth,firestore});
@@ -25,7 +25,10 @@ export function createV47ApiServer({auth,firestore,publicationEnabled=false,atom
   auth,firestore,publicationEnabled
  })(req,res);
  return createServer((request,response)=>{
-  const task=request.url==="/api/v47/attendance/atomic"
+  const task=typeof staticHandler==='function'&&typeof request.url==='string'&&
+    !request.url.startsWith('/api/')&&request.url!=='/api'
+   ? staticHandler(request,response)
+   : request.url==="/api/v47/attendance/atomic"
    ? atomicAttendance(request,response)
    : request.url==="/api/v47/publication/commit"
    ? publish(request,response)
