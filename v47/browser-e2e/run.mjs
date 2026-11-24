@@ -202,7 +202,15 @@ try{
    await wait(page,id=>Array.from(document.querySelectorAll('#schools tr')).some(tr=>tr.textContent.includes(id)&&tr.textContent.includes('Deactivate')),newSchoolId);
    const candidate2=await newSession();try{await login(candidate2.page,newSchoolId,newUid,true,'0',newEmail)}finally{await candidate2.context.close()}
    assert.deepEqual(errors,[]);
-   console.log('PASS Super Admin account creation, inactive registration, blocked inactive login, activation and new-school login');
+   await db.doc('schools/legacy-browser-fixture').set({name:'Legacy synthetic school',active:true});
+   await page.locator('#refresh').click();
+   const legacy=page.locator('#schools tr').filter({hasText:'legacy-browser-fixture'});
+   await legacy.waitFor({state:'visible'});
+   assert.match(await legacy.textContent(),/Needs review/);
+   assert.equal(await legacy.getByRole('button').count(),0);
+   assert.equal(await page.locator('#schools tr').filter({hasText:newSchoolId}).getByRole('button',{name:'Deactivate'}).count(),1);
+   assert.equal((await db.doc('schools/legacy-browser-fixture').get()).data().active,true);
+   console.log('PASS Super Admin account creation, inactive registration, blocked inactive login, activation and new-school login; malformed legacy registry shown read-only');
   }finally{await context.close()}
  }
  console.log('PASS real Chromium: 2 schools, 4 accounts, wrong-school login denied, shared session, Spark Grade Ledger, watermarked Grade Sheet, XLSX, logout; third school onboarding');

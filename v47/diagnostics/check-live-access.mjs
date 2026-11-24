@@ -2,6 +2,7 @@
 // Never print user identifiers, rule source, access tokens, or credentials.
 import {createRequire} from 'node:module';
 import {readFileSync} from 'node:fs';
+import {schoolRegistryIssues} from '../school-list-service.mjs';
 const projectId='smss-exam-portal-v47';
 const requireAdmin=createRequire(new URL('../../v47-runtime/package.json',import.meta.url));
 const {initializeApp,cert,deleteApp}=requireAdmin('firebase-admin/app');
@@ -35,6 +36,17 @@ try{
  }catch(e){console.log('Rules metadata read unavailable: '+summarizeError(e));blocked=true}
  try{
   const db=getFirestore(app);
+  if(!preflight){
+   const schools=await db.collection('schools').limit(31).get();
+   const issues={};let invalid=0;
+   for(const doc of schools.docs.slice(0,30)){
+    const reasons=schoolRegistryIssues(doc.id,doc.data());
+    if(reasons.length)invalid++;
+    for(const reason of reasons)issues[reason]=(issues[reason]??0)+1;
+   }
+   console.log('School registry diagnostics (up to 30): checked '+Math.min(30,schools.size)+', needs review '+invalid);
+   for(const [reason,count] of Object.entries(issues))console.log('Registry issue: '+reason+' — '+count);
+  }
   const snap=await db.collection('v47_super_admins').where('active','==',true).limit(20).get();
   console.log('Active root Super Admin documents (bounded at 20): '+snap.size);
   if(!snap.size)blocked=true;
