@@ -1231,9 +1231,16 @@ for(const grade of ['2','3']){
    :[/पारिवारिक नाता/,/ध्वनि प्रदूषणको असर/,/खोपको महत्त्व/,/प्राथमिक उपचारको अवधारणा/,/खाद्य शृङ्खलाको उदाहरण/,/ठोस, तरल र ग्यासका गुण परीक्षण/,/स्थानीय बाजा अभ्यास/,/स्थानीय भाषा/,/पैसा बचत/,/दिन र रातको कारण/];
   assert.match(rows.textContent,sampleLabels[i]);
   const toolLabels=[...rows.rows].map(row=>row.cells[row.cells.length-1].textContent.trim());
-  assert.ok(toolLabels.every(Boolean));
-  if(grade==='3'&&i===1)assert.ok(toolLabels.every(t=>t==='मूल फाराममा खाली'));
-  else assert.ok(toolLabels.every(t=>t!=='मूल फाराममा खाली'));
+  if(grade==='3'&&i===1){
+   assert.ok(toolLabels.every(t=>t===''));
+   assert.ok([...rows.rows].every(row=>row.cells[row.cells.length-1].getAttribute('aria-label')==='मूल फाराममा खाली'));
+  }else assert.ok(toolLabels.every(Boolean));
+  const printed=grade==='2'
+   ?[[1,2,3,4,5,5],[7,8,9,10],[11,12,13],[14,15,16],[17,18],[19,20],[21,22],[23],[24,25],[26,27,28]]
+   :[[1,2,3,4],[5,6,7],[8,9,10],[11,12,13],[14],[15,16],[17,18],[19],[20,21],[22,23,24]];
+  const ascii=v=>v.replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d)));
+  assert.deepEqual(outcomes.map(cell=>Number(ascii(cell.textContent).match(/उपलब्धि (\d+)/)[1])),printed[i]);
+  assert.equal(field('annexFoot').querySelectorAll('[data-cdc-sero-stage-average]').length,2);
   assert.equal(outcomes.reduce((n,cell)=>n+cell.rowSpan,0),expected[i][1]);
   assert.equal(rows.rows[0].cells[0].rowSpan,expected[i][1]);
   for(const stage of [0,1]){
@@ -1262,6 +1269,7 @@ assert.equal(prepared.start,7);
 assert.equal(prepared.groups.length,6);
 assert.deepEqual(Array.from(prepared.mainRows,r=>r.span),[4,8,8,8,8,4]);
 assert.deepEqual(Array.from(prepared.mainRows,r=>r.first),[true,true,false,true,false,true]);
+assert.deepEqual(Array.from(prepared.mainRows,r=>r.index),[7,8,8,9,9,10]);
 assert.equal(w.__testSeroEntryForm('2',unitUnderTest,'2084'),null);
 current.subjectAssignments=[{className:'Class 2',subject:'serophero',section:'A'}];
 serverRole={...current};
@@ -1298,6 +1306,9 @@ assert.equal(multiPrint.querySelector('tbody').rows.length,24);
 assert.equal(multiPrint.querySelector('tbody').rows[4].cells[0].rowSpan,8);
 assert.equal(multiPrint.querySelectorAll('input,select,button').length,0);
 assert.match(multiPrint.querySelector('tfoot').textContent,/पूरा: १ \/ ६/);
+assert.equal(multiPrint.querySelector('tfoot').rows.length,2);
+assert.equal(multiPrint.querySelector('tfoot').rows[1].cells[1].textContent,'—');
+assert.equal(multiPrint.querySelector('tfoot').rows[1].cells[2].textContent,'—');
 assert.equal(observations.size,beforeSero);
 w.__testSeroApproved.delete(keyUnderTest);
 w.getDocsFromServer=priorBinaryRead;
