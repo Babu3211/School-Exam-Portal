@@ -1089,6 +1089,17 @@
           "visualCellReviewComplete": false
         }
       }
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "कार्यालय सञ्चालन तथा लेखा",
+      "kind": "specification_grid",
+      "version": "२०८१ (publication title; PDF not inspected)",
+      "status": "official_elibrary_record_link_discovered_pdf_unavailable",
+      "url": "https://lib.moecdc.gov.np/elibrary/?r=11101",
+      "note": "E-Library link from the public MathMentor directory dated 2026-09-25, confirmed to target official CDC record 11101. On 2026-11-24 the record returned HTTP 502. No PDF or grid marks verified. Discovery source: https://basantakk.com.np/2026/1130/cdc-specification-grid-model-questions-download-center/"
     }
   ],
   "completion": {

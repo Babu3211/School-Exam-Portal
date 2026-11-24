@@ -107,6 +107,7 @@ OFFICIAL_RECORDS = [
     ("Mathematics","https://moecdc.gov.np/content/281/","11170"),
     ("Science and Technology","https://moecdc.gov.np/content/278/specialization-schedule-class-class-9-science-and/","11167"),
     ("Social Studies","https://www.moecdc.gov.np/content/277/specialization-schedule-social-study--class-9-/","11166"),
+    ("Office Operation and Accounting","https://moecdc.gov.np/content/276/specialization-table-2081-work-conduct-and-accounting/","11101"),
 ]
 class AttachmentParser(HTMLParser):
     def __init__(self,base):
