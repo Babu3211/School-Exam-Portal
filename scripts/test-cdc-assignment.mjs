@@ -1223,11 +1223,13 @@ for(const grade of ['2','3']){
   assert.equal(field('annex3').hidden,false,unit);
   assert.equal(rows.rows.length,expected[i][1],unit);
   assert.equal(outcomes.length,expected[i][0],unit);
-  if(grade==='2'&&i<2){
+  if(grade==='2'){
    assert.match(field('annexStatus').textContent,/कार्यगत शब्दावली/);
    assert.ok(outcomes.every(cell=>cell.textContent.includes(' — ')));
    assert.ok([...rows.rows].every(row=>!row.textContent.includes('मूल PDF हेर्नुहोस्')));
-   assert.match(rows.textContent,i===0?/छिमेकीलाई सम्मान गर्ने/:/चुम्बकबाट आकर्षित वस्तु छुट्याउने/);
+   const sampleLabels=[/छिमेकीलाई सम्मान गर्ने/,/चुम्बकबाट आकर्षित वस्तु छुट्याउने/,/स्थलचर जनावर चिन्ने/,/२५ मिटर दौड/,/सजीव–निर्जीव छुट्याउने/,/सार्वजनिक सम्पदा संरक्षण/,/स्थानीय गीत गाउने/,/राष्ट्रिय चिह्नको वर्णन/,/परिवारको आम्दानीका स्रोत/,/पानीका स्रोत/];
+   assert.match(rows.textContent,sampleLabels[i]);
+   assert.ok([...rows.rows].every(row=>row.cells[row.cells.length-1].textContent.trim().length>0));
   }else{
    assert.match(rows.textContent,/सूचक — मूल PDF हेर्नुहोस्/);
   }
