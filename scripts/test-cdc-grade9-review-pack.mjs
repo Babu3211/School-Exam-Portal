@@ -82,13 +82,45 @@ assert.equal(new Set(records.map(r=>r.subject+'|'+r.signature)).size,16);
 assert.ok(records.every(r=>r.status.includes('pending')));
 assert.ok(records.every(r=>r.html.includes('<details><summary>Teacher answer review')),'All sixteen papers have a separate teacher answer review');
 const out=process.env.SMSS_REVIEW_PACK_DIR;
+const style='body{font:16px/1.5 system-ui,sans-serif;max-width:900px;margin:24px auto;padding:0 16px;color:#172133}section{border-top:2px solid #aaa;padding:18px 0}pre,p,li{white-space:pre-wrap;overflow-wrap:anywhere}pre{font:inherit}.translation{display:block;color:#36465e;margin:3px 0 0}.question{margin-top:18px}aside{font-weight:700;color:#922}details{margin-top:20px}a{overflow-wrap:anywhere}nav{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px}.print-note{display:none}table{border-collapse:collapse;width:100%}th,td{text-align:left;vertical-align:top;border-bottom:1px solid #ddd;padding:10px 6px}@page{size:A4;margin:15mm}@media print{nav,details,.screen-only{display:none!important}body{margin:0;padding:0;font-size:11pt}.print-note{display:block;position:fixed;bottom:0;left:0;right:0;text-align:center;color:#333;font-size:9pt;font-weight:bold}section{border:0;padding:0}.question{break-inside:avoid}}';
+const page=(title,body)=>'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+esc(title)+'</title><style>'+style+'</style></head><body>'+body+'</body></html>';
+const warning='<aside>REVIEW ONLY — NOT FOR EXAM / परीक्षा प्रयोजनका लागि होइन</aside>';
+const noExecutable=html=>assert.doesNotMatch(html,/<(?:script|form|iframe|object|embed)\b|\son(?:click|load|error)\s*=/i);
+const files=[];
+for(const r of records){
+ const slug=r.subject.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+ const base='papers/'+slug+'-set-'+r.set;
+ r.paperPath=base+'.html';r.answerPath=base+'-answers.html';
+ // Split only the authored top-level teacher review disclosure. Question
+ // and answer documents have separate URLs; neither requires JavaScript.
+ const cut=r.html.lastIndexOf('<details><summary>');
+ assert.ok(cut>0&&r.html.endsWith('</details>'));
+ const endSummary=r.html.indexOf('</summary>',cut);
+ assert.ok(endSummary>cut);
+ const questions=r.html.slice(0,cut);
+ const key=r.html.slice(endSummary+'</summary>'.length,-'</details>'.length);
+ assert.ok(questions.trim()&&key.trim());
+ const meta='<h1>'+esc(r.subject)+' — Set '+r.set+'</h1>'+warning+'<p>Grade 9 · '+esc(r.status)+' · '+r.fullMarks+' marks · '+r.durationMinutes+' minutes · '+esc(r.language)+'</p>';
+ const back='<a href="../grade9-teacher-review.html">All subjects</a>';
+ const footer='<p class="print-note">SMSS — REVIEW ONLY — NOT FOR EXAM / सन्दर्भ अभ्यास मात्र</p>';
+ const questionPage=page(r.subject+' — Set '+r.set,'<nav>'+back+'<a href="'+r.answerPath.split('/').at(-1)+'">Teacher answer key</a></nav>'+meta+'<p class="screen-only">Use your browser Print or Save as PDF for this single review draft. Do not use it as an approved examination.</p><section>'+questions+'</section><p>Source: '+esc(r.sourceUrl||'See repository source register')+'</p>'+footer);
+ const answerPage=page(r.subject+' — Set '+r.set+' — answer review','<nav>'+back+'<a href="'+r.paperPath.split('/').at(-1)+'">Question paper</a></nav>'+meta+'<h2>Indicative answer key — teacher review only</h2><section>'+key+'</section>'+footer);
+ for(const [name,html] of [[r.paperPath,questionPage],[r.answerPath,answerPage]]){
+  noExecutable(html);assert.ok(html.includes('REVIEW ONLY — NOT FOR EXAM'));assert.ok(html.includes('print-note'));files.push([name,html]);
+ }
+ assert.ok(!questionPage.includes('Teacher answer review</summary>'));
+ assert.ok(!questionPage.includes('INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY'));
+}
+assert.equal(files.length,32);
+assert.equal(new Set(files.map(([name])=>name)).size,32);
+const rows=records.map(r=>'<tr><td>'+esc(r.subject)+'</td><td>'+r.set+'</td><td>'+r.fullMarks+'</td><td><a href="'+r.paperPath+'">Questions</a> · <a href="'+r.answerPath+'">Answer key</a></td></tr>').join('');
+const index=page('SMSS Grade 9 review pack','<h1>SMSS Grade 9 — teacher review pack</h1>'+warning+'<p>Eight subjects, two distinct draft sets each. Open one paper at a time to review or print it. Answer keys are separate. Six subjects use reference patterns; two use verified structural grids. All require teacher review. No school data or release approval.</p><table><thead><tr><th>Subject</th><th>Set</th><th>Marks</th><th>Review files</th></tr></thead><tbody>'+rows+'</tbody></table>');
+noExecutable(index);
+for(const [name] of files)assert.ok(index.includes('href="'+name+'"'));
 if(out){
- mkdirSync(out,{recursive:true});
- const style='body{font:16px/1.5 system-ui,sans-serif;max-width:900px;margin:24px auto;padding:0 16px;color:#172133}section{border-top:2px solid #aaa;padding:18px 0}pre,p,li{white-space:pre-wrap;overflow-wrap:anywhere}pre{font:inherit}.translation{display:block;color:#36465e;margin:3px 0 0}.question{margin-top:18px}aside{font-weight:700;color:#922}details{margin-top:20px}a{overflow-wrap:anywhere}@media print{section{break-before:page}details{display:none}}';
- assert.ok(records.every(r=>!/<(?:script|form|iframe|object|embed)\b/i.test(r.html)),'Review pack must contain no executable or login UI');
- const toc=records.map((r,i)=>'<li><a href="#paper'+i+'">'+esc(r.subject)+' — Set '+r.set+'</a></li>').join('');
- const body=records.map((r,i)=>'<section id="paper'+i+'"><aside>REVIEW ONLY — NOT FOR EXAM / परीक्षा प्रयोजनका लागि होइन</aside><h2>'+esc(r.subject)+' — Set '+r.set+'</h2><p>'+esc(r.status)+' · '+r.fullMarks+' marks · '+r.durationMinutes+' minutes · '+esc(r.language)+'</p><p>Source: '+esc(r.sourceUrl||'See repository source register')+'</p>'+r.html+'</section>').join('');
- writeFileSync(join(out,'grade9-teacher-review.html'),'<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>SMSS Grade 9 review pack</title><style>'+style+'</style><h1>SMSS Grade 9 — teacher review pack</h1><aside>16 original practice/reference drafts. No school data. No release approval.</aside><p>Six subject patterns are reference only; two bundled structures pass machine grid checks. Teacher verification of content, difficulty, answer keys and current official grid remains required.</p><ol>'+toc+'</ol>'+body+'</html>','utf8');
+ mkdirSync(join(out,'papers'),{recursive:true});
+ for(const [name,html] of files)writeFileSync(join(out,name),html,'utf8');
+ writeFileSync(join(out,'grade9-teacher-review.html'),index,'utf8');
  writeFileSync(join(out,'review-manifest.json'),JSON.stringify({grade,academicYear:2083,readyForLive:false,schoolDataIncluded:false,records:records.map(({html,...r})=>r)},null,2),'utf8');
 }
-console.log('PASS all 8 subjects, 16 distinct review drafts; six reference-only subjects remain blocked; no production writes.');
+console.log('PASS all 8 subjects, 16 distinct review drafts and 32 separate question/answer pages; six reference-only subjects remain blocked; no production writes.');
