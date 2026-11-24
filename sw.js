@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v84-grade9-reference-readiness-2083';
+const CACHE_NAME = 'smss-pwa-v85-grade9-social-real-reference-bank-2083';
 const APP_SHELL = [
   './',
   './index.html',
@@ -30,6 +30,7 @@ const APP_SHELL = [
   './cdc-grade9-science-archive-audit.mjs',
   './cdc-grade9-science-reference-planner.mjs',
   './cdc-grade9-social-reference-planner.mjs',
+  './cdc-grade9-social-reference-bank.mjs',
   './cdc-grade9-computer-original-practice.mjs',
   './cdc-grade9-environment-original-practice.mjs',
   './cdc-grade9-social-original-practice.mjs',

@@ -37,6 +37,8 @@ on:
       - 'cdc-grade9-science-archive-audit.mjs'
       - 'cdc-grade9-science-reference-planner.mjs'
       - 'cdc-grade9-social-reference-planner.mjs'
+      - 'cdc-grade9-social-reference-bank.mjs'
+      - 'scripts/test-cdc-grade9-social-reference-bank.mjs'
       - 'scripts/test-cdc-grade9-social-reference-planner.mjs'
       - 'scripts/test-cdc-grade9-science-reference-planner.mjs'
       - 'scripts/test-cdc-grade9-science-archive-audit.mjs'
@@ -177,6 +179,8 @@ jobs:
         run: node scripts/test-cdc-grade9-social-reference-planner.mjs
       - name: Test actual Grade 9 subject banks and reference readiness integration
         run: node scripts/test-cdc-grade9-reference-readiness.mjs
+      - name: Generate actual Grade 9 social reference papers in three language modes
+        run: node scripts/test-cdc-grade9-social-reference-bank.mjs
       - name: Verify automatic CDC Grid source detection for Grade 6-10 subjects
         run: node scripts/test-cdc-grid-source-index.mjs
       - name: Verify 54 original bilingual formula-checked Optional Maths practice questions

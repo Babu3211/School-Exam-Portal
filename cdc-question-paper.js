@@ -14,6 +14,7 @@ import {grade9ScienceOriginalBank} from "./cdc-grade9-science-original-practice.
 import {grade9NepaliPracticeBank} from "./cdc-grade9-nepali-practice.mjs";
 import {grade9EnglishPracticeBank,auditEnglishChart} from "./cdc-grade9-english-practice.mjs";
 import {grade9CompulsoryMathPracticeBank,auditCompulsoryMathArchive} from "./cdc-grade9-compulsory-math-practice.mjs";
+import {grade9SocialReferenceBank} from "./cdc-grade9-social-reference-bank.mjs";
 import {grade9SocialOriginalBank} from "./cdc-grade9-social-original-practice.mjs";
 import {grade9EnvironmentOriginalBank} from "./cdc-grade9-environment-original-practice.mjs";
 import {grade9ComputerOriginalBank} from "./cdc-grade9-computer-original-practice.mjs";
@@ -477,7 +478,7 @@ async function loadBundledPracticeBank({grade,subject}){
  const math=grade9CompulsoryMathPracticeBank({grade,subject});
  if(math.units.length)return {units:math.units,questions:math.questions,status:"कक्षा ९ अनिवार्य गणित: ऐतिहासिक २०७८ Grid का सात विषयक्षेत्रमा ४२ मौलिक bilingual अभ्यास प्रश्न। वर्तमान Grid तथा संयुक्त प्रश्न संरचना समीक्षा बाँकी; CDC Exact होइन।"};
  const social=grade9SocialOriginalBank({grade,subject});
- if(social.units.length)return {units:social.units,questions:social.questions,status:"कक्षा ९ सामाजिक अध्ययन: २०८२ पाठ्यक्रमका १० विषयक्षेत्रमा ३० मौलिक bilingual अभ्यास प्रश्न। नयाँ CDC Exact Grid र शिक्षक समीक्षा बाँकी।"};
+ if(social.units.length){const ref=grade9SocialReferenceBank({grade,subject});return {units:social.units,questions:[...social.questions,...ref.questions],status:"कक्षा ९ सामाजिक अध्ययन: १० विषयक्षेत्रमा ७८ मौलिक bilingual अभ्यास प्रश्न, २०७८ Grid सन्दर्भका ४८ प्रश्नसहित। नयाँ CDC Exact Grid र शिक्षक समीक्षा बाँकी।"};}
  const environment=grade9EnvironmentOriginalBank({grade,subject});
  if(environment.units.length)return {units:environment.units,questions:environment.questions,status:"कक्षा ९ वातावरण विज्ञान: सरकारी English पाठ्यपुस्तकको विषयसूचीसँग मिलाइएका ९ Unit का ६३ मौलिक bilingual अभ्यास प्रश्न (१/२/४/५/८ अङ्क)। प्रश्न/उत्तर समीक्षा बाँकी; आधिकारिक Grid प्रमाणित नभएसम्म CDC Exact मानिँदैन।"};
  if(grade===9&&getBundledComputerGrid({grade,subject,fullMarks:50})){
