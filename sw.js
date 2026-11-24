@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v125-nepali-cognitive-marks';
+const CACHE_NAME = 'smss-pwa-v126-grade9-grid-library';
 const APP_SHELL = [
   './',
   './index.html',
@@ -19,6 +19,7 @@ const APP_SHELL = [
   './cdc-optional-math-original-practice.mjs',
   './cdc-optional-math-render.mjs',
   './cdc-grid-source-index.mjs',
+  './cdc-grade9-grid-library.mjs',
   './cdc-grade9-release-audit.mjs',
   './cdc-grade9-paper-grid-guard.mjs',
   './cdc-grade9-model-reference-audit.mjs',

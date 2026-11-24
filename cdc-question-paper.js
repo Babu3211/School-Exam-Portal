@@ -2,7 +2,8 @@ import { getApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.j
 import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSubject,isQuestionReadyForLanguage,cognitiveMarkDistribution} from "./cdc-question-autogen.mjs";
 import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
 import {getBundledComputerGrid,bundledComputerUnitTopics} from "./cdc-verified-computer-grids.mjs";
-import {findCdcGridSources,grade9RequiredPaperLanguage} from "./cdc-grid-source-index.mjs";
+import {renderGrade9GridLibrary} from "./cdc-grade9-grid-library.mjs";
+import {cdcSubjectKey,findCdcGridSources,grade9RequiredPaperLanguage} from "./cdc-grid-source-index.mjs";
 import {assertGrade9ExamPaperMatches} from "./cdc-grade9-paper-grid-guard.mjs";
 import {buildGrade9ReferencePreview,referencePreviewTopics} from "./cdc-grade9-reference-preview.mjs";
 import {inspectGrade9ReferenceReadiness} from "./cdc-grade9-reference-readiness.mjs";
@@ -264,6 +265,7 @@ function pageShell() {
       <p class="qp-hint" id="qpPatternHint">CDC Grid आयात गरिएको छैन भने शिक्षकले Custom Pattern राख्न सक्नुहुन्छ। कुल प्रश्नको अङ्क पूर्णाङ्कसँग मिल्नुपर्छ।</p>
       <p class="qp-hint" id="qpAutoSourceStatus" role="status">उपलब्ध प्रश्न बैंक जाँचिँदैछ।</p>
       <p class="qp-hint" id="qpOfficialGridSource"></p>
+      <details id="qpGrade9GridLibrary" style="margin:10px 0;padding:10px;border:1px solid #cbd5e1;border-radius:8px"><summary>Class 9 — CDC Grid Library / सबै विषयको विशिष्टीकरण तालिका</summary><div id="qpGrade9GridLibraryContent"><p>CDC sources load after selecting a class and subject.</p></div></details>
       <p class="qp-hint" id="qpAutoGridStatus" role="status">CDC Exact मोडमा सम्बन्धित कक्षा, विषय र पूर्णाङ्कको समीक्षित Unit-wise Grid चाहिन्छ।</p>
       <p class="qp-hint">एक क्लिकमा: कक्षा/विषय, Topic, पूर्णाङ्क र भाषा छान्नुहोस्। उपलब्ध मौलिक अभ्यास प्रश्नबाट ठीक पूर्णाङ्कको Draft तयार हुनेछ। पर्याप्त जाँचिएका प्रश्न नभए गलत प्रश्नपत्र बनाइँदैन। CDC Grid को लागू संस्करण शिक्षकले पुष्टि गर्नुपर्छ।</p>
       <label class="qp-topic" style="margin-top:9px;background:#fff8e9;align-items:center"><input id="qpAutoReviewed" type="checkbox"><span>मैले प्रश्नपत्रको नेपाली वर्णविन्यास (ह्रस्व–दीर्घ), व्याकरण, English grammar, आवश्यक चित्र, पूर्णाङ्क, लागू CDC विशिष्टीकरण तालिका र उत्तरकुञ्जिका पढेर जाँच गरेको छु। <b>जाँच नगरी Save वा Print हुँदैन।</b></span></label>
@@ -642,6 +644,7 @@ async function loadCurrentData() {
  $("qpCurriculumVersion").value=curriculumRows[0]?.curriculumVersion||"CDC संस्करण Topic सूचीअनुसार";
  renderTopics();renderQuestionRows();
  $("qpAutoSourceStatus").textContent=bundledPracticeStatus;
+ renderGrade9GridLibrary($("qpGrade9GridLibraryContent"),cdcSourceRegister);
  const pdfSource=$("qpOfficialGridSource");
  if(pdfSource){
   pdfSource.replaceChildren();
@@ -668,7 +671,7 @@ async function loadCurrentData() {
     "पुष्टि बाँकी। यो स्थिति Live स्वीकृति होइन।";
    pdfSource.appendChild(summary);
    const current=grade9Gate.checkedSubjects.find(item=>
-    item.key===findCdcGridSources(cdcSourceRegister,9,subject)[0]?.subjectKey);
+    item.key===cdcSubjectKey(subject));
    if(current){
     const note=document.createElement("p");
     note.className="qp-hint";
