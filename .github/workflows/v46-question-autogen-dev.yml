@@ -28,6 +28,7 @@ on:
       - 'cdc-grade9-nepali-grouped-planner.mjs'
       - 'cdc-grade9-english-grouped-planner.mjs'
       - 'cdc-grade9-english-reference-bank.mjs'
+      - 'cdc-grade9-english-seen-reference.mjs'
       - 'scripts/test-cdc-grade9-english-reference-bank.mjs'
       - 'cdc-grade9-compulsory-math-grouped.mjs'
       - 'cdc-grade9-compulsory-math-reference-bank.mjs'
@@ -115,6 +116,7 @@ jobs:
           node --check cdc-grade9-nepali-model-2078.mjs
           node --check cdc-grade9-nepali-grouped-planner.mjs
           node --check cdc-grade9-english-grouped-planner.mjs
+          node --check cdc-grade9-english-seen-reference.mjs
           node --check cdc-grade9-compulsory-math-grouped.mjs
           node --check scripts/test-cdc-grade9-compulsory-math-grouped.mjs
           node --check scripts/test-cdc-grade9-english-grouped-planner.mjs

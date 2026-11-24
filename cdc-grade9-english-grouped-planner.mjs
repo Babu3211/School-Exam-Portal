@@ -32,7 +32,7 @@ const fourOptions=q=>Array.isArray(q.options)&&q.options.length===4&&q.options.e
 const nearWords=(s,n)=>{const count=str(s).split(/\s+/).filter(Boolean).length;return count>=Math.ceil(n*.75)&&count<=Math.floor(n*1.25);};
 function slotOK(q,i,subject,topics,chart,allowDraft=false){
  const reviewed=q?.reviewStatus==='teacher_reviewed'&&str(q.reviewedBy);
- const draft=allowDraft&&i>=2&&q?.bundled===true&&q?.reviewStatus==='draft'&&q?.teacherReviewRequired===true&&q?.sourceStatus==='SMSS_original_reference_draft'&&q?.officialCdcQuestion===false;
+ const draft=allowDraft&&(i>=2||(i===0&&q?.passageRights==='public_domain_original'&&sourceOK(q)))&&q?.bundled===true&&q?.reviewStatus==='draft'&&q?.teacherReviewRequired===true&&q?.sourceStatus==='SMSS_original_reference_draft'&&q?.officialCdcQuestion===false;
  if(!q||q.gradeNumber!==9||str(q.subject)!==str(subject)||q.slot!==slotNames[i]||!str(q.id)||!topics.has(q.topicId)||q.status==='archived'||(!reviewed&&!draft)||!cleanEnglish(q.text))return false;
  if(i<4){
   const r=chart.reading[i],items=q.items;
