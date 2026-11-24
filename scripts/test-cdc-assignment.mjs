@@ -1035,6 +1035,16 @@ for(const [theme,count,full,indicators] of [['हाम्रो विद्य
 }
 assert.equal(field('themeSummaryFoot').rows[0].cells[3].textContent,'१०८');
 assert.equal(field('themeSummaryRows').rows.length,10);
+assert.equal(field('seroCurriculumReference').hidden,false);
+assert.match(field('seroCurriculumTotal').textContent,/कक्षा १.*२५/);
+for(const grade of ['2','3']){
+ choice('summaryClass',grade);choice('summarySubject','serophero');
+ assert.equal(field('seroCurriculumReference').hidden,false);
+ assert.match(field('seroCurriculumTotal').textContent,/२५/);
+ assert.ok(summaryRows().every(row=>row.cells[3].textContent==='—'));
+}
+choice('summaryClass','1');choice('summarySubject','english');
+assert.equal(field('seroCurriculumReference').hidden,true);
 for(const grade of ['1','2','3','4','5']){
  choice('summaryClass',grade);choice('summarySubject','english');
  const rows=summaryRows();
