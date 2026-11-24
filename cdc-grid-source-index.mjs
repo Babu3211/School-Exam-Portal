@@ -10,7 +10,7 @@ const normal=s=>String(s||'').normalize('NFKC').toLocaleLowerCase()
 export function cdcSubjectKey(subject){
  const s=normal(subject);
  if(!s)return '';
- if(/(environmental science|वातावरण विज्ञान|पर्यावरण विज्ञान)/.test(s))return 'optional_environment';
+ if(/(environment(?:al)? science|वातावरण विज्ञान|पर्यावरण विज्ञान)/.test(s))return 'optional_environment';
  if(/(additional mathematics|additional math|अतिरिक्त गणित)/.test(s))return 'optional_math';
  if(/(optional|elective|ऐच्छिक|इच्छाधीन)/.test(s)){
   if(/(math|गणित)/.test(s))return 'optional_math';
