@@ -7,7 +7,7 @@ const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const read=p=>readFileSync(resolve(root,p),'utf8');
 const v46=read('index.html'),hub=read('v47/index.html');
 const features=[
- {name:'Dashboard',v46:/dashboard/i,v47:['v47/index.html'],production:/development hub|development workspace|independent prototypes/i},
+ {name:'Dashboard',v46:/dashboard/i,v47:['v47/index.html'],production:/development hub|development workspace|independent prototypes|data-release-status="Development only|परीक्षणका लागि मात्र — विद्यालयको अन्तिम सञ्चालनका लागि स्वीकृत छैन/i},
  {name:'School settings',v46:/school settings/i,v47:['v47/school-settings.html']},
  {name:'Student records',v46:/student/i,v47:['v47/students.html']},
  {name:'Teacher and staff records',v46:/teacher|staff/i,v47:['v47/staff.html']},

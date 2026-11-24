@@ -8,5 +8,5 @@ assert.match(js,/for\(const component of settings\.components\)/);
 assert.match(js,/for\(const component of classMarkSettings\.components\)/);
 assert.match(js,/if\(verified\.role!=='school_admin'\)/);
 assert.match(js,/classMarkSettings\.settingsId/);
-assert.match(js,/\$\('saveClassMarks'\)\.onclick=\(\)=>status\('Save\/Publish disabled/);
+assert.match(js,/\$\('saveClassMarks'\)\.onclick=\(\)=>status\('अङ्क सुरक्षित गर्ने वा प्रकाशन गर्ने आधिकारिक सुविधा बन्द छ। कुनै अङ्क सुरक्षित भएको छैन।'\)/);
 console.log('V47 dynamic examination settings class marks UI wiring passed');

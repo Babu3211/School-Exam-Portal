@@ -13,5 +13,5 @@ for(const file of ['test-v47-marks-preview-static.mjs','test-v47-ledger-exceptio
  assert.match(code,/excelWorkbook/,'Missing XLSX export expectation in '+file);
 }
 const marks=readFileSync(new URL('../v47/marks-entry-console.mjs',import.meta.url),'utf8');
-assert.match(marks,/Save\/Publish disabled: secure complete-class workflow is not implemented/);
+assert.match(marks,/\$\('saveClassMarks'\)\.onclick=\(\)=>status\('अङ्क सुरक्षित गर्ने वा प्रकाशन गर्ने आधिकारिक सुविधा बन्द छ। कुनै अङ्क सुरक्षित भएको छैन।'\)/);
 console.log('PASS V47 regression baseline: IEMIS IDs, XLSX export and disabled unaudited marks publishing');

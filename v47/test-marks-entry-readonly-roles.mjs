@@ -25,7 +25,7 @@ assert.match(editor,/\$\('loadClassMarks'\)\.disabled=value\|\|!actor\|\|actor\.
 assert.match(editor,/\$\('saveClassDraft'\)\.onclick=async\(\)=>/);
 assert.match(editor,/actor\?\.role!=='school_admin'/);
 assert.match(editor,/saveVerifiedCompleteClassDraft\(/);
-assert.match(editor,/\$\('saveClassMarks'\)\.onclick=\(\)=>status\('Save\/Publish disabled/);
+assert.match(editor,/\$\('saveClassMarks'\)\.onclick=\(\)=>status\('अङ्क सुरक्षित गर्ने वा प्रकाशन गर्ने आधिकारिक सुविधा बन्द छ। कुनै अङ्क सुरक्षित भएको छैन।'\)/);
 assert.match(editor,/\$\('save'\)\.disabled=true/);
 assert.match(editor,/\$\('work'\)\.hidden=true/);
 assert.match(editor,/new URL\('\.\/marks-preview\.html',location\.href\)/);

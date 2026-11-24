@@ -13,5 +13,5 @@ assert.ok(settings>=0&&roster>settings&&session>roster&&render>session,'School A
 assert.match(handler,/finalSession\.role!=='school_admin'/);
 assert.match(handler,/request!==rosterRequest\|\|attempt!==epoch/);
 assert.match(handler,/actor\?\.schoolId!==selectedSchoolId/);
-assert.match(js,/\$\('saveClassMarks'\)\.onclick=\(\)=>status\('Save\/Publish disabled/);
+assert.match(js,/\$\('saveClassMarks'\)\.onclick=\(\)=>status\('अङ्क सुरक्षित गर्ने वा प्रकाशन गर्ने आधिकारिक सुविधा बन्द छ। कुनै अङ्क सुरक्षित भएको छैन।'\)/);
 console.log('V47 full roster session revalidation wiring passed');

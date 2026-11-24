@@ -23,7 +23,7 @@ assert.match(source,/\$\('saveClassDraft'\)\.onclick=async\(\)=>/);
 assert.match(source,/window\.confirm\(/);
 assert.match(source,/saveVerifiedCompleteClassDraft\(/);
 assert.match(source,/savedDraft|saved\.rosterCount/);
-assert.match(source,/\$\('saveClassMarks'\)\.onclick=\(\)=>status\('Save\/Publish disabled/);
+assert.match(source,/\$\('saveClassMarks'\)\.onclick=\(\)=>status\('अङ्क सुरक्षित गर्ने वा प्रकाशन गर्ने आधिकारिक सुविधा बन्द छ। कुनै अङ्क सुरक्षित भएको छैन।'\)/);
 assert.match(safety,/match \/class_mark_drafts\/\{id\}/);
 const draftStart=safety.indexOf('match /class_mark_drafts/{id} {');
 const draftEnd=safety.indexOf('\n      }',draftStart);

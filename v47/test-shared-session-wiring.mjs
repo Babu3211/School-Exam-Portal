@@ -77,7 +77,7 @@ assert.doesNotMatch(recordsHtml,/id="config"/,'Records must not require manual F
 const schoolAdminHtml=read('school-admin.html');
 assert.doesNotMatch(schoolAdminHtml,/id="config"/,'School Admin must not require manual Firebase JSON');
 const hub=read('index.html');
-assert.match(hub,/Students, Attendance, School Settings and Raw Marks Entry can reuse the shared session/);
+assert.match(hub,/विद्यार्थी, हाजिरी, विद्यालय विवरण र अङ्क प्रविष्टिमा साझा लगइन प्रयोग गर्न सकिन्छ/);
 assert.doesNotMatch(hub,/currently ask you to sign in again/);
 const dashboard=read('dashboard-console.mjs');
 assert.match(dashboard,/destination\.searchParams\.set\('schoolId',current\.schoolId\)/);

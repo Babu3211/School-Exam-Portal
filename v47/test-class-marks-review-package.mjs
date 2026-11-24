@@ -46,5 +46,5 @@ assert.match(draftListener,/reviewPackage=null/);
 assert.match(draftListener,/\$\('reviewFile'\)\.value=''/);
 assert.match(draftListener,/\$\('reviewFile'\)\.disabled=true/);
 assert.match(draftListener,/\$\('verifyClassReview'\)\.disabled=true/);
-assert.match(ui,/Save\/Publish disabled: secure complete-class workflow is not implemented/);
+assert.match(ui,/\$\('saveClassMarks'\)\.onclick=\(\)=>status\('अङ्क सुरक्षित गर्ने वा प्रकाशन गर्ने आधिकारिक सुविधा बन्द छ। कुनै अङ्क सुरक्षित भएको छैन।'\)/);
 console.log('V47 full-class offline review export deterministic and read-only; no Firestore marks writes');

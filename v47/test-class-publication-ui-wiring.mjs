@@ -6,6 +6,6 @@ assert.match(source,/import \{prepareConfiguredClassPublication\} from '\.\/conf
 assert.match(source,/if\(result\.complete\)\{\s*const proposal=prepareConfiguredClassPublication/);
 assert.match(source,/reviewBatches\.length/);
 assert.match(source,/No data saved/);
-assert.match(save,/Save\/Publish disabled/);
+assert.match(save,/अङ्क सुरक्षित गर्ने वा प्रकाशन गर्ने आधिकारिक सुविधा बन्द छ। कुनै अङ्क सुरक्षित भएको छैन।/);
 assert.doesNotMatch(save,/saveCompleteClassMarks|tx\.set|addDoc|setDoc/);
 console.log('V47 marks UI read-only full-class publication preview wiring passed');
