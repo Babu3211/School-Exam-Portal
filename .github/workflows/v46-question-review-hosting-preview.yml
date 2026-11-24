@@ -42,6 +42,11 @@ jobs:
           set -euo pipefail
           mkdir -p preview-public
           SMSS_REVIEW_PACK_DIR=preview-public node scripts/test-cdc-grade9-review-pack.mjs
+          if ! command -v pdftoppm >/dev/null || ! command -v pdfinfo >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends poppler-utils
+          fi
+          python3 scripts/audit-grade9-grid-catalog.py --preview-grid-dir preview-public
           cp preview-public/grade9-teacher-review.html preview-public/index.html
           printf '%s\n' "$GITHUB_SHA" > preview-public/review-revision.txt
           cp index.html preview-public/app-shell.html
@@ -121,7 +126,7 @@ jobs:
           shopt -s nullglob
           paper_files=(preview-public/papers/*.html)
           test "${#paper_files[@]}" -eq 32
-          for source in preview-public/sw.js preview-public/app-worker-source.js preview-public/app-shell.html preview-public/manifest.webmanifest preview-public/grade9-teacher-review.html preview-public/grade9-cdc-grid-library.html preview-public/review-manifest.json preview-public/cdc-question-paper.js preview-public/cdc-*.mjs preview-public/data/cdc-*.json "${paper_files[@]}"; do
+          for source in preview-public/sw.js preview-public/app-worker-source.js preview-public/app-shell.html preview-public/manifest.webmanifest preview-public/grade9-teacher-review.html preview-public/grade9-cdc-grid-library.html preview-public/review-manifest.json preview-public/cdc-question-paper.js preview-public/cdc-*.mjs preview-public/data/cdc-*.json preview-public/grid-source-pages/manifest.json preview-public/grid-source-pages/*.png "${paper_files[@]}"; do
             file="${source#preview-public/}"
             target="$RUNNER_TEMP/preview/$file"
             verify_asset "$source" "/$file" "$target"

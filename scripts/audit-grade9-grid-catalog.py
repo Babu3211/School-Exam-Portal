@@ -259,10 +259,75 @@ def selftest():
     assert directory_pdf_candidates(r'["https:\/\/giwmscdnone.gov.np\/media\/grid.pdf","https://unknown.invalid/x.pdf","https://moecdc.gov.np/storage/g.pdf"]')==["https://giwmscdnone.gov.np/media/grid.pdf","https://moecdc.gov.np/storage/g.pdf"]
     print("PASS parser grade scope, public source allowlist, official attachment and literal directory URL extraction")
 
+def stage_grid_page_images(preview_dir):
+    """Render only previously fingerprinted public Grid pages.
+    A source failure is explicit and never changes Grid approval.
+    """
+    from html import escape
+    register=json.loads((Path(__file__).resolve().parent.parent/"data/cdc-question-paper-sources-2083.json").read_text(encoding="utf-8"))
+    limits={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3}
+    preview=Path(preview_dir)
+    index=preview/"grade9-cdc-grid-library.html"
+    if not index.is_file(): raise ValueError("Generate the static Grid Library first")
+    folder=preview/"grid-source-pages"; folder.mkdir(exist_ok=True)
+    entries=[]
+    for source in register["sources"]:
+        e=source.get("retrievalEvidence",{})
+        resource=e.get("resource")
+        if resource not in limits or not re.fullmatch(r"[a-f0-9]{64}",e.get("sha256","")): continue
+        result={"resource":resource,"subject":source["subject"],"url":source["url"],"status":"unavailable","images":[],"currentCdcExactApproved":False}
+        try:
+            if urlsplit(source["url"]).hostname!="giwmscdnone.gov.np" or not re.search(r"/RS"+resource+r"_",source["url"]):
+                raise ValueError("Unexpected source identity")
+            _,_,data=get(source["url"],min(32*1024*1024,e["byteCount"]))
+            if len(data)!=e["byteCount"] or hashlib.sha256(data).hexdigest()!=e["sha256"] or not data.startswith(b"%PDF-"):
+                raise ValueError("Source differs from recorded PDF fingerprint")
+            with tempfile.TemporaryDirectory() as tmp:
+                pdf=Path(tmp)/"source.pdf";pdf.write_bytes(data)
+                info=subprocess.run(["pdfinfo",str(pdf)],check=True,capture_output=True,text=True,timeout=20).stdout
+                pages=int(re.search(r"(?m)^Pages:\s+(\d+)",info).group(1))
+                if pages!=e["pages"] or limits[resource]>pages: raise ValueError("PDF page count changed")
+                subprocess.run(["pdftoppm","-f","1","-l",str(limits[resource]),"-r","130","-png",str(pdf),str(Path(tmp)/"grid")],check=True,capture_output=True,timeout=60)
+                images=sorted(Path(tmp).glob("grid-*.png"))
+                if len(images)!=limits[resource]: raise ValueError("Incomplete source page rendering")
+                for i,img in enumerate(images,1):
+                    content=img.read_bytes()
+                    if not content.startswith(b"\x89PNG\r\n\x1a\n") or len(content)>4*1024*1024: raise ValueError("Invalid rendered page")
+                    name=resource+"-page-"+str(i)+".png"
+                    (folder/name).write_bytes(content)
+                    result["images"].append("grid-source-pages/"+name)
+            result.update(status="fingerprint_matched_pages_rendered",sha256=e["sha256"])
+        except (OSError,ValueError,AttributeError,KeyError,subprocess.SubprocessError) as err:
+            for image in result["images"]: (preview/image).unlink(missing_ok=True)
+            result["images"]=[]
+            result["reason"]=str(err)[:200]
+        entries.append(result)
+        print("Grid source "+resource+": "+result["status"])
+    if len(entries)!=5 or len({x["resource"] for x in entries})!=5: raise ValueError("Unexpected fingerprinted source inventory")
+    parts=['<section id="original-grid-pages"><h2>Original CDC Grid page images</h2><p>Historical source copies for comparison only. Matching a document fingerprint does not certify the current examination Grid.</p>']
+    for result in entries:
+        parts.append('<h3>'+escape(result["subject"])+'</h3>')
+        if result["images"]:
+            for i,image in enumerate(result["images"],1):
+                parts.append('<p><a href="'+escape(image)+'">Open source page '+str(i)+'</a></p>')
+        else:
+            parts.append('<p>Original page copy unavailable. Use the official source link below.</p>')
+        parts.append('<p><a href="'+escape(result["url"],quote=True)+'" rel="noopener noreferrer">Official PDF</a></p>')
+    parts.append('</section>')
+    html=index.read_text(encoding="utf-8")
+    if html.count("</body>")!=1 or 'id="original-grid-pages"' in html: raise ValueError("Unexpected Grid Library HTML")
+    index.write_text(html.replace("</body>","".join(parts)+"</body>"),encoding="utf-8")
+    (folder/"manifest.json").write_text(json.dumps({"currentCdcExactApproved":False,"documents":entries},ensure_ascii=False,indent=2),encoding="utf-8")
+
 if __name__=="__main__":
     ap=argparse.ArgumentParser()
-    ap.add_argument("--output",required=True)
+    ap.add_argument("--output")
+    ap.add_argument("--preview-grid-dir")
     args=ap.parse_args(); selftest()
+    if args.preview_grid_dir:
+        stage_grid_page_images(args.preview_grid_dir)
+        raise SystemExit(0)
+    if not args.output: ap.error("--output is required for the catalog audit")
     report={"catalog":CATALOG,"officialGridApproved":False,"rows":[]}
     try:
         final,_,data=get(CATALOG,4*1024*1024)
