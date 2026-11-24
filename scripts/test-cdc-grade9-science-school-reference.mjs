@@ -42,6 +42,10 @@ for(const q of circuits){
  assert.match(svg,/<svg/);assert.match(svg,/12 V/);
  assert.match(svg,q.questionTextEn.includes('in series')?/Series circuit/:/Parallel circuit/);
  for(const value of q.questionTextEn.match(/\d+ Ω/g))assert.ok(svg.includes(value));
- assert.doesNotMatch(questionFigure(q,'ne'),/[0-9]+ Ω|[0-9]+ V/);
+ const neLabels=[...questionFigure(q,'ne').matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map(m=>m[1]);
+ const neDigits=s=>s.replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]);
+ assert.ok(neLabels.includes('१२ V'));
+ for(const value of q.questionTextEn.match(/\d+ Ω/g))assert.ok(neLabels.includes(neDigits(value)));
+ assert.ok(neLabels.every(label=>!/[0-9]/.test(label)),'Visible Nepali figure labels must use Nepali digits');
 }
 console.log('PASS real series and parallel circuit figures with variant-specific values');
