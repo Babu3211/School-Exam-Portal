@@ -9,6 +9,7 @@ on:
       - 'cdc-question-paper.js'
       - 'sw.js'
       - 'data/cdc-*.json'
+      - 'scripts/test-cdc-grade9-review-pack.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -36,7 +37,42 @@ jobs:
           npm run test:question-paper
           npm run test:pwa
           node scripts/test-cdc-grade9-review-pack.mjs
-      - name: Deploy isolated Hosting channel (no Firestore rules or data)
+      - name: Stage static teacher review only (no authentication or production database)
+        run: |
+          set -euo pipefail
+          mkdir -p preview-public
+          SMSS_REVIEW_PACK_DIR=preview-public node scripts/test-cdc-grade9-review-pack.mjs
+          cp preview-public/grade9-teacher-review.html preview-public/index.html
+          cp index.html preview-public/app-shell.html
+          cp manifest.webmanifest cdc-question-paper.js cdc-*.mjs preview-public/
+          cp -r data preview-public/data
+          cp sw.js preview-public/app-worker-source.js
+          # Retire the previously installed preview service worker, if any.
+          # Its cache namespace is origin-local; no live-origin cache is touched.
+          cat > preview-public/sw.js <<'JS'
+          self.addEventListener('install', () => self.skipWaiting());
+          self.addEventListener('activate', event => event.waitUntil((async () => {
+            for (const key of await caches.keys()) if (key.startsWith('smss-pwa-')) await caches.delete(key);
+            await self.clients.claim();
+            await self.registration.unregister();
+          })()));
+          JS
+          # This modifies only the runner's staging configuration, not GitHub or live Hosting.
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const config=JSON.parse(fs.readFileSync('firebase.json','utf8'));
+          config.hosting.public='preview-public';
+          config.hosting.headers=[
+            {source:'**',headers:[
+              {key:'Content-Security-Policy',value:"default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; script-src 'none'; form-action 'none'; base-uri 'none'; frame-ancestors 'none'"},
+              {key:'X-Content-Type-Options',value:'nosniff'},
+              {key:'Cache-Control',value:'no-store'},
+              {key:'Referrer-Policy',value:'no-referrer'}
+            ]}
+          ];
+          fs.writeFileSync('firebase.json',JSON.stringify(config,null,2));
+          JS
+      - name: Deploy isolated static review channel (no Firestore rules or data)
         id: preview
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
@@ -46,22 +82,26 @@ jobs:
           channelId: v46-question-review
           expires: 7d
           entryPoint: .
-      - name: Verify exact served app shell and all question modules
+      - name: Verify hosted review pack, isolation headers and all question modules
         env:
           PREVIEW_URL: ${{ steps.preview.outputs.details_url }}
         run: |
           set -euo pipefail
           [[ "$PREVIEW_URL" == https://exam-portal-smss-95016--*.web.app ]]
           mkdir -p "$RUNNER_TEMP/preview"
-          curl -fsSL --retry 5 "$PREVIEW_URL/" -o "$RUNNER_TEMP/preview/index.html"
-          cmp index.html "$RUNNER_TEMP/preview/index.html"
-          for file in sw.js manifest.webmanifest cdc-question-paper.js cdc-*.mjs data/cdc-*.json; do
+          curl -fsSL --retry 5 -D "$RUNNER_TEMP/preview/headers.txt" "$PREVIEW_URL/" -o "$RUNNER_TEMP/preview/index.html"
+          cmp preview-public/index.html "$RUNNER_TEMP/preview/index.html"
+          grep -i '^content-security-policy:' "$RUNNER_TEMP/preview/headers.txt" | grep -F "connect-src 'none'" | grep -F "script-src 'none'"
+          grep -F 'REVIEW ONLY' "$RUNNER_TEMP/preview/index.html"
+          if grep -Eq 'initializeApp\(|firebaseConfig|<script|<form' "$RUNNER_TEMP/preview/index.html"; then
+            echo 'Unexpected authentication or executable UI in review page'; exit 1
+          fi
+          for file in sw.js app-worker-source.js app-shell.html manifest.webmanifest grade9-teacher-review.html review-manifest.json cdc-question-paper.js cdc-*.mjs data/cdc-*.json; do
             target="$RUNNER_TEMP/preview/$file"
             mkdir -p "$(dirname "$target")"
             curl -fsSL --retry 5 "$PREVIEW_URL/$file" -o "$target"
-            cmp "$file" "$target"
+            cmp "preview-public/$file" "$target"
           done
-          echo "Preview URL: $PREVIEW_URL" >> "$GITHUB_STEP_SUMMARY"
-          echo "Static resources only; real authentication, database schema, backup, and release approval are not verified by this job." >> "$GITHUB_STEP_SUMMARY"
-          echo "Do not enter or save real student records from preview." >> "$GITHUB_STEP_SUMMARY"
+          echo "Teacher review URL: $PREVIEW_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "Read-only synthetic review page, scripts and database connections blocked by CSP. Real account, backup, and release approval remain separate prerequisites." >> "$GITHUB_STEP_SUMMARY"
 # No live channel, rules deployment, billing change, or school-data write.
