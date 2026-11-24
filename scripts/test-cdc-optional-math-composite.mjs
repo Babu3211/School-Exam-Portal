@@ -1,20 +1,15 @@
 import assert from 'node:assert/strict';
-import {getCdcOptionalMathGuide,optionalMathAreaTopics} from '../cdc-optional-math-2082.mjs';
+import {getCdcOptionalMathGuide,optionalMathAreaTopics,optionalMathOriginalSlots,optionalMathCellAudit} from '../cdc-optional-math-2082.mjs';
 import {inspectCdcOptionalMathPaper} from '../cdc-optional-math-composite.mjs';
 import {renderCdcCompositePaper} from '../cdc-optional-math-render.mjs';
 
 const levels=['knowledge','understanding','application','higher'];
 const targets={knowledge:12,understanding:18,application:30,higher:15};
-const wcaMarks=[[3,3,3],[3,3,4],[4,4,4],[3],[3],[3]];
-const crossParts=[
- [[1,3],[2,3]], [[1,3],[3,3]],
- [[2,1],[3,2],[4,3]], [[5,3],[6,3]]
-];
 function fixture(grade,subject,version){
  const topics=optionalMathAreaTopics(grade,subject).map(x=>x.id+'_0');
  const out=[],put=(group,units,index)=>{
-  const parts=units.map(([unitCode,mark],part)=>({
-   unitCode:String(unitCode),marks:mark,cognitiveLevel:'knowledge',
+  const parts=units.map(([unitCode,mark,cognitiveLevel],part)=>({
+   unitCode:String(unitCode),marks:mark,cognitiveLevel,
    textNe:'कृत्रिम '+grade+' '+group+' '+index+' भाग '+part+' विकल्प '+version+' के हो?',
    answerNe:'नमुना उत्तर '+index+' '+part,
    textEn:'Synthetic '+group+' '+index+' part '+part+' version '+version+'?',
@@ -31,25 +26,7 @@ function fixture(grade,subject,version){
    subquestions:parts
   });
  };
- let i=0;
- for(const [unit,amount]of [2,3,3,1,1,1].entries())
-  for(let j=0;j<amount;j++)put('objective',[[unit+1,1]],i++);
- i=0;
- for(const [unit,marks]of wcaMarks.entries())
-  for(const mark of marks){
-   put('WCA',mark===3?[[unit+1,1],[unit+1,2]]:
-    [[unit+1,2],[unit+1,2]],i++);
-  }
- i=0;
- for(const units of crossParts)put('CCA',units,i++);
- const pieces=out.flatMap(q=>q.subquestions).sort((a,b)=>b.marks-a.marks);
- const allocations={knowledge:0,understanding:0,application:0,higher:0};
- for(const part of pieces){
-  const level=levels.find(l=>allocations[l]+part.marks<=targets[l]);
-  assert.ok(level,'Synthetic fixture cognitive allocation impossible');
-  part.cognitiveLevel=level;allocations[level]+=part.marks;
- }
- assert.deepEqual(allocations,targets);
+ for(const [index,slot] of optionalMathOriginalSlots(getCdcOptionalMathGuide({grade,subject})).entries())put(slot.group,slot.parts,index);
  return {topics,questions:out};
 }
 for(const grade of [9,10]){
@@ -65,6 +42,15 @@ for(const grade of [9,10]){
  assert.deepEqual(result.groupMarks,{objective:11,WCA:40,CCA:24});
  assert.deepEqual(Object.values(result.areaMarks),[17,17,20,7,7,7]);
  assert.deepEqual(result.cognitiveMarks,targets);
+ assert.equal(result.cellAudit.matches,true);
+ const altered=structuredClone(result.questions);
+ const a=altered.find(q=>q.group==='objective'&&q.subquestions[0].unitCode==='1'&&q.subquestions[0].cognitiveLevel==='knowledge').subquestions[0];
+ const z=altered.find(q=>q.group==='objective'&&q.subquestions[0].unitCode==='4').subquestions[0];
+ [a.cognitiveLevel,z.cognitiveLevel]=[z.cognitiveLevel,a.cognitiveLevel];
+ assert.equal(optionalMathCellAudit(guide,altered).matches,false);
+ assert.equal(inspectCdcOptionalMathPaper({guide,questions:altered,selectedTopicIds:f.topics,rng:()=>.45,language:'ne'}).ready,false);
+ const forgedGuide=structuredClone(guide);forgedGuide.areas[0].marksByGroup.WCA[0]++;
+ assert.throws(()=>inspectCdcOptionalMathPaper({guide:forgedGuide,questions:bank,selectedTopicIds:f.topics,rng:()=>.45}),/cells differ/);
  const paper={questionFormat:'cdc_optional_math_composite',
   language:'both',schoolName:'कृत्रिम विद्यालय',schoolAddress:'काठमाडौँ',
   paperTitle:'कृत्रिम परीक्षा',className:'Class '+grade,subject,

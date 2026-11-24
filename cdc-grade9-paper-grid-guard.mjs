@@ -4,7 +4,7 @@
  * grids do not certify an official examination.
  */
 import {getBundledComputerGrid} from './cdc-verified-computer-grids.mjs';
-import {getCdcOptionalMathGuide} from './cdc-optional-math-2082.mjs';
+import {getCdcOptionalMathGuide,optionalMathCellAudit} from './cdc-optional-math-2082.mjs';
 import {validateExactCdcUnitGrid} from './cdc-exact-grid.mjs';
 const levels=['knowledge','understanding','application','higher'];
 const str=x=>String(x??'').trim();
@@ -80,6 +80,7 @@ export function assertGrade9ExamPaperMatches(paper){
   for(const g of grid.questionGroups)require(groups[g.code]===g.questionCount&&groupMarks[g.code]===g.totalMarks,'group '+g.code+' count or marks');
   for(const a of grid.areas)require(areaMarks[a.unitCode]===a.totalMarks&&objectives[a.unitCode]===a.objectiveCount&&wca[a.unitCode]===a.wcaQuestionCount,'area '+a.unitCode+' allocation');
   for(const l of levels)require(Math.abs(cognitive[l]-grid.fullMarks*grid.cognitiveDistribution[l]/100)<=grid.compositeRules.cognitiveMarksTolerance,'cognitive marks '+l);
+  require(optionalMathCellAudit(grid,qs).matches,'area/group/cognitive cell allocation');
  }
  return true;
 }

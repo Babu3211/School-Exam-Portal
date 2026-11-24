@@ -30,6 +30,11 @@ const result=inspectCdcOptionalMathPaper({guide,questions:mathBank.questions,sel
 assert.equal(result.ready,true);
 const p={gradeNumber:9,subject:math,fullMarks:75,durationMinutes:180,language:'both',questionFormat:'cdc_optional_math_composite',questions:result.questions.map(q=>({...q,questionId:q.id}))};
 assert.equal(assertGrade9ExamPaperMatches(p),true);
+const cellSwap=structuredClone(p);
+const aa=cellSwap.questions.find(q=>q.group==='objective'&&q.subquestions[0].unitCode==='1'&&q.subquestions[0].cognitiveLevel==='knowledge').subquestions[0];
+const zz=cellSwap.questions.find(q=>q.group==='objective'&&q.subquestions[0].unitCode==='4').subquestions[0];
+[aa.cognitiveLevel,zz.cognitiveLevel]=[zz.cognitiveLevel,aa.cognitiveLevel];
+assert.throws(()=>assertGrade9ExamPaperMatches(cellSwap),/cell allocation/);
 for(const change of [x=>x.questions.pop(),x=>x.questions[0].subquestions[0].marks=2,x=>x.questions[0].subquestions[0].unitCode='99',x=>x.questions.find(q=>q.group==='CCA').subquestions.forEach(s=>s.unitCode='1'),x=>x.questions[0].subquestions[0].answerEn='',x=>x.questionFormat='flat',x=>{x.questions[0].subquestions[0].marks='1';},x=>{const q=x.questions.find(q=>q.group==='WCA');q.subquestions.forEach(s=>s.marks=10);}]){
  const bad=structuredClone(p);change(bad);assert.throws(()=>assertGrade9ExamPaperMatches(bad),/CDC Grid mismatch/);
 }

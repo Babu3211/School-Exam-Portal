@@ -35,6 +35,9 @@ for(const grade of [9,10]){
   });
   assert.equal(selected.ready,true,selected.reason);
   assert.equal(selected.questions.length,27);
+  assert.equal(selected.cellAudit.matches,true);
+  assert.equal(Object.keys(selected.cellAudit.actual).length,72);
+  assert.deepEqual(selected.cellAudit.actual,selected.cellAudit.expected);
   assert.equal(selected.teacherReviewRequired,true);
   assert.equal(selected.sourceApprovedByCdc,false);
   assert.deepEqual(selected.groupMarks,{objective:11,WCA:40,CCA:24});

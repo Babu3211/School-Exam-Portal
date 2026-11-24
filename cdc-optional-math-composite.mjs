@@ -8,6 +8,7 @@
  * not specify every subquestion's exact mark in the area summary; the curated
  * bank must provide and the engine must validate each subquestion explicitly.
  */
+import {getCdcOptionalMathGuide,optionalMathCellTargets,optionalMathCellAudit} from './cdc-optional-math-2082.mjs';
 import {isOriginalMathOfflineDraft} from './cdc-optional-math-original-practice.mjs';
 const GROUPS=['objective','WCA','CCA'];
 const LEVELS=['knowledge','understanding','application','higher'];
@@ -45,6 +46,8 @@ function validateGuide(guide){
    guide.compositeRules.minSubquestionsPerQuestion!==2||
    guide.compositeRules.maxSubquestionsPerQuestion!==4)
   throw Error('CDC Optional Mathematics cognitive/composite rules invalid');
+ const canonical=getCdcOptionalMathGuide({grade:guide.gradeNumber,subject:guide.subject});
+ if(!canonical||JSON.stringify(optionalMathCellTargets(guide))!==JSON.stringify(optionalMathCellTargets(canonical)))throw Error('CDC area/group cognitive cells differ from official grid');
  return areaCodes;
 }
 const present=(item,lang)=>{
@@ -95,9 +98,9 @@ function inspectItem(q,guide,language,areaCodes,allowFormulaVerifiedDraft=false)
  }
  const total=sum(q.subquestions,s=>s.marks);
  if(total>12||type==='CCA'&&total<3||type==='WCA'&&total<2)return null;
- const areas=mapOf(areaCodes),cognitive=mapOf(LEVELS);
- for(const sub of q.subquestions){areas[n(sub.unitCode)]+=sub.marks;cognitive[sub.cognitiveLevel]+=sub.marks;}
- return {question:q,group:type,id:n(q.id),family:n(q.variantFamily)||n(q.id),topicId:n(q.topicId),areas,cognitive,
+ const areas=mapOf(areaCodes),cognitive=mapOf(LEVELS),cells={};
+ for(const sub of q.subquestions){areas[n(sub.unitCode)]+=sub.marks;cognitive[sub.cognitiveLevel]+=sub.marks;const key=[n(sub.unitCode),type,sub.cognitiveLevel].join('|');cells[key]=(cells[key]||0)+sub.marks;}
+ return {question:q,group:type,id:n(q.id),family:n(q.variantFamily)||n(q.id),topicId:n(q.topicId),areas,cognitive,cells,
   unitCode:type==='CCA'?null:touched[0],marks:total};
 }
 export function inspectCdcOptionalMathPaper({
@@ -154,6 +157,7 @@ export function inspectCdcOptionalMathPaper({
  const order=slots.map((slot,i)=>({i,slot,pool:candidates[i]}))
   .sort((a,b)=>a.pool.length-b.pool.length);
  const targetAreas=Object.fromEntries(guide.areas.map(x=>[String(x.unitCode),x.totalMarks]));
+ const targetCells=optionalMathCellTargets(guide),currentCells=mapOf(Object.keys(targetCells));
  const targetCognition=Object.fromEntries(LEVELS.map(l=>[l,guide.cognitiveDistribution[l]*.75]));
  const tolerance=guide.compositeRules.cognitiveMarksTolerance;
  const used=new Set(),usedFamilies=new Set(),seenTopics=new Set(),chosen=new Array(slots.length),
@@ -168,6 +172,7 @@ export function inspectCdcOptionalMathPaper({
   if(step===order.length){
    if(groupMarks.objective!==11||groupMarks.WCA!==40||groupMarks.CCA!==24||
       areaCodes.some(code=>currentAreas[code]!==targetAreas[code])||
+      Object.keys(targetCells).some(key=>currentCells[key]!==targetCells[key])||
       LEVELS.some(level=>Math.abs(currentCog[level]-targetCognition[level])>tolerance)||
       [...topics].some(id=>!seenTopics.has(id))||
       blocked.has(signature(chosen.map(x=>x.question))))return false;
@@ -180,14 +185,17 @@ export function inspectCdcOptionalMathPaper({
      (slot.group==='objective'?11:slot.group==='WCA'?40:24))continue;
    if(areaCodes.some(code=>currentAreas[code]+q.areas[code]>targetAreas[code]))continue;
    if(LEVELS.some(l=>currentCog[l]+q.cognitive[l]>targetCognition[l]+tolerance))continue;
+   if(Object.entries(q.cells).some(([key,value])=>currentCells[key]+value>targetCells[key]))continue;
    used.add(q.id);usedFamilies.add(q.family);chosen[i]=q;groupMarks[q.group]+=q.marks;groupCounts[q.group]++;
    for(const code of areaCodes)currentAreas[code]+=q.areas[code];
    for(const l of LEVELS)currentCog[l]+=q.cognitive[l];
+   for(const [key,value] of Object.entries(q.cells))currentCells[key]+=value;
    seenTopics.add(q.topicId);
    if(search(step+1))return true;
    chosen[i]=null;used.delete(q.id);usedFamilies.delete(q.family);groupMarks[q.group]-=q.marks;groupCounts[q.group]--;
    for(const code of areaCodes)currentAreas[code]-=q.areas[code];
    for(const l of LEVELS)currentCog[l]-=q.cognitive[l];
+   for(const [key,value] of Object.entries(q.cells))currentCells[key]-=value;
    if(!chosen.some(x=>x?.topicId===q.topicId))seenTopics.delete(q.topicId);
   }
   return false;
@@ -197,8 +205,10 @@ export function inspectCdcOptionalMathPaper({
   reason:'Curated questions cannot jointly satisfy CDC 75 marks, area totals, WCA/CCA, cognitive marks and unique paper history',
   questions:[],signature:null};
  const chosenQuestions=chosen.map(x=>x.question);
+ const cellAudit=optionalMathCellAudit(guide,chosenQuestions);
+ if(!cellAudit.matches)throw Error('CDC area/group cognitive marks mismatch');
  return {...resultBase,ready:true,reason:null,questions:chosenQuestions,
   signature:signature(chosenQuestions),groupMarks:{...groupMarks},
-  areaMarks:{...currentAreas},cognitiveMarks:{...currentCog},
+  areaMarks:{...currentAreas},cognitiveMarks:{...currentCog},cellAudit,
   teacherReviewRequired:true,sourceApprovedByCdc:false};
 }

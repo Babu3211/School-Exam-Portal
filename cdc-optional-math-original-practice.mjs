@@ -8,10 +8,8 @@
  *
  * This is not a substitute for genuine textbook examples or human review.
  */
-import {getCdcOptionalMathGuide,optionalMathAreaTopics} from './cdc-optional-math-2082.mjs';
-const WCA=[[3,3,3],[3,3,4],[4,4,4],[3],[3],[3]];
-const CCA=[[[1,3],[2,3]],[[1,3],[3,3]],[[2,1],[3,2],[4,3]],[[5,3],[6,3]]];
-const levelTargets={knowledge:12,understanding:18,application:30,higher:15};
+import {getCdcOptionalMathGuide,optionalMathAreaTopics,optionalMathOriginalSlots} from './cdc-optional-math-2082.mjs';
+// Original cognitive labels are subject-teacher review targets, not official CDC authorship.
 const issuedOfflineDrafts=new WeakSet();
 export function isOriginalMathOfflineDraft(row){
  return !!row&&typeof row==='object'&&issuedOfflineDrafts.has(row);
@@ -92,7 +90,7 @@ const slotQuestions=({grade,subject,version})=>{
  const rows=[];
  const add=(group,parts,slot)=>{
   const index=rows.length,seed=grade*37+version*101+index*11;
-  const subquestions=parts.map(([unitCode,marks],i)=>part(unitCode,seed+i*17,marks));
+  const subquestions=parts.map(([unitCode,marks,cognitiveLevel],i)=>({...part(unitCode,seed+i*17,marks),cognitiveLevel}));
   let contextNe='',contextEn='';
   if(group!=='objective'){
    const names=[...new Set(parts.map(x=>units[x[0]-1]))].join(' and ');
@@ -116,21 +114,8 @@ const slotQuestions=({grade,subject,version})=>{
    sourceUrl:'',status:'active',
    teacherReviewRequired:true});
  };
- let slot=0;
- for(const [unit,area]of [2,3,3,1,1,1].entries())
-  for(let j=0;j<area;j++)add('objective',[[unit+1,1]],++slot);
- for(const [unit,marks]of WCA.entries())
-  for(const mark of marks)
-   add('WCA',mark===3?[[unit+1,1],[unit+1,2]]:[[unit+1,2],[unit+1,2]],++slot);
- for(const combo of CCA)add('CCA',combo,++slot);
- const pieces=rows.flatMap(q=>q.subquestions).sort((a,b)=>b.marks-a.marks);
- const used={knowledge:0,understanding:0,application:0,higher:0};
- for(const item of pieces){
-  const level=Object.keys(levelTargets).find(k=>used[k]+item.marks<=levelTargets[k]);
-  if(!level)throw Error('Unable to allocate exact CDC cognitive distribution');
-  item.cognitiveLevel=level;used[level]+=item.marks;
- }
- if(JSON.stringify(used)!==JSON.stringify(levelTargets))throw Error('Incorrect CDC cognitive totals');
+ const guide=getCdcOptionalMathGuide({grade,subject});
+ for(const [index,slot] of optionalMathOriginalSlots(guide).entries())add(slot.group,slot.parts,index+1);
  for(const item of rows)issuedOfflineDrafts.add(item);
  return rows;
 };

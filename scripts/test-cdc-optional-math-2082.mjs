@@ -13,6 +13,9 @@ for(const grade of [9,10]){
   assert.equal(source.requiresCompositeQuestionEngine,true);
   assert.equal(source.areas.length,6);
   assert.deepEqual(source.areas.map(a=>a.totalMarks),[17,17,20,7,7,7]);
+  assert.deepEqual(source.areas.map(a=>['objective','WCA','CCA'].map(group=>a.marksByGroup[group])),[[[1,0,1,0],[2,2,4,2],[0,2,2,1]],[[1,0,1,1],[2,2,4,1],[0,2,2,1]],[[1,0,1,1],[2,3,6,0],[0,2,1,3]],[[0,1,0,0],[1,0,1,1],[0,0,2,1]],[[0,1,0,0],[1,1,0,1],[0,0,3,0]],[[0,1,0,0],[1,1,1,1],[0,0,1,1]]]);
+  source.areas[0].marksByGroup.WCA[0]=99;
+  assert.equal(getCdcOptionalMathGuide({grade,subject}).areas[0].marksByGroup.WCA[0],2);
   assert.deepEqual(source.areas.map(a=>a.objectiveCount),[2,3,3,1,1,1]);
   assert.deepEqual(source.areas.map(a=>a.wcaQuestionCount),[3,3,3,1,1,1]);
   assert.deepEqual(source.questionGroups.map(g=>[g.code,g.questionCount,g.totalMarks]),[
