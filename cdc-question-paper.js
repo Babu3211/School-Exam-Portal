@@ -7,6 +7,7 @@ import {auditGrade9Release} from "./cdc-grade9-release-audit.mjs";
 import {auditGrade9ScienceArchive} from "./cdc-grade9-science-archive-audit.mjs";
 import {compareGrade8SciencePracticeBank,getGrade8ScienceHistoricalPracticePattern} from "./cdc-grade8-science-model-audit.mjs";
 import {grade8ScienceOriginalSupplement} from "./cdc-grade8-science-original-supplement.mjs";
+import {grade9ScienceOriginalBank} from "./cdc-grade9-science-original-practice.mjs";
 import {grade9NepaliPracticeBank} from "./cdc-grade9-nepali-practice.mjs";
 import {grade9EnglishPracticeBank,auditEnglishChart} from "./cdc-grade9-english-practice.mjs";
 import {grade9CompulsoryMathPracticeBank,auditCompulsoryMathArchive} from "./cdc-grade9-compulsory-math-practice.mjs";
@@ -463,6 +464,8 @@ async function loadClassSubjects() {
 // Local original practice sources require no Admin import or Firestore write.
 // Absence of a checked source never triggers invented questions or a fake grid.
 async function loadBundledPracticeBank({grade,subject}){
+ const science=grade9ScienceOriginalBank({grade,subject});
+ if(science.units.length)return {units:science.units,questions:science.questions,status:"कक्षा ९ विज्ञान तथा प्रविधि: सरकारी English पाठ्यपुस्तकको विषयसूचीबाट १९ Unit का ७६ मौलिक bilingual अभ्यास प्रश्न। २०८२ को नवीनतम मूल पुस्तक र Grid समीक्षा बाँकी; पुरानो २०७८ Grid स्वतः लागू हुँदैन।"};
  const nepali=grade9NepaliPracticeBank({grade,subject});
  if(nepali.units.length)return {units:nepali.units,questions:nepali.questions,status:"कक्षा ९ नेपाली: १६ प्रस्तावित पाठ शीर्षकका ४८ मौलिक व्याकरण/लेखन अभ्यास। प्रश्नको भाषा नेपाली नै राखिएको छ। २०८२ को मूल पाठ्यपुस्तक, सच्याइएको तथ्य र Exact Grid समीक्षा बाँकी; पूर्ण CDC प्रश्नपत्र होइन।"};
  const english=grade9EnglishPracticeBank({grade,subject});

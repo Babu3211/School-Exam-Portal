@@ -175,3 +175,29 @@ assert.equal(byKey.nepali.gridTranscribed,false);
 assert.ok(data.sources.some(s=>s.url===NEPALI_CORRECTION_NOTICE));
 assert.match(readFileSync(new URL('../sw.js',import.meta.url),'utf8'),/cdc-grade9-nepali-practice\.mjs/);
 console.log('PASS Grade9 Nepali practice, language, source caveats and isolation');
+
+const {grade9ScienceOriginalBank,SCIENCE_TEXTBOOK_URL}=await import('../cdc-grade9-science-original-practice.mjs');
+for(const subject of ['Science and Technology','विज्ञान तथा प्रविधि']){
+ const p=grade9ScienceOriginalBank({grade:9,subject});
+ assert.equal(p.units.length,19);assert.equal(p.questions.length,76);
+ assert.equal(new Set(p.questions.map(q=>q.id)).size,76);
+ assert.equal(new Set(p.questions.map(q=>q.questionText)).size,76);
+ assert.equal(p.exactGridVerified,false);
+ assert.equal(p.units[2].unitTitleEn,'Mushroom');
+ assert.equal(p.units[18].unitTitleEn,'Materials used in Agriculture');
+ for(const u of p.units){
+  assert.equal(u.sourceUrl,SCIENCE_TEXTBOOK_URL);
+  const qs=p.questions.filter(q=>q.unitId===u.id);
+  assert.deepEqual(qs.map(q=>q.questionType),['mcq','very_short','short','long']);
+  assert.deepEqual(qs.map(q=>q.marks),[1,1,2,4]);
+  assert.ok(qs.every(q=>q.questionText&&q.questionTextEn&&q.answer&&q.answerEn&&q.teacherReviewRequired&&!q.officialCdcQuestion&&u.topics.includes(q.topicName)));
+  const mcq=qs[0],k='ABCD'.indexOf(mcq.correctOption);
+  assert.ok(k>=0&&mcq.options.length===4&&mcq.optionsEn.length===4);
+  assert.equal(mcq.answer,mcq.options[k]);assert.equal(mcq.answerEn,mcq.optionsEn[k]);
+ }
+}
+for(const [grade,subject] of [[8,'Science'],[10,'Science'],[9,'Optional Computer Science'],[9,'Optional I: Environmental Science']])assert.equal(grade9ScienceOriginalBank({grade,subject}).questions.length,0);
+assert.equal(byKey.science.gridTranscribed,false);
+assert.ok(data.sources.some(s=>s.url===SCIENCE_TEXTBOOK_URL&&s.kind==='CDC_textbook'));
+assert.match(readFileSync(new URL('../sw.js',import.meta.url),'utf8'),/cdc-grade9-science-original-practice\.mjs/);
+console.log('PASS Grade9 Science nineteen textbook units, 76 bilingual original items, answer keys and subject isolation');
