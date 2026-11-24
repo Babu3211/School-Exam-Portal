@@ -8,8 +8,8 @@ import {planSocial2078ReferencePaper} from './cdc-grade9-social-reference-planne
 import {planGrade9EnglishReferencePaper} from './cdc-grade9-english-grouped-planner.mjs';
 import {planEnvironmentSchoolReference} from './cdc-grade9-environment-reference-bank.mjs';
 import {planScienceSchoolReference} from './cdc-grade9-science-school-reference.mjs';
-import {planNepali2078ReferencePaper} from './cdc-grade9-nepali-grouped-planner.mjs';
-const planners={nepali:planNepali2078ReferencePaper,science:planScienceSchoolReference,optional_environment:planEnvironmentSchoolReference,math:planGrade9MathReference,social:planSocial2078ReferencePaper,english:planGrade9EnglishReferencePaper};
+import {planNepaliRevisedMarksPractice} from './cdc-grade9-nepali-grouped-planner.mjs';
+const planners={nepali:planNepaliRevisedMarksPractice,science:planScienceSchoolReference,optional_environment:planEnvironmentSchoolReference,math:planGrade9MathReference,social:planSocial2078ReferencePaper,english:planGrade9EnglishReferencePaper};
 const draft=q=>q?.gradeNumber===9&&q.bundled===true&&q.reviewStatus==='draft'&&q.teacherReviewRequired===true&&q.officialCdcQuestion===false&&q.sourceStatus==='SMSS_original_reference_draft'&&q.status!=='archived';
 export function referencePreviewTopics({grade,subject,questions=[]}={}){
  if(grade!==9||!Object.hasOwn(planners,cdcSubjectKey(subject)))return [];

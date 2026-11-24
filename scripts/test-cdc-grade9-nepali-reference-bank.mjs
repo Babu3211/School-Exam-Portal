@@ -75,3 +75,22 @@ assert.ok(classes.some(q=>q.passage.includes('(राम) विद्याल�
 const grammar=p.questions.filter(q=>q.skill==='grammar_passage');
 assert.ok(grammar.every(q=>q.components.some(c=>c.text.includes('कारक र विभक्ति छुट्याउनुहोस्।'))));
 console.log('PASS targeted Nepali editorial corrections; intentionally incorrect test words preserved');
+
+const {planNepaliRevisedMarksPractice}=await import('../cdc-grade9-nepali-grouped-planner.mjs');
+const revised=planNepaliRevisedMarksPractice(practiceArgs);
+assert.equal(revised.ready,true,revised.reason);
+assert.equal(revised.partialRevisedMarksMatched,true);
+assert.equal(revised.referenceStructureMatched,false);
+assert.equal(revised.paper.groups.reduce((n,g)=>n+g.marks,0),75);
+const unseen=revised.paper.groups.find(g=>g.skill==='unseen_passage');
+assert.equal(unseen.marks,4);assert.equal(unseen.choices[0].components.length,4);
+assert.doesNotMatch(unseen.choices[0].answer,/अभियान चल्यो|संस्कार विकास गर्नुपर्छ/);
+const notes=revised.paper.groups.find(g=>g.skill==='notes_and_summary');
+assert.equal(notes.marks,5);assert.deepEqual(notes.choices[0].components.map(c=>c.marks),[2,3]);
+assert.equal(revised.currentCdcExactApproved,false);assert.equal(revised.readyForLive,false);
+assert.throws(()=>assertGrade9ExamPaperMatches(revised.paper),/verified subject/);
+assert.match(b.text,/अदृष्टांश ४, बुँदा टिपोट २ र सारांश ३/);
+assert.match(b.blocks[11].text,/\[४\]/);assert.match(b.blocks[14].text,/\[५\]/);
+assert.equal(a.paper.groups[11].marks,5,'Historical comparison unchanged');
+assert.equal(a.paper.groups[14].marks,4,'Historical comparison unchanged');
+console.log('PASS revised Nepali marks in real preview, historical comparison preserved, official gate closed');

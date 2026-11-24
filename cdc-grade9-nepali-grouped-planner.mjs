@@ -87,3 +87,29 @@ export function planNepali2078ReferencePaper({grade,subject,fullMarks=75,duratio
  const practiceSubstitution=groups.some(g=>g.choices.some(c=>c.practiceSubstitution===true));
  return {ready:true,paper,signature:paperSignature(groups),...checked,readyForLive:false,sourceUrl:ref.sourceUrl,referenceOnly:true,practiceSubstitution,referenceLabel:practiceSubstitution?'नेपाली ७५ अङ्कको अभ्यास संरचना: सारांशमा मौलिक अपठित गद्यांश प्रयोग गरिएको छ, मूल पाठगत अंश होइन। CDC Exact होइन।':''};
 }
+
+/** Partial revised-mark practice adaptation, not a full 2080/2083 Grid.
+ * RS11168 pp.3–4 extracted marks and independent 2080 table agree on
+ * unseen 4, note-taking 2, summary 3. Keep the historical planner intact.
+ * Other task/choice/cognitive differences and authentic seen passages remain
+ * unresolved. Never enable official save or print from this adaptation.
+ */
+export function planNepaliRevisedMarksPractice(args={}){
+ const result=planNepali2078ReferencePaper(args);
+ if(!result.ready)return result;
+ const old=result.paper;
+ const groups=old.groups.map(g=>{
+  if(g.skill==='unseen_passage')return {...g,marks:4,choices:g.choices.map(c=>{
+   if(c.components?.length!==5)throw Error('Unexpected historical unseen components');
+   const components=c.components.slice(0,4).map(x=>({...x}));
+   return {...c,marks:4,text:'मौलिक अपठित गद्यांश पढी चार बोध प्रश्नको उत्तर लेख्नुहोस्।',components,answer:components.map(x=>x.answer).join(' / ')};
+  })};
+  if(g.skill==='notes_and_summary')return {...g,marks:5,choices:g.choices.map(c=>{
+   if(c.components?.length!==2)throw Error('Unexpected historical summary components');
+   return {...c,marks:5,components:c.components.map((x,i)=>({...x,marks:i===0?2:3}))};
+  })};
+  return g;
+ });
+ if(groups.reduce((n,g)=>n+g.marks,0)!==75||groups.some(g=>g.choices.some(c=>c.marks*g.answerCount!==g.marks||c.components&&c.components.reduce((n,x)=>n+x.marks,0)!==c.marks)))throw Error('Revised-mark practice allocation mismatch');
+ return {...result,paper:{...old,groups,referenceOnly:true},referenceStructureMatched:false,partialRevisedMarksMatched:true,sourceUrl:'https://giwmscdnone.gov.np/media/pdf_upload/RS11168_Specification%20Grid%20(9%20-%2010)%20Compulsory%20Nepali_p4hju5n.pdf',referenceLabel:'नेपाली अभ्यास: अदृष्टांश ४, बुँदा टिपोट २ र सारांश ३ अङ्क मिलाइएको छ। सारांशमा मौलिक अपठित गद्यांश प्रयोग गरिएको छ; मूल पाठगत अंश, अलग गद्यांश, अन्य प्रश्न संरचना र संज्ञानात्मक तहको अन्तिम प्रमाणीकरण बाँकी छ। CDC Exact होइन।',currentCdcExactApproved:false,readyForLive:false};
+}
