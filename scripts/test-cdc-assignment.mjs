@@ -372,6 +372,24 @@ await field('save').onclick();
 assert.match(field('status').textContent,/मस्यौदा राखियो/);
 assert.equal(field('history').rows.length,2);
 console.log('CDC Annex 3 staged assessment and legacy observation preservation passed');
+await field('gridRead').onclick();
+const gridRow=field('annexRows').rows[1];
+const gridCount=observations.size;
+gridRow.querySelector('[data-cdc-grid-edit="regular"]').click();
+assert.equal(gridRow.querySelector('[data-cdc-grid-editor="date"]').value,'2083-08-07');
+assert.equal(field('printForm').disabled,true);
+gridRow.querySelector('[data-cdc-grid-editor="level"]').value='3';
+gridRow.querySelector('[data-cdc-grid-editor="remarks"]').value='Synthetic remark';
+await gridRow.querySelector('[data-cdc-grid-save="regular"]').onclick();
+assert.equal(observations.size,gridCount+1);
+assert.equal([...observations.values()].at(-1).level,3);
+assert.equal([...observations.values()].at(-1).stage,'regular');
+assert.equal([...observations.values()].at(-1).evidence,'');
+assert.equal([...observations.values()].at(-1).feedback,'Synthetic remark');
+assert.match(field('gridStatus').textContent,/सुरक्षित भयो/);
+assert.match(field('annexRows').rows[1].textContent,/Synthetic remark/);
+assert.equal(field('printForm').disabled,false);
+console.log('Direct table date/rating entry, optional remarks and immutable school save passed');
 for(const [subject,unit,count] of [
   ['Mathematics','ज्यामिति',8],
   ['Social Studies and Human Values Education','हामी र हाम्रो समुदाय',8],
