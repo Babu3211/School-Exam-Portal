@@ -34,6 +34,8 @@ on:
       - 'scripts/test-cdc-grade9-paper-grid-guard.mjs'
       - 'cdc-grade9-science-archive-audit.mjs'
       - 'cdc-grade9-science-reference-planner.mjs'
+      - 'cdc-grade9-social-reference-planner.mjs'
+      - 'scripts/test-cdc-grade9-social-reference-planner.mjs'
       - 'scripts/test-cdc-grade9-science-reference-planner.mjs'
       - 'scripts/test-cdc-grade9-science-archive-audit.mjs'
       - 'cdc-grade9-computer-original-practice.mjs'
@@ -112,6 +114,8 @@ jobs:
           node --check scripts/test-cdc-grade9-paper-grid-guard.mjs
           node --check cdc-grade9-science-archive-audit.mjs
           node --check cdc-grade9-science-reference-planner.mjs
+          node --check cdc-grade9-social-reference-planner.mjs
+          node --check scripts/test-cdc-grade9-social-reference-planner.mjs
           node --check scripts/test-cdc-grade9-science-reference-planner.mjs
           node --check scripts/test-cdc-grade9-science-archive-audit.mjs
           node --check cdc-grade9-computer-original-practice.mjs
@@ -165,6 +169,8 @@ jobs:
         run: node scripts/test-cdc-grade9-compulsory-math-grouped.mjs
       - name: Verify historical science reference unit and response element marks
         run: node scripts/test-cdc-grade9-science-reference-planner.mjs
+      - name: Verify historical Social Studies reference slots and map alternatives
+        run: node scripts/test-cdc-grade9-social-reference-planner.mjs
       - name: Verify automatic CDC Grid source detection for Grade 6-10 subjects
         run: node scripts/test-cdc-grid-source-index.mjs
       - name: Verify 54 original bilingual formula-checked Optional Maths practice questions
