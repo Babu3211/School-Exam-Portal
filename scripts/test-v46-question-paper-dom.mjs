@@ -412,7 +412,6 @@ const repeatNodes=[...dom.window.document.querySelectorAll('[data-qp-topic]')];
 assert.equal(repeatNodes.length,2,'Equal topic names from different units must remain separate');
 assert.deepEqual(repeatNodes.map(x=>x.dataset.unitCode),['1','2']);
 assert.notEqual(repeatNodes[0].value,repeatNodes[1].value);
-dom.window.close();
 console.log('PASS V46 DOM auto question paper: class 10, unit choices, bilingual, review gate, random practice and topic-unit isolation');
 
  // Exercise the real reference UI functions with the actual page shell.
@@ -446,3 +445,5 @@ console.log('PASS V46 DOM auto question paper: class 10, unit choices, bilingual
  referenceHarness.logout();
  assert.throws(()=>referenceHarness.generate(),/assigned subject/);
  console.log('PASS actual review-only answer UI, inert text, stale key clearing and official save/print lock');
+
+dom.window.close();
