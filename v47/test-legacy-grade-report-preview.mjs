@@ -44,3 +44,32 @@ for(const [input,pattern] of [
 ])assert.throws(()=>prepareLegacyGradeReport(input),pattern);
 assert.throws(()=>legacyGradePreviewExcel({}),/read-only/);
 console.log('PASS V47 V46-compatible Grade Ledger and watermarked Grade Sheet preview, Excel, no partial/foreign/raw marks');
+
+import {prepareCommittedIemisReport} from './committed-iemis-report-preview.mjs';
+for(const klass of ['6','7','8','9','10'])for(const exam of ['1st','2nd','final']){
+ const roster=students.map(s=>({...s,class:klass}));
+ const catalog=[{id:'computer',schoolId,class:klass,active:true,name:'Computer Science',creditHour:4},{id:'math',schoolId,class:klass,active:true,name:'Mathematics',creditHour:5}];
+ const iemisTerm=exam==='final'?'annual':exam==='1st'?'first':'second';
+ const published=catalog.map(sub=>{
+  const components=iemisEntrySchema(klass,iemisTerm,sub.name).map((c,i)=>({key:'field'+i,name:c.name,fullMarks:c.max}));
+  const values=Object.fromEntries(components.map(c=>[c.key,c.fullMarks]));
+  return {published:true,schoolId,classId:klass,subjectId:sub.id,examId:exam,publicationId:'pub_'+sub.id,digest:'a'.repeat(64),rosterCount:roster.length,components,entries:roster.map(s=>({studentId:s.id,isAbsent:false,values,totalObtained:Object.values(values).reduce((a,b)=>a+b,0)}))};
+ });
+ const input={schoolId,school,classNo:klass,term:exam,students:roster,subjects:catalog,publications:published};
+ const report=prepareCommittedIemisReport(input);
+ assert.equal(report.summary.complete,true);assert.equal(report.previewOnly,true);
+ assert.equal(report.summary.rows[0].gpa,4);
+ assert.match(report.printFor('s1').html,/NOT VALID FOR OFFICIAL USE/);
+ const alter=fn=>{const copy=structuredClone(input);fn(copy);return copy};
+ for(const fn of [
+  a=>a.publications.pop(),
+  a=>a.publications[0].published=false,
+  a=>a.publications[0].schoolId='999999999',
+  a=>a.publications[0].components[0].fullMarks++,
+  a=>a.publications[0].entries[0].totalObtained++,
+  a=>a.publications[0].entries[0].isAbsent=true,
+  a=>a.publications[0].entries[1].studentId='s1'
+ ])assert.throws(()=>prepareCommittedIemisReport(alter(fn)));
+}
+assert.throws(()=>prepareCommittedIemisReport({classNo:'1',term:'1st'}),/primary achievement/);
+console.log('PASS committed-to-IEMIS preview: Classes 6–10, first/second/final, Computer and Mathematics, complete scope and watermark');

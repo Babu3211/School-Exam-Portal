@@ -25,5 +25,5 @@ export function resolveVerifiedOfficialClassMarks({settings,expectedStudentIds,.
    if(!Object.hasOwn(row.values,key)||row.values[key]>max)throw new Error('Published mark exceeds Examination Settings');
   }
  }
- return result;
+ return Object.freeze({...result,components});
 }

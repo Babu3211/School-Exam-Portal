@@ -8,6 +8,7 @@ const publication={...pointer,state:'committed'};
 const entries=expectedStudentIds.map(studentId=>({studentId,publicationId:pointer.publicationId,isAbsent:false,values:{theory:35,practical:9,internal:4},totalObtained:48}));
 const args={...scope,settings,expectedStudentIds,pointer,publication,entries};
 assert.equal(resolveVerifiedOfficialClassMarks(args).rosterCount,1500);
+assert.deepEqual(resolveVerifiedOfficialClassMarks(args).components,settings.components,'Verified component names and limits accompany committed marks');
 assert.equal(resolveVerifiedOfficialClassMarks({...args,pointer:null,publication:null,entries:[]}).published,false);
 const rejects=(changes,pattern)=>assert.throws(()=>resolveVerifiedOfficialClassMarks({...args,...changes}),pattern);
 rejects({expectedStudentIds:expectedStudentIds.slice(1)},/roster differs/);
