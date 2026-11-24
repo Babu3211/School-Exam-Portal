@@ -21,12 +21,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Inspect public HTML and bounded PDF header responses
+      - name: Check PDF extraction tools
+        run: command -v pdfinfo && command -v pdftotext
+      - name: Inspect public HTML and read identified Grade 9 government PDFs
         run: python3 scripts/audit-grade9-grid-catalog.py --output "$RUNNER_TEMP/grade9-grid-catalog/audit.json"
       - name: Retain source discovery report only
         uses: actions/upload-artifact@v4
         with:
           name: grade9-public-grid-source-audit
-          path: ${{ runner.temp }}/grade9-grid-catalog/audit.json
+          path: ${{ runner.temp }}/grade9-grid-catalog/
           retention-days: 7
 # No Firebase secrets, production reads/writes, or deployment.

@@ -14,7 +14,7 @@ for(const language of ['ne','en','both']){
  assert.equal(a.paper.questions.length,40);assert.equal(a.paper.questions.reduce((n,q)=>n+q.marks,0),75);assert.equal(a.currentCdcExactApproved,false);
  assert.equal(plan({...args,selectedTopicIds:selectedTopicIds.slice(0,18)}).ready,false);
  assert.equal(plan({...args,questions:p.questions.map(q=>({...q,marks:9}))}).ready,false);
- const preview=buildGrade9ReferencePreview(args);assert.equal(preview.ready,true);assert.match(preview.text,/BESS 2079 school annual reference/);assert.match(preview.text,/\[1\]/);
+ const preview=buildGrade9ReferencePreview(args);assert.equal(preview.ready,true);assert.match(preview.text,language==='ne'?/BESS २०७९ school annual reference/:/BESS 2079 school annual reference/);assert.match(preview.text,language==='ne'?/\[१\]/:/\[1\]/);
 }
 console.log('PASS 80 real science bilingual variants, 40 questions, exact BESS school unit weights and cognitive category counts; no current CDC approval');
 

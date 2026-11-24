@@ -3,6 +3,9 @@ Never certify a Grid based on a title/link or PDF magic alone. No credentials,
 cookies, student records, cloud deploy, or attempts to circumvent access controls.
 """
 import argparse
+import hashlib
+import subprocess
+import tempfile
 from html.parser import HTMLParser
 import json
 from html import unescape
@@ -173,6 +176,35 @@ def audit_directory():
         result.update(status="directory_unavailable",reason=str(err)[:200])
     return result
 
+def read_compulsory_pdf(url, output_dir):
+    match=re.search(r"/RS(111(?:66|67|68|69|70))_",url)
+    if not match: raise ValueError("Unexpected resource ID")
+    resource=match.group(1)
+    entry={"resource":resource,"url":url,"officialGridApproved":False}
+    try:
+        final,ctype,data=get(url,32*1024*1024)
+        if not data.startswith(b"%PDF-") or b"%%EOF" not in data[-4096:]:
+            raise ValueError("Incomplete or non-PDF document")
+        with tempfile.TemporaryDirectory() as tmp:
+            pdf=Path(tmp)/"source.pdf";pdf.write_bytes(data)
+            info=subprocess.run(["pdfinfo",str(pdf)],check=True,capture_output=True,text=True,timeout=20).stdout
+            pages=int(re.search(r"(?m)^Pages:\s+(\d+)",info).group(1))
+            if not 1<=pages<=150: raise ValueError("Unexpected PDF page count")
+            text=subprocess.run(["pdftotext","-f","1","-l",str(min(pages,4)),"-layout",str(pdf),"-"],check=True,capture_output=True,text=True,timeout=30).stdout
+            # Keep page layout for offline inspection, never treat extraction as
+            # a confirmed transcription. Log only compact numeric table rows.
+            output_dir.mkdir(parents=True,exist_ok=True)
+            (output_dir/(resource+"-first-pages.txt")).write_text(text,encoding="utf-8")
+            grid_rows=[]
+            for i,page in enumerate(text.split("\f"),1):
+                for line in page.splitlines():
+                    if len(re.findall(r"\d+",line))>=4 and len(line.strip())<=240:
+                        grid_rows.append({"page":i,"row":line.rstrip()})
+            entry.update(finalUrl=final,contentType=ctype,byteCount=len(data),sha256=hashlib.sha256(data).hexdigest(),pages=pages,numericRows=grid_rows[:45],textLength=len(text),status="full_pdf_read_needs_grid_review")
+    except (OSError,ValueError,AttributeError,subprocess.SubprocessError) as err:
+        entry.update(status="full_pdf_read_failed",reason=str(err)[:200])
+    return entry
+
 def selftest():
     data='<table><tr><td>26</td><td>९</td><td>Science</td><td><a href="https://moecdc.gov.np/test.pdf">Download</a><button onclick="location.href=\'https://giwmscdnone.gov.np/test.pdf\'">View</button><a href="javascript:alert(1)">X</a><a href="https://unknown.invalid/x">X</a></td></tr><tr><td>34</td><td>१०</td><td>Not grade nine</td></tr></table>'
     result=parse(data,CATALOG)
@@ -213,6 +245,10 @@ if __name__=="__main__":
     report["pdfHeaderCandidates"]+=sum(p.get("status")=="pdf_header_detected_needs_visual_grid_review" for p in report["alternativeDirectory"].get("grade9CompulsoryProbes",[]))
     report["result"]="attachment_candidates_require_visual_review" if report["pdfHeaderCandidates"] else ("directory_links_require_document_review" if report["alternativeDirectory"].get("literalGovernmentPdfCount") else "no_pdf_attachment_retrieved")
     out=Path(args.output);out.parent.mkdir(parents=True,exist_ok=True)
+    targets=[p["url"] for p in report["alternativeDirectory"].get("grade9CompulsoryProbes",[]) if p["status"]=="pdf_header_detected_needs_visual_grid_review"]
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        report["fullDocumentReview"]=list(pool.map(lambda url:read_compulsory_pdf(url,out.parent/"extracted"),targets))
+    report["fullDocumentsRead"]=sum(r["status"]=="full_pdf_read_needs_grid_review" for r in report["fullDocumentReview"])
     out.write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
     print(json.dumps(report,ensure_ascii=False,indent=2))
     print("No Grid approval is granted by this audit.")
