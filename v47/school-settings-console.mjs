@@ -1,3 +1,4 @@
+import {neError} from './nepali-feedback.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
@@ -37,8 +38,8 @@ $('connect').onclick=async()=>{
    if(!busy)lock(false);
   });
   $('connect').disabled=true;lock(false);message('V47 जडान भयो।');
-  if(requestedSchool){try{$('schoolId').value=validateSchoolId(requestedSchool);if(auth.currentUser)queueMicrotask(()=>$('login').click())}catch(e){message('विद्यालय छनोट अमान्य: '+e.message)}}
- }catch(e){message('जडान असफल: '+e.message)}
+  if(requestedSchool){try{$('schoolId').value=validateSchoolId(requestedSchool);if(auth.currentUser)queueMicrotask(()=>$('login').click())}catch(e){message('विद्यालय छनोट अमान्य: '+neError(e))}}
+ }catch(e){message('जडान असफल: '+neError(e))}
 };
 $('login').onclick=async()=>{
  if(busy||!auth)return;
@@ -71,7 +72,7 @@ $('login').onclick=async()=>{
   if(freshSignIn)startVerifiedSchoolActivity();
   message('विद्यालयको विवरण प्रमाणित भयो।');
  }catch(e){
-  if(request===epoch){reset();try{await authSdk.signOut(auth)}catch{}message('विद्यालय पुष्टि असफल: '+e.message)}
+  if(request===epoch){reset();try{await authSdk.signOut(auth)}catch{}message('विद्यालय पुष्टि असफल: '+neError(e))}
  }finally{lock(false)}
 };
 $('saveProfile').onclick=async()=>{
@@ -107,13 +108,13 @@ $('saveProfile').onclick=async()=>{
   if(request!==epoch||actor!==current||auth.currentUser?.uid!==current.uid)return;
   loadedProfile=schoolProfileView(data);
   message('विद्यालयको नाम र ठेगाना सुरक्षित गरियो। IEMIS ID परिवर्तन भएको छैन।');
- }catch(e){if(request===epoch&&actor===current)message('विद्यालय विवरण सुरक्षित भएन: '+e.message)}
+ }catch(e){if(request===epoch&&actor===current)message('विद्यालय विवरण सुरक्षित भएन: '+neError(e))}
  finally{lock(false)}
 };
 $('logout').onclick=async()=>{
  if(busy)return;
  reset();lock(true);
  try{await authSdk.signOut(auth);message('Logout सफल भयो।')}
- catch(e){message('Logout असफल: '+e.message)}finally{lock(false)}
+ catch(e){message('Logout असफल: '+neError(e))}finally{lock(false)}
 };
 if(requestedSchool)queueMicrotask(()=>$('connect').click());

@@ -1,3 +1,4 @@
+import {neError} from './nepali-feedback.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
@@ -35,9 +36,9 @@ $('connect').onclick=async()=>{
   $('connect').disabled=true;$('login').disabled=false;
   if(requestedSchool){
    try{$('schoolId').value=validateSchoolId(requestedSchool);if(auth.currentUser)queueMicrotask(()=>$('login').click());}
-   catch(e){status('विद्यालय छनोट अमान्य: '+e.message);}
+   catch(e){status('विद्यालय छनोट अमान्य: '+neError(e));}
   }else status('V47 जडान भयो। विद्यालय Login प्रमाणित गर्नुहोस्।');
- }catch(e){status('जडान असफल: '+e.message)}
+ }catch(e){status('जडान असफल: '+neError(e))}
 };
 $('login').onclick=async()=>{
  if(!auth||busy||loading||exporting)return;
@@ -61,13 +62,13 @@ $('login').onclick=async()=>{
   $('records').hidden=false;$('staffImportArea').hidden=member.role!=='school_admin';$('logout').disabled=false;$('exportAll').disabled=false;
   busy=false;await loadPage(true);
  }catch(e){
-  if(request===epoch){reset();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status('Login असफल: '+e.message)}
+  if(request===epoch){reset();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status('Login असफल: '+neError(e))}
  }finally{busy=false;$('login').disabled=!auth}
 };
 $('logout').onclick=async()=>{
  reset();
  try{if(auth)await authSdk.signOut(auth);status('Logout सफल भयो।')}
- catch(e){status('Logout असफल: '+e.message)}
+ catch(e){status('Logout असफल: '+neError(e))}
 };
 async function loadPage(resetPage=false){
  if(!actor||!store||loading||exporting)return;
@@ -89,7 +90,7 @@ async function loadPage(resetPage=false){
   cursor=next.cursor;hasMore=next.hasMore;
   $('count').textContent=seen.size+' staff records loaded'+(hasMore?' — more available':' — end of school roster');
   status('विद्यालयका Staff विवरण पढियो।');
- }catch(e){if(token===epoch){hasMore=false;$('next').disabled=true;status('Staff विवरण लोड भएन: '+e.message)}}
+ }catch(e){if(token===epoch){hasMore=false;$('next').disabled=true;status('Staff विवरण लोड भएन: '+neError(e))}}
  finally{if(token===epoch){loading=false;$('refresh').disabled=false;$('next').disabled=!hasMore;$('exportAll').disabled=!actor||exporting;}}
 }
 $('staffImportFile').onchange=()=>{
@@ -141,7 +142,7 @@ $('previewStaffImport').onclick=async()=>{
    (details.length?' First issues: '+details.slice(0,8).join(' | '):'');
  }catch(e){
   if(token===epoch&&review===previewToken&&actor===selectedActor)
-   $('staffImportSummary').textContent='Excel preview failed: '+e.message+' — no records modified.';
+   $('staffImportSummary').textContent='Excel पूर्वावलोकन असफल: '+neError(e)+' — कुनै अभिलेख परिवर्तन भएको छैन।';
  }finally{
   previewBusy=false;
   if(token===epoch)$('previewStaffImport').disabled=!actor||actor.role!=='school_admin';
@@ -175,7 +176,7 @@ $('exportAll').onclick=async()=>{
    document.body.append(link);link.click();
   }finally{link.remove();URL.revokeObjectURL(url)}
   status(result.count+' Staff विवरण Excel (.xlsx) मा Export भयो। यो Database Backup होइन।');
- }catch(e){if(token===epoch&&actor===selectedActor)status('Excel Export रोकियो: '+e.message)}
+ }catch(e){if(token===epoch&&actor===selectedActor)status('Excel Export रोकियो: '+neError(e))}
  finally{exporting=false;if(token===epoch&&actor===selectedActor)$('exportAll').disabled=false}
 };
 if(requestedSchool)queueMicrotask(()=>$('connect').click());

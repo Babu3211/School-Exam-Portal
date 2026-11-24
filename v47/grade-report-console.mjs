@@ -1,3 +1,4 @@
+import {neError} from './nepali-feedback.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
@@ -37,9 +38,9 @@ $('connect').onclick=async()=>{
   ({auth,authSdk,db,api}=await connectSchoolFirebase());
   authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clearSession();status('Login परिवर्तन भयो। पुनः प्रमाणित गर्नुहोस्।')}});
   $('connect').disabled=true;$('login').disabled=false;
-  if(requestedSchool)try{$('schoolId').value=validateSchoolId(requestedSchool)}catch(e){status('विद्यालय छनोट अमान्य: '+e.message)}
+  if(requestedSchool)try{$('schoolId').value=validateSchoolId(requestedSchool)}catch(e){status('विद्यालय छनोट अमान्य: '+neError(e))}
   status('V47 जडान भयो। School Login प्रमाणित गर्नुहोस्।');
- }catch(e){status('जडान असफल: '+e.message)}
+ }catch(e){status('जडान असफल: '+neError(e))}
 };
 $('login').onclick=async()=>{
  if(busy||loading||!auth)return;
@@ -57,10 +58,10 @@ $('login').onclick=async()=>{
   if(fresh)startVerifiedSchoolActivity();
   $('verifiedLabel').textContent=String(school.name??sid)+' · '+sid+' · '+session.role;
   $('reportArea').hidden=false;$('logout').disabled=false;status('विद्यालय प्रमाणित भयो।');
- }catch(e){if(seq===sessionSeq){clearSession();try{await authSdk.signOut(auth)}catch{}status('Login असफल: '+e.message)}}
+ }catch(e){if(seq===sessionSeq){clearSession();try{await authSdk.signOut(auth)}catch{}status('Login असफल: '+neError(e))}}
  finally{busy=false;$('login').disabled=!auth}
 };
-$('logout').onclick=async()=>{clearSession();try{if(auth)await authSdk.signOut(auth);status('Logout सफल भयो।')}catch(e){status('Logout असफल: '+e.message)}};
+$('logout').onclick=async()=>{clearSession();try{if(auth)await authSdk.signOut(auth);status('Logout सफल भयो।')}catch(e){status('Logout असफल: '+neError(e))}};
 $('schoolClass').onchange=clearReview;$('term').onchange=clearReview;$('reportSource').onchange=clearReview;
 $('cancel').onclick=()=>{clearReview();status('Read-only review cancelled. कुनै अंक परिवर्तन गरिएको छैन।')};
 function showSheet(){
@@ -78,7 +79,7 @@ function showSheet(){
    $('sheetStatus').textContent='PREVIEW ONLY — NOT VALID FOR OFFICIAL USE';
   };
   frame.srcdoc=doc.html;
- }catch(e){frame.removeAttribute('srcdoc');$('sheetStatus').textContent=e.message}
+ }catch(e){frame.removeAttribute('srcdoc');$('sheetStatus').textContent=neError(e)}
 }
 $('load').onclick=async()=>{
  if(loading||busy||!actor)return;
@@ -107,7 +108,7 @@ $('load').onclick=async()=>{
   for(const st of data.students){const option=document.createElement('option');option.value=st.id;option.textContent=String(st.nameEnglish??st.name??st.id);$('student').append(option)}
   $('student').disabled=false;$('previewSheet').disabled=false;$('sheetArea').hidden=false;showSheet();
   status((source==='sparkCommitted'?'Committed V47 read view':source==='draft'?'Private saved V47 Drafts':source==='committed'?'Committed V47 marks':'V46 IEMIS component marks')+' बाट read-only पूर्वावलोकन तयार भयो। यो आधिकारिक नतिजा होइन।');
- }catch(e){if(seq===sessionSeq&&review===reviewSeq){clearReview();$('progress').textContent='Preview blocked: '+e.message;status('पूर्ण Grade Preview उपलब्ध छैन: '+e.message)}}
+ }catch(e){if(seq===sessionSeq&&review===reviewSeq){clearReview();$('progress').textContent='पूर्वावलोकन रोकियो: '+neError(e);status('पूर्ण Grade Preview उपलब्ध छैन: '+neError(e))}}
  finally{loading=false;$('load').disabled=!actor;$('cancel').disabled=true}
 };
 $('student').onchange=showSheet;$('previewSheet').onclick=showSheet;
@@ -123,7 +124,7 @@ $('printSheet').onclick=async()=>{
   if(!print.ready)throw Error(print.reason);
   if(!frame.contentWindow)throw Error('Print frame unavailable');
   frame.contentWindow.focus();frame.contentWindow.print();
- }catch(e){clearReview();status('Print blocked: '+e.message)}
+ }catch(e){clearReview();status('छपाइ रोकियो: '+neError(e))}
 };
 $('exportExcel').onclick=async()=>{
  if(!report||$('exportExcel').disabled)return;
@@ -138,7 +139,7 @@ $('exportExcel').onclick=async()=>{
    document.body.append(link);link.click();
   }finally{link.remove();URL.revokeObjectURL(url)}
   status('Excel पूर्वावलोकन निकालियो। यो आधिकारिक Ledger होइन।');
- }catch(e){if(seq===sessionSeq&&review===reviewSeq){clearReview();status('Excel Export blocked: '+e.message)}}
+ }catch(e){if(seq===sessionSeq&&review===reviewSeq){clearReview();status('Excel निर्यात रोकियो: '+neError(e))}}
  finally{if(seq===sessionSeq)$('exportExcel').disabled=!report}
 };
 if(requestedSchool)queueMicrotask(()=>$('connect').click());
