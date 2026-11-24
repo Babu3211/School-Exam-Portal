@@ -397,6 +397,9 @@ if __name__=="__main__":
     with ThreadPoolExecutor(max_workers=3) as pool:
         report["optionalDocumentReview"]=list(pool.map(lambda source:audit_optional_grid_pdf(source,out.parent/"optional-extracted"),optional))
     report["optionalDocumentsRead"]=sum(r["status"]=="full_pdf_retrieved_visual_review_required" for r in report["optionalDocumentReview"])
+    accounting=[source for source in register["sources"] if 9 in source.get("grades",[]) and source.get("subject")=="कार्यालय सञ्चालन तथा लेखा" and urlsplit(source.get("url","")).hostname=="giwmscdnone.gov.np" and urlsplit(source.get("url","")).path.endswith("_fwmookm.pdf")]
+    if len(accounting)!=1: raise ValueError("Unexpected accounting PDF inventory")
+    report["accountingDocumentReview"]=audit_optional_grid_pdf(accounting[0],out.parent/"accounting-extracted")
     out.write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
     print(json.dumps(report,ensure_ascii=False,indent=2))
     print("No Grid approval is granted by this audit.")
