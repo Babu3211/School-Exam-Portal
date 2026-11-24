@@ -1,12 +1,20 @@
-name: V47 preview hosting (manual only)
+name: V47 isolated preview hosting (never production)
 on:
   workflow_dispatch:
+  push:
+    branches: [smss-v47-multischool-work]
+    paths:
+      - '.github/workflows/v47-preview-hosting.yml'
 permissions:
   contents: read
+concurrency:
+  group: v47-isolated-preview-only
+  cancel-in-progress: false
 jobs:
   deploy-v47-preview:
     if: github.ref == 'refs/heads/smss-v47-multischool-work'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - name: Build and validate isolated V47 assets
@@ -17,6 +25,7 @@ jobs:
           test -f v47/dist/school-login.html
           test ! -f v47/dist/firestore.rules
           node --check v47/school-login.mjs
+          node --input-type=module -e 'import {readFileSync} from "node:fs"; const c=JSON.parse(readFileSync("v47/firebase.json","utf8")); if(Object.keys(c).join(",")!=="hosting"||c.hosting.public!=="dist") throw Error("Preview must contain isolated Hosting only");'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -47,11 +56,16 @@ jobs:
             echo "::error::Missing FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 repository secret; no deployment attempted."
             exit 1
           fi
+          node -e 'let c; try {c=JSON.parse(process.env.V47_SERVICE_ACCOUNT)} catch {throw Error("Invalid V47 credential format")} if(c.type!=="service_account"||c.project_id!=="smss-exam-portal-v47")throw Error("Wrong Firebase credential project; preview refused")'
       - name: Deploy to V47 preview channel only
         env:
           V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}
         run: |
-          printf '%s' "$V47_SERVICE_ACCOUNT" > "$RUNNER_TEMP/v47-credentials.json"
-          chmod 600 "$RUNNER_TEMP/v47-credentials.json"
-          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/v47-credentials.json"
-          npx --yes firebase-tools@14.21.0 hosting:channel:deploy v47-test --project smss-exam-portal-v47 --config v47/firebase.json --expires 30d --non-interactive
+          umask 077
+          credential_file="$(mktemp "$RUNNER_TEMP/v47-credentials.XXXXXX")"
+          trap 'rm -f "$credential_file"' EXIT
+          printf '%s' "$V47_SERVICE_ACCOUNT" > "$credential_file"
+          export GOOGLE_APPLICATION_CREDENTIALS="$credential_file"
+          unset V47_SERVICE_ACCOUNT
+          npx --yes firebase-tools@14.21.0 hosting:channel:deploy v47-test --project smss-exam-portal-v47 --config v47/firebase.json --expires 7d --non-interactive
+          echo 'V47 preview only; no production Hosting channel, rules, database migration, billing change or V46 deployment.' >> "$GITHUB_STEP_SUMMARY"
