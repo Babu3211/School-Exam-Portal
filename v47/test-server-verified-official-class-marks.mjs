@@ -25,3 +25,13 @@ rejects({settings:alternateSettings},/component keys differ/);
 rejects({settings:alternateSettings,entries:alternateEntries.map((row,i)=>i?row:{...row,values:{written:81,practical:18},totalObtained:99})},/exceeds Examination Settings/);
 assert.equal(resolveVerifiedOfficialClassMarks({...args,entries:entries.map((row,i)=>i?row:{...row,isAbsent:true,values:null,totalObtained:0})}).entries[0].isAbsent,true);
 console.log('V47 verified official class marks: 1500 students, roster and dynamic component limits enforced');
+
+const primaryScope={...scope,classId:'1',subjectId:'math'};
+const primaryPointer={...pointer,...primaryScope,rosterCount:1};
+const primarySettings={...primaryScope,active:true,components:[
+ {key:'count',name:'No. of Learning Achievement',fullMarks:10},
+ {key:'got',name:'Obtained Learning Achievement',fullMarks:40}]};
+const primaryArgs={...primaryScope,settings:primarySettings,pointer:primaryPointer,publication:{...primaryPointer,state:'committed'},
+ expectedStudentIds:['s1'],entries:[{studentId:'s1',publicationId:pointer.publicationId,isAbsent:false,values:{count:5,got:20},totalObtained:25}]};
+assert.equal(resolveVerifiedOfficialClassMarks(primaryArgs).published,true);
+assert.throws(()=>resolveVerifiedOfficialClassMarks({...primaryArgs,entries:[{...primaryArgs.entries[0],values:{count:5,got:21},totalObtained:26}]}),/learning achievement/);

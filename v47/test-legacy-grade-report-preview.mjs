@@ -90,7 +90,7 @@ for(const klass of ['1','2','3','4','5'])for(const exam of ['1st','2nd','final']
  assert.equal(report.summary.rows[0].subjects[0].summary.full,20);
  assert.equal(report.summary.rows[0].subjects[0].summary.obtained,18,'Count is metadata, not earned marks');
  assert.equal(report.summary.rows[0].gpa,4);
- assert.equal(report.summary.rows[1].gpa,3.6);
+ assert.ok(Math.abs(report.summary.rows[1].gpa-3.6)<1e-9);
  assert.equal(report.previewOnly,true);
  assert.match(report.printFor('s1').html,/NOT VALID FOR OFFICIAL USE/);
  for(const mutate of [

@@ -1,5 +1,5 @@
 import {resolveOfficialClassMarks} from './server-official-marks-reader.mjs';
-import {validateConfiguredMarkComponents} from './configured-mark-preflight.mjs';
+import {validateConfiguredMarkComponents,primaryAchievementPair,validatePrimaryAchievementValues} from './configured-mark-preflight.mjs';
 
 // Final result boundary for server-reloaded roster and examination settings.
 // This is a pure validator, NOT a Firestore fetch or publication executor.
@@ -16,6 +16,7 @@ export function resolveVerifiedOfficialClassMarks({settings,expectedStudentIds,.
  if(!result.published)return result;
  if(result.rosterCount!==roster.size)throw new Error('Published class roster differs from authoritative roster');
  const limits=new Map(components.map(c=>[c.key,c.fullMarks]));
+ const primaryPair=primaryAchievementPair(components,classId);
  for(const row of result.entries){
   if(!roster.has(row.studentId))throw new Error('Published marks include a foreign or inactive student');
   if(row.isAbsent){if(row.totalObtained!==0||row.values!==null)throw new Error('Invalid published absence');continue;}
@@ -24,6 +25,7 @@ export function resolveVerifiedOfficialClassMarks({settings,expectedStudentIds,.
   for(const [key,max] of limits){
    if(!Object.hasOwn(row.values,key)||row.values[key]>max)throw new Error('Published mark exceeds Examination Settings');
   }
+  validatePrimaryAchievementValues(primaryPair,row.values);
  }
  return Object.freeze({...result,components});
 }

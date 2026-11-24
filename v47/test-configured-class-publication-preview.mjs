@@ -40,3 +40,15 @@ assert.throws(()=>prepareConfiguredClassPublication({...args,expectedStudentIds:
 for(const uid of [' ','admin/other','admin.name','a'.repeat(129)]){
  assert.throws(()=>prepareConfiguredClassPublication({...args,actor:{...actor,uid}}),/Verified school admin required/);
 }
+
+const primarySettings={...settings,classId:'1',subjectId:'math',components:[
+ {key:'count',name:'No. of Learning Achievement',fullMarks:10},
+ {key:'got',name:'Obtained Learning Achievement',fullMarks:40}]};
+const primaryArgs={...args,classId:'1',subjectId:'math',settings:primarySettings,expectedStudentIds:['s1'],drafts:[{studentId:'s1',values:{count:5,got:20}}]};
+assert.equal(prepareConfiguredClassPublication(primaryArgs).complete,true);
+for(const values of [{count:5,got:21},{count:0,got:0},{count:5.5,got:20},{count:5,got:19.5}]){
+ const review=prepareConfiguredClassPublication({...primaryArgs,drafts:[{studentId:'s1',values}]});
+ assert.equal(review.complete,false);
+ assert.match(review.invalid[0].message,/learning achievement/);
+}
+assert.throws(()=>prepareConfiguredClassPublication({...primaryArgs,settings:{...primarySettings,components:[primarySettings.components[0],{...primarySettings.components[1],fullMarks:39}]}}),/maximum count/);
