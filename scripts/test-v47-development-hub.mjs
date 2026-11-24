@@ -7,7 +7,7 @@ assert.match(html,/NOT official CDC\/IEMIS results/);
 assert.match(html,/viewport/);
 assert.match(html,/grid-template-columns:repeat\(auto-fit/);
 const scriptTags=[...html.matchAll(/<script\b[^>]*>/gi)].map(match=>match[0]);
-assert.deepEqual(scriptTags,['<script type="module" src="./dashboard-console.mjs">'],'Landing page may load only the local verified Dashboard module, with no inline scripts');
+assert.deepEqual(scriptTags,['<script type="module" src="./pwa-install.mjs">','<script type="module" src="./dashboard-console.mjs">'],'Landing page may load only the explicit local install and verified Dashboard modules, with no inline scripts');
 assert.doesNotMatch(html,/firebaseConfig|apiKey|password[^>]*value=/i,'Do not embed Firebase credentials or hard-coded passwords in HTML');
 assert.match(html,/data-school-module/,'School modules must remain restricted until login verification');
 const pages=['admin','school-admin','school-settings','students','staff','attendance','records','teacher-assigned-class','teacher-draft-review','subjects','assignments','question-paper','marks-entry','computer-marks','marks-preview','report-preview','grade-ledger','grade-sheet','ledger-exceptions','exams'];

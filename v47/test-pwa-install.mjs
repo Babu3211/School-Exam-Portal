@@ -10,7 +10,7 @@ assert.equal(installSurface({}).visible,false);
 for(const host of ['localhost','127.0.0.1','smss-exam-portal-v47.web.app','smss-exam-portal-v47--v47-test-abc.web.app'])assert.equal(isIsolatedPwaOrigin(host),true);
 for(const host of ['exam-portal-smss-95016.web.app','babu3211.github.io','smss-exam-portal-v47.web.app.evil.com'])assert.equal(isIsolatedPwaOrigin(host),false);
 const listeners={},buttons={},nodes={installBanner:{},installHint:{},installPortal:{addEventListener:(name,fn)=>buttons[name]=fn}};
-const win={location:{hostname:'smss-exam-portal-v47.web.app',href:'https://smss-exam-portal-v47.web.app/'},isSecureContext:true,matchMedia:()=>({matches:false}),addEventListener:(name,fn)=>listeners[name]=fn};
+const win={location:{hostname:'smss-exam-portal-v47.web.app',origin:'https://smss-exam-portal-v47.web.app',href:'https://smss-exam-portal-v47.web.app/'},isSecureContext:true,matchMedia:()=>({matches:false}),addEventListener:(name,fn)=>listeners[name]=fn};
 let registered=0,shown=0;
 const nav={userAgent:'Android',serviceWorker:{register:async(url,opts)=>{assert.match(url,/v47-service-worker\.js$/);assert.equal(opts.scope,'./');registered++}}};
 mountV47Install({win,doc:{getElementById:id=>nodes[id]},nav});
