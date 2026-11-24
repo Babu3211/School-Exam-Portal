@@ -17,12 +17,12 @@ function partition(i){
  return false;
 }
 assert.ok(partition(0));
-const bank=slots.flatMap((s,i)=>[0,1].map(v=>({id:i+'-'+v,gradeNumber:9,subject,topicId:'unit-'+(assignment[i]+1),unitCode:String(assignment[i]+1),referenceUnitTitle:r.units[assignment[i]].title,sourceYearBS:2078,status:'active',reviewStatus:'teacher_reviewed',reviewedBy:'fixture-only',questionType:s.type,marks:s.marks,cognitiveLevel:s.level,questionText:'परीक्षण प्रश्न '+i+' '+v,questionTextEn:'Synthetic prompt '+i+' '+v,answer:'उत्तर',answerEn:'Answer',options:['उत्तर','ख','ग','घ'],optionsEn:['Answer','B','C','D'],correctOption:'A',elements:Array.from({length:s.marks},()=>({marks:1,cognitiveLevel:s.level,answerNe:'उत्तर',answerEn:'Answer'}))})));
+const bank=slots.flatMap((s,i)=>[0,1].map(v=>({id:i+'-'+v,variantFamily:'fixture-family-'+i,gradeNumber:9,subject,topicId:'unit-'+(assignment[i]+1),unitCode:String(assignment[i]+1),referenceUnitTitle:r.units[assignment[i]].title,sourceYearBS:2078,status:'active',reviewStatus:'teacher_reviewed',reviewedBy:'fixture-only',questionType:s.type,marks:s.marks,cognitiveLevel:s.level,questionText:'परीक्षण प्रश्न '+i+' '+v,questionTextEn:'Synthetic prompt '+i+' '+v,answer:'उत्तर',answerEn:'Answer',options:['उत्तर','ख','ग','घ'],optionsEn:['Answer','B','C','D'],correctOption:'A',elements:Array.from({length:s.marks},()=>({marks:1,cognitiveLevel:s.level,answerNe:'उत्तर',answerEn:'Answer'}))})));
 const topics=r.units.map(u=>'unit-'+u.unitCode);
 const args={grade,subject,questions:bank,selectedTopicIds:topics,rng:()=>.42,maxVisits:200000};
 const a=plan(args);assert.equal(a.ready,true,a.reason);assert.equal(a.paper.questions.length,40);assert.deepEqual(a.contentMarks,[10,19,26,20]);assert.deepEqual(a.cognitiveMarks,[12,22,22,19]);
 const b=plan({...args,previousSignature:a.signature,rng:()=>.61});assert.equal(b.ready,true,b.reason);assert.notEqual(b.signature,a.signature);
-for(const mutate of [p=>p.questions.pop(),p=>p.questions[0].marks++,p=>p.questions[0].referenceUnitTitle='Mushroom',p=>p.questions[0].elements.pop(),p=>p.questions[0].reviewStatus='draft',p=>p.fullMarks=74,p=>p.questions.find(q=>q.questionType==='mcq').correctOption='B']){
+for(const mutate of [p=>p.questions.pop(),p=>p.questions[1].variantFamily=p.questions[0].variantFamily,p=>p.questions[0].marks++,p=>p.questions[0].referenceUnitTitle='Mushroom',p=>p.questions[0].elements.pop(),p=>p.questions[0].reviewStatus='draft',p=>p.fullMarks=74,p=>p.questions.find(q=>q.questionType==='mcq').correctOption='B']){
  const bad=structuredClone(a.paper);mutate(bad);assert.throws(()=>assertScience2078ReferencePaper(bad),/reference mismatch/);
 }
 // Mixed cognitive response elements are permitted if the total level marks

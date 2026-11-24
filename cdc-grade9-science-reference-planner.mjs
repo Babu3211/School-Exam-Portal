@@ -32,13 +32,13 @@ function inspect(q,r,language,topics){
   const valid=(opts,key)=>Array.isArray(opts)&&opts.length===4&&opts.every(str)&&new Set(opts.map(norm)).size===4&&norm(opts['ABCD'.indexOf(q.correctOption)])===norm(key);
   if(!['A','B','C','D'].includes(q.correctOption)||(language!=='en'&&!valid(q.options,q.answer))||(language!=='ne'&&!valid(q.optionsEn,q.answerEn)))return null;
  }
- return {q,id:str(q.id),text:norm(language==='en'?q.questionTextEn:q.questionText),unit:Number(unit.unitCode)-1,content:UNIT_GROUPS.findIndex(xs=>xs.includes(Number(unit.unitCode))),type:group.code,level,marks:q.marks,actual};
+ return {q,id:str(q.id),family:str(q.variantFamily)||str(q.id),text:norm(language==='en'?q.questionTextEn:q.questionText),unit:Number(unit.unitCode)-1,content:UNIT_GROUPS.findIndex(xs=>xs.includes(Number(unit.unitCode))),type:group.code,level,marks:q.marks,actual};
 }
 function validateTotals(rows,r,topics){
  const units=Array(19).fill(0),content=Array(4).fill(0),cog=Array(4).fill(0);
  const typeCounts=Object.fromEntries(r.groups.map(g=>[g.code,[0,0,0,0]]));
- const ids=new Set(),texts=new Set();
- for(const x of rows){require(!ids.has(x.id)&&!texts.has(x.text),'duplicate question');ids.add(x.id);texts.add(x.text);units[x.unit]+=x.marks;content[x.content]+=x.marks;typeCounts[x.type][x.level]++;x.actual.forEach((m,i)=>cog[i]+=m);}
+ const ids=new Set(),texts=new Set(),families=new Set();
+ for(const x of rows){require(!ids.has(x.id)&&!texts.has(x.text)&&!families.has(x.family),'duplicate question or variant family');ids.add(x.id);texts.add(x.text);families.add(x.family);units[x.unit]+=x.marks;content[x.content]+=x.marks;typeCounts[x.type][x.level]++;x.actual.forEach((m,i)=>cog[i]+=m);}
  require(rows.length===40&&sum(units)===75,'question count or full marks');
  require(r.units.every((u,i)=>units[i]>0&&Math.abs(units[i]-u.marks)<=2),'unit marks, tolerance or missing unit');
  require(r.contentGroups.every((g,i)=>content[i]===g.marks),'content group marks');
@@ -62,12 +62,12 @@ export function planScience2078ReferencePaper({grade,subject,fullMarks=75,durati
  require(Array.isArray(questions)&&questions.length<=5000&&Array.isArray(selectedTopicIds)&&Array.isArray(avoidSignatures)&&avoidSignatures.length<=30&&avoidSignatures.every(x=>typeof x==='string')&&Number.isSafeInteger(maxVisits)&&maxVisits>0&&maxVisits<=200000,'bank or search options');
  const topics=new Set(selectedTopicIds),bank=questions.map(q=>inspect(q,r,language,topics)).filter(Boolean);
  const cells=r.groups.flatMap(g=>g.levelCounts.map((n,level)=>({type:g.code,level,n,pool:shuffle(bank.filter(x=>x.type===g.code&&x.level===level),rng)}))).filter(x=>x.n>0);
- const shortages=cells.filter(c=>new Set(c.pool.map(x=>x.id)).size<c.n).map(c=>({type:c.type,level:LEVELS[c.level],required:c.n,available:new Set(c.pool.map(x=>x.id)).size}));
+ const shortages=cells.filter(c=>new Set(c.pool.map(x=>x.family)).size<c.n).map(c=>({type:c.type,level:LEVELS[c.level],required:c.n,available:new Set(c.pool.map(x=>x.id)).size}));
  const missingUnits=r.units.filter((u,i)=>!bank.some(x=>x.unit===i)).map(u=>u.unitCode);
  const no=reason=>({ready:false,reason,shortages,missingUnits,currentCdcExactApproved:false,readyForLive:false});
  if(shortages.length||missingUnits.length||!topics.size||topics.size>40)return no('Missing eligible historical unit or reviewed questions');
  cells.sort((a,b)=>a.pool.length/a.n-b.pool.length/b.n);
- const slots=cells.flatMap((c,i)=>Array.from({length:c.n},()=>i)),used=new Set(),texts=new Set(),chosen=[],unit=Array(19).fill(0),content=Array(4).fill(0),cog=Array(4).fill(0),banned=new Set([previousSignature,...avoidSignatures].filter(Boolean));
+ const slots=cells.flatMap((c,i)=>Array.from({length:c.n},()=>i)),used=new Set(),texts=new Set(),families=new Set(),chosen=[],unit=Array(19).fill(0),content=Array(4).fill(0),cog=Array(4).fill(0),banned=new Set([previousSignature,...avoidSignatures].filter(Boolean));
  let visits=0;
  function dfs(step,start){
   if(++visits>maxVisits)throw Error('Science reference search exceeded safe limit');
@@ -76,12 +76,15 @@ export function planScience2078ReferencePaper({grade,subject,fullMarks=75,durati
    try{validateTotals(chosen,r,topics);return true;}catch{return false;}
   }
   const cell=cells[slots[step]],last=slots[step+1]!==slots[step];
+  // Prune branches without enough distinct unused families in this cell.
+  let need=0;for(let k=step;k<slots.length&&slots[k]===slots[step];k++)need++;
+  if(new Set(cell.pool.slice(start).filter(x=>!used.has(x.id)&&!texts.has(x.text)&&!families.has(x.family)).map(x=>x.family)).size<need)return false;
   for(let i=start;i<cell.pool.length;i++){
    const x=cell.pool[i];
-   if(used.has(x.id)||texts.has(x.text)||unit[x.unit]+x.marks>r.units[x.unit].marks+2||content[x.content]+x.marks>r.contentGroups[x.content].marks||x.actual.some((m,k)=>cog[k]+m>r.cognitiveMarks[k]))continue;
-   used.add(x.id);texts.add(x.text);chosen.push(x);unit[x.unit]+=x.marks;content[x.content]+=x.marks;x.actual.forEach((m,k)=>cog[k]+=m);
+   if(used.has(x.id)||texts.has(x.text)||families.has(x.family)||unit[x.unit]+x.marks>r.units[x.unit].marks+2||content[x.content]+x.marks>r.contentGroups[x.content].marks||x.actual.some((m,k)=>cog[k]+m>r.cognitiveMarks[k]))continue;
+   used.add(x.id);texts.add(x.text);families.add(x.family);chosen.push(x);unit[x.unit]+=x.marks;content[x.content]+=x.marks;x.actual.forEach((m,k)=>cog[k]+=m);
    if(dfs(step+1,last?0:i+1))return true;
-   used.delete(x.id);texts.delete(x.text);chosen.pop();unit[x.unit]-=x.marks;content[x.content]-=x.marks;x.actual.forEach((m,k)=>cog[k]-=m);
+   used.delete(x.id);texts.delete(x.text);families.delete(x.family);chosen.pop();unit[x.unit]-=x.marks;content[x.content]-=x.marks;x.actual.forEach((m,k)=>cog[k]-=m);
   }
   return false;
  }
