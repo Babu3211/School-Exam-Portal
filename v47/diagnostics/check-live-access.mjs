@@ -46,6 +46,29 @@ try{
    }
    console.log('School registry diagnostics (up to 30): checked '+Math.min(30,schools.size)+', needs review '+invalid);
    for(const [reason,count] of Object.entries(issues))console.log('Registry issue: '+reason+' — '+count);
+   // Inspect only the first malformed registry entry. Never log its identity or
+   // copy any academic record; a document-path migration requires separate review.
+   const legacy=schools.docs.slice(0,30).find(doc=>schoolRegistryIssues(doc.id,doc.data()).length);
+   if(legacy){
+    const data=legacy.data();
+    const raw=data.iemisCode;
+    const candidate=typeof raw==='string'?raw.trim():Number.isSafeInteger(raw)&&raw>=0?String(raw):'';
+    const valid=/^[0-9]{5,20}$/.test(candidate);
+    console.log('Legacy school has usable numeric IEMIS field: '+(valid?'YES':'NO'));
+    if(valid){
+     const target=await db.collection('schools').doc(candidate).get();
+     console.log('Proposed canonical school document already exists: '+(target.exists?'YES':'NO'));
+    }
+    const sub=await legacy.ref.listCollections();
+    console.log('Legacy school immediate subcollections: '+sub.length);
+    const known=new Set(['members','students','staff','teachers','subjects','attendance','exams','marks','component_marks','mark_settings','school_settings','teacher_assignments','class_mark_drafts','official_marks_pointers']);
+    for(const collection of sub.slice(0,20)){
+     const count=(await collection.count().get()).data().count;
+     console.log('Legacy collection '+(known.has(collection.id)?collection.id:'[other]')+' direct documents: '+count);
+    }
+    if(sub.length>20)console.log('Additional subcollections not inspected; migration must remain blocked');
+    console.log('Legacy school path unchanged; no data moved or modified.');
+   }
   }
   const snap=await db.collection('v47_super_admins').where('active','==',true).limit(20).get();
   console.log('Active root Super Admin documents (bounded at 20): '+snap.size);

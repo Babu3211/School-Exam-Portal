@@ -1,4 +1,4 @@
-name: V47 live access and school registry diagnostic (read only)
+name: V47 live access and legacy school migration preflight (read only)
 on:
   workflow_dispatch:
   push:
