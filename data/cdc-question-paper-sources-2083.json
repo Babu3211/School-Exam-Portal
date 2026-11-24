@@ -548,7 +548,148 @@
             "totalMarks": 7
           }
         ],
-        "visualCellReviewComplete": false,
+        "visualCellReviewComplete": true,
+        "currentEditionConfirmed": false,
+        "teacherReviewComplete": false,
+        "officialExamApproved": false
+      },
+      "structuralVisualReview": {
+        "reviewedOn": "2026-11-24",
+        "pdfPage": 1,
+        "sourceEdition": "2082",
+        "sha256": "4bf6d5f47ca75cef224f27311c9ca3acad9bb76b2757f0c28c13bde559f3e396",
+        "method": "Direct visual inspection of the registered government PDF first page; independent row transcription of objective/WCA/CCA × K/U/A/HA including blanks as zero",
+        "matchedCells": 72,
+        "expectedCells": 72,
+        "matrix": [
+          [
+            1,
+            0,
+            1,
+            0,
+            2,
+            2,
+            4,
+            2,
+            0,
+            2,
+            2,
+            1
+          ],
+          [
+            1,
+            0,
+            1,
+            1,
+            2,
+            2,
+            4,
+            1,
+            0,
+            2,
+            2,
+            1
+          ],
+          [
+            1,
+            0,
+            1,
+            1,
+            2,
+            3,
+            6,
+            0,
+            0,
+            2,
+            1,
+            3
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            2,
+            1
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            3,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1
+          ]
+        ],
+        "unitMarks": [
+          17,
+          17,
+          20,
+          7,
+          7,
+          7
+        ],
+        "workingHours": [
+          29,
+          30,
+          36,
+          11,
+          10,
+          12
+        ],
+        "wcaQuestionCounts": [
+          3,
+          3,
+          3,
+          1,
+          1,
+          1
+        ],
+        "groupQuestionCounts": [
+          11,
+          12,
+          4
+        ],
+        "groupMarks": [
+          11,
+          40,
+          24
+        ],
+        "cognitivePercent": [
+          16,
+          24,
+          40,
+          20
+        ],
+        "fullMarks": 75,
+        "durationMinutes": 180,
+        "visualCellReviewComplete": true,
         "currentEditionConfirmed": false,
         "teacherReviewComplete": false,
         "officialExamApproved": false

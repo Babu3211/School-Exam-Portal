@@ -31,6 +31,11 @@ export function grade9GridLibrary(register){
     status='Original 2082 PDF extracted totals matched; independent complete visual and teacher review pending';
     add('Original PDF text cross-check',['Field','Marks / hours / percentage'],[['Full marks',textReview.fullMarks],['Working hours',textReview.workingHours],['Objective / WCA / CCA',textReview.groupMarks.join(' / ')],['K / U / A / HA (%)',textReview.cognitivePercent.join(' / ')]]);
    }
+   const visual=entries.find(x=>x.structuralVisualReview?.matchedCells===72)?.structuralVisualReview;
+   if(visual){
+    status='Original 2082 Grid: all 72 cells visually matched; current edition and teacher review pending';
+    add('Visual source cross-check',['Area','Working hours','WCA question count','Full marks'],m.areas.map((a,i)=>[a.unitTitle,visual.workingHours[i],visual.wcaQuestionCounts[i],visual.unitMarks[i]]));
+   }
   }else if(key==='optional_computer'){
    const c=getBundledComputerGrid({grade:9,subject,fullMarks:50});fullMarks=c.fullMarks;durationMinutes=c.durationMinutes;
    status='Official structural transcription; teacher review pending';

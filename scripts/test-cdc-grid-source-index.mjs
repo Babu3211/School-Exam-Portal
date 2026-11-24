@@ -137,9 +137,9 @@ assert.equal(mathTextGuide.areas.reduce((n,a)=>n+a.workHours,0),mathText.working
 assert.deepEqual(mathTextGuide.questionGroups.map(g=>g.totalMarks),mathText.groupMarks);
 assert.deepEqual(['knowledge','understanding','application','higher'].map(k=>mathTextGuide.cognitiveDistribution[k]),mathText.cognitivePercent);
 for(const e of mathText.readableAreaHours){const area=mathTextGuide.areas.find(a=>a.unitCode===e.unitCode);assert.equal(area.workHours,e.hours);if(e.totalMarks!==undefined)assert.equal(area.totalMarks,e.totalMarks);}
-assert.equal(mathText.visualCellReviewComplete,false);
+assert.equal(mathText.visualCellReviewComplete,true);
 assert.equal(mathText.officialExamApproved,false);
-console.log('PASS optional mathematics original PDF extracted totals cross-check; full visual/current edition approval pending');
+console.log('PASS optional mathematics original PDF extracted totals cross-check; current edition approval pending');
 
 // Cross-check the actual reference paper planners, not just the display tables,
 // against independently recorded government PDF extraction evidence.
@@ -206,3 +206,20 @@ assert.equal(nepaliRevised.currentCdcExactApproved,false);
 assert.equal(nepaliRevised.readyForLive,false);
 assert.equal(nepaliEvidence.visualCellReviewComplete,false);
 console.log('PASS revised Nepali practice against four extracted official marks; cognitive comparison secondary only; authentic passages and exact current Grid remain unapproved');
+
+const mathVisual=mathTextSource.structuralVisualReview;
+assert.equal(mathVisual.sha256,mathTextSource.optionalRetrievalEvidence.sha256);
+assert.equal(mathVisual.matchedCells,72);
+assert.equal(mathVisual.expectedCells,72);
+assert.deepEqual(mathTextGuide.areas.map(a=>['objective','WCA','CCA'].flatMap(g=>a.marksByGroup[g])),mathVisual.matrix);
+assert.deepEqual(mathTextGuide.areas.map(a=>a.totalMarks),mathVisual.unitMarks);
+assert.deepEqual(mathTextGuide.areas.map(a=>a.workHours),mathVisual.workingHours);
+assert.deepEqual(mathTextGuide.areas.map(a=>a.wcaQuestionCount),mathVisual.wcaQuestionCounts);
+assert.deepEqual(mathTextGuide.questionGroups.map(g=>g.questionCount),mathVisual.groupQuestionCounts);
+assert.deepEqual(mathTextGuide.questionGroups.map(g=>g.totalMarks),mathVisual.groupMarks);
+assert.equal(mathTextGuide.durationMinutes,mathVisual.durationMinutes);
+assert.equal(mathVisual.visualCellReviewComplete,true);
+assert.equal(mathVisual.currentEditionConfirmed,false);
+assert.equal(mathVisual.teacherReviewComplete,false);
+assert.equal(mathVisual.officialExamApproved,false);
+console.log('PASS Grade 9 Optional Mathematics all 72 original 2082 CDC grid cells visually matched; no release approval');

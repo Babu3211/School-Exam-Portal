@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v129-optional-math-source-check';
+const CACHE_NAME = 'smss-pwa-v130-optional-math-visual-grid';
 const APP_SHELL = [
   './',
   './index.html',
