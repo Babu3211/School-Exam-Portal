@@ -5902,6 +5902,11 @@ const cdcGrade3EnglishForms={"Me and My Family":{"name":"Me and My Family","grad
 const cdcPrimaryEnglishForms={1:cdcGrade1EnglishForms,2:cdcGrade2EnglishForms,3:cdcGrade3EnglishForms};
 // CDC 2076 assessment guide PDF pp.128–130, source-based working paraphrases.
 // Reference only: binary indicator persistence and group scoring must be separately verified.
+// All four binary indicators must be explicitly evaluated; blank is not a failure.
+// Zero is a count in the preview, not a persisted 1–4 achievement level.
+function cdcSeroferoIndicatorCount(values){
+  return Array.isArray(values)&&values.length===4&&values.every(v=>v==='yes'||v==='no')?values.filter(v=>v==='yes').length:null;
+}
 const cdcSeroferoReferenceForms={1:{"म र मेरो परिवार":{"page":128,"start":1,"groups":[["आफू र परिवारको परिचय",["आफ्नो नाम, ठेगाना, पहिरन र परिवारका नाम बताउने","पारिवारिक नाता बताई अभिवादन गर्ने","आफूभन्दा सानालाई माया गर्ने","परिवारका मुख्य काम बताउने"],["प्रश्नोत्तर","रेटिङ स्केल","अवलोकन","परियोजना अवलोकन, मौखिक प्रश्न"]],["बालगीतको लयमा चाल र रेखाचित्र",["समूहमा गीतको तालमा खुट्टा चलाउने","गीतको तालमा शरीर हल्लाउने","मोटा, मसिना र सिधा रेखा कोर्ने","मोटा, मसिना र बाङ्गाटिङ्गा रेखा कोर्ने"],["अवलोकन","अवलोकन","अवलोकन","अवलोकन"]],["सफा र ताजा खाना खाने बानी",["खाने कुराका नाम बताउने","स्थानीय सफा र ताजा खानेकुरा चिन्ने","खानेकुरा सफा राख्ने","स्थानीय सफा ताजा खाना खाने बानी बसाल्ने"],["प्रश्नोत्तर","प्रश्नोत्तर","अवलोकन, अभिभावक प्रतिक्रिया","अवलोकन, प्रश्नोत्तर, अभिभावक प्रतिक्रिया"]],["खेलौना प्रयोग र खेल",["आफ्नो खेलौना चिनाई घरका खेलौना प्रयोग गर्ने","साथीसँग स्थानीय खेल खेल्ने","लाइनमा मिलेर हिँड्ने बानी विकास गर्ने","निर्देशनअनुसार कथामा आधारित खेल खेल्ने"],["अवलोकन","अवलोकन","अवलोकन","अवलोकन"]],["घरायसी सामानको जतन र प्रयोग",["घरका सामानको नाम बताउने","घरका सामानको जतन गर्ने","सामान उचित स्थानमा राख्ने","सामान्य उपकरण हेरी आवश्यक मापनमा प्रयोग गर्ने"],["प्रश्नोत्तर","अवलोकन, प्रश्नोत्तर, अभिभावक प्रतिक्रिया","अभिभावक प्रतिक्रिया","अवलोकन, प्रश्नोत्तर, अभिभावक प्रतिक्रिया"]]]},"मेरो दैनिक जीवन":{"page":129,"start":6,"groups":[["आधारभूत शारीरिक अभ्यास",["निर्देशनमा सुखासन, शिशु आसन र शवासन अभ्यास गर्ने","विभिन्न दिशामा शरीर तन्काउने र झुकाउने","भकुण्डो गुडाउने र समाउने","हिँड्ने, उफ्रने, बस्ने, सुत्ने र सिधा रेखामा दौडने"],["अवलोकन","अवलोकन","अवलोकन","अवलोकन"]],["स्वस्थ र सुरक्षित बानी",["बाहिरी अङ्ग चिनेर सफा गर्ने","हात धोएर खाने बानी बसाल्ने","चर्पीमा दिसापिसाब गर्ने","सफा सुरक्षित पानी पिउने"],["प्रश्नोत्तर, अवलोकन","प्रश्नोत्तर, अवलोकन","प्रश्नोत्तर","प्रश्नोत्तर, अवलोकन"]],["तालमा हिँड्ने र स्वतन्त्र चित्र बनाउने",["सिधा र बाङ्गोटिङ्गो रेखामा तालमा हिँड्ने","विभिन्न दिशामा तालअनुसार शरीर घुमाउने र बटार्ने","स्थानीय सामग्रीका रङले औँला वा छेस्काले चित्र बनाउने","इच्छाअनुसार स्वतन्त्र चित्र कोर्ने"],["अवलोकन","अवलोकन","अवलोकन","अवलोकन"]],["दैनिक शक्तिका स्रोत पहिचान",["विद्युत्को दैनिक उपयोग बताउने","खाना पकाउने इन्धनका नाम बताउने","ध्वनि र तिनका स्रोत पहिचान गर्ने","देख्न प्रकाश आवश्यक हुने र मुख्य स्रोत चिन्ने"],["प्रश्नोत्तर","प्रश्नोत्तर","प्रश्नोत्तर","प्रश्नोत्तर"]]]},"हाम्रो समुदाय":{"page":130,"start":10,"groups":[["सहयोगात्मक भावना विकास",["साथी र परिवारसँग मिलेर बस्ने, खेल्ने र सहयोग गर्ने","धारा र शौचालय प्रयोगमा पालो पर्खने","साथीसँग घेरामा वा समूहमा रमाइला खेल खेल्ने","समूहमा पात, बोक्रा, सिक्का र कपडाबाट बुट्टा छाप्ने"],["अवलोकन, परियोजना कार्य","अवलोकन, प्रश्नोत्तर","अवलोकन","अवलोकन, परियोजना कार्य"]],["आफ्नो स्वास्थ्यप्रति सचेत",["सन्चो नभएको कुरा परिवार, साथी र शिक्षकलाई बताउने","उपचारका लागि जाने स्वास्थ्य संस्थाको नाम बताउने","बिरामी हुँदा परिवार, साथी र शिक्षकको सहयोग लिने","सर्ने रोगका नाम बताउने"],["अवलोकन, प्रश्नोत्तर","प्रश्नोत्तर","अवलोकन, प्रश्नोत्तर","प्रश्नोत्तर"]],["वरपरका जनावर र हेरचाह",["वरपरका जनावर र तिनका खाना चिन्ने","जनावरका बच्चा चिनेर नाम बताउने","जनावरको हेरचाहमा सहयोग गर्ने","पशुपन्छीका क्रियाकलाप हेरी अभिनय गर्ने"],["परियोजना कार्य","प्रश्नोत्तर","अवलोकन","मौखिक अभिव्यक्ति"]]]}}};
  const cdcVerifiedOutcomes = {
   '1:serophero': [
@@ -7759,6 +7764,22 @@ function parseCdcBilingualCatalog(text) {
     field('annexUnit').textContent='थिम: '+unit;
     field('annexHead').innerHTML='<tr><th rowspan="2">थिम</th><th rowspan="2">मुख्य सिकाइ उपलब्धि</th><th rowspan="2">उपलब्धि सूचक</th><th colspan="3">नियमित पढाइपछिको मूल्याङ्कन</th><th colspan="3">थप सहायतापछिको मूल्याङ्कन</th><th rowspan="2">मूल्याङ्कनका साधन</th></tr><tr><th>सकेको / नसकेको</th><th>मिति</th><th>अङ्कन</th><th>सकेको / नसकेको</th><th>मिति</th><th>अङ्कन</th></tr>';
     const body=field('annexRows'),foot=field('annexFoot');body.replaceChildren();foot.replaceChildren();
+    const groupStates=form.groups.map(()=>[[],[]]), scoreCells=form.groups.map(()=>[null,null]);
+    const dates=form.groups.map(()=>[null,null]);
+    const row=foot.insertRow(),label=row.insertCell(),value=row.insertCell();label.colSpan=3;label.textContent='पूर्वावलोकन — औसत अङ्क';value.colSpan=7;value.textContent='—';
+    const updatePreview=()=>{
+      const completed=[];
+      for(const [i,stages] of groupStates.entries()){
+        const scores=stages.map(inputs=>cdcSeroferoIndicatorCount(inputs.map(input=>input.value)));
+        scores.forEach((score,j)=>{scoreCells[i][j].textContent=score===null?'—':digits(score);});
+        // A partially entered remedial stage must not silently replace a complete regular stage.
+        const remedialStarted=stages[1].some(input=>input.value!=='');
+        const effective=remedialStarted?scores[1]:scores[0];
+        if(effective!==null)completed.push(effective);
+      }
+      const count=completed.length,total=completed.reduce((a,b)=>a+b,0);
+      value.textContent=(count===form.groups.length?digits((total/count).toFixed(2)):'—')+' | पूरा: '+digits(count)+' / '+digits(form.groups.length);
+    };
     for(const [i,[title,indicators,tools]] of form.groups.entries()){
       for(const [j,indicator] of indicators.entries()){
         const row=body.insertRow();
@@ -7766,15 +7787,22 @@ function parseCdcBilingualCatalog(text) {
         if(j===0){const c=row.insertCell();c.rowSpan=4;c.textContent=digits(form.start+i)+'. '+title;}
         row.insertCell().textContent=digits(j+1)+'. '+indicator;
         for(let stage=0;stage<2;stage++){
-          row.insertCell().textContent='—';
-          if(j===0){for(let k=0;k<2;k++){const c=row.insertCell();c.rowSpan=4;c.textContent='—';}}
+          const cell=row.insertCell(),select=document.createElement('select');
+          select.dataset.cdcSeroIndicator=String(stage);select.setAttribute('aria-label',(stage?'थप सहायता: ':'नियमित: ')+indicator);
+          select.append(new Option('—',''),new Option('✓ सकेको','yes'),new Option('× नसकेको','no'));
+          select.disabled=readOnly;select.onchange=updatePreview;groupStates[i][stage].push(select);cell.append(select);
+          if(j===0){
+            const dateCell=row.insertCell();dateCell.rowSpan=4;
+            const date=document.createElement('input');date.type='text';date.inputMode='numeric';date.maxLength=10;date.placeholder='मिति';date.setAttribute('aria-label',(stage?'थप सहायता':'नियमित')+' मूल्याङ्कन मिति');date.disabled=readOnly;date.style.width='95px';dateCell.append(date);dates[i][stage]=date;
+            const score=row.insertCell();score.rowSpan=4;score.dataset.cdcSeroScore=String(stage);scoreCells[i][stage]=score;
+          }
         }
         row.insertCell().textContent=tools[j];
       }
     }
-    const row=foot.insertRow(),label=row.insertCell(),value=row.insertCell();label.colSpan=3;label.textContent='औसत अङ्क';value.colSpan=7;value.textContent='—';
+    updatePreview();
     field('annexSign').textContent='शिक्षकको सही __________   अभिभावकको सही __________';
-    field('annexStatus').textContent='पाठ्यक्रम विकास केन्द्र २०७६, पीडीएफ पृष्ठ '+digits(form.page)+' — '+digits(form.groups.length*4)+' सूचक। स्रोतमा आधारित समीक्षा प्रति; यस तालिकामा अङ्क प्रविष्टि र छपाइ अझै सक्रिय छैन। पुराना अभिलेख सुरक्षित छन्।';
+    field('annexStatus').textContent='पाठ्यक्रम विकास केन्द्र २०७६, पीडीएफ पृष्ठ '+digits(form.page)+' — '+digits(form.groups.length*4)+' सूचक। स्रोतमा आधारित समीक्षा प्रति। सूचक छानेर अङ्क गणना हेर्न सकिन्छ; यो अस्थायी पूर्वावलोकन मात्र हो, सुरक्षित वा छपाइ हुँदैन। थिम परिवर्तन गर्दा छनोट हट्छ। पुराना अभिलेख सुरक्षित छन्।';
   }
   function renderPrimaryLegacy(){
     const form=primaryLegacyForm(),grade=field('class').value,unit=field('unit').value;
