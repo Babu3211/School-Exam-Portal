@@ -4,6 +4,7 @@ Run only for the noncommercial school reference-bank build; no Firestore writes.
 """
 from html.parser import HTMLParser
 from urllib.request import Request, urlopen
+from urllib.parse import urlsplit
 import json, re, hashlib
 from pathlib import Path
 
@@ -51,8 +52,10 @@ def extract(html):
 if __name__ == "__main__":
     request = Request(SOURCE, headers={"User-Agent": "SMSS school reference preparation/1.0"})
     with urlopen(request, timeout=30) as response:
-        if response.geturl() != SOURCE:
-            raise ValueError("Unexpected redirect")
+        final = urlsplit(response.geturl())
+        if final.scheme != "https" or final.hostname not in {"www.fadedpage.com", "fadedpage.com"} or not final.path.startswith("/books/20190248/"):
+            raise ValueError("Unexpected source location: "+final.hostname+final.path)
+        print("Source location:", final.hostname+final.path)
         raw = response.read(2_000_001)
     if len(raw) > 2_000_000:
         raise ValueError("Source exceeds size cap")
