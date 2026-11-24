@@ -4602,33 +4602,30 @@ const cdcPrimaryDailyLifeRubrics = [
    return Object.entries(cdcRevisedMathForms).filter(([key])=>key.startsWith(grade+':'))
      .flatMap(([key,form])=>form.rows.map(([,ne,en])=>[key.slice(2),ne,en]));
  }
-// CDC 2076 Nepali, printed p.102: grouped outcome / aspect / instrument review.
-// The source text extraction is not a visually verified transcription. Keep
-// instrument-level ratings read-only until the assessment/annual mapping is audited.
-const cdcPrimaryNepaliFamilyPreview=[
- {ne:'प्रसङ्गअनुसार कुराकानी, संवाद र प्रश्नोत्तर गर्ने',en:'Use appropriate language in conversation and questions',tools:[
- ['मौखिक अभिव्यक्ति','Oral expression','कुराकानी','Conversation'],
- ['मौखिक अभिव्यक्ति','Oral expression','हाउभाउ र कथनको अवलोकन','Observe gestures and speech'],
- ['मौखिक अभिव्यक्ति','Oral expression','छलफल','Discussion'],
- ['मौखिक अभिव्यक्ति','Oral expression','प्रश्नोत्तर','Questions and answers'],
- ['श्रुतिवर्णन','Oral description','अवलोकन','Observation']]},
- {ne:'परिवारमा चल्ने शब्द चिन्ने र प्रयोग गर्ने',en:'Recognize and use family vocabulary',tools:[
- ['शब्दभण्डार','Vocabulary','शब्दसूची','Word list'],['शब्दभण्डार','Vocabulary','अभ्यास र प्रयोग','Practice and use']]},
- {ne:'सङ्केत जोडेर आकृति र चित्र बनाउने',en:'Join marks to make shapes and pictures',tools:[
- ['पुनरुत्पादन','Reproduction','ढाँचा लेखन','Pattern writing'],['पुनरुत्पादन','Reproduction','रङ भर्ने','Colouring']]},
- {ne:'पाठका दैनिक प्रयोगका शब्द सुनेर दोहोर्‍याउने',en:'Listen to and repeat familiar words',tools:[
- ['ध्वनि र वर्ण','Sounds and letters','श्रवण र उच्चारण','Listening and pronunciation'],['शब्दभण्डार','Vocabulary','परियोजना कार्य','Project work']]},
- {ne:'चित्र, शीर्षक र पाठको सन्दर्भबाट छलफल तथा प्रश्नोत्तर गर्ने',en:'Discuss and answer questions using pictures, titles and context',tools:[
- ['पठनबोध','Reading comprehension','छलफल र प्रश्नोत्तर','Discussion and questions'],['पठनबोध','Reading comprehension','वर्णन','Description']]},
- {ne:'पाठको परिवेश, पात्र र सन्दर्भ चिन्ने तथा तुलना गर्ने',en:'Identify and compare setting, characters and context',tools:[
- ['पठनबोध','Reading comprehension','सूचना प्रयोग','Use information'],['पठनबोध','Reading comprehension','छलफल र प्रश्नोत्तर','Discussion and questions'],['पठनबोध','Reading comprehension','तुलना','Comparison']]},
- {ne:'चित्र र त्यससँग मिल्ने शब्द चिनेर प्रश्नोत्तर गर्ने',en:'Match pictures with words and answer questions',tools:[
- ['दृश्यबोध','Visual comprehension','चित्र','Pictures'],['दृश्यबोध','Visual comprehension','श्रव्यदृश्य सामग्री','Audiovisual material']]},
- {ne:'उचित पदसङ्गति र चिह्न प्रयोग गरी मौखिक तथा लिखित अभिव्यक्ति दिने',en:'Use appropriate agreement and punctuation in speech and writing',tools:[
- ['चिह्न, काल र सङ्गति','Punctuation, tense and agreement','मौखिक प्रयोग','Oral use']]},
- {ne:'कार्यपुस्तिकाका क्रियाकलापबाट विषयवस्तुको सिकाइ परीक्षण गर्ने',en:'Assess learning through workbook activities',tools:[
- ['मापन','Assessment','मौखिक तथा लिखित कार्य','Oral and written tasks']]}
+// CDC 2076 Nepali, printed pp.103–106. One rating per outcome;
+// multiple instruments belong in one cell. Keep established observation keys.
+// Community/school vowel coverage differs from the old catalogue; review only.
+const cdcPrimaryNepaliTools=[
+ ['श्रुतिकथन तथा श्रुतिवर्णन','संवाद, हाउभाउ र कथन अवलोकन, छलफल, प्रश्नोत्तर'],
+ ['शब्दभण्डार','शब्दसूची, अर्थबोध र प्रयोग'],
+ ['पुनरुत्पादन','ढाँचा लेखन, रङ भर्ने'],
+ ['सङ्केतन र विसङ्केतन','श्रवण र उच्चारण'],
+ ['सङ्केतन, विसङ्केतन र शब्दभण्डार','उच्चारण, परियोजना'],
+ ['सङ्केतन र विसङ्केतन','लिपि सङ्केत'],
+ ['सङ्केतन र विसङ्केतन','शब्द निर्माण'],
+ ['सङ्केतन र विसङ्केतन','श्रवण अवलोकन'],
+ ['पठनबोध','छलफल, प्रश्नोत्तर र वर्णन'],
+ ['चिह्न, काल र सङ्गति','मौखिक प्रयोग'],
+ ['पठनबोध','सूचना प्रयोग, छलफल, प्रश्नोत्तर र तुलना'],
+ ['दृश्यबोध','चित्र तथा श्रव्यदृश्य सामग्री'],
+ ['चिह्न, काल र सङ्गति','मौखिक प्रयोग']
 ];
+const cdcPrimaryNepaliForms={
+ 'म र मेरो परिवार':{page:103,indices:[0,1,2,4,8,10,11,12],editable:true},
+ 'मेरो दैनिक जीवन':{page:104,indices:[0,1,2,3,4,5,6,7,8,10,11,12],editable:true},
+ 'हाम्रो समुदाय':{page:105,indices:[0,1,2,3,4,5,6,7,8,9,10,11,12],vowels:'अ, आ, इ, ई र उ स्वर वर्ण चिन्ने र उच्चारण गर्ने'},
+ 'हाम्रो विद्यालय':{page:106,indices:[0,1,2,3,4,5,6,7,8,9,10,11,12],vowels:'ए, ऐ, ओ, औ, अं र अः स्वर वर्ण चिन्ने र उच्चारण गर्ने'}
+};
  const cdcVerifiedOutcomes = {
   '1:serophero': [
     ['म र मेरो परिवार','आफू र परिवारको परिचय','Introduce yourself and your family'],
@@ -6281,9 +6278,9 @@ function parseCdcBilingualCatalog(text) {
   const revisedPrimaryYear=/^\d{4}$/.test(year)&&Number(year)>=2084;
   const primaryRevisedForm=()=>revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics'?cdcRevisedMathForms[field('class').value+':'+field('unit').value]:null;
   const primaryLegacyForm=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics'?cdcLegacyMathRubrics[field('class').value+':'+field('unit').value]:null;
-  const primaryNepaliPreview=()=>context&&!revisedPrimaryYear&&field('class').value==='1'&&cdcAssessmentSubjectKey(field('subject').value)==='nepali'&&field('unit').value==='म र मेरो परिवार';
+  const primaryNepaliForm=()=>context&&!revisedPrimaryYear&&field('class').value==='1'&&cdcAssessmentSubjectKey(field('subject').value)==='nepali'?cdcPrimaryNepaliForms[field('unit').value]:null;
   const isPrimaryRubric=()=>!!primaryRevisedForm()||!!primaryLegacyForm();
-  const hasAnnexGrid=()=>!!context&&(isPrimaryRubric()||(Number(field('class').value)>=4&&['nepali','english','mathematics','socialstudies','science','healthphysicalcreativeart'].includes(cdcAssessmentSubjectKey(field('subject').value))));
+  const hasAnnexGrid=()=>!!context&&(!!primaryNepaliForm()?.editable||isPrimaryRubric()||(Number(field('class').value)>=4&&['nepali','english','mathematics','socialstudies','science','healthphysicalcreativeart'].includes(cdcAssessmentSubjectKey(field('subject').value))));
   // Enter a single stage in the official date/rating columns. Never overwrite a
   // previous observation. Require an authoritative read before enabling entry.
   const appendAnnexCells=(row,unit,title,alt,regular,support,toolsMode=false)=>{
@@ -6344,10 +6341,10 @@ function parseCdcBilingualCatalog(text) {
   field('gridRead').onclick=()=>field('readSchool').onclick();
   const renderAnnex=()=>{
     const panel=field('annex3'),enabled=hasAnnexGrid(),en=language()==='en';
-    const preview=primaryNepaliPreview();
-    panel.hidden=!enabled&&!preview;field('stageRow').hidden=!enabled;field('gridRead').hidden=!!preview;
-    if(preview){field('printForm').disabled=true;renderPrimaryNepaliPreview();return;}
+    const nepaliForm=primaryNepaliForm();
+    panel.hidden=!enabled&&!nepaliForm;field('stageRow').hidden=!enabled;field('gridRead').hidden=!!nepaliForm&&!nepaliForm.editable;
     field('printForm').disabled=!enabled||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('unit').value.trim();
+    if(nepaliForm){renderPrimaryNepaliForm(nepaliForm);return;}
     if(!enabled)return;
     if(primaryLegacyForm()){renderPrimaryLegacy();return;}
     if(primaryRevisedForm()){renderPrimaryRevised();return;}
@@ -6398,25 +6395,33 @@ function parseCdcBilingualCatalog(text) {
     field('annexStatus').textContent=en?'Draft layout using existing outcome catalogue. Select a row to enter the observation; read school records to populate ratings. Unclassified legacy records are not assigned to either stage.':'हालको उपलब्धि सूचीमा आधारित प्रारम्भिक ढाँचा। उपलब्धि छानेर मूल्याङ्कन गर्नुहोस्; विद्यालयको अभिलेख पढेपछि अङ्क देखिन्छ। चरण नखुलेका पुराना अभिलेख छुट्टै रहन्छन्।';
     field('annexSign').textContent=en?'Teacher signature __________  Date __________  Parent signature __________  Date __________':'शिक्षकको दस्तखत __________  मिति __________  अभिभावकको दस्तखत __________  मिति __________';
   };
-  function renderPrimaryNepaliPreview(){
-    const en=language()==='en',label=(ne,eng)=>en?eng:ne;
-    field('annexTitle').textContent=label('मूल्याङ्कन अभिलेख — नेपाली (समीक्षा प्रति)','Nepali assessment record — review copy');
-    field('annexIdentity').textContent=label('कक्षा: १   विद्यार्थी: ','Grade: 1   Student: ')+(field('student').selectedOptions[0]?.text||'');
-    field('annexUnit').textContent=localized('म र मेरो परिवार','Me and my family');
-    field('annexHead').innerHTML='<tr><th rowspan="2">'+label('सिकाइ उपलब्धि','Learning outcome')+'</th><th rowspan="2">'+label('परीक्षण गर्ने पक्ष','Assessment aspect')+'</th><th rowspan="2">'+label('साधन','Instrument')+'</th><th colspan="2">'+label('नियमित पढाइको मूल्याङ्कन','Regular assessment')+'</th><th colspan="2">'+label('थप सहायतापछिको मूल्याङ्कन','Assessment after support')+'</th><th rowspan="2">'+label('कैफियत','Remarks')+'</th></tr><tr><th>'+label('मिति','Date')+'</th><th>'+label('अङ्क','Rating')+'</th><th>'+label('मिति','Date')+'</th><th>'+label('अङ्क','Rating')+'</th></tr>';
+  function renderPrimaryNepaliForm(form){
+    const unit=field('unit').value,st=assessmentStudents.find(s=>s.id===field('student').value);
+    field('annexTitle').textContent='मूल्याङ्कन अभिलेखीकरण — नेपाली';
+    field('annexIdentity').textContent='कक्षा: १   विद्यार्थी: '+(field('student').selectedOptions[0]?.text||'')+'   रोल नम्बर: '+(st?.rollNo??'');
+    field('annexUnit').textContent=unit;
+    field('annexHead').innerHTML='<tr><th rowspan="2">सिकाइ उपलब्धि</th><th rowspan="2">परीक्षण गर्ने पक्ष</th><th rowspan="2">साधन</th><th colspan="2">नियमित पढाइको मूल्याङ्कन</th><th colspan="2">थप सहायतापछिको मूल्याङ्कन</th><th rowspan="2">कैफियत</th></tr><tr><th>मिति</th><th>अङ्कन</th><th>मिति</th><th>अङ्कन</th></tr>';
     const body=field('annexRows');body.replaceChildren();
-    for(const outcome of cdcPrimaryNepaliFamilyPreview){
-      for(const [i,[aspect,aspectEn,tool,toolEn]] of outcome.tools.entries()){
-        const row=body.insertRow();
-        if(i===0){const cell=row.insertCell();cell.rowSpan=outcome.tools.length;cell.textContent=localized(outcome.ne,outcome.en);}
-        row.insertCell().textContent=localized(aspect,aspectEn);
-        row.insertCell().textContent=localized(tool,toolEn);
-        for(let j=0;j<5;j++)row.insertCell();
-      }
+    const rows=cdcVerifiedOutcomes['1:nepali'].filter(([u])=>u===unit);
+    let sum=0,count=0;
+    if(rows.length!==form.indices.length){field('printForm').disabled=true;field('annexStatus').textContent='स्रोत सूची मिलान आवश्यक छ।';return;}
+    rows.forEach(([,title],i)=>{
+      const index=form.indices[i],row=body.insertRow(),[aspect,tool]=cdcPrimaryNepaliTools[index];
+      row.insertCell().textContent=(index===3&&form.vowels)||title;
+      row.insertCell().textContent=index===0&&form.page===103?'श्रुतिकथन':index===3&&form.page>=105?'सङ्केतन, विसङ्केतन र पठन अभ्यास':aspect;
+      row.insertCell().textContent=index===7&&form.page===104?'उच्चारण':index===3&&form.page>=105?'श्रवण, उच्चारण र सस्वरवाचन':index===11&&form.page>=105?tool+' र स्थलगत भ्रमण':tool;
+      if(!form.editable){for(let j=0;j<5;j++)row.insertCell();return;}
+      const records=annexObservations.filter(o=>o.unit===unit&&o.topic===title&&Number.isInteger(o.level)&&o.level>=1&&o.level<=4);
+      const regular=records.find(o=>o.stage==='regular'),support=records.find(o=>o.stage==='support'),effective=support||regular;
+      if(effective){sum+=effective.level;count++;}
+      appendAnnexCells(row,unit,title,'',regular,support);
+    });
+    const foot=field('annexFoot');foot.replaceChildren();
+    for(const [label,value] of [['सिकाइ उपलब्धिको अङ्कको जोड',count?sum:'—'],['सिकाइ उपलब्धि प्रतिशत',count?(100*sum/(4*count)).toFixed(2)+'%':'—'],['मूल्याङ्कन भएका उपलब्धि',count+' / '+rows.length]]){
+      const row=foot.insertRow(),a=row.insertCell(),b=row.insertCell();a.colSpan=3;b.colSpan=5;a.textContent=label;b.textContent=value;
     }
-    field('annexFoot').replaceChildren();
-    field('annexSign').textContent=label('अभिभावकको दस्तखत __________   शिक्षकको दस्तखत र मिति __________','Parent signature __________   Teacher signature and date __________');
-    field('annexStatus').textContent=label('CDC २०७६, मुद्रित पृष्ठ १०२ — ९ उपलब्धि, २० साधन पङ्क्ति। कार्यगत द्विभाषिक रूपान्तरण। तालिका समीक्षा मात्र; साधनगत अङ्कन र स्रोत दृश्य मिलान बाँकी। पुरानो उपलब्धि अभिलेख यथावत् छ।','CDC 2076, printed p.102 — 9 outcomes, 20 instrument rows. Working translation. Table preview only: instrument rating and visual verification pending. Existing outcome records are unchanged.');
+    field('annexSign').textContent='अभिभावकको दस्तखत __________   शिक्षकको दस्तखत र मिति __________';
+    field('annexStatus').textContent='CDC २०७६, मुद्रित पृष्ठ '+form.page+' — '+rows.length+' उपलब्धि। कार्यगत शब्दावली; दृश्य मिलान बाँकी। '+(form.editable?'पुरानै उपलब्धि शीर्षकमा चरणगत अङ्कन।':'स्वर वर्णको पुरानो सूची फरक भएकाले समीक्षा मात्र; अभिलेख नसारिएका छन्।');
   }
   function renderPrimaryLegacy(){
     const form=primaryLegacyForm(),grade=field('class').value,unit=field('unit').value;
