@@ -73,7 +73,7 @@ Object.assign(w,{
   getDocsFromServer:async ({name,filters})=>{
     assert.equal(name,'cdc_observations');
     assert.deepEqual(Object.fromEntries(filters.map(([name,op,value])=>{assert.equal(op,'==');return [name,value];})),{
-      studentId:field('student').value,className:({three:'Class 3',primary:'Class 5','nepali-1':'Class 1'})[field('student').value]||field('class').value,subject:field('subject').value,
+      studentId:field('student').value,className:({three:'Class 3',primary:'Class 5','nepali-1':'Class 1','nepali-2':'Class 2'})[field('student').value]||field('class').value,subject:field('subject').value,
       section:'A',academicYear:w.currentSchoolSettings.academicYear,...(filters.some(([key])=>key==='period')?{period:field('period').value}:{})
     });
     if(readSchool) await readSchool.promise;
@@ -722,5 +722,45 @@ choice('unit','म र मेरो परिवार');
 assert.equal(field('annex3').hidden,true);
 assert.equal(observations.size,beforePreview+3);
 console.log('Grade 1 Nepali eleven editable themes, 150 outcome rows, corrected key isolation, safe stage entry and year isolation passed');
+// Grade 2 new thematic forms stay separate from the legacy skill catalogue.
+w.currentSchoolSettings.academicYear='2083';
+current.subjectAssignments=[{className:'Class 2',subject:'Nepali',section:'A'}];
+serverRole={...current};
+w.getDocs=async()=>({docs:[{id:'nepali-2',data:()=>({class:'Class 2',section:'A',name:'Synthetic Grade 2 Nepali'})}]});
+await w.loadCdcAssessmentPage();
+const beforeGrade2=observations.size;
+for(const [unit,count,page] of [
+ ['म र मेरो परिवार',11,114],['मेरो दैनिक जीवन',12,115],['हाम्रो समुदाय',13,116],
+ ['मेरो विद्यालय',14,117],['हाम्रो वातावरण',15,118],['मेरो सिर्जना',16,119],['रुचि र बानी',16,120]
+]){
+ choice('unit',unit);
+ assert.equal(field('annex3').hidden,false,unit);
+ assert.match(field('annexIdentity').textContent,/कक्षा: २/);
+ assert.equal(field('annexRows').rows.length,count,unit);
+ assert.equal(field('outcomePicker').options.length,count+1,unit);
+ assert.equal(new Set([...field('outcomePicker').options].slice(1).map(o=>o.value)).size,count,unit);
+ assert.match(field('annexStatus').textContent,new RegExp(String(page)));
+ await field('gridRead').onclick();
+ assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,count*2,unit);
+ assert.equal(field('printForm').disabled,false,unit);
+}
+assert.equal(observations.size,beforeGrade2);
+const grade2Row=field('annexRows').rows[0];
+grade2Row.querySelector('[data-cdc-grid-edit="regular"]').click();
+grade2Row.querySelector('[data-cdc-grid-editor="level"]').value='3';
+await grade2Row.querySelector('[data-cdc-grid-save="regular"]').onclick();
+assert.equal(observations.size,beforeGrade2+1);
+assert.equal([...observations.values()].at(-1).unit,'रुचि र बानी');
+assert.equal([...observations.values()].at(-1).className,'Class 2');
+assert.match(field('annexFoot').textContent,/1 \/ 16/);
+choice('unit','सुनाइ र बोलाइ');
+assert.equal(field('annex3').hidden,true);
+assert.ok(field('outcomePicker').options.length>1);
+w.currentSchoolSettings.academicYear='2084';
+await w.loadCdcAssessmentPage();
+choice('unit','म र मेरो परिवार');
+assert.equal(field('annex3').hidden,true);
+assert.equal(observations.size,beforeGrade2+1);
+console.log('Grade 2 Nepali seven thematic forms, 97 outcomes, stage entry and legacy skill/year isolation passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
