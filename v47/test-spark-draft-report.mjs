@@ -7,7 +7,7 @@ const docs=new Map([
  [base+'/members/'+uid,actor],
  [base+'/students/s1',{schoolId,class:'1',name:'Test Student',active:true}],
  [base+'/subjects/math',{schoolId,class:'1',name:'Mathematics',active:true,creditHour:4,theoryFullMarks:0,practicalFullMarks:100}],
- [base+'/mark_settings/'+id,{id,schoolId,classId:classNo,subjectId,examId:term,active:true,components:[{key:'count',name:'Number of Learning Achievements',fullMarks:25},{key:'obtained',name:'Obtained Marks',fullMarks:100}]}],
+ [base+'/mark_settings/'+id,{id,schoolId,classId:classNo,subjectId,examId:term,active:true,components:[{key:'count',name:'No. of Learning Achievement',fullMarks:25},{key:'obtained',name:'Obtained Learning Achievement',fullMarks:100}]}],
  [base+'/class_mark_drafts/'+id,{format:'smss-v47-complete-class-draft-v1',state:'draft',schoolId,classId:classNo,subjectId,examId:term,settingsId:id,rosterCount:1,revision:1,updatedBy:uid,updatedAt:'test',entries:[{studentId:'s1',isAbsent:false,values:{count:25,obtained:80},totalObtained:105}]}]
 ]);
 const snap=p=>({id:p.split('/').at(-1),ref:{path:p},exists:()=>docs.has(p),data:()=>structuredClone(docs.get(p))});
@@ -23,3 +23,37 @@ await assert.rejects(loadSparkDraftReport(args),/full class roster/);
 docs.set(base+'/class_mark_drafts/'+id,original);
 await assert.rejects(loadSparkDraftReport({...args,assertCurrent:()=>{throw Error('session changed')}}),/session changed/);
 console.log('PASS Spark private Draft report denies Viewer, missing/incomplete Draft and stale session');
+
+// Positive fixture and all grade groups / terms using actual V46 schema.
+import {iemisEntrySchema} from './iemis-entry.js';
+import {legacyGradePreviewExcel} from './legacy-grade-report-preview.mjs';
+const first=await loadSparkDraftReport(args);
+assert.equal(first.draftPreview,true);assert.equal(first.summary.rows[0].gpa,3.6);
+assert.equal(first.summary.rows[0].subjects[0].summary.obtained,80);
+assert.equal(first.publicationAllowed,false);
+for(const klass of ['1','2','3','4','5','6','7','8','9','10'])for(const exam of ['1st','2nd','final']){
+ for(const k of [...docs.keys()])if(/\/(students|subjects|mark_settings|class_mark_drafts)\//.test(k))docs.delete(k);
+ for(const st of ['s1','s2'])docs.set(base+'/students/'+st,{schoolId,class:klass,name:'Student '+st,active:true});
+ const subjects=Number(klass)<=5?[['math','Mathematics'],['english','English']]:[['math','Mathematics'],['computer','Computer Science']];
+ for(const [sid,name] of subjects){
+  docs.set(base+'/subjects/'+sid,{schoolId,class:klass,name,active:true,creditHour:4});
+  const key=klass+'_'+sid+'_'+exam;
+  const components=Number(klass)<=5?[{key:'count',name:'No. of Learning Achievement',fullMarks:10},{key:'got',name:'Obtained Learning Achievement',fullMarks:40}]:
+   iemisEntrySchema(klass,exam==='final'?'annual':exam==='1st'?'first':'second',name).filter(c=>!c.readonly).map((c,i)=>({key:'f'+i,name:c.name,fullMarks:c.max}));
+  docs.set(base+'/mark_settings/'+key,{id:key,schoolId,classId:klass,subjectId:sid,examId:exam,active:true,components});
+  const values=Object.fromEntries(components.map(c=>[c.key,c.fullMarks]));
+  docs.set(base+'/class_mark_drafts/'+key,{format:'smss-v47-complete-class-draft-v1',state:'draft',schoolId,classId:klass,subjectId:sid,examId:exam,settingsId:key,rosterCount:2,revision:1,updatedBy:uid,updatedAt:'test',
+   entries:['s1','s2'].map(studentId=>({studentId,isAbsent:false,values,totalObtained:Object.values(values).reduce((a,b)=>a+b,0)}))});
+ }
+ const result=await loadSparkDraftReport({...args,classNo:klass,term:exam});
+ assert.equal(result.rosterCount,2);assert.equal(result.subjectCount,2);assert.equal(result.summary.complete,true);
+ assert.equal(result.summary.rows[0].gpa,Number(klass)<=5||exam==='final'?4:null);
+ assert.equal(result.previewOnly,true);assert.equal(result.publicationAllowed,false);
+ for(const mode of ['grade','number','entry']){
+  assert.match(result.ledgers[mode].body,/Student s1/);
+  const bytes=new Uint8Array(await legacyGradePreviewExcel(result,mode).arrayBuffer());
+  assert.deepEqual([...bytes.slice(0,2)],[80,75]);assert.match(new TextDecoder().decode(bytes),/NOT FOR OFFICIAL USE/);
+ }
+ const sheet=result.printFor('s1');if(Number(klass)<=5||exam==='final'){assert.equal(sheet.ready,true);assert.match(sheet.html,/NOT VALID FOR OFFICIAL USE/)}else assert.equal(sheet.ready,false);
+}
+console.log('PASS Spark Draft reports: 30 class/term combinations, two subjects, all ledgers and preview XLSX, GPA and watermark');

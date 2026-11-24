@@ -39,7 +39,7 @@ export async function loadSparkDraftReport({db,api,auth,actor,schoolId,classNo,t
   for(const subject of subjects){
    const id=completeClassDraftId({classId:classNo,subjectId:subject.id,examId:term});
    const [current,settings,stored]=await Promise.all([tx.get(path('subjects',subject.id)),tx.get(path('mark_settings',id)),tx.get(path('class_mark_drafts',id))]);check();
-   if(!current.exists()||!same(current.data(),Object.fromEntries(Object.entries(subject).filter(([k])=>k!=='id')))&&!same({...current.data(),id:subject.id},subject))throw Error('Subject changed during report');
+   if(!current.exists()||!same({...current.data(),id:subject.id},subject))throw Error('Subject changed during report');
    if(!settings.exists()||!stored.exists())throw Error('Missing settings or saved Draft for '+subject.name);
    const config=settings.data();
    if(config.id!==id||config.active!==true)throw Error('Inactive or mismatched settings');

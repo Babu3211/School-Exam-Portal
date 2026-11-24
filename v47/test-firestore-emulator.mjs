@@ -1,7 +1,8 @@
+import {loadSparkDraftReport} from './spark-draft-report.mjs';
 import {saveTeacherClassAttendance} from './teacher-class-attendance.mjs';
 import {initializeTestEnvironment,assertFails,assertSucceeds} from '@firebase/rules-unit-testing';
 import {readFileSync} from 'node:fs';
-import {doc,getDoc,setDoc,updateDoc,deleteDoc,deleteField,collection,getDocs,serverTimestamp,runTransaction} from 'firebase/firestore';
+import {doc,getDoc,setDoc,updateDoc,deleteDoc,deleteField,collection,getDocs,serverTimestamp,runTransaction,getDocFromServer,getDocsFromServer,query,where,orderBy,limit,startAfter} from 'firebase/firestore';
 const rules=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
 const env=await initializeTestEnvironment({projectId:'smss-v47-emulator-tests',firestore:{rules,host:'127.0.0.1',port:8187}});
 const db=(uid)=>env.authenticatedContext(uid).firestore();
@@ -50,6 +51,22 @@ try{
   await setDoc(activity(context.firestore(),'12345678','viewer_12345678'),{schoolId:'12345678',uid:'viewer_12345678',lastSeen:new Date(Date.now()-16*60*1000)});
  });
  await assertSucceeds(setDoc(self,activityPayload('12345678','viewer_12345678')));
+ // Actual Spark Web SDK private draft report with synthetic primary school data.
+ const reportSid='12345678',reportUid='admin_12345678',reportId='1_reportmath_final';
+ await env.withSecurityRulesDisabled(async ctx=>{
+  const f=ctx.firestore(),root=['schools',reportSid];
+  await setDoc(doc(f,...root,'students','report_s1'),{schoolId:reportSid,class:'1',name:'Report Student',active:true});
+  await setDoc(doc(f,...root,'subjects','reportmath'),{schoolId:reportSid,class:'1',name:'Mathematics',creditHour:4,active:true});
+  await setDoc(doc(f,...root,'mark_settings',reportId),{id:reportId,schoolId:reportSid,classId:'1',subjectId:'reportmath',examId:'final',active:true,components:[{key:'count',name:'No. of Learning Achievement',fullMarks:5},{key:'got',name:'Obtained Learning Achievement',fullMarks:20}]});
+  await setDoc(doc(f,...root,'class_mark_drafts',reportId),{format:'smss-v47-complete-class-draft-v1',state:'draft',schoolId:reportSid,classId:'1',subjectId:'reportmath',examId:'final',settingsId:reportId,rosterCount:1,revision:1,updatedBy:reportUid,updatedAt:serverTimestamp(),entries:[{studentId:'report_s1',isAbsent:false,values:{count:5,got:18},totalObtained:23}]});
+ });
+ const reportArgs={db:admin,api:{doc,getDocFromServer,getDocsFromServer,collection,query,where,orderBy,limit,startAfter,runTransaction},
+  auth:{currentUser:{uid:reportUid}},actor:{uid:reportUid,role:'school_admin',schoolId:reportSid,active:true},schoolId:reportSid,classNo:'1',term:'final',assertCurrent:()=>{}};
+ const preview=await loadSparkDraftReport(reportArgs);
+ if(preview.summary.rows[0].gpa!==4||preview.publicationAllowed!==false||!preview.draftPreview)throw Error('Private Spark report GPA or preview guard incorrect');
+ await assertFails(getDoc(doc(viewer,'schools',reportSid,'class_mark_drafts',reportId)));
+ await assertFails(getDoc(doc(db('admin_87654321'),'schools',reportSid,'class_mark_drafts',reportId)));
+ console.log('PASS actual Web SDK Spark private draft report and cross-school/Viewer deny');
  // 1 Anonymous reads denied
  await assertFails(getDoc(student(anon,'12345678')));
  // 2 Anonymous writes denied

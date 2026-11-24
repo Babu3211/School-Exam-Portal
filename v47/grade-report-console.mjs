@@ -17,7 +17,7 @@ function clearReview(){
  $('sheetFrame').onload=null;delete $('sheetFrame').dataset.loadedStudent;$('sheetFrame').removeAttribute('srcdoc');$('sheetStatus').textContent='';
  $('progress').textContent='No complete-class preview loaded.';
 }
-function clearSession(){sessionSeq++;clearReview();actor=null;schoolId=null;$('reportArea').hidden=true;$('logout').disabled=true}
+function clearSession(){sessionSeq++;clearReview();$('reportSource').value='legacy';$('reportSource').querySelector('option[value="draft"]').disabled=true;actor=null;schoolId=null;$('reportArea').hidden=true;$('logout').disabled=true}
 function assertCurrent(seq,review,member,klass,term){
  if(seq!==sessionSeq||review!==reviewSeq||actor!==member||schoolId!==member.schoolId||
   auth?.currentUser?.uid!==member.uid||$('schoolClass').value!==klass||$('term').value!==term)
@@ -52,6 +52,7 @@ $('login').onclick=async()=>{
   const school=await readDocument('schools/'+sid);
   if(seq!==sessionSeq||auth.currentUser?.uid!==uid||!school||school.id!==sid||school.active!==true)throw Error('School sign-in changed');
   actor={uid,schoolId:sid,role:session.role,active:true};schoolId=sid;
+  $('reportSource').querySelector('option[value="draft"]').disabled=session.role!=='school_admin';
   if(fresh)startVerifiedSchoolActivity();
   $('verifiedLabel').textContent=String(school.name??sid)+' · '+sid+' · '+session.role;
   $('reportArea').hidden=false;$('logout').disabled=false;status('विद्यालय प्रमाणित भयो।');
