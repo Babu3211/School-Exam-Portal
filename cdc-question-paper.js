@@ -4,6 +4,7 @@ import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
 import {getBundledComputerGrid,bundledComputerUnitTopics} from "./cdc-verified-computer-grids.mjs";
 import {findCdcGridSources} from "./cdc-grid-source-index.mjs";
 import {auditGrade9Release} from "./cdc-grade9-release-audit.mjs";
+import {auditGrade9ScienceArchive} from "./cdc-grade9-science-archive-audit.mjs";
 import {compareGrade8SciencePracticeBank,getGrade8ScienceHistoricalPracticePattern} from "./cdc-grade8-science-model-audit.mjs";
 import {grade8ScienceOriginalSupplement} from "./cdc-grade8-science-original-supplement.mjs";
 import {grade9ComputerOriginalBank} from "./cdc-grade9-computer-original-practice.mjs";
@@ -556,6 +557,7 @@ async function loadCurrentData() {
  const grade8ScienceModelAudit=compareGrade8SciencePracticeBank({
   grade,subject,questions:bundled.questions
  });
+ const grade9ScienceHistoricalAudit=auditGrade9ScienceArchive({grade,subject});
  // WCA/CCA questions with 2-4 subquestions cannot be represented by the
  // simple exact allocator. Do not let a flat admin blueprint falsely claim
  // official CDC mathematics compliance for the 75-mark paper.
@@ -643,6 +645,9 @@ async function loadCurrentData() {
   if(grade8ScienceModelAudit)addLink(
    grade8ScienceModelAudit.model.archivedCdcCatalogUrl,
    "कक्षा ८ विज्ञान २०७८ Grid / Model / Answer Key (CDC Library)");
+  if(grade9ScienceHistoricalAudit)addLink(
+   grade9ScienceHistoricalAudit.archivedModel.officialArchiveUrl,
+   "कक्षा ९ विज्ञान २०७८ सरकारी Grid PDF (हालको २०८३ Grid होइन)");
   sources.forEach((item,i)=>addLink(item.sourceUrl,
    "CDC स्रोत "+(i+1)+" ("+item.gridVersion+")"));
  }
@@ -669,6 +674,12 @@ async function loadCurrentData() {
    (grade10ModelAudit?.matches?
     " कक्षा १० को २०८३ Model Question को उपलब्ध प्रतिमा ११ Objective, १२ WCA, ४ CCA र छवटै विषयक्षेत्रको अङ्कभार मिलेको छ। मूल २०८३ PDF attachment प्रत्यक्ष प्रमाणीकरण बाँकी छ।":"")+
    " SMSS मौलिक अभ्यास Draft Generate हुन्छ; CDC प्रकाशित प्रश्न होइन। शिक्षकले उत्तरकुञ्जिका जाँचेर मात्र Save/Print गर्नुहोस्।";
+ }else if(grade9ScienceHistoricalAudit){
+  badge.textContent="Grade 9 Science · २०७८ ऐतिहासिक Grid";
+  $("qpPatternHint").textContent="CDC को २०७८ कक्षा ९ विज्ञान नमुना ढाँचा: "+
+   "१० MCQ, ९ अति छोटा, १४ छोटा, ७ लामा = ४० प्रश्न/७५ अङ्क। "+
+   "तर २०८२ मा Grid संशोधन भएको छ। नयाँ मूल Grid तुलना नहुँदासम्म "+
+   "यो ढाँचा २०८३ को CDC Exact होइन र Auto Generate मा स्वतः प्रयोग गरिँदैन।";
  }else if(grade8ScienceModelAudit){
   badge.textContent="Grade 8 Science · CDC २०७८ Model जाँच";
   $("qpPatternHint").textContent="CDC अभिलेखमा कक्षा ८ विज्ञानको २०७८ नमुना प्रश्न भेटिएको छ: "+
