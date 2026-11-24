@@ -427,6 +427,53 @@
         "firstPageRendered": true,
         "currentCdcExactApproved": false,
         "verifiedGridRows": false
+      },
+      "structuralVisualReview": {
+        "reviewedOn": "2026-11-24",
+        "pdfPage": 1,
+        "method": "Independent visual comparison of original government PDF page 1 with bundled grid; all 7 units × 4 cognitive domains × 3 question types, including zero cells",
+        "matchedCells": 84,
+        "expectedCells": 84,
+        "unitMarks": [
+          11,
+          4,
+          5,
+          8,
+          5,
+          5,
+          12
+        ],
+        "workingHours": [
+          15,
+          6,
+          6,
+          10,
+          6,
+          6,
+          15
+        ],
+        "fullMarks": 50,
+        "durationMinutes": 120,
+        "questionCounts": [
+          10,
+          10,
+          5
+        ],
+        "marksEach": [
+          1,
+          2,
+          4
+        ],
+        "cognitiveMarks": [
+          10,
+          15,
+          15,
+          10
+        ],
+        "sourceEdition": "2082-04-29",
+        "currentEditionConfirmed": false,
+        "teacherReviewComplete": false,
+        "officialExamApproved": false
       }
     },
     {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v127-grid-library-details';
+const CACHE_NAME = 'smss-pwa-v128-grade9-computer-visual-grid';
 const APP_SHELL = [
   './',
   './index.html',

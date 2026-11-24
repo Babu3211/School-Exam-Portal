@@ -31,6 +31,11 @@ export function grade9GridLibrary(register){
    status='Official structural transcription; teacher review pending';
    add('Unit-wise grid',['Unit','Level','Question type','Marks each','Count','Total'],c.unitGrid.map(x=>[c.unitNames[Number(x.unitCode)-1],x.cognitiveLevel,x.type,x.marks,x.count,x.marks*x.count]));
    add('Cognitive allocation (%)',['K','U','A','HA'],[levels.map(k=>c.cognitiveDistribution[k])]);
+   const visual=entries.find(x=>x.structuralVisualReview?.matchedCells===84)?.structuralVisualReview;
+   if(visual){
+    status='Original 2082 Grid: all 84 cells visually matched; current edition and teacher review pending';
+    add('Visual source cross-check',['Unit','Working hours','Full marks'],c.unitNames.map((n,i)=>[n,visual.workingHours[i],visual.unitMarks[i]]));
+   }
   }else if(evidence){
    status=key==='nepali'?'Partial revised marks; complete official verification pending':'Historical/source comparison only; current Grid verification pending';
    fullMarks=evidence.fullMarks||null;durationMinutes=evidence.durationMinutes||null;

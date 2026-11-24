@@ -78,3 +78,112 @@ for(const grade of [9,10]){
  console.log('PASS CDC Grade '+grade+' Computer Science official 50-mark grid:',
   bp.unitNames.length+' units, 25 questions, 20/30/30/20 marks, no repeated set');
 }
+
+// Independent visual transcription of the first page of the CDC 2082 Grade 9 PDF.
+// Within each domain: MCQ, short, long. Blank printed cells are zero.
+const grade9VisualMatrix=[
+  [
+    1,
+    0,
+    1,
+    0,
+    1,
+    0,
+    1,
+    1,
+    0,
+    1,
+    0,
+    0
+  ],
+  [
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0
+  ],
+  [
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    1
+  ],
+  [
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0
+  ],
+  [
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0
+  ],
+  [
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    1,
+    0,
+    1,
+    0
+  ]
+];
+const grade9VisualGrid=getBundledComputerGrid({grade:9,subject:'Computer Science',fullMarks:50});
+const grade9Domains=['knowledge','understanding','application','higher'];
+const grade9Types=['mcq','short','long'];
+const actualMatrix=grade9VisualGrid.unitNames.map((_,i)=>grade9Domains.flatMap(level=>grade9Types.map(type=>grade9VisualGrid.unitGrid.filter(r=>r.unitCode===String(i+1)&&r.cognitiveLevel===level&&r.type===type).reduce((n,r)=>n+r.count,0))));
+assert.deepEqual(actualMatrix,grade9VisualMatrix,'All 84 printed cells must match independently inspected original CDC page 1');
+console.log('PASS Grade 9 Computer Science all 84 visual source grid cells match');
