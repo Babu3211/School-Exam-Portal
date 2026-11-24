@@ -46,7 +46,11 @@ function slotOK(q,i,subject,topics,chart,allowDraft=false,allowPracticeReading=f
   if(!items.every(x=>x&&x.marks===1&&cleanEnglish(x.text)&&str(x.answer)&&domains.includes(x.domain)&&
    (x.domain!=='vocabulary'||i===3)&&
    (x.type!=='mcq'||fourOptions(x))))return false;
-  if(i===3&&items.filter(x=>x.domain==='vocabulary').length!==5)return false;
+  if(i===3){
+   const vocabulary=items.filter(x=>x.domain==='vocabulary');
+   const words=new Set(norm(q.passage).match(/[a-z0-9]+(?:['’-][a-z0-9]+)*/g)||[]);
+   if(vocabulary.length!==5||new Set(vocabulary.map(x=>norm(x.answer))).size!==5||vocabulary.some(x=>!words.has(norm(x.answer))))return false;
+  }
   return true;
  }
  if(i<8){const w=chart.writing[i-4];return q.marks===w.marks&&q.targetWords===w.words&&writingGenres[i-4].includes(q.genre)&&cleanEnglish(q.answer);}

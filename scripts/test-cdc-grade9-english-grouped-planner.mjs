@@ -5,7 +5,7 @@ const rows=[['reading1',5,100,'poem',['true_false'],['literal','literal','litera
 const passage=(n,i,v)=>Array.from({length:n},(_,j)=>'word'+i+'v'+v+'n'+j).join(' ');
 const common=(slot,i,v,marks)=>({id:slot+'-'+v,slot,gradeNumber:9,subject,topicId:topics[i%2],marks,text:'Synthetic test prompt '+slot+' variant '+v,status:'active',reviewStatus:'teacher_reviewed',reviewedBy:'fixture-only'});
 const bank=[0,1].flatMap(v=>[
- ...rows.map(([slot,marks,n,genre,types,ds],i)=>({...common(slot,i,v,marks),genre,passage:passage(n,i,v),sourceKind:i<2?'textbook':'original_unseen',sourceTitle:'Synthetic fixture not textbook',sourceEdition:'fixture',sourcePage:1,sourceUrl:'https://moecdc.gov.np/',items:ds.map((domain,j)=>({type:types[j%types.length],domain,marks:1,text:'Test item '+j,answer:'Test answer'}))})),
+ ...rows.map(([slot,marks,n,genre,types,ds],i)=>({...common(slot,i,v,marks),genre,passage:passage(n,i,v),sourceKind:i<2?'textbook':'original_unseen',sourceTitle:'Synthetic fixture not textbook',sourceEdition:'fixture',sourcePage:1,sourceUrl:'https://moecdc.gov.np/',items:ds.map((domain,j)=>({type:types[j%types.length],domain,marks:1,text:'Test item '+j,answer:domain==='vocabulary'?'word'+i+'v'+v+'n'+j:'Test answer'}))})),
  ...[['paragraph',5,100],['biography',5,100],['dialogue',6,150],['essay',8,200]].map(([genre,marks,targetWords],i)=>({...common('writing'+(i+1),i,v,marks),genre,targetWords,answer:'Synthetic rubric'})),
  {...common('transformation',0,v,6),items:['tense','question_tag','reported_speech','voice','wh_question','negation'].map(grammar=>({grammar,marks:1,text:'Test '+grammar,answer:'Test answer'}))},
  {...common('contextual_mcq',1,v,5),passage:Array.from({length:10},(_,j)=>'Text {'+(j+1)+'}').join(' '),items:Array.from({length:10},(_,j)=>({grammar:'tense',marks:.5,text:'Blank '+j,options:['is','are','was','were'],correctOption:'A',answer:'is'}))}
@@ -25,3 +25,6 @@ assert.equal(bad(q=>q.slot==='contextual_mcq'?{...q,items:q.items.map(x=>({...x,
 assert.equal(bad(q=>({...q,reviewStatus:'draft'})),false);
 assert.throws(()=>plan({...args,fullMarks:50}),/75-mark/);
 console.log('PASS Grade9 English official skill-chart reference planner: 40 reading,24 writing,11 grammar; passage, domain, choice, marks, review and no-repeat gates');
+
+assert.equal(bad(q=>q.slot==='reading4'?{...q,items:q.items.map(x=>x.domain==='vocabulary'?{...x,answer:'absentword'}:x)}:q),false);
+console.log('PASS reject vocabulary answers absent from reading passage');

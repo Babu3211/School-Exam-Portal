@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v118-reading-answer-validation';
+const CACHE_NAME = 'smss-pwa-v119-reading-source-guard';
 const APP_SHELL = [
   './',
   './index.html',
