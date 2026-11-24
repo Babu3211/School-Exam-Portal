@@ -687,7 +687,22 @@
         "checkedOn": "2026-11-24",
         "directory": "https://sikshakhub.com/specification-grid-directory/",
         "verifiedGridRows": false,
-        "currentCdcExactApproved": false
+        "currentCdcExactApproved": false,
+        "numericReferenceCrosscheck": {
+          "runId": 45395601881,
+          "pages": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "fullMarks": 75,
+          "durationMinutes": 180,
+          "method": "Partial legacy-font task-cell extraction, not a complete approved table",
+          "currentEditionConfirmed": false,
+          "visualCellReviewComplete": false
+        }
       }
     },
     {
@@ -710,7 +725,36 @@
         "checkedOn": "2026-11-24",
         "directory": "https://sikshakhub.com/specification-grid-directory/",
         "verifiedGridRows": false,
-        "currentCdcExactApproved": false
+        "currentCdcExactApproved": false,
+        "numericReferenceCrosscheck": {
+          "runId": 45395601881,
+          "pages": [
+            2,
+            3
+          ],
+          "fullMarks": 75,
+          "readingMarks": [
+            5,
+            10,
+            10,
+            15
+          ],
+          "writingMarks": [
+            5,
+            5,
+            6,
+            8
+          ],
+          "grammar": {
+            "transformationCount": 6,
+            "transformationMarksEach": 1,
+            "contextualMcqCount": 10,
+            "contextualMcqMarksEach": 0.5,
+            "total": 11
+          },
+          "currentEditionConfirmed": false,
+          "visualCellReviewComplete": false
+        }
       }
     },
     {

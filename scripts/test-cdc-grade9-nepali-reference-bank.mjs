@@ -43,6 +43,16 @@ assert.equal(a.ready,true,a.reason);
 assert.equal(a.practiceSubstitution,true);
 assert.equal(a.paper.groups.length,20);
 assert.equal(a.paper.groups.reduce((n,g)=>n+g.marks,0),75);
+// Government RS11168 extraction, run 45395601881, p.1 confirms
+// 75 marks / 3 hours. Legible task-row marks cross-check the existing
+// historical reference without guessing missing columns or approving 2083.
+const recoveredSkillMarks={spelling_choice:1,sentence_editing:2,word_class:3,tense_aspect:2,verb_mood:2,sentence_transformation:4,grammar_passage:4,functional_writing:4,critical_response:7,essay:7};
+for(const [skill,marks] of Object.entries(recoveredSkillMarks)){
+ const group=a.paper.groups.find(g=>g.skill===skill);
+ assert.ok(group,skill);assert.equal(group.marks,marks,skill);
+}
+assert.equal(a.paper.durationMinutes,180);
+assert.equal(a.paper.referenceOnly,true);
 assert.equal(a.paper.groups[14].choices[0].practiceSubstitution,true);
 assert.equal(a.readyForLive,false);
 assert.throws(()=>assertGrade9ExamPaperMatches(a.paper),/verified subject/);

@@ -41,6 +41,19 @@ const ep=planGrade9EnglishReferencePaper({...ea,allowOriginalReadingPractice:tru
 assert.equal(ep.ready,true,ep.reason);assert.equal(ep.practiceSubstitution,true);
 assert.equal(ep.paper.groups.reduce((n,g)=>n+g.marks,0),75);
 assert.equal(ep.paper.groups.slice(0,4).reduce((n,g)=>n+g.items.length,0),40);
+// Official RS11169 PDF, pages 2–3, successful extraction run 45395601881.
+// Check the actual generated draft, not just the hard-coded chart.
+const englishSlots=['reading1','reading2','reading3','reading4','writing1','writing2','writing3','writing4','transformation','contextual_mcq'];
+assert.deepEqual(ep.paper.groups.map(g=>g.slot),englishSlots);
+assert.deepEqual(ep.paper.groups.map(g=>g.marks),[5,10,10,15,5,5,6,8,6,5]);
+assert.deepEqual(ep.paper.groups.slice(0,4).map(g=>g.items.reduce((sum,item)=>sum+item.marks,0)),[5,10,10,15]);
+assert.deepEqual(ep.paper.groups.slice(4,7).map(g=>g.targetWords),[100,100,150]);
+assert.equal(ep.paper.groups[8].items.length,6);
+assert.ok(ep.paper.groups[8].items.every(item=>item.marks===1));
+assert.equal(ep.paper.groups[9].items.length,10);
+assert.ok(ep.paper.groups[9].items.every(item=>item.marks===0.5));
+assert.equal(ep.paper.groups[9].items.reduce((sum,item)=>sum+item.marks,0),5);
+assert.equal(ep.practiceSubstitution,true,'A substituted seen passage must remain explicitly non-official');
 assert.throws(()=>assertGrade9ExamPaperMatches(ep.paper),/verified subject/);
 const ev=build(ea);
 assert.equal(ev.ready,true,ev.reason);assert.equal(ev.groupCount,10);assert.match(ev.text,/ORIGINAL PRACTICE — not a seen textbook extract/);
