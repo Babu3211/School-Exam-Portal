@@ -389,5 +389,34 @@ for(const [subject,unit,count] of [
 }
 console.log('CDC subject-specific annex column counts passed');
 console.log('Standalone assessment navigation, primary-only assignment reads and inline display passed');
+// Grade 3 daily life theme pilot follows the printed four-indicator table structure.
+current.subjectAssignments=[{className:'Class 3',subject:'Mathematics',section:'A'}];
+serverRole={...current};
+w.getDocs=async request=>{
+  assert.equal(request.name,'students');
+  assert.deepEqual(Array.from(request.filters[0]),['class','==','Class 3']);
+  return {docs:[{id:'three',data:()=>({class:'Class 3',section:'A',name:'Grade 3 synthetic'})}]};
+};
+await w.loadCdcAssessmentPage();
+choice('unit','मेरो दैनिक जीवन');
+assert.equal(field('annex3').hidden,false);
+assert.equal(field('annexRows').rows.length,12);
+assert.equal(field('annexRows').rows[0].cells[0].rowSpan,12);
+assert.equal(field('annexRows').rows[0].cells[1].rowSpan,4);
+assert.equal(field('annexRows').rows[0].cells.length,8);
+assert.match(field('annexRows').rows[0].cells[2].textContent,/\(4\)$/);
+assert.match(field('annexRows').rows[3].textContent,/\(1\)$/);
+assert.match(field('annexFoot').textContent,/0 \/ 3/);
+field('annexRows').querySelector('button').click();
+assert.match(field('topic').value,/घडी/);
+field('stage').value='regular';field('level').value='3';field('evidence').value='Synthetic clock reading';
+await field('save').onclick();
+assert.match(field('status').textContent,/मस्यौदा राखियो/);
+await field('saveSchool').onclick();
+assert.match(field('annexFoot').textContent,/75\.00%/);
+assert.match(field('annexFoot').textContent,/1 \/ 3/);
+choice('unit','नाप');
+assert.equal(field('annex3').hidden,true);
+console.log('Grade 3 verified theme rubric structure, rating save and assessed-only percentage passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
