@@ -117,7 +117,7 @@ try{
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,'Dashboard must fit viewport');
   }else{
    await wait(page,()=>document.getElementById('dashboardStatus').textContent.includes('Login असफल'));
-   assert.equal(await page.locator('#schoolIdentity').textContent(),'No school verified');
+   assert.equal(await page.locator('#schoolIdentity').textContent(),'विद्यालय प्रमाणित भएको छैन।');
    assert.equal(await page.locator('[data-school-module][aria-disabled="false"]').count(),0);
   }
  }

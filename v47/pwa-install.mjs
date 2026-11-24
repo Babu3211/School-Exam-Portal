@@ -1,9 +1,9 @@
 // Browser-only install UI. No private data is cached or sent by this module.
 export function installSurface({standalone,ios,hasPrompt,android}){
  if(standalone)return {visible:false,button:false,hint:''};
- if(hasPrompt)return {visible:true,button:true,hint:'Install the V47 app on this device.'};
- if(ios)return {visible:true,button:false,hint:'In Safari, tap Share, then Add to Home Screen.'};
- if(android)return {visible:true,button:false,hint:'Open in Chrome and choose Install app from the browser menu, if offered.'};
+ if(hasPrompt)return {visible:true,button:true,hint:'यस उपकरणमा V47 एप स्थापना गर्नुहोस्।'};
+ if(ios)return {visible:true,button:false,hint:'Safari मा Share थिचेर Add to Home Screen छान्नुहोस्।'};
+ if(android)return {visible:true,button:false,hint:'Chrome मा खोल्नुहोस् र ब्राउजरको मेनुमा उपलब्ध भए Install app छान्नुहोस्।'};
  return {visible:false,button:false,hint:''};
 }
 export function isIsolatedPwaOrigin(host){
