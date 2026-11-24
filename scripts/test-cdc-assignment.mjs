@@ -1100,10 +1100,26 @@ field('printForm').onclick();assert.equal(seroPrintCount,1);
 await field('gridRead').onclick();assert.equal(seroControls('score')[0].textContent,'—');
 assert.equal(field('printForm').disabled,false);
 assert.equal(observations.size,beforeSero);
+for(const [unit,count,page] of [['हाम्रा वरपरका जीवजन्तु',8,'१४०'],['हाम्रो वातावरण',8,'१४१'],['हाम्रो संस्कृति',4,'१४३']]){
+ choice('unit',unit);
+ assert.equal(field('annex3').hidden,false,unit);
+ assert.equal(field('annexRows').rows.length,count,unit);
+ assert.ok(seroControls('indicator').every(control=>control.disabled));
+ assert.ok(seroControls('indicator',1).every(control=>control.disabled));
+ assert.ok(seroControls('date').every(control=>control.disabled));
+ assert.equal(seroControls('save').length,0);
+ assert.equal(field('gridRead').hidden,true);
+ assert.equal(field('printForm').disabled,true);
+ assert.match(field('annexStatus').textContent,new RegExp('मुद्रित पृष्ठ '+page));
+ await field('gridRead').onclick();
+ field('printForm').onclick();
+ assert.equal(seroPrintCount,1);
+ assert.equal(binaryRecords.size,2);
+}
 w.currentSchoolSettings.academicYear='2084';
 await w.loadCdcAssessmentPage();
 choice('unit','म र मेरो परिवार');
 assert.equal(field('annex3').hidden,true);
-console.log('Grade 1 Our Surroundings three forms, 48 indicators, scoped binary Save/Load, saved-only print, duplicate and revoked-role checks passed');
+console.log('Grade 1 Our Surroundings three forms, 48 indicators, scoped binary Save/Load, saved-only print, three additional curriculum review forms, duplicate and revoked-role checks passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
