@@ -24,6 +24,8 @@ on:
       - 'cdc-grade9-model-reference-audit.mjs'
       - 'cdc-grade9-nepali-model-2078.mjs'
       - 'cdc-grade9-nepali-grouped-planner.mjs'
+      - 'cdc-grade9-english-grouped-planner.mjs'
+      - 'scripts/test-cdc-grade9-english-grouped-planner.mjs'
       - 'scripts/test-cdc-grade9-nepali-grouped-planner.mjs'
       - 'scripts/test-cdc-grade9-nepali-model-2078.mjs'
       - 'scripts/test-cdc-grade9-model-reference-audit.mjs'
@@ -96,6 +98,8 @@ jobs:
           node --check cdc-grade9-model-reference-audit.mjs
           node --check cdc-grade9-nepali-model-2078.mjs
           node --check cdc-grade9-nepali-grouped-planner.mjs
+          node --check cdc-grade9-english-grouped-planner.mjs
+          node --check scripts/test-cdc-grade9-english-grouped-planner.mjs
           node --check scripts/test-cdc-grade9-nepali-grouped-planner.mjs
           node --check scripts/test-cdc-grade9-nepali-model-2078.mjs
           node --check scripts/test-cdc-grade9-model-reference-audit.mjs
@@ -147,6 +151,8 @@ jobs:
         run: node scripts/test-cdc-grade9-nepali-model-2078.mjs
       - name: Test randomized Nepali reference groups and reviewed source eligibility
         run: node scripts/test-cdc-grade9-nepali-grouped-planner.mjs
+      - name: Verify English grouped reference and official comprehension and grammar distribution
+        run: node scripts/test-cdc-grade9-english-grouped-planner.mjs
       - name: Verify automatic CDC Grid source detection for Grade 6-10 subjects
         run: node scripts/test-cdc-grid-source-index.mjs
       - name: Verify 54 original bilingual formula-checked Optional Maths practice questions
