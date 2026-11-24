@@ -2340,8 +2340,8 @@ function cdcVerifiedUnits(className,subject) {
     ["रुचि र सोख","Hobbies and Interests"],
     ["चराचुरुङ्गी र जनावर","Birds and Animals"]
   ];
-  if (Number(className)===1&&key==='mathematics') return [cdcSeroferoUnits[0],cdcSeroferoUnits[1],cdcSeroferoUnits[2],cdcSeroferoUnits[3],cdcSeroferoUnits[6],cdcSeroferoUnits[8]];
-  if (['2','3'].includes(String(className))&&key==='mathematics') return [["म र मेरो परिवार","Me and my family"],["मेरो दैनिक जीवन","My daily life"],["ज्यामिति","Geometry"],["सङ्ख्याको ज्ञान","Number concepts"],["गणितका आधारभूत क्रिया","Basic operations"],["नाप","Measurement"],["साधारण ग्राफ","Simple graphs"]];
+  if (Number(className)===1&&key==='mathematics') return [cdcSeroferoUnits[1],cdcSeroferoUnits[2],cdcSeroferoUnits[3],cdcSeroferoUnits[6],cdcSeroferoUnits[8]];
+  if (['2','3'].includes(String(className))&&key==='mathematics') return [["ज्यामिति","Geometry"],["सङ्ख्याको ज्ञान","Number concepts"],["गणितका आधारभूत क्रिया","Basic operations"],["नाप","Measurement"],["साधारण ग्राफ","Simple graphs"]];
 
   if (['4','5'].includes(String(className))&&key==='healthphysicalcreativeart') return [
     ["व्यक्तिगत स्वच्छता","Personal hygiene"],
@@ -2840,7 +2840,8 @@ const cdcPrimaryDailyLifeRubrics = [
   ],
   // Class 1 Mathematics assessment record, 2076 curriculum.
   '1:mathematics': [
-    ...revisedMathRows('1'),
+    ['मेरो दैनिक जीवन','दैनिक काम कुन समयमा गरिन्छ बताउने','Tell when daily activities take place'],
+    ['मेरो दैनिक जीवन','हप्ताका दिन भन्ने र लेख्ने','Say and write the days of the week'],
     ['हाम्रो समुदाय','देवनागरीमा २१–१०० गन्ने, पढ्ने, लेख्ने र तुलना गर्ने','Count, read, write and compare 21–100 in Devanagari notation'],
     ['हाम्रो समुदाय','देवनागरीमा एकदेखि बीससम्म अक्षरमा पढ्ने र लेख्ने','Read and write one to twenty in words in Devanagari'],
     ['हाम्रो समुदाय','हिन्दु-अरबी अङ्कमा 21–100 गन्ने, पढ्ने, लेख्ने र तुलना गर्ने','Count, read, write and compare 21–100 in Hindu–Arabic notation'],
@@ -3334,7 +3335,6 @@ const cdcPrimaryDailyLifeRubrics = [
     ["हाम्रो वरपरको संसार","पानी जोगाउने उपाय बताउने"]
   ],
   '2:mathematics': [
-    ...revisedMathRows('2'),
     ["ज्यामिति","वस्तु जोडेर त्रिभुज र चतुर्भुज बनाउने","Build triangles and quadrilaterals with objects"],
     ["ज्यामिति","त्रिभुज, चतुर्भुज र वृत्तको खाका उतार्ने","Trace triangles, quadrilaterals and circles"],
     ["ज्यामिति","भुजा र कुना हेरेर त्रिभुज र चतुर्भुज छुट्याउने","Distinguish triangles and quadrilaterals by their sides and corners"],
@@ -3360,7 +3360,6 @@ const cdcPrimaryDailyLifeRubrics = [
     ["साधारण ग्राफ","चित्रग्राफबाट सङ्ख्या गनेर तालिकामा राख्ने","Count values in a pictograph and enter them in a table"]
   ],
   '3:mathematics': [
-    ...revisedMathRows('3'),
     ["ज्यामिति","किनारा वा रेखाखण्ड नाप्ने र दिइएको लम्बाइको रेखाखण्ड कोर्ने","Measure edges and draw a segment of a given length"],
     ["ज्यामिति","वस्तुमा कोण चिन्ने, बनाउने, नाम दिने र तुलना गर्ने","Find, construct, name and compare angles"],
     ["ज्यामिति","समकोण चिन्ने","Identify right angles"],
@@ -4387,7 +4386,9 @@ function openCdcAssessment(context = null) {
   // Older observations lack a stage and must not be silently classified.
   let annexObservations=[];
   let annexReadSelection=null;
-  const primaryRevisedForm=()=>cdcAssessmentSubjectKey(field('subject').value)==='mathematics'?cdcRevisedMathForms[field('class').value+':'+field('unit').value]:null;
+  // Revised curriculum (2082), printed p.3: implementation starts academic year 2084.
+  const revisedPrimaryYear=/^\d{4}$/.test(year)&&Number(year)>=2084;
+  const primaryRevisedForm=()=>revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics'?cdcRevisedMathForms[field('class').value+':'+field('unit').value]:null;
   const isPrimaryRubric=()=>!!primaryRevisedForm();
   const hasAnnexGrid=()=>!!context&&(isPrimaryRubric()||(Number(field('class').value)>=4&&['nepali','english','mathematics','socialstudies','science','healthphysicalcreativeart'].includes(cdcAssessmentSubjectKey(field('subject').value))));
   const renderAnnex=()=>{
@@ -4502,7 +4503,7 @@ function openCdcAssessment(context = null) {
       }
     } catch { field('status').textContent = 'मस्यौदा सूची पढ्न सकिएन।'; }
     const revised=primaryRevisedForm();
-    const official = revised ? revised.rows.map(([,ne,en])=>[field('unit').value,ne,en]) : (cdcVerifiedOutcomes[cl+':'+cdcAssessmentSubjectKey(subject)] || [])
+    const official = revised ? revised.rows.map(([,ne,en])=>[field('unit').value,ne,en]) : (revisedPrimaryYear&&Number(cl)<=3&&cdcAssessmentSubjectKey(subject)==='mathematics'?[]:cdcVerifiedOutcomes[cl+':'+cdcAssessmentSubjectKey(subject)] || [])
       .filter(([unit])=>normalizeTitle(unit)===sourceUnit);
     const english = language()==='en';
     field('outcomePickerLabel').hidden=!official.length;
@@ -4736,7 +4737,13 @@ function openCdcAssessment(context = null) {
   };
   const units = () => {
     const pairs = new Map(cdcVerifiedUnits(field('class').value,field('subject').value));
-    if(cdcAssessmentSubjectKey(field('subject').value)==='mathematics')for(const [grade,ne,en] of revisedMathThemes)if(grade===field('class').value)pairs.set(ne,en);
+    if(revisedPrimaryYear&&Number(field('class').value)<=3&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics'){
+      // The revised forms are a separate catalogue; never expose future rows in 2083.
+      const grade=field('class').value;
+      const aliases=new Map([['म र मेरो परिवार','Me and my family'],['मेरो दैनिक जीवन','My daily life'],...revisedMathThemes.filter(([g])=>g===grade).map(([,ne,en])=>[ne,en])]);
+      pairs.clear();
+      for(const key of Object.keys(cdcRevisedMathForms).filter(k=>k.startsWith(grade+':'))){const unit=key.slice(2);pairs.set(unit,aliases.get(unit)||unit);}
+    }
     for(const {unit,unitEn} of getCatalog()) if(!pairs.has(unit)) pairs.set(unit,unitEn);
     return [...pairs];
   };
@@ -4794,6 +4801,7 @@ function openCdcAssessment(context = null) {
   function refreshSubjects() {
     const cl = field('class').value;
     field('revisedCurriculumSource').hidden=!(Number(cl)>=1&&Number(cl)<=3);
+    field('revisedCurriculumSource').textContent='कक्षा १–३ परिमार्जित पाठ्यक्रम २०८२ (लागू: शैक्षिक वर्ष २०८४)';
     field('levelRow').hidden = !cl;
     field('guide').textContent = Number(cl)<=3 ? 'विद्यार्थी मूल्याङ्कन मार्गदर्शन २०७६ (कक्षा १–३)' : 'विद्यार्थी मूल्याङ्कन मार्गदर्शन २०८३ (कक्षा ४–५)';
     field('guide').href = Number(cl)<=3 ? 'https://moecdc.gov.np/content/644/student-assessment-guide-for-basic-level-class/' : 'https://moecdc.gov.np/content/646/guide-to-student-assessment-in-basic-level/';
