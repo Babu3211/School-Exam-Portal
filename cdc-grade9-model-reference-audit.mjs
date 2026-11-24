@@ -43,7 +43,7 @@ export function auditGrade9ModelReference({grade,subject,questions=[]}={}){
  if(k==='science'){
   const s=auditGrade9ScienceArchive({grade,subject});
   if(!s)return null;
-  r={url:s.archivedModel.officialArchiveUrl,sourceType:'government 2078 archive, text read; screenshot timed out',year:'2078',minutes:180,modelCount:40,groups:s.archivedModel.groups.map(g=>[g.code,g.count,g.marksEach]),limitations:['Official sample checklist totals 74, not 75','Latest revised grid not confirmed','Old unit titles differ from newer textbook','Cognitive parts can span levels']};
+  r={url:s.archivedModel.officialArchiveUrl,sourceType:'government 2078 archive; mirror Grid and Checklist visually checked',mirrorUrl:'https://hupen.com.np/files/Class-9-Science-Grid-And-Model-Question_1754407135.pdf',checklistPrintedTotal:75,year:'2078',minutes:180,modelCount:40,groups:s.archivedModel.groups.map(g=>[g.code,g.count,g.marksEach]),limitations:['Mirror checklist prints 75; earlier extracted 74 was a transcription discrepancy','Latest revised grid not confirmed','Old unit titles differ from newer textbook','Cognitive parts can span levels']};
  }
  if(k==='english'){
   const s=auditEnglishChart({grade,subject});if(!s)return null;
