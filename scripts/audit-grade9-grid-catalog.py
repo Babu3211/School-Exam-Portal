@@ -266,15 +266,15 @@ def stage_grid_page_images(preview_dir):
     """
     from html import escape
     register=json.loads((Path(__file__).resolve().parent.parent/"data/cdc-question-paper-sources-2083.json").read_text(encoding="utf-8"))
-    limits={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3,"optional-computer":1,"optional-math":1,"optional-economics":1}
-    optional_paths={"optional-computer":"2082-04-29%20Specification%20grid%20and%20Model%20Questions-Computer%20Science%20Grade%209_khtkxrc.pdf","optional-math":"Specification%20Grid%20and%20Model%20Question-G9-Opt.%20Math-web_nrbp00y.pdf","optional-economics":"RS11136_"}
+    limits={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3,"optional-computer":1,"optional-math":1,"optional-economics":1,"accounting":1}
+    optional_paths={"optional-computer":"2082-04-29%20Specification%20grid%20and%20Model%20Questions-Computer%20Science%20Grade%209_khtkxrc.pdf","optional-math":"Specification%20Grid%20and%20Model%20Question-G9-Opt.%20Math-web_nrbp00y.pdf","optional-economics":"RS11136_","accounting":"%E0%A4%B5%E0%A4%BF%E0%A4%B6%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%B0%E0%A4%A3%20%E0%A4%A4%E0%A4%BE%E0%A4%B2%E0%A4%BF%E0%A4%95%E0%A4%BE%20%E0%A5%A8%E0%A5%A6%E0%A5%AE%E0%A5%A7%20"}
     preview=Path(preview_dir)
     index=preview/"grade9-cdc-grid-library.html"
     if not index.is_file(): raise ValueError("Generate the static Grid Library first")
     folder=preview/"grid-source-pages"; folder.mkdir(exist_ok=True)
     entries=[]
     for source in register["sources"]:
-        e=source.get("retrievalEvidence") or source.get("optionalRetrievalEvidence",{})
+        e=source.get("retrievalEvidence") or source.get("optionalRetrievalEvidence") or source.get("accountingRetrievalEvidence",{})
         resource=e.get("resource")
         if resource not in limits or not re.fullmatch(r"[a-f0-9]{64}",e.get("sha256","")): continue
         result={"resource":resource,"subject":source["subject"],"url":source["url"],"status":"unavailable","images":[],"currentCdcExactApproved":False}
@@ -307,7 +307,7 @@ def stage_grid_page_images(preview_dir):
             result["reason"]=str(err)[:200]
         entries.append(result)
         print("Grid source "+resource+": "+result["status"])
-    if len(entries)!=8 or {x["resource"] for x in entries}!=set(limits): raise ValueError("Unexpected fingerprinted source inventory")
+    if len(entries)!=len(limits) or {x["resource"] for x in entries}!=set(limits): raise ValueError("Unexpected fingerprinted source inventory")
     parts=['<section id="original-grid-pages"><h2>Original CDC Grid page images</h2><p>Source page copies for comparison only. Matching a document fingerprint does not certify the current examination Grid. Optional subjects show the first page; full PDF links are retained.</p>']
     for result in entries:
         parts.append('<h3>'+escape(result["subject"])+'</h3>')

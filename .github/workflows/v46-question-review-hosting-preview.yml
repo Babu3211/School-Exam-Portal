@@ -55,7 +55,7 @@ jobs:
           root=Path("preview-public")
           manifest=json.loads((root/"grid-source-pages/manifest.json").read_text())
           assert manifest["currentCdcExactApproved"] is False
-          expected={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3,"optional-computer":1,"optional-math":1,"optional-economics":1}
+          expected={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3,"optional-computer":1,"optional-math":1,"optional-economics":1,"accounting":1}
           docs=manifest["documents"]
           assert len(docs)==len(expected) and {d["resource"] for d in docs}==set(expected)
           declared=set()
