@@ -1,4 +1,4 @@
-name: V47 live access diagnostic (read only)
+name: V47 live access and recent account diagnostic (read only)
 on:
   workflow_dispatch:
   push:

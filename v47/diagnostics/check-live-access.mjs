@@ -42,6 +42,24 @@ try{
    const users=await getAuth(app).getUsers(snap.docs.map(d=>({uid:d.id})));
    console.log('Matching enabled Auth accounts: '+users.users.filter(u=>!u.disabled).length);
    if(users.users.filter(u=>!u.disabled).length!==snap.size)blocked=true;
+   if(!preflight){
+    // Diagnose the recent reported sign-in without logging any email or UID.
+    // Only inspect a small account set; never infer or grant privilege from login time.
+    const page=await getAuth(app).listUsers(20);
+    if(page.pageToken)console.log('Recent-account comparison skipped: more than 20 Auth accounts');
+    else{
+     const enabled=page.users.filter(u=>!u.disabled);
+     const recent=enabled.map(u=>({u,time:Date.parse(u.metadata.lastSignInTime??'')})).filter(x=>Number.isFinite(x.time)).sort((a,b)=>b.time-a.time);
+     console.log('Enabled Auth accounts in bounded comparison: '+enabled.length);
+     if(recent.length===0||recent.length>1&&recent[0].time===recent[1].time)console.log('Most recent sign-in account cannot be determined uniquely');
+     else{
+      const match=snap.docs.some(d=>d.id===recent[0].u.uid);
+      console.log('Most recently signed-in account has active root Super Admin document: '+(match?'YES':'NO'));
+      console.log('Most recent sign-in age in whole minutes: '+Math.max(0,Math.floor((Date.now()-recent[0].time)/60000)));
+      if(!match)blocked=true;
+     }
+    }
+   }
   }catch(e){console.log('Auth UID match check unavailable: '+summarizeError(e));blocked=true}
  }catch(e){console.log('Registry metadata read unavailable: '+summarizeError(e));blocked=true}
 }finally{await deleteApp(app)}
