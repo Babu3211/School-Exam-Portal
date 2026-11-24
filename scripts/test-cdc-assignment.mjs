@@ -1000,6 +1000,34 @@ serverRole={...current};
 w.getDocs=async()=>({docs:[{id:'sero-1',data:()=>({class:'Class 1',section:'A',name:'Synthetic Student'})}]});
 w.ledgerSubjectsForClass=()=>['serophero'];
 await w.loadCdcAssessmentPage();
+// Independent public curriculum summary does not switch the current assessment.
+const entryClassBefore=field('class').value,entrySubjectBefore=field('subject').value,entryStudentBefore=field('student').value;
+const summaryRows=()=>[...field('themeSummaryRows').rows];
+choice('summaryClass','1');choice('summarySubject','serophero');
+const seroSummary=summaryRows().find(row=>row.cells[1]?.textContent==='म र मेरो परिवार');
+assert.equal(seroSummary.cells[2].textContent,'५');
+assert.equal(seroSummary.cells[3].textContent,'२०');
+assert.equal(seroSummary.cells[4].textContent,'२०');
+assert.equal(summaryRows().find(row=>row.cells[1]?.textContent==='हाम्रो संस्कृति').cells[3].textContent,'४');
+assert.equal(summaryRows().find(row=>row.cells[1]?.textContent==='हाम्रो विद्यालय').cells[3].textContent,'—');
+assert.equal(field('themeSummaryRows').rows.length,10);
+for(const grade of ['1','2','3','4','5']){
+ choice('summaryClass',grade);choice('summarySubject','english');
+ const rows=summaryRows();
+ assert.ok(rows.length>0);
+ for(const row of rows){
+  assert.equal(Number(row.cells[3].textContent),4*Number(row.cells[2].textContent));
+  assert.doesNotMatch(row.textContent,/[\u0900-\u097f]/);
+ }
+ assert.equal(rows.length,({'1':11,'2':10,'3':10,'4':16,'5':17})[grade]);
+}
+choice('summaryClass','4');choice('summarySubject','english');
+assert.equal(summaryRows().find(row=>row.cells[1]?.textContent.includes('Describing Location')).cells[3].textContent,'20');
+choice('summaryClass','5');choice('summarySubject','hamrodhunibeshi');
+assert.match(field('themeSummaryRows').textContent,/Source catalogue is not yet available/);
+assert.equal(field('class').value,entryClassBefore);
+assert.equal(field('subject').value,entrySubjectBefore);
+assert.equal(field('student').value,entryStudentBefore);
 const beforeSero=observations.size;
 for(const [unit,count,groups] of [['म र मेरो परिवार',20,5],['मेरो दैनिक जीवन',16,4],['हाम्रो समुदाय',12,3]]){
  choice('unit',unit);
