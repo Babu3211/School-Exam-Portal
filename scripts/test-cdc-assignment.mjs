@@ -88,7 +88,7 @@ const field=name=>w.document.querySelector('[data-cdc="'+name+'"]');
 const choice=(name,value)=>{field(name).value=value;field(name).onchange();};
 const references=field('referenceLibrary');
 assert.ok(references);
-for(const name of ['guidePdf13','guidePdf45','guideOfficial13','guideOfficial45','guideCurriculum13','guideMirror45']){
+for(const name of ['guidePdf13','guidePdf45','guideOfficial13','guideOfficial45','guideCurriculum13','guideMirror45','guideCehrd45','guideHealth4','guideHealth5']){
  const link=field(name);
  assert.ok(references.contains(link),name);
  assert.equal(link.target,'_blank');
@@ -99,6 +99,13 @@ assert.match(field('guidePdf13').href,/STUDENTS-EVALUATION-GRADE-1-3\.pdf$/);
 assert.match(field('guidePdf45').href,/^https:\/\/learning\.cehrd\.gov\.np\/pluginfile\.php\/106343\//);
 assert.match(field('guideOfficial13').href,/\/644\//);
 assert.match(field('guideOfficial45').href,/\/646\//);
+assert.equal(field('guideCehrd45').href,'https://learning.cehrd.gov.np/mod/resource/view.php?id=1032');
+for(const [name,page] of [['guideHealth4',123],['guideHealth5',136]]){
+ const link=new URL(field(name).href);
+ assert.equal(link.hash,'#page='+page);
+ link.hash='';
+ assert.equal(link.href,field('guidePdf45').href);
+}
 console.log('Both CDC assessment guide reference PDFs and official source links visible together');
 
 assert.match(field('curriculumSource').href,/moecdc\.gov\.np\/content\/203\//);
