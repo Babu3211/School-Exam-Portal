@@ -81,3 +81,31 @@ export function planGrade9MathReference({grade,subject,fullMarks=75,durationMinu
  const paper={gradeNumber:9,subject,fullMarks,durationMinutes,language,topicIds:[...topics],referenceOnly:true,groups:structuredClone(chosen)};
  return {ready:true,paper,signature:sig(chosen),...assertGrade9MathReferencePaper(paper,{allowOriginalReferenceDraft}),readyForLive:false,referenceOnly:true,sourceUrl:ref.sourceUrl};
 }
+
+// Transcribed mark/level metadata only, from the Grade 9 model following
+// the 2078 chart in MATH_REFERENCE_MIRROR. The 2026 upload is NOT a new grid.
+// K=knowledge, U=understanding, A=application, H=higher ability.
+const printedModelGroups=[
+ ['1','1K 1U 3A 1H'],['2','1K 2U 2A'],['2','1K 1A 1H'],['2','1U 2A 1H'],
+ ['3','1K 1U 2A 1H'],['3','1K 3A'],['3','2U 2H'],
+ ['4','1K 1U 2A'],['4','3U 3A'],['4','1U 2A 2H'],
+ ['5','3A 2H'],['5','1K 1U 2A'],['5','1K 2U 1H'],
+ ['6','1K 1U 2A 1H'],['6','1K 2U 2A 1H'],['7','1K 1U 1A 1H']
+];
+export function compareGrade9MathPrintedModel(){
+ const grid=getGrade9MathReference({grade:9,subject:'Mathematics'});
+ const rows=grid.areas.map(a=>({unitCode:a.unitCode,groupCount:0,itemCount:0,marks:0,itemsByLevel:[0,0,0,0],marksByLevel:[0,0,0,0]}));
+ for(const [code,parts] of printedModelGroups){
+  const row=rows.find(r=>r.unitCode===code);row.groupCount++;
+  for(const part of parts.split(' ')){const m=/^(\\d+)([KUAH])$/.exec(part);if(!m)throw Error('Invalid printed model label');const marks=Number(m[1]),i='KUAH'.indexOf(m[2]);row.itemCount++;row.marks+=marks;row.itemsByLevel[i]++;row.marksByLevel[i]+=marks;}
+ }
+ const differences=rows.flatMap((r,i)=>levels.flatMap((level,j)=>{
+  const a=grid.areas[i],itemDelta=r.itemsByLevel[j]-a.itemsByLevel[level],markDelta=r.marksByLevel[j]-a.marksByLevel[level];
+  return itemDelta||markDelta?[{unitCode:r.unitCode,level,itemDelta,markDelta}]:[];
+ }));
+ const groupCount=sum(rows.map(r=>r.groupCount)),itemCount=sum(rows.map(r=>r.itemCount)),fullMarks=sum(rows.map(r=>r.marks));
+ const structureMatched=groupCount===16&&itemCount===49&&fullMarks===75&&rows.every((r,i)=>r.groupCount===grid.areas[i].groups&&r.itemCount===grid.areas[i].items&&r.marks===grid.areas[i].marks);
+ const cognitiveMarks=levels.map((_,j)=>sum(rows.map(r=>r.marksByLevel[j])));
+ const withinPublishedCognitiveTolerance=levels.every((l,j)=>Math.abs(cognitiveMarks[j]-sum(grid.areas.map(a=>a.marksByLevel[l])))<=grid.gridCognitiveToleranceMarks)&&differences.every(d=>Math.abs(d.markDelta)<=grid.gridCognitiveToleranceMarks);
+ return {sourceUrl:MATH_REFERENCE_MIRROR,sourceYearBS:2078,groupCount,itemCount,fullMarks,structureMatched,cognitiveMarks,differences,withinPublishedCognitiveTolerance,exactCognitiveMatch:differences.length===0,currentCdcExactApproved:false,readyForLive:false};
+}
