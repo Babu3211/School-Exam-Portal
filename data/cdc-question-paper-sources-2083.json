@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "title": "SMSS CDC Question Paper Source Register",
-  "checkedOn": "2026-11-23",
+  "checkedOn": "2026-11-24",
   "note": "Official CDC references only. A source link is not a substitute for extracting and validating its complete topic list, specification grid, model questions and answer key. Older grids are marked supplementary.",
   "sources": [
     {
@@ -496,6 +496,17 @@
       "status": "historical_CDC_government_pdf_75_marks_40_questions_2026_screenshot_timeout_2082_revised_grid_not_verified",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11167_Specification%20Grid%20%28Grade%209%29%20Compulsory%20Science%20and%20Technology_nk1kpta.pdf",
       "note": "Original government PDF text examined: 75 marks, 40 questions (10 MCQ,9 very short,14 short,7 long), cognitive marks 12/22/22/19, 19 unit mark totals. Screenshot request timed out. CDC confirms the compulsory Grade9 Science Grid was revised for 2082, so this old layout is NOT an approved 2083 Exact blueprint."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक अर्थशास्त्र",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2082",
+      "status": "official_CDC_pdf_model_and_summary_crosschecked_grid_content_not_yet_extracted",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11136_%E0%A4%85%E0%A4%B0%E0%A5%8D%E0%A4%A5%E0%A4%B6%E0%A4%BE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%8D%E0%A4%B0%20%E0%A4%95%E0%A4%95%E0%A5%8D%E0%A4%B7%E0%A4%BE-%20%E0%A5%AF%20%E0%A4%B5%E0%A4%BF%E0%A4%B6%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%B0%E0%A4%A3%20%E0%A4%A4%E0%A4%BE%E0%A4%B2%E0%A4%BF%E0%A4%95%E0%A4%BE%20%E0%A4%B0%20%E0%A4%A8%E0%A4%AE%E0%A5%81%E0%A4%A8%E0%A4%BE%20%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%B6%E0%A5%8D%E0%A4%A8%E0%A4%B9%E0%A4%B0%E0%A5%81%20%E0%A5%A8%E0%A5%A6%E0%A5%AE%E0%A5%A8_3ew2awb.pdf",
+      "note": "Government-hosted CDC Grade 9 Economics (103) PDF; text-extracted bilingual model and summary table agree on 75 marks, 3h, 22 required items: 11×1, 8×5, 3×8; alternatives at model Q12,16,18,22 (not extra scored items). Six unit totals read as 9/24/9/6/12/15; cognitive summary marks 13/24/17/21. Extracted prose conflicts with the summary/model (5 short items, 5-mark long items, higher ability cap 20% vs 28% summary). Page screenshots timed out; original row/cell visual confirmation and clarification of conflicting prose still required. No exact blueprint approved; no automatic generation enabled by this source."
     }
   ],
   "completion": {
