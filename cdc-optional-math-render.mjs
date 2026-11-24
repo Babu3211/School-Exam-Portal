@@ -241,6 +241,15 @@ export function questionFigure(question,language='both'){
   body='<path d="M28 38H252 M28 104H252 M79 132L194 10"/>'+txt(17,42,'A')+txt(263,42,'B')+txt(17,108,'C')+txt(263,108,'D')+txt(158,57,match[1]+'°');caption='समानान्तर रेखा / Parallel lines';
  }else if((match=/^In triangle ABC, angle A=(\d+)° and B=(\d+)°\./.exec(en))){
   body='<path d="M135 20L40 115H230Z"/>'+txt(135,14,'C')+txt(31,130,'A')+txt(239,130,'B')+txt(75,106,match[1]+'°')+txt(193,106,match[2]+'°');caption='त्रिभुज / Triangle';
+ }else if((match=/^A (\d+) Ω and (\d+) Ω resistor are in (series|parallel) across (\d+) V\./.exec(en))){
+  const battery='<path d="M32 48V66 M16 66H48 M23 77H41 M32 77V115"/>'+txt(62,73,match[4]+' V')+txt(52,61,'+');
+  if(match[3]==='series'){
+   body=battery+'<path d="M32 48V25H80 M130 25H165 M215 25H250V115H32"/><rect x="80" y="17" width="50" height="16"/><rect x="165" y="17" width="50" height="16"/>'+txt(105,13,match[1]+' Ω')+txt(190,13,match[2]+' Ω');
+   caption='श्रेणीक्रम परिपथ / Series circuit';
+  }else{
+   body=battery+'<path d="M32 48V25H100 V93 M100 25H148 M198 25H250V115H32 M100 93H148 M198 93H250"/><rect x="148" y="17" width="50" height="16"/><rect x="148" y="85" width="50" height="16"/><circle cx="100" cy="25" r="2" fill="#111"/><circle cx="250" cy="93" r="2" fill="#111"/>'+txt(173,13,match[1]+' Ω')+txt(173,81,match[2]+' Ω');
+   caption='समानान्तर परिपथ / Parallel circuit';
+  }
  }else if(/^Why does a longer effort arm reduce the force needed in a lever\?/.test(en)){
   body='<path d="M24 60H248 M89 61L72 107H106Z M39 34V56 M34 49L39 56L44 49 M227 34V56 M222 49L227 56L232 49"/>'+txt(39,25,language==='ne'?'भार':language==='both'?'भार / Load':'Load')+txt(224,25,language==='ne'?'प्रयास':language==='both'?'प्रयास / Effort':'Effort')+txt(89,125,language==='ne'?'आधारबिन्दु':language==='both'?'आधारबिन्दु / Fulcrum':'Fulcrum');caption='उत्तोलक / Lever';
  }

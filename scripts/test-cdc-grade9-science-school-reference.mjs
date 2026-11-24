@@ -32,3 +32,16 @@ assert.equal(buildGrade9ReferencePreview(mappedArgs).ready,true);
 assert.equal(plan({...mappedArgs,questions:mapped.map(q=>({...q,questionText:'tampered'}))}).ready,false);
 assert.throws(()=>plan({...mappedArgs,questions:mapped.map(q=>({...q,topicId:mappedIds[0]})),selectedTopicIds:[mappedIds[0]]}),/crosses unit/);
 console.log('PASS school curriculum topic remapping without accepting modified question content');
+
+// Real numerical electricity variants must display their own circuit and labels.
+const {questionFigure}=await import('../cdc-optional-math-render.mjs');
+const circuits=p.questions.filter(q=>q.unitCode==='11'&&q.questionType==='long');
+assert.equal(circuits.length,2);
+for(const q of circuits){
+ const svg=questionFigure(q,'both');
+ assert.match(svg,/<svg/);assert.match(svg,/12 V/);
+ assert.match(svg,q.questionTextEn.includes('in series')?/Series circuit/:/Parallel circuit/);
+ for(const value of q.questionTextEn.match(/\d+ Ω/g))assert.ok(svg.includes(value));
+ assert.doesNotMatch(questionFigure(q,'ne'),/[0-9]+ Ω|[0-9]+ V/);
+}
+console.log('PASS real series and parallel circuit figures with variant-specific values');

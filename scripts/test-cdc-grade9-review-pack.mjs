@@ -88,6 +88,7 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
 }
 assert.equal(records.length,16);
 assert.ok(records.filter(r=>r.subject==='Mathematics').every(r=>r.html.includes('<svg')),'Math review papers must retain matching schematic figures');
+assert.ok(records.filter(r=>r.subject==='Science and Technology').every(r=>/Series circuit|Parallel circuit/.test(r.html)),'Both science sets must retain their electricity circuit diagram');
 assert.ok(records.filter(r=>r.subject==='Mathematics').every(r=>r.html.includes('not to scale')));
 assert.ok(records.filter(r=>r.subject==='Mathematics').every(r=>/<div class="question" data-question-number="\d+"><pre>[\s\S]*?<\/pre><figure/.test(r.html)),'Figures stay in the question block');
 assert.equal(new Set(records.map(r=>r.subject)).size,8);

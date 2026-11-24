@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v119-reading-source-guard';
+const CACHE_NAME = 'smss-pwa-v120-science-circuit-figures';
 const APP_SHELL = [
   './',
   './index.html',
