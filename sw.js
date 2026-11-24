@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v106-reference-history-2083';
+const CACHE_NAME = 'smss-pwa-v107-reference-answer-ui-2083';
 const APP_SHELL = [
   './',
   './index.html',

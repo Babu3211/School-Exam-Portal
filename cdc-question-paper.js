@@ -268,7 +268,7 @@ function pageShell() {
       <p class="qp-hint">एक क्लिकमा: कक्षा/विषय, Topic, पूर्णाङ्क र भाषा छान्नुहोस्। उपलब्ध मौलिक अभ्यास प्रश्नबाट ठीक पूर्णाङ्कको Draft तयार हुनेछ। पर्याप्त जाँचिएका प्रश्न नभए गलत प्रश्नपत्र बनाइँदैन। CDC Grid को लागू संस्करण शिक्षकले पुष्टि गर्नुपर्छ।</p>
       <label class="qp-topic" style="margin-top:9px;background:#fff8e9;align-items:center"><input id="qpAutoReviewed" type="checkbox"><span>मैले तयार भएको प्रश्नपत्र, पूर्णाङ्क, लागू CDC विशिष्टीकरण तालिका र उत्तरकुञ्जिका पढेर जाँच गरेको छु। <b>जाँच नगरी Save वा Print हुँदैन।</b></span></label>
       <div class="qp-actions"><button class="qp-btn" id="qpSmartGenerateBtn" type="button">एक क्लिकमा Auto Question Paper</button><button class="qp-btn alt" id="qpGenerateBtn" type="button">म्यानुअल Pattern Generate</button><button class="qp-btn alt" id="qpSavePaperBtn" type="button" disabled>प्रश्नपत्र Save</button><button class="qp-btn alt" id="qpPrintPaperBtn" type="button" disabled>प्रश्नपत्र Print / PDF</button><button class="qp-btn alt" id="qpAnswerKeyBtn" type="button" disabled>उत्तरकुञ्जिका Print / PDF</button></div>
-      <div class="qp-actions" id="qpReferenceDraftActions" hidden><button class="qp-btn alt" id="qpSelectReferenceTopics" type="button">Select reference topics (75 marks)</button><button class="qp-btn alt" id="qpReferenceDraftBtn" type="button">Reference Draft Preview — not for exam</button></div><pre id="qpReferenceDraftPreview" hidden style="white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;border:2px solid #c48740;border-radius:8px;background:#fff8e9;color:#482b11;font:inherit" role="status"></pre>
+      <div class="qp-actions" id="qpReferenceDraftActions" hidden><button class="qp-btn alt" id="qpSelectReferenceTopics" type="button">Select reference topics (75 marks)</button><button class="qp-btn alt" id="qpReferenceDraftBtn" type="button">Reference Draft Preview — not for exam</button></div><pre id="qpReferenceDraftPreview" hidden style="white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;border:2px solid #c48740;border-radius:8px;background:#fff8e9;color:#482b11;font:inherit" role="status"></pre><details id="qpReferenceAnswerReview" hidden style="margin-top:10px;padding:12px;border:1px solid #c48740;border-radius:8px"><summary>Teacher Answer Review / उत्तरकुञ्जिका (not official)</summary><pre id="qpReferenceAnswerText" style="white-space:pre-wrap;overflow-wrap:anywhere;font:inherit"></pre></details>
       <div id="qpPaperPreview" style="margin-top:14px"><p class="qp-hint">Topic छानेर प्रश्नपत्र Auto Generate गर्नुहोस्।</p></div>
     </div>
 
@@ -1164,9 +1164,15 @@ const rememberReferencePreview=(scope,signature)=>{
  referencePreviewHistory.delete(scope);referencePreviewHistory.set(scope,next);
  while(referencePreviewHistory.size>20)referencePreviewHistory.delete(referencePreviewHistory.keys().next().value);
 };
-function clearReferenceDraftPreview(){
+function resetReferenceDraftOutput(){
  const box=$("qpReferenceDraftPreview");
  if(box){box.hidden=true;box.textContent="";}
+ const answers=$("qpReferenceAnswerReview"),text=$("qpReferenceAnswerText");
+ if(answers){answers.hidden=true;answers.open=false;}
+ if(text)text.textContent="";
+}
+function clearReferenceDraftPreview(){
+ resetReferenceDraftOutput();
  const actions=$("qpReferenceDraftActions");
  if(actions)actions.hidden=true;
 }
@@ -1193,6 +1199,7 @@ function selectReferenceDraftTopics(){
  message("सन्दर्भ प्रश्नका उपलब्ध Topic छानिए। यो CDC Exact परीक्षा होइन।");
 }
 function generateReferenceDraftPreview(){
+ resetReferenceDraftOutput();
  assertReferencePreviewScope();
  const topicIds=selectedTopicIds(),language=$("qpAutoLanguage").value;
  const scope=JSON.stringify([auth.currentUser.uid,selectedClass,selectedSubject,selectedSection,75]);
@@ -1202,6 +1209,11 @@ function generateReferenceDraftPreview(){
  // Clear any prior official generation, then display only inert text.
  invalidateGeneratedQuestionPaper();
  box.textContent=result.text;box.hidden=false;
+ const answers=$("qpReferenceAnswerReview"),text=$("qpReferenceAnswerText");
+ if(answers&&text&&result.answerText){
+  text.textContent=result.answerText;
+  answers.hidden=false;answers.open=false;
+ }
  rememberReferencePreview(scope,result.signature);
  message("सन्दर्भ Draft तयार। वर्तमान CDC Grid पुष्टि बाँकी — परीक्षा Save/Print बन्द।");
 }

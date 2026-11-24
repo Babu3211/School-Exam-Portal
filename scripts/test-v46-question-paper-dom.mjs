@@ -414,3 +414,35 @@ assert.deepEqual(repeatNodes.map(x=>x.dataset.unitCode),['1','2']);
 assert.notEqual(repeatNodes[0].value,repeatNodes[1].value);
 dom.window.close();
 console.log('PASS V46 DOM auto question paper: class 10, unit choices, bilingual, review gate, random practice and topic-unit isolation');
+
+ // Exercise the real reference UI functions with the actual page shell.
+ const referenceHarness=new Function('$',`
+ const auth={currentUser:{uid:'teacher-synthetic'}};
+ let selectedClass='Class 9',selectedSubject='Science and Technology',selectedSection='A',questionDataLoadEpoch=1;
+ let verifiedQuestionSelection={className:selectedClass,subject:selectedSubject,section:selectedSection,request:1};
+ const gradeNumber=()=>9,roleCanTeach=()=>true,selectedTopicIds=()=>['unit-1'];
+ const bundledPracticeQuestions=[],message=()=>{};
+ let next={ready:true,text:'REFERENCE DRAFT — NOT FOR EXAM <img src=x>',answerText:'INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY <script>test</script>',signature:'paper-a'};
+ const buildGrade9ReferencePreview=()=>next;
+ const invalidateGeneratedQuestionPaper=()=>{for(const id of ['qpSavePaperBtn','qpPrintPaperBtn','qpAnswerKeyBtn'])$(id).disabled=true;};
+ `+code('const referencePreviewHistory=new Map();','async function generateSmartPaper()')+`
+ return {generate:generateReferenceDraftPreview,clear:clearReferenceDraftPreview,fail:()=>{next={ready:false,reason:'Insufficient topics'};},logout:()=>{auth.currentUser=null;}};
+ `)($);
+ assert.ok($('qpReferenceAnswerReview').hidden);
+ referenceHarness.generate();
+ assert.equal($('qpReferenceAnswerReview').hidden,false);
+ assert.equal($('qpReferenceAnswerReview').open,false);
+ assert.match($('qpReferenceAnswerText').textContent,/INDICATIVE ANSWER KEY/);
+ assert.equal($('qpReferenceAnswerText').querySelector('script'),null);
+ assert.equal($('qpReferenceDraftPreview').querySelector('img'),null);
+ assert.ok(['qpSavePaperBtn','qpPrintPaperBtn','qpAnswerKeyBtn'].every(id=>$(id).disabled));
+ $('qpReferenceAnswerReview').open=true;
+ referenceHarness.fail();referenceHarness.generate();
+ assert.equal($('qpReferenceAnswerReview').hidden,true);
+ assert.equal($('qpReferenceAnswerReview').open,false);
+ assert.equal($('qpReferenceAnswerText').textContent,'');
+ referenceHarness.clear();
+ assert.ok($('qpReferenceDraftPreview').hidden);
+ referenceHarness.logout();
+ assert.throws(()=>referenceHarness.generate(),/assigned subject/);
+ console.log('PASS actual review-only answer UI, inert text, stale key clearing and official save/print lock');
