@@ -507,6 +507,30 @@
       "status": "official_CDC_pdf_model_and_summary_crosschecked_grid_content_not_yet_extracted",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11136_%E0%A4%85%E0%A4%B0%E0%A5%8D%E0%A4%A5%E0%A4%B6%E0%A4%BE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%8D%E0%A4%B0%20%E0%A4%95%E0%A4%95%E0%A5%8D%E0%A4%B7%E0%A4%BE-%20%E0%A5%AF%20%E0%A4%B5%E0%A4%BF%E0%A4%B6%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%B0%E0%A4%A3%20%E0%A4%A4%E0%A4%BE%E0%A4%B2%E0%A4%BF%E0%A4%95%E0%A4%BE%20%E0%A4%B0%20%E0%A4%A8%E0%A4%AE%E0%A5%81%E0%A4%A8%E0%A4%BE%20%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%B6%E0%A5%8D%E0%A4%A8%E0%A4%B9%E0%A4%B0%E0%A5%81%20%E0%A5%A8%E0%A5%A6%E0%A5%AE%E0%A5%A8_3ew2awb.pdf",
       "note": "Government-hosted CDC Grade 9 Economics (103) PDF; text-extracted bilingual model and summary table agree on 75 marks, 3h, 22 required items: 11×1, 8×5, 3×8; alternatives at model Q12,16,18,22 (not extra scored items). Six unit totals read as 9/24/9/6/12/15; cognitive summary marks 13/24/17/21. Extracted prose conflicts with the summary/model (5 short items, 5-mark long items, higher ability cap 20% vs 28% summary). Page screenshots timed out; original row/cell visual confirmation and clarification of conflicting prose still required. No exact blueprint approved; no automatic generation enabled by this source."
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य गणित",
+      "kind": "historical_specification_grid_and_model_questions",
+      "version": "2078",
+      "status": "official_CDC_historical_PDF_visual_grid_checked_current_revision_unconfirmed",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11170_Specification%20Grid%20%28grade%209-10%29%20Compulsory%20Mathematics_nbimkq0.pdf",
+      "note": "Government PDF page 1 visually checked: 75 marks, 3 hours, 16 grouped questions, 49 subitems; seven area marks 6/13/13/15/13/11/4; cognitive marks 12/18/30/15. Grade 9 model is present. The PDF expressly dates its grid to 2078; the 2082 official listing date alone does not establish that the PDF is the latest applicable revision. Archive reference only until current applicability is verified."
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य अङ्ग्रेजी",
+      "kind": "historical_specification_grid_and_model_questions",
+      "version": "2078 curriculum basis",
+      "status": "official_CDC_PDF_visual_section_grid_checked_grade9_model_and_current_applicability_pending",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/Specification%20Grid%20%28Grade%209%20-10%29%20Compulsory%20English_f4xgqyn.pdf",
+      "note": "Government PDF cover and grid visually verified: reading 40 (5/10/10/15), writing 35 (5/5/6/8 plus grammar 11), total 75, 3h. Reading requires two textbook and two unseen passages with distinct comprehension task patterns; grammar includes six 1-mark transformations and ten half-mark contextual choices. The included model is Grade 10, not Grade 9. Current Grade 9 model applicability and reviewed passage bank remain pending; do not automatically approve CDC Exact."
     }
   ],
   "completion": {
