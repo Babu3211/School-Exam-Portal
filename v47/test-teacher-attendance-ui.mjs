@@ -7,7 +7,9 @@ for(const token of [
  "actor={role:session.role,active:true,schoolId:selectedSchool,uid}",
  "actor.role==='teacher'?await saveAssignedTeacherAttendance",
  "if(!['school_admin','teacher'].includes(actor?.role))",
- "if(actor?.role==='school_admin'){const select=document.createElement('select')",
+ "if(canSelectRoster()){const select=document.createElement('select')",
+ "teacherDuty.classId===$('schoolClass').value",
+ "await saveTeacherClassAttendance({db,api,actor:selected,schoolId:sid,entries",
  "if(actor?.role!=='school_admin')throw new Error('School Admin required')"
 ])assert.ok(js.includes(token),'Missing teacher attendance UI contract: '+token);
 assert.ok(js.includes("Present/Absent मात्र सच्याउन मिल्छ"),'Teacher correction confirmation missing');

@@ -1,6 +1,7 @@
+import {saveTeacherClassAttendance} from './teacher-class-attendance.mjs';
 import {initializeTestEnvironment,assertFails,assertSucceeds} from '@firebase/rules-unit-testing';
 import {readFileSync} from 'node:fs';
-import {doc,getDoc,setDoc,updateDoc,deleteDoc,deleteField,collection,getDocs,serverTimestamp} from 'firebase/firestore';
+import {doc,getDoc,setDoc,updateDoc,deleteDoc,deleteField,collection,getDocs,serverTimestamp,runTransaction} from 'firebase/firestore';
 const rules=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
 const env=await initializeTestEnvironment({projectId:'smss-v47-emulator-tests',firestore:{rules,host:'127.0.0.1',port:8187}});
 const db=(uid)=>env.authenticatedContext(uid).firestore();
@@ -269,6 +270,15 @@ try{
  await assertSucceeds(updateDoc(doc(admin,'schools','12345678','teacher_assignments','12345678:teacher_12345678:10:attendance'),{active:true}));
  // Assigned Teacher can correct only the Present/Absent field of the right class.
  await assertSucceeds(updateDoc(attendance(teacher,'12345678'),{present:true}));
+ // Actual Web SDK multi-student transaction under unchanged assignment rules.
+ const batchRows=Array.from({length:5},(_,i)=>({studentId:'teacher_bulk_'+i,class:'10',date:'2026-11-24',present:i%2===0}));
+ await env.withSecurityRulesDisabled(async ctx=>{for(const e of batchRows)await setDoc(doc(ctx.firestore(),'schools','12345678','students',e.studentId),{name:'Synthetic '+e.studentId,schoolId:'12345678',class:'10',active:true})});
+ const teacherBatch={db:teacher,api:{doc,runTransaction},actor:{uid:'teacher_12345678',schoolId:'12345678',role:'teacher',active:true},schoolId:'12345678',entries:batchRows,assertSession:()=>{}};
+ const batchResult=await saveTeacherClassAttendance(teacherBatch);
+ if(batchResult.saved!==5||batchResult.changed!==5)throw Error('Teacher bulk attendance must commit all five assigned rows');
+ const noChange=await saveTeacherClassAttendance(teacherBatch);
+ if(noChange.changed!==0)throw Error('Repeated attendance must not rewrite unchanged rows');
+
  await assertSucceeds(updateDoc(attendance(teacher,'12345678'),{present:false}));
  await assertFails(updateDoc(attendance(teacher,'12345678'),{date:'2026-11-19'}));
  await assertFails(updateDoc(attendance(teacher,'12345678'),{class:'9'}));
