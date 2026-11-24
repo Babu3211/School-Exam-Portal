@@ -388,7 +388,8 @@ service cloud.firestore {
           'date', 'level', 'method', 'evidence', 'feedback', 'createdBy', 'createdAt']) &&
         data.keys().hasOnly(['studentId', 'className', 'subject', 'section',
           'academicYear', 'period', 'unit', 'unitEn', 'topic', 'topicAlt',
-          'date', 'level', 'method', 'evidence', 'feedback', 'createdBy', 'createdAt']) &&
+          'date', 'level', 'method', 'evidence', 'feedback', 'createdBy', 'createdAt', 'stage']) &&
+        (!data.keys().hasAny(['stage']) || data.stage in ['regular', 'support']) &&
         data.studentId is string && data.studentId.size() > 0 && data.studentId.size() <= 1500 &&
         data.studentId.matches('^[^/]+$') && !(data.studentId in ['.', '..']) &&
         data.className is string && data.className.matches('^(Class |कक्षा )?[1-5१-५]$') &&
