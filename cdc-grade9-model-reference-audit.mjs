@@ -3,6 +3,7 @@
  * current-grid approval. No external question text is copied.
  */
 import {cdcSubjectKey} from './cdc-grid-source-index.mjs';
+import {getNepali2078Reference} from './cdc-grade9-nepali-model-2078.mjs';
 import {auditGrade9ScienceArchive} from './cdc-grade9-science-archive-audit.mjs';
 import {auditEnglishChart} from './cdc-grade9-english-practice.mjs';
 import {auditCompulsoryMathArchive} from './cdc-grade9-compulsory-math-practice.mjs';
@@ -34,6 +35,11 @@ export function auditGrade9ModelReference({grade,subject,questions=[]}={}){
  if(grade!==9)return null;
  const k=cdcSubjectKey(subject);
  let r=refs[k]?structuredClone(refs[k]):null;
+ if(k==='nepali'){
+  const n=getNepali2078Reference();
+  const names=['Vocabulary','Spelling','Language structure','Reading comprehension','Guided writing','Functional writing','Notes and summary','Text comprehension','Interpretation','Critical response','Essay'];
+  r={url:n.sourceUrl,sourceType:n.sourceType,year:'2078',minutes:180,modelCount:20,areas:n.areaMarks.map((marks,i)=>[names[i],marks]),modelSlots:n.slots,secondarySummary:refs.nepali.url,limitations:['Current approved version not verified; source is a feedback copy','Seen passages and grouped question bank still required','Equal-weight components are planning inference, not a marking key']};
+ }
  if(k==='science'){
   const s=auditGrade9ScienceArchive({grade,subject});
   if(!s)return null;

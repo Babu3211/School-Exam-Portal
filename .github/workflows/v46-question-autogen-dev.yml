@@ -22,6 +22,8 @@ on:
       - 'cdc-grade9-release-audit.mjs'
       - 'cdc-grade9-paper-grid-guard.mjs'
       - 'cdc-grade9-model-reference-audit.mjs'
+      - 'cdc-grade9-nepali-model-2078.mjs'
+      - 'scripts/test-cdc-grade9-nepali-model-2078.mjs'
       - 'scripts/test-cdc-grade9-model-reference-audit.mjs'
       - 'scripts/test-cdc-grade9-paper-grid-guard.mjs'
       - 'cdc-grade9-science-archive-audit.mjs'
@@ -90,6 +92,8 @@ jobs:
           node --check cdc-grade9-release-audit.mjs
           node --check cdc-grade9-paper-grid-guard.mjs
           node --check cdc-grade9-model-reference-audit.mjs
+          node --check cdc-grade9-nepali-model-2078.mjs
+          node --check scripts/test-cdc-grade9-nepali-model-2078.mjs
           node --check scripts/test-cdc-grade9-model-reference-audit.mjs
           node --check scripts/test-cdc-grade9-paper-grid-guard.mjs
           node --check cdc-grade9-science-archive-audit.mjs
@@ -135,6 +139,8 @@ jobs:
         run: node scripts/test-cdc-grade9-paper-grid-guard.mjs
       - name: Compare six Grade 9 alternative model references and bank shortages without approving unverified grids
         run: node scripts/test-cdc-grade9-model-reference-audit.mjs
+      - name: Verify Grade 9 Nepali feedback model grouped question and optional-choice structure
+        run: node scripts/test-cdc-grade9-nepali-model-2078.mjs
       - name: Verify automatic CDC Grid source detection for Grade 6-10 subjects
         run: node scripts/test-cdc-grid-source-index.mjs
       - name: Verify 54 original bilingual formula-checked Optional Maths practice questions
