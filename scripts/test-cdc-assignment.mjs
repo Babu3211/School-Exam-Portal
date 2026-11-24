@@ -1223,16 +1223,17 @@ for(const grade of ['2','3']){
   assert.equal(field('annex3').hidden,false,unit);
   assert.equal(rows.rows.length,expected[i][1],unit);
   assert.equal(outcomes.length,expected[i][0],unit);
-  if(grade==='2'){
-   assert.match(field('annexStatus').textContent,/कार्यगत शब्दावली/);
-   assert.ok(outcomes.every(cell=>cell.textContent.includes(' — ')));
-   assert.ok([...rows.rows].every(row=>!row.textContent.includes('मूल PDF हेर्नुहोस्')));
-   const sampleLabels=[/छिमेकीलाई सम्मान गर्ने/,/चुम्बकबाट आकर्षित वस्तु छुट्याउने/,/स्थलचर जनावर चिन्ने/,/२५ मिटर दौड/,/सजीव–निर्जीव छुट्याउने/,/सार्वजनिक सम्पदा संरक्षण/,/स्थानीय गीत गाउने/,/राष्ट्रिय चिह्नको वर्णन/,/परिवारको आम्दानीका स्रोत/,/पानीका स्रोत/];
-   assert.match(rows.textContent,sampleLabels[i]);
-   assert.ok([...rows.rows].every(row=>row.cells[row.cells.length-1].textContent.trim().length>0));
-  }else{
-   assert.match(rows.textContent,/सूचक — मूल PDF हेर्नुहोस्/);
-  }
+  assert.match(field('annexStatus').textContent,/कार्यगत शब्दावली/);
+  assert.ok(outcomes.every(cell=>cell.textContent.includes(' — ')));
+  assert.ok([...rows.rows].every(row=>!row.textContent.includes('मूल PDF हेर्नुहोस्')));
+  const sampleLabels=grade==='2'
+   ?[/छिमेकीलाई सम्मान गर्ने/,/चुम्बकबाट आकर्षित वस्तु छुट्याउने/,/स्थलचर जनावर चिन्ने/,/२५ मिटर दौड/,/सजीव–निर्जीव छुट्याउने/,/सार्वजनिक सम्पदा संरक्षण/,/स्थानीय गीत गाउने/,/राष्ट्रिय चिह्नको वर्णन/,/परिवारको आम्दानीका स्रोत/,/पानीका स्रोत/]
+   :[/पारिवारिक नाता/,/ध्वनि प्रदूषणको असर/,/खोपको महत्त्व/,/प्राथमिक उपचारको अवधारणा/,/खाद्य शृङ्खलाको उदाहरण/,/ठोस, तरल र ग्यासका गुण परीक्षण/,/स्थानीय बाजा अभ्यास/,/स्थानीय भाषा/,/पैसा बचत/,/दिन र रातको कारण/];
+  assert.match(rows.textContent,sampleLabels[i]);
+  const toolLabels=[...rows.rows].map(row=>row.cells[row.cells.length-1].textContent.trim());
+  assert.ok(toolLabels.every(Boolean));
+  if(grade==='3'&&i===1)assert.ok(toolLabels.every(t=>t==='मूल फाराममा खाली'));
+  else assert.ok(toolLabels.every(t=>t!=='मूल फाराममा खाली'));
   assert.equal(outcomes.reduce((n,cell)=>n+cell.rowSpan,0),expected[i][1]);
   assert.equal(rows.rows[0].cells[0].rowSpan,expected[i][1]);
   for(const stage of [0,1]){
