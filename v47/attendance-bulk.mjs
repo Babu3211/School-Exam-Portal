@@ -1,6 +1,7 @@
 import {validateSchoolId} from './school-paths.mjs';
 import {canAccessSchool} from './permissions.mjs';
 import {validateAttendance} from './attendance-service.mjs';
+import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
 // Capped conservatively for Firestore Security Rules document-access budgets. No writes occur until all inputs validate.
 export async function saveClassAttendance({db,api,actor,schoolId,entries}){
  validateSchoolId(schoolId);
@@ -17,12 +18,46 @@ export async function saveClassAttendance({db,api,actor,schoolId,entries}){
   ids.add(entry.studentId);
  }
  if(typeof api?.getDoc!=='function')throw new TypeError('Student roster verification requires getDoc');
+ // Web SDK supports transactions on Spark. Compare existing attendance before
+ // writing; identical rows cost no write and concurrent corrections conflict.
+ // Legacy test adapters lacking transactions keep the original bounded batch.
+ if(typeof api.runTransaction==='function'){
+  const check=()=>{
+   if(actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId||!canAccessSchool(actor,schoolId,'write'))
+    throw Error('School Admin identity changed during attendance transaction');
+  };
+  const ref=(collection,id)=>api.doc(db,'schools',schoolId,collection,id);
+  const changed=await api.runTransaction(db,async tx=>{
+   const students=await Promise.all(validated.map(e=>tx.get(ref('students',e.studentId))));
+   const attendanceRefs=validated.map(e=>ref('attendance',e.date+'_'+e.studentId));
+   const existing=await Promise.all(attendanceRefs.map(r=>tx.get(r)));
+   check();
+   const writes=[];
+   for(let i=0;i<validated.length;i++){
+    const e=validated[i],student=students[i].exists()?students[i].data():null;
+    if(student?.schoolId!==schoolId||student.class!==schoolClass||!isActiveEnrolledStudent(student))
+     throw Error('Student roster changed or school mismatch');
+    if(existing[i].exists()){
+     const row=existing[i].data();
+     if(!row||Object.keys(row).sort().join(',')!=='class,date,present,schoolId,studentId'||
+       row.schoolId!==schoolId||row.class!==schoolClass||row.date!==date||row.studentId!==e.studentId||typeof row.present!=='boolean')
+      throw Error('Existing attendance identity or format mismatch');
+     if(row.present===e.present)continue;
+    }
+    writes.push([attendanceRefs[i],{...e,schoolId}]);
+   }
+   check();
+   for(const [r,data] of writes)tx.set(r,data);
+   return writes.length;
+  });
+  return {saved:validated.length,changed,unchanged:validated.length-changed,date,class:schoolClass};
+ }
  const snapshots=await Promise.all(validated.map(e=>api.getDoc(api.doc(db,'schools',schoolId,'students',e.studentId))));
- for(let i=0;i<validated.length;i++)if(!snapshots[i].exists()||snapshots[i].data().schoolId!==schoolId||snapshots[i].data().class!==schoolClass||snapshots[i].data().active===false)throw new Error('Student roster changed or school mismatch');
+ for(let i=0;i<validated.length;i++)if(!snapshots[i].exists()||snapshots[i].data().schoolId!==schoolId||snapshots[i].data().class!==schoolClass||!isActiveEnrolledStudent(snapshots[i].data()))throw new Error('Student roster changed or school mismatch');
  if(actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId||!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin identity changed during attendance roster verification');
  const batch=api.writeBatch(db);
  for(const entry of validated)batch.set(api.doc(db,'schools',schoolId,'attendance',entry.date+'_'+entry.studentId),{...entry,schoolId});
  if(actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId||!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin identity changed before attendance batch commit');
  await batch.commit();
- return {saved:validated.length,date,class:schoolClass};
+ return {saved:validated.length,changed:validated.length,unchanged:0,date,class:schoolClass};
 }

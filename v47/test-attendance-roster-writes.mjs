@@ -120,3 +120,30 @@ for(const mutate of [
  assert.equal(staged.writes.length,0);
 }
 console.log('V47 attendance student roster authorization tests passed');
+
+ // Transaction-capable Spark path: unchanged rows must not consume document
+ // writes; changed/new rows retain their existing schema and identities.
+{
+ const state=mock(),existing=new Map([['s1',{schoolId,...entry('s1')}]]);
+ const snap=data=>({exists:()=>!!data,data:()=>data});
+ let writes=0,txs=0;
+ const api={...state.api,runTransaction:async(_db,fn)=>{
+  txs++;const pending=[];
+  const result=await fn({
+   get:async path=>{assert.equal(pending.length,0,'all reads precede writes');
+    return path.includes('/students/')?snap({schoolId,class:'9'}):snap(existing.get(path.split('_').at(-1)))},
+   set:(path,data)=>pending.push([path,data])
+  });
+  for(const [path,data] of pending){existing.set(data.studentId,data);writes++}
+  return result;
+ }};
+ const args={db:{},api,actor,schoolId,entries:[entry('s1'),entry('s2')]};
+ const first=await saveClassAttendance(args);
+ assert.equal(first.saved,2);assert.equal(first.changed,1);assert.equal(first.unchanged,1);assert.equal(writes,1);
+ const again=await saveClassAttendance(args);
+ assert.equal(again.changed,0);assert.equal(again.unchanged,2);assert.equal(writes,1);assert.equal(txs,2);
+ const correction=await saveClassAttendance({...args,entries:[{...entry('s1'),present:false},entry('s2')]});
+ assert.equal(correction.changed,1);assert.equal(writes,2);
+ existing.set('s2',{schoolId:'99999',...entry('s2')});
+ await assert.rejects(saveClassAttendance(args),/identity or format mismatch/);assert.equal(writes,2);
+}

@@ -15,18 +15,19 @@ export async function saveLoadedClassAttendance({db,api,actor,schoolId,entries,o
  const validated=entries.map(validateAttendance);
  const date=validated[0].date,schoolClass=validated[0].class,ids=new Set();
  for(const entry of validated){if(entry.date!==date||entry.class!==schoolClass)throw new Error('Mixed class or date');if(ids.has(entry.studentId))throw new Error('Duplicate student ID');ids.add(entry.studentId);}
- let saved=0;
+ let saved=0,changed=0;
  for(let offset=0;offset<validated.length;offset+=10){
   const chunk=validated.slice(offset,offset+10);
   try{
    // Auth may change between 10-record commits even if the actor object is unchanged.
    assertSession();
    if(actor.uid!==identity.uid||actor.role!==identity.role||actor.active!==identity.active||actor.schoolId!==identity.schoolId||!canAccessSchool(actor,schoolId,'write'))throw new Error('School Admin identity changed during class attendance save');
-   await saveClassAttendance({db,api,actor,schoolId,entries:chunk});
+   const outcome=await saveClassAttendance({db,api,actor,schoolId,entries:chunk});
+   changed+=outcome.changed??chunk.length;
   }
   catch(cause){throw new PartialAttendanceSaveError(saved,validated.length,cause,validated.slice(offset).map(entry=>entry.studentId));}
   saved+=chunk.length;
   try{onProgress({saved,total:validated.length,savedIds:chunk.map(e=>e.studentId)});}catch(error){/* UI callback failures must not turn a committed batch into a misleading save failure. */}
  }
- return {saved,total:validated.length,date,class:schoolClass};
+ return {saved,total:validated.length,changed,unchanged:saved-changed,date,class:schoolClass};
 }
