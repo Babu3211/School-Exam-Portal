@@ -2438,6 +2438,340 @@ const cdcPrimaryDailyLifeRubrics = [
  ['आयत र वर्ग','आयताकार तथा वर्गाकार सतह चिन्ने','Identify rectangular and square surfaces']]},
  '3:मेरो दैनिक जीवन':{page:215,rows:cdcPrimaryDailyLifeRubrics.map((r,i)=>[['घडीअनुसार समय','समयका एकाइको सम्बन्ध','काममा लागेको समय'][i],r.ne,r.en])}
  };
+ // Remaining printed forms, pp. 204–206, 209–213 and 216–220.
+ Object.assign(cdcRevisedMathForms,{
+  "1:हाम्रो समुदाय": {
+    "page": 204,
+    "rows": [
+      [
+        "२० सम्म अक्षरमा",
+        "दुवै अङ्क पद्धतिमा १–२० अक्षरमा पढ्ने र लेख्ने",
+        "Read and write 1–20 in words in both numeral systems"
+      ],
+      [
+        "जोर र बिजोर",
+        "वस्तुबाट २० सम्मका सङ्ख्या जोर र बिजोरमा वर्गीकरण गर्ने",
+        "Sort numbers through 20 into even and odd using objects"
+      ],
+      [
+        "जोड",
+        "योगफल २० सम्म हुने तीनवटासम्म सङ्ख्या जोड्ने",
+        "Add up to three numbers with total at most 20"
+      ],
+      [
+        "२१–१००",
+        "दुवै अङ्क पद्धतिमा २१–१०० गन्ने, पढ्ने, लेख्ने र तुलना गर्ने",
+        "Count, read, write and compare 21–100 in both numeral systems"
+      ],
+      [
+        "लम्बाइ",
+        "अमानक नापबाट वस्तु नापेर अग्लो–होचो र लामो–छोटो छुट्याउने",
+        "Measure using informal units and compare height and length"
+      ]
+    ]
+  },
+  "1:मेरो विद्यालय": {
+    "page": 205,
+    "rows": [
+      [
+        "क्रमात्मक सङ्ख्या",
+        "पहिलोदेखि दसौँसम्म स्थान पहिचान गर्ने",
+        "Identify first through tenth positions"
+      ],
+      [
+        "जोड",
+        "हात नलिई योगफल १०० सम्म हुने दुई सङ्ख्या जोड्ने",
+        "Add two numbers up to 100 without carrying"
+      ],
+      [
+        "घटाउ",
+        "ठोस वस्तुको प्रयोगबाट २० सम्मका सङ्ख्या घटाउने",
+        "Subtract numbers up to 20 using objects"
+      ],
+      [
+        "दुई अङ्कको घटाउ",
+        "सापटी नलिई दुई अङ्कसम्मका सङ्ख्या घटाउने",
+        "Subtract up to two-digit numbers without borrowing"
+      ]
+    ]
+  },
+  "1:सञ्चार प्रविधि र बजार": {
+    "page": 206,
+    "rows": [
+      [
+        "सिक्का र नोट",
+        "चलनचल्तीका रु. १०० सम्मका नेपाली सिक्का र नोट चिन्ने",
+        "Recognize Nepalese coins and notes up to Rs 100"
+      ],
+      [
+        "चित्रग्राफ",
+        "चित्रग्राफबाट सूचना लिने र दिने",
+        "Read and communicate information using pictographs"
+      ]
+    ]
+  },
+  "2:सङ्ख्याको ज्ञान": {
+    "page": 209,
+    "rows": [
+      [
+        "१००० सम्मका सङ्ख्या",
+        "दुवै अङ्क पद्धतिमा १००० सम्मका सङ्ख्या स्थानमान तालिकामा देखाउने, पढ्ने र लेख्ने",
+        "Represent, read and write numbers to 1,000 using place value in both scripts"
+      ],
+      [
+        "१०० सम्म अक्षरमा",
+        "दुवै अङ्क पद्धतिअनुसार १०० सम्मका सङ्ख्या अक्षरमा पढ्ने र लेख्ने",
+        "Read and write numbers to 100 in words in both systems"
+      ]
+    ]
+  },
+  "2:हाम्रो समुदाय": {
+    "page": 210,
+    "rows": [
+      [
+        "बढ्दो र घट्दो क्रम",
+        "तीन अङ्कसम्मका सङ्ख्या तुलना गरी बढ्दो वा घट्दो क्रममा पढ्ने र लेख्ने",
+        "Compare and order up to three-digit numbers"
+      ],
+      [
+        "जोर र बिजोर",
+        "तीन अङ्कसम्मका जोर र बिजोर सङ्ख्या चिन्ने",
+        "Identify even and odd numbers up to three digits"
+      ],
+      [
+        "तौल",
+        "१०० ग्रामदेखि १ किलोग्रामसम्मको मानक ढकबाट वस्तु तौलने",
+        "Weigh objects using standard weights from 100 g to 1 kg"
+      ],
+      [
+        "तौलका एकाइ",
+        "किलोग्राम र ग्रामबीचको सम्बन्ध बताउने",
+        "Explain the relationship between kilograms and grams"
+      ]
+    ]
+  },
+  "2:मेरो विद्यालय": {
+    "page": 211,
+    "rows": [
+      [
+        "मानक लम्बाइ",
+        "मानक एकाइ चिन्ने र रुलरबाट सेन्टिमिटर तथा मिलिमिटरमा नाप पढ्ने",
+        "Recognize standard units and read cm and mm on a ruler"
+      ],
+      [
+        "लम्बाइ अनुमान",
+        "वस्तुको लम्बाइ सेन्टिमिटरमा अनुमान, नाप र पुष्टि गर्ने",
+        "Estimate and check lengths in centimetres"
+      ],
+      [
+        "क्षेत्रफल",
+        "समान प्रकृतिका दुई सतहको क्षेत्रफल अवलोकनबाट तुलना गर्ने",
+        "Compare areas of two similar surfaces by observation"
+      ],
+      [
+        "गुणन",
+        "दोहोरिने जोडको रूपमा गुणन व्यक्त गर्ने",
+        "Express multiplication as repeated addition"
+      ],
+      [
+        "भिन्न",
+        "सिङ्गो, आधा र एक चौथाइका आधारमा वस्तु तुलना गर्ने",
+        "Compare objects as whole, half and quarter"
+      ]
+    ]
+  },
+  "2:सञ्चार प्रविधि र बजार": {
+    "page": 212,
+    "rows": [
+      [
+        "तालिका",
+        "दिइएको तालिकाबाट जानकारी लिने र दिने",
+        "Read and communicate data from a table"
+      ],
+      [
+        "चित्रग्राफ र तालिका",
+        "चित्रग्राफका सदस्य गनेर तालिकामा प्रस्तुत गर्ने",
+        "Count pictograph entries and display them in a table"
+      ],
+      [
+        "सिक्का र नोट",
+        "रु. १००० सम्मका सिक्का तथा नोट चिन्ने",
+        "Recognize coins and notes up to Rs 1,000"
+      ],
+      [
+        "मुद्रा",
+        "रूपान्तरण नगरी रकम जोड्ने र घटाउने",
+        "Add and subtract money without conversion"
+      ]
+    ]
+  },
+  "2:गणितका आधारभूत क्रिया": {
+    "page": 213,
+    "rows": [
+      [
+        "जोड",
+        "योगफल १००० सम्म हुने तीन अङ्कसम्मका सङ्ख्या जोड्ने",
+        "Add up to three-digit numbers with sum at most 1,000"
+      ],
+      [
+        "घटाउ",
+        "तीन अङ्कसम्मको सङ्ख्या घटाउने",
+        "Subtract numbers of up to three digits"
+      ],
+      [
+        "गुणन",
+        "१० सम्मको गुणन तालिका निर्माण गर्ने",
+        "Construct multiplication tables through 10"
+      ],
+      [
+        "भाग",
+        "गुणन तालिकाको आधारमा दुई अङ्कसम्मको सङ्ख्यालाई १० सम्मको भाजकले निःशेष भाग गर्ने",
+        "Use multiplication tables for exact division of up to two-digit numbers by divisors through 10"
+      ]
+    ]
+  },
+  "3:सङ्ख्याको ज्ञान": {
+    "page": 216,
+    "rows": [
+      [
+        "पाँच अङ्कसम्म",
+        "दुवै अङ्क पद्धतिमा पाँच अङ्कसम्मका सङ्ख्या स्थानमान तालिकामा देखाउने, पढ्ने र लेख्ने",
+        "Represent, read and write up to five-digit numbers using place value in both scripts"
+      ],
+      [
+        "१००० सम्म अक्षरमा",
+        "दुवै पद्धतिमा १००० सम्मका सङ्ख्या अक्षरमा पढ्ने र लेख्ने",
+        "Read and write numbers to 1,000 in words in both systems"
+      ],
+      [
+        "तुलना",
+        "चार अङ्कसम्मका सङ्ख्या =, > र < सङ्केतले तुलना गर्ने",
+        "Compare up to four-digit numbers using equality and inequality signs"
+      ],
+      [
+        "ढाँचा",
+        "सङ्ख्याको ढाँचा पहिचान गर्ने",
+        "Recognize number patterns"
+      ]
+    ]
+  },
+  "3:हाम्रो समुदाय": {
+    "page": 217,
+    "rows": [
+      [
+        "बढ्दो र घट्दो क्रम",
+        "चार अङ्कसम्मका सङ्ख्या बढ्दो वा घट्दो क्रममा पढ्ने र लेख्ने",
+        "Read and write up to four-digit numbers in ascending or descending order"
+      ],
+      [
+        "स्थानीय सङ्ख्याङ्क",
+        "स्थानीय सङ्ख्याङ्कमा २० सम्म पढ्ने र लेख्ने",
+        "Read and write through 20 in local notation"
+      ],
+      [
+        "लम्बाइ",
+        "मिटर वा सेन्टिमिटरमा वस्तुको लम्बाइ अनुमान, नाप र पुष्टि गर्ने",
+        "Estimate and verify lengths in metres or centimetres"
+      ]
+    ]
+  },
+  "3:मेरो विद्यालय": {
+    "page": 218,
+    "rows": [
+      [
+        "भिन्न लेखन",
+        "आधा, एक चौथाइ, तीन चौथाइ, एक तिहाइ र दुई तिहाइ भिन्नमा लेख्ने",
+        "Write halves, quarters, three quarters, thirds and two thirds as fractions"
+      ],
+      [
+        "भिन्न प्रदर्शन",
+        "१/२, १/४, ३/४, १/३ र २/३ सामग्रीबाट देखाउने",
+        "Model the five specified fractions using materials"
+      ],
+      [
+        "भिन्न तुलना",
+        "चित्रबाट उल्लिखित भिन्नमध्ये दुई तुलना गर्ने",
+        "Compare two of the listed fractions using pictures"
+      ],
+      [
+        "क्षेत्रफल",
+        "वर्ग कोठा गनेर वर्गाकार वा आयताकार सतहको क्षेत्रफल निकाल्ने",
+        "Find square or rectangular area by counting unit squares"
+      ]
+    ]
+  },
+  "3:गणितका आधारभूत क्रिया": {
+    "page": 219,
+    "rows": [
+      [
+        "जोड",
+        "योगफल १०००० सम्म हुने चार अङ्कसम्मका सङ्ख्या जोड्ने",
+        "Add up to four-digit numbers with sum at most 10,000"
+      ],
+      [
+        "जोड र घटाउ",
+        "जोड र घटाउको सम्बन्ध चिन्ने",
+        "Identify the relationship between addition and subtraction"
+      ],
+      [
+        "घटाउ",
+        "चार अङ्कसम्मका सङ्ख्या घटाउने",
+        "Subtract up to four-digit numbers"
+      ],
+      [
+        "गुणन",
+        "तीन अङ्कसम्मको सङ्ख्यालाई दुई अङ्कसम्मको सङ्ख्याले गुणन गर्ने",
+        "Multiply up to three-digit by up to two-digit numbers"
+      ],
+      [
+        "भाग",
+        "तीन अङ्कसम्मको सङ्ख्यालाई १० सम्मको सङ्ख्याले भाग गर्ने",
+        "Divide up to three-digit numbers by divisors through 10"
+      ]
+    ]
+  },
+  "3:सञ्चार प्रविधि र बजार": {
+    "page": 220,
+    "rows": [
+      [
+        "मुद्रा",
+        "मुद्रासम्बन्धी जोड र घटाउ गर्ने",
+        "Add and subtract amounts of money"
+      ],
+      [
+        "क्षमताका एकाइ",
+        "लिटर र मिलिलिटरको सम्बन्ध बताउने",
+        "Explain the relationship between litres and millilitres"
+      ],
+      [
+        "क्षमता नाप",
+        "भाँडाको क्षमता लिटर र मिलिलिटरमा नाप्ने",
+        "Measure container capacity in litres and millilitres"
+      ],
+      [
+        "क्षमताको जोड र घटाउ",
+        "लिटर र मिलिलिटरसम्बन्धी जोड र घटाउ गर्ने",
+        "Add and subtract litres and millilitres"
+      ],
+      [
+        "लम्बाइका एकाइ",
+        "मिटर, सेन्टिमिटर र मिलिमिटरको सम्बन्ध बताउने",
+        "Relate metres, centimetres and millimetres"
+      ],
+      [
+        "तौल",
+        "वस्तुको तौल अनुमान गरी नापबाट पुष्टि गर्ने",
+        "Estimate and verify object weights"
+      ],
+      [
+        "चित्रग्राफ",
+        "चित्रग्राफ बनाउने",
+        "Construct a pictograph"
+      ]
+    ]
+  }
+});
+ const revisedMathThemes=[["1","हाम्रो समुदाय","Our community"],["1","मेरो विद्यालय","My school"],["1","सञ्चार प्रविधि र बजार","Communication technology and market"],["2","सङ्ख्याको ज्ञान","Number concepts"],["2","हाम्रो समुदाय","Our community"],["2","मेरो विद्यालय","My school"],["2","सञ्चार प्रविधि र बजार","Communication technology and market"],["2","गणितका आधारभूत क्रिया","Basic operations"],["3","सङ्ख्याको ज्ञान","Number concepts"],["3","हाम्रो समुदाय","Our community"],["3","मेरो विद्यालय","My school"],["3","गणितका आधारभूत क्रिया","Basic operations"],["3","सञ्चार प्रविधि र बजार","Communication technology and market"]];
  function revisedMathRows(grade){
    return Object.entries(cdcRevisedMathForms).filter(([key])=>key.startsWith(grade+':'))
      .flatMap(([key,form])=>form.rows.map(([,ne,en])=>[key.slice(2),ne,en]));
@@ -4167,7 +4501,8 @@ function openCdcAssessment(context = null) {
         }
       }
     } catch { field('status').textContent = 'मस्यौदा सूची पढ्न सकिएन।'; }
-    const official = (cdcVerifiedOutcomes[cl+':'+cdcAssessmentSubjectKey(subject)] || [])
+    const revised=primaryRevisedForm();
+    const official = revised ? revised.rows.map(([,ne,en])=>[field('unit').value,ne,en]) : (cdcVerifiedOutcomes[cl+':'+cdcAssessmentSubjectKey(subject)] || [])
       .filter(([unit])=>normalizeTitle(unit)===sourceUnit);
     const english = language()==='en';
     field('outcomePickerLabel').hidden=!official.length;
@@ -4401,6 +4736,7 @@ function openCdcAssessment(context = null) {
   };
   const units = () => {
     const pairs = new Map(cdcVerifiedUnits(field('class').value,field('subject').value));
+    if(cdcAssessmentSubjectKey(field('subject').value)==='mathematics')for(const [grade,ne,en] of revisedMathThemes)if(grade===field('class').value)pairs.set(ne,en);
     for(const {unit,unitEn} of getCatalog()) if(!pairs.has(unit)) pairs.set(unit,unitEn);
     return [...pairs];
   };
