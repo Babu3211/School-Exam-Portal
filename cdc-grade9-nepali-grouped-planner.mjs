@@ -21,7 +21,7 @@ const sourceOK=q=>q.sourceKind==='textbook'&&str(q.sourceTitle)&&str(q.sourceEdi
  Number.isSafeInteger(q.sourcePage)&&q.sourcePage>0;
 function matches(q,s,subject,topics,allowDraft=false){
  const reviewed=q?.reviewStatus==='teacher_reviewed'&&str(q.reviewedBy);
- const draft=allowDraft&&!seenSkills.has(s.skill)&&q?.bundled===true&&q?.reviewStatus==='draft'&&q?.teacherReviewRequired===true&&q?.officialCdcQuestion===false&&q?.sourceStatus==='SMSS_original_reference_draft';
+ const draft=allowDraft&&(!seenSkills.has(s.skill)||(s.skill!=='notes_and_summary'&&q?.sourceEvidence==='textbook_text_checked_original_questions'&&sourceOK(q)))&&q?.bundled===true&&q?.reviewStatus==='draft'&&q?.teacherReviewRequired===true&&q?.officialCdcQuestion===false&&q?.sourceStatus==='SMSS_original_reference_draft';
  if(!q||q.gradeNumber!==9||str(q.subject)!==str(subject)||q.status==='archived'||
   !str(q.id)||!topics.has(q.topicId)||(!reviewed&&!draft)||
   q.skill!==s.skill||q.cognitiveLevel!==s.cognitiveLevel||q.marks!==s.marksPerChoice||

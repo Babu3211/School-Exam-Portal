@@ -3,6 +3,7 @@
  * Textbook-dependent groups deliberately excluded until actual text evidence.
  */
 import {getNepali2078Reference} from './cdc-grade9-nepali-model-2078.mjs';
+import {nepaliTextbookReferenceDrafts} from './cdc-grade9-nepali-textbook-reference.mjs';
 import {grade9NepaliPracticeBank} from './cdc-grade9-nepali-practice.mjs';
 const paired=[
 [2,1,0,null,[
@@ -64,5 +65,5 @@ export function grade9NepaliReferenceBank({grade,subject}={}){
   const answer=components?components.map(c=>c.answer).join(' / '):raw;
   return {id:'smss_nep_ref9_'+family+'_v'+v,gradeNumber:9,subject,unitCode:u.unitCode,unitId:u.id,unitTitle:u.unitTitle,topicId:u.id+'_'+t,topicName:u.topics[t],skill:s.skill,cognitiveLevel:s.cognitiveLevel,marks:s.marksPerChoice,questionType:'grouped_reference',text:prompt+' (समूह '+(v+1)+')',questionText:prompt,questionTextEn:prompt,answer,answerEn:answer,...(genre?{genre}:{}),...(components?{components}:{}),...(passage?{passage}:{}),sourceKind:number===12?'original_unseen':'original_practice',status:'active',bundled:true,teacherReviewRequired:true,reviewStatus:'draft',officialCdcQuestion:false,sourceStatus:'SMSS_original_reference_draft'};
  }));
- return {units,questions,coveredMarks:43,teacherReviewRequired:true,exactGridVerified:false};
+ return {units,questions:[...questions,...nepaliTextbookReferenceDrafts({grade,subject,units})],coveredMarks:71,teacherReviewRequired:true,exactGridVerified:false};
 }

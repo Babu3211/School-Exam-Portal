@@ -75,7 +75,7 @@ const rows=[
     "फोहोर व्यवस्थापन, पानी बचत, वृक्ष संरक्षण, प्रदूषण न्यूनीकरण र सहभागिता।"
   ],
   [
-    "कालजित र अजङ्गको राक्षसको कथा",
+    "कालजित र अजङ्गुको राक्षसको कथा",
     "Folktale",
     "वचन / Number",
     "‘बालक’ को बहुवचन लेख्नुहोस्।",
@@ -188,7 +188,7 @@ const rows=[
 export function grade9NepaliPracticeBank({grade,subject}={}){
  const base={units:[],questions:[],teacherReviewRequired:true,officialCdcQuestions:false,exactGridVerified:false};
  if(grade!==9||cdcSubjectKey(subject)!=='nepali')return base;
- const units=rows.map(([ne,en,grammar],i)=>({id:'smss_nepali_g9_u'+(i+1),unitCode:String(i+1),unitTitle:ne+' / '+en,unitTitleEn:en,topics:[grammar,'लेखन / Writing'],sourceTitle:'CDC Grade 9 Nepali textbook publication; chapter cross-check pending',sourceUrl:NEPALI_BOOK_PAGE,provenance:'Secondary-index chapter labels; current textbook content and official grid review pending'}));
+ const units=rows.map(([ne,en,grammar],i)=>({id:'smss_nepali_g9_u'+(i+1),unitCode:String(i+1),unitTitle:ne+' / '+en,unitTitleEn:en,topics:[grammar,'लेखन / Writing'],sourceTitle:'CDC Grade 9 Nepali 2082 textbook contents',sourceUrl:"https://giwmscdnone.gov.np/media/pdf_upload/Updated%20Nepali%20grade%209_2082.04.28%20for%20web_compressed_het3rai.pdf",sourcePage:[1,10,25,36,46,58,69,82,90,103,117,131,141,149,159,168][i],provenance:'2082 textbook contents text checked; detailed grammar mapping and official grid review pending'}));
  const questions=rows.flatMap(([, , ,q1,a1,q2,a2,w,wa],i)=>[[0,q1,a1,1,'knowledge'],[0,q2,a2,2,'application'],[1,w,wa,5,'application']].map(([t,prompt,answer,marks,cognitiveLevel],j)=>({id:units[i].id+'_q'+j,gradeNumber:9,subject,unitCode:units[i].unitCode,unitId:units[i].id,unitTitle:units[i].unitTitle,topicId:units[i].id+'_'+t,topicName:units[i].topics[t],questionType:marks===1?'very_short':marks===2?'short':'long',marks,cognitiveLevel,questionText:prompt,questionTextEn:prompt,answer,answerEn:answer,options:[],optionsEn:[],correctOption:'',status:'active',bundled:true,teacherReviewRequired:true,officialCdcQuestion:false,sourceStatus:'SMSS_original_draft_not_CDC_published'})));
  return {...base,units,questions};
 }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v93-grade9-science-school-reference-2083';
+const CACHE_NAME = 'smss-pwa-v94-grade9-nepali-textbook-reference-2083';
 const APP_SHELL = [
   './',
   './index.html',
@@ -27,6 +27,7 @@ const APP_SHELL = [
   './cdc-grade9-nepali-model-2078.mjs',
   './cdc-grade9-nepali-grouped-planner.mjs',
   './cdc-grade9-nepali-reference-bank.mjs',
+  './cdc-grade9-nepali-textbook-reference.mjs',
   './cdc-grade9-english-grouped-planner.mjs',
   './cdc-grade9-english-reference-bank.mjs',
   './cdc-grade9-english-seen-reference.mjs',

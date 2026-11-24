@@ -479,7 +479,7 @@ async function loadBundledPracticeBank({grade,subject}){
  const science=grade9ScienceOriginalBank({grade,subject});
  if(science.units.length){const ref=grade9ScienceSchoolReferenceBank({grade,subject});return {units:science.units,questions:[...science.questions,...ref.questions],status:"Grade 9 Science: 76 original exercises and 80 bilingual school-reference variants; 75-mark full-year review only. Current CDC Grid not verified."};}
  const nepali=grade9NepaliPracticeBank({grade,subject});
- if(nepali.units.length){const ref=grade9NepaliReferenceBank({grade,subject});return {units:nepali.units,questions:[...nepali.questions,...ref.questions],status:"कक्षा ९ नेपाली: ४८ अभ्यास र ३२ मौलिक सन्दर्भ समूह, ४३ अङ्कको संरचना; पाठगत ३२ अङ्क र वर्तमान CDC Grid पुष्टि बाँकी।"};}
+ if(nepali.units.length){const ref=grade9NepaliReferenceBank({grade,subject});return {units:nepali.units,questions:[...nepali.questions,...ref.questions],status:"कक्षा ९ नेपाली: ४८ अभ्यास र ५४ मौलिक सन्दर्भ समूह, ७१ अङ्कको संरचना; ४ अङ्कको सारांश पाठांश र वर्तमान CDC Grid पुष्टि बाँकी।"};}
  const english=grade9EnglishPracticeBank({grade,subject});
  if(english.units.length){const ref=grade9EnglishReferenceBank({grade,subject});return {units:english.units,questions:[...english.questions,...ref.questions],status:"Grade 9 English: 54 original exercises plus "+ref.questions.length+" reference groups; "+(ref.questions.some(q=>q.slot==="reading2")?"75-mark reference structure; teacher review and current model confirmation required.":"65 marks prepared; original seen prose retrieval pending.")+" Not a CDC Exact examination."};}
  const math=grade9CompulsoryMathPracticeBank({grade,subject});

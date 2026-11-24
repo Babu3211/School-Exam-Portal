@@ -29,6 +29,7 @@ on:
       - 'cdc-grade9-nepali-model-2078.mjs'
       - 'cdc-grade9-nepali-grouped-planner.mjs'
       - 'cdc-grade9-nepali-reference-bank.mjs'
+      - 'cdc-grade9-nepali-textbook-reference.mjs'
       - 'scripts/test-cdc-grade9-nepali-reference-bank.mjs'
       - 'cdc-grade9-english-grouped-planner.mjs'
       - 'cdc-grade9-english-reference-bank.mjs'
