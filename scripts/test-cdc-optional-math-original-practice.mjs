@@ -71,3 +71,12 @@ for(const grade of [9,10]){
 assert.equal(originalOptionalMathPracticeBank({grade:8,subject:'Optional Mathematics'}).questions.length,0);
 assert.equal(originalOptionalMathPracticeBank({grade:9,subject:'Compulsory Mathematics'}).questions.length,0);
 console.log('PASS randomized 27-question CDC structure, no repeat, no forged original-bank review status');
+
+const grade9=originalOptionalMathPracticeBank({grade:9,subject:'Optional Mathematics'}).questions.flatMap(q=>q.subquestions);
+for(const unit of ['3','4','5'])assert.ok(grade9.filter(p=>p.unitCode===unit).every(p=>p.curriculumSkill),'Grade 9 subject-aligned skills '+unit);
+assert.doesNotMatch(grade9.filter(p=>p.unitCode==='3').map(p=>p.textEn).join(' '),/area of a rectangle|perimeter|third angle/);
+assert.doesNotMatch(grade9.filter(p=>p.unitCode==='4').map(p=>p.textEn).join(' '),/u · v/);
+assert.ok(grade9.some(p=>p.curriculumSkill==='standard_deviation'));
+assert.ok(grade9.some(p=>p.curriculumSkill==='parallel_vectors'));
+assert.ok(grade9.some(p=>p.curriculumSkill==='rotation'));
+console.log('PASS Grade 9 geometry, vectors and statistics aligned to curriculum pp. 3–5; Grade 10 behavior unchanged');

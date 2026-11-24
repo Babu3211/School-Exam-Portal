@@ -17,6 +17,63 @@ export function isOriginalMathOfflineDraft(row){
 
 const units=['Algebra','Trigonometry','Geometry','Vectors','Statistics','Limit and Continuity'];
 const triples=[[3,4,5],[5,12,13],[8,15,17],[7,24,25]];
+// Grade 9 learning outcomes, curriculum pp. 3–5 (mirror of CDC publication):
+// https://drmathnp.com/wp-content/uploads/2026/07/Optional-Mathematics-Curriculum-Secondary-Level-Grade-9-and-10_afqyz38.pdf
+// These are newly authored exercises, not textbook quotations or certified difficulty.
+const grade9Part=(unit,seed,marks,level)=>{
+ const a=2+seed%31,b=2+seed%7,c=1+seed%5,mode=seed%4;
+ let ne,en,ans,skill;
+ if(unit===3){
+  if(mode===0){
+   const x=a+b,y=c+2*b;
+   ne='A('+a+','+c+') र B('+x+','+y+') जोड्ने रेखाको ढलान पत्ता लगाउनुहोस्।';
+   en='Find the slope of the line through A('+a+','+c+') and B('+x+','+y+').';ans='2';skill='coordinate_slope';
+  }else if(mode===1){
+   ne='बिन्दु P('+a+','+b+') लाई y = x मा परावर्तन गर्दा प्राप्त बिन्दु लेख्नुहोस्।';
+   en='Find the image of P('+a+','+b+') under reflection in y = x.';ans='('+b+','+a+')';skill='reflection';
+  }else if(mode===2){
+   ne='A('+a+','+b+') र B('+(a+2*c)+','+(b+4*c)+') को मध्यबिन्दु पत्ता लगाउनुहोस्।';
+   en='Find the midpoint of A('+a+','+b+') and B('+(a+2*c)+','+(b+4*c)+').';ans='('+(a+c)+','+(b+2*c)+')';skill='section_formula';
+  }else{
+   ne='बिन्दु P('+a+','+b+') लाई मूलबिन्दु केन्द्र मानी घडीको विपरीत दिशामा 90° परिक्रमण गर्दा प्राप्त बिन्दु लेख्नुहोस्।';
+   en='Rotate P('+a+','+b+') through 90° anticlockwise about the origin. Find the image.';ans='('+(-b)+','+a+')';skill='rotation';
+  }
+ }else if(unit===4){
+  if(mode===0){
+   ne='u = ('+a+','+b+') र v = ('+c+','+(c+1)+') भए u + v निकाल्नुहोस्।';
+   en='For u = ('+a+','+b+') and v = ('+c+','+(c+1)+'), find u + v.';ans='('+(a+c)+','+(b+c+1)+')';skill='vector_addition';
+  }else if(mode===1){
+   ne='u = ('+a+','+b+') र v = ('+(a*c)+', t) समानान्तर भए t निकाल्नुहोस्।';
+   en='If u = ('+a+','+b+') and v = ('+(a*c)+', t) are parallel, find t.';ans=String(b*c);skill='parallel_vectors';
+  }else if(mode===2){
+   ne='भेक्टर v = ('+(3*a)+','+(4*a)+') को परिमाण निकाल्नुहोस्।';
+   en='Find the magnitude of vector v = ('+(3*a)+','+(4*a)+').';ans=String(5*a);skill='vector_magnitude';
+  }else{
+   ne='भेक्टर v = ('+(3*a)+','+(4*a)+') को दिशामा एकाइ भेक्टर लेख्नुहोस्।';
+   en='Find the unit vector in the direction of v = ('+(3*a)+','+(4*a)+').';ans='(3/5,4/5)';skill='unit_vector';
+  }
+ }else if(unit===5){
+  const values=[a-b,a-b,a+b,a+b].join(', ');
+  if(mode===0){
+   ne=values+' को माध्यबाट औसत विचलन निकाल्नुहोस्।';
+   en='Find the mean deviation from the arithmetic mean for '+values+'.';ans=String(b);skill='mean_deviation';
+  }else if(mode===1){
+   ne=values+' को स्तरीय विचलन निकाल्नुहोस् (N ले भाग गर्ने सूत्र प्रयोग गर्नुहोस्)।';
+   en='Find the population standard deviation of '+values+'.';ans=String(b);skill='standard_deviation';
+  }else if(mode===2){
+   const v=[a-b,a,a+b,a+2*b,a+3*b,a+4*b,a+5*b].join(', ');
+   ne=v+' को Q₁ र Q₃ बाट चतुर्थांशीय विचलन निकाल्नुहोस्।';
+   en='For '+v+', find the quartile deviation using Q₁ and Q₃.';ans=String(2*b);skill='quartile_deviation';
+  }else{
+   ne=values+' को variance निकाल्नुहोस् (N ले भाग गर्ने सूत्र प्रयोग गर्नुहोस्)।';
+   en='Find the population variance of '+values+'.';ans=String(b*b);skill='variance';
+  }
+ }else if(unit===6&&mode===3){
+  ne='lim (x→'+a+') (x² − '+(a*a)+')/(x − '+a+') निकाल्नुहोस्।';
+  en='Evaluate lim(x→'+a+') (x² − '+(a*a)+')/(x − '+a+').';ans=String(2*a);skill='algebraic_limit';
+ }else return null;
+ return {unitCode:String(unit),marks,cognitiveLevel:level,textNe:ne,textEn:en,answerNe:ans,answerEn:ans,curriculumSkill:skill};
+};
 const part=(unit,seed,marks)=>{
  const k=2+(seed%7),p=2+(seed%4),q=1+((seed*3)%5),
   odd=seed%4,t=triples[seed%triples.length];
@@ -90,7 +147,7 @@ const slotQuestions=({grade,subject,version})=>{
  const rows=[];
  const add=(group,parts,slot)=>{
   const index=rows.length,seed=grade*37+version*101+index*11;
-  const subquestions=parts.map(([unitCode,marks,cognitiveLevel],i)=>({...part(unitCode,seed+i*17,marks),cognitiveLevel}));
+  const subquestions=parts.map(([unitCode,marks,cognitiveLevel],i)=>({...((grade===9&&grade9Part(unitCode,seed+i*17,marks,cognitiveLevel))||part(unitCode,seed+i*17,marks)),cognitiveLevel}));
   let contextNe='',contextEn='';
   if(group!=='objective'){
    const names=[...new Set(parts.map(x=>units[x[0]-1]))].join(' and ');
