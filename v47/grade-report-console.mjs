@@ -2,6 +2,7 @@ import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} fro
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {loadVerifiedLegacyGradeReport} from './verified-legacy-grade-report.mjs';
+import {loadCommittedReportPreview} from './committed-report-client.mjs';
 import {legacyGradePreviewExcel} from './legacy-grade-report-preview.mjs';
 const $=id=>document.getElementById(id),status=s=>{$('message').textContent=s};
 const reportMode=['number','entry'].includes(document.documentElement.dataset.report)?document.documentElement.dataset.report:'grade';
@@ -57,7 +58,7 @@ $('login').onclick=async()=>{
  finally{busy=false;$('login').disabled=!auth}
 };
 $('logout').onclick=async()=>{clearSession();try{if(auth)await authSdk.signOut(auth);status('Logout सफल भयो।')}catch(e){status('Logout असफल: '+e.message)}};
-$('schoolClass').onchange=clearReview;$('term').onchange=clearReview;
+$('schoolClass').onchange=clearReview;$('term').onchange=clearReview;$('reportSource').onchange=clearReview;
 $('cancel').onclick=()=>{clearReview();status('Read-only review cancelled. कुनै अंक परिवर्तन गरिएको छैन।')};
 function showSheet(){
  const seq=++sheetSeq,frame=$('sheetFrame'),studentId=$('student').value;
@@ -79,13 +80,19 @@ function showSheet(){
 $('load').onclick=async()=>{
  if(loading||busy||!actor)return;
  clearReview();const seq=sessionSeq,review=reviewSeq,member=actor,klass=$('schoolClass').value,term=$('term').value;
- const check=()=>assertCurrent(seq,review,member,klass,term);
+ const source=$('reportSource').value;
+ const check=()=>{assertCurrent(seq,review,member,klass,term);if($('reportSource').value!==source)throw Error('Report source changed')};
  loading=true;$('load').disabled=true;$('cancel').disabled=false;
  try{
   await verifyAgain(member,seq,review,klass,term);
-  const data=await loadVerifiedLegacyGradeReport({db,api,auth,actor:member,schoolId:member.schoolId,
+  const data=source==='committed'
+   ?await loadCommittedReportPreview({schoolId:member.schoolId,classNo:klass,term,
+    getIdToken:()=>auth.currentUser.getIdToken(),fetchImpl:(...args)=>fetch(...args),assertCurrent:check})
+   :source==='legacy'?await loadVerifiedLegacyGradeReport({db,api,auth,actor:member,schoolId:member.schoolId,
    classNo:klass,term,readDocument,assertCurrent:check,
-   onProgress:s=>{check();$('progress').textContent=s}});
+   onProgress:s=>{check();$('progress').textContent=s}}):null;
+  if(!data)throw Error('Unknown report source');
+  await verifyAgain(member,seq,review,klass,term);
   check();report=data;
   $('progress').textContent=data.rosterCount+' students / '+data.subjectCount+' subjects — all compatible mark records checked.';
   // iemisLedger HTML cells are escaped by the original V46 rendering module.
@@ -96,7 +103,7 @@ $('load').onclick=async()=>{
   $('gradeOutput').replaceChildren(table);$('ledgerArea').hidden=false;$('exportExcel').disabled=false;
   for(const st of data.students){const option=document.createElement('option');option.value=st.id;option.textContent=String(st.nameEnglish??st.name??st.id);$('student').append(option)}
   $('student').disabled=false;$('previewSheet').disabled=false;$('sheetArea').hidden=false;showSheet();
-  status('V46 IEMIS component marks बाट read-only पूर्वावलोकन तयार भयो। यो आधिकारिक नतिजा होइन।');
+  status((source==='committed'?'Committed V47 marks':'V46 IEMIS component marks')+' बाट read-only पूर्वावलोकन तयार भयो। यो आधिकारिक नतिजा होइन।');
  }catch(e){if(seq===sessionSeq&&review===reviewSeq){clearReview();$('progress').textContent='Preview blocked: '+e.message;status('पूर्ण Grade Preview उपलब्ध छैन: '+e.message)}}
  finally{loading=false;$('load').disabled=!actor;$('cancel').disabled=true}
 };

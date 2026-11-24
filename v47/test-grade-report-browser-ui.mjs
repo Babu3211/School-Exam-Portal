@@ -6,7 +6,7 @@ for(const name of ['grade-ledger','grade-sheet','mark-ledger','mark-entry-ledger
  const html=get('./'+name+'.html');
  assert.match(html,/DEVELOPMENT PREVIEW — NOT VALID FOR OFFICIAL USE/);
  assert.match(html,/grade-report-console\.mjs/);
- for(const id of ['schoolId','email','password','login','logout','schoolClass','term','load','cancel','gradeOutput','exportExcel','student','previewSheet','printSheet','sheetFrame'])
+ for(const id of ['schoolId','email','password','login','logout','schoolClass','term','reportSource','load','cancel','gradeOutput','exportExcel','student','previewSheet','printSheet','sheetFrame'])
   assert.match(html,new RegExp('id="'+id+'"'));
  assert.match(html,/sandbox="allow-same-origin allow-modals"/);
  assert.doesNotMatch(html,/allow-scripts/);
@@ -47,3 +47,30 @@ for(const [name,type] of [['mark-ledger','number'],['mark-entry-ledger','entry']
  assert.ok(links.every(m=>m[0].includes('data-school-module')),'School authorization gate missing: '+name);
 }
 console.log('PASS V46-compatible Mark/Entry/Grade Ledger and Grade Sheet read-only browser routes');
+
+import {loadCommittedReportPreview} from './committed-report-client.mjs';
+assert.match(ui,/source==='committed'/);
+assert.match(ui,/loadCommittedReportPreview\(/);
+assert.match(ui,/reportSource'\)\.onchange=clearReview/);
+const q={schoolId:'12345',classNo:'1',term:'1st'};
+const students=[{id:'s1',schoolId:q.schoolId,class:'1',active:true,nameEnglish:'Alpha'}];
+const subjects=[{id:'math',schoolId:q.schoolId,class:'1',active:true,name:'Mathematics',creditHour:4}];
+const snapshot={...q,school:{nameEnglish:'Test School'},students,subjects,publications:[
+ {published:true,schoolId:q.schoolId,classId:'1',subjectId:'math',examId:q.term,publicationId:'pub_math1',digest:'a'.repeat(64),rosterCount:1,
+ components:[{key:'count',name:'No. of Learning Achievement',fullMarks:5},{key:'got',name:'Obtained Learning Achievement',fullMarks:20}],
+ entries:[{studentId:'s1',isAbsent:false,values:{count:5,got:18},totalObtained:23}]}]};
+const body={snapshot,previewOnly:true,cdcGradeApproved:false};
+let requests=0,changed=false;
+const options={...q,getIdToken:async()=>'test-token',assertCurrent:()=>{if(changed)throw Error('Session changed')},
+ fetchImpl:async(url,opts)=>{requests++;assert.equal(url,'/api/v47/committed-report?schoolId=12345&classId=1&examId=1st');
+ assert.equal(opts.headers.Authorization,'Bearer test-token');assert.equal(opts.cache,'no-store');assert.equal(opts.redirect,'error');
+ return {ok:true,json:async()=>body}}};
+const report=await loadCommittedReportPreview(options);
+assert.equal(report.summary.rows[0].gpa,4);assert.equal(report.previewOnly,true);
+assert.equal(requests,1);
+for(const invalid of [{...body,cdcGradeApproved:true},{...body,snapshot:{...snapshot,schoolId:'99999'}}])
+ await assert.rejects(loadCommittedReportPreview({...options,fetchImpl:async()=>({ok:true,json:async()=>invalid})}),/Unexpected or foreign/);
+await assert.rejects(loadCommittedReportPreview({...options,fetchImpl:async()=>({ok:false})}),/unavailable/);
+await assert.rejects(loadCommittedReportPreview({...options,fetchImpl:async()=>({ok:true,json:async()=>{throw Error('HTML')}})}),/static Hosting/);
+await assert.rejects(loadCommittedReportPreview({...options,fetchImpl:async()=>{changed=true;return {ok:true,json:async()=>body}}}),/Session changed/);
+console.log('PASS V47 committed report browser client: scoped preview, no fallback, unavailable API, stale session and foreign payload refused');
