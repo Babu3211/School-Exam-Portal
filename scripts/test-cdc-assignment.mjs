@@ -74,7 +74,7 @@ Object.assign(w,{
     assert.equal(name,'cdc_observations');
     assert.deepEqual(Object.fromEntries(filters.map(([name,op,value])=>{assert.equal(op,'==');return [name,value];})),{
       studentId:field('student').value,className:({three:'Class 3',primary:'Class 5'})[field('student').value]||field('class').value,subject:field('subject').value,
-      section:'A',academicYear:'2083',period:field('period').value
+      section:'A',academicYear:w.currentSchoolSettings.academicYear,period:field('period').value
     });
     if(readSchool) await readSchool.promise;
     return {docs:[...observations.keys()].filter(path=>filters.every(([key,,value])=>observations.get(path)[key]===value)).map(recordData)};
@@ -398,6 +398,17 @@ w.getDocs=async request=>{
   return {docs:[{id:'three',data:()=>({class:'Class 3',section:'A',name:'Grade 3 synthetic'})}]};
 };
 await w.loadCdcAssessmentPage();
+choice('unit','नाप');
+assert.ok(field('outcomePicker').options.length>1);
+assert.equal(field('annex3').hidden,true);
+assert.doesNotMatch(w.document.querySelector('#cdcUnitSuggestions').textContent,/My daily life/);
+choice('unit','मेरो दैनिक जीवन');
+assert.equal(field('annex3').hidden,true);
+assert.equal(field('printForm').disabled,true);
+assert.equal(field('outcomePicker').options.length,1);
+assert.match(field('revisedCurriculumSource').textContent,/२०८४/);
+w.currentSchoolSettings.academicYear='2084';
+await w.loadCdcAssessmentPage();
 choice('unit','मेरो दैनिक जीवन');
 assert.equal(field('annex3').hidden,false);
 assert.equal(field('annexRows').rows.length,3);
@@ -416,6 +427,7 @@ assert.match(field('status').textContent,/विद्यालयमा सु�
 assert.match(field('schoolStatus').textContent,/1 अवलोकन/);
 assert.equal([...observations.values()].at(-1).className,'Class 3');
 assert.equal([...observations.values()].at(-1).stage,'regular');
+assert.equal([...observations.values()].at(-1).academicYear,'2084');
 assert.doesNotMatch(field('annexFoot').textContent,/75\.00%/);
 assert.match(field('annexFoot').textContent,/1 \/ 3/);
 for(let i=1;i<3;i++){
@@ -463,6 +475,6 @@ for(const [grade,unit,count,page] of [
  assert.ok(field('annexFoot').textContent.includes(count+' × 4'));
  assert.equal(field('printForm').disabled,true);
 }
-console.log('All 19 revised mathematics forms, fixed denominator, unique outcome picker and print isolation passed');
+console.log('All 19 revised mathematics forms, 2083/2084 curriculum isolation, fixed denominator, unique outcome picker and print isolation passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
