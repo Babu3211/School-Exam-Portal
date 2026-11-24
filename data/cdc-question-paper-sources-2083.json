@@ -701,7 +701,26 @@
           "durationMinutes": 180,
           "method": "Partial legacy-font task-cell extraction, not a complete approved table",
           "currentEditionConfirmed": false,
-          "visualCellReviewComplete": false
+          "visualCellReviewComplete": false,
+          "grade9ApplicabilityInstruction": "PDF page 5 states Grade 9 paper should use Grade 10 grid as basis and cover all Grade 9 content areas.",
+          "extractedTaskMarks": {
+            "languageStructureReading": 4,
+            "unseenReading": 4,
+            "noteTaking": 2,
+            "summaryWriting": 3
+          },
+          "legacyReferenceConflict": {
+            "unseenReading": {
+              "extracted": 4,
+              "historicalDraft": 5
+            },
+            "notesAndSummary": {
+              "extracted": 5,
+              "historicalDraft": 4
+            }
+          },
+          "comparisonStatus": "partial_text_conflict_requires_visual_confirmation_and_planner_revision",
+          "officialExamApproved": false
         }
       }
     },
@@ -1014,7 +1033,7 @@
     "teacherReview": "required",
     "grade8SciencePracticePack": "seed-file-created-admin-import-available-teacher-review-required",
     "scienceSourceDiscovery": "Grade 9 correct textbook 19 units and 80 bilingual school-reference variants prepared; historical government RS11167 aggregate marks and cognitive counts matched; current approved Grid applicability pending. Grades 6 and 7 topic extraction pending.",
-    "grade9SciencePracticePack": "80 bilingual original variants, 40 questions per 75-mark review draft; official 2083 exam approval remains blocked",
+    "grade9SciencePracticePack": "blocked-not-importable: obsolete misidentified textbook import remains disabled; separate correct-textbook reference bank has 80 bilingual original variants, 40 questions per 75-mark review draft; official 2083 exam approval remains blocked",
     "otherGradeSubjectPacks": "pending",
     "officialBlueprintCoverage": "partial-only-verified-subject-grade-grid-can-be-set-by-admin",
     "grade10SciencePracticePack": "seed-file-created-admin-import-available-2080-textbook-reference-check-2082-modified-book-and-grid",

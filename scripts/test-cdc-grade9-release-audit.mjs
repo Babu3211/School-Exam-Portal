@@ -204,3 +204,18 @@ assert.equal(byKey.science.gridTranscribed,false);
 assert.ok(data.sources.some(s=>s.url===SCIENCE_TEXTBOOK_URL&&s.kind==='CDC_textbook'));
 assert.match(readFileSync(new URL('../sw.js',import.meta.url),'utf8'),/cdc-grade9-science-original-practice\.mjs/);
 console.log('PASS Grade9 Science nineteen textbook units, 76 bilingual original items, answer keys and subject isolation');
+
+// Source audit RS11168: the current downloaded table must not be conflated
+// with the old 2078 feedback-copy reference. Partial legacy-font extraction
+// identifies a mark conflict; no visual/current-approval claim is made.
+const nepaliSource=data.sources.find(s=>s.retrievalEvidence?.resource==='11168');
+const extracted=nepaliSource.retrievalEvidence.numericReferenceCrosscheck;
+const {getNepali2078Reference}=await import('../cdc-grade9-nepali-model-2078.mjs');
+const historic=getNepali2078Reference();
+assert.equal(historic.slots.find(s=>s.skill==='unseen_passage').marks,extracted.legacyReferenceConflict.unseenReading.historicalDraft);
+assert.equal(historic.slots.find(s=>s.skill==='notes_and_summary').marks,extracted.legacyReferenceConflict.notesAndSummary.historicalDraft);
+assert.equal(extracted.extractedTaskMarks.noteTaking+extracted.extractedTaskMarks.summaryWriting,5);
+assert.equal(extracted.extractedTaskMarks.unseenReading,4);
+assert.equal(extracted.officialExamApproved,false);
+assert.equal(byKey.nepali.gridTranscribed,false);
+console.log('PASS Nepalese government Grid text discrepancy tracked without certifying historical draft');
