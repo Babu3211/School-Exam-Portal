@@ -66,15 +66,16 @@ const {grade9EnvironmentOriginalBank}=await import('../cdc-grade9-environment-or
 for(const subject of ['Optional I: Environmental Science','Optional Environment Science','ऐच्छिक प्रथम: वातावरण विज्ञान']){
  const pack=grade9EnvironmentOriginalBank({grade:9,subject});
  assert.equal(pack.units.length,9);
- assert.equal(pack.questions.length,36);
- assert.equal(new Set(pack.questions.map(q=>q.id)).size,36);
+ assert.equal(pack.questions.length,63);
+ assert.equal(new Set(pack.questions.map(q=>q.id)).size,63);
  assert.equal(pack.exactGridVerified,false);
- assert.ok(pack.units.every(u=>u.provenance.includes('review pending')&&u.sourceUrl.includes('id=15803')));
+ assert.ok(pack.units.every(u=>u.provenance.includes('review pending')&&u.sourceUrl.includes('Opt%20Env%20Sc%20Grade%209')));
  for(const unit of pack.units){
   assert.ok(unit.unitTitleEn&&unit.unitTitle);
   const questions=pack.questions.filter(q=>q.unitId===unit.id);
-  assert.equal(questions.length,4);
-  assert.deepEqual(questions.map(q=>q.cognitiveLevel),['knowledge','understanding','application','higher']);
+  assert.equal(questions.length,7);
+  assert.deepEqual(questions.map(q=>q.marks),[2,2,4,4,1,5,8]);
+  assert.deepEqual(questions.map(q=>q.cognitiveLevel),['knowledge','understanding','application','higher','knowledge','application','higher']);
   assert.ok(questions.every(q=>q.questionText&&q.questionTextEn&&q.answer&&q.answerEn&&q.teacherReviewRequired&&!q.officialCdcQuestion));
  }
 }

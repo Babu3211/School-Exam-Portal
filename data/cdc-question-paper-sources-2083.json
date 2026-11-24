@@ -655,6 +655,17 @@
       "status": "official_gov_textbook_contents_text_extracted_screenshot_timeout",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/Science%20and%20Technology%20Grade%20-9%20%28English%20Translation%29_v0nphvf.pdf",
       "note": "Grade 9 English PDF contents explicitly list 19 units. Unit 3 Mushroom and Unit 19 Materials used in Agriculture differ from historical 2078 grid labels. Current 2082 textbook page and grid page exist; exact current edition and row-level allocations not confirmed. Original practice questions only."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक वातावरण विज्ञान",
+      "kind": "CDC_textbook",
+      "version": "Government English textbook",
+      "status": "official_government_pdf_contents_text_checked_screenshot_timeout",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/Opt%20Env%20Sc%20Grade%209_r9nzny9.pdf",
+      "note": "Extracted contents lists nine units (printed starting pages 1,15,32,68,94,110,135,149,184). Separate 2083 school syllabus lists ten units; not an official Grid. No unit marks inferred."
     }
   ],
   "completion": {

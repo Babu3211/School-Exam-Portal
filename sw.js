@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v82-grade9-science-family-pruning-2083';
+const CACHE_NAME = 'smss-pwa-v83-grade9-environment-textbook-2083';
 const APP_SHELL = [
   './',
   './index.html',

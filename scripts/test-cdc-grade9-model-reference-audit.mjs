@@ -12,7 +12,7 @@ assert.equal(s.slots.find(x=>x.historicUnit===7).currentUnit,8);
 assert.equal(s.slots.find(x=>x.historicUnit===8).currentUnit,7);
 assert.equal(s.groups[0].missing,1);
 const e=audit({grade:9,subject:env,questions:grade9EnvironmentOriginalBank({grade:9,subject:env}).questions});
-assert.equal(e.olderModelConflict,true);assert.equal(e.missingAtLeast,22);
+assert.equal(e.olderModelConflict,true);assert.equal(e.missingAtLeast,2);
 assert.deepEqual(e.groups.map(g=>[g.required,g.marks]),[[11,1],[8,5],[3,8]]);
 const a=audit({grade:9,subject:science,questions:grade9ScienceOriginalBank({grade:9,subject:science}).questions});
 assert.equal(a.modelCount,40);assert.ok(a.limitations.some(x=>x.includes('74')));

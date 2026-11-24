@@ -478,7 +478,7 @@ async function loadBundledPracticeBank({grade,subject}){
  const social=grade9SocialOriginalBank({grade,subject});
  if(social.units.length)return {units:social.units,questions:social.questions,status:"कक्षा ९ सामाजिक अध्ययन: २०८२ पाठ्यक्रमका १० विषयक्षेत्रमा ३० मौलिक bilingual अभ्यास प्रश्न। नयाँ CDC Exact Grid र शिक्षक समीक्षा बाँकी।"};
  const environment=grade9EnvironmentOriginalBank({grade,subject});
- if(environment.units.length)return {units:environment.units,questions:environment.questions,status:"कक्षा ९ वातावरण विज्ञान: ९ प्रस्तावित Unit का ३६ मौलिक bilingual अभ्यास प्रश्न। वर्तमान CDC पाठ्यपुस्तकसँग Unit/उत्तर समीक्षा बाँकी; आधिकारिक Grid प्रमाणित नभएसम्म CDC Exact मानिँदैन।"};
+ if(environment.units.length)return {units:environment.units,questions:environment.questions,status:"कक्षा ९ वातावरण विज्ञान: सरकारी English पाठ्यपुस्तकको विषयसूचीसँग मिलाइएका ९ Unit का ६३ मौलिक bilingual अभ्यास प्रश्न (१/२/४/५/८ अङ्क)। प्रश्न/उत्तर समीक्षा बाँकी; आधिकारिक Grid प्रमाणित नभएसम्म CDC Exact मानिँदैन।"};
  if(grade===9&&getBundledComputerGrid({grade,subject,fullMarks:50})){
   const pack=grade9ComputerOriginalBank({subject});
   return {units:pack.units,questions:pack.questions,
