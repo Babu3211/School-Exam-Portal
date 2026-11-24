@@ -108,3 +108,15 @@ const portal=readFileSync(new URL('../cdc-question-paper.js',import.meta.url),'u
 assert.match(portal,/id="qpGrade9GridLibrary"/);
 assert.match(portal,/renderGrade9GridLibrary\(\$\("qpGrade9GridLibraryContent"\),cdcSourceRegister\)/);
 console.log('PASS read-only Class 9 Grid Library, all 8 school subjects plus 3 catalog subjects, no invented approval');
+
+const findTable=(key,title)=>byKey[key].tables.find(t=>t.title===title);
+const scienceMatrix=findTable('science','Historical question count by cognitive level');
+assert.equal(scienceMatrix.rows.length,4);
+assert.deepEqual(scienceMatrix.rows.map(r=>r[5]),[10,9,14,7]);
+assert.equal(scienceMatrix.rows.reduce((n,r)=>n+r[7],0),75);
+assert.deepEqual([1,2,3,4].map(i=>scienceMatrix.rows.reduce((n,r)=>n+r[i]*r[6],0)),[12,22,22,19]);
+const grammar=findTable('english','Historical grammar detail');
+assert.deepEqual(grammar.rows.map(r=>r[3]),[6,5]);
+assert.deepEqual(findTable('math','Historical question structure').rows,[[16,49,75]]);
+assert.ok(['science','english','math'].every(key=>!byKey[key].currentCdcExactApproved));
+console.log('PASS complete available science cognitive matrix, English grammar detail and mathematics historical question counts');

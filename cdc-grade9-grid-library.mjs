@@ -43,6 +43,23 @@ export function grade9GridLibrary(register){
    if(key==='english'){
     add('Reading and writing marks',['Section','Marks'],[...(evidence.readingMarks||[]).map((n,i)=>['Reading '+(i+1),n]),...(evidence.writingMarks||[]).map((n,i)=>['Writing '+(i+1),n]),['Grammar',evidence.grammar?.total]]);
    }
+   if(key==='english'&&evidence.grammar){
+    const g=evidence.grammar;
+    add('Historical grammar detail',['Question type','Count','Marks each','Total'],[
+     ['Transformation',g.transformationCount,g.transformationMarksEach,g.transformationCount*g.transformationMarksEach],
+     ['Contextual MCQ',g.contextualMcqCount,g.contextualMcqMarksEach,g.contextualMcqCount*g.contextualMcqMarksEach]
+    ]);
+   }
+   if(key==='math'&&Number.isSafeInteger(evidence.groupCount)&&Number.isSafeInteger(evidence.subitemCount)){
+    add('Historical question structure',['Groups','Subitems','Total marks'],[[evidence.groupCount,evidence.subitemCount,evidence.fullMarks]]);
+   }
+   if(key==='science'&&Array.isArray(evidence.typeLevelCounts)){
+    const types=['MCQ','Very short','Short','Long'];
+    add('Historical question count by cognitive level',['Type','K','U','A','HA','Count','Marks each','Total marks'],evidence.typeLevelCounts.map((row,i)=>{
+     const count=row.reduce((n,v)=>n+v,0);
+     return [types[i],...row,count,evidence.marksEach[i],count*evidence.marksEach[i]];
+    }));
+   }
    if(evidence.unitMarks)add('Historical area/unit marks',['Unit','Marks'],numbered(evidence.unitMarks));
    if(evidence.questionCounts)add('Historical question distribution',['Type','Count','Marks each'],evidence.questionCounts.map((n,i)=>[(key==='science'?['MCQ','Very short','Short','Long']:['Very short','Short','Long'])[i],n,evidence.marksEach[i]]));
    if(evidence.cognitiveMarks)add('Historical cognitive marks',['K','U','A','HA'],[evidence.cognitiveMarks]);
