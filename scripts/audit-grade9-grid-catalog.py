@@ -210,6 +210,7 @@ if __name__=="__main__":
         for r in group["records"]
         for e in [r,*r.get("probes",[])]
     )+sum(p.get("status")=="pdf_header_detected_needs_visual_grid_review" for row in report["rows"] for p in row.get("probes",[]))
+    report["pdfHeaderCandidates"]+=sum(p.get("status")=="pdf_header_detected_needs_visual_grid_review" for p in report["alternativeDirectory"].get("grade9CompulsoryProbes",[]))
     report["result"]="attachment_candidates_require_visual_review" if report["pdfHeaderCandidates"] else ("directory_links_require_document_review" if report["alternativeDirectory"].get("literalGovernmentPdfCount") else "no_pdf_attachment_retrieved")
     out=Path(args.output);out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
