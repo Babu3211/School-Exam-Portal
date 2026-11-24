@@ -4,11 +4,11 @@ Run only for the noncommercial school reference-bank build; no Firestore writes.
 """
 from html.parser import HTMLParser
 from urllib.request import Request, urlopen
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, parse_qs
 import json, re, hashlib
 from pathlib import Path
 
-SOURCE = "https://www.fadedpage.com/books/20190248/html.php"
+SOURCE = "https://www.fadedpage.com/link.php?file=20190248.html"
 WINDOWS = [
     ("He had begun life decently enough", "very nice jewellery."),
     ("But when circumstances forced George", "They spent a happy month there."),
@@ -32,7 +32,7 @@ def extract(html):
     p = Plain()
     p.feed(html)
     text = re.sub(r"\s+", " ", "".join(p.parts)).strip()
-    if "Somerset Maugham" not in text or "public domain" not in text.lower():
+    if "Somerset Maugham" not in text or "public domain" not in text.lower() or "20190248" not in text:
         raise ValueError("Unexpected source or missing rights notice")
     excerpts = []
     for start, end in WINDOWS:
@@ -53,7 +53,8 @@ if __name__ == "__main__":
     request = Request(SOURCE, headers={"User-Agent": "SMSS school reference preparation/1.0"})
     with urlopen(request, timeout=30) as response:
         final = urlsplit(response.geturl())
-        if final.scheme != "https" or final.hostname not in {"www.fadedpage.com", "fadedpage.com"} or not final.path.startswith("/books/20190248/"):
+        same_book = final.path == "/books/20190248/html.php" or (final.path == "/link.php" and parse_qs(final.query).get("file") == ["20190248.html"])
+        if final.scheme != "https" or final.hostname not in {"www.fadedpage.com", "fadedpage.com"} or not same_book:
             raise ValueError("Unexpected source location: "+final.hostname+final.path)
         print("Source location:", final.hostname+final.path)
         raw = response.read(2_000_001)
