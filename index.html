@@ -4630,13 +4630,13 @@ const cdcPrimaryNepaliFullIndices=[0,1,2,3,13,4,5,6,7,8,9,10,11,14,12];
 const cdcPrimaryNepaliForms={
  'म र मेरो परिवार':{page:103,indices:[0,1,2,4,8,10,11,12],editable:true},
  'मेरो दैनिक जीवन':{page:104,indices:[0,1,2,3,4,5,6,7,8,10,11,12],editable:true},
- 'हाम्रो समुदाय':{page:105,indices:[0,1,2,3,4,5,6,7,8,9,10,11,12],vowels:'अ, आ, इ, ई र उ स्वर वर्ण चिन्ने र उच्चारण गर्ने'},
- 'हाम्रो विद्यालय':{page:106,indices:[0,1,2,3,4,5,6,7,8,9,10,11,12],vowels:'ए, ऐ, ओ, औ, अं र अः स्वर वर्ण चिन्ने र उच्चारण गर्ने'},
+ 'हाम्रो समुदाय':{page:105,indices:[0,1,2,3,4,5,6,7,8,9,10,11,12],vowels:'उ, ऊ, ऋ र ए स्वर वर्ण चिन्ने र उच्चारण गर्ने',editable:true},
+ 'हाम्रो विद्यालय':{page:106,displayTitle:'मेरो विद्यालय',indices:[0,1,2,3,4,5,6,7,8,9,10,11,12],vowels:'ऐ, ओ, औ, अं र अः स्वर वर्ण चिन्ने र उच्चारण गर्ने'},
  'हाम्रो वातावरण':{page:107,indices:cdcPrimaryNepaliExtended,order:cdcPrimaryNepaliOrder,editable:true},
  'मेरो सिर्जना':{page:108,indices:cdcPrimaryNepaliExtended,order:cdcPrimaryNepaliOrder,consonants:'ख, ग र घ व्यञ्जन तथा मात्रा पहिचान, उच्चारण र वर्ण विश्लेषण गर्ने'},
  'बोध र वाणी':{page:109,displayTitle:'रुचि र बानी',indices:cdcPrimaryNepaliFullIndices,order:cdcPrimaryNepaliFullOrder,consonants:'ङ, च, छ, ज, झ र ञ व्यञ्जन तथा मात्रा पहिचान, उच्चारण र वर्ण विश्लेषण गर्ने'},
  'हाम्रो संस्कृति':{page:110,indices:cdcPrimaryNepaliFullIndices,order:cdcPrimaryNepaliFullOrder,editable:true},
- 'सूचना प्रविधि र बजार':{page:111,displayTitle:'सञ्चार प्रविधि र बजार',indices:cdcPrimaryNepaliFullIndices,order:cdcPrimaryNepaliFullOrder},
+ 'सूचना प्रविधि र बजार':{page:111,displayTitle:'सञ्चार प्रविधि र बजार',indices:cdcPrimaryNepaliFullIndices,order:cdcPrimaryNepaliFullOrder,editable:true},
  'हाम्रो क्रियाकलाप':{page:112,displayTitle:'हाम्रा क्रियाकलाप',indices:cdcPrimaryNepaliFullIndices,order:[0,1,2,3,10,4,5,6,'शब्दका सुरु र अन्त्यका ध्वनि पहिचान र उच्चारण गर्ने',7,8,'पाठको परिवेश, पात्र र सन्दर्भ चिन्ने तथा तुलना गर्ने',9,11,'उचित काल, पदसङ्गति र चिह्नसहित मौखिक तथा लिखित अभिव्यक्ति दिने']},
  'हाम्रो वरपरको संसार':{page:113,indices:[0,1,2,3,13,15,4,5,6,7,8,9,10,11,14,12],order:[0,1,2,3,4,5,'दैनिक प्रयोगका शब्द सुनेर दोहोर्‍याउने','पढेका वर्ण र मात्राको लेखन ढाँचा उतार्ने','शब्दका अक्षर छुट्याउने र जोड्ने','शब्दको सुरु र अन्त्यको ध्वनि चिन्ने र उच्चारण गर्ने','चित्र, शीर्षक र पाठको सन्दर्भबाट छलफल तथा प्रश्नोत्तर गर्ने','संवेगात्मक अभिव्यक्ति बुझेर प्रतिक्रिया दिने','पाठको परिवेश, पात्र र सन्दर्भ चिन्ने तथा तुलना गर्ने','चित्र र त्यससँग मिल्ने शब्द चिनेर प्रश्नोत्तर गर्ने','पाठसामग्री पढेर नयाँ शब्द चिन्ने, अर्थ बुझ्ने र प्रयोग गर्ने','उचित काल, पदसङ्गति र चिह्नसहित मौखिक तथा लिखित अभिव्यक्ति दिने']}
 };
@@ -6414,7 +6414,7 @@ function parseCdcBilingualCatalog(text) {
     field('annexTitle').textContent='मूल्याङ्कन अभिलेखीकरण — नेपाली';
     field('annexIdentity').textContent='कक्षा: १   विद्यार्थी: '+(field('student').selectedOptions[0]?.text||'')+'   रोल नम्बर: '+(st?.rollNo??'');
     field('annexUnit').textContent=form.displayTitle||unit;
-    field('annexHead').innerHTML='<tr><th rowspan="2">सिकाइ उपलब्धि</th><th rowspan="2">परीक्षण गर्ने पक्ष</th><th rowspan="2">साधन</th><th colspan="2">नियमित पढाइको मूल्याङ्कन</th><th colspan="2">थप सहायतापछिको मूल्याङ्कन</th><th rowspan="2">कैफियत</th></tr><tr><th>मिति</th><th>अङ्कन</th><th>मिति</th><th>अङ्कन</th></tr>';
+    field('annexHead').innerHTML='<tr><th rowspan="2">सिकाइ उपलब्धि</th><th rowspan="2">परीक्षण गर्ने पक्ष</th><th rowspan="2">साधन</th><th colspan="2">नियमित पढाइपछिको मूल्याङ्कन</th><th colspan="2">थप सहायतापछिको मूल्याङ्कन</th><th rowspan="2">कैफियत</th></tr><tr><th>मिति</th><th>अङ्कन</th><th>मिति</th><th>अङ्कन</th></tr>';
     const body=field('annexRows');body.replaceChildren();
     const catalogue=cdcVerifiedOutcomes['1:nepali'].filter(([u])=>u===unit);
     const rows=form.order?form.order.map(ref=>typeof ref==='number'?catalogue[ref]:[unit,ref]):catalogue;
@@ -6864,14 +6864,17 @@ function parseCdcBilingualCatalog(text) {
     for(const {unit,unitEn} of getCatalog()) if(!pairs.has(unit)) pairs.set(unit,unitEn);
     return [...pairs];
   };
+  // Accept the source title as an alias, without changing stored unit identifiers.
+  const unitDisplayTitle=unit=>context&&!revisedPrimaryYear&&field('class').value==='1'&&cdcAssessmentSubjectKey(field('subject').value)==='nepali'?(cdcPrimaryNepaliForms[unit]?.displayTitle||unit):unit;
+  const unitMatches=(names,value)=>[...names,unitDisplayTitle(names[0])].some(name=>normalizeTitle(name)===normalizeTitle(value));
   const matchUnit = input => {
-    const pair = field(input).value.trim() && units().find(names=>names.some(name=>normalizeTitle(name)===normalizeTitle(field(input).value)));
+    const pair = field(input).value.trim() && units().find(names=>unitMatches(names,field(input).value));
     if(pair) [field('unit').value,field('unitEn').value]=pair;
     refreshRecords();
   };
   for(const input of ['unit','unitEn']) field(input).onchange=()=>{
     const other = input==='unit' ? 'unitEn' : 'unit';
-    const selectedUnit=field(input).value.trim() && units().find(names=>names.some(name=>normalizeTitle(name)===normalizeTitle(field(input).value)));
+    const selectedUnit=field(input).value.trim() && units().find(names=>unitMatches(names,field(input).value));
     if(input==='unitEn' && !selectedUnit && language()!=='en') return;
     field(other).value=input==='unitEn' && !selectedUnit ? field(input).value : '';
     matchUnit(input);
@@ -6884,7 +6887,7 @@ function parseCdcBilingualCatalog(text) {
       : 'यस विषयका एकाइको सुझाव उपलब्ध छैन। एकाइ र सिकाइ उपलब्धि सम्बन्धित स्रोतबाट लेख्नुहोस्।';
     dialog.querySelector('#cdcUnitSuggestions').replaceChildren(...units().flatMap(([ne,en])=>[
       ...(language()==='both' ? [...new Set([ne,en])].map(value=>new Option(localized(ne,en),value)) :
-        [new Option(localized(ne,en),localized(ne,en))])
+        [new Option(unitDisplayTitle(localized(ne,en)),unitDisplayTitle(localized(ne,en)))])
     ]));
   }
   function refreshStudents() {
