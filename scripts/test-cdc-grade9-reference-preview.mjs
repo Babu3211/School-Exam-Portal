@@ -7,12 +7,16 @@ const grade=9;
 for(const [subject,provider,count] of [['Social Studies',grade9SocialReferenceBank,24],['Mathematics',grade9CompulsoryMathReferenceBank,16]]){
  const pack=provider({grade,subject}),questionBefore=JSON.stringify(pack);
  const ids=topics({grade,subject,questions:pack.questions});
- const args={grade,subject,questions:pack.questions,selectedTopicIds:ids,fullMarks:75,durationMinutes:180,language:'both',rng:()=>.39};
+ const args={grade,subject,questions:pack.questions,selectedTopicIds:ids,fullMarks:75,durationMinutes:180,language:subject==='Social Studies'?'ne':'both',rng:()=>.39};
  const a=build(args),b=build({...args,previousSignature:a.signature,rng:()=>.61});
  assert.equal(a.ready,true,a.reason);assert.equal(b.ready,true,b.reason);
  assert.notEqual(a.signature,b.signature);assert.equal(a.groupCount,count);
  assert.match(a.text,/REFERENCE DRAFT — NOT FOR EXAM/);
- assert.match(a.text,/75 marks · 180 minutes/);
+ if(subject==='Social Studies'){
+  assert.match(a.text,/पूर्णाङ्क: ७५ · समय: १८० मिनेट/);
+  assert.doesNotMatch(a.text,/[0-9]/);
+  for(const language of ['en','both'])assert.throws(()=>build({...args,language}),/must be in Nepali/);
+ }else assert.match(a.text,/75 marks · 180 minutes/);
  assert.equal(a.readyForLive,false);assert.equal(a.currentCdcExactApproved,false);
  assert.equal(JSON.stringify(pack),questionBefore);
  assert.throws(()=>build({...args,selectedTopicIds:['outside']}),/no reference group/);
@@ -75,7 +79,7 @@ for(const [subject,questions,language,duration] of [
  ['Nepali',[...grade9NepaliReferenceBank({grade,subject:'Nepali'}).questions,...grade9NepaliPracticeSummaryDrafts({grade,subject:'Nepali'})],'ne',180],
  ['English',all,'en',180],
  ['Mathematics',grade9CompulsoryMathReferenceBank({grade,subject:'Mathematics'}).questions,'both',180],
- ['Social Studies',grade9SocialReferenceBank({grade,subject:'Social Studies'}).questions,'both',180]
+ ['Social Studies',grade9SocialReferenceBank({grade,subject:'Social Studies'}).questions,'ne',180]
 ]){
  const history=[],args={grade,subject,questions,language,durationMinutes:duration,fullMarks:75,selectedTopicIds:topics({grade,subject,questions}),rng:()=>.39};
  for(let i=0;i<(subject==='Science and Technology'?31:4);i++){

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v121-environment-distinct-items';
+const CACHE_NAME = 'smss-pwa-v122-social-nepali-preview';
 const APP_SHELL = [
   './',
   './index.html',

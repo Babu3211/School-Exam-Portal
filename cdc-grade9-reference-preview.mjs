@@ -22,7 +22,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  if(fullMarks!==75||durationMinutes!==requiredDuration)throw Error('This reference requires 75 marks and '+requiredDuration+' minutes');
  if(!['ne','en','both'].includes(language))throw Error('Select a language');
  if(key==='english'&&language!=='en')throw Error('English assessment must be in English');
- if(key==='nepali'&&language!=='ne')throw Error('Nepali assessment must be in Nepali');
+ if((key==='nepali'||key==='social')&&language!=='ne')throw Error('Nepali and Social Studies assessments must be in Nepali');
  if(!Array.isArray(questions)||questions.length>5000||!Array.isArray(selectedTopicIds)||!selectedTopicIds.length||new Set(selectedTopicIds).size!==selectedTopicIds.length)throw Error('Select distinct reference topics');
  if(!Array.isArray(avoidSignatures)||avoidSignatures.length>30||avoidSignatures.some(x=>typeof x!=='string'||x.length>20000)||typeof previousSignature!=='string'||previousSignature.length>20000)throw Error('Invalid reference paper history');
  const bank=questions.filter(q=>draft(q)&&q.subject===subject);

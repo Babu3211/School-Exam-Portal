@@ -51,6 +51,10 @@ for(const language of ['ne','en','both']){
  assert.equal(result.paper.questions.reduce((n,q)=>n+q.marks,0),75);
  assert.throws(()=>assertSocial2078ReferencePaper(result.paper,{allowOriginalReferenceDraft:true}),/map alternative/);
  assert.throws(()=>assertGrade9ExamPaperMatches(result.paper),/verified subject/);
+ if(language!=='ne'){
+  assert.throws(()=>buildGrade9ReferencePreview({...args,fullMarks:75,durationMinutes:180}),/must be in Nepali/);
+  continue;
+ }
  const preview=buildGrade9ReferencePreview({...args,fullMarks:75,durationMinutes:180});assert.equal(preview.ready,true,preview.reason);
  assert.match(preview.text,/Nepal-only map practice/);
  assert.doesNotMatch(preview.text,/Gobi Desert|Danube River/);
