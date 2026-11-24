@@ -26,7 +26,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  const bank=questions.filter(q=>draft(q)&&q.subject===subject);
  const known=new Set(referencePreviewTopics({grade,subject,questions:bank}));
  if(selectedTopicIds.some(id=>!known.has(id)))throw Error('A selected topic has no reference group; select available reference topics');
- const result=planners[key]({grade,subject,fullMarks,durationMinutes,language,questions:bank,selectedTopicIds,previousSignature,rng,allowOriginalReferenceDraft:true,allowOriginalSummaryPractice:key==='nepali'});
+ const result=planners[key]({grade,subject,fullMarks,durationMinutes,language,questions:bank,selectedTopicIds,previousSignature,rng,allowOriginalReferenceDraft:true,allowOriginalSummaryPractice:key==='nepali',allowOriginalReadingPractice:key==='english'});
  if(!result.ready)return {ready:false,reason:result.reason,missing:result.shortages||result.shortage||[],referenceOnly:true,currentCdcExactApproved:false,readyForLive:false};
  if(result.currentCdcExactApproved!==false||result.paper.referenceOnly!==true||result.readyForLive!==false)throw Error('Unexpected reference preview state');
  const p=result.paper,groups=p.groups||p.questions;
@@ -47,6 +47,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   const parts=g.subquestions||g.items||[];
   const marks=g.marks??parts.reduce((s,x)=>s+Number(x.marks||0),0);
   lines.push((i+1)+'. '+(key==='english'?g.text:choose(g.contextNe||g.questionText,g.contextEn||g.questionTextEn))+' ['+marks+']');
+  if(g.practiceSubstitution===true)lines.push('ORIGINAL PRACTICE — not a seen textbook extract.');
   if(g.passage)lines.push(g.passage);
   if(g.questionType==='mcq')for(const [j,o] of (g.options||[]).entries())lines.push('  '+String.fromCharCode(65+j)+'. '+choose(o,g.optionsEn?.[j]));
   if(Array.isArray(g.mapChoices)){

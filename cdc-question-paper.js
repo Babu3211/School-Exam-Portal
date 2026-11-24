@@ -15,7 +15,7 @@ import {grade9ScienceSchoolReferenceBank} from "./cdc-grade9-science-school-refe
 import {grade9ScienceOriginalBank} from "./cdc-grade9-science-original-practice.mjs";
 import {grade9NepaliReferenceBank,grade9NepaliPracticeSummaryDrafts} from "./cdc-grade9-nepali-reference-bank.mjs";
 import {grade9NepaliPracticeBank} from "./cdc-grade9-nepali-practice.mjs";
-import {grade9EnglishReferenceBank} from "./cdc-grade9-english-reference-bank.mjs";
+import {grade9EnglishReferenceBank,grade9EnglishPracticeReading2} from "./cdc-grade9-english-reference-bank.mjs";
 import {grade9EnglishPracticeBank,auditEnglishChart} from "./cdc-grade9-english-practice.mjs";
 import {grade9CompulsoryMathReferenceBank} from "./cdc-grade9-compulsory-math-reference-bank.mjs";
 import {grade9CompulsoryMathPracticeBank,auditCompulsoryMathArchive} from "./cdc-grade9-compulsory-math-practice.mjs";
@@ -481,7 +481,7 @@ async function loadBundledPracticeBank({grade,subject}){
  const nepali=grade9NepaliPracticeBank({grade,subject});
  if(nepali.units.length){const ref=grade9NepaliReferenceBank({grade,subject});return {units:nepali.units,questions:[...nepali.questions,...ref.questions,...grade9NepaliPracticeSummaryDrafts({grade,subject})],status:"कक्षा ९ नेपाली: ४८ अभ्यास, ५४ सन्दर्भ समूह र २ मौलिक सारांश अभ्यास; ७५ अङ्कको समीक्षा संरचना। पाठगत सारांश र वर्तमान CDC Grid पुष्टि बाँकी।"};}
  const english=grade9EnglishPracticeBank({grade,subject});
- if(english.units.length){const ref=grade9EnglishReferenceBank({grade,subject});return {units:english.units,questions:[...english.questions,...ref.questions],status:"Grade 9 English: 54 original exercises plus "+ref.questions.length+" reference groups; "+(ref.questions.some(q=>q.slot==="reading2")?"75-mark reference structure; teacher review and current model confirmation required.":"65 marks prepared; original seen prose retrieval pending.")+" Not a CDC Exact examination."};}
+ if(english.units.length){const ref=grade9EnglishReferenceBank({grade,subject});return {units:english.units,questions:[...english.questions,...ref.questions,...(ref.questions.some(q=>q.slot==="reading2")?[]:grade9EnglishPracticeReading2({grade,subject}))],status:"Grade 9 English: 75-mark review practice available. Where an authorized seen passage is unavailable, the original reading substitute is explicitly marked; not a CDC Exact examination."};}
  const math=grade9CompulsoryMathPracticeBank({grade,subject});
  if(math.units.length){const ref=grade9CompulsoryMathReferenceBank({grade,subject});return {units:math.units,questions:[...math.questions,...ref.questions],status:"कक्षा ९ अनिवार्य गणित: ४२ मौलिक अभ्यास र ३२ संयुक्त समूह (९८ उपप्रश्न), ऐतिहासिक २०७८ Grid सन्दर्भ; नवीनतम Grid र शिक्षक समीक्षा बाँकी।"};}
  const social=grade9SocialOriginalBank({grade,subject});

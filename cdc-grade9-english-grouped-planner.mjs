@@ -31,14 +31,15 @@ const fourOptions=q=>Array.isArray(q.options)&&q.options.length===4&&q.options.e
 // The chart says "about" a word count, not a precise tolerance. ±25% is an
 // explicit SMSS editorial filter, not an additional claimed CDC rule.
 const nearWords=(s,n)=>{const count=str(s).split(/\s+/).filter(Boolean).length;return count>=Math.ceil(n*.75)&&count<=Math.floor(n*1.25);};
-function slotOK(q,i,subject,topics,chart,allowDraft=false){
+function slotOK(q,i,subject,topics,chart,allowDraft=false,allowPracticeReading=false){
+ const originalPractice=allowDraft&&allowPracticeReading&&i===1&&q?.practiceSubstitution===true&&q?.sourceKind==='original_unseen';
  const reviewed=q?.reviewStatus==='teacher_reviewed'&&str(q.reviewedBy);
- const draft=allowDraft&&(i>=2||(i<2&&q?.passageRights==='public_domain_original'&&sourceOK(q)))&&q?.bundled===true&&q?.reviewStatus==='draft'&&q?.teacherReviewRequired===true&&q?.sourceStatus==='SMSS_original_reference_draft'&&q?.officialCdcQuestion===false;
+ const draft=allowDraft&&(originalPractice||i>=2||(i<2&&q?.passageRights==='public_domain_original'&&sourceOK(q)))&&q?.bundled===true&&q?.reviewStatus==='draft'&&q?.teacherReviewRequired===true&&q?.sourceStatus==='SMSS_original_reference_draft'&&q?.officialCdcQuestion===false;
  if(!q||q.gradeNumber!==9||str(q.subject)!==str(subject)||q.slot!==slotNames[i]||!str(q.id)||!topics.has(q.topicId)||q.status==='archived'||(!reviewed&&!draft)||!cleanEnglish(q.text))return false;
  if(i<4){
   const r=chart.reading[i],items=q.items;
   if(q.marks!==r.marks||!cleanEnglish(q.passage)||!nearWords(q.passage,r.words)||!str(q.genre)||!Array.isArray(items)||items.length!==r.marks||
-   (r.seen?!sourceOK(q):q.sourceKind!=='original_unseen')||
+   (r.seen?!originalPractice&&!sourceOK(q):q.sourceKind!=='original_unseen')||
    (i===2&&!readingGenres3.includes(q.genre))||(i===3&&!readingGenres4.includes(q.genre)))return false;
   const types=new Set(items.map(x=>x?.type));
   if(types.size!==r.types||[...types].some(t=>!readingTypes.includes(t)))return false;
@@ -68,12 +69,12 @@ function paperCompatible(groups){
 }
 const signature=groups=>groups.map(q=>str(q.id)).sort().join('|');
 function shuffled(pool,rng){const a=[...pool];for(let i=a.length-1;i>0;i--){const v=rng();if(!Number.isFinite(v)||v<0||v>=1)throw Error('Invalid random source');const j=Math.floor(v*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-export function planGrade9EnglishReferencePaper({grade,subject,fullMarks=75,durationMinutes=180,questions=[],selectedTopicIds=[],previousSignature='',avoidSignatures=[],rng=Math.random,maxVisits=100000,allowOriginalReferenceDraft=false}={}){
+export function planGrade9EnglishReferencePaper({grade,subject,fullMarks=75,durationMinutes=180,questions=[],selectedTopicIds=[],previousSignature='',avoidSignatures=[],rng=Math.random,maxVisits=100000,allowOriginalReferenceDraft=false,allowOriginalReadingPractice=false}={}){
  const chart=auditEnglishChart({grade,subject});
  if(!chart||cdcSubjectKey(subject)!=='english'||fullMarks!==75||durationMinutes!==180)throw Error('Grade 9 English 75-mark 180-minute chart required');
  if(!Array.isArray(questions)||questions.length>5000||!Array.isArray(selectedTopicIds)||!Array.isArray(avoidSignatures)||avoidSignatures.length>30||avoidSignatures.some(x=>typeof x!=='string')||!Number.isSafeInteger(maxVisits)||maxVisits<1||maxVisits>200000)throw Error('Invalid reference bank or history');
  const topics=new Set(selectedTopicIds.filter(x=>typeof x==='string'&&x.trim()));
- const slots=slotNames.map((slot,i)=>({slot,i,pool:questions.filter(q=>slotOK(q,i,subject,topics,chart,allowOriginalReferenceDraft))}));
+ const slots=slotNames.map((slot,i)=>({slot,i,pool:questions.filter(q=>slotOK(q,i,subject,topics,chart,allowOriginalReferenceDraft,allowOriginalReadingPractice))}));
  const shortages=slots.filter(s=>!s.pool.length).map(s=>s.slot);
  const no=(reason)=>({ready:false,reason,shortages,currentCdcExactApproved:false,readyForLive:false});
  if(shortages.length||!topics.size)return no('Missing reviewed English groups; no partial paper generated');
@@ -89,5 +90,5 @@ export function planGrade9EnglishReferencePaper({grade,subject,fullMarks=75,dura
   return false;
  };
  if(!search(0))return no('No complete distinct paper satisfies the comprehension distribution, formats, genres and selected topics');
- return {ready:true,paper:{gradeNumber:9,subject,fullMarks,durationMinutes,language:'en',referenceOnly:true,groups:structuredClone(groups)},signature:signature(groups),referenceStructureMatched:true,currentCdcExactApproved:false,teacherReviewRequired:true,readyForLive:false,sourceUrl:chart.sourceUrl,referenceOnly:true};
+ return {ready:true,paper:{gradeNumber:9,subject,fullMarks,durationMinutes,language:'en',referenceOnly:true,groups:structuredClone(groups)},signature:signature(groups),practiceSubstitution:groups.some(q=>q.practiceSubstitution===true),referenceLabel:groups.some(q=>q.practiceSubstitution===true)?'English 75-mark practice draft: original reading replaces the 10-mark seen textbook excerpt. NOT CDC Exact.':'',referenceStructureMatched:true,currentCdcExactApproved:false,teacherReviewRequired:true,readyForLive:false,sourceUrl:chart.sourceUrl,referenceOnly:true};
 }

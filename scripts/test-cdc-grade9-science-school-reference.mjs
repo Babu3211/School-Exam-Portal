@@ -17,3 +17,11 @@ for(const language of ['ne','en','both']){
  const preview=buildGrade9ReferencePreview(args);assert.equal(preview.ready,true);assert.match(preview.text,/BESS 2079 school annual reference/);assert.match(preview.text,/\[1\]/);
 }
 console.log('PASS 80 real science bilingual variants, 40 questions, exact BESS school unit weights and cognitive category counts; no current CDC approval');
+
+const mapped=p.questions.map(q=>({...q,topicId:'school-topic-'+q.unitCode}));
+const mappedIds=referencePreviewTopics({grade,subject,questions:mapped});
+const mappedArgs={grade,subject,fullMarks:75,durationMinutes:180,language:'both',questions:mapped,selectedTopicIds:mappedIds,rng:()=>.32};
+assert.equal(buildGrade9ReferencePreview(mappedArgs).ready,true);
+assert.equal(plan({...mappedArgs,questions:mapped.map(q=>({...q,questionText:'tampered'}))}).ready,false);
+assert.throws(()=>plan({...mappedArgs,questions:mapped.map(q=>({...q,topicId:mappedIds[0]})),selectedTopicIds:[mappedIds[0]]}),/crosses unit/);
+console.log('PASS school curriculum topic remapping without accepting modified question content');

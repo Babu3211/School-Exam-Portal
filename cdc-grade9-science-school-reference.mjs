@@ -67,7 +67,11 @@ export function planScienceSchoolReference({grade,subject,fullMarks,durationMinu
  const ids=new Set(selectedTopicIds),approved=new Map(known.map(q=>[q.id,q]));
  // Immutable original bank: reject tampered records instead of accepting
  // arbitrary labels from Firestore or a forged review status.
- const bank=questions.filter(q=>{const k=approved.get(q?.id);return k&&ids.has(q.topicId)&&JSON.stringify(q)===JSON.stringify(k);});
+ const bank=questions.filter(q=>{const k=approved.get(q?.id);if(!k||!ids.has(q.topicId)||typeof q.topicId!=='string'||!q.topicId.trim())return false;return JSON.stringify({...q,topicId:k.topicId})===JSON.stringify(k);});
+ // renderTopics may replace the bundled topic ID with a matching school topic ID.
+ // All other authored content and provenance must still be identical.
+ const byUnit=new Map();for(const q of bank){const prev=byUnit.get(q.unitCode);if(prev&&prev!==q.topicId)throw Error('Inconsistent topic mapping within science unit');byUnit.set(q.unitCode,q.topicId);}
+ if(new Set(byUnit.values()).size!==byUnit.size)throw Error('Science topic mapping crosses unit boundaries');
  const families=Array.from({length:40},(_,i)=>bank.filter(q=>q.variantFamily==='smss_sci_school9_'+i));
  const shortages=families.flatMap((f,i)=>f.length?[]:['group '+(i+1)]);
  const fail=reason=>({ready:false,reason,shortages,currentCdcExactApproved:false,readyForLive:false});
