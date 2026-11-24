@@ -991,12 +991,33 @@ for(const [unit,count,groups] of [['म र मेरो परिवार',20,
  assert.equal(field('printForm').disabled,true);
  assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,0);
  assert.match(field('annexStatus').textContent,/समीक्षा प्रति/);
+ const regular=[...field('annexRows').querySelectorAll('[data-cdc-sero-indicator="0"]')];
+ const remedial=[...field('annexRows').querySelectorAll('[data-cdc-sero-indicator="1"]')];
+ const scores=[...field('annexRows').querySelectorAll('[data-cdc-sero-score="0"]')];
+ const supportScores=[...field('annexRows').querySelectorAll('[data-cdc-sero-score="1"]')];
+ assert.equal(regular.length,count);assert.equal(remedial.length,count);
+ assert.equal(scores.length,groups);assert.equal(supportScores.length,groups);
+ assert.equal(scores[0].textContent,'—');
+ for(let i=0;i<3;i++){regular[i].value='yes';regular[i].onchange();}
+ assert.equal(scores[0].textContent,'—');
+ regular[3].value='no';regular[3].onchange();
+ assert.equal(scores[0].textContent,'३');
+ assert.match(field('annexFoot').textContent,/पूरा: १/);
+ remedial[0].value='yes';remedial[0].onchange();
+ assert.equal(supportScores[0].textContent,'—');
+ assert.match(field('annexFoot').textContent,/पूरा: ०/);
+ for(let i=1;i<4;i++){remedial[i].value='yes';remedial[i].onchange();}
+ assert.equal(supportScores[0].textContent,'४');
+ for(let i=4;i<regular.length;i++){regular[i].value='no';regular[i].onchange();}
+ assert.equal(scores[1].textContent,'०');
+ assert.match(field('annexFoot').textContent,new RegExp('पूरा: '+String(groups).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)])));
+ assert.equal(field('printForm').disabled,true);
 }
 assert.equal(observations.size,beforeSero);
 w.currentSchoolSettings.academicYear='2084';
 await w.loadCdcAssessmentPage();
 choice('unit','म र मेरो परिवार');
 assert.equal(field('annex3').hidden,true);
-console.log('Grade 1 Our Surroundings three reference forms, 48 indicators, Nepali-only columns and no automatic writes passed');
+console.log('Grade 1 Our Surroundings three forms, 48 indicators, separate stage preview scoring and no automatic writes passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
