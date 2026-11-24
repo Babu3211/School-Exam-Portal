@@ -7468,7 +7468,52 @@ function parseCdcBilingualCatalog(text) {
    const assessed=[...dates.values()].filter(s=>s.size===1).length;
    return {recordedDays:dates.size,present,assessed,unresolved:dates.size-assessed,percentage:assessed?100*present/assessed:null};
  }
- function openCdcAssessment(context = null) {
+ // Read-only catalogue totals. Count scored outcomes, not individual rubric indicators.
+// Raw assessment maximum is not the term exam full mark or final weighted grade.
+function cdcThemeMarkRows(grade,subject,year){
+  grade=String(grade);
+  const key=cdcAssessmentSubjectKey(subject),lower=Number(grade)<=3,revised=Number(year)>=2084;
+  const rows=[],seen=new Set();
+  const add=(unit,en,count,status,indicators=null)=>{
+    if(seen.has(unit))return;
+    seen.add(unit);
+    rows.push({unit,en,count:Number.isInteger(count)&&count>0?count:null,
+      fullMark:Number.isInteger(count)&&count>0?count*4:null,indicators,status});
+  };
+  if(lower&&revised){
+    if(key==='mathematics'){
+      for(const [id,form] of Object.entries(cdcRevisedMathForms))if(id.startsWith(grade+':')){
+        const unit=id.slice(grade.length+1),en=revisedMathThemes.find(([g,n])=>g===grade&&n===unit)?.[2]||'';
+        add(unit,en,form.rows.length,'revised');
+      }
+    }else for(const [unit,en] of cdcVerifiedUnits(grade,key))add(unit,en,null,'pending');
+    return rows;
+  }
+  if(lower&&key==='nepali'){
+    const forms=grade==='1'?cdcPrimaryNepaliForms:cdcNepaliThemeForms[grade]||{};
+    for(const [unit,form] of Object.entries(forms))add(form.displayTitle||unit,'',form.indices.length,'mapped');
+  }else if(lower&&key==='english'){
+    for(const [unit,form] of Object.entries(cdcPrimaryEnglishForms[grade]||{}))add(form.name,form.name,form.groups.reduce((a,b)=>a+b,0),'mapped');
+  }else if(lower&&key==='mathematics'){
+    for(const [id,form] of Object.entries(cdcLegacyMathRubrics))if(id.startsWith(grade+':'))add(id.slice(grade.length+1),form.en,form.rows.length,'mapped');
+  }else if(lower&&key==='serophero'){
+    for(const [unit,en] of cdcVerifiedUnits(grade,key)){
+      const form=cdcSeroferoReferenceForms[grade]?.[unit];
+      add(unit,'',form?.groups.length,form?(form.referenceOnly?'review':'mapped'):'pending',form?form.groups.length*4:null);
+    }
+  }else if(!lower){
+    const catalogue=cdcVerifiedOutcomes[grade+':'+key]||[];
+    const themes=new Map(cdcVerifiedUnits(grade,key));
+    for(const [unit] of catalogue)if(!themes.has(unit))themes.set(unit,key==='english'?unit:'');
+    for(const [unit,en] of themes){
+      const count=catalogue.filter(([u])=>u===unit).length;
+      add(unit,en,count,count?'mapped':'pending');
+    }
+  }
+  return rows;
+}
+
+function openCdcAssessment(context = null) {
   if (!auth.currentUser) return;
   document.getElementById('cdcAssessmentDialog')?.remove();
   const dialog = document.createElement(context ? 'section' : 'dialog');
@@ -7483,6 +7528,17 @@ function parseCdcBilingualCatalog(text) {
       <label>विद्यार्थी <select data-cdc="student"></select></label>
       <label>अवधि <select data-cdc="period"><option>First Term</option><option>Second Term</option><option>Final Term</option></select></label>
     </div>
+    <details data-cdc="themeSummary" style="border:1px solid #b9d5e7;border-radius:8px;padding:12px;margin:10px 0">
+      <summary style="cursor:pointer;font-weight:700">Theme, Learning Achievement &amp; Full Marks — Classes 1–5</summary>
+      <p>कक्षा र विषय छानेर प्रत्येक थिमका मुख्य सिकाइ उपलब्धि र कच्चा पूर्णाङ्क हेर्नुहोस्। यो विद्यार्थीको प्राप्ताङ्क होइन।</p>
+      <div class="fields">
+        <label>Class <select data-cdc="summaryClass"></select></label>
+        <label>Subject <select data-cdc="summarySubject"></select></label>
+      </div>
+      <p data-cdc="themeSummaryInfo" role="status"></p>
+      <div class="tablewrap"><table data-cdc="themeSummaryTable"><thead data-cdc="themeSummaryHead"></thead><tbody data-cdc="themeSummaryRows"></tbody><tfoot data-cdc="themeSummaryFoot"></tfoot></table></div>
+      <small>पूर्णाङ्क = मुख्य सिकाइ उपलब्धि × ४। — ले स्रोत पुष्टि वा सूची बाँकी जनाउँछ। थिमगत कच्चा पूर्णाङ्कलाई परीक्षा पूर्णाङ्क नमान्नुहोस्।</small>
+    </details>
     <section data-cdc="referenceLibrary" aria-label="CDC Assessment Reference PDFs" style="border:1px solid #b9d5e7;border-radius:8px;padding:12px;margin:10px 0">
       <strong>CDC Assessment Reference PDFs</strong>
       <p style="margin:6px 0">मूल फाराम, सिकाइ उपलब्धि र अङ्कन विधि तुलना गर्न दुवै मार्गदर्शन यहाँबाट खोल्नुहोस्।</p>
@@ -8440,6 +8496,43 @@ function parseCdcBilingualCatalog(text) {
   }
   const classes = (context ? context.classes : [...document.getElementById('entryClass').options].map(o=>classNoFromName(o.value))).filter(n=>Number(n)>=1&&Number(n)<=5);
   options('class',[...new Set(classes)].map(n=>[n,'Class '+n]));
+  function renderThemeSummary(){
+    const grade=field('summaryClass').value,key=field('summarySubject').value,mode=subjectLanguage(key);
+    const rows=cdcThemeMarkRows(grade,key,year),ne=mode==='ne',en=mode==='en';
+    const digits=n=>ne?String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]):String(n);
+    const label=(a,b)=>ne?a:en?b:a+' / '+b;
+    const head=field('themeSummaryHead'),body=field('themeSummaryRows'),foot=field('themeSummaryFoot');
+    head.replaceChildren();body.replaceChildren();foot.replaceChildren();
+    const header=head.insertRow();
+    for(const text of [label('क्र.स.','SN'),label('थिम / एकाइ','Theme / Unit'),label('सिकाइ उपलब्धि सङ्ख्या','Number of Learning Achievements'),label('पूर्णाङ्क','Full Marks'),...(key==='serophero'?[label('सूचक सङ्ख्या','Indicators')]:[]),label('स्रोत अवस्था','Source Status')]){
+      const th=document.createElement('th');th.textContent=text;header.append(th);
+    }
+    const statuses={mapped:label('प्रणालीको स्रोत सूची','Mapped catalogue'),review:label('समीक्षा फाराम','Review form'),pending:label('पुष्टि बाँकी','Pending source'),revised:label('परिमार्जित सूची','Revised catalogue')};
+    for(const [i,row] of rows.entries()){
+      const tr=body.insertRow();
+      const name=ne?row.unit:en?row.en||row.unit:[...new Set([row.unit,row.en].filter(Boolean))].join(' / ');
+      for(const value of [digits(i+1),name,row.count===null?'—':digits(row.count),row.fullMark===null?'—':digits(row.fullMark),...(key==='serophero'?[row.indicators===null?'—':digits(row.indicators)]:[]),statuses[row.status]])tr.insertCell().textContent=value;
+    }
+    if(!rows.length){const cell=body.insertRow().insertCell();cell.colSpan=header.cells.length;cell.textContent=label('यस विषयको स्रोत सूची तयार छैन।','Source catalogue is not yet available.');}
+    const known=rows.filter(row=>row.count!==null),total=known.reduce((sum,row)=>sum+row.count,0);
+    const tr=foot.insertRow(),title=tr.insertCell();title.colSpan=2;title.textContent=label('सूचीकृत जम्मा (आंशिक हुन सक्छ)','Listed subtotal (may be partial)');
+    tr.insertCell().textContent=known.length?digits(total):'—';tr.insertCell().textContent=known.length?digits(total*4):'—';
+    if(key==='serophero')tr.insertCell().textContent=known.length?digits(known.reduce((sum,row)=>sum+(row.indicators||0),0)):'—';
+    tr.insertCell().textContent=digits(known.length)+' / '+digits(rows.length);
+    field('themeSummaryInfo').textContent=label('शैक्षिक सत्र','Academic year')+': '+digits(year)+' | '+label('सूची भएका थिम','Themes with counts')+': '+digits(known.length)+' / '+digits(rows.length)+' | '+label('मूल स्रोतसँग अन्तिम मिलान बाँकी हुन सक्छ।','Final source verification may be pending.');
+  }
+  function refreshThemeSummarySubjects(){
+    const previous=field('summarySubject').value,grade=Number(field('summaryClass').value);
+    const list=grade<=3?cdcPrimarySubjects:cdcUpperPrimarySubjects;
+    options('summarySubject',list.map(([key,ne,en])=>[key,subjectLanguage(key)==='ne'?ne:subjectLanguage(key)==='en'?en:ne+' / '+en]));
+    if(list.some(([key])=>key===previous))field('summarySubject').value=previous;
+    renderThemeSummary();
+  }
+  options('summaryClass',['1','2','3','4','5'].map(n=>[n,'Class '+n]));
+  field('summaryClass').value=field('class').value||'1';
+  field('summaryClass').onchange=refreshThemeSummarySubjects;
+  field('summarySubject').onchange=renderThemeSummary;
+  refreshThemeSummarySubjects();
   field('class').onchange=refreshSubjects;
   field('subject').onchange=refreshStudents;
   field('student').onchange=load;
