@@ -3,6 +3,16 @@
 export async function createIsolatedAdminAccount({appSdk,authSdk,config,actor,email,password,assertCurrent,verifyPrivilege}){
  if(config?.projectId!=='smss-exam-portal-v47'||actor?.role!=='super_admin'||actor?.active!==true||typeof actor.uid!=='string'||!actor.uid)
   throw Error('Verified V47 Super Admin required');
+ return createIsolatedAccount({appSdk,authSdk,config,actor,email,password,assertCurrent,verifyPrivilege});
+}
+// School Admin may provision Auth only, for the current school. Role is not
+// granted by Auth creation. The existing inactive membership transaction and
+// explicit activation are still required, with Firestore rules as authority.
+export async function createIsolatedSchoolMemberAccount({appSdk,authSdk,config,actor,schoolId,role,email,password,assertCurrent,verifyPrivilege}){
+ if(config?.projectId!=='smss-exam-portal-v47'||actor?.role!=='school_admin'||actor?.active!==true||typeof actor.uid!=='string'||!actor.uid||actor.schoolId!==schoolId||typeof schoolId!=='string'||!/^\d{5,20}$/.test(schoolId)||!['teacher','viewer'].includes(role))throw Error('Verified V47 School Admin and subordinate role required');
+ return createIsolatedAccount({appSdk,authSdk,config,actor,email,password,assertCurrent,verifyPrivilege});
+}
+async function createIsolatedAccount({appSdk,authSdk,config,actor,email,password,assertCurrent,verifyPrivilege}){
  if(typeof email!=='string'||email.length>254||!/^\S+@[^\s@]+\.[^\s@]+$/.test(email)||typeof password!=='string'||password.length<12||password.length>128)
   throw Error('Valid email and 12–128 character password required');
  if(typeof assertCurrent!=='function'||typeof verifyPrivilege!=='function')throw Error('Session and server privilege checks required');

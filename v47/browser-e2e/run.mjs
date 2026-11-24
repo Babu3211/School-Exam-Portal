@@ -171,6 +171,40 @@ try{
  for(const [sid,uid] of [[schools[1].sid,'alpha-viewer'],[schools[0].sid,'beta-admin']]){
   const {context,page,errors}=await newSession();try{await login(page,sid,uid,false);assert.deepEqual(errors,[])}finally{await context.close()}
  }
+ // School Admin provisions an isolated Auth account, then grants membership
+ // via the existing inactive transaction. No platform role or foreign school.
+ {
+  const {context,page,errors}=await newSession();
+  try{
+   await login(page,schools[0].sid,'alpha-admin');
+   await page.goto(origin+'/school-admin.html?schoolId='+schools[0].sid);
+   await wait(page,()=>!document.getElementById('schoolArea').hidden);
+   await page.locator('#newMemberAccount summary').click();
+   const newEmail=email('alpha-new-viewer');
+   await page.locator('#role').selectOption('viewer');
+   await page.locator('#newMemberEmail').fill(newEmail);
+   await page.locator('#newMemberPassword').fill(password);
+   page.once('dialog',dialog=>dialog.accept());await page.locator('#createMemberAccount').click();
+   await wait(page,()=>document.getElementById('memberUid').value.length>=6&&!document.getElementById('add').disabled);
+   const newUid=await page.locator('#memberUid').inputValue();
+   assert.equal((await admin.getUserByEmail(newEmail)).uid,newUid);
+   assert.equal(await page.locator('#newMemberPassword').inputValue(),'');
+   const membership=db.doc('schools/'+schools[0].sid+'/members/'+newUid);
+   assert.equal((await membership.get()).exists,false);
+   page.once('dialog',dialog=>dialog.accept());await page.locator('#add').click();
+   const row=page.locator('#members tr').filter({hasText:newUid});await row.waitFor({state:'visible'});
+   assert.deepEqual((await membership.get()).data(),{uid:newUid,schoolId:schools[0].sid,role:'viewer',active:false});
+   const before=await newSession();try{await login(before.page,schools[0].sid,newUid,false,'1',newEmail)}finally{await before.context.close()}
+   page.once('dialog',dialog=>dialog.accept());await row.getByRole('button',{name:'Activate',exact:true}).click();
+   await wait(page,uid=>Array.from(document.querySelectorAll('#members tr')).some(r=>r.textContent.includes(uid)&&r.textContent.includes('Deactivate')),newUid);
+   const after=await newSession();try{await login(after.page,schools[0].sid,newUid,true,'1',newEmail)}finally{await after.context.close()}
+   const foreign=await newSession();try{await login(foreign.page,schools[1].sid,newUid,false,'1',newEmail)}finally{await foreign.context.close()}
+   assert.equal((await db.doc('v47_super_admins/'+newUid).get()).exists,false);
+   assert.equal((await db.doc('schools/'+schools[1].sid+'/members/'+newUid).get()).exists,false);
+   assert.deepEqual(errors,[]);
+   console.log('PASS School Admin isolated Viewer account, inactive membership, activation, tenant denial');
+  }finally{await context.close()}
+ }
  // Register a third synthetic school using the actual Super Admin UI.
  const newSchoolId='33333003',newEmail=email('new-school-admin');
  {

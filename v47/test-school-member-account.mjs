@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {createIsolatedSchoolMemberAccount,createIsolatedAdminAccount} from './first-admin-account.mjs';
+const events=[],secondary={},app={};
+const appSdk={initializeApp:(_cfg,name)=>{assert.match(name,/^smss-v47-provision-/);events.push('init');return app},deleteApp:async a=>{assert.equal(a,app);events.push('delete-app')}};
+const authSdk={getAuth:a=>{assert.equal(a,app);return secondary},inMemoryPersistence:{},setPersistence:async a=>{assert.equal(a,secondary);events.push('persistence')},createUserWithEmailAndPassword:async a=>{assert.equal(a,secondary);events.push('create');return {user:{uid:'new_user_123'}}},signOut:async a=>{assert.equal(a,secondary);events.push('signout')}};
+const actor={role:'school_admin',active:true,schoolId:'12345678',uid:'school_admin_123'};
+const base={appSdk,authSdk,config:{projectId:'smss-exam-portal-v47'},actor,schoolId:actor.schoolId,role:'viewer',email:'synthetic@example.invalid',password:'Synthetic-Only-1234',assertCurrent:()=>{},verifyPrivilege:async()=>events.push('verify')};
+for(const change of [{role:'school_admin'},{role:'super_admin'},{schoolId:'87654321'},{actor:{...actor,role:'teacher'}},{actor:{...actor,active:false}},{config:{projectId:'wrong'}}])await assert.rejects(createIsolatedSchoolMemberAccount({...base,...change}));
+assert.deepEqual(events,[]);
+await assert.rejects(createIsolatedAdminAccount(base));
+assert.deepEqual(await createIsolatedSchoolMemberAccount(base),{uid:'new_user_123',accountCreated:true,membershipCreated:false});
+assert.deepEqual(events,['verify','init','persistence','create','verify','signout','delete-app']);
+events.length=0;let count=0;await assert.rejects(createIsolatedSchoolMemberAccount({...base,verifyPrivilege:async()=>{if(++count===2)throw Error('revoked')}}),/revoked/);
+assert.deepEqual(events,['init','persistence','create','signout','delete-app']);
+console.log('PASS isolated subordinate account authorization and cleanup; no membership granted');
