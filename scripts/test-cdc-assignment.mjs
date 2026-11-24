@@ -993,7 +993,7 @@ await w.loadCdcAssessmentPage();
 choice('unitEn','Me and My Family');
 assert.equal(field('annex3').hidden,true);
 console.log('Grade 3 English ten assessment-guide themes, 236 outcome rows, scoped saves and year isolation passed');
-// Source-based reference only: do not invent or persist binary indicator scores.
+// Binary evidence Save/Load remains separate from legacy observations.
 w.currentSchoolSettings.academicYear='2083';
 current.subjectAssignments=[{className:'Class 1',subject:'serophero',section:'A'}];
 serverRole={...current};
@@ -1009,7 +1009,8 @@ for(const [unit,count,groups] of [['म र मेरो परिवार',20,
  assert.equal(field('annexRows').rows[0].cells[1].rowSpan,4);
  assert.equal([...field('annexRows').rows].filter(row=>row.cells.length>=9).length,groups);
  assert.match(field('annexHead').textContent,/सकेको \/ नसकेको/);
- assert.equal(field('gridRead').hidden,true);
+ assert.equal(field('gridRead').hidden,false);
+ assert.equal(field('annexRows').querySelectorAll('[data-cdc-sero-save]').length,0);
  assert.equal(field('printForm').disabled,true);
  assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,0);
  assert.match(field('annexStatus').textContent,/समीक्षा प्रति/);
@@ -1036,10 +1037,54 @@ for(const [unit,count,groups] of [['म र मेरो परिवार',20,
  assert.equal(field('printForm').disabled,true);
 }
 assert.equal(observations.size,beforeSero);
+const binaryRecords=new Map(),originalDoc=w.doc,originalSetDoc=w.setDoc,originalRead=w.getDocsFromServer,originalGetDoc=w.getDocFromServer;
+w.doc=(base,name,id)=>base==='cdc_serofero_indicators'?{path:base+'/'+(name??++nextId)}:originalDoc(base,name,id);
+w.setDoc=async(ref,data)=>{
+ if(!ref.path.startsWith('cdc_serofero_indicators/'))return originalSetDoc(ref,data);
+ if(binaryRecords.has(ref.path))throw Error('immutable');
+ binaryRecords.set(ref.path,data);
+};
+w.getDocFromServer=async ref=>ref.path.startsWith('cdc_serofero_indicators/')?{data:()=>binaryRecords.get(ref.path)}:originalGetDoc(ref);
+w.getDocsFromServer=async args=>{
+ if(args.name!=='cdc_serofero_indicators')return originalRead(args);
+ const filters=Object.fromEntries(args.filters.map(([k,op,v])=>{assert.equal(op,'==');return [k,v];}));
+ assert.deepEqual(filters,{studentId:'sero-1',className:'Class 1',subject:field('subject').value,section:'A',academicYear:'2083',period:field('period').value,unit:field('unit').value});
+ return {docs:[...binaryRecords.values()].filter(record=>Object.entries(filters).every(([k,v])=>record[k]===v)).map(record=>({data:()=>record}))};
+};
+choice('unit','म र मेरो परिवार');
+await field('gridRead').onclick();
+const seroControls=(name,stage=0)=>[...field('annexRows').querySelectorAll('[data-cdc-sero-'+name+'="'+stage+'"]')];
+assert.equal(seroControls('save').length,5);
+const fill=(stage,values,date='2083-08-07')=>{
+ values.forEach((v,i)=>{const select=seroControls('indicator',stage)[i];select.value=v;select.onchange();});
+ seroControls('date',stage)[0].value=date;
+};
+fill(0,['yes','no','yes','']);
+await seroControls('save')[0].onclick();assert.equal(binaryRecords.size,0);
+fill(0,['yes','no','yes','no'],'2083-13-01');
+await seroControls('save')[0].onclick();assert.equal(binaryRecords.size,0);
+fill(0,['yes','no','yes','no']);
+await seroControls('save')[0].onclick();assert.equal(binaryRecords.size,1);
+assert.equal(JSON.stringify([...binaryRecords.values()][0].indicators),'[true,false,true,false]');
+assert.equal([...binaryRecords.values()][0].outcomeId,'cdc2076-g1-1');
+await seroControls('save')[0].onclick();assert.equal(binaryRecords.size,1);
+fill(1,['yes','yes','yes','yes']);
+await seroControls('save',1)[0].onclick();assert.equal(binaryRecords.size,2);
+await field('gridRead').onclick();
+assert.equal(seroControls('score')[0].textContent,'२');
+assert.equal(seroControls('score',1)[0].textContent,'४');
+assert.equal(seroControls('date')[0].value,'2083-08-07');
+serverRole={...current,subjectAssignments:[]};
+fill(0,['no','no','no','no']);
+await seroControls('save')[0].onclick();assert.equal(binaryRecords.size,2);
+serverRole={...current};
+choice('unit','मेरो दैनिक जीवन');
+await field('gridRead').onclick();assert.equal(seroControls('score')[0].textContent,'—');
+assert.equal(observations.size,beforeSero);
 w.currentSchoolSettings.academicYear='2084';
 await w.loadCdcAssessmentPage();
 choice('unit','म र मेरो परिवार');
 assert.equal(field('annex3').hidden,true);
-console.log('Grade 1 Our Surroundings three forms, 48 indicators, separate stage preview scoring and no automatic writes passed');
+console.log('Grade 1 Our Surroundings three forms, 48 indicators, scoped binary Save/Load, duplicate and revoked-role checks passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
