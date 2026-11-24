@@ -1,9 +1,9 @@
 /** Grade 9 Environment Science: original SMSS draft, NOT CDC published questions.
- * Unit order follows CDC 2025 English textbook (updated curriculum 2081).
+ * Nine-unit draft outline requires teacher comparison with the current CDC textbook.
  * No official marks grid is inferred from textbook contents.
  */
 import {cdcSubjectKey} from './cdc-grid-source-index.mjs';
-export const ENVIRONMENT_TEXTBOOK_URL='https://giwmscdntwo.gov.np/media/pdf_upload/Class%209%20Environment%20science_English%20Version_zgnagog.pdf';
+export const ENVIRONMENT_TEXTBOOK_URL='https://lib.moecdc.gov.np/catalog/opac_css/index.php?id=15803&lvl=notice_display';
 const rows=[
  ['वातावरणको परिचय','Introduction to Environment',[
  ['वातावरणका दुई जैविक र दुई अजैविक घटक उदाहरणसहित लेख्नुहोस्।','Give two living and two nonliving components of an environment.','जैविक: वनस्पति, चरा; अजैविक: पानी, माटो।','Living: plants, birds; nonliving: water, soil.',2,'knowledge'],
@@ -54,7 +54,7 @@ const rows=[
 export function grade9EnvironmentOriginalBank({grade,subject}={}){
  const empty={units:[],questions:[],teacherReviewRequired:true,officialCdcQuestions:false,exactGridVerified:false};
  if(grade!==9||cdcSubjectKey(subject)!=='optional_environment')return empty;
- const units=rows.map(([ne,en],i)=>({id:'smss_env_g9_u'+(i+1),unitCode:String(i+1),unitTitle:ne,unitTitleEn:en,topics:[ne],sourceTitle:'CDC 2025 textbook contents',sourceUrl:ENVIRONMENT_TEXTBOOK_URL,provenance:'Textbook unit order; not a specification grid'}));
+ const units=rows.map(([ne,en],i)=>({id:'smss_env_g9_u'+(i+1),unitCode:String(i+1),unitTitle:ne,unitTitleEn:en,topics:[ne],sourceTitle:'CDC Library 2082 textbook record',sourceUrl:ENVIRONMENT_TEXTBOOK_URL,provenance:'SMSS draft unit outline; textbook review pending; not a specification grid'}));
  const questions=rows.flatMap(([, ,items],i)=>items.map(([questionText,questionTextEn,answer,answerEn,marks,cognitiveLevel],j)=>({id:'smss_env_g9_u'+(i+1)+'_q'+(j+1),gradeNumber:9,subject,unitCode:units[i].unitCode,unitId:units[i].id,unitTitle:units[i].unitTitle,topicId:units[i].id+'_0',topicName:units[i].unitTitle,questionType:marks===2?'short':'long',marks,cognitiveLevel,questionText,questionTextEn,answer,answerEn,options:[],optionsEn:[],correctOption:'',status:'active',bundled:true,teacherReviewRequired:true,officialCdcQuestion:false,sourceStatus:'SMSS_original_draft_not_CDC_published'})));
  return {...empty,units,questions};
 }

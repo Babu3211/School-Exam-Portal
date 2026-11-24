@@ -549,10 +549,10 @@
       ],
       "subject": "ऐच्छिक वातावरण विज्ञान",
       "kind": "CDC_textbook",
-      "version": "2025 first edition; updated curriculum 2081",
-      "status": "official_textbook_contents_text_extracted_grid_not_verified",
-      "url": "https://giwmscdntwo.gov.np/media/pdf_upload/Class%209%20Environment%20science_English%20Version_zgnagog.pdf",
-      "note": "New textbook contents list nine units; older 2076 curriculum listed ten areas. Textbook is not specification grid; visual screenshot unavailable; exact marks allocation remains unverified."
+      "version": "2082 first edition",
+      "status": "official_CDC_library_textbook_record_full_contents_and_grid_review_pending",
+      "url": "https://lib.moecdc.gov.np/catalog/opac_css/index.php?id=15803&lvl=notice_display",
+      "note": "CDC Library record 15803 confirms the 2082 first-edition Grade 9 optional Environment Science textbook (198 pages, Nepali). Previous English PDF candidate timed out on recheck; nine-unit SMSS practice outline requires teacher comparison against actual textbook. Catalog record does not verify exact Grid, contents, or model questions."
     }
   ],
   "completion": {

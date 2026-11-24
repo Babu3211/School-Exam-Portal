@@ -69,6 +69,7 @@ for(const subject of ['Optional I: Environmental Science','Optional Environment 
  assert.equal(pack.questions.length,36);
  assert.equal(new Set(pack.questions.map(q=>q.id)).size,36);
  assert.equal(pack.exactGridVerified,false);
+ assert.ok(pack.units.every(u=>u.provenance.includes('review pending')&&u.sourceUrl.includes('id=15803')));
  for(const unit of pack.units){
   assert.ok(unit.unitTitleEn&&unit.unitTitle);
   const questions=pack.questions.filter(q=>q.unitId===unit.id);
@@ -80,7 +81,7 @@ for(const subject of ['Optional I: Environmental Science','Optional Environment 
 for(const [grade,subject] of [[8,'Environmental Science'],[10,'Environmental Science'],[9,'Science and Technology'],[9,'Computer Science']]){
  assert.equal(grade9EnvironmentOriginalBank({grade,subject}).questions.length,0);
 }
-assert.ok(data.sources.some(s=>s.subject==='ऐच्छिक वातावरण विज्ञान'&&s.kind==='CDC_textbook'&&s.url.includes('zgnagog')));
+assert.ok(data.sources.some(s=>s.subject==='ऐच्छिक वातावरण विज्ञान'&&s.kind==='CDC_textbook'&&s.url.includes('id=15803')));
 assert.equal(byKey.optional_environment.status,'source_missing','Textbook must never count as verified grid');
 assert.match(readFileSync(new URL('../sw.js',import.meta.url),'utf8'),/cdc-grade9-environment-original-practice\.mjs/);
 console.log('PASS Grade9 environment nine-unit bilingual practice, source separation and offline cache');

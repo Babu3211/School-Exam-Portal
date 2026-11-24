@@ -460,7 +460,7 @@ async function loadClassSubjects() {
 // Absence of a checked source never triggers invented questions or a fake grid.
 async function loadBundledPracticeBank({grade,subject}){
  const environment=grade9EnvironmentOriginalBank({grade,subject});
- if(environment.units.length)return {units:environment.units,questions:environment.questions,status:"कक्षा ९ वातावरण विज्ञान: CDC 2025 पाठ्यपुस्तकका ९ Unit अनुसार ३६ मौलिक bilingual अभ्यास प्रश्न। शिक्षक समीक्षा आवश्यक; आधिकारिक Grid प्रमाणित नभएसम्म CDC Exact मानिँदैन।"};
+ if(environment.units.length)return {units:environment.units,questions:environment.questions,status:"कक्षा ९ वातावरण विज्ञान: ९ प्रस्तावित Unit का ३६ मौलिक bilingual अभ्यास प्रश्न। वर्तमान CDC पाठ्यपुस्तकसँग Unit/उत्तर समीक्षा बाँकी; आधिकारिक Grid प्रमाणित नभएसम्म CDC Exact मानिँदैन।"};
  if(grade===9&&getBundledComputerGrid({grade,subject,fullMarks:50})){
   const pack=grade9ComputerOriginalBank({subject});
   return {units:pack.units,questions:pack.questions,
