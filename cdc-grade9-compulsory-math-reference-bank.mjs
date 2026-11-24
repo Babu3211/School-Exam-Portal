@@ -1,5 +1,5 @@
 /** Original, formula-derived Grade 9 compulsory mathematics grouped drafts.
- * Two variants of each of 16 groups; allocation matches the historical
+ * Six numerical variants of each of 16 groups; allocation matches the historical
  * 2078 area/cognitive totals, not a verified current 2083 specification.
  * No teacher approval or CDC publication is claimed.
  */
@@ -8,6 +8,17 @@ import {grade9CompulsoryMathPracticeBank} from './cdc-grade9-compulsory-math-pra
 const K='knowledge',U='understanding',A='application',H='higher';
 const p=(cognitiveLevel,marks,textNe,textEn,answerNe,answerEn=answerNe)=>({cognitiveLevel,marks,textNe,textEn,answerNe:String(answerNe),answerEn:String(answerEn)});
 const g=(unit,topic,contextNe,contextEn,...subquestions)=>({unit,topic,contextNe,contextEn,subquestions});
+// These are explicit grouped-exercise labels, not the topic labels of the
+// unrelated standalone three-item bank. Preserve standalone topic IDs.
+const groupTopics=[
+ ['समूहका गणना र सम्मिलन / Set cardinality and union'],
+ ['छुट र बिक्री मूल्य / Discount and selling price','साधारण ब्याज / Simple interest (grouped)','कामदार र समय / Inverse proportion'],
+ ['आयतको क्षेत्रफल र लागत / Rectangle area and cost','वृत्तको परिधि र क्षेत्रफल / Circle circumference and area','घनाभको आयतन / Cuboid volume'],
+ ['बहुपदी र खण्डीकरण / Polynomials and factorization','युगपत समीकरण / Simultaneous equations','क्षेत्रफल र द्विघात समीकरण / Area and quadratic equations'],
+ ['त्रिभुजका भित्री र बाहिरी कोण / Triangle interior and exterior angles','पाइथागोरस प्रमेय / Pythagoras theorem','समानान्तर रेखा र कोण / Parallel lines and angles'],
+ ['मध्यमान, मध्यक र विस्तार / Mean, median and range','बलको सम्भाव्यता / Probability of drawing balls'],
+ ['समकोण त्रिभुजका अनुपात / Right-triangle trigonometric ratios']
+];
 function groups(n){
  const x=10+n,y=8+n,z=3+n,t=x+y-z;
  const price=1000+200*n,discount=10*n,net=price*(100-discount)/100;
@@ -75,7 +86,7 @@ function groups(n){
  p(U,2,'मध्यक र विस्तार निकाल्नुहोस्।','Find the median and range.','Median='+4*n+'; Range='+6*n+'−'+2*n+'='+4*n),
  p(A,2,'अङ्कगणितीय मध्यमान निकाल्नुहोस्।','Calculate the arithmetic mean.',data.join('+')+' = '+20*n+'; '+20*n+'/5='+4*n),
  p(H,1,'प्रत्येक मानमा 3 थप्दा मध्यमान कति बदलिन्छ?','How does the mean change if 3 is added to every value?','3 ले बढ्छ।','Increases by 3.')),
- g(6,1,'एउटा झोलामा '+base+' राता र '+height+' नीला समान आकारका बल छन्।','A bag contains '+base+' red and '+height+' blue balls of equal size.',
+ g(6,1,'एउटा झोलामा '+base+' राता र '+height+' नीला समान आकारका बल छन्। एउटा बल अनियमित रूपमा निकालिन्छ।','A bag contains '+base+' red and '+height+' blue balls of equal size. One ball is drawn at random.',
  p(K,1,'सम्भाव्यताको सूत्र लेख्नुहोस्।','State the probability formula for equally likely outcomes.','अनुकूल परिणाम / कुल सम्भावित परिणाम','Favourable outcomes / total possible outcomes'),
  p(U,1,'कुल बल कति छन्?','How many balls are there?',base+height),
  p(A,2,'रातो र नीलो बल आउने सम्भाव्यता निकाल्नुहोस्।','Find the probabilities of drawing red and blue.','P(R)='+base+'/'+(base+height)+'=3/7; P(B)='+height+'/'+(base+height)+'=4/7'),
@@ -89,9 +100,11 @@ function groups(n){
 }
 export function grade9CompulsoryMathReferenceBank({grade,subject}={}){
  const ref=getGrade9MathReference({grade,subject});if(!ref)return {units:[],questions:[]};
- const {units}=grade9CompulsoryMathPracticeBank({grade,subject});
- const questions=[1,2].flatMap(n=>groups(n).map((row,i)=>{
-  const u=units[row.unit-1],topicIndex=Math.min(row.topic,u.topics.length-1);
+ const standalone=grade9CompulsoryMathPracticeBank({grade,subject}).units;
+ const units=standalone.map((u,i)=>({...u,topics:[...u.topics,...groupTopics[i]]}));
+ const questions=[1,2,3,4,5,6].flatMap(n=>groups(n).map((row,i)=>{
+  const u=units[row.unit-1],topicIndex=standalone[row.unit-1].topics.length+row.topic;
+  if(!groupTopics[row.unit-1]?.[row.topic])throw Error('Unknown grouped math topic');
   return {id:'smss_math_ref9_'+i+'_v'+n,variantFamily:'smss_math_ref9_'+i,gradeNumber:9,subject,unitCode:u.unitCode,unitId:u.id,unitTitle:u.unitTitle,topicId:u.id+'_'+topicIndex,topicName:u.topics[topicIndex],
   contextNe:row.contextNe,contextEn:row.contextEn,subquestions:row.subquestions,questionText:row.contextNe,questionTextEn:row.contextEn,answer:row.subquestions.map(x=>x.answerNe).join('; '),answerEn:row.subquestions.map(x=>x.answerEn).join('; '),marks:row.subquestions.reduce((s,x)=>s+x.marks,0),questionType:'long',cognitiveLevel:'application',status:'active',bundled:true,teacherReviewRequired:true,reviewStatus:'draft',officialCdcQuestion:false,sourceStatus:'SMSS_original_reference_draft'};
  }));

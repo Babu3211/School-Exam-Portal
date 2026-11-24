@@ -483,7 +483,7 @@ async function loadBundledPracticeBank({grade,subject}){
  const english=grade9EnglishPracticeBank({grade,subject});
  if(english.units.length){const ref=grade9EnglishReferenceBank({grade,subject});return {units:english.units,questions:[...english.questions,...ref.questions,...(ref.questions.some(q=>q.slot==="reading2")?[]:grade9EnglishPracticeReading2({grade,subject}))],status:"Grade 9 English: 75-mark review practice available. Where an authorized seen passage is unavailable, the original reading substitute is explicitly marked; not a CDC Exact examination."};}
  const math=grade9CompulsoryMathPracticeBank({grade,subject});
- if(math.units.length){const ref=grade9CompulsoryMathReferenceBank({grade,subject});return {units:math.units,questions:[...math.questions,...ref.questions],status:"कक्षा ९ अनिवार्य गणित: ४२ मौलिक अभ्यास र ३२ संयुक्त समूह (९८ उपप्रश्न), ऐतिहासिक २०७८ Grid सन्दर्भ; नवीनतम Grid र शिक्षक समीक्षा बाँकी।"};}
+ if(math.units.length){const ref=grade9CompulsoryMathReferenceBank({grade,subject});return {units:ref.units,questions:[...math.questions,...ref.questions],status:"कक्षा ९ अनिवार्य गणित: ४२ मौलिक अभ्यास र ९६ संयुक्त समूह (२९४ उपप्रश्न), १६ संयुक्त Topic; ऐतिहासिक २०७८ Grid सन्दर्भ। नवीनतम Grid र शिक्षक समीक्षा बाँकी।"};}
  const social=grade9SocialOriginalBank({grade,subject});
  if(social.units.length){const ref=grade9SocialReferenceBank({grade,subject});return {units:social.units,questions:[...social.questions,...ref.questions],status:"कक्षा ९ सामाजिक अध्ययन: १० विषयक्षेत्रमा ७८ मौलिक bilingual अभ्यास प्रश्न, २०७८ Grid सन्दर्भका ४८ प्रश्नसहित। नयाँ CDC Exact Grid र शिक्षक समीक्षा बाँकी।"};}
  const environment=grade9EnvironmentOriginalBank({grade,subject});
