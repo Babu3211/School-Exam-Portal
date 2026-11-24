@@ -72,5 +72,40 @@ for(const klass of ['6','7','8','9','10'])for(const exam of ['1st','2nd','final'
   a=>a.publications[0].entries[1].studentId='s1'
  ])assert.throws(()=>prepareCommittedIemisReport(alter(fn)));
 }
-assert.throws(()=>prepareCommittedIemisReport({classNo:'1',term:'1st'}),/primary achievement/);
+assert.throws(()=>prepareCommittedIemisReport({classNo:'11',term:'1st'}),/Classes 1–10/);
 console.log('PASS committed-to-IEMIS preview: Classes 6–10, first/second/final, Computer and Mathematics, complete scope and watermark');
+
+for(const klass of ['1','2','3','4','5'])for(const exam of ['1st','2nd','final']){
+ const roster=students.map(s=>({...s,class:klass}));
+ const catalog=subjects.map(s=>({...s,class:klass}));
+ const publications=catalog.map(sub=>({published:true,schoolId,classId:klass,subjectId:sub.id,examId:exam,
+  publicationId:'pub_'+sub.id,digest:'b'.repeat(64),rosterCount:2,
+  components:[{key:'achievementCount',name:'No. of Learning Achievement',fullMarks:10},
+   {key:'achievementScore',name:'Obtained Learning Achievement',fullMarks:40}],
+  entries:[{studentId:'s1',isAbsent:false,values:{achievementCount:5,achievementScore:18},totalObtained:23},
+   {studentId:'s2',isAbsent:false,values:{achievementCount:10,achievementScore:35},totalObtained:45}]}));
+ const input={schoolId,school,classNo:klass,term:exam,students:roster,subjects:catalog,publications};
+ const report=prepareCommittedIemisReport(input);
+ assert.equal(report.summary.complete,true);
+ assert.equal(report.summary.rows[0].subjects[0].summary.full,20);
+ assert.equal(report.summary.rows[0].subjects[0].summary.obtained,18,'Count is metadata, not earned marks');
+ assert.equal(report.summary.rows[0].gpa,4);
+ assert.equal(report.summary.rows[1].gpa,3.6);
+ assert.equal(report.previewOnly,true);
+ assert.match(report.printFor('s1').html,/NOT VALID FOR OFFICIAL USE/);
+ for(const mutate of [
+  a=>a.publications[0].components[1].fullMarks=39,
+  a=>a.publications[0].components.push({key:'full',name:'Full Marks',fullMarks:40}),
+  a=>{const r=a.publications[0].entries[0];r.values.achievementScore=21;r.totalObtained=26},
+  a=>{const r=a.publications[0].entries[0];r.values.achievementCount=0;r.values.achievementScore=0;r.totalObtained=0},
+  a=>{const r=a.publications[0].entries[0];r.values.achievementCount=5.5;r.totalObtained=23.5},
+  a=>{const r=a.publications[0].entries[0];r.values.achievementScore=18.5;r.totalObtained=23.5},
+  a=>a.publications[0].entries[0].totalObtained=18,
+  a=>a.publications[0].entries[0].isAbsent=true,
+  a=>a.publications[0].published=false
+ ]){
+  const copy=structuredClone(input);mutate(copy);
+  assert.throws(()=>prepareCommittedIemisReport(copy));
+ }
+}
+console.log('PASS committed primary learning achievement preview: Classes 1–5, three terms, derived full marks, GPA, watermark and invalid count/score rejection');
