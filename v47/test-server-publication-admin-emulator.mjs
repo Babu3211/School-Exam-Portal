@@ -3,6 +3,9 @@
 // production credentials, hosting, HTTP API, or real student data are used.
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
+import {once} from 'node:events';
+import {createV47ApiServer} from '../src/v47/node-api-server.mjs';
+import {runSavedClassPublication} from './saved-class-publication-client.mjs';
 // Admin SDK intentionally lives in the isolated v47-runtime package, not V46.
 const requireV47=createRequire(new URL('../v47-runtime/package.json',import.meta.url));
  import {createAdminClassPublicationReaders} from './server-publication-authoritative-loader.mjs';
@@ -213,6 +216,35 @@ try{
  const duplicateCommit=getResponse();
  await approvedCommit(requestPublish(),duplicateCommit);
  assert.equal(duplicateCommit.statusCode,403,'CAS and reuse must refuse duplicate HTTP commit');
+ // Browser client over actual loopback HTTP router + real Admin SDK emulator.
+ // Only the test server may enable final publication.
+ const runHttpClient=async (enabled,callback)=>{
+  const http=createV47ApiServer({auth:publishAuth,firestore:db,publicationEnabled:enabled});
+  http.listen(0,'127.0.0.1');await once(http,'listening');
+  const url='http://127.0.0.1:'+http.address().port;
+  const requests=[];
+  const fetchImpl=async(path,opts)=>{requests.push(path);return fetch(url+path,opts)};
+  try{return await callback({scope,getIdToken:async()=>actorUid,fetchImpl,assertCurrent:()=>{},confirmStage:()=>true,confirmCommit:()=>true},requests)}
+  finally{http.closeAllConnections?.();await new Promise(resolve=>http.close(resolve))}
+ };
+ await runHttpClient(false,async(opts,requests)=>{
+  await assert.rejects(runSavedClassPublication(opts),/503/);
+  assert.equal(requests.length,3);assert.equal((await pointerRef.get()).data().publicationId,stageHttpId);
+ });
+ let latestPublication;
+ await runHttpClient(true,async(opts,requests)=>{
+  const cancelled=await runSavedClassPublication({...opts,confirmStage:()=>false});
+  assert.equal(cancelled.committed,false);assert.equal(requests.length,1);
+  const published=await runSavedClassPublication({...opts,confirmCommit:info=>{
+   assert.equal(info.previousPublicationId,stageHttpId);assert.equal(info.review.rosterCount,count);return true
+  }});
+  assert.equal(published.committed,true);latestPublication=published.publicationId;
+  assert.equal(requests.length,4);assert.equal((await pointerRef.get()).data().publicationId,latestPublication);
+  assert.equal((await loadCommittedOfficialClassMarks({firestore:db,...scope,actorUid})).rosterCount,count);
+  await assert.rejects(runSavedClassPublication({...opts,getIdToken:async()=>'viewer1'}),/403/);
+  assert.equal((await pointerRef.get()).data().publicationId,latestPublication);
+ });
+ console.log('PASS actual HTTP browser publication client: review/stage/commit, disabled default, CAS pointer, cancellation and denied Viewer');
  // Verify atomic attendance against actual Admin SDK transactions, not just mocks.
  const date='2026-11-24',attendanceScope={firestore:db,schoolId,classId,date,actorUid};
  const attendanceEntries=marks.map(({studentId})=>({studentId,class:classId,date,present:true}));

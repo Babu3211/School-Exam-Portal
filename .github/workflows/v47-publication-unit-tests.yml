@@ -20,6 +20,8 @@ on:
       - 'src/v47/node-api-server.mjs'
       - 'src/v47/node-atomic-attendance-handler.mjs'
       - 'v47/atomic-attendance-client.mjs'
+      - 'v47/saved-class-publication-client.mjs'
+      - 'v47/test-saved-class-publication-client.mjs'
       - 'scripts/test-v47-publication-stage-http.mjs'
 permissions:
   contents: read
@@ -38,6 +40,7 @@ jobs:
       - name: Check publication validation and official-reader regression tests
         run: |
           set -euo pipefail
+          node v47/test-saved-class-publication-client.mjs
           node v47/test-server-atomic-class-attendance.mjs
           node v47/test-server-publication-pointer-plan.mjs
           node v47/test-server-class-review-confirmation.mjs
