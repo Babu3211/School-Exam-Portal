@@ -7,6 +7,7 @@ import {computePublishedPagesDigest,computeOfficialSettingsDigest} from './serve
 import {resolveVerifiedOfficialClassMarks} from './server-verified-official-class-marks.mjs';
 import {completeClassDraftId} from './complete-class-draft-document.mjs';
 import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
+import {prepareCommittedIemisReport} from './committed-iemis-report-preview.mjs';
 
 const schoolIdPattern=/^[0-9]{5,20}$/;
 const segment=/^[A-Za-z0-9_-]{1,128}$/;
@@ -32,10 +33,14 @@ export async function loadCommittedOfficialClassMarks({firestore,schoolId,classI
   throw new TypeError('Trusted Firebase Admin Firestore required');
  const scope={schoolId,classId,subjectId,examId};
  const ref=(...path)=>firestore.doc(['schools',schoolId,...path].join('/'));
- return firestore.runTransaction(async tx=>{
+ return firestore.runTransaction(tx=>readCommittedSubject({firestore,tx,scope,actorUid}));
+}
+async function readCommittedSubject({firestore,tx,scope,actorUid,shared}){
+ const {schoolId,classId,subjectId,examId}=scope;
+ const ref=(...path)=>firestore.doc(['schools',schoolId,...path].join('/'));
   if(typeof tx?.get!=='function')throw new TypeError('Trusted read transaction required');
-  const school=value(await tx.get(ref()));
-  const member=value(await tx.get(ref('members',actorUid)));
+  const school=shared?shared.school:value(await tx.get(ref()));
+  const member=shared?shared.member:value(await tx.get(ref('members',actorUid)));
   if(school?.active!==true||school.id!==schoolId||
      member?.schoolId!==schoolId||member?.uid!==actorUid||member.active!==true||
      !['school_admin','teacher','viewer'].includes(member.role))
@@ -98,7 +103,7 @@ export async function loadCommittedOfficialClassMarks({firestore,schoolId,classI
   // Reverify the live roster and dynamic subject settings inside this same
   // Firestore transaction: a published hash alone cannot prove current eligibility.
   const settingsId=completeClassDraftId(scope);
-  const subject=value(await tx.get(ref('subjects',subjectId)));
+  const subject=shared?shared.subjects.get(subjectId):value(await tx.get(ref('subjects',subjectId)));
   const settings=value(await tx.get(ref('mark_settings',settingsId)));
   if(!subject||subject.schoolId!==schoolId||subject.class!==classId||subject.active!==true)
    throw new Error('Published subject inactive or changed');
@@ -106,7 +111,7 @@ export async function loadCommittedOfficialClassMarks({firestore,schoolId,classI
    throw new Error('Verified Examination Settings unavailable');
   const rosterQuery=firestore.collection(['schools',schoolId,'students'].join('/'))
    .where('class','==',classId).orderBy('__name__').limit(1501);
-  const snapshot=await tx.get(rosterQuery);
+  const snapshot=shared?shared.roster:await tx.get(rosterQuery);
   if(!Array.isArray(snapshot?.docs)||snapshot.docs.length<1||
      snapshot.docs.length>1500||snapshot.docs.length!==pointer.rosterCount)
    throw new Error('Published class roster differs from live roster');
@@ -127,5 +132,66 @@ export async function loadCommittedOfficialClassMarks({firestore,schoolId,classI
   if(computeOfficialSettingsDigest(settings,scope)!==pointer.settingsDigest)
    throw new Error('Published Examination Settings changed; review and republish required');
   return verified;
+}
+
+// All subject pointers and their settings, school membership and roster must
+// come from ONE read transaction. Parallel per-subject HTTP reads could mix
+// publications from different points in time. Never fall back to legacy marks.
+export async function loadCommittedIemisReportSnapshot({firestore,schoolId,classId,examId,actorUid}){
+ if(typeof schoolId!=='string'||!schoolIdPattern.test(schoolId)||
+    typeof classId!=='string'||!/^(?:[1-9]|10)$/.test(classId)||
+    !['1st','2nd','3rd','final'].includes(examId)||typeof actorUid!=='string'||!segment.test(actorUid))
+  throw Error('Verified IEMIS report scope required');
+ if(typeof firestore?.doc!=='function'||typeof firestore?.collection!=='function'||typeof firestore?.runTransaction!=='function')
+  throw TypeError('Trusted Firebase Admin Firestore required');
+ const ref=(...parts)=>firestore.doc(['schools',schoolId,...parts].join('/'));
+ const query=(collection,n)=>firestore.collection(['schools',schoolId,collection].join('/')).where('class','==',classId).orderBy('__name__').limit(n);
+ return firestore.runTransaction(async tx=>{
+  const school=value(await tx.get(ref())),member=value(await tx.get(ref('members',actorUid)));
+  if(school?.id!==schoolId||school.active!==true||member?.schoolId!==schoolId||member.uid!==actorUid||member.active!==true||
+     !['school_admin','teacher','viewer'].includes(member.role))throw Error('Active school membership required for report');
+  const profile=value(await tx.get(ref('school_settings','profile')));
+  if(profile&&profile.schoolId!==schoolId)throw Error('Cross-school profile');
+  const branding={nameEnglish:profile?.nameEnglish||school.name,nameNepali:profile?.nameNepali||'',
+   addressEnglish:profile?.addressEnglish||'',addressNepali:profile?.addressNepali||''};
+  const roster=await tx.get(query('students',1501)),catalog=await tx.get(query('subjects',31));
+  if(!Array.isArray(roster?.docs)||roster.docs.length<1||roster.docs.length>1500||
+     !Array.isArray(catalog?.docs)||catalog.docs.length<1||catalog.docs.length>30)
+   throw Error('Complete class roster and subject catalog required');
+  const students=[],subjects=[],subjectMap=new Map(),ids=new Set();
+  const textField=v=>typeof v==='string'?v.slice(0,250):typeof v==='number'&&Number.isFinite(v)?String(v):'';
+  for(const doc of roster.docs){
+   const row=doc.data();
+   if(!segment.test(doc.id)||ids.has(doc.id)||doc.ref?.path!==ref('students',doc.id).path||
+      row?.schoolId!==schoolId||row.class!==classId||!isActiveEnrolledStudent(row))
+    throw Error('Foreign, duplicate or inactive report student');
+   ids.add(doc.id);
+   // Explicit allowlist: do not send parents, phone, addresses or other PII.
+   students.push({id:doc.id,schoolId,class:classId,active:true,
+    nameEnglish:textField(row.nameEnglish??row.studentNameEnglish??row.name),
+    rollNo:textField(row.rollNo??row.rollNumber),
+    studentIemisNo:textField(row.studentIemisNo??row.iemisStudentNo??row.registrationNo),
+    symbolNo:textField(row.symbolNo??row.symbolNumber??row.examSymbolNo)});
+  }
+  for(const doc of catalog.docs){
+   const row=doc.data();
+   if(!segment.test(doc.id)||subjectMap.has(doc.id)||doc.ref?.path!==ref('subjects',doc.id).path||
+      row?.schoolId!==schoolId||row.class!==classId||row.active!==true)
+    throw Error('Foreign, duplicate or inactive report subject');
+   const sub={id:doc.id,schoolId,class:classId,active:true,name:row.name,creditHour:row.creditHour};
+   subjects.push(sub);subjectMap.set(doc.id,sub);
+  }
+  const publications=[];
+  for(const sub of subjects){
+   const result=await readCommittedSubject({firestore,tx,scope:{schoolId,classId,subjectId:sub.id,examId},actorUid,
+    shared:{school,member,subjects:subjectMap,roster}});
+   if(!result.published)throw Error('All subjects must have committed marks before report preview');
+   publications.push(result);
+  }
+  const input={schoolId,school:branding,classNo:classId,term:examId,students,subjects,publications};
+  // Validate completeness and compatibility using the existing V46 renderer.
+  // Only structured data is returned. Browser rendering remains unapproved.
+  prepareCommittedIemisReport(input);
+  return input;
  });
 }

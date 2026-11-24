@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {loadCommittedOfficialClassMarks} from './server-official-marks-firestore-loader.mjs';
+import {loadCommittedOfficialClassMarks,loadCommittedIemisReportSnapshot} from './server-official-marks-firestore-loader.mjs';
 import {computePublishedPagesDigest,computeOfficialSettingsDigest} from './server-publication-content-digest.mjs';
 import {officialClassPointerId} from './server-publication-authoritative-preflight.mjs';
 
@@ -63,12 +63,12 @@ function fixture(){
    const tx={get:async ref=>{
     reads++;
     if(ref.query){
-     if(ref.query!==path('students')||ref.field!=='class'||ref.op!=='=='||
-        ref.order!=='__name__'||ref.n!==1501)throw Error('Invalid roster query');
+     if(![path('students'),path('subjects')].includes(ref.query)||ref.field!=='class'||ref.op!=='=='||
+        ref.order!=='__name__'||ref.n!==(ref.query===path('students')?1501:31))throw Error('Invalid roster query');
      return {docs:[...docs.entries()]
-      .filter(([key,v])=>key.startsWith(path('students')+'/')&&v.class===ref.klass)
+      .filter(([key,v])=>key.startsWith(ref.query+'/')&&v.class===ref.klass)
       .sort(([a],[b])=>a.localeCompare(b))
-      .map(([key,v])=>({id:key.slice(path('students').length+1),ref:{path:key},data:()=>structuredClone(v)}))};
+      .map(([key,v])=>({id:key.slice(ref.query.length+1),ref:{path:key},data:()=>structuredClone(v)}))};
     }
     return {exists:docs.has(ref.path),data:()=>structuredClone(docs.get(ref.path))};
    }};
@@ -137,3 +137,52 @@ for(const mutate of [
 await assert.rejects(run(fixture(),{schoolId:'67890'}),/membership/);
 await assert.rejects(run(fixture(),{classId:'../9'}),/Verified/);
 console.log('PASS trusted official marks Firestore loader: 101 rows, Viewer, unpublished, revoked membership, tamper/cross-school/settings/roster refusals; no public API or writes');
+
+import {createV47CommittedReportHttpHandler} from '../src/v47/committed-report-http-handler.mjs';
+{
+ const h=fixture();
+ h.docs.get(root).name='Test School';
+ h.docs.get(path('subjects','computer')).name='Computer Science';
+ h.docs.get(path('subjects','computer')).creditHour=4;
+ // Build two genuine V46-shaped final-term subjects using the same fixture.
+ for(const [subjectId,name,components] of [
+  ['computer','Computer Science',[['Participation',4],['Practical/Project',36],['Total of Term',10],['TH (Theory)',50]]],
+  ['math','Mathematics',[['Participation',3],['Practical/Project',16],['Total of Term',6],['TH (Theory)',75]]]
+ ]){
+  const sc={...scope,subjectId},id='pub_'+subjectId+'_0001',settingsId='9_'+subjectId+'_final';
+  const config={...sc,id:settingsId,active:true,components:components.map(([name,fullMarks],i)=>({key:'c'+i,name,fullMarks}))};
+  const values=Object.fromEntries(config.components.map(c=>[c.key,c.fullMarks]));
+  const entries=rows.map(r=>({studentId:r.studentId,isAbsent:false,values,totalObtained:Object.values(values).reduce((a,b)=>a+b,0)}));
+  const pages=Array.from({length:2},(_,i)=>{const chunk=entries.slice(i*100,(i+1)*100);return {index:i,count:chunk.length,firstStudentId:chunk[0].studentId,lastStudentId:chunk.at(-1).studentId,entries:chunk}});
+  const pointer={...sc,publicationId:id,digest,contentDigest:computePublishedPagesDigest(pages),settingsDigest:computeOfficialSettingsDigest(config,sc),rosterCount:count};
+  h.put(path('subjects',subjectId),{schoolId:scope.schoolId,class:'9',active:true,name,creditHour:4});
+  h.put(path('mark_settings',settingsId),config);
+  h.put(path('official_marks_pointers',officialClassPointerId(sc)),pointer);
+  h.put(path('official_marks_publications',id),{...pointer,state:'committed',batchCount:2,approvedBy:uid});
+  h.put(path('official_marks_audit',id),{...pointer,approvedBy:uid,action:'official_class_marks_publish'});
+  h.put(path('marks_staging',id),{...sc,publicationId:id,digest,rosterCount:count,batchCount:2,format:'smss-v47-verified-staging-manifest-v1',state:'staged_verified_not_published',writeAuthorized:false,publicationAllowed:false});
+  for(const page of pages)h.put(path('marks_staging',id,'batches','b'+String(page.index).padStart(4,'0')),{...sc,publicationId:id,digest,format:'smss-v47-staged-page-v1',...page});
+ }
+ h.docs.get(path('students','s0000')).nameEnglish='Alpha';
+ h.docs.get(path('students','s0000')).parentPhone='PRIVATE';
+ h.docs.get(path('members',uid)).role='viewer';
+ const q={schoolId:scope.schoolId,classId:'9',examId:'final'};
+ const snapshot=await loadCommittedIemisReportSnapshot({firestore:h.firestore,...q,actorUid:uid});
+ assert.equal(h.transactions,1,'All subjects must be read in one transaction');
+ assert.equal(snapshot.publications.length,2);
+ assert.equal(snapshot.students.length,101);
+ assert.equal(snapshot.students[0].nameEnglish,'Alpha');
+ assert.equal(Object.hasOwn(snapshot.students[0],'parentPhone'),false);
+ const handler=createV47CommittedReportHttpHandler({firestore:h.firestore,auth:{verifyIdToken:async(token,revoked)=>{assert.equal(revoked,true);return {uid:token}}}});
+ const req={method:'GET',headers:{authorization:'Bearer '+uid},query:q};
+ const ok=await handler(req);
+ assert.equal(ok.status,200);assert.equal(ok.body.previewOnly,true);assert.equal(ok.body.cdcGradeApproved,false);
+ assert.equal((await handler({...req,headers:{}})).status,401);
+ assert.equal((await handler({...req,query:{...q,uid}})).status,400);
+ assert.equal((await handler({...req,method:'POST'})).status,405);
+ h.docs.delete(path('official_marks_pointers',officialClassPointerId({...scope,subjectId:'math'})));
+ assert.equal((await handler(req)).status,403,'Missing subject must block whole report');
+ h.docs.get(path('members',uid)).active=false;
+ assert.equal((await handler(req)).status,403);
+}
+console.log('PASS complete committed report snapshot: 101 students, two subjects, one transaction, Viewer, no PII, partial reports refused');

@@ -10,6 +10,7 @@ on:
       - 'v47/test-configured-*.mjs'
       - '.github/workflows/v47-publication-unit-tests.yml'
       - 'src/v47/official-marks-http-handler.mjs'
+      - 'src/v47/committed-report-http-handler.mjs'
       - 'src/v47/read-api-router.mjs'
       - 'scripts/test-v47-official-marks-http.mjs'
       - 'src/v47/publication-review-http-handler.mjs'
