@@ -190,8 +190,7 @@ def read_compulsory_pdf(url, output_dir):
             info=subprocess.run(["pdfinfo",str(pdf)],check=True,capture_output=True,text=True,timeout=20).stdout
             pages=int(re.search(r"(?m)^Pages:\s+(\d+)",info).group(1))
             if not 1<=pages<=150: raise ValueError("Unexpected PDF page count")
-            grid_page_limits={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3,"optional-computer":1,"optional-math":1,"optional-economics":1}
-    optional_paths={"optional-computer":"2082-04-29%20Specification%20grid%20and%20Model%20Questions-Computer%20Science%20Grade%209_khtkxrc.pdf","optional-math":"Specification%20Grid%20and%20Model%20Question-G9-Opt.%20Math-web_nrbp00y.pdf","optional-economics":"RS11136_"}
+            grid_page_limits={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3}
             last=min(pages,grid_page_limits[resource])
             text=subprocess.run(["pdftotext","-f","1","-l",str(last),"-layout",str(pdf),"-"],check=True,capture_output=True,text=True,timeout=30).stdout
             # Keep page layout for offline inspection, never treat extraction as
@@ -266,7 +265,8 @@ def stage_grid_page_images(preview_dir):
     """
     from html import escape
     register=json.loads((Path(__file__).resolve().parent.parent/"data/cdc-question-paper-sources-2083.json").read_text(encoding="utf-8"))
-    limits={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3}
+    limits={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3,"optional-computer":1,"optional-math":1,"optional-economics":1}
+    optional_paths={"optional-computer":"2082-04-29%20Specification%20grid%20and%20Model%20Questions-Computer%20Science%20Grade%209_khtkxrc.pdf","optional-math":"Specification%20Grid%20and%20Model%20Question-G9-Opt.%20Math-web_nrbp00y.pdf","optional-economics":"RS11136_"}
     preview=Path(preview_dir)
     index=preview/"grade9-cdc-grid-library.html"
     if not index.is_file(): raise ValueError("Generate the static Grid Library first")
