@@ -22,3 +22,10 @@ assert.ok(p.questions.filter(q=>q.sourceKind==='textbook').every(q=>q.sourceEdit
 assert.equal(p.questions.filter(q=>q.sourceKind==='textbook').length,22);
 assert.equal(p.units[6].unitTitle.split(' / ')[0],'कालजित र अजङ्गुको राक्षसको कथा');
 console.log('PASS 54 actual Nepali reference tasks; 71 marks covered; notes/summary passage and current Grid approval remain pending');
+
+for(const q of p.questions){
+ if(['vocabulary_identification','word_class','word_formation','grammar_passage','unseen_passage'].includes(q.skill))assert.ok(q.passage,'Missing contextual passage: '+q.id);
+ if(q.skill==='sentence_transformation')assert.match(q.components[2].text,/वाच्य/);
+ if(q.skill==='unseen_passage')assert.match(q.components[4].text,/वाक्यमा प्रयोग/);
+}
+console.log('PASS contextual grammar task format and required transformation/vocabulary categories in authored Nepali drafts');
