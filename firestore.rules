@@ -434,7 +434,1374 @@ service cloud.firestore {
         data.academicYear == '2083' &&
         data.period in ['First Term','Second Term','Final Term'] &&
         data.unit is string && data.unit.size() > 0 && data.unit.size() <= 180 &&
-        data.outcomeId is string && data.outcomeId.matches('^cdc2076-g[1-3]-[1-9][0-9]{0,2}$') &&
+        // Only the three currently enabled Class 1 themes may append evidence.
+        // Class 2–3 approvals must update this server guard and the UI together.
+        // Existing records remain readable; this guard applies to creates only.
+        data.className.matches('^(Class |कक्षा )?[1१]
+        data.stage in ['regular','support'] &&
+        data.date is string && data.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[0-2])$') &&
+        data.indicators is list && data.indicators.size() == 4 &&
+        data.indicators[0] is bool && data.indicators[1] is bool &&
+        data.indicators[2] is bool && data.indicators[3] is bool &&
+        data.createdBy == request.auth.uid && data.createdAt == request.time;
+    }
+
+    match /cdc_serofero_indicators/{documentId} {
+      allow read: if isAdmin() || isViewer() ||
+        (signedIn() && (teacherAllSectionsAccess(resource.data.className, resource.data.subject) ||
+          teacherSubjectAccess(resource.data.className, resource.data.subject, resource.data.section)));
+      allow create: if signedIn() && validCdcSeroferoIndicators(request.resource.data) &&
+        canWriteCdcObservation(request.resource.data);
+      allow update, delete: if false;
+    }
+
+    function validDailyAttendance(data) {
+      return data.keys().hasAll([
+          'date', 'className', 'attendanceType', 'subject', 'students',
+          'totalStudents', 'presentCount', 'absentCount', 'leaveCount',
+          'academicYear', 'updatedAt', 'updatedBy'
+        ]) &&
+        data.keys().hasOnly([
+          'date', 'className', 'attendanceType', 'subject', 'students',
+          'totalStudents', 'presentCount', 'absentCount', 'leaveCount',
+          'academicYear', 'updatedAt', 'updatedBy', 'createdAt', 'createdBy'
+        ]) &&
+        data.date is string && data.date.size() > 0 && data.date.size() <= 20 &&
+        data.className is string && data.className.size() > 0 && data.className.size() <= 40 &&
+        data.attendanceType == 'daily' &&
+        (data.subject == null || (data.subject is string && data.subject.size() <= 100)) &&
+        data.students is list && data.students.size() > 0 &&
+        data.students.size() <= 200 &&
+        data.totalStudents is int && data.totalStudents == data.students.size() &&
+        data.presentCount is int && data.presentCount >= 0 &&
+        data.absentCount is int && data.absentCount >= 0 &&
+        data.leaveCount is int && data.leaveCount >= 0 &&
+        data.presentCount + data.absentCount + data.leaveCount == data.totalStudents &&
+        data.academicYear is string && data.academicYear.size() > 0 && data.academicYear.size() <= 20 &&
+        data.updatedBy == request.auth.uid &&
+        data.updatedAt == request.time;
+    }
+
+    // Class teachers can write daily attendance only for assigned classes.
+    // Document identity, date, original creator and attendance type are immutable
+    // to prevent moving or relabelling an existing attendance register.
+    match /attendance/{documentId} {
+      allow get, list: if hasActiveRole() && (isViewer() || isAssignedClassTeacher(resource.data.className));
+      allow create: if isAdmin() ||
+        (hasActiveRole() &&
+         validDailyAttendance(request.resource.data) &&
+         request.resource.data.createdBy == request.auth.uid &&
+         request.resource.data.createdAt == request.time &&
+         isAssignedClassTeacher(request.resource.data.className));
+      allow update: if isAdmin() ||
+        (hasActiveRole() &&
+         validDailyAttendance(request.resource.data) &&
+         resource.data.attendanceType == 'daily' &&
+         request.resource.data.className == resource.data.className &&
+         request.resource.data.date == resource.data.date &&
+         request.resource.data.subject == resource.data.subject &&
+         request.resource.data.createdBy == resource.data.createdBy &&
+         request.resource.data.createdAt == resource.data.createdAt &&
+         isAssignedClassTeacher(resource.data.className));
+      allow delete: if isAdmin();
+    }
+
+    // Certificate records contain issued student certificate snapshots; Admin only.
+    match /certificates/{certificateId} {
+      allow get, list: if isAdmin() || isViewer();
+      allow create: if isAdmin() &&
+        request.resource.data.issuedBy == request.auth.uid &&
+        request.resource.data.keys().hasOnly([
+          'certificateNumber', 'certificateType', 'studentId', 'studentName',
+          'fatherName', 'guardianName', 'className', 'rollNo', 'admissionNo',
+          'dob', 'address', 'issueDate', 'remarks', 'academicYear',
+          'issuedBy', 'issuedAt', 'issuedAtIso'
+        ]);
+      allow update, delete: if isAdmin();
+    }
+
+    match /school_settings/{documentId} {
+      allow get: if hasActiveRole();
+      allow list: if false;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public school gallery images are stored in small chunks so each document stays bounded.
+    // Login needs public read; only the school administrator may change gallery chunks.
+    match /school_gallery/{documentId} {
+      allow get, list: if true;
+      allow create, update: if isAdmin() &&
+        documentId.matches("part_[0-9]{2}") &&
+        request.resource.data.keys().hasOnly(['photos', 'updatedAt', 'updatedBy']) &&
+        request.resource.data.photos is list &&
+        request.resource.data.photos.size() > 0 &&
+        request.resource.data.photos.size() <= 4 &&
+        request.resource.data.photos[0] is string &&
+        request.resource.data.photos[0].size() <= 245760 &&
+        (request.resource.data.photos.size() < 2 ||
+          (request.resource.data.photos[1] is string && request.resource.data.photos[1].size() <= 245760)) &&
+        (request.resource.data.photos.size() < 3 ||
+          (request.resource.data.photos[2] is string && request.resource.data.photos[2].size() <= 245760)) &&
+        (request.resource.data.photos.size() < 4 ||
+          (request.resource.data.photos[3] is string && request.resource.data.photos[3].size() <= 245760));
+      allow delete: if isAdmin() && documentId.matches("part_[0-9]{2}");
+    }
+
+    // Public login branding only; private school contact details remain protected.
+    match /school_public_branding/{documentId} {
+      allow get: if documentId == 'main';
+      allow list: if false;
+      allow create, update, delete: if isAdmin() && documentId == 'main';
+    }
+
+    // A user can read their own role record; Admin manages all role records.
+    match /user_roles/{userId} {
+      allow get: if isAdmin() || isViewer() || (signedIn() && request.auth.uid == userId);
+      allow list: if isAdmin() || isViewer();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Audit records are append-only. Only active school users may write
+    // their own bounded, well-formed activity record. Admin alone may read.
+    match /audit_logs/{documentId} {
+      allow get, list: if isAdmin() || isViewer();
+      allow create: if hasActiveRole() && !isViewer() &&
+        request.resource.data.actorUid == request.auth.uid &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.actorName is string &&
+        request.resource.data.actorName.size() > 0 &&
+        request.resource.data.actorName.size() <= 100 &&
+        request.resource.data.module is string &&
+        request.resource.data.module.size() > 0 &&
+        request.resource.data.module.size() <= 40 &&
+        request.resource.data.action is string &&
+        request.resource.data.action.size() > 0 &&
+        request.resource.data.action.size() <= 40 &&
+        request.resource.data.recordId is string &&
+        request.resource.data.recordId.size() > 0 &&
+        request.resource.data.recordId.size() <= 150 &&
+        request.resource.data.detail is string &&
+        request.resource.data.detail.size() <= 240 &&
+        request.resource.data.keys().hasOnly([
+          'actorUid', 'actorName', 'module', 'action',
+          'recordId', 'detail', 'createdAt'
+        ]);
+      allow update, delete: if false;
+    }
+
+    // Public result index: contains exam metadata only.
+    match /public_result_exams/{examId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public lookup is exact-document get only. Public list is forbidden.
+    // Admin list is needed for safe per-student re-publish/unpublish and backup.
+    match /public_result_lookup/{lookupId} {
+      allow get: if true;
+      allow list: if isAdmin() || isViewer();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public result documents can be fetched only by known document ID.
+    // Admin list is needed for publication status, legacy cleanup and backup.
+    match /public_results/{resultId} {
+      allow get: if true;
+      allow list: if isAdmin() || isViewer();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Reserved collection; no client-side access is enabled.
+    match /online_result_rate_limits/{documentId} {
+      allow read, write: if false;
+    }
+
+    match /cdc_curriculum/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /cdc_blueprints/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /question_bank/{questionId} {
+      allow get, list: if hasActiveRole() &&
+        (isViewer() || isAssignedSubject(
+          resource.data.get('className', ''),
+          resource.data.get('subject', ''),
+          resource.data.get('section', '')
+        ));
+      allow create: if hasActiveRole() &&
+        isAssignedSubject(
+          request.resource.data.get('className', ''),
+          request.resource.data.get('subject', ''),
+          request.resource.data.get('section', '')
+        ) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.gradeNumber is int &&
+        request.resource.data.gradeNumber >= 6 &&
+        request.resource.data.gradeNumber <= 10 &&
+        request.resource.data.className is string &&
+        request.resource.data.className.size() > 0 &&
+        request.resource.data.subject is string &&
+        request.resource.data.subject.size() > 0 &&
+        request.resource.data.section is string &&
+        request.resource.data.section.size() <= 40 &&
+        request.resource.data.questionText is string &&
+        request.resource.data.questionText.size() > 0 &&
+        request.resource.data.questionText.size() <= 3000 &&
+        request.resource.data.questionType in ['mcq', 'short', 'long'] &&
+        request.resource.data.marks is number &&
+        request.resource.data.marks >= 1 &&
+        request.resource.data.marks <= 100 &&
+        request.resource.data.cognitiveLevel in ['knowledge', 'understanding', 'application', 'higher'] &&
+        request.resource.data.topicId is string &&
+        request.resource.data.topicId.size() > 0 &&
+        request.resource.data.topicName is string &&
+        request.resource.data.topicName.size() > 0 &&
+        request.resource.data.options is list &&
+        request.resource.data.options.size() <= 4 &&
+        request.resource.data.keys().hasOnly([
+          'gradeNumber', 'className', 'subject', 'section', 'unitId',
+          'unitTitle', 'topicId', 'topicName', 'questionType', 'marks',
+          'cognitiveLevel', 'questionText', 'options', 'correctOption',
+          'answer', 'createdBy', 'createdByName', 'createdAt', 'status'
+        ]);
+      allow update: if isAdmin() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ) &&
+         request.resource.data.createdBy == request.auth.uid &&
+         request.resource.data.className == resource.data.className &&
+         request.resource.data.subject == resource.data.subject &&
+         request.resource.data.section == resource.data.section);
+      allow delete: if isAdmin() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ));
+    }
+
+    match /question_papers/{paperId} {
+      allow get, list: if isAdmin() || isViewer() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ));
+      allow create: if hasActiveRole() &&
+        isAssignedSubject(
+          request.resource.data.get('className', ''),
+          request.resource.data.get('subject', ''),
+          request.resource.data.get('section', '')
+        ) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.gradeNumber is int &&
+        request.resource.data.gradeNumber >= 6 &&
+        request.resource.data.gradeNumber <= 10 &&
+        request.resource.data.className is string &&
+        request.resource.data.subject is string &&
+        request.resource.data.section is string &&
+        request.resource.data.paperTitle is string &&
+        request.resource.data.paperTitle.size() > 0 &&
+        request.resource.data.paperTitle.size() <= 120 &&
+        request.resource.data.fullMarks is number &&
+        request.resource.data.fullMarks >= 1 &&
+        request.resource.data.fullMarks <= 500 &&
+        request.resource.data.durationMinutes is int &&
+        request.resource.data.durationMinutes >= 15 &&
+        request.resource.data.durationMinutes <= 360 &&
+        request.resource.data.questions is list &&
+        request.resource.data.questions.size() > 0 &&
+        request.resource.data.questions.size() <= 80 &&
+        request.resource.data.topicIds is list &&
+        request.resource.data.topicIds.size() > 0 &&
+        request.resource.data.keys().hasOnly([
+          'schoolName', 'schoolAddress', 'gradeNumber', 'className',
+          'subject', 'section', 'paperTitle', 'academicYear',
+          'durationMinutes', 'fullMarks', 'curriculumVersion',
+          'blueprintId', 'cognitiveDistribution', 'topicIds', 'questions', 'createdBy',
+          'createdAt', 'status'
+        ]);
+      allow update: if isAdmin();
+      allow delete: if isAdmin() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ));
+    }
+
+    match /user_activity/{eventId} {
+      allow get, list: if isAdmin();
+      allow create: if hasActiveRole() &&
+        request.resource.data.keys().hasOnly(['uid', 'type', 'sessionId', 'at']) &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.type in ['login', 'logout'] &&
+        request.resource.data.sessionId is string &&
+        request.resource.data.sessionId.size() >= 16 &&
+        request.resource.data.sessionId.size() <= 80 &&
+        request.resource.data.at == request.time;
+      allow update, delete: if false;
+    }
+
+    match /user_presence/{sessionId} {
+      allow get, list: if isAdmin();
+      allow create, update: if hasActiveRole() &&
+        request.resource.data.keys().hasOnly(['uid', 'online', 'updatedAt']) &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.online is bool &&
+        request.resource.data.updatedAt == request.time &&
+        sessionId.size() >= 16 && sessionId.size() <= 80 &&
+        (!exists(/databases/$(database)/documents/user_presence/$(sessionId)) ||
+         resource.data.uid == request.auth.uid);
+      allow delete: if false;
+    }
+
+    // Deny all other collections and documents by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+) &&
+        data.outcomeId is string &&
+        ((data.unit == 'म र मेरो परिवार' && data.outcomeId.matches('^cdc2076-g1-[1-5]
+        data.stage in ['regular','support'] &&
+        data.date is string && data.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[0-2])$') &&
+        data.indicators is list && data.indicators.size() == 4 &&
+        data.indicators[0] is bool && data.indicators[1] is bool &&
+        data.indicators[2] is bool && data.indicators[3] is bool &&
+        data.createdBy == request.auth.uid && data.createdAt == request.time;
+    }
+
+    match /cdc_serofero_indicators/{documentId} {
+      allow read: if isAdmin() || isViewer() ||
+        (signedIn() && (teacherAllSectionsAccess(resource.data.className, resource.data.subject) ||
+          teacherSubjectAccess(resource.data.className, resource.data.subject, resource.data.section)));
+      allow create: if signedIn() && validCdcSeroferoIndicators(request.resource.data) &&
+        canWriteCdcObservation(request.resource.data);
+      allow update, delete: if false;
+    }
+
+    function validDailyAttendance(data) {
+      return data.keys().hasAll([
+          'date', 'className', 'attendanceType', 'subject', 'students',
+          'totalStudents', 'presentCount', 'absentCount', 'leaveCount',
+          'academicYear', 'updatedAt', 'updatedBy'
+        ]) &&
+        data.keys().hasOnly([
+          'date', 'className', 'attendanceType', 'subject', 'students',
+          'totalStudents', 'presentCount', 'absentCount', 'leaveCount',
+          'academicYear', 'updatedAt', 'updatedBy', 'createdAt', 'createdBy'
+        ]) &&
+        data.date is string && data.date.size() > 0 && data.date.size() <= 20 &&
+        data.className is string && data.className.size() > 0 && data.className.size() <= 40 &&
+        data.attendanceType == 'daily' &&
+        (data.subject == null || (data.subject is string && data.subject.size() <= 100)) &&
+        data.students is list && data.students.size() > 0 &&
+        data.students.size() <= 200 &&
+        data.totalStudents is int && data.totalStudents == data.students.size() &&
+        data.presentCount is int && data.presentCount >= 0 &&
+        data.absentCount is int && data.absentCount >= 0 &&
+        data.leaveCount is int && data.leaveCount >= 0 &&
+        data.presentCount + data.absentCount + data.leaveCount == data.totalStudents &&
+        data.academicYear is string && data.academicYear.size() > 0 && data.academicYear.size() <= 20 &&
+        data.updatedBy == request.auth.uid &&
+        data.updatedAt == request.time;
+    }
+
+    // Class teachers can write daily attendance only for assigned classes.
+    // Document identity, date, original creator and attendance type are immutable
+    // to prevent moving or relabelling an existing attendance register.
+    match /attendance/{documentId} {
+      allow get, list: if hasActiveRole() && (isViewer() || isAssignedClassTeacher(resource.data.className));
+      allow create: if isAdmin() ||
+        (hasActiveRole() &&
+         validDailyAttendance(request.resource.data) &&
+         request.resource.data.createdBy == request.auth.uid &&
+         request.resource.data.createdAt == request.time &&
+         isAssignedClassTeacher(request.resource.data.className));
+      allow update: if isAdmin() ||
+        (hasActiveRole() &&
+         validDailyAttendance(request.resource.data) &&
+         resource.data.attendanceType == 'daily' &&
+         request.resource.data.className == resource.data.className &&
+         request.resource.data.date == resource.data.date &&
+         request.resource.data.subject == resource.data.subject &&
+         request.resource.data.createdBy == resource.data.createdBy &&
+         request.resource.data.createdAt == resource.data.createdAt &&
+         isAssignedClassTeacher(resource.data.className));
+      allow delete: if isAdmin();
+    }
+
+    // Certificate records contain issued student certificate snapshots; Admin only.
+    match /certificates/{certificateId} {
+      allow get, list: if isAdmin() || isViewer();
+      allow create: if isAdmin() &&
+        request.resource.data.issuedBy == request.auth.uid &&
+        request.resource.data.keys().hasOnly([
+          'certificateNumber', 'certificateType', 'studentId', 'studentName',
+          'fatherName', 'guardianName', 'className', 'rollNo', 'admissionNo',
+          'dob', 'address', 'issueDate', 'remarks', 'academicYear',
+          'issuedBy', 'issuedAt', 'issuedAtIso'
+        ]);
+      allow update, delete: if isAdmin();
+    }
+
+    match /school_settings/{documentId} {
+      allow get: if hasActiveRole();
+      allow list: if false;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public school gallery images are stored in small chunks so each document stays bounded.
+    // Login needs public read; only the school administrator may change gallery chunks.
+    match /school_gallery/{documentId} {
+      allow get, list: if true;
+      allow create, update: if isAdmin() &&
+        documentId.matches("part_[0-9]{2}") &&
+        request.resource.data.keys().hasOnly(['photos', 'updatedAt', 'updatedBy']) &&
+        request.resource.data.photos is list &&
+        request.resource.data.photos.size() > 0 &&
+        request.resource.data.photos.size() <= 4 &&
+        request.resource.data.photos[0] is string &&
+        request.resource.data.photos[0].size() <= 245760 &&
+        (request.resource.data.photos.size() < 2 ||
+          (request.resource.data.photos[1] is string && request.resource.data.photos[1].size() <= 245760)) &&
+        (request.resource.data.photos.size() < 3 ||
+          (request.resource.data.photos[2] is string && request.resource.data.photos[2].size() <= 245760)) &&
+        (request.resource.data.photos.size() < 4 ||
+          (request.resource.data.photos[3] is string && request.resource.data.photos[3].size() <= 245760));
+      allow delete: if isAdmin() && documentId.matches("part_[0-9]{2}");
+    }
+
+    // Public login branding only; private school contact details remain protected.
+    match /school_public_branding/{documentId} {
+      allow get: if documentId == 'main';
+      allow list: if false;
+      allow create, update, delete: if isAdmin() && documentId == 'main';
+    }
+
+    // A user can read their own role record; Admin manages all role records.
+    match /user_roles/{userId} {
+      allow get: if isAdmin() || isViewer() || (signedIn() && request.auth.uid == userId);
+      allow list: if isAdmin() || isViewer();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Audit records are append-only. Only active school users may write
+    // their own bounded, well-formed activity record. Admin alone may read.
+    match /audit_logs/{documentId} {
+      allow get, list: if isAdmin() || isViewer();
+      allow create: if hasActiveRole() && !isViewer() &&
+        request.resource.data.actorUid == request.auth.uid &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.actorName is string &&
+        request.resource.data.actorName.size() > 0 &&
+        request.resource.data.actorName.size() <= 100 &&
+        request.resource.data.module is string &&
+        request.resource.data.module.size() > 0 &&
+        request.resource.data.module.size() <= 40 &&
+        request.resource.data.action is string &&
+        request.resource.data.action.size() > 0 &&
+        request.resource.data.action.size() <= 40 &&
+        request.resource.data.recordId is string &&
+        request.resource.data.recordId.size() > 0 &&
+        request.resource.data.recordId.size() <= 150 &&
+        request.resource.data.detail is string &&
+        request.resource.data.detail.size() <= 240 &&
+        request.resource.data.keys().hasOnly([
+          'actorUid', 'actorName', 'module', 'action',
+          'recordId', 'detail', 'createdAt'
+        ]);
+      allow update, delete: if false;
+    }
+
+    // Public result index: contains exam metadata only.
+    match /public_result_exams/{examId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public lookup is exact-document get only. Public list is forbidden.
+    // Admin list is needed for safe per-student re-publish/unpublish and backup.
+    match /public_result_lookup/{lookupId} {
+      allow get: if true;
+      allow list: if isAdmin() || isViewer();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public result documents can be fetched only by known document ID.
+    // Admin list is needed for publication status, legacy cleanup and backup.
+    match /public_results/{resultId} {
+      allow get: if true;
+      allow list: if isAdmin() || isViewer();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Reserved collection; no client-side access is enabled.
+    match /online_result_rate_limits/{documentId} {
+      allow read, write: if false;
+    }
+
+    match /cdc_curriculum/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /cdc_blueprints/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /question_bank/{questionId} {
+      allow get, list: if hasActiveRole() &&
+        (isViewer() || isAssignedSubject(
+          resource.data.get('className', ''),
+          resource.data.get('subject', ''),
+          resource.data.get('section', '')
+        ));
+      allow create: if hasActiveRole() &&
+        isAssignedSubject(
+          request.resource.data.get('className', ''),
+          request.resource.data.get('subject', ''),
+          request.resource.data.get('section', '')
+        ) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.gradeNumber is int &&
+        request.resource.data.gradeNumber >= 6 &&
+        request.resource.data.gradeNumber <= 10 &&
+        request.resource.data.className is string &&
+        request.resource.data.className.size() > 0 &&
+        request.resource.data.subject is string &&
+        request.resource.data.subject.size() > 0 &&
+        request.resource.data.section is string &&
+        request.resource.data.section.size() <= 40 &&
+        request.resource.data.questionText is string &&
+        request.resource.data.questionText.size() > 0 &&
+        request.resource.data.questionText.size() <= 3000 &&
+        request.resource.data.questionType in ['mcq', 'short', 'long'] &&
+        request.resource.data.marks is number &&
+        request.resource.data.marks >= 1 &&
+        request.resource.data.marks <= 100 &&
+        request.resource.data.cognitiveLevel in ['knowledge', 'understanding', 'application', 'higher'] &&
+        request.resource.data.topicId is string &&
+        request.resource.data.topicId.size() > 0 &&
+        request.resource.data.topicName is string &&
+        request.resource.data.topicName.size() > 0 &&
+        request.resource.data.options is list &&
+        request.resource.data.options.size() <= 4 &&
+        request.resource.data.keys().hasOnly([
+          'gradeNumber', 'className', 'subject', 'section', 'unitId',
+          'unitTitle', 'topicId', 'topicName', 'questionType', 'marks',
+          'cognitiveLevel', 'questionText', 'options', 'correctOption',
+          'answer', 'createdBy', 'createdByName', 'createdAt', 'status'
+        ]);
+      allow update: if isAdmin() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ) &&
+         request.resource.data.createdBy == request.auth.uid &&
+         request.resource.data.className == resource.data.className &&
+         request.resource.data.subject == resource.data.subject &&
+         request.resource.data.section == resource.data.section);
+      allow delete: if isAdmin() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ));
+    }
+
+    match /question_papers/{paperId} {
+      allow get, list: if isAdmin() || isViewer() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ));
+      allow create: if hasActiveRole() &&
+        isAssignedSubject(
+          request.resource.data.get('className', ''),
+          request.resource.data.get('subject', ''),
+          request.resource.data.get('section', '')
+        ) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.gradeNumber is int &&
+        request.resource.data.gradeNumber >= 6 &&
+        request.resource.data.gradeNumber <= 10 &&
+        request.resource.data.className is string &&
+        request.resource.data.subject is string &&
+        request.resource.data.section is string &&
+        request.resource.data.paperTitle is string &&
+        request.resource.data.paperTitle.size() > 0 &&
+        request.resource.data.paperTitle.size() <= 120 &&
+        request.resource.data.fullMarks is number &&
+        request.resource.data.fullMarks >= 1 &&
+        request.resource.data.fullMarks <= 500 &&
+        request.resource.data.durationMinutes is int &&
+        request.resource.data.durationMinutes >= 15 &&
+        request.resource.data.durationMinutes <= 360 &&
+        request.resource.data.questions is list &&
+        request.resource.data.questions.size() > 0 &&
+        request.resource.data.questions.size() <= 80 &&
+        request.resource.data.topicIds is list &&
+        request.resource.data.topicIds.size() > 0 &&
+        request.resource.data.keys().hasOnly([
+          'schoolName', 'schoolAddress', 'gradeNumber', 'className',
+          'subject', 'section', 'paperTitle', 'academicYear',
+          'durationMinutes', 'fullMarks', 'curriculumVersion',
+          'blueprintId', 'cognitiveDistribution', 'topicIds', 'questions', 'createdBy',
+          'createdAt', 'status'
+        ]);
+      allow update: if isAdmin();
+      allow delete: if isAdmin() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ));
+    }
+
+    match /user_activity/{eventId} {
+      allow get, list: if isAdmin();
+      allow create: if hasActiveRole() &&
+        request.resource.data.keys().hasOnly(['uid', 'type', 'sessionId', 'at']) &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.type in ['login', 'logout'] &&
+        request.resource.data.sessionId is string &&
+        request.resource.data.sessionId.size() >= 16 &&
+        request.resource.data.sessionId.size() <= 80 &&
+        request.resource.data.at == request.time;
+      allow update, delete: if false;
+    }
+
+    match /user_presence/{sessionId} {
+      allow get, list: if isAdmin();
+      allow create, update: if hasActiveRole() &&
+        request.resource.data.keys().hasOnly(['uid', 'online', 'updatedAt']) &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.online is bool &&
+        request.resource.data.updatedAt == request.time &&
+        sessionId.size() >= 16 && sessionId.size() <= 80 &&
+        (!exists(/databases/$(database)/documents/user_presence/$(sessionId)) ||
+         resource.data.uid == request.auth.uid);
+      allow delete: if false;
+    }
+
+    // Deny all other collections and documents by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+)) ||
+         (data.unit == 'मेरो दैनिक जीवन' && data.outcomeId.matches('^cdc2076-g1-[6-9]
+        data.stage in ['regular','support'] &&
+        data.date is string && data.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[0-2])$') &&
+        data.indicators is list && data.indicators.size() == 4 &&
+        data.indicators[0] is bool && data.indicators[1] is bool &&
+        data.indicators[2] is bool && data.indicators[3] is bool &&
+        data.createdBy == request.auth.uid && data.createdAt == request.time;
+    }
+
+    match /cdc_serofero_indicators/{documentId} {
+      allow read: if isAdmin() || isViewer() ||
+        (signedIn() && (teacherAllSectionsAccess(resource.data.className, resource.data.subject) ||
+          teacherSubjectAccess(resource.data.className, resource.data.subject, resource.data.section)));
+      allow create: if signedIn() && validCdcSeroferoIndicators(request.resource.data) &&
+        canWriteCdcObservation(request.resource.data);
+      allow update, delete: if false;
+    }
+
+    function validDailyAttendance(data) {
+      return data.keys().hasAll([
+          'date', 'className', 'attendanceType', 'subject', 'students',
+          'totalStudents', 'presentCount', 'absentCount', 'leaveCount',
+          'academicYear', 'updatedAt', 'updatedBy'
+        ]) &&
+        data.keys().hasOnly([
+          'date', 'className', 'attendanceType', 'subject', 'students',
+          'totalStudents', 'presentCount', 'absentCount', 'leaveCount',
+          'academicYear', 'updatedAt', 'updatedBy', 'createdAt', 'createdBy'
+        ]) &&
+        data.date is string && data.date.size() > 0 && data.date.size() <= 20 &&
+        data.className is string && data.className.size() > 0 && data.className.size() <= 40 &&
+        data.attendanceType == 'daily' &&
+        (data.subject == null || (data.subject is string && data.subject.size() <= 100)) &&
+        data.students is list && data.students.size() > 0 &&
+        data.students.size() <= 200 &&
+        data.totalStudents is int && data.totalStudents == data.students.size() &&
+        data.presentCount is int && data.presentCount >= 0 &&
+        data.absentCount is int && data.absentCount >= 0 &&
+        data.leaveCount is int && data.leaveCount >= 0 &&
+        data.presentCount + data.absentCount + data.leaveCount == data.totalStudents &&
+        data.academicYear is string && data.academicYear.size() > 0 && data.academicYear.size() <= 20 &&
+        data.updatedBy == request.auth.uid &&
+        data.updatedAt == request.time;
+    }
+
+    // Class teachers can write daily attendance only for assigned classes.
+    // Document identity, date, original creator and attendance type are immutable
+    // to prevent moving or relabelling an existing attendance register.
+    match /attendance/{documentId} {
+      allow get, list: if hasActiveRole() && (isViewer() || isAssignedClassTeacher(resource.data.className));
+      allow create: if isAdmin() ||
+        (hasActiveRole() &&
+         validDailyAttendance(request.resource.data) &&
+         request.resource.data.createdBy == request.auth.uid &&
+         request.resource.data.createdAt == request.time &&
+         isAssignedClassTeacher(request.resource.data.className));
+      allow update: if isAdmin() ||
+        (hasActiveRole() &&
+         validDailyAttendance(request.resource.data) &&
+         resource.data.attendanceType == 'daily' &&
+         request.resource.data.className == resource.data.className &&
+         request.resource.data.date == resource.data.date &&
+         request.resource.data.subject == resource.data.subject &&
+         request.resource.data.createdBy == resource.data.createdBy &&
+         request.resource.data.createdAt == resource.data.createdAt &&
+         isAssignedClassTeacher(resource.data.className));
+      allow delete: if isAdmin();
+    }
+
+    // Certificate records contain issued student certificate snapshots; Admin only.
+    match /certificates/{certificateId} {
+      allow get, list: if isAdmin() || isViewer();
+      allow create: if isAdmin() &&
+        request.resource.data.issuedBy == request.auth.uid &&
+        request.resource.data.keys().hasOnly([
+          'certificateNumber', 'certificateType', 'studentId', 'studentName',
+          'fatherName', 'guardianName', 'className', 'rollNo', 'admissionNo',
+          'dob', 'address', 'issueDate', 'remarks', 'academicYear',
+          'issuedBy', 'issuedAt', 'issuedAtIso'
+        ]);
+      allow update, delete: if isAdmin();
+    }
+
+    match /school_settings/{documentId} {
+      allow get: if hasActiveRole();
+      allow list: if false;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public school gallery images are stored in small chunks so each document stays bounded.
+    // Login needs public read; only the school administrator may change gallery chunks.
+    match /school_gallery/{documentId} {
+      allow get, list: if true;
+      allow create, update: if isAdmin() &&
+        documentId.matches("part_[0-9]{2}") &&
+        request.resource.data.keys().hasOnly(['photos', 'updatedAt', 'updatedBy']) &&
+        request.resource.data.photos is list &&
+        request.resource.data.photos.size() > 0 &&
+        request.resource.data.photos.size() <= 4 &&
+        request.resource.data.photos[0] is string &&
+        request.resource.data.photos[0].size() <= 245760 &&
+        (request.resource.data.photos.size() < 2 ||
+          (request.resource.data.photos[1] is string && request.resource.data.photos[1].size() <= 245760)) &&
+        (request.resource.data.photos.size() < 3 ||
+          (request.resource.data.photos[2] is string && request.resource.data.photos[2].size() <= 245760)) &&
+        (request.resource.data.photos.size() < 4 ||
+          (request.resource.data.photos[3] is string && request.resource.data.photos[3].size() <= 245760));
+      allow delete: if isAdmin() && documentId.matches("part_[0-9]{2}");
+    }
+
+    // Public login branding only; private school contact details remain protected.
+    match /school_public_branding/{documentId} {
+      allow get: if documentId == 'main';
+      allow list: if false;
+      allow create, update, delete: if isAdmin() && documentId == 'main';
+    }
+
+    // A user can read their own role record; Admin manages all role records.
+    match /user_roles/{userId} {
+      allow get: if isAdmin() || isViewer() || (signedIn() && request.auth.uid == userId);
+      allow list: if isAdmin() || isViewer();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Audit records are append-only. Only active school users may write
+    // their own bounded, well-formed activity record. Admin alone may read.
+    match /audit_logs/{documentId} {
+      allow get, list: if isAdmin() || isViewer();
+      allow create: if hasActiveRole() && !isViewer() &&
+        request.resource.data.actorUid == request.auth.uid &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.actorName is string &&
+        request.resource.data.actorName.size() > 0 &&
+        request.resource.data.actorName.size() <= 100 &&
+        request.resource.data.module is string &&
+        request.resource.data.module.size() > 0 &&
+        request.resource.data.module.size() <= 40 &&
+        request.resource.data.action is string &&
+        request.resource.data.action.size() > 0 &&
+        request.resource.data.action.size() <= 40 &&
+        request.resource.data.recordId is string &&
+        request.resource.data.recordId.size() > 0 &&
+        request.resource.data.recordId.size() <= 150 &&
+        request.resource.data.detail is string &&
+        request.resource.data.detail.size() <= 240 &&
+        request.resource.data.keys().hasOnly([
+          'actorUid', 'actorName', 'module', 'action',
+          'recordId', 'detail', 'createdAt'
+        ]);
+      allow update, delete: if false;
+    }
+
+    // Public result index: contains exam metadata only.
+    match /public_result_exams/{examId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public lookup is exact-document get only. Public list is forbidden.
+    // Admin list is needed for safe per-student re-publish/unpublish and backup.
+    match /public_result_lookup/{lookupId} {
+      allow get: if true;
+      allow list: if isAdmin() || isViewer();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public result documents can be fetched only by known document ID.
+    // Admin list is needed for publication status, legacy cleanup and backup.
+    match /public_results/{resultId} {
+      allow get: if true;
+      allow list: if isAdmin() || isViewer();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Reserved collection; no client-side access is enabled.
+    match /online_result_rate_limits/{documentId} {
+      allow read, write: if false;
+    }
+
+    match /cdc_curriculum/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /cdc_blueprints/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /question_bank/{questionId} {
+      allow get, list: if hasActiveRole() &&
+        (isViewer() || isAssignedSubject(
+          resource.data.get('className', ''),
+          resource.data.get('subject', ''),
+          resource.data.get('section', '')
+        ));
+      allow create: if hasActiveRole() &&
+        isAssignedSubject(
+          request.resource.data.get('className', ''),
+          request.resource.data.get('subject', ''),
+          request.resource.data.get('section', '')
+        ) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.gradeNumber is int &&
+        request.resource.data.gradeNumber >= 6 &&
+        request.resource.data.gradeNumber <= 10 &&
+        request.resource.data.className is string &&
+        request.resource.data.className.size() > 0 &&
+        request.resource.data.subject is string &&
+        request.resource.data.subject.size() > 0 &&
+        request.resource.data.section is string &&
+        request.resource.data.section.size() <= 40 &&
+        request.resource.data.questionText is string &&
+        request.resource.data.questionText.size() > 0 &&
+        request.resource.data.questionText.size() <= 3000 &&
+        request.resource.data.questionType in ['mcq', 'short', 'long'] &&
+        request.resource.data.marks is number &&
+        request.resource.data.marks >= 1 &&
+        request.resource.data.marks <= 100 &&
+        request.resource.data.cognitiveLevel in ['knowledge', 'understanding', 'application', 'higher'] &&
+        request.resource.data.topicId is string &&
+        request.resource.data.topicId.size() > 0 &&
+        request.resource.data.topicName is string &&
+        request.resource.data.topicName.size() > 0 &&
+        request.resource.data.options is list &&
+        request.resource.data.options.size() <= 4 &&
+        request.resource.data.keys().hasOnly([
+          'gradeNumber', 'className', 'subject', 'section', 'unitId',
+          'unitTitle', 'topicId', 'topicName', 'questionType', 'marks',
+          'cognitiveLevel', 'questionText', 'options', 'correctOption',
+          'answer', 'createdBy', 'createdByName', 'createdAt', 'status'
+        ]);
+      allow update: if isAdmin() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ) &&
+         request.resource.data.createdBy == request.auth.uid &&
+         request.resource.data.className == resource.data.className &&
+         request.resource.data.subject == resource.data.subject &&
+         request.resource.data.section == resource.data.section);
+      allow delete: if isAdmin() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ));
+    }
+
+    match /question_papers/{paperId} {
+      allow get, list: if isAdmin() || isViewer() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ));
+      allow create: if hasActiveRole() &&
+        isAssignedSubject(
+          request.resource.data.get('className', ''),
+          request.resource.data.get('subject', ''),
+          request.resource.data.get('section', '')
+        ) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.gradeNumber is int &&
+        request.resource.data.gradeNumber >= 6 &&
+        request.resource.data.gradeNumber <= 10 &&
+        request.resource.data.className is string &&
+        request.resource.data.subject is string &&
+        request.resource.data.section is string &&
+        request.resource.data.paperTitle is string &&
+        request.resource.data.paperTitle.size() > 0 &&
+        request.resource.data.paperTitle.size() <= 120 &&
+        request.resource.data.fullMarks is number &&
+        request.resource.data.fullMarks >= 1 &&
+        request.resource.data.fullMarks <= 500 &&
+        request.resource.data.durationMinutes is int &&
+        request.resource.data.durationMinutes >= 15 &&
+        request.resource.data.durationMinutes <= 360 &&
+        request.resource.data.questions is list &&
+        request.resource.data.questions.size() > 0 &&
+        request.resource.data.questions.size() <= 80 &&
+        request.resource.data.topicIds is list &&
+        request.resource.data.topicIds.size() > 0 &&
+        request.resource.data.keys().hasOnly([
+          'schoolName', 'schoolAddress', 'gradeNumber', 'className',
+          'subject', 'section', 'paperTitle', 'academicYear',
+          'durationMinutes', 'fullMarks', 'curriculumVersion',
+          'blueprintId', 'cognitiveDistribution', 'topicIds', 'questions', 'createdBy',
+          'createdAt', 'status'
+        ]);
+      allow update: if isAdmin();
+      allow delete: if isAdmin() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ));
+    }
+
+    match /user_activity/{eventId} {
+      allow get, list: if isAdmin();
+      allow create: if hasActiveRole() &&
+        request.resource.data.keys().hasOnly(['uid', 'type', 'sessionId', 'at']) &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.type in ['login', 'logout'] &&
+        request.resource.data.sessionId is string &&
+        request.resource.data.sessionId.size() >= 16 &&
+        request.resource.data.sessionId.size() <= 80 &&
+        request.resource.data.at == request.time;
+      allow update, delete: if false;
+    }
+
+    match /user_presence/{sessionId} {
+      allow get, list: if isAdmin();
+      allow create, update: if hasActiveRole() &&
+        request.resource.data.keys().hasOnly(['uid', 'online', 'updatedAt']) &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.online is bool &&
+        request.resource.data.updatedAt == request.time &&
+        sessionId.size() >= 16 && sessionId.size() <= 80 &&
+        (!exists(/databases/$(database)/documents/user_presence/$(sessionId)) ||
+         resource.data.uid == request.auth.uid);
+      allow delete: if false;
+    }
+
+    // Deny all other collections and documents by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+)) ||
+         (data.unit == 'हाम्रो समुदाय' && data.outcomeId.matches('^cdc2076-g1-1[0-2]
+        data.stage in ['regular','support'] &&
+        data.date is string && data.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[0-2])$') &&
+        data.indicators is list && data.indicators.size() == 4 &&
+        data.indicators[0] is bool && data.indicators[1] is bool &&
+        data.indicators[2] is bool && data.indicators[3] is bool &&
+        data.createdBy == request.auth.uid && data.createdAt == request.time;
+    }
+
+    match /cdc_serofero_indicators/{documentId} {
+      allow read: if isAdmin() || isViewer() ||
+        (signedIn() && (teacherAllSectionsAccess(resource.data.className, resource.data.subject) ||
+          teacherSubjectAccess(resource.data.className, resource.data.subject, resource.data.section)));
+      allow create: if signedIn() && validCdcSeroferoIndicators(request.resource.data) &&
+        canWriteCdcObservation(request.resource.data);
+      allow update, delete: if false;
+    }
+
+    function validDailyAttendance(data) {
+      return data.keys().hasAll([
+          'date', 'className', 'attendanceType', 'subject', 'students',
+          'totalStudents', 'presentCount', 'absentCount', 'leaveCount',
+          'academicYear', 'updatedAt', 'updatedBy'
+        ]) &&
+        data.keys().hasOnly([
+          'date', 'className', 'attendanceType', 'subject', 'students',
+          'totalStudents', 'presentCount', 'absentCount', 'leaveCount',
+          'academicYear', 'updatedAt', 'updatedBy', 'createdAt', 'createdBy'
+        ]) &&
+        data.date is string && data.date.size() > 0 && data.date.size() <= 20 &&
+        data.className is string && data.className.size() > 0 && data.className.size() <= 40 &&
+        data.attendanceType == 'daily' &&
+        (data.subject == null || (data.subject is string && data.subject.size() <= 100)) &&
+        data.students is list && data.students.size() > 0 &&
+        data.students.size() <= 200 &&
+        data.totalStudents is int && data.totalStudents == data.students.size() &&
+        data.presentCount is int && data.presentCount >= 0 &&
+        data.absentCount is int && data.absentCount >= 0 &&
+        data.leaveCount is int && data.leaveCount >= 0 &&
+        data.presentCount + data.absentCount + data.leaveCount == data.totalStudents &&
+        data.academicYear is string && data.academicYear.size() > 0 && data.academicYear.size() <= 20 &&
+        data.updatedBy == request.auth.uid &&
+        data.updatedAt == request.time;
+    }
+
+    // Class teachers can write daily attendance only for assigned classes.
+    // Document identity, date, original creator and attendance type are immutable
+    // to prevent moving or relabelling an existing attendance register.
+    match /attendance/{documentId} {
+      allow get, list: if hasActiveRole() && (isViewer() || isAssignedClassTeacher(resource.data.className));
+      allow create: if isAdmin() ||
+        (hasActiveRole() &&
+         validDailyAttendance(request.resource.data) &&
+         request.resource.data.createdBy == request.auth.uid &&
+         request.resource.data.createdAt == request.time &&
+         isAssignedClassTeacher(request.resource.data.className));
+      allow update: if isAdmin() ||
+        (hasActiveRole() &&
+         validDailyAttendance(request.resource.data) &&
+         resource.data.attendanceType == 'daily' &&
+         request.resource.data.className == resource.data.className &&
+         request.resource.data.date == resource.data.date &&
+         request.resource.data.subject == resource.data.subject &&
+         request.resource.data.createdBy == resource.data.createdBy &&
+         request.resource.data.createdAt == resource.data.createdAt &&
+         isAssignedClassTeacher(resource.data.className));
+      allow delete: if isAdmin();
+    }
+
+    // Certificate records contain issued student certificate snapshots; Admin only.
+    match /certificates/{certificateId} {
+      allow get, list: if isAdmin() || isViewer();
+      allow create: if isAdmin() &&
+        request.resource.data.issuedBy == request.auth.uid &&
+        request.resource.data.keys().hasOnly([
+          'certificateNumber', 'certificateType', 'studentId', 'studentName',
+          'fatherName', 'guardianName', 'className', 'rollNo', 'admissionNo',
+          'dob', 'address', 'issueDate', 'remarks', 'academicYear',
+          'issuedBy', 'issuedAt', 'issuedAtIso'
+        ]);
+      allow update, delete: if isAdmin();
+    }
+
+    match /school_settings/{documentId} {
+      allow get: if hasActiveRole();
+      allow list: if false;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public school gallery images are stored in small chunks so each document stays bounded.
+    // Login needs public read; only the school administrator may change gallery chunks.
+    match /school_gallery/{documentId} {
+      allow get, list: if true;
+      allow create, update: if isAdmin() &&
+        documentId.matches("part_[0-9]{2}") &&
+        request.resource.data.keys().hasOnly(['photos', 'updatedAt', 'updatedBy']) &&
+        request.resource.data.photos is list &&
+        request.resource.data.photos.size() > 0 &&
+        request.resource.data.photos.size() <= 4 &&
+        request.resource.data.photos[0] is string &&
+        request.resource.data.photos[0].size() <= 245760 &&
+        (request.resource.data.photos.size() < 2 ||
+          (request.resource.data.photos[1] is string && request.resource.data.photos[1].size() <= 245760)) &&
+        (request.resource.data.photos.size() < 3 ||
+          (request.resource.data.photos[2] is string && request.resource.data.photos[2].size() <= 245760)) &&
+        (request.resource.data.photos.size() < 4 ||
+          (request.resource.data.photos[3] is string && request.resource.data.photos[3].size() <= 245760));
+      allow delete: if isAdmin() && documentId.matches("part_[0-9]{2}");
+    }
+
+    // Public login branding only; private school contact details remain protected.
+    match /school_public_branding/{documentId} {
+      allow get: if documentId == 'main';
+      allow list: if false;
+      allow create, update, delete: if isAdmin() && documentId == 'main';
+    }
+
+    // A user can read their own role record; Admin manages all role records.
+    match /user_roles/{userId} {
+      allow get: if isAdmin() || isViewer() || (signedIn() && request.auth.uid == userId);
+      allow list: if isAdmin() || isViewer();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Audit records are append-only. Only active school users may write
+    // their own bounded, well-formed activity record. Admin alone may read.
+    match /audit_logs/{documentId} {
+      allow get, list: if isAdmin() || isViewer();
+      allow create: if hasActiveRole() && !isViewer() &&
+        request.resource.data.actorUid == request.auth.uid &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.actorName is string &&
+        request.resource.data.actorName.size() > 0 &&
+        request.resource.data.actorName.size() <= 100 &&
+        request.resource.data.module is string &&
+        request.resource.data.module.size() > 0 &&
+        request.resource.data.module.size() <= 40 &&
+        request.resource.data.action is string &&
+        request.resource.data.action.size() > 0 &&
+        request.resource.data.action.size() <= 40 &&
+        request.resource.data.recordId is string &&
+        request.resource.data.recordId.size() > 0 &&
+        request.resource.data.recordId.size() <= 150 &&
+        request.resource.data.detail is string &&
+        request.resource.data.detail.size() <= 240 &&
+        request.resource.data.keys().hasOnly([
+          'actorUid', 'actorName', 'module', 'action',
+          'recordId', 'detail', 'createdAt'
+        ]);
+      allow update, delete: if false;
+    }
+
+    // Public result index: contains exam metadata only.
+    match /public_result_exams/{examId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public lookup is exact-document get only. Public list is forbidden.
+    // Admin list is needed for safe per-student re-publish/unpublish and backup.
+    match /public_result_lookup/{lookupId} {
+      allow get: if true;
+      allow list: if isAdmin() || isViewer();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public result documents can be fetched only by known document ID.
+    // Admin list is needed for publication status, legacy cleanup and backup.
+    match /public_results/{resultId} {
+      allow get: if true;
+      allow list: if isAdmin() || isViewer();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Reserved collection; no client-side access is enabled.
+    match /online_result_rate_limits/{documentId} {
+      allow read, write: if false;
+    }
+
+    match /cdc_curriculum/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /cdc_blueprints/{documentId} {
+      allow get, list: if hasActiveRole();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /question_bank/{questionId} {
+      allow get, list: if hasActiveRole() &&
+        (isViewer() || isAssignedSubject(
+          resource.data.get('className', ''),
+          resource.data.get('subject', ''),
+          resource.data.get('section', '')
+        ));
+      allow create: if hasActiveRole() &&
+        isAssignedSubject(
+          request.resource.data.get('className', ''),
+          request.resource.data.get('subject', ''),
+          request.resource.data.get('section', '')
+        ) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.gradeNumber is int &&
+        request.resource.data.gradeNumber >= 6 &&
+        request.resource.data.gradeNumber <= 10 &&
+        request.resource.data.className is string &&
+        request.resource.data.className.size() > 0 &&
+        request.resource.data.subject is string &&
+        request.resource.data.subject.size() > 0 &&
+        request.resource.data.section is string &&
+        request.resource.data.section.size() <= 40 &&
+        request.resource.data.questionText is string &&
+        request.resource.data.questionText.size() > 0 &&
+        request.resource.data.questionText.size() <= 3000 &&
+        request.resource.data.questionType in ['mcq', 'short', 'long'] &&
+        request.resource.data.marks is number &&
+        request.resource.data.marks >= 1 &&
+        request.resource.data.marks <= 100 &&
+        request.resource.data.cognitiveLevel in ['knowledge', 'understanding', 'application', 'higher'] &&
+        request.resource.data.topicId is string &&
+        request.resource.data.topicId.size() > 0 &&
+        request.resource.data.topicName is string &&
+        request.resource.data.topicName.size() > 0 &&
+        request.resource.data.options is list &&
+        request.resource.data.options.size() <= 4 &&
+        request.resource.data.keys().hasOnly([
+          'gradeNumber', 'className', 'subject', 'section', 'unitId',
+          'unitTitle', 'topicId', 'topicName', 'questionType', 'marks',
+          'cognitiveLevel', 'questionText', 'options', 'correctOption',
+          'answer', 'createdBy', 'createdByName', 'createdAt', 'status'
+        ]);
+      allow update: if isAdmin() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ) &&
+         request.resource.data.createdBy == request.auth.uid &&
+         request.resource.data.className == resource.data.className &&
+         request.resource.data.subject == resource.data.subject &&
+         request.resource.data.section == resource.data.section);
+      allow delete: if isAdmin() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ));
+    }
+
+    match /question_papers/{paperId} {
+      allow get, list: if isAdmin() || isViewer() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ));
+      allow create: if hasActiveRole() &&
+        isAssignedSubject(
+          request.resource.data.get('className', ''),
+          request.resource.data.get('subject', ''),
+          request.resource.data.get('section', '')
+        ) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.gradeNumber is int &&
+        request.resource.data.gradeNumber >= 6 &&
+        request.resource.data.gradeNumber <= 10 &&
+        request.resource.data.className is string &&
+        request.resource.data.subject is string &&
+        request.resource.data.section is string &&
+        request.resource.data.paperTitle is string &&
+        request.resource.data.paperTitle.size() > 0 &&
+        request.resource.data.paperTitle.size() <= 120 &&
+        request.resource.data.fullMarks is number &&
+        request.resource.data.fullMarks >= 1 &&
+        request.resource.data.fullMarks <= 500 &&
+        request.resource.data.durationMinutes is int &&
+        request.resource.data.durationMinutes >= 15 &&
+        request.resource.data.durationMinutes <= 360 &&
+        request.resource.data.questions is list &&
+        request.resource.data.questions.size() > 0 &&
+        request.resource.data.questions.size() <= 80 &&
+        request.resource.data.topicIds is list &&
+        request.resource.data.topicIds.size() > 0 &&
+        request.resource.data.keys().hasOnly([
+          'schoolName', 'schoolAddress', 'gradeNumber', 'className',
+          'subject', 'section', 'paperTitle', 'academicYear',
+          'durationMinutes', 'fullMarks', 'curriculumVersion',
+          'blueprintId', 'cognitiveDistribution', 'topicIds', 'questions', 'createdBy',
+          'createdAt', 'status'
+        ]);
+      allow update: if isAdmin();
+      allow delete: if isAdmin() ||
+        (hasActiveRole() &&
+         resource.data.createdBy == request.auth.uid &&
+         isAssignedSubject(
+           resource.data.get('className', ''),
+           resource.data.get('subject', ''),
+           resource.data.get('section', '')
+         ));
+    }
+
+    match /user_activity/{eventId} {
+      allow get, list: if isAdmin();
+      allow create: if hasActiveRole() &&
+        request.resource.data.keys().hasOnly(['uid', 'type', 'sessionId', 'at']) &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.type in ['login', 'logout'] &&
+        request.resource.data.sessionId is string &&
+        request.resource.data.sessionId.size() >= 16 &&
+        request.resource.data.sessionId.size() <= 80 &&
+        request.resource.data.at == request.time;
+      allow update, delete: if false;
+    }
+
+    match /user_presence/{sessionId} {
+      allow get, list: if isAdmin();
+      allow create, update: if hasActiveRole() &&
+        request.resource.data.keys().hasOnly(['uid', 'online', 'updatedAt']) &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.online is bool &&
+        request.resource.data.updatedAt == request.time &&
+        sessionId.size() >= 16 && sessionId.size() <= 80 &&
+        (!exists(/databases/$(database)/documents/user_presence/$(sessionId)) ||
+         resource.data.uid == request.auth.uid);
+      allow delete: if false;
+    }
+
+    // Deny all other collections and documents by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+))) &&
         data.stage in ['regular','support'] &&
         data.date is string && data.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[0-2])$') &&
         data.indicators is list && data.indicators.size() == 4 &&
