@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v124-nepali-grammar-practice';
+const CACHE_NAME = 'smss-pwa-v125-nepali-cognitive-marks';
 const APP_SHELL = [
   './',
   './index.html',

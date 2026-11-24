@@ -108,3 +108,14 @@ for(const rng of [()=>.42,()=>.61]){
  assert.equal(transform.components.reduce((n,x)=>n+x.marks,0),4);
 }
 console.log('PASS revised Grade 9 grammar practice, same-tense paragraphs and four transformation categories; historical bank retained');
+
+// Independent 2080 table: marks, not counts, per cognitive level.
+assert.deepEqual(revised.cognitiveMarks,{knowledge:8,understanding:12,application:24,higher:31});
+for(const rng of [()=>.42,()=>.61]){
+ const result=planNepaliRevisedMarksPractice({...practiceArgs,rng});
+ assert.equal(result.ready,true,result.reason);
+ const totals=['knowledge','understanding','application','higher'].map(level=>result.paper.groups.filter(g=>g.cognitiveLevel===level).reduce((n,g)=>n+g.marks,0));
+ assert.deepEqual(totals,[8,12,24,31]);
+ assert.equal(result.currentCdcExactApproved,false);
+}
+console.log('PASS revised Nepali draft cognitive marks 8/12/24/31; primary-source approval remains pending');

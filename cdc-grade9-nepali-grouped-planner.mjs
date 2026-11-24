@@ -98,7 +98,11 @@ export function planNepaliRevisedMarksPractice(args={}){
  const result=planNepali2078ReferencePaper(args);
  if(!result.ready)return result;
  const old=result.paper;
- const groups=old.groups.map(g=>{
+ // Cognitive classifications from the independently transcribed 2080 table.
+ // These labels are practice metadata, not primary-source approval.
+ const revisedLevels={vocabulary_identification:'knowledge',word_class:'knowledge',grammar_passage:'application',guided_writing:'higher'};
+ const groups=old.groups.map(original=>{
+  const g={...original,cognitiveLevel:revisedLevels[original.skill]||original.cognitiveLevel};
   // The independent 2080 transcription describes same-tense paragraphs
   // and four Grade 9 transformation categories. Original practice only.
   if(args.allowOriginalReferenceDraft===true&&['tense_aspect','sentence_transformation'].includes(g.skill))return {...g,choices:g.choices.map(c=>{
@@ -129,5 +133,7 @@ export function planNepaliRevisedMarksPractice(args={}){
   return g;
  });
  if(groups.reduce((n,g)=>n+g.marks,0)!==75||groups.some(g=>g.choices.some(c=>c.marks*g.answerCount!==g.marks||c.components&&c.components.reduce((n,x)=>n+x.marks,0)!==c.marks)))throw Error('Revised-mark practice allocation mismatch');
- return {...result,paper:{...old,groups,referenceOnly:true},referenceStructureMatched:false,partialRevisedMarksMatched:true,sourceUrl:'https://giwmscdnone.gov.np/media/pdf_upload/RS11168_Specification%20Grid%20(9%20-%2010)%20Compulsory%20Nepali_p4hju5n.pdf',referenceLabel:'नेपाली अभ्यास: अदृष्टांश ४, बुँदा टिपोट २ र सारांश ३ अङ्क मिलाइएको छ। सारांशमा मौलिक अपठित गद्यांश प्रयोग गरिएको छ; मूल पाठगत अंश, अलग गद्यांश, अन्य प्रश्न संरचना र संज्ञानात्मक तहको अन्तिम प्रमाणीकरण बाँकी छ। CDC Exact होइन।',currentCdcExactApproved:false,readyForLive:false};
+ const cognitiveMarks=Object.fromEntries(['knowledge','understanding','application','higher'].map(level=>[level,groups.filter(g=>g.cognitiveLevel===level).reduce((n,g)=>n+g.marks,0)]));
+ if(Object.values(cognitiveMarks).join(',')!=='8,12,24,31')throw Error('Revised Nepali practice cognitive allocation mismatch');
+ return {...result,paper:{...old,groups,referenceOnly:true},referenceStructureMatched:false,partialRevisedMarksMatched:true,cognitiveMarks,sourceUrl:'https://giwmscdnone.gov.np/media/pdf_upload/RS11168_Specification%20Grid%20(9%20-%2010)%20Compulsory%20Nepali_p4hju5n.pdf',referenceLabel:'नेपाली अभ्यास: अदृष्टांश ४, बुँदा टिपोट २ र सारांश ३ अङ्क मिलाइएको छ। सारांशमा मौलिक अपठित गद्यांश प्रयोग गरिएको छ; मूल पाठगत अंश, अलग गद्यांश, अन्य प्रश्न संरचना र संज्ञानात्मक तहको मूल CDC स्रोतबाट अन्तिम प्रमाणीकरण बाँकी छ। CDC Exact होइन।',currentCdcExactApproved:false,readyForLive:false};
 }
