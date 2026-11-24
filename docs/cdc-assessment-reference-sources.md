@@ -46,3 +46,23 @@ Keep source documents distinct by grade band and year; do not relabel draft para
 
 ### Academic-year applicability — critical release guard
 The revised 2082 curriculum is scheduled for academic year **2084**, not 2083, per the CDC implementation notice reported on 2026-08-03 (https://shikshyakhabar.com/2026/08/03/18283 and https://www.ratopati.com/story/581974/new-social-studies-curriculum-to-be-implemented-up-to-grade-12). The government bulletin also records the council recommendation for 2084 implementation: https://giwmscdnone.gov.np/media/pdf_upload/Bulletin%202083g_9zk5fth.pdf. All revised theme counts above are **2084 reference only**; 2083 grade 2–3 theme counts remain unverified against the 2076 assessment guide. Keep the 2083 UI and persistence unchanged and do not substitute these counts into its summary. Future 2084 forms need an independent catalogue and record version.
+
+## 2026-11-24 — Original 2076 guide recovered; 2083 source blocker resolved
+- Alternate host page: https://hemantaparajuli.com.np/contents/2025/08/1118 (link to the 149-page CDC original guide). Cover and all 20 Class 2–3 Our Surroundings forms inspected visually at zero-based PDF pages 134–148. This supersedes the earlier inaccessible-source note for these pages. No PDF bytes embedded yet.
+- PDF index 127 explicitly instructs marking each achieved indicator and counting achieved indicators in groups of four for the score. A main outcome may span several separately dated/scored blocks. Keep main outcome count, indicator count and number of score blocks separate. Do NOT use four times the main outcome count when a main outcome spans multiple blocks. Do not silently normalize printed numbering anomalies (Class 2 family repeats the printed number 5 for the last main outcome; use stable unique internal IDs).
+
+| Theme (catalogue label) | Class 2 indicators per main outcome | Class 2 indicators / raw max | PDF page (1-based) | Class 3 indicators per main outcome | Class 3 indicators / raw max | PDF page (1-based) |
+|---|---|---:|---:|---|---:|---:|
+| म र मेरो परिवार | 4+4+4+4+4+4 | 24 | 135 | 4+4+12+4 | 24 | 142 |
+| मेरो दैनिक जीवन | 4+8+8+4 | 24 | 136 | 4+8+4 | 16 | 143 |
+| हाम्रो समुदाय | 8+8+8 | 24 | 137 | 8+8+8 | 24 | 144 |
+| हाम्रो विद्यालय | 8+4+4 | 16 | 138 | 4+4+8 | 16 | 145 |
+| हाम्रा वरपरका जीवजन्तु | 4+4 | 8 | 139 | 8 | 8 | 146 |
+| हाम्रो वातावरण | 4+8 | 12 | 139 | 4+4 | 8 | 146 |
+| मेरो सिर्जना | 8+4 | 12 | 140 | 4+8 | 12 | 147 |
+| हाम्रो संस्कृति | 4 | 4 | 140 | 8 | 8 | 148 |
+| सञ्चार प्रविधि र बजार | 4+4 | 8 | 141 | 4+4 | 8 | 148 |
+| हाम्रो वरपरको संसार | 4+4+4 | 12 | 141 | 4+8+4 | 16 | 149 |
+| Total | 28 main outcome rows; 36 blocks | 144 | | 24 main outcome rows; 35 blocks | 140 | |
+
+Raw max is the sum of the individual 4-indicator scoring blocks, not the official subject grade. The PDF's theme footer is an average score. The current 2083 UI still has unknown Class 2–3 summary values; integrate this verified catalogue and update the pending-summary regression together, preserving existing Class 1 IDs and historical records. Full wording, tools, print and persistence for the new forms still require implementation and testing. Class 1 mixed-source catalogue must also be reconciled with PDF pages 129–134 (1-based). Keep revised 2084 counts separate.
