@@ -46,7 +46,7 @@ export async function loadSparkCommittedReport({db,api,auth,actor,schoolId,class
    if(config.id!==id||config.active!==true)throw Error('Inactive or mismatched settings');
    const view=stored.data(),scope={schoolId,classId:classNo,subjectId:subject.id,examId:term};
    const components=validateConfiguredMarkComponents(config,scope);
-   if(view.format!=='smss-v47-official-read-view-v1'||Object.entries(scope).some(([k,v])=>view[k]!==v)||
+   if(Object.keys(view).sort().join(',')!=='classId,contentDigest,digest,entries,examId,format,publicationId,rosterCount,schoolId,settingsDigest,subjectId'||view.format!=='smss-v47-official-read-view-v1'||Object.entries(scope).some(([k,v])=>view[k]!==v)||
     !/^[A-Za-z0-9_-]{8,128}$/.test(view.publicationId??'')||
     !/^[a-f0-9]{64}$/.test(view.digest??'')||view.rosterCount!==roster.count||
     !Array.isArray(view.entries)||view.entries.length!==roster.count)throw Error('Invalid committed read view');
@@ -57,7 +57,7 @@ export async function loadSparkCommittedReport({db,api,auth,actor,schoolId,class
     pages.push({index:i/100,count:entries.length,firstStudentId:entries[0].studentId,lastStudentId:entries.at(-1).studentId,entries});
    }
    if(await hash(JSON.stringify(canonical(pages)))!==view.contentDigest)throw Error('Published content digest mismatch');
-   if(view.entries.some((row,i)=>row.studentId!==roster.studentIds[i]))throw Error('Published student roster changed');
+   if(view.entries.some((row,i)=>!row||Object.keys(row).sort().join(',')!=='isAbsent,studentId,totalObtained,values'||row.studentId!==roster.studentIds[i]))throw Error('Published student roster changed');
    bySubject.set(subject.id,{components,entries:view.entries});
   }
   return {school:{nameEnglish:pr?.nameEnglish||sc.name,nameNepali:pr?.nameNepali||'',addressEnglish:pr?.addressEnglish||'',addressNepali:pr?.addressNepali||''},bySubject};

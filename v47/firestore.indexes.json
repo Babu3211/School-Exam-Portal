@@ -133,5 +133,11 @@
       ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    {
+      "collectionGroup": "official_read_views",
+      "fieldPath": "entries",
+      "indexes": []
+    }
+  ]
 }

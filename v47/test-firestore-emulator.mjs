@@ -1,3 +1,5 @@
+import {createHash} from 'node:crypto';
+import {loadSparkCommittedReport} from './spark-committed-report.mjs';
 import {loadSparkDraftReport} from './spark-draft-report.mjs';
 import {saveTeacherClassAttendance} from './teacher-class-attendance.mjs';
 import {initializeTestEnvironment,assertFails,assertSucceeds} from '@firebase/rules-unit-testing';
@@ -67,6 +69,32 @@ try{
  await assertFails(getDoc(doc(viewer,'schools',reportSid,'class_mark_drafts',reportId)));
  await assertFails(getDoc(doc(db('admin_87654321'),'schools',reportSid,'class_mark_drafts',reportId)));
  console.log('PASS actual Web SDK Spark private draft report and cross-school/Viewer deny');
+ const reportScope={schoolId:reportSid,classId:'1',subjectId:'reportmath',examId:'final'};
+ const sha=v=>createHash('sha256').update(v).digest('hex');
+ const canonical=v=>Array.isArray(v)?v.map(canonical):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])])):v;
+ const reportKey=sha(JSON.stringify(['1','reportmath','final']));
+ const reportComponents=[{key:'count',name:'No. of Learning Achievement',fullMarks:5},{key:'got',name:'Obtained Learning Achievement',fullMarks:20}];
+ const reportEntries=[{studentId:'report_s1',isAbsent:false,values:{count:5,got:18},totalObtained:23}];
+ const reportView={...reportScope,publicationId:'pub_report01',digest:'a'.repeat(64),rosterCount:1,format:'smss-v47-official-read-view-v1',entries:reportEntries,
+  contentDigest:sha(JSON.stringify(canonical([{index:0,count:1,firstStudentId:'report_s1',lastStudentId:'report_s1',entries:reportEntries}]))),
+  settingsDigest:sha(JSON.stringify(canonical({...reportScope,components:reportComponents})))};
+ const reportViewPath=f=>doc(f,'schools',reportSid,'official_read_views',reportKey);
+ const pointerPath=f=>doc(f,'schools',reportSid,'official_marks_pointers',reportKey);
+ await env.withSecurityRulesDisabled(async ctx=>{
+  const f=ctx.firestore();await setDoc(reportViewPath(f),reportView);await setDoc(pointerPath(f),{...reportScope,publicationId:reportView.publicationId,digest:reportView.digest,contentDigest:reportView.contentDigest,settingsDigest:reportView.settingsDigest,rosterCount:1});
+ });
+ const viewArgs={...reportArgs,db:viewer,auth:{currentUser:{uid:'viewer_12345678'}},actor:{...reportArgs.actor,uid:'viewer_12345678',role:'viewer'}};
+ for(const opts of [reportArgs,viewArgs,{...reportArgs,db:teacher,auth:{currentUser:{uid:'teacher_12345678'}},actor:{...reportArgs.actor,uid:'teacher_12345678',role:'teacher'}}]){
+  const result=await loadSparkCommittedReport(opts);
+  if(!result.committedViewPreview||result.summary.rows[0].gpa!==4||result.publicationAllowed!==false)throw Error('Spark committed view GPA or preview guard mismatch');
+ }
+ // A valid-looking modified row with the old digest must fail the report.
+ await env.withSecurityRulesDisabled(async ctx=>{await updateDoc(reportViewPath(ctx.firestore()),{entries:[{...reportEntries[0],values:{count:5,got:17},totalObtained:22}]})});
+ let blocked=false;try{await loadSparkCommittedReport(viewArgs)}catch(e){if(!/content digest mismatch/.test(e.message))throw e;blocked=true}
+ if(!blocked)throw Error('Modified read view must not render');
+ await env.withSecurityRulesDisabled(async ctx=>{await setDoc(reportViewPath(ctx.firestore()),reportView);await updateDoc(pointerPath(ctx.firestore()),{publicationId:'pub_report02'})});
+ await assertFails(getDocFromServer(reportViewPath(viewer)));
+ console.log('PASS actual Spark committed report for Admin, Teacher and Viewer, content tamper and stale pointer blocked');
  // 1 Anonymous reads denied
  await assertFails(getDoc(student(anon,'12345678')));
  // 2 Anonymous writes denied

@@ -102,7 +102,10 @@ for(const size of [1,101,500,1500]){
  const published=await commitTrustedOfficialClassPublication(h.options);
  assert.equal(published.committed,true);
  assert.equal(published.rosterCount,size);
- assert.equal(h.writes-before,3,'Only official pointer, header and audit written atomically');
+ assert.equal(h.writes-before,4,'Only official pointer, header, audit and current read view written atomically');
+ const view=h.docs.get(base+'/official_read_views/'+officialClassPointerId(scope));
+ assert.equal(view.publicationId,publicationId);assert.equal(view.entries.length,size);
+ assert.equal(view.contentDigest,h.docs.get(base+'/official_marks_pointers/'+officialClassPointerId(scope)).contentDigest);
  assert.equal(h.transactionQueryReads>0,true,'Real roster query must be read INSIDE Firestore transaction');
  assert.equal(h.docs.get(base+'/official_marks_pointers/'+officialClassPointerId(scope)).publicationId,publicationId);
  const lastWrites=h.writes;
