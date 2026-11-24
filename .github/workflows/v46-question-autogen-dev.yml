@@ -87,6 +87,9 @@ on:
       - 'scripts/test-cdc-assignment.mjs'
       - 'package.json'
       - 'sw.js'
+      - 'firestore.rules'
+      - 'scripts/test-firestore-rules.mjs'
+      - 'scripts/test-pwa-upgrade.mjs'
       - '.github/workflows/v46-question-autogen-dev.yml'
   workflow_dispatch:
 permissions:
@@ -235,5 +238,7 @@ jobs:
         run: node scripts/test-v46-question-paper-dom.mjs
       - name: Test assigned teacher question-paper access
         run: node scripts/test-cdc-assignment.mjs
+      - name: Test PWA online module refresh and offline cache
+        run: npm run test:pwa
       - name: Check V46 preservation
         run: npm run test:v46-preservation

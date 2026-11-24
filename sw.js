@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v96-grade9-english-practice-topic-map-2083';
+const CACHE_NAME = 'smss-pwa-v97-question-schema-integration-2083';
 const APP_SHELL = [
   './',
   './index.html',
@@ -105,7 +105,7 @@ self.addEventListener('fetch', event => {
   event.respondWith((async () => {
     // Mutable same-URL assets must refresh online when a hosted PWA/APK WebView opens.
     // Versioned release imports remain cache-first for reliable offline use.
-    const mutable = /\.(?:js|css|json|webmanifest)$/i.test(url.pathname) && !url.searchParams.has('v');
+    const mutable = /\.(?:m?js|css|json|webmanifest)$/i.test(url.pathname) && !url.searchParams.has('v');
     if (mutable) {
       try {
         const response = await fetch(request);

@@ -1277,7 +1277,7 @@ async function generateSmartPaper(){
   ...header,gradeNumber:gradeNumber(selectedClass),className:selectedClass,
   subject:selectedSubject,section:selectedSection,
   paperTitle,academicYear,
-  durationMinutes,fullMarks:target,
+  durationMinutes,fullMarks:target,language,
   curriculumVersion:planned.exactGridMatched?(selectedBlueprint?.curriculumVersion||"Reviewed CDC Unit Grid"):
    "SMSS मौलिक अभ्यास — शिक्षक समीक्षा आवश्यक",
   blueprintId:planned.exactGridMatched?selectedBlueprint?.id||null:null,

@@ -34,6 +34,11 @@ let pending;listeners.install({waitUntil:p=>pending=p});await pending;
 listeners.activate({waitUntil:p=>pending=p});await pending;
 assert.equal(claimed,true);assert.equal(buckets.has('smss-pwa-old'),false);assert.equal(buckets.has('unrelated-cache'),true);
 const before=await (await request('./index.html','navigate')).text();
+for(const modulePath of ['./cdc-question-autogen.mjs','./cdc-grade9-paper-grid-guard.mjs']){
+ const oldCount=fetched.filter(x=>x===key(modulePath)).length;
+ await request(modulePath);await request(modulePath);
+ assert.equal(fetched.filter(x=>x===key(modulePath)).length,oldCount+2,'Mutable ESM must refresh online');
+}
 const mutablePath='./cdc-question-paper.js';
 const firstMutable=await (await request(mutablePath)).text();
 assert.ok(fetched.includes(key(mutablePath)),'Mutable script must be fetched online');
@@ -42,6 +47,7 @@ await request(mutablePath);
 assert.equal(fetched.filter(x=>x===key(mutablePath)).length,mutableCount+1,'Mutable same-URL scripts must refresh on subsequent online visits');
 await request('./qa/iemis-layout','navigate');
 online=false;
+for(const modulePath of ['./cdc-question-autogen.mjs','./cdc-grade9-paper-grid-guard.mjs'])assert.ok((await request(modulePath)).ok,'Question ESM must be available offline');
 assert.equal(await (await request(mutablePath)).text(),firstMutable,'Refreshed mutable script must remain available offline');
 assert.equal(await (await request('./','navigate')).text(),before,'QA navigation must never replace the offline app shell.');
 assert.match(await (await request(ledgerImport)).text(),/export function iemisLegacyTheory/);

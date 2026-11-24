@@ -271,6 +271,7 @@ const live=make();
 await live.run();
 const paper=live.getPaper();
 assert.ok(paper);
+assert.ok(['ne','en','both'].includes(paper.language),'Generated paper must retain chosen language for saved Grid validation');
 // A fresh session must not regenerate question IDs that were already saved.
 const samePaperHistory={
  className:'Class 10',subject:'Science and Technology',section:'A',fullMarks:3,
