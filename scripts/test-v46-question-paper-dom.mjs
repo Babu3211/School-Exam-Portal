@@ -518,8 +518,9 @@ dom.window.close();
 // Real portal shell: library is collapsible, renders all tables and is read-only.
 const {renderGrade9GridLibrary}=await import('../cdc-grade9-grid-library.mjs');
 const gridRegister=JSON.parse(readFileSync(new URL('../data/cdc-question-paper-sources-2083.json',import.meta.url),'utf8'));
-const libraryRoot=$('qpGrade9GridLibraryContent');
-assert.ok(libraryRoot);assert.equal($('qpGrade9GridLibrary').open,false);
+const libraryDom=new JSDOM('<!doctype html><html><body>'+shell+'</body></html>',{url:'https://example.test'});
+const libraryRoot=libraryDom.window.document.getElementById('qpGrade9GridLibraryContent');
+assert.ok(libraryRoot);assert.equal(libraryDom.window.document.getElementById('qpGrade9GridLibrary').open,false);
 renderGrade9GridLibrary(libraryRoot,gridRegister);
 assert.equal(libraryRoot.querySelectorAll(':scope > details').length,11);
 assert.ok(libraryRoot.querySelectorAll('table').length>=10);
@@ -533,4 +534,5 @@ renderGrade9GridLibrary(libraryRoot,null);
 assert.match(libraryRoot.textContent,/not available offline yet/);
 renderGrade9GridLibrary(libraryRoot,gridRegister);
 assert.equal(libraryRoot.querySelectorAll(':scope > details').length,11);
+libraryDom.window.close();
 console.log('PASS actual Grid Library DOM, original-source links, offline fallback and read-only rendering');
