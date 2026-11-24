@@ -118,7 +118,16 @@ try{
   await page.locator('#login').click();
   await wait(page,()=>!document.getElementById('reportArea').hidden);
   assert.match(await page.locator('#verifiedLabel').textContent(),new RegExp(role));
-  assert.equal(await page.locator('#reportSource option[value="draft"]').isDisabled(),role!=='school_admin');
+  // Playwright's generic isDisabled() does not classify native OPTION as a
+  // supported disabled control. Assert the actual HTMLOptionElement state.
+  assert.equal(await page.locator('#reportSource option[value="draft"]').evaluate(option=>option.disabled),role!=='school_admin','Private Draft option must be disabled for '+role);
+  if(role!=='school_admin'){
+   const denied=await page.locator('#reportSource').evaluate(select=>{
+    const draft=select.querySelector('option[value="draft"]');
+    return draft.disabled&&draft.matches(':disabled');
+   });
+   assert.equal(denied,true,'Native disabled Draft option for '+role);
+  }
   await page.locator('#term').selectOption('final');
   await page.locator('#reportSource').selectOption('sparkCommitted');
   await page.locator('#load').click();
@@ -140,6 +149,7 @@ try{
    await login(page,school.sid,uid);
    if(role!=='school_admin')assert.equal(await page.locator('[data-required-role="school_admin"][aria-disabled="false"]').count(),0);
    await report(page,school,role);assert.deepEqual(errors,[]);
+   console.log('PASS browser school/report/logout for '+uid+' ('+role+')');
   }finally{await context.close()}
  }
  for(const [sid,uid] of [[schools[1].sid,'alpha-viewer'],[schools[0].sid,'beta-admin']]){
