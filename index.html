@@ -4097,7 +4097,7 @@ function openCdcAssessment(context = null) {
   };
   let schoolReadSequence = 0;
   let schoolSavePending = false;
-  const canShow = () => dialog.isConnected && dialog.open && auth.currentUser?.uid===owner;
+  const canShow = () => dialog.isConnected && (context ? context.host.isConnected : dialog.open) && auth.currentUser?.uid===owner;
   const schoolSelection = () => {
     const [,,cl,subject,studentId,period] = scope();
     const student = assessmentStudents.find(st=>st.id===studentId);
