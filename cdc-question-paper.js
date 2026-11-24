@@ -28,7 +28,7 @@ import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-mat
 import {CDC_G10_OPTIONAL_MATH_2083_MODEL,compareCdc2083MathModelToBundledGrid} from "./cdc-optional-math-model-compare.mjs";
 import {inspectCdcOptionalMathPaper} from "./cdc-optional-math-composite.mjs";
 import {originalOptionalMathPracticeBank} from "./cdc-optional-math-original-practice.mjs";
-import {renderCdcCompositePaper,paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText} from "./cdc-optional-math-render.mjs";
+import {renderCdcCompositePaper,paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS,buildQuestionPaperDocx} from "./cdc-optional-math-render.mjs";
 import {QUESTION_EXCEL_FIELDS,parseQuestionExcelSheet,CDC_GRID_EXCEL_FIELDS,parseCdcGridExcelSheet} from "./cdc-question-excel.mjs";
 import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
@@ -105,8 +105,8 @@ function pageShell() {
     .qp-topic input{margin-top:3px}.qp-table{width:100%;border-collapse:collapse;font-size:12px}.qp-table th,.qp-table td{padding:9px;border-bottom:1px solid #e6ebf2;text-align:left;vertical-align:top}.qp-table th{background:#f5f8fc;color:#40536d}
     .qp-table-wrap{overflow-x:auto}.qp-section-title{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
     .qp-paper-preview{background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:22px;color:#111827}.qp-paper-preview h2,.qp-paper-preview h3{text-align:center;margin:5px}
-    .qp-paper-preview .qp-q{margin:13px 0;line-height:1.6}.qp-paper-preview .qp-q b{white-space:pre-line}.qp-muted{color:#718096}.qp-hidden{display:none!important}
-    @media(max-width:600px){.qp-card{padding:12px}.qp-paper-preview{padding:12px}.qp-table{min-width:650px}}
+    .qp-paper-preview .qp-paper-body{column-count:2;column-gap:8mm;column-rule:1px solid #ddd;overflow-wrap:anywhere}.qp-paper-preview .qp-q{margin:13px 0;line-height:1.6;break-inside:avoid}.qp-paper-preview .qp-q b{white-space:pre-line}.qp-muted{color:#718096}.qp-hidden{display:none!important}
+    @media(max-width:600px){.qp-paper-preview .qp-paper-body{column-count:1}.qp-card{padding:12px}.qp-paper-preview{padding:12px}.qp-table{min-width:650px}}
     @media print{body *{visibility:hidden!important}#qpPrintArea,#qpPrintArea *{visibility:visible!important}#qpPrintArea{position:absolute;left:0;top:0;width:100%;border:0!important;box-shadow:none!important}}
   </style>
   <div class="qp-wrap" id="qpApp">
@@ -266,8 +266,8 @@ function pageShell() {
       <p class="qp-hint" id="qpOfficialGridSource"></p>
       <p class="qp-hint" id="qpAutoGridStatus" role="status">CDC Exact मोडमा सम्बन्धित कक्षा, विषय र पूर्णाङ्कको समीक्षित Unit-wise Grid चाहिन्छ।</p>
       <p class="qp-hint">एक क्लिकमा: कक्षा/विषय, Topic, पूर्णाङ्क र भाषा छान्नुहोस्। उपलब्ध मौलिक अभ्यास प्रश्नबाट ठीक पूर्णाङ्कको Draft तयार हुनेछ। पर्याप्त जाँचिएका प्रश्न नभए गलत प्रश्नपत्र बनाइँदैन। CDC Grid को लागू संस्करण शिक्षकले पुष्टि गर्नुपर्छ।</p>
-      <label class="qp-topic" style="margin-top:9px;background:#fff8e9;align-items:center"><input id="qpAutoReviewed" type="checkbox"><span>मैले तयार भएको प्रश्नपत्र, पूर्णाङ्क, लागू CDC विशिष्टीकरण तालिका र उत्तरकुञ्जिका पढेर जाँच गरेको छु। <b>जाँच नगरी Save वा Print हुँदैन।</b></span></label>
-      <div class="qp-actions"><button class="qp-btn" id="qpSmartGenerateBtn" type="button">एक क्लिकमा Auto Question Paper</button><button class="qp-btn alt" id="qpGenerateBtn" type="button">म्यानुअल Pattern Generate</button><button class="qp-btn alt" id="qpSavePaperBtn" type="button" disabled>प्रश्नपत्र Save</button><button class="qp-btn alt" id="qpPrintPaperBtn" type="button" disabled>प्रश्नपत्र Print / PDF</button><button class="qp-btn alt" id="qpAnswerKeyBtn" type="button" disabled>उत्तरकुञ्जिका Print / PDF</button></div>
+      <label class="qp-topic" style="margin-top:9px;background:#fff8e9;align-items:center"><input id="qpAutoReviewed" type="checkbox"><span>मैले प्रश्नपत्रको नेपाली वर्णविन्यास (ह्रस्व–दीर्घ), व्याकरण, English grammar, आवश्यक चित्र, पूर्णाङ्क, लागू CDC विशिष्टीकरण तालिका र उत्तरकुञ्जिका पढेर जाँच गरेको छु। <b>जाँच नगरी Save वा Print हुँदैन।</b></span></label>
+      <div class="qp-actions"><button class="qp-btn" id="qpSmartGenerateBtn" type="button">एक क्लिकमा Auto Question Paper</button><button class="qp-btn alt" id="qpGenerateBtn" type="button">म्यानुअल Pattern Generate</button><button class="qp-btn alt" id="qpSavePaperBtn" type="button" disabled>प्रश्नपत्र Save</button><button class="qp-btn alt" id="qpPrintPaperBtn" type="button" disabled>प्रश्नपत्र Print / PDF</button><button class="qp-btn alt" id="qpAnswerKeyBtn" type="button" disabled>उत्तरकुञ्जिका Print / PDF</button><button class="qp-btn alt" id="qpWordPaperBtn" type="button" disabled>Word (.docx) Export</button></div>
       <div class="qp-actions" id="qpReferenceDraftActions" hidden><button class="qp-btn alt" id="qpSelectReferenceTopics" type="button">Select reference topics (75 marks)</button><button class="qp-btn alt" id="qpReferenceDraftBtn" type="button">Reference Draft Preview — not for exam</button></div><pre id="qpReferenceDraftPreview" hidden style="white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;border:2px solid #c48740;border-radius:8px;background:#fff8e9;color:#482b11;font:inherit" role="status"></pre><details id="qpReferenceAnswerReview" hidden style="margin-top:10px;padding:12px;border:1px solid #c48740;border-radius:8px"><summary>Teacher Answer Review / उत्तरकुञ्जिका (not official)</summary><pre id="qpReferenceAnswerText" style="white-space:pre-wrap;overflow-wrap:anywhere;font:inherit"></pre></details>
       <div id="qpPaperPreview" style="margin-top:14px"><p class="qp-hint">Topic छानेर प्रश्नपत्र Auto Generate गर्नुहोस्।</p></div>
     </div>
@@ -376,7 +376,7 @@ function renderQuestionRows() {
 function updateAutoReviewActions(){
  const ready=!!generatedPaper&&(!generatedPaper.qualityReport?.teacherReviewRequired||
   $("qpAutoReviewed")?.checked===true);
- for(const id of ["qpSavePaperBtn","qpPrintPaperBtn","qpAnswerKeyBtn"])if($(id))$(id).disabled=!ready;
+ for(const id of ["qpSavePaperBtn","qpPrintPaperBtn","qpAnswerKeyBtn","qpWordPaperBtn"])if($(id))$(id).disabled=!ready;
 }
 function invalidateGeneratedQuestionPaper(){
  generatedPaper=null;
@@ -420,8 +420,8 @@ function renderPaperPreview(paper = generatedPaper) {
     </div>
     ${paper.questions.some(q=>String(q.questionId||"").startsWith("builtIn_"))?
       '<p style="font-size:12px;font-weight:bold;color:#7a3700;padding:8px;border:1px solid #c48740">अभ्यास प्रश्नपत्र — CDC प्रकाशित नमुना होइन। शिक्षकले Grid, तथ्य र उत्तर जाँचेर मात्र प्रयोग गर्नुहोस्।</p>':""}
-    ${groups.map(type=>{const list=paper.questions.filter(q=>q.questionType===type);if(!list.length)return "";return `<h3 style="text-align:left;margin-top:16px">${esc(questionTypeLabel(type))}</h3>${list.map(q=>{number++;return `<div class="qp-q"><div style="display:flex;justify-content:space-between;gap:10px"><b>${display(number)}. ${display(q.questionText)}</b><b>[${display(q.marks)}]</b></div>${type==="mcq"?'<div style="margin-left:18px">'+(q.options||[]).map((o,i)=>'<div>'+paperOptionLabel(i,paper.language)+'. '+display(o)+'</div>').join("")+'</div>':""}</div>`;}).join("")}`;}).join("")}
-    <div style="text-align:center;margin-top:25px;font-weight:700">— प्रश्नपत्र समाप्त —</div>
+    <div class="qp-paper-body">${groups.map(type=>{const list=paper.questions.filter(q=>q.questionType===type);if(!list.length)return "";return `<h3 style="text-align:left;margin-top:16px">${esc(questionTypeLabel(type))}</h3>${list.map(q=>{number++;return `<div class="qp-q"><div style="display:flex;justify-content:space-between;gap:10px"><b>${display(number)}. ${display(q.questionText)}</b><b>[${display(q.marks)}]</b></div>${type==="mcq"?'<div style="margin-left:18px">'+(q.options||[]).map((o,i)=>'<div>'+paperOptionLabel(i,paper.language)+'. '+display(o)+'</div>').join("")+'</div>':""}</div>`;}).join("")}`;}).join("")}
+    </div><div class="qp-paper-end" style="text-align:center;margin-top:25px;font-weight:700">— प्रश्नपत्र समाप्त —</div>
   </div>`;
 }
 function printPaper(paper = generatedPaper, includeAnswers = false) {
@@ -439,10 +439,21 @@ function printPaper(paper = generatedPaper, includeAnswers = false) {
   const answerSheet = includeAnswers&&paper.questionFormat==="cdc_optional_math_composite"?
    '<div style="page-break-before:always">'+renderCdcCompositePaper(paper,{escapeHtml:esc,answerKey:true})+'</div>':
    includeAnswers ? '<section style="page-break-before:always;font-family:Arial,sans-serif;padding:24px;color:#111"><h2>'+esc(paper.schoolName||"विद्यालय")+'</h2><h3>'+esc(paper.paperTitle||"प्रश्नपत्र")+' — उत्तरकुञ्जिका (शिक्षक प्रति)</h3><p>कक्षा: '+display(paperClassLabel(paper.className,paper.language))+' · विषय: '+display(paperSubjectLabel(paper.subject,paper.language))+'</p><ol style="list-style:none;padding-left:0">'+paper.questions.map((q,i)=>'<li style="margin:10px 0;line-height:1.6;white-space:pre-line"><b>'+display(i+1)+'. '+display(q.questionText)+'</b><br>उत्तर: '+display(q.answer|| (q.correctOption ? "सही विकल्प "+paperAnswerOption(q.correctOption,paper.language) : "उत्तर संकेत उपलब्ध छैन"))+'</li>').join("")+'</ol></section>' : "";
-  w.document.write('<!doctype html><html lang="ne"><head><meta charset="utf-8"><title>'+esc(paper.paperTitle)+'</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h2,h3{text-align:center}.qp-q{margin:14px 0;line-height:1.7}.qp-q b{white-space:pre-line}@page{size:A4;margin:18mm}</style></head><body>'+area.outerHTML+answerSheet+'</body></html>');
+  w.document.write('<!doctype html><html lang="ne"><head><meta charset="utf-8"><title>'+esc(paper.paperTitle)+'</title><style>'+PAPER_PRINT_CSS+'</style></head><body>'+area.outerHTML+answerSheet+'</body></html>');
   w.document.close();
   w.focus();
   w.print();
+}
+function exportQuestionPaperWord(paper=generatedPaper){
+ if(!paper||!roleCanTeach(paper.className,paper.subject,paper.section||""))throw Error("यस प्रश्नपत्रमा Export अनुमति छैन।");
+ if(Number(paper.gradeNumber)===9)assertGrade9ExamPaperMatches(paper);
+ if(paper.qualityReport?.teacherReviewRequired&&$("qpAutoReviewed")?.checked!==true)throw Error("प्रश्नपत्रको भाषा, Grid, चित्र र उत्तर समीक्षा पुष्टि गर्नुहोस्।");
+ const area=$("qpPaperPreview")?.querySelector("#qpPrintArea");
+ if(!area)throw Error("प्रश्नपत्र Preview उपलब्ध छैन।");
+ const bytes=buildQuestionPaperDocx(area);
+ const filename=("SMSS-"+String(paper.className||"Class")+"-"+String(paper.subject||"Subject")).replace(/[^\p{L}\p{M}\p{N}_-]+/gu,"-").slice(0,100)+".docx";
+ const url=URL.createObjectURL(new Blob([bytes],{type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"}));
+ const link=document.createElement("a");link.href=url;link.download=filename;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
 async function loadClassSubjects() {
   const snap = await getDocs(collection(db,"classes"));
@@ -1808,7 +1819,7 @@ document.addEventListener("change",async event=>{
   if(t.id==="qpClass"){
     questionDataLoadEpoch++;verifiedQuestionSelection=null;
     selectedClass=t.value;selectedSubject="";selectedSection="";generatedPaper=null;savedPapers=[];$("qpPaperRows").innerHTML='<tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr>';
-    $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;$("qpAnswerKeyBtn").disabled=true;
+    $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;$("qpAnswerKeyBtn").disabled=true;if($("qpWordPaperBtn"))$("qpWordPaperBtn").disabled=true;
     const opts=classSubjects.filter(x=>x.className===selectedClass);
     const subjects=[...new Set(opts.map(x=>x.subject))];
     $("qpSubject").innerHTML='<option value="">विषय छान्नुहोस्</option>'+subjects.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
@@ -1821,7 +1832,7 @@ document.addEventListener("change",async event=>{
   if(t.id==="qpSubject"){
     questionDataLoadEpoch++;verifiedQuestionSelection=null;
     selectedSubject=t.value;selectedSection="";generatedPaper=null;savedPapers=[];$("qpPaperRows").innerHTML='<tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr>';
-    $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;$("qpAnswerKeyBtn").disabled=true;
+    $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;$("qpAnswerKeyBtn").disabled=true;if($("qpWordPaperBtn"))$("qpWordPaperBtn").disabled=true;
     curriculumRows=[];questionRows=[];blueprintRows=[];currentBlueprint=null;
     bundledPracticeUnits=[];bundledPracticeQuestions=[];
     renderTopics();renderQuestionRows();$("qpAutoGridStatus").textContent="Section छान्नुहोस्।";
@@ -1959,6 +1970,7 @@ document.addEventListener("click",async event=>{
     if(t.id==="qpSavePaperBtn")await savePaper();
     if(t.id==="qpPrintPaperBtn")printPaper(generatedPaper,false);
     if(t.id==="qpAnswerKeyBtn")printPaper(generatedPaper,true);
+    if(t.id==="qpWordPaperBtn")exportQuestionPaperWord(generatedPaper);
     if(t.id==="qpRefreshBtn"&&selectedClass&&selectedSubject){await loadCurrentData();message("प्रश्न बैंक Refresh भयो।");}
     if(t.id==="qpPaperReloadBtn"&&selectedClass&&selectedSubject)await loadPaperHistory();
     if(t.dataset.qpDeleteQuestion)await deleteQuestion(t.dataset.qpDeleteQuestion);

@@ -107,5 +107,45 @@ export function renderCdcCompositePaper(paper,{escapeHtml,answerKey=false}={}){
   '</p>';
  return '<section '+(answerKey?'':'id="qpPrintArea"')+
   ' class="qp-paper-preview" style="font-family:Arial,sans-serif">'+
-  header+note+html+'</section>';
+  header+note+'<div class="qp-paper-body">'+html+'</div></section>';
+}
+
+
+// Offline A4 landscape exam layout. Flow across pages rather than shrink.
+export const PAPER_PRINT_CSS='@page{size:A4 landscape;margin:10mm}body{font:11pt/1.35 "Noto Sans Devanagari","Nirmala UI",Arial,sans-serif;color:#111;margin:0;padding:0}h2,h3{text-align:center;margin:4px 0}h2{font-size:15pt}h3{font-size:12pt}.qp-paper-preview{padding:0!important;border:0!important}.qp-paper-body{column-count:2;column-gap:8mm;column-rule:0.35pt solid #aaa;overflow-wrap:anywhere}.qp-paper-body h3{break-after:avoid;text-align:left}.qp-q{margin:7px 0;line-height:1.35;break-inside:avoid;page-break-inside:avoid}.qp-q b{white-space:pre-line}.qp-paper-body img,.qp-paper-body svg{max-width:100%;height:auto;break-inside:avoid}.qp-paper-end{text-align:center}';
+function crc32(bytes){let c=0xffffffff;for(const b of bytes){c^=b;for(let i=0;i<8;i++)c=(c>>>1)^((c&1)?0xedb88320:0);}return (c^0xffffffff)>>>0;}
+function storedZip(files){
+ const enc=new TextEncoder(),chunks=[],central=[];let offset=0,size=0;
+ for(const [name,content] of files){
+  const n=enc.encode(name),data=enc.encode(content),crc=crc32(data);
+  const h=new Uint8Array(30+n.length),v=new DataView(h.buffer);
+  v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(6,0x800,true);v.setUint16(12,33,true);v.setUint32(14,crc,true);v.setUint32(18,data.length,true);v.setUint32(22,data.length,true);v.setUint16(26,n.length,true);h.set(n,30);
+  const z=new Uint8Array(46+n.length),w=new DataView(z.buffer);
+  w.setUint32(0,0x02014b50,true);w.setUint16(4,20,true);w.setUint16(6,20,true);w.setUint16(8,0x800,true);w.setUint16(14,33,true);w.setUint32(16,crc,true);w.setUint32(20,data.length,true);w.setUint32(24,data.length,true);w.setUint16(28,n.length,true);w.setUint32(42,offset,true);z.set(n,46);
+  chunks.push(h,data);central.push(z);offset+=h.length+data.length;size+=z.length;
+ }
+ const end=new Uint8Array(22),v=new DataView(end.buffer);v.setUint32(0,0x06054b50,true);v.setUint16(8,files.length,true);v.setUint16(10,files.length,true);v.setUint32(12,size,true);v.setUint32(16,offset,true);
+ const out=new Uint8Array(offset+size+22);let pos=0;for(const a of [...chunks,...central,end]){out.set(a,pos);pos+=a.length;}return out;
+}
+const xmlText=v=>String(v??'').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/g,'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const paragraph=(text,{center=false,bold=false,size=22}={})=>'<w:p><w:pPr>'+(center?'<w:jc w:val="center"/>':'')+'<w:spacing w:after="65" w:line="300" w:lineRule="auto"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Nirmala UI"/>'+(bold?'<w:b/><w:bCs/>':'')+'<w:sz w:val="'+size+'"/><w:szCs w:val="'+size+'"/></w:rPr>'+String(text).split('\n').map((line,i)=>(i?'<w:br/>':'')+'<w:t xml:space="preserve">'+xmlText(line)+'</w:t>').join('')+'</w:r></w:p>';
+function paperParagraphs(node){
+ const blocks=new Set(['DIV','P','H1','H2','H3','H4','LI','OL','UL','SECTION','PRE','ARTICLE','ASIDE']);const out=[];let buffer='';
+ const flush=()=>{if(buffer.trim())out.push(buffer.trim());buffer='';};
+ const walk=n=>{if(n.nodeType===3){buffer+=n.nodeValue;return;}if(n.nodeType!==1)return;if(['SCRIPT','STYLE','BUTTON','DETAILS','SVG','IMG'].includes(n.tagName))return;if(n.tagName==='BR'){buffer+='\n';return;}const block=blocks.has(n.tagName);if(block)flush();for(const child of n.childNodes)walk(child);if(block)flush();};
+ walk(node);flush();return out;
+}
+export function buildQuestionPaperDocx(area){
+ if(!area||typeof area.querySelector!=='function')throw Error('Question paper preview required');
+ const body=area.querySelector('.qp-paper-body');if(!body)throw Error('Two-column question paper layout required');
+ // Never silently omit a diagram; figure-bearing DOCX needs image embedding.
+ if(area.querySelector('img,svg,canvas'))throw Error('Figure-bearing Word export requires embedded image support; use Print/PDF.');
+ const header=area.firstElementChild,heading=paperParagraphs(header),preface=[...area.children].filter(x=>x!==header&&x!==body&&!x.classList.contains('qp-paper-end')).flatMap(paperParagraphs),paras=paperParagraphs(body);if(!paras.length)throw Error('Empty question paper');
+ const sect=cols=>'<w:sectPr><w:type w:val="continuous"/><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="567" w:right="567" w:bottom="567" w:left="567" w:header="283" w:footer="283" w:gutter="0"/><w:cols w:num="'+cols+'" w:space="454"'+(cols===2?' w:sep="1"':'')+'/></w:sectPr>';
+ const content=heading.map((line,i)=>paragraph(line,{center:true,bold:i===0,size:i===0?30:22})).join('')+preface.map(line=>paragraph(line,{center:true,size:18})).join('')+'<w:p><w:pPr>'+sect(1)+'</w:pPr></w:p>'+paras.map(line=>paragraph(line)).join('')+sect(2);
+ const xml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+ return storedZip([
+ ['[Content_Types].xml',xml+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'],
+ ['_rels/.rels',xml+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'],
+ ['word/document.xml',xml+'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+content+'</w:body></w:document>']]);
 }

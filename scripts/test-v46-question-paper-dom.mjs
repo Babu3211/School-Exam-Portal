@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {JSDOM} from 'jsdom';
-import {paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText} from '../cdc-optional-math-render.mjs';
+import {paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS,buildQuestionPaperDocx} from '../cdc-optional-math-render.mjs';
 import {readBundledScienceBank,buildAutomaticQuestionPaper,cognitiveMarkDistribution} from '../cdc-question-autogen.mjs';
 const source=readFileSync(new URL('../cdc-question-paper.js',import.meta.url),'utf8');
 const code=(start,end)=>{
@@ -16,7 +16,7 @@ const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>'
 const normal=s=>String(s||'').trim().toLocaleLowerCase().replace(/\s+/g,' ');
 for(const id of ['qpClass','qpSubject','qpSection','qpPaperFullMarks','qpAutoLanguage',
  'qpSmartGenerateBtn','qpGenerateBtn','qpTopicSelectAll','qpTopicClearAll','qpSelectGridUnits',
- 'qpSavePaperBtn','qpPrintPaperBtn','qpAnswerKeyBtn','qpPaperPreview','qpAutoReviewed','qpAutoMode','qpAutoGridStatus',
+ 'qpSavePaperBtn','qpPrintPaperBtn','qpAnswerKeyBtn','qpWordPaperBtn','qpPaperPreview','qpAutoReviewed','qpAutoMode','qpAutoGridStatus',
  'qpOfficialGridSource','qpBpVeryShortCount','qpBpVeryShortMarks',
  'qpPaperVeryShortCount','qpPaperVeryShortMarks',
  'qpQuestionExcelTemplateBtn','qpQuestionExcelFile','qpQuestionTemplateBtn','qpQuestionImportFile',
@@ -376,12 +376,23 @@ const fakeWindow={open:()=>({
  document:{write:s=>{generatedPrint=s},close:()=>{}},
  focus:()=>{},print:()=>{printCount++}
 })};
-const printPaper=new Function('$','esc','message','window','generatedPaper','paperSubjectLabel','paperClassLabel','paperAnswerOption','paperDisplayText',
+const printPaper=new Function('$','esc','message','window','generatedPaper','paperSubjectLabel','paperClassLabel','paperAnswerOption','paperDisplayText','PAPER_PRINT_CSS',
  code('function printPaper(','async function loadClassSubjects()')+'return printPaper;')(
- $,escape,()=>{},fakeWindow,null,paperSubjectLabel,paperClassLabel,paperAnswerOption,paperDisplayText);
+ $,escape,()=>{},fakeWindow,null,paperSubjectLabel,paperClassLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS);
 printPaper(approved.getPaper(),true);
 assert.equal(printCount,1);
 assert.match(generatedPrint,/white-space:pre-line/);
+assert.match(generatedPrint,/@page\{size:A4 landscape/);
+assert.match(generatedPrint,/column-count:2/);
+assert.equal($('qpWordPaperBtn').disabled,false);
+const docx=buildQuestionPaperDocx($('qpPrintArea'));
+assert.deepEqual([...docx.slice(0,4)],[80,75,3,4]);
+const docxText=new TextDecoder().decode(docx);
+assert.match(docxText,/word\/document\.xml/);
+assert.match(docxText,/w:orient="landscape"/);
+assert.match(docxText,/w:cols w:num="2"/);
+assert.match(docxText,/Test School/);
+assert.doesNotMatch(docxText,/qpGridAudit|qpAutoReviewed/);
 assert.match(generatedPrint,/CDC प्रकाशित नमुना होइन/);
 assert.match(generatedPrint,/उत्तरकुञ्जिका/);
 assert.match(generatedPrint,/Test School/);
