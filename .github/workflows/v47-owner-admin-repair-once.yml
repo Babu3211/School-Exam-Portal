@@ -1,0 +1,38 @@
+name: V47 one-time requested Super Admin registry repair
+on:
+  push:
+    branches: [smss-v47-multischool-work]
+    paths:
+      - '.github/workflows/v47-owner-admin-repair-once.yml'
+permissions:
+  contents: read
+concurrency:
+  group: v47-owner-admin-repair-once
+  cancel-in-progress: false
+jobs:
+  exact-owner:
+    if: github.ref == 'refs/heads/smss-v47-multischool-work'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Admin SDK
+        run: npm install --prefix v47-runtime --no-package-lock --no-audit --no-fund --ignore-scripts
+      - name: Repair exact owner-selected V47 account only
+        env:
+          V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}
+        run: |
+          test "$(git ls-remote origin refs/heads/smss-v47-multischool-work | cut -f1)" = "$GITHUB_SHA"
+          test -n "$V47_SERVICE_ACCOUNT"
+          umask 077
+          credential_file="$(mktemp "$RUNNER_TEMP/v47-owner.XXXXXX")"
+          trap 'rm -f "$credential_file"' EXIT
+          printf '%s' "$V47_SERVICE_ACCOUNT" > "$credential_file"
+          export GOOGLE_APPLICATION_CREDENTIALS="$credential_file"
+          unset V47_SERVICE_ACCOUNT
+          node v47/diagnostics/check-live-access.mjs --before-rules-deploy
+          node v47/diagnostics/repair-owner-admin-once.mjs
+          node v47/diagnostics/check-live-access.mjs
