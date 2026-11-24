@@ -95,7 +95,7 @@ for(const name of ['guidePdf13','guidePdf45','guideOfficial13','guideOfficial45'
  assert.ok(link.rel.split(' ').includes('noopener'));
  assert.equal(new URL(link.href).protocol,'https:');
 }
-assert.match(field('guidePdf13').href,/STUDENTS-EVALUATION-GRADE-1-3\.pdf$/);
+assert.equal(field('guidePdf13').href,'https://hemantaparajuli.com.np/wp-content/uploads/2025/08/'+encodeURIComponent('विद्यार्थी-मूल्याङ्‍कन-मार्गदर्शन-१-३')+'.pdf');
 assert.match(field('guidePdf45').href,/^https:\/\/learning\.cehrd\.gov\.np\/pluginfile\.php\/106343\//);
 assert.match(field('guideOfficial13').href,/\/644\//);
 assert.match(field('guideOfficial45').href,/\/646\//);
@@ -1009,14 +1009,18 @@ const coverageRow=(grade,subject)=>coverage.find(row=>row.dataset.cdcCoverageCla
 assert.equal(coverageRow('1','serophero').cells[2].textContent,'१० / १०');
 assert.equal(coverageRow('1','serophero').cells[3].textContent,'२६');
 assert.equal(coverageRow('1','serophero').cells[4].textContent,'१०४');
-assert.equal(coverageRow('2','serophero').cells[2].textContent,'० / १०');
-assert.equal(coverageRow('2','serophero').cells[4].textContent,'—');
+assert.equal(coverageRow('2','serophero').cells[2].textContent,'१० / १०');
+assert.equal(coverageRow('2','serophero').cells[3].textContent,'२८');
+assert.equal(coverageRow('2','serophero').cells[4].textContent,'१४४');
+assert.equal(coverageRow('3','serophero').cells[3].textContent,'२४');
+assert.equal(coverageRow('3','serophero').cells[4].textContent,'१४०');
 assert.equal(coverageRow('3','english').cells[4].textContent,'944');
 assert.equal(coverageRow('5','hamrodhunibeshi').cells[2].textContent,'—');
-assert.match(field('themeCoverageInfo').textContent,/223 \/ 243.*5/);
+assert.match(field('themeCoverageInfo').textContent,/243 \/ 243.*5/);
 for(const row of coverage){
  const toNumber=v=>Number(v.replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)));
  if(row.cells[3].textContent==='—'){assert.equal(row.cells[4].textContent,'—');continue;}
+ if(row.dataset.cdcCoverageSubject==='serophero'&&['2','3'].includes(row.dataset.cdcCoverageClass))continue;
  assert.equal(toNumber(row.cells[4].textContent),4*toNumber(row.cells[3].textContent));
 }
 
@@ -1037,22 +1041,30 @@ assert.equal(field('themeSummaryFoot').rows[0].cells[3].textContent,'१०८')
 assert.equal(field('themeSummaryRows').rows.length,10);
 assert.equal(field('seroCurriculumReference').hidden,false);
 assert.match(field('seroCurriculumTotal').textContent,/कक्षा १.*२५/);
-// The 2082 revised curriculum is a separate 2084 reference, not a source of
-// 2083 marks. Verify all twenty pending theme rows, not just the first grade.
+// Verified original 2076 guide, twenty theme count rows for 2083 only.
+const verifiedSeroCounts={
+ '2':[[6,24],[4,24],[3,24],[3,16],[2,8],[2,12],[2,12],[1,4],[2,8],[3,12]],
+ '3':[[4,24],[3,16],[3,24],[3,16],[1,8],[2,8],[2,12],[1,8],[2,8],[3,16]]
+};
 for(const grade of ['2','3']){
  choice('summaryClass',grade);choice('summarySubject','serophero');
  assert.equal(field('seroCurriculumReference').hidden,false);
  assert.match(field('seroCurriculumTotal').textContent,/२५/);
- const pending=summaryRows();
- assert.equal(pending.length,10,'All ten 2083 themes must remain visible for Class '+grade);
- assert.equal(new Set(pending.map(row=>row.cells[1].textContent.trim())).size,10);
- for(const row of pending){
-  assert.equal(row.cells[2].textContent,'—','Do not substitute curriculum or 2084 counts');
-  assert.equal(row.cells[3].textContent,'—','Unverified full marks must stay unknown');
+ const rows=summaryRows(),expected=verifiedSeroCounts[grade];
+ assert.equal(rows.length,10);
+ assert.equal(new Set(rows.map(row=>row.cells[1].textContent.trim())).size,10);
+ const n=v=>Number(v.replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)));
+ for(const [i,row] of rows.entries()){
+  assert.equal(n(row.cells[2].textContent),expected[i][0]);
+  assert.equal(n(row.cells[3].textContent),expected[i][1]);
+  assert.equal(n(row.cells[4].textContent),expected[i][1]);
+  assert.match(row.cells[5].textContent,/गणना पुष्टि, प्रविष्टि बाँकी/);
  }
- assert.equal(coverageRow(grade,'serophero').cells[2].textContent,'० / १०');
- assert.equal(coverageRow(grade,'serophero').cells[3].textContent,'—');
- assert.equal(coverageRow(grade,'serophero').cells[4].textContent,'—');
+ const foot=field('themeSummaryFoot').rows[0];
+ assert.equal(n(foot.cells[1].textContent),grade==='2'?28:24);
+ assert.equal(n(foot.cells[2].textContent),grade==='2'?144:140);
+ assert.equal(n(foot.cells[3].textContent),grade==='2'?144:140);
+ assert.equal(coverageRow(grade,'serophero').cells[2].textContent,'१० / १०');
  assert.equal(field('class').value,entryClassBefore);
  assert.equal(field('subject').value,entrySubjectBefore);
  assert.equal(field('student').value,entryStudentBefore);
@@ -1194,6 +1206,12 @@ for(const [unit,count,page] of [['हाम्रा वरपरका जी�
 }
 w.currentSchoolSettings.academicYear='2084';
 await w.loadCdcAssessmentPage();
+for(const grade of ['2','3']){
+ choice('summaryClass',grade);choice('summarySubject','serophero');
+ assert.equal(field('seroCurriculumReference').hidden,true);
+ assert.equal(summaryRows().length,10);
+ assert.ok(summaryRows().every(row=>row.cells[2].textContent==='—'&&row.cells[3].textContent==='—'));
+}
 choice('unit','म र मेरो परिवार');
 assert.equal(field('annex3').hidden,true);
 console.log('Grade 1 Our Surroundings three forms, 48 indicators, scoped binary Save/Load, saved-only print, three additional curriculum review forms, duplicate and revoked-role checks passed');
