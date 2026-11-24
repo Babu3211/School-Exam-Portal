@@ -14,8 +14,8 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{border:1px solid 
 <section id="reportArea" hidden><p id="verifiedLabel"></p>
 <label>Class<select id="schoolClass"><option value="1">Class 1</option><option value="2">Class 2</option><option value="3">Class 3</option><option value="4">Class 4</option><option value="5">Class 5</option><option value="6">Class 6</option><option value="7">Class 7</option><option value="8">Class 8</option><option value="9">Class 9</option><option value="10">Class 10</option></select></label>
 <label>Term<select id="term"><option value="1st">1st</option><option value="2nd">2nd</option><option value="3rd">3rd</option><option value="final">Final</option></select></label>
-<label>Report Source<select id="reportSource"><option value="legacy">V46-compatible records</option><option value="committed">Committed V47 marks (isolated server)</option></select></label>
-<p>Committed marks require the isolated authenticated V47 API. Static Hosting alone cannot provide this service. If unavailable, the preview is blocked; no automatic fallback occurs.</p>
+<label>Report Source<select id="reportSource"><option value="legacy">V46-compatible records</option><option value="draft">Saved class Drafts (School Admin, Free Plan)</option><option value="committed">Committed V47 marks (isolated server)</option></select></label>
+<p>Saved class Drafts are private, unapproved previews for School Admin only. All subjects must have complete saved Drafts. Committed marks require the isolated authenticated V47 API. Static Hosting alone cannot provide this service. If unavailable, the preview is blocked; no automatic fallback occurs.</p>
 <button id="load">Load Complete Class Preview</button><button id="cancel" disabled>Cancel Review</button>
 <p id="progress" role="status" aria-live="polite">No complete-class preview loaded.</p>
 <section id="ledgerArea" hidden><h2>Unapproved Mark Ledger</h2><p class="warn">PREVIEW ONLY — NOT VALID FOR OFFICIAL USE</p><div id="gradeOutput"></div><button id="exportExcel" disabled>Export Unapproved Mark Ledger Excel (.xlsx)</button></section>
