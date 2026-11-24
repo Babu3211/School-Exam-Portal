@@ -191,7 +191,7 @@ try{
    assert.equal(await page.locator('#newAdminPassword').inputValue(),'');
    assert.match(await page.locator('#identity').textContent(),/platform-admin/);
    assert.equal((await db.doc('schools/'+newSchoolId).get()).exists,false);
-   await page.locator('#schoolId').fill(newSchoolId);await page.locator('#iemis').fill(newSchoolId);await page.locator('#schoolName').fill('Gamma Synthetic School');
+   await page.locator('#schoolId').fill(newSchoolId);assert.equal(await page.locator('#iemis').inputValue(),newSchoolId);assert.equal(await page.locator('#iemis').isVisible(),false);await page.locator('#schoolName').fill('Gamma Synthetic School');
    page.once('dialog',dialog=>dialog.accept());await page.locator('#register').click();
    const row=page.locator('#schools tr').filter({hasText:newSchoolId});
    await wait(page,id=>Array.from(document.querySelectorAll('#schools tr')).some(tr=>tr.textContent.includes(id)&&tr.textContent.includes('Inactive')),newSchoolId);
