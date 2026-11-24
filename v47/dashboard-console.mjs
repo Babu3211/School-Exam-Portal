@@ -4,10 +4,26 @@ import {verifySchoolSession} from './verified-school-session.mjs';
 import {schoolDashboardAccess} from './dashboard-access.mjs';
 import {schoolProfileView} from './school-settings-profile.mjs';
 import {schoolSatelliteMapLinks} from './dashboard-school-map.mjs';
+import {createActivityGate,recordDashboardActivity,readRecentDashboardActivity} from './dashboard-activity.mjs';
 import {loadVerifiedSchoolStats,dashboardStatsText,createForegroundStatsGate} from './dashboard-stats.mjs';
 const $=id=>document.getElementById(id);
 let auth,authSdk,db,api,verified=null,busy=false,checkingLink=false,lastActivity=Date.now();
 const foregroundStatsGate=createForegroundStatsGate();
+const activityGate=createActivityGate();
+let activityRequest=0;
+async function noteDashboardActivity(){
+ const selected=verified;
+ if(!selected||!activityGate.claim({schoolId:selected.schoolId,uid:selected.uid,now:Date.now(),visible:!document.hidden}))return;
+ const check=()=>{if(verified!==selected||auth?.currentUser?.uid!==selected.uid)throw Error('School session changed')};
+ try{await recordDashboardActivity({db,api,actor:{...selected,active:true},assertSession:check})}catch{/* telemetry must never block academic modules; rate-limit denies duplicate tabs */}
+}
+async function showRecentActivity(){
+ const selected=verified,request=++activityRequest,section=$('recentActivityCard');
+ section.hidden=selected?.role!=='school_admin';$('recentActivityCount').textContent='—';
+ if(section.hidden)return;
+ const check=()=>{if(request!==activityRequest||verified!==selected||auth?.currentUser?.uid!==selected.uid)throw Error('Session changed')};
+ try{const count=await readRecentDashboardActivity({db,api,actor:{...selected,active:true},assertSession:check});check();$('recentActivityCount').textContent=String(count)}catch{/* no fabricated zero */}
+}
 const MAX_IDLE_MS=60*60*1000;
 const SCHOOL_SELECTION_KEY='smss-v47-dashboard-school';
 const readDocument=async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null};
@@ -48,7 +64,7 @@ function showMetricCards(stats){
 let statsRequest=0;
 let mapRequest=0;
 function resetSchoolMap(){mapRequest++;$('schoolMapFrame').removeAttribute('src');$('schoolMapFrame').hidden=true;$('schoolMapOpen').removeAttribute('href');$('schoolMapOpen').hidden=true;}
-function clear(){resetSchoolMap();statsRequest++;foregroundStatsGate.reset();verified=null;resetMetricCards();$('dashboardStats').textContent='विद्यालय प्रमाणित गरेपछि विवरण देखिन्छ।';lock()}
+function clear(){activityRequest++;$('recentActivityCard').hidden=true;$('recentActivityCount').textContent='—';resetSchoolMap();statsRequest++;foregroundStatsGate.reset();verified=null;resetMetricCards();$('dashboardStats').textContent='विद्यालय प्रमाणित गरेपछि विवरण देखिन्छ।';lock()}
 async function refreshStats(){
  if(!verified||!api||!db||!auth)return;
  const selected=verified,request=++statsRequest;
@@ -74,6 +90,8 @@ async function refreshStats(){
   assertSession();
   $('dashboardStats').textContent=dashboardStatsText(loaded);
   showMetricCards(loaded);
+  await noteDashboardActivity();
+  assertSession();void showRecentActivity();
  }catch(error){
   if(request===statsRequest&&verified===selected)
    $('dashboardStats').textContent='विद्यालय विवरण उपलब्ध भएन: '+error.message;
@@ -173,7 +191,7 @@ for(const eventName of ['pointerdown','keydown'])document.addEventListener(event
  if(!verified)return;
  if(Date.now()-lastActivity>=MAX_IDLE_MS){void expireIdle();return}
  if(!touchSchoolActivity()){void expireIdle();return}
- lastActivity=Date.now();
+ lastActivity=Date.now();void noteDashboardActivity();
 },{passive:true,capture:true});
 $('dashboardConnect').onclick=async()=>{if(busy||auth)return;busy=true;$('dashboardConnect').disabled=true;try{
  ({auth,authSdk,db,api}=await connectSchoolFirebase());

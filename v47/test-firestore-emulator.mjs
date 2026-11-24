@@ -30,6 +30,25 @@ try{
   await setDoc(doc(admin,'schools','12345678','members','forged_user'),{uid:'someone_else',schoolId:'12345678',role:'viewer',active:true});
  });
  const viewer=db('viewer_12345678'),teacher=db('teacher_12345678'),admin=db('admin_12345678'),superDb=db('root_super');
+ // Activity telemetry is a narrow self-only exception, not academic permission.
+ const activity=(db,sid,uid)=>doc(db,'schools',sid,'dashboard_activity',uid);
+ const activityPayload=(sid,uid)=>({schoolId:sid,uid,lastSeen:serverTimestamp()});
+ const self=activity(viewer,'12345678','viewer_12345678');
+ await assertSucceeds(setDoc(self,activityPayload('12345678','viewer_12345678')));
+ await assertFails(setDoc(self,activityPayload('12345678','viewer_12345678'))); // rate limit
+ await assertFails(setDoc(activity(viewer,'12345678','teacher_12345678'),activityPayload('12345678','teacher_12345678')));
+ await assertFails(setDoc(activity(viewer,'87654321','viewer_12345678'),activityPayload('87654321','viewer_12345678')));
+ await assertFails(setDoc(activity(anon,'12345678','viewer_12345678'),activityPayload('12345678','viewer_12345678')));
+ await assertFails(setDoc(activity(teacher,'12345678','teacher_12345678'),{...activityPayload('12345678','teacher_12345678'),role:'school_admin'}));
+ await assertFails(setDoc(activity(teacher,'12345678','teacher_12345678'),{schoolId:'12345678',uid:'teacher_12345678',lastSeen:new Date()}));
+ await assertFails(getDocs(collection(viewer,'schools','12345678','dashboard_activity')));
+ await assertFails(getDocs(collection(db('admin_87654321'),'schools','12345678','dashboard_activity')));
+ await assertSucceeds(getDocs(collection(admin,'schools','12345678','dashboard_activity')));
+ await assertFails(deleteDoc(self));
+ await env.withSecurityRulesDisabled(async context=>{
+  await setDoc(activity(context.firestore(),'12345678','viewer_12345678'),{schoolId:'12345678',uid:'viewer_12345678',lastSeen:new Date(Date.now()-16*60*1000)});
+ });
+ await assertSucceeds(setDoc(self,activityPayload('12345678','viewer_12345678')));
  // 1 Anonymous reads denied
  await assertFails(getDoc(student(anon,'12345678')));
  // 2 Anonymous writes denied

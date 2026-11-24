@@ -85,6 +85,25 @@ service cloud.firestore {
         allow update: if (superAdmin() && validMember()) || adminCanUpdate();
         allow delete: if superAdmin();
       }
+      // Operational self-activity only; this does not grant any academic writes.
+      // One bounded document per UID; server clock and minimum heartbeat interval.
+      match /dashboard_activity/{uid} {
+        function validActivity() {
+          let d=request.resource.data;
+          return activeMember(sid) && request.auth.uid == uid
+            && d.keys().hasOnly(['schoolId','uid','lastSeen'])
+            && d.keys().hasAll(['schoolId','uid','lastSeen'])
+            && d.schoolId == sid && d.uid == uid && d.lastSeen == request.time;
+        }
+        allow get: if canAdmin(sid) || (activeMember(sid) && request.auth.uid == uid);
+        allow list: if canAdmin(sid);
+        allow create: if validActivity();
+        allow update: if validActivity()
+          && resource.data.schoolId == sid && resource.data.uid == uid
+          && resource.data.lastSeen is timestamp
+          && request.time >= resource.data.lastSeen + duration.value(15,'m');
+        allow delete: if false;
+      }
       // Teacher assignments are separate from student subject assignments.
       // Provisioning is school-admin-only; teacher clients cannot self-assign.
       match /teacher_assignments/{id} {
