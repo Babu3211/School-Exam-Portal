@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v68-grade9-environment-source-2083';
+const CACHE_NAME = 'smss-pwa-v69-grade9-social-practice-2083';
 const APP_SHELL = [
   './',
   './index.html',
@@ -23,6 +23,7 @@ const APP_SHELL = [
   './cdc-grade9-science-archive-audit.mjs',
   './cdc-grade9-computer-original-practice.mjs',
   './cdc-grade9-environment-original-practice.mjs',
+  './cdc-grade9-social-original-practice.mjs',
   './cdc-grade8-science-model-audit.mjs',
   './cdc-grade8-science-original-supplement.mjs',
   './data/cdc-question-paper-sources-2083.json',

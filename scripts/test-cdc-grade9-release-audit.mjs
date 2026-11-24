@@ -85,3 +85,24 @@ assert.ok(data.sources.some(s=>s.subject==='ऐच्छिक वाताव�
 assert.equal(byKey.optional_environment.status,'source_missing','Textbook must never count as verified grid');
 assert.match(readFileSync(new URL('../sw.js',import.meta.url),'utf8'),/cdc-grade9-environment-original-practice\.mjs/);
 console.log('PASS Grade9 environment nine-unit bilingual practice, source separation and offline cache');
+
+const {grade9SocialOriginalBank}=await import('../cdc-grade9-social-original-practice.mjs');
+for(const subject of ['Social Studies','सामाजिक अध्ययन']){
+ const pack=grade9SocialOriginalBank({grade:9,subject});
+ assert.equal(pack.units.length,10);
+ assert.equal(pack.questions.length,30);
+ assert.equal(new Set(pack.questions.map(q=>q.id)).size,30);
+ assert.equal(pack.exactGridVerified,false);
+ for(const unit of pack.units){
+  assert.equal(unit.topics.length,3);
+  const qs=pack.questions.filter(q=>q.unitId===unit.id);
+  assert.deepEqual(qs.map(q=>q.marks),[1,4,7]);
+  assert.deepEqual(qs.map(q=>q.topicName),unit.topics);
+  assert.ok(qs.every(q=>q.questionText&&q.questionTextEn&&q.answer&&q.answerEn&&q.teacherReviewRequired&&!q.officialCdcQuestion));
+ }
+}
+assert.equal(grade9SocialOriginalBank({grade:10,subject:'Social Studies'}).questions.length,0);
+assert.equal(grade9SocialOriginalBank({grade:9,subject:'Science and Technology'}).questions.length,0);
+assert.equal(byKey.social.gridTranscribed,false,'Current curriculum and historical grid must not approve exact generation');
+assert.match(readFileSync(new URL('../sw.js',import.meta.url),'utf8'),/cdc-grade9-social-original-practice\.mjs/);
+console.log('PASS Grade9 Social current curriculum areas, original bilingual questions and no false exact approval');

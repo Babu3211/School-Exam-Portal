@@ -7,6 +7,7 @@ import {auditGrade9Release} from "./cdc-grade9-release-audit.mjs";
 import {auditGrade9ScienceArchive} from "./cdc-grade9-science-archive-audit.mjs";
 import {compareGrade8SciencePracticeBank,getGrade8ScienceHistoricalPracticePattern} from "./cdc-grade8-science-model-audit.mjs";
 import {grade8ScienceOriginalSupplement} from "./cdc-grade8-science-original-supplement.mjs";
+import {grade9SocialOriginalBank} from "./cdc-grade9-social-original-practice.mjs";
 import {grade9EnvironmentOriginalBank} from "./cdc-grade9-environment-original-practice.mjs";
 import {grade9ComputerOriginalBank} from "./cdc-grade9-computer-original-practice.mjs";
 import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-math-2082.mjs";
@@ -459,6 +460,8 @@ async function loadClassSubjects() {
 // Local original practice sources require no Admin import or Firestore write.
 // Absence of a checked source never triggers invented questions or a fake grid.
 async function loadBundledPracticeBank({grade,subject}){
+ const social=grade9SocialOriginalBank({grade,subject});
+ if(social.units.length)return {units:social.units,questions:social.questions,status:"कक्षा ९ सामाजिक अध्ययन: २०८२ पाठ्यक्रमका १० विषयक्षेत्रमा ३० मौलिक bilingual अभ्यास प्रश्न। नयाँ CDC Exact Grid र शिक्षक समीक्षा बाँकी।"};
  const environment=grade9EnvironmentOriginalBank({grade,subject});
  if(environment.units.length)return {units:environment.units,questions:environment.questions,status:"कक्षा ९ वातावरण विज्ञान: ९ प्रस्तावित Unit का ३६ मौलिक bilingual अभ्यास प्रश्न। वर्तमान CDC पाठ्यपुस्तकसँग Unit/उत्तर समीक्षा बाँकी; आधिकारिक Grid प्रमाणित नभएसम्म CDC Exact मानिँदैन।"};
  if(grade===9&&getBundledComputerGrid({grade,subject,fullMarks:50})){

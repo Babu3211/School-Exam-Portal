@@ -553,6 +553,29 @@
       "status": "official_CDC_library_textbook_record_full_contents_and_grid_review_pending",
       "url": "https://lib.moecdc.gov.np/catalog/opac_css/index.php?id=15803&lvl=notice_display",
       "note": "CDC Library record 15803 confirms the 2082 first-edition Grade 9 optional Environment Science textbook (198 pages, Nepali). Previous English PDF candidate timed out on recheck; nine-unit SMSS practice outline requires teacher comparison against actual textbook. Catalog record does not verify exact Grid, contents, or model questions."
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "curriculum",
+      "version": "2082",
+      "status": "official_CDC_curriculum_cover_and_grade9_learning_areas_checked",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/social%209-10_oe5hq7v.pdf",
+      "note": "Current curriculum cover and Grade 9 outcomes checked. Ten learning areas; 75% external and 25% internal assessment; external questions require separate CDC specification grid. No grid approval from curriculum."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "historical_specification_grid_and_model_questions",
+      "version": "2078",
+      "status": "official_CDC_historical_grid_text_extracted_visual_timeout_current_revision_not_verified",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11166_Specification%20Grid%20%28Grade%209%29%20Compulsory%20Social%20Studies%20%281%29_jlqxsmn.pdf",
+      "note": "Historical 75-mark, 3-hour grid: 11 very short x1, 9 short x4, 4 long x7. Three combined cognitive groups; historic geography map alternative. Grid and model totals agree. Screenshot timeout; current 2082 curriculum changes learning-area order and outcomes. Archive only, not approved for 2083 Exact."
     }
   ],
   "completion": {
