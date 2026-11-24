@@ -49,6 +49,8 @@ assert.match(source,/heading\.textContent="CDC वेबसाइटमा य�
 assert.match(source,/pdfSource\.appendChild\(heading\)/);
 assert.match(source,/getCdcOptionalMathGuide\(\{grade,subject\}\)/);
 assert.match(source,/compareGrade8SciencePracticeBank\(\{/);
+assert.match(source,/grade8ScienceOriginalSupplement\(\{/);
+assert.match(source,/allQuestions=\[\.\.\.safe\.questions,\.\.\.supplement\.questions\]/);
 assert.match(source,/value="very_short">अति छोटो उत्तर/);
 assert.match(source,/\{type:"very_short",count:Number\(\$\(prefix\+"VeryShortCount"\)/);
 assert.match(source,/const groups = \["mcq","very_short","short","long"\]/);
