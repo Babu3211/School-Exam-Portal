@@ -566,7 +566,7 @@ function viewerReadOnlyGuard(event){
   if(action.matches("[data-page],[data-go]")||action.closest("[data-page],[data-go]"))return;
   const id=String(action.id||"").toLowerCase(),label=String(action.textContent||"").toLowerCase();
   // Explicit non-mutating actions: do not infer safety from a substring such as "show" or "generate".
-  const readActionIds=new Set(["cdcprintform","cdcreadschool","cdcnextstudent","logoutbtn","loadentrystudents","loadattendancestudents","loadattendancehistory","numberledgertab","gradeledgertab","entryledgertab","studentcanceleditbtn","staffcancelbtn","classcancelbtn","examcancelbtn","subjectcatalogcancel","cancelroleassignmentbtn","toggleloginpassword","onlineresulttoggle","onlineresultsearchbtn","loadreportbtn","loadresultsbtn","refreshresultsbtn","showledgerview","refreshledgerview","refreshentry","refreshattendance","refreshattendancehistory","refreshcertificatesbtn","refreshreportbtn","refreshusersbtn","refreshauditlogs","reloadschoolsettings","studentsearchbtn","studentreloadbtn","staffsearchbtn","staffreloadbtn","classsearchbtn","classreloadbtn","examsearchbtn","examreloadbtn","subjectcatalogreloadbtn","markreloadsettings","studentexport","studentsample","staffexport","staffsample","exportledgerexcel","sampleledgerexcel","exportledgerpageexcel","printledgerpage","printgradesheetbtn","printtabulationbtn","exporttabulationbtn","printattendance","exportattendance","printattendancehistory","exportattendancehistory","exportreportbtn","printreportbtn","downloadfirebasebackup","previewfirebaserestore","onlineresultprintbtn"]);
+  const readActionIds=new Set(["cdcgridread","cdcprintform","cdcreadschool","cdcnextstudent","logoutbtn","loadentrystudents","loadattendancestudents","loadattendancehistory","numberledgertab","gradeledgertab","entryledgertab","studentcanceleditbtn","staffcancelbtn","classcancelbtn","examcancelbtn","subjectcatalogcancel","cancelroleassignmentbtn","toggleloginpassword","onlineresulttoggle","onlineresultsearchbtn","loadreportbtn","loadresultsbtn","refreshresultsbtn","showledgerview","refreshledgerview","refreshentry","refreshattendance","refreshattendancehistory","refreshcertificatesbtn","refreshreportbtn","refreshusersbtn","refreshauditlogs","reloadschoolsettings","studentsearchbtn","studentreloadbtn","staffsearchbtn","staffreloadbtn","classsearchbtn","classreloadbtn","examsearchbtn","examreloadbtn","subjectcatalogreloadbtn","markreloadsettings","studentexport","studentsample","staffexport","staffsample","exportledgerexcel","sampleledgerexcel","exportledgerpageexcel","printledgerpage","printgradesheetbtn","printtabulationbtn","exporttabulationbtn","printattendance","exportattendance","printattendancehistory","exportattendancehistory","exportreportbtn","printreportbtn","downloadfirebasebackup","previewfirebaserestore","onlineresultprintbtn"]);
   const safeReadLabel=/^(?:search|refresh|reload|view|preview|print|download|export|filter|history print|history export|mark wise ledger|grade wise ledger|mark entry ledger|student list|cancel|close|back|next|previous|logout)(?:\\b|\\s|$)/i;
   const mutationLabel=/\\b(?:add|save|delete|edit|update|import|restore|publish|issue|create|remove|clear|seed|sync|assign|generate missing|confirm|submit)\\b/i;
   const allowed=readActionIds.has(id)||(!mutationLabel.test(id+" "+label)&&safeReadLabel.test(label));
@@ -4331,7 +4331,7 @@ function openCdcAssessment(context = null) {
     <datalist id="cdcTopicSuggestions"></datalist>
     <datalist id="cdcUnitSuggestions"></datalist>
     <p data-cdc="unitCoverage" class="hint"></p>
-    <section data-cdc="annex3" hidden><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><div class="tablewrap"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Print / Save PDF</button><p data-cdc="printStatus" role="status" class="hint"></p></section>
+    <section data-cdc="annex3" hidden><div class="toolbar"><button type="button" class="btn alt" data-cdc="gridRead" id="cdcGridRead">Load / Refresh Records</button><span data-cdc="gridStatus" role="status" class="hint"></span></div><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><div class="tablewrap"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Print / Save PDF</button><p data-cdc="printStatus" role="status" class="hint"></p></section>
     <details data-cdc="catalogPanel"><summary>द्विभाषिक उपलब्धि सूची थप्नुहोस्</summary>
       <p class="hint">स्रोतबाट पुष्टि गरेका चार स्तम्भ Excel बाट प्रतिलिपि गर्नुहोस्। क्रम: नेपाली एकाइ, English unit, नेपाली उपलब्धि, English outcome। शीर्षक पङ्क्ति छोड्नुहोस्।</p>
       <textarea data-cdc="catalogText" aria-label="द्विभाषिक उपलब्धि सूची" rows="4" maxlength="1100000" style="width:100%"></textarea>
@@ -4386,11 +4386,71 @@ function openCdcAssessment(context = null) {
   // Older observations lack a stage and must not be silently classified.
   let annexObservations=[];
   let annexReadSelection=null;
+  let inlinePending=false;
+  const inlineRetry=new Map();
   // Revised curriculum (2082), printed p.3: implementation starts academic year 2084.
   const revisedPrimaryYear=/^\d{4}$/.test(year)&&Number(year)>=2084;
   const primaryRevisedForm=()=>revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics'?cdcRevisedMathForms[field('class').value+':'+field('unit').value]:null;
   const isPrimaryRubric=()=>!!primaryRevisedForm();
   const hasAnnexGrid=()=>!!context&&(isPrimaryRubric()||(Number(field('class').value)>=4&&['nepali','english','mathematics','socialstudies','science','healthphysicalcreativeart'].includes(cdcAssessmentSubjectKey(field('subject').value))));
+  // Enter a single stage in the official date/rating columns. Never overwrite a
+  // previous observation. Require an authoritative read before enabling entry.
+  const appendAnnexCells=(row,unit,title,alt,regular,support)=>{
+    const effective=support||regular;
+    const selection=schoolSelection(),selectionKey=JSON.stringify(selection);
+    const editable=!readOnly&&selection&&annexReadSelection===selectionKey;
+    const stages=[];
+    for(const [stage,previous] of [['regular',regular],['support',support]]){
+      const dateCell=row.insertCell(),ratingCell=row.insertCell();
+      dateCell.textContent=previous?.date??'';ratingCell.textContent=previous?.level??'';
+      if(!editable)continue;
+      const button=document.createElement('button');button.type='button';button.className='btn alt';button.dataset.cdcGridEdit=stage;
+      button.style.cssText='display:block;margin:3px auto;padding:4px 8px';button.textContent=previous?'Reassess':'Enter';
+      ratingCell.append(button);stages.push({stage,previous,dateCell,ratingCell,button});
+    }
+    const remarksCell=row.insertCell();remarksCell.textContent=effective?.feedback??'';
+    for(const {stage,previous,dateCell,ratingCell,button} of stages){
+      button.onclick=()=>{
+        if(inlinePending||!canShow()||selectionKey!==JSON.stringify(schoolSelection()))return;
+        // Single active editor: preserve the rest of the saved table.
+        const active=dialog.querySelector('[data-cdc-grid-editor]');
+        if(active){field('gridStatus').textContent='पहिले खुला मूल्याङ्कन Save वा Cancel गर्नुहोस्।';return;}
+        field('printForm').disabled=true;
+        const date=document.createElement('input');date.type='text';date.inputMode='numeric';date.maxLength=10;date.value=today();date.setAttribute('aria-label','Assessment date (B.S.)');date.style.width='110px';date.dataset.cdcGridEditor='date';
+        const level=document.createElement('select');level.setAttribute('aria-label','Achievement rating');level.style.minWidth='60px';level.dataset.cdcGridEditor='level';level.append(new Option('—',''),...[1,2,3,4].map(n=>new Option(String(n),String(n))));
+        const remarks=document.createElement('textarea');remarks.rows=2;remarks.maxLength=2000;remarks.placeholder='कैफियत / Remarks';remarks.value=previous?.feedback||'';remarks.dataset.cdcGridEditor='remarks';remarks.style.width='100%';
+        const save=document.createElement('button');save.type='button';save.className='btn';save.textContent='Save';save.dataset.cdcGridSave=stage;
+        const cancel=document.createElement('button');cancel.type='button';cancel.className='btn alt';cancel.textContent='Cancel';cancel.dataset.cdcGridCancel='true';
+        dateCell.replaceChildren(date);ratingCell.replaceChildren(level,save,cancel);remarksCell.replaceChildren(remarks);
+        const stillHere=()=>canShow()&&selectionKey===JSON.stringify(schoolSelection())&&row.isConnected;
+        cancel.onclick=()=>{if(!inlinePending){renderAnnex();field('gridStatus').textContent='';}};
+        save.onclick=async()=>{
+          if(inlinePending||!stillHere())return;
+          const raw=attendanceDigitsToEnglish(date.value).trim();
+          const normalized=raw.split('-').map((p,i)=>i?attendancePad(p):p).join('-');
+          let valid=false;try{valid=/^\d{4}-\d{1,2}-\d{1,2}$/.test(raw)&&attendanceAdToBs(attendanceBsToAd(normalized))===normalized;}catch{}
+          if(!valid||!['1','2','3','4'].includes(level.value)){field('gridStatus').textContent='मान्य मिति र १–४ अङ्क छान्नुहोस्।';return;}
+          const payload={...selection,unit,unitEn:field('unitEn').value.trim(),topic:title,topicAlt:alt||'',date:normalized,level:Number(level.value),method:'',evidence:'',feedback:remarks.value.trim(),stage,createdBy:owner};
+          const retryKey=JSON.stringify(payload);
+          const ref=inlineRetry.get(retryKey)||doc(collection(db,'cdc_observations'));
+          inlineRetry.set(retryKey,ref);
+          inlinePending=true;save.disabled=true;cancel.disabled=true;field('gridStatus').textContent='सुरक्षित गर्दै…';
+          try{
+            const role=(await getDocFromServer(doc(db,'user_roles',owner))).data();
+            const student=assessmentStudents.find(s=>s.id===selection.studentId);
+            if(!stillHere()||!student||!cdcTeacherAssignment(role,field('class').value,selection.subject,student))throw Error('Assignment unavailable');
+            try{await setDoc(ref,{...payload,createdAt:serverTimestamp()});}
+            catch(error){const existing=(await getDocFromServer(ref)).data();if(!existing||!Object.entries(payload).every(([k,v])=>existing[k]===v))throw error;}
+            inlineRetry.delete(retryKey);
+            if(stillHere()){await field('readSchool').onclick();field('gridStatus').textContent=annexReadSelection===selectionKey?'मूल्याङ्कन सुरक्षित भयो।':'सुरक्षित भयो; अभिलेख फेरि Load गर्नुहोस्।';}
+          }catch{if(stillHere())field('gridStatus').textContent='सुरक्षित भएको पुष्टि भएन। फेरि प्रयास गर्नुहोस्।';}
+          finally{inlinePending=false;if(stillHere()){save.disabled=false;cancel.disabled=false;}}
+        };
+        level.focus();
+      };
+    }
+  };
+  field('gridRead').onclick=()=>field('readSchool').onclick();
   const renderAnnex=()=>{
     const panel=field('annex3'),enabled=hasAnnexGrid(),en=language()==='en';
     panel.hidden=!enabled;field('stageRow').hidden=!enabled;
@@ -4434,7 +4494,7 @@ function openCdcAssessment(context = null) {
       const items=annexObservations.filter(item=>normalizeTitle(item.unit)===normalizeTitle(unit)&&item.topic===title);
       const regular=items.find(item=>item.stage==='regular'),support=items.find(item=>item.stage==='support');
       const effective=support||regular;
-      for(const value of [regular?.date,regular?.level,support?.date,support?.level,effective?.feedback])row.insertCell().textContent=value??'';
+      appendAnnexCells(row,unit,title,alt,regular,support);
       if(effective){total+=effective.level;filled++;}
     }
     const foot=field('annexFoot');foot.replaceChildren();
@@ -4460,7 +4520,7 @@ function openCdcAssessment(context = null) {
       const row=body.insertRow();row.insertCell().textContent=String(i+1);row.insertCell().textContent=content;
       const button=document.createElement('button');button.type='button';button.className='btn alt';button.textContent=localized(ne,en);button.onclick=()=>{field('topic').value=ne;load();};
       row.insertCell().append(button);
-      for(const v of [regular?.date,regular?.level,support?.date,support?.level,current?.feedback])row.insertCell().textContent=v??'';
+      appendAnnexCells(row,unit,ne,en,regular,support);
     }
     const foot=field('annexFoot');foot.replaceChildren();const max=4*form.rows.length;
     const complete=count===form.rows.length;
@@ -4590,6 +4650,7 @@ function openCdcAssessment(context = null) {
     annexObservations=[];
     annexReadSelection=null;
     field('printStatus').textContent='';
+    field('gridStatus').textContent='';
     renderAnnex();
     field('schoolStatus').textContent='';
     field('readSchool').disabled=!schoolSelection();
@@ -4598,7 +4659,7 @@ function openCdcAssessment(context = null) {
   // Print the selected, freshly read school record only. Never include editor
   // fields, other students, hidden UI, or an unconfirmed/stale snapshot.
   const buildAssessmentPrint=()=>{
-    if(!hasAnnexGrid()||!canShow()||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('annexRows').rows.length)return null;
+    if(inlinePending||dialog.querySelector('[data-cdc-grid-editor]')||!hasAnnexGrid()||!canShow()||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('annexRows').rows.length)return null;
     const doc=document.implementation.createHTMLDocument('CDC Assessment — Review copy');
     doc.documentElement.lang=language()==='en'?'en':'ne';
     const style=doc.createElement('style');
@@ -4609,6 +4670,7 @@ function openCdcAssessment(context = null) {
       const p=doc.createElement('p');p.textContent=field(name).textContent;doc.body.append(p);
     }
     const table=doc.importNode(field('annexTable'),true);table.removeAttribute('style');
+    table.querySelectorAll('[data-cdc-grid-edit]').forEach(button=>button.remove());
     table.querySelectorAll('button').forEach(button=>button.replaceWith(doc.createTextNode(button.textContent)));
     table.querySelectorAll('[data-cdc]').forEach(node=>node.removeAttribute('data-cdc'));
     table.removeAttribute('data-cdc');doc.body.append(table);
