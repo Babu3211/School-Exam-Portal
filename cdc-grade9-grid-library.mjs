@@ -75,6 +75,14 @@ export function grade9GridLibrary(register){
      return [types[i],...row,count,evidence.marksEach[i],count*evidence.marksEach[i]];
     }));
    }
+   const historical=entries.find(x=>x.historicalVisualReview)?.historicalVisualReview;
+   if(key==='math'&&historical){
+    add('Historical 2078 visual comparison: cognitive items / marks',['Area','Hours','K items / marks','U items / marks','A items / marks','HA items / marks','Question groups'],['Sets','Arithmetic','Mensuration','Algebra','Geometry','Statistics and Probability','Trigonometry'].map((name,i)=>[name,historical.workingHours[i],...historical.itemCounts[i].map((count,j)=>count+' / '+historical.levelMarks[i][j]),historical.groupCounts[i]]));
+   }
+   if(key==='science'&&historical){
+    add('Historical 2078 visual comparison: unit hours and marks',['Unit','Working hours','Marks'],historical.unitMarks.map((marks,i)=>[i+1,historical.workingHours[i],marks]));
+    add('Historical content-group marks',['Group','Marks'],historical.contentGroupMarks.map((marks,i)=>[i+1,marks]));
+   }
    if(evidence.unitMarks)add('Historical area/unit marks',['Unit','Marks'],numbered(evidence.unitMarks));
    if(evidence.questionCounts)add('Historical question distribution',['Type','Count','Marks each'],evidence.questionCounts.map((n,i)=>[(key==='science'?['MCQ','Very short','Short','Long']:['Very short','Short','Long'])[i],n,evidence.marksEach[i]]));
    if(evidence.cognitiveMarks)add('Historical cognitive marks',['K','U','A','HA'],[evidence.cognitiveMarks]);

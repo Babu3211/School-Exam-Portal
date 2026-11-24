@@ -223,3 +223,18 @@ assert.equal(mathVisual.currentEditionConfirmed,false);
 assert.equal(mathVisual.teacherReviewComplete,false);
 assert.equal(mathVisual.officialExamApproved,false);
 console.log('PASS Grade 9 Optional Mathematics all 72 original 2082 CDC grid cells visually matched; no release approval');
+
+const mathHistoricalVisual=register.sources.find(s=>s.retrievalEvidence?.resource==='11170').historicalVisualReview;
+const scienceHistoricalVisual=register.sources.find(s=>s.retrievalEvidence?.resource==='11167').historicalVisualReview;
+const crosscheckLevels=['knowledge','understanding','application','higher'];
+assert.deepEqual(mathRef.areas.map(a=>crosscheckLevels.map(l=>a.itemsByLevel[l])),mathHistoricalVisual.itemCounts);
+assert.deepEqual(mathRef.areas.map(a=>crosscheckLevels.map(l=>a.marksByLevel[l])),mathHistoricalVisual.levelMarks);
+assert.deepEqual(mathRef.areas.map(a=>a.groups),mathHistoricalVisual.groupCounts);
+assert.equal(mathHistoricalVisual.workingHours.reduce((n,x)=>n+x,0),160);
+assert.deepEqual(scienceRef.units.map(u=>u.marks),scienceHistoricalVisual.unitMarks);
+assert.deepEqual(scienceRef.contentGroups.map(g=>g.marks),scienceHistoricalVisual.contentGroupMarks);
+assert.deepEqual(scienceRef.groups.map(g=>g.levelCounts),scienceHistoricalVisual.typeLevelCounts);
+assert.deepEqual(scienceRef.cognitiveMarks,scienceHistoricalVisual.cognitiveMarks);
+assert.equal(scienceHistoricalVisual.workingHours.reduce((n,x)=>n+x,0),160);
+for(const e of [mathHistoricalVisual,scienceHistoricalVisual]){assert.equal(e.sourceYear,2078);assert.equal(e.currentEditionConfirmed,false);assert.equal(e.officialExamApproved,false);}
+console.log('PASS historical visual source cross-check for compulsory math and science, no current grid approval');
