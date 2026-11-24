@@ -1204,6 +1204,45 @@ for(const [unit,count,page] of [['हाम्रा वरपरका जी�
  assert.equal(seroPrintCount,1);
  assert.equal(binaryRecords.size,2);
 }
+// All twenty guide-layout previews: preserve main-outcome row spans and
+// separately merged four-indicator date/score blocks. No record writes.
+for(const grade of ['2','3']){
+ current.subjectAssignments=[{className:'Class '+grade,subject:'serophero',section:'A'}];
+ serverRole={...current};
+ w.getDocs=async()=>({docs:[{id:'sero-review-'+grade,data:()=>({class:'Class '+grade,section:'A',name:'Synthetic Review Student'})}]});
+ await w.loadCdcAssessmentPage();
+ choice('summaryClass',grade);choice('summarySubject','serophero');
+ const names=summaryRows().map(row=>row.cells[1].textContent);
+ const expected=verifiedSeroCounts[grade];
+ const pages=grade==='2'?[135,136,137,138,139,139,140,140,141,141]:[142,143,144,145,146,146,147,148,148,149];
+ for(const [i,unit] of names.entries()){
+  const summaryLink=summaryRows()[i].querySelector('a');
+  assert.ok(summaryLink.href.endsWith('#page='+pages[i]));
+  choice('unit',unit);
+  const rows=field('annexRows'),outcomes=[...rows.querySelectorAll('[data-cdc-guide-outcome]')];
+  assert.equal(field('annex3').hidden,false,unit);
+  assert.equal(rows.rows.length,expected[i][1],unit);
+  assert.equal(outcomes.length,expected[i][0],unit);
+  assert.equal(outcomes.reduce((n,cell)=>n+cell.rowSpan,0),expected[i][1]);
+  assert.equal(rows.rows[0].cells[0].rowSpan,expected[i][1]);
+  for(const stage of [0,1]){
+   const blocks=[...rows.querySelectorAll('[data-cdc-guide-block="'+stage+'"]')];
+   assert.equal(blocks.length,expected[i][1]/4);
+   assert.ok(blocks.every(cell=>cell.rowSpan===4));
+  }
+  assert.ok(field('annexStatus').querySelector('a').href.endsWith('#page='+pages[i]));
+  assert.equal(rows.querySelectorAll('input,select,button').length,0);
+  assert.equal(field('gridRead').hidden,true);
+  assert.equal(field('printForm').disabled,true);
+  await field('gridRead').onclick();field('printForm').onclick();
+  assert.equal(binaryRecords.size,2);
+  assert.equal(observations.size,beforeSero);
+  assert.equal(seroPrintCount,1);
+ }
+}
+current.subjectAssignments=[{className:'Class 1',subject:'serophero',section:'A'}];
+serverRole={...current};
+w.getDocs=async()=>({docs:[{id:'sero-1',data:()=>({class:'Class 1',section:'A',name:'Synthetic Student'})}]});
 w.currentSchoolSettings.academicYear='2084';
 await w.loadCdcAssessmentPage();
 for(const grade of ['2','3']){
