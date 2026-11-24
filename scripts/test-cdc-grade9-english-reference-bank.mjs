@@ -28,3 +28,14 @@ for(const v of [0,1]){
 }
 assert.equal(grade9EnglishReferenceBank({grade:8,subject}).questions.length,0);
 console.log('PASS English reference groups with explicit seen prose retrieval status');
+
+// Verify the reviewed contextual grammar alternatives remain unambiguous
+// in the intended past narrative and do not change the 11-mark grid.
+const museum=pack.questions.find(q=>q.slot==='contextual_mcq'&&q.passage.includes('old museum'));
+assert.ok(museum);
+assert.equal(museum.items[1].answer,'at');assert.ok(!museum.items[1].options.includes('by'));
+assert.equal(museum.items[8].answer,'was carrying');
+assert.match(museum.passage,/that day/);
+const wh=pack.questions.filter(q=>q.slot==='transformation').flatMap(q=>q.items).filter(x=>x.grammar==='wh_question');
+assert.equal(wh.length,2);assert.ok(wh.every(x=>!x.text.includes('underlined')&&x.text.includes('Rewrite as a question')));
+console.log('PASS targeted English grammar contextual agreement and clear WH-question instructions');

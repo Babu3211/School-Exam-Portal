@@ -64,3 +64,14 @@ assert.match(b.text,/विकल्पमध्ये/);
 assert.equal(b.readyForLive,false);
 assert.notEqual(buildGrade9ReferencePreview({...practiceArgs,previousSignature:b.signature,rng:()=>.61}).signature,b.signature);
 console.log('PASS 75-mark Nepali practice review preview, explicit original summary substitution, all optional choices, official exam still blocked');
+
+// Deliberately incorrect spellings are assessment inputs, not editing mistakes.
+const spellingEdits=p.questions.filter(q=>q.skill==='sentence_editing');
+assert.equal(spellingEdits.length,2);
+assert.ok(spellingEdits.some(q=>q.components.some(c=>c.text==='पानि'&&c.answer==='पानी')));
+assert.ok(spellingEdits.some(q=>q.components.some(c=>c.text==='जिवन'&&c.answer==='जीवन')));
+const classes=p.questions.filter(q=>q.skill==='word_class');
+assert.ok(classes.some(q=>q.passage.includes('(राम) विद्यालय जान्छ')));
+const grammar=p.questions.filter(q=>q.skill==='grammar_passage');
+assert.ok(grammar.every(q=>q.components.some(c=>c.text.includes('कारक र विभक्ति छुट्याउनुहोस्।'))));
+console.log('PASS targeted Nepali editorial corrections; intentionally incorrect test words preserved');

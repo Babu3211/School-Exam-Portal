@@ -16,7 +16,7 @@ const groupTopics=[
  ['आयतको क्षेत्रफल र लागत / Rectangle area and cost','वृत्तको परिधि र क्षेत्रफल / Circle circumference and area','घनाभको आयतन / Cuboid volume'],
  ['बहुपदी र खण्डीकरण / Polynomials and factorization','युगपत समीकरण / Simultaneous equations','क्षेत्रफल र द्विघात समीकरण / Area and quadratic equations'],
  ['त्रिभुजका भित्री र बाहिरी कोण / Triangle interior and exterior angles','पाइथागोरस प्रमेय / Pythagoras theorem','समानान्तर रेखा र कोण / Parallel lines and angles'],
- ['मध्यमान, मध्यक र विस्तार / Mean, median and range','बलको सम्भाव्यता / Probability of drawing balls'],
+ ['माध्य, मध्यक र विस्तार / Mean, median and range','बल छान्ने सम्भाव्यता / Probability of drawing balls'],
  ['समकोण त्रिभुजका अनुपात / Right-triangle trigonometric ratios']
 ];
 function groups(n){
@@ -84,8 +84,8 @@ function groups(n){
  g(6,0,'पाँच विद्यार्थीको तथ्याङ्क: '+data.join(', ')+'.','Data from five students: '+data.join(', ')+'.',
  p(K,1,'मध्यकको अर्थ लेख्नुहोस्।','Define median.','क्रमबद्ध तथ्याङ्कको बीचको मान।','Middle value of ordered data.'),
  p(U,2,'मध्यक र विस्तार निकाल्नुहोस्।','Find the median and range.','Median='+4*n+'; Range='+6*n+'−'+2*n+'='+4*n),
- p(A,2,'अङ्कगणितीय मध्यमान निकाल्नुहोस्।','Calculate the arithmetic mean.',data.join('+')+' = '+20*n+'; '+20*n+'/5='+4*n),
- p(H,1,'प्रत्येक मानमा 3 थप्दा मध्यमान कति बदलिन्छ?','How does the mean change if 3 is added to every value?','3 ले बढ्छ।','Increases by 3.')),
+ p(A,2,'अङ्कगणितीय माध्य निकाल्नुहोस्।','Calculate the arithmetic mean.',data.join('+')+' = '+20*n+'; '+20*n+'/5='+4*n),
+ p(H,1,'प्रत्येक मानमा 3 थप्दा माध्य कति बदलिन्छ?','How does the mean change if 3 is added to every value?','3 ले बढ्छ।','Increases by 3.')),
  g(6,1,'एउटा झोलामा '+base+' राता र '+height+' नीला समान आकारका बल छन्। एउटा बल अनियमित रूपमा निकालिन्छ।','A bag contains '+base+' red and '+height+' blue balls of equal size. One ball is drawn at random.',
  p(K,1,'सम्भाव्यताको सूत्र लेख्नुहोस्।','State the probability formula for equally likely outcomes.','अनुकूल परिणाम / कुल सम्भावित परिणाम','Favourable outcomes / total possible outcomes'),
  p(U,1,'कुल बल कति छन्?','How many balls are there?',base+height),
