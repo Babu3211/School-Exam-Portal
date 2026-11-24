@@ -408,6 +408,12 @@ try {
   await assertFails(setDoc(cdc('wrong-student'),{...observation,studentId:'cdc-test-b'}));
   await assertFails(setDoc(cdc('wrong-subject'),{...observation,subject:'English'}));
   await assertFails(setDoc(cdc('wrong-level'),{...observation,level:5}));
+  await assertSucceeds(setDoc(cdc('grid-stage'),{...observation,stage:'regular',evidence:'',method:''}));
+  await assertFails(setDoc(cdc('grid-without-stage'),{...observation,evidence:''}));
+  await assertFails(setDoc(cdc('grid-invalid-stage'),{...observation,stage:'invalid',evidence:''}));
+  await assertFails(setDoc(cdc('grid-wrong-section'),{...observation,stage:'regular',evidence:'',section:'B',studentId:'cdc-test-b'}));
+  await assertFails(updateDoc(cdc('grid-stage'),{level:4}));
+  await assertFails(deleteDoc(cdc('grid-stage')));
   await assertFails(updateDoc(cdc('valid'),{evidence:'Overwrite'}));
   await assertFails(deleteDoc(cdc('valid')));
   const adminCdcDb=testEnv.authenticatedContext(ADMIN).firestore();
