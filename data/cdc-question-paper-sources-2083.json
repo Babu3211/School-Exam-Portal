@@ -463,6 +463,28 @@
       "status": "official_CDC_library_old_model_50_government_archive_pdf_text_grid_40_requires_visual_and_current_2082_grid_reconciliation",
       "url": "https://lib.moecdc.gov.np/catalog/opac_css/index.php?id=13717&lvl=notice_display",
       "note": "CDC catalog identifies a 12-page 2078 Grade8 Science grid, bilingual Model Question and Answer Key. Dhangadhi government archive search-readable PDF contains 'grid 40' but model '50' within the Grade8 Science pages, and screenshot retrieval failed. Independent 2078 model synopsis reports 50 marks, 2 hours, 10 MCQ(1), 8 very short(1), 8 short(2), 4 long(4), 30 items and 11 unit areas. This record is historical reference ONLY. No verified 2083 Grid row is transcribed or approved; do not automatically use this for the current CDC exact generator."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "specification_grid",
+      "version": "२०८२",
+      "status": "official_CDC_publication_page_only_grid_rows_not_transcribed",
+      "url": "https://moecdc.gov.np/content/277/specialization-schedule-social-study--class-9-/",
+      "note": "Official CDC publication page located. Complete PDF unit/cognitive marks and grade 9 model-question allocation not yet independently transcribed. Source listing is not an approved exact examination blueprint."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "कार्यालय सञ्चालन तथा लेखा",
+      "kind": "specification_grid",
+      "version": "२०८१",
+      "status": "official_CDC_publication_page_only_grid_rows_not_transcribed",
+      "url": "https://moecdc.gov.np/content/276/specialization-table-2081-work-conduct-and-accounting/",
+      "note": "Official CDC publication page located. Complete PDF unit/cognitive marks and grade 9 model-question allocation not yet independently transcribed. Source listing is not an approved exact examination blueprint."
     }
   ],
   "completion": {
@@ -482,7 +504,8 @@
     "verifiedOptionalComputerGrid": "Official Grade 9/10 Computer Science grid PDFs transcribed unit/type/marks/cognitive levels for 50-mark paper; development only, source checked, teacher answer review required; other subjects not configured.",
     "optionalMath2082": "Official Grade 9/10 Optional Math source area totals and WCA/CCA composite question groups verified and bundled; exact automated grouped question generation pending. Not equivalent to simple MCQ/Short/Long.",
     "grade10OptionalMathModel2083": "Grade10 CDC 2083 publication confirmed. Secondary-hosted model PDF table compared against 2082 original government grid: all group counts, group marks, 6 area marks, cognitive percentage identical; original CDC 2083 PDF download not yet independently accessed. Printer follows CDC Q1(A-K), Q2-13, Q14-17.",
-    "grade8ScienceModelArchive2078": "Model 2078 four-group format 50/30 documented from CDC catalog, municipality archive text and independent synopsis; 11 unit weights staged for comparative audit. Municipality archive text contains Grid 40 vs Model 50 inconsistency; direct 2082 CDC primary PDF not visually available. Grade8 existing 55-item bank has 22 1-mark MCQs, 22 5-mark short and 11 10-mark long (missing 8×1 very short, 8×2 short, 4×4 long). CDC Exact remains blocked pending reconciliation, teacher review and bank expansion."
+    "grade8ScienceModelArchive2078": "Model 2078 four-group format 50/30 documented from CDC catalog, municipality archive text and independent synopsis; 11 unit weights staged for comparative audit. Municipality archive text contains Grid 40 vs Model 50 inconsistency; direct 2082 CDC primary PDF not visually available. Grade8 existing 55-item bank has 22 1-mark MCQs, 22 5-mark short and 11 10-mark long (missing 8×1 very short, 8×2 short, 4×4 long). CDC Exact remains blocked pending reconciliation, teacher review and bank expansion.",
+    "grade9AllSubjects": "Nine-subject audit covers 5 compulsory subjects and 4 known electives (actual school electives must be checked against School Settings). Government pages found for Nepali/English/Math/Science/Social, 2081 Accounting, 2082 Optional Economics, Optional Mathematics and Optional Computer Science. Only Computer and Optional Maths Grid transcriptions bundled, both need proper reviewed paper banks and teacher testing. Never deploy Grade9 question-paper claims until gate closes."
   },
   "practicePacks": [
     {
