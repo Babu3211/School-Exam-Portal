@@ -8618,6 +8618,16 @@ const cdcSeroGuideWorkingText={2:{
 // Release gate: only a visually verified, exact-wording theme may be approved.
 // Do not add a theme based on the working paraphrase alone.
 const cdcSeroGuideApproved=new Set();
+// Printed main-outcome numbers, not database IDs. PDF pp.135–149.
+// Class 2 has a duplicated printed 5 and no printed 6.
+const cdcSeroGuidePrintedNumbers={
+ '2':[[1,2,3,4,5,5],[7,8,9,10],[11,12,13],[14,15,16],[17,18],[19,20],[21,22],[23],[24,25],[26,27,28]],
+ '3':[[1,2,3,4],[5,6,7],[8,9,10],[11,12,13],[14],[15,16],[17,18],[19],[20,21],[22,23,24]]
+};
+function cdcSeroGuidePrintedNumber(grade,unit,i){
+ const themeIndex=cdcSeroferoUnits.findIndex(([name])=>name===unit);
+ return cdcSeroGuidePrintedNumbers[grade]?.[themeIndex]?.[i]??i+1;
+}
 function cdcSeroGuideEntryForm(grade,unit,year){
   if(year!=='2083'||!cdcSeroGuideApproved.has(grade+':'+unit))return null;
   const catalogue=cdcSeroferoGuideCounts[grade],source=catalogue?.[unit],wording=cdcSeroGuideWorkingText[grade]?.[unit];
@@ -8634,7 +8644,7 @@ function cdcSeroGuideEntryForm(grade,unit,year){
     if(!Number.isInteger(count)||count<=0||count%4||!g||g[1].length!==count||g[2].length!==count)return null;
     for(let j=0;j<count;j+=4){
       groups.push([g[0],g[1].slice(j,j+4),g[2].slice(j,j+4)]);
-      mainRows.push({first:j===0,index:i+1,span:count,offset:j});
+      mainRows.push({first:j===0,index:cdcSeroGuidePrintedNumber(grade,unit,i),span:count,offset:j});
     }
   }
   return {page:source.page,start,groups,mainRows,guideEntry:true};
@@ -9073,7 +9083,7 @@ function openCdcAssessment(context = null) {
       for(let j=0;j<count;j++){
         const row=body.insertRow();
         if(i===0&&j===0){const c=row.insertCell();c.rowSpan=total;c.textContent=unit;}
-        if(j===0){const c=row.insertCell();c.rowSpan=count;c.dataset.cdcGuideOutcome=String(i);c.textContent='उपलब्धि '+digits(i+1)+(wording?' — '+wording[i][0]:'');}
+        if(j===0){const c=row.insertCell();c.rowSpan=count;c.dataset.cdcGuideOutcome=String(i);c.textContent='उपलब्धि '+digits(cdcSeroGuidePrintedNumber(field('class').value,unit,i))+(wording?' — '+wording[i][0]:'');}
         row.insertCell().textContent=digits(j+1)+'. '+(wording?wording[i][1][j]:'सूचक — मूल PDF हेर्नुहोस्');
         if(j%4===0)block++;
         for(let stage=0;stage<2;stage++){
@@ -9083,14 +9093,22 @@ function openCdcAssessment(context = null) {
             const score=row.insertCell();score.rowSpan=4;score.dataset.cdcGuideBlock=String(stage);score.textContent='— / ४';
           }
         }
-        row.insertCell().textContent=wording?wording[i][2][j]:'मूल PDF हेर्नुहोस्';
+        const toolCell=row.insertCell(),tool=wording?wording[i][2][j]:'मूल PDF हेर्नुहोस्';
+        if(tool==='मूल फाराममा खाली'){toolCell.textContent='';toolCell.setAttribute('aria-label','मूल फाराममा खाली');}else toolCell.textContent=tool;
       }
     }
     const tr=foot.insertRow(),cell=tr.insertCell();cell.colSpan=10;
     cell.textContent='मुख्य उपलब्धि: '+digits(form.groups.length)+' | सूचक: '+digits(total)+' | अङ्कन खण्ड: '+digits(block)+' | कच्चा पूर्णाङ्क: '+digits(total);
+    appendSeroStageAverages(foot);
     field('annexSign').textContent='संरचना समीक्षा मात्र — विद्यार्थीको अङ्कन अभिलेख होइन।';
     const status=field('annexStatus');status.textContent=wording?'मूल मार्गदर्शनमा आधारित कार्यगत शब्दावली र साधन — हुबहु मिलान तथा सुरक्षित प्रविष्टि बाँकी। ':'मूल सूचकको शब्दावली, साधन र सुरक्षित प्रविष्टि मिलान बाँकी छ। ';
     const link=document.createElement('a');link.href=field('guidePdf13').href+'#page='+form.page;link.target='_blank';link.rel='noopener noreferrer';link.textContent='मूल CDC PDF — पृष्ठ '+digits(form.page);status.append(link);
+  }
+  // Two stage-specific averages mirror the source footer. A partially
+  // evaluated stage does not produce a complete average.
+  function appendSeroStageAverages(foot){
+    const row=foot.insertRow(),label=row.insertCell();label.colSpan=3;label.textContent='औसत अङ्क (चरणगत)';
+    return [0,1].map(stage=>{const cell=row.insertCell();cell.colSpan=3;cell.dataset.cdcSeroStageAverage=String(stage);cell.textContent='—';if(stage===1)row.insertCell();return cell;});
   }
   function renderSeroferoReference(form){
     const unit=field('unit').value,st=assessmentStudents.find(s=>s.id===field('student').value);
@@ -9142,16 +9160,18 @@ function openCdcAssessment(context = null) {
       finally{inlinePending=false;if(stillHere())button.disabled=false;}
     }
     const row=foot.insertRow(),label=row.insertCell(),value=row.insertCell();label.colSpan=3;label.textContent='पूर्वावलोकन — औसत अङ्क';value.colSpan=7;value.textContent='—';
+    const stageAverages=form.guideEntry?appendSeroStageAverages(foot):null;
     const updatePreview=()=>{
-      const completed=[];
+      const completed=[],stageScores=[[],[]];
       for(const [i,stages] of groupStates.entries()){
         const scores=stages.map(inputs=>cdcSeroferoIndicatorCount(inputs.map(input=>input.value)));
-        scores.forEach((score,j)=>{scoreCells[i][j].textContent=score===null?'—':digits(score);});
+        scores.forEach((score,j)=>{scoreCells[i][j].textContent=score===null?'—':digits(score);if(score!==null)stageScores[j].push(score);});
         // A partially entered remedial stage must not silently replace a complete regular stage.
         const remedialStarted=stages[1].some(input=>input.value!=='');
         const effective=remedialStarted?scores[1]:scores[0];
         if(effective!==null)completed.push(effective);
       }
+      if(stageAverages)stageScores.forEach((scores,j)=>{stageAverages[j].textContent=scores.length===form.groups.length?digits((scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(2)):'—';});
       const count=completed.length,total=completed.reduce((a,b)=>a+b,0);
       value.textContent=(count===form.groups.length?digits((total/count).toFixed(2)):'—')+' | पूरा: '+digits(count)+' / '+digits(form.groups.length);
     };
@@ -9176,7 +9196,8 @@ function openCdcAssessment(context = null) {
             const score=row.insertCell();score.rowSpan=4;score.dataset.cdcSeroScore=String(stage);scoreCells[i][stage]=score;
           }
         }
-        row.insertCell().textContent=tools[j];
+        const toolCell=row.insertCell();
+        if(tools[j]==='मूल फाराममा खाली'){toolCell.setAttribute('aria-label','मूल फाराममा खाली');}else toolCell.textContent=tools[j];
       }
     }
     if(loaded)for(let i=0;i<form.groups.length;i++)for(let j=0;j<2;j++)applyRecord(i,j,seroLatest(idFor(i),j?'support':'regular'));
@@ -9479,7 +9500,7 @@ function openCdcAssessment(context = null) {
     if(seroForm){
       // Reconstruct printable values solely from saved records, never from live controls.
       const digits=n=>String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]);
-      const effective=[];
+      const effective=[],stageScores=[[],[]];
       for(let stage=0;stage<2;stage++){
         const indicators=[...table.querySelectorAll('[data-cdc-sero-indicator="'+stage+'"]')];
         const dates=[...table.querySelectorAll('[data-cdc-sero-date="'+stage+'"]')];
@@ -9491,8 +9512,14 @@ function openCdcAssessment(context = null) {
           dates[i].replaceWith(doc.createTextNode(record?digits(record.date):'—'));
           const score=record?record.indicators.filter(Boolean).length:null;
           scores[i].textContent=score===null?'—':digits(score);
+          if(score!==null)stageScores[stage].push(score);
           if(stage===0||record)effective[i]=score;
         }
+      }
+      if(seroForm.guideEntry)for(const [stage,scores] of stageScores.entries()){
+        const cell=table.querySelector('[data-cdc-sero-stage-average="'+stage+'"]');if(!cell)return null;
+        cell.textContent=scores.length===seroForm.groups.length?digits((scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(2)):'—';
+        cell.removeAttribute('data-cdc-sero-stage-average');
       }
       table.querySelectorAll('[data-cdc-sero-save]').forEach(button=>button.remove());
       table.querySelectorAll('[data-cdc-sero-score]').forEach(cell=>cell.removeAttribute('data-cdc-sero-score'));
