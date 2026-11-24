@@ -514,3 +514,23 @@ assert.match(generatedPrint,/१७/);
 assert.equal(paperDisplayText('print(2 + 3)','ne','Optional Computer Science'),'print(2 + 3)');
 assert.equal(paperDisplayText('12 cm','en','Mathematics'),'12 cm');
 dom.window.close();
+
+// Real portal shell: library is collapsible, renders all tables and is read-only.
+const {renderGrade9GridLibrary}=await import('../cdc-grade9-grid-library.mjs');
+const gridRegister=JSON.parse(readFileSync(new URL('../data/cdc-question-paper-sources-2083.json',import.meta.url),'utf8'));
+const libraryRoot=$('qpGrade9GridLibraryContent');
+assert.ok(libraryRoot);assert.equal($('qpGrade9GridLibrary').open,false);
+renderGrade9GridLibrary(libraryRoot,gridRegister);
+assert.equal(libraryRoot.querySelectorAll(':scope > details').length,11);
+assert.ok(libraryRoot.querySelectorAll('table').length>=10);
+assert.ok([...libraryRoot.querySelectorAll('a')].every(a=>a.target==='_blank'&&a.rel.includes('noopener')));
+assert.equal(libraryRoot.querySelectorAll('input,button,form,script,iframe').length,0);
+assert.match(libraryRoot.textContent,/Current Grid verification pending|current Grid verification pending/);
+assert.match(libraryRoot.textContent,/Official curriculum only/);
+assert.match(libraryRoot.textContent,/Objective K\/U\/A\/HA/);
+assert.ok([...libraryRoot.querySelectorAll('a')].some(a=>a.href.includes('Opt.%20Math')));
+renderGrade9GridLibrary(libraryRoot,null);
+assert.match(libraryRoot.textContent,/not available offline yet/);
+renderGrade9GridLibrary(libraryRoot,gridRegister);
+assert.equal(libraryRoot.querySelectorAll(':scope > details').length,11);
+console.log('PASS actual Grid Library DOM, original-source links, offline fallback and read-only rendering');

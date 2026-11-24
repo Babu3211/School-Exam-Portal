@@ -130,6 +130,7 @@ jobs:
               "cdc-grade9-nepali-textbook-reference.mjs",
               "cdc-grade9-paper-grid-guard.mjs",
               "cdc-grade9-reference-preview.mjs",
+              "cdc-grade9-grid-library.mjs",
               "cdc-grade9-reference-readiness.mjs",
               "cdc-grade9-release-audit.mjs",
               "cdc-grade9-science-archive-audit.mjs",
