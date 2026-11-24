@@ -8615,6 +8615,30 @@ const cdcSeroGuideWorkingText={2:{
     ]
   ]
 }};
+// Release gate: only a visually verified, exact-wording theme may be approved.
+// Do not add a theme based on the working paraphrase alone.
+const cdcSeroGuideApproved=new Set();
+function cdcSeroGuideEntryForm(grade,unit,year){
+  if(year!=='2083'||!cdcSeroGuideApproved.has(grade+':'+unit))return null;
+  const catalogue=cdcSeroferoGuideCounts[grade],source=catalogue?.[unit],wording=cdcSeroGuideWorkingText[grade]?.[unit];
+  if(!source||!Array.isArray(wording)||wording.length!==source.groups.length)return null;
+  let start=1;
+  for(const [name] of cdcSeroferoUnits){
+    if(name===unit)break;
+    const prior=catalogue[name];if(!prior)return null;
+    start+=prior.groups.reduce((n,v)=>n+v/4,0);
+  }
+  const groups=[],mainRows=[];
+  for(const [i,count] of source.groups.entries()){
+    const g=wording[i];
+    if(!Number.isInteger(count)||count<=0||count%4||!g||g[1].length!==count||g[2].length!==count)return null;
+    for(let j=0;j<count;j+=4){
+      groups.push([g[0],g[1].slice(j,j+4),g[2].slice(j,j+4)]);
+      mainRows.push({first:j===0,index:i+1,span:count,offset:j});
+    }
+  }
+  return {page:source.page,start,groups,mainRows,guideEntry:true};
+}
 function cdcThemeMarkRows(grade,subject,year){
   grade=String(grade);
   const key=cdcAssessmentSubjectKey(subject),lower=Number(grade)<=3,revised=Number(year)>=2084;
@@ -8813,8 +8837,8 @@ function openCdcAssessment(context = null) {
   const primaryLegacyForm=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics'?cdcLegacyMathRubrics[field('class').value+':'+field('unit').value]:null;
   const primaryNepaliForm=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='nepali'?(field('class').value==='1'?cdcPrimaryNepaliForms[field('unit').value]:cdcNepaliThemeForms[field('class').value]?.[field('unit').value]||null):null;
   const primaryEnglishForm=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='english'?(cdcPrimaryEnglishForms[field('class').value]?.[field('unit').value]||null):null;
-  const primarySeroferoReference=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='serophero'?cdcSeroferoReferenceForms[field('class').value]?.[field('unit').value]:null;
-  const primarySeroGuideReview=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='serophero'?cdcSeroferoGuideCounts[field('class').value]?.[field('unit').value]:null;
+  const primarySeroferoReference=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='serophero'?(cdcSeroGuideEntryForm(field('class').value,field('unit').value,year)||cdcSeroferoReferenceForms[field('class').value]?.[field('unit').value]):null;
+  const primarySeroGuideReview=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='serophero'&&!primarySeroferoReference()?cdcSeroferoGuideCounts[field('class').value]?.[field('unit').value]:null;
   const isPrimaryRubric=()=>!!primaryRevisedForm()||!!primaryLegacyForm();
   const hasAnnexGrid=()=>!!context&&(!!primaryEnglishForm()||!!primaryNepaliForm()?.editable||isPrimaryRubric()||(Number(field('class').value)>=4&&['nepali','english','mathematics','socialstudies','science','healthphysicalcreativeart'].includes(cdcAssessmentSubjectKey(field('subject').value))));
   // Enter a single stage in the official date/rating columns. Never overwrite a
@@ -9135,8 +9159,9 @@ function openCdcAssessment(context = null) {
       for(const [j,indicator] of indicators.entries()){
         const row=body.insertRow();
         if(i===0&&j===0){const c=row.insertCell();c.rowSpan=form.groups.length*4;c.textContent=unit;}
-        if(j===0){const c=row.insertCell();c.rowSpan=4;c.textContent=digits(form.start+i)+'. '+title;}
-        row.insertCell().textContent=digits(j+1)+'. '+indicator;
+        const main=form.mainRows?.[i];
+        if(j===0&&(!main||main.first)){const c=row.insertCell();c.rowSpan=main?.span||4;c.textContent=digits(main?.index??form.start+i)+'. '+title;}
+        row.insertCell().textContent=digits((main?.offset||0)+j+1)+'. '+indicator;
         for(let stage=0;stage<2;stage++){
           const cell=row.insertCell(),select=document.createElement('select');
           select.dataset.cdcSeroIndicator=String(stage);select.setAttribute('aria-label',(stage?'थप सहायता: ':'नियमित: ')+indicator);
@@ -9529,6 +9554,7 @@ function openCdcAssessment(context = null) {
   field('saveSchool').onclick=async()=>{
     const selection=schoolSelection();
     if(readOnly||schoolSavePending||!selection||!canShow()) return;
+    if(primarySeroGuideReview()||primarySeroferoReference()?.guideEntry){field('status').textContent='यस थिमको चार-सूचक फारामबाट मात्र मूल्याङ्कन सुरक्षित गर्नुहोस्।';return;}
     const status=field('status');
     const savingKey=key();
     const isCurrent=()=>canShow()&&key()===savingKey;
@@ -9834,6 +9860,7 @@ function openCdcAssessment(context = null) {
   for(const name of ['evidence','feedback']) field(name).readOnly=readOnly;
   field('save').onclick=async()=>{
     if(auth.currentUser?.uid!==owner||readOnly||field('save').disabled) return;
+    if(primarySeroGuideReview()||primarySeroferoReference()?.guideEntry){field('status').textContent='यस थिमको चार-सूचक फारामबाट मात्र मूल्याङ्कन सुरक्षित गर्नुहोस्।';return;}
     if(!field('topic').value.trim()||!field('evidence').value.trim()) {
       field('status').textContent='सिकाइ उपलब्धि र देखिएको प्रमाण लेख्नुहोस्।';return;
     }
