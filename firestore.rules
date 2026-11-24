@@ -404,7 +404,8 @@ service cloud.firestore {
         data.topic is string && data.topic.size() > 0 && data.topic.size() <= 180 &&
         data.topicAlt is string && data.topicAlt.size() <= 180 &&
         data.method is string && data.method.size() <= 180 &&
-        data.evidence is string && data.evidence.size() > 0 && data.evidence.size() <= 2000 &&
+        data.evidence is string && data.evidence.size() <= 2000 &&
+        (data.evidence.size() > 0 || data.keys().hasAny(['stage'])) &&
         data.feedback is string && data.feedback.size() <= 2000 &&
         data.createdBy == request.auth.uid && data.createdAt == request.time;
     }
