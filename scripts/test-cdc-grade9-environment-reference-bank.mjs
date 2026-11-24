@@ -26,3 +26,12 @@ assert.equal(bank({grade:8,subject}).questions.length,0);
 console.log('PASS environment school-model 75-mark bilingual review drafts, 9 units, two distinct sets in three languages; official guard retained');
 
 console.log('PASS historic CDC SEE aggregate comparison only; current Grade 9 Environment Grid remains unapproved.');
+
+// Complementary one-mark variants must not ask for the same answer in the same unit.
+for(const unit of p.units){
+ const items=p.questions.filter(q=>q.unitId===unit.id&&q.marks===1);
+ assert.equal(items.length,2);
+ assert.notEqual(items[0].answerEn.toLowerCase().trim(),items[1].answerEn.toLowerCase().trim());
+ assert.notEqual(items[0].answer.trim(),items[1].answer.trim());
+}
+console.log('PASS distinct complementary one-mark environment questions in every unit');

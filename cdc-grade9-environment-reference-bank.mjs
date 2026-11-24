@@ -5,9 +5,9 @@
 import {grade9EnvironmentOriginalBank} from './cdc-grade9-environment-original-practice.mjs';
 import {cdcSubjectKey} from './cdc-grid-source-index.mjs';
 const extra=[
- ['अजैविक वातावरणीय घटकको एउटा उदाहरण दिनुहोस्।','Give one example of an abiotic environmental component.','पानी।','Water.'],
- ['उत्पादक जीवको एउटा उदाहरण दिनुहोस्।','Give an example of a producer.','हरियो घाँस।','Green grass.'],
- ['नवीकरणीय प्राकृतिक स्रोतको एउटा उदाहरण दिनुहोस्।','Give an example of a renewable natural resource.','सौर्य ऊर्जा।','Solar energy.'],
+ ['वातावरणका जैविक घटक भनेका के हुन्?','What are biotic components of the environment?','वातावरणका जीवित घटकहरू।','The living components of the environment.'],
+ ['खाद्य शृङ्खलामा अपघटकको एउटा उदाहरण दिनुहोस्।','Give one example of a decomposer in a food chain.','ढुसी।','A fungus.'],
+ ['अनवीकरणीय प्राकृतिक स्रोतको एउटा उदाहरण दिनुहोस्।','Give one example of a nonrenewable natural resource.','कोइला।','Coal.'],
  ['जल प्रदूषणको एउटा स्रोत लेख्नुहोस्।','Name one source of water pollution.','अप्रशोधित ढल।','Untreated sewage.'],
  ['जलवायु परिवर्तन अनुकूलनको एउटा उपाय लेख्नुहोस्।','State one climate adaptation measure.','खडेरी सहने बाली लगाउने।','Plant drought-tolerant crops.'],
  ['दिगो उपभोगको एउटा अभ्यास लेख्नुहोस्।','State one sustainable consumption practice.','सामग्री पुनः प्रयोग गर्नु।','Reuse materials.'],

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v120-science-circuit-figures';
+const CACHE_NAME = 'smss-pwa-v121-environment-distinct-items';
 const APP_SHELL = [
   './',
   './index.html',
