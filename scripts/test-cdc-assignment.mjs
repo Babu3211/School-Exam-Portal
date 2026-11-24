@@ -74,7 +74,7 @@ Object.assign(w,{
     assert.equal(name,'cdc_observations');
     assert.deepEqual(Object.fromEntries(filters.map(([name,op,value])=>{assert.equal(op,'==');return [name,value];})),{
       studentId:field('student').value,className:({three:'Class 3',primary:'Class 5'})[field('student').value]||field('class').value,subject:field('subject').value,
-      section:'A',academicYear:w.currentSchoolSettings.academicYear,period:field('period').value
+      section:'A',academicYear:w.currentSchoolSettings.academicYear,...(filters.some(([key])=>key==='period')?{period:field('period').value}:{})
     });
     if(readSchool) await readSchool.promise;
     return {docs:[...observations.keys()].filter(path=>filters.every(([key,,value])=>observations.get(path)[key]===value)).map(recordData)};
@@ -390,6 +390,27 @@ assert.match(field('gridStatus').textContent,/सुरक्षित भयो
 assert.match(field('annexRows').rows[1].textContent,/Synthetic remark/);
 assert.equal(field('printForm').disabled,false);
 console.log('Direct table date/rating entry, optional remarks and immutable school save passed');
+await field('readProgress').onclick();
+assert.equal(field('annualRows').rows.length,7);
+assert.deepEqual([...field('annualRows').rows].map(row=>Number(row.cells[2].textContent)),[5,5,5,5,5,3,4]);
+assert.equal(field('annualRows').rows[0].cells[3].textContent,'1');
+assert.equal(field('annualRows').rows[0].cells[4].textContent,'B+ (3.2)');
+assert.match(field('annualRows').rows[0].cells[5].textContent,/75\.00%/);
+assert.equal(field('annualRows').rows[1].cells[4].textContent,'—');
+const annualCalc=w.eval('cdcAnnualSubjectAchievement');
+for(const [level,grade,point] of [[1,'NG',null],[2,'C+',2.4],[3,'B+',3.2],[4,'A+',4]]){
+ const result=annualCalc([{unit:'U',topic:'T',level,date:'2083-01-01'}],[['U','T']]);
+ assert.equal(result.grade,grade);assert.equal(result.point,point);
+}
+const distinct=annualCalc([
+ {unit:'U',topic:'T',level:1,date:'2083-01-01'},
+ {unit:'U',topic:'T',level:4,date:'2083-01-02'},
+ {unit:'V',topic:'T',level:2,date:'2083-01-01'},
+ {unit:'V',topic:'unknown',level:4,date:'2083-01-01'}
+],[['U','T'],['V','T'],['W','T']]);
+assert.equal(distinct.assessed,2);assert.equal(distinct.total,6);assert.equal(distinct.percentage,75);assert.equal(distinct.complete,false);
+assert.equal(annualCalc([],[['U','T']]).grade,null);
+console.log('CDC annual progress credit hours, grade scale, distinct outcomes and unassigned subjects passed');
 for(const [subject,unit,count] of [
   ['Mathematics','ज्यामिति',8],
   ['Social Studies and Human Values Education','हामी र हाम्रो समुदाय',8],
