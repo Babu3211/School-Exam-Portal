@@ -17,3 +17,9 @@ This is a reference register for continuing PR #81 without redoing previously ma
 
 ## Release guard
 Keep source documents distinct by grade band and year; do not relabel draft paraphrases as exact CDC transcription. The source register and reference links do not constitute verification of every digital assessment form. Preserve existing student data, role restrictions, and V46 production. Keep PR #81 in draft until source, print, persistence, and regression checks are complete.
+
+## 2026-11-24 — alternative curriculum copy, Class 1 Our Surroundings
+- Alternate CDC curriculum copy: https://www.collegenp.com/uploads/pdf/2020/03/syllabus-for-compulsory-subjects-from-grade-one-to-three-2076.pdf
+- Annex 3(d) screenshots: PDF viewer page 145 (printed 138), school: 2 main outcomes, 12 indicators; page 148 (printed 141), creation: 2 main outcomes, 12 indicators; page 150 (printed 143), communication and market: 2 main outcomes, 8 indicators; page 151 (printed 144), immediate world: 3 main outcomes, 8 indicators.
+- The final sample shows irregular indicator group sizes (8+4 and 4+1+3). Do not use the existing four-boolean record shape or fabricate missing indicators for these samples. These counts are reference-only pending comparison with the assessment guide. Class 1 subtotal across ten themes in current mixed-source catalogue: 26 main outcomes, raw maximum 104, 108 indicators; not an official certified total.
+- Printed page 144 explicitly limits the curriculum sample forms to Class 1; use the separate assessment guide for Classes 2–3 and the applicable local curriculum for local subject assessment. Do not extrapolate counts.
