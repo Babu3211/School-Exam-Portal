@@ -449,8 +449,28 @@ try {
     wrongSection:{studentId:'sero-test-b',section:'B'}, inactive:{studentId:'sero-test-inactive'},
     wrongSubject:{subject:'Mathematics'}, wrongYear:{academicYear:'2084'},
     wrongStage:{stage:'other'}, wrongAuthor:{createdBy:cdcUid}, badId:{outcomeId:'other'},
-    badDate:{date:'2083-13-01'}
+    badDate:{date:'2083-13-01'},
+    wrongGradeId:{outcomeId:'cdc2076-g2-1'},
+    outOfBounds:{outcomeId:'cdc2076-g1-99'},
+    wrongThemeId:{outcomeId:'cdc2076-g1-6'},
+    reviewOnlyTheme:{unit:'हाम्रो वातावरण',outcomeId:'cdc2076-g1-18'},
+    mismatchedTheme:{unit:'हाम्रो समुदाय',outcomeId:'cdc2076-g1-1'}
   })) await assertFails(setDoc(seroRef(id),{...seroData,...patch}));
+  // Legitimate IDs at the boundaries of all three enabled themes.
+  for(const [unit,ids] of [['म र मेरो परिवार',[1,5]],['मेरो दैनिक जीवन',[6,9]],['हाम्रो समुदाय',[10,12]]]){
+    for(const n of ids)await assertSucceeds(setDoc(seroRef('valid-boundary-'+n),{...seroData,unit,outcomeId:'cdc2076-g1-'+n}));
+  }
+  // Assigned Class 2/3 teachers cannot bypass the draft source approval gate.
+  await testEnv.withSecurityRulesDisabled(async context=>{
+    const d=context.firestore();
+    await setDoc(doc(d,'user_roles',seroUid),{active:true,roles:['subject_teacher'],
+      subjectAssignmentKeys:[1,2,3].map(g=>g+'::'+seroSubject),
+      subjectAssignmentSectionKeys:[1,2,3].map(g=>g+'::'+seroSubject+'::A')});
+    for(const g of [2,3])await setDoc(doc(d,'students','sero-g'+g),{class:String(g),section:'A',active:true});
+  });
+  for(const g of [2,3]){
+    await assertFails(setDoc(seroRef('unapproved-g'+g),{...seroData,studentId:'sero-g'+g,className:String(g),outcomeId:'cdc2076-g'+g+'-1'}));
+  }
   await assertFails(updateDoc(seroRef('regular'),{indicators:[true,true,true,true]}));
   await assertFails(deleteDoc(seroRef('regular')));
   await assertFails(getDoc(seroRef('regular',cdcDb)));
