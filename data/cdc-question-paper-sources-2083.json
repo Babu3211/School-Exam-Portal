@@ -1318,6 +1318,40 @@
       "catalogRow": 33,
       "officialGrid": false,
       "note": "User-provided Khadgakali Secondary School CDC grid index, row 33. Page content verified 2026-11-24; school reports links updated 2026-07-20. Individual download buttons were not exposed by web extraction. Do not infer exact grid rows or approval from index."
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "ऐच्छिक वातावरण विज्ञान",
+      "kind": "historical_CDC_SEE_grid_school_mirror",
+      "version": "2076 first edition",
+      "status": "historical_SEE_aggregate_text_checked_visual_fetch_forbidden_not_grade9_approval",
+      "url": "https://veda-app.s3.ap-south-1.amazonaws.com/assets/142/downloads/2023-05-22/XMykfhgIsH60lcrs-1684763382.pdf",
+      "note": "CDC-authored optional-subject collection, printed pp.69–70. Text extraction confirms 75 marks, 135 minutes, 11 very short x1, 8 short x5, 3 long x8. Model explicitly describes secondary education examination (SEE), not current Grade 9. Historical alternatives: environmental pollution long answer; environmental/public health and ecology short answers. Grade 9 school 2083 syllabus corroborates aggregate pattern only; its ten-unit outline differs from current nine-unit CDC Grade 9 textbook. Do not transfer old unit/cognitive allocation or alternatives without current Grade 9 evidence. Visual PDF fetch returned 403.",
+      "officialGrid": false,
+      "referenceCrosscheck": {
+        "grade9AggregateOnly": true,
+        "currentGrade9Approved": false,
+        "visualReviewComplete": false,
+        "fullMarks": 75,
+        "durationMinutes": 135,
+        "questionCounts": [
+          11,
+          8,
+          3
+        ],
+        "marksEach": [
+          1,
+          5,
+          8
+        ],
+        "sectionMarks": [
+          11,
+          40,
+          24
+        ]
+      }
     }
   ]
 }

@@ -9,10 +9,20 @@ for(const language of ['ne','en','both']){
  const args={grade,subject,fullMarks:75,durationMinutes:135,language,questions:p.questions,selectedTopicIds,rng:()=>.31};
  const a=plan(args),b=plan({...args,previousSignature:a.signature,rng:()=>.71});
  assert.equal(a.ready,true,a.reason);assert.equal(b.ready,true,b.reason);assert.notEqual(a.signature,b.signature);
- for(const r of [a,b]){assert.equal(r.paper.questions.length,22);assert.equal(r.paper.questions.reduce((n,q)=>n+q.marks,0),75);assert.equal(new Set(r.paper.questions.map(q=>q.topicId)).size,9);assert.equal(r.currentCdcExactApproved,false);assert.throws(()=>assertGrade9ExamPaperMatches(r.paper),/verified subject/);}
+ for(const r of [a,b]){assert.equal(r.paper.questions.length,22);assert.equal(r.paper.questions.reduce((n,q)=>n+q.marks,0),75);
+ // CDC 2076 SEE optional Environment Grid pp.69–70 matches the
+ // Grade 9 school-model aggregate only. Never transfer old SEE unit
+ // and cognitive allocations or certify the present Grade 9 Grid.
+ const types=['very_short','short','long'];
+ assert.deepEqual(types.map(type=>r.paper.questions.filter(q=>q.questionType===type).length),[11,8,3]);
+ assert.deepEqual(types.map(type=>r.paper.questions.filter(q=>q.questionType===type).reduce((sum,q)=>sum+q.marks,0)),[11,40,24]);
+ assert.equal(r.paper.durationMinutes,135);
+ assert.equal(r.paper.referenceOnly,true);assert.equal(new Set(r.paper.questions.map(q=>q.topicId)).size,9);assert.equal(r.currentCdcExactApproved,false);assert.throws(()=>assertGrade9ExamPaperMatches(r.paper),/verified subject/);}
  const preview=buildGrade9ReferencePreview(args);assert.equal(preview.ready,true);assert.match(preview.text,/School model aggregate pattern only/);
  assert.equal(preview.readyForLive,false);assert.equal(preview.groupCount,22);
  assert.equal(plan({...args,selectedTopicIds:selectedTopicIds.slice(0,2)}).ready,false);
 }
 assert.equal(bank({grade:8,subject}).questions.length,0);
 console.log('PASS environment school-model 75-mark bilingual review drafts, 9 units, two distinct sets in three languages; official guard retained');
+
+console.log('PASS historic CDC SEE aggregate comparison only; current Grade 9 Environment Grid remains unapproved.');
