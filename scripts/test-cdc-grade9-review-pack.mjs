@@ -42,7 +42,11 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
    assert.doesNotMatch(result.text,/Option A:|OR \/ अथवा B:/);
    assert.doesNotMatch(result.text,/[0-9]/);
   }
-  if(subject==='English')assert.match(result.text,/सामान्य निर्देशन: प्रश्न ध्यानपूर्वक पढ्नुहोस्/);
+  if(subject==='English'){
+   assert.match(result.text,/General instructions: Read each question carefully/);
+   assert.doesNotMatch(result.text,/[\u0900-\u097f]/u);
+   assert.doesNotMatch(result.answerText,/[\u0900-\u097f]/u);
+  }
   assert.ok(result.answerCount>=count,subject+' answer coverage');
   assert.doesNotMatch(result.answerText,/\bundefined\b/);
   previousSignature=result.signature;
@@ -110,13 +114,13 @@ for(const r of records){
  const key=r.html.slice(endSummary+'</summary>'.length,-'</details>'.length);
  assert.ok(questions.trim()&&key.trim());
  const ne=r.language==='ne',name=paperSubjectLabel(r.subject,r.language),digits=x=>paperDigits(x,r.language);
- const meta='<h1>'+esc(name)+(ne?' — सेट ':' — Set ')+digits(r.set)+'</h1>'+warning+'<p>'+(ne?'कक्षा ९':'Grade 9')+' · '+esc(r.status)+' · '+digits(r.fullMarks)+(ne?' अङ्क · ':' marks · ')+digits(r.durationMinutes)+(ne?' मिनेट':' minutes')+' · '+esc(r.language)+'</p>';
+ const meta='<h1>'+esc(name)+(ne?' — सेट ':' — Set ')+digits(r.set)+'</h1>'+(r.language==='en'?'<aside>REVIEW ONLY — NOT FOR EXAM</aside>':warning)+'<p>'+(ne?'कक्षा ९':'Grade 9')+' · '+esc(r.status)+' · '+digits(r.fullMarks)+(ne?' अङ्क · ':' marks · ')+digits(r.durationMinutes)+(ne?' मिनेट':' minutes')+' · '+esc(r.language)+'</p>';
  const back='<a href="../grade9-teacher-review.html">All subjects</a>';
- const footer='<p class="print-note">SMSS — REVIEW ONLY — NOT FOR EXAM / सन्दर्भ अभ्यास मात्र</p>';
+ const footer='<p class="print-note">SMSS — REVIEW ONLY — NOT FOR EXAM'+(r.language==='en'?'':' / सन्दर्भ अभ्यास मात्र')+'</p>';
  const questionPage=page(r.subject+' — Set '+r.set,'<nav>'+back+'<a href="'+r.answerPath.split('/').at(-1)+'">Teacher answer key</a></nav>'+meta+'<p class="screen-only">Use your browser Print or Save as PDF for this single review draft. Do not use it as an approved examination.</p><section class="review-paper-body">'+questions+'</section><p>Source: '+esc(r.sourceUrl||'See repository source register')+'</p>'+footer);
  const answerPage=page(r.subject+' — Set '+r.set+' — answer review','<nav>'+back+'<a href="'+r.paperPath.split('/').at(-1)+'">Question paper</a></nav>'+meta+'<h2>Indicative answer key — teacher review only</h2><section class="review-paper-body">'+key+'</section>'+footer);
  for(const [name,html] of [[r.paperPath,questionPage],[r.answerPath,answerPage]]){
-  noExecutable(html);assert.ok(html.includes('REVIEW ONLY — NOT FOR EXAM'));assert.ok(html.includes('print-note'));files.push([name,html]);
+  noExecutable(html);if(r.language==='en')assert.doesNotMatch(html,/[\u0900-\u097f]/u,'English export must be English only');assert.ok(html.includes('REVIEW ONLY — NOT FOR EXAM'));assert.ok(html.includes('print-note'));files.push([name,html]);
  }
  assert.ok(!questionPage.includes('Teacher answer review</summary>'));
  assert.ok(!questionPage.includes('INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY'));

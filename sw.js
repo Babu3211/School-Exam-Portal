@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v116-language-editorial-review';
+const CACHE_NAME = 'smss-pwa-v117-english-only-review';
 const APP_SHELL = [
   './',
   './index.html',

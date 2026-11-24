@@ -59,6 +59,9 @@ const ev=build(ea);
 assert.equal(ev.ready,true,ev.reason);assert.equal(ev.groupCount,10);assert.match(ev.text,/ORIGINAL PRACTICE — not a seen textbook extract/);
 assert.notEqual(build({...ea,previousSignature:ev.signature,rng:()=>.63}).signature,ev.signature);
 assert.equal(ev.readyForLive,false);
+assert.match(ev.text,/General instructions: Read each question carefully/);
+assert.doesNotMatch(ev.text,/[\u0900-\u097f]/u,'English paper must contain no Nepali text');
+assert.doesNotMatch(ev.answerText,/[\u0900-\u097f]/u,'English answer key must contain no Nepali text');
 console.log('PASS offline English full reference practice, explicit original reading replacement, official gate unchanged');
 
 // The pack test checks all six reference subjects, two distinct sets and answer coverage.

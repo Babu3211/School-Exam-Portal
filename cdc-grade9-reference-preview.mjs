@@ -34,10 +34,10 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  const p=result.paper,groups=p.groups||p.questions;
  if(!Array.isArray(groups))throw Error('Missing reference groups');
  const choose=(ne,en)=>key==='english'||language==='en'?String(en||ne||''):language==='ne'?String(ne||en||''):[ne,en].filter(Boolean).join(' / ');
- const lines=['REFERENCE DRAFT — NOT FOR EXAM / सन्दर्भ समीक्षा मात्र',language==='ne'?'कक्षा ९ · '+paperSubjectLabel(subject,language)+' · पूर्णाङ्क: '+p.fullMarks+' · समय: '+p.durationMinutes+' मिनेट':'Grade 9 · '+subject+' · '+p.fullMarks+' marks · '+p.durationMinutes+' minutes','Current CDC Grid approval and teacher review pending.',result.referenceLabel||'',''];
- const answers=['INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY / उत्तरकुञ्जिका समीक्षा मात्र',(language==='ne'?'कक्षा ९ · '+paperSubjectLabel(subject,language):'Grade 9 · '+subject),'Not an official CDC marking scheme. Review model answers and partial credit before use.',''];
+ const lines=[(key==='english'?'REFERENCE DRAFT — NOT FOR EXAM':'REFERENCE DRAFT — NOT FOR EXAM / सन्दर्भ समीक्षा मात्र'),language==='ne'?'कक्षा ९ · '+paperSubjectLabel(subject,language)+' · पूर्णाङ्क: '+p.fullMarks+' · समय: '+p.durationMinutes+' मिनेट':'Grade 9 · '+subject+' · '+p.fullMarks+' marks · '+p.durationMinutes+' minutes','Current CDC Grid approval and teacher review pending.',result.referenceLabel||'',''];
+ const answers=[(key==='english'?'INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY':'INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY / उत्तरकुञ्जिका समीक्षा मात्र'),(language==='ne'?'कक्षा ९ · '+paperSubjectLabel(subject,language):'Grade 9 · '+subject),'Not an official CDC marking scheme. Review model answers and partial credit before use.',''];
  const figures=[],starts=[];
- if(key==='english')lines.push('सामान्य निर्देशन: प्रश्न ध्यानपूर्वक पढ्नुहोस्। तोकिएको अङ्क र निर्देशनअनुसार उत्तर अङ्ग्रेजीमा लेख्नुहोस्।','General instructions: Read each question carefully and answer in English as directed.','');
+ if(key==='english')lines.push('General instructions: Read each question carefully and answer in English as directed.','');
  let answerCount=0;
  const answer=(label,value,marks)=>{
   const text=String(value??'').trim();

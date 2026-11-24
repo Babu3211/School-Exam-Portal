@@ -285,7 +285,7 @@ function applyGrade9LanguagePolicy(){
  for(const option of select.options)option.disabled=!!required&&option.value!==required;
  select.disabled=!!required;
  if(required)select.value=required;
- if(hint)hint.textContent=required==="ne"?"नेपाली मात्र — विद्यालयको भाषा नियम":required==="both"?"नेपाली र English दुवै — एउटै प्रश्न, एउटै अङ्कभार":required==="en"?"English assessment: मूल प्रश्न English मा, सामान्य निर्देशन नेपालीमा पनि।":"";
+ if(hint)hint.textContent=required==="ne"?"नेपाली मात्र — विद्यालयको भाषा नियम":required==="both"?"नेपाली र English दुवै — एउटै प्रश्न, एउटै अङ्कभार":required==="en"?"English only — questions and instructions.":"";
 }
 function selectedTopicIds() {
   return [...document.querySelectorAll("[data-qp-topic]:checked")].map(x => x.value);
