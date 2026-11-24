@@ -177,12 +177,15 @@ try{
   const {context,page,errors}=await newSession();
   try{
    await page.goto(origin+'/admin.html');
-   await page.locator('#connect').click();await wait(page,()=>!document.getElementById('login').disabled);
+   await wait(page,()=>!document.getElementById('login').disabled);
+   assert.equal(await page.locator('#adminArea').isVisible(),false);
+   assert.equal(await page.locator('#connect').isVisible(),false);
    await page.locator('#email').fill(email('platform-admin'));await page.locator('#password').fill(password);
    await page.locator('#login').click();await wait(page,()=>!document.getElementById('adminArea').hidden);
    await page.locator('#newAdminAccount summary').click();await page.locator('#newAdminEmail').fill(newEmail);await page.locator('#newAdminPassword').fill(password);
    page.once('dialog',dialog=>dialog.accept());await page.locator('#createAdminAccount').click();
-   await wait(page,()=>document.getElementById('adminUid').value.length>=6&&!document.getElementById('register').disabled);
+   try{await wait(page,()=>document.getElementById('adminUid').value.length>=6&&!document.getElementById('register').disabled)}catch(error){throw Error('Synthetic account creation failed: '+await page.locator('#accountStatus').textContent(),{cause:error})}
+   assert.equal(await page.locator('#superLoginFields').isVisible(),false);
    const newUid=await page.locator('#adminUid').inputValue();
    assert.equal((await admin.getUserByEmail(newEmail)).uid,newUid);
    assert.equal(await page.locator('#newAdminPassword').inputValue(),'');
