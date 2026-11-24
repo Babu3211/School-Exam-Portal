@@ -238,3 +238,15 @@ assert.deepEqual(scienceRef.cognitiveMarks,scienceHistoricalVisual.cognitiveMark
 assert.equal(scienceHistoricalVisual.workingHours.reduce((n,x)=>n+x,0),160);
 for(const e of [mathHistoricalVisual,scienceHistoricalVisual]){assert.equal(e.sourceYear,2078);assert.equal(e.currentEditionConfirmed,false);assert.equal(e.officialExamApproved,false);}
 console.log('PASS historical visual source cross-check for compulsory math and science, no current grid approval');
+
+// A ministry revision notice is proof of a change, not the revised numerical grid.
+for(const id of ['11167','11170']){
+ const source=register.sources.find(s=>s.retrievalEvidence?.resource===id);
+ const notice=source.revisionNoticeEvidence;
+ assert.equal(notice.effectiveSchoolYear,2082);
+ assert.equal(notice.openEndedQuestionsReported,true);
+ assert.equal(notice.revisedNumericalGridRetrieved,false);
+ assert.equal(notice.currentGridApproved,false);
+ assert.equal(source.retrievalEvidence.currentCdcExactApproved,false);
+}
+console.log('PASS ministry revision notice remains separate from exact Grid approval');

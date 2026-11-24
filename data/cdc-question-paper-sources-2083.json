@@ -1087,7 +1087,7 @@
       "version": "PDF edition applicability pending",
       "status": "official_government_full_PDF_retrieved_grid_review_pending",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11170_Specification%20Grid%20(grade%209-10)%20Compulsory%20Mathematics_nbimkq0.pdf",
-      "note": "Page 1 numeric text confirms 75 marks, 16 groups, 49 items, seven area marks 6/13/13/15/13/11/4, cognitive marks 12/18/30/15; historical grid applicability remains unconfirmed.",
+      "note": "Page 1 numeric text confirms 75 marks, 16 groups, 49 items, seven area marks 6/13/13/15/13/11/4, cognitive marks 12/18/30/15; historical grid applicability remains unconfirmed. Ministry Educational Information 2081, printed p.38, confirms revision effective 2082 with open-ended questions; exact revised numerical allocation not retrieved.",
       "retrievalEvidence": {
         "resource": "11170",
         "pages": 15,
@@ -1237,6 +1237,25 @@
         ],
         "currentEditionConfirmed": false,
         "officialExamApproved": false
+      },
+      "revisionNoticeEvidence": {
+        "url": "https://giwmscdntwo.gov.np/media/pdf_upload/Educational%20information%20book_u6e3p7q.pdf",
+        "title": "शैक्षिक सूचना, २०८१",
+        "printedPage": 38,
+        "checkedOn": "2026-11-24",
+        "effectiveSchoolYear": 2082,
+        "grades": [
+          9,
+          10
+        ],
+        "subjects": [
+          "Compulsory Mathematics",
+          "Science and Technology"
+        ],
+        "openEndedQuestionsReported": true,
+        "method": "Government PDF searchable text; screenshot request timed out",
+        "revisedNumericalGridRetrieved": false,
+        "currentGridApproved": false
       }
     },
     {
@@ -1248,7 +1267,7 @@
       "version": "2078 (PDF title); current applicability pending",
       "status": "official_government_full_PDF_retrieved_grid_review_pending",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11167_Specification%20Grid%20(Grade%209)%20Compulsory%20Science%20and%20Technology_nk1kpta.pdf",
-      "note": "Government PDF title and unit/mark text checked again on 2026-11-24. The official listing date is 2082-05-08; a separate revised Grid has not been established. Screenshot request timed out.",
+      "note": "Government PDF title and unit/mark text checked again on 2026-11-24. The official listing date is 2082-05-08; a separate revised Grid has not been established. Screenshot request timed out. Ministry Educational Information 2081, printed p.38, confirms revision effective 2082 with open-ended questions; exact revised numerical allocation not retrieved.",
       "retrievalEvidence": {
         "resource": "11167",
         "pages": 10,
@@ -1420,6 +1439,25 @@
         ],
         "currentEditionConfirmed": false,
         "officialExamApproved": false
+      },
+      "revisionNoticeEvidence": {
+        "url": "https://giwmscdntwo.gov.np/media/pdf_upload/Educational%20information%20book_u6e3p7q.pdf",
+        "title": "शैक्षिक सूचना, २०८१",
+        "printedPage": 38,
+        "checkedOn": "2026-11-24",
+        "effectiveSchoolYear": 2082,
+        "grades": [
+          9,
+          10
+        ],
+        "subjects": [
+          "Compulsory Mathematics",
+          "Science and Technology"
+        ],
+        "openEndedQuestionsReported": true,
+        "method": "Government PDF searchable text; screenshot request timed out",
+        "revisedNumericalGridRetrieved": false,
+        "currentGridApproved": false
       }
     },
     {
