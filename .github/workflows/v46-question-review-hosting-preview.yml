@@ -5,6 +5,10 @@ on:
       - feat/v46-question-autogen-grid-safe-2083
     paths:
       - '.github/workflows/v46-question-review-hosting-preview.yml'
+      - 'cdc-*.mjs'
+      - 'cdc-question-paper.js'
+      - 'sw.js'
+      - 'data/cdc-*.json'
   workflow_dispatch:
 permissions:
   contents: read

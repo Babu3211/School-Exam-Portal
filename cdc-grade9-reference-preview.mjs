@@ -26,7 +26,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  const bank=questions.filter(q=>draft(q)&&q.subject===subject);
  const known=new Set(referencePreviewTopics({grade,subject,questions:bank}));
  if(selectedTopicIds.some(id=>!known.has(id)))throw Error('A selected topic has no reference group; select available reference topics');
- const result=planners[key]({grade,subject,fullMarks,durationMinutes,language,questions:bank,selectedTopicIds,previousSignature,rng,allowOriginalReferenceDraft:true,allowOriginalSummaryPractice:key==='nepali',allowOriginalReadingPractice:key==='english'});
+ const result=planners[key]({grade,subject,fullMarks,durationMinutes,language,questions:bank,selectedTopicIds,previousSignature,rng,allowOriginalReferenceDraft:true,allowOriginalSummaryPractice:key==='nepali',allowOriginalReadingPractice:key==='english',currentCurriculumMapPractice:key==='social'});
  if(!result.ready)return {ready:false,reason:result.reason,missing:result.shortages||result.shortage||[],referenceOnly:true,currentCdcExactApproved:false,readyForLive:false};
  if(result.currentCdcExactApproved!==false||result.paper.referenceOnly!==true||result.readyForLive!==false)throw Error('Unexpected reference preview state');
  const p=result.paper,groups=p.groups||p.questions;

@@ -31,3 +31,20 @@ assert.ok(bank.questions.some(q=>q.unitCode==='8'&&/Anglo-Nepal War/.test(q.ques
 assert.ok(bank.questions.some(q=>q.unitCode==='8'&&/Greek and Roman civilizations/.test(q.questionTextEn)));
 assert.ok(bank.questions.some(q=>q.unitCode==='10'&&/demography/.test(q.questionTextEn)));
 console.log('PASS selected Grade 9 social reference content corrections from CDC 2082 curriculum p.4; historical Grid remains unapproved');
+
+const {buildGrade9ReferencePreview}=await import('../cdc-grade9-reference-preview.mjs');
+const {assertSocial2078ReferencePaper}=await import('../cdc-grade9-social-reference-planner.mjs');
+for(const language of ['ne','en','both']){
+ const args={grade,subject,questions:bank.questions,selectedTopicIds:topics,language,allowOriginalReferenceDraft:true,currentCurriculumMapPractice:true,rng:()=>.39};
+ const result=plan(args);assert.equal(result.ready,true,result.reason);
+ const task=result.paper.questions.find(q=>q.mapChoices);
+ assert.deepEqual(task.mapChoices.map(c=>c.region),['Nepal','Nepal']);
+ assert.equal(new Set(task.mapChoices.flatMap(c=>c.labels.map(l=>l.en))).size,10);
+ assert.equal(result.paper.questions.reduce((n,q)=>n+q.marks,0),75);
+ assert.throws(()=>assertSocial2078ReferencePaper(result.paper,{allowOriginalReferenceDraft:true}),/map alternative/);
+ assert.throws(()=>assertGrade9ExamPaperMatches(result.paper),/verified subject/);
+ const preview=buildGrade9ReferencePreview({...args,fullMarks:75,durationMinutes:180});assert.equal(preview.ready,true,preview.reason);
+ assert.match(preview.text,/Nepal-only map practice/);
+ assert.doesNotMatch(preview.text,/Gobi Desert|Danube River/);
+}
+console.log('PASS Nepal-only map practice in three languages, historical comparison preserved, official exam gate unchanged');
