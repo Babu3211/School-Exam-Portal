@@ -73,7 +73,7 @@ Object.assign(w,{
   getDocsFromServer:async ({name,filters})=>{
     assert.equal(name,'cdc_observations');
     assert.deepEqual(Object.fromEntries(filters.map(([name,op,value])=>{assert.equal(op,'==');return [name,value];})),{
-      studentId:field('student').value,className:({three:'Class 3',primary:'Class 5','nepali-1':'Class 1','nepali-2':'Class 2','nepali-3':'Class 3','english-1':'Class 1','english-2':'Class 2'})[field('student').value]||field('class').value,subject:field('subject').value,
+      studentId:field('student').value,className:({three:'Class 3',primary:'Class 5','nepali-1':'Class 1','nepali-2':'Class 2','nepali-3':'Class 3','english-1':'Class 1','english-2':'Class 2','english-3':'Class 3'})[field('student').value]||field('class').value,subject:field('subject').value,
       section:'A',academicYear:w.currentSchoolSettings.academicYear,...(filters.some(([key])=>key==='period')?{period:field('period').value}:{})
     });
     if(readSchool) await readSchool.promise;
@@ -920,5 +920,51 @@ await w.loadCdcAssessmentPage();
 choice('unitEn','Me and My Family');
 assert.equal(field('annex3').hidden,true);
 console.log('Grade 2 English ten thematic forms, 283 unique outcome rows, English-only stage entry, legacy skill/year isolation passed');
+// Grade 3 thematic forms: source Table 23 subset, not a full scoring-sheet certification.
+w.currentSchoolSettings.academicYear='2083';
+current.subjectAssignments=[{className:'Class 3',subject:'English',section:'A'}];
+serverRole={...current};
+w.getDocs=async()=>({docs:[{id:'english-3',data:()=>({class:'Class 3',section:'A',name:'Synthetic Grade 3 English'})}]});
+await w.loadCdcAssessmentPage();
+const beforeEnglish3=observations.size;
+for(const [unit,groups] of [['Me and My Family',[7,3,9,7]],['My Daily Life',[7,4,4,8]]]){
+ choice('unitEn',unit);
+ const count=groups.reduce((a,b)=>a+b,0);
+ assert.equal(field('annex3').hidden,false,unit);
+ assert.match(field('annexIdentity').textContent,/Grade: 3/);
+ assert.equal(field('annexRows').rows.length,count,unit);
+ assert.equal(field('outcomePicker').options.length,count+1,unit);
+ assert.equal(new Set([...field('outcomePicker').options].slice(1).map(o=>o.value)).size,count,unit);
+ assert.doesNotMatch(field('annexTable').textContent,/[\u0900-\u097f]/u);
+ assert.match(field('annexStatus').textContent,/Table 23 thematic outcomes/);
+ let offset=0;
+ for(const [i,skill] of ['Listening','Speaking','Reading','Writing'].entries()){
+   const row=field('annexRows').rows[offset];
+   assert.equal(row.cells[1].textContent,skill);
+   assert.equal(row.cells[1].rowSpan,groups[i]);
+   offset+=groups[i];
+ }
+ await field('gridRead').onclick();
+ assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,count*2,unit);
+ assert.equal(field('printForm').disabled,false,unit);
+}
+assert.equal(observations.size,beforeEnglish3);
+const english3Row=field('annexRows').rows[0];
+english3Row.querySelector('[data-cdc-grid-edit="regular"]').click();
+english3Row.querySelector('[data-cdc-grid-editor="level"]').value='3';
+await english3Row.querySelector('[data-cdc-grid-save="regular"]').onclick();
+assert.equal(observations.size,beforeEnglish3+1);
+assert.equal([...observations.values()].at(-1).unit,'My Daily Life');
+assert.equal([...observations.values()].at(-1).className,'Class 3');
+assert.equal([...observations.values()].at(-1).topic,'Recognize and produce rhyming words');
+assert.match(field('annexFoot').textContent,/1 \/ 23/);
+choice('unitEn','Listening');
+assert.equal(field('annex3').hidden,true);
+assert.ok(field('outcomePicker').options.length>1);
+w.currentSchoolSettings.academicYear='2084';
+await w.loadCdcAssessmentPage();
+choice('unitEn','Me and My Family');
+assert.equal(field('annex3').hidden,true);
+console.log('Grade 3 English first two Table 23 themes, 49 outcomes, scoped saves and year isolation passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
