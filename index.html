@@ -3998,7 +3998,7 @@ function openCdcAssessment(context = null) {
   // The language-subject Annex 3 grid uses explicit assessment stages.
   // Older observations lack a stage and must not be silently classified.
   let annexObservations=[];
-  const hasAnnexGrid=()=>!!context&&Number(field('class').value)>=4&&['nepali','english'].includes(cdcAssessmentSubjectKey(field('subject').value));
+  const hasAnnexGrid=()=>!!context&&Number(field('class').value)>=4&&['nepali','english','mathematics','socialstudies','science','healthphysicalcreativeart'].includes(cdcAssessmentSubjectKey(field('subject').value));
   const renderAnnex=()=>{
     const panel=field('annex3'),enabled=hasAnnexGrid(),en=language()==='en';
     panel.hidden=!enabled;field('stageRow').hidden=!enabled;
@@ -4006,16 +4006,34 @@ function openCdcAssessment(context = null) {
     const selection=field('student').selectedOptions[0];
     const st=assessmentStudents.find(s=>s.id===selection?.value);
     const subject=field('subject').selectedOptions[0]?.text||'';
-    field('annexTitle').textContent=en?'Annex 3 — Learning achievement record':'अनुसूची ३ : सिकाइ उपलब्धि मूल्याङ्कन अभिलेख';
+    const subjectKey=cdcAssessmentSubjectKey(field('subject').value);
+    // CDC 2083 PDF pp. 80, 100, 120, 140: science omits serial/content;
+    // health includes serial but no separate content column.
+    const serial=subjectKey!=='science';
+    const contentColumn=['nepali','english','mathematics','socialstudies'].includes(subjectKey);
+    const leading=1+Number(serial)+Number(contentColumn),columnCount=leading+5;
+    field('annexTitle').textContent=en?'Annex 3 — Learning achievement record':'अनुसूची ३ : '+subject+' — सिकाइ उपलब्धि मूल्याङ्कन अभिलेख';
     field('annexIdentity').textContent=(en?'Grade: ':'कक्षा: ')+field('class').value+'    '+(en?'Subject: ':'विषय: ')+subject+'    '+(en?'Student: ':'विद्यार्थी: ')+(selection?.text||'')+'    '+(en?'Roll No.: ':'रोल नम्बर: ')+(st?.rollNo??'');
-    field('annexUnit').textContent=field('unit').value;
-    field('annexHead').innerHTML=en?'<tr><th rowspan="2">S.N.</th><th rowspan="2">Language skills</th><th rowspan="2">Learning outcome indicators</th><th colspan="2">Regular class assessment</th><th colspan="2">Assessment after additional support</th><th rowspan="2">Remarks</th></tr><tr><th>Date</th><th>Rating</th><th>Date</th><th>Rating</th></tr>':'<tr><th rowspan="2">क्र.स.</th><th rowspan="2">विषयवस्तु</th><th rowspan="2">सिकाइ उपलब्धि सूचक</th><th colspan="2">नियमित पठनपाठनपछिको मूल्याङ्कन</th><th colspan="2">थप सहायतापछिको मूल्याङ्कन</th><th rowspan="2">कैफियत</th></tr><tr><th>मिति</th><th>अङ्कन</th><th>मिति</th><th>अङ्कन</th></tr>';
+    field('annexUnit').textContent=(en?'Unit: ':'विषयक्षेत्र: ')+localized(field('unit').value,field('unitEn').value);
+    const header=(ne,eng)=>en?eng:ne;
+    field('annexHead').innerHTML='<tr>'+
+      (serial?'<th rowspan="2">'+header('क्र.स.','S.N.')+'</th>':'')+
+      (contentColumn?'<th rowspan="2">'+header('विषयवस्तु','Language skills')+'</th>':'')+
+      '<th rowspan="2">'+header('सिकाइ उपलब्धि'+(subjectKey==='nepali'?' सूचक':''),'Learning outcome indicators')+'</th>'+
+      '<th colspan="2">'+header(subjectKey==='science'?'नियमित सिकाइको मूल्याङ्कन':'नियमित पठनपाठनपछिको मूल्याङ्कन','Regular class assessment')+'</th>'+
+      '<th colspan="2">'+header('थप सहायतापछिको मूल्याङ्कन','Assessment after additional support')+'</th>'+
+      '<th rowspan="2">'+header('कैफियत','Remarks')+'</th></tr><tr><th>'+header('मिति','Date')+'</th><th>'+header('अङ्कन','Rating')+'</th><th>'+header('मिति','Date')+'</th><th>'+header('अङ्कन','Rating')+'</th></tr>';
     const rows=(cdcVerifiedOutcomes[field('class').value+':'+cdcAssessmentSubjectKey(field('subject').value)]||[]).filter(([unit])=>normalizeTitle(unit)===normalizeTitle(field('unit').value));
     const body=field('annexRows');body.replaceChildren();
     let total=0,filled=0;
     for(const [i,[unit,title,alt]] of rows.entries()){
       const row=body.insertRow();const parts=localized(title,alt).split(' — ');
-      row.insertCell().textContent=String(i+1);row.insertCell().textContent=parts.length>1?parts.shift():'';
+      if(serial)row.insertCell().textContent=String(i+1);
+      if(contentColumn){
+        // Do not invent missing topic labels. The existing outcome catalogue is
+        // preserved; exact content-label transcription remains a separate audit.
+        row.insertCell().textContent=parts.length>1?parts.shift():'';
+      }
       const button=document.createElement('button');button.type='button';button.className='btn alt';button.textContent=parts.join(' — ');
       button.onclick=()=>{field('topic').value=title;load();};
       row.insertCell().append(button);
@@ -4027,7 +4045,7 @@ function openCdcAssessment(context = null) {
     }
     const foot=field('annexFoot');foot.replaceChildren();
     for(const [label,value] of [[en?'Unit-wise total':'विषयक्षेत्रगत अङ्कको जोड',filled===rows.length&&rows.length?String(total):'—'],[en?'Achieved percentage':'उपलब्धि प्रतिशत',filled===rows.length&&rows.length?(100*total/(4*rows.length)).toFixed(2)+'%':'—']]){
-      const row=foot.insertRow();const a=row.insertCell();a.colSpan=2;a.textContent=label;const b=row.insertCell();b.colSpan=6;b.textContent=value;
+      const row=foot.insertRow();const a=row.insertCell();a.colSpan=leading;a.textContent=label;const b=row.insertCell();b.colSpan=columnCount-leading;b.textContent=value;
     }
     field('annexStatus').textContent=en?'Draft layout using existing outcome catalogue. Select a row to enter the observation; read school records to populate ratings. Unclassified legacy records are not assigned to either stage.':'हालको उपलब्धि सूचीमा आधारित प्रारम्भिक ढाँचा। उपलब्धि छानेर मूल्याङ्कन गर्नुहोस्; विद्यालयको अभिलेख पढेपछि अङ्क देखिन्छ। चरण नखुलेका पुराना अभिलेख छुट्टै रहन्छन्।';
     field('annexSign').textContent=en?'Teacher signature __________  Date __________  Parent signature __________  Date __________':'शिक्षकको दस्तखत __________  मिति __________  अभिभावकको दस्तखत __________  मिति __________';
