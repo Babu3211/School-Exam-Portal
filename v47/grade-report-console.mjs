@@ -2,6 +2,7 @@ import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} fro
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {loadVerifiedLegacyGradeReport} from './verified-legacy-grade-report.mjs';
+import {loadSparkCommittedReport} from './spark-committed-report.mjs';
 import {loadSparkDraftReport} from './spark-draft-report.mjs';
 import {loadCommittedReportPreview} from './committed-report-client.mjs';
 import {legacyGradePreviewExcel} from './legacy-grade-report-preview.mjs';
@@ -87,7 +88,7 @@ $('load').onclick=async()=>{
  loading=true;$('load').disabled=true;$('cancel').disabled=false;
  try{
   await verifyAgain(member,seq,review,klass,term);
-  const data=source==='draft'?await loadSparkDraftReport({db,api,auth,actor:member,schoolId:member.schoolId,classNo:klass,term,assertCurrent:check,onProgress:s=>{check();$('progress').textContent=s}}):source==='committed'
+  const data=source==='sparkCommitted'?await loadSparkCommittedReport({db,api,auth,actor:member,schoolId:member.schoolId,classNo:klass,term,assertCurrent:check,onProgress:s=>{check();$('progress').textContent=s}}):source==='draft'?await loadSparkDraftReport({db,api,auth,actor:member,schoolId:member.schoolId,classNo:klass,term,assertCurrent:check,onProgress:s=>{check();$('progress').textContent=s}}):source==='committed'
    ?await loadCommittedReportPreview({schoolId:member.schoolId,classNo:klass,term,
     getIdToken:()=>auth.currentUser.getIdToken(),fetchImpl:(...args)=>fetch(...args),assertCurrent:check})
    :source==='legacy'?await loadVerifiedLegacyGradeReport({db,api,auth,actor:member,schoolId:member.schoolId,
@@ -105,7 +106,7 @@ $('load').onclick=async()=>{
   $('gradeOutput').replaceChildren(table);$('ledgerArea').hidden=false;$('exportExcel').disabled=false;
   for(const st of data.students){const option=document.createElement('option');option.value=st.id;option.textContent=String(st.nameEnglish??st.name??st.id);$('student').append(option)}
   $('student').disabled=false;$('previewSheet').disabled=false;$('sheetArea').hidden=false;showSheet();
-  status((source==='draft'?'Private saved V47 Drafts':source==='committed'?'Committed V47 marks':'V46 IEMIS component marks')+' बाट read-only पूर्वावलोकन तयार भयो। यो आधिकारिक नतिजा होइन।');
+  status((source==='sparkCommitted'?'Committed V47 read view':source==='draft'?'Private saved V47 Drafts':source==='committed'?'Committed V47 marks':'V46 IEMIS component marks')+' बाट read-only पूर्वावलोकन तयार भयो। यो आधिकारिक नतिजा होइन।');
  }catch(e){if(seq===sessionSeq&&review===reviewSeq){clearReview();$('progress').textContent='Preview blocked: '+e.message;status('पूर्ण Grade Preview उपलब्ध छैन: '+e.message)}}
  finally{loading=false;$('load').disabled=!actor;$('cancel').disabled=true}
 };

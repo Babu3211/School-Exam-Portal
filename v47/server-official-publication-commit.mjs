@@ -109,6 +109,14 @@ export async function commitTrustedOfficialClassPublication({
   // A later valid-looking score change must not silently become official.
   const contentDigest=computePublishedPagesDigest(pages);
   const settingsDigest=computeOfficialSettingsDigest(authoritativeInput.settings,scope);
+  // One compact, trusted, read-only materialization per subject. The pointer,
+  // audit, header and view switch together; drafts and staging stay private.
+  const view={...scope,publicationId,digest:checked.digest,contentDigest,settingsDigest,
+   rosterCount:checked.rosterCount,format:'smss-v47-official-read-view-v1',
+   entries:pages.flatMap(page=>page.entries)};
+  if(Buffer.byteLength(JSON.stringify(view),'utf8')>700000)
+   throw Error('Official read view exceeds safe Firestore document size');
+  transaction.set(ref('official_read_views',pointerId),view);
   transaction.set(publicationRef,{
    ...scope,publicationId,state:'committed',digest:checked.digest,contentDigest,settingsDigest,
    rosterCount:checked.rosterCount,batchCount:checked.batchCount,

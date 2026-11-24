@@ -458,6 +458,14 @@ try{
  // no browser (even Super Admin) may infer, read or overwrite a pointer.
  const protectedOfficial=(database,collectionName,sid='12345678')=>
   doc(database,'schools',sid,collectionName,'pub_00000001');
+ const viewId='a'.repeat(64),viewPath=(database,sid='12345678')=>doc(database,'schools',sid,'official_read_views',viewId);
+ const viewRecord={schoolId:'12345678',publicationId:'pub_00000001',digest:'b'.repeat(64),contentDigest:'c'.repeat(64),settingsDigest:'d'.repeat(64),entries:[]};
+ await env.withSecurityRulesDisabled(async ctx=>{const f=ctx.firestore();await setDoc(viewPath(f),viewRecord);await setDoc(doc(f,'schools','12345678','official_marks_pointers',viewId),viewRecord)});
+ await assertSucceeds(getDoc(viewPath(viewer)));await assertSucceeds(getDoc(viewPath(teacher)));await assertSucceeds(getDoc(viewPath(admin)));
+ await assertFails(getDoc(viewPath(db('admin_87654321'))));await assertFails(getDocs(collection(viewer,'schools','12345678','official_read_views')));
+ for(const database of [viewer,teacher,admin,superDb])await assertFails(setDoc(viewPath(database),viewRecord));
+ await env.withSecurityRulesDisabled(async ctx=>{await updateDoc(doc(ctx.firestore(),'schools','12345678','official_marks_pointers',viewId),{publicationId:'pub_replaced'})});
+ await assertFails(getDoc(viewPath(viewer)));
  const officialCollections=['official_marks_pointers','official_marks_publications','official_marks_audit'];
  await env.withSecurityRulesDisabled(async context=>{
   const root=context.firestore();

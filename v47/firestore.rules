@@ -626,6 +626,18 @@ service cloud.firestore {
       // Pointer, committed header and immutable audit belong to the trusted
       // server transaction. No browser role may read or manipulate them until
       // a verified tenant-specific Official Results API is released.
+      match /official_read_views/{id} {
+        function currentView() {
+          let p = /databases/$(database)/documents/schools/$(sid)/official_marks_pointers/$(id);
+          return resource.data.schoolId == sid && exists(p)
+            && get(p).data.publicationId == resource.data.publicationId
+            && get(p).data.digest == resource.data.digest
+            && get(p).data.contentDigest == resource.data.contentDigest
+            && get(p).data.settingsDigest == resource.data.settingsDigest;
+        }
+        allow get: if activeMember(sid) && currentView();
+        allow list, write: if false;
+      }
       match /official_marks_pointers/{id} {
         allow read, write: if false;
       }

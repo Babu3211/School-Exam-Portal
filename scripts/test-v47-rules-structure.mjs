@@ -32,7 +32,13 @@ assert.ok(start>=0&&end>start,'Missing dedicated activity block');
 assert.equal(rules.split(activityStart).length-1,1,'Duplicate activity block');
 const activity=rules.slice(start,end);
 assert.ok(activity.length<1400,'Activity rules unexpectedly expanded');
-assert.ok(rules.length-activity.length<40000,'Unexpected Firestore rules expansion outside activity block');
+const viewStart=rules.indexOf('      match /official_read_views/{id} {');
+const viewEnd=rules.indexOf('      match /official_marks_pointers/{id} {',viewStart);
+assert.ok(viewStart>=0&&viewEnd>viewStart);
+const viewBlock=rules.slice(viewStart,viewEnd);
+assert.ok(viewBlock.length<1100);
+for(const guard of ['activeMember(sid) && currentView()','allow list, write: if false;','get(p).data.publicationId == resource.data.publicationId','get(p).data.contentDigest == resource.data.contentDigest','get(p).data.settingsDigest == resource.data.settingsDigest'])assert.ok(viewBlock.includes(guard),'Read view rule missing '+guard);
+assert.ok(rules.length-activity.length-viewBlock.length<40000,'Unexpected Firestore rules expansion outside bounded additions');
 for(const guard of ["activeMember(sid) && request.auth.uid == uid","d.keys().hasOnly(['schoolId','uid','lastSeen'])","d.schoolId == sid && d.uid == uid && d.lastSeen == request.time","allow list: if canAdmin(sid);","request.time >= resource.data.lastSeen + duration.value(15,'m')","allow delete: if false;"])
  assert.ok(activity.includes(guard),'Activity guard missing: '+guard);
 assert.equal((activity.match(/allow\s+(?:create|update)\s*:/g)||[]).length,2);

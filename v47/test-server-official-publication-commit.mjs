@@ -79,9 +79,11 @@ for(const size of [1,101,500,1500]){
  assert.equal(result.committed,true);
  assert.equal(result.rosterCount,size);
  assert.equal(result.batchCount,Math.ceil(size/100));
- assert.equal(h.writes,before+3,'Header, pointer and audit must be committed together');
+ assert.equal(h.writes,before+4,'Header, pointer, audit and read view must be committed together');
  const pointerId=officialClassPointerId(scope);
  const pointer=h.docs.get(prefix+'official_marks_pointers/'+pointerId);
+ const view=h.docs.get(prefix+'official_read_views/'+pointerId);
+ assert.equal(view.publicationId,publicationId);assert.equal(view.entries.length,size);assert.equal(view.contentDigest,pointer.contentDigest);
  const publication=h.docs.get(prefix+'official_marks_publications/'+publicationId);
  const audit=h.docs.get(prefix+'official_marks_audit/'+publicationId);
  assert.equal(pointer.publicationId,publicationId);
@@ -180,5 +182,6 @@ for(const size of [1,101,500,1500]){
  assert.equal(change.previousPublicationId,publicationId);
  assert.equal(h.docs.get(prefix+'official_marks_publications/'+publicationId).digest,old.digest);
  assert.equal(h.docs.get(prefix+'official_marks_pointers/'+officialClassPointerId(scope)).publicationId,nextId);
+ assert.equal(h.docs.get(prefix+'official_read_views/'+officialClassPointerId(scope)).publicationId,nextId);
 }
 console.log('V47 trusted official publication CAS: 1/101/500/1500 rows; atomic header/pointer/audit, revocation, tampering, stale roster/settings, conflict and cross-school denials');
