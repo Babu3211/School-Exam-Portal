@@ -43,6 +43,10 @@ assert.equal(manifest.digest,complete.digest);
 assert.equal(manifest.publicationAllowed,false);
 assert.ok([...stage.docs.keys()].every(path=>path===manifestPath||path.startsWith(manifestPath+'/batches/')));
 assert.ok([...stage.docs.keys()].every(path=>!path.includes('/marks/')&&!path.includes('pointers')));
+// Simulate Firestore map canonicalization across a restart: all persisted
+// maps return reverse key order, while arrays and numeric values are unchanged.
+const reverseMaps=v=>Array.isArray(v)?v.map(reverseMaps):v&&typeof v==='object'?Object.fromEntries(Object.entries(v).reverse().map(([k,x])=>[k,reverseMaps(x)])):v;
+for(const [key,value] of stage.docs)stage.docs.set(key,reverseMaps(value));
 const again=await stageTrustedClassMarks(makeOptions(stage));
 assert.equal(again.existingPages,15,'Idempotent restart must not duplicate staging documents');
 assert.equal(stage.docs.size,16);

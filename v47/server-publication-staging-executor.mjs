@@ -1,3 +1,4 @@
+import {sameMarkJson} from './mark-json-equality.mjs';
 // Trusted Node/server-only STAGING executor. Not a browser module, public API,
 // Firebase Function, or permission to publish. No existing marks are modified.
 // A Spark-plan operator must supply a trusted Firestore Admin adapter and
@@ -57,7 +58,7 @@ export async function stageTrustedClassMarks({
    if(typeof tx?.get!=='function'||typeof tx?.set!=='function')throw TypeError('Trusted Firestore transaction required');
    const ref=path(page.index),snap=await tx.get(ref);
    if(snapExists(snap)){
-    if(JSON.stringify(dataOf(snap))!==JSON.stringify(expected))
+    if(!sameMarkJson(dataOf(snap),expected))
      throw Error('Staged publication ID already contains a different page: '+page.index);
     return 'reused';
    }
@@ -105,7 +106,7 @@ export async function stageTrustedClassMarks({
   if(typeof tx?.get!=='function'||typeof tx?.set!=='function')throw TypeError('Trusted Firestore transaction required');
   const snap=await tx.get(manifestRef);
   if(snapExists(snap)){
-   if(JSON.stringify(dataOf(snap))!==JSON.stringify(manifest))
+   if(!sameMarkJson(dataOf(snap),manifest))
     throw Error('Existing staged manifest conflicts with authoritative verification');
   }else tx.set(manifestRef,manifest);
  });

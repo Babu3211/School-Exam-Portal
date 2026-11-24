@@ -1,3 +1,4 @@
+import {sameMarkJson} from './mark-json-equality.mjs';
 // Isolated V47 Firestore class-DRAFT save: one compare-and-swap document,
 // not an official mark, publication or grade. No per-student mark writes.
 // Requires current authenticated School Admin and complete authoritative roster.
@@ -59,7 +60,7 @@ export async function saveVerifiedCompleteClassDraft({
  if(!settingsSnap?.exists())throw Error('Verified Examination Settings missing');
  const settings={...settingsSnap.data(),settingsId:id};
  validateConfiguredMarkComponents(settings,{schoolId,classId,subjectId,examId});
- const originalComponents=JSON.stringify(settings.components);
+ const originalComponents=structuredClone(settings.components);
  let roster;
  try{roster=await loadCompleteClassRoster({db,api,actor,schoolId,classId})}
  catch(error){check();throw error}
@@ -89,7 +90,7 @@ export async function saveVerifiedCompleteClassDraft({
      subject.data()?.class!==classId||subject.data()?.active!==true)
    throw Error('Subject changed before draft commit');
   if(!setting.exists()||setting.data()?.id!==id||
-     JSON.stringify(setting.data().components)!==originalComponents)
+     !sameMarkJson(setting.data().components,originalComponents))
    throw Error('Examination Settings changed before draft commit');
   validateConfiguredMarkComponents(setting.data(),{schoolId,classId,subjectId,examId});
   const currentRevision=prior.exists()?prior.data()?.revision:0;
@@ -123,7 +124,7 @@ export async function saveVerifiedCompleteClassDraft({
      persisted?.examId!==examId||persisted?.settingsId!==id||
      persisted?.updatedBy!==uid||persisted?.rosterCount!==planned.rosterCount||
      persisted?.revision!==planned.data.revision||
-     JSON.stringify(persisted.entries)!==JSON.stringify(planned.data.entries))
+     !sameMarkJson(persisted.entries,planned.data.entries))
    throw Error('Persisted class Draft revision or entries changed after commit');
   if(freshRoster.studentIds.length!==roster.studentIds.length||
      freshRoster.studentIds.some((studentId,i)=>studentId!==roster.studentIds[i])||

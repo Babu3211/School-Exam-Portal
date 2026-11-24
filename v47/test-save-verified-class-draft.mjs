@@ -143,6 +143,37 @@ for(const state of ['offline','enrollment','auth-switched','tampered-revision'])
  assert.equal(txStarted,true);
  assert.equal(f.writes.length,0);
 }
+// Real Firestore maps can return keys in a different order after a write.
+const reverseMaps=v=>Array.isArray(v)?v.map(reverseMaps):v&&typeof v==='object'?Object.fromEntries(Object.entries(v).reverse().map(([k,x])=>[k,reverseMaps(x)])):v;
+{
+ const f=fixture({beforeTx:store=>{
+  const key='schools/'+schoolId+'/mark_settings/9_computer_final';
+  store.set(key,reverseMaps(store.get(key)));
+ }});
+ const previous=f.api.runTransaction;
+ f.api.runTransaction=async(...args)=>{
+  const result=await previous(...args);
+  const key='schools/'+schoolId+'/class_mark_drafts/9_computer_final';
+  f.store.set(key,reverseMaps(f.store.get(key)));
+  return result;
+ };
+ const result=await saveVerifiedCompleteClassDraft({...context,api:f.api});
+ assert.equal(result.savedDraft,true);assert.equal(result.rosterReverified,true);assert.equal(f.writes.length,1);
+}
+{
+ const f=fixture({beforeTx:store=>{
+  const key='schools/'+schoolId+'/mark_settings/9_computer_final';
+  const setting=structuredClone(store.get(key));setting.components.reverse();store.set(key,setting);
+ }});
+ await assert.rejects(saveVerifiedCompleteClassDraft({...context,api:f.api}),/Examination Settings changed/);
+ assert.equal(f.writes.length,0);
+}
+{
+ const f=fixture(),previous=f.api.runTransaction;
+ f.api.runTransaction=async(...args)=>{const r=await previous(...args);const key='schools/'+schoolId+'/class_mark_drafts/9_computer_final';const draft=structuredClone(f.store.get(key));draft.entries[0].values.term=29;f.store.set(key,draft);return r};
+ await assert.rejects(saveVerifiedCompleteClassDraft({...context,api:f.api}),e=>e.name==='ClassDraftPostSaveReviewError');
+ assert.equal(f.writes.length,1);
+}
 const source=readFileSync(new URL('./save-verified-class-draft.mjs',import.meta.url),'utf8');
 assert.doesNotMatch(source,/['"]marks['"]|['"]component_marks['"]|publishedAt|gradeSheet/);
 assert.match(source,/runTransaction/);

@@ -1,3 +1,4 @@
+import {sameMarkJson} from './mark-json-equality.mjs';
 // Authenticated, CAS-safe Teacher DRAFT. Uses verified tenant/assignment,
 // full roster and configured components. No official mark write or publication.
 import {verifySchoolSession} from './verified-school-session.mjs';
@@ -56,7 +57,7 @@ export async function saveVerifiedTeacherClassDraft({
  if(!settingSnap?.exists?.()||settingSnap.data()?.id!==id)throw Error('Verified Examination Settings unavailable');
  const settings={...settingSnap.data(),settingsId:id};
  validateConfiguredMarkComponents(settings,{schoolId,classId,subjectId,examId});
- const settingsJson=JSON.stringify(settings.components);
+ const originalComponents=structuredClone(settings.components);
  const roster=await loadCompleteClassRoster({db,api,actor,schoolId,classId});
  check();
  if(roster.students.some(student=>!isActiveEnrolledStudent(student)))
@@ -82,7 +83,7 @@ export async function saveVerifiedTeacherClassDraft({
    subject.data()?.class!==classId||subject.data()?.active!==true)
    throw Error('Assigned subject changed before Draft commit');
   if(!setting.exists()||setting.data()?.id!==id||
-   JSON.stringify(setting.data()?.components)!==settingsJson)
+   !sameMarkJson(setting.data()?.components,originalComponents))
    throw Error('Examination Settings changed before Draft commit');
   validateConfiguredMarkComponents(setting.data(),{schoolId,classId,subjectId,examId});
   const oldRevision=prior.exists()?prior.data()?.revision:0;

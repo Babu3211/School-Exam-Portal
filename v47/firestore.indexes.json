@@ -138,6 +138,21 @@
       "collectionGroup": "official_read_views",
       "fieldPath": "entries",
       "indexes": []
+    },
+    {
+      "collectionGroup": "class_mark_drafts",
+      "fieldPath": "entries",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "class_drafts",
+      "fieldPath": "entries",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "batches",
+      "fieldPath": "entries",
+      "indexes": []
     }
   ]
 }
