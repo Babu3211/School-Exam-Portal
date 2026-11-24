@@ -1,0 +1,63 @@
+name: V46 Question Paper Hosting Preview (never live)
+on:
+  push:
+    branches:
+      - feat/v46-question-autogen-grid-safe-2083
+    paths:
+      - '.github/workflows/v46-question-review-hosting-preview.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: smss-v46-question-review-preview
+  cancel-in-progress: true
+jobs:
+  preview:
+    if: github.repository == 'Babu3211/School-Exam-Portal' && github.ref == 'refs/heads/feat/v46-question-autogen-grid-safe-2083'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify question banks and preserved app before preview
+        run: |
+          node scripts/check-inline-js.mjs
+          node scripts/check-v44-requirements.mjs
+          npm run test:v46-preservation
+          npm run test:question-paper
+          npm run test:pwa
+          node scripts/test-cdc-grade9-review-pack.mjs
+      - name: Deploy isolated Hosting channel (no Firestore rules or data)
+        id: preview
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
+          projectId: exam-portal-smss-95016
+          channelId: v46-question-review
+          expires: 7d
+          entryPoint: .
+      - name: Verify exact served app shell and all question modules
+        env:
+          PREVIEW_URL: ${{ steps.preview.outputs.details_url }}
+        run: |
+          set -euo pipefail
+          [[ "$PREVIEW_URL" == https://exam-portal-smss-95016--*.web.app ]]
+          mkdir -p "$RUNNER_TEMP/preview"
+          curl -fsSL --retry 5 "$PREVIEW_URL/" -o "$RUNNER_TEMP/preview/index.html"
+          cmp index.html "$RUNNER_TEMP/preview/index.html"
+          for file in sw.js manifest.webmanifest cdc-question-paper.js cdc-*.mjs data/cdc-*.json; do
+            target="$RUNNER_TEMP/preview/$file"
+            mkdir -p "$(dirname "$target")"
+            curl -fsSL --retry 5 "$PREVIEW_URL/$file" -o "$target"
+            cmp "$file" "$target"
+          done
+          echo "Preview URL: $PREVIEW_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "Static resources only; real authentication, database schema, backup, and release approval are not verified by this job." >> "$GITHUB_STEP_SUMMARY"
+          echo "Do not enter or save real student records from preview." >> "$GITHUB_STEP_SUMMARY"
+# No live channel, rules deployment, billing change, or school-data write.
