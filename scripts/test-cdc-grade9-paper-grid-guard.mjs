@@ -18,7 +18,8 @@ for(const language of ['ne','en','both']){
  const result=buildAutomaticQuestionPaper({questions:bank.questions,topicIds,fullMarks,language,blueprint:bp,requireExactGrid:true,gradeNumber:grade,subject,rng:()=>0.4});
  const p={gradeNumber:grade,subject,fullMarks,durationMinutes:120,topicIds,language,questions:result.questions.map(q=>({...q,questionId:q.id,gridEvidence:result.gridAudit.slotEvidence.find(e=>e.questionId===q.id)}))};
  assert.equal(assertGrade9ExamPaperMatches(p),true);
- for(const change of [x=>x.fullMarks=49,x=>x.durationMinutes=180,x=>x.questions.pop(),x=>x.questions[0].gridEvidence.unitCode='99',x=>x.questions[0].marks=99,x=>x.questions[0].gridEvidence=null,x=>x.questions[1].questionId=x.questions[0].questionId,x=>x.topicIds=[]]){
+ if(language==='en'){const bad=structuredClone(p);bad.questions[0].answer='उत्तर';assert.throws(()=>assertGrade9ExamPaperMatches(bad),/untranslated/);}
+ for(const change of [x=>x.fullMarks=49,x=>x.durationMinutes=180,x=>x.questions.pop(),x=>x.questions[0].gridEvidence.unitCode='99',x=>x.questions[0].marks=99,x=>x.questions[0].gridEvidence=null,x=>x.questions[1].questionId=x.questions[0].questionId,x=>x.topicIds=[],x=>x.language='invalid',x=>{const q=x.questions.find(q=>q.questionType==='mcq');q.options[1]=q.options[0];},x=>{const q=x.questions.find(q=>q.questionType==='mcq');q.correctOption=' A ';}]){
   const bad=structuredClone(p);change(bad);assert.throws(()=>assertGrade9ExamPaperMatches(bad),/CDC Grid mismatch/);
  }
 }
@@ -29,7 +30,7 @@ const result=inspectCdcOptionalMathPaper({guide,questions:mathBank.questions,sel
 assert.equal(result.ready,true);
 const p={gradeNumber:9,subject:math,fullMarks:75,durationMinutes:180,language:'both',questionFormat:'cdc_optional_math_composite',questions:result.questions.map(q=>({...q,questionId:q.id}))};
 assert.equal(assertGrade9ExamPaperMatches(p),true);
-for(const change of [x=>x.questions.pop(),x=>x.questions[0].subquestions[0].marks=2,x=>x.questions[0].subquestions[0].unitCode='99',x=>x.questions.find(q=>q.group==='CCA').subquestions.forEach(s=>s.unitCode='1'),x=>x.questions[0].subquestions[0].answerEn='',x=>x.questionFormat='flat']){
+for(const change of [x=>x.questions.pop(),x=>x.questions[0].subquestions[0].marks=2,x=>x.questions[0].subquestions[0].unitCode='99',x=>x.questions.find(q=>q.group==='CCA').subquestions.forEach(s=>s.unitCode='1'),x=>x.questions[0].subquestions[0].answerEn='',x=>x.questionFormat='flat',x=>{x.questions[0].subquestions[0].marks='1';},x=>{const q=x.questions.find(q=>q.group==='WCA');q.subquestions.forEach(s=>s.marks=10);}]){
  const bad=structuredClone(p);change(bad);assert.throws(()=>assertGrade9ExamPaperMatches(bad),/CDC Grid mismatch/);
 }
 assert.equal(assertGrade9ExamPaperMatches({gradeNumber:10}),true);
