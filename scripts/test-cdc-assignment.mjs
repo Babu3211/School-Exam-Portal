@@ -73,7 +73,7 @@ Object.assign(w,{
   getDocsFromServer:async ({name,filters})=>{
     assert.equal(name,'cdc_observations');
     assert.deepEqual(Object.fromEntries(filters.map(([name,op,value])=>{assert.equal(op,'==');return [name,value];})),{
-      studentId:field('student').value,className:({three:'Class 3',primary:'Class 5','nepali-1':'Class 1','nepali-2':'Class 2'})[field('student').value]||field('class').value,subject:field('subject').value,
+      studentId:field('student').value,className:({three:'Class 3',primary:'Class 5','nepali-1':'Class 1','nepali-2':'Class 2','nepali-3':'Class 3'})[field('student').value]||field('class').value,subject:field('subject').value,
       section:'A',academicYear:w.currentSchoolSettings.academicYear,...(filters.some(([key])=>key==='period')?{period:field('period').value}:{})
     });
     if(readSchool) await readSchool.promise;
@@ -731,7 +731,8 @@ await w.loadCdcAssessmentPage();
 const beforeGrade2=observations.size;
 for(const [unit,count,page] of [
  ['म र मेरो परिवार',11,114],['मेरो दैनिक जीवन',12,115],['हाम्रो समुदाय',13,116],
- ['मेरो विद्यालय',14,117],['हाम्रो वातावरण',15,118],['मेरो सिर्जना',16,119],['रुचि र बानी',16,120]
+ ['मेरो विद्यालय',14,117],['हाम्रो वातावरण',15,118],['मेरो सिर्जना',16,119],['रुचि र बानी',16,120],
+ ['हाम्रो संस्कृति',16,121],['सञ्चार प्रविधि र बजार',17,122],['हाम्रा क्रियाकलाप',17,123],['हाम्रो वरपरको संसार',18,124]
 ]){
  choice('unit',unit);
  assert.equal(field('annex3').hidden,false,unit);
@@ -745,6 +746,9 @@ for(const [unit,count,page] of [
  assert.equal(field('printForm').disabled,false,unit);
 }
 assert.equal(observations.size,beforeGrade2);
+assert.match(field('annexRows').rows[14].cells[0].textContent,/शब्द जोडेर/);
+assert.match(field('annexRows').rows[15].cells[0].textContent,/शब्द निर्माण अभ्यास/);
+choice('unit','रुचि र बानी');await field('gridRead').onclick();
 const grade2Row=field('annexRows').rows[0];
 grade2Row.querySelector('[data-cdc-grid-edit="regular"]').click();
 grade2Row.querySelector('[data-cdc-grid-editor="level"]').value='3';
@@ -761,6 +765,40 @@ await w.loadCdcAssessmentPage();
 choice('unit','म र मेरो परिवार');
 assert.equal(field('annex3').hidden,true);
 assert.equal(observations.size,beforeGrade2+1);
-console.log('Grade 2 Nepali seven thematic forms, 97 outcomes, stage entry and legacy skill/year isolation passed');
+console.log('Grade 2 Nepali eleven thematic forms, 165 outcomes, stage entry and legacy skill/year isolation passed');
+// Grade 3 first two thematic forms remain isolated by class and year.
+w.currentSchoolSettings.academicYear='2083';
+current.subjectAssignments=[{className:'Class 3',subject:'Nepali',section:'A'}];
+serverRole={...current};
+w.getDocs=async()=>({docs:[{id:'nepali-3',data:()=>({class:'Class 3',section:'A',name:'Synthetic Grade 3 Nepali'})}]});
+await w.loadCdcAssessmentPage();
+const beforeGrade3=observations.size;
+for(const [unit,count,page] of [['म र मेरो परिवार',11,125],['मेरो दैनिक जीवन',13,126]]){
+ choice('unit',unit);
+ assert.equal(field('annex3').hidden,false,unit);
+ assert.match(field('annexIdentity').textContent,/कक्षा: ३/);
+ assert.equal(field('annexRows').rows.length,count,unit);
+ assert.equal(field('outcomePicker').options.length,count+1,unit);
+ assert.equal(new Set([...field('outcomePicker').options].slice(1).map(o=>o.value)).size,count,unit);
+ assert.match(field('annexStatus').textContent,new RegExp(String(page)));
+ await field('gridRead').onclick();
+ assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,count*2,unit);
+}
+assert.equal(observations.size,beforeGrade3);
+const grade3Row=field('annexRows').rows[12];
+grade3Row.querySelector('[data-cdc-grid-edit="regular"]').click();
+grade3Row.querySelector('[data-cdc-grid-editor="level"]').value='4';
+await grade3Row.querySelector('[data-cdc-grid-save="regular"]').onclick();
+assert.equal(observations.size,beforeGrade3+1);
+assert.equal([...observations.values()].at(-1).className,'Class 3');
+assert.match([...observations.values()].at(-1).topic,/लिङ्ग, वचन, पुरुष/);
+choice('unit','सुनाइ र बोलाइ');
+assert.equal(field('annex3').hidden,true);
+assert.ok(field('outcomePicker').options.length>1);
+w.currentSchoolSettings.academicYear='2084';
+await w.loadCdcAssessmentPage();
+choice('unit','म र मेरो परिवार');
+assert.equal(field('annex3').hidden,true);
+console.log('Grade 3 Nepali first two thematic forms, 24 outcomes, stage entry and legacy skill/year isolation passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
