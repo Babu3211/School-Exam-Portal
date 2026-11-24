@@ -167,6 +167,7 @@ jobs:
               "scripts/test-cdc-grade9-nepali-reference-bank.mjs",
               "scripts/test-cdc-grade9-paper-grid-guard.mjs",
               "scripts/test-cdc-grade9-reference-preview.mjs",
+              "scripts/test-cdc-grade9-review-pack.mjs",
               "scripts/test-cdc-grade9-reference-readiness.mjs",
               "scripts/test-cdc-grade9-release-audit.mjs",
               "scripts/test-cdc-grade9-science-archive-audit.mjs",

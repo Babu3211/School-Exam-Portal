@@ -25,6 +25,7 @@ on:
       - 'cdc-grade9-reference-readiness.mjs'
       - 'cdc-grade9-reference-preview.mjs'
       - 'scripts/test-cdc-grade9-reference-preview.mjs'
+      - 'scripts/test-cdc-grade9-review-pack.mjs'
       - 'scripts/test-cdc-grade9-reference-readiness.mjs'
       - 'cdc-grade9-nepali-model-2078.mjs'
       - 'cdc-grade9-nepali-grouped-planner.mjs'
@@ -210,6 +211,16 @@ jobs:
         run: node --input-type=module -e "import {PUBLIC_DOMAIN_SEEN_PROSE as d} from './cdc-grade9-english-seen-prose-data.mjs'; if(d.length) await import('./scripts/test-cdc-grade9-english-seen-prose.mjs'); else console.log('Seen prose not retrieved; official exam remains blocked')"
       - name: Test real Grade 9 review-only reference previews
         run: node scripts/test-cdc-grade9-reference-preview.mjs
+      - name: Generate and verify sixteen teacher-review drafts for eight subjects
+        env:
+          SMSS_REVIEW_PACK_DIR: ${{ runner.temp }}/smss-grade9-review
+        run: node scripts/test-cdc-grade9-review-pack.mjs
+      - name: Upload read-only Grade 9 review pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: smss-grade9-teacher-review-pack
+          path: ${{ runner.temp }}/smss-grade9-review/
+          retention-days: 7
       - name: Generate environment review-only school-model papers
         run: node scripts/test-cdc-grade9-environment-reference-bank.mjs
       - name: Validate actual Nepali grammar reading and writing reference tasks
