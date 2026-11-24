@@ -1007,24 +1007,24 @@
   ],
   "completion": {
     "sourceRegister": "created",
-    "gradeWiseTopicExtraction": "pending_for_grades_6_7_9_science_and_other_subjects; grade_8_and_10_science_seeded",
+    "gradeWiseTopicExtraction": "Grade 9 reference topic banks prepared for all eight V46 default subjects; Grades 6 and 7 and remaining official current Grid verification pending; Grade 8 and 10 science seeded",
     "specificationGridExtraction": "partial_official_sources_verified",
-    "questionBankCuration": "grade_8_science_55; grade_10_science_57_original_practice_questions_teacher_review_required; grade_9_science_pack_blocked_source_mismatch; other_subjects_pending",
+    "questionBankCuration": "Grade 9 eight-subject review drafts prepared: 16 distinct papers with separate answer keys; all require teacher review; Grade 8 science 55 and Grade 10 science 57 original practice items",
     "answerKeyValidation": "pending",
     "teacherReview": "required",
     "grade8SciencePracticePack": "seed-file-created-admin-import-available-teacher-review-required",
-    "scienceSourceDiscovery": "CDC textbook and teacher-guide sources identified for Grades 6–10; Grade 8 and Grade 10 textbook unit lists seeded; Grade 6, 7 and 9 topic extraction and subject-specific grid parsing remain pending",
-    "grade9SciencePracticePack": "blocked-not-importable-source-mismatch-found-draft-deleted-do-not-use",
+    "scienceSourceDiscovery": "Grade 9 correct textbook 19 units and 80 bilingual school-reference variants prepared; historical government RS11167 aggregate marks and cognitive counts matched; current approved Grid applicability pending. Grades 6 and 7 topic extraction pending.",
+    "grade9SciencePracticePack": "80 bilingual original variants, 40 questions per 75-mark review draft; official 2083 exam approval remains blocked",
     "otherGradeSubjectPacks": "pending",
     "officialBlueprintCoverage": "partial-only-verified-subject-grade-grid-can-be-set-by-admin",
     "grade10SciencePracticePack": "seed-file-created-admin-import-available-2080-textbook-reference-check-2082-modified-book-and-grid",
     "sourceCorrection": "A Grade 10 textbook PDF (1692097269.pdf) was wrongly tagged as Grade 9 in an old source-register entry. Removed the Grade 9 entry; keep actual Grade 9 packs blocked until original Grade 9 textbook and grid are checked.",
     "verifiedOptionalComputerGrid": "Official Grade 9/10 Computer Science grid PDFs transcribed unit/type/marks/cognitive levels for 50-mark paper; development only, source checked, teacher answer review required; other subjects not configured.",
-    "optionalMath2082": "Official Grade 9/10 Optional Math source area totals and WCA/CCA composite question groups verified and bundled; exact automated grouped question generation pending. Not equivalent to simple MCQ/Short/Long.",
+    "optionalMath2082": "Official Grade 9/10 Optional Math area and WCA/CCA grouped allocations bundled; Grade 9 72-cell structural checks and two composite teacher-review drafts pass; teacher review and live approval pending",
     "grade10OptionalMathModel2083": "Grade10 CDC 2083 publication confirmed. Secondary-hosted model PDF table compared against 2082 original government grid: all group counts, group marks, 6 area marks, cognitive percentage identical; original CDC 2083 PDF download not yet independently accessed. Printer follows CDC Q1(A-K), Q2-13, Q14-17.",
     "grade8ScienceModelArchive2078": "Model 2078 four-group format 50/30 documented from CDC catalog, municipality archive text and independent synopsis; 11 unit weights staged for comparative audit. Municipality archive text contains Grid 40 vs Model 50 inconsistency; direct 2082 CDC primary PDF not visually available. Grade8 existing 55-item bank has 22 1-mark MCQs, 22 5-mark short and 11 10-mark long (missing 8×1 very short, 8×2 short, 4×4 long). CDC Exact remains blocked pending reconciliation, teacher review and bank expansion.",
-    "grade9AllSubjects": "Nine-subject audit covers 5 compulsory subjects and 4 known electives (actual school electives must be checked against School Settings). Government pages found for Nepali/English/Math/Science/Social, 2081 Accounting, 2082 Optional Economics, Optional Mathematics and Optional Computer Science. Only Computer and Optional Maths Grid transcriptions bundled, both need proper reviewed paper banks and teacher testing. Never deploy Grade9 question-paper claims until gate closes.",
-    "grade9ScienceArchivedGrid": "2078 archived CDC PDF transcribed for comparison: 75 marks, 40 items, 19 units. Original screenshot failed; 2082 revised Science Grid primary table remains unverified. Legacy Grid blocked from 2083 exact-paper generation."
+    "grade9AllSubjects": "Eight-subject V46 default audit: five compulsory subjects, Optional Mathematics, Computer Science and Environmental Science. All eight have two distinct review sets. Computer and Optional Mathematics bundled structural grids match; six reference subjects remain unapproved for official exams. All require actual teacher review and final release verification. Other electives require separate verification.",
+    "grade9ScienceArchivedGrid": "RS11167 government PDF extracted, historical 2078 75 marks, 40 items, 19 units and cognitive marks 12/22/22/19 match numerical review tests; present applicability and revised textbook alignment pending."
   },
   "practicePacks": [
     {
