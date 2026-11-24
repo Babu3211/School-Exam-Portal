@@ -610,6 +610,40 @@
       "status": "official_CDC_textbook_contents_text_checked_screenshot_timeout",
       "url": "https://moecdc.gov.np/storage/gallery/1688289325.pdf",
       "note": "Textbook contents identify 18 units and grammar/writing topics. Original SMSS practice only. Textbook seen extracts not reproduced. English grid PDF visually verified on printed pages 1 and 2; included model is Grade 10, not Grade 9. Exact current Grade 9 paper remains unverified."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य नेपाली",
+      "kind": "CDC_textbook",
+      "version": "2082",
+      "status": "official_CDC_textbook_listing_full_contents_review_pending",
+      "url": "https://moecdc.gov.np/content/587/nepali-class---9/",
+      "note": "CDC lists Grade 9 Nepali (2082), published on 24 Shrawan 2083. Full textbook was not accessible. Provisional chapter labels from two secondary educational indexes are not asserted to match latest edition. Original grammar and writing practice only."
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य नेपाली",
+      "kind": "curriculum",
+      "version": "2082 publication listing",
+      "status": "official_CDC_revised_curriculum_listing",
+      "url": "https://moecdc.gov.np/content/194/secondary-education-certificate-class-9-and-10/",
+      "note": "CDC revised Nepali curriculum page; complete curriculum attachment not inspected."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य नेपाली",
+      "kind": "textbook_correction_notice",
+      "version": "2082",
+      "status": "official_CDC_correction_notice",
+      "url": "https://moecdc.gov.np/content/99/factical-information-in-compulsory-nepali-textbooks-of/",
+      "note": "Official correction notice exists. Avoid reproducing text-specific factual answers until corrected book is checked."
     }
   ],
   "completion": {

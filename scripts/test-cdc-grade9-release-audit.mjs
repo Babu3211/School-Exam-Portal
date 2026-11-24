@@ -153,3 +153,25 @@ assert.equal(grade9EnglishPracticeBank({grade:9,subject:'Nepali'}).questions.len
 assert.equal(byKey.english.gridTranscribed,false);
 assert.match(readFileSync(new URL('../sw.js',import.meta.url),'utf8'),/cdc-grade9-english-practice\.mjs/);
 console.log('PASS Grade9 English eighteen textbook units and chart arithmetic; no false exact paper');
+
+const {grade9NepaliPracticeBank,NEPALI_BOOK_PAGE,NEPALI_CORRECTION_NOTICE}=await import('../cdc-grade9-nepali-practice.mjs');
+for(const subject of ['Compulsory Nepali','अनिवार्य नेपाली']){
+ const p=grade9NepaliPracticeBank({grade:9,subject});
+ assert.equal(p.units.length,16);assert.equal(p.questions.length,48);
+ assert.equal(new Set(p.questions.map(q=>q.id)).size,48);
+ assert.equal(new Set(p.questions.map(q=>q.questionText)).size,48);
+ assert.equal(p.exactGridVerified,false);
+ for(const u of p.units){
+  assert.equal(u.sourceUrl,NEPALI_BOOK_PAGE);
+  assert.match(u.provenance,/review pending/);
+  const qs=p.questions.filter(q=>q.unitId===u.id);
+  assert.deepEqual(qs.map(q=>q.marks),[1,2,5]);
+  assert.ok(qs.every(q=>q.questionText===q.questionTextEn&&q.answer===q.answerEn&&q.teacherReviewRequired&&!q.officialCdcQuestion));
+ }
+}
+assert.equal(grade9NepaliPracticeBank({grade:10,subject:'Nepali'}).questions.length,0);
+assert.equal(grade9NepaliPracticeBank({grade:9,subject:'English'}).questions.length,0);
+assert.equal(byKey.nepali.gridTranscribed,false);
+assert.ok(data.sources.some(s=>s.url===NEPALI_CORRECTION_NOTICE));
+assert.match(readFileSync(new URL('../sw.js',import.meta.url),'utf8'),/cdc-grade9-nepali-practice\.mjs/);
+console.log('PASS Grade9 Nepali practice, language, source caveats and isolation');
