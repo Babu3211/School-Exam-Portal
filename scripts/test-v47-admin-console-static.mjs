@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
 const html=readFileSync('v47/admin.html','utf8'),js=readFileSync('v47/admin-console.mjs','utf8');
-assert.match(html,/admin-console\.mjs/);assert.match(html,/Development only/);assert.match(js,/smss-exam-portal-v47/);assert.match(js,/onboardSchool/);assert.match(js,/setSchoolActive/);assert.match(js,/getDocs/);assert.doesNotMatch(js,/localStorage|sessionStorage/);assert.match(js,/mutating=true;button\.disabled=true/);
+assert.match(html,/admin-console\.mjs/);assert.match(html,/यो छुट्टै V47 परीक्षण प्रणाली हो, हाल सञ्चालनमा रहेको V46 होइन/);assert.match(js,/smss-exam-portal-v47/);assert.match(js,/onboardSchool/);assert.match(js,/setSchoolActive/);assert.match(js,/getDocs/);assert.doesNotMatch(js,/localStorage|sessionStorage/);assert.match(js,/mutating=true;button\.disabled=true/);
 assert.match(js,/\$\('register'\)\.onclick=async/);assert.match(js,/if\(mutating\|\|signingIn\|\|signingOut\)return/);assert.match(js,/await onboardSchool/);
 assert.match(js,/finally\{mutating=false;if\(sessionEpoch===mutationSession/);assert.match(js,/\$\('register'\)\.disabled=false/);
 assert.match(js,/if\(mutating\|\|signingIn\|\|signingOut\)/);

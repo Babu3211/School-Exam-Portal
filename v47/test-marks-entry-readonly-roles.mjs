@@ -34,6 +34,6 @@ assert.match(preview,/const requestedSchool=new URL\(location\.href\)\.searchPar
 assert.match(preview,/\$\('schoolId'\)\.value=validateSchoolId\(requestedSchool\)/);
 assert.match(preview,/verifySchoolSession\(/);
 assert.match(preview,/if\(requestedSchool\)queueMicrotask/);
-assert.match(previewPage,/read-only raw marks/i);
+assert.match(previewPage,/परीक्षणका लागि हेर्न मात्र मिल्ने प्रारम्भिक अङ्क/);
 assert.doesNotMatch(preview,/(?:setDoc|updateDoc|addDoc|deleteDoc)\(/);
 console.log('PASS V47 Viewer/Teacher Marks Entry opens read-only, raw marks preview linked, school-admin writes remain gated');

@@ -10,6 +10,8 @@ for(const filename of ['marks-entry.html','marks-preview.html','ledger-exception
  const terms=[...termOptions.matchAll(/<option value="([^"]+)">/g)].map(m=>m[1]);
  assert.deepEqual(classes,expectedClasses,filename+' class list must match V47 catalog');
  assert.deepEqual(terms,expectedTerms,filename+' terms must match V47 exam terms');
- assert.match(html,/development|NOT a CDC|NOT verified/i,filename+' must remain clearly non-official');
+ if(filename==='marks-entry.html')assert.match(html,/development|NOT a CDC|NOT verified/i,filename+' must remain clearly non-official');
+ else assert.match(html,/आधिकारिक|परीक्षणका लागि/,filename+' must remain clearly non-official');
+ if(filename!=='marks-entry.html')assert.match(html,/नतिजा प्रकाशित नगर्नुहोस्/,filename+' must explicitly prohibit publication');
 }
 console.log('V47 raw review selectors and non-official warnings passed');

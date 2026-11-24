@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createContext,runInContext} from 'node:vm';
 import {verifySchoolSession} from './verified-school-session.mjs';
+import {neError} from './nepali-feedback.mjs';
 
 const source=readFileSync(new URL('./report-preview-console.mjs',import.meta.url),'utf8');
 const begin=source.indexOf('async function withVerifiedReportSnapshot(');
@@ -23,7 +24,7 @@ function fixture(){
   }},
   epoch:1,
   enforceSchoolIdle:async()=>!state.expire,
-  verifySchoolSession,
+  verifySchoolSession,neError,
   currentSession:(attempt,uid)=>attempt===1&&auth.currentUser?.uid===uid,
   clear:()=>{state.cleared++;context.reportRows=null;context.epoch++},
   status:message=>messages.push(message),
@@ -45,6 +46,8 @@ function fixture(){
  assert.equal(test.state.rendered,0);
  assert.equal(test.state.cleared,1);
  assert.match(test.messages[0],/फेरि Login/);
+ assert.match(test.messages[0],/अनुरोध पूरा भएन/);
+ assert.doesNotMatch(test.messages[0],/Membership revoked/);
 }
 {
  const test=fixture();test.state.expire=true;

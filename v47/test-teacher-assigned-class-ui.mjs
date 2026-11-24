@@ -6,7 +6,7 @@ const hub=readFileSync(new URL('./index.html',import.meta.url),'utf8');
 const indexes=JSON.parse(readFileSync(new URL('./firestore.indexes.json',import.meta.url),'utf8'));
 assert.ok(indexes.indexes.some(index=>index.collectionGroup==='teacher_assignments'&&index.fields[0]?.fieldPath==='uid'&&index.fields[1]?.fieldPath==='__name__'));
 assert.match(hub,/href="\.\/teacher-assigned-class\.html"/);
-assert.match(html,/Development-only teacher workspace/);
+assert.match(html,/शिक्षकको परीक्षण कार्यक्षेत्र मात्र।/);
 assert.match(html,/id="students"/);
 assert.match(html,/id="loadAssignments"/);
 assert.match(html,/id="loadAttendance" disabled/);
