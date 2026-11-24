@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v73-grade9-science-practice-2083';
+const CACHE_NAME = 'smss-pwa-v74-grade9-strict-grid-2083';
 const APP_SHELL = [
   './',
   './index.html',
@@ -20,6 +20,7 @@ const APP_SHELL = [
   './cdc-optional-math-render.mjs',
   './cdc-grid-source-index.mjs',
   './cdc-grade9-release-audit.mjs',
+  './cdc-grade9-paper-grid-guard.mjs',
   './cdc-grade9-science-archive-audit.mjs',
   './cdc-grade9-computer-original-practice.mjs',
   './cdc-grade9-environment-original-practice.mjs',

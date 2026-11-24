@@ -3,6 +3,7 @@ import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSub
 import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
 import {getBundledComputerGrid,bundledComputerUnitTopics} from "./cdc-verified-computer-grids.mjs";
 import {findCdcGridSources} from "./cdc-grid-source-index.mjs";
+import {assertGrade9ExamPaperMatches} from "./cdc-grade9-paper-grid-guard.mjs";
 import {auditGrade9Release} from "./cdc-grade9-release-audit.mjs";
 import {auditGrade9ScienceArchive} from "./cdc-grade9-science-archive-audit.mjs";
 import {compareGrade8SciencePracticeBank,getGrade8ScienceHistoricalPracticePattern} from "./cdc-grade8-science-model-audit.mjs";
@@ -414,6 +415,7 @@ function renderPaperPreview(paper = generatedPaper) {
 }
 function printPaper(paper = generatedPaper, includeAnswers = false) {
   if (!paper) return;
+  if(Number(paper.gradeNumber)===9){try{assertGrade9ExamPaperMatches(paper);}catch(e){message(e.message,true);return;}}
   if(paper.qualityReport?.teacherReviewRequired&&$("qpAutoReviewed")?.checked!==true){
    message("प्रश्नपत्र र उत्तरकुञ्जिका समीक्षा पुष्टि गरेपछि मात्र Print गर्न मिल्छ।",true);
    return;
@@ -579,7 +581,7 @@ async function loadCurrentData() {
  // WCA/CCA questions with 2-4 subquestions cannot be represented by the
  // simple exact allocator. Do not let a flat admin blueprint falsely claim
  // official CDC mathematics compliance for the 75-mark paper.
- currentBlueprint=officialComputerGrid||(!officialOptionalMathGuide?
+ currentBlueprint=officialComputerGrid||(grade!==9&&!officialOptionalMathGuide?
   blueprintRows.sort((a,b)=>Number(b.updatedAt?.seconds||0)-Number(a.updatedAt?.seconds||0))[0]||null:null);
  // Read-only CDC unit titles shipped with the portal. Teachers can select
  // units immediately; no spreadsheet import or school database write is needed.
@@ -909,6 +911,7 @@ function toggleMcqFields() {
   document.querySelectorAll(".qp-mcq-field").forEach(x=>x.classList.toggle("qp-hidden",!show));
 }
 async function generatePaper() {
+  if(gradeNumber(selectedClass)===9)throw Error("कक्षा ९: CDC Exact Grid अनुसार Auto Question Paper मात्र प्रयोग गर्नुहोस्; Manual Pattern परीक्षा प्रश्नपत्रको लागि स्वीकार हुँदैन।");
   if(!roleCanTeach(selectedClass,selectedSubject,selectedSection))throw new Error("यो विषय/Section मा प्रश्नपत्र बनाउने अनुमति छैन।");
   const questions=allocateQuestions();
   const fullMarks=Number($("qpPaperFullMarks").value);
@@ -947,6 +950,7 @@ function blueprintForFullMarks(fullMarks){
  const grade=gradeNumber(selectedClass),subject=selectedSubject;
  const official=getBundledComputerGrid({grade,subject,fullMarks});
  if(official)return official;
+ if(grade===9)return null;
  if(fullMarks===75&&getCdcOptionalMathGuide({grade,subject}))return null;
  return blueprintRows
   .filter(bp=>bp.active!==false&&Number(bp.fullMarks)===fullMarks)
@@ -1139,6 +1143,7 @@ async function generateSmartPaper(){
   throw Error("कक्षा/विषय/Section मा प्रश्नपत्र बनाउन अनुमति छैन।");
  const topicIds=selectedTopicIds(),target=Number($("qpPaperFullMarks").value);
  const language=$("qpAutoLanguage").value,mode=$("qpAutoMode").value;
+ if(gradeNumber(selectedClass)===9&&mode!=="cdc")throw Error("कक्षा ९: CDC Grid नमिल्ने अभ्यास ढाँचामा परीक्षा प्रश्नपत्र बनाइँदैन। CDC Exact छान्नुहोस्।");
  const strict=mode==="cdc",
   historicalPractice=!strict?getGrade8ScienceHistoricalPracticePattern({
    grade:gradeNumber(selectedClass),subject:selectedSubject,fullMarks:target
@@ -1172,6 +1177,8 @@ async function generateSmartPaper(){
  if(!sessionUid||!paperTitle||!academicYear||
     !Number.isSafeInteger(durationMinutes)||durationMinutes<15||durationMinutes>360)
   throw Error("प्रश्नपत्रको नाम, शैक्षिक वर्ष वा परीक्षा समय अमान्य छ।");
+ if(gradeNumber(selectedClass)===9&&durationMinutes!==selectedBlueprint?.durationMinutes)
+  throw Error("कक्षा ९: CDC Grid को परीक्षा समय मिलेन।");
  const planned=buildAutomaticQuestionPaper({
   questions:[...questionRows,...bundledPracticeQuestions],
   topicIds,fullMarks:target,language,
@@ -1244,6 +1251,7 @@ async function generateSmartPaper(){
 
 async function savePaper() {
   if(!generatedPaper)throw new Error("पहिले प्रश्नपत्र Auto Generate गर्नुहोस्।");
+  if(Number(generatedPaper.gradeNumber)===9)assertGrade9ExamPaperMatches(generatedPaper);
   if(generatedPaper.qualityReport?.teacherReviewRequired&&$("qpAutoReviewed")?.checked!==true)
    throw Error("प्रश्नपत्र र उत्तरकुञ्जिका समीक्षा पुष्टि नगरी Save गर्न मिल्दैन।");
   // Persist only the paper schema; preview qualityReport and local id stay in memory.

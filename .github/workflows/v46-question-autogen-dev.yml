@@ -20,6 +20,8 @@ on:
       - 'scripts/test-v46-optional-math-ui.mjs'
       - 'cdc-grid-source-index.mjs'
       - 'cdc-grade9-release-audit.mjs'
+      - 'cdc-grade9-paper-grid-guard.mjs'
+      - 'scripts/test-cdc-grade9-paper-grid-guard.mjs'
       - 'cdc-grade9-science-archive-audit.mjs'
       - 'scripts/test-cdc-grade9-science-archive-audit.mjs'
       - 'cdc-grade9-computer-original-practice.mjs'
@@ -84,6 +86,8 @@ jobs:
           node --check scripts/test-v46-optional-math-ui.mjs
           node --check cdc-grid-source-index.mjs
           node --check cdc-grade9-release-audit.mjs
+          node --check cdc-grade9-paper-grid-guard.mjs
+          node --check scripts/test-cdc-grade9-paper-grid-guard.mjs
           node --check cdc-grade9-science-archive-audit.mjs
           node --check scripts/test-cdc-grade9-science-archive-audit.mjs
           node --check cdc-grade9-computer-original-practice.mjs
@@ -123,6 +127,8 @@ jobs:
         run: node scripts/test-cdc-grade9-science-archive-audit.mjs
       - name: Verify Grade 9 all-subject CDC Grid, question bank and teacher-test release gate
         run: node scripts/test-cdc-grade9-release-audit.mjs
+      - name: Reject Grade 9 exam papers that do not match verified CDC Grid at Save and Print
+        run: node scripts/test-cdc-grade9-paper-grid-guard.mjs
       - name: Verify automatic CDC Grid source detection for Grade 6-10 subjects
         run: node scripts/test-cdc-grid-source-index.mjs
       - name: Verify 54 original bilingual formula-checked Optional Maths practice questions
