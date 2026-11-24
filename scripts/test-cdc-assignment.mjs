@@ -595,6 +595,17 @@ assert.equal(field('outcomePicker').options.length,7);
 assert.match(field('annexRows').textContent,/७०००/);
 assert.match(field('annexRows').textContent,/९९९९/);
 assert.match(field('annexStatus').textContent,/154/);
-console.log('Seven current-year mathematics rubric themes and source-specific criteria passed');
+for(const [unit,count,page] of [['मेरो सिर्जना',6,156],['सञ्चार प्रविधि र बजार',10,158],['सङ्ख्याको ज्ञान',6,160],['गणितका आधारभूत क्रिया',5,162]]){
+ choice('unit',unit);
+ assert.equal(field('annex3').hidden,false,unit);
+ assert.equal(field('annexRows').rows.length,count*4,unit);
+ assert.equal(field('annexRows').rows[0].cells[0].rowSpan,count*4,unit);
+ assert.equal(field('outcomePicker').options.length,count+1,unit);
+ assert.equal(new Set([...field('outcomePicker').options].slice(1).map(o=>o.value)).size,count,unit);
+ assert.match(field('annexStatus').textContent,new RegExp(String(page)));
+}
+assert.match(field('annexRows').textContent,/तीन अङ्क × दुई अङ्क/);
+assert.match(field('annexRows').textContent,/शेष नरहने/);
+console.log('Eleven current-year mathematics rubric themes and source-specific criteria passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
