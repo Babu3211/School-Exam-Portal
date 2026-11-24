@@ -1,3 +1,4 @@
+import {neError} from './nepali-feedback.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
 import {discoverVerifiedSubjectExamSettings} from './discover-subject-exam-settings.mjs';
 import {inspectConfiguredClassMarks} from './configured-mark-preflight.mjs';
@@ -22,7 +23,7 @@ async function verifiedSession(uid,id){
  if(auth?.currentUser?.uid!==uid)throw new Error('Authentication changed');
  return session;
 }
-$('connect').onclick=async()=>{try{({auth,authSdk,db,api}=await connectSchoolFirebase());authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clear();message('प्रयोगकर्ता सत्र परिवर्तन भयो। पुनः लगइन गर्नुहोस्।')}if(!busy)lock(false)});$('connect').disabled=true;$('login').disabled=false;if(requestedSchool){$('schoolId').value=validateSchoolId(requestedSchool);if(auth.currentUser)queueMicrotask(()=>$('login').click())}message('Connected to V47')}catch(e){message('Connection failed: '+e.message)}};
+$('connect').onclick=async()=>{try{({auth,authSdk,db,api}=await connectSchoolFirebase());authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clear();message('प्रयोगकर्ता सत्र परिवर्तन भयो। पुनः लगइन गर्नुहोस्।')}if(!busy)lock(false)});$('connect').disabled=true;$('login').disabled=false;if(requestedSchool){$('schoolId').value=validateSchoolId(requestedSchool);if(auth.currentUser)queueMicrotask(()=>$('login').click())}message('V47 मा जडान भयो।')}catch(e){message('जडान असफल: '+neError(e))}};
 $('login').onclick=async()=>{
  if(busy||!auth)return;
  clear();const request=epoch;lock(true);
@@ -35,10 +36,10 @@ $('login').onclick=async()=>{
   if(request!==epoch)throw new Error('Login changed');
   if(id!==$('schoolId').value.trim())throw new Error('School selection changed');
   actor={uid:session.uid,role:'teacher',active:true,schoolId:id};if(freshSignIn)startVerifiedSchoolActivity();schoolId=id;$('work').hidden=false;message('शिक्षकको लगइन सफल भयो। आफ्नो कक्षा र विषय छान्नुहोस्।');
- }catch(e){if(request===epoch){clear();const failedEpoch=epoch;try{await authSdk.signOut(auth)}catch{}if(epoch===failedEpoch){lock(false);message('Sign in failed: '+e.message)}}}
+ }catch(e){if(request===epoch){clear();const failedEpoch=epoch;try{await authSdk.signOut(auth)}catch{}if(epoch===failedEpoch){lock(false);message('लगइन असफल: '+neError(e))}}}
  finally{if(request===epoch)lock(false)}
 };
-$('logout').onclick=async()=>{if(busy)return;lock(true);clear();try{await authSdk.signOut(auth);message('Signed out')}catch(e){message('Sign out failed: '+e.message)}finally{lock(false)}};
+$('logout').onclick=async()=>{if(busy)return;lock(true);clear();try{await authSdk.signOut(auth);message('सफलतापूर्वक लगआउट भयो।')}catch(e){message('लगआउट असफल: '+neError(e))}finally{lock(false)}};
 $('classId').addEventListener('change',()=>{clearTeacherDraft();$('students').replaceChildren();$('count').textContent='';$('subjectId').replaceChildren();selectionEpoch++;if(!busy)lock(false)});
 $('subjectId').addEventListener('change',()=>{clearTeacherDraft();$('students').replaceChildren();$('count').textContent='';selectionEpoch++;if(!busy)lock(false)});
 $('loadAssignments').onclick=async()=>{
@@ -83,7 +84,7 @@ $('loadAssignments').onclick=async()=>{
   }
   $('load').disabled=true;
   message(verified.length+' assigned subjects verified. Choose a subject and load the class.');
- }catch(e){if(request===epoch&&selection===selectionEpoch){$('subjectId').replaceChildren();message('Assigned subject load failed: '+e.message)}}
+ }catch(e){if(request===epoch&&selection===selectionEpoch){$('subjectId').replaceChildren();message('तोकिएको विषय लोड भएन: '+neError(e))}}
  finally{if(request===epoch)lock(false)}
 };
 $('load').onclick=async()=>{
@@ -104,7 +105,7 @@ $('load').onclick=async()=>{
    fragment.append(tr);
   }
   $('students').append(fragment);$('count').textContent=roster.count+' assigned-class students (read-only)';message('विद्यार्थी सूची लोड भयो। यो पृष्ठबाट अंक Save गर्न मिल्दैन।');
- }catch(e){if(request===epoch&&selection===selectionEpoch){$('students').replaceChildren();$('count').textContent='';message('Access denied or roster unavailable: '+e.message)}}
+ }catch(e){if(request===epoch&&selection===selectionEpoch){$('students').replaceChildren();$('count').textContent='';message('अनुमति छैन वा विद्यार्थी सूची उपलब्ध भएन: '+neError(e))}}
  finally{if(request===epoch)lock(false)}
 };
 
@@ -127,7 +128,7 @@ $('loadAttendance').onclick=async()=>{
   }
   $('students').append(fragment);$('count').textContent=roster.count+' attendance-duty students (read-only)';
   message('Attendance जिम्मेवारी प्रमाणित भयो। विद्यार्थी सूची मात्र देखाइएको छ; Save गर्न मिल्दैन।');
- }catch(e){if(request===epoch&&selection===selectionEpoch){$('students').replaceChildren();$('count').textContent='';message('Attendance duty denied or roster unavailable: '+e.message)}}
+ }catch(e){if(request===epoch&&selection===selectionEpoch){$('students').replaceChildren();$('count').textContent='';message('हाजिरी जिम्मेवारीको अनुमति छैन वा विद्यार्थी सूची उपलब्ध भएन: '+neError(e))}}
  finally{if(request===epoch)lock(false)}
 };
 
@@ -245,7 +246,7 @@ $('loadTeacherDraft').onclick=async()=>{
   $('teacherDraftStatus').textContent=roster.count+' विद्यार्थी, '+settings.components.length+
     ' Examination Settings Components। '+(restored?'Draft Revision '+restored.revision+' सुरक्षित छ।':'नयाँ Draft।')+
     ' सबै अंक भरेपछि Validate गर्नुहोस्। यो आधिकारिक नतिजा होइन।';
- }catch(e){if(current===draftEpoch&&request===epoch){clearTeacherDraft();$('teacherDraftStatus').textContent='Teacher Draft खोल्न सकिएन: '+e.message}}
+ }catch(e){if(current===draftEpoch&&request===epoch){clearTeacherDraft();$('teacherDraftStatus').textContent='Teacher Draft खोल्न सकिएन: '+neError(e)}}
  finally{if(request===epoch)lock(false)}
 };
 $('inspectTeacherDraft').onclick=()=>{
@@ -263,7 +264,7 @@ $('inspectTeacherDraft').onclick=()=>{
   $('teacherDraftStatus').textContent=result.complete?
    'सबै '+result.rosterCount+' विद्यार्थीका अंक मिलेको छ। Teacher Draft मात्र Save गर्न मिल्छ।':
    'Draft अपूर्ण छ: '+result.missing.length+' छुटेका र '+result.invalid.length+' अमान्य अंक।';
- }catch(e){draftInspected=false;$('teacherDraftStatus').textContent='Draft जाँच असफल: '+e.message}
+ }catch(e){draftInspected=false;$('teacherDraftStatus').textContent='Draft जाँच असफल: '+neError(e)}
  lockTeacherDraft(false);
 };
 $('saveTeacherDraft').onclick=async()=>{
@@ -271,7 +272,7 @@ $('saveTeacherDraft').onclick=async()=>{
  const c=draftContext,request=epoch,current=draftEpoch,selectedActor=actor;
  if(!confirm('यो कक्षाका सबै विद्यार्थीको अंक Teacher DRAFT मा मात्र Save गर्ने हो। आधिकारिक नतिजा प्रकाशित हुँदैन। अगाडि बढ्ने?'))return;
  let drafts;
- try{drafts=collectTeacherDraft()}catch(e){$('teacherDraftStatus').textContent=e.message;return}
+ try{drafts=collectTeacherDraft()}catch(e){$('teacherDraftStatus').textContent=neError(e);return}
  lock(true);
  $('teacherDraftStatus').textContent='सम्पूर्ण कक्षाको Teacher Draft सुरक्षित गर्न पुनः प्रमाणित हुँदैछ…';
  try{
@@ -295,7 +296,7 @@ $('saveTeacherDraft').onclick=async()=>{
     (e.name==='TeacherDraftPostSaveReviewError'
      ? 'Draft Revision '+e.revision+' Commit भएको छ, तर अन्तिम जाँच असफल भयो। '
      : 'Draft Save को स्थिति पुष्टि भएन। ')+
-    'पुनः Save नगर्नुहोस्; पहिले कक्षा र सुरक्षित Revision Reload गरी जाँच्नुहोस्। कारण: '+(e.cause?.message??e.message);
+    'पुनः Save नगर्नुहोस्; पहिले कक्षा र सुरक्षित Revision Reload गरी जाँच्नुहोस्। कारण: '+neError(e.cause??e);
   }
  }finally{if(epoch===request)lock(false)}
 };

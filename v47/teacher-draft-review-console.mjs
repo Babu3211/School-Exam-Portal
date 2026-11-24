@@ -1,3 +1,4 @@
+import {neError} from './nepali-feedback.mjs';
 // Read-only School Admin review. No Firestore write/import/approval API.
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
@@ -35,13 +36,13 @@ $('connect').onclick=async()=>{
    if(actor&&user?.uid!==actor.uid){clearSession();status('Login परिवर्तन भयो। फेरि लगइन गर्नुहोस्।')}
   });
   $('login').disabled=false;
-  status('Connected to separate V47 Firebase project.');
+  status('छुट्टै V47 Firebase परियोजनामा जडान भयो।');
   if(requestedSchool){
    $('schoolId').value=validateSchoolId(requestedSchool);
    $('adminBack').href='./school-admin.html?schoolId='+encodeURIComponent(requestedSchool);
    if(auth.currentUser)queueMicrotask(()=>$('login').click());
   }
- }catch(e){$('connect').disabled=false;status('Connection failed: '+e.message)}
+ }catch(e){$('connect').disabled=false;status('जडान असफल: '+neError(e))}
 };
 $('login').onclick=async()=>{
  if(busy||!auth)return;
@@ -60,15 +61,15 @@ $('login').onclick=async()=>{
   schoolId=id;$('schoolId').disabled=true;if(!existing)startVerifiedSchoolActivity();
   $('reviewArea').hidden=false;$('logout').disabled=false;
   $('adminBack').href='./school-admin.html?schoolId='+encodeURIComponent(id);
-  status('School Admin verified for school '+id+'. Reviews are read-only.');
+  status('विद्यालयको School Admin प्रमाणित भयो: '+id+'. Reviews are read-only.');
  }catch(e){
-  if(current===epoch){clearSession();status('Verification failed: '+e.message)}
+  if(current===epoch){clearSession();status('प्रमाणीकरण असफल: '+neError(e))}
  }finally{busy=false;$('login').disabled=!auth}
 };
 $('logout').onclick=async()=>{
  if(busy)return;
  clearSession();
- try{if(auth)await authSdk.signOut(auth);status('Signed out')}catch(e){status('Sign out failed: '+e.message)}
+ try{if(auth)await authSdk.signOut(auth);status('सफलतापूर्वक लगआउट भयो।')}catch(e){status('लगआउट असफल: '+neError(e))}
 };
 for(const id of ['teacherUid','classId','subjectId','examId']){
  $(id).addEventListener('input',()=>clearReview('Selection changed. Verify the Draft again.'));
@@ -116,7 +117,7 @@ $('review').onclick=async()=>{
   $('reviewStatus').textContent='प्रमाणित Draft Revision '+result.revision+' · '+result.rosterCount+
    ' विद्यार्थी · '+result.subjectName+' · Read-only, NOT official/published.';
  }catch(e){if(current===epoch&&request===requestId){
-  clearReview('Review रोकियो: '+e.message+' पुनः प्रमाणित गरेर खोल्नुहोस्।');
+  clearReview('Review रोकियो: '+neError(e)+' पुनः प्रमाणित गरेर खोल्नुहोस्।');
  }}finally{busy=false;$('review').disabled=!actor}
 };
 $('exportDraft').onclick=async()=>{
@@ -149,7 +150,7 @@ $('exportDraft').onclick=async()=>{
   $('reviewStatus').textContent='Draft Excel: '+file.count+
    ' विद्यार्थी · Revision '+revision+' · NOT OFFICIAL / NOT PUBLISHED.';
  }catch(e){if(current===epoch&&request===requestId)
-  clearReview('Excel Export रोकियो: '+e.message+'। फेरि Draft Review गर्नुहोस्।');
+  clearReview('Excel Export रोकियो: '+neError(e)+'। फेरि Draft Review गर्नुहोस्।');
  }finally{busy=false;$('exportDraft').disabled=!verifiedSelection||verifiedRevision===null}
 };
 if(requestedSchool)queueMicrotask(()=>$('connect').click());

@@ -1,3 +1,4 @@
+import {neError} from './nepali-feedback.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
 import {createV46ReadOnlyBridge} from './v46-readonly-bridge.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
@@ -26,7 +27,7 @@ $('connect').onclick=async()=>{
   // Dashboard already passes the selected IEMIS school in its verified link.
   // Reuse that Firebase login, but always reload live school membership and records.
   if(requestedSchool&&auth.currentUser)queueMicrotask(()=>$('login').click());
- }catch(error){status(error.message);$('connect').disabled=false}
+ }catch(error){status(neError(error));$('connect').disabled=false}
  finally{connecting=false}
 };
 $('login').onclick=()=>{
@@ -61,8 +62,8 @@ $('login').onclick=()=>{
   const classSelect=$('summaryClass');classSelect.replaceChildren(new Option('Select class',''));
   for(let n=1;n<=12;n++)classSelect.add(new Option('Class '+n,String(n)));
   for(const id of ['summaryExam','summaryClass','summaryAnnual','summaryRun','coverageSection','coverageSubject','coverageRun'])$(id).disabled=false;
-  $('report').hidden=false;status('Read-only report inputs loaded. No results were published.');
- }catch(error){if(current===epoch){clear();try{if(freshSignIn&&signedUid&&auth?.currentUser?.uid===signedUid)await authSdk.signOut(auth)}catch{}status('Report unavailable: '+error.message)}}
+  $('report').hidden=false;status('हेर्न मात्र मिल्ने प्रतिवेदनका विवरण लोड भए। कुनै नतिजा प्रकाशित गरिएको छैन।');
+ }catch(error){if(current===epoch){clear();try{if(freshSignIn&&signedUid&&auth?.currentUser?.uid===signedUid)await authSdk.signOut(auth)}catch{}status('प्रतिवेदन उपलब्ध भएन: '+neError(error))}}
  finally{busy=false;$('login').disabled=!auth||loggingOut;if(!auth?.currentUser)$('logout').disabled=true}
  })();
 };
@@ -74,8 +75,8 @@ $('logout').onclick=async()=>{
   // A pending sign-in may finish after signOut; wait and sign out again.
   if(loginTask){try{await loginTask}catch{ /* still sign out after a failed login */ }}
   if(auth)await authSdk.signOut(auth);
-  status('Signed out');
- }catch(error){status('Unable to sign out: '+error.message)}
+  status('सफलतापूर्वक लगआउट भयो।');
+ }catch(error){status('लगआउट गर्न सकिएन: '+neError(error))}
  finally{loggingOut=false;$('login').disabled=!auth;loginTask=null}
 };
 
@@ -102,7 +103,7 @@ async function withVerifiedReportSnapshot(render){
  }catch(error){
   if(reportRows===snapshot){
    clear();
-   status('विद्यालयको अनुमति पुनः जाँच्न सकिएन। फेरि Login गर्नुहोस्: '+error.message);
+   status('विद्यालयको अनुमति पुनः जाँच्न सकिएन। फेरि Login गर्नुहोस्: '+neError(error));
   }
  }finally{verifyingReport=false}
 }
@@ -125,12 +126,12 @@ $('summaryRun').onclick=()=>withVerifiedReportSnapshot(rows=>{
    body.append(tr);
   }
   $('summaryResult').textContent='Diagnostic only: '+preview.completeCount+'/'+preview.records.length+' mark records have complete grade inputs. Official GPA and publication disabled.';
- }catch(error){$('summaryRows').replaceChildren();$('summaryResult').textContent='Unable to inspect: '+error.message}
+ }catch(error){$('summaryRows').replaceChildren();$('summaryResult').textContent='जाँच गर्न सकिएन: '+neError(error)}
 });
 
 $('coverageRun').onclick=()=>withVerifiedReportSnapshot(rows=>{
  try{
   const result=inspectClassMarkCoverage(rows,{examId:$('summaryExam').value,classNo:Number($('summaryClass').value),subject:$('coverageSubject').value,section:$('coverageSection').value.trim()||null});
   $('coverageResult').textContent='Read-only class check: '+result.rosterCount+' students, '+result.markCount+' marks; missing '+result.missing.length+', duplicate '+result.duplicates.length+', outsider '+result.outsiders.length+'. '+(result.complete?'Roster covered.':'Not complete.')+' Save and publication disabled.';
- }catch(error){$('coverageResult').textContent='Class coverage unavailable: '+error.message}
+ }catch(error){$('coverageResult').textContent='कक्षाका अभिलेखको पूर्णता जाँच उपलब्ध भएन: '+neError(error)}
 });

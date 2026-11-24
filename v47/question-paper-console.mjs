@@ -1,3 +1,4 @@
+import {neError} from './nepali-feedback.mjs';
 // School-verified, read-only CDC links and original SMSS practice questions.
 // Never imports V46's project-global Firebase question-paper writer.
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
@@ -80,9 +81,9 @@ $('connect').onclick=async()=>{
   ({auth,authSdk,db,api}=await connectSchoolFirebase());
   authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){reset();status('विद्यालय Login परिवर्तन भयो। पुनः प्रमाणित गर्नुहोस्।')}});
   $('connect').disabled=true;$('login').disabled=false;
-  if(requestedSchool)try{$('schoolId').value=validateSchoolId(requestedSchool)}catch(e){status('विद्यालय ID अमान्य: '+e.message)}
+  if(requestedSchool)try{$('schoolId').value=validateSchoolId(requestedSchool)}catch(e){status('विद्यालय ID अमान्य: '+neError(e))}
   status('V47 जडान भयो। School Login प्रमाणित गर्नुहोस्।');
- }catch(e){status('V47 जडान असफल: '+e.message)}
+ }catch(e){status('V47 जडान असफल: '+neError(e))}
 };
 $('login').onclick=async()=>{
  if(!auth||busy)return;
@@ -106,13 +107,13 @@ $('login').onclick=async()=>{
   $('resourceArea').hidden=false;renderSources();
   status('स्रोत सूची खुल्यो। प्रश्नपत्र प्रकाशन वा Firestore Write हुँदैन।');
  }catch(e){
-  if(request===epoch){reset();try{await authSdk.signOut(auth)}catch{}status('स्रोत खोल्न सकिएन: '+e.message)}
+  if(request===epoch){reset();try{await authSdk.signOut(auth)}catch{}status('स्रोत खोल्न सकिएन: '+neError(e))}
  }finally{busy=false;$('login').disabled=!auth}
 };
 $('logout').onclick=async()=>{
  reset();
  try{if(auth)await authSdk.signOut(auth);status('Logout सफल भयो।')}
- catch(e){status('Logout असफल: '+e.message)}
+ catch(e){status('Logout असफल: '+neError(e))}
 };
 $('grade').onchange=()=>{if(actor&&register)renderSources()};
 async function loadPractice(grade){
@@ -137,8 +138,8 @@ async function loadPractice(grade){
   status('Original SMSS अभ्यास प्रश्नको पूर्वावलोकन तयार छ। Teacher Review आवश्यक छ।');
  }catch(e){
   if(request===epoch&&actor===member&&version===previewVersion){
-   clearPreview();$('paperStatus').textContent='Practice preview blocked: '+e.message;
-   status('अभ्यास प्रश्न लोड हुन सकेन: '+e.message);
+   clearPreview();$('paperStatus').textContent='अभ्यास प्रश्नको पूर्वावलोकन रोकियो: '+neError(e);
+   status('अभ्यास प्रश्न लोड हुन सकेन: '+neError(e));
   }
  }finally{loading=false;if(request===epoch){$('preview8').disabled=false;$('preview10').disabled=false}}
 }
@@ -232,7 +233,7 @@ $('updatePractice').onclick=async()=>{
   paper=fresh;displayPaper();
   status('छनोट गरेका मौलिक अभ्यास प्रश्नको पूर्वावलोकन तयार भयो। यो आधिकारिक प्रश्नपत्र होइन।');
  }catch(e){
-  if(request===epoch&&actor===member){invalidateSelectedPreview();status('अभ्यास प्रश्नको चयन रोकियो: '+e.message)}
+  if(request===epoch&&actor===member){invalidateSelectedPreview();status('अभ्यास प्रश्नको चयन रोकियो: '+neError(e))}
  }finally{busy=false;if(request===epoch)selectionSummary()}
 };
 
@@ -246,6 +247,6 @@ $('printPractice').onclick=async()=>{
   if(version!==previewVersion||frame.dataset.loadedVersion!==String(version)||
      !frame.contentWindow)throw Error('Practice preview not ready for printing');
   frame.contentWindow.focus();frame.contentWindow.print();
- }catch(e){clearPreview();status('Practice print blocked: '+e.message)}
+ }catch(e){clearPreview();status('अभ्यास प्रश्नको छपाइ रोकियो: '+neError(e))}
 };
 if(requestedSchool)queueMicrotask(()=>$('connect').click());
