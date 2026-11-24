@@ -48,6 +48,16 @@ jobs:
         run: node v47/test-super-admin-session-guard.mjs
       - name: Enforce V47 marks publication safety
         run: node v47/test-production-marks-guard.mjs
+      # Gate this refreshed mobile login preview on real browser testing, not static evidence alone.
+      - name: Install Chromium E2E dependencies
+        run: |
+          npm install --no-package-lock --no-audit --no-fund --no-save firebase@11.10.0 esbuild@0.25.5 playwright@1.52.0
+          npm install --prefix v47-runtime --no-package-lock --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Browser login and mobile layout acceptance
+        env:
+          GCLOUD_PROJECT: demo-smss-v47-browser
+        run: npx firebase emulators:exec --project demo-smss-v47-browser --config v47/firebase.browser-test.json --only auth,firestore "node v47/browser-e2e/run.mjs"
       - name: Check V47 deployment credentials
         env:
           V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}

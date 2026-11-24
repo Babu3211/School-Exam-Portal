@@ -94,17 +94,25 @@ try{
  const wait=async(page,fn,arg)=>page.waitForFunction(fn,arg,{timeout:30000});
  async function login(page,sid,uid,success=true){
   await page.goto(origin+'/');
-  await page.locator('#dashboardConnect').click();
   await wait(page,()=>!document.getElementById('dashboardLogin').disabled);
+  assert.equal(await page.locator('#verifiedSidebar').isVisible(),false);
+  assert.equal(await page.locator('#verifiedDashboard').isVisible(),false);
+  assert.equal(await page.locator('#dashboardConnect').isVisible(),false);
+  assert.equal(await page.locator('#dashboardLoginFields').isVisible(),true);
   await page.locator('#dashboardSchool').fill(sid);
   await page.locator('#dashboardEmail').fill(email(uid));
   await page.locator('#dashboardPassword').fill(password);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,'Login must fit viewport');
   await page.locator('#dashboardLogin').click();
   if(success){
    await wait(page,s=>document.getElementById('schoolIdentity').textContent.includes(s),sid);
    await wait(page,()=>!document.getElementById('dashboardMetricCards').hidden);
    assert.equal(await page.locator('[data-metric="students"]').textContent(),'1');
    assert.equal(await page.locator('#dashboardPassword').inputValue(),'');
+   assert.equal(await page.locator('#dashboardLoginFields').isVisible(),false);
+   assert.equal(await page.locator('#verifiedSidebar').isVisible(),true);
+   assert.equal(await page.locator('#verifiedDashboard').isVisible(),true);
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,'Dashboard must fit viewport');
   }else{
    await wait(page,()=>document.getElementById('dashboardStatus').textContent.includes('Login असफल'));
    assert.equal(await page.locator('#schoolIdentity').textContent(),'No school verified');
@@ -146,9 +154,15 @@ try{
  for(const [school,uid,role] of [[schools[0],'alpha-admin','school_admin'],[schools[0],'alpha-viewer','viewer'],[schools[0],'alpha-teacher','teacher'],[schools[1],'beta-admin','school_admin']]){
   const {context,page,errors}=await newSession();
   try{
+   if(role==='viewer')await page.setViewportSize({width:375,height:812});
    await login(page,school.sid,uid);
    if(role!=='school_admin')assert.equal(await page.locator('[data-required-role="school_admin"][aria-disabled="false"]').count(),0);
    await report(page,school,role);assert.deepEqual(errors,[]);
+   // After report logout, returning to the dashboard must not restore any menu.
+   await page.goto(origin+'/');
+   await wait(page,()=>!document.getElementById('dashboardLogin').disabled);
+   assert.equal(await page.locator('#verifiedDashboard').isVisible(),false);
+   assert.equal(await page.locator('#verifiedSidebar').isVisible(),false);
    console.log('PASS browser school/report/logout for '+uid+' ('+role+')');
   }finally{await context.close()}
  }

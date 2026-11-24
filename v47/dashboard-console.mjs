@@ -34,7 +34,13 @@ async function verifiedSchoolLabel(schoolId,registryName){
  return {label:[profile.nameEnglish,profile.nameNepali,profile.addressEnglish,profile.addressNepali].filter(Boolean).join(' · '),map:schoolSatelliteMapLinks({schoolId,profile})};
 }
 function message(value){$('dashboardStatus').textContent=value}
-function lock(){for(const link of document.querySelectorAll('[data-school-module]')){const allowed=!!verified&&schoolDashboardAccess(verified.role,link.dataset.requiredRole==='school_admin'?'school-admin':'module');link.setAttribute('aria-disabled',String(!allowed));link.tabIndex=allowed?0:-1;link.classList.toggle('locked',!allowed)}$('schoolIdentity').textContent=verified?verified.name+' · '+verified.schoolId+' · '+verified.role:'No school verified';$('schoolAccessMode').textContent=!verified?'Login required to view school modules.':verified.role==='viewer'?'Viewer — पढ्न र रिपोर्ट हेर्न मात्र मिल्छ। Add, Edit, Delete वा Save अनुमति छैन।':verified.role==='teacher'?'Teacher — तोकिएको कक्षा र विषयमा मात्र अनुमति अनुसार काम गर्न मिल्छ।':'School Admin — विद्यालयको व्यवस्थापन गर्न मिल्छ; प्रत्येक Module ले अनुमति पुनः जाँच्छ।';$('dashboardLogout').disabled=!verified;$('dashboardRefreshStats').disabled=!verified;$('schoolMapSection').hidden=!verified;$('schoolMapLoad').disabled=!verified?.map;$('schoolMapMessage').textContent=!verified?'विद्यालय प्रमाणित गरेपछि नक्सा हेर्नुहोस्।':verified.map?'नक्सा खोल्न बटन थिच्नुहोस्। देखाइएको स्थान खोज परिणाम हो, प्रमाणित GPS होइन।':'School Settings मा विद्यालयको ठेगाना राखेपछि Satellite Map उपलब्ध हुन्छ।'}
+function lock(){
+ const signedIn=!!verified;
+ for(const id of ['verifiedSidebar','verifiedOverview','verifiedDashboard','dashboardLogout'])$(id).hidden=!signedIn;
+ $('dashboardLoginFields').hidden=signedIn;
+ document.body.classList.toggle('verified-school',signedIn);
+ if(signedIn){$('dashboardPassword').value='';$('dashboardPassword').type='password';$('dashboardPasswordToggle').textContent='Show';$('dashboardPasswordToggle').setAttribute('aria-pressed','false');}
+ for(const link of document.querySelectorAll('[data-school-module]')){const allowed=!!verified&&schoolDashboardAccess(verified.role,link.dataset.requiredRole==='school_admin'?'school-admin':'module');link.setAttribute('aria-disabled',String(!allowed));link.tabIndex=allowed?0:-1;link.classList.toggle('locked',!allowed)}$('schoolIdentity').textContent=verified?verified.name+' · '+verified.schoolId+' · '+verified.role:'No school verified';$('schoolAccessMode').textContent=!verified?'Login required to view school modules.':verified.role==='viewer'?'Viewer — पढ्न र रिपोर्ट हेर्न मात्र मिल्छ। Add, Edit, Delete वा Save अनुमति छैन।':verified.role==='teacher'?'Teacher — तोकिएको कक्षा र विषयमा मात्र अनुमति अनुसार काम गर्न मिल्छ।':'School Admin — विद्यालयको व्यवस्थापन गर्न मिल्छ; प्रत्येक Module ले अनुमति पुनः जाँच्छ।';$('dashboardLogout').disabled=!verified;$('dashboardRefreshStats').disabled=!verified;$('schoolMapSection').hidden=!verified;$('schoolMapLoad').disabled=!verified?.map;$('schoolMapMessage').textContent=!verified?'विद्यालय प्रमाणित गरेपछि नक्सा हेर्नुहोस्।':verified.map?'नक्सा खोल्न बटन थिच्नुहोस्। देखाइएको स्थान खोज परिणाम हो, प्रमाणित GPS होइन।':'School Settings मा विद्यालयको ठेगाना राखेपछि Satellite Map उपलब्ध हुन्छ।'}
 const DASHBOARD_METRICS=Object.freeze(['students','staff','subjects','exams','members','activeMembers']);
 function resetMetricCards(){
  $('dashboardMetricCards').hidden=true;
@@ -194,12 +200,12 @@ for(const eventName of ['pointerdown','keydown'])document.addEventListener(event
  if(!touchSchoolActivity()){void expireIdle();return}
  lastActivity=Date.now();void noteDashboardActivity();
 },{passive:true,capture:true});
-$('dashboardConnect').onclick=async()=>{if(busy||auth)return;busy=true;$('dashboardConnect').disabled=true;try{
+$('dashboardConnect').onclick=async()=>{if(busy||auth)return;busy=true;$('dashboardConnect').disabled=true;$('dashboardConnect').hidden=true;message('Connecting securely to V47…');try{
  ({auth,authSdk,db,api}=await connectSchoolFirebase());
  authSdk.onAuthStateChanged(auth,user=>{if(verified&&user?.uid!==verified.uid){sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();message('Login सत्र परिवर्तन भयो। फेरि प्रमाणित गर्नुहोस्।')}});
- $('dashboardLogin').disabled=false;message('V47 Firebase जडान भयो।');await restoreVerifiedSchool();
- }catch(e){message('जडान असफल: '+e.message);$('dashboardConnect').disabled=false}finally{busy=false}};
-$('dashboardLogin').onclick=async()=>{if(busy||!auth)return;busy=true;$('dashboardLogin').disabled=true;clear();try{
+ $('dashboardLogin').disabled=false;message('Enter your school IEMIS ID, email and password.');await restoreVerifiedSchool();
+ }catch(e){message('जडान असफल: '+e.message);$('dashboardConnect').disabled=false;$('dashboardConnect').hidden=false}finally{busy=false}};
+$('dashboardLoginForm').onsubmit=async(event)=>{event.preventDefault();if(busy||!auth)return;busy=true;$('dashboardLogin').disabled=true;clear();try{
  const schoolId=validateSchoolId($('dashboardSchool').value.trim());
  const credential=await authSdk.signInWithEmailAndPassword(auth,$('dashboardEmail').value,$('dashboardPassword').value);
  $('dashboardPassword').value='';
@@ -213,6 +219,10 @@ $('dashboardLogin').onclick=async()=>{if(busy||!auth)return;busy=true;$('dashboa
  message('विद्यालय प्रमाणित भयो। साझा Session समर्थित Module मा पुनः Password आवश्यक पर्दैन।');void refreshStats();
  }catch(e){sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();try{await authSdk.signOut(auth)}catch{}message('Login असफल: '+e.message)}finally{busy=false;$('dashboardLogin').disabled=!auth}};
 $('dashboardLogout').onclick=async()=>{if(busy)return;clear();sessionStorage.removeItem(SCHOOL_SELECTION_KEY);try{if(auth)await authSdk.signOut(auth);message('Logout सफल भयो।')}catch(e){message('Logout असफल: '+e.message)}};
+$('dashboardPasswordToggle').onclick=()=>{
+ const field=$('dashboardPassword'),show=field.type==='password';
+ field.type=show?'text':'password';$('dashboardPasswordToggle').textContent=show?'Hide':'Show';$('dashboardPasswordToggle').setAttribute('aria-pressed',String(show));$('dashboardPasswordToggle').setAttribute('aria-label',show?'Hide password':'Show password');
+};
 lock();
-
-if(sessionStorage.getItem(SCHOOL_SELECTION_KEY))queueMicrotask(()=>$('dashboardConnect').click());
+// Automatically connect, without authenticating or opening any school data.
+queueMicrotask(()=>$('dashboardConnect').click());

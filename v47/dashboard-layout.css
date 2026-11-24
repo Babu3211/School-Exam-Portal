@@ -1,0 +1,35 @@
+/* V47 mobile/login presentation, independent of authorization rules. */
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{max-width:100%;margin:0}
+.portal-shell:has(#verifiedSidebar[hidden]){display:block;min-height:100dvh;background:linear-gradient(160deg,#e6f0ff,#f7faff 60%,#e9f1fc)}
+.portal-shell main{width:100%;min-width:0;padding:clamp(12px,3vw,24px);overflow-wrap:anywhere}
+.portal-shell:has(#verifiedSidebar[hidden]) main{max-width:490px;margin:auto;padding-top:clamp(18px,6vh,60px)}
+.portal-hero{display:flex;align-items:center;gap:14px;padding:20px;background:linear-gradient(135deg,#113e77,#1766bc);box-shadow:0 8px 24px #12345b19}
+.portal-hero h1{font-size:clamp(20px,4vw,30px);line-height:1.18;margin:5px 0 6px}
+.portal-hero p{font-size:13px;color:#edf5ff}
+.hero-logo{flex:none;width:64px;height:64px;border-radius:14px;object-fit:contain;background:#fff}
+.login-kicker{font-size:10px;letter-spacing:.07em;font-weight:700;color:#dcecff}
+.preview-label{display:inline-block;font-size:10px;font-weight:700;margin-left:6px;border:1px solid #b7d5ff;border-radius:4px;padding:2px 5px}
+.portal-mark{background:transparent;padding:0;flex:none;object-fit:contain}
+.login-card{padding:clamp(16px,4vw,24px);box-shadow:0 8px 24px #12345b0c}
+.login-welcome{text-align:center}
+.login-welcome h2{font-size:24px;margin:0 0 5px}
+.login-welcome p,.login-note{font-size:13px;color:#526b80}
+.role-strip{text-align:center;font-size:12px;color:#315880;background:#edf4ff;padding:9px;border-radius:8px}
+#dashboardLoginForm{display:grid;gap:7px;margin-top:15px}
+#dashboardLoginForm label{display:block;margin:6px 0 0;font-size:13px;font-weight:650}
+#dashboardLoginForm input{display:block;width:100%;min-width:0;min-height:46px;background:white;font-size:16px}
+.password-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px}
+#dashboardPasswordToggle{font-size:13px;background:#edf4ff;color:#1755a0}
+#dashboardLogin{margin-top:9px;min-height:46px;font-weight:750;background:#1769d2}
+#dashboardConnect{margin-top:10px;width:100%}
+.super-login{display:block;text-align:center;margin-top:16px;color:#1755a0;font-size:14px;font-weight:650}
+#dashboardStatus{font-size:13px;overflow-wrap:anywhere}
+#verifiedOverview .metric-grid{margin-bottom:12px}
+.grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.quick-links{grid-template-columns:repeat(4,minmax(0,1fr))}
+.quick-action,.tile{min-width:0}
+#verifiedDashboard{min-width:0}
+@media(max-width:850px){.portal-shell main{max-width:100%}.portal-shell:has(#verifiedSidebar[hidden]) main{max-width:490px}.quick-links{grid-template-columns:repeat(2,minmax(0,1fr))}.portal-sidebar{width:100%;min-width:0}}
+@media(max-width:360px){.portal-hero{gap:9px;padding:13px}.hero-logo{width:48px;height:48px}.login-kicker{font-size:9px}}
