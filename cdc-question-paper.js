@@ -28,7 +28,7 @@ import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-mat
 import {CDC_G10_OPTIONAL_MATH_2083_MODEL,compareCdc2083MathModelToBundledGrid} from "./cdc-optional-math-model-compare.mjs";
 import {inspectCdcOptionalMathPaper} from "./cdc-optional-math-composite.mjs";
 import {originalOptionalMathPracticeBank} from "./cdc-optional-math-original-practice.mjs";
-import {renderCdcCompositePaper} from "./cdc-optional-math-render.mjs";
+import {renderCdcCompositePaper,paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText} from "./cdc-optional-math-render.mjs";
 import {QUESTION_EXCEL_FIELDS,parseQuestionExcelSheet,CDC_GRID_EXCEL_FIELDS,parseCdcGridExcelSheet} from "./cdc-question-excel.mjs";
 import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
@@ -392,6 +392,7 @@ function renderPaperPreview(paper = generatedPaper) {
      renderCdcCompositePaper(paper,{escapeHtml:esc});
     return;
   }
+  const display=value=>esc(paperDisplayText(value,paper.language,paper.subject));
   const groups = ["mcq","very_short","short","long"];
   let number = 0;
   const report=paper.qualityReport||null;
@@ -413,13 +414,13 @@ function renderPaperPreview(paper = generatedPaper) {
     '<p class="qp-hint" style="background:#fff3df;padding:8px"><b>SMSS अभ्यास प्रश्नपत्र (CDC को प्रकाशित नमुना होइन):</b> शिक्षकले लागू पाठ्यक्रम, Grid, प्रश्न र उत्तर जाँचेर मात्र प्रयोग गर्नुहोस्।</p>':"")+
     `<div id="qpPrintArea" class="qp-paper-preview">
     <div style="text-align:center;border-bottom:1px solid #222;padding-bottom:10px">
-      <h2>${esc(paper.schoolName||"विद्यालयको नाम")}</h2><div>${esc(paper.schoolAddress||"")}</div>
-      <h3>${esc(paper.paperTitle)}</h3><b>${esc(paper.className)} · ${esc(paper.subject)}</b>
-      <div style="display:flex;justify-content:space-between;gap:8px;margin-top:12px"><span>शैक्षिक वर्ष: ${esc(paper.academicYear)}</span><span>समय: ${esc(paper.durationMinutes)} मिनेट</span><span>पूर्णाङ्क: ${esc(paper.fullMarks)}</span></div>
+      <h2>${display(paper.schoolName||"विद्यालयको नाम")}</h2><div>${display(paper.schoolAddress||"")}</div>
+      <h3>${display(paper.paperTitle)}</h3><b>${display(paperClassLabel(paper.className,paper.language))} · ${display(paperSubjectLabel(paper.subject,paper.language))}</b>
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-top:12px"><span>शैक्षिक वर्ष: ${display(paper.academicYear)}</span><span>समय: ${display(paper.durationMinutes)} मिनेट</span><span>पूर्णाङ्क: ${display(paper.fullMarks)}</span></div>
     </div>
     ${paper.questions.some(q=>String(q.questionId||"").startsWith("builtIn_"))?
       '<p style="font-size:12px;font-weight:bold;color:#7a3700;padding:8px;border:1px solid #c48740">अभ्यास प्रश्नपत्र — CDC प्रकाशित नमुना होइन। शिक्षकले Grid, तथ्य र उत्तर जाँचेर मात्र प्रयोग गर्नुहोस्।</p>':""}
-    ${groups.map(type=>{const list=paper.questions.filter(q=>q.questionType===type);if(!list.length)return "";return `<h3 style="text-align:left;margin-top:16px">${esc(questionTypeLabel(type))}</h3>${list.map(q=>{number++;return `<div class="qp-q"><div style="display:flex;justify-content:space-between;gap:10px"><b>${number}. ${esc(q.questionText)}</b><b>[${esc(q.marks)}]</b></div>${type==="mcq"?'<div style="margin-left:18px">'+(q.options||[]).map((o,i)=>'<div>'+String.fromCharCode(65+i)+'. '+esc(o)+'</div>').join("")+'</div>':""}</div>`;}).join("")}`;}).join("")}
+    ${groups.map(type=>{const list=paper.questions.filter(q=>q.questionType===type);if(!list.length)return "";return `<h3 style="text-align:left;margin-top:16px">${esc(questionTypeLabel(type))}</h3>${list.map(q=>{number++;return `<div class="qp-q"><div style="display:flex;justify-content:space-between;gap:10px"><b>${display(number)}. ${display(q.questionText)}</b><b>[${display(q.marks)}]</b></div>${type==="mcq"?'<div style="margin-left:18px">'+(q.options||[]).map((o,i)=>'<div>'+paperOptionLabel(i,paper.language)+'. '+display(o)+'</div>').join("")+'</div>':""}</div>`;}).join("")}`;}).join("")}
     <div style="text-align:center;margin-top:25px;font-weight:700">— प्रश्नपत्र समाप्त —</div>
   </div>`;
 }
@@ -434,9 +435,10 @@ function printPaper(paper = generatedPaper, includeAnswers = false) {
   if (!area) return;
   const w = window.open("", "_blank", "width=900,height=900");
   if (!w) { message("Print खोल्न Popup अनुमति दिनुहोस्।", true); return; }
+  const display=value=>esc(paperDisplayText(value,paper.language,paper.subject));
   const answerSheet = includeAnswers&&paper.questionFormat==="cdc_optional_math_composite"?
    '<div style="page-break-before:always">'+renderCdcCompositePaper(paper,{escapeHtml:esc,answerKey:true})+'</div>':
-   includeAnswers ? '<section style="page-break-before:always;font-family:Arial,sans-serif;padding:24px;color:#111"><h2>'+esc(paper.schoolName||"विद्यालय")+'</h2><h3>'+esc(paper.paperTitle||"प्रश्नपत्र")+' — उत्तरकुञ्जिका (शिक्षक प्रति)</h3><p>कक्षा: '+esc(paper.className)+' · विषय: '+esc(paper.subject)+'</p><ol>'+paper.questions.map(q=>'<li style="margin:10px 0;line-height:1.6;white-space:pre-line"><b>'+esc(q.questionText)+'</b><br>उत्तर: '+esc(q.answer|| (q.correctOption ? "सही विकल्प "+q.correctOption : "उत्तर संकेत उपलब्ध छैन"))+'</li>').join("")+'</ol></section>' : "";
+   includeAnswers ? '<section style="page-break-before:always;font-family:Arial,sans-serif;padding:24px;color:#111"><h2>'+esc(paper.schoolName||"विद्यालय")+'</h2><h3>'+esc(paper.paperTitle||"प्रश्नपत्र")+' — उत्तरकुञ्जिका (शिक्षक प्रति)</h3><p>कक्षा: '+display(paperClassLabel(paper.className,paper.language))+' · विषय: '+display(paperSubjectLabel(paper.subject,paper.language))+'</p><ol style="list-style:none;padding-left:0">'+paper.questions.map((q,i)=>'<li style="margin:10px 0;line-height:1.6;white-space:pre-line"><b>'+display(i+1)+'. '+display(q.questionText)+'</b><br>उत्तर: '+display(q.answer|| (q.correctOption ? "सही विकल्प "+paperAnswerOption(q.correctOption,paper.language) : "उत्तर संकेत उपलब्ध छैन"))+'</li>').join("")+'</ol></section>' : "";
   w.document.write('<!doctype html><html lang="ne"><head><meta charset="utf-8"><title>'+esc(paper.paperTitle)+'</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h2,h3{text-align:center}.qp-q{margin:14px 0;line-height:1.7}.qp-q b{white-space:pre-line}@page{size:A4;margin:18mm}</style></head><body>'+area.outerHTML+answerSheet+'</body></html>');
   w.document.close();
   w.focus();

@@ -165,6 +165,10 @@ def audit_directory():
         # Candidate list is discovery evidence only. Filename is not proof
         # of scope, year, authenticity or applicable grid.
         result["status"]="literal_pdf_links_need_document_review" if urls else "no_literal_government_pdf_links"
+        # Only the exact five observed Grade 9 compulsory resource IDs.
+        target=[url for url in urls if re.search(r"/RS111(?:66|67|68|69|70)_",url)]
+        with ThreadPoolExecutor(max_workers=5) as pool:
+            result["grade9CompulsoryProbes"]=list(pool.map(probe,target))
     except (OSError,ValueError) as err:
         result.update(status="directory_unavailable",reason=str(err)[:200])
     return result

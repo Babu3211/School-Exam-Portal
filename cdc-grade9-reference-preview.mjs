@@ -1,6 +1,7 @@
 /** Review-only connection to shipped reference question banks.
  * Does not certify the current CDC Grid, set generatedPaper, save or print.
  */
+import {paperDigits,paperSubjectLabel,paperOptionLabel,paperDisplayText} from './cdc-optional-math-render.mjs';
 import {cdcSubjectKey} from './cdc-grid-source-index.mjs';
 import {planGrade9MathReference} from './cdc-grade9-compulsory-math-grouped.mjs';
 import {planSocial2078ReferencePaper} from './cdc-grade9-social-reference-planner.mjs';
@@ -33,8 +34,8 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  const p=result.paper,groups=p.groups||p.questions;
  if(!Array.isArray(groups))throw Error('Missing reference groups');
  const choose=(ne,en)=>key==='english'||language==='en'?String(en||ne||''):language==='ne'?String(ne||en||''):[ne,en].filter(Boolean).join(' / ');
- const lines=['REFERENCE DRAFT — NOT FOR EXAM / सन्दर्भ समीक्षा मात्र','Grade 9 · '+subject+' · '+p.fullMarks+' marks · '+p.durationMinutes+' minutes','Current CDC Grid approval and teacher review pending.',result.referenceLabel||'',''];
- const answers=['INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY / उत्तरकुञ्जिका समीक्षा मात्र','Grade 9 · '+subject,'Not an official CDC marking scheme. Review model answers and partial credit before use.',''];
+ const lines=['REFERENCE DRAFT — NOT FOR EXAM / सन्दर्भ समीक्षा मात्र',language==='ne'?'कक्षा ९ · '+paperSubjectLabel(subject,language)+' · पूर्णाङ्क: '+p.fullMarks+' · समय: '+p.durationMinutes+' मिनेट':'Grade 9 · '+subject+' · '+p.fullMarks+' marks · '+p.durationMinutes+' minutes','Current CDC Grid approval and teacher review pending.',result.referenceLabel||'',''];
+ const answers=['INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY / उत्तरकुञ्जिका समीक्षा मात्र',(language==='ne'?'कक्षा ९ · '+paperSubjectLabel(subject,language):'Grade 9 · '+subject),'Not an official CDC marking scheme. Review model answers and partial credit before use.',''];
  let answerCount=0;
  const answer=(label,value,marks)=>{
   const text=String(value??'').trim();
@@ -46,14 +47,14 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   if(key==='nepali'){
    lines.push((i+1)+'. '+g.choices.length+' विकल्पमध्ये '+g.answerCount+' वटाको उत्तर दिनुहोस्। ['+g.marks+']');
    for(const [j,c] of g.choices.entries()){
-    lines.push('  '+String.fromCharCode(65+j)+'. '+c.text+' ['+c.marks+']');
+    lines.push('  '+paperOptionLabel(j,language)+'. '+c.text+' ['+c.marks+']');
     if(c.passage)lines.push(c.passage);
     if(c.practiceSubstitution)lines.push('मौलिक अभ्यास — पाठगत उद्धरण होइन।');
-    const label=(i+1)+'.'+String.fromCharCode(65+j);
+    const label=(i+1)+'.'+paperOptionLabel(j,language);
     answer(label,c.answer,c.marks);
     for(const [k,x] of (c.components||[]).entries()){
-     lines.push('    '+String.fromCharCode(97+k)+') '+x.text+' ['+x.marks+']');
-     answer(label+'.'+String.fromCharCode(97+k),x.answer,x.marks);
+     lines.push('    '+paperOptionLabel(k,language,true)+') '+x.text+' ['+x.marks+']');
+     answer(label+'.'+paperOptionLabel(k,language,true),x.answer,x.marks);
     }
    }
    lines.push('');continue;
@@ -63,21 +64,21 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   lines.push((i+1)+'. '+(key==='english'?g.text:choose(g.contextNe||g.questionText,g.contextEn||g.questionTextEn))+' ['+marks+']');
   if(g.practiceSubstitution===true)lines.push('ORIGINAL PRACTICE — not a seen textbook extract.');
   if(g.passage)lines.push(g.passage);
-  if(g.questionType==='mcq')for(const [j,o] of (g.options||[]).entries())lines.push('  '+String.fromCharCode(65+j)+'. '+choose(o,g.optionsEn?.[j]));
+  if(g.questionType==='mcq')for(const [j,o] of (g.options||[]).entries())lines.push('  '+paperOptionLabel(j,language)+'. '+choose(o,g.optionsEn?.[j]));
   if(Array.isArray(g.mapChoices)){
    for(const [j,c] of g.mapChoices.entries()){
     lines.push((j===0?'Option A: ':'OR / अथवा B: ')+choose(c.textNe,c.textEn)+' [7]');
-    answer((i+1)+'.'+String.fromCharCode(65+j),choose(c.answerNe,c.answerEn)+' — '+c.labels.map(l=>choose(l.ne,l.en)).join('; '),7);
+    answer((i+1)+'.'+paperOptionLabel(j,language),choose(c.answerNe,c.answerEn)+' — '+c.labels.map(l=>choose(l.ne,l.en)).join('; '),7);
    }
   }else if(!parts.length){
    answer(String(i+1),(g.correctOption?g.correctOption+' — ':'')+(key==='english'?g.answer:choose(g.answerNe||g.answer,g.answerEn)),marks);
   }
   for(const [j,x] of parts.entries()){
-   lines.push('  '+String.fromCharCode(97+j)+') '+(key==='english'?x.text:choose(x.textNe,x.textEn))+' ['+x.marks+']');
-   if(Array.isArray(x.options))lines.push('    '+x.options.map((o,k)=>String.fromCharCode(65+k)+'. '+o).join('    '));
-   answer((i+1)+'.'+String.fromCharCode(97+j),(x.correctOption?x.correctOption+' — ':'')+(key==='english'?String(x.answer??''):choose(x.answerNe||x.answer,x.answerEn)),x.marks);
+   lines.push('  '+paperOptionLabel(j,language,true)+') '+(key==='english'?x.text:choose(x.textNe,x.textEn))+' ['+x.marks+']');
+   if(Array.isArray(x.options))lines.push('    '+x.options.map((o,k)=>paperOptionLabel(k,language)+'. '+o).join('    '));
+   answer((i+1)+'.'+paperOptionLabel(j,language,true),(x.correctOption?x.correctOption+' — ':'')+(key==='english'?String(x.answer??''):choose(x.answerNe||x.answer,x.answerEn)),x.marks);
   }
   lines.push('');
  }
- return {ready:true,referenceOnly:true,currentCdcExactApproved:false,readyForLive:false,signature:result.signature,groupCount:groups.length,text:lines.join('\n'),answerText:answers.join('\n'),answerCount,sourceUrl:result.sourceUrl};
+ return {ready:true,referenceOnly:true,currentCdcExactApproved:false,readyForLive:false,signature:result.signature,groupCount:groups.length,text:paperDisplayText(lines.join('\n'),language,subject),answerText:paperDisplayText(answers.join('\n'),language,subject),answerCount,sourceUrl:result.sourceUrl};
 }

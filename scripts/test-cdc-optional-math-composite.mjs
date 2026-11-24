@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {getCdcOptionalMathGuide,optionalMathAreaTopics,optionalMathOriginalSlots,optionalMathCellAudit} from '../cdc-optional-math-2082.mjs';
 import {inspectCdcOptionalMathPaper} from '../cdc-optional-math-composite.mjs';
-import {renderCdcCompositePaper} from '../cdc-optional-math-render.mjs';
+import {renderCdcCompositePaper,paperDigits,paperSubjectLabel} from '../cdc-optional-math-render.mjs';
 
 const levels=['knowledge','understanding','application','higher'];
 const targets={knowledge:12,understanding:18,application:30,higher:15};
@@ -58,6 +58,8 @@ for(const grade of [9,10]){
   questions:result.questions};
  const escapeHtml=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
   .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+ const nePreview=renderCdcCompositePaper({...paper,language:'ne'},{escapeHtml});
+ assert.match(nePreview,/ऐच्छिक गणित/);assert.match(nePreview,/पूर्णाङ्क: ७५/);assert.match(nePreview,/समूह क/);assert.match(nePreview,/१\./);
  const preview=renderCdcCompositePaper(paper,{escapeHtml});
  const answer=renderCdcCompositePaper(paper,{escapeHtml,answerKey:true});
  assert.match(preview,/id="qpPrintArea"/);
@@ -116,3 +118,6 @@ for(const grade of [9,10]){
  console.log('PASS CDC 2082 Optional Math Grade '+grade+': 27 grouped questions, 75 exact marks,');
  console.log('6 exact area marks, 4 cognitive totals, bilingual, no repeat, reviewed-only');
 }
+
+assert.equal(paperDigits('2083 / 75.5','ne'),'२०८३ / ७५.५');
+assert.equal(paperSubjectLabel('Optional Mathematics','ne'),'ऐच्छिक गणित');

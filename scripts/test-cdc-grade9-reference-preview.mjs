@@ -72,3 +72,6 @@ for(const [subject,questions,language,duration] of [
 assert.match(ui,/avoidSignatures:referencePreviewHistory\.get\(scope\)/);
 assert.match(ui,/\.slice\(0,30\)/);
 console.log('PASS six reference subjects exclude earlier session drafts; science exercises 31 distinct papers even with constant RNG');
+
+const neDraft=build({...ea,subject:'Mathematics',questions:grade9CompulsoryMathReferenceBank({grade,subject:'Mathematics'}).questions,selectedTopicIds:topics({grade,subject:'Mathematics',questions:grade9CompulsoryMathReferenceBank({grade,subject:'Mathematics'}).questions}),language:'ne'});
+assert.equal(neDraft.ready,true,neDraft.reason);assert.match(neDraft.text,/कक्षा ९ · अनिवार्य गणित/);assert.match(neDraft.text,/पूर्णाङ्क: ७५/);assert.doesNotMatch(neDraft.text,/[0-9]/);assert.doesNotMatch(neDraft.answerText,/[0-9]/);

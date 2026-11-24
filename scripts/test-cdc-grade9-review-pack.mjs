@@ -14,7 +14,7 @@ import {buildAutomaticQuestionPaper} from '../cdc-question-autogen.mjs';
 import {getCdcOptionalMathGuide,optionalMathAreaTopics} from '../cdc-optional-math-2082.mjs';
 import {originalOptionalMathPracticeBank} from '../cdc-optional-math-original-practice.mjs';
 import {inspectCdcOptionalMathPaper} from '../cdc-optional-math-composite.mjs';
-import {renderCdcCompositePaper} from '../cdc-optional-math-render.mjs';
+import {renderCdcCompositePaper,paperDigits,paperSubjectLabel} from '../cdc-optional-math-render.mjs';
 import {assertGrade9ExamPaperMatches} from '../cdc-grade9-paper-grid-guard.mjs';
 
 const grade=9,records=[],esc=s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
@@ -100,7 +100,8 @@ for(const r of records){
  const questions=r.html.slice(0,cut);
  const key=r.html.slice(endSummary+'</summary>'.length,-'</details>'.length);
  assert.ok(questions.trim()&&key.trim());
- const meta='<h1>'+esc(r.subject)+' — Set '+r.set+'</h1>'+warning+'<p>Grade 9 · '+esc(r.status)+' · '+r.fullMarks+' marks · '+r.durationMinutes+' minutes · '+esc(r.language)+'</p>';
+ const ne=r.language==='ne',name=paperSubjectLabel(r.subject,r.language),digits=x=>paperDigits(x,r.language);
+ const meta='<h1>'+esc(name)+(ne?' — सेट ':' — Set ')+digits(r.set)+'</h1>'+warning+'<p>'+(ne?'कक्षा ९':'Grade 9')+' · '+esc(r.status)+' · '+digits(r.fullMarks)+(ne?' अङ्क · ':' marks · ')+digits(r.durationMinutes)+(ne?' मिनेट':' minutes')+' · '+esc(r.language)+'</p>';
  const back='<a href="../grade9-teacher-review.html">All subjects</a>';
  const footer='<p class="print-note">SMSS — REVIEW ONLY — NOT FOR EXAM / सन्दर्भ अभ्यास मात्र</p>';
  const questionPage=page(r.subject+' — Set '+r.set,'<nav>'+back+'<a href="'+r.answerPath.split('/').at(-1)+'">Teacher answer key</a></nav>'+meta+'<p class="screen-only">Use your browser Print or Save as PDF for this single review draft. Do not use it as an approved examination.</p><section>'+questions+'</section><p>Source: '+esc(r.sourceUrl||'See repository source register')+'</p>'+footer);
