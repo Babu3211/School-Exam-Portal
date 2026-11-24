@@ -4,6 +4,7 @@ import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
 import {getBundledComputerGrid,bundledComputerUnitTopics} from "./cdc-verified-computer-grids.mjs";
 import {findCdcGridSources} from "./cdc-grid-source-index.mjs";
 import {assertGrade9ExamPaperMatches} from "./cdc-grade9-paper-grid-guard.mjs";
+import {auditGrade9ModelReference} from "./cdc-grade9-model-reference-audit.mjs";
 import {auditGrade9Release} from "./cdc-grade9-release-audit.mjs";
 import {auditGrade9ScienceArchive} from "./cdc-grade9-science-archive-audit.mjs";
 import {compareGrade8SciencePracticeBank,getGrade8ScienceHistoricalPracticePattern} from "./cdc-grade8-science-model-audit.mjs";
@@ -643,6 +644,14 @@ async function loadCurrentData() {
       "CDC को Unit/Type/Marks/Cognitive तालिका पूरा प्रमाणित छैन।");
     pdfSource.appendChild(note);
    }
+  }
+  // Alternative model references are read-only and cannot approve a Grid.
+  const modelReference=auditGrade9ModelReference({grade,subject,questions:[...questionRows,...bundledPracticeQuestions]});
+  if(modelReference){
+   const detail=document.createElement("p");detail.className="qp-hint";
+   detail.textContent="Model comparison (सन्दर्भ मात्र): "+modelReference.fullMarks+" अङ्क"+(modelReference.modelCount?" · "+modelReference.modelCount+" प्रश्न":"")+(modelReference.groups.length?" · न्यूनतम "+modelReference.missingAtLeast+" मिल्ने प्रश्न अपुग":"")+"। "+modelReference.limitations.join(" · ")+"। CDC Exact स्वीकृत छैन।";
+   pdfSource.appendChild(detail);
+   const refLink=document.createElement("a");refLink.href=modelReference.url;refLink.target="_blank";refLink.rel="noopener noreferrer";refLink.textContent="तुलना गरिएको Model/Grid स्रोत (प्रमाणीकरण बाँकी)";pdfSource.appendChild(refLink);
   }
   // Prefer the already reviewed and preloaded government's original PDF
   // for Computer Science and the separate WCA/CCA Optional Mathematics guide.
