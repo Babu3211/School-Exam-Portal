@@ -733,7 +733,32 @@
         "checkedOn": "2026-11-24",
         "directory": "https://sikshakhub.com/specification-grid-directory/",
         "verifiedGridRows": false,
-        "currentCdcExactApproved": false
+        "currentCdcExactApproved": false,
+        "numericReferenceCrosscheck": {
+          "runId": 45387386269,
+          "method": "full PDF extracted table numeric cells; old pattern comparison only",
+          "page": 1,
+          "fullMarks": 75,
+          "groupCount": 16,
+          "subitemCount": 49,
+          "unitMarks": [
+            6,
+            13,
+            13,
+            15,
+            13,
+            11,
+            4
+          ],
+          "cognitiveMarks": [
+            12,
+            18,
+            30,
+            15
+          ],
+          "currentEditionConfirmed": false,
+          "visualCellReviewComplete": false
+        }
       }
     },
     {
@@ -755,7 +780,80 @@
         "checkedOn": "2026-11-24",
         "directory": "https://sikshakhub.com/specification-grid-directory/",
         "verifiedGridRows": false,
-        "currentCdcExactApproved": false
+        "currentCdcExactApproved": false,
+        "numericReferenceCrosscheck": {
+          "runId": 45387386269,
+          "method": "full PDF extracted table numeric cells; old pattern comparison only",
+          "page": 1,
+          "fullMarks": 75,
+          "questionCounts": [
+            10,
+            9,
+            14,
+            7
+          ],
+          "marksEach": [
+            1,
+            1,
+            2,
+            4
+          ],
+          "unitMarks": [
+            3,
+            3,
+            2,
+            3,
+            8,
+            3,
+            5,
+            2,
+            4,
+            7,
+            6,
+            2,
+            7,
+            6,
+            3,
+            3,
+            2,
+            3,
+            3
+          ],
+          "cognitiveMarks": [
+            12,
+            22,
+            22,
+            19
+          ],
+          "typeLevelCounts": [
+            [
+              2,
+              4,
+              2,
+              2
+            ],
+            [
+              2,
+              4,
+              2,
+              1
+            ],
+            [
+              2,
+              3,
+              5,
+              4
+            ],
+            [
+              1,
+              2,
+              2,
+              2
+            ]
+          ],
+          "currentEditionConfirmed": false,
+          "visualCellReviewComplete": false
+        }
       }
     },
     {
@@ -777,7 +875,89 @@
         "checkedOn": "2026-11-24",
         "directory": "https://sikshakhub.com/specification-grid-directory/",
         "verifiedGridRows": false,
-        "currentCdcExactApproved": false
+        "currentCdcExactApproved": false,
+        "numericReferenceCrosscheck": {
+          "runId": 45387386269,
+          "method": "full PDF extracted table numeric cells; old pattern comparison only",
+          "page": 2,
+          "fullMarks": 75,
+          "questionCounts": [
+            11,
+            9,
+            4
+          ],
+          "marksEach": [
+            1,
+            4,
+            7
+          ],
+          "unitMarks": [
+            5,
+            5,
+            8,
+            6,
+            11,
+            11,
+            9,
+            9,
+            6,
+            5
+          ],
+          "unitTypeMarks": [
+            [
+              1,
+              4,
+              0
+            ],
+            [
+              1,
+              4,
+              0
+            ],
+            [
+              0,
+              8,
+              0
+            ],
+            [
+              2,
+              4,
+              0
+            ],
+            [
+              0,
+              4,
+              7
+            ],
+            [
+              0,
+              4,
+              7
+            ],
+            [
+              2,
+              0,
+              7
+            ],
+            [
+              2,
+              0,
+              7
+            ],
+            [
+              2,
+              4,
+              0
+            ],
+            [
+              1,
+              4,
+              0
+            ]
+          ],
+          "currentEditionConfirmed": false,
+          "visualCellReviewComplete": false
+        }
       }
     }
   ],

@@ -12,6 +12,14 @@ for(const language of ['ne','en','both']){
  assert.equal(plan(args).ready,false,'Draft must never masquerade as teacher-reviewed');
  const a=plan({...args,allowOriginalReferenceDraft:true});
  assert.equal(a.ready,true,a.reason);assert.equal(a.paper.questions.length,24);assert.equal(a.fullMarks,75);
+ // Government PDF RS11166 page 2, full extraction run 45387386269.
+ // Columns: very short, short, long marks. Historic units 7/8 have
+ // identical total marks even though their curriculum order has changed.
+ const expected=[[1,4,0],[1,4,0],[0,8,0],[2,4,0],[0,4,7],[0,4,7],[2,0,7],[2,0,7],[2,4,0],[1,4,0]];
+ const types=['very_short','short','long'];
+ const actual=Array.from({length:10},(_,i)=>types.map(type=>a.paper.questions.filter(q=>String(q.unitCode)===String(i+1)&&q.questionType===type).reduce((sum,q)=>sum+q.marks,0)));
+ assert.deepEqual(actual,expected);
+ assert.deepEqual(types.map(type=>a.paper.questions.filter(q=>q.questionType===type).length),[11,9,4]);
  assert.equal(a.currentCdcExactApproved,false);assert.equal(a.paper.referenceOnly,true);
  const b=plan({...args,allowOriginalReferenceDraft:true,previousSignature:a.signature,rng:()=>.61});
  assert.equal(b.ready,true,b.reason);assert.notEqual(a.signature,b.signature);

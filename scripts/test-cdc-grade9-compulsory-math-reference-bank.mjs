@@ -24,6 +24,11 @@ for(const language of ['ne','en','both']){
  assert.equal(plan(args).ready,false);
  const a=plan({...args,allowOriginalReferenceDraft:true});
  assert.equal(a.ready,true,a.reason);assert.equal(a.paper.groups.length,16);assert.equal(a.itemCount,49);assert.equal(a.fullMarks,75);
+ // Government PDF RS11170 page 1, full extraction run 45387386269.
+ const areaMarks=Array.from({length:7},(_,i)=>a.paper.groups.filter(q=>String(q.unitCode)===String(i+1)).reduce((sum,q)=>sum+q.subquestions.reduce((n,p)=>n+p.marks,0),0));
+ assert.deepEqual(areaMarks,[6,13,13,15,13,11,4]);
+ const parts=a.paper.groups.flatMap(q=>q.subquestions);
+ assert.deepEqual(['knowledge','understanding','application','higher'].map(level=>parts.filter(p=>p.cognitiveLevel===level).reduce((sum,p)=>sum+p.marks,0)),[12,18,30,15]);
  const b=plan({...args,allowOriginalReferenceDraft:true,previousSignature:a.signature,rng:()=>.61});
  assert.equal(b.ready,true,b.reason);assert.notEqual(b.signature,a.signature);
  assert.equal(a.currentCdcExactApproved,false);assert.equal(a.paper.referenceOnly,true);
