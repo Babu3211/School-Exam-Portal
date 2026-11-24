@@ -9,6 +9,7 @@ import json, re, hashlib, subprocess, tempfile
 from pathlib import Path
 
 SOURCES = [
+    "https://s3.veda-app.com/veda-app/assets/122/downloads/2025-11-18/QQR9tk79bmn5fO01-1763456573.pdf",
     "https://giwmscdntwo.gov.np/media/pdf_upload/5.%20Reduced-class%209%20English%20final_5hjggyv.pdf",
     "https://learning.cehrd.gov.np/moodle/pluginfile.php/188/mod_resource/content/2/English%20grade%209.pdf",
     "https://moecdc.gov.np/storage/gallery/1688289325.pdf"
@@ -17,7 +18,7 @@ WINDOWS = [
     ("He had begun life decently enough", "very nice jewellery."),
     ("But when circumstances forced George", "They spent a happy month there."),
 ]
-ALLOWED = {"giwmscdntwo.gov.np", "giwmscdnone.gov.np", "learning.cehrd.gov.np", "moecdc.gov.np", "www.moecdc.gov.np"}
+ALLOWED = {"s3.veda-app.com", "giwmscdntwo.gov.np", "giwmscdnone.gov.np", "learning.cehrd.gov.np", "moecdc.gov.np", "www.moecdc.gov.np"}
 CAP = 35 * 1024 * 1024
 
 def checked_url(url):
@@ -33,7 +34,7 @@ class SafeRedirect(HTTPRedirectHandler):
 def clean(raw):
     raw = raw.replace("\u00ad", "").replace("\u2013", "-").replace("\u2011", "-")
     # Strip running headers and standalone printed page numbers, not prose.
-    raw = re.sub(r"(?im)^\s*(?:English\s*9(?:\s+\d{1,3})?|\d{1,3}\s+English\s*9|\d{1,3})\s*$", " ", raw)
+    raw = re.sub(r"(?im)^[ \t]*(?:English[ \t]*9(?:[ \t]+\d{1,3})?|\d{1,3}[ \t]+English[ \t]*9|\d{1,3})[ \t]*$", " ", raw)
     raw = re.sub(r"(?<=\w)-\s*\n\s*(?=\w)", "-", raw)
     return re.sub(r"\s+", " ", raw).strip()
 
@@ -73,7 +74,8 @@ def retrieve(source):
         pdf=Path(tmp)/"book.pdf"
         pdf.write_bytes(raw)
         for mode in ("-raw","-layout"):
-            result=subprocess.run(["pdftotext",mode,str(pdf),"-"],check=True,capture_output=True,timeout=25)
+            pages=["-f","113","-l","115"] if source==SOURCES[0] else []
+            result=subprocess.run(["pdftotext",mode,*pages,str(pdf),"-"],check=True,capture_output=True,timeout=25)
             try:
                 return extract(result.stdout.decode("utf-8"),source)
             except ValueError as e:
