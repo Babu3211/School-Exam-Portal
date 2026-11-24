@@ -10,6 +10,8 @@ import {stageTrustedClassMarks} from './server-publication-staging-executor.mjs'
 import {commitTrustedOfficialClassPublication} from './server-official-publication-commit.mjs';
 import {fingerprintConfiguredClassReview} from './server-class-review-fingerprint.mjs';
 import {officialClassPointerId} from './server-publication-authoritative-preflight.mjs';
+import {reviewOrSaveAtomicClassAttendance} from './server-atomic-class-attendance.mjs';
+import {createV47NodeAtomicAttendanceHandler} from '../src/v47/node-atomic-attendance-handler.mjs';
 import {loadCommittedOfficialClassMarks} from './server-official-marks-firestore-loader.mjs';
 import {createV47PublicationReviewHttpHandler} from '../src/v47/publication-review-http-handler.mjs';
 import {createV47NodePublicationStageHandler} from '../src/v47/node-publication-stage-handler.mjs';
@@ -211,6 +213,65 @@ try{
  const duplicateCommit=getResponse();
  await approvedCommit(requestPublish(),duplicateCommit);
  assert.equal(duplicateCommit.statusCode,403,'CAS and reuse must refuse duplicate HTTP commit');
+ // Verify atomic attendance against actual Admin SDK transactions, not just mocks.
+ const date='2026-11-24',attendanceScope={firestore:db,schoolId,classId,date,actorUid};
+ const attendanceEntries=marks.map(({studentId})=>({studentId,class:classId,date,present:true}));
+ const attendance=()=>db.collection(path('attendance')).where('date','==',date).where('class','==',classId).get();
+ const reviewAttendance=await reviewOrSaveAtomicClassAttendance({...attendanceScope,entries:attendanceEntries});
+ assert.equal(reviewAttendance.committed,false);
+ assert.equal((await attendance()).size,0);
+ await memberRef.update({active:false});
+ await assert.rejects(reviewOrSaveAtomicClassAttendance({...attendanceScope,entries:attendanceEntries,reviewDigest:reviewAttendance.reviewDigest}),/Active School Admin/);
+ assert.equal((await attendance()).size,0);
+ await memberRef.update({active:true});
+ // A new student invalidates an otherwise legitimate review. No partial writes.
+ const newStudent=db.doc(path('students','attendance_new'));
+ await newStudent.set({schoolId,class:classId,active:true});
+ await assert.rejects(reviewOrSaveAtomicClassAttendance({...attendanceScope,entries:attendanceEntries,reviewDigest:reviewAttendance.reviewDigest}),/incomplete/i);
+ assert.equal((await attendance()).size,0);
+ await newStudent.delete();
+ const atomicResult=await reviewOrSaveAtomicClassAttendance({...attendanceScope,entries:attendanceEntries,reviewDigest:reviewAttendance.reviewDigest});
+ assert.equal(atomicResult.committed,true);
+ assert.equal(atomicResult.count,count);
+ assert.equal((await attendance()).size,count);
+ const correction=attendanceEntries.map((e,i)=>({...e,present:i%2===0}));
+ const correctedReview=await reviewOrSaveAtomicClassAttendance({...attendanceScope,entries:correction});
+ // Simulate a competing single-student correction after the class review.
+ const firstAttendance=db.doc(path('attendance',date+'_s0000'));
+ await firstAttendance.update({present:false});
+ await assert.rejects(reviewOrSaveAtomicClassAttendance({...attendanceScope,entries:correction,reviewDigest:correctedReview.reviewDigest}),/changed after review/);
+ assert.equal((await db.doc(path('attendance',date+'_s0001')).get()).data().present,true);
+ const refreshed=await reviewOrSaveAtomicClassAttendance({...attendanceScope,entries:correction});
+ const attendanceRequest=(reviewDigest)=>({url:'/api/v47/attendance/atomic',method:'POST',
+  headers:{authorization:'Bearer '+actorUid,'content-type':'application/json'},
+  async *[Symbol.asyncIterator](){yield Buffer.from(JSON.stringify({schoolId,classId,date,entries:correction,reviewDigest}))}});
+ const disabledAttendance=createV47NodeAtomicAttendanceHandler({auth:publishAuth,firestore:db});
+ const disabledAttendanceResponse=getResponse();
+ await disabledAttendance(attendanceRequest(refreshed.reviewDigest),disabledAttendanceResponse);
+ assert.equal(disabledAttendanceResponse.statusCode,503);
+ const approvedAttendance=createV47NodeAtomicAttendanceHandler({auth:publishAuth,firestore:db,atomicAttendanceEnabled:true});
+ const correctedResponse=getResponse();
+ await approvedAttendance(attendanceRequest(refreshed.reviewDigest),correctedResponse);
+ assert.equal(correctedResponse.statusCode,200);
+ assert.equal(correctedResponse.body.result.atomic,true);
+ assert.equal(correctedResponse.body.result.committed,true);
+ assert.equal((await attendance()).docs.filter(d=>d.data().present===false).length,50);
+ // Exercise the actual maximum of 500 changed attendance documents in one commit.
+ const largeClass='8',largeDate='2026-11-25';
+ const largeRoster=Array.from({length:500},(_,i)=>({studentId:'large'+String(i).padStart(4,'0'),class:largeClass,date:largeDate,present:i%2===0}));
+ const largeBatch=db.batch();
+ for(const row of largeRoster)largeBatch.set(db.doc(path('students',row.studentId)),{schoolId,class:largeClass,active:true});
+ await largeBatch.commit();
+ const largeScope={...attendanceScope,classId:largeClass,date:largeDate,entries:largeRoster};
+ const largeReview=await reviewOrSaveAtomicClassAttendance(largeScope);
+ assert.equal(largeReview.changed,500);
+ const largeResult=await reviewOrSaveAtomicClassAttendance({...largeScope,reviewDigest:largeReview.reviewDigest});
+ assert.equal(largeResult.committed,true);
+ assert.equal(largeResult.changed,500);
+ const largeAttendance=await db.collection(path('attendance')).where('date','==',largeDate).where('class','==',largeClass).get();
+ assert.equal(largeAttendance.size,500);
+ assert.equal(largeAttendance.docs.filter(d=>d.data().present).length,250);
+ console.log('PASS real Firestore atomic attendance: 101 and 500 students, stale roster and competing edits rejected, disabled API and one-transaction commit');
  console.log('PASS real Firebase Admin Firestore emulator: 101-student configured 4/36/10 staging, two pages, transaction-scoped full roster, CAS pointer/header/audit, official 101-row reader, active Viewer, revoked membership, missing page and inactive-student refusals');
 }finally{
  await deleteApp(app);

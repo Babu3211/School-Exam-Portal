@@ -18,6 +18,8 @@ on:
       - 'src/v47/node-publication-stage-handler.mjs'
       - 'src/v47/node-publication-commit-handler.mjs'
       - 'src/v47/node-api-server.mjs'
+      - 'src/v47/node-atomic-attendance-handler.mjs'
+      - 'v47/atomic-attendance-client.mjs'
       - 'scripts/test-v47-publication-stage-http.mjs'
 permissions:
   contents: read
@@ -36,6 +38,7 @@ jobs:
       - name: Check publication validation and official-reader regression tests
         run: |
           set -euo pipefail
+          node v47/test-server-atomic-class-attendance.mjs
           node v47/test-server-publication-pointer-plan.mjs
           node v47/test-server-class-review-confirmation.mjs
           node v47/test-server-staged-class-integrity.mjs
@@ -88,7 +91,7 @@ jobs:
         run: |
           {
             echo '## Isolated Firebase Admin SDK publication emulator'
-            echo 'Real transaction reads, 101-student school-scoped staging and atomic pointer/header/audit are exercised only in a local emulator.'
+            echo 'Real transaction reads, 101-student school-scoped marks staging, atomic pointer/header/audit and 101/500-student atomic attendance are exercised only in a local emulator.'
             echo 'No hosting deployment, real Firebase credentials or production Firestore writes.'
             echo 'This is NOT full CDC/IEMIS parity, browser E2E, transaction-load approval for 1500 students or production release.'
           } >> "$GITHUB_STEP_SUMMARY"
