@@ -3944,6 +3944,7 @@ function openCdcAssessment(context = null) {
     <datalist id="cdcTopicSuggestions"></datalist>
     <datalist id="cdcUnitSuggestions"></datalist>
     <p data-cdc="unitCoverage" class="hint"></p>
+    <section data-cdc="annex3" hidden><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><div class="tablewrap"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p></section>
     <details data-cdc="catalogPanel"><summary>द्विभाषिक उपलब्धि सूची थप्नुहोस्</summary>
       <p class="hint">स्रोतबाट पुष्टि गरेका चार स्तम्भ Excel बाट प्रतिलिपि गर्नुहोस्। क्रम: नेपाली एकाइ, English unit, नेपाली उपलब्धि, English outcome। शीर्षक पङ्क्ति छोड्नुहोस्।</p>
       <textarea data-cdc="catalogText" aria-label="द्विभाषिक उपलब्धि सूची" rows="4" maxlength="1100000" style="width:100%"></textarea>
@@ -3954,6 +3955,7 @@ function openCdcAssessment(context = null) {
     <label>मूल्याङ्कन मिति (वि.सं.) <input data-cdc="date" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD"></label>
     <button class="btn alt" data-cdc="today" type="button">आजको मिति</button>
     <details><summary>यस उपलब्धिका पहिलेका अवलोकन</summary><div class="tablewrap"><table><thead><tr><th>मिति (वि.सं.)</th><th>मूल्याङ्कन साधन</th><th>उपलब्धिस्तर</th><th>सिकाइ प्रमाण</th><th>सुधारात्मक सहयोग</th></tr></thead><tbody data-cdc="history"></tbody></table></div></details>
+    <label data-cdc="stageRow" hidden>मूल्याङ्कन चरण / Assessment stage <select data-cdc="stage"><option value="">छान्नुहोस् / Select</option><option value="regular">नियमित / Regular</option><option value="support">थप सहयोगपछि / After support</option></select></label>
     <label data-cdc="levelRow">सिकाइ स्तर <select data-cdc="level"><option value="">छान्नुहोस्</option><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
     <label>मूल्याङ्कन साधन <input data-cdc="method" list="cdcMethodSuggestions" maxlength="180" placeholder="प्रयोग गरेको साधन लेख्नुहोस्"></label>
     <datalist id="cdcMethodSuggestions"><option>रुजुसूची</option><option>रुब्रिक्स</option><option>श्रेणीमापन</option><option>मौखिक प्रश्न</option><option>अवलोकन फाराम</option></datalist>
@@ -3993,6 +3995,43 @@ function openCdcAssessment(context = null) {
   const language = () => subjectLanguage(field('subject').value);
   const localized = (ne,en) => language()==='both' ? [...new Set([ne,en].filter(Boolean))].join(' / ')
     : language()==='en' ? en||ne : ne||en;
+  // The language-subject Annex 3 grid uses explicit assessment stages.
+  // Older observations lack a stage and must not be silently classified.
+  let annexObservations=[];
+  const hasAnnexGrid=()=>!!context&&Number(field('class').value)>=4&&['nepali','english'].includes(cdcAssessmentSubjectKey(field('subject').value));
+  const renderAnnex=()=>{
+    const panel=field('annex3'),enabled=hasAnnexGrid(),en=language()==='en';
+    panel.hidden=!enabled;field('stageRow').hidden=!enabled;
+    if(!enabled)return;
+    const selection=field('student').selectedOptions[0];
+    const st=assessmentStudents.find(s=>s.id===selection?.value);
+    const subject=field('subject').selectedOptions[0]?.text||'';
+    field('annexTitle').textContent=en?'Annex 3 — Learning achievement record':'अनुसूची ३ : सिकाइ उपलब्धि मूल्याङ्कन अभिलेख';
+    field('annexIdentity').textContent=(en?'Grade: ':'कक्षा: ')+field('class').value+'    '+(en?'Subject: ':'विषय: ')+subject+'    '+(en?'Student: ':'विद्यार्थी: ')+(selection?.text||'')+'    '+(en?'Roll No.: ':'रोल नम्बर: ')+(st?.rollNo??'');
+    field('annexUnit').textContent=field('unit').value;
+    field('annexHead').innerHTML=en?'<tr><th rowspan="2">S.N.</th><th rowspan="2">Language skills</th><th rowspan="2">Learning outcome indicators</th><th colspan="2">Regular class assessment</th><th colspan="2">Assessment after additional support</th><th rowspan="2">Remarks</th></tr><tr><th>Date</th><th>Rating</th><th>Date</th><th>Rating</th></tr>':'<tr><th rowspan="2">क्र.स.</th><th rowspan="2">विषयवस्तु</th><th rowspan="2">सिकाइ उपलब्धि सूचक</th><th colspan="2">नियमित पठनपाठनपछिको मूल्याङ्कन</th><th colspan="2">थप सहायतापछिको मूल्याङ्कन</th><th rowspan="2">कैफियत</th></tr><tr><th>मिति</th><th>अङ्कन</th><th>मिति</th><th>अङ्कन</th></tr>';
+    const rows=(cdcVerifiedOutcomes[field('class').value+':'+cdcAssessmentSubjectKey(field('subject').value)]||[]).filter(([unit])=>normalizeTitle(unit)===normalizeTitle(field('unit').value));
+    const body=field('annexRows');body.replaceChildren();
+    let total=0,filled=0;
+    for(const [i,[unit,title,alt]] of rows.entries()){
+      const row=body.insertRow();const parts=localized(title,alt).split(' — ');
+      row.insertCell().textContent=String(i+1);row.insertCell().textContent=parts.length>1?parts.shift():'';
+      const button=document.createElement('button');button.type='button';button.className='btn alt';button.textContent=parts.join(' — ');
+      button.onclick=()=>{field('topic').value=title;load();};
+      row.insertCell().append(button);
+      const items=annexObservations.filter(item=>normalizeTitle(item.unit)===normalizeTitle(unit)&&item.topic===title);
+      const regular=items.find(item=>item.stage==='regular'),support=items.find(item=>item.stage==='support');
+      const effective=support||regular;
+      for(const value of [regular?.date,regular?.level,support?.date,support?.level,effective?.feedback])row.insertCell().textContent=value??'';
+      if(effective){total+=effective.level;filled++;}
+    }
+    const foot=field('annexFoot');foot.replaceChildren();
+    for(const [label,value] of [[en?'Unit-wise total':'विषयक्षेत्रगत अङ्कको जोड',filled===rows.length&&rows.length?String(total):'—'],[en?'Achieved percentage':'उपलब्धि प्रतिशत',filled===rows.length&&rows.length?(100*total/(4*rows.length)).toFixed(2)+'%':'—']]){
+      const row=foot.insertRow();const a=row.insertCell();a.colSpan=2;a.textContent=label;const b=row.insertCell();b.colSpan=6;b.textContent=value;
+    }
+    field('annexStatus').textContent=en?'Draft layout using existing outcome catalogue. Select a row to enter the observation; read school records to populate ratings. Unclassified legacy records are not assigned to either stage.':'हालको उपलब्धि सूचीमा आधारित प्रारम्भिक ढाँचा। उपलब्धि छानेर मूल्याङ्कन गर्नुहोस्; विद्यालयको अभिलेख पढेपछि अङ्क देखिन्छ। चरण नखुलेका पुराना अभिलेख छुट्टै रहन्छन्।';
+    field('annexSign').textContent=en?'Teacher signature __________  Date __________  Parent signature __________  Date __________':'शिक्षकको दस्तखत __________  मिति __________  अभिभावकको दस्तखत __________  मिति __________';
+  };
   const titleValue = () => {
     const title = field('topic').value.trim();
     const matches = topicAliases.get(normalizeTitle(title));
@@ -4108,6 +4147,8 @@ function openCdcAssessment(context = null) {
   const clearSchoolResults = () => {
     schoolReadSequence++;
     field('schoolRows').replaceChildren();
+    annexObservations=[];
+    renderAnnex();
     field('schoolStatus').textContent='';
     field('readSchool').disabled=!schoolSelection();
     field('saveSchool').disabled=readOnly||schoolSavePending||!schoolSelection();
@@ -4126,6 +4167,8 @@ function openCdcAssessment(context = null) {
       if(!isLatest()) return;
       const items=result.docs.map(record=>record.data()).sort((a,b)=>
         b.date.localeCompare(a.date)||(b.createdAt?.toMillis()??0)-(a.createdAt?.toMillis()??0));
+      annexObservations=items;
+      renderAnnex();
       for(const item of items) {
         const row=field('schoolRows').insertRow();
         for(const value of [localized(item.unit,item.unitEn),
@@ -4155,6 +4198,8 @@ function openCdcAssessment(context = null) {
       const values={unit:unitValue(),unitEn:field('unitEn').value.trim(),topicAlt:field('topicAlt').value.trim(),
         date:field('date').value.trim(),level:field('level').value,method:field('method').value,
         evidence:field('evidence').value,feedback:field('feedback').value};
+      if(hasAnnexGrid())values.stage=field('stage').value;
+      if(hasAnnexGrid()&&!['regular','support'].includes(values.stage)){status.textContent='मूल्याङ्कन चरण छान्नुहोस्।';return;}
       if(appendObservation||!title||!draft.evidence||Object.entries(values).some(([name,value])=>(draft[name]||'')!==value)) {
         status.textContent='पहिले देखिएको विवरण मस्यौदामा राख्नुहोस्।';return;
       }
@@ -4203,13 +4248,14 @@ function openCdcAssessment(context = null) {
     }
     try { if(field('topic').value.trim()) record = readRecord(); }
     catch { field('status').textContent = 'मस्यौदा पढ्न सकिएन।'; }
-    for(const name of ['unit','unitEn','topicAlt','level','method','evidence','feedback']) field(name).value = record[name] || '';
+    for(const name of ['unit','unitEn','topicAlt','level','method','evidence','feedback','stage']) field(name).value = record[name] || '';
     if(!record.unit) [field('unit').value,field('unitEn').value]=chosenUnit;
     field('topicAlt').value ||= topicTranslations.get(titleValue()) || '';
     field('date').value = record.date || today();
     showHistory(record);
     refreshRecords();
     refreshClassProgress();
+    renderAnnex();
   };
   const resetTopic = () => {
     for(const name of ['topic','unit','unitEn']) field(name).value='';
@@ -4307,7 +4353,7 @@ function openCdcAssessment(context = null) {
   field('today').onclick=()=>{field('date').value=today();};
   field('new').onclick=()=>{
     appendObservation=true;
-    for(const name of ['level','method','evidence','feedback']) field(name).value='';
+    for(const name of ['level','method','evidence','feedback','stage']) field(name).value='';
     field('date').value=today();
     field('status').textContent='थप अवलोकन लेखेर मस्यौदा राख्नुहोस्।';
   };
@@ -4355,6 +4401,7 @@ function openCdcAssessment(context = null) {
     load();
   };
   field('level').disabled=readOnly;
+  field('stage').disabled=readOnly;
   field('method').readOnly=readOnly;
   for(const name of ['unit','unitEn','topicAlt']) field(name).readOnly=readOnly;
   for(const name of ['evidence','feedback']) field(name).readOnly=readOnly;
@@ -4369,7 +4416,7 @@ function openCdcAssessment(context = null) {
       const [,,cl,subject,studentId] = scope();
       const selectedStudent = assessmentStudents.find(st=>st.id===studentId);
       const snapshot = await getDocFromServer(doc(db,'user_roles',owner));
-      if (!dialog.open || auth.currentUser?.uid!==owner || key()!==savingKey) return;
+      if (!canShow() || key()!==savingKey) return;
       if (!selectedStudent || !cdcTeacherAssignment(snapshot.data(),cl,subject,selectedStudent)) {
         field('status').textContent='यो कक्षा, विषय वा सेक्शनको मूल्याङ्कन तपाईंलाई तोकिएको छैन।';
         return;
@@ -4392,6 +4439,11 @@ function openCdcAssessment(context = null) {
       const record={date:normalized,unit:field('unit').value.trim(),unitEn:field('unitEn').value.trim(),topicAlt:alternate,level:field('level').value,
         method:field('method').value,evidence:field('evidence').value,feedback:field('feedback').value,
         history:appendObservation&&last.evidence?[...earlier,last]:earlier};
+      if(hasAnnexGrid()){
+        record.stage=field('stage').value;
+        if(!['regular','support'].includes(record.stage)){field('status').textContent='मूल्याङ्कन चरण छान्नुहोस्।';return;}
+        if(last.evidence&&last.stage!==record.stage&&!appendObservation)record.history=[...earlier,last];
+      }
       if(last.schoolId&&!appendObservation&&Object.keys(record).every(name=>name==='history'||record[name]===(last[name]||''))) {
         record.schoolId=last.schoolId;
       }
