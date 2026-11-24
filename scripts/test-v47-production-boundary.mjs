@@ -13,6 +13,8 @@ const allowed=path=>
  path.startsWith(".github/workflows/v47-") ||
  path==="v47-runtime/server.mjs" ||
  path==="v47-runtime/package.json" ||
+ path==="v47-runtime/static-handler.mjs" ||
+ path==="v47-runtime/SPARK-LOCAL-OPTION.md" ||
  path.startsWith("scripts/test-v47-") ||
  path==="scripts/build-v47-spark-staging.mjs" ||
  path==="scripts/audit-v46-tenant-migration.mjs" ||
