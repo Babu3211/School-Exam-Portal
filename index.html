@@ -7538,6 +7538,12 @@ function openCdcAssessment(context = null) {
       <p data-cdc="themeSummaryInfo" role="status"></p>
       <div class="tablewrap"><table data-cdc="themeSummaryTable"><thead data-cdc="themeSummaryHead"></thead><tbody data-cdc="themeSummaryRows"></tbody><tfoot data-cdc="themeSummaryFoot"></tfoot></table></div>
       <small>पूर्णाङ्क = मुख्य सिकाइ उपलब्धि × ४। — ले स्रोत पुष्टि वा सूची बाँकी जनाउँछ। थिमगत कच्चा पूर्णाङ्कलाई परीक्षा पूर्णाङ्क नमान्नुहोस्।</small>
+      <details data-cdc="themeCoverage" style="margin-top:10px">
+        <summary style="cursor:pointer;font-weight:600">All Classes — Theme Coverage</summary>
+        <p class="hint">कक्षा १–५ का विषयगत सूची एकै ठाउँमा। उपलब्ध गणना भएका थिम मात्र जोडिएका छन्; यसलाई अन्तिम आधिकारिक पूर्णाङ्क नमान्नुहोस्।</p>
+        <div class="tablewrap"><table><thead><tr><th>Class</th><th>Subject</th><th>Themes with counts / Listed themes</th><th>Number of Learning Achievements</th><th>Full Marks</th><th>Source Status</th></tr></thead><tbody data-cdc="themeCoverageRows"></tbody></table></div>
+        <p data-cdc="themeCoverageInfo" role="status" class="hint"></p>
+      </details>
     </details>
     <section data-cdc="referenceLibrary" aria-label="CDC Assessment Reference PDFs" style="border:1px solid #b9d5e7;border-radius:8px;padding:12px;margin:10px 0">
       <strong>CDC Assessment Reference PDFs</strong>
@@ -8521,6 +8527,25 @@ function openCdcAssessment(context = null) {
     tr.insertCell().textContent=digits(known.length)+' / '+digits(rows.length);
     field('themeSummaryInfo').textContent=label('शैक्षिक सत्र','Academic year')+': '+digits(year)+' | '+label('सूची भएका थिम','Themes with counts')+': '+digits(known.length)+' / '+digits(rows.length)+' | '+label('मूल स्रोतसँग अन्तिम मिलान बाँकी हुन सक्छ।','Final source verification may be pending.');
   }
+  function renderThemeCoverage(){
+    const body=field('themeCoverageRows');body.replaceChildren();
+    const put=(values)=>{const row=body.insertRow();for(const v of values)row.insertCell().textContent=v;return row;};
+    let allKnown=0,allThemes=0,unlisted=0;
+    for(const grade of ['1','2','3','4','5']){
+      const subjects=Number(grade)<=3?cdcPrimarySubjects:cdcUpperPrimarySubjects;
+      for(const [key,ne,en] of subjects){
+        const mode=subjectLanguage(key),digits=n=>mode==='ne'?String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]):String(n);
+        const label=(a,b)=>mode==='ne'?a:mode==='en'?b:a+' / '+b;
+        const rows=cdcThemeMarkRows(grade,key,year),known=rows.filter(row=>row.count!==null),review=known.filter(row=>row.status==='review').length;
+        const total=known.reduce((sum,row)=>sum+row.count,0);
+        const status=!rows.length?label('स्रोत सूची बाँकी','No source catalogue'):known.length!==rows.length?label('आंशिक सूची','Partial catalogue'):label('सूचीकृत — अन्तिम प्रमाणीकरण बाँकी','Mapped — final verification pending');
+        const tr=put(['Class '+grade,mode==='ne'?ne:mode==='en'?en:ne+' / '+en,rows.length?digits(known.length)+' / '+digits(rows.length):'—',known.length?digits(total):'—',known.length?digits(total*4):'—',status+(review?' ('+digits(review)+' '+label('समीक्षा फाराम','review forms')+')':'')]);
+        tr.dataset.cdcCoverageClass=grade;tr.dataset.cdcCoverageSubject=key;
+        allKnown+=known.length;allThemes+=rows.length;if(!rows.length)unlisted++;
+      }
+    }
+    field('themeCoverageInfo').textContent='उपलब्ध गणना भएका थिम: '+allKnown+' / '+allThemes+' | स्रोत सूची नै नभएका कक्षा-विषय: '+unlisted+'।';
+  }
   function refreshThemeSummarySubjects(){
     const previous=field('summarySubject').value,grade=Number(field('summaryClass').value);
     const list=grade<=3?cdcPrimarySubjects:cdcUpperPrimarySubjects;
@@ -8533,6 +8558,7 @@ function openCdcAssessment(context = null) {
   field('summaryClass').onchange=refreshThemeSummarySubjects;
   field('summarySubject').onchange=renderThemeSummary;
   refreshThemeSummarySubjects();
+  renderThemeCoverage();
   field('class').onchange=refreshSubjects;
   field('subject').onchange=refreshStudents;
   field('student').onchange=load;
