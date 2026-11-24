@@ -2340,8 +2340,8 @@ function cdcVerifiedUnits(className,subject) {
     ["रुचि र सोख","Hobbies and Interests"],
     ["चराचुरुङ्गी र जनावर","Birds and Animals"]
   ];
-  if (Number(className)===1&&key==='mathematics') return [cdcSeroferoUnits[1],cdcSeroferoUnits[2],cdcSeroferoUnits[3],cdcSeroferoUnits[6],cdcSeroferoUnits[8]];
-  if (['2','3'].includes(String(className))&&key==='mathematics') return [...(String(className)==='3'?[["मेरो दैनिक जीवन","My daily life"]]:[]),["ज्यामिति","Geometry"],["सङ्ख्याको ज्ञान","Number concepts"],["गणितका आधारभूत क्रिया","Basic operations"],["नाप","Measurement"],["साधारण ग्राफ","Simple graphs"]];
+  if (Number(className)===1&&key==='mathematics') return [cdcSeroferoUnits[0],cdcSeroferoUnits[1],cdcSeroferoUnits[2],cdcSeroferoUnits[3],cdcSeroferoUnits[6],cdcSeroferoUnits[8]];
+  if (['2','3'].includes(String(className))&&key==='mathematics') return [["म र मेरो परिवार","Me and my family"],["मेरो दैनिक जीवन","My daily life"],["ज्यामिति","Geometry"],["सङ्ख्याको ज्ञान","Number concepts"],["गणितका आधारभूत क्रिया","Basic operations"],["नाप","Measurement"],["साधारण ग्राफ","Simple graphs"]];
 
   if (['4','5'].includes(String(className))&&key==='healthphysicalcreativeart') return [
     ["व्यक्तिगत स्वच्छता","Personal hygiene"],
@@ -2409,7 +2409,40 @@ const cdcPrimaryDailyLifeRubrics = [
     ['शिक्षकको केही सहयोगमा लागेको समय निकाल्ने','Determine elapsed time with partial teacher help'],
     ['शिक्षकको पूर्ण सहयोगमा लागेको समय निकाल्ने','Determine elapsed time with full teacher help']]}
 ];
-const cdcVerifiedOutcomes = {
+// Revised CDC 2082, Annex 3(g), printed pp.202–203,207–208,214–215.
+ // Each row stores a topic label and stable observation title; English is a working translation.
+ const cdcRevisedMathForms={
+ '1:म र मेरो परिवार':{page:202,rows:[
+ ['स्थानगत अवधारणा','वस्तुको सापेक्ष स्थान छुट्याउने','Distinguish relative positions'],
+ ['रेखा','सिधा र बक्र रेखा चिन्ने र कोर्ने','Identify and draw straight and curved lines'],
+ ['आकार','त्रिभुज, चतुर्भुज र वृत्त चिन्ने','Identify triangles, quadrilaterals and circles'],
+ ['२० सम्मका सङ्ख्या','दुवै अङ्क पद्धतिमा २० सम्म गन्ने, पढ्ने, लेख्ने र तुलना गर्ने','Count, read, write and compare up to 20 in both numeral systems']]},
+ '1:मेरो दैनिक जीवन':{page:203,rows:[
+ ['दैनिक कामको समय','दैनिक काम कुन समयमा गरिन्छ बताउने','Tell when daily activities take place'],
+ ['हप्ताका दिन','हप्ताका दिन भन्ने र लेख्ने','Say and write the days of the week']]},
+ '2:म र मेरो परिवार':{page:207,rows:[
+ ['ज्यामितीय आकार','ठोस वस्तुबाट त्रिभुज र चतुर्भुज बनाउने','Build triangles and quadrilaterals using objects'],
+ ['ज्यामितीय आकार','त्रिभुज, चतुर्भुज र वृत्तको खाका उतार्ने','Trace triangles, quadrilaterals and circles'],
+ ['भुजा र कुना','भुजा र कुनाबाट त्रिभुज र चतुर्भुज बुझ्ने','Distinguish triangles and quadrilaterals by sides and corners'],
+ ['भाँडाको क्षमता','उस्तै भाँडाको क्षमता तुलना गर्ने','Compare capacities of similar containers'],
+ ['क्षमता','अमानक नापबाट क्षमता अनुमान जाँच्ने','Estimate capacity and verify with informal measures']]},
+ '2:मेरो दैनिक जीवन':{page:208,rows:[
+ ['घण्टा र मिनेट','घडी हेरेर घण्टा र मिनेटमा समय भन्ने र लेख्ने','Tell and write time in hours and minutes'],
+ ['मिति','पात्रोबाट साल, महिना, गते र बार भन्ने र लेख्ने','Read and write a date from a calendar']]},
+ '3:म र मेरो परिवार':{page:214,rows:[
+ ['रेखाखण्ड','किनारा नाप्ने र तोकिएको लम्बाइको रेखाखण्ड कोर्ने','Measure an edge and draw a given line segment'],
+ ['कोण','वरपरका ठोस वस्तुमा कोण देखाउने','Identify angles in solid objects'],
+ ['कोणको रचना','रुलरले कोण कोर्ने, नाम दिने र तुलना गर्ने','Draw, name and compare angles with a ruler'],
+ ['समकोण','समकोण पहिचान गर्ने','Identify right angles'],
+ ['ज्यामितीय आकार','त्रिभुज र चतुर्भुज कोर्ने र नाम लेख्ने','Draw and name triangles and quadrilaterals'],
+ ['आयत र वर्ग','आयताकार तथा वर्गाकार सतह चिन्ने','Identify rectangular and square surfaces']]},
+ '3:मेरो दैनिक जीवन':{page:215,rows:cdcPrimaryDailyLifeRubrics.map((r,i)=>[['घडीअनुसार समय','समयका एकाइको सम्बन्ध','काममा लागेको समय'][i],r.ne,r.en])}
+ };
+ function revisedMathRows(grade){
+   return Object.entries(cdcRevisedMathForms).filter(([key])=>key.startsWith(grade+':'))
+     .flatMap(([key,form])=>form.rows.map(([,ne,en])=>[key.slice(2),ne,en]));
+ }
+ const cdcVerifiedOutcomes = {
   '1:serophero': [
     ['म र मेरो परिवार','आफू र परिवारको परिचय','Introduce yourself and your family'],
     ['म र मेरो परिवार','परिवारका सदस्यहरूको नाता र अभिवादन','Identify family relationships and greet appropriately'],
@@ -2473,8 +2506,7 @@ const cdcVerifiedOutcomes = {
   ],
   // Class 1 Mathematics assessment record, 2076 curriculum.
   '1:mathematics': [
-    ['मेरो दैनिक जीवन','दैनिक काम कुन समयमा गरिन्छ बताउने','Tell when daily activities take place'],
-    ['मेरो दैनिक जीवन','हप्ताका दिन भन्ने र लेख्ने','Say and write the days of the week'],
+    ...revisedMathRows('1'),
     ['हाम्रो समुदाय','देवनागरीमा २१–१०० गन्ने, पढ्ने, लेख्ने र तुलना गर्ने','Count, read, write and compare 21–100 in Devanagari notation'],
     ['हाम्रो समुदाय','देवनागरीमा एकदेखि बीससम्म अक्षरमा पढ्ने र लेख्ने','Read and write one to twenty in words in Devanagari'],
     ['हाम्रो समुदाय','हिन्दु-अरबी अङ्कमा 21–100 गन्ने, पढ्ने, लेख्ने र तुलना गर्ने','Count, read, write and compare 21–100 in Hindu–Arabic notation'],
@@ -2968,6 +3000,7 @@ const cdcVerifiedOutcomes = {
     ["हाम्रो वरपरको संसार","पानी जोगाउने उपाय बताउने"]
   ],
   '2:mathematics': [
+    ...revisedMathRows('2'),
     ["ज्यामिति","वस्तु जोडेर त्रिभुज र चतुर्भुज बनाउने","Build triangles and quadrilaterals with objects"],
     ["ज्यामिति","त्रिभुज, चतुर्भुज र वृत्तको खाका उतार्ने","Trace triangles, quadrilaterals and circles"],
     ["ज्यामिति","भुजा र कुना हेरेर त्रिभुज र चतुर्भुज छुट्याउने","Distinguish triangles and quadrilaterals by their sides and corners"],
@@ -2993,7 +3026,7 @@ const cdcVerifiedOutcomes = {
     ["साधारण ग्राफ","चित्रग्राफबाट सङ्ख्या गनेर तालिकामा राख्ने","Count values in a pictograph and enter them in a table"]
   ],
   '3:mathematics': [
-    ...cdcPrimaryDailyLifeRubrics.map(({ne,en})=>['मेरो दैनिक जीवन',ne,en]),
+    ...revisedMathRows('3'),
     ["ज्यामिति","किनारा वा रेखाखण्ड नाप्ने र दिइएको लम्बाइको रेखाखण्ड कोर्ने","Measure edges and draw a segment of a given length"],
     ["ज्यामिति","वस्तुमा कोण चिन्ने, बनाउने, नाम दिने र तुलना गर्ने","Find, construct, name and compare angles"],
     ["ज्यामिति","समकोण चिन्ने","Identify right angles"],
@@ -4020,14 +4053,15 @@ function openCdcAssessment(context = null) {
   // Older observations lack a stage and must not be silently classified.
   let annexObservations=[];
   let annexReadSelection=null;
-  const isPrimaryRubric=()=>field('class').value==='3'&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics'&&normalizeTitle(field('unit').value)===normalizeTitle('मेरो दैनिक जीवन');
+  const primaryRevisedForm=()=>cdcAssessmentSubjectKey(field('subject').value)==='mathematics'?cdcRevisedMathForms[field('class').value+':'+field('unit').value]:null;
+  const isPrimaryRubric=()=>!!primaryRevisedForm();
   const hasAnnexGrid=()=>!!context&&(isPrimaryRubric()||(Number(field('class').value)>=4&&['nepali','english','mathematics','socialstudies','science','healthphysicalcreativeart'].includes(cdcAssessmentSubjectKey(field('subject').value))));
   const renderAnnex=()=>{
     const panel=field('annex3'),enabled=hasAnnexGrid(),en=language()==='en';
     panel.hidden=!enabled;field('stageRow').hidden=!enabled;
     field('printForm').disabled=!enabled||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('unit').value.trim();
     if(!enabled)return;
-    if(isPrimaryRubric()){renderPrimaryRubric();return;}
+    if(isPrimaryRubric()){renderPrimaryRevised();return;}
     const selection=field('student').selectedOptions[0];
     const st=assessmentStudents.find(s=>s.id===selection?.value);
     const subject=field('subject').selectedOptions[0]?.text||'';
@@ -4075,37 +4109,32 @@ function openCdcAssessment(context = null) {
     field('annexStatus').textContent=en?'Draft layout using existing outcome catalogue. Select a row to enter the observation; read school records to populate ratings. Unclassified legacy records are not assigned to either stage.':'हालको उपलब्धि सूचीमा आधारित प्रारम्भिक ढाँचा। उपलब्धि छानेर मूल्याङ्कन गर्नुहोस्; विद्यालयको अभिलेख पढेपछि अङ्क देखिन्छ। चरण नखुलेका पुराना अभिलेख छुट्टै रहन्छन्।';
     field('annexSign').textContent=en?'Teacher signature __________  Date __________  Parent signature __________  Date __________':'शिक्षकको दस्तखत __________  मिति __________  अभिभावकको दस्तखत __________  मिति __________';
   };
-  function renderPrimaryRubric(){
+  function renderPrimaryRevised(){
+    const form=primaryRevisedForm(),grade=field('class').value,unit=field('unit').value;
     const st=assessmentStudents.find(s=>s.id===field('student').value);
-    field('annexTitle').textContent='कक्षा ३ — गणित / Mathematics';
-    field('annexIdentity').textContent='विद्यार्थी / Student: '+(field('student').selectedOptions[0]?.text||'')+'   परिचयपत्र नं. / Student ID: '+(st?.iemisId||st?.studentIemisNo||st?.admissionNo||'');
-    field('annexUnit').textContent='थिम / Theme: मेरो दैनिक जीवन / My daily life';
-    field('annexHead').innerHTML='<tr><th rowspan="2">थिम / Theme</th><th rowspan="2">मुख्य सिकाइ उपलब्धि / Main outcome</th><th rowspan="2">सूचक / Indicator</th><th colspan="2">नियमित मूल्याङ्कन / Regular</th><th colspan="2">थप सहायतापछि / After support</th><th rowspan="2">साधन / Tools</th></tr><tr><th>मिति / Date</th><th>उपलब्धि / Rating</th><th>मिति / Date</th><th>उपलब्धि / Rating</th></tr>';
+    field('annexTitle').textContent='अनुसूची ३ (ग) — गणित / Mathematics';
+    field('annexIdentity').textContent='कक्षा / Class: '+grade+'   विद्यार्थी / Student: '+(field('student').selectedOptions[0]?.text||'')+'   रोल नम्बर / Roll No.: '+(st?.rollNo??'');
+    field('annexUnit').textContent='विषयक्षेत्र / Theme: '+localized(unit,field('unitEn').value);
+    field('annexHead').innerHTML='<tr><th rowspan="2">क्र.स.</th><th rowspan="2">विषयवस्तु / Content</th><th rowspan="2">सिकाइ उपलब्धि / Learning outcome</th><th colspan="2">नियमित पठनपाठनपछिको मूल्याङ्कन</th><th colspan="2">थप सहायतापछिको मूल्याङ्कन</th><th rowspan="2">कैफियत</th></tr><tr><th>मिति</th><th>अङ्कन</th><th>मिति</th><th>अङ्कन</th></tr>';
     const body=field('annexRows');body.replaceChildren();
     let sum=0,count=0;
-    for(const [i,item] of cdcPrimaryDailyLifeRubrics.entries()){
-      const observations=annexObservations.filter(o=>normalizeTitle(o.unit)===normalizeTitle('मेरो दैनिक जीवन')&&o.topic===item.ne);
-      const regular=observations.find(o=>o.stage==='regular'),support=observations.find(o=>o.stage==='support');
-      const current=support||regular;
-      if(current&&Number.isInteger(current.level)&&current.level>=1&&current.level<=4){sum+=current.level;count++;}
-      for(const [j,[ne,en]] of item.criteria.entries()){
-        const row=body.insertRow();
-        if(i===0&&j===0){const cell=row.insertCell();cell.rowSpan=12;cell.textContent='मेरो दैनिक जीवन / My daily life';}
-        if(j===0){const cell=row.insertCell();cell.rowSpan=4;const button=document.createElement('button');button.type='button';button.className='btn alt';button.textContent=localized(item.ne,item.en);button.onclick=()=>{field('topic').value=item.ne;load();};cell.append(button);}
-        row.insertCell().textContent=localized(ne,en)+' ('+(4-j)+')';
-        if(j===0){
-          for(const value of [regular?.date,regular?.level,support?.date,support?.level,[...new Set([regular?.method,support?.method].filter(Boolean))].join(' / ')]){
-            const cell=row.insertCell();cell.rowSpan=4;cell.textContent=value??'';
-          }
-        }
-      }
+    for(const [i,[content,ne,en]] of form.rows.entries()){
+      const items=annexObservations.filter(o=>normalizeTitle(o.unit)===normalizeTitle(unit)&&o.topic===ne&&Number.isInteger(o.level)&&o.level>=1&&o.level<=4);
+      const regular=items.find(o=>o.stage==='regular'),support=items.find(o=>o.stage==='support'),current=support||regular;
+      if(current){sum+=current.level;count++;}
+      const row=body.insertRow();row.insertCell().textContent=String(i+1);row.insertCell().textContent=content;
+      const button=document.createElement('button');button.type='button';button.className='btn alt';button.textContent=localized(ne,en);button.onclick=()=>{field('topic').value=ne;load();};
+      row.insertCell().append(button);
+      for(const v of [regular?.date,regular?.level,support?.date,support?.level,current?.feedback])row.insertCell().textContent=v??'';
     }
-    const foot=field('annexFoot');foot.replaceChildren();
-    for(const [label,value] of [['उपलब्धि अङ्कको जोड / Total',count?String(sum):'—'],['उपलब्धि प्रतिशत / Achievement percentage',count?(100*sum/(4*count)).toFixed(2)+'%':'—'],['मूल्याङ्कन भएका उपलब्धि / Assessed outcomes',count+' / '+cdcPrimaryDailyLifeRubrics.length]]){
-      const row=foot.insertRow();const a=row.insertCell();a.colSpan=3;a.textContent=label;const b=row.insertCell();b.colSpan=5;b.textContent=value;
-    }
-    field('annexStatus').textContent='प्रारम्भिक फाराम: CDC २०७६, मुद्रित पृष्ठ १५३; सूचकको द्विभाषिक रूपान्तरण। पुरानो नाप एकाइका अभिलेख स्वतः सारिएका छैनन्।';
-    field('annexSign').textContent='अभिभावकको दस्तखत __________   शिक्षकको दस्तखत र मिति __________';
+    const foot=field('annexFoot');foot.replaceChildren();const max=4*form.rows.length;
+    const complete=count===form.rows.length;
+    const first=foot.insertRow(),label=first.insertCell();label.rowSpan=2;label.textContent='विषयक्षेत्रगत उपलब्धि';
+    const sumCell=first.insertCell();sumCell.colSpan=7;sumCell.textContent='सिकाइ उपलब्धिको अङ्कको जोड: '+(complete?sum:'—');
+    const second=foot.insertRow(),percent=second.insertCell();percent.colSpan=7;percent.textContent='उपलब्धि प्रतिशत = '+(complete?sum:'—')+' / ('+form.rows.length+' × 4) × 100 = '+(complete?(100*sum/max).toFixed(2)+'%':'—');
+    const coverage=foot.insertRow(),coverageCell=coverage.insertCell();coverageCell.colSpan=8;coverageCell.textContent='मूल्याङ्कन भएका उपलब्धि / Assessed outcomes: '+count+' / '+form.rows.length;
+    field('annexStatus').textContent='CDC २०८२ परिमार्जित, मुद्रित पृष्ठ '+form.page+'; संरचना र उपलब्धि सङ्ख्या मिलाइएको समीक्षा प्रति। शब्दावलीको अन्तिम मिलान बाँकी। पुराना अभिलेख नसारिएका छन्।';
+    field('annexSign').textContent='शिक्षकको हस्ताक्षर __________   मिति __________   अभिभावकको दस्तखत __________   मिति __________';
   }
   const titleValue = () => {
     const title = field('topic').value.trim();
