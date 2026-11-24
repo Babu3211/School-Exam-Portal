@@ -190,7 +190,8 @@ def read_compulsory_pdf(url, output_dir):
             info=subprocess.run(["pdfinfo",str(pdf)],check=True,capture_output=True,text=True,timeout=20).stdout
             pages=int(re.search(r"(?m)^Pages:\s+(\d+)",info).group(1))
             if not 1<=pages<=150: raise ValueError("Unexpected PDF page count")
-            grid_page_limits={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3}
+            grid_page_limits={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3,"optional-computer":1,"optional-math":1,"optional-economics":1}
+    optional_paths={"optional-computer":"2082-04-29%20Specification%20grid%20and%20Model%20Questions-Computer%20Science%20Grade%209_khtkxrc.pdf","optional-math":"Specification%20Grid%20and%20Model%20Question-G9-Opt.%20Math-web_nrbp00y.pdf","optional-economics":"RS11136_"}
             last=min(pages,grid_page_limits[resource])
             text=subprocess.run(["pdftotext","-f","1","-l",str(last),"-layout",str(pdf),"-"],check=True,capture_output=True,text=True,timeout=30).stdout
             # Keep page layout for offline inspection, never treat extraction as
@@ -272,12 +273,14 @@ def stage_grid_page_images(preview_dir):
     folder=preview/"grid-source-pages"; folder.mkdir(exist_ok=True)
     entries=[]
     for source in register["sources"]:
-        e=source.get("retrievalEvidence",{})
+        e=source.get("retrievalEvidence") or source.get("optionalRetrievalEvidence",{})
         resource=e.get("resource")
         if resource not in limits or not re.fullmatch(r"[a-f0-9]{64}",e.get("sha256","")): continue
         result={"resource":resource,"subject":source["subject"],"url":source["url"],"status":"unavailable","images":[],"currentCdcExactApproved":False}
         try:
-            if urlsplit(source["url"]).hostname!="giwmscdnone.gov.np" or not re.search(r"/RS"+resource+r"_",source["url"]):
+            path=urlsplit(source["url"]).path
+            identity_ok=(path.rsplit("/",1)[-1].startswith(optional_paths[resource]) if resource in optional_paths else bool(re.search(r"/RS"+resource+r"_",path)))
+            if urlsplit(source["url"]).hostname!="giwmscdnone.gov.np" or not identity_ok:
                 raise ValueError("Unexpected source identity")
             _,_,data=get(source["url"],min(32*1024*1024,e["byteCount"]))
             if len(data)!=e["byteCount"] or hashlib.sha256(data).hexdigest()!=e["sha256"] or not data.startswith(b"%PDF-"):
@@ -303,8 +306,8 @@ def stage_grid_page_images(preview_dir):
             result["reason"]=str(err)[:200]
         entries.append(result)
         print("Grid source "+resource+": "+result["status"])
-    if len(entries)!=5 or len({x["resource"] for x in entries})!=5: raise ValueError("Unexpected fingerprinted source inventory")
-    parts=['<section id="original-grid-pages"><h2>Original CDC Grid page images</h2><p>Historical source copies for comparison only. Matching a document fingerprint does not certify the current examination Grid.</p>']
+    if len(entries)!=8 or {x["resource"] for x in entries}!=set(limits): raise ValueError("Unexpected fingerprinted source inventory")
+    parts=['<section id="original-grid-pages"><h2>Original CDC Grid page images</h2><p>Source page copies for comparison only. Matching a document fingerprint does not certify the current examination Grid. Optional subjects show the first page; full PDF links are retained.</p>']
     for result in entries:
         parts.append('<h3>'+escape(result["subject"])+'</h3>')
         if result["images"]:

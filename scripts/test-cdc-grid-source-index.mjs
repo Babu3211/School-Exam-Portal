@@ -120,3 +120,9 @@ assert.deepEqual(grammar.rows.map(r=>r[3]),[6,5]);
 assert.deepEqual(findTable('math','Historical question structure').rows,[[16,49,75]]);
 assert.ok(['science','english','math'].every(key=>!byKey[key].currentCdcExactApproved));
 console.log('PASS complete available science cognitive matrix, English grammar detail and mathematics historical question counts');
+
+const optionalFingerprints=register.sources.filter(s=>s.optionalRetrievalEvidence);
+assert.equal(optionalFingerprints.length,3);
+assert.deepEqual(optionalFingerprints.map(s=>s.optionalRetrievalEvidence.resource).sort(),['optional-computer','optional-economics','optional-math']);
+for(const s of optionalFingerprints){const e=s.optionalRetrievalEvidence;assert.match(e.sha256,/^[a-f0-9]{64}$/);assert.ok(e.pages>0&&e.byteCount>0&&e.firstPageRendered);assert.equal(e.currentCdcExactApproved,false);assert.equal(e.verifiedGridRows,false);assert.ok(s.grades.includes(9));}
+console.log('PASS optional source fingerprints; no automatic approval');

@@ -417,7 +417,17 @@
       "version": "2082",
       "status": "official_CDC_pdf_grid_unitwise_transcribed_dev_teacher_review_required",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/2082-04-29%20Specification%20grid%20and%20Model%20Questions-Computer%20Science%20Grade%209_khtkxrc.pdf",
-      "note": "Original government PDF: Full marks 50, 2 hours; 7 units, 25 questions; MCQ 10×1, short 10×2, long 5×4; 20/30/30/20 cognitive distribution. Exact row grid bundled for V46 dev, no real student data modified."
+      "note": "Original government PDF: Full marks 50, 2 hours; 7 units, 25 questions; MCQ 10×1, short 10×2, long 5×4; 20/30/30/20 cognitive distribution. Exact row grid bundled for V46 dev, no real student data modified.",
+      "optionalRetrievalEvidence": {
+        "resource": "optional-computer",
+        "sha256": "bbe0886317f3046c378a7157503ed0f63e32f212649bd6476e04146fd712e425",
+        "byteCount": 864075,
+        "pages": 10,
+        "runId": 45418316887,
+        "firstPageRendered": true,
+        "currentCdcExactApproved": false,
+        "verifiedGridRows": false
+      }
     },
     {
       "grades": [
@@ -440,7 +450,17 @@
       "version": "2082 (CDC decision 2082/04/16)",
       "status": "official_CDC_2082_area_and_group_totals_transcribed_composite_WCA_CCA_not_yet_supported",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/Specification%20Grid%20and%20Model%20Question-G9-Opt.%20Math-web_nrbp00y.pdf",
-      "note": "Official government PDF page 1 verified: 75 marks, 3h, 11 objective 1-mark items (11), 12 WCA grouped questions (40), 4 CCA cross-content grouped questions (24), 6 content areas marks 17/17/20/7/7/7, domains K16% U24% A40% HA20%, each composite question 2-4 subquestions. Existing flat MCQ/short/long allocator MUST NOT claim CDC compliance. Teacher needs no manual Excel grid entry; grouped-question generation remains disabled."
+      "note": "Official government PDF page 1 verified: 75 marks, 3h, 11 objective 1-mark items (11), 12 WCA grouped questions (40), 4 CCA cross-content grouped questions (24), 6 content areas marks 17/17/20/7/7/7, domains K16% U24% A40% HA20%, each composite question 2-4 subquestions. Existing flat MCQ/short/long allocator MUST NOT claim CDC compliance. Teacher needs no manual Excel grid entry; grouped-question generation remains disabled.",
+      "optionalRetrievalEvidence": {
+        "resource": "optional-math",
+        "sha256": "4bf6d5f47ca75cef224f27311c9ca3acad9bb76b2757f0c28c13bde559f3e396",
+        "byteCount": 812755,
+        "pages": 12,
+        "runId": 45418316887,
+        "firstPageRendered": true,
+        "currentCdcExactApproved": false,
+        "verifiedGridRows": false
+      }
     },
     {
       "grades": [
@@ -506,7 +526,17 @@
       "version": "2082",
       "status": "official_CDC_pdf_model_and_summary_crosschecked_grid_content_not_yet_extracted",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11136_%E0%A4%85%E0%A4%B0%E0%A5%8D%E0%A4%A5%E0%A4%B6%E0%A4%BE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%8D%E0%A4%B0%20%E0%A4%95%E0%A4%95%E0%A5%8D%E0%A4%B7%E0%A4%BE-%20%E0%A5%AF%20%E0%A4%B5%E0%A4%BF%E0%A4%B6%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%B0%E0%A4%A3%20%E0%A4%A4%E0%A4%BE%E0%A4%B2%E0%A4%BF%E0%A4%95%E0%A4%BE%20%E0%A4%B0%20%E0%A4%A8%E0%A4%AE%E0%A5%81%E0%A4%A8%E0%A4%BE%20%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%B6%E0%A5%8D%E0%A4%A8%E0%A4%B9%E0%A4%B0%E0%A5%81%20%E0%A5%A8%E0%A5%A6%E0%A5%AE%E0%A5%A8_3ew2awb.pdf",
-      "note": "Government-hosted CDC Grade 9 Economics (103) PDF; text-extracted bilingual model and summary table agree on 75 marks, 3h, 22 required items: 11×1, 8×5, 3×8; alternatives at model Q12,16,18,22 (not extra scored items). Six unit totals read as 9/24/9/6/12/15; cognitive summary marks 13/24/17/21. Extracted prose conflicts with the summary/model (5 short items, 5-mark long items, higher ability cap 20% vs 28% summary). Page screenshots timed out; original row/cell visual confirmation and clarification of conflicting prose still required. No exact blueprint approved; no automatic generation enabled by this source."
+      "note": "Government-hosted CDC Grade 9 Economics (103) PDF; text-extracted bilingual model and summary table agree on 75 marks, 3h, 22 required items: 11×1, 8×5, 3×8; alternatives at model Q12,16,18,22 (not extra scored items). Six unit totals read as 9/24/9/6/12/15; cognitive summary marks 13/24/17/21. Extracted prose conflicts with the summary/model (5 short items, 5-mark long items, higher ability cap 20% vs 28% summary). Page screenshots timed out; original row/cell visual confirmation and clarification of conflicting prose still required. No exact blueprint approved; no automatic generation enabled by this source.",
+      "optionalRetrievalEvidence": {
+        "resource": "optional-economics",
+        "sha256": "c8f2219f945839a8016cde60334139f3bc11949888feb0925155aa45caead07e",
+        "byteCount": 989439,
+        "pages": 6,
+        "runId": 45418316887,
+        "firstPageRendered": true,
+        "currentCdcExactApproved": false,
+        "verifiedGridRows": false
+      }
     },
     {
       "grades": [
