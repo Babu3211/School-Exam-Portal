@@ -219,3 +219,13 @@ assert.equal(extracted.extractedTaskMarks.unseenReading,4);
 assert.equal(extracted.officialExamApproved,false);
 assert.equal(byKey.nepali.gridTranscribed,false);
 console.log('PASS Nepalese government Grid text discrepancy tracked without certifying historical draft');
+
+const secondary=extracted.secondaryCorroboration;
+assert.equal(secondary.claimedGridEdition,2080);
+assert.equal(secondary.officialSource,false);
+assert.equal(secondary.areaMarks.reduce((a,b)=>a+b,0),75);
+assert.equal(secondary.cognitiveMarks.reduce((a,b)=>a+b,0),75);
+assert.deepEqual([secondary.unseenReadingMarks,secondary.noteTakingMarks,secondary.summaryWritingMarks],[extracted.extractedTaskMarks.unseenReading,extracted.extractedTaskMarks.noteTaking,extracted.extractedTaskMarks.summaryWriting]);
+assert.notDeepEqual(secondary.cognitiveMarks,Object.values(historic.cognitiveMarks));
+assert.equal(byKey.nepali.ready,false);
+console.log('PASS independent 2080 Nepali crosscheck, 75 marks, primary-source discrepancies retained');

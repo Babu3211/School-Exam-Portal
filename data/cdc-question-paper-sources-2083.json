@@ -720,7 +720,44 @@
             }
           },
           "comparisonStatus": "partial_text_conflict_requires_visual_confirmation_and_planner_revision",
-          "officialExamApproved": false
+          "officialExamApproved": false,
+          "secondaryCorroboration": {
+            "url": "https://science-playground.com/learn/grade-9-nepali/papers",
+            "checkedOn": "2026-11-24",
+            "claimedGridEdition": 2080,
+            "officialSource": false,
+            "areaMarks": [
+              6,
+              3,
+              15,
+              8,
+              4,
+              4,
+              2,
+              3,
+              12,
+              4,
+              7,
+              7
+            ],
+            "cognitiveMarks": [
+              8,
+              12,
+              24,
+              31
+            ],
+            "unseenReadingMarks": 4,
+            "noteTakingMarks": 2,
+            "summaryWritingMarks": 3,
+            "additionalDifferences": [
+              "verb_mood_alternative",
+              "grade9_transformation_excludes_reported_speech",
+              "textbook_grammar_passage_required",
+              "textbook_summary_passage_max_100_words",
+              "two_required_textbook_comprehension_tasks"
+            ],
+            "note": "Independent educational site's transcription agrees with selected RS11168 government PDF extracted cells. It is not expert-reviewed or authoritative. Other detailed fields require primary visual verification; historical 2078 practice remains separate."
+          }
         }
       }
     },
