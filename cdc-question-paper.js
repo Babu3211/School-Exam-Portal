@@ -6,6 +6,7 @@ import {findCdcGridSources} from "./cdc-grid-source-index.mjs";
 import {auditGrade9Release} from "./cdc-grade9-release-audit.mjs";
 import {compareGrade8SciencePracticeBank,getGrade8ScienceHistoricalPracticePattern} from "./cdc-grade8-science-model-audit.mjs";
 import {grade8ScienceOriginalSupplement} from "./cdc-grade8-science-original-supplement.mjs";
+import {grade9ComputerOriginalBank} from "./cdc-grade9-computer-original-practice.mjs";
 import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-math-2082.mjs";
 import {CDC_G10_OPTIONAL_MATH_2083_MODEL,compareCdc2083MathModelToBundledGrid} from "./cdc-optional-math-model-compare.mjs";
 import {inspectCdcOptionalMathPaper} from "./cdc-optional-math-composite.mjs";
@@ -456,6 +457,13 @@ async function loadClassSubjects() {
 // Local original practice sources require no Admin import or Firestore write.
 // Absence of a checked source never triggers invented questions or a fake grid.
 async function loadBundledPracticeBank({grade,subject}){
+ if(grade===9&&getBundledComputerGrid({grade,subject,fullMarks:50})){
+  const pack=grade9ComputerOriginalBank({subject});
+  return {units:pack.units,questions:pack.questions,
+   status:"कक्षा ९ ऐच्छिक कम्प्युटर: CDC को ५० अङ्कको Unit/Type/Cognitive Grid अनुसार "+
+    "२५ स्थानका २/२ वटा (जम्मा ५०) मौलिक नेपाली/English अभ्यास प्रश्न र उत्तरकुञ्जिका छन्। "+
+    "यी CDC प्रकाशित प्रश्न होइनन्; शिक्षकले उत्तर र कक्षा उपयुक्तता जाँचेर मात्र Save/Print गर्नुपर्छ।"};
+ }
  // Strictly return a snapshot. A previous request must never mutate the
  // active class, topic list or bank after the user switches selections.
  if(![8,10].includes(grade)||!isSupportedScienceSubject(subject))
@@ -560,7 +568,10 @@ async function loadCurrentData() {
  bundledPracticeQuestions=bundled.questions;
  bundledPracticeStatus=officialComputerGrid?
   "कक्षा "+grade+" Computer Science: CDC को ५० अङ्क/२५ प्रश्नको आधिकारिक Unit-wise Grid र "+
-  officialComputerGrid.unitNames.length+" Unit स्वतः तयार छन्। प्रश्नपत्रका लागि पर्याप्त समीक्षा गरिएका प्रश्न अझै आवश्यक छन्।":
+  officialComputerGrid.unitNames.length+" Unit स्वतः तयार छन्। "+
+  (grade===9&&bundled.questions.length===50?
+   "५० मौलिक bilingual अभ्यास प्रश्न उपलब्ध छन्; शिक्षकको समीक्षा र विद्यालय परीक्षण अनिवार्य छ।":
+   "प्रश्नपत्रका लागि पर्याप्त समीक्षा गरिएका प्रश्न अझै आवश्यक छन्।") :
   officialOptionalMathGuide?
   "CDC २०८२ ऐच्छिक गणित: ६ विषयक्षेत्र, ७५ अङ्क, ११ Objective + १२ WCA + ४ CCA प्रश्न।"+
   (grade10ModelAudit?.matches?
