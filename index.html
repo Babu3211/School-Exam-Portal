@@ -566,7 +566,7 @@ function viewerReadOnlyGuard(event){
   if(action.matches("[data-page],[data-go]")||action.closest("[data-page],[data-go]"))return;
   const id=String(action.id||"").toLowerCase(),label=String(action.textContent||"").toLowerCase();
   // Explicit non-mutating actions: do not infer safety from a substring such as "show" or "generate".
-  const readActionIds=new Set(["cdcreadschool","cdcnextstudent","logoutbtn","loadentrystudents","loadattendancestudents","loadattendancehistory","numberledgertab","gradeledgertab","entryledgertab","studentcanceleditbtn","staffcancelbtn","classcancelbtn","examcancelbtn","subjectcatalogcancel","cancelroleassignmentbtn","toggleloginpassword","onlineresulttoggle","onlineresultsearchbtn","loadreportbtn","loadresultsbtn","refreshresultsbtn","showledgerview","refreshledgerview","refreshentry","refreshattendance","refreshattendancehistory","refreshcertificatesbtn","refreshreportbtn","refreshusersbtn","refreshauditlogs","reloadschoolsettings","studentsearchbtn","studentreloadbtn","staffsearchbtn","staffreloadbtn","classsearchbtn","classreloadbtn","examsearchbtn","examreloadbtn","subjectcatalogreloadbtn","markreloadsettings","studentexport","studentsample","staffexport","staffsample","exportledgerexcel","sampleledgerexcel","exportledgerpageexcel","printledgerpage","printgradesheetbtn","printtabulationbtn","exporttabulationbtn","printattendance","exportattendance","printattendancehistory","exportattendancehistory","exportreportbtn","printreportbtn","downloadfirebasebackup","previewfirebaserestore","onlineresultprintbtn"]);
+  const readActionIds=new Set(["cdcprintform","cdcreadschool","cdcnextstudent","logoutbtn","loadentrystudents","loadattendancestudents","loadattendancehistory","numberledgertab","gradeledgertab","entryledgertab","studentcanceleditbtn","staffcancelbtn","classcancelbtn","examcancelbtn","subjectcatalogcancel","cancelroleassignmentbtn","toggleloginpassword","onlineresulttoggle","onlineresultsearchbtn","loadreportbtn","loadresultsbtn","refreshresultsbtn","showledgerview","refreshledgerview","refreshentry","refreshattendance","refreshattendancehistory","refreshcertificatesbtn","refreshreportbtn","refreshusersbtn","refreshauditlogs","reloadschoolsettings","studentsearchbtn","studentreloadbtn","staffsearchbtn","staffreloadbtn","classsearchbtn","classreloadbtn","examsearchbtn","examreloadbtn","subjectcatalogreloadbtn","markreloadsettings","studentexport","studentsample","staffexport","staffsample","exportledgerexcel","sampleledgerexcel","exportledgerpageexcel","printledgerpage","printgradesheetbtn","printtabulationbtn","exporttabulationbtn","printattendance","exportattendance","printattendancehistory","exportattendancehistory","exportreportbtn","printreportbtn","downloadfirebasebackup","previewfirebaserestore","onlineresultprintbtn"]);
   const safeReadLabel=/^(?:search|refresh|reload|view|preview|print|download|export|filter|history print|history export|mark wise ledger|grade wise ledger|mark entry ledger|student list|cancel|close|back|next|previous|logout)(?:\\b|\\s|$)/i;
   const mutationLabel=/\\b(?:add|save|delete|edit|update|import|restore|publish|issue|create|remove|clear|seed|sync|assign|generate missing|confirm|submit)\\b/i;
   const allowed=readActionIds.has(id)||(!mutationLabel.test(id+" "+label)&&safeReadLabel.test(label));
@@ -3950,7 +3950,7 @@ function openCdcAssessment(context = null) {
       <label>विद्यार्थी <select data-cdc="student"></select></label>
       <label>अवधि <select data-cdc="period"><option>First Term</option><option>Second Term</option><option>Final Term</option></select></label>
     </div>
-    <p><a data-cdc="guide" target="_blank" rel="noopener">CDC मूल्याङ्कन मार्गदर्शन</a> · <a data-cdc="curriculumSource" target="_blank" rel="noopener">एकाइ र सिकाइ उपलब्धिको स्रोत</a></p>
+    <p><a data-cdc="guide" target="_blank" rel="noopener">CDC मूल्याङ्कन मार्गदर्शन</a> · <a data-cdc="revisedCurriculumSource" href="https://learning.cehrd.gov.np/mod/resource/view.php?id=1259" target="_blank" rel="noopener" hidden>कक्षा १–३ परिमार्जित पाठ्यक्रम २०८२</a> <a data-cdc="curriculumSource" target="_blank" rel="noopener">एकाइ र सिकाइ उपलब्धिको स्रोत</a></p>
     <label>सुरक्षित मूल्याङ्कन <select data-cdc="records"></select></label>
     <p data-cdc="summary" class="hint"></p>
     <details><summary>यस उपलब्धिको विद्यार्थीगत प्रगति</summary>
@@ -3965,7 +3965,7 @@ function openCdcAssessment(context = null) {
     <datalist id="cdcTopicSuggestions"></datalist>
     <datalist id="cdcUnitSuggestions"></datalist>
     <p data-cdc="unitCoverage" class="hint"></p>
-    <section data-cdc="annex3" hidden><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><div class="tablewrap"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p></section>
+    <section data-cdc="annex3" hidden><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><div class="tablewrap"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Print / Save PDF</button><p data-cdc="printStatus" role="status" class="hint"></p></section>
     <details data-cdc="catalogPanel"><summary>द्विभाषिक उपलब्धि सूची थप्नुहोस्</summary>
       <p class="hint">स्रोतबाट पुष्टि गरेका चार स्तम्भ Excel बाट प्रतिलिपि गर्नुहोस्। क्रम: नेपाली एकाइ, English unit, नेपाली उपलब्धि, English outcome। शीर्षक पङ्क्ति छोड्नुहोस्।</p>
       <textarea data-cdc="catalogText" aria-label="द्विभाषिक उपलब्धि सूची" rows="4" maxlength="1100000" style="width:100%"></textarea>
@@ -4019,11 +4019,13 @@ function openCdcAssessment(context = null) {
   // The language-subject Annex 3 grid uses explicit assessment stages.
   // Older observations lack a stage and must not be silently classified.
   let annexObservations=[];
+  let annexReadSelection=null;
   const isPrimaryRubric=()=>field('class').value==='3'&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics'&&normalizeTitle(field('unit').value)===normalizeTitle('मेरो दैनिक जीवन');
   const hasAnnexGrid=()=>!!context&&(isPrimaryRubric()||(Number(field('class').value)>=4&&['nepali','english','mathematics','socialstudies','science','healthphysicalcreativeart'].includes(cdcAssessmentSubjectKey(field('subject').value))));
   const renderAnnex=()=>{
     const panel=field('annex3'),enabled=hasAnnexGrid(),en=language()==='en';
     panel.hidden=!enabled;field('stageRow').hidden=!enabled;
+    field('printForm').disabled=!enabled||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('unit').value.trim();
     if(!enabled)return;
     if(isPrimaryRubric()){renderPrimaryRubric();return;}
     const selection=field('student').selectedOptions[0];
@@ -4221,10 +4223,43 @@ function openCdcAssessment(context = null) {
     schoolReadSequence++;
     field('schoolRows').replaceChildren();
     annexObservations=[];
+    annexReadSelection=null;
+    field('printStatus').textContent='';
     renderAnnex();
     field('schoolStatus').textContent='';
     field('readSchool').disabled=!schoolSelection();
     field('saveSchool').disabled=readOnly||schoolSavePending||!schoolSelection();
+  };
+  // Print the selected, freshly read school record only. Never include editor
+  // fields, other students, hidden UI, or an unconfirmed/stale snapshot.
+  const buildAssessmentPrint=()=>{
+    if(!hasAnnexGrid()||!canShow()||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('annexRows').rows.length)return null;
+    const doc=document.implementation.createHTMLDocument('CDC Assessment — Review copy');
+    doc.documentElement.lang=language()==='en'?'en':'ne';
+    const style=doc.createElement('style');
+    style.textContent='@page{size:A4 landscape;margin:10mm}body{font:11px Arial,"Noto Sans Devanagari",sans-serif;color:#111;margin:0}h1{text-align:center;font-size:16px;margin:0 0 8px}p{margin:5px 0;white-space:pre-wrap}table{width:100%;border-collapse:collapse;table-layout:auto}th,td{border:1px solid #111;padding:4px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{text-align:center}thead{display:table-header-group}tr{break-inside:avoid}tfoot{display:table-row-group}.review{font-size:10px;margin-top:8px}';
+    doc.head.append(style);
+    const title=doc.createElement('h1');title.textContent=field('annexTitle').textContent;doc.body.append(title);
+    for(const name of ['annexIdentity','annexUnit']){
+      const p=doc.createElement('p');p.textContent=field(name).textContent;doc.body.append(p);
+    }
+    const table=doc.importNode(field('annexTable'),true);table.removeAttribute('style');
+    table.querySelectorAll('button').forEach(button=>button.replaceWith(doc.createTextNode(button.textContent)));
+    table.querySelectorAll('[data-cdc]').forEach(node=>node.removeAttribute('data-cdc'));
+    table.removeAttribute('data-cdc');doc.body.append(table);
+    for(const name of ['annexSign','annexStatus']){
+      const p=doc.createElement('p');p.textContent=field(name).textContent;doc.body.append(p);
+    }
+    const note=doc.createElement('p');note.className='review';note.textContent='Review copy — CDC layout verification pending. Academic year: '+year+' | '+field('period').value;doc.body.append(note);
+    return doc;
+  };
+  field('printForm').onclick=()=>{
+    const doc=buildAssessmentPrint();
+    if(!doc){field('printStatus').textContent='पहिले विद्यालयको अभिलेख पढ्नुहोस्।';return;}
+    const popup=window.open('','_blank');
+    if(!popup){field('printStatus').textContent='Print खोल्न pop-up अनुमति दिनुहोस्।';return;}
+    popup.document.open();popup.document.write('<!doctype html>'+doc.documentElement.outerHTML);popup.document.close();
+    popup.focus();popup.print();
   };
   field('readSchool').onclick=async()=>{
     const selection=schoolSelection();
@@ -4241,6 +4276,7 @@ function openCdcAssessment(context = null) {
       const items=result.docs.map(record=>record.data()).sort((a,b)=>
         b.date.localeCompare(a.date)||(b.createdAt?.toMillis()??0)-(a.createdAt?.toMillis()??0));
       annexObservations=items;
+      annexReadSelection=JSON.stringify(selection);
       renderAnnex();
       for(const item of items) {
         const row=field('schoolRows').insertRow();
@@ -4392,6 +4428,7 @@ function openCdcAssessment(context = null) {
   }
   function refreshSubjects() {
     const cl = field('class').value;
+    field('revisedCurriculumSource').hidden=!(Number(cl)>=1&&Number(cl)<=3);
     field('levelRow').hidden = !cl;
     field('guide').textContent = Number(cl)<=3 ? 'विद्यार्थी मूल्याङ्कन मार्गदर्शन २०७६ (कक्षा १–३)' : 'विद्यार्थी मूल्याङ्कन मार्गदर्शन २०८३ (कक्षा ४–५)';
     field('guide').href = Number(cl)<=3 ? 'https://moecdc.gov.np/content/644/student-assessment-guide-for-basic-level-class/' : 'https://moecdc.gov.np/content/646/guide-to-student-assessment-in-basic-level/';
