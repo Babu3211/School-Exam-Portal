@@ -41,7 +41,9 @@ assert.equal(noOptional.checkedSubjects.length,5,'Required subjects cannot be re
 const extra=auditGrade9Release({
  register:data,offeredSubjects:['Optional Computer Science','Robotics']
 });
-assert.deepEqual(extra.unknownSchoolSubjects,[],'Unknown Grade9 subjects should be explicitly represented');
+assert.deepEqual(extra.unknownSchoolSubjects,['Robotics'],
+ 'School subjects not yet in CDC source index must remain blockers');
+assert.equal(extra.grade9PaperReady,false);
 const forged=auditGrade9Release({register:data,offeredSubjects:[],
  exactGridReviews:{nepali:true,english:true,math:true,science:true,social:true},
  reviewedBanks:{nepali:true,english:true,math:true,science:true,social:true},
