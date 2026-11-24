@@ -663,9 +663,9 @@
       "subject": "ऐच्छिक वातावरण विज्ञान",
       "kind": "CDC_textbook",
       "version": "Government English textbook",
-      "status": "official_government_pdf_contents_text_checked_screenshot_timeout",
-      "url": "https://giwmscdnone.gov.np/media/pdf_upload/Opt%20Env%20Sc%20Grade%209_r9nzny9.pdf",
-      "note": "Extracted contents lists nine units (printed starting pages 1,15,32,68,94,110,135,149,184). Separate 2083 school syllabus lists ten units; not an official Grid. No unit marks inferred."
+      "status": "official_government_pdf_contents_visual_verified",
+      "url": "https://giwmscdntwo.gov.np/media/pdf_upload/Class%209%20Environment%20science_English%20Version_zgnagog.pdf",
+      "note": "English textbook PDF contents page (PDF page 7) visually confirms nine units and printed starting pages 1,15,32,68,94,110,135,149,184. No external examination marks grid inferred."
     }
   ],
   "completion": {

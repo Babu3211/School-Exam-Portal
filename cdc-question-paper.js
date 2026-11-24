@@ -4,6 +4,7 @@ import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
 import {getBundledComputerGrid,bundledComputerUnitTopics} from "./cdc-verified-computer-grids.mjs";
 import {findCdcGridSources} from "./cdc-grid-source-index.mjs";
 import {assertGrade9ExamPaperMatches} from "./cdc-grade9-paper-grid-guard.mjs";
+import {inspectGrade9ReferenceReadiness} from "./cdc-grade9-reference-readiness.mjs";
 import {auditGrade9ModelReference} from "./cdc-grade9-model-reference-audit.mjs";
 import {auditGrade9Release} from "./cdc-grade9-release-audit.mjs";
 import {auditGrade9ScienceArchive} from "./cdc-grade9-science-archive-audit.mjs";
@@ -651,6 +652,12 @@ async function loadCurrentData() {
    const detail=document.createElement("p");detail.className="qp-hint";
    detail.textContent="Model comparison (सन्दर्भ मात्र): "+modelReference.fullMarks+" अङ्क"+(modelReference.modelCount?" · "+modelReference.modelCount+" प्रश्न":"")+(modelReference.groups.length?" · न्यूनतम "+modelReference.missingAtLeast+" मिल्ने प्रश्न अपुग":"")+"। "+modelReference.limitations.join(" · ")+"। CDC Exact स्वीकृत छैन।";
    pdfSource.appendChild(detail);
+   const readiness=inspectGrade9ReferenceReadiness({grade,subject,questions:[...questionRows,...bundledPracticeQuestions]});
+   if(readiness){
+    const status=document.createElement("p");status.className="qp-hint";
+    status.textContent="वास्तविक Question Bank: "+readiness.bankCount+" प्रश्न; शिक्षकले समीक्षा गरेका "+readiness.reviewedCount+"। "+(readiness.referenceStructureMatched?"सन्दर्भ ढाँचा मिल्ने समूह भेटिए;":"पूरा सन्दर्भ प्रश्नपत्र बन्न बाँकी;")+(readiness.missing.length?" अपुग: "+readiness.missing.slice(0,8).join("; ")+"।":" ")+readiness.reason+"। Official Generate बन्द छ।";
+    pdfSource.appendChild(status);
+   }
    const refLink=document.createElement("a");refLink.href=modelReference.url;refLink.target="_blank";refLink.rel="noopener noreferrer";refLink.textContent="तुलना गरिएको Model/Grid स्रोत (प्रमाणीकरण बाँकी)";pdfSource.appendChild(refLink);
   }
   // Prefer the already reviewed and preloaded government's original PDF

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v83-grade9-environment-textbook-2083';
+const CACHE_NAME = 'smss-pwa-v84-grade9-reference-readiness-2083';
 const APP_SHELL = [
   './',
   './index.html',
@@ -22,6 +22,7 @@ const APP_SHELL = [
   './cdc-grade9-release-audit.mjs',
   './cdc-grade9-paper-grid-guard.mjs',
   './cdc-grade9-model-reference-audit.mjs',
+  './cdc-grade9-reference-readiness.mjs',
   './cdc-grade9-nepali-model-2078.mjs',
   './cdc-grade9-nepali-grouped-planner.mjs',
   './cdc-grade9-english-grouped-planner.mjs',

@@ -69,7 +69,7 @@ for(const subject of ['Optional I: Environmental Science','Optional Environment 
  assert.equal(pack.questions.length,63);
  assert.equal(new Set(pack.questions.map(q=>q.id)).size,63);
  assert.equal(pack.exactGridVerified,false);
- assert.ok(pack.units.every(u=>u.provenance.includes('review pending')&&u.sourceUrl.includes('Opt%20Env%20Sc%20Grade%209')));
+ assert.ok(pack.units.every(u=>u.provenance.includes('review pending')&&u.sourceUrl.includes('Class%209%20Environment%20science_English%20Version')));
  for(const unit of pack.units){
   assert.ok(unit.unitTitleEn&&unit.unitTitle);
   const questions=pack.questions.filter(q=>q.unitId===unit.id);
