@@ -927,7 +927,7 @@ serverRole={...current};
 w.getDocs=async()=>({docs:[{id:'english-3',data:()=>({class:'Class 3',section:'A',name:'Synthetic Grade 3 English'})}]});
 await w.loadCdcAssessmentPage();
 const beforeEnglish3=observations.size;
-for(const [unit,groups] of [['Me and My Family',[7,3,9,7]],['My Daily Life',[7,4,4,8]]]){
+for(const [unit,groups] of [["Me and My Family",[7,3,9,7]],["My School",[5,5,5,7]],["Our Environment",[5,5,6,8]],["My Belongings",[4,4,4,8]],["Our Culture",[6,5,7,7]],["Communication Technology and Market",[6,6,7,8]],["Fruits and Vegetables",[6,5,6,9]],["Hobbies and Interests",[5,4,6,9]],["My Daily Life",[7,4,4,8]]]){
  choice('unitEn',unit);
  const count=groups.reduce((a,b)=>a+b,0);
  assert.equal(field('annex3').hidden,false,unit);
@@ -965,6 +965,6 @@ w.currentSchoolSettings.academicYear='2084';
 await w.loadCdcAssessmentPage();
 choice('unitEn','Me and My Family');
 assert.equal(field('annex3').hidden,true);
-console.log('Grade 3 English first two Table 23 themes, 49 outcomes, scoped saves and year isolation passed');
+console.log('Grade 3 English nine Table 23 themes, 217 outcome rows, scoped saves and year isolation passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
