@@ -23,3 +23,23 @@ Keep source documents distinct by grade band and year; do not relabel draft para
 - Annex 3(d) screenshots: PDF viewer page 145 (printed 138), school: 2 main outcomes, 12 indicators; page 148 (printed 141), creation: 2 main outcomes, 12 indicators; page 150 (printed 143), communication and market: 2 main outcomes, 8 indicators; page 151 (printed 144), immediate world: 3 main outcomes, 8 indicators.
 - The final sample shows irregular indicator group sizes (8+4 and 4+1+3). Do not use the existing four-boolean record shape or fabricate missing indicators for these samples. These counts are reference-only pending comparison with the assessment guide. Class 1 subtotal across ten themes in current mixed-source catalogue: 26 main outcomes, raw maximum 104, 108 indicators; not an official certified total.
 - Printed page 144 explicitly limits the curriculum sample forms to Class 1; use the separate assessment guide for Classes 2–3 and the applicable local curriculum for local subject assessment. Do not extrapolate counts.
+
+## 2026-11-24 — NEW official revised curriculum (2082), Classes 2–3 Our Surroundings
+- Government CEHRD resource: https://learning.cehrd.gov.np/mod/resource/view.php?id=1259 (259-page CDC curriculum, 2076 revised 2082). Cover, section 15, Annex 1 and all 20 Class 2–3 Our Surroundings forms were visually inspected. This is a newer curriculum, NOT the separate 2076 assessment guide. The latter's DOE archival URL https://www.doe.gov.np/assets/uploads/files/ff5cbec92ccb2b84a6c71bcbd8b71831.pdf also failed to open.
+- The revised forms use individually rated outcomes, regular and additional-support date/score columns, remarks and percentage = sum / (4 × number of outcomes) × 100. They are materially different from the older four-binary-indicator grouped forms; never reuse old record IDs or silently reinterpret existing records. Confirm academic-year applicability before switching production. Printed pages 231–240 and 241–250; corresponding zero-based PDF indices 237–246 and 247–256.
+
+| Theme | Class 2 outcomes | Raw max | Printed page | Class 3 outcomes | Raw max | Printed page |
+|---|---:|---:|---:|---:|---:|---:|
+| म र मेरो परिवार | 18 | 72 | 231 | 16 | 64 | 241 |
+| मेरो दैनिक जीवन | 13 | 52 | 232 | 14 | 56 | 242 |
+| हाम्रो समुदाय | 13 | 52 | 233 | 16 | 64 | 243 |
+| मेरो विद्यालय | 13 | 52 | 234 | 11 | 44 | 244 |
+| हाम्रा वरपरका सजीवहरू | 6 | 24 | 235 | 5 | 20 | 245 |
+| हाम्रो वातावरण | 7 | 28 | 236 | 7 | 28 | 246 |
+| मेरो सिर्जना | 8 | 32 | 237 | 7 | 28 | 247 |
+| हाम्रो संस्कृति | 4 | 16 | 238 | 5 | 20 | 248 |
+| सञ्चार प्रविधि र बजार | 5 | 20 | 239 | 4 | 16 | 249 |
+| हाम्रो वरपरको संसार | 8 | 32 | 240 | 12 | 48 | 250 |
+| Total (raw, not official subject grade) | 95 | 380 | | 97 | 388 | |
+
+- These are the revised **theme-form** row counts, not the earlier 25 class-level curriculum outcomes. Do not combine revisions or add both totals. Class 1 revised forms and other subject forms still require separate comparison. The revised Annex 4 (printed 251, PDF index 257) also provides a progress report with learning achievement count and overall achievement level. This register is a source-verification checkpoint only; no new assessment entry, migration or production release is authorized by it.
