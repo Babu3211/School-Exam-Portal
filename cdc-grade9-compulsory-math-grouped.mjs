@@ -97,7 +97,7 @@ export function compareGrade9MathPrintedModel(){
  const rows=grid.areas.map(a=>({unitCode:a.unitCode,groupCount:0,itemCount:0,marks:0,itemsByLevel:[0,0,0,0],marksByLevel:[0,0,0,0]}));
  for(const [code,parts] of printedModelGroups){
   const row=rows.find(r=>r.unitCode===code);row.groupCount++;
-  for(const part of parts.split(' ')){const m=/^(\\d+)([KUAH])$/.exec(part);if(!m)throw Error('Invalid printed model label');const marks=Number(m[1]),i='KUAH'.indexOf(m[2]);row.itemCount++;row.marks+=marks;row.itemsByLevel[i]++;row.marksByLevel[i]+=marks;}
+  for(const part of parts.split(' ')){const m=/^([0-9]+)([KUAH])$/.exec(part);if(!m)throw Error('Invalid printed model label');const marks=Number(m[1]),i='KUAH'.indexOf(m[2]);row.itemCount++;row.marks+=marks;row.itemsByLevel[i]++;row.marksByLevel[i]+=marks;}
  }
  const differences=rows.flatMap((r,i)=>levels.flatMap((level,j)=>{
   const a=grid.areas[i],itemDelta=r.itemsByLevel[j]-a.itemsByLevel[level],markDelta=r.marksByLevel[j]-a.marksByLevel[level];

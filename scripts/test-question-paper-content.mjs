@@ -136,6 +136,10 @@ for(const entry of register.independentReferences){
  assert.equal(entry.officialGrid,false);
  assert.deepEqual(entry.grades,[9]);
  assert.ok(entry.status&&entry.note);
- assert.match(entry.url,/^https:\\/\\//);
+ assert.equal(new URL(entry.url).protocol,'https:');
  assert.ok(!register.sources.some(s=>s.url===entry.url&&s.subject===entry.subject));
 }
+
+const schoolRefs=register.independentReferences.filter(e=>e.kind==='school_cdc_grid_catalog');
+assert.deepEqual(schoolRefs.map(e=>e.catalogRow),[24,25,26,27,28,29,30,31,32,33]);
+assert.ok(schoolRefs.every(e=>e.officialGrid===false&&e.status==='school_catalog_row_verified_attachment_not_accessed'));
