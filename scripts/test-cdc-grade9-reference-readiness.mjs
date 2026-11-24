@@ -38,7 +38,7 @@ for(const language of ['ne','en','both']){
  const a=buildAutomaticQuestionPaper(args),b=buildAutomaticQuestionPaper({...args,previousSignature:a.signature,rng:()=>.61});
  assert.notEqual(a.signature,b.signature);
  for(const r of [a,b]){
-  const p={gradeNumber:grade,subject,fullMarks:50,durationMinutes:bp.durationMinutes,topicIds:topics,questions:r.questions.map(q=>({...q,questionId:q.id,gridEvidence:r.gridAudit.slotEvidence.find(e=>e.questionId===q.id)}))};
+  const p={gradeNumber:grade,subject,fullMarks:50,durationMinutes:bp.durationMinutes,language,topicIds:topics,questions:r.questions.map(q=>({...q,questionId:q.id,gridEvidence:r.gridAudit.slotEvidence.find(e=>e.questionId===q.id)}))};
   assert.equal(assertGrade9ExamPaperMatches(p),true);
  }
 }

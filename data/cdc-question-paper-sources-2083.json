@@ -666,6 +666,127 @@
       "status": "official_government_pdf_contents_visual_verified",
       "url": "https://giwmscdntwo.gov.np/media/pdf_upload/Class%209%20Environment%20science_English%20Version_zgnagog.pdf",
       "note": "English textbook PDF contents page (PDF page 7) visually confirms nine units and printed starting pages 1,15,32,68,94,110,135,149,184. No external examination marks grid inferred."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "secondary_practice_model_reference",
+      "version": "2026 practice based on 2078 Grid",
+      "status": "secondary_reference_conflicting_unit_cognitive_rows_not_approved",
+      "url": "https://science-playground.com/learn/grade-9-science-ne/papers",
+      "note": "Three practice papers. Group count/marks agree with historical CDC: 10x1, 9x1, 14x2, 7x4. Unit marks agree with existing BESS reference, but several printed unit cognitive totals disagree with their unit marks (e.g. units 5, 6, 7, 8, 14, 15, 18, 19); not an official current grid."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "secondary_practice_model_reference",
+      "version": "2026 practice based on 2078 Grid",
+      "status": "secondary_reference_historical_not_approved",
+      "url": "https://science-playground.com/learn/grade-9-social/papers",
+      "note": "Three original practice papers; published pattern 11x1, 9x4, 4x7, 75 marks, 180 min. Historical 2078 basis explicitly stated; compare against revised 2082 curriculum and grid before approval."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक गणित",
+      "kind": "school_annual_exam_reference",
+      "version": "2082",
+      "status": "municipal_exam_scan_first_page_visual_checked_not_official_grid",
+      "url": "https://www.bidhyamandir.com/wp-content/uploads/2026/03/Class-9-Opt.-Maths-2082-Kathmandu.pdf",
+      "note": "Kathmandu Metropolitan City annual examination scan: Grade 9, 75 marks, 180 minutes, first numbered question contains 11 objective parts; later group allocation and cognitive labels not independently certified."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य नेपाली",
+      "kind": "school_exam_collection_index",
+      "version": "2082 annual and 2083 terminal",
+      "status": "third_party_collection_index_only_not_grid",
+      "url": "https://www.chautaritimes.com/p/class-9-grade-9-grade-ix-exam-question.html",
+      "note": "ISAN annual 2082 and ISAN/PABSON terminal 2083 papers listed. The collection is a discovery reference, not verification of individual marks or an official CDC grid."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य अङ्ग्रेजी",
+      "kind": "school_exam_collection_index",
+      "version": "2082 annual and 2083 terminal",
+      "status": "third_party_collection_index_only_not_grid",
+      "url": "https://www.chautaritimes.com/p/class-9-grade-9-grade-ix-exam-question.html",
+      "note": "ISAN annual 2082 and ISAN/PABSON terminal 2083 papers listed. The collection is a discovery reference, not verification of individual marks or an official CDC grid."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "school_exam_collection_index",
+      "version": "2082 annual and 2083 terminal",
+      "status": "third_party_collection_index_only_not_grid",
+      "url": "https://www.chautaritimes.com/p/class-9-grade-9-grade-ix-exam-question.html",
+      "note": "ISAN annual 2082 and ISAN/PABSON terminal 2083 papers listed. The collection is a discovery reference, not verification of individual marks or an official CDC grid."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "school_exam_collection_index",
+      "version": "2082 annual and 2083 terminal",
+      "status": "third_party_collection_index_only_not_grid",
+      "url": "https://www.chautaritimes.com/p/class-9-grade-9-grade-ix-exam-question.html",
+      "note": "ISAN annual 2082 and ISAN/PABSON terminal 2083 papers listed. The collection is a discovery reference, not verification of individual marks or an official CDC grid."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य गणित",
+      "kind": "school_exam_collection_index",
+      "version": "2082 annual and 2083 terminal",
+      "status": "third_party_collection_index_only_not_grid",
+      "url": "https://www.chautaritimes.com/p/class-9-grade-9-grade-ix-exam-question.html",
+      "note": "ISAN annual 2082 and ISAN/PABSON terminal 2083 papers listed. The collection is a discovery reference, not verification of individual marks or an official CDC grid."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक गणित",
+      "kind": "school_exam_collection_index",
+      "version": "2082 annual and 2083 terminal",
+      "status": "third_party_collection_index_only_not_grid",
+      "url": "https://www.chautaritimes.com/p/class-9-grade-9-grade-ix-exam-question.html",
+      "note": "ISAN annual 2082 and ISAN/PABSON terminal 2083 papers listed. The collection is a discovery reference, not verification of individual marks or an official CDC grid."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "कार्यालय सञ्चालन तथा लेखा",
+      "kind": "school_exam_collection_index",
+      "version": "2082 annual and 2083 terminal",
+      "status": "third_party_collection_index_only_not_grid",
+      "url": "https://www.chautaritimes.com/p/class-9-grade-9-grade-ix-exam-question.html",
+      "note": "ISAN annual 2082 and ISAN/PABSON terminal 2083 papers listed. The collection is a discovery reference, not verification of individual marks or an official CDC grid."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक कम्प्युटर विज्ञान",
+      "kind": "school_exam_collection_index",
+      "version": "2082 annual and 2083 terminal",
+      "status": "third_party_collection_index_only_not_grid",
+      "url": "https://www.chautaritimes.com/p/class-9-grade-9-grade-ix-exam-question.html",
+      "note": "ISAN annual 2082 and ISAN/PABSON terminal 2083 papers listed. The collection is a discovery reference, not verification of individual marks or an official CDC grid."
     }
   ],
   "completion": {
