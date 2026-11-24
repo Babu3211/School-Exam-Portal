@@ -2411,6 +2411,27 @@ const cdcPrimaryDailyLifeRubrics = [
 ];
 // Revised CDC 2082, Annex 3(g), printed pp.202–203,207–208,214–215.
  // Each row stores a topic label and stable observation title; English is a working translation.
+ // 2076 curriculum, printed pp.149,150,153. Working bilingual paraphrases.
+ // Store the older themes separately from the 2084 revised curriculum.
+ const cdcLegacyMathRubrics={
+ '2:मेरो सिर्जना':{page:149,en:'My creation',rows:[
+ {ne:'ठोस वस्तुबाट त्रिभुज र चतुर्भुज बनाउने',en:'Construct triangles and quadrilaterals using objects',criteria:[
+ ['आफैँ बनाउने','Independently'],['साथीको सहयोगमा बनाउने','With peer help'],['शिक्षकको आंशिक सहयोगमा बनाउने','With partial teacher help'],['शिक्षकको पूर्ण सहयोगमा बनाउने','With full teacher help']]},
+ {ne:'त्रिभुज, चतुर्भुज र वृत्तको खाका उतार्ने',en:'Trace triangles, quadrilaterals and circles',criteria:[
+ ['आफैँ खाका उतार्ने','Independently'],['साथीको सहयोगमा खाका उतार्ने','With peer help'],['शिक्षकको आंशिक सहयोगमा खाका उतार्ने','With partial teacher help'],['शिक्षकको पूर्ण सहयोगमा खाका उतार्ने','With full teacher help']]},
+ {ne:'भुजा र कुनाका आधारमा त्रिभुज र चतुर्भुज चिन्ने',en:'Identify triangles and quadrilaterals by sides and corners',criteria:[
+ ['आकार पहिचान र भुजा–कुना सङ्ख्या बताउने','Identify shapes and state counts of sides and corners'],['पहिचान वा सङ्ख्या बताउने','Identify or state counts'],['साथीको सहयोगमा दुवै गर्ने','Both with peer help'],['शिक्षकको आंशिक सहयोगमा दुवै गर्ने','Both with partial teacher help']]}]},
+ '2:सञ्चार प्रविधि र बजार':{page:150,en:'Communication technology and market',rows:[
+ {ne:'रु. १००० सम्मका सिक्का र नोट चिन्ने',en:'Recognize coins and notes up to Rs 1,000',criteria:[
+ ['आफैँ चिन्ने','Independently'],['साथीको सहयोगमा चिन्ने','With peer help'],['शिक्षकको आंशिक सहयोगमा चिन्ने','With partial teacher help'],['शिक्षकको पूर्ण सहयोगमा चिन्ने','With full teacher help']]},
+ {ne:'रूपान्तरण नगरी मुद्रा जोड्ने र घटाउने',en:'Add and subtract money without conversion',criteria:[
+ ['आफैँ गर्ने','Independently'],['साथीको सहयोगमा गर्ने','With peer help'],['शिक्षकको आंशिक सहयोगमा गर्ने','With partial teacher help'],['शिक्षकको पूर्ण सहयोगमा गर्ने','With full teacher help']]},
+ {ne:'तालिकाबाट जानकारी लिने र दिने',en:'Read and communicate table data',criteria:[
+ ['आफैँ पूर्ण जानकारी दिने','Complete independently'],['आफैँ आंशिक जानकारी दिने','Partial independently'],['साथीको सहयोगमा आंशिक जानकारी दिने','Partial with peer help'],['शिक्षकको सहयोगमा आंशिक जानकारी दिने','Partial with teacher help']]},
+ {ne:'चित्रग्राफका सदस्य गनेर तालिकामा प्रस्तुत गर्ने',en:'Count pictograph entries and tabulate them',criteria:[
+ ['आफैँ पूरा प्रस्तुत गर्ने','Complete independently'],['आफैँ आंशिक प्रस्तुत गर्ने','Partial independently'],['साथीको सहयोगमा प्रस्तुत गर्ने','With peer help'],['शिक्षकको सहयोगमा प्रस्तुत गर्ने','With teacher help']]}]},
+ '3:मेरो दैनिक जीवन':{page:153,en:'My daily life',rows:cdcPrimaryDailyLifeRubrics}
+ };
  const cdcRevisedMathForms={
  '1:म र मेरो परिवार':{page:202,rows:[
  ['स्थानगत अवधारणा','वस्तुको सापेक्ष स्थान छुट्याउने','Distinguish relative positions'],
@@ -4427,11 +4448,12 @@ function parseCdcBilingualCatalog(text) {
   // Revised curriculum (2082), printed p.3: implementation starts academic year 2084.
   const revisedPrimaryYear=/^\d{4}$/.test(year)&&Number(year)>=2084;
   const primaryRevisedForm=()=>revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics'?cdcRevisedMathForms[field('class').value+':'+field('unit').value]:null;
-  const isPrimaryRubric=()=>!!primaryRevisedForm();
+  const primaryLegacyForm=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics'?cdcLegacyMathRubrics[field('class').value+':'+field('unit').value]:null;
+  const isPrimaryRubric=()=>!!primaryRevisedForm()||!!primaryLegacyForm();
   const hasAnnexGrid=()=>!!context&&(isPrimaryRubric()||(Number(field('class').value)>=4&&['nepali','english','mathematics','socialstudies','science','healthphysicalcreativeart'].includes(cdcAssessmentSubjectKey(field('subject').value))));
   // Enter a single stage in the official date/rating columns. Never overwrite a
   // previous observation. Require an authoritative read before enabling entry.
-  const appendAnnexCells=(row,unit,title,alt,regular,support)=>{
+  const appendAnnexCells=(row,unit,title,alt,regular,support,toolsMode=false)=>{
     const effective=support||regular;
     const selection=schoolSelection(),selectionKey=JSON.stringify(selection);
     const editable=!readOnly&&selection&&annexReadSelection===selectionKey;
@@ -4444,7 +4466,7 @@ function parseCdcBilingualCatalog(text) {
       button.style.cssText='display:block;margin:3px auto;padding:4px 8px';button.textContent=previous?'Reassess':'Enter';
       ratingCell.append(button);stages.push({stage,previous,dateCell,ratingCell,button});
     }
-    const remarksCell=row.insertCell();remarksCell.textContent=effective?.feedback??'';
+    const remarksCell=row.insertCell();remarksCell.textContent=toolsMode?[...new Set([regular?.method,support?.method].filter(Boolean))].join(' / '):(effective?.feedback??'');
     for(const {stage,previous,dateCell,ratingCell,button} of stages){
       button.onclick=()=>{
         if(inlinePending||!canShow()||selectionKey!==JSON.stringify(schoolSelection()))return;
@@ -4454,7 +4476,7 @@ function parseCdcBilingualCatalog(text) {
         field('printForm').disabled=true;
         const date=document.createElement('input');date.type='text';date.inputMode='numeric';date.maxLength=10;date.value=today();date.setAttribute('aria-label','Assessment date (B.S.)');date.style.width='110px';date.dataset.cdcGridEditor='date';
         const level=document.createElement('select');level.setAttribute('aria-label','Achievement rating');level.style.minWidth='60px';level.dataset.cdcGridEditor='level';level.append(new Option('—',''),...[1,2,3,4].map(n=>new Option(String(n),String(n))));
-        const remarks=document.createElement('textarea');remarks.rows=2;remarks.maxLength=2000;remarks.placeholder='कैफियत / Remarks';remarks.value=previous?.feedback||'';remarks.dataset.cdcGridEditor='remarks';remarks.style.width='100%';
+        const remarks=document.createElement('textarea');remarks.rows=2;remarks.maxLength=toolsMode?180:2000;remarks.placeholder=toolsMode?'साधन / Tools':'कैफियत / Remarks';remarks.value=(toolsMode?previous?.method:previous?.feedback)||'';remarks.dataset.cdcGridEditor='remarks';remarks.style.width='100%';
         const save=document.createElement('button');save.type='button';save.className='btn';save.textContent='Save';save.dataset.cdcGridSave=stage;
         const cancel=document.createElement('button');cancel.type='button';cancel.className='btn alt';cancel.textContent='Cancel';cancel.dataset.cdcGridCancel='true';
         dateCell.replaceChildren(date);ratingCell.replaceChildren(level,save,cancel);remarksCell.replaceChildren(remarks);
@@ -4466,7 +4488,7 @@ function parseCdcBilingualCatalog(text) {
           const normalized=raw.split('-').map((p,i)=>i?attendancePad(p):p).join('-');
           let valid=false;try{valid=/^\d{4}-\d{1,2}-\d{1,2}$/.test(raw)&&attendanceAdToBs(attendanceBsToAd(normalized))===normalized;}catch{}
           if(!valid||!['1','2','3','4'].includes(level.value)){field('gridStatus').textContent='मान्य मिति र १–४ अङ्क छान्नुहोस्।';return;}
-          const payload={...selection,unit,unitEn:field('unitEn').value.trim(),topic:title,topicAlt:alt||'',date:normalized,level:Number(level.value),method:'',evidence:'',feedback:remarks.value.trim(),stage,createdBy:owner};
+          const payload={...selection,unit,unitEn:field('unitEn').value.trim(),topic:title,topicAlt:alt||'',date:normalized,level:Number(level.value),method:toolsMode?remarks.value.trim():'',evidence:'',feedback:toolsMode?(previous?.feedback||''):remarks.value.trim(),stage,createdBy:owner};
           const retryKey=JSON.stringify(payload);
           const ref=inlineRetry.get(retryKey)||doc(collection(db,'cdc_observations'));
           inlineRetry.set(retryKey,ref);
@@ -4492,7 +4514,8 @@ function parseCdcBilingualCatalog(text) {
     panel.hidden=!enabled;field('stageRow').hidden=!enabled;
     field('printForm').disabled=!enabled||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('unit').value.trim();
     if(!enabled)return;
-    if(isPrimaryRubric()){renderPrimaryRevised();return;}
+    if(primaryLegacyForm()){renderPrimaryLegacy();return;}
+    if(primaryRevisedForm()){renderPrimaryRevised();return;}
     const selection=field('student').selectedOptions[0];
     const st=assessmentStudents.find(s=>s.id===selection?.value);
     const subject=field('subject').selectedOptions[0]?.text||'';
@@ -4540,6 +4563,33 @@ function parseCdcBilingualCatalog(text) {
     field('annexStatus').textContent=en?'Draft layout using existing outcome catalogue. Select a row to enter the observation; read school records to populate ratings. Unclassified legacy records are not assigned to either stage.':'हालको उपलब्धि सूचीमा आधारित प्रारम्भिक ढाँचा। उपलब्धि छानेर मूल्याङ्कन गर्नुहोस्; विद्यालयको अभिलेख पढेपछि अङ्क देखिन्छ। चरण नखुलेका पुराना अभिलेख छुट्टै रहन्छन्।';
     field('annexSign').textContent=en?'Teacher signature __________  Date __________  Parent signature __________  Date __________':'शिक्षकको दस्तखत __________  मिति __________  अभिभावकको दस्तखत __________  मिति __________';
   };
+  function renderPrimaryLegacy(){
+    const form=primaryLegacyForm(),grade=field('class').value,unit=field('unit').value;
+    const st=assessmentStudents.find(s=>s.id===field('student').value);
+    field('annexTitle').textContent='विद्यार्थी सिकाइ उपलब्धि मूल्याङ्कन अभिलेख — गणित / Mathematics';
+    field('annexIdentity').textContent='कक्षा: '+grade+'   विद्यार्थीको नाम: '+(field('student').selectedOptions[0]?.text||'')+'   परिचय नम्बर: '+(st?.iemisId||st?.studentIemisNo||st?.admissionNo||'');
+    field('annexUnit').textContent='थिम: '+localized(unit,form.en);
+    field('annexHead').innerHTML='<tr><th rowspan="2">थिम</th><th rowspan="2">मुख्य सिकाइ उपलब्धि</th><th rowspan="2">सूचक</th><th colspan="2">नियमित पढाइपछिको मूल्याङ्कन</th><th colspan="2">थप सहायतापछिको मूल्याङ्कन</th><th rowspan="2">प्रयोग गरिएका मूल्याङ्कनका साधन</th></tr><tr><th>मिति</th><th>उपलब्धि</th><th>मिति</th><th>उपलब्धि</th></tr>';
+    const body=field('annexRows');body.replaceChildren();let sum=0,count=0;
+    for(const [i,item] of form.rows.entries()){
+      const records=annexObservations.filter(o=>normalizeTitle(o.unit)===normalizeTitle(unit)&&o.topic===item.ne&&Number.isInteger(o.level)&&o.level>=1&&o.level<=4);
+      const regular=records.find(o=>o.stage==='regular'),support=records.find(o=>o.stage==='support'),current=support||regular;
+      if(current){sum+=current.level;count++;}
+      for(const [j,[ne,en]] of item.criteria.entries()){
+        const row=body.insertRow();
+        if(i===0&&j===0){const cell=row.insertCell();cell.rowSpan=form.rows.length*4;cell.textContent=localized(unit,form.en);}
+        if(j===0){const cell=row.insertCell();cell.rowSpan=4;const button=document.createElement('button');button.type='button';button.className='btn alt';button.textContent=localized(item.ne,item.en);button.onclick=()=>{field('topic').value=item.ne;load();};cell.append(button);}
+        row.insertCell().textContent=localized(ne,en)+' ('+(4-j)+')';
+        if(j===0){appendAnnexCells(row,unit,item.ne,item.en,regular,support,true);for(const cell of [...row.cells].slice(-5))cell.rowSpan=4;}
+      }
+    }
+    const foot=field('annexFoot');foot.replaceChildren();
+    for(const [label,value] of [['सिकाइ उपलब्धिको अङ्कको जोड',count?sum:'—'],['सिकाइ उपलब्धि प्रतिशत',count?(100*sum/(4*count)).toFixed(2)+'%':'—'],['मूल्याङ्कन भएका उपलब्धि',count+' / '+form.rows.length]]){
+      const row=foot.insertRow();const a=row.insertCell();a.colSpan=3;a.textContent=label;const b=row.insertCell();b.colSpan=5;b.textContent=value;
+    }
+    field('annexStatus').textContent='CDC २०७६, मुद्रित पृष्ठ '+form.page+' — सूचकको कार्यगत द्विभाषिक रूपान्तरण, समीक्षा प्रति। पुराना अभिलेख स्वतः सारिएका छैनन्।';
+    field('annexSign').textContent='अभिभावकको दस्तखत __________   शिक्षकको दस्तखत र मिति __________';
+  }
   function renderPrimaryRevised(){
     const form=primaryRevisedForm(),grade=field('class').value,unit=field('unit').value;
     const st=assessmentStudents.find(s=>s.id===field('student').value);
@@ -4598,8 +4648,8 @@ function parseCdcBilingualCatalog(text) {
         }
       }
     } catch { field('status').textContent = 'मस्यौदा सूची पढ्न सकिएन।'; }
-    const revised=primaryRevisedForm();
-    const official = revised ? revised.rows.map(([,ne,en])=>[field('unit').value,ne,en]) : (revisedPrimaryYear&&Number(cl)<=3&&cdcAssessmentSubjectKey(subject)==='mathematics'?[]:cdcVerifiedOutcomes[cl+':'+cdcAssessmentSubjectKey(subject)] || [])
+    const revised=primaryRevisedForm(),legacy=primaryLegacyForm();
+    const official = legacy ? legacy.rows.map(({ne,en})=>[field('unit').value,ne,en]) : revised ? revised.rows.map(([,ne,en])=>[field('unit').value,ne,en]) : (revisedPrimaryYear&&Number(cl)<=3&&cdcAssessmentSubjectKey(subject)==='mathematics'?[]:cdcVerifiedOutcomes[cl+':'+cdcAssessmentSubjectKey(subject)] || [])
       .filter(([unit])=>normalizeTitle(unit)===sourceUnit);
     const english = language()==='en';
     field('outcomePickerLabel').hidden=!official.length;
@@ -4935,6 +4985,7 @@ function parseCdcBilingualCatalog(text) {
       pairs.clear();
       for(const key of Object.keys(cdcRevisedMathForms).filter(k=>k.startsWith(grade+':'))){const unit=key.slice(2);pairs.set(unit,aliases.get(unit)||unit);}
     }
+    if(context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics')for(const [key,form] of Object.entries(cdcLegacyMathRubrics))if(key.startsWith(field('class').value+':'))pairs.set(key.slice(2),form.en);
     for(const {unit,unitEn} of getCatalog()) if(!pairs.has(unit)) pairs.set(unit,unitEn);
     return [...pairs];
   };
