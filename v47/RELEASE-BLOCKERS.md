@@ -81,3 +81,12 @@ Already implemented: school-scoped login/dashboard/sidebar, school management, E
 - Perform real two-school V47 Firebase browser sign-in, onboarding, school-admin and assigned teacher workflows, viewer read-only, mobile PWA and cross-school denial. Confirm backups, actual Spark quotas, and release sign-off at the exact deployment head. Do not use real V46 data or credentials in these checks.
 
 No production or preview hosting deployment performed in this checkpoint. No verified access to the real V47 Firebase account, deployment secret metadata or browser session was established by the available repository connector. A successful CI build does not demonstrate a live site. Do not keep making speculative staging-validation changes while these operational prerequisites remain unresolved.
+
+
+## Verified preview and localization checkpoint — 2026-11-24
+
+At exact commit `93e09541f4bc4486767e1d497278a63833b38da9`, 13 of 15 workflows succeeded. Isolated unit/security run 45421867780 logged 262/262 offline suites passed and successful Firestore emulator checks. Core Regression 45421867772 and real Chromium emulator E2E 45421867803 succeeded. Full Verification 45421868195: full-v47 passed, feature-parity and release-readiness remain blocked. Isolated preview deployment 45421868451 succeeded; channel URL https://smss-exam-portal-v47--v47-test-mkxgy83q.web.app expires 2026-12-01 15:10:20 UTC. This is not production hosting approval.
+
+The separate module workflow 45421867690 failed on an outdated English Marks Entry warning assertion. This commit updates the assertion to the exact Nepali disabled-publication handler and requires the Nepali non-official warning, while preserving all role and data-write guards. Its CI result is not yet known. A consolidated UI contract step reports all affected static checks instead of stopping at the first obsolete string.
+
+The user requires English menus/buttons/field labels and Nepali information, warnings and errors. Major school and Super Admin screens have localized guidance and safe error mappings; do not claim all text is independently verified. Do not delay unresolved functional parity and actual two-school acceptance for repeated cosmetic changes. Preview may be used for approved V47-only test accounts; no real school registration, migration or deletion without an authorized School Admin identity. Production remains blocked by trusted runtime provisioning, official CDC/IEMIS verification, latest V46 parity, backups and real-school acceptance. No billing activation or V46 change.

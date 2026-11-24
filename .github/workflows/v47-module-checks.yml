@@ -15,6 +15,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Check all localized UI contracts together
+        run: |
+          failures=0
+          for test in scripts/test-v47-*-console-static.mjs scripts/test-v47-development-hub.mjs v47/test-nepali-feedback.mjs; do
+            if ! node "$test"; then
+              echo "::error file=$test::UI contract failed"
+              failures=$((failures+1))
+            fi
+          done
+          test "$failures" -eq 0
       - name: Prevent regressions to legacy school IDs and CSV checks
         run: node scripts/test-v47-regression-baseline.mjs
       - name: V47 multi-school development navigation
