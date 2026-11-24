@@ -25,3 +25,13 @@ This does **not** prove that no older independent export exists. Check existing 
 - [ ] Record the known-good Hosting release for rollback.
 
 **Do not delete V44/V45 branches, merge PR #47, or mark `BACKUP-VERIFIED` until the evidence above exists.**
+
+## Local encrypted snapshot candidate (development, not production-tested)
+
+A synthetic-tested candidate tool is `scripts/v46-local-firestore-backup.py`. It uses the Firestore REST API at a single bounded read time, enumerates all collections and missing ancestors, preserves typed Firestore fields, and encrypts in memory using AES-256-GCM and scrypt. It cannot write Firestore documents, deploy rules, or enable billing. It refuses real operation in CI. Do not run until reviewed by an authorized school operator. The actual backup is not present in GitHub.
+
+- On a trusted local computer, install Python dependencies `google-auth requests cryptography` in an isolated environment; authenticate locally with authorized read-only ADC for the school project. Do not share credentials or upload backup files.
+- Run `python scripts/v46-local-firestore-backup.py --self-test` first. Inspect remaining Spark read quota; the tool's caps are not a guarantee of remaining free reads. Choose a low-activity time and suitable bounded limits. Exceeding a limit aborts rather than claiming completeness.
+- After scope and authorization review, run `python scripts/v46-local-firestore-backup.py --output /private/offline/smss-snapshot.enc --confirm READ-ONLY-V46-BACKUP` using a real private path outside the Git repository. Keep the passphrase separately; never enter it on the command line.
+- Verify locally with `python scripts/v46-local-firestore-backup.py --verify /private/offline/smss-snapshot.enc`. This checks authenticated encryption and inventory, NOT a restoration.
+- Scope is Firestore documents only. Firebase Authentication accounts, Storage, Hosting, security rules, indexes and other services are separate. A missing-parent document is not itself created. Reference-valued fields require review during isolated-project restoration. Restore tooling and rehearsal, independent completeness review, and real school-role acceptance remain required. No `BACKUP-VERIFIED` attestation is justified yet.
