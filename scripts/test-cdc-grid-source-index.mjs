@@ -69,3 +69,16 @@ const found=findCdcGridSources(fake,8,'Science and Technology');
 assert.deepEqual(found.map(x=>x.sourceUrl),['https://moecdc.gov.np/content/284/']);
 console.log('PASS CDC source index for grades 6-10, Nepali and English subject aliases,');
 console.log('official PDF CDN accepted, no class/optional subject leaks, no fake approved grids');
+
+const retrieved=register.sources.filter(s=>s.retrievalEvidence?.runId===45387109761);
+assert.equal(retrieved.length,5);
+assert.deepEqual(retrieved.map(s=>s.retrievalEvidence.resource).sort(),['11166','11167','11168','11169','11170']);
+for(const s of retrieved){
+ const e=s.retrievalEvidence;
+ assert.match(e.sha256,/^[a-f0-9]{64}$/);
+ assert.ok(e.pages>0&&e.byteCount>0);
+ assert.equal(e.currentCdcExactApproved,false);
+ assert.equal(e.verifiedGridRows,false);
+ assert.ok(findCdcGridSources(register,9,s.subject).some(x=>x.sourceUrl===s.url&&x.sourceOnly&&!x.verifiedGridRows));
+}
+console.log('PASS five full government PDF retrieval fingerprints; source evidence only, no automatic approval');

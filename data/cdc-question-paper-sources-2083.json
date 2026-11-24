@@ -666,6 +666,119 @@
       "status": "official_government_pdf_contents_visual_verified",
       "url": "https://giwmscdntwo.gov.np/media/pdf_upload/Class%209%20Environment%20science_English%20Version_zgnagog.pdf",
       "note": "English textbook PDF contents page (PDF page 7) visually confirms nine units and printed starting pages 1,15,32,68,94,110,135,149,184. No external examination marks grid inferred."
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य नेपाली",
+      "kind": "specification_grid_and_model_questions",
+      "version": "PDF edition applicability pending",
+      "status": "official_government_full_PDF_retrieved_grid_review_pending",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11168_Specification%20Grid%20(9%20-%2010)%20Compulsory%20Nepali_p4hju5n.pdf",
+      "note": "Legacy-font grid across first pages; current edition and exact question distribution require verification.",
+      "retrievalEvidence": {
+        "resource": "11168",
+        "pages": 20,
+        "byteCount": 505782,
+        "sha256": "530478014b8179821bf25d43724b935fabca4baa522dd36cebdff402e3e2c98e",
+        "runId": 45387109761,
+        "checkedOn": "2026-11-24",
+        "directory": "https://sikshakhub.com/specification-grid-directory/",
+        "verifiedGridRows": false,
+        "currentCdcExactApproved": false
+      }
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य अङ्ग्रेजी",
+      "kind": "specification_grid_and_model_questions",
+      "version": "PDF edition applicability pending",
+      "status": "official_government_full_PDF_retrieved_grid_review_pending",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11169_Specification%20Grid%20(Grade%209%20-10)%20Compulsory%20English_f2wru8b.pdf",
+      "note": "Full PDF obtained; compare reading/writing tasks, seen passages and included model grade.",
+      "retrievalEvidence": {
+        "resource": "11169",
+        "pages": 10,
+        "byteCount": 593219,
+        "sha256": "cded9c1eb876908061ec96c41dcaa42750158a4f4f306f6cbd15006afff54715",
+        "runId": 45387109761,
+        "checkedOn": "2026-11-24",
+        "directory": "https://sikshakhub.com/specification-grid-directory/",
+        "verifiedGridRows": false,
+        "currentCdcExactApproved": false
+      }
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य गणित",
+      "kind": "specification_grid_and_model_questions",
+      "version": "PDF edition applicability pending",
+      "status": "official_government_full_PDF_retrieved_grid_review_pending",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11170_Specification%20Grid%20(grade%209-10)%20Compulsory%20Mathematics_nbimkq0.pdf",
+      "note": "Page 1 numeric text confirms 75 marks, 16 groups, 49 items, seven area marks 6/13/13/15/13/11/4, cognitive marks 12/18/30/15; historical grid applicability remains unconfirmed.",
+      "retrievalEvidence": {
+        "resource": "11170",
+        "pages": 15,
+        "byteCount": 1679552,
+        "sha256": "8f2f3d13394f24948e8b096f9974ec8888fa4c277715eadd7f75c464e02f8bde",
+        "runId": 45387109761,
+        "checkedOn": "2026-11-24",
+        "directory": "https://sikshakhub.com/specification-grid-directory/",
+        "verifiedGridRows": false,
+        "currentCdcExactApproved": false
+      }
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "specification_grid_and_model_questions",
+      "version": "PDF edition applicability pending",
+      "status": "official_government_full_PDF_retrieved_grid_review_pending",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11167_Specification%20Grid%20(Grade%209)%20Compulsory%20Science%20and%20Technology_nk1kpta.pdf",
+      "note": "Legacy-font grid and checklist; not proof of revised 2082 grid.",
+      "retrievalEvidence": {
+        "resource": "11167",
+        "pages": 10,
+        "byteCount": 1270043,
+        "sha256": "cf7025fa4fc1743b81d2da0d56f584a6c25de346c85e2bf32f80dc62d65b4021",
+        "runId": 45387109761,
+        "checkedOn": "2026-11-24",
+        "directory": "https://sikshakhub.com/specification-grid-directory/",
+        "verifiedGridRows": false,
+        "currentCdcExactApproved": false
+      }
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "specification_grid_and_model_questions",
+      "version": "PDF edition applicability pending",
+      "status": "official_government_full_PDF_retrieved_grid_review_pending",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11166_Specification%20Grid%20(Grade%209)%20Compulsory%20Social%20Studies%20(1)_jlqxsmn.pdf",
+      "note": "Legacy-font table on page 2; compare current revised curriculum before exact approval.",
+      "retrievalEvidence": {
+        "resource": "11166",
+        "pages": 9,
+        "byteCount": 542978,
+        "sha256": "636c0e961b0d0a474aea035fc1dd56e93318e33f21865f43b2cde8ee3211ce05",
+        "runId": 45387109761,
+        "checkedOn": "2026-11-24",
+        "directory": "https://sikshakhub.com/specification-grid-directory/",
+        "verifiedGridRows": false,
+        "currentCdcExactApproved": false
+      }
     }
   ],
   "completion": {

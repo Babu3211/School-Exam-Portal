@@ -195,12 +195,33 @@ def read_compulsory_pdf(url, output_dir):
             # a confirmed transcription. Log only compact numeric table rows.
             output_dir.mkdir(parents=True,exist_ok=True)
             (output_dir/(resource+"-first-pages.txt")).write_text(text,encoding="utf-8")
+            # Retain numeric table cells, including Preeti legacy digit glyphs.
+            # Limit to the grid/checklist pages, not model question passages.
+            legacy_digits=str.maketrans("!@#$%^&*()","1234567890")
+            grid_page_limits={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3}
             grid_rows=[]
+            for i,page in enumerate(text.split("\f"),1):
+                if i>grid_page_limits[resource]: break
+                for line in page.splitlines():
+                    # Preserve original cell positions and normalize only cells
+                    # consisting entirely of numeric glyphs, never ordinary words.
+                    cells=re.split(r" {2,}",line.strip())
+                    numeric_cells=[]
+                    for cell in cells:
+                        token=cell.strip()
+                        if re.fullmatch(r"[!@#$%^&*()]+",token):
+                            numeric_cells.append(token.translate(legacy_digits))
+                        elif re.fullmatch(r"\d+",token):
+                            numeric_cells.append(token)
+                    if len(numeric_cells)>=2:
+                        grid_rows.append({"page":i,"row":line.rstrip(),"numericCells":numeric_cells})
+            # Original extraction is retained separately for comparison.
+            fallback_rows=[]
             for i,page in enumerate(text.split("\f"),1):
                 for line in page.splitlines():
                     if len(re.findall(r"\d+",line))>=4 and len(line.strip())<=240:
-                        grid_rows.append({"page":i,"row":line.rstrip()})
-            entry.update(finalUrl=final,contentType=ctype,byteCount=len(data),sha256=hashlib.sha256(data).hexdigest(),pages=pages,numericRows=grid_rows[:45],textLength=len(text),status="full_pdf_read_needs_grid_review")
+                        fallback_rows.append({"page":i,"row":line.rstrip()})
+            entry.update(finalUrl=final,contentType=ctype,byteCount=len(data),sha256=hashlib.sha256(data).hexdigest(),pages=pages,numericRows=grid_rows[:90],fallbackNumericRows=fallback_rows[:12],textLength=len(text),status="full_pdf_read_needs_grid_review")
     except (OSError,ValueError,AttributeError,subprocess.SubprocessError) as err:
         entry.update(status="full_pdf_read_failed",reason=str(err)[:200])
     return entry
