@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('./admin-console.html',import.meta.url),'utf8');
+const canonical=readFileSync(new URL('./admin.html',import.meta.url),'utf8');
+assert.equal(html,canonical,'Legacy Super Admin link must expose exactly the canonical admin page');
 const script=readFileSync(new URL('./admin-console.mjs',import.meta.url),'utf8');
 const ids=[...script.matchAll(/\$\('([A-Za-z][A-Za-z0-9_-]*)'\)/g)].map(x=>x[1]);
 for(const id of new Set(ids)) assert.ok(html.includes('id="'+id+'"'),'Missing console element '+id);

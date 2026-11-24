@@ -90,8 +90,9 @@ async function refreshStats(){
   assertSession();
   $('dashboardStats').textContent=dashboardStatsText(loaded);
   showMetricCards(loaded);
-  await noteDashboardActivity();
-  assertSession();void showRecentActivity();
+  // Offline heartbeat must not block the aggregate refresh button.
+  void showRecentActivity();
+  void noteDashboardActivity().then(()=>{if(request===statsRequest&&verified===selected)void showRecentActivity()});
  }catch(error){
   if(request===statsRequest&&verified===selected)
    $('dashboardStats').textContent='विद्यालय विवरण उपलब्ध भएन: '+error.message;

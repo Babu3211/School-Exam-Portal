@@ -23,7 +23,21 @@ assert.match(rules,/teacherAttendanceAllowed\(sid, id\)/);
 assert.match(rules,/allow delete: if false;/);
 // Added one small, explicit teacher-only draft collection. Keep a strict size
 // ceiling AND require its role, assignment and publication isolation guards.
-assert.ok(rules.length<40000,'Unexpected Firestore rules expansion');
+// The one explicit self-activity block has its own bounded budget and guards.
+// All other rules retain the original 40,000-character ceiling.
+const activityStart='      match /dashboard_activity/{uid} {';
+const activityEnd='      // Teacher assignments are separate';
+const start=rules.indexOf(activityStart),end=rules.indexOf(activityEnd,start);
+assert.ok(start>=0&&end>start,'Missing dedicated activity block');
+assert.equal(rules.split(activityStart).length-1,1,'Duplicate activity block');
+const activity=rules.slice(start,end);
+assert.ok(activity.length<1400,'Activity rules unexpectedly expanded');
+assert.ok(rules.length-activity.length<40000,'Unexpected Firestore rules expansion outside activity block');
+for(const guard of ["activeMember(sid) && request.auth.uid == uid","d.keys().hasOnly(['schoolId','uid','lastSeen'])","d.schoolId == sid && d.uid == uid && d.lastSeen == request.time","allow list: if canAdmin(sid);","request.time >= resource.data.lastSeen + duration.value(15,'m')","allow delete: if false;"])
+ assert.ok(activity.includes(guard),'Activity guard missing: '+guard);
+assert.equal((activity.match(/allow\s+(?:create|update)\s*:/g)||[]).length,2);
+assert.doesNotMatch(activity,/allow\s+write\s*:/);
+
 const teacherDraftBlock=rules.split('match /teacher_mark_drafts/{teacherUid} {')[1]?.split('      // Complete-class DRAFT only.')[0]??'';
 assert.ok(teacherDraftBlock.length>1500&&teacherDraftBlock.length<7000,
  'Exactly one bounded teacher-only class draft block required');
