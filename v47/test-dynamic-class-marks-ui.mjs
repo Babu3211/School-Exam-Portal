@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('./marks-entry.html',import.meta.url),'utf8');
 const js=readFileSync(new URL('./marks-entry-console.mjs',import.meta.url),'utf8');
-assert.doesNotMatch(html,/id="markSettingsId"/);assert.match(html,/detected automatically/);assert.match(html,/id="classMarkHeader"/);
+assert.doesNotMatch(html,/id="markSettingsId"/);assert.match(html,/Examination Settings स्वतः पहिचान हुन्छन्/);assert.match(html,/id="classMarkHeader"/);
 assert.match(js,/discoverVerifiedSubjectExamSettings\(/);assert.match(js,/classMarkSettings\.components/);assert.match(js,/inspectConfiguredClassMarks\(/);
 assert.match(js,/settings\.components\.map\(c=>c\.name/);
 assert.match(js,/for\(const component of settings\.components\)/);

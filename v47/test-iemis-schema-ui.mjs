@@ -9,5 +9,5 @@ assert.match(js,/iemisEntrySchema\(classNo,/);
 assert.match(js,/auth\.currentUser\.uid!==actor\.uid/);
 assert.match(js,/tbody\.replaceChildren\(\)/);
 assert.match(js,/td\.textContent=String\(value\)/);
-assert.match(html,/Save\/Publish disabled|Save\/Publish is disabled/);
+assert.match(html,/आधिकारिक Save\/Publish बन्द छ/);
 console.log('V47 IEMIS schema preview wiring tests passed');

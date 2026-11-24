@@ -17,7 +17,7 @@ function clearReview(){
  $('student').replaceChildren();$('student').disabled=true;$('gradeOutput').replaceChildren();
  $('previewSheet').disabled=true;$('printSheet').disabled=true;$('exportExcel').disabled=true;
  $('sheetFrame').onload=null;delete $('sheetFrame').dataset.loadedStudent;$('sheetFrame').removeAttribute('srcdoc');$('sheetStatus').textContent='';
- $('progress').textContent='No complete-class preview loaded.';
+ $('progress').textContent='सम्पूर्ण कक्षाको पूर्वावलोकन लोड भएको छैन।';
 }
 function clearSession(){sessionSeq++;clearReview();$('reportSource').value='legacy';$('reportSource').querySelector('option[value="draft"]').disabled=true;actor=null;schoolId=null;$('reportArea').hidden=true;$('logout').disabled=true}
 function assertCurrent(seq,review,member,klass,term){
@@ -63,7 +63,7 @@ $('login').onclick=async()=>{
 };
 $('logout').onclick=async()=>{clearSession();try{if(auth)await authSdk.signOut(auth);status('Logout सफल भयो।')}catch(e){status('Logout असफल: '+neError(e))}};
 $('schoolClass').onchange=clearReview;$('term').onchange=clearReview;$('reportSource').onchange=clearReview;
-$('cancel').onclick=()=>{clearReview();status('Read-only review cancelled. कुनै अंक परिवर्तन गरिएको छैन।')};
+$('cancel').onclick=()=>{clearReview();status('हेर्न मात्र मिल्ने समीक्षा रद्द भयो। कुनै अङ्क परिवर्तन गरिएको छैन।')};
 function showSheet(){
  const seq=++sheetSeq,frame=$('sheetFrame'),studentId=$('student').value;
  frame.onload=null;delete frame.dataset.loadedStudent;$('printSheet').disabled=true;
@@ -71,12 +71,12 @@ function showSheet(){
  try{
   const doc=report.printFor(studentId);
   if(!doc.ready){frame.removeAttribute('srcdoc');$('sheetStatus').textContent=doc.reason;return}
-  $('sheetStatus').textContent='Watermarked preview loading. Not valid for official use.';
+  $('sheetStatus').textContent='वाटरमार्कसहितको पूर्वावलोकन लोड हुँदैछ। आधिकारिक प्रयोगका लागि मान्य छैन।';
   frame.onload=()=>{
    if(sheetSeq!==seq||!report||$('student').value!==studentId)return;
    frame.dataset.loadedStudent=studentId;
    $('printSheet').disabled=false;
-   $('sheetStatus').textContent='PREVIEW ONLY — NOT VALID FOR OFFICIAL USE';
+   $('sheetStatus').textContent='पूर्वावलोकन मात्र — आधिकारिक प्रयोगका लागि मान्य छैन।';
   };
   frame.srcdoc=doc.html;
  }catch(e){frame.removeAttribute('srcdoc');$('sheetStatus').textContent=neError(e)}
@@ -98,7 +98,7 @@ $('load').onclick=async()=>{
   if(!data)throw Error('Unknown report source');
   await verifyAgain(member,seq,review,klass,term);
   check();report=data;
-  $('progress').textContent=data.rosterCount+' students / '+data.subjectCount+' subjects — all compatible mark records checked.';
+  $('progress').textContent=data.rosterCount+' विद्यार्थी / '+data.subjectCount+' विषय — मिल्ने सबै अङ्क अभिलेख जाँचिए।';
   // iemisLedger HTML cells are escaped by the original V46 rendering module.
   const table=document.createElement('table'),thead=document.createElement('thead'),tbody=document.createElement('tbody');
   const selectedLedger=data.ledgers?.[reportMode];
@@ -107,7 +107,7 @@ $('load').onclick=async()=>{
   $('gradeOutput').replaceChildren(table);$('ledgerArea').hidden=false;$('exportExcel').disabled=false;
   for(const st of data.students){const option=document.createElement('option');option.value=st.id;option.textContent=String(st.nameEnglish??st.name??st.id);$('student').append(option)}
   $('student').disabled=false;$('previewSheet').disabled=false;$('sheetArea').hidden=false;showSheet();
-  status((source==='sparkCommitted'?'Committed V47 read view':source==='draft'?'Private saved V47 Drafts':source==='committed'?'Committed V47 marks':'V46 IEMIS component marks')+' बाट read-only पूर्वावलोकन तयार भयो। यो आधिकारिक नतिजा होइन।');
+  status((source==='sparkCommitted'?'V47 को प्रमाणित प्रकाशन अभिलेख':source==='draft'?'V47 का निजी सुरक्षित मस्यौदा':source==='committed'?'V47 का प्रकाशित अङ्क':'V46 IEMIS का शीर्षकगत अङ्क')+' बाट read-only पूर्वावलोकन तयार भयो। यो आधिकारिक नतिजा होइन।');
  }catch(e){if(seq===sessionSeq&&review===reviewSeq){clearReview();$('progress').textContent='पूर्वावलोकन रोकियो: '+neError(e);status('पूर्ण Grade Preview उपलब्ध छैन: '+neError(e))}}
  finally{loading=false;$('load').disabled=!actor;$('cancel').disabled=true}
 };

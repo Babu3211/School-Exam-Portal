@@ -4,7 +4,7 @@ const js=readFileSync(new URL('./marks-entry-console.mjs',import.meta.url),'utf8
 const html=readFileSync(new URL('./marks-entry.html',import.meta.url),'utf8');
 assert.match(js,/rows\.filter\(row=>row\.active===true\)/);
 assert.doesNotMatch(js,/schoolClass\|\|'10'\)\&\&String\(row\.name/);
-assert.match(html,/Computer is not restricted to 4\/36\/10/);
+assert.match(html,/Computer विषय ४\/३६\/१० मा मात्र सीमित छैन/);
 assert.match(html,/settings take precedence/);
-assert.match(html,/Save\/Publish is disabled/);
+assert.match(html,/आधिकारिक Save\/Publish बन्द छ/);
 console.log('V47 subject selection includes Computer; settings precedence notice present');

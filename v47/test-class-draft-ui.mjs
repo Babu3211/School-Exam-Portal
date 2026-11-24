@@ -5,7 +5,7 @@ const source=readFileSync(new URL('./marks-entry-console.mjs',import.meta.url),'
 const safety=readFileSync(new URL('./firestore.rules',import.meta.url),'utf8');
 assert.match(html,/id="saveClassDraft" disabled/);
 assert.match(html,/id="classDraftStatus"/);
-assert.match(html,/DRAFTS are NOT official marks/);
+assert.match(html,/मस्यौदा आधिकारिक अङ्क, CDC\/IEMIS नतिजा, ग्रेड तालिका वा ग्रेड सिट होइन/);
 assert.match(html,/id="saveClassMarks" disabled/);
 assert.match(html,/id="save" disabled/);
 assert.match(source,/import \{saveVerifiedCompleteClassDraft\} from '\.\/save-verified-class-draft\.mjs'/);
