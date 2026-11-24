@@ -873,7 +873,9 @@ const beforeEnglish2=observations.size;
 let english2Count=0;
 for(const [unit,groups] of [
  ['Me and My Family',[9,5,7,7]],['My daily life',[8,6,9,8]],['My school',[7,5,8,8]],
- ['Our environment',[7,6,8,8]],['My Belongings',[6,6,8,8]],['Our culture',[6,6,8,9]]
+ ['Our environment',[7,6,8,8]],['My Belongings',[6,6,8,8]],['Our culture',[6,6,8,9]],
+ ['Communication, technology and market',[6,7,8,8]],['Fruits and vegetables',[6,6,8,7]],
+ ['Hobbies and interests',[6,5,8,7]],['Birds and animals',[6,6,8,8]]
 ]){
  choice('unitEn',unit);
  const count=groups.reduce((a,b)=>a+b,0);
@@ -897,7 +899,7 @@ for(const [unit,groups] of [
  assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,count*2,unit);
  assert.equal(field('printForm').disabled,false,unit);
 }
-assert.equal(english2Count,173);
+assert.equal(english2Count,283);
 assert.equal(observations.size,beforeEnglish2);
 choice('unitEn','Me and My Family');
 await field('gridRead').onclick();
@@ -917,6 +919,6 @@ w.currentSchoolSettings.academicYear='2084';
 await w.loadCdcAssessmentPage();
 choice('unitEn','Me and My Family');
 assert.equal(field('annex3').hidden,true);
-console.log('Grade 2 English six thematic forms, 173 unique outcome rows, English-only stage entry, legacy skill/year isolation passed');
+console.log('Grade 2 English ten thematic forms, 283 unique outcome rows, English-only stage entry, legacy skill/year isolation passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
