@@ -72,7 +72,7 @@ export function renderCdcCompositePaper(paper,{escapeHtml,answerKey=false}={}){
     ' ('+(ne?'सही विकल्प: ':'Correct option: ')+esc(paperAnswerOption(sub.correctOption,paper.language))+')':'';
    return '<div style="margin:10px 0 10px 18px;white-space:pre-line">'+
     '<b>'+paperOptionLabel(i,paper.language)+'.</b> '+prompt+key+
-    (answerKey?'':' <b>['+esc(1)+']</b>')+optionsHtml(sub)+'</div>';
+    (answerKey?'':' <b>['+esc(1)+']</b>'+questionFigure(sub,paper.language))+optionsHtml(sub)+'</div>';
   }).join('')+'</div>';
  const groupedHtml=(group,startingNumber)=>
   '<h3 style="text-align:left;margin-top:18px">'+esc(group.title)+'</h3>'+
@@ -87,7 +87,7 @@ export function renderCdcCompositePaper(paper,{escapeHtml,answerKey=false}={}){
     label(i)+'. '+
     esc(text(sub,answerKey?'answer':'text'))+
     (answerKey?'':' <b>['+esc(sub.marks)+']</b>')+
-    optionsHtml(sub)+'</li>').join('');
+    (answerKey?'':questionFigure(sub,paper.language))+optionsHtml(sub)+'</li>').join('');
    return '<div class="qp-q" style="break-inside:avoid;page-break-inside:avoid;margin:13px 0">'+
     '<b>'+esc(number)+'. '+(answerKey?(ne?'[उत्तरकुञ्जिका] ':'[Answer Key] '):'')+
     '<span>['+esc(mark)+']</span></b>'+contextHtml+
@@ -117,7 +117,8 @@ function crc32(bytes){let c=0xffffffff;for(const b of bytes){c^=b;for(let i=0;i<
 function storedZip(files){
  const enc=new TextEncoder(),chunks=[],central=[];let offset=0,size=0;
  for(const [name,content] of files){
-  const n=enc.encode(name),data=enc.encode(content),crc=crc32(data);
+  const n=enc.encode(name),data=typeof content==='string'?enc.encode(content):content,crc=crc32(data);
+  if(!(data instanceof Uint8Array))throw Error('Invalid DOCX package part');
   const h=new Uint8Array(30+n.length),v=new DataView(h.buffer);
   v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(6,0x800,true);v.setUint16(12,33,true);v.setUint32(14,crc,true);v.setUint32(18,data.length,true);v.setUint32(22,data.length,true);v.setUint16(26,n.length,true);h.set(n,30);
   const z=new Uint8Array(46+n.length),w=new DataView(z.buffer);
@@ -129,32 +130,91 @@ function storedZip(files){
 }
 const xmlText=v=>String(v??'').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/g,'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const paragraph=(text,{center=false,bold=false,size=22}={})=>'<w:p><w:pPr>'+(center?'<w:jc w:val="center"/>':'')+'<w:spacing w:after="65" w:line="300" w:lineRule="auto"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Nirmala UI"/>'+(bold?'<w:b/><w:bCs/>':'')+'<w:sz w:val="'+size+'"/><w:szCs w:val="'+size+'"/></w:rPr>'+String(text).split('\n').map((line,i)=>(i?'<w:br/>':'')+'<w:t xml:space="preserve">'+xmlText(line)+'</w:t>').join('')+'</w:r></w:p>';
-function paperParagraphs(node){
- const blocks=new Set(['DIV','P','H1','H2','H3','H4','LI','OL','UL','SECTION','PRE','ARTICLE','ASIDE']);const out=[];let buffer='';
+function paperParagraphs(node,{figureTokens=false}={}){
+ const blocks=new Set(['DIV','P','H1','H2','H3','H4','LI','OL','UL','SECTION','PRE','ARTICLE','ASIDE','FIGURE','FIGCAPTION']);const out=[];let buffer='';
  const flush=()=>{if(buffer.trim())out.push(buffer.trim());buffer='';};
- const walk=n=>{if(n.nodeType===3){buffer+=n.nodeValue;return;}if(n.nodeType!==1)return;if(['SCRIPT','STYLE','BUTTON','DETAILS','SVG','IMG'].includes(n.tagName))return;if(n.tagName==='BR'){buffer+='\n';return;}const block=blocks.has(n.tagName);if(block)flush();for(const child of n.childNodes)walk(child);if(block)flush();};
+ const walk=n=>{if(n.nodeType===3){buffer+=n.nodeValue;return;}if(n.nodeType!==1)return;const tag=n.tagName.toUpperCase();if(tag==='SVG'){flush();if(figureTokens)out.push(n);return;}if(['SCRIPT','STYLE','BUTTON','DETAILS','IMG','CANVAS'].includes(tag))return;if(tag==='BR'){buffer+='\n';return;}const block=blocks.has(tag);if(block)flush();for(const child of n.childNodes)walk(child);if(block)flush();};
  walk(node);flush();return out;
 }
-export function buildQuestionPaperDocx(area){
+// Only our self-contained drawing elements can be converted. External images,
+// scripts, styles, event attributes and resource references are never fetched.
+function paperFigureNodes(area){
+ const figures=[...area.querySelectorAll('svg')];
+ if(area.querySelector('img,canvas,object,embed,iframe')||figures.length>100)throw Error('Unsupported or excessive paper figures');
+ for(const svg of figures){
+  if(!svg.closest('.qp-paper-body .qp-figure')||svg.namespaceURI!=='http://www.w3.org/2000/svg')throw Error('Unrecognized paper figure');
+  for(const el of [svg,...svg.querySelectorAll('*')]){
+   if(!['svg','g','rect','path','circle','text','line','polyline','polygon'].includes(el.localName))throw Error('Unsupported paper figure element');
+   for(const attr of el.attributes){
+    if(!['xmlns','width','height','viewBox','role','aria-label','x','y','x1','x2','y1','y2','cx','cy','r','d','points','fill','stroke','stroke-width','font-family','font-size','text-anchor'].includes(attr.name)||/url\s*\(|javascript:|https?:|data:/i.test(attr.value)&&attr.name!=='xmlns')throw Error('Unsafe paper figure attribute');
+   }
+  }
+  if(!Number.isFinite(Number(svg.getAttribute('width')))||!Number.isFinite(Number(svg.getAttribute('height')))||Number(svg.getAttribute('width'))<1||Number(svg.getAttribute('height'))<1||Number(svg.getAttribute('width'))>1000||Number(svg.getAttribute('height'))>1000)throw Error('Invalid figure dimensions');
+ }
+ return figures;
+}
+function validateFigurePng(bytes){
+ if(!(bytes instanceof Uint8Array)||bytes.length<45||bytes.length>8*1024*1024||![137,80,78,71,13,10,26,10].every((b,i)=>bytes[i]===b)||String.fromCharCode(...bytes.slice(12,16))!=='IHDR')throw Error('Figure PNG is invalid');
+ const v=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength),w=v.getUint32(16),h=v.getUint32(20);
+ if(!w||!h||w>3000||h>3000)throw Error('Invalid PNG dimensions');
+ return {w,h};
+}
+export async function rasterizePaperFigures(area){
+ const result=new Map();
+ for(const svg of paperFigureNodes(area)){
+  const doc=area.ownerDocument,view=doc.defaultView;
+  const serialized=new view.XMLSerializer().serializeToString(svg);
+  const img=new view.Image(),url=view.URL.createObjectURL(new view.Blob([serialized],{type:'image/svg+xml;charset=utf-8'}));
+  try{
+   await new Promise((resolve,reject)=>{
+    const timer=view.setTimeout(()=>reject(Error('Figure conversion timed out')),8000);
+    img.onload=()=>{view.clearTimeout(timer);resolve();};
+    img.onerror=()=>{view.clearTimeout(timer);reject(Error('Figure conversion failed'));};
+    img.src=url;
+   });
+   const canvas=doc.createElement('canvas');
+   canvas.width=Number(svg.getAttribute('width'))*3;canvas.height=Number(svg.getAttribute('height'))*3;
+   const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas not available');
+   ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
+   const png=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Figure PNG creation failed')),'image/png'));
+   const bytes=new Uint8Array(await png.arrayBuffer());validateFigurePng(bytes);result.set(svg,bytes);
+  }finally{view.URL.revokeObjectURL(url);}
+ }
+ return result;
+}
+function figureDrawing(id,w,h){
+ const cx=Math.min(3000000,w*9525/3),cy=Math.round(cx*h/w),name='Figure '+id;
+ return '<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="'+Math.round(cx)+'" cy="'+cy+'"/><wp:docPr id="'+id+'" name="'+name+'"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="'+id+'" name="'+name+'"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdFigure'+id+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="'+Math.round(cx)+'" cy="'+cy+'"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
+}
+export function buildQuestionPaperDocx(area,{figurePngs=new Map()}={}){
  if(!area||typeof area.querySelector!=='function')throw Error('Question paper preview required');
  const body=area.querySelector('.qp-paper-body');if(!body)throw Error('Two-column question paper layout required');
- // Never silently omit a diagram; figure-bearing DOCX needs image embedding.
- if(area.querySelector('img,svg,canvas'))throw Error('Figure-bearing Word export requires embedded image support; use Print/PDF.');
- const header=area.firstElementChild,heading=paperParagraphs(header),preface=[...area.children].filter(x=>x!==header&&x!==body&&!x.classList.contains('qp-paper-end')).flatMap(paperParagraphs),paras=paperParagraphs(body);if(!paras.length)throw Error('Empty question paper');
+ const figures=paperFigureNodes(area),media=[],rels=[];
+ if(!(figurePngs instanceof Map)||figures.some(svg=>!figurePngs.has(svg))||figurePngs.size!==figures.length)throw Error('Every paper figure must be embedded before Word export');
+ const header=area.firstElementChild,heading=paperParagraphs(header),preface=[...area.children].filter(x=>x!==header&&x!==body&&!x.classList.contains('qp-paper-end')).flatMap(paperParagraphs),paras=paperParagraphs(body,{figureTokens:true});if(!paras.length)throw Error('Empty question paper');
  const sect=cols=>'<w:sectPr><w:type w:val="continuous"/><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="567" w:right="567" w:bottom="567" w:left="567" w:header="283" w:footer="283" w:gutter="0"/><w:cols w:num="'+cols+'" w:space="454"'+(cols===2?' w:sep="1"':'')+'/></w:sectPr>';
- const content=heading.map((line,i)=>paragraph(line,{center:true,bold:i===0,size:i===0?30:22})).join('')+preface.map(line=>paragraph(line,{center:true,size:18})).join('')+'<w:p><w:pPr>'+sect(1)+'</w:pPr></w:p>'+paras.map(line=>paragraph(line)).join('')+sect(2);
+ const bodyContent=paras.map(token=>{
+  if(typeof token==='string')return paragraph(token);
+  const bytes=figurePngs.get(token),{w,h}=validateFigurePng(bytes),id=media.length+1;
+  media.push(['word/media/figure'+id+'.png',bytes]);
+  rels.push('<Relationship Id="rIdFigure'+id+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/figure'+id+'.png"/>');
+  return figureDrawing(id,w,h);
+ }).join('');
+ if(media.length!==figures.length)throw Error('A question figure would be omitted');
+ const content=heading.map((line,i)=>paragraph(line,{center:true,bold:i===0,size:i===0?30:22})).join('')+preface.map(line=>paragraph(line,{center:true,size:18})).join('')+'<w:p><w:pPr>'+sect(1)+'</w:pPr></w:p>'+bodyContent+sect(2);
  const xml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
  return storedZip([
- ['[Content_Types].xml',xml+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'],
+ ['[Content_Types].xml',xml+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'],
  ['_rels/.rels',xml+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'],
- ['word/document.xml',xml+'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+content+'</w:body></w:document>']]);
+ ['word/document.xml',xml+'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>'+content+'</w:body></w:document>'],
+ ...(media.length?[["word/_rels/document.xml.rels",xml+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+rels.join('')+'</Relationships>'],...media]:[])]);
 }
 
 
 // Offline schematic illustrations tied to explicit question wording. The
 // labels reproduce givens only; unknown quantities are never solved here.
 export function questionFigure(question,language='both'){
- const en=String(question?.contextEn||question?.questionTextEn||question?.textEn||'');
+ const en=String(question?.contextEn||question?.questionTextEn||question?.textEn||String(question?.questionText||'').split('\n').at(-1)||'');
  const label=s=>paperDigits(s,language).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const txt=(x,y,value)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" stroke="none" fill="#111" font-size="13">'+label(value)+'</text>';
  const triangle=(a,b,c,theta=false)=>'<path d="M48 18V116H218Z M48 104H60V116" />'+txt(24,69,a)+txt(133,134,b)+txt(153,53,c)+(theta?txt(194,110,'θ'):'');
@@ -163,6 +223,14 @@ export function questionFigure(question,language='both'){
   body=triangle(match[1]+' cm',match[2]+' cm','?');caption='समकोण त्रिभुज / Right triangle';
  }else if((match=/^In a right triangle, opposite to θ is (\d+), adjacent is (\d+) and hypotenuse is (\d+)\./.exec(en))){
   body=triangle(match[1],match[2],match[3],true);caption='समकोण त्रिभुज / Right triangle';
+ }else if((match=/^In a right triangle, opposite = (\d+) and hypotenuse = (\d+)\. Find sin θ\.$/.exec(en))){
+  body=triangle(match[1],'',match[2],true);caption='समकोण त्रिभुज / Right triangle';
+ }else if((match=/^In a right triangle, adjacent = (\d+) and hypotenuse = (\d+)\. Find cos θ\.$/.exec(en))){
+  body=triangle('',match[1],match[2],true);caption='समकोण त्रिभुज / Right triangle';
+ }else if((match=/^In a right triangle, opposite = (\d+), adjacent = (\d+)\. Find tan θ\.$/.exec(en))){
+  body=triangle(match[1],match[2],'',true);caption='समकोण त्रिभुज / Right triangle';
+ }else if((match=/^Find the hypotenuse of a right triangle with legs (\d+) and (\d+)\.$/.exec(en))){
+  body=triangle(match[1],match[2],'?');caption='समकोण त्रिभुज / Right triangle';
  }else if((match=/^A circular pond has radius (\d+) m\./.exec(en))){
   body='<circle cx="130" cy="71" r="51"/><path d="M130 71H181"/><circle cx="130" cy="71" r="2" fill="#111"/>'+txt(155,63,match[1]+' m');caption='वृत्त / Circle';
  }else if((match=/^A rectangular garden is (\d+) m long and (\d+) m wide\./.exec(en))){

@@ -28,7 +28,7 @@ import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-mat
 import {CDC_G10_OPTIONAL_MATH_2083_MODEL,compareCdc2083MathModelToBundledGrid} from "./cdc-optional-math-model-compare.mjs";
 import {inspectCdcOptionalMathPaper} from "./cdc-optional-math-composite.mjs";
 import {originalOptionalMathPracticeBank} from "./cdc-optional-math-original-practice.mjs";
-import {renderCdcCompositePaper,paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS,buildQuestionPaperDocx,questionFigure} from "./cdc-optional-math-render.mjs";
+import {renderCdcCompositePaper,paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS,buildQuestionPaperDocx,questionFigure,rasterizePaperFigures} from "./cdc-optional-math-render.mjs";
 import {QUESTION_EXCEL_FIELDS,parseQuestionExcelSheet,CDC_GRID_EXCEL_FIELDS,parseCdcGridExcelSheet} from "./cdc-question-excel.mjs";
 import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
@@ -453,13 +453,16 @@ function printPaper(paper = generatedPaper, includeAnswers = false) {
   w.focus();
   w.print();
 }
-function exportQuestionPaperWord(paper=generatedPaper){
+async function exportQuestionPaperWord(paper=generatedPaper){
  if(!paper||!roleCanTeach(paper.className,paper.subject,paper.section||""))throw Error("यस प्रश्नपत्रमा Export अनुमति छैन।");
  if(Number(paper.gradeNumber)===9)assertGrade9ExamPaperMatches(paper);
  if(paper.qualityReport?.teacherReviewRequired&&$("qpAutoReviewed")?.checked!==true)throw Error("प्रश्नपत्रको भाषा, Grid, चित्र र उत्तर समीक्षा पुष्टि गर्नुहोस्।");
  const area=$("qpPaperPreview")?.querySelector("#qpPrintArea");
  if(!area)throw Error("प्रश्नपत्र Preview उपलब्ध छैन।");
- const bytes=buildQuestionPaperDocx(area);
+ const uid=auth.currentUser?.uid;
+ const figurePngs=await rasterizePaperFigures(area);
+ if(!uid||auth.currentUser?.uid!==uid||paper!==generatedPaper||$("qpPaperPreview")?.querySelector("#qpPrintArea")!==area||!roleCanTeach(paper.className,paper.subject,paper.section||"")||(paper.qualityReport?.teacherReviewRequired&&$("qpAutoReviewed")?.checked!==true))throw Error("Export गर्दा Login, प्रश्नपत्र वा समीक्षा परिवर्तन भयो। पुनः Export गर्नुहोस्।");
+ const bytes=buildQuestionPaperDocx(area,{figurePngs});
  const filename=("SMSS-"+String(paper.className||"Class")+"-"+String(paper.subject||"Subject")).replace(/[^\p{L}\p{M}\p{N}_-]+/gu,"-").slice(0,100)+".docx";
  const url=URL.createObjectURL(new Blob([bytes],{type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"}));
  const link=document.createElement("a");link.href=url;link.download=filename;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
@@ -1981,7 +1984,7 @@ document.addEventListener("click",async event=>{
     if(t.id==="qpSavePaperBtn")await savePaper();
     if(t.id==="qpPrintPaperBtn")printPaper(generatedPaper,false);
     if(t.id==="qpAnswerKeyBtn")printPaper(generatedPaper,true);
-    if(t.id==="qpWordPaperBtn")exportQuestionPaperWord(generatedPaper);
+    if(t.id==="qpWordPaperBtn")await exportQuestionPaperWord(generatedPaper);
     if(t.id==="qpRefreshBtn"&&selectedClass&&selectedSubject){await loadCurrentData();message("प्रश्न बैंक Refresh भयो।");}
     if(t.id==="qpPaperReloadBtn"&&selectedClass&&selectedSubject)await loadPaperHistory();
     if(t.dataset.qpDeleteQuestion)await deleteQuestion(t.dataset.qpDeleteQuestion);

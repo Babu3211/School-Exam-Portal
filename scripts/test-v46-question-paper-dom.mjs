@@ -404,6 +404,35 @@ assert.match(docxText,/w:orient="landscape"/);
 assert.match(docxText,/w:cols w:num="2"/);
 assert.match(docxText,/Test School/);
 assert.doesNotMatch(docxText,/qpGridAudit|qpAutoReviewed/);
+// Inspect actual stored ZIP parts and XML relationships. Browser PNG encoding
+// is separate; a valid embedded PNG fixture proves the package contract.
+const unzipStored=bytes=>{
+ const parts=new Map();const v=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);let off=0;
+ while(v.getUint32(off,true)===0x04034b50){
+  assert.equal(v.getUint16(off+8,true),0);
+  const size=v.getUint32(off+18,true),len=v.getUint16(off+26,true),extra=v.getUint16(off+28,true);
+  const name=new TextDecoder().decode(bytes.slice(off+30,off+30+len)),start=off+30+len+extra;
+  parts.set(name,bytes.slice(start,start+size));off=start+size;
+ }
+ assert.equal(v.getUint32(off,true),0x02014b50);return parts;
+};
+const fixture=dom.window.document.createElement('section');
+fixture.innerHTML='<div><h2>विद्यालय</h2></div><div class="qp-paper-body"><p>Given question</p>'+questionFigure({contextEn:'A circular pond has radius 14 m. Use π = 22/7.'},'ne')+'<p>Next question</p></div>';
+const svg=fixture.querySelector('svg');
+assert.ok(svg);
+assert.match(svg.textContent,/१४/);
+assert.throws(()=>buildQuestionPaperDocx(fixture),/Every paper figure/);
+const png=new Uint8Array(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aJc0AAAAASUVORK5CYII=','base64'));
+const embedded=buildQuestionPaperDocx(fixture,{figurePngs:new Map([[svg,png]])});
+const parts=unzipStored(embedded),xml=new TextDecoder().decode(parts.get('word/document.xml'));
+assert.deepEqual(parts.get('word/media/figure1.png'),png);
+assert.match(xml,/r:embed="rIdFigure1"/);
+assert.match(new TextDecoder().decode(parts.get('word/_rels/document.xml.rels')),/Target="media\/figure1.png"/);
+assert.ok(xml.indexOf('Given question')<xml.indexOf('<w:drawing>')&&xml.indexOf('<w:drawing>')<xml.indexOf('Next question'));
+for(const [name,bytes] of parts)if(/\.xml$|\.rels$/.test(name))assert.equal(new dom.window.DOMParser().parseFromString(new TextDecoder().decode(bytes),'application/xml').querySelector('parsererror'),null,name);
+svg.setAttribute('onload','alert(1)');
+assert.throws(()=>buildQuestionPaperDocx(fixture,{figurePngs:new Map([[svg,png]])}),/Unsafe paper figure/);
+console.log('PASS real DOCX package image bytes, relationships, question order and unsafe figure rejection');
 assert.match(generatedPrint,/CDC प्रकाशित नमुना होइन/);
 assert.match(generatedPrint,/उत्तरकुञ्जिका/);
 assert.match(generatedPrint,/Test School/);
