@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v62-grade8-vsq-exact-grid-2083';
+const CACHE_NAME = 'smss-pwa-v63-grade8-original-practice-2083';
 const APP_SHELL = [
   './',
   './index.html',
@@ -20,6 +20,7 @@ const APP_SHELL = [
   './cdc-optional-math-render.mjs',
   './cdc-grid-source-index.mjs',
   './cdc-grade8-science-model-audit.mjs',
+  './cdc-grade8-science-original-supplement.mjs',
   './data/cdc-question-paper-sources-2083.json',
   './data/cdc-science-bilingual-mcq-v1.json',
   './data/cdc-grade8-science-practice-pack-v1.json',
