@@ -28,6 +28,8 @@ on:
       - 'cdc-grade9-nepali-grouped-planner.mjs'
       - 'cdc-grade9-english-grouped-planner.mjs'
       - 'cdc-grade9-compulsory-math-grouped.mjs'
+      - 'cdc-grade9-compulsory-math-reference-bank.mjs'
+      - 'scripts/test-cdc-grade9-compulsory-math-reference-bank.mjs'
       - 'scripts/test-cdc-grade9-compulsory-math-grouped.mjs'
       - 'scripts/test-cdc-grade9-english-grouped-planner.mjs'
       - 'scripts/test-cdc-grade9-nepali-grouped-planner.mjs'
@@ -181,6 +183,8 @@ jobs:
         run: node scripts/test-cdc-grade9-reference-readiness.mjs
       - name: Generate actual Grade 9 social reference papers in three language modes
         run: node scripts/test-cdc-grade9-social-reference-bank.mjs
+      - name: Generate actual Grade 9 compulsory math reference drafts
+        run: node scripts/test-cdc-grade9-compulsory-math-reference-bank.mjs
       - name: Verify automatic CDC Grid source detection for Grade 6-10 subjects
         run: node scripts/test-cdc-grid-source-index.mjs
       - name: Verify 54 original bilingual formula-checked Optional Maths practice questions

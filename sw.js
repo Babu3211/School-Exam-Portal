@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v85-grade9-social-real-reference-bank-2083';
+const CACHE_NAME = 'smss-pwa-v86-grade9-math-real-reference-bank-2083';
 const APP_SHELL = [
   './',
   './index.html',
@@ -27,6 +27,7 @@ const APP_SHELL = [
   './cdc-grade9-nepali-grouped-planner.mjs',
   './cdc-grade9-english-grouped-planner.mjs',
   './cdc-grade9-compulsory-math-grouped.mjs',
+  './cdc-grade9-compulsory-math-reference-bank.mjs',
   './cdc-grade9-science-archive-audit.mjs',
   './cdc-grade9-science-reference-planner.mjs',
   './cdc-grade9-social-reference-planner.mjs',
