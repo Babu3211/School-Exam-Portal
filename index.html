@@ -566,7 +566,7 @@ function viewerReadOnlyGuard(event){
   if(action.matches("[data-page],[data-go]")||action.closest("[data-page],[data-go]"))return;
   const id=String(action.id||"").toLowerCase(),label=String(action.textContent||"").toLowerCase();
   // Explicit non-mutating actions: do not infer safety from a substring such as "show" or "generate".
-  const readActionIds=new Set(["cdcreadprogress","cdcgridread","cdcprintform","cdcreadschool","cdcnextstudent","logoutbtn","loadentrystudents","loadattendancestudents","loadattendancehistory","numberledgertab","gradeledgertab","entryledgertab","studentcanceleditbtn","staffcancelbtn","classcancelbtn","examcancelbtn","subjectcatalogcancel","cancelroleassignmentbtn","toggleloginpassword","onlineresulttoggle","onlineresultsearchbtn","loadreportbtn","loadresultsbtn","refreshresultsbtn","showledgerview","refreshledgerview","refreshentry","refreshattendance","refreshattendancehistory","refreshcertificatesbtn","refreshreportbtn","refreshusersbtn","refreshauditlogs","reloadschoolsettings","studentsearchbtn","studentreloadbtn","staffsearchbtn","staffreloadbtn","classsearchbtn","classreloadbtn","examsearchbtn","examreloadbtn","subjectcatalogreloadbtn","markreloadsettings","studentexport","studentsample","staffexport","staffsample","exportledgerexcel","sampleledgerexcel","exportledgerpageexcel","printledgerpage","printgradesheetbtn","printtabulationbtn","exporttabulationbtn","printattendance","exportattendance","printattendancehistory","exportattendancehistory","exportreportbtn","printreportbtn","downloadfirebasebackup","previewfirebaserestore","onlineresultprintbtn"]);
+  const readActionIds=new Set(["cdcprintprogress","cdcreadprogress","cdcgridread","cdcprintform","cdcreadschool","cdcnextstudent","logoutbtn","loadentrystudents","loadattendancestudents","loadattendancehistory","numberledgertab","gradeledgertab","entryledgertab","studentcanceleditbtn","staffcancelbtn","classcancelbtn","examcancelbtn","subjectcatalogcancel","cancelroleassignmentbtn","toggleloginpassword","onlineresulttoggle","onlineresultsearchbtn","loadreportbtn","loadresultsbtn","refreshresultsbtn","showledgerview","refreshledgerview","refreshentry","refreshattendance","refreshattendancehistory","refreshcertificatesbtn","refreshreportbtn","refreshusersbtn","refreshauditlogs","reloadschoolsettings","studentsearchbtn","studentreloadbtn","staffsearchbtn","staffreloadbtn","classsearchbtn","classreloadbtn","examsearchbtn","examreloadbtn","subjectcatalogreloadbtn","markreloadsettings","studentexport","studentsample","staffexport","staffsample","exportledgerexcel","sampleledgerexcel","exportledgerpageexcel","printledgerpage","printgradesheetbtn","printtabulationbtn","exporttabulationbtn","printattendance","exportattendance","printattendancehistory","exportattendancehistory","exportreportbtn","printreportbtn","downloadfirebasebackup","previewfirebaserestore","onlineresultprintbtn"]);
   const safeReadLabel=/^(?:search|refresh|reload|view|preview|print|download|export|filter|history print|history export|mark wise ledger|grade wise ledger|mark entry ledger|student list|cancel|close|back|next|previous|logout)(?:\\b|\\s|$)/i;
   const mutationLabel=/\\b(?:add|save|delete|edit|update|import|restore|publish|issue|create|remove|clear|seed|sync|assign|generate missing|confirm|submit)\\b/i;
   const allowed=readActionIds.has(id)||(!mutationLabel.test(id+" "+label)&&safeReadLabel.test(label));
@@ -4367,7 +4367,7 @@ function parseCdcBilingualCatalog(text) {
     <datalist id="cdcUnitSuggestions"></datalist>
     <p data-cdc="unitCoverage" class="hint"></p>
     <section data-cdc="annex3" hidden><div class="toolbar"><button type="button" class="btn alt" data-cdc="gridRead" id="cdcGridRead">Load / Refresh Records</button><span data-cdc="gridStatus" role="status" class="hint"></span></div><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><div class="tablewrap"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Print / Save PDF</button><p data-cdc="printStatus" role="status" class="hint"></p></section>
-    <section data-cdc="annualProgress" hidden class="panel"><h3>प्रगति प्रतिवेदन — अनुसूची ४ / Annual Progress</h3><p data-cdc="progressIdentity"></p><button type="button" class="btn alt" id="cdcReadProgress" data-cdc="readProgress">View Annual Progress</button><p data-cdc="annualStatus" role="status" class="hint"></p><div class="tablewrap"><table><thead><tr><th>क्र. सं.</th><th>विषय</th><th>पाठ्यघण्टा</th><th>सिकाइ उपलब्धि सङ्ख्या</th><th>समग्र उपलब्धिस्तर</th><th>कैफियत</th></tr></thead><tbody data-cdc="annualRows"></tbody></table></div><p data-cdc="annualAttendance" class="hint">उपस्थिति: अभिलेख लोड गर्नुहोस्।</p><p class="hint">विद्यालय सञ्चालन दिन विद्यालयको प्रमाणित पात्रोबाट पुष्टि गर्नुपर्छ। यो समीक्षा प्रति हो।</p><p>कक्षा शिक्षक __________　 प्रधानाध्यापक __________　 मिति __________</p></section>
+    <section data-cdc="annualProgress" hidden class="panel"><h3>प्रगति प्रतिवेदन — अनुसूची ४ / Annual Progress</h3><p data-cdc="progressIdentity"></p><button type="button" class="btn alt" id="cdcReadProgress" data-cdc="readProgress">View Annual Progress</button> <button type="button" class="btn alt" id="cdcPrintProgress" data-cdc="printProgress" disabled>Print / Save PDF</button><p data-cdc="annualStatus" role="status" class="hint"></p><div class="tablewrap"><table><thead><tr><th>क्र. सं.</th><th>विषय</th><th>पाठ्यघण्टा</th><th>सिकाइ उपलब्धि सङ्ख्या</th><th>समग्र उपलब्धिस्तर</th><th>कैफियत</th></tr></thead><tbody data-cdc="annualRows"></tbody></table></div><p data-cdc="annualAttendance" class="hint">उपस्थिति: अभिलेख लोड गर्नुहोस्।</p><p class="hint">विद्यालय सञ्चालन दिन विद्यालयको प्रमाणित पात्रोबाट पुष्टि गर्नुपर्छ। यो समीक्षा प्रति हो।</p><p>कक्षा शिक्षक __________　 प्रधानाध्यापक __________　 मिति __________</p></section>
     <details data-cdc="catalogPanel"><summary>द्विभाषिक उपलब्धि सूची थप्नुहोस्</summary>
       <p class="hint">स्रोतबाट पुष्टि गरेका चार स्तम्भ Excel बाट प्रतिलिपि गर्नुहोस्। क्रम: नेपाली एकाइ, English unit, नेपाली उपलब्धि, English outcome। शीर्षक पङ्क्ति छोड्नुहोस्।</p>
       <textarea data-cdc="catalogText" aria-label="द्विभाषिक उपलब्धि सूची" rows="4" maxlength="1100000" style="width:100%"></textarea>
@@ -4672,6 +4672,7 @@ function parseCdcBilingualCatalog(text) {
   };
   let schoolReadSequence = 0;
   let annualReadSequence=0;
+  let annualPrintSnapshot=null;
   let schoolSavePending = false;
   const canShow = () => dialog.isConnected && (context ? context.host.isConnected : dialog.open) && auth.currentUser?.uid===owner;
   const schoolSelection = () => {
@@ -4683,6 +4684,8 @@ function parseCdcBilingualCatalog(text) {
   };
   function clearAnnualProgress(){
     annualReadSequence++;
+    annualPrintSnapshot=null;
+    field('printProgress').disabled=true;
     field('annualRows').replaceChildren();
     field('annualStatus').textContent='';
     field('annualAttendance').textContent='उपस्थिति: अभिलेख लोड गर्नुहोस्।';
@@ -4704,11 +4707,13 @@ function parseCdcBilingualCatalog(text) {
     const st=assessmentStudents.find(s=>s.id===selection.studentId);
     const registry=context.subjectsFor(grade);
     try{
+      let attendanceSummary=null;
       const attendancePromise=(async()=>{
         if(!readOnly&&(!roleHas('class_teacher')||typeof classTeacherNames!=='function'||!classTeacherNames().includes(selection.className)))return 'उपस्थिति: हाजिरी हेर्ने अनुमति छैन।';
         try{
           const snapshot=await getDocsFromServer(query(collection(db,'attendance'),where('className','==',selection.className),where('attendanceType','==','daily'),where('academicYear','==',year)));
           const result=cdcAttendanceSummary(snapshot.docs.map(d=>d.data()),selection);
+          attendanceSummary=result;
           if(!result.recordedDays)return 'उपस्थिति: दैनिक हाजिरी अभिलेख छैन।';
           return 'उपस्थिति: अभिलेख भएका कक्षा दिन '+result.recordedDays+' | विद्यार्थीको पुष्टि भएको हाजिरी दिन '+result.assessed+' | उपस्थित दिन '+result.present+' | अभिलेखअनुसार प्रतिशत '+(result.percentage===null?'—':result.percentage.toFixed(2)+'%')+(result.unresolved?' | अपूर्ण वा विवादित दिन '+result.unresolved:'');
         }catch{return 'उपस्थिति: हाजिरी अभिलेख पढ्न सकिएन।';}
@@ -4734,7 +4739,38 @@ function parseCdcBilingualCatalog(text) {
       field('annualAttendance').textContent=attendance;
       for(const values of rows){const row=field('annualRows').insertRow();for(const value of values)row.insertCell().textContent=String(value);}
       field('annualStatus').textContent='सबै अवधिको पछिल्लो वैध अङ्कनबाट प्रति उपलब्धि एक पटक गणना। अपूर्ण सूचीको ग्रेड प्रारम्भिक मात्र हो।';
+      annualPrintSnapshot={selectionKey:JSON.stringify(selection),rows,attendance,attendanceSummary,grade,studentName:field('student').selectedOptions[0]?.text||'',roll:st?.rollNo??'',school:currentSchoolSettings.schoolNameNe||currentSchoolSettings.schoolName||'',schoolCode:currentSchoolSettings.iemisCode||'',year};
+      field('printProgress').disabled=false;
     }finally{if(isCurrent())field('readProgress').disabled=false;}
+  };
+  // Annex 4, supplied CDC 2083 guide, printed p.148. Print a review copy;
+  // recorded attendance days are not the verified school operating calendar.
+  field('printProgress').onclick=()=>{
+    const snap=annualPrintSnapshot;
+    if(!canShow()||!snap||snap.selectionKey!==JSON.stringify(schoolSelection())||inlinePending||dialog.querySelector('[data-cdc-grid-editor]'))return;
+    const report=document.implementation.createHTMLDocument('CDC Annual Progress — Review copy');
+    report.documentElement.lang='ne';
+    const style=report.createElement('style');
+    style.textContent='@page{size:A4 portrait;margin:12mm}body{font:12px Arial,"Noto Sans Devanagari",sans-serif;color:#111;margin:0}h2,h3{text-align:center;margin:5px 0}h3{text-decoration:underline}.meta{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin:18px 0 8px}.meta p{margin:0}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #222;padding:9px 5px;vertical-align:middle}th{font-weight:600;text-align:center}td:nth-child(1),td:nth-child(3),td:nth-child(4),td:nth-child(5){text-align:center}tr{break-inside:avoid}thead{display:table-header-group}.sign{display:flex;justify-content:space-between;margin-top:44px;text-align:center}.note{font-size:10px;margin-top:12px}';
+    report.head.append(style);
+    const add=(tag,value,host=report.body)=>{const e=report.createElement(tag);e.textContent=value;host.append(e);return e;};
+    add('h2','अनुसूची ४ : विद्यार्थीको समग्र प्रगति प्रतिवेदनको ढाँचा');
+    add('h3','प्रगति प्रतिवेदन');
+    const meta=report.createElement('div');meta.className='meta';report.body.append(meta);
+    const a=snap.attendanceSummary;
+    for(const value of ['विद्यार्थीको नाम: '+snap.studentName,'कक्षा: '+snap.grade,'रोल नं.: '+snap.roll,'विद्यालयको नाम: '+snap.school,'सङ्केत नं.: '+snap.schoolCode,'शैक्षिक सत्र: '+snap.year,'उपस्थिति: विद्यालय सञ्चालन भएको दिन: ______','उपस्थित भएको दिन: '+(a&&a.assessed?a.present:'______'),'प्रतिशत: ______'])add('p',value,meta);
+    const table=report.createElement('table');report.body.append(table);
+    const head=table.createTHead().insertRow();
+    for(const title of ['क्र. सं.','विषय','पाठ्यघण्टा','सिकाइ उपलब्धि सङ्ख्या','समग्र उपलब्धिस्तर','कैफियत'])add('th',title,head);
+    const body=table.createTBody();
+    for(const values of snap.rows){const row=body.insertRow();for(const value of values)row.insertCell().textContent=String(value);}
+    const signs=report.createElement('div');signs.className='sign';report.body.append(signs);
+    for(const label of ['कक्षा शिक्षक','प्रधानाध्यापक','मिति']){const cell=report.createElement('div');add('p','…………………………',cell);add('p',label,cell);signs.append(cell);}
+    const note=add('p','समीक्षा प्रति — अपूर्ण सूचीको ग्रेड प्रारम्भिक हो। सञ्चालन दिन र वार्षिक उपस्थिति प्रतिशत विद्यालयले पुष्टि गर्नुपर्नेछ।');note.className='note';
+    add('p',snap.attendance).className='note';
+    const popup=window.open('','_blank');
+    if(!popup){field('annualStatus').textContent='Print खोल्न pop-up अनुमति दिनुहोस्।';return;}
+    popup.document.open();popup.document.write('<!doctype html>'+report.documentElement.outerHTML);popup.document.close();popup.focus();popup.print();
   };
   const clearSchoolResults = () => {
     clearAnnualProgress();
