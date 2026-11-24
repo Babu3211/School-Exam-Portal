@@ -3,6 +3,7 @@ import {readBundledScienceBank,buildAutomaticQuestionPaper,isSupportedScienceSub
 import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
 import {getBundledComputerGrid,bundledComputerUnitTopics} from "./cdc-verified-computer-grids.mjs";
 import {findCdcGridSources} from "./cdc-grid-source-index.mjs";
+import {auditGrade9Release} from "./cdc-grade9-release-audit.mjs";
 import {compareGrade8SciencePracticeBank,getGrade8ScienceHistoricalPracticePattern} from "./cdc-grade8-science-model-audit.mjs";
 import {grade8ScienceOriginalSupplement} from "./cdc-grade8-science-original-supplement.mjs";
 import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-math-2082.mjs";
@@ -588,6 +589,28 @@ async function loadCurrentData() {
    heading.textContent="यस विषयको मिल्ने CDC विशिष्टीकरण स्रोत सूचीमा छैन; अनुमानित Grid प्रयोग हुँदैन।";
   }
   pdfSource.appendChild(heading);
+  if(grade===9&&cdcSourceRegister){
+   const grade9Gate=auditGrade9Release({register:cdcSourceRegister});
+   const summary=document.createElement("p");
+   summary.className="qp-hint";
+   summary.textContent="कक्षा ९ (ज्ञात विषयहरू): "+
+    grade9Gate.checkedSubjects.filter(item=>item.gridTranscribed).length+
+    "/"+grade9Gate.checkedSubjects.length+
+    " CDC Grid संरचना लोड; सबै विषयका समीक्षा गरिएका प्रश्नपत्र र Teacher E2E "+
+    "पुष्टि बाँकी। यो स्थिति Live स्वीकृति होइन।";
+   pdfSource.appendChild(summary);
+   const current=grade9Gate.checkedSubjects.find(item=>
+    item.key===findCdcGridSources(cdcSourceRegister,9,subject)[0]?.subjectKey);
+   if(current){
+    const note=document.createElement("p");
+    note.className="qp-hint";
+    note.textContent="कक्षा ९ · "+current.subject+
+     ": "+(current.gridTranscribed?
+      "Grid संरचना सेट; समीक्षित Question Bank र शिक्षक परीक्षण आवश्यक।":
+      "CDC को Unit/Type/Marks/Cognitive तालिका पूरा प्रमाणित छैन।");
+    pdfSource.appendChild(note);
+   }
+  }
   // Prefer the already reviewed and preloaded government's original PDF
   // for Computer Science and the separate WCA/CCA Optional Mathematics guide.
   const urls=new Set();
