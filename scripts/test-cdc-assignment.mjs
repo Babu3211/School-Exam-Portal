@@ -636,10 +636,10 @@ const beforePreview=observations.size;
 await w.loadCdcAssessmentPage();
 for(const [unit,count,page,editable] of [
  ['म र मेरो परिवार',8,103,true],['मेरो दैनिक जीवन',12,104,true],
- ['हाम्रो समुदाय',13,105,false],['हाम्रो विद्यालय',13,106,false],
+ ['हाम्रो समुदाय',13,105,true],['हाम्रो विद्यालय',13,106,false],
  ['हाम्रो वातावरण',14,107,true],['मेरो सिर्जना',14,108,false],
  ['बोध र वाणी',15,109,false],['हाम्रो संस्कृति',15,110,true],
- ['सूचना प्रविधि र बजार',15,111,false],['हाम्रो क्रियाकलाप',15,112,false],
+ ['सूचना प्रविधि र बजार',15,111,true],['हाम्रो क्रियाकलाप',15,112,false],
  ['हाम्रो वरपरको संसार',16,113,false]
 ]){
  choice('unit',unit);
@@ -677,8 +677,20 @@ assert.equal([...observations.values()].at(-1).stage,'regular');
 assert.match(field('annexFoot').textContent,/75\.00%/);
 assert.match(field('annexFoot').textContent,/1 \/ 12/);
 choice('unit','हाम्रो समुदाय');
+assert.match(field('annexRows').rows[3].textContent,/उ, ऊ, ऋ र ए/);
+await field('gridRead').onclick();
+assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,26);
+choice('unit','मेरो विद्यालय');
+assert.equal(field('unit').value,'हाम्रो विद्यालय');
+assert.equal(field('annexUnit').textContent,'मेरो विद्यालय');
+assert.match(field('annexRows').rows[3].cells[0].textContent,/^ऐ, ओ, औ/);
 assert.equal(field('annexRows').querySelectorAll('button,input,select,textarea').length,0);
-assert.match(field('annexRows').rows[3].textContent,/अ, आ, इ, ई र उ/);
+choice('unit','सञ्चार प्रविधि र बजार');
+assert.equal(field('unit').value,'सूचना प्रविधि र बजार');
+await field('gridRead').onclick();
+assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,30);
+assert.ok([...w.document.querySelectorAll('#cdcUnitSuggestions option')].some(o=>o.value==='रुचि र बानी'));
+assert.equal(observations.size,beforePreview+1);
 w.currentSchoolSettings.academicYear='2084';
 await w.loadCdcAssessmentPage();
 choice('unit','म र मेरो परिवार');
