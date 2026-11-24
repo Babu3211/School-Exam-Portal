@@ -73,7 +73,7 @@ Object.assign(w,{
   getDocsFromServer:async ({name,filters})=>{
     assert.equal(name,'cdc_observations');
     assert.deepEqual(Object.fromEntries(filters.map(([name,op,value])=>{assert.equal(op,'==');return [name,value];})),{
-      studentId:field('student').value,className:({three:'Class 3',primary:'Class 5'})[field('student').value]||field('class').value,subject:field('subject').value,
+      studentId:field('student').value,className:({three:'Class 3',primary:'Class 5','nepali-1':'Class 1'})[field('student').value]||field('class').value,subject:field('subject').value,
       section:'A',academicYear:w.currentSchoolSettings.academicYear,...(filters.some(([key])=>key==='period')?{period:field('period').value}:{})
     });
     if(readSchool) await readSchool.promise;
@@ -650,6 +650,7 @@ for(const [unit,count,page,editable] of [
 assert.equal(observations.size,beforePreview);
 choice('unit','मेरो दैनिक जीवन');
 await field('gridRead').onclick();
+assert.match(field('schoolStatus').textContent,/अवलोकन|अभिलेख छैन/);
 const nepaliRow=field('annexRows').rows[0];
 nepaliRow.querySelector('[data-cdc-grid-edit="regular"]').click();
 nepaliRow.querySelector('[data-cdc-grid-editor="level"]').value='3';
