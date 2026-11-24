@@ -5,7 +5,8 @@ import {cdcSubjectKey} from './cdc-grid-source-index.mjs';
 import {planGrade9MathReference} from './cdc-grade9-compulsory-math-grouped.mjs';
 import {planSocial2078ReferencePaper} from './cdc-grade9-social-reference-planner.mjs';
 import {planGrade9EnglishReferencePaper} from './cdc-grade9-english-grouped-planner.mjs';
-const planners={math:planGrade9MathReference,social:planSocial2078ReferencePaper,english:planGrade9EnglishReferencePaper};
+import {planEnvironmentSchoolReference} from './cdc-grade9-environment-reference-bank.mjs';
+const planners={optional_environment:planEnvironmentSchoolReference,math:planGrade9MathReference,social:planSocial2078ReferencePaper,english:planGrade9EnglishReferencePaper};
 const draft=q=>q?.gradeNumber===9&&q.bundled===true&&q.reviewStatus==='draft'&&q.teacherReviewRequired===true&&q.officialCdcQuestion===false&&q.sourceStatus==='SMSS_original_reference_draft'&&q.status!=='archived';
 export function referencePreviewTopics({grade,subject,questions=[]}={}){
  if(grade!==9||!Object.hasOwn(planners,cdcSubjectKey(subject)))return [];
@@ -14,7 +15,8 @@ export function referencePreviewTopics({grade,subject,questions=[]}={}){
 export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMinutes,language,questions=[],selectedTopicIds=[],previousSignature='',rng=Math.random}={}){
  const key=cdcSubjectKey(subject);
  if(grade!==9||!Object.hasOwn(planners,key))throw Error('No review-only reference generator for this grade and subject');
- if(fullMarks!==75||durationMinutes!==180)throw Error('This reference requires 75 marks and 180 minutes');
+ const requiredDuration=key==='optional_environment'?135:180;
+ if(fullMarks!==75||durationMinutes!==requiredDuration)throw Error('This reference requires 75 marks and '+requiredDuration+' minutes');
  if(!['ne','en','both'].includes(language))throw Error('Select a language');
  if(key==='english'&&language!=='en')throw Error('English assessment must be in English');
  if(!Array.isArray(questions)||questions.length>5000||!Array.isArray(selectedTopicIds)||!selectedTopicIds.length||new Set(selectedTopicIds).size!==selectedTopicIds.length)throw Error('Select distinct reference topics');
@@ -27,7 +29,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  const p=result.paper,groups=p.groups||p.questions;
  if(!Array.isArray(groups))throw Error('Missing reference groups');
  const choose=(ne,en)=>key==='english'||language==='en'?String(en||ne||''):language==='ne'?String(ne||en||''):[ne,en].filter(Boolean).join(' / ');
- const lines=['REFERENCE DRAFT — NOT FOR EXAM / सन्दर्भ समीक्षा मात्र','Grade 9 · '+subject+' · '+p.fullMarks+' marks · '+p.durationMinutes+' minutes','Current CDC Grid approval and teacher review pending.',''];
+ const lines=['REFERENCE DRAFT — NOT FOR EXAM / सन्दर्भ समीक्षा मात्र','Grade 9 · '+subject+' · '+p.fullMarks+' marks · '+p.durationMinutes+' minutes','Current CDC Grid approval and teacher review pending.',result.referenceLabel||'',''];
  for(const [i,g] of groups.entries()){
   const parts=g.subquestions||g.items||[];
   const marks=g.marks??parts.reduce((s,x)=>s+Number(x.marks||0),0);

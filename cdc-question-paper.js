@@ -19,6 +19,7 @@ import {grade9CompulsoryMathReferenceBank} from "./cdc-grade9-compulsory-math-re
 import {grade9CompulsoryMathPracticeBank,auditCompulsoryMathArchive} from "./cdc-grade9-compulsory-math-practice.mjs";
 import {grade9SocialReferenceBank} from "./cdc-grade9-social-reference-bank.mjs";
 import {grade9SocialOriginalBank} from "./cdc-grade9-social-original-practice.mjs";
+import {grade9EnvironmentReferenceBank} from "./cdc-grade9-environment-reference-bank.mjs";
 import {grade9EnvironmentOriginalBank} from "./cdc-grade9-environment-original-practice.mjs";
 import {grade9ComputerOriginalBank} from "./cdc-grade9-computer-original-practice.mjs";
 import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-math-2082.mjs";
@@ -484,7 +485,7 @@ async function loadBundledPracticeBank({grade,subject}){
  const social=grade9SocialOriginalBank({grade,subject});
  if(social.units.length){const ref=grade9SocialReferenceBank({grade,subject});return {units:social.units,questions:[...social.questions,...ref.questions],status:"कक्षा ९ सामाजिक अध्ययन: १० विषयक्षेत्रमा ७८ मौलिक bilingual अभ्यास प्रश्न, २०७८ Grid सन्दर्भका ४८ प्रश्नसहित। नयाँ CDC Exact Grid र शिक्षक समीक्षा बाँकी।"};}
  const environment=grade9EnvironmentOriginalBank({grade,subject});
- if(environment.units.length)return {units:environment.units,questions:environment.questions,status:"कक्षा ९ वातावरण विज्ञान: सरकारी English पाठ्यपुस्तकको विषयसूचीसँग मिलाइएका ९ Unit का ६३ मौलिक bilingual अभ्यास प्रश्न (१/२/४/५/८ अङ्क)। प्रश्न/उत्तर समीक्षा बाँकी; आधिकारिक Grid प्रमाणित नभएसम्म CDC Exact मानिँदैन।"};
+ if(environment.units.length){const ref=grade9EnvironmentReferenceBank({grade,subject});const byId=new Map([...environment.questions,...ref.questions].map(q=>[q.id,q]));return {units:environment.units,questions:[...byId.values()],status:"Grade 9 Environmental Science: 72 original bilingual exercises, including 36 review-only school-model items. Current CDC exact grid not verified."};}
  if(grade===9&&getBundledComputerGrid({grade,subject,fullMarks:50})){
   const pack=grade9ComputerOriginalBank({subject});
   return {units:pack.units,questions:pack.questions,
@@ -1177,7 +1178,7 @@ function selectReferenceDraftTopics(){
  const ids=new Set(referencePreviewTopics({grade:9,subject:selectedSubject,questions:bundledPracticeQuestions}));
  if(!ids.size)throw Error("Reference question groups unavailable");
  for(const input of document.querySelectorAll("[data-qp-topic]"))input.checked=ids.has(input.value);
- $("qpPaperFullMarks").value="75";$("qpPaperDuration").value="180";
+ $("qpPaperFullMarks").value="75";$("qpPaperDuration").value=String(grade9EnvironmentReferenceBank({grade:9,subject:selectedSubject}).questions.length?135:180);
  if(auditEnglishChart({grade:9,subject:selectedSubject}))$("qpAutoLanguage").value="en";
  invalidateGeneratedQuestionPaper();
  clearReferenceDraftPreview();refreshReferenceDraftActions();updateAutoGridStatus();

@@ -53,6 +53,8 @@ on:
       - 'scripts/test-cdc-grade9-science-archive-audit.mjs'
       - 'cdc-grade9-computer-original-practice.mjs'
       - 'cdc-grade9-environment-original-practice.mjs'
+      - 'cdc-grade9-environment-reference-bank.mjs'
+      - 'scripts/test-cdc-grade9-environment-reference-bank.mjs'
       - 'cdc-grade9-social-original-practice.mjs'
       - 'cdc-grade9-compulsory-math-practice.mjs'
       - 'cdc-grade9-english-practice.mjs'
@@ -199,6 +201,8 @@ jobs:
         run: node --input-type=module -e "import {PUBLIC_DOMAIN_SEEN_PROSE as d} from './cdc-grade9-english-seen-prose-data.mjs'; if(d.length) await import('./scripts/test-cdc-grade9-english-seen-prose.mjs'); else console.log('Seen prose not retrieved; official exam remains blocked')"
       - name: Test real Grade 9 review-only reference previews
         run: node scripts/test-cdc-grade9-reference-preview.mjs
+      - name: Generate environment review-only school-model papers
+        run: node scripts/test-cdc-grade9-environment-reference-bank.mjs
       - name: Verify automatic CDC Grid source detection for Grade 6-10 subjects
         run: node scripts/test-cdc-grid-source-index.mjs
       - name: Verify 54 original bilingual formula-checked Optional Maths practice questions
