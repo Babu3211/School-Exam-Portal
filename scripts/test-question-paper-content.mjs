@@ -108,6 +108,7 @@ assert.match(questionBuilder, /ExcelJS/);
 assert.match(appShell, /cdc-question-excel\.mjs/);
 assert.match(appShell, /cdc-grid-source-index\.mjs/);
 assert.match(appShell, /cdc-grade9-release-audit\.mjs/);
+assert.match(appShell, /cdc-grade9-computer-original-practice\.mjs/);
 assert.match(appShell, /cdc-grade8-science-model-audit\.mjs/);
 assert.match(appShell, /cdc-optional-math-composite\.mjs/);
 assert.match(appShell, /cdc-optional-math-original-practice\.mjs/);
