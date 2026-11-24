@@ -773,7 +773,12 @@ serverRole={...current};
 w.getDocs=async()=>({docs:[{id:'nepali-3',data:()=>({class:'Class 3',section:'A',name:'Synthetic Grade 3 Nepali'})}]});
 await w.loadCdcAssessmentPage();
 const beforeGrade3=observations.size;
-for(const [unit,count,page] of [['म र मेरो परिवार',11,125],['मेरो दैनिक जीवन',13,126]]){
+for(const [unit,count,page] of [
+ ['म र मेरो परिवार',11,125],['मेरो दैनिक जीवन',13,126],['हाम्रो समुदाय',15,127],
+ ['मेरो विद्यालय',17,128],['हाम्रो वातावरण',18,129],['मेरो सिर्जना',19,130],
+ ['रुचि र बानी',20,131],['हाम्रो संस्कृति',22,132],['सञ्चार प्रविधि र बजार',22,133],
+ ['हाम्रा क्रियाकलाप',22,134],['हाम्रो वरपरको संसार',22,135]
+]){
  choice('unit',unit);
  assert.equal(field('annex3').hidden,false,unit);
  assert.match(field('annexIdentity').textContent,/कक्षा: ३/);
@@ -785,6 +790,10 @@ for(const [unit,count,page] of [['म र मेरो परिवार',11,12
  assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,count*2,unit);
 }
 assert.equal(observations.size,beforeGrade3);
+assert.match(field('annexRows').rows[21].cells[0].textContent,/परियोजना कार्य/);
+assert.notEqual(field('annexRows').rows[6].cells[0].textContent,field('annexRows').rows[21].cells[0].textContent);
+assert.match(field('annexRows').rows[21].cells[2].textContent,/परियोजना कार्य/);
+choice('unit','मेरो दैनिक जीवन');await field('gridRead').onclick();
 const grade3Row=field('annexRows').rows[12];
 grade3Row.querySelector('[data-cdc-grid-edit="regular"]').click();
 grade3Row.querySelector('[data-cdc-grid-editor="level"]').value='4';
@@ -799,6 +808,6 @@ w.currentSchoolSettings.academicYear='2084';
 await w.loadCdcAssessmentPage();
 choice('unit','म र मेरो परिवार');
 assert.equal(field('annex3').hidden,true);
-console.log('Grade 3 Nepali first two thematic forms, 24 outcomes, stage entry and legacy skill/year isolation passed');
+console.log('Grade 3 Nepali eleven thematic forms, 201 outcome rows, distinct project-work key, stage entry and legacy skill/year isolation passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
