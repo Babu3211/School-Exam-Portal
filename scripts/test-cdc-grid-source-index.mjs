@@ -183,3 +183,26 @@ assert.deepEqual(socialTypes.map(type=>socialRef.slots.filter(s=>s.type===type).
 assert.deepEqual(socialRef.unitMarks.map((_,i)=>socialTypes.map(type=>socialRef.slots.filter(s=>s.historicUnit===i+1&&s.type===type).reduce((n,s)=>n+s.marks,0))),socialEvidence.unitTypeMarks);
 assert.ok([scienceRef,mathRef,englishRef,socialRef].every(ref=>ref.currentCdcExactApproved===false));
 console.log('PASS four compulsory reference planners against government PDF numeric extraction: historical comparison only, no current CDC approval');
+
+// Test the actual original practice bank and revised Nepali planner against
+// the few marks read from the original government PDF, not its historical fixture.
+const {grade9NepaliReferenceBank,grade9NepaliPracticeSummaryDrafts}=await import('../cdc-grade9-nepali-reference-bank.mjs');
+const {planNepaliRevisedMarksPractice}=await import('../cdc-grade9-nepali-grouped-planner.mjs');
+const {referencePreviewTopics}=await import('../cdc-grade9-reference-preview.mjs');
+const nepaliEvidence=evidenceFor('11168');
+const nepaliSubject='Nepali';
+const nepaliQuestions=[...grade9NepaliReferenceBank({grade:9,subject:nepaliSubject}).questions,...grade9NepaliPracticeSummaryDrafts({grade:9,subject:nepaliSubject})];
+const nepaliTopics=referencePreviewTopics({grade:9,subject:nepaliSubject,questions:nepaliQuestions});
+const nepaliRevised=planNepaliRevisedMarksPractice({grade:9,subject:nepaliSubject,questions:nepaliQuestions,selectedTopicIds:nepaliTopics,allowOriginalReferenceDraft:true,allowOriginalSummaryPractice:true,rng:()=>.39});
+assert.equal(nepaliRevised.ready,true,nepaliRevised.reason);
+const ng=nepaliRevised.paper.groups;
+assert.equal(ng.reduce((n,g)=>n+g.marks,0),nepaliEvidence.fullMarks);
+assert.equal(ng.find(g=>g.skill==='grammar_passage').marks,nepaliEvidence.extractedTaskMarks.languageStructureReading);
+assert.equal(ng.find(g=>g.skill==='unseen_passage').marks,nepaliEvidence.extractedTaskMarks.unseenReading);
+assert.deepEqual(ng.find(g=>g.skill==='notes_and_summary').choices[0].components.map(c=>c.marks),[nepaliEvidence.extractedTaskMarks.noteTaking,nepaliEvidence.extractedTaskMarks.summaryWriting]);
+// These cognitive totals derive from a secondary transcription, not a primary visual review.
+assert.deepEqual(Object.values(nepaliRevised.cognitiveMarks),nepaliEvidence.secondaryCorroboration.cognitiveMarks);
+assert.equal(nepaliRevised.currentCdcExactApproved,false);
+assert.equal(nepaliRevised.readyForLive,false);
+assert.equal(nepaliEvidence.visualCellReviewComplete,false);
+console.log('PASS revised Nepali practice against four extracted official marks; cognitive comparison secondary only; authentic passages and exact current Grid remain unapproved');
