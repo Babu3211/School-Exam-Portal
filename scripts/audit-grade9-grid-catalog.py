@@ -5,6 +5,7 @@ cookies, student records, cloud deploy, or attempts to circumvent access control
 import argparse
 from html.parser import HTMLParser
 import json
+from html import unescape
 from pathlib import Path
 import re
 from urllib.parse import urljoin, urlsplit
@@ -13,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 CATALOG = "https://www.khadgakali.edu.np/2025/02/specification-grid.html"
 ROWS = set(range(24, 34))
-HOSTS = {"www.khadgakali.edu.np", "khadgakali.edu.np", "moecdc.gov.np",
+HOSTS = {"sikshakhub.com", "www.sikshakhub.com", "www.khadgakali.edu.np", "khadgakali.edu.np", "moecdc.gov.np",
          "www.moecdc.gov.np", "lib.moecdc.gov.np", "elibrary.moecdc.gov.np",
          "giwmscdnone.gov.np", "giwmscdntwo.gov.np", "giwmscdntthree.gov.np",
          "giwmscdntfour.gov.np", "drive.google.com", "docs.google.com",
@@ -140,6 +141,34 @@ def official_record(record):
         result["records"].append(entry)
     return result
 
+# Distinct public directory discovered 24 Nov. It claims checked direct
+# government PDF URLs. Read literal data only; never execute scripts.
+DIRECTORY = "https://sikshakhub.com/specification-grid-directory/"
+def directory_pdf_candidates(html):
+    decoded = unescape(html).replace(r"\/", "/").replace(r"\u0026", "&")
+    candidates = []
+    for u in re.findall(r'https://[^\s"\'<>\\]+?\.pdf(?:\?[^\s"\'<>\\]*)?', decoded, re.I):
+        try: checked(u)
+        except ValueError: continue
+        # Only public government document hosts, no third-party files.
+        host = urlsplit(u).hostname
+        if not (host.endswith(".gov.np") or host == "moecdc.gov.np"): continue
+        if u not in candidates: candidates.append(u)
+    return candidates
+def audit_directory():
+    result = {"url":DIRECTORY,"officialGridApproved":False}
+    try:
+        final,_,data=get(DIRECTORY,4*1024*1024)
+        html=data.decode("utf-8",errors="replace")
+        urls=directory_pdf_candidates(html)
+        result.update(finalUrl=final,literalGovernmentPdfCount=len(urls),candidates=urls[:250])
+        # Candidate list is discovery evidence only. Filename is not proof
+        # of scope, year, authenticity or applicable grid.
+        result["status"]="literal_pdf_links_need_document_review" if urls else "no_literal_government_pdf_links"
+    except (OSError,ValueError) as err:
+        result.update(status="directory_unavailable",reason=str(err)[:200])
+    return result
+
 def selftest():
     data='<table><tr><td>26</td><td>९</td><td>Science</td><td><a href="https://moecdc.gov.np/test.pdf">Download</a><button onclick="location.href=\'https://giwmscdnone.gov.np/test.pdf\'">View</button><a href="javascript:alert(1)">X</a><a href="https://unknown.invalid/x">X</a></td></tr><tr><td>34</td><td>१०</td><td>Not grade nine</td></tr></table>'
     result=parse(data,CATALOG)
@@ -148,7 +177,8 @@ def selftest():
     parser=AttachmentParser("https://moecdc.gov.np/content/278/")
     parser.feed('<iframe src="https://giwmscdnone.gov.np/media/a.pdf"></iframe><a href="/storage/b.pdf">File</a><a href="https://unknown.invalid/c.pdf">Untrusted</a>')
     assert parser.links==["https://giwmscdnone.gov.np/media/a.pdf","https://moecdc.gov.np/storage/b.pdf"]
-    print("PASS parser grade scope, public source allowlist, and official attachment extraction")
+    assert directory_pdf_candidates(r'["https:\/\/giwmscdnone.gov.np\/media\/grid.pdf","https://unknown.invalid/x.pdf","https://moecdc.gov.np/storage/g.pdf"]')==["https://giwmscdnone.gov.np/media/grid.pdf","https://moecdc.gov.np/storage/g.pdf"]
+    print("PASS parser grade scope, public source allowlist, official attachment and literal directory URL extraction")
 
 if __name__=="__main__":
     ap=argparse.ArgumentParser()
@@ -169,13 +199,14 @@ if __name__=="__main__":
         report["catalogError"]=str(err)[:300]
     with ThreadPoolExecutor(max_workers=5) as pool:
         report["officialRecords"]=list(pool.map(official_record,OFFICIAL_RECORDS))
+    report["alternativeDirectory"]=audit_directory()
     report["pdfHeaderCandidates"]=sum(
         e.get("status")=="pdf_header_detected_needs_visual_grid_review"
         for group in report["officialRecords"]
         for r in group["records"]
         for e in [r,*r.get("probes",[])]
     )+sum(p.get("status")=="pdf_header_detected_needs_visual_grid_review" for row in report["rows"] for p in row.get("probes",[]))
-    report["result"]="attachment_candidates_require_visual_review" if report["pdfHeaderCandidates"] else "no_pdf_attachment_retrieved"
+    report["result"]="attachment_candidates_require_visual_review" if report["pdfHeaderCandidates"] else ("directory_links_require_document_review" if report["alternativeDirectory"].get("literalGovernmentPdfCount") else "no_pdf_attachment_retrieved")
     out=Path(args.output);out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
     print(json.dumps(report,ensure_ascii=False,indent=2))
