@@ -10,9 +10,13 @@
  */
 import {getCdcOptionalMathGuide,optionalMathAreaTopics,optionalMathOriginalSlots} from './cdc-optional-math-2082.mjs';
 // Original cognitive labels are subject-teacher review targets, not official CDC authorship.
-const issuedOfflineDrafts=new WeakSet();
+const issuedOfflineDrafts=new WeakMap();
 export function isOriginalMathOfflineDraft(row){
- return !!row&&typeof row==='object'&&issuedOfflineDrafts.has(row);
+ if(!row||typeof row!=='object'||!issuedOfflineDrafts.has(row))return false;
+ // Identity alone is insufficient if a caller changes an answer, mark,
+ // option, language or review flag after this original row was issued.
+ try{return issuedOfflineDrafts.get(row)===JSON.stringify(row);}
+ catch{return false;}
 }
 
 const units=['Algebra','Trigonometry','Geometry','Vectors','Statistics','Limit and Continuity'];
@@ -262,7 +266,7 @@ const slotQuestions=({grade,subject,version})=>{
  };
  const guide=getCdcOptionalMathGuide({grade,subject});
  for(const [index,slot] of optionalMathOriginalSlots(guide).entries())add(slot.group,slot.parts,index+1);
- for(const item of rows)issuedOfflineDrafts.add(item);
+ for(const item of rows)issuedOfflineDrafts.set(item,JSON.stringify(item));
  return rows;
 };
 export function originalOptionalMathPracticeBank({grade,subject}){

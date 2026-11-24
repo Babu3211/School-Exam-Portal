@@ -65,6 +65,12 @@ for(const grade of [9,10]){
    language:'both',allowFormulaVerifiedDraft:true,rng:()=>0.4
   });
   assert.equal(rejected.ready,false,'Copied Firestore-style draft metadata cannot forge offline verification');
+  const changed=pack.questions[0],original=changed.subquestions[0].answerEn;
+  changed.subquestions[0].answerEn='incorrect modified answer';
+  assert.equal(isOriginalMathOfflineDraft(changed),false,'Mutated original question must lose original-bank evidence');
+  assert.equal(isOriginalMathOfflineDraft(pack.questions[1]),true,'Other originals remain intact');
+  changed.subquestions[0].answerEn=original;
+  assert.equal(isOriginalMathOfflineDraft(changed),true,'Exact original content is recognized again');
   console.log('PASS Grade '+grade+' '+subject+': 54 original offline bilingual math drafts');
  }
 }

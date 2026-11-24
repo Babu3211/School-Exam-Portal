@@ -259,8 +259,8 @@ const items=[
   'a = int(input("First: ")); b = int(input("Second: ")); total = a + b; print(total).'],
  ['कुनै पूर्णाङ्क सम वा बिजोर हो भनेर जाँच्ने Python कार्यक्रम चार चरणमा लेख्नुहोस्।',
   'Write four logical steps of a Python program that tests whether an integer is even or odd.',
-  'n = int(input("Number: ")); r = n % 2; if r == 0: print("Even"); else: print("Odd") (Python मा if/else लाई सही indentation सहित छुट्टै लाइनमा लेख्ने)।',
-  'n = int(input("Number: ")); r = n % 2; if r == 0: print("Even"); else: print("Odd") (use proper multi-line indentation in Python).']
+  'n = int(input("Number: "))\nr = n % 2\nif r == 0:\n    print("Even")\nelse:\n    print("Odd")',
+  'n = int(input("Number: "))\nr = n % 2\nif r == 0:\n    print("Even")\nelse:\n    print("Odd")']
  ],
  // Unit7 higher short
  [

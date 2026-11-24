@@ -51,8 +51,17 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
   assert.notEqual(result.signature,previousSignature);previousSignature=result.signature;
   const paper={gradeNumber:grade,subject,fullMarks,language,topicIds,durationMinutes:blueprint.durationMinutes,questions:result.questions.map(q=>({...q,questionId:q.id,gridEvidence:result.gridAudit.slotEvidence.find(e=>e.questionId===q.id)}))};
   assert.equal(assertGrade9ExamPaperMatches(paper),true);
-  const html=paper.questions.map((q,n)=>'<p><b>'+ (n+1)+'.</b> '+esc(q.questionText)+' ['+q.marks+']</p>'+ (q.questionType==='mcq'?'<ol type="A">'+q.options.map(o=>'<li>'+esc(o)+'</li>').join('')+'</ol>':'')).join('');
-  const key='<h3>Indicative answer key</h3>'+paper.questions.map((q,n)=>'<p>'+ (n+1)+'. '+esc(q.answer)+(q.correctOption?' ('+esc(q.correctOption)+')':'')+'</p>').join('');
+  const bilingual=(ne,en)=>{
+   assert.ok(typeof ne==='string'&&ne.trim()&&typeof en==='string'&&en.trim(),'Both languages required in computer review');
+   return '<span lang="ne">'+esc(ne)+'</span>'+(ne===en?'':'<span class="translation" lang="en">'+esc(en)+'</span>');
+  };
+  const html=paper.questions.map((q,n)=>'<p class="question"><b>'+ (n+1)+'.</b> '+bilingual(q.questionText,q.questionTextEn)+' ['+q.marks+']</p>'+ (q.questionType==='mcq'?'<ol type="A">'+q.options.map((o,i)=>'<li>'+bilingual(o,q.optionsEn[i])+'</li>').join('')+'</ol>':'')).join('');
+  const key='<h3>Indicative answer key</h3>'+paper.questions.map((q,n)=>'<p>'+ (n+1)+'. '+bilingual(q.answer,q.answerEn)+(q.correctOption?' ('+esc(q.correctOption)+')':'')+'</p>').join('');
+  for(const q of paper.questions){
+   assert.ok(html.includes(esc(q.questionTextEn)),'English question missing from bilingual review');
+   assert.ok(key.includes(esc(q.answerEn)),'English answer missing from bilingual review');
+   if(q.questionType==='mcq')for(const option of q.optionsEn)assert.ok(html.includes(esc(option)),'English MCQ option missing');
+  }
   records.push({subject,set:i+1,language,fullMarks,durationMinutes:paper.durationMinutes,groupCount:paper.questions.length,sourceUrl:blueprint.sourceUrl,status:'Bundled CDC structural grid matched — teacher review pending',signature:result.signature,html:html+'<details><summary>Teacher answer review</summary>'+key+'</details>'});
  }
 }
@@ -75,7 +84,7 @@ assert.ok(records.every(r=>r.html.includes('<details><summary>Teacher answer rev
 const out=process.env.SMSS_REVIEW_PACK_DIR;
 if(out){
  mkdirSync(out,{recursive:true});
- const style='body{font:16px/1.5 system-ui,sans-serif;max-width:900px;margin:24px auto;padding:0 16px;color:#172133}section{border-top:2px solid #aaa;padding:18px 0}pre,p,li{white-space:pre-wrap;overflow-wrap:anywhere}pre{font:inherit}aside{font-weight:700;color:#922}details{margin-top:20px}a{overflow-wrap:anywhere}@media print{section{break-before:page}details{display:none}}';
+ const style='body{font:16px/1.5 system-ui,sans-serif;max-width:900px;margin:24px auto;padding:0 16px;color:#172133}section{border-top:2px solid #aaa;padding:18px 0}pre,p,li{white-space:pre-wrap;overflow-wrap:anywhere}pre{font:inherit}.translation{display:block;color:#36465e;margin:3px 0 0}.question{margin-top:18px}aside{font-weight:700;color:#922}details{margin-top:20px}a{overflow-wrap:anywhere}@media print{section{break-before:page}details{display:none}}';
  assert.ok(records.every(r=>!/<(?:script|form|iframe|object|embed)\b/i.test(r.html)),'Review pack must contain no executable or login UI');
  const toc=records.map((r,i)=>'<li><a href="#paper'+i+'">'+esc(r.subject)+' — Set '+r.set+'</a></li>').join('');
  const body=records.map((r,i)=>'<section id="paper'+i+'"><aside>REVIEW ONLY — NOT FOR EXAM / परीक्षा प्रयोजनका लागि होइन</aside><h2>'+esc(r.subject)+' — Set '+r.set+'</h2><p>'+esc(r.status)+' · '+r.fullMarks+' marks · '+r.durationMinutes+' minutes · '+esc(r.language)+'</p><p>Source: '+esc(r.sourceUrl||'See repository source register')+'</p>'+r.html+'</section>').join('');
