@@ -531,6 +531,17 @@
       "status": "official_CDC_PDF_visual_section_grid_checked_grade9_model_and_current_applicability_pending",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/Specification%20Grid%20%28Grade%209%20-10%29%20Compulsory%20English_f4xgqyn.pdf",
       "note": "Government PDF cover and grid visually verified: reading 40 (5/10/10/15), writing 35 (5/5/6/8 plus grammar 11), total 75, 3h. Reading requires two textbook and two unseen passages with distinct comprehension task patterns; grammar includes six 1-mark transformations and ten half-mark contextual choices. The included model is Grade 10, not Grade 9. Current Grade 9 model applicability and reviewed passage bank remain pending; do not automatically approve CDC Exact."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक प्रथम: वातावरण विज्ञान",
+      "kind": "curriculum",
+      "version": "2076",
+      "status": "official_CDC_curriculum_reference_not_a_grid",
+      "url": "https://moecdc.gov.np/content/53/environment-science-class-4/",
+      "note": "CDC Grade 9 optional Environmental Science curriculum listing. Not a verified specification grid or model question; do not substitute compulsory Science."
     }
   ],
   "completion": {

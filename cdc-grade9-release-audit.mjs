@@ -17,8 +17,7 @@ export const GRADE9_BASE_SUBJECTS=Object.freeze([
 export const GRADE9_OPTIONAL_SUBJECTS=Object.freeze([
  Object.freeze({key:'optional_math',name:'Optional Mathematics',labelNe:'ऐच्छिक गणित'}),
  Object.freeze({key:'optional_computer',name:'Optional Computer Science',labelNe:'ऐच्छिक कम्प्युटर विज्ञान'}),
- Object.freeze({key:'optional_economics',name:'Optional Economics',labelNe:'ऐच्छिक अर्थशास्त्र'}),
- Object.freeze({key:'accounting',name:'Office Management and Accounting',labelNe:'कार्यालय सञ्चालन तथा लेखा'})
+ Object.freeze({key:'optional_environment',name:'Optional I: Environmental Science',labelNe:'ऐच्छिक प्रथम: वातावरण विज्ञान'})
 ]);
 const GRADES=Object.freeze([...GRADE9_BASE_SUBJECTS,...GRADE9_OPTIONAL_SUBJECTS]);
 export const GRADE9_PUBLISH_GATE_VERSION='2083-dev-grade9-only';
@@ -38,8 +37,8 @@ function scopeKey(raw){
 /**
  * A school may have a subset of optional subjects. Only actually selected
  * optional subjects are release blockers, but all five compulsory subjects
- * remain mandatory. If the school's subject list is unknown, audit ALL known
- * optional Grade9 streams rather than assuming that none is offered.
+ * remain mandatory. If the school's subject list is unknown, audit the three optional subjects in V46's existing Grade 9–10 defaults.
+ * Other optional subjects are outside this release scope.
  */
 export function auditGrade9Release({
  register,offeredSubjects=null,reviewedBanks={},teacherTestedPapers={},

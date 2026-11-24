@@ -606,7 +606,7 @@ async function loadCurrentData() {
    const grade9Gate=auditGrade9Release({register:cdcSourceRegister});
    const summary=document.createElement("p");
    summary.className="qp-hint";
-   summary.textContent="कक्षा ९ (ज्ञात विषयहरू): "+
+   summary.textContent="कक्षा ९ (V46 का विषयहरू): "+
     grade9Gate.checkedSubjects.filter(item=>item.gridTranscribed).length+
     "/"+grade9Gate.checkedSubjects.length+
     " CDC Grid संरचना लोड; सबै विषयका समीक्षा गरिएका प्रश्नपत्र र Teacher E2E "+

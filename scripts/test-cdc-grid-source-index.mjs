@@ -29,6 +29,12 @@ for(const [grade,subject,key] of examples){
  assert.ok(sources.every(x=>/^https:\/\/(?:www\.|lib\.)?moecdc\.gov\.np\/|^https:\/\/giwmscdnone\.gov\.np\//i.test(x.sourceUrl)));
 }
 assert.equal(cdcSubjectKey('Health and Physical Education'),'health');
+for(const s of ['Optional I: Environmental Science','ऐच्छिक प्रथम: वातावरण विज्ञान']){
+ assert.equal(cdcSubjectKey(s),'optional_environment');
+ assert.ok(findCdcGridSources(register,9,s).every(x=>x.subjectKey==='optional_environment'),'No compulsory Science grid reuse');
+}
+assert.equal(cdcSubjectKey('Optional I: Additional Mathematics'),'optional_math');
+assert.equal(cdcSubjectKey('ऐच्छिक प्रथम: अतिरिक्त गणित'),'optional_math');
 assert.deepEqual(findCdcGridSources(register,10,'Health and Physical Education'),[],
  'The official health curriculum is NOT a specification Grid; do not label it as such');
 for(const grade of [9,10]){
