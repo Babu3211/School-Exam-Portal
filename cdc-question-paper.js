@@ -7,6 +7,7 @@ import {auditGrade9Release} from "./cdc-grade9-release-audit.mjs";
 import {auditGrade9ScienceArchive} from "./cdc-grade9-science-archive-audit.mjs";
 import {compareGrade8SciencePracticeBank,getGrade8ScienceHistoricalPracticePattern} from "./cdc-grade8-science-model-audit.mjs";
 import {grade8ScienceOriginalSupplement} from "./cdc-grade8-science-original-supplement.mjs";
+import {grade9CompulsoryMathPracticeBank,auditCompulsoryMathArchive} from "./cdc-grade9-compulsory-math-practice.mjs";
 import {grade9SocialOriginalBank} from "./cdc-grade9-social-original-practice.mjs";
 import {grade9EnvironmentOriginalBank} from "./cdc-grade9-environment-original-practice.mjs";
 import {grade9ComputerOriginalBank} from "./cdc-grade9-computer-original-practice.mjs";
@@ -460,6 +461,8 @@ async function loadClassSubjects() {
 // Local original practice sources require no Admin import or Firestore write.
 // Absence of a checked source never triggers invented questions or a fake grid.
 async function loadBundledPracticeBank({grade,subject}){
+ const math=grade9CompulsoryMathPracticeBank({grade,subject});
+ if(math.units.length)return {units:math.units,questions:math.questions,status:"कक्षा ९ अनिवार्य गणित: ऐतिहासिक २०७८ Grid का सात विषयक्षेत्रमा ४२ मौलिक bilingual अभ्यास प्रश्न। वर्तमान Grid तथा संयुक्त प्रश्न संरचना समीक्षा बाँकी; CDC Exact होइन।"};
  const social=grade9SocialOriginalBank({grade,subject});
  if(social.units.length)return {units:social.units,questions:social.questions,status:"कक्षा ९ सामाजिक अध्ययन: २०८२ पाठ्यक्रमका १० विषयक्षेत्रमा ३० मौलिक bilingual अभ्यास प्रश्न। नयाँ CDC Exact Grid र शिक्षक समीक्षा बाँकी।"};
  const environment=grade9EnvironmentOriginalBank({grade,subject});
@@ -651,6 +654,8 @@ async function loadCurrentData() {
   if(grade8ScienceModelAudit)addLink(
    grade8ScienceModelAudit.model.archivedCdcCatalogUrl,
    "कक्षा ८ विज्ञान २०७८ Grid / Model / Answer Key (CDC Library)");
+  const mathArchive=auditCompulsoryMathArchive({grade,subject});
+  if(mathArchive)addLink(mathArchive.sourceUrl,"कक्षा ९ अनिवार्य गणित २०७८ Grid / Model (१६ समूह, ४९ उपप्रश्न; वर्तमान Grid पुष्टि बाँकी)");
   if(grade9ScienceHistoricalAudit)addLink(
    grade9ScienceHistoricalAudit.archivedModel.officialArchiveUrl,
    "कक्षा ९ विज्ञान २०७८ सरकारी Grid PDF (हालको २०८३ Grid होइन)");

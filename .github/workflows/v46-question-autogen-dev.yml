@@ -25,6 +25,7 @@ on:
       - 'cdc-grade9-computer-original-practice.mjs'
       - 'cdc-grade9-environment-original-practice.mjs'
       - 'cdc-grade9-social-original-practice.mjs'
+      - 'cdc-grade9-compulsory-math-practice.mjs'
       - 'scripts/test-cdc-grade9-computer-original-practice.mjs'
       - 'scripts/test-cdc-grade9-release-audit.mjs'
       - 'cdc-grade8-science-model-audit.mjs'
@@ -85,6 +86,7 @@ jobs:
           node --check cdc-grade9-computer-original-practice.mjs
           node --check cdc-grade9-environment-original-practice.mjs
           node --check cdc-grade9-social-original-practice.mjs
+          node --check cdc-grade9-compulsory-math-practice.mjs
           node --check scripts/test-cdc-grade9-computer-original-practice.mjs
           node --check scripts/test-cdc-grade9-release-audit.mjs
           node --check cdc-grade8-science-model-audit.mjs

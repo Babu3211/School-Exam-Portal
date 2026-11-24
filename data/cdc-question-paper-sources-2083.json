@@ -576,6 +576,29 @@
       "status": "official_CDC_historical_grid_text_extracted_visual_timeout_current_revision_not_verified",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11166_Specification%20Grid%20%28Grade%209%29%20Compulsory%20Social%20Studies%20%281%29_jlqxsmn.pdf",
       "note": "Historical 75-mark, 3-hour grid: 11 very short x1, 9 short x4, 4 long x7. Three combined cognitive groups; historic geography map alternative. Grid and model totals agree. Screenshot timeout; current 2082 curriculum changes learning-area order and outcomes. Archive only, not approved for 2083 Exact."
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य गणित",
+      "kind": "historical_specification_grid_and_model_questions",
+      "version": "2078",
+      "status": "official_CDC_archive_text_verified_current_revision_pending",
+      "url": "https://moecdc.gov.np/storage/gallery/1689228983.pdf",
+      "note": "Government website direct mirror of 2078 test specification chart. Text confirms 7 content areas, 75 marks, 16 groups, 49 items, cognitive marks 12/18/30/15 and Grade 9 model. Screenshot timed out; current applicability and grouped generation not approved."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य गणित",
+      "kind": "CDC_textbook",
+      "version": "2022 English translation",
+      "status": "official_CDC_library_record",
+      "url": "https://lib.moecdc.gov.np/catalog/opac_css/index.php?id=13786&lvl=notice_display",
+      "note": "CDC Library record confirms textbook; contents and latest revision not independently confirmed."
     }
   ],
   "completion": {

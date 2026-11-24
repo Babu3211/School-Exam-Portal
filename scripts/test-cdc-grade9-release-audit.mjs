@@ -106,3 +106,27 @@ assert.equal(grade9SocialOriginalBank({grade:9,subject:'Science and Technology'}
 assert.equal(byKey.social.gridTranscribed,false,'Current curriculum and historical grid must not approve exact generation');
 assert.match(readFileSync(new URL('../sw.js',import.meta.url),'utf8'),/cdc-grade9-social-original-practice\.mjs/);
 console.log('PASS Grade9 Social current curriculum areas, original bilingual questions and no false exact approval');
+
+const {grade9CompulsoryMathPracticeBank,auditCompulsoryMathArchive}=await import('../cdc-grade9-compulsory-math-practice.mjs');
+for(const subject of ['Compulsory Mathematics','अनिवार्य गणित']){
+ const args={grade:9,subject},p=grade9CompulsoryMathPracticeBank(args),a=auditCompulsoryMathArchive(args);
+ assert.equal(p.units.length,7);assert.equal(p.questions.length,42);
+ assert.equal(new Set(p.questions.map(q=>q.id)).size,42);
+ assert.equal(a.groupCount,16);assert.equal(a.itemCount,49);
+ assert.deepEqual(a.areas.map(x=>x.marks),[6,13,13,15,13,11,4]);
+ assert.deepEqual(a.cognitiveMarks,[12,18,30,15]);
+ assert.equal(a.currentCdcExactApproved,false);assert.equal(p.exactGridVerified,false);
+ for(const unit of p.units){
+  const qs=p.questions.filter(q=>q.unitId===unit.id);
+  assert.equal(qs.length,6);assert.equal(unit.topics.length,3);
+  for(const topicName of unit.topics)assert.equal(qs.filter(q=>q.topicName===topicName).length,2);
+  assert.ok(qs.every(q=>q.questionText&&q.questionTextEn&&q.answer&&q.answerEn&&q.teacherReviewRequired&&!q.officialCdcQuestion));
+ }
+}
+assert.equal(grade9CompulsoryMathPracticeBank({grade:9,subject:'Optional I: Additional Mathematics'}).questions.length,0);
+assert.equal(grade9CompulsoryMathPracticeBank({grade:10,subject:'Mathematics'}).questions.length,0);
+assert.equal(byKey.math.gridTranscribed,false);
+const mathQuestions=grade9CompulsoryMathPracticeBank({grade:9,subject:'Mathematics'}).questions;
+assert.equal(mathQuestions.find(q=>q.id==='smss_math_g9_u2_t2_v2').answerEn,'4000×10×2/100=800; total 4800');
+assert.equal(mathQuestions.find(q=>q.id==='smss_math_g9_u7_t2_v2').answerEn,'√(6²+8²)=10; tan θ=3/4');
+console.log('PASS Grade9 compulsory math archive arithmetic and original bilingual practice scope');
