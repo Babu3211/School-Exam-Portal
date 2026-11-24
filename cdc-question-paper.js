@@ -12,6 +12,7 @@ import {compareGrade8SciencePracticeBank,getGrade8ScienceHistoricalPracticePatte
 import {grade8ScienceOriginalSupplement} from "./cdc-grade8-science-original-supplement.mjs";
 import {grade9ScienceOriginalBank} from "./cdc-grade9-science-original-practice.mjs";
 import {grade9NepaliPracticeBank} from "./cdc-grade9-nepali-practice.mjs";
+import {grade9EnglishReferenceBank} from "./cdc-grade9-english-reference-bank.mjs";
 import {grade9EnglishPracticeBank,auditEnglishChart} from "./cdc-grade9-english-practice.mjs";
 import {grade9CompulsoryMathReferenceBank} from "./cdc-grade9-compulsory-math-reference-bank.mjs";
 import {grade9CompulsoryMathPracticeBank,auditCompulsoryMathArchive} from "./cdc-grade9-compulsory-math-practice.mjs";
@@ -475,7 +476,7 @@ async function loadBundledPracticeBank({grade,subject}){
  const nepali=grade9NepaliPracticeBank({grade,subject});
  if(nepali.units.length)return {units:nepali.units,questions:nepali.questions,status:"कक्षा ९ नेपाली: १६ प्रस्तावित पाठ शीर्षकका ४८ मौलिक व्याकरण/लेखन अभ्यास। प्रश्नको भाषा नेपाली नै राखिएको छ। २०८२ को मूल पाठ्यपुस्तक, सच्याइएको तथ्य र Exact Grid समीक्षा बाँकी; पूर्ण CDC प्रश्नपत्र होइन।"};
  const english=grade9EnglishPracticeBank({grade,subject});
- if(english.units.length)return {units:english.units,questions:english.questions,status:"Grade 9 English: 18 textbook units, 54 original grammar/writing practice tasks. The English assessment language is preserved. Seen and unseen reading groups and current Grade 9 model verification remain pending; not a complete CDC Exact paper."};
+ if(english.units.length){const ref=grade9EnglishReferenceBank({grade,subject});return {units:english.units,questions:[...english.questions,...ref.questions],status:"Grade 9 English: 54 original exercises and 16 reference groups, covering 60 marks per draft set. Two textbook-based seen reading groups and current model confirmation remain pending; not a complete CDC Exact paper."};}
  const math=grade9CompulsoryMathPracticeBank({grade,subject});
  if(math.units.length){const ref=grade9CompulsoryMathReferenceBank({grade,subject});return {units:math.units,questions:[...math.questions,...ref.questions],status:"कक्षा ९ अनिवार्य गणित: ४२ मौलिक अभ्यास र ३२ संयुक्त समूह (९८ उपप्रश्न), ऐतिहासिक २०७८ Grid सन्दर्भ; नवीनतम Grid र शिक्षक समीक्षा बाँकी।"};}
  const social=grade9SocialOriginalBank({grade,subject});
