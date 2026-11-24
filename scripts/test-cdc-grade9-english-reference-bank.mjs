@@ -39,3 +39,13 @@ assert.match(museum.passage,/that day/);
 const wh=pack.questions.filter(q=>q.slot==='transformation').flatMap(q=>q.items).filter(x=>x.grammar==='wh_question');
 assert.equal(wh.length,2);assert.ok(wh.every(x=>!x.text.includes('underlined')&&x.text.includes('Rewrite as a question')));
 console.log('PASS targeted English grammar contextual agreement and clear WH-question instructions');
+
+// Every vocabulary answer must be a word in the supplied unseen passage.
+for(const q of pack.questions.filter(q=>q.slot==='reading4')){
+ const words=new Set(q.passage.toLowerCase().match(/[a-z]+/g));
+ const items=q.items.filter(x=>x.domain==='vocabulary');
+ assert.equal(items.length,5);
+ assert.equal(new Set(items.map(x=>x.answer)).size,5);
+ for(const item of items)assert.ok(words.has(item.answer.toLowerCase()),q.id+' missing vocabulary answer: '+item.answer);
+}
+console.log('PASS unseen reading vocabulary answers grounded in the passage');
