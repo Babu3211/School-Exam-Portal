@@ -1,6 +1,6 @@
-"""Prepare only two bounded excerpts of Maugham's 1924 public-domain story.
+"""Validate two bounded excerpts for local school reference review.
 The Grade 9 textbook identifies this story and includes both passages.
-No other textbook/editorial material is saved or published. Read-only to
+Generated excerpts are temporary CI inputs, not licensed repository assets. Read-only to
 school data; local temporary PDF/text removed on exit. No rights bypasses.
 """
 from urllib.request import Request, build_opener, HTTPRedirectHandler
@@ -15,8 +15,8 @@ SOURCES = [
     "https://moecdc.gov.np/storage/gallery/1688289325.pdf"
 ]
 WINDOWS = [
-    ("He had begun life decently enough", "very nice jewellery."),
-    ("But when circumstances forced George", "They spent a happy month there."),
+    ("But one day, without warning", "very nice jewellery."),
+    ("It was not very nice for a respectable lawyer", "They spent a happy month there."),
 ]
 ALLOWED = {"s3.veda-app.com", "giwmscdntwo.gov.np", "giwmscdnone.gov.np", "learning.cehrd.gov.np", "moecdc.gov.np", "www.moecdc.gov.np"}
 CAP = 35 * 1024 * 1024
@@ -91,6 +91,6 @@ if __name__ == "__main__":
             print("Source unavailable or rejected:",urlsplit(source).hostname,str(e))
     else:
         raise SystemExit("No verified passage retrieved. The missing seen group remains blocked.")
-    body="// Two bounded excerpts of the 1924 original story, with source metadata.\nexport const PUBLIC_DOMAIN_SEEN_PROSE = "+json.dumps(excerpts,ensure_ascii=False,indent=2)+";\n"
+    body="// Temporary school reference review data; do not commit or distribute.\nexport const PUBLIC_DOMAIN_SEEN_PROSE = "+json.dumps(excerpts,ensure_ascii=False,indent=2)+";\n"
     Path("cdc-grade9-english-seen-prose-data.mjs").write_text(body,encoding="utf-8")
     print("Prepared source-checked excerpt lengths:",[e["wordCount"] for e in excerpts])

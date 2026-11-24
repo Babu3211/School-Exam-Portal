@@ -1,11 +1,11 @@
 /** Public-domain original poems listed in the CDC English Grade 9
- * updated edition (2025), printed pp. 8–9 and 45–46. These are original
+ * 2022 first edition (school-hosted copy), printed pp. 8–9 and 45–46. These are original
  * literary works, not a reproduction of CDC's textbook exercises.
  * Source-specific SMSS questions are newly written and unreviewed.
  * The 10-mark seen prose groups use validated excerpts of the 1924 story, when retrieved from the identified public-domain collection.
  */
 import {PUBLIC_DOMAIN_SEEN_PROSE} from './cdc-grade9-english-seen-prose-data.mjs';
-export const SEEN_BOOK="https://giwmscdnone.gov.np/media/pdf_upload/5.%20Reduced-class%209%20English%20final_5hjggyv.pdf";
+export const SEEN_BOOK="https://s3.veda-app.com/veda-app/assets/122/downloads/2025-11-18/QQR9tk79bmn5fO01-1763456573.pdf";
 const item=(domain,text,answer)=>({type:'short_answer',domain,text,answer,marks:1});
 const poems=[
  {unit:0,sourcePage:8,title:'Stopping by Woods on a Snowy Evening',author:'Robert Frost',publicationYear:1923,passage:`Whose woods these are I think I know.
@@ -51,7 +51,7 @@ When I have crost the bar.`,
 ];
 export function englishSeenPoemDrafts({grade,subject,units}={}){
  if(grade!==9||!Array.isArray(units)||units.length<4)return [];
- return poems.map(({unit,...poem},v)=>{const u=units[unit];return {id:'smss_eng_seen1_'+v,gradeNumber:9,subject,unitCode:u.unitCode,unitId:u.id,unitTitle:u.unitTitle,topicId:u.id+'_1',topicName:u.topics[1],slot:'reading1',marks:5,genre:'poem',text:'Read '+poem.title+' by '+poem.author+' and answer the questions.',...poem,sourceKind:'textbook',sourceTitle:'English Grade 9',sourceEdition:'2025 updated edition',sourceUrl:SEEN_BOOK,passageRights:'public_domain_original',status:'active',bundled:true,teacherReviewRequired:true,reviewStatus:'draft',officialCdcQuestion:false,sourceStatus:'SMSS_original_reference_draft'};});
+ return poems.map(({unit,...poem},v)=>{const u=units[unit];return {id:'smss_eng_seen1_'+v,gradeNumber:9,subject,unitCode:u.unitCode,unitId:u.id,unitTitle:u.unitTitle,topicId:u.id+'_1',topicName:u.topics[1],slot:'reading1',marks:5,genre:'poem',text:'Read '+poem.title+' by '+poem.author+' and answer the questions.',...poem,sourceKind:'textbook',sourceTitle:'English Grade 9',sourceEdition:'2022 first edition',sourceUrl:SEEN_BOOK,passageRights:'public_domain_original',status:'active',bundled:true,teacherReviewRequired:true,reviewStatus:'draft',officialCdcQuestion:false,sourceStatus:'SMSS_original_reference_draft'};});
 }
 // The source has copyright-protected editorial content. Do not bundle
 // modern textbook prose, substitute a paraphrase as a seen text or fake
@@ -76,7 +76,7 @@ export const SEEN_PROSE_PENDING=Object.freeze({
 });
 
 const secondProseItems=[
- {type:'true_false',domain:'literal',text:'George finally stopped trusting Tom to settle down.',answer:'True',marks:1},
+ {type:'true_false',domain:'literal',text:'George paid money when Tom offered to give up his jobs.',answer:'True',marks:1},
  {type:'true_false',domain:'literal',text:'Tom threatened to embarrass George by taking ordinary jobs.',answer:'True',marks:1},
  {type:'true_false',domain:'literal',text:'Tom was once at risk of imprisonment.',answer:'True',marks:1},
  {type:'true_false',domain:'literal',text:'Cronshaw travelled to Monte Carlo alone after the settlement.',answer:'False',marks:1},
@@ -93,8 +93,8 @@ export function englishSeenProseDrafts({grade,subject,units}={}){
  return PUBLIC_DOMAIN_SEEN_PROSE.map((row,v)=>({
   id:'smss_eng_seen2_'+v,gradeNumber:9,subject,unitCode:u.unitCode,unitId:u.id,unitTitle:u.unitTitle,topicId:u.id+'_1',topicName:u.topics[1],slot:'reading2',marks:10,genre:'story',
   text:'Read this excerpt from The Ant and the Grasshopper by W. Somerset Maugham (part '+(v+1)+') and answer the questions.',
-  passage:row.passage,items:sets[v].map(x=>({...x})),sourceKind:'textbook',sourceTitle:'English Grade 9',sourceEdition:row.sourceUrl===SEEN_BOOK?'2025 updated edition':row.sourceUrl==="https://s3.veda-app.com/veda-app/assets/122/downloads/2025-11-18/QQR9tk79bmn5fO01-1763456573.pdf"?'Grade 9 school-hosted CDC textbook; printed pp. 108–109 checked':'Grade 9 government-hosted edition; edition check pending',sourceUrl:row.sourceUrl,sourcePage:row.sourcePage,
-  originalSourceUrl:"https://www.fadedpage.com/books/20181237/html.php",sourcePassageSha256:row.sha256,passageRights:'public_domain_original',originalPublicationYear:1924,
+  passage:row.passage,items:sets[v].map(x=>({...x})),sourceKind:'textbook',sourceTitle:'English Grade 9',sourceEdition:row.sourceUrl===SEEN_BOOK?'2022 first edition; printed pp. 108–109':'Grade 9 government-hosted edition; edition check pending',sourceUrl:row.sourceUrl,sourcePage:row.sourcePage,
+  originalSourceUrl:"https://www.fadedpage.com/books/20190248/html.php",sourcePassageSha256:row.sha256,passageRights:'public_domain_original',originalPublicationYear:1924,
   status:'active',bundled:true,teacherReviewRequired:true,reviewStatus:'draft',officialCdcQuestion:false,sourceStatus:'SMSS_original_reference_draft'
  }));
 }
