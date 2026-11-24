@@ -7548,6 +7548,12 @@ function openCdcAssessment(context = null) {
         <label>Subject <select data-cdc="summarySubject"></select></label>
       </div>
       <p data-cdc="themeSummaryInfo" role="status"></p>
+      <aside data-cdc="seroCurriculumReference" hidden style="padding:8px;border:1px solid #cbd5e1;border-radius:6px">
+        <strong>कक्षागत पाठ्यक्रमको छुट्टै सन्दर्भ — हाम्रो सेरोफेरो</strong>
+        <p data-cdc="seroCurriculumTotal"></p>
+        <a href="https://www.collegenp.com/uploads/pdf/2020/03/syllabus-for-compulsory-subjects-from-grade-one-to-three-2076.pdf#page=34" target="_blank" rel="noopener noreferrer">तालिका १४ — मुद्रित पृष्ठ २७–२८</a>
+        <small>यो कक्षागत पाठ्यक्रमको सङ्ख्या हो, थिमगत मूल्याङ्कन फारामको पूर्णाङ्क होइन।</small>
+      </aside>
       <div class="tablewrap"><table data-cdc="themeSummaryTable"><thead data-cdc="themeSummaryHead"></thead><tbody data-cdc="themeSummaryRows"></tbody><tfoot data-cdc="themeSummaryFoot"></tfoot></table></div>
       <small>पूर्णाङ्क = मुख्य सिकाइ उपलब्धि × ४। — ले स्रोत पुष्टि वा सूची बाँकी जनाउँछ। थिमगत कच्चा पूर्णाङ्कलाई परीक्षा पूर्णाङ्क नमान्नुहोस्।</small>
       <details data-cdc="themeCoverage" style="margin-top:10px">
@@ -8518,6 +8524,11 @@ function openCdcAssessment(context = null) {
   function renderThemeSummary(){
     const grade=field('summaryClass').value,key=field('summarySubject').value,mode=subjectLanguage(key);
     const rows=cdcThemeMarkRows(grade,key,year),ne=mode==='ne',en=mode==='en';
+    // Table 14, printed pp.27–28, 2076 curriculum: each grade has 25 numbered
+    // class-level outcomes. Never use them to fill missing theme assessment rows.
+    const curriculumVisible=key==='serophero'&&['1','2','3'].includes(grade)&&Number(year)<2084;
+    field('seroCurriculumReference').hidden=!curriculumVisible;
+    field('seroCurriculumTotal').textContent=curriculumVisible?'कक्षा '+({'1':'१','2':'२','3':'३'}[grade])+' — कक्षागत सिकाइ उपलब्धि: २५। थिमगत फारामको सूची छुट्टै छ।':'';
     const digits=n=>ne?String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]):String(n);
     const label=(a,b)=>ne?a:en?b:a+' / '+b;
     const head=field('themeSummaryHead'),body=field('themeSummaryRows'),foot=field('themeSummaryFoot');
