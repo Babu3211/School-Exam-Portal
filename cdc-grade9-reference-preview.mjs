@@ -6,7 +6,8 @@ import {planGrade9MathReference} from './cdc-grade9-compulsory-math-grouped.mjs'
 import {planSocial2078ReferencePaper} from './cdc-grade9-social-reference-planner.mjs';
 import {planGrade9EnglishReferencePaper} from './cdc-grade9-english-grouped-planner.mjs';
 import {planEnvironmentSchoolReference} from './cdc-grade9-environment-reference-bank.mjs';
-const planners={optional_environment:planEnvironmentSchoolReference,math:planGrade9MathReference,social:planSocial2078ReferencePaper,english:planGrade9EnglishReferencePaper};
+import {planScienceSchoolReference} from './cdc-grade9-science-school-reference.mjs';
+const planners={science:planScienceSchoolReference,optional_environment:planEnvironmentSchoolReference,math:planGrade9MathReference,social:planSocial2078ReferencePaper,english:planGrade9EnglishReferencePaper};
 const draft=q=>q?.gradeNumber===9&&q.bundled===true&&q.reviewStatus==='draft'&&q.teacherReviewRequired===true&&q.officialCdcQuestion===false&&q.sourceStatus==='SMSS_original_reference_draft'&&q.status!=='archived';
 export function referencePreviewTopics({grade,subject,questions=[]}={}){
  if(grade!==9||!Object.hasOwn(planners,cdcSubjectKey(subject)))return [];
@@ -35,6 +36,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   const marks=g.marks??parts.reduce((s,x)=>s+Number(x.marks||0),0);
   lines.push((i+1)+'. '+(key==='english'?g.text:choose(g.contextNe||g.questionText,g.contextEn||g.questionTextEn))+' ['+marks+']');
   if(g.passage)lines.push(g.passage);
+  if(g.questionType==='mcq')for(const [j,o] of (g.options||[]).entries())lines.push('  '+String.fromCharCode(65+j)+'. '+choose(o,g.optionsEn?.[j]));
   if(Array.isArray(g.mapChoices)){
    for(const [j,c] of g.mapChoices.entries())lines.push((j===0?'Option A: ':'OR / अथवा B: ')+choose(c.textNe,c.textEn)+' [7]');
   }

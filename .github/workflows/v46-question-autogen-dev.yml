@@ -62,6 +62,8 @@ on:
       - 'cdc-grade9-english-practice.mjs'
       - 'cdc-grade9-nepali-practice.mjs'
       - 'cdc-grade9-science-original-practice.mjs'
+      - 'cdc-grade9-science-school-reference.mjs'
+      - 'scripts/test-cdc-grade9-science-school-reference.mjs'
       - 'scripts/test-cdc-grade9-computer-original-practice.mjs'
       - 'scripts/test-cdc-grade9-release-audit.mjs'
       - 'cdc-grade8-science-model-audit.mjs'
@@ -207,6 +209,8 @@ jobs:
         run: node scripts/test-cdc-grade9-environment-reference-bank.mjs
       - name: Validate actual Nepali grammar reading and writing reference tasks
         run: node scripts/test-cdc-grade9-nepali-reference-bank.mjs
+      - name: Verify actual science school-reference full-year questions
+        run: node scripts/test-cdc-grade9-science-school-reference.mjs
       - name: Verify automatic CDC Grid source detection for Grade 6-10 subjects
         run: node scripts/test-cdc-grid-source-index.mjs
       - name: Verify 54 original bilingual formula-checked Optional Maths practice questions

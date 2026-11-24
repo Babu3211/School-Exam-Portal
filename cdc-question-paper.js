@@ -11,6 +11,7 @@ import {auditGrade9Release} from "./cdc-grade9-release-audit.mjs";
 import {auditGrade9ScienceArchive} from "./cdc-grade9-science-archive-audit.mjs";
 import {compareGrade8SciencePracticeBank,getGrade8ScienceHistoricalPracticePattern} from "./cdc-grade8-science-model-audit.mjs";
 import {grade8ScienceOriginalSupplement} from "./cdc-grade8-science-original-supplement.mjs";
+import {grade9ScienceSchoolReferenceBank} from "./cdc-grade9-science-school-reference.mjs";
 import {grade9ScienceOriginalBank} from "./cdc-grade9-science-original-practice.mjs";
 import {grade9NepaliReferenceBank} from "./cdc-grade9-nepali-reference-bank.mjs";
 import {grade9NepaliPracticeBank} from "./cdc-grade9-nepali-practice.mjs";
@@ -476,7 +477,7 @@ async function loadClassSubjects() {
 // Absence of a checked source never triggers invented questions or a fake grid.
 async function loadBundledPracticeBank({grade,subject}){
  const science=grade9ScienceOriginalBank({grade,subject});
- if(science.units.length)return {units:science.units,questions:science.questions,status:"कक्षा ९ विज्ञान तथा प्रविधि: सरकारी English पाठ्यपुस्तकको विषयसूचीबाट १९ Unit का ७६ मौलिक bilingual अभ्यास प्रश्न। २०८२ को नवीनतम मूल पुस्तक र Grid समीक्षा बाँकी; पुरानो २०७८ Grid स्वतः लागू हुँदैन।"};
+ if(science.units.length){const ref=grade9ScienceSchoolReferenceBank({grade,subject});return {units:science.units,questions:[...science.questions,...ref.questions],status:"Grade 9 Science: 76 original exercises and 80 bilingual school-reference variants; 75-mark full-year review only. Current CDC Grid not verified."};}
  const nepali=grade9NepaliPracticeBank({grade,subject});
  if(nepali.units.length){const ref=grade9NepaliReferenceBank({grade,subject});return {units:nepali.units,questions:[...nepali.questions,...ref.questions],status:"कक्षा ९ नेपाली: ४८ अभ्यास र ३२ मौलिक सन्दर्भ समूह, ४३ अङ्कको संरचना; पाठगत ३२ अङ्क र वर्तमान CDC Grid पुष्टि बाँकी।"};}
  const english=grade9EnglishPracticeBank({grade,subject});
