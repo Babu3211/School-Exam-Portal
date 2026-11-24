@@ -10,6 +10,7 @@ on:
       - 'sw.js'
       - 'data/cdc-*.json'
       - 'scripts/test-cdc-grade9-review-pack.mjs'
+      - 'scripts/audit-grade9-grid-catalog.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -46,7 +47,31 @@ jobs:
             sudo apt-get update -qq
             sudo apt-get install -y --no-install-recommends poppler-utils
           fi
+          python3 -m py_compile scripts/audit-grade9-grid-catalog.py
           python3 scripts/audit-grade9-grid-catalog.py --preview-grid-dir preview-public
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("preview-public")
+          manifest=json.loads((root/"grid-source-pages/manifest.json").read_text())
+          assert manifest["currentCdcExactApproved"] is False
+          expected={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3,"optional-computer":1,"optional-math":1,"optional-economics":1}
+          docs=manifest["documents"]
+          assert len(docs)==len(expected) and {d["resource"] for d in docs}==set(expected)
+          declared=set()
+          for doc in docs:
+              assert doc["currentCdcExactApproved"] is False
+              if doc["status"]=="fingerprint_matched_pages_rendered":
+                  assert len(doc["images"])==expected[doc["resource"]]
+                  for i,p in enumerate(doc["images"],1):
+                      assert p=="grid-source-pages/"+doc["resource"]+"-page-"+str(i)+".png"
+                      assert (root/p).read_bytes().startswith(bytes([137,80,78,71,13,10,26,10]))
+                      declared.add(p)
+              else:
+                  assert doc["status"]=="unavailable" and not doc["images"]
+          assert declared=={str(p.relative_to(root)) for p in (root/"grid-source-pages").glob("*.png")}
+          print("Grid source inventory:",len(declared),"/",sum(expected.values()),"pages staged; unavailable documents are explicitly labelled.")
+          PY
           cp preview-public/grade9-teacher-review.html preview-public/index.html
           printf '%s\n' "$GITHUB_SHA" > preview-public/review-revision.txt
           cp index.html preview-public/app-shell.html
