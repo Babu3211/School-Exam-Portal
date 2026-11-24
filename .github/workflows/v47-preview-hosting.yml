@@ -44,6 +44,8 @@ jobs:
           npm run test:v47:verified-import
       - name: Test V47 school onboarding and pagination
         run: node v47/test-school-admin-services.mjs
+      - name: Verify teacher account Excel validation and school isolation
+        run: node v47/test-teacher-account-excel.mjs
       - name: Verify V47 Super Admin session security
         run: node v47/test-super-admin-session-guard.mjs
       - name: Enforce V47 marks publication safety
