@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v114-question-block-layout';
+const CACHE_NAME = 'smss-pwa-v115-full-review-docx';
 const APP_SHELL = [
   './',
   './index.html',

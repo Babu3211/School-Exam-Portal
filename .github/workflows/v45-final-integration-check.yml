@@ -194,6 +194,7 @@ jobs:
               "scripts/test-question-paper-content.mjs",
               "scripts/test-v46-optional-math-ui.mjs",
               "scripts/test-v46-question-paper-dom.mjs",
+              "scripts/test-v46-paper-browser-layout.mjs",
               "sw.js",
             }
           unexpected=changed-allowed

@@ -48,6 +48,34 @@ try{
   const pdftext=execFileSync('pdftotext',[path,'-'],{encoding:'utf8'});
   assert.ok(pdftext.includes('REVIEW ONLY'),name+' review watermark');
   console.log('PDF PASS',name,dim[1],dim[2],layout.figureCount);
+  // Export the entire review document, not just an isolated image fixture.
+  const docx=await page.evaluate(async()=>{
+   const m=await import('/cdc-optional-math-render.mjs');
+   const area=document.createElement('section');
+   const header=document.createElement('div');
+   header.textContent=document.querySelector('h1').textContent+'\nREVIEW ONLY — NOT FOR EXAM / सन्दर्भ अभ्यास मात्र';
+   area.append(header);
+   const body=document.querySelector('.review-paper-body').cloneNode(true);
+   body.classList.add('qp-paper-body');area.append(body);
+   const figurePngs=await m.rasterizePaperFigures(area);
+   return Array.from(m.buildQuestionPaperDocx(area,{figurePngs}));
+  });
+  const docxPath=join(out,name.replace(/\.html$/,'.docx'));
+  await writeFile(docxPath,Uint8Array.from(docx));
+  const verifyFull=[
+   'import zipfile,sys,xml.etree.ElementTree as ET',
+   'with zipfile.ZipFile(sys.argv[1]) as z:',
+   ' assert z.testzip() is None',
+   ' for n in z.namelist():',
+   '  if n.endswith((".xml",".rels")): ET.fromstring(z.read(n))',
+   ' x=z.read("word/document.xml").decode()',
+   ' assert "REVIEW ONLY" in x and "NOT FOR EXAM" in x',
+   ' assert "w:orient=\\"landscape\\"" in x and "w:cols w:num=\\"2\\"" in x',
+   ' assert len([n for n in z.namelist() if n.startswith("word/media/")])==int(sys.argv[2])',
+   ' assert x.count("<w:drawing>")==int(sys.argv[2])'
+  ].join('\n');
+  execFileSync('python3',['-c',verifyFull,docxPath,String(layout.figureCount)]);
+  console.log('DOCX PASS',name,layout.figureCount);
  }
  await page.goto(base+'/test');
  const result=await page.evaluate(async()=>{
@@ -75,5 +103,5 @@ try{
   ' print("Actual browser PNG and DOCX ZIP/OOXML integrity PASS")'
  ].join('\n');
  execFileSync('python3',['-c',verify,join(out,'synthetic-figure-test.docx'),join(out,'synthetic-figure-test.png')],{stdio:'inherit'});
- console.log('PASS all 32 actual landscape PDFs and browser-generated embedded Word image');
+ console.log('PASS all 32 actual landscape PDFs, 32 full editable review DOCX files and browser-generated embedded Word image');
 }finally{await browser?.close();await new Promise(r=>server.close(r));}

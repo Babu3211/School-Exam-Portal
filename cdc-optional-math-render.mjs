@@ -235,6 +235,10 @@ export function questionFigure(question,language='both'){
   body='<circle cx="130" cy="71" r="51"/><path d="M130 71H181"/><circle cx="130" cy="71" r="2" fill="#111"/>'+txt(155,63,match[1]+' m');caption='वृत्त / Circle';
  }else if((match=/^A rectangular garden is (\d+) m long and (\d+) m wide\./.exec(en))){
   body='<rect x="38" y="30" width="190" height="82"/>'+txt(133,23,match[1]+' m')+txt(256,75,match[2]+' m');caption='आयत / Rectangle';
+ }else if((match=/^A cuboid measures (\d+) cm by (\d+) cm by (\d+) cm\./.exec(en))){
+  body='<path d="M40 52H198V118H40Z M40 52L78 18H236L198 52 M198 118L236 84V18"/>'+txt(120,137,match[1]+' cm')+txt(250,65,match[3]+' cm')+txt(218,113,match[2]+' cm');caption='घनाभ / Cuboid';
+ }else if((match=/^AB and CD are parallel; a transversal forms an interior angle of (\d+)°\./.exec(en))){
+  body='<path d="M28 38H252 M28 104H252 M79 132L194 10"/>'+txt(17,42,'A')+txt(263,42,'B')+txt(17,108,'C')+txt(263,108,'D')+txt(158,57,match[1]+'°');caption='समानान्तर रेखा / Parallel lines';
  }else if((match=/^In triangle ABC, angle A=(\d+)° and B=(\d+)°\./.exec(en))){
   body='<path d="M135 20L40 115H230Z"/>'+txt(135,14,'C')+txt(31,130,'A')+txt(239,130,'B')+txt(75,106,match[1]+'°')+txt(193,106,match[2]+'°');caption='त्रिभुज / Triangle';
  }else if(/^Why does a longer effort arm reduce the force needed in a lever\?/.test(en)){
