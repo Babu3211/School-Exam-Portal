@@ -971,5 +971,32 @@ await w.loadCdcAssessmentPage();
 choice('unitEn','Me and My Family');
 assert.equal(field('annex3').hidden,true);
 console.log('Grade 3 English ten assessment-guide themes, 236 outcome rows, scoped saves and year isolation passed');
+// Source-based reference only: do not invent or persist binary indicator scores.
+w.currentSchoolSettings.academicYear='2083';
+current.subjectAssignments=[{className:'Class 1',subject:'serophero',section:'A'}];
+serverRole={...current};
+w.getDocs=async()=>({docs:[{id:'sero-1',data:()=>({class:'Class 1',section:'A',name:'Synthetic Student'})}]});
+w.ledgerSubjectsForClass=()=>['serophero'];
+await w.loadCdcAssessmentPage();
+const beforeSero=observations.size;
+for(const [unit,count,groups] of [['म र मेरो परिवार',20,5],['मेरो दैनिक जीवन',16,4],['हाम्रो समुदाय',12,3]]){
+ choice('unit',unit);
+ assert.equal(field('annex3').hidden,false,unit);
+ assert.equal(field('annexRows').rows.length,count,unit);
+ assert.equal(field('annexRows').rows[0].cells[0].rowSpan,count);
+ assert.equal(field('annexRows').rows[0].cells[1].rowSpan,4);
+ assert.equal([...field('annexRows').rows].filter(row=>row.cells.length>=9).length,groups);
+ assert.match(field('annexHead').textContent,/सकेको \/ नसकेको/);
+ assert.equal(field('gridRead').hidden,true);
+ assert.equal(field('printForm').disabled,true);
+ assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,0);
+ assert.match(field('annexStatus').textContent,/समीक्षा प्रति/);
+}
+assert.equal(observations.size,beforeSero);
+w.currentSchoolSettings.academicYear='2084';
+await w.loadCdcAssessmentPage();
+choice('unit','म र मेरो परिवार');
+assert.equal(field('annex3').hidden,true);
+console.log('Grade 1 Our Surroundings three reference forms, 48 indicators, Nepali-only columns and no automatic writes passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
