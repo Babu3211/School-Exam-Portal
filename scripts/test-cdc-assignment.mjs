@@ -920,14 +920,14 @@ await w.loadCdcAssessmentPage();
 choice('unitEn','Me and My Family');
 assert.equal(field('annex3').hidden,true);
 console.log('Grade 2 English ten thematic forms, 283 unique outcome rows, English-only stage entry, legacy skill/year isolation passed');
-// Grade 3 thematic forms: source Table 23 subset, not a full scoring-sheet certification.
+// Grade 3 themes checked against CDC 2076 Student Assessment Guide PDF pp.114–123; print and wording still pending.
 w.currentSchoolSettings.academicYear='2083';
 current.subjectAssignments=[{className:'Class 3',subject:'English',section:'A'}];
 serverRole={...current};
 w.getDocs=async()=>({docs:[{id:'english-3',data:()=>({class:'Class 3',section:'A',name:'Synthetic Grade 3 English'})}]});
 await w.loadCdcAssessmentPage();
 const beforeEnglish3=observations.size;
-for(const [unit,groups] of [["Me and My Family",[7,3,9,7]],["My School",[5,5,5,7]],["Our Environment",[5,5,6,8]],["My Belongings",[4,4,4,8]],["Our Culture",[6,5,7,7]],["Communication Technology and Market",[6,6,7,8]],["Fruits and Vegetables",[6,5,6,9]],["Hobbies and Interests",[5,4,6,9]],["My Daily Life",[7,4,4,8]]]){
+for(const [unit,groups] of [["Me and My Family",[7,3,9,7]],["My School",[5,5,5,7]],["Our Environment",[5,5,6,8]],["My Belongings",[4,4,4,8]],["Our Culture",[6,5,7,7]],["Communication Technology and Market",[6,6,7,8]],["Fruits and Vegetables",[6,5,6,9]],["Hobbies and Interests",[5,4,6,9]],["Birds and Animals",[5,4,6,4]],["My Daily Life",[7,4,4,8]]]){
  choice('unitEn',unit);
  const count=groups.reduce((a,b)=>a+b,0);
  assert.equal(field('annex3').hidden,false,unit);
@@ -936,7 +936,12 @@ for(const [unit,groups] of [["Me and My Family",[7,3,9,7]],["My School",[5,5,5,7
  assert.equal(field('outcomePicker').options.length,count+1,unit);
  assert.equal(new Set([...field('outcomePicker').options].slice(1).map(o=>o.value)).size,count,unit);
  assert.doesNotMatch(field('annexTable').textContent,/[\u0900-\u097f]/u);
- assert.match(field('annexStatus').textContent,/Table 23 thematic outcomes/);
+ assert.match(field('annexStatus').textContent,/CDC 2076 Student Assessment Guide, PDF page 1[12][0-9]/);
+ if(unit==='Birds and Animals'){
+   assert.match(field('annexRows').rows[0].textContent,/Respond with words or gestures/);
+   assert.match(field('annexRows').rows[18].textContent,/Write neatly and legibly/);
+ }
+ if(unit==='My School')assert.match(field('annexUnit').textContent,/Our School/);
  let offset=0;
  for(const [i,skill] of ['Listening','Speaking','Reading','Writing'].entries()){
    const row=field('annexRows').rows[offset];
@@ -965,6 +970,6 @@ w.currentSchoolSettings.academicYear='2084';
 await w.loadCdcAssessmentPage();
 choice('unitEn','Me and My Family');
 assert.equal(field('annex3').hidden,true);
-console.log('Grade 3 English nine Table 23 themes, 217 outcome rows, scoped saves and year isolation passed');
+console.log('Grade 3 English ten assessment-guide themes, 236 outcome rows, scoped saves and year isolation passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
