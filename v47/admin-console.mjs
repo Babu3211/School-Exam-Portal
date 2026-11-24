@@ -67,7 +67,7 @@ async function refreshCounts(){
  const check=()=>{if(actor!==selected||auth?.currentUser?.uid!==selected.uid||request!==countsEpoch)throw Error('Session changed')};
  $('refreshCounts').disabled=true;
  try{const counts=await loadPlatformSchoolCounts({db,api,actor:selected,assertSession:check});check();
- $('platformCounts').textContent='Total schools: '+counts.totalSchools+' · Active: '+counts.activeSchools+' · Inactive: '+counts.inactiveSchools;
+ $('platformCounts').textContent='कुल विद्यालय: '+counts.totalSchools+' · सक्रिय: '+counts.activeSchools+' · निष्क्रिय: '+counts.inactiveSchools;
  }catch{if(request===countsEpoch)$('platformCounts').textContent='विद्यालयको प्रमाणित संख्या उपलब्ध भएन।'}
  finally{if(request===countsEpoch)$('refreshCounts').disabled=false}
 }

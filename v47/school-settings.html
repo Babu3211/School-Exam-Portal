@@ -12,7 +12,7 @@ dt{font-weight:bold;margin-top:12px}dd{margin:4px 0 10px}
 </style></head><body><main>
 <h1>SMSS Exam Portal V47 — School Settings</h1>
 <p><a href="./index.html">Dashboard</a></p>
-<p class="warning">Settings for the verified school only. School IEMIS ID and activation are managed by the Super Admin and cannot be changed here. V47 is not yet production-ready.</p>
+<p class="warning">प्रमाणित विद्यालयका सेटिङ मात्र। विद्यालयको IEMIS ID र सक्रिय अवस्था Super Admin ले व्यवस्थापन गर्छन्। यहाँ परिवर्तन गर्न मिल्दैन। V47 अन्तिम सञ्चालनका लागि अझै स्वीकृत छैन।</p>
 <section><button id="connect">Connect to V47</button>
 <label>School IEMIS ID <input id="schoolId" inputmode="numeric" pattern="[0-9]{5,20}" minlength="5" maxlength="20"></label>
 <label>Email <input id="email" type="email" autocomplete="username"></label>
@@ -22,11 +22,11 @@ dt{font-weight:bold;margin-top:12px}dd{margin:4px 0 10px}
 <dl><dt>School IEMIS ID</dt><dd id="iemis"></dd><dt>Registered school name</dt><dd id="name"></dd>
 <dt>School status</dt><dd id="active"></dd><dt>Signed-in role</dt><dd id="role"></dd></dl>
 <h3>School name and address</h3>
-<p id="profileAccess">Teacher and Viewer accounts can see these details but cannot save changes.</p>
+<p id="profileAccess">Teacher र Viewer खाताले यी विवरण हेर्न सक्छन् तर परिवर्तन सुरक्षित गर्न मिल्दैन।</p>
 <label>School name (English)<input id="nameEnglish" maxlength="160" autocomplete="off"></label>
 <label>विद्यालयको नाम (नेपाली)<input id="nameNepali" maxlength="160" autocomplete="off" lang="ne"></label>
 <label>Address (English)<input id="addressEnglish" maxlength="300" autocomplete="off"></label>
 <label>ठेगाना (नेपाली)<input id="addressNepali" maxlength="300" autocomplete="off" lang="ne"></label>
 <button id="saveProfile" disabled hidden>Save School Settings</button></section>
-<p id="message" role="status" aria-live="polite">Connect to the separate V47 Firebase project.</p>
+<p id="message" role="status" aria-live="polite">छुट्टै V47 Firebase परियोजनामा जडान गर्नुहोस्।</p>
 </main><script type="module" src="./school-settings-console.mjs"></script></body></html>

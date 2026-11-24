@@ -9,6 +9,6 @@ assert.match(js,/actor!==expectedActor\|\|auth\.currentUser\?\.uid!==expectedUid
 assert.match(js,/merged\.length>1500/,'Large pages must fail closed');
 assert.match(js,/session\.role!==expectedRole/,'Excel export must revalidate membership role');
 assert.match(js,/actor!==selectedActor\|\|actor\.uid!==uid/);
-assert.match(html,/NOT a CDC\/IEMIS 2083 Mark Ledger/);
+assert.match(html,/यो CDC\/IEMIS २०८३ को आधिकारिक अङ्क तालिका, ग्रेड तालिका, GPA वा ग्रेड सिट होइन/);
 assert.doesNotMatch(js,/setDoc|addDoc|updateDoc|deleteDoc|writeBatch|localStorage|inMemoryPersistence/,'Preview remains read-only under shared session');
 console.log('V47 read-only raw marks Excel preview uses shared V47 login and stale-session guards');

@@ -11,7 +11,7 @@ for(const id of ['schoolId','email','password','login','logout','settings','iemi
  assert.match(html,new RegExp('id="'+id+'"'),'Missing school-settings control '+id);
 }
 assert.match(html,/id="saveProfile" disabled hidden/);
-assert.match(html,/IEMIS ID and activation are managed by the Super Admin/);
+assert.match(html,/विद्यालयको IEMIS ID र सक्रिय अवस्था Super Admin ले व्यवस्थापन गर्छन्/);
 assert.doesNotMatch(html,/id="config"/,'School settings must not require pasting Firebase configuration');
 assert.match(js,/connectSchoolFirebase/);
 assert.match(firebaseClient,/V47_FIREBASE_CONFIG\.projectId!=='smss-exam-portal-v47'/);
