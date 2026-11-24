@@ -130,3 +130,26 @@ const mathQuestions=grade9CompulsoryMathPracticeBank({grade:9,subject:'Mathemati
 assert.equal(mathQuestions.find(q=>q.id==='smss_math_g9_u2_t2_v2').answerEn,'4000×10×2/100=800; total 4800');
 assert.equal(mathQuestions.find(q=>q.id==='smss_math_g9_u7_t2_v2').answerEn,'√(6²+8²)=10; tan θ=3/4');
 console.log('PASS Grade9 compulsory math archive arithmetic and original bilingual practice scope');
+
+const {grade9EnglishPracticeBank,auditEnglishChart}=await import('../cdc-grade9-english-practice.mjs');
+for(const subject of ['Compulsory English','अनिवार्य अङ्ग्रेजी']){
+ const args={grade:9,subject},p=grade9EnglishPracticeBank(args),a=auditEnglishChart(args);
+ assert.equal(p.units.length,18);assert.equal(p.questions.length,54);
+ assert.equal(new Set(p.questions.map(q=>q.id)).size,54);
+ assert.equal(new Set(p.questions.map(q=>q.questionText)).size,54);
+ assert.equal(a.reading.reduce((n,x)=>n+x.marks,0),40);
+ assert.equal(a.writing.reduce((n,x)=>n+x.marks,0)+a.grammar.reduce((n,x)=>n+x.count*x.marksEach,0),35);
+ assert.equal(Object.values(a.comprehensionCounts).reduce((n,x)=>n+x,0),40);
+ assert.equal(a.modelGrade,10);assert.equal(a.currentCdcExactApproved,false);
+ assert.equal(p.exactGridVerified,false);
+ for(const u of p.units){
+  const qs=p.questions.filter(q=>q.unitId===u.id);
+  assert.equal(qs.length,3);assert.deepEqual(qs.map(q=>q.marks),[1,1,5]);
+  assert.ok(qs.every(q=>q.questionText===q.questionTextEn&&q.answer===q.answerEn&&q.teacherReviewRequired&&!q.officialCdcQuestion));
+ }
+}
+assert.equal(grade9EnglishPracticeBank({grade:10,subject:'English'}).questions.length,0);
+assert.equal(grade9EnglishPracticeBank({grade:9,subject:'Nepali'}).questions.length,0);
+assert.equal(byKey.english.gridTranscribed,false);
+assert.match(readFileSync(new URL('../sw.js',import.meta.url),'utf8'),/cdc-grade9-english-practice\.mjs/);
+console.log('PASS Grade9 English eighteen textbook units and chart arithmetic; no false exact paper');

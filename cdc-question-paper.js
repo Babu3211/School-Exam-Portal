@@ -7,6 +7,7 @@ import {auditGrade9Release} from "./cdc-grade9-release-audit.mjs";
 import {auditGrade9ScienceArchive} from "./cdc-grade9-science-archive-audit.mjs";
 import {compareGrade8SciencePracticeBank,getGrade8ScienceHistoricalPracticePattern} from "./cdc-grade8-science-model-audit.mjs";
 import {grade8ScienceOriginalSupplement} from "./cdc-grade8-science-original-supplement.mjs";
+import {grade9EnglishPracticeBank,auditEnglishChart} from "./cdc-grade9-english-practice.mjs";
 import {grade9CompulsoryMathPracticeBank,auditCompulsoryMathArchive} from "./cdc-grade9-compulsory-math-practice.mjs";
 import {grade9SocialOriginalBank} from "./cdc-grade9-social-original-practice.mjs";
 import {grade9EnvironmentOriginalBank} from "./cdc-grade9-environment-original-practice.mjs";
@@ -461,6 +462,8 @@ async function loadClassSubjects() {
 // Local original practice sources require no Admin import or Firestore write.
 // Absence of a checked source never triggers invented questions or a fake grid.
 async function loadBundledPracticeBank({grade,subject}){
+ const english=grade9EnglishPracticeBank({grade,subject});
+ if(english.units.length)return {units:english.units,questions:english.questions,status:"Grade 9 English: 18 textbook units, 54 original grammar/writing practice tasks. The English assessment language is preserved. Seen and unseen reading groups and current Grade 9 model verification remain pending; not a complete CDC Exact paper."};
  const math=grade9CompulsoryMathPracticeBank({grade,subject});
  if(math.units.length)return {units:math.units,questions:math.questions,status:"कक्षा ९ अनिवार्य गणित: ऐतिहासिक २०७८ Grid का सात विषयक्षेत्रमा ४२ मौलिक bilingual अभ्यास प्रश्न। वर्तमान Grid तथा संयुक्त प्रश्न संरचना समीक्षा बाँकी; CDC Exact होइन।"};
  const social=grade9SocialOriginalBank({grade,subject});
@@ -654,6 +657,8 @@ async function loadCurrentData() {
   if(grade8ScienceModelAudit)addLink(
    grade8ScienceModelAudit.model.archivedCdcCatalogUrl,
    "कक्षा ८ विज्ञान २०७८ Grid / Model / Answer Key (CDC Library)");
+  const englishChart=auditEnglishChart({grade,subject});
+  if(englishChart)addLink(englishChart.sourceUrl,"English CDC Grade 9–10 chart: 40 reading + 35 writing/grammar; Grade 9 model verification pending");
   const mathArchive=auditCompulsoryMathArchive({grade,subject});
   if(mathArchive)addLink(mathArchive.sourceUrl,"कक्षा ९ अनिवार्य गणित २०७८ Grid / Model (१६ समूह, ४९ उपप्रश्न; वर्तमान Grid पुष्टि बाँकी)");
   if(grade9ScienceHistoricalAudit)addLink(

@@ -1,0 +1,44 @@
+/** Grade 9 English, original SMSS practice, NOT CDC published questions.
+ * Textbook contents checked against 2022 CDC textbook (2078 curriculum).
+ * Official grade 9–10 chart includes a grade 10 model, not grade 9.
+ * Never label flat practice items as a complete CDC English paper.
+ */
+import {cdcSubjectKey} from './cdc-grid-source-index.mjs';
+export const ENGLISH_BOOK='https://moecdc.gov.np/storage/gallery/1688289325.pdf';
+export const ENGLISH_GRID='https://giwmscdnone.gov.np/media/pdf_upload/Specification%20Grid%20%28Grade%209%20-10%29%20Compulsory%20English_f4xgqyn.pdf';
+const rows=[
+ ['यात्रा र बिदा','Travel and holidays','Future forms','Rewrite with will: We plan to visit Pokhara tomorrow.','We will visit Pokhara tomorrow.','Use the future continuous: At this time tomorrow, I (travel) to Ilam.','At this time tomorrow, I will be travelling to Ilam.','Write a paragraph outlining a three-day holiday plan.'],
+ ['स्वास्थ्य र सरसफाइ','Health and hygiene','Modals and conditionals','Give advice using should: Your friend drinks very little water.','You should drink enough water.','Complete: If I were you, I (wash) my hands before eating.','If I were you, I would wash my hands before eating.','Write instructions for keeping a classroom clean.'],
+ ['परिवार, बजार र सार्वजनिक स्थान','Family, market and public place','Polite requests','Make a polite request using could: Open the window.','Could you open the window, please?','Make a polite request using would: Help me carry this bag.','Would you help me carry this bag, please?','Write a request to your head teacher for a classroom reading corner.'],
+ ['जीवन र मृत्यु','Life and death','Subject–verb agreement','Choose the correct verb: Each of the students (has/have) a notebook.','Each of the students has a notebook.','Correct the verb: My friends visits their grandparents regularly.','My friends visit their grandparents regularly.','Write a message of sympathy for a fictional classmate who has lost a relative.'],
+ ['नैतिकता, मान्यता र मूल्य','Ethics, norms and values','Present continuous','Complete: The students (discuss) the rules at the moment.','The students are discussing the rules at the moment.','Change to present continuous: She writes a note.','She is writing a note.','Write a paragraph about the importance of keeping promises.'],
+ ['प्रथा र संस्कृति','Custom and culture','Reported questions','Report: Mina asked, "Are you coming to the festival?"','Mina asked whether I was coming to the festival.','Report: Hari asked, "Do you know the custom?"','Hari asked whether I knew the custom.','Write a short description of a local cultural celebration.'],
+ ['पारिस्थितिकी र वातावरण','Ecology and environment','First conditional','Complete: If we plant trees, the playground (become) cooler.','If we plant trees, the playground will become cooler.','Complete: If it rains tomorrow, we (cancel) the clean-up.','If it rains tomorrow, we will cancel the clean-up.','Write a letter to the editor suggesting ways to reduce litter.'],
+ ['विज्ञान र प्रविधि','Science and technology','Relative clauses','Join using who: The girl won the science fair. She is my neighbour.','The girl who won the science fair is my neighbour.','Join using which: The device measures temperature. It is on the desk.','The device which measures temperature is on the desk.','Write a short news report using these facts: school science fair; Friday; 20 teams; prizes.'],
+ ['काम र फुर्सद','Work and leisure','Passive and causatives','Change to passive: The club organizes a reading session every week.','A reading session is organized by the club every week.','Rewrite using have: A mechanic repaired my bicycle for me.','I had my bicycle repaired.','Write an essay about balancing study and leisure.'],
+ ['पृथ्वी र अन्तरिक्ष','The Earth and Space','Prepositions','Complete: The Earth revolves ___ the Sun.','around','Complete: The exhibition begins ___ Monday.','on','Write a set of rules for visitors to a science exhibition.'],
+ ['उपकरण र साधन','Gadgets and instruments','Reported commands','Report: The teacher said to us, "Switch off your phones."','The teacher told us to switch off our phones.','Report: The technician said to me, "Do not touch the wire."','The technician told me not to touch the wire.','Write instructions for using a school tablet responsibly.'],
+ ['व्यक्ति र स्थान','People and places','Articles','Complete: She is ___ honest guide.','an','Complete: We saw ___ old bridge near the village.','an','Write a biography of an imaginary community volunteer using these cues: born in 1990; teacher; started a library; award in 2024.'],
+ ['संस्था र अधिकार','Organization profile and authority','Connectives','Join using although: The library is small. It has many useful books.','Although the library is small, it has many useful books.','Join using because: The meeting was postponed. The hall was unavailable.','The meeting was postponed because the hall was unavailable.','Write an advertisement for a school book fair: Saturday, 10 am, school hall, free entry.'],
+ ['इतिहास र सभ्यता','History and civilization','Past forms','Complete: When we arrived, the museum (close) already.','When we arrived, the museum had already closed.','Rewrite using used to: People often travelled on foot in the past.','People used to travel on foot in the past.','Write a story about a student who discovers an old family photograph.'],
+ ['मानिस र जीवनशैली','People and lifestyle','Present perfect','Complete: I (live) here since 2020.','I have lived here since 2020.','Complete with present perfect continuous: She (study) for two hours.','She has been studying for two hours.','Write a diary entry about a day spent helping your community.'],
+ ['खेलकुद','Games and sports','Question tags and negation','Add a question tag: They play volleyball, ___?','They play volleyball, do they not? / They play volleyball, don’t they?','Make negative: He has finished the race.','He has not finished the race.','Write a news story: inter-house football final; Blue House won 2–1; Saturday.'],
+ ['विश्व तापवृद्धि र जलवायु परिवर्तन','Global warming and climate change','Future perfect and questions','Complete: By next Friday, we (finish) the tree survey.','By next Friday, we will have finished the tree survey.','Make a question about the time: The meeting will begin at noon.','When will the meeting begin?','Write a notice inviting students to a climate awareness programme: Friday, 11 am, school hall.'],
+ ['यातायात र सञ्चार','Transportation and communication','Adjectives and adverbs','Complete: The bus moved (slow/slowly) through the town.','slowly','Use the comparative: This road is (wide) than that one.','This road is wider than that one.','Write a paragraph comparing public transport and private vehicles.']
+];
+export function auditEnglishChart({grade,subject}={}){
+ if(grade!==9||cdcSubjectKey(subject)!=='english')return null;
+ return {grade:9,sourceUrl:ENGLISH_GRID,modelGrade:10,currentGrade9ModelVerified:false,fullMarks:75,durationMinutes:180,
+ reading:[{marks:5,seen:true,words:100,types:1},{marks:10,seen:true,words:200,types:2},{marks:10,seen:false,words:200,types:2},{marks:15,seen:false,words:300,types:3}],
+ comprehensionCounts:{literal:16,reorganization:8,inference:8,evaluation:3,vocabulary:5},
+ writing:[{marks:5,words:100},{marks:5,words:100},{marks:6,words:150},{marks:8,words:200}],
+ grammar:[{count:6,marksEach:1,kind:'transformation'},{count:10,marksEach:0.5,kind:'contextual_mcq'}],
+ currentCdcExactApproved:false,teacherReviewRequired:true};
+}
+export function grade9EnglishPracticeBank({grade,subject}={}){
+ const base={units:[],questions:[],teacherReviewRequired:true,officialCdcQuestions:false,exactGridVerified:false};
+ if(!auditEnglishChart({grade,subject}))return base;
+ const units=rows.map(([ne,en,grammar],i)=>({id:'smss_english_g9_u'+(i+1),unitCode:String(i+1),unitTitle:en+' / '+ne,unitTitleEn:en,topics:[grammar,'Writing / लेखन'],sourceTitle:'CDC English Grade 9 textbook contents (2022)',sourceUrl:ENGLISH_BOOK,provenance:'Textbook grammar and writing scope, not a complete exam grid'}));
+ const questions=rows.flatMap(([, , ,q1,a1,q2,a2,w],i)=>[[0,q1,a1,1],[0,q2,a2,1],[1,w,'Teacher rubric: assess relevance, organization, language accuracy, vocabulary and suitable format; allow other valid responses.',5]].map(([t,prompt,answer,marks],j)=>({id:units[i].id+'_q'+j,gradeNumber:9,subject,unitCode:units[i].unitCode,unitId:units[i].id,unitTitle:units[i].unitTitle,topicId:units[i].id+'_'+t,topicName:units[i].topics[t],questionType:marks===1?'very_short':'long',marks,cognitiveLevel:'application',questionText:prompt,questionTextEn:prompt,answer,answerEn:answer,options:[],optionsEn:[],correctOption:'',status:'active',bundled:true,teacherReviewRequired:true,officialCdcQuestion:false,sourceStatus:'SMSS_original_draft_not_CDC_published'})));
+ return {...base,units,questions};
+}
