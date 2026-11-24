@@ -88,7 +88,7 @@ const field=name=>w.document.querySelector('[data-cdc="'+name+'"]');
 const choice=(name,value)=>{field(name).value=value;field(name).onchange();};
 const references=field('referenceLibrary');
 assert.ok(references);
-for(const name of ['guidePdf13','guidePdf45','guideOfficial13','guideOfficial45','guideCurriculum13','guideMirror45','guideCehrd45','guideHealth4','guideHealth5']){
+for(const name of ['guidePdf13','guidePdf45','guideOfficial13','guideOfficial45','guideCurriculum13','guideCurriculumMirror13','guideMirror45','guideCehrd45','guideHealth4','guideHealth5']){
  const link=field(name);
  assert.ok(references.contains(link),name);
  assert.equal(link.target,'_blank');
@@ -1006,14 +1006,14 @@ const summaryRows=()=>[...field('themeSummaryRows').rows];
 const coverage=[...field('themeCoverageRows').rows];
 assert.equal(coverage.length,29);
 const coverageRow=(grade,subject)=>coverage.find(row=>row.dataset.cdcCoverageClass===grade&&row.dataset.cdcCoverageSubject===subject);
-assert.equal(coverageRow('1','serophero').cells[2].textContent,'६ / १०');
-assert.equal(coverageRow('1','serophero').cells[3].textContent,'१७');
-assert.equal(coverageRow('1','serophero').cells[4].textContent,'६८');
+assert.equal(coverageRow('1','serophero').cells[2].textContent,'१० / १०');
+assert.equal(coverageRow('1','serophero').cells[3].textContent,'२६');
+assert.equal(coverageRow('1','serophero').cells[4].textContent,'१०४');
 assert.equal(coverageRow('2','serophero').cells[2].textContent,'० / १०');
 assert.equal(coverageRow('2','serophero').cells[4].textContent,'—');
 assert.equal(coverageRow('3','english').cells[4].textContent,'944');
 assert.equal(coverageRow('5','hamrodhunibeshi').cells[2].textContent,'—');
-assert.match(field('themeCoverageInfo').textContent,/219 \/ 243.*5/);
+assert.match(field('themeCoverageInfo').textContent,/223 \/ 243.*5/);
 for(const row of coverage){
  const toNumber=v=>Number(v.replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)));
  if(row.cells[3].textContent==='—'){assert.equal(row.cells[4].textContent,'—');continue;}
@@ -1026,7 +1026,14 @@ assert.equal(seroSummary.cells[2].textContent,'५');
 assert.equal(seroSummary.cells[3].textContent,'२०');
 assert.equal(seroSummary.cells[4].textContent,'२०');
 assert.equal(summaryRows().find(row=>row.cells[1]?.textContent==='हाम्रो संस्कृति').cells[3].textContent,'४');
-assert.equal(summaryRows().find(row=>row.cells[1]?.textContent==='हाम्रो विद्यालय').cells[3].textContent,'—');
+for(const [theme,count,full,indicators] of [['हाम्रो विद्यालय','२','८','१२'],['मेरो सिर्जना','२','८','१२'],['सञ्चार प्रविधि र बजार','२','८','८'],['हाम्रो वरपरको संसार','३','१२','८']]){
+ const row=summaryRows().find(row=>row.cells[1]?.textContent===theme);
+ assert.equal(row.cells[2].textContent,count);
+ assert.equal(row.cells[3].textContent,full);
+ assert.equal(row.cells[4].textContent,indicators);
+ assert.match(row.cells[5].textContent,/पाठ्यक्रम नमुना/);
+}
+assert.equal(field('themeSummaryFoot').rows[0].cells[3].textContent,'१०८');
 assert.equal(field('themeSummaryRows').rows.length,10);
 for(const grade of ['1','2','3','4','5']){
  choice('summaryClass',grade);choice('summarySubject','english');
