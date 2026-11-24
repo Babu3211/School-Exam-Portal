@@ -7580,6 +7580,10 @@ function parseCdcBilingualCatalog(text) {
   // Older observations lack a stage and must not be silently classified.
   let annexObservations=[];
   let annexReadSelection=null;
+  let seroRecords=[],seroReadKey=null,seroReadSequence=0;
+  const seroRetry=new Map();
+  const seroScopeKey=()=>JSON.stringify([schoolSelection(),field('unit').value]);
+  const seroLatest=(outcomeId,stage)=>seroRecords.find(o=>o.outcomeId===outcomeId&&o.stage===stage);
   let inlinePending=false;
   const inlineRetry=new Map();
   // Revised curriculum (2082), printed p.3: implementation starts academic year 2084.
@@ -7648,13 +7652,35 @@ function parseCdcBilingualCatalog(text) {
       };
     }
   };
-  field('gridRead').onclick=()=>field('readSchool').onclick();
+  async function readSeroferoRecords(){
+    const selection=schoolSelection(),form=primarySeroferoReference(),unit=field('unit').value;
+    if(!selection||!form||year!=='2083'||!canShow()||inlinePending)return;
+    const scopeKey=seroScopeKey(),sequence=++seroReadSequence;
+    const current=()=>canShow()&&sequence===seroReadSequence&&scopeKey===seroScopeKey();
+    seroRecords=[];seroReadKey=null;renderAnnex();
+    field('gridRead').disabled=true;
+    field('gridStatus').textContent='सूचक अभिलेख पढ्दै…';
+    try{
+      const result=await getDocsFromServer(query(collection(db,'cdc_serofero_indicators'),...Object.entries({...selection,unit}).map(([k,v])=>where(k,'==',v))));
+      if(!current())return;
+      seroRecords=result.docs.map(d=>d.data()).filter(o=>Object.entries({...selection,unit}).every(([k,v])=>o[k]===v)&&
+        ['regular','support'].includes(o.stage)&&Array.isArray(o.indicators)&&o.indicators.length===4&&o.indicators.every(v=>typeof v==='boolean')&&typeof o.date==='string')
+        .sort((a,b)=>b.date.localeCompare(a.date)||(b.createdAt?.toMillis()??0)-(a.createdAt?.toMillis()??0));
+      seroReadKey=scopeKey;renderAnnex();
+      field('gridStatus').textContent=seroRecords.length?'सूचक अभिलेख पढियो।':'यस थिममा सूचक अभिलेख छैन।';
+    }catch{
+      if(current())field('gridStatus').textContent='सूचक अभिलेख पढ्न सकिएन। अनुमति र जडान जाँच्नुहोस्।';
+    }finally{if(current())field('gridRead').disabled=false;}
+  }
+  field('gridRead').onclick=()=>primarySeroferoReference()?readSeroferoRecords():field('readSchool').onclick();
   const renderAnnex=()=>{
     const panel=field('annex3'),enabled=hasAnnexGrid(),en=language()==='en';
     const nepaliForm=primaryNepaliForm(),seroReference=primarySeroferoReference();
     panel.hidden=!enabled&&!nepaliForm&&!seroReference;field('stageRow').hidden=!enabled;field('gridRead').hidden=!!nepaliForm&&!nepaliForm.editable;
     field('printForm').disabled=!enabled||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('unit').value.trim();
-    if(seroReference){field('gridRead').hidden=true;field('printForm').disabled=true;renderSeroferoReference(seroReference);return;}
+    field('gridRead').textContent=seroReference?'सूचक अभिलेख पढ्नुहोस् / पुनः पढ्नुहोस्':'Load / Refresh Records';
+    field('gridRead').disabled=false;
+    if(seroReference){field('gridRead').hidden=year!=='2083';field('printForm').disabled=true;renderSeroferoReference(seroReference);return;}
     if(nepaliForm){renderPrimaryNepaliForm(nepaliForm);return;}
     if(!enabled)return;
     if(primaryEnglishForm()){renderPrimaryEnglish(primaryEnglishForm());return;}
@@ -7791,7 +7817,46 @@ function parseCdcBilingualCatalog(text) {
     field('annexHead').innerHTML='<tr><th rowspan="2">थिम</th><th rowspan="2">मुख्य सिकाइ उपलब्धि</th><th rowspan="2">उपलब्धि सूचक</th><th colspan="3">नियमित पढाइपछिको मूल्याङ्कन</th><th colspan="3">थप सहायतापछिको मूल्याङ्कन</th><th rowspan="2">मूल्याङ्कनका साधन</th></tr><tr><th>सकेको / नसकेको</th><th>मिति</th><th>अङ्कन</th><th>सकेको / नसकेको</th><th>मिति</th><th>अङ्कन</th></tr>';
     const body=field('annexRows'),foot=field('annexFoot');body.replaceChildren();foot.replaceChildren();
     const groupStates=form.groups.map(()=>[[],[]]), scoreCells=form.groups.map(()=>[null,null]);
-    const dates=form.groups.map(()=>[null,null]);
+    const dates=form.groups.map(()=>[null,null]),buttons=form.groups.map(()=>[null,null]);
+    const selection=schoolSelection(),scopeKey=seroScopeKey(),loaded=!!selection&&seroReadKey===scopeKey;
+    const editable=loaded&&!readOnly&&year==='2083';
+    const idFor=i=>'cdc2076-g'+field('class').value+'-'+(form.start+i);
+    const applyRecord=(i,j,record)=>{
+      groupStates[i][j].forEach((input,k)=>{input.value=record?(record.indicators[k]?'yes':'no'):'';});
+      dates[i][j].value=record?.date||'';
+    };
+    async function saveGroup(i,j){
+      const button=buttons[i][j],stage=j?'support':'regular',outcomeId=idFor(i);
+      const stillHere=()=>canShow()&&scopeKey===seroScopeKey()&&seroReadKey===scopeKey&&button?.isConnected;
+      if(!editable||inlinePending||!stillHere())return;
+      const values=groupStates[i][j].map(input=>input.value);
+      const raw=attendanceDigitsToEnglish(dates[i][j].value).trim(),date=raw.split('-').map((p,k)=>k?attendancePad(p):p).join('-');
+      let valid=false;try{valid=/^\d{4}-\d{1,2}-\d{1,2}$/.test(raw)&&attendanceAdToBs(attendanceBsToAd(date))===date;}catch{}
+      if(cdcSeroferoIndicatorCount(values)===null||!valid){field('gridStatus').textContent='चारै सूचक र मान्य मूल्याङ्कन मिति भर्नुहोस्।';return;}
+      const payload={...selection,unit,outcomeId,stage,date,indicators:values.map(v=>v==='yes'),createdBy:owner};
+      const previous=seroLatest(outcomeId,stage);
+      if(previous&&previous.date===date&&JSON.stringify(previous.indicators)===JSON.stringify(payload.indicators)){field('gridStatus').textContent='यो मूल्याङ्कन पहिले नै सुरक्षित छ।';return;}
+      const retryKey=JSON.stringify(payload),ref=seroRetry.get(retryKey)||doc(collection(db,'cdc_serofero_indicators'));
+      seroRetry.set(retryKey,ref);inlinePending=true;button.disabled=true;
+      field('gridStatus').textContent='सूचक अभिलेख सुरक्षित गर्दै…';
+      try{
+        const role=(await getDocFromServer(doc(db,'user_roles',owner))).data();
+        const student=assessmentStudents.find(s=>s.id===selection.studentId);
+        if(!stillHere()||!student||!cdcTeacherAssignment(role,field('class').value,selection.subject,student))throw Error('Assignment unavailable');
+        try{await setDoc(ref,{...payload,createdAt:serverTimestamp()});}
+        catch(error){
+          const existing=(await getDocFromServer(ref)).data();
+          if(!existing||!Object.entries(payload).every(([k,v])=>JSON.stringify(existing[k])===JSON.stringify(v)))throw error;
+        }
+        seroRetry.delete(retryKey);
+        if(stillHere()){
+          seroRecords=[payload,...seroRecords].sort((a,b)=>b.date.localeCompare(a.date));
+          applyRecord(i,j,seroLatest(outcomeId,stage));updatePreview();
+          field('gridStatus').textContent='सूचक अभिलेख सुरक्षित भयो।';
+        }
+      }catch{if(stillHere())field('gridStatus').textContent='सुरक्षित भएको पुष्टि भएन। अनुमति जाँचेर पुनः प्रयास गर्नुहोस्।';}
+      finally{inlinePending=false;if(stillHere())button.disabled=false;}
+    }
     const row=foot.insertRow(),label=row.insertCell(),value=row.insertCell();label.colSpan=3;label.textContent='पूर्वावलोकन — औसत अङ्क';value.colSpan=7;value.textContent='—';
     const updatePreview=()=>{
       const completed=[];
@@ -7819,16 +7884,20 @@ function parseCdcBilingualCatalog(text) {
           select.disabled=readOnly;select.onchange=updatePreview;groupStates[i][stage].push(select);cell.append(select);
           if(j===0){
             const dateCell=row.insertCell();dateCell.rowSpan=4;
-            const date=document.createElement('input');date.type='text';date.inputMode='numeric';date.maxLength=10;date.placeholder='मिति';date.setAttribute('aria-label',(stage?'थप सहायता':'नियमित')+' मूल्याङ्कन मिति');date.disabled=readOnly;date.style.width='95px';dateCell.append(date);dates[i][stage]=date;
+            const date=document.createElement('input');date.type='text';date.inputMode='numeric';date.maxLength=10;date.placeholder='मिति';date.setAttribute('aria-label',(stage?'थप सहायता':'नियमित')+' मूल्याङ्कन मिति');date.disabled=readOnly;date.style.width='95px';date.dataset.cdcSeroDate=String(stage);dateCell.append(date);dates[i][stage]=date;
+            if(editable){
+              const button=document.createElement('button');button.type='button';button.className='btn alt';button.textContent='सुरक्षित गर्नुहोस्';button.dataset.cdcSeroSave=String(stage);button.onclick=()=>saveGroup(i,stage);buttons[i][stage]=button;dateCell.append(button);
+            }
             const score=row.insertCell();score.rowSpan=4;score.dataset.cdcSeroScore=String(stage);scoreCells[i][stage]=score;
           }
         }
         row.insertCell().textContent=tools[j];
       }
     }
+    if(loaded)for(let i=0;i<form.groups.length;i++)for(let j=0;j<2;j++)applyRecord(i,j,seroLatest(idFor(i),j?'support':'regular'));
     updatePreview();
     field('annexSign').textContent='शिक्षकको सही __________   अभिभावकको सही __________';
-    field('annexStatus').textContent='पाठ्यक्रम विकास केन्द्र २०७६, पीडीएफ पृष्ठ '+digits(form.page)+' — '+digits(form.groups.length*4)+' सूचक। स्रोतमा आधारित समीक्षा प्रति। सूचक छानेर अङ्क गणना हेर्न सकिन्छ; यो अस्थायी पूर्वावलोकन मात्र हो, सुरक्षित वा छपाइ हुँदैन। थिम परिवर्तन गर्दा छनोट हट्छ। पुराना अभिलेख सुरक्षित छन्।';
+    field('annexStatus').textContent='पाठ्यक्रम विकास केन्द्र २०७६, पीडीएफ पृष्ठ '+digits(form.page)+' — '+digits(form.groups.length*4)+' सूचक। स्रोतमा आधारित समीक्षा प्रति। '+(loaded?(readOnly?'सुरक्षित अभिलेख मात्र हेर्न सकिन्छ।':'चारै सूचक र मिति भरेर प्रत्येक चरण छुट्टै सुरक्षित गर्नुहोस्। नसुरक्षित छनोट पुनः पढ्दा हट्छ।'):'सुरक्षित गर्न पहिले सूचक अभिलेख पढ्नुहोस्। हालको छनोट अस्थायी हो।')+' छपाइको प्रमाणीकरण बाँकी छ। पुराना अभिलेख सुरक्षित छन्।';
   }
   function renderPrimaryLegacy(){
     const form=primaryLegacyForm(),grade=field('class').value,unit=field('unit').value;
@@ -8095,6 +8164,7 @@ function parseCdcBilingualCatalog(text) {
     field('schoolRows').replaceChildren();
     annexObservations=[];
     annexReadSelection=null;
+    seroReadSequence++;seroRecords=[];seroReadKey=null;
     field('printStatus').textContent='';
     field('gridStatus').textContent='';
     renderAnnex();
