@@ -176,6 +176,7 @@ try{
  {
   const {context,page,errors}=await newSession();
   try{
+   await page.setViewportSize({width:375,height:812});
    await page.goto(origin+'/admin.html');
    await wait(page,()=>!document.getElementById('login').disabled);
    assert.equal(await page.locator('#adminArea').isVisible(),false);
@@ -208,6 +209,11 @@ try{
    await legacy.waitFor({state:'visible'});
    assert.match(await legacy.textContent(),/Needs review/);
    assert.equal(await legacy.getByRole('button').count(),0);
+   assert.equal(await page.locator('#capacityPanel').evaluate(el=>el.open),false);
+   assert.equal(await legacy.locator('td').first().getAttribute('data-label'),'School ID');
+   assert.equal(await legacy.evaluate(el=>getComputedStyle(el).display),'block');
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,'Super Admin page must fit 375px viewport');
+   assert.equal(await page.locator('.school-table-wrap').evaluate(el=>el.scrollWidth<=el.clientWidth),true,'School cards must fit mobile viewport');
    assert.equal(await page.locator('#schools tr').filter({hasText:newSchoolId}).getByRole('button',{name:'Deactivate'}).count(),1);
    assert.equal((await db.doc('schools/legacy-browser-fixture').get()).data().active,true);
    // Simulate returning after a suspended one-hour browser tab.
