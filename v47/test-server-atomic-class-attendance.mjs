@@ -86,3 +86,15 @@ for(const mutate of [
  }finally{await new Promise(resolve=>server.close(resolve))}
 }
 console.log('PASS V47 atomic attendance: 1/11/101/500, zero partial writes, concurrent changes and role/tenant boundaries');
+
+import {requestAtomicAttendance} from './atomic-attendance-client.mjs';
+{
+ const f=fixture(11),review=await run(f);
+ const args={schoolId,classId,date,entries:f.entries,reviewDigest:null,getIdToken:async()=>actorUid,assertCurrent:()=>{},
+  fetchImpl:async(url,options)=>{assert.equal(url,'/api/v47/attendance/atomic');assert.equal(options.redirect,'error');
+   return {ok:true,json:async()=>({result:review})}}};
+ assert.equal((await requestAtomicAttendance(args)).count,11);
+ await assert.rejects(requestAtomicAttendance({...args,fetchImpl:async()=>({ok:false})}),/unavailable/);
+ await assert.rejects(requestAtomicAttendance({...args,fetchImpl:async()=>({ok:true,json:async()=>({result:{...review,schoolId:'99999'}})})}),/Unexpected/);
+ await assert.rejects(requestAtomicAttendance({...args,reviewDigest:review.reviewDigest}),/Unexpected/);
+}

@@ -5,6 +5,7 @@ import {saveSchoolAttendance} from './attendance-service.mjs';
 import {saveAssignedTeacherAttendance} from './teacher-attendance-service.mjs';
 import {saveLoadedClassAttendance} from './attendance-class-save.mjs';
 import {saveAuthoritativeClassAttendance} from './verified-class-attendance-save.mjs';
+import {requestAtomicAttendance} from './atomic-attendance-client.mjs';
 import {loadClassRoster} from './attendance-roster.mjs';
 import {loadAttendanceByClassDate} from './attendance-query.mjs';
 import {nepalGregorianDate} from './nepal-date.mjs';
@@ -95,6 +96,50 @@ $('verifiedSave').onclick=async()=>{
   $('rosterNext').disabled=moreRosterPages?false:true;
   $('allPresent').disabled=false;$('allAbsent').disabled=false;
   if(succeeded)reset();
+ }
+};
+
+// Explicit opt-in API path. Never substitute legacy partial batches on failure.
+$('atomicSave').onclick=async()=>{
+ if(savingAttendance||signingIn)return;
+ const wasLoading=rosterBusy,morePages=!$('rosterNext').disabled;
+ const selectedActor=actor,sid=schoolId,uid=actor?.uid,classId=$('schoolClass').value,date=$('date').value;
+ let sentCommit=false,succeeded=false;
+ savingAttendance=true;epoch++;busy=false;rosterEpoch++;rosterBusy=false;
+ const buttons=['atomicSave','verifiedSave','bulkSave','save','logout','login','schoolClass','date','rosterLoad','rosterNext','allPresent','allAbsent','next'];
+ for(const id of buttons)$(id).disabled=true;
+ renderRoster();
+ const check=()=>{if(!uid||actor!==selectedActor||schoolId!==sid||auth?.currentUser?.uid!==uid||
+   actor?.role!=='school_admin'||$('schoolClass').value!==classId||$('date').value!==date)throw Error('School session changed')};
+ try{
+  check();
+  if(attendanceReviewRequired)throw Error('Reload and review existing attendance before saving');
+  if(wasLoading||morePages||!rosterStudents.length||rosterStudents.length>500||
+     rosterSelections.size!==rosterStudents.length||!rosterStudents.every(s=>rosterSelections.has(s.id)))
+   throw Error('Load and mark every active student; atomic server limit is 500 per class');
+  const entries=rosterStudents.map(s=>({studentId:s.id,class:classId,date,present:rosterSelections.get(s.id)==='true'}));
+  const opts={schoolId:sid,classId,date,entries,getIdToken:()=>auth.currentUser.getIdToken(),
+   fetchImpl:(...args)=>fetch(...args),assertCurrent:check};
+  const review=await requestAtomicAttendance({...opts,reviewDigest:null});
+  if(!confirm('Save all '+review.count+' students in ONE transaction? '+review.changed+' records will change.')){status('Atomic Save cancelled');return}
+  check();sentCommit=true;
+  const result=await requestAtomicAttendance({...opts,reviewDigest:review.reviewDigest});
+  check();
+  rosterSelections.clear();attendanceReviewRequired=false;succeeded=true;
+  status('Atomic class attendance saved: '+result.count+' students; '+result.changed+' changed.');
+ }catch(e){
+  if(sentCommit){attendanceReviewRequired=true;attendanceReviewInProgress=false;}
+  status(sentCommit?'Atomic Save outcome not confirmed. Reload all attendance pages before retrying. '+e.message:'Atomic review blocked: '+e.message);
+ }finally{
+  savingAttendance=false;renderRoster();
+  $('atomicSave').disabled=actor?.role!=='school_admin';
+  $('verifiedSave').disabled=actor?.role!=='school_admin';$('bulkSave').disabled=actor?.role!=='school_admin';
+  $('save').disabled=!['school_admin','teacher'].includes(actor?.role);
+  $('logout').disabled=!actor;$('login').disabled=!auth;
+  $('schoolClass').disabled=attendanceReviewRequired;$('date').disabled=attendanceReviewRequired;
+  $('rosterLoad').disabled=!actor;$('rosterNext').disabled=!actor||!morePages;
+  $('allPresent').disabled=!actor;$('allAbsent').disabled=!actor;
+  if(succeeded){const message=$('message').textContent;reset();status(message)}
  }
 };
 
