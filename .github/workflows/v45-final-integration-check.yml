@@ -105,6 +105,7 @@ jobs:
               ".github/workflows/v46-grade9-grid-catalog-audit.yml",
               "scripts/audit-grade9-grid-catalog.py",
               "scripts/v46-local-firestore-backup.py",
+              "scripts/test-v46-backup-restore-emulator.py",
               ".github/workflows/v46-local-backup-test.yml",
               "docs/V46-FREE-FIRESTORE-BACKUP-PLAN.md",
               "cdc-exact-grid.mjs",
