@@ -10,6 +10,7 @@ import {mkdtemp,writeFile,readFile,rm} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
 import {build} from 'esbuild';
 import {chromium} from 'playwright';
+import {excelWorkbook} from '../excel-workbook.mjs';
 import {createV47StaticHandler} from '../../v47-runtime/static-handler.mjs';
 
 const projectId='demo-smss-v47-browser';
@@ -203,6 +204,64 @@ try{
    assert.equal((await db.doc('schools/'+schools[1].sid+'/members/'+newUid).get()).exists,false);
    assert.deepEqual(errors,[]);
    console.log('PASS School Admin isolated Viewer account, inactive membership, activation, tenant denial');
+  }finally{await context.close()}
+ }
+ // Real XLSX upload, isolated Auth, atomic Staff link and teacher assignment.
+ {
+  const school=schools[0],foreign=schools[1],base='schools/'+school.sid;
+  const staffRef=db.doc(base+'/staff/batch-teacher'),foreignStaff=db.doc('schools/'+foreign.sid+'/staff/batch-teacher');
+  const staff={schoolId:school.sid,name:'Batch Teacher',position:'Teacher',staffId:'EMP-BATCH'};
+  await staffRef.set(staff);await foreignStaff.set({...staff,schoolId:foreign.sid});
+  const batchEmail=email('alpha-batch-teacher'),unmatchedEmail=email('alpha-batch-unmatched');
+  const {context,page,errors}=await newSession();
+  const upload=async rows=>{
+   const blob=excelWorkbook(['Name','Email','Password'],rows,{sheetName:'Teacher_Accounts'});
+   await page.locator('#teacherBatchFile').setInputFiles({name:'teacher-accounts.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from(await blob.arrayBuffer())});
+   await page.locator('#teacherBatchPreview').click();
+   await wait(page,()=>!document.getElementById('teacherBatchPreview').disabled);
+  };
+  try{
+   await login(page,school.sid,'alpha-admin');
+   await page.goto(origin+'/school-admin.html?schoolId='+school.sid);
+   await wait(page,()=>!document.getElementById('schoolArea').hidden);
+   await page.locator('#teacherBatch summary').click();
+   await upload([['Batch Teacher',batchEmail,password],['Batch Teacher',batchEmail.toUpperCase(),password]]);
+   assert.equal(await page.locator('#teacherBatchCreate').isDisabled(),true);
+   assert.match(await page.locator('#teacherBatchStatus').textContent(),/दोहोरिएको/);
+   await assert.rejects(admin.getUserByEmail(batchEmail),e=>e.code==='auth/user-not-found');
+   await upload([['Batch Teacher',batchEmail,password],['Unmatched Teacher',unmatchedEmail,password]]);
+   assert.equal(await page.locator('#teacherBatchCreate').isDisabled(),false,await page.locator('#teacherBatchStatus').textContent());
+   assert.match(await page.locator('#teacherBatchRows').textContent(),/Staff matched/);
+   assert.match(await page.locator('#teacherBatchRows').textContent(),/No Staff match/);
+   assert.ok(!(await page.locator('#teacherBatchRows').textContent()).includes(password));
+   assert.equal((await staffRef.get()).data().authUid,undefined);
+   await assert.rejects(admin.getUserByEmail(batchEmail),e=>e.code==='auth/user-not-found');
+   page.once('dialog',dialog=>dialog.accept());await page.locator('#teacherBatchCreate').click();
+   await wait(page,()=>document.getElementById('teacherBatchStatus').textContent.includes('2 निष्क्रिय सदस्यता बन्यो'));
+   const linkedUid=(await admin.getUserByEmail(batchEmail)).uid,unmatchedUid=(await admin.getUserByEmail(unmatchedEmail)).uid;
+   for(const uid of [linkedUid,unmatchedUid]){
+    assert.deepEqual((await db.doc(base+'/members/'+uid).get()).data(),{uid,schoolId:school.sid,role:'teacher',active:false});
+    assert.equal((await db.doc('schools/'+foreign.sid+'/members/'+uid).get()).exists,false);
+    assert.equal((await db.doc('v47_super_admins/'+uid).get()).exists,false);
+   }
+   assert.deepEqual((await staffRef.get()).data(),{...staff,email:batchEmail,authUid:linkedUid});
+   assert.deepEqual((await foreignStaff.get()).data(),{...staff,schoolId:foreign.sid});
+   const before=await newSession();try{await login(before.page,school.sid,linkedUid,false,'1',batchEmail)}finally{await before.context.close()}
+   const row=page.locator('#members tr').filter({hasText:linkedUid});await row.waitFor({state:'visible'});
+   page.once('dialog',dialog=>dialog.accept());await row.getByRole('button',{name:'Activate',exact:true}).click();
+   await wait(page,uid=>Array.from(document.querySelectorAll('#members tr')).some(r=>r.textContent.includes(uid)&&r.textContent.includes('Deactivate')),linkedUid);
+   const after=await newSession();try{await login(after.page,school.sid,linkedUid,true,'1',batchEmail)}finally{await after.context.close()}
+   const wrong=await newSession();try{await login(wrong.page,foreign.sid,linkedUid,false,'1',batchEmail)}finally{await wrong.context.close()}
+   await page.locator('#assignmentUid').fill(linkedUid);await page.locator('#assignmentClass').selectOption('1');await page.locator('#assignmentSubject').fill('math');
+   page.once('dialog',dialog=>dialog.accept());await page.locator('#assignTeacher').click();
+   await wait(page,()=>!document.getElementById('assignTeacher').disabled);
+   const assignment=db.doc(base+'/teacher_assignments/'+[school.sid,linkedUid,'1','math'].join(':'));
+   assert.deepEqual((await assignment.get()).data(),{schoolId:school.sid,uid:linkedUid,classId:'1',subjectId:'math',active:false});
+   page.once('dialog',dialog=>dialog.accept());await page.locator('#activateAssignment').click();
+   await wait(page,()=>!document.getElementById('activateAssignment').disabled);
+   assert.equal((await assignment.get()).data().active,true);
+   assert.deepEqual(errors,[]);
+   console.log('PASS real XLSX Teacher accounts, duplicate rejection, Staff transaction, inactive login, activation, tenant isolation and class/subject assignment');
   }finally{await context.close()}
  }
  // Register a third synthetic school using the actual Super Admin UI.
