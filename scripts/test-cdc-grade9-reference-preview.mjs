@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {buildGrade9ReferencePreview as build,referencePreviewTopics as topics} from '../cdc-grade9-reference-preview.mjs';
+import {grade9SocialReferenceBank} from '../cdc-grade9-social-reference-bank.mjs';
+import {grade9CompulsoryMathReferenceBank} from '../cdc-grade9-compulsory-math-reference-bank.mjs';
+const grade=9;
+for(const [subject,provider,count] of [['Social Studies',grade9SocialReferenceBank,24],['Mathematics',grade9CompulsoryMathReferenceBank,16]]){
+ const pack=provider({grade,subject}),questionBefore=JSON.stringify(pack);
+ const ids=topics({grade,subject,questions:pack.questions});
+ const args={grade,subject,questions:pack.questions,selectedTopicIds:ids,fullMarks:75,durationMinutes:180,language:'both',rng:()=>.39};
+ const a=build(args),b=build({...args,previousSignature:a.signature,rng:()=>.61});
+ assert.equal(a.ready,true,a.reason);assert.equal(b.ready,true,b.reason);
+ assert.notEqual(a.signature,b.signature);assert.equal(a.groupCount,count);
+ assert.match(a.text,/REFERENCE DRAFT — NOT FOR EXAM/);
+ assert.match(a.text,/75 marks · 180 minutes/);
+ assert.equal(a.readyForLive,false);assert.equal(a.currentCdcExactApproved,false);
+ assert.equal(JSON.stringify(pack),questionBefore);
+ assert.throws(()=>build({...args,selectedTopicIds:['outside']}),/no reference group/);
+ assert.throws(()=>build({...args,grade:8}),/No review-only/);
+ assert.throws(()=>build({...args,fullMarks:50}),/75 marks/);
+}
+const ui=readFileSync(new URL('../cdc-question-paper.js',import.meta.url),'utf8');
+assert.match(ui,/id="qpReferenceDraftBtn"/);
+assert.match(ui,/function generateReferenceDraftPreview\(\)/);
+assert.match(ui,/box\.textContent=result\.text/);
+assert.match(ui,/roleCanTeach\(selectedClass,selectedSubject,selectedSection\)/);
+assert.match(ui,/clearReferenceDraftPreview\(\)/);
+const f=ui.slice(ui.indexOf('function generateReferenceDraftPreview()'),ui.indexOf('async function generateSmartPaper()'));
+assert.doesNotMatch(f,/generatedPaper\s*=|addDoc\(|setDoc\(|printPaper\(/);
+console.log('PASS actual Grade9 maths/social reference banks in separate read-only preview, selected topic checks and no official save or print');

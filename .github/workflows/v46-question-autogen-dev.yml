@@ -23,6 +23,8 @@ on:
       - 'cdc-grade9-paper-grid-guard.mjs'
       - 'cdc-grade9-model-reference-audit.mjs'
       - 'cdc-grade9-reference-readiness.mjs'
+      - 'cdc-grade9-reference-preview.mjs'
+      - 'scripts/test-cdc-grade9-reference-preview.mjs'
       - 'scripts/test-cdc-grade9-reference-readiness.mjs'
       - 'cdc-grade9-nepali-model-2078.mjs'
       - 'cdc-grade9-nepali-grouped-planner.mjs'
@@ -195,6 +197,8 @@ jobs:
         run: node scripts/test-cdc-grade9-english-reference-bank.mjs
       - name: Verify full English seen prose papers when retrieved
         run: node --input-type=module -e "import {PUBLIC_DOMAIN_SEEN_PROSE as d} from './cdc-grade9-english-seen-prose-data.mjs'; if(d.length) await import('./scripts/test-cdc-grade9-english-seen-prose.mjs'); else console.log('Seen prose not retrieved; official exam remains blocked')"
+      - name: Test real Grade 9 review-only reference previews
+        run: node scripts/test-cdc-grade9-reference-preview.mjs
       - name: Verify automatic CDC Grid source detection for Grade 6-10 subjects
         run: node scripts/test-cdc-grid-source-index.mjs
       - name: Verify 54 original bilingual formula-checked Optional Maths practice questions
