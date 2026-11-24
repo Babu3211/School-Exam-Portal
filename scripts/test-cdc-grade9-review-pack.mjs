@@ -36,8 +36,11 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
   assert.equal(result.groupCount,count);assert.equal(result.currentCdcExactApproved,false);
   assert.equal(result.readyForLive,false);assert.notEqual(result.signature,previousSignature);
   assert.match(result.text,/REFERENCE DRAFT — NOT FOR EXAM/);
+  assert.match(result.answerText,/INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY/);
+  assert.ok(result.answerCount>=count,subject+' answer coverage');
+  assert.doesNotMatch(result.answerText,/\bundefined\b/);
   previousSignature=result.signature;
-  records.push({subject,set:i+1,language,fullMarks:75,durationMinutes,groupCount:count,sourceUrl:result.sourceUrl,status:'Reference only — current CDC approval pending',signature:result.signature,html:'<pre>'+esc(result.text)+'</pre>'});
+  records.push({subject,set:i+1,language,fullMarks:75,durationMinutes,groupCount:count,sourceUrl:result.sourceUrl,status:'Reference only — current CDC approval pending',signature:result.signature,answerCount:result.answerCount,html:'<pre>'+esc(result.text)+'</pre><details><summary>Teacher answer review / उत्तरकुञ्जिका</summary><pre>'+esc(result.answerText)+'</pre></details>'});
  }
 }
 {
@@ -68,11 +71,12 @@ assert.equal(records.length,16);
 assert.equal(new Set(records.map(r=>r.subject)).size,8);
 assert.equal(new Set(records.map(r=>r.subject+'|'+r.signature)).size,16);
 assert.ok(records.every(r=>r.status.includes('pending')));
+assert.ok(records.every(r=>r.html.includes('<details><summary>Teacher answer review')),'All sixteen papers have a separate teacher answer review');
 const out=process.env.SMSS_REVIEW_PACK_DIR;
 if(out){
  mkdirSync(out,{recursive:true});
  const style='body{font:16px/1.5 system-ui,sans-serif;max-width:900px;margin:24px auto;padding:0 16px;color:#172133}section{border-top:2px solid #aaa;padding:18px 0}pre,p,li{white-space:pre-wrap;overflow-wrap:anywhere}pre{font:inherit}aside{font-weight:700;color:#922}details{margin-top:20px}a{overflow-wrap:anywhere}@media print{section{break-before:page}details{display:none}}';
- assert.ok(records.every(r=>!/<(?:script|form|iframe|object|embed)\\b/i.test(r.html)),'Review pack must contain no executable or login UI');
+ assert.ok(records.every(r=>!/<(?:script|form|iframe|object|embed)\b/i.test(r.html)),'Review pack must contain no executable or login UI');
  const toc=records.map((r,i)=>'<li><a href="#paper'+i+'">'+esc(r.subject)+' — Set '+r.set+'</a></li>').join('');
  const body=records.map((r,i)=>'<section id="paper'+i+'"><aside>REVIEW ONLY — NOT FOR EXAM / परीक्षा प्रयोजनका लागि होइन</aside><h2>'+esc(r.subject)+' — Set '+r.set+'</h2><p>'+esc(r.status)+' · '+r.fullMarks+' marks · '+r.durationMinutes+' minutes · '+esc(r.language)+'</p><p>Source: '+esc(r.sourceUrl||'See repository source register')+'</p>'+r.html+'</section>').join('');
  writeFileSync(join(out,'grade9-teacher-review.html'),'<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>SMSS Grade 9 review pack</title><style>'+style+'</style><h1>SMSS Grade 9 — teacher review pack</h1><aside>16 original practice/reference drafts. No school data. No release approval.</aside><p>Six subject patterns are reference only; two bundled structures pass machine grid checks. Teacher verification of content, difficulty, answer keys and current official grid remains required.</p><ol>'+toc+'</ol>'+body+'</html>','utf8');

@@ -47,3 +47,5 @@ assert.equal(ev.ready,true,ev.reason);assert.equal(ev.groupCount,10);assert.matc
 assert.notEqual(build({...ea,previousSignature:ev.signature,rng:()=>.63}).signature,ev.signature);
 assert.equal(ev.readyForLive,false);
 console.log('PASS offline English full reference practice, explicit original reading replacement, official gate unchanged');
+
+// The pack test checks all six reference subjects, two distinct sets and answer coverage.

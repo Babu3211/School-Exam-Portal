@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v100-social-nepal-map-practice-2083';
+const CACHE_NAME = 'smss-pwa-v101-reference-answer-review-2083';
 const APP_SHELL = [
   './',
   './index.html',
