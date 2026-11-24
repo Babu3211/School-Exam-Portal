@@ -140,3 +140,46 @@ for(const e of mathText.readableAreaHours){const area=mathTextGuide.areas.find(a
 assert.equal(mathText.visualCellReviewComplete,false);
 assert.equal(mathText.officialExamApproved,false);
 console.log('PASS optional mathematics original PDF extracted totals cross-check; full visual/current edition approval pending');
+
+// Cross-check the actual reference paper planners, not just the display tables,
+// against independently recorded government PDF extraction evidence.
+const evidenceFor=resource=>{
+ const source=register.sources.find(s=>s.retrievalEvidence?.resource===resource);
+ assert.ok(source?.retrievalEvidence?.numericReferenceCrosscheck);
+ assert.equal(source.retrievalEvidence.currentCdcExactApproved,false);
+ return source.retrievalEvidence.numericReferenceCrosscheck;
+};
+const {getScience2078Reference}=await import('../cdc-grade9-science-reference-planner.mjs');
+const {getGrade9MathReference}=await import('../cdc-grade9-compulsory-math-grouped.mjs');
+const {auditEnglishChart}=await import('../cdc-grade9-english-practice.mjs');
+const {getSocial2078Reference}=await import('../cdc-grade9-social-reference-planner.mjs');
+const scienceEvidence=evidenceFor('11167');
+const scienceRef=getScience2078Reference({grade:9,subject:'Science and Technology'});
+assert.equal(scienceRef.fullMarks,scienceEvidence.fullMarks);
+assert.deepEqual(scienceRef.units.map(u=>u.marks),scienceEvidence.unitMarks);
+assert.deepEqual(scienceRef.groups.map(g=>g.count),scienceEvidence.questionCounts);
+assert.deepEqual(scienceRef.groups.map(g=>g.marksEach),scienceEvidence.marksEach);
+assert.deepEqual(scienceRef.groups.map(g=>g.levelCounts),scienceEvidence.typeLevelCounts);
+assert.deepEqual(scienceRef.cognitiveMarks,scienceEvidence.cognitiveMarks);
+const mathEvidence=evidenceFor('11170');
+const mathRef=getGrade9MathReference({grade:9,subject:'Mathematics'});
+assert.equal(mathRef.fullMarks,mathEvidence.fullMarks);
+assert.equal(mathRef.groupCount,mathEvidence.groupCount);
+assert.equal(mathRef.itemCount,mathEvidence.subitemCount);
+assert.deepEqual(mathRef.areas.map(a=>a.marks),mathEvidence.unitMarks);
+assert.deepEqual(mathRef.cognitiveMarks,mathEvidence.cognitiveMarks);
+const englishEvidence=evidenceFor('11169');
+const englishRef=auditEnglishChart({grade:9,subject:'English'});
+assert.equal(englishRef.fullMarks,englishEvidence.fullMarks);
+assert.deepEqual(englishRef.reading.map(x=>x.marks),englishEvidence.readingMarks);
+assert.deepEqual(englishRef.writing.map(x=>x.marks),englishEvidence.writingMarks);
+assert.deepEqual(englishRef.grammar.map(x=>[x.count,x.marksEach]),[[englishEvidence.grammar.transformationCount,englishEvidence.grammar.transformationMarksEach],[englishEvidence.grammar.contextualMcqCount,englishEvidence.grammar.contextualMcqMarksEach]]);
+const socialEvidence=evidenceFor('11166');
+const socialRef=getSocial2078Reference({grade:9,subject:'Social Studies'});
+assert.equal(socialRef.fullMarks,socialEvidence.fullMarks);
+assert.deepEqual(socialRef.unitMarks,socialEvidence.unitMarks);
+const socialTypes=['very_short','short','long'];
+assert.deepEqual(socialTypes.map(type=>socialRef.slots.filter(s=>s.type===type).length),socialEvidence.questionCounts);
+assert.deepEqual(socialRef.unitMarks.map((_,i)=>socialTypes.map(type=>socialRef.slots.filter(s=>s.historicUnit===i+1&&s.type===type).reduce((n,s)=>n+s.marks,0))),socialEvidence.unitTypeMarks);
+assert.ok([scienceRef,mathRef,englishRef,socialRef].every(ref=>ref.currentCdcExactApproved===false));
+console.log('PASS four compulsory reference planners against government PDF numeric extraction: historical comparison only, no current CDC approval');
