@@ -606,6 +606,27 @@ for(const [unit,count,page] of [['मेरो सिर्जना',6,156],['�
 }
 assert.match(field('annexRows').textContent,/तीन अङ्क × दुई अङ्क/);
 assert.match(field('annexRows').textContent,/शेष नरहने/);
-console.log('Eleven current-year mathematics rubric themes and source-specific criteria passed');
+for(const [grade,unit,count,page] of [
+ ['1','म र मेरो परिवार',4,136],['1','मेरो दैनिक जीवन',2,138],['1','हाम्रो समुदाय',8,139],
+ ['1','हाम्रो विद्यालय',5,141],['1','मेरो सिर्जना',2,142],['1','सञ्चार प्रविधि र बजार',2,143],
+ ['2','म र मेरो परिवार',2,144],['2','मेरो दैनिक जीवन',2,145],['2','हाम्रो समुदाय',4,146]
+]){
+ current.subjectAssignments=[{className:'Class '+grade,subject:'Mathematics',section:'A'}];
+ serverRole={...current};
+ w.getDocs=async()=>({docs:[{id:'math-'+grade,data:()=>({class:'Class '+grade,section:'A',name:'Synthetic grade '+grade})}]});
+ await w.loadCdcAssessmentPage();choice('unit',unit);
+ assert.equal(field('annex3').hidden,false,unit);
+ assert.equal(field('annexRows').rows.length,count*4,unit);
+ assert.equal(field('annexRows').rows[0].cells[0].rowSpan,count*4,unit);
+ assert.equal(field('outcomePicker').options.length,count+1,unit);
+ assert.equal(new Set([...field('outcomePicker').options].slice(1).map(o=>o.value)).size,count,unit);
+ assert.match(field('annexStatus').textContent,new RegExp(String(page)));
+ assert.match(field('annexHead').textContent,grade==='1'?/कैफियत/:/साधन/);
+}
+const legacyForms=w.eval('cdcLegacyMathRubrics');
+assert.equal(Object.keys(legacyForms).length,20);
+assert.equal(Object.values(legacyForms).reduce((n,f)=>n+f.rows.length,0),87);
+assert.ok(Object.values(legacyForms).every(f=>f.rows.every(r=>r.criteria.length===4)));
+console.log('Twenty current-year mathematics rubric themes, 87 outcomes, 348 criteria and class-specific columns passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
