@@ -1003,6 +1003,23 @@ await w.loadCdcAssessmentPage();
 // Independent public curriculum summary does not switch the current assessment.
 const entryClassBefore=field('class').value,entrySubjectBefore=field('subject').value,entryStudentBefore=field('student').value;
 const summaryRows=()=>[...field('themeSummaryRows').rows];
+const coverage=[...field('themeCoverageRows').rows];
+assert.equal(coverage.length,29);
+const coverageRow=(grade,subject)=>coverage.find(row=>row.dataset.cdcCoverageClass===grade&&row.dataset.cdcCoverageSubject===subject);
+assert.equal(coverageRow('1','serophero').cells[2].textContent,'६ / १०');
+assert.equal(coverageRow('1','serophero').cells[3].textContent,'१७');
+assert.equal(coverageRow('1','serophero').cells[4].textContent,'६८');
+assert.equal(coverageRow('2','serophero').cells[2].textContent,'० / १०');
+assert.equal(coverageRow('2','serophero').cells[4].textContent,'—');
+assert.equal(coverageRow('3','english').cells[4].textContent,'944');
+assert.equal(coverageRow('5','hamrodhunibeshi').cells[2].textContent,'—');
+assert.match(field('themeCoverageInfo').textContent,/219 \/ 243.*5/);
+for(const row of coverage){
+ const toNumber=v=>Number(v.replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)));
+ if(row.cells[3].textContent==='—'){assert.equal(row.cells[4].textContent,'—');continue;}
+ assert.equal(toNumber(row.cells[4].textContent),4*toNumber(row.cells[3].textContent));
+}
+
 choice('summaryClass','1');choice('summarySubject','serophero');
 const seroSummary=summaryRows().find(row=>row.cells[1]?.textContent==='म र मेरो परिवार');
 assert.equal(seroSummary.cells[2].textContent,'५');
