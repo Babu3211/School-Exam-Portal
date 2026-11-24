@@ -46,6 +46,8 @@ assert.match(source,/gridOrigin==="bundled_official_cdc_pdf"/);
 assert.match(source,/loadCdcGridSourceRegister\(\)/);
 assert.match(source,/findCdcGridSources\(cdcSourceRegister,grade,subject\)/);
 assert.match(source,/auditGrade9Release\(\{register:cdcSourceRegister\}\)/);
+assert.match(source,/auditGrade9ScienceArchive\(\{grade,subject\}\)/);
+assert.match(source,/२०७८ ऐतिहासिक Grid/);
 assert.match(source,/grade9ComputerOriginalBank\(\{subject\}\)/);
 assert.match(source,/यो स्थिति Live स्वीकृति होइन/);
 assert.match(source,/heading\.textContent="CDC वेबसाइटमा यस विषयको Grid स्रोत भेटियो/);
