@@ -1,10 +1,11 @@
 /** Public-domain original poems listed in the CDC English Grade 9
- * first edition (2022), printed pp. 8–9 and 45–46. These are original
+ * updated edition (2025), printed pp. 8–9 and 45–46. These are original
  * literary works, not a reproduction of CDC's textbook exercises.
  * Source-specific SMSS questions are newly written and unreviewed.
  * The 10-mark seen prose group still requires an authorized passage.
  */
-export const SEEN_BOOK='https://giwmscdnone.gov.np/media/pdf_upload/English%20Grade-9_yoc9xcn.pdf';
+import {PUBLIC_DOMAIN_SEEN_PROSE} from './cdc-grade9-english-seen-prose-data.mjs';
+export const SEEN_BOOK="https://giwmscdnone.gov.np/media/pdf_upload/5.%20Reduced-class%209%20English%20final_5hjggyv.pdf";
 const item=(domain,text,answer)=>({type:'short_answer',domain,text,answer,marks:1});
 const poems=[
  {unit:0,sourcePage:8,title:'Stopping by Woods on a Snowy Evening',author:'Robert Frost',publicationYear:1923,passage:`Whose woods these are I think I know.
@@ -50,7 +51,7 @@ When I have crost the bar.`,
 ];
 export function englishSeenPoemDrafts({grade,subject,units}={}){
  if(grade!==9||!Array.isArray(units)||units.length<4)return [];
- return poems.map(({unit,...poem},v)=>{const u=units[unit];return {id:'smss_eng_seen1_'+v,gradeNumber:9,subject,unitCode:u.unitCode,unitId:u.id,unitTitle:u.unitTitle,topicId:u.id+'_1',topicName:u.topics[1],slot:'reading1',marks:5,genre:'poem',text:'Read '+poem.title+' by '+poem.author+' and answer the questions.',...poem,sourceKind:'textbook',sourceTitle:'English Grade 9',sourceEdition:'2022 first edition',sourceUrl:SEEN_BOOK,passageRights:'public_domain_original',status:'active',bundled:true,teacherReviewRequired:true,reviewStatus:'draft',officialCdcQuestion:false,sourceStatus:'SMSS_original_reference_draft'};});
+ return poems.map(({unit,...poem},v)=>{const u=units[unit];return {id:'smss_eng_seen1_'+v,gradeNumber:9,subject,unitCode:u.unitCode,unitId:u.id,unitTitle:u.unitTitle,topicId:u.id+'_1',topicName:u.topics[1],slot:'reading1',marks:5,genre:'poem',text:'Read '+poem.title+' by '+poem.author+' and answer the questions.',...poem,sourceKind:'textbook',sourceTitle:'English Grade 9',sourceEdition:'2025 updated edition',sourceUrl:SEEN_BOOK,passageRights:'public_domain_original',status:'active',bundled:true,teacherReviewRequired:true,reviewStatus:'draft',officialCdcQuestion:false,sourceStatus:'SMSS_original_reference_draft'};});
 }
 // The source has copyright-protected editorial content. Do not bundle
 // modern textbook prose, substitute a paraphrase as a seen text or fake
@@ -73,3 +74,27 @@ export const SEEN_PROSE_PENDING=Object.freeze({
  item('evaluation','Was giving Tom more money an effective way to help him become responsible? Explain using the events in the passage.','No, the money was used for luxuries rather than a lasting fresh start; accept a reasoned response supported by the passage.')
  ])
 });
+
+const secondProseItems=[
+ {type:'true_false',domain:'literal',text:'George finally stopped trusting Tom to settle down.',answer:'True',marks:1},
+ {type:'true_false',domain:'literal',text:'Tom threatened to embarrass George by taking ordinary jobs.',answer:'True',marks:1},
+ {type:'true_false',domain:'literal',text:'Tom was once at risk of imprisonment.',answer:'True',marks:1},
+ {type:'true_false',domain:'literal',text:'Cronshaw travelled to Monte Carlo alone after the settlement.',answer:'False',marks:1},
+ item('reorganization','Identify the two jobs Tom used to pressure his brother.','Working in a bar and driving a taxi.'),
+ item('reorganization','What two outcomes followed the payment to Cronshaw?','The court dispute was settled; Tom and Cronshaw travelled together to Monte Carlo.'),
+ item('reorganization','How did George respond to Tom’s threats and then to the legal dispute?','He paid to avoid embarrassment and later arranged a financial settlement.'),
+ item('inference','Why did Tom believe ordinary jobs would embarrass George?','George was concerned about family reputation and his own social standing.'),
+ item('inference','Why did the news of the trip anger George?','It suggested that his payment had been obtained through deception.'),
+ item('evaluation','Suggest a more responsible way George could have responded to Tom’s repeated demands. Explain briefly.','For example, refuse further unrestricted payments and offer conditional practical support; accept a reasoned answer consistent with the story.')
+];
+export function englishSeenProseDrafts({grade,subject,units}={}){
+ if(grade!==9||!Array.isArray(units)||units.length<9)return [];
+ const u=units[8],sets=[SEEN_PROSE_PENDING.items,secondProseItems];
+ return PUBLIC_DOMAIN_SEEN_PROSE.map((row,v)=>({
+  id:'smss_eng_seen2_'+v,gradeNumber:9,subject,unitCode:u.unitCode,unitId:u.id,unitTitle:u.unitTitle,topicId:u.id+'_1',topicName:u.topics[1],slot:'reading2',marks:10,genre:'story',
+  text:'Read this excerpt from The Ant and the Grasshopper by W. Somerset Maugham (part '+(v+1)+') and answer the questions.',
+  passage:row.passage,items:sets[v].map(x=>({...x})),sourceKind:'textbook',sourceTitle:'English Grade 9',sourceEdition:'2025 updated edition',sourceUrl:SEEN_BOOK,sourcePage:108+v,
+  originalSourceUrl:"https://www.fadedpage.com/books/20190248/html.php",sourcePassageSha256:row.sha256,passageRights:'public_domain_original',originalPublicationYear:1924,
+  status:'active',bundled:true,teacherReviewRequired:true,reviewStatus:'draft',officialCdcQuestion:false,sourceStatus:'SMSS_original_reference_draft'
+ }));
+}

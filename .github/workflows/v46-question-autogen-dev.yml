@@ -29,6 +29,8 @@ on:
       - 'cdc-grade9-english-grouped-planner.mjs'
       - 'cdc-grade9-english-reference-bank.mjs'
       - 'cdc-grade9-english-seen-reference.mjs'
+      - 'cdc-grade9-english-seen-prose-data.mjs'
+      - 'scripts/test-cdc-grade9-english-seen-prose.mjs'
       - 'scripts/test-cdc-grade9-english-reference-bank.mjs'
       - 'cdc-grade9-compulsory-math-grouped.mjs'
       - 'cdc-grade9-compulsory-math-reference-bank.mjs'
@@ -191,6 +193,8 @@ jobs:
         run: node scripts/test-cdc-grade9-compulsory-math-reference-bank.mjs
       - name: Validate original Grade 9 English reading writing and grammar groups
         run: node scripts/test-cdc-grade9-english-reference-bank.mjs
+      - name: Verify full English seen prose papers when retrieved
+        run: node --input-type=module -e "import {PUBLIC_DOMAIN_SEEN_PROSE as d} from './cdc-grade9-english-seen-prose-data.mjs'; if(d.length) await import('./scripts/test-cdc-grade9-english-seen-prose.mjs'); else console.log('Seen prose not retrieved; official exam remains blocked')"
       - name: Verify automatic CDC Grid source detection for Grade 6-10 subjects
         run: node scripts/test-cdc-grid-source-index.mjs
       - name: Verify 54 original bilingual formula-checked Optional Maths practice questions

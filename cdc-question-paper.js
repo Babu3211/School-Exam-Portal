@@ -476,7 +476,7 @@ async function loadBundledPracticeBank({grade,subject}){
  const nepali=grade9NepaliPracticeBank({grade,subject});
  if(nepali.units.length)return {units:nepali.units,questions:nepali.questions,status:"कक्षा ९ नेपाली: १६ प्रस्तावित पाठ शीर्षकका ४८ मौलिक व्याकरण/लेखन अभ्यास। प्रश्नको भाषा नेपाली नै राखिएको छ। २०८२ को मूल पाठ्यपुस्तक, सच्याइएको तथ्य र Exact Grid समीक्षा बाँकी; पूर्ण CDC प्रश्नपत्र होइन।"};
  const english=grade9EnglishPracticeBank({grade,subject});
- if(english.units.length){const ref=grade9EnglishReferenceBank({grade,subject});return {units:english.units,questions:[...english.questions,...ref.questions],status:"Grade 9 English: 54 original exercises and 18 reference groups, covering 65 marks per draft set. The 10-mark authorized textbook prose group and current model confirmation remain pending; not a complete CDC Exact paper."};}
+ if(english.units.length){const ref=grade9EnglishReferenceBank({grade,subject});return {units:english.units,questions:[...english.questions,...ref.questions],status:"Grade 9 English: 54 original exercises plus "+ref.questions.length+" reference groups; "+(ref.questions.some(q=>q.slot==="reading2")?"75-mark reference structure; teacher review and current model confirmation required.":"65 marks prepared; original seen prose retrieval pending.")+" Not a CDC Exact examination."};}
  const math=grade9CompulsoryMathPracticeBank({grade,subject});
  if(math.units.length){const ref=grade9CompulsoryMathReferenceBank({grade,subject});return {units:math.units,questions:[...math.questions,...ref.questions],status:"कक्षा ९ अनिवार्य गणित: ४२ मौलिक अभ्यास र ३२ संयुक्त समूह (९८ उपप्रश्न), ऐतिहासिक २०७८ Grid सन्दर्भ; नवीनतम Grid र शिक्षक समीक्षा बाँकी।"};}
  const social=grade9SocialOriginalBank({grade,subject});

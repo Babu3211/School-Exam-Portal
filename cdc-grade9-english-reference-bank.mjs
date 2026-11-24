@@ -3,7 +3,7 @@
  * Seen reading slots intentionally require actual textbook evidence.
  * Nothing here is teacher-approved or a current CDC exact paper.
  */
-import {englishSeenPoemDrafts} from './cdc-grade9-english-seen-reference.mjs';
+import {englishSeenPoemDrafts,englishSeenProseDrafts} from './cdc-grade9-english-seen-reference.mjs';
 import {grade9EnglishPracticeBank,auditEnglishChart} from './cdc-grade9-english-practice.mjs';
 const q=(type,domain,text,answer)=>({type,domain,text,answer,marks:1});
 const tf=(domain,text,answer)=>q('true_false',domain,text,answer);
@@ -49,5 +49,5 @@ export function grade9EnglishReferenceBank({grade,subject}={}){
   const write=writing.map((variants,i)=>{const [genre,targetWords,text,answer]=variants[v];return make('writing'+(i+1),v,i,1,[5,5,6,8][i],{genre,targetWords,text,answer});});
   return [...read,...write,make('transformation',v,0,0,6,{text:'Rewrite the following sentences as instructed. Set '+(v+1)+'.',items:transforms[v].map(([grammar,text,answer])=>({grammar,text,answer,marks:1}))}),make('contextual_mcq',v,1,0,5,{text:'Choose the correct alternatives to complete the passage. Set '+(v+1)+'.',passage:grammarSets[v].passage,items:grammarSets[v].items.map((x,j)=>({...x,text:'Blank '+(j+1)}))})];
  });
- return {units,questions:[...questions,...englishSeenPoemDrafts({grade,subject,units})],teacherReviewRequired:true,exactGridVerified:false};
+ return {units,questions:[...questions,...englishSeenPoemDrafts({grade,subject,units}),...englishSeenProseDrafts({grade,subject,units})],teacherReviewRequired:true,exactGridVerified:false};
 }

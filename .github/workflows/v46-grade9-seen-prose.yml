@@ -1,0 +1,41 @@
+name: Prepare Grade 9 Seen Prose Reference (Development Only)
+on:
+  push:
+    branches:
+      - feat/v46-question-autogen-grid-safe-2083
+    paths:
+      - 'scripts/prepare-grade9-seen-prose.py'
+      - '.github/workflows/v46-grade9-seen-prose.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: v46-grade9-seen-prose-development
+  cancel-in-progress: true
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/feat/v46-question-autogen-grid-safe-2083'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/v46-question-autogen-grid-safe-2083
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Retrieve bounded original literary excerpts
+        run: python3 scripts/prepare-grade9-seen-prose.py
+      - name: Verify actual full reference drafts
+        run: |
+          node scripts/test-cdc-grade9-english-reference-bank.mjs
+          node scripts/test-cdc-grade9-english-seen-prose.mjs
+      - name: Preserve verified data on development branch only
+        run: |
+          test "$(git branch --show-current)" = "feat/v46-question-autogen-grid-safe-2083"
+          git add cdc-grade9-english-seen-prose-data.mjs
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data(v46): prepare two verified original Grade 9 seen prose reference excerpts"
+          git push origin HEAD:refs/heads/feat/v46-question-autogen-grid-safe-2083
