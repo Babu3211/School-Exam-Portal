@@ -94,6 +94,9 @@ jobs:
             allowed.add('sw.js')
           if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-cdc-assessment':
             allowed.update({'scripts/test-cdc-assignment.mjs','scripts/test-firestore-rules.mjs'})
+          # Dedicated primary assessment follow-up: permit only its regression file.
+          if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-cdc-assessment-official-forms':
+            allowed.add('scripts/test-cdc-assignment.mjs')
           unexpected=changed-allowed
           assert not unexpected, f'Unexpected changes to protected V44/IEMIS files: {sorted(unexpected)}'
           print('Approved dashboard and IEMIS source files remain protected.')
