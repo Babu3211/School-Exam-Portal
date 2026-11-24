@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v113-embedded-paper-figures';
+const CACHE_NAME = 'smss-pwa-v114-question-block-layout';
 const APP_SHELL = [
   './',
   './index.html',

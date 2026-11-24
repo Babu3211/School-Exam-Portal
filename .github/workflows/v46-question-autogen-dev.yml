@@ -26,6 +26,7 @@ on:
       - 'cdc-grade9-reference-preview.mjs'
       - 'scripts/test-cdc-grade9-reference-preview.mjs'
       - 'scripts/test-cdc-grade9-review-pack.mjs'
+      - 'scripts/test-v46-paper-browser-layout.mjs'
       - 'scripts/test-cdc-grade9-reference-readiness.mjs'
       - 'cdc-grade9-nepali-model-2078.mjs'
       - 'cdc-grade9-nepali-grouped-planner.mjs'
@@ -101,7 +102,7 @@ concurrency:
 jobs:
   question-paper:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -215,6 +216,25 @@ jobs:
         env:
           SMSS_REVIEW_PACK_DIR: ${{ runner.temp }}/smss-grade9-review
         run: node scripts/test-cdc-grade9-review-pack.mjs
+      - name: Test real Chromium PDF page dimensions and embedded Word figure
+        env:
+          SMSS_REVIEW_PACK_DIR: ${{ runner.temp }}/smss-grade9-review
+          SMSS_LAYOUT_OUT: ${{ runner.temp }}/smss-layout-test
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright-core@1.56.1
+          export CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          if ! command -v pdfinfo || ! command -v pdftotext; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends poppler-utils
+          fi
+          node scripts/test-v46-paper-browser-layout.mjs
+      - name: Upload synthetic PDF and DOCX layout evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: smss-grade9-layout-evidence
+          path: ${{ runner.temp }}/smss-layout-test/
+          retention-days: 7
       - name: Upload read-only Grade 9 review pack
         uses: actions/upload-artifact@v4
         with:

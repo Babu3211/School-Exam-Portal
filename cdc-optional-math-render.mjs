@@ -238,7 +238,7 @@ export function questionFigure(question,language='both'){
  }else if((match=/^In triangle ABC, angle A=(\d+)° and B=(\d+)°\./.exec(en))){
   body='<path d="M135 20L40 115H230Z"/>'+txt(135,14,'C')+txt(31,130,'A')+txt(239,130,'B')+txt(75,106,match[1]+'°')+txt(193,106,match[2]+'°');caption='त्रिभुज / Triangle';
  }else if(/^Why does a longer effort arm reduce the force needed in a lever\?/.test(en)){
-  body='<path d="M24 60H248 M89 61L72 107H106Z M39 34V56 M34 49L39 56L44 49 M227 34V56 M222 49L227 56L232 49"/>'+txt(39,25,language==='ne'?'भार':'Load')+txt(224,25,language==='ne'?'प्रयास':'Effort')+txt(89,125,language==='ne'?'आधारबिन्दु':'Fulcrum');caption='उत्तोलक / Lever';
+  body='<path d="M24 60H248 M89 61L72 107H106Z M39 34V56 M34 49L39 56L44 49 M227 34V56 M222 49L227 56L232 49"/>'+txt(39,25,language==='ne'?'भार':language==='both'?'भार / Load':'Load')+txt(224,25,language==='ne'?'प्रयास':language==='both'?'प्रयास / Effort':'Effort')+txt(89,125,language==='ne'?'आधारबिन्दु':language==='both'?'आधारबिन्दु / Fulcrum':'Fulcrum');caption='उत्तोलक / Lever';
  }
  if(!body)return '';
  const name=language==='ne'?caption.split(' / ')[0]:language==='en'?caption.split(' / ')[1]:caption;

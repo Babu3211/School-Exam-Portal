@@ -36,7 +36,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  const choose=(ne,en)=>key==='english'||language==='en'?String(en||ne||''):language==='ne'?String(ne||en||''):[ne,en].filter(Boolean).join(' / ');
  const lines=['REFERENCE DRAFT — NOT FOR EXAM / सन्दर्भ समीक्षा मात्र',language==='ne'?'कक्षा ९ · '+paperSubjectLabel(subject,language)+' · पूर्णाङ्क: '+p.fullMarks+' · समय: '+p.durationMinutes+' मिनेट':'Grade 9 · '+subject+' · '+p.fullMarks+' marks · '+p.durationMinutes+' minutes','Current CDC Grid approval and teacher review pending.',result.referenceLabel||'',''];
  const answers=['INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY / उत्तरकुञ्जिका समीक्षा मात्र',(language==='ne'?'कक्षा ९ · '+paperSubjectLabel(subject,language):'Grade 9 · '+subject),'Not an official CDC marking scheme. Review model answers and partial credit before use.',''];
- const figures=[];
+ const figures=[],starts=[];
  if(key==='english')lines.push('सामान्य निर्देशन: प्रश्न ध्यानपूर्वक पढ्नुहोस्। तोकिएको अङ्क र निर्देशनअनुसार उत्तर अङ्ग्रेजीमा लेख्नुहोस्।','General instructions: Read each question carefully and answer in English as directed.','');
  let answerCount=0;
  const answer=(label,value,marks)=>{
@@ -46,6 +46,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   answerCount++;
  };
  for(const [i,g] of groups.entries()){
+  starts.push(lines.length);
   if(key==='nepali'){
    lines.push((i+1)+'. '+g.choices.length+' विकल्पमध्ये '+g.answerCount+' वटाको उत्तर दिनुहोस्। ['+g.marks+']');
    for(const [j,c] of g.choices.entries()){
@@ -83,5 +84,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   }
   lines.push('');
  }
- return {ready:true,referenceOnly:true,currentCdcExactApproved:false,readyForLive:false,signature:result.signature,groupCount:groups.length,text:paperDisplayText(lines.join('\n'),language,subject),answerText:paperDisplayText(answers.join('\n'),language,subject),answerCount,figures,sourceUrl:result.sourceUrl};
+ const introText=paperDisplayText(lines.slice(0,starts[0]).join('\n'),language,subject);
+ const blocks=starts.map((start,i)=>({number:i+1,text:paperDisplayText(lines.slice(start,starts[i+1]??lines.length).join('\n'),language,subject),figureHtml:figures.find(f=>f.number===i+1)?.html||''}));
+ return {ready:true,referenceOnly:true,currentCdcExactApproved:false,readyForLive:false,signature:result.signature,groupCount:groups.length,introText,blocks,text:paperDisplayText(lines.join('\n'),language,subject),answerText:paperDisplayText(answers.join('\n'),language,subject),answerCount,figures,sourceUrl:result.sourceUrl};
 }
