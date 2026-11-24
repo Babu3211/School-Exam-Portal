@@ -7680,7 +7680,7 @@ function parseCdcBilingualCatalog(text) {
     field('printForm').disabled=!enabled||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('unit').value.trim();
     field('gridRead').textContent=seroReference?'सूचक अभिलेख पढ्नुहोस् / पुनः पढ्नुहोस्':'Load / Refresh Records';
     field('gridRead').disabled=false;
-    if(seroReference){field('gridRead').hidden=year!=='2083';field('printForm').disabled=true;renderSeroferoReference(seroReference);return;}
+    if(seroReference){field('gridRead').hidden=year!=='2083';field('printForm').disabled=year!=='2083'||!schoolSelection()||seroReadKey!==seroScopeKey()||inlinePending;renderSeroferoReference(seroReference);return;}
     if(nepaliForm){renderPrimaryNepaliForm(nepaliForm);return;}
     if(!enabled)return;
     if(primaryEnglishForm()){renderPrimaryEnglish(primaryEnglishForm());return;}
@@ -8175,7 +8175,10 @@ function parseCdcBilingualCatalog(text) {
   // Print the selected, freshly read school record only. Never include editor
   // fields, other students, hidden UI, or an unconfirmed/stale snapshot.
   const buildAssessmentPrint=()=>{
-    if(inlinePending||dialog.querySelector('[data-cdc-grid-editor]')||!hasAnnexGrid()||!canShow()||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('annexRows').rows.length)return null;
+    const seroForm=primarySeroferoReference();
+    const seroReady=!!seroForm&&year==='2083'&&!!schoolSelection()&&seroReadKey===seroScopeKey();
+    if(inlinePending||dialog.querySelector('[data-cdc-grid-editor]')||!canShow()||!field('annexRows').rows.length||
+      (seroForm?!seroReady:(!hasAnnexGrid()||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection()))))return null;
     const doc=document.implementation.createHTMLDocument('CDC Assessment — Review copy');
     doc.documentElement.lang=language()==='en'?'en':'ne';
     const style=doc.createElement('style');
@@ -8186,6 +8189,31 @@ function parseCdcBilingualCatalog(text) {
       const p=doc.createElement('p');p.textContent=field(name).textContent;doc.body.append(p);
     }
     const table=doc.importNode(field('annexTable'),true);table.removeAttribute('style');
+    if(seroForm){
+      // Reconstruct printable values solely from saved records, never from live controls.
+      const digits=n=>String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]);
+      const effective=[];
+      for(let stage=0;stage<2;stage++){
+        const indicators=[...table.querySelectorAll('[data-cdc-sero-indicator="'+stage+'"]')];
+        const dates=[...table.querySelectorAll('[data-cdc-sero-date="'+stage+'"]')];
+        const scores=[...table.querySelectorAll('[data-cdc-sero-score="'+stage+'"]')];
+        if(indicators.length!==seroForm.groups.length*4||dates.length!==seroForm.groups.length||scores.length!==seroForm.groups.length)return null;
+        for(let i=0;i<seroForm.groups.length;i++){
+          const record=seroLatest('cdc2076-g'+field('class').value+'-'+(seroForm.start+i),stage?'support':'regular');
+          for(let j=0;j<4;j++)indicators[i*4+j].replaceWith(doc.createTextNode(record?(record.indicators[j]?'✓':'×'):'—'));
+          dates[i].replaceWith(doc.createTextNode(record?digits(record.date):'—'));
+          const score=record?record.indicators.filter(Boolean).length:null;
+          scores[i].textContent=score===null?'—':digits(score);
+          if(stage===0||record)effective[i]=score;
+        }
+      }
+      table.querySelectorAll('[data-cdc-sero-save]').forEach(button=>button.remove());
+      table.querySelectorAll('[data-cdc-sero-score]').forEach(cell=>cell.removeAttribute('data-cdc-sero-score'));
+      const foot=table.tFoot?.rows[0];if(!foot||foot.cells.length!==2)return null;
+      const complete=effective.filter(v=>v!==null),sum=complete.reduce((a,b)=>a+b,0);
+      foot.cells[0].textContent='सुरक्षित अभिलेख — औसत अङ्क';
+      foot.cells[1].textContent=(complete.length===seroForm.groups.length?digits((sum/complete.length).toFixed(2)):'—')+' | पूरा: '+digits(complete.length)+' / '+digits(seroForm.groups.length);
+    }
     table.querySelectorAll('[data-cdc-grid-edit]').forEach(button=>button.remove());
     table.querySelectorAll('button').forEach(button=>button.replaceWith(doc.createTextNode(button.textContent)));
     table.querySelectorAll('[data-cdc]').forEach(node=>node.removeAttribute('data-cdc'));
@@ -8193,7 +8221,7 @@ function parseCdcBilingualCatalog(text) {
     for(const name of ['annexSign','annexStatus']){
       const p=doc.createElement('p');p.textContent=field(name).textContent;doc.body.append(p);
     }
-    const note=doc.createElement('p');note.className='review';note.textContent='Review copy — CDC layout verification pending. Academic year: '+year+' | '+field('period').value;doc.body.append(note);
+    const note=doc.createElement('p');note.className='review';note.textContent=seroForm?'समीक्षा प्रति — सुरक्षित सूचक अभिलेख मात्र। मूल फारामसँग छपाइको अन्तिम प्रमाणीकरण बाँकी। शैक्षिक सत्र: '+year+' | '+({'First Term':'प्रथम त्रैमासिक','Second Term':'द्वितीय त्रैमासिक','Final Term':'वार्षिक'}[field('period').value]||''):'Review copy — CDC layout verification pending. Academic year: '+year+' | '+field('period').value;doc.body.append(note);
     return doc;
   };
   field('printForm').onclick=()=>{
