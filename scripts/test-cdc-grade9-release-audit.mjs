@@ -61,3 +61,26 @@ assert.equal(forged.readyForLive,false,'Grade9 subject prereq never grants live 
 assert.throws(()=>auditGrade9Release({}),/Official CDC source register required/);
 console.log('PASS Grade9 source, unit-grid, question review and teacher-test release gate');
 console.log('Mandatory subjects 5, V46 optional streams 3, live gate stays closed without release workflow');
+
+const {grade9EnvironmentOriginalBank}=await import('../cdc-grade9-environment-original-practice.mjs');
+for(const subject of ['Optional I: Environmental Science','Optional Environment Science','ऐच्छिक प्रथम: वातावरण विज्ञान']){
+ const pack=grade9EnvironmentOriginalBank({grade:9,subject});
+ assert.equal(pack.units.length,9);
+ assert.equal(pack.questions.length,36);
+ assert.equal(new Set(pack.questions.map(q=>q.id)).size,36);
+ assert.equal(pack.exactGridVerified,false);
+ for(const unit of pack.units){
+  assert.ok(unit.unitTitleEn&&unit.unitTitle);
+  const questions=pack.questions.filter(q=>q.unitId===unit.id);
+  assert.equal(questions.length,4);
+  assert.deepEqual(questions.map(q=>q.cognitiveLevel),['knowledge','understanding','application','higher']);
+  assert.ok(questions.every(q=>q.questionText&&q.questionTextEn&&q.answer&&q.answerEn&&q.teacherReviewRequired&&!q.officialCdcQuestion));
+ }
+}
+for(const [grade,subject] of [[8,'Environmental Science'],[10,'Environmental Science'],[9,'Science and Technology'],[9,'Computer Science']]){
+ assert.equal(grade9EnvironmentOriginalBank({grade,subject}).questions.length,0);
+}
+assert.ok(data.sources.some(s=>s.subject==='ऐच्छिक वातावरण विज्ञान'&&s.kind==='CDC_textbook'&&s.url.includes('zgnagog')));
+assert.equal(byKey.optional_environment.status,'source_missing','Textbook must never count as verified grid');
+assert.match(readFileSync(new URL('../sw.js',import.meta.url),'utf8'),/cdc-grade9-environment-original-practice\.mjs/);
+console.log('PASS Grade9 environment nine-unit bilingual practice, source separation and offline cache');
