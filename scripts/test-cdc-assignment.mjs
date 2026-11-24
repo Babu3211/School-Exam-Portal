@@ -82,7 +82,8 @@ Object.assign(w,{
 });
 w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
 w.eval(readFileSync('iemis-importer/transfer.js','utf8'));
-w.eval(html.slice(html.indexOf('const cdcCoreSubjects'),html.indexOf('let iemisEntryGrid'))+'\nopenCdcAssessment();');
+// Capture the lexical catalogue in the same eval that initializes the page.
+const legacyForms=w.eval(html.slice(html.indexOf('const cdcCoreSubjects'),html.indexOf('let iemisEntryGrid'))+'\nopenCdcAssessment();\ncdcLegacyMathRubrics;');
 const field=name=>w.document.querySelector('[data-cdc="'+name+'"]');
 const choice=(name,value)=>{field(name).value=value;field(name).onchange();};
 assert.match(field('curriculumSource').href,/moecdc\.gov\.np\/content\/203\//);
@@ -623,7 +624,6 @@ for(const [grade,unit,count,page] of [
  assert.match(field('annexStatus').textContent,new RegExp(String(page)));
  assert.match(field('annexHead').textContent,grade==='1'?/कैफियत/:/साधन/);
 }
-const legacyForms=w.eval('cdcLegacyMathRubrics');
 assert.equal(Object.keys(legacyForms).length,20);
 assert.equal(Object.values(legacyForms).reduce((n,f)=>n+f.rows.length,0),87);
 assert.ok(Object.values(legacyForms).every(f=>f.rows.every(r=>r.criteria.length===4)));
