@@ -1,0 +1,60 @@
+name: V47 reviewed Firestore rules activation (separate project only)
+on:
+  workflow_dispatch:
+  push:
+    branches: [smss-v47-multischool-work]
+    paths:
+      - '.github/workflows/v47-verified-rules-activation.yml'
+permissions:
+  contents: read
+concurrency:
+  group: v47-rules-only-activation
+  cancel-in-progress: false
+jobs:
+  verified-rules:
+    if: github.ref == 'refs/heads/smss-v47-multischool-work'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install isolated test dependencies
+        run: |
+          npm install --no-package-lock --no-audit --no-fund
+          npm install --prefix v47-runtime --no-package-lock --no-audit --no-fund --ignore-scripts
+      - name: Confirm V47 project isolation and strict academic write guards
+        run: |
+          node scripts/test-v47-school-isolation-gate.mjs
+          node scripts/test-v47-rules-structure.mjs
+          node v47/test-production-marks-guard.mjs
+          node v47/test-super-admin-session-guard.mjs
+          npm run test:v47:rules-iemis-syntax
+          node -e 'const c=require("./v47/firebase.v47.json");if(c.firestore.rules!=="firestore.rules"||c.hosting||c.functions)throw Error("Unexpected V47 deployment config")'
+      - name: Compile and test tenant isolation in Firebase emulator
+        run: |
+          npm run test:v47:emulator
+          npx firebase emulators:exec --project v47-isolation-test --config v47/firebase.v47.json --only firestore "node scripts/test-v47-rules-emulator.mjs"
+      - name: Activate only reviewed Firestore rules in V47 and verify
+        env:
+          V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}
+        run: |
+          test "$(git ls-remote origin refs/heads/smss-v47-multischool-work | cut -f1)" = "$GITHUB_SHA"
+          test -n "$V47_SERVICE_ACCOUNT"
+          umask 077
+          credential_file="$(mktemp "$RUNNER_TEMP/v47-rules.XXXXXX")"
+          trap 'rm -f "$credential_file"' EXIT
+          printf '%s' "$V47_SERVICE_ACCOUNT" > "$credential_file"
+          export GOOGLE_APPLICATION_CREDENTIALS="$credential_file"
+          unset V47_SERVICE_ACCOUNT
+          # Verify the dedicated credential, root admin account, and previous ruleset before changing policy.
+          node v47/diagnostics/check-live-access.mjs --before-rules-deploy
+          # Rules only: no hosting, indexes, document writes, account modifications or billing.
+          npx --yes firebase-tools@14.21.0 deploy --only firestore:rules --project smss-exam-portal-v47 --config v47/firebase.v47.json --non-interactive
+          node v47/diagnostics/check-live-access.mjs
+          echo 'Reviewed V47 Firestore rules activated and verified. No V46 resources, school documents, user accounts, billing or production hosting changed. Official publication and production release remain separately gated.' >> "$GITHUB_STEP_SUMMARY"

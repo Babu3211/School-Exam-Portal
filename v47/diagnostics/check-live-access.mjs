@@ -11,6 +11,8 @@ if(process.env.FIRESTORE_EMULATOR_HOST||process.env.FIREBASE_AUTH_EMULATOR_HOST)
 const key=JSON.parse(readFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS,'utf8'));
 if(key.project_id!==projectId||key.type!=='service_account')throw Error('Dedicated V47 credential required');
 const credential=cert(key),app=initializeApp({credential,projectId},'v47-read-only-diagnostic');
+const preflight=process.argv.length===3&&process.argv[2]==='--before-rules-deploy';
+if(process.argv.length>2&&!preflight)throw Error('Unknown diagnostic option');
 let blocked=false;
 const summarizeError=e=>String(e?.code??e?.status??'unknown').replace(/[^A-Za-z0-9_/-]/g,'').slice(0,70);
 async function getJson(path){
@@ -23,12 +25,13 @@ try{
  try{
   const release=await getJson('projects/'+projectId+'/releases/cloud.firestore');
   if(!release.rulesetName?.startsWith('projects/'+projectId+'/rulesets/'))throw Error('Unexpected ruleset path');
+  if(preflight)console.log('Previous V47 ruleset for rollback: '+release.rulesetName);
   const ruleset=await getJson(release.rulesetName);
   const current=readFileSync(new URL('../firestore.rules',import.meta.url),'utf8').replace(/\r\n/g,'\n').trim();
   const sources=ruleset.source?.files??[];
   const same=sources.length===1&&String(sources[0].content??'').replace(/\r\n/g,'\n').trim()===current;
   console.log('Live Firestore rules match reviewed V47 source: '+(same?'YES':'NO'));
-  if(!same)blocked=true;
+  if(!same&&!preflight)blocked=true;
  }catch(e){console.log('Rules metadata read unavailable: '+summarizeError(e));blocked=true}
  try{
   const db=getFirestore(app);
