@@ -18,3 +18,16 @@ for(const language of ['ne','en','both']){
  assert.throws(()=>assertGrade9ExamPaperMatches(a.paper),/verified subject/);
 }
 console.log('PASS six actual distinct bilingual social reference papers using original questions; official exam remains blocked');
+
+// CDC 2082 curriculum p.4: Grade 9 foreign policy/BIMSTEC, Grade 10 UN;
+// family budgeting belongs to Grade 9, tourism to Grade 10.
+const unit9=bank.questions.filter(q=>q.unitCode==='9');
+assert.equal(unit9.length,6);
+assert.ok(unit9.every(q=>/BIMSTEC|foreign policy|Panchsheel/i.test(q.questionTextEn)));
+assert.ok(unit9.every(q=>!/United Nations|SAARC/i.test(q.questionTextEn)));
+assert.ok(bank.questions.some(q=>q.unitCode==='7'&&/family budget plan/i.test(q.questionTextEn)));
+assert.ok(bank.questions.filter(q=>q.unitCode==='7').every(q=>!/tourism/i.test(q.questionTextEn)));
+assert.ok(bank.questions.some(q=>q.unitCode==='8'&&/Anglo-Nepal War/.test(q.questionTextEn)));
+assert.ok(bank.questions.some(q=>q.unitCode==='8'&&/Greek and Roman civilizations/.test(q.questionTextEn)));
+assert.ok(bank.questions.some(q=>q.unitCode==='10'&&/demography/.test(q.questionTextEn)));
+console.log('PASS selected Grade 9 social reference content corrections from CDC 2082 curriculum p.4; historical Grid remains unapproved');

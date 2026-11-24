@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v98-optional-math-cell-grid-2083';
+const CACHE_NAME = 'smss-pwa-v99-social-curriculum-review-2083';
 const APP_SHELL = [
   './',
   './index.html',
