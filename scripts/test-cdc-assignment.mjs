@@ -445,7 +445,10 @@ assert.equal(field('annex3').hidden,true);
 for(const [grade,unit,count,page] of [
  ['1','म र मेरो परिवार',4,202],['1','मेरो दैनिक जीवन',2,203],
  ['2','म र मेरो परिवार',5,207],['2','मेरो दैनिक जीवन',2,208],
- ['3','म र मेरो परिवार',6,214],['3','मेरो दैनिक जीवन',3,215]
+ ['3','म र मेरो परिवार',6,214],['3','मेरो दैनिक जीवन',3,215],
+ ['1','हाम्रो समुदाय',5,204],['1','मेरो विद्यालय',4,205],['1','सञ्चार प्रविधि र बजार',2,206],
+ ['2','सङ्ख्याको ज्ञान',2,209],['2','हाम्रो समुदाय',4,210],['2','मेरो विद्यालय',5,211],['2','सञ्चार प्रविधि र बजार',4,212],['2','गणितका आधारभूत क्रिया',4,213],
+ ['3','सङ्ख्याको ज्ञान',4,216],['3','हाम्रो समुदाय',3,217],['3','मेरो विद्यालय',4,218],['3','गणितका आधारभूत क्रिया',5,219],['3','सञ्चार प्रविधि र बजार',7,220]
 ]){
  current.subjectAssignments=[{className:'Class '+grade,subject:'Mathematics',section:'A'}];
  serverRole={...current};
@@ -453,11 +456,13 @@ for(const [grade,unit,count,page] of [
  await w.loadCdcAssessmentPage();choice('unit',unit);
  assert.equal(field('annex3').hidden,false,grade+unit);
  assert.equal(field('annexRows').rows.length,count,grade+unit);
+ assert.equal(field('outcomePicker').options.length,count+1,grade+unit);
+ assert.equal(new Set([...field('outcomePicker').options].slice(1).map(o=>o.value)).size,count,grade+unit);
  assert.equal(field('annexRows').rows[0].cells.length,8);
  assert.match(field('annexStatus').textContent,new RegExp(String(page)));
  assert.ok(field('annexFoot').textContent.includes(count+' × 4'));
  assert.equal(field('printForm').disabled,true);
 }
-console.log('Six revised mathematics forms, fixed denominator, saved ratings and print isolation passed');
+console.log('All 19 revised mathematics forms, fixed denominator, unique outcome picker and print isolation passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
