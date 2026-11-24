@@ -411,6 +411,25 @@ const distinct=annualCalc([
 assert.equal(distinct.assessed,2);assert.equal(distinct.total,6);assert.equal(distinct.percentage,75);assert.equal(distinct.complete,false);
 assert.equal(annualCalc([],[['U','T']]).grade,null);
 console.log('CDC annual progress credit hours, grade scale, distinct outcomes and unassigned subjects passed');
+assert.match(field('annualAttendance').textContent,/अनुमति छैन/);
+const attendanceCalc=w.eval('cdcAttendanceSummary');
+const selection={studentId:'primary',className:'Class 5',academicYear:'2083'};
+const daily=(date,status,extra={})=>({className:'Class 5',academicYear:'2083',attendanceType:'daily',date,students:status?[{studentId:'primary',status}]:[],...extra});
+const attendance=attendanceCalc([
+ daily('2026-05-01','present'),daily('2026-05-01','present'),
+ daily('2026-05-02','absent'),daily('2026-05-03','leave'),
+ daily('2026-05-04','present'),daily('2026-05-04','absent'),
+ daily('2026-05-05',null),daily('2026-05-06','present',{attendanceType:'subject'}),
+ daily('2026-05-07','present',{academicYear:'2082'}),
+ daily('2026-05-08','present',{className:'Class 4'})
+],selection);
+assert.equal(attendance.recordedDays,5);
+assert.equal(attendance.assessed,3);
+assert.equal(attendance.present,1);
+assert.equal(attendance.unresolved,2);
+assert.ok(Math.abs(attendance.percentage-100/3)<1e-8);
+assert.equal(attendanceCalc([],selection).percentage,null);
+console.log('CDC annual attendance excludes wrong scope, duplicate dates, missing and conflicting status passed');
 for(const [subject,unit,count] of [
   ['Mathematics','ज्यामिति',8],
   ['Social Studies and Human Values Education','हामी र हाम्रो समुदाय',8],
