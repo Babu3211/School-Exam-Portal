@@ -7,7 +7,7 @@ export function sameMarkJson(a,b){
  if(typeof a==='number')return Number.isFinite(a)&&Number.isFinite(b)&&a===b;
  if(typeof a==='string'||typeof a==='boolean')return a===b;
  if(typeof a!=='object')return false;
- if(Array.isArray(a)||Array.isArray(b))return Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&a.every((x,i)=>Object.hasOwn(a,i)&&Object.hasOwn(b,i)&&sameMarkJson(x,b[i]));
+ if(Array.isArray(a)||Array.isArray(b))return Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&Array.from({length:a.length},(_,i)=>i).every(i=>Object.hasOwn(a,i)&&Object.hasOwn(b,i)&&sameMarkJson(a[i],b[i]));
  const plain=v=>Object.getPrototypeOf(v)===Object.prototype||Object.getPrototypeOf(v)===null;
  if(!plain(a)||!plain(b))return false;
  const keys=Object.keys(a);

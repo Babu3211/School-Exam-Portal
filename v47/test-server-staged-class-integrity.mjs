@@ -14,6 +14,8 @@ const base={authoritativeInput,stagedBatches:batches,reviewDigest};
 assert.equal(verifyCompleteStagedClass(base).rosterCount,1500);
 assert.equal(verifyCompleteStagedClass(base).batchCount,15);
 assert.equal(verifyCompleteStagedClass(base).publicationAllowed,false);
+const reverseMaps=v=>Array.isArray(v)?v.map(reverseMaps):v&&typeof v==='object'?Object.fromEntries(Object.entries(v).reverse().map(([k,x])=>[k,reverseMaps(x)])):v;
+assert.equal(verifyCompleteStagedClass({...base,stagedBatches:reverseMaps(batches)}).rosterCount,1500);
 const reject=(mutate,pattern)=>{const changed=JSON.parse(JSON.stringify(batches));mutate(changed);assert.throws(()=>verifyCompleteStagedClass({...base,stagedBatches:changed}),pattern)};
 reject(b=>b.pop(),/Incomplete staged batch count/);
 reject(b=>b[0].entries[0].values.written--,/altered/);
@@ -22,6 +24,8 @@ reject(b=>b[1].entries[0].studentId=b[0].entries[0].studentId,/duplicated or alt
 reject(b=>b[0].entries.pop(),/order or size mismatch/);
 reject(b=>b.reverse(),/order or size mismatch/);
 reject(b=>b[0].entries[0].extra=true,/altered/);
+reject(b=>b[0].entries[0].values.written='75',/altered/);
+reject(b=>b[0].entries.reverse(),/altered|order/);
 assert.throws(()=>verifyCompleteStagedClass({...base,reviewDigest:'0'.repeat(64)}),/review changed/);
 assert.throws(()=>verifyCompleteStagedClass({...base,authoritativeInput:{...authoritativeInput,rosterRevision:'r2'}}),/review changed/);
 console.log('V47 staged class integrity: 1500 students/15 batches; tampering, missing pages, stale roster rejected');

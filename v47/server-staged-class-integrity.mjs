@@ -1,3 +1,4 @@
+import {sameMarkJson} from './mark-json-equality.mjs';
 import {planConfiguredPublicationStaging} from './configured-publication-staging-plan.mjs';
 import {fingerprintConfiguredClassReview} from './server-class-review-fingerprint.mjs';
 
@@ -20,7 +21,7 @@ export function verifyCompleteStagedClass({authoritativeInput,stagedBatches,revi
   for(let j=0;j<expected.entries.length;j++){
    const row=actual.entries[j],canonical=expected.entries[j];
    if(!row||typeof row!=='object'||Array.isArray(row)||Object.keys(row).sort().join(',')!=='isAbsent,studentId,totalObtained,values'.split(',').sort().join(',')||
-    seen.has(row.studentId)||JSON.stringify(row)!==JSON.stringify(canonical))throw new Error('Staged student row missing, duplicated or altered');
+    seen.has(row.studentId)||!sameMarkJson(row,canonical))throw new Error('Staged student row missing, duplicated or altered');
    seen.add(row.studentId);count++;
   }
  }
