@@ -4,6 +4,7 @@
  * Does not accept client marks, does not stage/commit, and is not deployed.
  */
 import {createAdminClassPublicationReaders} from '../../v47/server-publication-authoritative-loader.mjs';
+import {officialClassPointerId} from '../../v47/server-publication-authoritative-preflight.mjs';
 import {fingerprintConfiguredClassReview} from '../../v47/server-class-review-fingerprint.mjs';
 const schools=/^[0-9]{5,20}$/,parts=/^[A-Za-z0-9_-]{1,128}$/;
 const classes=new Set(['ECD','LKG','UKG',...Array.from({length:12},(_,i)=>String(i+1))]);
@@ -38,14 +39,19 @@ export function createV47PublicationReviewHttpHandler({auth,firestore}){
    // A single consistent Firestore transaction prevents a role revocation
    // or roster/settings edit between individual reads from creating a review
    // against a mixture of class revisions.
-   const review=await firestore.runTransaction(async transaction=>{
+   const {review,previousPublicationId}=await firestore.runTransaction(async transaction=>{
     const authoritative=await readers.loadTransactionalAuthoritative({
      ...scope,schoolId:scope.schoolId,uid:actorUid,transaction
     });
-    return fingerprintConfiguredClassReview(authoritative);
+    const snap=await transaction.get(firestore.doc('schools/'+scope.schoolId+'/official_marks_pointers/'+officialClassPointerId(scope)));
+    const pointer=(typeof snap?.exists==='function'?snap.exists():snap?.exists===true)?snap.data():null;
+    if(pointer&&(!/^[A-Za-z0-9_-]{8,128}$/.test(pointer.publicationId??'')||
+      Object.entries(scope).some(([key,value])=>pointer[key]!==value)))
+     throw Error('Invalid current publication pointer');
+    return {review:fingerprintConfiguredClassReview(authoritative),previousPublicationId:pointer?.publicationId??null};
    });
    return {status:200,body:{
-    review,
+    review,previousPublicationId,
     readOnly:true,stageAuthorized:false,publishAuthorized:false,
     warning:'Review only. Official marks and Grade Sheets are NOT published.'
    }};

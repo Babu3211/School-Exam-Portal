@@ -54,6 +54,7 @@ try{
  let body=await r.json();
  assert.equal(r.headers.get('cache-control'),'no-store');
  assert.equal(body.review.rosterCount,101);
+ assert.equal(body.previousPublicationId,null);
  assert.equal(body.review.digest.length,64);
  assert.equal(body.review.writeAuthorized,false);
  assert.equal(body.review.publicationAllowed,false);
@@ -89,3 +90,5 @@ try{
  assert.equal(writes,0,'Publication review must never write');
  console.log('PASS V47 authenticated publication review HTTP: 101 students, verified School Admin only, revocation, roster, mark limits, revision digest, zero writes');
 }finally{await new Promise((resolve,reject)=>server.close(e=>e?reject(e):resolve()))}
+
+// The isolated browser flow must use an authoritative compare-and-swap pointer, not guess it.

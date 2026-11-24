@@ -379,6 +379,31 @@ $('saveClassDraft').onclick=async()=>{
   }
  }finally{if(attempt===epoch)lock(false)}
 };
+$('serverReviewMarks').onclick=async()=>{
+ if(busy||actor?.role!=='school_admin'||!classMarkContext||classDraftRevision===null||classDraftRevision<1)return status('Load and save a complete class Draft first.');
+ const selectedActor=actor,selectedSchool=schoolId,attempt=epoch,request=rosterRequest;
+ const scope={schoolId:selectedSchool,classId:classMarkContext.classId,subjectId:classMarkContext.subjectId,examId:classMarkContext.term};
+ const check=()=>{if(attempt!==epoch||request!==rosterRequest||actor!==selectedActor||auth?.currentUser?.uid!==selectedActor.uid||
+  schoolId!==selectedSchool||$('schoolClass').value!==scope.classId||$('subjectId').value!==scope.subjectId||$('term').value!==scope.examId)
+  throw Error('School or class selection changed')};
+ const show=s=>{$('serverPublicationStatus').textContent=s};
+ lock(true);$('serverReviewMarks').disabled=true;
+ let committing=false;
+ try{
+  if(!await enforceSchoolIdle(auth,authSdk))throw Error('Login expired');
+  check();
+  const {runSavedClassPublication}=await import('./saved-class-publication-client.mjs');
+  const result=await runSavedClassPublication({scope,getIdToken:()=>auth.currentUser.getIdToken(),fetchImpl:(...args)=>fetch(...args),assertCurrent:check,
+   confirmStage:review=>window.confirm('Review completed for saved Draft: '+review.rosterCount+' students. Stage this saved revision? Unsaved screen changes are not included.'),
+   confirmCommit:({review,publicationId,previousPublicationId})=>window.confirm('Commit '+review.rosterCount+' saved student marks? '+(previousPublicationId?'Replace the previously committed subject result.':'First publication.')+' This does not approve CDC Grade Sheets.'),
+   onStage:stage=>show('Staged '+stage.rosterCount+' students. Not published.'),
+   onCommit:()=>{committing=true}
+  });
+  check();
+  show(result.committed?'Marks committed. CDC Grade Sheet approval is separate.':'Publication cancelled. No final marks committed by this action.');
+ }catch(e){if(attempt===epoch&&request===rosterRequest)show((committing?'Final publication outcome not confirmed; reload official report before retrying. ':'Server review/stage blocked. ')+e.message)}
+ finally{if(attempt===epoch){lock(false);$('serverReviewMarks').disabled=false}}
+};
 $('saveClassMarks').onclick=()=>status('Save/Publish disabled: secure complete-class workflow is not implemented. No marks saved.');
 
 // Read-only V46 IEMIS component reference; no mark writes.
