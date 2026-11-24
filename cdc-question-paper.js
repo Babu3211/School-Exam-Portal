@@ -4,6 +4,7 @@ import {aggregateExactCdcGrid} from "./cdc-exact-grid.mjs";
 import {getBundledComputerGrid,bundledComputerUnitTopics} from "./cdc-verified-computer-grids.mjs";
 import {findCdcGridSources} from "./cdc-grid-source-index.mjs";
 import {compareGrade8SciencePracticeBank,getGrade8ScienceHistoricalPracticePattern} from "./cdc-grade8-science-model-audit.mjs";
+import {grade8ScienceOriginalSupplement} from "./cdc-grade8-science-original-supplement.mjs";
 import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-math-2082.mjs";
 import {CDC_G10_OPTIONAL_MATH_2083_MODEL,compareCdc2083MathModelToBundledGrid} from "./cdc-optional-math-model-compare.mjs";
 import {inspectCdcOptionalMathPaper} from "./cdc-optional-math-composite.mjs";
@@ -468,11 +469,18 @@ async function loadBundledPracticeBank({grade,subject}){
   if(translations.schemaVersion!==1||translations.reviewRequired!==true)
    throw Error("अनुवादको प्रमाणित संरचना छैन");
   const safe=readBundledScienceBank(pack,{grade,subject,bilingual:translations.translations});
-  return {units:safe.units,questions:safe.questions,
+  // The new 1/2/4-mark school practice exercises are original writing, not
+  // reprinted CDC questions. Keep all 55 existing items and their IDs.
+  const supplement=grade===8?grade8ScienceOriginalSupplement({
+   subject,units:safe.units
+  }):{questions:[]};
+  const allQuestions=[...safe.questions,...supplement.questions];
+  return {units:safe.units,questions:allQuestions,
    status:"कक्षा "+grade+" विज्ञान: "+safe.units.length+" Unit, "+
-    safe.questions.length+" मौलिक नेपाली प्रश्न। English/दुवै भाषाका "+
-    safe.questions.filter(q=>q.questionTextEn).length+
-    " MCQ मात्र उपलब्ध छन्। CDC प्रकाशित Model Question होइनन्; शिक्षक समीक्षा आवश्यक।"};
+    allQuestions.length+" मौलिक अभ्यास प्रश्न (नयाँ "+supplement.questions.length+
+    " वटा १/२/४ अङ्कका bilingual प्रश्न)। English/दुवै भाषाका "+
+    allQuestions.filter(q=>q.questionTextEn).length+
+    " प्रश्न उपलब्ध छन्। यी CDC प्रकाशित Model Question होइनन्; शिक्षक समीक्षा आवश्यक।"};
  }catch(e){
   return {units:[],questions:[],
    status:"अभ्यास स्रोत लोड हुन सकेन: "+e.message+
@@ -632,7 +640,8 @@ async function loadCurrentData() {
   $("qpPatternHint").textContent="CDC अभिलेखमा कक्षा ८ विज्ञानको २०७८ नमुना प्रश्न भेटिएको छ: "+
    "१० MCQ (१०), ८ अति छोटो (८), ८ छोटो (१६), ४ लामो (१६) = ५० अङ्क। "+
    "पुरानो सरकारी PDF का Grid र Model कुल अङ्कमा अन्तर छ र २०८२ मूल CDC Grid अझै जाँचिएको छैन। "+
-   "अहिलेको ५५ प्रश्नको अभ्यास बैंकमा १ अङ्क अति छोटो, २ अङ्क छोटो तथा ४ अङ्क लामा प्रश्न अपूरा छन्।"+
+   "मूलका ५५ अभ्यास प्रश्नमा १/२/४ अङ्कका प्रश्न अभाव थियो; अब ४० नयाँ मौलिक bilingual अभ्यास प्रश्न थपिएका छन्। "+
+   "पर्याप्त प्रश्न संख्या भए पनि शिक्षक समीक्षा तथा मूल २०८२ CDC Grid पुष्टि आवश्यक छ।"+
    " यसलाई २०८३ CDC Exact प्रश्नपत्र नमान्नुहोस्।";
   const historicalPattern=getGrade8ScienceHistoricalPracticePattern({grade,subject});
   if(historicalPattern){
