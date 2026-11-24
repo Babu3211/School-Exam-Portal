@@ -190,7 +190,9 @@ def read_compulsory_pdf(url, output_dir):
             info=subprocess.run(["pdfinfo",str(pdf)],check=True,capture_output=True,text=True,timeout=20).stdout
             pages=int(re.search(r"(?m)^Pages:\s+(\d+)",info).group(1))
             if not 1<=pages<=150: raise ValueError("Unexpected PDF page count")
-            text=subprocess.run(["pdftotext","-f","1","-l",str(min(pages,4)),"-layout",str(pdf),"-"],check=True,capture_output=True,text=True,timeout=30).stdout
+            grid_page_limits={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3}
+            last=min(pages,grid_page_limits[resource])
+            text=subprocess.run(["pdftotext","-f","1","-l",str(last),"-layout",str(pdf),"-"],check=True,capture_output=True,text=True,timeout=30).stdout
             # Keep page layout for offline inspection, never treat extraction as
             # a confirmed transcription. Log only compact numeric table rows.
             output_dir.mkdir(parents=True,exist_ok=True)
@@ -198,7 +200,6 @@ def read_compulsory_pdf(url, output_dir):
             # Retain numeric table cells, including Preeti legacy digit glyphs.
             # Limit to the grid/checklist pages, not model question passages.
             legacy_digits=str.maketrans("!@#$%^&*()","1234567890")
-            grid_page_limits={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3}
             grid_rows=[]
             for i,page in enumerate(text.split("\f"),1):
                 if i>grid_page_limits[resource]: break
@@ -221,7 +222,28 @@ def read_compulsory_pdf(url, output_dir):
                 for line in page.splitlines():
                     if len(re.findall(r"\d+",line))>=4 and len(line.strip())<=240:
                         fallback_rows.append({"page":i,"row":line.rstrip()})
-            entry.update(finalUrl=final,contentType=ctype,byteCount=len(data),sha256=hashlib.sha256(data).hexdigest(),pages=pages,numericRows=grid_rows[:90],fallbackNumericRows=fallback_rows[:12],textLength=len(text),status="full_pdf_read_needs_grid_review")
+            # Language grids use inline expressions and half marks rather than
+            # isolated numeric cells. Retain a bounded set of mark-related rows,
+            # with page references. This is evidence for review, not approval.
+            language_rows=[]
+            if resource in ("11168","11169"):
+                for i,page in enumerate(text.split("\f"),1):
+                    for line in page.splitlines():
+                        row=line.strip()
+                        if not row or len(row)>300: continue
+                        if resource=="11169":
+                            has_number=bool(re.search(r"\d",row))
+                            relevant=bool(re.search(r"(?i)\b(reading|writing|grammar|marks?|question[s]?|total|weight|passage[s]?|comprehension|text[s]?|item[s]?)\b|\d\s*[x×=]\s*\d",row))
+                            if has_number and relevant:
+                                language_rows.append({"page":i,"row":row})
+                        else:
+                            # Preeti digit-only cells and explicit total rows.
+                            if re.search(r"(?:^|\s)(?:hDdf|s'n|&%|[!@#$%^&*()]+×[!@#$%^&*()]+)(?:\s|$)",row):
+                                language_rows.append({"page":i,"row":row})
+                # Rasterize only the language Grid pages into short-lived
+                # Actions artifacts, never live hosting or the source tree.
+                subprocess.run(["pdftoppm","-f","1","-l",str(last),"-r","150","-png",str(pdf),str(output_dir/(resource+"-grid"))],check=True,capture_output=True,timeout=60)
+            entry.update(finalUrl=final,contentType=ctype,byteCount=len(data),sha256=hashlib.sha256(data).hexdigest(),pages=pages,gridPagesExtracted=last,numericRows=grid_rows[:90],fallbackNumericRows=fallback_rows[:12],languageGridRows=language_rows[:50],visualReviewRequired=True,textLength=len(text),status="full_pdf_read_needs_grid_review")
     except (OSError,ValueError,AttributeError,subprocess.SubprocessError) as err:
         entry.update(status="full_pdf_read_failed",reason=str(err)[:200])
     return entry

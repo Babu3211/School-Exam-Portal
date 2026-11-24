@@ -24,15 +24,16 @@ jobs:
       - name: Install PDF extraction tools on the ephemeral runner
         run: |
           set -euo pipefail
-          if ! command -v pdfinfo || ! command -v pdftotext; then
+          if ! command -v pdfinfo || ! command -v pdftotext || ! command -v pdftoppm; then
             sudo apt-get update -qq
             sudo apt-get install -y --no-install-recommends poppler-utils
           fi
           command -v pdfinfo
           command -v pdftotext
+          command -v pdftoppm
       - name: Inspect public HTML and read identified Grade 9 government PDFs
         run: python3 scripts/audit-grade9-grid-catalog.py --output "$RUNNER_TEMP/grade9-grid-catalog/audit.json"
-      - name: Retain source discovery report only
+      - name: Retain source evidence and language Grid page images for review
         uses: actions/upload-artifact@v4
         with:
           name: grade9-public-grid-source-audit
