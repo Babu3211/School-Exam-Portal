@@ -54,6 +54,8 @@ try{
   batch.set(db.doc(base+'/official_read_views/'+key),{...common,format:'smss-v47-official-read-view-v1',entries});
   await batch.commit();
  }
+ await admin.createUser({uid:'platform-admin',email:email('platform-admin'),password});
+ await db.doc('v47_super_admins/platform-admin').set({active:true});
  // Real pinned Firebase SDK, bundled as three entry modules with shared chunks.
  // No CDN network is needed. Emulator connections happen before SDK operations.
  const sources={
@@ -80,8 +82,8 @@ try{
     return route.fulfill({status:200,contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},body:await readFile(join(out,name))});
    }
    if(url===origin+'/v47-firebase-config.mjs')return route.fulfill({contentType:'application/javascript',body:fixtureConfig});
-   if(url===origin+'/school-firebase-client.mjs'){
-    const source=await readFile(join(root,'school-firebase-client.mjs'),'utf8');
+   if([origin+'/school-firebase-client.mjs',origin+'/admin-console.mjs',origin+'/first-admin-account.mjs'].includes(url)){
+    const source=await readFile(join(root,new URL(url).pathname.slice(1)),'utf8');
     return route.fulfill({contentType:'application/javascript',body:source.replaceAll('smss-exam-portal-v47',projectId)});
    }
    if(url.startsWith(origin+'/')||url.startsWith('http://127.0.0.1:8081/')||url.startsWith('http://127.0.0.1:9099/'))return route.continue();
@@ -92,7 +94,7 @@ try{
   return {context,page,errors};
  }
  const wait=async(page,fn,arg)=>page.waitForFunction(fn,arg,{timeout:30000});
- async function login(page,sid,uid,success=true){
+ async function login(page,sid,uid,success=true,studentCount='1',loginEmail=email(uid)){
   await page.goto(origin+'/');
   await wait(page,()=>!document.getElementById('dashboardLogin').disabled);
   assert.equal(await page.locator('#verifiedSidebar').isVisible(),false);
@@ -100,14 +102,14 @@ try{
   assert.equal(await page.locator('#dashboardConnect').isVisible(),false);
   assert.equal(await page.locator('#dashboardLoginFields').isVisible(),true);
   await page.locator('#dashboardSchool').fill(sid);
-  await page.locator('#dashboardEmail').fill(email(uid));
+  await page.locator('#dashboardEmail').fill(loginEmail);
   await page.locator('#dashboardPassword').fill(password);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,'Login must fit viewport');
   await page.locator('#dashboardLogin').click();
   if(success){
    await wait(page,s=>document.getElementById('schoolIdentity').textContent.includes(s),sid);
    await wait(page,()=>!document.getElementById('dashboardMetricCards').hidden);
-   assert.equal(await page.locator('[data-metric="students"]').textContent(),'1');
+   assert.equal(await page.locator('[data-metric="students"]').textContent(),studentCount);
    assert.equal(await page.locator('#dashboardPassword').inputValue(),'');
    assert.equal(await page.locator('#dashboardLoginFields').isVisible(),false);
    assert.equal(await page.locator('#verifiedSidebar').isVisible(),true);
@@ -169,7 +171,38 @@ try{
  for(const [sid,uid] of [[schools[1].sid,'alpha-viewer'],[schools[0].sid,'beta-admin']]){
   const {context,page,errors}=await newSession();try{await login(page,sid,uid,false);assert.deepEqual(errors,[])}finally{await context.close()}
  }
- console.log('PASS real Chromium: 2 schools, 4 accounts, wrong-school login denied, shared session, Spark Grade Ledger, watermarked Grade Sheet, XLSX, logout');
+ // Register a third synthetic school using the actual Super Admin UI.
+ const newSchoolId='33333003',newEmail=email('new-school-admin');
+ {
+  const {context,page,errors}=await newSession();
+  try{
+   await page.goto(origin+'/admin.html');
+   await page.locator('#connect').click();await wait(page,()=>!document.getElementById('login').disabled);
+   await page.locator('#email').fill(email('platform-admin'));await page.locator('#password').fill(password);
+   await page.locator('#login').click();await wait(page,()=>!document.getElementById('adminArea').hidden);
+   await page.locator('#newAdminAccount summary').click();await page.locator('#newAdminEmail').fill(newEmail);await page.locator('#newAdminPassword').fill(password);
+   page.once('dialog',dialog=>dialog.accept());await page.locator('#createAdminAccount').click();
+   await wait(page,()=>document.getElementById('adminUid').value.length>=6&&!document.getElementById('register').disabled);
+   const newUid=await page.locator('#adminUid').inputValue();
+   assert.equal((await admin.getUserByEmail(newEmail)).uid,newUid);
+   assert.equal(await page.locator('#newAdminPassword').inputValue(),'');
+   assert.match(await page.locator('#identity').textContent(),/platform-admin/);
+   assert.equal((await db.doc('schools/'+newSchoolId).get()).exists,false);
+   await page.locator('#schoolId').fill(newSchoolId);await page.locator('#iemis').fill(newSchoolId);await page.locator('#schoolName').fill('Gamma Synthetic School');
+   page.once('dialog',dialog=>dialog.accept());await page.locator('#register').click();
+   const row=page.locator('#schools tr').filter({hasText:newSchoolId});
+   await wait(page,id=>Array.from(document.querySelectorAll('#schools tr')).some(tr=>tr.textContent.includes(id)&&tr.textContent.includes('Inactive')),newSchoolId);
+   assert.equal((await db.doc('schools/'+newSchoolId).get()).data().active,false);
+   assert.equal((await db.doc('schools/'+newSchoolId+'/members/'+newUid).get()).data().role,'school_admin');
+   const candidate=await newSession();try{await login(candidate.page,newSchoolId,newUid,false,'0',newEmail)}finally{await candidate.context.close()}
+   page.once('dialog',dialog=>dialog.accept());await row.getByRole('button',{name:'Activate',exact:true}).click();
+   await wait(page,id=>Array.from(document.querySelectorAll('#schools tr')).some(tr=>tr.textContent.includes(id)&&tr.textContent.includes('Deactivate')),newSchoolId);
+   const candidate2=await newSession();try{await login(candidate2.page,newSchoolId,newUid,true,'0',newEmail)}finally{await candidate2.context.close()}
+   assert.deepEqual(errors,[]);
+   console.log('PASS Super Admin account creation, inactive registration, blocked inactive login, activation and new-school login');
+  }finally{await context.close()}
+ }
+ console.log('PASS real Chromium: 2 schools, 4 accounts, wrong-school login denied, shared session, Spark Grade Ledger, watermarked Grade Sheet, XLSX, logout; third school onboarding');
 }finally{
  if(browser)await browser.close();
  if(server){server.closeAllConnections?.();await new Promise(r=>server.close(r))}

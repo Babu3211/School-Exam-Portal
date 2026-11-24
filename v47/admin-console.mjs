@@ -1,3 +1,4 @@
+import {createIsolatedAdminAccount} from './first-admin-account.mjs';
 import {loadPlatformSchoolCounts} from './super-admin-dashboard.mjs';
 import {estimateSparkDay} from './spark-capacity.mjs';
 import {onboardSchool} from './school-onboarding.mjs';
@@ -9,7 +10,7 @@ const status=message=>{$('message').textContent=message};
 const cleanAuthError=error=>{const message=error?.message;if(typeof message==='string'&&['विद्यालयको IEMIS Code ५–२० अङ्कको हुनुपर्छ।','School ID र IEMIS Code एउटै हुनुपर्छ।','विद्यालयको नाम ३–१६० अक्षरको हुनुपर्छ।','Admin UID मान्य छैन।'].includes(message))return message;const code=String(error?.code??'');if(code.startsWith('auth/'))return 'प्रमाणीकरण असफल भयो। Email, Password वा अनुमति जाँच्नुहोस्।';if(code==='permission-denied'||code==='firestore/permission-denied')return 'अनुमति छैन। Super Admin अधिकार जाँच्नुहोस्।';if(code==='unavailable'||code==='firestore/unavailable')return 'सेवा अहिले उपलब्ध छैन। पुनः प्रयास गर्नुहोस्।';return 'अनुरोध पूरा भएन। विवरण जाँचेर पुनः प्रयास गर्नुहोस्।';};
 const showError=error=>status(cleanAuthError(error));
 let countsEpoch=0;
-function clearAdmin(){countsEpoch++;$('platformCounts').textContent='School counts not loaded.';$('quotaResult').textContent='';sessionEpoch++;refreshEpoch++;actor=null;cursor=null;$('adminArea').hidden=true;$('logout').disabled=true;$('identity').textContent='साइन इन भएको छैन';$('schools').replaceChildren();$('next').disabled=true;$('next').onclick=null;}
+function clearAdmin(){$('newAdminPassword').value='';$('newAdminEmail').value='';$('adminUid').value='';$('accountStatus').textContent='';$('newAdminAccount').open=false;countsEpoch++;$('platformCounts').textContent='School counts not loaded.';$('quotaResult').textContent='';sessionEpoch++;refreshEpoch++;actor=null;cursor=null;$('adminArea').hidden=true;$('logout').disabled=true;$('identity').textContent='साइन इन भएको छैन';$('schools').replaceChildren();$('next').disabled=true;$('next').onclick=null;}
 const firebaseBase='https://www.gstatic.com/firebasejs/11.10.0/';
 $('connect').onclick=async()=>{if(connecting||db)return;connecting=true;$('connect').disabled=true;try{
  const config=V47_FIREBASE_CONFIG;
@@ -20,6 +21,26 @@ $('connect').onclick=async()=>{if(connecting||db)return;connecting=true;$('conne
  const app=appSdk.getApps().find(x=>x.name==='smss-v47-admin')??appSdk.initializeApp(config,'smss-v47-admin');const candidateAuth=authSdk.getAuth(app);await authSdk.setPersistence(candidateAuth,authSdk.inMemoryPersistence);auth=candidateAuth;db=api.getFirestore(app);
  authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clearAdmin();status('सत्र परिवर्तन भयो। फेरि साइन इन गर्नुहोस्।')}});
  $('connect').disabled=true;$('login').disabled=false;$('connection').textContent='V47 Project सँग जडान भयो।';
+ $('createAdminAccount').onclick=async()=>{
+  if(mutating||signingIn||signingOut||!actor||auth?.currentUser?.uid!==actor.uid)return;
+  const selected=actor,epoch=sessionEpoch,email=$('newAdminEmail').value.trim(),password=$('newAdminPassword').value;
+  $('newAdminPassword').value='';
+  const current=()=>actor===selected&&sessionEpoch===epoch&&auth?.currentUser?.uid===selected.uid;
+  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||email.length>254||password.length<12||password.length>128){$('accountStatus').textContent='Enter a valid email and a temporary password of 12–128 characters.';return}
+  if(!confirm('Create a new V47 Auth account for '+email+'? School access is not granted until registration and activation.'))return;
+  if(!current())return;
+  mutating=true;$('createAdminAccount').disabled=true;$('register').disabled=true;$('logout').disabled=true;
+  $('accountStatus').textContent='Creating account…';
+  try{
+   const result=await createIsolatedAdminAccount({appSdk,authSdk,config,actor:selected,email,password,assertCurrent:()=>{if(!current())throw Error('Session changed')},
+    verifyPrivilege:()=>api.getDocs(api.query(api.collection(db,'schools'),api.limit(1)))});
+   if(!current())return;
+   $('adminUid').value=result.uid;
+   $('accountStatus').textContent='V47 account created. UID filled. Register the school inactive, then activate after verifying the school.';
+  }catch(e){if(current())$('accountStatus').textContent=e?.code==='auth/email-already-in-use'?'Email already registered. Use the existing V47 UID from Firebase Authentication. No existing account was changed.':'Account creation could not be confirmed. Check Firebase Authentication before retrying; an account may already exist.'}
+  finally{mutating=false;$('createAdminAccount').disabled=false;if(current()){$('register').disabled=false;$('logout').disabled=false}}
+ };
+
  $('login').onclick=async()=>{if(signingIn||signingOut||mutating)return;signingIn=true;$('login').disabled=true;try{await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value);$('password').value='';await verifyAdmin();}catch(e){clearAdmin();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}showError(e)}finally{$('password').value='';signingIn=false;$('login').disabled=false}};
  $('logout').onclick=async()=>{if(mutating||signingIn||signingOut){status('हालको प्रक्रिया पूरा नभएसम्म पर्खनुहोस्।');return}signingOut=true;$('logout').disabled=true;try{await authSdk.signOut(auth);clearAdmin();status('सफलतापूर्वक साइन आउट भयो।')}catch(e){showError(e)}finally{signingOut=false;if(actor)$('logout').disabled=false}};
  status('जडान भयो। अधिकृत Super Admin बाट साइन इन गर्नुहोस्।');
