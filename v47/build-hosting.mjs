@@ -11,7 +11,7 @@ const required=['index.html','school-login.html','school-login.mjs','admin.html'
 for(const name of required)if(!available.has(name))throw new Error('Missing entry: '+name);
 const blocked=name=>name.startsWith('test-')||name.startsWith('firebase.')||name.startsWith('build-')||name.startsWith('server-')||name.startsWith('release-')||name.startsWith('audit-')||['firebase.json','firestore.rules','firestore.indexes.json','run-unit-checks.mjs'].includes(name);
 const assets=new Set();
-const queue=files.filter(f=>f.isFile()&&(f.name.endsWith('.html')||f.name==='school-login.mjs')).map(f=>f.name);
+const queue=files.filter(f=>f.isFile()&&(f.name.endsWith('.html')||f.name==='school-login.mjs'||f.name==='v47-service-worker.js')).map(f=>f.name);
 const localRef=(ref,owner)=>{
  if(!ref.startsWith('./'))return;
  const name=decodeURIComponent(ref.slice(2).split(/[?#]/)[0]);
