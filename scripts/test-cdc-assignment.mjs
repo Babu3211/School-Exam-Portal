@@ -1223,6 +1223,14 @@ for(const grade of ['2','3']){
   assert.equal(field('annex3').hidden,false,unit);
   assert.equal(rows.rows.length,expected[i][1],unit);
   assert.equal(outcomes.length,expected[i][0],unit);
+  if(grade==='2'&&i<2){
+   assert.match(field('annexStatus').textContent,/कार्यगत शब्दावली/);
+   assert.ok(outcomes.every(cell=>cell.textContent.includes(' — ')));
+   assert.ok([...rows.rows].every(row=>!row.textContent.includes('मूल PDF हेर्नुहोस्')));
+   assert.match(rows.textContent,i===0?/छिमेकीलाई सम्मान गर्ने/:/चुम्बकबाट आकर्षित वस्तु छुट्याउने/);
+  }else{
+   assert.match(rows.textContent,/सूचक — मूल PDF हेर्नुहोस्/);
+  }
   assert.equal(outcomes.reduce((n,cell)=>n+cell.rowSpan,0),expected[i][1]);
   assert.equal(rows.rows[0].cells[0].rowSpan,expected[i][1]);
   for(const stage of [0,1]){
