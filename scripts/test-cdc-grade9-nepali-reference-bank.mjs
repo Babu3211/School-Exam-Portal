@@ -94,3 +94,17 @@ assert.match(b.blocks[11].text,/\[४\]/);assert.match(b.blocks[14].text,/\[५\
 assert.equal(a.paper.groups[11].marks,5,'Historical comparison unchanged');
 assert.equal(a.paper.groups[14].marks,4,'Historical comparison unchanged');
 console.log('PASS revised Nepali marks in real preview, historical comparison preserved, official gate closed');
+
+for(const rng of [()=>.42,()=>.61]){
+ const paper=planNepaliRevisedMarksPractice({...practiceArgs,rng}).paper;
+ const tense=paper.groups.find(g=>g.skill==='tense_aspect').choices[0];
+ assert.equal(tense.marks,2);assert.equal(tense.components.length,4);
+ assert.equal(tense.passage,tense.components.map(x=>x.text).join(' '));
+ assert.ok(tense.components.every(x=>x.marks===0.5));
+ const transform=paper.groups.find(g=>g.skill==='sentence_transformation').choices[0];
+ assert.deepEqual(transform.components.map(x=>x.text.match(/\(([^)]+)\)$/)[1]).slice(1),['कर्मवाच्य','प्रेरणार्थक','भाववाच्य']);
+ assert.match(transform.components[0].text,/संश्लेषण|विश्लेषण/);
+ assert.doesNotMatch(transform.components.map(x=>x.text).join(' '),/प्रत्यक्ष कथन|अप्रत्यक्ष कथन/);
+ assert.equal(transform.components.reduce((n,x)=>n+x.marks,0),4);
+}
+console.log('PASS revised Grade 9 grammar practice, same-tense paragraphs and four transformation categories; historical bank retained');

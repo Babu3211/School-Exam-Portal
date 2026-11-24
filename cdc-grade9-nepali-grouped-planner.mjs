@@ -99,6 +99,24 @@ export function planNepaliRevisedMarksPractice(args={}){
  if(!result.ready)return result;
  const old=result.paper;
  const groups=old.groups.map(g=>{
+  // The independent 2080 transcription describes same-tense paragraphs
+  // and four Grade 9 transformation categories. Original practice only.
+  if(args.allowOriginalReferenceDraft===true&&['tense_aspect','sentence_transformation'].includes(g.skill))return {...g,choices:g.choices.map(c=>{
+   const variant=/^smss_nep_ref9_\d+_v([01])$/.exec(c.id);
+   if(!variant)throw Error('Revised grammar practice requires a known original variant');
+   const v=Number(variant[1]),tense=g.skill==='tense_aspect';
+   const tenseRows=[
+    [['म बिहान उठ्छु।','म बिहान उठेँ।'],['म पानी पिउँछु।','म पानी पिएँ।'],['म पुस्तक पढ्छु।','म पुस्तक पढेँ।'],['म विद्यालय जान्छु।','म विद्यालय गएँ।']],
+    [['हामी बगैँचामा जान्छौँ।','हामी बगैँचामा जानेछौँ।'],['हामी माटो खन्छौँ।','हामी माटो खन्नेछौँ।'],['हामी बिरुवा रोप्छौँ।','हामी बिरुवा रोप्नेछौँ।'],['हामी पानी हाल्छौँ।','हामी पानी हाल्नेछौँ।']]
+   ];
+   const transformationRows=[
+    [['सीता पढ्छिन्। सीता लेख्छिन्। (संश्लेषण)','सीता पढ्छिन् र लेख्छिन्।'],['रामले चिठी लेख्यो। (कर्मवाच्य)','रामद्वारा चिठी लेखियो।'],['बालक हाँस्यो। (प्रेरणार्थक)','आमाले बालकलाई हँसाइन्।'],['म हाँस्छु। (भाववाच्य)','मबाट हाँसिन्छ।']],
+    [['राम आयो र बस्यो। (विश्लेषण)','राम आयो। राम बस्यो।'],['शिक्षकले पाठ पढाउनुभयो। (कर्मवाच्य)','शिक्षकद्वारा पाठ पढाइयो।'],['बालक सुत्यो। (प्रेरणार्थक)','आमाले बालकलाई सुताइन्।'],['हामी हिँड्छौँ। (भाववाच्य)','हामीबाट हिँडिन्छ।']]
+   ];
+   const rows=tense?tenseRows[v]:transformationRows[v];
+   const components=rows.map(([text,answer])=>({text,answer,marks:tense?0.5:1}));
+   return {...c,text:tense?'दिइएको अनुच्छेदलाई '+(v===0?'सामान्य भूतकालमा':'सामान्य भविष्यत् कालमा')+' परिवर्तन गरी लेख्नुहोस्।':'निर्देशनअनुसार चार वाक्यको वाक्यान्तरण गर्नुहोस्।',...(tense?{passage:rows.map(x=>x[0]).join(' ')}:{}),components,answer:components.map(x=>x.answer).join(' / ')};
+  })};
   if(g.skill==='unseen_passage')return {...g,marks:4,choices:g.choices.map(c=>{
    if(c.components?.length!==5)throw Error('Unexpected historical unseen components');
    const components=c.components.slice(0,4).map(x=>({...x}));
