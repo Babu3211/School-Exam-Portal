@@ -73,7 +73,7 @@ Object.assign(w,{
   getDocsFromServer:async ({name,filters})=>{
     assert.equal(name,'cdc_observations');
     assert.deepEqual(Object.fromEntries(filters.map(([name,op,value])=>{assert.equal(op,'==');return [name,value];})),{
-      studentId:field('student').value,className:({three:'Class 3',primary:'Class 5','nepali-1':'Class 1','nepali-2':'Class 2','nepali-3':'Class 3'})[field('student').value]||field('class').value,subject:field('subject').value,
+      studentId:field('student').value,className:({three:'Class 3',primary:'Class 5','nepali-1':'Class 1','nepali-2':'Class 2','nepali-3':'Class 3','english-1':'Class 1'})[field('student').value]||field('class').value,subject:field('subject').value,
       section:'A',academicYear:w.currentSchoolSettings.academicYear,...(filters.some(([key])=>key==='period')?{period:field('period').value}:{})
     });
     if(readSchool) await readSchool.promise;
@@ -809,5 +809,59 @@ await w.loadCdcAssessmentPage();
 choice('unit','म र मेरो परिवार');
 assert.equal(field('annex3').hidden,true);
 console.log('Grade 3 Nepali eleven thematic forms, 201 outcome rows, distinct project-work key, stage entry and legacy skill/year isolation passed');
+// Grade 1 English: preserve original keys, English-only form labels and four skill groups.
+w.currentSchoolSettings.academicYear='2083';
+current.subjectAssignments=[{className:'Class 1',subject:'English',section:'A'}];
+serverRole={...current};
+w.getDocs=async()=>({docs:[{id:'english-1',data:()=>({class:'Class 1',section:'A',name:'Synthetic Grade 1 English'})}]});
+await w.loadCdcAssessmentPage();
+const beforeEnglish=observations.size;
+let outcomeCount=0;
+for(const [unit,groups] of [
+ ['वर्णमाला',[9,5,5,5]],['म र मेरो परिवार',[4,5,5,4]],['मेरो दैनिक जीवन',[5,4,5,3]],
+ ['हाम्रो विद्यालय',[4,4,6,7]],['हाम्रो वातावरण',[4,4,7,6]],['मेरा सरसामान',[5,4,6,6]],
+ ['हाम्रो संस्कृति',[5,4,6,7]],['सञ्चार प्रविधि र बजार',[5,4,6,6]],
+ ['फलफूल र तरकारी',[4,4,6,6]],['रुचि र सोख',[3,3,6,6]],['चराचुरुङ्गी र जनावर',[5,5,6,6]]
+]){
+ choice('unit',unit);
+ const count=groups.reduce((a,b)=>a+b,0);
+ outcomeCount+=count;
+ assert.equal(field('annex3').hidden,false,unit);
+ assert.equal(field('annexRows').rows.length,count,unit);
+ assert.equal(field('outcomePicker').options.length,count+1,unit);
+ assert.doesNotMatch(field('annexTable').textContent,/[\u0900-\u097f]/u);
+ assert.doesNotMatch(field('annexUnit').textContent,/[\u0900-\u097f]/u);
+ let offset=0;
+ for(const [i,skill] of ['Listening','Speaking','Reading','Writing'].entries()){
+   const row=field('annexRows').rows[offset];
+   assert.equal(row.cells[0].textContent,String(i+1));
+   assert.equal(row.cells[1].textContent,skill);
+   assert.equal(row.cells[0].rowSpan,groups[i]);
+   assert.equal(row.cells[1].rowSpan,groups[i]);
+   offset+=groups[i];
+ }
+ await field('gridRead').onclick();
+ assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,count*2,unit);
+ assert.equal(field('printForm').disabled,false,unit);
+}
+assert.equal(outcomeCount,225);
+assert.equal(observations.size,beforeEnglish);
+choice('unitEn','Alphabet');
+await field('gridRead').onclick();
+const alphabetRow=field('annexRows').rows[0];
+alphabetRow.querySelector('[data-cdc-grid-edit="regular"]').click();
+alphabetRow.querySelector('[data-cdc-grid-editor="level"]').value='3';
+await alphabetRow.querySelector('[data-cdc-grid-save="regular"]').onclick();
+assert.equal(observations.size,beforeEnglish+1);
+const englishObservation=[...observations.values()].at(-1);
+assert.equal(englishObservation.unit,'वर्णमाला');
+assert.equal(englishObservation.topic,'सुनेका ध्वनि दोहोर्‍याउने, चिन्ने र छुट्याउने');
+assert.equal(englishObservation.topicAlt,'Copy, recognize and distinguish sounds');
+assert.match(field('annexFoot').textContent,/1 \/ 24/);
+w.currentSchoolSettings.academicYear='2084';
+await w.loadCdcAssessmentPage();
+choice('unitEn','Alphabet');
+assert.equal(field('annex3').hidden,true);
+console.log('Grade 1 English eleven thematic forms, 225 outcomes, English-only skill groups, original record keys and year isolation passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
