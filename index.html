@@ -7838,6 +7838,7 @@ function openCdcAssessment(context = null) {
   const primaryNepaliForm=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='nepali'?(field('class').value==='1'?cdcPrimaryNepaliForms[field('unit').value]:cdcNepaliThemeForms[field('class').value]?.[field('unit').value]||null):null;
   const primaryEnglishForm=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='english'?(cdcPrimaryEnglishForms[field('class').value]?.[field('unit').value]||null):null;
   const primarySeroferoReference=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='serophero'?cdcSeroferoReferenceForms[field('class').value]?.[field('unit').value]:null;
+  const primarySeroGuideReview=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='serophero'?cdcSeroferoGuideCounts[field('class').value]?.[field('unit').value]:null;
   const isPrimaryRubric=()=>!!primaryRevisedForm()||!!primaryLegacyForm();
   const hasAnnexGrid=()=>!!context&&(!!primaryEnglishForm()||!!primaryNepaliForm()?.editable||isPrimaryRubric()||(Number(field('class').value)>=4&&['nepali','english','mathematics','socialstudies','science','healthphysicalcreativeart'].includes(cdcAssessmentSubjectKey(field('subject').value))));
   // Enter a single stage in the official date/rating columns. Never overwrite a
@@ -7917,14 +7918,15 @@ function openCdcAssessment(context = null) {
       if(current())field('gridStatus').textContent='सूचक अभिलेख पढ्न सकिएन। अनुमति र जडान जाँच्नुहोस्।';
     }finally{if(current())field('gridRead').disabled=false;}
   }
-  field('gridRead').onclick=()=>primarySeroferoReference()?readSeroferoRecords():field('readSchool').onclick();
+  field('gridRead').onclick=()=>primarySeroGuideReview()?undefined:primarySeroferoReference()?readSeroferoRecords():field('readSchool').onclick();
   const renderAnnex=()=>{
     const panel=field('annex3'),enabled=hasAnnexGrid(),en=language()==='en';
-    const nepaliForm=primaryNepaliForm(),seroReference=primarySeroferoReference();
-    panel.hidden=!enabled&&!nepaliForm&&!seroReference;field('stageRow').hidden=!enabled;field('gridRead').hidden=!!nepaliForm&&!nepaliForm.editable;
+    const nepaliForm=primaryNepaliForm(),seroReference=primarySeroferoReference(),seroGuide=primarySeroGuideReview();
+    panel.hidden=!enabled&&!nepaliForm&&!seroReference&&!seroGuide;field('stageRow').hidden=!enabled;field('gridRead').hidden=!!nepaliForm&&!nepaliForm.editable;
     field('printForm').disabled=!enabled||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('unit').value.trim();
     field('gridRead').textContent=seroReference?'सूचक अभिलेख पढ्नुहोस् / पुनः पढ्नुहोस्':'Load / Refresh Records';
     field('gridRead').disabled=false;
+    if(seroGuide){field('gridRead').hidden=true;field('printForm').disabled=true;renderSeroGuideReview(seroGuide);return;}
     if(seroReference){field('gridRead').hidden=!!seroReference.referenceOnly||year!=='2083';field('printForm').disabled=!!seroReference.referenceOnly||year!=='2083'||!schoolSelection()||seroReadKey!==seroScopeKey()||inlinePending;renderSeroferoReference(seroReference);return;}
     if(nepaliForm){renderPrimaryNepaliForm(nepaliForm);return;}
     if(!enabled)return;
@@ -8052,6 +8054,41 @@ function openCdcAssessment(context = null) {
     field('annexSign').textContent='अभिभावकको दस्तखत __________   शिक्षकको दस्तखत र मिति __________';
     const priorCount=annexObservations.filter(o=>o.unit===unit&&!rows.some(([,title])=>title===o.topic)).length;
     field('annexStatus').textContent='CDC २०७६, मुद्रित पृष्ठ '+form.page+' — '+rows.length+' उपलब्धि। कार्यगत शब्दावली; अन्तिम मुद्रण मिलान बाँकी। '+(priorCount?'फरक पुरानो शीर्षकका '+priorCount+' अभिलेख विद्यालयको अभिलेख सूचीमा सुरक्षित छन्; नयाँ उपलब्धिमा स्वतः सारिएका छैनन्।':'प्रत्येक उपलब्धिको चरणगत अङ्कन।');
+  }
+  // Read-only layout review until exact indicator wording and persistence are verified.
+  // Each main outcome can span several independent four-indicator scoring blocks.
+  function renderSeroGuideReview(form){
+    const digits=n=>String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]);
+    const unit=field('unit').value,st=assessmentStudents.find(s=>s.id===field('student').value);
+    const total=form.groups.reduce((a,b)=>a+b,0);
+    field('annexTitle').textContent='हाम्रो सेरोफेरो — मूल फारामको संरचना समीक्षा';
+    field('annexIdentity').textContent='कक्षा: '+digits(field('class').value)+'   विद्यार्थी: '+(field('student').selectedOptions[0]?.text||'')+'   परिचय नम्बर: '+(st?.iemisId||st?.studentIemisNo||st?.admissionNo||'');
+    field('annexUnit').textContent='थिम: '+unit;
+    field('annexHead').innerHTML='<tr><th rowspan="2">थिम</th><th rowspan="2">मुख्य सिकाइ उपलब्धि</th><th rowspan="2">उपलब्धि सूचक</th><th colspan="3">नियमित मूल्याङ्कन</th><th colspan="3">थप सहायतापछिको मूल्याङ्कन</th><th rowspan="2">मूल्याङ्कन साधन</th></tr><tr><th>सकेको / नसकेको</th><th>मिति</th><th>अङ्कन</th><th>सकेको / नसकेको</th><th>मिति</th><th>अङ्कन</th></tr>';
+    const body=field('annexRows'),foot=field('annexFoot');body.replaceChildren();foot.replaceChildren();
+    let block=0;
+    for(const [i,count] of form.groups.entries()){
+      for(let j=0;j<count;j++){
+        const row=body.insertRow();
+        if(i===0&&j===0){const c=row.insertCell();c.rowSpan=total;c.textContent=unit;}
+        if(j===0){const c=row.insertCell();c.rowSpan=count;c.dataset.cdcGuideOutcome=String(i);c.textContent='उपलब्धि '+digits(i+1);}
+        row.insertCell().textContent='सूचक '+digits(j+1)+' — मूल PDF हेर्नुहोस्';
+        if(j%4===0)block++;
+        for(let stage=0;stage<2;stage++){
+          row.insertCell().textContent='—';
+          if(j%4===0){
+            const date=row.insertCell();date.rowSpan=4;date.textContent='—';
+            const score=row.insertCell();score.rowSpan=4;score.dataset.cdcGuideBlock=String(stage);score.textContent='— / ४';
+          }
+        }
+        row.insertCell().textContent='मूल PDF हेर्नुहोस्';
+      }
+    }
+    const tr=foot.insertRow(),cell=tr.insertCell();cell.colSpan=10;
+    cell.textContent='मुख्य उपलब्धि: '+digits(form.groups.length)+' | सूचक: '+digits(total)+' | अङ्कन खण्ड: '+digits(block)+' | कच्चा पूर्णाङ्क: '+digits(total);
+    field('annexSign').textContent='संरचना समीक्षा मात्र — विद्यार्थीको अङ्कन अभिलेख होइन।';
+    const status=field('annexStatus');status.textContent='मूल सूचकको शब्दावली, साधन र सुरक्षित प्रविष्टि मिलान बाँकी छ। ';
+    const link=document.createElement('a');link.href=field('guidePdf13').href+'#page='+form.page;link.target='_blank';link.rel='noopener noreferrer';link.textContent='मूल CDC PDF — पृष्ठ '+digits(form.page);status.append(link);
   }
   function renderSeroferoReference(form){
     const unit=field('unit').value,st=assessmentStudents.find(s=>s.id===field('student').value);
@@ -8421,6 +8458,7 @@ function openCdcAssessment(context = null) {
   // Print the selected, freshly read school record only. Never include editor
   // fields, other students, hidden UI, or an unconfirmed/stale snapshot.
   const buildAssessmentPrint=()=>{
+    if(primarySeroGuideReview())return null;
     const seroForm=primarySeroferoReference();
     const seroReady=!!seroForm&&!seroForm.referenceOnly&&year==='2083'&&!!schoolSelection()&&seroReadKey===seroScopeKey();
     if(inlinePending||dialog.querySelector('[data-cdc-grid-editor]')||!canShow()||!field('annexRows').rows.length||
@@ -8706,6 +8744,10 @@ function openCdcAssessment(context = null) {
       const tr=body.insertRow();
       const name=ne?row.unit:en?row.en||row.unit:[...new Set([row.unit,row.en].filter(Boolean))].join(' / ');
       for(const value of [digits(i+1),name,row.count===null?'—':digits(row.count),row.fullMark===null?'—':digits(row.fullMark),...(key==='serophero'?[row.indicators===null?'—':digits(row.indicators)]:[]),statuses[row.status]])tr.insertCell().textContent=value;
+      if(row.status==='guideCounts'){
+        const source=cdcSeroferoGuideCounts[grade]?.[row.unit];
+        if(source){const a=document.createElement('a');a.href=field('guidePdf13').href+'#page='+source.page;a.target='_blank';a.rel='noopener noreferrer';a.textContent=' — PDF '+digits(source.page);tr.cells[tr.cells.length-1].append(a);}
+      }
     }
     if(!rows.length){const cell=body.insertRow().insertCell();cell.colSpan=header.cells.length;cell.textContent=label('यस विषयको स्रोत सूची तयार छैन।','Source catalogue is not yet available.');}
     const known=rows.filter(row=>row.count!==null),total=known.reduce((sum,row)=>sum+row.count,0);
