@@ -89,3 +89,11 @@ assert.ok(grade9.some(p=>p.curriculumSkill==='polynomial_division'));
 assert.ok(grade9.some(p=>p.curriculumSkill==='arc_length'));
 assert.ok(grade9.some(p=>p.curriculumSkill==='pythagorean_identity'));
 console.log('PASS all six Grade 9 optional math content areas use grade-specific original curriculum exercises');
+
+const high=grade9.filter(p=>p.cognitiveLevel==='higher');
+assert.ok(high.every(p=>p.reasoningTask===true));
+assert.deepEqual([...new Set(high.map(p=>p.unitCode))].sort(),['1','2','3','4','5','6']);
+assert.equal(high.reduce((n,p)=>n+p.marks,0),30,'Two variants of the 15 higher-level marks');
+const higherWritten=originalOptionalMathPracticeBank({grade:9,subject:'Optional Mathematics'}).questions.filter(q=>q.group!=='objective').flatMap(q=>q.subquestions).filter(p=>p.cognitiveLevel==='higher');
+assert.ok(higherWritten.every(p=>p.answerEn.length>30&&p.answerNe.length>20),'Higher written items require explanatory solutions');
+console.log('PASS Grade 9 higher-level draft questions use reverse problems, error diagnosis and written reasoning; difficulty still requires teacher review');

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v103-grade9-optmath-all-areas-2083';
+const CACHE_NAME = 'smss-pwa-v104-grade9-optmath-reasoning-2083';
 const APP_SHELL = [
   './',
   './index.html',

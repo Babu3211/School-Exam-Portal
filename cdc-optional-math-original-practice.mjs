@@ -17,10 +17,50 @@ export function isOriginalMathOfflineDraft(row){
 
 const units=['Algebra','Trigonometry','Geometry','Vectors','Statistics','Limit and Continuity'];
 const triples=[[3,4,5],[5,12,13],[8,15,17],[7,24,25]];
-// Grade 9 learning outcomes, curriculum pp. 3–5 (mirror of CDC publication):
+// Grade 9 learning outcomes, curriculum pp. 2–5 (mirror of CDC publication):
 // https://drmathnp.com/wp-content/uploads/2026/07/Optional-Mathematics-Curriculum-Secondary-Level-Grade-9-and-10_afqyz38.pdf
 // These are newly authored exercises, not textbook quotations or certified difficulty.
-const grade9Part=(unit,seed,marks,level)=>{
+// Higher-level original tasks use a reverse problem, error diagnosis, or
+// combined reasoning rather than assigning a higher label to a recall task.
+// The numerical MCQ key stays separate from the worked response.
+const grade9HigherPart=(unit,seed,marks,objective)=>{
+ const a=3+seed%29,b=2+seed%7,c=2+seed%5;
+ let ne,en,answer,workNe,workEn,skill;
+ if(unit===1){
+  const target=a*b+c,wrong=target-b;
+  ne='f(x) = '+b+'x + '+c+' मा एक विद्यार्थीले '+target+' को पूर्वप्रतिबिम्ब '+(a-1)+' हो भन्छ। सही पूर्वप्रतिबिम्ब कति हो'+(objective?'?':'? कारणसहित त्रुटि सच्याउनुहोस्।');
+  en='For f(x) = '+b+'x + '+c+', a student claims the preimage of '+target+' is '+(a-1)+'. What is the correct preimage'+(objective?'?':'? Correct the error with a reason.');
+  answer=String(a);workNe='दिइएको दाबीबाट f('+(a-1)+') = '+wrong+' ≠ '+target+'; '+b+'x = '+(target-c)+', x = '+a+'.';workEn='The claimed input gives f('+(a-1)+') = '+wrong+' ≠ '+target+'; solving '+b+'x = '+(target-c)+' gives x = '+a+'.';skill='function_preimage';
+ }else if(unit===2){
+  const n=2+seed%9,r=12*a,L=a*n;
+  ne='एउटा वृत्तमा '+L+'π cm चापले '+n+'π/12 रेडियन कोण बनाउँछ। उही चापको लागि अर्धव्यास दोब्बर गरे केन्द्रीय कोण कति रेडियन हुन्छ'+(objective?'?':'? सूत्रबाट देखाउनुहोस्।');
+  en='An arc of '+L+'π cm subtends '+n+'π/12 radians. If the radius is doubled but the arc length is unchanged, what is the new central angle'+(objective?'?':'? Justify using the arc-length formula.');
+  answer=n+'π/24';workNe='s=rθ स्थिर हुँदा θ नयाँ = θ पुरानो/2 = '+answer+' रेडियन; मूल अर्धव्यास '+r+' cm।';workEn='Since s=rθ is fixed, doubling r halves θ, giving '+answer+' radians; original radius '+r+' cm.';skill='arc_length';
+ }else if(unit===3){
+  const m=2+seed%5,x=a+b,y=c+m*b;
+  ne='A('+a+','+c+'), B('+x+','+y+') र C('+(a+2*b)+', t) एउटै सरल रेखामा छन्। t को मान कति हो'+(objective?'?':'? बराबर ढलानबाट प्रमाणित गर्नुहोस्।');
+  en='A('+a+','+c+'), B('+x+','+y+') and C('+(a+2*b)+', t) lie on one straight line. What is t'+(objective?'?':'? Justify using equal slopes.');
+  answer=String(c+2*m*b);workNe='AB को ढलान = '+m+'; (t − '+y+')/'+b+' = '+m+' ⇒ t = '+answer+'।';workEn='Slope AB = '+m+'; setting slope BC = (t − '+y+')/'+b+' = '+m+' gives t = '+answer+'.';skill='coordinate_slope';
+ }else if(unit===4){
+  const y=b*c;
+  ne='u = ('+a+','+b+') र v = ('+(a*c)+', t) का दिशाहरू समान छन्। एक विद्यार्थीले t = '+(y+1)+' राखेको छ। सही t निकाल्नुहोस्'+(objective?'।':' र दाबी किन गलत छ देखाउनुहोस्।');
+  en='Vectors u = ('+a+','+b+') and v = ('+(a*c)+', t) have the same direction. A student proposes t = '+(y+1)+'. Find the correct t'+(objective?'.':' and explain the error.');
+  answer=String(y);workNe='v = '+c+'u हुनुपर्छ; t = '+c+' × '+b+' = '+y+'। '+(y+1)+' राख्दा समान अनुपात हुँदैन।';workEn='The first components require v = '+c+'u; hence t = '+c+' × '+b+' = '+y+'. The proposed value breaks proportionality.';skill='parallel_vectors';
+ }else if(unit===5){
+  const mean=a+b,d=2*b,vals=[mean-d,mean-d,mean+d,mean+d].join(', ');
+  ne=vals+' को प्रत्येक मानमा '+c+' थप्दा स्तरीय विचलन कति हुन्छ'+(objective?'?':'? माध्य र विचलनको सम्बन्धबाट कारण दिनुहोस्।');
+  en='Each value in '+vals+' is increased by '+c+'. What is the new population standard deviation'+(objective?'?':'? Explain using the mean and deviations.');
+  answer=String(d);workNe='नयाँ माध्य '+(mean+c)+' हुन्छ तर माध्यबाट प्रत्येक विचलन ±'+d+' नै रहन्छ; σ = √('+d*d+') = '+d+'।';workEn='The new mean is '+(mean+c)+', but deviations from it remain ±'+d+'; σ = √('+d*d+') = '+d+'.';skill='standard_deviation';
+ }else if(unit===6){
+  const k=a*b;
+  ne='lim (x→'+a+') (x² − '+a*a+')/(x − '+a+') = 0 भनी एक विद्यार्थीले लेख्यो। सही सीमान्तमान कति हो'+(objective?'?':'? 0/0 किन उत्तर होइन भन्ने देखाउनुहोस्।');
+  en='A student claims lim(x→'+a+') (x² − '+a*a+')/(x − '+a+') = 0. What is the correct limit'+(objective?'?':'? Explain why 0/0 is not the answer.');
+  answer=String(2*a);workNe='प्रत्यक्ष प्रतिस्थापनबाट 0/0 अनिर्धारित रूप आउँछ। x ≠ '+a+' हुँदा (x² − '+a*a+')/(x − '+a+') = x + '+a+'; सीमान्तमान '+answer+'।';workEn='Substitution gives the indeterminate form 0/0. For x ≠ '+a+', factor and cancel to obtain x + '+a+'; the limit is '+answer+'.';skill='algebraic_limit';
+ }else throw Error('Unsupported higher-level area');
+ return {unitCode:String(unit),marks,cognitiveLevel:'higher',textNe:ne,textEn:en,answerNe:objective?answer:workNe,answerEn:objective?answer:workEn,curriculumSkill:skill,reasoningTask:true};
+};
+const grade9Part=(unit,seed,marks,level,objective)=>{ 
+ if(level==='higher')return grade9HigherPart(unit,seed,marks,objective);
  const a=2+seed%31,b=2+seed%7,c=1+seed%5,mode=seed%4;
  let ne,en,ans,skill;
  if(unit===1){
@@ -196,7 +236,7 @@ const slotQuestions=({grade,subject,version})=>{
  const rows=[];
  const add=(group,parts,slot)=>{
   const index=rows.length,seed=grade*37+version*101+index*11;
-  const subquestions=parts.map(([unitCode,marks,cognitiveLevel],i)=>({...((grade===9&&grade9Part(unitCode,seed+i*17,marks,cognitiveLevel))||part(unitCode,seed+i*17,marks)),cognitiveLevel}));
+  const subquestions=parts.map(([unitCode,marks,cognitiveLevel],i)=>({...((grade===9&&grade9Part(unitCode,seed+i*17,marks,cognitiveLevel,group==='objective'))||part(unitCode,seed+i*17,marks)),cognitiveLevel}));
   let contextNe='',contextEn='';
   if(group!=='objective'){
    const names=[...new Set(parts.map(x=>units[x[0]-1]))].join(' and ');
