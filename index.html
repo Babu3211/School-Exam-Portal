@@ -566,7 +566,7 @@ function viewerReadOnlyGuard(event){
   if(action.matches("[data-page],[data-go]")||action.closest("[data-page],[data-go]"))return;
   const id=String(action.id||"").toLowerCase(),label=String(action.textContent||"").toLowerCase();
   // Explicit non-mutating actions: do not infer safety from a substring such as "show" or "generate".
-  const readActionIds=new Set(["cdcgridread","cdcprintform","cdcreadschool","cdcnextstudent","logoutbtn","loadentrystudents","loadattendancestudents","loadattendancehistory","numberledgertab","gradeledgertab","entryledgertab","studentcanceleditbtn","staffcancelbtn","classcancelbtn","examcancelbtn","subjectcatalogcancel","cancelroleassignmentbtn","toggleloginpassword","onlineresulttoggle","onlineresultsearchbtn","loadreportbtn","loadresultsbtn","refreshresultsbtn","showledgerview","refreshledgerview","refreshentry","refreshattendance","refreshattendancehistory","refreshcertificatesbtn","refreshreportbtn","refreshusersbtn","refreshauditlogs","reloadschoolsettings","studentsearchbtn","studentreloadbtn","staffsearchbtn","staffreloadbtn","classsearchbtn","classreloadbtn","examsearchbtn","examreloadbtn","subjectcatalogreloadbtn","markreloadsettings","studentexport","studentsample","staffexport","staffsample","exportledgerexcel","sampleledgerexcel","exportledgerpageexcel","printledgerpage","printgradesheetbtn","printtabulationbtn","exporttabulationbtn","printattendance","exportattendance","printattendancehistory","exportattendancehistory","exportreportbtn","printreportbtn","downloadfirebasebackup","previewfirebaserestore","onlineresultprintbtn"]);
+  const readActionIds=new Set(["cdcreadprogress","cdcgridread","cdcprintform","cdcreadschool","cdcnextstudent","logoutbtn","loadentrystudents","loadattendancestudents","loadattendancehistory","numberledgertab","gradeledgertab","entryledgertab","studentcanceleditbtn","staffcancelbtn","classcancelbtn","examcancelbtn","subjectcatalogcancel","cancelroleassignmentbtn","toggleloginpassword","onlineresulttoggle","onlineresultsearchbtn","loadreportbtn","loadresultsbtn","refreshresultsbtn","showledgerview","refreshledgerview","refreshentry","refreshattendance","refreshattendancehistory","refreshcertificatesbtn","refreshreportbtn","refreshusersbtn","refreshauditlogs","reloadschoolsettings","studentsearchbtn","studentreloadbtn","staffsearchbtn","staffreloadbtn","classsearchbtn","classreloadbtn","examsearchbtn","examreloadbtn","subjectcatalogreloadbtn","markreloadsettings","studentexport","studentsample","staffexport","staffsample","exportledgerexcel","sampleledgerexcel","exportledgerpageexcel","printledgerpage","printgradesheetbtn","printtabulationbtn","exporttabulationbtn","printattendance","exportattendance","printattendancehistory","exportattendancehistory","exportreportbtn","printreportbtn","downloadfirebasebackup","previewfirebaserestore","onlineresultprintbtn"]);
   const safeReadLabel=/^(?:search|refresh|reload|view|preview|print|download|export|filter|history print|history export|mark wise ledger|grade wise ledger|mark entry ledger|student list|cancel|close|back|next|previous|logout)(?:\\b|\\s|$)/i;
   const mutationLabel=/\\b(?:add|save|delete|edit|update|import|restore|publish|issue|create|remove|clear|seed|sync|assign|generate missing|confirm|submit)\\b/i;
   const allowed=readActionIds.has(id)||(!mutationLabel.test(id+" "+label)&&safeReadLabel.test(label));
@@ -4301,7 +4301,27 @@ function parseCdcBilingualCatalog(text) {
 }
 
 // CDC observations use a separate Firestore collection and browser drafts.
-function openCdcAssessment(context = null) {
+// CDC 2083 guide, printed pp.14–15: percentage of assessed outcomes,
+ // not average of unit percentages; never count multiple observations twice.
+ function cdcAnnualSubjectAchievement(records,catalogue){
+   const key=(unit,title)=>JSON.stringify([cdcNormalizeTitle(unit),cdcNormalizeTitle(title)]);
+   const known=new Set(catalogue.map(([unit,title])=>key(unit,title)));
+   const latest=new Map();
+   const chronological=(a,b)=>String(b.date||'').localeCompare(String(a.date||''))||
+      (b.createdAt?.toMillis?.()??0)-(a.createdAt?.toMillis?.()??0);
+   for(const record of [...records].sort(chronological)){
+     if(!Number.isInteger(record.level)||record.level<1||record.level>4||!record.unit||!record.topic)continue;
+     const k=key(record.unit,record.topic);
+     if(known.size&&!known.has(k))continue;
+     if(!latest.has(k))latest.set(k,record.level);
+   }
+   const assessed=latest.size,total=[...latest.values()].reduce((a,b)=>a+b,0);
+   const percentage=assessed?100*total/(4*assessed):null;
+   const bands=[[90,'A+',4.0],[80,'A',3.6],[70,'B+',3.2],[60,'B',2.8],[50,'C+',2.4],[40,'C',2.0],[35,'D',1.6],[0,'NG',null]];
+   const band=percentage===null?null:bands.find(([min])=>percentage>=min);
+   return {assessed,total,expected:known.size,percentage,grade:band?.[1]??null,point:band?.[2]??null,complete:known.size>0&&assessed===known.size};
+ }
+ function openCdcAssessment(context = null) {
   if (!auth.currentUser) return;
   document.getElementById('cdcAssessmentDialog')?.remove();
   const dialog = document.createElement(context ? 'section' : 'dialog');
@@ -4332,6 +4352,7 @@ function openCdcAssessment(context = null) {
     <datalist id="cdcUnitSuggestions"></datalist>
     <p data-cdc="unitCoverage" class="hint"></p>
     <section data-cdc="annex3" hidden><div class="toolbar"><button type="button" class="btn alt" data-cdc="gridRead" id="cdcGridRead">Load / Refresh Records</button><span data-cdc="gridStatus" role="status" class="hint"></span></div><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><div class="tablewrap"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Print / Save PDF</button><p data-cdc="printStatus" role="status" class="hint"></p></section>
+    <section data-cdc="annualProgress" hidden class="panel"><h3>प्रगति प्रतिवेदन — अनुसूची ४ / Annual Progress</h3><p data-cdc="progressIdentity"></p><button type="button" class="btn alt" id="cdcReadProgress" data-cdc="readProgress">View Annual Progress</button><p data-cdc="annualStatus" role="status" class="hint"></p><div class="tablewrap"><table><thead><tr><th>क्र. सं.</th><th>विषय</th><th>पाठ्यघण्टा</th><th>सिकाइ उपलब्धि सङ्ख्या</th><th>समग्र उपलब्धिस्तर</th><th>कैफियत</th></tr></thead><tbody data-cdc="annualRows"></tbody></table></div><p class="hint">उपस्थिति: हाजिरी अभिलेखसँग जोड्न बाँकी। यो समीक्षा प्रति हो।</p><p>कक्षा शिक्षक __________　 प्रधानाध्यापक __________　 मिति __________</p></section>
     <details data-cdc="catalogPanel"><summary>द्विभाषिक उपलब्धि सूची थप्नुहोस्</summary>
       <p class="hint">स्रोतबाट पुष्टि गरेका चार स्तम्भ Excel बाट प्रतिलिपि गर्नुहोस्। क्रम: नेपाली एकाइ, English unit, नेपाली उपलब्धि, English outcome। शीर्षक पङ्क्ति छोड्नुहोस्।</p>
       <textarea data-cdc="catalogText" aria-label="द्विभाषिक उपलब्धि सूची" rows="4" maxlength="1100000" style="width:100%"></textarea>
@@ -4635,6 +4656,7 @@ function openCdcAssessment(context = null) {
     }
   };
   let schoolReadSequence = 0;
+  let annualReadSequence=0;
   let schoolSavePending = false;
   const canShow = () => dialog.isConnected && (context ? context.host.isConnected : dialog.open) && auth.currentUser?.uid===owner;
   const schoolSelection = () => {
@@ -4644,7 +4666,51 @@ function openCdcAssessment(context = null) {
     return {studentId,className:String(student.class??student.className),subject,
       section:String(student.section??''),academicYear:year,period};
   };
+  function clearAnnualProgress(){
+    annualReadSequence++;
+    field('annualRows').replaceChildren();
+    field('annualStatus').textContent='';
+    const selection=schoolSelection();
+    const visible=!!context&&Number(field('class').value)>=4&&Number(field('class').value)<=5;
+    field('annualProgress').hidden=!visible;
+    field('readProgress').disabled=!selection||!visible;
+    const st=assessmentStudents.find(s=>s.id===selection?.studentId);
+    field('progressIdentity').textContent='विद्यार्थी: '+(field('student').selectedOptions[0]?.text||'')+'  |  कक्षा: '+field('class').value+'  |  रोल नं.: '+(st?.rollNo??'')+'  |  विद्यालय: '+(currentSchoolSettings.schoolNameNe||currentSchoolSettings.schoolName||'')+'  |  सङ्केत नं.: '+(currentSchoolSettings.iemisCode||'')+'  |  शैक्षिक सत्र: '+year;
+  }
+  field('readProgress').onclick=async()=>{
+    const selection=schoolSelection(),grade=field('class').value;
+    if(!context||!selection||!canShow()||!['4','5'].includes(grade))return;
+    clearAnnualProgress();
+    const sequence=annualReadSequence;
+    const isCurrent=()=>canShow()&&sequence===annualReadSequence;
+    field('readProgress').disabled=true;
+    field('annualStatus').textContent='वार्षिक अभिलेख पढ्दै…';
+    const st=assessmentStudents.find(s=>s.id===selection.studentId);
+    const registry=context.subjectsFor(grade);
+    try{
+      const rows=await Promise.all(cdcUpperPrimarySubjects.map(async ([key,ne,en],i)=>{
+        const label=key==='english'?en:ne;
+        const hours=[5,5,5,5,5,3,4][i];
+        const matches=[...new Set(registry.filter(s=>cdcAssessmentSubjectKey(s)===key))];
+        if(matches.length!==1)return [i+1,label,hours,'—','—',matches.length?'विषय दर्ता अस्पष्ट':'विषय दर्ता बाँकी'];
+        const subject=matches[0];
+        if(!readOnly&&!cdcTeacherAssignment(currentUserRole,grade,subject,st))return [i+1,label,hours,'—','—','हेर्ने अनुमति छैन'];
+        try{
+          const {period,...annualScope}=selection;
+          const filters=Object.entries({...annualScope,subject}).map(([k,v])=>where(k,'==',v));
+          const snapshot=await getDocsFromServer(query(collection(db,'cdc_observations'),...filters));
+          const result=cdcAnnualSubjectAchievement(snapshot.docs.map(d=>d.data()),cdcVerifiedOutcomes[grade+':'+key]||[]);
+          const gradeText=result.grade===null?'—':result.grade+' ('+(result.point===null?'—':result.point.toFixed(1))+')';
+          return [i+1,label,hours,result.assessed,gradeText,result.percentage===null?'अभिलेख छैन':result.percentage.toFixed(2)+'% · '+(result.complete?'सूचीअनुसार पूर्ण':result.expected?('प्रारम्भिक '+result.assessed+'/'+result.expected):'स्थानीय सूची पुष्टि बाँकी')];
+        }catch{return [i+1,label,hours,'—','—','अभिलेख पढ्न सकिएन'];}
+      }));
+      if(!isCurrent())return;
+      for(const values of rows){const row=field('annualRows').insertRow();for(const value of values)row.insertCell().textContent=String(value);}
+      field('annualStatus').textContent='सबै अवधिको पछिल्लो वैध अङ्कनबाट प्रति उपलब्धि एक पटक गणना। अपूर्ण सूचीको ग्रेड प्रारम्भिक मात्र हो।';
+    }finally{if(isCurrent())field('readProgress').disabled=false;}
+  };
   const clearSchoolResults = () => {
+    clearAnnualProgress();
     schoolReadSequence++;
     field('schoolRows').replaceChildren();
     annexObservations=[];
