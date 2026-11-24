@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+const source=readFileSync(new URL('./school-admin-console.mjs',import.meta.url),'utf8');
+const html=readFileSync(new URL('./school-admin.html',import.meta.url),'utf8');
+assert.match(html,/id="newMemberPassword" type="password"/);
+assert.match(source,/function clearMemberAccount\(\)\{for\(const id of \['newMemberEmail','newMemberPassword','memberUid'\]\)\$\(id\)\.value=''/);
+assert.match(source,/if\(actor&&user\?\.uid!==actor\.uid\)\{clearMemberAccount\(\);sessionEpoch\+\+/);
+assert.match(source,/\$\('newMemberPassword'\)\.value='';/);
+assert.match(source,/\$\('memberUid'\)\.value='';\s*busy=true;for\(const id of \['createMemberAccount','add','role','logout','login'\]/);
+assert.match(source,/api\.getDocFromServer\(api\.doc\(db,\.\.\.path\.split\('\/'\)\)\)/);
+assert.match(source,/if\(membership\.role!=='school_admin'\)throw Error/);
+assert.match(source,/if\(!current\(\)\)return;\s*\$\('memberUid'\)\.value=result\.uid/);
+console.log('PASS subordinate account UI clears credentials and stale UID, verifies live school privilege');

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('./school-admin-console.mjs',import.meta.url),'utf8');
-assert.match(source,/loggingIn=true;\$\('login'\)\.disabled=true;\$\('logout'\)\.disabled=false;/,'Allow logout during pending login');
-assert.match(source,/signingOut=true;sessionEpoch\+\+;memberRequest\+\+;/,'Logout must invalidate pending login and member requests');
+assert.match(source,/loggingIn=true;clearMemberAccount\(\);\$\('login'\)\.disabled=true;\$\('logout'\)\.disabled=false;/,'Allow logout during pending login');
+assert.match(source,/signingOut=true;clearMemberAccount\(\);sessionEpoch\+\+;memberRequest\+\+;/,'Logout must invalidate pending login and member requests');
 assert.match(source,/memberRefreshPending=false;lookupRequest\+\+;foundMember=null;/,'Logout must revoke stale member lookups');
 assert.match(source,/actor=null;\$\('schoolArea'\)\.hidden=true;\$\('logout'\)\.disabled=true;/,'Logout must hide privileged school UI');
 assert.match(source,/if\(current!==sessionEpoch&&loginAuth\.currentUser\?\.uid===uid\)await authSdk\.signOut\(loginAuth\);return/,'Stale school details must not keep auth signed in');

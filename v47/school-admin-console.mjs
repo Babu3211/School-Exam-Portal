@@ -31,7 +31,7 @@ async function loadMembersPage(){
   const tbody=$('members');
   for(const member of page.records){const tr=document.createElement('tr');for(const value of [member.uid,member.role,member.active?'Yes':'No']){const td=document.createElement('td');td.textContent=String(value);tr.append(td)}if(['teacher','viewer'].includes(member.role)){const td=document.createElement('td');const btn=document.createElement('button');btn.textContent=member.active?'Deactivate':'Activate';btn.onclick=async()=>{if(busy)return;const session=requireCurrentAdmin();if(!confirm((member.active?'Deactivate ':'Activate ')+member.role+' '+member.uid+'?'))return;assertSameAdmin(session);busy=true;btn.disabled=true;$('logout').disabled=true;try{await setSchoolMemberActive({db,api,actor:session.actor,schoolId:session.schoolId,uid:member.uid,active:!member.active,expectedActive:member.active});await refresh()}catch(e){status(neError(e))}finally{busy=false;btn.disabled=false;$('logout').disabled=false}};td.append(btn);tr.append(td)}tbody.append(tr)}
   memberCursor=page.nextCursor;memberHasMore=page.hasMore;
-  status('Loaded '+tbody.children.length+' members'+(page.hasMore?' — more available':''));
+  status(tbody.children.length+' सदस्य लोड भए।'+(page.hasMore?' थप सदस्य उपलब्ध छन्।':''));
  }catch(e){if(current===sessionEpoch&&request===memberRequest)status(neError(e))}
  finally{memberLoading=false;$('refresh').disabled=false;$('moreMembers').disabled=!memberHasMore||!actor||current!==sessionEpoch||request!==memberRequest;if(memberRefreshPending){memberRefreshPending=false;if(actor&&auth?.currentUser?.uid===actor.uid)void loadMembersPage();}}
 }
@@ -77,6 +77,8 @@ $('createMemberAccount').onclick=async()=>{
  const current=()=>session.epoch===sessionEpoch&&session.actor===actor&&session.schoolId===schoolId&&auth?.currentUser?.uid===session.actor.uid;
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254||password.length<12||password.length>128||!['teacher','viewer'].includes(role)){$('memberAccountStatus').textContent='मान्य इमेल, भूमिका र १२–१२८ अक्षरको अस्थायी पासवर्ड राख्नुहोस्।';return}
  if(!confirm(email+' का लागि नयाँ '+role+' खाता बनाउने हो? खाता बनाउँदैमा विद्यालयको अनुमति प्राप्त हुँदैन।')||!current())return;
+ // Never leave a previously provisioned UID selected when a new request fails.
+ $('memberUid').value='';
  busy=true;for(const id of ['createMemberAccount','add','role','logout','login'])$(id).disabled=true;
  $('memberAccountStatus').textContent='खाता बनाइँदैछ…';
  const check=()=>assertSameAdmin(session);
@@ -97,7 +99,7 @@ $('createMemberAccount').onclick=async()=>{
  }catch(e){if(current())$('memberAccountStatus').textContent=e?.code==='auth/email-already-in-use'?'यो इमेल पहिल्यै दर्ता छ। पहिलेको खाताको अधिकृत UID प्रयोग गर्नुहोस्।':'खाता बनेको पुष्टि भएन। '+neError(e)+' पुनः प्रयास गर्नुअघि Firebase Authentication जाँच्नुहोस्। खाता बनिसकेको हुन सक्छ।'}
  finally{busy=false;for(const id of ['createMemberAccount','add','role','login'])$(id).disabled=false;if(current())$('logout').disabled=false}
 };
-$('add').onclick=async()=>{if(busy)return;try{const session=requireCurrentAdmin();const uid=$('memberUid').value.trim(),role=$('role').value;if(!confirm('Add '+role+' '+uid+' to '+schoolId+'?'))return;assertSameAdmin(session);busy=true;$('add').disabled=true;$('logout').disabled=true;$('login').disabled=true;try{await addSchoolMember({db,api,actor:session.actor,schoolId:session.schoolId,uid,role});$('memberUid').value='';await refresh();status('सदस्यता निष्क्रिय अवस्थामा सिर्जना भयो। अधिकृत प्रशासकले Firebase खाता प्रमाणित गरेपछि मात्र सक्रिय गर्नुहोस्।')}finally{busy=false;$('add').disabled=false;$('logout').disabled=false;$('login').disabled=false}}catch(e){status(neError(e))}};
+$('add').onclick=async()=>{if(busy)return;try{const session=requireCurrentAdmin();const uid=$('memberUid').value.trim(),role=$('role').value;if(!confirm(schoolId+' विद्यालयमा '+uid+' लाई '+role+' को निष्क्रिय सदस्यता दिने हो?'))return;assertSameAdmin(session);busy=true;$('add').disabled=true;$('logout').disabled=true;$('login').disabled=true;try{await addSchoolMember({db,api,actor:session.actor,schoolId:session.schoolId,uid,role});$('memberUid').value='';await refresh();status('सदस्यता निष्क्रिय अवस्थामा सिर्जना भयो। अधिकृत प्रशासकले Firebase खाता प्रमाणित गरेपछि मात्र सक्रिय गर्नुहोस्।')}finally{busy=false;$('add').disabled=false;$('logout').disabled=false;$('login').disabled=false}}catch(e){status(neError(e))}};
 
 async function assignmentAction(kind){
  if(busy||!actor)return;
