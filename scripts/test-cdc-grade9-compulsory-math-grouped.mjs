@@ -28,11 +28,11 @@ assert.throws(()=>plan({...args,subject:'Optional Mathematics'}),/reference mism
 console.log('PASS Grade 9 compulsory math reference: 16 context groups,49 items,75 marks, all seven area cognitive item/mark totals, randomization and rejection');
 
 const printed=compareGrade9MathPrintedModel();
-assert.equal(printed.structureMatched,true);
-assert.deepEqual([printed.groupCount,printed.itemCount,printed.fullMarks],[16,49,75]);
-assert.deepEqual(printed.cognitiveMarks,[11,19,30,15]);
-assert.deepEqual(printed.differences,[{unitCode:'4',level:'knowledge',itemDelta:-1,markDelta:-1},{unitCode:'4',level:'understanding',itemDelta:1,markDelta:1}]);
+assert.equal(printed.structureMatched,false); // Printed question marks sum to 74, despite 75-mark heading.
+assert.deepEqual([printed.groupCount,printed.itemCount,printed.fullMarks],[16,49,74]);
+assert.deepEqual(printed.cognitiveMarks,[11,19,30,14]);
+assert.deepEqual(printed.differences,[{unitCode:'2',level:'higher',itemDelta:0,markDelta:-1},{unitCode:'4',level:'knowledge',itemDelta:-1,markDelta:-1},{unitCode:'4',level:'understanding',itemDelta:1,markDelta:1}]);
 assert.equal(printed.withinPublishedCognitiveTolerance,true);
 assert.equal(printed.exactCognitiveMatch,false);
 assert.equal(printed.currentCdcExactApproved,false);
-console.log('PASS printed Grade 9 compulsory math model metadata vs historical CDC chart; Algebra difference reported, never auto-approved');
+console.log('PASS printed Grade 9 compulsory math model metadata vs historical CDC chart; Arithmetic mark shortfall and Algebra difference reported, never auto-approved');
