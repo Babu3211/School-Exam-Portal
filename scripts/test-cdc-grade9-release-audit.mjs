@@ -26,6 +26,13 @@ assert.equal(byKey.nepali.gridTranscribed,false);
 assert.equal(byKey.math.gridTranscribed,false);
 assert.equal(byKey.social.gridTranscribed,false);
 assert.equal(byKey.optional_economics.gridTranscribed,false);
+const economicsPDF=data.sources.find(s=>s.grades.length===1&&s.grades[0]===9&&s.subject==='ऐच्छिक अर्थशास्त्र'&&s.url.includes('RS11136_'));
+assert.ok(economicsPDF,'Keep direct government Economics grid and model source');
+assert.match(economicsPDF.status,/not_yet_extracted/);
+assert.match(economicsPDF.note,/11×1, 8×5, 3×8/);
+assert.match(economicsPDF.note,/conflicts/);
+assert.equal(byKey.optional_economics.status,'grid_not_transcribed','Model agreement on overall marks alone must not approve an incomplete or contradictory Grid');
+assert.equal(byKey.optional_economics.ready,false);
 assert.equal(byKey.accounting.gridTranscribed,false);
 assert.ok(baseline.checkedSubjects.filter(x=>x.officialSourceUrl).length>=7);
 const ownSchool=auditGrade9Release({
