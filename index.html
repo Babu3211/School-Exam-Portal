@@ -5487,6 +5487,256 @@ const cdcGrade1EnglishForms={
     ]
   }
 };
+// Grade 2: first six theme forms read from CDC 2076 Annex 3(c).
+// Map the source subset to the existing skill catalogue; no legacy skill records are moved.
+const cdcGrade2EnglishForms={
+  "Me and My Family": {
+    "name": "Me and My Family",
+    "groups": [
+      9,
+      5,
+      7,
+      7
+    ],
+    "indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      10,
+      11,
+      12,
+      14,
+      15,
+      17,
+      18,
+      20,
+      21,
+      22,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      32,
+      35,
+      36
+    ],
+    "grade": 2
+  },
+  "My daily life": {
+    "name": "My daily life",
+    "groups": [
+      8,
+      6,
+      9,
+      8
+    ],
+    "indices": [
+      0,
+      1,
+      2,
+      3,
+      5,
+      6,
+      7,
+      8,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      31,
+      36,
+      32,
+      34,
+      35
+    ],
+    "grade": 2,
+    "note": "The extracted source repeats handwriting; scored once pending visual verification."
+  },
+  "My school": {
+    "name": "My school",
+    "groups": [
+      7,
+      5,
+      8,
+      8
+    ],
+    "indices": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      11,
+      12,
+      14,
+      15,
+      16,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      35,
+      36
+    ],
+    "grade": 2
+  },
+  "Our environment": {
+    "name": "Our environment",
+    "groups": [
+      7,
+      6,
+      8,
+      8
+    ],
+    "indices": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      35,
+      36
+    ],
+    "grade": 2
+  },
+  "My Belongings": {
+    "name": "My Belongings",
+    "groups": [
+      6,
+      6,
+      8,
+      8
+    ],
+    "indices": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      31,
+      32,
+      33,
+      35,
+      36
+    ],
+    "grade": 2
+  },
+  "Our culture": {
+    "name": "Our culture",
+    "groups": [
+      6,
+      6,
+      8,
+      9
+    ],
+    "indices": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36
+    ],
+    "grade": 2
+  }
+};
  const cdcVerifiedOutcomes = {
   '1:serophero': [
     ['म र मेरो परिवार','आफू र परिवारको परिचय','Introduce yourself and your family'],
@@ -7140,7 +7390,7 @@ function parseCdcBilingualCatalog(text) {
   const primaryRevisedForm=()=>revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics'?cdcRevisedMathForms[field('class').value+':'+field('unit').value]:null;
   const primaryLegacyForm=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics'?cdcLegacyMathRubrics[field('class').value+':'+field('unit').value]:null;
   const primaryNepaliForm=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='nepali'?(field('class').value==='1'?cdcPrimaryNepaliForms[field('unit').value]:cdcNepaliThemeForms[field('class').value]?.[field('unit').value]||null):null;
-  const primaryEnglishForm=()=>context&&!revisedPrimaryYear&&field('class').value==='1'&&cdcAssessmentSubjectKey(field('subject').value)==='english'?cdcGrade1EnglishForms[field('unit').value]:null;
+  const primaryEnglishForm=()=>context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='english'?(field('class').value==='1'?cdcGrade1EnglishForms[field('unit').value]:field('class').value==='2'?cdcGrade2EnglishForms[field('unit').value]:null):null;
   const isPrimaryRubric=()=>!!primaryRevisedForm()||!!primaryLegacyForm();
   const hasAnnexGrid=()=>!!context&&(!!primaryEnglishForm()||!!primaryNepaliForm()?.editable||isPrimaryRubric()||(Number(field('class').value)>=4&&['nepali','english','mathematics','socialstudies','science','healthphysicalcreativeart'].includes(cdcAssessmentSubjectKey(field('subject').value))));
   // Enter a single stage in the official date/rating columns. Never overwrite a
@@ -7258,13 +7508,17 @@ function parseCdcBilingualCatalog(text) {
     field('annexStatus').textContent=en?'Draft layout using existing outcome catalogue. Select a row to enter the observation; read school records to populate ratings. Unclassified legacy records are not assigned to either stage.':'हालको उपलब्धि सूचीमा आधारित प्रारम्भिक ढाँचा। उपलब्धि छानेर मूल्याङ्कन गर्नुहोस्; विद्यालयको अभिलेख पढेपछि अङ्क देखिन्छ। चरण नखुलेका पुराना अभिलेख छुट्टै रहन्छन्।';
     field('annexSign').textContent=en?'Teacher signature __________  Date __________  Parent signature __________  Date __________':'शिक्षकको दस्तखत __________  मिति __________  अभिभावकको दस्तखत __________  मिति __________';
   };
+  function primaryEnglishRows(form,unit){
+    if(form.grade===2)return form.indices.map(i=>[unit,cdcVerifiedOutcomes['2:english'][i][1],cdcVerifiedOutcomes['2:english'][i][1]]);
+    return cdcVerifiedOutcomes['1:english'].filter(([u])=>u===unit);
+  }
   function renderPrimaryEnglish(form){
     const unit=field('unit').value;
-    const rows=cdcVerifiedOutcomes['1:english'].filter(([u])=>u===unit);
+    const rows=primaryEnglishRows(form,unit);
     const body=field('annexRows');body.replaceChildren();
     field('annexFoot').replaceChildren();
     field('annexTitle').textContent='English — Learning achievement record';
-    field('annexIdentity').textContent='Grade: 1   Name of the student: '+(field('student').selectedOptions[0]?.text||'');
+    field('annexIdentity').textContent='Grade: '+(form.grade||1)+'   Name of the student: '+(field('student').selectedOptions[0]?.text||'');
     field('annexUnit').textContent='Theme: '+form.name;
     field('annexHead').innerHTML='<tr><th rowspan="2">SN</th><th rowspan="2">Areas / Skills</th><th rowspan="2">Learning outcomes</th><th colspan="2">Regular Assessment</th><th colspan="2">Assessment after Remedial Class</th><th rowspan="2">Remarks</th></tr><tr><th>Date</th><th>Achievement</th><th>Date</th><th>Achievement</th></tr>';
     field('annexSign').textContent="Teacher's Signature __________   Guardian's Signature and date __________";
@@ -7284,7 +7538,7 @@ function parseCdcBilingualCatalog(text) {
     for(const [label,value] of [['Total obtained mark',filled===rows.length?total:'—'],['Achieved percentage',filled===rows.length?(100*total/(4*rows.length)).toFixed(2)+'%':'—'],['Outcomes assessed',filled+' / '+rows.length]]){
       const row=field('annexFoot').insertRow(),a=row.insertCell(),b=row.insertCell();a.colSpan=3;b.colSpan=5;a.textContent=label;b.textContent=value;
     }
-    field('annexStatus').textContent='CDC 2076 — '+rows.length+' outcomes. Working catalogue; final wording and print verification pending. Unclassified records remain in the school record list.';
+    field('annexStatus').textContent='CDC 2076 — '+rows.length+' outcomes. Working catalogue; final wording and print verification pending. Unclassified records remain in the school record list.'+(form.note?' '+form.note:'');
   }
   // A corrected or previously missing outcome has its own key. Do not relabel
   // observations recorded under a different alphabet/competency.
@@ -7415,7 +7669,7 @@ function parseCdcBilingualCatalog(text) {
       }
     } catch { field('status').textContent = 'मस्यौदा सूची पढ्न सकिएन।'; }
     const revised=primaryRevisedForm(),legacy=primaryLegacyForm(),nepaliForm=primaryNepaliForm();
-    const official = nepaliForm ? primaryNepaliRows(nepaliForm,field('unit').value) : legacy ? legacy.rows.map(({ne,en})=>[field('unit').value,ne,en]) : revised ? revised.rows.map(([,ne,en])=>[field('unit').value,ne,en]) : (revisedPrimaryYear&&Number(cl)<=3&&cdcAssessmentSubjectKey(subject)==='mathematics'?[]:cdcVerifiedOutcomes[cl+':'+cdcAssessmentSubjectKey(subject)] || [])
+    const official = primaryEnglishForm() ? primaryEnglishRows(primaryEnglishForm(),field('unit').value) : nepaliForm ? primaryNepaliRows(nepaliForm,field('unit').value) : legacy ? legacy.rows.map(({ne,en})=>[field('unit').value,ne,en]) : revised ? revised.rows.map(([,ne,en])=>[field('unit').value,ne,en]) : (revisedPrimaryYear&&Number(cl)<=3&&cdcAssessmentSubjectKey(subject)==='mathematics'?[]:cdcVerifiedOutcomes[cl+':'+cdcAssessmentSubjectKey(subject)] || [])
       .filter(([unit])=>normalizeTitle(unit)===sourceUnit);
     const english = language()==='en';
     field('outcomePickerLabel').hidden=!official.length;
@@ -7744,6 +7998,9 @@ function parseCdcBilingualCatalog(text) {
   };
   const units = () => {
     const pairs = new Map(cdcVerifiedUnits(field('class').value,field('subject').value));
+    if(context&&!revisedPrimaryYear&&field('class').value==='2'&&cdcAssessmentSubjectKey(field('subject').value)==='english'){
+      const previous=[...pairs];pairs.clear();for(const unit of Object.keys(cdcGrade2EnglishForms))pairs.set(unit,unit);for(const pair of previous)pairs.set(...pair);
+    }
     if(context&&!revisedPrimaryYear&&cdcNepaliThemeForms[field('class').value]&&cdcAssessmentSubjectKey(field('subject').value)==='nepali'){
       const previous=[...pairs];pairs.clear();for(const unit of Object.keys(cdcNepaliThemeForms[field('class').value]))pairs.set(unit,'');for(const pair of previous)pairs.set(...pair);
     }
