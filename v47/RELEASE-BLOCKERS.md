@@ -67,3 +67,17 @@ Directly inspected **V46 `main/index.html`** (493,155 characters), **V46 `main/m
 - Do not copy V46's hard-coded single-school Firebase settings into V47. Adapt its UI and features behind tenant-scoped V47 services.
 
 **Next implementation target:** V47 project-only Firebase bootstrap, shared authenticated school context, then V46 feature screens. Do not spend another iteration on read-only marks staging assertions.
+
+
+## Current verified handoff — 2026-11-24
+
+**This section supersedes older source-status descriptions, not the release safety gate.** Exact tested head `9c65d46df4560d8e69bfcd8fce5b967bbb2ea611`: 12/13 workflows completed successfully. Full Verification run 45397318847 has full-v47 SUCCESS (job 138456434964), feature-parity FAILURE (job 138456434354), release-readiness FAILURE (job 138456434925). Publication Unit Tests 45397318902, Firestore Isolation 45397318917, Core Regression 45397318859, Hosting Build 45397318663 and Multi-School Validation 45397318791 are SUCCESS. All are non-production evidence.
+
+Already implemented: school-scoped login/dashboard/sidebar, school management, Excel import/export, complete-class Admin/assigned-Teacher drafts, configured assessment components, trusted server review/staging/atomic publication, immutable pointer/header/audit/current read view, Spark read-only published report views, four IEMIS preview reports, watermark, PWA install surface, assignment-aware attendance, and opt-in trusted atomic attendance. Do not reimplement these solely because historic blockers above describe earlier prototypes. Real HTTP publication and 101/500-row atomic attendance were tested on a local Admin emulator; 1500-row publication unit coverage is not production load evidence. Raw marks and component_marks client writes must remain DENIED: this is intentional and not a permission to remove the boundary to turn the gate green.
+
+**Actual remaining work:**
+- Select and provision the trusted runtime under the owner's Spark-only constraint. Firebase static hosting cannot execute privileged Node publication or atomic attendance. The current local runtime is loopback-only and final-write routes are disabled by default. A school-owned computer used for authenticated, operator-driven publication is a possible no-Firebase-compute-cost approach; it requires independently approved configuration and real operation. A publicly available server requires separately secured HTTPS and operations. Do not activate billing or deploy a privileged runtime by assumption.
+- Verify the latest V46 dashboard and feature parity, including official CDC/IEMIS 2083 grading, absent/NG handling and printed grade sheets; primary assessment and current V46 question-generator work in other branches must not be assumed integrated. Drafts and watermarked previews are NOT official results.
+- Perform real two-school V47 Firebase browser sign-in, onboarding, school-admin and assigned teacher workflows, viewer read-only, mobile PWA and cross-school denial. Confirm backups, actual Spark quotas, and release sign-off at the exact deployment head. Do not use real V46 data or credentials in these checks.
+
+No production or preview hosting deployment performed in this checkpoint. No verified access to the real V47 Firebase account, deployment secret metadata or browser session was established by the available repository connector. A successful CI build does not demonstrate a live site. Do not keep making speculative staging-validation changes while these operational prerequisites remain unresolved.
