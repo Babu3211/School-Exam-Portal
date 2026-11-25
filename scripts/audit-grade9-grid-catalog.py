@@ -308,19 +308,36 @@ def stage_grid_page_images(preview_dir):
         entries.append(result)
         print("Grid source "+resource+": "+result["status"])
     if len(entries)!=len(limits) or {x["resource"] for x in entries}!=set(limits): raise ValueError("Unexpected fingerprinted source inventory")
+    subject_keys={"11168":"nepali","11169":"english","11170":"math","11167":"science","11166":"social","optional-computer":"optional_computer","optional-math":"optional_math","optional-economics":"optional_economics","accounting":"accounting"}
     parts=['<section id="original-grid-pages"><h2>Original CDC Grid page images</h2><p>Source page copies for comparison only. Matching a document fingerprint does not certify the current examination Grid. Optional subjects show the first page; full PDF links are retained.</p>']
-    for result in entries:
-        parts.append('<h3>'+escape(result["subject"])+'</h3>')
-        if result["images"]:
-            for i,image in enumerate(result["images"],1):
-                parts.append('<p><a href="'+escape(image)+'">Open source page '+str(i)+'</a></p>')
-        else:
-            parts.append('<p>Original page copy unavailable. Use the official source link below.</p>')
-        parts.append('<p><a href="'+escape(result["url"],quote=True)+'" rel="noopener noreferrer">Official PDF</a></p>')
-    parts.append('</section>')
     html=index.read_text(encoding="utf-8")
     if html.count("</body>")!=1 or 'id="original-grid-pages"' in html: raise ValueError("Unexpected Grid Library HTML")
-    index.write_text(html.replace("</body>","".join(parts)+"</body>"),encoding="utf-8")
+    for result in entries:
+        key=subject_keys[result["resource"]]
+        target="source-pages-"+key
+        marker='<section id="'+key+'">'
+        if html.count(marker)!=1: raise ValueError("Missing or duplicate subject section "+key)
+        label="View "+str(len(result["images"]))+" original Grid page(s)" if result["images"] else "Check original source availability"
+        html=html.replace(marker,marker+'<p><a href="#'+target+'">'+label+'</a></p>',1)
+        parts.append('<div id="'+target+'"><h3>'+escape(result["subject"])+'</h3><p><a href="#'+key+'">Back to subject comparison</a></p>')
+        if result["images"]:
+            for i,image in enumerate(result["images"],1):
+                safe_image=escape(image,quote=True)
+                parts.append('<details><summary>Original Grid page '+str(i)+'</summary><p><a href="'+safe_image+'">Open full-size page '+str(i)+'</a></p><a href="'+safe_image+'"><img loading="lazy" decoding="async" style="width:100%;height:auto" src="'+safe_image+'" alt="'+escape(result["subject"],quote=True)+' source page '+str(i)+'"></a></details>')
+        else:
+            parts.append('<p>Original page copy unavailable. Use the official source link below.</p>')
+        parts.append('<p><a href="'+escape(result["url"],quote=True)+'" rel="noopener noreferrer">Official PDF</a></p></div>')
+    parts.append('</section>')
+    html=html.replace("</body>","".join(parts)+"</body>")
+    for result in entries:
+        key=subject_keys[result["resource"]]
+        assert html.count('id="source-pages-'+key+'"')==1
+        assert html.count('href="#source-pages-'+key+'"')==1
+        for image in result["images"]:
+            assert html.count('src="'+escape(image,quote=True)+'"')==1
+            assert (preview/image).is_file()
+    assert '<script' not in html.lower()
+    index.write_text(html,encoding="utf-8")
     (folder/"manifest.json").write_text(json.dumps({"currentCdcExactApproved":False,"documents":entries},ensure_ascii=False,indent=2),encoding="utf-8")
 
 def audit_optional_grid_pdf(source, output_dir):
