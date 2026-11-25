@@ -1868,6 +1868,7 @@ for(const grade of ['1','2','3']){
 console.log('Grades 1–3 CDC 2076 Annex 2 annual report and portfolio PDF Word Excel regression');
 // School-wide read-only coverage and reporting: current-year unique evidence,
 // not final grades; exclude other students, classes, sections and invalid scores.
+{
 const reportPupils=[{id:'r1',class:'Class 1',section:'A',name:'Report One'},{id:'r2',class:'Class 1',section:'B',name:'Report Two'},{id:'r5',class:'Class 5',section:'A',name:'Report Five'},{id:'old',class:'Class 6',section:'A'},{id:'inactive',class:'Class 1',active:false}];
 const evidence={studentId:'r1',className:'Class 1',section:'A',academicYear:'2083',subject:'Nepali',unit:'Unit',topic:'Outcome',level:3};
 const indicators={studentId:'r5',className:'Class 5',section:'A',academicYear:'2083',subject:'Our Surroundings',unit:'Unit',outcomeId:'block',indicators:[true,true,false,true]};
@@ -1907,12 +1908,18 @@ assert.equal(reportDetail.querySelector('[data-cdc="student"]').value,'r1');
 assert.equal(reportDetail.querySelector('[data-cdc="accessNotice"]').hidden,false);
 assert.equal(reportDetail.querySelector('[data-cdc="save"]').disabled,true);
 assert.ok(reportDetail.querySelector('[data-cdc="portfolioPanel"]'));
+const readsBeforeDenied=coverageReads;
 w.isAdmin=()=>false;current.roles=['subject_teacher'];current.active=true;
-await w.loadCdcDashboardOverview();assert.equal(dash.hidden,true);assert.equal(coverageReads,3);
+await w.loadCdcDashboardOverview();assert.equal(dash.hidden,true);assert.equal(coverageReads,readsBeforeDenied);
 assert.equal(w.cdcSchoolReportAccess(),false);
+assert.equal(dash.querySelectorAll('.analytics-bar-item').length,0);
 w.isAdmin=()=>true;current.roles=['admin'];
+w.clearCdcCoverageCache();
+const readsAfterReset=coverageReads;
+await w.loadCdcDashboardOverview();assert.equal(coverageReads,readsAfterReset+3);
 reportHub.remove();reportDetail.remove();dash.remove();
 console.log('CDC dashboard and report hub: current-year coverage, deduplication, cached reads, export, admin read-only drill-down and role isolation passed');
+}
 // CDC backup: verify legacy and new exports in an isolated synthetic DOM.
 // Assessment evidence must never be replayed through ordinary client restore.
 const backupDom=new JSDOM('<div id="restoreFirebaseMessage"></div><pre id="restorePreview"></pre><input id="restoreBackupFile" type="file"><button id="runFirebaseRestore"></button>',{runScripts:'outside-only'});

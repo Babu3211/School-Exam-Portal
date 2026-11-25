@@ -11275,20 +11275,21 @@ function cdcCoverageModel(students,ordinary,indicators,year){
 }
 // A single per-session snapshot, explicitly refreshable. Avoid re-reading the
 // entire school assessment collection on each dashboard navigation.
-let cdcCoverageCache=null,cdcCoveragePending=null;
+let cdcCoverageCache=null,cdcCoveragePending=null,cdcCoverageGeneration=0;
+function clearCdcCoverageCache(){cdcCoverageCache=null;cdcCoveragePending=null;cdcCoverageGeneration++;}
 async function cdcLoadCoverage(force=false){
   if(!cdcSchoolReportAccess())throw Error('हेर्ने अनुमति छैन।');
   const uid=auth.currentUser.uid,year=String(currentSchoolSettings.academicYear||'2083'),key=uid+'|'+year;
-  if(!force&&cdcCoverageCache?.key===key)return cdcCoverageCache.model;
+  if(!force&&cdcCoverageCache?.key===key&&Date.now()-Date.parse(cdcCoverageCache.model.loadedAt)<120000)return cdcCoverageCache.model;
   if(cdcCoveragePending?.key===key)return cdcCoveragePending.promise;
-  const request={key,promise:null};
+  const request={key,promise:null,generation:cdcCoverageGeneration};
   request.promise=(async()=>{
     const [students,ordinary,binary]=await Promise.all([
       getDocsFromServer(collection(db,'students')),
       getDocsFromServer(query(collection(db,'cdc_observations'),where('academicYear','==',year))),
       getDocsFromServer(query(collection(db,'cdc_serofero_indicators'),where('academicYear','==',year)))
     ]);
-    if(!cdcSchoolReportAccess()||auth.currentUser?.uid!==uid||String(currentSchoolSettings.academicYear||'2083')!==year)throw Error('Login वा शैक्षिक सत्र परिवर्तन भयो।');
+    if(request.generation!==cdcCoverageGeneration||!cdcSchoolReportAccess()||auth.currentUser?.uid!==uid||String(currentSchoolSettings.academicYear||'2083')!==year)throw Error('Login वा शैक्षिक सत्र परिवर्तन भयो।');
     const model={...cdcCoverageModel(students.docs.map(d=>({...d.data(),id:d.id})),ordinary.docs.map(d=>d.data()),binary.docs.map(d=>d.data()),year),year,loadedAt:new Date().toISOString()};
     cdcCoverageCache={key,model};return model;
   })();
@@ -11298,7 +11299,7 @@ async function cdcLoadCoverage(force=false){
 async function loadCdcDashboardOverview(force=false){
   const panel=document.getElementById('cdcDashboardPanel'),chart=document.getElementById('cdcDashboardAnalytics'),status=document.getElementById('cdcDashboardStatus'),refresh=document.getElementById('cdcDashboardRefresh');
   if(!panel||!chart||!status||!refresh)return;
-  panel.hidden=!cdcSchoolReportAccess();if(panel.hidden)return;
+  panel.hidden=!cdcSchoolReportAccess();if(panel.hidden){chart.replaceChildren();status.textContent='';return;}
   const uid=auth.currentUser.uid,current=()=>panel.isConnected&&cdcSchoolReportAccess()&&auth.currentUser?.uid===uid;
   refresh.onclick=()=>loadCdcDashboardOverview(true);
   chart.replaceChildren();refresh.disabled=true;status.textContent='मूल्याङ्कन विवरण पढ्दै…';
@@ -12678,7 +12679,7 @@ document.addEventListener("change",e=>{if(["reportType","reportClass"].includes(
 window.loadDashboardData=loadDashboardData;window.loadReportsData=loadReportsData;
 
 void loadPublicSchoolBranding();
-onAuthStateChanged(auth,async user=>{if(!user){idleSession.stop();void userActivity.onAuth(null);clearLoginSecret();document.getElementById("cdcAssessmentDialog")?.remove();currentUserRole=null;shell.style.display="none";gate.style.display="flex";return;}try{if(user.uid===ADMIN_UID)currentUserRole={roles:["admin"],active:true};else if(!currentUserRole||currentUserRole.uid!==user.uid){const rs=await getDoc(doc(db,"user_roles",user.uid));if(!rs.exists()||rs.data().active!==true)throw new Error("सक्रिय User Role भेटिएन।");currentUserRole={uid:user.uid,...rs.data()};}gate.style.display="none";shell.style.display="flex";statusBox.textContent="";idleSession.start(user);void userActivity.onAuth(user);const signedInName=String(isAdmin()?"Babukrishna Khanal":(currentUserRole?.displayName||user.displayName||user.email?.split("@")[0]||"User")).trim();const topName=document.getElementById("topUserName"),topGreeting=document.getElementById("topGreeting"),topAvatar=document.getElementById("topAvatar");if(topName)topName.textContent=signedInName;if(topGreeting)topGreeting.textContent=`नमस्ते ${signedInName} ज्यू, परीक्षा पोर्टलमा स्वागत छ।`;if(topAvatar)topAvatar.textContent=(signedInName.replace(/\s+/g," ").charAt(0)||"U").toUpperCase();window.renderSmssUserActivity();applyRoleNavigation();await loadSchoolSettings();/* Refresh the active screen after role permissions are resolved. The shared render() path loads every module, including attendance and marks, rather than maintaining incomplete admin/teacher startup lists. */render(window.currentPage||"dashboard");}catch(err){console.error("Role authentication failed",err);currentUserRole=null;await signOut(auth);shell.style.display="none";gate.style.display="flex";errorBox.textContent=safeNoticeError(err)||"User Role जाँच हुन सकेन।";}});
+onAuthStateChanged(auth,async user=>{clearCdcCoverageCache();if(!user){idleSession.stop();void userActivity.onAuth(null);clearLoginSecret();document.getElementById("cdcAssessmentDialog")?.remove();currentUserRole=null;shell.style.display="none";gate.style.display="flex";return;}try{if(user.uid===ADMIN_UID)currentUserRole={roles:["admin"],active:true};else if(!currentUserRole||currentUserRole.uid!==user.uid){const rs=await getDoc(doc(db,"user_roles",user.uid));if(!rs.exists()||rs.data().active!==true)throw new Error("सक्रिय User Role भेटिएन।");currentUserRole={uid:user.uid,...rs.data()};}gate.style.display="none";shell.style.display="flex";statusBox.textContent="";idleSession.start(user);void userActivity.onAuth(user);const signedInName=String(isAdmin()?"Babukrishna Khanal":(currentUserRole?.displayName||user.displayName||user.email?.split("@")[0]||"User")).trim();const topName=document.getElementById("topUserName"),topGreeting=document.getElementById("topGreeting"),topAvatar=document.getElementById("topAvatar");if(topName)topName.textContent=signedInName;if(topGreeting)topGreeting.textContent=`नमस्ते ${signedInName} ज्यू, परीक्षा पोर्टलमा स्वागत छ।`;if(topAvatar)topAvatar.textContent=(signedInName.replace(/\s+/g," ").charAt(0)||"U").toUpperCase();window.renderSmssUserActivity();applyRoleNavigation();await loadSchoolSettings();/* Refresh the active screen after role permissions are resolved. The shared render() path loads every module, including attendance and marks, rather than maintaining incomplete admin/teacher startup lists. */render(rolePageAllowed(window.currentPage||"dashboard")?window.currentPage||"dashboard":"dashboard");}catch(err){console.error("Role authentication failed",err);currentUserRole=null;await signOut(auth);shell.style.display="none";gate.style.display="flex";errorBox.textContent=safeNoticeError(err)||"User Role जाँच हुन सकेन।";}});
 </script>
 <script type="module" src="./cdc-question-paper.js?v=20261125-grade9-quick-builder"></script>
 
