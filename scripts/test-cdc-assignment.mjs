@@ -1594,13 +1594,14 @@ console.log('Grade 1 Our Surroundings three forms, 48 indicators, scoped binary 
 const backupDom=new JSDOM('<div id="restoreFirebaseMessage"></div><pre id="restorePreview"></pre><input id="restoreBackupFile" type="file"><button id="runFirebaseRestore"></button>',{runScripts:'outside-only'});
 const bw=backupDom.window;
 Object.assign(bw,{requireAdmin:()=>{},auth:{currentUser:{uid:'backup-admin'}},ADMIN_UID:'backup-admin',safeNoticeError:e=>e.message});
-const backupStart=html.indexOf('const CDC_BACKUP_ONLY_COLLECTIONS=');
+const backupStart=html.indexOf('async function downloadFirebaseBackup(){');
 const backupEnd=html.indexOf('document.addEventListener("click",e=>{if(e.target.closest("#downloadFirebaseBackup"))',backupStart);
 assert.ok(backupStart>=0&&backupEnd>backupStart);
 bw.eval(html.slice(backupStart,backupEnd)+'\nwindow.__previewBackup=previewFirebaseRestore;window.__restoreCollections=RESTORE_COLLECTIONS;window.__backupOnly=CDC_BACKUP_ONLY_COLLECTIONS;');
 assert.deepEqual(Array.from(bw.__backupOnly),['cdc_observations','cdc_serofero_indicators']);
 assert.ok(bw.__backupOnly.every(n=>!bw.__restoreCollections.includes(n)));
-assert.match(html.slice(backupStart,backupEnd),/collectionNames=\[[^\n]+\.\.\.CDC_BACKUP_ONLY_COLLECTIONS\]/);
+const exportedCollections=JSON.parse(html.slice(backupStart,backupEnd).match(/const collectionNames=(\[[^;]+\]);/)[1]);
+assert.ok(bw.__backupOnly.every(n=>exportedCollections.includes(n)));
 const backupFile=bw.document.getElementById('restoreBackupFile');
 const backupOutput=bw.document.getElementById('restorePreview');
 const legacyBackup={format:'SMSS-Firestore-Backup',version:1,collections:{students:[{id:'synthetic',data:{}}]}};
