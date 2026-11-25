@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {renderIemisGradeSheetPrint} from './iemis-grade-sheet-print-preview.mjs';
+import {renderIemisGradeSheetPrint,createIemisGradeSheetPrinter} from './iemis-grade-sheet-print-preview.mjs';
 import {iemisEntrySchema} from '../iemis-entry.js';
 import {previewIemisGradeSheet} from './iemis-grade-sheet-preview.mjs';
 const students=[{id:'s1',nameEnglish:'<script>alert(1)</script>'}];
@@ -14,7 +14,7 @@ const summary=sheet.subjects[0].summary;
 const sourceGrade=summary.totalGrade.grade;
 assert.match(result.html,new RegExp('<td>'+summary.obtained+' / '+summary.full+'</td>'));
 assert.match(result.html,new RegExp('<td>'+summary.totalGrade.point+'</td>'));
-assert.match(result.html,new RegExp('GPA: '+sheet.gpa));
+assert.match(result.html,new RegExp('GPA: '+sheet.gpa.toFixed(2)));
 assert.match(result.html,new RegExp('<td>'+summary.inGrade.grade+'</td>'));
 assert.match(result.html,new RegExp('<td>'+sourceGrade.replace('+','\\+')+'</td>'));
 assert.match(result.html,/<td>—<\/td>/); // Primary class has no theory grade.
@@ -45,7 +45,7 @@ for(const classNo of ['1','2','3','4','5','6','7','8','9','10'])for(const [term,
  assert.ok(printed.html.includes('<td>'+(subject.theoryGrade?.grade??'—')+'</td>'));
  assert.ok(printed.html.includes('<td>'+subject.totalGrade.grade+'</td>'));
  assert.ok(printed.html.includes('<td>'+subject.totalGrade.point+'</td>'));
- assert.ok(printed.html.includes('GPA: '+calculated.student.gpa));
+ assert.ok(printed.html.includes('GPA: '+calculated.student.gpa.toFixed(2)));
 }
 
 
@@ -66,3 +66,21 @@ assert.throws(()=>renderIemisGradeSheetPrint({...args,school:{...args.school,nam
 assert.throws(()=>renderIemisGradeSheetPrint({...args,school:{...args.school,addressNepali:'x'.repeat(251)}}),/Invalid Nepali school address/);
 
 console.log('V47 offline A4 grade sheet preview escaping, watermark and incomplete-class tests passed');
+
+const cachedArgs=structuredClone(args);
+cachedArgs.students[0].studentIemisNo='0000123';
+cachedArgs.students[0].symbolNo='SYM<1>';
+cachedArgs.students[0].dob='2080-01-01';
+const printer=createIemisGradeSheetPrinter(cachedArgs);
+const initial=printer('s1');
+assert.match(initial.html,/Registration No.: 0000123/);
+assert.match(initial.html,/Symbol No.: SYM&lt;1&gt;/);
+assert.match(initial.html,/Date of Birth: 2080-01-01/);
+assert.match(initial.html,/GPA: 3\.60/);
+assert.match(initial.html,/print-color-adjust:exact/);
+cachedArgs.draftsBySubject.english.s1.values.obtained='0';
+cachedArgs.students[0].nameEnglish='Changed after snapshot';
+assert.deepEqual(printer('s1'),initial,'Cached print must retain the verified snapshot');
+assert.throws(()=>printer('other'),/not in selected class/);
+assert.equal(createIemisGradeSheetPrinter({...args,draftsBySubject:{english:{}}})('s1').ready,false);
+console.log('PASS cached grade-sheet printing: verified roster, immutable snapshot, escaped identifiers, two-decimal GPA and print watermark');

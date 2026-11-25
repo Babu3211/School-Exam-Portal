@@ -7,7 +7,7 @@ import {renderV46TenantLedger} from './iemis-v46-ledger-adapter.mjs';
 import {iemisEntrySchema,iemisEntryDraft} from './iemis-entry.js';
 import {iemisSubjectKey,iemisComponentKey,iemisSummary} from './iemis-ledger.js';
 import {previewIemisGradeLedger} from './iemis-grade-ledger-preview.mjs';
-import {renderIemisGradeSheetPrint} from './iemis-grade-sheet-print-preview.mjs';
+import {createIemisGradeSheetPrinter} from './iemis-grade-sheet-print-preview.mjs';
 import {excelWorkbook} from './excel-workbook.mjs';
 const termMap=Object.freeze({'1st':'first','2nd':'second','3rd':'third','final':'annual'});
 export function prepareLegacyGradeReport({schoolId,school,classNo,term,students,subjects,records}){
@@ -89,7 +89,7 @@ export function prepareLegacyGradeReport({schoolId,school,classNo,term,students,
  };
  const summary=previewIemisGradeLedger({classNo,term,students,subjects,draftsBySubject,academicYear:'2083'});
  if(!summary.complete)throw Error('Incomplete V46 grade preview');
- const printFor=studentId=>renderIemisGradeSheetPrint({school,classNo,term,students,subjects,draftsBySubject,studentId});
+ const printFor=createIemisGradeSheetPrinter({school,classNo,term,students,subjects,draftsBySubject});
  return Object.freeze({schoolId,school,classNo:String(classNo),term,students,subjects,rosterCount:students.length,subjectCount:subjects.length,ledger,ledgers,excelFor,summary,printFor,previewOnly:true,writeAuthorized:false,publicationAllowed:false});
 }
 export function legacyGradePreviewExcel(result,mode='grade'){

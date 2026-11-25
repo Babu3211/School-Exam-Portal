@@ -147,6 +147,11 @@ try{
   assert.ok(text.includes(school.student));assert.ok(!text.includes(school.sid===schools[0].sid?schools[1].student:schools[0].student));
   await wait(page,()=>!document.getElementById('printSheet').disabled);
   assert.match(await page.frameLocator('#sheetFrame').locator('body').textContent(),/NOT VALID FOR OFFICIAL USE/);
+  assert.equal(await page.locator('#gradeOutput tbody tr td').last().textContent(),'4.00');
+  const sheetBody=page.frameLocator('#sheetFrame').locator('body');
+  assert.match(await sheetBody.textContent(),/GPA: 4\.00/);
+  const watermark=await page.frameLocator('#sheetFrame').locator('.sheet').evaluate(el=>({repeat:getComputedStyle(el,':before').backgroundRepeat,adjust:getComputedStyle(el,':before').printColorAdjust}));
+  assert.equal(watermark.repeat,'repeat');assert.equal(watermark.adjust,'exact');
   const downloadPromise=page.waitForEvent('download',{timeout:30000});
   await page.locator('#exportExcel').click();const download=await downloadPromise;
   assert.match(download.suggestedFilename(),/UNAPPROVED-.*\.xlsx$/);
