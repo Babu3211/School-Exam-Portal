@@ -69,6 +69,17 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
    assert.equal((result.blocks[9].text.match(/\([a-j]\) ……… \(/g)||[]).length,10,'Ten inline contextual grammar choices');
    assert.doesNotMatch(result.blocks[9].text,/\{\d+\}|Blank \d+/);
    assert.doesNotMatch(result.text,/\[\d+(?:\.\d+)?\]/,'Do not print per-item marks in English');
+   const matching=result.blocks[3].text.split('\n').filter(l=>l.includes('|')).map(l=>l.split('|').map(t=>t.trim()));
+   assert.equal(matching.length,6);
+   for(const [left] of matching.slice(0,5)){
+    const [letter,...words]=left.split(' '),word=words.join(' ');
+    const line=result.answerText.split('\n').find(l=>l.startsWith('4.A.'+letter.replace('.','')+' [1] '));
+    assert.ok(line,'Missing vocabulary key for '+left);
+    const m=/\[1\] (i{1,3}|iv|v|vi) — (.*?) = (.*)$/.exec(line);
+    assert.ok(m,'Missing printed right-column label');
+    assert.equal(m[2],word);
+    assert.ok(matching.some(row=>row[1]===m[1]+'. '+m[3]),'Answer must match printed right column');
+   }
 
   }
   if(subject==='Science and Technology'){
