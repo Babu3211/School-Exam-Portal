@@ -200,8 +200,19 @@ assert.equal(ng.reduce((n,g)=>n+g.marks,0),nepaliEvidence.fullMarks);
 assert.equal(ng.find(g=>g.skill==='grammar_passage').marks,nepaliEvidence.extractedTaskMarks.languageStructureReading);
 assert.equal(ng.find(g=>g.skill==='unseen_passage').marks,nepaliEvidence.extractedTaskMarks.unseenReading);
 assert.deepEqual(ng.find(g=>g.skill==='notes_and_summary').choices[0].components.map(c=>c.marks),[nepaliEvidence.extractedTaskMarks.noteTaking,nepaliEvidence.extractedTaskMarks.summaryWriting]);
-// These cognitive totals derive from a secondary transcription, not a primary visual review.
-assert.deepEqual(Object.values(nepaliRevised.cognitiveMarks),nepaliEvidence.secondaryCorroboration.cognitiveMarks);
+// Original archived government Grid pages now independently corroborate the totals.
+const nepaliSource=register.sources.find(s=>s.retrievalEvidence?.resource==='11168');
+const nepaliVisual=nepaliSource.retrievalEvidence.primaryVisualReview;
+assert.equal(nepaliVisual.sha256,nepaliSource.retrievalEvidence.sha256);
+assert.equal(nepaliVisual.sourceEdition,2080);assert.equal(nepaliVisual.tableGrade,10);assert.equal(nepaliVisual.appliesAsBasisToGrade,9);
+assert.equal(nepaliVisual.taskRows.length,21);
+assert.equal(nepaliVisual.taskRows.reduce((n,r)=>n+r[5],0),75);
+assert.deepEqual(Array.from({length:12},(_,i)=>nepaliVisual.taskRows.filter(r=>r[0]===i+1).reduce((n,r)=>n+r[5],0)),nepaliEvidence.secondaryCorroboration.areaMarks);
+assert.deepEqual(['K','U','A','HA'].map(k=>nepaliVisual.taskRows.filter(r=>r[2]===k).reduce((n,r)=>n+r[5],0)),[8,12,24,31]);
+assert.deepEqual(Object.values(nepaliRevised.cognitiveMarks),nepaliVisual.cognitiveMarks);
+assert.deepEqual(nepaliVisual.pages,[1,2,3,4,5]);
+assert.equal(nepaliVisual.currentEditionConfirmed,false);assert.equal(nepaliVisual.grade9SpecificTaskAdaptationsReviewed,false);assert.equal(nepaliVisual.officialExamApproved,false);assert.equal(nepaliVisual.currentCdcExactApproved,false);
+assert.ok(byKey.nepali.tables.some(t=>t.title.includes('परीक्षणीय पक्ष')&&t.rows.length===21));
 assert.equal(nepaliRevised.currentCdcExactApproved,false);
 assert.equal(nepaliRevised.readyForLive,false);
 assert.equal(nepaliEvidence.visualCellReviewComplete,false);

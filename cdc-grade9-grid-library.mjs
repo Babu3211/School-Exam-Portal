@@ -54,6 +54,13 @@ export function grade9GridLibrary(register){
     if(q?.areaMarks)add('Independent 2080 reference — not approved',['Area','Marks'],['शब्दभण्डार','वर्णविन्यास','भाषिक संरचना','पठनबोध','निर्देशित रचना','व्यावहारिक लेखन','बुँदा टिपोट','सारांश','पाठगत बोध','भावविस्तार','समीक्षात्मक उत्तर','निबन्ध'].map((n,i)=>[n,q.areaMarks[i]]));
     if(evidence.extractedTaskMarks)add('Government PDF partial text extraction',['Task','Marks'],Object.entries(evidence.extractedTaskMarks));
     if(q?.cognitiveMarks)add('Independent reference cognitive marks',['K','U','A','HA'],[q.cognitiveMarks]);
+    const visual=entries.find(x=>x.retrievalEvidence?.primaryVisualReview?.completeTaskMatrixVisuallyChecked===true)?.retrievalEvidence?.primaryVisualReview;
+    if(visual?.officialExamApproved===false&&visual.grade9InstructionVisuallyChecked===true){
+     status='मूल २०८० कक्षा १० तालिकाका पाँच पृष्ठ प्रमाणित; कक्षा ९ को आधार स्पष्ट, हालको संशोधन र कक्षा ९ अनुकूलन बाँकी';
+     add('मूल CDC तालिका — परीक्षणीय पक्ष र अङ्कभार',['क्षेत्र क्र.सं.','परीक्षणीय पक्ष','तह','प्रश्न सङ्ख्या','उत्तर सङ्ख्या','अङ्क','पृष्ठ'],visual.taskRows.map(r=>[r[0],r[1],({K:'ज्ञान',U:'बोध',A:'प्रयोग',HA:'उच्च दक्षता'})[r[2]],...r.slice(3)].map(v=>typeof v==='number'?String(v).replace(/\d/g,d=>'०१२३४५६७८९'[Number(d)]):v)));
+     add('मूल तालिकाको संज्ञानात्मक अङ्कभार',['ज्ञान','बोध','प्रयोग','उच्च दक्षता'],[visual.cognitiveMarks.map(v=>String(v).replace(/\d/g,d=>'०१२३४५६७८९'[Number(d)]))]);
+     add('कक्षा ९ का लागि मूल निर्देशन',['विवरण'],[['कक्षा १० को तालिकालाई आधार मानी कक्षा ९ का सबै विषयक्षेत्र समेट्ने।'],['प्रश्न बनाउँदा पाठ नदोहोरिने गरी बनाउने।']]);
+    }
    }
    if(key==='english'){
     add('Reading and writing marks',['Section','Marks'],[...(evidence.readingMarks||[]).map((n,i)=>['Reading '+(i+1),n]),...(evidence.writingMarks||[]).map((n,i)=>['Writing '+(i+1),n]),['Grammar',evidence.grammar?.total]]);

@@ -1240,9 +1240,9 @@
       "subject": "अनिवार्य नेपाली",
       "kind": "specification_grid_and_model_questions",
       "version": "PDF edition applicability pending",
-      "status": "official_government_full_PDF_retrieved_grid_review_pending",
+      "status": "official_2080_grade10_nepali_grid_five_pages_visually_checked_grade9_basis_explicit_current_revision_pending",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11168_Specification%20Grid%20(9%20-%2010)%20Compulsory%20Nepali_p4hju5n.pdf",
-      "note": "Legacy-font grid across first pages; current edition and exact question distribution require verification.",
+      "note": "Legacy-font grid across first pages; current edition and exact question distribution require verification. Archived original pages 1–5 visually checked: 21 task rows, 12 area totals and four cognitive marks totals confirmed; Grade 9 applicability as a basis explicit, current revision and Grade 9 task adaptation still pending.",
       "retrievalEvidence": {
         "resource": "11168",
         "pages": 20,
@@ -1323,6 +1323,249 @@
             ],
             "note": "Independent educational site's transcription agrees with selected RS11168 government PDF extracted cells. It is not expert-reviewed or authoritative. Other detailed fields require primary visual verification; historical 2078 practice remains separate."
           }
+        },
+        "primaryVisualReview": {
+          "sourceEdition": 2080,
+          "tableGrade": 10,
+          "appliesAsBasisToGrade": 9,
+          "sha256": "530478014b8179821bf25d43724b935fabca4baa522dd36cebdff402e3e2c98e",
+          "runId": 45420493085,
+          "artifactId": 14934002500,
+          "artifactPaths": [
+            "extracted/11168-grid-01.png",
+            "extracted/11168-grid-02.png",
+            "extracted/11168-grid-03.png",
+            "extracted/11168-grid-04.png",
+            "extracted/11168-grid-05.png"
+          ],
+          "pages": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "fullMarks": 75,
+          "durationMinutes": 180,
+          "taskRows": [
+            [
+              1,
+              "शब्दार्थ",
+              "K",
+              1,
+              1,
+              2,
+              1
+            ],
+            [
+              1,
+              "शब्द पहिचान",
+              "K",
+              1,
+              1,
+              2,
+              1
+            ],
+            [
+              1,
+              "वाक्य रचना",
+              "A",
+              1,
+              1,
+              2,
+              1
+            ],
+            [
+              2,
+              "शुद्ध शब्द पहिचान",
+              "K",
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              2,
+              "वाक्य सम्पादन",
+              "A",
+              1,
+              1,
+              2,
+              2
+            ],
+            [
+              3,
+              "पदवर्ग पहिचान",
+              "K",
+              1,
+              1,
+              3,
+              2
+            ],
+            [
+              3,
+              "शब्दनिर्माण",
+              "A",
+              2,
+              2,
+              4,
+              2
+            ],
+            [
+              3,
+              "काल र पक्ष",
+              "A",
+              1,
+              1,
+              2,
+              2
+            ],
+            [
+              3,
+              "भाव/अर्थ",
+              "A",
+              2,
+              1,
+              2,
+              2
+            ],
+            [
+              3,
+              "वाक्यान्तरण",
+              "A",
+              1,
+              1,
+              4,
+              3
+            ],
+            [
+              4,
+              "भाषिक संरचना पहिचान र प्रयोग (दृष्टांश)",
+              "A",
+              1,
+              1,
+              4,
+              3
+            ],
+            [
+              4,
+              "बोध प्रश्नोत्तर (अदृष्टांश)",
+              "U",
+              1,
+              1,
+              4,
+              3
+            ],
+            [
+              5,
+              "निर्देशित रचना",
+              "HA",
+              2,
+              1,
+              4,
+              3
+            ],
+            [
+              6,
+              "व्यावहारिक लेखन",
+              "A",
+              2,
+              1,
+              4,
+              3
+            ],
+            [
+              7,
+              "बुँदा टिपोट (दृष्टांश)",
+              "HA",
+              1,
+              1,
+              2,
+              4
+            ],
+            [
+              8,
+              "सारांश लेखन (दृष्टांश)",
+              "HA",
+              1,
+              1,
+              3,
+              4
+            ],
+            [
+              9,
+              "बोध उत्तर लेखन",
+              "U",
+              2,
+              2,
+              8,
+              4
+            ],
+            [
+              9,
+              "तार्किक उत्तर लेखन",
+              "HA",
+              1,
+              1,
+              4,
+              4
+            ],
+            [
+              10,
+              "भाव विस्तार/व्याख्या",
+              "HA",
+              2,
+              1,
+              4,
+              4
+            ],
+            [
+              11,
+              "समीक्षात्मक उत्तर लेखन",
+              "HA",
+              2,
+              1,
+              7,
+              4
+            ],
+            [
+              12,
+              "निबन्ध लेखन",
+              "HA",
+              3,
+              1,
+              7,
+              5
+            ]
+          ],
+          "areaMarks": [
+            6,
+            3,
+            15,
+            8,
+            4,
+            4,
+            2,
+            3,
+            12,
+            4,
+            7,
+            7
+          ],
+          "cognitiveMarks": [
+            8,
+            12,
+            24,
+            31
+          ],
+          "completeTaskMatrixVisuallyChecked": true,
+          "grade9InstructionVisuallyChecked": true,
+          "noRepeatedTextbookLessons": true,
+          "currentEditionConfirmed": false,
+          "grade9SpecificTaskAdaptationsReviewed": false,
+          "officialExamApproved": false,
+          "currentCdcExactApproved": false,
+          "note": "Page 1 explicitly titles the table Grade 10, 2080. Page 5 instructs using it as the basis for Grade 9 while covering all Grade 9 content areas, and avoiding repeated lessons. Do not copy Grade 10-only content or certify the current edition from this evidence."
         }
       }
     },
