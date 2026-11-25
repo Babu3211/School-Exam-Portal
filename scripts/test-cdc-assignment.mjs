@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,writeFileSync} from 'node:fs';
+import {join} from 'node:path';
+// Optional CI artifacts use only the synthetic students in this test harness.
+const saveSyntheticPrint=(name,markup)=>{if(process.env.SMSS_CDC_PRINT_DIR)writeFileSync(join(process.env.SMSS_CDC_PRINT_DIR,name+'.html'),markup,'utf8');};
 
 const html = readFileSync('index.html','utf8');
 const source = html.slice(html.indexOf('function cdcTeacherAssignment'),html.indexOf('// CDC observations'));
@@ -451,6 +454,7 @@ assert.match(annualDoc.body.textContent,/प्रतिशत: ______/);
 assert.match(annualDoc.body.textContent,/प्रधानाध्यापक/);
 assert.doesNotMatch(annualDoc.body.textContent,/Synthetic remark/);
 assert.equal(annualDoc.querySelectorAll('input,select,button,textarea').length,0);
+saveSyntheticPrint('cdc-annual',annualMarkup);
 choice('period','Second Term');
 assert.equal(field('printProgress').disabled,true);
 field('printProgress').onclick();
@@ -628,6 +632,7 @@ assert.match(printDoc.body.textContent,/75\.00%/);
 assert.match(printDoc.head.textContent,/A4 landscape/);
 assert.equal(printDoc.querySelectorAll('button,input,select,textarea').length,0);
 assert.doesNotMatch(printDoc.body.textContent,/Synthetic clock reading/);
+saveSyntheticPrint('cdc-math',printedMarkup);
 choice('unit','नाप');
 assert.equal(field('printForm').disabled,true);
 assert.equal(field('annex3').hidden,true);
@@ -1497,6 +1502,7 @@ assert.match(multiPrint.querySelector('tfoot').textContent,/पूरा: १ \/
 assert.equal(multiPrint.querySelector('tfoot').rows.length,2);
 assert.equal(multiPrint.querySelector('tfoot').rows[1].cells[3].textContent,'—');
 assert.equal(multiPrint.querySelector('tfoot').rows[1].cells[6].textContent,'—');
+saveSyntheticPrint('cdc-sero',seroMarkup);
 assert.equal(observations.size,beforeSero);
 w.__testSeroApproved.delete(keyUnderTest);
 w.getDocsFromServer=priorBinaryRead;
