@@ -627,7 +627,9 @@ const environmentSection=[...libraryRoot.querySelectorAll(':scope > details')].f
 assert.ok(environmentSection,'Environment subject must retain its own Grid Library section');
 assert.match(environmentSection.textContent,/Official curriculum \+ non-official school pattern; Grade 9 exact Grid unavailable/);
 assert.match(environmentSection.textContent,/School syllabus 2080: scored questions only \(not CDC Grid\)/);
-assert.match(environmentSection.textContent,/School syllabus alternatives — not implemented in reference drafts/);
+assert.match(environmentSection.textContent,/School syllabus alternatives — original draft adaptation, not verified CDC mapping/);
+assert.match(environmentSection.textContent,/Implemented as original 8-mark review choice/);
+assert.match(environmentSection.textContent,/75; alternative not added to total/);
 assert.match(environmentSection.textContent,/Complete official GridNo/);
 assert.ok([...environmentSection.querySelectorAll('a')].every(a=>a.href.startsWith('https://giwmscdnone.gov.np/')),'Non-official reference must not be listed as an official Grid source');
 assert.match(libraryRoot.textContent,/Objective K\/U\/A\/HA/);
