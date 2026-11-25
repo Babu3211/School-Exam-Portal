@@ -1279,6 +1279,36 @@ for(const grade of ['2','3']){
 }
 // Test-only approval injection: production approval set must remain empty.
 assert.equal(w.__testSeroApproved.size,0);
+// Check every pending original-guide form can be constructed with a unique,
+// consecutive scoring ID without ever approving it in production.
+const reviewNames=['म र मेरो परिवार','मेरो दैनिक जीवन','हाम्रो समुदाय','हाम्रो विद्यालय','हाम्रा वरपरका जीवजन्तु','हाम्रो वातावरण','मेरो सिर्जना','हाम्रो संस्कृति','सञ्चार प्रविधि र बजार','हाम्रो वरपरको संसार'];
+const expectedByGrade={
+ '1':[20,16,12,12,8,8,12,4,8,8],
+ '2':[24,24,24,16,8,12,12,4,8,12],
+ '3':[24,16,24,16,8,8,12,8,8,16]
+};
+for(const grade of ['1','2','3']){
+ let next=1;
+ for(const [i,unit] of reviewNames.entries()){
+  const blocks=expectedByGrade[grade][i]/4;
+  const key=grade+':'+unit;
+  assert.equal(w.__testSeroEntryForm(grade,unit,'2083'),null);
+  if(grade==='1'&&i<3){next+=blocks;continue;}
+  w.__testSeroApproved.add(key);
+  try{
+   const form=w.__testSeroEntryForm(grade,unit,'2083');
+   assert.ok(form,key);
+   assert.equal(form.start,next,key);
+   assert.equal(form.groups.length,blocks,key);
+   assert.ok(form.groups.every(g=>g[1].length===4&&g[2].length===4),key);
+   assert.equal(form.mainRows.filter(row=>row.first).reduce((sum,row)=>sum+row.span,0),blocks*4,key);
+   assert.equal(w.__testSeroEntryForm(grade,unit,'2084'),null);
+  }finally{w.__testSeroApproved.delete(key);}
+  next+=blocks;
+ }
+ assert.equal(next-1,({'1':27,'2':36,'3':35})[grade]);
+}
+assert.equal(w.__testSeroApproved.size,0);
 const unitUnderTest='मेरो दैनिक जीवन';
 const keyUnderTest='2:'+unitUnderTest;
 assert.equal(w.__testSeroEntryForm('2',unitUnderTest,'2083'),null);
