@@ -29,7 +29,7 @@ import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-mat
 import {CDC_G10_OPTIONAL_MATH_2083_MODEL,compareCdc2083MathModelToBundledGrid} from "./cdc-optional-math-model-compare.mjs";
 import {inspectCdcOptionalMathPaper} from "./cdc-optional-math-composite.mjs";
 import {originalOptionalMathPracticeBank} from "./cdc-optional-math-original-practice.mjs";
-import {renderCdcCompositePaper,grade9ComputerModelGroups,paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS,buildQuestionPaperDocx,questionFigure,rasterizePaperFigures} from "./cdc-optional-math-render.mjs";
+import {renderCdcCompositePaper,referenceMatchingSegments,grade9ComputerModelGroups,paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS,buildQuestionPaperDocx,questionFigure,rasterizePaperFigures} from "./cdc-optional-math-render.mjs";
 import {QUESTION_EXCEL_FIELDS,parseQuestionExcelSheet,CDC_GRID_EXCEL_FIELDS,parseCdcGridExcelSheet} from "./cdc-question-excel.mjs";
 import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
@@ -1352,7 +1352,13 @@ function buildReferenceExportArea(d,answerKey=false){
  else{
   pre(header,d.result.introText);
   for(const block of d.result.blocks){
-   const q=doc.createElement("div");q.className="qp-q";pre(q,block.text);
+   const q=doc.createElement("div");q.className="qp-q";
+   for(const segment of referenceMatchingSegments(block.text)){
+    if(!segment.matchingRows){pre(q,segment.text);continue;}
+    const table=doc.createElement("table");table.className="qp-matching-table";table.style.cssText="width:100%;table-layout:fixed;border-collapse:collapse;margin:5px 0";
+    segment.matchingRows.forEach((row,i)=>{const tr=table.insertRow();for(const value of row){const cell=doc.createElement(i===0?"th":"td");cell.textContent=value;cell.style.cssText="text-align:left;vertical-align:top;padding:2px 5px;width:50%;overflow-wrap:anywhere";tr.append(cell);}});
+    q.append(table);
+   }
    // Generated solely by the bundled questionFigure renderer, not school
    // data or an uploaded HTML file. Text remains inert.
    if(block.figureHtml)q.insertAdjacentHTML("beforeend",block.figureHtml);
