@@ -113,9 +113,67 @@ const rows=[
     "Communicate clearly; keep the court safe and follow teacher instructions."
   ]
 ];
+const supplement=[
+  [
+    "नियमित व्यायाम गर्दा श्वासप्रश्वास र रक्तसञ्चार प्रणालीमा हुने तत्काल परिवर्तन तथा तिनको कारण व्याख्या गर्नुहोस्।",
+    "Explain immediate changes in respiration and circulation during exercise and their reasons.",
+    "सास र मुटुको गति बढ्न सक्छ; काम गर्ने मांसपेशीको अक्सिजन र ऊर्जा आवश्यकता बढ्छ; कार्बन डाइअक्साइड हटाउन सहयोग हुन्छ।",
+    "Breathing and heart rate may increase; working muscles need more oxygen and energy; carbon dioxide removal increases."
+  ],
+  [
+    "विद्यार्थीका लागि निद्रा, अध्ययन, खेल र डिजिटल उपकरणको सन्तुलित दैनिक योजना बनाउनुहोस्। चार प्राथमिकता स्पष्ट गर्नुहोस्।",
+    "Design a balanced daily plan for a student covering sleep, study, play and digital devices. Explain four priorities.",
+    "पर्याप्त नियमित निद्रा, केन्द्रित अध्ययन समय, शारीरिक गतिविधि, सीमित र उद्देश्यपूर्ण डिजिटल प्रयोग।",
+    "Adequate regular sleep, focused study time, physical activity, limited purposeful digital use."
+  ],
+  [
+    "विद्यालयको खाजा सुरक्षित र पौष्टिक बनाउन चार उपाय र तिनको कारण लेख्नुहोस्।",
+    "Explain four measures to make school snacks nutritious and safe.",
+    "विविध पोषक खाद्य, सफा हात, सुरक्षित पानी, उचित भण्डारण; पोषण र संक्रमण रोकथामसँग सम्बन्ध।",
+    "Varied nutritious foods, clean hands, safe water, proper storage; link to nutrition and infection prevention."
+  ],
+  [
+    "विद्यालयमा संक्रामक रोग फैलिने जोखिम घटाउन चार सामूहिक उपाय कारणसहित लेख्नुहोस्।",
+    "Explain four collective measures to reduce the risk of infectious disease spreading at school.",
+    "हात धुने सुविधा, हावापास, बिरामीलाई उचित आराम र स्वास्थ्य सल्लाह, स्वास्थ्य सचेतना।",
+    "Handwashing facilities, ventilation, appropriate rest and health advice for sick students, health education."
+  ],
+  [
+    "विद्यालय वरिपरि फोहोर र दूषित पानीको समस्या समाधान गर्न चार चरणको सामुदायिक स्वास्थ्य योजना बनाउनुहोस्।",
+    "Prepare a four-step community health plan for waste and polluted water around a school.",
+    "समस्या पहिचान, सुरक्षित फोहोर व्यवस्थापन, पानीको स्रोत संरक्षण, स्थानीय निकाय र समुदायसँग नियमित अनुगमन।",
+    "Identify problems, manage waste safely, protect water sources, monitor with local authorities and community."
+  ],
+  [
+    "किशोरकिशोरीको स्वास्थ्य निर्णयमा सम्मान, गोपनीयता, विश्वसनीय सूचना र सहयोगको भूमिका उदाहरणसहित लेख्नुहोस्।",
+    "Explain the roles of respect, privacy, reliable information and support in adolescent health decisions, with examples.",
+    "भेदभाव नगर्ने, निजी सूचना सुरक्षित राख्ने, विश्वसनीय स्वास्थ्य स्रोत प्रयोग गर्ने, आवश्यकता अनुसार योग्य स्वास्थ्यकर्मी वा विश्वस्त वयस्कको सहयोग लिने।",
+    "Avoid discrimination, protect private information, use reliable health sources, seek qualified professional or trusted adult support when needed."
+  ],
+  [
+    "खेल अभ्यासमा तन्दुरुस्ती, आराम, पानी र सुरक्षित प्राविधिक अभ्यासको महत्त्व चार बुँदामा लेख्नुहोस्।",
+    "Explain four reasons why fitness, rest, hydration and safe technique matter in sports training.",
+    "तन्दुरुस्तीले कार्यक्षमता, आरामले पुनःस्थापना, पानीले तरल सन्तुलन, सुरक्षित प्रविधिले चोटको जोखिम घटाउन सहयोग।",
+    "Fitness supports performance, rest supports recovery, hydration supports fluid balance, safe technique helps reduce injury risk."
+  ],
+  [
+    "विद्यालयको दौड प्रतियोगितामा तयारी, दौड क्षेत्र, नियम र चोट परेपछि सहयोगको व्यवस्था कसरी गर्ने?",
+    "Explain arrangements for preparation, track safety, rules and help in case of injury at a school race.",
+    "शिक्षकको निगरानीमा तयारी, अवरोधरहित मार्ग, स्पष्ट नियम र पालो, चोटमा गतिविधि रोक्ने र उपयुक्त प्राथमिक सहायता वा स्वास्थ्य सहायता लिने।",
+    "Supervised preparation, unobstructed track, clear rules and turns, stop activity if injured and seek appropriate first aid or medical assistance."
+  ],
+  [
+    "टोली खेलमा नियमको पालना, निष्पक्षता, सञ्चार र सहकार्यले खेलको गुणस्तर कसरी सुधार गर्छ?",
+    "Explain how rules, fairness, communication and cooperation improve team games.",
+    "नियमले सुरक्षा र क्रम, निष्पक्षताले समान अवसर, सञ्चारले समन्वय, सहकार्यले साझा लक्ष्य पूरा गर्न सहयोग।",
+    "Rules support safety and order, fairness supports equal opportunity, communication supports coordination, cooperation helps achieve shared goals."
+  ]
+];
 export function grade9HealthPracticeBank({grade,subject}){
  if(grade!==9||subject!=='Health and Physical Education')throw Error('Wrong Health practice scope');
  const units=rows.map(([ne,en],i)=>({id:'smss_g9_health_u'+(i+1),unitCode:String(i+1),unitTitle:ne+' / '+en,unitTitleEn:en,topics:[ne+' / '+en],sourceUrl:HEALTH_SOURCE,provenance:'CDC 2082 curriculum text; original practice, teacher review pending'}));
  const questions=rows.flatMap((row,i)=>[1,2].map((marks,j)=>{const u=units[i],p=2+j*4;return {id:u.id+'_q'+j,gradeNumber:9,subject,unitCode:u.unitCode,unitId:u.id,unitTitle:u.unitTitle,topicId:u.id+'_0',topicName:u.topics[0],questionType:j?'short':'very_short',marks,cognitiveLevel:j?'understanding':'knowledge',questionText:row[p],questionTextEn:row[p+1],answer:row[p+2],answerEn:row[p+3],options:[],optionsEn:[],correctOption:'',status:'active',bundled:true,teacherReviewRequired:true,officialCdcQuestion:false,sourceStatus:'SMSS_original_draft_not_CDC_published'};}));
+ if(supplement.length!==units.length)throw Error('Health supplement unit mismatch');
+ for(const [i,row] of supplement.entries())questions.push({...questions[i*2],id:units[i].id+'_extra1',marks:4,questionType:'long',cognitiveLevel:'application',questionText:row[0],questionTextEn:row[1],answer:row[2],answerEn:row[3]});
  return {units,questions,teacherReviewRequired:true,officialCdcQuestions:false,exactGridVerified:false};
 }

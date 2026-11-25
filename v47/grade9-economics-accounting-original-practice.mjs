@@ -259,12 +259,226 @@ const accounting=[
     "Strengthen public accountability; enable audit and budget control."
   ]
 ];
+const economicsExtra=[
+  [
+    [
+      "परिवारसँग रु. १२०० छ। किताब रु. ७०० र यातायात रु. ५०० पर्छ। दुवै किनेपछि बाँकी रकम कति हुन्छ? बचतका लागि दुई निर्णय र तिनको अवसर लागत व्याख्या गर्नुहोस्।",
+      "A household has Rs 1,200. Books cost Rs 700 and transport costs Rs 500. Calculate the balance if both are purchased. Explain two possible decisions to save money and their opportunity costs.",
+      "बाँकी ०; सस्तो किताब रोज्दा किताबको गुणस्तर वा सुविधा त्याग्नुपर्ने हुन सक्छ; कम खर्चिलो यात्रा गर्दा समय वा सुविधा त्याग्नुपर्ने हुन सक्छ। उचित उदाहरण स्वीकार्य।",
+      "Balance 0; cheaper books may sacrifice quality or convenience; cheaper transport may sacrifice time or convenience. Accept justified examples."
+    ],
+    [
+      "विद्यालयमा सीमित बजेटले पुस्तकालय र खेलकुदमध्ये प्राथमिकता निर्धारण गर्नुपर्छ। दुर्लभता, छनोट, अवसर लागत र वैकल्पिक योजना प्रयोग गरी निर्णय प्रक्रिया व्याख्या गर्नुहोस्।",
+      "A school must prioritize library and sports spending within a limited budget. Explain a decision process using scarcity, choice, opportunity cost and alternative plans.",
+      "बजेटको सीमा पहिचान; दुवैको आवश्यकता र लाभ तुलना; विद्यार्थीको प्राथमिकता बुझ्ने; छनोटको त्यागिएको लाभ लेख्ने; चरणबद्ध लगानीको सम्भावना जाँच्ने; निर्णयको पुनरावलोकन।",
+      "Identify budget constraints; compare needs and benefits; consult students; identify forgone benefit; consider phased spending; review the decision."
+    ]
+  ],
+  [
+    [
+      "मूल्य रु. १०, २० र ३० हुँदा माग परिमाण क्रमशः ३०, २० र १० एकाइ छ। तालिका बनाउनुहोस् र मागको सम्बन्ध व्याख्या गर्नुहोस्।",
+      "Price is Rs 10, 20 and 30, with demand of 30, 20 and 10 units respectively. Prepare a schedule and explain the relationship.",
+      "(१०,३०), (२०,२०), (३०,१०); अन्य अवस्था समान हुँदा मूल्य बढेसँगै माग घट्छ।",
+      "Pairs (10,30), (20,20), (30,10); other things equal, quantity demanded falls as price rises."
+    ],
+    [
+      "मूल्य रु. १०, २० र ३० मा माग ४०, ३० र २० तथा आपूर्ति १०, ३० र ५० एकाइ छ। तालिका, सन्तुलन र रु. १० तथा ३० मा हुने अवस्थाको व्याख्या गर्नुहोस्।",
+      "At prices Rs 10, 20 and 30, demand is 40, 30 and 20 units and supply is 10, 30 and 50 units. Prepare a schedule, identify equilibrium and explain conditions at Rs 10 and Rs 30.",
+      "सन्तुलन रु. २० मा ३० एकाइ; रु. १० मा ३० एकाइ अधिक माग; रु. ३० मा ३० एकाइ अधिक आपूर्ति; अन्य अवस्था समान भए मूल्य समायोजनको सम्भावना।",
+      "Equilibrium Rs 20 and 30 units; excess demand 30 units at Rs 10; excess supply 30 units at Rs 30; potential price adjustment, other things equal."
+    ]
+  ],
+  [
+    [
+      "एक परिवारको मासिक आम्दानी रु. २०००० बाट रु. २२००० र खर्च रु. १८००० बाट रु. २०००० भयो। दुवै अवधिको बचत गणना गरी तुलना गर्नुहोस्।",
+      "Monthly household income rises from Rs 20,000 to Rs 22,000 and spending from Rs 18,000 to Rs 20,000. Calculate and compare savings.",
+      "दुवैमा रु. २००० बचत; बचत रकम उही भए पनि बचत दर १० प्रतिशतबाट करिब ९.०९ प्रतिशतमा घट्यो।",
+      "Savings Rs 2,000 in both periods; savings rate falls from 10% to about 9.09%."
+    ],
+    [
+      "देशको उत्पादन, रोजगारी र सामान्य मूल्यस्तरले परिवारमा पार्ने प्रभाव तीन उदाहरणसहित व्याख्या गर्नुहोस्। आर्थिक तथ्याङ्कको सीमाबारे दुई बुँदा लेख्नुहोस्।",
+      "Explain how national output, employment and the general price level affect households, with three examples. Give two limitations of aggregate statistics.",
+      "उत्पादनले वस्तु र आयको अवसर; रोजगारीले आम्दानी; मूल्यले क्रयशक्ति प्रभावित गर्छ। औसतले असमानता र क्षेत्रीय भिन्नता लुकाउन सक्छ। उदाहरणको औचित्य आवश्यक।",
+      "Output affects goods and income opportunities; employment affects income; prices affect purchasing power. Averages can conceal inequality and regional differences. Require reasoned examples."
+    ]
+  ],
+  [
+    [
+      "शिक्षा र स्वास्थ्यमा सुधारले आर्थिक विकासमा कसरी योगदान गर्छ? तीन कारण र दुई स्थानीय उदाहरण दिनुहोस्।",
+      "How can better education and health contribute to development? Give three reasons and two local examples.",
+      "सीप विकास, उत्पादकता वृद्धि र काममा सहभागिता; उदाहरण: व्यावसायिक तालिम र सुरक्षित स्वास्थ्य सेवा।",
+      "Skills, productivity and participation; examples include vocational training and accessible health services."
+    ],
+    [
+      "दुई काल्पनिक गाउँको औसत आय समान छ, तर शिक्षा, स्वास्थ्य र खानेपानीको पहुँच फरक छ। विकास तुलना गर्ने चार सूचक र दुई सुधार प्राथमिकता कारणसहित प्रस्ताव गर्नुहोस्।",
+      "Two hypothetical villages have the same average income but differ in education, health and water access. Propose four development indicators and two justified improvement priorities.",
+      "विद्यालय सहभागिता, स्वास्थ्य सेवा पहुँच, सुरक्षित पानी, आय वितरण; पहुँचमा बढी अभाव भएका सेवा पहिचान गरी प्राथमिकता दिने। आय मात्र पर्याप्त सूचक होइन।",
+      "School participation, healthcare access, safe water and income distribution; prioritize services with the greatest unmet needs. Income alone is insufficient."
+    ]
+  ],
+  [
+    [
+      "नेपालको ग्रामीण क्षेत्रमा कृषि र सेवा क्षेत्रका तीन आर्थिक सम्बन्ध व्याख्या गरी दुई स्थानीय रोजगारीका उदाहरण दिनुहोस्।",
+      "Explain three economic links between agriculture and services in rural Nepal, with two local employment examples.",
+      "ढुवानीले बजार जोड्छ; वित्तीय सेवाले पूँजी जुटाउँछ; बजार सूचनाले बिक्री सहयोग गर्छ। ढुवानी चालक र कृषि सेवा प्राविधिक उदाहरण।",
+      "Transport connects markets; finance supports capital; market information supports sales. Examples: drivers and agricultural service technicians."
+    ],
+    [
+      "काल्पनिक स्थानीय सहकारीले कृषकको उत्पादन बजारमा पुर्‍याउन योजना बनाउँदैछ। लागत, गुणस्तर, बजार, रोजगारी र जोखिम समेटेर पाँच चरणको योजना प्रस्ताव गर्नुहोस्।",
+      "A hypothetical cooperative plans to market farmers’ produce. Propose a five-step plan covering cost, quality, markets, jobs and risk.",
+      "लागत र माग अनुमान; संकलन र गुणस्तर जाँच; भण्डारण र ढुवानी; बजार सम्झौता र जिम्मेवारी; जोखिम तथा आम्दानीको समीक्षा।",
+      "Estimate costs and demand; collect and check quality; arrange storage and transport; establish market agreements and roles; review risks and income."
+    ]
+  ],
+  [
+    [
+      "चार दिनको बिक्री रु. १००, १५०, २०० र २५० छ। कुल, औसत र उच्चतम तथा न्यूनतम बिक्रीको अन्तर निकाल्नुहोस्।",
+      "Sales over four days are Rs 100, 150, 200 and 250. Calculate total, mean and range.",
+      "कुल ७००, औसत १७५, अन्तर १५०।",
+      "Total 700, mean 175, range 150."
+    ],
+    [
+      "तीन वस्तुको आधार वर्षको मूल्य रु. २०, ३० र ५० तथा हालको मूल्य रु. २५, ३६ र ५९ छ। एक-एक एकाइको डालोका दुवै लागत, वृद्धि रकम र प्रतिशत निकाल्नुहोस् र त्यसको अर्थ लेख्नुहोस्।",
+      "Three items cost Rs 20, 30 and 50 in the base year and Rs 25, 36 and 59 now. For a basket of one unit each, calculate both costs, increase and percentage increase, and interpret it.",
+      "आधार लागत १००, हाल १२०, वृद्धि २०, वृद्धि दर २० प्रतिशत; उही डालो किन्न २० प्रतिशत बढी रकम चाहिन्छ। यो तीन वस्तुको उदाहरण मात्र हो।",
+      "Base cost 100, current 120, increase 20, increase 20%; the same basket costs 20% more. This is only an illustrative three-item basket."
+    ]
+  ]
+];
+const accountingExtra=[
+  [
+    [
+      "विद्यालय कार्यालयमा पत्र, आगन्तुक र दैनिक काम व्यवस्थित गर्न चार कार्य तथा तिनको जिम्मेवारी तोक्नुहोस्।",
+      "Allocate four duties and responsibilities for correspondence, visitors and daily work in a school office.",
+      "पत्र दर्ता, आगन्तुक अभिलेख, कार्यसूची, सम्बन्धित शाखामा पठाउने; जिम्मेवार व्यक्ति तोक्ने।",
+      "Register letters, log visitors, maintain work schedules, route tasks; allocate responsibility."
+    ]
+  ],
+  [
+    [
+      "कार्यालय सहायकले एकै दिन तीन अत्यावश्यक काम पाएमा प्राथमिकता कसरी निर्धारण गर्छ? चार बुँदा लेख्नुहोस्।",
+      "Explain four steps an office assistant should take to prioritize three urgent tasks.",
+      "समयसीमा बुझ्ने, प्रभाव र आवश्यकता तुलना गर्ने, अधिकारीसँग समन्वय गर्ने, प्रगति अभिलेख राख्ने।",
+      "Check deadlines, compare impact and need, coordinate with the supervisor, record progress."
+    ]
+  ],
+  [
+    [
+      "कुनै कार्यालयमा ५० कापी मौज्दात थियो, ३० थपियो र २५ वितरण भयो। बाँकी निकालेर मौज्दात नियन्त्रणका दुई उपाय लेख्नुहोस्।",
+      "An office had 50 notebooks, received 30 and issued 25. Calculate the balance and give two inventory controls.",
+      "५५; प्राप्ति र वितरण दर्ता; भौतिक गणना मिलान।",
+      "55; record receipts and issues; reconcile physical counts."
+    ]
+  ],
+  [
+    [
+      "पुस्तक माग गर्न प्रधानाध्यापकलाई विषय, कारण र अनुरोधसहित औपचारिक पत्रको छोटो नमुना लेख्नुहोस्।",
+      "Draft a short formal letter to a headteacher requesting books, including a subject, reason and request.",
+      "मिति, प्राप्तकर्ता, स्पष्ट विषय, आवश्यकताको कारण, अनुरोध, सम्मानजनक समाप्ति र प्रेषक।",
+      "Date, recipient, clear subject, reason, request, respectful closing and sender."
+    ]
+  ],
+  [
+    [
+      "विद्यार्थीका अभिलेख खोज्न र सुरक्षित राख्न चार चरणको अभिलेख व्यवस्थापन योजना लेख्नुहोस्।",
+      "Prepare a four-step plan for retrieving and protecting student records.",
+      "वर्गीकरण, सूचक वा खोज प्रणाली, पहुँच नियन्त्रण, सुरक्षित ब्याकअप र पुनर्प्राप्ति जाँच।",
+      "Classification, index or search system, access control, secure backup and recovery check."
+    ]
+  ],
+  [
+    [
+      "कार्यालयमा गोपनीय सूचना पठाउँदा सुरक्षित डिजिटल सञ्चारका चार उपाय कारणसहित लेख्नुहोस्।",
+      "Explain four precautions when sending confidential office information digitally.",
+      "प्राप्तकर्ता जाँच, आवश्यक विवरण मात्र, सुरक्षित माध्यम, पहुँच सुरक्षा; प्रत्येकको कारण स्पष्ट।",
+      "Verify recipient, minimize data, use secure channels, protect access; justify each."
+    ]
+  ],
+  [
+    [
+      "एक पसलले रु. ५००० मा सामान किन्यो र रु. ६२०० मा बेच्यो। अन्य खर्च रु. ४०० भए नाफा गणना गरी दुई खर्च नियन्त्रण उपाय लेख्नुहोस्।",
+      "A shop buys goods for Rs 5,000, sells for Rs 6,200 and incurs Rs 400 in other expenses. Calculate profit and give two cost controls.",
+      "नाफा ८००; खरिद मूल्य तुलना र अनावश्यक खर्च घटाउने।",
+      "Profit 800; compare purchase prices and reduce unnecessary expenses."
+    ]
+  ],
+  [
+    [
+      "विद्यालय बैठकका लागि तीन कार्यसूची र निर्णय लेख्ने ढाँचाको नमुना तयार गर्नुहोस्।",
+      "Prepare three agenda items and a sample format for recording school meeting decisions.",
+      "मिति, सहभागी, कार्यसूची, निर्णय, जिम्मेवार व्यक्ति र समयसीमा।",
+      "Date, attendees, agenda, decision, responsible person and deadline."
+    ]
+  ],
+  [
+    [
+      "व्यवसायको रु. ३००० नगद बिक्री र रु. ५०० भाडा भुक्तानीलाई लेखा अभिलेखमा कसरी देखाउने? नगदको खुद परिवर्तन निकाल्नुहोस्।",
+      "Explain how to record Rs 3,000 cash sales and Rs 500 rent paid. Calculate the net cash movement.",
+      "नगद वृद्धि ३०००, बिक्री आय ३०००; भाडा खर्च ५००, नगद कमी ५००; खुद वृद्धि २५००।",
+      "Cash increase 3,000 and sales revenue 3,000; rent expense 500 and cash decrease 500; net cash increase 2,500."
+    ]
+  ],
+  [
+    [
+      "मालिकले रु. ४०००० नगद लगानी गरे र रु. १०००० बैंक ऋण लिए। सम्पत्ति, दायित्व र पुँजी निकालेर लेखा समीकरण जाँच्नुहोस्।",
+      "An owner invests Rs 40,000 cash and borrows Rs 10,000. Calculate assets, liabilities and equity and check the accounting equation.",
+      "सम्पत्ति ५००००, दायित्व १००००, पुँजी ४००००; ५०००० = १०००० + ४००००।",
+      "Assets 50,000, liabilities 10,000, equity 40,000; 50,000 = 10,000 + 40,000."
+    ]
+  ],
+  [
+    [
+      "रु. २५०० को कार्यालय सामग्री भुक्तानीको भौचरमा राखिने पाँच विवरणको नमुना तयार गर्नुहोस्।",
+      "Prepare a sample of five entries required in a voucher for Rs 2,500 office supplies.",
+      "मिति, भौचर नम्बर, प्राप्तकर्ता, कारोबार विवरण र रु. २५०० रकम; स्वीकृति वा प्रमाण पनि स्वीकार्य।",
+      "Date, voucher number, payee, description and amount Rs 2,500; authorization or evidence also acceptable."
+    ]
+  ],
+  [
+    [
+      "नगद रु. १०००० बाट व्यवसाय सुरु गरी रु. २००० को सामग्री नगदमा किनेको अवस्थामा नगद खाताको बाँकी र सम्बन्धित डेबिट/क्रेडिट देखाउनुहोस्।",
+      "A business starts with Rs 10,000 cash and buys supplies for Rs 2,000 cash. Show the cash balance and relevant debits and credits.",
+      "नगद डेबिट १००००, पुँजी क्रेडिट १००००; सामग्री डेबिट २०००, नगद क्रेडिट २०००; नगद बाँकी ८०००।",
+      "Debit cash 10,000 and credit capital 10,000; debit supplies 2,000 and credit cash 2,000; cash balance 8,000."
+    ]
+  ],
+  [
+    [
+      "नगद बिक्री रु. १५००, उधारो बिक्री रु. २५०० र व्यापारिक सामानको उधारो खरिद रु. २००० कुन-कुन पुस्तिकामा लेख्ने? कारण दिनुहोस्।",
+      "Identify the books for Rs 1,500 cash sales, Rs 2,500 credit sales and Rs 2,000 credit purchases of trading goods. Explain why.",
+      "नगद पुस्तिका, बिक्री पुस्तिका, खरिद पुस्तिका; कारोबारको प्रकृतिअनुसार वर्गीकरण।",
+      "Cash book, sales book, purchases book; classify by transaction type."
+    ]
+  ],
+  [
+    [
+      "नगद डेबिट रु. ८०००, सामग्री डेबिट रु. २००० र पुँजी क्रेडिट रु. १०००० भएको सन्तुलन परीक्षण बनाउनुहोस्। यसको एउटा सीमा लेख्नुहोस्।",
+      "Prepare a trial balance for cash debit Rs 8,000, supplies debit Rs 2,000 and capital credit Rs 10,000. State one limitation.",
+      "डेबिट जम्मा १००००; क्रेडिट जम्मा १००००; बराबर भए पनि पूर्ण रूपमा छुटेको कारोबार पत्ता नलाग्न सक्छ।",
+      "Debit total 10,000; credit total 10,000; equality cannot detect a completely omitted transaction."
+    ]
+  ],
+  [
+    [
+      "सार्वजनिक विद्यालयमा बजेट खर्च अभिलेखको उत्तरदायित्व बढाउन पाँच उपाय प्रस्ताव गर्नुहोस्।",
+      "Propose five measures to improve accountability of public school budget expenditure.",
+      "स्वीकृत बजेट, प्रमाणित भौचर, नियमित अभिलेख, बैंक मिलान, लेखापरीक्षण र उपयुक्त सार्वजनिक प्रतिवेदन।",
+      "Approved budget, supported vouchers, regular records, bank reconciliation, audit and appropriate public reporting."
+    ]
+  ]
+];
 function build(rows,key,subject,sourceUrl){
  const units=rows.map(([ne,en],i)=>({id:'smss_g9_'+key+'_u'+(i+1),unitCode:String(i+1),unitTitle:ne+' / '+en,unitTitleEn:en,topics:[ne+' / '+en],sourceUrl,provenance:'Pinned government PDF text: topic headings only; original questions require teacher review'}));
  const questions=rows.flatMap((row,i)=>[1,2].map((marks,j)=>{
   const u=units[i],p=2+j*4;
   return {id:u.id+'_q'+j,gradeNumber:9,subject,unitCode:u.unitCode,unitId:u.id,unitTitle:u.unitTitle,topicId:u.id+'_0',topicName:u.topics[0],questionType:j?'short':'very_short',marks,cognitiveLevel:j?'application':'knowledge',questionText:row[p],questionTextEn:row[p+1],answer:row[p+2],answerEn:row[p+3],options:[],optionsEn:[],correctOption:'',status:'active',bundled:true,teacherReviewRequired:true,officialCdcQuestion:false,sourceStatus:'SMSS_original_draft_not_CDC_published'};
  }));
+ const extra=key==='economics'?economicsExtra:accountingExtra,marks=key==='economics'?[5,8]:[5];
+ if(extra.length!==units.length)throw Error('Practice supplement unit mismatch');
+ for(const [i,items] of extra.entries())for(const [j,row] of items.entries()){
+  const base=questions[i*2],m=marks[j];
+  questions.push({...base,id:units[i].id+'_extra'+(j+1),marks:m,questionType:m===8?'long':'short',cognitiveLevel:j?'higher':'application',questionText:row[0],questionTextEn:row[1],answer:row[2],answerEn:row[3]});
+ }
  return {units,questions,teacherReviewRequired:true,officialCdcQuestions:false,exactGridVerified:false};
 }
 export function grade9EconomicsPracticeBank({grade,subject}){

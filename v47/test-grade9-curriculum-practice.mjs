@@ -22,9 +22,24 @@ console.log('PASS V47 Grade 9 nine-subject original curriculum practice, languag
 
 const health=grade9PracticeTopics('health','both').flatMap(u=>u.topics.map(t=>t.id));
 const capacity=grade9PracticeCapacity({key:'health',language:'both',topicIds:health,fullMarks:50});
-assert.equal(capacity.questionCount,18);assert.equal(capacity.availableMarks,27);assert.equal(capacity.canGenerate,false);
-assert.deepEqual(capacity.possible,Array.from({length:19},(_,i)=>i+9));
+assert.equal(capacity.questionCount,27);assert.equal(capacity.availableMarks,63);assert.equal(capacity.canGenerate,true);
+assert.deepEqual(capacity.possible,Array.from({length:42},(_,i)=>i+9));
 assert.equal(grade9PracticeCapacity({key:'health',language:'both',topicIds:health,fullMarks:25}).canGenerate,true);
 assert.equal(grade9PracticeCapacity({key:'health',language:'both',topicIds:[],fullMarks:1}).canGenerate,false);
 assert.throws(()=>grade9PracticeCapacity({key:'health',language:'both',topicIds:[health[0],health[0]],fullMarks:1}));
 console.log('PASS Grade 9 topic coverage and available exact full-marks preflight');
+
+for(const [key,fullMarks,availableMarks] of [['economics',75,96],['accounting',75,120],['health',50,63]]){
+ for(const language of ['ne','en','both']){
+  const topicIds=grade9PracticeTopics(key,language).flatMap(u=>u.topics.map(t=>t.id));
+  const capacity=grade9PracticeCapacity({key,language,topicIds,fullMarks});
+  assert.equal(capacity.availableMarks,availableMarks);assert.equal(capacity.canGenerate,true);
+  let state=117;const rng=()=>((state=(Math.imul(state,1664525)+1013904223)>>>0)/4294967296);
+  const args={schoolId:'12345',schoolName:'Synthetic School',key,language,topicIds,fullMarks,rng};
+  const first=generateGrade9CurriculumPractice(args),second=generateGrade9CurriculumPractice({...args,avoidSignatures:[first.signature]});
+  assert.equal(first.totalMarks,fullMarks);assert.equal(first.questions.reduce((n,q)=>n+q.marks,0),fullMarks);
+  assert.equal(new Set(first.questions.map(q=>q.topicId)).size,topicIds.length);
+  assert.notEqual(first.signature,second.signature);assert.equal(first.exactGridMatched,false);
+ }
+}
+console.log('PASS full-mark original practice and distinct paper generation for expanded Economics, Accounting and Health banks');
