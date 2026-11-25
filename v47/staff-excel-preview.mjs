@@ -30,13 +30,13 @@ export function previewV46StaffExcelRows({schoolId,cells}){
    issues.push({row:line,error:'Staff name is missing'});continue;
   }
   if(employeeId){
-   if(seen.has(employeeId)){
+   if(seen.has(employeeId.toUpperCase())){
     issues.push({row:line,error:'Duplicate Employee ID in uploaded Excel'});continue;
    }
-   seen.add(employeeId);
+   seen.add(employeeId.toUpperCase());
   }else warnings.push({row:line,warning:'Employee ID is blank; match manually before import'});
   if(!nameEnglish)warnings.push({row:line,warning:'English name missing; verify before future import'});
-  items.push(Object.freeze({row:line,employeeId,nameEnglish,nameNepali,position:values[4]}));
+  items.push(Object.freeze({row:line,employeeId,nameEnglish,nameNepali,position:values[4],cells:Object.freeze(values)}));
  }
  return Object.freeze({schoolId:id,format:'v46-staff-11-column',rows:Object.freeze(items),
   errors:Object.freeze(issues),warnings:Object.freeze(warnings),

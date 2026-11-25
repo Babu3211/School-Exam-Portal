@@ -2,7 +2,7 @@
 <title>SMSS V47 — Staff / Teachers</title>
 <style>body{margin:0;background:#f4f7fb;color:#183650;font:15px system-ui,sans-serif}main{max-width:980px;margin:auto;padding:18px}section{background:white;border:1px solid #dbe5ef;border-radius:12px;padding:18px;margin:14px 0}input,button{font:inherit;padding:10px;border:1px solid #b8c9d9;border-radius:7px;max-width:100%;box-sizing:border-box}label{display:block;margin:9px 0}button{background:#175eb5;color:white;cursor:pointer;margin:4px}button:disabled{opacity:.5;cursor:default}table{width:100%;border-collapse:collapse}td,th{padding:10px;border-bottom:1px solid #dbe5ef;text-align:left}.warn{background:#fff5dc;padding:12px;border-radius:8px}#message{white-space:pre-wrap}</style></head>
 <body><main><h1>SMSS V47 — Staff / Teachers</h1>
-<p><a href="./index.html">Dashboard</a></p><p class="warn">प्रमाणित विद्यालयको कर्मचारी सूची हेर्न मात्र मिल्छ। Teacher र Viewer ले हेर्न र निर्यात गर्न सक्छन् तर अभिलेख परिवर्तन गर्न मिल्दैन। कर्मचारी विवरण निर्यात गर्दा Firebase खाता सिर्जना हुँदैन र पासवर्ड देखाइँदैन। सञ्चालनमा रहेको V46 मा असर पर्दैन।</p>
+<p><a href="./index.html">Dashboard</a></p><p class="warn">School Admin ले नयाँ कर्मचारी विवरण सुरक्षित गर्न सक्छन्। Teacher र Viewer ले हेर्न र निर्यात गर्न सक्छन् तर अभिलेख परिवर्तन गर्न मिल्दैन। कर्मचारी विवरण निर्यात गर्दा Firebase खाता सिर्जना हुँदैन र पासवर्ड देखाइँदैन। सञ्चालनमा रहेको V46 मा असर पर्दैन।</p>
 <section><h2>School Login</h2><button id="connect">Connect to V47</button>
 <label>School IEMIS ID<input id="schoolId" inputmode="numeric" pattern="[0-9]{5,20}" minlength="5" maxlength="20" autocomplete="off"></label>
 <label>Email<input id="email" type="email" autocomplete="username"></label>
@@ -14,10 +14,11 @@
 <p id="count"></p><div style="overflow:auto"><table><thead><tr><th>Employee ID</th><th>Name (English)</th><th>नाम (नेपाली)</th><th>Position</th><th>Email</th></tr></thead><tbody id="staffRows"></tbody></table></div>
 <p lang="ne">यो सुविधाले एउटा विद्यालयका सबै Staff/Teacher विवरण अधिकतम ५,००० रेकर्डसम्म Excel (.xlsx) मा निकाल्छ। अपूर्ण सूचीको फाइल बनाइँदैन। पुरानो V46 Excel स्तम्भ क्रम सुरक्षित राखिएको छ। यो Firestore Database Backup होइन।</p></section>
 <section id="staffImportArea" hidden>
-<h2>V46 Staff Excel (.xlsx) Preview — School Admin</h2>
-<p lang="ne">पुरानो V46 को ११-स्तम्भ Excel फाइल पढेर त्रुटि जाँच्ने सुविधा हो। अहिले कुनै Staff, Teacher Account, Password वा User Role सुरक्षित गरिँदैन। विद्यालयका पहिल्यै भएका अधिकतम ५,००० कर्मचारीका Employee ID समेत जाँचिन्छ (Firestore Reads लाग्छ)। Import Save र Teacher Account Creation अझै बाँकी छ।</p>
+<h2>V46 Staff Excel (.xlsx) Import — School Admin</h2>
+<p lang="ne">पुरानो V46 को ११-स्तम्भ Excel बाट एकपटकमा बढीमा १०० नयाँ कर्मचारी सुरक्षित गर्न मिल्छ। Employee ID र अंग्रेजी नाम आवश्यक छन्। पहिले विद्यालयका अधिकतम ५,००० कर्मचारीका Employee ID जाँचिन्छ। पुराना अभिलेख परिवर्तन हुँदैनन्। Teacher Account छुट्टै School Admin पेजबाट बनाउनुहोस्।</p>
 <label>Select Staff Excel (.xlsx)<input id="staffImportFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label>
 <button id="previewStaffImport" type="button">Review Excel (no save)</button>
+<button id="saveStaffImport" type="button" disabled>Save New Staff</button>
 <p id="staffImportSummary" role="status" aria-live="polite">कुनै Excel फाइल जाँचिएको छैन।</p>
 <div style="overflow:auto"><table><thead><tr><th>Excel Row</th><th>Employee ID</th><th>Name (English)</th><th>Name (Nepali)</th></tr></thead><tbody id="staffImportRows"></tbody></table></div>
 </section>
