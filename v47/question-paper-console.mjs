@@ -5,6 +5,7 @@ import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} fro
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {prepareCdcSourceCatalog,prepareReadOnlyPracticePaper,recommendedPracticeIndices,printReadOnlyPracticePaper} from './question-paper-cdc-preview.mjs';
+import {renderGrade9GridLibrary} from './cdc-grade9-grid-library.mjs';
 import {computerGridReference,generateComputerPractice} from './computer-grid-practice.mjs';
 import {practiceUnitOptions,generatePracticePreview} from './automatic-practice-preview.mjs';
 import {listOriginalPracticeChoices,summarizeOriginalPracticeSelection,MAX_PRACTICE_SELECTION} from './practice-question-selection.mjs';
@@ -25,7 +26,7 @@ function clearPreview(){
  $('paperStatus').textContent='No practice preview prepared.';
 }
 function reset(){
- epoch++;clearPreview();actor=null;schoolId=null;school=null;register=null;loading=false;practiceHistory.clear();$('computerGridTable').replaceChildren();$('computerGenerateArea').hidden=true;$('computerGridStatus').textContent='';
+ epoch++;clearPreview();actor=null;schoolId=null;school=null;register=null;loading=false;practiceHistory.clear();$('grade9GridLibrary').replaceChildren();$('grade9GridLibraryStatus').textContent='';$('computerGridTable').replaceChildren();$('computerGenerateArea').hidden=true;$('computerGridStatus').textContent='';
  $('resourceArea').hidden=true;$('sourceList').replaceChildren();$('logout').disabled=true;
  $('identity').textContent='No verified school';$('sourceStatus').textContent='No sources loaded.';
 }
@@ -107,7 +108,7 @@ $('login').onclick=async()=>{
   $('logout').disabled=false;
   register=await fetchJson('cdc-source-register-2083.json');
   assertSame(request,actor);await verifyAgain(request,actor);
-  $('resourceArea').hidden=false;renderSources();renderComputerGrid();
+  $('resourceArea').hidden=false;renderSources();renderComputerGrid();await loadGrade9GridLibrary(request,actor);
   status('स्रोत सूची खुल्यो। प्रश्नपत्र प्रकाशन वा Firestore Write हुँदैन।');
  }catch(e){
   if(request===epoch){reset();try{await authSdk.signOut(auth)}catch{}status('स्रोत खोल्न सकिएन: '+neError(e))}
@@ -272,6 +273,17 @@ $('generatePractice').onclick=async()=>{
  }catch(e){if(epoch===request&&actor===member){invalidateSelectedPreview();$('autoPracticeStatus').textContent='छनोट गरिएको भाषा, Unit र पूर्णाङ्कमा फरक प्रश्नपत्र बनाउन पर्याप्त प्रश्न छैनन् वा अनुरोध असफल भयो। '+neError(e)}}
  finally{busy=false;if(epoch===request)$('generatePractice').disabled=false}
 };
+async function loadGrade9GridLibrary(request,member){
+ const root=$('grade9GridLibrary'),status=$('grade9GridLibraryStatus');
+ root.replaceChildren();status.textContent='Grid स्रोत लोड हुँदैछ…';
+ try{
+  const data=await fetchJson('cdc-grade9-source-register-pinned.json');
+  assertSame(request,member);
+  if(data?.schemaVersion!==1||!Array.isArray(data.sources)||data.sources.length!==40||data.sources.some(s=>!s.grades?.includes(9)))throw Error('Grade 9 source register mismatch');
+  renderGrade9GridLibrary(root,data);
+  status.textContent='११ विषयका स्रोत र उपलब्ध तालिका। पूर्ण आधिकारिक प्रमाणीकरण बाँकी छ।';
+ }catch(e){if(epoch===request&&actor===member){root.replaceChildren();status.textContent='Grid Library लोड हुन सकेन: '+neError(e)}}
+}
 function renderComputerGrid(){
  if(!actor)return;
  const grade=Number($('computerGridClass').value),grid=computerGridReference(grade),root=$('computerGridTable');
