@@ -9288,8 +9288,8 @@ function openCdcAssessment(context = null) {
   dialog.id = 'cdcAssessmentDialog';
   dialog.style.cssText = context ? 'width:100%;min-width:0' : 'width:min(720px,94vw);max-height:90vh;border:1px solid #ccd9ea;border-radius:16px;padding:24px';
   const assessmentStudents = context ? context.students : marksStudents;
-  dialog.innerHTML = `<h2>मूल्याङ्कन १–५</h2>
-    <style>#cdcAssessmentDialog .cdc-more{border:1px solid #ccd9ea;border-radius:8px;margin:8px 0;padding:8px}#cdcAssessmentDialog details>summary{cursor:pointer;font-weight:600}#cdcAssessmentDialog [data-cdc="annexTable"] th,#cdcAssessmentDialog [data-cdc="annexTable"] td{border:1px solid #94a3b8;padding:6px;vertical-align:middle}#cdcAssessmentDialog [data-cdc="annexTable"] th{background:#eef4fa;color:#172b43}#cdcAssessmentDialog [data-cdc="annexTable"] td>.btn.alt:not([data-cdc-grid-edit]):not([data-cdc-grid-cancel]){background:transparent;border:0;color:inherit;text-align:left;white-space:normal;padding:2px}#cdcAssessmentDialog [data-cdc="annexTitle"]{background:#17466e;color:white;padding:10px;text-align:center;border-radius:4px}#cdcAssessmentDialog [data-cdc="annexTable"] input,#cdcAssessmentDialog [data-cdc="annexTable"] select{max-width:100%;box-sizing:border-box}</style>
+  dialog.innerHTML = `<h2 data-cdc="workspaceTitle">मूल्याङ्कन १–५</h2>
+    <style>#cdcAssessmentDialog [hidden]{display:none!important}#cdcAssessmentDialog .cdc-more{border:1px solid #ccd9ea;border-radius:8px;margin:8px 0;padding:8px}#cdcAssessmentDialog details>summary{cursor:pointer;font-weight:600}#cdcAssessmentDialog [data-cdc="annexTable"] th,#cdcAssessmentDialog [data-cdc="annexTable"] td{border:1px solid #94a3b8;padding:6px;vertical-align:middle}#cdcAssessmentDialog [data-cdc="annexTable"] th{background:#eef4fa;color:#172b43}#cdcAssessmentDialog [data-cdc="annexTable"] td>.btn.alt:not([data-cdc-grid-edit]):not([data-cdc-grid-cancel]){background:transparent;border:0;color:inherit;text-align:left;white-space:normal;padding:2px}#cdcAssessmentDialog [data-cdc="annexTitle"]{background:#17466e;color:white;padding:10px;text-align:center;border-radius:4px}#cdcAssessmentDialog [data-cdc="annexTable"] input,#cdcAssessmentDialog [data-cdc="annexTable"] select{max-width:100%;box-sizing:border-box}</style>
     <div class="fields">
       <label>कक्षा <select data-cdc="class"></select></label>
       <label>विषय <select data-cdc="subject"></select></label>
@@ -9297,7 +9297,8 @@ function openCdcAssessment(context = null) {
       <label data-cdc="legacyPeriod">अवधि <select data-cdc="period"><option>First Term</option><option>Second Term</option><option>Final Term</option></select></label><label data-cdc="academicSession" hidden>शैक्षिक सत्र <output data-cdc="sessionYear"></output></label>
     </div>
     <label>विषयक्षेत्र / Theme <select data-cdc="themePick"><option value="">छान्नुहोस्</option></select></label>
-    <p class="hint">कक्षा, विषय, विद्यार्थी र विषयक्षेत्र छान्नुहोस्। फाराम खुलेपछि अभिलेख पढेर मिति र अङ्कन भर्नुहोस्।</p>
+    <p data-cdc="accessNotice" role="status" style="font-weight:600;margin:8px 0;padding:10px 12px;border-left:3px solid #17466e;background:#eef4fa;color:#172b43" hidden></p>
+    <p data-cdc="workspaceHint" class="hint">विषयक्षेत्र छान्नुहोस्, मिति र अङ्कन भरेर Save गर्नुहोस्।</p>
     <section data-cdc="annex3" hidden><div class="toolbar"><button type="button" class="btn alt" data-cdc="gridRead" id="cdcGridRead">अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्</button></div><p data-cdc="gridStatus" role="status" aria-live="polite" style="font-weight:600;color:#17466e;overflow-wrap:anywhere"></p><p data-cdc="entryNotice" class="hint" role="status"></p><p class="hint" style="font-size:12px">पूरा तालिका हेर्न दायाँ–बायाँ सार्नुहोस्।</p><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><details data-cdc="seroSourcePreview" hidden style="margin:8px 0"><summary style="cursor:pointer;font-weight:600">मूल CDC PDF सँग तुलना गर्नुहोस्</summary><p class="hint">मूल पृष्ठ र तलको डिजिटल फाराम तुलना गर्नुहोस्। PDF नदेखिए नयाँ ट्याबमा खोल्नुहोस्। विद्यार्थीको विवरण PDF सेवामा पठाइँदैन।</p><a data-cdc="seroSourceOpen" target="_blank" rel="noopener noreferrer">मूल पृष्ठ खोल्नुहोस्</a><div data-cdc="seroSourceFrame"></div></details><div class="tablewrap"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Print / Save PDF</button><p data-cdc="printStatus" role="status" class="hint"></p></section>
     <details class="cdc-more" data-cdc="extraReference"><summary>CDC निर्देशिका र विषयक्षेत्र विवरण</summary>
     <details data-cdc="themeSummary" style="border:1px solid #b9d5e7;border-radius:8px;padding:12px;margin:10px 0">
@@ -9413,7 +9414,7 @@ function openCdcAssessment(context = null) {
   const year = String(currentSchoolSettings.academicYear || '2083');
   // Standalone primary assessment follows the academic year, not examination terms.
   if(context){
-    field('legacyPeriod').hidden=true;
+    field('legacyPeriod').hidden=true;field('legacyPeriod').style.setProperty('display','none','important');
     field('period').replaceChildren(new Option('Annual','Annual'));
     field('academicSession').hidden=false;field('sessionYear').textContent=year;
   }
@@ -9423,6 +9424,24 @@ function openCdcAssessment(context = null) {
     return context?annual:selection;
   };
   const readOnly = isAdmin() || roleHas('viewer') || !roleHas('subject_teacher');
+  if(context){
+    field('workspaceTitle').hidden=true;
+    const notice=field('accessNotice');
+    notice.hidden=!readOnly;
+    notice.textContent='यो खाता हेर्न मात्र मिल्छ। मूल्याङ्कन भर्न सम्बन्धित विषय शिक्षकको खाताबाट प्रवेश गर्नुहोस्।';
+    if(readOnly)field('workspaceHint').textContent='विद्यार्थी र विषयक्षेत्र छान्नुहोस्। सुरक्षित अभिलेख हेर्न सकिन्छ।';
+    const extra=document.createElement('details');extra.className='cdc-more';extra.dataset.cdc='moreOptions';
+    const heading=document.createElement('summary');heading.textContent='थप विकल्प / More';extra.append(heading);
+    const summary=field('subjectSummaryPanel'),report=field('extraReports'),annex=field('annex3');
+    summary.querySelector('summary').textContent='समष्टिगत अभिलेख / Subject Summary';
+    report.querySelector('summary').textContent='वार्षिक प्रगति प्रतिवेदन';
+    annex.after(summary,report,extra);
+    for(const name of ['extraReference','extraObservations','extraManual','extraRecords','extraActions'])extra.append(field(name));
+    if(readOnly)for(const name of ['extraManual','extraActions'])field(name).hidden=true;
+    field('next').textContent='अर्को विद्यार्थी →';
+    field('student').parentElement.append(field('next'));
+    field('next').style.cssText='margin-left:8px;padding:5px 10px;min-height:32px';
+  }
   const options = (name, values) => field(name).replaceChildren(...values.map(([value,label])=>new Option(label,value)));
   const storagePrefix = 'smss-cdc-draft:';
   const scope = () => [owner,year,...['class','subject','student','period'].map(name=>field(name).value.trim())];
@@ -9482,6 +9501,14 @@ function openCdcAssessment(context = null) {
     for(const [stage,previous] of [['regular',regular],['support',support]]){
       const dateCell=row.insertCell(),ratingCell=row.insertCell();
       dateCell.textContent=previous?.date??'';ratingCell.textContent=previous?.level??'';
+      // Always expose the actual date and rating fields to teachers, even if
+      // the server read is pending. A failed read never enables a write.
+      if(readOnly)continue;
+      const datePreview=document.createElement('input');datePreview.type='text';datePreview.inputMode='numeric';datePreview.maxLength=10;datePreview.placeholder=language()==='en'?'YYYY-MM-DD':'मिति (साल-महिना-दिन)';
+      datePreview.value=previous?.date||'';datePreview.dataset.cdcGridDate=stage;datePreview.disabled=!editable;datePreview.setAttribute('aria-label',(stage==='regular'?'Regular':'After support')+' date (B.S.)');datePreview.style.cssText='display:block;width:118px;min-height:38px;padding:5px;border:1px solid #64748b;border-radius:5px;background:#fff;color:#172b43';
+      const ratingPreview=document.createElement('select');ratingPreview.dataset.cdcGridRating=stage;ratingPreview.disabled=!editable;ratingPreview.setAttribute('aria-label',(stage==='regular'?'Regular':'After support')+' rating');ratingPreview.style.cssText='display:block;min-width:82px;min-height:38px;padding:5px;border:1px solid #64748b;border-radius:5px;background:#fff;color:#172b43';
+      ratingPreview.append(new Option(language()==='en'?'Rating':'अङ्कन',''),...[1,2,3,4].map(n=>new Option(String(n),String(n))));ratingPreview.value=previous?String(previous.level):'';
+      dateCell.append(datePreview);ratingCell.append(ratingPreview);
       if(!editable)continue;
       const button=document.createElement('button');button.type='button';button.className='btn alt';button.dataset.cdcGridEdit=stage;
       button.style.cssText='display:block;margin:3px auto;padding:6px 8px;white-space:normal;min-height:34px';button.textContent=language()==='en'?(previous?'Reassess':'Date / Rating'):(previous?'पुनः अङ्कन':'मिति / अङ्कन');
@@ -9489,17 +9516,17 @@ function openCdcAssessment(context = null) {
       dateCell.tabIndex=0;dateCell.setAttribute('role','button');dateCell.setAttribute('aria-label',language()==='en'?'Enter date':'मिति भर्नुहोस्');
       dateCell.style.cursor='pointer';dateCell.style.background='#f0f6ff';
       dateCell.title=language()==='en'?'Enter date':'मिति भर्नुहोस्';
-      ratingCell.append(button);stages.push({stage,previous,dateCell,ratingCell,button});
+      ratingCell.append(button);stages.push({stage,previous,dateCell,ratingCell,button,datePreview,ratingPreview});
     }
     const remarksCell=row.insertCell();remarksCell.textContent=toolsMode?[...new Set([regular?.method,support?.method].filter(Boolean))].join(' / '):(effective?.feedback??'');
-    for(const {stage,previous,dateCell,ratingCell,button} of stages){
+    for(const {stage,previous,dateCell,ratingCell,button,datePreview,ratingPreview} of stages){
       button.onclick=()=>{
         if(inlinePending||!canShow()||selectionKey!==JSON.stringify(schoolSelection()))return;
         // Single active editor: preserve the rest of the saved table.
         const active=dialog.querySelector('[data-cdc-grid-editor]');
         if(active){field('gridStatus').textContent='पहिले खुला मूल्याङ्कन Save वा Cancel गर्नुहोस्।';return;}
         field('printForm').disabled=true;
-        const date=document.createElement('input');date.type='text';date.inputMode='numeric';date.maxLength=10;date.value=today();date.setAttribute('aria-label','Assessment date (B.S.)');date.style.width='110px';date.dataset.cdcGridEditor='date';
+        const date=document.createElement('input');date.type='text';date.inputMode='numeric';date.maxLength=10;date.value=today();date.placeholder='YYYY-MM-DD';date.setAttribute('aria-label','Assessment date (B.S.)');date.style.width='110px';date.dataset.cdcGridEditor='date';
         const level=document.createElement('select');level.setAttribute('aria-label','Achievement rating');level.style.minWidth='60px';level.dataset.cdcGridEditor='level';level.append(new Option('—',''),...[1,2,3,4].map(n=>new Option(String(n),String(n))));
         const remarks=document.createElement('textarea');remarks.rows=2;remarks.maxLength=toolsMode?180:2000;remarks.placeholder=toolsMode?'साधन / Tools':'कैफियत / Remarks';remarks.value=(toolsMode?previous?.method:previous?.feedback)||'';remarks.dataset.cdcGridEditor='remarks';remarks.style.width='100%';
         const save=document.createElement('button');save.type='button';save.className='btn';save.textContent='Save';save.dataset.cdcGridSave=stage;
@@ -9533,6 +9560,11 @@ function openCdcAssessment(context = null) {
         dateCell.removeAttribute('role');dateCell.removeAttribute('tabindex');dateCell.onclick=null;dateCell.onkeydown=null;
         field('gridStatus').textContent=language()==='en'?'Enter the date, choose a rating from 1 to 4, then Save.':'मिति भर्नुहोस्, १–४ अङ्कन छान्नुहोस् र Save थिच्नुहोस्।';
       };
+      // Directly focusing a date opens the editable date; choosing a rating
+      // transfers that selection to the active editor without a second click.
+      datePreview.onfocus=()=>button.click();
+      datePreview.onclick=event=>event.stopPropagation();
+      ratingPreview.onchange=()=>{const chosen=ratingPreview.value;button.click();const input=ratingCell.querySelector('[data-cdc-grid-editor="level"]');if(input){input.value=chosen;input.focus();}else ratingPreview.value=previous?String(previous.level):'';};
       dateCell.onclick=()=>button.click();
       dateCell.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();button.click();}};
     }
@@ -10204,6 +10236,7 @@ function openCdcAssessment(context = null) {
     const selection=schoolSelection();
     const visible=!!context&&Number(field('class').value)>=4&&Number(field('class').value)<=5;
     field('annualProgress').hidden=!visible;
+    if(context)field('extraReports').hidden=!visible;
     field('readProgress').disabled=!selection||!visible;
     const st=assessmentStudents.find(s=>s.id===selection?.studentId);
     field('progressIdentity').textContent='विद्यार्थी: '+(field('student').selectedOptions[0]?.text||'')+'  |  कक्षा: '+field('class').value+'  |  रोल नं.: '+(st?.rollNo??'')+'  |  विद्यालय: '+(currentSchoolSettings.schoolNameNe||currentSchoolSettings.schoolName||'')+'  |  सङ्केत नं.: '+(currentSchoolSettings.iemisCode||'')+'  |  शैक्षिक सत्र: '+year;
@@ -10361,7 +10394,7 @@ function openCdcAssessment(context = null) {
       foot.cells[0].textContent='सुरक्षित अभिलेख — औसत अङ्क';
       foot.cells[1].textContent=(complete.length===seroForm.groups.length?digits((sum/complete.length).toFixed(2)):'—')+' | पूरा: '+digits(complete.length)+' / '+digits(seroForm.groups.length);
     }
-    table.querySelectorAll('[data-cdc-grid-edit]').forEach(button=>button.remove());
+    table.querySelectorAll('[data-cdc-grid-edit],[data-cdc-grid-date],[data-cdc-grid-rating]').forEach(control=>control.remove());
     table.querySelectorAll('button').forEach(button=>button.replaceWith(doc.createTextNode(button.textContent)));
     table.querySelectorAll('[data-cdc]').forEach(node=>node.removeAttribute('data-cdc'));
     table.removeAttribute('data-cdc');doc.body.append(table);
@@ -10407,7 +10440,7 @@ function openCdcAssessment(context = null) {
       }
       field('schoolStatus').textContent=items.length
         ? `यस विद्यार्थी, विषय र अवधिमा ${items.length} अवलोकन छन्।` : 'यस छनोटमा विद्यालयको अभिलेख छैन।';
-      field('gridStatus').textContent=readOnly?'अभिलेख पढियो। यो खाता हेर्न मात्र हो।':!field('unit').value.trim()?'अभिलेख पढियो। विषयक्षेत्र छान्नुहोस्।':'Entry तयार छ। सम्बन्धित मिति / अङ्कन कोठामा थिच्नुहोस्।';
+      field('gridStatus').textContent=readOnly?'अभिलेख पढियो। यो खाता हेर्न मात्र हो।':!field('unit').value.trim()?'अभिलेख पढियो। विषयक्षेत्र छान्नुहोस्।':'Entry तयार छ। मिति कोठामा थिच्नुहोस् वा अङ्कन १–४ छान्नुहोस्, त्यसपछि Save गर्नुहोस्।';
     } catch(error) {
       if(isLatest()){
         const code=String(error?.code||'');

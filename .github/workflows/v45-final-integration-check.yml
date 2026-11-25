@@ -97,7 +97,7 @@ jobs:
           # Dedicated primary assessment follow-up: exact tests and source register only.
           if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-cdc-continuous-year':
             allowed.update({'scripts/test-firestore-rules.mjs','scripts/test-cdc-assignment.mjs'})
-          if os.environ.get('GITHUB_HEAD_REF') in ('fix/v46-cdc-simple-teacher-form','fix/v46-cdc-entry-visible'):
+          if os.environ.get('GITHUB_HEAD_REF') in ('fix/v46-cdc-simple-teacher-form','fix/v46-cdc-entry-visible','fix/v46-cdc-direct-date-rating'):
             allowed.add('scripts/test-cdc-assignment.mjs')
           if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-cdc-assessment-official-forms':
             allowed.update({'scripts/test-cdc-assignment.mjs','scripts/test-firestore-rules.mjs','docs/cdc-assessment-reference-sources.md'})
@@ -263,7 +263,7 @@ jobs:
           npm run test:rules
           npx firebase emulators:exec --only firestore --project smss-v45-activity-test 'node scripts/test-user-activity-rules.mjs'
       - name: Render and verify synthetic A4 Grade Sheet
-        if: github.head_ref == 'fix/iemis-class6-2083-term-sheets' || (github.head_ref == 'feat/v46-cdc-assessment-official-forms' || (github.head_ref == 'fix/v46-cdc-simple-teacher-form' || (github.head_ref == 'fix/v46-cdc-entry-visible' || github.head_ref == 'feat/v46-cdc-continuous-year')))
+        if: github.head_ref == 'fix/iemis-class6-2083-term-sheets' || (github.head_ref == 'feat/v46-cdc-assessment-official-forms' || (github.head_ref == 'fix/v46-cdc-simple-teacher-form' || (github.head_ref == 'fix/v46-cdc-entry-visible' || github.head_ref == 'feat/v46-cdc-continuous-year' || github.head_ref == 'fix/v46-cdc-direct-date-rating')))
         run: |
           mkdir -p "$RUNNER_TEMP/smss-print"
           report="$RUNNER_TEMP/smss-print"
@@ -289,7 +289,7 @@ jobs:
           grep -Fq "32 HOURS" "$report/secondary.txt"
           grep -Fq "COMPUTER SCIENCE" "$report/secondary.txt"
       - name: Save synthetic Grade Sheet for visual review
-        if: always() && (github.head_ref == 'fix/iemis-class6-2083-term-sheets' || (github.head_ref == 'feat/v46-cdc-assessment-official-forms' || (github.head_ref == 'fix/v46-cdc-simple-teacher-form' || (github.head_ref == 'fix/v46-cdc-entry-visible' || github.head_ref == 'feat/v46-cdc-continuous-year'))))
+        if: always() && (github.head_ref == 'fix/iemis-class6-2083-term-sheets' || (github.head_ref == 'feat/v46-cdc-assessment-official-forms' || (github.head_ref == 'fix/v46-cdc-simple-teacher-form' || (github.head_ref == 'fix/v46-cdc-entry-visible' || github.head_ref == 'feat/v46-cdc-continuous-year' || github.head_ref == 'fix/v46-cdc-direct-date-rating'))))
         uses: actions/upload-artifact@v4
         with:
           name: smss-synthetic-a4-grade-sheet
@@ -303,7 +303,7 @@ jobs:
             ${{ runner.temp }}/smss-print/*-info.txt
           retention-days: 7
       - name: Render and verify synthetic CDC assessment PDFs
-        if: (github.head_ref == 'feat/v46-cdc-assessment-official-forms' || (github.head_ref == 'fix/v46-cdc-simple-teacher-form' || (github.head_ref == 'fix/v46-cdc-entry-visible' || github.head_ref == 'feat/v46-cdc-continuous-year')))
+        if: (github.head_ref == 'feat/v46-cdc-assessment-official-forms' || (github.head_ref == 'fix/v46-cdc-simple-teacher-form' || (github.head_ref == 'fix/v46-cdc-entry-visible' || github.head_ref == 'feat/v46-cdc-continuous-year' || github.head_ref == 'fix/v46-cdc-direct-date-rating')))
         run: |
           set -euo pipefail
           report="$RUNNER_TEMP/smss-cdc-print"
@@ -335,7 +335,7 @@ jobs:
           grep -Fq 'Primary' "$report/cdc-annual.txt"
           grep -Fq 'Grade 3 synthetic' "$report/cdc-math.txt"
       - name: Save synthetic CDC assessment PDFs for visual review
-        if: always() && (github.head_ref == 'feat/v46-cdc-assessment-official-forms' || (github.head_ref == 'fix/v46-cdc-simple-teacher-form' || (github.head_ref == 'fix/v46-cdc-entry-visible' || github.head_ref == 'feat/v46-cdc-continuous-year')))
+        if: always() && (github.head_ref == 'feat/v46-cdc-assessment-official-forms' || (github.head_ref == 'fix/v46-cdc-simple-teacher-form' || (github.head_ref == 'fix/v46-cdc-entry-visible' || github.head_ref == 'feat/v46-cdc-continuous-year' || github.head_ref == 'fix/v46-cdc-direct-date-rating')))
         uses: actions/upload-artifact@v4
         with:
           name: smss-synthetic-cdc-assessment-print
