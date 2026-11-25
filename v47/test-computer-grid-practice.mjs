@@ -21,6 +21,8 @@ for(const language of ['ne','en','both']){
  const html=printReadOnlyPracticePaper({paper:first,showAnswers:true});
  assert.match(html,/A4 landscape/);assert.match(html,/columns:2/);assert.match(html,/NOT AN OFFICIAL CDC QUESTION PAPER/);
  assert.match(html,/Synthetic &lt;School&gt;/);
+ if(language==='ne'){assert.match(html,/कक्षा ९/);assert.match(html,/पूर्णाङ्क: ५०/);assert.match(html,/१ अङ्क/);}
+ else assert.match(html,/Total marks: 50/);
  assert.equal((html.match(/Teacher-review answer:/g)||[]).length,25);
  assert.doesNotMatch(printReadOnlyPracticePaper({paper:first}),/Teacher-review answer:/);
 }

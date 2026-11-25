@@ -1,3 +1,4 @@
+import {paperDigits,paperDisplayText,paperSubjectLabel,paperClassLabel,paperAnswerOption,questionFigure} from './cdc-optional-math-render.mjs';
 import {assertGrade9CurriculumPractice} from './grade9-curriculum-practice.mjs';
 import {assertComputerPracticeGrid} from './computer-grid-practice.mjs';
 // V47 isolated, read-only CDC source and SMSS practice-paper preview.
@@ -94,6 +95,9 @@ export function recommendedPracticeIndices(pack){
  if(!indices.length)throw Error('No practice questions found');
  return Object.freeze(indices.sort((a,b)=>a-b));
 }
+export function flatPracticeQuestionText(paper,q){
+ return paperDisplayText(q.questionText,paper.language,paper.subject);
+}
 export function printReadOnlyPracticePaper({paper,showAnswers=false}){
  if(!paper||paper.approved!==false||paper.official!==false||
     paper.teacherReviewRequired!==true||paper.writeAuthorized!==false||
@@ -101,12 +105,15 @@ export function printReadOnlyPracticePaper({paper,showAnswers=false}){
     !(PRACTICE_GRADES.includes(paper.grade)&&officialUrl(paper.sourceUrl)||paper.grade===9&&(paper.questionFormat==='grade9_curriculum_practice'?assertGrade9CurriculumPractice(paper):assertComputerPracticeGrid(paper)))||
     typeof showAnswers!=='boolean')
   throw Error('Verified read-only practice paper required');
+ const ne=paper.language==='ne',language=paper.language||'ne';
+ const display=value=>esc(paperDisplayText(value,paper.language,paper.subject));
+ const digits=value=>esc(paperDigits(value,paper.language));
  let marks=0;
  const questions=paper.questions.map((q,index)=>{
   marks+=q.marks;
-  const options=q.questionType==='mcq'?'<ol type="A">'+q.options.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol>':'';
-  return '<li><div>'+esc(q.questionText)+' <em>('+esc(q.marks)+' marks)</em></div>'+options+
-    (showAnswers?'<p class="answer">Teacher-review answer: '+(q.questionType==='mcq'&&q.correctOption?esc(q.correctOption)+' — ':'')+esc(q.answer)+'</p>':'')+'</li>';
+  const options=q.questionType==='mcq'?'<ol type="A">'+q.options.map(x=>'<li>'+display(x)+'</li>').join('')+'</ol>':'';
+  return '<li><div>'+esc(flatPracticeQuestionText(paper,q))+' <em>('+digits(q.marks)+(ne?' अङ्क':' marks')+')</em></div>'+(!showAnswers?questionFigure(q,language):'')+options+
+    (showAnswers?'<p class="answer">Teacher-review answer: '+(q.questionType==='mcq'&&q.correctOption?esc(paperAnswerOption(q.correctOption,paper.language))+' — ':'')+display(q.answer)+'</p>':'')+'</li>';
  }).join('');
  if(marks!==paper.totalMarks)throw Error('Practice marks changed after preview');
  const watermark='data:image/svg+xml,'+encodeURIComponent(
@@ -116,10 +123,10 @@ export function printReadOnlyPracticePaper({paper,showAnswers=false}){
  );
  return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow">'+
  '<title>UNREVIEWED SMSS Practice Paper</title>'+
- '<style>@page{size:A4'+(paper.grade===9?' landscape':'')+';margin:14mm}html,body{margin:0}body{font:14px system-ui,sans-serif;color:#172238;background-image:url("'+watermark+'");background-repeat:repeat;background-size:390px 225px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.sheet{position:relative;min-height:255mm}.warning{border:2px solid #b81c1c;padding:10px;text-align:center;background:#fff}h1,h2,p{text-align:center}ol{padding-left:25px}ol>li{margin:13px 0;break-inside:avoid;page-break-inside:avoid}li>div,.answer{white-space:pre-line}.answer{background:#f0f2f7;text-align:left;padding:5px}@media print{.sheet{break-inside:auto;page-break-inside:auto}}</style></head><body><main class="sheet">'+
- '<h1>'+esc(paper.schoolName)+'</h1><h2>Class '+esc(paper.grade)+' · '+esc(paper.subject)+'</h2>'+
+ '<style>@page{size:A4 landscape;margin:14mm}html,body{margin:0}body{font:14px system-ui,sans-serif;color:#172238;background-image:url("'+watermark+'");background-repeat:repeat;background-size:390px 225px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.sheet{position:relative;min-height:170mm}.qp-figure svg{max-width:100%;height:auto}@counter-style nepali-options{system:fixed;symbols:"क" "ख" "ग" "घ";suffix:". "}body.nepali .sheet>ol{list-style-type:devanagari}body.nepali ol[type=A]{list-style-type:nepali-options}.warning{border:2px solid #b81c1c;padding:10px;text-align:center;background:#fff}h1,h2,p{text-align:center}ol{padding-left:25px}ol>li{margin:13px 0;break-inside:avoid;page-break-inside:avoid}li>div,.answer{white-space:pre-line}.answer{background:#f0f2f7;text-align:left;padding:5px}@media print{.sheet{break-inside:auto;page-break-inside:auto}}</style></head><body'+(ne?' class="nepali"':'')+'><main class="sheet">'+
+ '<h1>'+esc(paper.schoolName)+'</h1><h2>'+esc(paperClassLabel('Class '+paper.grade,paper.language))+' · '+esc(paperSubjectLabel(paper.subject,paper.language))+'</h2>'+
  '<p class="warning">UNREVIEWED ORIGINAL PRACTICE — NOT AN OFFICIAL CDC QUESTION PAPER</p>'+
- '<p>Questions: '+esc(paper.questionCount)+' | Total marks: '+esc(paper.totalMarks)+
+ '<p>'+(ne?'प्रश्न सङ्ख्या: ':'Questions: ')+digits(paper.questionCount)+(ne?' | पूर्णाङ्क: ':' | Total marks: ')+digits(paper.totalMarks)+
  ' | '+(showAnswers?'UNAPPROVED TEACHER REVIEW ANSWERS':'PRACTICE QUESTIONS')+'</p>'+
- '<ol'+(paper.grade===9?' style="columns:2;column-gap:12mm"':'')+'>'+questions+'</ol><footer>V46-sourced SMSS practice pack. Teacher must verify against current CDC specification grid before any real exam. No data saved.</footer></main></body></html>';
+ '<ol style="columns:2;column-gap:12mm">'+questions+'</ol><footer>V46-sourced SMSS practice pack. Teacher must verify against current CDC specification grid before any real exam. No data saved.</footer></main></body></html>';
 }

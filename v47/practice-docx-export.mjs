@@ -1,4 +1,5 @@
 // Export the verified, currently displayed practice preview, never an official paper.
+import {flatPracticeQuestionText} from './question-paper-cdc-preview.mjs';
 import {buildQuestionPaperDocx,rasterizePaperFigures} from './cdc-optional-math-render.mjs';
 const NOTICE='UNREVIEWED ORIGINAL PRACTICE — NOT AN OFFICIAL CDC QUESTION PAPER';
 const digits=(n,language)=>language==='ne'?String(n).replace(/\d/g,d=>'०१२३४५६७८९'[Number(d)]):String(n);
@@ -18,14 +19,17 @@ export async function exportPracticeDocx({document:doc,paper,assertCurrent}){
   const source=doc.querySelector('main.sheet > ol');
   if(!source||source.children.length!==paper.questionCount)throw Error('Practice question count changed');
   area=make('section');const header=make('header',undefined,area);
-  make('h1',paper.schoolName,header);make('h2','Class '+paper.grade+' · '+paper.subject,header);
-  make('p',NOTICE,area);make('p','Questions: '+paper.questionCount+' | Total marks: '+paper.totalMarks,area);
+  const heading=doc.querySelector('main.sheet > h2'),summary=doc.querySelector('main.sheet > p.warning + p');
+  if(!heading||!summary)throw Error('Practice header unavailable');
+  make('h1',paper.schoolName,header);make('h2',heading.textContent,header);
+  make('p',NOTICE,area);make('p',summary.textContent,area);
   const body=make('div',undefined,area);body.className='qp-paper-body';
   for(const [i,li] of [...source.children].entries()){
    const q=paper.questions[i],block=make('div',undefined,body);block.className='qp-q';
    const text=li.firstElementChild?.textContent;
-   if(!text||!text.includes(q.questionText))throw Error('Practice question changed');
+   if(!text||!text.includes(flatPracticeQuestionText(paper,q)))throw Error('Practice question changed');
    make('p',digits(i+1,paper.language)+'. '+text,block);
+   const figure=li.querySelector(':scope > .qp-figure');if(figure)block.append(figure.cloneNode(true));
    const options=li.querySelector(':scope > ol');
    if(options){for(const [j,option] of [...options.children].entries())make('p',(paper.language==='ne'?'कखगघ'[j]:'ABCD'[j])+'. '+option.textContent,block)}
    const answer=li.querySelector(':scope > .answer');if(answer)make('p',answer.textContent,block);

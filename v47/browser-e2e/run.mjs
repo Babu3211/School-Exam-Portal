@@ -278,7 +278,8 @@ try{
     await page.locator('#generateGrade9Curriculum').click();
     await wait(page,()=>!document.getElementById('downloadPracticeDocx').disabled);
     assert.equal(await frame.locator('main.sheet > ol > li').count(),1);
-    assert.ok((await frame.locator('h2').textContent()).includes(subject));
+    const displaySubject=lang==='ne'?({social:'सामाजिक अध्ययन',nepali:'नेपाली'}[key]||subject):subject;
+    assert.ok((await frame.locator('h2').textContent()).includes(displaySubject));
     assert.match(await frame.locator('body').textContent(),/NOT AN OFFICIAL CDC QUESTION PAPER/);
     if(['social','nepali','english'].includes(key))assert.equal(await page.locator('#grade9CurriculumLanguage option:not([disabled])').count(),1);
    }
