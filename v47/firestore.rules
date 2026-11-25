@@ -682,16 +682,7 @@ service cloud.firestore {
           let p = /databases/$(database)/documents/schools/$(sid)/members/$(uid);
           let changed = request.resource.data.diff(resource.data).affectedKeys();
           return !linked(resource.data) && uid is string
-            && uid.matches('^[A-Za-z0-9_-]{6,128}        allow get, list: if collection in ['classes','school_settings'] && canRead(sid);
-        allow create: if collection in ['classes','school_settings'] && canAdmin(sid) && scopedRecord(sid);
-        allow update: if collection in ['classes','school_settings'] && canAdmin(sid) && immutableSchool(sid);
-        allow delete: if false;
-      }
-    }
-    match /{document=**} { allow read, write: if false; }
-  }
-}
-) && uid != request.auth.uid
+            && uid.matches('^[A-Za-z0-9_-]{6,128}$') && uid != request.auth.uid
             && changed.hasOnly(['authUid','email']) && changed.hasAll(['authUid'])
             && validEmail() && request.resource.data.email.size() > 0
             && !exists(p) && existsAfter(p)
