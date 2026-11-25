@@ -34,6 +34,8 @@ jobs:
           node scripts/test-v47-rules-structure.mjs
           node v47/test-production-marks-guard.mjs
           node v47/test-super-admin-session-guard.mjs
+          node --check v47/diagnostics/activate-reviewed-rules.mjs
+          node --check v47/diagnostics/check-live-access.mjs
           npm run test:v47:rules-iemis-syntax
           node -e 'const c=require("./v47/firebase.v47.json");if(c.firestore.rules!=="firestore.rules"||c.hosting||c.functions)throw Error("Unexpected V47 deployment config")'
       - name: Compile and test tenant isolation in Firebase emulator
@@ -56,5 +58,5 @@ jobs:
           node v47/diagnostics/check-live-access.mjs --before-rules-deploy
           # Rules only: no hosting, indexes, document writes, account modifications or billing.
           node v47/diagnostics/activate-reviewed-rules.mjs
-          node v47/diagnostics/check-live-access.mjs
-          echo 'Reviewed V47 Firestore rules activated and verified. No V46 resources, school documents, user accounts, billing or production hosting changed. Official publication and production release remain separately gated.' >> "$GITHUB_STEP_SUMMARY"
+          node v47/diagnostics/check-live-access.mjs --after-rules-deploy
+          echo 'Reviewed V47 Firestore rules activated and verified. Full school registry diagnostic is separate; the known invalid legacy school still requires an owner-confirmed IEMIS ID. No V46 resources, school documents, user accounts, billing or production hosting changed. Official publication and production release remain separately gated.' >> "$GITHUB_STEP_SUMMARY"

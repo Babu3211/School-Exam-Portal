@@ -2,9 +2,12 @@
 // This does not change IAM, enable services, touch documents, or deploy Hosting.
 import {createRequire} from 'node:module';
 import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 const project='smss-exam-portal-v47',root='projects/'+project;
 const releaseName=root+'/releases/cloud.firestore';
-const expectedPrevious=root+'/rulesets/44ae23f0-b828-405d-8cf4-d287a71cfe00';
+// Verified deployment 45408831333, commit 85d1a519: exact prior ruleset and source blob.
+const expectedPrevious=root+'/rulesets/4059796c-b1b7-4742-a599-ab0da55bcbcf';
+const expectedPreviousBlob='879412ed98e7e7fe33dbf49a048479234aef4d7a';
 const requireAdmin=createRequire(new URL('../../v47-runtime/package.json',import.meta.url));
 const {cert}=requireAdmin('firebase-admin/app');
 if(process.env.FIRESTORE_EMULATOR_HOST||process.env.FIREBASE_AUTH_EMULATOR_HOST||process.env.GITHUB_REF!=='refs/heads/smss-v47-multischool-work')throw Error('Isolated V47 branch and real project required');
@@ -26,10 +29,18 @@ async function matches(name){
  const files=data.source?.files??[];
  return files.length===1&&normalize(files[0].content)===normalize(content);
 }
+async function verifyPriorSource(name){
+ if(name!==expectedPrevious)throw Error('Live rules changed since reviewed deployment; refuse to overwrite');
+ const data=await call('GET',name),files=data.source?.files??[];
+ if(files.length!==1||typeof files[0].content!=='string')throw Error('Unexpected prior rules source');
+ const bytes=Buffer.from(files[0].content,'utf8');
+ const blob=createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex');
+ if(blob!==expectedPreviousBlob)throw Error('Prior rules source fingerprint differs; refuse to overwrite');
+}
 async function main(){
  const before=await call('GET',releaseName);
  if(await matches(before.rulesetName)){console.log('Reviewed V47 rules already active; no write required');return}
- if(before.rulesetName!==expectedPrevious)throw Error('Live rules changed since reviewed diagnostic; refuse to overwrite');
+ await verifyPriorSource(before.rulesetName);
  console.log('Rollback ruleset: '+before.rulesetName);
  // Ruleset creation is validated by the official API, not yet enforced.
  const created=await call('POST',root+'/rulesets',{source:{files:[{name:'firestore.rules',content}]}});

@@ -13,7 +13,9 @@ const key=JSON.parse(readFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS,'ut
 if(key.project_id!==projectId||key.type!=='service_account')throw Error('Dedicated V47 credential required');
 const credential=cert(key),app=initializeApp({credential,projectId},'v47-read-only-diagnostic');
 const preflight=process.argv.length===3&&process.argv[2]==='--before-rules-deploy';
-if(process.argv.length>2&&!preflight)throw Error('Unknown diagnostic option');
+const postflight=process.argv.length===3&&process.argv[2]==='--after-rules-deploy';
+const fullDiagnostic=!preflight&&!postflight;
+if(process.argv.length>2&&!preflight&&!postflight)throw Error('Unknown diagnostic option');
 let blocked=false;
 const summarizeError=e=>String(e?.code??e?.status??'unknown').replace(/[^A-Za-z0-9_/-]/g,'').slice(0,70);
 async function getJson(path){
@@ -36,7 +38,7 @@ try{
  }catch(e){console.log('Rules metadata read unavailable: '+summarizeError(e));blocked=true}
  try{
   const db=getFirestore(app);
-  if(!preflight){
+  if(fullDiagnostic){
    const schools=await db.collection('schools').limit(31).get();
    const issues={};let invalid=0;
    for(const doc of schools.docs.slice(0,30)){
@@ -79,7 +81,7 @@ try{
    const users=await getAuth(app).getUsers(snap.docs.map(d=>({uid:d.id})));
    console.log('Matching enabled Auth accounts: '+users.users.filter(u=>!u.disabled).length);
    if(users.users.filter(u=>!u.disabled).length!==snap.size)blocked=true;
-   if(!preflight){
+   if(fullDiagnostic){
     // Diagnose the recent reported sign-in without logging any email or UID.
     // Only inspect a small account set; never infer or grant privilege from login time.
     const page=await getAuth(app).listUsers(20);
@@ -101,5 +103,5 @@ try{
   }catch(e){console.log('Auth UID match check unavailable: '+summarizeError(e));blocked=true}
  }catch(e){console.log('Registry metadata read unavailable: '+summarizeError(e));blocked=true}
 }finally{await deleteApp(app)}
-console.log('Read-only V47 diagnostic: '+(blocked?'BLOCKED':'bounded checks passed; browser acceptance, backups and publication runtime still required'));
+console.log('Read-only V47 diagnostic: '+(blocked?'BLOCKED':fullDiagnostic?'bounded checks passed; browser acceptance, backups and publication runtime still required':'rules and root-account checks passed; school registry and all other release requirements are separate'));
 if(blocked)process.exitCode=1;
