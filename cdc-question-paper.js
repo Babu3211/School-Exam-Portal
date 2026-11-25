@@ -60,6 +60,7 @@ let lastAutoSignature=null,paperHistoryLoadEpoch=0;
 function message(text, error = false) {
   const el = $("qpMessage");
   if (el) { el.textContent = text; el.style.color = error ? "#b42318" : "#52627a"; }
+  const paperMessage=$("qpPaperMessage");if(paperMessage){paperMessage.textContent=text;paperMessage.style.color=error?"#b42318":"#52627a";}
 }
 async function logQuestionActivity(action,recordId,detail) {
   try {
@@ -99,6 +100,7 @@ function pageShell() {
     .qp-grade9[data-qp-view="paper"] :is(#qpTopicCard,#qpBankList,#qpBankEditor,#qpCdcReferences,#qpCatalogAdmin,#qpSavedPapers),
     .qp-grade9[data-qp-view="manage"] :is(#qpTopicCard,#qpPaperComposer,#qpSavedPapers),
     .qp-grade9[data-qp-view="history"] :is(#qpTopicCard,#qpPaperComposer,#qpBankList,#qpBankEditor,#qpCdcReferences,#qpCatalogAdmin){display:none!important}
+    .qp-unit-group[hidden],.qp-topic[hidden]{display:none!important}
     .qp-unit-group{border:1px solid #dce5f1;border-radius:10px;padding:8px;min-width:0}.qp-unit-group h4{font-size:13px;color:#193b69;margin:0 0 6px}.qp-unit-group .qp-topic{margin:4px 0}.qp-unit-group .qp-topic:has(input:disabled){opacity:.55}
     .qp-topic-next{display:none}.qp-grade9 .qp-topic-next{display:flex}
     .qp-collapsible{margin-top:10px}.qp-collapsible summary{cursor:pointer;color:#2447a7;font-weight:750;padding:8px 0}
@@ -283,6 +285,7 @@ function pageShell() {
       <label class="qp-topic" style="margin-top:9px;background:#fff8e9;align-items:center"><input id="qpAutoReviewed" type="checkbox"><span>मैले प्रश्नपत्रको नेपाली वर्णविन्यास (ह्रस्व–दीर्घ), व्याकरण, English grammar, आवश्यक चित्र, पूर्णाङ्क, लागू CDC विशिष्टीकरण तालिका र उत्तरकुञ्जिका पढेर जाँच गरेको छु। <b>जाँच नगरी Save वा Print हुँदैन।</b></span></label>
       <div class="qp-actions"><button class="qp-btn" id="qpSmartGenerateBtn" type="button">एक क्लिकमा Auto Question Paper</button><button class="qp-btn alt" id="qpGenerateBtn" type="button">म्यानुअल Pattern Generate</button><button class="qp-btn alt" id="qpSavePaperBtn" type="button" disabled>प्रश्नपत्र Save</button><button class="qp-btn alt" id="qpPrintPaperBtn" type="button" disabled>प्रश्नपत्र Print / PDF</button><button class="qp-btn alt" id="qpAnswerKeyBtn" type="button" disabled>उत्तरकुञ्जिका Print / PDF</button><button class="qp-btn alt" id="qpWordPaperBtn" type="button" disabled>Word (.docx) Export</button></div>
       <div class="qp-actions" id="qpReferenceDraftActions" hidden><button class="qp-btn alt" id="qpSelectReferenceTopics" type="button">Select reference topics (75 marks)</button><button class="qp-btn alt" id="qpReferenceDraftBtn" type="button">Generate School Grid Draft (75 marks)</button></div><div id="qpReferenceExportActions" hidden><label class="qp-topic"><input id="qpReferenceReviewed" type="checkbox"><span>मैले विद्यालयको Grid, भाषा, चित्र र उत्तरकुञ्जिका जाँच गरेको छु। यो CDC Exact स्वीकृति होइन।</span></label><div class="qp-actions"><button class="qp-btn alt" id="qpReferencePrintBtn" type="button" disabled>Draft Print / PDF</button><button class="qp-btn alt" id="qpReferenceWordBtn" type="button" disabled>Draft Word (.docx)</button><button class="qp-btn alt" id="qpReferenceKeyBtn" type="button" disabled>Draft Answer Key / PDF</button></div></div><div id="qpReferenceDraftPreview" hidden style="white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;border:2px solid #c48740;border-radius:8px;background:#fff8e9;color:#482b11;font:inherit" role="status"></div><details id="qpReferenceAnswerReview" hidden style="margin-top:10px;padding:12px;border:1px solid #c48740;border-radius:8px"><summary>Teacher Answer Review / उत्तरकुञ्जिका (not official)</summary><pre id="qpReferenceAnswerText" style="white-space:pre-wrap;overflow-wrap:anywhere;font:inherit"></pre></details>
+      <p id="qpPaperMessage" class="qp-hint" role="status"></p>
       <div id="qpPaperPreview" style="margin-top:14px"><p class="qp-hint">Topic छानेर प्रश्नपत्र Auto Generate गर्नुहोस्।</p></div>
     </div>
 
@@ -529,17 +532,17 @@ async function loadClassSubjects() {
 // Absence of a checked source never triggers invented questions or a fake grid.
 async function loadBundledPracticeBank({grade,subject}){
  const science=grade9ScienceOriginalBank({grade,subject});
- if(science.units.length){const ref=grade9ScienceSchoolReferenceBank({grade,subject});return {units:science.units,questions:[...science.questions,...ref.questions],status:"Grade 9 Science: 76 original exercises and 80 bilingual school-reference variants; 75-mark full-year review only. Current CDC Grid not verified."};}
+ if(science.units.length){const ref=grade9ScienceSchoolReferenceBank({grade,subject});return {units:[...science.units,...ref.units],questions:[...science.questions,...ref.questions],status:"Grade 9 Science: 76 original exercises and 80 bilingual school-reference variants; 75-mark full-year review only. Current CDC Grid not verified."};}
  const nepali=grade9NepaliPracticeBank({grade,subject});
- if(nepali.units.length){const ref=grade9NepaliReferenceBank({grade,subject});return {units:nepali.units,questions:[...nepali.questions,...ref.questions,...grade9NepaliPracticeSummaryDrafts({grade,subject})],status:"कक्षा ९ नेपाली: ४८ अभ्यास, ५४ सन्दर्भ समूह र २ मौलिक सारांश अभ्यास; ७५ अङ्कको समीक्षा संरचना। पाठगत सारांश र वर्तमान CDC Grid पुष्टि बाँकी।"};}
+ if(nepali.units.length){const ref=grade9NepaliReferenceBank({grade,subject});return {units:[...nepali.units,...ref.units],questions:[...nepali.questions,...ref.questions,...grade9NepaliPracticeSummaryDrafts({grade,subject})],status:"कक्षा ९ नेपाली: ४८ अभ्यास, ५४ सन्दर्भ समूह र २ मौलिक सारांश अभ्यास; ७५ अङ्कको समीक्षा संरचना। पाठगत सारांश र वर्तमान CDC Grid पुष्टि बाँकी।"};}
  const english=grade9EnglishPracticeBank({grade,subject});
- if(english.units.length){const ref=grade9EnglishReferenceBank({grade,subject});return {units:english.units,questions:[...english.questions,...ref.questions,...(ref.questions.some(q=>q.slot==="reading2")?[]:grade9EnglishPracticeReading2({grade,subject}))],status:"Grade 9 English: 75-mark review practice available. Where an authorized seen passage is unavailable, the original reading substitute is explicitly marked; not a CDC Exact examination."};}
+ if(english.units.length){const ref=grade9EnglishReferenceBank({grade,subject});return {units:[...english.units,...ref.units],questions:[...english.questions,...ref.questions,...(ref.questions.some(q=>q.slot==="reading2")?[]:grade9EnglishPracticeReading2({grade,subject}))],status:"Grade 9 English: 75-mark review practice available. Where an authorized seen passage is unavailable, the original reading substitute is explicitly marked; not a CDC Exact examination."};}
  const math=grade9CompulsoryMathPracticeBank({grade,subject});
  if(math.units.length){const ref=grade9CompulsoryMathReferenceBank({grade,subject});return {units:ref.units,questions:[...math.questions,...ref.questions],status:"कक्षा ९ अनिवार्य गणित: ४२ मौलिक अभ्यास र ९६ संयुक्त समूह (२९४ उपप्रश्न), १६ संयुक्त Topic; ऐतिहासिक २०७८ Grid सन्दर्भ। नवीनतम Grid र शिक्षक समीक्षा बाँकी।"};}
  const social=grade9SocialOriginalBank({grade,subject});
- if(social.units.length){const ref=grade9SocialReferenceBank({grade,subject});return {units:social.units,questions:[...social.questions,...ref.questions],status:"कक्षा ९ सामाजिक अध्ययन: १० विषयक्षेत्रमा ७८ मौलिक bilingual अभ्यास प्रश्न, २०७८ Grid सन्दर्भका ४८ प्रश्नसहित। नयाँ CDC Exact Grid र शिक्षक समीक्षा बाँकी।"};}
+ if(social.units.length){const ref=grade9SocialReferenceBank({grade,subject});return {units:[...social.units,...ref.units],questions:[...social.questions,...ref.questions],status:"कक्षा ९ सामाजिक अध्ययन: १० विषयक्षेत्रमा ७८ मौलिक bilingual अभ्यास प्रश्न, २०७८ Grid सन्दर्भका ४८ प्रश्नसहित। नयाँ CDC Exact Grid र शिक्षक समीक्षा बाँकी।"};}
  const environment=grade9EnvironmentOriginalBank({grade,subject});
- if(environment.units.length){const ref=grade9EnvironmentReferenceBank({grade,subject});const byId=new Map([...environment.questions,...ref.questions].map(q=>[q.id,q]));return {units:environment.units,questions:[...byId.values()],status:"Grade 9 Environmental Science: 72 original bilingual exercises, including 36 review-only school-model items. Current CDC exact grid not verified."};}
+ if(environment.units.length){const ref=grade9EnvironmentReferenceBank({grade,subject});const byId=new Map([...environment.questions,...ref.questions].map(q=>[q.id,q]));return {units:[...environment.units,...ref.units],questions:[...byId.values()],status:"Grade 9 Environmental Science: 72 original bilingual exercises, including 36 review-only school-model items. Current CDC exact grid not verified."};}
  if(grade===9&&getBundledComputerGrid({grade,subject,fullMarks:50})){
   const pack=grade9ComputerOriginalBank({subject});
   return {units:pack.units,questions:pack.questions,
@@ -693,8 +696,9 @@ async function loadCurrentData() {
   const referenceIds=new Set(referencePreviewTopics({grade,subject,questions:bundledPracticeQuestions}));
   if(referenceIds.size)for(const input of document.querySelectorAll("[data-qp-topic]")){
    input.checked=referenceIds.has(input.value);input.disabled=!input.checked;
-   if(input.disabled)input.closest("label")?.setAttribute("title","यस Grid मा मिल्ने प्रश्न समूह उपलब्ध छैन");
+   if(input.disabled)input.closest("label")?.setAttribute("hidden","");
   }
+  if(referenceIds.size){for(const group of document.querySelectorAll(".qp-unit-group"))group.hidden=!group.querySelector("[data-qp-topic]:not(:disabled)");$("qpTopicCount").textContent=document.querySelectorAll("[data-qp-topic]:not(:disabled)").length+" Topic";}
  }
  $("qpAutoSourceStatus").textContent=bundledPracticeStatus;
  renderGrade9GridLibrary($("qpGrade9GridLibraryContent"),cdcSourceRegister,[...new Set(classSubjects.filter(x=>x.gradeNumber===9).map(x=>x.subject))]);
