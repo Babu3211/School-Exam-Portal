@@ -97,6 +97,11 @@ export function grade9GridLibrary(register){
     add('Extracted cognitive summary',['Level',...e.types,'Total marks'],e.levelTypeCounts.map((row,i)=>[e.levelNames[i],...row,row.reduce((n,v,j)=>n+v*e.marksEach[j],0)]));
     add('Model alternative questions (one response per question)',['Question number','Unit'],e.alternativeQuestionNumbers.map((n,i)=>[n,e.alternativeUnitNumbers[i]]));
     add('Unresolved source extraction discrepancies',['Field','Extracted notes','Model / summary'],e.extractedProseConflicts);
+    const visual=entries.find(x=>x.economicsVisualReview?.matchedCells===72)?.economicsVisualReview;
+    if(visual?.completeUnitMatrixVerified===true&&visual.officialExamApproved===false){
+     status='Original 2082 unit Grid: all 72 count cells visually matched; conflicting prose and current edition review pending';
+     add('Original PDF page 1: unit-wise question counts',['Area','Hours','K: V/S/L','U: V/S/L','A: V/S/L','HA: V/S/L','Marks'],e.areas.map((a,i)=>[a[0],visual.workingHours[i],...[0,3,6,9].map(k=>visual.unitLevelTypeCounts[i].slice(k,k+3).join(' / ')),visual.unitMarks[i]]));
+    }
    }
   }else if(key==='accounting'){
    const e=entries.find(x=>x.accountingTextReview)?.accountingTextReview;
