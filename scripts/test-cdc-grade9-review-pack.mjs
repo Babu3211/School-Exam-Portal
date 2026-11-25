@@ -43,13 +43,32 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
   assert.ok(audit.checks.length>=4&&audit.unresolved.length>0);
   assert.equal(audit.currentCdcExactApproved,false);
   assert.ok(audit.checks.includes('Scored subparts and alternatives'));
+  if(subject==='Nepali'){
+   assert.match(result.blocks[0].text,/^१\. .+\(२\)/);
+   assert.match(result.blocks[0].text,/समूह ‘क’.+समूह ‘ख’/);
+   assert.equal(result.blocks[0].text.split('\n').filter(l=>l.includes('|')).length,6);
+   assert.equal((result.blocks[6].text.match(/\(२\)/g)||[]).length,2);
+   assert.match(result.blocks[14].text,/\(२ \+ ३ = ५\)/);
+   assert.match(result.blocks[15].text,/\(४ \+ ४ = ८\)/);
+   assert.doesNotMatch(result.text,/\[\d+\]|\[[०-९.]+\]/);
+  }
   if(subject==='Mathematics'){
    assert.ok(audit.checks.includes('Per-area question and cognitive item/mark matrix'));
    for(const tag of ['1K','1U','3A','1HA'])assert.ok(result.blocks[0].text.includes('['+tag+']'),'Model mark notation: '+tag);
    assert.equal((result.text.match(/\[\d+(?:K|U|A|HA)\]/g)||[]).length,49,'All math subparts show cognitive mark notation');
   }
   if(subject==='English'){
-   for(const tag of ['[5 × 1 = 5]','[10 × 1 = 10]','[15 × 1 = 15]','[6 × 1 = 6]','[10 × 0.5 = 5]'])assert.ok(result.text.includes(tag),'Model-style English count × mark: '+tag);
+   assert.ok(audit.checks.includes('Model reading subsections of five items'));
+   for(const [j,n] of [1,2,2,3].entries()){
+    const t=result.blocks[j].text;
+    assert.equal((t.match(/^[ABC]\. .*\(5 × 1 = 5\)$/gm)||[]).length,n,'Reading subsection count Q'+(j+1));
+    assert.doesNotMatch(t.split('\n')[0],/\(\d+ ×/,'No reading total on passage instruction');
+   }
+   for(const [j,tag] of [[4,'(5)'],[5,'(5)'],[6,'(6)'],[7,'(8)'],[8,'(6 × 1 = 6)'],[9,'(10 × 0.5 = 5)']])assert.ok(result.blocks[j].text.split('\n')[0].endsWith(tag),'Model-style writing/grammar Q'+(j+1));
+   assert.equal((result.blocks[9].text.match(/\([a-j]\) ……… \(/g)||[]).length,10,'Ten inline contextual grammar choices');
+   assert.doesNotMatch(result.blocks[9].text,/\{\d+\}|Blank \d+/);
+   assert.doesNotMatch(result.text,/\[\d+(?:\.\d+)?\]/,'Do not print per-item marks in English');
+
   }
   if(subject==='Science and Technology'){
    for(const tag of ['10 × 1 = 10','9 × 1 = 9','14 × 2 = 28','7 × 4 = 28','Time: 25 minutes','Group A','Group B','Group C','Group D']){
