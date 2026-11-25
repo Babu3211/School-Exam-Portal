@@ -15,11 +15,11 @@ import {buildAutomaticQuestionPaper} from '../cdc-question-autogen.mjs';
 import {getCdcOptionalMathGuide,optionalMathAreaTopics} from '../cdc-optional-math-2082.mjs';
 import {originalOptionalMathPracticeBank} from '../cdc-optional-math-original-practice.mjs';
 import {inspectCdcOptionalMathPaper} from '../cdc-optional-math-composite.mjs';
-import {renderCdcCompositePaper,referenceMatchingSegments,paperDigits,paperSubjectLabel} from '../cdc-optional-math-render.mjs';
+import {renderCdcCompositePaper,referenceWordClassRuns,referenceMatchingSegments,paperDigits,paperSubjectLabel} from '../cdc-optional-math-render.mjs';
 import {assertGrade9ExamPaperMatches} from '../cdc-grade9-paper-grid-guard.mjs';
 
 const grade=9,records=[],esc=s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
-const renderReferenceBlock=block=>referenceMatchingSegments(block.text).map(seg=>seg.matchingRows?'<table class="qp-matching-table" style="width:100%;table-layout:fixed;border-collapse:collapse">'+seg.matchingRows.map((row,i)=>'<tr>'+row.map(value=>'<'+(i===0?'th':'td')+' style="width:50%;vertical-align:top;text-align:left;overflow-wrap:anywhere">'+esc(value)+'</'+(i===0?'th':'td')+'>').join('')+'</tr>').join('')+'</table>':'<pre>'+esc(seg.text)+'</pre>').join('')+block.figureHtml;
+const renderReferenceBlock=block=>referenceMatchingSegments(block.text).map(seg=>seg.matchingRows?'<table class="qp-matching-table" style="width:100%;table-layout:fixed;border-collapse:collapse">'+seg.matchingRows.map((row,i)=>'<tr>'+row.map(value=>'<'+(i===0?'th':'td')+' style="width:50%;vertical-align:top;text-align:left;overflow-wrap:anywhere">'+esc(value)+'</'+(i===0?'th':'td')+'>').join('')+'</tr>').join('')+'</table>':block.underlineWords?'<pre class="qp-underlined-passage">'+referenceWordClassRuns(seg.text).map(r=>r.underline?'<u>'+esc(r.text)+'</u>':esc(r.text)).join('')+'</pre>':'<pre>'+esc(seg.text)+'</pre>').join('')+block.figureHtml;
 const refs=[
  ['Nepali',a=>[...grade9NepaliReferenceBank(a).questions,...grade9NepaliPracticeSummaryDrafts(a)],'ne',180,20],
  ['English',a=>[...grade9EnglishReferenceBank(a).questions.filter(q=>q.slot!=='reading2'),...grade9EnglishPracticeReading2(a)],'en',180,10],
@@ -50,6 +50,10 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
    assert.equal(result.blocks[0].text.split('\n').filter(l=>l.includes('|')).length,6);
    assert.equal((result.blocks[6].text.match(/\(२\)/g)||[]).length,2);
    assert.match(result.blocks[14].text,/\(२ \+ ३ = ५\)/);
+   assert.equal(result.blocks[5].underlineWords,true);
+   assert.equal(referenceWordClassRuns(result.blocks[5].text).filter(r=>r.underline).length,6);
+   assert.match(result.blocks[14].text,/टिप्नुहोस्। \(२\)/);
+   assert.match(result.blocks[14].text,/सारांश लेख्नुहोस्। \(३\)/);
    assert.match(result.blocks[15].text,/\(४ \+ ४ = ८\)/);
    assert.doesNotMatch(result.text,/\[\d+\]|\[[०-९.]+\]/);
   }
