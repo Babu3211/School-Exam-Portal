@@ -75,6 +75,29 @@ try{
    ' assert x.count("<w:drawing>")==int(sys.argv[2])'
   ].join('\n');
   execFileSync('python3',['-c',verifyFull,docxPath,String(layout.figureCount)]);
+  if(name.startsWith('optional-mathematics-')){
+   const rows=await page.locator('.qp-model-row').count(),headings=await page.locator('.qp-model-heading').count();
+   assert.equal(rows,60,name+' scored subparts');
+   assert.equal(headings,3,name+' model headings');
+   const verifyRows=[
+    'import zipfile,sys,xml.etree.ElementTree as ET',
+    'ns={"w":"http://schemas.openxmlformats.org/wordprocessingml/2006/main"}',
+    'with zipfile.ZipFile(sys.argv[1]) as z:',
+    ' root=ET.fromstring(z.read("word/document.xml"))',
+    ' rows=root.findall(".//w:tbl/w:tr",ns)',
+    ' assert len(rows)==63',
+    ' marks=[]',
+    ' for row in rows:',
+    '  cells=row.findall("w:tc",ns)',
+    '  assert len(cells)==3',
+    '  texts=["".join(t.text or "" for t in c.findall(".//w:t",ns)) for c in cells]',
+    '  if texts[1].strip().isdigit():',
+    '   assert texts[2].strip() in ("K","U","A","HA")',
+    '   marks.append(int(texts[1]))',
+    ' assert len(marks)==60 and sum(marks)==75'
+   ].join('\n');
+   execFileSync('python3',['-c',verifyRows,docxPath]);
+  }
   console.log('DOCX PASS',name,layout.figureCount);
  }
  await page.goto(base+'/test');
