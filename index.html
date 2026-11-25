@@ -7636,9 +7636,11 @@ const cdcUpperScienceSource={
 };
 const cdcUpperScienceByTitle=new Map();
 for(const [grade,forms] of Object.entries(cdcUpperScienceSource)){
- const themes=cdcVerifiedUnits(grade,'science');
+ // Derive the ordered theme keys from the same canonical catalogue used by saves.
+ const catalogue=cdcVerifiedOutcomes[grade+':science'];
+ const themes=[...new Set(catalogue.map(row=>row[0]))];
  forms.forEach((items,themeIndex)=>{
-  const unit=themes[themeIndex]?.[0],rows=cdcVerifiedOutcomes[grade+':science'].filter(row=>row[0]===unit);
+  const unit=themes[themeIndex],rows=catalogue.filter(row=>row[0]===unit);
   if(rows.length===items.length)rows.forEach((row,i)=>cdcUpperScienceByTitle.set(JSON.stringify([grade,unit,row[1]]),{number:(themeIndex+1)+'.'+(i+1),ne:items[i]}));
  });
 }
