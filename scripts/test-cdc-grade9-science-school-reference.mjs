@@ -21,7 +21,10 @@ for(const language of ['ne','en','both']){
  assert.deepEqual(Array.from({length:19},(_,i)=>a.paper.questions.filter(q=>String(q.unitCode)===String(i+1)).reduce((sum,q)=>sum+q.marks,0)),[3,3,2,3,8,3,5,2,4,7,6,2,7,6,3,3,2,3,3]);
  assert.equal(plan({...args,selectedTopicIds:selectedTopicIds.slice(0,18)}).ready,false);
  assert.equal(plan({...args,questions:p.questions.map(q=>({...q,marks:9}))}).ready,false);
- const preview=buildGrade9ReferencePreview(args);assert.equal(preview.ready,true);assert.match(preview.text,language==='ne'?/BESS २०७९ school annual reference/:/BESS 2079 school annual reference/);assert.match(preview.text,language==='ne'?/\[१\]/:/\[1\]/);
+ const preview=buildGrade9ReferencePreview(args);assert.equal(preview.ready,true);assert.match(preview.text,language==='ne'?/BESS २०७९ school annual reference/:/BESS 2079 school annual reference/);assert.doesNotMatch(preview.text,/\[[0-9०-९]+\]/,'Uniform marks belong in section headings');
+ const totals=language==='ne'?['१० × १ = १०','९ × १ = ९','१४ × २ = २८','७ × ४ = २८']:['10 × 1 = 10','9 × 1 = 9','14 × 2 = 28','7 × 4 = 28'];
+ for(const total of totals)assert.ok(preview.text.includes(total),'Missing science group marks: '+total);
+ assert.deepEqual(preview.blocks.map(b=>b.displayNumber),[...Array.from({length:10},(_,i)=>i+1),...Array.from({length:30},(_,i)=>i+1)]);
 }
 console.log('PASS 80 real science bilingual variants, 40 questions, exact BESS school unit weights and cognitive category counts; no current CDC approval');
 
