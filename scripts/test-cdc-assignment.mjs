@@ -386,6 +386,14 @@ for (const [grade,registered,label] of [
     assert.ok(topic && /[अ-ह]/u.test(topic.value) && !/[a-z]/i.test(topic.text));
   }
 }
+assert.equal(field('localSubjectHelp').hidden,false);
+assert.equal(field('themePick').disabled,true);
+assert.match(field('localSubjectMessage').textContent,/आधिकारिक/);
+field('localSubjectOpen').onclick();
+for(const name of ['extraObservations','extraManual','extraActions','extraRecords'])assert.equal(field(name).open,true);
+assert.equal(field('annexScroll').getAttribute('tabindex'),'0');
+assert.match(html,/@media screen and \(max-width:700px\)/);
+assert.match(html,/data-cdc-subject-key="mathematics"/);
 console.log('Real registry spellings, local subjects and IEMIS-coded subject labels passed');
 // Standalone assessment route is a sibling of Marks Entry and requires no marks or exams.
 assert.match(html,/<summary>[^\n]*Manage Exam<\/summary>[^\n]*data-page="cdc-assessment"/);
@@ -1866,6 +1874,60 @@ for(const grade of ['1','2','3']){
  assert.ok(field('portfolioPreview').querySelector('[data-page-orientation="portrait"]'));
 }
 console.log('Grades 1–3 CDC 2076 Annex 2 annual report and portfolio PDF Word Excel regression');
+// School-wide read-only coverage and reporting: current-year unique evidence,
+// not final grades; exclude other students, classes, sections and invalid scores.
+{
+const reportPupils=[{id:'r1',class:'Class 1',section:'A',name:'Report One'},{id:'r2',class:'Class 1',section:'B',name:'Report Two'},{id:'r5',class:'Class 5',section:'A',name:'Report Five'},{id:'old',class:'Class 6',section:'A'},{id:'inactive',class:'Class 1',active:false}];
+const evidence={studentId:'r1',className:'Class 1',section:'A',academicYear:'2083',subject:'Nepali',unit:'Unit',topic:'Outcome',level:3};
+const indicators={studentId:'r5',className:'Class 5',section:'A',academicYear:'2083',subject:'Our Surroundings',unit:'Unit',outcomeId:'block',indicators:[true,true,false,true]};
+const coverage=w.cdcCoverageModel(reportPupils,[evidence,{...evidence,stage:'support'},{...evidence,studentId:'r2'},{...evidence,academicYear:'2082'},{...evidence,studentId:'r5',className:'Class 5',topic:'Five',level:4},{...evidence,studentId:'r2',section:'B',level:0}],[indicators,{...indicators,studentId:'r1',className:'Class 1',section:'A'}],'2083');
+assert.deepEqual(JSON.parse(JSON.stringify(coverage.groups.map(g=>[g.students,g.observed,g.items]))),[[2,1,2],[0,0,0],[0,0,0],[0,0,0],[1,1,1]]);
+const coverageReport=w.cdcCoveragePrint({...coverage,year:'2083'},'1');
+assert.match(coverageReport.body.textContent,/Report One/);
+assert.match(coverageReport.body.textContent,/Report Two/);
+assert.doesNotMatch(coverageReport.body.textContent,/Report Five/);
+assert.equal(coverageReport.querySelectorAll('tbody tr').length,2);
+assert.ok(zipEntries(w.cdcOfficeExport(coverageReport,'xlsx'))['xl/worksheets/sheet1.xml']);
+assert.ok(zipEntries(w.cdcOfficeExport(coverageReport,'docx'))['word/document.xml']);
+const reportHub=w.document.createElement('div');reportHub.id='cdcReportHub';w.document.body.append(reportHub);
+const reportDetail=w.document.createElement('div');reportDetail.id='cdcReportDetail';w.document.body.append(reportDetail);
+let coverageReads=0;
+w.getDocsFromServer=async q=>{
+ coverageReads++;
+ if(q==='students')return {docs:reportPupils.map(p=>({id:p.id,data:()=>p}))};
+ assert.equal(q.filters[0][0],'academicYear');assert.equal(q.filters[0][2],'2083');
+ return {docs:(q.name==='cdc_observations'?[evidence]:[]).map(r=>({data:()=>r}))};
+};
+await w.loadCdcReportHub();
+const hubField=n=>reportHub.querySelector('[data-cdc-hub="'+n+'"]');
+assert.equal(coverageReads,3);
+assert.equal(hubField('preview').querySelectorAll('tbody tr').length,5);
+hubField('grade').value='1';hubField('grade').onchange();
+assert.equal(hubField('student').options.length,3);
+assert.equal(hubField('preview').querySelectorAll('tbody tr').length,2);
+hubField('format').value='xlsx';hubField('export').onclick();
+assert.match(officeDownloads.at(-1).entries['xl/worksheets/sheet1.xml'],/Report One/);
+assert.doesNotMatch(officeDownloads.at(-1).entries['xl/worksheets/sheet1.xml'],/Report Five/);
+const dash=w.document.createElement('section');dash.id='cdcDashboardPanel';dash.innerHTML='<div id="cdcDashboardAnalytics"></div><p id="cdcDashboardStatus"></p><button id="cdcDashboardRefresh"></button>';w.document.body.append(dash);
+await w.loadCdcDashboardOverview();assert.equal(coverageReads,3);assert.equal(dash.querySelectorAll('.analytics-bar-item').length,5);
+w.getDocs=async name=>({docs:name==='students'?reportPupils.map(p=>({id:p.id,data:()=>p})):[{id:'registry',data:()=>({className:'Class 1',subject:'Nepali'})}]});
+hubField('student').value='r1';hubField('student').onchange();await hubField('view').onclick();
+assert.equal(reportDetail.querySelector('[data-cdc="student"]').value,'r1');
+assert.equal(reportDetail.querySelector('[data-cdc="accessNotice"]').hidden,false);
+assert.equal(reportDetail.querySelector('[data-cdc="save"]').disabled,true);
+assert.ok(reportDetail.querySelector('[data-cdc="portfolioPanel"]'));
+const readsBeforeDenied=coverageReads;
+w.isAdmin=()=>false;current.roles=['subject_teacher'];current.active=true;
+await w.loadCdcDashboardOverview();assert.equal(dash.hidden,true);assert.equal(coverageReads,readsBeforeDenied);
+assert.equal(w.cdcSchoolReportAccess(),false);
+assert.equal(dash.querySelectorAll('.analytics-bar-item').length,0);
+w.isAdmin=()=>true;current.roles=['admin'];
+w.clearCdcCoverageCache();
+const readsAfterReset=coverageReads;
+await w.loadCdcDashboardOverview();assert.equal(coverageReads,readsAfterReset+3);
+reportHub.remove();reportDetail.remove();dash.remove();
+console.log('CDC dashboard and report hub: current-year coverage, deduplication, cached reads, export, admin read-only drill-down and role isolation passed');
+}
 // CDC backup: verify legacy and new exports in an isolated synthetic DOM.
 // Assessment evidence must never be replayed through ordinary client restore.
 const backupDom=new JSDOM('<div id="restoreFirebaseMessage"></div><pre id="restorePreview"></pre><input id="restoreBackupFile" type="file"><button id="runFirebaseRestore"></button>',{runScripts:'outside-only'});
