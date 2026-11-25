@@ -9248,6 +9248,31 @@ function cdcUpperGuidePage(grade,subject,unit,year){
   const i=cdcVerifiedUnits(grade,key).findIndex(([name])=>name===unit);
   return i>=0&&i<source.counts.length?{page:source.pages[i],count:source.counts[i],guide:'45'}:null;
 }
+// The assessment picker must use the exact form keys, not just curriculum skill labels.
+// Keep older catalogue units separately available without changing saved identifiers.
+function cdcEntryThemeOptions(grade,subject,year){
+  grade=String(grade);
+  const key=cdcAssessmentSubjectKey(subject),lower=Number(grade)<=3,revised=Number(year)>=2084;
+  const curriculum=new Map(cdcVerifiedUnits(grade,key)),forms=new Map();
+  if(lower&&!revised&&key==='mathematics'){
+    for(const [id,form] of Object.entries(cdcLegacyMathRubrics).filter(([id])=>id.startsWith(grade+':')).sort((a,b)=>a[1].page-b[1].page))
+      forms.set(id.slice(grade.length+1),form.en);
+  }else if(lower&&!revised&&key==='nepali'){
+    for(const unit of Object.keys(grade==='1'?cdcPrimaryNepaliForms:cdcNepaliThemeForms[grade]||{}))forms.set(unit,'');
+  }else if(lower&&!revised&&key==='english'){
+    for(const [unit,form] of Object.entries(cdcPrimaryEnglishForms[grade]||{}))forms.set(unit,form.name);
+  }else if(lower&&revised&&key==='mathematics'){
+    const aliases=new Map([['म र मेरो परिवार','Me and my family'],['मेरो दैनिक जीवन','My daily life'],...revisedMathThemes.filter(([g])=>g===grade).map(([,ne,en])=>[ne,en])]);
+    for(const id of Object.keys(cdcRevisedMathForms).filter(k=>k.startsWith(grade+':')))forms.set(id.slice(grade.length+1),aliases.get(id.slice(grade.length+1))||id.slice(grade.length+1));
+    return [...forms].map(([unit,en])=>({unit,en,kind:'form'}));
+  }else if(lower&&!revised&&key==='serophero'){
+    return [...curriculum].map(([unit,en])=>({unit,en,kind:cdcSeroSavedReportForm(grade,unit,year)?'form':cdcSeroferoGuideCounts[grade]?.[unit]||cdcSeroferoReferenceForms[grade]?.[unit]?'review':'manual'}));
+  }else if(!lower){
+    const catalogue=cdcVerifiedOutcomes[grade+':'+key]||[];
+    for(const [unit] of catalogue)if(!forms.has(unit))forms.set(unit,curriculum.get(unit)||(key==='english'?unit:''));
+  }
+  return [...[...forms].map(([unit,en])=>({unit,en:en||curriculum.get(unit)||'',kind:'form'})),...[...curriculum].filter(([unit])=>!forms.has(unit)).map(([unit,en])=>({unit,en,kind:'manual'}))];
+}
 function cdcThemeMarkRows(grade,subject,year){
   grade=String(grade);
   const key=cdcAssessmentSubjectKey(subject),lower=Number(grade)<=3,revised=Number(year)>=2084;
@@ -9475,6 +9500,7 @@ function openCdcAssessment(context = null) {
     <label>विषयक्षेत्र / Theme <select data-cdc="themePick"><option value="">छान्नुहोस्</option></select></label>
     <p data-cdc="accessNotice" role="status" style="font-weight:600;margin:8px 0;padding:10px 12px;border-left:3px solid #17466e;background:#eef4fa;color:#172b43" hidden></p>
     <p data-cdc="workspaceHint" class="hint">विषयक्षेत्र छान्नुहोस्, मिति र अङ्कन भरेर Save गर्नुहोस्।</p>
+    <section data-cdc="themeEntryHelp" class="notice" hidden><p data-cdc="themeEntryMessage" role="status"></p><button type="button" class="btn alt" data-cdc="themeManualOpen">Open Learning Outcomes / Records</button></section>
     <section data-cdc="localSubjectHelp" hidden><strong>Local Subject Assessment</strong><p class="hint" data-cdc="localSubjectMessage"></p><button type="button" class="btn alt" data-cdc="localSubjectOpen">Open Local Assessment</button></section>
     <section data-cdc="annex3" hidden><div class="toolbar"><button type="button" class="btn alt" data-cdc="gridRead" id="cdcGridRead">अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्</button></div><p data-cdc="gridStatus" role="status" aria-live="polite" style="font-weight:600;color:#17466e;overflow-wrap:anywhere"></p><p data-cdc="entryNotice" class="hint" role="status"></p><p class="hint" style="font-size:12px">पूरा तालिका हेर्न दायाँ–बायाँ सार्नुहोस्।</p><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><details data-cdc="seroSourcePreview" hidden style="margin:8px 0"><summary style="cursor:pointer;font-weight:600">मूल CDC PDF सँग तुलना गर्नुहोस्</summary><p class="hint">मूल पृष्ठ र तलको डिजिटल फाराम तुलना गर्नुहोस्। PDF नदेखिए नयाँ ट्याबमा खोल्नुहोस्। विद्यार्थीको विवरण PDF सेवामा पठाइँदैन।</p><a data-cdc="seroSourceOpen" target="_blank" rel="noopener noreferrer">मूल पृष्ठ खोल्नुहोस्</a><div data-cdc="seroSourceFrame"></div></details><div class="tablewrap" data-cdc="annexScroll" role="region" aria-label="Assessment table — scroll horizontally" tabindex="0"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><label>Export Format <select data-cdc="exportFormat"><option value="pdf">PDF / Print</option><option value="docx">Word (.docx)</option><option value="xlsx">Excel (.xlsx)</option></select></label> <button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Export Selected Student</button><button class="btn alt" data-cdc="printAll" type="button" disabled>Export All Students</button><p data-cdc="printStatus" role="status" class="hint"></p><p data-cdc="batchPrintStatus" role="status" aria-live="polite" class="hint"></p></section>
     <details class="cdc-more" data-cdc="extraReference"><summary>CDC निर्देशिका र विषयक्षेत्र विवरण</summary>
@@ -9622,13 +9648,14 @@ function openCdcAssessment(context = null) {
     field('student').parentElement.append(field('next'));
     field('next').style.cssText='margin-left:8px;padding:5px 10px;min-height:32px';
   }
-  field('localSubjectOpen').onclick=()=>{
-    if(field('localSubjectHelp').hidden)return;
+  const openManualAssessment=()=>{
     if(context)field('moreOptions').open=true;
     field('extraObservations').open=true;
     if(!readOnly){field('extraManual').open=true;field('extraActions').open=true;}
     field('extraRecords').open=true;
   };
+  field('localSubjectOpen').onclick=()=>{if(!field('localSubjectHelp').hidden)openManualAssessment();};
+  field('themeManualOpen').onclick=()=>{if(!field('themeEntryHelp').hidden)openManualAssessment();};
   const options = (name, values) => field(name).replaceChildren(...values.map(([value,label])=>new Option(label,value)));
   const storagePrefix = 'smss-cdc-draft:';
   const scope = () => [owner,year,...['class','subject','student','period'].map(name=>field(name).value.trim())];
@@ -9811,6 +9838,12 @@ function openCdcAssessment(context = null) {
     syncSeroSourcePreview(seroReference||seroGuide||cdcUpperGuidePage(field('class').value,field('subject').value,field('unit').value,year));
     field('printAll').hidden=!context;
     field('printAll').disabled=batchPrinting||!context||!schoolSelection()||!field('unit').value.trim()||!!seroGuide||(!enabled&&(!seroReference||seroReference.referenceOnly))||!!seroReference&&(seroReference.referenceOnly||year!=='2083');
+    const pickedUnit=field('unit').value.trim(),entryKind=cdcEntryThemeOptions(field('class').value,field('subject').value,year).find(x=>x.unit===pickedUnit)?.kind;
+    const manualOnly=!!pickedUnit&&!enabled&&!nepaliForm&&!seroReference&&!seroGuide;
+    const reviewOnly=!!pickedUnit&&(!!seroGuide||!!seroReference?.referenceOnly||!!nepaliForm&&!nepaliForm.editable);
+    field('themeEntryHelp').hidden=!context||(!manualOnly&&!reviewOnly)||cdcAssessmentSubjectKey(field('subject').value)===cdcLocalSubject[0];
+    field('themeEntryMessage').textContent=reviewOnly?'यस थिमको मूल फाराम समीक्षा गर्न खुल्छ। स्रोत प्रमाणीकरण नभएकाले अङ्कन तथा सुरक्षित गर्ने सुविधा निष्क्रिय छ।':manualOnly?(entryKind==='manual'?'यो पाठ्यक्रमको सामान्य एकाइ हो; यसको छुट्टै CDC मूल्याङ्कन फाराम उपलब्ध छैन। पुराना अभिलेख र सिकाइ उपलब्धि तल हेर्न सकिन्छ।':'यस एकाइको प्रमाणित मूल्याङ्कन फाराम उपलब्ध छैन। तलको बटनबाट सिकाइ उपलब्धि र अभिलेख हेर्न सकिन्छ।'):'';
+    field('themeManualOpen').hidden=reviewOnly;
     panel.hidden=!enabled&&!nepaliForm&&!seroReference&&!seroGuide;field('stageRow').hidden=!enabled;field('gridRead').hidden=!!nepaliForm&&!nepaliForm.editable;
     field('printForm').disabled=!enabled||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('unit').value.trim();
     field('gridRead').textContent=seroReference?'सूचक अभिलेख पढ्नुहोस् / पुनः पढ्नुहोस्':'अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्';
@@ -10218,10 +10251,13 @@ function openCdcAssessment(context = null) {
     const official = primaryEnglishForm() ? primaryEnglishRows(primaryEnglishForm(),field('unit').value) : nepaliForm ? primaryNepaliRows(nepaliForm,field('unit').value) : legacy ? legacy.rows.map(({ne,en})=>[field('unit').value,ne,en]) : revised ? revised.rows.map(([,ne,en])=>[field('unit').value,ne,en]) : (revisedPrimaryYear&&Number(cl)<=3&&cdcAssessmentSubjectKey(subject)==='mathematics'?[]:cdcVerifiedOutcomes[cl+':'+cdcAssessmentSubjectKey(subject)] || [])
       .filter(([unit])=>normalizeTitle(unit)===sourceUnit);
     const english = language()==='en';
-    field('outcomePickerLabel').hidden=!official.length;
+    const pickerRows=[...official];
+    const pickerKeys=new Set(pickerRows.map(([,ne])=>normalizeTitle(ne)));
+    for(const {unit,ne,en} of getCatalog())if(normalizeTitle(unit)===sourceUnit&&!pickerKeys.has(normalizeTitle(ne))){pickerRows.push([unit,ne,en]);pickerKeys.add(normalizeTitle(ne));}
+    field('outcomePickerLabel').hidden=!pickerRows.length;
     field('outcomePickerLabel').firstChild.textContent=english ? 'Curriculum learning outcomes ' : 'पाठ्यक्रमका सिकाइ उपलब्धि ';
     options('outcomePicker',[['',english ? 'Select a learning outcome' : 'उपलब्धि छान्नुहोस्'],
-      ...official.map(([,ne,en])=>[ne,localized(ne,en)])]);
+      ...pickerRows.map(([,ne,en])=>[ne,localized(ne,en)])]);
     for(const [,ne,en] of official) {
       if(!sharedTopics.has(ne)) sharedTopics.set(ne,en);
     }
@@ -10935,22 +10971,12 @@ function openCdcAssessment(context = null) {
     load();
   };
   const units = () => {
-    const pairs = new Map(cdcVerifiedUnits(field('class').value,field('subject').value));
-    if(context&&!revisedPrimaryYear&&Number(field('class').value)>=2&&cdcPrimaryEnglishForms[field('class').value]&&cdcAssessmentSubjectKey(field('subject').value)==='english'){
-      const previous=[...pairs];pairs.clear();for(const unit of Object.keys(cdcPrimaryEnglishForms[field('class').value]))pairs.set(unit,unit);for(const pair of previous)pairs.set(...pair);
+    const grade=field('class').value,subject=field('subject').value;
+    const pairs=new Map(context?cdcEntryThemeOptions(grade,subject,year).map(({unit,en})=>[unit,en]):cdcVerifiedUnits(grade,subject));
+    if(!context&&revisedPrimaryYear&&Number(grade)<=3&&cdcAssessmentSubjectKey(subject)==='mathematics'){
+      pairs.clear();for(const {unit,en} of cdcEntryThemeOptions(grade,subject,year))pairs.set(unit,en);
     }
-    if(context&&!revisedPrimaryYear&&cdcNepaliThemeForms[field('class').value]&&cdcAssessmentSubjectKey(field('subject').value)==='nepali'){
-      const previous=[...pairs];pairs.clear();for(const unit of Object.keys(cdcNepaliThemeForms[field('class').value]))pairs.set(unit,'');for(const pair of previous)pairs.set(...pair);
-    }
-    if(revisedPrimaryYear&&Number(field('class').value)<=3&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics'){
-      // The revised forms are a separate catalogue; never expose future rows in 2083.
-      const grade=field('class').value;
-      const aliases=new Map([['म र मेरो परिवार','Me and my family'],['मेरो दैनिक जीवन','My daily life'],...revisedMathThemes.filter(([g])=>g===grade).map(([,ne,en])=>[ne,en])]);
-      pairs.clear();
-      for(const key of Object.keys(cdcRevisedMathForms).filter(k=>k.startsWith(grade+':'))){const unit=key.slice(2);pairs.set(unit,aliases.get(unit)||unit);}
-    }
-    if(context&&!revisedPrimaryYear&&cdcAssessmentSubjectKey(field('subject').value)==='mathematics')for(const [key,form] of Object.entries(cdcLegacyMathRubrics))if(key.startsWith(field('class').value+':'))pairs.set(key.slice(2),form.en);
-    for(const {unit,unitEn} of getCatalog()) if(!pairs.has(unit)) pairs.set(unit,unitEn);
+    for(const {unit,unitEn} of getCatalog())if(!pairs.has(unit))pairs.set(unit,unitEn);
     return [...pairs];
   };
   // Accept the source title as an alias, without changing stored unit identifiers.
@@ -10971,7 +10997,8 @@ function openCdcAssessment(context = null) {
   };
   function refreshUnitSuggestions() {
     const verifiedUnits = units();
-    options('themePick',[['','छान्नुहोस्'],...verifiedUnits.map(([ne,en])=>[ne,unitDisplayTitle(localized(ne,en))])]);
+    const kinds=new Map(context?cdcEntryThemeOptions(field('class').value,field('subject').value,year).map(({unit,kind})=>[unit,kind]):[]);
+    options('themePick',[['','छान्नुहोस्'],...verifiedUnits.map(([ne,en])=>[ne,unitDisplayTitle(localized(ne,en))+(context&&kinds.get(ne)==='manual'?' — पाठ्यक्रम / Curriculum':context&&kinds.get(ne)==='review'?' — समीक्षा / Review':'')])]);
     field('themePick').value=field('unit').value;
     const local=cdcAssessmentSubjectKey(field('subject').value)===cdcLocalSubject[0];
     field('localSubjectHelp').hidden=!local;
@@ -10982,6 +11009,7 @@ function openCdcAssessment(context = null) {
       const pair=units().find(([ne])=>ne===field('themePick').value);
       [field('unit').value,field('unitEn').value]=pair||['',''];
       field('topic').value='';load();
+      if(context&&pair&&!field('themeEntryHelp').hidden&&!field('themeManualOpen').hidden)openManualAssessment();
       if(context&&pair&&!field('annex3').hidden&&!field('gridRead').hidden&&schoolSelection())await field('gridRead').onclick();
     };
     field('unitCoverage').textContent = verifiedUnits.length
