@@ -7,6 +7,11 @@ const bilingual=read('./cdc-science-bilingual-mcq-v1.json').translations;
 let state=1;const rng=()=>((state=(state*1664525+1013904223)>>>0)/4294967296);
 for(const grade of [8,10]){
  const pack=read('./cdc-grade'+grade+'-science-practice-pack-v1.json');
+ if(grade===10){
+  assert.equal(pack.questions[3].options[0],bilingual['10:2'].originalOptionsNe[0]);
+  const stale=structuredClone(pack);stale.questions[3].options[0]='साझा लक्षण र പരിണामिक सम्बन्ध';
+  assert.throws(()=>practiceUnitOptions({pack:stale,bilingual,language:'both'}),/Bilingual source question/);
+ }
  const args={schoolId:'12345',schoolName:'Test School',pack,bilingual,rng};
  const options=practiceUnitOptions({pack,bilingual,language:'ne'});
  const topicIds=options.filter(u=>u.available).map(u=>u.id);

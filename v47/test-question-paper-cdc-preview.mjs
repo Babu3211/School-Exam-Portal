@@ -7,7 +7,19 @@ const pairs=[
  ['./cdc-grade8-science-practice-pack-v1.json','../data/cdc-grade8-science-practice-pack-v1.json'],
  ['./cdc-grade10-science-practice-pack-v1.json','../data/cdc-grade10-science-practice-pack-v1.json']
 ];
-for(const [v47,v46] of pairs)assert.deepEqual(read(v47),read(v46),'V47 practice/source reference must preserve exact V46 material: '+v47);
+for(const [v47,v46] of pairs){
+ const expected=read(v46);
+ if(v47===pairs[2][0]){
+  // V46 development 4a0c6f71 corrected mixed-script text in one question.
+  // Root production source remains unchanged. No other divergence is allowed.
+  assert.equal(expected.questions[3].unitCode,'2');
+  assert.equal(expected.questions[3].options[0],'साझा लक्षण र പരിണामिक सम्बन्ध');
+  assert.equal(expected.questions[3].answer,'जीवहरूको साझा लक्षण र പരിണामिक सम्बन्ध वर्गीकरणका आधार हुन्।');
+  expected.questions[3].options[0]='साझा लक्षण र विकासक्रमीय सम्बन्ध';
+  expected.questions[3].answer='जीवहरूको साझा लक्षण र विकासक्रमीय सम्बन्ध वर्गीकरणका आधार हुन्।';
+ }
+ assert.deepEqual(read(v47),expected,'V47 source parity with the pinned V46 correction: '+v47);
+}
 const register=read(pairs[0][0]),catalog=prepareCdcSourceCatalog(register);
 assert.equal(catalog.completeOfficialBlueprint,false);
 assert.equal(catalog.metadataOnly,true);
