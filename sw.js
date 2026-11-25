@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v137-grade9-quick-builder';
+const CACHE_NAME = 'smss-pwa-v138-grade9-model-mark-layout';
 const APP_SHELL = [
   './',
   './index.html',
