@@ -51,7 +51,15 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
   if(subject==='English'){
    for(const tag of ['[5 × 1 = 5]','[10 × 1 = 10]','[15 × 1 = 15]','[6 × 1 = 6]','[10 × 0.5 = 5]'])assert.ok(result.text.includes(tag),'Model-style English count × mark: '+tag);
   }
-  if(subject==='Science and Technology')for(const tag of ['10 × 1 = 10','9 × 1 = 9','14 × 2 = 28','7 × 4 = 28'])assert.ok(result.text.includes(tag));
+  if(subject==='Science and Technology'){
+   for(const tag of ['10 × 1 = 10','9 × 1 = 9','14 × 2 = 28','7 × 4 = 28','Time: 25 minutes','Group A','Group B','Group C','Group D']){
+    assert.ok(result.text.includes(tag),tag);
+    if(tag.startsWith('Group '))assert.ok(result.answerText.includes(tag),'answer key '+tag);
+   }
+   assert.deepEqual(result.blocks.map(b=>b.displayNumber),[...Array.from({length:10},(_,i)=>i+1),...Array.from({length:30},(_,i)=>i+1)]);
+   assert.equal(new Set(result.blocks.map(b=>b.number)).size,40,'stable figure and DOM identity');
+   for(const b of result.blocks)assert.match(b.text,new RegExp('(?:^|\\n)'+b.displayNumber+'\\. '));
+  }
   if(subject==='Social Studies')for(const tag of ['११ × १ = ११','९ × ४ = ३६','४ × ७ = २८'])assert.ok(result.text.includes(tag));
   if(subject==='Environmental Science')for(const tag of ['11 × 1 = 11','8 × 5 = 40','3 × 8 = 24'])assert.ok(result.text.includes(tag));
   assert.equal(result.readyForLive,false);assert.notEqual(result.signature,previousSignature);
