@@ -40,6 +40,7 @@ export function inspectReferencePaperAllocation({subject,groups,durationMinutes}
    }
   }
   if(Array.isArray(g.mapChoices))need(g.mapChoices.length===2&&g.mapChoices.every(c=>c.outlineMarks+c.labelMarks===mark(g)),'map alternative marks');
+  if(g.markParts!==undefined)need(Array.isArray(g.markParts)&&g.markParts.length>=2&&g.markParts.every(positive)&&sum(g.markParts)===mark(g),'explicit task mark split');
  }
  const checks=['Full marks','Main question count','Duration','Scored subparts and alternatives'],unresolved=[];
  const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
@@ -134,7 +135,8 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   if(!['science','social','optional_environment'].includes(key)||i&&groups[i-1].questionType===g.questionType)return '';
   const group=groups.filter(x=>x.questionType===g.questionType),n=group.length,m=group[0].marks;
   const names={mcq:['बहुविकल्पीय प्रश्न','Multiple choice questions'],very_short:['अति छोटो उत्तर आउने प्रश्न','Very short answer questions'],short:['छोटो उत्तर आउने प्रश्न','Short answer questions'],long:['लामो उत्तर आउने प्रश्न','Long answer questions']};
-  const label=names[g.questionType];if(!label)return '';
+  const instructions={mcq:['सही उत्तरमा गोलो चिन्ह लगाउनुहोस्।','Circle the correct option.'],very_short:['अति छोटो उत्तर दिनुहोस्।','Give very short answers.'],short:['छोटो उत्तर दिनुहोस्।','Give short answers.'],long:['लामो उत्तर दिनुहोस्।','Give long answers.']};
+  const label=instructions[g.questionType];if(!label)return '';
   const groupIndex=['mcq','very_short','short','long'].indexOf(g.questionType)-(key==='science'?0:1);
   const groupNe=['क','ख','ग','घ'][groupIndex],groupEn=['A','B','C','D'][groupIndex];
   const heading=choose('समूह ('+groupNe+')','Group '+groupEn);
@@ -231,17 +233,24 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   const figure=questionFigure(g,language);if(figure)figures.push({number:i+1,html:figure});
   const parts=g.subquestions||g.items||[];
   const marks=g.marks??parts.reduce((s,x)=>s+Number(x.marks||0),0);
-  lines.push(displayNumber+'. '+(key==='english'?g.text:choose(g.contextNe||g.questionText,g.contextEn||g.questionTextEn))+(key==='math'?'':' '+groupMark(g,parts,marks)));
+  const groupOnly=key==='science'||key==='social';
+  const split=key==='social'&&g.markParts?modelMark(g.markParts.join(' + ')+' = '+marks):'';
+  // The archived science and social models place uniform marks at the section
+  // header, not beside each ordinary question. Compound tasks alone show splits.
+  if(!Array.isArray(g.mapChoices))lines.push(displayNumber+'. '+choose(g.contextNe||g.questionText,g.contextEn||g.questionTextEn)+(split?' '+split:key==='math'||groupOnly?'':' '+groupMark(g,parts,marks)));
+  else lines.push(displayNumber+'. '+choose('तलका नक्सामध्ये कुनै एक तयार पार्नुहोस्।','Draw either of the following maps.')+' '+modelMark(g.mapChoices[0].outlineMarks+' + '+g.mapChoices[0].labelMarks+' = '+marks));
   if(g.practiceSubstitution===true)lines.push('ORIGINAL PRACTICE — not a seen textbook extract.');
   if(g.passage)lines.push(g.passage);
   if(g.questionType==='mcq')for(const [j,o] of (g.options||[]).entries())lines.push('  '+paperOptionLabel(j,language)+'. '+choose(o,g.optionsEn?.[j]));
   if(Array.isArray(g.mapChoices)){
    for(const [j,c] of g.mapChoices.entries()){
-    lines.push((language==='ne'?(j===0?'विकल्प क: ':'अथवा ख: '):(j===0?'Option A: ':'OR / अथवा B: '))+choose(c.textNe,c.textEn)+' ['+marks+']');
-    answer((i+1)+'.'+paperOptionLabel(j,language),choose(c.answerNe,c.answerEn)+' — '+c.labels.map(l=>choose(l.ne,l.en)).join('; '),7);
+    if(j>0)lines.push(choose('अथवा','OR'));
+    lines.push(choose(c.textNe,c.textEn));
+    answer(displayNumber+'.'+paperOptionLabel(j,language),choose(c.answerNe,c.answerEn)+' — '+c.labels.map(l=>choose(l.ne,l.en)).join('; '),marks);
    }
   }else if(!parts.length){
-   answer(String(displayNumber),(g.correctOption?g.correctOption+' — ':'')+(key==='english'?g.answer:choose(g.answerNe||g.answer,g.answerEn)),marks);
+   const rubric=key==='social'&&g.markParts?' ('+g.markParts.join(' + ')+' = '+marks+')':'';
+   answer(String(displayNumber),(g.correctOption?g.correctOption+' — ':'')+choose(g.answerNe||g.answer,g.answerEn)+rubric,marks);
   }
   for(const [j,x] of parts.entries()){
    lines.push('  '+paperOptionLabel(j,language,true)+') '+(key==='english'?x.text:choose(x.textNe,x.textEn))+' '+itemMark(x));
