@@ -5,6 +5,7 @@ import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} fro
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {prepareCdcSourceCatalog,prepareReadOnlyPracticePaper,recommendedPracticeIndices,printReadOnlyPracticePaper} from './question-paper-cdc-preview.mjs';
+import {practiceUnitOptions,generatePracticePreview} from './automatic-practice-preview.mjs';
 import {listOriginalPracticeChoices,summarizeOriginalPracticeSelection,MAX_PRACTICE_SELECTION} from './practice-question-selection.mjs';
 const $=id=>document.getElementById(id);
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
@@ -12,8 +13,9 @@ const status=text=>{$('message').textContent=text};
 let auth,authSdk,db,api,actor=null,school=null,schoolId=null,register=null,paper=null,practicePack=null,practiceChoices=[],selectedQuestions=new Set();
 const PRACTICE_PACK_FILE=Object.freeze({8:'cdc-grade8-science-practice-pack-v1.json',10:'cdc-grade10-science-practice-pack-v1.json'});
 let epoch=0,previewVersion=0,busy=false,loading=false;
+let translations=null;const practiceHistory=new Map();
 function clearPreview(){
- previewVersion++;paper=null;practicePack=null;practiceChoices=[];selectedQuestions.clear();
+ previewVersion++;paper=null;practicePack=null;translations=null;$('autoPracticeArea').hidden=true;$('autoPracticeUnits').replaceChildren();$('generatePractice').disabled=true;practiceChoices=[];selectedQuestions.clear();
  $('practiceSelection').hidden=true;$('practiceQuestionList').replaceChildren();
  $('practiceUnitFilter').replaceChildren();$('practiceTypeFilter').value='';
  $('updatePractice').disabled=true;$('practiceSelectionCount').textContent='No practice questions selected.';
@@ -22,7 +24,7 @@ function clearPreview(){
  $('paperStatus').textContent='No practice preview prepared.';
 }
 function reset(){
- epoch++;clearPreview();actor=null;schoolId=null;school=null;register=null;loading=false;
+ epoch++;clearPreview();actor=null;schoolId=null;school=null;register=null;loading=false;practiceHistory.clear();
  $('resourceArea').hidden=true;$('sourceList').replaceChildren();$('logout').disabled=true;
  $('identity').textContent='No verified school';$('sourceStatus').textContent='No sources loaded.';
 }
@@ -124,7 +126,7 @@ async function loadPractice(grade){
   await verifyAgain(request,member);
   const file=PRACTICE_PACK_FILE[grade];
   if(!file)throw Error('Only verified V46 Grade 8/10 practice references are available');
-  const pack=await fetchJson(file);
+  const [pack,translationRegister]=await Promise.all([fetchJson(file),fetchJson('cdc-science-bilingual-mcq-v1.json')]);
   assertSame(request,member);
   const indices=recommendedPracticeIndices(pack);
   const result=prepareReadOnlyPracticePaper({
@@ -134,6 +136,8 @@ async function loadPractice(grade){
   await verifyAgain(request,member);
   if(version!==previewVersion)throw Error('Practice selection changed');
   initializeQuestionSelection(pack,indices);
+  translations=translationRegister.translations;
+  $('autoPracticeArea').hidden=member.role==='viewer';renderAutoUnits();
   paper=result;displayPaper();
   status('Original SMSS अभ्यास प्रश्नको पूर्वावलोकन तयार छ। Teacher Review आवश्यक छ।');
  }catch(e){
@@ -237,6 +241,36 @@ $('updatePractice').onclick=async()=>{
  }finally{busy=false;if(request===epoch)selectionSummary()}
 };
 
+function renderAutoUnits(){
+ if(!practicePack||!translations||!actor||actor.role==='viewer')return;
+ const root=$('autoPracticeUnits');root.replaceChildren();
+ try{
+  const units=practiceUnitOptions({pack:practicePack,bilingual:translations,language:$('autoPracticeLanguage').value});
+  for(const unit of units){const label=document.createElement('label');label.className='practiceChoice';const input=document.createElement('input');input.type='checkbox';input.value=unit.id;input.disabled=!unit.available;input.checked=!!unit.available;input.onchange=()=>{invalidateSelectedPreview();$('autoPracticeStatus').textContent='Unit छनोट परिवर्तन भयो। पुनः Generate गर्नुहोस्।';};const span=document.createElement('span');span.textContent=unit.name+' ('+unit.available+')';label.append(input,span);root.append(label)}
+  $('generatePractice').disabled=!units.some(u=>u.available);$('autoPracticeStatus').textContent='Unit र पूर्णाङ्क छानेर अभ्यास प्रश्नपत्र बनाउनुहोस्।';
+ }catch(e){$('generatePractice').disabled=true;$('autoPracticeStatus').textContent='प्रश्न उपलब्ध छैनन्: '+neError(e)}
+}
+$('autoPracticeLanguage').onchange=()=>{invalidateSelectedPreview();renderAutoUnits()};
+$('autoPracticeMarks').oninput=()=>{invalidateSelectedPreview();$('autoPracticeStatus').textContent='पूर्णाङ्क परिवर्तन भयो। पुनः Generate गर्नुहोस्।'};
+$('generatePractice').onclick=async()=>{
+ if(busy||loading||!actor||actor.role==='viewer'||!practicePack||!translations)return;
+ const request=epoch,member=actor,pack=practicePack,version=previewVersion;
+ const topicIds=[...$('autoPracticeUnits').querySelectorAll('input:checked')].map(x=>x.value);
+ const fullMarks=Number($('autoPracticeMarks').value),language=$('autoPracticeLanguage').value;
+ const key=JSON.stringify([member.schoolId,pack.gradeNumber,language,fullMarks,topicIds]);
+ busy=true;$('generatePractice').disabled=true;
+ try{
+  await verifyAgain(request,member);
+  if(pack!==practicePack||version!==previewVersion)throw Error('Practice selection changed');
+  const previous=practiceHistory.get(key)??[];
+  const fresh=generatePracticePreview({schoolId:member.schoolId,schoolName:String(school.name??''),pack,bilingual:translations,topicIds,fullMarks,language,avoidSignatures:previous});
+  assertSame(request,member);
+  if(version!==previewVersion)throw Error('Practice selection changed');
+  practiceHistory.set(key,[...previous,fresh.signature].slice(-30));paper=fresh;displayPaper();
+  $('autoPracticeStatus').textContent='छानिएका Unit बाट '+fullMarks+' पूर्णाङ्कको नयाँ अभ्यास प्रश्नपत्र बन्यो। शिक्षकबाट समीक्षा आवश्यक छ।';
+ }catch(e){if(epoch===request&&actor===member){invalidateSelectedPreview();$('autoPracticeStatus').textContent='छनोट गरिएको भाषा, Unit र पूर्णाङ्कमा फरक प्रश्नपत्र बनाउन पर्याप्त प्रश्न छैनन् वा अनुरोध असफल भयो। '+neError(e)}}
+ finally{busy=false;if(epoch===request)$('generatePractice').disabled=false}
+};
 $('showAnswers').onchange=()=>{if(paper)displayPaper()};
 $('printPractice').onclick=async()=>{
  if(!paper||$('printPractice').disabled||!actor)return;
