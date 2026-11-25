@@ -489,6 +489,35 @@ for(const [subject,unit,count] of [
   assert.ok(field('annexRows').rows.length,subject);
   assert.equal(field('annexRows').rows[0].cells.length,count,subject);
   assert.equal([...field('annexFoot').rows[0].cells].reduce((n,cell)=>n+cell.colSpan,0),count,subject);
+  if(subject==='Mathematics'){
+    const oldKey='चाँदले ०° देखि १५०° सम्मका कोण नाप्ने र कोर्ने';
+    const newKey='चाँदले ०° देखि १८०° सम्मका कोण नाप्ने र कोर्ने';
+    const geometry=[...field('annexRows').rows];
+    assert.equal(geometry.length,5);
+    assert.match(geometry[0].cells[1].textContent,/कोणहरूको नाप र रचना/);
+    assert.match(geometry[0].cells[2].textContent,/०° देखि १८०°/);
+    assert.doesNotMatch(geometry[0].cells[2].textContent,/१५०°|150°/);
+    assert.match(geometry[3].cells[1].textContent,/समानान्तर र लम्ब रेखाहरू/);
+    assert.match(geometry[4].cells[1].textContent,/ठोस वस्तुहरू/);
+    assert.ok([...field('outcomePicker').options].some(o=>o.value===newKey));
+    assert.ok(![...field('outcomePicker').options].some(o=>o.value===oldKey));
+    const oldResult=annualCalc([{unit:'ज्यामिति',topic:oldKey,level:4,date:'2083-08-07'}],[['ज्यामिति',newKey]]);
+    assert.equal(oldResult.point,null);
+    for(const [theme,n,first,last] of [
+      ['अङ्कगणित',10,/सङ्ख्याको ज्ञान/,/दशमलव र प्रतिशतको रूपान्तरण/],
+      ['नाप',7,/१२ घन्टे/,/आयतन/],
+      ['तथ्याङ्कशास्त्र',4,/बिल/,/स्तम्भचित्र/],
+      ['बीजगणित',4,/बीजीय पद/,/समीकरण/]
+    ]){
+      choice('unit',theme);
+      const rows=[...field('annexRows').rows];
+      assert.equal(rows.length,n);
+      assert.match(rows[0].cells[1].textContent,first);
+      assert.match(rows.at(-1).cells[1].textContent,last);
+      assert.ok(rows.every(row=>row.cells[1].textContent.trim()));
+    }
+    choice('unit','ज्यामिति');
+  }
 }
 console.log('CDC subject-specific annex column counts passed');
 console.log('Standalone assessment navigation, primary-only assignment reads and inline display passed');
