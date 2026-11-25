@@ -282,7 +282,7 @@ function pageShell() {
       <details id="qpGrade9GridLibrary" style="margin:10px 0;padding:10px;border:1px solid #cbd5e1;border-radius:8px"><summary>Class 9 — CDC Grid Library / सबै विषयको विशिष्टीकरण तालिका</summary><div id="qpGrade9GridLibraryContent"><p>CDC sources load after selecting a class and subject.</p></div></details>
       <p class="qp-hint" id="qpAutoGridStatus" role="status">CDC Exact मोडमा सम्बन्धित कक्षा, विषय र पूर्णाङ्कको समीक्षित Unit-wise Grid चाहिन्छ।</p>
       <p class="qp-hint">एक क्लिकमा: कक्षा/विषय, Topic, पूर्णाङ्क र भाषा छान्नुहोस्। उपलब्ध मौलिक अभ्यास प्रश्नबाट ठीक पूर्णाङ्कको Draft तयार हुनेछ। पर्याप्त जाँचिएका प्रश्न नभए गलत प्रश्नपत्र बनाइँदैन। CDC Grid को लागू संस्करण शिक्षकले पुष्टि गर्नुपर्छ।</p>
-      <label class="qp-topic" style="margin-top:9px;background:#fff8e9;align-items:center"><input id="qpAutoReviewed" type="checkbox"><span>मैले प्रश्नपत्रको नेपाली वर्णविन्यास (ह्रस्व–दीर्घ), व्याकरण, English grammar, आवश्यक चित्र, पूर्णाङ्क, लागू CDC विशिष्टीकरण तालिका र उत्तरकुञ्जिका पढेर जाँच गरेको छु। <b>जाँच नगरी Save वा Print हुँदैन।</b></span></label>
+      <label id="qpOfficialReviewLabel" class="qp-topic" hidden style="margin-top:9px;background:#fff8e9;align-items:center"><input id="qpAutoReviewed" type="checkbox"><span>मैले प्रश्नपत्रको नेपाली वर्णविन्यास (ह्रस्व–दीर्घ), व्याकरण, English grammar, आवश्यक चित्र, पूर्णाङ्क, लागू CDC विशिष्टीकरण तालिका र उत्तरकुञ्जिका पढेर जाँच गरेको छु। <b>जाँच नगरी Save वा Print हुँदैन।</b></span></label>
       <div class="qp-actions"><button class="qp-btn" id="qpSmartGenerateBtn" type="button">एक क्लिकमा Auto Question Paper</button><button class="qp-btn alt" id="qpGenerateBtn" type="button">म्यानुअल Pattern Generate</button><button class="qp-btn alt" id="qpSavePaperBtn" type="button" disabled>प्रश्नपत्र Save</button><button class="qp-btn alt" id="qpPrintPaperBtn" type="button" disabled>प्रश्नपत्र Print / PDF</button><button class="qp-btn alt" id="qpAnswerKeyBtn" type="button" disabled>उत्तरकुञ्जिका Print / PDF</button><button class="qp-btn alt" id="qpWordPaperBtn" type="button" disabled>Word (.docx) Export</button></div>
       <div class="qp-actions" id="qpReferenceDraftActions" hidden><button class="qp-btn alt" id="qpSelectReferenceTopics" type="button">Select reference topics (75 marks)</button><button class="qp-btn alt" id="qpReferenceDraftBtn" type="button">Generate School Grid Draft (75 marks)</button></div><div id="qpReferenceExportActions" hidden><label class="qp-topic"><input id="qpReferenceReviewed" type="checkbox"><span>मैले विद्यालयको Grid, भाषा, चित्र र उत्तरकुञ्जिका जाँच गरेको छु। यो CDC Exact स्वीकृति होइन।</span></label><div class="qp-actions"><button class="qp-btn alt" id="qpReferencePrintBtn" type="button" disabled>Draft Print / PDF</button><button class="qp-btn alt" id="qpReferenceWordBtn" type="button" disabled>Draft Word (.docx)</button><button class="qp-btn alt" id="qpReferenceKeyBtn" type="button" disabled>Draft Answer Key / PDF</button></div></div><div id="qpReferenceDraftPreview" hidden style="white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;border:2px solid #c48740;border-radius:8px;background:#fff8e9;color:#482b11;font:inherit" role="status"></div><details id="qpReferenceAnswerReview" hidden style="margin-top:10px;padding:12px;border:1px solid #c48740;border-radius:8px"><summary>Teacher Answer Review / उत्तरकुञ्जिका (not official)</summary><pre id="qpReferenceAnswerText" style="white-space:pre-wrap;overflow-wrap:anywhere;font:inherit"></pre></details>
       <p id="qpPaperMessage" class="qp-hint" role="status"></p>
@@ -303,6 +303,7 @@ function setQuestionBuilderView(view){
 }
 function applyGrade9LanguagePolicy(){
  $("qpApp")?.classList.toggle("qp-grade9",gradeNumber(selectedClass)===9);
+ for(const id of ["qpPaperFullMarks","qpPaperDuration"]){const input=$(id);if(input)input.readOnly=gradeNumber(selectedClass)===9;}
  const select=$("qpAutoLanguage"),hint=$("qpLanguagePolicy");
  if(!select)return;
  const required=grade9RequiredPaperLanguage(gradeNumber(selectedClass),selectedSubject);
@@ -403,6 +404,16 @@ function renderTopics() {
  box.innerHTML=[...groups.values()].map(g=>`<section class="qp-unit-group"><h4>${esc(g.code?"Unit "+g.code+" · ":"")}${esc(g.title)}</h4>${g.items.map(x=>`<label class="qp-topic"><input type="checkbox" data-qp-topic data-unit-code="${esc(x.unitCode||"")}" value="${esc(x.id)}" checked><span><b>${esc(x.topicName)}</b></span></label>`).join("")}</section>`).join("");
  picker.innerHTML=topics.map(x=>'<option value="'+esc(x.topicName)+'">').join("");
 }
+function filterReferenceTopicChoices({grade,subject}){
+ if(grade===9){
+  const referenceIds=new Set(referencePreviewTopics({grade,subject,questions:bundledPracticeQuestions}));
+  if(referenceIds.size)for(const input of document.querySelectorAll("[data-qp-topic]")){
+   input.checked=referenceIds.has(input.value);input.disabled=!input.checked;
+   if(input.disabled)input.closest("label")?.setAttribute("hidden","");
+  }
+  if(referenceIds.size){for(const group of document.querySelectorAll(".qp-unit-group"))group.hidden=!group.querySelector("[data-qp-topic]:not(:disabled)");$("qpTopicCount").textContent=document.querySelectorAll("[data-qp-topic]:not(:disabled)").length+" Topic";}
+ }
+}
 function renderQuestionRows() {
   const body = $("qpQuestionRows"); if (!body) return;
   if (!questionRows.length) { body.innerHTML='<tr><td colspan="7">'+(bundledPracticeQuestions.length?esc(bundledPracticeQuestions.length)+" वटा प्रणालीमा तयार अभ्यास प्रश्न उपलब्ध छन्। प्रश्न टाइप गर्नुपर्दैन।":"यस विषयको थप प्रश्न बैंक खाली छ।")+"</td></tr>"; return; }
@@ -413,6 +424,7 @@ function renderQuestionRows() {
   </tr>`).join("");
 }
 function updateAutoReviewActions(){
+ const reviewLabel=$("qpOfficialReviewLabel");if(reviewLabel)reviewLabel.hidden=!generatedPaper;
  const ready=!!generatedPaper&&(!generatedPaper.qualityReport?.teacherReviewRequired||
   $("qpAutoReviewed")?.checked===true);
  for(const id of ["qpSavePaperBtn","qpPrintPaperBtn","qpAnswerKeyBtn","qpWordPaperBtn"])if($(id))$(id).disabled=!ready;
@@ -692,14 +704,7 @@ async function loadCurrentData() {
    bundled.status;
  $("qpCurriculumVersion").value=curriculumRows[0]?.curriculumVersion||"CDC संस्करण Topic सूचीअनुसार";
  renderTopics();renderQuestionRows();
- if(grade===9){
-  const referenceIds=new Set(referencePreviewTopics({grade,subject,questions:bundledPracticeQuestions}));
-  if(referenceIds.size)for(const input of document.querySelectorAll("[data-qp-topic]")){
-   input.checked=referenceIds.has(input.value);input.disabled=!input.checked;
-   if(input.disabled)input.closest("label")?.setAttribute("hidden","");
-  }
-  if(referenceIds.size){for(const group of document.querySelectorAll(".qp-unit-group"))group.hidden=!group.querySelector("[data-qp-topic]:not(:disabled)");$("qpTopicCount").textContent=document.querySelectorAll("[data-qp-topic]:not(:disabled)").length+" Topic";}
- }
+ filterReferenceTopicChoices({grade,subject});
  $("qpAutoSourceStatus").textContent=bundledPracticeStatus;
  renderGrade9GridLibrary($("qpGrade9GridLibraryContent"),cdcSourceRegister,[...new Set(classSubjects.filter(x=>x.gradeNumber===9).map(x=>x.subject))]);
  const pdfSource=$("qpOfficialGridSource");

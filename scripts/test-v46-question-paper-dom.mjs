@@ -265,6 +265,30 @@ assert.equal(computerTopicMapping[0].topicId,'cdc_official_computer_g9_u1_0',
 assert.equal(importedComputerQuestions[0].topicId,'custom_old',
  'The mapping must not modify existing saved Firestore question rows');
 
+// Reproduce the real screenshot: Nepali alias for compulsory English,
+ // 36 mixed grammar/writing topics, and the separate reference question groups.
+ const {grade9EnglishPracticeBank}=await import('../cdc-grade9-english-practice.mjs');
+ const {grade9EnglishReferenceBank,grade9EnglishPracticeReading2}=await import('../cdc-grade9-english-reference-bank.mjs');
+ const {referencePreviewTopics,buildGrade9ReferencePreview}=await import('../cdc-grade9-reference-preview.mjs');
+ const englishSubject='अनिवार्य अंग्रेजी';
+ const epack=grade9EnglishPracticeBank({grade:9,subject:englishSubject});
+ const eref=grade9EnglishReferenceBank({grade:9,subject:englishSubject});
+ const ebank=[...epack.questions,...eref.questions,...(eref.questions.some(q=>q.slot==='reading2')?[]:grade9EnglishPracticeReading2({grade:9,subject:englishSubject}))];
+ const eRender=new Function('$','esc','normal','curriculumRows','bundledPracticeUnits','bundledPracticeQuestions','questionRows','referencePreviewTopics','document',
+  code('function renderTopics() {','function renderQuestionRows() {')+
+  'renderTopics();filterReferenceTopicChoices({grade:9,subject:'+JSON.stringify(englishSubject)+'});return bundledPracticeQuestions;');
+ const mappedEnglish=eRender($,escape,normal,[],[...epack.units,...eref.units],ebank,[],referencePreviewTopics,dom.window.document);
+ const visibleEnglish=[...$('qpTopicList').querySelectorAll('[data-qp-topic]:not(:disabled)')];
+ assert.ok(visibleEnglish.length>0&&visibleEnglish.length<=10,'Only valid grouped English topic choices should be visible');
+ assert.ok(visibleEnglish.every(x=>x.checked));
+ const englishIds=visibleEnglish.map(x=>x.value);
+ assert.deepEqual(new Set(englishIds),new Set(referencePreviewTopics({grade:9,subject:englishSubject,questions:mappedEnglish})));
+ const englishDraft=buildGrade9ReferencePreview({grade:9,subject:englishSubject,questions:mappedEnglish,selectedTopicIds:englishIds,fullMarks:75,durationMinutes:180,language:'en',rng:()=>.39});
+ assert.equal(englishDraft.ready,true,englishDraft.reason);
+ assert.equal(englishDraft.groupCount,10);
+ assert.match(englishDraft.text,/75 marks/);
+ assert.doesNotMatch(englishDraft.text,/[\u0900-\u097f]/u);
+ console.log('PASS actual English screenshot path: visible topics, 75 marks and ten groups');
 const renderTopics=new Function('$','esc','normal','curriculumRows',
  'bundledPracticeUnits','bundledPracticeQuestions','questionRows',
  code('function renderTopics() {','function renderQuestionRows() {')+
