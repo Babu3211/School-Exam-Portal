@@ -45,6 +45,8 @@ try{
     for(const reason of reasons)issues[reason]=(issues[reason]??0)+1;
    }
    console.log('School registry diagnostics (up to 30): checked '+Math.min(30,schools.size)+', needs review '+invalid);
+   if(invalid>0)blocked=true;
+   if(schools.size>30){console.log('Registry check incomplete: more than 30 schools; do not infer full registry readiness');blocked=true}
    for(const [reason,count] of Object.entries(issues))console.log('Registry issue: '+reason+' — '+count);
    // Inspect only the first malformed registry entry. Never log its identity or
    // copy any academic record; a document-path migration requires separate review.
@@ -91,11 +93,13 @@ try{
       const match=snap.docs.some(d=>d.id===recent[0].u.uid);
       console.log('Most recently signed-in account has active root Super Admin document: '+(match?'YES':'NO'));
       console.log('Most recent sign-in age in whole minutes: '+Math.max(0,Math.floor((Date.now()-recent[0].time)/60000)));
-      if(!match)blocked=true;
+      // Ordinary School Admin, Teacher and Viewer sign-ins are valid. This
+      // historical troubleshooting observation is not a release failure.
      }
     }
    }
   }catch(e){console.log('Auth UID match check unavailable: '+summarizeError(e));blocked=true}
  }catch(e){console.log('Registry metadata read unavailable: '+summarizeError(e));blocked=true}
 }finally{await deleteApp(app)}
+console.log('Read-only V47 diagnostic: '+(blocked?'BLOCKED':'bounded checks passed; browser acceptance, backups and publication runtime still required'));
 if(blocked)process.exitCode=1;

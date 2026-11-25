@@ -44,6 +44,12 @@ jobs:
           npm run test:v47:verified-import
       - name: Test V47 school onboarding and pagination
         run: node v47/test-school-admin-services.mjs
+      - name: Verify all school roles can view class-wise subjects
+        run: node v47/test-subject-catalog-view.mjs
+      - name: Verify first-release navigation scope and read-only report routes
+        run: |
+          node v47/test-dashboard-access.mjs
+          node v47/test-grade-report-browser-ui.mjs
       - name: Verify teacher account Excel validation and school isolation
         run: |
           node v47/test-teacher-account-excel.mjs
