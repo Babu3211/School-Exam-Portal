@@ -228,8 +228,10 @@ try{
   finally{http.closeAllConnections?.();await new Promise(resolve=>http.close(resolve))}
  };
  await runHttpClient(false,async(opts,requests)=>{
+  const before=(await db.collection(path('marks_staging')).get()).size;
   await assert.rejects(runSavedClassPublication(opts),/503/);
-  assert.equal(requests.length,3);assert.equal((await pointerRef.get()).data().publicationId,stageHttpId);
+  assert.equal(requests.length,2);assert.equal((await pointerRef.get()).data().publicationId,stageHttpId);
+  assert.equal((await db.collection(path('marks_staging')).get()).size,before,'Disabled final publication must not create orphan staged manifests');
  });
  let latestPublication;
  await runHttpClient(true,async(opts,requests)=>{
@@ -304,6 +306,45 @@ try{
  assert.equal(largeAttendance.size,500);
  assert.equal(largeAttendance.docs.filter(d=>d.data().present).length,250);
  console.log('PASS real Firestore atomic attendance: 101 and 500 students, stale roster and competing edits rejected, disabled API and one-transaction commit');
+ // Additional upper-bound marks publication test; do not extend the attendance
+ // test (its independent atomic limit is 500). All fixtures are emulator-only.
+ const maxScope={schoolId,classId:'10',subjectId:'computer10',examId:'final'};
+ const maxKey='10_computer10_final',maxCount=1500,maxEntries=[];
+ await put(path('subjects',maxScope.subjectId),{schoolId,class:'10',name:'Computer',active:true});
+ await put(path('mark_settings',maxKey),{id:maxKey,...maxScope,active:true,components:[
+  {key:'internal',name:'Internal',fullMarks:4},{key:'written',name:'Written',fullMarks:36},{key:'practical',name:'Practical',fullMarks:10}
+ ]});
+ for(let start=0;start<maxCount;start+=400){
+  const seed=db.batch();
+  for(let i=start;i<Math.min(start+400,maxCount);i++){
+   const studentId='max'+String(i).padStart(4,'0'),isAbsent=i%100===0;
+   seed.set(db.doc(path('students',studentId)),{schoolId,class:'10',active:true,name:'Synthetic Max Student '+i});
+   maxEntries.push({studentId,isAbsent,values:isAbsent?null:{internal:4,written:i%37,practical:10},totalObtained:isAbsent?0:14+i%37});
+  }
+  await seed.commit();
+ }
+ await put(path('class_mark_drafts',maxKey),{format:'smss-v47-complete-class-draft-v1',state:'draft',...maxScope,settingsId:maxKey,rosterCount:maxCount,revision:1,updatedBy:actorUid,updatedAt:'synthetic-max-emulator-test',entries:maxEntries});
+ const maxReader=createAdminClassPublicationReaders({firestore:db,...maxScope,actorUid});
+ const maxInput=await maxReader.loadAuthoritative({schoolId,uid:actorUid});
+ assert.equal(maxInput.expectedStudentIds.length,maxCount);
+ const maxReview=fingerprintConfiguredClassReview(maxInput);
+ const maxConfirmation=Object.fromEntries(['format','schoolId','classId','subjectId','examId','settingsRevision','rosterRevision','digestAlgorithm','digest'].map(k=>[k,maxReview[k]]));
+ const maxOptions={...maxReader,confirmation:maxConfirmation,publicationId:'pub_max_1500'};
+ const maxStage=await stageTrustedClassMarks(maxOptions);
+ assert.equal(maxStage.rosterCount,maxCount);assert.equal(maxStage.batchCount,15);
+ const maxPointer=db.doc(path('official_marks_pointers',officialClassPointerId(maxScope)));
+ assert.equal((await maxPointer.get()).exists,false);
+ const maxCommit=await commitTrustedOfficialClassPublication(maxOptions);
+ assert.equal(maxCommit.committed,true);assert.equal(maxCommit.rosterCount,maxCount);
+ const maxOfficial=await loadCommittedOfficialClassMarks({firestore:db,...maxScope,actorUid});
+ assert.equal(maxOfficial.published,true);assert.equal(maxOfficial.entries.length,maxCount);
+ assert.equal(maxOfficial.entries.filter(e=>e.isAbsent).length,15);
+ assert.equal(maxOfficial.entries[1499].values.written,1499%37);
+ const maxView=(await db.doc(path('official_read_views',officialClassPointerId(maxScope))).get()).data();
+ assert.equal(maxView.entries.length,maxCount);
+ assert.equal(maxView.contentDigest,(await maxPointer.get()).data().contentDigest);
+ assert.equal((await db.collection(path('marks')).get()).size,0);
+ console.log('PASS 1500-student configured 4/36/10 publication: 15 pages, absent entries, atomic pointer/read view and full committed reader');
  console.log('PASS real Firebase Admin Firestore emulator: 101-student configured 4/36/10 staging, two pages, transaction-scoped full roster, CAS pointer/header/audit, official 101-row reader, active Viewer, revoked membership, missing page and inactive-student refusals');
 }finally{
  await deleteApp(app);

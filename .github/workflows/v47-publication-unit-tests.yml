@@ -67,7 +67,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
   publication-admin-emulator:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -94,7 +94,7 @@ jobs:
         run: |
           {
             echo '## Isolated Firebase Admin SDK publication emulator'
-            echo 'Real transaction reads, 101-student school-scoped marks staging, atomic pointer/header/audit and 101/500-student atomic attendance are exercised only in a local emulator.'
+            echo 'Real transaction reads, 101- and 1500-student school-scoped marks staging, atomic pointer/header/audit and 101/500-student atomic attendance are exercised only in a local emulator.'
             echo 'No hosting deployment, real Firebase credentials or production Firestore writes.'
-            echo 'This is NOT full CDC/IEMIS parity, browser E2E, transaction-load approval for 1500 students or production release.'
+            echo 'This is NOT full CDC/IEMIS parity, browser E2E, live quota/load approval or production release.'
           } >> "$GITHUB_STEP_SUMMARY"

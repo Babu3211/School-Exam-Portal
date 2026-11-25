@@ -18,7 +18,19 @@ export function createV47ApiServer({auth,firestore,publicationEnabled=false,atom
  const assignTeacher=createV47NodeTeacherAssignmentHandler({auth,firestore});
  // Legacy isolated-read test adapters omit Admin SDK transactions. Instantiate
  // this write-capable staging handler only when its explicit route is called.
- const stage=(req,res)=>createV47NodePublicationStageHandler({auth,firestore})(req,res);
+ const stage=(req,res)=>{
+  // A disabled final commit must not leave additional orphan staging pages or
+  // consume shared Spark writes. Read-only review remains available.
+  if(publicationEnabled!==true){
+   res.statusCode=req.method==="POST"?503:405;
+   res.setHeader("Content-Type","application/json; charset=utf-8");
+   res.setHeader("Cache-Control","no-store");
+   res.setHeader("X-Content-Type-Options","nosniff");
+   res.end(JSON.stringify({error:req.method==="POST"?"Official publication disabled until audited release approval":"Method not allowed"}));
+   return;
+  }
+  return createV47NodePublicationStageHandler({auth,firestore})(req,res);
+ };
  // Final commit is disabled unless the explicitly configured trusted server
  // opts in; the browser, static Hosting and existing runtimes cannot enable it.
  const publish=(req,res)=>createV47NodePublicationCommitHandler({

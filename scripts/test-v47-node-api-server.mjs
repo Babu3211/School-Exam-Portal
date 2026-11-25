@@ -31,6 +31,10 @@ try{
  await once(server,"listening");
  const base="http://127.0.0.1:"+server.address().port;
  const headers={authorization:"Bearer token","content-type":"application/json"};
+ const staging=await fetch(base+"/api/v47/publication/stage",{method:"POST",headers,body:"{}"});
+ assert.equal(staging.status,503,"Disabled publication must reject staging before writes");
+ const wrongMethod=await fetch(base+"/api/v47/publication/stage",{headers});
+ assert.equal(wrongMethod.status,405);
  const read=await fetch(base+"/api/v47/records?schoolId=school_A001&collection=students",{headers});
  assert.equal(read.status,200);
  assert.equal((await read.json()).records[0].id,"student1");
