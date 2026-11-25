@@ -11651,12 +11651,15 @@ function buildReport(){
 }
 async function loadReportsData(){if(!auth.currentUser||(!isAdmin()&&currentUserRole?.active!==true))throw new Error("सक्रिय Login आवश्यक छ।");const msg=document.getElementById("reportMessage");if(msg)msg.textContent="प्रणालीबाट रिपोर्ट विवरण लोड हुँदैछ...";try{await fetchDashboardCollections();buildReport()}catch(err){console.error("Reports load failed",err);if(msg)msg.textContent=`रिपोर्ट लोड भएन (${safeNoticeError(err)})। सुरक्षा नियम र Internet जाँच गर्नुहोस्।`;}}
 
+// Assessment evidence is append-only. Export for independent recovery review;
+// never replay it through ordinary client Restore (creator and timestamp rules).
+const CDC_BACKUP_ONLY_COLLECTIONS=['cdc_observations','cdc_serofero_indicators'];
 async function downloadFirebaseBackup(){
  const msg=document.getElementById("firebaseBackupMessage"),btn=document.getElementById("downloadFirebaseBackup");
  if(!msg||!btn)return;
  try{requireAdmin();if(!auth.currentUser||auth.currentUser.uid!==ADMIN_UID)throw new Error("मुख्य Admin खाताबाट Login गर्नुहोस्।");
   btn.disabled=true;msg.textContent="प्रणालीबाट डेटा पढिँदैछ। कृपया पर्खनुहोस्...";
-  const collectionNames=["students","staff","classes","subjects","exams","marks","attendance","mark_settings","certificates","user_roles","public_result_exams","public_results","public_result_lookup","audit_logs"];
+  const collectionNames=["students","staff","classes","subjects","exams","marks","attendance","mark_settings","certificates","user_roles","public_result_exams","public_results","public_result_lookup","audit_logs",...CDC_BACKUP_ONLY_COLLECTIONS];
   const backup={format:"SMSS-Firestore-Backup",version:1,createdAt:new Date().toISOString(),collections:{},documents:{school_settings:{}}};
   let total=0;
   for(const name of collectionNames){const snap=await getDocs(collection(db,name));backup.collections[name]=snap.docs.map(d=>({id:d.id,data:d.data()}));total+=snap.size;msg.textContent=`Backup भइरहेको छ: ${name} (${total} records)...`;}
@@ -11688,11 +11691,11 @@ async function previewFirebaseRestore(){
   if(file.size>25*1024*1024)throw new Error("फाइल २५ MB भन्दा ठूलो छ।");
   const parsed=JSON.parse(await file.text());
   if(parsed.format!=="SMSS-Firestore-Backup"||parsed.version!==1||!parsed.collections||typeof parsed.collections!=="object")throw new Error("यो SMSS को मान्य Backup फाइल होइन।");
-  const unknown=Object.keys(parsed.collections).filter(n=>n!=="audit_logs"&&!RESTORE_COLLECTIONS.includes(n));
+  const unknown=Object.keys(parsed.collections).filter(n=>n!=="audit_logs"&&!RESTORE_COLLECTIONS.includes(n)&&!CDC_BACKUP_ONLY_COLLECTIONS.includes(n));
   if(parsed.collections.audit_logs!==undefined&&!Array.isArray(parsed.collections.audit_logs))throw new Error("Audit Log को Backup संरचना गलत छ।");
   if(unknown.length)throw new Error("Backup मा नचिनेका Collection छन्: "+unknown.join(", "));
   const legacyMissingCollections=[];
-  for(const n of RESTORE_COLLECTIONS){
+  for(const n of [...RESTORE_COLLECTIONS,...CDC_BACKUP_ONLY_COLLECTIONS]){
    if(parsed.collections[n]===undefined){parsed.collections[n]=[];legacyMissingCollections.push(n);}
    if(!Array.isArray(parsed.collections[n]))throw new Error(`Backup मा ${n} Collection को सूची छैन वा गलत छ।`);
    const seenIds=new Set();
@@ -11709,7 +11712,8 @@ async function previewFirebaseRestore(){
   validatedRestoreBackup=parsed;restorePlan={counts,total,hasSettings:!!settings,legacyMissingCollections};
   const auditCount=parsed.collections.audit_logs?.length||0;
   const createdAt=typeof parsed.createdAt==="string"?parsed.createdAt.slice(0,80):"उपलब्ध छैन";
-  out.textContent=`Backup जाँच सफल\nमिति: ${createdAt}\nकुल रेकर्ड: ${total}\n${RESTORE_COLLECTIONS.map(n=>`${n}: ${counts[n]}`).join("\n")}\nSchool Settings: ${settings?1:0}\nAudit Log: ${auditCount} (Backup मा सुरक्षित; Restore हुँदैन)\n\nअर्को चरणमा हालको प्रणालीमा पहिल्यै भएका ID जाँचिन्छन्।`;
+  const assessmentBackupInfo=CDC_BACKUP_ONLY_COLLECTIONS.map(n=>`${n}: ${legacyMissingCollections.includes(n)?"पुरानो Backup मा समावेश छैन":parsed.collections[n].length} (Backup मात्र; सामान्य Restore हुँदैन)`).join("\n");
+  out.textContent=`Backup जाँच सफल\nमिति: ${createdAt}\nकुल रेकर्ड: ${total}\n${RESTORE_COLLECTIONS.map(n=>`${n}: ${counts[n]}`).join("\n")}\nSchool Settings: ${settings?1:0}\nAudit Log: ${auditCount} (Backup मा सुरक्षित; Restore हुँदैन)\n${assessmentBackupInfo}\n\nअर्को चरणमा हालको प्रणालीमा पहिल्यै भएका ID जाँचिन्छन्।`;
   if(run)run.disabled=false;msg.textContent="Preview तयार भयो। हालको डेटाको नयाँ Backup लिएपछि मात्र पुष्टि गर्नुहोस्।";
  }catch(err){out.textContent="Backup Preview असफल: "+(safeNoticeError(err)||"फाइल जाँच त्रुटि");msg.textContent="Restore सुरु गर्न सकिएन।";console.error("Restore preview failed",err);}
 }
