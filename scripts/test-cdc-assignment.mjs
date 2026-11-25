@@ -1404,6 +1404,28 @@ assert.equal(seroControls('date')[0].value,'2083-08-07');
 assert.equal(seroControls('used-tool')[0].value,'');
 assert.equal(seroControls('used-tool',1)[0].value,'परीक्षण साधन: समूह छलफल');
 assert.equal(field('printForm').disabled,false);
+// Existing active Class 1 indicator records must appear in the subject report,
+// without opening the pending source catalogue or mixing students/themes.
+const beforeSummaryRead=w.getDocsFromServer;
+w.getDocsFromServer=async ({name,filters})=>{
+ const scope=Object.fromEntries(filters.map(([k,,v])=>[k,v]));
+ assert.equal(name,'cdc_serofero_indicators');assert.equal(scope.studentId,'sero-1');
+ assert.equal(scope.academicYear,'2083');assert.equal(scope.section,'A');
+ return {docs:[...binaryRecords.values()].filter(r=>Object.entries(scope).every(([k,v])=>r[k]===v)).map(r=>({data:()=>r}))};
+};
+await field('readSubjectSummary').onclick();
+const familySummary=field('subjectSummaryRows').rows[0];
+assert.equal(familySummary.dataset.cdcSummaryAssessed,'1');
+assert.equal(familySummary.cells[4].textContent,'—','Incomplete theme must not receive a final mark');
+for(const row of [...field('subjectSummaryRows').rows].slice(3))assert.equal(row.cells[4].textContent,'—');
+assert.ok(w.cdcSeroSavedReportForm('1','म र मेरो परिवार','2083'));
+assert.ok(w.cdcSeroSavedReportForm('1','मेरो दैनिक जीवन','2083'));
+assert.ok(w.cdcSeroSavedReportForm('1','हाम्रो समुदाय','2083'));
+assert.equal(w.cdcSeroSavedReportForm('1','हाम्रो विद्यालय','2083'),null);
+assert.equal(w.cdcSeroSavedReportForm('2','म र मेरो परिवार','2083'),null);
+assert.equal(w.cdcSeroSavedReportForm('1','म र मेरो परिवार','2084'),null);
+w.getDocsFromServer=beforeSummaryRead;
+console.log('Existing Grade 1 indicator evidence included in summary; unapproved source and year remain blocked');
 let seroMarkup='',seroPrintCount=0;
 w.open=()=>({document:{open(){},write(markup){seroMarkup=markup;},close(){}},focus(){},print(){seroPrintCount++;}});
 fill(0,['no','no','no','no'],'2083-08-09');

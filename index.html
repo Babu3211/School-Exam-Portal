@@ -9207,6 +9207,20 @@ function cdcSeroGuideEntryForm(grade,unit,year){
   }
   return {page:source.page,start,groups,mainRows,guideEntry:true};
 }
+// Existing Grade 1 source forms (2076 guide PDF pp.128–130) already
+// accept saved evidence. Report calculations must use their unchanged IDs.
+// The remaining 27 review-only themes still require explicit source approval.
+function cdcSeroSavedReportForm(grade,unit,year){
+  if(String(year)!=='2083')return null;
+  const approved=cdcSeroGuideEntryForm(grade,unit,year);
+  if(approved)return approved;
+  if(String(grade)!=='1')return null;
+  const existing=cdcSeroferoReferenceForms[grade]?.[unit],source=cdcSeroferoGuideCounts[grade]?.[unit];
+  if(!existing||existing.referenceOnly||!source||existing.page!==source.page)return null;
+  const expected=source.groups.reduce((sum,n)=>sum+n,0);
+  if(existing.groups.length*4!==expected||existing.groups.some(g=>g[1].length!==4))return null;
+  return existing;
+}
 // User-supplied CDC 2083 guide, Annex 3(a–f), PDF pages 18–148.
 // Counts from printed 4 × N denominators; pages are 1-based PDF pages.
 // Multi-page forms link to their first page (Class 5 arithmetic 87–88,
@@ -10304,7 +10318,7 @@ function openCdcAssessment(context = null) {
     for(const [i,theme] of themes.entries()){
       let scores=[],expected=theme.count,full=theme.fullMark;
       if(key==='serophero'){
-        const form=cdcSeroGuideEntryForm(grade,theme.unit,year);
+        const form=cdcSeroSavedReportForm(grade,theme.unit,year);
         if(form&&!form.referenceOnly&&form.groups.length*4===full){
           scores=form.groups.map((_,j)=>{
             const id='cdc2076-g'+grade+'-'+(form.start+j);
@@ -10386,7 +10400,7 @@ function openCdcAssessment(context = null) {
     let sum=0,assessed=0,expected=0,unmapped=false;
     for(const theme of themes){
       if(key==='serophero'){
-        const form=cdcSeroGuideEntryForm(grade,theme.unit,year);
+        const form=cdcSeroSavedReportForm(grade,theme.unit,year);
         if(!form||form.referenceOnly||form.groups.length*4!==theme.fullMark){unmapped=true;continue;}
         for(let i=0;i<form.groups.length;i++){
           expected++;
