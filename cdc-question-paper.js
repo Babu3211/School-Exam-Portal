@@ -578,6 +578,27 @@ async function loadCdcGridSourceRegister(){
   });
  return cdcGridSourceRequest;
 }
+// Read-only status from the already permission-filtered Class/Subject list.
+// Admin sees configured Grade 9 subjects plus required subjects; teachers see
+// their assigned Grade 9 subjects only. Neither view grants exam approval.
+function renderGrade9SchoolAudit(root,register,subject,pairs,admin){
+ if(!root||!register)return;
+ const offered=[...new Set([...pairs.filter(x=>x.gradeNumber===9).map(x=>x.subject),subject].filter(x=>String(x||"").trim()))];
+ const grade9Gate=auditGrade9Release({register,offeredSubjects:offered});
+ const keys=new Set(offered.map(cdcSubjectKey));
+ const visible=grade9Gate.checkedSubjects.filter(item=>admin||keys.has(item.key));
+ const doc=root.ownerDocument;
+ const append=text=>{const node=doc.createElement("p");node.className="qp-hint";node.textContent=text;root.appendChild(node);};
+ append("कक्षा ९ ("+(admin?"विद्यालयका विषयहरू":"आफूलाई तोकिएका विषयहरू") +"): "+
+  visible.filter(item=>item.gridTranscribed).length+"/"+visible.length+
+  " CDC Grid संरचना लोड; सबै विषयका समीक्षा गरिएका प्रश्नपत्र र शिक्षक परीक्षण "+
+  "पुष्टि बाँकी। यो स्थिति Live स्वीकृति होइन।");
+ if(grade9Gate.unknownSchoolSubjects.length)append("CDC विषयसँग नमिलेका विषय: "+grade9Gate.unknownSchoolSubjects.join(", ")+"। प्रमाणीकरण बाँकी।");
+ const current=visible.find(item=>item.key===cdcSubjectKey(subject));
+ if(current)append("कक्षा ९ · "+current.subject+": "+(current.gridTranscribed?
+  "Grid संरचना सेट; समीक्षित Question Bank र शिक्षक परीक्षण आवश्यक।":
+  "CDC को Unit/Type/Marks/Cognitive तालिका पूरा प्रमाणित छैन।"));
+}
 async function loadCurrentData() {
  if(!selectedClass||!selectedSubject)return;
  const request=++questionDataLoadEpoch,className=selectedClass,
@@ -660,28 +681,7 @@ async function loadCurrentData() {
    heading.textContent="यस विषयको मिल्ने CDC विशिष्टीकरण स्रोत सूचीमा छैन; अनुमानित Grid प्रयोग हुँदैन।";
   }
   pdfSource.appendChild(heading);
-  if(grade===9&&cdcSourceRegister){
-   const grade9Gate=auditGrade9Release({register:cdcSourceRegister});
-   const summary=document.createElement("p");
-   summary.className="qp-hint";
-   summary.textContent="कक्षा ९ (V46 का विषयहरू): "+
-    grade9Gate.checkedSubjects.filter(item=>item.gridTranscribed).length+
-    "/"+grade9Gate.checkedSubjects.length+
-    " CDC Grid संरचना लोड; सबै विषयका समीक्षा गरिएका प्रश्नपत्र र Teacher E2E "+
-    "पुष्टि बाँकी। यो स्थिति Live स्वीकृति होइन।";
-   pdfSource.appendChild(summary);
-   const current=grade9Gate.checkedSubjects.find(item=>
-    item.key===cdcSubjectKey(subject));
-   if(current){
-    const note=document.createElement("p");
-    note.className="qp-hint";
-    note.textContent="कक्षा ९ · "+current.subject+
-     ": "+(current.gridTranscribed?
-      "Grid संरचना सेट; समीक्षित Question Bank र शिक्षक परीक्षण आवश्यक।":
-      "CDC को Unit/Type/Marks/Cognitive तालिका पूरा प्रमाणित छैन।");
-    pdfSource.appendChild(note);
-   }
-  }
+  if(grade===9&&cdcSourceRegister)renderGrade9SchoolAudit(pdfSource,cdcSourceRegister,subject,classSubjects,isAdmin());
   // Alternative model references are read-only and cannot approve a Grid.
   const modelReference=auditGrade9ModelReference({grade,subject,questions:[...questionRows,...bundledPracticeQuestions]});
   if(modelReference){
