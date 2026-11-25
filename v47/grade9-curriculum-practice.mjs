@@ -5,9 +5,12 @@ import {grade9CompulsoryMathPracticeBank,MATH_ARCHIVE_URL} from './cdc-grade9-co
 import {grade9EnvironmentOriginalBank,ENVIRONMENT_BOOK_PDF} from './cdc-grade9-environment-original-practice.mjs';
 import {grade9NepaliPracticeBank,NEPALI_BOOK_PAGE} from './cdc-grade9-nepali-practice.mjs';
 import {grade9EnglishPracticeBank,ENGLISH_BOOK} from './cdc-grade9-english-practice.mjs';
+import {grade9EconomicsPracticeBank,grade9AccountingPracticeBank,ECONOMICS_SOURCE,ACCOUNTING_SOURCE} from './grade9-economics-accounting-original-practice.mjs';
 import {buildAutomaticQuestionPaper,isQuestionReadyForLanguage} from './cdc-question-autogen.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 const sources=Object.freeze({
+ economics:{subject:'Economics',bank:grade9EconomicsPracticeBank,url:ECONOMICS_SOURCE},
+ accounting:{subject:'Office Operation and Accounting',bank:grade9AccountingPracticeBank,url:ACCOUNTING_SOURCE},
  math:{subject:'Compulsory Mathematics',bank:grade9CompulsoryMathPracticeBank,url:MATH_ARCHIVE_URL},
  environment:{subject:'Environmental Science',bank:grade9EnvironmentOriginalBank,url:ENVIRONMENT_BOOK_PDF},
  nepali:{subject:'Nepali',bank:grade9NepaliPracticeBank,url:NEPALI_BOOK_PAGE},
