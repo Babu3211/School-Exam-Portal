@@ -91,7 +91,13 @@ export function inspectReferencePaperAllocation({subject,groups,durationMinutes}
   need(same(counts(['very_short','short','long']),[11,8,3])&&groups.every(g=>mark(g)===({very_short:1,short:5,long:8})[g.questionType]),'Environment school model pattern');
   checks.push('11 very short / 8 short / 3 long');
   unresolved.push('No subject-specific CDC numerical grid; unit and cognitive allocation unverified');
-  unresolved.push('School syllabus 2083 mirror lists ten units and an additional OR option from environmental pollution in the long-answer section; the current nine-unit draft has neither been reconciled to that syllabus nor supplied with this option. Do not treat its aggregate 22-question pattern as a complete model match.');
+  const withAlternative=groups.filter(g=>g.orAlternative);
+  need(withAlternative.length===1,'Environment school reference OR count');
+  const g=withAlternative[0],alt=g.orAlternative;
+  need(g.questionType==='long'&&alt.questionType==='long'&&mark(g)===8&&alt.marks===8&&String(alt.unitCode)==='4'&&alt.id&&groups.every(x=>x.id!==alt.id)&&alt.questionText&&alt.questionTextEn&&alt.answer&&alt.answerEn,'Environment pollution alternative eligibility');
+  if(alt.markParts)need(alt.markParts.every(positive)&&sum(alt.markParts)===8,'Environment alternative mark split');
+  checks.push('One additional pollution OR alternative (8 marks, not additional total)');
+  unresolved.push('School syllabus 2083 mirror lists ten units; the current CDC textbook has nine. Unit and cognitive grid reconciliation remains unresolved; the OR position is an editorial choice.');
  }
  return {subjectKey:key,fullMarks:75,groupCount:groups.length,groupMarks:marks,durationMinutes,numericalReferenceChecksPassed:true,checks,unresolved,currentCdcExactApproved:false};
 }
@@ -234,7 +240,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   const figure=questionFigure(g,language);if(figure)figures.push({number:i+1,html:figure});
   const parts=g.subquestions||g.items||[];
   const marks=g.marks??parts.reduce((s,x)=>s+Number(x.marks||0),0);
-  const groupOnly=key==='science'||key==='social';
+  const groupOnly=key==='science'||key==='social'||key==='optional_environment';
   const split=key==='social'&&g.markParts?modelMark(g.markParts.join(' + ')+' = '+marks):'';
   // The archived science and social models place uniform marks at the section
   // header, not beside each ordinary question. Compound tasks alone show splits.
@@ -252,6 +258,12 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   }else if(!parts.length){
    const rubric=key==='social'&&g.markParts?' ('+g.markParts.join(' + ')+' = '+marks+')':'';
    answer(String(displayNumber),(g.correctOption?g.correctOption+' — ':'')+choose(g.answerNe||g.answer,g.answerEn)+rubric,marks);
+  }
+  if(key==='optional_environment'&&g.orAlternative){
+   const alt=g.orAlternative;
+   lines.push(choose('अथवा','OR'));
+   lines.push(choose(alt.questionText,alt.questionTextEn)+(alt.markParts?' '+modelMark(alt.markParts.join(' + ')+' = '+alt.marks):''));
+   answer(displayNumber+' ('+choose('अथवा','OR')+')',choose(alt.answer,alt.answerEn),alt.marks);
   }
   for(const [j,x] of parts.entries()){
    lines.push('  '+paperOptionLabel(j,language,true)+') '+(key==='english'?x.text:choose(x.textNe,x.textEn))+' '+itemMark(x));
