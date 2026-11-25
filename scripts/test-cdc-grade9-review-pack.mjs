@@ -71,6 +71,8 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
 
   }
   if(subject==='Science and Technology'){
+   assert.doesNotMatch(result.text,/\[\d+\]/,'Uniform science marks only in section headings');
+   assert.match(result.blocks[0].text,/Circle the correct option/);
    for(const tag of ['10 × 1 = 10','9 × 1 = 9','14 × 2 = 28','7 × 4 = 28','Time: 25 minutes','Group A','Group B','Group C','Group D']){
     assert.ok(result.text.includes(tag),tag);
     if(tag.startsWith('Group '))assert.ok(result.answerText.includes(tag),'answer key '+tag);
@@ -85,6 +87,12 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
   assert.match(result.text,/REFERENCE DRAFT — NOT FOR EXAM/);
   assert.match(result.answerText,/INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY/);
   if(subject==='Social Studies'){
+   assert.doesNotMatch(result.text,/\[[०-९.]+\]/,'Group marks should not repeat for ordinary questions');
+   assert.match(result.blocks[21].text,/\(२ \+ ५ = ७\)/,'Map outline and labels have separate marks');
+   assert.equal((result.blocks[21].text.match(/२ \+ ५ = ७/g)||[]).length,1,'Alternative map marks counted once');
+   assert.match(result.blocks[21].text,/^अथवा$/m);
+   assert.match(result.blocks[20].text,/\(३ \+ ४ = ७\)/);
+   assert.match(result.blocks[23].text,/\([२३] \+ [४५] = ७\)/);
    assert.match(result.text,/कक्षा ९ · सामाजिक अध्ययन/);
    assert.doesNotMatch(result.text,/Option A:|OR \/ अथवा B:/);
    assert.doesNotMatch(result.text,/[0-9]/);
