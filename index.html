@@ -2296,7 +2296,7 @@ const cdcSubjectAliases = new Map();
 for (const [key,ne,en] of [...cdcPrimarySubjects,...cdcUpperPrimarySubjects]) {
   for (const name of [ne,en]) cdcSubjectAliases.set(globalThis.SmssIemisTransfer.key(name),key);
 }
-for (const name of ['Local','Local Subject','Our Dhunibesi','स्थानीय विषय','स्थानीय','मातृभाषा']) {
+for (const name of ['Local','Local Subject','Our Dhunibesi','Our Dhunibeshi','हाम्रो धुनिवेशी','हाम्रो धुनिबेशी','हाम्रो धुनिबेसी','स्थानीय विषय','स्थानीय','मातृभाषा']) {
   cdcSubjectAliases.set(globalThis.SmssIemisTransfer.key(name),cdcLocalSubject[0]);
 }
 cdcSubjectAliases.set('healthphysicalandcreativearts','healthphysicalcreativeart');
@@ -9441,7 +9441,31 @@ function openCdcAssessment(context = null) {
   dialog.style.cssText = context ? 'width:100%;min-width:0' : 'width:min(720px,94vw);max-height:90vh;border:1px solid #ccd9ea;border-radius:16px;padding:24px';
   const assessmentStudents = context ? context.students : marksStudents;
   dialog.innerHTML = `<h2 data-cdc="workspaceTitle">मूल्याङ्कन १–५</h2>
-    <style>#cdcAssessmentDialog [hidden]{display:none!important}#cdcAssessmentDialog .cdc-more{border:1px solid #ccd9ea;border-radius:8px;margin:8px 0;padding:8px}#cdcAssessmentDialog details>summary{cursor:pointer;font-weight:600}#cdcAssessmentDialog [data-cdc="annexTable"] th,#cdcAssessmentDialog [data-cdc="annexTable"] td{border:1px solid #94a3b8;padding:6px;vertical-align:middle}#cdcAssessmentDialog [data-cdc="annexTable"] th{background:#eef4fa;color:#172b43}#cdcAssessmentDialog [data-cdc="annexTable"] td>.btn.alt:not([data-cdc-grid-edit]):not([data-cdc-grid-cancel]){background:transparent;border:0;color:inherit;text-align:left;white-space:normal;padding:2px}#cdcAssessmentDialog [data-cdc="annexTitle"]{background:#17466e;color:white;padding:10px;text-align:center;border-radius:4px}#cdcAssessmentDialog [data-cdc="annexTable"] input,#cdcAssessmentDialog [data-cdc="annexTable"] select{max-width:100%;box-sizing:border-box}</style>
+    <style>#cdcAssessmentDialog [hidden]{display:none!important}#cdcAssessmentDialog .cdc-more{border:1px solid #ccd9ea;border-radius:8px;margin:8px 0;padding:8px}#cdcAssessmentDialog details>summary{cursor:pointer;font-weight:600}#cdcAssessmentDialog [data-cdc="annexTable"] th,#cdcAssessmentDialog [data-cdc="annexTable"] td{border:1px solid #94a3b8;padding:6px;vertical-align:middle}#cdcAssessmentDialog [data-cdc="annexTable"] th{background:#eef4fa;color:#172b43}#cdcAssessmentDialog [data-cdc="annexTable"] td>.btn.alt:not([data-cdc-grid-edit]):not([data-cdc-grid-cancel]){background:transparent;border:0;color:inherit;text-align:left;white-space:normal;padding:2px}#cdcAssessmentDialog [data-cdc="annexTitle"]{background:#17466e;color:white;padding:10px;text-align:center;border-radius:4px}#cdcAssessmentDialog [data-cdc="annexTable"] input,#cdcAssessmentDialog [data-cdc="annexTable"] select{max-width:100%;box-sizing:border-box}
+@media screen {
+#cdcAssessmentDialog{max-width:100%;box-sizing:border-box;overflow-wrap:break-word}
+#cdcAssessmentDialog .fields,#cdcAssessmentDialog section,#cdcAssessmentDialog details,#cdcAssessmentDialog label{min-width:0;max-width:100%;box-sizing:border-box}
+#cdcAssessmentDialog .tablewrap{width:100%;max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-x:contain}
+#cdcAssessmentDialog [data-cdc="annexTable"] th,#cdcAssessmentDialog [data-cdc="annexTable"] td{word-break:normal;overflow-wrap:break-word;line-height:1.5}
+#cdcAssessmentDialog [data-cdc="annexTable"] button{white-space:normal;overflow-wrap:break-word}
+#cdcAssessmentDialog [data-cdc="annexTable"] [data-cdc-grid-date],#cdcAssessmentDialog [data-cdc="annexTable"] [data-cdc-grid-editor="date"]{min-width:110px}
+#cdcAssessmentDialog [data-cdc="localSubjectHelp"]{background:#eef4fa;border:1px solid #b9d5e7;border-radius:8px;padding:10px;margin:10px 0}
+}
+@media screen and (max-width:700px){
+#cdcAssessmentDialog{padding:0}
+#cdcAssessmentDialog label{display:block;margin:8px 0}
+#cdcAssessmentDialog label>input,#cdcAssessmentDialog label>select,#cdcAssessmentDialog label>textarea{display:block;width:100%;min-width:0;max-width:100%;font-size:16px;min-height:44px;box-sizing:border-box}
+#cdcAssessmentDialog [data-cdc="annexTitle"]{font-size:16px;line-height:1.5}
+#cdcAssessmentDialog [data-cdc="annexIdentity"]{line-height:1.65;overflow-wrap:anywhere}
+#cdcAssessmentDialog [data-cdc="annexTable"]{table-layout:auto}
+#cdcAssessmentDialog[data-cdc-subject-key="mathematics"] [data-cdc="annexTable"]{min-width:1000px!important}
+#cdcAssessmentDialog [data-cdc="annexTable"] th,#cdcAssessmentDialog [data-cdc="annexTable"] td{padding:8px 6px;font-size:14px}
+#cdcAssessmentDialog [data-cdc="annexTable"] input,#cdcAssessmentDialog [data-cdc="annexTable"] select,#cdcAssessmentDialog [data-cdc="annexTable"] textarea{font-size:16px;min-height:44px!important}
+#cdcAssessmentDialog button.btn{min-height:44px;max-width:100%;white-space:normal}
+#cdcAssessmentDialog [data-cdc="exportFormat"]{width:100%}
+#cdcAssessmentDialog [data-cdc="printForm"],#cdcAssessmentDialog [data-cdc="printAll"]{width:100%;margin:4px 0}
+}
+</style>
     <div class="fields">
       <label>कक्षा <select data-cdc="class"></select></label>
       <label>विषय <select data-cdc="subject"></select></label>
@@ -9451,7 +9475,8 @@ function openCdcAssessment(context = null) {
     <label>विषयक्षेत्र / Theme <select data-cdc="themePick"><option value="">छान्नुहोस्</option></select></label>
     <p data-cdc="accessNotice" role="status" style="font-weight:600;margin:8px 0;padding:10px 12px;border-left:3px solid #17466e;background:#eef4fa;color:#172b43" hidden></p>
     <p data-cdc="workspaceHint" class="hint">विषयक्षेत्र छान्नुहोस्, मिति र अङ्कन भरेर Save गर्नुहोस्।</p>
-    <section data-cdc="annex3" hidden><div class="toolbar"><button type="button" class="btn alt" data-cdc="gridRead" id="cdcGridRead">अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्</button></div><p data-cdc="gridStatus" role="status" aria-live="polite" style="font-weight:600;color:#17466e;overflow-wrap:anywhere"></p><p data-cdc="entryNotice" class="hint" role="status"></p><p class="hint" style="font-size:12px">पूरा तालिका हेर्न दायाँ–बायाँ सार्नुहोस्।</p><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><details data-cdc="seroSourcePreview" hidden style="margin:8px 0"><summary style="cursor:pointer;font-weight:600">मूल CDC PDF सँग तुलना गर्नुहोस्</summary><p class="hint">मूल पृष्ठ र तलको डिजिटल फाराम तुलना गर्नुहोस्। PDF नदेखिए नयाँ ट्याबमा खोल्नुहोस्। विद्यार्थीको विवरण PDF सेवामा पठाइँदैन।</p><a data-cdc="seroSourceOpen" target="_blank" rel="noopener noreferrer">मूल पृष्ठ खोल्नुहोस्</a><div data-cdc="seroSourceFrame"></div></details><div class="tablewrap"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><label>Export Format <select data-cdc="exportFormat"><option value="pdf">PDF / Print</option><option value="docx">Word (.docx)</option><option value="xlsx">Excel (.xlsx)</option></select></label> <button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Export Selected Student</button><button class="btn alt" data-cdc="printAll" type="button" disabled>Export All Students</button><p data-cdc="printStatus" role="status" class="hint"></p><p data-cdc="batchPrintStatus" role="status" aria-live="polite" class="hint"></p></section>
+    <section data-cdc="localSubjectHelp" hidden><strong>Local Subject Assessment</strong><p class="hint" data-cdc="localSubjectMessage"></p><button type="button" class="btn alt" data-cdc="localSubjectOpen">Open Local Assessment</button></section>
+    <section data-cdc="annex3" hidden><div class="toolbar"><button type="button" class="btn alt" data-cdc="gridRead" id="cdcGridRead">अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्</button></div><p data-cdc="gridStatus" role="status" aria-live="polite" style="font-weight:600;color:#17466e;overflow-wrap:anywhere"></p><p data-cdc="entryNotice" class="hint" role="status"></p><p class="hint" style="font-size:12px">पूरा तालिका हेर्न दायाँ–बायाँ सार्नुहोस्।</p><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><details data-cdc="seroSourcePreview" hidden style="margin:8px 0"><summary style="cursor:pointer;font-weight:600">मूल CDC PDF सँग तुलना गर्नुहोस्</summary><p class="hint">मूल पृष्ठ र तलको डिजिटल फाराम तुलना गर्नुहोस्। PDF नदेखिए नयाँ ट्याबमा खोल्नुहोस्। विद्यार्थीको विवरण PDF सेवामा पठाइँदैन।</p><a data-cdc="seroSourceOpen" target="_blank" rel="noopener noreferrer">मूल पृष्ठ खोल्नुहोस्</a><div data-cdc="seroSourceFrame"></div></details><div class="tablewrap" data-cdc="annexScroll" role="region" aria-label="Assessment table — scroll horizontally" tabindex="0"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><label>Export Format <select data-cdc="exportFormat"><option value="pdf">PDF / Print</option><option value="docx">Word (.docx)</option><option value="xlsx">Excel (.xlsx)</option></select></label> <button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Export Selected Student</button><button class="btn alt" data-cdc="printAll" type="button" disabled>Export All Students</button><p data-cdc="printStatus" role="status" class="hint"></p><p data-cdc="batchPrintStatus" role="status" aria-live="polite" class="hint"></p></section>
     <details class="cdc-more" data-cdc="extraReference"><summary>CDC निर्देशिका र विषयक्षेत्र विवरण</summary>
     <details data-cdc="themeSummary" style="border:1px solid #b9d5e7;border-radius:8px;padding:12px;margin:10px 0">
       <summary style="cursor:pointer;font-weight:700">Theme, Learning Achievement &amp; Full Marks — Classes 1–5</summary>
@@ -9597,6 +9622,13 @@ function openCdcAssessment(context = null) {
     field('student').parentElement.append(field('next'));
     field('next').style.cssText='margin-left:8px;padding:5px 10px;min-height:32px';
   }
+  field('localSubjectOpen').onclick=()=>{
+    if(field('localSubjectHelp').hidden)return;
+    if(context)field('moreOptions').open=true;
+    field('extraObservations').open=true;
+    if(!readOnly){field('extraManual').open=true;field('extraActions').open=true;}
+    field('extraRecords').open=true;
+  };
   const options = (name, values) => field(name).replaceChildren(...values.map(([value,label])=>new Option(label,value)));
   const storagePrefix = 'smss-cdc-draft:';
   const scope = () => [owner,year,...['class','subject','student','period'].map(name=>field(name).value.trim())];
@@ -9806,7 +9838,7 @@ function openCdcAssessment(context = null) {
     const header=(ne,eng)=>en?eng:ne;
     field('annexHead').innerHTML='<tr>'+
       (serial?'<th rowspan="2">'+header('क्र.स.','S.N.')+'</th>':'')+
-      (contentColumn?'<th rowspan="2">'+header('विषयवस्तु','Language skills')+'</th>':'')+
+      (contentColumn?'<th rowspan="2">'+header('विषयवस्तु',subjectKey==='mathematics'?'Content':'Language skills')+'</th>':'')+
       '<th rowspan="2">'+header('सिकाइ उपलब्धि'+(subjectKey==='nepali'?' सूचक':''),'Learning outcome indicators')+'</th>'+
       '<th colspan="2">'+header(subjectKey==='science'?'नियमित सिकाइको मूल्याङ्कन':'नियमित पठनपाठनपछिको मूल्याङ्कन','Regular class assessment')+'</th>'+
       '<th colspan="2">'+header('थप सहायतापछिको मूल्याङ्कन','Assessment after additional support')+'</th>'+
@@ -10941,6 +10973,11 @@ function openCdcAssessment(context = null) {
     const verifiedUnits = units();
     options('themePick',[['','छान्नुहोस्'],...verifiedUnits.map(([ne,en])=>[ne,unitDisplayTitle(localized(ne,en))])]);
     field('themePick').value=field('unit').value;
+    const local=cdcAssessmentSubjectKey(field('subject').value)===cdcLocalSubject[0];
+    field('localSubjectHelp').hidden=!local;
+    field('themePick').disabled=local&&!verifiedUnits.length;
+    field('localSubjectMessage').textContent=local?(verifiedUnits.length?'यस खाताको ब्राउजरमा थपिएको स्थानीय सूची उपलब्ध छ। स्थानीय पाठ्यक्रमसँग मिलाएर मात्र अङ्कन गर्नुहोस्।':'स्थानीय विषयको आधिकारिक एकाइ र सिकाइ उपलब्धि सूची प्रणालीमा जोडिएको छैन। अप्रमाणित सूची वा पूर्णाङ्क प्रयोग नगर्नुहोस्।')+(readOnly?' सुरक्षित अभिलेख हेर्न तलको बटन थिच्नुहोस्।':' तलको बटनबाट एकाइ, उपलब्धि, मिति, अङ्कन र प्रमाण भर्नुहोस्। प्रमाणित सूची भए Excel बाट प्रतिलिपि गरी थप्न सकिन्छ (यही ब्राउजर र खातामा मात्र)।'):'';
+    field('localSubjectOpen').textContent=readOnly?'View Local Assessment Records':'Open Local Assessment';
     field('themePick').onchange=async()=>{
       const pair=units().find(([ne])=>ne===field('themePick').value);
       [field('unit').value,field('unitEn').value]=pair||['',''];
@@ -10958,6 +10995,7 @@ function openCdcAssessment(context = null) {
   function refreshStudents() {
     // CDC 2083 Table 2. Store the same numeric rating across subject languages.
     const levelNames = [['आधारभूतभन्दा कम','Below basic'],['आधारभूत','Basic'],['दक्ष','Proficient'],['उच्च','Advanced']];
+    dialog.dataset.cdcSubjectKey=cdcAssessmentSubjectKey(field('subject').value);
     const english = language()==='en';
     field('levelRow').firstChild.textContent=english ? 'Learning level ' : 'सिकाइ स्तर ';
     options('level',[['',english ? 'Select' : 'छान्नुहोस्'],...levelNames.map(([ne,en],i)=>{

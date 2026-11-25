@@ -386,6 +386,14 @@ for (const [grade,registered,label] of [
     assert.ok(topic && /[अ-ह]/u.test(topic.value) && !/[a-z]/i.test(topic.text));
   }
 }
+assert.equal(field('localSubjectHelp').hidden,false);
+assert.equal(field('themePick').disabled,true);
+assert.match(field('localSubjectMessage').textContent,/आधिकारिक/);
+field('localSubjectOpen').onclick();
+for(const name of ['extraObservations','extraManual','extraActions','extraRecords'])assert.equal(field(name).open,true);
+assert.equal(field('annexScroll').getAttribute('tabindex'),'0');
+assert.match(html,/@media screen and \(max-width:700px\)/);
+assert.match(html,/data-cdc-subject-key="mathematics"/);
 console.log('Real registry spellings, local subjects and IEMIS-coded subject labels passed');
 // Standalone assessment route is a sibling of Marks Entry and requires no marks or exams.
 assert.match(html,/<summary>[^\n]*Manage Exam<\/summary>[^\n]*data-page="cdc-assessment"/);
