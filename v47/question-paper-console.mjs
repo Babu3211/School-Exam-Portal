@@ -5,6 +5,7 @@ import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} fro
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {prepareCdcSourceCatalog,prepareReadOnlyPracticePaper,recommendedPracticeIndices,printReadOnlyPracticePaper} from './question-paper-cdc-preview.mjs';
+import {generateMathPractice,printMathPractice} from './optional-math-practice-preview.mjs';
 import {renderGrade9GridLibrary} from './cdc-grade9-grid-library.mjs';
 import {computerGridReference,generateComputerPractice} from './computer-grid-practice.mjs';
 import {practiceUnitOptions,generatePracticePreview} from './automatic-practice-preview.mjs';
@@ -26,7 +27,7 @@ function clearPreview(){
  $('paperStatus').textContent='No practice preview prepared.';
 }
 function reset(){
- epoch++;clearPreview();actor=null;schoolId=null;school=null;register=null;loading=false;practiceHistory.clear();$('grade9GridLibrary').replaceChildren();$('grade9GridLibraryStatus').textContent='';$('computerGridTable').replaceChildren();$('computerGenerateArea').hidden=true;$('computerGridStatus').textContent='';
+ epoch++;clearPreview();actor=null;schoolId=null;school=null;register=null;loading=false;practiceHistory.clear();$('mathPracticeArea').hidden=true;$('mathPracticeStatus').textContent='';$('grade9GridLibrary').replaceChildren();$('grade9GridLibraryStatus').textContent='';$('computerGridTable').replaceChildren();$('computerGenerateArea').hidden=true;$('computerGridStatus').textContent='';
  $('resourceArea').hidden=true;$('sourceList').replaceChildren();$('logout').disabled=true;
  $('identity').textContent='No verified school';$('sourceStatus').textContent='No sources loaded.';
 }
@@ -68,7 +69,8 @@ function renderSources(){
 function displayPaper(){
  if(!paper||!actor)return;
  const version=++previewVersion,frame=$('paperFrame');
- const html=printReadOnlyPracticePaper({paper,showAnswers:$('showAnswers').checked});
+ const renderer=paper.questionFormat==='cdc_optional_math_composite'?printMathPractice:printReadOnlyPracticePaper;
+ const html=renderer({paper,showAnswers:$('showAnswers').checked});
  frame.onload=null;delete frame.dataset.loadedVersion;
  $('printPractice').disabled=true;
  $('paperStatus').textContent='Unreviewed preview loading. No paper saved.';
@@ -108,7 +110,7 @@ $('login').onclick=async()=>{
   $('logout').disabled=false;
   register=await fetchJson('cdc-source-register-2083.json');
   assertSame(request,actor);await verifyAgain(request,actor);
-  $('resourceArea').hidden=false;renderSources();renderComputerGrid();await loadGrade9GridLibrary(request,actor);
+  $('resourceArea').hidden=false;renderSources();renderComputerGrid();$('mathPracticeArea').hidden=actor.role==='viewer';await loadGrade9GridLibrary(request,actor);
   status('स्रोत सूची खुल्यो। प्रश्नपत्र प्रकाशन वा Firestore Write हुँदैन।');
  }catch(e){
   if(request===epoch){reset();try{await authSdk.signOut(auth)}catch{}status('स्रोत खोल्न सकिएन: '+neError(e))}
@@ -319,6 +321,24 @@ $('generateComputer').onclick=async()=>{
   $('computerGridStatus').textContent='५० पूर्णाङ्क, २५ प्रश्न र सबै Grid कोष्ठ मिलेको अभ्यासपत्र बन्यो। वास्तविक परीक्षा अघि शिक्षक समीक्षा आवश्यक छ।';
  }catch(e){if(epoch===request&&actor===member){invalidateSelectedPreview();$('computerGridStatus').textContent='प्रश्नपत्र बनाउन सकिएन: '+neError(e)}}
  finally{busy=false;if(epoch===request)$('generateComputer').disabled=false}
+};
+$('mathPracticeLanguage').onchange=()=>{invalidateSelectedPreview();$('mathPracticeStatus').textContent='भाषा परिवर्तन भयो। पुनः Generate गर्नुहोस्।'};
+$('generateMathPractice').onclick=async()=>{
+ if(busy||loading||!actor||actor.role==='viewer')return;
+ const request=epoch,member=actor,language=$('mathPracticeLanguage').value;
+ clearPreview();const version=previewVersion,key=JSON.stringify([member.schoolId,'math9',language,75]);
+ busy=true;$('generateMathPractice').disabled=true;
+ try{
+  await verifyAgain(request,member);
+  if(version!==previewVersion)throw Error('Math selection changed');
+  const previous=practiceHistory.get(key)??[];
+  const fresh=generateMathPractice({schoolId:member.schoolId,schoolName:String(school.name??''),language,avoidSignatures:previous});
+  assertSame(request,member);
+  if(version!==previewVersion)throw Error('Math selection changed');
+  practiceHistory.set(key,[...previous,fresh.signature].slice(-30));paper=fresh;displayPaper();
+  $('mathPracticeStatus').textContent='७५ पूर्णाङ्कको Grid मिलेको अभ्यासपत्र बन्यो। शिक्षक समीक्षा आवश्यक छ।';
+ }catch(e){if(epoch===request&&actor===member){invalidateSelectedPreview();$('mathPracticeStatus').textContent='अभ्यासपत्र बनाउन सकिएन: '+neError(e)}}
+ finally{busy=false;if(epoch===request)$('generateMathPractice').disabled=false}
 };
 $('showAnswers').onchange=()=>{if(paper)displayPaper()};
 $('printPractice').onclick=async()=>{
