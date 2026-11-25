@@ -3029,6 +3029,140 @@
         "officialExamApproved": false,
         "currentCdcExactApproved": false
       }
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "स्वास्थ्य तथा शारीरिक शिक्षा",
+      "kind": "curriculum",
+      "version": "2082",
+      "status": "official_CDC_curriculum_assessment_pages_visually_checked_not_specification_grid",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/HPE%20grade%209-10-G._af0az3b.pdf",
+      "note": "Official curriculum, printed pp.20–21 visually checked; unit hours extracted from curriculum table. External assessment 50% with 80% health and 20% physical education. Separate specification Grid required; no question-type or unit marks inferred.",
+      "healthCurriculumReview": {
+        "sourceYear": 2082,
+        "checkedOn": "2026-11-25",
+        "visualPrintedPages": [
+          20,
+          21
+        ],
+        "creditHours": 4,
+        "annualHours": 128,
+        "units": [
+          [
+            "Human body and self-adjustment",
+            "मानव शरीर तथा स्वसमायोजन",
+            8,
+            4
+          ],
+          [
+            "Healthy lifestyle",
+            "स्वस्थ जीवनशैली",
+            8,
+            4
+          ],
+          [
+            "Nutrition and food safety",
+            "पोषण व्यवहार र खाद्य सुरक्षा",
+            6,
+            4
+          ],
+          [
+            "Health literacy and diseases",
+            "स्वास्थ्य साक्षरता र रोगहरू",
+            10,
+            4
+          ],
+          [
+            "Environmental and community health",
+            "पर्यावरणीय तथा सामुदायिक स्वास्थ्य",
+            10,
+            4
+          ],
+          [
+            "Sexual and reproductive health",
+            "यौनिक तथा प्रजनन स्वास्थ्य",
+            10,
+            4
+          ],
+          [
+            "Sports science",
+            "खेल विज्ञान",
+            12,
+            0
+          ],
+          [
+            "Athletics",
+            "एथलेटिक्स",
+            0,
+            14
+          ],
+          [
+            "Games",
+            "खेलहरू",
+            0,
+            26
+          ]
+        ],
+        "internalMarks": 50,
+        "externalMarks": 50,
+        "externalAreas": [
+          [
+            "Health education",
+            80,
+            40
+          ],
+          [
+            "Physical education",
+            20,
+            10
+          ]
+        ],
+        "internalComponents": [
+          [
+            "Attendance, classwork and homework",
+            10
+          ],
+          [
+            "Health education project and practical work",
+            15
+          ],
+          [
+            "Physical education sports and practical work",
+            25
+          ]
+        ],
+        "practicalRubric": [
+          [
+            "Health education performance",
+            12
+          ],
+          [
+            "Health education records",
+            3
+          ],
+          [
+            "Physical education performance",
+            22
+          ],
+          [
+            "Physical education records",
+            3
+          ]
+        ],
+        "assessmentCategories": [
+          "Knowledge and understanding",
+          "Application",
+          "Higher ability"
+        ],
+        "cumulativeCoverage": true,
+        "unitMarksVerified": false,
+        "questionTypeCountsVerified": false,
+        "officialExamApproved": false,
+        "currentCdcExactApproved": false
+      }
     }
   ],
   "completion": {

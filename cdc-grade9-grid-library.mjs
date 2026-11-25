@@ -159,6 +159,19 @@ export function grade9GridLibrary(register){
     add('Unresolved source differences',['Field','Value'],[['School syllabus units',school.sourceUnitCount],['Portal textbook units',school.portalTextbookUnitCount],['Verified unit mapping','No'],['Complete official Grid','No']]);
    }
   }
+  if(key==='health'){
+   const h=entries.find(x=>x.healthCurriculumReview?.sourceYear===2082)?.healthCurriculumReview;
+   if(h?.officialExamApproved===false){
+    fullMarks=h.externalMarks;
+    status='Official 2082 curriculum: assessment weights confirmed; separate specification Grid not retrieved';
+    add('Curriculum assessment (not question Grid)',['Assessment','Marks'],[['External written assessment',h.externalMarks],['Internal assessment',h.internalMarks]]);
+    add('External assessment area weight',['Area','Percent','Derived marks'],h.externalAreas);
+    add('Curriculum working hours (not marks)',['Area (English)','Area (Nepali)','Theory hours','Practical hours'],h.units);
+    add('Internal assessment components',['Component','Marks'],h.internalComponents);
+    add('Practical assessment rubric',['Component','Marks'],h.practicalRubric);
+    add('Unresolved Grid details',['Field','Verified'],[['Unit marks','No'],['Question-type counts','No'],['Cognitive mark allocation','No'],['Complete official Grid','No']]);
+   }
+  }
   if(key==='science'){
    const school=entries.find(x=>x.schoolScreenshotEvidence)?.schoolScreenshotEvidence;
    if(school?.sourceType==='user_supplied_school_grid_screenshot'&&school.yearBS===2079&&school.officialCdcSource===false&&school.officialExamApproved===false){
