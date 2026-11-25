@@ -1745,6 +1745,50 @@ w.getDocsFromServer=async()=>{if(field('student').value==='batch-two')throw Erro
 await field('printAll').onclick();
 assert.equal(batchPrinted,1);assert.equal(batchClosed,1);assert.equal(field('student').value,'batch-two');
 console.log('All-students A4 batch PDF: same form, isolated pupils, no partial output on read failure');
+// Native Office files preserve the same student pages and row/column spans.
+w.TextEncoder=TextEncoder;
+const zipEntries=bytes=>{
+ const data=Buffer.from(bytes),entries={};let p=0;
+ while(data.readUInt32LE(p)===0x04034b50){
+   const size=data.readUInt32LE(p+18),nameLen=data.readUInt16LE(p+26),extra=data.readUInt16LE(p+28);
+   const name=data.subarray(p+30,p+30+nameLen).toString('utf8'),start=p+30+nameLen+extra;
+   entries[name]=data.subarray(start,start+size).toString('utf8');p=start+size;
+ }
+ assert.equal(data.readUInt32LE(p),0x02014b50);
+ return entries;
+};
+const wordFile=zipEntries(w.cdcOfficeExport(batchDoc,'docx'));
+assert.match(wordFile['word/document.xml'],/w:orient="landscape"/);
+assert.match(wordFile['word/document.xml'],/w:br w:type="page"/);
+assert.match(wordFile['word/document.xml'],/Batch One/);
+assert.match(wordFile['word/document.xml'],/Batch Two/);
+assert.match(wordFile['word/document.xml'],/w:gridSpan/);
+const excelFile=zipEntries(w.cdcOfficeExport(batchDoc,'xlsx'));
+assert.match(excelFile['xl/workbook.xml'],/Student 2/);
+assert.match(excelFile['xl/worksheets/sheet1.xml'],/Batch One/);
+assert.doesNotMatch(excelFile['xl/worksheets/sheet1.xml'],/Batch Two/);
+assert.match(excelFile['xl/worksheets/sheet2.xml'],/Batch Two/);
+assert.match(excelFile['xl/worksheets/sheet1.xml'],/paperSize="9" orientation="landscape"/);
+assert.match(excelFile['xl/worksheets/sheet1.xml'],/mergeCell/);
+const sample=new JSDOM('<table><tr><td rowspan="2">नेपाली &amp; =1+1</td><td colspan="2">Header</td></tr><tr><td>A</td><td>B</td></tr></table>').window.document;
+const wordSpan=zipEntries(w.cdcOfficeExport(sample,'docx'))['word/document.xml'];
+assert.match(wordSpan,/w:vMerge w:val="restart"/);assert.match(wordSpan,/<w:vMerge\/>/);
+assert.match(wordSpan,/नेपाली &amp; =1\+1/);
+const excelSpan=zipEntries(w.cdcOfficeExport(sample,'xlsx'))['xl/worksheets/sheet1.xml'];
+assert.match(excelSpan,/A1:A2/);assert.match(excelSpan,/B1:C1/);assert.doesNotMatch(excelSpan,/<f>/);
+for(const file of [...Object.values(wordFile),...Object.values(excelFile)]){
+  assert.equal(new w.DOMParser().parseFromString(file,'application/xml').querySelector('parsererror'),null);
+}
+w.getDocsFromServer=async()=>({docs:[]});
+const officeDownloads=[];
+w.cdcDownloadOffice=(doc,format,filename)=>{officeDownloads.push({format,filename,entries:zipEntries(w.cdcOfficeExport(doc,format))});};
+field('exportFormat').value='docx';await field('printAll').onclick();
+assert.equal(officeDownloads.length,1);assert.equal(officeDownloads[0].format,'docx');
+field('exportFormat').value='xlsx';await field('printAll').onclick();
+assert.equal(officeDownloads.length,2);assert.ok(officeDownloads[1].entries['xl/worksheets/sheet2.xml']);
+field('printForm').onclick();assert.equal(officeDownloads.length,3);assert.ok(!officeDownloads[2].entries['xl/worksheets/sheet2.xml']);
+assert.equal(field('student').value,'batch-two');
+console.log('Native Word and Excel: valid XML, A4, spans, saved-only student isolation, single and batch paths');
 // CDC backup: verify legacy and new exports in an isolated synthetic DOM.
 // Assessment evidence must never be replayed through ordinary client restore.
 const backupDom=new JSDOM('<div id="restoreFirebaseMessage"></div><pre id="restorePreview"></pre><input id="restoreBackupFile" type="file"><button id="runFirebaseRestore"></button>',{runScripts:'outside-only'});
