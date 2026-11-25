@@ -241,7 +241,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   const parts=g.subquestions||g.items||[];
   const marks=g.marks??parts.reduce((s,x)=>s+Number(x.marks||0),0);
   const groupOnly=key==='science'||key==='social'||key==='optional_environment';
-  const split=key==='social'&&g.markParts?modelMark(g.markParts.join(' + ')+' = '+marks):'';
+  const split=(key==='social'||key==='optional_environment')&&g.markParts?modelMark(g.markParts.join(' + ')+' = '+marks):'';
   // The archived science and social models place uniform marks at the section
   // header, not beside each ordinary question. Compound tasks alone show splits.
   if(!Array.isArray(g.mapChoices))lines.push(displayNumber+'. '+choose(g.contextNe||g.questionText,g.contextEn||g.questionTextEn)+(split?' '+split:key==='math'||groupOnly?'':' '+groupMark(g,parts,marks)));
@@ -256,7 +256,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
     answer(displayNumber+'.'+paperOptionLabel(j,language),choose(c.answerNe,c.answerEn)+' — '+c.labels.map(l=>choose(l.ne,l.en)).join('; '),marks);
    }
   }else if(!parts.length){
-   const rubric=key==='social'&&g.markParts?' ('+g.markParts.join(' + ')+' = '+marks+')':'';
+   const rubric=(key==='social'||key==='optional_environment')&&g.markParts?' ('+g.markParts.join(' + ')+' = '+marks+')':'';
    answer(String(displayNumber),(g.correctOption?g.correctOption+' — ':'')+choose(g.answerNe||g.answer,g.answerEn)+rubric,marks);
   }
   if(key==='optional_environment'&&g.orAlternative){
