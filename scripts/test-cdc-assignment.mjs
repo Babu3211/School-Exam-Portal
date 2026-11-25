@@ -1003,6 +1003,23 @@ await w.loadCdcAssessmentPage();
 // Independent public curriculum summary does not switch the current assessment.
 const entryClassBefore=field('class').value,entrySubjectBefore=field('subject').value,entryStudentBefore=field('student').value;
 const summaryRows=()=>[...field('themeSummaryRows').rows];
+// Uploaded 2083 guide, Annex 3(f): PDF pages 123–148.
+const healthSourceCounts={'4':[5,6,6,10,5,4,10,12,6,7,7,5,3],'5':[5,6,6,10,5,4,10,12,6,7,8,6,3]};
+for(const grade of ['4','5']){
+ choice('summaryClass',grade);choice('summarySubject','healthphysicalcreativeart');
+ const rows=summaryRows(),counts=healthSourceCounts[grade];
+ assert.equal(rows.length,13);
+ const number=v=>Number(v.replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)));
+ for(const [i,row] of rows.entries()){
+  assert.equal(number(row.cells[2].textContent),counts[i]);
+  assert.equal(number(row.cells[3].textContent),counts[i]*4);
+  assert.match(row.cells[4].textContent,/सङ्ख्या मिलेको|count matched/);
+  const url=row.cells[4].querySelector('a').href;
+  assert.equal(url,field('guidePdf45').href.split('#')[0]+'#page='+((grade==='4'?123:136)+i));
+ }
+ assert.equal(field('class').value,entryClassBefore);
+ assert.equal(field('student').value,entryStudentBefore);
+}
 const coverage=[...field('themeCoverageRows').rows];
 assert.equal(coverage.length,29);
 const coverageRow=(grade,subject)=>coverage.find(row=>row.dataset.cdcCoverageClass===grade&&row.dataset.cdcCoverageSubject===subject);
