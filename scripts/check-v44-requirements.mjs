@@ -363,7 +363,7 @@ must(rules.includes('allow get, list: if true;') && rules.includes('allow create
 must(!html.includes('id="appNotification"') && !html.includes("function showAppNotification"), "Global success/error toast popup must remain removed.");
 
 must(html.includes('if(page==="question-papers")return roleHas("subject_teacher")'), "Assigned subject teachers must be able to access Question Paper Builder.");
-must(html.includes('data-page="question-papers"') && html.includes('window.loadQuestionPaperModule()') && html.includes('src="./cdc-question-paper.js"'), "V45 Question Paper Builder must be navigable and load its module.");
+must(html.includes('data-page="question-papers"') && html.includes('window.loadQuestionPaperModule()') && /src="\.\/cdc-question-paper\.js(?:\?v=[A-Za-z0-9._-]+)?"/.test(html), "V45 Question Paper Builder must be navigable and load its module.");
 must(html.includes('schoolNameNe:document.getElementById("setSchoolNameNe").value.trim()') && html.includes('addressNe:document.getElementById("setAddressNe").value.trim()'), "School Settings must save both Nepali identity fields.");
 
 
@@ -372,7 +372,7 @@ must(html.includes('id="loginSchoolName"') && html.includes('id="loginSchoolName
 must(html.includes('id="setSchoolNameNe"') && html.includes('id="setAddressNe"'), "School Settings must retain editable Nepali identity.");
 must(html.includes('id="smssInstallBanner"') && html.includes('appinstalled') && html.includes('banner.hidden=!isIOS()||standalone()'), "Only iPhone/iPad browsers should show PWA install guidance; Android and installed iOS apps must hide it.");
 must(html.includes('Add to Home Screen') && html.includes("display-mode: standalone"), "iOS install instructions and installed-mode suppression must remain.");
-must(html.includes('data-page="question-papers"') && html.includes('src="./cdc-question-paper.js"'), "V45 question-paper feature must remain alongside V44.");
+must(html.includes('data-page="question-papers"') && /src="\.\/cdc-question-paper\.js(?:\?v=[A-Za-z0-9._-]+)?"/.test(html), "V45 question-paper feature must remain alongside V44.");
 
 // Logout or a failed sign-in must not leave the previous account's password visible.
 const secretStart=html.indexOf("function clearLoginSecret(){");

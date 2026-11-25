@@ -1,6 +1,15 @@
 name: V47 live access and legacy school migration preflight (read only)
 on:
   workflow_dispatch:
+    inputs:
+      review_iemis:
+        description: 'Optional verified IEMIS code for read-only legacy candidate comparison'
+        required: false
+        type: string
+      review_name:
+        description: 'Optional confirmed English school name for comparison'
+        required: false
+        type: string
   push:
     branches: [smss-v47-multischool-work]
     paths:
@@ -25,6 +34,8 @@ jobs:
       - name: Inspect deployed rules, canonical school registry and root admin registry without changes
         env:
           V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}
+          V47_LEGACY_REVIEW_IEMIS: ${{ inputs.review_iemis || vars.V47_LEGACY_REVIEW_IEMIS }}
+          V47_LEGACY_REVIEW_NAME: ${{ inputs.review_name || vars.V47_LEGACY_REVIEW_NAME }}
         run: |
           test -n "$V47_SERVICE_ACCOUNT"
           umask 077

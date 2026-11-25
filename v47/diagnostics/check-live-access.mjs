@@ -50,6 +50,33 @@ try{
    if(invalid>0)blocked=true;
    if(schools.size>30){console.log('Registry check incomplete: more than 30 schools; do not infer full registry readiness');blocked=true}
    for(const [reason,count] of Object.entries(issues))console.log('Registry issue: '+reason+' — '+count);
+   const candidateId=process.env.V47_LEGACY_REVIEW_IEMIS??'';
+   const candidateName=process.env.V47_LEGACY_REVIEW_NAME??'';
+   if(candidateId||candidateName){
+    if(!/^[0-9]{5,20}$/.test(candidateId)||!candidateName.trim())throw Error('Invalid explicit legacy review candidate');
+    const normalizeName=s=>String(s??'').normalize('NFKC').toLowerCase().replace(/[^a-z]/g,'').replace(/maha(deva|dev)sthan/g,'mahadevsthan').replace(/mahadevasthan/g,'mahadevsthan');
+    const bad=schools.docs.slice(0,30).filter(doc=>schoolRegistryIssues(doc.id,doc.data()).length);
+    const matching=bad.filter(doc=>normalizeName(doc.data().name)===normalizeName(candidateName));
+    console.log('Legacy review candidate name matches exactly after documented spelling normalization: '+matching.length);
+    const target=await db.collection('schools').doc(candidateId).get();
+    console.log('Candidate canonical school path already exists: '+(target.exists?'YES':'NO'));
+    if(matching.length===1&&bad.length===1&&schools.size<=30&&!target.exists){
+     const old=matching[0],sub=await old.ref.listCollections();
+     const memberOnly=sub.length===1&&sub[0].id==='members';
+     console.log('Candidate has only the members subcollection: '+(memberOnly?'YES':'NO'));
+     if(memberOnly){
+      const page=await sub[0].limit(2).get();
+      const doc=page.docs[0],data=doc?.data();
+      const valid=page.size===1&&data?.uid===doc.id&&data?.schoolId===old.id&&data?.role==='school_admin'&&typeof data?.active==='boolean';
+      console.log('Single legacy School Admin membership with consistent identity: '+(valid?'YES':'NO'));
+      if(valid){
+       const user=await getAuth(app).getUser(doc.id);
+       console.log('Legacy School Admin Auth account exists and enabled: '+(!user.disabled?'YES':'NO'));
+      }
+     }
+    }
+    console.log('Candidate review only; no school identity, account, or data modified. Migration still requires explicit approval and a verified backup.');
+   }
    // Inspect only the first malformed registry entry. Never log its identity or
    // copy any academic record; a document-path migration requires separate review.
    const legacy=schools.docs.slice(0,30).find(doc=>schoolRegistryIssues(doc.id,doc.data()).length);

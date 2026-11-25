@@ -6,6 +6,7 @@
  */
 import {grade9ScienceOriginalBank} from './cdc-grade9-science-original-practice.mjs';
 import {cdcSubjectKey} from './cdc-grid-source-index.mjs';
+import {ARCHIVED_G9_SCIENCE_2078} from './cdc-grade9-science-archive-audit.mjs';
 export const SCIENCE_SCHOOL_SOURCE='https://studylib.net/doc/26081283/sciece-grid--3rd-term-and-annual-term';
 const unitMarks=[3,3,2,3,8,3,5,2,4,7,6,2,7,6,3,3,2,3,3];
 const K='knowledge',U='understanding',A='application',H='higher';
@@ -90,6 +91,12 @@ export function planScienceSchoolReference({grade,subject,fullMarks,durationMinu
   const totals=Array(19).fill(0),actual=Object.fromEntries(Object.keys(weight).map(t=>[t,[0,0,0,0]]));
   for(const q of selected){totals[Number(q.unitCode)-1]+=q.marks;actual[q.questionType][levels.indexOf(q.cognitiveLevel)]++;}
   if(selected.length!==40||JSON.stringify(totals)!==JSON.stringify(unitMarks)||Object.keys(counts).some(t=>JSON.stringify(counts[t])!==JSON.stringify(actual[t])))throw Error('Science school reference allocation mismatch');
+  // Cross-check independently against the actual government archive table,
+  // not just the school bank's own authored allocation constants.
+  const archived=ARCHIVED_G9_SCIENCE_2078;
+  const contentMarks=[totals[0]+totals[12],totals.slice(1,6).reduce((a,b)=>a+b,0),totals.slice(6,12).reduce((a,b)=>a+b,0),totals.slice(13,19).reduce((a,b)=>a+b,0)];
+  const cognitiveMarks=levels.map((_,i)=>Object.keys(actual).reduce((sum,t)=>sum+actual[t][i]*weight[t],0));
+  if(JSON.stringify(totals)!==JSON.stringify(archived.unitMarks)||JSON.stringify(contentMarks)!==JSON.stringify(archived.groupMarks)||JSON.stringify(cognitiveMarks)!==JSON.stringify(archived.cognitiveMarks)||archived.groups.some(g=>weight[g.code]!==g.marksEach||JSON.stringify(actual[g.code])!==JSON.stringify(g.levelCounts)))throw Error('Science draft does not match archived CDC numerical pattern');
   return {ready:true,paper:{gradeNumber:9,subject,fullMarks,durationMinutes,language,questions:selected.sort((a,b)=>Object.keys(weight).indexOf(a.questionType)-Object.keys(weight).indexOf(b.questionType)),referenceOnly:true},signature,referenceOnly:true,currentCdcExactApproved:false,readyForLive:false,sourceUrl:SCIENCE_SCHOOL_SOURCE,referenceLabel:'BESS 2079 school annual reference; editorial cognitive labels, NOT current CDC approval.'};
  }
  return fail('No distinct reference draft available');
