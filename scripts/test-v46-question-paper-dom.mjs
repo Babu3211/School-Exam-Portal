@@ -24,7 +24,7 @@ for(const id of ['qpClass','qpSubject','qpSection','qpPaperFullMarks','qpAutoLan
  'qpBpGridExcelTemplateBtn','qpBpGridExcelFile','qpBpGridFile'])
  assert.ok($(id),'Expected actual DOM control '+id);
 assert.deepEqual([...$('qpAutoLanguage').options].map(x=>x.value),['ne','en','both']);
-const policyHarness=new Function('$','grade9RequiredPaperLanguage','gradeNumber','selectedClass','selectedSubject',code('function applyGrade9LanguagePolicy()','function selectedTopicIds()')+'return applyGrade9LanguagePolicy;');
+const policyHarness=new Function('$','grade9RequiredPaperLanguage','gradeNumber','selectedClass','selectedSubject',code('function applyGrade9LanguagePolicy(','function selectedTopicIds()')+'return applyGrade9LanguagePolicy;');
 for(const [subject,expected] of [['Social Studies','ne'],['Nepali','ne'],['Mathematics','both'],['Science and Technology','both'],['English','en']]){
  const apply=policyHarness($,grade9RequiredPaperLanguage,()=>9,'Class 9',subject);
  apply(true);
@@ -44,7 +44,7 @@ assert.match($('qpTopicCard').textContent,/Unit\/Topic स्वतः लोड
 assert.ok($('qpApp').querySelector('.qp-manual-pattern'));
 assert.equal($('qpApp').dataset.qpView,'topics');
 assert.equal($('qpApp').querySelectorAll('.qp-stepbar [data-qp-view-target]').length,4);
-const viewHarness=new Function('$',code('function setQuestionBuilderView(','function applyGrade9LanguagePolicy()')+'return setQuestionBuilderView;')($);
+const viewHarness=new Function('$',code('function setQuestionBuilderView(','function applyGrade9LanguagePolicy(')+'return setQuestionBuilderView;')($);
 viewHarness('paper');assert.equal($('qpApp').dataset.qpView,'paper');
 assert.equal($('qpApp').querySelector('[data-qp-view-target="paper"]').getAttribute('aria-pressed'),'true');
 viewHarness('manage');assert.equal($('qpApp').dataset.qpView,'manage');viewHarness('topics');

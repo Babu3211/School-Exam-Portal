@@ -430,3 +430,15 @@ assert.equal(schoolEnv.sourceToPortalUnitMappingVerified,false);
 assert.equal(byKey.optional_environment.currentCdcExactApproved,false);
 assert.ok(byKey.optional_environment.tables.some(t=>t.title.includes('not implemented')));
 assert.ok(byKey.optional_environment.sources.every(s=>s.kind==='curriculum'));
+
+const directoryReview=register.schoolGrade9DirectoryReview;
+assert.equal(directoryReview.directoryUrl,'https://sikshakhub.com/specification-grid-directory/');
+assert.equal(directoryReview.literalGovernmentPdfCount,38);
+assert.equal(directoryReview.compulsory.length,5);
+for(const entry of directoryReview.compulsory){
+ const source=register.sources.find(s=>s.url===entry.url&&s.retrievalEvidence?.resource===entry.resource);
+ assert.ok(source);assert.equal(entry.sha256,source.retrievalEvidence.sha256);assert.equal(entry.fullPdfRetrieved,true);assert.equal(entry.current2083Approved,false);
+ assert.ok(byKey[entry.subjectKey].tables.some(t=>t.title.includes('SikshakHub directory')));
+}
+assert.equal(directoryReview.revisedMathScienceNumericalGridRetrieved,false);
+assert.equal(directoryReview.allEightOfficialExamApproved,false);

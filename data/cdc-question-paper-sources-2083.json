@@ -3723,5 +3723,76 @@
         ]
       }
     }
-  ]
+  ],
+  "schoolGrade9DirectoryReview": {
+    "directoryUrl": "https://sikshakhub.com/specification-grid-directory/",
+    "reviewedOn": "2026-11-25",
+    "directoryLinkCheckBS": "2083-05-09",
+    "artifactId": 14984790271,
+    "runId": 45529938017,
+    "artifactPath": "audit.json",
+    "literalGovernmentPdfCount": 38,
+    "method": "Reopened public directory; independently inspected previously retained original HTML audit and fullDocumentReview fingerprints. Directory is not the publishing authority.",
+    "compulsory": [
+      {
+        "subjectKey": "nepali",
+        "resource": "11168",
+        "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11168_Specification%20Grid%20(9%20-%2010)%20Compulsory%20Nepali_p4hju5n.pdf",
+        "sha256": "530478014b8179821bf25d43724b935fabca4baa522dd36cebdff402e3e2c98e",
+        "fullPdfRetrieved": true,
+        "current2083Approved": false
+      },
+      {
+        "subjectKey": "english",
+        "resource": "11169",
+        "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11169_Specification%20Grid%20(Grade%209%20-10)%20Compulsory%20English_f2wru8b.pdf",
+        "sha256": "cded9c1eb876908061ec96c41dcaa42750158a4f4f306f6cbd15006afff54715",
+        "fullPdfRetrieved": true,
+        "current2083Approved": false
+      },
+      {
+        "subjectKey": "math",
+        "resource": "11170",
+        "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11170_Specification%20Grid%20(grade%209-10)%20Compulsory%20Mathematics_nbimkq0.pdf",
+        "sha256": "8f2f3d13394f24948e8b096f9974ec8888fa4c277715eadd7f75c464e02f8bde",
+        "fullPdfRetrieved": true,
+        "current2083Approved": false
+      },
+      {
+        "subjectKey": "science",
+        "resource": "11167",
+        "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11167_Specification%20Grid%20(Grade%209)%20Compulsory%20Science%20and%20Technology_nk1kpta.pdf",
+        "sha256": "cf7025fa4fc1743b81d2da0d56f584a6c25de346c85e2bf32f80dc62d65b4021",
+        "fullPdfRetrieved": true,
+        "current2083Approved": false
+      },
+      {
+        "subjectKey": "social",
+        "resource": "11166",
+        "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11166_Specification%20Grid%20(Grade%209)%20Compulsory%20Social%20Studies%20(1)_jlqxsmn.pdf",
+        "sha256": "636c0e961b0d0a474aea035fc1dd56e93318e33f21865f43b2cde8ee3211ce05",
+        "fullPdfRetrieved": true,
+        "current2083Approved": false
+      }
+    ],
+    "otherConfiguredSubjects": [
+      {
+        "subjectKey": "optional_math",
+        "note": "Directory archive 2080 RS10571 is superseded by separately obtained official 2082 grid.",
+        "currentGridFromDirectoryConfirmed": false
+      },
+      {
+        "subjectKey": "optional_computer",
+        "note": "Grade 9 official 2082 PDF already verified separately; directory candidate does not establish grade 9 applicability.",
+        "currentGridFromDirectoryConfirmed": false
+      },
+      {
+        "subjectKey": "optional_environment",
+        "note": "No grade 9 subject-specific environment grid identified among the archived directory PDF links.",
+        "currentGridFromDirectoryConfirmed": false
+      }
+    ],
+    "revisedMathScienceNumericalGridRetrieved": false,
+    "allEightOfficialExamApproved": false
+  }
 }
