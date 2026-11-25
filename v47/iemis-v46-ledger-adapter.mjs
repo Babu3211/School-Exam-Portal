@@ -3,6 +3,7 @@
 // No Firebase access, writes, or fallback to global V46 collections.
 import {iemisLedger,iemisSubjectKey,iemisSummary,iemisComponentKey} from './iemis-ledger.js';
 import {iemisEntrySchema} from './iemis-entry.js';
+import {inspectV46IemisRecord} from './iemis-record-compatibility.mjs';
 export function renderV46TenantLedger({schoolId,schoolName,schoolCode='',classNo,term,mode='number',subjects,students,records,examId,...options}){
  if(typeof schoolId!=='string'||!/^[A-Za-z0-9_-]{1,64}$/.test(schoolId))throw Error('Valid school scope required');
  if(typeof schoolName!=='string'||!schoolName.trim())throw Error('School name required');
@@ -63,7 +64,11 @@ export function renderCompleteV46TenantGradeLedger(args){
  }
  for(const student of students)for(const subject of names){
   const record=index.get(JSON.stringify([student.id,subject]));
-  if(!record||!iemisSummary(record,{annual:term==='final',primary:Number(classNo)<=5}).complete)throw Error('Class marks incomplete; verified grade ledger unavailable');
+  if(!record)throw Error('Class marks incomplete; verified grade ledger unavailable');
+  if(record.isAbsent===true){
+   const check=inspectV46IemisRecord(record,{schoolId:args.schoolId,classNo,term,subject:record.subject,examId});
+   if(!check.compatible)throw Error('Class marks incomplete; '+check.reason);
+  }else if(!iemisSummary(record,{annual:term==='final',primary:Number(classNo)<=5}).complete)throw Error('Class marks incomplete; verified grade ledger unavailable');
   const v46term=term==='final'?'annual':term==='1st'?'first':term==='2nd'?'second':'third';
   const schema=iemisEntrySchema(classNo,v46term,subject);
   const expected=new Map(schema.map(c=>[c.key,c]));

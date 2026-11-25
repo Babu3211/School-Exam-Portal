@@ -33,8 +33,15 @@ export function convertVerifiedSubjectPreview({schoolId,school,classNo,term,stud
    if(!row||!roster.has(row.studentId)||seen.has(row.studentId))
     throw Error('Duplicate or foreign assessment student');
    seen.add(row.studentId);
-   // The existing V46 complete report refuses absent/incomplete marks; retain
-   // this safety boundary rather than rendering absence as a zero score.
+   // Explicit absence is not an incomplete mark or a zero grade.
+   // Primary absence has no stored learning-achievement count in this format;
+   // do not synthesize it from configured maxima.
+   if(row.isAbsent===true){
+    if(primary||row.values!==null||row.totalObtained!==0)throw Error('Absent or incomplete assessment needs verified IEMIS absence handling');
+    const absent=iemisEntryValues(schema,{values:{},isAbsent:true,incompatible:false});
+    records.push({...absent,schoolId,class:classNo,term,examId:term,studentId:row.studentId,subjectId:sub.id,subject:sub.name});
+    continue;
+   }
    if(row.isAbsent!==false||!row.values||typeof row.values!=='object'||Array.isArray(row.values)||Object.keys(row.values).length!==editable.length)
     throw Error('Absent or incomplete assessment needs verified IEMIS absence handling');
    const values={};

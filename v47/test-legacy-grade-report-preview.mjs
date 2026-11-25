@@ -133,3 +133,25 @@ console.log('PASS committed primary learning achievement preview: Classes 1–5,
   if(!annual)assert.equal(result.printFor(roster[0].id).ready,false,'Non-final certificate preview remains disabled pending independent approval');
  }
  console.log('PASS V46 2083 credit-weighted grade ledger and export GPA parity');
+
+for(const classNo of ['6','7','8','9','10'])for(const term of ['1st','2nd','final']){
+ const roster=students.map(s=>({...s,class:classNo}));
+ const catalog=[{id:'computer',schoolId,class:classNo,active:true,name:'Computer Science',creditHour:4},{id:'math',schoolId,class:classNo,active:true,name:'Mathematics',creditHour:5}];
+ const sourceTerm=term==='final'?'annual':term==='1st'?'first':'second';
+ const publications=catalog.map(sub=>{
+  const components=iemisEntrySchema(classNo,sourceTerm,sub.name).map((c,i)=>({key:'c'+i,name:c.name,fullMarks:c.max}));
+  const values=Object.fromEntries(components.map(c=>[c.key,c.fullMarks]));
+  return {published:true,schoolId,classId:classNo,subjectId:sub.id,examId:term,publicationId:'pub_'+sub.id,digest:'a'.repeat(64),rosterCount:2,components,entries:roster.map(s=>({studentId:s.id,isAbsent:false,values,totalObtained:Object.values(values).reduce((a,b)=>a+b,0)}))};
+ });
+ publications[0].entries[0]={studentId:'s1',isAbsent:true,values:null,totalObtained:0};
+ const input={schoolId,school,classNo,term,students:roster,subjects:catalog,publications};
+ const r=prepareCommittedIemisReport(input);
+ assert.equal(r.summary.complete,true);assert.equal(r.summary.rows[0].subjects[0].summary.absent,true);assert.equal(r.summary.rows[0].gpa,null);assert.equal(r.summary.rows[1].gpa,4);
+ assert.match(r.ledger.body,/>Abs<\/td>/);assert.match(r.ledgers.number.body,/>Abs<\/td>/);assert.match(r.ledgers.entry.body,/>Yes<\/td>/);
+ assert.equal(r.printFor('s1').ready,false);if(term==='final')assert.equal(r.printFor('s2').ready,true);
+ for(const mode of ['number','grade'])assert.match(new TextDecoder().decode(await legacyGradePreviewExcel(r,mode).arrayBuffer()),/>Abs</);
+ for(const mutation of [x=>x.publications[0].entries[0].values={},x=>x.publications[0].entries[0].totalObtained=1,x=>x.publications[0].entries.pop()]){
+  const bad=structuredClone(input);mutation(bad);assert.throws(()=>prepareCommittedIemisReport(bad));
+ }
+}
+console.log('PASS 15 secondary class/term absence cases: Abs, no GPA, unaffected classmates, XLSX and malformed absence rejection');

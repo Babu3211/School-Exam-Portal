@@ -21,6 +21,14 @@ export function inspectV46IemisRecord(record,{schoolId,classNo,term,subject,exam
   if(score.obtained!==null&&score.obtained!==undefined&&(!Number.isFinite(Number(score.obtained))||Number(score.obtained)<0||Number(score.obtained)>Number(score.fullMarks)))return {compatible:false,reason:'Assessment obtained marks out of range'};
   if(!['count','full','obtained'].includes(key)&&Number(score.fullMarks)!==expected.max)return {compatible:false,reason:'Assessment full marks do not match V46'};
  }
+ if(record.isAbsent===true){
+  if(record.totalObtained!==0||record.scores.some(score=>score.obtained!==null))return {compatible:false,reason:'Absent record must not contain obtained marks'};
+  if(Number(classNo)<=5){
+   const count=record.scores.find(x=>iemisComponentKey(x.name)==='count'),full=record.scores.find(x=>iemisComponentKey(x.name)==='full'),got=record.scores.find(x=>iemisComponentKey(x.name)==='obtained');
+   if(!Number.isSafeInteger(count?.fullMarks)||count.fullMarks<1||count.fullMarks>5000||full?.fullMarks!==count.fullMarks*4||got?.fullMarks!==count.fullMarks*4||record.totalFullMarks!==full.fullMarks)return {compatible:false,reason:'Absent primary learning achievement metadata required'};
+  }else if(record.totalFullMarks!==schema.reduce((n,c)=>n+c.max,0))return {compatible:false,reason:'Absent assessment full marks mismatch'};
+  return {compatible:true,reason:'Explicit V46 absence; no grade or GPA awarded'};
+ }
  if(Number(classNo)<=5){
   const count=record.scores.find(x=>iemisComponentKey(x.name)==='count');
   const full=record.scores.find(x=>iemisComponentKey(x.name)==='full');

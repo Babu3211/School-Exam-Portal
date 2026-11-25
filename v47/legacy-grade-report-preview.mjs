@@ -74,6 +74,7 @@ export function prepareLegacyGradeReport({schoolId,school,classNo,term,students,
     if(!record)throw Error('Incomplete verified ledger Excel roster');
     if(mode==='number'){
      const summary=iemisSummary(record,{annual:term==='final',primary:Number(classNo)<=5});
+     if(record.isAbsent===true)return ['Abs','—'];
      if(!summary.complete)throw Error('Incomplete number ledger cannot be exported');
      return [summary.obtained??'—',summary.full];
     }
@@ -87,9 +88,9 @@ export function prepareLegacyGradeReport({schoolId,school,classNo,term,students,
   });
   return excelWorkbook(headers,rows,{sheetName:mode==='number'?'Unapproved Mark Ledger':'Unapproved Entry Ledger'});
  };
- const summary=previewIemisGradeLedger({classNo,term,students,subjects,draftsBySubject,academicYear:'2083'});
+ const summary=previewIemisGradeLedger({classNo,term,students,subjects,draftsBySubject,academicYear:'2083',allowAbsent:true});
  if(!summary.complete)throw Error('Incomplete V46 grade preview');
- const printFor=createIemisGradeSheetPrinter({school,classNo,term,students,subjects,draftsBySubject});
+ const printFor=createIemisGradeSheetPrinter({school,classNo,term,students,subjects,draftsBySubject,allowAbsent:true});
  return Object.freeze({schoolId,school,classNo:String(classNo),term,students,subjects,rosterCount:students.length,subjectCount:subjects.length,ledger,ledgers,excelFor,summary,printFor,previewOnly:true,writeAuthorized:false,publicationAllowed:false});
 }
 export function legacyGradePreviewExcel(result,mode='grade'){
@@ -97,6 +98,6 @@ export function legacyGradePreviewExcel(result,mode='grade'){
  if(!['grade','number','entry'].includes(mode))throw Error('Unapproved ledger mode required');
  if(mode!=='grade'){if(typeof result.excelFor!=='function')throw Error('Complete ledger export unavailable');return result.excelFor(mode)}
  const headers=['PREVIEW ONLY — NOT FOR OFFICIAL USE','Class','Term','Student ID','Student Name',...result.subjects.flatMap(s=>[s.name+' Grade',s.name+' Point']),'GPA (Unapproved)'];
- const rows=result.summary.rows.map(st=>[result.schoolId,result.classNo,result.term,st.studentId,st.studentName,...st.subjects.flatMap(x=>[x.summary?.totalGrade?.grade??'—',x.summary?.totalGrade?.point??'—']),Number.isFinite(st.gpa)?st.gpa:'—']);
+ const rows=result.summary.rows.map(st=>[result.schoolId,result.classNo,result.term,st.studentId,st.studentName,...st.subjects.flatMap(x=>[x.summary?.absent?'Abs':x.summary?.totalGrade?.grade??'—',x.summary?.totalGrade?.point??'—']),Number.isFinite(st.gpa)?st.gpa:'—']);
  return excelWorkbook(headers,rows,{sheetName:'Unapproved Grade Ledger'});
 }
