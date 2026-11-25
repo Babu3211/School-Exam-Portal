@@ -425,7 +425,7 @@ service cloud.firestore {
       return data.keys().hasAll(['studentId','className','subject','section','academicYear',
           'period','unit','outcomeId','stage','date','indicators','createdBy','createdAt']) &&
         data.keys().hasOnly(['studentId','className','subject','section','academicYear',
-          'period','unit','outcomeId','stage','date','indicators','createdBy','createdAt']) &&
+          'period','unit','outcomeId','stage','date','indicators','createdBy','createdAt','usedTools']) &&
         data.studentId is string && data.studentId.size() > 0 && data.studentId.size() <= 1500 &&
         data.studentId.matches('^[^/]+$') && !(data.studentId in ['.','..']) &&
         data.className is string && data.className.matches('^(Class |कक्षा )?[1-3१-३]$') &&
@@ -447,6 +447,11 @@ service cloud.firestore {
         data.indicators is list && data.indicators.size() == 4 &&
         data.indicators[0] is bool && data.indicators[1] is bool &&
         data.indicators[2] is bool && data.indicators[3] is bool &&
+        (!('usedTools' in data) || (data.usedTools is list && data.usedTools.size() == 4 &&
+          data.usedTools[0] is string && data.usedTools[0].size() <= 200 &&
+          data.usedTools[1] is string && data.usedTools[1].size() <= 200 &&
+          data.usedTools[2] is string && data.usedTools[2].size() <= 200 &&
+          data.usedTools[3] is string && data.usedTools[3].size() <= 200)) &&
         data.createdBy == request.auth.uid && data.createdAt == request.time;
     }
 
