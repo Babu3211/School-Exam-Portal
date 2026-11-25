@@ -181,17 +181,21 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
      const items=parts.filter(x=>x.type===type);
      lines.push(upper(k)+'. '+(englishTask(type)||'')+' '+repeatedMark(items));
      if(type==='matching'&&items.every(x=>x.domain==='vocabulary')){
-      const meanings=rotate([...items.map(x=>x.text.replace(/^Find (?:a|the) (?:word|verb) meaning\s*/i,'').replace(/\.$/,'')),'a device for measuring temperature']);
+      const definitions=items.map(x=>x.text.replace(/^Find (?:a|the) (?:word|verb) meaning\s*/i,'').replace(/\.$/,''));
+      const distractors=['a device for measuring temperature','a small container used to store water','a written invitation to attend an event'];
+      const distractor=distractors.find(d=>!definitions.includes(d));
+      const meanings=rotate([...definitions,distractor]);
       if(items.some(x=>!x.answer)||new Set(meanings).size!==6)throw Error('Invalid vocabulary matching options');
       lines.push('    Column A                         Column B');
       for(let j=0;j<meanings.length;j++)lines.push('    '+(items[j]?alpha(j)+'. '+items[j].answer:'')+'     |     '+roman[j]+'. '+meanings[j]);
+      items.forEach((x,j)=>answer(displayNumber+'.'+upper(k)+'.'+alpha(j),roman[meanings.indexOf(definitions[j])]+' — '+x.answer+' = '+definitions[j],x.marks));
      }else{
       for(const [j,x] of items.entries()){
        lines.push('    '+alpha(j)+'. '+x.text);
        if(Array.isArray(x.options))x.options.forEach((o,l)=>lines.push('        '+roman[l]+'. '+o));
       }
+      items.forEach((x,j)=>answer(displayNumber+'.'+upper(k)+'.'+alpha(j),(x.correctOption?roman['ABCD'.indexOf(x.correctOption)]+' — ':'')+x.answer,x.marks));
      }
-     items.forEach((x,j)=>answer(displayNumber+'.'+upper(k)+'.'+alpha(j),(x.correctOption?roman['ABCD'.indexOf(x.correctOption)]+' — ':'')+x.answer,x.marks));
      lines.push('');
     }
    }else if(g.slot==='contextual_mcq'){
