@@ -1,24 +1,21 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 import {prepareCdcSourceCatalog,prepareReadOnlyPracticePaper,recommendedPracticeIndices,printReadOnlyPracticePaper} from './question-paper-cdc-preview.mjs';
 const read=path=>JSON.parse(readFileSync(new URL(path,import.meta.url),'utf8'));
+// First-release scope freeze: V47 does not follow later V46 question-bank
+// changes until that feature is explicitly resumed. Pin the exact verified
+// V47 fixture blobs from 04d767c (including the existing Grade 10 correction).
+// This checks immutable content, not merely an approval flag or today's main.
 const pairs=[
- ['./cdc-source-register-2083.json','../data/cdc-question-paper-sources-2083.json'],
- ['./cdc-grade8-science-practice-pack-v1.json','../data/cdc-grade8-science-practice-pack-v1.json'],
- ['./cdc-grade10-science-practice-pack-v1.json','../data/cdc-grade10-science-practice-pack-v1.json']
+ ['./cdc-source-register-2083.json','0c75d1c4c3b91808149c62cf0f900fefbf983c46'],
+ ['./cdc-grade8-science-practice-pack-v1.json','19c9f85b588536ee804e54b4d95340e25ee37803'],
+ ['./cdc-grade10-science-practice-pack-v1.json','229a4d1ff972e85f302aa04f1f468fd9e8d803d2']
 ];
-for(const [v47,v46] of pairs){
- const expected=read(v46);
- if(v47===pairs[2][0]){
-  // V46 development 4a0c6f71 corrected mixed-script text in one question.
-  // Root production source remains unchanged. No other divergence is allowed.
-  assert.equal(expected.questions[3].unitCode,'2');
-  assert.equal(expected.questions[3].options[0],'साझा लक्षण र പരിണामिक सम्बन्ध');
-  assert.equal(expected.questions[3].answer,'जीवहरूको साझा लक्षण र പരിണामिक सम्बन्ध वर्गीकरणका आधार हुन्।');
-  expected.questions[3].options[0]='साझा लक्षण र विकासक्रमीय सम्बन्ध';
-  expected.questions[3].answer='जीवहरूको साझा लक्षण र विकासक्रमीय सम्बन्ध वर्गीकरणका आधार हुन्।';
- }
- assert.deepEqual(read(v47),expected,'V47 source parity with the pinned V46 correction: '+v47);
+for(const [file,expectedBlob] of pairs){
+ const bytes=readFileSync(new URL(file,import.meta.url));
+ const blob=createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex');
+ assert.equal(blob,expectedBlob,'Frozen V47 question-paper source changed: '+file);
 }
 const register=read(pairs[0][0]),catalog=prepareCdcSourceCatalog(register);
 assert.equal(catalog.completeOfficialBlueprint,false);
