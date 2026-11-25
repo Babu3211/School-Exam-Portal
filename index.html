@@ -7374,9 +7374,10 @@ const cdcSeroferoReferenceForms={1:{"म र मेरो परिवार":{"
     ["बीजगणित","चल र अचल राशि चिन्ने","Recognize variables and constants"]
   ],
   '5:mathematics': [
-    ["ज्यामिति","चाँदले ०° देखि १५०° सम्मका कोण नाप्ने र कोर्ने","Use a protractor to measure and draw angles from 0° to 150°"],
+    ["ज्यामिति","चाँदले ०° देखि १८०° सम्मका कोण नाप्ने र कोर्ने","Use a protractor to measure and draw angles from 0° to 180°"],
     ["ज्यामिति","त्रिभुज र चतुर्भुजका भित्री कोण नाप्ने","Measure interior angles of triangles and quadrilaterals"],
     ["ज्यामिति","न्यूनकोण, समकोण र अधिक कोण छुट्याउने","Distinguish acute, right and obtuse angles"],
+    ['ज्यामिति','वर्गजालमा लम्ब र समानान्तर रेखा','Draw perpendicular and parallel lines on a square grid'],
     ["ज्यामिति","घन र बहुमुखाका शीर्षबिन्दु, किनारा र सतह गन्ने","Count vertices, edges and faces of cubes and polyhedra"],
     ["अङ्कगणित","राष्ट्रिय र अन्तर्राष्ट्रिय स्थानमान पद्धतिमा नौ अङ्कसम्मका सङ्ख्या देवनागरी र हिन्दु–अरबी अङ्कमा पढ्ने र लेख्ने","Read and write up to nine digits in both numeral scripts using national and international place-value systems"],
     ["अङ्कगणित","पाँच अङ्कसम्मका सङ्ख्यालाई नजिकको सय र हजारमा गोलाइ गर्ने","Round numbers of up to five digits to the nearest hundred and thousand"],
@@ -7402,10 +7403,60 @@ const cdcSeroferoReferenceForms={1:{"म र मेरो परिवार":{"
     ["बीजगणित","बीजीय पद र अभिव्यञ्जक चिनाउने","Explain algebraic terms and expressions"],
     ["बीजगणित","सजातीय र विजातीय पद छुट्याउने","Distinguish like and unlike terms"],
     ["बीजगणित","सजातीय पद जोड्ने र घटाउने","Add and subtract like terms"],
-    ["बीजगणित","बराबरीको गुण प्रयोग गरी एक चलको समीकरण हल गर्ने","Solve a one-variable equation using the properties of equality"],
-    ['ज्यामिति','वर्गजालमा लम्ब र समानान्तर रेखा','Draw perpendicular and parallel lines on a square grid']
+    ["बीजगणित","बराबरीको गुण प्रयोग गरी एक चलको समीकरण हल गर्ने","Solve a one-variable equation using the properties of equality"]
   ]
 };
+// Grade 5 Mathematics, original guide 2083 PDF pp. 86–91.
+// Only display text is refined for existing keys. The erroneous 150-degree
+// outcome is deliberately a new 180-degree key: no old scores are migrated.
+const cdcGrade5MathSource = {
+ 'ज्यामिति':[
+ ['कोणहरूको नाप र रचना','Measuring and constructing angles','चाँदको प्रयोग गरी ०° देखि १८०° सम्मका कोणहरू नाप्न र खिच्न'],
+ ['त्रिभुज र चतुर्भुजका भित्री कोणको नाप','Interior angles of triangles and quadrilaterals','दिइएका त्रिभुज र चतुर्भुजका भित्री कोणहरू नाप्न'],
+ ['कोणका प्रकार','Types of angles','समकोण, अधिक कोण र न्यूनकोण छुट्याउन'],
+ ['समानान्तर र लम्ब रेखाहरू','Parallel and perpendicular lines','वर्गाङ्कित कागज (Square Grid) मा लम्ब रेखा र समानान्तर रेखा खिच्न'],
+ ['ठोस वस्तुहरू','Solid objects','घन तथा बहुमुखाको शीर्षबिन्दु, किनारा र सतहको गणना गर्न']
+ ],
+ 'अङ्कगणित':[
+ ['सङ्ख्याको ज्ञान','Number concepts','देवनागरी र हिन्दु अरेबिक अङ्क प्रयोग गरी राष्ट्रिय पद्धति र अन्तर्राष्ट्रिय पद्धतिअनुसार नौ अङ्कसम्मका सङ्ख्यालाई स्थानमान तालिकामा प्रस्तुत गर्न, पढ्न र लेख्न'],
+ ['सङ्ख्याको शून्यान्त','Rounding numbers','पाँच अङ्कसम्मले बनेका सङ्ख्यालाई नजिकको सय र हजारमा शून्यान्त गर्न'],
+ ['रूढ र संयुक्त सङ्ख्या','Prime and composite numbers','१ देखि १०० सम्मका रूढ (Prime) र संयुक्त (Composite) सङ्ख्या छुट्याउन'],
+ ['सरलीकरण','Simplification','जोड, घटाउ, गुणन र भाग क्रिया मध्ये कुनै तीन क्रिया समावेश भएका व्यावहारिक समस्या हल गर्न'],
+ ['अनुपयुक्त भिन्न र मिश्रित सङ्ख्याको रूपान्तरण','Improper fractions and mixed numbers','अनुपयुक्त भिन्न र मिश्रित सङ्ख्या एकआपसमा रूपान्तरण गर्न'],
+ ['भिन्नको जोड र घटाउ','Addition and subtraction of fractions','समान हर भएका तीनओटासम्मको भिन्नको जोड र घटाउ गर्न'],
+ ['दशमलव र भिन्नको रूपान्तर','Decimal and fraction conversion','दशमलव र भिन्नलाई एकआपसमा रूपान्तर गर्न'],
+ ['दशमलव सङ्ख्याको जोड र घटाउ','Addition and subtraction of decimals','दशमलव सङ्ख्याको जोड र घटाउ गर्न'],
+ ['भिन्न र प्रतिशतको रूपान्तरण','Fraction and percentage conversion','भिन्न र प्रतिशतलाई एकआपसमा रूपान्तरण गर्न'],
+ ['दशमलव र प्रतिशतको रूपान्तरण','Decimal and percentage conversion','दशमलव र प्रतिशतलाई एकआपसमा रूपान्तरण गर्न']
+ ],
+ 'नाप':[
+ ['१२ घन्टे र २४ घन्टे पद्धतिमा समय','12-hour and 24-hour time','१२ घन्टे र २४ घन्टे पद्धतिमा समयलाई बताउन'],
+ ['समयसम्बन्धी गुणन र भाग','Multiplication and division of time','समयसम्बन्धी गुणन र भाग गर्न'],
+ ['दूरीका एकाइको गुणन र भाग','Multiplication and division of distance units','मिलिमिटर र सेन्टिमिटर, सेन्टिमिटर र मिटर, मिटर र किलोमिटरसम्बन्धी गुणन र भाग गर्न'],
+ ['क्षमताका एकाइको गुणन र भाग','Multiplication and division of capacity units','मिलिलिटर र लिटरको गुणन र भाग गर्न'],
+ ['तौलका एकाइको गुणन र भाग','Multiplication and division of weight units','ग्राम, किलोग्राम र क्विन्टलसम्बन्धी गुणन र भाग गर्न'],
+ ['आयताकार र वर्गाकार सतहको क्षेत्रफल र परिमिति','Area and perimeter of rectangles and squares','लम्बाइ र चौडाइको आधारमा आयताकार र वर्गाकार सतहको क्षेत्रफल र परिमिति पत्ता लगाउन'],
+ ['घन र षड्मुखाको आयतन','Volume of cubes and cuboids','एकाइ घन गनेर घन र षड्मुखाको आयतन पत्ता लगाउन']
+ ],
+ 'तथ्याङ्कशास्त्र':[
+ ['बिल','Bill','मूल्यसूचीका आधारमा बिल तयार गर्न'],
+ ['बजेट','Budget','पारिवारिक/घरायसी बजेट तयार गर्न'],
+ ['तालिका','Table','दिइएको वा सङ्कलन गरिएको तथ्याङ्कलाई तालिकामा प्रस्तुत गर्न'],
+ ['स्तम्भचित्र','Bar chart','वर्गाङ्कित कागज (Square Grid) को प्रयोग गरी स्तम्भचित्र बनाउन']
+ ],
+ 'बीजगणित':[
+ ['बीजीय पद र अभिव्यञ्जक','Algebraic terms and expressions','बीजीय पद र अभिव्यञ्जकको परिचय दिन'],
+ ['सजातीय तथा विजातीय पदहरू','Like and unlike terms','सजातीय तथा विजातीय पदहरू छुट्याउन'],
+ ['सजातीय पदहरूको जोड र घटाउ','Addition and subtraction of like terms','सजातीय पदहरूको जोड र घटाउ गर्न'],
+ ['समीकरण','Equation','बराबरी तथ्य प्रयोग गरी एक चलयुक्त समीकरण हल गर्न']
+ ]
+};
+// Bind source labels to the canonical catalogue titles, not to a mutable row index.
+const cdcGrade5MathSourceByTitle=new Map();
+for(const [unit,items] of Object.entries(cdcGrade5MathSource)){
+ const rows=cdcVerifiedOutcomes['5:mathematics'].filter(row=>row[0]===unit);
+ if(rows.length===items.length)rows.forEach((row,i)=>cdcGrade5MathSourceByTitle.set(row[1],items[i]));
+}
 const cdcNormalizeTitle = value => String(value || '').normalize('NFC').trim().replace(/\s+/g,' ').toLowerCase();
 function cdcStoredObservation(storage, prefix, scope, title, unit) {
   const legacyKey=prefix+JSON.stringify([...scope,title]);
@@ -9335,15 +9386,16 @@ function openCdcAssessment(context = null) {
       '<th colspan="2">'+header('थप सहायतापछिको मूल्याङ्कन','Assessment after additional support')+'</th>'+
       '<th rowspan="2">'+header('कैफियत','Remarks')+'</th></tr><tr><th>'+header('मिति','Date')+'</th><th>'+header('अङ्कन','Rating')+'</th><th>'+header('मिति','Date')+'</th><th>'+header('अङ्कन','Rating')+'</th></tr>';
     const rows=(cdcVerifiedOutcomes[field('class').value+':'+cdcAssessmentSubjectKey(field('subject').value)]||[]).filter(([unit])=>normalizeTitle(unit)===normalizeTitle(field('unit').value));
+    const grade5Math=year==='2083'&&field('class').value==='5'&&subjectKey==='mathematics';
     const body=field('annexRows');body.replaceChildren();
     let total=0,filled=0;
     for(const [i,[unit,title,alt]] of rows.entries()){
-      const row=body.insertRow();const parts=localized(title,alt).split(' — ');
+      const row=body.insertRow(),source=grade5Math?cdcGrade5MathSourceByTitle.get(title):null;const parts=localized(source?.[2]||title,alt).split(' — ');
       if(serial)row.insertCell().textContent=String(i+1);
       if(contentColumn){
         // Do not invent missing topic labels. The existing outcome catalogue is
         // preserved; exact content-label transcription remains a separate audit.
-        row.insertCell().textContent=parts.length>1?parts.shift():'';
+        row.insertCell().textContent=source?localized(source[0],source[1]):parts.length>1?parts.shift():'';
       }
       const button=document.createElement('button');button.type='button';button.className='btn alt';button.textContent=parts.join(' — ');
       button.onclick=()=>{field('topic').value=title;load();};
@@ -9359,6 +9411,7 @@ function openCdcAssessment(context = null) {
       const row=foot.insertRow();const a=row.insertCell();a.colSpan=leading;a.textContent=label;const b=row.insertCell();b.colSpan=columnCount-leading;b.textContent=value;
     }
     field('annexStatus').textContent=en?'Draft layout using existing outcome catalogue. Select a row to enter the observation; read school records to populate ratings. Unclassified legacy records are not assigned to either stage.':'हालको उपलब्धि सूचीमा आधारित प्रारम्भिक ढाँचा। उपलब्धि छानेर मूल्याङ्कन गर्नुहोस्; विद्यालयको अभिलेख पढेपछि अङ्क देखिन्छ। चरण नखुलेका पुराना अभिलेख छुट्टै रहन्छन्।';
+    if(grade5Math)field('annexStatus').textContent='CDC २०८३ गणित — मूल विषयवस्तु र सिकाइ उपलब्धि; पहिलेको १५०° शीर्षकको अङ्क नयाँ १८०° उपलब्धिमा स्वतः सारिँदैन।';
     field('annexSign').textContent=en?'Teacher signature __________  Date __________  Parent signature __________  Date __________':'शिक्षकको दस्तखत __________  मिति __________  अभिभावकको दस्तखत __________  मिति __________';
   };
   function primaryEnglishRows(form,unit){
