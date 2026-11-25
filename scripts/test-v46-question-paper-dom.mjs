@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {JSDOM} from 'jsdom';
 import {grade9RequiredPaperLanguage} from '../cdc-grid-source-index.mjs';
-import {paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS,buildQuestionPaperDocx,questionFigure} from '../cdc-optional-math-render.mjs';
+import {grade9ComputerModelGroups,paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS,buildQuestionPaperDocx,questionFigure} from '../cdc-optional-math-render.mjs';
 import {readBundledScienceBank,buildAutomaticQuestionPaper,cognitiveMarkDistribution} from '../cdc-question-autogen.mjs';
 const source=readFileSync(new URL('../cdc-question-paper.js',import.meta.url),'utf8');
 const code=(start,end)=>{
@@ -306,9 +306,9 @@ const checkboxes=[...dom.window.document.querySelectorAll('[data-qp-topic]')];
 for(const [i,input]of checkboxes.entries())input.checked=i<3;
 $('qpAutoLanguage').value='both';$('qpPaperFullMarks').value='3';
 $('qpAutoMode').value='practice';
-const renderPaperPreview=new Function('$','esc','questionTypeLabel','levelLabel','generatedPaper','paperDigits','paperSubjectLabel','paperClassLabel','paperOptionLabel','paperDisplayText','questionFigure',
+const renderPaperPreview=new Function('$','esc','questionTypeLabel','levelLabel','generatedPaper','paperDigits','paperSubjectLabel','paperClassLabel','paperOptionLabel','paperDisplayText','questionFigure','grade9ComputerModelGroups',
  code('function renderPaperPreview(','function printPaper(')+'return renderPaperPreview;')(
- $,escape,t=>({mcq:'MCQ',short:'Short',long:'Long'})[t]||t,x=>x,null,paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperDisplayText,questionFigure);
+ $,escape,t=>({mcq:'MCQ',short:'Short',long:'Long'})[t]||t,x=>x,null,paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperDisplayText,questionFigure,grade9ComputerModelGroups);
 let lastMessage='';
 const make=(overrides={})=>{
  const props={
@@ -446,9 +446,9 @@ const fakeWindow={open:()=>({
  document:{write:s=>{generatedPrint=s},close:()=>{}},
  focus:()=>{},print:()=>{printCount++}
 })};
-const printPaper=new Function('$','esc','message','window','generatedPaper','paperSubjectLabel','paperClassLabel','paperAnswerOption','paperDisplayText','PAPER_PRINT_CSS',
+const printPaper=new Function('$','esc','message','window','generatedPaper','paperSubjectLabel','paperClassLabel','paperAnswerOption','paperDisplayText','PAPER_PRINT_CSS','grade9ComputerModelGroups',
  code('function printPaper(','async function loadClassSubjects()')+'return printPaper;')(
- $,escape,()=>{},fakeWindow,null,paperSubjectLabel,paperClassLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS);
+ $,escape,()=>{},fakeWindow,null,paperSubjectLabel,paperClassLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS,grade9ComputerModelGroups);
 printPaper(approved.getPaper(),true);
 assert.equal(printCount,1);
 assert.match(generatedPrint,/white-space:pre-line/);
@@ -463,6 +463,13 @@ assert.match(docxText,/w:orient="landscape"/);
 assert.match(docxText,/w:cols w:num="2"/);
 assert.match(docxText,/Test School/);
 assert.doesNotMatch(docxText,/qpGridAudit|qpAutoReviewed/);
+const modelFixture=dom.window.document.createElement('section');
+modelFixture.innerHTML='<div>Model Test</div><div class="qp-paper-body"><div class="qp-model-heading"><span></span><span>Marks</span><span>Level</span></div><div class="qp-model-row"><div>Question A</div><span>2</span><span>HA</span></div></div>';
+const modelDocx=new TextDecoder().decode(buildQuestionPaperDocx(modelFixture));
+assert.equal((modelDocx.match(/<w:tbl>/g)||[]).length,2);
+assert.equal((modelDocx.match(/<w:tc>/g)||[]).length,6);
+assert.match(modelDocx,/<w:gridCol w:w="6300"\/><w:gridCol w:w="620"\/><w:gridCol w:w="700"\/>/);
+assert.match(modelDocx,/Question A[\s\S]*?<w:t xml:space="preserve">2<\/w:t>[\s\S]*?<w:t xml:space="preserve">HA<\/w:t>/);
 // Inspect actual stored ZIP parts and XML relationships. Browser PNG encoding
 // is separate; a valid embedded PNG fixture proves the package contract.
 const unzipStored=bytes=>{
