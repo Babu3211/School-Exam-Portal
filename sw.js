@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v136-environment-school-source';
+const CACHE_NAME = 'smss-pwa-v137-grade9-quick-builder';
 const APP_SHELL = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const APP_SHELL = [
   './iemis-ledger.js?v=20261115-class6-ledger',
   './iemis-entry.js?v=20261122-viewer-readonly',
   './cdc-question-paper.js',
+  './cdc-question-paper.js?v=20261125-grade9-quick-builder',
   './cdc-question-autogen.mjs',
   './cdc-exact-grid.mjs',
   './cdc-question-excel.mjs',
@@ -87,7 +88,7 @@ self.addEventListener('fetch', event => {
   if (request.mode === 'navigate') {
     event.respondWith((async () => {
       try {
-        const response = await fetch(request);
+        const response = await fetch(request, {cache:'no-cache'});
         const appRoot = new URL('./', self.location.href).pathname;
         const appIndex = new URL('./index.html', self.location.href).pathname;
         const isAppEntry = [appRoot, appIndex, appIndex.replace(/\.html$/, '')].includes(url.pathname);
@@ -109,7 +110,7 @@ self.addEventListener('fetch', event => {
     const mutable = /\.(?:m?js|css|json|webmanifest)$/i.test(url.pathname) && !url.searchParams.has('v');
     if (mutable) {
       try {
-        const response = await fetch(request);
+        const response = await fetch(request, {cache:'no-cache'});
         if (response && response.ok) {
           const cache = await caches.open(CACHE_NAME);
           await cache.put(request, response.clone());
