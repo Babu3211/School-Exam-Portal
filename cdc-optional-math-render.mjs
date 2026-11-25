@@ -158,7 +158,7 @@ const paragraph=(text,{center=false,bold=false,size=22}={})=>'<w:p><w:pPr>'+(cen
 function paperParagraphs(node,{figureTokens=false}={}){
  const blocks=new Set(['DIV','P','H1','H2','H3','H4','LI','OL','UL','SECTION','PRE','ARTICLE','ASIDE','FIGURE','FIGCAPTION']);const out=[];let buffer='';
  const flush=()=>{if(buffer.trim())out.push(buffer.trim());buffer='';};
- const walk=n=>{if(n.nodeType===3){buffer+=n.nodeValue;return;}if(n.nodeType!==1)return;const tag=n.tagName.toUpperCase();if(tag==='SVG'){flush();if(figureTokens)out.push(n);return;}if(['SCRIPT','STYLE','BUTTON','DETAILS','IMG','CANVAS'].includes(tag))return;if(tag==='BR'){buffer+='\n';return;}const block=blocks.has(tag);if(block)flush();for(const child of n.childNodes)walk(child);if(block)flush();};
+ const walk=n=>{if(n.nodeType===3){buffer+=n.nodeValue;return;}if(n.nodeType!==1)return;const tag=n.tagName.toUpperCase();if(tag==='SVG'){flush();if(figureTokens)out.push(n);return;}if(figureTokens&&(n.classList?.contains('qp-model-row')||n.classList?.contains('qp-model-heading'))){flush();if(n.children.length!==3)throw Error('Invalid model score row');out.push({modelCells:[...n.children].map(c=>paperParagraphs(c,{figureTokens:true}))});return;}if(['SCRIPT','STYLE','BUTTON','DETAILS','IMG','CANVAS'].includes(tag))return;if(tag==='BR'){buffer+='\n';return;}const block=blocks.has(tag);if(block)flush();for(const child of n.childNodes)walk(child);if(block)flush();};
  walk(node);flush();return out;
 }
 // Only our self-contained drawing elements can be converted. External images,
@@ -218,13 +218,21 @@ export function buildQuestionPaperDocx(area,{figurePngs=new Map()}={}){
  if(!(figurePngs instanceof Map)||figures.some(svg=>!figurePngs.has(svg))||figurePngs.size!==figures.length)throw Error('Every paper figure must be embedded before Word export');
  const header=area.firstElementChild,heading=paperParagraphs(header),preface=[...area.children].filter(x=>x!==header&&x!==body&&!x.classList.contains('qp-paper-end')).flatMap(paperParagraphs),paras=paperParagraphs(body,{figureTokens:true});if(!paras.length)throw Error('Empty question paper');
  const sect=cols=>'<w:sectPr><w:type w:val="continuous"/><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="567" w:right="567" w:bottom="567" w:left="567" w:header="283" w:footer="283" w:gutter="0"/><w:cols w:num="'+cols+'" w:space="454"'+(cols===2?' w:sep="1"':'')+'/></w:sectPr>';
- const bodyContent=paras.map(token=>{
+ // Retain the official model's question / marks / cognitive-level columns
+ // as native editable Word cells rather than three disconnected paragraphs.
+ const tableRow=cells=>{
+  const widths=[6300,620,700];
+  return '<w:tbl><w:tblPr><w:tblW w:w="7620" w:type="dxa"/><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>'+widths.map(w=>'<w:gridCol w:w="'+w+'"/>').join('')+'</w:tblGrid><w:tr><w:trPr><w:cantSplit/></w:trPr>'+cells.map((tokens,i)=>'<w:tc><w:tcPr><w:tcW w:w="'+widths[i]+'" w:type="dxa"/><w:vAlign w:val="top"/></w:tcPr>'+(tokens.length?tokens.map(t=>typeof t==='string'?paragraph(t,{center:i>0,bold:i>0}):renderToken(t)).join(''):paragraph(''))+'</w:tc>').join('')+'</w:tr></w:tbl>';
+ };
+ const renderToken=token=>{
   if(typeof token==='string')return paragraph(token);
+  if(token?.modelCells)return tableRow(token.modelCells);
   const bytes=figurePngs.get(token),{w,h}=validateFigurePng(bytes),id=media.length+1;
   media.push(['word/media/figure'+id+'.png',bytes]);
   rels.push('<Relationship Id="rIdFigure'+id+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/figure'+id+'.png"/>');
   return figureDrawing(id,w,h);
- }).join('');
+ };
+ const bodyContent=paras.map(renderToken).join('');
  if(media.length!==figures.length)throw Error('A question figure would be omitted');
  const content=heading.map((line,i)=>paragraph(line,{center:true,bold:i===0,size:i===0?30:22})).join('')+preface.map(line=>paragraph(line,{center:true,size:18})).join('')+'<w:p><w:pPr>'+sect(1)+'</w:pPr></w:p>'+bodyContent+sect(2);
  const xml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
