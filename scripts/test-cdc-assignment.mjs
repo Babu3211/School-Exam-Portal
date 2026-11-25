@@ -1143,6 +1143,20 @@ w.getDocsFromServer=async args=>{
  return {docs:[...binaryRecords.values()].filter(record=>Object.entries(filters).every(([k,v])=>record[k]===v)).map(record=>({data:()=>record}))};
 };
 choice('unit','म र मेरो परिवार');
+const preview=field('seroSourcePreview'),previewFrame=field('seroSourceFrame');
+assert.equal(preview.hidden,false);
+assert.equal(previewFrame.children.length,0);
+assert.ok(field('seroSourceOpen').href.endsWith('#page=128'));
+preview.open=true;preview.dispatchEvent(new w.Event('toggle'));
+assert.equal(previewFrame.children.length,1);
+assert.equal(previewFrame.firstChild.src,field('seroSourceOpen').href);
+assert.equal(previewFrame.firstChild.referrerPolicy,'no-referrer');
+assert.doesNotMatch(previewFrame.firstChild.src,/sero-1|studentId|academicYear/);
+choice('unit','मेरो दैनिक जीवन');
+assert.equal(preview.open,false);
+assert.equal(previewFrame.children.length,0);
+assert.ok(field('seroSourceOpen').href.endsWith('#page=129'));
+choice('unit','म र मेरो परिवार');
 await field('gridRead').onclick();
 const seroControls=(name,stage=0)=>[...field('annexRows').querySelectorAll('[data-cdc-sero-'+name+'="'+stage+'"]')];
 assert.equal(seroControls('save').length,5);
@@ -1452,6 +1466,8 @@ for(const grade of ['2','3']){
 }
 choice('unit','म र मेरो परिवार');
 assert.equal(field('annex3').hidden,true);
+assert.equal(field('seroSourcePreview').hidden,true);
+assert.equal(field('seroSourceFrame').children.length,0);
 console.log('Grade 1 Our Surroundings three forms, 48 indicators, scoped binary Save/Load, saved-only print, seven original-guide review forms, duplicate and revoked-role checks passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
