@@ -26,10 +26,12 @@ for(const id of ['qpClass','qpSubject','qpSection','qpPaperFullMarks','qpAutoLan
 assert.deepEqual([...$('qpAutoLanguage').options].map(x=>x.value),['ne','en','both']);
 const policyHarness=new Function('$','grade9RequiredPaperLanguage','gradeNumber','selectedClass','selectedSubject',code('function applyGrade9LanguagePolicy()','function selectedTopicIds()')+'return applyGrade9LanguagePolicy;');
 for(const [subject,expected] of [['Social Studies','ne'],['Nepali','ne'],['Mathematics','both'],['Science and Technology','both'],['English','en']]){
- policyHarness($,grade9RequiredPaperLanguage,()=>9,'Class 9',subject)();
+ const apply=policyHarness($,grade9RequiredPaperLanguage,()=>9,'Class 9',subject);
+ apply(true);
  assert.equal($('qpAutoLanguage').value,expected);
- assert.equal($('qpAutoLanguage').disabled,true);
- assert.deepEqual([...$('qpAutoLanguage').options].filter(x=>!x.disabled).map(x=>x.value),[expected]);
+ assert.equal($('qpAutoLanguage').disabled,expected!=='both');
+ assert.deepEqual([...$('qpAutoLanguage').options].filter(x=>!x.disabled).map(x=>x.value),expected==='both'?['ne','en','both']:[expected]);
+ if(expected==='both'){for(const language of ['ne','en','both']){$('qpAutoLanguage').value=language;apply();assert.equal($('qpAutoLanguage').value,language);}}
 }
 policyHarness($,grade9RequiredPaperLanguage,()=>10,'Class 10','Science and Technology')();
 assert.equal($('qpAutoLanguage').disabled,false);
@@ -288,6 +290,7 @@ assert.equal(importedComputerQuestions[0].topicId,'custom_old',
  assert.equal(englishDraft.groupCount,10);
  assert.match(englishDraft.text,/75 marks/);
  assert.doesNotMatch(englishDraft.text,/[\u0900-\u097f]/u);
+ assert.doesNotMatch(englishDraft.answerText,/[\u0900-\u097f]/u);
  console.log('PASS actual English screenshot path: visible topics, 75 marks and ten groups');
 const renderTopics=new Function('$','esc','normal','curriculumRows',
  'bundledPracticeUnits','bundledPracticeQuestions','questionRows',

@@ -301,16 +301,17 @@ function setQuestionBuilderView(view){
  root.dataset.qpView=view;
  for(const b of root.querySelectorAll(".qp-stepbar [data-qp-view-target]"))b.setAttribute("aria-pressed",String(b.dataset.qpViewTarget===view));
 }
-function applyGrade9LanguagePolicy(){
+function applyGrade9LanguagePolicy(resetDefault=false){
  $("qpApp")?.classList.toggle("qp-grade9",gradeNumber(selectedClass)===9);
  for(const id of ["qpPaperFullMarks","qpPaperDuration"]){const input=$(id);if(input)input.readOnly=gradeNumber(selectedClass)===9;}
  const select=$("qpAutoLanguage"),hint=$("qpLanguagePolicy");
  if(!select)return;
  const required=grade9RequiredPaperLanguage(gradeNumber(selectedClass),selectedSubject);
- for(const option of select.options)option.disabled=!!required&&option.value!==required;
- select.disabled=!!required;
- if(required)select.value=required;
- if(hint)hint.textContent=required==="ne"?"नेपाली मात्र — विद्यालयको भाषा नियम":required==="both"?"नेपाली र English दुवै — एउटै प्रश्न, एउटै अङ्कभार":required==="en"?"English only — questions and instructions.":"";
+ const locked=required==="ne"||required==="en";
+ for(const option of select.options)option.disabled=locked&&option.value!==required;
+ select.disabled=locked;
+ if(locked||(required&&resetDefault))select.value=required;
+ if(hint)hint.textContent=required==="ne"?"नेपाली मात्र — विद्यालयको भाषा नियम":required==="both"?"नेपाली, English वा दुवै छान्नुहोस्। Grid र अङ्कभार उही रहन्छ।":required==="en"?"English only — questions and instructions.":"";
 }
 function selectedTopicIds() {
   return [...document.querySelectorAll("[data-qp-topic]:checked")].map(x => x.value);
@@ -1289,7 +1290,8 @@ function generateReferenceDraftPreview(){
  resetReferenceDraftOutput();
  assertReferencePreviewScope();
  const topicIds=selectedTopicIds(),language=$("qpAutoLanguage").value;
- if(language!==grade9RequiredPaperLanguage(9,selectedSubject))throw Error("विषयको भाषा नियमअनुसार प्रश्नपत्र तयार गर्नुहोस्।");
+ const required=grade9RequiredPaperLanguage(9,selectedSubject);
+ if(!["ne","en","both"].includes(language)||(required!=="both"&&required&&language!==required))throw Error("विषयको भाषा नियमअनुसार प्रश्नपत्र तयार गर्नुहोस्।");
  const scope=JSON.stringify([auth.currentUser.uid,selectedClass,selectedSubject,selectedSection,75]);
  const result=buildGrade9ReferencePreview({grade:9,subject:selectedSubject,fullMarks:Number($("qpPaperFullMarks").value),durationMinutes:Number($("qpPaperDuration").value),language,questions:bundledPracticeQuestions,selectedTopicIds:topicIds,avoidSignatures:referencePreviewHistory.get(scope)||[]});
  const box=$("qpReferenceDraftPreview");
@@ -1379,7 +1381,8 @@ async function generateSmartPaper(){
   throw Error("कक्षा/विषय/Section मा प्रश्नपत्र बनाउन अनुमति छैन।");
  const topicIds=selectedTopicIds(),target=Number($("qpPaperFullMarks").value);
  const language=$("qpAutoLanguage").value,mode=$("qpAutoMode").value;
- if(gradeNumber(selectedClass)===9&&language!==grade9RequiredPaperLanguage(9,selectedSubject))throw Error("विषयको भाषा नियमअनुसार प्रश्नपत्र तयार गर्नुहोस्।");
+ const requiredLanguage=grade9RequiredPaperLanguage(gradeNumber(selectedClass),selectedSubject);
+ if(gradeNumber(selectedClass)===9&&(!["ne","en","both"].includes(language)||(requiredLanguage!=="both"&&requiredLanguage&&language!==requiredLanguage)))throw Error("विषयको भाषा नियमअनुसार प्रश्नपत्र तयार गर्नुहोस्।");
  if(gradeNumber(selectedClass)===9&&mode!=="cdc")throw Error("कक्षा ९: CDC Grid नमिल्ने अभ्यास ढाँचामा परीक्षा प्रश्नपत्र बनाइँदैन। CDC Exact छान्नुहोस्।");
  const strict=mode==="cdc",
   historicalPractice=!strict?getGrade8ScienceHistoricalPracticePattern({
@@ -1973,7 +1976,7 @@ document.addEventListener("change",async event=>{
   }
   if(t.id==="qpSubject"){
     questionDataLoadEpoch++;verifiedQuestionSelection=null;
-    selectedSubject=t.value;selectedSection="";generatedPaper=null;savedPapers=[];applyGrade9LanguagePolicy();$("qpPaperRows").innerHTML='<tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr>';
+    selectedSubject=t.value;selectedSection="";generatedPaper=null;savedPapers=[];applyGrade9LanguagePolicy(true);$("qpPaperRows").innerHTML='<tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr>';
     $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;$("qpAnswerKeyBtn").disabled=true;if($("qpWordPaperBtn"))$("qpWordPaperBtn").disabled=true;
     curriculumRows=[];questionRows=[];blueprintRows=[];currentBlueprint=null;
     bundledPracticeUnits=[];bundledPracticeQuestions=[];
