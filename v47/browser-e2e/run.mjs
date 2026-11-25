@@ -116,6 +116,8 @@ try{
    assert.equal(await page.locator('#dashboardLoginFields').isVisible(),false);
    assert.equal(await page.locator('#verifiedSidebar').isVisible(),true);
    assert.equal(await page.locator('#verifiedDashboard').isVisible(),true);
+   assert.equal(await page.locator('[data-post-release]:visible').count(),0);
+   assert.equal(await page.locator('[data-post-release][aria-disabled="true"][tabindex="-1"]').count(),3);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,'Dashboard must fit viewport');
   }else{
    await wait(page,()=>document.getElementById('dashboardStatus').textContent.includes('Login असफल'));

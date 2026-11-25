@@ -30,3 +30,13 @@ for(const route of ['students.html','attendance.html','staff.html','exams.html',
 assert.ok(html.includes('data-required-role="school_admin"'),'Admin-only module must be explicit');
 assert.ok(html.includes('Marks Entry (Preview)')&&html.includes('Grade Sheet (Preview)'),'Draft results must not appear officially published');
 console.log('V47 School Admin navigation is role-gated and reverified; other modules remain visible');
+
+const deferred=[...html.matchAll(/<a\b[^>]*\bhref="\.\/(?:primary-assessment|question-paper)\.html"[^>]*>/g)];
+assert.equal(deferred.length,3,'Keep experimental routes intact for post-release work');
+for(const [tag] of deferred){
+ assert.match(tag,/\bhidden\b/);assert.match(tag,/\bdata-post-release\b/);
+ assert.match(tag,/aria-disabled="true"/);assert.match(tag,/tabindex="-1"/);
+}
+assert.match(js,/&&!link\.hasAttribute\('data-post-release'\)/);
+assert.match(js,/if\(link\.hasAttribute\('data-post-release'\)\)return;/);
+console.log('PASS first-release scope: new assessment and question-paper references retained but not offered in normal exam navigation');
