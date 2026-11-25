@@ -1367,6 +1367,78 @@ assert.equal(observations.size,beforeSero);
 w.__testSeroApproved.delete(keyUnderTest);
 w.getDocsFromServer=priorBinaryRead;
 assert.equal(w.__testSeroApproved.size,0);
+// Full DOM cycle for all pending forms, using only the in-memory backend.
+// Source approval and Firestore production rules are NOT changed here.
+let checkedForms=0,checkedBlocks=0;
+for(const grade of ['1','2','3']){
+ const studentId='sero-cycle-'+grade,className='Class '+grade;
+ current.subjectAssignments=[{className,subject:'serophero',section:'A'}];
+ serverRole={...current};
+ w.getDocs=async()=>({docs:[{id:studentId,data:()=>({class:className,section:'A',name:'Synthetic Cycle Student'})}]});
+ w.getDocsFromServer=async args=>{
+  if(args.name!=='cdc_serofero_indicators')return priorBinaryRead(args);
+  const filters=Object.fromEntries(args.filters.map(([k,op,v])=>{assert.equal(op,'==');return [k,v];}));
+  assert.deepEqual(filters,{studentId,className,subject:field('subject').value,section:'A',academicYear:'2083',period:field('period').value,unit:field('unit').value});
+  return {docs:[...binaryRecords.values()].filter(record=>Object.entries(filters).every(([k,v])=>record[k]===v)).map(record=>({data:()=>record}))};
+ };
+ for(const [i,unit] of reviewNames.entries()){
+  if(grade==='1'&&i<3)continue;
+  const approval=grade+':'+unit,blocks=expectedByGrade[grade][i]/4;
+  w.__testSeroApproved.add(approval);
+  try{
+   await w.loadCdcAssessmentPage();
+   choice('unit',unit);
+   assert.equal(field('annexRows').rows.length,blocks*4,approval);
+   assert.equal(seroControls('save').length,0,approval);
+   await field('gridRead').onclick();
+   const prepared=w.__testSeroEntryForm(grade,unit,'2083');
+   assert.equal(seroControls('save').length,blocks,approval);
+   const before=binaryRecords.size;
+   // All blocks in both stages get synthetic data. This tests zero and
+   // maximum scores without touching a real student or Firebase.
+   for(const stage of [0,1]){
+    for(let k=0;k<blocks;k++){
+     for(let j=0;j<4;j++){
+      const input=seroControls('indicator',stage)[4*k+j];
+      input.value=stage?'yes':'no';input.onchange();
+     }
+     seroControls('date',stage)[k].value='2083-08-07';
+     seroControls('used-tool',stage)[k*4].value='परीक्षण साधन '+stage+'-'+k;
+     await seroControls('save',stage)[k].onclick();
+     const saved=[...binaryRecords.values()].at(-1);
+     assert.equal(saved.outcomeId,'cdc2076-g'+grade+'-'+(prepared.start+k),approval);
+     assert.equal(saved.stage,stage?'support':'regular');
+     assert.equal(saved.studentId,studentId);
+    }
+   }
+   assert.equal(binaryRecords.size,before+2*blocks,approval);
+   await field('gridRead').onclick();
+   assert.ok(seroControls('score',0).every(cell=>cell.textContent==='०'),approval);
+   assert.ok(seroControls('score',1).every(cell=>cell.textContent==='४'),approval);
+   const stageCells=field('annexFoot').querySelectorAll('[data-cdc-sero-stage-average]');
+   assert.equal(stageCells[0].textContent,'०.००');assert.equal(stageCells[1].textContent,'४.००');
+   assert.equal(seroControls('used-tool',1)[0].value,'परीक्षण साधन 1-0');
+   seroControls('used-tool',1)[0].value='नसुरक्षित साधन';
+   const beforePrint=seroPrintCount;
+   field('printForm').onclick();
+   assert.equal(seroPrintCount,beforePrint+1,approval);
+   const printed=new JSDOM(seroMarkup).window.document;
+   assert.equal(printed.querySelector('tbody').rows.length,blocks*4,approval);
+   assert.equal(printed.querySelectorAll('input,select,button').length,0);
+   assert.equal(printed.querySelector('tfoot').rows[1].cells[3].textContent,'०.००');
+   assert.equal(printed.querySelector('tfoot').rows[1].cells[6].textContent,'४.००');
+   assert.match(printed.body.textContent,/परीक्षण साधन 1-0/);
+   assert.doesNotMatch(printed.body.textContent,/नसुरक्षित साधन/);
+   assert.equal(observations.size,beforeSero);
+   checkedForms++;checkedBlocks+=blocks;
+  }finally{w.__testSeroApproved.delete(approval);}
+ }
+}
+assert.equal(checkedForms,27);
+assert.equal(checkedBlocks,86);
+assert.equal(w.__testSeroApproved.size,0);
+w.getDocsFromServer=priorBinaryRead;
+console.log('All 27 pending original-guide forms: 86 blocks in both stages, zero/max scores, scoped in-memory Save/Load and saved-only print');
 current.subjectAssignments=[{className:'Class 1',subject:'serophero',section:'A'}];
 serverRole={...current};
 w.getDocs=async()=>({docs:[{id:'sero-1',data:()=>({class:'Class 1',section:'A',name:'Synthetic Student'})}]});
