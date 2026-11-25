@@ -89,6 +89,17 @@ w.eval(readFileSync('iemis-importer/transfer.js','utf8'));
 const legacyForms=w.eval(html.slice(html.indexOf('const cdcCoreSubjects'),html.indexOf('let iemisEntryGrid'))+'\nwindow.__testSeroApproved=cdcSeroGuideApproved;\nwindow.__testSeroEntryForm=cdcSeroGuideEntryForm;\nwindow.__testScienceSourceCount=cdcUpperScienceByTitle.size;\nopenCdcAssessment();\ncdcLegacyMathRubrics;');
 const field=name=>w.document.querySelector('[data-cdc="'+name+'"]');
 const choice=(name,value)=>{field(name).value=value;field(name).onchange();};
+// Compact teacher workspace: keep the official form first and secondary panels closed.
+for(const name of ['extraReference','extraObservations','extraReports','extraManual','extraRecords','extraActions']){
+ assert.equal(field(name).tagName,'DETAILS',name);
+ assert.equal(field(name).open,false,name);
+ assert.ok(field(name).querySelector('summary'),name);
+ assert.ok(field('annex3').compareDocumentPosition(field(name)) & w.Node.DOCUMENT_POSITION_FOLLOWING,name);
+}
+assert.ok(field('extraReference').contains(field('referenceLibrary')));
+assert.ok(field('extraReports').contains(field('annualProgress')));
+assert.ok(field('extraRecords').contains(field('schoolRows')));
+
 const references=field('referenceLibrary');
 assert.ok(references);
 for(const name of ['guidePdf13','guidePdf45','guideOfficial13','guideOfficial45','guideCurriculum13','guideCurriculumMirror13','guideMirror45','guideCehrd45','guideHealth4','guideHealth5']){
@@ -118,6 +129,13 @@ assert.match(field('curriculumSource').href,/Curriculum_vtgf727\.pdf$/);
 choice('class','5');
 assert.deepEqual([...field('student').options].map(o=>o.value),['one','two']);
 assert.equal(field('date').value,'2083-08-07');
+assert.ok([...field('themePick').options].some(o=>o.value==='ज्यामिति'));
+choice('themePick','ज्यामिति');
+assert.equal(field('unit').value,'ज्यामिति');
+assert.equal(field('unitEn').value,'Geometry');
+assert.equal(field('extraReference').open,false);
+choice('themePick','');
+assert.equal(field('unit').value,'');
 choice('unitEn','Geometry');
 assert.equal(field('unit').value,'ज्यामिति');
 choice('topic','Draw perpendicular and parallel lines on a square grid');
