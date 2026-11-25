@@ -7386,6 +7386,8 @@ const cdcSeroferoReferenceForms={1:{"म र मेरो परिवार":{"
     ["अङ्कगणित","समान हर भएका बढीमा तीन भिन्न जोड्ने वा घटाउने","Add or subtract up to three fractions with a common denominator"],
     ["अङ्कगणित","भिन्न र दशमलव एकअर्कामा रूपान्तरण गर्ने","Convert between fractions and decimals"],
     ["अङ्कगणित","दशमलव सङ्ख्या जोड्ने र घटाउने","Add and subtract decimals"],
+    ["अङ्कगणित","भिन्न र प्रतिशतलाई एकआपसमा रूपान्तरण गर्न","Convert between fractions and percentages"],
+    ["अङ्कगणित","दशमलव र प्रतिशतलाई एकआपसमा रूपान्तरण गर्न","Convert between decimals and percentages"],
     ["नाप","समय १२ घण्टे र २४ घण्टे ढाँचामा बताउने","Tell time in 12-hour and 24-hour notation"],
     ["नाप","समयसम्बन्धी गुणन र भाग गर्ने","Multiply and divide durations"],
     ["नाप","मिलिमिटरदेखि किलोमिटरसम्मका सम्बन्धित एकाइमा दूरीको गुणन र भाग गर्ने","Multiply and divide lengths expressed in metric units from millimetres to kilometres"],
@@ -8958,18 +8960,30 @@ function cdcSeroGuideEntryForm(grade,unit,year){
   }
   return {page:source.page,start,groups,mainRows,guideEntry:true};
 }
-// User-supplied CDC 2083 guide, Annex 3(f), PDF pages 123–148.
-// Verified each theme's numbered rows against the printed 4 × N denominator.
-const cdcHealthGuideCounts={
-  '4':[5,6,6,10,5,4,10,12,6,7,7,5,3],
-  '5':[5,6,6,10,5,4,10,12,6,7,8,6,3]
+// User-supplied CDC 2083 guide, Annex 3(a–f), PDF pages 18–148.
+// Counts from printed 4 × N denominators; pages are 1-based PDF pages.
+// Multi-page forms link to their first page (Class 5 arithmetic 87–88,
+// Class 4 matter 111–112). Count checks are not wording certification.
+const cdcUpperGuideSource={
+ '4:nepali':{pages:Array.from({length:15},(_,i)=>18+i),counts:Array(15).fill(6)},
+ '5:nepali':{pages:Array.from({length:15},(_,i)=>33+i),counts:Array(15).fill(6)},
+ '4:english':{pages:Array.from({length:16},(_,i)=>48+i),counts:[7,5,4,5,5,4,5,4,4,5,4,4,4,4,5,4]},
+ '5:english':{pages:Array.from({length:17},(_,i)=>64+i),counts:[7,6,5,6,4,5,4,4,5,4,5,4,5,5,5,4,5]},
+ '4:mathematics':{pages:[81,82,83,84,85],counts:[4,11,10,3,2]},
+ '5:mathematics':{pages:[86,87,89,90,91],counts:[5,10,7,4,4]},
+ '4:socialstudies':{pages:[92,93,94,95,96,97,98],counts:[4,5,5,3,4,5,6]},
+ '5:socialstudies':{pages:[99,100,101,102,103,104,105],counts:[4,5,5,4,3,5,6]},
+ '4:science':{pages:[106,107,108,109,110,111,113,114],counts:[5,5,3,6,3,14,8,5]},
+ '5:science':{pages:[115,116,117,118,119,120,121,122],counts:[6,6,4,3,3,10,13,4]},
+ '4:healthphysicalcreativeart':{pages:Array.from({length:13},(_,i)=>123+i),counts:[5,6,6,10,5,4,10,12,6,7,7,5,3]},
+ '5:healthphysicalcreativeart':{pages:Array.from({length:13},(_,i)=>136+i),counts:[5,6,6,10,5,4,10,12,6,7,8,6,3]}
 };
-function cdcHealthGuidePage(grade,subject,unit,year){
-  if(String(year)!=='2083'||cdcAssessmentSubjectKey(subject)!=='healthphysicalcreativeart')return null;
-  const counts=cdcHealthGuideCounts[grade];
-  if(!counts)return null;
-  const i=cdcVerifiedUnits(grade,'healthphysicalcreativeart').findIndex(([name])=>name===unit);
-  return i>=0&&i<counts.length?{page:(grade==='4'?123:136)+i,count:counts[i],guide:'45'}:null;
+function cdcUpperGuidePage(grade,subject,unit,year){
+  if(String(year)!=='2083')return null;
+  const key=cdcAssessmentSubjectKey(subject),source=cdcUpperGuideSource[grade+':'+key];
+  if(!source)return null;
+  const i=cdcVerifiedUnits(grade,key).findIndex(([name])=>name===unit);
+  return i>=0&&i<source.counts.length?{page:source.pages[i],count:source.counts[i],guide:'45'}:null;
 }
 function cdcThemeMarkRows(grade,subject,year){
   grade=String(grade);
@@ -9015,8 +9029,8 @@ function cdcThemeMarkRows(grade,subject,year){
     for(const [unit] of catalogue)if(!themes.has(unit))themes.set(unit,key==='english'?unit:'');
     for(const [unit,en] of themes){
       const count=catalogue.filter(([u])=>u===unit).length;
-      const healthSource=cdcHealthGuidePage(grade,key,unit,year);
-      add(unit,en,count,healthSource&&count===healthSource.count?'guideMatched':count?'mapped':'pending');
+      const guideSource=cdcUpperGuidePage(grade,key,unit,year);
+      add(unit,en,count,guideSource&&count===guideSource.count?'guideMatched':count?'mapped':'pending');
     }
   }
   return rows;
@@ -9288,7 +9302,7 @@ function openCdcAssessment(context = null) {
   const renderAnnex=()=>{
     const panel=field('annex3'),enabled=hasAnnexGrid(),en=language()==='en';
     const nepaliForm=primaryNepaliForm(),seroReference=primarySeroferoReference(),seroGuide=primarySeroGuideReview();
-    syncSeroSourcePreview(seroReference||seroGuide||cdcHealthGuidePage(field('class').value,field('subject').value,field('unit').value,year));
+    syncSeroSourcePreview(seroReference||seroGuide||cdcUpperGuidePage(field('class').value,field('subject').value,field('unit').value,year));
     panel.hidden=!enabled&&!nepaliForm&&!seroReference&&!seroGuide;field('stageRow').hidden=!enabled;field('gridRead').hidden=!!nepaliForm&&!nepaliForm.editable;
     field('printForm').disabled=!enabled||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('unit').value.trim();
     field('gridRead').textContent=seroReference?'सूचक अभिलेख पढ्नुहोस् / पुनः पढ्नुहोस्':'Load / Refresh Records';
@@ -10170,7 +10184,7 @@ function openCdcAssessment(context = null) {
       const tr=body.insertRow();
       const name=ne?row.unit:en?row.en||row.unit:[...new Set([row.unit,row.en].filter(Boolean))].join(' / ');
       for(const value of [digits(i+1),name,row.count===null?'—':digits(row.count),row.fullMark===null?'—':digits(row.fullMark),...(key==='serophero'?[row.indicators===null?'—':digits(row.indicators)]:[]),statuses[row.status]])tr.insertCell().textContent=value;
-      const source=key==='serophero'&&Number(year)<2084?cdcSeroferoGuideCounts[grade]?.[row.unit]:cdcHealthGuidePage(grade,key,row.unit,year);
+      const source=key==='serophero'&&Number(year)<2084?cdcSeroferoGuideCounts[grade]?.[row.unit]:cdcUpperGuidePage(grade,key,row.unit,year);
       if(source){const a=document.createElement('a');a.href=field(source.guide==='45'?'guidePdf45':'guidePdf13').href.split('#')[0]+'#page='+source.page;a.target='_blank';a.rel='noopener noreferrer';a.textContent=' — PDF '+digits(source.page);tr.cells[tr.cells.length-1].append(a);}
     }
     if(!rows.length){const cell=body.insertRow().insertCell();cell.colSpan=header.cells.length;cell.textContent=label('यस विषयको स्रोत सूची तयार छैन।','Source catalogue is not yet available.');}
