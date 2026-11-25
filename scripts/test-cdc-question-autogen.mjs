@@ -146,7 +146,8 @@ console.log('PASS subject-scoped source isolation, changing selection invalidati
 
 assert.match(page,/verifiedQuestionSelection=null/);
 assert.match(page,/verifiedQuestionSelection\.request!==questionDataLoadEpoch/);
-assert.match(page,/verifiedQuestionSelection=\{className,subject,section,request\}/);
+assert.match(page,/verifiedQuestionSelection=\{className,subject,section,request,referenceHeader\}/);
+assert.match(page,/if\(!stillCurrent\(\)\|\|!sessionUid\|\|auth\.currentUser\?\.uid!==sessionUid\|\|!roleCanTeach\(className,subject,section\)\)return;/);
 console.log('PASS rejected stale subject/class/section loads before generating question paper');
 
 assert.match(page,/function updateAutoReviewActions\(/);
