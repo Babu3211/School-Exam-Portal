@@ -1,0 +1,42 @@
+name: V46 to V47 school migration preflight (read only)
+on:
+  workflow_dispatch:
+    inputs:
+      school_id:
+        description: 'Confirmed V46 school IEMIS code'
+        required: true
+        default: '300160003'
+        type: string
+  push:
+    branches: [smss-v47-multischool-work]
+    paths:
+      - '.github/workflows/v47-v46-migration-preflight.yml'
+permissions:
+  contents: read
+concurrency:
+  group: v47-v46-read-only-migration-preflight
+  cancel-in-progress: false
+jobs:
+  inventory:
+    if: github.ref == 'refs/heads/smss-v47-multischool-work'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test aggregate inventory and Nepali names without Firebase
+        run: |
+          node v47/diagnostics/test-v46-migration-preflight.mjs
+          node --check v47/diagnostics/v46-migration-preflight.mjs
+      - name: Install isolated Admin SDK
+        run: npm install --prefix v47-runtime --no-package-lock --no-audit --no-fund --ignore-scripts
+      - name: Read only bounded Firestore and Auth counts in both dedicated projects
+        env:
+          V46_READ_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
+          V47_READ_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}
+          V47_MIGRATION_IEMIS: ${{ inputs.school_id || '300160003' }}
+        run: node v47/diagnostics/v46-migration-preflight.mjs

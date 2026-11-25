@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {summarizeCollectionCounts,inspectSubjectNames,compareAuthIdentities} from './v46-migration-preflight-core.mjs';
+const count=summarizeCollectionCounts({students:500,subjects:30,marks:3000,unknown:7},{students:1});
+assert.equal(count.sourceTotal,3537);assert.equal(count.unknownDocuments,7);assert.equal(count.targetExistingDocuments,1);
+assert.throws(()=>summarizeCollectionCounts({students:-1},{}));
+const records=[{id:'subject1',data:{name:'नेपाली',class:'1'}},{id:'subject2',data:{name:'विज्ञान तथा प्रविधि',class:'9'}},{id:'subject3',data:{name:'English',class:'9'}},{id:'नेपाली',data:{name:'',class:'कक्षा १'}}];
+const frozen=JSON.stringify(records);
+assert.deepEqual(inspectSubjectNames(records),{count:4,nepali:2,missing:1,needsClassReview:1,nonCanonicalId:1});
+assert.equal(JSON.stringify(records),frozen,'Unicode source must remain unchanged');
+const source=[{uid:'a',email:'a@example.invalid',providerData:[{providerId:'password'}],passwordHash:'synthetic'},{uid:'b',email:'b@example.invalid'},{uid:'c',email:'c@example.invalid'},{uid:'d',email:'d@example.invalid'}];
+const target=[{uid:'a',email:'A@example.invalid'},{uid:'new',email:'b@example.invalid'},{uid:'c',email:'other@example.invalid'}];
+assert.deepEqual(compareAuthIdentities(source,target),{sourceAccounts:4,targetAccounts:3,exactIdentityMatches:1,identityConflicts:2,newAccounts:1,passwordAccounts:1,passwordHashAvailable:1});
+console.log('PASS migration aggregate inventory, untouched Nepali Unicode, collision checks and password continuity prerequisites');
