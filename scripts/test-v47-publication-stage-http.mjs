@@ -50,10 +50,13 @@ const auth={verifyIdToken:async(t,revoked)=>{
  if(t==='revoked')throw Error('revoked');
  return {uid:t,firebase:{sign_in_provider:t==='anon'?'anonymous':'password'}};
 }};
-const server=createV47ApiServer({auth,firestore});
+const server=createV47ApiServer({auth,firestore,publicationEnabled:true});
+const disabled=createV47ApiServer({auth,firestore});
 try{
  server.listen(0,'127.0.0.1');await once(server,'listening');
  const origin='http://127.0.0.1:'+server.address().port;
+ disabled.listen(0,'127.0.0.1');await once(disabled,'listening');
+ const disabledOrigin='http://127.0.0.1:'+disabled.address().port;
  const qs=new URLSearchParams(scope).toString();
  const review=async(token=actorUid)=>fetch(origin+'/api/v47/publication-review?'+qs,{
   headers:{authorization:'Bearer '+token}
@@ -69,6 +72,9 @@ try{
    body:options.method==='GET'?undefined:JSON.stringify(data)
   });
  const before=txWrites;
+ const blockedStage=await fetch(disabledOrigin+'/api/v47/publication/stage',{method:'POST',headers:{authorization:'Bearer '+actorUid,'content-type':'application/json'},body:JSON.stringify({scope,confirmation,confirmStage:true})});
+ assert.equal(blockedStage.status,503);
+ assert.equal(txWrites,before,'Disabled server must reject staging without writes');
  assert.equal((await post({scope,confirmation,confirmStage:false})).status,400);
  assert.equal((await post({scope,confirmation,confirmStage:true,studentMarks:marks})).status,413,'Oversized browser marks payload rejected before parsing');
  assert.equal((await post({scope:{...scope,schoolId:'87654321'},confirmation,confirmStage:true})).status,403);
@@ -117,7 +123,7 @@ try{
    method,headers:{authorization:'Bearer '+token,'content-type':'application/json'},
    body:method==='GET'?undefined:JSON.stringify(body)
   });
- assert.equal((await callCommit(origin)).status,503,'Default server must NOT publish');
+ assert.equal((await callCommit(disabledOrigin)).status,503,'Default server must NOT publish');
  assert.equal([...docs.keys()].some(p=>p.includes('/official_marks_pointers/')),false);
  const enabled=createV47ApiServer({auth,firestore,publicationEnabled:true});
  try{
@@ -155,4 +161,4 @@ try{
   await new Promise((resolve,reject)=>enabled.close(e=>e?reject(e):resolve()));
  }
  console.log('PASS V47 staging HTTP: 101 students, explicit fresh review, token/role/tenant checks, server-owned IDs, default publication disabled');
-}finally{await new Promise((resolve,reject)=>server.close(e=>e?reject(e):resolve()))}
+}finally{if(disabled.listening)await new Promise((resolve,reject)=>disabled.close(e=>e?reject(e):resolve()));await new Promise((resolve,reject)=>server.close(e=>e?reject(e):resolve()))}
