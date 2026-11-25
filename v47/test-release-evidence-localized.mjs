@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {spawnSync} from 'node:child_process';
+const r=spawnSync(process.execPath,[new URL('./release-evidence-report.mjs',import.meta.url).pathname],{encoding:'utf8'});
+assert.equal(r.status,1,'Static evidence must never authorize production');
+const report=JSON.parse(r.stdout);
+assert.equal(report.productionReady,false);
+const status=n=>report.checks.find(c=>c.name===n)?.status;
+for(const n of ['Attendance school scope','Attendance atomic API option','IEMIS school identity','Attendance partial-save warning','Viewer attendance read-only'])assert.equal(status(n),'STATIC_CHECK_OK',n);
+for(const n of ['V46 dashboard parity','Official marks save','CDC/IEMIS official grading','Official grade sheet'])assert.equal(status(n),'BLOCKED',n);
+console.log('PASS localized release evidence, scoped attendance and fail-closed production blockers');

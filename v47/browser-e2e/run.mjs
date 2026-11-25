@@ -172,6 +172,29 @@ try{
  for(const [sid,uid] of [[schools[1].sid,'alpha-viewer'],[schools[0].sid,'beta-admin']]){
   const {context,page,errors}=await newSession();try{await login(page,sid,uid,false);assert.deepEqual(errors,[])}finally{await context.close()}
  }
+ // Verify actual Attendance page, default Nepal date, roster name and Viewer read-only controls.
+ for(const [school,uid,role] of [[schools[0],'alpha-admin','school_admin'],[schools[0],'alpha-viewer','viewer'],[schools[1],'beta-admin','school_admin']]){
+  const {context,page,errors}=await newSession();
+  try{
+   await login(page,school.sid,uid);
+   await page.goto(origin+'/attendance.html?schoolId='+school.sid);
+   await wait(page,()=>!document.getElementById('work').hidden);
+   const expectedDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kathmandu',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+   assert.equal(await page.locator('#date').inputValue(),expectedDate);
+   await page.locator('#schoolClass').selectOption('1');
+   await page.locator('#rosterLoad').click();
+   await wait(page,()=>document.querySelectorAll('#rosterRows tr').length===1);
+   const roster=await page.locator('#rosterRows').textContent();
+   assert.ok(roster.includes(school.student));assert.ok(!roster.includes(school.sid===schools[0].sid?schools[1].student:schools[0].student));
+   assert.equal(await page.locator('#writeArea').isVisible(),role==='school_admin');
+   assert.equal(await page.locator('#bulkArea').isVisible(),role==='school_admin');
+   assert.equal(await page.locator('#teacherBulkArea').isVisible(),false);
+   assert.equal(await page.locator('#rosterRows select').count(),role==='school_admin'?1:0);
+   if(role==='viewer')assert.match(roster,/Read only/);
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+ }
+ console.log('PASS Attendance school-scoped roster, English student name, Nepal date and Viewer read-only browser controls');
  // School Admin provisions an isolated Auth account, then grants membership
  // via the existing inactive transaction. No platform role or foreign school.
  {
