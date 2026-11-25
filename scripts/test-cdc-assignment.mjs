@@ -1282,6 +1282,8 @@ for(const grade of ['2','3']){
   assert.equal(rows.rows.length,expected[i][1],unit);
   assert.equal(outcomes.length,expected[i][0],unit);
   assert.match(field('annexStatus').textContent,/कार्यगत शब्दावली/);
+  assert.equal(field('annexStatus').textContent.includes('सूचक क्रम, साधन र अङ्कन खण्ड मूल PDF सँग जाँचिएको'),grade==='2'&&i<2,unit);
+  if(grade==='2'&&i===0)assert.match(rows.textContent,/हपिङ गर्ने र रबरको रिङ फाल्ने/);
   assert.ok(outcomes.every(cell=>cell.textContent.includes(' — ')));
   assert.ok([...rows.rows].every(row=>!row.textContent.includes('मूल PDF हेर्नुहोस्')));
   const sampleLabels=grade==='2'
