@@ -14,4 +14,5 @@ for(const name of found){
 assert.throws(()=>v47CollectionPlan("school_A001","unreviewed"));
 assert.throws(()=>v47CollectionPlan("../invalid","marks"));
 assert.equal(V46_COLLECTION_POLICY.cdc_observations,"tenant-private");
+assert.equal(V46_COLLECTION_POLICY.cdc_serofero_indicators,"tenant-server-managed");
 console.log("V47 "+found.length+"-collection migration mapping checks passed");

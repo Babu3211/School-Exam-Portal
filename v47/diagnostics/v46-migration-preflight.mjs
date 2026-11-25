@@ -24,6 +24,9 @@ async function counts(collections){
  }
  return out;
 }
+async function identify(label,fn){
+ try{return await fn()}catch(e){console.log(label+' unavailable: '+safeError(e));throw e}
+}
 async function users(auth){
  const out=[];let token;
  do{
@@ -42,8 +45,8 @@ try{
  const sdb=getFirestore(source),tdb=getFirestore(target);
  try{
   const school=tdb.collection('schools').doc(sid);
-  const [sourceCollections,targetSchool,targetCollections]=await Promise.all([sdb.listCollections(),school.get(),school.listCollections()]);
-  const [sc,tc]=await Promise.all([counts(sourceCollections),counts(targetCollections)]);
+  const [sourceCollections,targetSchool,targetCollections]=await Promise.all([identify('V46 source Firestore collection listing',()=>sdb.listCollections()),identify('V47 target school registry',()=>school.get()),identify('V47 target school collection listing',()=>school.listCollections())]);
+  const [sc,tc]=await Promise.all([identify('V46 source Firestore counts',()=>counts(sourceCollections)),identify('V47 target Firestore counts',()=>counts(targetCollections))]);
   const summary=summarizeCollectionCounts(sc,tc);
   console.log('V46 top-level Firestore documents: '+summary.sourceTotal);
   console.log('V47 canonical school registry exists: '+(targetSchool.exists?'YES':'NO'));
@@ -64,7 +67,7 @@ try{
   }
  }catch(e){blocked=true;console.log('Firestore inventory unavailable or incomplete: '+safeError(e))}
  try{
-  const [su,tu]=await Promise.all([users(getAuth(source)),users(getAuth(target))]);
+  const [su,tu]=await Promise.all([identify('V46 source Auth account listing',()=>users(getAuth(source))),identify('V47 target Auth account listing',()=>users(getAuth(target)))]);
   const info=compareAuthIdentities(su,tu);
   console.log('Auth aggregate identity and password-hash availability: '+JSON.stringify(info));
   if(info.identityConflicts||info.exactIdentityMatches||info.passwordHashAvailable!==info.passwordAccounts)blocked=true;

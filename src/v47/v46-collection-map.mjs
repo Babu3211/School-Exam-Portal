@@ -10,6 +10,8 @@ export const V46_COLLECTION_POLICY=Object.freeze({
  // V46 CDC classroom observations contain identifiable student assessments;
  // school-scoped and private, never a public-results publishing collection.
  cdc_observations:"tenant-private",
+ // New V46 indicator definitions: preserve for migration, but require separate schema/role review.
+ cdc_serofero_indicators:"tenant-server-managed",
  certificates:"tenant-private",
  classes:"tenant-private",
  exams:"tenant-private",

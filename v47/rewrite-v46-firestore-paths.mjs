@@ -2,7 +2,7 @@
 // Every legacy collection must be classified; unknown references fail closed.
 export const V46_COLLECTIONS=Object.freeze([
  'audit_logs','students','certificates','school_public_branding','school_gallery','school_settings',
- 'staff','classes','user_roles','subjects','marks','mark_settings','exams','cdc_observations',
+ 'staff','classes','user_roles','subjects','marks','mark_settings','exams','cdc_observations','cdc_serofero_indicators',
  'public_result_exams','public_result_lookup','public_results','attendance'
 ]);
 export const V47_TENANT_COLLECTIONS=Object.freeze([...V46_COLLECTIONS]);

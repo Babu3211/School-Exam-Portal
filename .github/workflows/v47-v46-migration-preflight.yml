@@ -34,7 +34,7 @@ jobs:
           node --check v47/diagnostics/v46-migration-preflight.mjs
       - name: Install isolated Admin SDK
         run: npm install --prefix v47-runtime --no-package-lock --no-audit --no-fund --ignore-scripts
-      - name: Read only bounded Firestore and Auth counts in both dedicated projects
+      - name: Identify project-specific read permissions and compare bounded counts
         env:
           V46_READ_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXAM_PORTAL_SMSS_95016 }}
           V47_READ_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}

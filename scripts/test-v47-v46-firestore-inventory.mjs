@@ -8,7 +8,7 @@ const html=readFileSync(new URL("../index.html",import.meta.url),"utf8");
 const matches=[...html.matchAll(/\b(?:collection|doc)\s*\(\s*db\s*,\s*["'`]([^"'`]+)["'`]/g)];
 const found=[...new Set(matches.map(m=>m[1]))].sort();
 const known=[
- "audit_logs","attendance","cdc_observations","certificates","classes","exams","mark_settings",
+ "audit_logs","attendance","cdc_observations","cdc_serofero_indicators","certificates","classes","exams","mark_settings",
  "marks","public_result_exams","public_result_lookup","public_results",
  "school_gallery","school_public_branding","school_settings","staff",
  "students","subjects","user_roles"

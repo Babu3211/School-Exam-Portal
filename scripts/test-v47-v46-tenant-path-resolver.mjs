@@ -6,7 +6,7 @@ for(const name of ["students","staff","classes","subjects","exams","marks","atte
  assert.equal(admin.collection(name),"schools/"+id+"/"+name);
  assert.ok(!admin.collection(name).startsWith("schools/"+other+"/"));
 }
-for(const name of ["user_roles","audit_logs","public_results","public_result_lookup","public_result_exams","school_gallery","school_public_branding"]){
+for(const name of ["cdc_serofero_indicators","user_roles","audit_logs","public_results","public_result_lookup","public_result_exams","school_gallery","school_public_branding"]){
  assert.throws(()=>admin.collection(name),/server-side migration review/);
 }
 for(const name of ["../students","schools/"+other+"/students","unknown",""]){
