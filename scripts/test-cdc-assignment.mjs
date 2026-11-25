@@ -1789,6 +1789,25 @@ assert.equal(officeDownloads.length,2);assert.ok(officeDownloads[1].entries['xl/
 field('printForm').onclick();assert.equal(officeDownloads.length,3);assert.ok(!officeDownloads[2].entries['xl/worksheets/sheet2.xml']);
 assert.equal(field('student').value,'batch-two');
 console.log('Native Word and Excel: valid XML, A4, spans, saved-only student isolation, single and batch paths');
+await field('portfolioRead').onclick();
+assert.equal(field('portfolioExport').disabled,false,field('portfolioStatus').textContent);
+assert.equal(field('student').value,'batch-two');
+assert.match(field('portfolioPreview').textContent,/Batch Two/);
+assert.doesNotMatch(field('portfolioPreview').textContent,/Batch One/);
+assert.ok(field('portfolioPreview').querySelectorAll('table').length>1);
+assert.ok(field('portfolioPreview').querySelector('[data-page-orientation="portrait"]'));
+field('portfolioFormat').value='docx';await field('portfolioExport').onclick();
+assert.match(officeDownloads.at(-1).entries['word/document.xml'],/w:orient="portrait"/);
+assert.match(officeDownloads.at(-1).entries['word/document.xml'],/w:orient="landscape"/);
+assert.match(officeDownloads.at(-1).entries['word/document.xml'],/Batch Two/);
+field('portfolioFormat').value='xlsx';await field('portfolioExport').onclick();
+assert.ok(Object.values(officeDownloads.at(-1).entries).some(x=>x.includes('orientation="portrait"')));
+field('portfolioFormat').value='pdf';await field('portfolioExport').onclick();
+assert.match(batchMarkup,/CDC Student Portfolio/);
+choice('student','batch-one');
+assert.equal(field('portfolioExport').disabled,true);
+assert.equal(field('portfolioPreview').children.length,0);
+console.log('Portfolio preview and three export formats, mixed A4 orientation, selection invalidation passed');
 // CDC backup: verify legacy and new exports in an isolated synthetic DOM.
 // Assessment evidence must never be replayed through ordinary client restore.
 const backupDom=new JSDOM('<div id="restoreFirebaseMessage"></div><pre id="restorePreview"></pre><input id="restoreBackupFile" type="file"><button id="runFirebaseRestore"></button>',{runScripts:'outside-only'});
