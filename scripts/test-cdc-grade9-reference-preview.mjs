@@ -26,7 +26,11 @@ for(const [subject,provider,count] of [['Social Studies',grade9SocialReferenceBa
 const ui=readFileSync(new URL('../cdc-question-paper.js',import.meta.url),'utf8');
 assert.match(ui,/id="qpReferenceDraftBtn"/);
 assert.match(ui,/function generateReferenceDraftPreview\(\)/);
-assert.match(ui,/box\.textContent=result\.text/);
+assert.match(ui,/box\.replaceChildren\(buildReferenceExportArea\(draft\)\)/);
+assert.match(ui,/p\.textContent=value/);
+assert.match(ui,/function requireReferenceExport\(\)/);
+assert.match(ui,/function printReferenceDraft\(answerKey=false\)/);
+assert.match(ui,/async function exportReferenceWord\(\)/);
 assert.match(ui,/roleCanTeach\(selectedClass,selectedSubject,selectedSection\)/);
 assert.match(ui,/clearReferenceDraftPreview\(\)/);
 const f=ui.slice(ui.indexOf('function generateReferenceDraftPreview()'),ui.indexOf('async function generateSmartPaper()'));
