@@ -1458,6 +1458,215 @@
         "method": "Government PDF searchable text; screenshot request timed out",
         "revisedNumericalGridRetrieved": false,
         "currentGridApproved": false
+      },
+      "schoolScreenshotEvidence": {
+        "title": "BESS Specification Grid for Science and Technology-Grade 9 Annual Examination-2079",
+        "sourceType": "user_supplied_school_grid_screenshot",
+        "sourceFilename": "IMG_3505.png",
+        "yearBS": 2079,
+        "fullMarks": 75,
+        "durationMinutes": 180,
+        "units": [
+          {
+            "sourceRow": 1,
+            "area": "ICT",
+            "title": "Scientific learning",
+            "portalUnit": 1,
+            "marks": 3,
+            "portalTitle": "Scientific Study"
+          },
+          {
+            "sourceRow": 2,
+            "area": "ICT",
+            "title": "ICT",
+            "portalUnit": 13,
+            "marks": 7,
+            "portalTitle": "Information and Communication Technology"
+          },
+          {
+            "sourceRow": 3,
+            "area": "Biology",
+            "title": "Classification of living things",
+            "portalUnit": 2,
+            "marks": 3,
+            "portalTitle": "Classification of Living Beings"
+          },
+          {
+            "sourceRow": 4,
+            "area": "Biology",
+            "title": "Mushroom",
+            "portalUnit": 3,
+            "marks": 2,
+            "portalTitle": "Mushroom"
+          },
+          {
+            "sourceRow": 5,
+            "area": "Biology",
+            "title": "Evolution",
+            "portalUnit": 4,
+            "marks": 3,
+            "portalTitle": "Evolution"
+          },
+          {
+            "sourceRow": 6,
+            "area": "Biology",
+            "title": "Life Process",
+            "portalUnit": 5,
+            "marks": 8,
+            "portalTitle": "Body Structure and Life Process"
+          },
+          {
+            "sourceRow": 7,
+            "area": "Biology",
+            "title": "Nature and environment",
+            "portalUnit": 6,
+            "marks": 3,
+            "portalTitle": "Nature and Environment"
+          },
+          {
+            "sourceRow": 8,
+            "area": "Physics",
+            "title": "Force and motion",
+            "portalUnit": 7,
+            "marks": 5,
+            "portalTitle": "Force and Motion"
+          },
+          {
+            "sourceRow": 9,
+            "area": "Physics",
+            "title": "Simple Machine",
+            "portalUnit": 8,
+            "marks": 2,
+            "portalTitle": "Simple Machine"
+          },
+          {
+            "sourceRow": 10,
+            "area": "Physics",
+            "title": "Energy",
+            "portalUnit": 9,
+            "marks": 4,
+            "portalTitle": "Energy"
+          },
+          {
+            "sourceRow": 11,
+            "area": "Physics",
+            "title": "Wave",
+            "portalUnit": 10,
+            "marks": 7,
+            "portalTitle": "Wave"
+          },
+          {
+            "sourceRow": 12,
+            "area": "Physics",
+            "title": "Electricity",
+            "portalUnit": 11,
+            "marks": 6,
+            "portalTitle": "Electricity"
+          },
+          {
+            "sourceRow": 13,
+            "area": "Physics",
+            "title": "Universe",
+            "portalUnit": 12,
+            "marks": 2,
+            "portalTitle": "The Universe"
+          },
+          {
+            "sourceRow": 14,
+            "area": "Chemistry",
+            "title": "Atomic structure and chemical bond",
+            "portalUnit": 14,
+            "marks": 6,
+            "portalTitle": "Atomic Structure and Chemical Bond"
+          },
+          {
+            "sourceRow": 15,
+            "area": "Chemistry",
+            "title": "Chemical Reaction",
+            "portalUnit": 15,
+            "marks": 3,
+            "portalTitle": "Chemical Reaction"
+          },
+          {
+            "sourceRow": 16,
+            "area": "Chemistry",
+            "title": "Some gases",
+            "portalUnit": 16,
+            "marks": 3,
+            "portalTitle": "Gases"
+          },
+          {
+            "sourceRow": 17,
+            "area": "Chemistry",
+            "title": "Metals and non metals",
+            "portalUnit": 17,
+            "marks": 2,
+            "portalTitle": "Metals and Non-metals"
+          },
+          {
+            "sourceRow": 18,
+            "area": "Chemistry",
+            "title": "Carbon and its compound",
+            "portalUnit": 18,
+            "marks": 3,
+            "portalTitle": "Carbon and its Compounds"
+          },
+          {
+            "sourceRow": 19,
+            "area": "Chemistry",
+            "title": "Materials Used in Agriculture",
+            "portalUnit": 19,
+            "marks": 3,
+            "portalTitle": "Materials used in Agriculture"
+          }
+        ],
+        "areaMarks": {
+          "ICT": 10,
+          "Biology": 19,
+          "Physics": 26,
+          "Chemistry": 20
+        },
+        "questionTypes": [
+          "mcq",
+          "very_short",
+          "short",
+          "long"
+        ],
+        "marksEach": [
+          1,
+          1,
+          2,
+          4
+        ],
+        "typeLevelCounts": [
+          [
+            2,
+            4,
+            2,
+            2
+          ],
+          [
+            2,
+            4,
+            2,
+            1
+          ],
+          [
+            2,
+            3,
+            5,
+            4
+          ],
+          [
+            1,
+            2,
+            2,
+            2
+          ]
+        ],
+        "officialCdcSource": false,
+        "currentEditionConfirmed": false,
+        "officialExamApproved": false
       }
     },
     {

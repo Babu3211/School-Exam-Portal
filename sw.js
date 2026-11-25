@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v132-grid-revision-notice';
+const CACHE_NAME = 'smss-pwa-v133-bess-science-screenshot';
 const APP_SHELL = [
   './',
   './index.html',

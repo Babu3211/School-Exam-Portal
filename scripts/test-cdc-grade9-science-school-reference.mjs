@@ -49,3 +49,27 @@ for(const q of circuits){
  assert.ok(neLabels.every(label=>!/[0-9]/.test(label)),'Visible Nepali figure labels must use Nepali digits');
 }
 console.log('PASS real series and parallel circuit figures with variant-specific values');
+
+// Independently transcribed user-supplied BESS 2079 screenshot (IMG_3505.png).
+// Screenshot order groups ICT first; the portal follows textbook unit order.
+const {readFileSync}=await import('node:fs');
+const sourceRegister=JSON.parse(readFileSync(new URL('../data/cdc-question-paper-sources-2083.json',import.meta.url),'utf8'));
+const e=sourceRegister.sources.find(s=>s.retrievalEvidence?.resource==='11167').schoolScreenshotEvidence;
+assert.equal(e.yearBS,2079);assert.equal(e.units.length,19);
+assert.equal(new Set(e.units.map(u=>u.portalUnit)).size,19);
+assert.equal(e.officialCdcSource,false);assert.equal(e.currentEditionConfirmed,false);assert.equal(e.officialExamApproved,false);
+assert.equal(e.units[1].portalUnit,13);
+for(const u of e.units)assert.equal(p.units[u.portalUnit-1].unitTitleEn,u.portalTitle);
+for(const seed of [.1,.7]){
+ const result=plan({...mappedArgs,rng:()=>seed});assert.equal(result.ready,true,result.reason);
+ const qs=result.paper.questions;
+ assert.equal(result.paper.fullMarks,e.fullMarks);assert.equal(result.paper.durationMinutes,e.durationMinutes);
+ for(const u of e.units)assert.equal(qs.filter(q=>Number(q.unitCode)===u.portalUnit).reduce((n,q)=>n+q.marks,0),u.marks,u.title);
+ for(const [area,marks] of Object.entries(e.areaMarks))assert.equal(qs.filter(q=>e.units.some(u=>u.area===area&&u.portalUnit===Number(q.unitCode))).reduce((n,q)=>n+q.marks,0),marks,area);
+ for(const [i,type] of e.questionTypes.entries()){
+  const items=qs.filter(q=>q.questionType===type);assert.ok(items.every(q=>q.marks===e.marksEach[i]));
+  assert.deepEqual(['knowledge','understanding','application','higher'].map(level=>items.filter(q=>q.cognitiveLevel===level).length),e.typeLevelCounts[i]);
+ }
+ assert.equal(result.currentCdcExactApproved,false);assert.equal(result.readyForLive,false);
+}
+console.log('PASS user BESS 2079 screenshot: 19 mapped topics, 4 area weights, 16 cognitive-count cells; school reference only');
