@@ -216,9 +216,13 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
    for(const [j,c] of g.choices.entries()){
     const choiceLabel=paperOptionLabel(j,'ne'),label=multi?(i+1)+'.'+choiceLabel:String(i+1),components=c.components||[];
     const prefix=multi?'('+choiceLabel+') ':(i+1)+'. ';
-    const prompt=g.skill==='vocabulary_matching'?'समूह ‘क’ का शब्दलाई समूह ‘ख’ का अर्थसँग जोडा मिलाउनुहोस् :':cleanSetLabel(c.text);
+    const prompt=g.skill==='word_class'?'रेखाङ्कित छ पदको पदवर्ग पहिचान गर्नुहोस्।':g.skill==='vocabulary_matching'?'समूह ‘क’ का शब्दलाई समूह ‘ख’ का अर्थसँग जोडा मिलाउनुहोस् :':cleanSetLabel(c.text);
     lines.push(prefix+prompt+(multi||!gMark?'':' '+gMark));
     if(c.passage)lines.push(c.passage);
+    if(g.skill==='word_class'){
+     const marked=[...String(c.passage||'').matchAll(/\(([\p{Script=Devanagari}]+)\)/gu)].map(m=>m[0]);
+     if(marked.length!==6||components.length!==6||marked.some((m,k)=>m!==components[k].text))throw Error('Invalid word class marking');
+    }
     if(c.practiceSubstitution)lines.push('मौलिक अभ्यास — पाठगत उद्धरण होइन।');
     if(g.skill==='vocabulary_matching'){
      const rows=components.map(x=>{const m=/^(.+?)\s*—\s*\((.+)\)$/.exec(x.text);if(!m)throw Error('Missing Nepali matching choices');return {word:m[1],options:m[2].split(',').map(v=>v.trim()),answer:x.answer};});
@@ -236,7 +240,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
     }else{
      for(const [k,x] of components.entries()){
       const sub=multi?neLower(k):paperOptionLabel(k,'ne');
-      lines.push('    ('+sub+') '+x.text+(g.skill==='word_formation'?' '+modelMark(x.marks):''));
+      lines.push('    ('+sub+') '+x.text+(['word_formation','notes_and_summary'].includes(g.skill)?' '+modelMark(x.marks):''));
      }
     }
     if(g.skill==='sentence_editing'){
@@ -284,6 +288,6 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   lines.push('');
  }
  const introText=paperDisplayText(lines.slice(0,starts[0]).join('\n'),language,subject);
- const blocks=starts.map((start,i)=>({number:i+1,displayNumber:key==='science'&&i>=10?i-9:i+1,text:paperDisplayText(lines.slice(start,starts[i+1]??lines.length).join('\n'),language,subject),figureHtml:figures.find(f=>f.number===i+1)?.html||''}));
+ const blocks=starts.map((start,i)=>({number:i+1,displayNumber:key==='science'&&i>=10?i-9:i+1,text:paperDisplayText(lines.slice(start,starts[i+1]??lines.length).join('\n'),language,subject),figureHtml:figures.find(f=>f.number===i+1)?.html||'',underlineWords:key==='nepali'&&groups[i].skill==='word_class'}));
  return {ready:true,referenceOnly:true,currentCdcExactApproved:false,readyForLive:false,signature:result.signature,groupCount:groups.length,allocationReview,introText,blocks,text:paperDisplayText(lines.join('\n'),language,subject),answerText:paperDisplayText(answers.join('\n'),language,subject),answerCount,figures,sourceUrl:result.sourceUrl};
 }
