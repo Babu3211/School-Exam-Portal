@@ -235,6 +235,49 @@ try{
    console.log('PASS School Admin isolated Viewer account, inactive membership, activation, tenant denial');
   }finally{await context.close()}
  }
+ // Real question-paper generator and actual DOCX download, no Firestore saves.
+ {
+  const {context,page,errors}=await newSession();
+  try{
+   await login(page,schools[0].sid,'alpha-admin');
+   await page.goto(origin+'/question-paper.html?schoolId='+schools[0].sid);
+   await wait(page,()=>!document.getElementById('login').disabled);
+   await page.locator('#login').click();
+   await wait(page,()=>document.querySelectorAll('#grade9GridLibrary details').length===11);
+   await page.locator('#generateComputer').click();
+   await wait(page,()=>!document.getElementById('downloadPracticeDocx').disabled);
+   const frame=page.frameLocator('#paperFrame');
+   assert.match(await frame.locator('body').textContent(),/NOT AN OFFICIAL CDC QUESTION PAPER/);
+   assert.equal(await frame.locator('main.sheet > ol > li').count(),25);
+   const d1=page.waitForEvent('download',{timeout:30000});await page.locator('#downloadPracticeDocx').click();const file1=await d1;
+   assert.match(file1.suggestedFilename(),/^UNREVIEWED-Class-9-Practice\.docx$/);
+   const bytes1=await readFile(await file1.path());assert.equal(bytes1.subarray(0,2).toString(),'PK');
+   assert.ok(bytes1.includes(Buffer.from('NOT AN OFFICIAL CDC QUESTION PAPER')));
+   assert.ok(bytes1.includes(Buffer.from('w:orient="landscape"')));
+   assert.ok(bytes1.includes(Buffer.from('w:num="2"')));
+   await page.locator('#generateMathPractice').click();
+   await wait(page,()=>!document.getElementById('downloadPracticeDocx').disabled);
+   assert.match(await frame.locator('body').textContent(),/NOT AN OFFICIAL CDC QUESTION PAPER/);
+   assert.match(await frame.locator('body').textContent(),/75/);
+   const d2=page.waitForEvent('download',{timeout:30000});await page.locator('#downloadPracticeDocx').click();const file2=await d2;
+   const bytes2=await readFile(await file2.path());assert.equal(bytes2.subarray(0,2).toString(),'PK');
+   assert.ok(bytes2.includes(Buffer.from('NOT AN OFFICIAL CDC QUESTION PAPER')));
+   assert.ok(bytes2.includes(Buffer.from('w:num="2"')));
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+  const viewer=await newSession();try{
+   await login(viewer.page,schools[0].sid,'alpha-viewer');
+   await viewer.page.goto(origin+'/question-paper.html?schoolId='+schools[0].sid);
+   await wait(viewer.page,()=>!document.getElementById('login').disabled);
+   await viewer.page.locator('#login').click();
+   await wait(viewer.page,()=>document.querySelectorAll('#grade9GridLibrary details').length===11);
+   assert.equal(await viewer.page.locator('#mathPracticeArea').isVisible(),false);
+   assert.equal(await viewer.page.locator('#computerGenerateArea').isVisible(),false);
+   assert.equal(await viewer.page.locator('#downloadPracticeDocx').isDisabled(),true);
+   assert.deepEqual(viewer.errors,[]);
+  }finally{await viewer.context.close()}
+  console.log('PASS real Question Paper browser: 11-subject library, Computer and Math generation, actual unreviewed landscape DOCX, Viewer generation denied');
+ }
  // Real Staff XLSX import: same Employee ID in different schools is allowed,
  // but same-school duplicates and revoked accounts must not write anything.
  {

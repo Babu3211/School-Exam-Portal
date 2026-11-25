@@ -5,6 +5,7 @@ import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} fro
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {prepareCdcSourceCatalog,prepareReadOnlyPracticePaper,recommendedPracticeIndices,printReadOnlyPracticePaper} from './question-paper-cdc-preview.mjs';
+import {exportPracticeDocx} from './practice-docx-export.mjs';
 import {generateMathPractice,printMathPractice} from './optional-math-practice-preview.mjs';
 import {renderGrade9GridLibrary} from './cdc-grade9-grid-library.mjs';
 import {computerGridReference,generateComputerPractice} from './computer-grid-practice.mjs';
@@ -23,7 +24,7 @@ function clearPreview(){
  $('practiceUnitFilter').replaceChildren();$('practiceTypeFilter').value='';
  $('updatePractice').disabled=true;$('practiceSelectionCount').textContent='No practice questions selected.';
  $('paperFrame').onload=null;$('paperFrame').removeAttribute('srcdoc');
- $('paperFrame').dataset.loadedVersion='';$('printPractice').disabled=true;
+ $('paperFrame').dataset.loadedVersion='';$('printPractice').disabled=true;$('downloadPracticeDocx').disabled=true;
  $('paperStatus').textContent='No practice preview prepared.';
 }
 function reset(){
@@ -32,7 +33,7 @@ function reset(){
  $('identity').textContent='No verified school';$('sourceStatus').textContent='No sources loaded.';
 }
 const readDocument=async path=>{
- const snap=await api.getDoc(api.doc(db,...path.split('/')));
+ const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));
  return snap.exists()?snap.data():null;
 };
 function assertSame(request,member){
@@ -69,14 +70,14 @@ function renderSources(){
 function displayPaper(){
  if(!paper||!actor)return;
  const version=++previewVersion,frame=$('paperFrame');
- const renderer=paper.questionFormat==='cdc_optional_math_composite'?printMathPractice:printReadOnlyPracticePaper;
- const html=renderer({paper,showAnswers:$('showAnswers').checked});
+ const options={paper,showAnswers:$('showAnswers').checked};
+ const html=paper.questionFormat==='cdc_optional_math_composite'?printMathPractice(options):printReadOnlyPracticePaper(options);
  frame.onload=null;delete frame.dataset.loadedVersion;
- $('printPractice').disabled=true;
+ $('printPractice').disabled=true;$('downloadPracticeDocx').disabled=true;
  $('paperStatus').textContent='Unreviewed preview loading. No paper saved.';
  frame.onload=()=>{
   if(version!==previewVersion||!paper||!actor||auth?.currentUser?.uid!==actor.uid)return;
-  frame.dataset.loadedVersion=String(version);$('printPractice').disabled=false;
+  frame.dataset.loadedVersion=String(version);$('printPractice').disabled=false;$('downloadPracticeDocx').disabled=false;
   $('paperStatus').textContent='Class '+paper.grade+' — '+paper.questionCount+' original questions / '+paper.totalMarks+' marks. Teacher review required. NOT OFFICIAL.';
  };
  frame.srcdoc=html;
@@ -158,7 +159,7 @@ function invalidateSelectedPreview(){
  previewVersion++;paper=null;
  const frame=$('paperFrame');
  frame.onload=null;frame.removeAttribute('srcdoc');delete frame.dataset.loadedVersion;
- $('printPractice').disabled=true;
+ $('printPractice').disabled=true;$('downloadPracticeDocx').disabled=true;
  $('paperStatus').textContent='Selection changed. Review the selected questions before printing.';
 }
 function selectionSummary(){
@@ -341,6 +342,22 @@ $('generateMathPractice').onclick=async()=>{
  finally{busy=false;if(epoch===request)$('generateMathPractice').disabled=false}
 };
 $('showAnswers').onchange=()=>{if(paper)displayPaper()};
+$('downloadPracticeDocx').onclick=async()=>{
+ if(busy||loading||!paper||$('downloadPracticeDocx').disabled||!actor)return;
+ const request=epoch,member=actor,version=previewVersion,selected=paper,frame=$('paperFrame');
+ const check=()=>{assertSame(request,member);if(version!==previewVersion||paper!==selected||frame.dataset.loadedVersion!==String(version)||!frame.contentDocument)throw Error('Practice preview changed')};
+ busy=true;$('downloadPracticeDocx').disabled=true;
+ try{
+  await verifyAgain(request,member);check();
+  const bytes=await exportPracticeDocx({document:frame.contentDocument,paper:selected,assertCurrent:check});
+  await verifyAgain(request,member);check();
+  const blob=new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  try{a.href=url;a.download='UNREVIEWED-Class-'+selected.grade+'-Practice'+($('showAnswers').checked?'-Answers':'')+'.docx';document.body.append(a);a.click()}finally{a.remove();URL.revokeObjectURL(url)}
+  status('अभ्यासपत्रको Word फाइल तयार भयो।');
+ }catch(e){if(epoch===request&&actor===member){clearPreview();status('Word निर्यात रोकियो: '+neError(e))}}
+ finally{busy=false;if(epoch===request&&paper===selected&&frame.dataset.loadedVersion===String(version))$('downloadPracticeDocx').disabled=false}
+};
 $('printPractice').onclick=async()=>{
  if(!paper||$('printPractice').disabled||!actor)return;
  const request=epoch,member=actor,version=previewVersion;

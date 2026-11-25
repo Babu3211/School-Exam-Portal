@@ -49,8 +49,9 @@
 <button id="updatePractice" type="button" disabled>Update Unapproved Preview</button>
 </section>
 <section id="autoPracticeArea" hidden><h3>Automatic Practice Paper (Unapproved)</h3><p lang="ne">छानिएका Unit बाट उपलब्ध अभ्यास प्रश्न प्रयोग गरी पूर्णाङ्क मिलाएर प्रश्नपत्र बन्छ। यो CDC Specification Grid प्रमाणित प्रश्नपत्र होइन। अंग्रेजी वा दुवै भाषामा उपलब्ध प्रमाणित अनुवाद भएका प्रश्न मात्र प्रयोग हुन्छन्।</p><label>Language<select id="autoPracticeLanguage"><option value="ne">Nepali</option><option value="en">English</option><option value="both">Both</option></select></label><label>Full Marks<input id="autoPracticeMarks" type="number" min="1" max="250" step="1" value="25"></label><div id="autoPracticeUnits" class="practiceChoices"></div><button id="generatePractice" disabled>Generate New Practice Paper</button><p id="autoPracticeStatus" role="status" aria-live="polite"></p></section>
-<button id="printPractice" type="button" disabled>Print Unreviewed Practice Preview</button>
+<button id="printPractice" type="button" disabled>Print / Save PDF</button>
+<button id="downloadPracticeDocx" type="button" disabled>Download Word (.docx)</button><p lang="ne">PDF का लागि Print मा Save as PDF छान्नुहोस् (उपकरणमा उपलब्ध भएमा)। Word र PDF दुवै अभ्यासपत्र मात्र हुन्।</p>
 <p id="paperStatus" role="status" aria-live="polite">अभ्यास प्रश्नको पूर्वावलोकन तयार भएको छैन।</p>
-<iframe id="paperFrame" sandbox="allow-same-origin" title="Unreviewed Original Practice Questions"></iframe>
+<iframe id="paperFrame" sandbox="allow-same-origin allow-modals" title="Unreviewed Original Practice Questions"></iframe>
 </section><p id="message" role="status" aria-live="polite">विद्यालयको Login प्रमाणित गर्नुहोस्।</p>
 </main><script type="module" src="./question-paper-console.mjs"></script></body></html>

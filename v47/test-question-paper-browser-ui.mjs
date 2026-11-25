@@ -12,12 +12,13 @@ for(const p of paths){
  assert.match(js,new RegExp(p.replace(/\./g,'\\.')));
 }
 for(const id of ['connect','schoolId','email','password','login','logout','resourceArea','grade',
- 'sourceStatus','sourceList','preview8','preview10','paperStatus','paperFrame','printPractice','showAnswers'])
+ 'sourceStatus','sourceList','preview8','preview10','paperStatus','paperFrame','printPractice','showAnswers','downloadPracticeDocx'])
  assert.match(html,new RegExp('id="'+id+'"'));
 assert.match(html,/READ-ONLY PREVIEW/);
 assert.match(html,/Grade 9 Science pack remains blocked/);
 assert.match(html,/question-paper-console\.mjs/);
-assert.match(html,/sandbox="allow-same-origin"/);
+assert.match(html,/sandbox="allow-same-origin allow-modals"/);
+assert.doesNotMatch(html,/sandbox="[^"]*allow-scripts/);
 assert.match(js,/verifySchoolSession\(/);
 assert.match(js,/enforceSchoolIdle\(/);
 assert.match(js,/assertSame\(/);
@@ -25,6 +26,8 @@ assert.match(js,/prepareCdcSourceCatalog\(/);
 assert.match(js,/prepareReadOnlyPracticePaper\(/);
 assert.match(js,/recommendedPracticeIndices\(/);
 assert.match(js,/printReadOnlyPracticePaper\(/);
+assert.match(js,/printMathPractice\(/);
+assert.match(js,/exportPracticeDocx\(/);
 assert.match(js,/target='_blank'/);
 assert.match(js,/rel='noopener noreferrer'/);
 assert.match(js,/paperFrame/);
