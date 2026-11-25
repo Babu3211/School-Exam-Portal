@@ -69,6 +69,7 @@ export function inspectReferencePaperAllocation({subject,groups,durationMinutes}
   unresolved.push('Revised CDC numerical table and current applicability');
  }else if(key==='science'){
   need(same(counts(['mcq','very_short','short','long']),[10,9,14,7]),'Science question type counts');
+  need(same(groups.map(g=>g.questionType),['mcq','very_short','short','long'].flatMap((t,i)=>Array([10,9,14,7][i]).fill(t))),'Science model section order');
   const weights={mcq:1,very_short:1,short:2,long:4};
   need(groups.every(g=>mark(g)===weights[g.questionType]),'Science per-question marks');
   const actual=Array.from({length:19},(_,i)=>sum(groups.filter(g=>String(g.unitCode)===String(i+1)).map(mark)));
@@ -122,7 +123,14 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   const group=groups.filter(x=>x.questionType===g.questionType),n=group.length,m=group[0].marks;
   const names={mcq:['बहुविकल्पीय प्रश्न','Multiple choice questions'],very_short:['अति छोटो उत्तर आउने प्रश्न','Very short answer questions'],short:['छोटो उत्तर आउने प्रश्न','Short answer questions'],long:['लामो उत्तर आउने प्रश्न','Long answer questions']};
   const label=names[g.questionType];if(!label)return '';
-  return choose(label[0],label[1])+' ('+n+' × '+m+' = '+(n*m)+')';
+  const groupIndex=['mcq','very_short','short','long'].indexOf(g.questionType)-(key==='science'?0:1);
+  const groupNe=['क','ख','ग','घ'][groupIndex],groupEn=['A','B','C','D'][groupIndex];
+  const heading=choose('समूह ('+groupNe+')','Group '+groupEn);
+  // Source: CDC Grade 9 science 2078 model, Group A separate numbering
+  // and 25-minute MCQ section. Use grid totals, not inconsistent extracted
+  // multiplication strings in the archived model.
+  const time=key==='science'&&g.questionType==='mcq'?' — '+choose('समय: 25 मिनेट','Time: 25 minutes'):'';
+  return heading+time+'\n'+choose(label[0],label[1])+' ('+n+' × '+m+' = '+(n*m)+')';
  };
  if(key==='english')lines.push('General instructions: Read each question carefully and answer in English as directed.','');
  let answerCount=0;
@@ -134,7 +142,9 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  };
  for(const [i,g] of groups.entries()){
   starts.push(lines.length);
-  const section=sectionTitle(i,g);if(section)lines.push(section,'');
+  const section=sectionTitle(i,g);if(section){lines.push(section,'');answers.push('',section);}
+  // Keep internal block numbers unique for figures and DOM identity.
+  const displayNumber=key==='science'&&i>=10?i-9:i+1;
   if(key==='nepali'){
    lines.push((i+1)+'. '+(g.choices.length>1?g.choices.length+' विकल्पमध्ये '+g.answerCount+' वटाको उत्तर दिनुहोस्। ':'')+'['+g.marks+']');
    for(const [j,c] of g.choices.entries()){
@@ -153,7 +163,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   const figure=questionFigure(g,language);if(figure)figures.push({number:i+1,html:figure});
   const parts=g.subquestions||g.items||[];
   const marks=g.marks??parts.reduce((s,x)=>s+Number(x.marks||0),0);
-  lines.push((i+1)+'. '+(key==='english'?g.text:choose(g.contextNe||g.questionText,g.contextEn||g.questionTextEn))+(key==='math'?'':' '+groupMark(g,parts,marks)));
+  lines.push(displayNumber+'. '+(key==='english'?g.text:choose(g.contextNe||g.questionText,g.contextEn||g.questionTextEn))+(key==='math'?'':' '+groupMark(g,parts,marks)));
   if(g.practiceSubstitution===true)lines.push('ORIGINAL PRACTICE — not a seen textbook extract.');
   if(g.passage)lines.push(g.passage);
   if(g.questionType==='mcq')for(const [j,o] of (g.options||[]).entries())lines.push('  '+paperOptionLabel(j,language)+'. '+choose(o,g.optionsEn?.[j]));
@@ -163,16 +173,16 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
     answer((i+1)+'.'+paperOptionLabel(j,language),choose(c.answerNe,c.answerEn)+' — '+c.labels.map(l=>choose(l.ne,l.en)).join('; '),7);
    }
   }else if(!parts.length){
-   answer(String(i+1),(g.correctOption?g.correctOption+' — ':'')+(key==='english'?g.answer:choose(g.answerNe||g.answer,g.answerEn)),marks);
+   answer(String(displayNumber),(g.correctOption?g.correctOption+' — ':'')+(key==='english'?g.answer:choose(g.answerNe||g.answer,g.answerEn)),marks);
   }
   for(const [j,x] of parts.entries()){
    lines.push('  '+paperOptionLabel(j,language,true)+') '+(key==='english'?x.text:choose(x.textNe,x.textEn))+' '+itemMark(x));
    if(Array.isArray(x.options))lines.push('    '+x.options.map((o,k)=>paperOptionLabel(k,language)+'. '+o).join('    '));
-   answer((i+1)+'.'+paperOptionLabel(j,language,true),(x.correctOption?x.correctOption+' — ':'')+(key==='english'?String(x.answer??''):choose(x.answerNe||x.answer,x.answerEn)),x.marks);
+   answer(displayNumber+'.'+paperOptionLabel(j,language,true),(x.correctOption?x.correctOption+' — ':'')+(key==='english'?String(x.answer??''):choose(x.answerNe||x.answer,x.answerEn)),x.marks);
   }
   lines.push('');
  }
  const introText=paperDisplayText(lines.slice(0,starts[0]).join('\n'),language,subject);
- const blocks=starts.map((start,i)=>({number:i+1,text:paperDisplayText(lines.slice(start,starts[i+1]??lines.length).join('\n'),language,subject),figureHtml:figures.find(f=>f.number===i+1)?.html||''}));
+ const blocks=starts.map((start,i)=>({number:i+1,displayNumber:key==='science'&&i>=10?i-9:i+1,text:paperDisplayText(lines.slice(start,starts[i+1]??lines.length).join('\n'),language,subject),figureHtml:figures.find(f=>f.number===i+1)?.html||''}));
  return {ready:true,referenceOnly:true,currentCdcExactApproved:false,readyForLive:false,signature:result.signature,groupCount:groups.length,allocationReview,introText,blocks,text:paperDisplayText(lines.join('\n'),language,subject),answerText:paperDisplayText(answers.join('\n'),language,subject),answerCount,figures,sourceUrl:result.sourceUrl};
 }
