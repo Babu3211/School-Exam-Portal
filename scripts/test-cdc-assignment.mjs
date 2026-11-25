@@ -553,6 +553,35 @@ for(const [theme,n,first,last] of [
 }
 console.log('Class 4 math source display: five themes, 30 outcomes, bilingual labels and grade-scoped wording passed');
 
+const scienceThemes=['वैज्ञानिक सिकाइ','सूचना तथा सञ्चार प्रविधि','जीव र वातावरण','जीवहरूको वर्गीकरण','जीवन प्रक्रिया','पदार्थ','दैनिक जीवनमा शक्ति','पृथ्वी र अन्तरिक्ष'];
+const scienceCounts={'4':[5,5,3,6,3,14,8,5],'5':[6,6,4,3,3,10,13,4]};
+const scienceDigits=n=>String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]);
+for(const grade of ['4','5']){
+ current.subjectAssignments=[{className:'Class '+grade,subject:'Science and Technology',section:'A'}];
+ serverRole={...current};
+ w.getDocs=async request=>({docs:[{id:'science-source-'+grade,data:()=>({class:'Class '+grade,section:'A',name:'Synthetic science student'})}]});
+ await w.loadCdcAssessmentPage();
+ for(const [i,theme] of scienceThemes.entries()){
+  choice('unit',theme);
+  const rows=[...field('annexRows').rows];
+  assert.equal(rows.length,scienceCounts[grade][i],grade+':'+theme);
+  for(const [j,row] of rows.entries()){
+   assert.equal(row.cells.length,6);
+   const label=row.cells[0].querySelector('button').textContent;
+   assert.ok(label.startsWith(scienceDigits(i+1)+'.'+scienceDigits(j+1)+' '),label);
+   assert.ok(label.includes(' / '),label);
+  }
+  assert.match(field('annexStatus').textContent,/मूल उपलब्धि क्रमाङ्क/);
+ }
+ choice('unit','वैज्ञानिक सिकाइ');
+ const first=field('annexRows').rows[0].cells[0].querySelector('button').textContent;
+ assert.match(first,grade==='4'?/वर्गीकरण \(classification\)/:/वैज्ञानिक सिकाइ प्रक्रियाको परिचय/);
+ choice('unit','पदार्थ');
+ assert.match(field('annexRows').rows[0].cells[0].textContent,grade==='4'?/पानीका गुणहरू/:/पिण्ड हुने र ठाउँ ओगट्ने/);
+}
+assert.equal(w.eval('cdcUpperScienceByTitle.size'),98);
+console.log('Grade 4/5 science: all 16 source-numbered bilingual forms and 98 outcomes passed');
+
 console.log('Standalone assessment navigation, primary-only assignment reads and inline display passed');
 // Grade 3 revised Annex 3 theme uses one row per outcome and the fixed full-theme denominator.
 current.subjectAssignments=[{className:'Class 3',subject:'Mathematics',section:'A'}];
