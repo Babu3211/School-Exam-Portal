@@ -7451,11 +7451,57 @@ const cdcGrade5MathSource = {
  ['समीकरण','Equation','बराबरी तथ्य प्रयोग गरी एक चलयुक्त समीकरण हल गर्न']
  ]
 };
-// Bind source labels to the canonical catalogue titles, not to a mutable row index.
-const cdcGrade5MathSourceByTitle=new Map();
-for(const [unit,items] of Object.entries(cdcGrade5MathSource)){
- const rows=cdcVerifiedOutcomes['5:mathematics'].filter(row=>row[0]===unit);
- if(rows.length===items.length)rows.forEach((row,i)=>cdcGrade5MathSourceByTitle.set(row[1],items[i]));
+// Grade 4 Mathematics, user-supplied 2083 guide PDF pp. 81–85.
+// Source display wording and content labels are separate from stored keys.
+const cdcGrade4MathSource={
+ 'ज्यामिति':[
+ ['कोणहरूको नाप र रचना','Measuring and constructing angles','चाँदको प्रयोग गरी १० ले निःशेष भाग जाने ०° देखि १८०° सम्मका कोणहरू नाप्न र खिच्न'],
+ ['त्रिभुज र चतुर्भुजका भागहरू','Parts of triangles and quadrilaterals','त्रिभुज र चतुर्भुजका शीर्षबिन्दु, भुजा र कोणहरू पहिचान गर्न'],
+ ['त्रिभुज र चतुर्भुजका भुजाको नाप','Measuring sides of triangles and quadrilaterals','त्रिभुज र चतुर्भुजका भुजाहरूको लम्बाइ नाप्न'],
+ ['ठोस वस्तुहरू','Solid objects','घन र पञ्चमुखाका शीर्षबिन्दु, किनारा र सतह छुट्याउन']
+ ],
+ 'अङ्कगणित':[
+ ['सङ्ख्याको ज्ञान','Number concepts','देवनागरी र हिन्दु अरेबिक अङ्क प्रयोग गरी राष्ट्रिय पद्धतिअनुसार सात अङ्कसम्मका सङ्ख्यालाई स्थानमान तालिकामा प्रस्तुत गर्न, पढ्न र लेख्न'],
+ ['सङ्ख्याको शून्यान्त','Rounding numbers','चार अङ्कसम्मले बनेका सङ्ख्यालाई नजिकको दश र सयमा शून्यान्त गर्न'],
+ ['जोड','Addition','पाँच अङ्कसम्मले बनेका सङ्ख्याको जोड गर्न'],
+ ['घटाउ','Subtraction','पाँच अङ्कसम्मले बनेका सङ्ख्याको घटाउ गर्न'],
+ ['गुणन','Multiplication','तीन अङ्कसम्मको सङ्ख्यालाई तीन अङ्कसम्मको सङ्ख्याले गुणन गर्न'],
+ ['भाग','Division','तीन अङ्कसम्मको सङ्ख्यालाई दुई अङ्कसम्मको सङ्ख्याले भाग गर्न'],
+ ['सरलीकरण','Simplification','जोड र घटाउ क्रिया प्रयोग भएका समस्याहरू हल गर्न'],
+ ['भिन्नको तुलना','Comparing fractions','समान हर भएका भिन्नहरूको तुलना गर्न'],
+ ['उपयुक्त भिन्न, अनुपयुक्त भिन्न र मिश्रित सङ्ख्या','Proper fractions, improper fractions and mixed numbers','उपयुक्त भिन्न, अनुपयुक्त भिन्न र मिश्रित सङ्ख्या छुट्याउन'],
+ ['दशमलव','Decimals','दशांश र शतांशलाई चित्र, भिन्न र दशमलवमा प्रस्तुत गर्न'],
+ ['भिन्न, दशमलव र प्रतिशतको सम्बन्ध','Relationship between fractions, decimals and percentages','भिन्न, दशमलव र प्रतिशतको सम्बन्ध चित्रका माध्यमबाट स्थापित गर्न']
+ ],
+ 'नाप':[
+ ['समयका एकाइको रूपान्तर','Conversion of time units','समयका एकाइहरू एक अर्कामा रूपान्तर गर्न'],
+ ['समयका एकाइको जोड र घटाउ','Addition and subtraction of time units','समयका एकाइको जोड र घटाउ गर्न (वर्ष र महिना, दिन र घण्टा, घण्टा र मिनेट, हप्ता र दिन)'],
+ ['मुद्राका एकाइको गुणन र भाग','Multiplication and division of currency units','रुपियाँ तथा पैसासम्बन्धी गुणन र भाग गर्न'],
+ ['दूरीका एकाइको रूपान्तर','Conversion of distance units','दूरीका एकाइहरूलाई एकअर्कामा रूपान्तर गर्न (सेन्टिमिटर र मिलिमिटर, मिटर र सेन्टिमिटर, किलोमिटर र मिटर)'],
+ ['दूरीका एकाइको जोड र घटाउ','Addition and subtraction of distance units','सेन्टिमिटर र मिटर, मिटर र किलोमिटरसम्बन्धी जोड र घटाउ गर्न'],
+ ['क्षमताका एकाइको रूपान्तर','Conversion of capacity units','लिटर र मिलिलिटरलाई एकआपसमा रूपान्तर गर्न'],
+ ['क्षमताका एकाइको जोड र घटाउ','Addition and subtraction of capacity units','लिटर र मिलिलिटरको जोड र घटाउ गर्न'],
+ ['तौलका एकाइको रूपान्तर','Conversion of weight units','तौलका एकाइहरूलाई एकआपसमा रूपान्तर गर्न (किलोग्राम र ग्राम, किलोग्राम र क्विन्टल)'],
+ ['तौलका एकाइको जोड र घटाउ','Addition and subtraction of weight units','ग्राम, किलोग्राम र क्विन्टलसम्बन्धी जोड तथा घटाउ गर्न'],
+ ['आयताकार र वर्गाकार सतहको क्षेत्रफल र परिमिति','Area and perimeter of rectangular and square surfaces','वर्गाकार कोठाहरू प्रयोग गरेर आयताकार र वर्गाकार सतहको क्षेत्रफल र परिमिति पत्ता लगाउन']
+ ],
+ 'तथ्याङ्कशास्त्र':[
+ ['बिल','Bill','बिल हेरी सूचना लिन र दिन'],
+ ['बजेट','Budget','साधारण बजेट हेरी जानकारी लिन र दिन'],
+ ['स्तम्भचित्र','Bar chart','दिइएको स्तम्भचित्रबाट जानकारी लिन र दिन']
+ ],
+ 'बीजगणित':[
+ ['कोठा सङ्केत प्रयोग गरी जोड, घटाउ, गुणन र भाग','Operations using a box symbol','कोठा सङ्केत प्रयोग गरी जोड, घटाउ, गुणन र भाग गर्न'],
+ ['चल र अचल राशि','Variables and constants','चल र अचल राशि पहिचान गर्न']
+ ]
+};
+// Bind source labels to canonical catalogue titles; include the grade in the key.
+const cdcUpperMathSourceByTitle=new Map();
+for(const [grade,forms] of [['4',cdcGrade4MathSource],['5',cdcGrade5MathSource]]){
+ for(const [unit,items] of Object.entries(forms)){
+  const rows=cdcVerifiedOutcomes[grade+':mathematics'].filter(row=>row[0]===unit);
+  if(rows.length===items.length)rows.forEach((row,i)=>cdcUpperMathSourceByTitle.set(JSON.stringify([grade,unit,row[1]]),items[i]));
+ }
 }
 const cdcNormalizeTitle = value => String(value || '').normalize('NFC').trim().replace(/\s+/g,' ').toLowerCase();
 function cdcStoredObservation(storage, prefix, scope, title, unit) {
@@ -9386,11 +9432,11 @@ function openCdcAssessment(context = null) {
       '<th colspan="2">'+header('थप सहायतापछिको मूल्याङ्कन','Assessment after additional support')+'</th>'+
       '<th rowspan="2">'+header('कैफियत','Remarks')+'</th></tr><tr><th>'+header('मिति','Date')+'</th><th>'+header('अङ्कन','Rating')+'</th><th>'+header('मिति','Date')+'</th><th>'+header('अङ्कन','Rating')+'</th></tr>';
     const rows=(cdcVerifiedOutcomes[field('class').value+':'+cdcAssessmentSubjectKey(field('subject').value)]||[]).filter(([unit])=>normalizeTitle(unit)===normalizeTitle(field('unit').value));
-    const grade5Math=year==='2083'&&field('class').value==='5'&&subjectKey==='mathematics';
+    const upperMath=year==='2083'&&['4','5'].includes(field('class').value)&&subjectKey==='mathematics';
     const body=field('annexRows');body.replaceChildren();
     let total=0,filled=0;
     for(const [i,[unit,title,alt]] of rows.entries()){
-      const row=body.insertRow(),source=grade5Math?cdcGrade5MathSourceByTitle.get(title):null;const parts=localized(source?.[2]||title,alt).split(' — ');
+      const row=body.insertRow(),source=upperMath?cdcUpperMathSourceByTitle.get(JSON.stringify([field('class').value,unit,title])):null;const parts=localized(source?.[2]||title,alt).split(' — ');
       if(serial)row.insertCell().textContent=String(i+1);
       if(contentColumn){
         // Do not invent missing topic labels. The existing outcome catalogue is
@@ -9411,7 +9457,7 @@ function openCdcAssessment(context = null) {
       const row=foot.insertRow();const a=row.insertCell();a.colSpan=leading;a.textContent=label;const b=row.insertCell();b.colSpan=columnCount-leading;b.textContent=value;
     }
     field('annexStatus').textContent=en?'Draft layout using existing outcome catalogue. Select a row to enter the observation; read school records to populate ratings. Unclassified legacy records are not assigned to either stage.':'हालको उपलब्धि सूचीमा आधारित प्रारम्भिक ढाँचा। उपलब्धि छानेर मूल्याङ्कन गर्नुहोस्; विद्यालयको अभिलेख पढेपछि अङ्क देखिन्छ। चरण नखुलेका पुराना अभिलेख छुट्टै रहन्छन्।';
-    if(grade5Math)field('annexStatus').textContent='CDC २०८३ गणित — मूल विषयवस्तु र सिकाइ उपलब्धि; पहिलेको १५०° शीर्षकको अङ्क नयाँ १८०° उपलब्धिमा स्वतः सारिँदैन।';
+    if(upperMath)field('annexStatus').textContent='CDC २०८३ गणित — मूल विषयवस्तु र सिकाइ उपलब्धि।'+(field('class').value==='5'?' पहिलेको १५०° शीर्षकको अङ्क नयाँ १८०° उपलब्धिमा स्वतः सारिँदैन।':'');
     field('annexSign').textContent=en?'Teacher signature __________  Date __________  Parent signature __________  Date __________':'शिक्षकको दस्तखत __________  मिति __________  अभिभावकको दस्तखत __________  मिति __________';
   };
   function primaryEnglishRows(form,unit){
