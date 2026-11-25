@@ -1,0 +1,1935 @@
+{
+  "year": "2083",
+  "sourceCommit": "d1fd5622",
+  "sourceBlob": "b300bc9d51ef3f2e026d9e6a3302d65da3e0979d",
+  "guides": {
+    "lower": {
+      "edition": "2076",
+      "url": "https://hemantaparajuli.com.np/wp-content/uploads/2025/08/%E0%A4%B5%E0%A4%BF%E0%A4%A6%E0%A5%8D%E0%A4%AF%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%A5%E0%A5%80-%E0%A4%AE%E0%A5%82%E0%A4%B2%E0%A5%8D%E0%A4%AF%E0%A4%BE%E0%A4%99%E0%A5%8D%E2%80%8D%E0%A4%95%E0%A4%A8-%E0%A4%AE%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%97%E0%A4%A6%E0%A4%B0%E0%A5%8D%E0%A4%B6%E0%A4%A8-%E0%A5%A7-%E0%A5%A9.pdf",
+      "officialPage": "https://moecdc.gov.np/content/644/student-assessment-guide-for-basic-level-class/"
+    },
+    "upper": {
+      "edition": "2083",
+      "url": "https://nilaram.com.np/site-assets/uploads/2026/07/Students-Evaluation-2083.pdf",
+      "officialPage": "https://learning.cehrd.gov.np/mod/resource/view.php?id=1032"
+    }
+  },
+  "rows": {
+    "4:nepali": [
+      {
+        "theme": "क्षेत्र १ — कविता (नीतिपरक)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 18,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र २ — कथा (लोक)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 19,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र ३ — निबन्ध (शिक्षा)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 20,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र ४ — चिठी (घरायसी)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 21,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र ५ — संवाद (खेलकुद)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 22,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र ६ — कथा (सामाजिक)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 23,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र ७ — जीवनी (राष्ट्रिय)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 24,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र ८ — निबन्ध (कृषि)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 25,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र ९ — कथा (पौराणिक)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 26,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र १० — कविता (गीत)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 27,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र ११ — निबन्ध (ऐतिहासिक/सांस्कृतिक)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 28,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र १२ — कथा (सामाजिक)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 29,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र १३ — नियात्रा",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 30,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र १४ — कविता (प्रकृतिपरक)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 31,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र १५ — कथा (बालमनोविज्ञान)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 32,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      }
+    ],
+    "5:nepali": [
+      {
+        "theme": "क्षेत्र १ — कविता (गीत/देशप्रेम)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 33,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र २ — कथा (सामाजिक)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 34,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र ३ — निबन्ध (सञ्चार)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 35,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र ४ — व्यावहारिक लेखन (निवेदन)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 36,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र ५ — जीवनी (राष्ट्रिय)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 37,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र ६ — कथा (ऐतिहासिक)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 38,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र ७ — संवाद (कला/संस्कृति)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 39,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र ८ — कविता (सामाजिक)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 40,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र ९ — निबन्ध (स्वास्थ्य)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 41,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र १० — कथा (बालमनोविज्ञान)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 42,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र ११ — चिठी (घरायसी)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 43,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र १२ — संस्मरण",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 44,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र १३ — दैनिकी",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 45,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र १४ — कविता (प्रकृतिपरक)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 46,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "क्षेत्र १५ — कथा (सामाजिक)",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 47,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      }
+    ],
+    "4:english": [
+      {
+        "theme": "Unit 1: Greetings, introductions and goodbyes",
+        "en": "Unit 1: Greetings, introductions and goodbyes",
+        "count": 7,
+        "fullMarks": 28,
+        "page": 48,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 2: Possessions",
+        "en": "Unit 2: Possessions",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 49,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 3: Asking for information",
+        "en": "Unit 3: Asking for information",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 50,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 4: Requests and responses",
+        "en": "Unit 4: Requests and responses",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 51,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 5: Quantities",
+        "en": "Unit 5: Quantities",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 52,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 6: Comparisons",
+        "en": "Unit 6: Comparisons",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 53,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 7: Locations",
+        "en": "Unit 7: Locations",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 54,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 8: Facts and truths",
+        "en": "Unit 8: Facts and truths",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 55,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 9: Directions",
+        "en": "Unit 9: Directions",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 56,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 10: Past events",
+        "en": "Unit 10: Past events",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 57,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 11: Giving reasons",
+        "en": "Unit 11: Giving reasons",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 58,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 12: Describing people and places",
+        "en": "Unit 12: Describing people and places",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 59,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 13: Likes and dislikes",
+        "en": "Unit 13: Likes and dislikes",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 60,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 14: Ability",
+        "en": "Unit 14: Ability",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 61,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 15: Agreement and disagreement",
+        "en": "Unit 15: Agreement and disagreement",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 62,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 16: Future plans",
+        "en": "Unit 16: Future plans",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 63,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      }
+    ],
+    "5:english": [
+      {
+        "theme": "Unit 1: Introductions and goodbyes",
+        "en": "Unit 1: Introductions and goodbyes",
+        "count": 7,
+        "fullMarks": 28,
+        "page": 64,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 2: Possessions",
+        "en": "Unit 2: Possessions",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 65,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 3: Asking for information",
+        "en": "Unit 3: Asking for information",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 66,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 4: Requests and apologies",
+        "en": "Unit 4: Requests and apologies",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 67,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 5: Thanks and congratulations",
+        "en": "Unit 5: Thanks and congratulations",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 68,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 6: Quantities",
+        "en": "Unit 6: Quantities",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 69,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 7: Comparisons",
+        "en": "Unit 7: Comparisons",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 70,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 8: Locations",
+        "en": "Unit 8: Locations",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 71,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 9: Facts and truths",
+        "en": "Unit 9: Facts and truths",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 72,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 10: Instructions and directions",
+        "en": "Unit 10: Instructions and directions",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 73,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 11: Past events",
+        "en": "Unit 11: Past events",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 74,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 12: Asking for and giving reasons",
+        "en": "Unit 12: Asking for and giving reasons",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 75,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 13: Describing people, places and things",
+        "en": "Unit 13: Describing people, places and things",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 76,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 14: Likes and dislikes",
+        "en": "Unit 14: Likes and dislikes",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 77,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 15: Ability",
+        "en": "Unit 15: Ability",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 78,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 16: Agreement and disagreement",
+        "en": "Unit 16: Agreement and disagreement",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 79,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "Unit 17: Future plans",
+        "en": "Unit 17: Future plans",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 80,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      }
+    ],
+    "4:mathematics": [
+      {
+        "theme": "ज्यामिति",
+        "en": "Geometry",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 81,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "अङ्कगणित",
+        "en": "Arithmetic",
+        "count": 11,
+        "fullMarks": 44,
+        "page": 82,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "नाप",
+        "en": "Measurement",
+        "count": 10,
+        "fullMarks": 40,
+        "page": 83,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "तथ्याङ्कशास्त्र",
+        "en": "Statistics",
+        "count": 3,
+        "fullMarks": 12,
+        "page": 84,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "बीजगणित",
+        "en": "Algebra",
+        "count": 2,
+        "fullMarks": 8,
+        "page": 85,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      }
+    ],
+    "5:mathematics": [
+      {
+        "theme": "ज्यामिति",
+        "en": "Geometry",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 86,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "अङ्कगणित",
+        "en": "Arithmetic",
+        "count": 10,
+        "fullMarks": 40,
+        "page": 87,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "नाप",
+        "en": "Measurement",
+        "count": 7,
+        "fullMarks": 28,
+        "page": 89,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "तथ्याङ्कशास्त्र",
+        "en": "Statistics",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 90,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "बीजगणित",
+        "en": "Algebra",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 91,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      }
+    ],
+    "4:socialstudies": [
+      {
+        "theme": "हामी र हाम्रो समुदाय",
+        "en": "",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 92,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "हाम्रा मानवीय मूल्यमान्यता",
+        "en": "",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 93,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "नागरिक चेतना, कर्तव्य र अधिकार",
+        "en": "",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 94,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "सामाजिक समस्या र समाधान",
+        "en": "",
+        "count": 3,
+        "fullMarks": 12,
+        "page": 95,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "हाम्रो विगत",
+        "en": "",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 96,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "हाम्रा आर्थिक क्रियाकलाप",
+        "en": "",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 97,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "हाम्रो पृथ्वी",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 98,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      }
+    ],
+    "5:socialstudies": [
+      {
+        "theme": "हामी र हाम्रो समुदाय",
+        "en": "",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 99,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "हाम्रा मानवीय मूल्यमान्यता",
+        "en": "",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 100,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "नागरिक चेतना, कर्तव्य र अधिकार",
+        "en": "",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 101,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "सामाजिक समस्या र समाधान",
+        "en": "",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 102,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "हाम्रो विगत",
+        "en": "",
+        "count": 3,
+        "fullMarks": 12,
+        "page": 103,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "हाम्रा आर्थिक क्रियाकलाप",
+        "en": "",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 104,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "हाम्रो पृथ्वी",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 105,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      }
+    ],
+    "4:science": [
+      {
+        "theme": "वैज्ञानिक सिकाइ",
+        "en": "Scientific learning",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 106,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "सूचना तथा सञ्चार प्रविधि",
+        "en": "Information and communication technology",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 107,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "जीव र वातावरण",
+        "en": "Living things and their environment",
+        "count": 3,
+        "fullMarks": 12,
+        "page": 108,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "जीवहरूको वर्गीकरण",
+        "en": "Classification of living things",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 109,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "जीवन प्रक्रिया",
+        "en": "Life processes",
+        "count": 3,
+        "fullMarks": 12,
+        "page": 110,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "पदार्थ",
+        "en": "Matter",
+        "count": 14,
+        "fullMarks": 56,
+        "page": 111,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "दैनिक जीवनमा शक्ति",
+        "en": "Energy in everyday life",
+        "count": 8,
+        "fullMarks": 32,
+        "page": 113,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "पृथ्वी र अन्तरिक्ष",
+        "en": "Earth and space",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 114,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      }
+    ],
+    "5:science": [
+      {
+        "theme": "वैज्ञानिक सिकाइ",
+        "en": "Scientific learning",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 115,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "सूचना तथा सञ्चार प्रविधि",
+        "en": "Information and communication technology",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 116,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "जीव र वातावरण",
+        "en": "Living things and their environment",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 117,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "जीवहरूको वर्गीकरण",
+        "en": "Classification of living things",
+        "count": 3,
+        "fullMarks": 12,
+        "page": 118,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "जीवन प्रक्रिया",
+        "en": "Life processes",
+        "count": 3,
+        "fullMarks": 12,
+        "page": 119,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "पदार्थ",
+        "en": "Matter",
+        "count": 10,
+        "fullMarks": 40,
+        "page": 120,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "दैनिक जीवनमा शक्ति",
+        "en": "Energy in everyday life",
+        "count": 13,
+        "fullMarks": 52,
+        "page": 121,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "पृथ्वी र अन्तरिक्ष",
+        "en": "Earth and space",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 122,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      }
+    ],
+    "4:healthphysicalcreativeart": [
+      {
+        "theme": "व्यक्तिगत स्वच्छता",
+        "en": "Personal hygiene",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 123,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "वातावरणीय सरसफाइ",
+        "en": "Environmental sanitation",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 124,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "खाना र पोषण",
+        "en": "Food and nutrition",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 125,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "रोग, धूमपान र मद्यपान",
+        "en": "Disease, smoking and alcohol",
+        "count": 10,
+        "fullMarks": 40,
+        "page": 126,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "सुरक्षा र प्राथमिक उपचार",
+        "en": "Safety and first aid",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 127,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "कवाज र शारीरिक कसरत",
+        "en": "Drill and physical exercise",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 128,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "एथलेटिक्स र जिम्नास्टिक्स",
+        "en": "Athletics and gymnastics",
+        "count": 10,
+        "fullMarks": 40,
+        "page": 129,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "साधारण स्थानीय र बल खेलहरू",
+        "en": "Simple, local and ball games",
+        "count": 12,
+        "fullMarks": 48,
+        "page": 130,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "योग",
+        "en": "Yoga",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 131,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "रेखाचित्र र रङ",
+        "en": "Drawing and colour",
+        "count": 7,
+        "fullMarks": 28,
+        "page": 132,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "छपाइ, माटाको काम, कोलाज र निर्माण कार्य",
+        "en": "Printmaking, clay, collage and construction",
+        "count": 7,
+        "fullMarks": 28,
+        "page": 133,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "गायन र वादन",
+        "en": "Singing and playing instruments",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 134,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "नृत्य र अभिनय",
+        "en": "Dance and acting",
+        "count": 3,
+        "fullMarks": 12,
+        "page": 135,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      }
+    ],
+    "5:healthphysicalcreativeart": [
+      {
+        "theme": "व्यक्तिगत स्वच्छता",
+        "en": "Personal hygiene",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 136,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "वातावरणीय सरसफाइ",
+        "en": "Environmental sanitation",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 137,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "खाना र पोषण",
+        "en": "Food and nutrition",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 138,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "रोग, धूमपान र मद्यपान",
+        "en": "Disease, smoking and alcohol",
+        "count": 10,
+        "fullMarks": 40,
+        "page": 139,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "सुरक्षा र प्राथमिक उपचार",
+        "en": "Safety and first aid",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 140,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "कवाज र शारीरिक कसरत",
+        "en": "Drill and physical exercise",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 141,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "एथलेटिक्स र जिम्नास्टिक्स",
+        "en": "Athletics and gymnastics",
+        "count": 10,
+        "fullMarks": 40,
+        "page": 142,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "साधारण स्थानीय र बल खेलहरू",
+        "en": "Simple, local and ball games",
+        "count": 12,
+        "fullMarks": 48,
+        "page": 143,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "योग",
+        "en": "Yoga",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 144,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "रेखाचित्र र रङ",
+        "en": "Drawing and colour",
+        "count": 7,
+        "fullMarks": 28,
+        "page": 145,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "छपाइ, माटाको काम, कोलाज र निर्माण कार्य",
+        "en": "Printmaking, clay, collage and construction",
+        "count": 8,
+        "fullMarks": 32,
+        "page": 146,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "गायन र वादन",
+        "en": "Singing and playing instruments",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 147,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      },
+      {
+        "theme": "नृत्य र अभिनय",
+        "en": "Dance and acting",
+        "count": 3,
+        "fullMarks": 12,
+        "page": 148,
+        "guide": "upper",
+        "status": "guideMatched",
+        "indicators": null,
+        "scoreBlocks": null
+      }
+    ],
+    "1:serophero": [
+      {
+        "theme": "म र मेरो परिवार",
+        "en": "",
+        "count": 5,
+        "fullMarks": 20,
+        "page": 128,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 20,
+        "scoreBlocks": 5,
+        "groups": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      {
+        "theme": "मेरो दैनिक जीवन",
+        "en": "",
+        "count": 4,
+        "fullMarks": 16,
+        "page": 129,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 16,
+        "scoreBlocks": 4,
+        "groups": [
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      {
+        "theme": "हाम्रो समुदाय",
+        "en": "",
+        "count": 3,
+        "fullMarks": 12,
+        "page": 130,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 12,
+        "scoreBlocks": 3,
+        "groups": [
+          4,
+          4,
+          4
+        ]
+      },
+      {
+        "theme": "हाम्रो विद्यालय",
+        "en": "",
+        "count": 2,
+        "fullMarks": 12,
+        "page": 131,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 12,
+        "scoreBlocks": 3,
+        "groups": [
+          8,
+          4
+        ]
+      },
+      {
+        "theme": "हाम्रा वरपरका जीवजन्तु",
+        "en": "",
+        "count": 2,
+        "fullMarks": 8,
+        "page": 132,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 8,
+        "scoreBlocks": 2,
+        "groups": [
+          4,
+          4
+        ]
+      },
+      {
+        "theme": "हाम्रो वातावरण",
+        "en": "",
+        "count": 2,
+        "fullMarks": 8,
+        "page": 132,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 8,
+        "scoreBlocks": 2,
+        "groups": [
+          4,
+          4
+        ]
+      },
+      {
+        "theme": "मेरो सिर्जना",
+        "en": "",
+        "count": 2,
+        "fullMarks": 12,
+        "page": 133,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 12,
+        "scoreBlocks": 3,
+        "groups": [
+          8,
+          4
+        ]
+      },
+      {
+        "theme": "हाम्रो संस्कृति",
+        "en": "",
+        "count": 1,
+        "fullMarks": 4,
+        "page": 133,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 4,
+        "scoreBlocks": 1,
+        "groups": [
+          4
+        ]
+      },
+      {
+        "theme": "सञ्चार प्रविधि र बजार",
+        "en": "",
+        "count": 2,
+        "fullMarks": 8,
+        "page": 134,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 8,
+        "scoreBlocks": 2,
+        "groups": [
+          4,
+          4
+        ]
+      },
+      {
+        "theme": "हाम्रो वरपरको संसार",
+        "en": "",
+        "count": 2,
+        "fullMarks": 8,
+        "page": 134,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 8,
+        "scoreBlocks": 2,
+        "groups": [
+          4,
+          4
+        ]
+      }
+    ],
+    "2:serophero": [
+      {
+        "theme": "म र मेरो परिवार",
+        "en": "",
+        "count": 6,
+        "fullMarks": 24,
+        "page": 135,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 24,
+        "scoreBlocks": 6,
+        "groups": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      {
+        "theme": "मेरो दैनिक जीवन",
+        "en": "",
+        "count": 4,
+        "fullMarks": 24,
+        "page": 136,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 24,
+        "scoreBlocks": 6,
+        "groups": [
+          4,
+          8,
+          8,
+          4
+        ]
+      },
+      {
+        "theme": "हाम्रो समुदाय",
+        "en": "",
+        "count": 3,
+        "fullMarks": 24,
+        "page": 137,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 24,
+        "scoreBlocks": 6,
+        "groups": [
+          8,
+          8,
+          8
+        ]
+      },
+      {
+        "theme": "हाम्रो विद्यालय",
+        "en": "",
+        "count": 3,
+        "fullMarks": 16,
+        "page": 138,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 16,
+        "scoreBlocks": 4,
+        "groups": [
+          8,
+          4,
+          4
+        ]
+      },
+      {
+        "theme": "हाम्रा वरपरका जीवजन्तु",
+        "en": "",
+        "count": 2,
+        "fullMarks": 8,
+        "page": 139,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 8,
+        "scoreBlocks": 2,
+        "groups": [
+          4,
+          4
+        ]
+      },
+      {
+        "theme": "हाम्रो वातावरण",
+        "en": "",
+        "count": 2,
+        "fullMarks": 12,
+        "page": 139,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 12,
+        "scoreBlocks": 3,
+        "groups": [
+          4,
+          8
+        ]
+      },
+      {
+        "theme": "मेरो सिर्जना",
+        "en": "",
+        "count": 2,
+        "fullMarks": 12,
+        "page": 140,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 12,
+        "scoreBlocks": 3,
+        "groups": [
+          8,
+          4
+        ]
+      },
+      {
+        "theme": "हाम्रो संस्कृति",
+        "en": "",
+        "count": 1,
+        "fullMarks": 4,
+        "page": 140,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 4,
+        "scoreBlocks": 1,
+        "groups": [
+          4
+        ]
+      },
+      {
+        "theme": "सञ्चार प्रविधि र बजार",
+        "en": "",
+        "count": 2,
+        "fullMarks": 8,
+        "page": 141,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 8,
+        "scoreBlocks": 2,
+        "groups": [
+          4,
+          4
+        ]
+      },
+      {
+        "theme": "हाम्रो वरपरको संसार",
+        "en": "",
+        "count": 3,
+        "fullMarks": 12,
+        "page": 141,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 12,
+        "scoreBlocks": 3,
+        "groups": [
+          4,
+          4,
+          4
+        ]
+      }
+    ],
+    "3:serophero": [
+      {
+        "theme": "म र मेरो परिवार",
+        "en": "",
+        "count": 4,
+        "fullMarks": 24,
+        "page": 142,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 24,
+        "scoreBlocks": 6,
+        "groups": [
+          4,
+          4,
+          12,
+          4
+        ]
+      },
+      {
+        "theme": "मेरो दैनिक जीवन",
+        "en": "",
+        "count": 3,
+        "fullMarks": 16,
+        "page": 143,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 16,
+        "scoreBlocks": 4,
+        "groups": [
+          4,
+          8,
+          4
+        ]
+      },
+      {
+        "theme": "हाम्रो समुदाय",
+        "en": "",
+        "count": 3,
+        "fullMarks": 24,
+        "page": 144,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 24,
+        "scoreBlocks": 6,
+        "groups": [
+          8,
+          8,
+          8
+        ]
+      },
+      {
+        "theme": "हाम्रो विद्यालय",
+        "en": "",
+        "count": 3,
+        "fullMarks": 16,
+        "page": 145,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 16,
+        "scoreBlocks": 4,
+        "groups": [
+          4,
+          4,
+          8
+        ]
+      },
+      {
+        "theme": "हाम्रा वरपरका जीवजन्तु",
+        "en": "",
+        "count": 1,
+        "fullMarks": 8,
+        "page": 146,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 8,
+        "scoreBlocks": 2,
+        "groups": [
+          8
+        ]
+      },
+      {
+        "theme": "हाम्रो वातावरण",
+        "en": "",
+        "count": 2,
+        "fullMarks": 8,
+        "page": 146,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 8,
+        "scoreBlocks": 2,
+        "groups": [
+          4,
+          4
+        ]
+      },
+      {
+        "theme": "मेरो सिर्जना",
+        "en": "",
+        "count": 2,
+        "fullMarks": 12,
+        "page": 147,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 12,
+        "scoreBlocks": 3,
+        "groups": [
+          4,
+          8
+        ]
+      },
+      {
+        "theme": "हाम्रो संस्कृति",
+        "en": "",
+        "count": 1,
+        "fullMarks": 8,
+        "page": 148,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 8,
+        "scoreBlocks": 2,
+        "groups": [
+          8
+        ]
+      },
+      {
+        "theme": "सञ्चार प्रविधि र बजार",
+        "en": "",
+        "count": 2,
+        "fullMarks": 8,
+        "page": 148,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 8,
+        "scoreBlocks": 2,
+        "groups": [
+          4,
+          4
+        ]
+      },
+      {
+        "theme": "हाम्रो वरपरको संसार",
+        "en": "",
+        "count": 3,
+        "fullMarks": 16,
+        "page": 149,
+        "guide": "lower",
+        "status": "guideCounts",
+        "indicators": 16,
+        "scoreBlocks": 4,
+        "groups": [
+          4,
+          8,
+          4
+        ]
+      }
+    ]
+  }
+}
