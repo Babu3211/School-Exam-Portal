@@ -34,9 +34,37 @@ export function grade9PracticeTopics(key,language){
  const {bank}=bankFor(key,language);
  return bank.units.map(u=>({id:u.id,name:language==='ne'?u.unitTitle.split(' / ').find(t=>/[\u0900-\u097f]/.test(t))||u.unitTitle:language==='en'?u.unitTitleEn:u.unitTitle,topics:u.topics.map((name,i)=>({id:u.id+'_'+i,name:language==='ne'?name.split(' / ').find(t=>/[\u0900-\u097f]/.test(t))||name:language==='en'?name.split(' / ').find(t=>!/[\u0900-\u097f]/.test(t))||u.unitTitleEn||name: name,available:bank.questions.filter(q=>q.topicId===u.id+'_'+i&&isQuestionReadyForLanguage(q,language)).length}))}));
 }
+export function grade9PracticeCapacity({key,language,topicIds,fullMarks}){
+ const {bank}=bankFor(key,language);
+ const limit=key==='health'?50:75;
+ if(!Array.isArray(topicIds)||topicIds.length>40||new Set(topicIds).size!==topicIds.length||topicIds.some(id=>typeof id!=='string'))throw Error('Select up to 40 unique topics');
+ const pool=[],seen=new Set(),selected=new Set(topicIds);
+ for(const q of bank.questions){
+  if(!selected.has(q.topicId)||q.status==='archived'||!isQuestionReadyForLanguage(q,language))continue;
+  const signature=String(q.questionText).trim().replace(/\s+/g,' ').toLowerCase();
+  if(seen.has(signature))continue;seen.add(signature);pool.push(q);
+ }
+ // Each selected topic must be represented. Whole-mark practice questions only.
+ // Exact subset-sum by topic; no CDC grid or future distinct-paper guarantee.
+ let reachable=new Set([0]);
+ for(const topic of topicIds){
+  const sums=new Set([0]);
+  for(const q of pool.filter(q=>q.topicId===topic)){
+   for(const value of [...sums])if(value+Number(q.marks)<=limit)sums.add(value+Number(q.marks));
+  }
+  sums.delete(0);
+  const next=new Set();
+  for(const a of reachable)for(const b of sums)if(a+b<=limit)next.add(a+b);
+  reachable=next;
+ }
+ const possible=topicIds.length?[...reachable].filter(n=>n>0).sort((a,b)=>a-b):[];
+ return {questionCount:pool.length,topicCount:topicIds.length,availableMarks:pool.reduce((n,q)=>n+Number(q.marks),0),limit,possible,canGenerate:Number.isSafeInteger(fullMarks)&&possible.includes(fullMarks),exactGridVerified:false};
+}
 export function generateGrade9CurriculumPractice({schoolId,schoolName,key,language,topicIds,fullMarks,avoidSignatures=[],rng=Math.random}){
  validateSchoolId(schoolId);
  if(typeof schoolName!=='string'||!schoolName.trim()||schoolName.length>160||!Number.isSafeInteger(fullMarks)||fullMarks<1||fullMarks>(key==='health'?50:75))throw Error('Verified school and practice full marks required');
+ const capacity=grade9PracticeCapacity({key,language,topicIds,fullMarks});
+ if(!capacity.canGenerate)throw Error('Selected topics cannot make these full marks');
  const {src,bank}=bankFor(key,language);
  const result=buildAutomaticQuestionPaper({questions:bank.questions,topicIds,fullMarks,language,gradeNumber:9,subject:src.subject,avoidSignatures,rng});
  if(result.teacherReviewRequired!==true||result.exactGridMatched!==false||result.blueprintMatched!==false)throw Error('Practice only');

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {grade9PracticeTopics,generateGrade9CurriculumPractice,assertGrade9CurriculumPractice} from './grade9-curriculum-practice.mjs';
+import {grade9PracticeTopics,grade9PracticeCapacity,generateGrade9CurriculumPractice,assertGrade9CurriculumPractice} from './grade9-curriculum-practice.mjs';
 import {printReadOnlyPracticePaper} from './question-paper-cdc-preview.mjs';
 for(const [key,languages] of [['science',['ne','en','both']],['social',['ne']],['math',['ne','en','both']],['environment',['ne','en','both']],['nepali',['ne']],['english',['en']],['economics',['ne','en','both']],['accounting',['ne','en','both']],['health',['ne','en','both']]]){
  for(const language of languages){
@@ -19,3 +19,12 @@ assert.throws(()=>grade9PracticeTopics('social','both'),/Invalid subject or lang
 assert.throws(()=>grade9PracticeTopics('nepali','en'),/Invalid subject or language/);
 assert.throws(()=>grade9PracticeTopics('english','both'),/Invalid subject or language/);
 console.log('PASS V47 Grade 9 nine-subject original curriculum practice, language restrictions and no current grid claim');
+
+const health=grade9PracticeTopics('health','both').flatMap(u=>u.topics.map(t=>t.id));
+const capacity=grade9PracticeCapacity({key:'health',language:'both',topicIds:health,fullMarks:50});
+assert.equal(capacity.questionCount,18);assert.equal(capacity.availableMarks,27);assert.equal(capacity.canGenerate,false);
+assert.deepEqual(capacity.possible,Array.from({length:19},(_,i)=>i+9));
+assert.equal(grade9PracticeCapacity({key:'health',language:'both',topicIds:health,fullMarks:25}).canGenerate,true);
+assert.equal(grade9PracticeCapacity({key:'health',language:'both',topicIds:[],fullMarks:1}).canGenerate,false);
+assert.throws(()=>grade9PracticeCapacity({key:'health',language:'both',topicIds:[health[0],health[0]],fullMarks:1}));
+console.log('PASS Grade 9 topic coverage and available exact full-marks preflight');

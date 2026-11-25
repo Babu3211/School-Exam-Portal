@@ -7,7 +7,7 @@ import {validateSchoolId} from './school-paths.mjs';
 import {prepareCdcSourceCatalog,prepareReadOnlyPracticePaper,recommendedPracticeIndices,printReadOnlyPracticePaper} from './question-paper-cdc-preview.mjs';
 import {exportPracticeDocx} from './practice-docx-export.mjs';
 import {generateMathPractice,printMathPractice} from './optional-math-practice-preview.mjs';
-import {grade9PracticeLanguages,grade9PracticeTopics,generateGrade9CurriculumPractice} from './grade9-curriculum-practice.mjs';
+import {grade9PracticeLanguages,grade9PracticeTopics,grade9PracticeCapacity,generateGrade9CurriculumPractice} from './grade9-curriculum-practice.mjs';
 import {renderGrade9GridLibrary} from './cdc-grade9-grid-library.mjs';
 import {computerGridReference,generateComputerPractice} from './computer-grid-practice.mjs';
 import {practiceUnitOptions,generatePracticePreview} from './automatic-practice-preview.mjs';
@@ -29,7 +29,7 @@ function clearPreview(){
  $('paperStatus').textContent='No practice preview prepared.';
 }
 function reset(){
- epoch++;clearPreview();actor=null;schoolId=null;school=null;register=null;loading=false;practiceHistory.clear();$('grade9CurriculumArea').hidden=true;$('grade9CurriculumTopics').replaceChildren();$('grade9CurriculumStatus').textContent='';$('mathPracticeArea').hidden=true;$('mathPracticeStatus').textContent='';$('grade9GridLibrary').replaceChildren();$('grade9GridLibraryStatus').textContent='';$('computerGridTable').replaceChildren();$('computerGenerateArea').hidden=true;$('computerGridStatus').textContent='';
+ epoch++;clearPreview();actor=null;schoolId=null;school=null;register=null;loading=false;practiceHistory.clear();$('grade9CurriculumArea').hidden=true;$('grade9CurriculumTopics').replaceChildren();$('grade9CurriculumStatus').textContent='';$('grade9CurriculumCapacity').textContent='';$('generateGrade9Curriculum').disabled=true;$('mathPracticeArea').hidden=true;$('mathPracticeStatus').textContent='';$('grade9GridLibrary').replaceChildren();$('grade9GridLibraryStatus').textContent='';$('computerGridTable').replaceChildren();$('computerGenerateArea').hidden=true;$('computerGridStatus').textContent='';
  $('resourceArea').hidden=true;$('sourceList').replaceChildren();$('logout').disabled=true;
  $('identity').textContent='No verified school';$('sourceStatus').textContent='No sources loaded.';
 }
@@ -342,6 +342,20 @@ $('generateMathPractice').onclick=async()=>{
  }catch(e){if(epoch===request&&actor===member){invalidateSelectedPreview();$('mathPracticeStatus').textContent='अभ्यासपत्र बनाउन सकिएन: '+neError(e)}}
  finally{busy=false;if(epoch===request)$('generateMathPractice').disabled=false}
 };
+function refreshGrade9Capacity(){
+ const btn=$('generateGrade9Curriculum'),out=$('grade9CurriculumCapacity'),marks=$('grade9CurriculumMarks');
+ btn.disabled=true;
+ if(!actor||actor.role==='viewer'){out.textContent='';return}
+ const key=$('grade9CurriculumSubject').value,language=$('grade9CurriculumLanguage').value;
+ marks.max=key==='health'?'50':'75';
+ const topicIds=[...$('grade9CurriculumTopics').querySelectorAll('input:checked')].map(x=>x.value);
+ try{
+  const result=grade9PracticeCapacity({key,language,topicIds,fullMarks:Number(marks.value)});
+  const numbers=result.possible.join(', ');
+  out.textContent=topicIds.length?'छानिएका '+result.topicCount+' Topic; उपलब्ध '+result.questionCount+' प्रश्न ('+result.availableMarks+' अङ्क)। मिल्न सक्ने पूर्णाङ्क: '+(numbers||'कुनै छैन')+'. '+(result.canGenerate?'छनोट मिल्यो; फरक प्रश्नपत्रका लागि प्रश्न पर्याप्त हुनुपर्छ।':'पूर्णाङ्क वा Topic परिवर्तन गर्नुहोस्।'):'कम्तीमा एउटा Topic छान्नुहोस्।';
+  btn.disabled=!result.canGenerate;
+ }catch(e){out.textContent='छनोट जाँच्न सकिएन: '+neError(e)}
+}
 function renderGrade9CurriculumTopics(){
  if(!actor||actor.role==='viewer')return;
  const key=$('grade9CurriculumSubject').value,lang=$('grade9CurriculumLanguage');
@@ -354,7 +368,7 @@ function renderGrade9CurriculumTopics(){
   for(const unit of units){const h=document.createElement('h4');h.textContent=unit.name;root.append(h);
    for(const topic of unit.topics){const label=document.createElement('label');label.className='practiceChoice';const input=document.createElement('input');input.type='checkbox';input.value=topic.id;input.disabled=!topic.available;input.onchange=()=>{invalidateSelectedPreview();$('grade9CurriculumStatus').textContent='Topic छनोट परिवर्तन भयो।'};const span=document.createElement('span');span.textContent=topic.name+' ('+topic.available+')';label.append(input,span);root.append(label)}
   }
-  $('grade9CurriculumStatus').textContent='आवश्यक Topic र पूर्णाङ्क छान्नुहोस्। उपलब्ध प्रश्न पर्याप्त नभए प्रणालीले रोक्छ।';
+  $('grade9CurriculumStatus').textContent='आवश्यक Topic र पूर्णाङ्क छान्नुहोस्। उपलब्ध प्रश्न पर्याप्त नभए प्रणालीले रोक्छ।';refreshGrade9Capacity();
  }catch(e){$('grade9CurriculumStatus').textContent='स्रोत खोल्न सकिएन: '+neError(e)}
 }
 $('grade9CurriculumSubject').onchange=$('grade9CurriculumLanguage').onchange=()=>{invalidateSelectedPreview();renderGrade9CurriculumTopics()};
@@ -374,7 +388,7 @@ $('generateGrade9Curriculum').onclick=async()=>{
   practiceHistory.set(historyKey,[...previous,fresh.signature].slice(-30));paper=fresh;displayPaper();
   $('grade9CurriculumStatus').textContent='अभ्यासपत्र तयार भयो। वर्तमान CDC Grid प्रमाणीकरण बाँकी छ।';
  }catch(e){if(epoch===request&&actor===member){invalidateSelectedPreview();$('grade9CurriculumStatus').textContent='छनोटमा पर्याप्त फरक प्रश्न छैनन् वा अनुरोध असफल भयो: '+neError(e)}}
- finally{busy=false;if(epoch===request)$('generateGrade9Curriculum').disabled=false}
+ finally{busy=false;if(epoch===request)refreshGrade9Capacity()}
 };
 $('showAnswers').onchange=()=>{if(paper)displayPaper()};
 $('downloadPracticeDocx').onclick=async()=>{
