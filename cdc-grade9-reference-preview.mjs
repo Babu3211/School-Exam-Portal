@@ -117,7 +117,14 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  // without claiming a current official model layout.
  const levelCode={knowledge:'K',understanding:'U',application:'A',higher:'HA'};
  const itemMark=(x)=>'['+x.marks+(key==='math'?levelCode[x.cognitiveLevel]:'')+']';
- const groupMark=(g,parts,marks)=>key==='english'&&parts.length&&parts.every(x=>x.marks===parts[0].marks)?'['+parts.length+' × '+parts[0].marks+' = '+marks+']':'['+marks+']';
+ const groupMark=(g,parts,marks)=>'['+marks+']';
+ const modelMark=(marks)=>'('+marks+')';
+ const repeatedMark=(items)=>modelMark(items.length+' × '+items[0].marks+' = '+items.reduce((n,x)=>n+x.marks,0));
+ const alpha=i=>String.fromCharCode(97+i), upper=i=>String.fromCharCode(65+i);
+ const roman=['i','ii','iii','iv','v','vi','vii','viii','ix','x'];
+ const neLower=i=>['अ','आ','इ','ई','उ','ऊ','ऋ'][i]||paperOptionLabel(i,'ne');
+ const englishTask=x=>({mcq:'Select the best answer.',true_false:'Identify each statement as True or False.',gap_fill:'Complete the blanks with words from the passage.',short_answer:'Give answers to the questions below.',matching:'Match each word with its meaning.',ordering:'Arrange the items in the correct order.'}[x]);
+ const rotate=a=>a.slice(1).concat(a.slice(0,1));
  const sectionTitle=(i,g)=>{
   if(!['science','social','optional_environment'].includes(key)||i&&groups[i-1].questionType===g.questionType)return '';
   const group=groups.filter(x=>x.questionType===g.questionType),n=group.length,m=group[0].marks;
@@ -133,6 +140,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   return heading+time+'\n'+choose(label[0],label[1])+' ('+n+' × '+m+' = '+(n*m)+')';
  };
  if(key==='english')lines.push('General instructions: Read each question carefully and answer in English as directed.','');
+ if(key==='nepali')lines.push('तलका सबै मुख्य प्रश्न अनिवार्य छन्। विकल्प दिइएका प्रश्नमा निर्देशन पालना गर्नुहोस्।','');
  let answerCount=0;
  const answer=(label,value,marks)=>{
   const text=String(value??'').trim();
@@ -145,18 +153,70 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   const section=sectionTitle(i,g);if(section){lines.push(section,'');answers.push('',section);}
   // Keep internal block numbers unique for figures and DOM identity.
   const displayNumber=key==='science'&&i>=10?i-9:i+1;
+  if(key==='english'){
+   const parts=g.items||[];
+   const isReading=i<4;
+   lines.push(displayNumber+'. '+g.text+(isReading?'':' '+(parts.length?repeatedMark(parts):modelMark(g.marks))));
+   if(g.practiceSubstitution===true)lines.push('ORIGINAL PRACTICE — not a seen textbook extract.');
+   if(isReading){
+    lines.push(g.passage,'');
+    const kinds=[...new Set(parts.map(x=>x.type))];
+    // Vocabulary is a separate subsection, even if another matching task exists.
+    for(const [k,type] of kinds.entries()){
+     const items=parts.filter(x=>x.type===type);
+     lines.push(upper(k)+'. '+(englishTask(type)||'')+' '+repeatedMark(items));
+     if(type==='matching'&&items.every(x=>x.domain==='vocabulary')){
+      const meanings=rotate(items.map(x=>x.text.replace(/^Find (?:a|the) (?:word|verb) meaning\s*/i,'').replace(/\.$/,'')));
+      lines.push('    Column A                         Column B');
+      items.forEach((x,j)=>lines.push('    '+alpha(j)+'. '+x.answer+'     |     '+roman[j]+'. '+meanings[j]));
+     }else{
+      for(const [j,x] of items.entries()){
+       lines.push('    '+alpha(j)+'. '+x.text);
+       if(Array.isArray(x.options))x.options.forEach((o,l)=>lines.push('        '+roman[l]+'. '+o));
+      }
+     }
+     items.forEach((x,j)=>answer(displayNumber+'.'+upper(k)+'.'+alpha(j),(x.correctOption?roman['ABCD'.indexOf(x.correctOption)]+' — ':'')+x.answer,x.marks));
+     lines.push('');
+    }
+   }else if(g.slot==='contextual_mcq'){
+    lines.push(g.passage.replace(/\{(\d+)\}/g,(_,n)=>{
+     const j=Number(n)-1,x=parts[j];if(!x)throw Error('Unmapped contextual blank');
+     return '('+alpha(j)+') ……… ('+x.options.join(', ')+')';
+    }));
+    parts.forEach((x,j)=>answer(displayNumber+'.'+alpha(j),x.answer,x.marks));
+   }else if(parts.length){
+    parts.forEach((x,j)=>{lines.push('    '+alpha(j)+'. '+x.text);answer(displayNumber+'.'+alpha(j),x.answer,x.marks);});
+   }else answer(String(displayNumber),g.answer,g.marks);
+   lines.push('');continue;
+  }
   if(key==='nepali'){
-   lines.push((i+1)+'. '+(g.choices.length>1?g.choices.length+' विकल्पमध्ये '+g.answerCount+' वटाको उत्तर दिनुहोस्। ':'')+'['+g.marks+']');
+   const multi=g.choices.length>1;
+   const gMark=g.skill==='notes_and_summary'?modelMark('2 + 3 = 5'):g.answerCount>1?modelMark(Array(g.answerCount).fill(g.choices[0].marks).join(' + ')+' = '+g.marks):g.skill==='word_formation'?'':modelMark(g.marks);
+   if(multi)lines.push((i+1)+'. कुनै '+(g.answerCount===1?'एक':'दुई')+' प्रश्नको उत्तर दिनुहोस् : '+gMark);
    for(const [j,c] of g.choices.entries()){
-    lines.push('  '+paperOptionLabel(j,language)+'. '+c.text+' ['+c.marks+']');
+    const choiceLabel=paperOptionLabel(j,'ne'),label=multi?(i+1)+'.'+choiceLabel:String(i+1),components=c.components||[];
+    const prefix=multi?'('+choiceLabel+') ':(i+1)+'. ';
+    lines.push(prefix+c.text+(multi||!gMark?'':' '+gMark));
     if(c.passage)lines.push(c.passage);
     if(c.practiceSubstitution)lines.push('मौलिक अभ्यास — पाठगत उद्धरण होइन।');
-    const label=(i+1)+'.'+paperOptionLabel(j,language);
-    answer(label,c.answer,c.marks);
-    for(const [k,x] of (c.components||[]).entries()){
-     lines.push('    '+paperOptionLabel(k,language,true)+') '+x.text+' ['+x.marks+']');
-     answer(label+'.'+paperOptionLabel(k,language,true),x.answer,x.marks);
+    if(g.skill==='vocabulary_matching'){
+     const rows=components.map(x=>{const m=/^(.+?)\s*—\s*\((.+)\)$/.exec(x.text);if(!m)throw Error('Missing Nepali matching choices');return {word:m[1],options:m[2].split(',').map(v=>v.trim()),answer:x.answer};});
+     const meanings=rotate([...rows.map(x=>x.answer),...rows.slice(0,2).map(x=>x.options.find(v=>v!==x.answer))]);
+     if(new Set(meanings).size!==6||meanings.some(x=>!x))throw Error('Invalid matching options');
+     lines.push('समूह ‘क’                       समूह ‘ख’');
+     for(let k=0;k<meanings.length;k++)lines.push((rows[k]?.word||'')+'     |     '+meanings[k]);
+    }else if(g.skill==='tense_aspect'&&c.passage||g.skill==='verb_mood'||g.skill==='word_class'){
+     // The printed question contains the passage or composition prompt once.
+    }else if(g.skill==='sentence_editing'||g.skill==='vocabulary_sentence_use'){
+     lines.push(components.map(x=>x.text).join(g.skill==='sentence_editing'?' । ':', '));
+    }else{
+     for(const [k,x] of components.entries()){
+      const sub=multi?neLower(k):paperOptionLabel(k,'ne');
+      lines.push('    ('+sub+') '+x.text+(g.skill==='word_formation'?' '+modelMark(x.marks):''));
+     }
     }
+    if(components.length)components.forEach((x,k)=>answer(label+'.'+(multi?neLower(k):paperOptionLabel(k,'ne')),x.answer,x.marks));
+    else answer(label,c.answer,c.marks);
    }
    lines.push('');continue;
   }
