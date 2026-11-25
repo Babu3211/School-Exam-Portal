@@ -15,10 +15,11 @@ import {buildAutomaticQuestionPaper} from '../cdc-question-autogen.mjs';
 import {getCdcOptionalMathGuide,optionalMathAreaTopics} from '../cdc-optional-math-2082.mjs';
 import {originalOptionalMathPracticeBank} from '../cdc-optional-math-original-practice.mjs';
 import {inspectCdcOptionalMathPaper} from '../cdc-optional-math-composite.mjs';
-import {renderCdcCompositePaper,paperDigits,paperSubjectLabel} from '../cdc-optional-math-render.mjs';
+import {renderCdcCompositePaper,referenceMatchingSegments,paperDigits,paperSubjectLabel} from '../cdc-optional-math-render.mjs';
 import {assertGrade9ExamPaperMatches} from '../cdc-grade9-paper-grid-guard.mjs';
 
 const grade=9,records=[],esc=s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
+const renderReferenceBlock=block=>referenceMatchingSegments(block.text).map(seg=>seg.matchingRows?'<table class="qp-matching-table" style="width:100%;table-layout:fixed;border-collapse:collapse">'+seg.matchingRows.map((row,i)=>'<tr>'+row.map(value=>'<'+(i===0?'th':'td')+' style="width:50%;vertical-align:top;text-align:left;overflow-wrap:anywhere">'+esc(value)+'</'+(i===0?'th':'td')+'>').join('')+'</tr>').join('')+'</table>':'<pre>'+esc(seg.text)+'</pre>').join('')+block.figureHtml;
 const refs=[
  ['Nepali',a=>[...grade9NepaliReferenceBank(a).questions,...grade9NepaliPracticeSummaryDrafts(a)],'ne',180,20],
  ['English',a=>[...grade9EnglishReferenceBank(a).questions.filter(q=>q.slot!=='reading2'),...grade9EnglishPracticeReading2(a)],'en',180,10],
@@ -115,7 +116,7 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
   assert.ok(result.answerCount>=count,subject+' answer coverage');
   assert.doesNotMatch(result.answerText,/\bundefined\b/);
   previousSignature=result.signature;
-  records.push({subject,set:i+1,language,fullMarks:75,durationMinutes,groupCount:count,sourceUrl:result.sourceUrl,status:'Reference only — current CDC approval pending',allocationReview:result.allocationReview,signature:result.signature,answerCount:result.answerCount,html:'<pre>'+esc(result.introText)+'</pre>'+result.blocks.map(block=>'<div class="question" data-question-number="'+block.number+'"><pre>'+esc(block.text)+'</pre>'+block.figureHtml+'</div>').join('')+'<details><summary>Teacher answer review / उत्तरकुञ्जिका</summary><pre>'+esc(result.answerText)+'</pre></details>'});
+  records.push({subject,set:i+1,language,fullMarks:75,durationMinutes,groupCount:count,sourceUrl:result.sourceUrl,status:'Reference only — current CDC approval pending',allocationReview:result.allocationReview,signature:result.signature,answerCount:result.answerCount,html:'<pre>'+esc(result.introText)+'</pre>'+result.blocks.map(block=>'<div class="question" data-question-number="'+block.number+'">'+renderReferenceBlock(block)+'</div>').join('')+'<details><summary>Teacher answer review / उत्तरकुञ्जिका</summary><pre>'+esc(result.answerText)+'</pre></details>'});
  }
 }
 {
@@ -171,6 +172,7 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
  }
 }
 assert.equal(records.length,16);
+assert.ok(records.filter(r=>['Nepali','English'].includes(r.subject)).every(r=>r.html.includes('class="qp-matching-table"')),'Both language subjects must render native matching tables');
 assert.ok(records.filter(r=>r.subject==='Mathematics').every(r=>r.html.includes('<svg')),'Math review papers must retain matching schematic figures');
 assert.ok(records.filter(r=>r.subject==='Science and Technology').every(r=>/Series circuit|Parallel circuit/.test(r.html)),'Both science sets must retain their electricity circuit diagram');
 assert.ok(records.filter(r=>r.subject==='Mathematics').every(r=>r.html.includes('not to scale')));
