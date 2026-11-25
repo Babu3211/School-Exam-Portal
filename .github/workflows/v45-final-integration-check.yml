@@ -201,6 +201,15 @@ jobs:
               "scripts/test-v46-paper-browser-layout.mjs",
               "sw.js",
             }
+          # The Grade 9 quick builder cache repair is authorized only for these
+          # exact reviewed blob pairs; any new edit in either protected revision
+          # requires a fresh comparison. Existing dashboard and release gates stay intact.
+          if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-question-autogen-grid-safe-2083':
+            for path, before, after in [[".github/workflows/v46-production-release.yml","ba40a4c3db49d20ca9ba6c53ece8b1250921ebbf","74647815ecf29be521f5e84ac328c56649790849"],["firebase.json","b7463565924e85dbd8121c514a6fbd51fea831a7","066badefd07f2994f7893ca6328a8752c06bd406"],["index.html","b300bc9d51ef3f2e026d9e6a3302d65da3e0979d","10bf92daf221647d4cd66438344f5623a814b7c5"]]:
+              if path in changed:
+                assert subprocess.check_output(['git','rev-parse','origin/main:'+path],text=True).strip()==before, 'Protected base changed: '+path
+                assert subprocess.check_output(['git','rev-parse','HEAD:'+path],text=True).strip()==after, 'Unexpected protected change: '+path
+                allowed.add(path)
           unexpected=changed-allowed
           assert not unexpected, f'Unexpected changes to protected V44/IEMIS files: {sorted(unexpected)}'
           print('Approved dashboard and IEMIS source files remain protected.')

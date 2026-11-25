@@ -201,6 +201,11 @@ export function grade9GridLibrary(register){
     add('BESS 2079 question counts by cognitive level',['Type','K','U','A','HA','Marks each'],school.questionTypes.map((type,i)=>[type,...school.typeLevelCounts[i],school.marksEach[i]]));
    }
   }
+  const directory=register?.schoolGrade9DirectoryReview;
+  const match=directory?.compulsory?.find(x=>x.subjectKey===key);
+  if(match&&entries.some(s=>s.url===match.url&&s.retrievalEvidence?.sha256===match.sha256)){
+   add('SikshakHub directory — original government file cross-check',['Resource','PDF retrieved','Current 2083 approved'],[[match.resource,'Yes','No']]);
+  }
   const revision=entries.find(x=>x.revisionNoticeEvidence?.effectiveSchoolYear===2082)?.revisionNoticeEvidence;
   if(['science','math'].includes(key)&&revision&&safeUrl(revision.url)&&revision.revisedNumericalGridRetrieved===false){
    status='Historical 2078 Grid; Ministry reports revision effective 2082; revised table not retrieved';

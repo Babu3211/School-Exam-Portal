@@ -78,6 +78,19 @@ jobs:
           grep -Fq 'SMSS Exam Portal' /tmp/smss-v46-index.html
           grep -Fq 'initIdleLogout' /tmp/smss-v46-index.html
           grep -Fq 'subjectCatalogList' /tmp/smss-v46-index.html
+          # Verify the deployed builder itself, not merely the generic dashboard.
+          qb_url=$(grep -oE 'cdc-question-paper\.js\?v=[A-Za-z0-9._-]+' index.html | head -1)
+          test -n "$qb_url"
+          grep -Fq "$qb_url" /tmp/smss-v46-index.html
+          for asset in "$qb_url" sw.js cdc-grade9-reference-preview.mjs; do
+            file="${asset%%\?*}"
+            ok=false
+            for attempt in 1 2 3 4 5; do
+              if curl -fsSL -H 'Cache-Control: no-cache' "$url/$asset" -o "/tmp/live-$file" && cmp -s "$file" "/tmp/live-$file"; then ok=true; break; fi
+              sleep 3
+            done
+            test "$ok" = true
+          done
           curl --fail --location "$url/manifest.webmanifest" -o /tmp/smss-v46-manifest.json
           node -e 'const m=require("/tmp/smss-v46-manifest.json");if(m.name!=="SMSS Exam Portal")process.exit(1)'
 # Manual production environment approval and independent school-account/backup verification are required before dispatch.

@@ -60,6 +60,7 @@ let lastAutoSignature=null,paperHistoryLoadEpoch=0;
 function message(text, error = false) {
   const el = $("qpMessage");
   if (el) { el.textContent = text; el.style.color = error ? "#b42318" : "#52627a"; }
+  const paperMessage=$("qpPaperMessage");if(paperMessage){paperMessage.textContent=text;paperMessage.style.color=error?"#b42318":"#52627a";}
 }
 async function logQuestionActivity(action,recordId,detail) {
   try {
@@ -92,6 +93,16 @@ function pageShell() {
     #qpTopicCard{order:1}#qpPaperComposer{order:2}#qpBankList{order:3}
     #qpBankEditor{order:4}#qpCdcReferences{order:5}#qpCatalogAdmin{order:6}
     #qpSavedPapers{order:7}
+    .qp-grade9 .qp-manual-pattern{display:none!important}.qp-grade9 #qpGenerateBtn{display:none}.qp-grade9 #qpSmartGenerateBtn{width:100%;padding:14px;font-size:15px}.qp-grade9 #qpReferenceDraftActions{display:none!important}
+    .qp-stepbar{display:none}.qp-grade9 .qp-stepbar{display:flex;flex-wrap:wrap;gap:6px;order:0}
+    .qp-stepbar .qp-btn{flex:1;min-width:100px}.qp-stepbar .qp-btn[aria-pressed="true"]{background:#315bd6;color:white}
+    .qp-grade9[data-qp-view="topics"] :is(#qpPaperComposer,#qpBankList,#qpBankEditor,#qpCdcReferences,#qpCatalogAdmin,#qpSavedPapers),
+    .qp-grade9[data-qp-view="paper"] :is(#qpTopicCard,#qpBankList,#qpBankEditor,#qpCdcReferences,#qpCatalogAdmin,#qpSavedPapers),
+    .qp-grade9[data-qp-view="manage"] :is(#qpTopicCard,#qpPaperComposer,#qpSavedPapers),
+    .qp-grade9[data-qp-view="history"] :is(#qpTopicCard,#qpPaperComposer,#qpBankList,#qpBankEditor,#qpCdcReferences,#qpCatalogAdmin){display:none!important}
+    .qp-unit-group[hidden],.qp-topic[hidden]{display:none!important}
+    .qp-unit-group{border:1px solid #dce5f1;border-radius:10px;padding:8px;min-width:0}.qp-unit-group h4{font-size:13px;color:#193b69;margin:0 0 6px}.qp-unit-group .qp-topic{margin:4px 0}.qp-unit-group .qp-topic:has(input:disabled){opacity:.55}
+    .qp-topic-next{display:none}.qp-grade9 .qp-topic-next{display:flex}
     .qp-collapsible{margin-top:10px}.qp-collapsible summary{cursor:pointer;color:#2447a7;font-weight:750;padding:8px 0}
     .qp-card{background:#fff;border:1px solid #dce5f1;border-radius:14px;padding:16px;box-shadow:0 4px 14px rgba(22,48,84,.04)}
     .qp-card h3{margin:0 0 10px;color:#193b69}.qp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
@@ -110,9 +121,9 @@ function pageShell() {
     @media(max-width:600px){.qp-paper-preview .qp-paper-body{column-count:1}.qp-card{padding:12px}.qp-paper-preview{padding:12px}.qp-table{min-width:650px}}
     @media print{body *{visibility:hidden!important}#qpPrintArea,#qpPrintArea *{visibility:visible!important}#qpPrintArea{position:absolute;left:0;top:0;width:100%;border:0!important;box-shadow:none!important}}
   </style>
-  <div class="qp-wrap" id="qpApp">
+  <div class="qp-wrap" id="qpApp" data-qp-view="topics">
     <div class="qp-card">
-      <div class="qp-section-title"><div><h3>CDC पाठ्यक्रमअनुसार प्रश्नपत्र निर्माण</h3><div class="qp-hint">कक्षा ६–१० · विषय · एकाइ/पाठ · Topic · प्रश्न बैंक · स्वचालित प्रश्नपत्र</div></div><span class="qp-badge">नयाँ Module</span></div>
+      <div class="qp-section-title"><div><h3>CDC पाठ्यक्रमअनुसार प्रश्नपत्र निर्माण</h3><div class="qp-hint">कक्षा ६–१० · विषय · एकाइ/पाठ · Topic · प्रश्न बैंक · स्वचालित प्रश्नपत्र</div></div><span class="qp-badge">V46 · Quick Builder</span></div>
       <div class="qp-grid" style="margin-top:12px">
         <div class="qp-field"><label for="qpClass">कक्षा</label><select id="qpClass"><option value="">कक्षा छान्नुहोस्</option></select></div>
         <div class="qp-field"><label for="qpSubject">विषय</label><select id="qpSubject"><option value="">विषय छान्नुहोस्</option></select></div>
@@ -122,6 +133,7 @@ function pageShell() {
       <p class="qp-hint" id="qpMessage" role="status">पहिले कक्षा र विषय छान्नुहोस्। शिक्षकले आफूलाई तोकिएको कक्षा/विषयमा मात्र काम गर्न पाउनुहुनेछ।</p>
     </div>
 
+    <nav class="qp-stepbar" aria-label="Question Builder"><button class="qp-btn alt" type="button" data-qp-view-target="topics" aria-pressed="true">1. Unit / Topic</button><button class="qp-btn alt" type="button" data-qp-view-target="paper" aria-pressed="false">2. Question Paper</button><button class="qp-btn alt" type="button" data-qp-view-target="history" aria-pressed="false">History</button><button class="qp-btn alt" type="button" data-qp-view-target="manage" aria-pressed="false">Manage</button></nav>
     <div class="qp-card" id="qpCdcReferences">
       <div class="qp-section-title"><h3>CDC आधिकारिक नमुना प्रश्नपत्र तथा विशिष्टीकरण स्रोत</h3><span class="qp-badge">CDC स्रोत</span></div>
       <details class="qp-collapsible" id="qpSourceDetails">
@@ -165,7 +177,7 @@ function pageShell() {
     </div>
 
     <div class="qp-card" id="qpCatalogAdmin">
-      <div class="qp-section-title"><h3>१. CDC पाठ्यक्रम तथा Topic सूची व्यवस्थापन (Admin)</h3><span class="qp-badge">Admin मात्र</span></div>
+      <details class="qp-collapsible" id="qpAdminDetails"><summary>Admin: CDC Grid / Topic व्यवस्थापन (ऐच्छिक)</summary>
       <p class="qp-hint">CDC को आधिकारिक पाठ्यक्रम/विशिष्टीकरण तालिकाबाट एकाइ र Topic प्रविष्ट वा JSON सूची आयात गर्नुहोस्। स्रोत र पाठ्यक्रम संस्करण राख्न अनिवार्य छ। अप्रमाणित Topic लाई CDC आधिकारिक भनेर चिनाइँदैन।</p>
       <p class="qp-hint">आधिकारिक आधार: <a href="https://moecdc.gov.np/content/472/basic-teaching-courses--2079--class-6-8--mandatory/" target="_blank" rel="noopener">कक्षा ६–८ अनिवार्य पाठ्यक्रम २०७९</a> · <a href="https://moecdc.gov.np/content/201/secondary-education-curssions--2078--class-9-10--mandatory/" target="_blank" rel="noopener">कक्षा ९–१० अनिवार्य पाठ्यक्रम २०७८</a> · <a href="https://moecdc.gov.np/category/course--g-/?page=2" target="_blank" rel="noopener">सामाजिक अध्ययन पाठ्यक्रम २०८२</a> · <a href="https://moecdc.gov.np/content/488/health-and-physical-education-syllabus--2082-secondary/" target="_blank" rel="noopener">स्वास्थ्य तथा शारीरिक शिक्षा २०८२</a>.</p>
       <form id="qpUnitForm" class="qp-grid">
@@ -207,13 +219,14 @@ function pageShell() {
         </div>
         <div class="qp-actions" style="grid-column:1/-1"><button class="qp-btn" type="submit">यो कक्षा/विषयको Blueprint सुरक्षित गर्नुहोस्</button><span class="qp-hint" id="qpBpStatus"></span></div>
       </form>
+      </details>
     </div>
 
     <div class="qp-card" id="qpTopicCard">
-      <div class="qp-section-title"><h3>२. CDC Topic छान्नुहोस्</h3><span class="qp-badge" id="qpTopicCount">० Topic</span></div>
+      <div class="qp-section-title"><h3>१. Unit / Topic छान्नुहोस्</h3><span class="qp-badge" id="qpTopicCount">० Topic</span></div>
       <div class="qp-actions"><button class="qp-btn alt" type="button" id="qpSelectGridUnits">CDC Grid का Unit छान्नुहोस्</button><button class="qp-btn alt" type="button" id="qpTopicSelectAll">सबै Topic चयन</button><button class="qp-btn alt" type="button" id="qpTopicClearAll">Topic चयन हटाउनुहोस्</button></div>
-      <p class="qp-hint">शिक्षकले प्रश्न बैंकमा आफैँ थपेका Topic र उपलब्ध पाठ्यक्रम सूचीबाट आफूले चाहेका Topic छान्नुहोस्। कुनै पूर्वलोड गरिएको सूची आवश्यक छैन।</p>
-      <div id="qpTopicList" class="qp-topic-list"><p class="qp-hint">कक्षा र विषय छान्नुहोस्।</p></div>
+      <p class="qp-hint">कक्षा ९ को उपलब्ध Unit/Topic स्वतः लोड हुन्छ। चाहिएका Topic मा टिक लगाउनुहोस्; प्रश्न वा Unit टाइप गर्नु पर्दैन। Grid पूरा गर्न आवश्यक Topic छुटेमा प्रणालीले जानकारी दिन्छ।</p>
+      <div id="qpTopicList" class="qp-topic-list"><p class="qp-hint">कक्षा र विषय छान्नुहोस्।</p></div><div class="qp-actions qp-topic-next"><button class="qp-btn" type="button" data-qp-view-target="paper">Next — Question Paper</button></div>
     </div>
 
     <div class="qp-card" id="qpBankEditor">
@@ -240,37 +253,39 @@ function pageShell() {
     </div>
 
     <div class="qp-card" id="qpBankList">
-      <div class="qp-section-title"><h3>४. प्रश्न बैंक</h3><button class="qp-btn alt" id="qpRefreshBtn" type="button">Refresh</button></div>
+      <details class="qp-collapsible" id="qpBankDetails"><summary>प्रश्न बैंक हेर्नुहोस् (ऐच्छिक)</summary><div class="qp-section-title"><h3>प्रश्न बैंक</h3><button class="qp-btn alt" id="qpRefreshBtn" type="button">Refresh</button></div>
       <div class="qp-table-wrap"><table class="qp-table"><thead><tr><th>Topic</th><th>प्रश्न</th><th>प्रकार</th><th>स्तर</th><th>अङ्क</th><th>थप्ने शिक्षक</th><th>कार्य</th></tr></thead><tbody id="qpQuestionRows"><tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr></tbody></table></div>
+      </details>
     </div>
 
     <div class="qp-card" id="qpPaperComposer">
-      <div class="qp-section-title"><h3>५. स्वचालित प्रश्नपत्र तयार गर्नुहोस्</h3><span id="qpBlueprintBadge" class="qp-badge">Custom Pattern</span></div>
+      <div class="qp-section-title"><h3>२. स्वचालित प्रश्नपत्र तयार गर्नुहोस्</h3><span id="qpBlueprintBadge" class="qp-badge">Custom Pattern</span></div>
       <div class="qp-grid">
         <div class="qp-field"><label for="qpPaperTitle">परीक्षाको नाम</label><input id="qpPaperTitle" maxlength="120" value="त्रैमासिक परीक्षा"></div>
         <div class="qp-field"><label for="qpPaperYear">शैक्षिक वर्ष</label><input id="qpPaperYear" maxlength="20" value="2083"></div>
         <div class="qp-field"><label for="qpPaperDuration">समय (मिनेट)</label><input id="qpPaperDuration" type="number" min="15" max="360" value="120"></div>
         <div class="qp-field"><label for="qpPaperFullMarks">पूर्णाङ्क</label><input id="qpPaperFullMarks" type="number" min="1" max="500" value="50"></div>
         <div class="qp-field"><label for="qpAutoLanguage">प्रश्नपत्रको भाषा</label><select id="qpAutoLanguage"><option value="ne">नेपाली मात्र</option><option value="en">English only</option><option value="both">नेपाली + English दुवै</option></select><small id="qpLanguagePolicy" class="qp-hint"></small></div>
-        <div class="qp-field"><label for="qpAutoMode">प्रश्नपत्रको ढाँचा</label><select id="qpAutoMode"><option value="cdc">CDC Unit-wise Grid EXACT</option><option value="practice">अभ्यास मात्र (CDC Grid होइन)</option></select></div>
-        <div class="qp-field"><label for="qpPaperMcqCount">MCQ संख्या</label><input id="qpPaperMcqCount" type="number" min="0" max="100" value="10"></div>
-        <div class="qp-field"><label for="qpPaperMcqMarks">MCQ प्रति अङ्क</label><input id="qpPaperMcqMarks" type="number" min="1" max="20" value="1"></div>
-        <div class="qp-field"><label for="qpPaperVeryShortCount">अति छोटो (VSQ) संख्या</label><input id="qpPaperVeryShortCount" type="number" min="0" max="100" value="0"></div>
-        <div class="qp-field"><label for="qpPaperVeryShortMarks">प्रति VSQ अङ्क</label><input id="qpPaperVeryShortMarks" type="number" min="1" max="20" value="1"></div>
-        <div class="qp-field"><label for="qpPaperShortCount">छोटो प्रश्न संख्या</label><input id="qpPaperShortCount" type="number" min="0" max="100" value="6"></div>
-        <div class="qp-field"><label for="qpPaperShortMarks">छोटो प्रश्न प्रति अङ्क</label><input id="qpPaperShortMarks" type="number" min="1" max="30" value="5"></div>
-        <div class="qp-field"><label for="qpPaperLongCount">लामो प्रश्न संख्या</label><input id="qpPaperLongCount" type="number" min="0" max="100" value="1"></div>
-        <div class="qp-field"><label for="qpPaperLongMarks">लामो प्रश्न प्रति अङ्क</label><input id="qpPaperLongMarks" type="number" min="1" max="50" value="10"></div>
+        <div class="qp-field qp-manual-pattern"><label for="qpAutoMode">प्रश्नपत्रको ढाँचा</label><select id="qpAutoMode"><option value="cdc">CDC Unit-wise Grid EXACT</option><option value="practice">अभ्यास मात्र (CDC Grid होइन)</option></select></div>
+        <div class="qp-field qp-manual-pattern"><label for="qpPaperMcqCount">MCQ संख्या</label><input id="qpPaperMcqCount" type="number" min="0" max="100" value="10"></div>
+        <div class="qp-field qp-manual-pattern"><label for="qpPaperMcqMarks">MCQ प्रति अङ्क</label><input id="qpPaperMcqMarks" type="number" min="1" max="20" value="1"></div>
+        <div class="qp-field qp-manual-pattern"><label for="qpPaperVeryShortCount">अति छोटो (VSQ) संख्या</label><input id="qpPaperVeryShortCount" type="number" min="0" max="100" value="0"></div>
+        <div class="qp-field qp-manual-pattern"><label for="qpPaperVeryShortMarks">प्रति VSQ अङ्क</label><input id="qpPaperVeryShortMarks" type="number" min="1" max="20" value="1"></div>
+        <div class="qp-field qp-manual-pattern"><label for="qpPaperShortCount">छोटो प्रश्न संख्या</label><input id="qpPaperShortCount" type="number" min="0" max="100" value="6"></div>
+        <div class="qp-field qp-manual-pattern"><label for="qpPaperShortMarks">छोटो प्रश्न प्रति अङ्क</label><input id="qpPaperShortMarks" type="number" min="1" max="30" value="5"></div>
+        <div class="qp-field qp-manual-pattern"><label for="qpPaperLongCount">लामो प्रश्न संख्या</label><input id="qpPaperLongCount" type="number" min="0" max="100" value="1"></div>
+        <div class="qp-field qp-manual-pattern"><label for="qpPaperLongMarks">लामो प्रश्न प्रति अङ्क</label><input id="qpPaperLongMarks" type="number" min="1" max="50" value="10"></div>
       </div>
       <p class="qp-hint" id="qpPatternHint">CDC Grid आयात गरिएको छैन भने शिक्षकले Custom Pattern राख्न सक्नुहुन्छ। कुल प्रश्नको अङ्क पूर्णाङ्कसँग मिल्नुपर्छ।</p>
       <p class="qp-hint" id="qpAutoSourceStatus" role="status">उपलब्ध प्रश्न बैंक जाँचिँदैछ।</p>
-      <p class="qp-hint" id="qpOfficialGridSource"></p>
+      <details class="qp-collapsible"><summary>Grid स्रोत र प्रमाणीकरण विवरण (ऐच्छिक)</summary><p class="qp-hint" id="qpOfficialGridSource"></p></details>
       <details id="qpGrade9GridLibrary" style="margin:10px 0;padding:10px;border:1px solid #cbd5e1;border-radius:8px"><summary>Class 9 — CDC Grid Library / सबै विषयको विशिष्टीकरण तालिका</summary><div id="qpGrade9GridLibraryContent"><p>CDC sources load after selecting a class and subject.</p></div></details>
       <p class="qp-hint" id="qpAutoGridStatus" role="status">CDC Exact मोडमा सम्बन्धित कक्षा, विषय र पूर्णाङ्कको समीक्षित Unit-wise Grid चाहिन्छ।</p>
       <p class="qp-hint">एक क्लिकमा: कक्षा/विषय, Topic, पूर्णाङ्क र भाषा छान्नुहोस्। उपलब्ध मौलिक अभ्यास प्रश्नबाट ठीक पूर्णाङ्कको Draft तयार हुनेछ। पर्याप्त जाँचिएका प्रश्न नभए गलत प्रश्नपत्र बनाइँदैन। CDC Grid को लागू संस्करण शिक्षकले पुष्टि गर्नुपर्छ।</p>
-      <label class="qp-topic" style="margin-top:9px;background:#fff8e9;align-items:center"><input id="qpAutoReviewed" type="checkbox"><span>मैले प्रश्नपत्रको नेपाली वर्णविन्यास (ह्रस्व–दीर्घ), व्याकरण, English grammar, आवश्यक चित्र, पूर्णाङ्क, लागू CDC विशिष्टीकरण तालिका र उत्तरकुञ्जिका पढेर जाँच गरेको छु। <b>जाँच नगरी Save वा Print हुँदैन।</b></span></label>
+      <label id="qpOfficialReviewLabel" class="qp-topic" hidden style="margin-top:9px;background:#fff8e9;align-items:center"><input id="qpAutoReviewed" type="checkbox"><span>मैले प्रश्नपत्रको नेपाली वर्णविन्यास (ह्रस्व–दीर्घ), व्याकरण, English grammar, आवश्यक चित्र, पूर्णाङ्क, लागू CDC विशिष्टीकरण तालिका र उत्तरकुञ्जिका पढेर जाँच गरेको छु। <b>जाँच नगरी Save वा Print हुँदैन।</b></span></label>
       <div class="qp-actions"><button class="qp-btn" id="qpSmartGenerateBtn" type="button">एक क्लिकमा Auto Question Paper</button><button class="qp-btn alt" id="qpGenerateBtn" type="button">म्यानुअल Pattern Generate</button><button class="qp-btn alt" id="qpSavePaperBtn" type="button" disabled>प्रश्नपत्र Save</button><button class="qp-btn alt" id="qpPrintPaperBtn" type="button" disabled>प्रश्नपत्र Print / PDF</button><button class="qp-btn alt" id="qpAnswerKeyBtn" type="button" disabled>उत्तरकुञ्जिका Print / PDF</button><button class="qp-btn alt" id="qpWordPaperBtn" type="button" disabled>Word (.docx) Export</button></div>
       <div class="qp-actions" id="qpReferenceDraftActions" hidden><button class="qp-btn alt" id="qpSelectReferenceTopics" type="button">Select reference topics (75 marks)</button><button class="qp-btn alt" id="qpReferenceDraftBtn" type="button">Generate School Grid Draft (75 marks)</button></div><div id="qpReferenceExportActions" hidden><label class="qp-topic"><input id="qpReferenceReviewed" type="checkbox"><span>मैले विद्यालयको Grid, भाषा, चित्र र उत्तरकुञ्जिका जाँच गरेको छु। यो CDC Exact स्वीकृति होइन।</span></label><div class="qp-actions"><button class="qp-btn alt" id="qpReferencePrintBtn" type="button" disabled>Draft Print / PDF</button><button class="qp-btn alt" id="qpReferenceWordBtn" type="button" disabled>Draft Word (.docx)</button><button class="qp-btn alt" id="qpReferenceKeyBtn" type="button" disabled>Draft Answer Key / PDF</button></div></div><div id="qpReferenceDraftPreview" hidden style="white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;border:2px solid #c48740;border-radius:8px;background:#fff8e9;color:#482b11;font:inherit" role="status"></div><details id="qpReferenceAnswerReview" hidden style="margin-top:10px;padding:12px;border:1px solid #c48740;border-radius:8px"><summary>Teacher Answer Review / उत्तरकुञ्जिका (not official)</summary><pre id="qpReferenceAnswerText" style="white-space:pre-wrap;overflow-wrap:anywhere;font:inherit"></pre></details>
+      <p id="qpPaperMessage" class="qp-hint" role="status"></p>
       <div id="qpPaperPreview" style="margin-top:14px"><p class="qp-hint">Topic छानेर प्रश्नपत्र Auto Generate गर्नुहोस्।</p></div>
     </div>
 
@@ -280,14 +295,23 @@ function pageShell() {
     </div>
   </div>`;
 }
-function applyGrade9LanguagePolicy(){
+function setQuestionBuilderView(view){
+ const root=$("qpApp");
+ if(!root||!["topics","paper","manage","history"].includes(view))return;
+ root.dataset.qpView=view;
+ for(const b of root.querySelectorAll(".qp-stepbar [data-qp-view-target]"))b.setAttribute("aria-pressed",String(b.dataset.qpViewTarget===view));
+}
+function applyGrade9LanguagePolicy(resetDefault=false){
+ $("qpApp")?.classList.toggle("qp-grade9",gradeNumber(selectedClass)===9);
+ for(const id of ["qpPaperFullMarks","qpPaperDuration"]){const input=$(id);if(input)input.readOnly=gradeNumber(selectedClass)===9;}
  const select=$("qpAutoLanguage"),hint=$("qpLanguagePolicy");
  if(!select)return;
  const required=grade9RequiredPaperLanguage(gradeNumber(selectedClass),selectedSubject);
- for(const option of select.options)option.disabled=!!required&&option.value!==required;
- select.disabled=!!required;
- if(required)select.value=required;
- if(hint)hint.textContent=required==="ne"?"नेपाली मात्र — विद्यालयको भाषा नियम":required==="both"?"नेपाली र English दुवै — एउटै प्रश्न, एउटै अङ्कभार":required==="en"?"English only — questions and instructions.":"";
+ const locked=required==="ne"||required==="en";
+ for(const option of select.options)option.disabled=locked&&option.value!==required;
+ select.disabled=locked;
+ if(locked||(required&&resetDefault))select.value=required;
+ if(hint)hint.textContent=required==="ne"?"नेपाली मात्र — विद्यालयको भाषा नियम":required==="both"?"नेपाली, English वा दुवै छान्नुहोस्। Grid र अङ्कभार उही रहन्छ।":required==="en"?"English only — questions and instructions.":"";
 }
 function selectedTopicIds() {
   return [...document.querySelectorAll("[data-qp-topic]:checked")].map(x => x.value);
@@ -372,12 +396,28 @@ function renderTopics() {
   box.innerHTML='<p class="qp-hint">यस कक्षा/विषयको Topic र समीक्षा गरिएको प्रश्न बैंक उपलब्ध छैन।</p>';
   picker.innerHTML="";return;
  }
- box.innerHTML=topics.map(x=>`<label class="qp-topic"><input type="checkbox" data-qp-topic data-unit-code="${esc(x.unitCode||"")}" value="${esc(x.id)}" checked><span><b>${esc(x.topicName)}</b><small class="qp-hint"> · ${esc(x.unitTitle||"एकाइ नतोकिएको")}</small></span></label>`).join("");
+ const groups=new Map();
+ for(const x of topics){
+  const key=String(x.unitCode||"").trim()||normal(x.unitTitle);
+  if(!groups.has(key))groups.set(key,{title:x.unitTitle||"एकाइ नतोकिएको",code:x.unitCode,items:[]});
+  groups.get(key).items.push(x);
+ }
+ box.innerHTML=[...groups.values()].map(g=>`<section class="qp-unit-group"><h4>${esc(g.code?"Unit "+g.code+" · ":"")}${esc(g.title)}</h4>${g.items.map(x=>`<label class="qp-topic"><input type="checkbox" data-qp-topic data-unit-code="${esc(x.unitCode||"")}" value="${esc(x.id)}" checked><span><b>${esc(x.topicName)}</b></span></label>`).join("")}</section>`).join("");
  picker.innerHTML=topics.map(x=>'<option value="'+esc(x.topicName)+'">').join("");
+}
+function filterReferenceTopicChoices({grade,subject}){
+ if(grade===9){
+  const referenceIds=new Set(referencePreviewTopics({grade,subject,questions:bundledPracticeQuestions}));
+  if(referenceIds.size)for(const input of document.querySelectorAll("[data-qp-topic]")){
+   input.checked=referenceIds.has(input.value);input.disabled=!input.checked;
+   if(input.disabled)input.closest("label")?.setAttribute("hidden","");
+  }
+  if(referenceIds.size){for(const group of document.querySelectorAll(".qp-unit-group"))group.hidden=!group.querySelector("[data-qp-topic]:not(:disabled)");$("qpTopicCount").textContent=document.querySelectorAll("[data-qp-topic]:not(:disabled)").length+" Topic";}
+ }
 }
 function renderQuestionRows() {
   const body = $("qpQuestionRows"); if (!body) return;
-  if (!questionRows.length) { body.innerHTML='<tr><td colspan="7">यस विषयको प्रश्न बैंक खाली छ। पहिले प्रश्न थप्नुहोस्।</td></tr>'; return; }
+  if (!questionRows.length) { body.innerHTML='<tr><td colspan="7">'+(bundledPracticeQuestions.length?esc(bundledPracticeQuestions.length)+" वटा प्रणालीमा तयार अभ्यास प्रश्न उपलब्ध छन्। प्रश्न टाइप गर्नुपर्दैन।":"यस विषयको थप प्रश्न बैंक खाली छ।")+"</td></tr>"; return; }
   body.innerHTML = questionRows.slice(0,100).map(q => `<tr>
     <td>${esc(q.topicName)}</td><td>${esc(q.questionText)}</td><td>${esc(questionTypeLabel(q.questionType))}</td>
     <td>${esc(levelLabel(q.cognitiveLevel))}</td><td>${esc(q.marks)}</td><td>${esc(q.createdByName||"शिक्षक")}</td>
@@ -385,6 +425,7 @@ function renderQuestionRows() {
   </tr>`).join("");
 }
 function updateAutoReviewActions(){
+ const reviewLabel=$("qpOfficialReviewLabel");if(reviewLabel)reviewLabel.hidden=!generatedPaper;
  const ready=!!generatedPaper&&(!generatedPaper.qualityReport?.teacherReviewRequired||
   $("qpAutoReviewed")?.checked===true);
  for(const id of ["qpSavePaperBtn","qpPrintPaperBtn","qpAnswerKeyBtn","qpWordPaperBtn"])if($(id))$(id).disabled=!ready;
@@ -504,17 +545,17 @@ async function loadClassSubjects() {
 // Absence of a checked source never triggers invented questions or a fake grid.
 async function loadBundledPracticeBank({grade,subject}){
  const science=grade9ScienceOriginalBank({grade,subject});
- if(science.units.length){const ref=grade9ScienceSchoolReferenceBank({grade,subject});return {units:science.units,questions:[...science.questions,...ref.questions],status:"Grade 9 Science: 76 original exercises and 80 bilingual school-reference variants; 75-mark full-year review only. Current CDC Grid not verified."};}
+ if(science.units.length){const ref=grade9ScienceSchoolReferenceBank({grade,subject});return {units:[...science.units,...ref.units],questions:[...science.questions,...ref.questions],status:"Grade 9 Science: 76 original exercises and 80 bilingual school-reference variants; 75-mark full-year review only. Current CDC Grid not verified."};}
  const nepali=grade9NepaliPracticeBank({grade,subject});
- if(nepali.units.length){const ref=grade9NepaliReferenceBank({grade,subject});return {units:nepali.units,questions:[...nepali.questions,...ref.questions,...grade9NepaliPracticeSummaryDrafts({grade,subject})],status:"कक्षा ९ नेपाली: ४८ अभ्यास, ५४ सन्दर्भ समूह र २ मौलिक सारांश अभ्यास; ७५ अङ्कको समीक्षा संरचना। पाठगत सारांश र वर्तमान CDC Grid पुष्टि बाँकी।"};}
+ if(nepali.units.length){const ref=grade9NepaliReferenceBank({grade,subject});return {units:[...nepali.units,...ref.units],questions:[...nepali.questions,...ref.questions,...grade9NepaliPracticeSummaryDrafts({grade,subject})],status:"कक्षा ९ नेपाली: ४८ अभ्यास, ५४ सन्दर्भ समूह र २ मौलिक सारांश अभ्यास; ७५ अङ्कको समीक्षा संरचना। पाठगत सारांश र वर्तमान CDC Grid पुष्टि बाँकी।"};}
  const english=grade9EnglishPracticeBank({grade,subject});
- if(english.units.length){const ref=grade9EnglishReferenceBank({grade,subject});return {units:english.units,questions:[...english.questions,...ref.questions,...(ref.questions.some(q=>q.slot==="reading2")?[]:grade9EnglishPracticeReading2({grade,subject}))],status:"Grade 9 English: 75-mark review practice available. Where an authorized seen passage is unavailable, the original reading substitute is explicitly marked; not a CDC Exact examination."};}
+ if(english.units.length){const ref=grade9EnglishReferenceBank({grade,subject});return {units:[...english.units,...ref.units],questions:[...english.questions,...ref.questions,...(ref.questions.some(q=>q.slot==="reading2")?[]:grade9EnglishPracticeReading2({grade,subject}))],status:"Grade 9 English: 75-mark review practice available. Where an authorized seen passage is unavailable, the original reading substitute is explicitly marked; not a CDC Exact examination."};}
  const math=grade9CompulsoryMathPracticeBank({grade,subject});
  if(math.units.length){const ref=grade9CompulsoryMathReferenceBank({grade,subject});return {units:ref.units,questions:[...math.questions,...ref.questions],status:"कक्षा ९ अनिवार्य गणित: ४२ मौलिक अभ्यास र ९६ संयुक्त समूह (२९४ उपप्रश्न), १६ संयुक्त Topic; ऐतिहासिक २०७८ Grid सन्दर्भ। नवीनतम Grid र शिक्षक समीक्षा बाँकी।"};}
  const social=grade9SocialOriginalBank({grade,subject});
- if(social.units.length){const ref=grade9SocialReferenceBank({grade,subject});return {units:social.units,questions:[...social.questions,...ref.questions],status:"कक्षा ९ सामाजिक अध्ययन: १० विषयक्षेत्रमा ७८ मौलिक bilingual अभ्यास प्रश्न, २०७८ Grid सन्दर्भका ४८ प्रश्नसहित। नयाँ CDC Exact Grid र शिक्षक समीक्षा बाँकी।"};}
+ if(social.units.length){const ref=grade9SocialReferenceBank({grade,subject});return {units:[...social.units,...ref.units],questions:[...social.questions,...ref.questions],status:"कक्षा ९ सामाजिक अध्ययन: १० विषयक्षेत्रमा ७८ मौलिक bilingual अभ्यास प्रश्न, २०७८ Grid सन्दर्भका ४८ प्रश्नसहित। नयाँ CDC Exact Grid र शिक्षक समीक्षा बाँकी।"};}
  const environment=grade9EnvironmentOriginalBank({grade,subject});
- if(environment.units.length){const ref=grade9EnvironmentReferenceBank({grade,subject});const byId=new Map([...environment.questions,...ref.questions].map(q=>[q.id,q]));return {units:environment.units,questions:[...byId.values()],status:"Grade 9 Environmental Science: 72 original bilingual exercises, including 36 review-only school-model items. Current CDC exact grid not verified."};}
+ if(environment.units.length){const ref=grade9EnvironmentReferenceBank({grade,subject});const byId=new Map([...environment.questions,...ref.questions].map(q=>[q.id,q]));return {units:[...environment.units,...ref.units],questions:[...byId.values()],status:"Grade 9 Environmental Science: 72 original bilingual exercises, including 36 review-only school-model items. Current CDC exact grid not verified."};}
  if(grade===9&&getBundledComputerGrid({grade,subject,fullMarks:50})){
   const pack=grade9ComputerOriginalBank({subject});
   return {units:pack.units,questions:pack.questions,
@@ -664,6 +705,7 @@ async function loadCurrentData() {
    bundled.status;
  $("qpCurriculumVersion").value=curriculumRows[0]?.curriculumVersion||"CDC संस्करण Topic सूचीअनुसार";
  renderTopics();renderQuestionRows();
+ filterReferenceTopicChoices({grade,subject});
  $("qpAutoSourceStatus").textContent=bundledPracticeStatus;
  renderGrade9GridLibrary($("qpGrade9GridLibraryContent"),cdcSourceRegister,[...new Set(classSubjects.filter(x=>x.gradeNumber===9).map(x=>x.subject))]);
  const pdfSource=$("qpOfficialGridSource");
@@ -751,7 +793,7 @@ async function loadCurrentData() {
     " कक्षा १० को २०८३ Model Question को उपलब्ध प्रतिमा ११ Objective, १२ WCA, ४ CCA र छवटै विषयक्षेत्रको अङ्कभार मिलेको छ। मूल २०८३ PDF attachment प्रत्यक्ष प्रमाणीकरण बाँकी छ।":"")+
    " SMSS मौलिक अभ्यास Draft Generate हुन्छ; CDC प्रकाशित प्रश्न होइन। शिक्षकले उत्तरकुञ्जिका जाँचेर मात्र Save/Print गर्नुहोस्।";
  }else if(grade9ScienceHistoricalAudit){
-  badge.textContent="Grade 9 Science · २०७८ ऐतिहासिक Grid";
+  badge.textContent="School Grid Draft · Grade 9 Science (२०७८ ऐतिहासिक Grid)";
   $("qpPatternHint").textContent="CDC को २०७८ कक्षा ९ विज्ञान नमुना ढाँचा: "+
    "१० MCQ, ९ अति छोटा, १४ छोटा, ७ लामा = ४० प्रश्न/७५ अङ्क। "+
    "तर २०८२ मा Grid संशोधन भएको छ। नयाँ मूल Grid तुलना नहुँदासम्म "+
@@ -775,7 +817,7 @@ async function loadCurrentData() {
   $("qpPatternHint").textContent="यस विषयको जाँचिएको CDC Grid आयात गरिएको छैन। Custom Pattern लाई CDC आधिकारिक नमान्नुहोस्।";
  }
  if(grade===9&&!officialComputerGrid&&!officialOptionalMathGuide&&referencePreviewTopics({grade,subject,questions:bundledPracticeQuestions}).length){
-  $("qpPaperFullMarks").value="75";$("qpPaperDuration").value=String(cdcSubjectKey(subject)==="optional_environment"?135:180);$("qpAutoMode").value="cdc";updateAutoGridStatus();
+  $("qpPaperFullMarks").value="75";$("qpPaperDuration").value=String(cdcSubjectKey(subject)==="optional_environment"?135:180);$("qpAutoMode").value="cdc";badge.textContent="School Grid Draft · 75 marks";$("qpPatternHint").textContent="उपलब्ध Grid/Question Bank स्वतः तयार छ। माथि Unit/Topic छान्नुहोस् र Auto Generate थिच्नुहोस्। CDC Exact स्वीकृति नभएको School Grid Draft हो।";updateAutoGridStatus();
  }
  const historyReady=await loadPaperHistory({required:true});
  if(!historyReady||!stillCurrent())return;
@@ -1070,6 +1112,8 @@ function updateAutoGridStatus(){
      (missing.join("; ")||"प्रकार पूरा भए पनि संज्ञानात्मक तह/एकाइ तथा मूल स्रोत पुष्टि बाँकी")+
      "। २०७८ स्रोतका Grid/Model अङ्कमा अन्तर र २०८२ मूल PDF जाँच बाँकी।"+
      " विद्यालयमा २०८३ CDC Exact भनेर प्रिन्ट गरिँदैन।";
+   }else if(gradeNumber(selectedClass)===9&&target===75&&referencePreviewTopics({grade:9,subject:selectedSubject,questions:bundledPracticeQuestions}).length){
+    el.textContent="७५ अङ्कको School Grid Draft तयार छ। Unit/Topic छानेर Auto Generate गर्नुहोस्। शिक्षक समीक्षा पछि Word/PDF निकाल्न मिल्छ। CDC Exact होइन।";
    }else el.textContent=target+
     " अंकको मूल CDC Unit-wise Grid का सबै अङ्कभार पङ्क्ति प्रणालीमा अझै प्रमाणित छैनन्। गलत प्रश्नपत्र नबनोस् भनेर Exact मोड रोकिएको छ।";
   }
@@ -1246,7 +1290,8 @@ function generateReferenceDraftPreview(){
  resetReferenceDraftOutput();
  assertReferencePreviewScope();
  const topicIds=selectedTopicIds(),language=$("qpAutoLanguage").value;
- if(language!==grade9RequiredPaperLanguage(9,selectedSubject))throw Error("विषयको भाषा नियमअनुसार प्रश्नपत्र तयार गर्नुहोस्।");
+ const required=grade9RequiredPaperLanguage(9,selectedSubject);
+ if(!["ne","en","both"].includes(language)||(required!=="both"&&required&&language!==required))throw Error("विषयको भाषा नियमअनुसार प्रश्नपत्र तयार गर्नुहोस्।");
  const scope=JSON.stringify([auth.currentUser.uid,selectedClass,selectedSubject,selectedSection,75]);
  const result=buildGrade9ReferencePreview({grade:9,subject:selectedSubject,fullMarks:Number($("qpPaperFullMarks").value),durationMinutes:Number($("qpPaperDuration").value),language,questions:bundledPracticeQuestions,selectedTopicIds:topicIds,avoidSignatures:referencePreviewHistory.get(scope)||[]});
  const box=$("qpReferenceDraftPreview");
@@ -1336,7 +1381,8 @@ async function generateSmartPaper(){
   throw Error("कक्षा/विषय/Section मा प्रश्नपत्र बनाउन अनुमति छैन।");
  const topicIds=selectedTopicIds(),target=Number($("qpPaperFullMarks").value);
  const language=$("qpAutoLanguage").value,mode=$("qpAutoMode").value;
- if(gradeNumber(selectedClass)===9&&language!==grade9RequiredPaperLanguage(9,selectedSubject))throw Error("विषयको भाषा नियमअनुसार प्रश्नपत्र तयार गर्नुहोस्।");
+ const requiredLanguage=grade9RequiredPaperLanguage(gradeNumber(selectedClass),selectedSubject);
+ if(gradeNumber(selectedClass)===9&&(!["ne","en","both"].includes(language)||(requiredLanguage!=="both"&&requiredLanguage&&language!==requiredLanguage)))throw Error("विषयको भाषा नियमअनुसार प्रश्नपत्र तयार गर्नुहोस्।");
  if(gradeNumber(selectedClass)===9&&mode!=="cdc")throw Error("कक्षा ९: CDC Grid नमिल्ने अभ्यास ढाँचामा परीक्षा प्रश्नपत्र बनाइँदैन। CDC Exact छान्नुहोस्।");
  const strict=mode==="cdc",
   historicalPractice=!strict?getGrade8ScienceHistoricalPracticePattern({
@@ -1914,7 +1960,7 @@ document.addEventListener("input",event=>{
 });
 document.addEventListener("change",async event=>{
   const t=event.target;
-  if(["qpClass","qpSubject","qpSection"].includes(t.id))clearReferenceDraftPreview();
+  if(["qpClass","qpSubject","qpSection"].includes(t.id)){clearReferenceDraftPreview();setQuestionBuilderView("topics");}
   if(t.id==="qpClass"){
     questionDataLoadEpoch++;verifiedQuestionSelection=null;
     selectedClass=t.value;selectedSubject="";selectedSection="";generatedPaper=null;savedPapers=[];applyGrade9LanguagePolicy();$("qpPaperRows").innerHTML='<tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr>';
@@ -1930,7 +1976,7 @@ document.addEventListener("change",async event=>{
   }
   if(t.id==="qpSubject"){
     questionDataLoadEpoch++;verifiedQuestionSelection=null;
-    selectedSubject=t.value;selectedSection="";generatedPaper=null;savedPapers=[];applyGrade9LanguagePolicy();$("qpPaperRows").innerHTML='<tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr>';
+    selectedSubject=t.value;selectedSection="";generatedPaper=null;savedPapers=[];applyGrade9LanguagePolicy(true);$("qpPaperRows").innerHTML='<tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr>';
     $("qpSavePaperBtn").disabled=true;$("qpPrintPaperBtn").disabled=true;$("qpAnswerKeyBtn").disabled=true;if($("qpWordPaperBtn"))$("qpWordPaperBtn").disabled=true;
     curriculumRows=[];questionRows=[];blueprintRows=[];currentBlueprint=null;
     bundledPracticeUnits=[];bundledPracticeQuestions=[];
@@ -2004,6 +2050,7 @@ document.addEventListener("submit",async event=>{
 document.addEventListener("click",async event=>{
   const t=event.target.closest("button");if(!t)return;
   try{
+    if(t.dataset.qpViewTarget){if(t.dataset.qpViewTarget==="paper"&&(!verifiedQuestionSelection||!selectedTopicIds().length))throw Error("पहिले विषय र उपलब्ध Unit/Topic छान्नुहोस्।");setQuestionBuilderView(t.dataset.qpViewTarget);return;}
     if(t.id==="qpTemplateBtn")downloadTemplate();
     if(t.id==="qpBpGridExcelTemplateBtn")await downloadCdcGridExcelTemplate();
     if(t.id==="qpQuestionExcelTemplateBtn")await downloadQuestionExcelTemplate();
@@ -2022,6 +2069,10 @@ document.addEventListener("click",async event=>{
     if(t.id==="qpReferenceWordBtn")await exportReferenceWord();
     if(t.id==="qpSmartGenerateBtn")await generateSmartPaper();
     if(t.id==="qpSelectGridUnits"){
+      if(gradeNumber(selectedClass)===9&&referencePreviewTopics({grade:9,subject:selectedSubject,questions:bundledPracticeQuestions}).length){
+       selectReferenceDraftTopics();return;
+      }
+      clearReferenceDraftPreview();refreshReferenceDraftActions();
       const target=Number($("qpPaperFullMarks").value);
       const compound=target===75?getCdcOptionalMathGuide({
        grade:gradeNumber(selectedClass),subject:selectedSubject
@@ -2067,7 +2118,8 @@ document.addEventListener("click",async event=>{
       }
     }
     if(t.id==="qpTopicSelectAll"||t.id==="qpTopicClearAll"){
-      document.querySelectorAll("[data-qp-topic]").forEach(input=>input.checked=t.id==="qpTopicSelectAll");
+      document.querySelectorAll("[data-qp-topic]").forEach(input=>input.checked=!input.disabled&&t.id==="qpTopicSelectAll");
+      clearReferenceDraftPreview();refreshReferenceDraftActions();
       if(generatedPaper)invalidateGeneratedQuestionPaper();
       updateAutoGridStatus();
   }

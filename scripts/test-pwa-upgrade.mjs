@@ -9,6 +9,9 @@ const base='https://smss-test.example/';
 const ledgerImport=html.match(/from ["'](\.\/iemis-ledger\.js\?v=[^"']+)["']/)?.[1];
 const entryImport=html.match(/from ["'](\.\/iemis-entry\.js\?v=[^"']+)["']/)?.[1];
 assert.ok(ledgerImport&&entryImport,'Updated page must use versioned module URLs.');
+const qbImport=html.match(/src="(\.\/cdc-question-paper\.js\?v=[^"]+)"/)?.[1];
+assert.ok(qbImport,'Question builder must bypass old unversioned cache');
+assert.ok(source.includes("'"+qbImport+"'"),'Current question builder must be pre-cached');
 assert.ok(entry.includes(ledgerImport),'Nested module import must share the ledger release URL.');
 for(const f of ['scripts/fixtures/iemis-layout.html','scripts/fixtures/iemis-entry.html']){
  const fixture=await readFile(f,'utf8');
@@ -30,6 +33,7 @@ const request=async (path,mode='cors',method='GET')=>{let pending;listeners.fetc
 // The OLD worker's cache-first strategy must not match a new release's import URL.
 assert.match(await (await request(ledgerImport)).text(),/export function iemisLegacyTheory/);
 assert.ok(fetched.includes(key(ledgerImport)));
+await request(qbImport);assert.ok(fetched.includes(key(qbImport)),'Versioned Question Builder must bypass old cache');
 let pending;listeners.install({waitUntil:p=>pending=p});await pending;
 listeners.activate({waitUntil:p=>pending=p});await pending;
 assert.equal(claimed,true);assert.equal(buckets.has('smss-pwa-old'),false);assert.equal(buckets.has('unrelated-cache'),true);

@@ -24,18 +24,30 @@ for(const id of ['qpClass','qpSubject','qpSection','qpPaperFullMarks','qpAutoLan
  'qpBpGridExcelTemplateBtn','qpBpGridExcelFile','qpBpGridFile'])
  assert.ok($(id),'Expected actual DOM control '+id);
 assert.deepEqual([...$('qpAutoLanguage').options].map(x=>x.value),['ne','en','both']);
-const policyHarness=new Function('$','grade9RequiredPaperLanguage','gradeNumber','selectedClass','selectedSubject',code('function applyGrade9LanguagePolicy()','function selectedTopicIds()')+'return applyGrade9LanguagePolicy;');
+const policyHarness=new Function('$','grade9RequiredPaperLanguage','gradeNumber','selectedClass','selectedSubject',code('function applyGrade9LanguagePolicy(','function selectedTopicIds()')+'return applyGrade9LanguagePolicy;');
 for(const [subject,expected] of [['Social Studies','ne'],['Nepali','ne'],['Mathematics','both'],['Science and Technology','both'],['English','en']]){
- policyHarness($,grade9RequiredPaperLanguage,()=>9,'Class 9',subject)();
+ const apply=policyHarness($,grade9RequiredPaperLanguage,()=>9,'Class 9',subject);
+ apply(true);
  assert.equal($('qpAutoLanguage').value,expected);
- assert.equal($('qpAutoLanguage').disabled,true);
- assert.deepEqual([...$('qpAutoLanguage').options].filter(x=>!x.disabled).map(x=>x.value),[expected]);
+ assert.equal($('qpAutoLanguage').disabled,expected!=='both');
+ assert.deepEqual([...$('qpAutoLanguage').options].filter(x=>!x.disabled).map(x=>x.value),expected==='both'?['ne','en','both']:[expected]);
+ if(expected==='both'){for(const language of ['ne','en','both']){$('qpAutoLanguage').value=language;apply();assert.equal($('qpAutoLanguage').value,language);}}
 }
 policyHarness($,grade9RequiredPaperLanguage,()=>10,'Class 10','Science and Technology')();
 assert.equal($('qpAutoLanguage').disabled,false);
 assert.ok([...$('qpAutoLanguage').options].every(x=>!x.disabled));
 assert.equal($('qpSourceDetails').open,false,'Long CDC source lists should be collapsed by default');
 assert.equal($('qpManualQuestions').open,false,'No typing required for the teacher default path');
+assert.equal($('qpAdminDetails').open,false);
+assert.equal($('qpBankDetails').open,false);
+assert.match($('qpTopicCard').textContent,/Unit\/Topic स्वतः लोड/);
+assert.ok($('qpApp').querySelector('.qp-manual-pattern'));
+assert.equal($('qpApp').dataset.qpView,'topics');
+assert.equal($('qpApp').querySelectorAll('.qp-stepbar [data-qp-view-target]').length,4);
+const viewHarness=new Function('$',code('function setQuestionBuilderView(','function applyGrade9LanguagePolicy(')+'return setQuestionBuilderView;')($);
+viewHarness('paper');assert.equal($('qpApp').dataset.qpView,'paper');
+assert.equal($('qpApp').querySelector('[data-qp-view-target="paper"]').getAttribute('aria-pressed'),'true');
+viewHarness('manage');assert.equal($('qpApp').dataset.qpView,'manage');viewHarness('topics');
 assert.ok($('qpQuestionForm'),'Existing manual bank form must be preserved for admins');
 assert.match(source,/async function importCdcGridExcel\(file\)/);
 assert.match(source,/function invalidateCdcGridSourceReview\(\)/);
@@ -255,6 +267,31 @@ assert.equal(computerTopicMapping[0].topicId,'cdc_official_computer_g9_u1_0',
 assert.equal(importedComputerQuestions[0].topicId,'custom_old',
  'The mapping must not modify existing saved Firestore question rows');
 
+// Reproduce the real screenshot: Nepali alias for compulsory English,
+ // 36 mixed grammar/writing topics, and the separate reference question groups.
+ const {grade9EnglishPracticeBank}=await import('../cdc-grade9-english-practice.mjs');
+ const {grade9EnglishReferenceBank,grade9EnglishPracticeReading2}=await import('../cdc-grade9-english-reference-bank.mjs');
+ const {referencePreviewTopics,buildGrade9ReferencePreview}=await import('../cdc-grade9-reference-preview.mjs');
+ const englishSubject='अनिवार्य अंग्रेजी';
+ const epack=grade9EnglishPracticeBank({grade:9,subject:englishSubject});
+ const eref=grade9EnglishReferenceBank({grade:9,subject:englishSubject});
+ const ebank=[...epack.questions,...eref.questions,...(eref.questions.some(q=>q.slot==='reading2')?[]:grade9EnglishPracticeReading2({grade:9,subject:englishSubject}))];
+ const eRender=new Function('$','esc','normal','curriculumRows','bundledPracticeUnits','bundledPracticeQuestions','questionRows','referencePreviewTopics','document',
+  code('function renderTopics() {','function renderQuestionRows() {')+
+  'renderTopics();filterReferenceTopicChoices({grade:9,subject:'+JSON.stringify(englishSubject)+'});return bundledPracticeQuestions;');
+ const mappedEnglish=eRender($,escape,normal,[],[...epack.units,...eref.units],ebank,[],referencePreviewTopics,dom.window.document);
+ const visibleEnglish=[...$('qpTopicList').querySelectorAll('[data-qp-topic]:not(:disabled)')];
+ assert.ok(visibleEnglish.length>0&&visibleEnglish.length<=10,'Only valid grouped English topic choices should be visible');
+ assert.ok(visibleEnglish.every(x=>x.checked));
+ const englishIds=visibleEnglish.map(x=>x.value);
+ assert.deepEqual(new Set(englishIds),new Set(referencePreviewTopics({grade:9,subject:englishSubject,questions:mappedEnglish})));
+ const englishDraft=buildGrade9ReferencePreview({grade:9,subject:englishSubject,questions:mappedEnglish,selectedTopicIds:englishIds,fullMarks:75,durationMinutes:180,language:'en',rng:()=>.39});
+ assert.equal(englishDraft.ready,true,englishDraft.reason);
+ assert.equal(englishDraft.groupCount,10);
+ assert.match(englishDraft.text,/75 marks/);
+ assert.doesNotMatch(englishDraft.text,/[\u0900-\u097f]/u);
+ assert.doesNotMatch(englishDraft.answerText,/[\u0900-\u097f]/u);
+ console.log('PASS actual English screenshot path: visible topics, 75 marks and ten groups');
 const renderTopics=new Function('$','esc','normal','curriculumRows',
  'bundledPracticeUnits','bundledPracticeQuestions','questionRows',
  code('function renderTopics() {','function renderQuestionRows() {')+
@@ -288,7 +325,7 @@ const make=(overrides={})=>{
   'verifiedQuestionSelection','questionRows','bundledPracticeQuestions',
   'currentBlueprint','auth','blueprintRows','cognitiveMarkDistribution','savedPapers',
   'getBundledComputerGrid','getCdcOptionalMathGuide',
-  'getGrade8ScienceHistoricalPracticePattern'];
+  'getGrade8ScienceHistoricalPracticePattern','grade9RequiredPaperLanguage'];
  const fn=new Function(...params,'let generatedPaper=null,lastAutoSignature=null;\n'+
   code('function updateAutoReviewActions()','function renderPaperPreview(')+
   code('function blueprintForFullMarks(','async function generateSmartPaper()')+
@@ -299,7 +336,7 @@ const make=(overrides={})=>{
   props.schoolHeader,v=>Number(String(v).match(/[0-9]+/)?.[0]||0),
   ()=>{},msg=>{lastMessage=msg},
   'Class 10','Science and Technology','A',props.questionDataLoadEpoch,
-  props.verifiedQuestionSelection,[],bank.questions,null,props.auth,[],cognitiveMarkDistribution,props.savedPapers||[],()=>null,()=>null,()=>null);
+  props.verifiedQuestionSelection,[],bank.questions,null,props.auth,[],cognitiveMarkDistribution,props.savedPapers||[],()=>null,()=>null,()=>null,grade9RequiredPaperLanguage);
 };
 const live=make();
 await live.run();
