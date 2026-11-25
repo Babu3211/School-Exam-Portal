@@ -38,6 +38,7 @@ assert.match(js,/profileSignature\(schoolProfileView/);
 assert.match(js,/transaction\.set\(profileRef\(current\.schoolId\)/);
 assert.doesNotMatch(js,/transaction\.set\(registryRef/,'School registry and IEMIS identity must not be edited');
 assert.doesNotMatch(js,/deleteDoc\(|transaction\.delete\(/,'School profile cannot be deleted');
-assert.match(rules,/collection in \['staff','classes','school_settings'\] && canAdmin\(sid\)/);
+assert.match(rules,/collection in \['classes','school_settings'\] && canAdmin\(sid\)/);
+assert.doesNotMatch(rules,/collection in \[[^\]]*'staff'/,'Staff must have separate explicit write rules');
 assert.match(js,/if\(request!==epoch\|\|actor!==current/);
 console.log('PASS V47 school settings role-gated editor, immutable IEMIS ID, tenant-scoped transactional save and viewer read-only');

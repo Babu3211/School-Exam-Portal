@@ -38,7 +38,33 @@ assert.ok(viewStart>=0&&viewEnd>viewStart);
 const viewBlock=rules.slice(viewStart,viewEnd);
 assert.ok(viewBlock.length<1100);
 for(const guard of ['activeMember(sid) && currentView()','allow list, write: if false;','get(p).data.publicationId == resource.data.publicationId','get(p).data.contentDigest == resource.data.contentDigest','get(p).data.settingsDigest == resource.data.settingsDigest'])assert.ok(viewBlock.includes(guard),'Read view rule missing '+guard);
-assert.ok(rules.length-activity.length-viewBlock.length<40000,'Unexpected Firestore rules expansion outside bounded additions');
+// Dedicated Staff block replaces the old generic Staff write permission.
+const staffStart='      // Staff profile updates cannot bypass';
+const staffEnd='      match /{collection}/{id} {';
+const staffIndex=rules.indexOf(staffStart),staffEndIndex=rules.indexOf(staffEnd,staffIndex);
+assert.ok(staffIndex>=0&&staffEndIndex>staffIndex,'Dedicated Staff rules required');
+assert.equal(rules.split('match /staff/{id} {').length-1,1,'Exactly one Staff match required');
+const staff=rules.slice(staffIndex,staffEndIndex);
+assert.ok(staff.length<2600,'Unexpected Staff rules expansion');
+for(const guard of [
+ 'allow get, list: if canRead(sid);',
+ 'allow create: if canAdmin(sid) && scopedRecord(sid)',
+ 'allow update: if canAdmin(sid) && immutableSchool(sid)',
+ "changed.hasOnly(['authUid','email'])",
+ "changed.hasAll(['authUid'])",
+ "(!linked(resource.data) || !changed.hasAny(['email','emailId']))",
+ "!request.resource.data.keys().hasAny(['authUid','firebaseUid','userUid','uid'])",
+ "!exists(p) && existsAfter(p)",
+ "getAfter(p).data.role == 'teacher' && getAfter(p).data.active == false",
+ "getAfter(p).data.uid == uid && getAfter(p).data.schoolId == sid",
+ "(profileEdit() || (memberRole(sid, 'school_admin') && newTeacherLink()))",
+ 'allow delete: if false;'
+])assert.ok(staff.includes(guard),'Staff guard missing: '+guard);
+assert.equal((staff.match(/allow\s+(?:create|update)\s*:/g)||[]).length,2);
+assert.doesNotMatch(staff,/allow\s+write\s*:/);
+const generic=rules.slice(staffEndIndex);
+assert.doesNotMatch(generic,/collection in \[[^\]]*'staff'/,'Staff must not have alternate wildcard permissions');
+assert.ok(rules.length-activity.length-viewBlock.length-staff.length<40000,'Unexpected Firestore rules expansion outside bounded additions');
 for(const guard of ["activeMember(sid) && request.auth.uid == uid","d.keys().hasOnly(['schoolId','uid','lastSeen'])","d.schoolId == sid && d.uid == uid && d.lastSeen == request.time","allow list: if canAdmin(sid);","request.time >= resource.data.lastSeen + duration.value(15,'m')","allow delete: if false;"])
  assert.ok(activity.includes(guard),'Activity guard missing: '+guard);
 assert.equal((activity.match(/allow\s+(?:create|update)\s*:/g)||[]).length,2);
