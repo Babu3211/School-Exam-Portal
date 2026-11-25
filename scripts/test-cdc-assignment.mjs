@@ -86,7 +86,7 @@ Object.assign(w,{
 w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
 w.eval(readFileSync('iemis-importer/transfer.js','utf8'));
 // Capture the lexical catalogue in the same eval that initializes the page.
-const legacyForms=w.eval(html.slice(html.indexOf('const cdcCoreSubjects'),html.indexOf('let iemisEntryGrid'))+'\nwindow.__testSeroApproved=cdcSeroGuideApproved;\nwindow.__testSeroEntryForm=cdcSeroGuideEntryForm;\nopenCdcAssessment();\ncdcLegacyMathRubrics;');
+const legacyForms=w.eval(html.slice(html.indexOf('const cdcCoreSubjects'),html.indexOf('let iemisEntryGrid'))+'\nwindow.__testSeroApproved=cdcSeroGuideApproved;\nwindow.__testSeroEntryForm=cdcSeroGuideEntryForm;\nwindow.__testScienceSourceCount=cdcUpperScienceByTitle.size;\nopenCdcAssessment();\ncdcLegacyMathRubrics;');
 const field=name=>w.document.querySelector('[data-cdc="'+name+'"]');
 const choice=(name,value)=>{field(name).value=value;field(name).onchange();};
 const references=field('referenceLibrary');
@@ -579,7 +579,7 @@ for(const grade of ['4','5']){
  choice('unit','पदार्थ');
  assert.match(field('annexRows').rows[0].cells[0].textContent,grade==='4'?/पानीका गुणहरू/:/पिण्ड हुने र ठाउँ ओगट्ने/);
 }
-assert.equal(w.eval('cdcUpperScienceByTitle.size'),98);
+assert.equal(w.__testScienceSourceCount,98);
 console.log('Grade 4/5 science: all 16 source-numbered bilingual forms and 98 outcomes passed');
 
 console.log('Standalone assessment navigation, primary-only assignment reads and inline display passed');
