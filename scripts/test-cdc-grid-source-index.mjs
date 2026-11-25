@@ -244,6 +244,18 @@ assert.equal(sv.mirrorVisualReview.officialExamApproved,false);
 assert.ok(byKey.social.tables.some(t=>t.title==='प्रतिलिपिको चित्रबाट पुष्टि'));
 assert.equal(sv.visualReviewComplete,false);assert.equal(sv.currentEditionConfirmed,false);assert.equal(sv.currentCdcExactApproved,false);assert.equal(sv.officialExamApproved,false);
 assert.ok(byKey.social.tables.some(t=>t.title.includes('प्रश्न सङ्ख्या')&&t.rows.length===10));
+const socialCurrent=register.sources.find(s=>s.currentAssessmentReview).currentAssessmentReview;
+assert.equal(socialCurrent.areas.length,10);
+assert.deepEqual(socialCurrent.outcomeCounts,[2,2,4,2,4,4,5,4,2,3]);
+assert.equal(socialCurrent.outcomeCounts.reduce((a,b)=>a+b,0),32);
+assert.equal(socialCurrent.internalComponents.reduce((a,r)=>a+r[1],0),25);
+assert.equal(socialCurrent.externalPercent+socialCurrent.internalPercent,100);
+assert.equal(socialCurrent.externalLevels.length,4);
+assert.equal(socialCurrent.requiresSeparateGrid,true);
+assert.equal(socialCurrent.officialExamApproved,false);
+assert.equal(socialCurrent.visualReviewComplete,false);
+assert.ok(byKey.social.tables.some(t=>t.title.includes('सिकाइ उपलब्धि सङ्ख्या')&&t.rows.length===10));
+
 assert.ok([scienceRef,mathRef,englishRef,socialRef].every(ref=>ref.currentCdcExactApproved===false));
 console.log('PASS four compulsory reference planners against government PDF numeric extraction: historical comparison only, no current CDC approval');
 

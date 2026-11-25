@@ -114,6 +114,15 @@ export function grade9GridLibrary(register){
      add('पुरानो तालिकाको संज्ञानात्मक अङ्कभार',['तह','अङ्क','प्रकाशित प्रतिशत'],v.categoryNames.map((n,i)=>[n,ne(v.cognitiveMarks[i]),ne(v.printedPercentages[i])+'%']));
      add('पुरानो तालिकाका विशेष निर्देशन',['एकाइ','निर्देशन'],[[v.unitNames[5],'लामो प्रश्नमा नक्साको वैकल्पिक प्रश्न'],[v.unitNames[7],'लामो प्रश्न सिर्जनात्मक सिपसँग सम्बन्धित']]);
     }
+   if(key==='social'){
+    const r=entries.find(x=>x.currentAssessmentReview)?.currentAssessmentReview;
+    if(r?.officialExamApproved===false){
+     const ne=n=>String(n).replace(/\d/g,d=>'०१२३४५६७८९'[Number(d)]);
+     add('२०८२ पाठ्यक्रम — सिकाइ उपलब्धि सङ्ख्या (अङ्क होइन)',['विषयक्षेत्र','सिकाइ उपलब्धि'],r.areas.map((a,i)=>[a,ne(r.outcomeCounts[i])]));
+     add('२०८२ पाठ्यक्रम — मूल्याङ्कन भार',['पक्ष','प्रतिशत'],[['बाह्य',ne(r.externalPercent)],...r.internalComponents.map(([a,v])=>[a,ne(v)])]);
+     add('२०८२ बाह्य मूल्याङ्कन — छुट्टै Grid आवश्यक',['संज्ञानात्मक तह','हालको अङ्कभार'],r.externalLevels.map(a=>[a,'पुष्टि बाँकी']));
+    }
+   }
   }else if(key==='optional_economics'){
    const e=entries.find(x=>x.economicsTextReview)?.economicsTextReview;
    if(e&&e.officialExamApproved===false){

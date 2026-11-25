@@ -1238,7 +1238,66 @@
       "version": "2082",
       "status": "official_CDC_curriculum_cover_and_grade9_learning_areas_checked",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/social%209-10_oe5hq7v.pdf",
-      "note": "Current curriculum cover and Grade 9 outcomes checked. Ten learning areas; 75% external and 25% internal assessment; external questions require separate CDC specification grid. No grid approval from curriculum."
+      "note": "Current curriculum cover and Grade 9 outcomes checked. Ten learning areas; 75% external and 25% internal assessment; external questions require separate CDC specification grid. No grid approval from curriculum. Printed pages 2–4 and 55–56 text confirms 32 Grade 9 learning outcomes and four external cognitive levels; historical combined categories cannot establish current four-level allocations. Screenshot timed out; no current numerical Grid obtained.",
+      "currentAssessmentReview": {
+        "reviewDate": "2026-11-25",
+        "method": "Official PDF indexed text, printed pages 2–4 and 55–56; screenshot timed out",
+        "visualReviewComplete": false,
+        "annualHours": 128,
+        "creditHours": 4,
+        "areas": [
+          "हामी र हाम्रो समाज",
+          "विकासका पूर्वाधार",
+          "हाम्रा मूल्यमान्यता",
+          "सामाजिक सुधार",
+          "नागरिक चेतना",
+          "हाम्रो पृथ्वी",
+          "आर्थिक क्रियाकलाप",
+          "हाम्रो विगत",
+          "अन्तर्राष्ट्रिय सम्बन्ध र सहयोग",
+          "जनसङ्ख्या व्यवस्थापन"
+        ],
+        "outcomeCounts": [
+          2,
+          2,
+          4,
+          2,
+          4,
+          4,
+          5,
+          4,
+          2,
+          3
+        ],
+        "externalPercent": 75,
+        "internalPercent": 25,
+        "internalComponents": [
+          [
+            "सहभागिता",
+            3
+          ],
+          [
+            "परियोजना/प्रयोगात्मक कार्य",
+            16
+          ],
+          [
+            "त्रैमासिक परीक्षा",
+            6
+          ]
+        ],
+        "externalLevels": [
+          "ज्ञान",
+          "बोध",
+          "प्रयोग",
+          "उच्च दक्षता"
+        ],
+        "cumulativeCoverage": true,
+        "requiresSeparateGrid": true,
+        "oldCombinedLevelsNotEquivalent": true,
+        "questionCountsVerified": false,
+        "unitMarksVerified": false,
+        "officialExamApproved": false
+      }
     },
     {
       "grades": [
