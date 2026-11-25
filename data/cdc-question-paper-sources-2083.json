@@ -758,7 +758,7 @@
       "subject": "ऐच्छिक अर्थशास्त्र",
       "kind": "specification_grid_and_model_questions",
       "version": "2082",
-      "status": "official_CDC_pdf_model_and_summary_crosschecked_grid_content_not_yet_extracted",
+      "status": "official_CDC_model_and_summary_structured_text_review_conflicting_prose_unresolved",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11136_%E0%A4%85%E0%A4%B0%E0%A5%8D%E0%A4%A5%E0%A4%B6%E0%A4%BE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%8D%E0%A4%B0%20%E0%A4%95%E0%A4%95%E0%A5%8D%E0%A4%B7%E0%A4%BE-%20%E0%A5%AF%20%E0%A4%B5%E0%A4%BF%E0%A4%B6%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%B0%E0%A4%A3%20%E0%A4%A4%E0%A4%BE%E0%A4%B2%E0%A4%BF%E0%A4%95%E0%A4%BE%20%E0%A4%B0%20%E0%A4%A8%E0%A4%AE%E0%A5%81%E0%A4%A8%E0%A4%BE%20%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%B6%E0%A5%8D%E0%A4%A8%E0%A4%B9%E0%A4%B0%E0%A5%81%20%E0%A5%A8%E0%A5%A6%E0%A5%AE%E0%A5%A8_3ew2awb.pdf",
       "note": "Government-hosted CDC Grade 9 Economics (103) PDF; text-extracted bilingual model and summary table agree on 75 marks, 3h, 22 required items: 11×1, 8×5, 3×8; alternatives at model Q12,16,18,22 (not extra scored items). Six unit totals read as 9/24/9/6/12/15; cognitive summary marks 13/24/17/21. Extracted prose conflicts with the summary/model (5 short items, 5-mark long items, higher ability cap 20% vs 28% summary). Page screenshots timed out; original row/cell visual confirmation and clarification of conflicting prose still required. No exact blueprint approved; no automatic generation enabled by this source.",
       "optionalRetrievalEvidence": {
@@ -770,6 +770,116 @@
         "firstPageRendered": true,
         "currentCdcExactApproved": false,
         "verifiedGridRows": false
+      },
+      "economicsTextReview": {
+        "sourceEdition": 2082,
+        "sourceMethod": "Government PDF text extraction: numerical summary and model agree; page images unavailable",
+        "sha256": "c8f2219f945839a8016cde60334139f3bc11949888feb0925155aa45caead07e",
+        "subjectCode": 103,
+        "fullMarks": 75,
+        "durationMinutes": 180,
+        "areas": [
+          [
+            "अर्थशास्त्रको आधारभूत अवधारणा र साधनको बाँडफाँट",
+            9
+          ],
+          [
+            "व्यक्ति अर्थशास्त्र",
+            24
+          ],
+          [
+            "समष्टि अर्थशास्त्र",
+            9
+          ],
+          [
+            "विकास अर्थशास्त्र",
+            6
+          ],
+          [
+            "नेपालको अर्थतन्त्र",
+            12
+          ],
+          [
+            "अर्थशास्त्रमा परिमाणात्मक पद्धति",
+            15
+          ]
+        ],
+        "types": [
+          "Very short",
+          "Short",
+          "Long"
+        ],
+        "questionCounts": [
+          11,
+          8,
+          3
+        ],
+        "marksEach": [
+          1,
+          5,
+          8
+        ],
+        "levelNames": [
+          "K",
+          "U",
+          "A",
+          "HA"
+        ],
+        "levelTypeCounts": [
+          [
+            5,
+            0,
+            1
+          ],
+          [
+            4,
+            4,
+            0
+          ],
+          [
+            2,
+            3,
+            0
+          ],
+          [
+            0,
+            1,
+            2
+          ]
+        ],
+        "alternativeQuestionNumbers": [
+          12,
+          16,
+          18,
+          22
+        ],
+        "alternativeUnitNumbers": [
+          1,
+          4,
+          5,
+          6
+        ],
+        "extractedProseConflicts": [
+          [
+            "Short question count",
+            "5",
+            "8"
+          ],
+          [
+            "Marks per long question",
+            "5",
+            "8"
+          ],
+          [
+            "Higher ability percentage cap",
+            "20%",
+            "28%"
+          ]
+        ],
+        "completeUnitMatrixVerified": false,
+        "visualCellReviewComplete": false,
+        "officialExamApproved": false,
+        "currentCdcExactApproved": false
       }
     },
     {

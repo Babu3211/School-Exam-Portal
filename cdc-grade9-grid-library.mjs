@@ -87,6 +87,17 @@ export function grade9GridLibrary(register){
    if(evidence.questionCounts)add('Historical question distribution',['Type','Count','Marks each'],evidence.questionCounts.map((n,i)=>[(key==='science'?['MCQ','Very short','Short','Long']:['Very short','Short','Long'])[i],n,evidence.marksEach[i]]));
    if(evidence.cognitiveMarks)add('Historical cognitive marks',['K','U','A','HA'],[evidence.cognitiveMarks]);
    if(evidence.unitTypeMarks)add('Historical unit/type marks',['Unit','Very short','Short','Long'],evidence.unitTypeMarks.map((row,i)=>[i+1,...row]));
+  }else if(key==='optional_economics'){
+   const e=entries.find(x=>x.economicsTextReview)?.economicsTextReview;
+   if(e&&e.officialExamApproved===false){
+    fullMarks=e.fullMarks;durationMinutes=e.durationMinutes;
+    status='Official 2082 model and summary text agree; conflicting extracted prose and unit cells need visual review';
+    add('Official PDF text: area totals (partial review)',['Area','Marks'],e.areas);
+    add('Model and summary question distribution',['Type','Count','Marks each','Total'],e.types.map((type,i)=>[type,e.questionCounts[i],e.marksEach[i],e.questionCounts[i]*e.marksEach[i]]));
+    add('Extracted cognitive summary',['Level',...e.types,'Total marks'],e.levelTypeCounts.map((row,i)=>[e.levelNames[i],...row,row.reduce((n,v,j)=>n+v*e.marksEach[j],0)]));
+    add('Model alternative questions (one response per question)',['Question number','Unit'],e.alternativeQuestionNumbers.map((n,i)=>[n,e.alternativeUnitNumbers[i]]));
+    add('Unresolved source extraction discrepancies',['Field','Extracted notes','Model / summary'],e.extractedProseConflicts);
+   }
   }else if(key==='optional_environment'){
    fullMarks=75;durationMinutes=135;status='Official curriculum only; Grade 9 exact Grid unavailable';
    add('Curriculum assessment',['Theory','Practical','Written time (min)'],[[75,25,135]]);

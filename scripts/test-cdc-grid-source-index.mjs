@@ -101,7 +101,7 @@ assert.equal(byKey.optional_math.tables[1].rows.reduce((n,r)=>n+r[4],0),75);
 assert.equal(byKey.optional_computer.tables[0].rows.reduce((n,r)=>n+r[5],0),50);
 assert.equal(byKey.nepali.tables[0].rows.reduce((n,r)=>n+r[1],0),75);
 assert.equal(byKey.optional_environment.sources.every(s=>s.kind==='curriculum'),true);
-assert.equal(byKey.optional_economics.tables.length,0);
+assert.equal(byKey.optional_economics.tables.length,5);
 assert.ok(library.every(x=>x.sources.every(s=>!s.url.includes('unsafe.example'))));
 assert.ok(grade9GridLibrary({sources:[{grades:[9],subject:'Nepali',kind:'specification_grid',url:'https://unsafe.example/grid'}]}).every(x=>x.sources.length===0));
 const portal=readFileSync(new URL('../cdc-question-paper.js',import.meta.url),'utf8');
@@ -258,3 +258,22 @@ for(const key of ['math','science']){
  assert.ok(item.sources.some(s=>s.kind==='revision_notice'&&s.url.includes('Educational%20information%20book')));
  assert.equal(item.currentCdcExactApproved,false);
 }
+
+const econSource=register.sources.find(s=>s.optionalRetrievalEvidence?.resource==='optional-economics');
+const econ=econSource.economicsTextReview;
+assert.equal(econ.sha256,econSource.optionalRetrievalEvidence.sha256);
+assert.equal(econ.areas.reduce((n,r)=>n+r[1],0),75);
+assert.equal(econ.questionCounts.reduce((n,v)=>n+v,0),22);
+assert.deepEqual(econ.questionCounts.map((v,i)=>v*econ.marksEach[i]),[11,40,24]);
+assert.deepEqual(econ.marksEach.map((_,i)=>econ.levelTypeCounts.reduce((n,r)=>n+r[i],0)),econ.questionCounts);
+assert.deepEqual(econ.levelTypeCounts.map(row=>row.reduce((n,v,i)=>n+v*econ.marksEach[i],0)),[13,24,17,21]);
+assert.deepEqual(econ.alternativeQuestionNumbers,[12,16,18,22]);
+assert.equal(econ.extractedProseConflicts.length,3);
+assert.equal(econ.completeUnitMatrixVerified,false);
+assert.equal(econ.visualCellReviewComplete,false);
+assert.equal(econ.officialExamApproved,false);
+assert.equal(byKey.optional_economics.currentCdcExactApproved,false);
+assert.equal(byKey.optional_economics.readyForLive,false);
+assert.equal(byKey.optional_economics.fullMarks,75);
+assert.equal(byKey.optional_economics.durationMinutes,180);
+console.log('PASS Economics 2082 text-based model/summary arithmetic, alternative choices, explicit source conflicts; no exact approval');

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v133-bess-science-screenshot';
+const CACHE_NAME = 'smss-pwa-v134-economics-text-review';
 const APP_SHELL = [
   './',
   './index.html',
