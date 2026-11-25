@@ -241,8 +241,9 @@ def read_compulsory_pdf(url, output_dir):
                             # Preeti digit-only cells and explicit total rows.
                             if re.search(r"(?:^|\s)(?:hDdf|s'n|&%|[!@#$%^&*()]+×[!@#$%^&*()]+)(?:\s|$)",row):
                                 language_rows.append({"page":i,"row":row})
-                # Rasterize only the language Grid pages into short-lived
-                # Actions artifacts, never live hosting or the source tree.
+            # Include the Social Studies table image, previously missing from
+            # the audit artifact. Keep the bounded scope of the Grid pages.
+            if resource in ("11168","11169","11166"):
                 subprocess.run(["pdftoppm","-f","1","-l",str(last),"-r","150","-png",str(pdf),str(output_dir/(resource+"-grid"))],check=True,capture_output=True,timeout=60)
             entry.update(finalUrl=final,contentType=ctype,byteCount=len(data),sha256=hashlib.sha256(data).hexdigest(),pages=pages,gridPagesExtracted=last,numericRows=grid_rows[:90],fallbackNumericRows=fallback_rows[:12],languageGridRows=language_rows[:50],visualReviewRequired=True,textLength=len(text),status="full_pdf_read_needs_grid_review")
     except (OSError,ValueError,AttributeError,subprocess.SubprocessError) as err:
@@ -266,7 +267,7 @@ def stage_grid_page_images(preview_dir):
     """
     from html import escape
     register=json.loads((Path(__file__).resolve().parent.parent/"data/cdc-question-paper-sources-2083.json").read_text(encoding="utf-8"))
-    limits={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3,"optional-computer":1,"optional-math":1,"optional-economics":1,"accounting":1}
+    limits={"11168":5,"11169":3,"11170":1,"11167":2,"11166":3,"optional-computer":1,"optional-math":1,"optional-economics":2,"accounting":2}
     optional_paths={"optional-computer":"2082-04-29%20Specification%20grid%20and%20Model%20Questions-Computer%20Science%20Grade%209_khtkxrc.pdf","optional-math":"Specification%20Grid%20and%20Model%20Question-G9-Opt.%20Math-web_nrbp00y.pdf","optional-economics":"RS11136_","accounting":"%E0%A4%B5%E0%A4%BF%E0%A4%B6%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%B0%E0%A4%A3%20%E0%A4%A4%E0%A4%BE%E0%A4%B2%E0%A4%BF%E0%A4%95%E0%A4%BE%20%E0%A5%A8%E0%A5%A6%E0%A5%AE%E0%A5%A7%20"}
     preview=Path(preview_dir)
     index=preview/"grade9-cdc-grid-library.html"
@@ -309,7 +310,7 @@ def stage_grid_page_images(preview_dir):
         print("Grid source "+resource+": "+result["status"])
     if len(entries)!=len(limits) or {x["resource"] for x in entries}!=set(limits): raise ValueError("Unexpected fingerprinted source inventory")
     subject_keys={"11168":"nepali","11169":"english","11170":"math","11167":"science","11166":"social","optional-computer":"optional_computer","optional-math":"optional_math","optional-economics":"optional_economics","accounting":"accounting"}
-    parts=['<section id="original-grid-pages"><h2>Original CDC Grid page images</h2><p>Source page copies for comparison only. Matching a document fingerprint does not certify the current examination Grid. Optional subjects show the first page; full PDF links are retained.</p>']
+    parts=['<section id="original-grid-pages"><h2>Original CDC Grid page images</h2><p>Source page copies for comparison only. Matching a document fingerprint does not certify the current examination Grid. Economics and Accounting include the first two pages for review of the written rules; full PDF links are retained.</p>']
     html=index.read_text(encoding="utf-8")
     if html.count("</body>")!=1 or 'id="original-grid-pages"' in html: raise ValueError("Unexpected Grid Library HTML")
     for result in entries:
@@ -361,8 +362,15 @@ def audit_optional_grid_pdf(source, output_dir):
             out=output_dir/digest[:16];out.mkdir(parents=True,exist_ok=True)
             text=subprocess.run(["pdftotext","-f","1","-l",str(min(3,pages)),"-layout",str(pdf),"-"],check=True,capture_output=True,text=True,timeout=30).stdout
             (out/"first-pages.txt").write_text(text,encoding="utf-8")
-            subprocess.run(["pdftoppm","-f","1","-l","1","-r","150","-png",str(pdf),str(out/"grid")],check=True,capture_output=True,timeout=60)
-            entry.update(finalUrl=final,contentType=ctype,sha256=digest,byteCount=len(data),pages=pages,firstPageRendered=True,status="full_pdf_retrieved_visual_review_required")
+            # Economics prose conflicts require page 2, not another repeat
+            # of the already-reviewed first-page count matrix. Accounting
+            # also has rules following its table. Preserve page 1 filenames.
+            render_last=min(pages,2 if subject in ("ऐच्छिक अर्थशास्त्र","कार्यालय सञ्चालन तथा लेखा") else 1)
+            subprocess.run(["pdftoppm","-f","1","-l",str(render_last),"-r","150","-png",str(pdf),str(out/"grid")],check=True,capture_output=True,timeout=60)
+            images=sorted(out.glob("grid-*.png"))
+            if len(images)!=render_last or any(not p.read_bytes().startswith(b"\x89PNG\r\n\x1a\n") for p in images):
+                raise ValueError("Incomplete rule-page image rendering")
+            entry.update(finalUrl=final,contentType=ctype,sha256=digest,byteCount=len(data),pages=pages,firstPageRendered=True,renderedPages=list(range(1,render_last+1)),renderedImages=[p.name for p in images],status="full_pdf_retrieved_visual_review_required")
             # Preserve compact numerical evidence, not model questions.
             first=text.split("\f",1)[0]
             entry["numericRows"]=[line.strip()[:240] for line in first.splitlines() if len(re.findall(r"\d+",line))>=3][:45]
