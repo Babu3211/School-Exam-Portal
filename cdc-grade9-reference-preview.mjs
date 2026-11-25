@@ -221,7 +221,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
     if(c.passage)lines.push(c.passage);
     if(g.skill==='word_class'){
      const marked=[...String(c.passage||'').matchAll(/\(([\p{Script=Devanagari}]+)\)/gu)].map(m=>m[0]);
-     if(marked.length!==6||components.length!==6||marked.some((m,k)=>m!==components[k].text))throw Error('Invalid word class marking');
+     if(marked.length!==6||new Set(marked).size!==6||components.length!==6||marked.some(m=>components.filter(x=>x.text===m).length!==1))throw Error('Invalid word class marking');
     }
     if(c.practiceSubstitution)lines.push('मौलिक अभ्यास — पाठगत उद्धरण होइन।');
     if(g.skill==='vocabulary_matching'){
@@ -247,7 +247,11 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
      const corrected=components.reduce((p,x)=>p.replace(x.text,x.answer),c.passage);
      answers.push(label+'. शुद्ध अनुच्छेद: '+corrected);
     }
-    if(components.length)components.forEach((x,k)=>answer(label+'.'+(multi?neLower(k):paperOptionLabel(k,'ne')),x.answer,x.marks));
+    if(g.skill==='word_class'){
+     for(const [k,m] of [...c.passage.matchAll(/\(([\p{Script=Devanagari}]+)\)/gu)].entries()){
+      const x=components.find(x=>x.text===m[0]);answer(label+'.'+paperOptionLabel(k,'ne'),m[1]+' — '+x.answer,x.marks);
+     }
+    }else if(components.length)components.forEach((x,k)=>answer(label+'.'+(multi?neLower(k):paperOptionLabel(k,'ne')),x.answer,x.marks));
     else answer(label,c.answer,c.marks);
    }
    lines.push('');continue;
