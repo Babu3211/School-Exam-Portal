@@ -1020,6 +1020,33 @@ for(const grade of ['4','5']){
  assert.equal(field('class').value,entryClassBefore);
  assert.equal(field('student').value,entryStudentBefore);
 }
+// Remaining upper-primary Annex 3 forms: verify each source count,
+// maximum and page link, including the two split-page forms.
+const upperSourceCases=[
+ ['4','nepali',Array.from({length:15},(_,i)=>18+i),Array(15).fill(6)],
+ ['5','nepali',Array.from({length:15},(_,i)=>33+i),Array(15).fill(6)],
+ ['4','english',Array.from({length:16},(_,i)=>48+i),[7,5,4,5,5,4,5,4,4,5,4,4,4,4,5,4]],
+ ['5','english',Array.from({length:17},(_,i)=>64+i),[7,6,5,6,4,5,4,4,5,4,5,4,5,5,5,4,5]],
+ ['4','mathematics',[81,82,83,84,85],[4,11,10,3,2]],
+ ['5','mathematics',[86,87,89,90,91],[5,10,7,4,4]],
+ ['4','socialstudies',[92,93,94,95,96,97,98],[4,5,5,3,4,5,6]],
+ ['5','socialstudies',[99,100,101,102,103,104,105],[4,5,5,4,3,5,6]],
+ ['4','science',[106,107,108,109,110,111,113,114],[5,5,3,6,3,14,8,5]],
+ ['5','science',[115,116,117,118,119,120,121,122],[6,6,4,3,3,10,13,4]]
+];
+for(const [grade,subject,pages,counts] of upperSourceCases){
+ choice('summaryClass',grade);choice('summarySubject',subject);
+ const rows=summaryRows(),num=v=>Number(v.replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)));
+ assert.equal(rows.length,counts.length,grade+':'+subject);
+ for(const [i,row] of rows.entries()){
+  assert.equal(num(row.cells[2].textContent),counts[i],grade+':'+subject+':'+i);
+  assert.equal(num(row.cells[3].textContent),counts[i]*4);
+  assert.match(row.cells[4].textContent,/सङ्ख्या मिलेको|count matched/);
+  assert.equal(row.cells[4].querySelector('a').href,field('guidePdf45').href.split('#')[0]+'#page='+pages[i]);
+ }
+ assert.equal(field('class').value,entryClassBefore);
+ assert.equal(field('student').value,entryStudentBefore);
+}
 const coverage=[...field('themeCoverageRows').rows];
 assert.equal(coverage.length,29);
 const coverageRow=(grade,subject)=>coverage.find(row=>row.dataset.cdcCoverageClass===grade&&row.dataset.cdcCoverageSubject===subject);
@@ -1032,6 +1059,8 @@ assert.equal(coverageRow('2','serophero').cells[4].textContent,'१४४');
 assert.equal(coverageRow('3','serophero').cells[3].textContent,'२४');
 assert.equal(coverageRow('3','serophero').cells[4].textContent,'१४०');
 assert.equal(coverageRow('3','english').cells[4].textContent,'944');
+assert.equal(coverageRow('5','mathematics').cells[3].textContent,'30');
+assert.equal(coverageRow('5','mathematics').cells[4].textContent,'120');
 assert.equal(coverageRow('5','hamrodhunibeshi').cells[2].textContent,'—');
 assert.match(field('themeCoverageInfo').textContent,/243 \/ 243.*5/);
 for(const row of coverage){
