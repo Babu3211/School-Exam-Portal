@@ -492,7 +492,7 @@ console.log('PASS V46 DOM auto question paper: class 10, unit choices, bilingual
  const referenceHarness=new Function('$','grade9RequiredPaperLanguage',`
  const auth={currentUser:{uid:'teacher-synthetic'}};
  let selectedClass='Class 9',selectedSubject='Science and Technology',selectedSection='A',questionDataLoadEpoch=1;
- let verifiedQuestionSelection={className:selectedClass,subject:selectedSubject,section:selectedSection,request:1};
+ let verifiedQuestionSelection={className:selectedClass,subject:selectedSubject,section:selectedSection,request:1,referenceHeader:{schoolName:'Synthetic School',schoolAddress:'Test Address'}};
  const gradeNumber=()=>9,roleCanTeach=()=>true,selectedTopicIds=()=>['unit-1'];
  const bundledPracticeQuestions=[],message=()=>{};
  let next={ready:true,text:'REFERENCE DRAFT — NOT FOR EXAM <img src=x>',answerText:'INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY <script>test</script>',signature:'paper-a',introText:'REFERENCE DRAFT — NOT FOR EXAM',blocks:[{number:1,text:'Question <img src=x>',figureHtml:''}]};
@@ -502,6 +502,7 @@ console.log('PASS V46 DOM auto question paper: class 10, unit choices, bilingual
  return {generate:generateReferenceDraftPreview,clear:clearReferenceDraftPreview,fail:()=>{next={ready:false,reason:'Insufficient topics'};},logout:()=>{auth.currentUser=null;},requireExport:requireReferenceExport,updateExport:updateReferenceExportActions,area:(key)=>buildReferenceExportArea(requireReferenceExport(),key)};
  `)($,grade9RequiredPaperLanguage);
  $('qpAutoLanguage').value='both';
+ $('qpPaperTitle').value='Term Exam';$('qpPaperYear').value='2083';
  assert.ok($('qpReferenceAnswerReview').hidden);
  referenceHarness.generate();
  assert.equal($('qpReferenceAnswerReview').hidden,false);
@@ -517,6 +518,11 @@ console.log('PASS V46 DOM auto question paper: class 10, unit choices, bilingual
  assert.equal($('qpReferencePrintBtn').disabled,false);
  const reviewArea=referenceHarness.area(false);
  assert.match(reviewArea.textContent,/NOT CDC EXACT/);
+ assert.match(reviewArea.textContent,/Synthetic School/);
+ assert.match(reviewArea.textContent,/Test Address/);
+ assert.match(reviewArea.textContent,/Term Exam · 2083/);
+ assert.equal($('qpReferenceDraftPreview').firstElementChild.outerHTML,reviewArea.outerHTML);
+ $('qpPaperYear').value='2084';assert.throws(()=>referenceHarness.requireExport(),/समीक्षा पुष्टि/);$('qpPaperYear').value='2083';
  assert.equal(reviewArea.querySelectorAll('.qp-paper-body .qp-q').length,1);
  assert.equal(reviewArea.querySelector('img'),null);
  assert.match(referenceHarness.area(true).textContent,/INDICATIVE ANSWER KEY/);
