@@ -98,6 +98,17 @@ export function grade9GridLibrary(register){
     add('Model alternative questions (one response per question)',['Question number','Unit'],e.alternativeQuestionNumbers.map((n,i)=>[n,e.alternativeUnitNumbers[i]]));
     add('Unresolved source extraction discrepancies',['Field','Extracted notes','Model / summary'],e.extractedProseConflicts);
    }
+  }else if(key==='accounting'){
+   const e=entries.find(x=>x.accountingTextReview)?.accountingTextReview;
+   if(e&&e.officialExamApproved===false){
+    fullMarks=e.fullMarks;durationMinutes=e.durationMinutes;
+    status='Official 2081 PDF model and summary text confirmed; complete unit/cognitive cells need visual review';
+    add('Official PDF text: topic working hours (not unit marks)',['Topic','Working hours'],e.units);
+    add('Model and summary question distribution',['Type','Count','Marks each','Total'],e.types.map((type,i)=>[type,e.questionCounts[i],e.marksEach[i],e.questionCounts[i]*e.marksEach[i]]));
+    add('Model alternative questions',['Question number','One response required'],e.modelAlternativeQuestionNumbers.map(n=>[n,'Yes']));
+    add('Extracted specification rules',['Rule','Value'],[['Maximum short alternatives',e.maxShortAlternatives],['Maximum long alternatives',e.maxLongAlternatives],['Knowledge maximum (%)',e.knowledgeMaxPercent],['Higher ability minimum (%)',e.higherAbilityMinPercent],['Long alternatives same numerical/theoretical nature',e.longAlternativeSameNature?'Yes':'No']]);
+    if(safeUrl(e.textSourceUrl)&&!sources.some(x=>x.url===e.textSourceUrl))sources.push({url:e.textSourceUrl,kind:'specification_grid',version:'2081',status:'Alternative government CDN text source; image inspection pending',note:'Question structure confirmed from model and summary. Merged unit marks not inferred from text.'});
+   }
   }else if(key==='optional_environment'){
    fullMarks=75;durationMinutes=135;status='Official curriculum only; Grade 9 exact Grid unavailable';
    add('Curriculum assessment',['Theory','Practical','Written time (min)'],[[75,25,135]]);

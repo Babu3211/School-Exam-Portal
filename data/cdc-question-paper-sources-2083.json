@@ -1900,10 +1900,10 @@
       ],
       "subject": "कार्यालय सञ्चालन तथा लेखा",
       "kind": "specification_grid",
-      "version": "2081 (filename; contents pending)",
-      "status": "government_pdf_retrieved_visual_grid_review_pending",
+      "version": "2081 (PDF text title confirmed)",
+      "status": "government_PDF_text_model_and_summary_confirmed_unit_cells_pending",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/%E0%A4%B5%E0%A4%BF%E0%A4%B6%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%B0%E0%A4%A3%20%E0%A4%A4%E0%A4%BE%E0%A4%B2%E0%A4%BF%E0%A4%95%E0%A4%BE%20%E0%A5%A8%E0%A5%A6%E0%A5%AE%E0%A5%A7%20%E0%A4%95%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%AF%20%E0%A4%B8%E0%A4%9E%E0%A5%8D%E0%A4%9A%E0%A4%BE%E0%A4%B2%E0%A4%A8%20%E0%A4%B0%20%E0%A4%B2%E0%A5%87%E0%A4%96%E0%A4%BE%20%E0%A4%95%E0%A4%95%E0%A5%8D%E0%A4%B7%E0%A4%BE%20%E0%A5%AF_fwmookm.pdf",
-      "note": "Direct government PDF URL identified in public directory audit run 45419593407. Filename suggests Grade 9 Accounting specification grid 2081; content, numerical rows and applicability must be checked before approval. Complete PDF retrieved in run 45420493085; first page rendered, legacy-font numeric rows require visual transcription.",
+      "note": "Direct government PDF URL identified in public directory audit run 45419593407. Filename suggests Grade 9 Accounting specification grid 2081; content, numerical rows and applicability must be checked before approval. Complete PDF retrieved in run 45420493085; first page rendered, legacy-font numeric rows require visual transcription. Alternate government CDN text confirms 2081 title, 15 topic areas, 96 working hours, 22 answered questions, 75 marks, 180 minutes; numerical cell layout remains unverified.",
       "accountingRetrievalEvidence": {
         "resource": "accounting",
         "sha256": "3a7095350890338c4c06a7a374b972d724bed0ab3800c830649d1a3bb303c9f4",
@@ -1913,6 +1913,106 @@
         "firstPageRendered": true,
         "currentCdcExactApproved": false,
         "verifiedGridRows": false
+      },
+      "accountingTextReview": {
+        "sourceEdition": 2081,
+        "sourceMethod": "Alternative government CDN PDF extracted text, pages 1–5; screenshots timed out; no byte equivalence claimed",
+        "textSourceUrl": "https://giwmscdntwo.gov.np/media/pdf_upload/%E0%A4%B5%E0%A4%BF%E0%A4%B6%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%B0%E0%A4%A3%20%E0%A4%A4%E0%A4%BE%E0%A4%B2%E0%A4%BF%E0%A4%95%E0%A4%BE%20%E0%A5%A8%E0%A5%A6%E0%A5%AE%E0%A5%A7%20%E0%A4%95%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%AF%20%E0%A4%B8%E0%A4%9E%E0%A5%8D%E0%A4%9A%E0%A4%BE%E0%A4%B2%E0%A4%A8%20%E0%A4%B0%20%E0%A4%B2%E0%A5%87%E0%A4%96%E0%A4%BE%20%E0%A4%95%E0%A4%95%E0%A5%8D%E0%A4%B7%E0%A4%BE%20%E0%A5%AF_fwmookm.pdf",
+        "grade": 9,
+        "fullMarks": 75,
+        "durationMinutes": 180,
+        "workingHours": 96,
+        "units": [
+          [
+            "कार्यालय र कर्मचारी",
+            6
+          ],
+          [
+            "कार्यालय सहायक",
+            4
+          ],
+          [
+            "कार्यालय स्रोत तथा साधन",
+            5
+          ],
+          [
+            "पत्र व्यवहार",
+            8
+          ],
+          [
+            "अभिलेख व्यवस्थापन",
+            3
+          ],
+          [
+            "सञ्चार र सूचना प्रविधि",
+            6
+          ],
+          [
+            "व्यवसाय",
+            14
+          ],
+          [
+            "सभा र बैठक",
+            4
+          ],
+          [
+            "लेखाविधि",
+            5
+          ],
+          [
+            "आधारभूत लेखा प्रणाली",
+            8
+          ],
+          [
+            "भौचर",
+            6
+          ],
+          [
+            "खाताबही",
+            5
+          ],
+          [
+            "सहायक पुस्तिका",
+            9
+          ],
+          [
+            "सन्तुलन परीक्षण",
+            6
+          ],
+          [
+            "सरकारी लेखा प्रणाली",
+            7
+          ]
+        ],
+        "types": [
+          "Very short",
+          "Short",
+          "Long"
+        ],
+        "questionCounts": [
+          11,
+          8,
+          3
+        ],
+        "marksEach": [
+          1,
+          5,
+          8
+        ],
+        "modelAlternativeQuestionNumbers": [
+          17,
+          19,
+          22
+        ],
+        "maxShortAlternatives": 2,
+        "maxLongAlternatives": 1,
+        "knowledgeMaxPercent": 20,
+        "higherAbilityMinPercent": 20,
+        "longAlternativeSameNature": true,
+        "completeUnitMatrixVerified": false,
+        "visualCellReviewComplete": false,
+        "currentCdcExactApproved": false,
+        "officialExamApproved": false
       }
     }
   ],
