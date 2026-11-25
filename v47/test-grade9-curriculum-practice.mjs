@@ -43,3 +43,18 @@ for(const [key,fullMarks,availableMarks] of [['economics',75,96],['accounting',7
  }
 }
 console.log('PASS full-mark original practice and distinct paper generation for expanded Economics, Accounting and Health banks');
+
+for(const [key,language,fullMarks] of [['science','both',75],['social','ne',75],['nepali','ne',75],['english','en',75],['math','both',75],['environment','both',75],['economics','both',75],['accounting','both',75],['health','both',50]]){
+ const units=grade9PracticeTopics(key,language),topicIds=units.map(u=>u.id);
+ const args={schoolId:'12345',schoolName:'Test',key,language,topicIds,fullMarks,coverage:'unit'};
+ assert.equal(grade9PracticeCapacity(args).canGenerate,true,key);
+ let state=121;const rng=()=>((state=(Math.imul(state,1664525)+1013904223)>>>0)/4294967296);
+ const paper=generateGrade9CurriculumPractice({...args,rng});
+ assert.equal(paper.totalMarks,fullMarks);
+ assert.equal(paper.exactGridMatched,false);
+ assert.deepEqual([...new Set(paper.questions.map(q=>q.unitId))].sort(),[...topicIds].sort());
+ for(const q of paper.questions)assert.ok(units.find(u=>u.id===q.unitId).topics.some(t=>t.id===q.topicId));
+ assert.throws(()=>generateGrade9CurriculumPractice({...args,topicIds:[topicIds[0],'unknown-unit'],rng}));
+ assert.throws(()=>grade9PracticeCapacity({...args,coverage:'invalid'}));
+}
+console.log('PASS full marks for all nine curriculum practice subjects with every selected unit covered and original topic provenance preserved');

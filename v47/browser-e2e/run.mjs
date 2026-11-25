@@ -283,6 +283,20 @@ try{
     assert.match(await frame.locator('body').textContent(),/NOT AN OFFICIAL CDC QUESTION PAPER/);
     if(['social','nepali','english'].includes(key))assert.equal(await page.locator('#grade9CurriculumLanguage option:not([disabled])').count(),1);
    }
+   await page.locator('#grade9CurriculumSubject').selectOption('science');
+   await page.locator('#grade9CurriculumLanguage').selectOption('both');
+   await page.locator('#grade9CurriculumCoverage').selectOption('unit');
+   await page.locator('#grade9SelectAll').click();
+   assert.equal(await page.locator('#grade9CurriculumTopics input:checked').count(),19);
+   await page.locator('#grade9CurriculumMarks').fill('75');
+   assert.equal(await page.locator('#generateGrade9Curriculum').isDisabled(),false);
+   await page.locator('#generateGrade9Curriculum').click();
+   await wait(page,()=>!document.getElementById('downloadPracticeDocx').disabled);
+   assert.match(await frame.locator('body').textContent(),/Total marks: 75/);
+   await page.locator('#grade9ClearAll').click();
+   assert.equal(await page.locator('#grade9CurriculumTopics input:checked').count(),0);
+   assert.equal(await page.locator('#generateGrade9Curriculum').isDisabled(),true);
+   console.log('PASS real browser unit selection, select all 19 science units, 75 marks and clear selection');
    console.log('PASS nine Grade 9 original curriculum subject generators and language policy');
    assert.deepEqual(errors,[]);
   }finally{await context.close()}
