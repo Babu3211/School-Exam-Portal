@@ -107,7 +107,7 @@ export function grade9GridLibrary(register){
     if(key==='social'&&evidence.cognitiveMatrixTextReview?.officialExamApproved===false){
      const v=evidence.cognitiveMatrixTextReview;
      const ne=n=>String(n).replace(/\d/g,d=>'०१२३४५६७८९'[Number(d)]);
-     status=v.mirrorVisualReview?.matchedUnitCountCells===90?'२०७८ को पुरानो तालिका: मूल PDF को पाठ र प्रतिलिपिको चित्रबाट अङ्कभार मिलेको; २०८२ संशोधित तालिका बाँकी':'२०७८ को पुरानो तालिका: मूल PDF को पाठबाट अङ्कभार मिलेको; चित्र र २०८२ संशोधित तालिका बाँकी';
+     status=v.primaryVisualReview?.matchedUnitCountCells===90?'२०७८ को पुरानो तालिका: मूल सरकारी PDF को चित्रबाट अङ्कभार मिलेको; २०८२ संशोधित तालिका बाँकी':v.mirrorVisualReview?.matchedUnitCountCells===90?'२०७८ को पुरानो तालिका: मूल PDF को पाठ र प्रतिलिपिको चित्रबाट अङ्कभार मिलेको; २०८२ संशोधित तालिका बाँकी':'२०७८ को पुरानो तालिका: मूल PDF को पाठबाट अङ्कभार मिलेको; चित्र र २०८२ संशोधित तालिका बाँकी';
      if(v.mirrorVisualReview?.matchedUnitCountCells===90)add('प्रतिलिपिको चित्रबाट पुष्टि',['विवरण','नतिजा'],[['प्रश्न सङ्ख्याका कोष','९०'],['कार्यघण्टा','१२८'],['पूर्णाङ्क','७५'],['हालको संशोधित Grid पुष्टि','छैन']]);
      durationMinutes=180;
      add('पुरानो CDC तालिका — प्रश्न सङ्ख्या (ज्ञान/बोध, प्रयोग/सिर्जना, उच्च दक्षता)',['एकाइ','कार्यघण्टा','अति छोटो','छोटो','लामो','अङ्क'],v.unitNames.map((n,i)=>[n,ne(v.workingHours[i]),...[0,3,6].map(k=>v.unitTypeCategoryCounts[i].slice(k,k+3).map(ne).join(' / ')),ne(evidence.unitMarks[i])]));
@@ -196,13 +196,16 @@ export function grade9GridLibrary(register){
   return {key,subject,status,fullMarks,durationMinutes,tables,sources,currentCdcExactApproved:false,readyForLive:false};
  });
 }
-export function renderGrade9GridLibrary(root,register){
+export function renderGrade9GridLibrary(root,register,offeredSubjects=null){
  if(!root)return;
  root.replaceChildren();
  const make=(tag,text,parent)=>{const e=root.ownerDocument.createElement(tag);if(text!==undefined)e.textContent=String(text);if(parent)parent.appendChild(e);return e;};
  make('p','Read-only: current CDC approval and school review are separate from reference tables. No changes to marks, questions or school data.',root);
  if(!register){make('p','Source register not available offline yet. Reopen after loading the portal.',root);return;}
- for(const item of grade9GridLibrary(register)){
+ const offered=Array.isArray(offeredSubjects)?new Set(offeredSubjects.map(cdcSubjectKey)):null;
+ const visible=grade9GridLibrary(register).filter(item=>!offered||offered.has(item.key));
+ if(offered&&!visible.length)make('p','कक्षा ९ का तोकिएका विषयको Grid उपलब्ध छैन।',root);
+ for(const item of visible){
   const section=make('details',undefined,root);
   make('summary',item.subject+' — '+item.status,section);
   if(item.fullMarks!==null)make('p','Full marks: '+item.fullMarks+(item.durationMinutes!==null?' | Minutes: '+item.durationMinutes:''),section);

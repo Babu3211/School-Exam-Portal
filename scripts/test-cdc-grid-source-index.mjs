@@ -230,6 +230,11 @@ assert.deepEqual(sv.unitTypeCategoryCounts,socialRef.unitMarks.map((_,i)=>social
 assert.deepEqual(sv.typeCategoryCounts,[[5,3,3],[4,2,3],[1,2,1]]);
 assert.deepEqual(sv.cognitiveMarks,socialRef.cognitiveMarks);
 assert.equal(sv.workingHours.reduce((n,v)=>n+v,0),128);
+assert.equal(sv.primaryVisualReview.matchedUnitCountCells,90);
+assert.equal(sv.primaryVisualReview.sha256,sv.sha256);
+assert.equal(sv.primaryVisualReview.workingHours,128);
+assert.equal(sv.primaryVisualReview.currentEditionConfirmed,false);
+assert.equal(sv.primaryVisualReview.officialExamApproved,false);
 assert.equal(sv.mirrorVisualReview.matchedUnitCountCells,90);
 assert.equal(sv.mirrorVisualReview.totalWorkingHours,128);
 assert.equal(sv.mirrorVisualReview.unit3Marks,8);

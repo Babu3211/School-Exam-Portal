@@ -2449,7 +2449,7 @@
       "version": "PDF edition applicability pending",
       "status": "official_government_full_PDF_retrieved_grid_review_pending",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11166_Specification%20Grid%20(Grade%209)%20Compulsory%20Social%20Studies%20(1)_jlqxsmn.pdf",
-      "note": "Legacy-font table on page 2; compare current revised curriculum before exact approval. Archived fixed-column text pages 2–3 independently transcribed for all 90 unit/type/category count cells and 128 working hours; printed totals match. No visual or current edition certification. A school-hosted CDC 2078 feedback-copy mirror visually corroborates the complete matrix and 128 hours. No byte equivalence or current edition certification.",
+      "note": "Legacy-font table on page 2; compare current revised curriculum before exact approval. Archived fixed-column text pages 2–3 independently transcribed for all 90 unit/type/category count cells and 128 working hours; printed totals match. No visual or current edition certification. A school-hosted CDC 2078 feedback-copy mirror visually corroborates the complete matrix and 128 hours. No byte equivalence or current edition certification. Original government PDF page 2 rendered in audit run 45529938017, all 90 count cells, 10 unit hours and 10 unit marks visually matched. Current 2082 revision still unverified.",
       "retrievalEvidence": {
         "resource": "11166",
         "pages": 9,
@@ -2743,6 +2743,20 @@
               "currentEditionConfirmed": false,
               "officialExamApproved": false,
               "note": "Visual inspection of the actual table confirms 128 hours, unit 6 hours 18 and unit 3 marks 8 (two 4-mark items); web text extraction misreads these as 125, 15 and 5. All 90 unit count cells match the archived government text transcription. Official PDF screenshot remains unavailable; the mirror is not evidence of the revised 2082 grid."
+            },
+            "primaryVisualReview": {
+              "runId": 45529938017,
+              "artifactId": 14984790271,
+              "artifactPath": "extracted/11166-grid-2.png",
+              "pageNumber": 2,
+              "sha256": "636c0e961b0d0a474aea035fc1dd56e93318e33f21865f43b2cde8ee3211ce05",
+              "matchedUnitCountCells": 90,
+              "matchedUnitHours": 10,
+              "matchedUnitMarks": 10,
+              "workingHours": 128,
+              "fullMarks": 75,
+              "currentEditionConfirmed": false,
+              "officialExamApproved": false
             }
           }
         }

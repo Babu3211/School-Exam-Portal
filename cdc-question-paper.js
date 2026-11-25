@@ -665,7 +665,7 @@ async function loadCurrentData() {
  $("qpCurriculumVersion").value=curriculumRows[0]?.curriculumVersion||"CDC संस्करण Topic सूचीअनुसार";
  renderTopics();renderQuestionRows();
  $("qpAutoSourceStatus").textContent=bundledPracticeStatus;
- renderGrade9GridLibrary($("qpGrade9GridLibraryContent"),cdcSourceRegister);
+ renderGrade9GridLibrary($("qpGrade9GridLibraryContent"),cdcSourceRegister,[...new Set(classSubjects.filter(x=>x.gradeNumber===9).map(x=>x.subject))]);
  const pdfSource=$("qpOfficialGridSource");
  if(pdfSource){
   pdfSource.replaceChildren();
