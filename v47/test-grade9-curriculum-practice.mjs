@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {grade9PracticeTopics,generateGrade9CurriculumPractice,assertGrade9CurriculumPractice} from './grade9-curriculum-practice.mjs';
 import {printReadOnlyPracticePaper} from './question-paper-cdc-preview.mjs';
-for(const [key,languages] of [['science',['ne','en','both']],['social',['ne']]]){
+for(const [key,languages] of [['science',['ne','en','both']],['social',['ne']],['math',['ne','en','both']],['environment',['ne','en','both']],['nepali',['ne']],['english',['en']]]){
  for(const language of languages){
   const units=grade9PracticeTopics(key,language);
   assert.ok(units.length>=5);
@@ -16,4 +16,6 @@ for(const [key,languages] of [['science',['ne','en','both']],['social',['ne']]])
  }
 }
 assert.throws(()=>grade9PracticeTopics('social','both'),/Invalid subject or language/);
-console.log('PASS V47 Grade 9 Science and Social Studies original curriculum practice, language restrictions and no current grid claim');
+assert.throws(()=>grade9PracticeTopics('nepali','en'),/Invalid subject or language/);
+assert.throws(()=>grade9PracticeTopics('english','both'),/Invalid subject or language/);
+console.log('PASS V47 Grade 9 six-subject original curriculum practice, language restrictions and no current grid claim');

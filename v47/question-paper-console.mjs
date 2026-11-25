@@ -7,7 +7,7 @@ import {validateSchoolId} from './school-paths.mjs';
 import {prepareCdcSourceCatalog,prepareReadOnlyPracticePaper,recommendedPracticeIndices,printReadOnlyPracticePaper} from './question-paper-cdc-preview.mjs';
 import {exportPracticeDocx} from './practice-docx-export.mjs';
 import {generateMathPractice,printMathPractice} from './optional-math-practice-preview.mjs';
-import {grade9PracticeTopics,generateGrade9CurriculumPractice} from './grade9-curriculum-practice.mjs';
+import {grade9PracticeLanguages,grade9PracticeTopics,generateGrade9CurriculumPractice} from './grade9-curriculum-practice.mjs';
 import {renderGrade9GridLibrary} from './cdc-grade9-grid-library.mjs';
 import {computerGridReference,generateComputerPractice} from './computer-grid-practice.mjs';
 import {practiceUnitOptions,generatePracticePreview} from './automatic-practice-preview.mjs';
@@ -345,8 +345,9 @@ $('generateMathPractice').onclick=async()=>{
 function renderGrade9CurriculumTopics(){
  if(!actor||actor.role==='viewer')return;
  const key=$('grade9CurriculumSubject').value,lang=$('grade9CurriculumLanguage');
- for(const o of lang.options)o.disabled=key==='social'&&o.value!=='ne';
- if(key==='social')lang.value='ne';
+ const allowed=grade9PracticeLanguages(key);
+ for(const o of lang.options)o.disabled=!allowed.includes(o.value);
+ if(!allowed.includes(lang.value))lang.value=allowed.includes('both')?'both':allowed[0];
  const root=$('grade9CurriculumTopics');root.replaceChildren();
  try{
   const units=grade9PracticeTopics(key,lang.value);

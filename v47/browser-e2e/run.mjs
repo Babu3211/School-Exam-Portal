@@ -263,6 +263,22 @@ try{
    const bytes2=await readFile(await file2.path());assert.equal(bytes2.subarray(0,2).toString(),'PK');
    assert.ok(bytes2.includes(Buffer.from('NOT AN OFFICIAL CDC QUESTION PAPER')));
    assert.ok(bytes2.includes(Buffer.from('w:num="2"')));
+   // Actual per-subject language controls and original curriculum generation.
+   for(const [key,lang,subject] of [['science','both','Science and Technology'],['social','ne','Social Studies'],['math','both','Compulsory Mathematics'],['environment','both','Environmental Science'],['nepali','ne','Nepali'],['english','en','English']]){
+    await page.locator('#grade9CurriculumSubject').selectOption(key);
+    await page.locator('#grade9CurriculumLanguage').selectOption(lang);
+    const topics=page.locator('#grade9CurriculumTopics input:not([disabled])');
+    assert.ok(await topics.count()>0);
+    await topics.first().check();
+    await page.locator('#grade9CurriculumMarks').fill('1');
+    await page.locator('#generateGrade9Curriculum').click();
+    await wait(page,()=>!document.getElementById('downloadPracticeDocx').disabled);
+    assert.equal(await frame.locator('main.sheet > ol > li').count(),1);
+    assert.ok((await frame.locator('h2').textContent()).includes(subject));
+    assert.match(await frame.locator('body').textContent(),/NOT AN OFFICIAL CDC QUESTION PAPER/);
+    if(['social','nepali','english'].includes(key))assert.equal(await page.locator('#grade9CurriculumLanguage option:not([disabled])').count(),1);
+   }
+   console.log('PASS six Grade 9 original curriculum subject generators and language policy');
    assert.deepEqual(errors,[]);
   }finally{await context.close()}
   const viewer=await newSession();try{
