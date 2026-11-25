@@ -157,6 +157,13 @@ export function grade9GridLibrary(register){
     add('School syllabus periods — not marks or textbook chapter mapping',['School unit','Periods'],school.periods.map((n,j)=>[j+1,n]));
     add('School syllabus alternatives — not implemented in reference drafts',['Type','School unit','Topic'],school.alternativeRules.map(a=>[a.type,a.sourceUnit,a.topic]));
     add('Unresolved source differences',['Field','Value'],[['School syllabus units',school.sourceUnitCount],['Portal textbook units',school.portalTextbookUnitCount],['Verified unit mapping','No'],['Complete official Grid','No']]);
+    const crosswalk=entries.find(s=>s.environmentTextbookCrosswalk?.contentsVisuallyChecked===true)?.environmentTextbookCrosswalk;
+    if(crosswalk?.officialExamApproved===false&&safeUrl(crosswalk.textbookUrl)){
+     add('CDC textbook contents (not examination marks)',['Chapter','Title','Printed page'],crosswalk.chapters.map((c,i)=>[i+1,...c]));
+     add('School areas vs textbook chapters (tentative topic alignment only)',['School area','Textbook chapter candidate(s)'],crosswalk.schoolAreas.map((name,i)=>[name,crosswalk.candidateChapters[i].join(' / ')]));
+     add('Alternative energy textbook references (no separate chapter marks)',['Chapter','Printed page','Evidence'],crosswalk.alternativeEnergyEvidence.map(x=>[x.chapter,x.printedPage,x.description]));
+     add('Crosswalk review limitations',['Field','Status'],[['School 2083 source','Indexed text only; direct access unavailable'],['Official chapter-to-grid mapping','Not verified'],['Transfer of periods or marks','Not permitted'],['Complete official Grid','No']]);
+    }
    }
   }
   if(key==='health'){

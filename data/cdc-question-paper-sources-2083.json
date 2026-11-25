@@ -1106,6 +1106,115 @@
         "completeUnitMatrixVerified": false,
         "officialCdcSource": false,
         "officialExamApproved": false
+      },
+      "environmentTextbookCrosswalk": {
+        "checkedOn": "2026-11-25",
+        "textbookUrl": "https://giwmscdnone.gov.np/media/pdf_upload/Opt%20Env%20Sc%20Grade%209_r9nzny9.pdf",
+        "textbookContentsPdfPage": 7,
+        "contentsVisuallyChecked": true,
+        "chapters": [
+          [
+            "Introduction to Environment",
+            1
+          ],
+          [
+            "Ecology and Ecosystem",
+            15
+          ],
+          [
+            "Natural Resources",
+            32
+          ],
+          [
+            "Environmental Pollution",
+            68
+          ],
+          [
+            "Climate Change and Its Mitigation",
+            94
+          ],
+          [
+            "Sustainable Development and Eco-friendly Lifestyle",
+            110
+          ],
+          [
+            "Environmental Health",
+            135
+          ],
+          [
+            "Hazard and Disaster Management",
+            149
+          ],
+          [
+            "Environment Management",
+            184
+          ]
+        ],
+        "schoolSyllabus2083IndexedUrl": "https://anyflip.com/jwxmu/hsyg/basic/101-150",
+        "schoolSourceAccess": "Search index excerpt available; direct page returned HTTP 403. Not a CDC source.",
+        "schoolAreas": [
+          "Introduction to environment",
+          "Ecology and ecosystem",
+          "Natural resources and biodiversity",
+          "Environmental pollution",
+          "Climate change and its effects",
+          "Alternative energy",
+          "Environment and sustainable development",
+          "Environment and public health",
+          "Natural disaster and its management",
+          "Environment management"
+        ],
+        "candidateChapters": [
+          [
+            1
+          ],
+          [
+            2
+          ],
+          [
+            3
+          ],
+          [
+            4
+          ],
+          [
+            5
+          ],
+          [
+            3,
+            6
+          ],
+          [
+            6
+          ],
+          [
+            7
+          ],
+          [
+            8
+          ],
+          [
+            9
+          ]
+        ],
+        "alternativeEnergyEvidence": [
+          {
+            "chapter": 3,
+            "printedPage": 32,
+            "description": "Opening activity asks about alternative energy sources and sustainable energy."
+          },
+          {
+            "chapter": 6,
+            "printedPage": 131,
+            "description": "Section 6.13 and preceding discussion address renewable energy and environment-friendly technologies."
+          }
+        ],
+        "mappingVerified": false,
+        "schoolGridCurrentEditionConfirmed": false,
+        "completeUnitMatrixVerified": false,
+        "officialExamApproved": false,
+        "currentCdcExactApproved": false,
+        "note": "Candidate topic alignment only; no hours or marks transferred from the older ten-area school syllabus to the nine textbook chapters. Alternative energy spans more than one chapter. Other learning outcomes may also span chapters. Do not use as a CDC Grid."
       }
     },
     {
@@ -3163,6 +3272,17 @@
         "officialExamApproved": false,
         "currentCdcExactApproved": false
       }
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक वातावरण विज्ञान",
+      "kind": "CDC_textbook",
+      "version": "Government English textbook; edition not independently confirmed",
+      "status": "official_government_pdf_contents_visual_and_selected_topic_text_checked",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/Opt%20Env%20Sc%20Grade%209_r9nzny9.pdf",
+      "note": "Contents PDF page 7 visually checked; chapter 3 printed p.32 and chapter 6 printed p.131 address alternative/renewable energy. Textbook scope only, not examination marks."
     }
   ],
   "completion": {
