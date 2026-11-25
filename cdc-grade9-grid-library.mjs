@@ -107,7 +107,8 @@ export function grade9GridLibrary(register){
     if(key==='social'&&evidence.cognitiveMatrixTextReview?.officialExamApproved===false){
      const v=evidence.cognitiveMatrixTextReview;
      const ne=n=>String(n).replace(/\d/g,d=>'०१२३४५६७८९'[Number(d)]);
-     status='२०७८ को पुरानो तालिका: मूल PDF को पाठबाट अङ्कभार मिलेको; चित्र र २०८२ संशोधित तालिका बाँकी';
+     status=v.mirrorVisualReview?.matchedUnitCountCells===90?'२०७८ को पुरानो तालिका: मूल PDF को पाठ र प्रतिलिपिको चित्रबाट अङ्कभार मिलेको; २०८२ संशोधित तालिका बाँकी':'२०७८ को पुरानो तालिका: मूल PDF को पाठबाट अङ्कभार मिलेको; चित्र र २०८२ संशोधित तालिका बाँकी';
+     if(v.mirrorVisualReview?.matchedUnitCountCells===90)add('प्रतिलिपिको चित्रबाट पुष्टि',['विवरण','नतिजा'],[['प्रश्न सङ्ख्याका कोष','९०'],['कार्यघण्टा','१२८'],['पूर्णाङ्क','७५'],['हालको संशोधित Grid पुष्टि','छैन']]);
      durationMinutes=180;
      add('पुरानो CDC तालिका — प्रश्न सङ्ख्या (ज्ञान/बोध, प्रयोग/सिर्जना, उच्च दक्षता)',['एकाइ','कार्यघण्टा','अति छोटो','छोटो','लामो','अङ्क'],v.unitNames.map((n,i)=>[n,ne(v.workingHours[i]),...[0,3,6].map(k=>v.unitTypeCategoryCounts[i].slice(k,k+3).map(ne).join(' / ')),ne(evidence.unitMarks[i])]));
      add('पुरानो तालिकाको संज्ञानात्मक अङ्कभार',['तह','अङ्क','प्रकाशित प्रतिशत'],v.categoryNames.map((n,i)=>[n,ne(v.cognitiveMarks[i]),ne(v.printedPercentages[i])+'%']));

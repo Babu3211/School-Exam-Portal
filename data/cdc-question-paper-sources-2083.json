@@ -2340,7 +2340,7 @@
       "version": "PDF edition applicability pending",
       "status": "official_government_full_PDF_retrieved_grid_review_pending",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11166_Specification%20Grid%20(Grade%209)%20Compulsory%20Social%20Studies%20(1)_jlqxsmn.pdf",
-      "note": "Legacy-font table on page 2; compare current revised curriculum before exact approval. Archived fixed-column text pages 2–3 independently transcribed for all 90 unit/type/category count cells and 128 working hours; printed totals match. No visual or current edition certification.",
+      "note": "Legacy-font table on page 2; compare current revised curriculum before exact approval. Archived fixed-column text pages 2–3 independently transcribed for all 90 unit/type/category count cells and 128 working hours; printed totals match. No visual or current edition certification. A school-hosted CDC 2078 feedback-copy mirror visually corroborates the complete matrix and 128 hours. No byte equivalence or current edition certification.",
       "retrievalEvidence": {
         "resource": "11166",
         "pages": 9,
@@ -2617,7 +2617,24 @@
             "visualReviewComplete": false,
             "currentEditionConfirmed": false,
             "officialExamApproved": false,
-            "currentCdcExactApproved": false
+            "currentCdcExactApproved": false,
+            "mirrorVisualReview": {
+              "sourceUrl": "https://riviera.edu.np/storage/newfiles/sz6EjaHjK75ANpCvsVindqTnqLRlidKFQp81Spva.pdf",
+              "pdfPage": 2,
+              "sourceEdition": 2078,
+              "sourceType": "school-hosted mirror of CDC feedback copy",
+              "checkedOn": "2026-11-25",
+              "matchedUnitCountCells": 90,
+              "matchedUnitHours": 10,
+              "matchedUnitMarks": 10,
+              "totalWorkingHours": 128,
+              "unit3Marks": 8,
+              "fullMarks": 75,
+              "byteEquivalenceEstablished": false,
+              "currentEditionConfirmed": false,
+              "officialExamApproved": false,
+              "note": "Visual inspection of the actual table confirms 128 hours, unit 6 hours 18 and unit 3 marks 8 (two 4-mark items); web text extraction misreads these as 125, 15 and 5. All 90 unit count cells match the archived government text transcription. Official PDF screenshot remains unavailable; the mirror is not evidence of the revised 2082 grid."
+            }
           }
         }
       }

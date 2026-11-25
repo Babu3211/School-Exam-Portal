@@ -200,6 +200,13 @@ assert.deepEqual(sv.unitTypeCategoryCounts,socialRef.unitMarks.map((_,i)=>social
 assert.deepEqual(sv.typeCategoryCounts,[[5,3,3],[4,2,3],[1,2,1]]);
 assert.deepEqual(sv.cognitiveMarks,socialRef.cognitiveMarks);
 assert.equal(sv.workingHours.reduce((n,v)=>n+v,0),128);
+assert.equal(sv.mirrorVisualReview.matchedUnitCountCells,90);
+assert.equal(sv.mirrorVisualReview.totalWorkingHours,128);
+assert.equal(sv.mirrorVisualReview.unit3Marks,8);
+assert.equal(sv.mirrorVisualReview.byteEquivalenceEstablished,false);
+assert.equal(sv.mirrorVisualReview.currentEditionConfirmed,false);
+assert.equal(sv.mirrorVisualReview.officialExamApproved,false);
+assert.ok(byKey.social.tables.some(t=>t.title==='प्रतिलिपिको चित्रबाट पुष्टि'));
 assert.equal(sv.visualReviewComplete,false);assert.equal(sv.currentEditionConfirmed,false);assert.equal(sv.currentCdcExactApproved,false);assert.equal(sv.officialExamApproved,false);
 assert.ok(byKey.social.tables.some(t=>t.title.includes('प्रश्न सङ्ख्या')&&t.rows.length===10));
 assert.ok([scienceRef,mathRef,englishRef,socialRef].every(ref=>ref.currentCdcExactApproved===false));
