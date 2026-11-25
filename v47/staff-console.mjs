@@ -8,17 +8,19 @@ import {excelWorkbook} from './excel-workbook.mjs';
 import {V46_STAFF_EXCEL_HEADERS,v46StaffExcelRow} from './v46-staff-excel-schema.mjs';
 import {readV47StudentXlsx} from './read-v47-student-xlsx.mjs';
 import {previewV46StaffExcelRows} from './staff-excel-preview.mjs';
+import {staffEditSnapshot,saveStaffProfile,STAFF_EDIT_FIELDS} from './staff-profile-edit.mjs';
 import {importNewStaff,MAX_STAFF_IMPORT} from './staff-import-save.mjs';
 import {checkExistingStaffEmployeeIds} from './staff-import-duplicate-preflight.mjs';
 const $=id=>document.getElementById(id);
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 let auth,authSdk,db,api,actor=null,store=null,schoolId=null,epoch=0,busy=false,loading=false,exporting=false,previewBusy=false,previewToken=0,cursor=null,seen=new Set(),hasMore=false;
-let reviewedCells=null,importing=false;
+let reviewedCells=null,importing=false,editing=false,editState=null;
+function clearEdit(){editState=null;$('staffEditArea').hidden=true;$('saveStaffEdit').disabled=true;$('editStaffId').value='';for(const k of STAFF_EDIT_FIELDS)$('editStaff-'+k).value='';$('staffEditStatus').textContent='';}
 const clearImport=()=>{reviewedCells=null;$('saveStaffImport').disabled=true;};
 const status=s=>{$('message').textContent=s;};
 const readDocument=async path=>{const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;};
 function reset(){
- epoch++;previewToken++;clearImport();actor=null;
+ epoch++;previewToken++;clearImport();clearEdit();actor=null;$('staffActionHeader').hidden=true;
  $('staffImportArea').hidden=true;$('staffImportFile').value='';
  $('staffImportRows').replaceChildren();$('staffImportSummary').textContent='No Excel file reviewed';store=null;schoolId=null;cursor=null;seen=new Set();hasMore=false;loading=false;
  $('records').hidden=true;$('staffRows').replaceChildren();$('count').textContent='';
@@ -44,7 +46,7 @@ $('connect').onclick=async()=>{
  }catch(e){status('जडान असफल: '+neError(e))}
 };
 $('login').onclick=async()=>{
- if(!auth||busy||loading||exporting||importing)return;
+ if(!auth||busy||loading||exporting||importing||editing||previewBusy)return;
  reset();const request=epoch;busy=true;$('login').disabled=true;
  try{
   const selectedSchool=validateSchoolId($('schoolId').value.trim());
@@ -62,7 +64,7 @@ $('login').onclick=async()=>{
   if(freshSignIn)startVerifiedSchoolActivity();
   $('heading').textContent='Staff — '+String(school.name??selectedSchool);
   $('mode').textContent=member.role==='viewer'?'Viewer — Read-only':member.role==='teacher'?'Teacher — Read-only':'School Admin — Staff management';
-  $('records').hidden=false;$('staffImportArea').hidden=member.role!=='school_admin';$('logout').disabled=false;$('exportAll').disabled=false;
+  $('records').hidden=false;$('staffActionHeader').hidden=member.role!=='school_admin';$('previewStaffImport').disabled=member.role!=='school_admin';$('staffImportArea').hidden=member.role!=='school_admin';$('logout').disabled=false;$('exportAll').disabled=false;
   busy=false;await loadPage(true);
  }catch(e){
   if(request===epoch){reset();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status('Login असफल: '+neError(e))}
@@ -88,6 +90,7 @@ async function loadPage(resetPage=false){
    for(const value of [fields[0],fields[2],fields[1],fields[4],item.email??item.emailId??'']){
     const td=document.createElement('td');td.textContent=String(value??'');tr.append(td);
    }
+   if(selectedActor.role==='school_admin'){const td=document.createElement('td'),button=document.createElement('button');button.type='button';button.textContent='Edit';button.onclick=()=>openEdit(item.id);td.append(button);tr.append(td)}
    $('staffRows').append(tr);
   }
   cursor=next.cursor;hasMore=next.hasMore;
@@ -96,6 +99,41 @@ async function loadPage(resetPage=false){
  }catch(e){if(token===epoch){hasMore=false;$('next').disabled=true;status('Staff विवरण लोड भएन: '+neError(e))}}
  finally{if(token===epoch){loading=false;$('refresh').disabled=false;$('next').disabled=!hasMore;$('exportAll').disabled=!actor||exporting;}}
 }
+async function openEdit(id){
+ if(editing||importing||previewBusy||actor?.role!=='school_admin')return;
+ clearEdit();const token=epoch,selectedActor=actor,selectedStore=store,selectedSchool=schoolId,uid=actor.uid;
+ const check=()=>assertCurrent(token,selectedActor,selectedStore,selectedSchool,uid);
+ editing=true;
+ try{
+  if(!await enforceSchoolIdle(auth,authSdk))throw Error('Login expired');check();
+  const record=await readDocument('schools/'+selectedSchool+'/staff/'+id);check();
+  if(record?.schoolId!==selectedSchool)throw Error('Staff record unavailable');
+  const expected=staffEditSnapshot(record);
+  editState={id,expected,token,selectedActor,selectedStore,selectedSchool,uid};
+  $('editStaffId').value=expected.staffId;
+  for(const k of STAFF_EDIT_FIELDS)$('editStaff-'+k).value=expected.values[k];
+  $('editStaff-email').readOnly=expected.linked;
+  $('staffEditArea').hidden=false;$('saveStaffEdit').disabled=false;
+  $('staffEditStatus').textContent=expected.linked?'जोडिएको खाताको इमेल परिवर्तन गर्न मिल्दैन।':'कर्मचारी विवरण सम्पादन गरी सुरक्षित गर्नुहोस्।';
+  $('staffEditArea').scrollIntoView({block:'nearest'});
+ }catch(e){if(token===epoch)status('Staff विवरण सम्पादन गर्न मिलेन: '+neError(e))}
+ finally{editing=false}
+}
+$('cancelStaffEdit').onclick=()=>{if(!editing)clearEdit()};
+$('saveStaffEdit').onclick=async()=>{
+ if(editing||!editState||actor?.role!=='school_admin')return;
+ const {id,expected,token,selectedActor,selectedStore,selectedSchool,uid}=editState;
+ const check=()=>assertCurrent(token,selectedActor,selectedStore,selectedSchool,uid);
+ if(!confirm('कर्मचारी विवरण सुरक्षित गर्ने हो?'))return;
+ const values=Object.fromEntries(STAFF_EDIT_FIELDS.map(k=>[k,$('editStaff-'+k).value]));
+ editing=true;$('saveStaffEdit').disabled=true;$('cancelStaffEdit').disabled=true;
+ try{
+  if(!await enforceSchoolIdle(auth,authSdk))throw Error('Login expired');check();
+  await saveStaffProfile({db,api,actor:selectedActor,schoolId:selectedSchool,id,expected,values,confirmed:true,assertCurrent:check});
+  check();clearEdit();await loadPage(true);status('कर्मचारी विवरण सुरक्षित भयो।');
+ }catch(e){if(token===epoch){clearEdit();status('सम्पादन पुष्टि भएन: '+neError(e)+'। सूची पुनः लोड गरी जाँच्नुहोस्।')}}
+ finally{editing=false;$('cancelStaffEdit').disabled=false}
+};
 $('downloadStaffTemplate').onclick=()=>{
  if(actor?.role!=='school_admin'||!actor.active)return;
  const url=URL.createObjectURL(excelWorkbook(V46_STAFF_EXCEL_HEADERS,[],{sheetName:'Staff'})),link=document.createElement('a');
@@ -156,7 +194,7 @@ $('previewStaffImport').onclick=async()=>{
    $('staffImportSummary').textContent='Excel पूर्वावलोकन असफल: '+neError(e)+' — कुनै अभिलेख परिवर्तन भएको छैन।';
  }finally{
   previewBusy=false;
-  if(token===epoch)$('previewStaffImport').disabled=!actor||actor.role!=='school_admin';
+  $('previewStaffImport').disabled=!actor||actor.role!=='school_admin'||importing;
  }
 };
 $('saveStaffImport').onclick=async()=>{

@@ -271,6 +271,17 @@ try{
    assert.deepEqual((await db.doc(base+'/staff/existing').get()).data(),original);
    assert.deepEqual((await db.doc(foreignBase+'/staff/existing').get()).data(),foreignRecord);
    await wait(page,()=>!document.getElementById('previewStaffImport').disabled);
+   await wait(page,()=>document.getElementById('staffRows').textContent.includes('Imported Staff'));
+   await page.locator('#staffRows tr').filter({hasText:'Imported Staff'}).getByRole('button',{name:'Edit',exact:true}).click();
+   await wait(page,()=>!document.getElementById('staffEditArea').hidden);
+   assert.equal(await page.locator('#editStaffId').inputValue(),'000071');
+   await page.locator('#editStaff-email').fill('staff-profile@example.invalid');
+   await page.locator('#editStaff-phone').fill('00009876');
+   page.once('dialog',d=>d.accept());await page.locator('#saveStaffEdit').click();
+   await wait(page,()=>document.getElementById('message').textContent.includes('कर्मचारी विवरण सुरक्षित भयो'));
+   const edit=(await db.collection(base+'/staff').get()).docs.find(d=>d.data().staffId==='000071').data();
+   assert.equal(edit.email,'staff-profile@example.invalid');assert.equal(edit.phone,'00009876');assert.equal(edit.authUid,undefined);
+   assert.deepEqual((await db.doc(foreignBase+'/staff/existing').get()).data(),foreignRecord);
    await upload([['emp-072',...second.slice(1)]]);
    assert.equal(await page.locator('#saveStaffImport').isDisabled(),true);
    await upload([['EMP-073',...second.slice(1)]]);
