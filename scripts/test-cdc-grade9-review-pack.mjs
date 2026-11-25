@@ -35,6 +35,13 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
   const result=buildGrade9ReferencePreview({...args,previousSignature,rng:()=>seed});
   assert.equal(result.ready,true,subject+': '+result.reason);
   assert.equal(result.groupCount,count);assert.equal(result.currentCdcExactApproved,false);
+  const audit=result.allocationReview;
+  assert.equal(audit.numericalReferenceChecksPassed,true,subject);
+  assert.equal(audit.groupCount,count);
+  assert.equal(audit.groupMarks.reduce((a,b)=>a+b,0),75);
+  assert.equal(audit.durationMinutes,durationMinutes);
+  assert.ok(audit.checks.length>=4&&audit.unresolved.length>0);
+  assert.equal(audit.currentCdcExactApproved,false);
   assert.equal(result.readyForLive,false);assert.notEqual(result.signature,previousSignature);
   assert.match(result.text,/REFERENCE DRAFT — NOT FOR EXAM/);
   assert.match(result.answerText,/INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY/);
@@ -51,7 +58,7 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
   assert.ok(result.answerCount>=count,subject+' answer coverage');
   assert.doesNotMatch(result.answerText,/\bundefined\b/);
   previousSignature=result.signature;
-  records.push({subject,set:i+1,language,fullMarks:75,durationMinutes,groupCount:count,sourceUrl:result.sourceUrl,status:'Reference only — current CDC approval pending',signature:result.signature,answerCount:result.answerCount,html:'<pre>'+esc(result.introText)+'</pre>'+result.blocks.map(block=>'<div class="question" data-question-number="'+block.number+'"><pre>'+esc(block.text)+'</pre>'+block.figureHtml+'</div>').join('')+'<details><summary>Teacher answer review / उत्तरकुञ्जिका</summary><pre>'+esc(result.answerText)+'</pre></details>'});
+  records.push({subject,set:i+1,language,fullMarks:75,durationMinutes,groupCount:count,sourceUrl:result.sourceUrl,status:'Reference only — current CDC approval pending',allocationReview:result.allocationReview,signature:result.signature,answerCount:result.answerCount,html:'<pre>'+esc(result.introText)+'</pre>'+result.blocks.map(block=>'<div class="question" data-question-number="'+block.number+'"><pre>'+esc(block.text)+'</pre>'+block.figureHtml+'</div>').join('')+'<details><summary>Teacher answer review / उत्तरकुञ्जिका</summary><pre>'+esc(result.answerText)+'</pre></details>'});
  }
 }
 {
