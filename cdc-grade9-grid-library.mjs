@@ -113,6 +113,12 @@ export function grade9GridLibrary(register){
     add('Model alternative questions',['Question number','One response required'],e.modelAlternativeQuestionNumbers.map(n=>[n,'Yes']));
     add('Extracted specification rules',['Rule','Value'],[['Maximum short alternatives',e.maxShortAlternatives],['Maximum long alternatives',e.maxLongAlternatives],['Knowledge maximum (%)',e.knowledgeMaxPercent],['Higher ability minimum (%)',e.higherAbilityMinPercent],['Long alternatives same numerical/theoretical nature',e.longAlternativeSameNature?'Yes':'No']]);
     if(safeUrl(e.textSourceUrl)&&!sources.some(x=>x.url===e.textSourceUrl))sources.push({url:e.textSourceUrl,kind:'specification_grid',version:'2081',status:'Alternative government CDN text source; image inspection pending',note:'Question structure confirmed from model and summary. Merged unit marks not inferred from text.'});
+    const visual=entries.find(x=>x.accountingVisualReview?.completeMergedGroupMatrixVerified===true)?.accountingVisualReview;
+    if(visual?.officialExamApproved===false){
+     status='Original 2081 Grid: merged unit groups visually matched; current edition and full-document review pending';
+     add('Original PDF page 1: grouped question counts',['Units (shared marks)','K: V/S/L','U: V/S/L','A: V/S/L','HA: V/S/L','Marks'],visual.unitGroups.map((g,i)=>[g.map(n=>n+'. '+e.units[n-1][0]).join(' / '),...[0,3,6,9].map(k=>visual.groupLevelTypeCounts[i].slice(k,k+3).join(' / ')),visual.groupMarks[i]]));
+     add('Numerical questions (*)',['Units','Level','Type'],visual.starredNumericalQuestions.map(x=>[x.units.join(' / '),x.level,x.type]));
+    }
    }
   }else if(key==='optional_environment'){
    fullMarks=75;durationMinutes=135;status='Official curriculum only; Grade 9 exact Grid unavailable';
