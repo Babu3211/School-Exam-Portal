@@ -1808,6 +1808,34 @@ choice('student','batch-one');
 assert.equal(field('portfolioExport').disabled,true);
 assert.equal(field('portfolioPreview').children.length,0);
 console.log('Portfolio preview and three export formats, mixed A4 orientation, selection invalidation passed');
+// CDC 2076 Annex 2: all three lower grades use the original four columns,
+// five subjects, annual hours and separate six-level achievement conversion.
+assert.deepEqual([0,29.99,30,44.99,45,59.99,60,74.99,75,89.99,90,100].map(w.cdcLower2076Grade),['E','E','D','D','C','C','B','B','A','A','A*','A*']);
+for(const grade of ['1','2','3']){
+ w.getDocs=async name=>({docs:name==='students'?[{id:'lower-'+grade,data:()=>({class:'Class '+grade,section:'A',name:'Lower Student '+grade})}]:[{id:'lower-class',data:()=>({className:'Class '+grade,subject:'Nepali'})}]});
+ w.getDocsFromServer=async()=>({docs:[]});
+ await w.loadCdcAssessmentPage();choice('class',grade);choice('subject','Nepali');choice('student','lower-'+grade);
+ assert.equal(field('annualProgress').hidden,false);
+ await field('readProgress').onclick();
+ assert.equal(field('annualHead').cells.length,4);
+ assert.equal(field('annualRows').rows.length,5);
+ assert.deepEqual([...field('annualRows').rows].map(row=>Number(row.cells[2].textContent)),[160,128,128,256,160]);
+ assert.ok([...field('annualRows').rows].every(row=>row.cells[3].textContent==='—'));
+ field('annualFormat').value='pdf';field('printProgress').onclick();
+ const lowerDoc=new JSDOM(batchMarkup).window.document;
+ assert.match(lowerDoc.body.textContent,/अनुसूची २/);
+ assert.match(lowerDoc.body.textContent,new RegExp('Lower Student '+grade));
+ assert.equal(lowerDoc.querySelectorAll('thead th').length,4);
+ assert.equal(lowerDoc.querySelectorAll('tbody tr').length,5);
+ field('annualFormat').value='docx';field('printProgress').onclick();
+ assert.match(officeDownloads.at(-1).entries['word/document.xml'],/w:orient="portrait"/);
+ field('annualFormat').value='xlsx';field('printProgress').onclick();
+ assert.match(officeDownloads.at(-1).entries['xl/worksheets/sheet1.xml'],/orientation="portrait"/);
+ await field('portfolioRead').onclick();
+ assert.equal(field('portfolioExport').disabled,false,field('portfolioStatus').textContent);
+ assert.ok(field('portfolioPreview').querySelector('[data-page-orientation="portrait"]'));
+}
+console.log('Grades 1–3 CDC 2076 Annex 2 annual report and portfolio PDF Word Excel regression');
 // CDC backup: verify legacy and new exports in an isolated synthetic DOM.
 // Assessment evidence must never be replayed through ordinary client restore.
 const backupDom=new JSDOM('<div id="restoreFirebaseMessage"></div><pre id="restorePreview"></pre><input id="restoreBackupFile" type="file"><button id="runFirebaseRestore"></button>',{runScripts:'outside-only'});

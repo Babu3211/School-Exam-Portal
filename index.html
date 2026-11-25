@@ -9285,6 +9285,10 @@ function cdcThemeMarkRows(grade,subject,year){
 
 // Native Office Open XML export. No CDN, external service, macros or formulas.
 // The input is the saved-only print DOM, preserving its row/column spans and wording.
+function cdcLower2076Grade(percent){
+  if(!Number.isFinite(percent)||percent<0||percent>100)return null;
+  return percent>=90?'A*':percent>=75?'A':percent>=60?'B':percent>=45?'C':percent>=30?'D':'E';
+}
 function cdcOfficeExport(doc,format){
   const pages=[...doc.body.querySelectorAll(':scope > .cdc-pupil')];
   if(!pages.length)pages.push(doc.body);
@@ -9511,7 +9515,7 @@ function openCdcAssessment(context = null) {
     </details>
     <details class="cdc-more" data-cdc="portfolioPanel" hidden><summary>Student Portfolio / विद्यार्थी पोर्टफोलियो</summary><p class="hint">छानिएको विद्यार्थीको अनुमति प्राप्त विषयगत समष्टिगत अभिलेख र उपलब्ध वार्षिक प्रतिवेदन। प्रत्येक विषयको मूल फाराम मुख्य मूल्याङ्कनमा हेर्न सकिन्छ।</p><div class="toolbar"><button type="button" class="btn alt" data-cdc="portfolioRead">View Portfolio</button><label>Export Format <select data-cdc="portfolioFormat"><option value="pdf">PDF / Print</option><option value="docx">Word (.docx)</option><option value="xlsx">Excel (.xlsx)</option></select></label><button type="button" class="btn alt" data-cdc="portfolioExport" disabled>Download Portfolio</button></div><p data-cdc="portfolioStatus" role="status" aria-live="polite" class="hint"></p><div data-cdc="portfolioPreview" class="tablewrap"></div></details>
     <details class="cdc-more" data-cdc="extraReports"><summary>वार्षिक प्रगति प्रतिवेदन</summary>
-    <section data-cdc="annualProgress" hidden class="panel"><h3>प्रगति प्रतिवेदन — अनुसूची ४ / Annual Progress</h3><p data-cdc="progressIdentity"></p><button type="button" class="btn alt" id="cdcReadProgress" data-cdc="readProgress">View Annual Progress</button> <label>Export Format <select data-cdc="annualFormat"><option value="pdf">PDF / Print</option><option value="docx">Word (.docx)</option><option value="xlsx">Excel (.xlsx)</option></select></label> <button type="button" class="btn alt" id="cdcPrintProgress" data-cdc="printProgress" disabled>Export Report</button><p data-cdc="annualStatus" role="status" class="hint"></p><div class="tablewrap"><table><thead><tr><th>क्र. सं.</th><th>विषय</th><th>पाठ्यघण्टा</th><th>सिकाइ उपलब्धि सङ्ख्या</th><th>समग्र उपलब्धिस्तर</th><th>कैफियत</th></tr></thead><tbody data-cdc="annualRows"></tbody></table></div><p data-cdc="annualAttendance" class="hint">उपस्थिति: अभिलेख लोड गर्नुहोस्।</p><p class="hint">विद्यालय सञ्चालन दिन विद्यालयको प्रमाणित पात्रोबाट पुष्टि गर्नुपर्छ। यो समीक्षा प्रति हो।</p><p>कक्षा शिक्षक __________　 प्रधानाध्यापक __________　 मिति __________</p></section>
+    <section data-cdc="annualProgress" hidden class="panel"><h3 data-cdc="annualTitle">प्रगति प्रतिवेदन / Annual Progress</h3><p data-cdc="progressIdentity"></p><button type="button" class="btn alt" id="cdcReadProgress" data-cdc="readProgress">View Annual Progress</button> <label>Export Format <select data-cdc="annualFormat"><option value="pdf">PDF / Print</option><option value="docx">Word (.docx)</option><option value="xlsx">Excel (.xlsx)</option></select></label> <button type="button" class="btn alt" id="cdcPrintProgress" data-cdc="printProgress" disabled>Export Report</button><p data-cdc="annualStatus" role="status" class="hint"></p><div class="tablewrap"><table><thead><tr data-cdc="annualHead"><th>क्र. सं.</th><th>विषय</th><th>पाठ्यघण्टा</th><th>सिकाइ उपलब्धि सङ्ख्या</th><th>समग्र उपलब्धिस्तर</th><th>कैफियत</th></tr></thead><tbody data-cdc="annualRows"></tbody></table></div><p data-cdc="annualAttendance" class="hint">उपस्थिति: अभिलेख लोड गर्नुहोस्।</p><p class="hint">विद्यालय सञ्चालन दिन विद्यालयको प्रमाणित पात्रोबाट पुष्टि गर्नुपर्छ। यो समीक्षा प्रति हो।</p><p>कक्षा शिक्षक __________　 प्रधानाध्यापक __________　 मिति __________</p></section>
     </details>
     <details class="cdc-more" data-cdc="extraManual"><summary>थप अवलोकन / मस्यौदा</summary>
     <details data-cdc="catalogPanel"><summary>द्विभाषिक उपलब्धि सूची थप्नुहोस्</summary>
@@ -10249,7 +10253,7 @@ function openCdcAssessment(context = null) {
   // The subject summary uses exactly the outcome keys of the corresponding
   // entry form. No assessment is invented from missing or unclassified data.
   let summarySequence=0,summarySnapshot=null;
-  const summaryGrade=percent=>[[90,'A+'],[80,'A'],[70,'B+'],[60,'B'],[50,'C+'],[40,'C'],[35,'D'],[0,'NG']].find(([min])=>percent>=min)?.[1]||'—';
+  const summaryGrade=percent=>Number(field('class').value)<=3&&Number(year)<2084?cdcLower2076Grade(percent):[[90,'A+'],[80,'A'],[70,'B+'],[60,'B'],[50,'C+'],[40,'C'],[35,'D'],[0,'NG']].find(([min])=>percent>=min)?.[1]||'—';
   function summaryCatalogue(grade,subjectKey,theme){
     const unit=theme.unit,lower=Number(grade)<=3;
     if(!lower)return {unit,titles:(cdcVerifiedOutcomes[grade+':'+subjectKey]||[]).filter(([u])=>normalizeTitle(u)===normalizeTitle(unit)).map(([,title])=>title)};
@@ -10364,6 +10368,47 @@ function openCdcAssessment(context = null) {
     return report;
   };
   field('printSubjectSummary').onclick=()=>exportCdcReport(buildSubjectSummaryReport(),field('reportFormat').value,'CDC-Subject-Summary-'+year,field('subjectSummaryStatus'));
+  const lowerAnnual=grade=>['1','2','3'].includes(String(grade))&&Number(year)<2084;
+  const annualAvailable=grade=>lowerAnnual(grade)||['4','5'].includes(String(grade));
+  const annualColumns=grade=>lowerAnnual(grade)?['क्र. सं.','विषयक्षेत्र','पाठ्यघण्टा','समग्र उपलब्धि स्तर']:['क्र. सं.','विषय','पाठ्यघण्टा','सिकाइ उपलब्धि सङ्ख्या','समग्र उपलब्धिस्तर','कैफियत'];
+  // Lower-primary assessment guide 2076, PDF pages 10, 13–14:
+  // preserve the five subject rows and annual hours. Missing/ambiguous source
+  // mappings or incomplete assessment must not produce a final achievement level.
+  const lowerSubjects=[
+    ['nepali','नेपाली भाषा',160],['mathematics','गणित',128],
+    ['english','अङ्ग्रेजी भाषा',128],['serophero','हाम्रो सेरोफेरो',256],
+    ['hamrodhunibeshi','मातृभाषा/स्थानीय विषय',160]
+  ];
+  function lowerAnnualAchievement(grade,key,records){
+    const themes=cdcThemeMarkRows(grade,key,year);
+    if(!themes.length)return {grade:null,reason:'स्रोत सूची बाँकी'};
+    const latest=[...records].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||(b.createdAt?.toMillis?.()??0)-(a.createdAt?.toMillis?.()??0));
+    let sum=0,assessed=0,expected=0,unmapped=false;
+    for(const theme of themes){
+      if(key==='serophero'){
+        const form=cdcSeroGuideEntryForm(grade,theme.unit,year);
+        if(!form||form.referenceOnly||form.groups.length*4!==theme.fullMark){unmapped=true;continue;}
+        for(let i=0;i<form.groups.length;i++){
+          expected++;
+          const id='cdc2076-g'+grade+'-'+(form.start+i);
+          const items=latest.filter(o=>o.unit===theme.unit&&o.outcomeId===id&&Array.isArray(o.indicators)&&o.indicators.length===4&&o.indicators.every(v=>typeof v==='boolean'));
+          const record=items.find(o=>o.stage==='support')||items.find(o=>o.stage==='regular');
+          if(record){assessed++;sum+=record.indicators.filter(Boolean).length;}
+        }
+      }else{
+        const cat=summaryCatalogue(grade,key,theme),titles=[...new Set(cat.titles)];
+        if(!titles.length||titles.length!==theme.count||theme.fullMark!==titles.length*4){unmapped=true;continue;}
+        for(const title of titles){
+          expected++;
+          const items=latest.filter(o=>normalizeTitle(o.unit)===normalizeTitle(cat.unit)&&o.topic===title&&Number.isInteger(o.level)&&o.level>=1&&o.level<=4);
+          const record=items.find(o=>o.stage==='support')||items.find(o=>o.stage==='regular')||items.find(o=>!o.stage);
+          if(record){assessed++;sum+=record.level;}
+        }
+      }
+    }
+    const percent=assessed?100*sum/(4*assessed):null;
+    return {grade:!unmapped&&expected>0&&assessed===expected?cdcLower2076Grade(percent):null,reason:unmapped?'स्रोत सूची अपूर्ण':assessed!==expected?'अपूर्ण मूल्याङ्कन '+assessed+'/'+expected:'',percent};
+  }
   function clearAnnualProgress(){
     annualReadSequence++;
     annualPrintSnapshot=null;
@@ -10372,7 +10417,9 @@ function openCdcAssessment(context = null) {
     field('annualStatus').textContent='';
     field('annualAttendance').textContent='उपस्थिति: अभिलेख लोड गर्नुहोस्।';
     const selection=schoolSelection();
-    const visible=!!context&&Number(field('class').value)>=4&&Number(field('class').value)<=5;
+    const visible=!!context&&annualAvailable(field('class').value);
+    field('annualTitle').textContent=lowerAnnual(field('class').value)?'प्रगति प्रतिवेदन — अनुसूची २ / Annual Progress':'प्रगति प्रतिवेदन — अनुसूची ४ / Annual Progress';
+    field('annualHead').replaceChildren(...annualColumns(field('class').value).map(label=>{const th=document.createElement('th');th.textContent=label;return th;}));
     field('annualProgress').hidden=!visible;
     if(context)field('extraReports').hidden=!visible;
     field('readProgress').disabled=!selection||!visible;
@@ -10381,7 +10428,7 @@ function openCdcAssessment(context = null) {
   }
   field('readProgress').onclick=async()=>{
     const selection=schoolSelection(),grade=field('class').value;
-    if(!context||!selection||!canShow()||!['4','5'].includes(grade))return;
+    if(!context||!selection||!canShow()||!annualAvailable(grade))return;
     clearAnnualProgress();
     const sequence=annualReadSequence;
     const isCurrent=()=>canShow()&&sequence===annualReadSequence;
@@ -10401,7 +10448,22 @@ function openCdcAssessment(context = null) {
           return 'उपस्थिति: अभिलेख भएका कक्षा दिन '+result.recordedDays+' | विद्यार्थीको पुष्टि भएको हाजिरी दिन '+result.assessed+' | उपस्थित दिन '+result.present+' | अभिलेखअनुसार प्रतिशत '+(result.percentage===null?'—':result.percentage.toFixed(2)+'%')+(result.unresolved?' | अपूर्ण वा विवादित दिन '+result.unresolved:'');
         }catch{return 'उपस्थिति: हाजिरी अभिलेख पढ्न सकिएन।';}
       })();
-      const rows=await Promise.all(cdcUpperPrimarySubjects.map(async ([key,ne,en],i)=>{
+      const lower=lowerAnnual(grade),lowerNotes=[];
+      const rows=lower?await Promise.all(lowerSubjects.map(async ([key,label,hours],i)=>{
+        const blank=reason=>{lowerNotes[i]=label+': '+reason;return [i+1,label,hours,'—'];};
+        const matches=[...new Set(registry.filter(s=>cdcAssessmentSubjectKey(s)===key))];
+        if(matches.length!==1)return blank(matches.length?'विषय दर्ता अस्पष्ट':'विषय दर्ता बाँकी');
+        const subject=matches[0];
+        if(!readOnly&&!cdcTeacherAssignment(currentUserRole,grade,subject,st))return blank('हेर्ने अनुमति छैन');
+        try{
+          const filters=Object.entries({...assessmentReadScope(selection),subject}).map(([k,v])=>where(k,'==',v));
+          const snapshot=await getDocsFromServer(query(collection(db,key==='serophero'?'cdc_serofero_indicators':'cdc_observations'),...filters));
+          const records=snapshot.docs.map(d=>d.data()).filter(o=>Object.entries({...assessmentReadScope(selection),subject}).every(([k,v])=>o[k]===v));
+          const result=lowerAnnualAchievement(grade,key,records);
+          if(!result.grade)return blank(result.reason||'मूल्याङ्कन बाँकी');
+          return [i+1,label,hours,result.grade];
+        }catch{return blank('अभिलेख पढ्न सकिएन');}
+      })):await Promise.all(cdcUpperPrimarySubjects.map(async ([key,ne,en],i)=>{
         const label=key==='english'?en:ne;
         const hours=[5,5,5,5,5,3,4][i];
         const matches=[...new Set(registry.filter(s=>cdcAssessmentSubjectKey(s)===key))];
@@ -10421,8 +10483,8 @@ function openCdcAssessment(context = null) {
       if(!isCurrent())return;
       field('annualAttendance').textContent=attendance;
       for(const values of rows){const row=field('annualRows').insertRow();for(const value of values)row.insertCell().textContent=String(value);}
-      field('annualStatus').textContent='सबै अवधिको पछिल्लो वैध अङ्कनबाट प्रति उपलब्धि एक पटक गणना। अपूर्ण सूचीको ग्रेड प्रारम्भिक मात्र हो।';
-      annualPrintSnapshot={selectionKey:JSON.stringify(selection),rows,attendance,attendanceSummary,grade,studentName:field('student').selectedOptions[0]?.text||'',roll:st?.rollNo??'',school:currentSchoolSettings.schoolNameNe||currentSchoolSettings.schoolName||'',schoolCode:currentSchoolSettings.iemisCode||'',year};
+      field('annualStatus').textContent=lower?'२०७६ मार्गदर्शन: अपूर्ण वा स्रोत पुष्टि बाँकीको अन्तिम स्तर खाली। '+lowerNotes.filter(Boolean).join(' | '):'सबै अवधिको पछिल्लो वैध अङ्कनबाट प्रति उपलब्धि एक पटक गणना। अपूर्ण सूचीको ग्रेड प्रारम्भिक मात्र हो।';
+      annualPrintSnapshot={selectionKey:JSON.stringify(selection),rows,attendance,attendanceSummary,grade,lower,lowerNotes:lowerNotes.filter(Boolean),address:currentSchoolSettings.schoolAddressNe||currentSchoolSettings.schoolAddress||currentSchoolSettings.address||'',studentName:field('student').selectedOptions[0]?.text||'',roll:st?.rollNo??'',school:currentSchoolSettings.schoolNameNe||currentSchoolSettings.schoolName||'',schoolCode:currentSchoolSettings.iemisCode||'',year};
       field('printProgress').disabled=false;
     }finally{if(isCurrent())field('readProgress').disabled=false;}
   };
@@ -10437,19 +10499,22 @@ function openCdcAssessment(context = null) {
     style.textContent='@page{size:A4 portrait;margin:12mm}body{font:12px Arial,"Noto Sans Devanagari",sans-serif;color:#111;margin:0}h2,h3{text-align:center;margin:5px 0}h3{text-decoration:underline}.meta{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin:18px 0 8px}.meta p{margin:0}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #222;padding:9px 5px;vertical-align:middle}th{font-weight:600;text-align:center}td:nth-child(1),td:nth-child(3),td:nth-child(4),td:nth-child(5){text-align:center}tr{break-inside:avoid}thead{display:table-header-group}.sign{display:flex;justify-content:space-between;margin-top:44px;text-align:center}.note{font-size:10px;margin-top:12px}';
     report.head.append(style);
     const add=(tag,value,host=report.body)=>{const e=report.createElement(tag);e.textContent=value;host.append(e);return e;};
-    add('h2','अनुसूची ४ : विद्यार्थीको समग्र प्रगति प्रतिवेदनको ढाँचा');
-    add('h3','प्रगति प्रतिवेदन');
+    add('h2',snap.lower?'अनुसूची २: विद्यार्थीको सिकाइ उपलब्धिको प्रतिवेदन':'अनुसूची ४ : विद्यार्थीको समग्र प्रगति प्रतिवेदनको ढाँचा');
+    add('h3',snap.lower?'विद्यार्थीको प्रगति प्रतिवेदन':'प्रगति प्रतिवेदन');
     const meta=report.createElement('div');meta.className='meta';report.body.append(meta);
     const a=snap.attendanceSummary;
-    for(const value of ['विद्यार्थीको नाम: '+snap.studentName,'कक्षा: '+snap.grade,'रोल नं.: '+snap.roll,'विद्यालयको नाम: '+snap.school,'सङ्केत नं.: '+snap.schoolCode,'शैक्षिक सत्र: '+snap.year,'उपस्थिति: विद्यालय सञ्चालन भएको दिन: ______','उपस्थित भएको दिन: '+(a&&a.assessed?a.present:'______'),'प्रतिशत: ______'])add('p',value,meta);
+    const identity=snap.lower?['विद्यालयको नाम: '+snap.school,'ठेगाना: '+snap.address,'सङ्केत नं.: '+snap.schoolCode,'विद्यार्थीको नाम: '+snap.studentName,'कक्षा: '+snap.grade,'परिचय नं./रोल नं.: '+snap.roll,'अध्ययन गरेको वर्ष: '+snap.year,'विद्यालय सञ्चालन भएको दिन: ______','उपस्थित भएको दिन: '+(a&&a.assessed?a.present:'______'),'उपस्थिति प्रतिशत: ______']:['विद्यार्थीको नाम: '+snap.studentName,'कक्षा: '+snap.grade,'रोल नं.: '+snap.roll,'विद्यालयको नाम: '+snap.school,'सङ्केत नं.: '+snap.schoolCode,'शैक्षिक सत्र: '+snap.year,'उपस्थिति: विद्यालय सञ्चालन भएको दिन: ______','उपस्थित भएको दिन: '+(a&&a.assessed?a.present:'______'),'प्रतिशत: ______'];
+    for(const value of identity)add('p',value,meta);
+    if(snap.lower)add('p','विषयक्षेत्रअनुसार विद्यार्थीको उपलब्धि स्तर:');
     const table=report.createElement('table');report.body.append(table);
     const head=table.createTHead().insertRow();
-    for(const title of ['क्र. सं.','विषय','पाठ्यघण्टा','सिकाइ उपलब्धि सङ्ख्या','समग्र उपलब्धिस्तर','कैफियत'])add('th',title,head);
+    for(const title of annualColumns(snap.grade))add('th',title,head);
     const body=table.createTBody();
     for(const values of snap.rows){const row=body.insertRow();for(const value of values)row.insertCell().textContent=String(value);}
     const signs=report.createElement('div');signs.className='sign';report.body.append(signs);
     for(const label of ['कक्षा शिक्षक','प्रधानाध्यापक','मिति']){const cell=report.createElement('div');add('p','…………………………',cell);add('p',label,cell);signs.append(cell);}
-    const note=add('p','समीक्षा प्रति — अपूर्ण सूचीको ग्रेड प्रारम्भिक हो। सञ्चालन दिन र वार्षिक उपस्थिति प्रतिशत विद्यालयले पुष्टि गर्नुपर्नेछ।');note.className='note';
+    if(snap.lower)add('p','उपलब्धि स्तर: A* (≥९०%), A (७५–९०% भन्दा कम), B (६०–७५% भन्दा कम), C (४५–६०% भन्दा कम), D (३०–४५% भन्दा कम), E (३०% भन्दा कम)।');
+    const note=add('p',snap.lower?'समीक्षा प्रति — अपूर्ण वा स्रोत पुष्टि बाँकीको अन्तिम स्तर खाली। '+snap.lowerNotes.join(' | ')+'। सञ्चालन दिन र उपस्थिति प्रतिशत विद्यालयले पुष्टि गर्नुपर्नेछ।':'समीक्षा प्रति — अपूर्ण सूचीको ग्रेड प्रारम्भिक हो। सञ्चालन दिन र वार्षिक उपस्थिति प्रतिशत विद्यालयले पुष्टि गर्नुपर्नेछ।');note.className='note';
     add('p',snap.attendance).className='note';
     return report;
   };
@@ -10513,7 +10578,7 @@ function openCdcAssessment(context = null) {
       }
       // Existing CDC Annex 4 applies only to Grades 4–5 in this implementation.
       field('subject').value=original.subject;refreshStudents();field('student').value=studentId;load();
-      if(['4','5'].includes(grade)){
+      if(annualAvailable(grade)){
         status.textContent='वार्षिक प्रगति प्रतिवेदन पढ्दै…';
         await field('readProgress').onclick();
         if(!stillHere()||portfolioKey()!==key)throw Error('छनोट परिवर्तन भयो।');
