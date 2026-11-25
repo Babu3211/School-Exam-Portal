@@ -208,6 +208,8 @@ jobs:
               assert w<h and pages==1, 'Annual report must fit portrait A4'
           else:
               assert w>h, 'Assessment form must be landscape A4'
+              if sys.argv[2]=='cdc-sero':
+                  assert pages==1, '24-indicator Serofero review fixture must fit on one page'
           PY
             pdftotext "$report/$fixture.pdf" "$report/$fixture.txt"
             test -s "$report/$fixture.txt"
