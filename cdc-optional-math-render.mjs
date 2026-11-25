@@ -58,6 +58,15 @@ export function renderCdcCompositePaper(paper,{escapeHtml,answerKey=false}={}){
    (paper.language==='both'&&Array.isArray(sub.optionsEn)?
     ' / '+esc(sub.optionsEn[i]||''):'')+'</div>').join('')+'</div>';
  };
+ // CDC 2082 model has separate marks and cognitive-level columns.
+ const levelCodes={knowledge:'K',understanding:'U',application:'A',higher:'HA'};
+ const scoreCells=sub=>{
+  const level=levelCodes[sub.cognitiveLevel];
+  if(!level||!Number.isSafeInteger(sub.marks)||sub.marks<1)throw Error('Invalid composite model score cell');
+  return '<span class="qp-model-mark" data-marks="'+sub.marks+'" style="text-align:center;font-weight:700"> '+esc(sub.marks)+' </span><span class="qp-model-level" data-level="'+level+'" style="text-align:center"> '+level+' </span>';
+ };
+ const modelRow=(content,sub)=>'<div class="qp-model-row" style="display:grid;grid-template-columns:minmax(0,1fr) 2em 2.5em;gap:4px;align-items:start;break-inside:avoid"><div>'+content+'</div>'+scoreCells(sub)+'</div>';
+ const modelHeading=()=>'<div class="qp-model-heading" style="display:grid;grid-template-columns:minmax(0,1fr) 2em 2.5em;gap:4px;font-size:10px;text-align:center"><span></span><span>'+esc(ne?'अङ्क':'Marks')+'</span><span>'+esc(ne?'तह':'Level')+'</span></div>';
  const objective=groups.find(x=>x.group==='objective');
  const within=groups.find(x=>x.group==='WCA');
  const cross=groups.find(x=>x.group==='CCA');
@@ -65,18 +74,18 @@ export function renderCdcCompositePaper(paper,{escapeHtml,answerKey=false}={}){
    esc(objective.title)+'</h3>'+
   '<div class="qp-q" style="break-inside:avoid;page-break-inside:avoid">'+
   '<b>'+esc(1)+'. '+(answerKey?(ne?'उत्तरकुञ्जिका — ':'Teacher Answer Key — '):'')+
-  (ne?'वस्तुगत प्रश्न':'Objective Questions')+' ['+esc(11)+']</b>'+
+  (ne?'वस्तुगत प्रश्न':'Objective Questions')+'</b>'+modelHeading()+
   objective.items.map((q,i)=>{
    const sub=q.subquestions[0];
    const prompt=esc(text(sub,answerKey?'answer':'text'));
    const key=answerKey&&sub.correctOption?
     ' ('+(ne?'सही विकल्प: ':'Correct option: ')+esc(paperAnswerOption(sub.correctOption,paper.language))+')':'';
    return '<div style="margin:10px 0 10px 18px;white-space:pre-line">'+
-    '<b>'+paperOptionLabel(i,paper.language)+'.</b> '+prompt+key+
-    (answerKey?'':' <b>['+esc(1)+']</b>'+questionFigure(sub,paper.language))+optionsHtml(sub)+'</div>';
+    modelRow('<b>'+paperOptionLabel(i,paper.language)+'.</b> '+prompt+key+
+    (answerKey?'':questionFigure(sub,paper.language))+optionsHtml(sub),sub)+'</div>';
   }).join('')+'</div>';
  const groupedHtml=(group,startingNumber)=>
-  '<h3 style="text-align:left;margin-top:18px">'+esc(group.title)+'</h3>'+
+  '<h3 style="text-align:left;margin-top:18px">'+esc(group.title)+'</h3>'+modelHeading()+
   group.items.map((q,index)=>{
    const number=startingNumber+index;
    const mark=q.subquestions.reduce((total,s)=>total+Number(s.marks),0);
@@ -85,17 +94,16 @@ export function renderCdcCompositePaper(paper,{escapeHtml,answerKey=false}={}){
     esc(context)+'</p>':'';
    const subparts=q.subquestions.map((sub,i)=>
     '<li style="margin:6px 0;white-space:pre-line">'+
-    label(i)+'. '+
+    modelRow(label(i)+'. '+
     esc(text(sub,answerKey?'answer':'text'))+
-    (answerKey?'':' <b>['+esc(sub.marks)+']</b>')+
-    (answerKey?'':questionFigure(sub,paper.language))+optionsHtml(sub)+'</li>').join('');
+    (answerKey?'':questionFigure(sub,paper.language))+optionsHtml(sub),sub)+'</li>').join('');
    return '<div class="qp-q" style="break-inside:avoid;page-break-inside:avoid;margin:13px 0">'+
     '<b>'+esc(number)+'. '+(answerKey?(ne?'[उत्तरकुञ्जिका] ':'[Answer Key] '):'')+
-    '<span>['+esc(mark)+']</span></b>'+contextHtml+
+    '</b>'+contextHtml+
     '<ol style="list-style:none;padding-left:16px;margin:5px 0">'+subparts+
     '</ol></div>';
   }).join('');
- const html=objectiveHtml+groupedHtml(within,2)+groupedHtml(cross,14);
+ const html='<p style="text-align:center;font-weight:700">'+esc(paper.language==='both'?'सबै प्रश्न अनिवार्य छन् । / Attempt all questions.':ne?'सबै प्रश्न अनिवार्य छन् ।':'Attempt all questions.')+'</p>'+objectiveHtml+groupedHtml(within,2)+groupedHtml(cross,14);
  const header='<div style="text-align:center;border-bottom:1px solid #222;padding-bottom:12px">'+
   '<h2>'+esc(paper.schoolName||'विद्यालय')+'</h2><p>'+esc(paper.schoolAddress||'')+'</p>'+
   '<h3>'+esc(paper.paperTitle||'प्रश्नपत्र')+(answerKey?(ne?' — उत्तरकुञ्जिका':' — Teacher Answer Key'):'')+'</h3>'+
