@@ -43,6 +43,9 @@ function slotOK(q,i,subject,topics,chart,allowDraft=false,allowPracticeReading=f
    (i===2&&!readingGenres3.includes(q.genre))||(i===3&&!readingGenres4.includes(q.genre)))return false;
   const types=new Set(items.map(x=>x?.type));
   if(types.size!==r.types||[...types].some(t=>!readingTypes.includes(t)))return false;
+  // The reference renderer uses five-item model subsections. Reject malformed
+  // groups at selection time rather than failing after a paper is generated.
+  if([...types].some(t=>items.filter(x=>x.type===t).length!==5))return false;
   if(!items.every(x=>x&&x.marks===1&&cleanEnglish(x.text)&&str(x.answer)&&domains.includes(x.domain)&&
    (x.domain!=='vocabulary'||i===3)&&
    (x.type!=='mcq'||fourOptions(x))))return false;
