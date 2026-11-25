@@ -120,8 +120,19 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
    assert.ok(typeof ne==='string'&&ne.trim()&&typeof en==='string'&&en.trim(),'Both languages required in computer review');
    return '<span lang="ne">'+esc(ne)+'</span>'+(ne===en?'':'<span class="translation" lang="en">'+esc(en)+'</span>');
   };
-  const html=paper.questions.map((q,n)=>'<p class="question"><b>'+ (n+1)+'.</b> '+bilingual(q.questionText,q.questionTextEn)+' ['+q.marks+']</p>'+ (q.questionType==='mcq'?'<ol type="A">'+q.options.map((o,i)=>'<li>'+bilingual(o,q.optionsEn[i])+'</li>').join('')+'</ol>':'')).join('');
-  const key='<h3>Indicative answer key</h3>'+paper.questions.map((q,n)=>'<p>'+ (n+1)+'. '+bilingual(q.answer,q.answerEn)+(q.correctOption?' ('+esc(q.correctOption)+')':'')+'</p>').join('');
+  // 2082 CDC model: three groups; marks at group heading, not every question.
+  const sections=[['A','mcq',10,1,'Choose the correct answer.','सही उत्तर छान्नुहोस्।'],['B','short',10,2,'Give short answers.','छोटो उत्तर दिनुहोस्।'],['C','long',5,4,'Give long answers.','लामो उत्तर दिनुहोस्।']];
+  let number=0;
+  const ordered=[];
+  const html='<p>सबै प्रश्न अनिवार्य छन्। / Attempt all questions.</p>'+sections.map(([label,type,count,marks,en,ne])=>{
+   const qs=paper.questions.filter(q=>q.questionType===type);
+   assert.equal(qs.length,count);assert.ok(qs.every(q=>q.marks===marks));
+   ordered.push(...qs);
+   return '<h3>Group '+label+' — '+count+' × '+marks+' = '+count*marks+'</h3><p>'+bilingual(ne,en)+'</p>'+qs.map(q=>'<p class="question"><b>'+ (++number)+'.</b> '+bilingual(q.questionText,q.questionTextEn)+'</p>'+ (type==='mcq'?'<ol type="a">'+q.options.map((o,i)=>'<li>'+bilingual(o,q.optionsEn[i])+'</li>').join('')+'</ol>':'')).join('');
+  }).join('');
+  const key='<h3>Indicative answer key</h3>'+ordered.map((q,n)=>'<p>'+ (n+1)+'. '+bilingual(q.answer,q.answerEn)+(q.correctOption?' ('+esc(q.correctOption.toLowerCase())+')':'')+' ['+q.marks+']</p>').join('');
+  assert.equal(number,25);
+  assert.doesNotMatch(html,/\\[(?:1|2|4)\\]/,'Uniform marks belong to group heading');
   for(const q of paper.questions){
    assert.ok(html.includes(esc(q.questionTextEn)),'English question missing from bilingual review');
    assert.ok(key.includes(esc(q.answerEn)),'English answer missing from bilingual review');
@@ -138,7 +149,15 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
   assert.equal(result.ready,true,result.reason);assert.equal(result.cellAudit.matches,true);assert.notEqual(result.signature,previousSignature);previousSignature=result.signature;
   const paper={gradeNumber:grade,subject,fullMarks:75,durationMinutes:180,language,topicIds,questionFormat:'cdc_optional_math_composite',schoolName:'SMSS — teacher review only',className:'9',paperTitle:'NOT FOR EXAM',academicYear:'2083',questions:result.questions.map(q=>({...q,questionId:q.id}))};
   assert.equal(assertGrade9ExamPaperMatches(paper),true);
-  records.push({subject,set:i+1,language,fullMarks:75,durationMinutes:180,groupCount:27,sourceUrl:guide.sourceUrl,status:'72 CDC grid cells matched — teacher review pending',signature:result.signature,html:renderCdcCompositePaper(paper,{escapeHtml:esc})+'<details><summary>Teacher answer review</summary>'+renderCdcCompositePaper(paper,{escapeHtml:esc,answerKey:true})+'</details>'});
+  const modelHtml=renderCdcCompositePaper(paper,{escapeHtml:esc});
+  const answerHtml=renderCdcCompositePaper(paper,{escapeHtml:esc,answerKey:true});
+  const subs=paper.questions.flatMap(q=>q.subquestions);
+  for(const html of [modelHtml,answerHtml]){
+   assert.equal((html.match(/class="qp-model-mark"/g)||[]).length,subs.length);
+   assert.equal((html.match(/class="qp-model-level"/g)||[]).length,subs.length);
+   assert.equal([...html.matchAll(/data-marks="(\d+)"/g)].reduce((n,m)=>n+Number(m[1]),0),75);
+  }
+  records.push({subject,set:i+1,language,fullMarks:75,durationMinutes:180,groupCount:27,sourceUrl:guide.sourceUrl,status:'72 CDC grid cells matched — teacher review pending',signature:result.signature,html:modelHtml+'<details><summary>Teacher answer review</summary>'+answerHtml+'</details>'});
  }
 }
 assert.equal(records.length,16);
