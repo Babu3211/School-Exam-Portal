@@ -273,6 +273,25 @@ try{
  await assertFails(updateDoc(doc(admin,'schools','12345678','staff','scoped_staff'),{schoolId:deleteField()}));
  // 83 School admin can update staff while preserving schoolId
  await assertSucceeds(updateDoc(doc(admin,'schools','12345678','staff','scoped_staff'),{name:'Updated Staff'}));
+ // Staff identity protection also applies to direct Web SDK writes.
+ const staffProfile=doc(admin,'schools','12345678','staff','protected_staff');
+ await assertSucceeds(setDoc(staffProfile,{schoolId:'12345678',staffId:'0001',name:'Staff Profile',email:'teacher@example.invalid'}));
+ await assertFails(updateDoc(staffProfile,{staffId:'0002'}));
+ await assertFails(updateDoc(staffProfile,{authUid:'forged_uid'}));
+ await assertFails(updateDoc(staffProfile,{role:'school_admin'}));
+ await assertFails(setDoc(doc(admin,'schools','12345678','staff','forged_link'),{schoolId:'12345678',name:'Forged',authUid:'fake_uid'}));
+ const newTeacherUid='staff_link_test_teacher',newTeacherRef=doc(admin,'schools','12345678','members',newTeacherUid);
+ await assertSucceeds(runTransaction(admin,async tx=>{
+  await tx.get(staffProfile);await tx.get(newTeacherRef);
+  tx.set(newTeacherRef,{uid:newTeacherUid,schoolId:'12345678',role:'teacher',active:false});
+  tx.update(staffProfile,{authUid:newTeacherUid,email:'teacher@example.invalid'});
+ }));
+ await assertFails(updateDoc(staffProfile,{email:'different@example.invalid'}));
+ await assertFails(updateDoc(staffProfile,{emailId:'different@example.invalid'}));
+ await assertFails(updateDoc(staffProfile,{authUid:deleteField()}));
+ await assertFails(updateDoc(staffProfile,{authUid:'other_uid'}));
+ await assertSucceeds(updateDoc(staffProfile,{phone:'00001234',nameEnglish:'Staff Updated'}));
+ console.log('PASS direct Staff writes: protected Employee ID, atomic teacher link, immutable linked email, no role edits');
  // 84 Staff with a different tenant cannot be created by superadmin either
  await assertFails(setDoc(doc(superDb,'schools','12345678','staff','forged_by_super'),{schoolId:'87654321',name:'Bad'}));
  // 85 School Admin creates own school's exam term with tenant identity
