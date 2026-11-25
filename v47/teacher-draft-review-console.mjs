@@ -1,6 +1,6 @@
 import {neError} from './nepali-feedback.mjs';
 // Read-only School Admin review. No Firestore write/import/approval API.
-import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
+import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,bindVerifiedModuleActivity} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {loadSchoolAdminTeacherDraftReview} from './school-admin-teacher-draft-review.mjs';
@@ -58,7 +58,7 @@ $('login').onclick=async()=>{
   await reverifyAdmin(user.uid,id);
   if(current!==epoch||id!==$('schoolId').value.trim())throw Error('School selection changed');
   actor={uid:user.uid,role:'school_admin',active:true,schoolId:id};
-  schoolId=id;$('schoolId').disabled=true;if(!existing)startVerifiedSchoolActivity();
+  schoolId=id;$('schoolId').disabled=true;if(!existing)startVerifiedSchoolActivity();{const activityMember=actor;bindVerifiedModuleActivity(activityMember,()=>actor===activityMember&&auth?.currentUser?.uid===activityMember.uid);}
   $('reviewArea').hidden=false;$('logout').disabled=false;
   $('adminBack').href='./school-admin.html?schoolId='+encodeURIComponent(id);
   status('विद्यालयको School Admin प्रमाणित भयो: '+id+'. Reviews are read-only.');

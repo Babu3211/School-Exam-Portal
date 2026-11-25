@@ -4,7 +4,7 @@ import {validateSchoolId} from './school-paths.mjs';
 import {buildRawLedgerPreview} from './raw-ledger-preview.mjs';
 import {excelWorkbook} from './excel-workbook.mjs';
 import {validateLedgerReviewPage} from './ledger-review-page-guard.mjs';
-import {connectSchoolFirebase,startVerifiedSchoolActivity} from './school-firebase-client.mjs';
+import {connectSchoolFirebase,startVerifiedSchoolActivity,bindVerifiedModuleActivity} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 const $=id=>document.getElementById(id),status=message=>{$('message').textContent=message};
 let auth,authSdk,api,db,actor,schoolId,epoch=0,busy=false,preview=null;
@@ -39,7 +39,7 @@ $('login').onclick=async()=>{
   if(attempt!==epoch||auth.currentUser?.uid!==loginUid)return;
   if(!school.exists()||school.data().active!==true||school.data().id!==id)throw new Error('School unavailable');
   actor={schoolId:id,role:session.role,active:true,uid:loginUid};schoolId=id;
-  if(freshSignIn)startVerifiedSchoolActivity();
+  if(freshSignIn)startVerifiedSchoolActivity();{const activityMember=actor;bindVerifiedModuleActivity(activityMember,()=>actor===activityMember&&auth?.currentUser?.uid===activityMember.uid);}
   $('heading').textContent='Missing marks — '+String(school.data().name??id);
   $('work').hidden=false;lock(false);
   status('लगइन सफल भयो। कक्षा र परीक्षा अवधि छानेर समीक्षा गर्नुहोस्।');

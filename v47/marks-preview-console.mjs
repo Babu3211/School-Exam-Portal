@@ -4,7 +4,7 @@ import {validateSchoolId} from './school-paths.mjs';
 import {loadMarksByClassTerm} from './marks-query.mjs';
 import {excelWorkbook} from './excel-workbook.mjs';
 import {auditLoadedMarks} from './marks-audit.mjs';
-import {connectSchoolFirebase,startVerifiedSchoolActivity} from './school-firebase-client.mjs';
+import {connectSchoolFirebase,startVerifiedSchoolActivity,bindVerifiedModuleActivity} from './school-firebase-client.mjs';
 const $=id=>document.getElementById(id),status=message=>{$('message').textContent=message};
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 let auth,authSdk,api,db,actor,schoolId,cursor=null,records=[],epoch=0,busy=false,loadingEpoch=null,hasMore=false;
@@ -27,7 +27,7 @@ $('login').onclick=async()=>{
   if(!school.exists()||school.data().active!==true)throw new Error('School inactive or unavailable');
   const uid=credential.user.uid;const session=await verifySchoolSession({schoolId:requestedId,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(attempt!==epoch||auth.currentUser?.uid!==uid)throw new Error('Authentication changed');
   schoolId=requestedId;actor={uid,role:session.role,active:true,schoolId};
-  if(freshSignIn)startVerifiedSchoolActivity();
+  if(freshSignIn)startVerifiedSchoolActivity();{const activityMember=actor;bindVerifiedModuleActivity(activityMember,()=>actor===activityMember&&auth?.currentUser?.uid===activityMember.uid);}
   $('heading').textContent='Marks — '+String(school.data().name??schoolId);$('work').hidden=false;$('logout').disabled=false;reset();
  }catch(e){if(attempt===epoch){clear();try{if(auth?.currentUser)await authSdk.signOut(auth)}catch{}status('लगइन असफल: '+neError(e))}}
  finally{$('login').disabled=false}

@@ -1,5 +1,5 @@
 import {neError} from './nepali-feedback.mjs';
-import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
+import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,bindVerifiedModuleActivity} from './school-firebase-client.mjs';
 import {discoverVerifiedSubjectExamSettings} from './discover-subject-exam-settings.mjs';
 import {inspectConfiguredClassMarks} from './configured-mark-preflight.mjs';
 import {verifyStoredTeacherClassDraft} from './teacher-class-draft.mjs';
@@ -35,7 +35,7 @@ $('login').onclick=async()=>{
   const session=await verifiedSession(credential.user.uid,id);
   if(request!==epoch)throw new Error('Login changed');
   if(id!==$('schoolId').value.trim())throw new Error('School selection changed');
-  actor={uid:session.uid,role:'teacher',active:true,schoolId:id};if(freshSignIn)startVerifiedSchoolActivity();schoolId=id;$('work').hidden=false;message('शिक्षकको लगइन सफल भयो। आफ्नो कक्षा र विषय छान्नुहोस्।');
+  actor={uid:session.uid,role:'teacher',active:true,schoolId:id};if(freshSignIn)startVerifiedSchoolActivity();{const activityMember=actor;bindVerifiedModuleActivity(activityMember,()=>actor===activityMember&&auth?.currentUser?.uid===activityMember.uid);}schoolId=id;$('work').hidden=false;message('शिक्षकको लगइन सफल भयो। आफ्नो कक्षा र विषय छान्नुहोस्।');
  }catch(e){if(request===epoch){clear();const failedEpoch=epoch;try{await authSdk.signOut(auth)}catch{}if(epoch===failedEpoch){lock(false);message('लगइन असफल: '+neError(e))}}}
  finally{if(request===epoch)lock(false)}
 };

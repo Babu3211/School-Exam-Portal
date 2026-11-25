@@ -1,5 +1,5 @@
 import {neError} from './nepali-feedback.mjs';
-import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
+import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,bindVerifiedModuleActivity} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {createSchoolStore} from './firestore-adapter.mjs';
@@ -61,7 +61,7 @@ $('login').onclick=async()=>{
   const selectedStore=createSchoolStore({db,api,member,schoolId:selectedSchool,
    assertSession:()=>{if(request!==epoch||auth?.currentUser?.uid!==uid||actor!==member||schoolId!==selectedSchool)throw new Error('School session changed')}});
   actor=member;schoolId=selectedSchool;store=selectedStore;
-  if(freshSignIn)startVerifiedSchoolActivity();
+  if(freshSignIn)startVerifiedSchoolActivity();{const activityMember=actor;bindVerifiedModuleActivity(activityMember,()=>actor===activityMember&&auth?.currentUser?.uid===activityMember.uid);}
   $('heading').textContent='Staff — '+String(school.name??selectedSchool);
   $('mode').textContent=member.role==='viewer'?'Viewer — Read-only':member.role==='teacher'?'Teacher — Read-only':'School Admin — Staff management';
   $('records').hidden=false;$('staffActionHeader').hidden=member.role!=='school_admin';$('previewStaffImport').disabled=member.role!=='school_admin';$('staffImportArea').hidden=member.role!=='school_admin';$('logout').disabled=false;$('exportAll').disabled=false;

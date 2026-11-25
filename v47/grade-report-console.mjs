@@ -1,5 +1,5 @@
 import {neError} from './nepali-feedback.mjs';
-import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} from './school-firebase-client.mjs';
+import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,bindVerifiedModuleActivity} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {loadVerifiedLegacyGradeReport} from './verified-legacy-grade-report.mjs';
@@ -55,7 +55,7 @@ $('login').onclick=async()=>{
   if(seq!==sessionSeq||auth.currentUser?.uid!==uid||!school||school.id!==sid||school.active!==true)throw Error('School sign-in changed');
   actor={uid,schoolId:sid,role:session.role,active:true};schoolId=sid;
   $('reportSource').querySelector('option[value="draft"]').disabled=session.role!=='school_admin';
-  if(fresh)startVerifiedSchoolActivity();
+  if(fresh)startVerifiedSchoolActivity();{const activityMember=actor;bindVerifiedModuleActivity(activityMember,()=>actor===activityMember&&auth?.currentUser?.uid===activityMember.uid);}
   $('verifiedLabel').textContent=String(school.name??sid)+' · '+sid+' · '+session.role;
   $('reportArea').hidden=false;$('logout').disabled=false;status('विद्यालय प्रमाणित भयो।');
  }catch(e){if(seq===sessionSeq){clearSession();try{await authSdk.signOut(auth)}catch{}status('Login असफल: '+neError(e))}}

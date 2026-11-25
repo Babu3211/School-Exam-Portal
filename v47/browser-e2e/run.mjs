@@ -160,6 +160,31 @@ try{
   await page.locator('#logout').click();await wait(page,()=>document.getElementById('reportArea').hidden);
   assert.equal(await page.locator('#gradeOutput').textContent(),'');
  }
+ // A direct Attendance login must register verified activity without visiting Dashboard.
+ {
+  const {context,page,errors}=await newSession();
+  try{
+   const school=schools[0],uid='alpha-teacher',activityPath='schools/'+school.sid+'/dashboard_activity/'+uid;
+   assert.equal((await db.doc(activityPath).get()).exists,false);
+   await page.goto(origin+'/attendance.html?schoolId='+school.sid);
+   await wait(page,()=>!document.getElementById('login').disabled);
+   await page.locator('#schoolId').fill(school.sid);
+   await page.locator('#email').fill(email(uid));
+   await page.locator('#password').fill(password);
+   await page.locator('#login').click();
+   await wait(page,()=>!document.getElementById('work').hidden);
+   let activity;
+   for(let attempt=0;attempt<100;attempt++){activity=await db.doc(activityPath).get();if(activity.exists)break;await new Promise(r=>setTimeout(r,100))}
+   assert.equal(activity.exists,true,'Direct module login must record activity');
+   assert.equal(activity.data().schoolId,school.sid);assert.equal(activity.data().uid,uid);
+   assert.equal((await db.doc('schools/'+schools[1].sid+'/dashboard_activity/'+uid).get()).exists,false);
+   const first=activity.data().lastSeen.toMillis();
+   await page.locator('#date').click();
+   assert.equal((await db.doc(activityPath).get()).data().lastSeen.toMillis(),first);
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+  console.log('PASS direct Attendance activity with verified tenant and throttled heartbeat');
+ }
  for(const [school,uid,role] of [[schools[0],'alpha-admin','school_admin'],[schools[0],'alpha-viewer','viewer'],[schools[0],'alpha-teacher','teacher'],[schools[1],'beta-admin','school_admin']]){
   const {context,page,errors}=await newSession();
   try{
