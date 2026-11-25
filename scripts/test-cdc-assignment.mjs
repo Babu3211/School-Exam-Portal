@@ -19,7 +19,13 @@ assert.equal(allowed({...teacher,active:false},'5','Mathematics',student),false)
 assert.equal(allowed({...teacher,roles:['subject_teacher','viewer']},'5','Mathematics',student),false);
 assert.equal(allowed({...teacher,subjectAssignments:[]},'5','Mathematics',student),false);
 assert.equal(allowed({...teacher,subjectAssignments:[{...task,section:'ALL'}]},'5','Mathematics',{...student,section:'B'}),true);
-console.log('CDC teacher assignment and section checks passed');
+const adminRole={active:true,roles:['admin']};
+assert.equal(allowed(adminRole,'5','Mathematics',{...student,section:'B'}),true);
+assert.equal(allowed(adminRole,'4','English',{...student,class:'4'}),true);
+assert.equal(allowed(adminRole,'6','English',{...student,class:'6'}),false);
+assert.equal(allowed(adminRole,'5','Mathematics',{...student,active:false}),false);
+assert.equal(allowed({...adminRole,roles:['admin','viewer']},'5','Mathematics',student),false);
+console.log('CDC teacher and Admin assignment and section checks passed');
 
 const catalogSource = html.slice(html.indexOf('const cdcNormalizeTitle'),html.indexOf('// CDC observations'));
 const parseCatalog = new Function(catalogSource+'return parseCdcBilingualCatalog;')();
@@ -1694,6 +1700,29 @@ assert.equal(field('annex3').hidden,true);
 assert.equal(field('seroSourcePreview').hidden,true);
 assert.equal(field('seroSourceFrame').children.length,0);
 console.log('Grade 1 Our Surroundings three forms, 48 indicators, scoped binary Save/Load, saved-only print, seven original-guide review forms, duplicate and revoked-role checks passed');
+// Admin can enter the official form without a teacher role document.
+w.isAdmin=()=>true;current.roles=['admin'];current.subjectAssignments=[];
+w.auth.currentUser.uid='synthetic-admin';w.currentSchoolSettings.academicYear='2083';
+w.getDocs=async name=>({docs:name==='students'?[{id:'admin-student',data:()=>({class:'Class 5',section:'B',name:'Synthetic Admin Student'})}]:[{id:'admin-class',data:()=>({className:'Class 5',subject:'Nepali'})}]});
+w.getDocsFromServer=async()=>({docs:[]});
+w.getDocFromServer=async()=>{throw Error('Admin has no teacher role document');};
+let adminSaved;
+w.setDoc=async(ref,data)=>{adminSaved=data;};
+await w.loadCdcAssessmentPage();
+choice('class','5');choice('subject','Nepali');choice('student','admin-student');
+choice('unit','क्षेत्र १ — कविता (गीत/देशप्रेम)');
+await field('gridRead').onclick();
+assert.equal(field('accessNotice').hidden,true);
+const adminRow=field('annexRows').rows[0];
+assert.equal(adminRow.querySelector('[data-cdc-grid-date="regular"]').disabled,false);
+adminRow.querySelector('[data-cdc-grid-edit="regular"]').click();
+adminRow.querySelector('[data-cdc-grid-editor="level"]').value='3';
+await adminRow.querySelector('[data-cdc-grid-save="regular"]').onclick();
+assert.equal(adminSaved?.createdBy,'synthetic-admin');
+assert.equal(adminSaved?.studentId,'admin-student');
+assert.equal(adminSaved?.section,'B');
+assert.equal(adminSaved?.level,3);
+console.log('Admin direct CDC form entry and save without teacher assignment passed');
 // CDC backup: verify legacy and new exports in an isolated synthetic DOM.
 // Assessment evidence must never be replayed through ordinary client restore.
 const backupDom=new JSDOM('<div id="restoreFirebaseMessage"></div><pre id="restorePreview"></pre><input id="restoreBackupFile" type="file"><button id="runFirebaseRestore"></button>',{runScripts:'outside-only'});

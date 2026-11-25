@@ -2377,9 +2377,11 @@ function cdcVerifiedUnits(className,subject) {
 
 function cdcTeacherAssignment(role, className, subject, student) {
   const grade = classNoFromName(className);
-  if (role?.active !== true || !role.roles?.includes('subject_teacher') || role.roles.includes('viewer') ||
+  if (role?.active !== true || role.roles?.includes('viewer') ||
       !['1','2','3','4','5'].includes(grade) || !subject) return false;
   if (student && (student.active === false || classNoFromName(student.class ?? student.className)!==grade)) return false;
+  if (role.roles?.includes('admin')) return true;
+  if (!role.roles?.includes('subject_teacher')) return false;
   const section = String(student?.section ?? '').trim().toLowerCase();
   return (role.subjectAssignments || []).some(assignment => {
     if(classNoFromName(assignment.className)!==grade || entrySubjectKey(assignment.subject)!==entrySubjectKey(subject)) return false;
@@ -9423,12 +9425,13 @@ function openCdcAssessment(context = null) {
     const {period,...annual}=selection;
     return context?annual:selection;
   };
-  const readOnly = isAdmin() || roleHas('viewer') || !roleHas('subject_teacher');
+  const readOnly = roleHas('viewer') || (!isAdmin() && !roleHas('subject_teacher'));
+  const assessmentRole = async () => isAdmin() ? {active:true,roles:['admin']} : (await getDocFromServer(doc(db,'user_roles',owner))).data();
   if(context){
     field('workspaceTitle').hidden=true;
     const notice=field('accessNotice');
     notice.hidden=!readOnly;
-    notice.textContent='यो खाता हेर्न मात्र मिल्छ। मूल्याङ्कन भर्न सम्बन्धित विषय शिक्षकको खाताबाट प्रवेश गर्नुहोस्।';
+    notice.textContent='यो खाता हेर्न मात्र मिल्छ। मूल्याङ्कन भर्न Admin वा सम्बन्धित विषय शिक्षकको खाताबाट प्रवेश गर्नुहोस्।';
     if(readOnly)field('workspaceHint').textContent='विद्यार्थी र विषयक्षेत्र छान्नुहोस्। सुरक्षित अभिलेख हेर्न सकिन्छ।';
     const extra=document.createElement('details');extra.className='cdc-more';extra.dataset.cdc='moreOptions';
     const heading=document.createElement('summary');heading.textContent='थप विकल्प / More';extra.append(heading);
@@ -9546,7 +9549,7 @@ function openCdcAssessment(context = null) {
           inlineRetry.set(retryKey,ref);
           inlinePending=true;save.disabled=true;cancel.disabled=true;field('gridStatus').textContent='सुरक्षित गर्दै…';
           try{
-            const role=(await getDocFromServer(doc(db,'user_roles',owner))).data();
+            const role=await assessmentRole();
             const student=assessmentStudents.find(s=>s.id===selection.studentId);
             if(!stillHere()||!student||!cdcTeacherAssignment(role,field('class').value,selection.subject,student))throw Error('Assignment unavailable');
             try{await setDoc(ref,{...payload,createdAt:serverTimestamp()});}
@@ -9625,7 +9628,7 @@ function openCdcAssessment(context = null) {
     field('printForm').disabled=!enabled||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('unit').value.trim();
     field('gridRead').textContent=seroReference?'सूचक अभिलेख पढ्नुहोस् / पुनः पढ्नुहोस्':'अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्';
     field('gridRead').disabled=false;
-    field('entryNotice').textContent=readOnly?'यो खाता हेर्न मात्र हो। मिति र अङ्कन भर्न तोकिएको विषय शिक्षकको खाताबाट प्रवेश गर्नुहोस्।':!schoolSelection()||!field('unit').value.trim()?'कक्षा, विषय, विद्यार्थी र विषयक्षेत्र छान्नुहोस्।':annexReadSelection===JSON.stringify(schoolSelection())?'तालिकामा मिति वा मिति / अङ्कन बटन थिचेर भर्नुहोस्।':'Entry खोल्नुहोस् थिचेर विद्यालयको अभिलेख पढ्नुहोस्।';
+    field('entryNotice').textContent=readOnly?'यो खाता हेर्न मात्र हो। मिति र अङ्कन भर्न Admin वा तोकिएको विषय शिक्षकको खाताबाट प्रवेश गर्नुहोस्।':!schoolSelection()||!field('unit').value.trim()?'कक्षा, विषय, विद्यार्थी र विषयक्षेत्र छान्नुहोस्।':annexReadSelection===JSON.stringify(schoolSelection())?'तालिकामा मिति वा मिति / अङ्कन बटन थिचेर भर्नुहोस्।':'Entry खोल्नुहोस् थिचेर विद्यालयको अभिलेख पढ्नुहोस्।';
     if(seroGuide){field('gridRead').hidden=true;field('printForm').disabled=true;renderSeroGuideReview(seroGuide);return;}
     if(seroReference){field('gridRead').hidden=!!seroReference.referenceOnly||year!=='2083';field('printForm').disabled=!!seroReference.referenceOnly||year!=='2083'||!schoolSelection()||seroReadKey!==seroScopeKey()||inlinePending;renderSeroferoReference(seroReference);return;}
     if(nepaliForm){renderPrimaryNepaliForm(nepaliForm);return;}
@@ -9851,7 +9854,7 @@ function openCdcAssessment(context = null) {
       seroRetry.set(retryKey,ref);inlinePending=true;button.disabled=true;
       field('gridStatus').textContent='सूचक अभिलेख सुरक्षित गर्दै…';
       try{
-        const role=(await getDocFromServer(doc(db,'user_roles',owner))).data();
+        const role=await assessmentRole();
         const student=assessmentStudents.find(s=>s.id===selection.studentId);
         if(!stillHere()||!student||!cdcTeacherAssignment(role,field('class').value,selection.subject,student))throw Error('Assignment unavailable');
         try{await setDoc(ref,{...payload,createdAt:serverTimestamp()});}
@@ -10254,7 +10257,7 @@ function openCdcAssessment(context = null) {
     try{
       let attendanceSummary=null;
       const attendancePromise=(async()=>{
-        if(!readOnly&&(!roleHas('class_teacher')||typeof classTeacherNames!=='function'||!classTeacherNames().includes(selection.className)))return 'उपस्थिति: हाजिरी हेर्ने अनुमति छैन।';
+        if(!readOnly&&!isAdmin()&&(!roleHas('class_teacher')||typeof classTeacherNames!=='function'||!classTeacherNames().includes(selection.className)))return 'उपस्थिति: हाजिरी हेर्ने अनुमति छैन।';
         try{
           const snapshot=await getDocsFromServer(query(collection(db,'attendance'),where('className','==',selection.className),where('attendanceType','==','daily'),where('academicYear','==',year)));
           const result=cdcAttendanceSummary(snapshot.docs.map(d=>d.data()),selection);
@@ -10728,7 +10731,7 @@ function openCdcAssessment(context = null) {
     try{
       if(!source) throw Error('आधिकारिक स्रोतको नाम वा URL राख्नुहोस्।');
       const incoming=parseCdcBilingualCatalog(field('catalogText').value);
-      const role=(await getDocFromServer(doc(db,'user_roles',owner))).data();
+      const role=await assessmentRole();
       if(!dialog.open||auth.currentUser?.uid!==owner||catalogKey()!==targetKey) return;
       if(!cdcTeacherAssignment(role,className,subject)) throw Error('यो विषयको assignment छैन।');
       const existing=getCatalog();
@@ -10776,9 +10779,9 @@ function openCdcAssessment(context = null) {
     try {
       const [,,cl,subject,studentId] = scope();
       const selectedStudent = assessmentStudents.find(st=>st.id===studentId);
-      const snapshot = await getDocFromServer(doc(db,'user_roles',owner));
+      const role = await assessmentRole();
       if (!canShow() || key()!==savingKey) return;
-      if (!selectedStudent || !cdcTeacherAssignment(snapshot.data(),cl,subject,selectedStudent)) {
+      if (!selectedStudent || !cdcTeacherAssignment(role,cl,subject,selectedStudent)) {
         field('status').textContent='यो कक्षा, विषय वा सेक्शनको मूल्याङ्कन तपाईंलाई तोकिएको छैन।';
         return;
       }
