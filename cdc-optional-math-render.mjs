@@ -117,15 +117,15 @@ export function renderCdcCompositePaper(paper,{escapeHtml,answerKey=false}={}){
  const cross=groups.find(x=>x.group==='CCA');
  const objectiveHtml='<h3 style="text-align:left;margin-top:18px">'+
    esc(objective.title)+'</h3>'+
-  '<div class="qp-q" style="break-inside:avoid;page-break-inside:avoid">'+
-  '<b>'+esc(1)+'. '+(answerKey?(ne?'उत्तरकुञ्जिका — ':'Teacher Answer Key — '):'')+
+  '<div class="qp-objective-section" style="break-inside:auto;page-break-inside:auto">'+
+  '<b style="break-after:avoid">'+esc(1)+'. '+(answerKey?(ne?'उत्तरकुञ्जिका — ':'Teacher Answer Key — '):'')+
   (ne?'वस्तुगत प्रश्न':'Objective Questions')+'</b>'+modelHeading()+
   objective.items.map((q,i)=>{
    const sub=q.subquestions[0];
    const prompt=esc(text(sub,answerKey?'answer':'text'));
    const key=answerKey&&sub.correctOption?
     ' ('+(ne?'सही विकल्प: ':'Correct option: ')+esc(paperAnswerOption(sub.correctOption,paper.language))+')':'';
-   return '<div style="margin:10px 0 10px 18px;white-space:pre-line">'+
+   return '<div class="qp-q qp-objective-item" style="margin:10px 0 10px 18px;white-space:pre-line;break-inside:avoid;page-break-inside:avoid">'+
     modelRow('<b>'+paperOptionLabel(i,paper.language)+'.</b> '+prompt+key+
     (answerKey?'':questionFigure(sub,paper.language))+optionsHtml(sub),sub)+'</div>';
   }).join('')+'</div>';
@@ -166,7 +166,7 @@ export function renderCdcCompositePaper(paper,{escapeHtml,answerKey=false}={}){
 
 
 // Offline A4 landscape exam layout. Flow across pages rather than shrink.
-export const PAPER_PRINT_CSS='@page{size:A4 landscape;margin:10mm}body{font:11pt/1.35 "Noto Sans Devanagari","Nirmala UI",Arial,sans-serif;color:#111;margin:0;padding:0}h2,h3{text-align:center;margin:4px 0}h2{font-size:15pt}h3{font-size:12pt}.qp-paper-preview{padding:0!important;border:0!important}.qp-paper-body{column-count:2;column-gap:8mm;column-rule:0.35pt solid #aaa;overflow-wrap:anywhere}.qp-paper-body h3{break-after:avoid;text-align:left}.qp-q{margin:7px 0;line-height:1.35;break-inside:avoid;page-break-inside:avoid}.qp-q b{white-space:pre-line}.qp-paper-body img,.qp-paper-body svg{max-width:100%;height:auto;break-inside:avoid}.qp-paper-end{text-align:center}';
+export const PAPER_PRINT_CSS='@page{size:A4 landscape;margin:10mm}body{font:11pt/1.35 "Noto Sans Devanagari","Nirmala UI",Arial,sans-serif;color:#111;margin:0;padding:0}h2,h3{text-align:center;margin:4px 0}h2{font-size:15pt}h3{font-size:12pt}.qp-paper-preview{padding:0!important;border:0!important}.qp-paper-body{column-count:2;column-gap:8mm;column-rule:0.35pt solid #aaa;overflow-wrap:anywhere}.qp-paper-body h3{break-after:avoid;text-align:left}.qp-model-heading{break-after:avoid;page-break-after:avoid}.qp-objective-section{break-inside:auto;page-break-inside:auto}.qp-objective-item{break-inside:avoid;page-break-inside:avoid}.qp-q{margin:7px 0;line-height:1.35;break-inside:avoid;page-break-inside:avoid}.qp-q b{white-space:pre-line}.qp-paper-body img,.qp-paper-body svg{max-width:100%;height:auto;break-inside:avoid}.qp-paper-end{text-align:center}';
 function crc32(bytes){let c=0xffffffff;for(const b of bytes){c^=b;for(let i=0;i<8;i++)c=(c>>>1)^((c&1)?0xedb88320:0);}return (c^0xffffffff)>>>0;}
 function storedZip(files){
  const enc=new TextEncoder(),chunks=[],central=[];let offset=0,size=0;
