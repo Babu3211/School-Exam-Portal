@@ -48,7 +48,11 @@ export function inspectReferencePaperAllocation({subject,groups,durationMinutes}
   const slots=['reading1','reading2','reading3','reading4','writing1','writing2','writing3','writing4','transformation','contextual_mcq'];
   need(same(groups.map(g=>g.slot),slots)&&same(marks,[5,10,10,15,5,5,6,8,6,5]),'English CDC chart section marks');
   need(same([sum(marks.slice(0,4)),sum(marks.slice(4,8)),sum(marks.slice(8))],[40,24,11]),'English reading/writing/grammar');
-  checks.push('Reading 40 / writing 24 / grammar 11','Ten group marks');
+  for(const [i,g] of groups.slice(0,4).entries()){
+   const subCounts=Object.values(g.items.reduce((acc,x)=>(acc[x.type]=(acc[x.type]||0)+1,acc),{}));
+   need(same(subCounts,Array(i===0?1:i===3?3:2).fill(5)),'English reading '+(i+1)+' model subsection size');
+  }
+  checks.push('Reading 40 / writing 24 / grammar 11','Ten group marks','Model reading subsections of five items');
   if(groups.some(g=>g.practiceSubstitution))unresolved.push('Original practice substitutes for a seen textbook passage');
   unresolved.push('Current Grade 9 official model and edition applicability');
  }else if(key==='nepali'){
@@ -122,6 +126,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  const repeatedMark=(items)=>modelMark(items.length+' × '+items[0].marks+' = '+items.reduce((n,x)=>n+x.marks,0));
  const alpha=i=>String.fromCharCode(97+i), upper=i=>String.fromCharCode(65+i);
  const roman=['i','ii','iii','iv','v','vi','vii','viii','ix','x'];
+ const cleanSetLabel=t=>String(t).replace(/\s+Set\s+\d+\.$/i,'').replace(/\s*\((?:समूह|सन्दर्भ अभ्यास)\s+\d+\)\s*$/u,'');
  const neLower=i=>['अ','आ','इ','ई','उ','ऊ','ऋ'][i]||paperOptionLabel(i,'ne');
  const englishTask=x=>({mcq:'Select the best answer.',true_false:'Identify each statement as True or False.',gap_fill:'Complete the blanks with words from the passage.',short_answer:'Give answers to the questions below.',matching:'Match each word with its meaning.',ordering:'Arrange the items in the correct order.'}[x]);
  const rotate=a=>a.slice(1).concat(a.slice(0,1));
@@ -156,19 +161,21 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   if(key==='english'){
    const parts=g.items||[];
    const isReading=i<4;
-   lines.push(displayNumber+'. '+g.text+(isReading?'':' '+(parts.length?repeatedMark(parts):modelMark(g.marks))));
+   lines.push(displayNumber+'. '+cleanSetLabel(g.text)+(isReading?'':' '+(parts.length?repeatedMark(parts):modelMark(g.marks))));
    if(g.practiceSubstitution===true)lines.push('ORIGINAL PRACTICE — not a seen textbook extract.');
    if(isReading){
     lines.push(g.passage,'');
     const kinds=[...new Set(parts.map(x=>x.type))];
+    if(i===3&&kinds.includes('matching')){kinds.splice(kinds.indexOf('matching'),1);kinds.unshift('matching');}
     // Vocabulary is a separate subsection, even if another matching task exists.
     for(const [k,type] of kinds.entries()){
      const items=parts.filter(x=>x.type===type);
      lines.push(upper(k)+'. '+(englishTask(type)||'')+' '+repeatedMark(items));
      if(type==='matching'&&items.every(x=>x.domain==='vocabulary')){
-      const meanings=rotate(items.map(x=>x.text.replace(/^Find (?:a|the) (?:word|verb) meaning\s*/i,'').replace(/\.$/,'')));
+      const meanings=rotate([...items.map(x=>x.text.replace(/^Find (?:a|the) (?:word|verb) meaning\s*/i,'').replace(/\.$/,'')),'a device for measuring temperature']);
+      if(items.some(x=>!x.answer)||new Set(meanings).size!==6)throw Error('Invalid vocabulary matching options');
       lines.push('    Column A                         Column B');
-      items.forEach((x,j)=>lines.push('    '+alpha(j)+'. '+x.answer+'     |     '+roman[j]+'. '+meanings[j]));
+      for(let j=0;j<meanings.length;j++)lines.push('    '+(items[j]?alpha(j)+'. '+items[j].answer:'')+'     |     '+roman[j]+'. '+meanings[j]);
      }else{
       for(const [j,x] of items.entries()){
        lines.push('    '+alpha(j)+'. '+x.text);
@@ -196,7 +203,8 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
    for(const [j,c] of g.choices.entries()){
     const choiceLabel=paperOptionLabel(j,'ne'),label=multi?(i+1)+'.'+choiceLabel:String(i+1),components=c.components||[];
     const prefix=multi?'('+choiceLabel+') ':(i+1)+'. ';
-    lines.push(prefix+c.text+(multi||!gMark?'':' '+gMark));
+    const prompt=g.skill==='vocabulary_matching'?'समूह ‘क’ का शब्दलाई समूह ‘ख’ का अर्थसँग जोडा मिलाउनुहोस् :':cleanSetLabel(c.text);
+    lines.push(prefix+prompt+(multi||!gMark?'':' '+gMark));
     if(c.passage)lines.push(c.passage);
     if(c.practiceSubstitution)lines.push('मौलिक अभ्यास — पाठगत उद्धरण होइन।');
     if(g.skill==='vocabulary_matching'){
@@ -208,7 +216,7 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
     }else if(g.skill==='tense_aspect'&&c.passage||g.skill==='verb_mood'||g.skill==='word_class'){
      // The printed question contains the passage or composition prompt once.
     }else if(g.skill==='sentence_editing'||g.skill==='vocabulary_sentence_use'){
-     lines.push(components.map(x=>x.text).join(g.skill==='sentence_editing'?' । ':', '));
+     lines.push(components.map(x=>x.text).join(g.skill==='sentence_editing'?' / ':', '));
     }else{
      for(const [k,x] of components.entries()){
       const sub=multi?neLower(k):paperOptionLabel(k,'ne');
