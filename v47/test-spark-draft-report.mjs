@@ -47,7 +47,7 @@ for(const klass of ['1','2','3','4','5','6','7','8','9','10'])for(const exam of 
  }
  const result=await loadSparkDraftReport({...args,classNo:klass,term:exam});
  assert.equal(result.rosterCount,2);assert.equal(result.subjectCount,2);assert.equal(result.summary.complete,true);
- assert.equal(result.summary.rows[0].gpa,Number(klass)<=5||exam==='final'?4:null);
+ assert.equal(result.summary.rows[0].gpa,4);assert.match(result.ledger.body,/<td>4\.00<\/td><\/tr>/);
  assert.equal(result.previewOnly,true);assert.equal(result.publicationAllowed,false);
  for(const mode of ['grade','number','entry']){
   assert.match(result.ledgers[mode].body,/Student s1/);

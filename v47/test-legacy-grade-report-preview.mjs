@@ -8,7 +8,7 @@ const records=students.flatMap(s=>subjects.map(sub=>({...iemisEntryValues(iemisE
 const args={schoolId,school,classNo,term,students,subjects,records},r=prepareLegacyGradeReport(args);
 assert.equal(r.rosterCount,2);assert.equal(r.previewOnly,true);
 assert.equal(r.publicationAllowed,false);assert.equal(r.writeAuthorized,false);
-assert.equal(r.summary.complete,true);assert.match(r.ledger.head,/Final GPA/);
+assert.equal(r.summary.complete,true);assert.match(r.ledger.head,/Final GPA/);assert.match(r.ledger.body,/<td>3\.60<\/td><\/tr>/);
 assert.deepEqual(r.ledgers.grade,r.ledger,'Existing grade ledger must remain unchanged');
 assert.equal(typeof Object.getOwnPropertyDescriptor(r.ledgers,'number').get,'function','Number table must be lazy');
 assert.equal(typeof Object.getOwnPropertyDescriptor(r.ledgers,'entry').get,'function','Entry table must be lazy');
@@ -58,7 +58,8 @@ for(const klass of ['6','7','8','9','10'])for(const exam of ['1st','2nd','final'
  const input={schoolId,school,classNo:klass,term:exam,students:roster,subjects:catalog,publications:published};
  const report=prepareCommittedIemisReport(input);
  assert.equal(report.summary.complete,true);assert.equal(report.previewOnly,true);
- assert.equal(report.summary.rows[0].gpa,exam==='final'?4:null);
+ assert.equal(report.summary.rows[0].gpa,4);
+ assert.match(report.ledger.body,/<td>4\.00<\/td><\/tr>/,'Grade Ledger must display the source GPA');
  if(exam==='final')assert.match(report.printFor('s1').html,/NOT VALID FOR OFFICIAL USE/);
  else assert.equal(report.printFor('s1').ready,false,'V46 non-final GPA is intentionally unavailable');
  const alter=fn=>{const copy=structuredClone(input);fn(copy);return copy};
@@ -109,3 +110,26 @@ for(const klass of ['1','2','3','4','5'])for(const exam of ['1st','2nd','final']
  }
 }
 console.log('PASS committed primary learning achievement preview: Classes 1–5, three terms, derived full marks, GPA, watermark and invalid count/score rejection');
+
+ // Unequal subject totals and credits: 2083 grade HTML and Excel summary
+ // must use the exact same V46 weighting, not an unweighted mean.
+ import {iemisLedger,iemisSummary,iemisGpa} from './iemis-ledger.js';
+ for(const klass of ['6','9','10'])for(const exam of ['1st','2nd','final']){
+  const roster=[{...students[0],class:klass}];
+  const catalog=[{...subjects[0],id:'computer',name:'Computer Science',class:klass,creditHour:4},{...subjects[1],id:'math',name:'Mathematics',class:klass,creditHour:5}];
+  const sourceTerm=exam==='final'?'annual':exam==='1st'?'first':'second';
+  const records=catalog.map((sub,i)=>{
+   const schema=iemisEntrySchema(klass,sourceTerm,sub.name);
+   const values=Object.fromEntries(schema.map(c=>[c.key,i===0?c.max:c.max*.6]));
+   return {...iemisEntryValues(schema,{values,isAbsent:false,incompatible:false}),schoolId,class:klass,term:exam,examId:exam,studentId:roster[0].id,subjectId:sub.id,subject:sub.name};
+  });
+  const result=prepareLegacyGradeReport({schoolId,school,classNo:klass,term:exam,students:roster,subjects:catalog,records});
+  const annual=exam==='final';
+  const expected=iemisLedger({mode:'grade',classNo:Number(klass),annual,academicYear:'2083',term:sourceTerm,subjects:catalog.map(s=>s.name),students:roster,records,examId:exam,schoolName:school.nameEnglish,schoolCode:schoolId,creditFor:name=>catalog.find(s=>s.name===name).creditHour});
+  assert.deepEqual(result.ledger,expected);
+  const expectedGpa=iemisGpa(records.map((r,i)=>{const summary=iemisSummary(r,{annual});return {summary,creditHour:catalog[i].creditHour*(!annual&&Number(klass)>=9?summary.inFull/100:1)}}),{annual,primary:!annual});
+  assert.equal(result.summary.rows[0].gpa,expectedGpa);
+  assert.match(result.ledger.body,new RegExp('<td>'+expectedGpa.toFixed(2)+'</td></tr>'));
+  if(!annual)assert.equal(result.printFor(roster[0].id).ready,false,'Non-final certificate preview remains disabled pending independent approval');
+ }
+ console.log('PASS V46 2083 credit-weighted grade ledger and export GPA parity');

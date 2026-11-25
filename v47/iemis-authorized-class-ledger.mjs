@@ -3,7 +3,7 @@
 import {inspectV46IemisRecord} from './iemis-record-compatibility.mjs';
 import {renderCompleteV46TenantGradeLedger} from './iemis-v46-ledger-adapter.mjs';
 import {iemisSubjectKey} from './iemis-ledger.js';
-export function renderAuthorizedV46ClassGradeLedger({schoolId,schoolName,schoolCode='',classNo,term,examId,students,subjects,records}){
+export function renderAuthorizedV46ClassGradeLedger({schoolId,schoolName,schoolCode='',classNo,term,examId,students,subjects,records,creditFor,academicYear}){
  if(!Array.isArray(students)||!Array.isArray(subjects)||!Array.isArray(records))throw Error('Authorized complete class snapshot required');
  if(!students.length||!subjects.length)throw Error('Class roster and subjects required');
  const names=subjects.map(s=>typeof s==='string'?s:s?.name);
@@ -21,5 +21,5 @@ export function renderAuthorizedV46ClassGradeLedger({schoolId,schoolName,schoolC
   const check=inspectV46IemisRecord(record,{schoolId,classNo,term,subject,examId});
   if(!check.compatible)throw Error('V46 IEMIS record not compatible: '+check.reason);
  }
- return renderCompleteV46TenantGradeLedger({schoolId,schoolName,schoolCode,classNo,term,examId,students,subjects,records});
+ return renderCompleteV46TenantGradeLedger({schoolId,schoolName,schoolCode,classNo,term,examId,students,subjects,records,...(creditFor===undefined?{}:{creditFor}),...(academicYear===undefined?{}:{academicYear})});
 }

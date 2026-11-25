@@ -42,7 +42,7 @@ export function prepareLegacyGradeReport({schoolId,school,classNo,term,students,
   draftsBySubject[sub.id][mark.studentId]=draft;
  }
  if(seen.size!==students.length*subjects.length)throw Error('Incomplete class marks');
- const ledger=renderAuthorizedV46ClassGradeLedger({schoolId,schoolName:school.nameEnglish,schoolCode:schoolId,classNo,term,examId:term,students,subjects:subjects.map(s=>s.name),records});
+ const ledger=renderAuthorizedV46ClassGradeLedger({schoolId,schoolName:school.nameEnglish,schoolCode:schoolId,classNo,term,examId:term,students,subjects:subjects.map(s=>s.name),records,academicYear:'2083',creditFor:name=>subs.get(iemisSubjectKey(name))?.creditHour??0});
  // All extra modes run only after the original complete-class, tenant, and
  // V46 component validation above. Nothing in these modes writes or publishes.
  const completeInput={schoolId,schoolName:school.nameEnglish,schoolCode:schoolId,classNo,
@@ -87,7 +87,7 @@ export function prepareLegacyGradeReport({schoolId,school,classNo,term,students,
   });
   return excelWorkbook(headers,rows,{sheetName:mode==='number'?'Unapproved Mark Ledger':'Unapproved Entry Ledger'});
  };
- const summary=previewIemisGradeLedger({classNo,term,students,subjects,draftsBySubject});
+ const summary=previewIemisGradeLedger({classNo,term,students,subjects,draftsBySubject,academicYear:'2083'});
  if(!summary.complete)throw Error('Incomplete V46 grade preview');
  const printFor=studentId=>renderIemisGradeSheetPrint({school,classNo,term,students,subjects,draftsBySubject,studentId});
  return Object.freeze({schoolId,school,classNo:String(classNo),term,students,subjects,rosterCount:students.length,subjectCount:subjects.length,ledger,ledgers,excelFor,summary,printFor,previewOnly:true,writeAuthorized:false,publicationAllowed:false});

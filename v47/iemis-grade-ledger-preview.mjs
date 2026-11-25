@@ -1,7 +1,7 @@
 // Offline-only multi-subject IEMIS grade ledger preview. No persistence or approval.
 import {previewIemisClassLedger} from './iemis-class-ledger-preview.mjs';
 import {previewIemisGpa} from './iemis-gpa-preview.mjs';
-export function previewIemisGradeLedger({classNo,term,students,subjects,draftsBySubject}){
+export function previewIemisGradeLedger({classNo,term,students,subjects,draftsBySubject,academicYear}){
  if(!Array.isArray(subjects)||!subjects.length||subjects.length>30)throw Error('Subject roster required');
  if(!draftsBySubject||typeof draftsBySubject!=='object'||Array.isArray(draftsBySubject))throw Error('Subject drafts required');
  const names=new Set(),subjectLedgers=[];
@@ -19,7 +19,11 @@ export function previewIemisGradeLedger({classNo,term,students,subjects,draftsBy
  if(Reflect.ownKeys(draftsBySubject).some(key=>typeof key!=='string'||!names.has(key)))throw Error('Unexpected subject drafts');
  const rows=students.map((student,index)=>{
   const subjectResults=subjectLedgers.map(ledger=>({subjectId:ledger.id,creditHour:ledger.creditHour,summary:ledger.rows[index].summary}));
-  const gpa=previewIemisGpa(subjectResults,{annual:term==='final',primary:Number(classNo)<=5});
+  // Match V46 IEMIS 2083 first/second-term ledger GPA, including its
+  // secondary credit weighting. Other callers retain conservative preview behavior.
+  const termGpa=academicYear==='2083'&&Number(classNo)>=6&&Number(classNo)<=10&&['1st','2nd'].includes(term);
+  const weighted=termGpa&&Number(classNo)>=9?subjectResults.map(s=>({...s,creditHour:s.creditHour*s.summary.inFull/100})):subjectResults;
+  const gpa=previewIemisGpa(weighted,{annual:term==='final',primary:Number(classNo)<=5||termGpa});
   return {studentId:student.id,studentName:String(student.nameEnglish??student.name??''),subjects:subjectResults,gpa};
  });
  return {complete:true,total:rows.length,rows};
