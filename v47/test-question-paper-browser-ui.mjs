@@ -36,3 +36,6 @@ assert.doesNotMatch(js,/from '\.\.\/cdc-question-paper\.js'|getFirestore\(|setDo
 assert.doesNotMatch(js,/firebaseConfig|apiKey|password\s*=\s*['"][^'"]+['"]/);
 assert.doesNotMatch(js,/grade9-science-practice-pack-v1\.json/);
 console.log('PASS V47 read-only school-verified CDC sources/practice question page; no V46 production Firebase writes');
+
+assert.match(js,/\$\('grade9CurriculumMarks'\)\.oninput=\(\)=>\{[^}]*refreshGrade9Capacity\(\)/,'Recheck attainable marks on every full-mark input change');
+console.log('PASS Grade 9 capacity refresh wired to full-mark input');

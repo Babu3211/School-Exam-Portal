@@ -271,9 +271,9 @@ try{
     assert.ok(await topics.count()>0);
     await topics.first().check();
     await page.locator('#grade9CurriculumMarks').fill('1');
-    assert.equal(await page.locator('#generateGrade9Curriculum').isDisabled(),false);
+    assert.equal(await page.locator('#generateGrade9Curriculum').isDisabled(),false,'Attainable one-mark selection: '+key+' '+await page.locator('#grade9CurriculumCapacity').textContent());
     await page.locator('#grade9CurriculumMarks').fill('75');
-    assert.equal(await page.locator('#generateGrade9Curriculum').isDisabled(),true);
+    assert.equal(await page.locator('#generateGrade9Curriculum').isDisabled(),true,'Impossible marks must remain blocked: '+key);
     await page.locator('#grade9CurriculumMarks').fill('1');
     await page.locator('#generateGrade9Curriculum').click();
     await wait(page,()=>!document.getElementById('downloadPracticeDocx').disabled);

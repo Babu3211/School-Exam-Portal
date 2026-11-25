@@ -372,7 +372,7 @@ function renderGrade9CurriculumTopics(){
  }catch(e){$('grade9CurriculumStatus').textContent='स्रोत खोल्न सकिएन: '+neError(e)}
 }
 $('grade9CurriculumSubject').onchange=$('grade9CurriculumLanguage').onchange=()=>{invalidateSelectedPreview();renderGrade9CurriculumTopics()};
-$('grade9CurriculumMarks').oninput=()=>{invalidateSelectedPreview();$('grade9CurriculumStatus').textContent='पूर्णाङ्क परिवर्तन भयो।'};
+$('grade9CurriculumMarks').oninput=()=>{invalidateSelectedPreview();$('grade9CurriculumStatus').textContent='पूर्णाङ्क परिवर्तन भयो।';refreshGrade9Capacity()};
 $('generateGrade9Curriculum').onclick=async()=>{
  if(busy||loading||!actor||actor.role==='viewer')return;
  const request=epoch,member=actor,key=$('grade9CurriculumSubject').value,language=$('grade9CurriculumLanguage').value,fullMarks=Number($('grade9CurriculumMarks').value);
