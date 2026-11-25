@@ -254,6 +254,16 @@ assert.equal(socialCurrent.externalLevels.length,4);
 assert.equal(socialCurrent.requiresSeparateGrid,true);
 assert.equal(socialCurrent.officialExamApproved,false);
 assert.equal(socialCurrent.visualReviewComplete,false);
+const socialImplementation=socialCurrent.implementationEvidence;
+assert.equal(socialImplementation.testYearBS,2083);
+assert.equal(socialImplementation.phasedImplementationFromBS,2084);
+assert.equal(socialImplementation.schoolTrialParticipationVerified,false);
+assert.equal(socialImplementation.grade9EffectiveYearVerified,false);
+assert.equal(socialImplementation.currentGridApplicableVerified,false);
+assert.equal(socialImplementation.visualReviewComplete,false);
+assert.equal(socialImplementation.officialExamApproved,false);
+assert.ok(byKey.social.tables.some(t=>t.title.includes('कार्यान्वयन (बुलेटिन')));
+assert.ok(byKey.social.sources.some(s=>s.kind==='revision_notice'&&s.url===socialImplementation.url));
 assert.ok(byKey.social.tables.some(t=>t.title.includes('सिकाइ उपलब्धि सङ्ख्या')&&t.rows.length===10));
 
 assert.ok([scienceRef,mathRef,englishRef,socialRef].every(ref=>ref.currentCdcExactApproved===false));

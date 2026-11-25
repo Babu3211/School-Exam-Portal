@@ -1236,9 +1236,9 @@
       "subject": "सामाजिक अध्ययन",
       "kind": "curriculum",
       "version": "2082",
-      "status": "official_CDC_curriculum_cover_and_grade9_learning_areas_checked",
+      "status": "official_CDC_2082_revised_curriculum_implementation_scope_unconfirmed_for_school_2083",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/social%209-10_oe5hq7v.pdf",
-      "note": "Current curriculum cover and Grade 9 outcomes checked. Ten learning areas; 75% external and 25% internal assessment; external questions require separate CDC specification grid. No grid approval from curriculum. Printed pages 2–4 and 55–56 text confirms 32 Grade 9 learning outcomes and four external cognitive levels; historical combined categories cannot establish current four-level allocations. Screenshot timed out; no current numerical Grid obtained.",
+      "note": "Current curriculum cover and Grade 9 outcomes checked. Ten learning areas; 75% external and 25% internal assessment; external questions require separate CDC specification grid. No grid approval from curriculum. Printed pages 2–4 and 55–56 text confirms 32 Grade 9 learning outcomes and four external cognitive levels; historical combined categories cannot establish current four-level allocations. Screenshot timed out; no current numerical Grid obtained. CDC 2082 semiannual bulletin records testing in 2083 and phased implementation from 2084 for revised social curriculum textbooks. This is not a confirmation that the school's Grade 9 is in the 2083 trial, or that a new exam Grid applies. The 2082 curriculum is a revision reference, not established as applicable to all schools in 2083.",
       "currentAssessmentReview": {
         "reviewDate": "2026-11-25",
         "method": "Official PDF indexed text, printed pages 2–4 and 55–56; screenshot timed out",
@@ -1296,7 +1296,24 @@
         "oldCombinedLevelsNotEquivalent": true,
         "questionCountsVerified": false,
         "unitMarksVerified": false,
-        "officialExamApproved": false
+        "officialExamApproved": false,
+        "implementationEvidence": {
+          "url": "https://giwmscdnone.gov.np/media/pdf_upload/Curriculum%20activities%207025-8-27%20C%20%281%29_kzkyxjl.pdf",
+          "alternateUrl": "https://giwmscdntwo.gov.np/media/pdf_upload/Curriculum%20activities%207025-8-27%20C%20%281%29_kzkyxjl.pdf",
+          "sourceTitle": "पाठ्यक्रम गतिविधि, अर्धवार्षिक बुलेटिन, २०८२",
+          "councilMeetingNumber": 66,
+          "councilDecisionDateBS": "2082-03-15",
+          "testYearBS": 2083,
+          "phasedImplementationFromBS": 2084,
+          "sourceMethod": "Indexed text on two government CDN copies; screenshots timed out. One extracted copy drops the trial clause; precise wording requires original-page visual verification.",
+          "schoolTrialParticipationVerified": false,
+          "grade9EffectiveYearVerified": false,
+          "currentGridApplicableVerified": false,
+          "officialExamApproved": false,
+          "visualReviewComplete": false,
+          "corroboratingNoticeReport": "https://shikshyakhabar.com/2026/08/03/18283",
+          "corroboratingNoticeScope": "Reported 2083-04-18 notice names grades 5, 8, 10 and 12 textbooks for 2084; not direct confirmation of Grade 9 exam grid applicability."
+        }
       }
     },
     {

@@ -120,7 +120,12 @@ export function grade9GridLibrary(register){
      const ne=n=>String(n).replace(/\d/g,d=>'०१२३४५६७८९'[Number(d)]);
      add('२०८२ पाठ्यक्रम — सिकाइ उपलब्धि सङ्ख्या (अङ्क होइन)',['विषयक्षेत्र','सिकाइ उपलब्धि'],r.areas.map((a,i)=>[a,ne(r.outcomeCounts[i])]));
      add('२०८२ पाठ्यक्रम — मूल्याङ्कन भार',['पक्ष','प्रतिशत'],[['बाह्य',ne(r.externalPercent)],...r.internalComponents.map(([a,v])=>[a,ne(v)])]);
-     add('२०८२ बाह्य मूल्याङ्कन — छुट्टै Grid आवश्यक',['संज्ञानात्मक तह','हालको अङ्कभार'],r.externalLevels.map(a=>[a,'पुष्टि बाँकी']));
+     add('२०८२ संशोधित बाह्य मूल्याङ्कन — छुट्टै Grid आवश्यक',['संज्ञानात्मक तह','अङ्कभार'],r.externalLevels.map(a=>[a,'पुष्टि बाँकी']));
+     const impl=r.implementationEvidence;
+     if(impl&&safeUrl(impl.url)){
+      add('संशोधित पाठ्यक्रमको कार्यान्वयन (बुलेटिनको पाठमा आधारित)',['विवरण','स्थिति'],[['परीक्षण वर्ष',ne(impl.testYearBS)],['क्रमशः कार्यान्वयन',ne(impl.phasedImplementationFromBS)],['विद्यालय परीक्षणमा सहभागी भएको पुष्टि','छैन'],['कक्षा ९ को लागू हुने Grid','पुष्टि बाँकी']]);
+      sources.push({url:impl.url,kind:'revision_notice',version:'२०८२ अर्धवार्षिक बुलेटिन',status:'कार्यान्वयन सूचना — Grid होइन',note:'मूल पृष्ठको चित्र खुल्न सकेन; २०८३ मा परीक्षण र २०८४ बाट क्रमशः कार्यान्वयनको पाठ प्रमाण। विद्यालयको सहभागिता र लागू हुने अङ्कतालिका पुष्टि बाँकी।'});
+     }
     }
    }
   }else if(key==='optional_economics'){
