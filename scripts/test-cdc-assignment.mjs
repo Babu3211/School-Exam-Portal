@@ -1589,5 +1589,35 @@ assert.equal(field('annex3').hidden,true);
 assert.equal(field('seroSourcePreview').hidden,true);
 assert.equal(field('seroSourceFrame').children.length,0);
 console.log('Grade 1 Our Surroundings three forms, 48 indicators, scoped binary Save/Load, saved-only print, seven original-guide review forms, duplicate and revoked-role checks passed');
+// CDC backup: verify legacy and new exports in an isolated synthetic DOM.
+// Assessment evidence must never be replayed through ordinary client restore.
+const backupDom=new JSDOM('<div id="restoreFirebaseMessage"></div><pre id="restorePreview"></pre><input id="restoreBackupFile" type="file"><button id="runFirebaseRestore"></button>',{runScripts:'outside-only'});
+const bw=backupDom.window;
+Object.assign(bw,{requireAdmin:()=>{},auth:{currentUser:{uid:'backup-admin'}},ADMIN_UID:'backup-admin',safeNoticeError:e=>e.message});
+const backupStart=html.indexOf('const CDC_BACKUP_ONLY_COLLECTIONS=');
+const backupEnd=html.indexOf('document.addEventListener("click",e=>{if(e.target.closest("#downloadFirebaseBackup"))',backupStart);
+assert.ok(backupStart>=0&&backupEnd>backupStart);
+bw.eval(html.slice(backupStart,backupEnd)+'\nwindow.__previewBackup=previewFirebaseRestore;window.__restoreCollections=RESTORE_COLLECTIONS;window.__backupOnly=CDC_BACKUP_ONLY_COLLECTIONS;');
+assert.deepEqual(Array.from(bw.__backupOnly),['cdc_observations','cdc_serofero_indicators']);
+assert.ok(bw.__backupOnly.every(n=>!bw.__restoreCollections.includes(n)));
+assert.match(html.slice(backupStart,backupEnd),/collectionNames=\[[^\n]+\.\.\.CDC_BACKUP_ONLY_COLLECTIONS\]/);
+const backupFile=bw.document.getElementById('restoreBackupFile');
+const backupOutput=bw.document.getElementById('restorePreview');
+const legacyBackup={format:'SMSS-Firestore-Backup',version:1,collections:{students:[{id:'synthetic',data:{}}]}};
+const previewBackup=async data=>{
+ Object.defineProperty(backupFile,'files',{configurable:true,value:[{size:100,text:async()=>JSON.stringify(data)}]});
+ await bw.__previewBackup();
+ return backupOutput.textContent;
+};
+assert.match(await previewBackup(legacyBackup),/cdc_observations: पुरानो Backup मा समावेश छैन/);
+const newBackup={...legacyBackup,collections:{...legacyBackup.collections,cdc_observations:[{id:'one',data:{}}],cdc_serofero_indicators:[{id:'two',data:{}}]}};
+const backupText=await previewBackup(newBackup);
+assert.match(backupText,/cdc_observations: 1 \(Backup मात्र; सामान्य Restore हुँदैन\)/);
+assert.match(backupText,/cdc_serofero_indicators: 1 \(Backup मात्र; सामान्य Restore हुँदैन\)/);
+assert.match(backupText,/कुल रेकर्ड: 1\b/);
+assert.match(await previewBackup({...newBackup,collections:{...newBackup.collections,cdc_observations:[{id:'bad/id',data:{}}]}}),/Backup Preview असफल/);
+assert.match(await previewBackup({...newBackup,collections:{...newBackup.collections,unknown:[]}}),/Backup Preview असफल/);
+backupDom.window.close();
+console.log('CDC backup preview: legacy compatibility, validated append-only evidence, no ordinary restore writes');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
