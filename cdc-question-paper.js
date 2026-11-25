@@ -270,7 +270,7 @@ function pageShell() {
       <p class="qp-hint">एक क्लिकमा: कक्षा/विषय, Topic, पूर्णाङ्क र भाषा छान्नुहोस्। उपलब्ध मौलिक अभ्यास प्रश्नबाट ठीक पूर्णाङ्कको Draft तयार हुनेछ। पर्याप्त जाँचिएका प्रश्न नभए गलत प्रश्नपत्र बनाइँदैन। CDC Grid को लागू संस्करण शिक्षकले पुष्टि गर्नुपर्छ।</p>
       <label class="qp-topic" style="margin-top:9px;background:#fff8e9;align-items:center"><input id="qpAutoReviewed" type="checkbox"><span>मैले प्रश्नपत्रको नेपाली वर्णविन्यास (ह्रस्व–दीर्घ), व्याकरण, English grammar, आवश्यक चित्र, पूर्णाङ्क, लागू CDC विशिष्टीकरण तालिका र उत्तरकुञ्जिका पढेर जाँच गरेको छु। <b>जाँच नगरी Save वा Print हुँदैन।</b></span></label>
       <div class="qp-actions"><button class="qp-btn" id="qpSmartGenerateBtn" type="button">एक क्लिकमा Auto Question Paper</button><button class="qp-btn alt" id="qpGenerateBtn" type="button">म्यानुअल Pattern Generate</button><button class="qp-btn alt" id="qpSavePaperBtn" type="button" disabled>प्रश्नपत्र Save</button><button class="qp-btn alt" id="qpPrintPaperBtn" type="button" disabled>प्रश्नपत्र Print / PDF</button><button class="qp-btn alt" id="qpAnswerKeyBtn" type="button" disabled>उत्तरकुञ्जिका Print / PDF</button><button class="qp-btn alt" id="qpWordPaperBtn" type="button" disabled>Word (.docx) Export</button></div>
-      <div class="qp-actions" id="qpReferenceDraftActions" hidden><button class="qp-btn alt" id="qpSelectReferenceTopics" type="button">Select reference topics (75 marks)</button><button class="qp-btn alt" id="qpReferenceDraftBtn" type="button">Reference Draft Preview — not for exam</button></div><pre id="qpReferenceDraftPreview" hidden style="white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;border:2px solid #c48740;border-radius:8px;background:#fff8e9;color:#482b11;font:inherit" role="status"></pre><details id="qpReferenceAnswerReview" hidden style="margin-top:10px;padding:12px;border:1px solid #c48740;border-radius:8px"><summary>Teacher Answer Review / उत्तरकुञ्जिका (not official)</summary><pre id="qpReferenceAnswerText" style="white-space:pre-wrap;overflow-wrap:anywhere;font:inherit"></pre></details>
+      <div class="qp-actions" id="qpReferenceDraftActions" hidden><button class="qp-btn alt" id="qpSelectReferenceTopics" type="button">Select reference topics (75 marks)</button><button class="qp-btn alt" id="qpReferenceDraftBtn" type="button">Generate School Grid Draft (75 marks)</button></div><div id="qpReferenceExportActions" hidden><label class="qp-topic"><input id="qpReferenceReviewed" type="checkbox"><span>मैले विद्यालयको Grid, भाषा, चित्र र उत्तरकुञ्जिका जाँच गरेको छु। यो CDC Exact स्वीकृति होइन।</span></label><div class="qp-actions"><button class="qp-btn alt" id="qpReferencePrintBtn" type="button" disabled>Draft Print / PDF</button><button class="qp-btn alt" id="qpReferenceWordBtn" type="button" disabled>Draft Word (.docx)</button><button class="qp-btn alt" id="qpReferenceKeyBtn" type="button" disabled>Draft Answer Key / PDF</button></div></div><pre id="qpReferenceDraftPreview" hidden style="white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;border:2px solid #c48740;border-radius:8px;background:#fff8e9;color:#482b11;font:inherit" role="status"></pre><details id="qpReferenceAnswerReview" hidden style="margin-top:10px;padding:12px;border:1px solid #c48740;border-radius:8px"><summary>Teacher Answer Review / उत्तरकुञ्जिका (not official)</summary><pre id="qpReferenceAnswerText" style="white-space:pre-wrap;overflow-wrap:anywhere;font:inherit"></pre></details>
       <div id="qpPaperPreview" style="margin-top:14px"><p class="qp-hint">Topic छानेर प्रश्नपत्र Auto Generate गर्नुहोस्।</p></div>
     </div>
 
@@ -774,6 +774,9 @@ async function loadCurrentData() {
   badge.textContent="Custom Pattern";
   $("qpPatternHint").textContent="यस विषयको जाँचिएको CDC Grid आयात गरिएको छैन। Custom Pattern लाई CDC आधिकारिक नमान्नुहोस्।";
  }
+ if(grade===9&&!officialComputerGrid&&!officialOptionalMathGuide&&referencePreviewTopics({grade,subject,questions:bundledPracticeQuestions}).length){
+  $("qpPaperFullMarks").value="75";$("qpPaperDuration").value=String(cdcSubjectKey(subject)==="optional_environment"?135:180);$("qpAutoMode").value="cdc";updateAutoGridStatus();
+ }
  const historyReady=await loadPaperHistory({required:true});
  if(!historyReady||!stillCurrent())return;
  verifiedQuestionSelection={className,subject,section,request};
@@ -1187,12 +1190,22 @@ async function generateOptionalMathCompositePaper(guide){
   " यी CDC प्रकाशित प्रश्न होइनन्। शिक्षकले गणितीय तथ्य, उत्तरकुञ्जिका र कक्षा उपयुक्तता जाँचेर मात्र Save/Print गर्नुहोस्।");
 }
 const referencePreviewHistory=new Map();
+let activeReferenceDraft=null;
 const rememberReferencePreview=(scope,signature)=>{
  const next=[signature,...(referencePreviewHistory.get(scope)||[]).filter(x=>x!==signature)].slice(0,30);
  referencePreviewHistory.delete(scope);referencePreviewHistory.set(scope,next);
  while(referencePreviewHistory.size>20)referencePreviewHistory.delete(referencePreviewHistory.keys().next().value);
 };
+function updateReferenceExportActions(){
+ const reviewed=$("qpReferenceReviewed")?.checked===true;
+ for(const id of ["qpReferencePrintBtn","qpReferenceWordBtn","qpReferenceKeyBtn"]){const b=$(id);if(b)b.disabled=!activeReferenceDraft||!reviewed;}
+}
 function resetReferenceDraftOutput(){
+ activeReferenceDraft=null;
+ const controls=$("qpReferenceExportActions"),review=$("qpReferenceReviewed");
+ if(controls)controls.hidden=true;
+ if(review)review.checked=false;
+ updateReferenceExportActions();
  const box=$("qpReferenceDraftPreview");
  if(box){box.hidden=true;box.textContent="";}
  const answers=$("qpReferenceAnswerReview"),text=$("qpReferenceAnswerText");
@@ -1242,8 +1255,64 @@ function generateReferenceDraftPreview(){
   text.textContent=result.answerText;
   answers.hidden=false;answers.open=false;
  }
+ activeReferenceDraft={result,uid:auth.currentUser.uid,selection:verifiedQuestionSelection,topicIds:JSON.stringify(topicIds),language,fullMarks:Number($("qpPaperFullMarks").value),duration:Number($("qpPaperDuration").value)};
+ $("qpReferenceExportActions").hidden=false;updateReferenceExportActions();
  rememberReferencePreview(scope,result.signature);
- message("सन्दर्भ Draft तयार। वर्तमान CDC Grid पुष्टि बाँकी — परीक्षा Save/Print बन्द।");
+ message("विद्यालयको उपलब्ध Grid अनुसार Draft तयार। शिक्षक समीक्षा गरेपछि Draft PDF/Word निकाल्न मिल्छ। CDC Exact परीक्षा Save/Print अलगै सुरक्षित छ।");
+}
+function generateSchoolGridDraft(){
+ assertReferencePreviewScope();
+ const known=new Set(referencePreviewTopics({grade:9,subject:selectedSubject,questions:bundledPracticeQuestions}));
+ if(!known.size)throw Error("विद्यालयको उपलब्ध Grid भेटिएन।");
+ const chosen=selectedTopicIds();
+ if(!chosen.length)selectReferenceDraftTopics();
+ else if(chosen.some(id=>!known.has(id)))throw Error("सन्दर्भ Grid का मिल्ने Topic मात्र छान्नुहोस्; Select reference topics प्रयोग गर्नुहोस्।");
+ $("qpPaperFullMarks").value="75";
+ $("qpPaperDuration").value=String(cdcSubjectKey(selectedSubject)==="optional_environment"?135:180);
+ applyGrade9LanguagePolicy();
+ generateReferenceDraftPreview();
+}
+function requireReferenceExport(){
+ assertReferencePreviewScope();
+ const d=activeReferenceDraft;
+ if(!d||d.uid!==auth.currentUser.uid||d.selection!==verifiedQuestionSelection||d.topicIds!==JSON.stringify(selectedTopicIds())||d.language!==$("qpAutoLanguage").value||d.fullMarks!==Number($("qpPaperFullMarks").value)||d.duration!==Number($("qpPaperDuration").value)||$("qpReferenceReviewed")?.checked!==true)
+  throw Error("Draft फेरि Generate गरी शिक्षक समीक्षा पुष्टि गर्नुहोस्।");
+ return d;
+}
+// Separate reference export: never set generatedPaper, save to Firestore or
+// bypass the independent CDC Exact examination guard.
+function buildReferenceExportArea(d,answerKey=false){
+ const doc=$("qpReferenceDraftPreview").ownerDocument;
+ const area=doc.createElement("section");area.className="qp-paper-preview";
+ const header=doc.createElement("header");area.append(header);
+ const title=doc.createElement("h2");title.textContent=answerKey?"SCHOOL GRID — DRAFT ANSWER KEY":"SCHOOL GRID — REVIEW DRAFT / NOT CDC EXACT";header.append(title);
+ const body=doc.createElement("div");body.className="qp-paper-body";
+ const pre=(parent,value)=>{const p=doc.createElement("pre");p.style.cssText="font:inherit;white-space:pre-wrap;overflow-wrap:anywhere;margin:4px 0";p.textContent=value;parent.append(p);};
+ if(answerKey){pre(body,d.result.answerText);}
+ else{
+  pre(header,d.result.introText);
+  for(const block of d.result.blocks){
+   const q=doc.createElement("div");q.className="qp-q";pre(q,block.text);
+   // Generated solely by the bundled questionFigure renderer, not school
+   // data or an uploaded HTML file. Text remains inert.
+   if(block.figureHtml)q.insertAdjacentHTML("beforeend",block.figureHtml);
+   body.append(q);
+  }
+ }
+ area.append(body);return area;
+}
+function printReferenceDraft(answerKey=false){
+ const d=requireReferenceExport(),area=buildReferenceExportArea(d,answerKey);
+ const w=window.open("","_blank","width=900,height=900");if(!w)throw Error("Print खोल्न Popup अनुमति दिनुहोस्।");
+ w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>School Grid Review Draft</title><style>'+PAPER_PRINT_CSS+'</style></head><body>'+area.outerHTML+'</body></html>');w.document.close();w.focus();w.print();
+}
+async function exportReferenceWord(){
+ const d=requireReferenceExport(),area=buildReferenceExportArea(d);
+ const figurePngs=await rasterizePaperFigures(area);
+ if(requireReferenceExport()!==d)throw Error("Draft परिवर्तन भयो। पुनः Export गर्नुहोस्।");
+ const bytes=buildQuestionPaperDocx(area,{figurePngs});
+ const url=URL.createObjectURL(new Blob([bytes],{type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"}));
+ const link=document.createElement("a");link.href=url;link.download="SMSS-Class9-School-Grid-Review-Draft.docx";document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
 async function generateSmartPaper(){
  if(!verifiedQuestionSelection||verifiedQuestionSelection.request!==questionDataLoadEpoch||
@@ -1268,6 +1337,8 @@ async function generateSmartPaper(){
   });
   if(grouped)return generateOptionalMathCompositePaper(grouped);
  }
+ if(strict&&!selectedBlueprint&&gradeNumber(selectedClass)===9&&target===75&&referencePreviewTopics({grade:9,subject:selectedSubject,questions:bundledPracticeQuestions}).length)
+  return generateSchoolGridDraft();
  if(strict&&!selectedBlueprint)
   throw Error("यस कक्षा/विषय/पूर्णाङ्कको मूल CDC Grid का सबै पङ्क्ति अझै प्रणालीमा प्रमाणित छैनन्। सही Grid नभई Exact प्रश्नपत्र बनाइँदैन।");
  const autoScope=JSON.stringify([selectedClass,selectedSubject,selectedSection,
@@ -1872,6 +1943,7 @@ document.addEventListener("change",async event=>{
      t.matches?.("[data-qp-topic]"))updateAutoGridStatus();
   if(t.id==="qpAutoLanguage")applyGrade9LanguagePolicy();
   if(t.id==="qpAutoReviewed")updateAutoReviewActions();
+  if(t.id==="qpReferenceReviewed")updateReferenceExportActions();
   if(t.id==="qpBpGridExcelFile"&&t.files?.[0]){
     try{await importCdcGridExcel(t.files[0]);}
     catch(err){console.error("CDC Grid Excel import failed",err);
@@ -1932,7 +2004,10 @@ document.addEventListener("click",async event=>{
       reviewAdminUnitGrid();
     }
     if(t.id==="qpSelectReferenceTopics")selectReferenceDraftTopics();
-    if(t.id==="qpReferenceDraftBtn")generateReferenceDraftPreview();
+    if(t.id==="qpReferenceDraftBtn")generateSchoolGridDraft();
+    if(t.id==="qpReferencePrintBtn")printReferenceDraft();
+    if(t.id==="qpReferenceKeyBtn")printReferenceDraft(true);
+    if(t.id==="qpReferenceWordBtn")await exportReferenceWord();
     if(t.id==="qpSmartGenerateBtn")await generateSmartPaper();
     if(t.id==="qpSelectGridUnits"){
       const target=Number($("qpPaperFullMarks").value);
