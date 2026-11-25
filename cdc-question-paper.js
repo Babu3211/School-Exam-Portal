@@ -29,7 +29,7 @@ import {getCdcOptionalMathGuide,optionalMathAreaTopics} from "./cdc-optional-mat
 import {CDC_G10_OPTIONAL_MATH_2083_MODEL,compareCdc2083MathModelToBundledGrid} from "./cdc-optional-math-model-compare.mjs";
 import {inspectCdcOptionalMathPaper} from "./cdc-optional-math-composite.mjs";
 import {originalOptionalMathPracticeBank} from "./cdc-optional-math-original-practice.mjs";
-import {renderCdcCompositePaper,referenceMatchingSegments,grade9ComputerModelGroups,paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS,buildQuestionPaperDocx,questionFigure,rasterizePaperFigures} from "./cdc-optional-math-render.mjs";
+import {renderCdcCompositePaper,referenceWordClassRuns,referenceMatchingSegments,grade9ComputerModelGroups,paperDigits,paperSubjectLabel,paperClassLabel,paperOptionLabel,paperAnswerOption,paperDisplayText,PAPER_PRINT_CSS,buildQuestionPaperDocx,questionFigure,rasterizePaperFigures} from "./cdc-optional-math-render.mjs";
 import {QUESTION_EXCEL_FIELDS,parseQuestionExcelSheet,CDC_GRID_EXCEL_FIELDS,parseCdcGridExcelSheet} from "./cdc-question-excel.mjs";
 import {validateExactCdcUnitGrid,inspectExactCdcGridAvailability} from "./cdc-exact-grid.mjs";
 import { getAuth } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
@@ -1354,7 +1354,17 @@ function buildReferenceExportArea(d,answerKey=false){
   for(const block of d.result.blocks){
    const q=doc.createElement("div");q.className="qp-q";
    for(const segment of referenceMatchingSegments(block.text)){
-    if(!segment.matchingRows){pre(q,segment.text);continue;}
+    if(!segment.matchingRows){
+     if(block.underlineWords){
+      const p=doc.createElement("pre");p.className="qp-underlined-passage";p.style.cssText="font:inherit;white-space:pre-wrap;overflow-wrap:anywhere;margin:4px 0";
+      for(const run of referenceWordClassRuns(segment.text)){
+       if(run.underline){const u=doc.createElement("u");u.textContent=run.text;p.append(u);}
+       else p.append(doc.createTextNode(run.text));
+      }
+      q.append(p);
+     }else pre(q,segment.text);
+     continue;
+    }
     const table=doc.createElement("table");table.className="qp-matching-table";table.style.cssText="width:100%;table-layout:fixed;border-collapse:collapse;margin:5px 0";
     segment.matchingRows.forEach((row,i)=>{const tr=table.insertRow();for(const value of row){const cell=doc.createElement(i===0?"th":"td");cell.textContent=value;cell.style.cssText="text-align:left;vertical-align:top;padding:2px 5px;width:50%;overflow-wrap:anywhere";tr.append(cell);}});
     q.append(table);
