@@ -82,7 +82,17 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
    for(const b of result.blocks)assert.match(b.text,new RegExp('(?:^|\\n)'+b.displayNumber+'\\. '));
   }
   if(subject==='Social Studies')for(const tag of ['११ × १ = ११','९ × ४ = ३६','४ × ७ = २८'])assert.ok(result.text.includes(tag));
-  if(subject==='Environmental Science')for(const tag of ['11 × 1 = 11','8 × 5 = 40','3 × 8 = 24'])assert.ok(result.text.includes(tag));
+  if(subject==='Environmental Science'){
+   for(const tag of ['11 × 1 = 11','8 × 5 = 40','3 × 8 = 24'])assert.ok(result.text.includes(tag));
+   const alt=result.blocks.filter(b=>b.text.includes('अथवा / OR'));
+   assert.equal(alt.length,1);
+   assert.ok(alt[0].number>=20&&alt[0].number<=22);
+   assert.equal(result.answerCount,23);
+   assert.ok(result.answerText.includes('अथवा / OR'));
+   assert.ok(audit.checks.includes('One additional pollution OR alternative (8 marks, not additional total)'));
+   assert.equal(audit.groupMarks.reduce((a,b)=>a+b,0),75);
+   assert.match(alt[0].text,/\(4 \+ 4 = 8\)/);
+  }
   assert.equal(result.readyForLive,false);assert.notEqual(result.signature,previousSignature);
   assert.match(result.text,/REFERENCE DRAFT — NOT FOR EXAM/);
   assert.match(result.answerText,/INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY/);
