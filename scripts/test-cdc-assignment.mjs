@@ -1029,6 +1029,7 @@ const seroSummary=summaryRows().find(row=>row.cells[1]?.textContent==='म र �
 assert.equal(seroSummary.cells[2].textContent,'५');
 assert.equal(seroSummary.cells[3].textContent,'२०');
 assert.equal(seroSummary.cells[4].textContent,'२०');
+assert.deepEqual(summaryRows().map(row=>Number(row.querySelector('a').href.split('#page=')[1])),[128,129,130,131,132,132,133,133,134,134]);
 assert.equal(summaryRows().find(row=>row.cells[1]?.textContent==='हाम्रो संस्कृति').cells[3].textContent,'४');
 for(const [theme,count,full,indicators] of [['हाम्रो विद्यालय','२','१२','१२'],['हाम्रा वरपरका जीवजन्तु','२','८','८'],['हाम्रो वातावरण','२','८','८'],['मेरो सिर्जना','२','१२','१२'],['हाम्रो संस्कृति','१','४','४'],['सञ्चार प्रविधि र बजार','२','८','८'],['हाम्रो वरपरको संसार','२','८','८']]){
  const row=summaryRows().find(row=>row.cells[1]?.textContent===theme);
@@ -1179,6 +1180,9 @@ assert.match(seroPrint.querySelector('tbody').rows[0].textContent,/✓.*२०�
 assert.doesNotMatch(seroPrint.body.textContent,/२०८३-०८-०९/);
 assert.match(seroPrint.querySelector('tfoot').textContent,/सुरक्षित अभिलेख.*पूरा: १ \/ ५/);
 assert.match(seroPrint.head.textContent,/A4 landscape/);
+assert.equal(seroPrint.querySelector('tfoot').rows.length,2);
+assert.equal(seroPrint.querySelector('tfoot').rows[1].cells[3].textContent,'—');
+assert.equal(seroPrint.querySelector('tfoot').rows[1].cells[6].textContent,'—');
 assert.equal(binaryRecords.size,2);
 serverRole={...current,subjectAssignments:[]};
 fill(0,['no','no','no','no']);
@@ -1305,6 +1309,11 @@ assert.equal(JSON.stringify(newRecord.indicators),'[false,true,true,true]');
 await field('gridRead').onclick();
 assert.equal(seroControls('score')[2].textContent,'३');
 assert.equal(seroControls('score')[1].textContent,'—');
+const averages=field('annexFoot').querySelectorAll('[data-cdc-sero-stage-average]');
+assert.equal(averages[0].cellIndex,3);assert.equal(averages[1].cellIndex,6);
+assert.equal([...averages[0].parentNode.cells].reduce((n,cell)=>n+cell.colSpan,0),10);
+for(const control of seroControls('indicator')){control.value='yes';control.onchange();}
+assert.equal(averages[0].textContent,'४.००');assert.equal(averages[1].textContent,'—');
 field('printForm').onclick();
 assert.equal(seroPrintCount,2);
 const multiPrint=new JSDOM(seroMarkup).window.document;
@@ -1313,8 +1322,8 @@ assert.equal(multiPrint.querySelector('tbody').rows[4].cells[0].rowSpan,8);
 assert.equal(multiPrint.querySelectorAll('input,select,button').length,0);
 assert.match(multiPrint.querySelector('tfoot').textContent,/पूरा: १ \/ ६/);
 assert.equal(multiPrint.querySelector('tfoot').rows.length,2);
-assert.equal(multiPrint.querySelector('tfoot').rows[1].cells[1].textContent,'—');
-assert.equal(multiPrint.querySelector('tfoot').rows[1].cells[2].textContent,'—');
+assert.equal(multiPrint.querySelector('tfoot').rows[1].cells[3].textContent,'—');
+assert.equal(multiPrint.querySelector('tfoot').rows[1].cells[6].textContent,'—');
 assert.equal(observations.size,beforeSero);
 w.__testSeroApproved.delete(keyUnderTest);
 w.getDocsFromServer=priorBinaryRead;
