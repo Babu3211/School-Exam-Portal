@@ -1,0 +1,547 @@
+{
+  "schemaVersion": 1,
+  "origin": "Original English translations authored for SMSS of one existing Nepali MCQ per CDC-textbook-derived science unit. Not official CDC model question translations.",
+  "reviewRequired": true,
+  "translations": {
+    "8:1": {
+      "questionTextEn": "What is the scientific process of carefully observing an object or event to collect information?",
+      "optionsEn": [
+        "Observation",
+        "Guessing",
+        "Conclusion",
+        "Survey"
+      ],
+      "answerEn": "Observation is the careful collection of information using senses or instruments.",
+      "originalQuestionNe": "वैज्ञानिक अध्ययनमा कुनै वस्तु वा घटनालाई ध्यानपूर्वक हेरी तथ्य सङ्कलन गर्ने प्रक्रियालाई के भनिन्छ?",
+      "originalOptionsNe": [
+        "अवलोकन",
+        "अनुमान",
+        "निष्कर्ष",
+        "सर्वेक्षण"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "8:2": {
+      "questionTextEn": "Which online service helps people search for information on websites?",
+      "optionsEn": [
+        "Search engine",
+        "Printer",
+        "Keyboard",
+        "Speaker"
+      ],
+      "answerEn": "A search engine helps find web pages and online information.",
+      "originalQuestionNe": "वेबसाइट वा इन्टरनेटमा सूचना खोज्न प्रयोग गरिने सेवाको उदाहरण कुन हो?",
+      "originalOptionsNe": [
+        "Search engine",
+        "Printer",
+        "Keyboard",
+        "Speaker"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "8:3": {
+      "questionTextEn": "What is the basic structural and functional unit of living organisms?",
+      "optionsEn": [
+        "Cell",
+        "Organ",
+        "Tissue",
+        "Organ system"
+      ],
+      "answerEn": "The cell is the basic structural and functional unit of living organisms.",
+      "originalQuestionNe": "सजीवको संरचनात्मक तथा कार्यात्मक आधारभूत एकाइ कुन हो?",
+      "originalOptionsNe": [
+        "कोष",
+        "अङ्ग",
+        "तन्तु",
+        "अङ्ग प्रणाली"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "8:4": {
+      "questionTextEn": "What is a system of interactions between living and non-living components of an area called?",
+      "optionsEn": [
+        "Ecosystem",
+        "Population",
+        "Species",
+        "Food item"
+      ],
+      "answerEn": "An ecosystem consists of interacting living and non-living components.",
+      "originalQuestionNe": "कुनै क्षेत्रमा रहेका सजीव र निर्जीव तत्वबीचको अन्तरसम्बन्धित प्रणालीलाई के भनिन्छ?",
+      "originalOptionsNe": [
+        "पारिस्थितिक प्रणाली",
+        "जनसंख्या",
+        "प्रजाति",
+        "खाद्य पदार्थ"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "8:5": {
+      "questionTextEn": "What is the process by which green plants make their own food called?",
+      "optionsEn": [
+        "Photosynthesis",
+        "Respiration",
+        "Excretion",
+        "Transpiration"
+      ],
+      "answerEn": "Green plants make food by photosynthesis using light, water and carbon dioxide.",
+      "originalQuestionNe": "हरिया बिरुवाले आफ्नै खाना बनाउने प्रक्रियालाई के भनिन्छ?",
+      "originalOptionsNe": [
+        "प्रकाश संश्लेषण",
+        "श्वसन",
+        "उत्सर्जन",
+        "वाष्पोत्सर्जन"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "8:6": {
+      "questionTextEn": "What is a push or pull that can change the motion or shape of an object called?",
+      "optionsEn": [
+        "Force",
+        "Energy",
+        "Mass",
+        "Density"
+      ],
+      "answerEn": "A force is a push or pull that can change an object's motion or shape.",
+      "originalQuestionNe": "वस्तुको गति वा आकार परिवर्तन गराउन सक्ने धक्कालाई के भनिन्छ?",
+      "originalOptionsNe": [
+        "बल",
+        "ऊर्जा",
+        "द्रव्यमान",
+        "घनत्व"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "8:7": {
+      "questionTextEn": "Which form of energy is mainly stored in the cooking gas used as fuel?",
+      "optionsEn": [
+        "Chemical energy",
+        "Sound energy",
+        "Light energy",
+        "Magnetic energy"
+      ],
+      "answerEn": "Fuel stores chemical energy that is released during combustion.",
+      "originalQuestionNe": "खाना पकाउन प्रयोग हुने ग्यासमा मुख्यतः कुन प्रकारको ऊर्जा सञ्चित हुन्छ?",
+      "originalOptionsNe": [
+        "रासायनिक ऊर्जा",
+        "ध्वनि ऊर्जा",
+        "प्रकाश ऊर्जा",
+        "चुम्बकीय ऊर्जा"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "8:8": {
+      "questionTextEn": "Under which condition can electric current flow through a circuit?",
+      "optionsEn": [
+        "Closed circuit",
+        "Open circuit",
+        "Broken wire",
+        "Open switch"
+      ],
+      "answerEn": "A complete or closed conducting path allows current to flow.",
+      "originalQuestionNe": "विद्युत् परिपथ पूरा हुँदा विद्युत् धारा बग्ने अवस्था कुन हो?",
+      "originalOptionsNe": [
+        "बन्द परिपथ",
+        "खुला परिपथ",
+        "टुटेको तार",
+        "स्विच खुला"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "8:9": {
+      "questionTextEn": "What is a pure substance formed by the chemical combination of two or more elements in a fixed ratio?",
+      "optionsEn": [
+        "Compound",
+        "Mixture",
+        "Metal",
+        "Solution only"
+      ],
+      "answerEn": "A compound contains chemically combined elements in a fixed proportion.",
+      "originalQuestionNe": "दुई वा दुईभन्दा बढी तत्व निश्चित अनुपातमा रासायनिक रूपमा मिलेर बनेको शुद्ध पदार्थ कुन हो?",
+      "originalOptionsNe": [
+        "यौगिक",
+        "मिश्रण",
+        "धातु",
+        "विलयन मात्र"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "8:10": {
+      "questionTextEn": "Which two conditions are mainly needed for iron to rust?",
+      "optionsEn": [
+        "Oxygen and water or moisture",
+        "Nitrogen and light",
+        "Carbon and sound",
+        "Helium and heat"
+      ],
+      "answerEn": "Rust forms when iron reacts in the presence of oxygen and moisture.",
+      "originalQuestionNe": "फलाममा खिया लाग्न मुख्यतः कुन दुई कुराको उपस्थिति आवश्यक हुन्छ?",
+      "originalOptionsNe": [
+        "अक्सिजन र पानी/चिस्यान",
+        "नाइट्रोजन र प्रकाश",
+        "कार्बन र ध्वनि",
+        "हिलियम र ताप"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "8:11": {
+      "questionTextEn": "Approximately how long does the Earth take to complete one revolution around the Sun?",
+      "optionsEn": [
+        "365 days",
+        "24 hours",
+        "30 days",
+        "12 hours"
+      ],
+      "answerEn": "The Earth completes one revolution in approximately 365 days and 6 hours.",
+      "originalQuestionNe": "पृथ्वीले सूर्यको एक परिक्रमा पूरा गर्न लगभग कति समय लगाउँछ?",
+      "originalOptionsNe": [
+        "३६५ दिन",
+        "२४ घण्टा",
+        "३० दिन",
+        "१२ घण्टा"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:1": {
+      "questionTextEn": "What is a scientific hypothesis?",
+      "optionsEn": [
+        "A possible explanation that can be tested",
+        "A final conclusion",
+        "An instrument",
+        "A measurement"
+      ],
+      "answerEn": "A hypothesis is a testable possible explanation.",
+      "originalQuestionNe": "परिकल्पना भन्नाले के बुझिन्छ?",
+      "originalOptionsNe": [
+        "परीक्षण गर्न सकिने सम्भावित व्याख्या",
+        "अन्तिम निष्कर्ष",
+        "उपकरण",
+        "मापन"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:2": {
+      "questionTextEn": "What is mainly considered in the modern classification of living organisms?",
+      "optionsEn": [
+        "Shared characteristics and evolutionary relationships",
+        "Colour",
+        "Size alone",
+        "Habitat alone"
+      ],
+      "answerEn": "Modern classification uses shared characteristics and evolutionary relationships.",
+      "originalQuestionNe": "आधुनिक वर्गीकरणमा मुख्यतः कुन आधार प्रयोग गरिन्छ?",
+      "originalOptionsNe": [
+        "साझा लक्षण र विकासक्रमीय सम्बन्ध",
+        "रङ",
+        "आकार मात्र",
+        "बसोबास मात्र"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:3": {
+      "questionTextEn": "Which member of a honeybee colony is primarily responsible for laying eggs?",
+      "optionsEn": [
+        "Queen bee",
+        "Worker bee",
+        "Drone",
+        "Larva"
+      ],
+      "answerEn": "The queen bee primarily lays eggs in the colony.",
+      "originalQuestionNe": "घारमा अण्डा पार्ने मुख्य मौरी कुन हो?",
+      "originalOptionsNe": [
+        "रानी मौरी",
+        "कामदार",
+        "भाले",
+        "लार्भा"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:4": {
+      "questionTextEn": "Where is hereditary information mainly stored?",
+      "optionsEn": [
+        "In DNA",
+        "In blood plasma",
+        "In the cell wall",
+        "In digestive juice"
+      ],
+      "answerEn": "Genes in DNA carry hereditary information.",
+      "originalQuestionNe": "वंशाणुगत सूचना मुख्यतः कहाँ हुन्छ?",
+      "originalOptionsNe": [
+        "DNA मा",
+        "रक्त प्लाज्मामा",
+        "कोशिका भित्तामा",
+        "पाचन रसमा"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:5": {
+      "questionTextEn": "Which organ pumps blood through the human body?",
+      "optionsEn": [
+        "Heart",
+        "Lungs",
+        "Kidneys",
+        "Liver"
+      ],
+      "answerEn": "The heart pumps blood throughout the body.",
+      "originalQuestionNe": "मानव शरीरमा रगत पम्प गर्ने अङ्ग कुन हो?",
+      "originalOptionsNe": [
+        "मुटु",
+        "फोक्सो",
+        "मिर्गौला",
+        "कलेजो"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:6": {
+      "questionTextEn": "Which is a producer in a food chain?",
+      "optionsEn": [
+        "Green plants",
+        "Tiger",
+        "Mushroom",
+        "Human"
+      ],
+      "answerEn": "Green plants produce food through photosynthesis.",
+      "originalQuestionNe": "खाद्य शृङ्खलामा उत्पादक कुन हो?",
+      "originalOptionsNe": [
+        "हरियो वनस्पति",
+        "बाघ",
+        "च्याउ",
+        "मानिस"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:7": {
+      "questionTextEn": "What is the SI unit of velocity?",
+      "optionsEn": [
+        "m/s",
+        "m/s²",
+        "N",
+        "kg"
+      ],
+      "answerEn": "The SI unit of velocity is metres per second (m/s).",
+      "originalQuestionNe": "वेगको SI एकाइ कुन हो?",
+      "originalOptionsNe": [
+        "m/s",
+        "m/s²",
+        "N",
+        "kg"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:8": {
+      "questionTextEn": "What is the SI unit of pressure?",
+      "optionsEn": [
+        "Pascal",
+        "Joule",
+        "Watt",
+        "Coulomb"
+      ],
+      "answerEn": "The SI unit of pressure is pascal (Pa), equal to N/m².",
+      "originalQuestionNe": "चापको SI एकाइ कुन हो?",
+      "originalOptionsNe": [
+        "पास्कल",
+        "जुल",
+        "वाट",
+        "कुलम्ब"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:9": {
+      "questionTextEn": "Which instrument measures temperature?",
+      "optionsEn": [
+        "Thermometer",
+        "Barometer",
+        "Ammeter",
+        "Hydrometer"
+      ],
+      "answerEn": "A thermometer is used to measure temperature.",
+      "originalQuestionNe": "तापक्रम मापन गर्ने उपकरण कुन हो?",
+      "originalOptionsNe": [
+        "थर्मोमिटर",
+        "ब्यारोमिटर",
+        "अमीटर",
+        "हाइड्रोमिटर"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:10": {
+      "questionTextEn": "What type of wave is sound?",
+      "optionsEn": [
+        "Mechanical wave",
+        "Electromagnetic wave",
+        "Light wave",
+        "Wave requiring no medium"
+      ],
+      "answerEn": "Sound is a mechanical wave and requires a medium to propagate.",
+      "originalQuestionNe": "ध्वनि कुन प्रकारको तरङ्ग हो?",
+      "originalOptionsNe": [
+        "यान्त्रिक",
+        "विद्युत्चुम्बकीय",
+        "प्रकाश",
+        "माध्यमबिनाको"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:11": {
+      "questionTextEn": "What is the SI unit of electric current?",
+      "optionsEn": [
+        "Ampere",
+        "Volt",
+        "Ohm",
+        "Watt"
+      ],
+      "answerEn": "The SI unit of electric current is ampere (A).",
+      "originalQuestionNe": "विद्युत् धाराको SI एकाइ कुन हो?",
+      "originalOptionsNe": [
+        "एम्पियर",
+        "भोल्ट",
+        "ओम",
+        "वाट"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:12": {
+      "questionTextEn": "Which celestial body is at the centre of our solar system?",
+      "optionsEn": [
+        "Sun",
+        "Earth",
+        "Moon",
+        "Jupiter"
+      ],
+      "answerEn": "The Sun is at the centre of the solar system.",
+      "originalQuestionNe": "सौर्यमण्डलको केन्द्रमा कुन पिण्ड छ?",
+      "originalOptionsNe": [
+        "सूर्य",
+        "पृथ्वी",
+        "चन्द्रमा",
+        "बृहस्पति"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:13": {
+      "questionTextEn": "What is the term for the address of a resource on the web?",
+      "optionsEn": [
+        "URL",
+        "CPU",
+        "RAM",
+        "USB"
+      ],
+      "answerEn": "A URL identifies the address of a web resource.",
+      "originalQuestionNe": "वेबसाइटको ठेगाना जनाउने प्रणाली कुन हो?",
+      "originalOptionsNe": [
+        "URL",
+        "CPU",
+        "RAM",
+        "USB"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:14": {
+      "questionTextEn": "On which basis are elements arranged in the modern periodic table?",
+      "optionsEn": [
+        "Atomic number",
+        "Density",
+        "Colour",
+        "Atomic size"
+      ],
+      "answerEn": "The modern periodic table is arranged by increasing atomic number.",
+      "originalQuestionNe": "आधुनिक आवर्त सारणी कुन आधारमा क्रमबद्ध छ?",
+      "originalOptionsNe": [
+        "परमाणु क्रमाङ्क",
+        "घनत्व",
+        "रङ",
+        "परमाणु आकार"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:15": {
+      "questionTextEn": "What is formed from reactants during a chemical reaction?",
+      "optionsEn": [
+        "Products",
+        "Only mixtures",
+        "Always elements",
+        "Only energy"
+      ],
+      "answerEn": "Chemical reactions convert reactants into products.",
+      "originalQuestionNe": "रासायनिक प्रतिक्रियामा अभिकारकबाट के बन्छ?",
+      "originalOptionsNe": [
+        "उत्पादन",
+        "मिश्रण मात्र",
+        "तत्व सधैँ",
+        "ऊर्जा मात्र"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:16": {
+      "questionTextEn": "What is the role of oxygen in combustion?",
+      "optionsEn": [
+        "Supports combustion",
+        "Stops combustion",
+        "Acts only as fuel",
+        "Only changes colour"
+      ],
+      "answerEn": "Oxygen supports the combustion of fuels.",
+      "originalQuestionNe": "अक्सिजनले दहनमा के भूमिका खेल्छ?",
+      "originalOptionsNe": [
+        "दहनलाई सहयोग",
+        "दहन रोक्ने",
+        "इन्धन मात्र",
+        "रङ परिवर्तन"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:17": {
+      "questionTextEn": "Which metal is liquid at normal room temperature?",
+      "optionsEn": [
+        "Mercury",
+        "Iron",
+        "Copper",
+        "Aluminium"
+      ],
+      "answerEn": "Mercury is liquid at ordinary room temperature.",
+      "originalQuestionNe": "कोठाको तापक्रममा तरल धातु कुन हो?",
+      "originalOptionsNe": [
+        "पारा",
+        "फलाम",
+        "तामा",
+        "एल्युमिनियम"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:18": {
+      "questionTextEn": "Which elements are present in hydrocarbons?",
+      "optionsEn": [
+        "Carbon and hydrogen",
+        "Carbon and oxygen",
+        "Hydrogen and nitrogen",
+        "Carbon and sulphur"
+      ],
+      "answerEn": "Hydrocarbons contain carbon and hydrogen.",
+      "originalQuestionNe": "हाइड्रोकार्बनमा कुन तत्व हुन्छन्?",
+      "originalOptionsNe": [
+        "कार्बन र हाइड्रोजन",
+        "कार्बन र अक्सिजन",
+        "हाइड्रोजन र नाइट्रोजन",
+        "कार्बन र सल्फर"
+      ],
+      "originalCorrectOption": "A"
+    },
+    "10:19": {
+      "questionTextEn": "How does soap help to remove greasy dirt?",
+      "optionsEn": [
+        "Its molecules interact with both oil and water",
+        "By magnetic attraction",
+        "By forming a metal",
+        "By forming an acid"
+      ],
+      "answerEn": "Soap molecules have parts that interact with water and oily substances.",
+      "originalQuestionNe": "साबुनले तेलिलो मैलो हटाउन कसरी सहयोग गर्छ?",
+      "originalOptionsNe": [
+        "तेल र पानीसँग अन्तरक्रिया गर्ने अणु संरचना",
+        "चुम्बकीय गुण",
+        "धातु बन्ने",
+        "अम्ल बनाउने"
+      ],
+      "originalCorrectOption": "A"
+    }
+  }
+}

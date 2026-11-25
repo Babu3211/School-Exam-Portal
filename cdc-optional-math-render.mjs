@@ -1,0 +1,260 @@
+/**
+ * Standalone safe renderer for grouped Optional Math school paper.
+ * Uses teacher-reviewed composite questions only. An exact CDC grid match
+ * does NOT mean the questions were written or approved by Nepal CDC.
+ */
+import {cdcSubjectKey} from './cdc-grid-source-index.mjs';
+const NE_DIGITS='०१२३४५६७८९';
+const NE_LETTERS=['क','ख','ग','घ','ङ','च','छ','ज','झ','ञ','ट'];
+const NE_SUBJECTS={nepali:'नेपाली',english:'अङ्ग्रेजी',math:'अनिवार्य गणित',science:'विज्ञान तथा प्रविधि',social:'सामाजिक अध्ययन',optional_math:'ऐच्छिक गणित',optional_computer:'ऐच्छिक कम्प्युटर विज्ञान',optional_environment:'वातावरण विज्ञान',optional_economics:'अर्थशास्त्र',accounting:'कार्यालय सञ्चालन तथा लेखा',health:'स्वास्थ्य, शारीरिक तथा सिर्जनात्मक कला'};
+export const paperDigits=(value,language)=>language==='ne'?String(value??'').replace(/[0-9]/g,d=>NE_DIGITS[Number(d)]):String(value??'');
+export const paperSubjectLabel=(subject,language)=>language==='ne'?(NE_SUBJECTS[cdcSubjectKey(subject)]||String(subject??'')):String(subject??'');
+export const paperClassLabel=(value,language)=>paperDigits(language==='ne'?String(value??'').replace(/^Class\s*/i,'कक्षा '):value,language);
+export const paperOptionLabel=(index,language,lower=false)=>language==='ne'?(NE_LETTERS[index]||paperDigits(index+1,language)):String.fromCharCode((lower?97:65)+index);
+export const paperAnswerOption=(option,language)=>language==='ne'&&/^[A-D]$/.test(option||'')?paperOptionLabel(option.charCodeAt(0)-65,language):String(option??'');
+// Computer program syntax must remain executable: preserve numeric literals
+// in lines containing actual code expressions. All ordinary text/marks use Nepali digits.
+export function paperDisplayText(value,language,subject){
+ const text=String(value??'');
+ if(language!=='ne')return text;
+ if(cdcSubjectKey(subject)==='optional_computer'){
+  return text.split('\n').map(line=>/\b(?:print|input|range|int|str|float)\s*\(|^\s*(?:if|elif|else|for|while)\b|\b[a-zA-Z_]\w*\s*=\s*\d|\b[a-zA-Z_]\w*\s*[+*/%\-]\s*\d/.test(line)?line:paperDigits(line,language)).join('\n');
+ }
+ return paperDigits(text,language);
+}
+const GROUPS=[
+ ['objective','Group A — Objective (11 × 1 = 11)'],
+ ['WCA','Group B — Within Content Area (12 questions, 40 marks)'],
+ ['CCA','Group C — Cross Content Area (4 questions, 24 marks)']
+];
+export function renderCdcCompositePaper(paper,{escapeHtml,answerKey=false}={}){
+ if(typeof escapeHtml!=='function'||paper?.questionFormat!=='cdc_optional_math_composite'||
+  !['ne','en','both'].includes(paper?.language)||!Array.isArray(paper?.questions)||
+  paper.questions.length!==27)throw Error('Validated composite paper required for printing');
+ const ne=paper.language==='ne',esc=value=>escapeHtml(paperDisplayText(value,paper.language,paper.subject)),label=i=>paperOptionLabel(i,paper.language,true);
+ const text=(x,tag)=>paper.language==='ne'?String(x[tag+'Ne']||''):
+   paper.language==='en'?String(x[tag+'En']||''):
+   String(x[tag+'Ne']||'')+'\n'+String(x[tag+'En']||'');
+ const groups=GROUPS.map(([group,title])=>{
+  const items=paper.questions.filter(q=>q.group===group);
+  const needed=group==='objective'?11:group==='WCA'?12:4;
+  const expected=group==='objective'?11:group==='WCA'?40:24;
+  const marks=items.reduce((a,q)=>a+q.subquestions.reduce((n,s)=>n+Number(s.marks),0),0);
+  if(items.length!==needed||marks!==expected)
+   throw Error('CDC composite print group does not match exact grid');
+  const titleNe={objective:'समूह क — वस्तुगत (11 × 1 = 11)',WCA:'समूह ख — विषयक्षेत्रभित्रका प्रश्न (12 प्रश्न, 40 अङ्क)',CCA:'समूह ग — अन्तरविषयक्षेत्रका प्रश्न (4 प्रश्न, 24 अङ्क)'};
+  return {group,title:ne?titleNe[group]:title,items};
+ });
+ // CDC Grade 9/10 Model Question layout:
+ // Q1 is a SINGLE objective question with parts A–K, not Q1–Q11.
+ // WCA are Q2–Q13, CCA are Q14–Q17. There are 27 scored items but
+ // 17 numbered main questions. Align print and answer key exactly.
+ const optionsHtml=sub=>{
+  const options=paper.language==='en'?sub.optionsEn:sub.optionsNe;
+  if(answerKey||!Array.isArray(options)||options.length!==4)return '';
+  return '<div style="padding-left:18px">'+options.map((value,i)=>
+   '<div>'+label(i)+'. '+esc(value)+
+   (paper.language==='both'&&Array.isArray(sub.optionsEn)?
+    ' / '+esc(sub.optionsEn[i]||''):'')+'</div>').join('')+'</div>';
+ };
+ const objective=groups.find(x=>x.group==='objective');
+ const within=groups.find(x=>x.group==='WCA');
+ const cross=groups.find(x=>x.group==='CCA');
+ const objectiveHtml='<h3 style="text-align:left;margin-top:18px">'+
+   esc(objective.title)+'</h3>'+
+  '<div class="qp-q" style="break-inside:avoid;page-break-inside:avoid">'+
+  '<b>'+esc(1)+'. '+(answerKey?(ne?'उत्तरकुञ्जिका — ':'Teacher Answer Key — '):'')+
+  (ne?'वस्तुगत प्रश्न':'Objective Questions')+' ['+esc(11)+']</b>'+
+  objective.items.map((q,i)=>{
+   const sub=q.subquestions[0];
+   const prompt=esc(text(sub,answerKey?'answer':'text'));
+   const key=answerKey&&sub.correctOption?
+    ' ('+(ne?'सही विकल्प: ':'Correct option: ')+esc(paperAnswerOption(sub.correctOption,paper.language))+')':'';
+   return '<div style="margin:10px 0 10px 18px;white-space:pre-line">'+
+    '<b>'+paperOptionLabel(i,paper.language)+'.</b> '+prompt+key+
+    (answerKey?'':' <b>['+esc(1)+']</b>'+questionFigure(sub,paper.language))+optionsHtml(sub)+'</div>';
+  }).join('')+'</div>';
+ const groupedHtml=(group,startingNumber)=>
+  '<h3 style="text-align:left;margin-top:18px">'+esc(group.title)+'</h3>'+
+  group.items.map((q,index)=>{
+   const number=startingNumber+index;
+   const mark=q.subquestions.reduce((total,s)=>total+Number(s.marks),0);
+   const context=text(q,'context').trim();
+   const contextHtml=context?'<p style="white-space:pre-line;margin:5px 0">'+
+    esc(context)+'</p>':'';
+   const subparts=q.subquestions.map((sub,i)=>
+    '<li style="margin:6px 0;white-space:pre-line">'+
+    label(i)+'. '+
+    esc(text(sub,answerKey?'answer':'text'))+
+    (answerKey?'':' <b>['+esc(sub.marks)+']</b>')+
+    (answerKey?'':questionFigure(sub,paper.language))+optionsHtml(sub)+'</li>').join('');
+   return '<div class="qp-q" style="break-inside:avoid;page-break-inside:avoid;margin:13px 0">'+
+    '<b>'+esc(number)+'. '+(answerKey?(ne?'[उत्तरकुञ्जिका] ':'[Answer Key] '):'')+
+    '<span>['+esc(mark)+']</span></b>'+contextHtml+
+    '<ol style="list-style:none;padding-left:16px;margin:5px 0">'+subparts+
+    '</ol></div>';
+  }).join('');
+ const html=objectiveHtml+groupedHtml(within,2)+groupedHtml(cross,14);
+ const header='<div style="text-align:center;border-bottom:1px solid #222;padding-bottom:12px">'+
+  '<h2>'+esc(paper.schoolName||'विद्यालय')+'</h2><p>'+esc(paper.schoolAddress||'')+'</p>'+
+  '<h3>'+esc(paper.paperTitle||'प्रश्नपत्र')+(answerKey?(ne?' — उत्तरकुञ्जिका':' — Teacher Answer Key'):'')+'</h3>'+
+  '<b>'+esc(paperClassLabel(paper.className,paper.language))+' · '+esc(paperSubjectLabel(paper.subject,paper.language))+'</b>'+
+  '<div style="display:flex;justify-content:space-between;margin-top:10px;gap:10px">'+
+  '<span>'+(ne?'शैक्षिक वर्ष: ':'Year: ')+esc(paper.academicYear)+'</span><span>'+(ne?'समय: ':'Time: ')+esc(paper.durationMinutes)+
+  (ne?' मिनेट':' minutes')+'</span><span>'+(ne?'पूर्णाङ्क: ':'FM: ')+esc(paper.fullMarks)+'</span></div></div>';
+ const note='<p style="font-size:12px;color:#444;margin:10px 0">'+
+  (ne?'CDC २०८२ को संरचना — विद्यालयका मौलिक गणित अभ्यास। CDC प्रकाशित प्रश्न होइनन्; शिक्षक समीक्षा आवश्यक।':'CDC 2082 Grid structure — SMSS original calculated practice questions. NOT CDC-published; teacher answer and curriculum review required.')+
+  '</p>';
+ return '<section '+(answerKey?'':'id="qpPrintArea"')+
+  ' class="qp-paper-preview" style="font-family:Arial,sans-serif">'+
+  header+note+'<div class="qp-paper-body">'+html+'</div></section>';
+}
+
+
+// Offline A4 landscape exam layout. Flow across pages rather than shrink.
+export const PAPER_PRINT_CSS='@page{size:A4 landscape;margin:10mm}body{font:11pt/1.35 "Noto Sans Devanagari","Nirmala UI",Arial,sans-serif;color:#111;margin:0;padding:0}h2,h3{text-align:center;margin:4px 0}h2{font-size:15pt}h3{font-size:12pt}.qp-paper-preview{padding:0!important;border:0!important}.qp-paper-body{column-count:2;column-gap:8mm;column-rule:0.35pt solid #aaa;overflow-wrap:anywhere}.qp-paper-body h3{break-after:avoid;text-align:left}.qp-q{margin:7px 0;line-height:1.35;break-inside:avoid;page-break-inside:avoid}.qp-q b{white-space:pre-line}.qp-paper-body img,.qp-paper-body svg{max-width:100%;height:auto;break-inside:avoid}.qp-paper-end{text-align:center}';
+function crc32(bytes){let c=0xffffffff;for(const b of bytes){c^=b;for(let i=0;i<8;i++)c=(c>>>1)^((c&1)?0xedb88320:0);}return (c^0xffffffff)>>>0;}
+function storedZip(files){
+ const enc=new TextEncoder(),chunks=[],central=[];let offset=0,size=0;
+ for(const [name,content] of files){
+  const n=enc.encode(name),data=typeof content==='string'?enc.encode(content):content,crc=crc32(data);
+  if(!(data instanceof Uint8Array))throw Error('Invalid DOCX package part');
+  const h=new Uint8Array(30+n.length),v=new DataView(h.buffer);
+  v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(6,0x800,true);v.setUint16(12,33,true);v.setUint32(14,crc,true);v.setUint32(18,data.length,true);v.setUint32(22,data.length,true);v.setUint16(26,n.length,true);h.set(n,30);
+  const z=new Uint8Array(46+n.length),w=new DataView(z.buffer);
+  w.setUint32(0,0x02014b50,true);w.setUint16(4,20,true);w.setUint16(6,20,true);w.setUint16(8,0x800,true);w.setUint16(14,33,true);w.setUint32(16,crc,true);w.setUint32(20,data.length,true);w.setUint32(24,data.length,true);w.setUint16(28,n.length,true);w.setUint32(42,offset,true);z.set(n,46);
+  chunks.push(h,data);central.push(z);offset+=h.length+data.length;size+=z.length;
+ }
+ const end=new Uint8Array(22),v=new DataView(end.buffer);v.setUint32(0,0x06054b50,true);v.setUint16(8,files.length,true);v.setUint16(10,files.length,true);v.setUint32(12,size,true);v.setUint32(16,offset,true);
+ const out=new Uint8Array(offset+size+22);let pos=0;for(const a of [...chunks,...central,end]){out.set(a,pos);pos+=a.length;}return out;
+}
+const xmlText=v=>String(v??'').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/g,'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const paragraph=(text,{center=false,bold=false,size=22}={})=>'<w:p><w:pPr>'+(center?'<w:jc w:val="center"/>':'')+'<w:spacing w:after="65" w:line="300" w:lineRule="auto"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Nirmala UI"/>'+(bold?'<w:b/><w:bCs/>':'')+'<w:sz w:val="'+size+'"/><w:szCs w:val="'+size+'"/></w:rPr>'+String(text).split('\n').map((line,i)=>(i?'<w:br/>':'')+'<w:t xml:space="preserve">'+xmlText(line)+'</w:t>').join('')+'</w:r></w:p>';
+function paperParagraphs(node,{figureTokens=false}={}){
+ const blocks=new Set(['DIV','P','H1','H2','H3','H4','LI','OL','UL','SECTION','PRE','ARTICLE','ASIDE','FIGURE','FIGCAPTION']);const out=[];let buffer='';
+ const flush=()=>{if(buffer.trim())out.push(buffer.trim());buffer='';};
+ const walk=n=>{if(n.nodeType===3){buffer+=n.nodeValue;return;}if(n.nodeType!==1)return;const tag=n.tagName.toUpperCase();if(tag==='SVG'){flush();if(figureTokens)out.push(n);return;}if(['SCRIPT','STYLE','BUTTON','DETAILS','IMG','CANVAS'].includes(tag))return;if(tag==='BR'){buffer+='\n';return;}const block=blocks.has(tag);if(block)flush();for(const child of n.childNodes)walk(child);if(block)flush();};
+ walk(node);flush();return out;
+}
+// Only our self-contained drawing elements can be converted. External images,
+// scripts, styles, event attributes and resource references are never fetched.
+function paperFigureNodes(area){
+ const figures=[...area.querySelectorAll('svg')];
+ if(area.querySelector('img,canvas,object,embed,iframe')||figures.length>100)throw Error('Unsupported or excessive paper figures');
+ for(const svg of figures){
+  if(!svg.closest('.qp-paper-body .qp-figure')||svg.namespaceURI!=='http://www.w3.org/2000/svg')throw Error('Unrecognized paper figure');
+  for(const el of [svg,...svg.querySelectorAll('*')]){
+   if(!['svg','g','rect','path','circle','text','line','polyline','polygon'].includes(el.localName))throw Error('Unsupported paper figure element');
+   for(const attr of el.attributes){
+    if(!['xmlns','width','height','viewBox','role','aria-label','x','y','x1','x2','y1','y2','cx','cy','r','d','points','fill','stroke','stroke-width','font-family','font-size','text-anchor'].includes(attr.name)||/url\s*\(|javascript:|https?:|data:/i.test(attr.value)&&attr.name!=='xmlns')throw Error('Unsafe paper figure attribute');
+   }
+  }
+  if(!Number.isFinite(Number(svg.getAttribute('width')))||!Number.isFinite(Number(svg.getAttribute('height')))||Number(svg.getAttribute('width'))<1||Number(svg.getAttribute('height'))<1||Number(svg.getAttribute('width'))>1000||Number(svg.getAttribute('height'))>1000)throw Error('Invalid figure dimensions');
+ }
+ return figures;
+}
+function validateFigurePng(bytes){
+ if(!(bytes instanceof Uint8Array)||bytes.length<45||bytes.length>8*1024*1024||![137,80,78,71,13,10,26,10].every((b,i)=>bytes[i]===b)||String.fromCharCode(...bytes.slice(12,16))!=='IHDR')throw Error('Figure PNG is invalid');
+ const v=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength),w=v.getUint32(16),h=v.getUint32(20);
+ if(!w||!h||w>3000||h>3000)throw Error('Invalid PNG dimensions');
+ return {w,h};
+}
+export async function rasterizePaperFigures(area){
+ const result=new Map();
+ for(const svg of paperFigureNodes(area)){
+  const doc=area.ownerDocument,view=doc.defaultView;
+  const serialized=new view.XMLSerializer().serializeToString(svg);
+  const img=new view.Image(),url=view.URL.createObjectURL(new view.Blob([serialized],{type:'image/svg+xml;charset=utf-8'}));
+  try{
+   await new Promise((resolve,reject)=>{
+    const timer=view.setTimeout(()=>reject(Error('Figure conversion timed out')),8000);
+    img.onload=()=>{view.clearTimeout(timer);resolve();};
+    img.onerror=()=>{view.clearTimeout(timer);reject(Error('Figure conversion failed'));};
+    img.src=url;
+   });
+   const canvas=doc.createElement('canvas');
+   canvas.width=Number(svg.getAttribute('width'))*3;canvas.height=Number(svg.getAttribute('height'))*3;
+   const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas not available');
+   ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
+   const png=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Figure PNG creation failed')),'image/png'));
+   const bytes=new Uint8Array(await png.arrayBuffer());validateFigurePng(bytes);result.set(svg,bytes);
+  }finally{view.URL.revokeObjectURL(url);}
+ }
+ return result;
+}
+function figureDrawing(id,w,h){
+ const cx=Math.min(3000000,w*9525/3),cy=Math.round(cx*h/w),name='Figure '+id;
+ return '<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="'+Math.round(cx)+'" cy="'+cy+'"/><wp:docPr id="'+id+'" name="'+name+'"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="'+id+'" name="'+name+'"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdFigure'+id+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="'+Math.round(cx)+'" cy="'+cy+'"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
+}
+export function buildQuestionPaperDocx(area,{figurePngs=new Map()}={}){
+ if(!area||typeof area.querySelector!=='function')throw Error('Question paper preview required');
+ const body=area.querySelector('.qp-paper-body');if(!body)throw Error('Two-column question paper layout required');
+ const figures=paperFigureNodes(area),media=[],rels=[];
+ if(!(figurePngs instanceof Map)||figures.some(svg=>!figurePngs.has(svg))||figurePngs.size!==figures.length)throw Error('Every paper figure must be embedded before Word export');
+ const header=area.firstElementChild,heading=paperParagraphs(header),preface=[...area.children].filter(x=>x!==header&&x!==body&&!x.classList.contains('qp-paper-end')).flatMap(paperParagraphs),paras=paperParagraphs(body,{figureTokens:true});if(!paras.length)throw Error('Empty question paper');
+ const sect=cols=>'<w:sectPr><w:type w:val="continuous"/><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="567" w:right="567" w:bottom="567" w:left="567" w:header="283" w:footer="283" w:gutter="0"/><w:cols w:num="'+cols+'" w:space="454"'+(cols===2?' w:sep="1"':'')+'/></w:sectPr>';
+ const bodyContent=paras.map(token=>{
+  if(typeof token==='string')return paragraph(token);
+  const bytes=figurePngs.get(token),{w,h}=validateFigurePng(bytes),id=media.length+1;
+  media.push(['word/media/figure'+id+'.png',bytes]);
+  rels.push('<Relationship Id="rIdFigure'+id+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/figure'+id+'.png"/>');
+  return figureDrawing(id,w,h);
+ }).join('');
+ if(media.length!==figures.length)throw Error('A question figure would be omitted');
+ const content=heading.map((line,i)=>paragraph(line,{center:true,bold:i===0,size:i===0?30:22})).join('')+preface.map(line=>paragraph(line,{center:true,size:18})).join('')+'<w:p><w:pPr>'+sect(1)+'</w:pPr></w:p>'+bodyContent+sect(2);
+ const xml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+ return storedZip([
+ ['[Content_Types].xml',xml+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'],
+ ['_rels/.rels',xml+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'],
+ ['word/document.xml',xml+'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>'+content+'</w:body></w:document>'],
+ ...(media.length?[["word/_rels/document.xml.rels",xml+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+rels.join('')+'</Relationships>'],...media]:[])]);
+}
+
+
+// Offline schematic illustrations tied to explicit question wording. The
+// labels reproduce givens only; unknown quantities are never solved here.
+export function questionFigure(question,language='both'){
+ const en=String(question?.contextEn||question?.questionTextEn||question?.textEn||String(question?.questionText||'').split('\n').at(-1)||'');
+ const label=s=>paperDigits(s,language).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const txt=(x,y,value)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" stroke="none" fill="#111" font-size="13">'+label(value)+'</text>';
+ const triangle=(a,b,c,theta=false)=>'<path d="M48 18V116H218Z M48 104H60V116" />'+txt(24,69,a)+txt(133,134,b)+txt(153,53,c)+(theta?txt(194,110,'θ'):'');
+ let match,body='',caption='';
+ if((match=/^The perpendicular sides of a right triangle are (\d+) cm and (\d+) cm\./.exec(en))){
+  body=triangle(match[1]+' cm',match[2]+' cm','?');caption='समकोण त्रिभुज / Right triangle';
+ }else if((match=/^In a right triangle, opposite to θ is (\d+), adjacent is (\d+) and hypotenuse is (\d+)\./.exec(en))){
+  body=triangle(match[1],match[2],match[3],true);caption='समकोण त्रिभुज / Right triangle';
+ }else if((match=/^In a right triangle, opposite = (\d+) and hypotenuse = (\d+)\. Find sin θ\.$/.exec(en))){
+  body=triangle(match[1],'',match[2],true);caption='समकोण त्रिभुज / Right triangle';
+ }else if((match=/^In a right triangle, adjacent = (\d+) and hypotenuse = (\d+)\. Find cos θ\.$/.exec(en))){
+  body=triangle('',match[1],match[2],true);caption='समकोण त्रिभुज / Right triangle';
+ }else if((match=/^In a right triangle, opposite = (\d+), adjacent = (\d+)\. Find tan θ\.$/.exec(en))){
+  body=triangle(match[1],match[2],'',true);caption='समकोण त्रिभुज / Right triangle';
+ }else if((match=/^Find the hypotenuse of a right triangle with legs (\d+) and (\d+)\.$/.exec(en))){
+  body=triangle(match[1],match[2],'?');caption='समकोण त्रिभुज / Right triangle';
+ }else if((match=/^A circular pond has radius (\d+) m\./.exec(en))){
+  body='<circle cx="130" cy="71" r="51"/><path d="M130 71H181"/><circle cx="130" cy="71" r="2" fill="#111"/>'+txt(155,63,match[1]+' m');caption='वृत्त / Circle';
+ }else if((match=/^A rectangular garden is (\d+) m long and (\d+) m wide\./.exec(en))){
+  body='<rect x="38" y="30" width="190" height="82"/>'+txt(133,23,match[1]+' m')+txt(256,75,match[2]+' m');caption='आयत / Rectangle';
+ }else if((match=/^A cuboid measures (\d+) cm by (\d+) cm by (\d+) cm\./.exec(en))){
+  body='<path d="M40 52H198V118H40Z M40 52L78 18H236L198 52 M198 118L236 84V18"/>'+txt(120,137,match[1]+' cm')+txt(250,65,match[3]+' cm')+txt(218,113,match[2]+' cm');caption='घनाभ / Cuboid';
+ }else if((match=/^AB and CD are parallel; a transversal forms an interior angle of (\d+)°\./.exec(en))){
+  body='<path d="M28 38H252 M28 104H252 M79 132L194 10"/>'+txt(17,42,'A')+txt(263,42,'B')+txt(17,108,'C')+txt(263,108,'D')+txt(158,57,match[1]+'°');caption='समानान्तर रेखा / Parallel lines';
+ }else if((match=/^In triangle ABC, angle A=(\d+)° and B=(\d+)°\./.exec(en))){
+  body='<path d="M135 20L40 115H230Z"/>'+txt(135,14,'C')+txt(31,130,'A')+txt(239,130,'B')+txt(75,106,match[1]+'°')+txt(193,106,match[2]+'°');caption='त्रिभुज / Triangle';
+ }else if((match=/^A (\d+) Ω and (\d+) Ω resistor are in (series|parallel) across (\d+) V\./.exec(en))){
+  const battery='<path d="M32 48V66 M16 66H48 M23 77H41 M32 77V115"/>'+txt(62,73,match[4]+' V')+txt(52,61,'+');
+  if(match[3]==='series'){
+   body=battery+'<path d="M32 48V25H80 M130 25H165 M215 25H250V115H32"/><rect x="80" y="17" width="50" height="16"/><rect x="165" y="17" width="50" height="16"/>'+txt(105,13,match[1]+' Ω')+txt(190,13,match[2]+' Ω');
+   caption='श्रेणीक्रम परिपथ / Series circuit';
+  }else{
+   body=battery+'<path d="M32 48V25H100 V93 M100 25H148 M198 25H250V115H32 M100 93H148 M198 93H250"/><rect x="148" y="17" width="50" height="16"/><rect x="148" y="85" width="50" height="16"/><circle cx="100" cy="25" r="2" fill="#111"/><circle cx="250" cy="93" r="2" fill="#111"/>'+txt(173,13,match[1]+' Ω')+txt(173,81,match[2]+' Ω');
+   caption='समानान्तर परिपथ / Parallel circuit';
+  }
+ }else if(/^Why does a longer effort arm reduce the force needed in a lever\?/.test(en)){
+  body='<path d="M24 60H248 M89 61L72 107H106Z M39 34V56 M34 49L39 56L44 49 M227 34V56 M222 49L227 56L232 49"/>'+txt(39,25,language==='ne'?'भार':language==='both'?'भार / Load':'Load')+txt(224,25,language==='ne'?'प्रयास':language==='both'?'प्रयास / Effort':'Effort')+txt(89,125,language==='ne'?'आधारबिन्दु':language==='both'?'आधारबिन्दु / Fulcrum':'Fulcrum');caption='उत्तोलक / Lever';
+ }
+ if(!body)return '';
+ const name=language==='ne'?caption.split(' / ')[0]:language==='en'?caption.split(' / ')[1]:caption;
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" width="280" height="145" viewBox="0 0 280 145" role="img" aria-label="'+label(name)+'"><rect width="280" height="145" fill="white" stroke="none"/><g fill="none" stroke="#111" stroke-width="1.5" font-family="Arial,Nirmala UI,sans-serif">'+body+'</g></svg>';
+ return '<figure class="qp-figure" style="margin:6px 0;text-align:center;break-inside:avoid">'+svg+'<figcaption style="font-size:9pt">'+label(name)+' — '+(language==='ne'?'मापनअनुसार होइन':language==='en'?'not to scale':'मापनअनुसार होइन / not to scale')+'</figcaption></figure>';
+}

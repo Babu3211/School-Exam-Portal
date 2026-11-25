@@ -1,0 +1,277 @@
+name: V46 Question Paper Auto Generator (Development Only)
+on:
+  push:
+    branches:
+      - feat/v46-question-autogen-grid-safe-2083
+    paths:
+      - 'cdc-question-paper.js'
+      - 'cdc-question-autogen.mjs'
+      - 'cdc-question-excel.mjs'
+      - 'scripts/test-cdc-very-short.mjs'
+      - 'cdc-verified-computer-grids.mjs'
+      - 'cdc-optional-math-2082.mjs'
+      - 'cdc-optional-math-model-compare.mjs'
+      - 'scripts/test-cdc-optional-math-model-compare.mjs'
+      - 'cdc-optional-math-composite.mjs'
+      - 'cdc-optional-math-original-practice.mjs'
+      - 'scripts/test-cdc-optional-math-original-practice.mjs'
+      - 'cdc-optional-math-render.mjs'
+      - 'scripts/test-cdc-optional-math-composite.mjs'
+      - 'scripts/test-v46-optional-math-ui.mjs'
+      - 'cdc-grid-source-index.mjs'
+      - 'cdc-grade9-grid-library.mjs'
+      - 'cdc-grade9-release-audit.mjs'
+      - 'cdc-grade9-paper-grid-guard.mjs'
+      - 'cdc-grade9-model-reference-audit.mjs'
+      - 'cdc-grade9-reference-readiness.mjs'
+      - 'cdc-grade9-reference-preview.mjs'
+      - 'scripts/test-cdc-grade9-reference-preview.mjs'
+      - 'scripts/test-cdc-grade9-review-pack.mjs'
+      - 'scripts/test-v46-paper-browser-layout.mjs'
+      - 'scripts/test-cdc-grade9-reference-readiness.mjs'
+      - 'cdc-grade9-nepali-model-2078.mjs'
+      - 'cdc-grade9-nepali-grouped-planner.mjs'
+      - 'cdc-grade9-nepali-reference-bank.mjs'
+      - 'cdc-grade9-nepali-textbook-reference.mjs'
+      - 'scripts/test-cdc-grade9-nepali-reference-bank.mjs'
+      - 'cdc-grade9-english-grouped-planner.mjs'
+      - 'cdc-grade9-english-reference-bank.mjs'
+      - 'cdc-grade9-english-seen-reference.mjs'
+      - 'cdc-grade9-english-seen-prose-data.mjs'
+      - 'scripts/test-cdc-grade9-english-seen-prose.mjs'
+      - 'scripts/prepare-grade9-seen-prose.py'
+      - 'scripts/test-cdc-grade9-english-reference-bank.mjs'
+      - 'cdc-grade9-compulsory-math-grouped.mjs'
+      - 'cdc-grade9-compulsory-math-reference-bank.mjs'
+      - 'scripts/test-cdc-grade9-compulsory-math-reference-bank.mjs'
+      - 'scripts/test-cdc-grade9-compulsory-math-grouped.mjs'
+      - 'scripts/test-cdc-grade9-english-grouped-planner.mjs'
+      - 'scripts/test-cdc-grade9-nepali-grouped-planner.mjs'
+      - 'scripts/test-cdc-grade9-nepali-model-2078.mjs'
+      - 'scripts/test-cdc-grade9-model-reference-audit.mjs'
+      - 'scripts/test-cdc-grade9-paper-grid-guard.mjs'
+      - 'cdc-grade9-science-archive-audit.mjs'
+      - 'cdc-grade9-science-reference-planner.mjs'
+      - 'cdc-grade9-social-reference-planner.mjs'
+      - 'cdc-grade9-social-reference-bank.mjs'
+      - 'scripts/test-cdc-grade9-social-reference-bank.mjs'
+      - 'scripts/test-cdc-grade9-social-reference-planner.mjs'
+      - 'scripts/test-cdc-grade9-science-reference-planner.mjs'
+      - 'scripts/test-cdc-grade9-science-archive-audit.mjs'
+      - 'cdc-grade9-computer-original-practice.mjs'
+      - 'cdc-grade9-environment-original-practice.mjs'
+      - 'cdc-grade9-environment-reference-bank.mjs'
+      - 'scripts/test-cdc-grade9-environment-reference-bank.mjs'
+      - 'cdc-grade9-social-original-practice.mjs'
+      - 'cdc-grade9-compulsory-math-practice.mjs'
+      - 'cdc-grade9-english-practice.mjs'
+      - 'cdc-grade9-nepali-practice.mjs'
+      - 'cdc-grade9-science-original-practice.mjs'
+      - 'cdc-grade9-science-school-reference.mjs'
+      - 'scripts/test-cdc-grade9-science-school-reference.mjs'
+      - 'scripts/test-cdc-grade9-computer-original-practice.mjs'
+      - 'scripts/test-cdc-grade9-release-audit.mjs'
+      - 'cdc-grade8-science-model-audit.mjs'
+      - 'cdc-grade8-science-original-supplement.mjs'
+      - 'scripts/test-cdc-grade8-science-original-supplement.mjs'
+      - 'scripts/test-cdc-grade8-science-model-audit.mjs'
+      - 'scripts/test-cdc-grid-source-index.mjs'
+      - 'scripts/test-cdc-optional-math-2082.mjs'
+      - 'scripts/test-cdc-verified-computer-grids.mjs'
+      - 'scripts/test-cdc-question-excel.mjs'
+      - 'cdc-exact-grid.mjs'
+      - 'cdc-question-grid-engine.mjs'
+      - 'scripts/test-cdc-exact-grid.mjs'
+      - 'data/cdc-*science*'
+      - 'data/cdc-question-paper-sources-2083.json'
+      - 'scripts/test-cdc-question-autogen.mjs'
+      - 'scripts/test-v46-question-paper-dom.mjs'
+      - 'scripts/test-question-paper-content.mjs'
+      - 'scripts/test-cdc-assignment.mjs'
+      - 'package.json'
+      - 'sw.js'
+      - 'firestore.rules'
+      - 'scripts/test-firestore-rules.mjs'
+      - 'scripts/test-pwa-upgrade.mjs'
+      - '.github/workflows/v46-question-autogen-dev.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: v46-question-autogen-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  question-paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check question paper module and pure engine syntax
+        run: |
+          node --check cdc-question-paper.js
+          node --check cdc-question-autogen.mjs
+          node --check cdc-question-excel.mjs
+          node --check scripts/test-cdc-very-short.mjs
+          node --check cdc-verified-computer-grids.mjs
+          node --check cdc-optional-math-2082.mjs
+          node --check cdc-optional-math-model-compare.mjs
+          node --check scripts/test-cdc-optional-math-model-compare.mjs
+          node --check cdc-optional-math-composite.mjs
+          node --check cdc-optional-math-original-practice.mjs
+          node --check scripts/test-cdc-optional-math-original-practice.mjs
+          node --check cdc-optional-math-render.mjs
+          node --check scripts/test-cdc-optional-math-composite.mjs
+          node --check scripts/test-v46-optional-math-ui.mjs
+          node --check cdc-grid-source-index.mjs
+          node --check cdc-grade9-grid-library.mjs
+          node --check cdc-grade9-release-audit.mjs
+          node --check cdc-grade9-paper-grid-guard.mjs
+          node --check cdc-grade9-model-reference-audit.mjs
+          node --check cdc-grade9-reference-readiness.mjs
+          node --check scripts/test-cdc-grade9-reference-readiness.mjs
+          node --check cdc-grade9-nepali-model-2078.mjs
+          node --check cdc-grade9-nepali-grouped-planner.mjs
+          node --check cdc-grade9-english-grouped-planner.mjs
+          node --check cdc-grade9-english-seen-reference.mjs
+          node --check cdc-grade9-compulsory-math-grouped.mjs
+          node --check scripts/test-cdc-grade9-compulsory-math-grouped.mjs
+          node --check scripts/test-cdc-grade9-english-grouped-planner.mjs
+          node --check scripts/test-cdc-grade9-nepali-grouped-planner.mjs
+          node --check scripts/test-cdc-grade9-nepali-model-2078.mjs
+          node --check scripts/test-cdc-grade9-model-reference-audit.mjs
+          node --check scripts/test-cdc-grade9-paper-grid-guard.mjs
+          node --check cdc-grade9-science-archive-audit.mjs
+          node --check cdc-grade9-science-reference-planner.mjs
+          node --check cdc-grade9-social-reference-planner.mjs
+          node --check scripts/test-cdc-grade9-social-reference-planner.mjs
+          node --check scripts/test-cdc-grade9-science-reference-planner.mjs
+          node --check scripts/test-cdc-grade9-science-archive-audit.mjs
+          node --check cdc-grade9-computer-original-practice.mjs
+          node --check cdc-grade9-environment-original-practice.mjs
+          node --check cdc-grade9-social-original-practice.mjs
+          node --check cdc-grade9-compulsory-math-practice.mjs
+          node --check cdc-grade9-english-practice.mjs
+          node --check cdc-grade9-nepali-practice.mjs
+          node --check cdc-grade9-science-original-practice.mjs
+          node --check scripts/test-cdc-grade9-computer-original-practice.mjs
+          node --check scripts/test-cdc-grade9-release-audit.mjs
+          node --check cdc-grade8-science-model-audit.mjs
+          node --check cdc-grade8-science-original-supplement.mjs
+          node --check scripts/test-cdc-grade8-science-original-supplement.mjs
+          node --check scripts/test-cdc-grade8-science-model-audit.mjs
+          node --check scripts/test-cdc-grid-source-index.mjs
+          node --check scripts/test-cdc-optional-math-2082.mjs
+          node --check scripts/test-cdc-verified-computer-grids.mjs
+          node --check scripts/test-cdc-question-excel.mjs
+          node --check cdc-exact-grid.mjs
+          node --check scripts/test-cdc-exact-grid.mjs
+          node --check scripts/test-cdc-question-autogen.mjs
+          node --check scripts/test-v46-question-paper-dom.mjs
+      - name: Install test-only dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: Test original bank, full marks and bilingual correctness
+        run: npm run test:question-paper
+      - name: Test Excel question-bank headers and bilingual import validation
+        run: node scripts/test-cdc-question-excel.mjs
+      - name: Generate two Grade8 Science original 50-mark bilingual practice papers with 1/2/4-mark exercises
+        run: node scripts/test-cdc-grade8-science-original-supplement.mjs
+      - name: Audit CDC historical Grade 8 Science Model and real question-bank gaps
+        run: node scripts/test-cdc-grade8-science-model-audit.mjs
+      - name: Test 50 original Grade9 Computer bilingual questions across all exact CDC slots
+        run: node scripts/test-cdc-grade9-computer-original-practice.mjs
+      - name: Compare historic 2078 Grade9 Science model and block unsafe reuse as 2083
+        run: node scripts/test-cdc-grade9-science-archive-audit.mjs
+      - name: Verify Grade 9 all-subject CDC Grid, question bank and teacher-test release gate
+        run: node scripts/test-cdc-grade9-release-audit.mjs
+      - name: Reject Grade 9 exam papers that do not match verified CDC Grid at Save and Print
+        run: node scripts/test-cdc-grade9-paper-grid-guard.mjs
+      - name: Compare six Grade 9 alternative model references and bank shortages without approving unverified grids
+        run: node scripts/test-cdc-grade9-model-reference-audit.mjs
+      - name: Verify Grade 9 Nepali feedback model grouped question and optional-choice structure
+        run: node scripts/test-cdc-grade9-nepali-model-2078.mjs
+      - name: Test randomized Nepali reference groups and reviewed source eligibility
+        run: node scripts/test-cdc-grade9-nepali-grouped-planner.mjs
+      - name: Verify English grouped reference and official comprehension and grammar distribution
+        run: node scripts/test-cdc-grade9-english-grouped-planner.mjs
+      - name: Verify compulsory mathematics grouped reference area item and cognitive marks
+        run: node scripts/test-cdc-grade9-compulsory-math-grouped.mjs
+      - name: Verify historical science reference unit and response element marks
+        run: node scripts/test-cdc-grade9-science-reference-planner.mjs
+      - name: Verify historical Social Studies reference slots and map alternatives
+        run: node scripts/test-cdc-grade9-social-reference-planner.mjs
+      - name: Test actual Grade 9 subject banks and reference readiness integration
+        run: node scripts/test-cdc-grade9-reference-readiness.mjs
+      - name: Generate actual Grade 9 social reference papers in three language modes
+        run: node scripts/test-cdc-grade9-social-reference-bank.mjs
+      - name: Generate actual Grade 9 compulsory math reference drafts
+        run: node scripts/test-cdc-grade9-compulsory-math-reference-bank.mjs
+      - name: Validate original Grade 9 English reading writing and grammar groups
+        run: node scripts/test-cdc-grade9-english-reference-bank.mjs
+      - name: Verify full English seen prose papers when retrieved
+        run: node --input-type=module -e "import {PUBLIC_DOMAIN_SEEN_PROSE as d} from './cdc-grade9-english-seen-prose-data.mjs'; if(d.length) await import('./scripts/test-cdc-grade9-english-seen-prose.mjs'); else console.log('Seen prose not retrieved; official exam remains blocked')"
+      - name: Test real Grade 9 review-only reference previews
+        run: node scripts/test-cdc-grade9-reference-preview.mjs
+      - name: Generate and verify sixteen teacher-review drafts for eight subjects
+        env:
+          SMSS_REVIEW_PACK_DIR: ${{ runner.temp }}/smss-grade9-review
+        run: node scripts/test-cdc-grade9-review-pack.mjs
+      - name: Test real Chromium PDF page dimensions and embedded Word figure
+        env:
+          SMSS_REVIEW_PACK_DIR: ${{ runner.temp }}/smss-grade9-review
+          SMSS_LAYOUT_OUT: ${{ runner.temp }}/smss-layout-test
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright-core@1.56.1
+          export CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          if ! command -v pdfinfo || ! command -v pdftotext; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends poppler-utils
+          fi
+          node scripts/test-v46-paper-browser-layout.mjs
+      - name: Upload synthetic PDF and DOCX layout evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: smss-grade9-layout-evidence
+          path: ${{ runner.temp }}/smss-layout-test/
+          retention-days: 7
+      - name: Upload read-only Grade 9 review pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: smss-grade9-teacher-review-pack
+          path: ${{ runner.temp }}/smss-grade9-review/
+          retention-days: 7
+      - name: Generate environment review-only school-model papers
+        run: node scripts/test-cdc-grade9-environment-reference-bank.mjs
+      - name: Validate actual Nepali grammar reading and writing reference tasks
+        run: node scripts/test-cdc-grade9-nepali-reference-bank.mjs
+      - name: Verify actual science school-reference full-year questions
+        run: node scripts/test-cdc-grade9-science-school-reference.mjs
+      - name: Verify automatic CDC Grid source detection for Grade 6-10 subjects
+        run: node scripts/test-cdc-grid-source-index.mjs
+      - name: Verify 54 original bilingual formula-checked Optional Maths practice questions
+        run: node scripts/test-cdc-optional-math-original-practice.mjs
+      - name: Test composite 2082 Optional Mathematics WCA CCA paper solver
+        run: node scripts/test-cdc-optional-math-composite.mjs
+      - name: Compare Grade 10 CDC 2083 Model Question and printed groups with 2082 original grid
+        run: node scripts/test-cdc-optional-math-model-compare.mjs
+      - name: Verify CDC Grade 9 and 10 Optional Mathematics grouped 2082 grid
+        run: node scripts/test-cdc-optional-math-2082.mjs
+      - name: Verify authentic CDC Computer Science Grade 9 and 10 grid transcriptions
+        run: node scripts/test-cdc-verified-computer-grids.mjs
+      - name: Test Grade 8 CDC Very Short Question bank Excel, exact grid, bilingual generation
+        run: node scripts/test-cdc-very-short.mjs
+      - name: Test exact unit-grid random paper across grades 6-10
+        run: node scripts/test-cdc-exact-grid.mjs
+      - name: Test real Optional Mathematics teacher one-click generation and stale request guards
+        run: node scripts/test-v46-optional-math-ui.mjs
+      - name: Test real generated paper UI and bilingual print
+        run: node scripts/test-v46-question-paper-dom.mjs
+      - name: Test assigned teacher question-paper access
+        run: node scripts/test-cdc-assignment.mjs
+      - name: Test PWA online module refresh and offline cache
+        run: npm run test:pwa
+      - name: Check V46 preservation
+        run: npm run test:v46-preservation

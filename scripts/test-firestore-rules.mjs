@@ -1,5 +1,12 @@
 import {iemisEntrySchema,iemisEntryValues,iemisEntryBatches} from "../iemis-entry.js";
 import assert from 'node:assert/strict';
+import {assertGrade9ExamPaperMatches} from '../cdc-grade9-paper-grid-guard.mjs';
+import {grade9ComputerOriginalBank} from '../cdc-grade9-computer-original-practice.mjs';
+import {buildAutomaticQuestionPaper} from '../cdc-question-autogen.mjs';
+import {getBundledComputerGrid} from '../cdc-verified-computer-grids.mjs';
+import {getCdcOptionalMathGuide,optionalMathAreaTopics} from '../cdc-optional-math-2082.mjs';
+import {originalOptionalMathPracticeBank} from '../cdc-optional-math-original-practice.mjs';
+import {inspectCdcOptionalMathPaper} from '../cdc-optional-math-composite.mjs';
 import { JSDOM } from 'jsdom';
 import { readFile } from "node:fs/promises";
 import {
@@ -255,32 +262,79 @@ try {
   await assertFails(getDoc(doc(db(inactiveUid),"question_bank","question-valid")));
   await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(),"question_bank","question-valid")));
 
-  // Exercise the actual V45 save function, including generated-only preview metadata.
-  const moduleSource=await readFile("cdc-question-paper.js","utf8");
-  const saveStart=moduleSource.indexOf("async function savePaper() {");
-  const saveEnd=moduleSource.indexOf("async function deleteQuestion(",saveStart);
-  const generated={
-    schoolName:"Test School",schoolAddress:"Test Address",gradeNumber:9,
-    className:"9",subject:"Mathematics",section:"A",paperTitle:"Test Paper",
-    academicYear:"2083",durationMinutes:60,fullMarks:1,curriculumVersion:"Custom Pattern",
-    blueprintId:null,cognitiveDistribution:null,topicIds:["topic-1"],
-    questions:[{questionId:"q-1",questionText:"Test question",questionType:"short",marks:1,number:1}],
-    createdBy:teacherUid,qualityReport:{questionCount:1,selectedTopicCount:1}
-  };
+  // Verify newly supported bank metadata with the real emulator.
+  const imported={...question,questionType:'very_short',unitCode:'1',
+    questionTextEn:'Name one example.',answerEn:'Example.',optionsEn:[],
+    sourceTitle:'Original practice',sourceUrl:'https://example.org/reference',
+    sourceStatus:'imported_question_teacher_review_required'};
+  await assertSucceeds(setDoc(doc(db(teacherUid),'question_bank','bilingual-import'),imported));
+  assert.equal((await getDoc(doc(db(teacherUid),'question_bank','bilingual-import'))).data().questionTextEn,'Name one example.');
+  for(const [i,bad] of [{questionTextEn:7},{optionsEn:['a','b','c','d','e']},{sourceStatus:'official_CDC_approved'},{sourceUrl:'x'.repeat(2001)},{section:'B'},{extraField:true}].entries())
+    await assertFails(setDoc(doc(db(teacherUid),'question_bank','invalid-import-'+i),{...imported,...bad}));
+
+  // The old one-mark Grade 9 fixture must now be blocked by the actual
+  // Grid guard; use assigned Grade 9 Computer and Optional Math papers
+  // for successful saves, not a stubbed validator.
+  const paperTeacher='question-paper-assigned-teacher',paperViewer='question-paper-viewer';
+  const computerSubject='Optional Computer Science',mathSubject='Optional Mathematics';
+  await testEnv.withSecurityRulesDisabled(async context=>{
+    const seedDb=context.firestore();
+    await setDoc(doc(seedDb,'user_roles',paperTeacher),{active:true,roles:['subject_teacher'],
+      subjectAssignmentKeys:['9::'+computerSubject,'9::'+mathSubject,'8::Mathematics'],
+      subjectAssignmentSectionKeys:['9::'+computerSubject+'::A','9::'+mathSubject+'::A','8::Mathematics::A']});
+    await setDoc(doc(seedDb,'user_roles',paperViewer),{active:true,roles:['viewer']});
+  });
+  const moduleSource=await readFile('cdc-question-paper.js','utf8');
+  const saveStart=moduleSource.indexOf('async function savePaper() {');
+  const saveEnd=moduleSource.indexOf('async function deleteQuestion(',saveStart);
   let paperNumber=0;
-  const savePaper=new Function("generatedPaper","auth","serverTimestamp","addDoc","collection","db","logQuestionActivity","loadPaperHistory","message","selectedClass","selectedSubject",
-    moduleSource.slice(saveStart,saveEnd)+";return savePaper;")(
-    generated,{currentUser:{uid:teacherUid}},serverTimestamp,
-    async (_collection,payload)=>{const id="paper-generated-"+(++paperNumber);await assertSucceeds(setDoc(doc(db(teacherUid),"question_papers",id),payload));return {id};},
-    ()=>null,null,async()=>{},async()=>{},()=>{},"9","Mathematics"
+  const makeSave=(generated,reviewed=true)=>new Function('generatedPaper','auth','serverTimestamp','addDoc','collection','db','logQuestionActivity','loadPaperHistory','message','selectedClass','selectedSubject','assertGrade9ExamPaperMatches','$',
+    moduleSource.slice(saveStart,saveEnd)+';return savePaper;')(
+    generated,{currentUser:{uid:paperTeacher}},serverTimestamp,
+    async (_collection,payload)=>{const id='paper-generated-'+(++paperNumber);await setDoc(doc(db(paperTeacher),'question_papers',id),payload);return {id};},
+    ()=>null,null,async()=>{},async()=>{},()=>{},generated.className,generated.subject,assertGrade9ExamPaperMatches,()=>({checked:reviewed})
   );
-  await savePaper();
-  const savedPaper=await assertSucceeds(getDoc(doc(db(teacherUid),"question_papers","paper-generated-1")));
-  if(savedPaper.data().paperTitle!==generated.paperTitle)throw new Error("Question paper did not round-trip.");
-  await savePaper(); // A second save must not send the local document id back to Firestore.
-  await assertFails(getDoc(doc(db(inactiveUid),"question_papers","paper-generated-1")));
-  await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(),"question_papers","paper-generated-1")));
-  await assertFails(setDoc(doc(db(teacherUid),"question_papers","paper-wrong-section"),{...savedPaper.data(),section:"B"}));
+  const basePaper={schoolName:'Test School',schoolAddress:'Test Address',gradeNumber:9,className:'9',section:'A',paperTitle:'Test Paper',academicYear:'2083',curriculumVersion:'CDC reference',blueprintId:null,cognitiveDistribution:null,createdBy:paperTeacher,qualityReport:{teacherReviewRequired:true}};
+  await assert.rejects(makeSave({...basePaper,subject:'Mathematics',fullMarks:1,durationMinutes:60,topicIds:['topic-1'],questions:[{questionId:'q1',marks:1}]}),/CDC Grid mismatch/);
+  assert.equal(paperNumber,0,'Unverified paper must not reach Firestore');
+  const bp=getBundledComputerGrid({grade:9,subject:computerSubject,fullMarks:50});
+  const computerBank=grade9ComputerOriginalBank({subject:computerSubject});
+  const topics=computerBank.units.map(u=>u.id+'_0');
+  const built=buildAutomaticQuestionPaper({questions:computerBank.questions,topicIds:topics,fullMarks:50,language:'both',blueprint:bp,requireExactGrid:true,gradeNumber:9,subject:computerSubject,rng:()=>.39});
+  const generated={...basePaper,subject:computerSubject,fullMarks:50,durationMinutes:bp.durationMinutes,language:'both',topicIds:topics,
+    questions:built.questions.map((q,i)=>({questionId:q.id,questionText:q.questionText,questionType:q.questionType,marks:q.marks,options:q.options||[],cognitiveLevel:q.cognitiveLevel,topicName:q.topicName,answer:q.answer,correctOption:q.correctOption||'',number:i+1,gridEvidence:built.gridAudit.slotEvidence.find(e=>e.questionId===q.id)}))};
+  await assert.rejects(makeSave(generated,false),/समीक्षा/);
+  assert.equal(paperNumber,0);
+  const savePaper=makeSave(generated);
+  await assertSucceeds(savePaper());
+  const savedPaper=await assertSucceeds(getDoc(doc(db(paperTeacher),'question_papers','paper-generated-1')));
+  assert.equal(savedPaper.data().paperTitle,generated.paperTitle);
+  assert.equal(savedPaper.data().language,'both');
+  assert.equal(savedPaper.data().qualityReport,undefined);
+  assert.equal(assertGrade9ExamPaperMatches(savedPaper.data()),true);
+  await assertSucceeds(savePaper()); // local ID must not leak into the second document
+  assert.equal((await getDoc(doc(db(paperTeacher),'question_papers','paper-generated-2'))).data().id,undefined);
+  const guide=getCdcOptionalMathGuide({grade:9,subject:mathSubject});
+  const mathBank=originalOptionalMathPracticeBank({grade:9,subject:mathSubject});
+  const mathTopics=optionalMathAreaTopics(9,mathSubject).map(u=>u.id+'_0');
+  const math=inspectCdcOptionalMathPaper({guide,questions:mathBank.questions,selectedTopicIds:mathTopics,language:'both',allowFormulaVerifiedDraft:true,rng:()=>.4});
+  assert.equal(math.ready,true,math.reason);
+  const composite={...basePaper,subject:mathSubject,fullMarks:75,durationMinutes:180,language:'both',topicIds:mathTopics,questionFormat:'cdc_optional_math_composite',sourceUrl:guide.sourceUrl,questionOrigin:'SMSS original practice',questions:math.questions.map((q,i)=>({questionId:q.id,number:i+1,group:q.group,contextNe:q.contextNe||'',contextEn:q.contextEn||'',subquestions:q.subquestions}))};
+  await assertSucceeds(makeSave(composite)());
+  const savedMath=(await getDoc(doc(db(paperTeacher),'question_papers','paper-generated-3'))).data();
+  assert.equal(savedMath.questionFormat,'cdc_optional_math_composite');
+  assert.equal(assertGrade9ExamPaperMatches(savedMath),true);
+  await assertSucceeds(makeSave({...basePaper,gradeNumber:8,className:'8',subject:'Mathematics',durationMinutes:60,fullMarks:1,language:'en',topicIds:['topic-1'],questions:[{questionId:'q1',questionText:'Test question',questionType:'short',marks:1,number:1}]})());
+  await assertFails(getDoc(doc(db(inactiveUid),'question_papers','paper-generated-1')));
+  await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(),'question_papers','paper-generated-1')));
+  await assertFails(getDoc(doc(db(teacherUid),'question_papers','paper-generated-1')));
+  await assertSucceeds(getDoc(doc(db(paperViewer),'question_papers','paper-generated-1')));
+  const persisted=savedPaper.data();
+  for(const [i,bad] of [{section:'B'},{language:'invalid'},{questionFormat:'forged'},{sourceUrl:42},{extraField:true},{createdBy:teacherUid}].entries())
+    await assertFails(setDoc(doc(db(paperTeacher),'question_papers','paper-invalid-'+i),{...persisted,...bad}));
+  await assertFails(setDoc(doc(db(paperViewer),'question_papers','viewer-forged-paper'),{...persisted,createdBy:paperViewer}));
+  await assertFails(setDoc(doc(db(paperViewer),'question_bank','viewer-forged-question'),{...imported,createdBy:paperViewer}));
+  console.log('Question bank import, real Grid guard, Computer and composite paper round-trip, teacher review, Viewer and section boundaries passed.');
   await assertFails(setDoc(doc(db(teacherUid),"cdc_blueprints","forged"),{gradeNumber:9}));
 
   await assertSucceeds(setDoc(doc(db(ADMIN), "marks", "legacy-six-components"), validMark({scores:Array.from({length:6},(_,i)=>({name:"Part "+i,fullMarks:10,obtained:5})),totalFullMarks:60,totalObtained:30})));
