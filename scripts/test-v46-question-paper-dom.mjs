@@ -325,7 +325,7 @@ const make=(overrides={})=>{
   'verifiedQuestionSelection','questionRows','bundledPracticeQuestions',
   'currentBlueprint','auth','blueprintRows','cognitiveMarkDistribution','savedPapers',
   'getBundledComputerGrid','getCdcOptionalMathGuide',
-  'getGrade8ScienceHistoricalPracticePattern'];
+  'getGrade8ScienceHistoricalPracticePattern','grade9RequiredPaperLanguage'];
  const fn=new Function(...params,'let generatedPaper=null,lastAutoSignature=null;\n'+
   code('function updateAutoReviewActions()','function renderPaperPreview(')+
   code('function blueprintForFullMarks(','async function generateSmartPaper()')+
@@ -336,7 +336,7 @@ const make=(overrides={})=>{
   props.schoolHeader,v=>Number(String(v).match(/[0-9]+/)?.[0]||0),
   ()=>{},msg=>{lastMessage=msg},
   'Class 10','Science and Technology','A',props.questionDataLoadEpoch,
-  props.verifiedQuestionSelection,[],bank.questions,null,props.auth,[],cognitiveMarkDistribution,props.savedPapers||[],()=>null,()=>null,()=>null);
+  props.verifiedQuestionSelection,[],bank.questions,null,props.auth,[],cognitiveMarkDistribution,props.savedPapers||[],()=>null,()=>null,()=>null,grade9RequiredPaperLanguage);
 };
 const live=make();
 await live.run();
