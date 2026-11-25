@@ -43,7 +43,7 @@ export function grade9ComputerModelGroups(paper){
  // Preserve every other line as text, never interpret author text as markup.
 export function referenceWordClassRuns(value){
  const text=String(value??''),runs=[];let cursor=0;
- for(const m of text.matchAll(/\(([\p{Script=Devanagari}]+)\)/gu)){
+ for(const m of text.matchAll(/\(((?=\p{L})[\p{Script=Devanagari}]+)\)/gu)){
   if(m.index>cursor)runs.push({text:text.slice(cursor,m.index)});
   runs.push({text:m[1],underline:true});cursor=m.index+m[0].length;
  }
