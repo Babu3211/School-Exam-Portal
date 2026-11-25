@@ -136,7 +136,7 @@ assert.ok(byKey.health.tables.some(t=>t.title==='Curriculum working hours (not m
 assert.ok(grade9GridLibrary({sources:[{grades:[9],subject:'Nepali',kind:'specification_grid',url:'https://unsafe.example/grid'}]}).every(x=>x.sources.length===0));
 const portal=readFileSync(new URL('../cdc-question-paper.js',import.meta.url),'utf8');
 assert.match(portal,/id="qpGrade9GridLibrary"/);
-assert.match(portal,/renderGrade9GridLibrary\(\$\("qpGrade9GridLibraryContent"\),cdcSourceRegister\)/);
+assert.match(portal,/renderGrade9GridLibrary\(\$\("qpGrade9GridLibraryContent"\),cdcSourceRegister,\[\.\.\.new Set\(classSubjects\.filter\(x=>x\.gradeNumber===9\)\.map\(x=>x\.subject\)\)\]\)/);
 console.log('PASS read-only Class 9 Grid Library, all 8 school subjects plus 3 catalog subjects, no invented approval');
 
 const findTable=(key,title)=>byKey[key].tables.find(t=>t.title===title);
