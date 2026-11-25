@@ -10001,6 +10001,14 @@ function openCdcAssessment(context = null) {
     }
     const table=doc.importNode(field('annexTable'),true);table.removeAttribute('style');
     if(seroForm){
+      // Allocate explicit widths to both stage dates and ratings. Compact short
+      // forms without scaling the entire page or hiding any saved evidence.
+      table.classList.add('sero-print');
+      if(seroForm.groups.length<=6)table.classList.add('sero-compact');
+      style.textContent+='table.sero-print{table-layout:fixed}table.sero-print .sero-date{white-space:nowrap;overflow-wrap:normal;text-align:center}table.sero-print th{overflow-wrap:normal;word-break:normal}table.sero-compact{font-size:10px;line-height:1.2}table.sero-compact th,table.sero-compact td{padding:2px 3px}table.sero-print tfoot{break-inside:avoid}';
+      const columns=doc.createElement('colgroup');
+      for(const width of [7,17,25,6,7.5,4,6,7.5,4,16]){const col=doc.createElement('col');col.style.width=width+'%';columns.append(col);}
+      table.prepend(columns);
       // Reconstruct printable values solely from saved records, never from live controls.
       const digits=n=>String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]);
       const effective=[],stageScores=[[],[]];
@@ -10017,6 +10025,7 @@ function openCdcAssessment(context = null) {
             const method=Array.isArray(record?.usedTools)&&typeof record.usedTools[j]==='string'?record.usedTools[j]:'';
             methods[i*4+j].replaceWith(doc.createTextNode(method?(stage?'थप सहायता: ':'नियमित: ')+method:''));
           }
+          dates[i].parentElement.classList.add('sero-date');
           dates[i].replaceWith(doc.createTextNode(record?digits(record.date):'—'));
           const score=record?record.indicators.filter(Boolean).length:null;
           scores[i].textContent=score===null?'—':digits(score);
@@ -10040,7 +10049,8 @@ function openCdcAssessment(context = null) {
     table.querySelectorAll('button').forEach(button=>button.replaceWith(doc.createTextNode(button.textContent)));
     table.querySelectorAll('[data-cdc]').forEach(node=>node.removeAttribute('data-cdc'));
     table.removeAttribute('data-cdc');doc.body.append(table);
-    for(const name of ['annexSign','annexStatus']){
+    // The Serofero footer already contains both signature lines.
+    for(const name of seroForm?['annexStatus']:['annexSign','annexStatus']){
       const p=doc.createElement('p');p.textContent=field(name).textContent;doc.body.append(p);
     }
     const note=doc.createElement('p');note.className='review';note.textContent=seroForm?'समीक्षा प्रति — सुरक्षित सूचक अभिलेख मात्र। मूल फारामसँग छपाइको अन्तिम प्रमाणीकरण बाँकी। शैक्षिक सत्र: '+year+' | '+({'First Term':'प्रथम त्रैमासिक','Second Term':'द्वितीय त्रैमासिक','Final Term':'वार्षिक'}[field('period').value]||''):'Review copy — CDC layout verification pending. Academic year: '+year+' | '+field('period').value;doc.body.append(note);
