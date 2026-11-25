@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v52-backup-preview-20261122';
+const CACHE_NAME = 'smss-pwa-v136-environment-school-source';
 const APP_SHELL = [
   './',
   './index.html',
@@ -9,6 +9,49 @@ const APP_SHELL = [
   './iemis-ledger.js?v=20261115-class6-ledger',
   './iemis-entry.js?v=20261122-viewer-readonly',
   './cdc-question-paper.js',
+  './cdc-question-autogen.mjs',
+  './cdc-exact-grid.mjs',
+  './cdc-question-excel.mjs',
+  './cdc-verified-computer-grids.mjs',
+  './cdc-optional-math-2082.mjs',
+  './cdc-optional-math-model-compare.mjs',
+  './cdc-optional-math-composite.mjs',
+  './cdc-optional-math-original-practice.mjs',
+  './cdc-optional-math-render.mjs',
+  './cdc-grid-source-index.mjs',
+  './cdc-grade9-grid-library.mjs',
+  './cdc-grade9-release-audit.mjs',
+  './cdc-grade9-paper-grid-guard.mjs',
+  './cdc-grade9-model-reference-audit.mjs',
+  './cdc-grade9-reference-readiness.mjs',
+  './cdc-grade9-reference-preview.mjs',
+  './cdc-grade9-nepali-model-2078.mjs',
+  './cdc-grade9-nepali-grouped-planner.mjs',
+  './cdc-grade9-nepali-reference-bank.mjs',
+  './cdc-grade9-nepali-textbook-reference.mjs',
+  './cdc-grade9-english-grouped-planner.mjs',
+  './cdc-grade9-english-reference-bank.mjs',
+  './cdc-grade9-english-seen-reference.mjs',
+  './cdc-grade9-english-seen-prose-data.mjs',
+  './cdc-grade9-compulsory-math-grouped.mjs',
+  './cdc-grade9-compulsory-math-reference-bank.mjs',
+  './cdc-grade9-science-archive-audit.mjs',
+  './cdc-grade9-science-reference-planner.mjs',
+  './cdc-grade9-social-reference-planner.mjs',
+  './cdc-grade9-social-reference-bank.mjs',
+  './cdc-grade9-computer-original-practice.mjs',
+  './cdc-grade9-environment-original-practice.mjs',
+  './cdc-grade9-environment-reference-bank.mjs',
+  './cdc-grade9-social-original-practice.mjs',
+  './cdc-grade9-compulsory-math-practice.mjs',
+  './cdc-grade9-english-practice.mjs',
+  './cdc-grade9-nepali-practice.mjs',
+  './cdc-grade9-science-original-practice.mjs',
+  './cdc-grade9-science-school-reference.mjs',
+  './cdc-grade8-science-model-audit.mjs',
+  './cdc-grade8-science-original-supplement.mjs',
+  './data/cdc-question-paper-sources-2083.json',
+  './data/cdc-science-bilingual-mcq-v1.json',
   './data/cdc-grade8-science-practice-pack-v1.json',
   './data/cdc-grade10-science-practice-pack-v1.json',
   './manifest.webmanifest',
@@ -63,7 +106,7 @@ self.addEventListener('fetch', event => {
   event.respondWith((async () => {
     // Mutable same-URL assets must refresh online when a hosted PWA/APK WebView opens.
     // Versioned release imports remain cache-first for reliable offline use.
-    const mutable = /\.(?:js|css|json|webmanifest)$/i.test(url.pathname) && !url.searchParams.has('v');
+    const mutable = /\.(?:m?js|css|json|webmanifest)$/i.test(url.pathname) && !url.searchParams.has('v');
     if (mutable) {
       try {
         const response = await fetch(request);

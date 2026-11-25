@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "title": "SMSS CDC Question Paper Source Register",
-  "checkedOn": "2026-11-08",
+  "checkedOn": "2026-11-24",
   "note": "Official CDC references only. A source link is not a substitute for extracting and validating its complete topic list, specification grid, model questions and answer key. Older grids are marked supplementary.",
   "sources": [
     {
@@ -153,9 +153,10 @@
       ],
       "subject": "विज्ञान तथा प्रविधि",
       "kind": "specification_grid",
-      "version": "2082",
+      "version": "Publication listed 2082-05-08; PDF edition unconfirmed",
       "status": "official",
-      "url": "https://moecdc.gov.np/category/specialization-schedule--g-/?page=6"
+      "url": "https://moecdc.gov.np/category/specialization-schedule--g-/?page=6",
+      "note": "CDC publication listing. Listing date is not evidence of a revised grid; the separate government RS11167 PDF is titled 2078."
     },
     {
       "grades": [
@@ -357,9 +358,21 @@
       ],
       "subject": "विज्ञान तथा प्रविधि",
       "kind": "specification_grid",
+      "version": "Publication listed 2082-05-08; PDF edition unconfirmed",
+      "status": "official_CDC_page_linked_grid_content_not_yet_extracted",
+      "url": "https://moecdc.gov.np/content/278/specialization-schedule-class-class-9-science-and/",
+      "note": "Official CDC Grade 9 science grid page located; exact unit/question/marks/cognitive rows are not yet transcribed or independently checked. Listing date is not evidence of a revised grid; the separate government RS11167 PDF is titled 2078."
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "specification_grid",
       "version": "2082",
-      "status": "official",
-      "url": "https://moecdc.gov.np/content/278/specialization-schedule-class-class-9-science-and/"
+      "status": "official_CDC_page_linked_grid_content_not_yet_extracted",
+      "url": "https://moecdc.gov.np/content/273/specialization-schedule-class-10-science-and-technology/",
+      "note": "Official CDC Grade 10 science grid page located; do not enable Exact mode until row-by-row transcription and school review."
     },
     {
       "grades": [
@@ -389,28 +402,2999 @@
       "grades": [
         9
       ],
+      "subject": "ऐच्छिक अर्थशास्त्र",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2082",
+      "status": "official_CDC_page_linked_grid_content_not_yet_extracted",
+      "url": "https://moecdc.gov.np/content/452/septemo-schedule-and-sample-questions-2082--class/",
+      "note": "CDC published this Grade 9 Economics 2082 grid and sample page on 12 Asoj 2083. Exact questions and mark/unit allocations remain untranscribed; not eligible for automatic official generation."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक कम्प्युटर विज्ञान",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2082",
+      "status": "official_CDC_pdf_grid_unitwise_transcribed_dev_teacher_review_required",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/2082-04-29%20Specification%20grid%20and%20Model%20Questions-Computer%20Science%20Grade%209_khtkxrc.pdf",
+      "note": "Original government PDF: Full marks 50, 2 hours; 7 units, 25 questions; MCQ 10×1, short 10×2, long 5×4; 20/30/30/20 cognitive distribution. Exact row grid bundled for V46 dev, no real student data modified.",
+      "optionalRetrievalEvidence": {
+        "resource": "optional-computer",
+        "sha256": "bbe0886317f3046c378a7157503ed0f63e32f212649bd6476e04146fd712e425",
+        "byteCount": 864075,
+        "pages": 10,
+        "runId": 45418316887,
+        "firstPageRendered": true,
+        "currentCdcExactApproved": false,
+        "verifiedGridRows": false
+      },
+      "structuralVisualReview": {
+        "reviewedOn": "2026-11-24",
+        "pdfPage": 1,
+        "method": "Independent visual comparison of original government PDF page 1 with bundled grid; all 7 units × 4 cognitive domains × 3 question types, including zero cells",
+        "matchedCells": 84,
+        "expectedCells": 84,
+        "unitMarks": [
+          11,
+          4,
+          5,
+          8,
+          5,
+          5,
+          12
+        ],
+        "workingHours": [
+          15,
+          6,
+          6,
+          10,
+          6,
+          6,
+          15
+        ],
+        "fullMarks": 50,
+        "durationMinutes": 120,
+        "questionCounts": [
+          10,
+          10,
+          5
+        ],
+        "marksEach": [
+          1,
+          2,
+          4
+        ],
+        "cognitiveMarks": [
+          10,
+          15,
+          15,
+          10
+        ],
+        "sourceEdition": "2082-04-29",
+        "currentEditionConfirmed": false,
+        "teacherReviewComplete": false,
+        "officialExamApproved": false
+      }
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "ऐच्छिक कम्प्युटर विज्ञान",
+      "kind": "specification_grid",
+      "version": "2083 CDC publication listing",
+      "status": "official_CDC_pdf_grid_unitwise_transcribed_dev_teacher_review_required",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/Computer%20Science%20grid_9080yt7.pdf",
+      "note": "Original government PDF: Full marks 50, 2 hours; 5 units, 25 questions; MCQ 10×1, short 10×2, long 5×4; 20/30/30/20 cognitive distribution. Exact row grid bundled for V46 dev; teacher review required."
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "ऐच्छिक गणित",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2082 (CDC decision 2082/04/16)",
+      "status": "official_CDC_2082_area_and_group_totals_transcribed_composite_WCA_CCA_not_yet_supported",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/Specification%20Grid%20and%20Model%20Question-G9-Opt.%20Math-web_nrbp00y.pdf",
+      "note": "Official government PDF page 1 verified: 75 marks, 3h, 11 objective 1-mark items (11), 12 WCA grouped questions (40), 4 CCA cross-content grouped questions (24), 6 content areas marks 17/17/20/7/7/7, domains K16% U24% A40% HA20%, each composite question 2-4 subquestions. Existing flat MCQ/short/long allocator MUST NOT claim CDC compliance. Teacher needs no manual Excel grid entry; grouped-question generation remains disabled.",
+      "optionalRetrievalEvidence": {
+        "resource": "optional-math",
+        "sha256": "4bf6d5f47ca75cef224f27311c9ca3acad9bb76b2757f0c28c13bde559f3e396",
+        "byteCount": 812755,
+        "pages": 12,
+        "runId": 45418316887,
+        "firstPageRendered": true,
+        "currentCdcExactApproved": false,
+        "verifiedGridRows": false
+      },
+      "structuralTextReview": {
+        "reviewedOn": "2026-11-24",
+        "runId": 45420998387,
+        "pdfPage": 1,
+        "sha256": "4bf6d5f47ca75cef224f27311c9ca3acad9bb76b2757f0c28c13bde559f3e396",
+        "method": "Comparison of original fingerprint-matched PDF page 1 layout text with existing guide; only unambiguous numeric totals recorded",
+        "fullMarks": 75,
+        "workingHours": 128,
+        "groupMarks": [
+          11,
+          40,
+          24
+        ],
+        "cognitivePercent": [
+          16,
+          24,
+          40,
+          20
+        ],
+        "readableAreaHours": [
+          {
+            "unitCode": "3",
+            "hours": 36,
+            "totalMarks": 20
+          },
+          {
+            "unitCode": "4",
+            "hours": 11,
+            "totalMarks": 7
+          },
+          {
+            "unitCode": "5",
+            "hours": 10
+          },
+          {
+            "unitCode": "6",
+            "hours": 12,
+            "totalMarks": 7
+          }
+        ],
+        "visualCellReviewComplete": true,
+        "currentEditionConfirmed": false,
+        "teacherReviewComplete": false,
+        "officialExamApproved": false
+      },
+      "structuralVisualReview": {
+        "reviewedOn": "2026-11-24",
+        "pdfPage": 1,
+        "sourceEdition": "2082",
+        "sha256": "4bf6d5f47ca75cef224f27311c9ca3acad9bb76b2757f0c28c13bde559f3e396",
+        "method": "Direct visual inspection of the registered government PDF first page; independent row transcription of objective/WCA/CCA × K/U/A/HA including blanks as zero",
+        "matchedCells": 72,
+        "expectedCells": 72,
+        "matrix": [
+          [
+            1,
+            0,
+            1,
+            0,
+            2,
+            2,
+            4,
+            2,
+            0,
+            2,
+            2,
+            1
+          ],
+          [
+            1,
+            0,
+            1,
+            1,
+            2,
+            2,
+            4,
+            1,
+            0,
+            2,
+            2,
+            1
+          ],
+          [
+            1,
+            0,
+            1,
+            1,
+            2,
+            3,
+            6,
+            0,
+            0,
+            2,
+            1,
+            3
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            2,
+            1
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            3,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1
+          ]
+        ],
+        "unitMarks": [
+          17,
+          17,
+          20,
+          7,
+          7,
+          7
+        ],
+        "workingHours": [
+          29,
+          30,
+          36,
+          11,
+          10,
+          12
+        ],
+        "wcaQuestionCounts": [
+          3,
+          3,
+          3,
+          1,
+          1,
+          1
+        ],
+        "groupQuestionCounts": [
+          11,
+          12,
+          4
+        ],
+        "groupMarks": [
+          11,
+          40,
+          24
+        ],
+        "cognitivePercent": [
+          16,
+          24,
+          40,
+          20
+        ],
+        "fullMarks": 75,
+        "durationMinutes": 180,
+        "visualCellReviewComplete": true,
+        "currentEditionConfirmed": false,
+        "teacherReviewComplete": false,
+        "officialExamApproved": false
+      }
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "ऐच्छिक गणित",
+      "kind": "specification_grid_model_questions_and_answer_key",
+      "version": "2083",
+      "status": "official_CDC_2083_model_page_checked_secondary_pdf_grid_crosschecked_original_attachment_pending",
+      "url": "https://moecdc.gov.np/content/659/class-10th-optional-mathematics-specification-table--model/",
+      "note": "CDC official page dated 23 Asar 2083 confirms newer Grade10 Optional Mathematics Grid, Model Question and Marking Scheme. Secondary-hosted PDF reproduces 2083 model with 11 Objective, 12 WCA, 4 CCA, 75 marks/3hr, area marks 17/17/20/7/7/7, identical to 2082 published specification. Exact original 2083 government PDF attachment unavailable in machine-readable page; do not label PDF copy as government authenticated. SMSS only creates original practice questions, not official CDC questions."
+    },
+    {
+      "grades": [
+        8
+      ],
       "subject": "विज्ञान तथा प्रविधि",
-      "kind": "textbook_table_of_contents_and_original_practice_pack",
-      "version": "2080 textbook contents; supplementary only",
-      "status": "teacher_review_required_not_current_2082_grid",
-      "url": "https://moecdc.gov.np/storage/gallery/1692097269.pdf",
-      "note": "Used for the 19-unit, 38-question original practice pack. Questions are not CDC-published model questions. CDC's 2082 textbook and Grade 9 science specification grid must be checked separately."
+      "kind": "historical_model_question_and_answer_key_reference",
+      "version": "२०७८ / CDC Library archive published २०८०",
+      "status": "official_CDC_library_old_model_50_government_archive_pdf_text_grid_40_requires_visual_and_current_2082_grid_reconciliation",
+      "url": "https://lib.moecdc.gov.np/catalog/opac_css/index.php?id=13717&lvl=notice_display",
+      "note": "CDC catalog identifies a 12-page 2078 Grade8 Science grid, bilingual Model Question and Answer Key. Dhangadhi government archive search-readable PDF contains 'grid 40' but model '50' within the Grade8 Science pages, and screenshot retrieval failed. Independent 2078 model synopsis reports 50 marks, 2 hours, 10 MCQ(1), 8 very short(1), 8 short(2), 4 long(4), 30 items and 11 unit areas. This record is historical reference ONLY. No verified 2083 Grid row is transcribed or approved; do not automatically use this for the current CDC exact generator."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "specification_grid",
+      "version": "२०८२",
+      "status": "official_CDC_publication_page_only_grid_rows_not_transcribed",
+      "url": "https://moecdc.gov.np/content/277/specialization-schedule-social-study--class-9-/",
+      "note": "Official CDC publication page located. Complete PDF unit/cognitive marks and grade 9 model-question allocation not yet independently transcribed. Source listing is not an approved exact examination blueprint."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "कार्यालय सञ्चालन तथा लेखा",
+      "kind": "specification_grid",
+      "version": "२०८१",
+      "status": "official_CDC_publication_page_only_grid_rows_not_transcribed",
+      "url": "https://moecdc.gov.np/content/276/specialization-table-2081-work-conduct-and-accounting/",
+      "note": "Official CDC publication page located. Complete PDF unit/cognitive marks and grade 9 model-question allocation not yet independently transcribed. Source listing is not an approved exact examination blueprint."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "historical_specification_grid_and_model_questions",
+      "version": "२०७८",
+      "status": "historical_CDC_government_pdf_2078_current_applicability_unconfirmed",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11167_Specification%20Grid%20%28Grade%209%29%20Compulsory%20Science%20and%20Technology_nk1kpta.pdf",
+      "note": "Government PDF explicitly titled 2078: 75 marks, 40 questions, 19 units. The official publication listing dated 2082-05-08 does not establish a revised edition. Current 2083 applicability is unconfirmed."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक अर्थशास्त्र",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2082",
+      "status": "official_CDC_first_page_unit_matrix_visual_review_complete_prose_conflicts_unresolved",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11136_%E0%A4%85%E0%A4%B0%E0%A5%8D%E0%A4%A5%E0%A4%B6%E0%A4%BE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%8D%E0%A4%B0%20%E0%A4%95%E0%A4%95%E0%A5%8D%E0%A4%B7%E0%A4%BE-%20%E0%A5%AF%20%E0%A4%B5%E0%A4%BF%E0%A4%B6%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%B0%E0%A4%A3%20%E0%A4%A4%E0%A4%BE%E0%A4%B2%E0%A4%BF%E0%A4%95%E0%A4%BE%20%E0%A4%B0%20%E0%A4%A8%E0%A4%AE%E0%A5%81%E0%A4%A8%E0%A4%BE%20%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%B6%E0%A5%8D%E0%A4%A8%E0%A4%B9%E0%A4%B0%E0%A5%81%20%E0%A5%A8%E0%A5%A6%E0%A5%AE%E0%A5%A8_3ew2awb.pdf",
+      "note": "Government-hosted CDC Grade 9 Economics (103) PDF; text-extracted bilingual model and summary table agree on 75 marks, 3h, 22 required items: 11×1, 8×5, 3×8; alternatives at model Q12,16,18,22 (not extra scored items). Six unit totals read as 9/24/9/6/12/15; cognitive summary marks 13/24/17/21. Extracted prose conflicts with the summary/model (5 short items, 5-mark long items, higher ability cap 20% vs 28% summary). Page screenshots timed out; original row/cell visual confirmation and clarification of conflicting prose still required. No exact blueprint approved; no automatic generation enabled by this source. Subsequent visual review of archived page 1 confirmed all 72 unit count cells, including the missing Unit 1 Understanding short count. See economicsVisualReview; the full-document/prose review remains blocked.",
+      "optionalRetrievalEvidence": {
+        "resource": "optional-economics",
+        "sha256": "c8f2219f945839a8016cde60334139f3bc11949888feb0925155aa45caead07e",
+        "byteCount": 989439,
+        "pages": 6,
+        "runId": 45418316887,
+        "firstPageRendered": true,
+        "currentCdcExactApproved": false,
+        "verifiedGridRows": false
+      },
+      "economicsTextReview": {
+        "sourceEdition": 2082,
+        "sourceMethod": "Government PDF text extraction: numerical summary and model agree; page images unavailable",
+        "sha256": "c8f2219f945839a8016cde60334139f3bc11949888feb0925155aa45caead07e",
+        "subjectCode": 103,
+        "fullMarks": 75,
+        "durationMinutes": 180,
+        "areas": [
+          [
+            "अर्थशास्त्रको आधारभूत अवधारणा र साधनको बाँडफाँट",
+            9
+          ],
+          [
+            "व्यक्ति अर्थशास्त्र",
+            24
+          ],
+          [
+            "समष्टि अर्थशास्त्र",
+            9
+          ],
+          [
+            "विकास अर्थशास्त्र",
+            6
+          ],
+          [
+            "नेपालको अर्थतन्त्र",
+            12
+          ],
+          [
+            "अर्थशास्त्रमा परिमाणात्मक पद्धति",
+            15
+          ]
+        ],
+        "types": [
+          "Very short",
+          "Short",
+          "Long"
+        ],
+        "questionCounts": [
+          11,
+          8,
+          3
+        ],
+        "marksEach": [
+          1,
+          5,
+          8
+        ],
+        "levelNames": [
+          "K",
+          "U",
+          "A",
+          "HA"
+        ],
+        "levelTypeCounts": [
+          [
+            5,
+            0,
+            1
+          ],
+          [
+            4,
+            4,
+            0
+          ],
+          [
+            2,
+            3,
+            0
+          ],
+          [
+            0,
+            1,
+            2
+          ]
+        ],
+        "alternativeQuestionNumbers": [
+          12,
+          16,
+          18,
+          22
+        ],
+        "alternativeUnitNumbers": [
+          1,
+          4,
+          5,
+          6
+        ],
+        "extractedProseConflicts": [
+          [
+            "Short question count",
+            "5",
+            "8"
+          ],
+          [
+            "Marks per long question",
+            "5",
+            "8"
+          ],
+          [
+            "Higher ability percentage cap",
+            "20%",
+            "28%"
+          ]
+        ],
+        "completeUnitMatrixVerified": false,
+        "visualCellReviewComplete": false,
+        "officialExamApproved": false,
+        "currentCdcExactApproved": false
+      },
+      "economicsVisualReview": {
+        "sourceEdition": 2082,
+        "sourceMethod": "Visual transcription of the official PDF page 1 rendered in prior GitHub Actions artifact; all six unit rows and 72 cognitive/type count cells checked",
+        "sha256": "c8f2219f945839a8016cde60334139f3bc11949888feb0925155aa45caead07e",
+        "runId": 45418316887,
+        "artifactId": 14931058649,
+        "artifactPath": "optional-extracted/c8f2219f945839a8/grid-1.png",
+        "pageNumber": 1,
+        "matchedCells": 72,
+        "workingHours": [
+          12,
+          30,
+          12,
+          8,
+          15,
+          19
+        ],
+        "unitMarks": [
+          9,
+          24,
+          9,
+          6,
+          12,
+          15
+        ],
+        "unitLevelTypeCounts": [
+          [
+            2,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "levelTypeCounts": [
+          5,
+          0,
+          1,
+          4,
+          4,
+          0,
+          2,
+          3,
+          0,
+          0,
+          1,
+          2
+        ],
+        "completeUnitMatrixVerified": true,
+        "fullDocumentVisualReviewComplete": false,
+        "officialExamApproved": false,
+        "currentCdcExactApproved": false,
+        "note": "Unit 1 has one 5-mark Understanding short question obscured by watermark in text extraction. Model and summary arithmetic match all six unit rows. Conflicting prose remains unresolved; this is reference evidence only, not exam approval. Unit 4 working hours corrected from 6 to 8 against the archived image and legacy-font text; 96 total hours.",
+        "workingHoursTotal": 96
+      }
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य गणित",
+      "kind": "historical_specification_grid_and_model_questions",
+      "version": "2078",
+      "status": "official_CDC_historical_PDF_visual_grid_checked_current_revision_unconfirmed",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11170_Specification%20Grid%20%28grade%209-10%29%20Compulsory%20Mathematics_nbimkq0.pdf",
+      "note": "Government PDF page 1 visually checked: 75 marks, 3 hours, 16 grouped questions, 49 subitems; seven area marks 6/13/13/15/13/11/4; cognitive marks 12/18/30/15. Grade 9 model is present. The PDF expressly dates its grid to 2078; the 2082 official listing date alone does not establish that the PDF is the latest applicable revision. Archive reference only until current applicability is verified."
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य अङ्ग्रेजी",
+      "kind": "historical_specification_grid_and_model_questions",
+      "version": "2078 curriculum basis",
+      "status": "official_CDC_PDF_visual_section_grid_checked_grade9_model_and_current_applicability_pending",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/Specification%20Grid%20%28Grade%209%20-10%29%20Compulsory%20English_f4xgqyn.pdf",
+      "note": "Government PDF cover and grid visually verified: reading 40 (5/10/10/15), writing 35 (5/5/6/8 plus grammar 11), total 75, 3h. Reading requires two textbook and two unseen passages with distinct comprehension task patterns; grammar includes six 1-mark transformations and ten half-mark contextual choices. The included model is Grade 10, not Grade 9. Current Grade 9 model applicability and reviewed passage bank remain pending; do not automatically approve CDC Exact."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक प्रथम: वातावरण विज्ञान",
+      "kind": "curriculum",
+      "version": "2076",
+      "status": "official_CDC_curriculum_reference_not_a_grid",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/Secondary%20Curriculum%202076%20Grade%209-10%20%28Optional%20Subject%29_wnaxygu.pdf",
+      "note": "Government optional curriculum 2076, Environment Science section 6: theory 75%, practical 25%, written exam 135 minutes, all units covered. Specific question/mark grid to be published separately. Extracted text reviewed; PDF visual request timed out. Ten curriculum areas must be reconciled with nine textbook chapters, not treated as identical. No exact grid approval.",
+      "schoolSyllabus2080Evidence": {
+        "url": "https://www.scribd.com/document/1031019175/9-O-I-Env-Sci-Syllabus",
+        "sourceType": "third_party_school_syllabus_text",
+        "yearBS": 2080,
+        "grade": 9,
+        "fullMarks": 75,
+        "durationMinutes": 135,
+        "types": [
+          "Very short",
+          "Short",
+          "Long"
+        ],
+        "questionCounts": [
+          11,
+          8,
+          3
+        ],
+        "marksEach": [
+          1,
+          5,
+          8
+        ],
+        "periods": [
+          6,
+          11,
+          18,
+          18,
+          12,
+          9,
+          14,
+          11,
+          12,
+          17
+        ],
+        "totalPeriods": 128,
+        "alternativeRules": [
+          {
+            "type": "Short",
+            "sourceUnit": 2,
+            "topic": "Ecology / ecosystem"
+          },
+          {
+            "type": "Short",
+            "sourceUnit": 8,
+            "topic": "Environmental / public health"
+          },
+          {
+            "type": "Long",
+            "sourceUnit": 4,
+            "topic": "Pollution"
+          }
+        ],
+        "sourceUnitCount": 10,
+        "portalTextbookUnitCount": 9,
+        "sourceToPortalUnitMappingVerified": false,
+        "completeUnitMatrixVerified": false,
+        "officialCdcSource": false,
+        "officialExamApproved": false
+      },
+      "environmentTextbookCrosswalk": {
+        "checkedOn": "2026-11-25",
+        "textbookUrl": "https://giwmscdnone.gov.np/media/pdf_upload/Opt%20Env%20Sc%20Grade%209_r9nzny9.pdf",
+        "textbookContentsPdfPage": 7,
+        "contentsVisuallyChecked": true,
+        "chapters": [
+          [
+            "Introduction to Environment",
+            1
+          ],
+          [
+            "Ecology and Ecosystem",
+            15
+          ],
+          [
+            "Natural Resources",
+            32
+          ],
+          [
+            "Environmental Pollution",
+            68
+          ],
+          [
+            "Climate Change and Its Mitigation",
+            94
+          ],
+          [
+            "Sustainable Development and Eco-friendly Lifestyle",
+            110
+          ],
+          [
+            "Environmental Health",
+            135
+          ],
+          [
+            "Hazard and Disaster Management",
+            149
+          ],
+          [
+            "Environment Management",
+            184
+          ]
+        ],
+        "schoolSyllabus2083IndexedUrl": "https://anyflip.com/jwxmu/hsyg/basic/101-150",
+        "schoolSourceAccess": "Search index excerpt available; direct page returned HTTP 403. Not a CDC source.",
+        "schoolAreas": [
+          "Introduction to environment",
+          "Ecology and ecosystem",
+          "Natural resources and biodiversity",
+          "Environmental pollution",
+          "Climate change and its effects",
+          "Alternative energy",
+          "Environment and sustainable development",
+          "Environment and public health",
+          "Natural disaster and its management",
+          "Environment management"
+        ],
+        "candidateChapters": [
+          [
+            1
+          ],
+          [
+            2
+          ],
+          [
+            3
+          ],
+          [
+            4
+          ],
+          [
+            5
+          ],
+          [
+            3,
+            6
+          ],
+          [
+            6
+          ],
+          [
+            7
+          ],
+          [
+            8
+          ],
+          [
+            9
+          ]
+        ],
+        "alternativeEnergyEvidence": [
+          {
+            "chapter": 3,
+            "printedPage": 32,
+            "description": "Opening activity asks about alternative energy sources and sustainable energy."
+          },
+          {
+            "chapter": 6,
+            "printedPage": 131,
+            "description": "Section 6.13 and preceding discussion address renewable energy and environment-friendly technologies."
+          }
+        ],
+        "mappingVerified": false,
+        "schoolGridCurrentEditionConfirmed": false,
+        "completeUnitMatrixVerified": false,
+        "officialExamApproved": false,
+        "currentCdcExactApproved": false,
+        "note": "Candidate topic alignment only; no hours or marks transferred from the older ten-area school syllabus to the nine textbook chapters. Alternative energy spans more than one chapter. Other learning outcomes may also span chapters. Do not use as a CDC Grid."
+      }
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक वातावरण विज्ञान",
+      "kind": "CDC_textbook",
+      "version": "2082 first edition",
+      "status": "official_CDC_library_textbook_record_full_contents_and_grid_review_pending",
+      "url": "https://lib.moecdc.gov.np/catalog/opac_css/index.php?id=15803&lvl=notice_display",
+      "note": "CDC Library record 15803 confirms the 2082 first-edition Grade 9 optional Environment Science textbook (198 pages, Nepali). Previous English PDF candidate timed out on recheck; nine-unit SMSS practice outline requires teacher comparison against actual textbook. Catalog record does not verify exact Grid, contents, or model questions."
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "curriculum",
+      "version": "2082",
+      "status": "official_CDC_2082_revised_curriculum_implementation_scope_unconfirmed_for_school_2083",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/social%209-10_oe5hq7v.pdf",
+      "note": "Current curriculum cover and Grade 9 outcomes checked. Ten learning areas; 75% external and 25% internal assessment; external questions require separate CDC specification grid. No grid approval from curriculum. Printed pages 2–4 and 55–56 text confirms 32 Grade 9 learning outcomes and four external cognitive levels; historical combined categories cannot establish current four-level allocations. Screenshot timed out; no current numerical Grid obtained. CDC 2082 semiannual bulletin records testing in 2083 and phased implementation from 2084 for revised social curriculum textbooks. This is not a confirmation that the school's Grade 9 is in the 2083 trial, or that a new exam Grid applies. The 2082 curriculum is a revision reference, not established as applicable to all schools in 2083.",
+      "currentAssessmentReview": {
+        "reviewDate": "2026-11-25",
+        "method": "Official PDF indexed text, printed pages 2–4 and 55–56; screenshot timed out",
+        "visualReviewComplete": false,
+        "annualHours": 128,
+        "creditHours": 4,
+        "areas": [
+          "हामी र हाम्रो समाज",
+          "विकासका पूर्वाधार",
+          "हाम्रा मूल्यमान्यता",
+          "सामाजिक सुधार",
+          "नागरिक चेतना",
+          "हाम्रो पृथ्वी",
+          "आर्थिक क्रियाकलाप",
+          "हाम्रो विगत",
+          "अन्तर्राष्ट्रिय सम्बन्ध र सहयोग",
+          "जनसङ्ख्या व्यवस्थापन"
+        ],
+        "outcomeCounts": [
+          2,
+          2,
+          4,
+          2,
+          4,
+          4,
+          5,
+          4,
+          2,
+          3
+        ],
+        "externalPercent": 75,
+        "internalPercent": 25,
+        "internalComponents": [
+          [
+            "सहभागिता",
+            3
+          ],
+          [
+            "परियोजना/प्रयोगात्मक कार्य",
+            16
+          ],
+          [
+            "त्रैमासिक परीक्षा",
+            6
+          ]
+        ],
+        "externalLevels": [
+          "ज्ञान",
+          "बोध",
+          "प्रयोग",
+          "उच्च दक्षता"
+        ],
+        "cumulativeCoverage": true,
+        "requiresSeparateGrid": true,
+        "oldCombinedLevelsNotEquivalent": true,
+        "questionCountsVerified": false,
+        "unitMarksVerified": false,
+        "officialExamApproved": false,
+        "implementationEvidence": {
+          "url": "https://giwmscdnone.gov.np/media/pdf_upload/Curriculum%20activities%207025-8-27%20C%20%281%29_kzkyxjl.pdf",
+          "alternateUrl": "https://giwmscdntwo.gov.np/media/pdf_upload/Curriculum%20activities%207025-8-27%20C%20%281%29_kzkyxjl.pdf",
+          "sourceTitle": "पाठ्यक्रम गतिविधि, अर्धवार्षिक बुलेटिन, २०८२",
+          "councilMeetingNumber": 66,
+          "councilDecisionDateBS": "2082-03-15",
+          "testYearBS": 2083,
+          "phasedImplementationFromBS": 2084,
+          "sourceMethod": "Indexed text on two government CDN copies; screenshots timed out. One extracted copy drops the trial clause; precise wording requires original-page visual verification.",
+          "schoolTrialParticipationVerified": false,
+          "grade9EffectiveYearVerified": false,
+          "currentGridApplicableVerified": false,
+          "officialExamApproved": false,
+          "visualReviewComplete": false,
+          "corroboratingNoticeReport": "https://shikshyakhabar.com/2026/08/03/18283",
+          "corroboratingNoticeScope": "Reported 2083-04-18 notice names grades 5, 8, 10 and 12 textbooks for 2084; not direct confirmation of Grade 9 exam grid applicability."
+        }
+      }
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "historical_specification_grid_and_model_questions",
+      "version": "2078",
+      "status": "official_CDC_historical_grid_text_extracted_visual_timeout_current_revision_not_verified",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11166_Specification%20Grid%20%28Grade%209%29%20Compulsory%20Social%20Studies%20%281%29_jlqxsmn.pdf",
+      "note": "Historical 75-mark, 3-hour grid: 11 very short x1, 9 short x4, 4 long x7. Three combined cognitive groups; historic geography map alternative. Grid and model totals agree. Screenshot timeout; current 2082 curriculum changes learning-area order and outcomes. Archive only, not approved for 2083 Exact."
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य गणित",
+      "kind": "historical_specification_grid_and_model_questions",
+      "version": "2078",
+      "status": "official_CDC_archive_text_verified_current_revision_pending",
+      "url": "https://moecdc.gov.np/storage/gallery/1689228983.pdf",
+      "note": "Government website direct mirror of 2078 test specification chart. Text confirms 7 content areas, 75 marks, 16 groups, 49 items, cognitive marks 12/18/30/15 and Grade 9 model. Screenshot timed out; current applicability and grouped generation not approved."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य गणित",
+      "kind": "CDC_textbook",
+      "version": "2022 English translation",
+      "status": "official_CDC_library_record",
+      "url": "https://lib.moecdc.gov.np/catalog/opac_css/index.php?id=13786&lvl=notice_display",
+      "note": "CDC Library record confirms textbook; contents and latest revision not independently confirmed."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य अङ्ग्रेजी",
+      "kind": "CDC_textbook",
+      "version": "2022 (2078 curriculum)",
+      "status": "official_CDC_textbook_contents_text_checked_screenshot_timeout",
+      "url": "https://moecdc.gov.np/storage/gallery/1688289325.pdf",
+      "note": "Textbook contents identify 18 units and grammar/writing topics. Original SMSS practice only. Textbook seen extracts not reproduced. English grid PDF visually verified on printed pages 1 and 2; included model is Grade 10, not Grade 9. Exact current Grade 9 paper remains unverified."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य नेपाली",
+      "kind": "CDC_textbook",
+      "version": "2082",
+      "status": "official_CDC_textbook_listing_full_contents_review_pending",
+      "url": "https://moecdc.gov.np/content/587/nepali-class---9/",
+      "note": "CDC lists Grade 9 Nepali (2082), published on 24 Shrawan 2083. Full textbook was not accessible. Provisional chapter labels from two secondary educational indexes are not asserted to match latest edition. Original grammar and writing practice only."
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य नेपाली",
+      "kind": "curriculum",
+      "version": "2082 publication listing",
+      "status": "official_CDC_revised_curriculum_listing",
+      "url": "https://moecdc.gov.np/content/194/secondary-education-certificate-class-9-and-10/",
+      "note": "CDC revised Nepali curriculum page; complete curriculum attachment not inspected."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य नेपाली",
+      "kind": "textbook_correction_notice",
+      "version": "2082",
+      "status": "official_CDC_correction_notice",
+      "url": "https://moecdc.gov.np/content/99/factical-information-in-compulsory-nepali-textbooks-of/",
+      "note": "Official correction notice exists. Avoid reproducing text-specific factual answers until corrected book is checked."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "CDC_textbook",
+      "version": "English translation (government PDF; current 2082 edition applicability pending)",
+      "status": "official_gov_textbook_contents_text_extracted_screenshot_timeout",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/Science%20and%20Technology%20Grade%20-9%20%28English%20Translation%29_v0nphvf.pdf",
+      "note": "Grade 9 English PDF contents explicitly list 19 units. Unit 3 Mushroom and Unit 19 Materials used in Agriculture differ from historical 2078 grid labels. Current 2082 textbook page and grid page exist; exact current edition and row-level allocations not confirmed. Original practice questions only."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक वातावरण विज्ञान",
+      "kind": "CDC_textbook",
+      "version": "Government English textbook",
+      "status": "official_government_pdf_contents_visual_verified",
+      "url": "https://giwmscdntwo.gov.np/media/pdf_upload/Class%209%20Environment%20science_English%20Version_zgnagog.pdf",
+      "note": "English textbook PDF contents page (PDF page 7) visually confirms nine units and printed starting pages 1,15,32,68,94,110,135,149,184. No external examination marks grid inferred."
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य नेपाली",
+      "kind": "specification_grid_and_model_questions",
+      "version": "PDF edition applicability pending",
+      "status": "official_2080_grade10_nepali_grid_five_pages_visually_checked_grade9_basis_explicit_current_revision_pending",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11168_Specification%20Grid%20(9%20-%2010)%20Compulsory%20Nepali_p4hju5n.pdf",
+      "note": "Legacy-font grid across first pages; current edition and exact question distribution require verification. Archived original pages 1–5 visually checked: 21 task rows, 12 area totals and four cognitive marks totals confirmed; Grade 9 applicability as a basis explicit, current revision and Grade 9 task adaptation still pending.",
+      "retrievalEvidence": {
+        "resource": "11168",
+        "pages": 20,
+        "byteCount": 505782,
+        "sha256": "530478014b8179821bf25d43724b935fabca4baa522dd36cebdff402e3e2c98e",
+        "runId": 45387109761,
+        "checkedOn": "2026-11-24",
+        "directory": "https://sikshakhub.com/specification-grid-directory/",
+        "verifiedGridRows": false,
+        "currentCdcExactApproved": false,
+        "numericReferenceCrosscheck": {
+          "runId": 45395601881,
+          "pages": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "fullMarks": 75,
+          "durationMinutes": 180,
+          "method": "Partial legacy-font task-cell extraction, not a complete approved table",
+          "currentEditionConfirmed": false,
+          "visualCellReviewComplete": false,
+          "grade9ApplicabilityInstruction": "PDF page 5 states Grade 9 paper should use Grade 10 grid as basis and cover all Grade 9 content areas.",
+          "extractedTaskMarks": {
+            "languageStructureReading": 4,
+            "unseenReading": 4,
+            "noteTaking": 2,
+            "summaryWriting": 3
+          },
+          "legacyReferenceConflict": {
+            "unseenReading": {
+              "extracted": 4,
+              "historicalDraft": 5
+            },
+            "notesAndSummary": {
+              "extracted": 5,
+              "historicalDraft": 4
+            }
+          },
+          "comparisonStatus": "partial_text_conflict_requires_visual_confirmation_and_planner_revision",
+          "officialExamApproved": false,
+          "secondaryCorroboration": {
+            "url": "https://science-playground.com/learn/grade-9-nepali/papers",
+            "checkedOn": "2026-11-24",
+            "claimedGridEdition": 2080,
+            "officialSource": false,
+            "areaMarks": [
+              6,
+              3,
+              15,
+              8,
+              4,
+              4,
+              2,
+              3,
+              12,
+              4,
+              7,
+              7
+            ],
+            "cognitiveMarks": [
+              8,
+              12,
+              24,
+              31
+            ],
+            "unseenReadingMarks": 4,
+            "noteTakingMarks": 2,
+            "summaryWritingMarks": 3,
+            "additionalDifferences": [
+              "verb_mood_alternative",
+              "grade9_transformation_excludes_reported_speech",
+              "textbook_grammar_passage_required",
+              "textbook_summary_passage_max_100_words",
+              "two_required_textbook_comprehension_tasks"
+            ],
+            "note": "Independent educational site's transcription agrees with selected RS11168 government PDF extracted cells. It is not expert-reviewed or authoritative. Other detailed fields require primary visual verification; historical 2078 practice remains separate."
+          }
+        },
+        "primaryVisualReview": {
+          "sourceEdition": 2080,
+          "tableGrade": 10,
+          "appliesAsBasisToGrade": 9,
+          "sha256": "530478014b8179821bf25d43724b935fabca4baa522dd36cebdff402e3e2c98e",
+          "runId": 45420493085,
+          "artifactId": 14934002500,
+          "artifactPaths": [
+            "extracted/11168-grid-01.png",
+            "extracted/11168-grid-02.png",
+            "extracted/11168-grid-03.png",
+            "extracted/11168-grid-04.png",
+            "extracted/11168-grid-05.png"
+          ],
+          "pages": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "fullMarks": 75,
+          "durationMinutes": 180,
+          "taskRows": [
+            [
+              1,
+              "शब्दार्थ",
+              "K",
+              1,
+              1,
+              2,
+              1
+            ],
+            [
+              1,
+              "शब्द पहिचान",
+              "K",
+              1,
+              1,
+              2,
+              1
+            ],
+            [
+              1,
+              "वाक्य रचना",
+              "A",
+              1,
+              1,
+              2,
+              1
+            ],
+            [
+              2,
+              "शुद्ध शब्द पहिचान",
+              "K",
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              2,
+              "वाक्य सम्पादन",
+              "A",
+              1,
+              1,
+              2,
+              2
+            ],
+            [
+              3,
+              "पदवर्ग पहिचान",
+              "K",
+              1,
+              1,
+              3,
+              2
+            ],
+            [
+              3,
+              "शब्दनिर्माण",
+              "A",
+              2,
+              2,
+              4,
+              2
+            ],
+            [
+              3,
+              "काल र पक्ष",
+              "A",
+              1,
+              1,
+              2,
+              2
+            ],
+            [
+              3,
+              "भाव/अर्थ",
+              "A",
+              2,
+              1,
+              2,
+              2
+            ],
+            [
+              3,
+              "वाक्यान्तरण",
+              "A",
+              1,
+              1,
+              4,
+              3
+            ],
+            [
+              4,
+              "भाषिक संरचना पहिचान र प्रयोग (दृष्टांश)",
+              "A",
+              1,
+              1,
+              4,
+              3
+            ],
+            [
+              4,
+              "बोध प्रश्नोत्तर (अदृष्टांश)",
+              "U",
+              1,
+              1,
+              4,
+              3
+            ],
+            [
+              5,
+              "निर्देशित रचना",
+              "HA",
+              2,
+              1,
+              4,
+              3
+            ],
+            [
+              6,
+              "व्यावहारिक लेखन",
+              "A",
+              2,
+              1,
+              4,
+              3
+            ],
+            [
+              7,
+              "बुँदा टिपोट (दृष्टांश)",
+              "HA",
+              1,
+              1,
+              2,
+              4
+            ],
+            [
+              8,
+              "सारांश लेखन (दृष्टांश)",
+              "HA",
+              1,
+              1,
+              3,
+              4
+            ],
+            [
+              9,
+              "बोध उत्तर लेखन",
+              "U",
+              2,
+              2,
+              8,
+              4
+            ],
+            [
+              9,
+              "तार्किक उत्तर लेखन",
+              "HA",
+              1,
+              1,
+              4,
+              4
+            ],
+            [
+              10,
+              "भाव विस्तार/व्याख्या",
+              "HA",
+              2,
+              1,
+              4,
+              4
+            ],
+            [
+              11,
+              "समीक्षात्मक उत्तर लेखन",
+              "HA",
+              2,
+              1,
+              7,
+              4
+            ],
+            [
+              12,
+              "निबन्ध लेखन",
+              "HA",
+              3,
+              1,
+              7,
+              5
+            ]
+          ],
+          "areaMarks": [
+            6,
+            3,
+            15,
+            8,
+            4,
+            4,
+            2,
+            3,
+            12,
+            4,
+            7,
+            7
+          ],
+          "cognitiveMarks": [
+            8,
+            12,
+            24,
+            31
+          ],
+          "completeTaskMatrixVisuallyChecked": true,
+          "grade9InstructionVisuallyChecked": true,
+          "noRepeatedTextbookLessons": true,
+          "currentEditionConfirmed": false,
+          "grade9SpecificTaskAdaptationsReviewed": false,
+          "officialExamApproved": false,
+          "currentCdcExactApproved": false,
+          "note": "Page 1 explicitly titles the table Grade 10, 2080. Page 5 instructs using it as the basis for Grade 9 while covering all Grade 9 content areas, and avoiding repeated lessons. Do not copy Grade 10-only content or certify the current edition from this evidence."
+        }
+      }
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य अङ्ग्रेजी",
+      "kind": "specification_grid_and_model_questions",
+      "version": "PDF edition applicability pending",
+      "status": "official_2078_curriculum_grade9_10_english_chart_visually_checked_current_revision_pending",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11169_Specification%20Grid%20(Grade%209%20-10)%20Compulsory%20English_f2wru8b.pdf",
+      "note": "Full PDF obtained; compare reading/writing tasks, seen passages and included model grade. Original PDF pages 1–3 visually checked; reading/writing/grammar and comprehension distribution confirmed. Grade 9 model and current edition still unconfirmed.",
+      "retrievalEvidence": {
+        "resource": "11169",
+        "pages": 10,
+        "byteCount": 593219,
+        "sha256": "cded9c1eb876908061ec96c41dcaa42750158a4f4f306f6cbd15006afff54715",
+        "runId": 45387109761,
+        "checkedOn": "2026-11-24",
+        "directory": "https://sikshakhub.com/specification-grid-directory/",
+        "verifiedGridRows": false,
+        "currentCdcExactApproved": false,
+        "numericReferenceCrosscheck": {
+          "runId": 45395601881,
+          "pages": [
+            2,
+            3
+          ],
+          "fullMarks": 75,
+          "readingMarks": [
+            5,
+            10,
+            10,
+            15
+          ],
+          "writingMarks": [
+            5,
+            5,
+            6,
+            8
+          ],
+          "grammar": {
+            "transformationCount": 6,
+            "transformationMarksEach": 1,
+            "contextualMcqCount": 10,
+            "contextualMcqMarksEach": 0.5,
+            "total": 11
+          },
+          "currentEditionConfirmed": false,
+          "visualCellReviewComplete": false
+        },
+        "primaryVisualReview": {
+          "curriculumEdition": 2078,
+          "grades": [
+            9,
+            10
+          ],
+          "modelGrade": 10,
+          "sha256": "cded9c1eb876908061ec96c41dcaa42750158a4f4f306f6cbd15006afff54715",
+          "runId": 45420493085,
+          "artifactId": 14934002500,
+          "artifactPaths": [
+            "extracted/11169-grid-01.png",
+            "extracted/11169-grid-02.png",
+            "extracted/11169-grid-03.png"
+          ],
+          "pdfPages": [
+            1,
+            2,
+            3
+          ],
+          "fullMarks": 75,
+          "durationMinutes": 180,
+          "reading": [
+            {
+              "marks": 5,
+              "seen": true,
+              "words": 100,
+              "types": 1
+            },
+            {
+              "marks": 10,
+              "seen": true,
+              "words": 200,
+              "types": 2
+            },
+            {
+              "marks": 10,
+              "seen": false,
+              "words": 200,
+              "types": 2
+            },
+            {
+              "marks": 15,
+              "seen": false,
+              "words": 300,
+              "types": 3
+            }
+          ],
+          "readingItemCount": 40,
+          "comprehensionCounts": {
+            "literal": 16,
+            "reorganization": 8,
+            "inference": 8,
+            "evaluation": 3
+          },
+          "vocabularyItemsDerived": 5,
+          "vocabularyOnlyReading": 4,
+          "allowRepeatedShortAnswerType": true,
+          "otherTypesDistinctWithinSeenAndUnseenPairs": true,
+          "writing": [
+            {
+              "kind": "Guided writing I",
+              "marks": 5,
+              "words": 100
+            },
+            {
+              "kind": "Guided writing II",
+              "marks": 5,
+              "words": 100
+            },
+            {
+              "kind": "Free writing I",
+              "marks": 6,
+              "words": 150
+            },
+            {
+              "kind": "Free writing II",
+              "marks": 8,
+              "words": 200
+            }
+          ],
+          "writingTypeMustDifferFromReadingTexts": true,
+          "grammarAreas": [
+            "Articles",
+            "Prepositions",
+            "Tense",
+            "Connectives",
+            "Question tags",
+            "Reported speech",
+            "Voice",
+            "Conditional sentences",
+            "Subject-verb agreement",
+            "Interrogation and negation",
+            "Causatives",
+            "Modals",
+            "Relative pronouns",
+            "Adjectives and adverbs"
+          ],
+          "grammar": [
+            {
+              "kind": "transformation",
+              "count": 6,
+              "marksEach": 1
+            },
+            {
+              "kind": "contextual_mcq",
+              "count": 10,
+              "marksEach": 0.5
+            }
+          ],
+          "mcqChoices": 4,
+          "chartVisualReviewComplete": true,
+          "grade9ModelVerified": false,
+          "currentEditionConfirmed": false,
+          "officialExamApproved": false,
+          "currentCdcExactApproved": false,
+          "note": "Cover and both specification pages checked against archived PDF. Vocabulary count is derived as 40 minus 35 comprehension items; it is not separately printed as 5 in the chart. Grade 10 model not used as Grade 9 textbook content."
+        }
+      }
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "अनिवार्य गणित",
+      "kind": "specification_grid_and_model_questions",
+      "version": "PDF edition applicability pending",
+      "status": "official_government_full_PDF_retrieved_grid_review_pending",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11170_Specification%20Grid%20(grade%209-10)%20Compulsory%20Mathematics_nbimkq0.pdf",
+      "note": "Page 1 numeric text confirms 75 marks, 16 groups, 49 items, seven area marks 6/13/13/15/13/11/4, cognitive marks 12/18/30/15; historical grid applicability remains unconfirmed. Ministry Educational Information 2081, printed p.38, confirms revision effective 2082 with open-ended questions; exact revised numerical allocation not retrieved.",
+      "retrievalEvidence": {
+        "resource": "11170",
+        "pages": 15,
+        "byteCount": 1679552,
+        "sha256": "8f2f3d13394f24948e8b096f9974ec8888fa4c277715eadd7f75c464e02f8bde",
+        "runId": 45387109761,
+        "checkedOn": "2026-11-24",
+        "directory": "https://sikshakhub.com/specification-grid-directory/",
+        "verifiedGridRows": false,
+        "currentCdcExactApproved": false,
+        "numericReferenceCrosscheck": {
+          "runId": 45387386269,
+          "method": "full PDF extracted table numeric cells; old pattern comparison only",
+          "page": 1,
+          "fullMarks": 75,
+          "groupCount": 16,
+          "subitemCount": 49,
+          "unitMarks": [
+            6,
+            13,
+            13,
+            15,
+            13,
+            11,
+            4
+          ],
+          "cognitiveMarks": [
+            12,
+            18,
+            30,
+            15
+          ],
+          "currentEditionConfirmed": false,
+          "visualCellReviewComplete": false
+        }
+      },
+      "historicalVisualReview": {
+        "reviewedOn": "2026-11-24",
+        "sourceYear": 2078,
+        "mirrorUrl": "https://dblimbu.com.np/site-assets/uploads/2026/09/Specification-Grid-Mathematics-9.pdf",
+        "pdfPage": 1,
+        "workingHours": [
+          12,
+          28,
+          28,
+          32,
+          28,
+          24,
+          8
+        ],
+        "itemCounts": [
+          [
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            2,
+            2,
+            3,
+            2
+          ],
+          [
+            2,
+            2,
+            2,
+            2
+          ],
+          [
+            2,
+            2,
+            3,
+            1
+          ],
+          [
+            2,
+            2,
+            2,
+            2
+          ],
+          [
+            2,
+            2,
+            2,
+            2
+          ],
+          [
+            1,
+            1,
+            1,
+            1
+          ]
+        ],
+        "levelMarks": [
+          [
+            1,
+            1,
+            3,
+            1
+          ],
+          [
+            2,
+            3,
+            5,
+            3
+          ],
+          [
+            2,
+            3,
+            5,
+            3
+          ],
+          [
+            2,
+            4,
+            7,
+            2
+          ],
+          [
+            2,
+            3,
+            5,
+            3
+          ],
+          [
+            2,
+            3,
+            4,
+            2
+          ],
+          [
+            1,
+            1,
+            1,
+            1
+          ]
+        ],
+        "groupCounts": [
+          1,
+          3,
+          3,
+          3,
+          3,
+          2,
+          1
+        ],
+        "currentEditionConfirmed": false,
+        "officialExamApproved": false
+      },
+      "revisionNoticeEvidence": {
+        "url": "https://giwmscdntwo.gov.np/media/pdf_upload/Educational%20information%20book_u6e3p7q.pdf",
+        "title": "शैक्षिक सूचना, २०८१",
+        "printedPage": 38,
+        "checkedOn": "2026-11-24",
+        "effectiveSchoolYear": 2082,
+        "grades": [
+          9,
+          10
+        ],
+        "subjects": [
+          "Compulsory Mathematics",
+          "Science and Technology"
+        ],
+        "openEndedQuestionsReported": true,
+        "method": "Government PDF searchable text; screenshot request timed out",
+        "revisedNumericalGridRetrieved": false,
+        "currentGridApproved": false
+      }
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "specification_grid_and_model_questions",
+      "version": "2078 (PDF title); current applicability pending",
+      "status": "official_government_full_PDF_retrieved_grid_review_pending",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11167_Specification%20Grid%20(Grade%209)%20Compulsory%20Science%20and%20Technology_nk1kpta.pdf",
+      "note": "Government PDF title and unit/mark text checked again on 2026-11-24. The official listing date is 2082-05-08; a separate revised Grid has not been established. Screenshot request timed out. Ministry Educational Information 2081, printed p.38, confirms revision effective 2082 with open-ended questions; exact revised numerical allocation not retrieved.",
+      "retrievalEvidence": {
+        "resource": "11167",
+        "pages": 10,
+        "byteCount": 1270043,
+        "sha256": "cf7025fa4fc1743b81d2da0d56f584a6c25de346c85e2bf32f80dc62d65b4021",
+        "runId": 45387109761,
+        "checkedOn": "2026-11-24",
+        "directory": "https://sikshakhub.com/specification-grid-directory/",
+        "verifiedGridRows": false,
+        "currentCdcExactApproved": false,
+        "numericReferenceCrosscheck": {
+          "runId": 45387386269,
+          "method": "full PDF extracted table numeric cells; old pattern comparison only",
+          "page": 1,
+          "fullMarks": 75,
+          "questionCounts": [
+            10,
+            9,
+            14,
+            7
+          ],
+          "marksEach": [
+            1,
+            1,
+            2,
+            4
+          ],
+          "unitMarks": [
+            3,
+            3,
+            2,
+            3,
+            8,
+            3,
+            5,
+            2,
+            4,
+            7,
+            6,
+            2,
+            7,
+            6,
+            3,
+            3,
+            2,
+            3,
+            3
+          ],
+          "cognitiveMarks": [
+            12,
+            22,
+            22,
+            19
+          ],
+          "typeLevelCounts": [
+            [
+              2,
+              4,
+              2,
+              2
+            ],
+            [
+              2,
+              4,
+              2,
+              1
+            ],
+            [
+              2,
+              3,
+              5,
+              4
+            ],
+            [
+              1,
+              2,
+              2,
+              2
+            ]
+          ],
+          "currentEditionConfirmed": false,
+          "visualCellReviewComplete": false
+        }
+      },
+      "historicalVisualReview": {
+        "reviewedOn": "2026-11-24",
+        "sourceYear": 2078,
+        "mirrorUrl": "https://hupen.com.np/files/Class-9-Science-Grid-And-Model-Question_1754407135.pdf",
+        "pdfPage": 1,
+        "workingHours": [
+          7,
+          6,
+          5,
+          6,
+          16,
+          6,
+          11,
+          5,
+          8,
+          16,
+          12,
+          5,
+          14,
+          13,
+          6,
+          6,
+          5,
+          6,
+          7
+        ],
+        "unitMarks": [
+          3,
+          3,
+          2,
+          3,
+          8,
+          3,
+          5,
+          2,
+          4,
+          7,
+          6,
+          2,
+          7,
+          6,
+          3,
+          3,
+          2,
+          3,
+          3
+        ],
+        "contentGroupMarks": [
+          10,
+          19,
+          26,
+          20
+        ],
+        "typeLevelCounts": [
+          [
+            2,
+            4,
+            2,
+            2
+          ],
+          [
+            2,
+            4,
+            2,
+            1
+          ],
+          [
+            2,
+            3,
+            5,
+            4
+          ],
+          [
+            1,
+            2,
+            2,
+            2
+          ]
+        ],
+        "cognitiveMarks": [
+          12,
+          22,
+          22,
+          19
+        ],
+        "currentEditionConfirmed": false,
+        "officialExamApproved": false
+      },
+      "revisionNoticeEvidence": {
+        "url": "https://giwmscdntwo.gov.np/media/pdf_upload/Educational%20information%20book_u6e3p7q.pdf",
+        "title": "शैक्षिक सूचना, २०८१",
+        "printedPage": 38,
+        "checkedOn": "2026-11-24",
+        "effectiveSchoolYear": 2082,
+        "grades": [
+          9,
+          10
+        ],
+        "subjects": [
+          "Compulsory Mathematics",
+          "Science and Technology"
+        ],
+        "openEndedQuestionsReported": true,
+        "method": "Government PDF searchable text; screenshot request timed out",
+        "revisedNumericalGridRetrieved": false,
+        "currentGridApproved": false
+      },
+      "schoolScreenshotEvidence": {
+        "title": "BESS Specification Grid for Science and Technology-Grade 9 Annual Examination-2079",
+        "sourceType": "user_supplied_school_grid_screenshot",
+        "sourceFilename": "IMG_3505.png",
+        "yearBS": 2079,
+        "fullMarks": 75,
+        "durationMinutes": 180,
+        "units": [
+          {
+            "sourceRow": 1,
+            "area": "ICT",
+            "title": "Scientific learning",
+            "portalUnit": 1,
+            "marks": 3,
+            "portalTitle": "Scientific Study"
+          },
+          {
+            "sourceRow": 2,
+            "area": "ICT",
+            "title": "ICT",
+            "portalUnit": 13,
+            "marks": 7,
+            "portalTitle": "Information and Communication Technology"
+          },
+          {
+            "sourceRow": 3,
+            "area": "Biology",
+            "title": "Classification of living things",
+            "portalUnit": 2,
+            "marks": 3,
+            "portalTitle": "Classification of Living Beings"
+          },
+          {
+            "sourceRow": 4,
+            "area": "Biology",
+            "title": "Mushroom",
+            "portalUnit": 3,
+            "marks": 2,
+            "portalTitle": "Mushroom"
+          },
+          {
+            "sourceRow": 5,
+            "area": "Biology",
+            "title": "Evolution",
+            "portalUnit": 4,
+            "marks": 3,
+            "portalTitle": "Evolution"
+          },
+          {
+            "sourceRow": 6,
+            "area": "Biology",
+            "title": "Life Process",
+            "portalUnit": 5,
+            "marks": 8,
+            "portalTitle": "Body Structure and Life Process"
+          },
+          {
+            "sourceRow": 7,
+            "area": "Biology",
+            "title": "Nature and environment",
+            "portalUnit": 6,
+            "marks": 3,
+            "portalTitle": "Nature and Environment"
+          },
+          {
+            "sourceRow": 8,
+            "area": "Physics",
+            "title": "Force and motion",
+            "portalUnit": 7,
+            "marks": 5,
+            "portalTitle": "Force and Motion"
+          },
+          {
+            "sourceRow": 9,
+            "area": "Physics",
+            "title": "Simple Machine",
+            "portalUnit": 8,
+            "marks": 2,
+            "portalTitle": "Simple Machine"
+          },
+          {
+            "sourceRow": 10,
+            "area": "Physics",
+            "title": "Energy",
+            "portalUnit": 9,
+            "marks": 4,
+            "portalTitle": "Energy"
+          },
+          {
+            "sourceRow": 11,
+            "area": "Physics",
+            "title": "Wave",
+            "portalUnit": 10,
+            "marks": 7,
+            "portalTitle": "Wave"
+          },
+          {
+            "sourceRow": 12,
+            "area": "Physics",
+            "title": "Electricity",
+            "portalUnit": 11,
+            "marks": 6,
+            "portalTitle": "Electricity"
+          },
+          {
+            "sourceRow": 13,
+            "area": "Physics",
+            "title": "Universe",
+            "portalUnit": 12,
+            "marks": 2,
+            "portalTitle": "The Universe"
+          },
+          {
+            "sourceRow": 14,
+            "area": "Chemistry",
+            "title": "Atomic structure and chemical bond",
+            "portalUnit": 14,
+            "marks": 6,
+            "portalTitle": "Atomic Structure and Chemical Bond"
+          },
+          {
+            "sourceRow": 15,
+            "area": "Chemistry",
+            "title": "Chemical Reaction",
+            "portalUnit": 15,
+            "marks": 3,
+            "portalTitle": "Chemical Reaction"
+          },
+          {
+            "sourceRow": 16,
+            "area": "Chemistry",
+            "title": "Some gases",
+            "portalUnit": 16,
+            "marks": 3,
+            "portalTitle": "Gases"
+          },
+          {
+            "sourceRow": 17,
+            "area": "Chemistry",
+            "title": "Metals and non metals",
+            "portalUnit": 17,
+            "marks": 2,
+            "portalTitle": "Metals and Non-metals"
+          },
+          {
+            "sourceRow": 18,
+            "area": "Chemistry",
+            "title": "Carbon and its compound",
+            "portalUnit": 18,
+            "marks": 3,
+            "portalTitle": "Carbon and its Compounds"
+          },
+          {
+            "sourceRow": 19,
+            "area": "Chemistry",
+            "title": "Materials Used in Agriculture",
+            "portalUnit": 19,
+            "marks": 3,
+            "portalTitle": "Materials used in Agriculture"
+          }
+        ],
+        "areaMarks": {
+          "ICT": 10,
+          "Biology": 19,
+          "Physics": 26,
+          "Chemistry": 20
+        },
+        "questionTypes": [
+          "mcq",
+          "very_short",
+          "short",
+          "long"
+        ],
+        "marksEach": [
+          1,
+          1,
+          2,
+          4
+        ],
+        "typeLevelCounts": [
+          [
+            2,
+            4,
+            2,
+            2
+          ],
+          [
+            2,
+            4,
+            2,
+            1
+          ],
+          [
+            2,
+            3,
+            5,
+            4
+          ],
+          [
+            1,
+            2,
+            2,
+            2
+          ]
+        ],
+        "officialCdcSource": false,
+        "currentEditionConfirmed": false,
+        "officialExamApproved": false
+      }
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "specification_grid_and_model_questions",
+      "version": "PDF edition applicability pending",
+      "status": "official_government_full_PDF_retrieved_grid_review_pending",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11166_Specification%20Grid%20(Grade%209)%20Compulsory%20Social%20Studies%20(1)_jlqxsmn.pdf",
+      "note": "Legacy-font table on page 2; compare current revised curriculum before exact approval. Archived fixed-column text pages 2–3 independently transcribed for all 90 unit/type/category count cells and 128 working hours; printed totals match. No visual or current edition certification. A school-hosted CDC 2078 feedback-copy mirror visually corroborates the complete matrix and 128 hours. No byte equivalence or current edition certification. Original government PDF page 2 rendered in audit run 45529938017, all 90 count cells, 10 unit hours and 10 unit marks visually matched. Current 2082 revision still unverified.",
+      "retrievalEvidence": {
+        "resource": "11166",
+        "pages": 9,
+        "byteCount": 542978,
+        "sha256": "636c0e961b0d0a474aea035fc1dd56e93318e33f21865f43b2cde8ee3211ce05",
+        "runId": 45387109761,
+        "checkedOn": "2026-11-24",
+        "directory": "https://sikshakhub.com/specification-grid-directory/",
+        "verifiedGridRows": false,
+        "currentCdcExactApproved": false,
+        "numericReferenceCrosscheck": {
+          "runId": 45387386269,
+          "method": "full PDF extracted table numeric cells; old pattern comparison only",
+          "page": 2,
+          "fullMarks": 75,
+          "questionCounts": [
+            11,
+            9,
+            4
+          ],
+          "marksEach": [
+            1,
+            4,
+            7
+          ],
+          "unitMarks": [
+            5,
+            5,
+            8,
+            6,
+            11,
+            11,
+            9,
+            9,
+            6,
+            5
+          ],
+          "unitTypeMarks": [
+            [
+              1,
+              4,
+              0
+            ],
+            [
+              1,
+              4,
+              0
+            ],
+            [
+              0,
+              8,
+              0
+            ],
+            [
+              2,
+              4,
+              0
+            ],
+            [
+              0,
+              4,
+              7
+            ],
+            [
+              0,
+              4,
+              7
+            ],
+            [
+              2,
+              0,
+              7
+            ],
+            [
+              2,
+              0,
+              7
+            ],
+            [
+              2,
+              4,
+              0
+            ],
+            [
+              1,
+              4,
+              0
+            ]
+          ],
+          "currentEditionConfirmed": false,
+          "visualCellReviewComplete": false,
+          "cognitiveMatrixTextReview": {
+            "sourceYear": 2078,
+            "sha256": "636c0e961b0d0a474aea035fc1dd56e93318e33f21865f43b2cde8ee3211ce05",
+            "runId": 45420493085,
+            "artifactId": 14934002500,
+            "artifactPath": "extracted/11166-first-pages.txt",
+            "pdfPages": [
+              2,
+              3
+            ],
+            "method": "Independent fixed-column transcription of archived legacy-font layout text; original page image unavailable",
+            "unitNames": [
+              "हामी र हाम्रो समाज",
+              "विकासका पूर्वाधार",
+              "हाम्रो परम्परा एवम् सामाजिक मूल्य र मान्यता",
+              "सामाजिक समस्या र समाधान",
+              "नागरिक चेतना",
+              "हाम्रो पृथ्वी",
+              "हाम्रो विगत",
+              "हाम्रो आर्थिक क्रियाकलाप",
+              "हाम्रो अन्तर्राष्ट्रिय सम्बन्ध र सहयोग",
+              "जनसङ्ख्या परिचय र व्यवस्थापन"
+            ],
+            "workingHours": [
+              8,
+              10,
+              14,
+              12,
+              18,
+              18,
+              14,
+              15,
+              11,
+              8
+            ],
+            "totalWorkingHours": 128,
+            "categoryNames": [
+              "ज्ञान र बोध",
+              "प्रयोग र सिर्जनात्मक सिप",
+              "उच्च दक्षता"
+            ],
+            "unitTypeCategoryCounts": [
+              [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                1,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0
+              ],
+              [
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                1,
+                0,
+                1,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ],
+            "typeCategoryCounts": [
+              [
+                5,
+                3,
+                3
+              ],
+              [
+                4,
+                2,
+                3
+              ],
+              [
+                1,
+                2,
+                1
+              ]
+            ],
+            "cognitiveMarks": [
+              28,
+              25,
+              22
+            ],
+            "printedPercentages": [
+              37,
+              33,
+              30
+            ],
+            "mapAlternativeHistoricalUnit": 6,
+            "creativeLongHistoricalUnit": 8,
+            "visualReviewComplete": false,
+            "currentEditionConfirmed": false,
+            "officialExamApproved": false,
+            "currentCdcExactApproved": false,
+            "mirrorVisualReview": {
+              "sourceUrl": "https://riviera.edu.np/storage/newfiles/sz6EjaHjK75ANpCvsVindqTnqLRlidKFQp81Spva.pdf",
+              "pdfPage": 2,
+              "sourceEdition": 2078,
+              "sourceType": "school-hosted mirror of CDC feedback copy",
+              "checkedOn": "2026-11-25",
+              "matchedUnitCountCells": 90,
+              "matchedUnitHours": 10,
+              "matchedUnitMarks": 10,
+              "totalWorkingHours": 128,
+              "unit3Marks": 8,
+              "fullMarks": 75,
+              "byteEquivalenceEstablished": false,
+              "currentEditionConfirmed": false,
+              "officialExamApproved": false,
+              "note": "Visual inspection of the actual table confirms 128 hours, unit 6 hours 18 and unit 3 marks 8 (two 4-mark items); web text extraction misreads these as 125, 15 and 5. All 90 unit count cells match the archived government text transcription. Official PDF screenshot remains unavailable; the mirror is not evidence of the revised 2082 grid."
+            },
+            "primaryVisualReview": {
+              "runId": 45529938017,
+              "artifactId": 14984790271,
+              "artifactPath": "extracted/11166-grid-2.png",
+              "pageNumber": 2,
+              "sha256": "636c0e961b0d0a474aea035fc1dd56e93318e33f21865f43b2cde8ee3211ce05",
+              "matchedUnitCountCells": 90,
+              "matchedUnitHours": 10,
+              "matchedUnitMarks": 10,
+              "workingHours": 128,
+              "fullMarks": 75,
+              "currentEditionConfirmed": false,
+              "officialExamApproved": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "कार्यालय सञ्चालन तथा लेखा",
+      "kind": "specification_grid",
+      "version": "२०८१ (publication title; PDF not inspected)",
+      "status": "official_elibrary_record_link_discovered_pdf_unavailable",
+      "url": "https://lib.moecdc.gov.np/elibrary/?r=11101",
+      "note": "E-Library link from the public MathMentor directory dated 2026-09-25, confirmed to target official CDC record 11101. On 2026-11-24 the record returned HTTP 502. No PDF or grid marks verified. Discovery source: https://basantakk.com.np/2026/1130/cdc-specification-grid-model-questions-download-center/"
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "कार्यालय सञ्चालन तथा लेखा",
+      "kind": "specification_grid",
+      "version": "2081 (PDF text title confirmed)",
+      "status": "government_PDF_2081_first_page_merged_group_matrix_visually_checked_current_applicability_pending",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/%E0%A4%B5%E0%A4%BF%E0%A4%B6%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%B0%E0%A4%A3%20%E0%A4%A4%E0%A4%BE%E0%A4%B2%E0%A4%BF%E0%A4%95%E0%A4%BE%20%E0%A5%A8%E0%A5%A6%E0%A5%AE%E0%A5%A7%20%E0%A4%95%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%AF%20%E0%A4%B8%E0%A4%9E%E0%A5%8D%E0%A4%9A%E0%A4%BE%E0%A4%B2%E0%A4%A8%20%E0%A4%B0%20%E0%A4%B2%E0%A5%87%E0%A4%96%E0%A4%BE%20%E0%A4%95%E0%A4%95%E0%A5%8D%E0%A4%B7%E0%A4%BE%20%E0%A5%AF_fwmookm.pdf",
+      "note": "Direct government PDF URL identified in public directory audit run 45419593407. Filename suggests Grade 9 Accounting specification grid 2081; content, numerical rows and applicability must be checked before approval. Complete PDF retrieved in run 45420493085; first page rendered, legacy-font numeric rows require visual transcription. Alternate government CDN text confirms 2081 title, 15 topic areas, 96 working hours, 22 answered questions, 75 marks, 180 minutes; numerical cell layout remains unverified. Archived first-page image confirms 11 scored groups for 15 topics, including merged units 2–3, 5–6, 8–9, 12–13. Individual allocations within merged groups are not specified. Numerical question markers preserved. Current applicability and full-document review pending.",
+      "accountingRetrievalEvidence": {
+        "resource": "accounting",
+        "sha256": "3a7095350890338c4c06a7a374b972d724bed0ab3800c830649d1a3bb303c9f4",
+        "byteCount": 284414,
+        "pages": 5,
+        "runId": 45420493085,
+        "firstPageRendered": true,
+        "currentCdcExactApproved": false,
+        "verifiedGridRows": false
+      },
+      "accountingTextReview": {
+        "sourceEdition": 2081,
+        "sourceMethod": "Alternative government CDN PDF extracted text, pages 1–5; screenshots timed out; no byte equivalence claimed",
+        "textSourceUrl": "https://giwmscdntwo.gov.np/media/pdf_upload/%E0%A4%B5%E0%A4%BF%E0%A4%B6%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%B0%E0%A4%A3%20%E0%A4%A4%E0%A4%BE%E0%A4%B2%E0%A4%BF%E0%A4%95%E0%A4%BE%20%E0%A5%A8%E0%A5%A6%E0%A5%AE%E0%A5%A7%20%E0%A4%95%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%AF%20%E0%A4%B8%E0%A4%9E%E0%A5%8D%E0%A4%9A%E0%A4%BE%E0%A4%B2%E0%A4%A8%20%E0%A4%B0%20%E0%A4%B2%E0%A5%87%E0%A4%96%E0%A4%BE%20%E0%A4%95%E0%A4%95%E0%A5%8D%E0%A4%B7%E0%A4%BE%20%E0%A5%AF_fwmookm.pdf",
+        "grade": 9,
+        "fullMarks": 75,
+        "durationMinutes": 180,
+        "workingHours": 96,
+        "units": [
+          [
+            "कार्यालय र कर्मचारी",
+            6
+          ],
+          [
+            "कार्यालय सहायक",
+            4
+          ],
+          [
+            "कार्यालय स्रोत तथा साधन",
+            5
+          ],
+          [
+            "पत्र व्यवहार",
+            8
+          ],
+          [
+            "अभिलेख व्यवस्थापन",
+            3
+          ],
+          [
+            "सञ्चार र सूचना प्रविधि",
+            6
+          ],
+          [
+            "व्यवसाय",
+            14
+          ],
+          [
+            "सभा र बैठक",
+            4
+          ],
+          [
+            "लेखाविधि",
+            5
+          ],
+          [
+            "आधारभूत लेखा प्रणाली",
+            8
+          ],
+          [
+            "भौचर",
+            6
+          ],
+          [
+            "खाताबही",
+            5
+          ],
+          [
+            "सहायक पुस्तिका",
+            9
+          ],
+          [
+            "सन्तुलन परीक्षण",
+            6
+          ],
+          [
+            "सरकारी लेखा प्रणाली",
+            7
+          ]
+        ],
+        "types": [
+          "Very short",
+          "Short",
+          "Long"
+        ],
+        "questionCounts": [
+          11,
+          8,
+          3
+        ],
+        "marksEach": [
+          1,
+          5,
+          8
+        ],
+        "modelAlternativeQuestionNumbers": [
+          17,
+          19,
+          22
+        ],
+        "maxShortAlternatives": 2,
+        "maxLongAlternatives": 1,
+        "knowledgeMaxPercent": 20,
+        "higherAbilityMinPercent": 20,
+        "longAlternativeSameNature": true,
+        "completeUnitMatrixVerified": false,
+        "visualCellReviewComplete": false,
+        "currentCdcExactApproved": false,
+        "officialExamApproved": false
+      },
+      "accountingVisualReview": {
+        "sourceEdition": 2081,
+        "sha256": "3a7095350890338c4c06a7a374b972d724bed0ab3800c830649d1a3bb303c9f4",
+        "runId": 45420493085,
+        "artifactId": 14934002500,
+        "artifactPath": "accounting-extracted/3a7095350890338c/grid-1.png",
+        "pageNumber": 1,
+        "unitGroups": [
+          [
+            1
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            4
+          ],
+          [
+            5,
+            6
+          ],
+          [
+            7
+          ],
+          [
+            8,
+            9
+          ],
+          [
+            10
+          ],
+          [
+            11
+          ],
+          [
+            12,
+            13
+          ],
+          [
+            14
+          ],
+          [
+            15
+          ]
+        ],
+        "groupLevelTypeCounts": [
+          [
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "groupMarks": [
+          6,
+          7,
+          8,
+          6,
+          10,
+          6,
+          6,
+          8,
+          7,
+          5,
+          6
+        ],
+        "levelTypeCounts": [
+          4,
+          2,
+          0,
+          5,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1
+        ],
+        "starredNumericalQuestions": [
+          {
+            "units": [
+              11
+            ],
+            "level": "A",
+            "type": "Long"
+          },
+          {
+            "units": [
+              12,
+              13
+            ],
+            "level": "A",
+            "type": "Short"
+          },
+          {
+            "units": [
+              14
+            ],
+            "level": "A",
+            "type": "Short"
+          }
+        ],
+        "completeMergedGroupMatrixVerified": true,
+        "individualMergedUnitAllocationKnown": false,
+        "fullDocumentVisualReviewComplete": false,
+        "officialExamApproved": false,
+        "currentCdcExactApproved": false
+      }
+    },
+    {
+      "grades": [
+        9,
+        10
+      ],
+      "subject": "स्वास्थ्य तथा शारीरिक शिक्षा",
+      "kind": "curriculum",
+      "version": "2082",
+      "status": "official_CDC_curriculum_assessment_pages_visually_checked_not_specification_grid",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/HPE%20grade%209-10-G._af0az3b.pdf",
+      "note": "Official curriculum, printed pp.20–21 visually checked; unit hours extracted from curriculum table. External assessment 50% with 80% health and 20% physical education. Separate specification Grid required; no question-type or unit marks inferred.",
+      "healthCurriculumReview": {
+        "sourceYear": 2082,
+        "checkedOn": "2026-11-25",
+        "visualPrintedPages": [
+          20,
+          21
+        ],
+        "creditHours": 4,
+        "annualHours": 128,
+        "units": [
+          [
+            "Human body and self-adjustment",
+            "मानव शरीर तथा स्वसमायोजन",
+            8,
+            4
+          ],
+          [
+            "Healthy lifestyle",
+            "स्वस्थ जीवनशैली",
+            8,
+            4
+          ],
+          [
+            "Nutrition and food safety",
+            "पोषण व्यवहार र खाद्य सुरक्षा",
+            6,
+            4
+          ],
+          [
+            "Health literacy and diseases",
+            "स्वास्थ्य साक्षरता र रोगहरू",
+            10,
+            4
+          ],
+          [
+            "Environmental and community health",
+            "पर्यावरणीय तथा सामुदायिक स्वास्थ्य",
+            10,
+            4
+          ],
+          [
+            "Sexual and reproductive health",
+            "यौनिक तथा प्रजनन स्वास्थ्य",
+            10,
+            4
+          ],
+          [
+            "Sports science",
+            "खेल विज्ञान",
+            12,
+            0
+          ],
+          [
+            "Athletics",
+            "एथलेटिक्स",
+            0,
+            14
+          ],
+          [
+            "Games",
+            "खेलहरू",
+            0,
+            26
+          ]
+        ],
+        "internalMarks": 50,
+        "externalMarks": 50,
+        "externalAreas": [
+          [
+            "Health education",
+            80,
+            40
+          ],
+          [
+            "Physical education",
+            20,
+            10
+          ]
+        ],
+        "internalComponents": [
+          [
+            "Attendance, classwork and homework",
+            10
+          ],
+          [
+            "Health education project and practical work",
+            15
+          ],
+          [
+            "Physical education sports and practical work",
+            25
+          ]
+        ],
+        "practicalRubric": [
+          [
+            "Health education performance",
+            12
+          ],
+          [
+            "Health education records",
+            3
+          ],
+          [
+            "Physical education performance",
+            22
+          ],
+          [
+            "Physical education records",
+            3
+          ]
+        ],
+        "assessmentCategories": [
+          "Knowledge and understanding",
+          "Application",
+          "Higher ability"
+        ],
+        "cumulativeCoverage": true,
+        "unitMarksVerified": false,
+        "questionTypeCountsVerified": false,
+        "officialExamApproved": false,
+        "currentCdcExactApproved": false
+      }
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक वातावरण विज्ञान",
+      "kind": "CDC_textbook",
+      "version": "Government English textbook; edition not independently confirmed",
+      "status": "official_government_pdf_contents_visual_and_selected_topic_text_checked",
+      "url": "https://giwmscdnone.gov.np/media/pdf_upload/Opt%20Env%20Sc%20Grade%209_r9nzny9.pdf",
+      "note": "Contents PDF page 7 visually checked; chapter 3 printed p.32 and chapter 6 printed p.131 address alternative/renewable energy. Textbook scope only, not examination marks."
     }
   ],
   "completion": {
     "sourceRegister": "created",
-    "gradeWiseTopicExtraction": "pending_for_grades_6_7_9_science_and_other_subjects; grade_8_and_10_science_seeded",
+    "gradeWiseTopicExtraction": "Grade 9 reference topic banks prepared for all eight V46 default subjects; Grades 6 and 7 and remaining official current Grid verification pending; Grade 8 and 10 science seeded",
     "specificationGridExtraction": "partial_official_sources_verified",
-    "questionBankCuration": "grade_8_science_55; grade_10_science_57_original_practice_questions_teacher_review_required; grade_9_science_pack_blocked_source_mismatch; other_subjects_pending",
+    "questionBankCuration": "Grade 9 eight-subject review drafts prepared: 16 distinct papers with separate answer keys; all require teacher review; Grade 8 science 55 and Grade 10 science 57 original practice items",
     "answerKeyValidation": "pending",
     "teacherReview": "required",
     "grade8SciencePracticePack": "seed-file-created-admin-import-available-teacher-review-required",
-    "scienceSourceDiscovery": "CDC textbook and teacher-guide sources identified for Grades 6–10; Grade 8 and Grade 10 textbook unit lists seeded; Grade 6, 7 and 9 topic extraction and subject-specific grid parsing remain pending",
-    "grade9SciencePracticePack": "blocked-not-importable-source-mismatch-found-draft-deleted-do-not-use",
+    "scienceSourceDiscovery": "Grade 9 correct textbook 19 units and 80 bilingual school-reference variants prepared; historical government RS11167 aggregate marks and cognitive counts matched; current approved Grid applicability pending. Grades 6 and 7 topic extraction pending.",
+    "grade9SciencePracticePack": "blocked-not-importable: obsolete misidentified textbook import remains disabled; separate correct-textbook reference bank has 80 bilingual original variants, 40 questions per 75-mark review draft; official 2083 exam approval remains blocked",
     "otherGradeSubjectPacks": "pending",
     "officialBlueprintCoverage": "partial-only-verified-subject-grade-grid-can-be-set-by-admin",
     "grade10SciencePracticePack": "seed-file-created-admin-import-available-2080-textbook-reference-check-2082-modified-book-and-grid",
-    "sourceCorrection": "The 19-unit 2080 textbook contents PDF at 1692097269.pdf is explicitly Grade 10. A draft previously labelled Grade 9 was blocked and deleted; Grade 9 topics must be re-extracted from the actual Grade 9 textbook and grid."
+    "sourceCorrection": "A Grade 10 textbook PDF (1692097269.pdf) was wrongly tagged as Grade 9 in an old source-register entry. Removed the Grade 9 entry; keep actual Grade 9 packs blocked until original Grade 9 textbook and grid are checked.",
+    "verifiedOptionalComputerGrid": "Official Grade 9/10 Computer Science grid PDFs transcribed unit/type/marks/cognitive levels for 50-mark paper; development only, source checked, teacher answer review required; other subjects not configured.",
+    "optionalMath2082": "Official Grade 9/10 Optional Math area and WCA/CCA grouped allocations bundled; Grade 9 72-cell structural checks and two composite teacher-review drafts pass; teacher review and live approval pending",
+    "grade10OptionalMathModel2083": "Grade10 CDC 2083 publication confirmed. Secondary-hosted model PDF table compared against 2082 original government grid: all group counts, group marks, 6 area marks, cognitive percentage identical; original CDC 2083 PDF download not yet independently accessed. Printer follows CDC Q1(A-K), Q2-13, Q14-17.",
+    "grade8ScienceModelArchive2078": "Model 2078 four-group format 50/30 documented from CDC catalog, municipality archive text and independent synopsis; 11 unit weights staged for comparative audit. Municipality archive text contains Grid 40 vs Model 50 inconsistency; direct 2082 CDC primary PDF not visually available. Grade8 existing 55-item bank has 22 1-mark MCQs, 22 5-mark short and 11 10-mark long (missing 8×1 very short, 8×2 short, 4×4 long). CDC Exact remains blocked pending reconciliation, teacher review and bank expansion.",
+    "grade9AllSubjects": "Eight-subject V46 default audit: five compulsory subjects, Optional Mathematics, Computer Science and Environmental Science. All eight have two distinct review sets. Computer and Optional Mathematics bundled structural grids match; six reference subjects remain unapproved for official exams. All require actual teacher review and final release verification. Other electives require separate verification.",
+    "grade9ScienceArchivedGrid": "RS11167 government PDF extracted, historical 2078 75 marks, 40 items, 19 units and cognitive marks 12/22/22/19 match numerical review tests; present applicability and revised textbook alignment pending."
   },
   "practicePacks": [
     {
@@ -428,6 +3412,316 @@
       "units": 19,
       "questions": 57,
       "sourceStatus": "CDC Grade 10 textbook contents (2080); original SMSS practice questions; check current 2082 textbook and grid"
+    }
+  ],
+  "independentReferences": [
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "secondary_practice_model_reference",
+      "version": "2026 practice based on 2078 Grid",
+      "status": "secondary_reference_conflicting_unit_cognitive_rows_not_approved",
+      "url": "https://science-playground.com/learn/grade-9-science-ne/papers",
+      "note": "Three practice papers. Group count/marks agree with historical CDC: 10x1, 9x1, 14x2, 7x4. Unit marks agree with existing BESS reference, but several printed unit cognitive totals disagree with their unit marks (e.g. units 5, 6, 7, 8, 14, 15, 18, 19); not an official current grid.",
+      "officialGrid": false
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "secondary_practice_model_reference",
+      "version": "2026 practice based on 2078 Grid",
+      "status": "secondary_reference_historical_not_approved",
+      "url": "https://science-playground.com/learn/grade-9-social/papers",
+      "note": "Three original practice papers; published pattern 11x1, 9x4, 4x7, 75 marks, 180 min. Historical 2078 basis explicitly stated; compare against revised 2082 curriculum and grid before approval.",
+      "officialGrid": false
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक गणित",
+      "kind": "school_annual_exam_reference",
+      "version": "2082",
+      "status": "municipal_exam_scan_first_page_visual_checked_not_official_grid",
+      "url": "https://www.bidhyamandir.com/wp-content/uploads/2026/03/Class-9-Opt.-Maths-2082-Kathmandu.pdf",
+      "note": "Kathmandu Metropolitan City annual examination scan: Grade 9, 75 marks, 180 minutes, first numbered question contains 11 objective parts; later group allocation and cognitive labels not independently certified.",
+      "officialGrid": false
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य नेपाली",
+      "kind": "school_exam_collection_index",
+      "version": "2082 annual and 2083 terminal",
+      "status": "third_party_collection_index_only_not_grid",
+      "url": "https://www.chautaritimes.com/p/class-9-grade-9-grade-ix-exam-question.html",
+      "note": "ISAN annual 2082 and ISAN/PABSON terminal 2083 papers listed. The collection is a discovery reference, not verification of individual marks or an official CDC grid.",
+      "officialGrid": false
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य अङ्ग्रेजी",
+      "kind": "school_exam_collection_index",
+      "version": "2082 annual and 2083 terminal",
+      "status": "third_party_collection_index_only_not_grid",
+      "url": "https://www.chautaritimes.com/p/class-9-grade-9-grade-ix-exam-question.html",
+      "note": "ISAN annual 2082 and ISAN/PABSON terminal 2083 papers listed. The collection is a discovery reference, not verification of individual marks or an official CDC grid.",
+      "officialGrid": false
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "school_exam_collection_index",
+      "version": "2082 annual and 2083 terminal",
+      "status": "third_party_collection_index_only_not_grid",
+      "url": "https://www.chautaritimes.com/p/class-9-grade-9-grade-ix-exam-question.html",
+      "note": "ISAN annual 2082 and ISAN/PABSON terminal 2083 papers listed. The collection is a discovery reference, not verification of individual marks or an official CDC grid.",
+      "officialGrid": false
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "school_exam_collection_index",
+      "version": "2082 annual and 2083 terminal",
+      "status": "third_party_collection_index_only_not_grid",
+      "url": "https://www.chautaritimes.com/p/class-9-grade-9-grade-ix-exam-question.html",
+      "note": "ISAN annual 2082 and ISAN/PABSON terminal 2083 papers listed. The collection is a discovery reference, not verification of individual marks or an official CDC grid.",
+      "officialGrid": false
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य गणित",
+      "kind": "school_exam_collection_index",
+      "version": "2082 annual and 2083 terminal",
+      "status": "third_party_collection_index_only_not_grid",
+      "url": "https://www.chautaritimes.com/p/class-9-grade-9-grade-ix-exam-question.html",
+      "note": "ISAN annual 2082 and ISAN/PABSON terminal 2083 papers listed. The collection is a discovery reference, not verification of individual marks or an official CDC grid.",
+      "officialGrid": false
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक गणित",
+      "kind": "school_exam_collection_index",
+      "version": "2082 annual and 2083 terminal",
+      "status": "third_party_collection_index_only_not_grid",
+      "url": "https://www.chautaritimes.com/p/class-9-grade-9-grade-ix-exam-question.html",
+      "note": "ISAN annual 2082 and ISAN/PABSON terminal 2083 papers listed. The collection is a discovery reference, not verification of individual marks or an official CDC grid.",
+      "officialGrid": false
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "कार्यालय सञ्चालन तथा लेखा",
+      "kind": "school_exam_collection_index",
+      "version": "2082 annual and 2083 terminal",
+      "status": "third_party_collection_index_only_not_grid",
+      "url": "https://www.chautaritimes.com/p/class-9-grade-9-grade-ix-exam-question.html",
+      "note": "ISAN annual 2082 and ISAN/PABSON terminal 2083 papers listed. The collection is a discovery reference, not verification of individual marks or an official CDC grid.",
+      "officialGrid": false
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक कम्प्युटर विज्ञान",
+      "kind": "school_exam_collection_index",
+      "version": "2082 annual and 2083 terminal",
+      "status": "third_party_collection_index_only_not_grid",
+      "url": "https://www.chautaritimes.com/p/class-9-grade-9-grade-ix-exam-question.html",
+      "note": "ISAN annual 2082 and ISAN/PABSON terminal 2083 papers listed. The collection is a discovery reference, not verification of individual marks or an official CDC grid.",
+      "officialGrid": false
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य गणित",
+      "kind": "secondary_model_comparison",
+      "version": "2078 original chart, mirror uploaded 2026",
+      "status": "printed_model_74_marks_vs_75_grid_not_approved",
+      "url": "https://dblimbu.com.np/site-assets/uploads/2026/09/Specification-Grid-Mathematics-9.pdf",
+      "officialGrid": false,
+      "note": "Visual chart and arithmetic question pages inspected; 16 groups and 49 subitems, but printed marks sum to 74. Arithmetic 12 vs 13; Algebra K/U difference. Do not infer 2083 applicability or copy printed error."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक कम्प्युटर विज्ञान",
+      "kind": "school_cdc_grid_catalog",
+      "version": "version not independently checked",
+      "status": "school_catalog_row_verified_attachment_not_accessed",
+      "url": "https://www.khadgakali.edu.np/2025/02/specification-grid.html",
+      "catalogRow": 24,
+      "officialGrid": false,
+      "note": "User-provided Khadgakali Secondary School CDC grid index, row 24. Page content verified 2026-11-24; school reports links updated 2026-07-20. Individual download buttons were not exposed by web extraction. Do not infer exact grid rows or approval from index."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक अर्थशास्त्र",
+      "kind": "school_cdc_grid_catalog",
+      "version": "2082",
+      "status": "school_catalog_row_verified_attachment_not_accessed",
+      "url": "https://www.khadgakali.edu.np/2025/02/specification-grid.html",
+      "catalogRow": 25,
+      "officialGrid": false,
+      "note": "User-provided Khadgakali Secondary School CDC grid index, row 25. Page content verified 2026-11-24; school reports links updated 2026-07-20. Individual download buttons were not exposed by web extraction. Do not infer exact grid rows or approval from index."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "विज्ञान तथा प्रविधि",
+      "kind": "school_cdc_grid_catalog",
+      "version": "version not independently checked",
+      "status": "school_catalog_row_verified_attachment_not_accessed",
+      "url": "https://www.khadgakali.edu.np/2025/02/specification-grid.html",
+      "catalogRow": 26,
+      "officialGrid": false,
+      "note": "User-provided Khadgakali Secondary School CDC grid index, row 26. Page content verified 2026-11-24; school reports links updated 2026-07-20. Individual download buttons were not exposed by web extraction. Do not infer exact grid rows or approval from index."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "सामाजिक अध्ययन",
+      "kind": "school_cdc_grid_catalog",
+      "version": "version not independently checked",
+      "status": "school_catalog_row_verified_attachment_not_accessed",
+      "url": "https://www.khadgakali.edu.np/2025/02/specification-grid.html",
+      "catalogRow": 27,
+      "officialGrid": false,
+      "note": "User-provided Khadgakali Secondary School CDC grid index, row 27. Page content verified 2026-11-24; school reports links updated 2026-07-20. Individual download buttons were not exposed by web extraction. Do not infer exact grid rows or approval from index."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "कार्यालय सञ्चालन तथा लेखा",
+      "kind": "school_cdc_grid_catalog",
+      "version": "2081",
+      "status": "school_catalog_row_verified_attachment_not_accessed",
+      "url": "https://www.khadgakali.edu.np/2025/02/specification-grid.html",
+      "catalogRow": 28,
+      "officialGrid": false,
+      "note": "User-provided Khadgakali Secondary School CDC grid index, row 28. Page content verified 2026-11-24; school reports links updated 2026-07-20. Individual download buttons were not exposed by web extraction. Do not infer exact grid rows or approval from index."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक गणित",
+      "kind": "school_cdc_grid_catalog",
+      "version": "version not independently checked",
+      "status": "school_catalog_row_verified_attachment_not_accessed",
+      "url": "https://www.khadgakali.edu.np/2025/02/specification-grid.html",
+      "catalogRow": 29,
+      "officialGrid": false,
+      "note": "User-provided Khadgakali Secondary School CDC grid index, row 29. Page content verified 2026-11-24; school reports links updated 2026-07-20. Individual download buttons were not exposed by web extraction. Do not infer exact grid rows or approval from index."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य नेपाली",
+      "kind": "school_cdc_grid_catalog",
+      "version": "version not independently checked",
+      "status": "school_catalog_row_verified_attachment_not_accessed",
+      "url": "https://www.khadgakali.edu.np/2025/02/specification-grid.html",
+      "catalogRow": 30,
+      "officialGrid": false,
+      "note": "User-provided Khadgakali Secondary School CDC grid index, row 30. Page content verified 2026-11-24; school reports links updated 2026-07-20. Individual download buttons were not exposed by web extraction. Do not infer exact grid rows or approval from index."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य गणित",
+      "kind": "school_cdc_grid_catalog",
+      "version": "version not independently checked",
+      "status": "school_catalog_row_verified_attachment_not_accessed",
+      "url": "https://www.khadgakali.edu.np/2025/02/specification-grid.html",
+      "catalogRow": 31,
+      "officialGrid": false,
+      "note": "User-provided Khadgakali Secondary School CDC grid index, row 31. Page content verified 2026-11-24; school reports links updated 2026-07-20. Individual download buttons were not exposed by web extraction. Do not infer exact grid rows or approval from index."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "अनिवार्य अङ्ग्रेजी",
+      "kind": "school_cdc_grid_catalog",
+      "version": "version not independently checked",
+      "status": "school_catalog_row_verified_attachment_not_accessed",
+      "url": "https://www.khadgakali.edu.np/2025/02/specification-grid.html",
+      "catalogRow": 32,
+      "officialGrid": false,
+      "note": "User-provided Khadgakali Secondary School CDC grid index, row 32. Page content verified 2026-11-24; school reports links updated 2026-07-20. Individual download buttons were not exposed by web extraction. Do not infer exact grid rows or approval from index."
+    },
+    {
+      "grades": [
+        9
+      ],
+      "subject": "ऐच्छिक गणित",
+      "kind": "school_cdc_grid_catalog",
+      "version": "version not independently checked",
+      "status": "school_catalog_row_verified_attachment_not_accessed",
+      "url": "https://www.khadgakali.edu.np/2025/02/specification-grid.html",
+      "catalogRow": 33,
+      "officialGrid": false,
+      "note": "User-provided Khadgakali Secondary School CDC grid index, row 33. Page content verified 2026-11-24; school reports links updated 2026-07-20. Individual download buttons were not exposed by web extraction. Do not infer exact grid rows or approval from index."
+    },
+    {
+      "grades": [
+        10
+      ],
+      "subject": "ऐच्छिक वातावरण विज्ञान",
+      "kind": "historical_CDC_SEE_grid_school_mirror",
+      "version": "2076 first edition",
+      "status": "historical_SEE_aggregate_text_checked_visual_fetch_forbidden_not_grade9_approval",
+      "url": "https://veda-app.s3.ap-south-1.amazonaws.com/assets/142/downloads/2023-05-22/XMykfhgIsH60lcrs-1684763382.pdf",
+      "note": "CDC-authored optional-subject collection, printed pp.69–70. Text extraction confirms 75 marks, 135 minutes, 11 very short x1, 8 short x5, 3 long x8. Model explicitly describes secondary education examination (SEE), not current Grade 9. Historical alternatives: environmental pollution long answer; environmental/public health and ecology short answers. Grade 9 school 2083 syllabus corroborates aggregate pattern only; its ten-unit outline differs from current nine-unit CDC Grade 9 textbook. Do not transfer old unit/cognitive allocation or alternatives without current Grade 9 evidence. Visual PDF fetch returned 403.",
+      "officialGrid": false,
+      "referenceCrosscheck": {
+        "grade9AggregateOnly": true,
+        "currentGrade9Approved": false,
+        "visualReviewComplete": false,
+        "fullMarks": 75,
+        "durationMinutes": 135,
+        "questionCounts": [
+          11,
+          8,
+          3
+        ],
+        "marksEach": [
+          1,
+          5,
+          8
+        ],
+        "sectionMarks": [
+          11,
+          40,
+          24
+        ]
+      }
     }
   ]
 }

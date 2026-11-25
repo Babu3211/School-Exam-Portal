@@ -1,0 +1,39 @@
+name: V46 Local Backup Synthetic Test (never production)
+on:
+  push:
+    branches:
+      - feat/v46-question-autogen-grid-safe-2083
+    paths:
+      - 'scripts/v46-local-firestore-backup.py'
+      - 'scripts/test-v46-backup-restore-emulator.py'
+      - '.github/workflows/v46-local-backup-test.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install cryptography
+      - run: python scripts/v46-local-firestore-backup.py --self-test
+      - name: Refuse real backup in CI
+        run: |
+          if python scripts/v46-local-firestore-backup.py --output /tmp/forbidden.enc --confirm READ-ONLY-V46-BACKUP; then exit 1; fi
+          test ! -e /tmp/forbidden.enc
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm install --no-package-lock --no-audit --no-fund
+      - name: Rehearse synthetic encrypted data restoration into local emulator
+        run: npx firebase emulators:exec --only firestore --project demo-smss-v46-backup-test 'python scripts/test-v46-backup-restore-emulator.py'
