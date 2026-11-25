@@ -1,3 +1,4 @@
+import {assertGrade9CurriculumPractice} from './grade9-curriculum-practice.mjs';
 import {assertComputerPracticeGrid} from './computer-grid-practice.mjs';
 // V47 isolated, read-only CDC source and SMSS practice-paper preview.
 // V46 source metadata / original practice questions reused; no Firebase writes,
@@ -97,7 +98,7 @@ export function printReadOnlyPracticePaper({paper,showAnswers=false}){
  if(!paper||paper.approved!==false||paper.official!==false||
     paper.teacherReviewRequired!==true||paper.writeAuthorized!==false||
     !Array.isArray(paper.questions)||!paper.questions.length||
-    !(PRACTICE_GRADES.includes(paper.grade)&&officialUrl(paper.sourceUrl)||paper.grade===9&&assertComputerPracticeGrid(paper))||
+    !(PRACTICE_GRADES.includes(paper.grade)&&officialUrl(paper.sourceUrl)||paper.grade===9&&(paper.questionFormat==='grade9_curriculum_practice'?assertGrade9CurriculumPractice(paper):assertComputerPracticeGrid(paper)))||
     typeof showAnswers!=='boolean')
   throw Error('Verified read-only practice paper required');
  let marks=0;
