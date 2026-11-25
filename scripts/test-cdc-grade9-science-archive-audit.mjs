@@ -23,6 +23,8 @@ for(const subject of ['Science and Technology','विज्ञान तथा 
  assert.deepEqual(audit.oldGroupedMarks,[10,19,26,20]);
  assert.equal(audit.publicationFound,true);
  assert.equal(audit.publicationDateBS,'2082-05-08');
+ assert.equal(audit.ministryRevisionReported,true);
+ assert.equal(audit.revisionEffectiveYearBS,2082);
  assert.equal(audit.separateRevisedGridConfirmed,false);
  assert.equal(audit.full2082GridInspected,false);
  assert.equal(audit.currentCdcExactApproved,false);

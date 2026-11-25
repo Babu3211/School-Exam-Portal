@@ -250,3 +250,11 @@ for(const id of ['11167','11170']){
  assert.equal(source.retrievalEvidence.currentCdcExactApproved,false);
 }
 console.log('PASS ministry revision notice remains separate from exact Grid approval');
+
+for(const key of ['math','science']){
+ const item=byKey[key];
+ assert.match(item.status,/revision effective 2082/);
+ assert.deepEqual(findTable(key,'Ministry revision notice (not a specification Grid)').rows,[[2082,'Yes','No']]);
+ assert.ok(item.sources.some(s=>s.kind==='revision_notice'&&s.url.includes('Educational%20information%20book')));
+ assert.equal(item.currentCdcExactApproved,false);
+}

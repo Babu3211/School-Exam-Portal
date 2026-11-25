@@ -91,6 +91,12 @@ export function grade9GridLibrary(register){
    fullMarks=75;durationMinutes=135;status='Official curriculum only; Grade 9 exact Grid unavailable';
    add('Curriculum assessment',['Theory','Practical','Written time (min)'],[[75,25,135]]);
   }
+  const revision=entries.find(x=>x.revisionNoticeEvidence?.effectiveSchoolYear===2082)?.revisionNoticeEvidence;
+  if(['science','math'].includes(key)&&revision&&safeUrl(revision.url)&&revision.revisedNumericalGridRetrieved===false){
+   status='Historical 2078 Grid; Ministry reports revision effective 2082; revised table not retrieved';
+   add('Ministry revision notice (not a specification Grid)',['Effective year','Open-ended questions reported','Revised numerical table retrieved'],[[revision.effectiveSchoolYear,revision.openEndedQuestionsReported?'Yes':'Not recorded','No']]);
+   if(!sources.some(x=>x.url===revision.url))sources.push({url:revision.url,kind:'revision_notice',version:'Educational Information 2081',status:'Revision notice only; not numerical Grid approval',note:'Ministry publication reports revision effective school year 2082. Printed page '+revision.printedPage+'. The revised unit and cognitive marks remain unavailable.'});
+  }
   return {key,subject,status,fullMarks,durationMinutes,tables,sources,currentCdcExactApproved:false,readyForLive:false};
  });
 }
@@ -116,7 +122,7 @@ export function renderGrade9GridLibrary(root,register){
   if(!item.tables.length)make('p','No verified numerical table available. Do not infer missing rows.',section);
   for(const src of item.sources){
    const p=make('p',undefined,section);
-   const link=make('a',src.kind==='curriculum'?'CDC curriculum (not Grid)':src.url.toLowerCase().endsWith('.pdf')?'Open original PDF':'Open CDC source',p);
+   const link=make('a',src.kind==='curriculum'?'CDC curriculum (not Grid)':src.kind==='revision_notice'?'Ministry revision notice (not Grid)':src.url.toLowerCase().endsWith('.pdf')?'Open original PDF':'Open CDC source',p);
    link.href=src.url;link.target='_blank';link.rel='noopener noreferrer';
    make('span',' — '+src.version+' · '+src.status,p);
    if(src.note)make('p',src.note,section);

@@ -60,9 +60,9 @@ export function auditGrade9ScienceArchive({grade,subject}={}){
  return Object.freeze({
   grade,subject,archivedModel:data,oldModelMarks:marksByGroup,
   oldCognitiveMarks:levels,oldGroupedMarks:grouped,
-  publicationFound:true,publicationDateBS:'2082-05-08',separateRevisedGridConfirmed:false,full2082GridInspected:false,
+  publicationFound:true,publicationDateBS:'2082-05-08',ministryRevisionReported:true,revisionEffectiveYearBS:2082,separateRevisedGridConfirmed:false,full2082GridInspected:false,
   currentCdcExactApproved:false,currentQuestionBankVerified:false,
   readyForLive:false,teacherReviewRequired:true,
-  note:'2078 CDC government PDF is a historical reference; the 2082 listing date alone does not establish a revised edition or current applicability'
+  note:'2078 CDC government PDF is a historical reference. Ministry Educational Information 2081 reports revision effective 2082, but the revised numerical table has not been retrieved.'
  });
 }
