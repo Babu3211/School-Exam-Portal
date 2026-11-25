@@ -48,7 +48,34 @@ assert.match(grade10Pack.sourceTitle, /Grade 10/, "Grade 10 source title must id
 assert.ok(Array.isArray(register.practicePacks) && register.practicePacks.some(p => p.grade === 10 && p.subject === "विज्ञान तथा प्रविधि"), "Grade 10 science pack must be listed in source register");
 assert.ok(!register.practicePacks.some(p => p.grade === 9 && p.subject === "विज्ञान तथा प्रविधि"), "Grade 9 pack must stay blocked until its source/topic mismatch is resolved");
 assert.match(String(register.completion.grade9SciencePracticePack || ""), /blocked-not-importable/, "Grade 9 pack block must be documented");
+assert.ok(!register.sources.some(s=>s.grades.includes(9) &&
+ s.url==="https://moecdc.gov.np/storage/gallery/1692097269.pdf"),
+ "Grade 10 textbook PDF must never be listed as Grade 9 CDC textbook");
+const grade9Economics=register.sources.find(s=>
+ s.grades.length===1&&s.grades[0]===9&&
+ s.subject==="ऐच्छिक अर्थशास्त्र"&&
+ s.url==="https://moecdc.gov.np/content/452/septemo-schedule-and-sample-questions-2082--class/");
+assert.ok(grade9Economics,"CDC Grade 9 Economics grid source must be tracked");
+assert.match(grade9Economics.status,/grid_content_not_yet_extracted/,
+ "Official source existence is NOT sufficient to mark the Grid as transcribed");
+for (const [grade, url] of [
+  [9, "https://moecdc.gov.np/content/278/specialization-schedule-class-class-9-science-and/"],
+  [10, "https://moecdc.gov.np/content/273/specialization-schedule-class-10-science-and-technology/"]
+]) {
+  const source = register.sources.find(s => s.url === url && s.grades.length === 1 && s.grades[0] === grade);
+  assert.ok(source, `Grade ${grade} official CDC science grid source must be registered`);
+  assert.match(source.status, /grid_content_not_yet_extracted/,
+    `Grade ${grade} must remain unverified until full official Grid transcription`);
+  assert.ok(!source.unitGrid, `Grade ${grade} must not ship speculative question/mark rows`);
+}
 
+
+const archivedGrade8=register.sources.find(s=>s.grades.length===1&&s.grades[0]===8&&
+ s.version.includes('२०७८')&&s.url.includes('id=13717'));
+assert.ok(archivedGrade8,'Historic CDC Grade8 Science Model and marking key must be tracked');
+assert.match(archivedGrade8.status,/requires_visual_and_current_2082_grid_reconciliation/,
+ 'Historical source must not be silently used as 2083 CDC Exact');
+assert.ok(!archivedGrade8.unitGrid,'Historic grid/model discrepancy may not create fabricated rows');
 const questionBuilder = readFileSync(new URL("../cdc-question-paper.js", import.meta.url), "utf8");
 const appShell = readFileSync(new URL("../sw.js", import.meta.url), "utf8");
 const fs = await import("node:fs");
@@ -62,11 +89,59 @@ for (const grade of [8, 10]) {
 
 
 assert.equal(register.schemaVersion, 1, "CDC source register schema");
+for(const grade of [9,10]){
+ const rows=register.sources.filter(s=>s.grades.length===1&&s.grades[0]===grade&&
+ s.subject==='ऐच्छिक कम्प्युटर विज्ञान'&&
+ s.status.includes('unitwise_transcribed'));
+ assert.equal(rows.length,1,'Exactly one CDC government PDF Grid source per Computer Science grade');
+ assert.match(rows[0].url,/^https:\/\/giwmscdnone\.gov\.np\/media\/pdf_upload\//);
+}
+const latestMath=o=>o.sources.find(s=>s.grades.length===1&&s.grades[0]===10&&
+ s.subject==='ऐच्छिक गणित'&&s.version==='2083');
+assert.ok(latestMath(register),'Official CDC 2083 Optional Math model reference required');
+assert.equal(latestMath(register).url,'https://moecdc.gov.np/content/659/class-10th-optional-mathematics-specification-table--model/');
+assert.match(latestMath(register).status,/original_attachment_pending/,
+ 'Secondary PDF replica must not be misrepresented as an independently authenticated original');
+assert.match(questionBuilder, /id="qpQuestionExcelTemplateBtn"/);
+assert.match(questionBuilder, /id="qpQuestionExcelFile"/);
+assert.match(questionBuilder, /ExcelJS/);
+assert.match(appShell, /cdc-question-excel\.mjs/);
+assert.match(appShell, /cdc-grid-source-index\.mjs/);
+assert.match(appShell, /cdc-grade9-release-audit\.mjs/);
+assert.match(appShell, /cdc-grade9-science-archive-audit\.mjs/);
+assert.match(appShell, /cdc-grade9-computer-original-practice\.mjs/);
+assert.match(appShell, /cdc-grade8-science-model-audit\.mjs/);
+assert.match(appShell, /cdc-optional-math-composite\.mjs/);
+assert.match(appShell, /cdc-optional-math-original-practice\.mjs/);
+assert.match(appShell, /cdc-optional-math-render\.mjs/);
+assert.match(appShell, /data\/cdc-question-paper-sources-2083\.json/);
 assert.ok(Array.isArray(register.sources) && register.sources.length >= 15, "CDC source register must contain grade-wise sources");
 for (const [index, source] of register.sources.entries()) {
   assert.ok(Array.isArray(source.grades) && source.grades.length, `source ${index + 1}: grade list required`);
   assert.ok(source.grades.every(g => Number(g) >= 6 && Number(g) <= 10), `source ${index + 1}: grade outside 6-10`);
-  assert.match(source.url, /^https:\/\/((www|lib)\.)?moecdc\.gov\.np\//i, `source ${index + 1}: non-CDC URL`);
+  // Accept the specific secondary government CDN only for a textbook reference.
+  // It does not add a source to the official specification-grid allowlist.
+  if (source.kind === "CDC_textbook" && source.url === "https://giwmscdntwo.gov.np/media/pdf_upload/Class%209%20Environment%20science_English%20Version_zgnagog.pdf") {
+    assert.deepEqual(source.grades, [9], "Environment textbook must remain scoped to Grade 9");
+  } else {
+  assert.match(source.url, /^https:\/\/(?:(?:www|lib)\.moecdc\.gov\.np|moecdc\.gov\.np|giwmscdnone\.gov\.np)\//i, `source ${index + 1}: non-CDC URL`);
+  }
   assert.ok(source.status, `source ${index + 1}: status required`);
 }
 console.log("Question paper content checks passed:", { packs: summaries, CDCSourceRecords: register.sources.length });
+
+// Independent model references are provenance only, never part of the official CDC source array.
+assert.ok(Array.isArray(register.independentReferences)&&register.independentReferences.length>=12);
+for(const entry of register.independentReferences){
+ assert.equal(entry.officialGrid,false);
+ if(entry.kind==='historical_CDC_SEE_grid_school_mirror'){
+  assert.deepEqual(entry.grades,[10]);assert.equal(entry.referenceCrosscheck.currentGrade9Approved,false);assert.equal(entry.referenceCrosscheck.grade9AggregateOnly,true);
+ }else assert.deepEqual(entry.grades,[9]);
+ assert.ok(entry.status&&entry.note);
+ assert.equal(new URL(entry.url).protocol,'https:');
+ assert.ok(!register.sources.some(s=>s.url===entry.url&&s.subject===entry.subject));
+}
+
+const schoolRefs=register.independentReferences.filter(e=>e.kind==='school_cdc_grid_catalog');
+assert.deepEqual(schoolRefs.map(e=>e.catalogRow),[24,25,26,27,28,29,30,31,32,33]);
+assert.ok(schoolRefs.every(e=>e.officialGrid===false&&e.status==='school_catalog_row_verified_attachment_not_accessed'));

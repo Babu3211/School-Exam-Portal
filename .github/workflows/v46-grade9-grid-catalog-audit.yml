@@ -1,0 +1,42 @@
+name: Audit public Grade 9 Grid catalog (no deployment)
+on:
+  push:
+    branches:
+      - feat/v46-question-autogen-grid-safe-2083
+    paths:
+      - 'scripts/audit-grade9-grid-catalog.py'
+      - '.github/workflows/v46-grade9-grid-catalog-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: v46-grade9-grid-catalog-audit
+  cancel-in-progress: true
+jobs:
+  source-audit:
+    if: github.ref == 'refs/heads/feat/v46-question-autogen-grid-safe-2083'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install PDF extraction tools on the ephemeral runner
+        run: |
+          set -euo pipefail
+          if ! command -v pdfinfo || ! command -v pdftotext || ! command -v pdftoppm; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends poppler-utils
+          fi
+          command -v pdfinfo
+          command -v pdftotext
+          command -v pdftoppm
+      - name: Inspect public HTML and read identified Grade 9 government PDFs
+        run: python3 scripts/audit-grade9-grid-catalog.py --output "$RUNNER_TEMP/grade9-grid-catalog/audit.json"
+      - name: Retain source evidence and language Grid page images for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: grade9-public-grid-source-audit
+          path: ${{ runner.temp }}/grade9-grid-catalog/
+          retention-days: 7
+# No Firebase secrets, production reads/writes, or deployment.

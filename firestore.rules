@@ -661,7 +661,7 @@ service cloud.firestore {
         request.resource.data.questionText is string &&
         request.resource.data.questionText.size() > 0 &&
         request.resource.data.questionText.size() <= 3000 &&
-        request.resource.data.questionType in ['mcq', 'short', 'long'] &&
+        request.resource.data.questionType in ['mcq', 'very_short', 'short', 'long'] &&
         request.resource.data.marks is number &&
         request.resource.data.marks >= 1 &&
         request.resource.data.marks <= 100 &&
@@ -672,11 +672,25 @@ service cloud.firestore {
         request.resource.data.topicName.size() > 0 &&
         request.resource.data.options is list &&
         request.resource.data.options.size() <= 4 &&
+        request.resource.data.get('unitCode', '') is string &&
+        request.resource.data.get('unitCode', '').size() <= 80 &&
+        request.resource.data.get('questionTextEn', '') is string &&
+        request.resource.data.get('questionTextEn', '').size() <= 3000 &&
+        request.resource.data.get('answerEn', '') is string &&
+        request.resource.data.get('answerEn', '').size() <= 3000 &&
+        request.resource.data.get('optionsEn', []) is list &&
+        request.resource.data.get('optionsEn', []).size() <= 4 &&
+        request.resource.data.get('sourceTitle', '') is string &&
+        request.resource.data.get('sourceTitle', '').size() <= 500 &&
+        request.resource.data.get('sourceUrl', '') is string &&
+        request.resource.data.get('sourceUrl', '').size() <= 2000 &&
+        request.resource.data.get('sourceStatus', '') in ['', 'imported_question_teacher_review_required'] &&
         request.resource.data.keys().hasOnly([
           'gradeNumber', 'className', 'subject', 'section', 'unitId',
           'unitTitle', 'topicId', 'topicName', 'questionType', 'marks',
           'cognitiveLevel', 'questionText', 'options', 'correctOption',
-          'answer', 'createdBy', 'createdByName', 'createdAt', 'status'
+          'answer', 'createdBy', 'createdByName', 'createdAt', 'status',
+          'unitCode', 'questionTextEn', 'answerEn', 'optionsEn', 'sourceTitle', 'sourceUrl', 'sourceStatus'
         ]);
       allow update: if isAdmin() ||
         (hasActiveRole() &&
@@ -736,12 +750,18 @@ service cloud.firestore {
         request.resource.data.questions.size() <= 80 &&
         request.resource.data.topicIds is list &&
         request.resource.data.topicIds.size() > 0 &&
+        request.resource.data.get('language', '') in ['', 'ne', 'en', 'both'] &&
+        request.resource.data.get('questionFormat', '') in ['', 'cdc_optional_math_composite'] &&
+        request.resource.data.get('sourceUrl', '') is string &&
+        request.resource.data.get('sourceUrl', '').size() <= 2000 &&
+        request.resource.data.get('questionOrigin', '') is string &&
+        request.resource.data.get('questionOrigin', '').size() <= 500 &&
         request.resource.data.keys().hasOnly([
           'schoolName', 'schoolAddress', 'gradeNumber', 'className',
           'subject', 'section', 'paperTitle', 'academicYear',
           'durationMinutes', 'fullMarks', 'curriculumVersion',
           'blueprintId', 'cognitiveDistribution', 'topicIds', 'questions', 'createdBy',
-          'createdAt', 'status'
+          'createdAt', 'status', 'language', 'questionFormat', 'sourceUrl', 'questionOrigin'
         ]);
       allow update: if isAdmin();
       allow delete: if isAdmin() ||
