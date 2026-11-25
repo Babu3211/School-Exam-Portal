@@ -112,6 +112,14 @@ export function grade9GridLibrary(register){
   }else if(key==='optional_environment'){
    fullMarks=75;durationMinutes=135;status='Official curriculum only; Grade 9 exact Grid unavailable';
    add('Curriculum assessment',['Theory','Practical','Written time (min)'],[[75,25,135]]);
+   const school=entries.find(s=>s.schoolSyllabus2080Evidence)?.schoolSyllabus2080Evidence;
+   if(school?.sourceType==='third_party_school_syllabus_text'&&school.officialCdcSource===false&&school.officialExamApproved===false){
+    status='Official curriculum + non-official school pattern; Grade 9 exact Grid unavailable';
+    add('School syllabus 2080: scored questions only (not CDC Grid)',['Type','Count','Marks each','Total'],school.types.map((type,j)=>[type,school.questionCounts[j],school.marksEach[j],school.questionCounts[j]*school.marksEach[j]]));
+    add('School syllabus periods — not marks or textbook chapter mapping',['School unit','Periods'],school.periods.map((n,j)=>[j+1,n]));
+    add('School syllabus alternatives — not implemented in reference drafts',['Type','School unit','Topic'],school.alternativeRules.map(a=>[a.type,a.sourceUnit,a.topic]));
+    add('Unresolved source differences',['Field','Value'],[['School syllabus units',school.sourceUnitCount],['Portal textbook units',school.portalTextbookUnitCount],['Verified unit mapping','No'],['Complete official Grid','No']]);
+   }
   }
   if(key==='science'){
    const school=entries.find(x=>x.schoolScreenshotEvidence)?.schoolScreenshotEvidence;

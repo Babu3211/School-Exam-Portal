@@ -915,7 +915,66 @@
       "version": "2076",
       "status": "official_CDC_curriculum_reference_not_a_grid",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/Secondary%20Curriculum%202076%20Grade%209-10%20%28Optional%20Subject%29_wnaxygu.pdf",
-      "note": "Government optional curriculum 2076, Environment Science section 6: theory 75%, practical 25%, written exam 135 minutes, all units covered. Specific question/mark grid to be published separately. Extracted text reviewed; PDF visual request timed out. Ten curriculum areas must be reconciled with nine textbook chapters, not treated as identical. No exact grid approval."
+      "note": "Government optional curriculum 2076, Environment Science section 6: theory 75%, practical 25%, written exam 135 minutes, all units covered. Specific question/mark grid to be published separately. Extracted text reviewed; PDF visual request timed out. Ten curriculum areas must be reconciled with nine textbook chapters, not treated as identical. No exact grid approval.",
+      "schoolSyllabus2080Evidence": {
+        "url": "https://www.scribd.com/document/1031019175/9-O-I-Env-Sci-Syllabus",
+        "sourceType": "third_party_school_syllabus_text",
+        "yearBS": 2080,
+        "grade": 9,
+        "fullMarks": 75,
+        "durationMinutes": 135,
+        "types": [
+          "Very short",
+          "Short",
+          "Long"
+        ],
+        "questionCounts": [
+          11,
+          8,
+          3
+        ],
+        "marksEach": [
+          1,
+          5,
+          8
+        ],
+        "periods": [
+          6,
+          11,
+          18,
+          18,
+          12,
+          9,
+          14,
+          11,
+          12,
+          17
+        ],
+        "totalPeriods": 128,
+        "alternativeRules": [
+          {
+            "type": "Short",
+            "sourceUnit": 2,
+            "topic": "Ecology / ecosystem"
+          },
+          {
+            "type": "Short",
+            "sourceUnit": 8,
+            "topic": "Environmental / public health"
+          },
+          {
+            "type": "Long",
+            "sourceUnit": 4,
+            "topic": "Pollution"
+          }
+        ],
+        "sourceUnitCount": 10,
+        "portalTextbookUnitCount": 9,
+        "sourceToPortalUnitMappingVerified": false,
+        "completeUnitMatrixVerified": false,
+        "officialCdcSource": false,
+        "officialExamApproved": false
+      }
     },
     {
       "grades": [

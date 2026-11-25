@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v135-accounting-text-review';
+const CACHE_NAME = 'smss-pwa-v136-environment-school-source';
 const APP_SHELL = [
   './',
   './index.html',

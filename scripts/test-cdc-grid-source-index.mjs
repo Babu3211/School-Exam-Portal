@@ -293,3 +293,16 @@ assert.equal(acct.officialExamApproved,false);assert.equal(byKey.accounting.curr
 assert.equal(byKey.accounting.tables.length,4);assert.equal(byKey.accounting.fullMarks,75);assert.equal(byKey.accounting.durationMinutes,180);
 assert.ok(byKey.accounting.sources.some(s=>s.url===acct.textSourceUrl));
 console.log('PASS Accounting 2081 official PDF extracted topic hours, model structure, alternatives and review guards');
+
+const schoolEnv=register.sources.find(s=>s.schoolSyllabus2080Evidence).schoolSyllabus2080Evidence;
+assert.equal(schoolEnv.periods.reduce((n,v)=>n+v,0),128);
+assert.equal(schoolEnv.questionCounts.reduce((n,v)=>n+v,0),22);
+assert.equal(schoolEnv.questionCounts.reduce((n,v,j)=>n+v*schoolEnv.marksEach[j],0),75);
+assert.equal(schoolEnv.alternativeRules.length,3);
+assert.equal(schoolEnv.officialCdcSource,false);
+assert.equal(schoolEnv.officialExamApproved,false);
+assert.equal(schoolEnv.completeUnitMatrixVerified,false);
+assert.equal(schoolEnv.sourceToPortalUnitMappingVerified,false);
+assert.equal(byKey.optional_environment.currentCdcExactApproved,false);
+assert.ok(byKey.optional_environment.tables.some(t=>t.title.includes('not implemented')));
+assert.ok(byKey.optional_environment.sources.every(s=>s.kind==='curriculum'));

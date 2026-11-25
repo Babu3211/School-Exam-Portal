@@ -35,3 +35,24 @@ for(const unit of p.units){
  assert.notEqual(items[0].answer.trim(),items[1].answer.trim());
 }
 console.log('PASS distinct complementary one-mark environment questions in every unit');
+
+const {readFileSync}=await import('node:fs');
+const sourceRegister=JSON.parse(readFileSync(new URL('../data/cdc-question-paper-sources-2083.json',import.meta.url),'utf8'));
+const school=sourceRegister.sources.find(s=>s.schoolSyllabus2080Evidence)?.schoolSyllabus2080Evidence;
+assert.equal(school.officialCdcSource,false);
+assert.equal(school.sourceToPortalUnitMappingVerified,false);
+assert.equal(school.sourceUnitCount,10);
+assert.equal(p.units.length,school.portalTextbookUnitCount);
+for(const seed of [.19,.83]){
+ const result=plan({grade,subject,fullMarks:school.fullMarks,durationMinutes:school.durationMinutes,language:'both',questions:p.questions,selectedTopicIds,rng:()=>seed});
+ assert.equal(result.ready,true,result.reason);
+ const types=['very_short','short','long'];
+ for(const [j,type] of types.entries()){
+  const questions=result.paper.questions.filter(q=>q.questionType===type);
+  assert.equal(questions.length,school.questionCounts[j]);
+  assert.ok(questions.every(q=>q.marks===school.marksEach[j]));
+ }
+ assert.equal(result.currentCdcExactApproved,false);
+ assert.equal(result.readyForLive,false);
+}
+console.log('PASS Environment school syllabus 2080 aggregate corroboration; no claim of unit mapping, alternatives or current CDC approval');
