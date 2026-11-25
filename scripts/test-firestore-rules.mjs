@@ -456,6 +456,10 @@ try {
     where('subject','==',subject),where('academicYear','==','2083'),where('period','==','First Term'));
   const visible=await assertSucceeds(getDocs(cdcQuery('A')));
   if(visible.size!==1) throw Error('Assigned teacher could not retrieve the saved CDC observation');
+  await assertSucceeds(setDoc(cdc('annual'),{...observation,period:'Annual',stage:'regular',evidence:''}));
+  await assertFails(setDoc(cdc('invalid-period'),{...observation,period:'Invalid'}));
+  const annualQuery=query(collection(cdcDb,'cdc_observations'),where('studentId','==','cdc-test-a'),where('className','==','5'),where('section','==','A'),where('subject','==','Mathematics'),where('academicYear','==','2083'));
+  assert.equal((await assertSucceeds(getDocs(annualQuery))).size,2);
   await assertFails(getDocs(cdcQuery('B')));
   await assertFails(getDocs(cdcQuery('A','English')));
   await assertFails(setDoc(cdc('invalid-student-path'),{...observation,studentId:'students/cdc-test-a'}));
@@ -498,6 +502,10 @@ try {
   const seroQuery=query(collection(seroDb,'cdc_serofero_indicators'),
     ...Object.entries({studentId:'sero-test-a',className:'1',subject:seroSubject,section:'A',academicYear:'2083',period:'First Term'}).map(([k,v])=>where(k,'==',v)));
   assert.equal((await assertSucceeds(getDocs(seroQuery))).size,3);
+  await assertSucceeds(setDoc(seroRef('annual'),{...seroData,period:'Annual'}));
+  await assertFails(setDoc(seroRef('invalid-period'),{...seroData,period:'Invalid'}));
+  const seroAnnualQuery=query(collection(seroDb,'cdc_serofero_indicators'),...Object.entries({studentId:'sero-test-a',className:'1',subject:seroSubject,section:'A',academicYear:'2083'}).map(([k,v])=>where(k,'==',v)));
+  assert.equal((await assertSucceeds(getDocs(seroAnnualQuery))).size,4);
   for(const [id,patch] of Object.entries({
     incomplete:{indicators:[true,false,true]}, nonBoolean:{indicators:[true,false,true,1]},
     extra:{indicators:[true,false,true,false,true]}, fakeScore:{level:4},

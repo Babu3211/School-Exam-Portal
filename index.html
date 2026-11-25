@@ -9294,7 +9294,7 @@ function openCdcAssessment(context = null) {
       <label>कक्षा <select data-cdc="class"></select></label>
       <label>विषय <select data-cdc="subject"></select></label>
       <label>विद्यार्थी <select data-cdc="student"></select></label>
-      <label>अवधि <select data-cdc="period"><option>First Term</option><option>Second Term</option><option>Final Term</option></select></label>
+      <label data-cdc="legacyPeriod">अवधि <select data-cdc="period"><option>First Term</option><option>Second Term</option><option>Final Term</option></select></label><label data-cdc="academicSession" hidden>शैक्षिक सत्र <output data-cdc="sessionYear"></output></label>
     </div>
     <label>विषयक्षेत्र / Theme <select data-cdc="themePick"><option value="">छान्नुहोस्</option></select></label>
     <p class="hint">कक्षा, विषय, विद्यार्थी र विषयक्षेत्र छान्नुहोस्। फाराम खुलेपछि अभिलेख पढेर मिति र अङ्कन भर्नुहोस्।</p>
@@ -9352,7 +9352,7 @@ function openCdcAssessment(context = null) {
     </section>
     <p><a data-cdc="guide" target="_blank" rel="noopener">CDC मूल्याङ्कन मार्गदर्शन</a> · <a data-cdc="revisedCurriculumSource" href="https://learning.cehrd.gov.np/mod/resource/view.php?id=1259" target="_blank" rel="noopener" hidden>कक्षा १–३ परिमार्जित पाठ्यक्रम २०८२</a> <a data-cdc="curriculumSource" target="_blank" rel="noopener">एकाइ र सिकाइ उपलब्धिको स्रोत</a></p>
     </details>
-    <details class="cdc-more" data-cdc="extraObservations"><summary>व्यक्तिगत अवलोकन र पुराना अभिलेख</summary>
+    <details class="cdc-more" data-cdc="extraObservations"><summary>व्यक्तिगत अवलोकन र पुराना अभिलेख</summary><details data-cdc="oldDrafts" hidden><summary>पुराना Term का स्थानीय मस्यौदा</summary><p class="hint">यी मस्यौदा यही ब्राउजरमा सुरक्षित छन्। आवश्यक विवरण नयाँ वार्षिक फाराममा मिलाएर भर्नुहोस्। पुराना मस्यौदा स्वतः मेटाइएका वा पुनः सुरक्षित गरिएका छैनन्।</p><div data-cdc="oldDraftRows"></div></details>
     <label>सुरक्षित मूल्याङ्कन <select data-cdc="records"></select></label>
     <p data-cdc="summary" class="hint"></p>
     <details><summary>यस उपलब्धिको विद्यार्थीगत प्रगति</summary>
@@ -9403,6 +9403,17 @@ function openCdcAssessment(context = null) {
   const field = name => dialog.querySelector('[data-cdc="'+name+'"]');
   const owner = auth.currentUser.uid;
   const year = String(currentSchoolSettings.academicYear || '2083');
+  // Standalone primary assessment follows the academic year, not examination terms.
+  if(context){
+    field('legacyPeriod').hidden=true;
+    field('period').replaceChildren(new Option('Annual','Annual'));
+    field('academicSession').hidden=false;field('sessionYear').textContent=year;
+  }
+  // Keep a compatibility field on new records. Annual reads include prior term evidence.
+  const assessmentReadScope=selection=>{
+    const {period,...annual}=selection;
+    return context?annual:selection;
+  };
   const readOnly = isAdmin() || roleHas('viewer') || !roleHas('subject_teacher');
   const options = (name, values) => field(name).replaceChildren(...values.map(([value,label])=>new Option(label,value)));
   const storagePrefix = 'smss-cdc-draft:';
@@ -9527,9 +9538,9 @@ function openCdcAssessment(context = null) {
     field('gridRead').disabled=true;
     field('gridStatus').textContent='सूचक अभिलेख पढ्दै…';
     try{
-      const result=await getDocsFromServer(query(collection(db,'cdc_serofero_indicators'),...Object.entries({...selection,unit}).map(([k,v])=>where(k,'==',v))));
+      const result=await getDocsFromServer(query(collection(db,'cdc_serofero_indicators'),...Object.entries({...assessmentReadScope(selection),unit}).map(([k,v])=>where(k,'==',v))));
       if(!current())return;
-      seroRecords=result.docs.map(d=>d.data()).filter(o=>Object.entries({...selection,unit}).every(([k,v])=>o[k]===v)&&
+      seroRecords=result.docs.map(d=>d.data()).filter(o=>Object.entries({...assessmentReadScope(selection),unit}).every(([k,v])=>o[k]===v)&&
         ['regular','support'].includes(o.stage)&&Array.isArray(o.indicators)&&o.indicators.length===4&&o.indicators.every(v=>typeof v==='boolean')&&typeof o.date==='string')
         .sort((a,b)=>b.date.localeCompare(a.date)||(b.createdAt?.toMillis()??0)-(a.createdAt?.toMillis()??0));
       seroReadKey=scopeKey;renderAnnex();
@@ -9951,6 +9962,7 @@ function openCdcAssessment(context = null) {
     topicAliases = new Map();
     const prefix = storagePrefix + JSON.stringify(scope()).slice(0,-1) + ',';
     const topics = new Map(), sharedTopics = new Map();
+    const oldDraftRows=field('oldDraftRows');oldDraftRows.replaceChildren();field('oldDrafts').hidden=!context;
     const sourceUnit = normalizeTitle(field('unit').value);
     const [uid,academicYear,cl,subject,,period] = scope();
     try {
@@ -9961,6 +9973,9 @@ function openCdcAssessment(context = null) {
         if(!Array.isArray(parts)||![7,8].includes(parts.length)||typeof parts[6]!=='string') continue;
         const record = JSON.parse(localStorage.getItem(stored) || '{}');
         const unit = record.unit || '';
+        if(context&&parts[0]===uid&&parts[1]===academicYear&&parts[2]===cl&&parts[3]===subject&&parts[4]===field('student').value&&['First Term','Second Term','Final Term'].includes(parts[5])){
+          const p=document.createElement('p');p.textContent=[parts[5],unit,parts[6],record.date,record.level,record.method,record.evidence,record.feedback].filter(Boolean).join(' | ');oldDraftRows.append(p);
+        }
         if (stored.startsWith(prefix)) topics.set(JSON.stringify([parts[6],normalizeTitle(unit)]),[parts[6],unit,record.topicAlt || '']);
         if(parts[0]===uid&&parts[1]===academicYear&&parts[2]===cl&&parts[3]===subject&&parts[5]===period) {
           if(normalizeTitle(unit)!==sourceUnit) continue;
@@ -10003,7 +10018,7 @@ function openCdcAssessment(context = null) {
     ]);
     options('records',[['','नयाँ सिकाइ उपलब्धि'],...savedOptions]);
     field('records').value = topics.has(JSON.stringify([titleValue(),sourceUnit])) ? JSON.stringify([titleValue(),sourceUnit]) : '';
-    field('summary').textContent = topics.size ? `यस विद्यार्थी, विषय र अवधिमा ${topics.size} मूल्याङ्कन मस्यौदा छन्।` : 'यस छनोटमा मूल्याङ्कन मस्यौदा छैन।';
+    field('summary').textContent = topics.size ? `यस विद्यार्थी र विषयको छनोटमा ${topics.size} मूल्याङ्कन मस्यौदा छन्।` : 'यस छनोटमा मूल्याङ्कन मस्यौदा छैन।';
   };
   const refreshClassProgress = () => {
     const body=field('progressRows');
@@ -10227,7 +10242,7 @@ function openCdcAssessment(context = null) {
     for(const name of seroForm?['annexStatus']:['annexSign','annexStatus']){
       const p=doc.createElement('p');p.textContent=field(name).textContent;doc.body.append(p);
     }
-    const note=doc.createElement('p');note.className='review';note.textContent=seroForm?'समीक्षा प्रति — सुरक्षित सूचक अभिलेख मात्र। मूल फारामसँग छपाइको अन्तिम प्रमाणीकरण बाँकी। शैक्षिक सत्र: '+year+' | '+({'First Term':'प्रथम त्रैमासिक','Second Term':'द्वितीय त्रैमासिक','Final Term':'वार्षिक'}[field('period').value]||''):'Review copy — CDC layout verification pending. Academic year: '+year+' | '+field('period').value;doc.body.append(note);
+    const note=doc.createElement('p');note.className='review';note.textContent=seroForm?'समीक्षा प्रति — सुरक्षित सूचक अभिलेख मात्र। मूल फारामसँग छपाइको अन्तिम प्रमाणीकरण बाँकी। शैक्षिक सत्र: '+year+' | '+({'First Term':'प्रथम त्रैमासिक','Second Term':'द्वितीय त्रैमासिक','Final Term':'वार्षिक','Annual':'निरन्तर मूल्याङ्कन'}[field('period').value]||''):'Review copy — CDC layout verification pending. Academic year: '+year+' | '+field('period').value;doc.body.append(note);
     return doc;
   };
   field('printForm').onclick=()=>{
@@ -10248,7 +10263,7 @@ function openCdcAssessment(context = null) {
     field('schoolStatus').textContent='विद्यालयको अभिलेख पढ्दै…';
     field('gridStatus').textContent='विद्यालयको अभिलेख पढ्दै…';field('gridRead').disabled=true;
     try {
-      const filters=Object.entries(selection).map(([name,value])=>where(name,'==',value));
+      const filters=Object.entries(assessmentReadScope(selection)).map(([name,value])=>where(name,'==',value));
       const result=await getDocsFromServer(query(collection(db,'cdc_observations'),...filters));
       if(!isLatest()) return;
       const items=result.docs.map(record=>record.data()).sort((a,b)=>
@@ -10394,10 +10409,11 @@ function openCdcAssessment(context = null) {
     const verifiedUnits = units();
     options('themePick',[['','छान्नुहोस्'],...verifiedUnits.map(([ne,en])=>[ne,unitDisplayTitle(localized(ne,en))])]);
     field('themePick').value=field('unit').value;
-    field('themePick').onchange=()=>{
+    field('themePick').onchange=async()=>{
       const pair=units().find(([ne])=>ne===field('themePick').value);
       [field('unit').value,field('unitEn').value]=pair||['',''];
       field('topic').value='';load();
+      if(context&&pair&&!field('annex3').hidden&&!field('gridRead').hidden&&schoolSelection())await field('gridRead').onclick();
     };
     field('unitCoverage').textContent = verifiedUnits.length
       ? `सुझावमा ${verifiedUnits.length} एकाइ छन्। एकाइ छानेपछि सम्बन्धित उपलब्धि हेर्नुहोस्।`
@@ -10527,7 +10543,7 @@ function openCdcAssessment(context = null) {
   field('class').onchange=refreshSubjects;
   field('subject').onchange=refreshStudents;
   field('student').onchange=load;
-  field('period').onchange=resetTopic;
+  field('period').onchange=()=>{if(!context)resetTopic();};
   field('next').onclick=()=>{
     const student=field('student');
     if(student.selectedIndex+1>=student.options.length){field('status').textContent='सूचीको अन्तिम विद्यार्थी।';return;}
