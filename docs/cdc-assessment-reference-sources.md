@@ -66,3 +66,7 @@ The revised 2082 curriculum is scheduled for academic year **2084**, not 2083, p
 | Total | 28 main outcome rows; 36 blocks | 144 | | 24 main outcome rows; 35 blocks | 140 | |
 
 Raw max is the sum of the individual 4-indicator scoring blocks, not the official subject grade. The PDF's theme footer is an average score. The current 2083 UI still has unknown Class 2–3 summary values; integrate this verified catalogue and update the pending-summary regression together, preserving existing Class 1 IDs and historical records. Full wording, tools, print and persistence for the new forms still require implementation and testing. Class 1 mixed-source catalogue must also be reconciled with PDF pages 129–134 (1-based). Keep revised 2084 counts separate.
+
+## 2026-11-25 — Class 2 Our Surroundings structural review completed
+- Original 2076 guide PDF pages 135–141 (1-based): visually compared all ten forms with the working catalogue. Totals: 28 main outcome rows (including the repeated printed 5), 144 indicators, 36 scoring blocks per assessment stage. Indicator ordering, suggested assessment tools and scoring block layout checked. Working wording remains a summary, not an exact transcription; no new entry approvals or rules permissions.
+- Clarified incomplete summaries in the community, school, environment, creative arts and communication themes. The source-review status and regression checks now cover all ten Class 2 themes. Earlier notes about missing Class 2 counts are superseded by the verified guide-count catalogue in the current implementation.
