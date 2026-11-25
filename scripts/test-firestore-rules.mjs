@@ -437,7 +437,8 @@ try {
     period:'First Term',unit:'म र मेरो परिवार',outcomeId:'cdc2076-g1-1',stage:'regular',
     date:'2083-08-07',indicators:[true,false,true,false],createdBy:seroUid,createdAt:serverTimestamp()};
   await assertSucceeds(setDoc(seroRef('regular'),seroData));
-  await assertSucceeds(setDoc(seroRef('support'),{...seroData,stage:'support',indicators:[true,true,true,true]}));
+  await assertSucceeds(setDoc(seroRef('support'),{...seroData,stage:'support',indicators:[true,true,true,true],usedTools:['समूह छलफल','चित्र अभ्यास','','']}));
+  assert.deepEqual((await assertSucceeds(getDoc(seroRef('support')))).data().usedTools,['समूह छलफल','चित्र अभ्यास','','']);
   await assertSucceeds(setDoc(seroRef('zero'),{...seroData,indicators:[false,false,false,false]}));
   await assertSucceeds(getDoc(seroRef('regular')));
   const seroQuery=query(collection(seroDb,'cdc_serofero_indicators'),
@@ -450,6 +451,11 @@ try {
     wrongSubject:{subject:'Mathematics'}, wrongYear:{academicYear:'2084'},
     wrongStage:{stage:'other'}, wrongAuthor:{createdBy:cdcUid}, badId:{outcomeId:'other'},
     badDate:{date:'2083-13-01'},
+    shortMethods:{usedTools:['एक']},
+    longMethods:{usedTools:['एक','','','','']},
+    nonStringMethod:{usedTools:['',1,'','']},
+    oversizedMethod:{usedTools:['x'.repeat(201),'','','']},
+    nonListMethods:{usedTools:'अवलोकन'},
     wrongGradeId:{outcomeId:'cdc2076-g2-1'},
     outOfBounds:{outcomeId:'cdc2076-g1-99'},
     wrongThemeId:{outcomeId:'cdc2076-g1-6'},
@@ -472,6 +478,7 @@ try {
     await assertFails(setDoc(seroRef('unapproved-g'+g),{...seroData,studentId:'sero-g'+g,className:String(g),outcomeId:'cdc2076-g'+g+'-1'}));
   }
   await assertFails(updateDoc(seroRef('regular'),{indicators:[true,true,true,true]}));
+  await assertFails(updateDoc(seroRef('support'),{usedTools:['परिवर्तन','','','']}));
   await assertFails(deleteDoc(seroRef('regular')));
   await assertFails(getDoc(seroRef('regular',cdcDb)));
   const seroViewerDb=testEnv.authenticatedContext(seroViewer).firestore();
