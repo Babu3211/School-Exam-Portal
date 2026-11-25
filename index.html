@@ -8957,6 +8957,19 @@ function cdcSeroGuideEntryForm(grade,unit,year){
   }
   return {page:source.page,start,groups,mainRows,guideEntry:true};
 }
+// User-supplied CDC 2083 guide, Annex 3(f), PDF pages 123–148.
+// Verified each theme's numbered rows against the printed 4 × N denominator.
+const cdcHealthGuideCounts={
+  '4':[5,6,6,10,5,4,10,12,6,7,7,5,3],
+  '5':[5,6,6,10,5,4,10,12,6,7,8,6,3]
+};
+function cdcHealthGuidePage(grade,subject,unit,year){
+  if(String(year)!=='2083'||cdcAssessmentSubjectKey(subject)!=='healthphysicalcreativeart')return null;
+  const counts=cdcHealthGuideCounts[grade];
+  if(!counts)return null;
+  const i=cdcVerifiedUnits(grade,'healthphysicalcreativeart').findIndex(([name])=>name===unit);
+  return i>=0&&i<counts.length?{page:(grade==='4'?123:136)+i,count:counts[i],guide:'45'}:null;
+}
 function cdcThemeMarkRows(grade,subject,year){
   grade=String(grade);
   const key=cdcAssessmentSubjectKey(subject),lower=Number(grade)<=3,revised=Number(year)>=2084;
@@ -9001,7 +9014,8 @@ function cdcThemeMarkRows(grade,subject,year){
     for(const [unit] of catalogue)if(!themes.has(unit))themes.set(unit,key==='english'?unit:'');
     for(const [unit,en] of themes){
       const count=catalogue.filter(([u])=>u===unit).length;
-      add(unit,en,count,count?'mapped':'pending');
+      const healthSource=cdcHealthGuidePage(grade,key,unit,year);
+      add(unit,en,count,healthSource&&count===healthSource.count?'guideMatched':count?'mapped':'pending');
     }
   }
   return rows;
@@ -9249,7 +9263,7 @@ function openCdcAssessment(context = null) {
   const sourcePreview=field('seroSourcePreview'),sourceFrame=field('seroSourceFrame');
   const syncSeroSourcePreview=form=>{
     const page=form&&!form.referenceOnly?form.page:null;
-    const href=page?field('guidePdf13').href.split('#')[0]+'#page='+page:'';
+    const href=page?field(form.guide==='45'?'guidePdf45':'guidePdf13').href.split('#')[0]+'#page='+page:'';
     if(sourcePreview.dataset.sourceUrl!==href){
       sourcePreview.open=false;
       sourceFrame.replaceChildren();
@@ -9273,7 +9287,7 @@ function openCdcAssessment(context = null) {
   const renderAnnex=()=>{
     const panel=field('annex3'),enabled=hasAnnexGrid(),en=language()==='en';
     const nepaliForm=primaryNepaliForm(),seroReference=primarySeroferoReference(),seroGuide=primarySeroGuideReview();
-    syncSeroSourcePreview(seroReference||seroGuide);
+    syncSeroSourcePreview(seroReference||seroGuide||cdcHealthGuidePage(field('class').value,field('subject').value,field('unit').value,year));
     panel.hidden=!enabled&&!nepaliForm&&!seroReference&&!seroGuide;field('stageRow').hidden=!enabled;field('gridRead').hidden=!!nepaliForm&&!nepaliForm.editable;
     field('printForm').disabled=!enabled||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('unit').value.trim();
     field('gridRead').textContent=seroReference?'सूचक अभिलेख पढ्नुहोस् / पुनः पढ्नुहोस्':'Load / Refresh Records';
@@ -10150,15 +10164,13 @@ function openCdcAssessment(context = null) {
     for(const text of [label('क्र.स.','SN'),label('थिम / एकाइ','Theme / Unit'),label('सिकाइ उपलब्धि सङ्ख्या','Number of Learning Achievements'),label('पूर्णाङ्क','Full Marks'),...(key==='serophero'?[label('सूचक सङ्ख्या','Indicators')]:[]),label('स्रोत अवस्था','Source Status')]){
       const th=document.createElement('th');th.textContent=text;header.append(th);
     }
-    const statuses={mapped:label('प्रणालीको स्रोत सूची','Mapped catalogue'),review:label('समीक्षा फाराम','Review form'),curriculum:label('पाठ्यक्रम नमुना — मार्गदर्शन मिलान बाँकी','Curriculum sample — guide comparison pending'),guideCounts:label('मार्गदर्शन २०७६ — गणना पुष्टि, प्रविष्टि बाँकी','2076 guide — counts verified, entry pending'),pending:label('पुष्टि बाँकी','Pending source'),revised:label('परिमार्जित सूची','Revised catalogue')};
+    const statuses={guideMatched:label('मूल मार्गदर्शन — सङ्ख्या मिलेको','Guide — count matched'),mapped:label('प्रणालीको स्रोत सूची','Mapped catalogue'),review:label('समीक्षा फाराम','Review form'),curriculum:label('पाठ्यक्रम नमुना — मार्गदर्शन मिलान बाँकी','Curriculum sample — guide comparison pending'),guideCounts:label('मार्गदर्शन २०७६ — गणना पुष्टि, प्रविष्टि बाँकी','2076 guide — counts verified, entry pending'),pending:label('पुष्टि बाँकी','Pending source'),revised:label('परिमार्जित सूची','Revised catalogue')};
     for(const [i,row] of rows.entries()){
       const tr=body.insertRow();
       const name=ne?row.unit:en?row.en||row.unit:[...new Set([row.unit,row.en].filter(Boolean))].join(' / ');
       for(const value of [digits(i+1),name,row.count===null?'—':digits(row.count),row.fullMark===null?'—':digits(row.fullMark),...(key==='serophero'?[row.indicators===null?'—':digits(row.indicators)]:[]),statuses[row.status]])tr.insertCell().textContent=value;
-      if(key==='serophero'&&Number(year)<2084){
-        const source=cdcSeroferoGuideCounts[grade]?.[row.unit];
-        if(source){const a=document.createElement('a');a.href=field('guidePdf13').href+'#page='+source.page;a.target='_blank';a.rel='noopener noreferrer';a.textContent=' — PDF '+digits(source.page);tr.cells[tr.cells.length-1].append(a);}
-      }
+      const source=key==='serophero'&&Number(year)<2084?cdcSeroferoGuideCounts[grade]?.[row.unit]:cdcHealthGuidePage(grade,key,row.unit,year);
+      if(source){const a=document.createElement('a');a.href=field(source.guide==='45'?'guidePdf45':'guidePdf13').href.split('#')[0]+'#page='+source.page;a.target='_blank';a.rel='noopener noreferrer';a.textContent=' — PDF '+digits(source.page);tr.cells[tr.cells.length-1].append(a);}
     }
     if(!rows.length){const cell=body.insertRow().insertCell();cell.colSpan=header.cells.length;cell.textContent=label('यस विषयको स्रोत सूची तयार छैन।','Source catalogue is not yet available.');}
     const known=rows.filter(row=>row.count!==null),total=known.reduce((sum,row)=>sum+row.count,0);
