@@ -27,7 +27,21 @@ export function inspectReferencePaperAllocation({subject,groups,durationMinutes}
  const marks=groups.map(mark);
  need(marks.every(m=>Number.isFinite(m)&&m>0)&&sum(marks)===75,'full marks');
  need(durationMinutes===(key==='optional_environment'?135:180),'duration');
- const checks=['Full marks','Main question count','Duration'],unresolved=[];
+ // Count only scored alternatives; do not double-count offered choices.
+ const positive=m=>Number.isFinite(m)&&m>0;
+ for(const g of groups){
+  const parts=g.subquestions||g.items||[];
+  if(parts.length)need(parts.every(x=>positive(x.marks))&&sum(parts.map(x=>x.marks))===mark(g),'subquestion marks');
+  if(Array.isArray(g.choices)){
+   need(Number.isSafeInteger(g.answerCount)&&g.answerCount>0&&g.answerCount<=g.choices.length,'choice count');
+   for(const c of g.choices){
+    need(positive(c.marks)&&c.marks*g.answerCount===mark(g),'scored choice marks');
+    if(c.components?.length)need(c.components.every(x=>positive(x.marks))&&sum(c.components.map(x=>x.marks))===c.marks,'choice component marks');
+   }
+  }
+  if(Array.isArray(g.mapChoices))need(g.mapChoices.length===2&&g.mapChoices.every(c=>c.outlineMarks+c.labelMarks===mark(g)),'map alternative marks');
+ }
+ const checks=['Full marks','Main question count','Duration','Scored subparts and alternatives'],unresolved=[];
  const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
  const counts=(types)=>types.map(t=>groups.filter(g=>g.questionType===t).length);
  if(key==='english'){
@@ -45,7 +59,13 @@ export function inspectReferencePaperAllocation({subject,groups,durationMinutes}
  }else if(key==='math'){
   const area=[6,13,13,15,13,11,4],actual=area.map((_,i)=>sum(groups.filter(g=>String(g.unitCode)===String(i+1)).map(mark)));
   need(same(area,actual)&&sum(groups.map(g=>g.subquestions.length))===49,'Compulsory math archived area marks and subparts');
-  checks.push('Seven area marks','49 subparts');
+  const levels=['knowledge','understanding','application','higher'];
+  const groupCounts=[1,3,3,3,3,2,1],itemCounts=[[1,1,1,1],[2,2,3,2],[2,2,2,2],[2,2,3,1],[2,2,2,2],[2,2,2,2],[1,1,1,1]],levelMarks=[[1,1,3,1],[2,3,5,3],[2,3,5,3],[2,4,7,2],[2,3,5,3],[2,3,4,2],[1,1,1,1]];
+  for(let i=0;i<area.length;i++){
+   const gs=groups.filter(g=>String(g.unitCode)===String(i+1)),parts=gs.flatMap(g=>g.subquestions);
+   need(gs.length===groupCounts[i]&&same(levels.map(l=>parts.filter(x=>x.cognitiveLevel===l).length),itemCounts[i])&&same(levels.map(l=>sum(parts.filter(x=>x.cognitiveLevel===l).map(x=>x.marks))),levelMarks[i]),'Mathematics archived area '+(i+1)+' cognitive allocation');
+  }
+  checks.push('Seven area marks','49 subparts','Per-area question and cognitive item/mark matrix');
   unresolved.push('Revised CDC numerical table and current applicability');
  }else if(key==='science'){
   need(same(counts(['mcq','very_short','short','long']),[10,9,14,7]),'Science question type counts');
@@ -91,6 +111,19 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  const lines=[(language==='en'?'REFERENCE DRAFT — NOT FOR EXAM':'REFERENCE DRAFT — NOT FOR EXAM / सन्दर्भ समीक्षा मात्र'),language==='ne'?'कक्षा ९ · '+paperSubjectLabel(subject,language)+' · पूर्णाङ्क: '+p.fullMarks+' · समय: '+p.durationMinutes+' मिनेट':'Grade 9 · '+paperSubjectLabel(subject,language)+' · '+p.fullMarks+' marks · '+p.durationMinutes+' minutes','Current CDC Grid approval and teacher review pending.',result.referenceLabel||'',''];
  const answers=[(language==='en'?'INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY':'INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY / उत्तरकुञ्जिका समीक्षा मात्र'),(language==='ne'?'कक्षा ९ · '+paperSubjectLabel(subject,language):'Grade 9 · '+paperSubjectLabel(subject,language)),'Not an official CDC marking scheme. Review model answers and partial credit before use.',''];
  const figures=[],starts=[];
+ // Model-style item weight notation. Mathematics follows the visually checked
+ // 2078 model's K/U/A/HA labels; other reference subjects show numeric weights
+ // without claiming a current official model layout.
+ const levelCode={knowledge:'K',understanding:'U',application:'A',higher:'HA'};
+ const itemMark=(x)=>'['+x.marks+(key==='math'?levelCode[x.cognitiveLevel]:'')+']';
+ const groupMark=(g,parts,marks)=>key==='english'&&parts.length&&parts.every(x=>x.marks===parts[0].marks)?'['+parts.length+' × '+parts[0].marks+' = '+marks+']':'['+marks+']';
+ const sectionTitle=(i,g)=>{
+  if(!['science','social','optional_environment'].includes(key)||i&&groups[i-1].questionType===g.questionType)return '';
+  const group=groups.filter(x=>x.questionType===g.questionType),n=group.length,m=group[0].marks;
+  const names={mcq:['बहुविकल्पीय प्रश्न','Multiple choice questions'],very_short:['अति छोटो उत्तर आउने प्रश्न','Very short answer questions'],short:['छोटो उत्तर आउने प्रश्न','Short answer questions'],long:['लामो उत्तर आउने प्रश्न','Long answer questions']};
+  const label=names[g.questionType];if(!label)return '';
+  return choose(label[0],label[1])+' ('+n+' × '+m+' = '+(n*m)+')';
+ };
  if(key==='english')lines.push('General instructions: Read each question carefully and answer in English as directed.','');
  let answerCount=0;
  const answer=(label,value,marks)=>{
@@ -101,8 +134,9 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
  };
  for(const [i,g] of groups.entries()){
   starts.push(lines.length);
+  const section=sectionTitle(i,g);if(section)lines.push(section,'');
   if(key==='nepali'){
-   lines.push((i+1)+'. '+g.choices.length+' विकल्पमध्ये '+g.answerCount+' वटाको उत्तर दिनुहोस्। ['+g.marks+']');
+   lines.push((i+1)+'. '+(g.choices.length>1?g.choices.length+' विकल्पमध्ये '+g.answerCount+' वटाको उत्तर दिनुहोस्। ':'')+'['+g.marks+']');
    for(const [j,c] of g.choices.entries()){
     lines.push('  '+paperOptionLabel(j,language)+'. '+c.text+' ['+c.marks+']');
     if(c.passage)lines.push(c.passage);
@@ -119,20 +153,20 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
   const figure=questionFigure(g,language);if(figure)figures.push({number:i+1,html:figure});
   const parts=g.subquestions||g.items||[];
   const marks=g.marks??parts.reduce((s,x)=>s+Number(x.marks||0),0);
-  lines.push((i+1)+'. '+(key==='english'?g.text:choose(g.contextNe||g.questionText,g.contextEn||g.questionTextEn))+' ['+marks+']');
+  lines.push((i+1)+'. '+(key==='english'?g.text:choose(g.contextNe||g.questionText,g.contextEn||g.questionTextEn))+(key==='math'?'':' '+groupMark(g,parts,marks)));
   if(g.practiceSubstitution===true)lines.push('ORIGINAL PRACTICE — not a seen textbook extract.');
   if(g.passage)lines.push(g.passage);
   if(g.questionType==='mcq')for(const [j,o] of (g.options||[]).entries())lines.push('  '+paperOptionLabel(j,language)+'. '+choose(o,g.optionsEn?.[j]));
   if(Array.isArray(g.mapChoices)){
    for(const [j,c] of g.mapChoices.entries()){
-    lines.push((language==='ne'?(j===0?'विकल्प क: ':'अथवा ख: '):(j===0?'Option A: ':'OR / अथवा B: '))+choose(c.textNe,c.textEn)+' [7]');
+    lines.push((language==='ne'?(j===0?'विकल्प क: ':'अथवा ख: '):(j===0?'Option A: ':'OR / अथवा B: '))+choose(c.textNe,c.textEn)+' ['+marks+']');
     answer((i+1)+'.'+paperOptionLabel(j,language),choose(c.answerNe,c.answerEn)+' — '+c.labels.map(l=>choose(l.ne,l.en)).join('; '),7);
    }
   }else if(!parts.length){
    answer(String(i+1),(g.correctOption?g.correctOption+' — ':'')+(key==='english'?g.answer:choose(g.answerNe||g.answer,g.answerEn)),marks);
   }
   for(const [j,x] of parts.entries()){
-   lines.push('  '+paperOptionLabel(j,language,true)+') '+(key==='english'?x.text:choose(x.textNe,x.textEn))+' ['+x.marks+']');
+   lines.push('  '+paperOptionLabel(j,language,true)+') '+(key==='english'?x.text:choose(x.textNe,x.textEn))+' '+itemMark(x));
    if(Array.isArray(x.options))lines.push('    '+x.options.map((o,k)=>paperOptionLabel(k,language)+'. '+o).join('    '));
    answer((i+1)+'.'+paperOptionLabel(j,language,true),(x.correctOption?x.correctOption+' — ':'')+(key==='english'?String(x.answer??''):choose(x.answerNe||x.answer,x.answerEn)),x.marks);
   }
