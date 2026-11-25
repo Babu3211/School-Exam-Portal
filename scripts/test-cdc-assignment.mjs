@@ -770,6 +770,16 @@ current.subjectAssignments=[{className:'Class 2',subject:'Mathematics',section:'
 serverRole={...current};
 w.getDocs=async()=>({docs:[{id:'math-2',data:()=>({class:'Class 2',section:'A',name:'Synthetic grade 2'})}]});
 await w.loadCdcAssessmentPage();
+// All available form themes are selectable; older curricular labels never silently blank the workspace.
+const math2Options=[...field('themePick').options].slice(1);
+assert.equal(math2Options.filter(o=>!o.text.includes('Curriculum')).length,8);
+assert.equal(math2Options.filter(o=>o.text.includes('Curriculum')).length,3);
+field('themePick').value='ज्यामिति';await field('themePick').onchange();
+assert.equal(field('themeEntryHelp').hidden,false);
+assert.equal(field('extraObservations').open,true);
+assert.ok(field('outcomePicker').options.length>1);
+field('themePick').value='';await field('themePick').onchange();
+assert.equal(field('themeEntryHelp').hidden,true);
 for(const [unit,count,page] of [['मेरो सिर्जना',3,149],['सञ्चार प्रविधि र बजार',4,150],['हाम्रो विद्यालय',5,147],['सङ्ख्याको ज्ञान',4,151],['गणितका आधारभूत क्रिया',4,152]]){
  choice('unit',unit);
  assert.equal(field('annex3').hidden,false);
@@ -815,6 +825,21 @@ for(const [grade,unit,count,page] of [
  assert.equal(new Set([...field('outcomePicker').options].slice(1).map(o=>o.value)).size,count,unit);
  assert.match(field('annexStatus').textContent,new RegExp(String(page)));
  assert.match(field('annexHead').textContent,grade==='1'?/कैफियत/:/साधन/);
+}
+// Class 1–3 math: every actual form is a selectable theme with its real outcome count.
+for(const grade of ['1','2','3']){
+ current.subjectAssignments=[{className:'Class '+grade,subject:'Mathematics',section:'A'}];serverRole={...current};
+ w.getDocs=async()=>({docs:[{id:'math-'+grade,data:()=>({class:'Class '+grade,section:'A',name:'Synthetic grade '+grade})}]});
+ await w.loadCdcAssessmentPage();
+ for(const [key,form] of Object.entries(legacyForms).filter(([key])=>key.startsWith(grade+':'))){
+   const unit=key.slice(2);
+   assert.ok([...field('themePick').options].some(o=>o.value===unit),grade+unit);
+   choice('unit',unit);
+   assert.equal(field('annex3').hidden,false,grade+unit);
+   assert.equal(field('themeEntryHelp').hidden,true,grade+unit);
+   assert.equal(field('annexRows').rows.length,form.rows.length*4,grade+unit);
+   assert.equal(field('outcomePicker').options.length,form.rows.length+1,grade+unit);
+ }
 }
 assert.equal(Object.keys(legacyForms).length,20);
 assert.equal(Object.values(legacyForms).reduce((n,f)=>n+f.rows.length,0),87);
