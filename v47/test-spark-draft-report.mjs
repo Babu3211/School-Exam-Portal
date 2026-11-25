@@ -57,3 +57,23 @@ for(const klass of ['1','2','3','4','5','6','7','8','9','10'])for(const exam of 
  const sheet=result.printFor('s1');if(Number(klass)<=5||exam==='final'){assert.equal(sheet.ready,true);assert.match(sheet.html,/NOT VALID FOR OFFICIAL USE/)}else assert.equal(sheet.ready,false);
 }
 console.log('PASS Spark Draft reports: 30 class/term combinations, two subjects, all ledgers and preview XLSX, GPA and watermark');
+
+// A verified secondary Draft has an explicit absence row, unlike a missing row.
+// The original V46 renderer must show Abs without awarding GPA to that student.
+{
+ const klass='9',exam='final',sid='computer',name='Computer Science',key=klass+'_'+sid+'_'+exam;
+ for(const k of [...docs.keys()])if(/\/(students|subjects|mark_settings|class_mark_drafts)\//.test(k))docs.delete(k);
+ for(const st of ['s1','s2'])docs.set(base+'/students/'+st,{schoolId,class:klass,name:'Student '+st,active:true});
+ docs.set(base+'/subjects/'+sid,{schoolId,class:klass,name,active:true,creditHour:4});
+ const components=iemisEntrySchema(klass,'annual',name).filter(c=>!c.readonly).map((c,i)=>({key:'f'+i,name:c.name,fullMarks:c.max}));
+ const values=Object.fromEntries(components.map(c=>[c.key,c.fullMarks]));
+ docs.set(base+'/mark_settings/'+key,{id:key,schoolId,classId:klass,subjectId:sid,examId:exam,active:true,components});
+ const original={format:'smss-v47-complete-class-draft-v1',state:'draft',schoolId,classId:klass,subjectId:sid,examId:exam,settingsId:key,rosterCount:2,revision:1,updatedBy:uid,updatedAt:'test',entries:[{studentId:'s1',isAbsent:true,values:null,totalObtained:0},{studentId:'s2',isAbsent:false,values,totalObtained:Object.values(values).reduce((a,b)=>a+b,0)}]};
+ const path=base+'/class_mark_drafts/'+key;docs.set(path,original);
+ const r=await loadSparkDraftReport({...args,classNo:klass,term:exam});
+ assert.equal(r.summary.rows[0].gpa,null);assert.equal(r.summary.rows[1].gpa,4);assert.match(r.ledger.body,/>Abs<\/td>/);
+ assert.equal(r.printFor('s1').ready,false);assert.equal(r.printFor('s2').ready,true);
+ const invalid=structuredClone(original);invalid.entries[0].values={f0:0};docs.set(path,invalid);
+ await assert.rejects(loadSparkDraftReport({...args,classNo:klass,term:exam}));
+}
+console.log('PASS saved secondary Draft absence through school-scoped read-only report loader');

@@ -155,3 +155,25 @@ for(const classNo of ['6','7','8','9','10'])for(const term of ['1st','2nd','fina
  }
 }
 console.log('PASS 15 secondary class/term absence cases: Abs, no GPA, unaffected classmates, XLSX and malformed absence rejection');
+
+for(const classNo of ['1','2','3','4','5'])for(const term of ['1st','2nd','final']){
+ const roster=students.map(s=>({...s,class:classNo})),catalog=subjects.map(s=>({...s,class:classNo}));
+ const sourceTerm=term==='final'?'annual':term==='1st'?'first':'second';
+ const records=roster.flatMap(s=>catalog.map(sub=>{
+  const absent=s.id==='s1'&&sub.id==='english';
+  const values=absent?{count:'10',obtained:''}:{count:'10',obtained:'36'};
+  return {...iemisEntryValues(iemisEntrySchema(classNo,sourceTerm,sub.name),{values,isAbsent:absent,incompatible:false}),schoolId,class:classNo,term,examId:term,studentId:s.id,subjectId:sub.id,subject:sub.name};
+ }));
+ const input={schoolId,school,classNo,term,students:roster,subjects:catalog,records};
+ const report=prepareLegacyGradeReport(input);
+ assert.equal(report.summary.complete,true);assert.equal(report.summary.rows[0].subjects[0].summary.absent,true);
+ assert.equal(report.summary.rows[0].gpa,null);assert.equal(report.summary.rows[1].gpa,4);
+ assert.match(report.ledger.body,/>Abs<\/td>/);
+ assert.equal(report.printFor('s1').ready,false);assert.equal(report.printFor('s2').ready,true);
+ const missingCount=structuredClone(input);
+ const absent=missingCount.records[0];absent.scores.forEach(s=>s.fullMarks=0);absent.totalFullMarks=0;
+ assert.throws(()=>prepareLegacyGradeReport(missingCount),/metadata/);
+ const falseAbsent=structuredClone(input);falseAbsent.records[0].scores[2].obtained=0;
+ assert.throws(()=>prepareLegacyGradeReport(falseAbsent),/must not contain obtained/);
+}
+console.log('PASS primary legacy absence: existing positive achievement count retained, no invented count or GPA, 15 class/term cases');
