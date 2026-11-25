@@ -201,7 +201,7 @@ console.log('V47 trusted official publication CAS: 1/101/500/1500 rows; atomic h
  h.docs.set(base,{id:schoolId,active:true,name:'Synthetic School'});
  h.docs.set(base+'/subjects/computer',{schoolId,class:klass,name:'Computer Science',active:true,creditHour:4});
  const settingsId=klass+'_computer_'+term;
- h.docs.set(base+'/mark_settings/'+settingsId,{...h.input.settings,id:settingsId});
+ h.docs.set(base+'/mark_settings/'+settingsId,clone({...h.input.settings,id:settingsId}));
  for(const id of h.input.expectedStudentIds)h.docs.set(base+'/students/'+id,{schoolId,class:klass,name:'Student '+id,active:true});
  const snapshot=p=>({id:p.split('/').at(-1),ref:{path:p},exists:()=>h.docs.has(p),data:()=>clone(h.docs.get(p))});
  const reads=[];
@@ -247,7 +247,7 @@ console.log('V47 trusted official publication CAS: 1/101/500/1500 rows; atomic h
  h.docs.set(viewPath,view);
  h.docs.get(base+'/mark_settings/'+settingsId).components[0].fullMarks+=1;
  await assert.rejects(loadSparkCommittedReport(args),/Settings changed/);
- h.docs.set(base+'/mark_settings/'+settingsId,{...h.input.settings,id:settingsId});
+ h.docs.set(base+'/mark_settings/'+settingsId,clone({...h.input.settings,id:settingsId}));
  // A verified Viewer can read the committed view but cannot gain write access.
  readActor.role='viewer';h.docs.set(base+'/members/'+actor.uid,{...readActor});
  assert.equal((await loadSparkCommittedReport(args)).rosterCount,101);
