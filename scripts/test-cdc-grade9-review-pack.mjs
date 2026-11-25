@@ -42,6 +42,18 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
   assert.equal(audit.durationMinutes,durationMinutes);
   assert.ok(audit.checks.length>=4&&audit.unresolved.length>0);
   assert.equal(audit.currentCdcExactApproved,false);
+  assert.ok(audit.checks.includes('Scored subparts and alternatives'));
+  if(subject==='Mathematics'){
+   assert.ok(audit.checks.includes('Per-area question and cognitive item/mark matrix'));
+   for(const tag of ['1K','1U','3A','1HA'])assert.ok(result.blocks[0].text.includes('['+tag+']'),'Model mark notation: '+tag);
+   assert.equal((result.text.match(/\[\d+(?:K|U|A|HA)\]/g)||[]).length,49,'All math subparts show cognitive mark notation');
+  }
+  if(subject==='English'){
+   for(const tag of ['[5 × 1 = 5]','[10 × 1 = 10]','[15 × 1 = 15]','[6 × 1 = 6]','[10 × 0.5 = 5]'])assert.ok(result.text.includes(tag),'Model-style English count × mark: '+tag);
+  }
+  if(subject==='Science and Technology')for(const tag of ['10 × 1 = 10','9 × 1 = 9','14 × 2 = 28','7 × 4 = 28'])assert.ok(result.text.includes(tag));
+  if(subject==='Social Studies')for(const tag of ['११ × १ = ११','९ × ४ = ३६','४ × ७ = २८'])assert.ok(result.text.includes(tag));
+  if(subject==='Environmental Science')for(const tag of ['11 × 1 = 11','8 × 5 = 40','3 × 8 = 24'])assert.ok(result.text.includes(tag));
   assert.equal(result.readyForLive,false);assert.notEqual(result.signature,previousSignature);
   assert.match(result.text,/REFERENCE DRAFT — NOT FOR EXAM/);
   assert.match(result.answerText,/INDICATIVE ANSWER KEY — TEACHER REVIEW ONLY/);
