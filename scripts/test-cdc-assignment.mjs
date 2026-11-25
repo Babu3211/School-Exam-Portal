@@ -1282,7 +1282,7 @@ for(const grade of ['2','3']){
   assert.equal(rows.rows.length,expected[i][1],unit);
   assert.equal(outcomes.length,expected[i][0],unit);
   assert.match(field('annexStatus').textContent,/कार्यगत शब्दावली/);
-  assert.equal(field('annexStatus').textContent.includes('सूचक क्रम, साधन र अङ्कन खण्ड मूल PDF सँग जाँचिएको'),grade==='2'&&i<2,unit);
+  assert.equal(field('annexStatus').textContent.includes('सूचक क्रम, साधन र अङ्कन खण्ड मूल PDF सँग जाँचिएको'),grade==='2',unit);
   if(grade==='2'&&i===0)assert.match(rows.textContent,/हपिङ गर्ने र रबरको रिङ फाल्ने/);
   assert.ok(outcomes.every(cell=>cell.textContent.includes(' — ')));
   assert.ok([...rows.rows].every(row=>!row.textContent.includes('मूल PDF हेर्नुहोस्')));
@@ -1290,6 +1290,9 @@ for(const grade of ['2','3']){
    ?[/छिमेकीलाई सम्मान गर्ने/,/चुम्बकबाट आकर्षित वस्तु छुट्याउने/,/स्थलचर जनावर चिन्ने/,/२५ मिटर दौड/,/सजीव–निर्जीव छुट्याउने/,/सार्वजनिक सम्पदा संरक्षण/,/स्थानीय गीत गाउने/,/राष्ट्रिय चिह्नको वर्णन/,/परिवारको आम्दानीका स्रोत/,/पानीका स्रोत/]
    :[/पारिवारिक नाता/,/ध्वनि प्रदूषणको असर/,/खोपको महत्त्व/,/प्राथमिक उपचारको अवधारणा/,/खाद्य शृङ्खलाको उदाहरण/,/ठोस, तरल र ग्यासका गुण परीक्षण/,/स्थानीय बाजा अभ्यास/,/स्थानीय भाषा/,/पैसा बचत/,/दिन र रातको कारण/];
   assert.match(rows.textContent,sampleLabels[i]);
+  if(grade==='2'&&i===2){assert.match(rows.textContent,/अरूलाई पनि अवसर दिने/);assert.match(rows.textContent,/उफ्राइ र आवाजको अनुकरण/);}
+  if(grade==='2'&&i===5)assert.match(rows.textContent,/डुब्ने वा तैरिने र घुल्ने वा नघुल्ने/);
+  if(grade==='2'&&i===6)assert.match(rows.textContent,/लय, ताल, भाव र चाल मिलाएर सामूहिक नृत्य/);
   const toolLabels=[...rows.rows].map(row=>row.cells[row.cells.length-1].textContent.trim());
   if(grade==='3'&&i===1){
    assert.ok(toolLabels.every(t=>t===''));
