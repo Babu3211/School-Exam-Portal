@@ -9301,7 +9301,7 @@ function openCdcAssessment(context = null) {
     <label>विषयक्षेत्र / Theme <select data-cdc="themePick"><option value="">छान्नुहोस्</option></select></label>
     <p data-cdc="accessNotice" role="status" style="font-weight:600;margin:8px 0;padding:10px 12px;border-left:3px solid #17466e;background:#eef4fa;color:#172b43" hidden></p>
     <p data-cdc="workspaceHint" class="hint">विषयक्षेत्र छान्नुहोस्, मिति र अङ्कन भरेर Save गर्नुहोस्।</p>
-    <section data-cdc="annex3" hidden><div class="toolbar"><button type="button" class="btn alt" data-cdc="gridRead" id="cdcGridRead">अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्</button></div><p data-cdc="gridStatus" role="status" aria-live="polite" style="font-weight:600;color:#17466e;overflow-wrap:anywhere"></p><p data-cdc="entryNotice" class="hint" role="status"></p><p class="hint" style="font-size:12px">पूरा तालिका हेर्न दायाँ–बायाँ सार्नुहोस्।</p><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><details data-cdc="seroSourcePreview" hidden style="margin:8px 0"><summary style="cursor:pointer;font-weight:600">मूल CDC PDF सँग तुलना गर्नुहोस्</summary><p class="hint">मूल पृष्ठ र तलको डिजिटल फाराम तुलना गर्नुहोस्। PDF नदेखिए नयाँ ट्याबमा खोल्नुहोस्। विद्यार्थीको विवरण PDF सेवामा पठाइँदैन।</p><a data-cdc="seroSourceOpen" target="_blank" rel="noopener noreferrer">मूल पृष्ठ खोल्नुहोस्</a><div data-cdc="seroSourceFrame"></div></details><div class="tablewrap"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Print / Save PDF</button><p data-cdc="printStatus" role="status" class="hint"></p></section>
+    <section data-cdc="annex3" hidden><div class="toolbar"><button type="button" class="btn alt" data-cdc="gridRead" id="cdcGridRead">अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्</button></div><p data-cdc="gridStatus" role="status" aria-live="polite" style="font-weight:600;color:#17466e;overflow-wrap:anywhere"></p><p data-cdc="entryNotice" class="hint" role="status"></p><p class="hint" style="font-size:12px">पूरा तालिका हेर्न दायाँ–बायाँ सार्नुहोस्।</p><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><details data-cdc="seroSourcePreview" hidden style="margin:8px 0"><summary style="cursor:pointer;font-weight:600">मूल CDC PDF सँग तुलना गर्नुहोस्</summary><p class="hint">मूल पृष्ठ र तलको डिजिटल फाराम तुलना गर्नुहोस्। PDF नदेखिए नयाँ ट्याबमा खोल्नुहोस्। विद्यार्थीको विवरण PDF सेवामा पठाइँदैन।</p><a data-cdc="seroSourceOpen" target="_blank" rel="noopener noreferrer">मूल पृष्ठ खोल्नुहोस्</a><div data-cdc="seroSourceFrame"></div></details><div class="tablewrap"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Print / Save PDF</button><button class="btn alt" data-cdc="printAll" type="button" disabled>All Students — Print / PDF</button><p data-cdc="printStatus" role="status" class="hint"></p><p data-cdc="batchPrintStatus" role="status" aria-live="polite" class="hint"></p></section>
     <details class="cdc-more" data-cdc="extraReference"><summary>CDC निर्देशिका र विषयक्षेत्र विवरण</summary>
     <details data-cdc="themeSummary" style="border:1px solid #b9d5e7;border-radius:8px;padding:12px;margin:10px 0">
       <summary style="cursor:pointer;font-weight:700">Theme, Learning Achievement &amp; Full Marks — Classes 1–5</summary>
@@ -9620,10 +9620,13 @@ function openCdcAssessment(context = null) {
     frame.src=href;
     sourceFrame.append(frame);
   });
+  let batchPrinting=false;
   const renderAnnex=()=>{
     const panel=field('annex3'),enabled=hasAnnexGrid(),en=language()==='en';
     const nepaliForm=primaryNepaliForm(),seroReference=primarySeroferoReference(),seroGuide=primarySeroGuideReview();
     syncSeroSourcePreview(seroReference||seroGuide||cdcUpperGuidePage(field('class').value,field('subject').value,field('unit').value,year));
+    field('printAll').hidden=!context;
+    field('printAll').disabled=batchPrinting||!context||!schoolSelection()||!field('unit').value.trim()||!!seroGuide||(!enabled&&(!seroReference||seroReference.referenceOnly))||!!seroReference&&(seroReference.referenceOnly||year!=='2083');
     panel.hidden=!enabled&&!nepaliForm&&!seroReference&&!seroGuide;field('stageRow').hidden=!enabled;field('gridRead').hidden=!!nepaliForm&&!nepaliForm.editable;
     field('printForm').disabled=!enabled||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('unit').value.trim();
     field('gridRead').textContent=seroReference?'सूचक अभिलेख पढ्नुहोस् / पुनः पढ्नुहोस्':'अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्';
@@ -10415,6 +10418,63 @@ function openCdcAssessment(context = null) {
     if(!popup){field('printStatus').textContent='Print खोल्न pop-up अनुमति दिनुहोस्।';return;}
     popup.document.open();popup.document.write('<!doctype html>'+doc.documentElement.outerHTML);popup.document.close();
     popup.focus();popup.print();
+  };
+  // Batch uses the exact saved-only single-pupil renderer, not a second template.
+  // It prints the selected class/subject/theme for every visible eligible pupil.
+  field('printAll').onclick=async()=>{
+    const status=field('batchPrintStatus');
+    if(!context||batchPrinting||inlinePending||schoolSavePending||dialog.querySelector('[data-cdc-grid-editor]')||!canShow()||field('printAll').disabled){status.textContent='पहिले खुला मूल्याङ्कन सुरक्षित वा बन्द गर्नुहोस्।';return;}
+    const student=field('student'),original=student.value;
+    const ids=[...student.options].map(o=>o.value).filter(Boolean);
+    const unit=field('unit').value,unitEn=field('unitEn').value,topic=field('topic').value;
+    const grade=field('class').value,subject=field('subject').value;
+    if(!ids.length||!unit)return;
+    if(!window.confirm('छानिएको कक्षा, विषय र विषयक्षेत्रका '+ids.length+' विद्यार्थीको सुरक्षित अभिलेख मात्र छापिनेछ। नसुरक्षित प्रविष्टि भए पहिले Save गर्नुहोस्। अगाडि बढ्ने?'))return;
+    const popup=window.open('','_blank');
+    if(!popup){status.textContent='Print खोल्न pop-up अनुमति दिनुहोस्।';return;}
+    batchPrinting=true;dialog.inert=true;field('printAll').disabled=true;
+    let report=null,success=false,problem='';
+    const current=()=>canShow()&&field('class').value===grade&&field('subject').value===subject;
+    const choose=id=>{
+      student.value=id;field('topic').value='';field('unit').value=unit;field('unitEn').value=unitEn;
+      load();
+    };
+    try{
+      for(const [i,id] of ids.entries()){
+        if(!current()||popup.closed)throw Error('छनोट परिवर्तन भयो।');
+        choose(id);
+        if(student.value!==id||field('unit').value!==unit||!schoolSelection())throw Error('विद्यार्थी वा विषयक्षेत्र मिलेन।');
+        status.textContent='अभिलेख पढ्दै… '+(i+1)+' / '+ids.length;
+        await field('gridRead').onclick();
+        if(!current()||student.value!==id||field('unit').value!==unit||popup.closed)throw Error('छनोट परिवर्तन भयो।');
+        const single=buildAssessmentPrint();
+        if(!single||field('printForm').disabled)throw Error('सबै विद्यार्थीको सुरक्षित अभिलेख पढ्न सकिएन।');
+        if(!report){
+          report=single;
+          const style=report.createElement('style');
+          style.textContent='.cdc-pupil{break-before:page;page-break-before:always}.cdc-pupil:first-child{break-before:auto;page-break-before:auto}';
+          report.head.append(style);
+          const first=report.createElement('section');first.className='cdc-pupil';
+          first.append(...Array.from(report.body.childNodes));report.body.append(first);
+        }else{
+          const page=report.createElement('section');page.className='cdc-pupil';
+          for(const node of single.body.childNodes)page.append(report.importNode(node,true));
+          report.body.append(page);
+        }
+      }
+      if(!current()||!report||popup.closed)throw Error('छपाइ रद्द भयो।');
+      popup.document.open();popup.document.write('<!doctype html>'+report.documentElement.outerHTML);popup.document.close();
+      popup.focus();popup.print();success=true;
+    }catch(error){problem=error.message||'PDF तयार भएन।';try{popup.close();}catch{}}
+    finally{
+      if(current()){
+        choose(original);field('topic').value=topic;load();
+        if(schoolSelection()&&!field('gridRead').hidden)await field('gridRead').onclick();
+        status.textContent=success?ids.length+' विद्यार्थीको A4 छपाइ तयार भयो।':problem+' कुनै आंशिक PDF निकालिएको छैन।';
+      }
+      batchPrinting=false;dialog.inert=false;
+      if(canShow())renderAnnex();
+    }
   };
   field('readSchool').onclick=async()=>{
     const selection=schoolSelection();

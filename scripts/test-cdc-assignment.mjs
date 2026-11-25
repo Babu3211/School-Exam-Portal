@@ -1723,6 +1723,28 @@ assert.equal(adminSaved?.studentId,'admin-student');
 assert.equal(adminSaved?.section,'B');
 assert.equal(adminSaved?.level,3);
 console.log('Admin direct CDC form entry and save without teacher assignment passed');
+// Batch print must use the same saved-only renderer and restore the selection.
+w.getDocs=async name=>({docs:name==='students'?[{id:'batch-one',data:()=>({class:'Class 5',section:'A',name:'Batch One'})},{id:'batch-two',data:()=>({class:'Class 5',section:'B',name:'Batch Two'})}]:[{id:'batch-class',data:()=>({className:'Class 5',subject:'Nepali'})}]});
+w.getDocsFromServer=async()=>({docs:[]});
+await w.loadCdcAssessmentPage();choice('class','5');choice('subject','Nepali');choice('student','batch-two');
+choice('unit','क्षेत्र १ — कविता (गीत/देशप्रेम)');
+w.confirm=()=>true;let batchMarkup='',batchPrinted=0,batchClosed=0;
+w.open=()=>({document:{open(){},write(value){batchMarkup=value;},close(){}},focus(){},print(){batchPrinted++;},close(){batchClosed++;}});
+assert.equal(field('printAll').disabled,false);
+await field('printAll').onclick();
+assert.equal(batchPrinted,1);assert.equal(field('student').value,'batch-two');
+const batchDoc=new JSDOM(batchMarkup).window.document;
+const pages=[...batchDoc.querySelectorAll('.cdc-pupil')];
+assert.equal(pages.length,2);
+assert.match(pages[0].textContent,/Batch One/);assert.doesNotMatch(pages[0].textContent,/Batch Two/);
+assert.match(pages[1].textContent,/Batch Two/);assert.doesNotMatch(pages[1].textContent,/Batch One/);
+assert.equal(pages[0].querySelectorAll('tbody tr').length,pages[1].querySelectorAll('tbody tr').length);
+assert.equal(batchDoc.querySelectorAll('input,select,button').length,0);
+assert.match(batchDoc.head.textContent,/@page\{size:A4 landscape/);
+w.getDocsFromServer=async()=>{if(field('student').value==='batch-two')throw Error('Read failed');return {docs:[]};};
+await field('printAll').onclick();
+assert.equal(batchPrinted,1);assert.equal(batchClosed,1);assert.equal(field('student').value,'batch-two');
+console.log('All-students A4 batch PDF: same form, isolated pupils, no partial output on read failure');
 // CDC backup: verify legacy and new exports in an isolated synthetic DOM.
 // Assessment evidence must never be replayed through ordinary client restore.
 const backupDom=new JSDOM('<div id="restoreFirebaseMessage"></div><pre id="restorePreview"></pre><input id="restoreBackupFile" type="file"><button id="runFirebaseRestore"></button>',{runScripts:'outside-only'});
