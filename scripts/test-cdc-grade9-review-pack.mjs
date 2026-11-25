@@ -132,7 +132,7 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
   }).join('');
   const key='<h3>Indicative answer key</h3>'+ordered.map((q,n)=>'<p>'+ (n+1)+'. '+bilingual(q.answer,q.answerEn)+(q.correctOption?' ('+esc(q.correctOption.toLowerCase())+')':'')+' ['+q.marks+']</p>').join('');
   assert.equal(number,25);
-  assert.doesNotMatch(html,/\\[(?:1|2|4)\\]/,'Uniform marks belong to group heading');
+  assert.doesNotMatch(html,/\[(?:1|2|4)\]/,'Uniform marks belong to group heading');
   for(const q of paper.questions){
    assert.ok(html.includes(esc(q.questionTextEn)),'English question missing from bilingual review');
    assert.ok(key.includes(esc(q.answerEn)),'English answer missing from bilingual review');
