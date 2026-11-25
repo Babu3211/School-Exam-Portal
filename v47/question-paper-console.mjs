@@ -5,6 +5,7 @@ import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle} fro
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {prepareCdcSourceCatalog,prepareReadOnlyPracticePaper,recommendedPracticeIndices,printReadOnlyPracticePaper} from './question-paper-cdc-preview.mjs';
+import {computerGridReference,generateComputerPractice} from './computer-grid-practice.mjs';
 import {practiceUnitOptions,generatePracticePreview} from './automatic-practice-preview.mjs';
 import {listOriginalPracticeChoices,summarizeOriginalPracticeSelection,MAX_PRACTICE_SELECTION} from './practice-question-selection.mjs';
 const $=id=>document.getElementById(id);
@@ -24,7 +25,7 @@ function clearPreview(){
  $('paperStatus').textContent='No practice preview prepared.';
 }
 function reset(){
- epoch++;clearPreview();actor=null;schoolId=null;school=null;register=null;loading=false;practiceHistory.clear();
+ epoch++;clearPreview();actor=null;schoolId=null;school=null;register=null;loading=false;practiceHistory.clear();$('computerGridTable').replaceChildren();$('computerGenerateArea').hidden=true;$('computerGridStatus').textContent='';
  $('resourceArea').hidden=true;$('sourceList').replaceChildren();$('logout').disabled=true;
  $('identity').textContent='No verified school';$('sourceStatus').textContent='No sources loaded.';
 }
@@ -106,7 +107,7 @@ $('login').onclick=async()=>{
   $('logout').disabled=false;
   register=await fetchJson('cdc-source-register-2083.json');
   assertSame(request,actor);await verifyAgain(request,actor);
-  $('resourceArea').hidden=false;renderSources();
+  $('resourceArea').hidden=false;renderSources();renderComputerGrid();
   status('स्रोत सूची खुल्यो। प्रश्नपत्र प्रकाशन वा Firestore Write हुँदैन।');
  }catch(e){
   if(request===epoch){reset();try{await authSdk.signOut(auth)}catch{}status('स्रोत खोल्न सकिएन: '+neError(e))}
@@ -270,6 +271,42 @@ $('generatePractice').onclick=async()=>{
   $('autoPracticeStatus').textContent='छानिएका Unit बाट '+fullMarks+' पूर्णाङ्कको नयाँ अभ्यास प्रश्नपत्र बन्यो। शिक्षकबाट समीक्षा आवश्यक छ।';
  }catch(e){if(epoch===request&&actor===member){invalidateSelectedPreview();$('autoPracticeStatus').textContent='छनोट गरिएको भाषा, Unit र पूर्णाङ्कमा फरक प्रश्नपत्र बनाउन पर्याप्त प्रश्न छैनन् वा अनुरोध असफल भयो। '+neError(e)}}
  finally{busy=false;if(epoch===request)$('generatePractice').disabled=false}
+};
+function renderComputerGrid(){
+ if(!actor)return;
+ const grade=Number($('computerGridClass').value),grid=computerGridReference(grade),root=$('computerGridTable');
+ root.replaceChildren();
+ const make=(tag,content,parent)=>{const el=document.createElement(tag);if(content!==null)el.textContent=String(content);parent.append(el);return el;};
+ make('p','Full Marks: '+grid.fullMarks+' · Duration: '+grid.durationMinutes+' minutes',root);
+ const a=make('a','Open original CDC PDF',root);a.href=grid.sourceUrl;a.target='_blank';a.rel='noopener noreferrer';
+ const table=make('table',null,root);table.className='grid-table';
+ const head=make('tr',null,make('thead',null,table));
+ ['Unit',...['Knowledge','Understanding','Application','Higher'].flatMap(level=>['MCQ','Short','Long'].map(type=>level+' '+type)),'Marks'].forEach(v=>make('th',v,head));
+ const body=make('tbody',null,table);
+ for(const row of grid.units){const tr=make('tr',null,body);[row.code+'. '+row.name,...row.counts,row.marks].forEach(v=>make('td',v,tr))}
+ const total=make('tr',null,body);['Total',...Array.from({length:12},(_,i)=>grid.units.reduce((n,u)=>n+u.counts[i],0)),50].forEach(v=>make('td',v,total));
+ make('p','Knowledge 20% · Understanding 30% · Application 30% · Higher 20%',root);
+ $('computerGenerateArea').hidden=grade!==9||actor.role==='viewer';
+ $('computerGridStatus').textContent=grade===9?'कक्षा ९ का मौलिक प्रश्नबाट Grid मिल्ने अभ्यासपत्र बनाउन सकिन्छ।':'कक्षा १० को Grid मात्र उपलब्ध छ; प्रश्न बैंक तयार भएको छैन।';
+}
+$('computerGridClass').onchange=()=>{invalidateSelectedPreview();renderComputerGrid()};
+$('computerLanguage').onchange=()=>{invalidateSelectedPreview();$('computerGridStatus').textContent='भाषा परिवर्तन भयो। पुनः Generate गर्नुहोस्।'};
+$('generateComputer').onclick=async()=>{
+ if(busy||loading||!actor||actor.role==='viewer'||$('computerGridClass').value!=='9')return;
+ const request=epoch,member=actor,language=$('computerLanguage').value;
+ clearPreview();const version=previewVersion,key=JSON.stringify([member.schoolId,'computer9',language,50]);
+ busy=true;$('generateComputer').disabled=true;
+ try{
+  await verifyAgain(request,member);
+  if(version!==previewVersion||$('computerGridClass').value!=='9')throw Error('Grid selection changed');
+  const previous=practiceHistory.get(key)??[];
+  const fresh=generateComputerPractice({schoolId:member.schoolId,schoolName:String(school.name??''),language,avoidSignatures:previous});
+  assertSame(request,member);
+  if(version!==previewVersion)throw Error('Grid selection changed');
+  practiceHistory.set(key,[...previous,fresh.signature].slice(-30));paper=fresh;displayPaper();
+  $('computerGridStatus').textContent='५० पूर्णाङ्क, २५ प्रश्न र सबै Grid कोष्ठ मिलेको अभ्यासपत्र बन्यो। वास्तविक परीक्षा अघि शिक्षक समीक्षा आवश्यक छ।';
+ }catch(e){if(epoch===request&&actor===member){invalidateSelectedPreview();$('computerGridStatus').textContent='प्रश्नपत्र बनाउन सकिएन: '+neError(e)}}
+ finally{busy=false;if(epoch===request)$('generateComputer').disabled=false}
 };
 $('showAnswers').onchange=()=>{if(paper)displayPaper()};
 $('printPractice').onclick=async()=>{

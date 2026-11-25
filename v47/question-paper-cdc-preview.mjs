@@ -1,3 +1,4 @@
+import {assertComputerPracticeGrid} from './computer-grid-practice.mjs';
 // V47 isolated, read-only CDC source and SMSS practice-paper preview.
 // V46 source metadata / original practice questions reused; no Firebase writes,
 // blueprint completeness assertion, IEMIS result, or generated official exam.
@@ -96,7 +97,7 @@ export function printReadOnlyPracticePaper({paper,showAnswers=false}){
  if(!paper||paper.approved!==false||paper.official!==false||
     paper.teacherReviewRequired!==true||paper.writeAuthorized!==false||
     !Array.isArray(paper.questions)||!paper.questions.length||
-    !PRACTICE_GRADES.includes(paper.grade)||!officialUrl(paper.sourceUrl)||
+    !(PRACTICE_GRADES.includes(paper.grade)&&officialUrl(paper.sourceUrl)||paper.grade===9&&assertComputerPracticeGrid(paper))||
     typeof showAnswers!=='boolean')
   throw Error('Verified read-only practice paper required');
  let marks=0;
@@ -104,7 +105,7 @@ export function printReadOnlyPracticePaper({paper,showAnswers=false}){
   marks+=q.marks;
   const options=q.questionType==='mcq'?'<ol type="A">'+q.options.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol>':'';
   return '<li><div>'+esc(q.questionText)+' <em>('+esc(q.marks)+' marks)</em></div>'+options+
-    (showAnswers?'<p class="answer">Teacher-review answer: '+esc(q.answer)+'</p>':'')+'</li>';
+    (showAnswers?'<p class="answer">Teacher-review answer: '+(q.questionType==='mcq'&&q.correctOption?esc(q.correctOption)+' — ':'')+esc(q.answer)+'</p>':'')+'</li>';
  }).join('');
  if(marks!==paper.totalMarks)throw Error('Practice marks changed after preview');
  const watermark='data:image/svg+xml,'+encodeURIComponent(
@@ -114,10 +115,10 @@ export function printReadOnlyPracticePaper({paper,showAnswers=false}){
  );
  return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow">'+
  '<title>UNREVIEWED SMSS Practice Paper</title>'+
- '<style>@page{size:A4;margin:14mm}html,body{margin:0}body{font:14px system-ui,sans-serif;color:#172238;background-image:url("'+watermark+'");background-repeat:repeat;background-size:390px 225px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.sheet{position:relative;min-height:255mm}.warning{border:2px solid #b81c1c;padding:10px;text-align:center;background:#fff}h1,h2,p{text-align:center}ol{padding-left:25px}ol>li{margin:13px 0;break-inside:avoid;page-break-inside:avoid}li>div,.answer{white-space:pre-line}.answer{background:#f0f2f7;text-align:left;padding:5px}@media print{.sheet{break-inside:auto;page-break-inside:auto}}</style></head><body><main class="sheet">'+
+ '<style>@page{size:A4'+(paper.grade===9?' landscape':'')+';margin:14mm}html,body{margin:0}body{font:14px system-ui,sans-serif;color:#172238;background-image:url("'+watermark+'");background-repeat:repeat;background-size:390px 225px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.sheet{position:relative;min-height:255mm}.warning{border:2px solid #b81c1c;padding:10px;text-align:center;background:#fff}h1,h2,p{text-align:center}ol{padding-left:25px}ol>li{margin:13px 0;break-inside:avoid;page-break-inside:avoid}li>div,.answer{white-space:pre-line}.answer{background:#f0f2f7;text-align:left;padding:5px}@media print{.sheet{break-inside:auto;page-break-inside:auto}}</style></head><body><main class="sheet">'+
  '<h1>'+esc(paper.schoolName)+'</h1><h2>Class '+esc(paper.grade)+' · '+esc(paper.subject)+'</h2>'+
  '<p class="warning">UNREVIEWED ORIGINAL PRACTICE — NOT AN OFFICIAL CDC QUESTION PAPER</p>'+
  '<p>Questions: '+esc(paper.questionCount)+' | Total marks: '+esc(paper.totalMarks)+
  ' | '+(showAnswers?'UNAPPROVED TEACHER REVIEW ANSWERS':'PRACTICE QUESTIONS')+'</p>'+
- '<ol>'+questions+'</ol><footer>V46-sourced SMSS practice pack. Teacher must verify against current CDC specification grid before any real exam. No data saved.</footer></main></body></html>';
+ '<ol'+(paper.grade===9?' style="columns:2;column-gap:12mm"':'')+'>'+questions+'</ol><footer>V46-sourced SMSS practice pack. Teacher must verify against current CDC specification grid before any real exam. No data saved.</footer></main></body></html>';
 }
