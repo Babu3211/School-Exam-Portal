@@ -770,6 +770,16 @@ current.subjectAssignments=[{className:'Class 2',subject:'Mathematics',section:'
 serverRole={...current};
 w.getDocs=async()=>({docs:[{id:'math-2',data:()=>({class:'Class 2',section:'A',name:'Synthetic grade 2'})}]});
 await w.loadCdcAssessmentPage();
+// All available form themes are selectable; older curricular labels never silently blank the workspace.
+const math2Options=[...field('themePick').options].slice(1);
+assert.equal(math2Options.filter(o=>!o.text.includes('Curriculum')).length,8);
+assert.equal(math2Options.filter(o=>o.text.includes('Curriculum')).length,3);
+field('themePick').value='ज्यामिति';await field('themePick').onchange();
+assert.equal(field('themeEntryHelp').hidden,false);
+assert.equal(field('extraObservations').open,true);
+assert.ok(field('outcomePicker').options.length>1);
+field('themePick').value='';await field('themePick').onchange();
+assert.equal(field('themeEntryHelp').hidden,true);
 for(const [unit,count,page] of [['मेरो सिर्जना',3,149],['सञ्चार प्रविधि र बजार',4,150],['हाम्रो विद्यालय',5,147],['सङ्ख्याको ज्ञान',4,151],['गणितका आधारभूत क्रिया',4,152]]){
  choice('unit',unit);
  assert.equal(field('annex3').hidden,false);
@@ -815,6 +825,21 @@ for(const [grade,unit,count,page] of [
  assert.equal(new Set([...field('outcomePicker').options].slice(1).map(o=>o.value)).size,count,unit);
  assert.match(field('annexStatus').textContent,new RegExp(String(page)));
  assert.match(field('annexHead').textContent,grade==='1'?/कैफियत/:/साधन/);
+}
+// Class 1–3 math: every actual form is a selectable theme with its real outcome count.
+for(const grade of ['1','2','3']){
+ current.subjectAssignments=[{className:'Class '+grade,subject:'Mathematics',section:'A'}];serverRole={...current};
+ w.getDocs=async()=>({docs:[{id:'math-'+grade,data:()=>({class:'Class '+grade,section:'A',name:'Synthetic grade '+grade})}]});
+ await w.loadCdcAssessmentPage();
+ for(const [key,form] of Object.entries(legacyForms).filter(([key])=>key.startsWith(grade+':'))){
+   const unit=key.slice(2);
+   assert.ok([...field('themePick').options].some(o=>o.value===unit),grade+unit);
+   choice('unit',unit);
+   assert.equal(field('annex3').hidden,false,grade+unit);
+   assert.equal(field('themeEntryHelp').hidden,true,grade+unit);
+   assert.equal(field('annexRows').rows.length,form.rows.length*4,grade+unit);
+   assert.equal(field('outcomePicker').options.length,form.rows.length+1,grade+unit);
+ }
 }
 assert.equal(Object.keys(legacyForms).length,20);
 assert.equal(Object.values(legacyForms).reduce((n,f)=>n+f.rows.length,0),87);
@@ -1874,6 +1899,34 @@ for(const grade of ['1','2','3']){
  assert.ok(field('portfolioPreview').querySelector('[data-page-orientation="portrait"]'));
 }
 console.log('Grades 1–3 CDC 2076 Annex 2 annual report and portfolio PDF Word Excel regression');
+// Audit every grade and national subject against the actual form catalogue.
+{
+ const auditStart=html.indexOf('const cdcCoreSubjects =');
+ const auditEnd=html.indexOf('function cdcStoredObservation',auditStart);
+ const auditTailStart=html.indexOf('const cdcSeroferoCurriculumCounts=');
+ const auditTailEnd=html.indexOf('function cdcThemeMarkRows',auditTailStart);
+ const audit=new Function('globalThis',html.slice(auditStart,auditEnd)+html.slice(auditTailStart,auditTailEnd)+';return {cdcEntryThemeOptions,cdcVerifiedOutcomes,cdcLegacyMathRubrics,cdcPrimaryNepaliForms,cdcNepaliThemeForms,cdcPrimaryEnglishForms,cdcPrimarySubjects,cdcUpperPrimarySubjects};')({SmssIemisTransfer:w.SmssIemisTransfer});
+ for(const grade of ['1','2','3','4','5']){
+   const lower=Number(grade)<=3;
+   for(const [subject] of lower?audit.cdcPrimarySubjects:audit.cdcUpperPrimarySubjects){
+     const entries=audit.cdcEntryThemeOptions(grade,subject,'2083'),keys=entries.map(x=>x.unit),forms=entries.filter(x=>x.kind==='form').map(x=>x.unit);
+     assert.equal(new Set(keys).size,keys.length,grade+':'+subject);
+     if(subject==='hamrodhunibeshi'){assert.equal(keys.length,0);continue;}
+     assert.ok(keys.length,grade+':'+subject);
+     if(!lower){assert.deepEqual(new Set(forms),new Set(audit.cdcVerifiedOutcomes[grade+':'+subject].map(row=>row[0])));continue;}
+     if(subject==='mathematics'){
+       assert.equal(forms.length,{'1':6,'2':8,'3':6}[grade]);
+       assert.ok(forms.every(unit=>audit.cdcLegacyMathRubrics[grade+':'+unit].rows.length>0));
+       assert.deepEqual(new Set(forms),new Set(Object.keys(audit.cdcLegacyMathRubrics).filter(k=>k.startsWith(grade+':')).map(k=>k.slice(2))));
+     }
+     if(subject==='nepali')assert.deepEqual(new Set(forms),new Set(Object.keys(grade==='1'?audit.cdcPrimaryNepaliForms:audit.cdcNepaliThemeForms[grade])));
+     if(subject==='english')assert.deepEqual(new Set(forms),new Set(Object.keys(audit.cdcPrimaryEnglishForms[grade])));
+     if(subject==='serophero')assert.equal(keys.length,10);
+     assert.ok(entries.slice(0,forms.length).every(x=>x.kind==='form')||subject==='serophero');
+   }
+ }
+ console.log('Grades 1–5 CDC theme coverage: exact form keys, legacy curriculum separation and local source boundary passed');
+}
 // School-wide read-only coverage and reporting: current-year unique evidence,
 // not final grades; exclude other students, classes, sections and invalid scores.
 {
