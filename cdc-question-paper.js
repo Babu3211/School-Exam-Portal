@@ -93,6 +93,14 @@ function pageShell() {
     #qpBankEditor{order:4}#qpCdcReferences{order:5}#qpCatalogAdmin{order:6}
     #qpSavedPapers{order:7}
     .qp-grade9 .qp-manual-pattern{display:none!important}.qp-grade9 #qpGenerateBtn{display:none}.qp-grade9 #qpSmartGenerateBtn{width:100%;padding:14px;font-size:15px}.qp-grade9 #qpReferenceDraftActions{display:none!important}
+    .qp-stepbar{display:none}.qp-grade9 .qp-stepbar{display:flex;flex-wrap:wrap;gap:6px;order:0}
+    .qp-stepbar .qp-btn{flex:1;min-width:100px}.qp-stepbar .qp-btn[aria-pressed="true"]{background:#315bd6;color:white}
+    .qp-grade9[data-qp-view="topics"] :is(#qpPaperComposer,#qpBankList,#qpBankEditor,#qpCdcReferences,#qpCatalogAdmin,#qpSavedPapers),
+    .qp-grade9[data-qp-view="paper"] :is(#qpTopicCard,#qpBankList,#qpBankEditor,#qpCdcReferences,#qpCatalogAdmin,#qpSavedPapers),
+    .qp-grade9[data-qp-view="manage"] :is(#qpTopicCard,#qpPaperComposer,#qpSavedPapers),
+    .qp-grade9[data-qp-view="history"] :is(#qpTopicCard,#qpPaperComposer,#qpBankList,#qpBankEditor,#qpCdcReferences,#qpCatalogAdmin){display:none!important}
+    .qp-unit-group{border:1px solid #dce5f1;border-radius:10px;padding:8px;min-width:0}.qp-unit-group h4{font-size:13px;color:#193b69;margin:0 0 6px}.qp-unit-group .qp-topic{margin:4px 0}.qp-unit-group .qp-topic:has(input:disabled){opacity:.55}
+    .qp-topic-next{display:none}.qp-grade9 .qp-topic-next{display:flex}
     .qp-collapsible{margin-top:10px}.qp-collapsible summary{cursor:pointer;color:#2447a7;font-weight:750;padding:8px 0}
     .qp-card{background:#fff;border:1px solid #dce5f1;border-radius:14px;padding:16px;box-shadow:0 4px 14px rgba(22,48,84,.04)}
     .qp-card h3{margin:0 0 10px;color:#193b69}.qp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
@@ -111,7 +119,7 @@ function pageShell() {
     @media(max-width:600px){.qp-paper-preview .qp-paper-body{column-count:1}.qp-card{padding:12px}.qp-paper-preview{padding:12px}.qp-table{min-width:650px}}
     @media print{body *{visibility:hidden!important}#qpPrintArea,#qpPrintArea *{visibility:visible!important}#qpPrintArea{position:absolute;left:0;top:0;width:100%;border:0!important;box-shadow:none!important}}
   </style>
-  <div class="qp-wrap" id="qpApp">
+  <div class="qp-wrap" id="qpApp" data-qp-view="topics">
     <div class="qp-card">
       <div class="qp-section-title"><div><h3>CDC पाठ्यक्रमअनुसार प्रश्नपत्र निर्माण</h3><div class="qp-hint">कक्षा ६–१० · विषय · एकाइ/पाठ · Topic · प्रश्न बैंक · स्वचालित प्रश्नपत्र</div></div><span class="qp-badge">V46 · Quick Builder</span></div>
       <div class="qp-grid" style="margin-top:12px">
@@ -123,6 +131,7 @@ function pageShell() {
       <p class="qp-hint" id="qpMessage" role="status">पहिले कक्षा र विषय छान्नुहोस्। शिक्षकले आफूलाई तोकिएको कक्षा/विषयमा मात्र काम गर्न पाउनुहुनेछ।</p>
     </div>
 
+    <nav class="qp-stepbar" aria-label="Question Builder"><button class="qp-btn alt" type="button" data-qp-view-target="topics" aria-pressed="true">1. Unit / Topic</button><button class="qp-btn alt" type="button" data-qp-view-target="paper" aria-pressed="false">2. Question Paper</button><button class="qp-btn alt" type="button" data-qp-view-target="history" aria-pressed="false">History</button><button class="qp-btn alt" type="button" data-qp-view-target="manage" aria-pressed="false">Manage</button></nav>
     <div class="qp-card" id="qpCdcReferences">
       <div class="qp-section-title"><h3>CDC आधिकारिक नमुना प्रश्नपत्र तथा विशिष्टीकरण स्रोत</h3><span class="qp-badge">CDC स्रोत</span></div>
       <details class="qp-collapsible" id="qpSourceDetails">
@@ -215,7 +224,7 @@ function pageShell() {
       <div class="qp-section-title"><h3>१. Unit / Topic छान्नुहोस्</h3><span class="qp-badge" id="qpTopicCount">० Topic</span></div>
       <div class="qp-actions"><button class="qp-btn alt" type="button" id="qpSelectGridUnits">CDC Grid का Unit छान्नुहोस्</button><button class="qp-btn alt" type="button" id="qpTopicSelectAll">सबै Topic चयन</button><button class="qp-btn alt" type="button" id="qpTopicClearAll">Topic चयन हटाउनुहोस्</button></div>
       <p class="qp-hint">कक्षा ९ को उपलब्ध Unit/Topic स्वतः लोड हुन्छ। चाहिएका Topic मा टिक लगाउनुहोस्; प्रश्न वा Unit टाइप गर्नु पर्दैन। Grid पूरा गर्न आवश्यक Topic छुटेमा प्रणालीले जानकारी दिन्छ।</p>
-      <div id="qpTopicList" class="qp-topic-list"><p class="qp-hint">कक्षा र विषय छान्नुहोस्।</p></div>
+      <div id="qpTopicList" class="qp-topic-list"><p class="qp-hint">कक्षा र विषय छान्नुहोस्।</p></div><div class="qp-actions qp-topic-next"><button class="qp-btn" type="button" data-qp-view-target="paper">Next — Question Paper</button></div>
     </div>
 
     <div class="qp-card" id="qpBankEditor">
@@ -282,6 +291,12 @@ function pageShell() {
       <div class="qp-table-wrap"><table class="qp-table"><thead><tr><th>परीक्षा</th><th>कक्षा</th><th>विषय</th><th>पूर्णाङ्क</th><th>समय</th><th>मिति</th><th>कार्य</th></tr></thead><tbody id="qpPaperRows"><tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr></tbody></table></div>
     </div>
   </div>`;
+}
+function setQuestionBuilderView(view){
+ const root=$("qpApp");
+ if(!root||!["topics","paper","manage","history"].includes(view))return;
+ root.dataset.qpView=view;
+ for(const b of root.querySelectorAll(".qp-stepbar [data-qp-view-target]"))b.setAttribute("aria-pressed",String(b.dataset.qpViewTarget===view));
 }
 function applyGrade9LanguagePolicy(){
  $("qpApp")?.classList.toggle("qp-grade9",gradeNumber(selectedClass)===9);
@@ -376,12 +391,18 @@ function renderTopics() {
   box.innerHTML='<p class="qp-hint">यस कक्षा/विषयको Topic र समीक्षा गरिएको प्रश्न बैंक उपलब्ध छैन।</p>';
   picker.innerHTML="";return;
  }
- box.innerHTML=topics.map(x=>`<label class="qp-topic"><input type="checkbox" data-qp-topic data-unit-code="${esc(x.unitCode||"")}" value="${esc(x.id)}" checked><span><b>${esc(x.topicName)}</b><small class="qp-hint"> · ${esc(x.unitTitle||"एकाइ नतोकिएको")}</small></span></label>`).join("");
+ const groups=new Map();
+ for(const x of topics){
+  const key=String(x.unitCode||"").trim()||normal(x.unitTitle);
+  if(!groups.has(key))groups.set(key,{title:x.unitTitle||"एकाइ नतोकिएको",code:x.unitCode,items:[]});
+  groups.get(key).items.push(x);
+ }
+ box.innerHTML=[...groups.values()].map(g=>`<section class="qp-unit-group"><h4>${esc(g.code?"Unit "+g.code+" · ":"")}${esc(g.title)}</h4>${g.items.map(x=>`<label class="qp-topic"><input type="checkbox" data-qp-topic data-unit-code="${esc(x.unitCode||"")}" value="${esc(x.id)}" checked><span><b>${esc(x.topicName)}</b></span></label>`).join("")}</section>`).join("");
  picker.innerHTML=topics.map(x=>'<option value="'+esc(x.topicName)+'">').join("");
 }
 function renderQuestionRows() {
   const body = $("qpQuestionRows"); if (!body) return;
-  if (!questionRows.length) { body.innerHTML='<tr><td colspan="7">यस विषयको प्रश्न बैंक खाली छ। पहिले प्रश्न थप्नुहोस्।</td></tr>'; return; }
+  if (!questionRows.length) { body.innerHTML='<tr><td colspan="7">'+(bundledPracticeQuestions.length?esc(bundledPracticeQuestions.length)+" वटा प्रणालीमा तयार अभ्यास प्रश्न उपलब्ध छन्। प्रश्न टाइप गर्नुपर्दैन।":"यस विषयको थप प्रश्न बैंक खाली छ।")+"</td></tr>"; return; }
   body.innerHTML = questionRows.slice(0,100).map(q => `<tr>
     <td>${esc(q.topicName)}</td><td>${esc(q.questionText)}</td><td>${esc(questionTypeLabel(q.questionType))}</td>
     <td>${esc(levelLabel(q.cognitiveLevel))}</td><td>${esc(q.marks)}</td><td>${esc(q.createdByName||"शिक्षक")}</td>
@@ -762,7 +783,7 @@ async function loadCurrentData() {
     " कक्षा १० को २०८३ Model Question को उपलब्ध प्रतिमा ११ Objective, १२ WCA, ४ CCA र छवटै विषयक्षेत्रको अङ्कभार मिलेको छ। मूल २०८३ PDF attachment प्रत्यक्ष प्रमाणीकरण बाँकी छ।":"")+
    " SMSS मौलिक अभ्यास Draft Generate हुन्छ; CDC प्रकाशित प्रश्न होइन। शिक्षकले उत्तरकुञ्जिका जाँचेर मात्र Save/Print गर्नुहोस्।";
  }else if(grade9ScienceHistoricalAudit){
-  badge.textContent="School Grid Draft · Grade 9 Science";
+  badge.textContent="School Grid Draft · Grade 9 Science (२०७८ ऐतिहासिक Grid)";
   $("qpPatternHint").textContent="CDC को २०७८ कक्षा ९ विज्ञान नमुना ढाँचा: "+
    "१० MCQ, ९ अति छोटा, १४ छोटा, ७ लामा = ४० प्रश्न/७५ अङ्क। "+
    "तर २०८२ मा Grid संशोधन भएको छ। नयाँ मूल Grid तुलना नहुँदासम्म "+
@@ -1927,7 +1948,7 @@ document.addEventListener("input",event=>{
 });
 document.addEventListener("change",async event=>{
   const t=event.target;
-  if(["qpClass","qpSubject","qpSection"].includes(t.id))clearReferenceDraftPreview();
+  if(["qpClass","qpSubject","qpSection"].includes(t.id)){clearReferenceDraftPreview();setQuestionBuilderView("topics");}
   if(t.id==="qpClass"){
     questionDataLoadEpoch++;verifiedQuestionSelection=null;
     selectedClass=t.value;selectedSubject="";selectedSection="";generatedPaper=null;savedPapers=[];applyGrade9LanguagePolicy();$("qpPaperRows").innerHTML='<tr><td colspan="7">पहिले कक्षा/विषय छान्नुहोस्।</td></tr>';
@@ -2017,6 +2038,7 @@ document.addEventListener("submit",async event=>{
 document.addEventListener("click",async event=>{
   const t=event.target.closest("button");if(!t)return;
   try{
+    if(t.dataset.qpViewTarget){if(t.dataset.qpViewTarget==="paper"&&(!verifiedQuestionSelection||!selectedTopicIds().length))throw Error("पहिले विषय र उपलब्ध Unit/Topic छान्नुहोस्।");setQuestionBuilderView(t.dataset.qpViewTarget);return;}
     if(t.id==="qpTemplateBtn")downloadTemplate();
     if(t.id==="qpBpGridExcelTemplateBtn")await downloadCdcGridExcelTemplate();
     if(t.id==="qpQuestionExcelTemplateBtn")await downloadQuestionExcelTemplate();
@@ -2035,6 +2057,10 @@ document.addEventListener("click",async event=>{
     if(t.id==="qpReferenceWordBtn")await exportReferenceWord();
     if(t.id==="qpSmartGenerateBtn")await generateSmartPaper();
     if(t.id==="qpSelectGridUnits"){
+      if(gradeNumber(selectedClass)===9&&referencePreviewTopics({grade:9,subject:selectedSubject,questions:bundledPracticeQuestions}).length){
+       selectReferenceDraftTopics();return;
+      }
+      clearReferenceDraftPreview();refreshReferenceDraftActions();
       const target=Number($("qpPaperFullMarks").value);
       const compound=target===75?getCdcOptionalMathGuide({
        grade:gradeNumber(selectedClass),subject:selectedSubject
