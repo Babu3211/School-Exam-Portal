@@ -169,7 +169,8 @@ export function grade9GridLibrary(register){
     status='Official curriculum + non-official school pattern; Grade 9 exact Grid unavailable';
     add('School syllabus 2080: scored questions only (not CDC Grid)',['Type','Count','Marks each','Total'],school.types.map((type,j)=>[type,school.questionCounts[j],school.marksEach[j],school.questionCounts[j]*school.marksEach[j]]));
     add('School syllabus periods — not marks or textbook chapter mapping',['School unit','Periods'],school.periods.map((n,j)=>[j+1,n]));
-    add('School syllabus alternatives — not implemented in reference drafts',['Type','School unit','Topic'],school.alternativeRules.map(a=>[a.type,a.sourceUnit,a.topic]));
+    add('School syllabus alternatives — original draft adaptation, not verified CDC mapping',['Type','School unit','Topic'],school.alternativeRules.map(a=>[a.type,a.sourceUnit,a.topic]));
+    add('Environment draft choice review',['Field','Status'],[['Pollution OR alternative','Implemented as original 8-mark review choice'],['Total scored marks','75; alternative not added to total'],['Official position and unit mapping','Not verified']]);
     add('Unresolved source differences',['Field','Value'],[['School syllabus units',school.sourceUnitCount],['Portal textbook units',school.portalTextbookUnitCount],['Verified unit mapping','No'],['Complete official Grid','No']]);
     const crosswalk=entries.find(s=>s.environmentTextbookCrosswalk?.contentsVisuallyChecked===true)?.environmentTextbookCrosswalk;
     if(crosswalk?.officialExamApproved===false&&safeUrl(crosswalk.textbookUrl)){
