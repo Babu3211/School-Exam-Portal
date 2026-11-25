@@ -91,6 +91,7 @@ export function inspectReferencePaperAllocation({subject,groups,durationMinutes}
   need(same(counts(['very_short','short','long']),[11,8,3])&&groups.every(g=>mark(g)===({very_short:1,short:5,long:8})[g.questionType]),'Environment school model pattern');
   checks.push('11 very short / 8 short / 3 long');
   unresolved.push('No subject-specific CDC numerical grid; unit and cognitive allocation unverified');
+  unresolved.push('School syllabus 2083 mirror lists ten units and an additional OR option from environmental pollution in the long-answer section; the current nine-unit draft has neither been reconciled to that syllabus nor supplied with this option. Do not treat its aggregate 22-question pattern as a complete model match.');
  }
  return {subjectKey:key,fullMarks:75,groupCount:groups.length,groupMarks:marks,durationMinutes,numericalReferenceChecksPassed:true,checks,unresolved,currentCdcExactApproved:false};
 }
