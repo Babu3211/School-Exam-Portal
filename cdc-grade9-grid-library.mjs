@@ -64,6 +64,16 @@ export function grade9GridLibrary(register){
    }
    if(key==='english'){
     add('Reading and writing marks',['Section','Marks'],[...(evidence.readingMarks||[]).map((n,i)=>['Reading '+(i+1),n]),...(evidence.writingMarks||[]).map((n,i)=>['Writing '+(i+1),n]),['Grammar',evidence.grammar?.total]]);
+    const visual=entries.find(s=>s.retrievalEvidence?.primaryVisualReview?.chartVisualReviewComplete===true)?.retrievalEvidence?.primaryVisualReview;
+    if(visual?.officialExamApproved===false){
+     durationMinutes=visual.durationMinutes;
+     status='Original Grades 9–10 English chart visually checked; current edition and Grade 9 model pending';
+     add('Original CDC reading chart',['Reading','Text source','Approx. words','Question types','Marks'],visual.reading.map((r,i)=>[i+1,r.seen?'Textbook':'Unseen',r.words,r.types,r.marks]));
+     add('Original CDC comprehension distribution',['Type','Items'],[...Object.entries(visual.comprehensionCounts),['Vocabulary (derived)',visual.vocabularyItemsDerived]]);
+     add('Original CDC writing chart',['Task','Approx. words','Marks'],visual.writing.map(w=>[w.kind,w.words,w.marks]));
+     add('Original CDC grammar areas',['Area'],visual.grammarAreas.map(x=>[x]));
+     add('Original CDC chart constraints',['Rule'],[['Vocabulary only in Reading 4'],['Except short answers, avoid repeating question types within the seen pair and within the unseen pair'],['Writing task type must differ from reading text types'],['Contextual grammar MCQs have four options']]);
+    }
    }
    if(key==='english'&&evidence.grammar){
     const g=evidence.grammar;
