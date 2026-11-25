@@ -3,7 +3,7 @@ import {grade9EnvironmentReferenceBank as bank,planEnvironmentSchoolReference as
 import {buildGrade9ReferencePreview,referencePreviewTopics} from '../cdc-grade9-reference-preview.mjs';
 import {assertGrade9ExamPaperMatches} from '../cdc-grade9-paper-grid-guard.mjs';
 const grade=9,subject='Environmental Science',p=bank({grade,subject});
-assert.equal(p.added.length,9);assert.equal(p.questions.length,36);
+assert.equal(p.added.length,10);assert.equal(p.questions.length,37);
 const selectedTopicIds=referencePreviewTopics({grade,subject,questions:p.questions});assert.equal(selectedTopicIds.length,9);
 for(const language of ['ne','en','both']){
  const args={grade,subject,fullMarks:75,durationMinutes:135,language,questions:p.questions,selectedTopicIds,rng:()=>.31};
@@ -16,9 +16,12 @@ for(const language of ['ne','en','both']){
  const types=['very_short','short','long'];
  assert.deepEqual(types.map(type=>r.paper.questions.filter(q=>q.questionType===type).length),[11,8,3]);
  assert.deepEqual(types.map(type=>r.paper.questions.filter(q=>q.questionType===type).reduce((sum,q)=>sum+q.marks,0)),[11,40,24]);
+ const alternatives=r.paper.questions.filter(q=>q.orAlternative);
+ assert.equal(alternatives.length,1);assert.equal(alternatives[0].orAlternative.marks,8);
+ assert.equal(String(alternatives[0].orAlternative.unitCode),'4');
  assert.equal(r.paper.durationMinutes,135);
  assert.equal(r.paper.referenceOnly,true);assert.equal(new Set(r.paper.questions.map(q=>q.topicId)).size,9);assert.equal(r.currentCdcExactApproved,false);assert.throws(()=>assertGrade9ExamPaperMatches(r.paper),/verified subject/);}
- const preview=buildGrade9ReferencePreview(args);assert.equal(preview.ready,true);assert.match(preview.text,/School model aggregate pattern only/);
+ const preview=buildGrade9ReferencePreview(args);assert.equal(preview.ready,true);assert.match(preview.text,/School model aggregate pattern and pollution OR choice only/);
  assert.equal(preview.readyForLive,false);assert.equal(preview.groupCount,22);
  assert.equal(plan({...args,selectedTopicIds:selectedTopicIds.slice(0,2)}).ready,false);
 }
