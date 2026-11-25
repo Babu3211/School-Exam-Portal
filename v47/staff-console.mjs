@@ -5,7 +5,7 @@ import {validateSchoolId} from './school-paths.mjs';
 import {createSchoolStore} from './firestore-adapter.mjs';
 import {collectCompleteSchoolStaffExport} from './complete-school-staff-excel.mjs';
 import {excelWorkbook} from './excel-workbook.mjs';
-import {v46StaffExcelRow} from './v46-staff-excel-schema.mjs';
+import {V46_STAFF_EXCEL_HEADERS,v46StaffExcelRow} from './v46-staff-excel-schema.mjs';
 import {readV47StudentXlsx} from './read-v47-student-xlsx.mjs';
 import {previewV46StaffExcelRows} from './staff-excel-preview.mjs';
 import {importNewStaff,MAX_STAFF_IMPORT} from './staff-import-save.mjs';
@@ -16,7 +16,7 @@ let auth,authSdk,db,api,actor=null,store=null,schoolId=null,epoch=0,busy=false,l
 let reviewedCells=null,importing=false;
 const clearImport=()=>{reviewedCells=null;$('saveStaffImport').disabled=true;};
 const status=s=>{$('message').textContent=s;};
-const readDocument=async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;};
+const readDocument=async path=>{const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;};
 function reset(){
  epoch++;previewToken++;clearImport();actor=null;
  $('staffImportArea').hidden=true;$('staffImportFile').value='';
@@ -96,6 +96,11 @@ async function loadPage(resetPage=false){
  }catch(e){if(token===epoch){hasMore=false;$('next').disabled=true;status('Staff विवरण लोड भएन: '+neError(e))}}
  finally{if(token===epoch){loading=false;$('refresh').disabled=false;$('next').disabled=!hasMore;$('exportAll').disabled=!actor||exporting;}}
 }
+$('downloadStaffTemplate').onclick=()=>{
+ if(actor?.role!=='school_admin'||!actor.active)return;
+ const url=URL.createObjectURL(excelWorkbook(V46_STAFF_EXCEL_HEADERS,[],{sheetName:'Staff'})),link=document.createElement('a');
+ try{link.href=url;link.download='SMSS-Staff-Template.xlsx';document.body.append(link);link.click()}finally{link.remove();URL.revokeObjectURL(url)}
+};
 $('staffImportFile').onchange=()=>{
  previewToken++;clearImport();$('staffImportRows').replaceChildren();
  $('staffImportSummary').textContent='Excel changed. Review the selected file again.';
@@ -173,7 +178,7 @@ $('saveStaffImport').onclick=async()=>{
 $('refresh').onclick=()=>loadPage(true);
 $('next').onclick=()=>loadPage(false);
 $('exportAll').onclick=async()=>{
- if(!actor||!store||exporting||loading)return;
+ if(!actor||!store||exporting||loading||importing)return;
  const token=epoch,selectedActor=actor,selectedStore=store,selectedSchool=schoolId,uid=actor.uid;
  exporting=true;$('exportAll').disabled=true;
  const assertSession=()=>assertCurrent(token,selectedActor,selectedStore,selectedSchool,uid);

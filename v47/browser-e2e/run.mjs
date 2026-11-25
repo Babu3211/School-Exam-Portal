@@ -11,6 +11,7 @@ import {join,resolve} from 'node:path';
 import {build} from 'esbuild';
 import {chromium} from 'playwright';
 import {excelWorkbook} from '../excel-workbook.mjs';
+import {V46_STAFF_EXCEL_HEADERS} from '../v46-staff-excel-schema.mjs';
 import {createV47StaticHandler} from '../../v47-runtime/static-handler.mjs';
 
 const projectId='demo-smss-v47-browser';
@@ -233,6 +234,66 @@ try{
    assert.deepEqual(errors,[]);
    console.log('PASS School Admin isolated Viewer account, inactive membership, activation, tenant denial');
   }finally{await context.close()}
+ }
+ // Real Staff XLSX import: same Employee ID in different schools is allowed,
+ // but same-school duplicates and revoked accounts must not write anything.
+ {
+  const school=schools[0],foreign=schools[1],base='schools/'+school.sid,foreignBase='schools/'+foreign.sid;
+  const original={schoolId:school.sid,staffId:'EXISTING-01',nameEnglish:'Existing Staff',name:'Existing Staff',position:'Teacher'};
+  const foreignRecord={...original,schoolId:foreign.sid,staffId:'000071',name:'Foreign Staff',nameEnglish:'Foreign Staff'};
+  await db.doc(base+'/staff/existing').set(original);
+  await db.doc(foreignBase+'/staff/existing').set(foreignRecord);
+  const staffRow=['000071','शिक्षक','Imported Staff','Kathmandu','Secondary','2081-01-01','Permanent','MA','Science','00123456','कार्यरत'];
+  const second=['EMP-072','','Second Staff','','Primary','','','','','','कार्यरत'];
+  const {context,page,errors}=await newSession();
+  const upload=async rows=>{
+   const blob=excelWorkbook(V46_STAFF_EXCEL_HEADERS,rows,{sheetName:'Staff'});
+   await page.locator('#staffImportFile').setInputFiles({name:'staff.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from(await blob.arrayBuffer())});
+   await page.locator('#previewStaffImport').click();
+   await wait(page,()=>!document.getElementById('previewStaffImport').disabled);
+  };
+  try{
+   await login(page,school.sid,'alpha-admin');
+   await page.goto(origin+'/staff.html?schoolId='+school.sid);
+   await wait(page,()=>!document.getElementById('staffImportArea').hidden&&!document.getElementById('refresh').disabled);
+   await upload([staffRow,second]);
+   assert.equal(await page.locator('#saveStaffImport').isDisabled(),false,await page.locator('#staffImportSummary').textContent());
+   assert.equal((await db.collection(base+'/staff').get()).size,1);
+   // A cancelled confirmation never writes or invalidates the review.
+   page.once('dialog',d=>d.dismiss());await page.locator('#saveStaffImport').click();
+   assert.equal((await db.collection(base+'/staff').get()).size,1);
+   page.once('dialog',d=>d.accept());await page.locator('#saveStaffImport').click();
+   await wait(page,()=>document.getElementById('staffImportSummary').textContent.includes('2 नयाँ कर्मचारी विवरण सुरक्षित भए'));
+   const records=(await db.collection(base+'/staff').get()).docs;
+   assert.equal(records.length,3);
+   const imported=records.find(d=>d.data().staffId==='000071').data();
+   assert.deepEqual(imported,{schoolId:school.sid,staffId:'000071',name:'Imported Staff',nameEnglish:'Imported Staff',nameNepali:'शिक्षक',position:'Secondary',levelCategory:'Secondary',permanentAddress:'Kathmandu',appointmentDateBs:'2081-01-01',appointmentType:'Permanent',qualification:'MA',subject:'Science',phone:'00123456',status:'कार्यरत'});
+   assert.deepEqual((await db.doc(base+'/staff/existing').get()).data(),original);
+   assert.deepEqual((await db.doc(foreignBase+'/staff/existing').get()).data(),foreignRecord);
+   await wait(page,()=>!document.getElementById('previewStaffImport').disabled);
+   await upload([['emp-072',...second.slice(1)]]);
+   assert.equal(await page.locator('#saveStaffImport').isDisabled(),true);
+   await upload([['EMP-073',...second.slice(1)]]);
+   assert.equal(await page.locator('#saveStaffImport').isDisabled(),false);
+   await db.doc(base+'/members/alpha-admin').update({active:false});
+   page.once('dialog',d=>d.accept());await page.locator('#saveStaffImport').click();
+   await wait(page,()=>document.getElementById('staffImportSummary').textContent.includes('Import पुष्टि भएन'));
+   assert.equal((await db.collection(base+'/staff').get()).size,3);
+   await db.doc(base+'/members/alpha-admin').update({active:true});
+   assert.deepEqual(errors,[]);
+  }finally{await db.doc(base+'/members/alpha-admin').update({active:true});await context.close()}
+  const viewer=await newSession();
+  try{
+   await login(viewer.page,school.sid,'alpha-viewer');
+   await viewer.page.goto(origin+'/staff.html?schoolId='+school.sid);
+   await wait(viewer.page,()=>!document.getElementById('records').hidden);
+   assert.equal(await viewer.page.locator('#staffImportArea').isVisible(),false);
+   assert.equal(await viewer.page.locator('#saveStaffImport').isDisabled(),true);
+   await wait(viewer.page,()=>document.getElementById('staffRows').textContent.includes('Imported Staff'));
+   assert.ok(!(await viewer.page.locator('#staffRows').textContent()).includes('Foreign Staff'));
+   assert.deepEqual(viewer.errors,[]);
+  }finally{await viewer.context.close()}
+  console.log('PASS Staff XLSX import: all 11 fields, leading zeros, no overwrite, same-school duplicate, cross-school isolation, cancelled confirmation, revoked admin and Viewer read-only');
  }
  // Real XLSX upload, isolated Auth, atomic Staff link and teacher assignment.
  {
