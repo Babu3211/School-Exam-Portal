@@ -11,6 +11,8 @@ for(const name of collections) {
 const cdcBlock=rules.match(/match \/cdc_observations\/\{id\} \{([\s\S]*?)\n      \}/)?.[1]??"";
 assert.match(cdcBlock,/allow read: if member\(schoolId\);/,"CDC student observations must be school-private");
 assert.match(cdcBlock,/allow (?:create, update, delete|write): if false;/,"CDC student observations must not be writable before schema review");
+const seroBlock=rules.match(/match \/cdc_serofero_indicators\/\{id\} \{([\s\S]*?)\n      \}/)?.[1]??"";
+assert.match(seroBlock,/allow read, write: if false;/,"Serofero indicators remain server-managed pending schema review");
 assert.match(rules,/function schoolActive\(schoolId\)/);
 assert.match(rules,/function member\(schoolId\)[\s\S]*?schoolActive\(schoolId\)/);
 assert.match(rules,/match \/\{document=\*\*\} \{ allow read, write: if false; \}/);

@@ -277,6 +277,11 @@ service cloud.firestore {
         allow read: if member(schoolId);
         allow create, update, delete: if false;
       }
+      // Preserve V46 Serofero indicator definitions in a future trusted migration.
+      // No browser permissions before schema review; catch-all remains deny.
+      match /cdc_serofero_indicators/{id} {
+        allow read, write: if false;
+      }
       match /certificates/{id} {
         allow read: if member(schoolId);
         allow create, update: if admin(schoolId);
