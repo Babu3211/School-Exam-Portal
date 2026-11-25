@@ -1733,6 +1733,7 @@ w.open=()=>({document:{open(){},write(value){batchMarkup=value;},close(){}},focu
 assert.equal(field('printAll').disabled,false);
 await field('printAll').onclick();
 assert.equal(batchPrinted,1);assert.equal(field('student').value,'batch-two');
+saveSyntheticPrint('cdc-batch',batchMarkup);
 const batchDoc=new JSDOM(batchMarkup).window.document;
 const pages=[...batchDoc.querySelectorAll('.cdc-pupil')];
 assert.equal(pages.length,2);
@@ -1757,6 +1758,8 @@ const zipEntries=bytes=>{
  assert.equal(data.readUInt32LE(p),0x02014b50);
  return entries;
 };
+const saveSyntheticOffice=(name,doc,format)=>{if(process.env.SMSS_CDC_PRINT_DIR)writeFileSync(join(process.env.SMSS_CDC_PRINT_DIR,name+'.'+format),Buffer.from(w.cdcOfficeExport(doc,format)));};
+for(const format of ['docx','xlsx'])saveSyntheticOffice('cdc-batch',batchDoc,format);
 const wordFile=zipEntries(w.cdcOfficeExport(batchDoc,'docx'));
 assert.match(wordFile['word/document.xml'],/w:orient="landscape"/);
 assert.match(wordFile['word/document.xml'],/w:br w:type="page"/);
@@ -1804,6 +1807,9 @@ field('portfolioFormat').value='xlsx';await field('portfolioExport').onclick();
 assert.ok(Object.values(officeDownloads.at(-1).entries).some(x=>x.includes('orientation="portrait"')));
 field('portfolioFormat').value='pdf';await field('portfolioExport').onclick();
 assert.match(batchMarkup,/CDC Student Portfolio/);
+saveSyntheticPrint('cdc-portfolio',batchMarkup);
+const portfolioDoc=new JSDOM(batchMarkup).window.document;
+for(const format of ['docx','xlsx'])saveSyntheticOffice('cdc-portfolio',portfolioDoc,format);
 choice('student','batch-one');
 assert.equal(field('portfolioExport').disabled,true);
 assert.equal(field('portfolioPreview').children.length,0);
@@ -1822,7 +1828,9 @@ for(const grade of ['1','2','3']){
  assert.deepEqual([...field('annualRows').rows].map(row=>Number(row.cells[2].textContent)),[160,128,128,256,160]);
  assert.ok([...field('annualRows').rows].every(row=>row.cells[3].textContent==='—'));
  field('annualFormat').value='pdf';field('printProgress').onclick();
+ saveSyntheticPrint('cdc-annual-'+grade,batchMarkup);
  const lowerDoc=new JSDOM(batchMarkup).window.document;
+ for(const format of ['docx','xlsx'])saveSyntheticOffice('cdc-annual-'+grade,lowerDoc,format);
  assert.match(lowerDoc.body.textContent,/अनुसूची २/);
  assert.match(lowerDoc.body.textContent,new RegExp('Lower Student '+grade));
  assert.equal(lowerDoc.querySelectorAll('thead th').length,4);
