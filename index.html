@@ -9207,6 +9207,20 @@ function cdcSeroGuideEntryForm(grade,unit,year){
   }
   return {page:source.page,start,groups,mainRows,guideEntry:true};
 }
+// Existing Grade 1 source forms (2076 guide PDF pp.128–130) already
+// accept saved evidence. Report calculations must use their unchanged IDs.
+// The remaining 27 review-only themes still require explicit source approval.
+function cdcSeroSavedReportForm(grade,unit,year){
+  if(String(year)!=='2083')return null;
+  const approved=cdcSeroGuideEntryForm(grade,unit,year);
+  if(approved)return approved;
+  if(String(grade)!=='1')return null;
+  const existing=cdcSeroferoReferenceForms[grade]?.[unit],source=cdcSeroferoGuideCounts[grade]?.[unit];
+  if(!existing||existing.referenceOnly||!source||existing.page!==source.page)return null;
+  const expected=source.groups.reduce((sum,n)=>sum+n,0);
+  if(existing.groups.length*4!==expected||existing.groups.some(g=>g[1].length!==4))return null;
+  return existing;
+}
 // User-supplied CDC 2083 guide, Annex 3(a–f), PDF pages 18–148.
 // Counts from printed 4 × N denominators; pages are 1-based PDF pages.
 // Multi-page forms link to their first page (Class 5 arithmetic 87–88,
@@ -9283,6 +9297,140 @@ function cdcThemeMarkRows(grade,subject,year){
   return rows;
 }
 
+// Native Office Open XML export. No CDN, external service, macros or formulas.
+// The input is the saved-only print DOM, preserving its row/column spans and wording.
+function cdcLower2076Grade(percent){
+  if(!Number.isFinite(percent)||percent<0||percent>100)return null;
+  return percent>=90?'A*':percent>=75?'A':percent>=60?'B':percent>=45?'C':percent>=30?'D':'E';
+}
+function cdcOfficeExport(doc,format){
+  const pages=[...doc.body.querySelectorAll(':scope > .cdc-pupil')];
+  if(!pages.length)pages.push(doc.body);
+  const xml=s=>String(s??'').replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+  const declaration='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+  const rel='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const pkg='http://schemas.openxmlformats.org/package/2006/relationships';
+  const types='http://schemas.openxmlformats.org/package/2006/content-types';
+  const word='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const sheet='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+  function grid(table){
+    const occupied=[],rows=[];let width=0;
+    for(const [r,tr] of [...table.rows].entries()){
+      occupied[r] ||= [];const cells=[];let c=0;
+      for(const td of tr.cells){
+        while(occupied[r][c])c++;
+        const h=Math.min(Math.max(td.rowSpan,1),table.rows.length-r),w=Math.max(td.colSpan,1);
+        const item={r,c,h,w,text:td.textContent.trim(),header:td.tagName==='TH'};
+        cells.push(item);
+        for(let i=r;i<r+h;i++){occupied[i] ||= [];for(let j=c;j<c+w;j++){if(occupied[i][j])throw Error('Overlapping form cells');occupied[i][j]=item;}}
+        c+=w;
+      }
+      width=Math.max(width,occupied[r].length);
+      rows.push({cells,header:tr.parentElement.tagName==='THEAD'});
+    }
+    return {occupied,rows,width};
+  }
+  const models=pages.map(page=>{
+    const table=page.querySelector('table');if(!table||page.querySelector('input,select,button'))throw Error('Saved form required');
+    return {table,orientation:page.dataset.pageOrientation||(/@page\s*\{\s*size:A4 portrait/.test(doc.head.textContent)?'portrait':'landscape'),sheetName:page.dataset.sheetName||'',layout:grid(table),before:[...page.children].slice(0,[...page.children].indexOf(table)),after:[...page.children].slice([...page.children].indexOf(table)+1)};
+  });
+  function weights(m){
+    const n=m.layout.width;
+    const source=[...m.table.querySelectorAll('colgroup col')].map(c=>parseFloat(c.style.width));
+    if(source.length===n&&source.every(v=>v>0))return source;
+    if(n===7)return [5,39,12,9,12,9,14];
+    if(n===8)return [5,30,12,9,12,9,12,11];
+    return Array(n).fill(1);
+  }
+  function widths(m,total){const w=weights(m),sum=w.reduce((a,b)=>a+b,0);const a=w.map(v=>Math.floor(v/sum*total));a[a.length-1]+=total-a.reduce((x,y)=>x+y,0);return a;}
+  const contentTypes=overrides=>declaration+'<Types xmlns="'+types+'"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>'+overrides.map(([path,type])=>'<Override PartName="/'+path+'" ContentType="'+type+'"/>').join('')+'</Types>';
+  const relationships=items=>declaration+'<Relationships xmlns="'+pkg+'">'+items.map(([id,type,target])=>'<Relationship Id="'+id+'" Type="'+rel+'/'+type+'" Target="'+target+'"/>').join('')+'</Relationships>';
+  const files={};
+  if(format==='docx'){
+    const nodeText=n=>n.querySelector('p')?[...n.querySelectorAll('p')].map(p=>p.textContent).join(' | '):n.textContent;
+    function para(text,heading=false){return '<w:p><w:pPr><w:spacing w:after="40"/>'+(heading?'<w:jc w:val="center"/>':'')+'</w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Noto Sans Devanagari"/><w:sz w:val="'+(heading?24:18)+'"/><w:szCs w:val="'+(heading?24:18)+'"/>'+(heading?'<w:b/><w:bCs/>':'')+'</w:rPr><w:t xml:space="preserve">'+xml(text)+'</w:t></w:r></w:p>';}
+    const border=['top','left','bottom','right','insideH','insideV'].map(s=>'<w:'+s+' w:val="single" w:sz="4" w:color="222222"/>').join('');
+    const section=orientation=>'<w:sectPr><w:type w:val="nextPage"/><w:pgSz w:w="'+(orientation==='portrait'?11906:16838)+'" w:h="'+(orientation==='portrait'?16838:11906)+'" w:orient="'+orientation+'"/><w:pgMar w:top="567" w:right="567" w:bottom="567" w:left="567" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr>';
+    const body=models.map((m,i)=>{
+      const totalWidth=m.orientation==='portrait'?10772:15704,ws=widths(m,totalWidth),g=m.layout;
+      let out=i?(models[i-1].orientation===m.orientation?'<w:p><w:r><w:br w:type="page"/></w:r></w:p>':'<w:p><w:pPr>'+section(models[i-1].orientation)+'</w:pPr></w:p>'):'';
+      out+=m.before.map(n=>para(nodeText(n),/^H[123]$/.test(n.tagName))).join('');
+      out+='<w:tbl><w:tblPr><w:tblW w:w="'+totalWidth+'" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblBorders>'+border+'</w:tblBorders><w:tblCellMar><w:top w:w="45" w:type="dxa"/><w:bottom w:w="45" w:type="dxa"/><w:left w:w="60" w:type="dxa"/><w:right w:w="60" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>'+ws.map(w=>'<w:gridCol w:w="'+w+'"/>').join('')+'</w:tblGrid>';
+      for(let r=0;r<g.rows.length;r++){
+        out+='<w:tr><w:trPr><w:cantSplit/>'+(g.rows[r].header?'<w:tblHeader/>':'')+'</w:trPr>';
+        for(let c=0;c<g.width;){
+          const x=g.occupied[r][c],span=x?.w||1;
+          const size=ws.slice(c,c+span).reduce((a,b)=>a+b,0);
+          out+='<w:tc><w:tcPr><w:tcW w:w="'+size+'" w:type="dxa"/>'+(span>1?'<w:gridSpan w:val="'+span+'"/>':'')+(x?.h>1?(x.r===r?'<w:vMerge w:val="restart"/>':'<w:vMerge/>'):'')+'<w:vAlign w:val="center"/></w:tcPr>'+para(x&&x.r===r?x.text:'',!!x?.header)+'</w:tc>';
+          c+=span;
+        }
+        out+='</w:tr>';
+      }
+      return out+'</w:tbl>'+m.after.map(n=>para(nodeText(n))).join('');
+    }).join('');
+    files['word/document.xml']=declaration+'<w:document xmlns:w="'+word+'"><w:body>'+body+section(models.at(-1).orientation)+'</w:body></w:document>';
+    files['[Content_Types].xml']=contentTypes([['word/document.xml','application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml']]);
+    files['_rels/.rels']=relationships([['rId1','officeDocument','word/document.xml']]);
+  }else if(format==='xlsx'){
+    const col=n=>{let s='';for(n++;n;n=Math.floor((n-1)/26))s=String.fromCharCode(65+(n-1)%26)+s;return s;};
+    const names=models.map((m,i)=>m.sheetName?'Report '+(i+1):'Student '+(i+1));
+    const overrides=[['xl/workbook.xml','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml'],['xl/styles.xml','application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml']];
+    const links=[['rIdStyles','styles','styles.xml']];
+    for(const [i,m] of models.entries()){
+      const g=m.layout,ws=widths(m,m.orientation==='portrait'?100:150),merges=[],rows=[];let row=0;
+      const cell=(r,c,value,style)=>'<c r="'+col(c)+r+'" s="'+style+'" t="inlineStr"><is><t xml:space="preserve">'+xml(value)+'</t></is></c>';
+      function paragraph(n){const value=n.querySelector('p')?[...n.querySelectorAll('p')].map(p=>p.textContent).join(' | '):n.textContent,heading=/^H[123]$/.test(n.tagName);row++;rows.push('<row r="'+row+'" ht="'+Math.min(180,Math.max(heading?30:24,16*Math.ceil(value.length/(m.orientation==='portrait'?85:125))))+'" customHeight="1">'+cell(row,0,value,heading?3:0)+'</row>');if(g.width>1)merges.push('A'+row+':'+col(g.width-1)+row);}
+      m.before.forEach(paragraph);const start=row+1;
+      for(let r=0;r<g.rows.length;r++){
+        row++;let line='',height=20;
+        for(let c=0;c<g.width;c++){
+          const x=g.occupied[r][c];if(!x){line+=cell(row,c,'',1);continue;}
+          const top=x.r===r&&x.c===c;
+          line+=cell(row,c,top?x.text:'',x.header?2:1);
+          if(top){
+            if(x.w>1||x.h>1)merges.push(col(c)+row+':'+col(c+x.w-1)+(row+x.h-1));
+            const wide=ws.slice(c,c+x.w).reduce((a,b)=>a+b,0);
+            if(x.h===1)height=Math.max(height,Math.min(180,16*Math.ceil(Math.max(1,x.text.length)/(Math.max(wide,5)*0.85))));
+          }
+        }
+        rows.push('<row r="'+row+'" ht="'+height+'" customHeight="1">'+line+'</row>');
+      }
+      m.after.forEach(paragraph);
+      const path='xl/worksheets/sheet'+(i+1)+'.xml';
+      files[path]=declaration+'<worksheet xmlns="'+sheet+'"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView workbookViewId="0" showGridLines="0"/></sheetViews><sheetFormatPr defaultRowHeight="20"/><cols>'+ws.map((w,c)=>'<col min="'+(c+1)+'" max="'+(c+1)+'" width="'+Math.max(5,w)+'" customWidth="1"/>').join('')+'</cols><sheetData>'+rows.join('')+'</sheetData>'+(merges.length?'<mergeCells count="'+merges.length+'">'+merges.map(ref=>'<mergeCell ref="'+ref+'"/>').join('')+'</mergeCells>':'')+'<pageMargins left="0.39" right="0.39" top="0.39" bottom="0.39" header="0" footer="0"/><pageSetup paperSize="9" orientation="'+m.orientation+'" fitToWidth="1" fitToHeight="0"/></worksheet>';
+      overrides.push([path,'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml']);links.push(['rId'+(i+1),'worksheet','worksheets/sheet'+(i+1)+'.xml']);
+    }
+    files['xl/workbook.xml']=declaration+'<workbook xmlns="'+sheet+'" xmlns:r="'+rel+'"><sheets>'+names.map((n,i)=>'<sheet name="'+n+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>').join('')+'</sheets></workbook>';
+    const bdr=['left','right','top','bottom'].map(n=>'<'+n+' style="thin"><color rgb="FF222222"/></'+n+'>').join('');
+    files['xl/styles.xml']=declaration+'<styleSheet xmlns="'+sheet+'"><fonts count="2"><font><sz val="10"/><name val="Arial"/></font><font><b/><sz val="10"/><name val="Arial"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border>'+bdr+'<diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4">'+[[0,0,'left'],[0,1,'left'],[1,1,'center'],[1,0,'center']].map(([f,b,a])=>'<xf numFmtId="0" fontId="'+f+'" fillId="0" borderId="'+b+'" xfId="0" applyAlignment="1" applyBorder="1" applyFont="1"><alignment horizontal="'+a+'" vertical="center" wrapText="1"/></xf>').join('')+'</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+    files['xl/_rels/workbook.xml.rels']=relationships(links);
+    files['_rels/.rels']=relationships([['rId1','officeDocument','xl/workbook.xml']]);
+    files['[Content_Types].xml']=contentTypes(overrides);
+  }else throw Error('Unsupported format');
+  // ZIP stored entries with CRC-32, local/central directories and UTF-8 names.
+  const encoder=new TextEncoder(),local=[],central=[];let offset=0,total=0;
+  const crc=bytes=>{let c=0xffffffff;for(const b of bytes){c^=b;for(let j=0;j<8;j++)c=(c>>>1)^((c&1)?0xedb88320:0);}return (c^0xffffffff)>>>0;};
+  for(const [name,content] of Object.entries(files)){
+    const n=encoder.encode(name),data=encoder.encode(content),check=crc(data);
+    const lh=new Uint8Array(30+n.length),l=new DataView(lh.buffer);
+    l.setUint32(0,0x04034b50,true);l.setUint16(4,20,true);l.setUint16(6,0x800,true);l.setUint16(12,33,true);l.setUint32(14,check,true);l.setUint32(18,data.length,true);l.setUint32(22,data.length,true);l.setUint16(26,n.length,true);lh.set(n,30);
+    const ch=new Uint8Array(46+n.length),c=new DataView(ch.buffer);
+    c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x800,true);c.setUint16(14,33,true);c.setUint32(16,check,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,n.length,true);c.setUint32(42,offset,true);ch.set(n,46);
+    local.push(lh,data);central.push(ch);offset+=lh.length+data.length;total+=ch.length;
+  }
+  if(central.length>65535||offset+total>0xffffffff)throw Error('Export size exceeds ZIP limit');
+  const end=new Uint8Array(22),e=new DataView(end.buffer);
+  e.setUint32(0,0x06054b50,true);e.setUint16(8,central.length,true);e.setUint16(10,central.length,true);e.setUint32(12,total,true);e.setUint32(16,offset,true);
+  const result=new Uint8Array(offset+total+22);let pos=0;
+  for(const bytes of [...local,...central,end]){result.set(bytes,pos);pos+=bytes.length;}
+  return result;
+}
+function cdcDownloadOffice(doc,format,filename){
+  const data=cdcOfficeExport(doc,format),mime=format==='docx'?'application/vnd.openxmlformats-officedocument.wordprocessingml.document':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  const url=URL.createObjectURL(new Blob([data],{type:mime})),a=document.createElement('a');
+  a.href=url;a.download=filename+'.'+format;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+
 function openCdcAssessment(context = null) {
   if (!auth.currentUser) return;
   document.getElementById('cdcAssessmentDialog')?.remove();
@@ -9301,7 +9449,7 @@ function openCdcAssessment(context = null) {
     <label>विषयक्षेत्र / Theme <select data-cdc="themePick"><option value="">छान्नुहोस्</option></select></label>
     <p data-cdc="accessNotice" role="status" style="font-weight:600;margin:8px 0;padding:10px 12px;border-left:3px solid #17466e;background:#eef4fa;color:#172b43" hidden></p>
     <p data-cdc="workspaceHint" class="hint">विषयक्षेत्र छान्नुहोस्, मिति र अङ्कन भरेर Save गर्नुहोस्।</p>
-    <section data-cdc="annex3" hidden><div class="toolbar"><button type="button" class="btn alt" data-cdc="gridRead" id="cdcGridRead">अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्</button></div><p data-cdc="gridStatus" role="status" aria-live="polite" style="font-weight:600;color:#17466e;overflow-wrap:anywhere"></p><p data-cdc="entryNotice" class="hint" role="status"></p><p class="hint" style="font-size:12px">पूरा तालिका हेर्न दायाँ–बायाँ सार्नुहोस्।</p><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><details data-cdc="seroSourcePreview" hidden style="margin:8px 0"><summary style="cursor:pointer;font-weight:600">मूल CDC PDF सँग तुलना गर्नुहोस्</summary><p class="hint">मूल पृष्ठ र तलको डिजिटल फाराम तुलना गर्नुहोस्। PDF नदेखिए नयाँ ट्याबमा खोल्नुहोस्। विद्यार्थीको विवरण PDF सेवामा पठाइँदैन।</p><a data-cdc="seroSourceOpen" target="_blank" rel="noopener noreferrer">मूल पृष्ठ खोल्नुहोस्</a><div data-cdc="seroSourceFrame"></div></details><div class="tablewrap"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Print / Save PDF</button><p data-cdc="printStatus" role="status" class="hint"></p></section>
+    <section data-cdc="annex3" hidden><div class="toolbar"><button type="button" class="btn alt" data-cdc="gridRead" id="cdcGridRead">अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्</button></div><p data-cdc="gridStatus" role="status" aria-live="polite" style="font-weight:600;color:#17466e;overflow-wrap:anywhere"></p><p data-cdc="entryNotice" class="hint" role="status"></p><p class="hint" style="font-size:12px">पूरा तालिका हेर्न दायाँ–बायाँ सार्नुहोस्।</p><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><details data-cdc="seroSourcePreview" hidden style="margin:8px 0"><summary style="cursor:pointer;font-weight:600">मूल CDC PDF सँग तुलना गर्नुहोस्</summary><p class="hint">मूल पृष्ठ र तलको डिजिटल फाराम तुलना गर्नुहोस्। PDF नदेखिए नयाँ ट्याबमा खोल्नुहोस्। विद्यार्थीको विवरण PDF सेवामा पठाइँदैन।</p><a data-cdc="seroSourceOpen" target="_blank" rel="noopener noreferrer">मूल पृष्ठ खोल्नुहोस्</a><div data-cdc="seroSourceFrame"></div></details><div class="tablewrap"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><label>Export Format <select data-cdc="exportFormat"><option value="pdf">PDF / Print</option><option value="docx">Word (.docx)</option><option value="xlsx">Excel (.xlsx)</option></select></label> <button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Selected Student — Export</button><button class="btn alt" data-cdc="printAll" type="button" disabled>All Students — Export</button><p data-cdc="printStatus" role="status" class="hint"></p><p data-cdc="batchPrintStatus" role="status" aria-live="polite" class="hint"></p></section>
     <details class="cdc-more" data-cdc="extraReference"><summary>CDC निर्देशिका र विषयक्षेत्र विवरण</summary>
     <details data-cdc="themeSummary" style="border:1px solid #b9d5e7;border-radius:8px;padding:12px;margin:10px 0">
       <summary style="cursor:pointer;font-weight:700">Theme, Learning Achievement &amp; Full Marks — Classes 1–5</summary>
@@ -9374,13 +9522,14 @@ function openCdcAssessment(context = null) {
     <details class="cdc-more" data-cdc="subjectSummaryPanel" hidden><summary>समष्टिगत सिकाइ उपलब्धि मूल्याङ्कन अभिलेख / Subject Summary</summary>
       <h3 data-cdc="subjectSummaryTitle"></h3><p data-cdc="subjectSummaryIdentity"></p>
       <button type="button" class="btn alt" data-cdc="readSubjectSummary">अभिलेख पढ्नुहोस्</button>
-      <button type="button" class="btn alt" data-cdc="printSubjectSummary" disabled>Print / Save PDF</button>
+      <label>Export Format <select data-cdc="reportFormat"><option value="pdf">PDF / Print</option><option value="docx">Word (.docx)</option><option value="xlsx">Excel (.xlsx)</option></select></label> <button type="button" class="btn alt" data-cdc="printSubjectSummary" disabled>Export Report</button>
       <p data-cdc="subjectSummaryStatus" role="status" class="hint"></p>
       <div class="tablewrap"><table data-cdc="subjectSummaryTable" style="border-collapse:collapse;width:100%;min-width:720px"><thead data-cdc="subjectSummaryHead"></thead><tbody data-cdc="subjectSummaryRows"></tbody><tfoot data-cdc="subjectSummaryFoot"></tfoot></table></div>
       <p data-cdc="subjectSummarySign"></p>
     </details>
+    <details class="cdc-more" data-cdc="portfolioPanel" hidden><summary>Student Portfolio / विद्यार्थी पोर्टफोलियो</summary><p class="hint">छानिएको विद्यार्थीको अनुमति प्राप्त विषयगत समष्टिगत अभिलेख र उपलब्ध वार्षिक प्रतिवेदन। प्रत्येक विषयको मूल फाराम मुख्य मूल्याङ्कनमा हेर्न सकिन्छ।</p><div class="toolbar"><button type="button" class="btn alt" data-cdc="portfolioRead">View Portfolio</button><label>Export Format <select data-cdc="portfolioFormat"><option value="pdf">PDF / Print</option><option value="docx">Word (.docx)</option><option value="xlsx">Excel (.xlsx)</option></select></label><button type="button" class="btn alt" data-cdc="portfolioExport" disabled>Download Portfolio</button></div><p data-cdc="portfolioStatus" role="status" aria-live="polite" class="hint"></p><div data-cdc="portfolioPreview" class="tablewrap"></div></details>
     <details class="cdc-more" data-cdc="extraReports"><summary>वार्षिक प्रगति प्रतिवेदन</summary>
-    <section data-cdc="annualProgress" hidden class="panel"><h3>प्रगति प्रतिवेदन — अनुसूची ४ / Annual Progress</h3><p data-cdc="progressIdentity"></p><button type="button" class="btn alt" id="cdcReadProgress" data-cdc="readProgress">View Annual Progress</button> <button type="button" class="btn alt" id="cdcPrintProgress" data-cdc="printProgress" disabled>Print / Save PDF</button><p data-cdc="annualStatus" role="status" class="hint"></p><div class="tablewrap"><table><thead><tr><th>क्र. सं.</th><th>विषय</th><th>पाठ्यघण्टा</th><th>सिकाइ उपलब्धि सङ्ख्या</th><th>समग्र उपलब्धिस्तर</th><th>कैफियत</th></tr></thead><tbody data-cdc="annualRows"></tbody></table></div><p data-cdc="annualAttendance" class="hint">उपस्थिति: अभिलेख लोड गर्नुहोस्।</p><p class="hint">विद्यालय सञ्चालन दिन विद्यालयको प्रमाणित पात्रोबाट पुष्टि गर्नुपर्छ। यो समीक्षा प्रति हो।</p><p>कक्षा शिक्षक __________　 प्रधानाध्यापक __________　 मिति __________</p></section>
+    <section data-cdc="annualProgress" hidden class="panel"><h3 data-cdc="annualTitle">प्रगति प्रतिवेदन / Annual Progress</h3><p data-cdc="progressIdentity"></p><button type="button" class="btn alt" id="cdcReadProgress" data-cdc="readProgress">View Annual Progress</button> <label>Export Format <select data-cdc="annualFormat"><option value="pdf">PDF / Print</option><option value="docx">Word (.docx)</option><option value="xlsx">Excel (.xlsx)</option></select></label> <button type="button" class="btn alt" id="cdcPrintProgress" data-cdc="printProgress" disabled>Export Report</button><p data-cdc="annualStatus" role="status" class="hint"></p><div class="tablewrap"><table><thead><tr data-cdc="annualHead"><th>क्र. सं.</th><th>विषय</th><th>पाठ्यघण्टा</th><th>सिकाइ उपलब्धि सङ्ख्या</th><th>समग्र उपलब्धिस्तर</th><th>कैफियत</th></tr></thead><tbody data-cdc="annualRows"></tbody></table></div><p data-cdc="annualAttendance" class="hint">उपस्थिति: अभिलेख लोड गर्नुहोस्।</p><p class="hint">विद्यालय सञ्चालन दिन विद्यालयको प्रमाणित पात्रोबाट पुष्टि गर्नुपर्छ। यो समीक्षा प्रति हो।</p><p>कक्षा शिक्षक __________　 प्रधानाध्यापक __________　 मिति __________</p></section>
     </details>
     <details class="cdc-more" data-cdc="extraManual"><summary>थप अवलोकन / मस्यौदा</summary>
     <details data-cdc="catalogPanel"><summary>द्विभाषिक उपलब्धि सूची थप्नुहोस्</summary>
@@ -9438,7 +9587,8 @@ function openCdcAssessment(context = null) {
     const summary=field('subjectSummaryPanel'),report=field('extraReports'),annex=field('annex3');
     summary.querySelector('summary').textContent='समष्टिगत अभिलेख / Subject Summary';
     report.querySelector('summary').textContent='वार्षिक प्रगति प्रतिवेदन';
-    annex.after(summary,report,extra);
+    const portfolio=field('portfolioPanel');portfolio.hidden=false;
+    annex.after(summary,report,portfolio,extra);
     for(const name of ['extraReference','extraObservations','extraManual','extraRecords','extraActions'])extra.append(field(name));
     if(readOnly)for(const name of ['extraManual','extraActions'])field(name).hidden=true;
     field('next').textContent='अर्को विद्यार्थी →';
@@ -9620,10 +9770,13 @@ function openCdcAssessment(context = null) {
     frame.src=href;
     sourceFrame.append(frame);
   });
+  let batchPrinting=false;
   const renderAnnex=()=>{
     const panel=field('annex3'),enabled=hasAnnexGrid(),en=language()==='en';
     const nepaliForm=primaryNepaliForm(),seroReference=primarySeroferoReference(),seroGuide=primarySeroGuideReview();
     syncSeroSourcePreview(seroReference||seroGuide||cdcUpperGuidePage(field('class').value,field('subject').value,field('unit').value,year));
+    field('printAll').hidden=!context;
+    field('printAll').disabled=batchPrinting||!context||!schoolSelection()||!field('unit').value.trim()||!!seroGuide||(!enabled&&(!seroReference||seroReference.referenceOnly))||!!seroReference&&(seroReference.referenceOnly||year!=='2083');
     panel.hidden=!enabled&&!nepaliForm&&!seroReference&&!seroGuide;field('stageRow').hidden=!enabled;field('gridRead').hidden=!!nepaliForm&&!nepaliForm.editable;
     field('printForm').disabled=!enabled||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('unit').value.trim();
     field('gridRead').textContent=seroReference?'सूचक अभिलेख पढ्नुहोस् / पुनः पढ्नुहोस्':'अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्';
@@ -10114,7 +10267,7 @@ function openCdcAssessment(context = null) {
   // The subject summary uses exactly the outcome keys of the corresponding
   // entry form. No assessment is invented from missing or unclassified data.
   let summarySequence=0,summarySnapshot=null;
-  const summaryGrade=percent=>[[90,'A+'],[80,'A'],[70,'B+'],[60,'B'],[50,'C+'],[40,'C'],[35,'D'],[0,'NG']].find(([min])=>percent>=min)?.[1]||'—';
+  const summaryGrade=percent=>Number(field('class').value)<=3&&Number(year)<2084?cdcLower2076Grade(percent):[[90,'A+'],[80,'A'],[70,'B+'],[60,'B'],[50,'C+'],[40,'C'],[35,'D'],[0,'NG']].find(([min])=>percent>=min)?.[1]||'—';
   function summaryCatalogue(grade,subjectKey,theme){
     const unit=theme.unit,lower=Number(grade)<=3;
     if(!lower)return {unit,titles:(cdcVerifiedOutcomes[grade+':'+subjectKey]||[]).filter(([u])=>normalizeTitle(u)===normalizeTitle(unit)).map(([,title])=>title)};
@@ -10165,7 +10318,7 @@ function openCdcAssessment(context = null) {
     for(const [i,theme] of themes.entries()){
       let scores=[],expected=theme.count,full=theme.fullMark;
       if(key==='serophero'){
-        const form=cdcSeroGuideEntryForm(grade,theme.unit,year);
+        const form=cdcSeroSavedReportForm(grade,theme.unit,year);
         if(form&&!form.referenceOnly&&form.groups.length*4===full){
           scores=form.groups.map((_,j)=>{
             const id='cdc2076-g'+grade+'-'+(form.start+j);
@@ -10219,16 +10372,57 @@ function openCdcAssessment(context = null) {
   }
   field('readSubjectSummary').onclick=readSubjectSummary;
   field('subjectSummaryPanel').addEventListener('toggle',()=>{if(field('subjectSummaryPanel').open&&!summarySnapshot)void readSubjectSummary();});
-  field('printSubjectSummary').onclick=()=>{
-    if(!canShow()||!summarySnapshot||summarySnapshot.key!==JSON.stringify(schoolSelection())||inlinePending)return;
+  const buildSubjectSummaryReport=()=>{
+    if(!canShow()||!summarySnapshot||summarySnapshot.key!==JSON.stringify(schoolSelection())||inlinePending||field('printSubjectSummary').disabled)return null;
     const report=document.implementation.createHTMLDocument('CDC Subject Summary — Review copy');
     const style=report.createElement('style');style.textContent='@page{size:A4 landscape;margin:10mm}body{font:12px Arial,sans-serif;color:#111}h2{text-align:center;font-size:15px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #555;padding:5px;text-align:center}th:nth-child(2),td:nth-child(2){text-align:left}thead{display:table-header-group}tr{break-inside:avoid}tfoot{font-weight:bold}';report.head.append(style);
     for(const name of ['subjectSummaryTitle','subjectSummaryIdentity']){const p=report.createElement(name==='subjectSummaryTitle'?'h2':'p');p.textContent=field(name).textContent;report.body.append(p);}
     const table=report.importNode(field('subjectSummaryTable'),true);table.removeAttribute('style');report.body.append(table);
     for(const name of ['subjectSummarySign','subjectSummaryStatus']){const p=report.createElement('p');p.textContent=field(name).textContent;report.body.append(p);}
-    const popup=window.open('','_blank');if(!popup){field('subjectSummaryStatus').textContent='Print खोल्न सकिएन।';return;}
-    popup.document.open();popup.document.write('<!doctype html>'+report.documentElement.outerHTML);popup.document.close();popup.focus();popup.print();
+    return report;
   };
+  field('printSubjectSummary').onclick=()=>exportCdcReport(buildSubjectSummaryReport(),field('reportFormat').value,'CDC-Subject-Summary-'+year,field('subjectSummaryStatus'));
+  const lowerAnnual=grade=>['1','2','3'].includes(String(grade))&&Number(year)<2084;
+  const annualAvailable=grade=>lowerAnnual(grade)||['4','5'].includes(String(grade));
+  const annualColumns=grade=>lowerAnnual(grade)?['क्र. सं.','विषयक्षेत्र','पाठ्यघण्टा','समग्र उपलब्धि स्तर']:['क्र. सं.','विषय','पाठ्यघण्टा','सिकाइ उपलब्धि सङ्ख्या','समग्र उपलब्धिस्तर','कैफियत'];
+  // Lower-primary assessment guide 2076, PDF pages 10, 13–14:
+  // preserve the five subject rows and annual hours. Missing/ambiguous source
+  // mappings or incomplete assessment must not produce a final achievement level.
+  const lowerSubjects=[
+    ['nepali','नेपाली भाषा',160],['mathematics','गणित',128],
+    ['english','अङ्ग्रेजी भाषा',128],['serophero','हाम्रो सेरोफेरो',256],
+    ['hamrodhunibeshi','मातृभाषा/स्थानीय विषय',160]
+  ];
+  function lowerAnnualAchievement(grade,key,records){
+    const themes=cdcThemeMarkRows(grade,key,year);
+    if(!themes.length)return {grade:null,reason:'स्रोत सूची बाँकी'};
+    const latest=[...records].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||(b.createdAt?.toMillis?.()??0)-(a.createdAt?.toMillis?.()??0));
+    let sum=0,assessed=0,expected=0,unmapped=false;
+    for(const theme of themes){
+      if(key==='serophero'){
+        const form=cdcSeroSavedReportForm(grade,theme.unit,year);
+        if(!form||form.referenceOnly||form.groups.length*4!==theme.fullMark){unmapped=true;continue;}
+        for(let i=0;i<form.groups.length;i++){
+          expected++;
+          const id='cdc2076-g'+grade+'-'+(form.start+i);
+          const items=latest.filter(o=>o.unit===theme.unit&&o.outcomeId===id&&Array.isArray(o.indicators)&&o.indicators.length===4&&o.indicators.every(v=>typeof v==='boolean'));
+          const record=items.find(o=>o.stage==='support')||items.find(o=>o.stage==='regular');
+          if(record){assessed++;sum+=record.indicators.filter(Boolean).length;}
+        }
+      }else{
+        const cat=summaryCatalogue(grade,key,theme),titles=[...new Set(cat.titles)];
+        if(!titles.length||titles.length!==theme.count||theme.fullMark!==titles.length*4){unmapped=true;continue;}
+        for(const title of titles){
+          expected++;
+          const items=latest.filter(o=>normalizeTitle(o.unit)===normalizeTitle(cat.unit)&&o.topic===title&&Number.isInteger(o.level)&&o.level>=1&&o.level<=4);
+          const record=items.find(o=>o.stage==='support')||items.find(o=>o.stage==='regular')||items.find(o=>!o.stage);
+          if(record){assessed++;sum+=record.level;}
+        }
+      }
+    }
+    const percent=assessed?100*sum/(4*assessed):null;
+    return {grade:!unmapped&&expected>0&&assessed===expected?cdcLower2076Grade(percent):null,reason:unmapped?'स्रोत सूची अपूर्ण':assessed!==expected?'अपूर्ण मूल्याङ्कन '+assessed+'/'+expected:'',percent};
+  }
   function clearAnnualProgress(){
     annualReadSequence++;
     annualPrintSnapshot=null;
@@ -10237,7 +10431,9 @@ function openCdcAssessment(context = null) {
     field('annualStatus').textContent='';
     field('annualAttendance').textContent='उपस्थिति: अभिलेख लोड गर्नुहोस्।';
     const selection=schoolSelection();
-    const visible=!!context&&Number(field('class').value)>=4&&Number(field('class').value)<=5;
+    const visible=!!context&&annualAvailable(field('class').value);
+    field('annualTitle').textContent=lowerAnnual(field('class').value)?'प्रगति प्रतिवेदन — अनुसूची २ / Annual Progress':'प्रगति प्रतिवेदन — अनुसूची ४ / Annual Progress';
+    field('annualHead').replaceChildren(...annualColumns(field('class').value).map(label=>{const th=document.createElement('th');th.textContent=label;return th;}));
     field('annualProgress').hidden=!visible;
     if(context)field('extraReports').hidden=!visible;
     field('readProgress').disabled=!selection||!visible;
@@ -10246,7 +10442,7 @@ function openCdcAssessment(context = null) {
   }
   field('readProgress').onclick=async()=>{
     const selection=schoolSelection(),grade=field('class').value;
-    if(!context||!selection||!canShow()||!['4','5'].includes(grade))return;
+    if(!context||!selection||!canShow()||!annualAvailable(grade))return;
     clearAnnualProgress();
     const sequence=annualReadSequence;
     const isCurrent=()=>canShow()&&sequence===annualReadSequence;
@@ -10266,7 +10462,22 @@ function openCdcAssessment(context = null) {
           return 'उपस्थिति: अभिलेख भएका कक्षा दिन '+result.recordedDays+' | विद्यार्थीको पुष्टि भएको हाजिरी दिन '+result.assessed+' | उपस्थित दिन '+result.present+' | अभिलेखअनुसार प्रतिशत '+(result.percentage===null?'—':result.percentage.toFixed(2)+'%')+(result.unresolved?' | अपूर्ण वा विवादित दिन '+result.unresolved:'');
         }catch{return 'उपस्थिति: हाजिरी अभिलेख पढ्न सकिएन।';}
       })();
-      const rows=await Promise.all(cdcUpperPrimarySubjects.map(async ([key,ne,en],i)=>{
+      const lower=lowerAnnual(grade),lowerNotes=[];
+      const rows=lower?await Promise.all(lowerSubjects.map(async ([key,label,hours],i)=>{
+        const blank=reason=>{lowerNotes[i]=label+': '+reason;return [i+1,label,hours,'—'];};
+        const matches=[...new Set(registry.filter(s=>cdcAssessmentSubjectKey(s)===key))];
+        if(matches.length!==1)return blank(matches.length?'विषय दर्ता अस्पष्ट':'विषय दर्ता बाँकी');
+        const subject=matches[0];
+        if(!readOnly&&!cdcTeacherAssignment(currentUserRole,grade,subject,st))return blank('हेर्ने अनुमति छैन');
+        try{
+          const filters=Object.entries({...assessmentReadScope(selection),subject}).map(([k,v])=>where(k,'==',v));
+          const snapshot=await getDocsFromServer(query(collection(db,key==='serophero'?'cdc_serofero_indicators':'cdc_observations'),...filters));
+          const records=snapshot.docs.map(d=>d.data()).filter(o=>Object.entries({...assessmentReadScope(selection),subject}).every(([k,v])=>o[k]===v));
+          const result=lowerAnnualAchievement(grade,key,records);
+          if(!result.grade)return blank(result.reason||'मूल्याङ्कन बाँकी');
+          return [i+1,label,hours,result.grade];
+        }catch{return blank('अभिलेख पढ्न सकिएन');}
+      })):await Promise.all(cdcUpperPrimarySubjects.map(async ([key,ne,en],i)=>{
         const label=key==='english'?en:ne;
         const hours=[5,5,5,5,5,3,4][i];
         const matches=[...new Set(registry.filter(s=>cdcAssessmentSubjectKey(s)===key))];
@@ -10286,41 +10497,130 @@ function openCdcAssessment(context = null) {
       if(!isCurrent())return;
       field('annualAttendance').textContent=attendance;
       for(const values of rows){const row=field('annualRows').insertRow();for(const value of values)row.insertCell().textContent=String(value);}
-      field('annualStatus').textContent='सबै अवधिको पछिल्लो वैध अङ्कनबाट प्रति उपलब्धि एक पटक गणना। अपूर्ण सूचीको ग्रेड प्रारम्भिक मात्र हो।';
-      annualPrintSnapshot={selectionKey:JSON.stringify(selection),rows,attendance,attendanceSummary,grade,studentName:field('student').selectedOptions[0]?.text||'',roll:st?.rollNo??'',school:currentSchoolSettings.schoolNameNe||currentSchoolSettings.schoolName||'',schoolCode:currentSchoolSettings.iemisCode||'',year};
+      field('annualStatus').textContent=lower?'२०७६ मार्गदर्शन: अपूर्ण वा स्रोत पुष्टि बाँकीको अन्तिम स्तर खाली। '+lowerNotes.filter(Boolean).join(' | '):'सबै अवधिको पछिल्लो वैध अङ्कनबाट प्रति उपलब्धि एक पटक गणना। अपूर्ण सूचीको ग्रेड प्रारम्भिक मात्र हो।';
+      annualPrintSnapshot={selectionKey:JSON.stringify(selection),rows,attendance,attendanceSummary,grade,lower,lowerNotes:lowerNotes.filter(Boolean),address:currentSchoolSettings.schoolAddressNe||currentSchoolSettings.schoolAddress||currentSchoolSettings.address||'',studentName:field('student').selectedOptions[0]?.text||'',roll:st?.rollNo??'',school:currentSchoolSettings.schoolNameNe||currentSchoolSettings.schoolName||'',schoolCode:currentSchoolSettings.iemisCode||'',year};
       field('printProgress').disabled=false;
     }finally{if(isCurrent())field('readProgress').disabled=false;}
   };
   // Annex 4, supplied CDC 2083 guide, printed p.148. Print a review copy;
   // recorded attendance days are not the verified school operating calendar.
-  field('printProgress').onclick=()=>{
+  const buildAnnualReport=()=>{
     const snap=annualPrintSnapshot;
-    if(!canShow()||!snap||snap.selectionKey!==JSON.stringify(schoolSelection())||inlinePending||dialog.querySelector('[data-cdc-grid-editor]'))return;
+    if(!canShow()||!snap||snap.selectionKey!==JSON.stringify(schoolSelection())||inlinePending||dialog.querySelector('[data-cdc-grid-editor]'))return null;
     const report=document.implementation.createHTMLDocument('CDC Annual Progress — Review copy');
     report.documentElement.lang='ne';
     const style=report.createElement('style');
     style.textContent='@page{size:A4 portrait;margin:12mm}body{font:12px Arial,"Noto Sans Devanagari",sans-serif;color:#111;margin:0}h2,h3{text-align:center;margin:5px 0}h3{text-decoration:underline}.meta{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin:18px 0 8px}.meta p{margin:0}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #222;padding:9px 5px;vertical-align:middle}th{font-weight:600;text-align:center}td:nth-child(1),td:nth-child(3),td:nth-child(4),td:nth-child(5){text-align:center}tr{break-inside:avoid}thead{display:table-header-group}.sign{display:flex;justify-content:space-between;margin-top:44px;text-align:center}.note{font-size:10px;margin-top:12px}';
     report.head.append(style);
     const add=(tag,value,host=report.body)=>{const e=report.createElement(tag);e.textContent=value;host.append(e);return e;};
-    add('h2','अनुसूची ४ : विद्यार्थीको समग्र प्रगति प्रतिवेदनको ढाँचा');
-    add('h3','प्रगति प्रतिवेदन');
+    add('h2',snap.lower?'अनुसूची २: विद्यार्थीको सिकाइ उपलब्धिको प्रतिवेदन':'अनुसूची ४ : विद्यार्थीको समग्र प्रगति प्रतिवेदनको ढाँचा');
+    add('h3',snap.lower?'विद्यार्थीको प्रगति प्रतिवेदन':'प्रगति प्रतिवेदन');
     const meta=report.createElement('div');meta.className='meta';report.body.append(meta);
     const a=snap.attendanceSummary;
-    for(const value of ['विद्यार्थीको नाम: '+snap.studentName,'कक्षा: '+snap.grade,'रोल नं.: '+snap.roll,'विद्यालयको नाम: '+snap.school,'सङ्केत नं.: '+snap.schoolCode,'शैक्षिक सत्र: '+snap.year,'उपस्थिति: विद्यालय सञ्चालन भएको दिन: ______','उपस्थित भएको दिन: '+(a&&a.assessed?a.present:'______'),'प्रतिशत: ______'])add('p',value,meta);
+    const identity=snap.lower?['विद्यालयको नाम: '+snap.school,'ठेगाना: '+snap.address,'सङ्केत नं.: '+snap.schoolCode,'विद्यार्थीको नाम: '+snap.studentName,'कक्षा: '+snap.grade,'परिचय नं./रोल नं.: '+snap.roll,'अध्ययन गरेको वर्ष: '+snap.year,'विद्यालय सञ्चालन भएको दिन: ______','उपस्थित भएको दिन: '+(a&&a.assessed?a.present:'______'),'उपस्थिति प्रतिशत: ______']:['विद्यार्थीको नाम: '+snap.studentName,'कक्षा: '+snap.grade,'रोल नं.: '+snap.roll,'विद्यालयको नाम: '+snap.school,'सङ्केत नं.: '+snap.schoolCode,'शैक्षिक सत्र: '+snap.year,'उपस्थिति: विद्यालय सञ्चालन भएको दिन: ______','उपस्थित भएको दिन: '+(a&&a.assessed?a.present:'______'),'प्रतिशत: ______'];
+    for(const value of identity)add('p',value,meta);
+    if(snap.lower)add('p','विषयक्षेत्रअनुसार विद्यार्थीको उपलब्धि स्तर:');
     const table=report.createElement('table');report.body.append(table);
     const head=table.createTHead().insertRow();
-    for(const title of ['क्र. सं.','विषय','पाठ्यघण्टा','सिकाइ उपलब्धि सङ्ख्या','समग्र उपलब्धिस्तर','कैफियत'])add('th',title,head);
+    for(const title of annualColumns(snap.grade))add('th',title,head);
     const body=table.createTBody();
     for(const values of snap.rows){const row=body.insertRow();for(const value of values)row.insertCell().textContent=String(value);}
     const signs=report.createElement('div');signs.className='sign';report.body.append(signs);
     for(const label of ['कक्षा शिक्षक','प्रधानाध्यापक','मिति']){const cell=report.createElement('div');add('p','…………………………',cell);add('p',label,cell);signs.append(cell);}
-    const note=add('p','समीक्षा प्रति — अपूर्ण सूचीको ग्रेड प्रारम्भिक हो। सञ्चालन दिन र वार्षिक उपस्थिति प्रतिशत विद्यालयले पुष्टि गर्नुपर्नेछ।');note.className='note';
+    if(snap.lower)add('p','उपलब्धि स्तर: A* (≥९०%), A (७५–९०% भन्दा कम), B (६०–७५% भन्दा कम), C (४५–६०% भन्दा कम), D (३०–४५% भन्दा कम), E (३०% भन्दा कम)।');
+    const note=add('p',snap.lower?'समीक्षा प्रति — अपूर्ण वा स्रोत पुष्टि बाँकीको अन्तिम स्तर खाली। '+snap.lowerNotes.join(' | ')+'। सञ्चालन दिन र उपस्थिति प्रतिशत विद्यालयले पुष्टि गर्नुपर्नेछ।':'समीक्षा प्रति — अपूर्ण सूचीको ग्रेड प्रारम्भिक हो। सञ्चालन दिन र वार्षिक उपस्थिति प्रतिशत विद्यालयले पुष्टि गर्नुपर्नेछ।');note.className='note';
     add('p',snap.attendance).className='note';
-    const popup=window.open('','_blank');
-    if(!popup){field('annualStatus').textContent='Print खोल्न pop-up अनुमति दिनुहोस्।';return;}
-    popup.document.open();popup.document.write('<!doctype html>'+report.documentElement.outerHTML);popup.document.close();popup.focus();popup.print();
+    return report;
+  };
+  field('printProgress').onclick=()=>exportCdcReport(buildAnnualReport(),field('annualFormat').value,'CDC-Annual-Progress-'+year,field('annualStatus'));
+  function exportCdcReport(report,format,filename,status){
+    if(!report||!canShow()){status.textContent='पहिले सुरक्षित अभिलेख पढ्नुहोस्।';return;}
+    try{
+      if(format==='pdf'){
+        const popup=window.open('','_blank');if(!popup)throw Error('Print खोल्न pop-up अनुमति दिनुहोस्।');
+        popup.document.open();popup.document.write('<!doctype html>'+report.documentElement.outerHTML);popup.document.close();popup.focus();popup.print();
+      }else cdcDownloadOffice(report,format,filename);
+    }catch{status.textContent='फाइल तयार गर्न सकिएन। Print अनुमति र जडान जाँच्नुहोस्।';}
+  }
+  let portfolioSnapshot=null,portfolioBusy=false;
+  const portfolioKey=()=>JSON.stringify([owner,year,field('class').value,field('student').value]);
+  function clearPortfolio(){
+    portfolioSnapshot=null;
+    field('portfolioPreview').replaceChildren();
+    field('portfolioExport').disabled=true;
+    field('portfolioRead').disabled=!context||!schoolSelection();
+    field('portfolioStatus').textContent='';
+  }
+  field('portfolioRead').onclick=async()=>{
+    if(!context||!schoolSelection()||!canShow()||portfolioBusy||batchPrinting||inlinePending||schoolSavePending||dialog.querySelector('[data-cdc-grid-editor]'))return;
+    const grade=field('class').value,studentId=field('student').value;
+    const original={subject:field('subject').value,unit:field('unit').value,unitEn:field('unitEn').value,topic:field('topic').value};
+    const student=assessmentStudents.find(s=>s.id===studentId),key=portfolioKey();
+    if(!student)return;
+    const status=field('portfolioStatus');
+    clearPortfolio();portfolioBusy=true;dialog.inert=true;field('portfolioRead').disabled=true;
+    let report=null,problem='',missing=[],count=0;
+    const stillHere=()=>canShow()&&field('class').value===grade;
+    const makeSection=(single,orientation,name)=>{
+      if(!report){
+        report=document.implementation.createHTMLDocument('CDC Student Portfolio — Review copy');
+        const style=report.createElement('style');
+        style.textContent='@page{size:A4 landscape;margin:10mm}@page portfolioPortrait{size:A4 portrait;margin:12mm}body{font:12px Arial,"Noto Sans Devanagari",sans-serif;color:#111}h1,h2,h3{text-align:center}table{border-collapse:collapse;width:100%}th,td{border:1px solid #555;padding:5px;vertical-align:middle}thead{display:table-header-group}tr{break-inside:avoid}.cdc-pupil{break-before:page;page-break-before:always}.cdc-pupil:first-child{break-before:auto;page-break-before:auto}.cdc-pupil[data-page-orientation="portrait"]{page:portfolioPortrait}.meta{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}.sign{display:flex;justify-content:space-between;margin-top:35px}.note{font-size:10px}';
+        report.head.append(style);
+      }
+      const page=report.createElement('section');page.className='cdc-pupil';page.dataset.pageOrientation=orientation;page.dataset.sheetName=name;
+      for(const node of single.body.childNodes)page.append(report.importNode(node,true));
+      report.body.append(page);count++;
+    };
+    try{
+      const role=await assessmentRole();
+      if(!stillHere()||portfolioKey()!==key||(!isAdmin()&&role?.active!==true))throw Error('Login वा अनुमति परिवर्तन भयो।');
+      const allowed=[...field('subject').options].map(o=>({value:o.value,label:o.text})).filter(o=>o.value&&(isAdmin()||role?.roles?.includes('viewer')||cdcTeacherAssignment(role,grade,o.value,student)));
+      if(!allowed.length)throw Error('हेर्न मिल्ने विषय छैन।');
+      // Use the same per-subject read and source-specific summary as the main form.
+      for(const [i,subject] of allowed.entries()){
+        if(!stillHere())throw Error('छनोट परिवर्तन भयो।');
+        field('subject').value=subject.value;refreshStudents();field('student').value=studentId;load();
+        if(field('student').value!==studentId||!schoolSelection())throw Error('विद्यार्थी छनोट मिलेन।');
+        status.textContent='विषय अभिलेख पढ्दै… '+(i+1)+' / '+allowed.length;
+        await readSubjectSummary();
+        if(!stillHere()||portfolioKey()!==key||field('subject').value!==subject.value)throw Error('छनोट परिवर्तन भयो।');
+        if(!summarySnapshot||summarySnapshot.key!==JSON.stringify(schoolSelection()))throw Error('विषय अभिलेख पढ्न सकिएन: '+subject.label);
+        const single=buildSubjectSummaryReport();
+        if(single)makeSection(single,'landscape',subject.label);
+        else missing.push(subject.label);
+      }
+      // Existing CDC Annex 4 applies only to Grades 4–5 in this implementation.
+      field('subject').value=original.subject;refreshStudents();field('student').value=studentId;load();
+      if(annualAvailable(grade)){
+        status.textContent='वार्षिक प्रगति प्रतिवेदन पढ्दै…';
+        await field('readProgress').onclick();
+        if(!stillHere()||portfolioKey()!==key)throw Error('छनोट परिवर्तन भयो।');
+        const annual=buildAnnualReport();if(annual)makeSection(annual,'portrait','Annual Progress');else missing.push('वार्षिक प्रगति प्रतिवेदन');
+      }
+      if(!report)throw Error('स्रोत पुष्टि भएको प्रतिवेदन उपलब्ध छैन।');
+    }catch(error){problem=error.message||'Portfolio तयार भएन।';}
+    finally{
+      if(stillHere()){
+        field('subject').value=original.subject;refreshStudents();field('student').value=studentId;
+        field('unit').value=original.unit;field('unitEn').value=original.unitEn;field('topic').value=original.topic;load();
+        if(schoolSelection()&&original.unit&&!field('gridRead').hidden)await field('gridRead').onclick();
+        if(stillHere()&&portfolioKey()===key&&!problem&&report){
+          portfolioSnapshot={key,report};
+          for(const page of report.body.children)field('portfolioPreview').append(document.importNode(page,true));
+          field('portfolioExport').disabled=false;
+          status.textContent=count+' प्रतिवेदन तयार। '+(missing.length?'स्रोत/ढाँचा बाँकी: '+missing.join(', ')+'। ':'')+(!isAdmin()&&!roleHas('viewer')?'तोकिएको विषयमा सीमित। ':'')+'अपूर्ण अङ्कनलाई खाली राखिएको छ।';
+        }else if(stillHere())status.textContent=problem||'छनोट परिवर्तन भयो।';
+      }
+      portfolioBusy=false;dialog.inert=false;if(canShow())field('portfolioRead').disabled=!schoolSelection();
+    }
+  };
+  field('portfolioExport').onclick=()=>{
+    if(!portfolioSnapshot||portfolioSnapshot.key!==portfolioKey()||portfolioBusy||!canShow())return;
+    exportCdcReport(portfolioSnapshot.report,field('portfolioFormat').value,'CDC-Portfolio-Class-'+field('class').value+'-'+year,field('portfolioStatus'));
   };
   const clearSchoolResults = () => {
+    if(!portfolioBusy)clearPortfolio();
     clearSubjectSummary();clearAnnualProgress();
     schoolReadSequence++;
     field('schoolRows').replaceChildren();
@@ -10411,10 +10711,77 @@ function openCdcAssessment(context = null) {
   field('printForm').onclick=()=>{
     const doc=buildAssessmentPrint();
     if(!doc){field('printStatus').textContent='पहिले विद्यालयको अभिलेख पढ्नुहोस्।';return;}
+    const format=field('exportFormat').value;
+    if(format!=='pdf'){
+      try{cdcDownloadOffice(doc,format,'CDC-Class-'+field('class').value+'-'+year);field('printStatus').textContent='फाइल तयार भयो।';}
+      catch{field('printStatus').textContent='फाइल तयार गर्न सकिएन।';}
+      return;
+    }
     const popup=window.open('','_blank');
     if(!popup){field('printStatus').textContent='Print खोल्न pop-up अनुमति दिनुहोस्।';return;}
     popup.document.open();popup.document.write('<!doctype html>'+doc.documentElement.outerHTML);popup.document.close();
     popup.focus();popup.print();
+  };
+  // Batch uses the exact saved-only single-pupil renderer, not a second template.
+  // It prints the selected class/subject/theme for every visible eligible pupil.
+  field('printAll').onclick=async()=>{
+    const status=field('batchPrintStatus');
+    if(!context||batchPrinting||portfolioBusy||inlinePending||schoolSavePending||dialog.querySelector('[data-cdc-grid-editor]')||!canShow()||field('printAll').disabled){status.textContent='पहिले खुला मूल्याङ्कन सुरक्षित वा बन्द गर्नुहोस्।';return;}
+    const student=field('student'),original=student.value;
+    const ids=[...student.options].map(o=>o.value).filter(Boolean);
+    const unit=field('unit').value,unitEn=field('unitEn').value,topic=field('topic').value;
+    const grade=field('class').value,subject=field('subject').value;
+    if(!ids.length||!unit)return;
+    if(!window.confirm('छानिएको कक्षा, विषय र विषयक्षेत्रका '+ids.length+' विद्यार्थीको सुरक्षित अभिलेख मात्र छापिनेछ। नसुरक्षित प्रविष्टि भए पहिले Save गर्नुहोस्। अगाडि बढ्ने?'))return;
+    const format=field('exportFormat').value;
+    const popup=format==='pdf'?window.open('','_blank'):null;
+    if(format==='pdf'&&!popup){status.textContent='Print खोल्न pop-up अनुमति दिनुहोस्।';return;}
+    batchPrinting=true;dialog.inert=true;field('printAll').disabled=true;
+    let report=null,success=false,problem='';
+    const current=()=>canShow()&&field('class').value===grade&&field('subject').value===subject;
+    const choose=id=>{
+      student.value=id;field('topic').value='';field('unit').value=unit;field('unitEn').value=unitEn;
+      load();
+    };
+    try{
+      for(const [i,id] of ids.entries()){
+        if(!current()||popup?.closed)throw Error('छनोट परिवर्तन भयो।');
+        choose(id);
+        if(student.value!==id||field('unit').value!==unit||!schoolSelection())throw Error('विद्यार्थी वा विषयक्षेत्र मिलेन।');
+        status.textContent='अभिलेख पढ्दै… '+(i+1)+' / '+ids.length;
+        await field('gridRead').onclick();
+        if(!current()||student.value!==id||field('unit').value!==unit||popup?.closed)throw Error('छनोट परिवर्तन भयो।');
+        const single=buildAssessmentPrint();
+        if(!single||field('printForm').disabled)throw Error('सबै विद्यार्थीको सुरक्षित अभिलेख पढ्न सकिएन।');
+        if(!report){
+          report=single;
+          const style=report.createElement('style');
+          style.textContent='.cdc-pupil{break-before:page;page-break-before:always}.cdc-pupil:first-child{break-before:auto;page-break-before:auto}';
+          report.head.append(style);
+          const first=report.createElement('section');first.className='cdc-pupil';
+          first.append(...Array.from(report.body.childNodes));report.body.append(first);
+        }else{
+          const page=report.createElement('section');page.className='cdc-pupil';
+          for(const node of single.body.childNodes)page.append(report.importNode(node,true));
+          report.body.append(page);
+        }
+      }
+      if(!current()||!report||popup?.closed)throw Error('छपाइ रद्द भयो।');
+      if(format==='pdf'){
+        popup.document.open();popup.document.write('<!doctype html>'+report.documentElement.outerHTML);popup.document.close();
+        popup.focus();popup.print();
+      }else cdcDownloadOffice(report,format,'CDC-Class-'+grade+'-'+year+'-All-Students');
+      success=true;
+    }catch(error){problem=error.message||'PDF तयार भएन।';try{popup?.close();}catch{}}
+    finally{
+      if(current()){
+        choose(original);field('topic').value=topic;load();
+        if(schoolSelection()&&!field('gridRead').hidden)await field('gridRead').onclick();
+        status.textContent=success?ids.length+' विद्यार्थीको A4 फाइल तयार भयो।':problem+' कुनै आंशिक फाइल निकालिएको छैन।';
+      }
+      batchPrinting=false;dialog.inert=false;
+      if(canShow())renderAnnex();
+    }
   };
   field('readSchool').onclick=async()=>{
     const selection=schoolSelection();

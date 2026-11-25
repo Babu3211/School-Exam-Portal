@@ -1404,6 +1404,28 @@ assert.equal(seroControls('date')[0].value,'2083-08-07');
 assert.equal(seroControls('used-tool')[0].value,'');
 assert.equal(seroControls('used-tool',1)[0].value,'परीक्षण साधन: समूह छलफल');
 assert.equal(field('printForm').disabled,false);
+// Existing active Class 1 indicator records must appear in the subject report,
+// without opening the pending source catalogue or mixing students/themes.
+const beforeSummaryRead=w.getDocsFromServer;
+w.getDocsFromServer=async ({name,filters})=>{
+ const scope=Object.fromEntries(filters.map(([k,,v])=>[k,v]));
+ assert.equal(name,'cdc_serofero_indicators');assert.equal(scope.studentId,'sero-1');
+ assert.equal(scope.academicYear,'2083');assert.equal(scope.section,'A');
+ return {docs:[...binaryRecords.values()].filter(r=>Object.entries(scope).every(([k,v])=>r[k]===v)).map(r=>({data:()=>r}))};
+};
+await field('readSubjectSummary').onclick();
+const familySummary=field('subjectSummaryRows').rows[0];
+assert.equal(familySummary.dataset.cdcSummaryAssessed,'1');
+assert.equal(familySummary.cells[4].textContent,'—','Incomplete theme must not receive a final mark');
+for(const row of [...field('subjectSummaryRows').rows].slice(3))assert.equal(row.cells[4].textContent,'—');
+assert.ok(w.cdcSeroSavedReportForm('1','म र मेरो परिवार','2083'));
+assert.ok(w.cdcSeroSavedReportForm('1','मेरो दैनिक जीवन','2083'));
+assert.ok(w.cdcSeroSavedReportForm('1','हाम्रो समुदाय','2083'));
+assert.equal(w.cdcSeroSavedReportForm('1','हाम्रो विद्यालय','2083'),null);
+assert.equal(w.cdcSeroSavedReportForm('2','म र मेरो परिवार','2083'),null);
+assert.equal(w.cdcSeroSavedReportForm('1','म र मेरो परिवार','2084'),null);
+w.getDocsFromServer=beforeSummaryRead;
+console.log('Existing Grade 1 indicator evidence included in summary; unapproved source and year remain blocked');
 let seroMarkup='',seroPrintCount=0;
 w.open=()=>({document:{open(){},write(markup){seroMarkup=markup;},close(){}},focus(){},print(){seroPrintCount++;}});
 fill(0,['no','no','no','no'],'2083-08-09');
@@ -1723,6 +1745,127 @@ assert.equal(adminSaved?.studentId,'admin-student');
 assert.equal(adminSaved?.section,'B');
 assert.equal(adminSaved?.level,3);
 console.log('Admin direct CDC form entry and save without teacher assignment passed');
+// Batch print must use the same saved-only renderer and restore the selection.
+w.getDocs=async name=>({docs:name==='students'?[{id:'batch-one',data:()=>({class:'Class 5',section:'A',name:'Batch One'})},{id:'batch-two',data:()=>({class:'Class 5',section:'B',name:'Batch Two'})}]:[{id:'batch-class',data:()=>({className:'Class 5',subject:'Nepali'})}]});
+w.getDocsFromServer=async()=>({docs:[]});
+await w.loadCdcAssessmentPage();choice('class','5');choice('subject','Nepali');choice('student','batch-two');
+choice('unit','क्षेत्र १ — कविता (गीत/देशप्रेम)');
+w.confirm=()=>true;let batchMarkup='',batchPrinted=0,batchClosed=0;
+w.open=()=>({document:{open(){},write(value){batchMarkup=value;},close(){}},focus(){},print(){batchPrinted++;},close(){batchClosed++;}});
+assert.equal(field('printAll').disabled,false);
+await field('printAll').onclick();
+assert.equal(batchPrinted,1);assert.equal(field('student').value,'batch-two');
+saveSyntheticPrint('cdc-batch',batchMarkup);
+const batchDoc=new JSDOM(batchMarkup).window.document;
+const pages=[...batchDoc.querySelectorAll('.cdc-pupil')];
+assert.equal(pages.length,2);
+assert.match(pages[0].textContent,/Batch One/);assert.doesNotMatch(pages[0].textContent,/Batch Two/);
+assert.match(pages[1].textContent,/Batch Two/);assert.doesNotMatch(pages[1].textContent,/Batch One/);
+assert.equal(pages[0].querySelectorAll('tbody tr').length,pages[1].querySelectorAll('tbody tr').length);
+assert.equal(batchDoc.querySelectorAll('input,select,button').length,0);
+assert.match(batchDoc.head.textContent,/@page\{size:A4 landscape/);
+w.getDocsFromServer=async()=>{if(field('student').value==='batch-two')throw Error('Read failed');return {docs:[]};};
+await field('printAll').onclick();
+assert.equal(batchPrinted,1);assert.equal(batchClosed,1);assert.equal(field('student').value,'batch-two');
+console.log('All-students A4 batch PDF: same form, isolated pupils, no partial output on read failure');
+// Native Office files preserve the same student pages and row/column spans.
+w.TextEncoder=TextEncoder;
+const zipEntries=bytes=>{
+ const data=Buffer.from(bytes),entries={};let p=0;
+ while(data.readUInt32LE(p)===0x04034b50){
+   const size=data.readUInt32LE(p+18),nameLen=data.readUInt16LE(p+26),extra=data.readUInt16LE(p+28);
+   const name=data.subarray(p+30,p+30+nameLen).toString('utf8'),start=p+30+nameLen+extra;
+   entries[name]=data.subarray(start,start+size).toString('utf8');p=start+size;
+ }
+ assert.equal(data.readUInt32LE(p),0x02014b50);
+ return entries;
+};
+const saveSyntheticOffice=(name,doc,format)=>{if(process.env.SMSS_CDC_PRINT_DIR)writeFileSync(join(process.env.SMSS_CDC_PRINT_DIR,name+'.'+format),Buffer.from(w.cdcOfficeExport(doc,format)));};
+for(const format of ['docx','xlsx'])saveSyntheticOffice('cdc-batch',batchDoc,format);
+const wordFile=zipEntries(w.cdcOfficeExport(batchDoc,'docx'));
+assert.match(wordFile['word/document.xml'],/w:orient="landscape"/);
+assert.match(wordFile['word/document.xml'],/w:br w:type="page"/);
+assert.match(wordFile['word/document.xml'],/Batch One/);
+assert.match(wordFile['word/document.xml'],/Batch Two/);
+assert.match(wordFile['word/document.xml'],/w:gridSpan/);
+const excelFile=zipEntries(w.cdcOfficeExport(batchDoc,'xlsx'));
+assert.match(excelFile['xl/workbook.xml'],/Student 2/);
+assert.match(excelFile['xl/worksheets/sheet1.xml'],/Batch One/);
+assert.doesNotMatch(excelFile['xl/worksheets/sheet1.xml'],/Batch Two/);
+assert.match(excelFile['xl/worksheets/sheet2.xml'],/Batch Two/);
+assert.match(excelFile['xl/worksheets/sheet1.xml'],/paperSize="9" orientation="landscape"/);
+assert.match(excelFile['xl/worksheets/sheet1.xml'],/mergeCell/);
+const sample=new JSDOM('<table><tr><td rowspan="2">नेपाली &amp; =1+1</td><td colspan="2">Header</td></tr><tr><td>A</td><td>B</td></tr></table>').window.document;
+const wordSpan=zipEntries(w.cdcOfficeExport(sample,'docx'))['word/document.xml'];
+assert.match(wordSpan,/w:vMerge w:val="restart"/);assert.match(wordSpan,/<w:vMerge\/>/);
+assert.match(wordSpan,/नेपाली &amp; =1\+1/);
+const excelSpan=zipEntries(w.cdcOfficeExport(sample,'xlsx'))['xl/worksheets/sheet1.xml'];
+assert.match(excelSpan,/A1:A2/);assert.match(excelSpan,/B1:C1/);assert.doesNotMatch(excelSpan,/<f>/);
+for(const file of [...Object.values(wordFile),...Object.values(excelFile)]){
+  assert.equal(new w.DOMParser().parseFromString(file,'application/xml').querySelector('parsererror'),null);
+}
+w.getDocsFromServer=async()=>({docs:[]});
+const officeDownloads=[];
+w.cdcDownloadOffice=(doc,format,filename)=>{officeDownloads.push({format,filename,entries:zipEntries(w.cdcOfficeExport(doc,format))});};
+field('exportFormat').value='docx';await field('printAll').onclick();
+assert.equal(officeDownloads.length,1);assert.equal(officeDownloads[0].format,'docx');
+field('exportFormat').value='xlsx';await field('printAll').onclick();
+assert.equal(officeDownloads.length,2);assert.ok(officeDownloads[1].entries['xl/worksheets/sheet2.xml']);
+field('printForm').onclick();assert.equal(officeDownloads.length,3);assert.ok(!officeDownloads[2].entries['xl/worksheets/sheet2.xml']);
+assert.equal(field('student').value,'batch-two');
+console.log('Native Word and Excel: valid XML, A4, spans, saved-only student isolation, single and batch paths');
+await field('portfolioRead').onclick();
+assert.equal(field('portfolioExport').disabled,false,field('portfolioStatus').textContent);
+assert.equal(field('student').value,'batch-two');
+assert.match(field('portfolioPreview').textContent,/Batch Two/);
+assert.doesNotMatch(field('portfolioPreview').textContent,/Batch One/);
+assert.ok(field('portfolioPreview').querySelectorAll('table').length>1);
+assert.ok(field('portfolioPreview').querySelector('[data-page-orientation="portrait"]'));
+field('portfolioFormat').value='docx';await field('portfolioExport').onclick();
+assert.match(officeDownloads.at(-1).entries['word/document.xml'],/w:orient="portrait"/);
+assert.match(officeDownloads.at(-1).entries['word/document.xml'],/w:orient="landscape"/);
+assert.match(officeDownloads.at(-1).entries['word/document.xml'],/Batch Two/);
+field('portfolioFormat').value='xlsx';await field('portfolioExport').onclick();
+assert.ok(Object.values(officeDownloads.at(-1).entries).some(x=>x.includes('orientation="portrait"')));
+field('portfolioFormat').value='pdf';await field('portfolioExport').onclick();
+assert.match(batchMarkup,/CDC Student Portfolio/);
+saveSyntheticPrint('cdc-portfolio',batchMarkup);
+const portfolioDoc=new JSDOM(batchMarkup).window.document;
+for(const format of ['docx','xlsx'])saveSyntheticOffice('cdc-portfolio',portfolioDoc,format);
+choice('student','batch-one');
+assert.equal(field('portfolioExport').disabled,true);
+assert.equal(field('portfolioPreview').children.length,0);
+console.log('Portfolio preview and three export formats, mixed A4 orientation, selection invalidation passed');
+// CDC 2076 Annex 2: all three lower grades use the original four columns,
+// five subjects, annual hours and separate six-level achievement conversion.
+assert.deepEqual([0,29.99,30,44.99,45,59.99,60,74.99,75,89.99,90,100].map(w.cdcLower2076Grade),['E','E','D','D','C','C','B','B','A','A','A*','A*']);
+for(const grade of ['1','2','3']){
+ w.getDocs=async name=>({docs:name==='students'?[{id:'lower-'+grade,data:()=>({class:'Class '+grade,section:'A',name:'Lower Student '+grade})}]:[{id:'lower-class',data:()=>({className:'Class '+grade,subject:'Nepali'})}]});
+ w.getDocsFromServer=async()=>({docs:[]});
+ await w.loadCdcAssessmentPage();choice('class',grade);choice('subject','Nepali');choice('student','lower-'+grade);
+ assert.equal(field('annualProgress').hidden,false);
+ await field('readProgress').onclick();
+ assert.equal(field('annualHead').cells.length,4);
+ assert.equal(field('annualRows').rows.length,5);
+ assert.deepEqual([...field('annualRows').rows].map(row=>Number(row.cells[2].textContent)),[160,128,128,256,160]);
+ assert.ok([...field('annualRows').rows].every(row=>row.cells[3].textContent==='—'));
+ field('annualFormat').value='pdf';field('printProgress').onclick();
+ saveSyntheticPrint('cdc-annual-'+grade,batchMarkup);
+ const lowerDoc=new JSDOM(batchMarkup).window.document;
+ for(const format of ['docx','xlsx'])saveSyntheticOffice('cdc-annual-'+grade,lowerDoc,format);
+ assert.match(lowerDoc.body.textContent,/अनुसूची २/);
+ assert.match(lowerDoc.body.textContent,new RegExp('Lower Student '+grade));
+ assert.equal(lowerDoc.querySelectorAll('thead th').length,4);
+ assert.equal(lowerDoc.querySelectorAll('tbody tr').length,5);
+ field('annualFormat').value='docx';field('printProgress').onclick();
+ assert.match(officeDownloads.at(-1).entries['word/document.xml'],/w:orient="portrait"/);
+ field('annualFormat').value='xlsx';field('printProgress').onclick();
+ assert.match(officeDownloads.at(-1).entries['xl/worksheets/sheet1.xml'],/orientation="portrait"/);
+ await field('portfolioRead').onclick();
+ assert.equal(field('portfolioExport').disabled,false,field('portfolioStatus').textContent);
+ assert.ok(field('portfolioPreview').querySelector('[data-page-orientation="portrait"]'));
+}
+console.log('Grades 1–3 CDC 2076 Annex 2 annual report and portfolio PDF Word Excel regression');
 // CDC backup: verify legacy and new exports in an isolated synthetic DOM.
 // Assessment evidence must never be replayed through ordinary client restore.
 const backupDom=new JSDOM('<div id="restoreFirebaseMessage"></div><pre id="restorePreview"></pre><input id="restoreBackupFile" type="file"><button id="runFirebaseRestore"></button>',{runScripts:'outside-only'});
