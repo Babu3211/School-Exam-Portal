@@ -1007,8 +1007,8 @@ const coverage=[...field('themeCoverageRows').rows];
 assert.equal(coverage.length,29);
 const coverageRow=(grade,subject)=>coverage.find(row=>row.dataset.cdcCoverageClass===grade&&row.dataset.cdcCoverageSubject===subject);
 assert.equal(coverageRow('1','serophero').cells[2].textContent,'१० / १०');
-assert.equal(coverageRow('1','serophero').cells[3].textContent,'२६');
-assert.equal(coverageRow('1','serophero').cells[4].textContent,'१०४');
+assert.equal(coverageRow('1','serophero').cells[3].textContent,'२५');
+assert.equal(coverageRow('1','serophero').cells[4].textContent,'१०८');
 assert.equal(coverageRow('2','serophero').cells[2].textContent,'१० / १०');
 assert.equal(coverageRow('2','serophero').cells[3].textContent,'२८');
 assert.equal(coverageRow('2','serophero').cells[4].textContent,'१४४');
@@ -1020,7 +1020,7 @@ assert.match(field('themeCoverageInfo').textContent,/243 \/ 243.*5/);
 for(const row of coverage){
  const toNumber=v=>Number(v.replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)));
  if(row.cells[3].textContent==='—'){assert.equal(row.cells[4].textContent,'—');continue;}
- if(row.dataset.cdcCoverageSubject==='serophero'&&['2','3'].includes(row.dataset.cdcCoverageClass))continue;
+ if(row.dataset.cdcCoverageSubject==='serophero'&&['1','2','3'].includes(row.dataset.cdcCoverageClass))continue;
  assert.equal(toNumber(row.cells[4].textContent),4*toNumber(row.cells[3].textContent));
 }
 
@@ -1030,13 +1030,15 @@ assert.equal(seroSummary.cells[2].textContent,'५');
 assert.equal(seroSummary.cells[3].textContent,'२०');
 assert.equal(seroSummary.cells[4].textContent,'२०');
 assert.equal(summaryRows().find(row=>row.cells[1]?.textContent==='हाम्रो संस्कृति').cells[3].textContent,'४');
-for(const [theme,count,full,indicators] of [['हाम्रो विद्यालय','२','८','१२'],['मेरो सिर्जना','२','८','१२'],['सञ्चार प्रविधि र बजार','२','८','८'],['हाम्रो वरपरको संसार','३','१२','८']]){
+for(const [theme,count,full,indicators] of [['हाम्रो विद्यालय','२','१२','१२'],['हाम्रा वरपरका जीवजन्तु','२','८','८'],['हाम्रो वातावरण','२','८','८'],['मेरो सिर्जना','२','१२','१२'],['हाम्रो संस्कृति','१','४','४'],['सञ्चार प्रविधि र बजार','२','८','८'],['हाम्रो वरपरको संसार','२','८','८']]){
  const row=summaryRows().find(row=>row.cells[1]?.textContent===theme);
  assert.equal(row.cells[2].textContent,count);
  assert.equal(row.cells[3].textContent,full);
  assert.equal(row.cells[4].textContent,indicators);
- assert.match(row.cells[5].textContent,/पाठ्यक्रम नमुना/);
+ assert.match(row.cells[5].textContent,/गणना पुष्टि, प्रविष्टि बाँकी/);
 }
+assert.equal(field('themeSummaryFoot').rows[0].cells[1].textContent,'२५');
+assert.equal(field('themeSummaryFoot').rows[0].cells[2].textContent,'१०८');
 assert.equal(field('themeSummaryFoot').rows[0].cells[3].textContent,'१०८');
 assert.equal(field('themeSummaryRows').rows.length,10);
 assert.equal(field('seroCurriculumReference').hidden,false);
@@ -1188,7 +1190,7 @@ field('printForm').onclick();assert.equal(seroPrintCount,1);
 await field('gridRead').onclick();assert.equal(seroControls('score')[0].textContent,'—');
 assert.equal(field('printForm').disabled,false);
 assert.equal(observations.size,beforeSero);
-for(const [unit,count,page] of [['हाम्रा वरपरका जीवजन्तु',8,'१४०'],['हाम्रो वातावरण',8,'१४१'],['हाम्रो संस्कृति',4,'१४३']]){
+for(const [unit,count,page,mainCount] of [['हाम्रो विद्यालय',12,131,2],['हाम्रा वरपरका जीवजन्तु',8,132,2],['हाम्रो वातावरण',8,132,2],['मेरो सिर्जना',12,133,2],['हाम्रो संस्कृति',4,133,1],['सञ्चार प्रविधि र बजार',8,134,2],['हाम्रो वरपरको संसार',8,134,2]]){
  choice('unit',unit);
  assert.equal(field('annex3').hidden,false,unit);
  assert.equal(field('annexRows').rows.length,count,unit);
@@ -1198,7 +1200,11 @@ for(const [unit,count,page] of [['हाम्रा वरपरका जी�
  assert.equal(seroControls('save').length,0);
  assert.equal(field('gridRead').hidden,true);
  assert.equal(field('printForm').disabled,true);
- assert.match(field('annexStatus').textContent,new RegExp('मुद्रित पृष्ठ '+page));
+ assert.ok(field('annexStatus').querySelector('a').href.endsWith('#page='+page));
+ assert.equal(field('annexRows').querySelectorAll('[data-cdc-guide-outcome]').length,mainCount);
+ assert.equal(field('annexRows').querySelectorAll('[data-cdc-guide-block="0"]').length,count/4);
+ assert.ok([...field('annexRows').rows].every(row=>!row.textContent.includes('मूल PDF हेर्नुहोस्')));
+ assert.equal(field('annexFoot').querySelectorAll('[data-cdc-sero-stage-average]').length,2);
  await field('gridRead').onclick();
  field('printForm').onclick();
  assert.equal(seroPrintCount,1);
@@ -1326,6 +1332,6 @@ for(const grade of ['2','3']){
 }
 choice('unit','म र मेरो परिवार');
 assert.equal(field('annex3').hidden,true);
-console.log('Grade 1 Our Surroundings three forms, 48 indicators, scoped binary Save/Load, saved-only print, three additional curriculum review forms, duplicate and revoked-role checks passed');
+console.log('Grade 1 Our Surroundings three forms, 48 indicators, scoped binary Save/Load, saved-only print, seven original-guide review forms, duplicate and revoked-role checks passed');
 dom.window.close();
 console.log('CDC form: bilingual lookup, editable Nepali date, progress, shared save/retry/read, stale results and revoked assignment passed');
