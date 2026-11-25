@@ -9298,7 +9298,7 @@ function openCdcAssessment(context = null) {
     </div>
     <label>विषयक्षेत्र / Theme <select data-cdc="themePick"><option value="">छान्नुहोस्</option></select></label>
     <p class="hint">कक्षा, विषय, विद्यार्थी र विषयक्षेत्र छान्नुहोस्। फाराम खुलेपछि अभिलेख पढेर मिति र अङ्कन भर्नुहोस्।</p>
-    <section data-cdc="annex3" hidden><div class="toolbar"><button type="button" class="btn alt" data-cdc="gridRead" id="cdcGridRead">अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्</button><span data-cdc="gridStatus" role="status" class="hint"></span></div><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><details data-cdc="seroSourcePreview" hidden style="margin:8px 0"><summary style="cursor:pointer;font-weight:600">मूल CDC PDF सँग तुलना गर्नुहोस्</summary><p class="hint">मूल पृष्ठ र तलको डिजिटल फाराम तुलना गर्नुहोस्। PDF नदेखिए नयाँ ट्याबमा खोल्नुहोस्। विद्यार्थीको विवरण PDF सेवामा पठाइँदैन।</p><a data-cdc="seroSourceOpen" target="_blank" rel="noopener noreferrer">मूल पृष्ठ खोल्नुहोस्</a><div data-cdc="seroSourceFrame"></div></details><div class="tablewrap"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Print / Save PDF</button><p data-cdc="printStatus" role="status" class="hint"></p></section>
+    <section data-cdc="annex3" hidden><div class="toolbar"><button type="button" class="btn alt" data-cdc="gridRead" id="cdcGridRead">अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्</button></div><p data-cdc="gridStatus" role="status" aria-live="polite" style="font-weight:600;color:#17466e;overflow-wrap:anywhere"></p><p data-cdc="entryNotice" class="hint" role="status"></p><p class="hint" style="font-size:12px">पूरा तालिका हेर्न दायाँ–बायाँ सार्नुहोस्।</p><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><details data-cdc="seroSourcePreview" hidden style="margin:8px 0"><summary style="cursor:pointer;font-weight:600">मूल CDC PDF सँग तुलना गर्नुहोस्</summary><p class="hint">मूल पृष्ठ र तलको डिजिटल फाराम तुलना गर्नुहोस्। PDF नदेखिए नयाँ ट्याबमा खोल्नुहोस्। विद्यार्थीको विवरण PDF सेवामा पठाइँदैन।</p><a data-cdc="seroSourceOpen" target="_blank" rel="noopener noreferrer">मूल पृष्ठ खोल्नुहोस्</a><div data-cdc="seroSourceFrame"></div></details><div class="tablewrap"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Print / Save PDF</button><p data-cdc="printStatus" role="status" class="hint"></p></section>
     <details class="cdc-more" data-cdc="extraReference"><summary>CDC निर्देशिका र विषयक्षेत्र विवरण</summary>
     <details data-cdc="themeSummary" style="border:1px solid #b9d5e7;border-radius:8px;padding:12px;margin:10px 0">
       <summary style="cursor:pointer;font-weight:700">Theme, Learning Achievement &amp; Full Marks — Classes 1–5</summary>
@@ -9465,7 +9465,11 @@ function openCdcAssessment(context = null) {
       dateCell.textContent=previous?.date??'';ratingCell.textContent=previous?.level??'';
       if(!editable)continue;
       const button=document.createElement('button');button.type='button';button.className='btn alt';button.dataset.cdcGridEdit=stage;
-      button.style.cssText='display:block;margin:3px auto;padding:4px 8px';button.textContent=previous?'Reassess':'Enter';
+      button.style.cssText='display:block;margin:3px auto;padding:6px 8px;white-space:normal;min-height:34px';button.textContent=language()==='en'?(previous?'Reassess':'Date / Rating'):(previous?'पुनः अङ्कन':'मिति / अङ्कन');
+      button.setAttribute('aria-label',(stage==='regular'?'Regular: ':'After support: ')+button.textContent);
+      dateCell.tabIndex=0;dateCell.setAttribute('role','button');dateCell.setAttribute('aria-label',language()==='en'?'Enter date':'मिति भर्नुहोस्');
+      dateCell.style.cursor='pointer';dateCell.style.background='#f0f6ff';
+      dateCell.title=language()==='en'?'Enter date':'मिति भर्नुहोस्';
       ratingCell.append(button);stages.push({stage,previous,dateCell,ratingCell,button});
     }
     const remarksCell=row.insertCell();remarksCell.textContent=toolsMode?[...new Set([regular?.method,support?.method].filter(Boolean))].join(' / '):(effective?.feedback??'');
@@ -9506,8 +9510,12 @@ function openCdcAssessment(context = null) {
           }catch{if(stillHere())field('gridStatus').textContent='सुरक्षित भएको पुष्टि भएन। फेरि प्रयास गर्नुहोस्।';}
           finally{inlinePending=false;if(stillHere()){save.disabled=false;cancel.disabled=false;}}
         };
-        level.focus();
+        date.focus();
+        dateCell.removeAttribute('role');dateCell.removeAttribute('tabindex');dateCell.onclick=null;dateCell.onkeydown=null;
+        field('gridStatus').textContent=language()==='en'?'Enter the date, choose a rating from 1 to 4, then Save.':'मिति भर्नुहोस्, १–४ अङ्कन छान्नुहोस् र Save थिच्नुहोस्।';
       };
+      dateCell.onclick=()=>button.click();
+      dateCell.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();button.click();}};
     }
   };
   async function readSeroferoRecords(){
@@ -9565,6 +9573,7 @@ function openCdcAssessment(context = null) {
     field('printForm').disabled=!enabled||!annexReadSelection||annexReadSelection!==JSON.stringify(schoolSelection())||!field('unit').value.trim();
     field('gridRead').textContent=seroReference?'सूचक अभिलेख पढ्नुहोस् / पुनः पढ्नुहोस्':'अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्';
     field('gridRead').disabled=false;
+    field('entryNotice').textContent=readOnly?'यो खाता हेर्न मात्र हो। मिति र अङ्कन भर्न तोकिएको विषय शिक्षकको खाताबाट प्रवेश गर्नुहोस्।':!schoolSelection()||!field('unit').value.trim()?'कक्षा, विषय, विद्यार्थी र विषयक्षेत्र छान्नुहोस्।':annexReadSelection===JSON.stringify(schoolSelection())?'तालिकामा मिति वा मिति / अङ्कन बटन थिचेर भर्नुहोस्।':'Entry खोल्नुहोस् थिचेर विद्यालयको अभिलेख पढ्नुहोस्।';
     if(seroGuide){field('gridRead').hidden=true;field('printForm').disabled=true;renderSeroGuideReview(seroGuide);return;}
     if(seroReference){field('gridRead').hidden=!!seroReference.referenceOnly||year!=='2083';field('printForm').disabled=!!seroReference.referenceOnly||year!=='2083'||!schoolSelection()||seroReadKey!==seroScopeKey()||inlinePending;renderSeroferoReference(seroReference);return;}
     if(nepaliForm){renderPrimaryNepaliForm(nepaliForm);return;}
@@ -10231,12 +10240,13 @@ function openCdcAssessment(context = null) {
   };
   field('readSchool').onclick=async()=>{
     const selection=schoolSelection();
-    if(!selection||!canShow()) return;
+    if(!selection||!canShow()) {if(canShow())field('gridStatus').textContent='पहिले कक्षा, विषय र विद्यार्थी छान्नुहोस्।';return;}
     clearSchoolResults();
     const request=schoolReadSequence;
     const isLatest=()=>canShow()&&request===schoolReadSequence;
     field('readSchool').disabled=true;
     field('schoolStatus').textContent='विद्यालयको अभिलेख पढ्दै…';
+    field('gridStatus').textContent='विद्यालयको अभिलेख पढ्दै…';field('gridRead').disabled=true;
     try {
       const filters=Object.entries(selection).map(([name,value])=>where(name,'==',value));
       const result=await getDocsFromServer(query(collection(db,'cdc_observations'),...filters));
@@ -10255,10 +10265,15 @@ function openCdcAssessment(context = null) {
       }
       field('schoolStatus').textContent=items.length
         ? `यस विद्यार्थी, विषय र अवधिमा ${items.length} अवलोकन छन्।` : 'यस छनोटमा विद्यालयको अभिलेख छैन।';
-    } catch {
-      if(isLatest()) field('schoolStatus').textContent='विद्यालयको अभिलेख पढ्न सकिएन। जडान र अनुमति जाँच्नुहोस्।';
+      field('gridStatus').textContent=readOnly?'अभिलेख पढियो। यो खाता हेर्न मात्र हो।':!field('unit').value.trim()?'अभिलेख पढियो। विषयक्षेत्र छान्नुहोस्।':'Entry तयार छ। सम्बन्धित मिति / अङ्कन कोठामा थिच्नुहोस्।';
+    } catch(error) {
+      if(isLatest()){
+        const code=String(error?.code||'');
+        const message=code.endsWith('permission-denied')?'अभिलेख पढ्ने अनुमति छैन। विषय शिक्षकको कक्षा, विषय र सेक्सन Assignment जाँच्नुहोस्।':code.endsWith('failed-precondition')?'अभिलेख पढ्न आवश्यक Firebase व्यवस्था अपूरो छ। व्यवस्थापकलाई जानकारी दिनुहोस्।':'विद्यालयको अभिलेख पढ्न सकिएन। इन्टरनेट जडान जाँचेर Entry फेरि खोल्नुहोस्।';
+        field('schoolStatus').textContent=message;field('gridStatus').textContent=message;
+      }
     } finally {
-      if(isLatest()) field('readSchool').disabled=false;
+      if(isLatest()){field('readSchool').disabled=false;field('gridRead').disabled=false;}
     }
   };
   field('saveSchool').onclick=async()=>{
