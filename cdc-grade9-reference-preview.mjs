@@ -228,13 +228,20 @@ export function buildGrade9ReferencePreview({grade,subject,fullMarks,durationMin
      for(let k=0;k<meanings.length;k++)lines.push((rows[k]?.word||'')+'     |     '+meanings[k]);
     }else if(g.skill==='tense_aspect'&&c.passage||g.skill==='verb_mood'||g.skill==='word_class'){
      // The printed question contains the passage or composition prompt once.
-    }else if(g.skill==='sentence_editing'||g.skill==='vocabulary_sentence_use'){
-     lines.push(components.map(x=>x.text).join(g.skill==='sentence_editing'?' / ':', '));
+    }else if(g.skill==='sentence_editing'){
+     // Four intentionally incorrect expressions occur once within the paragraph.
+     if(!c.passage||components.length!==4||components.some(x=>c.passage.split(x.text).length!==2))throw Error('Invalid Nepali proofreading paragraph');
+    }else if(g.skill==='vocabulary_sentence_use'){
+     lines.push(components.map(x=>x.text).join(', '));
     }else{
      for(const [k,x] of components.entries()){
       const sub=multi?neLower(k):paperOptionLabel(k,'ne');
       lines.push('    ('+sub+') '+x.text+(g.skill==='word_formation'?' '+modelMark(x.marks):''));
      }
+    }
+    if(g.skill==='sentence_editing'){
+     const corrected=components.reduce((p,x)=>p.replace(x.text,x.answer),c.passage);
+     answers.push(label+'. शुद्ध अनुच्छेद: '+corrected);
     }
     if(components.length)components.forEach((x,k)=>answer(label+'.'+(multi?neLower(k):paperOptionLabel(k,'ne')),x.answer,x.marks));
     else answer(label,c.answer,c.marks);
