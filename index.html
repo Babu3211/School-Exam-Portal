@@ -9439,13 +9439,14 @@ function openCdcAssessment(context = null) {
     field('annexHead').innerHTML='<tr><th rowspan="2">थिम</th><th rowspan="2">मुख्य सिकाइ उपलब्धि</th><th rowspan="2">उपलब्धि सूचक</th><th colspan="3">नियमित पढाइपछिको मूल्याङ्कन</th><th colspan="3">थप सहायतापछिको मूल्याङ्कन</th><th rowspan="2">मूल्याङ्कनका साधन</th></tr><tr><th>सकेको / नसकेको</th><th>मिति</th><th>अङ्कन</th><th>सकेको / नसकेको</th><th>मिति</th><th>अङ्कन</th></tr>';
     const body=field('annexRows'),foot=field('annexFoot');body.replaceChildren();foot.replaceChildren();
     const groupStates=form.groups.map(()=>[[],[]]), scoreCells=form.groups.map(()=>[null,null]);
-    const dates=form.groups.map(()=>[null,null]),buttons=form.groups.map(()=>[null,null]);
+    const dates=form.groups.map(()=>[null,null]),buttons=form.groups.map(()=>[null,null]),usedTools=form.groups.map(()=>[[],[]]);
     const selection=schoolSelection(),scopeKey=seroScopeKey(),loaded=!!selection&&seroReadKey===scopeKey;
     const editable=loaded&&!readOnly&&!form.referenceOnly&&year==='2083';
     const idFor=i=>'cdc2076-g'+field('class').value+'-'+(form.start+i);
     const applyRecord=(i,j,record)=>{
       groupStates[i][j].forEach((input,k)=>{input.value=record?(record.indicators[k]?'yes':'no'):'';});
       dates[i][j].value=record?.date||'';
+      usedTools[i][j].forEach((input,k)=>{input.value=Array.isArray(record?.usedTools)&&typeof record.usedTools[k]==='string'?record.usedTools[k]:'';});
     };
     async function saveGroup(i,j){
       const button=buttons[i][j],stage=j?'support':'regular',outcomeId=idFor(i);
@@ -9455,9 +9456,12 @@ function openCdcAssessment(context = null) {
       const raw=attendanceDigitsToEnglish(dates[i][j].value).trim(),date=raw.split('-').map((p,k)=>k?attendancePad(p):p).join('-');
       let valid=false;try{valid=/^\d{4}-\d{1,2}-\d{1,2}$/.test(raw)&&attendanceAdToBs(attendanceBsToAd(date))===date;}catch{}
       if(cdcSeroferoIndicatorCount(values)===null||!valid){field('gridStatus').textContent='चारै सूचक र मान्य मूल्याङ्कन मिति भर्नुहोस्।';return;}
+      const methods=usedTools[i][j].map(input=>input.value.trim());
+      if(methods.length!==4||methods.some(v=>v.length>200)){field('gridStatus').textContent='प्रयोग गरिएको साधन प्रत्येक सूचकमा २०० अक्षरभित्र लेख्नुहोस्।';return;}
       const payload={...selection,unit,outcomeId,stage,date,indicators:values.map(v=>v==='yes'),createdBy:owner};
+      if(methods.some(Boolean))payload.usedTools=methods;
       const previous=seroLatest(outcomeId,stage);
-      if(previous&&previous.date===date&&JSON.stringify(previous.indicators)===JSON.stringify(payload.indicators)){field('gridStatus').textContent='यो मूल्याङ्कन पहिले नै सुरक्षित छ।';return;}
+      if(previous&&previous.date===date&&JSON.stringify(previous.indicators)===JSON.stringify(payload.indicators)&&JSON.stringify(previous.usedTools||[])===JSON.stringify(payload.usedTools||[])){field('gridStatus').textContent='यो मूल्याङ्कन पहिले नै सुरक्षित छ।';return;}
       const retryKey=JSON.stringify(payload),ref=seroRetry.get(retryKey)||doc(collection(db,'cdc_serofero_indicators'));
       seroRetry.set(retryKey,ref);inlinePending=true;button.disabled=true;
       field('gridStatus').textContent='सूचक अभिलेख सुरक्षित गर्दै…';
@@ -9518,6 +9522,14 @@ function openCdcAssessment(context = null) {
         }
         const toolCell=row.insertCell();
         if(tools[j]==='मूल फाराममा खाली'){toolCell.setAttribute('aria-label','मूल फाराममा खाली');}else toolCell.textContent=tools[j];
+        if(!form.referenceOnly)for(let stage=0;stage<2;stage++){
+          const wrapper=document.createElement('div'),input=document.createElement('input');
+          input.type='text';input.maxLength=200;input.style.width='100%';
+          input.dataset.cdcSeroUsedTool=String(stage);
+          input.setAttribute('aria-label',(stage?'थप सहायता':'नियमित')+' — प्रयोग गरेको साधन: '+indicator);
+          input.placeholder=stage?'थप सहायता — प्रयोग गरेको साधन':'नियमित — प्रयोग गरेको साधन';
+          input.disabled=!editable;usedTools[i][stage].push(input);wrapper.append(input);toolCell.append(wrapper);
+        }
       }
     }
     if(loaded)for(let i=0;i<form.groups.length;i++)for(let j=0;j<2;j++)applyRecord(i,j,seroLatest(idFor(i),j?'support':'regular'));
@@ -9525,7 +9537,7 @@ function openCdcAssessment(context = null) {
     field('annexSign').textContent='शिक्षकको सही __________   अभिभावकको सही __________';
     if(form.referenceOnly){field('annexStatus').textContent='एकीकृत पाठ्यक्रम २०७६, अनुसूची ३(घ), मुद्रित पृष्ठ '+digits(form.page)+' — '+digits(form.groups.length*4)+' सूचक। पाठ्य अंशमा आधारित समीक्षा फाराम; मूल मार्गदर्शन र दृश्य पृष्ठ प्रमाणीकरण नभएसम्म सूचक प्रविष्टि, सुरक्षित गर्ने र छपाइ निष्क्रिय छन्।';return;}
     const status=field('annexStatus');
-    status.textContent='पाठ्यक्रम विकास केन्द्र २०७६, पीडीएफ पृष्ठ '+digits(form.page)+' — '+digits(form.groups.length*4)+' सूचक। स्रोतमा आधारित समीक्षा प्रति। '+(loaded?(readOnly?'सुरक्षित अभिलेख मात्र हेर्न सकिन्छ।':'चारै सूचक र मिति भरेर प्रत्येक चरण छुट्टै सुरक्षित गर्नुहोस्। नसुरक्षित छनोट पुनः पढ्दा हट्छ।'):'सुरक्षित गर्न पहिले सूचक अभिलेख पढ्नुहोस्। हालको छनोट अस्थायी हो।')+' प्रयोग गरेको साधनको छुट्टै अभिलेख राख्ने सुविधा अझै तयार छैन। छपाइको प्रमाणीकरण बाँकी छ। पुराना अभिलेख सुरक्षित छन्। ';
+    status.textContent='पाठ्यक्रम विकास केन्द्र २०७६, पीडीएफ पृष्ठ '+digits(form.page)+' — '+digits(form.groups.length*4)+' सूचक। स्रोतमा आधारित समीक्षा प्रति। '+(loaded?(readOnly?'सुरक्षित अभिलेख मात्र हेर्न सकिन्छ।':'चारै सूचक र मिति भरेर प्रत्येक चरण छुट्टै सुरक्षित गर्नुहोस्। नसुरक्षित छनोट पुनः पढ्दा हट्छ।'):'सुरक्षित गर्न पहिले सूचक अभिलेख पढ्नुहोस्। हालको छनोट अस्थायी हो।')+' प्रयोग गरेको साधन सम्बन्धित चरणको कोठामा लेख्न सकिन्छ; स्रोतको सुझाइएको साधन स्वतः सुरक्षित हुँदैन। छपाइको प्रमाणीकरण बाँकी छ। पुराना अभिलेख सुरक्षित छन्। ';
     const link=document.createElement('a');link.href=field('guidePdf13').href+'#page='+form.page;link.target='_blank';link.rel='noopener noreferrer';link.textContent='मूल CDC PDF — पृष्ठ '+digits(form.page);status.append(link);
   }
   function renderPrimaryLegacy(){
@@ -9827,10 +9839,15 @@ function openCdcAssessment(context = null) {
         const indicators=[...table.querySelectorAll('[data-cdc-sero-indicator="'+stage+'"]')];
         const dates=[...table.querySelectorAll('[data-cdc-sero-date="'+stage+'"]')];
         const scores=[...table.querySelectorAll('[data-cdc-sero-score="'+stage+'"]')];
-        if(indicators.length!==seroForm.groups.length*4||dates.length!==seroForm.groups.length||scores.length!==seroForm.groups.length)return null;
+        const methods=[...table.querySelectorAll('[data-cdc-sero-used-tool="'+stage+'"]')];
+        if(indicators.length!==seroForm.groups.length*4||dates.length!==seroForm.groups.length||scores.length!==seroForm.groups.length||methods.length!==indicators.length)return null;
         for(let i=0;i<seroForm.groups.length;i++){
           const record=seroLatest('cdc2076-g'+field('class').value+'-'+(seroForm.start+i),stage?'support':'regular');
-          for(let j=0;j<4;j++)indicators[i*4+j].replaceWith(doc.createTextNode(record?(record.indicators[j]?'✓':'×'):'—'));
+          for(let j=0;j<4;j++){
+            indicators[i*4+j].replaceWith(doc.createTextNode(record?(record.indicators[j]?'✓':'×'):'—'));
+            const method=Array.isArray(record?.usedTools)&&typeof record.usedTools[j]==='string'?record.usedTools[j]:'';
+            methods[i*4+j].replaceWith(doc.createTextNode(method?(stage?'थप सहायता: ':'नियमित: ')+method:''));
+          }
           dates[i].replaceWith(doc.createTextNode(record?digits(record.date):'—'));
           const score=record?record.indicators.filter(Boolean).length:null;
           scores[i].textContent=score===null?'—':digits(score);
