@@ -94,6 +94,9 @@ jobs:
             allowed.add('sw.js')
           if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-cdc-assessment':
             allowed.update({'scripts/test-cdc-assignment.mjs','scripts/test-firestore-rules.mjs'})
+          # Dedicated primary assessment follow-up: exact tests and source register only.
+          if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-cdc-assessment-official-forms':
+            allowed.update({'scripts/test-cdc-assignment.mjs','scripts/test-firestore-rules.mjs','docs/cdc-assessment-reference-sources.md'})
           # Exact file scope for the school-approved question-paper integration PR.
           # This does not permit dashboard, IEMIS, Android or Firestore changes.
           if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-question-autogen-grid-safe-2083':
@@ -224,7 +227,10 @@ jobs:
       - name: JavaScript syntax and approved dashboard regression
         run: |
           node scripts/check-inline-js.mjs
-          if test -f scripts/test-cdc-assignment.mjs; then node scripts/test-cdc-assignment.mjs; fi
+          if test -f scripts/test-cdc-assignment.mjs; then
+            mkdir -p "$RUNNER_TEMP/smss-cdc-print"
+            SMSS_CDC_PRINT_DIR="$RUNNER_TEMP/smss-cdc-print" node scripts/test-cdc-assignment.mjs
+          fi
           node --check user-activity.js
           node --check idle-logout.js
           node scripts/check-v44-requirements.mjs
@@ -244,7 +250,7 @@ jobs:
           npm run test:rules
           npx firebase emulators:exec --only firestore --project smss-v45-activity-test 'node scripts/test-user-activity-rules.mjs'
       - name: Render and verify synthetic A4 Grade Sheet
-        if: github.head_ref == 'fix/iemis-class6-2083-term-sheets'
+        if: github.head_ref == 'fix/iemis-class6-2083-term-sheets' || github.head_ref == 'feat/v46-cdc-assessment-official-forms'
         run: |
           mkdir -p "$RUNNER_TEMP/smss-print"
           report="$RUNNER_TEMP/smss-print"
@@ -262,7 +268,7 @@ jobs:
             pdftotext "$report/$fixture.pdf" "$report/$fixture.txt"
             grep -Fq 'GRADE POINT AVERAGE' "$report/$fixture.txt"
             grep -Fq 'Head Teacher' "$report/$fixture.txt"
-            pdftoppm -singlefile -r 110 -png "$report/$fixture.pdf" "$report/grade"
+            pdftoppm -singlefile -r 110 -png "$report/$fixture.pdf" "$report/$fixture"
           done
           grep -Fq "3.54" "$report/primary.txt"
           grep -Fq "26 HOURS" "$report/primary.txt"
@@ -270,7 +276,7 @@ jobs:
           grep -Fq "32 HOURS" "$report/secondary.txt"
           grep -Fq "COMPUTER SCIENCE" "$report/secondary.txt"
       - name: Save synthetic Grade Sheet for visual review
-        if: always() && github.head_ref == 'fix/iemis-class6-2083-term-sheets'
+        if: always() && (github.head_ref == 'fix/iemis-class6-2083-term-sheets' || github.head_ref == 'feat/v46-cdc-assessment-official-forms')
         uses: actions/upload-artifact@v4
         with:
           name: smss-synthetic-a4-grade-sheet
@@ -282,6 +288,48 @@ jobs:
             ${{ runner.temp }}/smss-print/secondary.pdf
             ${{ runner.temp }}/smss-print/secondary.png
             ${{ runner.temp }}/smss-print/*-info.txt
+          retention-days: 7
+      - name: Render and verify synthetic CDC assessment PDFs
+        if: github.head_ref == 'feat/v46-cdc-assessment-official-forms'
+        run: |
+          set -euo pipefail
+          report="$RUNNER_TEMP/smss-cdc-print"
+          sudo apt-get update -qq
+          sudo apt-get install -y poppler-utils fonts-noto-core
+          for fixture in cdc-annual cdc-math cdc-sero; do
+            test -s "$report/$fixture.html"
+            google-chrome --headless --no-sandbox --disable-gpu --no-pdf-header-footer \
+              --print-to-pdf="$report/$fixture.pdf" "file://$report/$fixture.html"
+            pdfinfo "$report/$fixture.pdf" | tee "$report/$fixture-info.txt"
+            grep -Eq '^Page size:.*\(A4\)' "$report/$fixture-info.txt"
+            python - "$report/$fixture-info.txt" "$fixture" <<'PY'
+          import re, sys
+          info=open(sys.argv[1]).read()
+          pages=int(re.search(r'^Pages:\s+(\d+)',info,re.M).group(1))
+          w,h=map(float,re.search(r'^Page size:\s+([\d.]+) x ([\d.]+)',info,re.M).groups())
+          assert pages>=1
+          if sys.argv[2]=='cdc-annual':
+              assert w<h and pages==1, 'Annual report must fit portrait A4'
+          else:
+              assert w>h, 'Assessment form must be landscape A4'
+              if sys.argv[2]=='cdc-sero':
+                  assert pages==1, '24-indicator Serofero review fixture must fit on one page'
+          PY
+            pdftotext "$report/$fixture.pdf" "$report/$fixture.txt"
+            test -s "$report/$fixture.txt"
+            pdftoppm -r 110 -png "$report/$fixture.pdf" "$report/$fixture"
+          done
+          grep -Fq 'Primary' "$report/cdc-annual.txt"
+          grep -Fq 'Grade 3 synthetic' "$report/cdc-math.txt"
+      - name: Save synthetic CDC assessment PDFs for visual review
+        if: always() && github.head_ref == 'feat/v46-cdc-assessment-official-forms'
+        uses: actions/upload-artifact@v4
+        with:
+          name: smss-synthetic-cdc-assessment-print
+          path: |
+            ${{ runner.temp }}/smss-cdc-print/*.pdf
+            ${{ runner.temp }}/smss-cdc-print/*.png
+            ${{ runner.temp }}/smss-cdc-print/*-info.txt
           retention-days: 7
       - name: Verify final V45 source remains the approved dashboard
         run: |
