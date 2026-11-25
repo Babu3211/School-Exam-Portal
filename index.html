@@ -9368,6 +9368,14 @@ function openCdcAssessment(context = null) {
     <datalist id="cdcUnitSuggestions"></datalist>
     <p data-cdc="unitCoverage" class="hint"></p>
     </details>
+    <details class="cdc-more" data-cdc="subjectSummaryPanel" hidden><summary>समष्टिगत सिकाइ उपलब्धि मूल्याङ्कन अभिलेख / Subject Summary</summary>
+      <h3 data-cdc="subjectSummaryTitle"></h3><p data-cdc="subjectSummaryIdentity"></p>
+      <button type="button" class="btn alt" data-cdc="readSubjectSummary">अभिलेख पढ्नुहोस्</button>
+      <button type="button" class="btn alt" data-cdc="printSubjectSummary" disabled>Print / Save PDF</button>
+      <p data-cdc="subjectSummaryStatus" role="status" class="hint"></p>
+      <div class="tablewrap"><table data-cdc="subjectSummaryTable" style="border-collapse:collapse;width:100%;min-width:720px"><thead data-cdc="subjectSummaryHead"></thead><tbody data-cdc="subjectSummaryRows"></tbody><tfoot data-cdc="subjectSummaryFoot"></tfoot></table></div>
+      <p data-cdc="subjectSummarySign"></p>
+    </details>
     <details class="cdc-more" data-cdc="extraReports"><summary>वार्षिक प्रगति प्रतिवेदन</summary>
     <section data-cdc="annualProgress" hidden class="panel"><h3>प्रगति प्रतिवेदन — अनुसूची ४ / Annual Progress</h3><p data-cdc="progressIdentity"></p><button type="button" class="btn alt" id="cdcReadProgress" data-cdc="readProgress">View Annual Progress</button> <button type="button" class="btn alt" id="cdcPrintProgress" data-cdc="printProgress" disabled>Print / Save PDF</button><p data-cdc="annualStatus" role="status" class="hint"></p><div class="tablewrap"><table><thead><tr><th>क्र. सं.</th><th>विषय</th><th>पाठ्यघण्टा</th><th>सिकाइ उपलब्धि सङ्ख्या</th><th>समग्र उपलब्धिस्तर</th><th>कैफियत</th></tr></thead><tbody data-cdc="annualRows"></tbody></table></div><p data-cdc="annualAttendance" class="hint">उपस्थिति: अभिलेख लोड गर्नुहोस्।</p><p class="hint">विद्यालय सञ्चालन दिन विद्यालयको प्रमाणित पात्रोबाट पुष्टि गर्नुपर्छ। यो समीक्षा प्रति हो।</p><p>कक्षा शिक्षक __________　 प्रधानाध्यापक __________　 मिति __________</p></section>
     </details>
@@ -9544,6 +9552,7 @@ function openCdcAssessment(context = null) {
         ['regular','support'].includes(o.stage)&&Array.isArray(o.indicators)&&o.indicators.length===4&&o.indicators.every(v=>typeof v==='boolean')&&typeof o.date==='string')
         .sort((a,b)=>b.date.localeCompare(a.date)||(b.createdAt?.toMillis()??0)-(a.createdAt?.toMillis()??0));
       seroReadKey=scopeKey;renderAnnex();
+      if(field('subjectSummaryPanel').open)await readSubjectSummary();
       field('gridStatus').textContent=seroRecords.length?'सूचक अभिलेख पढियो।':'यस थिममा सूचक अभिलेख छैन।';
     }catch{
       if(current())field('gridStatus').textContent='सूचक अभिलेख पढ्न सकिएन। अनुमति र जडान जाँच्नुहोस्।';
@@ -10067,6 +10076,124 @@ function openCdcAssessment(context = null) {
     return {studentId,className:String(student.class??student.className),subject,
       section:String(student.section??''),academicYear:year,period};
   };
+  // The subject summary uses exactly the outcome keys of the corresponding
+  // entry form. No assessment is invented from missing or unclassified data.
+  let summarySequence=0,summarySnapshot=null;
+  const summaryGrade=percent=>[[90,'A+'],[80,'A'],[70,'B+'],[60,'B'],[50,'C+'],[40,'C'],[35,'D'],[0,'NG']].find(([min])=>percent>=min)?.[1]||'—';
+  function summaryCatalogue(grade,subjectKey,theme){
+    const unit=theme.unit,lower=Number(grade)<=3;
+    if(!lower)return {unit,titles:(cdcVerifiedOutcomes[grade+':'+subjectKey]||[]).filter(([u])=>normalizeTitle(u)===normalizeTitle(unit)).map(([,title])=>title)};
+    if(revisedPrimaryYear){
+      const form=subjectKey==='mathematics'?cdcRevisedMathForms[grade+':'+unit]:null;
+      return {unit,titles:form?form.rows.map(([,ne])=>ne):[]};
+    }
+    if(subjectKey==='nepali'){
+      const forms=grade==='1'?cdcPrimaryNepaliForms:cdcNepaliThemeForms[grade]||{};
+      const match=Object.entries(forms).find(([key,form])=>(form.displayTitle||key)===unit);
+      return match?{unit:match[0],titles:primaryNepaliRows(match[1],match[0]).map(([,title])=>title)}:{unit,titles:[]};
+    }
+    if(subjectKey==='english'){
+      const match=Object.entries(cdcPrimaryEnglishForms[grade]||{}).find(([key,form])=>form.name===unit);
+      return match?{unit:match[0],titles:primaryEnglishRows(match[1],match[0]).map(([,title])=>title)}:{unit,titles:[]};
+    }
+    if(subjectKey==='mathematics'){
+      const form=cdcLegacyMathRubrics[grade+':'+unit];
+      return {unit,titles:form?form.rows.map(row=>row.ne):[]};
+    }
+    return {unit,titles:[]};
+  }
+  function clearSubjectSummary(){
+    summarySequence++;summarySnapshot=null;
+    field('subjectSummaryPanel').hidden=!context;
+    field('printSubjectSummary').disabled=true;
+    for(const name of ['subjectSummaryHead','subjectSummaryRows','subjectSummaryFoot'])field(name).replaceChildren();
+    field('subjectSummaryStatus').textContent='';field('readSubjectSummary').disabled=!schoolSelection();
+  }
+  function renderSubjectSummary(records,binaryRecords=[]){
+    if(!context||!schoolSelection()||!canShow())return;
+    const grade=field('class').value,subject=field('subject').value,key=cdcAssessmentSubjectKey(subject),en=language()==='en';
+    const label=(ne,eng)=>en?eng:ne;
+    const subjectLabel=field('subject').selectedOptions[0]?.text||subject;
+    field('subjectSummaryTitle').textContent=en?'Grade '+grade+': '+subjectLabel+' — Summative Learning Achievement Assessment Record':'कक्षा '+grade+' : '+subjectLabel+' विषयको समष्टिगत सिकाइ उपलब्धि मूल्याङ्कन अभिलेख';
+    field('subjectSummaryIdentity').textContent=label('विद्यार्थी: ','Student: ')+(field('student').selectedOptions[0]?.text||'')+' | '+label('शैक्षिक सत्र: ','Academic year: ')+year;
+    field('subjectSummarySign').textContent=label('शिक्षकको दस्तखत __________  मिति __________  अभिभावकको दस्तखत __________  मिति __________',"Teacher's Signature __________  Date __________  Parent's Signature __________  Date __________");
+    const head=field('subjectSummaryHead'),body=field('subjectSummaryRows'),foot=field('subjectSummaryFoot');
+    head.replaceChildren();body.replaceChildren();foot.replaceChildren();
+    const headings=en?['S.N.','Name of the Unit / Lesson','Number of Learning Achievements (NLA)','Full Marks / Maximum Marks (NLA × 4)','Obtained Marks','Percentage','Grade']:['क्र.सं. / S.N.','पाठ/विषयक्षेत्र / Lesson or Unit','सिकाइ उपलब्धि सङ्ख्या / NLA','पूर्णाङ्क / Full Marks','प्राप्ताङ्क / Obtained Marks','प्रतिशत / Percentage','ग्रेड / Grade'];
+    if(language()==='ne')headings.splice(0,7,'क्र.सं.','पाठ/विषयक्षेत्र','सिकाइ उपलब्धि सङ्ख्या','पूर्णाङ्क','प्राप्ताङ्क','प्रतिशत','ग्रेड');
+    const header=head.insertRow();for(const name of headings){const th=document.createElement('th');th.textContent=name;header.append(th);}
+    const ordered=items=>[...items].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||(b.createdAt?.toMillis?.()??0)-(a.createdAt?.toMillis?.()??0));
+    const regular=ordered(records),binary=ordered(binaryRecords);
+    const themes=cdcThemeMarkRows(grade,key,year),calculated=[];
+    const digits=value=>language()==='ne'?String(value).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]):String(value);
+    const put=(parent,values)=>{const row=parent.insertRow();for(const value of values)row.insertCell().textContent=value===null?'—':digits(value);return row;};
+    for(const [i,theme] of themes.entries()){
+      let scores=[],expected=theme.count,full=theme.fullMark;
+      if(key==='serophero'){
+        const form=cdcSeroGuideEntryForm(grade,theme.unit,year);
+        if(form&&!form.referenceOnly&&form.groups.length*4===full){
+          scores=form.groups.map((_,j)=>{
+            const id='cdc2076-g'+grade+'-'+(form.start+j);
+            const items=binary.filter(o=>o.unit===theme.unit&&o.outcomeId===id&&Array.isArray(o.indicators)&&o.indicators.length===4&&o.indicators.every(v=>typeof v==='boolean'));
+            const record=items.find(o=>o.stage==='support')||items.find(o=>o.stage==='regular');
+            return record?record.indicators.filter(Boolean).length:null;
+          });
+          expected=form.groups.length;
+        }
+      }else{
+        const cat=summaryCatalogue(grade,key,theme),titles=[...new Set(cat.titles)];
+        if(titles.length===theme.count&&theme.fullMark===titles.length*4){
+          scores=titles.map(title=>{
+            const items=regular.filter(o=>normalizeTitle(o.unit)===normalizeTitle(cat.unit)&&o.topic===title&&Number.isInteger(o.level)&&o.level>=1&&o.level<=4);
+            const record=items.find(o=>o.stage==='support')||items.find(o=>o.stage==='regular');
+            return record?.level??null;
+          });
+        }
+      }
+      const assessed=scores.filter(v=>v!==null).length,complete=Number.isInteger(expected)&&expected>0&&scores.length===expected&&assessed===expected;
+      const obtained=complete?scores.reduce((a,b)=>a+b,0):null,percent=complete&&full?100*obtained/full:null;
+      // For lower-primary formats, the grade conversion is a review aid, not
+      // a certified official equivalence. Unapproved forms remain blank.
+      const gradeValue=percent===null?null:summaryGrade(percent);
+      const row=put(body,[i+1,localized(theme.unit,theme.en),theme.count,full,obtained,percent===null?null:percent.toFixed(2)+'%',gradeValue]);
+      row.title=label('मूल्याङ्कन भएका: ','Assessed: ')+assessed+' / '+(expected??'—');
+      row.dataset.cdcSummaryAssessed=String(assessed);
+      calculated.push({count:theme.count,full,obtained,complete});
+    }
+    const allCounts=calculated.length>0&&calculated.every(r=>Number.isInteger(r.count)&&Number.isInteger(r.full));
+    const count=allCounts?calculated.reduce((n,r)=>n+r.count,0):null,full=allCounts?calculated.reduce((n,r)=>n+r.full,0):null;
+    const allComplete=allCounts&&calculated.every(r=>r.complete);
+    const obtained=allComplete?calculated.reduce((n,r)=>n+r.obtained,0):null,pct=allComplete&&full?100*obtained/full:null;
+    put(foot,['',label('जम्मा / Total','Total'),count,full,obtained,pct===null?null:pct.toFixed(2)+'%',pct===null?null:summaryGrade(pct)]);
+    field('subjectSummaryStatus').textContent=label('सुरक्षित नियमित वा थप सहायतापछिको अङ्कनबाट गणना। अपूर्ण वा स्रोत पुष्टि बाँकी भएका एकाइमा प्राप्ताङ्क/ग्रेड खाली राखिन्छ। समग्र प्रतिशत = कुल प्राप्ताङ्क ÷ कुल पूर्णाङ्क × १००। ग्रेड रूपान्तरण समीक्षा प्रति हो।','Calculated from saved regular or remedial ratings. Incomplete or unmapped units remain blank. Overall percentage uses total obtained marks divided by total maximum marks. Grade conversion is a review copy.');
+    summarySnapshot={key:JSON.stringify(schoolSelection())};
+    field('printSubjectSummary').disabled=!themes.length;
+  }
+  async function readSubjectSummary(){
+    const selection=schoolSelection();if(!context||!selection||!canShow())return;
+    if(cdcAssessmentSubjectKey(selection.subject)!=='serophero'){await field('readSchool').onclick();return;}
+    const sequence=++summarySequence,current=()=>canShow()&&sequence===summarySequence&&JSON.stringify(selection)===JSON.stringify(schoolSelection());
+    field('printSubjectSummary').disabled=true;field('readSubjectSummary').disabled=true;
+    field('subjectSummaryStatus').textContent='अभिलेख पढ्दै…';
+    try{
+      const filters=Object.entries(assessmentReadScope(selection)).map(([k,v])=>where(k,'==',v));
+      const snapshot=await getDocsFromServer(query(collection(db,'cdc_serofero_indicators'),...filters));
+      if(current())renderSubjectSummary([],snapshot.docs.map(d=>d.data()));
+    }catch{if(current())field('subjectSummaryStatus').textContent='समष्टिगत अभिलेख पढ्न सकिएन। अनुमति र जडान जाँच्नुहोस्।';}
+    finally{if(current())field('readSubjectSummary').disabled=false;}
+  }
+  field('readSubjectSummary').onclick=readSubjectSummary;
+  field('subjectSummaryPanel').addEventListener('toggle',()=>{if(field('subjectSummaryPanel').open&&!summarySnapshot)void readSubjectSummary();});
+  field('printSubjectSummary').onclick=()=>{
+    if(!canShow()||!summarySnapshot||summarySnapshot.key!==JSON.stringify(schoolSelection())||inlinePending)return;
+    const report=document.implementation.createHTMLDocument('CDC Subject Summary — Review copy');
+    const style=report.createElement('style');style.textContent='@page{size:A4 landscape;margin:10mm}body{font:12px Arial,sans-serif;color:#111}h2{text-align:center;font-size:15px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #555;padding:5px;text-align:center}th:nth-child(2),td:nth-child(2){text-align:left}thead{display:table-header-group}tr{break-inside:avoid}tfoot{font-weight:bold}';report.head.append(style);
+    for(const name of ['subjectSummaryTitle','subjectSummaryIdentity']){const p=report.createElement(name==='subjectSummaryTitle'?'h2':'p');p.textContent=field(name).textContent;report.body.append(p);}
+    const table=report.importNode(field('subjectSummaryTable'),true);table.removeAttribute('style');report.body.append(table);
+    for(const name of ['subjectSummarySign','subjectSummaryStatus']){const p=report.createElement('p');p.textContent=field(name).textContent;report.body.append(p);}
+    const popup=window.open('','_blank');if(!popup){field('subjectSummaryStatus').textContent='Print खोल्न सकिएन।';return;}
+    popup.document.open();popup.document.write('<!doctype html>'+report.documentElement.outerHTML);popup.document.close();popup.focus();popup.print();
+  };
   function clearAnnualProgress(){
     annualReadSequence++;
     annualPrintSnapshot=null;
@@ -10158,7 +10285,7 @@ function openCdcAssessment(context = null) {
     popup.document.open();popup.document.write('<!doctype html>'+report.documentElement.outerHTML);popup.document.close();popup.focus();popup.print();
   };
   const clearSchoolResults = () => {
-    clearAnnualProgress();
+    clearSubjectSummary();clearAnnualProgress();
     schoolReadSequence++;
     field('schoolRows').replaceChildren();
     annexObservations=[];
@@ -10270,7 +10397,7 @@ function openCdcAssessment(context = null) {
         b.date.localeCompare(a.date)||(b.createdAt?.toMillis()??0)-(a.createdAt?.toMillis()??0));
       annexObservations=items;
       annexReadSelection=JSON.stringify(selection);
-      renderAnnex();
+      renderAnnex();if(cdcAssessmentSubjectKey(selection.subject)!=='serophero')renderSubjectSummary(items);
       for(const item of items) {
         const row=field('schoolRows').insertRow();
         for(const value of [localized(item.unit,item.unitEn),

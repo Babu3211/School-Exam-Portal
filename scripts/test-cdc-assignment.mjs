@@ -442,6 +442,18 @@ assert.equal([...observations.values()].at(-1).stage,'regular');
 assert.equal([...observations.values()].at(-1).evidence,'');
 assert.equal([...observations.values()].at(-1).feedback,'Synthetic remark');
 assert.equal([...observations.values()].at(-1).period,'Annual');
+assert.equal(field('subjectSummaryPanel').hidden,false);
+assert.equal(field('subjectSummaryPanel').open,false);
+assert.equal(field('subjectSummaryHead').rows[0].cells.length,7);
+assert.equal(field('subjectSummaryRows').rows.length,15);
+assert.equal(field('subjectSummaryRows').rows[0].cells[2].textContent,'६');
+assert.equal(field('subjectSummaryRows').rows[0].cells[3].textContent,'२४');
+assert.equal(field('subjectSummaryRows').rows[0].cells[4].textContent,'—');
+assert.equal(field('subjectSummaryRows').rows[0].dataset.cdcSummaryAssessed,'1');
+assert.equal(field('subjectSummaryFoot').rows[0].cells[3].textContent,'३६०');
+assert.equal(field('subjectSummaryFoot').rows[0].cells[4].textContent,'—');
+assert.equal(field('printSubjectSummary').disabled,false);
+
 assert.match(field('gridStatus').textContent,/सुरक्षित भयो/);
 assert.match(field('annexRows').rows[1].textContent,/Synthetic remark/);
 assert.equal(field('printForm').disabled,false);
