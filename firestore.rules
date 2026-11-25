@@ -396,7 +396,7 @@ service cloud.firestore {
         data.subject is string && data.subject.size() > 0 && data.subject.size() <= 180 &&
         data.section is string && data.section.size() <= 40 &&
         data.academicYear is string && data.academicYear.matches('^[0-9]{4}$') &&
-        data.period in ['First Term','Second Term','Final Term'] &&
+        data.period in ['First Term','Second Term','Final Term','Annual'] &&
         data.date is string && data.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[0-2])$') &&
         data.level is int && data.level >= 1 && data.level <= 4 &&
         data.unit is string && data.unit.size() <= 180 &&
@@ -432,7 +432,7 @@ service cloud.firestore {
         data.subject in ['serophero','हाम्रो सेरोफेरो','Our Surroundings'] &&
         data.section is string && data.section.size() <= 40 &&
         data.academicYear == '2083' &&
-        data.period in ['First Term','Second Term','Final Term'] &&
+        data.period in ['First Term','Second Term','Final Term','Annual'] &&
         data.unit is string && data.unit.size() > 0 && data.unit.size() <= 180 &&
         // Only the three currently enabled Class 1 themes may append evidence.
         // Class 2–3 approvals must update this server guard and the UI together.

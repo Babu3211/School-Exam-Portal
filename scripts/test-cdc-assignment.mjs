@@ -429,6 +429,7 @@ const gridRow=field('annexRows').rows[1];
 assert.match(gridRow.querySelector('[data-cdc-grid-edit="regular"]').textContent,/मिति \/ अङ्कन/);
 assert.equal(gridRow.querySelector('[role="button"]').getAttribute('aria-label'),'मिति भर्नुहोस्');
 const gridCount=observations.size;
+assert.equal(field('period').value,'Annual');
 gridRow.querySelector('[role="button"]').click();
 assert.equal(gridRow.querySelector('[data-cdc-grid-editor="date"]').value,'2083-08-07');
 assert.equal(field('printForm').disabled,true);
@@ -440,9 +441,29 @@ assert.equal([...observations.values()].at(-1).level,3);
 assert.equal([...observations.values()].at(-1).stage,'regular');
 assert.equal([...observations.values()].at(-1).evidence,'');
 assert.equal([...observations.values()].at(-1).feedback,'Synthetic remark');
+assert.equal([...observations.values()].at(-1).period,'Annual');
+assert.equal(field('subjectSummaryPanel').hidden,false);
+assert.equal(field('subjectSummaryPanel').open,false);
+assert.equal(field('subjectSummaryHead').rows[0].cells.length,7);
+assert.equal(field('subjectSummaryRows').rows.length,15);
+assert.equal(field('subjectSummaryRows').rows[0].cells[2].textContent,'६');
+assert.equal(field('subjectSummaryRows').rows[0].cells[3].textContent,'२४');
+assert.equal(field('subjectSummaryRows').rows[0].cells[4].textContent,'—');
+assert.equal(field('subjectSummaryRows').rows[0].dataset.cdcSummaryAssessed,'1');
+assert.equal(field('subjectSummaryFoot').rows[0].cells[3].textContent,'३६०');
+assert.equal(field('subjectSummaryFoot').rows[0].cells[4].textContent,'—');
+assert.equal(field('printSubjectSummary').disabled,false);
+
 assert.match(field('gridStatus').textContent,/सुरक्षित भयो/);
 assert.match(field('annexRows').rows[1].textContent,/Synthetic remark/);
 assert.equal(field('printForm').disabled,false);
+const annualRecord=[...observations.values()].at(-1);
+observations.set('cdc_observations/legacy-annual-test',{...annualRecord,period:'Second Term',date:'2083-08-08',level:4});
+await field('gridRead').onclick();
+assert.match(field('annexRows').rows[1].textContent,/2083-08-08/);
+assert.equal(observations.get('cdc_observations/legacy-annual-test').period,'Second Term');
+observations.delete('cdc_observations/legacy-annual-test');
+await field('gridRead').onclick();
 console.log('Direct table date/rating entry, optional remarks and immutable school save passed');
 await field('readProgress').onclick();
 assert.equal(field('annualRows').rows.length,7);
@@ -483,11 +504,13 @@ assert.match(annualDoc.body.textContent,/प्रधानाध्यापक
 assert.doesNotMatch(annualDoc.body.textContent,/Synthetic remark/);
 assert.equal(annualDoc.querySelectorAll('input,select,button,textarea').length,0);
 saveSyntheticPrint('cdc-annual',annualMarkup);
-choice('period','Second Term');
+assert.equal(field('legacyPeriod').hidden,true);
+assert.equal(field('period').value,'Annual');
+assert.equal(field('sessionYear').textContent,'2083');
+choice('unit','क्षेत्र १ — कविता (गीत/देशप्रेम)');
 assert.equal(field('printProgress').disabled,true);
 field('printProgress').onclick();
 assert.equal(annualPrinted,1);
-choice('period','First Term');
 console.log('Annex 4 annual print A4, six columns, seven subjects, privacy and stale snapshot protection passed');
 const attendanceCalc=w.eval('cdcAttendanceSummary');
 const selection={studentId:'primary',className:'Class 5',academicYear:'2083'};
@@ -1305,7 +1328,7 @@ w.getDocFromServer=async ref=>ref.path.startsWith('cdc_serofero_indicators/')?{d
 w.getDocsFromServer=async args=>{
  if(args.name!=='cdc_serofero_indicators')return originalRead(args);
  const filters=Object.fromEntries(args.filters.map(([k,op,v])=>{assert.equal(op,'==');return [k,v];}));
- assert.deepEqual(filters,{studentId:'sero-1',className:'Class 1',subject:field('subject').value,section:'A',academicYear:'2083',period:field('period').value,unit:field('unit').value});
+ assert.deepEqual(filters,{studentId:'sero-1',className:'Class 1',subject:field('subject').value,section:'A',academicYear:'2083',unit:field('unit').value});
  return {docs:[...binaryRecords.values()].filter(record=>Object.entries(filters).every(([k,v])=>record[k]===v)).map(record=>({data:()=>record}))};
 };
 choice('unit','म र मेरो परिवार');
@@ -1523,7 +1546,7 @@ const priorBinaryRead=w.getDocsFromServer;
 w.getDocsFromServer=async args=>{
  if(args.name!=='cdc_serofero_indicators')return priorBinaryRead(args);
  const filters=Object.fromEntries(args.filters.map(([k,op,v])=>{assert.equal(op,'==');return [k,v];}));
- assert.deepEqual(filters,{studentId:'sero-review-2',className:'Class 2',subject:field('subject').value,section:'A',academicYear:'2083',period:field('period').value,unit:unitUnderTest});
+ assert.deepEqual(filters,{studentId:'sero-review-2',className:'Class 2',subject:field('subject').value,section:'A',academicYear:'2083',unit:unitUnderTest});
  return {docs:[...binaryRecords.values()].filter(record=>Object.entries(filters).every(([k,v])=>record[k]===v)).map(record=>({data:()=>record}))};
 };
 await w.loadCdcAssessmentPage();
@@ -1579,7 +1602,7 @@ for(const grade of ['1','2','3']){
  w.getDocsFromServer=async args=>{
   if(args.name!=='cdc_serofero_indicators')return priorBinaryRead(args);
   const filters=Object.fromEntries(args.filters.map(([k,op,v])=>{assert.equal(op,'==');return [k,v];}));
-  assert.deepEqual(filters,{studentId,className,subject:field('subject').value,section:'A',academicYear:'2083',period:field('period').value,unit:field('unit').value});
+  assert.deepEqual(filters,{studentId,className,subject:field('subject').value,section:'A',academicYear:'2083',unit:field('unit').value});
   return {docs:[...binaryRecords.values()].filter(record=>Object.entries(filters).every(([k,v])=>record[k]===v)).map(record=>({data:()=>record}))};
  };
  for(const [i,unit] of reviewNames.entries()){
