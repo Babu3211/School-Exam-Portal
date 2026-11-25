@@ -6,9 +6,11 @@ import {grade9EnvironmentOriginalBank,ENVIRONMENT_BOOK_PDF} from './cdc-grade9-e
 import {grade9NepaliPracticeBank,NEPALI_BOOK_PAGE} from './cdc-grade9-nepali-practice.mjs';
 import {grade9EnglishPracticeBank,ENGLISH_BOOK} from './cdc-grade9-english-practice.mjs';
 import {grade9EconomicsPracticeBank,grade9AccountingPracticeBank,ECONOMICS_SOURCE,ACCOUNTING_SOURCE} from './grade9-economics-accounting-original-practice.mjs';
+import {grade9HealthPracticeBank,HEALTH_SOURCE} from './grade9-health-original-practice.mjs';
 import {buildAutomaticQuestionPaper,isQuestionReadyForLanguage} from './cdc-question-autogen.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 const sources=Object.freeze({
+ health:{subject:'Health and Physical Education',bank:grade9HealthPracticeBank,url:HEALTH_SOURCE},
  economics:{subject:'Economics',bank:grade9EconomicsPracticeBank,url:ECONOMICS_SOURCE},
  accounting:{subject:'Office Operation and Accounting',bank:grade9AccountingPracticeBank,url:ACCOUNTING_SOURCE},
  math:{subject:'Compulsory Mathematics',bank:grade9CompulsoryMathPracticeBank,url:MATH_ARCHIVE_URL},
@@ -34,7 +36,7 @@ export function grade9PracticeTopics(key,language){
 }
 export function generateGrade9CurriculumPractice({schoolId,schoolName,key,language,topicIds,fullMarks,avoidSignatures=[],rng=Math.random}){
  validateSchoolId(schoolId);
- if(typeof schoolName!=='string'||!schoolName.trim()||schoolName.length>160||!Number.isSafeInteger(fullMarks)||fullMarks<1||fullMarks>75)throw Error('Verified school and practice full marks required');
+ if(typeof schoolName!=='string'||!schoolName.trim()||schoolName.length>160||!Number.isSafeInteger(fullMarks)||fullMarks<1||fullMarks>(key==='health'?50:75))throw Error('Verified school and practice full marks required');
  const {src,bank}=bankFor(key,language);
  const result=buildAutomaticQuestionPaper({questions:bank.questions,topicIds,fullMarks,language,gradeNumber:9,subject:src.subject,avoidSignatures,rng});
  if(result.teacherReviewRequired!==true||result.exactGridMatched!==false||result.blueprintMatched!==false)throw Error('Practice only');

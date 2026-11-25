@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {grade9HealthPracticeBank,healthCurriculumReference} from './grade9-health-original-practice.mjs';
+import {generateGrade9CurriculumPractice} from './grade9-curriculum-practice.mjs';
+import {isQuestionReadyForLanguage} from './cdc-question-autogen.mjs';
+const b=grade9HealthPracticeBank({grade:9,subject:'Health and Physical Education'});
+assert.equal(b.units.length,9);assert.equal(b.questions.length,18);
+assert.ok(b.questions.every(q=>['ne','en','both'].every(l=>isQuestionReadyForLanguage(q,l))));
+assert.equal(b.exactGridVerified,false);assert.equal(healthCurriculumReference.internalPercent,50);assert.equal(healthCurriculumReference.externalHealthPercent,80);
+assert.throws(()=>generateGrade9CurriculumPractice({schoolId:'12345',schoolName:'Test',key:'health',language:'both',topicIds:[b.units[0].id+'_0'],fullMarks:51}),/practice full marks/);
+console.log('PASS Grade 9 Health curriculum reference and 18 original bilingual exercises; no official grid claim');
