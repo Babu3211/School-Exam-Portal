@@ -19,6 +19,7 @@ assert.equal(bad(q=>q.slot==='reading1'?{...q,sourcePage:0}:q),false);
 assert.equal(bad(q=>q.slot==='reading3'?{...q,sourceKind:'textbook'}:q),false);
 assert.equal(bad(q=>q.slot==='reading2'?{...q,items:q.items.map((x,j)=>({...x,type:j%2?'short_answer':'true_false'}))}:q),false);
 assert.equal(bad(q=>q.slot==='reading1'?{...q,items:q.items.map(x=>({...x,domain:'literal'}))}:q),false);
+assert.equal(bad(q=>q.slot==='reading2'?{...q,items:q.items.map((x,j)=>({...x,type:j<4?'gap_fill':'short_answer'}))}:q),false,'Reject a 4+6 reading group instead of a 5+5 model group');
 assert.equal(bad(q=>q.slot==='writing2'?{...q,genre:'news_story',targetWords:150}:q),false);
 assert.equal(bad(q=>q.slot==='contextual_mcq'?{...q,items:q.items.map(x=>({...x,marks:1}))}:q),false);
 assert.equal(bad(q=>q.slot==='contextual_mcq'?{...q,items:q.items.map(x=>({...x,options:['is','are','was']}))}:q),false);
