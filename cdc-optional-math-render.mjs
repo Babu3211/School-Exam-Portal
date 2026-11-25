@@ -23,6 +23,22 @@ export function paperDisplayText(value,language,subject){
  }
  return paperDigits(text,language);
 }
+/** Grade 9 Computer Science: exact 50-mark group layout. The group
+ * headings carry uniform marks; never invent a compound-task split.
+ * Existing question order within each type is retained for answer keys. */
+export function grade9ComputerModelGroups(paper){
+ if(Number(paper?.gradeNumber)!==9||cdcSubjectKey(paper.subject)!=='optional_computer'||Number(paper.fullMarks)!==50||!Array.isArray(paper.questions))return null;
+ const specs=[['A','क','mcq',10,1,'Choose the correct answer.','सही उत्तर छान्नुहोस्।'],['B','ख','short',10,2,'Give short answers.','छोटो उत्तर दिनुहोस्।'],['C','ग','long',5,4,'Give long answers.','लामो उत्तर दिनुहोस्।']];
+ if(paper.questions.length!==25)return null;
+ const groups=specs.map(([en,ne,type,count,marks,instructionEn,instructionNe])=>{
+  const questions=paper.questions.filter(q=>q.questionType===type);
+  if(questions.length!==count||questions.some(q=>Number(q.marks)!==marks))return null;
+  const label=paper.language==='ne'?'समूह '+ne:paper.language==='both'?'समूह '+ne+' / Group '+en:'Group '+en;
+  const instruction=paper.language==='ne'?instructionNe:paper.language==='both'?instructionNe+' / '+instructionEn:instructionEn;
+  return {type,questions,title:label+' — '+count+' × '+marks+' = '+count*marks,instruction};
+ });
+ return groups.every(Boolean)?groups:null;
+}
 const GROUPS=[
  ['objective','Group A — Objective (11 × 1 = 11)'],
  ['WCA','Group B — Within Content Area (12 questions, 40 marks)'],
