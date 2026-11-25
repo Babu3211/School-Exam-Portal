@@ -68,6 +68,15 @@ console.log('PASS 75-mark Nepali practice review preview, explicit original summ
 // Deliberately incorrect spellings are assessment inputs, not editing mistakes.
 const spellingEdits=p.questions.filter(q=>q.skill==='sentence_editing');
 assert.equal(spellingEdits.length,2);
+for(const q of spellingEdits){
+ assert.ok(q.passage);
+ assert.equal(q.components.length,4);
+ assert.ok(q.components.every(c=>q.passage.split(c.text).length===2));
+ assert.equal(q.components.reduce((n,c)=>n+c.marks,0),2);
+}
+assert.match(b.blocks[4].text,/अनुच्छेद पुनर्लेखन गर्नुहोस्। \(२\)/);
+assert.match(b.answerText,/५\. शुद्ध अनुच्छेद:/);
+assert.doesNotMatch(b.blocks[4].text,/ \/ /);
 assert.ok(spellingEdits.some(q=>q.components.some(c=>c.text==='पानि'&&c.answer==='पानी')));
 assert.ok(spellingEdits.some(q=>q.components.some(c=>c.text==='जिवन'&&c.answer==='जीवन')));
 const classes=p.questions.filter(q=>q.skill==='word_class');
@@ -90,7 +99,7 @@ assert.equal(notes.marks,5);assert.deepEqual(notes.choices[0].components.map(c=>
 assert.equal(revised.currentCdcExactApproved,false);assert.equal(revised.readyForLive,false);
 assert.throws(()=>assertGrade9ExamPaperMatches(revised.paper),/verified subject/);
 assert.match(b.text,/अदृष्टांश ४, बुँदा टिपोट २ र सारांश ३/);
-assert.match(b.blocks[11].text,/\[४\]/);assert.match(b.blocks[14].text,/\[५\]/);
+assert.match(b.blocks[11].text,/\(४\)/);assert.match(b.blocks[14].text,/\(२ \+ ३ = ५\)/);
 assert.equal(a.paper.groups[11].marks,5,'Historical comparison unchanged');
 assert.equal(a.paper.groups[14].marks,4,'Historical comparison unchanged');
 console.log('PASS revised Nepali marks in real preview, historical comparison preserved, official gate closed');
