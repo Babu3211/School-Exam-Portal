@@ -520,6 +520,35 @@ for(const [subject,unit,count] of [
   }
 }
 console.log('CDC subject-specific annex column counts passed');
+// Class 4 math source content, all 30 outcomes; use a synthetic roster only.
+current.subjectAssignments=[{className:'Class 4',subject:'Mathematics',section:'A'}];
+serverRole={...current};
+w.getDocs=async request=>{
+ assert.equal(request.name,'students');
+ assert.deepEqual(Array.from(request.filters[0]),['class','==','Class 4']);
+ return {docs:[{id:'four-math-source',data:()=>({class:'Class 4',section:'A',name:'Grade 4 synthetic'})}]};
+};
+await w.loadCdcAssessmentPage();
+for(const [theme,n,first,last] of [
+ ['ज्यामिति',4,/कोणहरूको नाप र रचना/,/ठोस वस्तुहरू/],
+ ['अङ्कगणित',11,/सङ्ख्याको ज्ञान/,/भिन्न, दशमलव र प्रतिशतको सम्बन्ध/],
+ ['नाप',10,/समयका एकाइको रूपान्तर/,/क्षेत्रफल र परिमिति/],
+ ['तथ्याङ्कशास्त्र',3,/बिल/,/स्तम्भचित्र/],
+ ['बीजगणित',2,/कोठा सङ्केत/,/चल र अचल राशि/]
+]){
+ choice('unit',theme);
+ const rows=[...field('annexRows').rows];
+ assert.equal(rows.length,n,theme);
+ assert.match(rows[0].cells[1].textContent,first);
+ assert.match(rows.at(-1).cells[1].textContent,last);
+ assert.ok(rows.every(row=>row.cells[1].textContent.includes(' / ')));
+ assert.match(field('annexStatus').textContent,/CDC २०८३ गणित/);
+ assert.doesNotMatch(field('annexStatus').textContent,/१५०°/);
+ if(theme==='ज्यामिति')assert.match(rows[0].cells[2].textContent,/१० ले निःशेष भाग जाने ०° देखि १८०°/);
+ if(theme==='नाप')assert.match(rows[1].cells[2].textContent,/वर्ष र महिना, दिन र घण्टा, घण्टा र मिनेट, हप्ता र दिन/);
+}
+console.log('Class 4 math source display: five themes, 30 outcomes, bilingual labels and grade-scoped wording passed');
+
 console.log('Standalone assessment navigation, primary-only assignment reads and inline display passed');
 // Grade 3 revised Annex 3 theme uses one row per outcome and the fixed full-theme denominator.
 current.subjectAssignments=[{className:'Class 3',subject:'Mathematics',section:'A'}];
