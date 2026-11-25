@@ -193,6 +193,15 @@ assert.deepEqual(socialRef.unitMarks,socialEvidence.unitMarks);
 const socialTypes=['very_short','short','long'];
 assert.deepEqual(socialTypes.map(type=>socialRef.slots.filter(s=>s.type===type).length),socialEvidence.questionCounts);
 assert.deepEqual(socialRef.unitMarks.map((_,i)=>socialTypes.map(type=>socialRef.slots.filter(s=>s.historicUnit===i+1&&s.type===type).reduce((n,s)=>n+s.marks,0))),socialEvidence.unitTypeMarks);
+const sv=socialEvidence.cognitiveMatrixTextReview;
+assert.equal(sv.sha256,register.sources.find(s=>s.retrievalEvidence?.resource==='11166').retrievalEvidence.sha256);
+assert.equal(sv.unitTypeCategoryCounts.length,10);
+assert.deepEqual(sv.unitTypeCategoryCounts,socialRef.unitMarks.map((_,i)=>socialTypes.flatMap(type=>[0,1,2].map(c=>socialRef.slots.filter(s=>s.historicUnit===i+1&&s.type===type&&s.category===c).length))));
+assert.deepEqual(sv.typeCategoryCounts,[[5,3,3],[4,2,3],[1,2,1]]);
+assert.deepEqual(sv.cognitiveMarks,socialRef.cognitiveMarks);
+assert.equal(sv.workingHours.reduce((n,v)=>n+v,0),128);
+assert.equal(sv.visualReviewComplete,false);assert.equal(sv.currentEditionConfirmed,false);assert.equal(sv.currentCdcExactApproved,false);assert.equal(sv.officialExamApproved,false);
+assert.ok(byKey.social.tables.some(t=>t.title.includes('प्रश्न सङ्ख्या')&&t.rows.length===10));
 assert.ok([scienceRef,mathRef,englishRef,socialRef].every(ref=>ref.currentCdcExactApproved===false));
 console.log('PASS four compulsory reference planners against government PDF numeric extraction: historical comparison only, no current CDC approval');
 

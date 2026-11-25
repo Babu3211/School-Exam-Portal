@@ -2340,7 +2340,7 @@
       "version": "PDF edition applicability pending",
       "status": "official_government_full_PDF_retrieved_grid_review_pending",
       "url": "https://giwmscdnone.gov.np/media/pdf_upload/RS11166_Specification%20Grid%20(Grade%209)%20Compulsory%20Social%20Studies%20(1)_jlqxsmn.pdf",
-      "note": "Legacy-font table on page 2; compare current revised curriculum before exact approval.",
+      "note": "Legacy-font table on page 2; compare current revised curriculum before exact approval. Archived fixed-column text pages 2–3 independently transcribed for all 90 unit/type/category count cells and 128 working hours; printed totals match. No visual or current edition certification.",
       "retrievalEvidence": {
         "resource": "11166",
         "pages": 9,
@@ -2431,7 +2431,194 @@
             ]
           ],
           "currentEditionConfirmed": false,
-          "visualCellReviewComplete": false
+          "visualCellReviewComplete": false,
+          "cognitiveMatrixTextReview": {
+            "sourceYear": 2078,
+            "sha256": "636c0e961b0d0a474aea035fc1dd56e93318e33f21865f43b2cde8ee3211ce05",
+            "runId": 45420493085,
+            "artifactId": 14934002500,
+            "artifactPath": "extracted/11166-first-pages.txt",
+            "pdfPages": [
+              2,
+              3
+            ],
+            "method": "Independent fixed-column transcription of archived legacy-font layout text; original page image unavailable",
+            "unitNames": [
+              "हामी र हाम्रो समाज",
+              "विकासका पूर्वाधार",
+              "हाम्रो परम्परा एवम् सामाजिक मूल्य र मान्यता",
+              "सामाजिक समस्या र समाधान",
+              "नागरिक चेतना",
+              "हाम्रो पृथ्वी",
+              "हाम्रो विगत",
+              "हाम्रो आर्थिक क्रियाकलाप",
+              "हाम्रो अन्तर्राष्ट्रिय सम्बन्ध र सहयोग",
+              "जनसङ्ख्या परिचय र व्यवस्थापन"
+            ],
+            "workingHours": [
+              8,
+              10,
+              14,
+              12,
+              18,
+              18,
+              14,
+              15,
+              11,
+              8
+            ],
+            "totalWorkingHours": 128,
+            "categoryNames": [
+              "ज्ञान र बोध",
+              "प्रयोग र सिर्जनात्मक सिप",
+              "उच्च दक्षता"
+            ],
+            "unitTypeCategoryCounts": [
+              [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                1,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0
+              ],
+              [
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                1,
+                0,
+                1,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ],
+            "typeCategoryCounts": [
+              [
+                5,
+                3,
+                3
+              ],
+              [
+                4,
+                2,
+                3
+              ],
+              [
+                1,
+                2,
+                1
+              ]
+            ],
+            "cognitiveMarks": [
+              28,
+              25,
+              22
+            ],
+            "printedPercentages": [
+              37,
+              33,
+              30
+            ],
+            "mapAlternativeHistoricalUnit": 6,
+            "creativeLongHistoricalUnit": 8,
+            "visualReviewComplete": false,
+            "currentEditionConfirmed": false,
+            "officialExamApproved": false,
+            "currentCdcExactApproved": false
+          }
         }
       }
     },

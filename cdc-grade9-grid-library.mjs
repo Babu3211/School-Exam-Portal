@@ -104,6 +104,15 @@ export function grade9GridLibrary(register){
    if(evidence.questionCounts)add('Historical question distribution',['Type','Count','Marks each'],evidence.questionCounts.map((n,i)=>[(key==='science'?['MCQ','Very short','Short','Long']:['Very short','Short','Long'])[i],n,evidence.marksEach[i]]));
    if(evidence.cognitiveMarks)add('Historical cognitive marks',['K','U','A','HA'],[evidence.cognitiveMarks]);
    if(evidence.unitTypeMarks)add('Historical unit/type marks',['Unit','Very short','Short','Long'],evidence.unitTypeMarks.map((row,i)=>[i+1,...row]));
+    if(key==='social'&&evidence.cognitiveMatrixTextReview?.officialExamApproved===false){
+     const v=evidence.cognitiveMatrixTextReview;
+     const ne=n=>String(n).replace(/\d/g,d=>'०१२३४५६७८९'[Number(d)]);
+     status='२०७८ को पुरानो तालिका: मूल PDF को पाठबाट अङ्कभार मिलेको; चित्र र २०८२ संशोधित तालिका बाँकी';
+     durationMinutes=180;
+     add('पुरानो CDC तालिका — प्रश्न सङ्ख्या (ज्ञान/बोध, प्रयोग/सिर्जना, उच्च दक्षता)',['एकाइ','कार्यघण्टा','अति छोटो','छोटो','लामो','अङ्क'],v.unitNames.map((n,i)=>[n,ne(v.workingHours[i]),...[0,3,6].map(k=>v.unitTypeCategoryCounts[i].slice(k,k+3).map(ne).join(' / ')),ne(evidence.unitMarks[i])]));
+     add('पुरानो तालिकाको संज्ञानात्मक अङ्कभार',['तह','अङ्क','प्रकाशित प्रतिशत'],v.categoryNames.map((n,i)=>[n,ne(v.cognitiveMarks[i]),ne(v.printedPercentages[i])+'%']));
+     add('पुरानो तालिकाका विशेष निर्देशन',['एकाइ','निर्देशन'],[[v.unitNames[5],'लामो प्रश्नमा नक्साको वैकल्पिक प्रश्न'],[v.unitNames[7],'लामो प्रश्न सिर्जनात्मक सिपसँग सम्बन्धित']]);
+    }
   }else if(key==='optional_economics'){
    const e=entries.find(x=>x.economicsTextReview)?.economicsTextReview;
    if(e&&e.officialExamApproved===false){
