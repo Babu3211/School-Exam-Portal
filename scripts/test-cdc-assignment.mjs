@@ -1502,6 +1502,10 @@ assert.match(multiPrint.querySelector('tfoot').textContent,/पूरा: १ \/
 assert.equal(multiPrint.querySelector('tfoot').rows.length,2);
 assert.equal(multiPrint.querySelector('tfoot').rows[1].cells[3].textContent,'—');
 assert.equal(multiPrint.querySelector('tfoot').rows[1].cells[6].textContent,'—');
+assert.ok(multiPrint.querySelector('table').classList.contains('sero-compact'));
+assert.equal(multiPrint.querySelectorAll('colgroup col').length,10);
+assert.equal(multiPrint.querySelectorAll('.sero-date').length,12);
+assert.match(multiPrint.head.textContent,/white-space:nowrap/);
 saveSyntheticPrint('cdc-sero',seroMarkup);
 assert.equal(observations.size,beforeSero);
 w.__testSeroApproved.delete(keyUnderTest);
