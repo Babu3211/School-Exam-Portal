@@ -19,7 +19,14 @@ export const GRADE9_OPTIONAL_SUBJECTS=Object.freeze([
  Object.freeze({key:'optional_computer',name:'Optional Computer Science',labelNe:'ऐच्छिक कम्प्युटर विज्ञान'}),
  Object.freeze({key:'optional_environment',name:'Optional I: Environmental Science',labelNe:'ऐच्छिक प्रथम: वातावरण विज्ञान'})
 ]);
-const GRADES=Object.freeze([...GRADE9_BASE_SUBJECTS,...GRADE9_OPTIONAL_SUBJECTS]);
+// Additional subjects are audited only when the school explicitly offers them.
+// Keep the existing V46 default subject list intact.
+export const GRADE9_ADDITIONAL_SUBJECTS=Object.freeze([
+ Object.freeze({key:'optional_economics',name:'Economics',labelNe:'ऐच्छिक अर्थशास्त्र'}),
+ Object.freeze({key:'accounting',name:'Office Operation and Accounting',labelNe:'कार्यालय सञ्चालन तथा लेखा'}),
+ Object.freeze({key:'health',name:'Health and Physical Education',labelNe:'स्वास्थ्य तथा शारीरिक शिक्षा'})
+]);
+const GRADES=Object.freeze([...GRADE9_BASE_SUBJECTS,...GRADE9_OPTIONAL_SUBJECTS,...GRADE9_ADDITIONAL_SUBJECTS]);
 export const GRADE9_PUBLISH_GATE_VERSION='2083-dev-grade9-only';
 const failReason={
  source_missing:'CDC specification source not registered for Grade 9',
@@ -38,14 +45,16 @@ function scopeKey(raw){
  * A school may have a subset of optional subjects. Only actually selected
  * optional subjects are release blockers, but all five compulsory subjects
  * remain mandatory. If the school's subject list is unknown, audit the three optional subjects in V46's existing Grade 9–10 defaults.
- * Other optional subjects are outside this release scope.
+ * Additional catalog subjects are audited only if explicitly offered. An
+ * unfamiliar subject remains a release blocker.
  */
 export function auditGrade9Release({
  register,offeredSubjects=null,reviewedBanks={},teacherTestedPapers={},
  exactGridReviews={}
 }={}){
  if(!register||!Array.isArray(register.sources))throw Error('Official CDC source register required');
- const optional=new Set(GRADE9_OPTIONAL_SUBJECTS.map(x=>x.key));
+ const mandatory=new Set(GRADE9_BASE_SUBJECTS.map(x=>x.key));
+ const defaultOptional=new Set(GRADE9_OPTIONAL_SUBJECTS.map(x=>x.key));
  const offered=Array.isArray(offeredSubjects)?
   new Set(offeredSubjects.map(scopeKey).filter(Boolean)):null;
  const unknown=offeredSubjects&&[
@@ -53,7 +62,7 @@ export function auditGrade9Release({
    .filter(item=>!item.key||!GRADES.some(s=>s.key===item.key))
    .map(item=>item.name)
  ];
- const selected=GRADES.filter(s=>!optional.has(s.key)||!offered||offered.has(s.key));
+ const selected=GRADES.filter(s=>mandatory.has(s.key)||(offered?offered.has(s.key):defaultOptional.has(s.key)));
  const checks=selected.map(s=>{
   const sources=findCdcGridSources(register,9,s.labelNe);
   const source=sources[0]||null;

@@ -51,6 +51,23 @@ const extra=auditGrade9Release({
 assert.deepEqual(extra.unknownSchoolSubjects,['Robotics'],
  'School subjects not yet in CDC source index must remain blockers');
 assert.equal(extra.grade9PaperReady,false);
+// Known additional catalog subjects must show their actual review blockers,
+// without adding subjects to the existing V46 default scope.
+const additional=auditGrade9Release({register:data,offeredSubjects:['Optional Economics','Office Operation and Accounting','Health and Physical Education']});
+const more=Object.fromEntries(additional.checkedSubjects.map(x=>[x.key,x]));
+assert.equal(additional.checkedSubjects.length,8);
+assert.deepEqual(additional.unknownSchoolSubjects,[]);
+assert.equal(more.optional_economics.status,'grid_not_transcribed');
+assert.equal(more.accounting.status,'grid_not_transcribed');
+assert.equal(more.health.status,'source_missing');
+assert.ok(['optional_economics','accounting','health'].every(k=>!more[k].ready&&!more[k].gridTranscribed));
+assert.equal(additional.grade9PaperReady,false);
+assert.equal(additional.readyForLive,false);
+const allSubjects=auditGrade9Release({register:data,offeredSubjects:['Optional I: Environmental Science','Optional II: Computer Science','Optional I: Additional Mathematics','ऐच्छिक अर्थशास्त्र','कार्यालय सञ्चालन तथा लेखा','स्वास्थ्य तथा शारीरिक शिक्षा']});
+assert.equal(allSubjects.checkedSubjects.length,11);
+assert.deepEqual(allSubjects.unknownSchoolSubjects,[]);
+assert.equal(allSubjects.grade9PaperReady,false);
+assert.equal(allSubjects.readyForLive,false);
 const forged=auditGrade9Release({register:data,offeredSubjects:[],
  exactGridReviews:{nepali:true,english:true,math:true,science:true,social:true},
  reviewedBanks:{nepali:true,english:true,math:true,science:true,social:true},
