@@ -75,10 +75,33 @@ try{
    ' assert x.count("<w:drawing>")==int(sys.argv[2])'
   ].join('\n');
   execFileSync('python3',['-c',verifyFull,docxPath,String(layout.figureCount)]);
+  if(/^(nepali|english)-set-[12]\.html$/.test(name)){
+   const matching=page.locator('.qp-matching-table');
+   assert.equal(await matching.count(),1,name+' matching table');
+   assert.equal(await matching.locator('tr').count(),7,name+' six options and heading');
+   assert.equal(await matching.locator('th,td').count(),14,name+' two columns');
+   const isNepali=name.startsWith('nepali-');
+   assert.equal(await page.locator('.qp-underlined-passage u').count(),isNepali?6:0,name+' underlined target words');
+   const verifyLanguage=[
+    'import zipfile,sys,xml.etree.ElementTree as ET',
+    'ns={"w":"http://schemas.openxmlformats.org/wordprocessingml/2006/main"}',
+    'with zipfile.ZipFile(sys.argv[1]) as z:',
+    ' root=ET.fromstring(z.read("word/document.xml"))',
+    ' tables=root.findall(".//w:tbl",ns)',
+    ' assert len(tables)==1',
+    ' rows=tables[0].findall("w:tr",ns)',
+    ' assert len(rows)==7 and all(len(r.findall("w:tc",ns))==2 for r in rows)',
+    ' assert len(root.findall(".//w:rPr/w:u",ns))==int(sys.argv[2])'
+   ].join('\n');
+   execFileSync('python3',['-c',verifyLanguage,docxPath,isNepali?'6':'0']);
+  }
   if(name.startsWith('optional-mathematics-')){
    const rows=await page.locator('.qp-model-row').count(),headings=await page.locator('.qp-model-heading').count();
    assert.equal(rows,60,name+' scored subparts');
    assert.equal(headings,3,name+' model headings');
+   assert.equal(await page.locator('.qp-objective-item').count(),11,name+' individually breakable MCQ items');
+   const objectiveBreak=await page.locator('.qp-objective-section').evaluate(e=>getComputedStyle(e).breakInside);
+   assert.equal(objectiveBreak,'auto',name+' objective section may flow across pages');
    const verifyRows=[
     'import zipfile,sys,xml.etree.ElementTree as ET',
     'ns={"w":"http://schemas.openxmlformats.org/wordprocessingml/2006/main"}',
