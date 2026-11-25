@@ -9559,7 +9559,17 @@ function openCdcAssessment(context = null) {
           input.dataset.cdcSeroUsedTool=String(stage);
           input.setAttribute('aria-label',(stage?'थप सहायता':'नियमित')+' — प्रयोग गरेको साधन: '+indicator);
           input.placeholder=stage?'थप सहायता — प्रयोग गरेको साधन':'नियमित — प्रयोग गरेको साधन';
-          input.disabled=!editable;usedTools[i][stage].push(input);wrapper.append(input);toolCell.append(wrapper);
+          input.disabled=!editable;usedTools[i][stage].push(input);wrapper.append(input);
+          const suggested=tools[j]==='मूल फाराममा खाली'?'':tools[j];
+          if(suggested){
+            const use=document.createElement('button');use.type='button';use.className='btn alt';
+            use.textContent=(stage?'थप सहायता':'नियमित')+' — सुझाइएको साधन प्रयोग';
+            use.dataset.cdcSeroUseSuggested=String(stage);use.disabled=!editable;
+            use.setAttribute('aria-label',use.textContent+': '+indicator);
+            use.onclick=()=>{if(!editable||inlinePending||!use.isConnected||scopeKey!==seroScopeKey())return;input.value=suggested;};
+            wrapper.append(use);
+          }
+          toolCell.append(wrapper);
         }
       }
     }
@@ -9568,7 +9578,7 @@ function openCdcAssessment(context = null) {
     field('annexSign').textContent='शिक्षकको सही __________   अभिभावकको सही __________';
     if(form.referenceOnly){field('annexStatus').textContent='एकीकृत पाठ्यक्रम २०७६, अनुसूची ३(घ), मुद्रित पृष्ठ '+digits(form.page)+' — '+digits(form.groups.length*4)+' सूचक। पाठ्य अंशमा आधारित समीक्षा फाराम; मूल मार्गदर्शन र दृश्य पृष्ठ प्रमाणीकरण नभएसम्म सूचक प्रविष्टि, सुरक्षित गर्ने र छपाइ निष्क्रिय छन्।';return;}
     const status=field('annexStatus');
-    status.textContent='पाठ्यक्रम विकास केन्द्र २०७६, पीडीएफ पृष्ठ '+digits(form.page)+' — '+digits(form.groups.length*4)+' सूचक। स्रोतमा आधारित समीक्षा प्रति। '+(loaded?(readOnly?'सुरक्षित अभिलेख मात्र हेर्न सकिन्छ।':'चारै सूचक र मिति भरेर प्रत्येक चरण छुट्टै सुरक्षित गर्नुहोस्। नसुरक्षित छनोट पुनः पढ्दा हट्छ।'):'सुरक्षित गर्न पहिले सूचक अभिलेख पढ्नुहोस्। हालको छनोट अस्थायी हो।')+' प्रयोग गरेको साधन सम्बन्धित चरणको कोठामा लेख्न सकिन्छ; स्रोतको सुझाइएको साधन स्वतः सुरक्षित हुँदैन। छपाइको प्रमाणीकरण बाँकी छ। पुराना अभिलेख सुरक्षित छन्। ';
+    status.textContent='पाठ्यक्रम विकास केन्द्र २०७६, पीडीएफ पृष्ठ '+digits(form.page)+' — '+digits(form.groups.length*4)+' सूचक। स्रोतमा आधारित समीक्षा प्रति। '+(loaded?(readOnly?'सुरक्षित अभिलेख मात्र हेर्न सकिन्छ।':'चारै सूचक र मिति भरेर प्रत्येक चरण छुट्टै सुरक्षित गर्नुहोस्। नसुरक्षित छनोट पुनः पढ्दा हट्छ।'):'सुरक्षित गर्न पहिले सूचक अभिलेख पढ्नुहोस्। हालको छनोट अस्थायी हो।')+' प्रयोग गरेको साधन सम्बन्धित चरणको कोठामा लेख्नुहोस् वा प्रयोग गरेको सुझाइएको साधन छान्नुहोस्। सुरक्षित गर्नुहोस् नथिचेसम्म अभिलेख बदलिँदैन। छपाइको प्रमाणीकरण बाँकी छ। पुराना अभिलेख सुरक्षित छन्। ';
     const link=document.createElement('a');link.href=field('guidePdf13').href+'#page='+form.page;link.target='_blank';link.rel='noopener noreferrer';link.textContent='मूल CDC PDF — पृष्ठ '+digits(form.page);status.append(link);
   }
   function renderPrimaryLegacy(){
@@ -9891,7 +9901,7 @@ function openCdcAssessment(context = null) {
         cell.textContent=scores.length===seroForm.groups.length?digits((scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(2)):'—';
         cell.removeAttribute('data-cdc-sero-stage-average');
       }
-      table.querySelectorAll('[data-cdc-sero-save]').forEach(button=>button.remove());
+      table.querySelectorAll('[data-cdc-sero-save],[data-cdc-sero-use-suggested]').forEach(button=>button.remove());
       table.querySelectorAll('[data-cdc-sero-score]').forEach(cell=>cell.removeAttribute('data-cdc-sero-score'));
       const foot=table.tFoot?.rows[0];if(!foot||foot.cells.length!==2)return null;
       const complete=effective.filter(v=>v!==null),sum=complete.reduce((a,b)=>a+b,0);
