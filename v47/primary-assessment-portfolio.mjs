@@ -19,7 +19,7 @@ export function prepareObservationPortfolio({schoolId,grade,student,year='2083',
   rows.push(Object.freeze({id,subject:d.subject,unit:d.unit,unitEn:String(d.unitEn??''),topic:d.topic,topicAlt:String(d.topicAlt??''),stage:d.stage||'',date:d.date,level:d.level,method:String(d.method??''),evidence:String(d.evidence??''),feedback:String(d.feedback??'')}));
  }
  rows.sort((a,b)=>b.date.localeCompare(a.date)||a.subject.localeCompare(b.subject)||a.id.localeCompare(b.id));
- return Object.freeze({schoolId,grade,studentId:student.id,year,rows:Object.freeze(rows),historical,readOnly:true,officialAssessmentApproved:false,indicatorBlocksIncluded:false});
+ return Object.freeze({schoolId,grade,studentId:student.id,studentName:String(student.nameEnglish??student.name??''),section:String(student.section??''),year,rows:Object.freeze(rows),historical,readOnly:true,officialAssessmentApproved:false,indicatorBlocksIncluded:false});
 }
 export async function readObservationPortfolio({db,api,actor,schoolId,grade,studentId,assertCurrent}){
  validateSchoolId(schoolId);
@@ -66,7 +66,7 @@ export function prepareIndicatorPortfolio({schoolId,grade,student,docs}){
   rows.push(Object.freeze({id,subject:d.subject,unit:d.unit,outcomeId:d.outcomeId,stage:d.stage,date:d.date,indicators:Object.freeze([...d.indicators]),score:d.indicators.filter(Boolean).length,usedTools:Object.freeze([...(d.usedTools??['','','',''])])}));
  }
  rows.sort((a,b)=>a.unit.localeCompare(b.unit)||a.outcomeId.localeCompare(b.outcomeId,undefined,{numeric:true})||a.stage.localeCompare(b.stage));
- return Object.freeze({schoolId,grade,studentId:student.id,year:'2083',rows:Object.freeze(rows),historical,readOnly:true,officialAssessmentApproved:false});
+ return Object.freeze({schoolId,grade,studentId:student.id,studentName:String(student.nameEnglish??student.name??''),section:String(student.section??''),year:'2083',rows:Object.freeze(rows),historical,readOnly:true,officialAssessmentApproved:false});
 }
 export async function readIndicatorPortfolio({db,api,actor,schoolId,grade,studentId,assertCurrent}){
  validateSchoolId(schoolId);
@@ -94,4 +94,17 @@ export async function exportIndicatorPortfolio(args){
  const blob=excelWorkbook(headers,rows,{sheetName:'Indicator blocks'});
  args.assertCurrent();
  return Object.freeze({blob,filename:'V47-indicators-'+result.schoolId+'-'+result.studentId+'-2083.xlsx',count:rows.length});
+}
+
+// A fresh, verified saved-record print model, not a CDC official form.
+export async function readPortfolioPrintModel(args,kind){
+ if(!['observations','indicators'].includes(kind))throw Error('Invalid print type');
+ const result=await (kind==='observations'?readObservationPortfolio(args):readIndicatorPortfolio(args));
+ args.assertCurrent();
+ if(!result.rows.length)throw Error('No saved records to print');
+ const stage=s=>s==='regular'?'Regular':s==='support'?'Additional Support':'—';
+ const join=(a,b)=>[a,b].filter(Boolean).join(' / ');
+ const headers=kind==='observations'?['Subject','Theme','Learning Achievement','Stage','Date (BS)','Rating / 4','Tools','Evidence','Remarks']:['Subject','Theme','Block ID','Stage','Date (BS)','1','2','3','4','Score / 4','Tools'];
+ const rows=result.rows.map(r=>Object.freeze(kind==='observations'?[r.subject,join(r.unit,r.unitEn),join(r.topic,r.topicAlt),stage(r.stage),r.date,r.level,r.method,r.evidence,r.feedback]:[r.subject,r.unit,r.outcomeId,stage(r.stage),r.date,...r.indicators.map(v=>v?1:0),r.score,r.usedTools.join(' / ')]));
+ return Object.freeze({kind,title:kind==='observations'?'Saved Assessment Observations':'Saved Four-Indicator Blocks',schoolId:result.schoolId,studentId:result.studentId,studentName:result.studentName,grade:result.grade,section:result.section,year:result.year,historical:result.historical,headers:Object.freeze(headers),rows:Object.freeze(rows),notice:'Read-only record copy — NOT official assessment or grade sheet',officialAssessmentApproved:false});
 }

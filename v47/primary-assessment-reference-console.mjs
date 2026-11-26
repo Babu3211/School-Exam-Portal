@@ -3,7 +3,7 @@ import {validateSchoolId} from './school-paths.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {subjectsForGrade,assessmentThemeReference} from './primary-assessment-reference.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
-import {readObservationPortfolio,exportObservationPortfolio,readIndicatorPortfolio,exportIndicatorPortfolio} from './primary-assessment-portfolio.mjs';
+import {readObservationPortfolio,exportObservationPortfolio,readIndicatorPortfolio,exportIndicatorPortfolio,readPortfolioPrintModel} from './primary-assessment-portfolio.mjs';
 import {neError} from './nepali-feedback.mjs';
 const $=id=>document.getElementById(id);
 let actor=null,catalogue=null,auth,authSdk,db,api,epoch=0,portfolioEpoch=0;
@@ -33,11 +33,13 @@ async function render(){
 }
 function fill(){const previous=$('subject').value;$('subject').replaceChildren(...subjectsForGrade($('grade').value).map(([key,name])=>new Option(name,key)));if([...$('subject').options].some(o=>o.value===previous))$('subject').value=previous;void render()}
 $('grade').onchange=fill;$('subject').onchange=()=>void render();
+function clearPrint(){document.body.classList.remove('portfolio-printing');$('portfolioPrint').replaceChildren();$('portfolioPrint').hidden=true}
 function resetPortfolio(){
- portfolioEpoch++;$('portfolioRows').replaceChildren();$('indicatorRows').replaceChildren();$('portfolioStudent').replaceChildren();$('portfolioStudent').disabled=true;$('portfolioRead').disabled=true;$('portfolioExport').disabled=true;$('indicatorRead').disabled=true;$('indicatorExport').disabled=true;$('portfolioStatus').textContent='';
+ clearPrint();
+ portfolioEpoch++;$('portfolioRows').replaceChildren();$('indicatorRows').replaceChildren();$('portfolioStudent').replaceChildren();$('portfolioStudent').disabled=true;$('portfolioRead').disabled=true;$('portfolioExport').disabled=true;$('indicatorRead').disabled=true;$('indicatorExport').disabled=true;$('portfolioPrintOrdinary').disabled=true;$('portfolioPrintIndicators').disabled=true;$('portfolioStatus').textContent='';
 }
 $('portfolioGrade').onchange=resetPortfolio;
-$('portfolioStudent').onchange=()=>{portfolioEpoch++;$('portfolioRows').replaceChildren();$('indicatorRows').replaceChildren();$('portfolioStatus').textContent='';$('portfolioRead').disabled=!$('portfolioStudent').value;$('portfolioExport').disabled=!$('portfolioStudent').value;$('indicatorRead').disabled=$('indicatorExport').disabled=!$('portfolioStudent').value||!['1','2','3'].includes($('portfolioGrade').value)};
+$('portfolioStudent').onchange=()=>{clearPrint();portfolioEpoch++;$('portfolioRows').replaceChildren();$('indicatorRows').replaceChildren();$('portfolioStatus').textContent='';$('portfolioRead').disabled=!$('portfolioStudent').value;$('portfolioExport').disabled=$('portfolioPrintOrdinary').disabled=!$('portfolioStudent').value;$('indicatorRead').disabled=$('indicatorExport').disabled=$('portfolioPrintIndicators').disabled=!$('portfolioStudent').value||!['1','2','3'].includes($('portfolioGrade').value)};
 $('portfolioRoster').onclick=async()=>{
  resetPortfolio();const request=portfolioEpoch,member=actor,grade=$('portfolioGrade').value;
  const check=()=>{if(request!==portfolioEpoch||actor!==member||!member||auth.currentUser?.uid!==member.uid||$('portfolioGrade').value!==grade)throw Error('Portfolio selection changed')};
@@ -47,7 +49,7 @@ $('portfolioRoster').onclick=async()=>{
   $('portfolioStatus').textContent='विद्यार्थी सूची लोड हुँदैछ…';
   const roster=await loadCompleteClassRoster({db,api,actor:member,schoolId:member.schoolId,classId:grade,activeOnly:true});check();await verify();check();
   $('portfolioStudent').replaceChildren(...roster.students.map(s=>new Option(String(s.nameEnglish??s.name??s.id),s.id)));
-  $('portfolioStudent').disabled=false;$('portfolioRead').disabled=!$('portfolioStudent').value;$('portfolioExport').disabled=!$('portfolioStudent').value;$('indicatorRead').disabled=$('indicatorExport').disabled=!$('portfolioStudent').value||!['1','2','3'].includes($('portfolioGrade').value);$('portfolioStatus').textContent=roster.count+' विद्यार्थी उपलब्ध छन्।';
+  $('portfolioStudent').disabled=false;$('portfolioRead').disabled=!$('portfolioStudent').value;$('portfolioExport').disabled=$('portfolioPrintOrdinary').disabled=!$('portfolioStudent').value;$('indicatorRead').disabled=$('indicatorExport').disabled=$('portfolioPrintIndicators').disabled=!$('portfolioStudent').value||!['1','2','3'].includes($('portfolioGrade').value);$('portfolioStatus').textContent=roster.count+' विद्यार्थी उपलब्ध छन्।';
  }catch(e){if(request===portfolioEpoch){resetPortfolio();$('portfolioStatus').textContent='विद्यार्थी सूची खोल्न सकिएन: '+neError(e)}}
 };
 $('portfolioRead').onclick=async()=>{
@@ -98,6 +100,34 @@ $('indicatorExport').onclick=async()=>{
   $('portfolioStatus').textContent=file.count+' चार-सूचक अभिलेखको Excel तयार भयो। यो आधिकारिक मूल्याङ्कन प्रतिवेदन होइन।';
  }catch(e){if(request===portfolioEpoch){$('indicatorRows').replaceChildren();$('portfolioStatus').textContent='Excel तयार भएन: '+neError(e)}}
 };
+async function printPortfolio(kind){
+ clearPrint();
+ const request=++portfolioEpoch,member=actor,grade=$('portfolioGrade').value,studentId=$('portfolioStudent').value;
+ const check=()=>{if(request!==portfolioEpoch||actor!==member||!member||auth.currentUser?.uid!==member.uid||$('portfolioGrade').value!==grade||$('portfolioStudent').value!==studentId)throw Error('Portfolio selection changed')};
+ $('portfolioStatus').textContent='प्रिन्टका लागि सुरक्षित अभिलेख जाँच हुँदैछ…';
+ try{
+  await verify();check();
+  const model=await readPortfolioPrintModel({db,api,actor:member,schoolId:member.schoolId,grade,studentId,assertCurrent:check},kind);
+  await verify();check();
+  const root=$('portfolioPrint');
+  const add=(tag,value,parent=root)=>{const el=document.createElement(tag);el.textContent=value;parent.append(el);return el};
+  add('h1',model.title);
+  add('p','SMSS Exam Portal V47 · School ID: '+model.schoolId+' · Academic Year: '+model.year);
+  add('p','Student: '+(model.studentName||model.studentId)+' · Student ID: '+model.studentId+' · Class: '+model.grade+(model.section?' · Section: '+model.section:''));
+  add('p',model.notice);
+  add('p','Records: '+model.rows.length+' · Excluded historical records: '+model.historical);
+  const table=add('table',''),head=add('thead','',table),tr=add('tr','',head);
+  for(const v of model.headers)add('th',v,tr);
+  const body=add('tbody','',table);
+  for(const row of model.rows){const r=add('tr','',body);for(const v of row)add('td',v??'—',r)}
+  check();root.hidden=false;document.body.classList.add('portfolio-printing');
+  try{window.print()}finally{clearPrint()}
+  $('portfolioStatus').textContent='प्रिन्ट संवादमा Print वा Save as PDF छान्नुहोस्। यो आधिकारिक मूल्याङ्कन होइन।';
+ }catch(e){if(request===portfolioEpoch){clearPrint();$('portfolioStatus').textContent='प्रिन्ट तयार भएन: '+neError(e)}}
+}
+$('portfolioPrintOrdinary').onclick=()=>void printPortfolio('observations');
+$('portfolioPrintIndicators').onclick=()=>void printPortfolio('indicators');
+window.addEventListener('afterprint',clearPrint);
 try{
  ({auth,authSdk,db,api}=await connectSchoolFirebase());
  const sid=validateSchoolId(new URL(location.href).searchParams.get('schoolId')||'');

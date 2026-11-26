@@ -23,7 +23,7 @@ const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
 assert.match(html,/href="\.\/primary-assessment\.html"/);
 console.log('PASS V47 2083 primary assessment reference: 129 upper-primary themes, 30 lower-primary Our Surroundings forms, separate indicator denominators, no official writes');
 
-import {prepareObservationPortfolio,readObservationPortfolio,exportObservationPortfolio,prepareIndicatorPortfolio,readIndicatorPortfolio,exportIndicatorPortfolio} from './primary-assessment-portfolio.mjs';
+import {prepareObservationPortfolio,readObservationPortfolio,exportObservationPortfolio,prepareIndicatorPortfolio,readIndicatorPortfolio,exportIndicatorPortfolio,readPortfolioPrintModel} from './primary-assessment-portfolio.mjs';
 const sid='300160003',student={id:'s1',schoolId:sid,class:'1',active:true,section:''};
 const obs={schoolId:sid,studentId:'s1',academicYear:'2083',className:'कक्षा १',section:'',subject:'नेपाली',unit:'पठन',topic:'अक्षर चिन्ने',date:'2083-08-01',level:3,stage:'regular'};
 const doc=(id,d)=>({id,data:()=>d});
@@ -100,3 +100,17 @@ let indStale=false;
 await assert.rejects(exportIndicatorPortfolio({...indRead,api:{...api,getDocsFromServer:async()=>{indStale=true;return {docs:indArgs.docs}}},assertCurrent:()=>{if(indStale)throw Error('Stale indicator export')}}),/Stale indicator export/);
 assert.match(exportMarkup,/id="indicatorExport" type="button" disabled/);
 console.log('PASS V47 scoped indicator XLSX with exact zero and four scores and fresh authorization');
+
+const printOrd=await readPortfolioPrintModel(readArgs,'observations');
+assert.equal(printOrd.schoolId,sid);assert.equal(printOrd.studentId,'s1');
+assert.equal(printOrd.rows[0][5],3);assert.equal(printOrd.officialAssessmentApproved,false);
+const printInd=await readPortfolioPrintModel(indRead,'indicators');
+assert.deepEqual(printInd.rows.map(r=>r[9]),[0,4]);assert.match(printInd.notice,/NOT official/);
+await assert.rejects(readPortfolioPrintModel(indRead,'unknown'),/Invalid print type/);
+await assert.rejects(readPortfolioPrintModel({...readArgs,actor:{...actor,role:'teacher'}},'observations'),/Admin or Viewer/);
+await assert.rejects(readPortfolioPrintModel({...indRead,schoolId:'99999'},'indicators'),/Admin or Viewer/);
+await assert.rejects(readPortfolioPrintModel({...readArgs,api:{...api,getDocsFromServer:async()=>({docs:[]})}},'observations'),/No saved records/);
+assert.match(exportMarkup,/id="portfolioPrintOrdinary" type="button" disabled/);
+assert.match(exportMarkup,/id="portfolioPrintIndicators" type="button" disabled/);
+assert.match(exportMarkup,/@page\{size:A4 landscape/);
+console.log('PASS V47 scoped saved portfolio print models with exact ratings and explicit unofficial status');
