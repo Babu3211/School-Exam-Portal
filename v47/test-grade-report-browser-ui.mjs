@@ -51,7 +51,12 @@ console.log('PASS V46-compatible Mark/Entry/Grade Ledger and Grade Sheet read-on
 import {loadCommittedReportPreview} from './committed-report-client.mjs';
 assert.match(ui,/source==='committed'/);
 assert.match(ui,/loadCommittedReportPreview\(/);
-assert.match(ui,/reportSource'\)\.onchange=clearReview/);
+assert.match(ui,/reportSource'\)\.onchange=resetReportFilters/);
+assert.match(ui,/const resetReportFilters=\(\)=>\{clearReview\(\);resetExamSelection\(\)\}/);
+assert.match(ui,/legacyExam'\)\.onchange=clearReview/);
+assert.match(ui,/frame\.dataset\.loadedSelection!==sheetKey\(\)/);
+assert.match(ui,/combineTerminalGradeSheets\(/);
+assert.match(get('./grade-sheet.html'),/id="terminalSecondStudent" disabled/);
 const q={schoolId:'12345',classNo:'1',term:'1st'};
 const students=[{id:'s1',schoolId:q.schoolId,class:'1',active:true,nameEnglish:'Alpha'}];
 const subjects=[{id:'math',schoolId:q.schoolId,class:'1',active:true,name:'Mathematics',creditHour:4}];

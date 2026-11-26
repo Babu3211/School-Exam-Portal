@@ -32,6 +32,8 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Build the isolated browser UI
         run: node v47/build-hosting.mjs
+      - name: Verify physical grade-sheet print layout using synthetic records
+        run: node v47/browser-e2e/grade-sheet-print.mjs
       - name: Run Chromium with real local Auth and Firestore
         env:
           GCLOUD_PROJECT: demo-smss-v47-browser
