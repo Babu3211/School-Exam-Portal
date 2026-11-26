@@ -23,7 +23,7 @@ const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
 assert.match(html,/href="\.\/primary-assessment\.html"/);
 console.log('PASS V47 2083 primary assessment reference: 129 upper-primary themes, 30 lower-primary Our Surroundings forms, separate indicator denominators, no official writes');
 
-import {prepareObservationPortfolio,readObservationPortfolio,exportObservationPortfolio,prepareIndicatorPortfolio,readIndicatorPortfolio} from './primary-assessment-portfolio.mjs';
+import {prepareObservationPortfolio,readObservationPortfolio,exportObservationPortfolio,prepareIndicatorPortfolio,readIndicatorPortfolio,exportIndicatorPortfolio} from './primary-assessment-portfolio.mjs';
 const sid='300160003',student={id:'s1',schoolId:sid,class:'1',active:true,section:''};
 const obs={schoolId:sid,studentId:'s1',academicYear:'2083',className:'कक्षा १',section:'',subject:'नेपाली',unit:'पठन',topic:'अक्षर चिन्ने',date:'2083-08-01',level:3,stage:'regular'};
 const doc=(id,d)=>({id,data:()=>d});
@@ -80,3 +80,23 @@ await assert.rejects(readIndicatorPortfolio({...indRead,actor:{...actor,role:'te
 await assert.rejects(readIndicatorPortfolio({...indRead,schoolId:'99999'}),/Admin or Viewer/);
 await assert.rejects(readIndicatorPortfolio({...indRead,grade:'4'}),/Admin or Viewer/);
 console.log('PASS separate read-only 2083 indicator blocks, exact 0–4 counts and scope');
+
+const indFile=await exportIndicatorPortfolio(indRead);
+assert.equal(indFile.count,2);
+assert.equal(indFile.filename,'V47-indicators-300160003-s1-2083.xlsx');
+assert.equal(indFile.blob.type,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+const indBytes=new Uint8Array(await indFile.blob.arrayBuffer());
+assert.deepEqual([...indBytes.slice(0,4)],[80,75,3,4]);
+const indText=new TextDecoder().decode(indBytes);
+assert.match(indText,/NOT official assessment/);
+assert.match(indText,/cdc2076-g1-1/);
+assert.match(indText,/<v>0<\/v>/);
+assert.match(indText,/<v>4<\/v>/);
+await assert.rejects(exportIndicatorPortfolio({...indRead,grade:'4'}),/Admin or Viewer/);
+await assert.rejects(exportIndicatorPortfolio({...indRead,actor:{...actor,role:'teacher'}}),/Admin or Viewer/);
+await assert.rejects(exportIndicatorPortfolio({...indRead,schoolId:'99999'}),/Admin or Viewer/);
+await assert.rejects(exportIndicatorPortfolio({...indRead,api:{...api,getDocsFromServer:async()=>({docs:[]})}}),/No saved indicator blocks/);
+let indStale=false;
+await assert.rejects(exportIndicatorPortfolio({...indRead,api:{...api,getDocsFromServer:async()=>{indStale=true;return {docs:indArgs.docs}}},assertCurrent:()=>{if(indStale)throw Error('Stale indicator export')}}),/Stale indicator export/);
+assert.match(exportMarkup,/id="indicatorExport" type="button" disabled/);
+console.log('PASS V47 scoped indicator XLSX with exact zero and four scores and fresh authorization');

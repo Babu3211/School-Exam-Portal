@@ -66,7 +66,7 @@ export function prepareIndicatorPortfolio({schoolId,grade,student,docs}){
   rows.push(Object.freeze({id,subject:d.subject,unit:d.unit,outcomeId:d.outcomeId,stage:d.stage,date:d.date,indicators:Object.freeze([...d.indicators]),score:d.indicators.filter(Boolean).length,usedTools:Object.freeze([...(d.usedTools??['','','',''])])}));
  }
  rows.sort((a,b)=>a.unit.localeCompare(b.unit)||a.outcomeId.localeCompare(b.outcomeId,undefined,{numeric:true})||a.stage.localeCompare(b.stage));
- return Object.freeze({rows:Object.freeze(rows),historical,readOnly:true,officialAssessmentApproved:false});
+ return Object.freeze({schoolId,grade,studentId:student.id,year:'2083',rows:Object.freeze(rows),historical,readOnly:true,officialAssessmentApproved:false});
 }
 export async function readIndicatorPortfolio({db,api,actor,schoolId,grade,studentId,assertCurrent}){
  validateSchoolId(schoolId);
@@ -82,4 +82,16 @@ export async function readIndicatorPortfolio({db,api,actor,schoolId,grade,studen
  const snapshot=await api.getDocsFromServer(query);check();
  const result=prepareIndicatorPortfolio({schoolId,grade,student:{...student,id:studentId},docs:snapshot.docs});
  await verify();check();return result;
+}
+
+// Four-indicator records export separately; zero scores remain numeric zero.
+export async function exportIndicatorPortfolio(args){
+ const result=await readIndicatorPortfolio(args);
+ args.assertCurrent();
+ if(!result.rows.length)throw Error('No saved indicator blocks to export');
+ const headers=['Export status','School ID','Academic Year','Class','Student ID','Record ID','Subject','Theme','Block ID','Stage','Date (BS)','Indicator 1','Indicator 2','Indicator 3','Indicator 4','Block Score / 4','Tool 1','Tool 2','Tool 3','Tool 4','Excluded historical count'];
+ const rows=result.rows.map(r=>['Saved indicator blocks only - NOT official assessment',result.schoolId,result.year,result.grade,result.studentId,r.id,r.subject,r.unit,r.outcomeId,r.stage,r.date,...r.indicators.map(v=>v?1:0),r.score,...r.usedTools,result.historical]);
+ const blob=excelWorkbook(headers,rows,{sheetName:'Indicator blocks'});
+ args.assertCurrent();
+ return Object.freeze({blob,filename:'V47-indicators-'+result.schoolId+'-'+result.studentId+'-2083.xlsx',count:rows.length});
 }
