@@ -421,6 +421,20 @@ try{
  });
  const teacherDraft=(database,uid='teacher_12345678',sid='12345678')=>
   doc(database,'schools',sid,'teacher_mark_drafts',uid,'class_drafts','9_computer_final');
+ // First-load reads must return a missing snapshot only for the assigned teacher.
+ assert.equal((await assertSucceeds(getDoc(teacherDraft(teacher)))).exists(),false);
+ await assertFails(getDoc(teacherDraft(teacher,'anotherTeacher')));
+ await assertFails(getDoc(teacherDraft(viewer)));
+ await assertFails(getDoc(teacherDraft(anon)));
+ await assertFails(getDoc(teacherDraft(teacher,'teacher_12345678','87654321')));
+ await assertFails(getDoc(doc(teacher,'schools','12345678','teacher_mark_drafts','teacher_12345678','class_drafts','9_unknown_final')));
+ await env.withSecurityRulesDisabled(async context=>{
+  await updateDoc(doc(context.firestore(),'schools','12345678','teacher_assignments','12345678:teacher_12345678:9:computer'),{active:false});
+ });
+ await assertFails(getDoc(teacherDraft(teacher)));
+ await env.withSecurityRulesDisabled(async context=>{
+  await updateDoc(doc(context.firestore(),'schools','12345678','teacher_assignments','12345678:teacher_12345678:9:computer'),{active:true});
+ });
  const teacherEntries=[{studentId:'s1',isAbsent:false,
   values:{participation:7,practical:63,term:30},totalObtained:100}];
  const teacherPayload={format:'smss-v47-teacher-class-draft-v1',

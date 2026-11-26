@@ -162,6 +162,61 @@ try{
   await page.locator('#logout').click();await wait(page,()=>document.getElementById('reportArea').hidden);
   assert.equal(await page.locator('#gradeOutput').textContent(),'');
  }
+ // Real first teacher draft, original marks prefill, save, reload and Admin transfer.
+ {
+  const school=schools[0],sid=school.sid,root='schools/'+sid,teacherUid='alpha-teacher';
+  const duty=root+'/teacher_assignments/'+sid+':'+teacherUid+':1:math';
+  const legacy=root+'/marks/legacy_math_s1';
+  const teacherDraft=root+'/teacher_mark_drafts/'+teacherUid+'/class_drafts/1_math_final';
+  const adminDraft=root+'/class_mark_drafts/1_math_final';
+  await db.doc(duty).set({uid:teacherUid,schoolId:sid,classId:'1',subjectId:'math',active:true});
+  const original={schoolId:sid,class:'1',term:'final',termKey:'annual',examId:'final',academicYear:'2083',subjectId:'math',subject:'Mathematics',studentId:'s1',isAbsent:false,scores:[{name:'No. of Learning Achievement',fullMarks:5,obtained:5},{name:'Full Marks',fullMarks:20,obtained:null},{name:'Obtained Learning Achievement',fullMarks:20,obtained:18}],totalFullMarks:20,totalObtained:18};
+  await db.doc(legacy).set(original);
+  const teacherSession=await newSession();
+  try{
+   const {page,errors}=teacherSession;
+   await page.goto(origin+'/teacher-assigned-class.html?schoolId='+sid);
+   await wait(page,()=>!document.getElementById('login').disabled);
+   await page.locator('#email').fill(email(teacherUid));await page.locator('#password').fill(password);
+   await page.locator('#login').click();await wait(page,()=>!document.getElementById('work').hidden);
+   await page.locator('#classId').selectOption('1');await page.locator('#loadAssignments').click();
+   await wait(page,()=>Array.from(document.getElementById('subjectId').options).some(o=>o.value==='math'));
+   await page.locator('#subjectId').selectOption('math');await page.locator('#draftTerm').selectOption('final');
+   await page.locator('#loadTeacherDraft').click();
+   await wait(page,()=>document.querySelectorAll('#teacherDraftRows tr').length===1);
+   assert.equal(await page.locator('#teacherDraftRows input[data-component="count"]').inputValue(),'5');
+   assert.equal(await page.locator('#teacherDraftRows input[data-component="got"]').inputValue(),'18');
+   await page.locator('#inspectTeacherDraft').click();
+   page.once('dialog',d=>d.accept());await page.locator('#saveTeacherDraft').click();
+   await wait(page,()=>document.getElementById('teacherDraftStatus').textContent.includes('Revision 1 सुरक्षित'));
+   assert.equal((await db.doc(teacherDraft).get()).data().revision,1);
+   await page.locator('#loadTeacherDraft').click();
+   await wait(page,()=>document.getElementById('teacherDraftStatus').textContent.includes('Draft Revision 1 सुरक्षित'));
+   assert.equal(await page.locator('#teacherDraftRows input[data-component="got"]').inputValue(),'18');
+   assert.deepEqual(errors,[]);
+  }finally{await teacherSession.context.close()}
+  const adminSession=await newSession();
+  try{
+   const {page,errors}=adminSession;
+   await page.goto(origin+'/teacher-draft-review.html?schoolId='+sid);
+   await wait(page,()=>!document.getElementById('login').disabled);
+   await page.locator('#email').fill(email('alpha-admin'));await page.locator('#password').fill(password);
+   await page.locator('#login').click();await wait(page,()=>!document.getElementById('reviewArea').hidden);
+   await page.locator('#teacherUid').fill(teacherUid);await page.locator('#classId').selectOption('1');
+   await page.locator('#subjectId').fill('math');await page.locator('#examId').selectOption('final');
+   await page.locator('#review').click();await wait(page,()=>!document.getElementById('copyDraft').disabled);
+   page.once('dialog',d=>d.accept());await page.locator('#copyDraft').click();
+   await wait(page,()=>document.getElementById('reviewStatus').textContent.includes('नयाँ Admin Draft सुरक्षित भयो'));
+   assert.equal((await db.doc(adminDraft).get()).data().revision,1);
+   assert.equal((await db.doc(teacherDraft).get()).data().revision,1);
+   assert.deepEqual((await db.doc(legacy).get()).data(),original);
+   assert.equal((await db.doc('schools/'+schools[1].sid+'/class_mark_drafts/1_math_final').get()).exists,false);
+   assert.deepEqual(errors,[]);
+  }finally{await adminSession.context.close()}
+  // Leave other existing emulator tests' fixtures unchanged.
+  await Promise.all([duty,legacy,teacherDraft,adminDraft,root+'/dashboard_activity/'+teacherUid].map(path=>db.doc(path).delete()));
+  console.log('PASS real browser migrated marks prefill, first teacher draft Save, reload and Admin transfer; original marks unchanged');
+ }
  // A direct Attendance login must register verified activity without visiting Dashboard.
  {
   const {context,page,errors}=await newSession();
