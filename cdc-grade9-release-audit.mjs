@@ -31,6 +31,7 @@ export const GRADE9_PUBLISH_GATE_VERSION='2083-dev-grade9-only';
 const failReason={
  source_missing:'CDC specification source not registered for Grade 9',
  grid_not_transcribed:'Official CDC source listed but exact Grid allocation not fully transcribed',
+ current_edition_unconfirmed:'Grid structure transcribed, but applicability to this school in academic year 2083 is not confirmed',
  question_bank_not_verified:'CDC format set, but reviewed question bank and real teacher end-to-end test not verified',
  reviewed_paper_not_confirmed:'Question bank exists but a complete exact paper and teacher review are unverified'
 };
@@ -50,7 +51,7 @@ function scopeKey(raw){
  */
 export function auditGrade9Release({
  register,offeredSubjects=null,reviewedBanks={},teacherTestedPapers={},
- exactGridReviews={}
+ exactGridReviews={},currentEditionReviews={}
 }={}){
  if(!register||!Array.isArray(register.sources))throw Error('Official CDC source register required');
  const mandatory=new Set(GRADE9_BASE_SUBJECTS.map(x=>x.key));
@@ -74,15 +75,18 @@ export function auditGrade9Release({
   // One typed Admin-entered blueprint is not automatically an official CDC
   // Grid. Only separately verified exact grid reviews may count as evidence.
   const fullGrid=evidenceGrid||exactGridReviews[s.key]===true;
+  // Structural accuracy of an archived PDF is not evidence that its edition
+  // applies in 2083. Require a separate explicit reviewed applicability input.
+  const editionConfirmed=fullGrid&&currentEditionReviews[s.key]===true;
   const bank=reviewedBanks[s.key]===true;
   const teacherTest=teacherTestedPapers[s.key]===true;
   const status=!source?'source_missing':!fullGrid?'grid_not_transcribed':
-   !bank?'question_bank_not_verified':!teacherTest?'reviewed_paper_not_confirmed':'verified_for_school_review';
+   !editionConfirmed?'current_edition_unconfirmed':!bank?'question_bank_not_verified':!teacherTest?'reviewed_paper_not_confirmed':'verified_for_school_review';
   return {
    key:s.key,subject:s.name,subjectNe:s.labelNe,
    officialSourceUrl:source?.sourceUrl||null,
    sourceStatus:source?.sourceStatus||null,
-   gridTranscribed:fullGrid,questionBankReviewed:bank,
+   gridTranscribed:fullGrid,currentEditionConfirmed:editionConfirmed,questionBankReviewed:bank,
    teacherPaperTested:teacherTest,ready:status==='verified_for_school_review',
    status,reason:failReason[status]||null,
    gridType:bundledGrid?'unit_wise_computer':groupedGrid?'optional_math_WCA_CCA':
@@ -96,6 +100,8 @@ export function auditGrade9Release({
   grade9PaperReady:blocked.length===0&&!(unknown?.length),
   unknownSchoolSubjects:Object.freeze(unknown||[]),
   missingCount:blocked.length,
+  transcribedCount:checks.filter(x=>x.gridTranscribed).length,
+  currentEditionConfirmedCount:checks.filter(x=>x.currentEditionConfirmed).length,
   checkedSubjects:Object.freeze(checks),
   blockers:Object.freeze(blocked),
   note:'This is a prerequisite audit, never a deploy permission. Main/V46 production and V47 unaffected.'
