@@ -37,17 +37,18 @@ async function render(){
 function fill(){const previous=$('subject').value;$('subject').replaceChildren(...subjectsForGrade($('grade').value).map(([key,name])=>new Option(name,key)));if([...$('subject').options].some(o=>o.value===previous))$('subject').value=previous;void render()}
 $('grade').onchange=fill;$('subject').onchange=()=>void render();
 let teacherEpoch=0,worksheet=null,worksheetRequest=0,worksheetRevision=null;
+const usesLanguageStages=model=>['1','2','3'].includes(model?.grade)&&['nepali','english'].includes(model?.key);
 function clearDraft(){
  worksheetRequest++;worksheetRevision=null;$('teacherSaveDraft').disabled=true;$('teacherDraftSaveStatus').textContent='';
  $('teacherDraftRows').replaceChildren();$('teacherDate').value='';$('teacherDraftTotal').textContent='';$('teacherThemeSource').hidden=true;
 }
 function resetTeacherWorksheet(){
- teacherEpoch++;worksheet=null;clearDraft();
+ teacherEpoch++;worksheet=null;clearDraft();$('teacherStageWrap').hidden=true;$('teacherStage').value='regular';
  for(const id of ['teacherSubject','teacherStudent','teacherTheme']){$(id).replaceChildren();$(id).disabled=true}
  $('teacherOpenWorksheet').disabled=true;$('teacherDate').disabled=true;$('teacherWorksheetStatus').textContent='';
 }
 function clearTeacherModel(){
- teacherEpoch++;worksheet=null;clearDraft();
+ teacherEpoch++;worksheet=null;clearDraft();$('teacherStageWrap').hidden=true;$('teacherStage').value='regular';
  for(const id of ['teacherStudent','teacherTheme']){$(id).replaceChildren();$(id).disabled=true}
  $('teacherDate').disabled=true;
 }
@@ -67,12 +68,13 @@ async function renderTeacherDraft(){
  clearDraft();if(!worksheet||!$('teacherStudent').value||$('teacherTheme').value==='')return;
  const slots=draftThemeSlots(worksheet,Number($('teacherTheme').value));
  const theme=worksheet.themes[Number($('teacherTheme').value)];
+ $('teacherStageWrap').hidden=!usesLanguageStages(worksheet);
  $('teacherDate').value=todayAssessmentDate2083();
  $('teacherThemeSource').href=theme.sourceUrl;$('teacherThemeSource').hidden=false;
  const update=()=>{const fields=[...$('teacherDraftRows').querySelectorAll('select')];const used=fields.filter(el=>el.value!=='');$('teacherDraftTotal').textContent='Draft: '+used.length+'/'+fields.length+' · '+used.reduce((n,el)=>n+Number(el.value),0)+' / '+theme.fullMarks};
  for(const slot of slots){const tr=document.createElement('tr');const label=cell(tr,(slot.indicatorBlock?'Indicator Block ':'Achievement Slot ')+slot.number);if(slot.sourceText){for(const value of [slot.sourceText.title,slot.sourceText.titleEn,slot.sourceText.achievement].filter(Boolean)){const p=document.createElement('div');p.textContent=value;label.append(p)}for(const value of [slot.sourceText.aspect,slot.sourceText.tool].filter(Boolean)){const p=document.createElement('div');p.textContent=value;label.append(p)}if(slot.sourceText.criteria){for(const [i,criterion] of slot.sourceText.criteria.entries()){const p=document.createElement('div');p.textContent=(4-i)+' — '+criterion.join(' / ');label.append(p)}}}const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','Draft rating '+slot.number);input.append(new Option('—',''));for(let n=slot.min;n<=slot.max;n++)input.append(new Option(String(n),String(n)));input.onchange=update;td.append(input);$('teacherDraftRows').append(tr)}
  update();
- if(!['mathematics','science','socialstudies','nepali','english','healthphysicalcreativeart'].includes(worksheet.key)||(Number(worksheet.grade)<=3&&worksheet.key!=='mathematics')||!slots.every(s=>s.sourceText))return;
+ if(!['mathematics','science','socialstudies','nepali','english','healthphysicalcreativeart'].includes(worksheet.key)||(Number(worksheet.grade)<=3&&worksheet.key!=='mathematics'&&!usesLanguageStages(worksheet))||!slots.every(s=>s.sourceText))return;
  const args=worksheetSelection(),request=worksheetRequest;
  const fields=[...$('teacherDraftRows').querySelectorAll('select')];
  fields.forEach(el=>el.disabled=true);$('teacherDate').disabled=true;
@@ -88,9 +90,9 @@ async function renderTeacherDraft(){
  finally{if(request===worksheetRequest){fields.forEach(el=>el.disabled=false);$('teacherDate').disabled=false}}
 }
 function worksheetSelection(){
- const request=worksheetRequest,member=actor,model=worksheet,studentId=$('teacherStudent').value,themeIndex=Number($('teacherTheme').value);
- const assertCurrent=()=>{if(request!==worksheetRequest||actor!==member||worksheet!==model||!member||auth.currentUser?.uid!==member.uid||$('teacherStudent').value!==studentId||Number($('teacherTheme').value)!==themeIndex)throw Error('Worksheet selection changed')};
- return {db,api,auth,actor:member,model,studentId,themeIndex,assertCurrent};
+ const request=worksheetRequest,member=actor,model=worksheet,studentId=$('teacherStudent').value,themeIndex=Number($('teacherTheme').value),stage=usesLanguageStages(model)?$('teacherStage').value:undefined;
+ const assertCurrent=()=>{if(request!==worksheetRequest||actor!==member||worksheet!==model||!member||auth.currentUser?.uid!==member.uid||$('teacherStudent').value!==studentId||Number($('teacherTheme').value)!==themeIndex||(usesLanguageStages(model)&&$('teacherStage').value!==stage))throw Error('Worksheet selection changed')};
+ return {db,api,auth,actor:member,model,studentId,themeIndex,stage,assertCurrent};
 }
 $('teacherSaveDraft').onclick=async()=>{
  if(worksheetRevision===null||$('teacherSaveDraft').disabled)return;
@@ -108,7 +110,7 @@ $('teacherSaveDraft').onclick=async()=>{
  }catch(e){if(request===worksheetRequest){worksheetRevision=null;$('teacherDraftSaveStatus').textContent='Draft सुरक्षित भएको पुष्टि भएन। मिति र अङ्क जाँच्नुहोस्; विद्यार्थी वा थिम पुनः खोलेर सुरक्षित Revision जाँच्नुहोस्। '+neError(e)}}
  finally{if(request===worksheetRequest){fields.forEach(el=>el.disabled=false);$('teacherDate').disabled=false}}
 };
-$('teacherStudent').onchange=renderTeacherDraft;$('teacherTheme').onchange=renderTeacherDraft;
+$('teacherStudent').onchange=renderTeacherDraft;$('teacherTheme').onchange=renderTeacherDraft;$('teacherStage').onchange=renderTeacherDraft;
 $('teacherOpenWorksheet').onclick=async()=>{
  clearTeacherModel();const request=teacherEpoch,member=actor,grade=$('teacherGrade').value,subjectId=$('teacherSubject').value;
  const check=()=>{if(request!==teacherEpoch||actor!==member||!member||auth.currentUser?.uid!==member.uid||$('teacherGrade').value!==grade||$('teacherSubject').value!==subjectId)throw Error('Worksheet selection changed')};

@@ -13,6 +13,7 @@ import {chromium} from 'playwright';
 import {excelWorkbook} from '../excel-workbook.mjs';
 import {todayAssessmentDate2083} from '../assessment-date-2083.mjs';
 import {v46LowerMathReference} from '../primary-assessment-v46-lower-math.mjs';
+import {v46LowerLanguageReference} from '../primary-assessment-v46-lower-language.mjs';
 import {v46LanguageHealthThemeRows} from '../primary-assessment-v46-language-health-text.mjs';
 import {v46SocialThemeRows} from '../primary-assessment-v46-social-text.mjs';
 import {v46ScienceThemeRows} from '../primary-assessment-v46-science-text.mjs';
@@ -304,6 +305,62 @@ try{
     }finally{
      await Promise.all([sciencePath,assignmentPath,studentPath,subjectPath].map(p=>db.doc(p).delete()));
     }
+   }
+   // Lower-language stages must be independent and never overwrite migrated evidence.
+   for(const grade of ['1','2','3'])for(const kind of ['nepali','english']){
+    const subjectId='lower_'+kind+grade,studentId='lower_'+kind+'_student_'+grade;
+    const subjectPath=root+'/subjects/'+subjectId,studentPath=root+'/students/'+studentId;
+    const assignmentPath=root+'/teacher_assignments/'+[sid,teacherUid,grade,subjectId].join(':');
+    const themes=v46LowerLanguageReference(grade,kind),themeIndex=themes.findIndex(t=>t.sourceRows?.length===t.count);
+    assert.ok(themeIndex>=0,'Mapped lower-language theme required');
+    const theme=themes[themeIndex],count=theme.count;
+    const draftPaths=Object.fromEntries(['regular','support'].map(stage=>[stage,root+'/teacher_assessment_drafts/'+teacherUid+'/classes/'+grade+'/subjects/'+subjectId+'/students/'+studentId+'/themes/'+sha(JSON.stringify(['ad2e3b96a22601fed9d956397a98c564b3ffb768',grade,theme.theme,theme.sourceRows,stage]))]));
+    try{
+     await db.doc(subjectPath).set({schoolId:sid,class:grade,name:kind==='nepali'?'नेपाली':'English',active:true});
+     await db.doc(studentPath).set({schoolId:sid,class:grade,nameEnglish:'Synthetic lower '+kind+' '+grade,active:true});
+     await db.doc(assignmentPath).set({schoolId:sid,uid:teacherUid,classId:grade,subjectId,active:true});
+     const openLower=async()=>{
+      await page.locator('#teacherGrade').selectOption(grade);
+      await page.locator('#teacherLoadSubjects').click();
+      await wait(page,id=>Array.from(document.getElementById('teacherSubject').options).some(o=>o.value===id),subjectId);
+      await page.locator('#teacherSubject').selectOption(subjectId);
+      await page.locator('#teacherOpenWorksheet').click();
+      await wait(page,id=>Array.from(document.getElementById('teacherStudent').options).some(o=>o.value===id),studentId);
+      await page.locator('#teacherStudent').selectOption(studentId);
+      await page.locator('#teacherTheme').selectOption(String(themeIndex));
+      await wait(page,()=>!document.getElementById('teacherSaveDraft').disabled);
+     };
+     await openLower();
+     assert.equal(await page.locator('#teacherStage').isVisible(),true);
+     assert.equal(await ratings.count(),count);
+     assert.equal(await page.locator('#teacherDate').inputValue(),todayAssessmentDate2083());
+     assert.ok((await page.locator('#teacherDraftRows tr').first().textContent()).includes(theme.sourceRows[0].title));
+     for(const [stage,score,date] of [['regular','2','2083-08-11'],['support','4','2083-08-12']]){
+      await page.locator('#teacherStage').selectOption(stage);
+      await wait(page,()=>!document.getElementById('teacherSaveDraft').disabled);
+      assert.equal(await ratings.first().inputValue(),'');
+      await ratings.first().selectOption(score);
+      await page.locator('#teacherDate').fill(date);
+      await page.locator('#teacherSaveDraft').click();
+      await wait(page,()=>document.getElementById('teacherDraftSaveStatus').textContent.includes('Revision 1 सुरक्षित भयो'));
+      const d=(await db.doc(draftPaths[stage]).get()).data();
+      assert.equal(d.format,'smss-v47-primary-lower-'+kind+'-'+stage+'-draft-v1');
+      assert.equal(d.ratings,score+'_'.repeat(count-1));assert.equal(d.date,date);assert.equal(d.revision,1);
+      assert.equal((await db.doc(draftPaths[stage].replace(sid,schools[1].sid)).get()).exists,false);
+     }
+     await page.reload();
+     await wait(page,()=>!document.getElementById('teacherWorksheet').hidden);
+     await openLower();
+     assert.equal(await ratings.first().inputValue(),'2');
+     assert.equal(await page.locator('#teacherDate').inputValue(),'2083-08-11');
+     await page.locator('#teacherStage').selectOption('support');
+     await wait(page,()=>!document.getElementById('teacherSaveDraft').disabled);
+     assert.equal(await ratings.first().inputValue(),'4');
+     assert.equal(await page.locator('#teacherDate').inputValue(),'2083-08-12');
+     assert.deepEqual((await db.doc(legacy).get()).data(),original);
+     assert.deepEqual(errors,[]);
+     console.log('PASS lower-language staged draft '+grade+' '+kind+': separate date, scores, reload and school isolation');
+    }finally{await Promise.all([...Object.values(draftPaths),assignmentPath,studentPath,subjectPath].map(p=>db.doc(p).delete()));}
    }
   }finally{await teacherSession.context.close()}
   const adminSession=await newSession();

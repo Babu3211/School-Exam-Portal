@@ -11,18 +11,20 @@ export function validateMathDraftValues({ratings,date,count}){
  if(!Number.isInteger(count)||count<1||count>500||typeof ratings!=='string'||ratings.length!==count||!/^[1-4_]+$/.test(ratings)||!/[1-4]/.test(ratings)||!validAssessmentDate2083(date))throw Error('Invalid assessment draft date or ratings');
  return {ratings,date};
 }
-async function context({db,api,auth,actor,model,studentId,themeIndex,assertCurrent}){
+async function context({db,api,auth,actor,model,studentId,themeIndex,stage,assertCurrent}){
  const schoolId=validateSchoolId(model?.schoolId);
  const uid=actor?.uid;
- if(!segment.test(uid??'')||actor?.schoolId!==schoolId||actor?.role!=='teacher'||actor?.active!==true||auth?.currentUser?.uid!==uid||!Object.hasOwn(formats,model.key)||!['1','2','3','4','5'].includes(model.grade)||(model.key!=='mathematics'&&!['4','5'].includes(model.grade))||!segment.test(model.subjectId??'')||!segment.test(studentId??'')||!model.students?.some(s=>s.id===studentId)||typeof assertCurrent!=='function')throw Error('Verified assigned primary worksheet required');
+ const lowerLanguage=['1','2','3'].includes(model?.grade)&&['nepali','english'].includes(model?.key);
+ if(lowerLanguage?!['regular','support'].includes(stage):stage!==undefined)throw Error('Invalid assessment stage');
+ if(!segment.test(uid??'')||actor?.schoolId!==schoolId||actor?.role!=='teacher'||actor?.active!==true||auth?.currentUser?.uid!==uid||!Object.hasOwn(formats,model.key)||!['1','2','3','4','5'].includes(model.grade)||(model.key!=='mathematics'&&!lowerLanguage&&!['4','5'].includes(model.grade))||!segment.test(model.subjectId??'')||!segment.test(studentId??'')||!model.students?.some(s=>s.id===studentId)||typeof assertCurrent!=='function')throw Error('Verified assigned primary worksheet required');
  const theme=model.themes?.[themeIndex],slots=draftThemeSlots(model,themeIndex);
  if(!theme||!slots.every(s=>s.sourceText)||theme.sourceRows?.length!==slots.length)throw Error('Source text unavailable');
  const check=()=>{assertCurrent();if(auth?.currentUser?.uid!==uid||actor.uid!==uid||actor.schoolId!==schoolId||actor.role!=='teacher'||actor.active!==true)throw Error('Worksheet session changed')};
  check();
- const bytes=await globalThis.crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([sourceRevision,model.grade,theme.theme,theme.sourceRows])));
+ const bytes=await globalThis.crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([sourceRevision,model.grade,theme.theme,theme.sourceRows,...(lowerLanguage?[stage]:[])])));
  const themeId=Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('');
  check();
- const identity={format:formats[model.key],schoolId,teacherUid:uid,classId:model.grade,subjectId:model.subjectId,studentId,themeId,sourceRevision,themeName:theme.theme};
+ const identity={format:lowerLanguage?'smss-v47-primary-lower-'+model.key+'-'+stage+'-draft-v1':formats[model.key],schoolId,teacherUid:uid,classId:model.grade,subjectId:model.subjectId,studentId,themeId,sourceRevision,themeName:theme.theme};
  const ref=api.doc(db,'schools',schoolId,'teacher_assessment_drafts',uid,'classes',model.grade,'subjects',model.subjectId,'students',studentId,'themes',themeId);
  const read=snap=>{
   if(!snap.exists())return null;
