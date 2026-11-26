@@ -6,7 +6,7 @@ const u16=(a,n)=>{a.push(n&255,(n>>>8)&255)};
 const u32=(a,n)=>{a.push(n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255)};
 const crcTable=Array.from({length:256},(_,n)=>{let c=n;for(let i=0;i<8;i++)c=c&1?0xedb88320^(c>>>1):c>>>1;return c>>>0});
 const crc32=bytes=>{let c=0xffffffff;for(const b of bytes)c=crcTable[(c^b)&255]^(c>>>8);return (c^0xffffffff)>>>0};
-function zip(files){
+export function officeZip(files,type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'){
  const chunks=[],central=[];let offset=0;
  for(const [name,body] of files){
   const n=enc.encode(name),data=enc.encode(body),crc=crc32(data),h=[];
@@ -16,7 +16,7 @@ function zip(files){
   central.push(Uint8Array.from(c),n);offset+=h.length+n.length+data.length;
  }
  const centralSize=central.reduce((n,c)=>n+c.length,0),end=[];u32(end,0x06054b50);u16(end,0);u16(end,0);u16(end,files.length);u16(end,files.length);u32(end,centralSize);u32(end,offset);u16(end,0);
- return new Blob([...chunks,...central,Uint8Array.from(end)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+ return new Blob([...chunks,...central,Uint8Array.from(end)],{type});
 }
 export function excelWorkbook(headers,rows,{sheetName='Records'}={}){
  if(!Array.isArray(headers)||!headers.length||headers.length>100||!Array.isArray(rows)||rows.length>50000)throw new RangeError('Invalid Excel table dimensions');
@@ -31,7 +31,7 @@ export function excelWorkbook(headers,rows,{sheetName='Records'}={}){
  }).join('')+'</row>').join('');
  const sheet='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'+cells+'</sheetData></worksheet>';
  const workbook='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="'+xml(safeName)+'" sheetId="1" r:id="rId1"/></sheets></workbook>';
- return zip([
+ return officeZip([
   ['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>'],
   ['_rels/.rels','<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
   ['xl/workbook.xml',workbook],

@@ -23,7 +23,7 @@ const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
 assert.match(html,/href="\.\/primary-assessment\.html"/);
 console.log('PASS V47 2083 primary assessment reference: 129 upper-primary themes, 30 lower-primary Our Surroundings forms, separate indicator denominators, no official writes');
 
-import {prepareObservationPortfolio,readObservationPortfolio,exportObservationPortfolio,prepareIndicatorPortfolio,readIndicatorPortfolio,exportIndicatorPortfolio,readPortfolioPrintModel} from './primary-assessment-portfolio.mjs';
+import {prepareObservationPortfolio,readObservationPortfolio,exportObservationPortfolio,prepareIndicatorPortfolio,readIndicatorPortfolio,exportIndicatorPortfolio,readPortfolioPrintModel,exportPortfolioWord} from './primary-assessment-portfolio.mjs';
 const sid='300160003',student={id:'s1',schoolId:sid,class:'1',active:true,section:''};
 const obs={schoolId:sid,studentId:'s1',academicYear:'2083',className:'कक्षा १',section:'',subject:'नेपाली',unit:'पठन',topic:'अक्षर चिन्ने',date:'2083-08-01',level:3,stage:'regular'};
 const doc=(id,d)=>({id,data:()=>d});
@@ -114,3 +114,22 @@ assert.match(exportMarkup,/id="portfolioPrintOrdinary" type="button" disabled/);
 assert.match(exportMarkup,/id="portfolioPrintIndicators" type="button" disabled/);
 assert.match(exportMarkup,/@page\{size:A4 landscape/);
 console.log('PASS V47 scoped saved portfolio print models with exact ratings and explicit unofficial status');
+
+for(const [kind,input,count] of [['observations',readArgs,1],['indicators',indRead,2]]){
+ const f=await exportPortfolioWord(input,kind);
+ assert.equal(f.count,count);assert.equal(f.blob.type,'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+ assert.match(f.filename,/\.docx$/);
+ const bytes=new Uint8Array(await f.blob.arrayBuffer());
+ assert.deepEqual([...bytes.slice(0,4)],[80,75,3,4]);
+ const body=new TextDecoder().decode(bytes);
+ assert.match(body,/word\/document\.xml/);assert.match(body,/NOT official assessment/);assert.match(body,/w:orient="landscape"/);
+ assert.match(body,/<w:tblHeader\/>/);
+ if(kind==='observations')assert.match(body,/नेपाली/);
+ else assert.match(body,/<w:t xml:space="preserve">0<\/w:t>/);
+ await assert.rejects(exportPortfolioWord({...input,actor:{...actor,role:'teacher'}},kind),/Admin or Viewer/);
+ await assert.rejects(exportPortfolioWord({...input,schoolId:'99999'},kind),/Admin or Viewer/);
+ await assert.rejects(exportPortfolioWord({...input,api:{...api,getDocsFromServer:async()=>({docs:[]})}},kind),/No saved records/);
+}
+assert.match(exportMarkup,/id="portfolioWordOrdinary" type="button" disabled/);
+assert.match(exportMarkup,/id="portfolioWordIndicators" type="button" disabled/);
+console.log('PASS saved assessment Word export: genuine OOXML, scope, zero indicators, unofficial notice');
