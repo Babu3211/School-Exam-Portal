@@ -26,5 +26,6 @@ assert.ok(configPresent,"V46 Firebase project signature changed: re-review migra
 assert.ok(adminUidPresent,"V46 global admin binding changed: re-review tenant auth");
 assert.equal(unknown.length,0,"Unreviewed V46 collection paths");
 assert.ok(counts.size>=16,"V46 collection coverage unexpectedly shrank");
-assert.ok(dynamic.length<=3,"New dynamic Firestore references need manual audit");
+const expectedDynamic=["collection(db,key==='serophero'?'cdc_serofero_indicators':'cdc_observations'","collection(db,name","collection(db,name","doc(db,name"];
+assert.deepEqual([...dynamic].sort(),expectedDynamic.sort(),"New dynamic Firestore references need manual audit");
 console.log("V46 migration inventory captured. Not approved for V47 deployment.");

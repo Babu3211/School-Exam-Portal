@@ -17,6 +17,13 @@ let port=source.replace(literal,(full,fn,quote,name)=>{
  changed++;
  return fn+"(db,tenantCollection("+JSON.stringify(name)+")";
 });
+// Exactly one reviewed V46 annual CDC portfolio read chooses between two
+// known collections. Rewrite the entire conditional, not just the variable.
+const cdcConditional="collection(db,key==='serophero'?'cdc_serofero_indicators':'cdc_observations')";
+assert.equal(port.split(cdcConditional).length-1,1,"CDC annual portfolio conditional changed: review required");
+for(const c of ["cdc_serofero_indicators","cdc_observations"])assert.ok(Object.hasOwn(V46_COLLECTION_POLICY,c));
+port=port.replace(cdcConditional,"collection(db,tenantCollection(key==='serophero'?'cdc_serofero_indicators':'cdc_observations'))");
+const reviewedCdcConditionalReferences=1;
 // Route all remaining variable collection names through the same fail-closed gateway.
 const dynamicSource=/\b(collection|doc)\s*\(\s*db\s*,\s*([a-zA-Z_$][\w$]*)/g;
 const dynamicNames=new Set();
@@ -36,7 +43,7 @@ assert.equal(dynamicReferences,3,"V46 dynamic Firestore references changed: revi
 const legacyBackupRestoreCalls=[...source.matchAll(/\b(collection|doc)\s*\(\s*db\s*,\s*name\b/g)].length;
 assert.equal(legacyBackupRestoreCalls,dynamicReferences,"Legacy backup/restore references changed; review required");
 
-assert.equal((port.match(/tenantCollection\(/g)||[]).length,changed+dynamicReferences,"Every V46 Firestore reference must use tenant gateway");
+assert.equal((port.match(/tenantCollection\(/g)||[]).length,changed+dynamicReferences+reviewedCdcConditionalReferences,"Every V46 Firestore reference must use tenant gateway");
 const legacyConfig=/const firebaseConfig=\{[^;]+\};\s*const ADMIN_UID="[^"]+";\s*const app=initializeApp\(firebaseConfig\),auth=getAuth\(app\),db=getFirestore\(app\);/;
 assert.match(port,legacyConfig,"V46 Firebase bootstrap must be reviewed before migration");
 const blocker=`
@@ -111,6 +118,7 @@ await writeFile(join(output,"audit.json"),JSON.stringify({
  literalReferencesRewritten:changed,
  dynamicVariablesScoped:[...dynamicNames],
  dynamicReferencesRewritten:dynamicReferences,
+ reviewedCdcConditionalReferences,
  legacyBackupRestoreRequiresReview:true,
  firebaseOperationInventory:operationInventory,
  additionalReviewRequired:reviewRequired,
