@@ -19,7 +19,13 @@ assert.equal(allowed({...teacher,active:false},'5','Mathematics',student),false)
 assert.equal(allowed({...teacher,roles:['subject_teacher','viewer']},'5','Mathematics',student),false);
 assert.equal(allowed({...teacher,subjectAssignments:[]},'5','Mathematics',student),false);
 assert.equal(allowed({...teacher,subjectAssignments:[{...task,section:'ALL'}]},'5','Mathematics',{...student,section:'B'}),true);
-console.log('CDC teacher assignment and section checks passed');
+const adminRole={active:true,roles:['admin']};
+assert.equal(allowed(adminRole,'5','Mathematics',{...student,section:'B'}),true);
+assert.equal(allowed(adminRole,'4','English',{...student,class:'4'}),true);
+assert.equal(allowed(adminRole,'6','English',{...student,class:'6'}),false);
+assert.equal(allowed(adminRole,'5','Mathematics',{...student,active:false}),false);
+assert.equal(allowed({...adminRole,roles:['admin','viewer']},'5','Mathematics',student),false);
+console.log('CDC teacher and Admin assignment and section checks passed');
 
 const catalogSource = html.slice(html.indexOf('const cdcNormalizeTitle'),html.indexOf('// CDC observations'));
 const parseCatalog = new Function(catalogSource+'return parseCdcBilingualCatalog;')();
@@ -380,6 +386,14 @@ for (const [grade,registered,label] of [
     assert.ok(topic && /[अ-ह]/u.test(topic.value) && !/[a-z]/i.test(topic.text));
   }
 }
+assert.equal(field('localSubjectHelp').hidden,false);
+assert.equal(field('themePick').disabled,true);
+assert.match(field('localSubjectMessage').textContent,/आधिकारिक/);
+field('localSubjectOpen').onclick();
+for(const name of ['extraObservations','extraManual','extraActions','extraRecords'])assert.equal(field(name).open,true);
+assert.equal(field('annexScroll').getAttribute('tabindex'),'0');
+assert.match(html,/@media screen and \(max-width:700px\)/);
+assert.match(html,/data-cdc-subject-key="mathematics"/);
 console.log('Real registry spellings, local subjects and IEMIS-coded subject labels passed');
 // Standalone assessment route is a sibling of Marks Entry and requires no marks or exams.
 assert.match(html,/<summary>[^\n]*Manage Exam<\/summary>[^\n]*data-page="cdc-assessment"/);
@@ -422,6 +436,8 @@ await field('gridRead').onclick();
 assert.match(field('gridStatus').textContent,/अनुमति छैन/);
 assert.equal(field('gridRead').disabled,false);
 assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,0);
+assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-date]').length,12);
+assert.ok([...field('annexRows').querySelectorAll('[data-cdc-grid-date],[data-cdc-grid-rating]')].every(input=>input.disabled));
 w.getDocsFromServer=normalGetDocs;
 await field('gridRead').onclick();
 assert.match(field('gridStatus').textContent,/Entry तयार छ/);
@@ -430,7 +446,11 @@ assert.match(gridRow.querySelector('[data-cdc-grid-edit="regular"]').textContent
 assert.equal(gridRow.querySelector('[role="button"]').getAttribute('aria-label'),'मिति भर्नुहोस्');
 const gridCount=observations.size;
 assert.equal(field('period').value,'Annual');
-gridRow.querySelector('[role="button"]').click();
+const visibleDate=gridRow.querySelector('[data-cdc-grid-date="regular"]'),visibleRating=gridRow.querySelector('[data-cdc-grid-rating="regular"]');
+assert.equal(visibleDate.disabled,false);assert.equal(visibleRating.disabled,false);
+assert.deepEqual([...visibleRating.options].map(o=>o.value),['','1','2','3','4']);
+visibleRating.value='3';visibleRating.onchange();
+assert.equal(gridRow.querySelector('[data-cdc-grid-editor="level"]').value,'3');
 assert.equal(gridRow.querySelector('[data-cdc-grid-editor="date"]').value,'2083-08-07');
 assert.equal(field('printForm').disabled,true);
 gridRow.querySelector('[data-cdc-grid-editor="level"]').value='3';
@@ -505,6 +525,13 @@ assert.doesNotMatch(annualDoc.body.textContent,/Synthetic remark/);
 assert.equal(annualDoc.querySelectorAll('input,select,button,textarea').length,0);
 saveSyntheticPrint('cdc-annual',annualMarkup);
 assert.equal(field('legacyPeriod').hidden,true);
+assert.equal(field('legacyPeriod').style.display,'none');
+assert.equal(field('workspaceTitle').hidden,true);
+assert.equal(field('moreOptions').open,false);
+for(const name of ['extraReference','extraObservations','extraManual','extraRecords','extraActions'])assert.ok(field('moreOptions').contains(field(name)));
+assert.ok(!field('moreOptions').contains(field('subjectSummaryPanel')));
+assert.ok(field('student').parentElement.contains(field('next')));
+
 assert.equal(field('period').value,'Annual');
 assert.equal(field('sessionYear').textContent,'2083');
 choice('unit','क्षेत्र १ — कविता (गीत/देशप्रेम)');
@@ -657,7 +684,7 @@ assert.equal(field('outcomePicker').options.length,4);
 assert.equal(field('printForm').disabled,true);
 await field('gridRead').onclick();
 const legacyRow=field('annexRows').rows[0];
-legacyRow.querySelector('[data-cdc-grid-edit="regular"]').click();
+legacyRow.querySelector('[data-cdc-grid-date="regular"]').focus();
 legacyRow.querySelector('[data-cdc-grid-editor="level"]').value='3';
 legacyRow.querySelector('[data-cdc-grid-editor="remarks"]').value='Clock observation';
 await legacyRow.querySelector('[data-cdc-grid-save="regular"]').onclick();
@@ -743,6 +770,16 @@ current.subjectAssignments=[{className:'Class 2',subject:'Mathematics',section:'
 serverRole={...current};
 w.getDocs=async()=>({docs:[{id:'math-2',data:()=>({class:'Class 2',section:'A',name:'Synthetic grade 2'})}]});
 await w.loadCdcAssessmentPage();
+// All available form themes are selectable; older curricular labels never silently blank the workspace.
+const math2Options=[...field('themePick').options].slice(1);
+assert.equal(math2Options.filter(o=>!o.text.includes('Curriculum')).length,8);
+assert.equal(math2Options.filter(o=>o.text.includes('Curriculum')).length,3);
+field('themePick').value='ज्यामिति';await field('themePick').onchange();
+assert.equal(field('themeEntryHelp').hidden,false);
+assert.equal(field('extraObservations').open,true);
+assert.ok(field('outcomePicker').options.length>1);
+field('themePick').value='';await field('themePick').onchange();
+assert.equal(field('themeEntryHelp').hidden,true);
 for(const [unit,count,page] of [['मेरो सिर्जना',3,149],['सञ्चार प्रविधि र बजार',4,150],['हाम्रो विद्यालय',5,147],['सङ्ख्याको ज्ञान',4,151],['गणितका आधारभूत क्रिया',4,152]]){
  choice('unit',unit);
  assert.equal(field('annex3').hidden,false);
@@ -789,6 +826,21 @@ for(const [grade,unit,count,page] of [
  assert.match(field('annexStatus').textContent,new RegExp(String(page)));
  assert.match(field('annexHead').textContent,grade==='1'?/कैफियत/:/साधन/);
 }
+// Class 1–3 math: every actual form is a selectable theme with its real outcome count.
+for(const grade of ['1','2','3']){
+ current.subjectAssignments=[{className:'Class '+grade,subject:'Mathematics',section:'A'}];serverRole={...current};
+ w.getDocs=async()=>({docs:[{id:'math-'+grade,data:()=>({class:'Class '+grade,section:'A',name:'Synthetic grade '+grade})}]});
+ await w.loadCdcAssessmentPage();
+ for(const [key,form] of Object.entries(legacyForms).filter(([key])=>key.startsWith(grade+':'))){
+   const unit=key.slice(2);
+   assert.ok([...field('themePick').options].some(o=>o.value===unit),grade+unit);
+   choice('unit',unit);
+   assert.equal(field('annex3').hidden,false,grade+unit);
+   assert.equal(field('themeEntryHelp').hidden,true,grade+unit);
+   assert.equal(field('annexRows').rows.length,form.rows.length*4,grade+unit);
+   assert.equal(field('outcomePicker').options.length,form.rows.length+1,grade+unit);
+ }
+}
 assert.equal(Object.keys(legacyForms).length,20);
 assert.equal(Object.values(legacyForms).reduce((n,f)=>n+f.rows.length,0),87);
 assert.ok(Object.values(legacyForms).every(f=>f.rows.every(r=>r.criteria.length===4)));
@@ -814,7 +866,8 @@ for(const [unit,count,page,editable] of [
  assert.match(field('annexStatus').textContent,new RegExp(String(page)));
  assert.equal(field('gridRead').hidden,!editable);
  assert.equal(field('printForm').disabled,true);
- assert.equal(field('annexRows').querySelectorAll('button,input,select,textarea').length,0);
+ assert.equal(field('annexRows').querySelectorAll('button').length,0);
+ assert.ok([...field('annexRows').querySelectorAll('input,select')].every(control=>control.disabled));
  const titles=[...field('outcomePicker').options].slice(1).map(o=>o.value);
  assert.equal(titles.length,count,unit);
  assert.equal(new Set(titles).size,count,unit);
@@ -855,7 +908,8 @@ choice('unit','मेरो विद्यालय');
 assert.equal(field('unit').value,'हाम्रो विद्यालय');
 assert.equal(field('annexUnit').textContent,'मेरो विद्यालय');
 assert.match(field('annexRows').rows[3].cells[0].textContent,/^ऐ, ओ, औ/);
-assert.equal(field('annexRows').querySelectorAll('button,input,select,textarea').length,0);
+assert.equal(field('annexRows').querySelectorAll('button').length,0);
+ assert.ok([...field('annexRows').querySelectorAll('input,select')].every(control=>control.disabled));
 const oldSchoolTopic='ए, ओ, औ, अं र अः स्वर वर्ण चिन्ने र उच्चारण गर्ने';
 const newSchoolTopic='ऐ, ओ, औ, अं र अः स्वर वर्ण चिन्ने र उच्चारण गर्ने';
 const oldKey='cdc_observations/synthetic-legacy-nepali-school';
@@ -1383,6 +1437,28 @@ assert.equal(seroControls('date')[0].value,'2083-08-07');
 assert.equal(seroControls('used-tool')[0].value,'');
 assert.equal(seroControls('used-tool',1)[0].value,'परीक्षण साधन: समूह छलफल');
 assert.equal(field('printForm').disabled,false);
+// Existing active Class 1 indicator records must appear in the subject report,
+// without opening the pending source catalogue or mixing students/themes.
+const beforeSummaryRead=w.getDocsFromServer;
+w.getDocsFromServer=async ({name,filters})=>{
+ const scope=Object.fromEntries(filters.map(([k,,v])=>[k,v]));
+ assert.equal(name,'cdc_serofero_indicators');assert.equal(scope.studentId,'sero-1');
+ assert.equal(scope.academicYear,'2083');assert.equal(scope.section,'A');
+ return {docs:[...binaryRecords.values()].filter(r=>Object.entries(scope).every(([k,v])=>r[k]===v)).map(r=>({data:()=>r}))};
+};
+await field('readSubjectSummary').onclick();
+const familySummary=field('subjectSummaryRows').rows[0];
+assert.equal(familySummary.dataset.cdcSummaryAssessed,'1');
+assert.equal(familySummary.cells[4].textContent,'—','Incomplete theme must not receive a final mark');
+for(const row of [...field('subjectSummaryRows').rows].slice(3))assert.equal(row.cells[4].textContent,'—');
+assert.ok(w.cdcSeroSavedReportForm('1','म र मेरो परिवार','2083'));
+assert.ok(w.cdcSeroSavedReportForm('1','मेरो दैनिक जीवन','2083'));
+assert.ok(w.cdcSeroSavedReportForm('1','हाम्रो समुदाय','2083'));
+assert.equal(w.cdcSeroSavedReportForm('1','हाम्रो विद्यालय','2083'),null);
+assert.equal(w.cdcSeroSavedReportForm('2','म र मेरो परिवार','2083'),null);
+assert.equal(w.cdcSeroSavedReportForm('1','म र मेरो परिवार','2084'),null);
+w.getDocsFromServer=beforeSummaryRead;
+console.log('Existing Grade 1 indicator evidence included in summary; unapproved source and year remain blocked');
 let seroMarkup='',seroPrintCount=0;
 w.open=()=>({document:{open(){},write(markup){seroMarkup=markup;},close(){}},focus(){},print(){seroPrintCount++;}});
 fill(0,['no','no','no','no'],'2083-08-09');
@@ -1679,6 +1755,232 @@ assert.equal(field('annex3').hidden,true);
 assert.equal(field('seroSourcePreview').hidden,true);
 assert.equal(field('seroSourceFrame').children.length,0);
 console.log('Grade 1 Our Surroundings three forms, 48 indicators, scoped binary Save/Load, saved-only print, seven original-guide review forms, duplicate and revoked-role checks passed');
+// Admin can enter the official form without a teacher role document.
+w.isAdmin=()=>true;current.roles=['admin'];current.subjectAssignments=[];
+w.auth.currentUser.uid='synthetic-admin';w.currentSchoolSettings.academicYear='2083';
+w.getDocs=async name=>({docs:name==='students'?[{id:'admin-student',data:()=>({class:'Class 5',section:'B',name:'Synthetic Admin Student'})}]:[{id:'admin-class',data:()=>({className:'Class 5',subject:'Nepali'})}]});
+w.getDocsFromServer=async()=>({docs:[]});
+w.getDocFromServer=async()=>{throw Error('Admin has no teacher role document');};
+let adminSaved;
+w.setDoc=async(ref,data)=>{adminSaved=data;};
+await w.loadCdcAssessmentPage();
+choice('class','5');choice('subject','Nepali');choice('student','admin-student');
+choice('unit','क्षेत्र १ — कविता (गीत/देशप्रेम)');
+await field('gridRead').onclick();
+assert.equal(field('accessNotice').hidden,true);
+const adminRow=field('annexRows').rows[0];
+assert.equal(adminRow.querySelector('[data-cdc-grid-date="regular"]').disabled,false);
+adminRow.querySelector('[data-cdc-grid-edit="regular"]').click();
+adminRow.querySelector('[data-cdc-grid-editor="level"]').value='3';
+await adminRow.querySelector('[data-cdc-grid-save="regular"]').onclick();
+assert.equal(adminSaved?.createdBy,'synthetic-admin');
+assert.equal(adminSaved?.studentId,'admin-student');
+assert.equal(adminSaved?.section,'B');
+assert.equal(adminSaved?.level,3);
+console.log('Admin direct CDC form entry and save without teacher assignment passed');
+// Batch print must use the same saved-only renderer and restore the selection.
+w.getDocs=async name=>({docs:name==='students'?[{id:'batch-one',data:()=>({class:'Class 5',section:'A',name:'Batch One'})},{id:'batch-two',data:()=>({class:'Class 5',section:'B',name:'Batch Two'})}]:[{id:'batch-class',data:()=>({className:'Class 5',subject:'Nepali'})}]});
+w.getDocsFromServer=async()=>({docs:[]});
+await w.loadCdcAssessmentPage();choice('class','5');choice('subject','Nepali');choice('student','batch-two');
+choice('unit','क्षेत्र १ — कविता (गीत/देशप्रेम)');
+w.confirm=()=>true;let batchMarkup='',batchPrinted=0,batchClosed=0;
+w.open=()=>({document:{open(){},write(value){batchMarkup=value;},close(){}},focus(){},print(){batchPrinted++;},close(){batchClosed++;}});
+assert.equal(field('printAll').disabled,false);
+await field('printAll').onclick();
+assert.equal(batchPrinted,1);assert.equal(field('student').value,'batch-two');
+saveSyntheticPrint('cdc-batch',batchMarkup);
+const batchDoc=new JSDOM(batchMarkup).window.document;
+const pages=[...batchDoc.querySelectorAll('.cdc-pupil')];
+assert.equal(pages.length,2);
+assert.match(pages[0].textContent,/Batch One/);assert.doesNotMatch(pages[0].textContent,/Batch Two/);
+assert.match(pages[1].textContent,/Batch Two/);assert.doesNotMatch(pages[1].textContent,/Batch One/);
+assert.equal(pages[0].querySelectorAll('tbody tr').length,pages[1].querySelectorAll('tbody tr').length);
+assert.equal(batchDoc.querySelectorAll('input,select,button').length,0);
+assert.match(batchDoc.head.textContent,/@page\{size:A4 landscape/);
+w.getDocsFromServer=async()=>{if(field('student').value==='batch-two')throw Error('Read failed');return {docs:[]};};
+await field('printAll').onclick();
+assert.equal(batchPrinted,1);assert.equal(batchClosed,1);assert.equal(field('student').value,'batch-two');
+console.log('All-students A4 batch PDF: same form, isolated pupils, no partial output on read failure');
+// Native Office files preserve the same student pages and row/column spans.
+w.TextEncoder=TextEncoder;
+const zipEntries=bytes=>{
+ const data=Buffer.from(bytes),entries={};let p=0;
+ while(data.readUInt32LE(p)===0x04034b50){
+   const size=data.readUInt32LE(p+18),nameLen=data.readUInt16LE(p+26),extra=data.readUInt16LE(p+28);
+   const name=data.subarray(p+30,p+30+nameLen).toString('utf8'),start=p+30+nameLen+extra;
+   entries[name]=data.subarray(start,start+size).toString('utf8');p=start+size;
+ }
+ assert.equal(data.readUInt32LE(p),0x02014b50);
+ return entries;
+};
+const saveSyntheticOffice=(name,doc,format)=>{if(process.env.SMSS_CDC_PRINT_DIR)writeFileSync(join(process.env.SMSS_CDC_PRINT_DIR,name+'.'+format),Buffer.from(w.cdcOfficeExport(doc,format)));};
+for(const format of ['docx','xlsx'])saveSyntheticOffice('cdc-batch',batchDoc,format);
+const wordFile=zipEntries(w.cdcOfficeExport(batchDoc,'docx'));
+assert.match(wordFile['word/document.xml'],/w:orient="landscape"/);
+assert.match(wordFile['word/document.xml'],/w:br w:type="page"/);
+assert.match(wordFile['word/document.xml'],/Batch One/);
+assert.match(wordFile['word/document.xml'],/Batch Two/);
+assert.match(wordFile['word/document.xml'],/w:gridSpan/);
+const excelFile=zipEntries(w.cdcOfficeExport(batchDoc,'xlsx'));
+assert.match(excelFile['xl/workbook.xml'],/Student 2/);
+assert.match(excelFile['xl/worksheets/sheet1.xml'],/Batch One/);
+assert.doesNotMatch(excelFile['xl/worksheets/sheet1.xml'],/Batch Two/);
+assert.match(excelFile['xl/worksheets/sheet2.xml'],/Batch Two/);
+assert.match(excelFile['xl/worksheets/sheet1.xml'],/paperSize="9" orientation="landscape"/);
+assert.match(excelFile['xl/worksheets/sheet1.xml'],/mergeCell/);
+const sample=new JSDOM('<table><tr><td rowspan="2">नेपाली &amp; =1+1</td><td colspan="2">Header</td></tr><tr><td>A</td><td>B</td></tr></table>').window.document;
+const wordSpan=zipEntries(w.cdcOfficeExport(sample,'docx'))['word/document.xml'];
+assert.match(wordSpan,/w:vMerge w:val="restart"/);assert.match(wordSpan,/<w:vMerge\/>/);
+assert.match(wordSpan,/नेपाली &amp; =1\+1/);
+const excelSpan=zipEntries(w.cdcOfficeExport(sample,'xlsx'))['xl/worksheets/sheet1.xml'];
+assert.match(excelSpan,/A1:A2/);assert.match(excelSpan,/B1:C1/);assert.doesNotMatch(excelSpan,/<f>/);
+for(const file of [...Object.values(wordFile),...Object.values(excelFile)]){
+  assert.equal(new w.DOMParser().parseFromString(file,'application/xml').querySelector('parsererror'),null);
+}
+w.getDocsFromServer=async()=>({docs:[]});
+const officeDownloads=[];
+w.cdcDownloadOffice=(doc,format,filename)=>{officeDownloads.push({format,filename,entries:zipEntries(w.cdcOfficeExport(doc,format))});};
+field('exportFormat').value='docx';await field('printAll').onclick();
+assert.equal(officeDownloads.length,1);assert.equal(officeDownloads[0].format,'docx');
+field('exportFormat').value='xlsx';await field('printAll').onclick();
+assert.equal(officeDownloads.length,2);assert.ok(officeDownloads[1].entries['xl/worksheets/sheet2.xml']);
+field('printForm').onclick();assert.equal(officeDownloads.length,3);assert.ok(!officeDownloads[2].entries['xl/worksheets/sheet2.xml']);
+assert.equal(field('student').value,'batch-two');
+console.log('Native Word and Excel: valid XML, A4, spans, saved-only student isolation, single and batch paths');
+await field('portfolioRead').onclick();
+assert.equal(field('portfolioExport').disabled,false,field('portfolioStatus').textContent);
+assert.equal(field('student').value,'batch-two');
+assert.match(field('portfolioPreview').textContent,/Batch Two/);
+assert.doesNotMatch(field('portfolioPreview').textContent,/Batch One/);
+assert.ok(field('portfolioPreview').querySelectorAll('table').length>1);
+assert.ok(field('portfolioPreview').querySelector('[data-page-orientation="portrait"]'));
+field('portfolioFormat').value='docx';await field('portfolioExport').onclick();
+assert.match(officeDownloads.at(-1).entries['word/document.xml'],/w:orient="portrait"/);
+assert.match(officeDownloads.at(-1).entries['word/document.xml'],/w:orient="landscape"/);
+assert.match(officeDownloads.at(-1).entries['word/document.xml'],/Batch Two/);
+field('portfolioFormat').value='xlsx';await field('portfolioExport').onclick();
+assert.ok(Object.values(officeDownloads.at(-1).entries).some(x=>x.includes('orientation="portrait"')));
+field('portfolioFormat').value='pdf';await field('portfolioExport').onclick();
+assert.match(batchMarkup,/CDC Student Portfolio/);
+saveSyntheticPrint('cdc-portfolio',batchMarkup);
+const portfolioDoc=new JSDOM(batchMarkup).window.document;
+for(const format of ['docx','xlsx'])saveSyntheticOffice('cdc-portfolio',portfolioDoc,format);
+choice('student','batch-one');
+assert.equal(field('portfolioExport').disabled,true);
+assert.equal(field('portfolioPreview').children.length,0);
+console.log('Portfolio preview and three export formats, mixed A4 orientation, selection invalidation passed');
+// CDC 2076 Annex 2: all three lower grades use the original four columns,
+// five subjects, annual hours and separate six-level achievement conversion.
+assert.deepEqual([0,29.99,30,44.99,45,59.99,60,74.99,75,89.99,90,100].map(w.cdcLower2076Grade),['E','E','D','D','C','C','B','B','A','A','A*','A*']);
+for(const grade of ['1','2','3']){
+ w.getDocs=async name=>({docs:name==='students'?[{id:'lower-'+grade,data:()=>({class:'Class '+grade,section:'A',name:'Lower Student '+grade})}]:[{id:'lower-class',data:()=>({className:'Class '+grade,subject:'Nepali'})}]});
+ w.getDocsFromServer=async()=>({docs:[]});
+ await w.loadCdcAssessmentPage();choice('class',grade);choice('subject','Nepali');choice('student','lower-'+grade);
+ assert.equal(field('annualProgress').hidden,false);
+ await field('readProgress').onclick();
+ assert.equal(field('annualHead').cells.length,4);
+ assert.equal(field('annualRows').rows.length,5);
+ assert.deepEqual([...field('annualRows').rows].map(row=>Number(row.cells[2].textContent)),[160,128,128,256,160]);
+ assert.ok([...field('annualRows').rows].every(row=>row.cells[3].textContent==='—'));
+ field('annualFormat').value='pdf';field('printProgress').onclick();
+ saveSyntheticPrint('cdc-annual-'+grade,batchMarkup);
+ const lowerDoc=new JSDOM(batchMarkup).window.document;
+ for(const format of ['docx','xlsx'])saveSyntheticOffice('cdc-annual-'+grade,lowerDoc,format);
+ assert.match(lowerDoc.body.textContent,/अनुसूची २/);
+ assert.match(lowerDoc.body.textContent,new RegExp('Lower Student '+grade));
+ assert.equal(lowerDoc.querySelectorAll('thead th').length,4);
+ assert.equal(lowerDoc.querySelectorAll('tbody tr').length,5);
+ field('annualFormat').value='docx';field('printProgress').onclick();
+ assert.match(officeDownloads.at(-1).entries['word/document.xml'],/w:orient="portrait"/);
+ field('annualFormat').value='xlsx';field('printProgress').onclick();
+ assert.match(officeDownloads.at(-1).entries['xl/worksheets/sheet1.xml'],/orientation="portrait"/);
+ await field('portfolioRead').onclick();
+ assert.equal(field('portfolioExport').disabled,false,field('portfolioStatus').textContent);
+ assert.ok(field('portfolioPreview').querySelector('[data-page-orientation="portrait"]'));
+}
+console.log('Grades 1–3 CDC 2076 Annex 2 annual report and portfolio PDF Word Excel regression');
+// Audit every grade and national subject against the actual form catalogue.
+{
+ const auditStart=html.indexOf('const cdcCoreSubjects =');
+ const auditEnd=html.indexOf('function cdcStoredObservation',auditStart);
+ const auditTailStart=html.indexOf('const cdcSeroferoCurriculumCounts=');
+ const auditTailEnd=html.indexOf('function cdcThemeMarkRows',auditTailStart);
+ const audit=new Function('globalThis',html.slice(auditStart,auditEnd)+html.slice(auditTailStart,auditTailEnd)+';return {cdcEntryThemeOptions,cdcVerifiedOutcomes,cdcLegacyMathRubrics,cdcPrimaryNepaliForms,cdcNepaliThemeForms,cdcPrimaryEnglishForms,cdcPrimarySubjects,cdcUpperPrimarySubjects};')({SmssIemisTransfer:w.SmssIemisTransfer});
+ for(const grade of ['1','2','3','4','5']){
+   const lower=Number(grade)<=3;
+   for(const [subject] of lower?audit.cdcPrimarySubjects:audit.cdcUpperPrimarySubjects){
+     const entries=audit.cdcEntryThemeOptions(grade,subject,'2083'),keys=entries.map(x=>x.unit),forms=entries.filter(x=>x.kind==='form').map(x=>x.unit);
+     assert.equal(new Set(keys).size,keys.length,grade+':'+subject);
+     if(subject==='hamrodhunibeshi'){assert.equal(keys.length,0);continue;}
+     assert.ok(keys.length,grade+':'+subject);
+     if(!lower){assert.deepEqual(new Set(forms),new Set(audit.cdcVerifiedOutcomes[grade+':'+subject].map(row=>row[0])));continue;}
+     if(subject==='mathematics'){
+       assert.equal(forms.length,{'1':6,'2':8,'3':6}[grade]);
+       assert.ok(forms.every(unit=>audit.cdcLegacyMathRubrics[grade+':'+unit].rows.length>0));
+       assert.deepEqual(new Set(forms),new Set(Object.keys(audit.cdcLegacyMathRubrics).filter(k=>k.startsWith(grade+':')).map(k=>k.slice(2))));
+     }
+     if(subject==='nepali')assert.deepEqual(new Set(forms),new Set(Object.keys(grade==='1'?audit.cdcPrimaryNepaliForms:audit.cdcNepaliThemeForms[grade])));
+     if(subject==='english')assert.deepEqual(new Set(forms),new Set(Object.keys(audit.cdcPrimaryEnglishForms[grade])));
+     if(subject==='serophero')assert.equal(keys.length,10);
+     assert.ok(entries.slice(0,forms.length).every(x=>x.kind==='form')||subject==='serophero');
+   }
+ }
+ console.log('Grades 1–5 CDC theme coverage: exact form keys, legacy curriculum separation and local source boundary passed');
+}
+// School-wide read-only coverage and reporting: current-year unique evidence,
+// not final grades; exclude other students, classes, sections and invalid scores.
+{
+const reportPupils=[{id:'r1',class:'Class 1',section:'A',name:'Report One'},{id:'r2',class:'Class 1',section:'B',name:'Report Two'},{id:'r5',class:'Class 5',section:'A',name:'Report Five'},{id:'old',class:'Class 6',section:'A'},{id:'inactive',class:'Class 1',active:false}];
+const evidence={studentId:'r1',className:'Class 1',section:'A',academicYear:'2083',subject:'Nepali',unit:'Unit',topic:'Outcome',level:3};
+const indicators={studentId:'r5',className:'Class 5',section:'A',academicYear:'2083',subject:'Our Surroundings',unit:'Unit',outcomeId:'block',indicators:[true,true,false,true]};
+const coverage=w.cdcCoverageModel(reportPupils,[evidence,{...evidence,stage:'support'},{...evidence,studentId:'r2'},{...evidence,academicYear:'2082'},{...evidence,studentId:'r5',className:'Class 5',topic:'Five',level:4},{...evidence,studentId:'r2',section:'B',level:0}],[indicators,{...indicators,studentId:'r1',className:'Class 1',section:'A'}],'2083');
+assert.deepEqual(JSON.parse(JSON.stringify(coverage.groups.map(g=>[g.students,g.observed,g.items]))),[[2,1,2],[0,0,0],[0,0,0],[0,0,0],[1,1,1]]);
+const coverageReport=w.cdcCoveragePrint({...coverage,year:'2083'},'1');
+assert.match(coverageReport.body.textContent,/Report One/);
+assert.match(coverageReport.body.textContent,/Report Two/);
+assert.doesNotMatch(coverageReport.body.textContent,/Report Five/);
+assert.equal(coverageReport.querySelectorAll('tbody tr').length,2);
+assert.ok(zipEntries(w.cdcOfficeExport(coverageReport,'xlsx'))['xl/worksheets/sheet1.xml']);
+assert.ok(zipEntries(w.cdcOfficeExport(coverageReport,'docx'))['word/document.xml']);
+const reportHub=w.document.createElement('div');reportHub.id='cdcReportHub';w.document.body.append(reportHub);
+const reportDetail=w.document.createElement('div');reportDetail.id='cdcReportDetail';w.document.body.append(reportDetail);
+let coverageReads=0;
+w.getDocsFromServer=async q=>{
+ coverageReads++;
+ if(q==='students')return {docs:reportPupils.map(p=>({id:p.id,data:()=>p}))};
+ assert.equal(q.filters[0][0],'academicYear');assert.equal(q.filters[0][2],'2083');
+ return {docs:(q.name==='cdc_observations'?[evidence]:[]).map(r=>({data:()=>r}))};
+};
+await w.loadCdcReportHub();
+const hubField=n=>reportHub.querySelector('[data-cdc-hub="'+n+'"]');
+assert.equal(coverageReads,3);
+assert.equal(hubField('preview').querySelectorAll('tbody tr').length,5);
+hubField('grade').value='1';hubField('grade').onchange();
+assert.equal(hubField('student').options.length,3);
+assert.equal(hubField('preview').querySelectorAll('tbody tr').length,2);
+hubField('format').value='xlsx';hubField('export').onclick();
+assert.match(officeDownloads.at(-1).entries['xl/worksheets/sheet1.xml'],/Report One/);
+assert.doesNotMatch(officeDownloads.at(-1).entries['xl/worksheets/sheet1.xml'],/Report Five/);
+const dash=w.document.createElement('section');dash.id='cdcDashboardPanel';dash.innerHTML='<div id="cdcDashboardAnalytics"></div><p id="cdcDashboardStatus"></p><button id="cdcDashboardRefresh"></button>';w.document.body.append(dash);
+await w.loadCdcDashboardOverview();assert.equal(coverageReads,3);assert.equal(dash.querySelectorAll('.analytics-bar-item').length,5);
+w.getDocs=async name=>({docs:name==='students'?reportPupils.map(p=>({id:p.id,data:()=>p})):[{id:'registry',data:()=>({className:'Class 1',subject:'Nepali'})}]});
+hubField('student').value='r1';hubField('student').onchange();await hubField('view').onclick();
+assert.equal(reportDetail.querySelector('[data-cdc="student"]').value,'r1');
+assert.equal(reportDetail.querySelector('[data-cdc="accessNotice"]').hidden,false);
+assert.equal(reportDetail.querySelector('[data-cdc="save"]').disabled,true);
+assert.ok(reportDetail.querySelector('[data-cdc="portfolioPanel"]'));
+const readsBeforeDenied=coverageReads;
+w.isAdmin=()=>false;current.roles=['subject_teacher'];current.active=true;
+await w.loadCdcDashboardOverview();assert.equal(dash.hidden,true);assert.equal(coverageReads,readsBeforeDenied);
+assert.equal(w.cdcSchoolReportAccess(),false);
+assert.equal(dash.querySelectorAll('.analytics-bar-item').length,0);
+w.isAdmin=()=>true;current.roles=['admin'];
+w.clearCdcCoverageCache();
+const readsAfterReset=coverageReads;
+await w.loadCdcDashboardOverview();assert.equal(coverageReads,readsAfterReset+3);
+reportHub.remove();reportDetail.remove();dash.remove();
+console.log('CDC dashboard and report hub: current-year coverage, deduplication, cached reads, export, admin read-only drill-down and role isolation passed');
+}
 // CDC backup: verify legacy and new exports in an isolated synthetic DOM.
 // Assessment evidence must never be replayed through ordinary client restore.
 const backupDom=new JSDOM('<div id="restoreFirebaseMessage"></div><pre id="restorePreview"></pre><input id="restoreBackupFile" type="file"><button id="runFirebaseRestore"></button>',{runScripts:'outside-only'});

@@ -7,7 +7,9 @@ for(const id of ['connect','login','logout','work','term','create','refresh','te
 assert.match(html,/id="refresh"[^>]*disabled/);
 assert.match(consoleCode,/verifySchoolSession/);
 assert.match(consoleCode,/async function reverifyAdmin\(/);
-assert.match(consoleCode,/await reverifyAdmin\(\);const snap=/);
+assert.match(consoleCode,/await reverifyAdmin\(\);\s*const snap=await api\.getDocs\(api\.collection\(db,'schools',requested,'exams'\)\)/);
+assert.match(consoleCode,/await reverifyAdmin\(\);\s*if\(current!==epoch\|\|schoolId!==requested\|\|auth\?\.currentUser\?\.uid!==uid\)return;\s*const \{configured,history\}=partitionSchoolExams/);
+assert.match(html,/id="history"/);
 assert.match(consoleCode,/await reverifyAdmin\(\);const result=/);
 assert.match(consoleCode,/createSchoolExamTerm/);
 assert.match(consoleCode,/connectSchoolFirebase/);assert.match(read('school-firebase-client.mjs'),/browserSessionPersistence/);

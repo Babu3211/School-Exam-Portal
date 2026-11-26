@@ -375,9 +375,9 @@ service cloud.firestore {
 
     function canWriteCdcObservation(data) {
       let student = get(/databases/$(database)/documents/students/$(data.studentId)).data;
-      return !isAdmin() && !isViewer() &&
-        hasRole('subject_teacher') &&
-        teacherSubjectAccess(data.className, data.subject, data.section) &&
+      return !isViewer() &&
+        (isAdmin() || (hasRole('subject_teacher') &&
+          teacherSubjectAccess(data.className, data.subject, data.section))) &&
         studentBelongsToClass(data.studentId, data.className) &&
         student.get('section', '') == data.section;
     }

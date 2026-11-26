@@ -97,10 +97,12 @@ jobs:
           # Dedicated primary assessment follow-up: exact tests and source register only.
           if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-cdc-continuous-year':
             allowed.update({'scripts/test-firestore-rules.mjs','scripts/test-cdc-assignment.mjs'})
-          if os.environ.get('GITHUB_HEAD_REF') in ('fix/v46-cdc-simple-teacher-form','fix/v46-cdc-entry-visible'):
+          if os.environ.get('GITHUB_HEAD_REF') in ('fix/v46-cdc-simple-teacher-form','fix/v46-cdc-entry-visible','fix/v46-cdc-direct-date-rating'):
             allowed.add('scripts/test-cdc-assignment.mjs')
           if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-cdc-assessment-official-forms':
             allowed.update({'scripts/test-cdc-assignment.mjs','scripts/test-firestore-rules.mjs','docs/cdc-assessment-reference-sources.md'})
+          if os.environ.get('GITHUB_HEAD_REF') in ('fix/v46-cdc-admin-direct-entry','fix/v46-cdc-all-students-pdf','feat/v46-cdc-assessment-report-hub','fix/v46-cdc-theme-entry-coverage'):
+            allowed.update({'scripts/test-cdc-assignment.mjs','scripts/test-firestore-rules.mjs'})
           # Exact file scope for the school-approved question-paper integration PR.
           # This does not permit dashboard, IEMIS, Android or Firestore changes.
           if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-question-autogen-grid-safe-2083':
@@ -263,7 +265,7 @@ jobs:
           npm run test:rules
           npx firebase emulators:exec --only firestore --project smss-v45-activity-test 'node scripts/test-user-activity-rules.mjs'
       - name: Render and verify synthetic A4 Grade Sheet
-        if: github.head_ref == 'fix/iemis-class6-2083-term-sheets' || (github.head_ref == 'feat/v46-cdc-assessment-official-forms' || (github.head_ref == 'fix/v46-cdc-simple-teacher-form' || (github.head_ref == 'fix/v46-cdc-entry-visible' || github.head_ref == 'feat/v46-cdc-continuous-year')))
+        if: github.head_ref == 'fix/iemis-class6-2083-term-sheets' || (github.head_ref == 'feat/v46-cdc-assessment-official-forms' || (github.head_ref == 'fix/v46-cdc-simple-teacher-form' || (github.head_ref == 'fix/v46-cdc-entry-visible' || github.head_ref == 'feat/v46-cdc-continuous-year' || github.head_ref == 'fix/v46-cdc-direct-date-rating')))
         run: |
           mkdir -p "$RUNNER_TEMP/smss-print"
           report="$RUNNER_TEMP/smss-print"
@@ -289,7 +291,7 @@ jobs:
           grep -Fq "32 HOURS" "$report/secondary.txt"
           grep -Fq "COMPUTER SCIENCE" "$report/secondary.txt"
       - name: Save synthetic Grade Sheet for visual review
-        if: always() && (github.head_ref == 'fix/iemis-class6-2083-term-sheets' || (github.head_ref == 'feat/v46-cdc-assessment-official-forms' || (github.head_ref == 'fix/v46-cdc-simple-teacher-form' || (github.head_ref == 'fix/v46-cdc-entry-visible' || github.head_ref == 'feat/v46-cdc-continuous-year'))))
+        if: always() && (github.head_ref == 'fix/iemis-class6-2083-term-sheets' || (github.head_ref == 'feat/v46-cdc-assessment-official-forms' || (github.head_ref == 'fix/v46-cdc-simple-teacher-form' || (github.head_ref == 'fix/v46-cdc-entry-visible' || github.head_ref == 'feat/v46-cdc-continuous-year' || github.head_ref == 'fix/v46-cdc-direct-date-rating'))))
         uses: actions/upload-artifact@v4
         with:
           name: smss-synthetic-a4-grade-sheet
@@ -303,7 +305,7 @@ jobs:
             ${{ runner.temp }}/smss-print/*-info.txt
           retention-days: 7
       - name: Render and verify synthetic CDC assessment PDFs
-        if: (github.head_ref == 'feat/v46-cdc-assessment-official-forms' || (github.head_ref == 'fix/v46-cdc-simple-teacher-form' || (github.head_ref == 'fix/v46-cdc-entry-visible' || github.head_ref == 'feat/v46-cdc-continuous-year')))
+        if: (github.head_ref == 'fix/v46-cdc-all-students-pdf' || github.head_ref == 'feat/v46-cdc-assessment-report-hub' || github.head_ref == 'fix/v46-cdc-theme-entry-coverage') || (github.head_ref == 'feat/v46-cdc-assessment-official-forms' || (github.head_ref == 'fix/v46-cdc-simple-teacher-form' || (github.head_ref == 'fix/v46-cdc-entry-visible' || github.head_ref == 'feat/v46-cdc-continuous-year' || github.head_ref == 'fix/v46-cdc-direct-date-rating')))
         run: |
           set -euo pipefail
           report="$RUNNER_TEMP/smss-cdc-print"
@@ -334,8 +336,78 @@ jobs:
           done
           grep -Fq 'Primary' "$report/cdc-annual.txt"
           grep -Fq 'Grade 3 synthetic' "$report/cdc-math.txt"
+      - name: Verify batch and Grades 1–3 A4 reports and native Office files
+        if: (github.head_ref == 'fix/v46-cdc-all-students-pdf' || github.head_ref == 'feat/v46-cdc-assessment-report-hub' || github.head_ref == 'fix/v46-cdc-theme-entry-coverage')
+        run: |
+          set -euo pipefail
+          report="$RUNNER_TEMP/smss-cdc-print"
+          for fixture in cdc-batch cdc-portfolio cdc-annual-1 cdc-annual-2 cdc-annual-3; do
+            test -s "$report/$fixture.html"
+            google-chrome --headless --no-sandbox --disable-gpu --no-pdf-header-footer \
+              --print-to-pdf="$report/$fixture.pdf" "file://$report/$fixture.html"
+            pdfinfo "$report/$fixture.pdf" | tee "$report/$fixture-info.txt"
+            count=$(awk '/^Pages:/{print $2}' "$report/$fixture-info.txt")
+            pdfinfo -f 1 -l "$count" "$report/$fixture.pdf" > "$report/$fixture-pages.txt"
+            python - "$report/$fixture-pages.txt" "$fixture" "$count" <<'PY'
+          import re,sys
+          info=open(sys.argv[1]).read()
+          name=sys.argv[2]
+          sizes=[(float(w),float(h)) for w,h in re.findall(r'^Page\s+\d+\s+size:\s+([\d.]+) x ([\d.]+)',info,re.M)]
+          assert len(sizes)==int(sys.argv[3]), (name,sizes)
+          assert all(abs(min(w,h)-595)<3 and abs(max(w,h)-842)<3 for w,h in sizes), (name,sizes)
+          if name.startswith('cdc-annual-'):
+              assert len(sizes)==1 and all(w<h for w,h in sizes), (name,sizes)
+          elif name=='cdc-batch':
+              assert len(sizes)>=2 and all(w>h for w,h in sizes), (name,sizes)
+          else:
+              assert any(w>h for w,h in sizes) and any(w<h for w,h in sizes), (name,sizes)
+          PY
+            pdftotext "$report/$fixture.pdf" "$report/$fixture.txt"
+            test -s "$report/$fixture.txt"
+            pdftoppm -r 110 -png "$report/$fixture.pdf" "$report/$fixture"
+          done
+          grep -Fq 'Batch One' "$report/cdc-batch.txt"
+          grep -Fq 'Batch Two' "$report/cdc-batch.txt"
+          grep -Fq 'Batch Two' "$report/cdc-portfolio.txt"
+          ! grep -Fq 'Batch One' "$report/cdc-portfolio.txt"
+          for grade in 1 2 3; do
+            grep -Fq "Lower Student $grade" "$report/cdc-annual-$grade.txt"
+          done
+          python -m venv "$RUNNER_TEMP/cdc-office-check"
+          "$RUNNER_TEMP/cdc-office-check/bin/pip" install --quiet python-docx openpyxl
+          "$RUNNER_TEMP/cdc-office-check/bin/python" - "$report" <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          from docx import Document
+          from openpyxl import load_workbook
+          import sys
+          p=Path(sys.argv[1])
+          for stem in ('cdc-batch','cdc-portfolio','cdc-annual-1','cdc-annual-2','cdc-annual-3'):
+              for ext in ('docx','xlsx'):
+                  with ZipFile(p/f'{stem}.{ext}') as archive:
+                      assert archive.testzip() is None
+              doc=Document(p/f'{stem}.docx')
+              wb=load_workbook(p/f'{stem}.xlsx')
+              assert len(doc.tables)==len(wb.worksheets)>0
+              assert all(s.page_setup.paperSize=='9' or s.page_setup.paperSize==9 for s in wb.worksheets)
+              assert all(s.page_setup.orientation in ('portrait','landscape') for s in wb.worksheets)
+              if stem.startswith('cdc-annual-'):
+                  assert len(doc.tables)==1 and len(doc.tables[0].rows)==6
+                  assert doc.sections[0].page_width<doc.sections[0].page_height
+                  assert wb.worksheets[0].page_setup.orientation=='portrait'
+              if stem=='cdc-batch':
+                  assert len(doc.tables)==2 and len(wb.worksheets)==2
+                  for index,sheet in enumerate(wb.worksheets):
+                      data=' '.join(str(c.value) for row in sheet for c in row if c.value is not None)
+                      assert ('Batch One' if index==0 else 'Batch Two') in data
+                      assert ('Batch Two' if index==0 else 'Batch One') not in data
+              if stem=='cdc-portfolio':
+                  assert {s.page_setup.orientation for s in wb.worksheets}=={'portrait','landscape'}
+                  assert {s.page_width>s.page_height for s in doc.sections}=={True,False}
+              print(stem, 'DOCX and XLSX opened successfully')
+          PY
       - name: Save synthetic CDC assessment PDFs for visual review
-        if: always() && (github.head_ref == 'feat/v46-cdc-assessment-official-forms' || (github.head_ref == 'fix/v46-cdc-simple-teacher-form' || (github.head_ref == 'fix/v46-cdc-entry-visible' || github.head_ref == 'feat/v46-cdc-continuous-year')))
+        if: always() && ((github.head_ref == 'fix/v46-cdc-all-students-pdf' || github.head_ref == 'feat/v46-cdc-assessment-report-hub' || github.head_ref == 'fix/v46-cdc-theme-entry-coverage') || github.head_ref == 'feat/v46-cdc-assessment-official-forms' || (github.head_ref == 'fix/v46-cdc-simple-teacher-form' || (github.head_ref == 'fix/v46-cdc-entry-visible' || github.head_ref == 'feat/v46-cdc-continuous-year' || github.head_ref == 'fix/v46-cdc-direct-date-rating')))
         uses: actions/upload-artifact@v4
         with:
           name: smss-synthetic-cdc-assessment-print
@@ -343,6 +415,9 @@ jobs:
             ${{ runner.temp }}/smss-cdc-print/*.pdf
             ${{ runner.temp }}/smss-cdc-print/*.png
             ${{ runner.temp }}/smss-cdc-print/*-info.txt
+            ${{ runner.temp }}/smss-cdc-print/*-pages.txt
+            ${{ runner.temp }}/smss-cdc-print/*.docx
+            ${{ runner.temp }}/smss-cdc-print/*.xlsx
           retention-days: 7
       - name: Verify final V45 source remains the approved dashboard
         run: |
