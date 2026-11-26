@@ -73,7 +73,20 @@ const forged=auditGrade9Release({register:data,offeredSubjects:[],
  reviewedBanks:{nepali:true,english:true,math:true,science:true,social:true},
  teacherTestedPapers:{nepali:true,english:true,math:true,science:true,social:true}
 });
-assert.equal(forged.grade9PaperReady,true,'Fully reviewed, approved subject subset passes prerequisite audit');
+assert.equal(forged.grade9PaperReady,false,'Structural grid, question review and teacher test cannot replace 2083 edition confirmation');
+assert.ok(forged.checkedSubjects.every(x=>x.status==='current_edition_unconfirmed'));
+const confirmed=auditGrade9Release({register:data,offeredSubjects:[],
+ exactGridReviews:{nepali:true,english:true,math:true,science:true,social:true},
+ currentEditionReviews:{nepali:true,english:true,math:true,science:true,social:true},
+ reviewedBanks:{nepali:true,english:true,math:true,science:true,social:true},
+ teacherTestedPapers:{nepali:true,english:true,math:true,science:true,social:true}
+});
+assert.equal(confirmed.grade9PaperReady,true,'All four independent review inputs required');
+assert.equal(confirmed.readyForLive,false);
+assert.equal(baseline.transcribedCount,2);
+assert.equal(baseline.currentEditionConfirmedCount,0);
+assert.equal(byKey.optional_computer.status,'current_edition_unconfirmed');
+assert.equal(byKey.optional_math.status,'current_edition_unconfirmed');
 assert.equal(forged.readyForLive,false,'Grade9 subject prereq never grants live deployment itself');
 assert.throws(()=>auditGrade9Release({}),/Official CDC source register required/);
 console.log('PASS Grade9 source, unit-grid, question review and teacher-test release gate');
