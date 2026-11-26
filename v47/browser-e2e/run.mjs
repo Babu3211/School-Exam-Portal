@@ -339,6 +339,8 @@ try{
      assert.equal(await rowDateInputs.count(),binary?count/4:count);
      const headings=await page.locator('#teacherDraftHead').textContent();
      assert.ok(headings.includes(binary?'उपलब्धि सूचक':kind==='nepali'?'परीक्षण गर्ने पक्ष':'Areas / Skills'));
+     assert.equal(await page.locator('#teacherDraftHead [data-assessment-stage]').count(),2);
+     assert.equal(await page.locator('#teacherDraftHead [data-assessment-stage=regular]').getAttribute('class'),'assessment-active-stage');
      if(binary){assert.equal(await page.locator('#teacherDraftRows .assessment-block-score').count(),count/4);assert.equal(await page.locator('#teacherDraftRows .assessment-block-score').first().textContent(),'—');
       for(let i=0;i<4;i++)await ratings.nth(i).selectOption('0');
       assert.equal(await page.locator('#teacherDraftRows .assessment-block-score').first().textContent(),'० / ४');
@@ -369,11 +371,16 @@ try{
      assert.equal(await ratings.first().inputValue(),binary?'0':'2');
      assert.equal(await rowDateInputs.first().inputValue(),'2083-08-09');
      assert.equal(await page.locator('#teacherDate').inputValue(),'2083-08-11');
+     const peerText=await page.locator('#teacherDraftRows .assessment-peer-value').allTextContents();
+     assert.ok(peerText.includes('2083-08-10'));assert.ok(peerText.includes(binary?'सकेको':kind==='nepali'?'४':'4'));
      await page.locator('#teacherStage').selectOption('support');
      await wait(page,()=>!document.getElementById('teacherSaveDraft').disabled);
      assert.equal(await ratings.first().inputValue(),binary?'1':'4');
      assert.equal(await rowDateInputs.first().inputValue(),'2083-08-10');
      assert.equal(await page.locator('#teacherDate').inputValue(),'2083-08-12');
+     const regularText=await page.locator('#teacherDraftRows .assessment-peer-value').allTextContents();
+     assert.ok(regularText.includes('2083-08-09'));assert.ok(regularText.includes(binary?'नसकेको':kind==='nepali'?'२':'2'));
+     assert.equal(await page.locator('#teacherDraftHead [data-assessment-stage=support]').getAttribute('class'),'assessment-active-stage');
      assert.deepEqual((await db.doc(legacy).get()).data(),original);
      assert.deepEqual(errors,[]);
      console.log('PASS lower-language staged draft '+grade+' '+kind+': separate date, scores, reload and school isolation');

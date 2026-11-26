@@ -77,11 +77,29 @@ async function renderTeacherDraft(){
  const digits=n=>ne?String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]):String(n);
  const nepaliForm=lower&&key==='nepali',englishForm=lower&&key==='english',mathForm=lower&&key==='mathematics';
  const sourceReady=slots.every(s=>s.sourceText),indicatorForm=binary&&sourceReady;
+ const staged=usesLanguageStages(worksheet)&&sourceReady,activeStage=$('teacherStage').value,peerStage=activeStage==='regular'?'support':'regular';
  const stageLabel=usesLanguageStages(worksheet)?($('teacherStage').value==='regular'?(ne?'नियमित मूल्याङ्कन':'Regular Assessment'):(ne?'थप सहायतापछिको मूल्याङ्कन':'Assessment after Remedial Class')):(ne?'मूल्याङ्कन':'Assessment');
  const labels=indicatorForm?['थिम','मुख्य सिकाइ उपलब्धि','उपलब्धि सूचक','सकेको / नसकेको','मिति','अङ्कन / ४','मूल्याङ्कन साधन']:nepaliForm?['सिकाइ उपलब्धि','परीक्षण गर्ने पक्ष','साधन','मिति','अङ्कन / ४']:englishForm?['SN','Areas / Skills','Learning outcomes','Date (BS)','Achievement / 4']:mathForm?['Learning achievement / सिकाइ उपलब्धि','Criteria / अङ्कन आधार','Date (BS) / मिति','Achievement / 4']:ne?['सिकाइ उपलब्धि','मिति','अङ्कन / ४']:['Learning achievement','Date (BS)','Achievement / 4'];
- const head=$('teacherDraftHead');head.replaceChildren();const top=document.createElement('tr');const th=document.createElement('th');th.colSpan=labels.length;th.textContent=stageLabel+' — '+[theme.theme,theme.en&&theme.en!==theme.theme?theme.en:''].filter(Boolean).join(' / ');top.append(th);head.append(top);const heading=document.createElement('tr');for(const label of labels){const el=document.createElement('th');el.scope='col';el.textContent=label;heading.append(el)}head.append(heading);
+ const head=$('teacherDraftHead');head.replaceChildren();const top=document.createElement('tr');const th=document.createElement('th');th.colSpan=labels.length;th.textContent=stageLabel+' — '+[theme.theme,theme.en&&theme.en!==theme.theme?theme.en:''].filter(Boolean).join(' / ');top.append(th);head.append(top);const heading=document.createElement('tr');
+ if(staged){
+  const count=indicatorForm?3:2,lead=labels.slice(0,3),stageColumns=indicatorForm?['सकेको / नसकेको','मिति','अङ्कन / ४']:labels.slice(-2);
+  th.colSpan=lead.length+2*count+(indicatorForm?1:0);
+  th.textContent=[theme.theme,theme.en&&theme.en!==theme.theme?theme.en:''].filter(Boolean).join(' / ');
+  const sub=document.createElement('tr');
+  const headingCell=(tr,label,span=1,rows=1)=>{const el=document.createElement('th');el.textContent=label;el.colSpan=span;el.rowSpan=rows;tr.append(el);return el};
+  for(const label of lead)headingCell(heading,label,1,2);
+  for(const stage of ['regular','support']){
+   const label=stage==='regular'?(ne?'नियमित मूल्याङ्कन':'Regular Assessment'):(ne?'थप सहायतापछिको मूल्याङ्कन':'Assessment after Remedial Class');
+   const el=headingCell(heading,label,count);el.dataset.assessmentStage=stage;el.className=stage===activeStage?'assessment-active-stage':'assessment-peer-stage';
+   for(const label of stageColumns)headingCell(sub,label);
+  }
+  if(indicatorForm)headingCell(heading,'मूल्याङ्कन साधन',1,2);
+  head.append(heading,sub);
+ }else{for(const label of labels){const el=document.createElement('th');el.scope='col';el.textContent=label;heading.append(el)}head.append(heading)}
  const makeDate=(tr,span=1)=>{const td=cell(tr,'');td.rowSpan=span;const field=document.createElement('input');field.className='assessment-row-date';field.setAttribute('aria-label',ne?'मूल्याङ्कन मिति (वि.सं.)':'Assessment date (BS)');field.placeholder='2083-MM-DD';field.maxLength=10;td.append(field);return field};
- const scoreCells=[];
+ const scoreCells=[],peerRatings=[],peerDates=[],peerScores=[];
+ const peerCell=(tr,list,span=1)=>{const td=cell(tr,'—');td.rowSpan=span;td.className='assessment-peer-value';list.push(td);return td};
+ const showPeer=saved=>{const values=saved?.ratings??'';peerRatings.forEach((td,i)=>{const v=values[i];td.textContent=!v||v==='_'?'—':indicatorForm?(v==='1'?'सकेको':'नसकेको'):digits(v)});peerDates.forEach((td,i)=>{const used=indicatorForm?/[01]/.test(values.slice(i*4,i*4+4)):/[1-4]/.test(values[i]??'');td.textContent=saved&&used?(saved.rowDates?.slice(i*10,i*10+10)||saved.date):'—'});if(indicatorForm&&saved){const result=scoreSeroferoDraft(values);peerScores.forEach((td,i)=>td.textContent=result.blocks[i]===null?'—':digits(result.blocks[i])+' / ४')}};
  const update=()=>{const fields=[...$('teacherDraftRows').querySelectorAll('select')];if(indicatorForm&&fields.length&&fields.length%4===0){const score=scoreSeroferoDraft(fields.map(el=>el.value||'_').join(''));scoreCells.forEach((el,i)=>el.textContent=score.blocks[i]===null?'—':digits(score.blocks[i])+' / ४');$('teacherDraftTotal').textContent='पूरा सूचक समूह: '+digits(score.completed)+'/'+digits(score.blocks.length)+' · '+digits(score.total)+' / '+digits(theme.fullMarks);return;}const used=fields.filter(el=>el.value!=='');$('teacherDraftTotal').textContent='Draft: '+used.length+'/'+fields.length+' · '+used.reduce((n,el)=>n+Number(el.value),0)+' / '+theme.fullMarks};
  const rating=(tr,slot)=>{const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','Draft rating '+slot.number);input.append(new Option('—',''));for(let n=slot.min;n<=slot.max;n++)input.append(new Option(digits(n),String(n)));input.onchange=update;td.append(input);return input};
  const addText=(td,values)=>{for(const value of values.filter(Boolean)){const el=document.createElement('div');el.textContent=value;td.append(el)}};
@@ -93,8 +111,10 @@ async function renderTeacherDraft(){
     if(index===0&&i===0){const td=cell(tr,theme.theme);td.rowSpan=slots.length*4;td.className='assessment-group'}
     if(i===0&&(index===0||slots[index-1].sourceText.outcome!==row.outcome)){let span=1;while(index+span<slots.length&&slots[index+span].sourceText.outcome===row.outcome)span++;const td=cell(tr,digits(row.outcome)+'. '+row.title);td.rowSpan=span*4;td.className='assessment-group'}
     cell(tr,digits((row.block-1)*4+i+1)+'. '+row.indicators[i]);
-    const td=cell(tr,''),input=document.createElement('select');input.setAttribute('aria-label','सूचक '+slot.number+'.'+(i+1));input.append(new Option('—',''),new Option('सकेको','1'),new Option('नसकेको','0'));input.onchange=update;td.append(input);
-    if(i===0){makeDate(tr,4);const score=cell(tr,'—');score.rowSpan=4;score.className='assessment-block-score';scoreCells.push(score)}
+    const active=()=>{const td=cell(tr,''),input=document.createElement('select');input.setAttribute('aria-label','सूचक '+slot.number+'.'+(i+1));input.append(new Option('—',''),new Option('सकेको','1'),new Option('नसकेको','0'));input.onchange=update;td.append(input);
+    if(i===0){makeDate(tr,4);const score=cell(tr,'—');score.rowSpan=4;score.className='assessment-block-score';scoreCells.push(score)}};
+    const peer=()=>{peerCell(tr,peerRatings);if(i===0){peerCell(tr,peerDates,4);peerCell(tr,peerScores,4)}};
+    if(staged&&activeStage==='support')peer();active();if(staged&&activeStage==='regular')peer();
     const tool=row.tools[i];cell(tr,tool==='मूल फाराममा खाली'?'':tool);
     $('teacherDraftRows').append(tr);
    }
@@ -108,7 +128,8 @@ async function renderTeacherDraft(){
    else if(mathForm){const td=cell(tr,'');if(row?.criteria)addText(td,row.criteria.map((c,i)=>(4-i)+' — '+c.join(' / ')))}
    else if(row)addText(label,[row.aspect,row.tool]);
   }
-  makeDate(tr);rating(tr,slot);$('teacherDraftRows').append(tr);
+  const active=()=>{makeDate(tr);rating(tr,slot)},peer=()=>{peerCell(tr,peerDates);peerCell(tr,peerRatings)};
+  if(staged&&activeStage==='support')peer();active();if(staged&&activeStage==='regular')peer();$('teacherDraftRows').append(tr);
  }
  update();
  if(!['mathematics','science','socialstudies','nepali','english','healthphysicalcreativeart','serophero'].includes(worksheet.key)||(Number(worksheet.grade)<=3&&worksheet.key!=='mathematics'&&!usesLanguageStages(worksheet))||!slots.every(s=>s.sourceText))return;
@@ -118,7 +139,8 @@ async function renderTeacherDraft(){
  $('teacherDraftSaveStatus').textContent='सुरक्षित Draft जाँच हुँदैछ…';
  try{
   await verify();args.assertCurrent();
-  const saved=await loadMathAssessmentDraft(args);args.assertCurrent();
+  const [saved,other]=await Promise.all([loadMathAssessmentDraft(args),staged?loadMathAssessmentDraft({...args,stage:peerStage}):Promise.resolve(null)]);args.assertCurrent();
+  if(staged)showPeer(other);
   worksheetRevision=saved?.revision??0;
   if(saved){$('teacherDate').value=saved.date;fields.forEach((el,i)=>el.value=saved.ratings[i]==='_'?'':saved.ratings[i]);if(saved.rowDates)dates.forEach((el,i)=>el.value=saved.rowDates.slice(i*10,(i+1)*10));update()}
   $('teacherDraftSaveStatus').textContent=saved?'Draft Revision '+saved.revision+' पुनः लोड भयो।':'नयाँ निजी Draft।';
