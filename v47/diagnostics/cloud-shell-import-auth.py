@@ -74,12 +74,22 @@ def main(path):
         if j.get("nextPageToken"):raise RuntimeError("Unexpected account inventory size")
         return j.get("users",[])
     srcnow=users(SOURCE);si,_=index(source);li,_=index(srcnow)
-    if set(si)!=set(li):raise RuntimeError("V46 Auth changed since backup; refresh required")
-    for uid,u in si.items():
-        v=li[uid]
-        if stable(u)!=stable(v) or b64(u.get("passwordHash"))!=b64(v.get("passwordHash")) or b64(u.get("salt"))!=b64(v.get("salt")):raise RuntimeError("V46 credential or identity changed; refresh required")
-    srcconf=call(SOURCE,"https://identitytoolkit.googleapis.com/admin/v2/projects/"+SOURCE+"/config").get("signIn",{})
-    if config(srcconf.get("hashConfig") or srcconf.get("email",{}).get("hashConfig") or {})!=hc:raise RuntimeError("Source hash config changed")
+    if not li:raise RuntimeError("Live V46 Auth inventory empty; no import")
+    def credential(u):
+        return (stable(u),b64(u.get("passwordHash")),b64(u.get("salt")))
+    def source_hash_config():
+        sc=call(SOURCE,"https://identitytoolkit.googleapis.com/admin/v2/projects/"+SOURCE+"/config").get("signIn",{})
+        return config(sc.get("hashConfig") or sc.get("email",{}).get("hashConfig") or {})
+    live_hc=source_hash_config()
+    changed=sum(credential(si[k])!=credential(li[k]) for k in si.keys()&li.keys())
+    print("BACKUP SOURCE AUTH:",len(si),"CURRENT SOURCE AUTH:",len(li))
+    print("NEW SINCE BACKUP:",len(li.keys()-si.keys()),"REMOVED SINCE BACKUP:",len(si.keys()-li.keys()),"CHANGED EXISTING:",changed)
+    print("SOURCE HASH CONFIG CHANGED:",live_hc!=hc)
+    # Use current source accounts and current hash configuration only.
+    # Removed accounts are not recreated. Newly observed identities receive
+    # no school membership until the separate fresh role reconciliation.
+    hc=live_hc
+    live_credentials={k:credential(v) for k,v in li.items()}
     tc=call(TARGET,"https://identitytoolkit.googleapis.com/admin/v2/projects/"+TARGET+"/config").get("signIn",{})
     if tc.get("email",{}).get("enabled") is not True:raise RuntimeError("V47 Email/Password provider not enabled")
     api="https://firestore.googleapis.com/v1/projects/"+TARGET+"/databases/(default)/documents"
@@ -92,12 +102,18 @@ def main(path):
     su={d["name"].rsplit("/",1)[1] for d in supers.get("documents",[])}
     target=users(TARGET);ti,te=index(target);oi,_=index(original)
     if set(ti)!=set(oi) or set(oi)!=su or any(stable(ti[k])!=stable(oi[k]) for k in oi):raise RuntimeError("Existing target Auth differs from original snapshot; no writes")
-    new,collisions=plan(source,target)
-    if len(new)!=16 or len(collisions)!=2:raise RuntimeError("Unexpected collision count")
-    print("SOURCE AUTH VERIFIED UNCHANGED:",len(si))
+    new,collisions=plan(srcnow,target)
+    print("CURRENT SOURCE AUTH VERIFIED:",len(li))
+    if len(new)+len(collisions)!=len(li):raise RuntimeError("Incomplete current source plan")
     print("CREATE ONLY AUTH:",len(new),"SKIP EXISTING SUPER ADMINS:",len(collisions))
     print("NO MEMBERSHIPS OR PRIVILEGES WILL BE CREATED")
+    if not new:
+        print("NO NEW AUTH ACCOUNTS; NO WRITES")
+        return
     if input("Type IMPORT-V47-AUTH to proceed: ").strip()!="IMPORT-V47-AUTH":raise RuntimeError("Not confirmed")
+    latest,_=index(users(SOURCE))
+    if set(latest)!=set(li) or any(credential(latest[k])!=live_credentials[k] for k in li) or source_hash_config()!=hc:
+        raise RuntimeError("Current V46 Auth changed after preview; retry to refresh")
     fresh=users(TARGET);fi,_=index(fresh)
     if set(fi)!=set(ti) or any(stable(fi[k])!=stable(ti[k]) for k in ti):raise RuntimeError("Target accounts changed before import")
     body=dict(hc,users=new,sanityCheck=True,allowOverwrite=False)
@@ -113,9 +129,9 @@ def main(path):
     print("EXISTING SUPER ADMIN IDENTITIES PRESERVED:",preserved,"/",len(ti))
     print("IMPORT ERRORS:",len(errors))
     if errors or good!=len(new) or preserved!=len(ti) or set(ai)!=(set(ti)|{u["localId"] for u in new}):raise RuntimeError("Import verification incomplete; do not rerun blindly")
-    print("AUTH IMPORT VERIFIED: 16")
+    print("AUTH IMPORT VERIFIED:",len(new))
     print("V46 WRITES: ZERO; EXISTING AUTH OVERWRITES: ZERO; MEMBERSHIP CHANGES: ZERO; SCHOOL ACTIVE: FALSE")
-    print("Password sign-in requires separate real-user test; two existing email collisions remain unresolved.")
+    print("Password sign-in requires separate real-user test; skipped email/UID collisions and live role reconciliation remain unresolved.")
 if __name__=="__main__":
     try:
         if sys.argv[1:]==["--self-test"]:self_test()
