@@ -9,6 +9,28 @@ import requests
 spec=importlib.util.spec_from_file_location("cdc",Path.home()/"smss-cdc.py")
 cdc=importlib.util.module_from_spec(spec);spec.loader.exec_module(cdc)
 m=cdc.m;sub=cdc.sub;BASE=cdc.BASE
+def review_access(source,target,superuids,admin):
+    """Aggregate identity relationships, never expose UID/email or grant access."""
+    ids={u["localId"]:u for u in target}
+    emails={u["email"].casefold():u for u in target if isinstance(u.get("email"),str) and u["email"]}
+    if len(ids)!=len(target) or len(emails)!=len(target):raise ValueError("Ambiguous target account inventory")
+    counts=Counter()
+    admin_state="source_admin_missing"
+    for u in source:
+        uid=u["localId"];email=u.get("email") or ""
+        t=ids.get(uid);e=emails.get(email.casefold())
+        if not t and not e:state="missing_target"
+        elif t and t is e and t.get("email")==email:
+            if uid in superuids:state="same_identity_super_admin"
+            elif u.get("disabled") or t.get("disabled"):state="same_identity_disabled"
+            else:state="same_identity_non_super_admin"
+        elif e and e["localId"] in superuids:state="email_collision_super_admin"
+        elif t and uid in superuids:state="uid_collision_super_admin"
+        else:state="other_identity_conflict"
+        counts[state]+=1
+        if uid==admin:admin_state=state
+    return {"source_admin_identity_state":admin_state,"identity_relationship_counts":dict(counts)}
+
 def plan(source,target,roles,catalog,superuids,admin):
     s=m.string;b=m.boolean
     uid_re=re.compile(r"^[A-Za-z0-9_-]{6,128}$")
@@ -74,7 +96,11 @@ def self_test():
     assert not o
     o,r=plan([u],[u],[doc(["subject_teacher"])],{},{"teacher1"},"otheradmin")
     assert not o
-    print("PASS inactive-only membership, mixed-role and Super Admin exclusion")
+    assert review_access([u],[u],set(),"teacher1")["source_admin_identity_state"]=="same_identity_non_super_admin"
+    assert review_access([u],[u],{"teacher1"},"teacher1")["source_admin_identity_state"]=="same_identity_super_admin"
+    assert review_access([u],[dict(u,localId="super1")],{"super1"},"teacher1")["source_admin_identity_state"]=="email_collision_super_admin"
+    assert review_access([u],[],set(),"teacher1")["source_admin_identity_state"]=="missing_target"
+    print("PASS inactive-only membership, mixed-role, Super Admin exclusion and identity relationship review")
 def main(path,audit_only=False):
     if os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):raise RuntimeError("Forbidden in CI")
     from importlib.machinery import SourceFileLoader
@@ -141,6 +167,8 @@ def main(path,audit_only=False):
         source=users(m.SOURCE);target=users(m.TARGET);roles=listdocs(m.SOURCE,"user_roles")
         su={d["name"].rsplit("/",1)[1] for d in listdocs(m.TARGET,"v47_super_admins")}
         if match.group(1) not in {u["localId"] for u in source}:raise RuntimeError("V46 admin identity not found")
+        if audit_only:
+            print("ACCESS IDENTITY REVIEW:",json.dumps(review_access(source,target,su,match.group(1)),sort_keys=True))
         out,review=plan(source,target,roles,catalog,su,match.group(1))
         return out,review,len(source),len(target),len(roles)
     out,review,ns,nt,nr=snapshot()
