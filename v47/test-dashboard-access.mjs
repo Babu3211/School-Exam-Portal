@@ -32,8 +32,13 @@ assert.ok(html.includes('Marks Entry (Preview)')&&html.includes('Grade Sheet (Pr
 console.log('V47 School Admin navigation is role-gated and reverified; other modules remain visible');
 
 const deferred=[...html.matchAll(/<a\b[^>]*\bhref="\.\/(?:primary-assessment|question-paper)\.html"[^>]*>/g)];
-assert.equal(deferred.length,3,'Keep experimental routes intact for post-release work');
-for(const [tag] of deferred){
+const assessmentPreview=deferred.filter(([tag])=>tag.includes('data-assessment-preview'));
+assert.equal(assessmentPreview.length,1);
+assert.match(assessmentPreview[0][0],/data-required-role="school_admin"/);
+assert.match(assessmentPreview[0][0],/data-school-module/);
+const hiddenDeferred=deferred.filter(([tag])=>!tag.includes('data-assessment-preview'));
+assert.equal(hiddenDeferred.length,3,'Keep experimental routes intact for post-release work');
+for(const [tag] of hiddenDeferred){
  assert.match(tag,/\bhidden\b/);assert.match(tag,/\bdata-post-release\b/);
  assert.match(tag,/aria-disabled="true"/);assert.match(tag,/tabindex="-1"/);
 }

@@ -64,3 +64,22 @@ assert.match(src,/window\.addEventListener\('focus'/);
 assert.match(src,/refreshOnForeground\(\)/);
 assert.match(src,/foregroundStatsGate\.reset\(\)/);
 assert.match(src,/foregroundStatsGate\.seed\(/);
+
+{
+ const {loadPrimaryAssessmentCounts}=await import('./dashboard-assessment-counts.mjs');
+ const {context}=make('school_admin');let calls=[];
+ const args={...context,readCount:async(name,filters)=>{calls.push([name,filters]);return name==='cdc_observations'?5:0}};
+ const a=await loadPrimaryAssessmentCounts(args);
+ assert.equal(a.observations,5);assert.equal(a.indicatorBlocks,0);assert.equal(a.officialAssessmentApproved,false);
+ assert.deepEqual(calls,[['cdc_observations',{schoolId,academicYear:'2083'}],['cdc_serofero_indicators',{schoolId,academicYear:'2083'}]]);
+ await assert.rejects(loadPrimaryAssessmentCounts({...args,role:'viewer'}),/School Admin/);
+ await assert.rejects(loadPrimaryAssessmentCounts({...args,readDocument:make('teacher').context.readDocument}),/role changed/);
+ await assert.rejects(loadPrimaryAssessmentCounts({...args,readCount:async()=>-1}),/Invalid assessment count/);
+ let stale=false;
+ await assert.rejects(loadPrimaryAssessmentCounts({...args,readCount:async()=>{stale=true;return 0},assertSession:()=>{if(stale)throw Error('Stale')}}),/Stale/);
+ assert.match(html,/id="assessmentOverview" hidden/);
+ assert.match(src,/resetAssessmentCounts\(\)/);
+ assert.match(src,/api\.where\('schoolId','==',filters\.schoolId\)/);
+ assert.match(src,/api\.where\('academicYear','==',filters\.academicYear\)/);
+ console.log('PASS school-admin assessment counts: scoped year, separate record categories, role and stale-session guards');
+}

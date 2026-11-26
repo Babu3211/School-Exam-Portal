@@ -1,3 +1,4 @@
+import {loadPrimaryAssessmentCounts} from './dashboard-assessment-counts.mjs';
 import {neError} from './nepali-feedback.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,touchSchoolActivity} from './school-firebase-client.mjs';
 import {validateSchoolId} from './school-paths.mjs';
@@ -43,7 +44,11 @@ function lock(){
  if(signedIn){$('dashboardPassword').value='';$('dashboardPassword').type='password';$('dashboardPasswordToggle').textContent='Show';$('dashboardPasswordToggle').setAttribute('aria-pressed','false');}
  for(const link of document.querySelectorAll('[data-school-module]')){const allowed=!!verified&&schoolDashboardAccess(verified.role,link.dataset.requiredRole==='school_admin'?'school-admin':'module')&&!link.hasAttribute('data-post-release');if(link.hasAttribute('data-post-release'))link.hidden=true;link.setAttribute('aria-disabled',String(!allowed));link.tabIndex=allowed?0:-1;link.classList.toggle('locked',!allowed)}$('schoolIdentity').textContent=verified?verified.name+' · '+verified.schoolId+' · '+verified.role:'विद्यालय प्रमाणित भएको छैन।';$('schoolAccessMode').textContent=!verified?'विद्यालयका सुविधा हेर्न पहिले लगइन गर्नुहोस्।':verified.role==='viewer'?'Viewer — पढ्न र रिपोर्ट हेर्न मात्र मिल्छ। Add, Edit, Delete वा Save अनुमति छैन।':verified.role==='teacher'?'Teacher — तोकिएको कक्षा र विषयमा मात्र अनुमति अनुसार काम गर्न मिल्छ।':'School Admin — विद्यालयको व्यवस्थापन गर्न मिल्छ; प्रत्येक Module ले अनुमति पुनः जाँच्छ।';$('dashboardLogout').disabled=!verified;$('dashboardRefreshStats').disabled=!verified;$('schoolMapSection').hidden=!verified;$('schoolMapLoad').disabled=!verified?.map;$('schoolMapMessage').textContent=!verified?'विद्यालय प्रमाणित गरेपछि नक्सा हेर्नुहोस्।':verified.map?'नक्सा खोल्न बटन थिच्नुहोस्। देखाइएको स्थान खोज परिणाम हो, प्रमाणित GPS होइन।':'School Settings मा विद्यालयको ठेगाना राखेपछि Satellite Map उपलब्ध हुन्छ।'}
 const DASHBOARD_METRICS=Object.freeze(['students','staff','subjects','exams','members','activeMembers']);
+function resetAssessmentCounts(){
+ $('assessmentOverview').hidden=true;$('assessmentObservationCount').textContent='—';$('assessmentIndicatorCount').textContent='—';$('assessmentCountStatus').textContent='';
+}
 function resetMetricCards(){
+ resetAssessmentCounts();
  $('dashboardMetricCards').hidden=true;
  for(const name of DASHBOARD_METRICS){
   const node=document.querySelector('[data-metric="'+name+'"]');
@@ -97,6 +102,23 @@ async function refreshStats(){
   assertSession();
   $('dashboardStats').textContent=dashboardStatsText(loaded);
   showMetricCards(loaded);
+  if(selected.role==='school_admin'){
+   $('assessmentOverview').hidden=false;
+   $('assessmentCountStatus').textContent='मूल्याङ्कन अभिलेख जाँच हुँदैछ…';
+   try{
+    const assessment=await loadPrimaryAssessmentCounts({schoolId:selected.schoolId,uid:selected.uid,role:selected.role,assertSession,
+     readDocument:async path=>{const s=await api.getDocFromServer(api.doc(db,...path.split('/')));return s.exists()?s.data():null},
+     readCount:async(name,filters)=>{
+      const query=api.query(api.collection(db,'schools',selected.schoolId,name),api.where('schoolId','==',filters.schoolId),api.where('academicYear','==',filters.academicYear));
+      return (await api.getCountFromServer(query)).data().count;
+     }});
+    assertSession();
+    $('assessmentObservationCount').textContent=String(assessment.observations);
+    $('assessmentIndicatorCount').textContent=String(assessment.indicatorBlocks);
+    $('assessmentCountStatus').textContent='२०८३ का सुरक्षित अभिलेखको संख्या मात्र हो। विद्यार्थीको कुल संख्या वा अन्तिम ग्रेड होइन।';
+   }catch(e){if(request===statsRequest&&verified===selected)$('assessmentCountStatus').textContent='मूल्याङ्कन संख्या उपलब्ध भएन: '+neError(e)}
+  }
+  assertSession();
   // Offline heartbeat must not block the aggregate refresh button.
   void showRecentActivity();
   void noteDashboardActivity().then(()=>{if(request===statsRequest&&verified===selected)void showRecentActivity()});
