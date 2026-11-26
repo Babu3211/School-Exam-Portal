@@ -61,7 +61,7 @@ export async function loadPrimaryTeacherWorksheet(args){
  if(!ref.rows.length)throw Error('Theme reference unavailable');
  const roster=await loadCompleteClassRoster({db,api:{...api,getDocs:api.getDocsFromServer},actor,schoolId,classId:grade,activeOnly:true});check();
  await verifyAssignment();check();
- return Object.freeze({schoolId,grade,subjectId,subjectName:assigned.subjectName,key,students:Object.freeze(roster.students.map(s=>Object.freeze({id:s.id,name:String(s.nameEnglish??s.name??s.id),section:String(s.section??'')}))),themes:Object.freeze(ref.rows.map(r=>Object.freeze({theme:r.theme,en:r.en,count:r.count,fullMarks:r.fullMarks,scoreBlocks:r.scoreBlocks,sourceUrl:r.sourceUrl,sourceRows:key==='mathematics'&&['4','5'].includes(grade)?v46MathThemeRows(grade,r.theme,r.count):null}))),writeAuthorized:false,officialAssessmentApproved:false});
+ return Object.freeze({schoolId,grade,subjectId,subjectName:assigned.subjectName,key,students:Object.freeze(roster.students.map(s=>Object.freeze({id:s.id,name:String(s.nameEnglish??s.name??s.id),section:String(s.section??'')}))),themes:Object.freeze(ref.rows.map(r=>Object.freeze({theme:r.theme,en:r.en,count:r.count,fullMarks:r.fullMarks,scoreBlocks:r.scoreBlocks,sourceUrl:r.sourceUrl,status:r.status,sourceRows:key==='mathematics'&&['4','5'].includes(grade)?v46MathThemeRows(grade,r.theme,r.count):r.sourceRows??null}))),writeAuthorized:false,officialAssessmentApproved:false});
 }
 export function draftThemeSlots(model,themeIndex){
  if(model?.writeAuthorized!==false||model.officialAssessmentApproved!==false||!Number.isInteger(themeIndex))throw Error('Unverified worksheet');

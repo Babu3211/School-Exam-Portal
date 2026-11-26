@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {primarySubjectKey,draftThemeSlots,loadPrimaryTeacherWorksheet,loadAssignedPrimarySubjects} from './primary-assessment-teacher-worksheet.mjs';
 import {v46MathThemeRows} from './primary-assessment-v46-math-text.mjs';
+import {assessmentThemeReference} from './primary-assessment-reference.mjs';
 const catalogue=JSON.parse(readFileSync(new URL('./primary-assessment-reference-2083.json',import.meta.url)));
 assert.equal(primarySubjectKey('नेपाली'),'nepali');assert.equal(primarySubjectKey('Mathematics'),'mathematics');assert.equal(primarySubjectKey('Optional Mathematics'),null);
 for(const name of ['सेरोफेरो','हाम्रो सेरोफेरो'])assert.equal(primarySubjectKey(name),'serophero');
@@ -19,6 +20,20 @@ for(const grade of ['4','5']){
  assert.equal(count,30);
 }
 assert.equal(v46MathThemeRows('3','ज्यामिति',4),null);
+for(const grade of ['1','2','3']){
+ const ref=assessmentThemeReference({catalogue,grade,subject:'mathematics'});
+ assert.ok(ref.themeCount>0);
+ assert.equal(ref.writeAuthorized,false);
+ assert.equal(ref.rawFullMarks,ref.learningAchievements*4);
+ for(const theme of ref.rows){
+  assert.equal(theme.status,'v46WorkingReference');
+  assert.equal(theme.printedPage,true);
+  assert.equal(theme.sourceRows.length,theme.count);
+  const slots=draftThemeSlots({writeAuthorized:false,officialAssessmentApproved:false,key:'mathematics',themes:[theme]},0);
+  assert.equal(slots[0].sourceText.criteria.length,4);
+ }
+ console.log('V46 lower math reference grade '+grade+': '+ref.themeCount+' themes, '+ref.learningAchievements+' working rows');
+}
 const sid='300160003',actor={schoolId:sid,uid:'teacher1',role:'teacher',active:true},grade='4';
 let active=true,role='teacher',foreign=false,studentForeign=false,revoked=false;
 const school='schools/'+sid;

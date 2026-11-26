@@ -23,11 +23,11 @@ async function render(){
   await verify();if(request!==epoch||actor!==selected)return;
   const ref=assessmentThemeReference({catalogue,grade:$('grade').value,subject:$('subject').value});
   $('guideLink').href=ref.guide.url;$('officialLink').href=ref.guide.officialPage;
-  $('summary').textContent=ref.themeCount?'स्रोतमा '+ref.themeCount+' थिमको गणना उपलब्ध छ। शब्दशः फाराम र आधिकारिक मूल्याङ्कन प्रमाणीकरण बाँकी छ।':'यस विषयको थिमगत गणना अझै सुरक्षित रूपमा सारिएको छैन। मूल मार्गदर्शन हेर्नुहोस्।';
+  $('summary').textContent=ref.themeCount?(ref.rows.some(r=>r.status==='v46WorkingReference')?'V46 मा '+ref.themeCount+' गणित थिमका कार्यगत रुब्रिक उपलब्ध छन्। शब्दशः प्रमाणीकरण बाँकी छ।':'स्रोतमा '+ref.themeCount+' थिमको गणना उपलब्ध छ। शब्दशः फाराम र आधिकारिक मूल्याङ्कन प्रमाणीकरण बाँकी छ।'):'यस विषयको थिमगत गणना अझै सुरक्षित रूपमा सारिएको छैन। मूल मार्गदर्शन हेर्नुहोस्।';
   for(const item of ref.rows){
    const tr=document.createElement('tr');cell(tr,[item.theme,item.en&&item.en!==item.theme?item.en:''].filter(Boolean).join(' / '));cell(tr,item.count);cell(tr,item.indicators);cell(tr,item.scoreBlocks);cell(tr,item.fullMarks);
-   const td=cell(tr,''),a=document.createElement('a');a.href=item.sourceUrl;a.target='_blank';a.rel='noopener noreferrer';a.textContent=String(item.page);td.append(a);
-   cell(tr,item.status==='guideMatched'?'स्रोत गणना मिलेको':'स्रोत सूचक गणना');$('rows').append(tr);
+   const td=cell(tr,''),a=document.createElement('a');a.href=item.sourceUrl;a.target='_blank';a.rel='noopener noreferrer';a.textContent=(item.printedPage?'Printed p. ':'')+String(item.page);td.append(a);
+   cell(tr,item.status==='v46WorkingReference'?'V46 कार्यगत पाठ — शब्दशः प्रमाणीकरण बाँकी':item.status==='guideMatched'?'स्रोत गणना मिलेको':'स्रोत सूचक गणना');$('rows').append(tr);
   }
   if(ref.themeCount){const tr=document.createElement('tr');for(const x of ['Total',ref.learningAchievements,ref.indicators,ref.scoreBlocks,ref.rawFullMarks,'—','सन्दर्भ मात्र'])cell(tr,x);$('totals').append(tr)}
  }catch(e){if(request===epoch){clear();$('status').textContent='स्रोत खोल्न सकिएन: '+neError(e)}}
@@ -66,7 +66,7 @@ function renderTeacherDraft(){
  const theme=worksheet.themes[Number($('teacherTheme').value)];
  $('teacherThemeSource').href=theme.sourceUrl;$('teacherThemeSource').hidden=false;
  const update=()=>{const fields=[...$('teacherDraftRows').querySelectorAll('select')];const used=fields.filter(el=>el.value!=='');$('teacherDraftTotal').textContent='Draft: '+used.length+'/'+fields.length+' · '+used.reduce((n,el)=>n+Number(el.value),0)+' / '+theme.fullMarks};
- for(const slot of slots){const tr=document.createElement('tr');const label=cell(tr,(slot.indicatorBlock?'Indicator Block ':'Achievement Slot ')+slot.number);if(slot.sourceText){for(const value of [slot.sourceText.title,slot.sourceText.titleEn,slot.sourceText.achievement]){const p=document.createElement('div');p.textContent=value;label.append(p)}}const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','Draft rating '+slot.number);input.append(new Option('—',''));for(let n=slot.min;n<=slot.max;n++)input.append(new Option(String(n),String(n)));input.onchange=update;td.append(input);$('teacherDraftRows').append(tr)}
+ for(const slot of slots){const tr=document.createElement('tr');const label=cell(tr,(slot.indicatorBlock?'Indicator Block ':'Achievement Slot ')+slot.number);if(slot.sourceText){for(const value of [slot.sourceText.title,slot.sourceText.titleEn,slot.sourceText.achievement].filter(Boolean)){const p=document.createElement('div');p.textContent=value;label.append(p)}if(slot.sourceText.criteria){for(const [i,criterion] of slot.sourceText.criteria.entries()){const p=document.createElement('div');p.textContent=(4-i)+' — '+criterion.join(' / ');label.append(p)}}}const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','Draft rating '+slot.number);input.append(new Option('—',''));for(let n=slot.min;n<=slot.max;n++)input.append(new Option(String(n),String(n)));input.onchange=update;td.append(input);$('teacherDraftRows').append(tr)}
  update();
 }
 $('teacherStudent').onchange=renderTeacherDraft;$('teacherTheme').onchange=renderTeacherDraft;
@@ -77,7 +77,7 @@ $('teacherOpenWorksheet').onclick=async()=>{
  $('teacherStudent').replaceChildren(...result.students.map(s=>new Option(s.name+(s.section?' / '+s.section:''),s.id)));
  $('teacherTheme').replaceChildren(...result.themes.map((t,i)=>new Option([t.theme,t.en&&t.en!==t.theme?t.en:''].filter(Boolean).join(' / '),String(i))));
  $('teacherStudent').disabled=false;$('teacherTheme').disabled=false;$('teacherDate').disabled=false;
- renderTeacherDraft();$('teacherWorksheetStatus').textContent=result.students.length+' विद्यार्थी र '+result.themes.length+' थिम उपलब्ध छन्। '+(result.themes.every(t=>t.sourceRows)?'V46 मा रहेको उपलब्धि पाठ र थिम सङ्ख्या मिलाइएको छ। ':'सबै थिमको शब्दशः पाठ अझै उपलब्ध छैन। ')+'अस्थायी फाराम मात्र।';
+ renderTeacherDraft();$('teacherWorksheetStatus').textContent=result.students.length+' विद्यार्थी र '+result.themes.length+' थिम उपलब्ध छन्। '+(result.themes.every(t=>t.sourceRows)?'V46 को उपलब्धि पाठ उपलब्ध छ; शब्दशः प्रमाणीकरण बाँकी। ':'सबै थिमको शब्दशः पाठ अझै उपलब्ध छैन। ')+'अस्थायी फाराम मात्र।';
  }catch(e){if(request===teacherEpoch){clearTeacherModel();$('teacherWorksheetStatus').textContent='फाराम खोल्न सकिएन: '+neError(e)}}
 };
 function clearPrint(){document.body.classList.remove('portfolio-printing');$('portfolioPrint').replaceChildren();$('portfolioPrint').hidden=true}
