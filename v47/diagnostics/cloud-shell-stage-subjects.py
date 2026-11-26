@@ -64,6 +64,20 @@ def catalog(groups):
     print("SUBJECTS PER CLASS:",json.dumps(dict(Counter(cls for cls,key in pairs)),sort_keys=True))
     print("NEPALI CLASS SUBJECT NAMES:",sum(any("\u0900"<=c<="\u097f" for c in x[0]) for x in pairs.values()))
     return out,pairs
+def same_field(a,b):
+    # Firestore REST may serialize a double 4.0 as JSON 4. The typed
+    # doubleValue wrapper must still match; never conflate integerValue,
+    # booleanValue, strings, or distinct numeric values.
+    if isinstance(a,dict) and isinstance(b,dict):
+        if set(a)!=set(b):return False
+        if set(a)=={"doubleValue"}:
+            x,y=a["doubleValue"],b["doubleValue"]
+            if type(x) in (int,float) and type(y) in (int,float):
+                return math.isfinite(x) and math.isfinite(y) and x==y
+        return all(same_field(a[k],b[k]) for k in a)
+    if isinstance(a,list) and isinstance(b,list):
+        return len(a)==len(b) and all(same_field(x,y) for x,y in zip(a,b))
+    return type(a)==type(b) and a==b
 def self_test():
     def row(id,cls,name,credit,active=True):
         return {"name":m.root(m.SOURCE)+"/classes/"+id,"fields":{"className":m.string(cls),"subject":m.string(name),"creditHour":{"integerValue":str(credit)},"active":m.boolean(active)}}
@@ -76,8 +90,14 @@ def self_test():
     try:catalog({"classes":[a,row("z","9","कम्प्युटर",5)]})
     except ValueError:pass
     else:raise AssertionError("Conflicting credit accepted")
-    print("PASS exact Nepali names, section deduplication, credit preservation and primary/secondary separation")
-def main(path):
+    assert same_field({"doubleValue":4.0},{"doubleValue":4})
+    assert not same_field({"doubleValue":4.0},{"integerValue":"4"})
+    assert not same_field({"doubleValue":4.0},{"doubleValue":4.001})
+    assert not same_field({"doubleValue":1},{"doubleValue":True})
+    assert not same_field({"stringValue":"नेपाली"},{"stringValue":"Nepali"})
+    assert not same_field({"arrayValue":{"values":[{"stringValue":"a"},{"stringValue":"b"}]}},{"arrayValue":{"values":[{"stringValue":"b"},{"stringValue":"a"}]}})
+    print("PASS exact Nepali names, credit preservation, primary/secondary separation and strict typed numeric comparison")
+def main(path,verify_only=False):
     if os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):raise RuntimeError("Live migration forbidden in CI")
     warnings.simplefilter("error",getpass.GetPassWarning)
     raw=path.read_bytes();magic=b"SMSS-MIGRATION-V1";n=len(magic)
@@ -121,14 +141,25 @@ def main(path):
         if r.get("nextPageToken") or any(d["name"] not in out for d in r.get("documents",[])):raise RuntimeError("Unrelated target class/subject records")
     def check(batch):
         vals=read(batch)
+        differences=Counter()
         for n,v in vals.items():
-            if v is not None and m.canon(v)!=m.canon(out[n]):raise RuntimeError("Existing record differs; no overwrite")
+            if v is None:continue
+            if not same_field(v,out[n]):
+                for k in set(v)|set(out[n]):
+                    if k not in v or k not in out[n] or not same_field(v[k],out[n][k]):
+                        # Field names in the planned schema only, no values/IDs.
+                        differences[k if k in out[n] else "(unexpected field)"]+=1
+        if differences:
+            print("MISMATCH FIELD COUNTS:",json.dumps(dict(differences),sort_keys=True))
+            raise RuntimeError("Existing record differs; no overwrite")
         return [n for n in batch if vals[n] is None]
     names=sorted(out);batches=[names[i:i+50] for i in range(0,len(names),50)]
     missing=[]
     for batch in batches:missing.extend(check(batch))
     print("CREATE ONLY:",len(missing),"ALREADY IDENTICAL:",len(names)-len(missing))
-    if input("Type STAGE-V47-SUBJECTS to proceed: ").strip()!="STAGE-V47-SUBJECTS":raise RuntimeError("Not confirmed")
+    if verify_only and missing:raise RuntimeError("Missing documents; verification only, zero writes")
+    if missing and input("Type STAGE-V47-SUBJECTS to proceed: ").strip()!="STAGE-V47-SUBJECTS":raise RuntimeError("Not confirmed")
+    if not missing:print("ALL RECORDS ALREADY IDENTICAL; NO WRITES NEEDED")
     for i in range(0,len(missing),50):
         batch=missing[i:i+50]
         if any(not n.startswith(BASE+"/classes/") and not n.startswith(BASE+"/subjects/") for n in batch):raise RuntimeError("Wrong destination")
@@ -143,6 +174,7 @@ def main(path):
 if __name__=="__main__":
     try:
         if sys.argv[1:]==["--self-test"]:self_test()
+        elif len(sys.argv)==3 and sys.argv[1]=="--verify-only":main(Path(sys.argv[2]).expanduser(),verify_only=True)
         elif len(sys.argv)==2:main(Path(sys.argv[1]).expanduser())
         else:raise ValueError("Specify encrypted backup")
     except (Exception,KeyboardInterrupt) as e:
