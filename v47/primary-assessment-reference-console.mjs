@@ -66,7 +66,7 @@ function renderTeacherDraft(){
  const theme=worksheet.themes[Number($('teacherTheme').value)];
  $('teacherThemeSource').href=theme.sourceUrl;$('teacherThemeSource').hidden=false;
  const update=()=>{const fields=[...$('teacherDraftRows').querySelectorAll('select')];const used=fields.filter(el=>el.value!=='');$('teacherDraftTotal').textContent='Draft: '+used.length+'/'+fields.length+' · '+used.reduce((n,el)=>n+Number(el.value),0)+' / '+theme.fullMarks};
- for(const slot of slots){const tr=document.createElement('tr');cell(tr,(slot.indicatorBlock?'Indicator Block ':'Achievement Slot ')+slot.number);const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','Draft rating '+slot.number);input.append(new Option('—',''));for(let n=slot.min;n<=slot.max;n++)input.append(new Option(String(n),String(n)));input.onchange=update;td.append(input);$('teacherDraftRows').append(tr)}
+ for(const slot of slots){const tr=document.createElement('tr');const label=cell(tr,(slot.indicatorBlock?'Indicator Block ':'Achievement Slot ')+slot.number);if(slot.sourceText){for(const value of [slot.sourceText.title,slot.sourceText.titleEn,slot.sourceText.achievement]){const p=document.createElement('div');p.textContent=value;label.append(p)}}const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','Draft rating '+slot.number);input.append(new Option('—',''));for(let n=slot.min;n<=slot.max;n++)input.append(new Option(String(n),String(n)));input.onchange=update;td.append(input);$('teacherDraftRows').append(tr)}
  update();
 }
 $('teacherStudent').onchange=renderTeacherDraft;$('teacherTheme').onchange=renderTeacherDraft;
@@ -77,7 +77,7 @@ $('teacherOpenWorksheet').onclick=async()=>{
  $('teacherStudent').replaceChildren(...result.students.map(s=>new Option(s.name+(s.section?' / '+s.section:''),s.id)));
  $('teacherTheme').replaceChildren(...result.themes.map((t,i)=>new Option([t.theme,t.en&&t.en!==t.theme?t.en:''].filter(Boolean).join(' / '),String(i))));
  $('teacherStudent').disabled=false;$('teacherTheme').disabled=false;$('teacherDate').disabled=false;
- renderTeacherDraft();$('teacherWorksheetStatus').textContent=result.students.length+' विद्यार्थी र '+result.themes.length+' थिम उपलब्ध छन्। अस्थायी फाराम मात्र।';
+ renderTeacherDraft();$('teacherWorksheetStatus').textContent=result.students.length+' विद्यार्थी र '+result.themes.length+' थिम उपलब्ध छन्। '+(result.themes.every(t=>t.sourceRows)?'V46 मा रहेको उपलब्धि पाठ र थिम सङ्ख्या मिलाइएको छ। ':'सबै थिमको शब्दशः पाठ अझै उपलब्ध छैन। ')+'अस्थायी फाराम मात्र।';
  }catch(e){if(request===teacherEpoch){clearTeacherModel();$('teacherWorksheetStatus').textContent='फाराम खोल्न सकिएन: '+neError(e)}}
 };
 function clearPrint(){document.body.classList.remove('portfolio-printing');$('portfolioPrint').replaceChildren();$('portfolioPrint').hidden=true}

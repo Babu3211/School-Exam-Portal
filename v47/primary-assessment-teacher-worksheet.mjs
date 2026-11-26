@@ -1,5 +1,6 @@
 // Teacher assessment worksheet: verified assignment and source counts only.
 // Never writes observations, assigns privileges, or claims official form parity.
+import {v46MathThemeRows} from './primary-assessment-v46-math-text.mjs';
 import {readSchoolSubjectCatalog} from './subject-catalog-view.mjs';
 import {verifyTeacherSubjectAssignment} from './verified-teacher-subject-assignment.mjs';
 import {assessmentThemeReference} from './primary-assessment-reference.mjs';
@@ -8,11 +9,11 @@ import {verifySchoolSession} from './verified-school-session.mjs';
 
 const aliases={
  nepali:['nepali','नेपाली'],english:['english','अंग्रेजी','अङ्ग्रेजी'],mathematics:['mathematics','math','गणित'],
- serophero:['our surroundings','hamro sero fero','hamro serophero','हाम्रो सेरोफेरो','हाम्रो सेरो फेरो'],
+ serophero:['our surroundings','hamro sero fero','hamro serophero','हाम्रो सेरोफेरो','हाम्रो सेरो फेरो','सेरोफेरो'],
  science:['science','science and technology','विज्ञान','विज्ञान तथा प्रविधि'],
  socialstudies:['social studies','social studies and human values education','सामाजिक अध्ययन','सामाजिक अध्ययन तथा मानव मूल्य शिक्षा'],
  healthphysicalcreativeart:['health physical education and creative arts','health physical education and creative art','स्वास्थ्य शारीरिक तथा सिर्जनात्मक कला','स्वास्थ्य शारीरिक शिक्षा तथा सिर्जनात्मक कला'],
- hamrodhunibeshi:['mother tongue or local subject','local subject','hamro dhuni beshi','हाम्रो धुनीबेँसी','हाम्रो धुनीबेशी','स्थानीय विषय','मातृभाषा']
+ hamrodhunibeshi:['mother tongue or local subject','local subject','hamro dhuni beshi','हाम्रो धुनीबेँसी','हाम्रो धुनीबेशी','हाम्रो धुनिबेँशी','हाम्रो धुनिवेशी','हाम्रो धुनिबेशी','हाम्रो धुनिबेसी','स्थानीय विषय','स्थानीय','local','Our Dhunibesi','Our Dhunibeshi','मातृभाषा','मातृभाषा वा स्थानीय विषय']
 };
 const norm=s=>String(s??'').normalize('NFC').toLowerCase().replace(/[(),،–-]/g,' ').replace(/\s+/g,' ').trim();
 export function primarySubjectKey(name){
@@ -60,7 +61,7 @@ export async function loadPrimaryTeacherWorksheet(args){
  if(!ref.rows.length)throw Error('Theme reference unavailable');
  const roster=await loadCompleteClassRoster({db,api:{...api,getDocs:api.getDocsFromServer},actor,schoolId,classId:grade,activeOnly:true});check();
  await verifyAssignment();check();
- return Object.freeze({schoolId,grade,subjectId,subjectName:assigned.subjectName,key,students:Object.freeze(roster.students.map(s=>Object.freeze({id:s.id,name:String(s.nameEnglish??s.name??s.id),section:String(s.section??'')}))),themes:Object.freeze(ref.rows.map(r=>Object.freeze({theme:r.theme,en:r.en,count:r.count,fullMarks:r.fullMarks,scoreBlocks:r.scoreBlocks,sourceUrl:r.sourceUrl}))),writeAuthorized:false,officialAssessmentApproved:false});
+ return Object.freeze({schoolId,grade,subjectId,subjectName:assigned.subjectName,key,students:Object.freeze(roster.students.map(s=>Object.freeze({id:s.id,name:String(s.nameEnglish??s.name??s.id),section:String(s.section??'')}))),themes:Object.freeze(ref.rows.map(r=>Object.freeze({theme:r.theme,en:r.en,count:r.count,fullMarks:r.fullMarks,scoreBlocks:r.scoreBlocks,sourceUrl:r.sourceUrl,sourceRows:key==='mathematics'&&['4','5'].includes(grade)?v46MathThemeRows(grade,r.theme,r.count):null}))),writeAuthorized:false,officialAssessmentApproved:false});
 }
 export function draftThemeSlots(model,themeIndex){
  if(model?.writeAuthorized!==false||model.officialAssessmentApproved!==false||!Number.isInteger(themeIndex))throw Error('Unverified worksheet');
@@ -68,5 +69,5 @@ export function draftThemeSlots(model,themeIndex){
  const indicators=model.key==='serophero';
  const n=indicators?theme.scoreBlocks:theme.count;
  if(!Number.isInteger(n)||n<1||n>500||theme.fullMarks!==n*4)throw Error('Invalid worksheet denominator');
- return Object.freeze(Array.from({length:n},(_,i)=>Object.freeze({number:i+1,min:indicators?0:1,max:4,indicatorBlock:indicators})));
+ return Object.freeze(Array.from({length:n},(_,i)=>Object.freeze({number:i+1,min:indicators?0:1,max:4,indicatorBlock:indicators,...(theme.sourceRows?.length===n?{sourceText:theme.sourceRows[i]}:{})})));
 }

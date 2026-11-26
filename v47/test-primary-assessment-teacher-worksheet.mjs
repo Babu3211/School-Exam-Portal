@@ -1,8 +1,24 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {primarySubjectKey,draftThemeSlots,loadPrimaryTeacherWorksheet,loadAssignedPrimarySubjects} from './primary-assessment-teacher-worksheet.mjs';
+import {v46MathThemeRows} from './primary-assessment-v46-math-text.mjs';
 const catalogue=JSON.parse(readFileSync(new URL('./primary-assessment-reference-2083.json',import.meta.url)));
 assert.equal(primarySubjectKey('नेपाली'),'nepali');assert.equal(primarySubjectKey('Mathematics'),'mathematics');assert.equal(primarySubjectKey('Optional Mathematics'),null);
+for(const name of ['सेरोफेरो','हाम्रो सेरोफेरो'])assert.equal(primarySubjectKey(name),'serophero');
+for(const name of ['हाम्रो धुनिबेँशी','स्थानीय','Our Dhunibeshi','मातृभाषा वा स्थानीय विषय'])assert.equal(primarySubjectKey(name),'hamrodhunibeshi');
+for(const grade of ['4','5']){
+ let count=0;
+ for(const theme of catalogue.rows[grade+':mathematics']){
+  const rows=v46MathThemeRows(grade,theme.theme,theme.count);
+  assert.ok(rows,'V46 text missing or count mismatch: '+grade+' '+theme.theme);
+  assert.equal(rows.length,theme.count);count+=rows.length;
+  const slots=draftThemeSlots({writeAuthorized:false,officialAssessmentApproved:false,key:'mathematics',themes:[{...theme,sourceRows:rows}]},0);
+  assert.equal(slots.length,theme.count);assert.equal(slots[0].sourceText.achievement,rows[0].achievement);
+  assert.equal(v46MathThemeRows(grade,theme.theme,theme.count+1),null);
+ }
+ assert.equal(count,30);
+}
+assert.equal(v46MathThemeRows('3','ज्यामिति',4),null);
 const sid='300160003',actor={schoolId:sid,uid:'teacher1',role:'teacher',active:true},grade='4';
 let active=true,role='teacher',foreign=false,studentForeign=false,revoked=false;
 const school='schools/'+sid;
