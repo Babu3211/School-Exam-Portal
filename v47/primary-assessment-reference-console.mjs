@@ -41,7 +41,7 @@ let teacherEpoch=0,worksheet=null,worksheetRequest=0,worksheetRevision=null;
 const usesLanguageStages=model=>['1','2','3'].includes(model?.grade)&&['nepali','english','serophero'].includes(model?.key);
 function clearDraft(){
  worksheetRequest++;worksheetRevision=null;$('teacherSaveDraft').disabled=true;$('teacherDraftSaveStatus').textContent='';
- $('teacherDraftRows').replaceChildren();$('teacherDate').value='';$('teacherDraftTotal').textContent='';$('teacherThemeSource').hidden=true;
+ $('teacherDraftRows').replaceChildren();$('teacherDraftHead').replaceChildren();$('teacherDate').value='';$('teacherDraftTotal').textContent='';$('teacherThemeSource').hidden=true;
 }
 function resetTeacherWorksheet(){
  teacherEpoch++;worksheet=null;clearDraft();$('teacherStageWrap').hidden=true;$('teacherStage').value='regular';
@@ -73,9 +73,43 @@ async function renderTeacherDraft(){
  $('teacherDate').value=todayAssessmentDate2083();
  $('teacherThemeSource').href=theme.sourceUrl;$('teacherThemeSource').hidden=false;
  const binary=worksheet.key==='serophero';
- const makeDate=(tr,span=1)=>{const td=cell(tr,'');td.rowSpan=span;const field=document.createElement('input');field.className='assessment-row-date';field.setAttribute('aria-label','Assessment date (BS)');field.placeholder='2083-MM-DD';field.maxLength=10;td.append(field);return field};
- const update=()=>{const fields=[...$('teacherDraftRows').querySelectorAll('select')];if(binary&&fields.length&&fields.length%4===0){const score=scoreSeroferoDraft(fields.map(el=>el.value||'_').join(''));$('teacherDraftTotal').textContent='पूरा सूचक समूह: '+score.completed+'/'+score.blocks.length+' · '+score.total+' / '+theme.fullMarks;return;}const used=fields.filter(el=>el.value!=='');$('teacherDraftTotal').textContent='Draft: '+used.length+'/'+fields.length+' · '+used.reduce((n,el)=>n+Number(el.value),0)+' / '+theme.fullMarks};
- for(const slot of slots){if(binary&&slot.sourceText?.indicators?.length===4){for(let i=0;i<4;i++){const tr=document.createElement('tr');const label=cell(tr,slot.sourceText.title+' — '+slot.sourceText.indicators[i]);const tool=slot.sourceText.tools[i];if(tool&&tool!=='मूल फाराममा खाली'){const p=document.createElement('div');p.textContent=tool;label.append(p)}const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','सूचक '+slot.number+'.'+(i+1));input.append(new Option('—',''),new Option('सकेको','1'),new Option('नसकेको','0'));input.onchange=update;td.append(input);if(i===0)makeDate(tr,4);$('teacherDraftRows').append(tr)}continue;}const tr=document.createElement('tr');const label=cell(tr,(slot.indicatorBlock?'Indicator Block ':'Achievement Slot ')+slot.number);if(slot.sourceText){for(const value of [slot.sourceText.title,slot.sourceText.titleEn,slot.sourceText.achievement].filter(Boolean)){const p=document.createElement('div');p.textContent=value;label.append(p)}for(const value of [slot.sourceText.aspect,slot.sourceText.tool].filter(Boolean)){const p=document.createElement('div');p.textContent=value;label.append(p)}if(slot.sourceText.criteria){for(const [i,criterion] of slot.sourceText.criteria.entries()){const p=document.createElement('div');p.textContent=(4-i)+' — '+criterion.join(' / ');label.append(p)}}}const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','Draft rating '+slot.number);input.append(new Option('—',''));for(let n=slot.min;n<=slot.max;n++)input.append(new Option(String(n),String(n)));input.onchange=update;td.append(input);makeDate(tr);$('teacherDraftRows').append(tr)}
+ const key=worksheet.key,lower=['1','2','3'].includes(worksheet.grade),nepaliOnly=['nepali','socialstudies','serophero'].includes(key),ne=nepaliOnly;
+ const digits=n=>ne?String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]):String(n);
+ const nepaliForm=lower&&key==='nepali',englishForm=lower&&key==='english',mathForm=lower&&key==='mathematics';
+ const sourceReady=slots.every(s=>s.sourceText),indicatorForm=binary&&sourceReady;
+ const stageLabel=usesLanguageStages(worksheet)?($('teacherStage').value==='regular'?(ne?'नियमित मूल्याङ्कन':'Regular Assessment'):(ne?'थप सहायतापछिको मूल्याङ्कन':'Assessment after Remedial Class')):(ne?'मूल्याङ्कन':'Assessment');
+ const labels=indicatorForm?['थिम','मुख्य सिकाइ उपलब्धि','उपलब्धि सूचक','सकेको / नसकेको','मिति','अङ्कन / ४','मूल्याङ्कन साधन']:nepaliForm?['सिकाइ उपलब्धि','परीक्षण गर्ने पक्ष','साधन','मिति','अङ्कन / ४']:englishForm?['SN','Areas / Skills','Learning outcomes','Date (BS)','Achievement / 4']:mathForm?['Learning achievement / सिकाइ उपलब्धि','Criteria / अङ्कन आधार','Date (BS) / मिति','Achievement / 4']:ne?['सिकाइ उपलब्धि','मिति','अङ्कन / ४']:['Learning achievement','Date (BS)','Achievement / 4'];
+ const head=$('teacherDraftHead');head.replaceChildren();const top=document.createElement('tr');const th=document.createElement('th');th.colSpan=labels.length;th.textContent=stageLabel+' — '+[theme.theme,theme.en&&theme.en!==theme.theme?theme.en:''].filter(Boolean).join(' / ');top.append(th);head.append(top);const heading=document.createElement('tr');for(const label of labels){const el=document.createElement('th');el.scope='col';el.textContent=label;heading.append(el)}head.append(heading);
+ const makeDate=(tr,span=1)=>{const td=cell(tr,'');td.rowSpan=span;const field=document.createElement('input');field.className='assessment-row-date';field.setAttribute('aria-label',ne?'मूल्याङ्कन मिति (वि.सं.)':'Assessment date (BS)');field.placeholder='2083-MM-DD';field.maxLength=10;td.append(field);return field};
+ const scoreCells=[];
+ const update=()=>{const fields=[...$('teacherDraftRows').querySelectorAll('select')];if(indicatorForm&&fields.length&&fields.length%4===0){const score=scoreSeroferoDraft(fields.map(el=>el.value||'_').join(''));scoreCells.forEach((el,i)=>el.textContent=score.blocks[i]===null?'—':digits(score.blocks[i])+' / ४');$('teacherDraftTotal').textContent='पूरा सूचक समूह: '+digits(score.completed)+'/'+digits(score.blocks.length)+' · '+digits(score.total)+' / '+digits(theme.fullMarks);return;}const used=fields.filter(el=>el.value!=='');$('teacherDraftTotal').textContent='Draft: '+used.length+'/'+fields.length+' · '+used.reduce((n,el)=>n+Number(el.value),0)+' / '+theme.fullMarks};
+ const rating=(tr,slot)=>{const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','Draft rating '+slot.number);input.append(new Option('—',''));for(let n=slot.min;n<=slot.max;n++)input.append(new Option(digits(n),String(n)));input.onchange=update;td.append(input);return input};
+ const addText=(td,values)=>{for(const value of values.filter(Boolean)){const el=document.createElement('div');el.textContent=value;td.append(el)}};
+ for(const [index,slot] of slots.entries()){
+  const row=slot.sourceText;
+  if(indicatorForm){
+   for(let i=0;i<4;i++){
+    const tr=document.createElement('tr');
+    if(index===0&&i===0){const td=cell(tr,theme.theme);td.rowSpan=slots.length*4;td.className='assessment-group'}
+    if(i===0&&(index===0||slots[index-1].sourceText.outcome!==row.outcome)){let span=1;while(index+span<slots.length&&slots[index+span].sourceText.outcome===row.outcome)span++;const td=cell(tr,digits(row.outcome)+'. '+row.title);td.rowSpan=span*4;td.className='assessment-group'}
+    cell(tr,digits((row.block-1)*4+i+1)+'. '+row.indicators[i]);
+    const td=cell(tr,''),input=document.createElement('select');input.setAttribute('aria-label','सूचक '+slot.number+'.'+(i+1));input.append(new Option('—',''),new Option('सकेको','1'),new Option('नसकेको','0'));input.onchange=update;td.append(input);
+    if(i===0){makeDate(tr,4);const score=cell(tr,'—');score.rowSpan=4;score.className='assessment-block-score';scoreCells.push(score)}
+    const tool=row.tools[i];cell(tr,tool==='मूल फाराममा खाली'?'':tool);
+    $('teacherDraftRows').append(tr);
+   }
+   continue;
+  }
+  const tr=document.createElement('tr');
+  if(englishForm){cell(tr,String(slot.number));cell(tr,row?.aspect??'—');cell(tr,row?.title??'Source text unavailable')}
+  else{
+   const label=cell(tr,digits(slot.number)+'.');addText(label,row?[row.title,row.titleEn,row.achievement]:[ne?'स्रोत पाठ उपलब्ध छैन':'Source text unavailable']);
+   if(nepaliForm){cell(tr,row?.aspect??'—');cell(tr,row?.tool??'—')}
+   else if(mathForm){const td=cell(tr,'');if(row?.criteria)addText(td,row.criteria.map((c,i)=>(4-i)+' — '+c.join(' / ')))}
+   else if(row)addText(label,[row.aspect,row.tool]);
+  }
+  makeDate(tr);rating(tr,slot);$('teacherDraftRows').append(tr);
+ }
  update();
  if(!['mathematics','science','socialstudies','nepali','english','healthphysicalcreativeart','serophero'].includes(worksheet.key)||(Number(worksheet.grade)<=3&&worksheet.key!=='mathematics'&&!usesLanguageStages(worksheet))||!slots.every(s=>s.sourceText))return;
  const args=worksheetSelection(),request=worksheetRequest;

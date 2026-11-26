@@ -337,6 +337,15 @@ try{
      assert.equal(await page.locator('#teacherStage').isVisible(),true);
      assert.equal(await ratings.count(),count);
      assert.equal(await rowDateInputs.count(),binary?count/4:count);
+     const headings=await page.locator('#teacherDraftHead').textContent();
+     assert.ok(headings.includes(binary?'उपलब्धि सूचक':kind==='nepali'?'परीक्षण गर्ने पक्ष':'Areas / Skills'));
+     if(binary){assert.equal(await page.locator('#teacherDraftRows .assessment-block-score').count(),count/4);assert.equal(await page.locator('#teacherDraftRows .assessment-block-score').first().textContent(),'—');
+      for(let i=0;i<4;i++)await ratings.nth(i).selectOption('0');
+      assert.equal(await page.locator('#teacherDraftRows .assessment-block-score').first().textContent(),'० / ४');
+      for(let i=0;i<4;i++)await ratings.nth(i).selectOption('1');
+      assert.equal(await page.locator('#teacherDraftRows .assessment-block-score').first().textContent(),'४ / ४');
+      for(let i=0;i<4;i++)await ratings.nth(i).selectOption('');
+     }
      assert.equal(await page.locator('#teacherDate').inputValue(),todayAssessmentDate2083());
      assert.ok((await page.locator('#teacherDraftRows tr').first().textContent()).includes(theme.sourceRows[0].title));
      for(const [stage,score,date] of [['regular',binary?'0':'2','2083-08-11'],['support',binary?'1':'4','2083-08-12']]){
