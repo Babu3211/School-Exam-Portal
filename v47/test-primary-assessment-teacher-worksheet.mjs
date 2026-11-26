@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {primarySubjectKey,draftThemeSlots,loadPrimaryTeacherWorksheet,loadAssignedPrimarySubjects} from './primary-assessment-teacher-worksheet.mjs';
+import {v46ScienceThemeRows} from './primary-assessment-v46-science-text.mjs';
 import {v46MathThemeRows} from './primary-assessment-v46-math-text.mjs';
 import {assessmentThemeReference} from './primary-assessment-reference.mjs';
 const catalogue=JSON.parse(readFileSync(new URL('./primary-assessment-reference-2083.json',import.meta.url)));
@@ -20,6 +21,22 @@ for(const grade of ['4','5']){
  assert.equal(count,30);
 }
 assert.equal(v46MathThemeRows('3','ज्यामिति',4),null);
+for(const grade of ['4','5']){
+ let count=0;
+ const themes=catalogue.rows[grade+':science'];
+ assert.equal(themes.length,8);
+ for(const theme of themes){
+  const rows=v46ScienceThemeRows(grade,theme.theme,theme.count);
+  assert.ok(rows,'V46 Science text mismatch '+grade+' '+theme.theme);
+  count+=rows.length;
+  const slots=draftThemeSlots({writeAuthorized:false,officialAssessmentApproved:false,key:'science',themes:[{...theme,sourceRows:rows}]},0);
+  assert.equal(slots.length,theme.count);
+  assert.ok(slots.every(s=>s.sourceText.achievement&&s.sourceText.titleEn));
+  assert.equal(v46ScienceThemeRows(grade,theme.theme,theme.count+1),null);
+ }
+ assert.equal(count,49);
+}
+assert.equal(v46ScienceThemeRows('3','वैज्ञानिक सिकाइ',5),null);
 for(const grade of ['1','2','3']){
  const ref=assessmentThemeReference({catalogue,grade,subject:'mathematics'});
  assert.ok(ref.themeCount>0);

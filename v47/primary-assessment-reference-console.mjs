@@ -72,7 +72,7 @@ async function renderTeacherDraft(){
  const update=()=>{const fields=[...$('teacherDraftRows').querySelectorAll('select')];const used=fields.filter(el=>el.value!=='');$('teacherDraftTotal').textContent='Draft: '+used.length+'/'+fields.length+' · '+used.reduce((n,el)=>n+Number(el.value),0)+' / '+theme.fullMarks};
  for(const slot of slots){const tr=document.createElement('tr');const label=cell(tr,(slot.indicatorBlock?'Indicator Block ':'Achievement Slot ')+slot.number);if(slot.sourceText){for(const value of [slot.sourceText.title,slot.sourceText.titleEn,slot.sourceText.achievement].filter(Boolean)){const p=document.createElement('div');p.textContent=value;label.append(p)}if(slot.sourceText.criteria){for(const [i,criterion] of slot.sourceText.criteria.entries()){const p=document.createElement('div');p.textContent=(4-i)+' — '+criterion.join(' / ');label.append(p)}}}const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','Draft rating '+slot.number);input.append(new Option('—',''));for(let n=slot.min;n<=slot.max;n++)input.append(new Option(String(n),String(n)));input.onchange=update;td.append(input);$('teacherDraftRows').append(tr)}
  update();
- if(worksheet.key!=='mathematics'||!slots.every(s=>s.sourceText))return;
+ if(!['mathematics','science'].includes(worksheet.key)||!slots.every(s=>s.sourceText))return;
  const args=worksheetSelection(),request=worksheetRequest;
  const fields=[...$('teacherDraftRows').querySelectorAll('select')];
  fields.forEach(el=>el.disabled=true);$('teacherDate').disabled=true;
