@@ -10,8 +10,12 @@ from importlib.machinery import SourceFileLoader
 COLLS=("students","staff","classes","subjects","exams","marks","mark_settings","attendance","cdc_observations","cdc_serofero_indicators","school_settings","user_roles","certificates","school_public_branding","school_gallery","public_result_exams","public_result_lookup","public_results")
 ALLOWED={"marks","user_roles"}
 
+def delta_counts(old,current,equal):
+    return {"old":len(old),"current":len(current),"new":len(current.keys()-old.keys()),"removed":len(old.keys()-current.keys()),"changed":sum(not equal(old[k],current[k]) for k in old.keys() & current.keys())}
+
 def additions(old, current, equal, allowed):
-    if set(old)-set(current) or any(not equal(old[k],current[k]) for k in old.keys() & current.keys()):
+    counts=delta_counts(old,current,equal)
+    if counts["removed"] or counts["changed"]:
         raise RuntimeError("Source changed or removed existing records; manual reconciliation required")
     new=set(current)-set(old)
     if new and not allowed:raise RuntimeError("New records in unreviewed collection")
@@ -23,7 +27,8 @@ def self_test():
         try:additions(old,new,lambda x,y:x==y,allowed)
         except RuntimeError:pass
         else:raise AssertionError("Unexpected delta accepted")
-    print("PASS additive-only delta policy")
+    assert delta_counts({"a":1,"b":2},{"a":3,"c":4},lambda x,y:x==y)=={"old":2,"current":2,"new":1,"removed":1,"changed":1}
+    print("PASS additive-only delta policy and aggregate difference diagnostics")
 
 def main(path,apply=False):
     import requests
@@ -74,14 +79,21 @@ def main(path,apply=False):
             seen.add(page)
     def snapshot():
         rt=(datetime.now(timezone.utc)-timedelta(seconds=10)).isoformat(timespec="microseconds").replace("+00:00","Z")
-        updated=dict(groups);new_by_coll={}
+        updated=dict(groups);new_by_coll={};blocked=[]
         for c in COLLS:
             old={d["name"]:d["fields"] for d in groups.get(c,[])}
             if len(old)!=len(groups.get(c,[])):raise RuntimeError("Duplicate baseline identity")
             now=listing(m.SOURCE,source_api+"/"+c,m.root(m.SOURCE)+"/"+c+"/",rt)
-            new=additions(old,now,sub.same_field,c in ALLOWED)
+            counts=delta_counts(old,now,sub.same_field)
+            print("DELTA INVENTORY",c,json.dumps(counts,sort_keys=True),flush=True)
+            if counts["removed"] or counts["changed"] or (counts["new"] and c not in ALLOWED):
+                blocked.append(c)
             updated[c]=[{"name":n,"fields":f} for n,f in now.items()]
-            new_by_coll[c]=len(new)
+            new_by_coll[c]=counts["new"]
+        if blocked:
+            print("COLLECTIONS REQUIRING REVIEW:",", ".join(blocked))
+            print("READ ONLY: ZERO FIRESTORE OR AUTH WRITES DURING THIS INVENTORY")
+            raise RuntimeError("Source changes or unreviewed additions; no staging performed")
         expected={**staged,**subjectdocs,**a.plan(updated,staged,subjectdocs),**cdc.project(updated)}
         delta={k:v for k,v in expected.items() if k not in original}
         if any(k not in expected or not sub.same_field(v,expected[k]) for k,v in original.items()):raise RuntimeError("Mapped baseline changed")
