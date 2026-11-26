@@ -4,11 +4,12 @@ import {verifySchoolSession} from './verified-school-session.mjs';
 import {subjectsForGrade,assessmentThemeReference} from './primary-assessment-reference.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {readObservationPortfolio,exportObservationPortfolio,readIndicatorPortfolio,exportIndicatorPortfolio,readPortfolioPrintModel,exportPortfolioWord} from './primary-assessment-portfolio.mjs';
+import {loadAssignedPrimarySubjects,loadPrimaryTeacherWorksheet,draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
 import {neError} from './nepali-feedback.mjs';
 const $=id=>document.getElementById(id);
 let actor=null,catalogue=null,auth,authSdk,db,api,epoch=0,portfolioEpoch=0;
 const cell=(row,value)=>{const td=document.createElement('td');td.textContent=value??'—';row.append(td);return td};
-function clear(){resetPortfolio();$('portfolioArea').hidden=true;epoch++;actor=null;catalogue=null;$('referenceArea').hidden=true;$('rows').replaceChildren();$('totals').replaceChildren();$('identity').textContent='Academic Year 2083 · V47'}
+function clear(){resetTeacherWorksheet();$('teacherWorksheet').hidden=true;resetPortfolio();$('portfolioArea').hidden=true;epoch++;actor=null;catalogue=null;$('referenceArea').hidden=true;$('rows').replaceChildren();$('totals').replaceChildren();$('identity').textContent='Academic Year 2083 · V47'}
 async function verify(){
  const selected=actor,request=epoch;
  if(!selected||!await enforceSchoolIdle(auth,authSdk))throw Error('Login required');
@@ -33,6 +34,52 @@ async function render(){
 }
 function fill(){const previous=$('subject').value;$('subject').replaceChildren(...subjectsForGrade($('grade').value).map(([key,name])=>new Option(name,key)));if([...$('subject').options].some(o=>o.value===previous))$('subject').value=previous;void render()}
 $('grade').onchange=fill;$('subject').onchange=()=>void render();
+let teacherEpoch=0,worksheet=null;
+function clearDraft(){
+ $('teacherDraftRows').replaceChildren();$('teacherDate').value='';$('teacherDraftTotal').textContent='';$('teacherThemeSource').hidden=true;
+}
+function resetTeacherWorksheet(){
+ teacherEpoch++;worksheet=null;clearDraft();
+ for(const id of ['teacherSubject','teacherStudent','teacherTheme']){$(id).replaceChildren();$(id).disabled=true}
+ $('teacherOpenWorksheet').disabled=true;$('teacherDate').disabled=true;$('teacherWorksheetStatus').textContent='';
+}
+function clearTeacherModel(){
+ teacherEpoch++;worksheet=null;clearDraft();
+ for(const id of ['teacherStudent','teacherTheme']){$(id).replaceChildren();$(id).disabled=true}
+ $('teacherDate').disabled=true;
+}
+$('teacherGrade').onchange=resetTeacherWorksheet;
+$('teacherSubject').onchange=()=>{clearTeacherModel();$('teacherOpenWorksheet').disabled=!$('teacherSubject').value};
+$('teacherLoadSubjects').onclick=async()=>{
+ resetTeacherWorksheet();const request=teacherEpoch,member=actor,grade=$('teacherGrade').value;
+ const check=()=>{if(request!==teacherEpoch||actor!==member||!member||auth.currentUser?.uid!==member.uid||$('teacherGrade').value!==grade)throw Error('Worksheet selection changed')};
+ try{await verify();check();
+ const list=await loadAssignedPrimarySubjects({db,api,actor:member,schoolId:member.schoolId,grade,catalogue,assertCurrent:check});
+ check();$('teacherSubject').replaceChildren(...list.map(s=>new Option(s.name,s.id)));
+ $('teacherSubject').disabled=!list.length;$('teacherOpenWorksheet').disabled=!list.length;
+ $('teacherWorksheetStatus').textContent=list.length+' प्रमाणित विषय उपलब्ध छन्।';
+ }catch(e){if(request===teacherEpoch)$('teacherWorksheetStatus').textContent='विषय खोल्न सकिएन: '+neError(e)}
+};
+function renderTeacherDraft(){
+ clearDraft();if(!worksheet||!$('teacherStudent').value||$('teacherTheme').value==='')return;
+ const slots=draftThemeSlots(worksheet,Number($('teacherTheme').value));
+ const theme=worksheet.themes[Number($('teacherTheme').value)];
+ $('teacherThemeSource').href=theme.sourceUrl;$('teacherThemeSource').hidden=false;
+ const update=()=>{const fields=[...$('teacherDraftRows').querySelectorAll('select')];const used=fields.filter(el=>el.value!=='');$('teacherDraftTotal').textContent='Draft: '+used.length+'/'+fields.length+' · '+used.reduce((n,el)=>n+Number(el.value),0)+' / '+theme.fullMarks};
+ for(const slot of slots){const tr=document.createElement('tr');cell(tr,(slot.indicatorBlock?'Indicator Block ':'Achievement Slot ')+slot.number);const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','Draft rating '+slot.number);input.append(new Option('—',''));for(let n=slot.min;n<=slot.max;n++)input.append(new Option(String(n),String(n)));input.onchange=update;td.append(input);$('teacherDraftRows').append(tr)}
+ update();
+}
+$('teacherStudent').onchange=renderTeacherDraft;$('teacherTheme').onchange=renderTeacherDraft;
+$('teacherOpenWorksheet').onclick=async()=>{
+ clearTeacherModel();const request=teacherEpoch,member=actor,grade=$('teacherGrade').value,subjectId=$('teacherSubject').value;
+ const check=()=>{if(request!==teacherEpoch||actor!==member||!member||auth.currentUser?.uid!==member.uid||$('teacherGrade').value!==grade||$('teacherSubject').value!==subjectId)throw Error('Worksheet selection changed')};
+ try{await verify();check();const result=await loadPrimaryTeacherWorksheet({db,api,actor:member,schoolId:member.schoolId,grade,subjectId,catalogue,assertCurrent:check});check();worksheet=result;
+ $('teacherStudent').replaceChildren(...result.students.map(s=>new Option(s.name+(s.section?' / '+s.section:''),s.id)));
+ $('teacherTheme').replaceChildren(...result.themes.map((t,i)=>new Option([t.theme,t.en&&t.en!==t.theme?t.en:''].filter(Boolean).join(' / '),String(i))));
+ $('teacherStudent').disabled=false;$('teacherTheme').disabled=false;$('teacherDate').disabled=false;
+ renderTeacherDraft();$('teacherWorksheetStatus').textContent=result.students.length+' विद्यार्थी र '+result.themes.length+' थिम उपलब्ध छन्। अस्थायी फाराम मात्र।';
+ }catch(e){if(request===teacherEpoch){clearTeacherModel();$('teacherWorksheetStatus').textContent='फाराम खोल्न सकिएन: '+neError(e)}}
+};
 function clearPrint(){document.body.classList.remove('portfolio-printing');$('portfolioPrint').replaceChildren();$('portfolioPrint').hidden=true}
 function resetPortfolio(){
  clearPrint();
@@ -153,6 +200,6 @@ try{
  authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clear();$('status').textContent='लगइन परिवर्तन भयो। Dashboard बाट पुनः खोल्नुहोस्।'}});
  const response=await fetch('./primary-assessment-reference-2083.json',{cache:'no-store'});if(!response.ok)throw Error('Reference file unavailable');
  catalogue=await response.json();await verify();
- $('identity').textContent='Academic Year 2083 · V47 · '+sid;$('referenceArea').hidden=false;$('portfolioArea').hidden=!['school_admin','viewer'].includes(actor.role);$('status').textContent='विद्यालयको अनुमति पुष्टि भयो।';
+ $('identity').textContent='Academic Year 2083 · V47 · '+sid;$('referenceArea').hidden=false;$('portfolioArea').hidden=!['school_admin','viewer'].includes(actor.role);$('teacherWorksheet').hidden=actor.role!=='teacher';$('status').textContent='विद्यालयको अनुमति पुष्टि भयो।';
  const member=actor;bindVerifiedModuleActivity(member,()=>actor===member);fill();
 }catch(e){clear();$('status').textContent='Dashboard बाट प्रमाणित विद्यालयमा लगइन गरी पुनः खोल्नुहोस्: '+neError(e)}
