@@ -37,6 +37,17 @@ def reconciliation_actions(base,original,desired,extra,replacements,vals,equal):
         else:conflicts.append(k)
     return sorted(creates),sorted(updates),sorted(conflicts)
 
+def mark_catchup_actions(original,desired,actual,equal):
+    creates=[];updates=[];conflicts=[]
+    for k,v in desired.items():
+        if k not in actual:raise RuntimeError("Incomplete target inventory")
+        current=actual[k]
+        if equal(current,v):continue
+        if current is None and k not in original:creates.append(k)
+        elif k in original and current is not None and equal(current,original[k]):updates.append(k)
+        else:conflicts.append(k)
+    return sorted(creates),sorted(updates),sorted(conflicts)
+
 def self_test():
     assert additions({"a":1},{"a":1,"b":2},lambda x,y:x==y,True)=={"b"}
     for old,new,allowed in [({"a":1},{"a":2},True),({"a":1},{},True),({},{"a":1},False)]:
@@ -55,9 +66,13 @@ def self_test():
     assert reconciliation_actions(base,old,desired,extra,replacements,desired,eq)==([],[],[])
     assert reconciliation_actions(base,old,desired,extra,replacements,{staff:{"name":"different"},mark:{"score":4}},eq)==([],[],[mark,staff])
     assert reconciliation_actions(base,{}, {member:{"active":True}}, {member:{"active":True}}, {}, {member:None},eq)==([],[],[member])
-    print("PASS additive-only delta policy, aggregate diagnostics and guarded reconciliation actions")
+    assert mark_catchup_actions({"a":1},{"a":2,"b":3},{"a":1,"b":None},eq)==(["b"],["a"],[])
+    assert mark_catchup_actions({"a":1},{"a":2,"b":3},{"a":2,"b":3},eq)==([],[],[])
+    assert mark_catchup_actions({"a":1},{"a":2,"b":3},{"a":9,"b":4},eq)==([],[],["a","b"])
+    assert mark_catchup_actions({"a":1},{"a":2},{"a":None},eq)==([],[],["a"])
+    print("PASS additive-only delta policy, aggregate diagnostics and guarded reconciliation actions; mark catch-up conflict guards")
 
-def main(path,apply=False,reconcile=False):
+def main(path,apply=False,reconcile=False,marks_only=False):
     import requests
     if os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):raise RuntimeError("Live migration forbidden in CI")
     warnings.simplefilter("error",getpass.GetPassWarning)
@@ -191,6 +206,88 @@ def main(path,apply=False,reconcile=False):
             elif not sub.same_field(vals[k],v):raise RuntimeError("Existing target record differs or baseline absent; no overwrite")
         return missing
     check_rules()
+    if marks_only:
+        # Re-read the live source at a consistent timestamp; only the inactive
+        # target school's academic records may be changed. The original archive
+        # is never altered. No source writes, no role or membership changes.
+        from collections import Counter
+        academic=("exams","marks","mark_settings")
+        oldacademic={k:v for k,v in original.items() if any(k.startswith(BASE+"/"+c+"/") for c in academic)}
+        def current_marks():
+            rt=(datetime.now(timezone.utc)-timedelta(seconds=10)).isoformat(timespec="microseconds").replace("+00:00","Z")
+            current=dict(groups)
+            for c in ("school_settings","students","classes","exams","marks","mark_settings"):
+                now=listing(m.SOURCE,source_api+"/"+c,m.root(m.SOURCE)+"/"+c+"/",rt)
+                old={d["name"]:d["fields"] for d in groups.get(c,[])}
+                counts=delta_counts(old,now,sub.same_field)
+                print("LIVE SOURCE",c,json.dumps(counts,sort_keys=True),flush=True)
+                if c in ("school_settings","students","exams","marks","mark_settings") and counts["removed"]:
+                    raise RuntimeError("Source record removed; review required; no deletion")
+                current[c]=[{"name":n,"fields":v} for n,v in now.items()]
+            profiles=[d for d in current["school_settings"] if m.scalar(d["fields"],"iemisCode") in (m.SID,int(m.SID))]
+            if len(profiles)!=1:raise RuntimeError("Source school identity not verified")
+            live_students={BASE+"/students/"+m.safeid(d["name"].rsplit("/",1)[1]):m.project_student(d) for d in current["students"]}
+            live_subjects,_=sub.catalog(current)
+            # Attendance is deliberately out of scope for this marks catch-up.
+            mapped=a.plan({**current,"attendance":[]},live_students,live_subjects)
+            desired={k:v for k,v in mapped.items() if any(k.startswith(BASE+"/"+c+"/") for c in academic)}
+            if set(oldacademic)-set(desired):raise RuntimeError("Mapped source record removed; no deletion")
+            # Validate all target dependencies before any copy.
+            deps={**live_students,**live_subjects}
+            return desired,deps,rt
+        def classify(desired,deps,tx=None):
+            vals=read(sorted(set(desired)|set(deps)|{BASE,archive}),tx)
+            if not sub.same_field(vals[BASE],staged[BASE]):raise RuntimeError("Inactive target school differs")
+            if not vals[archive] or vals[archive].get("state")!=m.string("ARCHIVE_VERIFIED_NOT_OPERATIONAL") or vals[archive].get("documentCount")!={"integerValue":str(total)}:raise RuntimeError("Baseline archive not verified")
+            missing=[k for k,v in deps.items() if not sub.same_field(v,vals[k])]
+            print("DEPENDENCY MISMATCH COUNTS:",json.dumps(dict(Counter(k[len(BASE)+1:].split("/")[0] for k in missing)),sort_keys=True))
+            if missing:raise RuntimeError("Student/class/subject dependencies differ; reconcile before copy")
+            return mark_catchup_actions(oldacademic,desired,{k:vals[k] for k in desired},sub.same_field)
+        def inventory(desired):
+            for c in academic:
+                actual=listing(m.TARGET,api+"/schools/"+m.SID+"/"+c,BASE+"/"+c+"/")
+                if any(k not in desired for k in actual):raise RuntimeError("Extra target academic records; no deletion or overwrite")
+        def counts(keys):return dict(Counter(k[len(BASE)+1:].split("/")[0] for k in keys))
+        desired,deps,rt=current_marks()
+        inventory(desired)
+        creates,updates,conflicts=classify(desired,deps)
+        print("SOURCE SNAPSHOT UTC:",rt)
+        print("TARGET MATCHING:",json.dumps(counts(set(desired)-set(creates)-set(updates)-set(conflicts)),sort_keys=True))
+        print("TARGET CREATE:",json.dumps(counts(creates),sort_keys=True))
+        print("TARGET UPDATE BASELINE-IDENTICAL:",json.dumps(counts(updates),sort_keys=True))
+        print("TARGET CONFLICT:",json.dumps(counts(conflicts),sort_keys=True))
+        if conflicts:raise RuntimeError("Target differs from original baseline; review conflicts without overwrite")
+        if not apply or not (creates or updates):
+            print("READ ONLY: ZERO FIRESTORE OR AUTH WRITES; SCHOOL ACTIVE: FALSE")
+            print("MARK CATCH-UP AUDIT COMPLETE" if creates or updates else "MARK CATCH-UP VERIFIED: NO PENDING WRITES")
+            return
+        if len(creates)+len(updates)>200:raise RuntimeError("Catch-up exceeds 200-write reviewed transaction limit")
+        if input("Type CATCHUP-V47-300160003 to apply displayed changes only: ").strip()!="CATCHUP-V47-300160003":raise RuntimeError("Not confirmed")
+        check_rules()
+        latest,latestdeps,_=current_marks()
+        if not sub.same_field(desired,latest) or not sub.same_field(deps,latestdeps):raise RuntimeError("Source changed after preview; rerun catch-up")
+        inventory(desired)
+        tx=call(m.TARGET,api+":beginTransaction",{"options":{"readWrite":{}}})["transaction"]
+        committed=False
+        try:
+            if classify(desired,deps,tx)!=(creates,updates,[]):raise RuntimeError("Target changed after preview; no writes")
+            writes=[{"update":{"name":k,"fields":desired[k]},"currentDocument":{"exists":False}} for k in creates]
+            writes.extend({"update":{"name":k,"fields":desired[k]},"currentDocument":{"exists":True}} for k in updates)
+            r=call(m.TARGET,api+":commit",{"transaction":tx,"writes":writes})
+            committed=True
+            if len(r.get("writeResults",[]))!=len(writes):raise RuntimeError("Commit response incomplete; run audit")
+        finally:
+            if not committed:
+                try:call(m.TARGET,api+":rollback",{"transaction":tx})
+                except Exception:pass
+        if classify(desired,deps)!=([],[],[]):raise RuntimeError("Post-copy audit incomplete")
+        print("MARK CATCH-UP VERIFIED: CREATED",len(creates),"UPDATED",len(updates))
+        print("V46 WRITES: ZERO; AUTH CHANGES: ZERO; MEMBERSHIP CHANGES: ZERO; SCHOOL ACTIVE: FALSE")
+        # This confirms the reviewed source snapshot, not a continuous sync.
+        # Teachers may have saved more records since the snapshot.
+        fresh,freshdeps,fresh_rt=current_marks()
+        print("SOURCE CHANGED SINCE COPY:",not (sub.same_field(desired,fresh) and sub.same_field(deps,freshdeps)))
+        return
     if reconcile:
         from collections import Counter
         desired,extra,replacements=snapshot()
@@ -276,7 +373,8 @@ if __name__=="__main__":
     try:
         if sys.argv[1:]==["--self-test"]:self_test()
         elif len(sys.argv)==3 and sys.argv[1] in ("--audit-only","--apply","--audit-reconcile","--apply-reconcile"):main(Path(sys.argv[2]).expanduser(),sys.argv[1] in ("--apply","--apply-reconcile"),sys.argv[1] in ("--audit-reconcile","--apply-reconcile"))
-        else:raise RuntimeError("Specify --audit-only, --audit-reconcile, --apply or --apply-reconcile and encrypted backup")
+        elif len(sys.argv)==3 and sys.argv[1] in ("--audit-marks","--apply-marks"):main(Path(sys.argv[2]).expanduser(),sys.argv[1]=="--apply-marks",False,True)
+        else:raise RuntimeError("Specify --audit-only, --audit-reconcile, --apply, --apply-reconcile, --audit-marks or --apply-marks and encrypted backup")
     except (Exception,KeyboardInterrupt) as e:
         print("DELTA STOPPED:",type(e).__name__,str(e) if isinstance(e,RuntimeError) else "",file=sys.stderr)
         sys.exit(1)
