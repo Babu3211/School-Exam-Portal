@@ -75,7 +75,7 @@ def self_test():
     o,r=plan([u],[u],[doc(["subject_teacher"])],{},{"teacher1"},"otheradmin")
     assert not o
     print("PASS inactive-only membership, mixed-role and Super Admin exclusion")
-def main(path):
+def main(path,audit_only=False):
     if os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):raise RuntimeError("Forbidden in CI")
     from importlib.machinery import SourceFileLoader
     migration=SourceFileLoader("migration",str(Path.home()/"smss-migration-check.py")).load_module()
@@ -147,6 +147,41 @@ def main(path):
     missing=[]
     for batch in batches:missing.extend(check(batch))
     print("CREATE ONLY:",len(missing),"ALREADY IDENTICAL:",len(names)-len(missing))
+    if audit_only:
+        # Compare current root academic collections against the encrypted
+        # snapshot, not against transformed destination fields. Read only.
+        from datetime import datetime,timezone,timedelta
+        rt=(datetime.now(timezone.utc)-timedelta(seconds=30)).isoformat(timespec="microseconds").replace("+00:00","Z")
+        def current(coll):
+            docs=[];seen=set();page=None
+            while True:
+                params={"pageSize":300,"readTime":rt}
+                if page:params["pageToken"]=page
+                rr=session.get("https://firestore.googleapis.com/v1/"+m.root(m.SOURCE)+"/"+coll,headers={"Authorization":"Bearer "+token,"x-goog-user-project":m.SOURCE},params=params,timeout=(10,90),allow_redirects=False)
+                if rr.status_code!=200:raise RuntimeError("Source read HTTP "+str(rr.status_code))
+                data=rr.json();docs.extend(data.get("documents",[]))
+                page=data.get("nextPageToken")
+                if len(docs)>5000 or page in seen:raise RuntimeError("Inventory cap")
+                if not page:break
+                seen.add(page)
+            return docs
+        def index(docs):
+            result={d["name"]:d.get("fields",{}) for d in docs}
+            if len(result)!=len(docs):raise RuntimeError("Duplicate snapshot identity")
+            return result
+        print("ACADEMIC DELTA: collection / old / current / new / changed / removed")
+        collections=("students","staff","classes","subjects","exams","marks","mark_settings","attendance","cdc_observations","cdc_serofero_indicators","school_settings","user_roles","certificates","school_public_branding","school_gallery","public_result_exams","public_result_lookup","public_results")
+        totals=Counter()
+        for c in collections:
+            old=index(groups.get(c,[]));now=index(current(c))
+            added=len(now.keys()-old.keys());removed=len(old.keys()-now.keys())
+            changed=sum(not sub.same_field(old[k],now[k]) for k in old.keys()&now.keys())
+            totals.update({"new":added,"changed":changed,"removed":removed})
+            print(c,len(old),len(now),added,changed,removed,flush=True)
+        print("ACADEMIC DELTA TOTAL:",json.dumps(dict(totals),sort_keys=True))
+        print("ROLE PLAN MATCHING RECORDS:",len(names)-len(missing),"/",len(names))
+        print("READ ONLY: ZERO FIRESTORE OR AUTH WRITES; SCHOOL ACTIVE: FALSE")
+        return
     if missing:
         if input("Type STAGE-V47-ROLES to proceed: ").strip()!="STAGE-V47-ROLES":raise RuntimeError("Not confirmed")
         latest,review2,*_=snapshot()
@@ -165,6 +200,7 @@ def main(path):
 if __name__=="__main__":
     try:
         if sys.argv[1:]==["--self-test"]:self_test()
+        elif len(sys.argv)==3 and sys.argv[1]=="--audit-only":main(Path(sys.argv[2]).expanduser(),True)
         elif len(sys.argv)==2:main(Path(sys.argv[1]).expanduser())
         else:raise ValueError("Specify backup")
     except (Exception,KeyboardInterrupt) as e:
