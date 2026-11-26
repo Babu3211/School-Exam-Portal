@@ -64,14 +64,22 @@ assert.equal((staff.match(/allow\s+(?:create|update)\s*:/g)||[]).length,2);
 assert.doesNotMatch(staff,/allow\s+write\s*:/);
 const generic=rules.slice(staffEndIndex);
 assert.doesNotMatch(generic,/collection in \[[^\]]*'staff'/,'Staff must not have alternate wildcard permissions');
-assert.ok(rules.length-activity.length-viewBlock.length-staff.length<40000,'Unexpected Firestore rules expansion outside bounded additions');
+const missingStart=rules.indexOf('          // Authorize missing-draft lookup only');
+const missingEnd=rules.indexOf('          allow get: if canAdmin(sid) || teacherMayReadMissingDraft() || teacherMayReadDraft();',missingStart);
+assert.ok(missingStart>=0&&missingEnd>missingStart);
+const missingBlock=rules.slice(missingStart,missingEnd);
+assert.ok(missingBlock.length<2400,'Unexpected missing-draft rule expansion');
+for(const guard of ["memberRole(sid, 'teacher')","request.auth.uid == teacherUid","!exists(target) && exists(config)","missingDraftDuty(get(config).data)","c.get('schoolId','') == sid","id == c.classId + '_' + c.subjectId + '_' + c.examId","get(subject).data.get('active',false) == true","get(duty).data.get('active',false) == true","get(duty).data.get('uid','') == teacherUid","get(duty).data.get('schoolId','') == sid","get(duty).data.get('classId','') == c.classId","get(duty).data.get('subjectId','') == c.subjectId"])assert.ok(missingBlock.includes(guard),'Missing first-draft guard '+guard);
+assert.doesNotMatch(missingBlock,/allow\s/);
+const normalizedRules=rules.replace(missingBlock,'').replace(' || teacherMayReadMissingDraft()','');
+assert.ok(normalizedRules.length-activity.length-viewBlock.length-staff.length<40000,'Unexpected Firestore rules expansion outside bounded additions');
 for(const guard of ["activeMember(sid) && request.auth.uid == uid","d.keys().hasOnly(['schoolId','uid','lastSeen'])","d.schoolId == sid && d.uid == uid && d.lastSeen == request.time","allow list: if canAdmin(sid);","request.time >= resource.data.lastSeen + duration.value(15,'m')","allow delete: if false;"])
  assert.ok(activity.includes(guard),'Activity guard missing: '+guard);
 assert.equal((activity.match(/allow\s+(?:create|update)\s*:/g)||[]).length,2);
 assert.doesNotMatch(activity,/allow\s+write\s*:/);
 
 const teacherDraftBlock=rules.split('match /teacher_mark_drafts/{teacherUid} {')[1]?.split('      // Complete-class DRAFT only.')[0]??'';
-assert.ok(teacherDraftBlock.length>1500&&teacherDraftBlock.length<7000,
+assert.ok(teacherDraftBlock.length>1500&&teacherDraftBlock.length-missingBlock.length-' || teacherMayReadMissingDraft()'.length<7000,
  'Exactly one bounded teacher-only class draft block required');
 for(const guard of [
  "memberRole(sid, 'teacher')",

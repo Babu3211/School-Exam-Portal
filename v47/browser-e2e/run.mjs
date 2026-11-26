@@ -175,6 +175,7 @@ try{
   const teacherSession=await newSession();
   try{
    const {page,errors}=teacherSession;
+   page.on('console',msg=>{if(msg.type()==='error'||msg.type()==='warning')console.log('Synthetic teacher browser:',msg.text().slice(0,1500))});
    await page.goto(origin+'/teacher-assigned-class.html?schoolId='+sid);
    await wait(page,()=>!document.getElementById('login').disabled);
    await page.locator('#email').fill(email(teacherUid));await page.locator('#password').fill(password);
@@ -183,7 +184,8 @@ try{
    await wait(page,()=>Array.from(document.getElementById('subjectId').options).some(o=>o.value==='math'));
    await page.locator('#subjectId').selectOption('math');await page.locator('#draftTerm').selectOption('final');
    await page.locator('#loadTeacherDraft').click();
-   await wait(page,()=>document.querySelectorAll('#teacherDraftRows tr').length===1);
+   await wait(page,()=>document.querySelectorAll('#teacherDraftRows tr').length===1||document.getElementById('teacherDraftStatus').textContent.includes('खोल्न सकिएन'));
+   assert.equal(await page.locator('#teacherDraftRows tr').count(),1,'Teacher draft load: '+await page.locator('#teacherDraftStatus').textContent()+'; browser errors: '+errors.join('; '));
    assert.equal(await page.locator('#teacherDraftRows input[data-component="count"]').inputValue(),'5');
    assert.equal(await page.locator('#teacherDraftRows input[data-component="got"]').inputValue(),'18');
    await page.locator('#inspectTeacherDraft').click();

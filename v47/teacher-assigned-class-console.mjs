@@ -216,7 +216,7 @@ $('loadTeacherDraft').onclick=async()=>{
  const current=++draftEpoch,request=epoch,selection=selectionEpoch,
   uid=actor.uid,id=schoolId,classId=$('classId').value,
   subjectId=$('subjectId').value,examId=$('draftTerm').value;
- lock(true);$('teacherDraftStatus').textContent='विद्यालय, Assignment, Examination Settings र पूरा कक्षा जाँच हुँदैछ…';
+ lock(true);let stage='विद्यालय र शिक्षकको जिम्मेवारी';$('teacherDraftStatus').textContent='विद्यालय, Assignment, Examination Settings र पूरा कक्षा जाँच हुँदैछ…';
  const revalidate=async()=>{
   if(current!==draftEpoch||request!==epoch||selection!==selectionEpoch||
    auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==id||
@@ -227,13 +227,16 @@ $('loadTeacherDraft').onclick=async()=>{
  try{
   if(!await enforceSchoolIdle(auth,authSdk))throw Error('Teacher session expired');
   await verifyTeacherSubjectAssignment({db,api,actor,schoolId:id,classId,subjectId,revalidate});
+  stage='परीक्षा Settings';
   const settings=await discoverVerifiedSubjectExamSettings({
-   db,api,schoolId:id,classId,subjectId,examId,revalidate});
-  const roster=await loadCompleteClassRoster({db,api,actor,schoolId:id,classId});
+   db,api:{...api,getDocs:api.getDocsFromServer},schoolId:id,classId,subjectId,examId,revalidate});
+  stage='विद्यार्थी सूची';
+  const roster=await loadCompleteClassRoster({db,api:{...api,getDocs:api.getDocsFromServer},actor,schoolId:id,classId});
   await revalidate();
   if(roster.students.some(s=>!isActiveEnrolledStudent(s)))throw Error('Inactive student in class roster');
   const path=api.doc(db,'schools',id,'teacher_mark_drafts',uid,
    'class_drafts',settings.settingsId);
+  stage='सुरक्षित Draft';
   const snap=await api.getDocFromServer(path);
   await revalidate();
   const restored=snap?.exists?.()?verifyStoredTeacherClassDraft({
@@ -248,6 +251,7 @@ $('loadTeacherDraft').onclick=async()=>{
   let prefill=null;
   if(!restored&&['1st','2nd','3rd','final'].includes(examId)&&/^(?:[1-9]|10)$/.test(classId)){
    const assertCurrent=()=>{if(current!==draftEpoch||request!==epoch||selection!==selectionEpoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==id||classId!==$('classId').value||subjectId!==$('subjectId').value||examId!==$('draftTerm').value)throw Error('Teacher Draft selection changed')};
+   stage='V46 मूल अङ्क';
    const history=await loadAssignedLegacyMarks({db,api,actor,schoolId:id,classId,subjectId,term:examId,assertCurrent});
    prefill=prepareLegacyDraftPrefill({history,settings,studentIds:roster.studentIds});
    await revalidate();assertCurrent();
@@ -279,7 +283,7 @@ $('loadTeacherDraft').onclick=async()=>{
     ' Examination Settings Components। '+(restored?'Draft Revision '+restored.revision+' सुरक्षित छ।':'नयाँ Draft।')+
     (prefill?' V46 बाट '+prefill.loaded+' विद्यार्थीको अङ्क स्थानीय फाराममा भरियो; '+prefill.skipped+' अभिलेख स्वतः भरिएनन्। '+(prefill.examId?'मूल Exam ID: '+prefill.examId+'. ':'')+(prefill.reason?prefill.reason+'. ':''):'')+
     ' सबै अंक भरेपछि Validate गर्नुहोस्। यो आधिकारिक नतिजा होइन।';
- }catch(e){if(current===draftEpoch&&request===epoch){clearTeacherDraft();$('teacherDraftStatus').textContent='Teacher Draft खोल्न सकिएन: '+neError(e)}}
+ }catch(e){if(current===draftEpoch&&request===epoch){clearTeacherDraft();$('teacherDraftStatus').textContent='Teacher Draft खोल्न सकिएन ('+stage+'): '+neError(e)}}
  finally{if(request===epoch)lock(false)}
 };
 $('inspectTeacherDraft').onclick=()=>{

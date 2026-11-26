@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {loadSparkCommittedReport} from './spark-committed-report.mjs';
 import {loadSparkDraftReport} from './spark-draft-report.mjs';
@@ -422,7 +423,7 @@ try{
  const teacherDraft=(database,uid='teacher_12345678',sid='12345678')=>
   doc(database,'schools',sid,'teacher_mark_drafts',uid,'class_drafts','9_computer_final');
  // First-load reads must return a missing snapshot only for the assigned teacher.
- assert.equal((await assertSucceeds(getDoc(teacherDraft(teacher)))).exists(),false);
+ assert.equal((await getDoc(teacherDraft(teacher))).exists(),false);
  await assertFails(getDoc(teacherDraft(teacher,'anotherTeacher')));
  await assertFails(getDoc(teacherDraft(viewer)));
  await assertFails(getDoc(teacherDraft(anon)));
