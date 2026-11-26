@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {primarySubjectKey,draftThemeSlots,loadPrimaryTeacherWorksheet,loadAssignedPrimarySubjects} from './primary-assessment-teacher-worksheet.mjs';
+import {v46LanguageHealthThemeRows} from './primary-assessment-v46-language-health-text.mjs';
 import {v46SocialThemeRows} from './primary-assessment-v46-social-text.mjs';
 import {v46ScienceThemeRows} from './primary-assessment-v46-science-text.mjs';
 import {v46MathThemeRows} from './primary-assessment-v46-math-text.mjs';
@@ -55,6 +56,24 @@ for(const grade of ['4','5']){
  assert.equal(count,32);
 }
 assert.equal(v46SocialThemeRows('3','हामी र हाम्रो समुदाय',4),null);
+for(const [grade,subject,total] of [['4','nepali',90],['5','nepali',90],['4','english',73],['5','english',83],['4','healthphysicalcreativeart',86],['5','healthphysicalcreativeart',88]]){
+ let count=0;
+ for(const theme of catalogue.rows[grade+':'+subject]){
+  const rows=v46LanguageHealthThemeRows(grade,subject,theme.theme,theme.count);
+  assert.ok(rows,'V46 source mismatch '+grade+' '+subject+' '+theme.theme);
+  count+=rows.length;
+  for(const row of rows){
+   if(subject==='english'){assert.doesNotMatch(row.title,/[\u0900-\u097f]/);assert.equal(row.titleEn,undefined);}
+   else {assert.match(row.title,/[\u0900-\u097f]/);if(subject==='healthphysicalcreativeart')assert.ok(row.titleEn);else assert.equal(row.titleEn,undefined);}
+  }
+  const slots=draftThemeSlots({writeAuthorized:false,officialAssessmentApproved:false,key:subject,themes:[{...theme,sourceRows:rows}]},0);
+  assert.equal(slots.length,theme.count);
+  assert.equal(slots[0].sourceText.title,rows[0].title);
+  assert.equal(v46LanguageHealthThemeRows(grade,subject,theme.theme,theme.count+1),null);
+ }
+ assert.equal(count,total);
+}
+assert.equal(v46LanguageHealthThemeRows('3','english','Unit 1',7),null);
 for(const grade of ['1','2','3']){
  const ref=assessmentThemeReference({catalogue,grade,subject:'mathematics'});
  assert.ok(ref.themeCount>0);

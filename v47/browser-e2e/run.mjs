@@ -13,6 +13,7 @@ import {chromium} from 'playwright';
 import {excelWorkbook} from '../excel-workbook.mjs';
 import {todayAssessmentDate2083} from '../assessment-date-2083.mjs';
 import {v46LowerMathReference} from '../primary-assessment-v46-lower-math.mjs';
+import {v46LanguageHealthThemeRows} from '../primary-assessment-v46-language-health-text.mjs';
 import {v46SocialThemeRows} from '../primary-assessment-v46-social-text.mjs';
 import {v46ScienceThemeRows} from '../primary-assessment-v46-science-text.mjs';
 import {V46_STAFF_EXCEL_HEADERS} from '../v46-staff-excel-schema.mjs';
@@ -248,16 +249,18 @@ try{
    await db.doc(draftPath).delete();
    console.log('PASS browser assessment reference asset, assigned Mathematics date/score save, invalid-date correction, reload and isolation');
    // Independent Grade 4 and 5 Science draft tests, synthetic fixtures only.
-   for(const [grade,count,kind] of [['4',5,'science'],['5',6,'science'],['4',4,'social'],['5',4,'social']]){
+   for(const [grade,count,kind] of [['4',5,'science'],['5',6,'science'],['4',4,'social'],['5',4,'social'],['4',6,'nepali'],['5',6,'nepali'],['4',7,'english'],['5',7,'english'],['4',5,'health'],['5',5,'health']]){
     const subjectId=kind+grade,studentId=kind+'_student_'+grade;
     const subjectPath=root+'/subjects/'+subjectId,studentPath=root+'/students/'+studentId;
     const assignmentPath=root+'/teacher_assignments/'+[sid,teacherUid,grade,subjectId].join(':');
-    const themeName=kind==='science'?'वैज्ञानिक सिकाइ':'हामी र हाम्रो समुदाय',sourceRows=(kind==='science'?v46ScienceThemeRows:v46SocialThemeRows)(grade,themeName,count);
+    const subjectKey=kind==='health'?'healthphysicalcreativeart':kind;
+    const themeName=kind==='science'?'वैज्ञानिक सिकाइ':kind==='social'?'हामी र हाम्रो समुदाय':({"4":{"nepali":"क्षेत्र १ — कविता (नीतिपरक)","english":"Unit 1: Greetings, introductions and goodbyes","healthphysicalcreativeart":"व्यक्तिगत स्वच्छता"},"5":{"nepali":"क्षेत्र १ — कविता (गीत/देशप्रेम)","english":"Unit 1: Introductions and goodbyes","healthphysicalcreativeart":"व्यक्तिगत स्वच्छता"}})[grade][subjectKey];
+    const sourceRows=kind==='science'?v46ScienceThemeRows(grade,themeName,count):kind==='social'?v46SocialThemeRows(grade,themeName,count):v46LanguageHealthThemeRows(grade,subjectKey,themeName,count);
     assert.equal(sourceRows.length,count);
     const scienceThemeId=sha(JSON.stringify(['ad2e3b96a22601fed9d956397a98c564b3ffb768',grade,themeName,sourceRows]));
     const sciencePath=root+'/teacher_assessment_drafts/'+teacherUid+'/classes/'+grade+'/subjects/'+subjectId+'/students/'+studentId+'/themes/'+scienceThemeId;
     try{
-     await db.doc(subjectPath).set({schoolId:sid,class:grade,name:kind==='science'?'Science and Technology':'सामाजिक अध्ययन',active:true});
+     await db.doc(subjectPath).set({schoolId:sid,class:grade,name:({science:'Science and Technology',social:'सामाजिक अध्ययन',nepali:'नेपाली',english:'English',health:'Health Physical Education and Creative Arts'})[kind],active:true});
      await db.doc(studentPath).set({schoolId:sid,class:grade,nameEnglish:'Synthetic '+kind+' '+grade,active:true});
      await db.doc(assignmentPath).set({schoolId:sid,uid:teacherUid,classId:grade,subjectId,active:true});
      const openScience=async()=>{
@@ -271,7 +274,7 @@ try{
      await openScience();
      assert.equal(await page.locator('#teacherStudent').inputValue(),studentId);
      assert.equal(await ratings.count(),count);
-     assert.ok((await page.locator('#teacherDraftRows tr').first().textContent()).includes(kind==='science'?sourceRows[0].titleEn:sourceRows[0].title));
+     assert.ok((await page.locator('#teacherDraftRows tr').first().textContent()).includes(sourceRows[0].titleEn??sourceRows[0].title));
      assert.equal(await page.locator('#teacherDate').inputValue(),todayAssessmentDate2083());
      await ratings.first().selectOption('4');
      await page.locator('#teacherDate').fill('2083-08-11');
