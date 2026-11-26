@@ -53,12 +53,27 @@ def canonical_class(value):
 def class_recognized(value):
     try:canonical_class(value);return True
     except ValueError:return False
+def transfer_status(value):
+    # V46's real studentTransferred input is free text, and its Excel
+    # import preserves text values. Never interpret Python string truthiness.
+    if value is None:return False
+    if isinstance(value,bool):return value
+    if isinstance(value,(str,int,float)):
+        label=str(value).strip().casefold().translate(str.maketrans("०१२३४५६७८९","0123456789"))
+        if label in ("","false","no","n","0","0.0","होइन","छैन","होईन","नाइँ","नाई","not transferred"):return False
+        if label in ("true","yes","y","1","1.0","हो","छ","transferred"):return True
+    raise ValueError("Unrecognized transfer status")
+def transfer_bucket(fields):
+    try:
+        value=scalar(fields,"isTransferred")
+        if value is None or isinstance(value,str) and not value.strip():return "blank_or_missing"
+        return "transferred" if transfer_status(value) else "not_transferred"
+    except ValueError:return "unrecognized"
 def project_student(d):
     f=d["fields"];validate_scope(f)
     name=txt(f,"studentName",160,True)
     cls=canonical_class(scalar(f,"class"))
-    transfer=scalar(f,"isTransferred")
-    if transfer is not None and not isinstance(transfer,bool):raise ValueError("Unrecognized transfer status")
+    transfer=transfer_status(scalar(f,"isTransferred"))
     active=scalar(f,"active")
     if active is not None and not isinstance(active,bool):raise ValueError("Unrecognized active status")
     out={"name":string(name),"class":string(cls),"schoolId":string(SID),"active":boolean(active is not False and transfer is not True)}
@@ -124,6 +139,9 @@ def plan(backup):
     print("OPERATIONAL STUDENTS:",sum(k.startswith(base+"/students/") for k in out),"SOURCE:",len(groups.get("students",[])))
     print("OPERATIONAL STAFF:",sum(k.startswith(base+"/staff/") for k in out),"SOURCE:",len(groups.get("staff",[])))
     print("STUDENT CLASS COUNTS:",json.dumps(dict(sorted(Counter(scalar(f,"class") for k,f in out.items() if k.startswith(base+"/students/")).items())),ensure_ascii=False))
+    print("SOURCE TRANSFER STATUS:",json.dumps(dict(Counter(transfer_bucket(d["fields"]) for d in groups.get("students",[]))),sort_keys=True))
+    print("OPERATIONAL ACTIVE STUDENTS:",sum(scalar(f,"active") is True for k,f in out.items() if k.startswith(base+"/students/")))
+    print("OPERATIONAL INACTIVE STUDENTS:",sum(scalar(f,"active") is False for k,f in out.items() if k.startswith(base+"/students/")))
     print("STAFF NAME REVIEW:",sum(not isinstance(scalar(f,"name"),str) or len(scalar(f,"name").strip())<2 or len(scalar(f,"name"))>160 for k,f in out.items() if k.startswith(base+"/staff/")))
     if errors:
         print("UNMAPPED CLASS RECORDS:",sum(not class_recognized(scalar(d["fields"],"class")) for d in groups.get("students",[])))
@@ -153,7 +171,17 @@ def self_test():
     assert project_staff({"fields":{"name":string(""),"nameNepali":string("शिक्षक")}})["name"]==string("शिक्षक")
     assert project_staff({"fields":{"name":string("")}})["name"]==string("")
     assert project_staff({"fields":{"name":string("क")}})["name"]==string("क")
-    print("PASS school scope, exact Nepali text, V46 class aliases, staff preservation and transfer status")
+    for value in (False,None,"","  ","False","NO","0","०","होइन","Not Transferred"):
+        assert transfer_status(value) is False
+    for value in (True,"TRUE","Yes","1","१","हो","Transferred"):
+        assert transfer_status(value) is True
+    for value in ("unknown","pending","2",{},[]):
+        try:transfer_status(value)
+        except ValueError:pass
+        else:raise AssertionError("Unknown transfer status accepted")
+    assert project_student({"fields":dict(d["fields"],isTransferred=string("No"))})["active"]==boolean(True)
+    assert project_student({"fields":dict(d["fields"],isTransferred=string("Yes"))})["active"]==boolean(False)
+    print("PASS school scope, class aliases, staff preservation and V46 text transfer status")
 def main(path):
     if os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):raise RuntimeError("Live migration forbidden in CI")
     warnings.simplefilter("error",getpass.GetPassWarning)
