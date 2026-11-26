@@ -49,3 +49,37 @@ export async function exportObservationPortfolio(args){
  args.assertCurrent();
  return Object.freeze({blob,filename:'V47-observations-'+result.schoolId+'-'+result.studentId+'-2083.xlsx',count:rows.length});
 }
+
+ // Separate read-only V46 four-indicator evidence. Never convert it to a
+ // regular 1–4 observation or an official subject grade.
+export function prepareIndicatorPortfolio({schoolId,grade,student,docs}){
+ validateSchoolId(schoolId);
+ if(!['1','2','3'].includes(grade)||student?.schoolId!==schoolId||student.class!==grade||student.active===false||!idPattern.test(student.id||'')||!Array.isArray(docs)||docs.length>2000)throw Error('Invalid indicator portfolio scope');
+ const seen=new Set(),keys=new Set(),rows=[];let historical=0;
+ for(const doc of docs){
+  const d=doc.data(),id=doc.id;
+  if(typeof id!=='string'||!id||id.includes('/')||seen.has(id)||doc.ref?.path!==undefined&&doc.ref.path!=='schools/'+schoolId+'/cdc_serofero_indicators/'+id||!d||d.schoolId!==schoolId||d.studentId!==student.id||d.academicYear!=='2083')throw Error('Foreign or duplicate indicator record');
+  seen.add(id);
+  if(gradeOf(d.className)!==grade||String(d.section??'')!==String(student.section??'')){historical++;continue}
+  if(typeof d.subject!=='string'||!d.subject.trim()||typeof d.unit!=='string'||!d.unit.trim()||!new RegExp('^cdc2076-g'+grade+'-[1-9][0-9]*$').test(d.outcomeId)||!['regular','support'].includes(d.stage)||typeof d.date!=='string'||!/^2083-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[0-2])$/.test(d.date)||!Array.isArray(d.indicators)||d.indicators.length!==4||d.indicators.some(v=>typeof v!=='boolean')||d.usedTools!==undefined&&(!Array.isArray(d.usedTools)||d.usedTools.length!==4||d.usedTools.some(v=>typeof v!=='string')))throw Error('Invalid saved indicator block');
+  const key=JSON.stringify([d.subject,d.unit,d.outcomeId,d.stage]);if(keys.has(key))throw Error('Duplicate indicator block stage');keys.add(key);
+  rows.push(Object.freeze({id,subject:d.subject,unit:d.unit,outcomeId:d.outcomeId,stage:d.stage,date:d.date,indicators:Object.freeze([...d.indicators]),score:d.indicators.filter(Boolean).length,usedTools:Object.freeze([...(d.usedTools??['','','',''])])}));
+ }
+ rows.sort((a,b)=>a.unit.localeCompare(b.unit)||a.outcomeId.localeCompare(b.outcomeId,undefined,{numeric:true})||a.stage.localeCompare(b.stage));
+ return Object.freeze({rows:Object.freeze(rows),historical,readOnly:true,officialAssessmentApproved:false});
+}
+export async function readIndicatorPortfolio({db,api,actor,schoolId,grade,studentId,assertCurrent}){
+ validateSchoolId(schoolId);
+ if(actor?.schoolId!==schoolId||actor.active!==true||!['school_admin','viewer'].includes(actor.role)||!idPattern.test(actor.uid||'')||!idPattern.test(studentId||'')||!['1','2','3'].includes(grade)||typeof assertCurrent!=='function')throw Error('Verified Admin or Viewer indicator portfolio required');
+ const {uid,role}=actor;
+ const check=()=>{assertCurrent();if(actor.uid!==uid||actor.schoolId!==schoolId||actor.role!==role||actor.active!==true)throw Error('Portfolio session changed')};
+ const read=async path=>{check();const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));check();return snap.exists()?snap.data():null};
+ const verify=async()=>{const member=await verifySchoolSession({schoolId,uid,readDocument:read});check();if(member.role!==role)throw Error('Portfolio role changed')};
+ await verify();
+ const student=await read('schools/'+schoolId+'/students/'+studentId);
+ if(!student||student.schoolId!==schoolId||student.class!==grade||student.active===false)throw Error('Student outside portfolio scope');
+ const query=api.query(api.collection(db,'schools',schoolId,'cdc_serofero_indicators'),api.where('schoolId','==',schoolId),api.where('studentId','==',studentId),api.where('academicYear','==','2083'),api.limit(2001));
+ const snapshot=await api.getDocsFromServer(query);check();
+ const result=prepareIndicatorPortfolio({schoolId,grade,student:{...student,id:studentId},docs:snapshot.docs});
+ await verify();check();return result;
+}

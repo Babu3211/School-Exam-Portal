@@ -540,6 +540,12 @@ service cloud.firestore {
         allow get, list: if canRead(sid);
         allow create, update, delete: if false;
       }
+      // Migrated four-indicator CDC evidence; Admin and Viewer read only.
+      match /cdc_serofero_indicators/{id} {
+        allow get, list: if (memberRole(sid, 'school_admin') || memberRole(sid, 'viewer'))
+          && resource.data.schoolId == sid;
+        allow create, update, delete: if false;
+      }
       match /certificates/{id} {
         allow get, list: if canRead(sid);
         allow create, update, delete: if false;

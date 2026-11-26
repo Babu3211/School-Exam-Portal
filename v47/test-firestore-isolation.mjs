@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {initializeTestEnvironment,assertSucceeds,assertFails} from '@firebase/rules-unit-testing';
-import {doc,getDoc,setDoc,updateDoc,deleteDoc,getDocs,collection} from 'firebase/firestore';
+import {doc,getDoc,setDoc,updateDoc,deleteDoc,getDocs,collection,query,where} from 'firebase/firestore';
 
 const env=await initializeTestEnvironment({
   projectId:'smss-v47-isolation-test',
@@ -79,6 +79,24 @@ try {
   await assertFails(getDoc(doc(db('firstAdmin'),student('55667788','s1'))));
   await assertSucceeds(updateDoc(doc(db('root'),school('55667788')),{active:true}));
   await assertSucceeds(setDoc(doc(db('firstAdmin'),student('55667788','s1')),{name:'First Student',class:'6',schoolId:'55667788'}));
+  const indicatorPath='schools/12345678/cdc_serofero_indicators/i1';
+  const indicatorRecord={schoolId:'12345678',studentId:'s1',academicYear:'2083',indicators:[true,false,true,false]};
+  await env.withSecurityRulesDisabled(async ctx=>{
+   await setDoc(doc(ctx.firestore(),indicatorPath),indicatorRecord);
+   await setDoc(doc(ctx.firestore(),'schools/12345678/cdc_serofero_indicators/foreign'),{...indicatorRecord,schoolId:'87654321'});
+  });
+  for(const uid of ['adminA','viewerA']){
+   await assertSucceeds(getDoc(doc(db(uid),indicatorPath)));
+   const result=await assertSucceeds(getDocs(query(collection(db(uid),'schools/12345678/cdc_serofero_indicators'),where('schoolId','==','12345678'),where('studentId','==','s1'),where('academicYear','==','2083'))));
+   assert.equal(result.size,1);
+   await assertFails(getDoc(doc(db(uid),'schools/12345678/cdc_serofero_indicators/foreign')));
+   await assertFails(getDocs(collection(db(uid),'schools/12345678/cdc_serofero_indicators')));
+   await assertFails(setDoc(doc(db(uid),'schools/12345678/cdc_serofero_indicators/new'),indicatorRecord));
+   await assertFails(updateDoc(doc(db(uid),indicatorPath),{indicators:[true,true,true,true]}));
+   await assertFails(deleteDoc(doc(db(uid),indicatorPath)));
+  }
+  for(const uid of ['teacherA','adminB','unknownA','root'])await assertFails(getDoc(doc(db(uid),indicatorPath)));
+  await assertFails(getDoc(doc(anon,indicatorPath)));
   // Ten production-critical isolation and lifecycle assertions.
   await assertFails(getDoc(doc(anon,school('12345678')))); // 1
   await assertFails(getDoc(doc(db('viewerA'),school('87654321')))); // 2

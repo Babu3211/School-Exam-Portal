@@ -23,7 +23,7 @@ const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
 assert.match(html,/href="\.\/primary-assessment\.html"/);
 console.log('PASS V47 2083 primary assessment reference: 129 upper-primary themes, 30 lower-primary Our Surroundings forms, separate indicator denominators, no official writes');
 
-import {prepareObservationPortfolio,readObservationPortfolio,exportObservationPortfolio} from './primary-assessment-portfolio.mjs';
+import {prepareObservationPortfolio,readObservationPortfolio,exportObservationPortfolio,prepareIndicatorPortfolio,readIndicatorPortfolio} from './primary-assessment-portfolio.mjs';
 const sid='300160003',student={id:'s1',schoolId:sid,class:'1',active:true,section:''};
 const obs={schoolId:sid,studentId:'s1',academicYear:'2083',className:'कक्षा १',section:'',subject:'नेपाली',unit:'पठन',topic:'अक्षर चिन्ने',date:'2083-08-01',level:3,stage:'regular'};
 const doc=(id,d)=>({id,data:()=>d});
@@ -65,3 +65,18 @@ await assert.rejects(exportObservationPortfolio({...readArgs,api:{...api,getDocs
 const exportMarkup=readFileSync(new URL('./primary-assessment.html',import.meta.url),'utf8');
 assert.match(exportMarkup,/id="portfolioExport" type="button" disabled/);
 console.log('PASS V47 ordinary CDC observation XLSX export, fresh scope and no official assessment claim');
+
+const indicator={schoolId:sid,studentId:'s1',academicYear:'2083',className:'Class 1',section:'',subject:'हाम्रो सेरोफेरो',unit:'म र मेरो परिवार',outcomeId:'cdc2076-g1-1',stage:'regular',date:'2083-08-07',indicators:[false,false,false,false]};
+const indArgs={schoolId:sid,grade:'1',student,docs:[doc('i1',indicator),doc('i2',{...indicator,stage:'support',indicators:[true,true,true,true]})]};
+const indResult=prepareIndicatorPortfolio(indArgs);
+assert.deepEqual(indResult.rows.map(r=>r.score),[0,4]);
+assert.equal(indResult.officialAssessmentApproved,false);
+for(const bad of [{...indicator,schoolId:'99999'},{...indicator,studentId:'s2'},{...indicator,academicYear:'2084'},{...indicator,indicators:[true,false]},{...indicator,indicators:[1,0,1,0]},{...indicator,date:'2083-13-01'},{...indicator,outcomeId:'cdc2076-g2-1'}])assert.throws(()=>prepareIndicatorPortfolio({...indArgs,docs:[doc('i1',bad)]}));
+assert.throws(()=>prepareIndicatorPortfolio({...indArgs,docs:[doc('i1',indicator),doc('i2',indicator)]}),/Duplicate/);
+assert.equal(prepareIndicatorPortfolio({...indArgs,docs:[doc('i1',{...indicator,section:'old'})]}).historical,1);
+const indRead={...readArgs,api:{...api,getDocsFromServer:async q=>{assert.deepEqual(q,['schools/'+sid+'/cdc_serofero_indicators',['schoolId','==',sid],['studentId','==','s1'],['academicYear','==','2083'],2001]);return {docs:indArgs.docs}}}};
+assert.equal((await readIndicatorPortfolio(indRead)).rows.length,2);
+await assert.rejects(readIndicatorPortfolio({...indRead,actor:{...actor,role:'teacher'}}),/Admin or Viewer/);
+await assert.rejects(readIndicatorPortfolio({...indRead,schoolId:'99999'}),/Admin or Viewer/);
+await assert.rejects(readIndicatorPortfolio({...indRead,grade:'4'}),/Admin or Viewer/);
+console.log('PASS separate read-only 2083 indicator blocks, exact 0–4 counts and scope');
