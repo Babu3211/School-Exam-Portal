@@ -11,6 +11,7 @@ import {join,resolve} from 'node:path';
 import {build} from 'esbuild';
 import {chromium} from 'playwright';
 import {excelWorkbook} from '../excel-workbook.mjs';
+import {todayAssessmentDate2083} from '../assessment-date-2083.mjs';
 import {v46LowerMathReference} from '../primary-assessment-v46-lower-math.mjs';
 import {V46_STAFF_EXCEL_HEADERS} from '../v46-staff-excel-schema.mjs';
 import {createV47StaticHandler} from '../../v47-runtime/static-handler.mjs';
@@ -210,12 +211,13 @@ try{
    await page.locator('#teacherSubject').selectOption('math');
    await page.locator('#teacherOpenWorksheet').click();
    await wait(page,()=>!document.getElementById('teacherSaveDraft').disabled);
+   assert.equal(await page.locator('#teacherDate').inputValue(),todayAssessmentDate2083(),'Default must use Nepal-local academic year date');
    const theme=v46LowerMathReference('1')[0];
    const ratings=page.locator('#teacherDraftRows select');
    assert.equal(await ratings.count(),theme.count);
    await ratings.first().selectOption('3');
    // Invalid date must allow immediate correction, not discard the draft.
-   await page.locator('#teacherDate').fill('2083-13-01');
+   await page.locator('#teacherDate').fill('2083-08-30');
    await page.locator('#teacherSaveDraft').click();
    assert.equal(await page.locator('#teacherSaveDraft').isEnabled(),true);
    assert.match(await page.locator('#teacherDraftSaveStatus').textContent(),/YYYY-MM-DD/);

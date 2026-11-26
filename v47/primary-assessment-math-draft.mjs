@@ -1,12 +1,13 @@
 // Private, source-bound teacher worksheet draft. No write to migrated CDC
 // observations, grades, marks, or other teachers' records.
+import {validAssessmentDate2083} from './assessment-date-2083.mjs';
 import {draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {sameMarkJson} from './mark-json-equality.mjs';
 const sourceRevision='ad2e3b96a22601fed9d956397a98c564b3ffb768',format='smss-v47-primary-math-draft-v1';
 const segment=/^[A-Za-z0-9_-]{1,128}$/;
 export function validateMathDraftValues({ratings,date,count}){
- if(!Number.isInteger(count)||count<1||count>500||typeof ratings!=='string'||ratings.length!==count||!/^[1-4_]+$/.test(ratings)||!/[1-4]/.test(ratings)||typeof date!=='string'||!/^2083-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[0-2])$/.test(date))throw Error('Invalid assessment draft date or ratings');
+ if(!Number.isInteger(count)||count<1||count>500||typeof ratings!=='string'||ratings.length!==count||!/^[1-4_]+$/.test(ratings)||!/[1-4]/.test(ratings)||!validAssessmentDate2083(date))throw Error('Invalid assessment draft date or ratings');
  return {ratings,date};
 }
 async function context({db,api,auth,actor,model,studentId,themeIndex,assertCurrent}){
