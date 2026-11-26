@@ -565,6 +565,55 @@ service cloud.firestore {
         allow get, list: if canAdmin(sid);
         allow create, update, delete: if false;
       }
+      // Private assessment worksheet drafts; never official observations.
+      match /teacher_assessment_drafts/{teacherUid}/classes/{classId}/subjects/{subjectId}/students/{studentId}/themes/{themeId} {
+        function worksheetScope() {
+          return loggedIn() && request.auth.uid == teacherUid
+            && classId in ['1','2','3','4','5']
+            && themeId.matches('^[a-f0-9]{64}$')
+            && worksheetMember(get(schoolPath(sid)).data,get(memberPath(sid)).data)
+            && worksheetDependencies(
+              get(/databases/$(database)/documents/schools/$(sid)/subjects/$(subjectId)).data,
+              get(/databases/$(database)/documents/schools/$(sid)/students/$(studentId)).data,
+              get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + teacherUid + ':' + classId + ':' + subjectId)).data);
+        }
+        function worksheetMember(s,m) {
+          return s.get('id','') == sid && s.get('active',false) == true
+            && m.get('uid','') == teacherUid && m.get('schoolId','') == sid
+            && m.get('active',false) == true && m.get('role','') == 'teacher';
+        }
+        function worksheetDependencies(s,p,a) {
+          return s.get('schoolId','') == sid && s.get('class','') == classId
+            && s.get('active',false) == true
+            && p.get('schoolId','') == sid && p.get('class','') == classId
+            && p.get('active',true) == true
+            && a.get('schoolId','') == sid && a.get('uid','') == teacherUid
+            && a.get('classId','') == classId && a.get('subjectId','') == subjectId
+            && a.get('active',false) == true;
+        }
+        function validWorksheet() {
+          let d=request.resource.data;
+          return d.keys().hasOnly(['format','schoolId','teacherUid','classId','subjectId','studentId','themeId','sourceRevision','themeName','ratings','date','revision','updatedAt'])
+            && d.keys().hasAll(['format','schoolId','teacherUid','classId','subjectId','studentId','themeId','sourceRevision','themeName','ratings','date','revision','updatedAt'])
+            && d.format == 'smss-v47-primary-math-draft-v1' && d.schoolId == sid
+            && d.teacherUid == teacherUid && d.classId == classId && d.subjectId == subjectId
+            && d.studentId == studentId && d.themeId == themeId
+            && d.sourceRevision == 'ad2e3b96a22601fed9d956397a98c564b3ffb768'
+            && d.themeName is string && d.themeName.size() > 0 && d.themeName.size() <= 200
+            && d.ratings is string && d.ratings.matches('^[1-4_]{1,500}$')
+            && d.ratings.matches('.*[1-4].*')
+            && d.date is string && d.date.matches('^2083-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[0-2])$')
+            && d.revision is int && d.revision > 0 && d.revision <= 1000000000
+            && d.updatedAt == request.time;
+        }
+        allow get: if worksheetScope();
+        allow create: if worksheetScope() && validWorksheet() && request.resource.data.revision == 1;
+        allow update: if worksheetScope() && validWorksheet()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ratings','date','revision','updatedAt'])
+          && request.resource.data.ratings.size() == resource.data.ratings.size()
+          && request.resource.data.revision == resource.data.revision + 1;
+        allow list, delete: if false;
+      }
       // Per-student CDC assessment evidence remains tenant-contained;
       // no web writes until an audited assessment schema is implemented.
       match /cdc_observations/{id} {

@@ -5,6 +5,7 @@ import {subjectsForGrade,assessmentThemeReference} from './primary-assessment-re
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {readObservationPortfolio,exportObservationPortfolio,readIndicatorPortfolio,exportIndicatorPortfolio,readPortfolioPrintModel,exportPortfolioWord} from './primary-assessment-portfolio.mjs';
 import {loadAssignedPrimarySubjects,loadPrimaryTeacherWorksheet,draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
+import {loadMathAssessmentDraft,saveMathAssessmentDraft} from './primary-assessment-math-draft.mjs';
 import {neError} from './nepali-feedback.mjs';
 const $=id=>document.getElementById(id);
 let actor=null,catalogue=null,auth,authSdk,db,api,epoch=0,portfolioEpoch=0;
@@ -34,8 +35,9 @@ async function render(){
 }
 function fill(){const previous=$('subject').value;$('subject').replaceChildren(...subjectsForGrade($('grade').value).map(([key,name])=>new Option(name,key)));if([...$('subject').options].some(o=>o.value===previous))$('subject').value=previous;void render()}
 $('grade').onchange=fill;$('subject').onchange=()=>void render();
-let teacherEpoch=0,worksheet=null;
+let teacherEpoch=0,worksheet=null,worksheetRequest=0,worksheetRevision=null;
 function clearDraft(){
+ worksheetRequest++;worksheetRevision=null;$('teacherSaveDraft').disabled=true;$('teacherDraftSaveStatus').textContent='';
  $('teacherDraftRows').replaceChildren();$('teacherDate').value='';$('teacherDraftTotal').textContent='';$('teacherThemeSource').hidden=true;
 }
 function resetTeacherWorksheet(){
@@ -60,7 +62,7 @@ $('teacherLoadSubjects').onclick=async()=>{
  $('teacherWorksheetStatus').textContent=list.length+' प्रमाणित विषय उपलब्ध छन्।';
  }catch(e){if(request===teacherEpoch)$('teacherWorksheetStatus').textContent='विषय खोल्न सकिएन: '+neError(e)}
 };
-function renderTeacherDraft(){
+async function renderTeacherDraft(){
  clearDraft();if(!worksheet||!$('teacherStudent').value||$('teacherTheme').value==='')return;
  const slots=draftThemeSlots(worksheet,Number($('teacherTheme').value));
  const theme=worksheet.themes[Number($('teacherTheme').value)];
@@ -68,7 +70,39 @@ function renderTeacherDraft(){
  const update=()=>{const fields=[...$('teacherDraftRows').querySelectorAll('select')];const used=fields.filter(el=>el.value!=='');$('teacherDraftTotal').textContent='Draft: '+used.length+'/'+fields.length+' · '+used.reduce((n,el)=>n+Number(el.value),0)+' / '+theme.fullMarks};
  for(const slot of slots){const tr=document.createElement('tr');const label=cell(tr,(slot.indicatorBlock?'Indicator Block ':'Achievement Slot ')+slot.number);if(slot.sourceText){for(const value of [slot.sourceText.title,slot.sourceText.titleEn,slot.sourceText.achievement].filter(Boolean)){const p=document.createElement('div');p.textContent=value;label.append(p)}if(slot.sourceText.criteria){for(const [i,criterion] of slot.sourceText.criteria.entries()){const p=document.createElement('div');p.textContent=(4-i)+' — '+criterion.join(' / ');label.append(p)}}}const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','Draft rating '+slot.number);input.append(new Option('—',''));for(let n=slot.min;n<=slot.max;n++)input.append(new Option(String(n),String(n)));input.onchange=update;td.append(input);$('teacherDraftRows').append(tr)}
  update();
+ if(worksheet.key!=='mathematics'||!slots.every(s=>s.sourceText))return;
+ const args=worksheetSelection(),request=worksheetRequest;
+ const fields=[...$('teacherDraftRows').querySelectorAll('select')];
+ fields.forEach(el=>el.disabled=true);$('teacherDate').disabled=true;
+ $('teacherDraftSaveStatus').textContent='सुरक्षित Draft जाँच हुँदैछ…';
+ try{
+  await verify();args.assertCurrent();
+  const saved=await loadMathAssessmentDraft(args);args.assertCurrent();
+  worksheetRevision=saved?.revision??0;
+  if(saved){$('teacherDate').value=saved.date;fields.forEach((el,i)=>el.value=saved.ratings[i]==='_'?'':saved.ratings[i]);update()}
+  $('teacherDraftSaveStatus').textContent=saved?'Draft Revision '+saved.revision+' पुनः लोड भयो।':'नयाँ निजी Draft।';
+  $('teacherSaveDraft').disabled=false;
+ }catch(e){if(request===worksheetRequest)$('teacherDraftSaveStatus').textContent='Draft खोल्न सकिएन: '+neError(e)}
+ finally{if(request===worksheetRequest){fields.forEach(el=>el.disabled=false);$('teacherDate').disabled=false}}
 }
+function worksheetSelection(){
+ const request=worksheetRequest,member=actor,model=worksheet,studentId=$('teacherStudent').value,themeIndex=Number($('teacherTheme').value);
+ const assertCurrent=()=>{if(request!==worksheetRequest||actor!==member||worksheet!==model||!member||auth.currentUser?.uid!==member.uid||$('teacherStudent').value!==studentId||Number($('teacherTheme').value)!==themeIndex)throw Error('Worksheet selection changed')};
+ return {db,api,auth,actor:member,model,studentId,themeIndex,assertCurrent};
+}
+$('teacherSaveDraft').onclick=async()=>{
+ if(worksheetRevision===null||$('teacherSaveDraft').disabled)return;
+ const args=worksheetSelection(),request=worksheetRequest,expectedRevision=worksheetRevision;
+ const fields=[...$('teacherDraftRows').querySelectorAll('select')],ratings=fields.map(el=>el.value||'_').join(''),date=$('teacherDate').value.trim();
+ $('teacherSaveDraft').disabled=true;fields.forEach(el=>el.disabled=true);$('teacherDate').disabled=true;
+ try{
+  await verify();args.assertCurrent();
+  const saved=await saveMathAssessmentDraft({...args,ratings,date,expectedRevision});args.assertCurrent();
+  worksheetRevision=saved.revision;$('teacherDraftSaveStatus').textContent='Draft Revision '+saved.revision+' सुरक्षित भयो। यो आधिकारिक मूल्याङ्कन होइन।';
+  $('teacherSaveDraft').disabled=false;
+ }catch(e){if(request===worksheetRequest){worksheetRevision=null;$('teacherDraftSaveStatus').textContent='Draft सुरक्षित भएको पुष्टि भएन। मिति र अङ्क जाँच्नुहोस्; विद्यार्थी वा थिम पुनः खोलेर सुरक्षित Revision जाँच्नुहोस्। '+neError(e)}}
+ finally{if(request===worksheetRequest){fields.forEach(el=>el.disabled=false);$('teacherDate').disabled=false}}
+};
 $('teacherStudent').onchange=renderTeacherDraft;$('teacherTheme').onchange=renderTeacherDraft;
 $('teacherOpenWorksheet').onclick=async()=>{
  clearTeacherModel();const request=teacherEpoch,member=actor,grade=$('teacherGrade').value,subjectId=$('teacherSubject').value;

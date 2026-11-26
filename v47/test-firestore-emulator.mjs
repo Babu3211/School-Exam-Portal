@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
+import {loadMathAssessmentDraft,saveMathAssessmentDraft} from './primary-assessment-math-draft.mjs';
+import {loadPrimaryTeacherWorksheet} from './primary-assessment-teacher-worksheet.mjs';
 import {loadSparkCommittedReport} from './spark-committed-report.mjs';
 import {loadSparkDraftReport} from './spark-draft-report.mjs';
 import {saveTeacherClassAttendance} from './teacher-class-attendance.mjs';
@@ -144,6 +146,42 @@ try{
  await assertFails(updateDoc(doc(admin,'schools','12345678','cdc_observations','obs_1'),{level:'Changed'}));
  await assertFails(deleteDoc(doc(admin,'schools','12345678','cdc_observations','obs_1')));
  await assertFails(setDoc(doc(viewer,'schools','12345678','cdc_observations','new_observation'),{schoolId:'12345678'}));
+ // Real SDK source-bound assessment Draft: existing reportmath and report_s1
+ // fixtures are Class 1. Only synthetic teacher data is written.
+ {
+  const sid='12345678',uid='teacher_12345678',root=['schools',sid],subjectId='reportmath',studentId='report_s1';
+  await env.withSecurityRulesDisabled(async ctx=>{
+   await setDoc(doc(ctx.firestore(),...root,'teacher_assignments',sid+':'+uid+':1:'+subjectId),{schoolId:sid,uid,classId:'1',subjectId,active:true});
+  });
+  const api={doc,getDocFromServer,getDocsFromServer,getDoc,getDocs,collection,query,where,orderBy,limit,startAfter,runTransaction,serverTimestamp};
+  const actor={uid,schoolId:sid,role:'teacher',active:true},auth={currentUser:{uid}},assertCurrent=()=>{};
+  const catalogue=JSON.parse(readFileSync(new URL('./primary-assessment-reference-2083.json',import.meta.url),'utf8'));
+  const model=await loadPrimaryTeacherWorksheet({db:teacher,api,actor,schoolId:sid,grade:'1',subjectId,catalogue,assertCurrent});
+  const args={db:teacher,api,actor,auth,model,studentId,themeIndex:0,assertCurrent};
+  assert.equal(await loadMathAssessmentDraft(args),null);
+  const ratings='3'+'_'.repeat(model.themes[0].count-1);
+  const first=await saveMathAssessmentDraft({...args,ratings,date:'2083-08-10',expectedRevision:0});
+  assert.equal(first.revision,1);
+  assert.equal((await loadMathAssessmentDraft(args)).ratings,ratings);
+  await assert.rejects(saveMathAssessmentDraft({...args,ratings,date:'2083-08-11',expectedRevision:0}),/revision changed/);
+  await assert.rejects(saveMathAssessmentDraft({...args,ratings:'5'.repeat(ratings.length),date:'2083-08-11',expectedRevision:1}),/Invalid/);
+  const second=await saveMathAssessmentDraft({...args,ratings:'4'.repeat(ratings.length),date:'2083-08-11',expectedRevision:1});
+  assert.equal(second.revision,2);
+  const theme=model.themes[0];
+  const themeId=createHash('sha256').update(JSON.stringify(['ad2e3b96a22601fed9d956397a98c564b3ffb768','1',theme.theme,theme.sourceRows])).digest('hex');
+  const parts=[...root,'teacher_assessment_drafts',uid,'classes','1','subjects',subjectId,'students',studentId,'themes',themeId];
+  await assertFails(getDoc(doc(viewer,...parts)));
+  await assertFails(getDoc(doc(admin,...parts)));
+  await assertFails(getDoc(doc(db('teacher_87654321'),...parts)));
+  await assertFails(updateDoc(doc(teacher,...parts),{ratings:'9',revision:3,updatedAt:serverTimestamp()}));
+  await assertFails(deleteDoc(doc(teacher,...parts)));
+  await env.withSecurityRulesDisabled(async ctx=>{
+   await updateDoc(doc(ctx.firestore(),...root,'teacher_assignments',sid+':'+uid+':1:'+subjectId),{active:false});
+  });
+  await assertFails(getDoc(doc(teacher,...parts)));
+  await assertFails(updateDoc(doc(teacher,...parts),{ratings,revision:3,updatedAt:serverTimestamp()}));
+  console.log('PASS private assessment Draft save/reload, revision conflict, assigned teacher and other-school isolation');
+ }
  // 19 Unauthorized school listing denied
  await assertFails(getDocs(collection(viewer,'schools')));
  // 20 Super Admin school listing allowed

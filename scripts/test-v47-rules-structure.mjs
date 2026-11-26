@@ -72,7 +72,14 @@ assert.ok(missingBlock.length<3000,'Unexpected missing-draft rule expansion');
 for(const guard of ["loggedIn() && request.auth.uid == teacherUid && !exists(target)","missingDraftMember(get(schoolPath(sid)).data, get(memberPath(sid)).data)","missingDraftDuty(get(config).data)","s.get('active',false) == true","m.get('active',false) == true","m.get('uid','') == teacherUid","m.get('schoolId','') == sid","m.get('role','') == 'teacher'","c.get('schoolId','') == sid","c.get('active',false) == true","id == c.classId + '_' + c.subjectId + '_' + c.examId","missingDraftDependencies(c,get(subject).data,get(duty).data)","s.get('schoolId','') == sid","s.get('class','') == c.classId","a.get('active',false) == true","a.get('uid','') == teacherUid","a.get('schoolId','') == sid","a.get('classId','') == c.classId","a.get('subjectId','') == c.subjectId"])assert.ok(missingBlock.includes(guard),'Missing first-draft guard '+guard);
 assert.equal((missingBlock.match(/\bget\((?:subject|duty|config)\)/g)||[]).length,3,'Each authoritative dependency is read exactly once');
 assert.doesNotMatch(missingBlock,/allow\s/);
-const normalizedRules=rules.replace(missingBlock,'').replace('teacherMayReadMissingDraft() || ','');
+const worksheetStart=rules.indexOf('      // Private assessment worksheet drafts;');
+const worksheetEnd=rules.indexOf('      // Per-student CDC assessment evidence',worksheetStart);
+assert.ok(worksheetStart>=0&&worksheetEnd>worksheetStart);
+const worksheetBlock=rules.slice(worksheetStart,worksheetEnd);
+assert.ok(worksheetBlock.length<5000);
+for(const guard of ["request.auth.uid == teacherUid","m.get('role','') == 'teacher'","m.get('schoolId','') == sid","p.get('schoolId','') == sid","p.get('class','') == classId","p.get('active',true) == true","a.get('uid','') == teacherUid","a.get('classId','') == classId","a.get('subjectId','') == subjectId","a.get('active',false) == true","d.format == 'smss-v47-primary-math-draft-v1'","request.resource.data.revision == resource.data.revision + 1","allow list, delete: if false;"])assert.ok(worksheetBlock.includes(guard),'Assessment draft guard missing '+guard);
+assert.doesNotMatch(worksheetBlock,/allow\s+write\s*:/);
+const normalizedRules=rules.replace(missingBlock,'').replace('teacherMayReadMissingDraft() || ','').replace(worksheetBlock,'');
 assert.ok(normalizedRules.length-activity.length-viewBlock.length-staff.length<40000,'Unexpected Firestore rules expansion outside bounded additions');
 for(const guard of ["activeMember(sid) && request.auth.uid == uid","d.keys().hasOnly(['schoolId','uid','lastSeen'])","d.schoolId == sid && d.uid == uid && d.lastSeen == request.time","allow list: if canAdmin(sid);","request.time >= resource.data.lastSeen + duration.value(15,'m')","allow delete: if false;"])
  assert.ok(activity.includes(guard),'Activity guard missing: '+guard);
