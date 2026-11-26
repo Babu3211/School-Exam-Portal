@@ -48,6 +48,49 @@ def mark_catchup_actions(original,desired,actual,equal):
         else:conflicts.append(k)
     return sorted(creates),sorted(updates),sorted(conflicts)
 
+def entry_settings_inventory(legacy,subjects,operational,scalar,subject_key):
+    """Aggregate exact matching candidates only. Never invent a setting or term."""
+    from collections import Counter
+    groups={"1-3":("1","2","3"),"4-5":("4","5"),"6-8":("6","7","8"),"9-10":("9","10")}
+    terms={"first":"1st","second":"2nd","third":"3rd","annual":"final","1st":"1st","2nd":"2nd","3rd":"3rd","final":"final"}
+    counts=Counter();shapes=Counter();term_fields=Counter();candidate_counts=Counter()
+    for f in legacy.values():
+        group=scalar(f,"classGroup");name=scalar(f,"subject")
+        if group not in groups or not isinstance(name,str) or not name.strip():
+            counts["invalid_legacy_identity"]+=1;continue
+        explicit=[(k,scalar(f,k)) for k in ("termKey","term","examType","examTerm") if scalar(f,k) not in (None,"")]
+        for k,v in explicit:term_fields[k]+=1
+        mapped={terms.get(v) for k,v in explicit if isinstance(v,str)}
+        term=next(iter(mapped)) if len(mapped)==1 and None not in mapped and len(explicit)==sum(isinstance(v,str) for k,v in explicit) else None
+        if term is None:counts["term_missing_or_unresolved"]+=1
+        items=f.get("components",{}).get("arrayValue",{}).get("values",[])
+        shape=[]
+        for x in items:
+            p=x.get("mapValue",{}).get("fields",{})
+            n=scalar(p,"name");v=scalar(p,"fullMarks")
+            label=("count" if isinstance(n,str) and "learning achievement" in n.lower() and "obtained" not in n.lower()
+              else "obtained" if isinstance(n,str) and "obtained learning" in n.lower()
+              else "full" if isinstance(n,str) and n.lower().strip()=="full marks"
+              else "participation" if isinstance(n,str) and "participation" in n.lower()
+              else "practical" if isinstance(n,str) and ("practical" in n.lower() or "project" in n.lower())
+              else "theory" if isinstance(n,str) and ("theory" in n.lower() or n.lower().startswith("th ") or "total of final" in n.lower())
+              else "term" if isinstance(n,str) and ("term" in n.lower() or "examination" in n.lower())
+              else "other")
+            value=v if type(v) in (int,float) and 0<=v<=100000 else "invalid"
+            shape.append(label+":"+str(value))
+        shapes[group+" | "+(term or "unresolved")+" | "+",".join(shape)]+=1
+        matches=[(cls,sid) for (cls,sid),subject in subjects.items() if cls in groups[group] and subject_key(subject)==subject_key(name)]
+        if not matches:counts["no_catalog_subject"]+=1
+        if term is not None:
+            for cls,sid in matches:candidate_counts[(cls,sid,term)]+=1
+    counts["legacy_records"]=len(legacy)
+    counts["active_catalog_subjects"]=len(subjects)
+    counts["explicit_unique_candidates"]=sum(v==1 for v in candidate_counts.values())
+    counts["ambiguous_candidates"]=sum(v>1 for v in candidate_counts.values())
+    counts["operational_settings"]=len(operational)
+    counts["candidate_with_operational_settings"]=sum(k in operational for k in candidate_counts)
+    return dict(counts),dict(shapes),dict(term_fields)
+
 def self_test():
     assert additions({"a":1},{"a":1,"b":2},lambda x,y:x==y,True)=={"b"}
     for old,new,allowed in [({"a":1},{"a":2},True),({"a":1},{},True),({},{"a":1},False)]:
@@ -70,9 +113,13 @@ def self_test():
     assert mark_catchup_actions({"a":1},{"a":2,"b":3},{"a":2,"b":3},eq)==([],[],[])
     assert mark_catchup_actions({"a":1},{"a":2,"b":3},{"a":9,"b":4},eq)==([],[],["a","b"])
     assert mark_catchup_actions({"a":1},{"a":2},{"a":None},eq)==([],[],["a"])
-    print("PASS additive-only delta policy, aggregate diagnostics and guarded reconciliation actions; mark catch-up conflict guards")
+    sc=lambda f,k:f.get(k)
+    c,sh,t=entry_settings_inventory({"a":{"classGroup":"9-10","subject":"Math","termKey":"first","components":{"arrayValue":{"values":[{"mapValue":{"fields":{"name":"Participation","fullMarks":3}}}]}}},"b":{"classGroup":"9-10","subject":"Math"}},{("9","math"):"Math",("10","math"):"Math"},{("9","math","1st")},sc,str.lower)
+    assert c["explicit_unique_candidates"]==2 and c["term_missing_or_unresolved"]==1 and c["candidate_with_operational_settings"]==1
+    assert sh["9-10 | 1st | participation:3"]==1 and t=={"termKey":1}
+    print("PASS additive-only delta policy, aggregate diagnostics and guarded reconciliation actions; mark catch-up conflict guards; entry settings inventory")
 
-def main(path,apply=False,reconcile=False,marks_only=False):
+def main(path,apply=False,reconcile=False,marks_only=False,entry_settings=False):
     import requests
     if os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):raise RuntimeError("Live migration forbidden in CI")
     warnings.simplefilter("error",getpass.GetPassWarning)
@@ -249,6 +296,31 @@ def main(path,apply=False,reconcile=False,marks_only=False):
                 if any(k not in desired for k in actual):raise RuntimeError("Extra target academic records; no deletion or overwrite")
         def counts(keys):return dict(Counter(k[len(BASE)+1:].split("/")[0] for k in keys))
         desired,deps,rt=current_marks()
+        if entry_settings:
+            legacy={k:v for k,v in desired.items() if k.startswith(BASE+"/mark_settings/")}
+            catalog={(m.scalar(v,"class"),k.rsplit("/",1)[1]):m.scalar(v,"name") for k,v in deps.items() if k.startswith(BASE+"/subjects/") and m.scalar(v,"active") is True}
+            target=listing(m.TARGET,api+"/schools/"+m.SID+"/mark_settings",BASE+"/mark_settings/")
+            operational=set()
+            for k,v in target.items():
+                if k in legacy:
+                    if not sub.same_field(v,legacy[k]):raise RuntimeError("Original mark settings differ")
+                    continue
+                cls,sid,term=(m.scalar(v,x) for x in ("classId","subjectId","examId"))
+                if m.scalar(v,"schoolId")!=m.SID or m.scalar(v,"id")!=k.rsplit("/",1)[1] or (cls,sid) not in catalog or term not in ("weekly","monthly","1st","2nd","3rd","final") or m.scalar(v,"active") is not True:raise RuntimeError("Unexpected operational settings")
+                if (cls,sid,term) in operational:raise RuntimeError("Duplicate operational settings identity")
+                operational.add((cls,sid,term))
+            if set(legacy)-set(target):raise RuntimeError("Original settings missing")
+            # Verify school and archive and unchanged dependencies separately.
+            vals=read(sorted(set(deps)|{BASE,archive}))
+            if not sub.same_field(vals[BASE],staged[BASE]):raise RuntimeError("Inactive target school differs")
+            if not vals[archive] or vals[archive].get("state")!=m.string("ARCHIVE_VERIFIED_NOT_OPERATIONAL"):raise RuntimeError("Archive not verified")
+            if any(not sub.same_field(v,vals[k]) for k,v in deps.items()):raise RuntimeError("Dependencies differ")
+            counts,shapes,fields=entry_settings_inventory(legacy,catalog,operational,m.scalar,sub.subject_key)
+            print("ENTRY SETTINGS COUNTS:",json.dumps(counts,sort_keys=True))
+            print("ENTRY SETTINGS SHAPES:",json.dumps(shapes,sort_keys=True))
+            print("ENTRY SETTINGS TERM FIELDS:",json.dumps(fields,sort_keys=True))
+            print("READ ONLY: ZERO FIRESTORE OR AUTH WRITES; SCHOOL ACTIVE: FALSE")
+            return
         inventory(desired)
         creates,updates,conflicts=classify(desired,deps)
         print("SOURCE SNAPSHOT UTC:",rt)
@@ -374,7 +446,8 @@ if __name__=="__main__":
         if sys.argv[1:]==["--self-test"]:self_test()
         elif len(sys.argv)==3 and sys.argv[1] in ("--audit-only","--apply","--audit-reconcile","--apply-reconcile"):main(Path(sys.argv[2]).expanduser(),sys.argv[1] in ("--apply","--apply-reconcile"),sys.argv[1] in ("--audit-reconcile","--apply-reconcile"))
         elif len(sys.argv)==3 and sys.argv[1] in ("--audit-marks","--apply-marks"):main(Path(sys.argv[2]).expanduser(),sys.argv[1]=="--apply-marks",False,True)
-        else:raise RuntimeError("Specify --audit-only, --audit-reconcile, --apply, --apply-reconcile, --audit-marks or --apply-marks and encrypted backup")
+        elif len(sys.argv)==3 and sys.argv[1]=="--audit-entry-settings":main(Path(sys.argv[2]).expanduser(),False,False,True,True)
+        else:raise RuntimeError("Specify reviewed audit/apply mode and encrypted backup")
     except (Exception,KeyboardInterrupt) as e:
         print("DELTA STOPPED:",type(e).__name__,str(e) if isinstance(e,RuntimeError) else "",file=sys.stderr)
         sys.exit(1)
