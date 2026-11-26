@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {partitionSchoolExams} from './exam-history.mjs';
+const schoolId='300160003';
+const doc=(id,data)=>({id,data:()=>({schoolId,...data})});
+const a=doc('legacy-a',{academicYear:'2083',className:'Class 1',termKey:'first',term:'1st',examName:'First',startDate:'2083-03-01'});
+const b=doc('legacy-b',{academicYear:'2083',className:'Class 1',termKey:'first',term:'1st',examName:'First',startDate:'2083-04-01'});
+const c=doc('1st',{term:'1st'});
+const result=partitionSchoolExams(schoolId,[a,b,c]);
+assert.equal(result.configured.length,1);assert.equal(result.history.length,2);assert.deepEqual(result.history.map(x=>x.id),['legacy-a','legacy-b']);
+assert.throws(()=>partitionSchoolExams(schoolId,[a,a]),/invalid or foreign/i);
+assert.throws(()=>partitionSchoolExams(schoolId,[doc('foreign',{schoolId:'300160004'})]),/foreign/i);
+assert.throws(()=>partitionSchoolExams(schoolId,[doc('bad',{className:'1',academicYear:'2083',termKey:'first',term:'final'})]),/conflicting/i);
+assert.throws(()=>partitionSchoolExams(schoolId,[doc('1st',{term:'1st',className:'1'})]),/configured/i);
+console.log('PASS historical exam identity, duplicates, term conflict and cross-school rejection');

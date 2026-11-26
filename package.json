@@ -65,7 +65,7 @@
     "test:v47:terms": "node v47/test-term-catalog.mjs",
     "test:v47:term-rules": "node v47/test-term-rules-parity.mjs",
     "test:v47:large-class-plan": "node v47/test-large-class-mark-plan.mjs",
-    "test:v47:exam-service": "node v47/test-exam-term-service.mjs",
+    "test:v47:exam-service": "node v47/test-exam-term-service.mjs && node v47/test-exam-history.mjs",
     "test:v47:legacy-read-rules": "node v47/test-legacy-v46-read-rules.mjs",
     "test:v47:v46-student-record": "node v47/test-v46-student-record-compat.mjs",
     "test:v47:v46-staff-excel": "node v47/test-v46-staff-excel-schema.mjs",
