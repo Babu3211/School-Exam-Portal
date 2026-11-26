@@ -1,3 +1,4 @@
+import {prepareLegacyDraftPrefill} from './legacy-draft-prefill.mjs';
 import {loadAssignedLegacyMarks} from './assigned-legacy-marks.mjs';
 import {neError} from './nepali-feedback.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,bindVerifiedModuleActivity} from './school-firebase-client.mjs';
@@ -233,7 +234,7 @@ $('loadTeacherDraft').onclick=async()=>{
   if(roster.students.some(s=>!isActiveEnrolledStudent(s)))throw Error('Inactive student in class roster');
   const path=api.doc(db,'schools',id,'teacher_mark_drafts',uid,
    'class_drafts',settings.settingsId);
-  const snap=await api.getDoc(path);
+  const snap=await api.getDocFromServer(path);
   await revalidate();
   const restored=snap?.exists?.()?verifyStoredTeacherClassDraft({
    actor,schoolId:id,classId,subjectId,examId,settings,
@@ -244,7 +245,14 @@ $('loadTeacherDraft').onclick=async()=>{
   const students=[...roster.students].sort((a,b)=>
    String(a.name??a.id).localeCompare(String(b.name??b.id),'en',{numeric:true})||a.id.localeCompare(b.id));
   draftContext={schoolId:id,classId,subjectId,examId,settings,students,revision:restored?.revision??0};
-  const previous=new Map(restored?.entries.map(row=>[row.studentId,row])??[]);
+  let prefill=null;
+  if(!restored&&['1st','2nd','3rd','final'].includes(examId)&&/^(?:[1-9]|10)$/.test(classId)){
+   const assertCurrent=()=>{if(current!==draftEpoch||request!==epoch||selection!==selectionEpoch||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==id||classId!==$('classId').value||subjectId!==$('subjectId').value||examId!==$('draftTerm').value)throw Error('Teacher Draft selection changed')};
+   const history=await loadAssignedLegacyMarks({db,api,actor,schoolId:id,classId,subjectId,term:examId,assertCurrent});
+   prefill=prepareLegacyDraftPrefill({history,settings,studentIds:roster.studentIds});
+   await revalidate();assertCurrent();
+  }
+  const previous=new Map((restored?.entries??prefill?.entries??[]).map(row=>[row.studentId,row]));
   const header=$('teacherDraftHeader');header.replaceChildren();
   for(const text of ['Student','Absent',...settings.components.map(c=>c.name+' / '+c.fullMarks)]){
    const th=document.createElement('th');th.textContent=text;header.append(th);
@@ -261,7 +269,7 @@ $('loadTeacherDraft').onclick=async()=>{
     const td=document.createElement('td'),input=document.createElement('input');
     input.type='number';input.step='any';input.min='0';input.max=String(component.fullMarks);
     input.dataset.component=component.key;input.setAttribute('aria-label',component.name+' '+student.id);
-    if(prior&&!prior.isAbsent)input.value=String(prior.values[component.key]);
+    if(prior&&!prior.isAbsent&&Object.hasOwn(prior.values,component.key))input.value=String(prior.values[component.key]);
     input.disabled=prior?.isAbsent===true;td.append(input);tr.append(td);
    }
    fragment.append(tr);
@@ -269,6 +277,7 @@ $('loadTeacherDraft').onclick=async()=>{
   $('teacherDraftRows').append(fragment);
   $('teacherDraftStatus').textContent=roster.count+' विद्यार्थी, '+settings.components.length+
     ' Examination Settings Components। '+(restored?'Draft Revision '+restored.revision+' सुरक्षित छ।':'नयाँ Draft।')+
+    (prefill?' V46 बाट '+prefill.loaded+' विद्यार्थीको अङ्क स्थानीय फाराममा भरियो; '+prefill.skipped+' अभिलेख स्वतः भरिएनन्। '+(prefill.examId?'मूल Exam ID: '+prefill.examId+'. ':'')+(prefill.reason?prefill.reason+'. ':''):'')+
     ' सबै अंक भरेपछि Validate गर्नुहोस्। यो आधिकारिक नतिजा होइन।';
  }catch(e){if(current===draftEpoch&&request===epoch){clearTeacherDraft();$('teacherDraftStatus').textContent='Teacher Draft खोल्न सकिएन: '+neError(e)}}
  finally{if(request===epoch)lock(false)}

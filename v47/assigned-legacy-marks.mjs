@@ -37,7 +37,7 @@ export async function loadAssignedLegacyMarks({db,api,actor,schoolId,classId,sub
    });
    const student=await readDocument('schools/'+schoolId+'/students/'+r.studentId);
    if(!student||student.schoolId!==schoolId)throw Error('Original student identity unavailable');
-   rows.push(Object.freeze({id:r.id,examId,studentId:r.studentId,studentName:String(student.nameEnglish??student.name??r.studentId),isAbsent:r.isAbsent===true,scores:Object.freeze(scores),totalObtained:r.totalObtained??null,totalFullMarks:r.totalFullMarks??null}));
+   rows.push(Object.freeze({id:r.id,examId,academicYear:r.academicYear??null,studentId:r.studentId,studentName:String(student.nameEnglish??student.name??r.studentId),isAbsent:r.isAbsent===true,scores:Object.freeze(scores),totalObtained:r.totalObtained??null,totalFullMarks:r.totalFullMarks??null}));
   }
  }
  await assignment();check();
