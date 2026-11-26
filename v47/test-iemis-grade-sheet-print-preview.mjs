@@ -39,6 +39,13 @@ for(const classNo of ['1','2','3','4','5','6','7','8','9','10'])for(const [term,
  const printed=renderIemisGradeSheetPrint(candidate);
  assert.equal(printed.ready,calculated.ready,'readiness parity for class '+classNo+' term '+term);
  if(!calculated.ready){assert.equal(printed.html,null);continue}
+ assert.ok(printed.html.includes(term==='final'?'@page{size:A4 portrait;margin:10mm}':'@page{size:A5 portrait;margin:6mm}'));
+ assert.ok(printed.html.includes(term==='final'?'width:190mm;min-height:276mm':'width:136mm;min-height:197mm'));
+ assert.match(printed.html,/border:1\.4mm solid #1000cc/);
+ assert.match(printed.html,/border:\.55mm solid #1000cc/);
+ assert.match(printed.html,/border-color:#1000cc/);
+ assert.match(printed.html,/background-repeat:repeat/);
+ assert.match(printed.html,/NOT VALID FOR OFFICIAL USE/);
  const subject=calculated.student.subjects[0].summary;
  assert.match(printed.html,new RegExp('<td>'+subject.obtained+' / '+subject.full+'</td>'));
  assert.ok(printed.html.includes('<td>'+subject.inGrade.grade+'</td>'));
