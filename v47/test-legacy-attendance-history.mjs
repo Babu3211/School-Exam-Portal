@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {prepareLegacyAttendance,readLegacyAttendance,exportLegacyAttendance} from './legacy-attendance-history.mjs';
+const sid='300160003',date='2026-11-26',actor={schoolId:sid,uid:'admin1',role:'school_admin',active:true},root='schools/'+sid;
+const batch={schoolId:sid,date,className:'कक्षा ५',section:'A',attendanceType:'subject',subject:'नेपाली',academicYear:'2083',students:[{studentId:'s1',studentName:'विद्यार्थी',status:'leave',remark:'बिदा'},{studentId:'s2',studentName:'Student 2',status:'present',remark:''}],totalStudents:2,presentCount:1,absentCount:0,leaveCount:1};
+const doc=(id,d)=>({id,data:()=>d,exists:()=>true});
+const docs=[doc('batch1',batch),doc('new1',{schoolId:sid,date,class:'5',studentId:'s1',present:false})];
+const p=prepareLegacyAttendance({schoolId:sid,date,docs});assert.equal(p.batches.length,1);assert.equal(p.batches[0].students[0].status,'leave');assert.equal(p.batches[0].subject,'नेपाली');assert.equal(p.batches[0].id,'batch1');
+for(const bad of [{...batch,schoolId:'99999'},{...batch,date:'2026-11-25'},{...batch,leaveCount:0},{...batch,students:[batch.students[0],batch.students[0]]}])assert.throws(()=>prepareLegacyAttendance({schoolId:sid,date,docs:[doc('bad',bad)]}));
+let role='school_admin',stale=false;
+const api={doc:(_,...p)=>p.join('/'),collection:(_,...p)=>p.join('/'),query:(path,...constraints)=>({path,constraints}),where:(...p)=>p,limit:n=>n,getDocFromServer:async p=>{if(p===root)return doc(sid,{id:sid,active:true});if(p===root+'/members/'+actor.uid)return doc(actor.uid,{schoolId:sid,uid:actor.uid,role,active:true});throw Error('Unexpected path')},getDocsFromServer:async q=>{assert.equal(q.path,root+'/attendance');assert.deepEqual(q.constraints,[['date','==',date],2001]);return {docs}}};
+const args={db:{},api,actor,schoolId:sid,date,assertCurrent:()=>{if(stale)throw Error('Stale selection')}};
+assert.equal((await readLegacyAttendance(args)).batches.length,1);
+const file=await exportLegacyAttendance(args);assert.equal(file.count,2);const raw=new TextDecoder().decode(await file.blob.arrayBuffer());assert.match(raw,/leave/);assert.match(raw,/बिदा/);assert.match(raw,/नेपाली/);
+await assert.rejects(readLegacyAttendance({...args,actor:{...actor,role:'teacher'}}),/Admin or Viewer/);
+await assert.rejects(readLegacyAttendance({...args,schoolId:'99999'}),/Admin or Viewer/);
+role='viewer';await assert.rejects(readLegacyAttendance(args),/role changed/);role='school_admin';
+stale=true;await assert.rejects(exportLegacyAttendance(args),/Stale/);
+console.log('PASS legacy V46 attendance: original batch ID, leave, subject, source date, Excel and tenant/session guards');
