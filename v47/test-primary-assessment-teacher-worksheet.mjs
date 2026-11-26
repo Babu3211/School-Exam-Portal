@@ -1,12 +1,27 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {primarySubjectKey,draftThemeSlots,loadPrimaryTeacherWorksheet,loadAssignedPrimarySubjects} from './primary-assessment-teacher-worksheet.mjs';
+import {v46SeroferoThemeRows,scoreSeroferoDraft} from './primary-assessment-v46-serofero-text.mjs';
 import {v46LanguageHealthThemeRows} from './primary-assessment-v46-language-health-text.mjs';
 import {v46SocialThemeRows} from './primary-assessment-v46-social-text.mjs';
 import {v46ScienceThemeRows} from './primary-assessment-v46-science-text.mjs';
 import {v46MathThemeRows} from './primary-assessment-v46-math-text.mjs';
 import {assessmentThemeReference} from './primary-assessment-reference.mjs';
 const catalogue=JSON.parse(readFileSync(new URL('./primary-assessment-reference-2083.json',import.meta.url)));
+for(const [grade,expected] of [['1',27],['2',36],['3',35]]){
+ let total=0;
+ for(const t of catalogue.rows[grade+':serophero']){
+  const rows=v46SeroferoThemeRows(grade,t.theme,t.scoreBlocks);
+  assert.equal(rows.length,t.scoreBlocks);total+=rows.length;
+  assert.equal(v46SeroferoThemeRows(grade,t.theme,t.scoreBlocks+1),null);
+  const slots=draftThemeSlots({writeAuthorized:false,officialAssessmentApproved:false,key:'serophero',themes:[{...t,sourceRows:rows}]},0);
+  assert.equal(slots.length,t.scoreBlocks);assert.ok(slots.every(s=>s.sourceText.indicators.length===4));
+ }
+ assert.equal(total,expected);
+}
+assert.deepEqual(scoreSeroferoDraft('00001111_101'),{blocks:[0,4,null],completed:2,total:4});
+assert.throws(()=>scoreSeroferoDraft('0123'));
+assert.throws(()=>scoreSeroferoDraft('111'));
 assert.equal(primarySubjectKey('नेपाली'),'nepali');assert.equal(primarySubjectKey('Mathematics'),'mathematics');assert.equal(primarySubjectKey('Optional Mathematics'),null);
 for(const name of ['सेरोफेरो','हाम्रो सेरोफेरो'])assert.equal(primarySubjectKey(name),'serophero');
 for(const name of ['हाम्रो धुनिबेँशी','स्थानीय','Our Dhunibeshi','मातृभाषा वा स्थानीय विषय'])assert.equal(primarySubjectKey(name),'hamrodhunibeshi');
