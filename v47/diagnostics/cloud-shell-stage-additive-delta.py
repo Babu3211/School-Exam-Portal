@@ -1,6 +1,7 @@
 """V46 -> V47 additive marks/legacy role catch-up. Default is read-only.
 Requires the previously reviewed Cloud Shell helpers and encrypted baseline.
-Never changes source, Auth, membership, school status, or existing documents.
+Never changes source, Auth, membership or school status. Reviewed reconciliation
+updates only baseline-identical staff/catalog records, with the original archived.
 """
 import getpass, hashlib, json, os, subprocess, sys, warnings
 from datetime import datetime, timezone, timedelta
@@ -24,6 +25,18 @@ def additions(old, current, equal, allowed):
 def changed_fields(old,new,equal):
     return {k for k in old.keys() | new.keys() if k not in old or k not in new or not equal(old[k],new[k])}
 
+def reconciliation_actions(base,original,desired,extra,replacements,vals,equal):
+    creates=[];updates=[];conflicts=[]
+    for k,v in desired.items():
+        if k not in vals:raise RuntimeError("Incomplete target inventory")
+        if equal(vals[k],v):continue
+        if k in extra and k not in original and vals[k] is None and any(k.startswith(base+"/"+c+"/") for c in ("classes","subjects","marks","user_roles")):
+            creates.append(k)
+        elif k in replacements and k in original and equal(vals[k],original[k]) and (k.startswith(base+"/staff/") or (k.startswith(base+"/subjects/") and changed_fields(original[k],v,equal)=={"sourceClassRecordIds"})):
+            updates.append(k)
+        else:conflicts.append(k)
+    return sorted(creates),sorted(updates),sorted(conflicts)
+
 def self_test():
     assert additions({"a":1},{"a":1,"b":2},lambda x,y:x==y,True)=={"b"}
     for old,new,allowed in [({"a":1},{"a":2},True),({"a":1},{},True),({},{"a":1},False)]:
@@ -33,7 +46,16 @@ def self_test():
     assert delta_counts({"a":1,"b":2},{"a":3,"c":4},lambda x,y:x==y)=={"old":2,"current":2,"new":1,"removed":1,"changed":1}
     assert changed_fields({"a":1,"b":2},{"a":3,"c":4},lambda x,y:x==y)=={"a","b","c"}
     assert changed_fields({"a":1},{"a":1},lambda x,y:x==y)==set()
-    print("PASS additive-only delta policy and aggregate difference diagnostics")
+    base="schools/test"
+    staff=base+"/staff/s";mark=base+"/marks/m";member=base+"/members/u"
+    old={staff:{"name":"old"}}
+    desired={staff:{"name":"new"},mark:{"score":3}}
+    extra={mark:desired[mark]};replacements={staff:desired[staff]};eq=lambda x,y:x==y
+    assert reconciliation_actions(base,old,desired,extra,replacements,{staff:old[staff],mark:None},eq)==([mark],[staff],[])
+    assert reconciliation_actions(base,old,desired,extra,replacements,desired,eq)==([],[],[])
+    assert reconciliation_actions(base,old,desired,extra,replacements,{staff:{"name":"different"},mark:{"score":4}},eq)==([],[],[mark,staff])
+    assert reconciliation_actions(base,{}, {member:{"active":True}}, {member:{"active":True}}, {}, {member:None},eq)==([],[],[member])
+    print("PASS additive-only delta policy, aggregate diagnostics and guarded reconciliation actions")
 
 def main(path,apply=False,reconcile=False):
     import requests
@@ -107,7 +129,7 @@ def main(path,apply=False,reconcile=False):
             raise RuntimeError("Source changes or unreviewed additions; no staging performed")
         if reconcile:
             from collections import Counter
-            # Preview only. Keep old source data in the verified original archive.
+            # Keep old source data in the verified original archive.
             # Map the new source using the same reviewed V46 schema helpers.
             newstaged=dict(staged)
             field_counts=Counter()
@@ -170,28 +192,55 @@ def main(path,apply=False,reconcile=False):
         return missing
     check_rules()
     if reconcile:
-        if apply:raise RuntimeError("Reconciliation preview cannot write")
-        desired,extra,replacements=snapshot()
-        for c in ("staff","classes","subjects","marks","user_roles"):
-            actual=listing(m.TARGET,api+"/schools/"+m.SID+"/"+c,BASE+"/"+c+"/")
-            if any(k not in desired for k in actual):raise RuntimeError("Unrelated target records in "+c)
-        vals=read(sorted(set(desired)|{archive,BASE}))
-        if not sub.same_field(vals[BASE],staged[BASE]):raise RuntimeError("Inactive target school differs")
-        if not vals[archive] or vals[archive].get("state")!=m.string("ARCHIVE_VERIFIED_NOT_OPERATIONAL") or vals[archive].get("documentCount")!={"integerValue":str(total)}:raise RuntimeError("Baseline archive not verified")
         from collections import Counter
-        creates=Counter();updates=Counter();identical=Counter();conflicts=Counter()
-        for k,v in desired.items():
-            coll=k[len(BASE)+1:].split("/")[0] if k!=BASE else "school"
-            if sub.same_field(vals[k],v):identical[coll]+=1
-            elif k in extra and vals[k] is None:creates[coll]+=1
-            elif k in replacements and sub.same_field(vals[k],original[k]):updates[coll]+=1
-            else:conflicts[coll]+=1
-        print("TARGET CREATE COUNTS:",json.dumps(dict(creates),sort_keys=True))
-        print("TARGET UPDATE COUNTS:",json.dumps(dict(updates),sort_keys=True))
-        print("TARGET CONFLICT COUNTS:",json.dumps(dict(conflicts),sort_keys=True))
-        print("READ ONLY: ZERO FIRESTORE OR AUTH WRITES; SCHOOL ACTIVE: FALSE")
+        desired,extra,replacements=snapshot()
+        def inventory():
+            for c in ("staff","classes","subjects","marks","user_roles"):
+                actual=listing(m.TARGET,api+"/schools/"+m.SID+"/"+c,BASE+"/"+c+"/")
+                if any(k not in desired for k in actual):raise RuntimeError("Unrelated target records in "+c)
+        def classify(tx=None):
+            vals=read(sorted(set(desired)|{archive,BASE}),tx)
+            if not sub.same_field(vals[BASE],staged[BASE]):raise RuntimeError("Inactive target school differs")
+            if not vals[archive] or vals[archive].get("state")!=m.string("ARCHIVE_VERIFIED_NOT_OPERATIONAL") or vals[archive].get("documentCount")!={"integerValue":str(total)}:raise RuntimeError("Baseline archive not verified")
+            return reconciliation_actions(BASE,original,desired,extra,replacements,vals,sub.same_field)
+        def counts(keys):
+            return dict(Counter(k[len(BASE)+1:].split("/")[0] if k!=BASE else "school" for k in keys))
+        inventory()
+        creates,updates,conflicts=classify()
+        print("TARGET CREATE COUNTS:",json.dumps(counts(creates),sort_keys=True))
+        print("TARGET UPDATE COUNTS:",json.dumps(counts(updates),sort_keys=True))
+        print("TARGET CONFLICT COUNTS:",json.dumps(counts(conflicts),sort_keys=True))
         if conflicts:raise RuntimeError("Target diverges from approved baseline; no writes")
-        print("RECONCILIATION PREVIEW COMPLETE; NO APPLY IMPLEMENTED FOR STAFF OR CLASS CHANGES")
+        if not apply or not (creates or updates):
+            print("READ ONLY: ZERO FIRESTORE OR AUTH WRITES; SCHOOL ACTIVE: FALSE")
+            print("RECONCILIATION PREVIEW COMPLETE" if creates or updates else "RECONCILIATION VERIFIED: NO PENDING WRITES")
+            return
+        print("REVIEWED TARGET SCHOOL:",m.SID,"CREATE:",len(creates),"UPDATE:",len(updates))
+        print("Original baseline preserved in private archive. No membership, Auth or school activation writes.")
+        if input("Type RECONCILE-V47-300160003 to commit the displayed counts: ").strip()!="RECONCILE-V47-300160003":raise RuntimeError("Not confirmed")
+        check_rules()
+        latest,latest_extra,latest_replacements=snapshot()
+        if not all(sub.same_field(x,y) for x,y in ((desired,latest),(extra,latest_extra),(replacements,latest_replacements))):
+            raise RuntimeError("Source changed after preview; retry to review fresh counts")
+        inventory()
+        tx=call(m.TARGET,api+":beginTransaction",{"options":{"readWrite":{}}})["transaction"]
+        committed=False
+        try:
+            check_creates,check_updates,check_conflicts=classify(tx)
+            if (check_creates,check_updates,check_conflicts)!=(creates,updates,[]):
+                raise RuntimeError("Target changed after preview; no writes")
+            writes=[{"update":{"name":k,"fields":desired[k]},"currentDocument":{"exists":False}} for k in creates]
+            writes.extend({"update":{"name":k,"fields":desired[k]},"currentDocument":{"exists":True}} for k in updates)
+            result=call(m.TARGET,api+":commit",{"transaction":tx,"writes":writes})
+            committed=True
+            if len(result.get("writeResults",[]))!=len(writes):raise RuntimeError("Commit response incomplete; run read-only audit before retry")
+        finally:
+            if not committed:
+                try:call(m.TARGET,api+":rollback",{"transaction":tx})
+                except Exception:pass
+        if classify()!=([],[],[]):raise RuntimeError("Post-commit verification incomplete; run read-only audit")
+        print("RECONCILIATION VERIFIED: CREATED",len(creates),"UPDATED",len(updates))
+        print("V46 WRITES: ZERO; AUTH CHANGES: ZERO; MEMBERSHIP CHANGES: ZERO; SCHOOL ACTIVE: FALSE")
         return
     expected,delta=snapshot()
     for c in ALLOWED:
@@ -226,8 +275,8 @@ def main(path,apply=False,reconcile=False):
 if __name__=="__main__":
     try:
         if sys.argv[1:]==["--self-test"]:self_test()
-        elif len(sys.argv)==3 and sys.argv[1] in ("--audit-only","--apply","--audit-reconcile"):main(Path(sys.argv[2]).expanduser(),sys.argv[1]=="--apply",sys.argv[1]=="--audit-reconcile")
-        else:raise RuntimeError("Specify --audit-only, --audit-reconcile or --apply and encrypted backup")
+        elif len(sys.argv)==3 and sys.argv[1] in ("--audit-only","--apply","--audit-reconcile","--apply-reconcile"):main(Path(sys.argv[2]).expanduser(),sys.argv[1] in ("--apply","--apply-reconcile"),sys.argv[1] in ("--audit-reconcile","--apply-reconcile"))
+        else:raise RuntimeError("Specify --audit-only, --audit-reconcile, --apply or --apply-reconcile and encrypted backup")
     except (Exception,KeyboardInterrupt) as e:
         print("DELTA STOPPED:",type(e).__name__,str(e) if isinstance(e,RuntimeError) else "",file=sys.stderr)
         sys.exit(1)
