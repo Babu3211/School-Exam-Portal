@@ -13,6 +13,7 @@ import {chromium} from 'playwright';
 import {excelWorkbook} from '../excel-workbook.mjs';
 import {todayAssessmentDate2083} from '../assessment-date-2083.mjs';
 import {v46LowerMathReference} from '../primary-assessment-v46-lower-math.mjs';
+import {v46ScienceThemeRows} from '../primary-assessment-v46-science-text.mjs';
 import {V46_STAFF_EXCEL_HEADERS} from '../v46-staff-excel-schema.mjs';
 import {createV47StaticHandler} from '../../v47-runtime/static-handler.mjs';
 
@@ -245,6 +246,61 @@ try{
    assert.deepEqual(errors,[]);
    await db.doc(draftPath).delete();
    console.log('PASS browser assessment reference asset, assigned Mathematics date/score save, invalid-date correction, reload and isolation');
+   // Independent Grade 4 and 5 Science draft tests, synthetic fixtures only.
+   for(const [grade,count] of [['4',5],['5',6]]){
+    const subjectId='science'+grade,studentId='science_student_'+grade;
+    const subjectPath=root+'/subjects/'+subjectId,studentPath=root+'/students/'+studentId;
+    const assignmentPath=root+'/teacher_assignments/'+[sid,teacherUid,grade,subjectId].join(':');
+    const themeName='वैज्ञानिक सिकाइ',sourceRows=v46ScienceThemeRows(grade,themeName,count);
+    assert.equal(sourceRows.length,count);
+    const scienceThemeId=sha(JSON.stringify(['ad2e3b96a22601fed9d956397a98c564b3ffb768',grade,themeName,sourceRows]));
+    const sciencePath=root+'/teacher_assessment_drafts/'+teacherUid+'/classes/'+grade+'/subjects/'+subjectId+'/students/'+studentId+'/themes/'+scienceThemeId;
+    try{
+     await db.doc(subjectPath).set({schoolId:sid,class:grade,name:'Science and Technology',active:true});
+     await db.doc(studentPath).set({schoolId:sid,class:grade,nameEnglish:'Synthetic Science '+grade,active:true});
+     await db.doc(assignmentPath).set({schoolId:sid,uid:teacherUid,classId:grade,subjectId,active:true});
+     const openScience=async()=>{
+      await page.locator('#teacherGrade').selectOption(grade);
+      await page.locator('#teacherLoadSubjects').click();
+      await wait(page,id=>Array.from(document.getElementById('teacherSubject').options).some(o=>o.value===id),subjectId);
+      await page.locator('#teacherSubject').selectOption(subjectId);
+      await page.locator('#teacherOpenWorksheet').click();
+      await wait(page,()=>!document.getElementById('teacherSaveDraft').disabled);
+     };
+     await openScience();
+     assert.equal(await page.locator('#teacherStudent').inputValue(),studentId);
+     assert.equal(await ratings.count(),count);
+     assert.ok((await page.locator('#teacherDraftRows tr').first().textContent()).includes(sourceRows[0].titleEn));
+     assert.equal(await page.locator('#teacherDate').inputValue(),todayAssessmentDate2083());
+     await ratings.first().selectOption('4');
+     await page.locator('#teacherDate').fill('2083-08-11');
+     await page.locator('#teacherSaveDraft').click();
+     await wait(page,()=>document.getElementById('teacherDraftSaveStatus').textContent.includes('Revision 1 सुरक्षित भयो'));
+     const scienceSaved=(await db.doc(sciencePath).get()).data();
+     assert.equal(scienceSaved.format,'smss-v47-primary-science-draft-v1');
+     assert.equal(scienceSaved.ratings,'4'+'_'.repeat(count-1));
+     assert.equal(scienceSaved.date,'2083-08-11');
+     assert.equal(scienceSaved.revision,1);
+     await page.reload();
+     await wait(page,()=>!document.getElementById('teacherWorksheet').hidden);
+     await openScience();
+     assert.match(await page.locator('#teacherDraftSaveStatus').textContent(),/Revision 1 पुनः लोड भयो/);
+     assert.equal(await ratings.first().inputValue(),'4');
+     assert.equal(await page.locator('#teacherDate').inputValue(),'2083-08-11');
+     await ratings.last().selectOption('2');
+     await page.locator('#teacherSaveDraft').click();
+     await wait(page,()=>document.getElementById('teacherDraftSaveStatus').textContent.includes('Revision 2 सुरक्षित भयो'));
+     const updated=(await db.doc(sciencePath).get()).data();
+     assert.equal(updated.revision,2);
+     assert.equal(updated.ratings,'4'+'_'.repeat(count-2)+'2');
+     assert.equal((await db.doc(sciencePath.replace(sid,schools[1].sid)).get()).exists,false);
+     assert.deepEqual((await db.doc(legacy).get()).data(),original);
+     assert.deepEqual(errors,[]);
+     console.log('PASS browser Science assessment draft Grade '+grade+': bilingual rows, date, save, reload, update and isolation');
+    }finally{
+     await Promise.all([sciencePath,assignmentPath,studentPath,subjectPath].map(p=>db.doc(p).delete()));
+    }
+   }
   }finally{await teacherSession.context.close()}
   const adminSession=await newSession();
   try{
