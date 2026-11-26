@@ -595,7 +595,7 @@ service cloud.firestore {
           let d=request.resource.data;
           return d.keys().hasOnly(['format','schoolId','teacherUid','classId','subjectId','studentId','themeId','sourceRevision','themeName','ratings','date','revision','updatedAt'])
             && d.keys().hasAll(['format','schoolId','teacherUid','classId','subjectId','studentId','themeId','sourceRevision','themeName','ratings','date','revision','updatedAt'])
-            && (d.format == 'smss-v47-primary-math-draft-v1' || (d.format == 'smss-v47-primary-science-draft-v1' && classId in ['4','5'])) && d.schoolId == sid
+            && (d.format == 'smss-v47-primary-math-draft-v1' || (d.format == 'smss-v47-primary-science-draft-v1' && classId in ['4','5']) || (d.format == 'smss-v47-primary-social-draft-v1' && classId in ['4','5'])) && d.schoolId == sid
             && d.teacherUid == teacherUid && d.classId == classId && d.subjectId == subjectId
             && d.studentId == studentId && d.themeId == themeId
             && d.sourceRevision == 'ad2e3b96a22601fed9d956397a98c564b3ffb768'

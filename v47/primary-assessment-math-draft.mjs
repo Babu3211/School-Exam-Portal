@@ -5,7 +5,7 @@ import {draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {sameMarkJson} from './mark-json-equality.mjs';
 const sourceRevision='ad2e3b96a22601fed9d956397a98c564b3ffb768';
-const formats=Object.freeze({mathematics:'smss-v47-primary-math-draft-v1',science:'smss-v47-primary-science-draft-v1'});
+const formats=Object.freeze({mathematics:'smss-v47-primary-math-draft-v1',science:'smss-v47-primary-science-draft-v1',socialstudies:'smss-v47-primary-social-draft-v1'});
 const segment=/^[A-Za-z0-9_-]{1,128}$/;
 export function validateMathDraftValues({ratings,date,count}){
  if(!Number.isInteger(count)||count<1||count>500||typeof ratings!=='string'||ratings.length!==count||!/^[1-4_]+$/.test(ratings)||!/[1-4]/.test(ratings)||!validAssessmentDate2083(date))throw Error('Invalid assessment draft date or ratings');
@@ -14,7 +14,7 @@ export function validateMathDraftValues({ratings,date,count}){
 async function context({db,api,auth,actor,model,studentId,themeIndex,assertCurrent}){
  const schoolId=validateSchoolId(model?.schoolId);
  const uid=actor?.uid;
- if(!segment.test(uid??'')||actor?.schoolId!==schoolId||actor?.role!=='teacher'||actor?.active!==true||auth?.currentUser?.uid!==uid||!Object.hasOwn(formats,model.key)||!['1','2','3','4','5'].includes(model.grade)||(model.key==='science'&&!['4','5'].includes(model.grade))||!segment.test(model.subjectId??'')||!segment.test(studentId??'')||!model.students?.some(s=>s.id===studentId)||typeof assertCurrent!=='function')throw Error('Verified assigned Mathematics or Science worksheet required');
+ if(!segment.test(uid??'')||actor?.schoolId!==schoolId||actor?.role!=='teacher'||actor?.active!==true||auth?.currentUser?.uid!==uid||!Object.hasOwn(formats,model.key)||!['1','2','3','4','5'].includes(model.grade)||(['science','socialstudies'].includes(model.key)&&!['4','5'].includes(model.grade))||!segment.test(model.subjectId??'')||!segment.test(studentId??'')||!model.students?.some(s=>s.id===studentId)||typeof assertCurrent!=='function')throw Error('Verified assigned Mathematics, Science or Social Studies worksheet required');
  const theme=model.themes?.[themeIndex],slots=draftThemeSlots(model,themeIndex);
  if(!theme||!slots.every(s=>s.sourceText)||theme.sourceRows?.length!==slots.length)throw Error('Source text unavailable');
  const check=()=>{assertCurrent();if(auth?.currentUser?.uid!==uid||actor.uid!==uid||actor.schoolId!==schoolId||actor.role!=='teacher'||actor.active!==true)throw Error('Worksheet session changed')};
