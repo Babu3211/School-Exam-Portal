@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {renderIemisGradeSheetPrint,createIemisGradeSheetPrinter} from './iemis-grade-sheet-print-preview.mjs';
+import {renderIemisGradeSheetPrint,createIemisGradeSheetPrinter,combineTerminalGradeSheets} from './iemis-grade-sheet-print-preview.mjs';
 import {iemisEntrySchema} from '../iemis-entry.js';
 import {previewIemisGradeSheet} from './iemis-grade-sheet-preview.mjs';
 const students=[{id:'s1',nameEnglish:'<script>alert(1)</script>'}];
@@ -91,3 +91,25 @@ assert.deepEqual(printer('s1'),initial,'Cached print must retain the verified sn
 assert.throws(()=>printer('other'),/not in selected class/);
 assert.equal(createIemisGradeSheetPrinter({...args,draftsBySubject:{english:{}}})('s1').ready,false);
 console.log('PASS cached grade-sheet printing: verified roster, immutable snapshot, escaped identifiers, two-decimal GPA and print watermark');
+
+{
+ const pairArgs=structuredClone(args);
+ pairArgs.students.push({id:'s2',nameEnglish:'Second & Student'});
+ pairArgs.draftsBySubject.english.s2=structuredClone(draft);
+ const print=createIemisGradeSheetPrinter(pairArgs);
+ const pair=combineTerminalGradeSheets(print,['s1','s2'],'1st');
+ assert.equal(pair.ready,true);
+ assert.match(pair.html,/@page\{size:A4 landscape;margin:6mm\}/);
+ assert.match(pair.html,/grid-template-columns:136mm 136mm;gap:8mm/);
+ assert.equal((pair.html.match(/<main class="sheet">/g)||[]).length,2);
+ assert.equal((pair.html.match(/NOT VALID FOR OFFICIAL USE/g)||[]).length,2);
+ for(const id of ['s1','s2']){
+  const original=print(id).html.split('<body>')[1].split('</body>')[0];
+  assert.ok(pair.html.includes(original),'Original student data and markup unchanged');
+ }
+ assert.throws(()=>combineTerminalGradeSheets(print,['s1','s1'],'1st'),/distinct/);
+ assert.throws(()=>combineTerminalGradeSheets(print,['s1','s2'],'final'),/terminal/);
+ assert.throws(()=>combineTerminalGradeSheets(print,['s1','s2'],'2nd'),/Original terminal/);
+ assert.equal(combineTerminalGradeSheets(()=>({ready:false}),['s1','s2'],'1st').ready,false);
+ console.log('PASS two terminal cards per A4 landscape: original student markup and watermark unchanged');
+}

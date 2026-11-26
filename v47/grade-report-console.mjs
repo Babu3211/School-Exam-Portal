@@ -1,3 +1,4 @@
+import {combineTerminalGradeSheets} from './iemis-grade-sheet-print-preview.mjs';
 import {neError} from './nepali-feedback.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,bindVerifiedModuleActivity} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
@@ -13,11 +14,17 @@ const reportMode=['number','entry'].includes(document.documentElement.dataset.re
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 let auth,authSdk,api,db,actor=null,schoolId=null,sessionSeq=0,reviewSeq=0,sheetSeq=0,loading=false,busy=false,report=null;
 const readDocument=async path=>{const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null};
+const pairSelect=$('terminalSecondStudent');
+function resetPair(){if(pairSelect){pairSelect.replaceChildren(new Option('Single Grade Sheet',''));pairSelect.disabled=true;$('terminalPairArea').hidden=true}}
+function selectedPair(){return pairSelect?.value||''}
+function sheetKey(){return JSON.stringify([$('student').value,selectedPair()])}
+function selectedSheet(){return selectedPair()?combineTerminalGradeSheets(id=>report.printFor(id),[$('student').value,selectedPair()],$('term').value):report.printFor($('student').value)}
 function clearReview(){
+ resetPair();
  reviewSeq++;sheetSeq++;report=null;$('cancel').disabled=true;$('ledgerArea').hidden=true;$('sheetArea').hidden=true;
  $('student').replaceChildren();$('student').disabled=true;$('gradeOutput').replaceChildren();
  $('previewSheet').disabled=true;$('printSheet').disabled=true;$('exportExcel').disabled=true;
- $('sheetFrame').onload=null;delete $('sheetFrame').dataset.loadedStudent;$('sheetFrame').removeAttribute('srcdoc');$('sheetStatus').textContent='';
+ $('sheetFrame').onload=null;delete $('sheetFrame').dataset.loadedStudent;delete $('sheetFrame').dataset.loadedSelection;$('sheetFrame').removeAttribute('srcdoc');$('sheetStatus').textContent='';
  $('progress').textContent='सम्पूर्ण कक्षाको पूर्वावलोकन लोड भएको छैन।';
 }
 function resetExamSelection(){ $('legacyExam').replaceChildren(new Option('Automatic (Term only)','')); $('legacyExam').disabled=true; $('legacyExamArea').hidden=$('reportSource').value!=='legacy'; }
@@ -84,16 +91,16 @@ $('loadLegacyExams').onclick=async()=>{
 };
 $('cancel').onclick=()=>{clearReview();status('हेर्न मात्र मिल्ने समीक्षा रद्द भयो। कुनै अङ्क परिवर्तन गरिएको छैन।')};
 function showSheet(){
- const seq=++sheetSeq,frame=$('sheetFrame'),studentId=$('student').value;
- frame.onload=null;delete frame.dataset.loadedStudent;$('printSheet').disabled=true;
+ const seq=++sheetSeq,frame=$('sheetFrame'),studentId=$('student').value,selection=sheetKey();
+ frame.onload=null;delete frame.dataset.loadedStudent;delete frame.dataset.loadedSelection;$('printSheet').disabled=true;
  if(!report){frame.removeAttribute('srcdoc');return}
  try{
-  const doc=report.printFor(studentId);
+  const doc=selectedSheet();
   if(!doc.ready){frame.removeAttribute('srcdoc');$('sheetStatus').textContent=doc.reason;return}
   $('sheetStatus').textContent='वाटरमार्कसहितको पूर्वावलोकन लोड हुँदैछ। आधिकारिक प्रयोगका लागि मान्य छैन।';
   frame.onload=()=>{
-   if(sheetSeq!==seq||!report||$('student').value!==studentId)return;
-   frame.dataset.loadedStudent=studentId;
+   if(sheetSeq!==seq||!report||sheetKey()!==selection)return;
+   frame.dataset.loadedStudent=studentId;frame.dataset.loadedSelection=selection;
    $('printSheet').disabled=false;
    $('sheetStatus').textContent='पूर्वावलोकन मात्र — आधिकारिक प्रयोगका लागि मान्य छैन।';
   };
@@ -125,23 +132,37 @@ $('load').onclick=async()=>{
   thead.innerHTML=selectedLedger.head;tbody.innerHTML=selectedLedger.body;table.append(thead,tbody);
   $('gradeOutput').replaceChildren(table);$('ledgerArea').hidden=false;$('exportExcel').disabled=false;
   for(const st of data.students){const option=document.createElement('option');option.value=st.id;option.textContent=String(st.nameEnglish??st.name??st.id);$('student').append(option)}
-  $('student').disabled=false;$('previewSheet').disabled=false;$('sheetArea').hidden=false;showSheet();
+  $('student').disabled=false;$('previewSheet').disabled=false;$('sheetArea').hidden=false;refreshPairOptions();showSheet();
   status((source==='sparkCommitted'?'V47 को प्रमाणित प्रकाशन अभिलेख':source==='draft'?'V47 का निजी सुरक्षित मस्यौदा':source==='committed'?'V47 का प्रकाशित अङ्क':'V46 IEMIS का शीर्षकगत अङ्क')+' बाट read-only पूर्वावलोकन तयार भयो। यो आधिकारिक नतिजा होइन।');
  }catch(e){if(seq===sessionSeq&&review===reviewSeq){clearReview();$('progress').textContent='पूर्वावलोकन रोकियो: '+neError(e);status('पूर्ण Grade Preview उपलब्ध छैन: '+neError(e))}}
  finally{loading=false;$('load').disabled=!actor;$('cancel').disabled=true}
 };
-$('student').onchange=showSheet;$('previewSheet').onclick=showSheet;
+function refreshPairOptions(){
+ if(!pairSelect)return;
+ const second=selectedPair(),first=$('student').value;
+ const eligible=report&&['1st','2nd','3rd'].includes($('term').value)&&report.students.length>1;
+ pairSelect.replaceChildren(new Option('Single Grade Sheet',''));
+ if(eligible)for(const st of report.students){if(st.id!==first)pairSelect.append(new Option(String(st.nameEnglish??st.name??st.id),st.id))}
+ if([...pairSelect.options].some(o=>o.value===second))pairSelect.value=second;
+ pairSelect.disabled=!eligible;$('terminalPairArea').hidden=!eligible;
+}
+$('student').onchange=()=>{refreshPairOptions();showSheet()};$('previewSheet').onclick=showSheet;
+if(pairSelect)pairSelect.onchange=showSheet;
 $('printSheet').onclick=async()=>{
  if(!report||$('printSheet').disabled)return;
  const seq=sessionSeq,review=reviewSeq,member=actor,klass=$('schoolClass').value,term=$('term').value;
  try{
   await verifyAgain(member,seq,review,klass,term);
   const frame=$('sheetFrame'),studentId=$('student').value;
-  if($('printSheet').disabled||frame.dataset.loadedStudent!==studentId)
+  if($('printSheet').disabled||frame.dataset.loadedStudent!==studentId||frame.dataset.loadedSelection!==sheetKey())
    throw Error('Grade Sheet preview is not loaded for this student');
-  const print=report.printFor(studentId);
+  const print=selectedSheet();
   if(!print.ready)throw Error(print.reason);
   if(!frame.contentWindow)throw Error('Print frame unavailable');
+  if(selectedPair()){
+   const cards=frame.contentDocument?.querySelectorAll('.terminal-pair>.sheet');
+   if(cards?.length!==2||[...cards].some(card=>card.getBoundingClientRect().height>198*96/25.4+1))throw Error('दुईवटा Grade Sheet एउटै पृष्ठमा अटेनन्। छुट्टाछुट्टै छाप्नुहोस्।');
+  }
   frame.contentWindow.focus();frame.contentWindow.print();
  }catch(e){clearReview();status('छपाइ रोकियो: '+neError(e))}
 };
