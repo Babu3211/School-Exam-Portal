@@ -48,6 +48,86 @@ def mark_catchup_actions(original,desired,actual,equal):
         else:conflicts.append(k)
     return sorted(creates),sorted(updates),sorted(conflicts)
 
+def typed_mark_max(fields):
+    # Firestore REST integerValue is decimal text, not a Python int.
+    import re, math
+    wrapper=fields.get("fullMarks",{})
+    if not isinstance(wrapper,dict):return None
+    if set(wrapper)=={"integerValue"}:
+        v=wrapper["integerValue"]
+        if type(v) is str and re.fullmatch(r"[0-9]{1,6}",v):v=int(v)
+    elif set(wrapper)=={"doubleValue"}:v=wrapper["doubleValue"]
+    elif set(wrapper)=={"stringValue"}:
+        v=wrapper["stringValue"]
+        if not isinstance(v,str) or not re.fullmatch(r"[0-9]{1,6}(?:\.[0-9]{1,6})?",v.strip()):return None
+        v=float(v)
+    else:return None
+    return v if type(v) in (int,float) and math.isfinite(v) and 0<=v<=100000 else None
+
+def v46_setting_subject_key(value):
+    # Pinned V46 index.html canonicalSubjectKey, blob ad2e3b96.
+    raw=" ".join(str(value or "").strip().lower().split())
+    return "हाम्रो धुनिबेँशी" if raw in ("स्थानीय","स्थानीय विषय","local","local subject","हाम्रो धुनिबेँशी","hamro dhunibeshi","hamro dhunibesi") else raw
+
+def plan_v46_entry_settings(legacy,catalog,exams,scalar):
+    # Pinned V46 selectedEntrySetting: class override before group default;
+    # final theory is derived from exam term, never a setting's nonexistent term.
+    # This is an audit preview only. No new Firestore documents are created.
+    import re
+    from collections import Counter
+    groups={str(n):"1-3" if n<=3 else "4-5" if n<=5 else "6-8" if n<=8 else "9-10" for n in range(1,11)}
+    terms={"first":"1st","second":"2nd","third":"3rd","annual":"final"}
+    review=Counter();shapes=Counter();proposals={}
+    by_scope={}
+    for e in exams.values():
+        cls=scalar(e,"class");term=terms.get(scalar(e,"termKey"))
+        if cls in groups and term and str(scalar(e,"academicYear"))=="2083" and scalar(e,"active") is not False:
+            key=(cls,term);by_scope[key]=by_scope.get(key,0)+1
+    for (cls,sid),name in catalog.items():
+        if cls not in groups:continue
+        candidates=[f for f in legacy.values() if scalar(f,"classGroup")==groups[cls] and v46_setting_subject_key(scalar(f,"subject"))==v46_setting_subject_key(name)]
+        exact=[f for f in candidates if str(scalar(f,"className") or "")==cls]
+        defaults=[f for f in candidates if not scalar(f,"className")]
+        chosen=exact or defaults
+        if len(chosen)!=1:
+            review["missing_subject_setting" if not chosen else "ambiguous_subject_setting"]+=1
+            continue
+        parts=chosen[0].get("components",{}).get("arrayValue",{}).get("values",[])
+        internal=[]
+        for part in parts:
+            p=part.get("mapValue",{}).get("fields",{})
+            label=scalar(p,"name")
+            if not isinstance(label,str) or not label.strip():internal=[];break
+            if re.search(r"^TH\b|THEORY",label,re.I):continue
+            internal.append((label,typed_mark_max(p)))
+        if not internal or any(v is None for _,v in internal):
+            review["invalid_component_values"]+=1;continue
+        primary=int(cls)<=5
+        if primary:
+            count=internal[0][1]
+            if count==0:
+                review["dynamic_primary_count_requires_review"]+=1;continue
+            if int(count)!=count or count>5000:
+                review["invalid_primary_count"]+=1;continue
+            # The calculated Full Marks field is NOT an editable component.
+            internal=[("No. of Learning Achievement",int(count)),("Obtained Learning Achievement",int(count)*4)]
+        elif any(v<=0 or v>5000 for _,v in internal) or len(internal)>5:
+            review["invalid_secondary_components"]+=1;continue
+        for (ec,term),num in by_scope.items():
+            if ec!=cls:continue
+            if num!=1:
+                review["multiple_original_exams"]+=1;continue
+            components=list(internal)
+            if not primary and term=="final":
+                computer="computer" in name.lower() or "कम्प्युटर" in name
+                components.append(("TH (Theory)",50 if int(cls)<=8 or computer else 75))
+            key=(cls,sid,term)
+            proposals[key]=components
+            review["ready_candidates"]+=1
+            shapes[groups[cls]+" | "+term+" | "+",".join(str(v) for _,v in components)]+=1
+    review["verified_class_term_scopes"]=sum(n==1 for n in by_scope.values())
+    return proposals,dict(review),dict(shapes)
+
 def entry_settings_inventory(legacy,subjects,operational,scalar,subject_key):
     """Aggregate exact matching candidates only. Never invent a setting or term."""
     from collections import Counter
@@ -76,7 +156,8 @@ def entry_settings_inventory(legacy,subjects,operational,scalar,subject_key):
               else "theory" if isinstance(n,str) and ("theory" in n.lower() or n.lower().startswith("th ") or "total of final" in n.lower())
               else "term" if isinstance(n,str) and ("term" in n.lower() or "examination" in n.lower())
               else "other")
-            value=v if type(v) in (int,float) and 0<=v<=100000 else "invalid"
+            value=typed_mark_max(p)
+            if value is None:value="invalid"
             shape.append(label+":"+str(value))
         shapes[group+" | "+(term or "unresolved")+" | "+",".join(shape)]+=1
         matches=[(cls,sid) for (cls,sid),subject in subjects.items() if cls in groups[group] and subject_key(subject)==subject_key(name)]
@@ -116,7 +197,19 @@ def self_test():
     sc=lambda f,k:f.get(k)
     c,sh,t=entry_settings_inventory({"a":{"classGroup":"9-10","subject":"Math","termKey":"first","components":{"arrayValue":{"values":[{"mapValue":{"fields":{"name":"Participation","fullMarks":3}}}]}}},"b":{"classGroup":"9-10","subject":"Math"}},{("9","math"):"Math",("10","math"):"Math"},{("9","math","1st")},sc,str.lower)
     assert c["explicit_unique_candidates"]==2 and c["term_missing_or_unresolved"]==1 and c["candidate_with_operational_settings"]==1
-    assert sh["9-10 | 1st | participation:3"]==1 and t=={"termKey":1}
+    assert t=={"termKey":1}
+    assert typed_mark_max({"fullMarks":{"integerValue":"36"}})==36
+    assert typed_mark_max({"fullMarks":{"doubleValue":4.5}})==4.5
+    assert typed_mark_max({"fullMarks":{"stringValue":"10"}})==10
+    assert typed_mark_max({"fullMarks":{"booleanValue":True}}) is None
+    def part(n,v):return {"mapValue":{"fields":{"name":n,"fullMarks":{"integerValue":str(v)}}}}
+    l={"a":{"classGroup":"9-10","subject":"Computer","components":{"arrayValue":{"values":[part("Participation",4),part("Practical/Project",36),part("Term",10)]}}}}
+    p,rv,shapes=plan_v46_entry_settings(l,{("9","comp"):"Computer"},{ "a":{"class":"9","termKey":"first","academicYear":"2083"},"b":{"class":"9","termKey":"annual","academicYear":"2083"}},sc)
+    assert [v for n,v in p[("9","comp","1st")]]==[4,36,10]
+    assert [v for n,v in p[("9","comp","final")]]==[4,36,10,50]
+    assert rv["ready_candidates"]==2
+    p,rv,_=plan_v46_entry_settings(l,{("9","comp"):"Computer"},{"a":{"class":"9","termKey":"first","academicYear":"2083"},"b":{"class":"9","termKey":"first","academicYear":"2083"}},sc)
+    assert not p and rv["multiple_original_exams"]==1
     print("PASS additive-only delta policy, aggregate diagnostics and guarded reconciliation actions; mark catch-up conflict guards; entry settings inventory")
 
 def main(path,apply=False,reconcile=False,marks_only=False,entry_settings=False):
@@ -319,6 +412,12 @@ def main(path,apply=False,reconcile=False,marks_only=False,entry_settings=False)
             print("ENTRY SETTINGS COUNTS:",json.dumps(counts,sort_keys=True))
             print("ENTRY SETTINGS SHAPES:",json.dumps(shapes,sort_keys=True))
             print("ENTRY SETTINGS TERM FIELDS:",json.dumps(fields,sort_keys=True))
+            exams={k:v for k,v in desired.items() if k.startswith(BASE+"/exams/")}
+            proposals,review,planned_shapes=plan_v46_entry_settings(legacy,catalog,exams,m.scalar)
+            print("V46 EXACT ENTRY PLAN COUNTS:",json.dumps(review,sort_keys=True))
+            print("V46 EXACT ENTRY PLAN SHAPES:",json.dumps(planned_shapes,sort_keys=True))
+            print("V46 EXACT ENTRY PLAN EXISTING:",sum(k in operational for k in proposals))
+            print("V46 EXACT ENTRY PLAN: PREVIEW ONLY; NO SETTINGS CREATED")
             print("READ ONLY: ZERO FIRESTORE OR AUTH WRITES; SCHOOL ACTIVE: FALSE")
             return
         inventory(desired)
