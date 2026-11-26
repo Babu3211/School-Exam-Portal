@@ -10,9 +10,10 @@ import {previewIemisGradeLedger} from './iemis-grade-ledger-preview.mjs';
 import {createIemisGradeSheetPrinter} from './iemis-grade-sheet-print-preview.mjs';
 import {excelWorkbook} from './excel-workbook.mjs';
 const termMap=Object.freeze({'1st':'first','2nd':'second','3rd':'third','final':'annual'});
-export function prepareLegacyGradeReport({schoolId,school,classNo,term,students,subjects,records}){
+export function prepareLegacyGradeReport({schoolId,school,classNo,term,examId=term,students,subjects,records}){
  validateSchoolId(schoolId);
  if(!/^(?:[1-9]|10)$/.test(String(classNo))||!Object.hasOwn(termMap,term))throw Error('V46 IEMIS preview limited to Classes 1–10, 1st/2nd/3rd/Final');
+ if(typeof examId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(examId))throw Error('Invalid verified exam identity');
  if(!school||typeof school.nameEnglish!=='string'||!school.nameEnglish.trim())throw Error('Verified school name required');
  if(!Array.isArray(students)||students.length<1||students.length>1500||!Array.isArray(subjects)||subjects.length<1||subjects.length>30||!Array.isArray(records)||records.length!==students.length*subjects.length)throw Error('Complete class and subject marks required');
  const ids=new Set(),subs=new Map(),draftsBySubject=Object.create(null),seen=new Set();
@@ -30,7 +31,7 @@ export function prepareLegacyGradeReport({schoolId,school,classNo,term,students,
  }
  for(const mark of records){
   if(!mark||mark.schoolId!==schoolId||String(mark.class)!==String(classNo)||
-     mark.term!==term||mark.examId!==term||!ids.has(mark.studentId))throw Error('Mark outside verified school/class/term');
+     mark.term!==term||mark.examId!==examId||(examId!==term&&String(mark.academicYear)!=='2083')||!ids.has(mark.studentId))throw Error('Mark outside verified school/class/term');
   const sub=subs.get(iemisSubjectKey(mark.subject));
   if(!sub||(mark.subjectId!==undefined&&mark.subjectId!==sub.id))throw Error('Missing or foreign subject in marks');
   const pair=JSON.stringify([mark.studentId,sub.id]);
@@ -42,11 +43,11 @@ export function prepareLegacyGradeReport({schoolId,school,classNo,term,students,
   draftsBySubject[sub.id][mark.studentId]=draft;
  }
  if(seen.size!==students.length*subjects.length)throw Error('Incomplete class marks');
- const ledger=renderAuthorizedV46ClassGradeLedger({schoolId,schoolName:school.nameEnglish,schoolCode:schoolId,classNo,term,examId:term,students,subjects:subjects.map(s=>s.name),records,academicYear:'2083',creditFor:name=>subs.get(iemisSubjectKey(name))?.creditHour??0});
+ const ledger=renderAuthorizedV46ClassGradeLedger({schoolId,schoolName:school.nameEnglish,schoolCode:schoolId,classNo,term,examId,students,subjects:subjects.map(s=>s.name),records,academicYear:'2083',creditFor:name=>subs.get(iemisSubjectKey(name))?.creditHour??0});
  // All extra modes run only after the original complete-class, tenant, and
  // V46 component validation above. Nothing in these modes writes or publishes.
  const completeInput={schoolId,schoolName:school.nameEnglish,schoolCode:schoolId,classNo,
-  term:termMap[term],academicYear:'2083',examId:term,students,
+  term:termMap[term],academicYear:'2083',examId,students,
   subjects:subjects.map(s=>s.name),records,
   creditFor:name=>subs.get(iemisSubjectKey(name))?.creditHour??0,
   componentsFor:name=>iemisEntrySchema(classNo,termMap[term],name)};
@@ -91,7 +92,7 @@ export function prepareLegacyGradeReport({schoolId,school,classNo,term,students,
  const summary=previewIemisGradeLedger({classNo,term,students,subjects,draftsBySubject,academicYear:'2083',allowAbsent:true});
  if(!summary.complete)throw Error('Incomplete V46 grade preview');
  const printFor=createIemisGradeSheetPrinter({school,classNo,term,students,subjects,draftsBySubject,allowAbsent:true});
- return Object.freeze({schoolId,school,classNo:String(classNo),term,students,subjects,rosterCount:students.length,subjectCount:subjects.length,ledger,ledgers,excelFor,summary,printFor,previewOnly:true,writeAuthorized:false,publicationAllowed:false});
+ return Object.freeze({schoolId,school,classNo:String(classNo),term,examId,students,subjects,rosterCount:students.length,subjectCount:subjects.length,ledger,ledgers,excelFor,summary,printFor,previewOnly:true,writeAuthorized:false,publicationAllowed:false});
 }
 export function legacyGradePreviewExcel(result,mode='grade'){
  if(result?.previewOnly!==true||result.publicationAllowed!==false||result.writeAuthorized!==false||result.summary?.complete!==true)throw Error('Complete read-only grade preview required');

@@ -177,3 +177,22 @@ for(const classNo of ['1','2','3','4','5'])for(const term of ['1st','2nd','final
  assert.throws(()=>prepareLegacyGradeReport(falseAbsent),/must not contain obtained/);
 }
 console.log('PASS primary legacy absence: existing positive achievement count retained, no invented count or GPA, 15 class/term cases');
+
+import {resolveScopedReportExam} from './scoped-legacy-report-exam.mjs';
+{
+ const historical=records.map(r=>({...r,examId:'original-exam-01',academicYear:'2083',termKey:'first'}));
+ const exam={schoolId,class:classNo,academicYear:'2083',term:'1st',termKey:'first'};
+ let reads=0;
+ const opts={schoolId,classNo,term,records:historical,readDocument:async path=>{reads++;assert.equal(path,'schools/'+schoolId+'/exams/original-exam-01');return exam},assertCurrent:()=>{}};
+ const examId=await resolveScopedReportExam(opts);
+ assert.equal(examId,'original-exam-01');assert.equal(reads,1);
+ const report=prepareLegacyGradeReport({...args,records:historical,examId});
+ assert.equal(report.examId,examId);assert.deepEqual(report.ledger,r.ledger);
+ assert.equal(await resolveScopedReportExam({...opts,records}),term);assert.equal(reads,1);
+ await assert.rejects(resolveScopedReportExam({...opts,records:[historical[0],records[1]]}),/Multiple exams/);
+ await assert.rejects(resolveScopedReportExam({...opts,records:historical.map(x=>({...x,schoolId:'99999999'}))}),/Foreign/);
+ await assert.rejects(resolveScopedReportExam({...opts,readDocument:async()=>({...exam,schoolId:'99999999'})}),/not verified/);
+ await assert.rejects(resolveScopedReportExam({...opts,readDocument:async()=>({...exam,academicYear:'2082'})}),/not verified/);
+ assert.throws(()=>prepareLegacyGradeReport({...args,records:historical}),/outside/);
+}
+console.log('PASS scoped historical report identity; canonical terms unchanged; mixed exams and foreign schools rejected');

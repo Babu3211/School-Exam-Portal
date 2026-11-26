@@ -5,6 +5,7 @@ import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {loadAllClassMarks} from './complete-class-marks-query.mjs';
 import {prepareLegacyGradeReport} from './legacy-grade-report-preview.mjs';
 import {validateSchoolId} from './school-paths.mjs';
+import {resolveScopedReportExam} from './scoped-legacy-report-exam.mjs';
 export async function loadVerifiedLegacyGradeReport({db,api,auth,actor,schoolId,classNo,term,readDocument,assertCurrent,onProgress=()=>{}}){
  validateSchoolId(schoolId);
  if(typeof assertCurrent!=='function'||typeof readDocument!=='function'||typeof onProgress!=='function')throw TypeError('Verified report callbacks required');
@@ -30,9 +31,10 @@ export async function loadVerifiedLegacyGradeReport({db,api,auth,actor,schoolId,
  onProgress('Class subjects: '+subjects.length);
  const marks=await loadAllClassMarks({db,api,actor,schoolId,schoolClass:String(classNo),term,maxRecords:30000});check();
  onProgress('Read-only V46-compatible marks: '+marks.count+' records');
+ const examId=await resolveScopedReportExam({schoolId,classNo:String(classNo),term,records:marks.records,readDocument,assertCurrent:check});check();
  const after=await verifySchoolSession({schoolId,uid,readDocument});check();
  if(after.role!==before.role)throw Error('School membership changed during report load');
- const result=prepareLegacyGradeReport({schoolId,school:branding,classNo:String(classNo),term,students:roster.students,subjects,records:marks.records});
+ const result=prepareLegacyGradeReport({schoolId,school:branding,classNo:String(classNo),term,examId,students:roster.students,subjects,records:marks.records});
  check();
  return result;
 }
