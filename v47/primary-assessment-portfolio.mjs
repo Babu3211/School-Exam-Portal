@@ -1,5 +1,6 @@
 // V46 ordinary CDC observations only. Keep raw observation identity, stage and
 // 1–4 ratings separate from IEMIS marks. No writes or inferred grades.
+import {excelWorkbook} from './excel-workbook.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 const idPattern=/^[A-Za-z0-9_-]{1,128}$/;
@@ -18,7 +19,7 @@ export function prepareObservationPortfolio({schoolId,grade,student,year='2083',
   rows.push(Object.freeze({id,subject:d.subject,unit:d.unit,unitEn:String(d.unitEn??''),topic:d.topic,topicAlt:String(d.topicAlt??''),stage:d.stage||'',date:d.date,level:d.level,method:String(d.method??''),evidence:String(d.evidence??''),feedback:String(d.feedback??'')}));
  }
  rows.sort((a,b)=>b.date.localeCompare(a.date)||a.subject.localeCompare(b.subject)||a.id.localeCompare(b.id));
- return Object.freeze({rows:Object.freeze(rows),historical,readOnly:true,officialAssessmentApproved:false,indicatorBlocksIncluded:false});
+ return Object.freeze({schoolId,grade,studentId:student.id,year,rows:Object.freeze(rows),historical,readOnly:true,officialAssessmentApproved:false,indicatorBlocksIncluded:false});
 }
 export async function readObservationPortfolio({db,api,actor,schoolId,grade,studentId,assertCurrent}){
  validateSchoolId(schoolId);
@@ -34,4 +35,17 @@ export async function readObservationPortfolio({db,api,actor,schoolId,grade,stud
  const snapshot=await api.getDocsFromServer(query);check();
  const result=prepareObservationPortfolio({schoolId,grade,student:{...student,id:studentId},docs:snapshot.docs});
  await verify();check();return result;
+}
+
+ // Only the existing school-scoped, Admin/Viewer ordinary observation reader
+ // may feed this non-official export. No CDC indicator blocks or grades inferred.
+export async function exportObservationPortfolio(args){
+ const result=await readObservationPortfolio(args);
+ args.assertCurrent();
+ if(!result.rows.length)throw Error('No saved observations to export');
+ const headers=['Export status','School ID','Academic Year','Class','Student ID','Observation ID','Subject','Theme','Theme (English)','Learning Achievement','Alternate Achievement','Stage','Date (BS)','Rating','Tools','Evidence','Remarks','Excluded historical count'];
+ const rows=result.rows.map(r=>['Ordinary observations only - NOT official assessment; indicator blocks excluded',result.schoolId,result.year,result.grade,result.studentId,r.id,r.subject,r.unit,r.unitEn,r.topic,r.topicAlt,r.stage,r.date,r.level,r.method,r.evidence,r.feedback,result.historical]);
+ const blob=excelWorkbook(headers,rows,{sheetName:'Observations only'});
+ args.assertCurrent();
+ return Object.freeze({blob,filename:'V47-observations-'+result.schoolId+'-'+result.studentId+'-2083.xlsx',count:rows.length});
 }
