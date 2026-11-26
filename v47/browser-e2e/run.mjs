@@ -316,6 +316,7 @@ try{
     const themes=binary?[{theme:'म र मेरो परिवार',count:blocks*4,sourceRows:v46SeroferoThemeRows(grade,'म र मेरो परिवार',blocks)}]:v46LowerLanguageReference(grade,kind),themeIndex=themes.findIndex(t=>t.sourceRows?.length===(binary?t.count/4:t.count));
     assert.ok(themeIndex>=0,'Mapped lower-language theme required');
     const theme=themes[themeIndex],count=theme.count;
+    const rowDateInputs=page.locator('#teacherDraftRows .assessment-row-date');
     const draftPaths=Object.fromEntries(['regular','support'].map(stage=>[stage,root+'/teacher_assessment_drafts/'+teacherUid+'/classes/'+grade+'/subjects/'+subjectId+'/students/'+studentId+'/themes/'+sha(JSON.stringify(['ad2e3b96a22601fed9d956397a98c564b3ffb768',grade,theme.theme,theme.sourceRows,stage]))]));
     try{
      await db.doc(subjectPath).set({schoolId:sid,class:grade,name:kind==='nepali'?'नेपाली':kind==='serophero'?'हाम्रो सेरोफेरो':'English',active:true});
@@ -335,6 +336,7 @@ try{
      await openLower();
      assert.equal(await page.locator('#teacherStage').isVisible(),true);
      assert.equal(await ratings.count(),count);
+     assert.equal(await rowDateInputs.count(),binary?count/4:count);
      assert.equal(await page.locator('#teacherDate').inputValue(),todayAssessmentDate2083());
      assert.ok((await page.locator('#teacherDraftRows tr').first().textContent()).includes(theme.sourceRows[0].title));
      for(const [stage,score,date] of [['regular',binary?'0':'2','2083-08-11'],['support',binary?'1':'4','2083-08-12']]){
@@ -343,21 +345,25 @@ try{
       assert.equal(await ratings.first().inputValue(),'');
       await ratings.first().selectOption(score);
       await page.locator('#teacherDate').fill(date);
+      await rowDateInputs.first().fill(stage==='regular'?'2083-08-09':'2083-08-10');
       await page.locator('#teacherSaveDraft').click();
       await wait(page,()=>document.getElementById('teacherDraftSaveStatus').textContent.includes('Revision 1 सुरक्षित भयो'));
       const d=(await db.doc(draftPaths[stage]).get()).data();
       assert.equal(d.format,'smss-v47-primary-lower-'+kind+'-'+stage+'-draft-v1');
       assert.equal(d.ratings,score+'_'.repeat(count-1));assert.equal(d.date,date);assert.equal(d.revision,1);
+      assert.equal(d.rowDates,(stage==='regular'?'2083-08-09':'2083-08-10')+date.repeat((binary?count/4:count)-1));
       assert.equal((await db.doc(draftPaths[stage].replace(sid,schools[1].sid)).get()).exists,false);
      }
      await page.reload();
      await wait(page,()=>!document.getElementById('teacherWorksheet').hidden);
      await openLower();
      assert.equal(await ratings.first().inputValue(),binary?'0':'2');
+     assert.equal(await rowDateInputs.first().inputValue(),'2083-08-09');
      assert.equal(await page.locator('#teacherDate').inputValue(),'2083-08-11');
      await page.locator('#teacherStage').selectOption('support');
      await wait(page,()=>!document.getElementById('teacherSaveDraft').disabled);
      assert.equal(await ratings.first().inputValue(),binary?'1':'4');
+     assert.equal(await rowDateInputs.first().inputValue(),'2083-08-10');
      assert.equal(await page.locator('#teacherDate').inputValue(),'2083-08-12');
      assert.deepEqual((await db.doc(legacy).get()).data(),original);
      assert.deepEqual(errors,[]);

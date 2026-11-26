@@ -7,9 +7,10 @@ import {sameMarkJson} from './mark-json-equality.mjs';
 const sourceRevision='ad2e3b96a22601fed9d956397a98c564b3ffb768';
 const formats=Object.freeze({mathematics:'smss-v47-primary-math-draft-v1',science:'smss-v47-primary-science-draft-v1',socialstudies:'smss-v47-primary-social-draft-v1',nepali:'smss-v47-primary-nepali-draft-v1',english:'smss-v47-primary-english-draft-v1',healthphysicalcreativeart:'smss-v47-primary-health-draft-v1',serophero:'smss-v47-primary-serofero-draft-v1'});
 const segment=/^[A-Za-z0-9_-]{1,128}$/;
-export function validateMathDraftValues({ratings,date,count,binary=false}){
+export function validateMathDraftValues({ratings,date,count,binary=false,rowDates}){
  if(!Number.isInteger(count)||count<1||count>500||typeof ratings!=='string'||ratings.length!==count||(binary?(!/^[01_]+$/.test(ratings)||!/[01]/.test(ratings)||count%4!==0):(!/^[1-4_]+$/.test(ratings)||!/[1-4]/.test(ratings)))||!validAssessmentDate2083(date))throw Error('Invalid assessment draft date or ratings');
- return {ratings,date};
+ if(rowDates!==undefined&&(typeof rowDates!=='string'||rowDates.length!==(binary?count/4:count)*10||!rowDates.match(/.{10}/g)?.every(validAssessmentDate2083)))throw Error('Invalid assessment row dates');
+ return rowDates===undefined?{ratings,date}:{ratings,date,rowDates};
 }
 async function context({db,api,auth,actor,model,studentId,themeIndex,stage,assertCurrent}){
  const schoolId=validateSchoolId(model?.schoolId);
@@ -31,9 +32,9 @@ async function context({db,api,auth,actor,model,studentId,themeIndex,stage,asser
  const read=snap=>{
   if(!snap.exists())return null;
   const d=snap.data();
-  if(Object.keys(d).sort().join(',')!==[...Object.keys(identity),'ratings','date','revision','updatedAt'].sort().join(',')||Object.entries(identity).some(([k,v])=>d[k]!==v)||!Number.isSafeInteger(d.revision)||d.revision<1||d.revision>1000000000)throw Error('Saved assessment draft identity changed');
-  validateMathDraftValues({ratings:d.ratings,date:d.date,count:slots.length*(binary?4:1),binary});
-  return {ratings:d.ratings,date:d.date,revision:d.revision};
+  if(Object.keys(d).sort().join(',')!==[...Object.keys(identity),'ratings','date','revision','updatedAt',...(Object.hasOwn(d,'rowDates')?['rowDates']:[])].sort().join(',')||Object.entries(identity).some(([k,v])=>d[k]!==v)||!Number.isSafeInteger(d.revision)||d.revision<1||d.revision>1000000000)throw Error('Saved assessment draft identity changed');
+  const values=validateMathDraftValues({ratings:d.ratings,date:d.date,count:slots.length*(binary?4:1),binary,rowDates:d.rowDates});
+  return {...values,revision:d.revision};
  };
  return {check,identity,ref,read,count:slots.length*(binary?4:1),binary};
 }
@@ -44,12 +45,13 @@ export async function loadMathAssessmentDraft(args){
 }
 export async function saveMathAssessmentDraft(args){
  const c=await context(args),{api,db,expectedRevision}=args;
- const values=validateMathDraftValues({ratings:args.ratings,date:args.date,count:c.count,binary:c.binary});
+ const values=validateMathDraftValues({ratings:args.ratings,date:args.date,count:c.count,binary:c.binary,rowDates:args.rowDates});
  if(!Number.isSafeInteger(expectedRevision)||expectedRevision<0||expectedRevision>=1000000000)throw Error('Invalid revision');
  const revision=expectedRevision+1;
  await api.runTransaction(db,async tx=>{
   const old=c.read(await tx.get(c.ref));c.check();
   if((old?.revision??0)!==expectedRevision)throw Error('Worksheet draft revision changed; reload');
+  if(old?.rowDates!==undefined&&values.rowDates===undefined)throw Error('Existing row dates must be preserved');
   tx.set(c.ref,{...c.identity,...values,revision,updatedAt:api.serverTimestamp()});
  });
  c.check();

@@ -73,23 +73,24 @@ async function renderTeacherDraft(){
  $('teacherDate').value=todayAssessmentDate2083();
  $('teacherThemeSource').href=theme.sourceUrl;$('teacherThemeSource').hidden=false;
  const binary=worksheet.key==='serophero';
+ const makeDate=(tr,span=1)=>{const td=cell(tr,'');td.rowSpan=span;const field=document.createElement('input');field.className='assessment-row-date';field.setAttribute('aria-label','Assessment date (BS)');field.placeholder='2083-MM-DD';field.maxLength=10;td.append(field);return field};
  const update=()=>{const fields=[...$('teacherDraftRows').querySelectorAll('select')];if(binary&&fields.length&&fields.length%4===0){const score=scoreSeroferoDraft(fields.map(el=>el.value||'_').join(''));$('teacherDraftTotal').textContent='पूरा सूचक समूह: '+score.completed+'/'+score.blocks.length+' · '+score.total+' / '+theme.fullMarks;return;}const used=fields.filter(el=>el.value!=='');$('teacherDraftTotal').textContent='Draft: '+used.length+'/'+fields.length+' · '+used.reduce((n,el)=>n+Number(el.value),0)+' / '+theme.fullMarks};
- for(const slot of slots){if(binary&&slot.sourceText?.indicators?.length===4){for(let i=0;i<4;i++){const tr=document.createElement('tr');const label=cell(tr,slot.sourceText.title+' — '+slot.sourceText.indicators[i]);const tool=slot.sourceText.tools[i];if(tool&&tool!=='मूल फाराममा खाली'){const p=document.createElement('div');p.textContent=tool;label.append(p)}const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','सूचक '+slot.number+'.'+(i+1));input.append(new Option('—',''),new Option('सकेको','1'),new Option('नसकेको','0'));input.onchange=update;td.append(input);$('teacherDraftRows').append(tr)}continue;}const tr=document.createElement('tr');const label=cell(tr,(slot.indicatorBlock?'Indicator Block ':'Achievement Slot ')+slot.number);if(slot.sourceText){for(const value of [slot.sourceText.title,slot.sourceText.titleEn,slot.sourceText.achievement].filter(Boolean)){const p=document.createElement('div');p.textContent=value;label.append(p)}for(const value of [slot.sourceText.aspect,slot.sourceText.tool].filter(Boolean)){const p=document.createElement('div');p.textContent=value;label.append(p)}if(slot.sourceText.criteria){for(const [i,criterion] of slot.sourceText.criteria.entries()){const p=document.createElement('div');p.textContent=(4-i)+' — '+criterion.join(' / ');label.append(p)}}}const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','Draft rating '+slot.number);input.append(new Option('—',''));for(let n=slot.min;n<=slot.max;n++)input.append(new Option(String(n),String(n)));input.onchange=update;td.append(input);$('teacherDraftRows').append(tr)}
+ for(const slot of slots){if(binary&&slot.sourceText?.indicators?.length===4){for(let i=0;i<4;i++){const tr=document.createElement('tr');const label=cell(tr,slot.sourceText.title+' — '+slot.sourceText.indicators[i]);const tool=slot.sourceText.tools[i];if(tool&&tool!=='मूल फाराममा खाली'){const p=document.createElement('div');p.textContent=tool;label.append(p)}const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','सूचक '+slot.number+'.'+(i+1));input.append(new Option('—',''),new Option('सकेको','1'),new Option('नसकेको','0'));input.onchange=update;td.append(input);if(i===0)makeDate(tr,4);$('teacherDraftRows').append(tr)}continue;}const tr=document.createElement('tr');const label=cell(tr,(slot.indicatorBlock?'Indicator Block ':'Achievement Slot ')+slot.number);if(slot.sourceText){for(const value of [slot.sourceText.title,slot.sourceText.titleEn,slot.sourceText.achievement].filter(Boolean)){const p=document.createElement('div');p.textContent=value;label.append(p)}for(const value of [slot.sourceText.aspect,slot.sourceText.tool].filter(Boolean)){const p=document.createElement('div');p.textContent=value;label.append(p)}if(slot.sourceText.criteria){for(const [i,criterion] of slot.sourceText.criteria.entries()){const p=document.createElement('div');p.textContent=(4-i)+' — '+criterion.join(' / ');label.append(p)}}}const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','Draft rating '+slot.number);input.append(new Option('—',''));for(let n=slot.min;n<=slot.max;n++)input.append(new Option(String(n),String(n)));input.onchange=update;td.append(input);makeDate(tr);$('teacherDraftRows').append(tr)}
  update();
  if(!['mathematics','science','socialstudies','nepali','english','healthphysicalcreativeart','serophero'].includes(worksheet.key)||(Number(worksheet.grade)<=3&&worksheet.key!=='mathematics'&&!usesLanguageStages(worksheet))||!slots.every(s=>s.sourceText))return;
  const args=worksheetSelection(),request=worksheetRequest;
- const fields=[...$('teacherDraftRows').querySelectorAll('select')];
- fields.forEach(el=>el.disabled=true);$('teacherDate').disabled=true;
+ const fields=[...$('teacherDraftRows').querySelectorAll('select')],dates=[...$('teacherDraftRows').querySelectorAll('.assessment-row-date')];
+ fields.forEach(el=>el.disabled=true);dates.forEach(el=>el.disabled=true);$('teacherDate').disabled=true;
  $('teacherDraftSaveStatus').textContent='सुरक्षित Draft जाँच हुँदैछ…';
  try{
   await verify();args.assertCurrent();
   const saved=await loadMathAssessmentDraft(args);args.assertCurrent();
   worksheetRevision=saved?.revision??0;
-  if(saved){$('teacherDate').value=saved.date;fields.forEach((el,i)=>el.value=saved.ratings[i]==='_'?'':saved.ratings[i]);update()}
+  if(saved){$('teacherDate').value=saved.date;fields.forEach((el,i)=>el.value=saved.ratings[i]==='_'?'':saved.ratings[i]);if(saved.rowDates)dates.forEach((el,i)=>el.value=saved.rowDates.slice(i*10,(i+1)*10));update()}
   $('teacherDraftSaveStatus').textContent=saved?'Draft Revision '+saved.revision+' पुनः लोड भयो।':'नयाँ निजी Draft।';
   $('teacherSaveDraft').disabled=false;
  }catch(e){if(request===worksheetRequest)$('teacherDraftSaveStatus').textContent='Draft खोल्न सकिएन: '+neError(e)}
- finally{if(request===worksheetRequest){fields.forEach(el=>el.disabled=false);$('teacherDate').disabled=false}}
+ finally{if(request===worksheetRequest){fields.forEach(el=>el.disabled=false);dates.forEach(el=>el.disabled=false);$('teacherDate').disabled=false}}
 }
 function worksheetSelection(){
  const request=worksheetRequest,member=actor,model=worksheet,studentId=$('teacherStudent').value,themeIndex=Number($('teacherTheme').value),stage=usesLanguageStages(model)?$('teacherStage').value:undefined;
@@ -99,18 +100,18 @@ function worksheetSelection(){
 $('teacherSaveDraft').onclick=async()=>{
  if(worksheetRevision===null||$('teacherSaveDraft').disabled)return;
  const args=worksheetSelection(),request=worksheetRequest,expectedRevision=worksheetRevision;
- const fields=[...$('teacherDraftRows').querySelectorAll('select')],ratings=fields.map(el=>el.value||'_').join(''),date=$('teacherDate').value.trim();
- try{validateMathDraftValues({ratings,date,count:fields.length,binary:args.model.key==='serophero'})}catch{
+ const fields=[...$('teacherDraftRows').querySelectorAll('select')],ratings=fields.map(el=>el.value||'_').join(''),date=$('teacherDate').value.trim(),dates=[...$('teacherDraftRows').querySelectorAll('.assessment-row-date')],rowDates=dates.map(el=>el.value.trim()||date).join('');
+ try{validateMathDraftValues({ratings,date,count:fields.length,binary:args.model.key==='serophero',rowDates})}catch{
   $('teacherDraftSaveStatus').textContent=(args.model.key==='serophero'?'२०८३ सालको मान्य मिति र कम्तीमा एउटा सूचकको सकेको/नसकेको अवस्था राख्नुहोस्।':'२०८३ सालको मान्य मिति YYYY-MM-DD ढाँचामा र कम्तीमा एउटा १–४ प्राप्ताङ्क राख्नुहोस्।');return;
  }
- $('teacherSaveDraft').disabled=true;fields.forEach(el=>el.disabled=true);$('teacherDate').disabled=true;
+ $('teacherSaveDraft').disabled=true;fields.forEach(el=>el.disabled=true);dates.forEach(el=>el.disabled=true);$('teacherDate').disabled=true;
  try{
   await verify();args.assertCurrent();
-  const saved=await saveMathAssessmentDraft({...args,ratings,date,expectedRevision});args.assertCurrent();
-  worksheetRevision=saved.revision;$('teacherDraftSaveStatus').textContent='Draft Revision '+saved.revision+' सुरक्षित भयो। यो आधिकारिक मूल्याङ्कन होइन।';
+  const saved=await saveMathAssessmentDraft({...args,ratings,date,rowDates,expectedRevision});args.assertCurrent();
+  worksheetRevision=saved.revision;dates.forEach((el,i)=>el.value=saved.rowDates.slice(i*10,(i+1)*10));$('teacherDraftSaveStatus').textContent='Draft Revision '+saved.revision+' सुरक्षित भयो। यो आधिकारिक मूल्याङ्कन होइन।';
   $('teacherSaveDraft').disabled=false;
  }catch(e){if(request===worksheetRequest){worksheetRevision=null;$('teacherDraftSaveStatus').textContent='Draft सुरक्षित भएको पुष्टि भएन। मिति र अङ्क जाँच्नुहोस्; विद्यार्थी वा थिम पुनः खोलेर सुरक्षित Revision जाँच्नुहोस्। '+neError(e)}}
- finally{if(request===worksheetRequest){fields.forEach(el=>el.disabled=false);$('teacherDate').disabled=false}}
+ finally{if(request===worksheetRequest){fields.forEach(el=>el.disabled=false);dates.forEach(el=>el.disabled=false);$('teacherDate').disabled=false}}
 };
 $('teacherStudent').onchange=renderTeacherDraft;$('teacherTheme').onchange=renderTeacherDraft;$('teacherStage').onchange=renderTeacherDraft;
 $('teacherOpenWorksheet').onclick=async()=>{

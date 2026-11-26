@@ -593,7 +593,7 @@ service cloud.firestore {
         }
         function validWorksheet() {
           let d=request.resource.data;
-          return d.keys().hasOnly(['format','schoolId','teacherUid','classId','subjectId','studentId','themeId','sourceRevision','themeName','ratings','date','revision','updatedAt'])
+          return d.keys().hasOnly(['format','schoolId','teacherUid','classId','subjectId','studentId','themeId','sourceRevision','themeName','ratings','date','rowDates','revision','updatedAt'])
             && d.keys().hasAll(['format','schoolId','teacherUid','classId','subjectId','studentId','themeId','sourceRevision','themeName','ratings','date','revision','updatedAt'])
             && (d.format == 'smss-v47-primary-math-draft-v1' || (d.format == 'smss-v47-primary-science-draft-v1' && classId in ['4','5']) || (d.format == 'smss-v47-primary-social-draft-v1' && classId in ['4','5']) || (d.format == 'smss-v47-primary-nepali-draft-v1' && classId in ['4','5']) || (d.format == 'smss-v47-primary-english-draft-v1' && classId in ['4','5']) || (d.format == 'smss-v47-primary-health-draft-v1' && classId in ['4','5']) || (d.format == 'smss-v47-primary-lower-nepali-regular-draft-v1' && classId in ['1','2','3']) || (d.format == 'smss-v47-primary-lower-nepali-support-draft-v1' && classId in ['1','2','3']) || (d.format == 'smss-v47-primary-lower-english-regular-draft-v1' && classId in ['1','2','3']) || (d.format == 'smss-v47-primary-lower-english-support-draft-v1' && classId in ['1','2','3']) || (d.format == 'smss-v47-primary-lower-serophero-regular-draft-v1' && classId in ['1','2','3']) || (d.format == 'smss-v47-primary-lower-serophero-support-draft-v1' && classId in ['1','2','3'])) && d.schoolId == sid
             && d.teacherUid == teacherUid && d.classId == classId && d.subjectId == subjectId
@@ -602,13 +602,15 @@ service cloud.firestore {
             && d.themeName is string && d.themeName.size() > 0 && d.themeName.size() <= 200
             && d.ratings is string && ((d.format in ['smss-v47-primary-lower-serophero-regular-draft-v1','smss-v47-primary-lower-serophero-support-draft-v1'] && d.ratings.matches('^[01_]{4,500}$') && d.ratings.size() % 4 == 0 && d.ratings.matches('.*[01].*')) || (!(d.format in ['smss-v47-primary-lower-serophero-regular-draft-v1','smss-v47-primary-lower-serophero-support-draft-v1']) && d.ratings.matches('^[1-4_]{1,500}$') && d.ratings.matches('.*[1-4].*')))
             && d.date is string && d.date.matches('^2083-((01|02|04|05|06)-(0[1-9]|[12][0-9]|3[01])|03-(0[1-9]|[12][0-9]|3[0-2])|(07|09|11|12)-(0[1-9]|[12][0-9]|30)|(08|10)-(0[1-9]|[12][0-9]))$')
+            && (!('rowDates' in d) || (d.rowDates is string && d.rowDates.matches('^(2083-((01|02|04|05|06)-(0[1-9]|[12][0-9]|3[01])|03-(0[1-9]|[12][0-9]|3[0-2])|(07|09|11|12)-(0[1-9]|[12][0-9]|30)|(08|10)-(0[1-9]|[12][0-9]))){1,500}$') && (d.format in ['smss-v47-primary-lower-serophero-regular-draft-v1','smss-v47-primary-lower-serophero-support-draft-v1'] ? d.rowDates.size()*4 == d.ratings.size()*10 : d.rowDates.size() == d.ratings.size()*10)))
             && d.revision is int && d.revision > 0 && d.revision <= 1000000000
             && d.updatedAt == request.time;
         }
         allow get: if worksheetScope();
         allow create: if worksheetScope() && validWorksheet() && request.resource.data.revision == 1;
         allow update: if worksheetScope() && validWorksheet()
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ratings','date','revision','updatedAt'])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ratings','date','rowDates','revision','updatedAt'])
+          && (!('rowDates' in resource.data) || 'rowDates' in request.resource.data)
           && request.resource.data.ratings.size() == resource.data.ratings.size()
           && request.resource.data.revision == resource.data.revision + 1;
         allow list, delete: if false;
