@@ -172,6 +172,22 @@ def entry_settings_inventory(legacy,subjects,operational,scalar,subject_key):
     counts["candidate_with_operational_settings"]=sum(k in operational for k in candidate_counts)
     return dict(counts),dict(shapes),dict(term_fields)
 
+def operational_entry_documents(proposals,base,school_id):
+    import re
+    def text(v):return {"stringValue":v}
+    out={}
+    for (cls,sid,term),parts in proposals.items():
+        id=cls+"_"+sid+"_"+term
+        if not re.fullmatch(r"[A-Za-z0-9_-]{1,128}",id) or cls not in tuple(str(i) for i in range(1,11)) or term not in ("1st","2nd","3rd","final"):raise RuntimeError("Invalid operational setting identity")
+        components=[]
+        for i,(name,maxval) in enumerate(parts):
+            if not isinstance(name,str) or not 1<=len(name.strip())<=160 or type(maxval) not in (int,float) or not 0<maxval<=100000:raise RuntimeError("Invalid operational component")
+            number={"integerValue":str(int(maxval))} if int(maxval)==maxval else {"doubleValue":maxval}
+            components.append({"mapValue":{"fields":{"key":text("component_"+str(i+1)),"name":text(name.strip()),"fullMarks":number}}})
+        if not 1<=len(components)<=6:raise RuntimeError("Invalid operational components")
+        out[base+"/mark_settings/"+id]={"id":text(id),"schoolId":text(school_id),"classId":text(cls),"subjectId":text(sid),"examId":text(term),"active":{"booleanValue":True},"components":{"arrayValue":{"values":components}}}
+    return out
+
 def self_test():
     assert additions({"a":1},{"a":1,"b":2},lambda x,y:x==y,True)=={"b"}
     for old,new,allowed in [({"a":1},{"a":2},True),({"a":1},{},True),({},{"a":1},False)]:
@@ -208,6 +224,9 @@ def self_test():
     assert [v for n,v in p[("9","comp","1st")]]==[4,36,10]
     assert [v for n,v in p[("9","comp","final")]]==[4,36,10,50]
     assert rv["ready_candidates"]==2
+    docs=operational_entry_documents(p,"schools/test","300160003")
+    assert len(docs)==2
+    assert docs["schools/test/mark_settings/9_comp_1st"]["components"]["arrayValue"]["values"][1]["mapValue"]["fields"]["fullMarks"]=={"integerValue":"36"}
     p,rv,_=plan_v46_entry_settings(l,{("9","comp"):"Computer"},{"a":{"class":"9","termKey":"first","academicYear":"2083"},"b":{"class":"9","termKey":"first","academicYear":"2083"}},sc)
     assert not p and rv["multiple_original_exams"]==1
     print("PASS additive-only delta policy, aggregate diagnostics and guarded reconciliation actions; mark catch-up conflict guards; entry settings inventory")
@@ -386,7 +405,15 @@ def main(path,apply=False,reconcile=False,marks_only=False,entry_settings=False)
         def inventory(desired):
             for c in academic:
                 actual=listing(m.TARGET,api+"/schools/"+m.SID+"/"+c,BASE+"/"+c+"/")
-                if any(k not in desired for k in actual):raise RuntimeError("Extra target academic records; no deletion or overwrite")
+                extras=set(actual)-set(desired)
+                if extras and c=="mark_settings":
+                    legacy={k:v for k,v in desired.items() if k.startswith(BASE+"/mark_settings/")}
+                    cat={(m.scalar(v,"class"),k.rsplit("/",1)[1]):m.scalar(v,"name") for k,v in deps.items() if k.startswith(BASE+"/subjects/") and m.scalar(v,"active") is True}
+                    ex={k:v for k,v in desired.items() if k.startswith(BASE+"/exams/")}
+                    p,_,_=plan_v46_entry_settings(legacy,cat,ex,m.scalar)
+                    generated=operational_entry_documents(p,BASE,m.SID)
+                    extras={k for k in extras if k not in generated or not sub.same_field(actual[k],generated[k])}
+                if extras:raise RuntimeError("Extra target academic records; no deletion or overwrite")
         def counts(keys):return dict(Counter(k[len(BASE)+1:].split("/")[0] for k in keys))
         desired,deps,rt=current_marks()
         if entry_settings:
@@ -417,8 +444,48 @@ def main(path,apply=False,reconcile=False,marks_only=False,entry_settings=False)
             print("V46 EXACT ENTRY PLAN COUNTS:",json.dumps(review,sort_keys=True))
             print("V46 EXACT ENTRY PLAN SHAPES:",json.dumps(planned_shapes,sort_keys=True))
             print("V46 EXACT ENTRY PLAN EXISTING:",sum(k in operational for k in proposals))
-            print("V46 EXACT ENTRY PLAN: PREVIEW ONLY; NO SETTINGS CREATED")
-            print("READ ONLY: ZERO FIRESTORE OR AUTH WRITES; SCHOOL ACTIVE: FALSE")
+            for (cls,sid),name in sorted(catalog.items()):
+                if not any(k[:2]==(cls,sid) for k in proposals):
+                    print("UNRESOLVED SUBJECT:",cls,json.dumps(name,ensure_ascii=False))
+            docs=operational_entry_documents(proposals,BASE,m.SID)
+            if set(docs)&set(legacy):raise RuntimeError("Operational identity collides with original settings")
+            def setting_check(academic,dependencies,docs,tx=None):
+                vals=read(sorted(set(academic)|set(dependencies)|set(docs)|{BASE,archive}),tx)
+                if not sub.same_field(vals[BASE],staged[BASE]):raise RuntimeError("Inactive target school differs")
+                if not vals[archive] or vals[archive].get("state")!=m.string("ARCHIVE_VERIFIED_NOT_OPERATIONAL") or vals[archive].get("documentCount")!={"integerValue":str(total)}:raise RuntimeError("Archive not verified")
+                for k,v in {**academic,**dependencies}.items():
+                    if not sub.same_field(v,vals[k]):raise RuntimeError("Original academic records or dependencies differ; run marks catch-up first")
+                pending=[]
+                for k,v in docs.items():
+                    if vals[k] is None:pending.append(k)
+                    elif not sub.same_field(v,vals[k]):raise RuntimeError("Existing operational settings differ; no overwrite")
+                return sorted(pending)
+            pending=setting_check(desired,deps,docs)
+            print("OPERATIONAL SETTINGS READY TO CREATE:",len(pending))
+            if not apply or not pending:
+                print("V46 EXACT ENTRY PLAN: PREVIEW ONLY; NO SETTINGS CREATED")
+                print("READ ONLY: ZERO FIRESTORE OR AUTH WRITES; SCHOOL ACTIVE: FALSE")
+                return
+            if len(pending)>200:raise RuntimeError("Settings transaction exceeds reviewed bound")
+            if input("Type STAGE-ENTRY-SETTINGS-300160003 to create matching settings only: ").strip()!="STAGE-ENTRY-SETTINGS-300160003":raise RuntimeError("Not confirmed")
+            check_rules()
+            latest,latestdeps,_=current_marks()
+            if not sub.same_field(desired,latest) or not sub.same_field(deps,latestdeps):raise RuntimeError("Source changed; review again")
+            tx=call(m.TARGET,api+":beginTransaction",{"options":{"readWrite":{}}})["transaction"]
+            committed=False
+            try:
+                if setting_check(desired,deps,docs,tx)!=pending:raise RuntimeError("Target changed after preview")
+                writes=[{"update":{"name":k,"fields":docs[k]},"currentDocument":{"exists":False}} for k in pending]
+                result=call(m.TARGET,api+":commit",{"transaction":tx,"writes":writes})
+                committed=True
+                if len(result.get("writeResults",[]))!=len(writes):raise RuntimeError("Commit response incomplete; audit before retry")
+            finally:
+                if not committed:
+                    try:call(m.TARGET,api+":rollback",{"transaction":tx})
+                    except Exception:pass
+            if setting_check(desired,deps,docs):raise RuntimeError("Post-copy verification incomplete")
+            print("OPERATIONAL ENTRY SETTINGS VERIFIED: CREATED",len(pending))
+            print("ORIGINAL MARKS AND SETTINGS UNCHANGED; V46 WRITES: ZERO; AUTH CHANGES: ZERO; MEMBERSHIP CHANGES: ZERO; SCHOOL ACTIVE: FALSE")
             return
         inventory(desired)
         creates,updates,conflicts=classify(desired,deps)
@@ -545,7 +612,7 @@ if __name__=="__main__":
         if sys.argv[1:]==["--self-test"]:self_test()
         elif len(sys.argv)==3 and sys.argv[1] in ("--audit-only","--apply","--audit-reconcile","--apply-reconcile"):main(Path(sys.argv[2]).expanduser(),sys.argv[1] in ("--apply","--apply-reconcile"),sys.argv[1] in ("--audit-reconcile","--apply-reconcile"))
         elif len(sys.argv)==3 and sys.argv[1] in ("--audit-marks","--apply-marks"):main(Path(sys.argv[2]).expanduser(),sys.argv[1]=="--apply-marks",False,True)
-        elif len(sys.argv)==3 and sys.argv[1]=="--audit-entry-settings":main(Path(sys.argv[2]).expanduser(),False,False,True,True)
+        elif len(sys.argv)==3 and sys.argv[1] in ("--audit-entry-settings","--apply-entry-settings"):main(Path(sys.argv[2]).expanduser(),sys.argv[1]=="--apply-entry-settings",False,True,True)
         else:raise RuntimeError("Specify reviewed audit/apply mode and encrypted backup")
     except (Exception,KeyboardInterrupt) as e:
         print("DELTA STOPPED:",type(e).__name__,str(e) if isinstance(e,RuntimeError) else "",file=sys.stderr)
