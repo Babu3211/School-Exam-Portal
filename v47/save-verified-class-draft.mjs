@@ -1,3 +1,4 @@
+import {verifyStoredTeacherClassDraft} from './teacher-class-draft.mjs';
 import {sameMarkJson} from './mark-json-equality.mjs';
 // Isolated V47 Firestore class-DRAFT save: one compare-and-swap document,
 // not an official mark, publication or grade. No per-student mark writes.
@@ -22,7 +23,7 @@ export class ClassDraftPostSaveReviewError extends Error {
  }
 }
 export async function saveVerifiedCompleteClassDraft({
- db,api,auth,actor,schoolId,classId,subjectId,examId,drafts,expectedRevision=0
+ db,api,auth,actor,schoolId,classId,subjectId,examId,drafts,expectedRevision=0,reviewedTeacher=null,assertCurrent=()=>{}
 }){
  validateSchoolId(schoolId);
  if(!db||!api||['doc','getDoc','runTransaction','serverTimestamp'].some(name=>typeof api[name]!=='function'))
@@ -30,8 +31,12 @@ export async function saveVerifiedCompleteClassDraft({
  const uid=auth?.currentUser?.uid;
  if(typeof uid!=='string'||uid!==actor?.uid||actor?.role!=='school_admin'||actor?.active!==true||
     actor?.schoolId!==schoolId)throw Error('Authenticated School Admin required');
+ if(typeof assertCurrent!=='function')throw Error('Session check required');
+ if(reviewedTeacher!==null&&(!/^[A-Za-z0-9_-]{1,128}$/.test(reviewedTeacher.teacherUid??'')||reviewedTeacher.teacherUid===uid||!Number.isSafeInteger(reviewedTeacher.revision)||reviewedTeacher.revision<1||!Array.isArray(reviewedTeacher.components)||expectedRevision!==0))throw Error('Reviewed Teacher Draft and create-only target required');
+ const source=reviewedTeacher===null?null:structuredClone(reviewedTeacher);
  const identity=Object.freeze({uid,schoolId,actor});
  const check=()=>{
+  assertCurrent();
   if(auth?.currentUser?.uid!==identity.uid||actor!==identity.actor||
      actor.uid!==identity.uid||actor.role!=='school_admin'||actor.active!==true||
      actor.schoolId!==identity.schoolId)throw Error('School Admin session changed; nothing saved');
@@ -82,6 +87,24 @@ export async function saveVerifiedCompleteClassDraft({
   ]);
   check();
   const [school,member,subject,setting,prior]=snapshots;
+  if(source){
+   const teacherUid=source.teacherUid;
+   const [teacherMember,duty,teacherDraft]=await Promise.all([
+    tx.get(ref('members',teacherUid)),
+    tx.get(ref('teacher_assignments',schoolId+':'+teacherUid+':'+classId+':'+subjectId)),
+    tx.get(api.doc(db,'schools',schoolId,'teacher_mark_drafts',teacherUid,'class_drafts',id))
+   ]);
+   check();
+   const t=teacherMember.data(),a=duty.data();
+   if(!teacherMember.exists()||t?.uid!==teacherUid||t?.schoolId!==schoolId||t?.role!=='teacher'||t?.active!==true||
+     !duty.exists()||a?.uid!==teacherUid||a?.schoolId!==schoolId||a?.classId!==classId||a?.subjectId!==subjectId||a?.active!==true)
+    throw Error('Reviewed Teacher assignment changed');
+   if(!teacherDraft.exists()||teacherDraft.data()?.revision!==source.revision||!sameMarkJson(source.components,validateConfiguredMarkComponents(settings,{schoolId,classId,subjectId,examId})))throw Error('Reviewed Teacher Draft or Settings changed');
+   const verified=verifyStoredTeacherClassDraft({actor:{uid:teacherUid,schoolId,role:'teacher',active:true},schoolId,classId,subjectId,examId,settings,expectedStudentIds:roster.studentIds,stored:teacherDraft.data()});
+   const sorted=[...verified.entries].sort((a,b)=>a.studentId<b.studentId?-1:a.studentId>b.studentId?1:0);
+   if(!sameMarkJson(sorted,planned.data.entries))throw Error('Reviewed Teacher marks differ from requested copy');
+   if(prior.exists())throw Error('Existing Admin Draft retained; copy refused');
+  }
   if(!school.exists()||school.data()?.active!==true||school.data()?.id!==schoolId||
      !member.exists()||member.data()?.uid!==uid||member.data()?.schoolId!==schoolId||
      member.data()?.role!=='school_admin'||member.data()?.active!==true)

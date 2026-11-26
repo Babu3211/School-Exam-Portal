@@ -1,5 +1,7 @@
+import {saveVerifiedCompleteClassDraft} from './save-verified-class-draft.mjs';
+import {sameMarkJson} from './mark-json-equality.mjs';
 import {neError} from './nepali-feedback.mjs';
-// Read-only School Admin review. No Firestore write/import/approval API.
+// School Admin review and explicit create-only transfer to Admin Draft; never official publication.
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,bindVerifiedModuleActivity} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
@@ -7,10 +9,10 @@ import {loadSchoolAdminTeacherDraftReview} from './school-admin-teacher-draft-re
 import {teacherDraftReviewExcel} from './teacher-draft-review-excel.mjs';
 const $=id=>document.getElementById(id);
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
-let auth,authSdk,db,api,actor=null,schoolId=null,epoch=0,busy=false,requestId=0,verifiedSelection=null,verifiedRevision=null;
+let auth,authSdk,db,api,actor=null,schoolId=null,epoch=0,busy=false,requestId=0,verifiedSelection=null,verifiedRevision=null,verifiedReview=null;
 const status=msg=>{$('loginStatus').textContent=msg};
 function clearReview(msg=''){
- requestId++;verifiedSelection=null;verifiedRevision=null;$('exportDraft').disabled=true;
+ requestId++;verifiedSelection=null;verifiedRevision=null;verifiedReview=null;$('copyDraft').disabled=true;$('exportDraft').disabled=true;
  $('reviewHeader').replaceChildren();$('reviewRows').replaceChildren();
  $('reviewStatus').textContent=msg;
 }
@@ -112,7 +114,7 @@ $('review').onclick=async()=>{
    rows.append(tr);
   }
   check();$('reviewHeader').append(header);$('reviewRows').append(rows);
-  verifiedSelection=Object.freeze({...selection});verifiedRevision=result.revision;
+  verifiedSelection=Object.freeze({...selection});verifiedRevision=result.revision;verifiedReview=result;$('copyDraft').disabled=false;
   $('exportDraft').disabled=false;
   $('reviewStatus').textContent='प्रमाणित Draft Revision '+result.revision+' · '+result.rosterCount+
    ' विद्यार्थी · '+result.subjectName+' · Read-only, NOT official/published.';
@@ -152,5 +154,23 @@ $('exportDraft').onclick=async()=>{
  }catch(e){if(current===epoch&&request===requestId)
   clearReview('Excel Export रोकियो: '+neError(e)+'। फेरि Draft Review गर्नुहोस्।');
  }finally{busy=false;$('exportDraft').disabled=!verifiedSelection||verifiedRevision===null}
+};
+$('copyDraft').onclick=async()=>{
+ if(busy||!actor||!verifiedSelection||!verifiedReview)return;
+ const current=epoch,request=requestId,selected=actor,id=schoolId,selection=verifiedSelection,review=verifiedReview;
+ if(!window.confirm('यो शिक्षकको प्रमाणित Draft बाट नयाँ Admin Draft मात्र बनाउने हो। पहिलेको Admin Draft बदलिँदैन। आधिकारिक अङ्क प्रकाशित हुँदैनन्। अगाडि बढ्ने?'))return;
+ busy=true;$('copyDraft').disabled=true;$('exportDraft').disabled=true;$('review').disabled=true;
+ const check=()=>{if(epoch!==current||requestId!==request||actor!==selected||schoolId!==id||auth?.currentUser?.uid!==selected.uid||Object.entries(selection).some(([field,value])=>$(field).value.trim()!==value))throw Error('Review selection changed')};
+ try{
+  check();if(!await enforceSchoolIdle(auth,authSdk))throw Error('Login expired');check();
+  const serverApi={...api,getDoc:api.getDocFromServer,getDocs:api.getDocsFromServer};
+  const fresh=await loadSchoolAdminTeacherDraftReview({db,api:serverApi,auth,actor:selected,schoolId:id,...selection,assertSession:check});
+  check();
+  if(!fresh.found||fresh.revision!==review.revision||!sameMarkJson(fresh.entries,review.entries)||!sameMarkJson(fresh.components,review.components))throw Error('Teacher Draft changed; review again');
+  const result=await saveVerifiedCompleteClassDraft({db,api:serverApi,auth,actor:selected,schoolId:id,classId:selection.classId,subjectId:selection.subjectId,examId:selection.examId,
+   drafts:fresh.entries.map(e=>({studentId:e.studentId,isAbsent:e.isAbsent,values:e.isAbsent?{}:e.values})),expectedRevision:0,reviewedTeacher:{teacherUid:selection.teacherUid,revision:fresh.revision,components:fresh.components},assertCurrent:check});
+  check();$('reviewStatus').textContent=result.rosterCount+' विद्यार्थीको नयाँ Admin Draft सुरक्षित भयो। शिक्षकको मूल Draft र आधिकारिक Marks यथावत् छन्।';
+ }catch(e){if(current===epoch&&request===requestId)clearReview('प्रतिलिपिको अवस्था पुनः जाँच्नुहोस्: '+neError(e)+'। पहिलेको Admin Draft बदलिएको छैन; Network समस्या भए नयाँ Draft सुरक्षित भइसकेको हुन सक्छ।')}
+ finally{busy=false;$('review').disabled=!actor;$('exportDraft').disabled=!verifiedReview;$('copyDraft').disabled=true}
 };
 if(requestedSchool)queueMicrotask(()=>$('connect').click());

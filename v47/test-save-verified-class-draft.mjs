@@ -179,3 +179,24 @@ assert.doesNotMatch(source,/['"]marks['"]|['"]component_marks['"]|publishedAt|gr
 assert.match(source,/runTransaction/);
 assert.match(source,/expectedRevision/);
 console.log('PASS verified full-class Draft single-transaction save: authorized, bounded, revision-safe, no marks publication');
+
+{
+ const {prepareTeacherClassDraft}=await import('./teacher-class-draft.mjs');
+ const teacherUid='teacherA',teacher={uid:teacherUid,schoolId,role:'teacher',active:true},root='schools/'+schoolId;
+ const sourcePath=root+'/teacher_mark_drafts/'+teacherUid+'/class_drafts/9_computer_final';
+ const dutyPath=root+'/teacher_assignments/'+schoolId+':'+teacherUid+':'+classId+':'+subjectId;
+ const planned=prepareTeacherClassDraft({actor:teacher,schoolId,classId,subjectId,examId,settings:{...settings,settingsId:settings.id},expectedStudentIds:ids,drafts:ids.map(marks)});
+ for(const mode of ['success','revoked','changed','existing','different']){
+  const f=fixture(mode==='existing'?{existing:{revision:1}}:{});
+  f.store.set(root+'/members/'+teacherUid,teacher);
+  f.store.set(dutyPath,{uid:teacherUid,schoolId,classId,subjectId,active:mode!=='revoked'});
+  f.store.set(sourcePath,{...structuredClone(planned.data),updatedAt:{seconds:1},revision:mode==='changed'?2:1});
+  const args={...context,api:f.api,reviewedTeacher:{teacherUid,revision:1,components:settings.components}};
+  if(mode==='different')args.drafts=ids.map(id=>({studentId:id,values:{participation:6,practical:63,term:30}}));
+  if(mode==='success'){
+   const result=await saveVerifiedCompleteClassDraft(args);
+   assert.equal(result.savedDraft,true);assert.equal(f.writes.length,1);assert.equal(f.store.get(sourcePath).revision,1);
+  }else{await assert.rejects(saveVerifiedCompleteClassDraft(args));assert.equal(f.writes.length,0)}
+ }
+ console.log('PASS teacher to admin draft: create-only, atomic teacher revision, assignment and marks equality');
+}
