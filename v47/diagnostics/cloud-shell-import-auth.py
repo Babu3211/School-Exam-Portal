@@ -48,14 +48,41 @@ def plan(source,target):
 def config(c):
     if c.get("algorithm")!="SCRYPT" or type(c.get("rounds")) is not int or type(c.get("memoryCost")) is not int:raise ValueError("Unsupported SCRYPT config")
     return {"hashAlgorithm":"SCRYPT","signerKey":b64(c.get("signerKey")),"saltSeparator":b64(c.get("saltSeparator",""),True),"rounds":c["rounds"],"memoryCost":c["memoryCost"]}
+def audit_identities(source,target,original,superuids):
+    si,se=index(source);ti,te=index(target);oi,_=index(original)
+    counts=dict(matched_imported=0,super_admin_collision=0,missing=0,identity_conflict=0,metadata_mismatch=0,unexpected_target=0,original_super_admins_preserved=0)
+    for uid,u in si.items():
+        byid=ti.get(uid);byemail=te.get(u["email"].casefold())
+        if uid in oi or (byemail and byemail["localId"] in oi):
+            counts["super_admin_collision"]+=1
+        elif not byid and not byemail:
+            counts["missing"]+=1
+        elif not byid or byid is not byemail or byid["email"]!=u["email"]:
+            counts["identity_conflict"]+=1
+        elif bool(byid.get("disabled"))!=bool(u.get("disabled")) or bool(byid.get("emailVerified"))!=bool(u.get("emailVerified")) or claims(byid) or claims(u):
+            counts["metadata_mismatch"]+=1
+        else:
+            counts["matched_imported"]+=1
+    counts["unexpected_target"]=sum(k not in si and k not in oi for k in ti)
+    counts["original_super_admins_preserved"]=sum(k in ti and k in superuids and stable(ti[k])==stable(oi[k]) for k in oi)
+    counts["super_admin_registry_changed"]=set(oi)!=set(superuids)
+    return counts
+
 def self_test():
     u={"localId":"a","email":"a@example.test","passwordHash":"_"+("A"*43),"salt":"-w","providerUserInfo":[{"providerId":"password"}]}
     n,c=plan([u],[{"localId":"b","email":"A@example.test"}]);assert not n and c==["a"]
     n,c=plan([u],[]);assert len(n)==1 and not c
     assert b64("-w") == "+w=="
     assert n[0]["salt"]=="+w=="
-    print("PASS URL-safe decoding and collision exclusion")
-def main(path):
+    original=[{"localId":"super","email":"super@example.test"}]
+    target=original+[{"localId":"a","email":"a@example.test"}]
+    result=audit_identities([u,{"localId":"super-source","email":"super@example.test"},{"localId":"missing","email":"missing@example.test"}],target,original,{"super"})
+    assert result["matched_imported"]==1 and result["super_admin_collision"]==1 and result["missing"]==1
+    assert result["original_super_admins_preserved"]==1 and not result["super_admin_registry_changed"]
+    assert audit_identities([u],[{"localId":"b","email":"a@example.test"}],[],set())["identity_conflict"]==1
+    assert audit_identities([u],[{"localId":"a","email":"a@example.test","disabled":True}],[],set())["metadata_mismatch"]==1
+    print("PASS URL-safe decoding, collision exclusion and read-only identity audit")
+def main(path,audit_only=False):
     if os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):raise RuntimeError("Forbidden in CI")
     warnings.simplefilter("error",getpass.GetPassWarning)
     m=SourceFileLoader("migration",str(Path.home()/"smss-migration-check.py")).load_module()
@@ -65,7 +92,7 @@ def main(path):
     token=subprocess.check_output(["gcloud","auth","print-access-token"],text=True).strip()
     session=requests.Session()
     def call(project,url,body=None):
-        if project not in (SOURCE,TARGET) or body is not None and project!=TARGET:raise RuntimeError("Wrong project/write")
+        if project not in (SOURCE,TARGET) or body is not None and (project!=TARGET or audit_only):raise RuntimeError("Wrong project/write")
         r=session.request("GET" if body is None else "POST",url,headers={"Authorization":"Bearer "+token,"x-goog-user-project":project},json=body,timeout=(10,90),allow_redirects=False)
         if r.status_code!=200:raise RuntimeError("API HTTP "+str(r.status_code)+"; inspect account inventory before retrying")
         return r.json()
@@ -96,11 +123,21 @@ def main(path):
     school=call(TARGET,api+"/schools/"+SID).get("fields",{})
     if school.get("id")!={"stringValue":SID} or school.get("active")!={"booleanValue":False}:raise RuntimeError("Target school not verified inactive")
     mem=call(TARGET,api+"/schools/"+SID+"/members?pageSize=100")
-    if mem.get("documents") or mem.get("nextPageToken"):raise RuntimeError("Unexpected existing school memberships")
+    if not audit_only and (mem.get("documents") or mem.get("nextPageToken")):raise RuntimeError("Unexpected existing school memberships")
     supers=call(TARGET,api+"/v47_super_admins?pageSize=100")
     if supers.get("nextPageToken"):raise RuntimeError("Unexpected Super Admin inventory")
     su={d["name"].rsplit("/",1)[1] for d in supers.get("documents",[])}
     target=users(TARGET);ti,te=index(target);oi,_=index(original)
+    if audit_only:
+        result=audit_identities(srcnow,target,original,su)
+        print("LIVE V46 AUTH:",len(li),"LIVE V47 AUTH:",len(ti))
+        print("AUTH IDENTITY AUDIT:",json.dumps(result,sort_keys=True))
+        print("TARGET MEMBERSHIPS FIRST PAGE:",len(mem.get("documents",[])),"MORE:",bool(mem.get("nextPageToken")))
+        print("READ ONLY: ZERO FIRESTORE OR AUTH WRITES; SCHOOL ACTIVE: FALSE")
+        print("Identity match is NOT password sign-in verification. Super Admin collisions require separate review.")
+        if result["missing"] or result["identity_conflict"] or result["metadata_mismatch"] or result["unexpected_target"] or result["super_admin_registry_changed"] or result["original_super_admins_preserved"]!=len(oi):
+            raise RuntimeError("Auth identity audit found unresolved changes")
+        return
     if set(ti)!=set(oi) or set(oi)!=su or any(stable(ti[k])!=stable(oi[k]) for k in oi):raise RuntimeError("Existing target Auth differs from original snapshot; no writes")
     new,collisions=plan(srcnow,target)
     print("CURRENT SOURCE AUTH VERIFIED:",len(li))
@@ -135,6 +172,7 @@ def main(path):
 if __name__=="__main__":
     try:
         if sys.argv[1:]==["--self-test"]:self_test()
+        elif len(sys.argv)==3 and sys.argv[1]=="--audit-only":main(Path(sys.argv[2]).expanduser(),True)
         elif len(sys.argv)==2:main(Path(sys.argv[1]).expanduser())
         else:raise ValueError("Specify encrypted backup")
     except (Exception,KeyboardInterrupt) as e:
