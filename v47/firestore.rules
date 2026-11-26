@@ -336,13 +336,18 @@ service cloud.firestore {
               && get(duty).data.get('subjectId','') == d.subjectId;
           }
           // Authorize missing-draft lookup only with the exact current configuration
-          // and teacher duty. Existing draft read authorization stays unchanged.
+          // and teacher duty. Read each dependency once to stay within rule access limits.
           function teacherMayReadMissingDraft() {
             let target = /databases/$(database)/documents/schools/$(sid)/teacher_mark_drafts/$(teacherUid)/class_drafts/$(id);
             let config = /databases/$(database)/documents/schools/$(sid)/mark_settings/$(id);
-            return memberRole(sid, 'teacher') && request.auth.uid == teacherUid
-              && !exists(target) && exists(config)
+            return loggedIn() && request.auth.uid == teacherUid && !exists(target)
+              && missingDraftMember(get(schoolPath(sid)).data, get(memberPath(sid)).data)
               && missingDraftDuty(get(config).data);
+          }
+          function missingDraftMember(s, m) {
+            return s.get('active',false) == true && m.get('active',false) == true
+              && m.get('uid','') == teacherUid && m.get('schoolId','') == sid
+              && m.get('role','') == 'teacher';
           }
           function missingDraftDuty(c) {
             let duty = /databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + teacherUid + ':' + c.classId + ':' + c.subjectId);
@@ -353,16 +358,15 @@ service cloud.firestore {
               && c.subjectId is string && c.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
               && c.examId in ['weekly','monthly','1st','2nd','3rd','final']
               && id == c.classId + '_' + c.subjectId + '_' + c.examId
-              && exists(subject) && get(subject).data.get('schoolId','') == sid
-              && get(subject).data.get('class','') == c.classId
-              && get(subject).data.get('active',false) == true
-              && exists(duty) && get(duty).data.get('active',false) == true
-              && get(duty).data.get('uid','') == teacherUid
-              && get(duty).data.get('schoolId','') == sid
-              && get(duty).data.get('classId','') == c.classId
-              && get(duty).data.get('subjectId','') == c.subjectId;
+              && missingDraftDependencies(c,get(subject).data,get(duty).data);
           }
-          allow get: if canAdmin(sid) || teacherMayReadMissingDraft() || teacherMayReadDraft();
+          function missingDraftDependencies(c,s,a) {
+            return s.get('schoolId','') == sid && s.get('class','') == c.classId
+              && s.get('active',false) == true && a.get('active',false) == true
+              && a.get('uid','') == teacherUid && a.get('schoolId','') == sid
+              && a.get('classId','') == c.classId && a.get('subjectId','') == c.subjectId;
+          }
+          allow get: if teacherMayReadMissingDraft() || canAdmin(sid) || teacherMayReadDraft();
           // Teacher queries other teachers' draft collections are forbidden.
           allow list: if canAdmin(sid);
           allow create: if memberRole(sid, 'teacher') && request.auth.uid == teacherUid
