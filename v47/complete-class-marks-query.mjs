@@ -1,7 +1,7 @@
 import {loadMarksByClassTerm} from './marks-query.mjs';
 // Read every school-scoped marks page before any class completeness check.
 // This is a read-only snapshot, not an atomic exam publication transaction.
-export async function loadAllClassMarks({db,api,actor,schoolId,schoolClass,term,pageSize=100,maxRecords=30000}){
+export async function loadAllClassMarks({db,api,actor,schoolId,schoolClass,term,examId=null,pageSize=100,maxRecords=30000}){
  if(!Number.isInteger(pageSize)||pageSize<1||pageSize>100)throw new RangeError('Invalid marks page size');
  if(!Number.isInteger(maxRecords)||maxRecords<1||maxRecords>30000)throw new RangeError('Invalid marks record limit');
  const identity={uid:actor?.uid,schoolId:actor?.schoolId,role:actor?.role,active:actor?.active};
@@ -10,7 +10,7 @@ export async function loadAllClassMarks({db,api,actor,schoolId,schoolClass,term,
  let cursor=null,previous=null,pages=0;
  do{
   verify();
-  const page=await loadMarksByClassTerm({db,api,actor,schoolId,schoolClass,term,pageSize,cursor});
+  const page=await loadMarksByClassTerm({db,api,actor,schoolId,schoolClass,term,examId,pageSize,cursor});
   verify();
   pages++;
   if(pages>Math.ceil(maxRecords/pageSize)+1)throw new Error('Marks pagination exceeded safety bound');
@@ -18,7 +18,7 @@ export async function loadAllClassMarks({db,api,actor,schoolId,schoolClass,term,
   for(const record of page.records){
    if(typeof record.id!=='string'||!record.id||seen.has(record.id))throw new Error('Duplicate or invalid marks document');
    if(previous!==null&&record.id<=previous)throw new Error('Marks pagination order changed');
-   if(record.class!==schoolClass||record.term!==term)throw new Error('Unexpected marks class or term');
+   if(record.class!==schoolClass||record.term!==term||examId!==null&&record.examId!==examId)throw new Error('Unexpected marks class or term');
    seen.add(record.id);previous=record.id;records.push(record);
    if(records.length>maxRecords)throw new RangeError('Marks exceed safe read limit');
   }

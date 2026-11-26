@@ -196,3 +196,19 @@ import {resolveScopedReportExam} from './scoped-legacy-report-exam.mjs';
  assert.throws(()=>prepareLegacyGradeReport({...args,records:historical}),/outside/);
 }
 console.log('PASS scoped historical report identity; canonical terms unchanged; mixed exams and foreign schools rejected');
+
+{
+ const {listScopedReportExams}=await import('./scoped-legacy-report-exam.mjs');
+ const sid='300160003',member={schoolId:sid,uid:'teacher1',role:'viewer',active:true},root='schools/'+sid;
+ let role='viewer',stale=false,foreign=false;
+ const doc=(id,data)=>({id,data:()=>data,exists:()=>true});
+ const api={doc:(_,...p)=>p.join('/'),collection:(_,...p)=>p.join('/'),query:(path,...filters)=>({path,filters}),where:(...p)=>p,limit:n=>n,
+ getDocFromServer:async p=>{if(p===root)return doc(sid,{id:sid,active:true});if(p===root+'/members/teacher1')return doc('teacher1',{uid:'teacher1',schoolId:sid,active:true,role});throw Error('Unexpected read')},
+ getDocsFromServer:async q=>{assert.equal(q.path,root+'/exams');assert.deepEqual(q.filters,[['class','==','9'],['term','==','1st'],101]);const e={schoolId:foreign?'99999':sid,class:'9',term:'1st',termKey:'first',academicYear:'2083'};return {docs:[doc('exam1',{...e,name:'First Exam'}),doc('exam2',{...e,name:'Retake'}),doc('old',{...e,academicYear:'2082'})]}}};
+ const input={db:{},api,actor:member,schoolId:sid,classNo:'9',term:'1st',assertCurrent:()=>{if(stale)throw Error('Stale selection')}};
+ assert.deepEqual((await listScopedReportExams(input)).map(x=>x.id),['exam1','exam2']);
+ foreign=true;await assert.rejects(listScopedReportExams(input),/Foreign historical/);foreign=false;
+ role='teacher';await assert.rejects(listScopedReportExams(input),/role changed/);role='viewer';
+ stale=true;await assert.rejects(listScopedReportExams(input),/Stale selection/);
+ console.log('PASS distinct original exam options, 2083 year, tenant and session checks');
+}

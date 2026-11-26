@@ -2,6 +2,7 @@ import {neError} from './nepali-feedback.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,bindVerifiedModuleActivity} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
+import {listScopedReportExams} from './scoped-legacy-report-exam.mjs';
 import {loadVerifiedLegacyGradeReport} from './verified-legacy-grade-report.mjs';
 import {loadSparkCommittedReport} from './spark-committed-report.mjs';
 import {loadSparkDraftReport} from './spark-draft-report.mjs';
@@ -11,7 +12,7 @@ const $=id=>document.getElementById(id),status=s=>{$('message').textContent=s};
 const reportMode=['number','entry'].includes(document.documentElement.dataset.report)?document.documentElement.dataset.report:'grade';
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 let auth,authSdk,api,db,actor=null,schoolId=null,sessionSeq=0,reviewSeq=0,sheetSeq=0,loading=false,busy=false,report=null;
-const readDocument=async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null};
+const readDocument=async path=>{const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null};
 function clearReview(){
  reviewSeq++;sheetSeq++;report=null;$('cancel').disabled=true;$('ledgerArea').hidden=true;$('sheetArea').hidden=true;
  $('student').replaceChildren();$('student').disabled=true;$('gradeOutput').replaceChildren();
@@ -19,7 +20,8 @@ function clearReview(){
  $('sheetFrame').onload=null;delete $('sheetFrame').dataset.loadedStudent;$('sheetFrame').removeAttribute('srcdoc');$('sheetStatus').textContent='';
  $('progress').textContent='सम्पूर्ण कक्षाको पूर्वावलोकन लोड भएको छैन।';
 }
-function clearSession(){sessionSeq++;clearReview();$('reportSource').value='legacy';$('reportSource').querySelector('option[value="draft"]').disabled=true;actor=null;schoolId=null;$('reportArea').hidden=true;$('logout').disabled=true}
+function resetExamSelection(){ $('legacyExam').replaceChildren(new Option('Automatic (Term only)','')); $('legacyExam').disabled=true; $('legacyExamArea').hidden=$('reportSource').value!=='legacy'; }
+function clearSession(){sessionSeq++;clearReview();$('reportSource').value='legacy';resetExamSelection();$('reportSource').querySelector('option[value="draft"]').disabled=true;actor=null;schoolId=null;$('reportArea').hidden=true;$('logout').disabled=true}
 function assertCurrent(seq,review,member,klass,term){
  if(seq!==sessionSeq||review!==reviewSeq||actor!==member||schoolId!==member.schoolId||
   auth?.currentUser?.uid!==member.uid||$('schoolClass').value!==klass||$('term').value!==term)
@@ -62,7 +64,24 @@ $('login').onclick=async()=>{
  finally{busy=false;$('login').disabled=!auth}
 };
 $('logout').onclick=async()=>{clearSession();try{if(auth)await authSdk.signOut(auth);status('Logout सफल भयो।')}catch(e){status('Logout असफल: '+neError(e))}};
-$('schoolClass').onchange=clearReview;$('term').onchange=clearReview;$('reportSource').onchange=clearReview;
+const resetReportFilters=()=>{clearReview();resetExamSelection()};
+$('schoolClass').onchange=resetReportFilters;$('term').onchange=resetReportFilters;$('reportSource').onchange=resetReportFilters;
+$('legacyExam').onchange=clearReview;
+$('loadLegacyExams').onclick=async()=>{
+ if(!actor||busy||loading||$('reportSource').value!=='legacy')return;
+ clearReview();resetExamSelection();const seq=sessionSeq,review=reviewSeq,member=actor,klass=$('schoolClass').value,term=$('term').value;
+ const check=()=>{assertCurrent(seq,review,member,klass,term);if($('reportSource').value!=='legacy')throw Error('Report source changed')};
+ $('loadLegacyExams').disabled=true;
+ try{
+  await verifyAgain(member,seq,review,klass,term);
+  const rows=await listScopedReportExams({db,api,actor:member,schoolId:member.schoolId,classNo:klass,term,assertCurrent:check});check();
+  for(const r of rows)$('legacyExam').append(new Option(r.label+' · '+r.id,r.id));
+  $('legacyExam').append(new Option('Canonical term record',term));
+  $('legacyExam').disabled=false;
+  status(rows.length+' पुराना परीक्षा अभिलेख भेटिए। आवश्यक परे मूल परीक्षा छान्नुहोस्।');
+ }catch(e){if(seq===sessionSeq&&review===reviewSeq)status('परीक्षा सूची खोल्न सकिएन: '+neError(e))}
+ finally{$('loadLegacyExams').disabled=false}
+};
 $('cancel').onclick=()=>{clearReview();status('हेर्न मात्र मिल्ने समीक्षा रद्द भयो। कुनै अङ्क परिवर्तन गरिएको छैन।')};
 function showSheet(){
  const seq=++sheetSeq,frame=$('sheetFrame'),studentId=$('student').value;
@@ -84,16 +103,16 @@ function showSheet(){
 $('load').onclick=async()=>{
  if(loading||busy||!actor)return;
  clearReview();const seq=sessionSeq,review=reviewSeq,member=actor,klass=$('schoolClass').value,term=$('term').value;
- const source=$('reportSource').value;
- const check=()=>{assertCurrent(seq,review,member,klass,term);if($('reportSource').value!==source)throw Error('Report source changed')};
+ const source=$('reportSource').value,selectedExamId=source==='legacy'?$('legacyExam').value||null:null;
+ const check=()=>{assertCurrent(seq,review,member,klass,term);if($('reportSource').value!==source||source==='legacy'&&($('legacyExam').value||null)!==selectedExamId)throw Error('Report source changed')};
  loading=true;$('load').disabled=true;$('cancel').disabled=false;
  try{
   await verifyAgain(member,seq,review,klass,term);
   const data=source==='sparkCommitted'?await loadSparkCommittedReport({db,api,auth,actor:member,schoolId:member.schoolId,classNo:klass,term,assertCurrent:check,onProgress:s=>{check();$('progress').textContent=s}}):source==='draft'?await loadSparkDraftReport({db,api,auth,actor:member,schoolId:member.schoolId,classNo:klass,term,assertCurrent:check,onProgress:s=>{check();$('progress').textContent=s}}):source==='committed'
    ?await loadCommittedReportPreview({schoolId:member.schoolId,classNo:klass,term,
     getIdToken:()=>auth.currentUser.getIdToken(),fetchImpl:(...args)=>fetch(...args),assertCurrent:check})
-   :source==='legacy'?await loadVerifiedLegacyGradeReport({db,api,auth,actor:member,schoolId:member.schoolId,
-   classNo:klass,term,readDocument,assertCurrent:check,
+   :source==='legacy'?await loadVerifiedLegacyGradeReport({db,api:{...api,getDocs:api.getDocsFromServer},auth,actor:member,schoolId:member.schoolId,
+   classNo:klass,term,selectedExamId,readDocument,assertCurrent:check,
    onProgress:s=>{check();$('progress').textContent=s}}):null;
   if(!data)throw Error('Unknown report source');
   await verifyAgain(member,seq,review,klass,term);
@@ -135,7 +154,7 @@ $('exportExcel').onclick=async()=>{
   const blob=legacyGradePreviewExcel(report,reportMode);
   const url=URL.createObjectURL(blob),link=document.createElement('a');
   try{
-   link.href=url;link.download='smss-v47-UNAPPROVED-'+({grade:'grade-ledger',number:'mark-ledger',entry:'mark-entry-ledger'}[reportMode])+'-'+member.schoolId+'-'+klass+'-'+term+'.xlsx';
+   link.href=url;link.download='smss-v47-UNAPPROVED-'+({grade:'grade-ledger',number:'mark-ledger',entry:'mark-entry-ledger'}[reportMode])+'-'+member.schoolId+'-'+klass+'-'+term+(report.examId&&report.examId!==term?'-'+report.examId:'')+'.xlsx';
    document.body.append(link);link.click();
   }finally{link.remove();URL.revokeObjectURL(url)}
   status('Excel पूर्वावलोकन निकालियो। यो आधिकारिक Ledger होइन।');
