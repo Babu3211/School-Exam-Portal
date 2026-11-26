@@ -41,11 +41,22 @@ def safeid(id):
     return id
 def validate_scope(f):
     if "schoolId" in f and scalar(f,"schoolId")!=SID:raise ValueError("Foreign school scope")
+def canonical_class(value):
+    if isinstance(value,bool) or value is None:raise ValueError("Unrecognized class")
+    text=str(value).strip().translate(str.maketrans("०१२३४५६७८९","0123456789"))
+    upper=text.upper()
+    if upper in ("ECD","LKG","UKG"):return upper
+    if upper=="EARLY CHILDHOOD DEVELOPMENT":return "ECD"
+    match=re.fullmatch(r"(?:(?:class|कक्षा)\s*)?([1-9]|1[012])",text,re.IGNORECASE)
+    if match:return match.group(1)
+    raise ValueError("Unrecognized class")
+def class_recognized(value):
+    try:canonical_class(value);return True
+    except ValueError:return False
 def project_student(d):
     f=d["fields"];validate_scope(f)
     name=txt(f,"studentName",160,True)
-    cls=txt(f,"class",20,True) if str(scalar(f,"class")) not in CLASSES else str(scalar(f,"class"))
-    if cls not in CLASSES:raise ValueError("Unrecognized class")
+    cls=canonical_class(scalar(f,"class"))
     transfer=scalar(f,"isTransferred")
     if transfer is not None and not isinstance(transfer,bool):raise ValueError("Unrecognized transfer status")
     active=scalar(f,"active")
@@ -58,7 +69,17 @@ def project_student(d):
     return out
 def project_staff(d):
     f=dict(d["fields"]);validate_scope(f)
-    if not txt(f,"name",160,True):raise ValueError("Missing staff name")
+    # Legacy staff records can have missing/short names. Retain their exact
+    # source fields, including empty values, rather than inventing an identity.
+    # Use an existing bilingual name only when the original name is blank.
+    name=scalar(f,"name")
+    if name is not None and not isinstance(name,str):raise ValueError("Invalid staff name type")
+    if not name or not name.strip():
+        for alias in ("nameEnglish","nameEn","nameNepali"):
+            alt=scalar(f,alias)
+            if isinstance(alt,str) and alt.strip():
+                f["name"]=string(alt)
+                break
     # Retain all original staff fields. Do not create new Auth links, privilege,
     # or guess correspondence between the two existing target accounts.
     # Known source has no linked UID fields; halt if an unexpected link exists.
@@ -102,6 +123,10 @@ def plan(backup):
             except ValueError as e:errors[coll+": "+str(e)]+=1
     print("OPERATIONAL STUDENTS:",sum(k.startswith(base+"/students/") for k in out),"SOURCE:",len(groups.get("students",[])))
     print("OPERATIONAL STAFF:",sum(k.startswith(base+"/staff/") for k in out),"SOURCE:",len(groups.get("staff",[])))
+    print("STUDENT CLASS COUNTS:",json.dumps(dict(sorted(Counter(scalar(f,"class") for k,f in out.items() if k.startswith(base+"/students/")).items())),ensure_ascii=False))
+    print("STAFF NAME REVIEW:",sum(not isinstance(scalar(f,"name"),str) or len(scalar(f,"name").strip())<2 or len(scalar(f,"name"))>160 for k,f in out.items() if k.startswith(base+"/staff/")))
+    if errors:
+        print("UNMAPPED CLASS RECORDS:",sum(not class_recognized(scalar(d["fields"],"class")) for d in groups.get("students",[])))
     if errors:
         print("SCHEMA REVIEW REQUIRED:",json.dumps(errors,sort_keys=True))
         raise ValueError("No partial operational copy; review invalid rows first")
@@ -117,7 +142,18 @@ def self_test():
     except ValueError:pass
     else:raise AssertionError("Foreign school accepted")
     assert project_profile({"iemisCode":string(SID),"schoolName":string("School"),"schoolNameNe":string("विद्यालय")})[1]["nameNepali"]==string("विद्यालय")
-    print("PASS school scope, exact Nepali text, student mapping and transfer status")
+    for n in range(1,13):
+        nepali=str(n).translate(str.maketrans("0123456789","०१२३४५६७८९"))
+        for label in (str(n),"Class "+str(n),"कक्षा "+str(n),"कक्षा "+nepali):
+            assert canonical_class(label)==str(n)
+    assert canonical_class("Early Childhood Development")=="ECD"
+    assert canonical_class("lkg")=="LKG"
+    for invalid in ("Class 13","कक्षा १-३","Class 1 A",None,True):
+        assert not class_recognized(invalid)
+    assert project_staff({"fields":{"name":string(""),"nameNepali":string("शिक्षक")}})["name"]==string("शिक्षक")
+    assert project_staff({"fields":{"name":string("")}})["name"]==string("")
+    assert project_staff({"fields":{"name":string("क")}})["name"]==string("क")
+    print("PASS school scope, exact Nepali text, V46 class aliases, staff preservation and transfer status")
 def main(path):
     if os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):raise RuntimeError("Live migration forbidden in CI")
     warnings.simplefilter("error",getpass.GetPassWarning)
