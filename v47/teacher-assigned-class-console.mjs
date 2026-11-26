@@ -1,3 +1,4 @@
+import {loadAssignedLegacyMarks} from './assigned-legacy-marks.mjs';
 import {neError} from './nepali-feedback.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,bindVerifiedModuleActivity} from './school-firebase-client.mjs';
 import {discoverVerifiedSubjectExamSettings} from './discover-subject-exam-settings.mjs';
@@ -133,6 +134,7 @@ $('loadAttendance').onclick=async()=>{
 };
 
 function clearTeacherDraft(){
+ resetLegacyMarks();
  draftEpoch++;draftContext=null;draftInspected=false;
  $('teacherDraftRows').replaceChildren();$('teacherDraftHeader').replaceChildren();
  $('teacherDraftStatus').textContent='';
@@ -141,12 +143,34 @@ function clearTeacherDraft(){
 function lockTeacherDraft(value){
  $('teacherDraftArea').hidden=!actor;
  $('draftTerm').disabled=value||!actor;
+ $('loadLegacyMarks').disabled=value||!actor||!$('subjectId').value||!['1st','2nd','3rd','final'].includes($('draftTerm').value);
  $('loadTeacherDraft').disabled=value||!actor||!$('subjectId').value;
  $('inspectTeacherDraft').disabled=value||!draftContext;
  $('saveTeacherDraft').disabled=value||!draftContext||!draftInspected;
  for(const input of $('teacherDraftRows').querySelectorAll('input'))input.disabled=value||
   (input.matches('input[data-component]')&&input.closest('tr')?.querySelector('input[data-absent]')?.checked===true);
 }
+let legacyRequest=0;
+function resetLegacyMarks(){legacyRequest++;$('legacyMarkRows').replaceChildren();$('legacyMarkStatus').textContent=''}
+$('loadLegacyMarks').onclick=async()=>{
+ if(busy||!actor)return;
+ resetLegacyMarks();const req=legacyRequest,member=actor,klass=$('classId').value,sub=$('subjectId').value,term=$('draftTerm').value;
+ const check=()=>{if(req!==legacyRequest||actor!==member||auth?.currentUser?.uid!==member.uid||schoolId!==member.schoolId||$('classId').value!==klass||$('subjectId').value!==sub||$('draftTerm').value!==term)throw Error('Marks selection changed')};
+ lock(true);$('legacyMarkStatus').textContent='V46 बाट सारिएका मूल अङ्क जाँच हुँदैछन्…';
+ try{
+  if(!await enforceSchoolIdle(auth,authSdk))throw Error('Login expired');
+  const result=await loadAssignedLegacyMarks({db,api,actor:member,schoolId:member.schoolId,classId:klass,subjectId:sub,term,assertCurrent:check});check();
+  const fragment=document.createDocumentFragment();
+  for(const row of result.rows){
+   const tr=document.createElement('tr');
+   for(const value of [row.studentName,row.studentId,row.examId,row.isAbsent?'Yes':'No',row.scores.map(s=>s.name+': '+(s.obtained??'—')+' / '+s.fullMarks).join(' · '),(row.totalObtained??'—')+' / '+(row.totalFullMarks??'—')]){
+    const td=document.createElement('td');td.textContent=String(value);tr.append(td)
+   }fragment.append(tr);
+  }
+  $('legacyMarkRows').append(fragment);$('legacyMarkStatus').textContent=result.rows.length+' मूल Marks अभिलेख उपलब्ध छन्। अङ्क परिवर्तन वा प्रकाशन भएको छैन।';
+ }catch(e){if(req===legacyRequest)$('legacyMarkStatus').textContent='मूल अङ्क खोल्न सकिएन: '+neError(e)}
+ finally{if(actor===member)lock(false)}
+};
 $('draftTerm').onchange=()=>{clearTeacherDraft();if(!busy)lock(false)};
 $('teacherDraftRows').addEventListener('input',event=>{
  if(!event.target?.matches?.('input[data-component],input[data-absent]'))return;
