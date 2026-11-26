@@ -91,6 +91,7 @@ def main(path,audit_only=False):
     session=requests.Session()
     def call(project,url,body=None,readonly=False):
         if project not in (m.SOURCE,m.TARGET) or body is not None and project!=m.TARGET and not readonly:raise RuntimeError("Wrong destination")
+        if audit_only and body is not None and not (project==m.TARGET and url=="https://firestore.googleapis.com/v1/"+m.root(m.TARGET)+":batchGet" and readonly):raise RuntimeError("Read-only audit forbids mutation")
         r=session.request("GET" if body is None else "POST",url,headers={"Authorization":"Bearer "+token,"x-goog-user-project":project},json=body,timeout=(10,90),allow_redirects=False)
         if r.status_code!=200:raise RuntimeError("API HTTP "+str(r.status_code))
         return r.json()
@@ -121,6 +122,17 @@ def main(path,audit_only=False):
         return out
     v=read([BASE,archive])
     if not sub.same_field(v[BASE],staged[BASE]) or not v[archive] or v[archive].get("state")!=m.string("ARCHIVE_VERIFIED_NOT_OPERATIONAL"):raise RuntimeError("Inactive school or archive not verified")
+    if audit_only:
+        # After additive reconciliation, use live V46 class rows and require
+        # the entire mapped V47 catalog to agree. Never grant new privileges.
+        live_classes=listdocs(m.SOURCE,"classes")
+        subjectdocs,_=sub.catalog({**groups,"classes":live_classes})
+        catalog={(m.scalar(f,"class"),sub.subject_key(m.scalar(f,"name"))):k.rsplit("/",1)[1] for k,f in subjectdocs.items() if "/subjects/" in k}
+        for c in ("classes","subjects"):
+            actual=listdocs(m.TARGET,"schools/"+m.SID+"/"+c)
+            expected={k for k in subjectdocs if k.startswith(BASE+"/"+c+"/")}
+            if {d["name"] for d in actual}!=expected:raise RuntimeError("Current catalog not reconciled; no writes")
+        print("CURRENT CATALOG VERIFIED:",len(subjectdocs))
     keys=sorted(subjectdocs)
     for i in range(0,len(keys),40):
         for n,f in read(keys[i:i+40]).items():
@@ -134,19 +146,29 @@ def main(path,audit_only=False):
     out,review,ns,nt,nr=snapshot()
     print("LIVE SOURCE AUTH:",ns,"LIVE TARGET AUTH:",nt,"LIVE SOURCE ROLES:",nr)
     print("ROLE AND ASSIGNMENT REVIEW:",json.dumps(dict(review),sort_keys=True))
+    unexpected=Counter()
     for c in ("members","teacher_assignments"):
         docs=listdocs(m.TARGET,"schools/"+m.SID+"/"+c)
-        if any(d["name"] not in out for d in docs):raise RuntimeError("Existing target record outside inactive plan")
+        unexpected[c]=sum(d["name"] not in out for d in docs)
+        if unexpected[c] and not audit_only:raise RuntimeError("Existing target record outside inactive plan")
         print("PLANNED INACTIVE "+c.upper()+":",sum(k.startswith(BASE+"/"+c+"/") for k in out))
+    audit_conflicts=Counter()
     def check(batch):
         vals=read(batch)
         for n,v in vals.items():
-            if v is not None and not sub.same_field(v,out[n]):raise RuntimeError("Existing membership/assignment differs; no overwrite")
+            if v is not None and not sub.same_field(v,out[n]):
+                if not audit_only:raise RuntimeError("Existing membership/assignment differs; no overwrite")
+                audit_conflicts[n[len(BASE)+1:].split("/")[0]]+=1
         return [n for n in batch if vals[n] is None]
     names=sorted(out);batches=[names[i:i+40] for i in range(0,len(names),40)]
     missing=[]
     for batch in batches:missing.extend(check(batch))
-    print("CREATE ONLY:",len(missing),"ALREADY IDENTICAL:",len(names)-len(missing))
+    matching=len(names)-len(missing)-sum(audit_conflicts.values())
+    print("CREATE ONLY:",len(missing),"ALREADY IDENTICAL:",matching)
+    if audit_only:
+        print("ROLE PLAN MISSING COUNTS:",json.dumps(dict(Counter(n[len(BASE)+1:].split("/")[0] for n in missing)),sort_keys=True))
+        print("ROLE PLAN CONFLICT COUNTS:",json.dumps(dict(audit_conflicts),sort_keys=True))
+        print("ROLE PLAN OUTSIDE COUNTS:",json.dumps(dict(unexpected),sort_keys=True))
     if audit_only:
         # Compare current root academic collections against the encrypted
         # snapshot, not against transformed destination fields. Read only.
@@ -179,8 +201,9 @@ def main(path,audit_only=False):
             totals.update({"new":added,"changed":changed,"removed":removed})
             print(c,len(old),len(now),added,changed,removed,flush=True)
         print("ACADEMIC DELTA TOTAL:",json.dumps(dict(totals),sort_keys=True))
-        print("ROLE PLAN MATCHING RECORDS:",len(names)-len(missing),"/",len(names))
+        print("ROLE PLAN MATCHING RECORDS:",matching,"/",len(names))
         print("READ ONLY: ZERO FIRESTORE OR AUTH WRITES; SCHOOL ACTIVE: FALSE")
+        if audit_conflicts or any(unexpected.values()):raise RuntimeError("Role reconciliation requires review; no writes")
         return
     if missing:
         if input("Type STAGE-V47-ROLES to proceed: ").strip()!="STAGE-V47-ROLES":raise RuntimeError("Not confirmed")
