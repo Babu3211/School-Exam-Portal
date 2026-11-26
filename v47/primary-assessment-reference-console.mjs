@@ -5,7 +5,7 @@ import {subjectsForGrade,assessmentThemeReference} from './primary-assessment-re
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {readObservationPortfolio,exportObservationPortfolio,readIndicatorPortfolio,exportIndicatorPortfolio,readPortfolioPrintModel,exportPortfolioWord} from './primary-assessment-portfolio.mjs';
 import {loadAssignedPrimarySubjects,loadPrimaryTeacherWorksheet,draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
-import {loadMathAssessmentDraft,saveMathAssessmentDraft} from './primary-assessment-math-draft.mjs';
+import {loadMathAssessmentDraft,saveMathAssessmentDraft,validateMathDraftValues} from './primary-assessment-math-draft.mjs';
 import {neError} from './nepali-feedback.mjs';
 const $=id=>document.getElementById(id);
 let actor=null,catalogue=null,auth,authSdk,db,api,epoch=0,portfolioEpoch=0;
@@ -94,6 +94,9 @@ $('teacherSaveDraft').onclick=async()=>{
  if(worksheetRevision===null||$('teacherSaveDraft').disabled)return;
  const args=worksheetSelection(),request=worksheetRequest,expectedRevision=worksheetRevision;
  const fields=[...$('teacherDraftRows').querySelectorAll('select')],ratings=fields.map(el=>el.value||'_').join(''),date=$('teacherDate').value.trim();
+ try{validateMathDraftValues({ratings,date,count:fields.length})}catch{
+  $('teacherDraftSaveStatus').textContent='२०८३ सालको मिति YYYY-MM-DD ढाँचामा र कम्तीमा एउटा १–४ प्राप्ताङ्क राख्नुहोस्।';return;
+ }
  $('teacherSaveDraft').disabled=true;fields.forEach(el=>el.disabled=true);$('teacherDate').disabled=true;
  try{
   await verify();args.assertCurrent();

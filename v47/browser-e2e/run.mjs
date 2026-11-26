@@ -11,6 +11,7 @@ import {join,resolve} from 'node:path';
 import {build} from 'esbuild';
 import {chromium} from 'playwright';
 import {excelWorkbook} from '../excel-workbook.mjs';
+import {v46LowerMathReference} from '../primary-assessment-v46-lower-math.mjs';
 import {V46_STAFF_EXCEL_HEADERS} from '../v46-staff-excel-schema.mjs';
 import {createV47StaticHandler} from '../../v47-runtime/static-handler.mjs';
 
@@ -199,6 +200,49 @@ try{
    await wait(page,()=>document.getElementById('teacherDraftStatus').textContent.includes('Draft Revision 1 सुरक्षित'));
    assert.equal(await page.locator('#teacherDraftRows input[data-component="got"]').inputValue(),'18');
    assert.deepEqual(errors,[]);
+   // Real assessment UI served from the actual V47 Hosting output.
+   await page.goto(origin+'/primary-assessment.html?schoolId='+sid);
+   await wait(page,()=>!document.getElementById('teacherWorksheet').hidden||document.getElementById('status').textContent.includes('पुनः खोल्नुहोस्'));
+   assert.equal(await page.locator('#teacherWorksheet').isVisible(),true,await page.locator('#status').textContent());
+   await page.locator('#teacherGrade').selectOption('1');
+   await page.locator('#teacherLoadSubjects').click();
+   await wait(page,()=>Array.from(document.getElementById('teacherSubject').options).some(o=>o.value==='math'));
+   await page.locator('#teacherSubject').selectOption('math');
+   await page.locator('#teacherOpenWorksheet').click();
+   await wait(page,()=>!document.getElementById('teacherSaveDraft').disabled);
+   const theme=v46LowerMathReference('1')[0];
+   const ratings=page.locator('#teacherDraftRows select');
+   assert.equal(await ratings.count(),theme.count);
+   await ratings.first().selectOption('3');
+   // Invalid date must allow immediate correction, not discard the draft.
+   await page.locator('#teacherDate').fill('2083-13-01');
+   await page.locator('#teacherSaveDraft').click();
+   assert.equal(await page.locator('#teacherSaveDraft').isEnabled(),true);
+   assert.match(await page.locator('#teacherDraftSaveStatus').textContent(),/YYYY-MM-DD/);
+   await page.locator('#teacherDate').fill('2083-08-10');
+   await page.locator('#teacherSaveDraft').click();
+   await wait(page,()=>document.getElementById('teacherDraftSaveStatus').textContent.includes('Revision 1 सुरक्षित भयो'));
+   const themeId=sha(JSON.stringify(['ad2e3b96a22601fed9d956397a98c564b3ffb768','1',theme.theme,theme.sourceRows]));
+   const draftPath=root+'/teacher_assessment_drafts/'+teacherUid+'/classes/1/subjects/math/students/s1/themes/'+themeId;
+   const saved=(await db.doc(draftPath).get()).data();
+   assert.equal(saved.ratings,'3'+'_'.repeat(theme.count-1));
+   assert.equal(saved.date,'2083-08-10');
+   assert.equal(saved.revision,1);
+   await page.reload();
+   await wait(page,()=>!document.getElementById('teacherWorksheet').hidden);
+   await page.locator('#teacherGrade').selectOption('1');
+   await page.locator('#teacherLoadSubjects').click();
+   await wait(page,()=>Array.from(document.getElementById('teacherSubject').options).some(o=>o.value==='math'));
+   await page.locator('#teacherSubject').selectOption('math');
+   await page.locator('#teacherOpenWorksheet').click();
+   await wait(page,()=>document.getElementById('teacherDraftSaveStatus').textContent.includes('Revision 1 पुनः लोड भयो'));
+   assert.equal(await ratings.first().inputValue(),'3');
+   assert.equal(await page.locator('#teacherDate').inputValue(),'2083-08-10');
+   assert.deepEqual((await db.doc(legacy).get()).data(),original);
+   assert.equal((await db.doc(draftPath.replace(sid,schools[1].sid)).get()).exists,false);
+   assert.deepEqual(errors,[]);
+   await db.doc(draftPath).delete();
+   console.log('PASS browser assessment reference asset, assigned Mathematics date/score save, invalid-date correction, reload and isolation');
   }finally{await teacherSession.context.close()}
   const adminSession=await newSession();
   try{

@@ -43,6 +43,9 @@ while(queue.length){
  }else if(ext==='.mjs'||ext==='.js'){
   if(/(?:from\s*['"]node:|import\s*['"]node:)/.test(code))throw new Error('Node-only import reachable in V47 hosting: '+name);
   for(const m of code.matchAll(/(?:\bfrom\s*|\bimport\s*\(|\bimport\s*)["']([^"']+)["']/g))localRef(m[1],name);
+  // Only the explicitly reviewed public CDC reference is a runtime JSON asset.
+  // Never copy arbitrary school data or diagnostic JSON into static Hosting.
+  if(name==='primary-assessment-reference-console.mjs')localRef('./primary-assessment-reference-2083.json',name);
  }else{
   for(const m of code.matchAll(/url\(\s*["']?(\.\/[^)"']+)/g))localRef(m[1],name);
  }
