@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {createHash} from 'node:crypto';
-import {createServer} from 'node:http';
+import {createV47ApiServer} from '../../src/v47/node-api-server.mjs';
 import {once} from 'node:events';
 import {mkdtemp,writeFile,readFile,rm} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
@@ -68,7 +68,10 @@ try{
  for(const [name,source] of Object.entries(sources))await writeFile(join(temp,name),source);
  const out=join(temp,'out');
  await build({entryPoints:Object.keys(sources).map(name=>join(temp,name)),outdir:out,bundle:true,splitting:true,format:'esm',platform:'browser',target:'es2022',logLevel:'warning'});
- server=createServer(await createV47StaticHandler(root));server.listen(0,'127.0.0.1');await once(server,'listening');
+ // Privileged routes are enabled ONLY in this exact loopback synthetic test,
+ // never in the production runtime or static Hosting configuration.
+ server=createV47ApiServer({auth:admin,firestore:db,publicationEnabled:true,staticHandler:await createV47StaticHandler(root)});
+ server.listen(0,'127.0.0.1');await once(server,'listening');
  const origin='http://127.0.0.1:'+server.address().port;
  browser=await chromium.launch({headless:true});
  const cdn='https://www.gstatic.com/firebasejs/11.10.0/';
@@ -214,6 +217,53 @@ try{
    assert.deepEqual((await db.doc(legacy).get()).data(),original);
    assert.equal((await db.doc('schools/'+schools[1].sid+'/class_mark_drafts/1_math_final').get()).exists,false);
    assert.deepEqual(errors,[]);
+   // Real School Admin session and saved Draft flow through the same-origin
+   // authenticated review, staging, and atomic publication API. No mock HTTP.
+   const pointerId=sha(JSON.stringify(['1','math','final']));
+   const pointerPath=root+'/official_marks_pointers/'+pointerId;
+   const previous=(await db.doc(pointerPath).get()).data();
+   const otherPointer='schools/'+schools[1].sid+'/official_marks_pointers/'+pointerId;
+   const otherBefore=(await db.doc(otherPointer).get()).data();
+   await page.goto(origin+'/marks-entry.html?schoolId='+sid);
+   await wait(page,()=>!document.getElementById('work').hidden);
+   await page.locator('#schoolClass').selectOption('1');
+   await page.locator('#term').selectOption('final');
+   await page.locator('#loadSubjects').click();
+   await wait(page,()=>Array.from(document.getElementById('subjectId').options).some(o=>o.value==='math'));
+   await page.locator('#subjectId').selectOption('math');
+   await page.locator('#loadClassMarks').click();
+   await wait(page,()=>!document.getElementById('serverReviewMarks').disabled);
+   assert.match(await page.locator('#classDraftStatus').textContent(),/Revision 1 restored/);
+   // Unsaved UI edits must not become published marks.
+   await page.locator('#classMarkRows input[data-field="got"]').fill('1');
+   const dialogs=[];
+   const approve=async d=>{dialogs.push(d.message());await d.accept()};
+   page.on('dialog',approve);
+   try{
+    await page.locator('#serverReviewMarks').click();
+    await wait(page,()=>{const s=document.getElementById('serverPublicationStatus').textContent;return /Marks committed|blocked|not confirmed/.test(s)});
+   }finally{page.off('dialog',approve)}
+   assert.match(await page.locator('#serverPublicationStatus').textContent(),/Marks committed/);
+   assert.equal(dialogs.length,2,'Separate stage and final confirmation required');
+   const pointer=(await db.doc(pointerPath).get()).data();
+   assert.notEqual(pointer.publicationId,previous.publicationId);
+   assert.equal(pointer.rosterCount,1);
+   const [header,audit,view]=await Promise.all([
+    db.doc(root+'/official_marks_publications/'+pointer.publicationId).get(),
+    db.doc(root+'/official_marks_audit/'+pointer.publicationId).get(),
+    db.doc(root+'/official_read_views/'+pointerId).get()
+   ]);
+   assert.equal(header.data().state,'committed');
+   assert.equal(header.data().previousPublicationId,previous.publicationId);
+   assert.equal(audit.data().approvedBy,'alpha-admin');
+   assert.equal(view.data().publicationId,pointer.publicationId);
+   assert.equal(view.data().entries[0].values.got,18,'Only persisted revision is published');
+   assert.deepEqual((await db.doc(otherPointer).get()).data(),otherBefore);
+   assert.deepEqual((await db.doc(legacy).get()).data(),original);
+   assert.equal((await db.doc(teacherDraft).get()).data().revision,1);
+   assert.equal((await db.doc(adminDraft).get()).data().revision,1);
+   assert.deepEqual(errors,[]);
+   console.log('PASS real browser Admin Draft to authenticated API stage and commit; atomic pointer, audit, saved revision, original data and second school verified');
   }finally{await adminSession.context.close()}
   // Leave other existing emulator tests' fixtures unchanged.
   await Promise.all([duty,legacy,teacherDraft,adminDraft,root+'/dashboard_activity/'+teacherUid].map(path=>db.doc(path).delete()));
