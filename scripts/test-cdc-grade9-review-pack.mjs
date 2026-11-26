@@ -186,6 +186,32 @@ for(const [subject,provider,language,durationMinutes,count] of refs){
   records.push({subject,set:i+1,language,fullMarks:75,durationMinutes:180,groupCount:27,sourceUrl:guide.sourceUrl,status:'72 CDC grid cells matched — teacher review pending',signature:result.signature,html:modelHtml+'<details><summary>Teacher answer review</summary>'+answerHtml+'</details>'});
  }
 }
+// Additional language and random-seed regression checks; the review artifact
+// stays at exactly sixteen question sets and sixteen separate answer keys.
+for(const [subject,provider,language,durationMinutes,count] of refs.filter(r=>['Mathematics','Social Studies'].includes(r[0]))){
+ const questions=provider({grade,subject}),selectedTopicIds=referencePreviewTopics({grade,subject,questions});
+ for(const lang of subject==='Mathematics'?['ne','en','both']:[language]){
+  let previousSignature='';
+  for(const seed of [.39,.61,.19,.83]){
+   const p=buildGrade9ReferencePreview({grade,subject,questions,selectedTopicIds,language:lang,durationMinutes,fullMarks:75,previousSignature,rng:()=>seed});
+   assert.equal(p.ready,true,p.reason);
+   assert.notEqual(p.signature,previousSignature);previousSignature=p.signature;
+   assert.equal(p.groupCount,count);assert.equal(p.allocationReview.fullMarks,75);
+   assert.equal(p.currentCdcExactApproved,false);
+   if(subject==='Mathematics'){
+    assert.equal((p.text.match(/\[[0-9०-९]+(?:K|U|A|HA)\]/g)||[]).length,49);
+    assert.equal(p.answerCount,49);
+    assert.ok(p.blocks.some(b=>b.figureHtml.includes('<svg')));
+    if(lang==='ne')assert.doesNotMatch(p.text,/[0-9]/);
+   }else{
+    assert.doesNotMatch(p.text,/[0-9]/);
+    assert.match(p.blocks[21].text,/^अथवा$/m);
+    assert.match(p.blocks[21].text,/\(२ \+ ५ = ७\)/);
+    assert.equal(p.answerCount,25);
+   }
+  }
+ }
+}
 assert.equal(records.length,16);
 assert.ok(records.filter(r=>['Nepali','English'].includes(r.subject)).every(r=>r.html.includes('class="qp-matching-table"')),'Both language subjects must render native matching tables');
 assert.ok(records.filter(r=>r.subject==='Mathematics').every(r=>r.html.includes('<svg')),'Math review papers must retain matching schematic figures');
