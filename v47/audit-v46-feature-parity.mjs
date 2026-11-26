@@ -13,6 +13,7 @@ const features=[
  {name:'Teacher and staff records',v46:/teacher|staff/i,v47:['v47/staff.html']},
  {name:'Attendance',v46:/attendance/i,v47:['v47/attendance.html']},
  {name:'Exam management',v46:/exam/i,v47:['v47/exams.html']},
+ {name:'Primary Assessment 1–5',v46:/cdc|मूल्याङ्कन/i,v47:['v47/primary-assessment.html'],production:/स्रोत सन्दर्भ मात्र|primary-assessment-reference-console/i},
  {name:'Marks entry',v46:/mark/i,v47:['v47/marks-entry.html'],production:/read.only|development|disabled/i},
  {name:'Grade ledger',v46:/grade ledger/i,v47:['v47/grade-ledger.html'],production:/not valid for official use|development preview/i},
  {name:'Grade sheet',v46:/grade sheet/i,v47:['v47/grade-sheet.html'],production:/not valid for official use|development preview/i},

@@ -13,6 +13,9 @@ const singleMarkSave=read('mark-create-service.mjs');
 const classMarkSave=read('class-mark-save.mjs');
 const config=JSON.parse(read('firebase.json'));
 const blockers=[];
+// The existing V46 2083 operational assessment is required, not merely a catalogue.
+if(!existsSync(resolve(root,'primary-assessment.html'))||/स्रोत सन्दर्भ मात्र|primary-assessment-reference-console/i.test(read('primary-assessment.html')))
+ blockers.push('V46 Classes 1–5 assessment parity missing: assigned teacher student entry, date/score persistence, portfolio, official print/export, dashboard/report integration and school isolation required');
 if(/id="(?:theory|practical)"[^>]*max="100"/.test(marks))
  blockers.push('Raw marks draft UI still hardcodes a 100-point maximum');
 // The maximum for every subject must come from persisted Examination Settings.
