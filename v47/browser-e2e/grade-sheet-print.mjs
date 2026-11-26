@@ -9,16 +9,24 @@ try{
  const page=await context.newPage();
  const subjects=['Nepali','English','Mathematics','Science and Technology','Social Studies','Health and Physical Education','Computer','Local Subject'].map((name,i)=>({id:'sub'+i,name,creditHour:4}));
  const students=[{id:'s1',nameEnglish:'Synthetic Student Alpha',studentIemisNo:'0000001',symbolNo:'TEST-001',dob:'2070-01-01'},{id:'s2',nameEnglish:'Synthetic Student Beta',studentIemisNo:'0000002',symbolNo:'TEST-002',dob:'2070-02-01'}];
- for(const classNo of ['1','6','9','10'])for(const [term,v46term] of [['1st','first'],['2nd','second'],['3rd','third'],['final','annual']]){
+ for(const classNo of ['1','2','3','4','5','6','7','8','9','10'])for(const [term,v46term] of [['1st','first'],['2nd','second'],['3rd','third'],['final','annual']]){
   const draftsBySubject=Object.fromEntries(subjects.map(s=>{
    const schema=iemisEntrySchema(classNo,v46term,s.name);
    const values=Object.fromEntries(schema.filter(f=>!f.readonly).map(f=>[f.key,f.key==='count'?'10':f.key==='obtained'?'35':String(f.max)]));
    return [s.id,Object.fromEntries(students.map(st=>[st.id,{values:{...values},isAbsent:false,incompatible:false}]))];
   }));
-  const printer=createIemisGradeSheetPrinter({school:{nameEnglish:'Synthetic Secondary School',nameNepali:'नमुना माध्यमिक विद्यालय',addressEnglish:'Municipality, Nepal',addressNepali:'नगरपालिका, नेपाल'},classNo,term,students,subjects,draftsBySubject});
+  const printer=createIemisGradeSheetPrinter({school:{nameEnglish:'Synthetic Secondary School',nameNepali:'नमुना माध्यमिक विद्यालय',addressEnglish:'Municipality, Nepal',addressNepali:'नगरपालिका, नेपाल'},classNo,term,academicYear:'2083',students,subjects,draftsBySubject});
   const final=term==='final';
   const result=final?printer('s1'):combineTerminalGradeSheets(printer,['s1','s2'],term);
-  assert.equal(result.ready,true,'Ready '+classNo+' '+term);
+  // The existing calculator intentionally has no secondary third-term GPA
+  // projection. Do not fabricate results or change that policy in a CSS test.
+  if(Number(classNo)>=6&&term==='3rd'){
+   assert.equal(printer('s1').ready,false,'Existing third-term GPA gate');
+   assert.equal(result.ready,false,'Unverified grade sheet must not print');
+   console.log('PASS preserved existing secondary third-term GPA gate: class '+classNo);
+   continue;
+  }
+  assert.equal(result.ready,true,'Ready '+classNo+' '+term+': '+result.reason);
   await page.setContent(result.html);
   await page.emulateMedia({media:'print'});
   await page.evaluate(()=>document.fonts.ready);
