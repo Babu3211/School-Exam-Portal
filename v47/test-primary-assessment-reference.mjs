@@ -12,6 +12,23 @@ for(const grade of ['4','5'])for(const [subject] of subjectsForGrade(grade)){
  if(subject==='mathematics'){assert.equal(ref.rawFullMarks,120);assert.equal(ref.learningAchievements,30)}
 }
 assert.equal(themes,129);
+for(const grade of ['1','2','3'])for(const subject of ['nepali','english']){
+ const ref=assessmentThemeReference({catalogue,grade,subject});
+ assert.ok(ref.themeCount>=10);
+ assert.equal(ref.rawFullMarks,ref.learningAchievements*4);
+ assert.equal(ref.writeAuthorized,false);
+ assert.equal(ref.officialAssessmentApproved,false);
+ for(const row of ref.rows){
+  assert.equal(row.status,'v46WorkingReference');
+  if(row.sourceRows){
+   assert.equal(row.sourceRows.length,row.count);
+   assert.ok(row.sourceRows.every(r=>r.title&&r.aspect));
+   if(subject==='nepali')assert.ok(row.sourceRows.every(r=>r.tool));
+   else assert.ok(row.sourceRows.every(r=>!/[\u0900-\u097f]/.test(r.title)));
+  }
+ }
+ console.log('Lower language working reference',grade,subject,ref.themeCount,ref.learningAchievements,'mapped themes',ref.rows.filter(r=>r.sourceRows).length);
+}
 for(const [grade,main,indicators] of [['1',25,108],['2',28,144],['3',24,140]]){
  const ref=assessmentThemeReference({catalogue,grade,subject:'serophero'});
  assert.equal(ref.themeCount,10);assert.equal(ref.learningAchievements,main);assert.equal(ref.rawFullMarks,indicators);assert.equal(ref.scoreBlocks,indicators/4);
