@@ -635,12 +635,13 @@ function renderGrade9SchoolAudit(root,register,subject,pairs,admin){
  const append=text=>{const node=doc.createElement("p");node.className="qp-hint";node.textContent=text;root.appendChild(node);};
  append("कक्षा ९ ("+(admin?"विद्यालयका विषयहरू":"आफूलाई तोकिएका विषयहरू") +"): "+
   visible.filter(item=>item.gridTranscribed).length+"/"+visible.length+
-  " CDC Grid संरचना लोड; सबै विषयका समीक्षा गरिएका प्रश्नपत्र र शिक्षक परीक्षण "+
-  "पुष्टि बाँकी। यो स्थिति Live स्वीकृति होइन।");
+  " CDC Grid संरचना लोड; "+
+  visible.filter(item=>item.currentEditionConfirmed).length+"/"+visible.length+
+  " विषयको २०८३ मा लागू हुने Grid पुष्टि। प्रश्न बैंक तथा शिक्षक परीक्षण छुट्टै आवश्यक छन्। यो स्थिति Live स्वीकृति होइन।");
  if(grade9Gate.unknownSchoolSubjects.length)append("CDC विषयसँग नमिलेका विषय: "+grade9Gate.unknownSchoolSubjects.join(", ")+"। प्रमाणीकरण बाँकी।");
  const current=visible.find(item=>item.key===cdcSubjectKey(subject));
  if(current)append("कक्षा ९ · "+current.subject+": "+(current.gridTranscribed?
-  "Grid संरचना सेट; समीक्षित Question Bank र शिक्षक परीक्षण आवश्यक।":
+  (current.currentEditionConfirmed?"२०८३ का लागि Grid पुष्टि; प्रश्न बैंक र शिक्षक परीक्षण आवश्यक।":"Grid संरचना सेट; २०८३ मा लागू हुने संस्करण, प्रश्न बैंक र शिक्षक परीक्षण पुष्टि बाँकी।"):
   "CDC को Unit/Type/Marks/Cognitive तालिका पूरा प्रमाणित छैन।"));
 }
 async function loadCurrentData() {
