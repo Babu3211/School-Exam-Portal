@@ -52,6 +52,16 @@ async function runRegression(T,createV47IemisReader){
  const missing=marks.pop();await reject(()=>reader(request),/Incomplete saved/);marks.push(missing);
  const duplicate={...marks[0],id:'duplicate'};marks.push(duplicate);await reject(()=>reader(request),/duplicated/);marks.pop();
  exams.push({...exams[0],id:'exam-other'});await reject(()=>reader(request),/duplicate/);exams.pop();
+ // Optional II must not require marks for students who take another subject.
+ subjects.push({...b,id:'computer',name:'Computer Science',active:true});
+ students[0].optionalSubject2='Computer Science';students[1].optionalSubject2='Health';
+ marks.push({...x,id:'b:computer',studentId:'b',subjectId:'computer',subject:'Computer Science',examId:'exam-2',isAbsent:false,section:'A',scores:[{name:'Second Term Examination',fullMarks:50,obtained:45}]});
+ const optionalReq={...request,columns:[{subject:'Computer Science (3031)',label:'Second Term Examination(36)'}]};
+ const optional=(await reader(optionalReq)).grid;
+ eq(optional.rows.map(r=>[r[2],r[4]]),[['902',45],['901','N/A']],'Optional enrollment mapping');
+ eq(T.maximum(optional.columns[0].label),50,'Original computer full marks');
+ students[1].optionalSubject2='';await reject(()=>reader(optionalReq),/Optional subject assignment/);students[1].optionalSubject2='Health';
+ marks.push({...marks.at(-1),id:'a:computer',studentId:'a'});await reject(()=>reader(optionalReq),/optional subject assignment mismatch/);marks.pop();
  flip=true;await reject(()=>reader(request),/Login/);
  return 'PASS V47 direct saved marks contract: source scales, zero, subject/ID order, duplicate and incomplete data, school/term/section, revoked role, idle and changed session';
 }
