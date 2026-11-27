@@ -227,3 +227,18 @@ const plan=subjectCoveragePlan(coverageModel,2);assert.equal(plan.plannedReads,2
 assert.throws(()=>subjectCoveragePlan({...coverageModel,themes:Array.from({length:10},()=>coverageModel.themes[0])},1500),/12000/);
 assert.throws(()=>subjectCoveragePlan(coverageModel,0),/scope/);
 const coverageFile=classSubjectCoverageWorkbook({officialAssessmentApproved:false,rows:[{theme:'Two',stage:'assessment',students:2,available:false,expected:2}]},coverageModel);assert.match(coverageFile.filename,/\.xlsx$/);assert.match(new TextDecoder().decode(await coverageFile.blob.arrayBuffer()),/Source unavailable/);
+
+import {summarizeMigratedAssessmentEvidence,migratedAssessmentEvidenceText} from './primary-assessment-annual-review.mjs';
+{
+ const scope={schoolId:'11111001',grade:'1',studentId:'student'};
+ const ordinary={...scope,year:'2083',readOnly:true,officialAssessmentApproved:false,historical:2,rows:[{subject:'गणित',stage:''},{subject:'गणित',stage:'regular'},{subject:'नेपाली',stage:'support'}]};
+ const indicators={...ordinary,historical:1,rows:[{subject:'हाम्रो सेरोफेरो',stage:'regular'}]};
+ const evidence=summarizeMigratedAssessmentEvidence({...scope,ordinary,indicators});
+ assert.equal(evidence.observations,3);assert.equal(evidence.indicatorBlocks,1);assert.equal(evidence.excludedHistorical,3);assert.equal(evidence.includedInGrade,false);
+ assert.deepEqual(evidence.rows[0],{kind:'observations',subject:'गणित',regular:1,support:0,unspecified:1});
+ assert.match(migratedAssessmentEvidenceText(evidence),/not graded/);
+ assert.throws(()=>summarizeMigratedAssessmentEvidence({...scope,ordinary,indicators:{...indicators,schoolId:'22222002'}}),/identity/);
+ assert.throws(()=>summarizeMigratedAssessmentEvidence({...scope,ordinary,indicators:null}),/scope/);
+ const upper={...scope,grade:'4'};
+ assert.equal(summarizeMigratedAssessmentEvidence({...upper,ordinary:{...ordinary,grade:'4'},indicators:null}).indicatorBlocks,null);
+}

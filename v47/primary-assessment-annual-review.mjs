@@ -4,7 +4,7 @@ import {primarySubjectKey,loadAdminAssessmentWorksheet} from './primary-assessme
 import {readSchoolSubjectCatalog} from './subject-catalog-view.mjs';
 import {readAssessmentDraftProgress} from './primary-assessment-draft-progress.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
-import {assessmentPrintWordBlob} from './primary-assessment-portfolio.mjs';
+import {assessmentPrintWordBlob,readObservationPortfolio,readIndicatorPortfolio} from './primary-assessment-portfolio.mjs';
 import {excelWorkbook} from './excel-workbook.mjs';
 import {readLocalAssessmentSource} from './primary-assessment-local-source.mjs';
 import {validateAttendance} from './attendance-service.mjs';
@@ -14,6 +14,25 @@ import {lowerAssessmentGrade,upperAssessmentGrade} from './primary-assessment-pe
 import {schoolProfileView} from './school-settings-profile.mjs';
 const neDigits=v=>String(v??'').replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]);
 // CDC Annex 2 (2076) and Annex 4 (2083). Separate from detailed review/export.
+// Reconciliation counts are evidence inventory only, not achievement counts.
+// Use the original validated portfolio readers; do not merge or infer ratings.
+export function summarizeMigratedAssessmentEvidence({schoolId,grade,studentId,ordinary,indicators}){
+ const lower=['1','2','3'].includes(grade);
+ if(!['1','2','3','4','5'].includes(grade)||!ordinary||lower!==!!indicators)throw Error('Invalid migrated evidence scope');
+ const check=r=>{if(r.schoolId!==schoolId||r.grade!==grade||r.studentId!==studentId||r.year!=='2083'||r.readOnly!==true||r.officialAssessmentApproved!==false||!Array.isArray(r.rows)||!Number.isSafeInteger(r.historical)||r.historical<0)throw Error('Migrated evidence identity mismatch')};
+ check(ordinary);if(indicators)check(indicators);
+ const grouped=new Map();
+ for(const [kind,report] of [['observations',ordinary],['indicators',indicators]])if(report)for(const r of report.rows){
+  if(typeof r.subject!=='string'||!r.subject.trim())throw Error('Invalid migrated subject');
+  const key=JSON.stringify([kind,r.subject]),entry=grouped.get(key)??{kind,subject:r.subject,regular:0,support:0,unspecified:0};
+  if(r.stage==='regular')entry.regular++;else if(r.stage==='support')entry.support++;else if(r.stage==='')entry.unspecified++;else throw Error('Invalid evidence stage');
+  grouped.set(key,entry);
+ }
+ return Object.freeze({schoolId,grade,studentId,observations:ordinary.rows.length,indicatorBlocks:indicators?indicators.rows.length:null,excludedHistorical:ordinary.historical+(indicators?.historical??0),rows:Object.freeze([...grouped.values()].map(Object.freeze)),includedInGrade:false});
+}
+export function migratedAssessmentEvidenceText(e){
+ return e?'Migrated evidence (not graded): '+e.observations+' observations'+(e.indicatorBlocks===null?'':', '+e.indicatorBlocks+' four-indicator blocks')+'; '+e.excludedHistorical+' historical records excluded. Review separately in Student Portfolio.':'Migrated evidence not inventoried.';
+}
 export function annualAnnexPrintModel(report){
  const lower=['1','2','3'].includes(report.grade);
  if(!lower&&!['4','5'].includes(report.grade)||report.rows.length!==(lower?5:7)||report.officialAssessmentApproved!==false)throw Error('Invalid annual annex review');
@@ -29,7 +48,7 @@ export function annualAnnexPrintModel(report){
   'विद्यार्थीको नाम: '+(report.studentName||'—')+'    कक्षा: '+neDigits(report.grade)+'    '+(lower?'परिचय नं. / रोल नं.: ':'रोल नं.: ')+(report.rollNo||'—'),
   'विद्यालय सञ्चालन भएको दिन: '+(operating?neDigits(operating.operatingDays):'—')+'    उपस्थित भएको दिन: '+(attendance.recorded?neDigits(attendance.present):'—')+'    उपस्थिति प्रतिशत: '+(operating?.percentage!=null?neDigits(operating.percentage.toFixed(2))+'%':'—')
  ];
- const footerLines=['कक्षा शिक्षक: __________________    प्रधानाध्यापक: __________________    मिति: __________________',...(lower?['उपलब्धि स्तरको व्याख्या: A* उत्कृष्ट; A उच्च; B राम्रो; C सामान्य; D कमजोर; E ज्यादै कमजोर। ठीक ९०% को सीमा समीक्षा बाँकी।']:[]),'समीक्षा मात्र — आधिकारिक प्रकाशन होइन। '+annualAttendanceText(attendance)+' '+annualOperatingDaysText(operating)];
+ const footerLines=['कक्षा शिक्षक: __________________    प्रधानाध्यापक: __________________    मिति: __________________',...(lower?['उपलब्धि स्तरको व्याख्या: A* उत्कृष्ट; A उच्च; B राम्रो; C सामान्य; D कमजोर; E ज्यादै कमजोर। ठीक ९०% को सीमा समीक्षा बाँकी।']:[]),'समीक्षा मात्र — आधिकारिक प्रकाशन होइन। '+annualAttendanceText(attendance)+' '+annualOperatingDaysText(operating),migratedAssessmentEvidenceText(report.migratedEvidence)];
  return Object.freeze({...report,title:lower?'अनुसूची २ — विद्यार्थीको प्रगति प्रतिवेदन':'अनुसूची ४ — प्रगति प्रतिवेदन',headers,rows,metadataLines,footerLines,stageSummary:'',notice:'DRAFT / समीक्षा मात्र — NOT official annual report. Migrated assessment observations are not included.'});
 }
 // School-supplied local curriculum, single saved stage. This is a review under
@@ -156,16 +175,18 @@ export async function readAnnualReview(args){
   const consistent=a.complete&&c.complete&&!a.conflicts&&!a.different;
   rows.push([index+1,label,hours,expected,a.count+' / '+expected,consistent?a.grade.letter+' ('+(a.grade.point===null?'—':a.grade.point.toFixed(1))+')':'',a.conflicts?'Unresolved date conflicts: '+a.conflicts:a.different?'Stage/date review differs: '+a.different:!a.complete?'Incomplete assessment':consistent?'Review only · '+a.percentage.toFixed(2)+'%':'Review pending']);
  }
+ const [ordinary,indicators]=await Promise.all([readObservationPortfolio({...args,assertCurrent:check}),lower?readIndicatorPortfolio({...args,assertCurrent:check}):Promise.resolve(null)]);check();
+ const migratedEvidence=summarizeMigratedAssessmentEvidence({schoolId,grade,studentId,ordinary,indicators});
  const attendanceSnap=await api.getDocsFromServer(api.query(api.collection(db,'schools',schoolId,'attendance'),api.where('studentId','==',studentId),api.limit(1001)));check();
  const legacySnap=await api.getDocsFromServer(api.query(api.collection(db,'schools',schoolId,'attendance'),api.where('className','in',annualLegacyClassNames(grade)),api.limit(2001)));check();
  const asOf=nepalGregorianDate();
  const attendance=summarizeAnnualAttendance({schoolId,grade,studentId,docs:attendanceSnap.docs,legacyDocs:legacySnap.docs,section:String(student.section??''),asOf});
  const operating=reviewOperatingDays(attendance,args.operatingDays,args.registerSource,asOf);
  await verify();check();
- return Object.freeze({attendance,operating,schoolProfile,rollNo:String(student.rollNo??''),title:lower?'Annual Student Progress — Annex 2 Review':'Annual Student Progress — Annex 4 Review',schoolId,studentId,studentName:String(student.nameEnglish??student.name??studentId),grade,section:String(student.section??''),year:'2083',historical:0,headers:annualReviewHeaders(grade),rows:Object.freeze(rows.map(Object.freeze)),notice:'Saved teacher drafts only — NOT official annual report. Migrated assessment observations are not included. Daily attendance is a review, not verified school operating days.',stageSummary:(lower?'CDC 2076 A*–E scale; draft levels only. ':'') +annualAttendanceText(attendance)+' '+annualOperatingDaysText(operating)+' Signatures pending official verification. Class teacher __________ · Headteacher __________ · Date __________',officialAssessmentApproved:false});
+ return Object.freeze({attendance,operating,migratedEvidence,schoolProfile,rollNo:String(student.rollNo??''),title:lower?'Annual Student Progress — Annex 2 Review':'Annual Student Progress — Annex 4 Review',schoolId,studentId,studentName:String(student.nameEnglish??student.name??studentId),grade,section:String(student.section??''),year:'2083',historical:0,headers:annualReviewHeaders(grade),rows:Object.freeze(rows.map(Object.freeze)),notice:'Saved teacher drafts only — NOT official annual report. Migrated assessment observations are not included. Daily attendance is a review, not verified school operating days.',stageSummary:(lower?'CDC 2076 A*–E scale; draft levels only. ':'') +annualAttendanceText(attendance)+' '+annualOperatingDaysText(operating)+' Signatures pending official verification. Class teacher __________ · Headteacher __________ · Date __________',officialAssessmentApproved:false});
 }
 export function exportUpperAnnualReview(report,kind){
  if(!['word','excel'].includes(kind))throw Error('Invalid annual export');
- const blob=kind==='word'?assessmentPrintWordBlob(annualAnnexPrintModel(report)):excelWorkbook(['Status','School ID','Student ID','Student','Class','Year','School name','School address','Roll No','Attendance summary','Operating days review',...report.headers],report.rows.map(row=>[report.notice,report.schoolId,report.studentId,report.studentName,report.grade,report.year,report.schoolProfile?.nameNepali||report.schoolProfile?.nameEnglish||'',report.schoolProfile?.addressNepali||report.schoolProfile?.addressEnglish||'',report.rollNo??'',annualAttendanceText(report.attendance),annualOperatingDaysText(report.operating),...row]),{sheetName:'Annual review'});
+ const blob=kind==='word'?assessmentPrintWordBlob(annualAnnexPrintModel(report)):excelWorkbook(['Status','School ID','Student ID','Student','Class','Year','School name','School address','Roll No','Attendance summary','Operating days review','Migrated evidence inventory',...report.headers],report.rows.map(row=>[report.notice,report.schoolId,report.studentId,report.studentName,report.grade,report.year,report.schoolProfile?.nameNepali||report.schoolProfile?.nameEnglish||'',report.schoolProfile?.addressNepali||report.schoolProfile?.addressEnglish||'',report.rollNo??'',annualAttendanceText(report.attendance),annualOperatingDaysText(report.operating),migratedAssessmentEvidenceText(report.migratedEvidence),...row]),{sheetName:'Annual review'});
  return {blob,filename:'V47-ANNUAL-REVIEW-'+report.schoolId+'-'+report.studentId+'-2083.'+(kind==='word'?'docx':'xlsx')};
 }
