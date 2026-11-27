@@ -9502,7 +9502,7 @@ function openCdcAssessment(context = null) {
     <label>विषयक्षेत्र / Theme <select data-cdc="themePick"><option value="">छान्नुहोस्</option></select></label>
     <p data-cdc="accessNotice" role="status" style="font-weight:600;margin:8px 0;padding:10px 12px;border-left:3px solid #17466e;background:#eef4fa;color:#172b43" hidden></p>
     <p data-cdc="workspaceHint" class="hint">विषयक्षेत्र छान्नुहोस्, मिति र अङ्कन भरेर Save गर्नुहोस्।</p>
-    <div data-cdc="multiActions" class="toolbar" hidden><button type="button" class="btn" data-cdc="showClassForms">Show All Students</button><button type="button" class="btn alt" data-cdc="showStudentThemes">Show All Themes — Selected Student</button><button type="button" class="btn alt" data-cdc="showSingleForm" hidden>Single Student / Back</button></div>
+    <div data-cdc="multiActions" class="toolbar" hidden><button type="button" class="btn" data-cdc="showClassForms">Class Entry</button><button type="button" class="btn alt" data-cdc="showStudentThemes">Student Report</button><button type="button" class="btn alt" data-cdc="showSingleForm">Individual CDC Form</button></div>
     <section data-cdc="themeEntryHelp" class="notice" hidden><p data-cdc="themeEntryMessage" role="status"></p><button type="button" class="btn alt" data-cdc="themeManualOpen">Open Learning Outcomes / Records</button></section>
     <section data-cdc="localSubjectHelp" hidden><strong>Local Subject Assessment</strong><p class="hint" data-cdc="localSubjectMessage"></p><button type="button" class="btn alt" data-cdc="localSubjectOpen">Open Local Assessment</button></section>
     <section data-cdc="annex3" hidden><div class="toolbar"><button type="button" class="btn alt" data-cdc="gridRead" id="cdcGridRead">अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्</button></div><p data-cdc="gridStatus" role="status" aria-live="polite" style="font-weight:600;color:#17466e;overflow-wrap:anywhere"></p><p data-cdc="entryNotice" class="hint" role="status"></p><p class="hint" style="font-size:12px">पूरा तालिका हेर्न दायाँ–बायाँ सार्नुहोस्।</p><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><details data-cdc="seroSourcePreview" hidden style="margin:8px 0"><summary style="cursor:pointer;font-weight:600">मूल CDC PDF सँग तुलना गर्नुहोस्</summary><p class="hint">मूल पृष्ठ र तलको डिजिटल फाराम तुलना गर्नुहोस्। PDF नदेखिए नयाँ ट्याबमा खोल्नुहोस्। विद्यार्थीको विवरण PDF सेवामा पठाइँदैन।</p><a data-cdc="seroSourceOpen" target="_blank" rel="noopener noreferrer">मूल पृष्ठ खोल्नुहोस्</a><div data-cdc="seroSourceFrame"></div></details><div class="tablewrap" data-cdc="annexScroll" role="region" aria-label="Assessment table — scroll horizontally" tabindex="0"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><label>Export Format <select data-cdc="exportFormat"><option value="pdf">PDF / Print</option><option value="docx">Word (.docx)</option><option value="xlsx">Excel (.xlsx)</option></select></label> <button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Export Selected Student</button><button class="btn alt" data-cdc="printAll" type="button" disabled>Export All Students</button><p data-cdc="printStatus" role="status" class="hint"></p><p data-cdc="batchPrintStatus" role="status" aria-live="polite" class="hint"></p></section>
@@ -11018,9 +11018,11 @@ function openCdcAssessment(context = null) {
     field('localSubjectMessage').textContent=local?(verifiedUnits.length?'यस खाताको ब्राउजरमा थपिएको स्थानीय सूची उपलब्ध छ। स्थानीय पाठ्यक्रमसँग मिलाएर मात्र अङ्कन गर्नुहोस्।':'स्थानीय विषयको आधिकारिक एकाइ र सिकाइ उपलब्धि सूची प्रणालीमा जोडिएको छैन। अप्रमाणित सूची वा पूर्णाङ्क प्रयोग नगर्नुहोस्।')+(readOnly?' सुरक्षित अभिलेख हेर्न तलको बटन थिच्नुहोस्।':' तलको बटनबाट एकाइ, उपलब्धि, मिति, अङ्कन र प्रमाण भर्नुहोस्। प्रमाणित सूची भए Excel बाट प्रतिलिपि गरी थप्न सकिन्छ (यही ब्राउजर र खातामा मात्र)।'):'';
     field('localSubjectOpen').textContent=readOnly?'View Local Assessment Records':'Open Local Assessment';
     field('themePick').onchange=async()=>{
+      if(!embedded&&!allowMatrixChange()){field('themePick').value=field('unit').value;return;}
       const pair=units().find(([ne])=>ne===field('themePick').value);
       [field('unit').value,field('unitEn').value]=pair||['',''];
       field('topic').value='';load();
+      if(context&&!embedded&&entryMode==='class'&&pair&&matrixSource().rows.length){await showMulti('class');return;}
       if(context&&pair&&!field('themeEntryHelp').hidden&&!field('themeManualOpen').hidden)openManualAssessment();
       if(context&&pair&&!field('annex3').hidden&&!field('gridRead').hidden&&schoolSelection())await field('gridRead').onclick();
     };
@@ -11149,9 +11151,11 @@ function openCdcAssessment(context = null) {
   field('summaryClass').onchange=refreshThemeSummarySubjects;
   field('summarySubject').onchange=renderThemeSummary;
   if(!embedded){refreshThemeSummarySubjects();renderThemeCoverage();}
-  field('class').onchange=refreshSubjects;
-  field('subject').onchange=refreshStudents;
-  field('student').onchange=load;
+  let previousClass=field('class').value,previousSubject='',previousStudent='';
+  const rememberSelection=()=>{previousClass=field('class').value;previousSubject=field('subject').value;previousStudent=field('student').value;};
+  field('class').onchange=()=>{if(!embedded&&!allowMatrixChange()){field('class').value=previousClass;return;}closeMulti();refreshSubjects();rememberSelection();};
+  field('subject').onchange=()=>{if(!embedded&&!allowMatrixChange()){field('subject').value=previousSubject;return;}closeMulti();refreshStudents();rememberSelection();};
+  field('student').onchange=()=>{if(!embedded&&!allowMatrixChange()){field('student').value=previousStudent;return;}load();rememberSelection();if(context&&!embedded&&entryMode==='student')return showMulti('student');};
   field('period').onchange=()=>{if(!context)resetTopic();};
   field('next').onclick=()=>{
     const student=field('student');
@@ -11270,13 +11274,128 @@ function openCdcAssessment(context = null) {
   // Class/theme view uses independent copies of the existing CDC form, not
   // an alternative rating matrix. All student forms share the same page.
   // The original single-student editor and its PDF/Word/Excel paths are retained.
-  let multiSnapshot=null,multiPanel=null,multiSequence=0;
+  let multiSnapshot=null,multiPanel=null,multiSequence=0,matrixBusy=false,matrixDirty=()=>false;
+  let entryMode=context&&!context.reportOnly&&!embedded?'class':'single';
+  const matrixRetries=new Map();
+  const setEntryMode=mode=>{
+    entryMode=mode;
+    field('student').parentElement.classList.toggle('cdc-class-hide-student',mode==='class'&&!embedded);
+    for(const [name,value] of [['showClassForms','class'],['showStudentThemes','student'],['showSingleForm','single']])field(name).setAttribute('aria-pressed',String(mode===value));
+    if(!embedded&&!context?.reportOnly)field('workspaceHint').textContent=mode==='class'?'कक्षा, विषय र थिम छान्नुहोस्। सबै विद्यार्थी स्वतः देखिन्छन्।':mode==='student'?'विद्यार्थी छान्नुहोस्। सबै थिमको अभिलेख देखिन्छ।':'व्यक्तिगत CDC फाराम — विद्यार्थी र थिम छान्नुहोस्।';
+  };
+  const allowMatrixChange=()=>!matrixBusy&&(!matrixDirty()||window.confirm('सुरक्षित नगरेको अङ्कन छ। छनोट परिवर्तन गर्ने?'));
+  function matrixSource(){
+    const g=field('class').value,k=cdcAssessmentSubjectKey(field('subject').value),u=field('unit').value;
+    const legacy=primaryLegacyForm(),rev=primaryRevisedForm(),ne=primaryNepaliForm(),eng=primaryEnglishForm(),sero=primarySeroferoReference();
+    if(sero&&!sero.referenceOnly&&year==='2083')return {binary:true,rows:sero.groups.map(([title,indicators,tools],i)=>({title,id:'cdc2076-g'+g+'-'+(sero.start+i),indicators,tools}))};
+    if(legacy)return {rows:legacy.rows.map(r=>({title:r.ne,alt:r.en,criteria:r.criteria,toolsMode:g!=='1'}))};
+    if(rev)return {rows:rev.rows.map(([content,title,alt])=>({title,alt,content}))};
+    if(ne?.editable)return {rows:primaryNepaliRows(ne,u).map(([,title],i)=>{const idx=ne.indices[i],tools=cdcNepaliThemeRows[ne.grade]?cdcNepaliThemeRows[ne.grade][idx].slice(1):cdcPrimaryNepaliTools[idx];return {title,content:tools?.join(' / ')||''};})};
+    if(eng)return {rows:primaryEnglishRows(eng,u).map(([,title,alt])=>({title,alt:alt||title}))};
+    if(Number(g)>=4&&hasAnnexGrid())return {rows:(cdcVerifiedOutcomes[g+':'+k]||[]).filter(([unit])=>unit===u).map(([,title,alt])=>{const key=JSON.stringify([g,u,title]),math=cdcUpperMathSourceByTitle.get(key),science=cdcUpperScienceByTitle.get(key);return {title,alt,display:math?.[2]||science?.ne,content:math?localized(math[0],math[1]):''};})};
+    return {rows:[]};
+  }
+  async function renderClassMatrix(panel,status,pupils,current){
+    const {binary,rows}=matrixSource();
+    if(!rows.length){status.textContent='यस थिमको प्रमाणित कक्षागत फाराम उपलब्ध छैन। Individual CDC Form बाट स्रोत तथा पुराना अभिलेख हेर्नुहोस्।';return;}
+    const unit=field('unit').value,unitEn=field('unitEn').value.trim(),grade=field('class').value,subject=field('subject').value;
+    const collectionName=binary?'cdc_serofero_indicators':'cdc_observations';
+    const roster=pupils.slice().sort((a,b)=>String(a.section??'').localeCompare(String(b.section??''))||String(a.rollNo??'').localeCompare(String(b.rollNo??''),undefined,{numeric:true})).map(student=>({student,selection:{studentId:student.id,className:String(student.class??student.className),subject,section:String(student.section??''),academicYear:year,period:field('period').value},loaded:false,records:[]}));
+    let cursor=0;status.textContent='सुरक्षित अभिलेख पढ्दै…';
+    async function readWorker(){
+      while(current()&&cursor<roster.length){
+        const row=roster[cursor++],scope=assessmentReadScope(row.selection);
+        try{
+          const result=await getDocsFromServer(query(collection(db,collectionName),...Object.entries(scope).map(([k,v])=>where(k,'==',v))));
+          if(!current())return;
+          row.records=result.docs.map(d=>d.data()).filter(o=>Object.entries(scope).every(([k,v])=>o[k]===v)&&o.unit===unit&&['regular','support'].includes(o.stage)&&typeof o.date==='string').sort((a,b)=>b.date.localeCompare(a.date)||(b.createdAt?.toMillis?.()??0)-(a.createdAt?.toMillis?.()??0));row.loaded=true;
+        }catch{}
+      }
+    }
+    await Promise.all(Array.from({length:Math.min(4,roster.length)},readWorker));
+    if(!current())return;
+    const entries=[],save=document.createElement('button'),stages=['regular','support'];
+    const label=(a,b)=>language()==='en'?b:a;
+    const add=(parent,tag,value)=>{const node=document.createElement(tag);node.textContent=value;parent.append(node);return node;};
+    const pick=(options,initial,aria)=>{const el=document.createElement('select');el.setAttribute('aria-label',aria);el.append(...options.map(([v,l])=>new Option(l,v)));el.value=initial;el.style.cssText='min-width:65px;font-size:16px;min-height:40px';return el;};
+    const input=(value,aria,max=10)=>{const el=document.createElement('input');el.type='text';el.value=value;el.maxLength=max;el.setAttribute('aria-label',aria);el.style.cssText='width:'+(max===10?'112':'130')+'px;min-height:40px;font-size:16px';if(max===10)el.inputMode='numeric';return el;};
+    for(const [i,item] of rows.entries()){
+      const section=document.createElement('section');section.dataset.cdcMatrixOutcome=String(i);section.style.cssText='border:1px solid #b9d5e7;border-radius:8px;margin:12px 0;padding:8px;min-width:0;max-width:100%;box-sizing:border-box';
+      add(section,'h3',(i+1)+'. '+localized(item.display||item.title,item.alt)).style.cssText='font-size:16px;color:#17466e';
+      if(item.content)add(section,'p',item.content);
+      if(item.criteria||item.indicators){
+        const details=document.createElement('details');add(details,'summary',label('सिकाइ उपलब्धिका सूचक / मूल्याङ्कन आधार','Assessment criteria'));
+        const list=document.createElement('ol');for(const [j,c] of (item.criteria||item.indicators).entries())add(list,'li',item.criteria?localized(...c)+' ('+(4-j)+')':c+(item.tools?.[j]&&item.tools[j]!=='मूल फाराममा खाली'?' — '+item.tools[j]:''));details.append(list);section.append(details);
+      }
+      const wrap=document.createElement('div');wrap.className='tablewrap';wrap.style.cssText='overflow-x:auto;max-width:100%;width:100%';
+      const table=document.createElement('table');table.style.cssText='border-collapse:collapse;width:100%;min-width:'+(binary?'1080':'760')+'px';
+      const head=table.createTHead(),h=head.insertRow(),sub=head.insertRow();
+      for(const name of [label('विद्यार्थी','Student'),label('नियमित मूल्याङ्कन','Regular assessment'),label('थप सहायतापछि','After additional support')]){const th=add(h,'th',name);if(h.cells.length===1)th.rowSpan=2;else th.colSpan=3;}
+      for(const stage of stages)for(const name of [label('मिति','Date'),binary?label('सूचक (✓/×)','Indicators (✓/×)'):label('अङ्कन','Rating'),label(item.toolsMode||binary?'साधन':'कैफियत',item.toolsMode||binary?'Tools':'Remarks')])add(sub,'th',name);
+      const body=table.createTBody();
+      for(const [j,row] of roster.entries()){
+        const tr=body.insertRow();tr.dataset.cdcMatrixStudent=row.student.id;
+        const name=row.student.studentNameEnglish||row.student.nameEnglish||row.student.studentName||row.student.name||row.student.id;
+        tr.insertCell().textContent=(j+1)+'. '+name+(row.student.rollNo?' · '+row.student.rollNo:'')+(row.student.section?' ('+row.student.section+')':'')+(row.loaded?'':' — अभिलेख पढ्न सकिएन');
+        for(const stage of stages){
+          const prev=row.records.find(o=>o.stage===stage&&(binary?o.outcomeId===item.id&&Array.isArray(o.indicators)&&o.indicators.length===4&&o.indicators.every(v=>typeof v==='boolean'):o.topic===item.title&&Number.isInteger(o.level)&&o.level>=1&&o.level<=4));
+          const date=input(prev?.date||'',name+' '+stage+' date');date.placeholder='YYYY-MM-DD';date.dataset.cdcMatrixDate=stage;tr.insertCell().append(date);
+          const scoreCell=tr.insertCell(),remarksCell=tr.insertCell();
+          const scores=binary?item.indicators.map((indicator,k)=>{const el=pick([['','—'],['yes','✓'],['no','×']],prev?(prev.indicators[k]?'yes':'no'):'',name+' '+stage+' '+indicator);el.title=indicator;scoreCell.append(el);return el;}):[pick([['','—'],...['1','2','3','4'].map(v=>[v,v])],prev?String(prev.level):'',name+' '+stage+' rating')];
+          if(!binary)scoreCell.append(scores[0]);scores.forEach(el=>el.dataset.cdcMatrixRating=stage);
+          const scoreLabel=binary?add(scoreCell,'small',''):null;
+          const remarks=binary?item.indicators.map((indicator,k)=>{const el=input(prev?.usedTools?.[k]||'',name+' '+stage+' '+indicator+' साधन',200);el.placeholder='साधन '+(k+1);remarksCell.append(el);return el;}):[input((item.toolsMode?prev?.method:prev?.feedback)||'',name+' '+stage+' remarks',item.toolsMode?180:2000)];
+          if(!binary)remarksCell.append(remarks[0]);
+          const controls=[date,...scores,...remarks];for(const el of controls)el.disabled=readOnly||!row.loaded;
+          const values=()=>[date.value,...scores.map(x=>x.value),...remarks.map(x=>x.value)];
+          entries.push({row,item,stage,prev,date,scores,remarks,controls,baseline:JSON.stringify(values()),values});
+          const update=()=>{if(scoreLabel){const n=cdcSeroferoIndicatorCount(scores.map(x=>x.value));scoreLabel.textContent=n===null?'— / 4':n+' / 4';}};
+          for(const score of scores)score.onchange=()=>{if(score.value&&!date.value)date.value=today();update();};update();
+        }
+      }
+      wrap.append(table);section.append(wrap);panel.append(section);
+    }
+    const dirty=e=>e.row.loaded&&JSON.stringify(e.values())!==e.baseline;matrixDirty=()=>entries.some(dirty);
+    const failed=roster.filter(r=>!r.loaded).length;status.textContent=roster.length+' विद्यार्थी | '+rows.length+' सिकाइ उपलब्धि'+(failed?' | पढ्न नसकिएका: '+failed+' (प्रविष्टि बन्द)':'');
+    save.type='button';save.className='btn';save.textContent='Save Assessment';save.dataset.cdcMatrixSave='all';save.hidden=readOnly;save.disabled=readOnly||!roster.some(r=>r.loaded);panel.append(save);
+    save.onclick=async()=>{
+      if(readOnly||matrixBusy||!current())return;
+      const changed=entries.filter(dirty);if(!changed.length){status.textContent='नयाँ परिवर्तन छैन।';return;}
+      const pending=[];
+      for(const e of changed){
+        const {row,item,stage,date,scores,remarks,prev}=e;
+        const raw=attendanceDigitsToEnglish(date.value).trim(),normalized=raw.split('-').map((p,k)=>k?attendancePad(p):p).join('-');let valid=false;try{valid=/^\d{4}-\d{1,2}-\d{1,2}$/.test(raw)&&attendanceAdToBs(attendanceBsToAd(normalized))===normalized;}catch{}
+        const vals=scores.map(x=>x.value),tools=remarks.map(x=>x.value.trim());
+        if(!valid||(binary?cdcSeroferoIndicatorCount(vals)===null:!['1','2','3','4'].includes(vals[0]))){status.textContent='मान्य मिति र आवश्यक अङ्कन/सूचक भर्नुहोस्। खाली गर्दा पुरानो अभिलेख मेटिँदैन।';date.focus();return;}
+        const payload=binary?{...row.selection,unit,outcomeId:item.id,stage,date:normalized,indicators:vals.map(v=>v==='yes'),...(tools.some(Boolean)?{usedTools:tools}:{}),createdBy:owner}:{...row.selection,unit,unitEn,topic:item.title,topicAlt:item.alt||'',date:normalized,level:Number(vals[0]),method:item.toolsMode?tools[0]:'',evidence:'',feedback:item.toolsMode?(prev?.feedback||''):tools[0],stage,createdBy:owner};
+        pending.push({e,payload});
+      }
+      matrixBusy=true;save.disabled=true;
+      const controls=[...['class','subject','student','themePick','showClassForms','showStudentThemes','showSingleForm'].map(field),...entries.flatMap(e=>e.controls)].map(el=>[el,el.disabled]);controls.forEach(([el])=>el.disabled=true);
+      let saved=0,errors=0;
+      try{
+        const role=await assessmentRole();if(!current()||!role?.active||role.roles?.includes('viewer'))throw Error('Login वा अनुमति परिवर्तन भयो।');
+        for(const {e,payload} of pending){
+          if(!current())break;
+          if(!cdcTeacherAssignment(role,grade,subject,e.row.student)){errors++;continue;}
+          const retryKey=JSON.stringify([collectionName,payload]),ref=matrixRetries.get(retryKey)||doc(collection(db,collectionName));matrixRetries.set(retryKey,ref);
+          try{
+            try{await setDoc(ref,{...payload,createdAt:serverTimestamp()});}
+            catch(error){const existing=(await getDocFromServer(ref)).data();if(!existing||!Object.entries(payload).every(([k,v])=>JSON.stringify(existing[k])===JSON.stringify(v)))throw error;}
+            matrixRetries.delete(retryKey);e.prev=payload;e.date.value=payload.date;e.baseline=JSON.stringify(e.values());saved++;
+          }catch{errors++;}
+          if(current())status.textContent='सुरक्षित: '+saved+' / '+pending.length+' | असफल: '+errors;
+        }
+      }catch(error){if(current())status.textContent=error.message||'अङ्कन सुरक्षित भएन।';}
+      finally{matrixBusy=false;if(current()){controls.forEach(([el,was])=>el.disabled=was);save.disabled=false;if(saved||errors)status.textContent='सुरक्षित: '+saved+' / '+pending.length+(errors?' | असफल '+errors+' — फेरि Save गर्नुहोस्।':' — मूल्याङ्कन सुरक्षित भयो।');}}
+    };
+  }
   const multiKey=mode=>JSON.stringify([owner,year,field('class').value,field('subject').value,mode==='class'?field('unit').value:field('student').value]);
   const closeMulti=()=>{
-    multiSequence++;multiSnapshot=null;
+    multiSequence++;multiSnapshot=null;matrixDirty=()=>false;
     multiPanel?.remove();multiPanel=null;
     dialog.classList.remove('cdc-multi-active');
-    field('showSingleForm').hidden=true;
+    field('showSingleForm').hidden=false;
   };
   async function showMulti(mode){
     if(!context||embedded||!canShow()||inlinePending||schoolSavePending||portfolioBusy||batchPrinting||dialog.querySelector('[data-cdc-grid-editor]'))return;
@@ -11286,18 +11405,20 @@ function openCdcAssessment(context = null) {
     closeMulti();
     const sequence=multiSequence,key=multiKey(mode);
     const current=()=>canShow()&&sequence===multiSequence&&key===multiKey(mode);
-    multiSnapshot={mode,key};dialog.classList.add('cdc-multi-active');field('showSingleForm').hidden=false;
+    multiSnapshot={mode,key};dialog.classList.add('cdc-multi-active');
     const panel=document.createElement('section');multiPanel=panel;panel.dataset.cdcMulti=mode;panel.style.cssText='min-width:0;max-width:100%';
     const heading=document.createElement('h2');heading.textContent=mode==='class'?'Class '+grade+' — '+localized(unit,field('unitEn').value):'Student Assessment — All Themes';panel.append(heading);
-    const note=document.createElement('p');note.className='hint';note.textContent=mode==='class'?'पहिलेको CDC फाराम र नियमित / थप सहायतापछिको अङ्कन जस्ताको तस्तै छन्। प्रत्येक फाराममा Save थिच्नुहोस्। नसुरक्षित प्रविष्टि छोडेर छनोट नबदल्नुहोस्।':'छानिएको विद्यार्थीका यस विषयका सबै थिमको सुरक्षित अभिलेख — हेर्न मात्र।';panel.append(note);
+    const note=document.createElement('p');note.className='hint';note.textContent=mode==='class'?'हरेक सिकाइ उपलब्धिमा सबै विद्यार्थीको नियमित र थप सहायतापछिको मूल्याङ्कन भर्नुहोस्। Save Assessment थिच्नुहोस्।':'छानिएको विद्यार्थीका यस विषयका सबै थिमको सुरक्षित अभिलेख — हेर्न मात्र।';panel.append(note);
     const status=document.createElement('p');status.setAttribute('role','status');panel.append(status);
     dialog.after(panel);
     try{
       const role=await assessmentRole();if(!current())return;
       if(!role?.active||(!isAdmin()&&!role.roles?.includes('viewer')&&!role.roles?.includes('subject_teacher')))throw Error('मूल्याङ्कन हेर्ने अनुमति छैन।');
       const eligible=assessmentStudents.filter(st=>st.active!==false&&classNoFromName(st.class??st.className)===grade&&[...field('student').options].some(o=>o.value===st.id)&&(isAdmin()||role.roles?.includes('viewer')||cdcTeacherAssignment(role,grade,subject,st)));
+      if(!eligible.length)throw Error('यस छनोटमा विद्यार्थी उपलब्ध छैन।');
+      if(mode==='class'){await renderClassMatrix(panel,status,eligible,current);return;}
       const themes=units();
-      const work=mode==='class'?eligible.map(student=>({student,theme:themes.find(([name])=>name===unit)||[unit,field('unitEn').value]})):themes.map(theme=>({student:eligible.find(st=>st.id===selected),theme})).filter(x=>x.student);
+      const work=themes.map(theme=>({student:eligible.find(st=>st.id===selected),theme})).filter(x=>x.student);
       if(!work.length)throw Error('यस छनोटमा विद्यार्थी वा थिम उपलब्ध छैन।');
       const cards=work.map(({student,theme},i)=>{
         const card=document.createElement('details');card.open=true;card.style.cssText='border:1px solid #b9d5e7;border-radius:10px;padding:10px;margin:12px 0;min-width:0;max-width:100%;box-sizing:border-box';
@@ -11324,16 +11445,16 @@ function openCdcAssessment(context = null) {
       await Promise.all(Array.from({length:Math.min(3,work.length)},worker));
     }catch(error){if(current())status.textContent=error.message||'अभिलेख खोल्न सकिएन।';}
   }
-  field('showClassForms').onclick=()=>showMulti('class');
-  field('showStudentThemes').onclick=()=>showMulti('student');
-  field('showSingleForm').onclick=closeMulti;
+  field('showClassForms').onclick=()=>{if(!allowMatrixChange())return;closeMulti();setEntryMode('class');return field('unit').value?showMulti('class'):undefined;};
+  field('showStudentThemes').onclick=()=>{if(!allowMatrixChange())return;closeMulti();setEntryMode('student');return showMulti('student');};
+  field('showSingleForm').onclick=()=>{if(!allowMatrixChange())return;closeMulti();setEntryMode('single');load();};
   if(context){
     field('close').hidden=true;
     context.host.replaceChildren(dialog);
-    refreshSubjects();
+    refreshSubjects();rememberSelection();
     if(!embedded){
-      field('multiActions').hidden=false;
-      const style=document.createElement('style');style.textContent='#cdcAssessmentDialog.cdc-multi-active > [data-cdc="annex3"],#cdcAssessmentDialog.cdc-multi-active > [data-cdc="subjectSummaryPanel"],#cdcAssessmentDialog.cdc-multi-active > [data-cdc="extraReports"],#cdcAssessmentDialog.cdc-multi-active > [data-cdc="portfolioPanel"],#cdcAssessmentDialog.cdc-multi-active > [data-cdc="moreOptions"]{display:none!important}';
+      field('multiActions').hidden=false;setEntryMode(entryMode);
+      const style=document.createElement('style');style.textContent='#cdcAssessmentDialog .cdc-class-hide-student{display:none!important}#cdcAssessmentDialog.cdc-multi-active > [data-cdc="annex3"],#cdcAssessmentDialog.cdc-multi-active > [data-cdc="subjectSummaryPanel"],#cdcAssessmentDialog.cdc-multi-active > [data-cdc="extraReports"],#cdcAssessmentDialog.cdc-multi-active > [data-cdc="portfolioPanel"],#cdcAssessmentDialog.cdc-multi-active > [data-cdc="moreOptions"]{display:none!important}';
       dialog.append(style);
     }else{
       const initial=context.initial;
