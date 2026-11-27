@@ -1,5 +1,5 @@
 // Exports read only saved, source-bound private teacher drafts, never unsaved UI values.
-import {assessmentStagePercentage,formatAssessmentStagePercentage} from './primary-assessment-percentage.mjs';
+import {assessmentStagePercentage,formatAssessmentStagePercentage,reviewCombinedAchievement,formatCombinedAchievement} from './primary-assessment-percentage.mjs';
 import {loadMathAssessmentDraft,hasAssessmentStages,hasUpperAssessmentStages} from './primary-assessment-math-draft.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
@@ -22,7 +22,7 @@ export async function readSavedAssessmentDraftReport(args){
  const remarks=saved[0]?.remarks?.split('\n')??[];
  const digits=n=>String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]);
  const date=(d,i)=>d?.rowDates?.slice(i*10,i*10+10)||d?.date||'';
- const stageSummary=hasUpperAssessmentStages(model)?saved.map((d,i)=>labels[i]+': '+formatAssessmentStagePercentage(assessmentStagePercentage(d?.ratings??'_'.repeat(slots.length)),ne)).join(' | '):'';
+ const stageSummary=hasUpperAssessmentStages(model)?saved.map((d,i)=>labels[i]+': '+formatAssessmentStagePercentage(assessmentStagePercentage(d?.ratings??'_'.repeat(slots.length)),ne)).join(' | ')+' | '+formatCombinedAchievement(reviewCombinedAchievement(saved[0]?.ratings??'_'.repeat(slots.length),saved[1]?.ratings??'_'.repeat(slots.length)),ne):'';
  const rows=[];
  for(const [i,slot] of slots.entries()){
   const r=slot.sourceText;

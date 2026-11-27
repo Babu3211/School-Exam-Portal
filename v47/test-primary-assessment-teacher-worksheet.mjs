@@ -141,3 +141,7 @@ assert.equal(v46SeroferoPrintedNumber('2','म र मेरो परिवा�
 
 import {assessmentStagePercentage,formatAssessmentStagePercentage} from './primary-assessment-percentage.mjs';
 assert.deepEqual(assessmentStagePercentage('43__'),{sum:7,count:2,expected:4,denominator:8,percentage:87.5});assert.equal(assessmentStagePercentage('____').percentage,null);assert.equal(assessmentStagePercentage('1234').percentage,62.5);assert.equal(assessmentStagePercentage('4444').percentage,100);assert.throws(()=>assessmentStagePercentage('0_'));assert.match(formatAssessmentStagePercentage(assessmentStagePercentage('43__')),/87\.50%/);
+
+import {reviewCombinedAchievement,upperAssessmentGrade} from './primary-assessment-percentage.mjs';
+assert.deepEqual(reviewCombinedAchievement('4321','_2_4'),{sum:12,count:4,expected:4,denominator:16,percentage:75,complete:true,grade:{letter:'B+',point:3.2}});assert.equal(reviewCombinedAchievement('4___','_3__').grade,null);assert.equal(reviewCombinedAchievement('____','____').percentage,null);assert.equal(reviewCombinedAchievement('____','____').grade,null);assert.throws(()=>reviewCombinedAchievement('4','44'));
+for(const [p,letter,point] of [[100,'A+',4],[90,'A+',4],[89.99,'A',3.6],[80,'A',3.6],[70,'B+',3.2],[60,'B',2.8],[50,'C+',2.4],[40,'C',2],[35,'D',1.6],[34.99,'NG',null],[0,'NG',null]])assert.deepEqual(upperAssessmentGrade(p),{letter,point});
