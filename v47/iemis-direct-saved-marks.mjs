@@ -10,9 +10,10 @@ export function createV47IemisReader({getWorkspace,verifySchoolSession,enforceSc
  const attendance=attendanceModule({version:'v47',getWorkspace,T,verifySchoolSession,enforceSchoolIdle});
  return async request=>{
   if(request?.mode==='attendance')return attendance(request);
-  if(request?.mode!=='marks')fail('Attendance र Class 5 Final को प्रमाणित reader अझै तयार छैन।');
+  const class5=request?.mode==='class5';
+  if(!class5&&request?.mode!=='marks')fail('असमर्थित Direct Sync फाराम।');
   const c=request.context, examTerm=request.examTerm, term=termMap[examTerm], klass=T.classKey(c?.className);
-  if(!c||!term||T.termKey(c.term)!==examTerm||!['1','2','3','4','5','6','7','8','9','10'].includes(klass)||T.clean(c.year)!=='2083'||!Array.isArray(request.columns)||!request.columns.length||request.columns.length>150)fail('Class 1–10, 2083 र सही Term आवश्यक छ।');
+  if(!c||!term||(class5?(examTerm!=='final'||T.classKey(c.className)!=='5'||!/^Class 5 Final(?:\s*\/\s*(?:Final(?: Term)?|Annual|वार्षिक))?$/i.test(T.clean(c.term))):T.termKey(c.term)!==examTerm)||!['1','2','3','4','5','6','7','8','9','10'].includes(klass)||T.clean(c.year)!=='2083'||!Array.isArray(request.columns)||!request.columns.length||request.columns.length>150)fail('Class 1–10, 2083 र सही Term आवश्यक छ।');
   const primary=Number(klass)<=5,primaryKinds=new Set(['absent','count','full','obtained']);
   const w=getWorkspace(), {actor,auth,authSdk,db,api,schoolId,sessionSeq}=w;
   if(!actor||actor.role!=='school_admin'||actor.active!==true||!auth?.currentUser?.uid||actor.uid!==auth.currentUser.uid||actor.schoolId!==schoolId||schoolId!==T.clean(c.schoolCode)||!/^\d{5,20}$/.test(schoolId))fail('सही विद्यालयको सक्रिय School Admin Login आवश्यक छ।');
@@ -116,9 +117,9 @@ export function createV47IemisReader({getWorkspace,verifySchoolSession,enforceSc
    }
   }
   await verify();
-  const context={schoolCode:school.id,year:String(exam.academicYear),className:exam.class,term:labels[examTerm],section};
+  const context={schoolCode:school.id,year:String(exam.academicYear),className:exam.class,term:class5?c.term:labels[examTerm],section};
   if(JSON.stringify(T.normalizeContext(context))!==JSON.stringify(T.normalizeContext(c)))fail('Source context mismatch');
   const grid={context,columns:columns.map(({subject,label},i)=>({subject,label,index:i+4})),rows:[...rows].map(([id,row])=>[...row,...columns.map(col=>dataByStudent.get(id).get(col.key)??'')])};
-  check();return {format:'SMSS-IEMIS-DIRECT-1',savedOnly:true,mode:'marks',examTerm,grid};
+  check();return {format:'SMSS-IEMIS-DIRECT-1',savedOnly:true,mode:class5?'class5':'marks',examTerm,grid};
  };
 }
