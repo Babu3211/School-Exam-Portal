@@ -381,6 +381,12 @@ try{
      const regularText=await page.locator('#teacherDraftRows .assessment-peer-value').allTextContents();
      assert.ok(regularText.includes('2083-08-09'));assert.ok(regularText.includes(binary?'नसकेको':kind==='nepali'?'२':'2'));
      assert.equal(await page.locator('#teacherDraftHead [data-assessment-stage=support]').getAttribute('class'),'assessment-active-stage');
+     if(grade==='1'){
+      for(const [button,ext] of [['teacherDraftWord','docx'],['teacherDraftExcel','xlsx']]){
+       const dl=page.waitForEvent('download',{timeout:30000});await page.locator('#'+button).click();const file=await dl;assert.ok(file.suggestedFilename().endsWith('.'+ext));
+       const bytes=await readFile(await file.path());assert.equal(bytes.subarray(0,2).toString(),'PK');assert.ok(bytes.toString().includes('2083-08-09'));assert.ok(bytes.toString().includes('2083-08-10'));
+      }
+     }
      assert.deepEqual((await db.doc(legacy).get()).data(),original);
      assert.deepEqual(errors,[]);
      console.log('PASS lower-language staged draft '+grade+' '+kind+': separate date, scores, reload and school isolation');

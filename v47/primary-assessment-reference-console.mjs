@@ -8,6 +8,7 @@ import {loadAssignedPrimarySubjects,loadPrimaryTeacherWorksheet,draftThemeSlots}
 import {scoreSeroferoDraft} from './primary-assessment-v46-serofero-text.mjs';
 import {todayAssessmentDate2083} from './assessment-date-2083.mjs';
 import {loadMathAssessmentDraft,saveMathAssessmentDraft,validateMathDraftValues} from './primary-assessment-math-draft.mjs';
+import {readSavedAssessmentDraftReport,exportSavedAssessmentDraft} from './primary-assessment-draft-export.mjs';
 import {neError} from './nepali-feedback.mjs';
 const $=id=>document.getElementById(id);
 let actor=null,catalogue=null,auth,authSdk,db,api,epoch=0,portfolioEpoch=0;
@@ -39,8 +40,9 @@ function fill(){const previous=$('subject').value;$('subject').replaceChildren(.
 $('grade').onchange=fill;$('subject').onchange=()=>void render();
 let teacherEpoch=0,worksheet=null,worksheetRequest=0,worksheetRevision=null;
 const usesLanguageStages=model=>['1','2','3'].includes(model?.grade)&&['nepali','english','serophero'].includes(model?.key);
+function setDraftExportEnabled(enabled){for(const id of ['teacherDraftPrint','teacherDraftWord','teacherDraftExcel'])$(id).disabled=!enabled}
 function clearDraft(){
- worksheetRequest++;worksheetRevision=null;$('teacherSaveDraft').disabled=true;$('teacherDraftSaveStatus').textContent='';
+ setDraftExportEnabled(false);worksheetRequest++;worksheetRevision=null;$('teacherSaveDraft').disabled=true;$('teacherDraftSaveStatus').textContent='';
  $('teacherDraftRows').replaceChildren();$('teacherDraftHead').replaceChildren();$('teacherDate').value='';$('teacherDraftTotal').textContent='';$('teacherThemeSource').hidden=true;
 }
 function resetTeacherWorksheet(){
@@ -141,6 +143,7 @@ async function renderTeacherDraft(){
   await verify();args.assertCurrent();
   const [saved,other]=await Promise.all([loadMathAssessmentDraft(args),staged?loadMathAssessmentDraft({...args,stage:peerStage}):Promise.resolve(null)]);args.assertCurrent();
   if(staged)showPeer(other);
+  setDraftExportEnabled(!!saved||!!other);
   worksheetRevision=saved?.revision??0;
   if(saved){$('teacherDate').value=saved.date;fields.forEach((el,i)=>el.value=saved.ratings[i]==='_'?'':saved.ratings[i]);if(saved.rowDates)dates.forEach((el,i)=>el.value=saved.rowDates.slice(i*10,(i+1)*10));update()}
   $('teacherDraftSaveStatus').textContent=saved?'Draft Revision '+saved.revision+' पुनः लोड भयो।':'नयाँ निजी Draft।';
@@ -164,7 +167,7 @@ $('teacherSaveDraft').onclick=async()=>{
  try{
   await verify();args.assertCurrent();
   const saved=await saveMathAssessmentDraft({...args,ratings,date,rowDates,expectedRevision});args.assertCurrent();
-  worksheetRevision=saved.revision;dates.forEach((el,i)=>el.value=saved.rowDates.slice(i*10,(i+1)*10));$('teacherDraftSaveStatus').textContent='Draft Revision '+saved.revision+' सुरक्षित भयो। यो आधिकारिक मूल्याङ्कन होइन।';
+  worksheetRevision=saved.revision;setDraftExportEnabled(true);dates.forEach((el,i)=>el.value=saved.rowDates.slice(i*10,(i+1)*10));$('teacherDraftSaveStatus').textContent='Draft Revision '+saved.revision+' सुरक्षित भयो। यो आधिकारिक मूल्याङ्कन होइन।';
   $('teacherSaveDraft').disabled=false;
  }catch(e){if(request===worksheetRequest){worksheetRevision=null;$('teacherDraftSaveStatus').textContent='Draft सुरक्षित भएको पुष्टि भएन। मिति र अङ्क जाँच्नुहोस्; विद्यार्थी वा थिम पुनः खोलेर सुरक्षित Revision जाँच्नुहोस्। '+neError(e)}}
  finally{if(request===worksheetRequest){fields.forEach(el=>el.disabled=false);dates.forEach(el=>el.disabled=false);$('teacherDate').disabled=false}}
@@ -180,6 +183,22 @@ $('teacherOpenWorksheet').onclick=async()=>{
  renderTeacherDraft();$('teacherWorksheetStatus').textContent=result.students.length+' विद्यार्थी र '+result.themes.length+' थिम उपलब्ध छन्। '+(result.themes.every(t=>t.sourceRows)?'V46 को उपलब्धि पाठ उपलब्ध छ; शब्दशः प्रमाणीकरण बाँकी। ':'सबै थिमको शब्दशः पाठ अझै उपलब्ध छैन। ')+'अस्थायी फाराम मात्र।';
  }catch(e){if(request===teacherEpoch){clearTeacherModel();$('teacherWorksheetStatus').textContent='फाराम खोल्न सकिएन: '+neError(e)}}
 };
+async function outputTeacherDraft(kind){
+ const args=worksheetSelection(),request=worksheetRequest;
+ try{await verify();args.assertCurrent();
+ if(kind==='print'){
+  const model=await readSavedAssessmentDraftReport(args);await verify();args.assertCurrent();
+  renderSavedPrintModel(model);
+  $('teacherDraftSaveStatus').textContent='सुरक्षित Draft मात्र: Print वा Save as PDF छान्नुहोस्।';
+ }else{
+  const file=await exportSavedAssessmentDraft(args,kind);await verify();args.assertCurrent();
+  const url=URL.createObjectURL(file.blob),a=document.createElement('a');a.href=url;a.download=file.filename;
+  try{document.body.append(a);a.click()}finally{a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000)}
+  $('teacherDraftSaveStatus').textContent='सुरक्षित Draft को फाइल तयार भयो। सम्पादन गरेर Save नगरेका अङ्क समावेश छैनन्।';
+ }
+ }catch(e){if(request===worksheetRequest)$('teacherDraftSaveStatus').textContent='फाइल तयार भएन: '+neError(e)}
+}
+$('teacherDraftPrint').onclick=()=>void outputTeacherDraft('print');$('teacherDraftWord').onclick=()=>void outputTeacherDraft('word');$('teacherDraftExcel').onclick=()=>void outputTeacherDraft('excel');
 function clearPrint(){document.body.classList.remove('portfolio-printing');$('portfolioPrint').replaceChildren();$('portfolioPrint').hidden=true}
 function resetPortfolio(){
  clearPrint();
@@ -262,15 +281,8 @@ async function wordPortfolio(kind){
 }
 $('portfolioWordOrdinary').onclick=()=>void wordPortfolio('observations');
 $('portfolioWordIndicators').onclick=()=>void wordPortfolio('indicators');
-async function printPortfolio(kind){
+function renderSavedPrintModel(model){
  clearPrint();
- const request=++portfolioEpoch,member=actor,grade=$('portfolioGrade').value,studentId=$('portfolioStudent').value;
- const check=()=>{if(request!==portfolioEpoch||actor!==member||!member||auth.currentUser?.uid!==member.uid||$('portfolioGrade').value!==grade||$('portfolioStudent').value!==studentId)throw Error('Portfolio selection changed')};
- $('portfolioStatus').textContent='प्रिन्टका लागि सुरक्षित अभिलेख जाँच हुँदैछ…';
- try{
-  await verify();check();
-  const model=await readPortfolioPrintModel({db,api,actor:member,schoolId:member.schoolId,grade,studentId,assertCurrent:check},kind);
-  await verify();check();
   const root=$('portfolioPrint');
   const add=(tag,value,parent=root)=>{const el=document.createElement(tag);el.textContent=value;parent.append(el);return el};
   add('h1',model.title);
@@ -282,8 +294,19 @@ async function printPortfolio(kind){
   for(const v of model.headers)add('th',v,tr);
   const body=add('tbody','',table);
   for(const row of model.rows){const r=add('tr','',body);for(const v of row)add('td',v??'—',r)}
-  check();root.hidden=false;document.body.classList.add('portfolio-printing');
+  root.hidden=false;document.body.classList.add('portfolio-printing');
   try{window.print()}finally{clearPrint()}
+}
+async function printPortfolio(kind){
+ clearPrint();
+ const request=++portfolioEpoch,member=actor,grade=$('portfolioGrade').value,studentId=$('portfolioStudent').value;
+ const check=()=>{if(request!==portfolioEpoch||actor!==member||!member||auth.currentUser?.uid!==member.uid||$('portfolioGrade').value!==grade||$('portfolioStudent').value!==studentId)throw Error('Portfolio selection changed')};
+ $('portfolioStatus').textContent='प्रिन्टका लागि सुरक्षित अभिलेख जाँच हुँदैछ…';
+ try{
+  await verify();check();
+  const model=await readPortfolioPrintModel({db,api,actor:member,schoolId:member.schoolId,grade,studentId,assertCurrent:check},kind);
+  await verify();check();
+  renderSavedPrintModel(model);
   $('portfolioStatus').textContent='प्रिन्ट संवादमा Print वा Save as PDF छान्नुहोस्। यो आधिकारिक मूल्याङ्कन होइन।';
  }catch(e){if(request===portfolioEpoch){clearPrint();$('portfolioStatus').textContent='प्रिन्ट तयार भएन: '+neError(e)}}
 }

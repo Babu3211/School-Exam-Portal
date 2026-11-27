@@ -114,6 +114,10 @@ export async function readPortfolioPrintModel(args,kind){
 export async function exportPortfolioWord(args,kind){
  const model=await readPortfolioPrintModel(args,kind);
  args.assertCurrent();
+ return Object.freeze({blob:assessmentPrintWordBlob(model),filename:'V47-'+kind+'-'+model.schoolId+'-'+model.studentId+'-2083.docx',count:model.rows.length});
+}
+// Shared, pure document renderer for already verified saved-record models.
+export function assessmentPrintWordBlob(model){
  const xml=s=>String(s??'').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
  const p=(s,bold=false,size=18)=>'<w:p><w:r><w:rPr>'+(bold?'<w:b/>':'')+'<w:sz w:val="'+size+'"/><w:szCs w:val="'+size+'"/></w:rPr><w:t xml:space="preserve">'+xml(s)+'</w:t></w:r></w:p>';
  const width=Math.floor(15100/model.headers.length);
@@ -127,6 +131,5 @@ export async function exportPortfolioWord(args,kind){
  ['_rels/.rels','<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'],
  ['word/document.xml',doc]
  ],'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
- args.assertCurrent();
- return Object.freeze({blob,filename:'V47-'+kind+'-'+model.schoolId+'-'+model.studentId+'-2083.docx',count:model.rows.length});
+ return blob;
 }
