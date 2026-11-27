@@ -8,9 +8,10 @@ export function createV46DirectReader({getWorkspace,T,examTermKey,subjectLabel,o
  const attendance=attendanceModule({version:'v46',getWorkspace,T});
  return async request=>{
   if(request?.mode==='attendance')return attendance(request);
-  if(request?.mode!=='marks')fail('Attendance र Class 5 को Direct Sync अझै तयार छैन।');
+  const class5=request?.mode==='class5';
+  if(!class5&&request?.mode!=='marks')fail('असमर्थित Direct Sync फाराम।');
   const c=request.context,term=request.examTerm;
-  if(!c||!Object.hasOwn(termKeys,term)||T.termKey(c.term)!==term||T.clean(c.year)!=='2083'||!/^[0-9]{5,20}$/.test(c.schoolCode)||!['1','2','3','4','5','6','7','8','9','10'].includes(T.classKey(c.className))||!Array.isArray(request.columns)||!request.columns.length||request.columns.length>150)fail('सही विद्यालय, वर्ष 2083, कक्षा 1–10 र Term आवश्यक छ।');
+  if(!c||!Object.hasOwn(termKeys,term)||(class5?(term!=='final'||T.classKey(c.className)!=='5'||!/^Class 5 Final(?:\s*\/\s*(?:Final(?: Term)?|Annual|वार्षिक))?$/i.test(T.clean(c.term))):T.termKey(c.term)!==term)||T.clean(c.year)!=='2083'||!/^[0-9]{5,20}$/.test(c.schoolCode)||!['1','2','3','4','5','6','7','8','9','10'].includes(T.classKey(c.className))||!Array.isArray(request.columns)||!request.columns.length||request.columns.length>150)fail('सही विद्यालय, वर्ष 2083, कक्षा 1–10 र Term आवश्यक छ।');
   const klass=T.classKey(c.className), year=T.clean(c.year);
   const primary=Number(klass)<=5,primaryKinds=new Set(['absent','count','full','obtained']);
   const w=getWorkspace(),{auth,db,api,role,isAdmin}=w,user=auth?.currentUser;
@@ -123,9 +124,9 @@ export function createV46DirectReader({getWorkspace,T,examTermKey,subjectLabel,o
    for(const s of roster)if(!applies.has(s.id))for(const kind of requested)byStudent.get(s.id).set(key+'::'+kind,'N/A');
   }
   const profile=await school();
-  const context={schoolCode:T.clean(profile.iemisCode),year:T.clean(exam.academicYear),className:exam.className,term:names[term],section:allSections?'All':T.clean(roster[0].section)};
+  const context={schoolCode:T.clean(profile.iemisCode),year:T.clean(exam.academicYear),className:exam.className,term:class5?c.term:names[term],section:allSections?'All':T.clean(roster[0].section)};
   if(JSON.stringify(T.normalizeContext(context))!==JSON.stringify(T.normalizeContext(c)))fail('Source context mismatch');
   check();
-  return {format:'SMSS-IEMIS-DIRECT-1',savedOnly:true,mode:'marks',examTerm:term,grid:{context,columns:columns.map(({subject,label},i)=>({subject,label,index:i+4})),rows:[...identities].map(([id,row])=>[...row,...columns.map(col=>byStudent.get(id).get(col.key)??'')])}};
+  return {format:'SMSS-IEMIS-DIRECT-1',savedOnly:true,mode:class5?'class5':'marks',examTerm:term,grid:{context,columns:columns.map(({subject,label},i)=>({subject,label,index:i+4})),rows:[...identities].map(([id,row])=>[...row,...columns.map(col=>byStudent.get(id).get(col.key)??'')])}};
  };
 }
