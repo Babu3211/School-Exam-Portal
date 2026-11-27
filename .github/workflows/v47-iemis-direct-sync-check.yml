@@ -9,6 +9,7 @@ on:
       - 'v47/iemis-direct-*.js'
       - 'v47/test-iemis-direct-saved-marks.mjs'
       - 'v47/test-iemis-direct-attendance.mjs'
+      - 'v47/test-iemis-direct-primary.mjs'
       - 'v47/dashboard-console.mjs'
       - 'v47/grade-report-console.mjs'
 permissions:
@@ -24,6 +25,7 @@ jobs:
           node-version: '22'
       - run: node v47/test-iemis-direct-saved-marks.mjs
       - run: node v47/test-iemis-direct-attendance.mjs
+      - run: node v47/test-iemis-direct-primary.mjs
       - run: node --check v47/dashboard-console.mjs
       - run: node --check v47/grade-report-console.mjs
       - run: node v47/build-hosting.mjs
