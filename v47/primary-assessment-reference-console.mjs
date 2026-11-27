@@ -44,8 +44,9 @@ $('grade').onchange=fill;$('subject').onchange=()=>void render();
 let teacherEpoch=0,worksheet=null,worksheetRequest=0,worksheetRevision=null;
 const usesLanguageStages=model=>['1','2','3'].includes(model?.grade)&&['nepali','english','serophero'].includes(model?.key);
 function setDraftExportEnabled(enabled){for(const id of ['teacherDraftPrint','teacherDraftWord','teacherDraftExcel'])$(id).disabled=!enabled}
+function setTeacherClassExportEnabled(enabled){for(const id of ['teacherClassPrint','teacherClassWord','teacherClassExcel'])$(id).disabled=!enabled}
 function clearDraft(){
- setDraftExportEnabled(false);worksheetRequest++;worksheetRevision=null;$('teacherSaveDraft').disabled=true;$('teacherDraftSaveStatus').textContent='';
+ setTeacherClassExportEnabled(false);setDraftExportEnabled(false);worksheetRequest++;worksheetRevision=null;$('teacherSaveDraft').disabled=true;$('teacherDraftSaveStatus').textContent='';
  $('teacherDraftRows').replaceChildren();$('teacherDraftHead').replaceChildren();$('teacherDate').value='';$('teacherDraftTotal').textContent='';$('teacherThemeSource').hidden=true;
 }
 function resetTeacherWorksheet(){
@@ -146,7 +147,7 @@ async function renderTeacherDraft(){
   await verify();args.assertCurrent();
   const [saved,other]=await Promise.all([loadMathAssessmentDraft(args),staged?loadMathAssessmentDraft({...args,stage:peerStage}):Promise.resolve(null)]);args.assertCurrent();
   if(staged)showPeer(other);
-  setDraftExportEnabled(!!saved||!!other);
+  setDraftExportEnabled(!!saved||!!other);setTeacherClassExportEnabled(true);
   worksheetRevision=saved?.revision??0;
   if(saved){$('teacherDate').value=saved.date;fields.forEach((el,i)=>el.value=saved.ratings[i]==='_'?'':saved.ratings[i]);if(saved.rowDates)dates.forEach((el,i)=>el.value=saved.rowDates.slice(i*10,(i+1)*10));update()}
   $('teacherDraftSaveStatus').textContent=saved?'Draft Revision '+saved.revision+' पुनः लोड भयो।':'नयाँ निजी Draft।';
@@ -203,10 +204,14 @@ async function outputTeacherDraft(kind){
 }
 $('teacherDraftPrint').onclick=()=>void outputTeacherDraft('print');$('teacherDraftWord').onclick=()=>void outputTeacherDraft('word');$('teacherDraftExcel').onclick=()=>void outputTeacherDraft('excel');
 async function classDraftOutput(args,kind,statusId){
+ const ids=statusId==='teacherDraftSaveStatus'?['teacherClassPrint','teacherClassWord','teacherClassExcel']:['adminClassPrint','adminClassWord','adminClassExcel'];
+ if(!args.model||ids.some(id=>$(id).disabled))return;
+ for(const id of ids)$(id).disabled=true;
  try{await verify();args.assertCurrent();$(statusId).textContent='सबै विद्यार्थीको सुरक्षित Draft जाँच हुँदैछ…';const batch=await readClassAssessmentDraftReports(args);await verify();args.assertCurrent();
  if(kind==='print')renderSavedPrintModels(batch.reports);else{const file=exportClassAssessmentDraftReports(batch,args.model,args.themeIndex,kind);args.assertCurrent();const url=URL.createObjectURL(file.blob),a=document.createElement('a');a.href=url;a.download=file.filename;try{document.body.append(a);a.click()}finally{a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000)}}
  $(statusId).textContent=batch.studentCount+' विद्यार्थी — '+batch.savedCount+' सुरक्षित Draft; बाँकी खाली फाराम। आधिकारिक मूल्याङ्कन होइन।';
  }catch(e){try{args.assertCurrent();$(statusId).textContent='Class Export तयार भएन: '+neError(e)}catch{}}
+ finally{try{args.assertCurrent();for(const id of ids)$(id).disabled=false}catch{}}
 }
 $('teacherClassPrint').onclick=()=>void classDraftOutput(worksheetSelection(),'print','teacherDraftSaveStatus');$('teacherClassWord').onclick=()=>void classDraftOutput(worksheetSelection(),'word','teacherDraftSaveStatus');$('teacherClassExcel').onclick=()=>void classDraftOutput(worksheetSelection(),'excel','teacherDraftSaveStatus');
 function clearPrint(){document.body.classList.remove('portfolio-printing');$('portfolioPrint').replaceChildren();$('portfolioPrint').hidden=true}
