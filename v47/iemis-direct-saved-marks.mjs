@@ -44,7 +44,9 @@ export function createV47IemisReader({getWorkspace,verifySchoolSession,enforceSc
   const section=allSections?'All':T.clean(roster[0].section);
   const seenReg=new Set();
   const rows=new Map(roster.map((s,i)=>{
-   const reg=T.clean(s.studentIemisNo||s.iemisStudentNo||s.iemisNumber||s.iemisNo||s.registrationNo||s.regdNo||s.regNo||s.studentIemisNumber||'');
+   const ids=[s.studentIemisId,s.studentIemisNo,s.iemisStudentNo,s.iemisNumber,s.iemisNo,s.registrationNo,s.regdNo,s.regNo,s.studentIemisNumber].map(v=>T.clean(v)).filter(Boolean);
+   if(new Set(ids).size>1)fail('Conflicting IEMIS student identifiers');
+   const reg=ids[0]||'';
    const name=T.clean(s.studentNameEnglish||s.nameEnglish||s.studentName||s.name);
    if(!reg||!name||seenReg.has(reg))fail('Missing or duplicate IEMIS student registration');
    seenReg.add(reg);return [s.id,[s.rollNo??i+1,name,reg,T.clean(s.symbolNo||s.symbolNumber||s.examSymbolNo||'')]];
