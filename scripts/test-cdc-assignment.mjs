@@ -2002,7 +2002,7 @@ console.log('CDC dashboard and report hub: current-year coverage, deduplication,
  w.getDocsFromServer=async q=>{
    const filters=Object.fromEntries(q.filters.map(([k,,v])=>[k,v]));
    seenScopes.push(filters);
-   return {docs:[...observations.values()].filter(o=>Object.entries(filters).every(([k,v])=>o[k]===v)).map(o=>({data:()=>o}))};
+   return {docs:[...observations.entries()].filter(([path,o])=>path.startsWith(q.name+'/')&&q.filters.every(([k,op,v])=>op==='in'?v.includes(o[k]):o[k]===v)).map(([path,o])=>({ref:{path},data:()=>o}))};
  };
  await w.loadCdcAssessmentPage({host:multiHost});
  const root=multiHost.querySelector('#cdcAssessmentDialog'),main=n=>root.querySelector('[data-cdc="'+n+'"]');
@@ -2054,6 +2054,50 @@ console.log('CDC dashboard and report hub: current-year coverage, deduplication,
  assert.equal(view.querySelectorAll(':scope > details').length,5);
  assert.equal(view.querySelectorAll('[data-cdc-grid-edit]').length,0);
  assert.equal(observations.size,savedBefore+2);
+ // Admin-only corrections and delete actions must operate on real snapshot identities.
+ let confirmMessages=[],approve=false,transactionCount=0;
+ const oldConfirm=w.confirm,oldTransaction=w.runTransaction;
+ w.confirm=msg=>{confirmMessages.push(msg);return approve;};
+ w.runTransaction=async(_db,fn)=>{
+   transactionCount++;const writes=[];
+   await fn({get:async ref=>({exists:()=>observations.has(ref.path),data:()=>observations.get(ref.path)}),
+     update:(ref,patch)=>writes.push(()=>observations.set(ref.path,{...observations.get(ref.path),...patch})),
+     delete:ref=>writes.push(()=>observations.delete(ref.path))});
+   writes.forEach(write=>write());
+ };
+ await main('showClassForms').onclick();
+ const fresh=()=>multiHost.querySelector('[data-cdc-multi="class"]');
+ const first=()=>fresh().querySelector('[data-cdc-matrix-outcome="0"] tbody tr');
+ const regular=()=>first().querySelector('[data-cdc-matrix-delete="regular"]');
+ assert.equal(regular().hidden,false);
+ const edit=first().querySelector('[data-cdc-matrix-correct="regular"]');
+ assert.equal(edit.hidden,false);edit.onclick();
+ first().querySelector('[data-cdc-matrix-rating="regular"]').value='3';
+ await fresh().querySelector('[data-cdc-matrix-save]').onclick();
+ assert.equal(transactionCount,0,'cancelled edit performs no transaction');
+ approve=true;
+ await fresh().querySelector('[data-cdc-matrix-save]').onclick();
+ assert.equal(observations.size,savedBefore+2,'explicit correction updates without appending');
+ const savedEntry=[...observations.entries()].find(([,o])=>o.studentId==='multi-a'&&o.stage==='regular');
+ assert.equal(savedEntry[1].level,3);
+ approve=false;await regular().onclick();
+ assert.equal(observations.size,savedBefore+2,'cancelled individual delete preserves records');
+ approve=true;await regular().onclick();
+ assert.equal(observations.size,savedBefore+1,'one stage only is removed');
+ assert.ok([...observations.values()].some(o=>o.studentId==='multi-a'&&o.stage==='support'));
+ const support=[...observations.values()].find(o=>o.studentId==='multi-a'&&o.stage==='support');
+ const outside=[['cdc_observations/other-grade',{...support,className:'Class 4'}],['cdc_observations/other-year',{...support,academicYear:'2082'}],['cdc_serofero_indicators/other-binary',{...support,className:'Class 1'}]];
+ for(const [key,data] of outside)observations.set(key,data);
+ // Class delete includes inactive/orphaned pupils and alternate class spelling, not just current roster.
+ const extra='cdc_observations/same-class-other-subject';
+ observations.set(extra,{...support,className:'कक्षा ५',subject:'English',studentId:'orphan'});
+ approve=false;await fresh().querySelector('[data-cdc-class-delete-all]').onclick();
+ assert.ok(observations.has(extra));assert.match(confirmMessages.at(-1),/कक्षा 5.*2083.*2 अभिलेख/);
+ approve=true;await fresh().querySelector('[data-cdc-class-delete-all]').onclick();
+ assert.ok(!observations.has(extra));
+ assert.ok(![...observations.values()].some(o=>o.studentId==='multi-a'&&o.className==='Class 5'&&o.academicYear==='2083'));
+ for(const [key] of outside){assert.ok(observations.has(key),'other class/year/collection preserved');observations.delete(key);}
+ w.confirm=oldConfirm;w.runTransaction=oldTransaction;
  main('showSingleForm').onclick();multiHost.remove();
  console.log('Class theme forms: same CDC renderer, all scoped pupils, independent saved ratings, all-theme read-only view passed');
 }

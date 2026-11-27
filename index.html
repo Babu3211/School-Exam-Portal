@@ -11280,6 +11280,7 @@ function openCdcAssessment(context = null) {
   let entryMode=context&&!context.reportOnly&&!embedded?'class':'single';
   const matrixRetries=new Map();
   const matrixAdmin=()=>!readOnly&&canShow()&&isAdmin()&&!roleHas('viewer');
+  const matrixRecordKey=o=>JSON.stringify(Object.entries(o||{}).sort(([a],[b])=>a.localeCompare(b)));
   async function deleteMatrixRecords({grade,load,status,current,description}){
     if(!matrixAdmin()||matrixBusy||!current()||!['1','2','3','4','5'].includes(grade))return;
     if(matrixDirty()&&!window.confirm('सुरक्षित नगरेका परिवर्तन छन्। ती त्यागेर अगाडि बढ्ने?'))return;
@@ -11295,7 +11296,7 @@ function openCdcAssessment(context = null) {
         await runTransaction(db,async tx=>{
           const fresh=await Promise.all(chunk.map(d=>tx.get(d.ref)));
           if(!current()||!matrixAdmin())throw Error('छनोट वा अनुमति परिवर्तन भयो।');
-          if(fresh.some((d,i)=>!d.exists()||JSON.stringify(d.data())!==JSON.stringify(chunk[i].data())))throw Error('अभिलेख परिवर्तन भएको छ। फेरि Load गर्नुहोस्।');
+          if(fresh.some((d,i)=>!d.exists()||matrixRecordKey(d.data())!==matrixRecordKey(chunk[i].data())))throw Error('अभिलेख परिवर्तन भएको छ। फेरि Load गर्नुहोस्।');
           chunk.forEach(d=>tx.delete(d.ref));
         });
         removed+=chunk.length;
@@ -11392,16 +11393,16 @@ function openCdcAssessment(context = null) {
           const values=()=>[date.value,...scores.map(x=>x.value),...remarks.map(x=>x.value)];
           const entry={row,item,stage,prev,date,scores,remarks,controls,baseline:JSON.stringify(values()),values,correct:false,ref:row.recordRefs?.get(prev)};
           entries.push(entry);
-          if(matrixAdmin()&&entry.ref){
-            const edit=add(remarksCell,'button','Edit');edit.type='button';edit.className='btn alt';edit.dataset.cdcMatrixCorrect=stage;
+          if(matrixAdmin()){
+            const edit=add(remarksCell,'button','Edit');edit.type='button';edit.className='btn alt';edit.dataset.cdcMatrixCorrect=stage;edit.hidden=!entry.ref;
             edit.onclick=()=>{if(!matrixBusy&&current()&&matrixAdmin()){entry.correct=!entry.correct;edit.textContent=entry.correct?'Editing saved record':'Edit';date.focus();}};
-            const del=add(remarksCell,'button','Delete');del.type='button';del.className='btn alt';del.dataset.cdcMatrixDelete=stage;
+            const del=add(remarksCell,'button','Delete');del.type='button';del.className='btn alt';del.dataset.cdcMatrixDelete=stage;del.hidden=!entry.ref;
             del.onclick=()=>deleteMatrixRecords({grade,status,current,description:'कक्षा '+grade+' — '+name+' — '+item.title+' — '+stage,load:async()=>{
               const scope=assessmentReadScope(row.selection);
               const result=await getDocsFromServer(query(collection(db,collectionName),...Object.entries(scope).map(([k,v])=>where(k,'==',v))));
               return result.docs.filter(d=>{const o=d.data();return d.ref&&Object.entries(scope).every(([k,v])=>o[k]===v)&&o.stage===stage&&(binary?o.unit===unit&&o.outcomeId===item.id:normalizeTitle(o.unit)===normalizeTitle(unit)&&o.topic===item.title);});
             }});
-            entry.editButton=edit;controls.push(edit,del);
+            entry.editButton=edit;entry.deleteButton=del;controls.push(edit,del);
           }
           const update=()=>{if(scoreLabel){const n=cdcSeroferoIndicatorCount(scores.map(x=>x.value));scoreLabel.textContent=n===null?'— / 4':n+' / 4';}};
           for(const score of scores)score.onchange=()=>{if(score.value)fillToday();update();};update();
@@ -11440,7 +11441,7 @@ function openCdcAssessment(context = null) {
                const patch=binary?{date:payload.date,indicators:payload.indicators,usedTools:payload.usedTools||['','','','']}:{date:payload.date,level:payload.level,method:payload.method,feedback:payload.feedback};
                await runTransaction(db,async tx=>{
                  const live=await tx.get(e.ref);
-                 if(!current()||!matrixAdmin()||!live.exists()||JSON.stringify(live.data())!==JSON.stringify(e.prev))throw Error('Saved record changed');
+                 if(!current()||!matrixAdmin()||!live.exists()||matrixRecordKey(live.data())!==matrixRecordKey(e.prev))throw Error('Saved record changed');
                  tx.update(e.ref,patch);
                });
                e.prev={...e.prev,...patch};e.correct=false;if(e.editButton)e.editButton.textContent='Edit';e.date.value=payload.date;e.baseline=JSON.stringify(e.values());saved++;
@@ -11451,7 +11452,11 @@ function openCdcAssessment(context = null) {
           try{
             try{await setDoc(ref,{...payload,createdAt:serverTimestamp()});}
             catch(error){const existing=(await getDocFromServer(ref)).data();if(!existing||!Object.entries(payload).every(([k,v])=>JSON.stringify(existing[k])===JSON.stringify(v)))throw error;}
-            matrixRetries.delete(retryKey);e.prev=payload;e.date.value=payload.date;e.baseline=JSON.stringify(e.values());saved++;
+            matrixRetries.delete(retryKey);e.prev=payload;e.ref=null;e.correct=false;e.date.value=payload.date;e.baseline=JSON.stringify(e.values());saved++;
+             if(e.editButton){
+               e.editButton.hidden=true;e.editButton.textContent='Edit';e.deleteButton.hidden=true;
+               try{const snapshot=await getDocFromServer(ref),stored=snapshot.data();if(stored&&Object.entries(payload).every(([k,v])=>JSON.stringify(stored[k])===JSON.stringify(v))){e.prev=stored;e.ref=ref;e.editButton.hidden=false;e.deleteButton.hidden=false;}}catch{}
+             }
           }catch{errors++;}
           if(current())status.textContent='सुरक्षित: '+saved+' / '+pending.length+' | असफल: '+errors;
         }
