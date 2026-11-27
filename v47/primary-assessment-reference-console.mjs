@@ -441,4 +441,5 @@ try{
  catalogue=await response.json();await verify();
  $('identity').textContent='Academic Year 2083 · V47 · '+sid;$('referenceArea').hidden=false;$('portfolioArea').hidden=!['school_admin','viewer'].includes(actor.role);$('teacherWorksheet').hidden=actor.role!=='teacher';$('status').textContent='विद्यालयको अनुमति पुष्टि भयो।';
  const member=actor;bindVerifiedModuleActivity(member,()=>actor===member);fill();
+ if(location.hash==='#portfolioArea'&&actor.role==='school_admin')$('portfolioArea').scrollIntoView({block:'start'});
 }catch(e){clear();$('status').textContent='Dashboard बाट प्रमाणित विद्यालयमा लगइन गरी पुनः खोल्नुहोस्: '+neError(e)}

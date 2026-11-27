@@ -83,3 +83,18 @@ assert.match(src,/foregroundStatsGate\.seed\(/);
  assert.match(src,/api\.where\('academicYear','==',filters\.academicYear\)/);
  console.log('PASS school-admin assessment counts: scoped year, separate record categories, role and stale-session guards');
 }
+
+{
+ const {loadPrimaryAssessmentClassCounts}=await import('./dashboard-assessment-counts.mjs');
+ const {context}=make('school_admin');const calls=[];
+ const args={...context,readCount:async(name,f)=>{calls.push([name,f]);return name==='cdc_observations'?3:1}};
+ const result=await loadPrimaryAssessmentClassCounts(args);
+ assert.equal(result.rows.length,5);assert.equal(calls.length,10);assert.equal(result.rows[4].observations,3);
+ assert.ok(calls.every(([,f])=>f.schoolId===schoolId&&f.academicYear==='2083'&&f.classNames.length===10));
+ assert.equal(result.officialAssessmentApproved,false);
+ await assert.rejects(loadPrimaryAssessmentClassCounts({...args,role:'viewer'}),/School Admin/);
+ await assert.rejects(loadPrimaryAssessmentClassCounts({...args,readCount:async()=>-1}),/Invalid assessment count/);
+ let changed=false;await assert.rejects(loadPrimaryAssessmentClassCounts({...args,readCount:async()=>{changed=true;return 0},assertSession:()=>{if(changed)throw Error('changed')}}),/changed/);
+ assert.match(html,/id="assessmentClassLoad"/);assert.match(src,/loadPrimaryAssessmentClassCounts\(/);
+ assert.match(html,/data-required-role="school_admin"[^>]*href="\.\/primary-assessment\.html#portfolioArea"/);
+}

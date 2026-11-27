@@ -9,7 +9,7 @@ import {inspectClassMarkCoverage} from './class-mark-coverage-preview.mjs';
 const $=id=>document.getElementById(id);
 let auth,authSdk,db,firestoreApi,epoch=0,busy=false,connecting=false,loginTask=null,loggingOut=false,reportRows=null,verifyingReport=false;
 const status=message=>{$('message').textContent=message};
-function clear(){reportRows=null;$('summaryRows').replaceChildren();for(const id of ['summaryExam','summaryClass','summaryAnnual','summaryRun','coverageSubject','coverageSection','coverageRun'])$(id).disabled=true;$('summaryResult').textContent='Choose an exam and class after loading records.';$('coverageResult').textContent='Class-wide coverage not checked.';epoch++;$('report').hidden=true;$('counts').replaceChildren();$('school').textContent='';$('password').value=''}
+function clear(){reportRows=null;$('primaryAnnualReportArea').hidden=true;$('primaryAnnualReportOpen').disabled=true;$('summaryRows').replaceChildren();for(const id of ['summaryExam','summaryClass','summaryAnnual','summaryRun','coverageSubject','coverageSection','coverageRun'])$(id).disabled=true;$('summaryResult').textContent='Choose an exam and class after loading records.';$('coverageResult').textContent='Class-wide coverage not checked.';epoch++;$('report').hidden=true;$('counts').replaceChildren();$('school').textContent='';$('password').value=''}
 function currentSession(requestEpoch,uid){return requestEpoch===epoch&&auth?.currentUser?.uid===uid}
 $('connect').onclick=async()=>{
  if(connecting||auth)return;
@@ -62,6 +62,7 @@ $('login').onclick=()=>{
   const classSelect=$('summaryClass');classSelect.replaceChildren(new Option('Select class',''));
   for(let n=1;n<=12;n++)classSelect.add(new Option('Class '+n,String(n)));
   for(const id of ['summaryExam','summaryClass','summaryAnnual','summaryRun','coverageSection','coverageSubject','coverageRun'])$(id).disabled=false;
+  $('primaryAnnualReportArea').hidden=bridge.role!=='school_admin';$('primaryAnnualReportOpen').disabled=bridge.role!=='school_admin';
   $('report').hidden=false;status('हेर्न मात्र मिल्ने प्रतिवेदनका विवरण लोड भए। कुनै नतिजा प्रकाशित गरिएको छैन।');
  }catch(error){if(current===epoch){clear();try{if(freshSignIn&&signedUid&&auth?.currentUser?.uid===signedUid)await authSdk.signOut(auth)}catch{}status('प्रतिवेदन उपलब्ध भएन: '+neError(error))}}
  finally{busy=false;$('login').disabled=!auth||loggingOut;if(!auth?.currentUser)$('logout').disabled=true}
@@ -99,7 +100,8 @@ async function withVerifiedReportSnapshot(render){
   });
   if(session.schoolId!==snapshot.schoolId||!currentSession(requestEpoch,uid)||reportRows!==snapshot)
    throw new Error('Verified school session changed');
-  render(snapshot);
+  $('primaryAnnualReportArea').hidden=session.role!=='school_admin';$('primaryAnnualReportOpen').disabled=session.role!=='school_admin';
+  render(snapshot,session);
  }catch(error){
   if(reportRows===snapshot){
    clear();
@@ -134,4 +136,11 @@ $('coverageRun').onclick=()=>withVerifiedReportSnapshot(rows=>{
   const result=inspectClassMarkCoverage(rows,{examId:$('summaryExam').value,classNo:Number($('summaryClass').value),subject:$('coverageSubject').value,section:$('coverageSection').value.trim()||null});
   $('coverageResult').textContent='Read-only class check: '+result.rosterCount+' students, '+result.markCount+' marks; missing '+result.missing.length+', duplicate '+result.duplicates.length+', outsider '+result.outsiders.length+'. '+(result.complete?'Roster covered.':'Not complete.')+' Save and publication disabled.';
  }catch(error){$('coverageResult').textContent='कक्षाका अभिलेखको पूर्णता जाँच उपलब्ध भएन: '+neError(error)}
+});
+
+$('primaryAnnualReportOpen').onclick=()=>withVerifiedReportSnapshot((rows,session)=>{
+ if(session.role!=='school_admin')throw Error('School Admin required');
+ const destination=new URL('./primary-assessment.html#portfolioArea',location.href);
+ destination.searchParams.set('schoolId',rows.schoolId);
+ location.assign(destination.href);
 });

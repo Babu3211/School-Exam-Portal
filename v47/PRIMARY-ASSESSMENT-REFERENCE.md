@@ -143,3 +143,6 @@ Raw max is the sum of the individual 4-indicator scoring blocks, not the officia
 
 ## 2026-11-27 — CDC annual annex print structure
 - Visually reopened CDC 2076 PDF pages 13–14 and 2083 PDF page 149 (printed 148). Separate lower four-column and upper six-column review print/Word models, exact Nepali subject order and labels, school profile and register metadata, signature lines and lower scale legend. Excel remains detailed audit with school identity and roll number. No official release or grade change; source data gaps and draft notices retained. This is structural parity, not pixel-identical PDF or certified publication. Unit and browser checks added.
+
+## 2026-11-27 — Assessment dashboard and report navigation
+- Admin on-demand class-wise historical observation/indicator counts, fixed grade aliases and academic-year filters, 10 aggregate queries per explicit request, no document or student data scans. Not draft counts, unique students or official grades. Unmatched class aliases excluded, counts cleared on refresh/session switch. Reports menu and verified report page link to the existing annual review with fresh Admin membership checks; direct target still verifies independently. No role expansion, no publication or deployment. Static and unit checks added.

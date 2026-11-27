@@ -41,3 +41,8 @@ assert.match(controller,/if\(freshSignIn&&signedUid&&auth\?\.currentUser\?\.uid=
 assert.doesNotMatch(controller,/\b(?:setDoc|addDoc|updateDoc|deleteDoc|writeBatch)\s*\(/);
 assert.doesNotMatch(page,/\b(?:Save marks|Publish results|Print grade sheet)\b/i);
 console.log('V47 shared-session read-only report preview wiring tests passed');
+
+assert.match(page,/id="primaryAnnualReportArea" hidden/);
+assert.match(controller,/primaryAnnualReportOpen'\)\.onclick=\(\)=>withVerifiedReportSnapshot/);
+assert.match(controller,/session\.role!=='school_admin'/);
+assert.match(controller,/destination\.searchParams\.set\('schoolId',rows\.schoolId\)/);
