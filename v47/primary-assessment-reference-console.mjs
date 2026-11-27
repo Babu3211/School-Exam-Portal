@@ -11,6 +11,7 @@ import {assessmentStagePercentage,formatAssessmentStagePercentage,reviewCombined
 import {scoreSeroferoDraft,v46SeroferoPrintedNumber} from './primary-assessment-v46-serofero-text.mjs';
 import {todayAssessmentDate2083} from './assessment-date-2083.mjs';
 import {loadMathAssessmentDraft,saveMathAssessmentDraft,validateMathDraftValues,hasAssessmentStages} from './primary-assessment-math-draft.mjs';
+import {readUpperAnnualReview,exportUpperAnnualReview} from './primary-assessment-annual-review.mjs';
 import {readSubjectProgressReport,exportSubjectProgressReport} from './primary-assessment-progress-report.mjs';
 import {readAssessmentDraftProgress} from './primary-assessment-draft-progress.mjs';
 import {readSavedAssessmentDraftReport,exportSavedAssessmentDraft,readClassAssessmentDraftReports,exportClassAssessmentDraftReports} from './primary-assessment-draft-export.mjs';
@@ -225,10 +226,11 @@ async function classDraftOutput(args,kind,statusId){
 $('teacherClassPrint').onclick=()=>void classDraftOutput(worksheetSelection(),'print','teacherDraftSaveStatus');$('teacherClassWord').onclick=()=>void classDraftOutput(worksheetSelection(),'word','teacherDraftSaveStatus');$('teacherClassExcel').onclick=()=>void classDraftOutput(worksheetSelection(),'excel','teacherDraftSaveStatus');
 function clearPrint(){document.body.classList.remove('portfolio-printing');$('portfolioPrint').replaceChildren();$('portfolioPrint').hidden=true}
 let adminReviewEpoch=0,adminReviewModel=null;
-function clearAdminReview(){$('adminProgressRows').replaceChildren();$('adminProgressStatus').textContent='';$('adminDraftProgress').disabled=true;for(const id of ['adminProgressPrint','adminProgressWord','adminProgressExcel'])$(id).disabled=true;clearPrint();adminReviewEpoch++;adminReviewModel=null;$('adminDraftTheme').replaceChildren();$('adminDraftRows').replaceChildren();$('adminDraftHead').replaceChildren();$('adminDraftStatus').textContent='';for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel','adminClassPrint','adminClassWord','adminClassExcel'])$(id).disabled=true;}
+function resetAnnualReview(){for(const id of ['annualReviewRead','annualReviewPrint','annualReviewWord','annualReviewExcel'])$(id).disabled=!(actor?.role==='school_admin'&&['4','5'].includes($('portfolioGrade').value)&&$('portfolioStudent').value);$('annualReviewRows').replaceChildren();$('annualReviewStatus').textContent='';}
+function clearAdminReview(){resetAnnualReview();$('adminProgressRows').replaceChildren();$('adminProgressStatus').textContent='';$('adminDraftProgress').disabled=true;for(const id of ['adminProgressPrint','adminProgressWord','adminProgressExcel'])$(id).disabled=true;clearPrint();adminReviewEpoch++;adminReviewModel=null;$('adminDraftTheme').replaceChildren();$('adminDraftRows').replaceChildren();$('adminDraftHead').replaceChildren();$('adminDraftStatus').textContent='';for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel','adminClassPrint','adminClassWord','adminClassExcel'])$(id).disabled=true;}
 function resetPortfolio(){
  clearAdminReview();$('adminDraftTeacher').replaceChildren();$('adminDraftSubject').replaceChildren();$('adminDraftLoad').disabled=true;clearPrint();
- portfolioEpoch++;$('portfolioRows').replaceChildren();$('indicatorRows').replaceChildren();$('portfolioStudent').replaceChildren();$('portfolioStudent').disabled=true;$('portfolioRead').disabled=true;$('portfolioExport').disabled=true;$('indicatorRead').disabled=true;$('indicatorExport').disabled=true;$('portfolioWordOrdinary').disabled=$('portfolioPrintOrdinary').disabled=true;$('portfolioWordIndicators').disabled=$('portfolioPrintIndicators').disabled=true;$('portfolioStatus').textContent='';
+ portfolioEpoch++;$('portfolioRows').replaceChildren();$('indicatorRows').replaceChildren();$('portfolioStudent').replaceChildren();$('portfolioStudent').disabled=true;resetAnnualReview();$('portfolioRead').disabled=true;$('portfolioExport').disabled=true;$('indicatorRead').disabled=true;$('indicatorExport').disabled=true;$('portfolioWordOrdinary').disabled=$('portfolioPrintOrdinary').disabled=true;$('portfolioWordIndicators').disabled=$('portfolioPrintIndicators').disabled=true;$('portfolioStatus').textContent='';
 }
 $('portfolioGrade').onchange=resetPortfolio;
 $('portfolioStudent').onchange=()=>{clearAdminReview();$('adminDraftLoad').disabled=!$('portfolioStudent').value;clearPrint();portfolioEpoch++;$('portfolioRows').replaceChildren();$('indicatorRows').replaceChildren();$('portfolioStatus').textContent='';$('portfolioRead').disabled=!$('portfolioStudent').value;$('portfolioExport').disabled=$('portfolioWordOrdinary').disabled=$('portfolioPrintOrdinary').disabled=!$('portfolioStudent').value;$('indicatorRead').disabled=$('indicatorExport').disabled=$('portfolioWordIndicators').disabled=$('portfolioPrintIndicators').disabled=!$('portfolioStudent').value||!['1','2','3'].includes($('portfolioGrade').value)};
@@ -241,7 +243,7 @@ $('portfolioRoster').onclick=async()=>{
   $('portfolioStatus').textContent='विद्यार्थी सूची लोड हुँदैछ…';
   const roster=await loadCompleteClassRoster({db,api,actor:member,schoolId:member.schoolId,classId:grade,activeOnly:true});check();await verify();check();
   $('portfolioStudent').replaceChildren(...roster.students.map(s=>new Option(String(s.nameEnglish??s.name??s.id),s.id)));
-  $('portfolioStudent').disabled=false;$('adminDraftLoad').disabled=!$('portfolioStudent').value;$('portfolioRead').disabled=!$('portfolioStudent').value;$('portfolioExport').disabled=$('portfolioWordOrdinary').disabled=$('portfolioPrintOrdinary').disabled=!$('portfolioStudent').value;$('indicatorRead').disabled=$('indicatorExport').disabled=$('portfolioWordIndicators').disabled=$('portfolioPrintIndicators').disabled=!$('portfolioStudent').value||!['1','2','3'].includes($('portfolioGrade').value);$('portfolioStatus').textContent=roster.count+' विद्यार्थी उपलब्ध छन्।';
+  $('portfolioStudent').disabled=false;resetAnnualReview();$('adminDraftLoad').disabled=!$('portfolioStudent').value;$('portfolioRead').disabled=!$('portfolioStudent').value;$('portfolioExport').disabled=$('portfolioWordOrdinary').disabled=$('portfolioPrintOrdinary').disabled=!$('portfolioStudent').value;$('indicatorRead').disabled=$('indicatorExport').disabled=$('portfolioWordIndicators').disabled=$('portfolioPrintIndicators').disabled=!$('portfolioStudent').value||!['1','2','3'].includes($('portfolioGrade').value);$('portfolioStatus').textContent=roster.count+' विद्यार्थी उपलब्ध छन्।';
  }catch(e){if(request===portfolioEpoch){resetPortfolio();$('portfolioStatus').textContent='विद्यार्थी सूची खोल्न सकिएन: '+neError(e)}}
 };
 $('adminDraftTeacher').onchange=clearAdminReview;$('adminDraftSubject').onchange=clearAdminReview;
@@ -368,6 +370,16 @@ async function outputSubjectProgress(kind){
  }catch(e){if(request===adminReviewEpoch)$('adminProgressStatus').textContent='सारांश तयार भएन: '+neError(e)}finally{if(request===adminReviewEpoch)for(const id of ids)$(id).disabled=false}
 }
 for(const [id,kind] of [['adminProgressPrint','print'],['adminProgressWord','word'],['adminProgressExcel','excel']])$(id).onclick=()=>void outputSubjectProgress(kind);
+async function outputAnnualReview(kind){
+ const member=actor,grade=$('portfolioGrade').value,studentId=$('portfolioStudent').value,request=portfolioEpoch,ids=['annualReviewRead','annualReviewPrint','annualReviewWord','annualReviewExcel'];
+ if(ids.some(id=>$(id).disabled))return;for(const id of ids)$(id).disabled=true;
+ const check=()=>{if(request!==portfolioEpoch||actor!==member||member?.role!=='school_admin'||auth.currentUser?.uid!==member.uid||$('portfolioGrade').value!==grade||$('portfolioStudent').value!==studentId)throw Error('Annual selection changed')};
+ try{await verify();check();$('annualReviewStatus').textContent='वार्षिक समीक्षा तयार हुँदैछ…';const report=await readUpperAnnualReview({db,api,auth,actor:member,schoolId:member.schoolId,grade,studentId,catalogue,assertCurrent:check});await verify();check();
+ if(kind==='view'){$('annualReviewRows').replaceChildren();for(const row of report.rows){const tr=document.createElement('tr');for(const v of row)cell(tr,v);$('annualReviewRows').append(tr)}}else if(kind==='print')renderSavedPrintModel(report);else{const file=exportUpperAnnualReview(report,kind);const url=URL.createObjectURL(file.blob),a=document.createElement('a');a.href=url;a.download=file.filename;try{document.body.append(a);a.click()}finally{a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000)}}
+ $('annualReviewStatus').textContent='सात विषयको सुरक्षित Draft समीक्षा तयार भयो। आधिकारिक प्रतिवेदन होइन।';
+ }catch(e){try{check();$('annualReviewRows').replaceChildren();$('annualReviewStatus').textContent='वार्षिक समीक्षा तयार भएन: '+neError(e)}catch{}}finally{try{check();for(const id of ids)$(id).disabled=false}catch{}}
+}
+for(const [id,kind] of [['annualReviewRead','view'],['annualReviewPrint','print'],['annualReviewWord','word'],['annualReviewExcel','excel']])$(id).onclick=()=>void outputAnnualReview(kind);
 function renderSavedPrintModel(model){return renderSavedPrintModels([model])}
 function renderSavedPrintModels(models){
  clearPrint();

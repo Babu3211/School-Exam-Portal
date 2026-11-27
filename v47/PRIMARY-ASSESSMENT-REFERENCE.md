@@ -116,3 +116,6 @@ Raw max is the sum of the individual 4-indicator scoring blocks, not the officia
 
 ## 2026-11-27 — Admin subject progress export
 - Saved-only subject progress now exports all themes/stages for one selected student and assigned teacher, using A4 print/PDF, Word and XLSX. Upper-primary includes complete-only combined and annual date-order review rows, including explicit incomplete or conflict status. Stage progress uses assessed-count denominators and binary subjects retain indicator/group counts. No official records, historical merging, permissions or grade publication changed.
+
+## 2026-11-27 — Upper-primary annual student draft review
+- Reopened CDC 2083 guide PDF p.149, Annex 4 (printed p.148). Fixed seven subject rows with weekly periods 5,5,5,5,5,3,4. Admin selects one student and reads one unambiguous active assigned teacher per registered subject. Missing/ambiguous subjects or assignments stay blank. Only complete, non-conflicting date-order and stage-priority agreement yields a review grade. Local subject annual grade, attendance, school identity/signature details, migrated observations, lower-primary annual report and official publication remain pending. PDF/Word/XLSX are clearly marked review copies; no data writes or access changes.
