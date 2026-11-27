@@ -6,6 +6,7 @@ import {validateConfiguredMarkComponents,primaryAchievementPair} from './configu
 import {completeClassDraftId} from './complete-class-draft-document.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {readSchoolSubjectCatalog} from './subject-catalog-view.mjs';
+import {excelWorkbook} from './excel-workbook.mjs';
 const terms={'1st':'first','2nd':'second','3rd':'third',final:'annual'};
 const idPattern=/^[A-Za-z0-9_-]{1,128}$/;
 export function auditEntrySettingsCoverage({schoolId,classId,examId,subjects,settings}){
@@ -17,7 +18,7 @@ export function auditEntrySettingsCoverage({schoolId,classId,examId,subjects,set
   if(!idPattern.test(d.id??'')||ids.has(d.id)||d.schoolId!==schoolId||d.classId!==classId||d.examId!==examId||!idPattern.test(d.subjectId??''))throw Error('Invalid or foreign settings identity');
   ids.add(d.id);const group=groups.get(d.subjectId)??[];group.push(d);groups.set(d.subjectId,group);
  }
- const text=parts=>parts.map(c=>c.name+' / '+c.fullMarks).join(' | ');
+ const text=parts=>parts.map(c=>c&&typeof c.name==='string'&&typeof c.fullMarks==='number'?c.name+' / '+c.fullMarks:'Invalid component').join(' | ');
  for(const s of subjects){
   const records=groups.get(s.id)??[],active=records.filter(d=>d.active===true);
   if(s.active!==true){rows.push({subjectId:s.id,subject:s.name,status:'Inactive or unverified subject',expected:'',configured:text(active.flatMap(d=>Array.isArray(d.components)?d.components:[]))});continue}
@@ -39,7 +40,7 @@ export function auditEntrySettingsCoverage({schoolId,classId,examId,subjects,set
   rows.push({subjectId:s.id,subject:s.name,status,expected,configured});
  }
  for(const [sid,records] of groups)if(!seen.has(sid))rows.push({subjectId:sid,subject:sid,status:'Settings without registered subject',expected:'',configured:records.map(d=>d.id).join(' | ')});
- return Object.freeze({rows:Object.freeze(rows.map(Object.freeze)),matched:rows.filter(r=>r.status==='Schema match').length,reviewRequired:rows.filter(r=>r.status!=='Schema match').length,writeAuthorized:false,iemisVerified:false});
+ return Object.freeze({schoolId,classId,examId,rows:Object.freeze(rows.map(Object.freeze)),matched:rows.filter(r=>r.status==='Schema match').length,reviewRequired:rows.filter(r=>r.status!=='Schema match').length,writeAuthorized:false,iemisVerified:false});
 }
 export async function readEntrySettingsCoverage({db,api,auth,actor,schoolId,classId,examId,assertCurrent}){
  if(actor?.role!=='school_admin'||actor.active!==true||actor.schoolId!==schoolId||auth?.currentUser?.uid!==actor.uid||!Object.hasOwn(terms,examId)||!/^(?:[1-9]|10)$/.test(classId))throw Error('Verified School Admin and IEMIS class/term required');
@@ -52,4 +53,11 @@ export async function readEntrySettingsCoverage({db,api,auth,actor,schoolId,clas
  const snap=await api.getDocsFromServer(q);check();
  const settings=snap.docs.map(d=>{const v=d.data();if(v.id!==d.id||d.ref?.path!==undefined&&d.ref.path!=='schools/'+schoolId+'/mark_settings/'+d.id)throw Error('Settings document identity mismatch');return v});
  const result=auditEntrySettingsCoverage({schoolId,classId,examId,subjects,settings});await verify();return result;
+}
+
+export function entrySettingsAuditWorkbook(result){
+ if(result?.writeAuthorized!==false||result.iemisVerified!==false||!/^\d{5,20}$/.test(result.schoolId)||!/^(?:[1-9]|10)$/.test(result.classId)||!Object.hasOwn(terms,result.examId)||!Array.isArray(result.rows)||result.rows.length>300)throw Error('Invalid read-only audit result');
+ const headers=['Notice','School ID','Class','Term','Subject ID','Subject','Status','Expected V46 schema','Saved V47 settings'];
+ const rows=result.rows.map(r=>['Read-only schema comparison — NOT verified against live IEMIS',result.schoolId,result.classId,result.examId,r.subjectId,r.subject,r.status,r.expected,r.configured]);
+ return {blob:excelWorkbook(headers,rows,{sheetName:'Settings audit'}),filename:'V47-SETTINGS-AUDIT-'+result.schoolId+'-'+result.classId+'-'+result.examId+'.xlsx'};
 }

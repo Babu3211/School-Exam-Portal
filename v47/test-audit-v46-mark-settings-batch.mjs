@@ -41,3 +41,15 @@ import {auditEntrySettingsCoverage} from './entry-settings-coverage.mjs';
  assert.equal(auditEntrySettingsCoverage({...scope,classId:'1',subjects:[subject],settings:[primary]}).matched,1);
  assert.equal(auditEntrySettingsCoverage({...scope,classId:'1',subjects:[subject],settings:[{...primary,components:[primary.components[0],{...primary.components[1],fullMarks:39}]}]}).matched,0);
 }
+
+import {entrySettingsAuditWorkbook} from './entry-settings-coverage.mjs';
+{
+ const result=auditEntrySettingsCoverage({schoolId:'12345',classId:'9',examId:'final',subjects:[{id:'math',name:'Mathematics',active:true}],settings:[]});
+ const file=entrySettingsAuditWorkbook(result);
+ assert.equal(file.filename,'V47-SETTINGS-AUDIT-12345-9-final.xlsx');
+ const content=new TextDecoder().decode(await file.blob.arrayBuffer());
+ assert.match(content,/Missing active settings/);assert.match(content,/NOT verified against live IEMIS/);
+ assert.throws(()=>entrySettingsAuditWorkbook({...result,writeAuthorized:true}),/Invalid/);
+ const inactive=auditEntrySettingsCoverage({schoolId:'12345',classId:'9',examId:'final',subjects:[{id:'math',name:'Math',active:false}],settings:[{schoolId:'12345',classId:'9',examId:'final',subjectId:'math',id:'9_math_final',active:true,components:[null]}]});
+ assert.equal(inactive.rows[0].status,'Inactive or unverified subject');assert.equal(inactive.rows[0].configured,'Invalid component');
+}

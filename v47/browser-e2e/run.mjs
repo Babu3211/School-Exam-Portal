@@ -507,6 +507,15 @@ try{
    await wait(page,()=>!document.getElementById('work').hidden);
    await page.locator('#schoolClass').selectOption('1');
    await page.locator('#term').selectOption('final');
+   const settingPath=root+'/mark_settings/1_math_final',settingBefore=(await db.doc(settingPath).get()).data();
+   await page.locator('#auditEntrySettings').click();await wait(page,()=>document.getElementById('auditEntrySettingsStatus').textContent.includes('1 सेटिङ'));
+   assert.match(await page.locator('#auditEntrySettingsRows').textContent(),/Mathematics.*Schema match/);
+   const auditDownload=page.waitForEvent('download',{timeout:30000});await page.locator('#exportEntrySettingsAudit').click();const auditFile=await auditDownload;assert.equal(auditFile.suggestedFilename(),'V47-SETTINGS-AUDIT-'+sid+'-1-final.xlsx');
+   const auditBytes=(await readFile(await auditFile.path())).toString();assert.match(auditBytes,/Schema match/);assert.match(auditBytes,/NOT verified against live IEMIS/);
+   await page.locator('#term').selectOption('1st');assert.equal(await page.locator('#auditEntrySettingsRows tr').count(),0);
+   await page.locator('#auditEntrySettings').click();await wait(page,()=>document.getElementById('auditEntrySettingsStatus').textContent.includes('1 समीक्षा आवश्यक'));
+   assert.match(await page.locator('#auditEntrySettingsRows').textContent(),/Missing active settings/);
+   await page.locator('#term').selectOption('final');assert.deepEqual((await db.doc(settingPath).get()).data(),settingBefore);
    await page.locator('#loadSubjects').click();
    await wait(page,()=>Array.from(document.getElementById('subjectId').options).some(o=>o.value==='math'));
    await page.locator('#subjectId').selectOption('math');
