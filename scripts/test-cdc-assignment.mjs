@@ -2018,6 +2018,22 @@ console.log('CDC dashboard and report hub: current-year coverage, deduplication,
  assert.ok(seenScopes.some(o=>o.studentId==='multi-a')&&seenScopes.some(o=>o.studentId==='multi-b'));
  assert.ok(!seenScopes.some(o=>o.studentId==='multi-other'));
  const savedBefore=observations.size;
+ // Mobile table uses explicit columns rather than shrinking pupil names to a single character.
+ const table=panel.querySelector('[data-cdc-matrix-table]');
+ assert.equal(table.style.tableLayout,'fixed');
+ assert.equal(table.querySelector('col').style.width,'190px');
+ assert.equal(rows[0].querySelector('[data-cdc-matrix-name]').style.wordBreak,'normal');
+ assert.equal(rows[0].querySelector('[data-cdc-matrix-name]').textContent,'1. Multi A (A)');
+ const blankDate=rows[1].querySelector('[data-cdc-matrix-date="regular"]');
+ blankDate.dispatchEvent(new w.Event('focus'));
+ assert.equal(blankDate.value,'2083-08-07','blank date fills on focus without entering rating');
+ const regularDate=rows[0].querySelector('[data-cdc-matrix-date="regular"]');
+ regularDate.click();assert.equal(regularDate.value,'2083-08-07');
+ const supportDate=rows[0].querySelector('[data-cdc-matrix-date="support"]');
+ supportDate.click();assert.equal(supportDate.value,'2083-08-07');
+ supportDate.value='2083-08-08';supportDate.click();assert.equal(supportDate.value,'2083-08-08','manual or saved date is never overwritten');
+ await panel.querySelector('[data-cdc-matrix-save]').onclick();
+ assert.equal(observations.size,savedBefore,'date alone never writes records');
  rows[0].querySelector('[data-cdc-matrix-date="regular"]').value='2083-08-07';
  rows[0].querySelector('[data-cdc-matrix-rating="regular"]').value='2';
  rows[0].querySelector('[data-cdc-matrix-date="support"]').value='2083-08-08';
@@ -2039,6 +2055,46 @@ console.log('CDC dashboard and report hub: current-year coverage, deduplication,
  assert.equal(observations.size,savedBefore+2);
  main('showSingleForm').onclick();multiHost.remove();
  console.log('Class theme forms: same CDC renderer, all scoped pupils, independent saved ratings, all-theme read-only view passed');
+}
+// Check the same mobile matrix for every class/national subject and both score modes.
+{
+ w.isAdmin=()=>true;current.roles=['admin'];current.active=true;serverRole={...current};
+ const host=w.document.createElement('div');w.document.body.append(host);
+ const pupils=grades.map(grade=>({id:'mobile-'+grade,class:'Class '+grade,section:'A',name:'Long Student Name '+grade}));
+ const registry=grades.flatMap(grade=>(Number(grade)<=3?lowerSubjects:upperSubjects).concat('Local Subject').map(subject=>({className:'Class '+grade,subject})));
+ w.getDocs=async name=>({docs:(name==='students'?pupils:registry).map((p,i)=>({id:p.id||'reg-'+i,data:()=>p}))});
+ w.getDocsFromServer=async()=>({docs:[]});
+ const before=observations.size;
+ await w.loadCdcAssessmentPage({host});
+ const root=host.querySelector('#cdcAssessmentDialog'),f=n=>root.querySelector('[data-cdc="'+n+'"]');
+ let checked=0;
+ for(const grade of grades){
+   f('class').value=grade;await f('class').onchange();
+   for(const subject of Number(grade)<=3?lowerSubjects:upperSubjects){
+     f('subject').value=subject;await f('subject').onchange();
+     const option=w.cdcEntryThemeOptions(grade,subject,'2083').find(x=>x.kind==='form');
+     assert.ok(option,grade+' '+subject+' must have a source form');
+     f('themePick').value=option.unit;await f('themePick').onchange();
+     const panel=host.querySelector('[data-cdc-multi="class"]');
+     const table=panel?.querySelector('[data-cdc-matrix-table]');
+     assert.ok(table,grade+' '+subject+' class matrix');
+     const row=table.querySelector('tbody tr');
+     assert.match(row.querySelector('[data-cdc-matrix-name]').textContent,/Long Student Name/);
+     assert.equal(table.querySelector('col').style.width,'190px');
+     for(const stage of ['regular','support']){
+       const date=row.querySelector('[data-cdc-matrix-date="'+stage+'"]');
+       assert.equal(date.disabled,false);
+       date.click();assert.equal(date.value,'2083-08-07',grade+' '+subject+' '+stage);
+       assert.equal(row.querySelectorAll('[data-cdc-matrix-rating="'+stage+'"]').length,subject==='serophero'?4:1);
+     }
+     checked++;
+   }
+   f('subject').value='Local Subject';await f('subject').onchange();
+   assert.equal(f('localSubjectHelp').hidden,false,'local subject remains source-dependent');
+ }
+ assert.equal(checked,24);assert.equal(observations.size,before);
+ host.remove();
+ console.log('All 24 national class/subject mobile matrices: readable name, both date taps, correct score mode, no writes; local subject source boundary preserved');
 }
 // CDC backup: verify legacy and new exports in an isolated synthetic DOM.
 // Assessment evidence must never be replayed through ordinary client restore.
