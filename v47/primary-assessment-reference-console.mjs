@@ -11,7 +11,7 @@ import {scoreSeroferoDraft} from './primary-assessment-v46-serofero-text.mjs';
 import {todayAssessmentDate2083} from './assessment-date-2083.mjs';
 import {loadMathAssessmentDraft,saveMathAssessmentDraft,validateMathDraftValues} from './primary-assessment-math-draft.mjs';
 import {readAssessmentDraftProgress} from './primary-assessment-draft-progress.mjs';
-import {readSavedAssessmentDraftReport,exportSavedAssessmentDraft} from './primary-assessment-draft-export.mjs';
+import {readSavedAssessmentDraftReport,exportSavedAssessmentDraft,readClassAssessmentDraftReports,exportClassAssessmentDraftReports} from './primary-assessment-draft-export.mjs';
 import {neError} from './nepali-feedback.mjs';
 const $=id=>document.getElementById(id);
 let actor=null,catalogue=null,auth,authSdk,db,api,epoch=0,portfolioEpoch=0;
@@ -202,9 +202,16 @@ async function outputTeacherDraft(kind){
  }catch(e){if(request===worksheetRequest)$('teacherDraftSaveStatus').textContent='फाइल तयार भएन: '+neError(e)}
 }
 $('teacherDraftPrint').onclick=()=>void outputTeacherDraft('print');$('teacherDraftWord').onclick=()=>void outputTeacherDraft('word');$('teacherDraftExcel').onclick=()=>void outputTeacherDraft('excel');
+async function classDraftOutput(args,kind,statusId){
+ try{await verify();args.assertCurrent();$(statusId).textContent='सबै विद्यार्थीको सुरक्षित Draft जाँच हुँदैछ…';const batch=await readClassAssessmentDraftReports(args);await verify();args.assertCurrent();
+ if(kind==='print')renderSavedPrintModels(batch.reports);else{const file=exportClassAssessmentDraftReports(batch,args.model,args.themeIndex,kind);args.assertCurrent();const url=URL.createObjectURL(file.blob),a=document.createElement('a');a.href=url;a.download=file.filename;try{document.body.append(a);a.click()}finally{a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000)}}
+ $(statusId).textContent=batch.studentCount+' विद्यार्थी — '+batch.savedCount+' सुरक्षित Draft; बाँकी खाली फाराम। आधिकारिक मूल्याङ्कन होइन।';
+ }catch(e){try{args.assertCurrent();$(statusId).textContent='Class Export तयार भएन: '+neError(e)}catch{}}
+}
+$('teacherClassPrint').onclick=()=>void classDraftOutput(worksheetSelection(),'print','teacherDraftSaveStatus');$('teacherClassWord').onclick=()=>void classDraftOutput(worksheetSelection(),'word','teacherDraftSaveStatus');$('teacherClassExcel').onclick=()=>void classDraftOutput(worksheetSelection(),'excel','teacherDraftSaveStatus');
 function clearPrint(){document.body.classList.remove('portfolio-printing');$('portfolioPrint').replaceChildren();$('portfolioPrint').hidden=true}
 let adminReviewEpoch=0,adminReviewModel=null;
-function clearAdminReview(){$('adminProgressRows').replaceChildren();$('adminProgressStatus').textContent='';$('adminDraftProgress').disabled=true;adminReviewEpoch++;adminReviewModel=null;$('adminDraftTheme').replaceChildren();$('adminDraftRows').replaceChildren();$('adminDraftHead').replaceChildren();$('adminDraftStatus').textContent='';for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel'])$(id).disabled=true;}
+function clearAdminReview(){$('adminProgressRows').replaceChildren();$('adminProgressStatus').textContent='';$('adminDraftProgress').disabled=true;adminReviewEpoch++;adminReviewModel=null;$('adminDraftTheme').replaceChildren();$('adminDraftRows').replaceChildren();$('adminDraftHead').replaceChildren();$('adminDraftStatus').textContent='';for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel','adminClassPrint','adminClassWord','adminClassExcel'])$(id).disabled=true;}
 function resetPortfolio(){
  clearAdminReview();$('adminDraftTeacher').replaceChildren();$('adminDraftSubject').replaceChildren();$('adminDraftLoad').disabled=true;clearPrint();
  portfolioEpoch++;$('portfolioRows').replaceChildren();$('indicatorRows').replaceChildren();$('portfolioStudent').replaceChildren();$('portfolioStudent').disabled=true;$('portfolioRead').disabled=true;$('portfolioExport').disabled=true;$('indicatorRead').disabled=true;$('indicatorExport').disabled=true;$('portfolioWordOrdinary').disabled=$('portfolioPrintOrdinary').disabled=true;$('portfolioWordIndicators').disabled=$('portfolioPrintIndicators').disabled=true;$('portfolioStatus').textContent='';
@@ -244,7 +251,7 @@ $('adminDraftOpen').onclick=async()=>{
  clearAdminReview();const args=adminDraftSelection(),request=adminReviewEpoch;
  try{await verify();args.assertCurrent();const model=await loadAdminAssessmentWorksheet(args);args.assertCurrent();adminReviewModel=model;
  $('adminDraftTheme').replaceChildren(...model.themes.map((t,i)=>new Option(t.theme,String(i))));
- for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel'])$(id).disabled=false;
+ for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel','adminClassPrint','adminClassWord','adminClassExcel'])$(id).disabled=false;
  $('adminDraftProgress').disabled=false;$('adminDraftStatus').textContent='थिम छान्नुहोस्। सुरक्षित Draft मात्र हेर्न मिल्छ।';
  }catch(e){if(request===adminReviewEpoch)$('adminDraftStatus').textContent='Draft खोल्न सकिएन: '+neError(e)}
 };
@@ -271,6 +278,8 @@ async function adminDraftOutput(kind){
  $('adminDraftStatus').textContent='सुरक्षित Draft मात्र — आधिकारिक मूल्याङ्कन होइन।';
  }catch(e){if(request===adminReviewEpoch){$('adminDraftRows').replaceChildren();$('adminDraftHead').replaceChildren();$('adminDraftStatus').textContent='Draft तयार भएन: '+neError(e)}}
 }
+function adminClassOutput(kind){const selection=adminDraftSelection(),model=adminReviewModel,themeIndex=Number($('adminDraftTheme').value);return classDraftOutput({...selection,model,themeIndex,reviewTeacherUid:selection.teacherUid,assertCurrent:()=>{selection.assertCurrent();if(model!==adminReviewModel||themeIndex!==Number($('adminDraftTheme').value))throw Error('Review theme changed')}},kind,'adminDraftStatus')}
+for(const [id,kind] of [['adminClassPrint','print'],['adminClassWord','word'],['adminClassExcel','excel']])$(id).onclick=()=>void adminClassOutput(kind);
 for(const [id,kind] of [['adminDraftRead','view'],['adminDraftPrint','print'],['adminDraftWord','word'],['adminDraftExcel','excel']])$(id).onclick=()=>void adminDraftOutput(kind);
 $('portfolioRead').onclick=async()=>{
  const request=++portfolioEpoch,member=actor,grade=$('portfolioGrade').value,studentId=$('portfolioStudent').value;
@@ -335,19 +344,23 @@ async function wordPortfolio(kind){
 }
 $('portfolioWordOrdinary').onclick=()=>void wordPortfolio('observations');
 $('portfolioWordIndicators').onclick=()=>void wordPortfolio('indicators');
-function renderSavedPrintModel(model){
+function renderSavedPrintModel(model){return renderSavedPrintModels([model])}
+function renderSavedPrintModels(models){
  clearPrint();
   const root=$('portfolioPrint');
   const add=(tag,value,parent=root)=>{const el=document.createElement(tag);el.textContent=value;parent.append(el);return el};
-  add('h1',model.title);
-  add('p','SMSS Exam Portal V47 · School ID: '+model.schoolId+' · Academic Year: '+model.year);
-  add('p','Student: '+(model.studentName||model.studentId)+' · Student ID: '+model.studentId+' · Class: '+model.grade+(model.section?' · Section: '+model.section:''));
-  add('p',model.notice);
-  add('p','Records: '+model.rows.length+' · Excluded historical records: '+model.historical);
-  const table=add('table',''),head=add('thead','',table),tr=add('tr','',head);
+  for(const model of models){const page=add('section','');page.className='assessment-print-student';
+  const append=(tag,value)=>add(tag,value,page);
+  append('h1',model.title);
+  append('p','SMSS Exam Portal V47 · School ID: '+model.schoolId+' · Academic Year: '+model.year);
+  append('p','Student: '+(model.studentName||model.studentId)+' · Student ID: '+model.studentId+' · Class: '+model.grade+(model.section?' · Section: '+model.section:''));
+  append('p',model.notice);if(model.hasSaved===false)append('p','No saved draft — blank assessment form');
+  append('p','Records: '+model.rows.length+' · Excluded historical records: '+model.historical);
+  const table=append('table',''),head=add('thead','',table),tr=add('tr','',head);
   for(const v of model.headers)add('th',v,tr);
   const body=add('tbody','',table);
   for(const row of model.rows){const r=add('tr','',body);for(const v of row)add('td',v??'—',r)}
+  }
   root.hidden=false;document.body.classList.add('portfolio-printing');
   try{window.print()}finally{clearPrint()}
 }
