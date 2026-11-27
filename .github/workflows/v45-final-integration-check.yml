@@ -222,11 +222,12 @@ jobs:
             reviewed=[
               ("index.html", "ad2e3b96a22601fed9d956397a98c564b3ffb768", "8a195265fe3004b158d2d28596a7dbf3b056f80f"),
               ("sw.js", "5cbe2ad0e4e381c8a6b231e8f8ee8179df00cbad", "27d05d6f1b39b0bf63acc2c996b08247c30cf01d"),
-              (".github/workflows/iemis-direct-sync-check.yml", None, "f3386ead28fbc58bb509911535040a29116aad43"),
-              ("iemis-direct-saved-marks.js", None, "60fc633db90c97e7ba4300c56318952f77907388"),
+              (".github/workflows/iemis-direct-sync-check.yml", None, "5ebb86883c423d7ba6da925ecfdbb19e19f96012"),
+              ("iemis-direct-saved-marks.js", None, "2677b626d923f411b8a4a22f87074cd2f02ddf85"),
               ("scripts/test-iemis-direct-saved-marks.mjs", None, "5f90efdf5de7882a630c90d213d02f6e48fbc48e"),
               ("iemis-direct-attendance.js", None, "f91b5b3113d58a4c4cb1f14040273c9af9106143"),
               ("scripts/test-iemis-direct-attendance.mjs", None, "fee91b5f344f120a3a09b31975e92d716015e456"),
+              ("scripts/test-iemis-direct-primary.mjs", None, "90ddf136fd0d54eb7604db28d331d4687c36ffa8"),
             ]
             expected={p for p,_,_ in reviewed}|{'.github/workflows/v45-final-integration-check.yml'}
             assert changed==expected, 'Direct Sync change scope differs from reviewed files'
