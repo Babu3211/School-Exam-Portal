@@ -481,8 +481,11 @@ try {
   await assertFails(setDoc(cdc('admin-invalid-level',adminCdcDb),{...observation,level:5,createdBy:ADMIN}));
   await assertFails(setDoc(cdc('admin-wrong-section',adminCdcDb),{...observation,section:'B',createdBy:ADMIN}));
   await assertFails(setDoc(cdc('admin-spoof',adminCdcDb),observation));
-  await assertFails(updateDoc(cdc('admin-create',adminCdcDb),{level:4}));
-  await assertFails(deleteDoc(cdc('admin-create',adminCdcDb)));
+  await assertSucceeds(updateDoc(cdc('admin-create',adminCdcDb),{level:4}));
+  await assertFails(updateDoc(cdc('admin-create',adminCdcDb),{level:5}));
+  await assertFails(updateDoc(cdc('admin-create',adminCdcDb),{className:'4'}));
+  await assertFails(updateDoc(cdc('admin-create',adminCdcDb),{createdBy:'other'}));
+  await assertSucceeds(deleteDoc(cdc('admin-create',adminCdcDb)));
   await assertFails(getDoc(cdc('valid',testEnv.unauthenticatedContext().firestore())));
   // Binary indicator evidence is separate from the established 1–4 level records.
   const seroUid='cdc-sero-assigned',seroViewer='cdc-sero-viewer',seroSubject='हाम्रो सेरोफेरो';
@@ -558,8 +561,11 @@ try {
   await assertSucceeds(getDoc(seroRef('regular',adminCdcDb)));
   await assertSucceeds(setDoc(seroRef('admin-write',adminCdcDb),{...seroData,createdBy:ADMIN}));
   await assertFails(setDoc(seroRef('admin-invalid-indicators',adminCdcDb),{...seroData,indicators:[true],createdBy:ADMIN}));
-  await assertFails(updateDoc(seroRef('admin-write',adminCdcDb),{date:'2083-08-08'}));
-  await assertFails(deleteDoc(seroRef('admin-write',adminCdcDb)));
+  await assertSucceeds(updateDoc(seroRef('admin-write',adminCdcDb),{date:'2083-08-08'}));
+  await assertFails(updateDoc(seroRef('admin-write',adminCdcDb),{indicators:[true]}));
+  await assertFails(updateDoc(seroRef('admin-write',adminCdcDb),{outcomeId:'cdc2076-g1-2'}));
+  await assertFails(deleteDoc(seroRef('regular',seroViewerDb)));
+  await assertSucceeds(deleteDoc(seroRef('admin-write',adminCdcDb)));
   await assertFails(getDoc(seroRef('regular',testEnv.unauthenticatedContext().firestore())));
   await assertFails(setDoc(cdc('binary-in-legacy',seroDb),seroData));
   console.log('Our Surroundings binary evidence: scope, four booleans, read-only roles, append-only writes and legacy separation passed');

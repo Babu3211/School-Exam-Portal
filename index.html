@@ -11279,6 +11279,43 @@ function openCdcAssessment(context = null) {
   let multiSnapshot=null,multiPanel=null,multiSequence=0,matrixBusy=false,matrixDirty=()=>false;
   let entryMode=context&&!context.reportOnly&&!embedded?'class':'single';
   const matrixRetries=new Map();
+  const matrixAdmin=()=>!readOnly&&canShow()&&isAdmin()&&!roleHas('viewer');
+  async function deleteMatrixRecords({grade,load,status,current,description}){
+    if(!matrixAdmin()||matrixBusy||!current()||!['1','2','3','4','5'].includes(grade))return;
+    if(matrixDirty()&&!window.confirm('सुरक्षित नगरेका परिवर्तन छन्। ती त्यागेर अगाडि बढ्ने?'))return;
+    matrixBusy=true;let removed=0,targets=[];
+    try{
+      targets=await load();
+      if(!current()||!matrixAdmin())return;
+      if(!targets.length){status.textContent='मेटाउन मिल्ने सुरक्षित अभिलेख छैन।';return;}
+      if(!window.confirm(description+' | शैक्षिक वर्ष '+year+' | '+targets.length+' अभिलेख (पुराना पुनर्मूल्याङ्कन समेत)। Backup राख्नुभएको छ? पुष्टि गरेपछि मेटिएका अभिलेख स्वतः फर्काउन सकिँदैन। मेटाउने?'))return;
+      for(let offset=0;offset<targets.length;offset+=80){
+        if(!current()||!matrixAdmin())throw Error('छनोट वा अनुमति परिवर्तन भयो।');
+        const chunk=targets.slice(offset,offset+80);
+        await runTransaction(db,async tx=>{
+          const fresh=await Promise.all(chunk.map(d=>tx.get(d.ref)));
+          if(!current()||!matrixAdmin())throw Error('छनोट वा अनुमति परिवर्तन भयो।');
+          if(fresh.some((d,i)=>!d.exists()||JSON.stringify(d.data())!==JSON.stringify(chunk[i].data())))throw Error('अभिलेख परिवर्तन भएको छ। फेरि Load गर्नुहोस्।');
+          chunk.forEach(d=>tx.delete(d.ref));
+        });
+        removed+=chunk.length;
+        if(current())status.textContent='मेटाइयो: '+removed+' / '+targets.length;
+      }
+    }catch(error){if(current())status.textContent='मेटाइयो: '+removed+' / '+targets.length+'। '+(error.message||'मेटाउन सकिएन।');}
+    finally{
+      matrixBusy=false;
+      if(removed&&typeof clearCdcCoverageCache==='function')clearCdcCoverageCache();
+      if(removed&&current()){
+        const message=status.textContent;closeMulti();await showMulti('class');
+        const next=multiPanel?.querySelector('[role="status"]');if(next)next.textContent=message;
+      }
+    }
+  }
+  async function classDeleteSnapshots(grade){
+    const ne='०१२३४५६७८९'[Number(grade)],variants=[grade,ne,'Class '+grade,'Class '+ne,'कक्षा '+grade,'कक्षा '+ne];
+    const result=await Promise.all(['cdc_observations','cdc_serofero_indicators'].map(name=>getDocsFromServer(query(collection(db,name),where('academicYear','==',year),where('className','in',variants)))));
+    return result.flatMap(s=>s.docs).filter(d=>d.ref&&d.data().academicYear===year&&classNoFromName(d.data().className)===grade);
+  }
   const setEntryMode=mode=>{
     entryMode=mode;
     field('student').parentElement.classList.toggle('cdc-class-hide-student',mode==='class'&&!embedded);
@@ -11310,7 +11347,7 @@ function openCdcAssessment(context = null) {
         try{
           const result=await getDocsFromServer(query(collection(db,collectionName),...Object.entries(scope).map(([k,v])=>where(k,'==',v))));
           if(!current())return;
-          row.records=result.docs.map(d=>d.data()).filter(o=>Object.entries(scope).every(([k,v])=>o[k]===v)&&(binary?o.unit===unit:normalizeTitle(o.unit)===normalizeTitle(unit))&&['regular','support'].includes(o.stage)&&typeof o.date==='string').sort((a,b)=>b.date.localeCompare(a.date)||(b.createdAt?.toMillis?.()??0)-(a.createdAt?.toMillis?.()??0));row.loaded=true;
+          row.recordRefs=new Map();row.records=result.docs.map(d=>{const data=d.data();if(d.ref)row.recordRefs.set(data,d.ref);return data;}).filter(o=>Object.entries(scope).every(([k,v])=>o[k]===v)&&(binary?o.unit===unit:normalizeTitle(o.unit)===normalizeTitle(unit))&&['regular','support'].includes(o.stage)&&typeof o.date==='string').sort((a,b)=>b.date.localeCompare(a.date)||(b.createdAt?.toMillis?.()??0)-(a.createdAt?.toMillis?.()??0));row.loaded=true;
         }catch{}
       }
     }
@@ -11353,7 +11390,19 @@ function openCdcAssessment(context = null) {
           if(!binary)remarksCell.append(remarks[0]);else for(const el of remarks){el.style.display='block';el.style.marginBottom='4px';}
           const controls=[date,...scores,...remarks];for(const el of controls)el.disabled=readOnly||!row.loaded;
           const values=()=>[date.value,...scores.map(x=>x.value),...remarks.map(x=>x.value)];
-          entries.push({row,item,stage,prev,date,scores,remarks,controls,baseline:JSON.stringify(values()),values});
+          const entry={row,item,stage,prev,date,scores,remarks,controls,baseline:JSON.stringify(values()),values,correct:false,ref:row.recordRefs?.get(prev)};
+          entries.push(entry);
+          if(matrixAdmin()&&entry.ref){
+            const edit=add(remarksCell,'button','Edit');edit.type='button';edit.className='btn alt';edit.dataset.cdcMatrixCorrect=stage;
+            edit.onclick=()=>{if(!matrixBusy&&current()&&matrixAdmin()){entry.correct=!entry.correct;edit.textContent=entry.correct?'Editing saved record':'Edit';date.focus();}};
+            const del=add(remarksCell,'button','Delete');del.type='button';del.className='btn alt';del.dataset.cdcMatrixDelete=stage;
+            del.onclick=()=>deleteMatrixRecords({grade,status,current,description:'कक्षा '+grade+' — '+name+' — '+item.title+' — '+stage,load:async()=>{
+              const scope=assessmentReadScope(row.selection);
+              const result=await getDocsFromServer(query(collection(db,collectionName),...Object.entries(scope).map(([k,v])=>where(k,'==',v))));
+              return result.docs.filter(d=>{const o=d.data();return d.ref&&Object.entries(scope).every(([k,v])=>o[k]===v)&&o.stage===stage&&(binary?o.unit===unit&&o.outcomeId===item.id:normalizeTitle(o.unit)===normalizeTitle(unit)&&o.topic===item.title);});
+            }});
+            entry.editButton=edit;controls.push(edit,del);
+          }
           const update=()=>{if(scoreLabel){const n=cdcSeroferoIndicatorCount(scores.map(x=>x.value));scoreLabel.textContent=n===null?'— / 4':n+' / 4';}};
           for(const score of scores)score.onchange=()=>{if(score.value)fillToday();update();};update();
         }
@@ -11376,6 +11425,7 @@ function openCdcAssessment(context = null) {
         const payload=binary?{...row.selection,unit,outcomeId:item.id,stage,date:normalized,indicators:vals.map(v=>v==='yes'),...(tools.some(Boolean)?{usedTools:tools}:{}),createdBy:owner}:{...row.selection,unit,unitEn,topic:item.title,topicAlt:item.alt||'',date:normalized,level:Number(vals[0]),method:item.toolsMode?tools[0]:'',evidence:'',feedback:item.toolsMode?(prev?.feedback||''):tools[0],stage,createdBy:owner};
         pending.push({e,payload});
       }
+      if(pending.some(({e})=>e.correct)&&(!matrixAdmin()||!window.confirm('छानिएका पुराना अभिलेख सच्याउने? अन्य पुनर्मूल्याङ्कन अभिलेख यथावत् रहनेछन्।')))return;
       matrixBusy=true;save.disabled=true;
       const controls=[...['class','subject','student','themePick','showClassForms','showStudentThemes','showSingleForm'].map(field),...entries.flatMap(e=>e.controls)].map(el=>[el,el.disabled]);controls.forEach(([el])=>el.disabled=true);
       let saved=0,errors=0;
@@ -11384,7 +11434,20 @@ function openCdcAssessment(context = null) {
         for(const {e,payload} of pending){
           if(!current())break;
           if(!cdcTeacherAssignment(role,grade,subject,e.row.student)){errors++;continue;}
-          const retryKey=JSON.stringify([collectionName,payload]),ref=matrixRetries.get(retryKey)||doc(collection(db,collectionName));matrixRetries.set(retryKey,ref);
+          if(e.correct){
+             try{
+               if(!matrixAdmin()||!e.ref)throw Error('Correction permission unavailable');
+               const patch=binary?{date:payload.date,indicators:payload.indicators,usedTools:payload.usedTools||['','','','']}:{date:payload.date,level:payload.level,method:payload.method,feedback:payload.feedback};
+               await runTransaction(db,async tx=>{
+                 const live=await tx.get(e.ref);
+                 if(!current()||!matrixAdmin()||!live.exists()||JSON.stringify(live.data())!==JSON.stringify(e.prev))throw Error('Saved record changed');
+                 tx.update(e.ref,patch);
+               });
+               e.prev={...e.prev,...patch};e.correct=false;if(e.editButton)e.editButton.textContent='Edit';e.date.value=payload.date;e.baseline=JSON.stringify(e.values());saved++;
+             }catch{errors++;}
+             continue;
+           }
+           const retryKey=JSON.stringify([collectionName,payload]),ref=matrixRetries.get(retryKey)||doc(collection(db,collectionName));matrixRetries.set(retryKey,ref);
           try{
             try{await setDoc(ref,{...payload,createdAt:serverTimestamp()});}
             catch(error){const existing=(await getDocFromServer(ref)).data();if(!existing||!Object.entries(payload).every(([k,v])=>JSON.stringify(existing[k])===JSON.stringify(v)))throw error;}
@@ -11393,7 +11456,7 @@ function openCdcAssessment(context = null) {
           if(current())status.textContent='सुरक्षित: '+saved+' / '+pending.length+' | असफल: '+errors;
         }
       }catch(error){if(current())status.textContent=error.message||'अङ्कन सुरक्षित भएन।';}
-      finally{matrixBusy=false;if(current()){controls.forEach(([el,was])=>el.disabled=was);save.disabled=false;if(saved||errors)status.textContent='सुरक्षित: '+saved+' / '+pending.length+(errors?' | असफल '+errors+' — फेरि Save गर्नुहोस्।':' — मूल्याङ्कन सुरक्षित भयो।');}}
+      finally{matrixBusy=false;if(saved&&typeof clearCdcCoverageCache==='function')clearCdcCoverageCache();if(current()){controls.forEach(([el,was])=>el.disabled=was);save.disabled=false;if(saved||errors)status.textContent='सुरक्षित: '+saved+' / '+pending.length+(errors?' | असफल '+errors+' — फेरि Save गर्नुहोस्।':' — मूल्याङ्कन सुरक्षित भयो।');}}
     };
   }
   const multiKey=mode=>JSON.stringify([owner,year,field('class').value,field('subject').value,mode==='class'?field('unit').value:field('student').value]);
@@ -11422,7 +11485,14 @@ function openCdcAssessment(context = null) {
       if(!role?.active||(!isAdmin()&&!role.roles?.includes('viewer')&&!role.roles?.includes('subject_teacher')))throw Error('मूल्याङ्कन हेर्ने अनुमति छैन।');
       const eligible=assessmentStudents.filter(st=>st.active!==false&&classNoFromName(st.class??st.className)===grade&&[...field('student').options].some(o=>o.value===st.id)&&(isAdmin()||role.roles?.includes('viewer')||cdcTeacherAssignment(role,grade,subject,st)));
       if(!eligible.length)throw Error('यस छनोटमा विद्यार्थी उपलब्ध छैन।');
-      if(mode==='class'){await renderClassMatrix(panel,status,eligible,current);return;}
+      if(mode==='class'){
+         if(matrixAdmin()){
+           const bulk=document.createElement('button');bulk.type='button';bulk.className='btn alt';bulk.dataset.cdcClassDeleteAll='true';bulk.textContent='Delete All — Class '+grade;
+           bulk.onclick=()=>deleteMatrixRecords({grade,status,current,description:'कक्षा '+grade+' का सबै विद्यार्थी, विषय, थिम र चरणका मूल्याङ्कन मात्र',load:()=>classDeleteSnapshots(grade)});
+           panel.append(bulk);
+         }
+         await renderClassMatrix(panel,status,eligible,current);return;
+       }
       const themes=units();
       const work=themes.map(theme=>({student:eligible.find(st=>st.id===selected),theme})).filter(x=>x.student);
       if(!work.length)throw Error('यस छनोटमा विद्यार्थी वा थिम उपलब्ध छैन।');

@@ -2011,6 +2011,7 @@ console.log('CDC dashboard and report hub: current-year coverage, deduplication,
  main('themePick').value='ज्यामिति';await main('themePick').onchange();
  const panel=multiHost.querySelector('[data-cdc-multi="class"]');
  assert.ok(panel,'theme selection opens class matrix automatically');
+ assert.equal(panel.querySelector('[data-cdc-class-delete-all]').textContent,'Delete All — Class 5');
  assert.equal(panel.querySelectorAll('[data-cdc-matrix-outcome]').length,5);
  const rows=[...panel.querySelectorAll('[data-cdc-matrix-outcome="0"] tbody tr')];
  assert.equal(rows.length,2);assert.equal(rows[0].dataset.cdcMatrixStudent,'multi-a');assert.equal(rows[1].dataset.cdcMatrixStudent,'multi-b');
