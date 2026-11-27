@@ -1,4 +1,4 @@
-import '../iemis-importer/transfer.js';
+import './iemis-direct-transfer-keys.js';
 import {createV47IemisReader} from './iemis-direct-saved-marks.mjs';
 import {combineTerminalGradeSheets} from './iemis-grade-sheet-print-preview.mjs';
 import {neError} from './nepali-feedback.mjs';
