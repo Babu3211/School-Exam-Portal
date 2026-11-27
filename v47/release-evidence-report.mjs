@@ -35,6 +35,12 @@ checks.push(
  ['Student roll number optional',/Roll Number \(optional\)/.test(students),'Student roll number is unexpectedly required'],
  ['ECD and Classes 11–12', ['ECD','11','12'].every(x=>students.includes('value="'+x+'"')),'Student class options incomplete']
 );
+// Operational approval is independent of whether source files exist.
+checks.push(
+ ['Primary assessment official acceptance',false,'Draft entry, portfolio, review and exports do not certify official CDC publication or migrated evidence'],
+ ['Trusted Spark publication runtime',false,'Static Hosting cannot execute the Node publication API; approved separate trusted runtime is not established'],
+ ['Live V47 acceptance and IEMIS comparison',false,'Independent production-project acceptance, real IEMIS 2083 comparison and owner release sign-off remain required']
+);
 const blocked=checks.filter(([,pass])=>!pass);
 const report={project:'SMSS V47',branch:'smss-v47-multischool-work',productionReady:false,checks:checks.map(([name,pass,reason])=>({name,status:pass?'STATIC_CHECK_OK':'BLOCKED',reason:pass?'Static evidence only; not a runtime test':reason})),blockingCount:blocked.length};
 console.log(JSON.stringify(report,null,2));

@@ -13,9 +13,12 @@ const singleMarkSave=read('mark-create-service.mjs');
 const classMarkSave=read('class-mark-save.mjs');
 const config=JSON.parse(read('firebase.json'));
 const blockers=[];
-// The existing V46 2083 operational assessment is required, not merely a catalogue.
-if(!existsSync(resolve(root,'primary-assessment.html'))||/स्रोत सन्दर्भ मात्र|primary-assessment-reference-console/i.test(read('primary-assessment.html')))
- blockers.push('V46 Classes 1–5 assessment parity missing: assigned teacher student entry, date/score persistence, portfolio, official print/export, dashboard/report integration and school isolation required');
+// Development implementation is distinct from independently approved production parity.
+const assessmentModules=['primary-assessment.html','primary-assessment-teacher-worksheet.mjs','primary-assessment-math-draft.mjs','primary-assessment-portfolio.mjs','primary-assessment-annual-review.mjs','primary-assessment-draft-progress.mjs'];
+if(assessmentModules.some(name=>!existsSync(resolve(root,name))))
+ blockers.push('V46 Classes 1–5 assessment development modules missing');
+else
+ blockers.push('Classes 1–5 assessment: draft entry, portfolio, annual review and exports exist; official CDC assessment publication, migrated evidence reconciliation and live school acceptance remain unapproved');
 if(/id="(?:theory|practical)"[^>]*max="100"/.test(marks))
  blockers.push('Raw marks draft UI still hardcodes a 100-point maximum');
 // The maximum for every subject must come from persisted Examination Settings.
@@ -45,7 +48,7 @@ if(config.hosting?.target&&typeof config.hosting.target!=='string')
 if(/Development only|development workspace|independent prototypes/i.test(hub))
  blockers.push('V47 dashboard is still a development hub, not a feature-complete portal');
 if(/at most 3 students|max 3/i.test(marks)||/complete\.count\s*>\s*3/.test(save))
- blockers.push('Legacy official mark service is limited to three students; the new full-class Draft covers up to 1500 but is NOT official Marks Publication');
+ blockers.push('Legacy direct mark service remains limited to three students; full-class Draft and trusted publication implementation do not constitute an approved live publication runtime');
 // A per-document mark write permission bypasses the required complete-class save gate.
 const marksRule=rules.match(/match \/marks\/\{id\} \{([\s\S]*?)\n      \}/)?.[1]??'';
 if(!marksRule)
@@ -63,7 +66,7 @@ if(marksRule&&!rawWrites.length)
 if(rawWrites.some(rule=>rule.condition!=='false'))
  blockers.push('Firestore marks rules contain a writable permission outside verified complete-class publication');
 if(rawWrites.length&&rawWrites.every(rule=>rule.condition==='false'))
- blockers.push('Firestore marks writes are disabled until audited complete-class publication is implemented');
+ blockers.push('Firestore marks writes are disabled by design; approved trusted-server publication runtime is required, not client write grants');
 const componentRule=rules.match(/match \/component_marks\/\{id\} \{([\s\S]*?)\n      \}/)?.[1]??'';
 if(!componentRule)
  blockers.push('Computer component marks security rule is missing or unreadable');
@@ -73,11 +76,12 @@ if(componentRule&&!computerWrites.length)
 if(computerWrites.some(rule=>rule.condition!=='false'))
  blockers.push('Computer component marks contain a writable permission outside verified complete-class publication');
 if(computerWrites.length&&computerWrites.every(rule=>rule.condition==='false'))
- blockers.push('Computer component marks saving is disabled until complete-class publication is implemented');
+ blockers.push('Computer component direct writes are denied by design; approved configured-component publication and IEMIS verification are required');
 const publicDir=config.hosting?.public;
 if(typeof publicDir!=='string'||publicDir!=='dist'||!existsSync(resolve(root,'dist','index.html')))
  blockers.push('Firebase Hosting output is missing its index.html');
-if(!blockers.length)
- blockers.push('No independently verified feature-parity, emulator and deployment approvals recorded; manual release sign-off required');
+// Never infer operational approval from source presence or synthetic CI.
+blockers.push('Spark-only deployment: static Firebase Hosting cannot execute the privileged Node publication API; approved continuously available trusted runtime and operator configuration required');
+blockers.push('Independent live V47 two-school acceptance, real IEMIS 2083 comparison, backup/restore and project quota validation, and owner deployment sign-off are outstanding');
 console.error('V47 PRODUCTION RELEASE BLOCKED:\n'+blockers.map(x=>' - '+x).join('\n'));
 process.exitCode=1;

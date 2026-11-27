@@ -25,3 +25,7 @@ assert.match(html,/id="save" disabled/,'Individual Save UI must stay disabled');
 assert.match(gate,/Firestore marks writes are disabled/,'Release gate must flag blocked marks');
 assert.match(gate,/process\.exitCode\s*=\s*1/,'Release gate must fail closed');
 console.log('V47 release safety contract: marks writes denied and UI publication disabled');
+
+assert.match(gate,/Spark-only deployment/);
+assert.match(gate,/Independent live V47 two-school acceptance/);
+assert.match(gate,/not client write grants/);
