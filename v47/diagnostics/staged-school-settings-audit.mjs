@@ -4,6 +4,8 @@ import {execFileSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
 import {auditAllTermSettingsCoverage} from '../entry-settings-coverage.mjs';
+import {previewV46MarkSettingsMigration} from '../preview-v46-mark-settings-migration.mjs';
+import {previewV46PrimaryAchievementSettings} from '../preview-v46-primary-achievement-settings.mjs';
 const project='smss-exam-portal-v47',terms=['1st','2nd','3rd','final'];
 const classes=Array.from({length:10},(_,i)=>String(i+1));
 const requireScope=sid=>{if(typeof sid!=='string'||!/^\d{5,20}$/.test(sid))throw Error('Invalid school ID')};
@@ -24,6 +26,47 @@ export function decodeScopedDocument(doc,prefix){
  const id=doc.name.slice(prefix.length);
  return {id,fields};
 }
+const groups={'1-3':['1','2','3'],'4-5':['4','5'],'6-8':['6','7','8'],'9-10':['9','10']};
+const norm=v=>typeof v==='string'?v.normalize('NFC').trim().toLocaleLowerCase('en'):'';
+const classValue=v=>String(v??'').trim().replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d))).match(/^(?:(?:class|कक्षा)\s*)?([1-9]|10)$/i)?.[1];
+const termValue=v=>({'1st':'1st','first':'1st','2nd':'2nd','second':'2nd','3rd':'3rd','third':'3rd','final':'final','annual':'final'}[norm(v)]);
+const present=v=>v!==undefined&&v!==null&&v!=='';
+const countBy=(rows,key)=>Object.fromEntries([...new Set(rows.map(key))].sort().map(k=>[k,rows.filter(r=>key(r)===k).length]));
+// Count possible exact-name/class mappings, never assume a term or fan out a
+// group setting to all exams. All raw labels, IDs, and scores stay in memory.
+export function summarizeLegacySettings({schoolId,subjects,settings}){
+ const results=[];
+ for(const row of settings){
+  const d=row.fields,group=groups[d.classGroup],specific=classValue(d.className);
+  const record={kind:'Unrecognized legacy structure',term:'Unspecified',candidates:0,validPreviews:0};
+  const rawTerms=[d.examId,d.term,d.examName].filter(present),mapped=rawTerms.map(termValue);
+  if(rawTerms.length)record.term=mapped.every(Boolean)&&new Set(mapped).size===1?mapped[0]:'Unresolved or conflicting';
+  if(group&&typeof d.subject==='string'&&d.subject.trim()&&Array.isArray(d.components)){
+   if(present(d.className)&&(!specific||!group.includes(specific)))record.kind='Class-specific identity conflict';
+   else{
+    const scope=specific?[specific]:group;
+    const candidates=subjects.filter(r=>r.fields.active===true&&scope.includes(r.fields.class)&&norm(r.fields.name)===norm(d.subject));
+    record.candidates=candidates.length;
+    if(!candidates.length)record.kind='No exact registered subject';
+    else if(new Set(candidates.map(r=>r.fields.class)).size!==candidates.length)record.kind='Ambiguous subject within class';
+    else if(!terms.includes(record.term))record.kind='Explicit term review required';
+    else if(!specific&&candidates.length>1)record.kind='Class-group expansion review required';
+    else{
+     record.kind='Invalid legacy components';
+     for(const candidate of candidates)try{
+      const classId=candidate.fields.class,legacy={...d,...(specific?{className:specific}:{})};
+      const args={legacy,schoolId,classId,subjectId:candidate.id,examId:record.term,verifiedSubjectName:candidate.fields.name};
+      (Number(classId)<=5?previewV46PrimaryAchievementSettings:previewV46MarkSettingsMigration)(args);
+      record.validPreviews++;
+     }catch{}
+     if(record.validPreviews===candidates.length)record.kind='Exact mapping preview only';
+    }
+   }
+  }
+  results.push(record);
+ }
+ return {records:results.length,classification:countBy(results,r=>r.kind),termClassification:countBy(results,r=>r.term),exactNameClassCandidates:results.reduce((n,r)=>n+r.candidates,0),validatedPreviews:results.reduce((n,r)=>n+r.validPreviews,0),writeAuthorized:false};
+}
 export function summarizeStagedSettings({schoolId,school,subjects,settings,members,assignments}){
  requireScope(schoolId);
  if(school?.id!==schoolId||typeof school.active!=='boolean')throw Error('Target registry identity mismatch');
@@ -36,8 +79,18 @@ export function summarizeStagedSettings({schoolId,school,subjects,settings,membe
  const reports=classes.map(classId=>auditAllTermSettingsCoverage({schoolId,classId,subjects:activeSubjects.filter(r=>r.fields.class===classId).map(r=>({id:r.id,name:r.fields.name,active:true})),settings:recognized.filter(r=>r.fields.classId===classId&&r.fields.id===r.id).map(r=>r.fields)}));
  const matrix=reports.flatMap(r=>r.reports.map(t=>({classId:r.classId,term:t.examId,matched:t.matched,reviewRequired:t.reviewRequired,statusCounts:Object.fromEntries([...new Set(t.rows.map(x=>x.status))].sort().map(s=>[s,t.rows.filter(x=>x.status===s).length]))})));
  const badMembers=members.filter(r=>r.fields.uid!==r.id||!['school_admin','teacher','viewer'].includes(r.fields.role)||typeof r.fields.active!=='boolean').length;
- const badAssignments=assignments.filter(r=>{const a=r.fields,m=membersById.get(a.uid),s=subjectsById.get(a.subjectId);return typeof a.active!=='boolean'||r.id!==[schoolId,a.uid,a.classId,a.subjectId].join(':')||!m||m.role!=='teacher'||m.uid!==a.uid||!s||s.class!==a.classId||a.active===true&&(m.active!==true||s.active!==true)}).length;
- return {schoolActive:school.active,activeClassSubjects:activeSubjects.length,totalSettings:settings.length,recognizedEntrySettings:recognized.length,settingsIdentityMismatches:idMismatch,otherOrLegacySettings:settings.length-recognized.length,matchedClassTermSubjects:matrix.reduce((n,r)=>n+r.matched,0),reviewClassTermSubjects:matrix.reduce((n,r)=>n+r.reviewRequired,0),members:members.length,activeAdmins:members.filter(r=>r.fields.role==='school_admin'&&r.fields.active===true&&r.fields.uid===r.id).length,invalidMemberRecords:badMembers,teacherAssignments:assignments.length,invalidAssignmentRecords:badAssignments,matrix,writeAuthorized:false,liveIemisVerified:false,activationAuthorized:false};
+ const assignmentReasons=assignments.map(r=>{const a=r.fields,m=membersById.get(a.uid),s=subjectsById.get(a.subjectId);
+  if(typeof a.active!=='boolean')return 'Invalid active flag';
+  if(r.id!==[schoolId,a.uid,a.classId,a.subjectId].join(':'))return 'Noncanonical assignment ID';
+  if(!m||m.role!=='teacher'||m.uid!==a.uid)return 'Missing or wrong teacher membership';
+  if(!s||s.class!==a.classId)return 'Missing or wrong class subject';
+  if(a.active===true&&s.active!==true)return 'Inactive subject';
+  if(a.active===true&&m.active!==true)return 'Teacher membership inactive';
+  return 'Structurally valid';
+ });
+ const badAssignments=assignmentReasons.filter(r=>r!=='Structurally valid').length;
+ const legacyMapping=summarizeLegacySettings({schoolId,subjects,settings:settings.filter(r=>!recognized.includes(r))});
+ return {schoolActive:school.active,activeClassSubjects:activeSubjects.length,totalSettings:settings.length,recognizedEntrySettings:recognized.length,settingsIdentityMismatches:idMismatch,otherOrLegacySettings:settings.length-recognized.length,matchedClassTermSubjects:matrix.reduce((n,r)=>n+r.matched,0),reviewClassTermSubjects:matrix.reduce((n,r)=>n+r.reviewRequired,0),members:members.length,activeAdmins:members.filter(r=>r.fields.role==='school_admin'&&r.fields.active===true&&r.fields.uid===r.id).length,invalidMemberRecords:badMembers,teacherAssignments:assignments.length,invalidAssignmentRecords:badAssignments,assignmentReviewReasons:countBy(assignmentReasons,r=>r),legacyMapping,matrix,writeAuthorized:false,liveIemisVerified:false,activationAuthorized:false};
 }
 // Only the previously configured V47 service-account secret is accepted in CI.
 // This does not request extra IAM grants, nor expose tokens or raw fields.
@@ -87,7 +140,7 @@ async function main(){
  };
  const subjects=await list('subjects',['schoolId','class','name','active'],1000);
  console.log('Target subject inventory read: OK; '+subjects.length+' documents');
- const settings=await list('mark_settings',['schoolId','id','classId','subjectId','examId','active','components'],4000);
+ const settings=await list('mark_settings',['schoolId','id','classId','subjectId','examId','active','components','classGroup','className','subject','term','examName','totalFullMarks'],4000);
  console.log('Target settings inventory read: OK; '+settings.length+' documents');
  const members=await list('members',['schoolId','uid','role','active'],300);
  console.log('Target member inventory read: OK; '+members.length+' documents');

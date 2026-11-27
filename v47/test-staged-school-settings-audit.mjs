@@ -20,3 +20,13 @@ const fixtureCredential={type:'service_account',project_id:'smss-exam-portal-v47
 assert.equal(validateTargetCredential(fixtureCredential),fixtureCredential);
 assert.throws(()=>validateTargetCredential({...fixtureCredential,project_id:'exam-portal-smss-95016'}),/Unexpected target/);
 assert.throws(()=>validateTargetCredential(null),/Unexpected target/);
+
+import {summarizeLegacySettings} from './diagnostics/staged-school-settings-audit.mjs';
+{
+ const legacy=row('legacy-explicit',{classGroup:'9-10',className:'कक्षा ९',subject:'Computer',term:'First',components:[{name:'Participation',fullMarks:4},{name:'Practical/Project',fullMarks:36},{name:'First Term Examination',fullMarks:10}]});
+ const result=summarizeLegacySettings({schoolId,subjects,settings:[legacy,{...legacy,id:'legacy-missing-term',fields:{...legacy.fields,term:undefined}},{...legacy,id:'legacy-conflict',fields:{...legacy.fields,examId:'final'}},{...legacy,id:'legacy-wrong',fields:{...legacy.fields,className:'8'}}]});
+ assert.equal(result.validatedPreviews,1);assert.equal(result.classification['Exact mapping preview only'],1);assert.equal(result.classification['Explicit term review required'],2);assert.equal(result.classification['Class-specific identity conflict'],1);
+ assert.equal(result.writeAuthorized,false);assert.equal(JSON.stringify(result).includes('Computer'),false);
+ const inactive=summarizeStagedSettings({...args,members:[members[0],{...members[1],fields:{...members[1].fields,active:false}}]});
+ assert.equal(inactive.assignmentReviewReasons['Teacher membership inactive'],1);
+}
