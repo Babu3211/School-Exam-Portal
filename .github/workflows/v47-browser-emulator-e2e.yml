@@ -39,6 +39,13 @@ jobs:
           GCLOUD_PROJECT: demo-smss-v47-browser
         run: |
           npx firebase emulators:exec --project demo-smss-v47-browser --config v47/firebase.browser-test.json --only auth,firestore "node v47/browser-e2e/run.mjs"
+      - name: Retain synthetic annual review PDFs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v47-synthetic-annual-review-pdfs
+          path: v47-annual-print-artifacts/*.pdf
+          if-no-files-found: ignore
       - name: Explain verification boundary
         if: always()
         run: |

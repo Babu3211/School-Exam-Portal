@@ -153,3 +153,6 @@ Raw max is the sum of the individual 4-indicator scoring blocks, not the officia
 
 ## 2026-11-27 — All-theme class subject coverage
 - On-demand Admin-only subject-wide coverage reads a single active roster, plans validated theme/stage draft lookups before reading, caps at 12,000 draft document reads, processes batches of eight students. Separate complete/partial/blank counts and weighted units for every theme and stage. Unavailable source rows marked explicitly, never counted as zero; no overall grade or assumed completion. Excel audit output, stale-selection protection and unit/browser fixtures. Large requests fall back to selected theme. No production changes.
+
+## 2026-11-27 — Physical annual annex print regression
+- Annual annex print-only CSS separates the four- and six-column tables, allocates extra subject/remarks width, wraps text and uses Devanagari font fallback. The browser emulator test captures the actual verified annual print DOM and styles, renders offline and asserts one physical A4 landscape page, expected table rows/columns and no horizontal overflow for synthetic grade 1 and grade 4 cases. Retains those synthetic PDFs as a CI artifact for human visual review. Does not certify exact CDC artwork, all possible long names/remarks, or official publication. No change to Word layout, grades, Firestore or production deployment.

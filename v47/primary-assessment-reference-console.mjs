@@ -391,6 +391,7 @@ function renderSavedPrintModels(models){
   const add=(tag,value,parent=root)=>{const el=document.createElement(tag);el.textContent=value;parent.append(el);return el};
   for(const model of models){const page=add('section','');page.className='assessment-print-student';
   const append=(tag,value)=>add(tag,value,page);
+  if(model.metadataLines){page.classList.add('annual-annex');page.dataset.columns=String(model.headers.length)}
   append('h1',model.title);
   if(model.metadataLines){for(const line of model.metadataLines)append('p',line)}else{
   append('p','SMSS Exam Portal V47 · School ID: '+model.schoolId+' · Academic Year: '+model.year);
