@@ -1994,6 +1994,7 @@ console.log('CDC dashboard and report hub: current-year coverage, deduplication,
  for(const key of productionApprovals)w.__testSeroApproved.add(key);
  w.loadCdcAssessmentPage=originalLoadCdc;
  w.isAdmin=()=>true;current.roles=['admin'];current.active=true;serverRole={...current};w.currentSchoolSettings.academicYear='2083';
+ const previousMatrixFixtures=new Map(observations);observations.clear();
  w.setDoc=async(ref,data)=>{assert.match(ref.path,/^cdc_observations\//);assert.ok(!observations.has(ref.path));observations.set(ref.path,data);};
  const multiHost=w.document.createElement('div');w.document.body.append(multiHost);
  const pupils=[{id:'multi-a',class:'Class 5',section:'A',name:'Multi A'},{id:'multi-b',class:'Class 5',section:'A',name:'Multi B'},{id:'multi-other',class:'Class 4',section:'A',name:'Other'}];
@@ -2098,6 +2099,7 @@ console.log('CDC dashboard and report hub: current-year coverage, deduplication,
  assert.ok(![...observations.values()].some(o=>o.studentId==='multi-a'&&o.className==='Class 5'&&o.academicYear==='2083'));
  for(const [key] of outside){assert.ok(observations.has(key),'other class/year/collection preserved');observations.delete(key);}
  w.confirm=oldConfirm;w.runTransaction=oldTransaction;
+ observations.clear();for(const [key,data] of previousMatrixFixtures)observations.set(key,data);
  main('showSingleForm').onclick();multiHost.remove();
  console.log('Class theme forms: same CDC renderer, all scoped pupils, independent saved ratings, all-theme read-only view passed');
 }
