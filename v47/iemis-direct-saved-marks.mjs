@@ -20,7 +20,7 @@ export function createV47IemisReader({getWorkspace,verifySchoolSession,enforceSc
   const readRows=async(collection,filters,max)=>{
    check();const snapshot=await api.getDocsFromServer(api.query(api.collection(db,'schools',schoolId,collection),...filters.map(([field,value])=>api.where(field,'==',value)),api.limit(max+1)));check();
    if(!Array.isArray(snapshot?.docs)||snapshot.docs.length>max)fail('Data limit exceeded: '+collection);
-   const seen=new Set();return snapshot.docs.map(d=>{const value=d.data();if(!ident.test(d.id)||seen.has(d.id)||d.ref?.path!==undefined&&d.ref.path!==root+'/'+collection+'/'+d.id||!value||value.schoolId!==schoolId||filters.some(([key,expected])=>value[key]!==expected))fail('Invalid or foreign '+collection+' record');seen.add(d.id);return {...value,id:d.id};});
+   const seen=new Set();return snapshot.docs.map(d=>{const value=d.data();if(!(collection==='marks'?/^[A-Za-z0-9_:-]{1,256}$/.test(d.id):ident.test(d.id))||seen.has(d.id)||d.ref?.path!==undefined&&d.ref.path!==root+'/'+collection+'/'+d.id||!value||value.schoolId!==schoolId||filters.some(([key,expected])=>value[key]!==expected))fail('Invalid or foreign '+collection+' record');seen.add(d.id);return {...value,id:d.id};});
   };
   await verify();
   const school=await readDocument(root);if(!school||school.id!==schoolId||school.active!==true)fail('School unavailable');
