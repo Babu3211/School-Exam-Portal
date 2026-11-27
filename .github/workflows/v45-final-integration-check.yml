@@ -220,10 +220,10 @@ jobs:
           # Every normal dashboard, IEMIS, PWA and Firestore check below still runs.
           if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-iemis-direct-sync-safe':
             reviewed=[
-              ("index.html", "ad2e3b96a22601fed9d956397a98c564b3ffb768", "9ae2c45ae22e0018864604e5220a494b9b863ac4"),
-              ("sw.js", "5cbe2ad0e4e381c8a6b231e8f8ee8179df00cbad", "5ee17b9d7d29376a527916da23d62d4dc330a929"),
+              ("index.html", "ad2e3b96a22601fed9d956397a98c564b3ffb768", "1439bf501dabccf9abf88056131f19d41fab48e6"),
+              ("sw.js", "5cbe2ad0e4e381c8a6b231e8f8ee8179df00cbad", "3078e424bcc032be2b01eed725d9b85a2c24a3cc"),
               (".github/workflows/iemis-direct-sync-check.yml", None, "5ebb86883c423d7ba6da925ecfdbb19e19f96012"),
-              ("iemis-direct-saved-marks.js", None, "e901a3c717d8b7c10197d2be42dc3bf6dc10a00c"),
+              ("iemis-direct-saved-marks.js", None, "1dc1eb7c2eb1dc1d5a84d5608ad936e2d137fc0e"),
               ("scripts/test-iemis-direct-saved-marks.mjs", None, "c2b2de3dfc6bcb7cc21f96defce9ca93b5ed047c"),
               ("iemis-direct-attendance.js", None, "f91b5b3113d58a4c4cb1f14040273c9af9106143"),
               ("scripts/test-iemis-direct-attendance.mjs", None, "fee91b5f344f120a3a09b31975e92d716015e456"),
