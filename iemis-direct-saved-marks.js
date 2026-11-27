@@ -18,9 +18,22 @@ export function createV46DirectReader({getWorkspace,T,examTermKey,subjectLabel,o
   if(!user?.uid||!isAdmin()||role?.active!==true)fail('सक्रिय SMSS Admin Login आवश्यक छ।');
   const check=()=>{const now=getWorkspace();if(now.auth!==auth||auth.currentUser!==user||now.role!==role||!now.isAdmin())fail('Login परिवर्तन भयो। फेरि Fetch गर्नुहोस्।');};
   const read=async(name,filters,max)=>{
-   check();const snap=await api.getDocsFromServer(api.query(api.collection(db,name),...filters.map(([k,v])=>api.where(k,'==',v)),api.limit(max+1)));check();
-   if(!Array.isArray(snap?.docs)||snap.docs.length>max)fail('सुरक्षित read सीमा नाघ्यो: '+name);
-   const ids=new Set();return snap.docs.map(d=>{const v=d.data();if(typeof d.id!=='string'||!d.id||ids.has(d.id)||d.ref?.path!==undefined&&d.ref.path!==name+'/'+d.id||!v||typeof v!=='object'||filters.some(([k,x])=>v[k]!==x))fail('अमान्य saved record: '+name);ids.add(d.id);return {...v,id:d.id};});
+   // Firestore StructuredQuery permits at most 10,000 rows in a single limit.
+   // For large exams, read bounded pages ordered by document ID; never silently truncate.
+   const paged=max>=10000,base=api.collection(db,name),constraints=filters.map(([k,v])=>api.where(k,'==',v));
+   const ids=new Set(),result=[];let cursor=null;
+   if(paged&&(typeof api.orderBy!=='function'||typeof api.startAfter!=='function'))fail('Pagination SDK unavailable');
+   do{
+    check();
+    const pageLimit=paged?Math.min(1000,max-result.length+1):max+1;
+    const options=paged?[...constraints,api.orderBy('__name__'),...(cursor?[api.startAfter(cursor)]:[]),api.limit(pageLimit)]:[...constraints,api.limit(pageLimit)];
+    const snap=await api.getDocsFromServer(api.query(base,...options));check();
+    if(!Array.isArray(snap?.docs)||snap.docs.length>pageLimit||result.length+snap.docs.length>max)fail('सुरक्षित read सीमा नाघ्यो: '+name);
+    for(const d of snap.docs){const v=d.data();if(typeof d.id!=='string'||!d.id||ids.has(d.id)||d.ref?.path!==undefined&&d.ref.path!==name+'/'+d.id||!v||typeof v!=='object'||filters.some(([k,x])=>v[k]!==x))fail('अमान्य saved record: '+name);ids.add(d.id);result.push({...v,id:d.id});}
+    if(!paged||snap.docs.length<pageLimit)break;
+    cursor=snap.docs.at(-1);
+   }while(true);
+   return result;
   };
   const school=async()=>{check();const s=await api.getDocFromServer(api.doc(db,'school_settings','main'));check();const d=s.exists()?s.data():null;if(!d||T.clean(d.iemisCode)!==c.schoolCode||T.clean(d.academicYear)!==year)fail('SMSS School/Academic Year मिलेन।');return d;};
   await school();
