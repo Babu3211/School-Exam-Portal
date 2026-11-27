@@ -58,10 +58,23 @@ export function createV47IemisReader({getWorkspace,verifySchoolSession,enforceSc
   for(const [key,subject] of subjects){
    const records=await readRows('marks',[['class',klass],['term',term],['subjectId',subject.id],['examId',exam.id]],3000);
    const seen=new Set(), scales=new Map(), requested=wanted.get(key);
+   // V46 optional choices are preserved on migrated student records. Do not require
+   // a Computer/Optional I mark from students enrolled in a different optional.
+   const raw=String(subject.name).trim().toLowerCase();
+   const slot=Number(klass)>=9?(/ऐच्छिक\s*(?:प्रथम|पहिलो|१)|optional\s*(?:i|1|first)\b|\bopt\.?\s*i\b/.test(raw)?1:/ऐच्छिक\s*(?:द्वितीय|दोस्रो|२)|optional\s*(?:ii|2|second)\b|\bopt\.?\s*ii\b/.test(raw)?2:['environmentalscience','additionalmathematics'].includes(key)?1:key==='computerscience'?2:0):0;
+   const applicable=new Set();
+   for(const st of roster){
+    if(!slot){applicable.add(st.id);continue;}
+    const selected=slot===1?(st.optionalSubject1??st.optionalI??st.optionalFirstSubject):(st.optionalSubject2??st.optionalII??st.optionalSecondSubject);
+    if(!T.clean(selected))fail('Optional subject assignment पूरा छैन: '+subject.name);
+    if(T.subjectKey(selected)===key)applicable.add(st.id);
+   }
+   if(!applicable.size)fail('No eligible optional students: '+subject.name);
    for(const r of records){
     const st=allStudents.get(r.studentId);
     if(!st||String(r.academicYear)!==String(exam.academicYear)||r.termKey!==exam.termKey||T.subjectKey(r.subject)!==key||typeof r.isAbsent!=='boolean'||!Array.isArray(r.scores)||seen.has(r.studentId))fail('Invalid, duplicated or wrong-year saved marks');
     seen.add(r.studentId);if(!rows.has(r.studentId))continue;
+    if(!applicable.has(r.studentId))fail('Saved optional subject assignment mismatch');
     if(r.section&&T.key(r.section)!==T.key(st.section))fail('Saved section mismatch');
     const scores=new Map();
     for(const score of r.scores){const k=T.componentKey(score.name);if(scores.has(k)||typeof score.fullMarks!=='number'||!Number.isFinite(score.fullMarks)||score.fullMarks<0||score.obtained!==null&&score.obtained!==''&&(typeof score.obtained!=='number'||!Number.isFinite(score.obtained)||score.obtained<0||score.obtained>score.fullMarks))fail('Invalid original saved score');scores.set(k,score);}
@@ -74,7 +87,8 @@ export function createV47IemisReader({getWorkspace,verifySchoolSession,enforceSc
      scales.set(kind,score.fullMarks);row.set(col,r.isAbsent||score.obtained===null?'':score.obtained);
     }
    }
-   if(roster.some(s=>!seen.has(s.id)))fail('Incomplete saved class marks: '+subject.name);
+   if([...applicable].some(id=>!seen.has(id)))fail('Incomplete saved class marks: '+subject.name);
+   for(const st of roster)if(!applicable.has(st.id))for(const kind of requested)dataByStudent.get(st.id).set(key+'::'+kind,'N/A');
    for(const kind of requested){
     const base={absent:'IsAbsent',participation:'Participation',practical:'Practical/Project',term:examTerm==='final'?'Total of Term':labels[examTerm]+' Examination',theory:'TH (Theory)'}[kind];
     columns.push({subject:subject.name,label:kind==='absent'?base:base+'('+scales.get(kind)+')',key:key+'::'+kind});
