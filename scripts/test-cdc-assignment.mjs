@@ -1354,7 +1354,7 @@ for(const [unit,count,groups] of [['म र मेरो परिवार',20,
  assert.equal(field('annexRows').querySelectorAll('[data-cdc-sero-save]').length,0);
  assert.equal(field('printForm').disabled,true);
  assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,0);
- assert.match(field('annexStatus').textContent,/समीक्षा प्रति/);
+ assert.match(field('annexStatus').textContent,/स्रोतसँग अङ्कन संरचना मिलाइएको; डिजिटल शब्दावली कार्यगत रूपान्तरण हो/);
  const regular=[...field('annexRows').querySelectorAll('[data-cdc-sero-indicator="0"]')];
  const remedial=[...field('annexRows').querySelectorAll('[data-cdc-sero-indicator="1"]')];
  const scores=[...field('annexRows').querySelectorAll('[data-cdc-sero-score="0"]')];
