@@ -101,7 +101,7 @@ jobs:
             allowed.add('scripts/test-cdc-assignment.mjs')
           if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-cdc-assessment-official-forms':
             allowed.update({'scripts/test-cdc-assignment.mjs','scripts/test-firestore-rules.mjs','docs/cdc-assessment-reference-sources.md'})
-          if os.environ.get('GITHUB_HEAD_REF') in ('fix/v46-cdc-admin-direct-entry','fix/v46-cdc-all-students-pdf','feat/v46-cdc-assessment-report-hub','fix/v46-cdc-theme-entry-coverage','fix/v46-cdc-class-theme-entry','fix/v46-cdc-mobile-name-date','fix/v46-cdc-safe-edit-delete'):
+          if os.environ.get('GITHUB_HEAD_REF') in ('fix/v46-cdc-admin-direct-entry','fix/v46-cdc-all-students-pdf','feat/v46-cdc-assessment-report-hub','fix/v46-cdc-theme-entry-coverage','fix/v46-cdc-class-theme-entry','fix/v46-cdc-mobile-name-date','fix/v46-cdc-safe-edit-delete','fix/v46-cdc-delete-live-feedback'):
             allowed.update({'scripts/test-cdc-assignment.mjs','scripts/test-firestore-rules.mjs'})
           if os.environ.get('GITHUB_HEAD_REF')=='fix/v46-cdc-class-theme-entry':
             allowed.add('docs/cdc-assessment-reference-sources.md')

@@ -11282,40 +11282,66 @@ function openCdcAssessment(context = null) {
   const matrixAdmin=()=>!readOnly&&canShow()&&isAdmin()&&!roleHas('viewer');
   const matrixRecordKey=o=>JSON.stringify(Object.entries(o||{}).sort(([a],[b])=>a.localeCompare(b)));
   async function deleteMatrixRecords({grade,load,status,current,description}){
-    if(!matrixAdmin()||matrixBusy||!current()||!['1','2','3','4','5'].includes(grade))return;
-    if(matrixDirty()&&!window.confirm('सुरक्षित नगरेका परिवर्तन छन्। ती त्यागेर अगाडि बढ्ने?'))return;
-    matrixBusy=true;let removed=0,targets=[];
+    if(!matrixAdmin()||!current()||!['1','2','3','4','5'].includes(grade))return;
+    const showStatus=message=>{if(current()){status.textContent=message;status.scrollIntoView?.({block:'nearest',behavior:'smooth'});}};
+    if(matrixBusy){showStatus('अर्को काम चलिरहेको छ।');return;}
+    if(matrixDirty()&&!window.confirm('सुरक्षित नगरेका परिवर्तन छन्। ती त्यागेर अगाडि बढ्ने?')){showStatus('मेटाउने काम रद्द गरियो।');return;}
+    matrixBusy=true;let removed=0,targets=[],progressTimer=null,confirmed=false;
+    const originalStyle=status.style.cssText;
+    const panel=status.parentElement;
+    const locked=[...new Set([...['class','subject','student','themePick','showClassForms','showStudentThemes','showSingleForm'].map(field),...panel.querySelectorAll('button,input,select,textarea')])].map(el=>[el,el.disabled]);
+    locked.forEach(([el])=>el.disabled=true);
+    status.style.cssText='position:fixed;bottom:18px;left:12px;right:12px;margin:0;z-index:10000;padding:12px;border:2px solid #17466e;background:#fff;color:#17466e;border-radius:8px;box-shadow:0 3px 15px #0003;font-weight:700;white-space:normal;overflow-wrap:anywhere';
+    status.setAttribute('aria-live','assertive');status.dataset.cdcDeletePending='true';
+    showStatus('मेटाउन मिल्ने सुरक्षित मूल्याङ्कन खोज्दै…');
     try{
       targets=await load();
       if(!current()||!matrixAdmin())return;
-      if(!targets.length){status.textContent='मेटाउन मिल्ने सुरक्षित अभिलेख छैन।';return;}
-      if(!window.confirm(description+' | शैक्षिक वर्ष '+year+' | '+targets.length+' अभिलेख (पुराना पुनर्मूल्याङ्कन समेत)। Backup राख्नुभएको छ? पुष्टि गरेपछि मेटिएका अभिलेख स्वतः फर्काउन सकिँदैन। मेटाउने?'))return;
-      for(let offset=0;offset<targets.length;offset+=80){
+      if(!targets.length){showStatus('यस कक्षा/छनोट र शैक्षिक वर्षमा मेटाउन मिल्ने सुरक्षित मूल्याङ्कन छैन।');return;}
+      if(!window.confirm(description+' | शैक्षिक वर्ष '+year+' | '+targets.length+' अभिलेख (पुराना पुनर्मूल्याङ्कन समेत)। Backup राख्नुभएको छ? पुष्टि गरेपछि मेटिएका अभिलेख स्वतः फर्काउन सकिँदैन। मेटाउने?')){showStatus('मेटाउने काम रद्द गरियो। कुनै अभिलेख मेटिएको छैन।');return;}
+      confirmed=true;
+      showStatus('पुष्टि भयो। मूल्याङ्कन मेटाउँदै… 0 / '+targets.length);
+      progressTimer=window.setInterval(()=>{if(current()&&matrixBusy)showStatus('Firestore बाट पुष्टि पर्खँदै… '+removed+' / '+targets.length+'। फेरि Delete नथिच्नुहोस्।');},10000);
+      for(let offset=0;offset<targets.length;offset+=20){
         if(!current()||!matrixAdmin())throw Error('छनोट वा अनुमति परिवर्तन भयो।');
-        const chunk=targets.slice(offset,offset+80);
+        const chunk=targets.slice(offset,offset+20);
         await runTransaction(db,async tx=>{
           const fresh=await Promise.all(chunk.map(d=>tx.get(d.ref)));
           if(!current()||!matrixAdmin())throw Error('छनोट वा अनुमति परिवर्तन भयो।');
           if(fresh.some((d,i)=>!d.exists()||matrixRecordKey(d.data())!==matrixRecordKey(chunk[i].data())))throw Error('अभिलेख परिवर्तन भएको छ। फेरि Load गर्नुहोस्।');
           chunk.forEach(d=>tx.delete(d.ref));
-        });
+        },{maxAttempts:2});
         removed+=chunk.length;
-        if(current())status.textContent='मेटाइयो: '+removed+' / '+targets.length;
+        showStatus('मेटाइयो: '+removed+' / '+targets.length);
       }
-    }catch(error){if(current())status.textContent='मेटाइयो: '+removed+' / '+targets.length+'। '+(error.message||'मेटाउन सकिएन।');}
+      showStatus('मूल्याङ्कन सफलतापूर्वक मेटाइयो: '+removed+' / '+targets.length+'। विद्यार्थी विवरण सुरक्षित छ।');
+    }catch(error){
+      const reasons={'permission-denied':'Admin अनुमति वा Firestore Rules पुष्टि गर्नुहोस्।','failed-precondition':'डेटाबेस Query वा Index तयार छैन।','unavailable':'इन्टरनेट जडान वा Firestore उपलब्ध छैन।','aborted':'अर्को प्रयोगकर्ताले अभिलेख परिवर्तन गरेको हुन सक्छ। पुनः Load गर्नुहोस्।'};
+      const code=String(error?.code||'').split('/').at(-1);
+      showStatus('मेटाइयो: '+removed+' / '+targets.length+'। '+(reasons[code]||error?.message||'मेटाउन सकिएन।')+(code?' ('+code+')':''));
+    }
     finally{
+      if(progressTimer!==null)window.clearInterval(progressTimer);
+      status.style.cssText=originalStyle;delete status.dataset.cdcDeletePending;
+      locked.forEach(([el,was])=>el.disabled=was);
       matrixBusy=false;
       if(removed&&typeof clearCdcCoverageCache==='function')clearCdcCoverageCache();
-      if(removed&&current()){
-        const message=status.textContent;closeMulti();await showMulti('class');
-        const next=multiPanel?.querySelector('[role="status"]');if(next)next.textContent=message;
+      if(confirmed&&current()){
+        const message=status.textContent;
+        // Only reload after at least one committed deletion. A failed or uncertain
+        // write is reported without silently reissuing any destructive operation.
+        if(removed){closeMulti();await showMulti('class');}
+        const next=multiPanel?.querySelector('[role="status"]')||status;
+        next.textContent=message;next.setAttribute('aria-live','assertive');next.scrollIntoView?.({block:'nearest'});
       }
     }
   }
   async function classDeleteSnapshots(grade){
     const ne='०१२३४५६७८९'[Number(grade)],variants=[grade,ne,'Class '+grade,'Class '+ne,'कक्षा '+grade,'कक्षा '+ne];
-    const result=await Promise.all(['cdc_observations','cdc_serofero_indicators'].map(name=>getDocsFromServer(query(collection(db,name),where('academicYear','==',year),where('className','in',variants)))));
-    return result.flatMap(s=>s.docs).filter(d=>d.ref&&d.data().academicYear===year&&classNoFromName(d.data().className)===grade);
+    // Single-field query avoids depending on an undeployed composite index.
+    // The academic-year guard is applied to every document before confirmation or write.
+    const result=await Promise.all(['cdc_observations','cdc_serofero_indicators'].map(name=>getDocsFromServer(query(collection(db,name),where('className','in',variants)))));
+    return result.flatMap(s=>s.docs).filter(d=>{const data=d.data();return d.ref&&data.academicYear===year&&variants.includes(data.className)&&classNoFromName(data.className)===grade;});
   }
   const setEntryMode=mode=>{
     entryMode=mode;
