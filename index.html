@@ -430,7 +430,7 @@ import {initUserActivity} from "./user-activity.js?v=20261112-final";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
 import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut,createUserWithEmailAndPassword,deleteUser,sendPasswordResetEmail} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 
-import {getFirestore,collection,addDoc,getDocs,getDocsFromServer,doc,getDoc,getDocFromServer,setDoc,updateDoc,deleteDoc,serverTimestamp,query,where,writeBatch,runTransaction,orderBy,limit} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import {getFirestore,collection,addDoc,getDocs,getDocsFromServer,doc,getDoc,getDocFromServer,setDoc,updateDoc,deleteDoc,serverTimestamp,query,where,writeBatch,runTransaction,orderBy,limit,startAfter} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 function safeNoticeError(error,fallback="प्रणालीमा समस्या आयो।"){const raw=String(error?.code||error?.message||fallback);return raw.replace(/firebase|firestore/gi,"प्रणाली").slice(0,240);}
 
 const firebaseConfig={apiKey:"AIzaSyDOwR82MTwBK1BRb-5wSVX2-EITCzJ1A5c",authDomain:"exam-portal-smss-95016.firebaseapp.com",projectId:"exam-portal-smss-95016",storageBucket:"exam-portal-smss-95016.firebasestorage.app",messagingSenderId:"86041985011",appId:"1:86041985011:web:e3806d74f2ae39d97c5c86"};
@@ -12747,7 +12747,7 @@ window.loadDashboardData=loadDashboardData;window.loadReportsData=loadReportsDat
 
 // Direct sync: existing authenticated V46 session and fresh saved data only.
 if(!Object.hasOwn(globalThis,'__SMSS_IEMIS_READ_SAVED_V1__'))Object.defineProperty(globalThis,'__SMSS_IEMIS_READ_SAVED_V1__',{value:createV46DirectReader({
- getWorkspace:()=>({auth,db,role:currentUserRole,isAdmin,api:{collection,query,where,limit,doc,getDocFromServer,getDocsFromServer}}),
+ getWorkspace:()=>({auth,db,role:currentUserRole,isAdmin,api:{collection,query,where,limit,orderBy,startAfter,doc,getDocFromServer,getDocsFromServer}}),
  T:globalThis.SmssIemisTransfer,examTermKey:smssExamTermKey,
  subjectLabel:subject=>iemisDisplaySubject(subjectEnglishLabel(subject),{codes:false}),
  optionalSlot:optionalSlotForSubject,studentOptional:studentOptionalSubject
