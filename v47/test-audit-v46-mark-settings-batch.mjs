@@ -53,3 +53,16 @@ import {entrySettingsAuditWorkbook} from './entry-settings-coverage.mjs';
  const inactive=auditEntrySettingsCoverage({schoolId:'12345',classId:'9',examId:'final',subjects:[{id:'math',name:'Math',active:false}],settings:[{schoolId:'12345',classId:'9',examId:'final',subjectId:'math',id:'9_math_final',active:true,components:[null]}]});
  assert.equal(inactive.rows[0].status,'Inactive or unverified subject');assert.equal(inactive.rows[0].configured,'Invalid component');
 }
+
+import {auditAllTermSettingsCoverage,allTermSettingsAuditWorkbook} from './entry-settings-coverage.mjs';
+{
+ const scope={schoolId:'12345',classId:'9'},subjects=[{id:'computer',name:'Computer',active:true}],d={...scope,id:'9_computer_1st',subjectId:'computer',examId:'1st',active:true,components:[{key:'p',name:'Participation',fullMarks:4},{key:'q',name:'Practical/Project',fullMarks:36},{key:'t',name:'First Term Examination',fullMarks:10}]};
+ const result=auditAllTermSettingsCoverage({...scope,subjects,settings:[d]});
+ assert.equal(result.matched,1);assert.equal(result.reviewRequired,3);assert.deepEqual(result.reports.map(r=>r.examId),['1st','2nd','3rd','final']);
+ assert.equal(result.reports[3].rows[0].status,'Missing active settings');assert.equal(result.iemisVerified,false);
+ assert.throws(()=>auditAllTermSettingsCoverage({...scope,subjects,settings:[d,{...d,examId:'2nd'}]}),/identity/);
+ assert.throws(()=>auditAllTermSettingsCoverage({...scope,subjects,settings:[{...d,schoolId:'54321'}]}),/identity/);
+ const file=allTermSettingsAuditWorkbook(result);assert.equal(file.filename,'V47-SETTINGS-AUDIT-12345-9-ALL-TERMS.xlsx');
+ assert.match(new TextDecoder().decode(await file.blob.arrayBuffer()),/Missing active settings/);
+ assert.throws(()=>allTermSettingsAuditWorkbook({...result,iemisVerified:true}),/Invalid/);
+}

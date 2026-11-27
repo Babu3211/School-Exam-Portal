@@ -76,3 +76,6 @@ assert.ok(js.includes("ClassDraftPostSaveReviewError"),'UI must distinguish ackn
 assert.ok(js.includes("classDraftRevision=null;"),'Unknown Draft state must disable a blind retry');
 assert.ok(html.includes('पुनः प्रयास गर्नुअघि कक्षा लोड गरी सुरक्षित संस्करण जाँच्नुहोस्।'),'Draft post-save instructions missing');
 console.log('V47 full-class marks UI contract passed');
+
+assert.ok(js.includes("$('schoolClass').onchange=()=>{optionRequest++;invalidateClassMarks();clearSettingsAudit();"),'Class change must also clear settings audit');
+assert.ok(js.includes("$('term').onchange=()=>{clearSettingsAudit();invalidateClassMarks();"),'Term change must clear audit and marks');

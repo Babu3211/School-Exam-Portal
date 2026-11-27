@@ -61,3 +61,34 @@ export function entrySettingsAuditWorkbook(result){
  const rows=result.rows.map(r=>['Read-only schema comparison — NOT verified against live IEMIS',result.schoolId,result.classId,result.examId,r.subjectId,r.subject,r.status,r.expected,r.configured]);
  return {blob:excelWorkbook(headers,rows,{sheetName:'Settings audit'}),filename:'V47-SETTINGS-AUDIT-'+result.schoolId+'-'+result.classId+'-'+result.examId+'.xlsx'};
 }
+
+// Four supported IEMIS terms in one class. Reuse one authoritative catalogue
+// and one bounded server query; never scan students, marks or other schools.
+export function auditAllTermSettingsCoverage({schoolId,classId,subjects,settings}){
+ if(!Array.isArray(settings)||settings.length>800)throw Error('Class settings audit exceeds 800 records');
+ const byTerm=new Map(Object.keys(terms).map(t=>[t,[]])),ids=new Set();
+ for(const d of settings){
+  if(!d||d.schoolId!==schoolId||d.classId!==classId||!byTerm.has(d.examId)||ids.has(d.id))throw Error('Unexpected class settings identity');
+  ids.add(d.id);byTerm.get(d.examId).push(d);
+ }
+ const reports=Object.keys(terms).map(examId=>auditEntrySettingsCoverage({schoolId,classId,examId,subjects,settings:byTerm.get(examId)}));
+ return Object.freeze({schoolId,classId,reports:Object.freeze(reports),matched:reports.reduce((n,r)=>n+r.matched,0),reviewRequired:reports.reduce((n,r)=>n+r.reviewRequired,0),writeAuthorized:false,iemisVerified:false});
+}
+export async function readAllTermSettingsCoverage({db,api,auth,actor,schoolId,classId,assertCurrent}){
+ if(actor?.role!=='school_admin'||actor.active!==true||actor.schoolId!==schoolId||auth?.currentUser?.uid!==actor.uid||!/^(?:[1-9]|10)$/.test(classId))throw Error('Verified School Admin and class required');
+ const uid=actor.uid;
+ const check=()=>{assertCurrent();if(auth.currentUser?.uid!==uid||actor.uid!==uid||actor.schoolId!==schoolId||actor.role!=='school_admin'||actor.active!==true)throw Error('School session changed')};
+ const verify=async()=>{check();const s=await verifySchoolSession({schoolId,uid,readDocument:async path=>{const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));check();return snap.exists()?snap.data():null}});check();if(s.role!=='school_admin')throw Error('School Admin required')};
+ await verify();
+ const subjects=await readSchoolSubjectCatalog({db,api,actor,schoolId,schoolClass:classId,assertCurrent:check});
+ const q=api.query(api.collection(db,'schools',schoolId,'mark_settings'),api.where('classId','==',classId),api.where('examId','in',Object.keys(terms)),api.limit(801));
+ const snap=await api.getDocsFromServer(q);check();
+ const settings=snap.docs.map(d=>{const v=d.data();if(v.id!==d.id||d.ref?.path!==undefined&&d.ref.path!=='schools/'+schoolId+'/mark_settings/'+d.id)throw Error('Settings document identity mismatch');return v});
+ const result=auditAllTermSettingsCoverage({schoolId,classId,subjects,settings});await verify();return result;
+}
+export function allTermSettingsAuditWorkbook(result){
+ if(result?.writeAuthorized!==false||result.iemisVerified!==false||!/^\d{5,20}$/.test(result.schoolId)||!/^(?:[1-9]|10)$/.test(result.classId)||!Array.isArray(result.reports)||result.reports.length!==4||result.reports.some((r,i)=>r.schoolId!==result.schoolId||r.classId!==result.classId||r.examId!==Object.keys(terms)[i]||r.writeAuthorized!==false||r.iemisVerified!==false||!Array.isArray(r.rows)||r.rows.length>300))throw Error('Invalid all-term audit result');
+ const headers=['Notice','School ID','Class','Term','Subject ID','Subject','Status','Expected V46 schema','Saved V47 settings'];
+ const rows=result.reports.flatMap(r=>r.rows.map(v=>['Read-only schema comparison — NOT verified against live IEMIS',r.schoolId,r.classId,r.examId,v.subjectId,v.subject,v.status,v.expected,v.configured]));
+ return {blob:excelWorkbook(headers,rows,{sheetName:'All term settings'}),filename:'V47-SETTINGS-AUDIT-'+result.schoolId+'-'+result.classId+'-ALL-TERMS.xlsx'};
+}

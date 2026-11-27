@@ -515,6 +515,7 @@ try{
    await page.locator('#term').selectOption('1st');assert.equal(await page.locator('#auditEntrySettingsRows tr').count(),0);
    await page.locator('#auditEntrySettings').click();await wait(page,()=>document.getElementById('auditEntrySettingsStatus').textContent.includes('1 समीक्षा आवश्यक'));
    assert.match(await page.locator('#auditEntrySettingsRows').textContent(),/Missing active settings/);
+   const allAuditDownload=page.waitForEvent('download',{timeout:30000});await page.locator('#exportAllTermSettingsAudit').click();const allAuditFile=await allAuditDownload;assert.equal(allAuditFile.suggestedFilename(),'V47-SETTINGS-AUDIT-'+sid+'-1-ALL-TERMS.xlsx');const allAuditBytes=(await readFile(await allAuditFile.path())).toString();assert.match(allAuditBytes,/Schema match/);assert.match(allAuditBytes,/Missing active settings/);
    await page.locator('#term').selectOption('final');assert.deepEqual((await db.doc(settingPath).get()).data(),settingBefore);
    await page.locator('#loadSubjects').click();
    await wait(page,()=>Array.from(document.getElementById('subjectId').options).some(o=>o.value==='math'));
