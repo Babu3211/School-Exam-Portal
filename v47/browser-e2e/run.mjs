@@ -437,6 +437,15 @@ try{
      await admin.page.locator('#portfolioStudent').selectOption(studentId);await admin.page.locator('#adminDraftLoad').click();await wait(admin.page,id=>Array.from(document.getElementById('adminDraftSubject').options).some(o=>o.value===id),subjectId);await admin.page.locator('#adminDraftTeacher').selectOption(teacherUid);await admin.page.locator('#adminDraftSubject').selectOption(subjectId);await admin.page.locator('#adminDraftOpen').click();await wait(admin.page,()=>!document.getElementById('adminDraftRead').disabled);await admin.page.locator('#adminDraftRead').click();await wait(admin.page,()=>document.querySelectorAll('#adminDraftRows tr').length===2);
      assert.ok((await admin.page.locator('#adminDraftRows').textContent()).includes('2083-08-11'));
      const batchDownload=admin.page.waitForEvent('download',{timeout:30000});await admin.page.locator('#adminClassExcel').click();const batchFile=await batchDownload;const batchBytes=(await readFile(await batchFile.path())).toString();assert.ok(batchBytes.includes('Alpha Student')&&batchBytes.includes('Synthetic Unassessed Student')&&batchBytes.includes('Not saved'));
+     const attendanceFixtures=['2026-04-15','2026-04-16'].map(date=>root+'/attendance/'+date+'_'+studentId);
+     try{
+      await db.doc(attendanceFixtures[0]).set({schoolId:sid,studentId,class:grade,date:'2026-04-15',present:true});
+      await db.doc(attendanceFixtures[1]).set({schoolId:sid,studentId,class:grade,date:'2026-04-16',present:false});
+      await admin.page.locator('#annualReviewRead').click();await wait(admin.page,()=>document.querySelectorAll('#annualReviewRows tr').length===5);
+      const row=admin.page.locator('#annualReviewRows tr').last();assert.equal(await row.locator('td').nth(3).textContent(),'2');assert.equal(await row.locator('td').nth(4).textContent(),'2 / 2');assert.equal(await row.locator('td').nth(5).textContent(),'');assert.match(await row.textContent(),/87\.50%/);
+      assert.match(await admin.page.locator('#annualReviewStatus').textContent(),/1 दिन उपस्थित, 1 दिन अनुपस्थित, 2 दिनको V47 अभिलेख/);
+      const download=admin.page.waitForEvent('download',{timeout:30000});await admin.page.locator('#annualReviewExcel').click();const file=await download;assert.match((await readFile(await file.path())).toString(),/1 present, 1 absent, 2 recorded days/);
+     }finally{await Promise.all(attendanceFixtures.map(p=>db.doc(p).delete()))}
      assert.equal((await db.doc(draftPath).get()).data().revision,1);assert.deepEqual(admin.errors,[]);assert.deepEqual(errors,[]);
      console.log('PASS local curriculum Admin source registration, assigned teacher assessment, Excel and Admin review');
     }finally{await admin.context.close();await Promise.all([draftPath,sourcePath,assignmentPath,subjectPath,blankStudentPath].map(p=>db.doc(p).delete()))}

@@ -166,3 +166,11 @@ assert.equal(lowerSummary(reviewLowerAchievement({ratings:'4',date:'2083-08-12'}
 assert.equal(summarizeLowerAchievement([{expected:1,review:lowerReview('4',null,1)},{expected:2,review:null}]).grade,null);
 assert.equal(summarizeLowerAchievement([{expected:1,review:lowerReview('4',null,1)},{expected:3,review:lowerReview('111',null,3)}]).percentage,43.75);
 console.log('PASS CDC 2076 lower annual review: boundaries, weighted totals, binary zero, partial and conflicting evidence');
+
+import {summarizeAnnualAttendance} from './primary-assessment-annual-review.mjs';
+const attendanceDoc=(date,present,grade='1',schoolId='11111001')=>({id:date+'_student',data:()=>({schoolId,studentId:'student',class:grade,date,present})});
+const attendanceArgs={schoolId:'11111001',grade:'1',studentId:'student',asOf:'2026-11-27'};
+assert.deepEqual(summarizeAnnualAttendance({...attendanceArgs,docs:[attendanceDoc('2026-04-14',true),attendanceDoc('2026-04-15',false),attendanceDoc('2026-04-13',true),attendanceDoc('2026-04-16',true,'2'),attendanceDoc('2026-12-01',true)]}),{present:1,absent:1,recorded:2,excluded:3});
+assert.equal(summarizeAnnualAttendance({...attendanceArgs,docs:[]}).recorded,0);
+assert.throws(()=>summarizeAnnualAttendance({...attendanceArgs,docs:[attendanceDoc('2026-04-15',true,'1','22222002')]}),/identity mismatch/);
+assert.throws(()=>summarizeAnnualAttendance({...attendanceArgs,docs:[attendanceDoc('2026-04-15',true),attendanceDoc('2026-04-15',false)]}),/identity mismatch/);

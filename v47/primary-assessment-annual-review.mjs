@@ -6,6 +6,26 @@ import {readAssessmentDraftProgress} from './primary-assessment-draft-progress.m
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {assessmentPrintWordBlob} from './primary-assessment-portfolio.mjs';
 import {excelWorkbook} from './excel-workbook.mjs';
+import {readLocalAssessmentSource} from './primary-assessment-local-source.mjs';
+import {validateAttendance} from './attendance-service.mjs';
+import {nepalGregorianDate} from './nepal-date.mjs';
+// 2083 only; count recorded daily rows, not school operating days.
+export function summarizeAnnualAttendance({schoolId,grade,studentId,docs,asOf}){
+ if(!Array.isArray(docs)||docs.length>1000||typeof asOf!=='string')throw Error('Attendance review limit or scope invalid');
+ const seen=new Set();let present=0,absent=0,excluded=0;
+ for(const doc of docs){
+  const d=doc.data();
+  if(!d||d.schoolId!==schoolId||d.studentId!==studentId||doc.ref?.path!==undefined&&doc.ref.path!=='schools/'+schoolId+'/attendance/'+doc.id||seen.has(doc.id))throw Error('Attendance identity mismatch');
+  seen.add(doc.id);
+  const entry=validateAttendance(d);
+  if(doc.id!==entry.date+'_'+studentId)throw Error('Attendance document identity mismatch');
+  if(entry.class!==grade||entry.date<'2026-04-14'||entry.date>='2027-04-14'||entry.date>asOf){excluded++;continue}
+  if(entry.present)present++;else absent++;
+ }
+ return Object.freeze({present,absent,recorded:present+absent,excluded});
+}
+export function annualAttendanceText(a){return 'V47 recorded daily attendance: '+a.present+' present, '+a.absent+' absent, '+a.recorded+' recorded days. School operating days and migrated V46 attendance not included.';}
+
 export const upperAnnualSubjects=Object.freeze([['nepali','नेपाली',5],['english','English',5],['mathematics','गणित / Mathematics',5],['science','विज्ञान तथा प्रविधि / Science and Technology',5],['socialstudies','सामाजिक अध्ययन तथा मानवमूल्य शिक्षा',5],['healthphysicalcreativeart','स्वास्थ्य, शारीरिक तथा सिर्जनात्मक कला / Health, Physical and Creative Arts',3],['hamrodhunibeshi','मातृभाषा वा स्थानीय विषय वा अन्य',4]].map(Object.freeze));
 // CDC 2076 Annex 2, PDF pp.13–14 (applicable 2083); annual curriculum hours, not weekly periods.
 export const lowerAnnualSubjects=Object.freeze([['nepali','नेपाली भाषा',160],['mathematics','गणित / Mathematics',128],['english','English',128],['serophero','हाम्रो सेरोफेरो',256],['hamrodhunibeshi','मातृभाषा / स्थानीय विषय',160]].map(Object.freeze));
@@ -30,10 +50,16 @@ export async function readAnnualReview(args){
   const subject=matches[0],assigned=duties.filter(a=>a.subjectId===subject.id);
   if(assigned.length!==1){rows.push(blank(assigned.length?'Multiple assigned teachers — review required':'No assigned teacher'));continue}
   const teacherUid=assigned[0].uid;
-  // Local curriculum has no certified national grade rule. Do not fabricate it.
-  if(key==='hamrodhunibeshi'){rows.push(blank('School local curriculum — annual grade rule pending'));continue}
+  // A missing local source is not an error for the other subjects.
+  const local=key==='hamrodhunibeshi';
+  if(local&&!(await readLocalAssessmentSource({...args,subjectId:subject.id,assertCurrent:check}))){rows.push(blank('School local curriculum not registered'));continue}
   const model=await loadAdminAssessmentWorksheet({...args,subjectId:subject.id,teacherUid,assertCurrent:check});
   const progress=await readAssessmentDraftProgress({...args,model,reviewTeacherUid:teacherUid,assertCurrent:check});check();
+  if(local){
+   const expected=model.themes.reduce((n,t)=>n+t.count,0),total=progress.totals[0];
+   rows.push([index+1,label,hours,expected,total.entered+' / '+expected,'','School local curriculum · '+model.themes.length+' themes · '+(total.percentage===null?'No saved ratings':total.percentage.toFixed(2)+'% (draft)')+' · Annual grade rule pending']);
+   continue;
+  }
   if(lower){
    // Keep stages distinct. A partially checked four-indicator block is not an assessed outcome.
    const binary=key==='serophero',expected=model.themes.reduce((n,t)=>n+(binary?t.scoreBlocks:t.count),0);
@@ -48,11 +74,13 @@ export async function readAnnualReview(args){
   const consistent=a.complete&&c.complete&&!a.conflicts&&!a.different;
   rows.push([index+1,label,hours,expected,a.count+' / '+expected,consistent?a.grade.letter+' ('+(a.grade.point===null?'—':a.grade.point.toFixed(1))+')':'',a.conflicts?'Unresolved date conflicts: '+a.conflicts:a.different?'Stage/date review differs: '+a.different:!a.complete?'Incomplete assessment':consistent?'Review only · '+a.percentage.toFixed(2)+'%':'Review pending']);
  }
+ const attendanceSnap=await api.getDocsFromServer(api.query(api.collection(db,'schools',schoolId,'attendance'),api.where('studentId','==',studentId),api.limit(1001)));check();
+ const attendance=summarizeAnnualAttendance({schoolId,grade,studentId,docs:attendanceSnap.docs,asOf:nepalGregorianDate()});
  await verify();check();
- return Object.freeze({title:lower?'Annual Student Progress — Annex 2 Review':'Annual Student Progress — Annex 4 Review',schoolId,studentId,studentName:String(student.nameEnglish??student.name??studentId),grade,section:String(student.section??''),year:'2083',historical:0,headers:annualReviewHeaders(grade),rows:Object.freeze(rows.map(Object.freeze)),notice:'Saved teacher drafts only — NOT official annual report. Migrated observations and school operating-day attendance are not included.',stageSummary:(lower?'CDC 2076 A*–E scale; draft levels only. ':'')+'Attendance and signatures pending official verification. Class teacher __________ · Headteacher __________ · Date __________',officialAssessmentApproved:false});
+ return Object.freeze({attendance,title:lower?'Annual Student Progress — Annex 2 Review':'Annual Student Progress — Annex 4 Review',schoolId,studentId,studentName:String(student.nameEnglish??student.name??studentId),grade,section:String(student.section??''),year:'2083',historical:0,headers:annualReviewHeaders(grade),rows:Object.freeze(rows.map(Object.freeze)),notice:'Saved teacher drafts only — NOT official annual report. Migrated observations and V46 attendance are not included.',stageSummary:(lower?'CDC 2076 A*–E scale; draft levels only. ':'')+annualAttendanceText(attendance)+' Signatures pending official verification. Class teacher __________ · Headteacher __________ · Date __________',officialAssessmentApproved:false});
 }
 export function exportUpperAnnualReview(report,kind){
  if(!['word','excel'].includes(kind))throw Error('Invalid annual export');
- const blob=kind==='word'?assessmentPrintWordBlob(report):excelWorkbook(['Status','School ID','Student ID','Student','Class','Year',...report.headers],report.rows.map(row=>[report.notice,report.schoolId,report.studentId,report.studentName,report.grade,report.year,...row]),{sheetName:'Annual review'});
+ const blob=kind==='word'?assessmentPrintWordBlob(report):excelWorkbook(['Status','School ID','Student ID','Student','Class','Year','Attendance summary',...report.headers],report.rows.map(row=>[report.notice,report.schoolId,report.studentId,report.studentName,report.grade,report.year,annualAttendanceText(report.attendance),...row]),{sheetName:'Annual review'});
  return {blob,filename:'V47-ANNUAL-REVIEW-'+report.schoolId+'-'+report.studentId+'-2083.'+(kind==='word'?'docx':'xlsx')};
 }
