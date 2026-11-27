@@ -11286,37 +11286,53 @@ function openCdcAssessment(context = null) {
     const showStatus=message=>{if(current()){status.textContent=message;status.scrollIntoView?.({block:'nearest',behavior:'smooth'});}};
     if(matrixBusy){showStatus('अर्को काम चलिरहेको छ।');return;}
     if(matrixDirty()&&!window.confirm('सुरक्षित नगरेका परिवर्तन छन्। ती त्यागेर अगाडि बढ्ने?')){showStatus('मेटाउने काम रद्द गरियो।');return;}
-    matrixBusy=true;let removed=0,targets=[];
+    matrixBusy=true;let removed=0,targets=[],progressTimer=null,confirmed=false;
+    const originalStyle=status.style.cssText;
+    const panel=status.parentElement;
+    const locked=[...new Set([...['class','subject','student','themePick','showClassForms','showStudentThemes','showSingleForm'].map(field),...panel.querySelectorAll('button,input,select,textarea')])].map(el=>[el,el.disabled]);
+    locked.forEach(([el])=>el.disabled=true);
+    status.style.cssText='position:fixed;bottom:18px;left:12px;right:12px;margin:0;z-index:10000;padding:12px;border:2px solid #17466e;background:#fff;color:#17466e;border-radius:8px;box-shadow:0 3px 15px #0003;font-weight:700;white-space:normal;overflow-wrap:anywhere';
+    status.setAttribute('aria-live','assertive');status.dataset.cdcDeletePending='true';
     showStatus('मेटाउन मिल्ने सुरक्षित मूल्याङ्कन खोज्दै…');
     try{
       targets=await load();
       if(!current()||!matrixAdmin())return;
       if(!targets.length){showStatus('यस कक्षा/छनोट र शैक्षिक वर्षमा मेटाउन मिल्ने सुरक्षित मूल्याङ्कन छैन।');return;}
       if(!window.confirm(description+' | शैक्षिक वर्ष '+year+' | '+targets.length+' अभिलेख (पुराना पुनर्मूल्याङ्कन समेत)। Backup राख्नुभएको छ? पुष्टि गरेपछि मेटिएका अभिलेख स्वतः फर्काउन सकिँदैन। मेटाउने?')){showStatus('मेटाउने काम रद्द गरियो। कुनै अभिलेख मेटिएको छैन।');return;}
-      showStatus('मूल्याङ्कन मेटाउँदै… 0 / '+targets.length);
-      for(let offset=0;offset<targets.length;offset+=80){
+      confirmed=true;
+      showStatus('पुष्टि भयो। मूल्याङ्कन मेटाउँदै… 0 / '+targets.length);
+      progressTimer=window.setInterval(()=>{if(current()&&matrixBusy)showStatus('Firestore बाट पुष्टि पर्खँदै… '+removed+' / '+targets.length+'। फेरि Delete नथिच्नुहोस्।');},10000);
+      for(let offset=0;offset<targets.length;offset+=20){
         if(!current()||!matrixAdmin())throw Error('छनोट वा अनुमति परिवर्तन भयो।');
-        const chunk=targets.slice(offset,offset+80);
+        const chunk=targets.slice(offset,offset+20);
         await runTransaction(db,async tx=>{
           const fresh=await Promise.all(chunk.map(d=>tx.get(d.ref)));
           if(!current()||!matrixAdmin())throw Error('छनोट वा अनुमति परिवर्तन भयो।');
           if(fresh.some((d,i)=>!d.exists()||matrixRecordKey(d.data())!==matrixRecordKey(chunk[i].data())))throw Error('अभिलेख परिवर्तन भएको छ। फेरि Load गर्नुहोस्।');
           chunk.forEach(d=>tx.delete(d.ref));
-        });
+        },{maxAttempts:2});
         removed+=chunk.length;
-        if(current())status.textContent='मेटाइयो: '+removed+' / '+targets.length;
+        showStatus('मेटाइयो: '+removed+' / '+targets.length);
       }
+      showStatus('मूल्याङ्कन सफलतापूर्वक मेटाइयो: '+removed+' / '+targets.length+'। विद्यार्थी विवरण सुरक्षित छ।');
     }catch(error){
       const reasons={'permission-denied':'Admin अनुमति वा Firestore Rules पुष्टि गर्नुहोस्।','failed-precondition':'डेटाबेस Query वा Index तयार छैन।','unavailable':'इन्टरनेट जडान वा Firestore उपलब्ध छैन।','aborted':'अर्को प्रयोगकर्ताले अभिलेख परिवर्तन गरेको हुन सक्छ। पुनः Load गर्नुहोस्।'};
       const code=String(error?.code||'').split('/').at(-1);
       showStatus('मेटाइयो: '+removed+' / '+targets.length+'। '+(reasons[code]||error?.message||'मेटाउन सकिएन।')+(code?' ('+code+')':''));
     }
     finally{
+      if(progressTimer!==null)window.clearInterval(progressTimer);
+      status.style.cssText=originalStyle;delete status.dataset.cdcDeletePending;
+      locked.forEach(([el,was])=>el.disabled=was);
       matrixBusy=false;
       if(removed&&typeof clearCdcCoverageCache==='function')clearCdcCoverageCache();
-      if(removed&&current()){
-        const message=status.textContent;closeMulti();await showMulti('class');
-        const next=multiPanel?.querySelector('[role="status"]');if(next){next.textContent=message;next.scrollIntoView?.({block:'nearest'});}
+      if(confirmed&&current()){
+        const message=status.textContent;
+        // Only reload after at least one committed deletion. A failed or uncertain
+        // write is reported without silently reissuing any destructive operation.
+        if(removed){closeMulti();await showMulti('class');}
+        const next=multiPanel?.querySelector('[role="status"]')||status;
+        next.textContent=message;next.setAttribute('aria-live','assertive');next.scrollIntoView?.({block:'nearest'});
       }
     }
   }

@@ -2089,7 +2089,21 @@ console.log('CDC dashboard and report hub: current-year coverage, deduplication,
  assert.equal(savedEntry[1].level,3);
  approve=false;await regular().onclick();
  assert.equal(observations.size,savedBefore+2,'cancelled individual delete preserves records');
- approve=true;await regular().onclick();
+ approve=true;
+ // Simulate a confirmed deletion whose transaction has not yet answered.
+ const normalDeleteTransaction=w.runTransaction;
+ let releaseDelete,enteredDelete;
+ const deleteEntered=new Promise(resolve=>{enteredDelete=resolve;});
+ const deleteGate=new Promise(resolve=>{releaseDelete=resolve;});
+ w.runTransaction=async(...args)=>{enteredDelete();await deleteGate;return normalDeleteTransaction(...args);};
+ const pendingDelete=regular().onclick();await deleteEntered;
+ const pendingStatus=fresh().querySelector('[role="status"]');
+ assert.equal(pendingStatus.dataset.cdcDeletePending,'true');
+ assert.match(pendingStatus.textContent,/पुष्टि भयो/);
+ assert.equal(regular().disabled,true,'prevent duplicate deletes during pending transaction');
+ assert.equal(observations.size,savedBefore+2);
+ releaseDelete();await pendingDelete;w.runTransaction=normalDeleteTransaction;
+ assert.match(fresh().querySelector('[role="status"]').textContent,/सफलतापूर्वक मेटाइयो/);
  assert.equal(observations.size,savedBefore+1,'one stage only is removed');
  assert.ok([...observations.values()].some(o=>o.studentId==='multi-a'&&o.stage==='support'));
  const support=[...observations.values()].find(o=>o.studentId==='multi-a'&&o.stage==='support');
@@ -2112,7 +2126,14 @@ console.log('CDC dashboard and report hub: current-year coverage, deduplication,
  assert.equal(deleteQueries,2);
  assert.match(fresh().querySelector('[role="status"]').textContent,/रद्द गरियो/);
  assert.ok(observations.has(extra));assert.match(confirmMessages.at(-1),/कक्षा 5.*2083.*2 अभिलेख/);
- approve=true;await fresh().querySelector('[data-cdc-class-delete-all]').onclick();
+ approve=true;
+ w.runTransaction=async()=>{throw Object.assign(Error('synthetic permission error'),{code:'permission-denied'});};
+ await fresh().querySelector('[data-cdc-class-delete-all]').onclick();
+ assert.match(fresh().querySelector('[role="status"]').textContent,/permission-denied/);
+ assert.ok(observations.has(extra),'failed transaction does not erase data');
+ assert.equal(fresh().querySelector('[data-cdc-class-delete-all]').disabled,false);
+ w.runTransaction=normalDeleteTransaction;
+ await fresh().querySelector('[data-cdc-class-delete-all]').onclick();
  assert.ok(!observations.has(extra));
  assert.ok(![...observations.values()].some(o=>o.studentId==='multi-a'&&o.className==='Class 5'&&o.academicYear==='2083'));
  for(const [key] of outside){assert.ok(observations.has(key),'other class/year/collection preserved');observations.delete(key);}
