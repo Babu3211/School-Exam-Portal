@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {loadMathAssessmentDraft,saveMathAssessmentDraft} from './primary-assessment-math-draft.mjs';
-import {loadPrimaryTeacherWorksheet} from './primary-assessment-teacher-worksheet.mjs';
+import {loadPrimaryTeacherWorksheet,loadAdminAssessmentWorksheet} from './primary-assessment-teacher-worksheet.mjs';
 import {loadSparkCommittedReport} from './spark-committed-report.mjs';
 import {loadSparkDraftReport} from './spark-draft-report.mjs';
 import {saveTeacherClassAttendance} from './teacher-class-attendance.mjs';
@@ -171,7 +171,21 @@ try{
   const themeId=createHash('sha256').update(JSON.stringify(['ad2e3b96a22601fed9d956397a98c564b3ffb768','1',theme.theme,theme.sourceRows])).digest('hex');
   const parts=[...root,'teacher_assessment_drafts',uid,'classes','1','subjects',subjectId,'students',studentId,'themes',themeId];
   await assertFails(getDoc(doc(viewer,...parts)));
-  await assertFails(getDoc(doc(admin,...parts)));
+  // Same-school Admin review is now explicitly read-only, not teacher impersonation.
+  await assertSucceeds(getDoc(doc(admin,...parts)));
+  const reviewActor={uid:'admin_'+sid,schoolId:sid,role:'school_admin',active:true};
+  const reviewModel=await loadAdminAssessmentWorksheet({db:admin,api,actor:reviewActor,schoolId:sid,grade:'1',subjectId,studentId,teacherUid:uid,catalogue,assertCurrent});
+  const reviewArgs={db:admin,api,actor:reviewActor,auth:{currentUser:{uid:reviewActor.uid}},model:reviewModel,studentId,themeIndex:0,reviewTeacherUid:uid,assertCurrent};
+  assert.equal((await loadMathAssessmentDraft(reviewArgs)).ratings,'4'.repeat(ratings.length));
+  await assert.rejects(saveMathAssessmentDraft({...reviewArgs,ratings,date:'2083-08-11',expectedRevision:2}),/Verified assigned/);
+  await assertFails(updateDoc(doc(admin,...parts),{ratings,revision:3,updatedAt:serverTimestamp()}));
+  await assertFails(deleteDoc(doc(admin,...parts)));
+  await assertFails(getDocs(collection(admin,...parts.slice(0,-1))));
+  await assertFails(getDoc(doc(db('admin_87654321'),...parts)));
+  await assertFails(getDoc(doc(anon,...parts)));
+  const original=(await getDoc(doc(teacher,...parts))).data();
+  await assertFails(setDoc(doc(admin,...parts.slice(0,-1),'a'.repeat(64)),{...original,themeId:'a'.repeat(64),revision:1,updatedAt:serverTimestamp()}));
+  assert.equal((await getDoc(doc(teacher,...parts))).data().revision,2);
   await assertFails(getDoc(doc(db('teacher_87654321'),...parts)));
   await assertFails(updateDoc(doc(teacher,...parts),{ratings:'9',revision:3,updatedAt:serverTimestamp()}));
   await assertFails(deleteDoc(doc(teacher,...parts)));
@@ -179,8 +193,10 @@ try{
    await updateDoc(doc(ctx.firestore(),...root,'teacher_assignments',sid+':'+uid+':1:'+subjectId),{active:false});
   });
   await assertFails(getDoc(doc(teacher,...parts)));
+  await assertFails(getDoc(doc(admin,...parts)));
+  await assert.rejects(loadAdminAssessmentWorksheet({db:admin,api,actor:reviewActor,schoolId:sid,grade:'1',subjectId,studentId,teacherUid:uid,catalogue,assertCurrent}),/Active assigned/);
   await assertFails(updateDoc(doc(teacher,...parts),{ratings,revision:3,updatedAt:serverTimestamp()}));
-  console.log('PASS private assessment Draft save/reload, revision conflict, assigned teacher and other-school isolation');
+  console.log('PASS assessment Draft save/reload, assigned teacher, read-only Admin review, revoked assignment and other-school isolation');
  }
  // 19 Unauthorized school listing denied
  await assertFails(getDocs(collection(viewer,'schools')));
