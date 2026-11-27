@@ -9,6 +9,7 @@ import {loadAssignedPrimarySubjects,loadPrimaryTeacherWorksheet,loadAdminAssessm
 import {scoreSeroferoDraft} from './primary-assessment-v46-serofero-text.mjs';
 import {todayAssessmentDate2083} from './assessment-date-2083.mjs';
 import {loadMathAssessmentDraft,saveMathAssessmentDraft,validateMathDraftValues} from './primary-assessment-math-draft.mjs';
+import {readAssessmentDraftProgress} from './primary-assessment-draft-progress.mjs';
 import {readSavedAssessmentDraftReport,exportSavedAssessmentDraft} from './primary-assessment-draft-export.mjs';
 import {neError} from './nepali-feedback.mjs';
 const $=id=>document.getElementById(id);
@@ -202,7 +203,7 @@ async function outputTeacherDraft(kind){
 $('teacherDraftPrint').onclick=()=>void outputTeacherDraft('print');$('teacherDraftWord').onclick=()=>void outputTeacherDraft('word');$('teacherDraftExcel').onclick=()=>void outputTeacherDraft('excel');
 function clearPrint(){document.body.classList.remove('portfolio-printing');$('portfolioPrint').replaceChildren();$('portfolioPrint').hidden=true}
 let adminReviewEpoch=0,adminReviewModel=null;
-function clearAdminReview(){adminReviewEpoch++;adminReviewModel=null;$('adminDraftTheme').replaceChildren();$('adminDraftRows').replaceChildren();$('adminDraftHead').replaceChildren();$('adminDraftStatus').textContent='';for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel'])$(id).disabled=true;}
+function clearAdminReview(){$('adminProgressRows').replaceChildren();$('adminProgressStatus').textContent='';$('adminDraftProgress').disabled=true;adminReviewEpoch++;adminReviewModel=null;$('adminDraftTheme').replaceChildren();$('adminDraftRows').replaceChildren();$('adminDraftHead').replaceChildren();$('adminDraftStatus').textContent='';for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel'])$(id).disabled=true;}
 function resetPortfolio(){
  clearAdminReview();$('adminDraftTeacher').replaceChildren();$('adminDraftSubject').replaceChildren();$('adminDraftLoad').disabled=true;clearPrint();
  portfolioEpoch++;$('portfolioRows').replaceChildren();$('indicatorRows').replaceChildren();$('portfolioStudent').replaceChildren();$('portfolioStudent').disabled=true;$('portfolioRead').disabled=true;$('portfolioExport').disabled=true;$('indicatorRead').disabled=true;$('indicatorExport').disabled=true;$('portfolioWordOrdinary').disabled=$('portfolioPrintOrdinary').disabled=true;$('portfolioWordIndicators').disabled=$('portfolioPrintIndicators').disabled=true;$('portfolioStatus').textContent='';
@@ -243,8 +244,19 @@ $('adminDraftOpen').onclick=async()=>{
  try{await verify();args.assertCurrent();const model=await loadAdminAssessmentWorksheet(args);args.assertCurrent();adminReviewModel=model;
  $('adminDraftTheme').replaceChildren(...model.themes.map((t,i)=>new Option(t.theme,String(i))));
  for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel'])$(id).disabled=false;
- $('adminDraftStatus').textContent='थिम छान्नुहोस्। सुरक्षित Draft मात्र हेर्न मिल्छ।';
+ $('adminDraftProgress').disabled=false;$('adminDraftStatus').textContent='थिम छान्नुहोस्। सुरक्षित Draft मात्र हेर्न मिल्छ।';
  }catch(e){if(request===adminReviewEpoch)$('adminDraftStatus').textContent='Draft खोल्न सकिएन: '+neError(e)}
+};
+$('adminDraftProgress').onclick=async()=>{
+ const selection=adminDraftSelection(),model=adminReviewModel,request=adminReviewEpoch;
+ const args={...selection,model,reviewTeacherUid:selection.teacherUid,assertCurrent:()=>{selection.assertCurrent();if(adminReviewModel!==model)throw Error('Review changed')}};
+ $('adminDraftProgress').disabled=true;$('adminProgressRows').replaceChildren();$('adminProgressStatus').textContent='सबै थिमका सुरक्षित Draft जाँच हुँदैछन्…';
+ try{await verify();args.assertCurrent();const progress=await readAssessmentDraftProgress(args);await verify();args.assertCurrent();
+ const stage=s=>s==='regular'?'Regular':s==='support'?'Remedial':'Assessment';
+ for(const row of progress.rows){const tr=document.createElement('tr');for(const v of [row.theme,stage(row.stage),row.sourceAvailable?row.entered+' / '+row.total:'—',row.sourceAvailable?row.complete+' / '+row.totalGroups:'—',row.sourceAvailable?(row.revision===null?'Not saved':'Saved · R'+row.revision):'Source unavailable'])cell(tr,v);$('adminProgressRows').append(tr)}
+ $('adminProgressStatus').textContent=progress.totals.map(t=>stage(t.stage)+': '+t.entered+' / '+t.total+(progress.binary?' सूचक':' उपलब्धि')+' · '+t.complete+' / '+t.totalGroups+' पूरा समूह'+(t.unavailableThemes?' · '+t.unavailableThemes+' थिमको स्रोत उपलब्ध छैन':'' )).join(' | ')+' — सुरक्षित Draft को प्रगति मात्र, अन्तिम ग्रेड होइन।';
+ }catch(e){if(request===adminReviewEpoch)$('adminProgressStatus').textContent='प्रगति तयार भएन: '+neError(e)}
+ finally{if(request===adminReviewEpoch)$('adminDraftProgress').disabled=false}
 };
 async function adminDraftOutput(kind){
  const selection=adminDraftSelection(),request=adminReviewEpoch,themeIndex=Number($('adminDraftTheme').value),model=adminReviewModel;
