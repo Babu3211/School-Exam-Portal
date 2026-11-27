@@ -65,7 +65,23 @@ export async function loadPrimaryTeacherWorksheet(args){
  if(!ref.rows.length)throw Error('Theme reference unavailable');
  const roster=await loadCompleteClassRoster({db,api:{...api,getDocs:api.getDocsFromServer},actor,schoolId,classId:grade,activeOnly:true});check();
  await verifyAssignment();check();
- return Object.freeze({schoolId,grade,subjectId,subjectName:assigned.subjectName,key,students:Object.freeze(roster.students.map(s=>Object.freeze({id:s.id,name:String(s.nameEnglish??s.name??s.id),section:String(s.section??'')}))),themes:Object.freeze(ref.rows.map(r=>Object.freeze({theme:r.theme,en:r.en,count:r.count,fullMarks:r.fullMarks,scoreBlocks:r.scoreBlocks,sourceUrl:r.sourceUrl,status:r.status,sourceRows:key==='mathematics'&&['4','5'].includes(grade)?v46MathThemeRows(grade,r.theme,r.count):key==='science'&&['4','5'].includes(grade)?v46ScienceThemeRows(grade,r.theme,r.count):key==='socialstudies'&&['4','5'].includes(grade)?v46SocialThemeRows(grade,r.theme,r.count):['nepali','english','healthphysicalcreativeart'].includes(key)&&['4','5'].includes(grade)?v46LanguageHealthThemeRows(grade,key,r.theme,r.count):key==='serophero'?v46SeroferoThemeRows(grade,r.theme,r.scoreBlocks):r.sourceRows??null}))),writeAuthorized:false,officialAssessmentApproved:false});
+ return buildAssessmentWorksheet({schoolId,grade,subjectId,subjectName:assigned.subjectName,key,roster,ref});
+}
+function buildAssessmentWorksheet({schoolId,grade,subjectId,subjectName,key,roster,ref}){
+ return Object.freeze({schoolId,grade,subjectId,subjectName,key,students:Object.freeze(roster.students.map(s=>Object.freeze({id:s.id,name:String(s.nameEnglish??s.name??s.id),section:String(s.section??'')}))),themes:Object.freeze(ref.rows.map(r=>Object.freeze({theme:r.theme,en:r.en,count:r.count,fullMarks:r.fullMarks,scoreBlocks:r.scoreBlocks,sourceUrl:r.sourceUrl,status:r.status,sourceRows:key==='mathematics'&&['4','5'].includes(grade)?v46MathThemeRows(grade,r.theme,r.count):key==='science'&&['4','5'].includes(grade)?v46ScienceThemeRows(grade,r.theme,r.count):key==='socialstudies'&&['4','5'].includes(grade)?v46SocialThemeRows(grade,r.theme,r.count):['nepali','english','healthphysicalcreativeart'].includes(key)&&['4','5'].includes(grade)?v46LanguageHealthThemeRows(grade,key,r.theme,r.count):key==='serophero'?v46SeroferoThemeRows(grade,r.theme,r.scoreBlocks):r.sourceRows??null}))),writeAuthorized:false,officialAssessmentApproved:false});
+}
+export async function loadAdminAssessmentWorksheet({actor,schoolId,grade,subjectId,studentId,teacherUid,db,api,catalogue,assertCurrent}){
+ const segment=/^[A-Za-z0-9_-]{1,128}$/;
+ if(actor?.role!=='school_admin'||actor.active!==true||actor.schoolId!==schoolId||!['1','2','3','4','5'].includes(grade)||![subjectId,studentId,teacherUid].every(v=>segment.test(v??''))||typeof assertCurrent!=='function')throw Error('Verified School Admin required');
+ const uid=actor.uid;
+ const check=()=>{assertCurrent();if(actor.uid!==uid||actor.role!=='school_admin'||actor.schoolId!==schoolId||actor.active!==true)throw Error('Review scope changed')};
+ const read=async path=>{check();const s=await api.getDocFromServer(api.doc(db,...path.split('/')));check();return s.exists()?s.data():null};
+ const verify=async()=>{const member=await verifySchoolSession({schoolId,uid,readDocument:read});if(member.role!=='school_admin')throw Error('School Admin required');check()};
+ await verify();const root='schools/'+schoolId;
+ const [teacher,assignment,subject,student]=await Promise.all([read(root+'/members/'+teacherUid),read(root+'/teacher_assignments/'+[schoolId,teacherUid,grade,subjectId].join(':')),read(root+'/subjects/'+subjectId),read(root+'/students/'+studentId)]);
+ if(teacher?.uid!==teacherUid||teacher.schoolId!==schoolId||teacher.role!=='teacher'||teacher.active!==true||assignment?.schoolId!==schoolId||assignment.uid!==teacherUid||assignment.classId!==grade||assignment.subjectId!==subjectId||assignment.active!==true||subject?.schoolId!==schoolId||subject.class!==grade||subject.active!==true||student?.schoolId!==schoolId||student.class!==grade||student.active===false)throw Error('Active assigned teacher, subject and student required');
+ const key=primarySubjectKey(subject.name),ref=assessmentThemeReference({catalogue,grade,subject:key});if(!ref.rows.length)throw Error('Theme reference unavailable');
+ await verify();return buildAssessmentWorksheet({schoolId,grade,subjectId,subjectName:subject.name,key,roster:{students:[{...student,id:studentId}]},ref});
 }
 export function draftThemeSlots(model,themeIndex){
  if(model?.writeAuthorized!==false||model.officialAssessmentApproved!==false||!Number.isInteger(themeIndex))throw Error('Unverified worksheet');

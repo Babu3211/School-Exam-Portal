@@ -606,7 +606,10 @@ service cloud.firestore {
             && d.revision is int && d.revision > 0 && d.revision <= 1000000000
             && d.updatedAt == request.time;
         }
-        allow get: if worksheetScope();
+        allow get: if worksheetScope() || (memberRole(sid,'school_admin')
+          && classId in ['1','2','3','4','5'] && themeId.matches('^[a-f0-9]{64}$')
+          && worksheetMember(get(schoolPath(sid)).data,get(/databases/$(database)/documents/schools/$(sid)/members/$(teacherUid)).data)
+          && worksheetDependencies(get(/databases/$(database)/documents/schools/$(sid)/subjects/$(subjectId)).data,get(/databases/$(database)/documents/schools/$(sid)/students/$(studentId)).data,get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + teacherUid + ':' + classId + ':' + subjectId)).data));
         allow create: if worksheetScope() && validWorksheet() && request.resource.data.revision == 1;
         allow update: if worksheetScope() && validWorksheet()
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ratings','date','rowDates','revision','updatedAt'])

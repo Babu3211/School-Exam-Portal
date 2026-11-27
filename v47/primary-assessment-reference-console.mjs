@@ -4,7 +4,8 @@ import {verifySchoolSession} from './verified-school-session.mjs';
 import {subjectsForGrade,assessmentThemeReference} from './primary-assessment-reference.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {readObservationPortfolio,exportObservationPortfolio,readIndicatorPortfolio,exportIndicatorPortfolio,readPortfolioPrintModel,exportPortfolioWord} from './primary-assessment-portfolio.mjs';
-import {loadAssignedPrimarySubjects,loadPrimaryTeacherWorksheet,draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
+import {readSchoolSubjectCatalog} from './subject-catalog-view.mjs';
+import {loadAssignedPrimarySubjects,loadPrimaryTeacherWorksheet,loadAdminAssessmentWorksheet,primarySubjectKey,draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
 import {scoreSeroferoDraft} from './primary-assessment-v46-serofero-text.mjs';
 import {todayAssessmentDate2083} from './assessment-date-2083.mjs';
 import {loadMathAssessmentDraft,saveMathAssessmentDraft,validateMathDraftValues} from './primary-assessment-math-draft.mjs';
@@ -200,12 +201,14 @@ async function outputTeacherDraft(kind){
 }
 $('teacherDraftPrint').onclick=()=>void outputTeacherDraft('print');$('teacherDraftWord').onclick=()=>void outputTeacherDraft('word');$('teacherDraftExcel').onclick=()=>void outputTeacherDraft('excel');
 function clearPrint(){document.body.classList.remove('portfolio-printing');$('portfolioPrint').replaceChildren();$('portfolioPrint').hidden=true}
+let adminReviewEpoch=0,adminReviewModel=null;
+function clearAdminReview(){adminReviewEpoch++;adminReviewModel=null;$('adminDraftTheme').replaceChildren();$('adminDraftRows').replaceChildren();$('adminDraftHead').replaceChildren();$('adminDraftStatus').textContent='';for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel'])$(id).disabled=true;}
 function resetPortfolio(){
- clearPrint();
+ clearAdminReview();$('adminDraftTeacher').replaceChildren();$('adminDraftSubject').replaceChildren();$('adminDraftLoad').disabled=true;clearPrint();
  portfolioEpoch++;$('portfolioRows').replaceChildren();$('indicatorRows').replaceChildren();$('portfolioStudent').replaceChildren();$('portfolioStudent').disabled=true;$('portfolioRead').disabled=true;$('portfolioExport').disabled=true;$('indicatorRead').disabled=true;$('indicatorExport').disabled=true;$('portfolioWordOrdinary').disabled=$('portfolioPrintOrdinary').disabled=true;$('portfolioWordIndicators').disabled=$('portfolioPrintIndicators').disabled=true;$('portfolioStatus').textContent='';
 }
 $('portfolioGrade').onchange=resetPortfolio;
-$('portfolioStudent').onchange=()=>{clearPrint();portfolioEpoch++;$('portfolioRows').replaceChildren();$('indicatorRows').replaceChildren();$('portfolioStatus').textContent='';$('portfolioRead').disabled=!$('portfolioStudent').value;$('portfolioExport').disabled=$('portfolioWordOrdinary').disabled=$('portfolioPrintOrdinary').disabled=!$('portfolioStudent').value;$('indicatorRead').disabled=$('indicatorExport').disabled=$('portfolioWordIndicators').disabled=$('portfolioPrintIndicators').disabled=!$('portfolioStudent').value||!['1','2','3'].includes($('portfolioGrade').value)};
+$('portfolioStudent').onchange=()=>{clearAdminReview();$('adminDraftLoad').disabled=!$('portfolioStudent').value;clearPrint();portfolioEpoch++;$('portfolioRows').replaceChildren();$('indicatorRows').replaceChildren();$('portfolioStatus').textContent='';$('portfolioRead').disabled=!$('portfolioStudent').value;$('portfolioExport').disabled=$('portfolioWordOrdinary').disabled=$('portfolioPrintOrdinary').disabled=!$('portfolioStudent').value;$('indicatorRead').disabled=$('indicatorExport').disabled=$('portfolioWordIndicators').disabled=$('portfolioPrintIndicators').disabled=!$('portfolioStudent').value||!['1','2','3'].includes($('portfolioGrade').value)};
 $('portfolioRoster').onclick=async()=>{
  resetPortfolio();const request=portfolioEpoch,member=actor,grade=$('portfolioGrade').value;
  const check=()=>{if(request!==portfolioEpoch||actor!==member||!member||auth.currentUser?.uid!==member.uid||$('portfolioGrade').value!==grade)throw Error('Portfolio selection changed')};
@@ -215,9 +218,47 @@ $('portfolioRoster').onclick=async()=>{
   $('portfolioStatus').textContent='विद्यार्थी सूची लोड हुँदैछ…';
   const roster=await loadCompleteClassRoster({db,api,actor:member,schoolId:member.schoolId,classId:grade,activeOnly:true});check();await verify();check();
   $('portfolioStudent').replaceChildren(...roster.students.map(s=>new Option(String(s.nameEnglish??s.name??s.id),s.id)));
-  $('portfolioStudent').disabled=false;$('portfolioRead').disabled=!$('portfolioStudent').value;$('portfolioExport').disabled=$('portfolioWordOrdinary').disabled=$('portfolioPrintOrdinary').disabled=!$('portfolioStudent').value;$('indicatorRead').disabled=$('indicatorExport').disabled=$('portfolioWordIndicators').disabled=$('portfolioPrintIndicators').disabled=!$('portfolioStudent').value||!['1','2','3'].includes($('portfolioGrade').value);$('portfolioStatus').textContent=roster.count+' विद्यार्थी उपलब्ध छन्।';
+  $('portfolioStudent').disabled=false;$('adminDraftLoad').disabled=!$('portfolioStudent').value;$('portfolioRead').disabled=!$('portfolioStudent').value;$('portfolioExport').disabled=$('portfolioWordOrdinary').disabled=$('portfolioPrintOrdinary').disabled=!$('portfolioStudent').value;$('indicatorRead').disabled=$('indicatorExport').disabled=$('portfolioWordIndicators').disabled=$('portfolioPrintIndicators').disabled=!$('portfolioStudent').value||!['1','2','3'].includes($('portfolioGrade').value);$('portfolioStatus').textContent=roster.count+' विद्यार्थी उपलब्ध छन्।';
  }catch(e){if(request===portfolioEpoch){resetPortfolio();$('portfolioStatus').textContent='विद्यार्थी सूची खोल्न सकिएन: '+neError(e)}}
 };
+$('adminDraftTeacher').onchange=clearAdminReview;$('adminDraftSubject').onchange=clearAdminReview;
+$('adminDraftTheme').onchange=()=>{$('adminDraftRows').replaceChildren();$('adminDraftHead').replaceChildren();$('adminDraftStatus').textContent='';};
+$('adminDraftLoad').onclick=async()=>{
+ clearAdminReview();const request=adminReviewEpoch,member=actor,grade=$('portfolioGrade').value,studentId=$('portfolioStudent').value;
+ const check=()=>{if(request!==adminReviewEpoch||actor!==member||member?.role!=='school_admin'||auth.currentUser?.uid!==member.uid||$('portfolioGrade').value!==grade||$('portfolioStudent').value!==studentId)throw Error('Review selection changed')};
+ try{await verify();check();const [subjects,teachers]=await Promise.all([readSchoolSubjectCatalog({db,api,actor:member,schoolId:member.schoolId,schoolClass:grade,assertCurrent:check}),api.getDocsFromServer(api.query(api.collection(db,'schools',member.schoolId,'members'),api.where('role','==','teacher'),api.where('active','==',true),api.limit(101)))]);check();
+ if(teachers.docs.length>100||teachers.docs.some(d=>d.data().schoolId!==member.schoolId||d.data().uid!==d.id||d.data().role!=='teacher'||d.data().active!==true))throw Error('Teacher list invalid');
+ $('adminDraftTeacher').replaceChildren(...teachers.docs.map(d=>new Option(d.id,d.id)));
+ $('adminDraftSubject').replaceChildren(...subjects.filter(s=>s.active===true&&primarySubjectKey(s.name)).map(s=>new Option(s.name,s.id)));
+ $('adminDraftStatus').textContent='शिक्षक र विषय छानेर Open Review थिच्नुहोस्।';
+ }catch(e){if(request===adminReviewEpoch)$('adminDraftStatus').textContent=neError(e)}
+};
+function adminDraftSelection(){
+ const request=adminReviewEpoch,member=actor,grade=$('portfolioGrade').value,studentId=$('portfolioStudent').value,teacherUid=$('adminDraftTeacher').value,subjectId=$('adminDraftSubject').value;
+ const check=()=>{if(request!==adminReviewEpoch||actor!==member||member?.role!=='school_admin'||auth.currentUser?.uid!==member.uid||$('portfolioGrade').value!==grade||$('portfolioStudent').value!==studentId||$('adminDraftTeacher').value!==teacherUid||$('adminDraftSubject').value!==subjectId)throw Error('Review selection changed')};
+ return {db,api,auth,actor:member,schoolId:member?.schoolId,grade,studentId,teacherUid,subjectId,catalogue,assertCurrent:check};
+}
+$('adminDraftOpen').onclick=async()=>{
+ clearAdminReview();const args=adminDraftSelection(),request=adminReviewEpoch;
+ try{await verify();args.assertCurrent();const model=await loadAdminAssessmentWorksheet(args);args.assertCurrent();adminReviewModel=model;
+ $('adminDraftTheme').replaceChildren(...model.themes.map((t,i)=>new Option(t.theme,String(i))));
+ for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel'])$(id).disabled=false;
+ $('adminDraftStatus').textContent='थिम छान्नुहोस्। सुरक्षित Draft मात्र हेर्न मिल्छ।';
+ }catch(e){if(request===adminReviewEpoch)$('adminDraftStatus').textContent='Draft खोल्न सकिएन: '+neError(e)}
+};
+async function adminDraftOutput(kind){
+ const selection=adminDraftSelection(),request=adminReviewEpoch,themeIndex=Number($('adminDraftTheme').value),model=adminReviewModel;
+ const args={...selection,model,themeIndex,reviewTeacherUid:selection.teacherUid,assertCurrent:()=>{selection.assertCurrent();if(adminReviewModel!==model||Number($('adminDraftTheme').value)!==themeIndex)throw Error('Review theme changed')}};
+ try{await verify();args.assertCurrent();
+ if(kind==='view'||kind==='print'){
+  const report=await readSavedAssessmentDraftReport(args);await verify();args.assertCurrent();
+  if(kind==='print')renderSavedPrintModel(report);
+  else{const h=$('adminDraftHead'),b=$('adminDraftRows');h.replaceChildren();b.replaceChildren();const tr=document.createElement('tr');for(const label of report.headers){const th=document.createElement('th');th.textContent=label;tr.append(th)}h.append(tr);for(const row of report.rows){const tr=document.createElement('tr');for(const v of row)cell(tr,v);b.append(tr)}}
+ }else{const file=await exportSavedAssessmentDraft(args,kind);await verify();args.assertCurrent();const url=URL.createObjectURL(file.blob),a=document.createElement('a');a.href=url;a.download=file.filename;try{document.body.append(a);a.click()}finally{a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000)}}
+ $('adminDraftStatus').textContent='सुरक्षित Draft मात्र — आधिकारिक मूल्याङ्कन होइन।';
+ }catch(e){if(request===adminReviewEpoch){$('adminDraftRows').replaceChildren();$('adminDraftHead').replaceChildren();$('adminDraftStatus').textContent='Draft तयार भएन: '+neError(e)}}
+}
+for(const [id,kind] of [['adminDraftRead','view'],['adminDraftPrint','print'],['adminDraftWord','word'],['adminDraftExcel','excel']])$(id).onclick=()=>void adminDraftOutput(kind);
 $('portfolioRead').onclick=async()=>{
  const request=++portfolioEpoch,member=actor,grade=$('portfolioGrade').value,studentId=$('portfolioStudent').value;
  $('portfolioRows').replaceChildren();$('indicatorRows').replaceChildren();$('portfolioStatus').textContent='अभिलेख जाँच हुँदैछ…';
@@ -319,7 +360,7 @@ try{
  const uid=auth.currentUser?.uid;if(!uid)throw Error('Login required');
  const session=await verifySchoolSession({schoolId:sid,uid,readDocument:async path=>{const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null}});
  if(auth.currentUser?.uid!==uid)throw Error('Login changed');
- actor={...session,active:true};
+ actor={...session,active:true};$('adminDraftArea').hidden=actor.role!=='school_admin';
  authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clear();$('status').textContent='लगइन परिवर्तन भयो। Dashboard बाट पुनः खोल्नुहोस्।'}});
  const response=await fetch('./primary-assessment-reference-2083.json',{cache:'no-store'});if(!response.ok)throw Error('Reference file unavailable');
  catalogue=await response.json();await verify();

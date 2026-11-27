@@ -12,17 +12,17 @@ export function validateMathDraftValues({ratings,date,count,binary=false,rowDate
  if(rowDates!==undefined&&(typeof rowDates!=='string'||rowDates.length!==(binary?count/4:count)*10||!rowDates.match(/.{10}/g)?.every(validAssessmentDate2083)))throw Error('Invalid assessment row dates');
  return rowDates===undefined?{ratings,date}:{ratings,date,rowDates};
 }
-async function context({db,api,auth,actor,model,studentId,themeIndex,stage,assertCurrent}){
+async function context({db,api,auth,actor,model,studentId,themeIndex,stage,assertCurrent,reviewTeacherUid},readOnly=false){
  const schoolId=validateSchoolId(model?.schoolId);
- const uid=actor?.uid;
+ const reviewer=readOnly&&reviewTeacherUid!==undefined,uid=reviewer?reviewTeacherUid:actor?.uid,actorUid=actor?.uid,role=reviewer?'school_admin':'teacher';
  const binary=model?.key==='serophero';
  const lowerLanguage=['1','2','3'].includes(model?.grade)&&['nepali','english','serophero'].includes(model?.key);
  if(binary&&!lowerLanguage)throw Error('Invalid indicator grade');
  if(lowerLanguage?!['regular','support'].includes(stage):stage!==undefined)throw Error('Invalid assessment stage');
- if(!segment.test(uid??'')||actor?.schoolId!==schoolId||actor?.role!=='teacher'||actor?.active!==true||auth?.currentUser?.uid!==uid||!Object.hasOwn(formats,model.key)||!['1','2','3','4','5'].includes(model.grade)||(model.key!=='mathematics'&&!lowerLanguage&&!['4','5'].includes(model.grade))||!segment.test(model.subjectId??'')||!segment.test(studentId??'')||!model.students?.some(s=>s.id===studentId)||typeof assertCurrent!=='function')throw Error('Verified assigned primary worksheet required');
+ if(!segment.test(uid??'')||actor?.schoolId!==schoolId||actor?.role!==role||actor?.active!==true||auth?.currentUser?.uid!==actorUid||!Object.hasOwn(formats,model.key)||!['1','2','3','4','5'].includes(model.grade)||(model.key!=='mathematics'&&!lowerLanguage&&!['4','5'].includes(model.grade))||!segment.test(model.subjectId??'')||!segment.test(studentId??'')||!model.students?.some(s=>s.id===studentId)||typeof assertCurrent!=='function')throw Error('Verified assigned primary worksheet required');
  const theme=model.themes?.[themeIndex],slots=draftThemeSlots(model,themeIndex);
  if(!theme||!slots.every(s=>s.sourceText)||theme.sourceRows?.length!==slots.length||(binary&&slots.some(s=>s.sourceText.indicators?.length!==4)))throw Error('Source text unavailable');
- const check=()=>{assertCurrent();if(auth?.currentUser?.uid!==uid||actor.uid!==uid||actor.schoolId!==schoolId||actor.role!=='teacher'||actor.active!==true)throw Error('Worksheet session changed')};
+ const check=()=>{assertCurrent();if(auth?.currentUser?.uid!==actorUid||actor.uid!==actorUid||actor.schoolId!==schoolId||actor.role!==role||actor.active!==true)throw Error('Worksheet session changed')};
  check();
  const bytes=await globalThis.crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([sourceRevision,model.grade,theme.theme,theme.sourceRows,...(lowerLanguage?[stage]:[])])));
  const themeId=Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('');
@@ -39,7 +39,7 @@ async function context({db,api,auth,actor,model,studentId,themeIndex,stage,asser
  return {check,identity,ref,read,count:slots.length*(binary?4:1),binary};
 }
 export async function loadMathAssessmentDraft(args){
- const c=await context(args);
+ const c=await context(args,true);
  const snap=await args.api.getDocFromServer(c.ref);c.check();
  return c.read(snap);
 }
