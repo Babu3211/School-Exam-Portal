@@ -40,7 +40,7 @@ async function runRegression(T,createV47IemisReader){
  students[1].studentIemisNo='999';await reject(()=>reader(request),/Conflicting IEMIS/);delete students[1].studentIemisNo;
  const initialReads=reads;
  await reject(()=>reader({...request,context:{...request.context,schoolCode:'999990002'}}),/School Admin/);eq(reads,initialReads,'Foreign request read data');
- await reject(()=>reader({...request,examTerm:'first'}),/Class 6/);
+ await reject(()=>reader({...request,examTerm:'first'}),/Class 1/);
  await reject(()=>reader({...request,mode:'attendance'}),/Attendance/);
  await reject(()=>reader({...request,columns:[...request.columns,request.columns[0]]}),/Duplicate/);
  await reject(()=>reader({...request,context:{...request.context,section:'B'}}),/No eligible/);
