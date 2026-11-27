@@ -1,3 +1,4 @@
+import {attendanceModule} from './iemis-direct-attendance.mjs';
 // Read-only V47 migrated saved marks, ordinary score components only. No Firebase writes.
 export function createV47IemisReader({getWorkspace,verifySchoolSession,enforceSchoolIdle,T}){
  const termMap={first:'1st',second:'2nd',third:'3rd',final:'final'};
@@ -6,7 +7,9 @@ export function createV47IemisReader({getWorkspace,verifySchoolSession,enforceSc
  const fail=m=>{throw Error(m)};
  const ident=/^[A-Za-z0-9_-]{1,128}$/;
  const kindSet=new Set(['participation','practical','term','theory','absent']);
+ const attendance=attendanceModule({version:'v47',getWorkspace,T,verifySchoolSession,enforceSchoolIdle});
  return async request=>{
+  if(request?.mode==='attendance')return attendance(request);
   if(request?.mode!=='marks')fail('Attendance र Class 5 Final को प्रमाणित reader अझै तयार छैन।');
   const c=request.context, examTerm=request.examTerm, term=termMap[examTerm], klass=T.classKey(c?.className);
   if(!c||!term||T.termKey(c.term)!==examTerm||!['6','7','8','9','10'].includes(klass)||T.clean(c.year)!=='2083'||!Array.isArray(request.columns)||!request.columns.length||request.columns.length>150)fail('Class 6–10, 2083 र सही Term आवश्यक छ।');
