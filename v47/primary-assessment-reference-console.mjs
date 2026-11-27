@@ -14,7 +14,7 @@ import {loadMathAssessmentDraft,saveMathAssessmentDraft,validateMathDraftValues,
 import {readAnnualReview,annualReviewHeaders,exportUpperAnnualReview,annualAnnexPrintModel} from './primary-assessment-annual-review.mjs';
 import {readSubjectProgressReport,exportSubjectProgressReport} from './primary-assessment-progress-report.mjs';
 import {readAssessmentDraftProgress} from './primary-assessment-draft-progress.mjs';
-import {readSavedAssessmentDraftReport,exportSavedAssessmentDraft,readClassAssessmentDraftReports,exportClassAssessmentDraftReports,summarizeClassDraftCoverage} from './primary-assessment-draft-export.mjs';
+import {readSavedAssessmentDraftReport,exportSavedAssessmentDraft,readClassAssessmentDraftReports,exportClassAssessmentDraftReports,summarizeClassDraftCoverage,readClassSubjectCoverage,classSubjectCoverageWorkbook} from './primary-assessment-draft-export.mjs';
 import {neError} from './nepali-feedback.mjs';
 const $=id=>document.getElementById(id);
 let actor=null,catalogue=null,auth,authSdk,db,api,epoch=0,portfolioEpoch=0;
@@ -229,7 +229,9 @@ let adminReviewEpoch=0,adminReviewModel=null;
 function resetAnnualReview(){$('annualOperatingDays').value='';$('annualRegisterSource').value='';$('annualOperatingDays').disabled=false;$('annualRegisterSource').disabled=false;for(const id of ['annualReviewRead','annualReviewPrint','annualReviewWord','annualReviewExcel'])$(id).disabled=!(actor?.role==='school_admin'&&['1','2','3','4','5'].includes($('portfolioGrade').value)&&$('portfolioStudent').value);$('annualReviewRows').replaceChildren();$('annualReviewHead').replaceChildren(...annualReviewHeaders($('portfolioGrade').value).map(v=>{const th=document.createElement('th');th.textContent=v;return th}));$('annualReviewStatus').textContent='';}
 let classCoverageEpoch=0;
 function resetClassCoverage(){classCoverageEpoch++;$('adminClassCoverageRows').replaceChildren();$('adminClassCoverageStatus').textContent='';$('adminClassCoverage').disabled=!adminReviewModel;}
-function clearAdminReview(){resetAnnualReview();resetClassCoverage();$('adminClassCoverage').disabled=true;$('adminProgressRows').replaceChildren();$('adminProgressStatus').textContent='';$('adminDraftProgress').disabled=true;for(const id of ['adminProgressPrint','adminProgressWord','adminProgressExcel'])$(id).disabled=true;clearPrint();adminReviewEpoch++;adminReviewModel=null;$('adminDraftTheme').replaceChildren();$('adminDraftRows').replaceChildren();$('adminDraftHead').replaceChildren();$('adminDraftStatus').textContent='';for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel','adminClassPrint','adminClassWord','adminClassExcel'])$(id).disabled=true;}
+let subjectCoverageEpoch=0;
+function resetSubjectCoverage(){subjectCoverageEpoch++;$('adminSubjectCoverageRows').replaceChildren();$('adminSubjectCoverageStatus').textContent='';for(const id of ['adminSubjectCoverage','adminSubjectCoverageExcel'])$(id).disabled=true;}
+function clearAdminReview(){resetAnnualReview();resetClassCoverage();resetSubjectCoverage();$('adminClassCoverage').disabled=true;$('adminProgressRows').replaceChildren();$('adminProgressStatus').textContent='';$('adminDraftProgress').disabled=true;for(const id of ['adminProgressPrint','adminProgressWord','adminProgressExcel'])$(id).disabled=true;clearPrint();adminReviewEpoch++;adminReviewModel=null;$('adminDraftTheme').replaceChildren();$('adminDraftRows').replaceChildren();$('adminDraftHead').replaceChildren();$('adminDraftStatus').textContent='';for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel','adminClassPrint','adminClassWord','adminClassExcel'])$(id).disabled=true;}
 function resetPortfolio(){
  clearAdminReview();$('adminDraftTeacher').replaceChildren();$('adminDraftSubject').replaceChildren();$('adminDraftLoad').disabled=true;clearPrint();
  portfolioEpoch++;$('portfolioRows').replaceChildren();$('indicatorRows').replaceChildren();$('portfolioStudent').replaceChildren();$('portfolioStudent').disabled=true;resetAnnualReview();$('portfolioRead').disabled=true;$('portfolioExport').disabled=true;$('indicatorRead').disabled=true;$('indicatorExport').disabled=true;$('portfolioWordOrdinary').disabled=$('portfolioPrintOrdinary').disabled=true;$('portfolioWordIndicators').disabled=$('portfolioPrintIndicators').disabled=true;$('portfolioStatus').textContent='';
@@ -270,7 +272,7 @@ $('adminDraftOpen').onclick=async()=>{
  try{await verify();args.assertCurrent();const model=await loadAdminAssessmentWorksheet(args);args.assertCurrent();adminReviewModel=model;
  $('adminDraftTheme').replaceChildren(...model.themes.map((t,i)=>new Option(t.theme,String(i))));
  for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel','adminClassPrint','adminClassWord','adminClassExcel'])$(id).disabled=false;
- $('adminClassCoverage').disabled=false;$('adminDraftProgress').disabled=false;for(const id of ['adminProgressPrint','adminProgressWord','adminProgressExcel'])$(id).disabled=false;$('adminDraftStatus').textContent='थिम छान्नुहोस्। सुरक्षित Draft मात्र हेर्न मिल्छ।';
+ $('adminClassCoverage').disabled=false;for(const id of ['adminSubjectCoverage','adminSubjectCoverageExcel'])$(id).disabled=false;$('adminDraftProgress').disabled=false;for(const id of ['adminProgressPrint','adminProgressWord','adminProgressExcel'])$(id).disabled=false;$('adminDraftStatus').textContent='थिम छान्नुहोस्। सुरक्षित Draft मात्र हेर्न मिल्छ।';
  }catch(e){if(request===adminReviewEpoch)$('adminDraftStatus').textContent='Draft खोल्न सकिएन: '+neError(e)}
 };
 $('adminDraftProgress').onclick=async()=>{
@@ -458,3 +460,22 @@ $('adminClassCoverage').onclick=async()=>{
  }catch(e){try{check();$('adminClassCoverageStatus').textContent='कक्षागत प्रगति तयार भएन: '+neError(e)}catch{}}
  finally{try{check();$('adminClassCoverage').disabled=false}catch{}}
 };
+
+async function outputClassSubjectCoverage(kind){
+ const selection=adminDraftSelection(),model=adminReviewModel,request=++subjectCoverageEpoch,ids=['adminSubjectCoverage','adminSubjectCoverageExcel'];
+ if(!model||selection.actor?.role!=='school_admin')return;
+ const check=()=>{selection.assertCurrent();if(request!==subjectCoverageEpoch||model!==adminReviewModel)throw Error('Subject coverage selection changed')};
+ for(const id of ids)$(id).disabled=true;
+ $('adminSubjectCoverageRows').replaceChildren();$('adminSubjectCoverageStatus').textContent='विषयका सबै थिम जाँच हुँदैछन्…';
+ try{
+  await verify();check();
+  const result=await readClassSubjectCoverage({...selection,model,reviewTeacherUid:selection.teacherUid,assertCurrent:check});
+  await verify();check();
+  if(kind==='excel'){const file=classSubjectCoverageWorkbook(result,model),url=URL.createObjectURL(file.blob),a=document.createElement('a');a.href=url;a.download=file.filename;try{document.body.append(a);a.click()}finally{a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000)}}
+  else for(const r of result.rows){const tr=document.createElement('tr');for(const v of [r.theme,r.stage==='regular'?'Regular':r.stage==='support'?'Remedial':'Assessment',r.students,r.available?r.saved:'—',r.available?r.complete:'—',r.available?r.partial:'—',r.available?r.blank:'—',r.available?r.entered+' / '+r.expected:'— / '+r.expected,r.available?r.coveragePercent.toFixed(2)+'%':'Source unavailable'])cell(tr,v);$('adminSubjectCoverageRows').append(tr)}
+  $('adminSubjectCoverageStatus').textContent=result.studentCount+' विद्यार्थी · '+result.rows.length+' थिम/चरण पङ्क्ति। स्रोत नपुगेको थिम छुट्टै छ। यो अभिलेख पूर्णता मात्र हो।';
+ }catch(e){try{check();$('adminSubjectCoverageStatus').textContent='विषयगत पूर्णता तयार भएन: '+neError(e)}catch{}}
+ finally{try{check();for(const id of ids)$(id).disabled=false}catch{}}
+}
+$('adminSubjectCoverage').onclick=()=>void outputClassSubjectCoverage('view');
+$('adminSubjectCoverageExcel').onclick=()=>void outputClassSubjectCoverage('excel');

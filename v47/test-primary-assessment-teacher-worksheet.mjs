@@ -220,3 +220,10 @@ const coverageBatch={studentCount:3,officialAssessmentApproved:false,reports:[mk
 assert.deepEqual(summarizeClassDraftCoverage(coverageBatch)[0],{stage:'assessment',students:3,saved:2,complete:1,partial:1,blank:1,entered:3,expected:6,coveragePercent:50});
 assert.throws(()=>summarizeClassDraftCoverage({...coverageBatch,reports:[mkCoverage('a',true,2),mkCoverage('a',true,1),mkCoverage('c',false,0)]}),/identity/);
 assert.throws(()=>summarizeClassDraftCoverage({...coverageBatch,reports:[mkCoverage('a',true,2),mkCoverage('b',false,1),mkCoverage('c',false,0)]}),/coverage/);
+
+import {subjectCoveragePlan,classSubjectCoverageWorkbook} from './primary-assessment-draft-export.mjs';
+const coverageModel={key:'hamrodhunibeshi',grade:'1',schoolId:'11111001',subjectId:'local',subjectName:'Local',writeAuthorized:false,officialAssessmentApproved:false,themes:[{theme:'One',count:2,fullMarks:8,sourceRows:[{title:'A'},{title:'B'}]},{theme:'Two',count:1,fullMarks:4}]};
+const plan=subjectCoveragePlan(coverageModel,2);assert.equal(plan.plannedReads,2);assert.equal(plan.themes[1].available,false);assert.equal(plan.themes[1].expected,1);
+assert.throws(()=>subjectCoveragePlan({...coverageModel,themes:Array.from({length:10},()=>coverageModel.themes[0])},1500),/12000/);
+assert.throws(()=>subjectCoveragePlan(coverageModel,0),/scope/);
+const coverageFile=classSubjectCoverageWorkbook({officialAssessmentApproved:false,rows:[{theme:'Two',stage:'assessment',students:2,available:false,expected:2}]},coverageModel);assert.match(coverageFile.filename,/\.xlsx$/);assert.match(new TextDecoder().decode(await coverageFile.blob.arrayBuffer()),/Source unavailable/);

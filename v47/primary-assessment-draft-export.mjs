@@ -85,3 +85,44 @@ export function summarizeClassDraftCoverage(batch){
   return Object.freeze({stage:f.stage,students:batch.studentCount,saved,complete,partial,blank,entered,expected,coveragePercent:entered/expected*100});
  }));
 }
+
+// Subject-wide on-demand coverage: load roster once, then read only validated,
+// source-bound draft documents. Limit cost before reading any draft.
+export function subjectCoveragePlan(model,studentCount){
+ if(!Number.isInteger(studentCount)||studentCount<1||studentCount>1500||!Array.isArray(model?.themes)||!model.themes.length||model.themes.length>100)throw Error('Invalid subject coverage scope');
+ const stages=hasAssessmentStages(model)?['regular','support']:[undefined];
+ const themes=model.themes.map((theme,index)=>{const slots=draftThemeSlots(model,index);return {index,theme:theme.theme,expected:slots.length,available:slots.every(s=>s.sourceText)}});
+ const plannedReads=studentCount*stages.length*themes.filter(t=>t.available).length;
+ if(plannedReads>12000)throw Error('Subject coverage exceeds 12000 draft reads; use selected-theme review');
+ return {stages,themes,plannedReads};
+}
+export async function readClassSubjectCoverage(args){
+ const {model,actor,db,api,auth,assertCurrent,reviewTeacherUid}=args;
+ if(actor?.role!=='school_admin'||actor.active!==true||actor.schoolId!==model?.schoolId||auth?.currentUser?.uid!==actor.uid||!reviewTeacherUid)throw Error('Verified School Admin required');
+ const roster=await loadCompleteClassRoster({db,api,actor,schoolId:model.schoolId,classId:model.grade,activeOnly:true,assertCurrent});assertCurrent();
+ const students=roster.students.map(s=>Object.freeze({id:s.id,name:String(s.nameEnglish??s.name??s.id),section:String(s.section??'')}));
+ if(new Set(students.map(s=>s.id)).size!==students.length)throw Error('Duplicate roster identity');
+ const plan=subjectCoveragePlan(model,students.length),batchModel=Object.freeze({...model,students:Object.freeze(students)}),rows=[];
+ for(const t of plan.themes){
+  assertCurrent();
+  if(!t.available){for(const stage of plan.stages)rows.push(Object.freeze({theme:t.theme,stage:stage??'assessment',students:students.length,available:false,expected:students.length*t.expected}));continue}
+  for(const stage of plan.stages){
+   let saved=0,complete=0,partial=0,blank=0,entered=0;
+   for(let i=0;i<students.length;i+=8){
+    assertCurrent();
+    const drafts=await Promise.all(students.slice(i,i+8).map(s=>loadMathAssessmentDraft({...args,model:batchModel,studentId:s.id,themeIndex:t.index,stage})));
+    assertCurrent();
+    for(const d of drafts){if(!d){blank++;continue}saved++;const n=model.key==='serophero'?scoreSeroferoDraft(d.ratings).completed:[...d.ratings].filter(v=>v!=='_').length;entered+=n;if(n===t.expected)complete++;else partial++}
+   }
+   const expected=students.length*t.expected;
+   rows.push(Object.freeze({theme:t.theme,stage:stage??'assessment',students:students.length,available:true,saved,complete,partial,blank,entered,expected,coveragePercent:entered/expected*100}));
+  }
+ }
+ assertCurrent();
+ return Object.freeze({rows:Object.freeze(rows),studentCount:students.length,plannedReads:plan.plannedReads,officialAssessmentApproved:false});
+}
+export function classSubjectCoverageWorkbook(result,model){
+ if(result.officialAssessmentApproved!==false)throw Error('Invalid coverage review');
+ const headers=['Status','School ID','Class','Year','Subject','Theme','Stage','Students','Saved','Complete','Partial','Not saved','Completed units','Expected units','Coverage %'];
+ return {blob:excelWorkbook(headers,result.rows.map(r=>['Draft coverage only — NOT official grade',model.schoolId,model.grade,'2083',model.subjectName,r.theme,r.stage,r.students,r.available?r.saved:'',r.available?r.complete:'',r.available?r.partial:'',r.available?r.blank:'',r.available?r.entered:'',r.expected,r.available?r.coveragePercent.toFixed(2):'Source unavailable']),{sheetName:'Subject coverage'}),filename:'V47-SUBJECT-COVERAGE-'+model.schoolId+'-'+model.grade+'-'+model.subjectId+'-2083.xlsx'};
+}

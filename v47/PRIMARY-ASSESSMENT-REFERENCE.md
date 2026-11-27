@@ -150,3 +150,6 @@ Raw max is the sum of the individual 4-indicator scoring blocks, not the officia
 ## 2026-11-27 — Report guard test and class draft analytics
 - Dynamic report guard fixture now includes new annual report controls and asserts role downgrade hides the Admin route; no authorization weakened.
 - Selected class/subject/theme coverage uses the same verified, bounded complete-class draft read as export, separates stages, counts saved/complete/partial/not-saved students, and calculates completed units/expected units. Serofero counts only complete four-indicator groups. No official grade, no school-wide draft scan or automatic polling. Added synthetic unit and browser checks. No production changes.
+
+## 2026-11-27 — All-theme class subject coverage
+- On-demand Admin-only subject-wide coverage reads a single active roster, plans validated theme/stage draft lookups before reading, caps at 12,000 draft document reads, processes batches of eight students. Separate complete/partial/blank counts and weighted units for every theme and stage. Unavailable source rows marked explicitly, never counted as zero; no overall grade or assumed completion. Excel audit output, stale-selection protection and unit/browser fixtures. Large requests fall back to selected theme. No production changes.
