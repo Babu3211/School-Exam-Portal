@@ -93,3 +93,7 @@ Raw max is the sum of the individual 4-indicator scoring blocks, not the officia
 - Inspected the user-supplied 2083 assessment guide PDF pp. 81–85 (printed pp. 80–84). Added source content labels and reviewed Nepali outcome display text with English counterparts for 30 outcomes across geometry (4), arithmetic (11), measurement (10), statistics (3), algebra (2). Raw maximum 120, not an official subject grade.
 - Grade 4 angle task is restricted to multiples of ten from 0 to 180 degrees, unlike Grade 5. Grade 4 time measurement lists the explicit paired units in the guide. No existing Grade 4 observation title keys changed. Source labels now scoped by grade, theme and canonical title. Tests added for bilingual labels, counts, and grade-specific wording.
 - Grade 4/5 math source display review covers ten forms and 60 outcomes; final print and live deployment remain subject to release gates.
+
+## 2026-11-27 — V47 Our Surroundings display numbering
+- Copied the exact printed-number mapping from pinned V46 source blob ad2e3b96a22601fed9d956397a98c564b3ffb768, not a new independent PDF verification. All 30 themes use the source's continuous numbering including the repeated Class 2 number 5. Export orders theme, main outcome, indicator, both stages and tools, matching the V46 column sequence.
+- Display-only mapping: sourceRows, ordinal identities, draft hashes, scores and Firestore rules unchanged. Verbatim guide wording, exact print layout and official publication remain unapproved.

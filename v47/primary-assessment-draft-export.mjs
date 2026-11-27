@@ -2,7 +2,7 @@
 import {loadMathAssessmentDraft} from './primary-assessment-math-draft.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
-import {scoreSeroferoDraft} from './primary-assessment-v46-serofero-text.mjs';
+import {scoreSeroferoDraft,v46SeroferoPrintedNumber} from './primary-assessment-v46-serofero-text.mjs';
 import {excelWorkbook} from './excel-workbook.mjs';
 import {assessmentPrintWordBlob} from './primary-assessment-portfolio.mjs';
 export async function readSavedAssessmentDraftReport(args){
@@ -15,8 +15,10 @@ export async function readSavedAssessmentDraftReport(args){
  const hasSaved=saved.some(Boolean);if(!hasSaved&&!args.includeBlank)throw Error('No saved assessment draft');
  const ne=['nepali','socialstudies','serophero','hamrodhunibeshi'].includes(model.key);
  const labels=staged?(ne?['नियमित','थप सहायतापछि']:['Regular','Remedial']):[ne?'मूल्याङ्कन':'Assessment'];
- const columns=binary?(ne?['मुख्य सिकाइ उपलब्धि','सूचक','साधन']:['Learning achievement','Indicator','Tool']):model.key==='english'&&staged?['Areas / Skills','Learning outcomes']:model.key==='nepali'&&staged?['सिकाइ उपलब्धि','परीक्षण गर्ने पक्ष','साधन']:[ne?'सिकाइ उपलब्धि':'Learning achievement'];
+ const columns=binary?['थिम','मुख्य सिकाइ उपलब्धि','उपलब्धि सूचक']:model.key==='english'&&staged?['Areas / Skills','Learning outcomes']:model.key==='nepali'&&staged?['सिकाइ उपलब्धि','परीक्षण गर्ने पक्ष','साधन']:[ne?'सिकाइ उपलब्धि':'Learning achievement'];
  const headers=[...columns,...labels.flatMap(label=>binary?[label+' — सकेको / नसकेको',label+' — मिति',label+' — अङ्कन / ४']:[label+(ne?' — मिति':' — Date (BS)'),label+(ne?' — अङ्कन / ४':' — Rating / 4')])];
+ if(binary)headers.push('मूल्याङ्कन साधन');
+ const digits=n=>String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]);
  const date=(d,i)=>d?.rowDates?.slice(i*10,i*10+10)||d?.date||'';
  const rows=[];
  for(const [i,slot] of slots.entries()){
@@ -24,7 +26,7 @@ export async function readSavedAssessmentDraftReport(args){
   if(binary){
    for(let j=0;j<4;j++){
     const values=saved.flatMap(d=>{const v=d?.ratings[i*4+j],block=d?.ratings.slice(i*4,i*4+4),used=block&&/[01]/.test(block);const score=block?scoreSeroferoDraft(block).blocks[0]:null;return [v==='1'?'सकेको':v==='0'?'नसकेको':'',j===0&&used?date(d,i):'',j===0&&score!==null?score:'']});
-    rows.push([r.title,r.indicators[j],r.tools[j]==='मूल फाराममा खाली'?'':r.tools[j],...values]);
+    rows.push([theme.theme,digits(v46SeroferoPrintedNumber(model.grade,theme.theme,r.outcome))+'. '+r.title,digits((r.block-1)*4+j+1)+'. '+r.indicators[j],...values,r.tools[j]==='मूल फाराममा खाली'?'':r.tools[j]]);
    }
   }else{
    const title=[r.title,r.titleEn,r.achievement,...(r.criteria??[]).map((c,k)=>(4-k)+' — '+c.join(' / '))].filter(Boolean).join('\n');

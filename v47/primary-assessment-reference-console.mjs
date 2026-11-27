@@ -7,7 +7,7 @@ import {readObservationPortfolio,exportObservationPortfolio,readIndicatorPortfol
 import {parseLocalAssessmentSource,readLocalAssessmentSource,saveLocalAssessmentSource} from './primary-assessment-local-source.mjs';
 import {readSchoolSubjectCatalog} from './subject-catalog-view.mjs';
 import {loadAssignedPrimarySubjects,loadPrimaryTeacherWorksheet,loadAdminAssessmentWorksheet,primarySubjectKey,draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
-import {scoreSeroferoDraft} from './primary-assessment-v46-serofero-text.mjs';
+import {scoreSeroferoDraft,v46SeroferoPrintedNumber} from './primary-assessment-v46-serofero-text.mjs';
 import {todayAssessmentDate2083} from './assessment-date-2083.mjs';
 import {loadMathAssessmentDraft,saveMathAssessmentDraft,validateMathDraftValues} from './primary-assessment-math-draft.mjs';
 import {readAssessmentDraftProgress} from './primary-assessment-draft-progress.mjs';
@@ -115,7 +115,7 @@ async function renderTeacherDraft(){
    for(let i=0;i<4;i++){
     const tr=document.createElement('tr');
     if(index===0&&i===0){const td=cell(tr,theme.theme);td.rowSpan=slots.length*4;td.className='assessment-group'}
-    if(i===0&&(index===0||slots[index-1].sourceText.outcome!==row.outcome)){let span=1;while(index+span<slots.length&&slots[index+span].sourceText.outcome===row.outcome)span++;const td=cell(tr,digits(row.outcome)+'. '+row.title);td.rowSpan=span*4;td.className='assessment-group'}
+    if(i===0&&(index===0||slots[index-1].sourceText.outcome!==row.outcome)){let span=1;while(index+span<slots.length&&slots[index+span].sourceText.outcome===row.outcome)span++;const td=cell(tr,digits(v46SeroferoPrintedNumber(worksheet.grade,theme.theme,row.outcome))+'. '+row.title);td.rowSpan=span*4;td.className='assessment-group'}
     cell(tr,digits((row.block-1)*4+i+1)+'. '+row.indicators[i]);
     const active=()=>{const td=cell(tr,''),input=document.createElement('select');input.setAttribute('aria-label','सूचक '+slot.number+'.'+(i+1));input.append(new Option('—',''),new Option('सकेको','1'),new Option('नसकेको','0'));input.onchange=update;td.append(input);
     if(i===0){makeDate(tr,4);const score=cell(tr,'—');score.rowSpan=4;score.className='assessment-block-score';scoreCells.push(score)}};

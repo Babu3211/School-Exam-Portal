@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {primarySubjectKey,draftThemeSlots,loadPrimaryTeacherWorksheet,loadAssignedPrimarySubjects} from './primary-assessment-teacher-worksheet.mjs';
 import {parseLocalAssessmentSource} from './primary-assessment-local-source.mjs';
-import {v46SeroferoThemeRows,scoreSeroferoDraft} from './primary-assessment-v46-serofero-text.mjs';
+import {v46SeroferoThemeRows,scoreSeroferoDraft,v46SeroferoPrintedNumber} from './primary-assessment-v46-serofero-text.mjs';
 import {v46LanguageHealthThemeRows} from './primary-assessment-v46-language-health-text.mjs';
 import {v46SocialThemeRows} from './primary-assessment-v46-social-text.mjs';
 import {v46ScienceThemeRows} from './primary-assessment-v46-science-text.mjs';
@@ -129,3 +129,12 @@ revoked=true;await assert.rejects(loadPrimaryTeacherWorksheet(args),/Stale/);
 console.log('PASS primary teacher worksheet: verified assignments, source counts, active roster, stale and tenant rejection, no persistence');
 
 const localRows=parseLocalAssessmentSource('# स्थानीय थिम\nउपलब्धि एक\nउपलब्धि दुई\n# अर्को थिम\nअर्को उपलब्धि','विद्यालयको स्थानीय पाठ्यक्रम २०८३');assert.equal(localRows.length,2);assert.equal(localRows[0].fullMarks,8);assert.equal(localRows[1].fullMarks,4);assert.throws(()=>parseLocalAssessmentSource('# थिम\n# अर्को\nउपलब्धि','Source'));assert.throws(()=>parseLocalAssessmentSource('# थिम\nउपलब्धि\nउपलब्धि','Source'));assert.throws(()=>parseLocalAssessmentSource('उपलब्धि','Source'));
+
+// Display numbers are distinct from stable source-row identities. Repeated printed 5 is intentional.
+for(const grade of ['1','2','3']){
+ const ref=assessmentThemeReference({catalogue,grade,subject:'serophero'});
+ let previous=0,total=0;
+ for(const t of ref.rows){const rows=v46SeroferoThemeRows(grade,t.theme,t.scoreBlocks);const outcomes=[...new Set(rows.map(r=>r.outcome))];for(const ordinal of outcomes){const n=v46SeroferoPrintedNumber(grade,t.theme,ordinal);assert.ok(n>=previous);previous=n;total++;}assert.ok(rows.every(r=>!Object.hasOwn(r,'printedNumber')));}
+ assert.equal(total,grade==='1'?25:grade==='2'?28:24);assert.equal(previous,Number(grade==='1'?25:grade==='2'?28:24));
+}
+assert.equal(v46SeroferoPrintedNumber('2','म र मेरो परिवार',5),5);assert.equal(v46SeroferoPrintedNumber('2','म र मेरो परिवार',6),5);assert.equal(v46SeroferoPrintedNumber('2','मेरो दैनिक जीवन',1),7);assert.throws(()=>v46SeroferoPrintedNumber('2','Unknown',1));

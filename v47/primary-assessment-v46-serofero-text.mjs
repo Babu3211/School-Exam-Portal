@@ -1740,6 +1740,19 @@ export function v46SeroferoThemeRows(grade,theme,count){
  if(!Array.isArray(rows)||rows.length!==count||rows.some(r=>r.indicators.length!==4||r.tools.length!==4||!r.title||r.indicators.some(v=>typeof v!=='string'||!v.trim())||r.tools.some(v=>typeof v!=='string')))return null;
  return Object.freeze(rows.map(r=>Object.freeze({...r,indicators:Object.freeze([...r.indicators]),tools:Object.freeze([...r.tools])})));
 }
+// Display-only numbering copied from pinned V46 cdcSeroGuidePrintedNumbers.
+// Keep ordinal outcome and sourceRows unchanged: saved theme hashes depend on them.
+const printedNumbers={
+ '1':[[1,2,3,4,5],[6,7,8,9],[10,11,12],[13,14],[15,16],[17,18],[19,20],[21],[22,23],[24,25]],
+ '2':[[1,2,3,4,5,5],[7,8,9,10],[11,12,13],[14,15,16],[17,18],[19,20],[21,22],[23],[24,25],[26,27,28]],
+ '3':[[1,2,3,4],[5,6,7],[8,9,10],[11,12,13],[14],[15,16],[17,18],[19],[20,21],[22,23,24]]
+};
+const themeOrder=['म र मेरो परिवार','मेरो दैनिक जीवन','हाम्रो समुदाय','हाम्रो विद्यालय','हाम्रा वरपरका जीवजन्तु','हाम्रो वातावरण','मेरो सिर्जना','हाम्रो संस्कृति','सञ्चार प्रविधि र बजार','हाम्रो वरपरको संसार'];
+export function v46SeroferoPrintedNumber(grade,theme,outcome){
+ const value=printedNumbers[grade]?.[themeOrder.indexOf(theme)]?.[outcome-1];
+ if(!Number.isInteger(outcome)||!Number.isInteger(value))throw Error('Unknown source outcome number');
+ return value;
+}
 export function scoreSeroferoDraft(ratings){
  if(typeof ratings!=='string'||ratings.length<4||ratings.length%4||!/^[01_]+$/.test(ratings))throw Error('Invalid indicator ratings');
  const blocks=ratings.match(/.{4}/g).map(b=>b.includes('_')?null:[...b].filter(v=>v==='1').length);
