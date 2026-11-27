@@ -113,3 +113,6 @@ Raw max is the sum of the individual 4-indicator scoring blocks, not the officia
 
 ## 2026-11-27 — Annual date-order comparison
 - Rechecked pinned V46 cdcAnnualSubjectAchievement and CDC 2083 guide PDF page 16. Admin subject progress now compares the existing support-preferred V46 summary with a separate annual latest-assessment-date preview. Individual saved row dates take precedence over default date. V47 drafts do not retain per-row creation timestamps; differing ratings with identical dates remain unresolved, rather than assuming a V46 tie-break. Counts, weighted percent, discrepancies and unresolved conflicts are displayed; incomplete subject grades remain blank. This is a draft-only comparison, not a certified annual report, and does not modify records or official publication gates.
+
+## 2026-11-27 — Admin subject progress export
+- Saved-only subject progress now exports all themes/stages for one selected student and assigned teacher, using A4 print/PDF, Word and XLSX. Upper-primary includes complete-only combined and annual date-order review rows, including explicit incomplete or conflict status. Stage progress uses assessed-count denominators and binary subjects retain indicator/group counts. No official records, historical merging, permissions or grade publication changed.
