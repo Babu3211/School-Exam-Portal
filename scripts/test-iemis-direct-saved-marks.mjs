@@ -5,7 +5,7 @@ async function test(T,createV46DirectReader){
  const eq=(a,b,m)=>check(JSON.stringify(a)===JSON.stringify(b),m+': '+JSON.stringify(a));
  const reject=async(fn,re)=>{let e;try{await fn()}catch(err){e=err;}check(e&&re.test(e.message),'Expected '+re+', got '+e?.message)};
  const schoolCode='999990001',school={iemisCode:schoolCode,academicYear:'2083'},user={uid:'synthetic-admin'},auth={currentUser:user},role={active:true};
- const klass='कक्षा ९',students=[{id:'b',studentName:'Student B',studentIemisNo:'902',class:klass,section:'A',optionalSubject2:'Optional II Computer Science'},{id:'a',studentName:'Student A',studentIemisNo:'901',class:klass,section:'A',optionalSubject2:'Optional II Health'}];
+ const klass='कक्षा ९',students=[{id:'b',studentName:'Student B',studentIemisId:'902',class:klass,section:'A',optionalSubject2:'Optional II Computer Science'},{id:'a',studentName:'Student A',studentIemisId:'901',studentIemisNo:'901',class:klass,section:'A',optionalSubject2:'Optional II Health'}];
  const subjects=[{id:'c1',className:klass,subject:'Mathematics'},{id:'c2',className:klass,subject:'English'},{id:'c3',className:klass,subject:'Optional II Computer Science'}];
  const exams=[{id:'exam2',className:klass,academicYear:'2083',termKey:'second'}];
  const marks=[];
@@ -30,6 +30,7 @@ async function test(T,createV46DirectReader){
  marks.push({...marks[0],id:'duplicate'});await reject(()=>reader(req),/Duplicate/);marks.pop();
  exams.push({...exams[0],id:'other'});await reject(()=>reader(req),/एउटा मात्र/);exams.pop();
  students[1].optionalSubject2='';await reject(()=>reader(req),/Optional subject assignment/);students[1].optionalSubject2='Optional II Health';
+ students[1].studentIemisNo='999';await reject(()=>reader(req),/Conflicting/);students[1].studentIemisNo='901';
  changed=true;await reject(()=>reader(req),/Login/);
  return 'PASS V46 saved marks: original maxima, zero, optional eligibility, scope, duplicate/incomplete records, login changes';
 }
