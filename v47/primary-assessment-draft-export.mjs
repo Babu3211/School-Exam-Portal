@@ -1,5 +1,6 @@
 // Exports read only saved, source-bound private teacher drafts, never unsaved UI values.
-import {loadMathAssessmentDraft,hasAssessmentStages} from './primary-assessment-math-draft.mjs';
+import {assessmentStagePercentage,formatAssessmentStagePercentage} from './primary-assessment-percentage.mjs';
+import {loadMathAssessmentDraft,hasAssessmentStages,hasUpperAssessmentStages} from './primary-assessment-math-draft.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
 import {scoreSeroferoDraft,v46SeroferoPrintedNumber} from './primary-assessment-v46-serofero-text.mjs';
@@ -21,6 +22,7 @@ export async function readSavedAssessmentDraftReport(args){
  const remarks=saved[0]?.remarks?.split('\n')??[];
  const digits=n=>String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]);
  const date=(d,i)=>d?.rowDates?.slice(i*10,i*10+10)||d?.date||'';
+ const stageSummary=hasUpperAssessmentStages(model)?saved.map((d,i)=>labels[i]+': '+formatAssessmentStagePercentage(assessmentStagePercentage(d?.ratings??'_'.repeat(slots.length)),ne)).join(' | '):'';
  const rows=[];
  for(const [i,slot] of slots.entries()){
   const r=slot.sourceText;
@@ -36,12 +38,12 @@ export async function readSavedAssessmentDraftReport(args){
   }
  }
  assertCurrent();
- return Object.freeze({title:ne?'सुरक्षित मूल्याङ्कन Draft — '+theme.theme:'Saved Assessment Draft — '+theme.theme,schoolId:model.schoolId,studentId,studentName:student.name,grade:model.grade,section:student.section,year:'2083',historical:0,hasSaved,headers:Object.freeze(headers),rows:Object.freeze(rows.map(Object.freeze)),notice:ne?'निजी सुरक्षित Draft मात्र — आधिकारिक मूल्याङ्कन वा ग्रेड होइन।':'Private saved draft only — NOT official assessment or grade',officialAssessmentApproved:false});
+ return Object.freeze({title:ne?'सुरक्षित मूल्याङ्कन Draft — '+theme.theme:'Saved Assessment Draft — '+theme.theme,schoolId:model.schoolId,studentId,studentName:student.name,grade:model.grade,section:student.section,year:'2083',historical:0,hasSaved,stageSummary,headers:Object.freeze(headers),rows:Object.freeze(rows.map(Object.freeze)),notice:ne?'निजी सुरक्षित Draft मात्र — आधिकारिक मूल्याङ्कन वा ग्रेड होइन।':'Private saved draft only — NOT official assessment or grade',officialAssessmentApproved:false});
 }
 export async function exportSavedAssessmentDraft(args,kind){
  if(!['word','excel'].includes(kind))throw Error('Invalid export kind');
  const model=await readSavedAssessmentDraftReport(args);
- const blob=kind==='word'?assessmentPrintWordBlob(model):excelWorkbook(['Status','School ID','Student ID','Class','Year','Subject','Theme',...model.headers],model.rows.map(r=>[model.notice,model.schoolId,model.studentId,model.grade,model.year,args.model.subjectName,args.model.themes[args.themeIndex].theme,...r]),{sheetName:'Saved draft'});
+ const blob=kind==='word'?assessmentPrintWordBlob(model):excelWorkbook(['Status','School ID','Student ID','Class','Year','Subject','Theme','Stage percentage summary',...model.headers],model.rows.map(r=>[model.notice,model.schoolId,model.studentId,model.grade,model.year,args.model.subjectName,args.model.themes[args.themeIndex].theme,model.stageSummary,...r]),{sheetName:'Saved draft'});
  args.assertCurrent();
  return {blob,filename:'V47-DRAFT-'+model.schoolId+'-'+model.studentId+'-'+args.model.subjectId+'-2083.'+(kind==='word'?'docx':'xlsx'),count:model.rows.length};
 }
@@ -61,8 +63,8 @@ export async function readClassAssessmentDraftReports(args){
 }
 export function exportClassAssessmentDraftReports(batch,model,themeIndex,kind){
  if(!['word','excel'].includes(kind)||!batch.reports.length)throw Error('Invalid class export');
- const first=batch.reports[0],headers=['Status','School ID','Class','Year','Subject','Theme','Student ID','Student','Section','Draft status',...first.headers];
- const rows=batch.reports.flatMap(r=>r.rows.map(row=>[r.notice,r.schoolId,r.grade,r.year,model.subjectName,model.themes[themeIndex].theme,r.studentId,r.studentName,r.section,r.hasSaved?'Saved':'Not saved',...row]));
+ const first=batch.reports[0],headers=['Status','School ID','Class','Year','Subject','Theme','Student ID','Student','Section','Draft status','Stage percentage summary',...first.headers];
+ const rows=batch.reports.flatMap(r=>r.rows.map(row=>[r.notice,r.schoolId,r.grade,r.year,model.subjectName,model.themes[themeIndex].theme,r.studentId,r.studentName,r.section,r.hasSaved?'Saved':'Not saved',r.stageSummary,...row]));
  const blob=kind==='word'?assessmentPrintWordBlob(first,batch.reports):excelWorkbook(headers,rows,{sheetName:'Class saved drafts'});
  return {blob,filename:'V47-CLASS-DRAFT-'+model.schoolId+'-'+model.grade+'-'+model.subjectId+'-2083.'+(kind==='word'?'docx':'xlsx'),count:batch.studentCount};
 }

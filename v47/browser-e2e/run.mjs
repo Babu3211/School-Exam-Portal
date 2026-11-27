@@ -301,7 +301,7 @@ try{
      await wait(page,()=>document.getElementById('teacherDraftSaveStatus').textContent.includes('Revision 2 सुरक्षित भयो'));
      const updated=(await db.doc(sciencePath).get()).data();
      assert.equal(updated.revision,2);
-     assert.equal(updated.ratings,'4'+'_'.repeat(count-2)+'2');assert.equal(updated.remarks.split('\n')[0],note);
+     assert.equal(updated.ratings,'4'+'_'.repeat(count-2)+'2');assert.ok((await page.locator('#teacherDraftTotal').textContent()).replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d))).includes('75.00%'));assert.equal(updated.remarks.split('\n')[0],note);
      assert.equal(await page.locator('#teacherStage').isVisible(),true);await page.locator('#teacherStage').selectOption('support');await wait(page,()=>!document.getElementById('teacherSaveDraft').disabled);
      assert.equal(await ratings.first().inputValue(),'');assert.equal(await page.locator('#teacherDraftRows .assessment-remark').count(),0);assert.equal(await page.locator('#teacherDraftRows .assessment-remark-readonly').first().textContent(),note);await ratings.first().selectOption('3');await page.locator('#teacherDate').fill('2083-08-12');await page.locator('#teacherSaveDraft').click();await wait(page,()=>document.getElementById('teacherDraftSaveStatus').textContent.includes('Revision 1 सुरक्षित भयो'));
      const support=(await db.doc(supportPath).get()).data();assert.equal(support.format,'smss-v47-primary-'+kind+'-support-draft-v1');assert.equal(support.ratings,'3'+'_'.repeat(count-1));assert.equal(support.date,'2083-08-12');assert.deepEqual((await db.doc(sciencePath).get()).data(),updated);

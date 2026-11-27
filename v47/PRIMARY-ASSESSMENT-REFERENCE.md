@@ -103,3 +103,7 @@ Raw max is the sum of the individual 4-indicator scoring blocks, not the officia
 
 ## 2026-11-27 — Shared remarks column in staged assessment drafts
 - The uploaded CDC 2083 upper-primary guide shows a single remarks column following regular and remedial date/rating columns. A row note (up to 200 characters) is edited and saved with the regular draft; remedial stage displays it read-only. This is also used for staged lower Nepali and English. Existing draft identities and scores are unchanged, and all export modes include the shared note. Remarks-only saves without any regular rating are not supported. No official publication or full source certification is implied.
+
+## 2026-11-27 — Upper-primary stage achievement percentages
+- Reopened the supplied 149-page CDC 2083 guide, PDF page 15 (printed p.14), section on theme/unit assessment point 5: sum of achievement-level points divided by four times the number of assessed learning achievements, multiplied by 100. PDF page 16 (printed p.15) repeats the subject aggregate principle. Annex forms show full-theme denominator after all rows are assessed.
+- Apply formula separately to saved regular/remedial stage and display assessed/expected coverage. No assessment = blank percentage, not zero. Subject progress weights by actual assessed count, never averages theme percentages. Current UI preview reflects current selected stage edits and saved peer; reports read saved records. No merged final-stage score or letter grade is inferred; official publication stays blocked. No schema, hashes or rules changed.

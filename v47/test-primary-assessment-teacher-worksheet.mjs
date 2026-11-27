@@ -138,3 +138,6 @@ for(const grade of ['1','2','3']){
  assert.equal(total,grade==='1'?25:grade==='2'?28:24);assert.equal(previous,Number(grade==='1'?25:grade==='2'?28:24));
 }
 assert.equal(v46SeroferoPrintedNumber('2','म र मेरो परिवार',5),5);assert.equal(v46SeroferoPrintedNumber('2','म र मेरो परिवार',6),5);assert.equal(v46SeroferoPrintedNumber('2','मेरो दैनिक जीवन',1),7);assert.throws(()=>v46SeroferoPrintedNumber('2','Unknown',1));
+
+import {assessmentStagePercentage,formatAssessmentStagePercentage} from './primary-assessment-percentage.mjs';
+assert.deepEqual(assessmentStagePercentage('43__'),{sum:7,count:2,expected:4,denominator:8,percentage:87.5});assert.equal(assessmentStagePercentage('____').percentage,null);assert.equal(assessmentStagePercentage('1234').percentage,62.5);assert.equal(assessmentStagePercentage('4444').percentage,100);assert.throws(()=>assessmentStagePercentage('0_'));assert.match(formatAssessmentStagePercentage(assessmentStagePercentage('43__')),/87\.50%/);

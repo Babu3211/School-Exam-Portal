@@ -7,6 +7,7 @@ import {readObservationPortfolio,exportObservationPortfolio,readIndicatorPortfol
 import {parseLocalAssessmentSource,readLocalAssessmentSource,saveLocalAssessmentSource} from './primary-assessment-local-source.mjs';
 import {readSchoolSubjectCatalog} from './subject-catalog-view.mjs';
 import {loadAssignedPrimarySubjects,loadPrimaryTeacherWorksheet,loadAdminAssessmentWorksheet,primarySubjectKey,draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
+import {assessmentStagePercentage,formatAssessmentStagePercentage} from './primary-assessment-percentage.mjs';
 import {scoreSeroferoDraft,v46SeroferoPrintedNumber} from './primary-assessment-v46-serofero-text.mjs';
 import {todayAssessmentDate2083} from './assessment-date-2083.mjs';
 import {loadMathAssessmentDraft,saveMathAssessmentDraft,validateMathDraftValues,hasAssessmentStages} from './primary-assessment-math-draft.mjs';
@@ -84,6 +85,7 @@ async function renderTeacherDraft(){
  const nepaliForm=lower&&key==='nepali',englishForm=lower&&key==='english',mathForm=lower&&key==='mathematics',upperMath=!lower&&key==='mathematics';
  const sourceReady=slots.every(s=>s.sourceText),indicatorForm=binary&&sourceReady;
  const staged=usesLanguageStages(worksheet)&&sourceReady,activeStage=$('teacherStage').value,peerStage=activeStage==='regular'?'support':'regular';
+ const showPercentage=!lower&&staged&&!binary;let peerSaved=null;
  const showRemarks=staged&&!binary,remarksEditable=showRemarks&&activeStage==='regular',remarksLabel=ne?'कैफियत':'Remarks';
  const stageLabel=usesLanguageStages(worksheet)?($('teacherStage').value==='regular'?(ne?'नियमित मूल्याङ्कन':'Regular Assessment'):(ne?'थप सहायतापछिको मूल्याङ्कन':'Assessment after Remedial Class')):(ne?'मूल्याङ्कन':'Assessment');
  const labels=indicatorForm?['थिम','मुख्य सिकाइ उपलब्धि','उपलब्धि सूचक','सकेको / नसकेको','मिति','अङ्कन / ४','मूल्याङ्कन साधन']:nepaliForm?['सिकाइ उपलब्धि','परीक्षण गर्ने पक्ष','साधन','मिति','अङ्कन / ४']:englishForm?['SN','Areas / Skills','Learning outcomes','Date (BS)','Achievement / 4']:upperMath?['SN / क्र.सं.','Content / विषयवस्तु','Learning achievement / सिकाइ उपलब्धि','Date (BS) / मिति','Achievement / 4']:mathForm?['Learning achievement / सिकाइ उपलब्धि','Criteria / अङ्कन आधार','Date (BS) / मिति','Achievement / 4']:ne?['सिकाइ उपलब्धि','मिति','अङ्कन / ४']:['Learning achievement','Date (BS)','Achievement / 4'];
@@ -107,8 +109,8 @@ async function renderTeacherDraft(){
  const makeDate=(tr,span=1)=>{const td=cell(tr,'');td.rowSpan=span;const field=document.createElement('input');field.className='assessment-row-date';field.setAttribute('aria-label',ne?'मूल्याङ्कन मिति (वि.सं.)':'Assessment date (BS)');field.placeholder='2083-MM-DD';field.maxLength=10;td.append(field);return field};
  const scoreCells=[],peerRatings=[],peerDates=[],peerScores=[],remarkCells=[];
  const peerCell=(tr,list,span=1)=>{const td=cell(tr,'—');td.rowSpan=span;td.className='assessment-peer-value';list.push(td);return td};
- const showPeer=saved=>{const values=saved?.ratings??'';peerRatings.forEach((td,i)=>{const v=values[i];td.textContent=!v||v==='_'?'—':indicatorForm?(v==='1'?'सकेको':'नसकेको'):digits(v)});peerDates.forEach((td,i)=>{const used=indicatorForm?/[01]/.test(values.slice(i*4,i*4+4)):/[1-4]/.test(values[i]??'');td.textContent=saved&&used?(saved.rowDates?.slice(i*10,i*10+10)||saved.date):'—'});if(indicatorForm&&saved){const result=scoreSeroferoDraft(values);peerScores.forEach((td,i)=>td.textContent=result.blocks[i]===null?'—':digits(result.blocks[i])+' / ४')}};
- const update=()=>{const fields=[...$('teacherDraftRows').querySelectorAll('select')];if(indicatorForm&&fields.length&&fields.length%4===0){const score=scoreSeroferoDraft(fields.map(el=>el.value||'_').join(''));scoreCells.forEach((el,i)=>el.textContent=score.blocks[i]===null?'—':digits(score.blocks[i])+' / ४');$('teacherDraftTotal').textContent='पूरा सूचक समूह: '+digits(score.completed)+'/'+digits(score.blocks.length)+' · '+digits(score.total)+' / '+digits(theme.fullMarks);return;}const used=fields.filter(el=>el.value!=='');$('teacherDraftTotal').textContent='Draft: '+used.length+'/'+fields.length+' · '+used.reduce((n,el)=>n+Number(el.value),0)+' / '+theme.fullMarks};
+ const showPeer=saved=>{peerSaved=saved;const values=saved?.ratings??'';peerRatings.forEach((td,i)=>{const v=values[i];td.textContent=!v||v==='_'?'—':indicatorForm?(v==='1'?'सकेको':'नसकेको'):digits(v)});peerDates.forEach((td,i)=>{const used=indicatorForm?/[01]/.test(values.slice(i*4,i*4+4)):/[1-4]/.test(values[i]??'');td.textContent=saved&&used?(saved.rowDates?.slice(i*10,i*10+10)||saved.date):'—'});if(indicatorForm&&saved){const result=scoreSeroferoDraft(values);peerScores.forEach((td,i)=>td.textContent=result.blocks[i]===null?'—':digits(result.blocks[i])+' / ४')}};
+ const update=()=>{const fields=[...$('teacherDraftRows').querySelectorAll('select')];if(indicatorForm&&fields.length&&fields.length%4===0){const score=scoreSeroferoDraft(fields.map(el=>el.value||'_').join(''));scoreCells.forEach((el,i)=>el.textContent=score.blocks[i]===null?'—':digits(score.blocks[i])+' / ४');$('teacherDraftTotal').textContent='पूरा सूचक समूह: '+digits(score.completed)+'/'+digits(score.blocks.length)+' · '+digits(score.total)+' / '+digits(theme.fullMarks);return;}if(showPercentage){const current=assessmentStagePercentage(fields.map(el=>el.value||'_').join('')),other=assessmentStagePercentage(peerSaved?.ratings??'_'.repeat(fields.length));const labels=ne?['नियमित','थप सहायतापछि']:['Regular','Remedial'];const summaries=activeStage==='regular'?[current,other]:[other,current];$('teacherDraftTotal').textContent=labels.map((label,i)=>label+': '+formatAssessmentStagePercentage(summaries[i],ne)).join(' | ')+(ne?' — चरणगत प्रतिशत मात्र।':' — stage percentages only.');return}const used=fields.filter(el=>el.value!=='');$('teacherDraftTotal').textContent='Draft: '+used.length+'/'+fields.length+' · '+used.reduce((n,el)=>n+Number(el.value),0)+' / '+theme.fullMarks};
  const rating=(tr,slot)=>{const td=cell(tr,'');const input=document.createElement('select');input.setAttribute('aria-label','Draft rating '+slot.number);input.append(new Option('—',''));for(let n=slot.min;n<=slot.max;n++)input.append(new Option(digits(n),String(n)));input.onchange=update;td.append(input);return input};
  const addText=(td,values)=>{for(const value of values.filter(Boolean)){const el=document.createElement('div');el.textContent=value;td.append(el)}};
  for(const [index,slot] of slots.entries()){
@@ -150,7 +152,7 @@ async function renderTeacherDraft(){
  try{
   await verify();args.assertCurrent();
   const [saved,other]=await Promise.all([loadMathAssessmentDraft(args),staged?loadMathAssessmentDraft({...args,stage:peerStage}):Promise.resolve(null)]);args.assertCurrent();
-  if(staged)showPeer(other);
+  if(staged){showPeer(other);update();}
   if(showRemarks){const notes=(remarksEditable?saved:other)?.remarks?.split('\n')??[];remarkCells.forEach((el,i)=>{if(remarksEditable)el.value=notes[i]??'';else el.textContent=notes[i]??''})}
   setDraftExportEnabled(!!saved||!!other);setTeacherClassExportEnabled(true);
   worksheetRevision=saved?.revision??0;
@@ -272,8 +274,8 @@ $('adminDraftProgress').onclick=async()=>{
  $('adminDraftProgress').disabled=true;$('adminProgressRows').replaceChildren();$('adminProgressStatus').textContent='सबै थिमका सुरक्षित Draft जाँच हुँदैछन्…';
  try{await verify();args.assertCurrent();const progress=await readAssessmentDraftProgress(args);await verify();args.assertCurrent();
  const stage=s=>s==='regular'?'Regular':s==='support'?'Remedial':'Assessment';
- for(const row of progress.rows){const tr=document.createElement('tr');for(const v of [row.theme,stage(row.stage),row.sourceAvailable?row.entered+' / '+row.total:'—',row.sourceAvailable?row.complete+' / '+row.totalGroups:'—',row.sourceAvailable?(row.revision===null?'Not saved':'Saved · R'+row.revision):'Source unavailable'])cell(tr,v);$('adminProgressRows').append(tr)}
- $('adminProgressStatus').textContent=progress.totals.map(t=>stage(t.stage)+': '+t.entered+' / '+t.total+(progress.binary?' सूचक':' उपलब्धि')+' · '+t.complete+' / '+t.totalGroups+' पूरा समूह'+(t.unavailableThemes?' · '+t.unavailableThemes+' थिमको स्रोत उपलब्ध छैन':'' )).join(' | ')+' — सुरक्षित Draft को प्रगति मात्र, अन्तिम ग्रेड होइन।';
+ for(const row of progress.rows){const tr=document.createElement('tr');for(const v of [row.theme,stage(row.stage),row.sourceAvailable?row.entered+' / '+row.total:'—',row.sourceAvailable?row.complete+' / '+row.totalGroups:'—',row.sourceAvailable?(row.revision===null?'Not saved':'Saved · R'+row.revision):'Source unavailable',row.percentage===null?'—':row.percentage.toFixed(2)+'%'])cell(tr,v);$('adminProgressRows').append(tr)}
+ $('adminProgressStatus').textContent=progress.totals.map(t=>stage(t.stage)+': '+t.entered+' / '+t.total+(progress.binary?' सूचक':' उपलब्धि')+' · '+t.complete+' / '+t.totalGroups+' पूरा समूह'+(t.percentage===null?'':' · '+t.percentage.toFixed(2)+'%')+(t.unavailableThemes?' · '+t.unavailableThemes+' थिमको स्रोत उपलब्ध छैन':'' )).join(' | ')+' — सुरक्षित Draft को प्रगति मात्र, अन्तिम ग्रेड होइन।';
  }catch(e){if(request===adminReviewEpoch)$('adminProgressStatus').textContent='प्रगति तयार भएन: '+neError(e)}
  finally{if(request===adminReviewEpoch)$('adminDraftProgress').disabled=false}
 };
@@ -365,7 +367,7 @@ function renderSavedPrintModels(models){
   append('h1',model.title);
   append('p','SMSS Exam Portal V47 · School ID: '+model.schoolId+' · Academic Year: '+model.year);
   append('p','Student: '+(model.studentName||model.studentId)+' · Student ID: '+model.studentId+' · Class: '+model.grade+(model.section?' · Section: '+model.section:''));
-  append('p',model.notice);if(model.hasSaved===false)append('p','No saved draft — blank assessment form');
+  append('p',model.notice);if(model.stageSummary)append('p',model.stageSummary);if(model.hasSaved===false)append('p','No saved draft — blank assessment form');
   append('p','Records: '+model.rows.length+' · Excluded historical records: '+model.historical);
   const table=append('table',''),head=add('thead','',table),tr=add('tr','',head);
   for(const v of model.headers)add('th',v,tr);
