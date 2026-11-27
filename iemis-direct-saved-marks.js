@@ -10,8 +10,9 @@ export function createV46DirectReader({getWorkspace,T,examTermKey,subjectLabel,o
   if(request?.mode==='attendance')return attendance(request);
   if(request?.mode!=='marks')fail('Attendance र Class 5 को Direct Sync अझै तयार छैन।');
   const c=request.context,term=request.examTerm;
-  if(!c||!Object.hasOwn(termKeys,term)||T.termKey(c.term)!==term||T.clean(c.year)!=='2083'||!/^[0-9]{5,20}$/.test(c.schoolCode)||!['6','7','8','9','10'].includes(T.classKey(c.className))||!Array.isArray(request.columns)||!request.columns.length||request.columns.length>150)fail('सही विद्यालय, वर्ष 2083, कक्षा 6–10 र Term आवश्यक छ।');
+  if(!c||!Object.hasOwn(termKeys,term)||T.termKey(c.term)!==term||T.clean(c.year)!=='2083'||!/^[0-9]{5,20}$/.test(c.schoolCode)||!['1','2','3','4','5','6','7','8','9','10'].includes(T.classKey(c.className))||!Array.isArray(request.columns)||!request.columns.length||request.columns.length>150)fail('सही विद्यालय, वर्ष 2083, कक्षा 1–10 र Term आवश्यक छ।');
   const klass=T.classKey(c.className), year=T.clean(c.year);
+  const primary=Number(klass)<=5,primaryKinds=new Set(['absent','count','full','obtained']);
   const w=getWorkspace(),{auth,db,api,role,isAdmin}=w,user=auth?.currentUser;
   if(!user?.uid||!isAdmin()||role?.active!==true)fail('सक्रिय SMSS Admin Login आवश्यक छ।');
   const check=()=>{const now=getWorkspace();if(now.auth!==auth||auth.currentUser!==user||now.role!==role||!now.isAdmin())fail('Login परिवर्तन भयो। फेरि Fetch गर्नुहोस्।');};
@@ -26,11 +27,12 @@ export function createV46DirectReader({getWorkspace,T,examTermKey,subjectLabel,o
   for(const col of request.columns){
    if(typeof col?.subject!=='string'||typeof col?.label!=='string')fail('अमान्य विषय request');
    const key=T.subjectKey(col.subject),kind=T.componentKey(col.label);
-   if(!key||!kinds.has(kind))fail('Unsupported component: '+col.label);
+   if(!key||!(primary?primaryKinds:kinds).has(kind))fail('Unsupported component: '+col.label);
    if(!wanted.has(key))wanted.set(key,new Set());
    if(wanted.get(key).has(kind))fail('Duplicate requested component');
    wanted.get(key).add(kind);
   }
+  if(primary)for(const set of wanted.values())if((set.has('obtained')||set.has('full'))&&!set.has('count'))fail('Learning Achievement count column आवश्यक छ।');
   const subjectKey=s=>T.subjectKey(subjectLabel(s));
   const [catalog,allStudents,exams]=await Promise.all([read('classes',[],3000),read('students',[],5000),read('exams',[],1000)]);
   const subjects=new Map();
@@ -88,6 +90,17 @@ export function createV46DirectReader({getWorkspace,T,examTermKey,subjectLabel,o
      if(scores.has(k)||typeof s.fullMarks!=='number'||!Number.isFinite(s.fullMarks)||s.fullMarks<0||n!==null&&n!==''&&(typeof n!=='number'||!Number.isFinite(n)||n<0||n>s.fullMarks))fail('Invalid original saved score');
      scores.set(k,s);
     }
+    // The saved primary assessment is an exact count × 4 contract; never scale it.
+    if(primary){
+     const count=scores.get('count'),full=scores.get('full'),obtained=scores.get('obtained');
+     if(!count||!full||!obtained||!Number.isInteger(count.fullMarks)||count.fullMarks<0||count.fullMarks>5000||full.fullMarks!==count.fullMarks*4||obtained.fullMarks!==full.fullMarks||full.obtained!==null||(!r.isAbsent&&(count.obtained!==count.fullMarks||!Number.isInteger(obtained.obtained)||obtained.obtained<0||obtained.obtained>full.fullMarks))||(r.isAbsent&&(count.obtained!==null||obtained.obtained!==null)))fail('Saved learning achievement count/full/obtained mismatch');
+     if(r.isAbsent&&!requested.has('absent'))fail('IEMIS primary absence column unavailable');
+     for(const kind of requested){
+      const value=kind==='absent'?(r.isAbsent?'TRUE':'FALSE'):kind==='count'?count.fullMarks:kind==='full'?full.fullMarks:r.isAbsent?'':obtained.obtained;
+      byStudent.get(r.studentId).set(key+'::'+kind,value);
+     }
+     continue;
+    }
     for(const kind of requested){
      const row=byStudent.get(r.studentId),col=key+'::'+kind;
      if(kind==='absent'){row.set(col,r.isAbsent?'TRUE':'FALSE');continue;}
@@ -99,6 +112,11 @@ export function createV46DirectReader({getWorkspace,T,examTermKey,subjectLabel,o
    }
    if([...applies].some(id=>!seen.has(id)))fail('Incomplete saved marks: '+subject);
    for(const kind of requested){
+    if(primary){
+     const label={absent:'IsAbsent',count:'No. Of Learning Achievement',full:'Full Marks',obtained:'Obtained Learning Achievement'}[kind];
+     columns.push({subject:subjectLabel(subject),label,key:key+'::'+kind});
+     continue;
+    }
     const base={absent:'IsAbsent',participation:'Participation',practical:'Practical/Project',term:term==='final'?'Total of Term':names[term]+' Examination',theory:'TH (Theory)'}[kind];
     columns.push({subject:subjectLabel(subject),label:kind==='absent'?base:base+'('+scales.get(kind)+')',key:key+'::'+kind});
    }
