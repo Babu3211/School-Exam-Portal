@@ -94,6 +94,12 @@ w.eval(readFileSync('iemis-importer/transfer.js','utf8'));
 // Capture the lexical catalogue in the same eval that initializes the page.
 const legacyForms=w.eval(html.slice(html.indexOf('const cdcCoreSubjects'),html.indexOf('let iemisEntryGrid'))+'\nwindow.__testSeroApproved=cdcSeroGuideApproved;\nwindow.__testSeroEntryForm=cdcSeroGuideEntryForm;\nwindow.__testScienceSourceCount=cdcUpperScienceByTitle.size;\nopenCdcAssessment();\ncdcLegacyMathRubrics;');
 const field=name=>w.document.querySelector('[data-cdc="'+name+'"]');
+const productionApprovals=[...w.__testSeroApproved];
+assert.equal(productionApprovals.length,27);
+for(const key of productionApprovals){const i=key.indexOf(':');assert.ok(w.__testSeroEntryForm(key.slice(0,i),key.slice(i+1),'2083'),key);}
+w.__testSeroApproved.clear(); // legacy preview regression only; restore below
+const originalLoadCdc=w.loadCdcAssessmentPage;
+w.loadCdcAssessmentPage=async (...args)=>{await originalLoadCdc(...args);if(!args[0]?.reportOnly&&field('showSingleForm'))field('showSingleForm').onclick();};
 const choice=(name,value)=>{field(name).value=value;field(name).onchange();};
 // Compact teacher workspace: keep the official form first and secondary panels closed.
 for(const name of ['extraReference','extraObservations','extraReports','extraManual','extraRecords','extraActions']){
@@ -395,6 +401,7 @@ assert.equal(field('annexScroll').getAttribute('tabindex'),'0');
 assert.match(html,/@media screen and \(max-width:700px\)/);
 assert.match(html,/data-cdc-subject-key="mathematics"/);
 console.log('Real registry spellings, local subjects and IEMIS-coded subject labels passed');
+// Multi-form workspace must preserve the original form and student-scoped reads.
 // Standalone assessment route is a sibling of Marks Entry and requires no marks or exams.
 assert.match(html,/<summary>[^\n]*Manage Exam<\/summary>[^\n]*data-page="cdc-assessment"/);
 assert.doesNotMatch(html,/id="openCdcAssessment"/);
@@ -1347,7 +1354,7 @@ for(const [unit,count,groups] of [['म र मेरो परिवार',20,
  assert.equal(field('annexRows').querySelectorAll('[data-cdc-sero-save]').length,0);
  assert.equal(field('printForm').disabled,true);
  assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,0);
- assert.match(field('annexStatus').textContent,/समीक्षा प्रति/);
+ assert.match(field('annexStatus').textContent,/स्रोतसँग अङ्कन संरचना मिलाइएको; डिजिटल शब्दावली कार्यगत रूपान्तरण हो/);
  const regular=[...field('annexRows').querySelectorAll('[data-cdc-sero-indicator="0"]')];
  const remedial=[...field('annexRows').querySelectorAll('[data-cdc-sero-indicator="1"]')];
  const scores=[...field('annexRows').querySelectorAll('[data-cdc-sero-score="0"]')];
@@ -1535,7 +1542,7 @@ for(const grade of ['2','3']){
   assert.ok(outcomes.every(cell=>cell.textContent.includes(' — ')));
   assert.ok([...rows.rows].every(row=>!row.textContent.includes('मूल PDF हेर्नुहोस्')));
   const sampleLabels=grade==='2'
-   ?[/छिमेकीलाई सम्मान गर्ने/,/चुम्बकबाट आकर्षित वस्तु छुट्याउने/,/स्थलचर जनावर चिन्ने/,/२५ मिटर दौड/,/सजीव–निर्जीव छुट्याउने/,/सार्वजनिक सम्पदा संरक्षण/,/स्थानीय गीत गाउने/,/राष्ट्रिय चिह्नको वर्णन/,/परिवारको आम्दानीका स्रोत/,/पानीका स्रोत/]
+   ?[/छिमेकीलाई सम्मान गर्ने/,/चुम्बकबाट आकर्षित वस्तु छुट्याउने/,/स्थलचर जनावर चिन्ने/,/२५ मिटर दौड/,/सजीव–निर्जीव छुट्याउने/,/सार्वजनिक सम्पदा संरक्षण/,/स्थानीय गीत लयमा गाउने/,/राष्ट्रिय चिह्नको वर्णन/,/परिवारको आम्दानीका स्रोत/,/पानीका स्रोत/]
    :[/पारिवारिक नाता/,/ध्वनि प्रदूषणको असर/,/खोपको महत्त्व/,/प्राथमिक उपचारको अवधारणा/,/खाद्य शृङ्खलाको उदाहरण/,/ठोस, तरल र ग्यासका गुण परीक्षण/,/स्थानीय बाजा अभ्यास/,/स्थानीय भाषा/,/पैसा बचत/,/दिन र रातको कारण/];
   assert.match(rows.textContent,sampleLabels[i]);
   if(grade==='3'&&i===1)assert.match(rows.textContent,/चुम्बकीय र अचुम्बकीय वस्तु/);
@@ -1921,7 +1928,7 @@ console.log('Grades 1–3 CDC 2076 Annex 2 annual report and portfolio PDF Word 
      }
      if(subject==='nepali')assert.deepEqual(new Set(forms),new Set(Object.keys(grade==='1'?audit.cdcPrimaryNepaliForms:audit.cdcNepaliThemeForms[grade])));
      if(subject==='english')assert.deepEqual(new Set(forms),new Set(Object.keys(audit.cdcPrimaryEnglishForms[grade])));
-     if(subject==='serophero')assert.equal(keys.length,10);
+     if(subject==='serophero'){assert.equal(keys.length,10);assert.equal(forms.length,10);}
      assert.ok(entries.slice(0,forms.length).every(x=>x.kind==='form')||subject==='serophero');
    }
  }
@@ -1980,6 +1987,58 @@ const readsAfterReset=coverageReads;
 await w.loadCdcDashboardOverview();assert.equal(coverageReads,readsAfterReset+3);
 reportHub.remove();reportDetail.remove();dash.remove();
 console.log('CDC dashboard and report hub: current-year coverage, deduplication, cached reads, export, admin read-only drill-down and role isolation passed');
+}
+// Class/theme workspace: all authorized students on one page, original CDC
+// regular/support controls, independent scopes, and a read-only all-theme view.
+{
+ for(const key of productionApprovals)w.__testSeroApproved.add(key);
+ w.loadCdcAssessmentPage=originalLoadCdc;
+ w.isAdmin=()=>true;current.roles=['admin'];current.active=true;serverRole={...current};w.currentSchoolSettings.academicYear='2083';
+ w.setDoc=async(ref,data)=>{assert.match(ref.path,/^cdc_observations\//);assert.ok(!observations.has(ref.path));observations.set(ref.path,data);};
+ const multiHost=w.document.createElement('div');w.document.body.append(multiHost);
+ const pupils=[{id:'multi-a',class:'Class 5',section:'A',name:'Multi A'},{id:'multi-b',class:'Class 5',section:'A',name:'Multi B'},{id:'multi-other',class:'Class 4',section:'A',name:'Other'}];
+ w.getDocs=async name=>({docs:name==='students'?pupils.map(p=>({id:p.id,data:()=>p})):[{id:'math',data:()=>({className:'Class 5',subject:'Mathematics'})}]});
+ const seenScopes=[];
+ w.getDocsFromServer=async q=>{
+   const filters=Object.fromEntries(q.filters.map(([k,,v])=>[k,v]));
+   seenScopes.push(filters);
+   return {docs:[...observations.values()].filter(o=>Object.entries(filters).every(([k,v])=>o[k]===v)).map(o=>({data:()=>o}))};
+ };
+ await w.loadCdcAssessmentPage({host:multiHost});
+ const root=multiHost.querySelector('#cdcAssessmentDialog'),main=n=>root.querySelector('[data-cdc="'+n+'"]');
+ main('class').value='5';main('class').onchange();
+ main('subject').value='Mathematics';main('subject').onchange();
+ main('themePick').value='ज्यामिति';await main('themePick').onchange();
+ const panel=multiHost.querySelector('[data-cdc-multi="class"]');
+ assert.ok(panel,'theme selection opens class matrix automatically');
+ assert.equal(panel.querySelectorAll('[data-cdc-matrix-outcome]').length,5);
+ const rows=[...panel.querySelectorAll('[data-cdc-matrix-outcome="0"] tbody tr')];
+ assert.equal(rows.length,2);assert.equal(rows[0].dataset.cdcMatrixStudent,'multi-a');assert.equal(rows[1].dataset.cdcMatrixStudent,'multi-b');
+ assert.ok(rows.every(row=>!row.querySelector('[data-cdc-matrix-rating="regular"]').disabled&&row.querySelector('[data-cdc-matrix-rating="support"]')));
+ assert.ok(seenScopes.some(o=>o.studentId==='multi-a')&&seenScopes.some(o=>o.studentId==='multi-b'));
+ assert.ok(!seenScopes.some(o=>o.studentId==='multi-other'));
+ const savedBefore=observations.size;
+ rows[0].querySelector('[data-cdc-matrix-date="regular"]').value='2083-08-07';
+ rows[0].querySelector('[data-cdc-matrix-rating="regular"]').value='2';
+ rows[0].querySelector('[data-cdc-matrix-date="support"]').value='2083-08-08';
+ rows[0].querySelector('[data-cdc-matrix-rating="support"]').value='4';
+ await panel.querySelector('[data-cdc-matrix-save]').onclick();
+ assert.equal(observations.size,savedBefore+2);
+ assert.ok([...observations.values()].some(o=>o.studentId==='multi-a'&&o.level===2&&o.stage==='regular'));
+ assert.ok([...observations.values()].some(o=>o.studentId==='multi-a'&&o.level===4&&o.stage==='support'));
+ assert.equal(rows[1].querySelector('[data-cdc-matrix-rating="regular"]').value,'');
+ await panel.querySelector('[data-cdc-matrix-save]').onclick();
+ assert.equal(observations.size,savedBefore+2);
+ main('showSingleForm').onclick();
+ assert.equal(multiHost.querySelector('[data-cdc-multi]'),null);
+ main('student').value='multi-a';main('student').onchange();
+ await main('showStudentThemes').onclick();
+ const view=multiHost.querySelector('[data-cdc-multi="student"]');assert.ok(view);
+ assert.equal(view.querySelectorAll(':scope > details').length,5);
+ assert.equal(view.querySelectorAll('[data-cdc-grid-edit]').length,0);
+ assert.equal(observations.size,savedBefore+2);
+ main('showSingleForm').onclick();multiHost.remove();
+ console.log('Class theme forms: same CDC renderer, all scoped pupils, independent saved ratings, all-theme read-only view passed');
 }
 // CDC backup: verify legacy and new exports in an isolated synthetic DOM.
 // Assessment evidence must never be replayed through ordinary client restore.

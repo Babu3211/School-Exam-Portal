@@ -434,14 +434,45 @@ service cloud.firestore {
         data.academicYear == '2083' &&
         data.period in ['First Term','Second Term','Final Term','Annual'] &&
         data.unit is string && data.unit.size() > 0 && data.unit.size() <= 180 &&
-        // Only the three currently enabled Class 1 themes may append evidence.
-        // Class 2–3 approvals must update this server guard and the UI together.
-        // Existing records remain readable; this guard applies to creates only.
-        data.className.matches('^(Class |कक्षा )?[1१]$') &&
+        // Source-reviewed 2076 guide: exact class/theme/block allowlist.
+        // Existing IDs and append-only record semantics remain unchanged.
         data.outcomeId is string &&
-        ((data.unit == 'म र मेरो परिवार' && data.outcomeId.matches('^cdc2076-g1-[1-5]$')) ||
-         (data.unit == 'मेरो दैनिक जीवन' && data.outcomeId.matches('^cdc2076-g1-[6-9]$')) ||
-         (data.unit == 'हाम्रो समुदाय' && data.outcomeId.matches('^cdc2076-g1-1[0-2]$'))) &&
+        ((data.className.matches('^(Class |कक्षा )?[1१]$') && (
+          (data.unit == 'म र मेरो परिवार' && data.outcomeId.matches('^cdc2076-g1-(1|2|3|4|5)$')) ||
+          (data.unit == 'मेरो दैनिक जीवन' && data.outcomeId.matches('^cdc2076-g1-(6|7|8|9)$')) ||
+          (data.unit == 'हाम्रो समुदाय' && data.outcomeId.matches('^cdc2076-g1-(10|11|12)$')) ||
+          (data.unit == 'हाम्रो विद्यालय' && data.outcomeId.matches('^cdc2076-g1-(13|14|15)$')) ||
+          (data.unit == 'हाम्रा वरपरका जीवजन्तु' && data.outcomeId.matches('^cdc2076-g1-(16|17)$')) ||
+          (data.unit == 'हाम्रो वातावरण' && data.outcomeId.matches('^cdc2076-g1-(18|19)$')) ||
+          (data.unit == 'मेरो सिर्जना' && data.outcomeId.matches('^cdc2076-g1-(20|21|22)$')) ||
+          (data.unit == 'हाम्रो संस्कृति' && data.outcomeId.matches('^cdc2076-g1-(23)$')) ||
+          (data.unit == 'सञ्चार प्रविधि र बजार' && data.outcomeId.matches('^cdc2076-g1-(24|25)$')) ||
+          (data.unit == 'हाम्रो वरपरको संसार' && data.outcomeId.matches('^cdc2076-g1-(26|27)$'))
+        )) ||
+        (data.className.matches('^(Class |कक्षा )?[2२]$') && (
+          (data.unit == 'म र मेरो परिवार' && data.outcomeId.matches('^cdc2076-g2-(1|2|3|4|5|6)$')) ||
+          (data.unit == 'मेरो दैनिक जीवन' && data.outcomeId.matches('^cdc2076-g2-(7|8|9|10|11|12)$')) ||
+          (data.unit == 'हाम्रो समुदाय' && data.outcomeId.matches('^cdc2076-g2-(13|14|15|16|17|18)$')) ||
+          (data.unit == 'हाम्रो विद्यालय' && data.outcomeId.matches('^cdc2076-g2-(19|20|21|22)$')) ||
+          (data.unit == 'हाम्रा वरपरका जीवजन्तु' && data.outcomeId.matches('^cdc2076-g2-(23|24)$')) ||
+          (data.unit == 'हाम्रो वातावरण' && data.outcomeId.matches('^cdc2076-g2-(25|26|27)$')) ||
+          (data.unit == 'मेरो सिर्जना' && data.outcomeId.matches('^cdc2076-g2-(28|29|30)$')) ||
+          (data.unit == 'हाम्रो संस्कृति' && data.outcomeId.matches('^cdc2076-g2-(31)$')) ||
+          (data.unit == 'सञ्चार प्रविधि र बजार' && data.outcomeId.matches('^cdc2076-g2-(32|33)$')) ||
+          (data.unit == 'हाम्रो वरपरको संसार' && data.outcomeId.matches('^cdc2076-g2-(34|35|36)$'))
+        )) ||
+        (data.className.matches('^(Class |कक्षा )?[3३]$') && (
+          (data.unit == 'म र मेरो परिवार' && data.outcomeId.matches('^cdc2076-g3-(1|2|3|4|5|6)$')) ||
+          (data.unit == 'मेरो दैनिक जीवन' && data.outcomeId.matches('^cdc2076-g3-(7|8|9|10)$')) ||
+          (data.unit == 'हाम्रो समुदाय' && data.outcomeId.matches('^cdc2076-g3-(11|12|13|14|15|16)$')) ||
+          (data.unit == 'हाम्रो विद्यालय' && data.outcomeId.matches('^cdc2076-g3-(17|18|19|20)$')) ||
+          (data.unit == 'हाम्रा वरपरका जीवजन्तु' && data.outcomeId.matches('^cdc2076-g3-(21|22)$')) ||
+          (data.unit == 'हाम्रो वातावरण' && data.outcomeId.matches('^cdc2076-g3-(23|24)$')) ||
+          (data.unit == 'मेरो सिर्जना' && data.outcomeId.matches('^cdc2076-g3-(25|26|27)$')) ||
+          (data.unit == 'हाम्रो संस्कृति' && data.outcomeId.matches('^cdc2076-g3-(28|29)$')) ||
+          (data.unit == 'सञ्चार प्रविधि र बजार' && data.outcomeId.matches('^cdc2076-g3-(30|31)$')) ||
+          (data.unit == 'हाम्रो वरपरको संसार' && data.outcomeId.matches('^cdc2076-g3-(32|33|34|35)$'))
+        ))) &&
         data.stage in ['regular','support'] &&
         data.date is string && data.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[0-2])$') &&
         data.indicators is list && data.indicators.size() == 4 &&
