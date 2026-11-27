@@ -13,12 +13,12 @@ import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 
 const aliases={
- nepali:['nepali','नेपाली'],english:['english','अंग्रेजी','अङ्ग्रेजी'],mathematics:['mathematics','math','गणित'],
+ nepali:['nepali','नेपाली','नेपाली भाषा','Nepali Language'],english:['english','अंग्रेजी','अङ्ग्रेजी','अङ्ग्रेजी भाषा','अंग्रेजी भाषा','English Language'],mathematics:['mathematics','math','गणित'],
  serophero:['our surroundings','hamro sero fero','hamro serophero','हाम्रो सेरोफेरो','हाम्रो सेरो फेरो','सेरोफेरो'],
  science:['science','science and technology','विज्ञान','विज्ञान तथा प्रविधि'],
- socialstudies:['social studies','social studies and human values education','सामाजिक अध्ययन','सामाजिक अध्ययन तथा मानव मूल्य शिक्षा'],
- healthphysicalcreativeart:['health physical education and creative arts','health physical education and creative art','स्वास्थ्य शारीरिक तथा सिर्जनात्मक कला','स्वास्थ्य शारीरिक शिक्षा तथा सिर्जनात्मक कला'],
- hamrodhunibeshi:['mother tongue or local subject','local subject','hamro dhuni beshi','हाम्रो धुनीबेँसी','हाम्रो धुनीबेशी','हाम्रो धुनिबेँशी','हाम्रो धुनिवेशी','हाम्रो धुनिबेशी','हाम्रो धुनिबेसी','स्थानीय विषय','स्थानीय','local','Our Dhunibesi','Our Dhunibeshi','मातृभाषा','मातृभाषा वा स्थानीय विषय']
+ socialstudies:['social studies','social studies and human values education','सामाजिक अध्ययन','सामाजिक अध्ययन तथा मानव मूल्य शिक्षा','सामाजिक अध्ययन तथा मानवमूल्य शिक्षा'],
+ healthphysicalcreativeart:['health physical education and creative arts','health physical education and creative art','health physical and creative arts','स्वास्थ्य शारीरिक तथा सिर्जनात्मक कला','स्वास्थ्य शारीरिक शिक्षा तथा सिर्जनात्मक कला'],
+ hamrodhunibeshi:['mother tongue or local subject','local subject','hamro dhuni beshi','हाम्रो धुनीबेँसी','हाम्रो धुनीबेशी','हाम्रो धुनिबेँशी','हाम्रो धुनिवेशी','हाम्रो धुनिबेशी','हाम्रो धुनिबेसी','स्थानीय विषय','स्थानीय','local','Our Dhunibesi','Our Dhunibeshi','मातृभाषा','मातृभाषा वा स्थानीय विषय','मातृभाषा/स्थानीय विषय','मातृभाषा / स्थानीय विषय','मातृभाषा वा स्थानीय विषय वा अन्य','mother tongue or local subject or other']
 };
 const norm=s=>String(s??'').normalize('NFC').toLowerCase().replace(/[(),،–-]/g,' ').replace(/\s+/g,' ').trim();
 export function primarySubjectKey(name){

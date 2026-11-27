@@ -193,3 +193,18 @@ assert.throws(()=>reviewOperatingDays(fullDaily,'366','Register','2026-11-27'),/
 assert.throws(()=>reviewOperatingDays(fullDaily,'20','Register','2026-04-15'),/Invalid operating/);
 assert.throws(()=>reviewOperatingDays(fullDaily,'2.5','Register','2026-11-27'),/Invalid operating/);
 assert.match(annualOperatingDaysText(reviewOperatingDays(fullDaily,'20','Register p. 12','2026-11-27')),/90\.00%/);
+
+import {reviewLocalAnnualGrade} from './primary-assessment-annual-review.mjs';
+const localAnnualRow=(total,entered,scoreSum,sourceAvailable=true)=>({stage:'assessment',total,entered,scoreSum,sourceAvailable});
+assert.equal(reviewLocalAnnualGrade({grade:'1',expected:2,rows:[localAnnualRow(2,2,7)]}).grade,'A');
+assert.equal(reviewLocalAnnualGrade({grade:'5',expected:2,rows:[localAnnualRow(2,2,7)]}).grade,'A (3.6)');
+assert.equal(reviewLocalAnnualGrade({grade:'2',expected:10,rows:[localAnnualRow(10,10,36)]}).grade,'');
+assert.equal(reviewLocalAnnualGrade({grade:'4',expected:10,rows:[localAnnualRow(10,10,36)]}).grade,'A+ (4.0)');
+assert.equal(reviewLocalAnnualGrade({grade:'4',expected:2,rows:[localAnnualRow(2,1,4)]}).grade,'');
+assert.equal(reviewLocalAnnualGrade({grade:'4',expected:2,rows:[localAnnualRow(2,0,null,false)]}).grade,'');
+assert.throws(()=>reviewLocalAnnualGrade({grade:'4',expected:3,rows:[localAnnualRow(2,2,8)]}),/count mismatch/);
+assert.throws(()=>reviewLocalAnnualGrade({grade:'4',expected:2,rows:[localAnnualRow(2,2,9)]}),/score/);
+for(const label of ['मातृभाषा/स्थानीय विषय','मातृभाषा वा स्थानीय विषय वा अन्य','Mother Tongue or Local Subject or Other'])assert.equal(primarySubjectKey(label),'hamrodhunibeshi');
+assert.equal(primarySubjectKey('सामाजिक अध्ययन तथा मानवमूल्य शिक्षा'),'socialstudies');
+assert.equal(primarySubjectKey('नेपाली भाषा'),'nepali');
+assert.equal(primarySubjectKey('Health, Physical and Creative Arts'),'healthphysicalcreativeart');

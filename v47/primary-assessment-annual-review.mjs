@@ -10,6 +10,24 @@ import {readLocalAssessmentSource} from './primary-assessment-local-source.mjs';
 import {validateAttendance} from './attendance-service.mjs';
 import {nepalGregorianDate} from './nepal-date.mjs';
 import {prepareLegacyAttendance} from './legacy-attendance-history.mjs';
+import {lowerAssessmentGrade,upperAssessmentGrade} from './primary-assessment-percentage.mjs';
+// School-supplied local curriculum, single saved stage. This is a review under
+// the class-level CDC scale, not approval of the school's local rubric or publication.
+export function reviewLocalAnnualGrade({grade,expected,rows}){
+ if(!['1','2','3','4','5'].includes(grade)||!Number.isInteger(expected)||expected<1||expected>500||!Array.isArray(rows)||!rows.length)throw Error('Invalid local annual review');
+ let sum=0,count=0,total=0,available=true;
+ for(const r of rows){
+  if(r.stage!=='assessment'||!Number.isInteger(r.total)||r.total<1||!Number.isInteger(r.entered)||r.entered<0||r.entered>r.total)throw Error('Invalid local assessment coverage');
+  total+=r.total;count+=r.entered;
+  if(!r.sourceAvailable){available=false;continue}
+  if(!Number.isInteger(r.scoreSum)||r.scoreSum<r.entered||r.scoreSum>4*r.entered)throw Error('Invalid local achievement score');
+  sum+=r.scoreSum;
+ }
+ if(total!==expected)throw Error('Local source count mismatch');
+ const complete=available&&count===expected,percentage=count&&available?sum/(4*count)*100:null;
+ const lower=['1','2','3'].includes(grade),result=complete?(lower?lowerAssessmentGrade(sum,count):upperAssessmentGrade(percentage)):null;
+ return Object.freeze({count,expected,percentage,complete,grade:lower?(result??''):(result?result.letter+' ('+(result.point===null?'—':result.point.toFixed(1))+')':'')});
+}
 // 2083 only; count recorded daily rows, not school operating days.
 export function annualLegacyClassNames(grade){
  if(!['1','2','3','4','5'].includes(grade))throw Error('Invalid primary grade');
@@ -97,7 +115,8 @@ export async function readAnnualReview(args){
   const progress=await readAssessmentDraftProgress({...args,model,reviewTeacherUid:teacherUid,assertCurrent:check});check();
   if(local){
    const expected=model.themes.reduce((n,t)=>n+t.count,0),total=progress.totals[0];
-   rows.push([index+1,label,hours,expected,total.entered+' / '+expected,'','School local curriculum · '+model.themes.length+' themes · '+(total.percentage===null?'No saved ratings':total.percentage.toFixed(2)+'% (draft)')+' · Annual grade rule pending']);
+   const review=reviewLocalAnnualGrade({grade,expected,rows:progress.rows});
+   rows.push([index+1,label,hours,expected,total.entered+' / '+expected,review.grade,'School local curriculum · '+model.themes.length+' themes · '+(review.percentage===null?'No complete source evidence':review.percentage.toFixed(2)+'% (draft)')+' · '+(!review.complete?'Incomplete assessment':!review.grade?'90% boundary requires confirmation':'Grade review only; local rubric approval pending')]);
    continue;
   }
   if(lower){
