@@ -11330,35 +11330,38 @@ function openCdcAssessment(context = null) {
         const details=document.createElement('details');add(details,'summary',label('सिकाइ उपलब्धिका सूचक / मूल्याङ्कन आधार','Assessment criteria'));
         const list=document.createElement('ol');for(const [j,c] of (item.criteria||item.indicators).entries())add(list,'li',item.criteria?localized(...c)+' ('+(4-j)+')':c+(item.tools?.[j]&&item.tools[j]!=='मूल फाराममा खाली'?' — '+item.tools[j]:''));details.append(list);section.append(details);
       }
-      const wrap=document.createElement('div');wrap.className='tablewrap';wrap.style.cssText='overflow-x:auto;max-width:100%;width:100%';
-      const table=document.createElement('table');table.style.cssText='border-collapse:collapse;width:100%;min-width:'+(binary?'1080':'760')+'px';
+      const wrap=document.createElement('div');wrap.className='tablewrap';wrap.style.cssText='overflow-x:auto;max-width:100%;width:100%;min-width:0;overscroll-behavior-x:contain';wrap.tabIndex=0;wrap.setAttribute('role','region');wrap.setAttribute('aria-label','Assessment table — scroll horizontally');
+      const table=document.createElement('table');table.dataset.cdcMatrixTable='true';table.style.cssText='border-collapse:collapse;table-layout:fixed;width:100%;min-width:'+(binary?'1180':'1040')+'px';
+      const cols=document.createElement('colgroup');for(const width of [190,150,binary?140:105,binary?205:170,150,binary?140:105,binary?205:170]){const col=document.createElement('col');col.style.width=width+'px';cols.append(col);}table.append(cols);
       const head=table.createTHead(),h=head.insertRow(),sub=head.insertRow();
-      for(const name of [label('विद्यार्थी','Student'),label('नियमित मूल्याङ्कन','Regular assessment'),label('थप सहायतापछि','After additional support')]){const th=add(h,'th',name);if(h.cells.length===1)th.rowSpan=2;else th.colSpan=3;}
+      for(const name of [label('विद्यार्थी','Student'),label('नियमित मूल्याङ्कन','Regular assessment'),label('थप सहायतापछि','After additional support')]){const th=add(h,'th',name);if(h.cells.length===1){th.rowSpan=2;th.style.cssText='white-space:normal;overflow-wrap:normal;word-break:normal';}else th.colSpan=3;}
       for(const stage of stages)for(const name of [label('मिति','Date'),binary?label('सूचक (✓/×)','Indicators (✓/×)'):label('अङ्कन','Rating'),label(item.toolsMode||binary?'साधन':'कैफियत',item.toolsMode||binary?'Tools':'Remarks')])add(sub,'th',name);
       const body=table.createTBody();
       for(const [j,row] of roster.entries()){
         const tr=body.insertRow();tr.dataset.cdcMatrixStudent=row.student.id;
         const name=row.student.studentNameEnglish||row.student.nameEnglish||row.student.studentName||row.student.name||row.student.id;
-        tr.insertCell().textContent=(j+1)+'. '+name+(row.student.rollNo?' · '+row.student.rollNo:'')+(row.student.section?' ('+row.student.section+')':'')+(row.loaded?'':' — अभिलेख पढ्न सकिएन');
+        const nameCell=tr.insertCell();nameCell.dataset.cdcMatrixName='true';nameCell.style.cssText='white-space:normal;overflow-wrap:break-word;word-break:normal;line-height:1.4;vertical-align:middle';nameCell.textContent=(j+1)+'. '+name+(row.student.rollNo?' · '+row.student.rollNo:'')+(row.student.section?' ('+row.student.section+')':'')+(row.loaded?'':' — अभिलेख पढ्न सकिएन');
         for(const stage of stages){
           const prev=row.records.find(o=>o.stage===stage&&(binary?o.outcomeId===item.id&&Array.isArray(o.indicators)&&o.indicators.length===4&&o.indicators.every(v=>typeof v==='boolean'):o.topic===item.title&&Number.isInteger(o.level)&&o.level>=1&&o.level<=4));
-          const date=input(prev?.date||'',name+' '+stage+' date');date.placeholder='YYYY-MM-DD';date.dataset.cdcMatrixDate=stage;tr.insertCell().append(date);
+          const date=input(prev?.date||'',name+' '+stage+' date');date.placeholder='YYYY-MM-DD';date.title='वि.सं. — थिच्दा आजको मिति, आवश्यक भए परिवर्तन गर्नुहोस्।';date.dataset.cdcMatrixDate=stage;date.style.width='128px';tr.insertCell().append(date);
+          const fillToday=()=>{if(!date.disabled&&!date.value){const value=today();if(/^20[7-9]\d-\d{2}-\d{2}$/.test(value))date.value=value;}};date.addEventListener('focus',fillToday);date.addEventListener('click',fillToday);
           const scoreCell=tr.insertCell(),remarksCell=tr.insertCell();
           const scores=binary?item.indicators.map((indicator,k)=>{const el=pick([['','—'],['yes','✓'],['no','×']],prev?(prev.indicators[k]?'yes':'no'):'',name+' '+stage+' '+indicator);el.title=indicator;scoreCell.append(el);return el;}):[pick([['','—'],...['1','2','3','4'].map(v=>[v,v])],prev?String(prev.level):'',name+' '+stage+' rating')];
-          if(!binary)scoreCell.append(scores[0]);scores.forEach(el=>el.dataset.cdcMatrixRating=stage);
+          if(!binary)scoreCell.append(scores[0]);scores.forEach(el=>{el.dataset.cdcMatrixRating=stage;if(binary){el.style.display='block';el.style.marginBottom='4px';}});
           const scoreLabel=binary?add(scoreCell,'small',''):null;
           const remarks=binary?item.indicators.map((indicator,k)=>{const el=input(prev?.usedTools?.[k]||'',name+' '+stage+' '+indicator+' साधन',200);el.placeholder='साधन '+(k+1);remarksCell.append(el);return el;}):[input((item.toolsMode?prev?.method:prev?.feedback)||'',name+' '+stage+' remarks',item.toolsMode?180:2000)];
-          if(!binary)remarksCell.append(remarks[0]);
+          if(!binary)remarksCell.append(remarks[0]);else for(const el of remarks){el.style.display='block';el.style.marginBottom='4px';}
           const controls=[date,...scores,...remarks];for(const el of controls)el.disabled=readOnly||!row.loaded;
           const values=()=>[date.value,...scores.map(x=>x.value),...remarks.map(x=>x.value)];
           entries.push({row,item,stage,prev,date,scores,remarks,controls,baseline:JSON.stringify(values()),values});
           const update=()=>{if(scoreLabel){const n=cdcSeroferoIndicatorCount(scores.map(x=>x.value));scoreLabel.textContent=n===null?'— / 4':n+' / 4';}};
-          for(const score of scores)score.onchange=()=>{if(score.value&&!date.value)date.value=today();update();};update();
+          for(const score of scores)score.onchange=()=>{if(score.value)fillToday();update();};update();
         }
       }
       wrap.append(table);section.append(wrap);panel.append(section);
     }
-    const dirty=e=>e.row.loaded&&JSON.stringify(e.values())!==e.baseline;matrixDirty=()=>entries.some(dirty);
+    // A date-only tap on a blank stage is not an assessment; do not block saving other completed students.
+    const dirty=e=>e.row.loaded&&JSON.stringify(e.values())!==e.baseline&&(!!e.prev||e.scores.some(el=>el.value!=='')||e.remarks.some(el=>el.value.trim()!==''));matrixDirty=()=>entries.some(dirty);
     const failed=roster.filter(r=>!r.loaded).length;status.textContent=roster.length+' विद्यार्थी | '+rows.length+' सिकाइ उपलब्धि'+(failed?' | पढ्न नसकिएका: '+failed+' (प्रविष्टि बन्द)':'');
     save.type='button';save.className='btn';save.textContent='Save Assessment';save.dataset.cdcMatrixSave='all';save.hidden=readOnly;save.disabled=readOnly||!roster.some(r=>r.loaded);panel.append(save);
     save.onclick=async()=>{
