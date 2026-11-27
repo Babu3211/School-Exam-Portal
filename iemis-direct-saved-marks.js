@@ -1,4 +1,4 @@
-import {attendanceModule} from './iemis-direct-attendance.js';
+import {attendanceModule} from './iemis-direct-attendance.js?v=20261127-sync-r141';
 // V46 single-school saved marks, no writes or draft/UI state reads.
 export function createV46DirectReader({getWorkspace,T,examTermKey,subjectLabel,optionalSlot,studentOptional}){
  const termKeys={first:'first',second:'second',third:'third',final:'annual'};
@@ -27,7 +27,9 @@ export function createV46DirectReader({getWorkspace,T,examTermKey,subjectLabel,o
     check();
     const pageLimit=paged?Math.min(1000,max-result.length+1):max+1;
     const options=paged?[...constraints,api.orderBy('__name__'),...(cursor?[api.startAfter(cursor)]:[]),api.limit(pageLimit)]:[...constraints,api.limit(pageLimit)];
-    const snap=await api.getDocsFromServer(api.query(base,...options));check();
+    let snap;
+    try{snap=await api.getDocsFromServer(api.query(base,...options));}catch(e){fail('V46 Sync r141 | '+name+' | page limit '+pageLimit+' | '+String(e?.message||e));}
+    check();
     if(!Array.isArray(snap?.docs)||snap.docs.length>pageLimit||result.length+snap.docs.length>max)fail('सुरक्षित read सीमा नाघ्यो: '+name);
     for(const d of snap.docs){const v=d.data();if(typeof d.id!=='string'||!d.id||ids.has(d.id)||d.ref?.path!==undefined&&d.ref.path!==name+'/'+d.id||!v||typeof v!=='object'||filters.some(([k,x])=>v[k]!==x))fail('अमान्य saved record: '+name);ids.add(d.id);result.push({...v,id:d.id});}
     if(!paged||snap.docs.length<pageLimit)break;
