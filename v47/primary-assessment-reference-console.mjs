@@ -7,7 +7,7 @@ import {readObservationPortfolio,exportObservationPortfolio,readIndicatorPortfol
 import {parseLocalAssessmentSource,readLocalAssessmentSource,saveLocalAssessmentSource} from './primary-assessment-local-source.mjs';
 import {readSchoolSubjectCatalog} from './subject-catalog-view.mjs';
 import {loadAssignedPrimarySubjects,loadPrimaryTeacherWorksheet,loadAdminAssessmentWorksheet,primarySubjectKey,draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
-import {assessmentStagePercentage,formatAssessmentStagePercentage,reviewCombinedAchievement,formatCombinedAchievement} from './primary-assessment-percentage.mjs';
+import {assessmentStagePercentage,formatAssessmentStagePercentage,reviewCombinedAchievement,formatCombinedAchievement,formatAnnualAchievement} from './primary-assessment-percentage.mjs';
 import {scoreSeroferoDraft,v46SeroferoPrintedNumber} from './primary-assessment-v46-serofero-text.mjs';
 import {todayAssessmentDate2083} from './assessment-date-2083.mjs';
 import {loadMathAssessmentDraft,saveMathAssessmentDraft,validateMathDraftValues,hasAssessmentStages} from './primary-assessment-math-draft.mjs';
@@ -275,7 +275,7 @@ $('adminDraftProgress').onclick=async()=>{
  try{await verify();args.assertCurrent();const progress=await readAssessmentDraftProgress(args);await verify();args.assertCurrent();
  const stage=s=>s==='regular'?'Regular':s==='support'?'Remedial':'Assessment';
  for(const row of progress.rows){const tr=document.createElement('tr');for(const v of [row.theme,stage(row.stage),row.sourceAvailable?row.entered+' / '+row.total:'—',row.sourceAvailable?row.complete+' / '+row.totalGroups:'—',row.sourceAvailable?(row.revision===null?'Not saved':'Saved · R'+row.revision):'Source unavailable',row.percentage===null?'—':row.percentage.toFixed(2)+'%'])cell(tr,v);$('adminProgressRows').append(tr)}
- $('adminProgressStatus').textContent=progress.totals.map(t=>stage(t.stage)+': '+t.entered+' / '+t.total+(progress.binary?' सूचक':' उपलब्धि')+' · '+t.complete+' / '+t.totalGroups+' पूरा समूह'+(t.percentage===null?'':' · '+t.percentage.toFixed(2)+'%')+(t.unavailableThemes?' · '+t.unavailableThemes+' थिमको स्रोत उपलब्ध छैन':'' )).join(' | ')+(progress.combined?' | '+formatCombinedAchievement(progress.combined,false):'')+' — सुरक्षित Draft को प्रगति मात्र, अन्तिम ग्रेड होइन।';
+ $('adminProgressStatus').textContent=progress.totals.map(t=>stage(t.stage)+': '+t.entered+' / '+t.total+(progress.binary?' सूचक':' उपलब्धि')+' · '+t.complete+' / '+t.totalGroups+' पूरा समूह'+(t.percentage===null?'':' · '+t.percentage.toFixed(2)+'%')+(t.unavailableThemes?' · '+t.unavailableThemes+' थिमको स्रोत उपलब्ध छैन':'' )).join(' | ')+(progress.combined?' | '+formatCombinedAchievement(progress.combined,false):'')+(progress.annual?' | '+formatAnnualAchievement(progress.annual):'')+' — सुरक्षित Draft को प्रगति मात्र, अन्तिम ग्रेड होइन।';
  }catch(e){if(request===adminReviewEpoch)$('adminProgressStatus').textContent='प्रगति तयार भएन: '+neError(e)}
  finally{if(request===adminReviewEpoch)$('adminDraftProgress').disabled=false}
 };

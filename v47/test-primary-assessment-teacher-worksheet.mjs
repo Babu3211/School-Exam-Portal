@@ -145,3 +145,8 @@ assert.deepEqual(assessmentStagePercentage('43__'),{sum:7,count:2,expected:4,den
 import {reviewCombinedAchievement,upperAssessmentGrade} from './primary-assessment-percentage.mjs';
 assert.deepEqual(reviewCombinedAchievement('4321','_2_4'),{sum:12,count:4,expected:4,denominator:16,percentage:75,complete:true,grade:{letter:'B+',point:3.2}});assert.equal(reviewCombinedAchievement('4___','_3__').grade,null);assert.equal(reviewCombinedAchievement('____','____').percentage,null);assert.equal(reviewCombinedAchievement('____','____').grade,null);assert.throws(()=>reviewCombinedAchievement('4','44'));
 for(const [p,letter,point] of [[100,'A+',4],[90,'A+',4],[89.99,'A',3.6],[80,'A',3.6],[70,'B+',3.2],[60,'B',2.8],[50,'C+',2.4],[40,'C',2],[35,'D',1.6],[34.99,'NG',null],[0,'NG',null]])assert.deepEqual(upperAssessmentGrade(p),{letter,point});
+
+import {reviewAnnualAchievement} from './primary-assessment-percentage.mjs';
+const regularAnnual={ratings:'4321',date:'2083-08-11',rowDates:'2083-08-112083-08-132083-08-112083-08-11'},supportAnnual={ratings:'_2_4',date:'2083-08-12'};
+assert.deepEqual(reviewAnnualAchievement(regularAnnual,supportAnnual,4),{sum:13,count:4,expected:4,denominator:16,percentage:81.25,conflicts:0,different:1,complete:true,grade:{letter:'A',point:3.6}});
+assert.equal(reviewAnnualAchievement({ratings:'4',date:'2083-08-11'},{ratings:'2',date:'2083-08-11'},1).grade,null);assert.equal(reviewAnnualAchievement({ratings:'4',date:'2083-08-11'},{ratings:'2',date:'2083-08-11'},1).conflicts,1);assert.equal(reviewAnnualAchievement(null,null,3).percentage,null);assert.equal(reviewAnnualAchievement({ratings:'4',date:'2083-08-11'},{ratings:'4',date:'2083-08-11'},1).percentage,100);

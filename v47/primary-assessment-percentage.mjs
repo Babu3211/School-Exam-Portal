@@ -1,3 +1,4 @@
+import {validAssessmentDate2083} from './assessment-date-2083.mjs';
 // CDC 2083 upper-primary guide, printed pp. 14–15: sum / (4 * assessed outcomes).
 // Separate stage previews only: no assumed regular/remedial merge or final grade.
 export function assessmentStagePercentage(ratings){
@@ -28,3 +29,17 @@ export function formatCombinedAchievement(result,ne=false){
  const label=ne?'संयुक्त समीक्षा (V46 सारांश)':'Combined review (V46 summary)';
  return label+': '+formatAssessmentStagePercentage(result,ne)+' · '+(result.grade?result.grade.letter:(ne?'ग्रेड बाँकी':'Grade pending'));
 }
+
+// Annual review comparison uses the V46 annual chronological convention.
+// V47 draft storage does not preserve per-row creation timestamps. Equal-date
+// conflicting ratings therefore remain unresolved, rather than guessing.
+export function reviewAnnualAchievement(regular,support,count){
+ if(!Number.isInteger(count)||count<1||count>500)throw Error('Invalid annual review count');
+ const values=d=>{if(!d)return '_'.repeat(count);assessmentStagePercentage(d.ratings);if(d.ratings.length!==count)throw Error('Mismatched annual review ratings');return d.ratings};
+ const r=values(regular),s=values(support),date=(d,i)=>{const v=d.rowDates?.slice(i*10,i*10+10)||d.date;if(!validAssessmentDate2083(v))throw Error('Invalid annual review date');return v};
+ let conflicts=0,different=0;
+ const effective=[...r].map((v,i)=>{const w=s[i];if(v==='_')return w;if(w==='_')return v;const a=date(regular,i),b=date(support,i);if(a===b&&v!==w){conflicts++;return '_'}const selected=a>b?v:w;if(selected!==w)different++;return selected}).join('');
+ const result=assessmentStagePercentage(effective),complete=result.count===count&&conflicts===0;
+ return Object.freeze({...result,conflicts,different,complete,grade:complete?upperAssessmentGrade(result.percentage):null});
+}
+export function formatAnnualAchievement(result){return 'Annual date-order review: '+formatAssessmentStagePercentage(result)+' · '+(result.grade?.letter??'Grade pending')+' · '+result.conflicts+' unresolved same-date conflicts · '+result.different+' differences from stage-priority review';}
