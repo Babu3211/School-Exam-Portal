@@ -103,6 +103,8 @@ jobs:
             allowed.update({'scripts/test-cdc-assignment.mjs','scripts/test-firestore-rules.mjs','docs/cdc-assessment-reference-sources.md'})
           if os.environ.get('GITHUB_HEAD_REF') in ('fix/v46-cdc-admin-direct-entry','fix/v46-cdc-all-students-pdf','feat/v46-cdc-assessment-report-hub','fix/v46-cdc-theme-entry-coverage','fix/v46-cdc-class-theme-entry'):
             allowed.update({'scripts/test-cdc-assignment.mjs','scripts/test-firestore-rules.mjs'})
+          if os.environ.get('GITHUB_HEAD_REF')=='fix/v46-cdc-class-theme-entry':
+            allowed.add('docs/cdc-assessment-reference-sources.md')
           # Exact file scope for the school-approved question-paper integration PR.
           # This does not permit dashboard, IEMIS, Android or Firestore changes.
           if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-question-autogen-grid-safe-2083':
