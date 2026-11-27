@@ -146,3 +146,7 @@ Raw max is the sum of the individual 4-indicator scoring blocks, not the officia
 
 ## 2026-11-27 — Assessment dashboard and report navigation
 - Admin on-demand class-wise historical observation/indicator counts, fixed grade aliases and academic-year filters, 10 aggregate queries per explicit request, no document or student data scans. Not draft counts, unique students or official grades. Unmatched class aliases excluded, counts cleared on refresh/session switch. Reports menu and verified report page link to the existing annual review with fresh Admin membership checks; direct target still verifies independently. No role expansion, no publication or deployment. Static and unit checks added.
+
+## 2026-11-27 — Report guard test and class draft analytics
+- Dynamic report guard fixture now includes new annual report controls and asserts role downgrade hides the Admin route; no authorization weakened.
+- Selected class/subject/theme coverage uses the same verified, bounded complete-class draft read as export, separates stages, counts saved/complete/partial/not-saved students, and calculates completed units/expected units. Serofero counts only complete four-indicator groups. No official grade, no school-wide draft scan or automatic polling. Added synthetic unit and browser checks. No production changes.

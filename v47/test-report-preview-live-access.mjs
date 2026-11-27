@@ -12,9 +12,9 @@ const guard=source.slice(begin,end);
 const session={schoolId:'12345',verifiedUid:'admin123'};
 function fixture(){
  const messages=[],state={cleared:0,reads:0,rendered:0,valid:true,expire:false,schoolActive:true,role:'viewer',schoolId:'12345'};
- const auth={currentUser:{uid:'admin123'}};
+ const auth={currentUser:{uid:'admin123'}},controls={primaryAnnualReportArea:{hidden:true},primaryAnnualReportOpen:{disabled:true}};
  const context=createContext({
-  reportRows:session,busy:false,loggingOut:false,auth,authSdk:{},db:{},
+  $:id=>{assert.ok(controls[id],'Unexpected control '+id);return controls[id]},reportRows:session,busy:false,loggingOut:false,auth,authSdk:{},db:{},
   firestoreApi:{doc:(_db,...segments)=>segments.join('/'),getDocFromServer:async path=>{
    state.reads++;
    if(!state.valid)throw Error('Membership revoked');
@@ -31,14 +31,16 @@ function fixture(){
   Error,
  });
  runInContext('let verifyingReport=false; '+guard+'; globalThis.runReportGuard=withVerifiedReportSnapshot',context);
- return {state,auth,context,messages,run:callback=>context.runReportGuard(callback)};
+ return {state,auth,context,messages,controls,run:callback=>context.runReportGuard(callback)};
 }
 {
  const test=fixture();
  await test.run(()=>test.state.rendered++);
  assert.equal(test.state.rendered,1);
  assert.equal(test.state.reads,2);
- assert.equal(test.state.cleared,0);
+ assert.equal(test.state.cleared,0);assert.equal(test.controls.primaryAnnualReportArea.hidden,true);assert.equal(test.controls.primaryAnnualReportOpen.disabled,true);
+ test.state.role='school_admin';await test.run((rows,s)=>{assert.equal(s.role,'school_admin');assert.equal(rows.schoolId,'12345')});assert.equal(test.controls.primaryAnnualReportArea.hidden,false);assert.equal(test.controls.primaryAnnualReportOpen.disabled,false);
+ test.state.role='viewer';await test.run(()=>{});assert.equal(test.controls.primaryAnnualReportArea.hidden,true);assert.equal(test.controls.primaryAnnualReportOpen.disabled,true);
 }
 {
  const test=fixture();test.state.valid=false;

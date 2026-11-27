@@ -13,6 +13,7 @@ export async function readSavedAssessmentDraftReport(args){
  const binary=model.key==='serophero',staged=hasAssessmentStages(model),lower=['1','2','3'].includes(model.grade),upperMath=!lower&&model.key==='mathematics';
  const stages=staged?['regular','support']:[undefined];
  const saved=await Promise.all(stages.map(stage=>loadMathAssessmentDraft({...args,stage})));assertCurrent();
+ const stageCoverage=Object.freeze(stages.map((stage,i)=>{const ratings=saved[i]?.ratings,expected=slots.length,completed=ratings?(binary?scoreSeroferoDraft(ratings).completed:[...ratings].filter(v=>v!=='_').length):0;return Object.freeze({stage:stage??'assessment',expected,completed,saved:!!saved[i]})}));
  const hasSaved=saved.some(Boolean);if(!hasSaved&&!args.includeBlank)throw Error('No saved assessment draft');
  const ne=['nepali','socialstudies','serophero','hamrodhunibeshi'].includes(model.key);
  const labels=staged?(ne?['नियमित','थप सहायतापछि']:['Regular','Remedial']):[ne?'मूल्याङ्कन':'Assessment'];
@@ -38,7 +39,7 @@ export async function readSavedAssessmentDraftReport(args){
   }
  }
  assertCurrent();
- return Object.freeze({title:ne?'सुरक्षित मूल्याङ्कन Draft — '+theme.theme:'Saved Assessment Draft — '+theme.theme,schoolId:model.schoolId,studentId,studentName:student.name,grade:model.grade,section:student.section,year:'2083',historical:0,hasSaved,stageSummary,headers:Object.freeze(headers),rows:Object.freeze(rows.map(Object.freeze)),notice:ne?'निजी सुरक्षित Draft मात्र — आधिकारिक मूल्याङ्कन वा ग्रेड होइन।':'Private saved draft only — NOT official assessment or grade',officialAssessmentApproved:false});
+ return Object.freeze({title:ne?'सुरक्षित मूल्याङ्कन Draft — '+theme.theme:'Saved Assessment Draft — '+theme.theme,schoolId:model.schoolId,studentId,studentName:student.name,grade:model.grade,section:student.section,year:'2083',historical:0,hasSaved,stageCoverage,stageSummary,headers:Object.freeze(headers),rows:Object.freeze(rows.map(Object.freeze)),notice:ne?'निजी सुरक्षित Draft मात्र — आधिकारिक मूल्याङ्कन वा ग्रेड होइन।':'Private saved draft only — NOT official assessment or grade',officialAssessmentApproved:false});
 }
 export async function exportSavedAssessmentDraft(args,kind){
  if(!['word','excel'].includes(kind))throw Error('Invalid export kind');
@@ -67,4 +68,20 @@ export function exportClassAssessmentDraftReports(batch,model,themeIndex,kind){
  const rows=batch.reports.flatMap(r=>r.rows.map(row=>[r.notice,r.schoolId,r.grade,r.year,model.subjectName,model.themes[themeIndex].theme,r.studentId,r.studentName,r.section,r.hasSaved?'Saved':'Not saved',r.stageSummary,...row]));
  const blob=kind==='word'?assessmentPrintWordBlob(first,batch.reports):excelWorkbook(headers,rows,{sheetName:'Class saved drafts'});
  return {blob,filename:'V47-CLASS-DRAFT-'+model.schoolId+'-'+model.grade+'-'+model.subjectId+'-2083.'+(kind==='word'?'docx':'xlsx'),count:batch.studentCount};
+}
+
+// Aggregate the existing verified class read; no new collection scan or writes.
+export function summarizeClassDraftCoverage(batch){
+ if(!Array.isArray(batch?.reports)||!batch.reports.length||batch.reports.length!==batch.studentCount||batch.officialAssessmentApproved!==false)throw Error('Invalid class draft batch');
+ const first=batch.reports[0].stageCoverage;
+ if(!Array.isArray(first)||!first.length)throw Error('Missing draft coverage');
+ const seen=new Set();
+ for(const r of batch.reports){if(seen.has(r.studentId)||r.officialAssessmentApproved!==false||!Array.isArray(r.stageCoverage)||r.stageCoverage.length!==first.length)throw Error('Invalid draft coverage identity');seen.add(r.studentId)}
+ return Object.freeze(first.map((f,i)=>{
+  let saved=0,complete=0,partial=0,blank=0,entered=0;
+  if(!Number.isInteger(f.expected)||f.expected<1)throw Error('Invalid coverage expected count');
+  for(const r of batch.reports){const c=r.stageCoverage[i];if(c.stage!==f.stage||c.expected!==f.expected||!Number.isInteger(c.completed)||c.completed<0||c.completed>c.expected||typeof c.saved!=='boolean'||!c.saved&&c.completed!==0)throw Error('Invalid stage coverage');if(c.saved){saved++;if(c.completed===c.expected)complete++;else partial++}else blank++;entered+=c.completed}
+  const expected=batch.studentCount*f.expected;
+  return Object.freeze({stage:f.stage,students:batch.studentCount,saved,complete,partial,blank,entered,expected,coveragePercent:entered/expected*100});
+ }));
 }

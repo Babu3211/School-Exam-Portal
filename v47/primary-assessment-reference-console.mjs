@@ -14,7 +14,7 @@ import {loadMathAssessmentDraft,saveMathAssessmentDraft,validateMathDraftValues,
 import {readAnnualReview,annualReviewHeaders,exportUpperAnnualReview,annualAnnexPrintModel} from './primary-assessment-annual-review.mjs';
 import {readSubjectProgressReport,exportSubjectProgressReport} from './primary-assessment-progress-report.mjs';
 import {readAssessmentDraftProgress} from './primary-assessment-draft-progress.mjs';
-import {readSavedAssessmentDraftReport,exportSavedAssessmentDraft,readClassAssessmentDraftReports,exportClassAssessmentDraftReports} from './primary-assessment-draft-export.mjs';
+import {readSavedAssessmentDraftReport,exportSavedAssessmentDraft,readClassAssessmentDraftReports,exportClassAssessmentDraftReports,summarizeClassDraftCoverage} from './primary-assessment-draft-export.mjs';
 import {neError} from './nepali-feedback.mjs';
 const $=id=>document.getElementById(id);
 let actor=null,catalogue=null,auth,authSdk,db,api,epoch=0,portfolioEpoch=0;
@@ -227,7 +227,9 @@ $('teacherClassPrint').onclick=()=>void classDraftOutput(worksheetSelection(),'p
 function clearPrint(){document.body.classList.remove('portfolio-printing');$('portfolioPrint').replaceChildren();$('portfolioPrint').hidden=true}
 let adminReviewEpoch=0,adminReviewModel=null;
 function resetAnnualReview(){$('annualOperatingDays').value='';$('annualRegisterSource').value='';$('annualOperatingDays').disabled=false;$('annualRegisterSource').disabled=false;for(const id of ['annualReviewRead','annualReviewPrint','annualReviewWord','annualReviewExcel'])$(id).disabled=!(actor?.role==='school_admin'&&['1','2','3','4','5'].includes($('portfolioGrade').value)&&$('portfolioStudent').value);$('annualReviewRows').replaceChildren();$('annualReviewHead').replaceChildren(...annualReviewHeaders($('portfolioGrade').value).map(v=>{const th=document.createElement('th');th.textContent=v;return th}));$('annualReviewStatus').textContent='';}
-function clearAdminReview(){resetAnnualReview();$('adminProgressRows').replaceChildren();$('adminProgressStatus').textContent='';$('adminDraftProgress').disabled=true;for(const id of ['adminProgressPrint','adminProgressWord','adminProgressExcel'])$(id).disabled=true;clearPrint();adminReviewEpoch++;adminReviewModel=null;$('adminDraftTheme').replaceChildren();$('adminDraftRows').replaceChildren();$('adminDraftHead').replaceChildren();$('adminDraftStatus').textContent='';for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel','adminClassPrint','adminClassWord','adminClassExcel'])$(id).disabled=true;}
+let classCoverageEpoch=0;
+function resetClassCoverage(){classCoverageEpoch++;$('adminClassCoverageRows').replaceChildren();$('adminClassCoverageStatus').textContent='';$('adminClassCoverage').disabled=!adminReviewModel;}
+function clearAdminReview(){resetAnnualReview();resetClassCoverage();$('adminClassCoverage').disabled=true;$('adminProgressRows').replaceChildren();$('adminProgressStatus').textContent='';$('adminDraftProgress').disabled=true;for(const id of ['adminProgressPrint','adminProgressWord','adminProgressExcel'])$(id).disabled=true;clearPrint();adminReviewEpoch++;adminReviewModel=null;$('adminDraftTheme').replaceChildren();$('adminDraftRows').replaceChildren();$('adminDraftHead').replaceChildren();$('adminDraftStatus').textContent='';for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel','adminClassPrint','adminClassWord','adminClassExcel'])$(id).disabled=true;}
 function resetPortfolio(){
  clearAdminReview();$('adminDraftTeacher').replaceChildren();$('adminDraftSubject').replaceChildren();$('adminDraftLoad').disabled=true;clearPrint();
  portfolioEpoch++;$('portfolioRows').replaceChildren();$('indicatorRows').replaceChildren();$('portfolioStudent').replaceChildren();$('portfolioStudent').disabled=true;resetAnnualReview();$('portfolioRead').disabled=true;$('portfolioExport').disabled=true;$('indicatorRead').disabled=true;$('indicatorExport').disabled=true;$('portfolioWordOrdinary').disabled=$('portfolioPrintOrdinary').disabled=true;$('portfolioWordIndicators').disabled=$('portfolioPrintIndicators').disabled=true;$('portfolioStatus').textContent='';
@@ -247,7 +249,7 @@ $('portfolioRoster').onclick=async()=>{
  }catch(e){if(request===portfolioEpoch){resetPortfolio();$('portfolioStatus').textContent='विद्यार्थी सूची खोल्न सकिएन: '+neError(e)}}
 };
 $('adminDraftTeacher').onchange=clearAdminReview;$('adminDraftSubject').onchange=clearAdminReview;
-$('adminDraftTheme').onchange=()=>{$('adminDraftRows').replaceChildren();$('adminDraftHead').replaceChildren();$('adminDraftStatus').textContent='';};
+$('adminDraftTheme').onchange=()=>{resetClassCoverage();$('adminDraftRows').replaceChildren();$('adminDraftHead').replaceChildren();$('adminDraftStatus').textContent='';};
 $('adminDraftLoad').onclick=async()=>{
  clearAdminReview();const request=adminReviewEpoch,member=actor,grade=$('portfolioGrade').value,studentId=$('portfolioStudent').value;
  const check=()=>{if(request!==adminReviewEpoch||actor!==member||member?.role!=='school_admin'||auth.currentUser?.uid!==member.uid||$('portfolioGrade').value!==grade||$('portfolioStudent').value!==studentId)throw Error('Review selection changed')};
@@ -268,7 +270,7 @@ $('adminDraftOpen').onclick=async()=>{
  try{await verify();args.assertCurrent();const model=await loadAdminAssessmentWorksheet(args);args.assertCurrent();adminReviewModel=model;
  $('adminDraftTheme').replaceChildren(...model.themes.map((t,i)=>new Option(t.theme,String(i))));
  for(const id of ['adminDraftRead','adminDraftPrint','adminDraftWord','adminDraftExcel','adminClassPrint','adminClassWord','adminClassExcel'])$(id).disabled=false;
- $('adminDraftProgress').disabled=false;for(const id of ['adminProgressPrint','adminProgressWord','adminProgressExcel'])$(id).disabled=false;$('adminDraftStatus').textContent='थिम छान्नुहोस्। सुरक्षित Draft मात्र हेर्न मिल्छ।';
+ $('adminClassCoverage').disabled=false;$('adminDraftProgress').disabled=false;for(const id of ['adminProgressPrint','adminProgressWord','adminProgressExcel'])$(id).disabled=false;$('adminDraftStatus').textContent='थिम छान्नुहोस्। सुरक्षित Draft मात्र हेर्न मिल्छ।';
  }catch(e){if(request===adminReviewEpoch)$('adminDraftStatus').textContent='Draft खोल्न सकिएन: '+neError(e)}
 };
 $('adminDraftProgress').onclick=async()=>{
@@ -443,3 +445,16 @@ try{
  const member=actor;bindVerifiedModuleActivity(member,()=>actor===member);fill();
  if(location.hash==='#portfolioArea'&&actor.role==='school_admin')$('portfolioArea').scrollIntoView({block:'start'});
 }catch(e){clear();$('status').textContent='Dashboard बाट प्रमाणित विद्यालयमा लगइन गरी पुनः खोल्नुहोस्: '+neError(e)}
+
+$('adminClassCoverage').onclick=async()=>{
+ const selection=adminDraftSelection(),model=adminReviewModel,themeIndex=Number($('adminDraftTheme').value),request=++classCoverageEpoch;
+ if(!model||selection.actor?.role!=='school_admin')return;
+ const check=()=>{selection.assertCurrent();if(request!==classCoverageEpoch||adminReviewModel!==model||Number($('adminDraftTheme').value)!==themeIndex)throw Error('Class coverage selection changed')};
+ $('adminClassCoverage').disabled=true;$('adminClassCoverageRows').replaceChildren();$('adminClassCoverageStatus').textContent='कक्षाका सुरक्षित Draft जाँच हुँदैछन्…';
+ try{await verify();check();const batch=await readClassAssessmentDraftReports({...selection,model,themeIndex,reviewTeacherUid:selection.teacherUid,assertCurrent:check});await verify();check();
+ const rows=summarizeClassDraftCoverage(batch);
+ for(const r of rows){const tr=document.createElement('tr');for(const v of [r.stage==='regular'?'Regular':r.stage==='support'?'Remedial':'Assessment',r.students,r.saved,r.complete,r.partial,r.blank,r.entered+' / '+r.expected,r.coveragePercent.toFixed(2)+'%'])cell(tr,v);$('adminClassCoverageRows').append(tr)}
+ $('adminClassCoverageStatus').textContent='छानिएको थिमको अभिलेख पूर्णता मात्र हो; प्राप्ताङ्क वा अन्तिम ग्रेड होइन। हाम्रो सेरोफेरोमा पूरा चार-सूचक समूह मात्र गणना हुन्छ।';
+ }catch(e){try{check();$('adminClassCoverageStatus').textContent='कक्षागत प्रगति तयार भएन: '+neError(e)}catch{}}
+ finally{try{check();$('adminClassCoverage').disabled=false}catch{}}
+};
