@@ -60,7 +60,15 @@ const b=buildGrade9ReferencePreview(practiceArgs);
 assert.equal(b.ready,true,b.reason);
 assert.match(b.text,/मौलिक अपठित गद्यांश/);
 assert.match(b.text,/बुँदाटिपोट/);
-assert.match(b.text,/विकल्पमध्ये/);
+// Match the model-paper choice directions at the actual six optional groups,
+// rather than requiring an obsolete phrase anywhere in the paper.
+for(const [number,offered,answerCount] of [[13,2,1],[14,2,1],[16,3,2],[18,2,1],[19,2,1],[20,3,1]]){
+ const group=a.paper.groups[number-1],block=b.blocks[number-1];
+ assert.equal(group.choices.length,offered);
+ assert.equal(group.answerCount,answerCount);
+ assert.match(block.text,answerCount===1?/कुनै एक प्रश्नको उत्तर दिनुहोस्\s*:/ : /कुनै दुई प्रश्नको उत्तर दिनुहोस्\s*:/);
+}
+assert.match(b.text,/विकल्प दिइएका प्रश्नमा निर्देशन पालना गर्नुहोस्/);
 assert.equal(b.readyForLive,false);
 assert.notEqual(buildGrade9ReferencePreview({...practiceArgs,previousSignature:b.signature,rng:()=>.61}).signature,b.signature);
 console.log('PASS 75-mark Nepali practice review preview, explicit original summary substitution, all optional choices, official exam still blocked');
