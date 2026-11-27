@@ -22,3 +22,22 @@ assert.equal(invalidThenValid.valid,1);
 assert.match(invalidThenValid.errors[0].message,/subject mismatch/);
 assert.equal(invalidThenValid.previews[0].index,1);
 console.log('V47 V46 mark settings batch audit tests passed');
+
+import {auditEntrySettingsCoverage} from './entry-settings-coverage.mjs';
+{
+ const schoolId='12345',classId='9',examId='1st',scope={schoolId,classId,examId};
+ const subject={id:'computer',name:'Computer Science',active:true};
+ const components=[{key:'p',name:'Participation',fullMarks:4},{key:'q',name:'Practical/Project',fullMarks:36},{key:'t',name:'First Term Examination',fullMarks:10}];
+ const d={...scope,id:'9_computer_1st',subjectId:'computer',active:true,components};
+ const audit=(settings,subjects=[subject])=>auditEntrySettingsCoverage({...scope,settings,subjects});
+ assert.equal(audit([d]).matched,1);assert.equal(audit([d]).iemisVerified,false);
+ assert.equal(audit([]).rows[0].status,'Missing active settings');
+ assert.equal(audit([{...d,id:'legacy_id'}]).rows[0].status,'Noncanonical settings ID');
+ assert.equal(audit([d,{...d,id:'duplicate'}]).rows[0].status,'Duplicate active settings');
+ assert.equal(audit([{...d,components:components.map((c,i)=>i===0?{...c,fullMarks:3}:c)}]).rows[0].status,'Component mismatch');
+ assert.equal(audit([d],[]).rows[0].status,'Settings without registered subject');
+ assert.throws(()=>audit([{...d,schoolId:'54321'}]),/foreign/);
+ const primary={...d,classId:'1',id:'1_computer_1st',components:[{key:'count',name:'No. of Learning Achievement',fullMarks:10},{key:'obtained',name:'Obtained Learning Achievement',fullMarks:40}]};
+ assert.equal(auditEntrySettingsCoverage({...scope,classId:'1',subjects:[subject],settings:[primary]}).matched,1);
+ assert.equal(auditEntrySettingsCoverage({...scope,classId:'1',subjects:[subject],settings:[{...primary,components:[primary.components[0],{...primary.components[1],fullMarks:39}]}]}).matched,0);
+}
