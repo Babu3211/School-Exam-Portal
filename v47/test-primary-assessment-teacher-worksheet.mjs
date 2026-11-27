@@ -170,7 +170,14 @@ console.log('PASS CDC 2076 lower annual review: boundaries, weighted totals, bin
 import {summarizeAnnualAttendance} from './primary-assessment-annual-review.mjs';
 const attendanceDoc=(date,present,grade='1',schoolId='11111001')=>({id:date+'_student',data:()=>({schoolId,studentId:'student',class:grade,date,present})});
 const attendanceArgs={schoolId:'11111001',grade:'1',studentId:'student',asOf:'2026-11-27'};
-assert.deepEqual(summarizeAnnualAttendance({...attendanceArgs,docs:[attendanceDoc('2026-04-14',true),attendanceDoc('2026-04-15',false),attendanceDoc('2026-04-13',true),attendanceDoc('2026-04-16',true,'2'),attendanceDoc('2026-12-01',true)]}),{present:1,absent:1,recorded:2,excluded:3});
+assert.deepEqual(summarizeAnnualAttendance({...attendanceArgs,docs:[attendanceDoc('2026-04-14',true),attendanceDoc('2026-04-15',false),attendanceDoc('2026-04-13',true),attendanceDoc('2026-04-16',true,'2'),attendanceDoc('2026-12-01',true)]}),{present:1,absent:1,leave:0,recorded:2,excluded:3,duplicates:0,conflicts:0});
 assert.equal(summarizeAnnualAttendance({...attendanceArgs,docs:[]}).recorded,0);
 assert.throws(()=>summarizeAnnualAttendance({...attendanceArgs,docs:[attendanceDoc('2026-04-15',true,'1','22222002')]}),/identity mismatch/);
 assert.throws(()=>summarizeAnnualAttendance({...attendanceArgs,docs:[attendanceDoc('2026-04-15',true),attendanceDoc('2026-04-15',false)]}),/identity mismatch/);
+
+const legacyDaily=(id,date,status,extra={})=>({id,data:()=>({schoolId:'11111001',date,className:'कक्षा १',academicYear:'2083',section:'',attendanceType:'daily',subject:null,students:[{studentId:'student',studentName:'Synthetic Student',status,remark:''}],totalStudents:1,presentCount:Number(status==='present'),absentCount:Number(status==='absent'),leaveCount:Number(status==='leave'),...extra})});
+const mergedAttendance=summarizeAnnualAttendance({...attendanceArgs,docs:[attendanceDoc('2026-04-14',true),attendanceDoc('2026-04-15',false)],legacyDocs:[legacyDaily('a','2026-04-14','present'),legacyDaily('b','2026-04-15','leave'),legacyDaily('c','2026-04-16','leave'),legacyDaily('d','2026-04-17','absent'),legacyDaily('e','2026-04-18','present',{attendanceType:'subject',subject:'Math'}),legacyDaily('f','2026-04-19','present',{section:'B'}),legacyDaily('g','2026-04-20','present',{academicYear:'2082'})]});
+assert.deepEqual(mergedAttendance,{present:1,absent:1,leave:1,recorded:3,excluded:0,duplicates:1,conflicts:1});
+assert.throws(()=>summarizeAnnualAttendance({...attendanceArgs,docs:[],legacyDocs:[legacyDaily('bad','2026-04-16','leave',{schoolId:'22222002'})]}),/identity mismatch/);
+assert.throws(()=>summarizeAnnualAttendance({...attendanceArgs,docs:[],legacyDocs:[legacyDaily('bad','2026-04-16','leave',{leaveCount:0})]}),/totals mismatch/);
+console.log('PASS annual attendance review: native and legacy daily merge, leave, date conflicts, duplicate deduplication, tenant isolation');
