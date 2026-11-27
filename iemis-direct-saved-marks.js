@@ -1,10 +1,13 @@
+import {attendanceModule} from './iemis-direct-attendance.js';
 // V46 single-school saved marks, no writes or draft/UI state reads.
 export function createV46DirectReader({getWorkspace,T,examTermKey,subjectLabel,optionalSlot,studentOptional}){
  const termKeys={first:'first',second:'second',third:'third',final:'annual'};
  const names={first:'First Term',second:'Second Term',third:'Third Term',final:'Final Term'};
  const kinds=new Set(['absent','participation','practical','term','theory']);
  const fail=m=>{throw Error(m)};
+ const attendance=attendanceModule({version:'v46',getWorkspace,T});
  return async request=>{
+  if(request?.mode==='attendance')return attendance(request);
   if(request?.mode!=='marks')fail('Attendance र Class 5 को Direct Sync अझै तयार छैन।');
   const c=request.context,term=request.examTerm;
   if(!c||!Object.hasOwn(termKeys,term)||T.termKey(c.term)!==term||T.clean(c.year)!=='2083'||!/^[0-9]{5,20}$/.test(c.schoolCode)||!['6','7','8','9','10'].includes(T.classKey(c.className))||!Array.isArray(request.columns)||!request.columns.length||request.columns.length>150)fail('सही विद्यालय, वर्ष 2083, कक्षा 6–10 र Term आवश्यक छ।');
