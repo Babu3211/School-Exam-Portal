@@ -1,0 +1,33 @@
+name: V47 Direct Sync read-only checks
+on:
+  push:
+    branches: [feat/v47-iemis-direct-sync-safe]
+  pull_request:
+    branches: [smss-v47-multischool-work]
+    paths:
+      - 'v47/iemis-direct-*.mjs'
+      - 'v47/iemis-direct-*.js'
+      - 'v47/test-iemis-direct-saved-marks.mjs'
+      - 'v47/test-iemis-direct-attendance.mjs'
+      - 'v47/test-iemis-direct-primary.mjs'
+      - 'v47/dashboard-console.mjs'
+      - 'v47/grade-report-console.mjs'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node v47/test-iemis-direct-saved-marks.mjs
+      - run: node v47/test-iemis-direct-attendance.mjs
+      - run: node v47/test-iemis-direct-primary.mjs
+      - run: node --check v47/dashboard-console.mjs
+      - run: node --check v47/grade-report-console.mjs
+      - run: node v47/build-hosting.mjs
+      - run: node v47/test-hosting-bundle.mjs
+      - run: test -f v47/dist/iemis-direct-saved-marks.mjs && test -f v47/dist/iemis-direct-transfer-keys.js && test -f v47/dist/iemis-direct-attendance.mjs

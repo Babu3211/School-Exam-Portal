@@ -1,3 +1,5 @@
+import './iemis-direct-transfer-keys.js';
+import {createV47IemisReader} from './iemis-direct-saved-marks.mjs';
 import {loadPrimaryAssessmentCounts,loadPrimaryAssessmentClassCounts} from './dashboard-assessment-counts.mjs';
 import {neError} from './nepali-feedback.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,touchSchoolActivity} from './school-firebase-client.mjs';
@@ -267,3 +269,11 @@ $('dashboardPasswordToggle').onclick=()=>{
 lock();
 // Automatically connect, without authenticating or opening any school data.
 queueMicrotask(()=>$('dashboardConnect').click());
+
+// Read-only sync from the already verified dashboard session; never start a new login.
+let iemisVerified=null,iemisActor=null;
+function iemisWorkspace(){
+ if(iemisVerified!==verified){iemisVerified=verified;iemisActor=verified?Object.freeze({...verified,active:true}):null;}
+ return {auth,authSdk,api,db,actor:iemisActor,schoolId:verified?.schoolId,sessionSeq:iemisVerified};
+}
+if(!Object.hasOwn(globalThis,'__SMSS_IEMIS_READ_SAVED_V1__'))Object.defineProperty(globalThis,'__SMSS_IEMIS_READ_SAVED_V1__',{value:createV47IemisReader({getWorkspace:iemisWorkspace,verifySchoolSession,enforceSchoolIdle,T:globalThis.SmssIemisTransfer}),configurable:true,writable:false,enumerable:false});

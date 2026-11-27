@@ -1,3 +1,5 @@
+import './iemis-direct-transfer-keys.js';
+import {createV47IemisReader} from './iemis-direct-saved-marks.mjs';
 import {combineTerminalGradeSheets} from './iemis-grade-sheet-print-preview.mjs';
 import {neError} from './nepali-feedback.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,bindVerifiedModuleActivity} from './school-firebase-client.mjs';
@@ -183,3 +185,9 @@ $('exportExcel').onclick=async()=>{
  finally{if(seq===sessionSeq)$('exportExcel').disabled=!report}
 };
 if(requestedSchool)queueMicrotask(()=>$('connect').click());
+
+// Direct IEMIS read is limited to a live, verified school admin report session.
+// The reader rechecks membership, idle timeout, tenant, year and exam scope on every request.
+if (!Object.hasOwn(globalThis,'__SMSS_IEMIS_READ_SAVED_V1__')) {
+ Object.defineProperty(globalThis,'__SMSS_IEMIS_READ_SAVED_V1__',{value:createV47IemisReader({getWorkspace:()=>({auth,authSdk,api,db,actor,schoolId,sessionSeq}),verifySchoolSession,enforceSchoolIdle,T:globalThis.SmssIemisTransfer}),configurable:true,writable:false,enumerable:false});
+}
