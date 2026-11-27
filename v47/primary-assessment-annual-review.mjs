@@ -53,7 +53,18 @@ export function summarizeAnnualAttendance({schoolId,grade,studentId,docs,asOf,le
  }
  return Object.freeze({present,absent,leave,recorded:present+absent+leave,excluded,duplicates,conflicts});
 }
-export function annualAttendanceText(a){return 'V46/V47 daily attendance review: '+a.present+' present, '+a.absent+' absent, '+a.leave+' leave, '+a.recorded+' recorded days; '+a.conflicts+' conflicting dates excluded; '+a.duplicates+' duplicate entries ignored. School operating days not verified.';}
+// The count is supplied from the school's attendance register for this review only.
+export function reviewOperatingDays(attendance,rawDays,rawSource,asOf){
+ const days=String(rawDays??'').trim(),source=String(rawSource??'').trim();
+ if(!days&&!source)return null;
+ const elapsed=Math.min(365,Math.max(0,Math.floor((Date.parse(asOf+'T00:00:00Z')-Date.UTC(2026,3,14))/86400000)+1));
+ if(!Number.isInteger(elapsed)||!/^\d{1,3}$/.test(days)||Number(days)<1||Number(days)>elapsed||!source||source.length>160||/[\u0000-\u001f\u007f]/.test(source))throw Error('Invalid operating-day count or register reference');
+ const operatingDays=Number(days);
+ const complete=attendance.conflicts===0&&attendance.recorded===operatingDays;
+ return Object.freeze({operatingDays,source,complete,percentage:complete?attendance.present/operatingDays*100:null});
+}
+export function annualOperatingDaysText(a){return a?'School operating days (Admin supplied): '+a.operatingDays+'; Register: '+a.source+'; Attendance percentage (review): '+(a.percentage===null?'Pending — incomplete/conflicting records':a.percentage.toFixed(2)+'%')+'.':'School operating days not supplied.';}
+export function annualAttendanceText(a){return 'V46/V47 daily attendance review: '+a.present+' present, '+a.absent+' absent, '+a.leave+' leave, '+a.recorded+' recorded days; '+a.conflicts+' conflicting dates excluded; '+a.duplicates+' duplicate entries ignored. School operating days require separate register verification.';}
 
 export const upperAnnualSubjects=Object.freeze([['nepali','नेपाली',5],['english','English',5],['mathematics','गणित / Mathematics',5],['science','विज्ञान तथा प्रविधि / Science and Technology',5],['socialstudies','सामाजिक अध्ययन तथा मानवमूल्य शिक्षा',5],['healthphysicalcreativeart','स्वास्थ्य, शारीरिक तथा सिर्जनात्मक कला / Health, Physical and Creative Arts',3],['hamrodhunibeshi','मातृभाषा वा स्थानीय विषय वा अन्य',4]].map(Object.freeze));
 // CDC 2076 Annex 2, PDF pp.13–14 (applicable 2083); annual curriculum hours, not weekly periods.
@@ -105,12 +116,14 @@ export async function readAnnualReview(args){
  }
  const attendanceSnap=await api.getDocsFromServer(api.query(api.collection(db,'schools',schoolId,'attendance'),api.where('studentId','==',studentId),api.limit(1001)));check();
  const legacySnap=await api.getDocsFromServer(api.query(api.collection(db,'schools',schoolId,'attendance'),api.where('className','in',annualLegacyClassNames(grade)),api.limit(2001)));check();
- const attendance=summarizeAnnualAttendance({schoolId,grade,studentId,docs:attendanceSnap.docs,legacyDocs:legacySnap.docs,section:String(student.section??''),asOf:nepalGregorianDate()});
+ const asOf=nepalGregorianDate();
+ const attendance=summarizeAnnualAttendance({schoolId,grade,studentId,docs:attendanceSnap.docs,legacyDocs:legacySnap.docs,section:String(student.section??''),asOf});
+ const operating=reviewOperatingDays(attendance,args.operatingDays,args.registerSource,asOf);
  await verify();check();
- return Object.freeze({attendance,title:lower?'Annual Student Progress — Annex 2 Review':'Annual Student Progress — Annex 4 Review',schoolId,studentId,studentName:String(student.nameEnglish??student.name??studentId),grade,section:String(student.section??''),year:'2083',historical:0,headers:annualReviewHeaders(grade),rows:Object.freeze(rows.map(Object.freeze)),notice:'Saved teacher drafts only — NOT official annual report. Migrated assessment observations are not included. Daily attendance is a review, not verified school operating days.',stageSummary:(lower?'CDC 2076 A*–E scale; draft levels only. ':'')+annualAttendanceText(attendance)+' Signatures pending official verification. Class teacher __________ · Headteacher __________ · Date __________',officialAssessmentApproved:false});
+ return Object.freeze({attendance,operating,title:lower?'Annual Student Progress — Annex 2 Review':'Annual Student Progress — Annex 4 Review',schoolId,studentId,studentName:String(student.nameEnglish??student.name??studentId),grade,section:String(student.section??''),year:'2083',historical:0,headers:annualReviewHeaders(grade),rows:Object.freeze(rows.map(Object.freeze)),notice:'Saved teacher drafts only — NOT official annual report. Migrated assessment observations are not included. Daily attendance is a review, not verified school operating days.',stageSummary:(lower?'CDC 2076 A*–E scale; draft levels only. ':'') +annualAttendanceText(attendance)+' '+annualOperatingDaysText(operating)+' Signatures pending official verification. Class teacher __________ · Headteacher __________ · Date __________',officialAssessmentApproved:false});
 }
 export function exportUpperAnnualReview(report,kind){
  if(!['word','excel'].includes(kind))throw Error('Invalid annual export');
- const blob=kind==='word'?assessmentPrintWordBlob(report):excelWorkbook(['Status','School ID','Student ID','Student','Class','Year','Attendance summary',...report.headers],report.rows.map(row=>[report.notice,report.schoolId,report.studentId,report.studentName,report.grade,report.year,annualAttendanceText(report.attendance),...row]),{sheetName:'Annual review'});
+ const blob=kind==='word'?assessmentPrintWordBlob(report):excelWorkbook(['Status','School ID','Student ID','Student','Class','Year','Attendance summary','Operating days review',...report.headers],report.rows.map(row=>[report.notice,report.schoolId,report.studentId,report.studentName,report.grade,report.year,annualAttendanceText(report.attendance),annualOperatingDaysText(report.operating),...row]),{sheetName:'Annual review'});
  return {blob,filename:'V47-ANNUAL-REVIEW-'+report.schoolId+'-'+report.studentId+'-2083.'+(kind==='word'?'docx':'xlsx')};
 }

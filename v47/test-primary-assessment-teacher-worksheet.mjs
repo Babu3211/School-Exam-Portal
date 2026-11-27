@@ -181,3 +181,15 @@ assert.deepEqual(mergedAttendance,{present:1,absent:1,leave:1,recorded:3,exclude
 assert.throws(()=>summarizeAnnualAttendance({...attendanceArgs,docs:[],legacyDocs:[legacyDaily('bad','2026-04-16','leave',{schoolId:'22222002'})]}),/identity mismatch/);
 assert.throws(()=>summarizeAnnualAttendance({...attendanceArgs,docs:[],legacyDocs:[legacyDaily('bad','2026-04-16','leave',{leaveCount:0})]}),/totals mismatch/);
 console.log('PASS annual attendance review: native and legacy daily merge, leave, date conflicts, duplicate deduplication, tenant isolation');
+
+import {reviewOperatingDays,annualOperatingDaysText} from './primary-assessment-annual-review.mjs';
+const fullDaily={present:18,absent:1,leave:1,recorded:20,conflicts:0};
+assert.equal(reviewOperatingDays(fullDaily,'20','Register p. 12','2026-11-27').percentage,90);
+assert.equal(reviewOperatingDays(fullDaily,'21','Register p. 12','2026-11-27').percentage,null);
+assert.equal(reviewOperatingDays({...fullDaily,conflicts:1},'20','Register p. 12','2026-11-27').percentage,null);
+assert.equal(reviewOperatingDays(fullDaily,'','','2026-11-27'),null);
+assert.throws(()=>reviewOperatingDays(fullDaily,'20','','2026-11-27'),/Invalid operating/);
+assert.throws(()=>reviewOperatingDays(fullDaily,'366','Register','2026-11-27'),/Invalid operating/);
+assert.throws(()=>reviewOperatingDays(fullDaily,'20','Register','2026-04-15'),/Invalid operating/);
+assert.throws(()=>reviewOperatingDays(fullDaily,'2.5','Register','2026-11-27'),/Invalid operating/);
+assert.match(annualOperatingDaysText(reviewOperatingDays(fullDaily,'20','Register p. 12','2026-11-27')),/90\.00%/);
