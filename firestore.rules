@@ -382,7 +382,7 @@ service cloud.firestore {
         student.get('section', '') == data.section;
     }
 
-    function validCdcObservation(data) {
+    function validCdcObservation(data, correction) {
       return data.keys().hasAll(['studentId', 'className', 'subject', 'section',
           'academicYear', 'period', 'unit', 'unitEn', 'topic', 'topicAlt',
           'date', 'level', 'method', 'evidence', 'feedback', 'createdBy', 'createdAt']) &&
@@ -407,7 +407,7 @@ service cloud.firestore {
         data.evidence is string && data.evidence.size() <= 2000 &&
         (data.evidence.size() > 0 || data.keys().hasAny(['stage'])) &&
         data.feedback is string && data.feedback.size() <= 2000 &&
-        data.createdBy == request.auth.uid && data.createdAt == request.time;
+        (correction || (data.createdBy == request.auth.uid && data.createdAt == request.time));
     }
 
     match /cdc_observations/{documentId} {
@@ -415,13 +415,16 @@ service cloud.firestore {
         (signedIn() && (teacherAllSectionsAccess(resource.data.className, resource.data.subject) ||
           teacherSubjectAccess(resource.data.className, resource.data.subject, resource.data.section)));
       // Reassessment appends a separate observation so previous evidence remains available.
-      allow create: if signedIn() && validCdcObservation(request.resource.data) &&
+      allow create: if signedIn() && validCdcObservation(request.resource.data, false) &&
         canWriteCdcObservation(request.resource.data);
-      allow update, delete: if false;
+      allow update: if isAdmin() && !isViewer() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['date','level','method','feedback']) &&
+        validCdcObservation(request.resource.data, true);
+      allow delete: if isAdmin() && !isViewer();
     }
 
     // Separate binary indicator evidence from the existing 1–4 achievement observations.
-    function validCdcSeroferoIndicators(data) {
+    function validCdcSeroferoIndicators(data, correction) {
       return data.keys().hasAll(['studentId','className','subject','section','academicYear',
           'period','unit','outcomeId','stage','date','indicators','createdBy','createdAt']) &&
         data.keys().hasOnly(['studentId','className','subject','section','academicYear',
@@ -483,16 +486,19 @@ service cloud.firestore {
           data.usedTools[1] is string && data.usedTools[1].size() <= 200 &&
           data.usedTools[2] is string && data.usedTools[2].size() <= 200 &&
           data.usedTools[3] is string && data.usedTools[3].size() <= 200)) &&
-        data.createdBy == request.auth.uid && data.createdAt == request.time;
+        (correction || (data.createdBy == request.auth.uid && data.createdAt == request.time));
     }
 
     match /cdc_serofero_indicators/{documentId} {
       allow read: if isAdmin() || isViewer() ||
         (signedIn() && (teacherAllSectionsAccess(resource.data.className, resource.data.subject) ||
           teacherSubjectAccess(resource.data.className, resource.data.subject, resource.data.section)));
-      allow create: if signedIn() && validCdcSeroferoIndicators(request.resource.data) &&
+      allow create: if signedIn() && validCdcSeroferoIndicators(request.resource.data, false) &&
         canWriteCdcObservation(request.resource.data);
-      allow update, delete: if false;
+      allow update: if isAdmin() && !isViewer() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['date','indicators','usedTools']) &&
+        validCdcSeroferoIndicators(request.resource.data, true);
+      allow delete: if isAdmin() && !isViewer();
     }
 
     function validDailyAttendance(data) {
