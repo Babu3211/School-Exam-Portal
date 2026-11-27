@@ -78,7 +78,7 @@ async function renderTeacherDraft(){
  $('teacherDate').value=todayAssessmentDate2083();
  if(theme.sourceUrl){$('teacherThemeSource').href=theme.sourceUrl;$('teacherThemeSource').hidden=false}else{$('teacherThemeSource').removeAttribute('href');$('teacherThemeSource').hidden=true;}
  const binary=worksheet.key==='serophero';
- const key=worksheet.key,lower=['1','2','3'].includes(worksheet.grade),nepaliOnly=['nepali','socialstudies','serophero'].includes(key),ne=nepaliOnly;
+ const key=worksheet.key,lower=['1','2','3'].includes(worksheet.grade),nepaliOnly=['nepali','socialstudies','serophero','hamrodhunibeshi'].includes(key),ne=nepaliOnly;
  const digits=n=>ne?String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]):String(n);
  const nepaliForm=lower&&key==='nepali',englishForm=lower&&key==='english',mathForm=lower&&key==='mathematics';
  const sourceReady=slots.every(s=>s.sourceText),indicatorForm=binary&&sourceReady;
@@ -183,7 +183,7 @@ $('teacherOpenWorksheet').onclick=async()=>{
  $('teacherStudent').replaceChildren(...result.students.map(s=>new Option(s.name+(s.section?' / '+s.section:''),s.id)));
  $('teacherTheme').replaceChildren(...result.themes.map((t,i)=>new Option([t.theme,t.en&&t.en!==t.theme?t.en:''].filter(Boolean).join(' / '),String(i))));
  $('teacherStudent').disabled=false;$('teacherTheme').disabled=false;$('teacherDate').disabled=false;
- renderTeacherDraft();$('teacherWorksheetStatus').textContent=result.students.length+' विद्यार्थी र '+result.themes.length+' थिम उपलब्ध छन्। '+(result.themes.every(t=>t.sourceRows)?'V46 को उपलब्धि पाठ उपलब्ध छ; शब्दशः प्रमाणीकरण बाँकी। ':'सबै थिमको शब्दशः पाठ अझै उपलब्ध छैन। ')+'अस्थायी फाराम मात्र।';
+ renderTeacherDraft();$('teacherWorksheetStatus').textContent=result.students.length+' विद्यार्थी र '+result.themes.length+' थिम उपलब्ध छन्। '+(result.key==='hamrodhunibeshi'?'विद्यालयले सुरक्षित गरेको स्थानीय पाठ्यक्रम स्रोत उपलब्ध छ। ':result.themes.every(t=>t.sourceRows)?'V46 को उपलब्धि पाठ उपलब्ध छ; शब्दशः प्रमाणीकरण बाँकी। ':'सबै थिमको शब्दशः पाठ अझै उपलब्ध छैन। ')+'अस्थायी फाराम मात्र।';
  }catch(e){if(request===teacherEpoch){clearTeacherModel();$('teacherWorksheetStatus').textContent='फाराम खोल्न सकिएन: '+neError(e)}}
 };
 async function outputTeacherDraft(kind){
@@ -367,11 +367,11 @@ async function printPortfolio(kind){
 $('portfolioPrintOrdinary').onclick=()=>void printPortfolio('observations');
 $('portfolioPrintIndicators').onclick=()=>void printPortfolio('indicators');
 let localEpoch=0,localPreview=null;
-function resetLocalSource(){localEpoch++;localPreview=null;$('localSourceSave').disabled=true;$('localSourcePreview').disabled=true;$('localSourceSubject').replaceChildren();$('localSourceText').value='';$('localSourceLabel').value='';$('localSourceStatus').textContent='';$('localSourceRows').replaceChildren();}
+function resetLocalSource(){localEpoch++;localPreview=null;$('localSourceSave').disabled=true;$('localSourcePreview').disabled=true;$('localSourceSubject').replaceChildren();$('localSourceText').value='';$('localSourceLabel').value='';$('localSourceText').readOnly=$('localSourceLabel').readOnly=true;$('localSourceStatus').textContent='';$('localSourceRows').replaceChildren();}
 $('localSourceGrade').onchange=resetLocalSource;
 function localSelection(){const request=localEpoch,member=actor,grade=$('localSourceGrade').value,subjectId=$('localSourceSubject').value;return {db,api,actor:member,schoolId:member?.schoolId,grade,subjectId,assertCurrent:()=>{if(request!==localEpoch||actor!==member||member?.role!=='school_admin'||auth.currentUser?.uid!==member.uid||$('localSourceGrade').value!==grade||$('localSourceSubject').value!==subjectId)throw Error('Local source selection changed')}}}
 $('localSourceLoad').onclick=async()=>{resetLocalSource();const args=localSelection();try{await verify();args.assertCurrent();const list=await readSchoolSubjectCatalog({...args,schoolClass:args.grade});args.assertCurrent();$('localSourceSubject').replaceChildren(...list.filter(s=>s.active===true&&primarySubjectKey(s.name)==='hamrodhunibeshi').map(s=>new Option(s.name,s.id)));$('localSourceStatus').textContent='स्थानीय विषय छानेर Open Source थिच्नुहोस्।';}catch(e){$('localSourceStatus').textContent=neError(e)}};
-$('localSourceSubject').onchange=()=>{localEpoch++;localPreview=null;$('localSourceSave').disabled=true;$('localSourcePreview').disabled=true;$('localSourceText').value='';$('localSourceLabel').value='';$('localSourceRows').replaceChildren();};
+$('localSourceSubject').onchange=()=>{localEpoch++;localPreview=null;$('localSourceSave').disabled=true;$('localSourcePreview').disabled=true;$('localSourceText').value='';$('localSourceLabel').value='';$('localSourceText').readOnly=$('localSourceLabel').readOnly=true;$('localSourceRows').replaceChildren();};
 function showLocalRows(rows){$('localSourceRows').replaceChildren();for(const row of rows){const tr=document.createElement('tr');for(const v of [row.theme,row.count,row.fullMarks])cell(tr,v);$('localSourceRows').append(tr)}}
 $('localSourceOpen').onclick=async()=>{localEpoch++;localPreview=null;$('localSourceSave').disabled=true;const args=localSelection();try{await verify();args.assertCurrent();if(!args.subjectId)throw Error('Select local subject');const saved=await readLocalAssessmentSource(args);args.assertCurrent();$('localSourceText').value=saved?.sourceText??'';$('localSourceLabel').value=saved?.sourceLabel??'';$('localSourceText').readOnly=$('localSourceLabel').readOnly=!!saved;$('localSourcePreview').disabled=!!saved;if(saved)showLocalRows(saved.rows);else $('localSourceRows').replaceChildren();$('localSourceStatus').textContent=saved?'सुरक्षित स्थानीय स्रोत। पुरानो Draft जोगाउन परिवर्तन बन्द छ।':'विद्यालयको आधिकारिक स्थानीय पाठ्यक्रमबाट थिम र उपलब्धि राख्नुहोस्।';}catch(e){$('localSourceStatus').textContent=neError(e)}};
 for(const id of ['localSourceText','localSourceLabel'])$(id).oninput=()=>{localPreview=null;$('localSourceSave').disabled=true};

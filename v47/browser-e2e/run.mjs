@@ -11,6 +11,7 @@ import {join,resolve} from 'node:path';
 import {build} from 'esbuild';
 import {chromium} from 'playwright';
 import {excelWorkbook} from '../excel-workbook.mjs';
+import {parseLocalAssessmentSource,LOCAL_SOURCE_REVISION} from '../primary-assessment-local-source.mjs';
 import {todayAssessmentDate2083} from '../assessment-date-2083.mjs';
 import {v46LowerMathReference} from '../primary-assessment-v46-lower-math.mjs';
 import {v46SeroferoThemeRows} from '../primary-assessment-v46-serofero-text.mjs';
@@ -397,6 +398,35 @@ try{
      assert.deepEqual(errors,[]);
      console.log('PASS lower-language staged draft '+grade+' '+kind+': separate date, scores, reload and school isolation');
     }finally{await Promise.all([...Object.values(draftPaths),assignmentPath,studentPath,subjectPath].map(p=>db.doc(p).delete()));}
+   }
+   // Local curriculum UI: Admin registers one real source, assigned teacher saves
+   // the existing student's draft, Admin reviews the same records. Emulator only.
+   {
+    const grade='1',subjectId='synthetic_local_1',studentId='s1',sourceText='# स्थानीय थिम\nपहिलो उपलब्धि\nदोस्रो उपलब्धि',sourceLabel='Synthetic local source 2083';
+    const subjectPath=root+'/subjects/'+subjectId,sourcePath=root+'/primary_local_curricula/1_'+subjectId,assignmentPath=root+'/teacher_assignments/'+sid+':'+teacherUid+':1:'+subjectId;
+    const theme=parseLocalAssessmentSource(sourceText,sourceLabel)[0];
+    const draftPath=root+'/teacher_assessment_drafts/'+teacherUid+'/classes/1/subjects/'+subjectId+'/students/'+studentId+'/themes/'+sha(JSON.stringify([LOCAL_SOURCE_REVISION,grade,theme.theme,theme.sourceRows]));
+    const admin=await newSession();
+    try{
+     await db.doc(subjectPath).set({schoolId:sid,class:grade,name:'हाम्रो धुनिबेँशी',active:true});
+     await db.doc(assignmentPath).set({schoolId:sid,uid:teacherUid,classId:grade,subjectId,active:true});
+     await login(admin.page,sid,'alpha-admin');await admin.page.goto(origin+'/primary-assessment.html?schoolId='+sid);await wait(admin.page,()=>!document.getElementById('localSourceArea').hidden);
+     await admin.page.locator('#localSourceLoad').click();await wait(admin.page,id=>Array.from(document.getElementById('localSourceSubject').options).some(o=>o.value===id),subjectId);
+     await admin.page.locator('#localSourceSubject').selectOption(subjectId);await admin.page.locator('#localSourceOpen').click();await wait(admin.page,()=>!document.getElementById('localSourcePreview').disabled);
+     await admin.page.locator('#localSourceLabel').fill(sourceLabel);await admin.page.locator('#localSourceText').fill(sourceText);await admin.page.locator('#localSourcePreview').click();
+     assert.ok((await admin.page.locator('#localSourceRows').textContent()).includes('8'));admin.page.once('dialog',dialog=>dialog.accept());
+     await admin.page.locator('#localSourceSave').click();await wait(admin.page,()=>document.getElementById('localSourceStatus').textContent.includes('स्थानीय पाठ्यक्रम सुरक्षित भयो'));
+     assert.equal((await db.doc(sourcePath).get()).data().sourceText,sourceText);
+     await page.locator('#teacherGrade').selectOption(grade);await page.locator('#teacherLoadSubjects').click();await wait(page,id=>Array.from(document.getElementById('teacherSubject').options).some(o=>o.value===id),subjectId);
+     await page.locator('#teacherSubject').selectOption(subjectId);await page.locator('#teacherOpenWorksheet').click();await wait(page,()=>!document.getElementById('teacherSaveDraft').disabled);
+     assert.equal(await ratings.count(),2);await ratings.first().selectOption('3');await ratings.nth(1).selectOption('4');await page.locator('#teacherDate').fill('2083-08-10');await page.locator('#teacherDraftRows .assessment-row-date').nth(1).fill('2083-08-11');await page.locator('#teacherSaveDraft').click();await wait(page,()=>document.getElementById('teacherDraftSaveStatus').textContent.includes('Revision 1 सुरक्षित भयो'));
+     assert.equal((await db.doc(draftPath).get()).data().ratings,'34');
+     const dl=page.waitForEvent('download',{timeout:30000});await page.locator('#teacherDraftExcel').click();const file=await dl;assert.ok(file.suggestedFilename().endsWith('.xlsx'));assert.ok((await readFile(await file.path())).toString().includes('2083-08-11'));
+     await admin.page.locator('#portfolioGrade').selectOption(grade);await admin.page.locator('#portfolioRoster').click();await wait(admin.page,id=>Array.from(document.getElementById('portfolioStudent').options).some(o=>o.value===id),studentId);
+     await admin.page.locator('#portfolioStudent').selectOption(studentId);await admin.page.locator('#adminDraftLoad').click();await wait(admin.page,id=>Array.from(document.getElementById('adminDraftSubject').options).some(o=>o.value===id),subjectId);await admin.page.locator('#adminDraftTeacher').selectOption(teacherUid);await admin.page.locator('#adminDraftSubject').selectOption(subjectId);await admin.page.locator('#adminDraftOpen').click();await wait(admin.page,()=>!document.getElementById('adminDraftRead').disabled);await admin.page.locator('#adminDraftRead').click();await wait(admin.page,()=>document.querySelectorAll('#adminDraftRows tr').length===2);
+     assert.ok((await admin.page.locator('#adminDraftRows').textContent()).includes('2083-08-11'));assert.equal((await db.doc(draftPath).get()).data().revision,1);assert.deepEqual(admin.errors,[]);assert.deepEqual(errors,[]);
+     console.log('PASS local curriculum Admin source registration, assigned teacher assessment, Excel and Admin review');
+    }finally{await admin.context.close();await Promise.all([draftPath,sourcePath,assignmentPath,subjectPath].map(p=>db.doc(p).delete()))}
    }
   }finally{await teacherSession.context.close()}
   const adminSession=await newSession();

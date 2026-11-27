@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {loadMathAssessmentDraft,saveMathAssessmentDraft} from './primary-assessment-math-draft.mjs';
-import {loadPrimaryTeacherWorksheet,loadAdminAssessmentWorksheet} from './primary-assessment-teacher-worksheet.mjs';
+import {readLocalAssessmentSource,saveLocalAssessmentSource,LOCAL_SOURCE_REVISION} from './primary-assessment-local-source.mjs';
+import {loadAssignedPrimarySubjects,loadPrimaryTeacherWorksheet,loadAdminAssessmentWorksheet} from './primary-assessment-teacher-worksheet.mjs';
 import {loadSparkCommittedReport} from './spark-committed-report.mjs';
 import {loadSparkDraftReport} from './spark-draft-report.mjs';
 import {saveTeacherClassAttendance} from './teacher-class-attendance.mjs';
@@ -197,6 +198,50 @@ try{
   await assert.rejects(loadAdminAssessmentWorksheet({db:admin,api,actor:reviewActor,schoolId:sid,grade:'1',subjectId,studentId,teacherUid:uid,catalogue,assertCurrent}),/Active assigned/);
   await assertFails(updateDoc(doc(teacher,...parts),{ratings,revision:3,updatedAt:serverTimestamp()}));
   console.log('PASS assessment Draft save/reload, assigned teacher, read-only Admin review, revoked assignment and other-school isolation');
+ }
+ // Local source and local draft: exercise all five grade boundaries with real rules.
+ {
+  const sid='12345678',uid='teacher_'+sid,root=['schools',sid],api={doc,getDocFromServer,getDocsFromServer,getDoc,getDocs,collection,query,where,orderBy,limit,startAfter,runTransaction,serverTimestamp};
+  const assertCurrent=()=>{},catalogue=JSON.parse(readFileSync(new URL('./primary-assessment-reference-2083.json',import.meta.url),'utf8'));
+  const actor={uid,schoolId:sid,role:'teacher',active:true},reviewActor={uid:'admin_'+sid,schoolId:sid,role:'school_admin',active:true};
+  const sourceText='# स्थानीय थिम\nपहिलो उपलब्धि\nदोस्रो उपलब्धि\n# अर्को थिम\nतेस्रो उपलब्धि',sourceLabel='Synthetic local curriculum 2083';
+  for(const grade of ['1','2','3','4','5']){
+   const subjectId='localtest_'+grade,studentId='localstudent_'+grade,assignment=sid+':'+uid+':'+grade+':'+subjectId;
+   const sourcePath=[...root,'primary_local_curricula',grade+'_'+subjectId];
+   const base={api,schoolId:sid,grade,subjectId,assertCurrent,catalogue};
+   const teacherArgs={...base,actor,db:teacher,auth:{currentUser:{uid}}};
+   const adminArgs={...base,actor:reviewActor,db:admin,auth:{currentUser:{uid:reviewActor.uid}}};
+   const cleanup=[];
+   try{
+    await env.withSecurityRulesDisabled(async ctx=>{
+     const f=ctx.firestore();for(const [p,d] of [[['subjects',subjectId],{schoolId:sid,class:grade,name:'हाम्रो धुनिबेँशी',active:true}],[['students',studentId],{schoolId:sid,class:grade,name:'Synthetic local student',active:true}],[['teacher_assignments',assignment],{schoolId:sid,uid,classId:grade,subjectId,active:true}]]){await setDoc(doc(f,...root,...p),d);cleanup.push([...root,...p])}
+    });
+    assert.equal(await readLocalAssessmentSource(teacherArgs),null);
+    assert.ok(!(await loadAssignedPrimarySubjects(teacherArgs)).some(s=>s.id===subjectId));
+    await assert.rejects(saveLocalAssessmentSource({...teacherArgs,sourceText,sourceLabel}),/School Admin/);
+    const source=await saveLocalAssessmentSource({...adminArgs,sourceText,sourceLabel});cleanup.push(sourcePath);
+    assert.deepEqual(source.map(t=>t.fullMarks),[8,4]);
+    await assert.rejects(saveLocalAssessmentSource({...adminArgs,sourceText,sourceLabel}),/already registered/);
+    assert.equal((await readLocalAssessmentSource(teacherArgs)).rows[0].count,2);
+    assert.ok((await loadAssignedPrimarySubjects(teacherArgs)).some(s=>s.id===subjectId));
+    await assertFails(getDoc(doc(viewer,...sourcePath)));await assertFails(getDoc(doc(db('admin_87654321'),...sourcePath)));
+    await assertFails(updateDoc(doc(admin,...sourcePath),{sourceText:'# Changed\nChanged'}));await assertFails(deleteDoc(doc(admin,...sourcePath)));
+    const model=await loadPrimaryTeacherWorksheet(teacherArgs);
+    const args={...teacherArgs,model,studentId,themeIndex:0};
+    const hash=createHash('sha256').update(JSON.stringify([LOCAL_SOURCE_REVISION,grade,model.themes[0].theme,model.themes[0].sourceRows])).digest('hex');
+    const draftPath=[...root,'teacher_assessment_drafts',uid,'classes',grade,'subjects',subjectId,'students',studentId,'themes',hash];
+    assert.equal(await loadMathAssessmentDraft(args),null);
+    const saved=await saveMathAssessmentDraft({...args,ratings:'34',date:'2083-08-10',rowDates:'2083-08-102083-08-11',expectedRevision:0});cleanup.push(draftPath);
+    assert.equal(saved.ratings,'34');assert.equal((await loadMathAssessmentDraft(args)).rowDates,'2083-08-102083-08-11');
+    const raw=(await getDoc(doc(teacher,...draftPath))).data();assert.equal(raw.format,'smss-v47-primary-local-draft-v1');assert.equal(raw.sourceRevision,LOCAL_SOURCE_REVISION);
+    const reviewModel=await loadAdminAssessmentWorksheet({...adminArgs,studentId,teacherUid:uid});
+    assert.equal((await loadMathAssessmentDraft({...adminArgs,model:reviewModel,studentId,themeIndex:0,reviewTeacherUid:uid})).ratings,'34');
+    await assertFails(getDoc(doc(viewer,...draftPath)));await assertFails(getDoc(doc(db('teacher_87654321'),...draftPath)));await assertFails(updateDoc(doc(admin,...draftPath),{ratings:'44',revision:2,updatedAt:serverTimestamp()}));
+    await env.withSecurityRulesDisabled(async ctx=>updateDoc(doc(ctx.firestore(),...root,'teacher_assignments',assignment),{active:false}));
+    await assertFails(getDoc(doc(teacher,...sourcePath)));await assertFails(getDoc(doc(teacher,...draftPath)));await assertFails(getDoc(doc(admin,...draftPath)));
+    console.log('PASS school-local curriculum class '+grade+': source save, assignment, ratings, dates, immutable source and tenant isolation');
+   }finally{await env.withSecurityRulesDisabled(async ctx=>{for(const p of cleanup.reverse())await deleteDoc(doc(ctx.firestore(),...p))})}
+  }
  }
  // 19 Unauthorized school listing denied
  await assertFails(getDocs(collection(viewer,'schools')));
