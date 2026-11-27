@@ -10,7 +10,7 @@ async function runRegression(T,createV47IemisReader){
  let workspace={actor,auth,authSdk:{},db:{},api:null,schoolId,sessionSeq:1};
  const b={schoolId,class:'9'},x={...b,term:'2nd',termKey:'second',academicYear:'2083'};
  const subjects=[{...b,id:'english',name:'English',active:true},{...b,id:'math',name:'Mathematics',active:true}];
- const students=[{...b,id:'b',nameEnglish:'Student B',studentIemisNo:'902',section:'A'},{...b,id:'a',nameEnglish:'Student A',studentIemisNo:'901',section:'A'}];
+ const students=[{...b,id:'b',nameEnglish:'Student B',studentIemisNo:'902',section:'A'},{...b,id:'a',nameEnglish:'Student A',studentIemisId:'901',section:'A'}];
  const exams=[{...x,id:'exam-2',active:true}];
  const marks=[];
  for(const [studentId,subjectId,n] of [['b','english',0],['a','english',70],['b','math',80],['a','math',95]]){
@@ -37,6 +37,7 @@ async function runRegression(T,createV47IemisReader){
  assert(m>=4&&e>=4,'Subject mapping missing');
  eq(response.grid.rows.map(r=>[r[2],r[m],r[e]]),[['902',80,0],['901',95,70]],'Student/subject source scores');
  eq(response.grid.columns.filter(c=>T.componentKey(c.label)==='term').map(c=>T.maximum(c.label)),[100,100],'Source full marks must remain original');
+ students[1].studentIemisNo='999';await reject(()=>reader(request),/Conflicting IEMIS/);delete students[1].studentIemisNo;
  const initialReads=reads;
  await reject(()=>reader({...request,context:{...request.context,schoolCode:'999990002'}}),/School Admin/);eq(reads,initialReads,'Foreign request read data');
  await reject(()=>reader({...request,examTerm:'first'}),/Class 6/);
