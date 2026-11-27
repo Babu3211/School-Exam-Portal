@@ -216,6 +216,23 @@ jobs:
                 assert subprocess.check_output(['git','rev-parse','origin/main:'+path],text=True).strip()==before, 'Protected base changed: '+path
                 assert subprocess.check_output(['git','rev-parse','HEAD:'+path],text=True).strip()==after, 'Unexpected protected change: '+path
                 allowed.add(path)
+          # Direct Sync review: exact reviewed blob pairs only, never a wildcard.
+          # Every normal dashboard, IEMIS, PWA and Firestore check below still runs.
+          if os.environ.get('GITHUB_HEAD_REF')=='feat/v46-iemis-direct-sync-safe':
+            reviewed=[
+              ("index.html", "ad2e3b96a22601fed9d956397a98c564b3ffb768", "8a195265fe3004b158d2d28596a7dbf3b056f80f"),
+              ("sw.js", "5cbe2ad0e4e381c8a6b231e8f8ee8179df00cbad", "735de7bb71713b4414f73a5cdc748ed0f87e696a"),
+              (".github/workflows/iemis-direct-sync-check.yml", None, "c8a9ef41a18fab87f71afd1767d540dae568ddfe"),
+              ("iemis-direct-saved-marks.js", None, "c93d30ebb16fe9a0e57fe2b6d585863892a6e0e5"),
+              ("scripts/test-iemis-direct-saved-marks.mjs", None, "5f90efdf5de7882a630c90d213d02f6e48fbc48e"),
+            ]
+            expected={p for p,_,_ in reviewed}|{'.github/workflows/v45-final-integration-check.yml'}
+            assert changed==expected, 'Direct Sync change scope differs from reviewed files'
+            for path,before,after in reviewed:
+              base=subprocess.run(['git','rev-parse','--verify','origin/main:'+path],capture_output=True,text=True)
+              assert (base.stdout.strip() if base.returncode==0 else None)==before, 'Direct Sync base changed: '+path
+              assert subprocess.check_output(['git','rev-parse','HEAD:'+path],text=True).strip()==after, 'Direct Sync review required: '+path
+              allowed.add(path)
           unexpected=changed-allowed
           assert not unexpected, f'Unexpected changes to protected V44/IEMIS files: {sorted(unexpected)}'
           print('Approved dashboard and IEMIS source files remain protected.')
