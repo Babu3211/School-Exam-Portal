@@ -48,7 +48,9 @@ export function createV46DirectReader({getWorkspace,T,examTermKey,subjectLabel,o
   if(!roster.length)fail('सही कक्षा/Section का विद्यार्थी भेटिएनन्।');
   const identities=new Map(),registrations=new Set(),symbols=new Set();
   for(const [i,s] of roster.entries()){
-   const reg=T.clean(s.studentIemisNo||s.iemisStudentNo||s.iemisNumber||s.iemisNo||s.registrationNo||s.regdNo||s.regNo||s.studentIemisNumber||'');
+   const ids=[s.studentIemisId,s.studentIemisNo,s.iemisStudentNo,s.iemisNumber,s.iemisNo,s.registrationNo,s.regdNo,s.regNo,s.studentIemisNumber].map(v=>T.clean(v)).filter(Boolean);
+   if(new Set(ids).size>1)fail('Conflicting IEMIS student identifiers');
+   const reg=ids[0]||'';
    const symbol=T.clean(s.symbolNo||s.symbolNumber||s.examSymbolNo||'');
    const name=T.clean(s.studentNameEnglish||s.nameEnglish||s.studentName||s.name);
    if(!name||(!reg&&!symbol)||reg&&registrations.has(reg)||!reg&&symbols.has(symbol))fail('विद्यार्थी ID खाली वा दोहोरिएको छ।');
