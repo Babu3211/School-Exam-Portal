@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v139-iemis-attendance-sync';
+const CACHE_NAME = 'smss-pwa-v140-iemis-query-pagination';
 const APP_SHELL = [
   './',
   './index.html',
