@@ -124,15 +124,17 @@ jobs:
           status=$?
           set -e
           cat /tmp/v47-release-gate.log
-          if [ "$status" -eq 0 ]; then
-            echo "ERROR: Unapproved V47 release gate passed" >&2
+          if [ "$status" -ne 1 ]; then
+            echo "ERROR: Expected deliberate V47 release refusal (exit 1), got $status" >&2
             exit 1
           fi
-          grep -q 'V47 PRODUCTION RELEASE BLOCKED' /tmp/v47-release-gate.log
-          grep -q 'Legacy official mark service is limited to three students' /tmp/v47-release-gate.log
-          grep -q 'full-class Draft covers up to 1500 but is NOT official Marks Publication' /tmp/v47-release-gate.log
-          grep -q 'Firestore marks writes are disabled' /tmp/v47-release-gate.log
-          grep -q 'Computer component marks saving is disabled' /tmp/v47-release-gate.log
+          grep -Fq 'V47 PRODUCTION RELEASE BLOCKED' /tmp/v47-release-gate.log
+          grep -Fq 'Legacy direct mark service remains limited to three students' /tmp/v47-release-gate.log
+          grep -Fq 'full-class Draft and trusted publication implementation do not constitute an approved live publication runtime' /tmp/v47-release-gate.log
+          grep -Fq 'Firestore marks writes are disabled by design' /tmp/v47-release-gate.log
+          grep -Fq 'Computer component direct writes are denied by design' /tmp/v47-release-gate.log
+          grep -Fq 'Spark-only deployment' /tmp/v47-release-gate.log
+          grep -Fq 'Independent live V47 two-school acceptance' /tmp/v47-release-gate.log
 
       - name: Verify class publication safety preflight
         run: node v47/test-class-publication-preflight.mjs

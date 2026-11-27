@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {spawnSync} from 'node:child_process';
 const root=new URL('./',import.meta.url);
 const read=name=>readFileSync(new URL(name,root),'utf8');
 const rules=read('firestore.rules');
@@ -29,3 +30,9 @@ console.log('V47 release safety contract: marks writes denied and UI publication
 assert.match(gate,/Spark-only deployment/);
 assert.match(gate,/Independent live V47 two-school acceptance/);
 assert.match(gate,/not client write grants/);
+
+// Exercise the actual gate, not just a matching comment or an accidental crash.
+const release=spawnSync(process.execPath,[new URL('./release-readiness-gate.mjs',root).pathname],{encoding:'utf8'});
+assert.equal(release.status,1);
+for(const reason of ['V47 PRODUCTION RELEASE BLOCKED','Legacy direct mark service remains limited to three students','full-class Draft and trusted publication implementation do not constitute an approved live publication runtime','Firestore marks writes are disabled by design','Computer component direct writes are denied by design','Spark-only deployment','Independent live V47 two-school acceptance'])assert.ok(release.stderr.includes(reason),'Missing deliberate release blocker: '+reason);
+console.log('PASS deliberate runtime release refusal and current diagnostic messages');
