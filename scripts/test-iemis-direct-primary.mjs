@@ -22,6 +22,16 @@ async function runPrimaryRegression(T,reader,version){
   const absent=(await read(q)).grid.rows[0].slice(4);
   if(JSON.stringify(absent)!==JSON.stringify(["TRUE",25,100,""]))throw Error("Primary absence mismatch");
   await expectReject(()=>read({...q,columns:q.columns.slice(1)}),/absence column/);
+  if(grade===5){
+   exam.termKey='annual';if(v47)exam.term='final';record.termKey='annual';record.term='final';
+   record.isAbsent=false;record.scores[0].obtained=25;record.scores[2].obtained=73;
+   const finalReq={...q,mode:'class5',examTerm:'final',context:{...q.context,term:'Class 5 Final / Final Term'}};
+   const finalResult=await read(finalReq);
+   if(finalResult.mode!=='class5'||finalResult.examTerm!=='final'||finalResult.grid.context.term!==finalReq.context.term||JSON.stringify(finalResult.grid.rows[0].slice(4))!==JSON.stringify(['FALSE',25,100,73]))throw Error('Class 5 Final exact transfer mismatch');
+   await expectReject(()=>read({...finalReq,examTerm:'first'}),/Term/);
+   await expectReject(()=>read({...finalReq,context:{...finalReq.context,className:'4'}}),/Term/);
+   await expectReject(()=>read({...finalReq,columns:[{subject:'English',label:'Marks'}]}),/Unsupported component/);
+  }
  }
  return "PASS "+version+" grades 1–5 exact saved achievement count, ×4 maximum, zero and absence, wrong full and incomplete columns rejected";
 }
