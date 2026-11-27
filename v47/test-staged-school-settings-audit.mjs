@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {summarizeStagedSettings,decodeScopedDocument} from './diagnostics/staged-school-settings-audit.mjs';
+const schoolId='12345',school={id:schoolId,active:false},row=(id,fields)=>({id,fields:{schoolId,...fields}});
+const subjects=[row('computer',{class:'9',name:'Computer',active:true})],settings=[row('9_computer_1st',{id:'9_computer_1st',classId:'9',subjectId:'computer',examId:'1st',active:true,components:[{key:'p',name:'Participation',fullMarks:4},{key:'q',name:'Practical/Project',fullMarks:36},{key:'t',name:'First Term Examination',fullMarks:10}]}),row('legacy',{classGroup:'9-10'})];
+const members=[row('admin',{uid:'admin',role:'school_admin',active:true}),row('teacher',{uid:'teacher',role:'teacher',active:true})];
+const assignments=[row('12345:teacher:9:computer',{uid:'teacher',classId:'9',subjectId:'computer',active:true})];
+const args={schoolId,school,subjects,settings,members,assignments},r=summarizeStagedSettings(args);
+assert.equal(r.schoolActive,false);assert.equal(r.matchedClassTermSubjects,1);assert.equal(r.reviewClassTermSubjects,3);assert.equal(r.otherOrLegacySettings,1);assert.equal(r.invalidAssignmentRecords,0);assert.equal(r.activationAuthorized,false);
+assert.equal(r.matrix.length,40);assert.equal(JSON.stringify(r).includes('computer'),false);
+assert.throws(()=>summarizeStagedSettings({...args,subjects:[row('x',{schoolId:'99999'})]}),/foreign/);
+assert.equal(summarizeStagedSettings({...args,members:[members[0]]}).invalidAssignmentRecords,1);
+assert.equal(summarizeStagedSettings({...args,settings:[row('bad',{...settings[0].fields})]}).settingsIdentityMismatches,1);
+const prefix='projects/p/databases/(default)/documents/schools/12345/subjects/';
+assert.deepEqual(decodeScopedDocument({name:prefix+'x',fields:{name:{stringValue:'गणित'},active:{booleanValue:true},n:{integerValue:'4'}}},prefix),{id:'x',fields:{name:'गणित',active:true,n:4}});
+assert.throws(()=>decodeScopedDocument({name:prefix+'x/sub/y'},prefix),/path/);
+console.log('PASS staged school aggregate audit: four terms, legacy settings, inactive registry, foreign records, assignments, masked REST decode, no identity output');
