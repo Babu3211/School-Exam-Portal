@@ -396,7 +396,35 @@ try{
       assert.equal(d.rowDates,(stage==='regular'?'2083-08-09':'2083-08-10')+date.repeat((binary?count/4:count)-1));
       assert.equal((await db.doc(draftPaths[stage].replace(sid,schools[1].sid)).get()).exists,false);
      }
-     if(grade==='1'&&binary){const review=await newSession();try{await login(review.page,sid,'alpha-admin',true,'2');await review.page.goto(origin+'/primary-assessment.html?schoolId='+sid);await wait(review.page,()=>!document.getElementById('portfolioArea').hidden);await review.page.locator('#portfolioGrade').selectOption(grade);await review.page.locator('#portfolioRoster').click();await wait(review.page,id=>Array.from(document.getElementById('portfolioStudent').options).some(o=>o.value===id),studentId);await review.page.locator('#portfolioStudent').selectOption(studentId);await review.page.locator('#annualReviewRead').click();await wait(review.page,()=>document.querySelectorAll('#annualReviewRows tr').length===5);assert.ok((await review.page.locator('#annualReviewHead').textContent()).includes('Annual curriculum hours'));assert.match(await review.page.locator('#annualMigratedStatus').textContent(),/चार-सूचक समूह/);assert.match(await review.page.locator('#annualMigratedStatus').textContent(),/मिसाइएको छैन/);const row=review.page.locator('#annualReviewRows tr').nth(3);assert.equal(await row.locator('td').nth(2).textContent(),'256');assert.match(await row.locator('td').nth(4).textContent(),/Regular: 0 \/ \d+ \| Support: 0 \/ \d+/);assert.equal(await row.locator('td').nth(5).textContent(),'');assert.match(await row.textContent(),/Four-indicator score blocks/);const dl=review.page.waitForEvent('download',{timeout:30000});await review.page.locator('#annualReviewExcel').click();const file=await dl;assert.ok((await readFile(await file.path())).toString().includes('NOT official annual report'));await verifyAnnualPrint(review.page,4,5,'annex-2-grade-1');assert.deepEqual(review.errors,[])}finally{await review.context.close()}}
+     if(grade==='1'&&binary){
+      // Positive migrated evidence in the same synthetic student, plus historical
+      // section and same student ID in a different school. No real data.
+      const observation={schoolId:sid,studentId,academicYear:'2083',className:'कक्षा १',section:'',subject:'गणित',unit:'संख्या',topic:'Synthetic outcome',stage:'regular',date:'2083-08-09',level:3};
+      const indicator={schoolId:sid,studentId,academicYear:'2083',className:'1',section:'',subject:'हाम्रो सेरोफेरो',unit:theme.theme,outcomeId:'cdc2076-g1-1',stage:'support',date:'2083-08-10',indicators:[false,false,false,false],usedTools:['','','','']};
+      const migratedFixtures=[
+       [root+'/cdc_observations/e2e_annual_regular',observation],
+       [root+'/cdc_observations/e2e_annual_unspecified',{...observation,stage:'',level:4}],
+       [root+'/cdc_observations/e2e_annual_old_section',{...observation,section:'B'}],
+       [root+'/cdc_serofero_indicators/e2e_annual_zero',indicator],
+       ['schools/'+schools[1].sid+'/cdc_observations/e2e_annual_foreign',{...observation,schoolId:schools[1].sid,subject:'Foreign school evidence'}],
+       ['schools/'+schools[1].sid+'/cdc_serofero_indicators/e2e_annual_foreign',{...indicator,schoolId:schools[1].sid,subject:'Foreign school evidence'}]
+      ];
+      const review=await newSession();try{
+       for(const [path,value] of migratedFixtures)await db.doc(path).set(value);
+       await login(review.page,sid,'alpha-admin',true,'2');await review.page.goto(origin+'/primary-assessment.html?schoolId='+sid);await wait(review.page,()=>!document.getElementById('portfolioArea').hidden);await review.page.locator('#portfolioGrade').selectOption(grade);await review.page.locator('#portfolioRoster').click();await wait(review.page,id=>Array.from(document.getElementById('portfolioStudent').options).some(o=>o.value===id),studentId);await review.page.locator('#portfolioStudent').selectOption(studentId);await review.page.locator('#annualReviewRead').click();await wait(review.page,()=>document.querySelectorAll('#annualReviewRows tr').length===5);assert.ok((await review.page.locator('#annualReviewHead').textContent()).includes('Annual curriculum hours'));assert.match(await review.page.locator('#annualMigratedStatus').textContent(),/2 साधारण अभिलेख, 1 चार-सूचक समूह; 1 पुराना/);assert.match(await review.page.locator('#annualMigratedStatus').textContent(),/मिसाइएको छैन/);
+       assert.equal(await review.page.locator('#annualMigratedRows tr').count(),2);
+       const inventory=await review.page.locator('#annualMigratedRows tr').allTextContents();
+       assert.ok(inventory.some(x=>x.includes('गणित')));assert.ok(inventory.some(x=>x.includes('हाम्रो सेरोफेरो')));assert.ok(inventory.every(x=>!x.includes('Foreign school evidence')));
+       const ordinaryRow=review.page.locator('#annualMigratedRows tr').filter({hasText:'गणित'});
+       assert.deepEqual(await ordinaryRow.locator('td').allTextContents(),['Observation','गणित','1','0','1']);
+       const indicatorRow=review.page.locator('#annualMigratedRows tr').filter({hasText:'हाम्रो सेरोफेरो'});
+       assert.deepEqual(await indicatorRow.locator('td').allTextContents(),['Four-indicator block','हाम्रो सेरोफेरो','0','1','0']);
+       const row=review.page.locator('#annualReviewRows tr').nth(3);assert.equal(await row.locator('td').nth(2).textContent(),'256');assert.match(await row.locator('td').nth(4).textContent(),/Regular: 0 \/ \d+ \| Support: 0 \/ \d+/);assert.equal(await row.locator('td').nth(5).textContent(),'');assert.match(await row.textContent(),/Four-indicator score blocks/);const dl=review.page.waitForEvent('download',{timeout:30000});await review.page.locator('#annualReviewExcel').click();const file=await dl;const migratedBytes=(await readFile(await file.path())).toString();assert.ok(migratedBytes.includes('NOT official annual report'));assert.match(migratedBytes,/2 observations, 1 four-indicator blocks/);
+       await verifyAnnualPrint(review.page,4,5,'annex-2-grade-1');
+       for(const [path,value] of migratedFixtures)assert.deepEqual((await db.doc(path).get()).data(),value,'Migration evidence must remain unchanged');
+       assert.deepEqual(review.errors,[]);
+       console.log('PASS migrated assessment annual review: ordinary and zero indicator evidence, old-section exclusion, tenant isolation and unchanged grade');
+      }finally{await review.context.close();await Promise.all(migratedFixtures.map(([path])=>db.doc(path).delete()))}}
      await page.reload();
      await wait(page,()=>!document.getElementById('teacherWorksheet').hidden);
      await openLower();
