@@ -12,7 +12,8 @@ export function createV47IemisReader({getWorkspace,verifySchoolSession,enforceSc
   if(request?.mode==='attendance')return attendance(request);
   if(request?.mode!=='marks')fail('Attendance र Class 5 Final को प्रमाणित reader अझै तयार छैन।');
   const c=request.context, examTerm=request.examTerm, term=termMap[examTerm], klass=T.classKey(c?.className);
-  if(!c||!term||T.termKey(c.term)!==examTerm||!['6','7','8','9','10'].includes(klass)||T.clean(c.year)!=='2083'||!Array.isArray(request.columns)||!request.columns.length||request.columns.length>150)fail('Class 6–10, 2083 र सही Term आवश्यक छ।');
+  if(!c||!term||T.termKey(c.term)!==examTerm||!['1','2','3','4','5','6','7','8','9','10'].includes(klass)||T.clean(c.year)!=='2083'||!Array.isArray(request.columns)||!request.columns.length||request.columns.length>150)fail('Class 1–10, 2083 र सही Term आवश्यक छ।');
+  const primary=Number(klass)<=5,primaryKinds=new Set(['absent','count','full','obtained']);
   const w=getWorkspace(), {actor,auth,authSdk,db,api,schoolId,sessionSeq}=w;
   if(!actor||actor.role!=='school_admin'||actor.active!==true||!auth?.currentUser?.uid||actor.uid!==auth.currentUser.uid||actor.schoolId!==schoolId||schoolId!==T.clean(c.schoolCode)||!/^\d{5,20}$/.test(schoolId))fail('सही विद्यालयको सक्रिय School Admin Login आवश्यक छ।');
   const uid=actor.uid;
@@ -31,10 +32,11 @@ export function createV47IemisReader({getWorkspace,verifySchoolSession,enforceSc
   for(const column of request.columns){
    if(typeof column?.subject!=='string'||typeof column?.label!=='string')fail('Invalid subject request');
    const sub=T.subjectKey(column.subject),kind=T.componentKey(column.label);
-   if(!sub||!kindSet.has(kind))fail('Unsupported marks component: '+column.label);
+   if(!sub||!(primary?primaryKinds:kindSet).has(kind))fail('Unsupported marks component: '+column.label);
    if(!wanted.has(sub))wanted.set(sub,new Set());
    if(wanted.get(sub).has(kind))fail('Duplicate subject component');wanted.get(sub).add(kind);
   }
+  if(primary)for(const set of wanted.values())if((set.has('obtained')||set.has('full'))&&!set.has('count'))fail('Learning Achievement count column आवश्यक छ।');
   const catalog=await readRows('subjects',[['class',klass]],100);
   const subjects=new Map();
   for(const subject of catalog){const key=T.subjectKey(subject.name);if(!wanted.has(key))continue;if(subject.active!==true||subjects.has(key))fail('Inactive or duplicate subject: '+subject.name);subjects.set(key,subject);}
@@ -81,6 +83,17 @@ export function createV47IemisReader({getWorkspace,verifySchoolSession,enforceSc
     if(r.section&&T.key(r.section)!==T.key(st.section))fail('Saved section mismatch');
     const scores=new Map();
     for(const score of r.scores){const k=T.componentKey(score.name);if(scores.has(k)||typeof score.fullMarks!=='number'||!Number.isFinite(score.fullMarks)||score.fullMarks<0||score.obtained!==null&&score.obtained!==''&&(typeof score.obtained!=='number'||!Number.isFinite(score.obtained)||score.obtained<0||score.obtained>score.fullMarks))fail('Invalid original saved score');scores.set(k,score);}
+    // The saved primary assessment is an exact count × 4 contract; never scale it.
+    if(primary){
+     const count=scores.get('count'),full=scores.get('full'),obtained=scores.get('obtained');
+     if(!count||!full||!obtained||!Number.isInteger(count.fullMarks)||count.fullMarks<0||count.fullMarks>5000||full.fullMarks!==count.fullMarks*4||obtained.fullMarks!==full.fullMarks||full.obtained!==null||(!r.isAbsent&&(count.obtained!==count.fullMarks||!Number.isInteger(obtained.obtained)||obtained.obtained<0||obtained.obtained>full.fullMarks))||(r.isAbsent&&(count.obtained!==null||obtained.obtained!==null)))fail('Saved learning achievement count/full/obtained mismatch');
+     if(r.isAbsent&&!requested.has('absent'))fail('IEMIS primary absence column unavailable');
+     for(const kind of requested){
+      const value=kind==='absent'?(r.isAbsent?'TRUE':'FALSE'):kind==='count'?count.fullMarks:kind==='full'?full.fullMarks:r.isAbsent?'':obtained.obtained;
+      dataByStudent.get(r.studentId).set(key+'::'+kind,value);
+     }
+     continue;
+    }
     for(const kind of requested){
      const row=dataByStudent.get(r.studentId), col=key+'::'+kind;
      if(kind==='absent'){row.set(col,r.isAbsent?'TRUE':'FALSE');continue;}
@@ -93,6 +106,11 @@ export function createV47IemisReader({getWorkspace,verifySchoolSession,enforceSc
    if([...applicable].some(id=>!seen.has(id)))fail('Incomplete saved class marks: '+subject.name);
    for(const st of roster)if(!applicable.has(st.id))for(const kind of requested)dataByStudent.get(st.id).set(key+'::'+kind,'N/A');
    for(const kind of requested){
+    if(primary){
+     const label={absent:'IsAbsent',count:'No. Of Learning Achievement',full:'Full Marks',obtained:'Obtained Learning Achievement'}[kind];
+     columns.push({subject:subject.name,label,key:key+'::'+kind});
+     continue;
+    }
     const base={absent:'IsAbsent',participation:'Participation',practical:'Practical/Project',term:examTerm==='final'?'Total of Term':labels[examTerm]+' Examination',theory:'TH (Theory)'}[kind];
     columns.push({subject:subject.name,label:kind==='absent'?base:base+'('+scales.get(kind)+')',key:key+'::'+kind});
    }
