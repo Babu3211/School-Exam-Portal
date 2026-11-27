@@ -9458,11 +9458,13 @@ function cdcDownloadOffice(doc,format,filename){
   a.href=url;a.download=filename+'.'+format;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
 
+let cdcEmbeddedSequence=0;
 function openCdcAssessment(context = null) {
   if (!auth.currentUser) return;
-  document.getElementById('cdcAssessmentDialog')?.remove();
+  const embedded=!!context?.embedded;
+  if(!embedded)document.getElementById('cdcAssessmentDialog')?.remove();
   const dialog = document.createElement(context ? 'section' : 'dialog');
-  dialog.id = 'cdcAssessmentDialog';
+  dialog.id = embedded?'cdcAssessmentEmbedded'+(++cdcEmbeddedSequence):'cdcAssessmentDialog';
   dialog.style.cssText = context ? 'width:100%;min-width:0' : 'width:min(720px,94vw);max-height:90vh;border:1px solid #ccd9ea;border-radius:16px;padding:24px';
   const assessmentStudents = context ? context.students : marksStudents;
   dialog.innerHTML = `<h2 data-cdc="workspaceTitle">मूल्याङ्कन १–५</h2>
@@ -9500,6 +9502,7 @@ function openCdcAssessment(context = null) {
     <label>विषयक्षेत्र / Theme <select data-cdc="themePick"><option value="">छान्नुहोस्</option></select></label>
     <p data-cdc="accessNotice" role="status" style="font-weight:600;margin:8px 0;padding:10px 12px;border-left:3px solid #17466e;background:#eef4fa;color:#172b43" hidden></p>
     <p data-cdc="workspaceHint" class="hint">विषयक्षेत्र छान्नुहोस्, मिति र अङ्कन भरेर Save गर्नुहोस्।</p>
+    <div data-cdc="multiActions" class="toolbar" hidden><button type="button" class="btn" data-cdc="showClassForms">Show All Students</button><button type="button" class="btn alt" data-cdc="showStudentThemes">Show All Themes — Selected Student</button><button type="button" class="btn alt" data-cdc="showSingleForm" hidden>Single Student / Back</button></div>
     <section data-cdc="themeEntryHelp" class="notice" hidden><p data-cdc="themeEntryMessage" role="status"></p><button type="button" class="btn alt" data-cdc="themeManualOpen">Open Learning Outcomes / Records</button></section>
     <section data-cdc="localSubjectHelp" hidden><strong>Local Subject Assessment</strong><p class="hint" data-cdc="localSubjectMessage"></p><button type="button" class="btn alt" data-cdc="localSubjectOpen">Open Local Assessment</button></section>
     <section data-cdc="annex3" hidden><div class="toolbar"><button type="button" class="btn alt" data-cdc="gridRead" id="cdcGridRead">अभिलेख पढ्नुहोस् / Entry खोल्नुहोस्</button></div><p data-cdc="gridStatus" role="status" aria-live="polite" style="font-weight:600;color:#17466e;overflow-wrap:anywhere"></p><p data-cdc="entryNotice" class="hint" role="status"></p><p class="hint" style="font-size:12px">पूरा तालिका हेर्न दायाँ–बायाँ सार्नुहोस्।</p><h3 data-cdc="annexTitle"></h3><p data-cdc="annexIdentity"></p><p data-cdc="annexUnit"></p><details data-cdc="seroSourcePreview" hidden style="margin:8px 0"><summary style="cursor:pointer;font-weight:600">मूल CDC PDF सँग तुलना गर्नुहोस्</summary><p class="hint">मूल पृष्ठ र तलको डिजिटल फाराम तुलना गर्नुहोस्। PDF नदेखिए नयाँ ट्याबमा खोल्नुहोस्। विद्यार्थीको विवरण PDF सेवामा पठाइँदैन।</p><a data-cdc="seroSourceOpen" target="_blank" rel="noopener noreferrer">मूल पृष्ठ खोल्नुहोस्</a><div data-cdc="seroSourceFrame"></div></details><div class="tablewrap" data-cdc="annexScroll" role="region" aria-label="Assessment table — scroll horizontally" tabindex="0"><table style="border-collapse:collapse;width:100%;min-width:760px" data-cdc="annexTable"><thead data-cdc="annexHead"></thead><tbody data-cdc="annexRows"></tbody><tfoot data-cdc="annexFoot"></tfoot></table></div><p data-cdc="annexStatus" class="hint"></p><p data-cdc="annexSign"></p><label>Export Format <select data-cdc="exportFormat"><option value="pdf">PDF / Print</option><option value="docx">Word (.docx)</option><option value="xlsx">Excel (.xlsx)</option></select></label> <button class="btn alt" id="cdcPrintForm" data-cdc="printForm" type="button" disabled>Export Selected Student</button><button class="btn alt" data-cdc="printAll" type="button" disabled>Export All Students</button><p data-cdc="printStatus" role="status" class="hint"></p><p data-cdc="batchPrintStatus" role="status" aria-live="polite" class="hint"></p></section>
@@ -9613,6 +9616,14 @@ function openCdcAssessment(context = null) {
     <p data-cdc="status" role="status"></p>
     <details class="cdc-more" data-cdc="extraActions"><summary>मस्यौदा सुरक्षित गर्ने / थप अवलोकन</summary>
     <div class="toolbar"><button class="btn" data-cdc="save" type="button">मस्यौदा राख्नुहोस्</button><button class="btn" data-cdc="saveSchool" type="button">मस्यौदा विद्यालयमा सुरक्षित गर्नुहोस्</button><button class="btn alt" data-cdc="new" type="button">थप अवलोकन</button></div></details><div class="toolbar"><button class="btn alt" data-cdc="next" id="cdcNextStudent" type="button">अर्को विद्यार्थी</button><button class="btn alt" data-cdc="close" type="button">बन्द गर्नुहोस्</button></div>`;
+  // Each embedded form has its own original renderer, state and event handlers.
+  // Namespace DOM IDs and list references; never clone live input handlers.
+  const ownId=id=>embedded?dialog.id+'-'+id:id;
+  if(embedded){
+    for(const node of dialog.querySelectorAll('[id]'))node.id=ownId(node.id);
+    for(const node of dialog.querySelectorAll('[list]'))node.setAttribute('list',ownId(node.getAttribute('list')));
+    for(const style of dialog.querySelectorAll('style'))style.textContent=style.textContent.replaceAll('#cdcAssessmentDialog','#'+dialog.id);
+  }
   const field = name => dialog.querySelector('[data-cdc="'+name+'"]');
   const owner = auth.currentUser.uid;
   const year = String(currentSchoolSettings.academicYear || '2083');
@@ -9627,7 +9638,7 @@ function openCdcAssessment(context = null) {
     const {period,...annual}=selection;
     return context?annual:selection;
   };
-  const readOnly = !!context?.reportOnly || roleHas('viewer') || (!isAdmin() && !roleHas('subject_teacher'));
+  const readOnly = !!context?.reportOnly || !!context?.embeddedReadOnly || roleHas('viewer') || (!isAdmin() && !roleHas('subject_teacher'));
   const assessmentRole = async () => isAdmin() ? {active:true,roles:['admin']} : (await getDocFromServer(doc(db,'user_roles',owner))).data();
   if(context){
     field('workspaceTitle').hidden=true;
@@ -9836,7 +9847,7 @@ function openCdcAssessment(context = null) {
     const panel=field('annex3'),enabled=hasAnnexGrid(),en=language()==='en';
     const nepaliForm=primaryNepaliForm(),seroReference=primarySeroferoReference(),seroGuide=primarySeroGuideReview();
     syncSeroSourcePreview(seroReference||seroGuide||cdcUpperGuidePage(field('class').value,field('subject').value,field('unit').value,year));
-    field('printAll').hidden=!context;
+    field('printAll').hidden=!context||embedded;
     field('printAll').disabled=batchPrinting||!context||!schoolSelection()||!field('unit').value.trim()||!!seroGuide||(!enabled&&(!seroReference||seroReference.referenceOnly))||!!seroReference&&(seroReference.referenceOnly||year!=='2083');
     const pickedUnit=field('unit').value.trim(),entryKind=cdcEntryThemeOptions(field('class').value,field('subject').value,year).find(x=>x.unit===pickedUnit)?.kind;
     const manualOnly=!!pickedUnit&&!enabled&&!nepaliForm&&!seroReference&&!seroGuide;
@@ -10278,7 +10289,7 @@ function openCdcAssessment(context = null) {
       const display=localized(title,alternate);
       suggestions.push(new Option(display,display));
     }
-    dialog.querySelector('#cdcTopicSuggestions').replaceChildren(...suggestions);
+    dialog.querySelector('#'+ownId('cdcTopicSuggestions')).replaceChildren(...suggestions);
     field('outcomePicker').value=official.some(([,title])=>title===titleValue()) ? titleValue() : '';
     const savedOptions=[...topics].sort((a,b)=>a[1][0].localeCompare(b[1][0],'ne')).map(([value,[title,unit,alt]])=>[
       value,[localized(unit,units().find(([ne])=>normalizeTitle(ne)===normalizeTitle(unit))?.[1]),localized(title,alt)].filter(Boolean).join(' · ')
@@ -10326,7 +10337,7 @@ function openCdcAssessment(context = null) {
   let annualReadSequence=0;
   let annualPrintSnapshot=null;
   let schoolSavePending = false;
-  const canShow = () => dialog.isConnected && (context ? context.host.isConnected : dialog.open) && auth.currentUser?.uid===owner && (!context?.reportOnly || cdcSchoolReportAccess());
+  const canShow = () => dialog.isConnected && (context ? context.host.isConnected : dialog.open) && auth.currentUser?.uid===owner && (!context?.reportOnly || cdcSchoolReportAccess()) && (!embedded||context.parentCurrent());
   const schoolSelection = () => {
     const [,,cl,subject,studentId,period] = scope();
     const student = assessmentStudents.find(st=>st.id===studentId);
@@ -10362,7 +10373,7 @@ function openCdcAssessment(context = null) {
   }
   function clearSubjectSummary(){
     summarySequence++;summarySnapshot=null;
-    field('subjectSummaryPanel').hidden=!context;
+    field('subjectSummaryPanel').hidden=!context||embedded;
     field('printSubjectSummary').disabled=true;
     for(const name of ['subjectSummaryHead','subjectSummaryRows','subjectSummaryFoot'])field(name).replaceChildren();
     field('subjectSummaryStatus').textContent='';field('readSubjectSummary').disabled=!schoolSelection();
@@ -10942,6 +10953,7 @@ function openCdcAssessment(context = null) {
     }
   };
   const load = () => {
+    if(!embedded&&multiSnapshot&&multiSnapshot.key!==multiKey(multiSnapshot.mode))closeMulti();
     appendObservation = false;
     clearSchoolResults();
     const chosenUnit = [field('unit').value,field('unitEn').value];
@@ -11015,7 +11027,7 @@ function openCdcAssessment(context = null) {
     field('unitCoverage').textContent = verifiedUnits.length
       ? `सुझावमा ${verifiedUnits.length} एकाइ छन्। एकाइ छानेपछि सम्बन्धित उपलब्धि हेर्नुहोस्।`
       : 'यस विषयका एकाइको सुझाव उपलब्ध छैन। एकाइ र सिकाइ उपलब्धि सम्बन्धित स्रोतबाट लेख्नुहोस्।';
-    dialog.querySelector('#cdcUnitSuggestions').replaceChildren(...units().flatMap(([ne,en])=>[
+    dialog.querySelector('#'+ownId('cdcUnitSuggestions')).replaceChildren(...units().flatMap(([ne,en])=>[
       ...(language()==='both' ? [...new Set([ne,en])].map(value=>new Option(localized(ne,en),value)) :
         [new Option(unitDisplayTitle(localized(ne,en)),unitDisplayTitle(localized(ne,en)))])
     ]));
@@ -11136,8 +11148,7 @@ function openCdcAssessment(context = null) {
   field('summaryClass').value=field('class').value||'1';
   field('summaryClass').onchange=refreshThemeSummarySubjects;
   field('summarySubject').onchange=renderThemeSummary;
-  refreshThemeSummarySubjects();
-  renderThemeCoverage();
+  if(!embedded){refreshThemeSummarySubjects();renderThemeCoverage();}
   field('class').onchange=refreshSubjects;
   field('subject').onchange=refreshStudents;
   field('student').onchange=load;
@@ -11256,10 +11267,91 @@ function openCdcAssessment(context = null) {
     } catch {field('status').textContent='Assignment पुष्टि गर्न वा मस्यौदा राख्न सकिएन। फेरि प्रयास गर्नुहोस्।';}
     finally { field('save').disabled = readOnly || !field('subject').value || !field('student').value; }
   };
+  // Class/theme view uses independent copies of the existing CDC form, not
+  // an alternative rating matrix. All student forms share the same page.
+  // The original single-student editor and its PDF/Word/Excel paths are retained.
+  let multiSnapshot=null,multiPanel=null,multiSequence=0;
+  const multiKey=mode=>JSON.stringify([owner,year,field('class').value,field('subject').value,mode==='class'?field('unit').value:field('student').value]);
+  const closeMulti=()=>{
+    multiSequence++;multiSnapshot=null;
+    multiPanel?.remove();multiPanel=null;
+    dialog.classList.remove('cdc-multi-active');
+    field('showSingleForm').hidden=true;
+  };
+  async function showMulti(mode){
+    if(!context||embedded||!canShow()||inlinePending||schoolSavePending||portfolioBusy||batchPrinting||dialog.querySelector('[data-cdc-grid-editor]'))return;
+    const grade=field('class').value,subject=field('subject').value,selected=field('student').value,unit=field('unit').value;
+    if(!grade||!subject||(mode==='class'&&!unit)||(mode==='student'&&!selected)){field('workspaceHint').textContent=mode==='class'?'पहिले कक्षा, विषय र थिम छान्नुहोस्।':'पहिले कक्षा, विषय र विद्यार्थी छान्नुहोस्।';return;}
+    if(multiSnapshot&&multiSnapshot.key===multiKey(mode)&&multiSnapshot.mode===mode)return;
+    closeMulti();
+    const sequence=multiSequence,key=multiKey(mode);
+    const current=()=>canShow()&&sequence===multiSequence&&key===multiKey(mode);
+    multiSnapshot={mode,key};dialog.classList.add('cdc-multi-active');field('showSingleForm').hidden=false;
+    const panel=document.createElement('section');multiPanel=panel;panel.dataset.cdcMulti=mode;panel.style.cssText='min-width:0;max-width:100%';
+    const heading=document.createElement('h2');heading.textContent=mode==='class'?'Class '+grade+' — '+localized(unit,field('unitEn').value):'Student Assessment — All Themes';panel.append(heading);
+    const note=document.createElement('p');note.className='hint';note.textContent=mode==='class'?'पहिलेको CDC फाराम र नियमित / थप सहायतापछिको अङ्कन जस्ताको तस्तै छन्। प्रत्येक फाराममा Save थिच्नुहोस्। नसुरक्षित प्रविष्टि छोडेर छनोट नबदल्नुहोस्।':'छानिएको विद्यार्थीका यस विषयका सबै थिमको सुरक्षित अभिलेख — हेर्न मात्र।';panel.append(note);
+    const status=document.createElement('p');status.setAttribute('role','status');panel.append(status);
+    dialog.after(panel);
+    try{
+      const role=await assessmentRole();if(!current())return;
+      if(!role?.active||(!isAdmin()&&!role.roles?.includes('viewer')&&!role.roles?.includes('subject_teacher')))throw Error('मूल्याङ्कन हेर्ने अनुमति छैन।');
+      const eligible=assessmentStudents.filter(st=>st.active!==false&&classNoFromName(st.class??st.className)===grade&&[...field('student').options].some(o=>o.value===st.id)&&(isAdmin()||role.roles?.includes('viewer')||cdcTeacherAssignment(role,grade,subject,st)));
+      const themes=units();
+      const work=mode==='class'?eligible.map(student=>({student,theme:themes.find(([name])=>name===unit)||[unit,field('unitEn').value]})):themes.map(theme=>({student:eligible.find(st=>st.id===selected),theme})).filter(x=>x.student);
+      if(!work.length)throw Error('यस छनोटमा विद्यार्थी वा थिम उपलब्ध छैन।');
+      const cards=work.map(({student,theme},i)=>{
+        const card=document.createElement('details');card.open=true;card.style.cssText='border:1px solid #b9d5e7;border-radius:10px;padding:10px;margin:12px 0;min-width:0;max-width:100%;box-sizing:border-box';
+        const title=document.createElement('summary');title.style.cssText='font-weight:700;color:#17466e;cursor:pointer;overflow-wrap:anywhere';
+        const name=student.studentNameEnglish||student.nameEnglish||student.studentName||student.name||student.id;
+        title.textContent=(i+1)+'. '+(mode==='class'?name+(student.rollNo?' — Roll '+student.rollNo:'')+(student.section?' — Section '+student.section:''):unitDisplayTitle(localized(...theme)));
+        const host=document.createElement('div');host.textContent='फाराम लोड हुँदै…';card.append(title,host);panel.append(card);return host;
+      });
+      let cursor=0,finished=0,failed=0;
+      status.textContent='फाराम लोड हुँदै… 0 / '+work.length;
+      // Small bounded parallelism; reads retain the original per-student rule scope.
+      async function worker(){
+        while(current()&&cursor<work.length){
+          const index=cursor++,{student,theme}=work[index],host=cards[index];
+          try{
+            const child=openCdcAssessment({host,students:[student],classes:[grade],subjectsFor:()=>[subject],reportOnly:!!context.reportOnly,embedded:true,embeddedReadOnly:mode==='student',parentCurrent:current,initial:{grade,subject,studentId:student.id,theme}});
+            if(!child)throw Error('फाराम तयार भएन।');
+            await child.read();
+            if(current()&&!child.loaded()&&child.requiresRead())failed++;
+          }catch{if(current()){host.textContent='फाराम खोल्न सकिएन। सम्बन्धित विद्यार्थीको अनुमति र जडान जाँच्नुहोस्।';failed++;}}
+          if(current()){finished++;status.textContent='फाराम: '+finished+' / '+work.length+(failed?' | पढ्न नसकिएका: '+failed:'')+'।';}
+        }
+      }
+      await Promise.all(Array.from({length:Math.min(3,work.length)},worker));
+    }catch(error){if(current())status.textContent=error.message||'अभिलेख खोल्न सकिएन।';}
+  }
+  field('showClassForms').onclick=()=>showMulti('class');
+  field('showStudentThemes').onclick=()=>showMulti('student');
+  field('showSingleForm').onclick=closeMulti;
   if(context){
     field('close').hidden=true;
     context.host.replaceChildren(dialog);
     refreshSubjects();
+    if(!embedded){
+      field('multiActions').hidden=false;
+      const style=document.createElement('style');style.textContent='#cdcAssessmentDialog.cdc-multi-active > [data-cdc="annex3"],#cdcAssessmentDialog.cdc-multi-active > [data-cdc="subjectSummaryPanel"],#cdcAssessmentDialog.cdc-multi-active > [data-cdc="extraReports"],#cdcAssessmentDialog.cdc-multi-active > [data-cdc="portfolioPanel"],#cdcAssessmentDialog.cdc-multi-active > [data-cdc="moreOptions"]{display:none!important}';
+      dialog.append(style);
+    }else{
+      const initial=context.initial;
+      field('class').value=initial.grade;refreshSubjects();
+      field('subject').value=initial.subject;refreshStudents();
+      field('student').value=initial.studentId;
+      field('unit').value=initial.theme[0];field('unitEn').value=initial.theme[1]||'';field('topic').value='';load();
+      // Keep the exact form and its entry/export controls. Hide duplicated
+      // selectors, global reports and options; manual themes retain their
+      // existing manual observation workspace where the source permits it.
+      const selectors=dialog.querySelector(':scope > .fields');if(selectors)selectors.hidden=true;
+      field('themePick').parentElement.hidden=true;field('workspaceHint').hidden=true;
+      for(const name of ['subjectSummaryPanel','extraReports','portfolioPanel'])field(name).hidden=true;
+      const manual=field('annex3').hidden&&!primarySeroGuideReview();
+      if(manual){openManualAssessment();if(readOnly)field('extraManual').hidden=true;}
+      else field('moreOptions').hidden=true;
+      return {read:async()=>{if(!canShow())return;if(!field('annex3').hidden&&!field('gridRead').hidden)await field('gridRead').onclick();else if(manual)await field('readSchool').onclick();},requiresRead:()=>manual||!field('gridRead').hidden&&!field('annex3').hidden,loaded:()=>!!annexReadSelection||!!seroReadKey};
+    }
   }else{
     field('close').onclick=()=>dialog.close();
     dialog.addEventListener('close',()=>dialog.remove(),{once:true});
