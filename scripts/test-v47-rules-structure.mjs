@@ -76,7 +76,10 @@ const worksheetStart=rules.indexOf('      // Private assessment worksheet drafts
 const worksheetEnd=rules.indexOf('      // Per-student CDC assessment evidence',worksheetStart);
 assert.ok(worksheetStart>=0&&worksheetEnd>worksheetStart);
 const worksheetBlock=rules.slice(worksheetStart,worksheetEnd);
-assert.ok(worksheetBlock.length<6500);
+assert.ok(worksheetBlock.length<9500);
+assert.ok(worksheetBlock.includes("match /primary_local_curricula/{id}"));
+assert.ok(worksheetBlock.includes("allow list, update, delete: if false;"));
+assert.ok(worksheetBlock.includes("d.format == 'smss-v47-primary-local-draft-v1'"));
 assert.ok(worksheetBlock.includes("allow get: if worksheetScope() || (memberRole(sid,'school_admin')"));
 assert.ok(worksheetBlock.includes('allow create: if worksheetScope() && validWorksheet()'));
 assert.ok(worksheetBlock.includes('allow update: if worksheetScope() && validWorksheet()'));

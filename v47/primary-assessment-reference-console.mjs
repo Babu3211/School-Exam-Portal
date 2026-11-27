@@ -4,6 +4,7 @@ import {verifySchoolSession} from './verified-school-session.mjs';
 import {subjectsForGrade,assessmentThemeReference} from './primary-assessment-reference.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {readObservationPortfolio,exportObservationPortfolio,readIndicatorPortfolio,exportIndicatorPortfolio,readPortfolioPrintModel,exportPortfolioWord} from './primary-assessment-portfolio.mjs';
+import {parseLocalAssessmentSource,readLocalAssessmentSource,saveLocalAssessmentSource} from './primary-assessment-local-source.mjs';
 import {readSchoolSubjectCatalog} from './subject-catalog-view.mjs';
 import {loadAssignedPrimarySubjects,loadPrimaryTeacherWorksheet,loadAdminAssessmentWorksheet,primarySubjectKey,draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
 import {scoreSeroferoDraft} from './primary-assessment-v46-serofero-text.mjs';
@@ -15,7 +16,7 @@ import {neError} from './nepali-feedback.mjs';
 const $=id=>document.getElementById(id);
 let actor=null,catalogue=null,auth,authSdk,db,api,epoch=0,portfolioEpoch=0;
 const cell=(row,value)=>{const td=document.createElement('td');td.textContent=value??'—';row.append(td);return td};
-function clear(){resetTeacherWorksheet();$('teacherWorksheet').hidden=true;resetPortfolio();$('portfolioArea').hidden=true;epoch++;actor=null;catalogue=null;$('referenceArea').hidden=true;$('rows').replaceChildren();$('totals').replaceChildren();$('identity').textContent='Academic Year 2083 · V47'}
+function clear(){$('localSourceArea').hidden=true;resetLocalSource();resetTeacherWorksheet();$('teacherWorksheet').hidden=true;resetPortfolio();$('portfolioArea').hidden=true;epoch++;actor=null;catalogue=null;$('referenceArea').hidden=true;$('rows').replaceChildren();$('totals').replaceChildren();$('identity').textContent='Academic Year 2083 · V47'}
 async function verify(){
  const selected=actor,request=epoch;
  if(!selected||!await enforceSchoolIdle(auth,authSdk))throw Error('Login required');
@@ -75,7 +76,7 @@ async function renderTeacherDraft(){
  const theme=worksheet.themes[Number($('teacherTheme').value)];
  $('teacherStageWrap').hidden=!usesLanguageStages(worksheet);
  $('teacherDate').value=todayAssessmentDate2083();
- $('teacherThemeSource').href=theme.sourceUrl;$('teacherThemeSource').hidden=false;
+ if(theme.sourceUrl){$('teacherThemeSource').href=theme.sourceUrl;$('teacherThemeSource').hidden=false}else{$('teacherThemeSource').removeAttribute('href');$('teacherThemeSource').hidden=true;}
  const binary=worksheet.key==='serophero';
  const key=worksheet.key,lower=['1','2','3'].includes(worksheet.grade),nepaliOnly=['nepali','socialstudies','serophero'].includes(key),ne=nepaliOnly;
  const digits=n=>ne?String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]):String(n);
@@ -136,7 +137,7 @@ async function renderTeacherDraft(){
   if(staged&&activeStage==='support')peer();active();if(staged&&activeStage==='regular')peer();$('teacherDraftRows').append(tr);
  }
  update();
- if(!['mathematics','science','socialstudies','nepali','english','healthphysicalcreativeart','serophero'].includes(worksheet.key)||(Number(worksheet.grade)<=3&&worksheet.key!=='mathematics'&&!usesLanguageStages(worksheet))||!slots.every(s=>s.sourceText))return;
+ if(!['mathematics','science','socialstudies','nepali','english','healthphysicalcreativeart','serophero','hamrodhunibeshi'].includes(worksheet.key)||(Number(worksheet.grade)<=3&&!['mathematics','hamrodhunibeshi'].includes(worksheet.key)&&!usesLanguageStages(worksheet))||!slots.every(s=>s.sourceText))return;
  const args=worksheetSelection(),request=worksheetRequest;
  const fields=[...$('teacherDraftRows').querySelectorAll('select')],dates=[...$('teacherDraftRows').querySelectorAll('.assessment-row-date')];
  fields.forEach(el=>el.disabled=true);dates.forEach(el=>el.disabled=true);$('teacherDate').disabled=true;
@@ -365,6 +366,17 @@ async function printPortfolio(kind){
 }
 $('portfolioPrintOrdinary').onclick=()=>void printPortfolio('observations');
 $('portfolioPrintIndicators').onclick=()=>void printPortfolio('indicators');
+let localEpoch=0,localPreview=null;
+function resetLocalSource(){localEpoch++;localPreview=null;$('localSourceSave').disabled=true;$('localSourcePreview').disabled=true;$('localSourceSubject').replaceChildren();$('localSourceText').value='';$('localSourceLabel').value='';$('localSourceStatus').textContent='';$('localSourceRows').replaceChildren();}
+$('localSourceGrade').onchange=resetLocalSource;
+function localSelection(){const request=localEpoch,member=actor,grade=$('localSourceGrade').value,subjectId=$('localSourceSubject').value;return {db,api,actor:member,schoolId:member?.schoolId,grade,subjectId,assertCurrent:()=>{if(request!==localEpoch||actor!==member||member?.role!=='school_admin'||auth.currentUser?.uid!==member.uid||$('localSourceGrade').value!==grade||$('localSourceSubject').value!==subjectId)throw Error('Local source selection changed')}}}
+$('localSourceLoad').onclick=async()=>{resetLocalSource();const args=localSelection();try{await verify();args.assertCurrent();const list=await readSchoolSubjectCatalog({...args,schoolClass:args.grade});args.assertCurrent();$('localSourceSubject').replaceChildren(...list.filter(s=>s.active===true&&primarySubjectKey(s.name)==='hamrodhunibeshi').map(s=>new Option(s.name,s.id)));$('localSourceStatus').textContent='स्थानीय विषय छानेर Open Source थिच्नुहोस्।';}catch(e){$('localSourceStatus').textContent=neError(e)}};
+$('localSourceSubject').onchange=()=>{localEpoch++;localPreview=null;$('localSourceSave').disabled=true;$('localSourcePreview').disabled=true;$('localSourceText').value='';$('localSourceLabel').value='';$('localSourceRows').replaceChildren();};
+function showLocalRows(rows){$('localSourceRows').replaceChildren();for(const row of rows){const tr=document.createElement('tr');for(const v of [row.theme,row.count,row.fullMarks])cell(tr,v);$('localSourceRows').append(tr)}}
+$('localSourceOpen').onclick=async()=>{localEpoch++;localPreview=null;$('localSourceSave').disabled=true;const args=localSelection();try{await verify();args.assertCurrent();if(!args.subjectId)throw Error('Select local subject');const saved=await readLocalAssessmentSource(args);args.assertCurrent();$('localSourceText').value=saved?.sourceText??'';$('localSourceLabel').value=saved?.sourceLabel??'';$('localSourceText').readOnly=$('localSourceLabel').readOnly=!!saved;$('localSourcePreview').disabled=!!saved;if(saved)showLocalRows(saved.rows);else $('localSourceRows').replaceChildren();$('localSourceStatus').textContent=saved?'सुरक्षित स्थानीय स्रोत। पुरानो Draft जोगाउन परिवर्तन बन्द छ।':'विद्यालयको आधिकारिक स्थानीय पाठ्यक्रमबाट थिम र उपलब्धि राख्नुहोस्।';}catch(e){$('localSourceStatus').textContent=neError(e)}};
+for(const id of ['localSourceText','localSourceLabel'])$(id).oninput=()=>{localPreview=null;$('localSourceSave').disabled=true};
+$('localSourcePreview').onclick=()=>{try{const sourceText=$('localSourceText').value,sourceLabel=$('localSourceLabel').value;const rows=parseLocalAssessmentSource(sourceText,sourceLabel);localPreview={sourceText,sourceLabel};showLocalRows(rows);$('localSourceSave').disabled=false;$('localSourceStatus').textContent='सूची, उपलब्धि र पूर्णाङ्क जाँच गरी मात्र सुरक्षित गर्नुहोस्।';}catch(e){localPreview=null;$('localSourceSave').disabled=true;$('localSourceStatus').textContent=neError(e)}};
+$('localSourceSave').onclick=async()=>{if(!localPreview||!confirm('यो विद्यालयको आधिकारिक स्थानीय पाठ्यक्रमसँग सूची मिलेको छ? सुरक्षित स्रोत पछि सोझै बदल्न मिल्दैन।'))return;const args=localSelection(),preview=localPreview;$('localSourceSave').disabled=true;try{await verify();args.assertCurrent();const rows=await saveLocalAssessmentSource({...args,...preview});args.assertCurrent();showLocalRows(rows);$('localSourceText').readOnly=$('localSourceLabel').readOnly=true;$('localSourcePreview').disabled=true;localPreview=null;$('localSourceStatus').textContent='स्थानीय पाठ्यक्रम सुरक्षित भयो। तोकिएको शिक्षकले Draft खोल्न सक्छ।';}catch(e){$('localSourceStatus').textContent=neError(e)}};
 window.addEventListener('afterprint',clearPrint);
 try{
  ({auth,authSdk,db,api}=await connectSchoolFirebase());
@@ -372,7 +384,7 @@ try{
  const uid=auth.currentUser?.uid;if(!uid)throw Error('Login required');
  const session=await verifySchoolSession({schoolId:sid,uid,readDocument:async path=>{const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null}});
  if(auth.currentUser?.uid!==uid)throw Error('Login changed');
- actor={...session,active:true};$('adminDraftArea').hidden=actor.role!=='school_admin';
+ actor={...session,active:true};$('adminDraftArea').hidden=actor.role!=='school_admin';$('localSourceArea').hidden=actor.role!=='school_admin';
  authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){clear();$('status').textContent='लगइन परिवर्तन भयो। Dashboard बाट पुनः खोल्नुहोस्।'}});
  const response=await fetch('./primary-assessment-reference-2083.json',{cache:'no-store'});if(!response.ok)throw Error('Reference file unavailable');
  catalogue=await response.json();await verify();

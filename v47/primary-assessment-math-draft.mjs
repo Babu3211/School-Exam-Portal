@@ -1,11 +1,12 @@
 // Private, source-bound teacher worksheet draft. No write to migrated CDC
 // observations, grades, marks, or other teachers' records.
+import {LOCAL_SOURCE_REVISION} from './primary-assessment-local-source.mjs';
 import {validAssessmentDate2083} from './assessment-date-2083.mjs';
 import {draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {sameMarkJson} from './mark-json-equality.mjs';
-const sourceRevision='ad2e3b96a22601fed9d956397a98c564b3ffb768';
-const formats=Object.freeze({mathematics:'smss-v47-primary-math-draft-v1',science:'smss-v47-primary-science-draft-v1',socialstudies:'smss-v47-primary-social-draft-v1',nepali:'smss-v47-primary-nepali-draft-v1',english:'smss-v47-primary-english-draft-v1',healthphysicalcreativeart:'smss-v47-primary-health-draft-v1',serophero:'smss-v47-primary-serofero-draft-v1'});
+const nationalSourceRevision='ad2e3b96a22601fed9d956397a98c564b3ffb768';
+const formats=Object.freeze({mathematics:'smss-v47-primary-math-draft-v1',science:'smss-v47-primary-science-draft-v1',socialstudies:'smss-v47-primary-social-draft-v1',nepali:'smss-v47-primary-nepali-draft-v1',english:'smss-v47-primary-english-draft-v1',healthphysicalcreativeart:'smss-v47-primary-health-draft-v1',serophero:'smss-v47-primary-serofero-draft-v1',hamrodhunibeshi:'smss-v47-primary-local-draft-v1'});
 const segment=/^[A-Za-z0-9_-]{1,128}$/;
 export function validateMathDraftValues({ratings,date,count,binary=false,rowDates}){
  if(!Number.isInteger(count)||count<1||count>500||typeof ratings!=='string'||ratings.length!==count||(binary?(!/^[01_]+$/.test(ratings)||!/[01]/.test(ratings)||count%4!==0):(!/^[1-4_]+$/.test(ratings)||!/[1-4]/.test(ratings)))||!validAssessmentDate2083(date))throw Error('Invalid assessment draft date or ratings');
@@ -15,11 +16,11 @@ export function validateMathDraftValues({ratings,date,count,binary=false,rowDate
 async function context({db,api,auth,actor,model,studentId,themeIndex,stage,assertCurrent,reviewTeacherUid},readOnly=false){
  const schoolId=validateSchoolId(model?.schoolId);
  const reviewer=readOnly&&reviewTeacherUid!==undefined,uid=reviewer?reviewTeacherUid:actor?.uid,actorUid=actor?.uid,role=reviewer?'school_admin':'teacher';
- const binary=model?.key==='serophero';
+ const binary=model?.key==='serophero',local=model?.key==='hamrodhunibeshi',sourceRevision=local?LOCAL_SOURCE_REVISION:nationalSourceRevision;
  const lowerLanguage=['1','2','3'].includes(model?.grade)&&['nepali','english','serophero'].includes(model?.key);
  if(binary&&!lowerLanguage)throw Error('Invalid indicator grade');
  if(lowerLanguage?!['regular','support'].includes(stage):stage!==undefined)throw Error('Invalid assessment stage');
- if(!segment.test(uid??'')||actor?.schoolId!==schoolId||actor?.role!==role||actor?.active!==true||auth?.currentUser?.uid!==actorUid||!Object.hasOwn(formats,model.key)||!['1','2','3','4','5'].includes(model.grade)||(model.key!=='mathematics'&&!lowerLanguage&&!['4','5'].includes(model.grade))||!segment.test(model.subjectId??'')||!segment.test(studentId??'')||!model.students?.some(s=>s.id===studentId)||typeof assertCurrent!=='function')throw Error('Verified assigned primary worksheet required');
+ if(!segment.test(uid??'')||actor?.schoolId!==schoolId||actor?.role!==role||actor?.active!==true||auth?.currentUser?.uid!==actorUid||!Object.hasOwn(formats,model.key)||!['1','2','3','4','5'].includes(model.grade)||(model.key!=='mathematics'&&!local&&!lowerLanguage&&!['4','5'].includes(model.grade))||!segment.test(model.subjectId??'')||!segment.test(studentId??'')||!model.students?.some(s=>s.id===studentId)||typeof assertCurrent!=='function')throw Error('Verified assigned primary worksheet required');
  const theme=model.themes?.[themeIndex],slots=draftThemeSlots(model,themeIndex);
  if(!theme||!slots.every(s=>s.sourceText)||theme.sourceRows?.length!==slots.length||(binary&&slots.some(s=>s.sourceText.indicators?.length!==4)))throw Error('Source text unavailable');
  const check=()=>{assertCurrent();if(auth?.currentUser?.uid!==actorUid||actor.uid!==actorUid||actor.schoolId!==schoolId||actor.role!==role||actor.active!==true)throw Error('Worksheet session changed')};

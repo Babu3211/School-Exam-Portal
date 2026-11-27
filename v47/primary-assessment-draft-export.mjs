@@ -12,7 +12,7 @@ export async function readSavedAssessmentDraftReport(args){
  const stages=staged?['regular','support']:[undefined];
  const saved=await Promise.all(stages.map(stage=>loadMathAssessmentDraft({...args,stage})));assertCurrent();
  if(!saved.some(Boolean))throw Error('No saved assessment draft');
- const ne=['nepali','socialstudies','serophero'].includes(model.key);
+ const ne=['nepali','socialstudies','serophero','hamrodhunibeshi'].includes(model.key);
  const labels=staged?(ne?['नियमित','थप सहायतापछि']:['Regular','Remedial']):[ne?'मूल्याङ्कन':'Assessment'];
  const columns=binary?(ne?['मुख्य सिकाइ उपलब्धि','सूचक','साधन']:['Learning achievement','Indicator','Tool']):model.key==='english'&&staged?['Areas / Skills','Learning outcomes']:model.key==='nepali'&&staged?['सिकाइ उपलब्धि','परीक्षण गर्ने पक्ष','साधन']:[ne?'सिकाइ उपलब्धि':'Learning achievement'];
  const headers=[...columns,...labels.flatMap(label=>binary?[label+' — सकेको / नसकेको',label+' — मिति',label+' — अङ्कन / ४']:[label+(ne?' — मिति':' — Date (BS)'),label+(ne?' — अङ्कन / ४':' — Rating / 4')])];

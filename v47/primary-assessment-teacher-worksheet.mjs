@@ -1,5 +1,6 @@
 // Teacher assessment worksheet: verified assignment and source counts only.
 // Never writes observations, assigns privileges, or claims official form parity.
+import {readLocalAssessmentSource} from './primary-assessment-local-source.mjs';
 import {v46SeroferoThemeRows} from './primary-assessment-v46-serofero-text.mjs';
 import {v46LanguageHealthThemeRows} from './primary-assessment-v46-language-health-text.mjs';
 import {v46SocialThemeRows} from './primary-assessment-v46-social-text.mjs';
@@ -44,13 +45,13 @@ export async function loadAssignedPrimarySubjects(args){
   const key=primarySubjectKey(s.name);
   if(!key)continue;
   let ref;try{ref=assessmentThemeReference({catalogue,grade,subject:key})}catch{continue}
-  if(!ref.rows.length)continue;
+  if(key!=='hamrodhunibeshi'&&!ref.rows.length)continue;
   const id=schoolId+':'+actor.uid+':'+grade+':'+s.id;
   const snap=await api.getDocFromServer(api.doc(db,'schools',schoolId,'teacher_assignments',id));check();
   if(!snap.exists())continue;
   const a=snap.data();
   if(a?.schoolId!==schoolId||a.uid!==actor.uid||a.classId!==grade||a.subjectId!==s.id)throw Error('Assignment identity mismatch');
-  if(a.active===true)out.push(Object.freeze({id:s.id,name:s.name,key}));
+  if(a.active===true){if(key==='hamrodhunibeshi'&&!(await readLocalAssessmentSource({...args,subjectId:s.id})))continue;out.push(Object.freeze({id:s.id,name:s.name,key}));}
  }
  await verify();check();return Object.freeze(out);
 }
@@ -61,8 +62,8 @@ export async function loadPrimaryTeacherWorksheet(args){
  const assigned=await verifyAssignment();check();
  const key=primarySubjectKey(assigned.subjectName);
  if(!key)throw Error('Subject reference not verified');
- const ref=assessmentThemeReference({catalogue,grade,subject:key});
- if(!ref.rows.length)throw Error('Theme reference unavailable');
+ const ref=key==='hamrodhunibeshi'?await readLocalAssessmentSource(args):assessmentThemeReference({catalogue,grade,subject:key});
+ if(!ref?.rows.length)throw Error('Theme reference unavailable');
  const roster=await loadCompleteClassRoster({db,api:{...api,getDocs:api.getDocsFromServer},actor,schoolId,classId:grade,activeOnly:true});check();
  await verifyAssignment();check();
  return buildAssessmentWorksheet({schoolId,grade,subjectId,subjectName:assigned.subjectName,key,roster,ref});
@@ -80,7 +81,7 @@ export async function loadAdminAssessmentWorksheet({actor,schoolId,grade,subject
  await verify();const root='schools/'+schoolId;
  const [teacher,assignment,subject,student]=await Promise.all([read(root+'/members/'+teacherUid),read(root+'/teacher_assignments/'+[schoolId,teacherUid,grade,subjectId].join(':')),read(root+'/subjects/'+subjectId),read(root+'/students/'+studentId)]);
  if(teacher?.uid!==teacherUid||teacher.schoolId!==schoolId||teacher.role!=='teacher'||teacher.active!==true||assignment?.schoolId!==schoolId||assignment.uid!==teacherUid||assignment.classId!==grade||assignment.subjectId!==subjectId||assignment.active!==true||subject?.schoolId!==schoolId||subject.class!==grade||subject.active!==true||student?.schoolId!==schoolId||student.class!==grade||student.active===false)throw Error('Active assigned teacher, subject and student required');
- const key=primarySubjectKey(subject.name),ref=assessmentThemeReference({catalogue,grade,subject:key});if(!ref.rows.length)throw Error('Theme reference unavailable');
+ const key=primarySubjectKey(subject.name),ref=key==='hamrodhunibeshi'?await readLocalAssessmentSource({actor,schoolId,grade,subjectId,db,api,assertCurrent:check}):assessmentThemeReference({catalogue,grade,subject:key});if(!ref?.rows.length)throw Error('Theme reference unavailable');
  await verify();return buildAssessmentWorksheet({schoolId,grade,subjectId,subjectName:subject.name,key,roster:{students:[{...student,id:studentId}]},ref});
 }
 export function draftThemeSlots(model,themeIndex){

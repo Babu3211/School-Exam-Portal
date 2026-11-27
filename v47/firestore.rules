@@ -595,10 +595,10 @@ service cloud.firestore {
           let d=request.resource.data;
           return d.keys().hasOnly(['format','schoolId','teacherUid','classId','subjectId','studentId','themeId','sourceRevision','themeName','ratings','date','rowDates','revision','updatedAt'])
             && d.keys().hasAll(['format','schoolId','teacherUid','classId','subjectId','studentId','themeId','sourceRevision','themeName','ratings','date','revision','updatedAt'])
-            && (d.format == 'smss-v47-primary-math-draft-v1' || (d.format == 'smss-v47-primary-science-draft-v1' && classId in ['4','5']) || (d.format == 'smss-v47-primary-social-draft-v1' && classId in ['4','5']) || (d.format == 'smss-v47-primary-nepali-draft-v1' && classId in ['4','5']) || (d.format == 'smss-v47-primary-english-draft-v1' && classId in ['4','5']) || (d.format == 'smss-v47-primary-health-draft-v1' && classId in ['4','5']) || (d.format == 'smss-v47-primary-lower-nepali-regular-draft-v1' && classId in ['1','2','3']) || (d.format == 'smss-v47-primary-lower-nepali-support-draft-v1' && classId in ['1','2','3']) || (d.format == 'smss-v47-primary-lower-english-regular-draft-v1' && classId in ['1','2','3']) || (d.format == 'smss-v47-primary-lower-english-support-draft-v1' && classId in ['1','2','3']) || (d.format == 'smss-v47-primary-lower-serophero-regular-draft-v1' && classId in ['1','2','3']) || (d.format == 'smss-v47-primary-lower-serophero-support-draft-v1' && classId in ['1','2','3'])) && d.schoolId == sid
+            && (d.format == 'smss-v47-primary-math-draft-v1' || (d.format == 'smss-v47-primary-science-draft-v1' && classId in ['4','5']) || (d.format == 'smss-v47-primary-social-draft-v1' && classId in ['4','5']) || (d.format == 'smss-v47-primary-nepali-draft-v1' && classId in ['4','5']) || (d.format == 'smss-v47-primary-english-draft-v1' && classId in ['4','5']) || (d.format == 'smss-v47-primary-health-draft-v1' && classId in ['4','5']) || (d.format == 'smss-v47-primary-lower-nepali-regular-draft-v1' && classId in ['1','2','3']) || (d.format == 'smss-v47-primary-lower-nepali-support-draft-v1' && classId in ['1','2','3']) || (d.format == 'smss-v47-primary-lower-english-regular-draft-v1' && classId in ['1','2','3']) || (d.format == 'smss-v47-primary-lower-english-support-draft-v1' && classId in ['1','2','3']) || (d.format == 'smss-v47-primary-lower-serophero-regular-draft-v1' && classId in ['1','2','3']) || (d.format == 'smss-v47-primary-lower-serophero-support-draft-v1' && classId in ['1','2','3']) || (d.format == 'smss-v47-primary-local-draft-v1' && exists(/databases/$(database)/documents/schools/$(sid)/primary_local_curricula/$(classId + '_' + subjectId)))) && d.schoolId == sid
             && d.teacherUid == teacherUid && d.classId == classId && d.subjectId == subjectId
             && d.studentId == studentId && d.themeId == themeId
-            && d.sourceRevision == 'ad2e3b96a22601fed9d956397a98c564b3ffb768'
+            && (d.format == 'smss-v47-primary-local-draft-v1' ? d.sourceRevision == 'school-local-curriculum-v1' : d.sourceRevision == 'ad2e3b96a22601fed9d956397a98c564b3ffb768')
             && d.themeName is string && d.themeName.size() > 0 && d.themeName.size() <= 200
             && d.ratings is string && ((d.format in ['smss-v47-primary-lower-serophero-regular-draft-v1','smss-v47-primary-lower-serophero-support-draft-v1'] && d.ratings.matches('^[01_]{4,500}$') && d.ratings.size() % 4 == 0 && d.ratings.matches('.*[01].*')) || (!(d.format in ['smss-v47-primary-lower-serophero-regular-draft-v1','smss-v47-primary-lower-serophero-support-draft-v1']) && d.ratings.matches('^[1-4_]{1,500}$') && d.ratings.matches('.*[1-4].*')))
             && d.date is string && d.date.matches('^2083-((01|02|04|05|06)-(0[1-9]|[12][0-9]|3[01])|03-(0[1-9]|[12][0-9]|3[0-2])|(07|09|11|12)-(0[1-9]|[12][0-9]|30)|(08|10)-(0[1-9]|[12][0-9]))$')
@@ -617,6 +617,29 @@ service cloud.firestore {
           && request.resource.data.ratings.size() == resource.data.ratings.size()
           && request.resource.data.revision == resource.data.revision + 1;
         allow list, delete: if false;
+      }
+      // School-specific, immutable 2083 local curriculum source; never a national catalogue.
+      match /primary_local_curricula/{id} {
+        allow get: if memberRole(sid,'school_admin') || (memberRole(sid,'teacher')
+          && id.matches('^[1-5]_[A-Za-z0-9_-]{1,128}$')
+          && (!exists(/databases/$(database)/documents/schools/$(sid)/primary_local_curricula/$(id)) ||
+            (resource.data.schoolId == sid && resource.data.year == '2083'
+            && get(/databases/$(database)/documents/schools/$(sid)/teacher_assignments/$(sid + ':' + request.auth.uid + ':' + resource.data.grade + ':' + resource.data.subjectId)).data.get('active',false) == true)));
+        allow create: if memberRole(sid,'school_admin') && validLocalSource();
+        function validLocalSource() {
+          let d=request.resource.data;
+          let s=get(/databases/$(database)/documents/schools/$(sid)/subjects/$(d.subjectId)).data;
+          return d.keys().hasOnly(['format','schoolId','grade','subjectId','year','sourceText','sourceLabel','createdBy','createdAt'])
+            && d.keys().hasAll(['format','schoolId','grade','subjectId','year','sourceText','sourceLabel','createdBy','createdAt'])
+            && d.schoolId == sid && d.format == 'school-local-curriculum-v1' && d.year == '2083'
+            && d.grade in ['1','2','3','4','5'] && d.subjectId is string && d.subjectId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && id == d.grade + '_' + d.subjectId
+            && s.get('schoolId','') == sid && s.get('class','') == d.grade && s.get('active',false) == true
+            && d.sourceText is string && d.sourceText.size() > 0 && d.sourceText.size() <= 60000
+            && d.sourceLabel is string && d.sourceLabel.size() > 0 && d.sourceLabel.size() <= 200
+            && d.createdBy == request.auth.uid && d.createdAt == request.time;
+        }
+        allow list, update, delete: if false;
       }
       // Per-student CDC assessment evidence remains tenant-contained;
       // no web writes until an audited assessment schema is implemented.

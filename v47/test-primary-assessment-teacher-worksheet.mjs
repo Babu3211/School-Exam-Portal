@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {primarySubjectKey,draftThemeSlots,loadPrimaryTeacherWorksheet,loadAssignedPrimarySubjects} from './primary-assessment-teacher-worksheet.mjs';
+import {parseLocalAssessmentSource} from './primary-assessment-local-source.mjs';
 import {v46SeroferoThemeRows,scoreSeroferoDraft} from './primary-assessment-v46-serofero-text.mjs';
 import {v46LanguageHealthThemeRows} from './primary-assessment-v46-language-health-text.mjs';
 import {v46SocialThemeRows} from './primary-assessment-v46-social-text.mjs';
@@ -126,3 +127,5 @@ await assert.rejects(loadPrimaryTeacherWorksheet({...args,actor:{...actor,role:'
 await assert.rejects(loadPrimaryTeacherWorksheet({...args,schoolId:'99999'}),/Verified primary teacher/);
 revoked=true;await assert.rejects(loadPrimaryTeacherWorksheet(args),/Stale/);
 console.log('PASS primary teacher worksheet: verified assignments, source counts, active roster, stale and tenant rejection, no persistence');
+
+const localRows=parseLocalAssessmentSource('# स्थानीय थिम\nउपलब्धि एक\nउपलब्धि दुई\n# अर्को थिम\nअर्को उपलब्धि','विद्यालयको स्थानीय पाठ्यक्रम २०८३');assert.equal(localRows.length,2);assert.equal(localRows[0].fullMarks,8);assert.equal(localRows[1].fullMarks,4);assert.throws(()=>parseLocalAssessmentSource('# थिम\n# अर्को\nउपलब्धि','Source'));assert.throws(()=>parseLocalAssessmentSource('# थिम\nउपलब्धि\nउपलब्धि','Source'));assert.throws(()=>parseLocalAssessmentSource('उपलब्धि','Source'));
