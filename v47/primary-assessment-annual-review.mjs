@@ -39,7 +39,9 @@ export async function readAnnualReview(args){
    const binary=key==='serophero',expected=model.themes.reduce((n,t)=>n+(binary?t.scoreBlocks:t.count),0);
    const coverage=progress.totals.map(t=>(t.stage==='regular'?'Regular':t.stage==='support'?'Support':'Assessment')+': '+(binary?t.complete:t.entered)+' / '+expected).join(' | ');
    const unavailable=progress.totals[0].unavailableThemes;
-   rows.push([index+1,label,hours,expected,coverage,'',(binary?'Four-indicator score blocks; ':'Learning achievement rows; ')+(unavailable?unavailable+' source themes unavailable; ':'')+'Final level pending review']);
+   const review=progress.lowerAnnual;
+   const detail=[binary?'Four-indicator score blocks':'Learning achievement rows',unavailable?unavailable+' source themes unavailable':'',review.partial?review.partial+' partial blocks':'',review.conflicts?review.conflicts+' same-date conflicts':'',review.different?review.different+' stage/date differences':'',review.percentage===null?'No complete evidence':review.percentage.toFixed(2)+'% (review)',review.complete?(review.grade?'Review only':'90% boundary requires confirmation'):'Final level pending review'].filter(Boolean).join('; ');
+   rows.push([index+1,label,hours,expected,coverage,review.grade??'',detail]);
    continue;
   }
   const a=progress.annual,c=progress.combined,expected=progress.themeReviews.reduce((n,t)=>n+t.expected,0);
@@ -47,7 +49,7 @@ export async function readAnnualReview(args){
   rows.push([index+1,label,hours,expected,a.count+' / '+expected,consistent?a.grade.letter+' ('+(a.grade.point===null?'—':a.grade.point.toFixed(1))+')':'',a.conflicts?'Unresolved date conflicts: '+a.conflicts:a.different?'Stage/date review differs: '+a.different:!a.complete?'Incomplete assessment':consistent?'Review only · '+a.percentage.toFixed(2)+'%':'Review pending']);
  }
  await verify();check();
- return Object.freeze({title:lower?'Annual Student Progress — Annex 2 Review':'Annual Student Progress — Annex 4 Review',schoolId,studentId,studentName:String(student.nameEnglish??student.name??studentId),grade,section:String(student.section??''),year:'2083',historical:0,headers:annualReviewHeaders(grade),rows:Object.freeze(rows.map(Object.freeze)),notice:'Saved teacher drafts only — NOT official annual report. Migrated observations and school operating-day attendance are not included.',stageSummary:(lower?'CDC 2076 A*–E scale; final levels pending. ':'')+'Attendance and signatures pending official verification. Class teacher __________ · Headteacher __________ · Date __________',officialAssessmentApproved:false});
+ return Object.freeze({title:lower?'Annual Student Progress — Annex 2 Review':'Annual Student Progress — Annex 4 Review',schoolId,studentId,studentName:String(student.nameEnglish??student.name??studentId),grade,section:String(student.section??''),year:'2083',historical:0,headers:annualReviewHeaders(grade),rows:Object.freeze(rows.map(Object.freeze)),notice:'Saved teacher drafts only — NOT official annual report. Migrated observations and school operating-day attendance are not included.',stageSummary:(lower?'CDC 2076 A*–E scale; draft levels only. ':'')+'Attendance and signatures pending official verification. Class teacher __________ · Headteacher __________ · Date __________',officialAssessmentApproved:false});
 }
 export function exportUpperAnnualReview(report,kind){
  if(!['word','excel'].includes(kind))throw Error('Invalid annual export');

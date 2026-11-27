@@ -43,3 +43,40 @@ export function reviewAnnualAchievement(regular,support,count){
  return Object.freeze({...result,conflicts,different,complete,grade:complete?upperAssessmentGrade(result.percentage):null});
 }
 export function formatAnnualAchievement(result){return 'Annual date-order review: '+formatAssessmentStagePercentage(result)+' · '+(result.grade?.letter??'Grade pending')+' · '+result.conflicts+' unresolved same-date conflicts · '+result.different+' differences from stage-priority review';}
+
+// CDC 2076 PDF pp.10,14: lower-primary letters are not upper-primary GPA.
+// Annex 2 resolves the D interval; exactly 90 is not explicitly covered.
+export function lowerAssessmentGrade(sum,count){
+ if(!Number.isInteger(count)||count<1||!Number.isInteger(sum)||sum<0||sum>4*count)throw Error('Invalid lower assessment score');
+ const n=sum*100,d=count*4;
+ return n===90*d?null:n>90*d?'A*':n>=75*d?'A':n>=60*d?'B':n>=45*d?'C':n>=30*d?'D':'E';
+}
+// Compare complete regular/remedial blocks only. Never fill missing indicators
+// from the other stage. Date-order versus remedial preference disagreements
+// and partially entered peer blocks with complete evidence require review.
+export function reviewLowerAchievement(regular,support,count,binary=false){
+ if(!Number.isInteger(count)||count<1||count>500)throw Error('Invalid lower assessment count');
+ const width=binary?4:1,pattern=binary?/^[01_]+$/:/^[1-4_]+$/;
+ const values=d=>{if(!d)return '_'.repeat(count*width);if(typeof d.ratings!=='string'||d.ratings.length!==count*width||!pattern.test(d.ratings))throw Error('Invalid lower assessment ratings');return d.ratings};
+ const r=values(regular),s=values(support);
+ const date=(d,i)=>{const v=d.rowDates?.slice(i*10,i*10+10)||d.date;if(!validAssessmentDate2083(v))throw Error('Invalid lower assessment date');return v};
+ let sum=0,assessed=0,conflicts=0,partial=0,different=0;
+ for(let i=0;i<count;i++){
+  const raw=[r.slice(i*width,(i+1)*width),s.slice(i*width,(i+1)*width)];
+  const score=v=>v.includes('_')?null:[...v].reduce((n,x)=>n+Number(x),0);
+  const [a,b]=raw.map(score);
+  if(raw.some(v=>v.includes('_')&&/[^_]/.test(v))){partial++;continue}
+  if(a===null&&b===null)continue;
+  let chosen=a??b;
+  if(a!==null&&b!==null){const x=date(regular,i),y=date(support,i);if(x===y&&a!==b){conflicts++;continue}chosen=x>y?a:b;if(chosen!==b)different++}
+  sum+=chosen;assessed++;
+ }
+ return Object.freeze({sum,count:assessed,expected:count,conflicts,partial,different});
+}
+export function summarizeLowerAchievement(themes){
+ if(!Array.isArray(themes)||!themes.length)throw Error('Missing lower assessment themes');
+ const expected=themes.reduce((n,t)=>n+t.expected,0),available=themes.filter(t=>t.review!==null),total=k=>available.reduce((n,t)=>n+t.review[k],0);
+ const count=total('count'),sum=total('sum'),conflicts=total('conflicts'),partial=total('partial'),different=total('different'),unavailable=themes.length-available.length;
+ const complete=expected>0&&count===expected&&!conflicts&&!partial&&!different&&!unavailable;
+ return Object.freeze({sum,count,expected,conflicts,partial,different,unavailable,percentage:count?sum/(4*count)*100:null,complete,grade:complete?lowerAssessmentGrade(sum,count):null});
+}
