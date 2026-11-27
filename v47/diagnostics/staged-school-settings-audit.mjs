@@ -2,6 +2,7 @@
 // no Firebase Admin write API, source reads, Auth export or credential logs.
 import {execFileSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
+import {createRequire} from 'node:module';
 import {auditAllTermSettingsCoverage} from '../entry-settings-coverage.mjs';
 const project='smss-exam-portal-v47',terms=['1st','2nd','3rd','final'];
 const classes=Array.from({length:10},(_,i)=>String(i+1));
@@ -38,12 +39,30 @@ export function summarizeStagedSettings({schoolId,school,subjects,settings,membe
  const badAssignments=assignments.filter(r=>{const a=r.fields,m=membersById.get(a.uid),s=subjectsById.get(a.subjectId);return typeof a.active!=='boolean'||r.id!==[schoolId,a.uid,a.classId,a.subjectId].join(':')||!m||m.role!=='teacher'||m.uid!==a.uid||!s||s.class!==a.classId||a.active===true&&(m.active!==true||s.active!==true)}).length;
  return {schoolActive:school.active,activeClassSubjects:activeSubjects.length,totalSettings:settings.length,recognizedEntrySettings:recognized.length,settingsIdentityMismatches:idMismatch,otherOrLegacySettings:settings.length-recognized.length,matchedClassTermSubjects:matrix.reduce((n,r)=>n+r.matched,0),reviewClassTermSubjects:matrix.reduce((n,r)=>n+r.reviewRequired,0),members:members.length,activeAdmins:members.filter(r=>r.fields.role==='school_admin'&&r.fields.active===true&&r.fields.uid===r.id).length,invalidMemberRecords:badMembers,teacherAssignments:assignments.length,invalidAssignmentRecords:badAssignments,matrix,writeAuthorized:false,liveIemisVerified:false,activationAuthorized:false};
 }
+// Only the previously configured V47 service-account secret is accepted in CI.
+// This does not request extra IAM grants, nor expose tokens or raw fields.
+export function validateTargetCredential(value){
+ if(value?.type!=='service_account'||value.project_id!==project||typeof value.client_email!=='string'||typeof value.private_key!=='string')throw Error('Unexpected target credential');
+ return value;
+}
+async function operatorToken(){
+ const raw=process.env.V47_TARGET_AUDIT_CREDENTIAL;
+ delete process.env.V47_TARGET_AUDIT_CREDENTIAL;
+ if(process.env.GITHUB_ACTIONS==='true'){
+  if(process.env.GITHUB_REF!=='refs/heads/smss-v47-multischool-work'||!raw)throw Error('Dedicated V47 audit branch and credential required');
+  const requireAdmin=createRequire(new URL('../../v47-runtime/package.json',import.meta.url));
+  const {cert}=requireAdmin('firebase-admin/app');
+  return (await cert(validateTargetCredential(JSON.parse(raw))).getAccessToken()).access_token;
+ }
+ if(raw)throw Error('Use gcloud operator authentication outside CI');
+ return execFileSync('gcloud',['auth','print-access-token'],{encoding:'utf8',stdio:['ignore','pipe','ignore'],timeout:30000}).trim();
+}
 async function main(){
  const sid=process.argv[2];requireScope(sid);
  if(process.argv.length!==3||process.env.FIRESTORE_EMULATOR_HOST)throw Error('Specify one target school ID');
  // The token remains in this process; never print it or put it in URLs.
- const token=execFileSync('gcloud',['auth','print-access-token'],{encoding:'utf8',stdio:['ignore','pipe','ignore'],timeout:30000}).trim();
- if(!token||/\s/.test(token))throw Error('Operator authentication unavailable');
+ const token=await operatorToken();
+ if(typeof token!=='string'||!token||/\s/.test(token))throw Error('Operator authentication unavailable');
  const base='https://firestore.googleapis.com/v1/projects/'+project+'/databases/(default)/documents/';
  const prefix='projects/'+project+'/databases/(default)/documents/schools/'+sid;
  const get=async(path,params)=>{
@@ -54,6 +73,7 @@ async function main(){
  };
  const registry=async()=>{const d=await get('schools/'+sid,[['mask.fieldPaths','id'],['mask.fieldPaths','active']]);if(d.name!==prefix)throw Error('Target registry path mismatch');return {fields:decodeScopedDocument(d,prefix.slice(0,-sid.length)).fields,updateTime:d.updateTime}};
  const before=await registry();
+ console.log('V47 target registry read: OK; school active: '+String(before.fields.active));
  const list=async(name,fields,cap)=>{
   const out=[],tokens=new Set();let next;
   do{
@@ -66,9 +86,13 @@ async function main(){
   return out;
  };
  const subjects=await list('subjects',['schoolId','class','name','active'],1000);
+ console.log('Target subject inventory read: OK; '+subjects.length+' documents');
  const settings=await list('mark_settings',['schoolId','id','classId','subjectId','examId','active','components'],4000);
+ console.log('Target settings inventory read: OK; '+settings.length+' documents');
  const members=await list('members',['schoolId','uid','role','active'],300);
+ console.log('Target member inventory read: OK; '+members.length+' documents');
  const assignments=await list('teacher_assignments',['schoolId','uid','classId','subjectId','active'],1000);
+ console.log('Target assignment inventory read: OK; '+assignments.length+' documents');
  const after=await registry();
  if(before.updateTime!==after.updateTime||JSON.stringify(before.fields)!==JSON.stringify(after.fields))throw Error('Registry changed during audit');
  const result=summarizeStagedSettings({schoolId:sid,school:after.fields,subjects,settings,members,assignments});

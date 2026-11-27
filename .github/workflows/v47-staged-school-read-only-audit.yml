@@ -1,0 +1,32 @@
+name: V47 staged school read-only acceptance audit
+on:
+  push:
+    branches: [smss-v47-multischool-work]
+    paths:
+      - '.github/workflows/v47-staged-school-read-only-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: v47-staged-school-read-only-audit
+  cancel-in-progress: false
+jobs:
+  audit:
+    if: github.ref == 'refs/heads/smss-v47-multischool-work'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify synthetic audit and credential boundary
+        run: node v47/test-staged-school-settings-audit.mjs
+      - name: Install isolated Admin credential provider
+        run: npm install --prefix v47-runtime --no-package-lock --no-audit --no-fund --ignore-scripts
+      - name: Read only the staged V47 school inventory
+        env:
+          V47_TARGET_AUDIT_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}
+        run: node v47/diagnostics/staged-school-settings-audit.mjs 300160003

@@ -14,3 +14,9 @@ const prefix='projects/p/databases/(default)/documents/schools/12345/subjects/';
 assert.deepEqual(decodeScopedDocument({name:prefix+'x',fields:{name:{stringValue:'गणित'},active:{booleanValue:true},n:{integerValue:'4'}}},prefix),{id:'x',fields:{name:'गणित',active:true,n:4}});
 assert.throws(()=>decodeScopedDocument({name:prefix+'x/sub/y'},prefix),/path/);
 console.log('PASS staged school aggregate audit: four terms, legacy settings, inactive registry, foreign records, assignments, masked REST decode, no identity output');
+
+import {validateTargetCredential} from './diagnostics/staged-school-settings-audit.mjs';
+const fixtureCredential={type:'service_account',project_id:'smss-exam-portal-v47',client_email:'fixture@example.invalid',private_key:'synthetic-only'};
+assert.equal(validateTargetCredential(fixtureCredential),fixtureCredential);
+assert.throws(()=>validateTargetCredential({...fixtureCredential,project_id:'exam-portal-smss-95016'}),/Unexpected target/);
+assert.throws(()=>validateTargetCredential(null),/Unexpected target/);
