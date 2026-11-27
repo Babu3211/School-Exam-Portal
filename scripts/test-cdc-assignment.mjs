@@ -2098,12 +2098,25 @@ console.log('CDC dashboard and report hub: current-year coverage, deduplication,
  // Class delete includes inactive/orphaned pupils and alternate class spelling, not just current roster.
  const extra='cdc_observations/same-class-other-subject';
  observations.set(extra,{...support,className:'कक्षा ५',subject:'English',studentId:'orphan'});
+ // A deployed project may lack a composite index; class deletion must use a single-field query.
+ const beforeDeleteRead=w.getDocsFromServer;
+ let deleteQueries=0;
+ w.getDocsFromServer=async q=>{
+   if(q.filters?.some(([key,op])=>key==='className'&&op==='in')){
+     assert.equal(q.filters.length,1,'class delete must not depend on a composite index');
+     deleteQueries++;
+   }
+   return beforeDeleteRead(q);
+ };
  approve=false;await fresh().querySelector('[data-cdc-class-delete-all]').onclick();
+ assert.equal(deleteQueries,2);
+ assert.match(fresh().querySelector('[role="status"]').textContent,/रद्द गरियो/);
  assert.ok(observations.has(extra));assert.match(confirmMessages.at(-1),/कक्षा 5.*2083.*2 अभिलेख/);
  approve=true;await fresh().querySelector('[data-cdc-class-delete-all]').onclick();
  assert.ok(!observations.has(extra));
  assert.ok(![...observations.values()].some(o=>o.studentId==='multi-a'&&o.className==='Class 5'&&o.academicYear==='2083'));
  for(const [key] of outside){assert.ok(observations.has(key),'other class/year/collection preserved');observations.delete(key);}
+ w.getDocsFromServer=beforeDeleteRead;
  w.confirm=oldConfirm;w.runTransaction=oldTransaction;
  observations.clear();for(const [key,data] of previousMatrixFixtures)observations.set(key,data);
  w.classNoFromName=oldClassParser;
