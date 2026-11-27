@@ -2018,6 +2018,22 @@ console.log('CDC dashboard and report hub: current-year coverage, deduplication,
  assert.ok(seenScopes.some(o=>o.studentId==='multi-a')&&seenScopes.some(o=>o.studentId==='multi-b'));
  assert.ok(!seenScopes.some(o=>o.studentId==='multi-other'));
  const savedBefore=observations.size;
+ // Mobile table uses explicit columns rather than shrinking pupil names to a single character.
+ const table=panel.querySelector('[data-cdc-matrix-table]');
+ assert.equal(table.style.tableLayout,'fixed');
+ assert.equal(table.querySelector('col').style.width,'190px');
+ assert.equal(rows[0].querySelector('[data-cdc-matrix-name]').style.wordBreak,'normal');
+ assert.equal(rows[0].querySelector('[data-cdc-matrix-name]').textContent,'1. Multi A (A)');
+ const blankDate=rows[1].querySelector('[data-cdc-matrix-date="regular"]');
+ blankDate.dispatchEvent(new w.Event('focus'));
+ assert.equal(blankDate.value,'2083-08-07','blank date fills on focus without entering rating');
+ const regularDate=rows[0].querySelector('[data-cdc-matrix-date="regular"]');
+ regularDate.click();assert.equal(regularDate.value,'2083-08-07');
+ const supportDate=rows[0].querySelector('[data-cdc-matrix-date="support"]');
+ supportDate.click();assert.equal(supportDate.value,'2083-08-07');
+ supportDate.value='2083-08-08';supportDate.click();assert.equal(supportDate.value,'2083-08-08','manual or saved date is never overwritten');
+ await panel.querySelector('[data-cdc-matrix-save]').onclick();
+ assert.equal(observations.size,savedBefore,'date alone never writes records');
  rows[0].querySelector('[data-cdc-matrix-date="regular"]').value='2083-08-07';
  rows[0].querySelector('[data-cdc-matrix-rating="regular"]').value='2';
  rows[0].querySelector('[data-cdc-matrix-date="support"]').value='2083-08-08';
