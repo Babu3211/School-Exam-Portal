@@ -6,6 +6,8 @@ on:
     branches: [main]
     paths:
       - 'iemis-direct-saved-marks.js'
+      - 'iemis-direct-attendance.js'
+      - 'scripts/test-iemis-direct-attendance.mjs'
       - 'scripts/test-iemis-direct-saved-marks.mjs'
       - 'index.html'
       - 'sw.js'
@@ -21,6 +23,7 @@ jobs:
         with:
           node-version: '22'
       - run: node scripts/test-iemis-direct-saved-marks.mjs
+      - run: node scripts/test-iemis-direct-attendance.mjs
       - run: node scripts/check-inline-js.mjs
       - run: npm install --no-package-lock --no-audit --no-fund
       - run: npm run test:iemis-transfer
