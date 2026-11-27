@@ -100,3 +100,6 @@ Raw max is the sum of the individual 4-indicator scoring blocks, not the officia
 
 ## 2026-11-27 — Upper-primary two-stage form correction
 - CDC 2083 Annex 3 sample pages 18, 48, 81, 93, 111, 123 visually confirm separate regular and additional-support dates/ratings in all six national subjects. Upper-primary previously had only one stage. Existing stage-less draft identities remain the regular stage; only additional support receives a new format and hash suffix. No conversion or deletion. Exports and progress now read both stages separately. Content column mapping improved for mathematics; exact content labels, remarks, final percentage logic and full visual certification remain pending. Local subject remains a separate school-supplied source.
+
+## 2026-11-27 — Shared remarks column in staged assessment drafts
+- The uploaded CDC 2083 upper-primary guide shows a single remarks column following regular and remedial date/rating columns. A row note (up to 200 characters) is edited and saved with the regular draft; remedial stage displays it read-only. This is also used for staged lower Nepali and English. Existing draft identities and scores are unchanged, and all export modes include the shared note. Remarks-only saves without any regular rating are not supported. No official publication or full source certification is implied.

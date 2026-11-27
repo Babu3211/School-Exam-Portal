@@ -17,7 +17,8 @@ export async function readSavedAssessmentDraftReport(args){
  const labels=staged?(ne?['नियमित','थप सहायतापछि']:['Regular','Remedial']):[ne?'मूल्याङ्कन':'Assessment'];
  const columns=binary?['थिम','मुख्य सिकाइ उपलब्धि','उपलब्धि सूचक']:upperMath?['SN','Content / विषयवस्तु','Learning achievement / सिकाइ उपलब्धि']:model.key==='english'&&lower?['Areas / Skills','Learning outcomes']:model.key==='nepali'&&lower?['सिकाइ उपलब्धि','परीक्षण गर्ने पक्ष','साधन']:[ne?'सिकाइ उपलब्धि':'Learning achievement'];
  const headers=[...columns,...labels.flatMap(label=>binary?[label+' — सकेको / नसकेको',label+' — मिति',label+' — अङ्कन / ४']:[label+(ne?' — मिति':' — Date (BS)'),label+(ne?' — अङ्कन / ४':' — Rating / 4')])];
- if(binary)headers.push('मूल्याङ्कन साधन');
+ if(binary)headers.push('मूल्याङ्कन साधन');else if(staged)headers.push(ne?'कैफियत':'Remarks');
+ const remarks=saved[0]?.remarks?.split('\n')??[];
  const digits=n=>String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]);
  const date=(d,i)=>d?.rowDates?.slice(i*10,i*10+10)||d?.date||'';
  const rows=[];
@@ -31,7 +32,7 @@ export async function readSavedAssessmentDraftReport(args){
   }else{
    const title=[r.title,r.titleEn,r.achievement,...(r.criteria??[]).map((c,k)=>(4-k)+' — '+c.join(' / '))].filter(Boolean).join('\n');
    const lead=upperMath?[slot.number,[r.title,r.titleEn].filter(Boolean).join('\n'),r.achievement??'']:model.key==='english'&&lower?[r.aspect??'',title]:model.key==='nepali'&&lower?[title,r.aspect??'',r.tool??'']:[title];
-   rows.push([...lead,...saved.flatMap(d=>{const v=d?.ratings[i];return v&&v!=='_'?[date(d,i),Number(v)]:['','']})]);
+   rows.push([...lead,...saved.flatMap(d=>{const v=d?.ratings[i];return v&&v!=='_'?[date(d,i),Number(v)]:['','']}),...(staged?[remarks[i]??'']:[])]);
   }
  }
  assertCurrent();
