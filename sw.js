@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smss-pwa-v140-iemis-query-pagination';
+const CACHE_NAME = 'smss-pwa-v141-iemis-provider-refresh';
 const APP_SHELL = [
   './',
   './index.html',
@@ -7,6 +7,8 @@ const APP_SHELL = [
   './iemis-transfer-export.js',
   './iemis-direct-saved-marks.js',
   './iemis-direct-attendance.js',
+  './iemis-direct-saved-marks.js?v=20261127-sync-r141',
+  './iemis-direct-attendance.js?v=20261127-sync-r141',
   './iemis-importer/transfer.js',
   './iemis-ledger.js?v=20261115-class6-ledger',
   './iemis-entry.js?v=20261122-viewer-readonly',
@@ -109,7 +111,8 @@ self.addEventListener('fetch', event => {
   event.respondWith((async () => {
     // Mutable same-URL assets must refresh online when a hosted PWA/APK WebView opens.
     // Versioned release imports remain cache-first for reliable offline use.
-    const mutable = /\.(?:m?js|css|json|webmanifest)$/i.test(url.pathname) && !url.searchParams.has('v');
+    const directSync = /\/iemis-direct-(?:saved-marks|attendance)\.js$/.test(url.pathname);
+    const mutable = directSync || (/\.(?:m?js|css|json|webmanifest)$/i.test(url.pathname) && !url.searchParams.has('v'));
     if (mutable) {
       try {
         const response = await fetch(request, {cache:'no-cache'});
