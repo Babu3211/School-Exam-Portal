@@ -94,6 +94,12 @@ w.eval(readFileSync('iemis-importer/transfer.js','utf8'));
 // Capture the lexical catalogue in the same eval that initializes the page.
 const legacyForms=w.eval(html.slice(html.indexOf('const cdcCoreSubjects'),html.indexOf('let iemisEntryGrid'))+'\nwindow.__testSeroApproved=cdcSeroGuideApproved;\nwindow.__testSeroEntryForm=cdcSeroGuideEntryForm;\nwindow.__testScienceSourceCount=cdcUpperScienceByTitle.size;\nopenCdcAssessment();\ncdcLegacyMathRubrics;');
 const field=name=>w.document.querySelector('[data-cdc="'+name+'"]');
+const productionApprovals=[...w.__testSeroApproved];
+assert.equal(productionApprovals.length,27);
+for(const key of productionApprovals){const i=key.indexOf(':');assert.ok(w.__testSeroEntryForm(key.slice(0,i),key.slice(i+1),'2083'),key);}
+w.__testSeroApproved.clear(); // legacy preview regression only; restore below
+const originalLoadCdc=w.loadCdcAssessmentPage;
+w.loadCdcAssessmentPage=async (...args)=>{await originalLoadCdc(...args);if(!args[0]?.reportOnly&&field('showSingleForm'))field('showSingleForm').onclick();};
 const choice=(name,value)=>{field(name).value=value;field(name).onchange();};
 // Compact teacher workspace: keep the official form first and secondary panels closed.
 for(const name of ['extraReference','extraObservations','extraReports','extraManual','extraRecords','extraActions']){
@@ -1536,7 +1542,7 @@ for(const grade of ['2','3']){
   assert.ok(outcomes.every(cell=>cell.textContent.includes(' — ')));
   assert.ok([...rows.rows].every(row=>!row.textContent.includes('मूल PDF हेर्नुहोस्')));
   const sampleLabels=grade==='2'
-   ?[/छिमेकीलाई सम्मान गर्ने/,/चुम्बकबाट आकर्षित वस्तु छुट्याउने/,/स्थलचर जनावर चिन्ने/,/२५ मिटर दौड/,/सजीव–निर्जीव छुट्याउने/,/सार्वजनिक सम्पदा संरक्षण/,/स्थानीय गीत गाउने/,/राष्ट्रिय चिह्नको वर्णन/,/परिवारको आम्दानीका स्रोत/,/पानीका स्रोत/]
+   ?[/छिमेकीलाई सम्मान गर्ने/,/चुम्बकबाट आकर्षित वस्तु छुट्याउने/,/स्थलचर जनावर चिन्ने/,/२५ मिटर दौड/,/सजीव–निर्जीव छुट्याउने/,/सार्वजनिक सम्पदा संरक्षण/,/स्थानीय गीत लयमा गाउने/,/राष्ट्रिय चिह्नको वर्णन/,/परिवारको आम्दानीका स्रोत/,/पानीका स्रोत/]
    :[/पारिवारिक नाता/,/ध्वनि प्रदूषणको असर/,/खोपको महत्त्व/,/प्राथमिक उपचारको अवधारणा/,/खाद्य शृङ्खलाको उदाहरण/,/ठोस, तरल र ग्यासका गुण परीक्षण/,/स्थानीय बाजा अभ्यास/,/स्थानीय भाषा/,/पैसा बचत/,/दिन र रातको कारण/];
   assert.match(rows.textContent,sampleLabels[i]);
   if(grade==='3'&&i===1)assert.match(rows.textContent,/चुम्बकीय र अचुम्बकीय वस्तु/);
@@ -1922,7 +1928,7 @@ console.log('Grades 1–3 CDC 2076 Annex 2 annual report and portfolio PDF Word 
      }
      if(subject==='nepali')assert.deepEqual(new Set(forms),new Set(Object.keys(grade==='1'?audit.cdcPrimaryNepaliForms:audit.cdcNepaliThemeForms[grade])));
      if(subject==='english')assert.deepEqual(new Set(forms),new Set(Object.keys(audit.cdcPrimaryEnglishForms[grade])));
-     if(subject==='serophero')assert.equal(keys.length,10);
+     if(subject==='serophero'){assert.equal(keys.length,10);assert.equal(forms.length,10);}
      assert.ok(entries.slice(0,forms.length).every(x=>x.kind==='form')||subject==='serophero');
    }
  }
@@ -1985,7 +1991,10 @@ console.log('CDC dashboard and report hub: current-year coverage, deduplication,
 // Class/theme workspace: all authorized students on one page, original CDC
 // regular/support controls, independent scopes, and a read-only all-theme view.
 {
- w.isAdmin=()=>true;current.roles=['admin'];current.active=true;serverRole={...current};
+ for(const key of productionApprovals)w.__testSeroApproved.add(key);
+ w.loadCdcAssessmentPage=originalLoadCdc;
+ w.isAdmin=()=>true;current.roles=['admin'];current.active=true;serverRole={...current};w.currentSchoolSettings.academicYear='2083';
+ w.setDoc=async(ref,data)=>{assert.match(ref.path,/^cdc_observations\//);assert.ok(!observations.has(ref.path));observations.set(ref.path,data);};
  const multiHost=w.document.createElement('div');w.document.body.append(multiHost);
  const pupils=[{id:'multi-a',class:'Class 5',section:'A',name:'Multi A'},{id:'multi-b',class:'Class 5',section:'A',name:'Multi B'},{id:'multi-other',class:'Class 4',section:'A',name:'Other'}];
  w.getDocs=async name=>({docs:name==='students'?pupils.map(p=>({id:p.id,data:()=>p})):[{id:'math',data:()=>({className:'Class 5',subject:'Mathematics'})}]});
@@ -2002,7 +2011,7 @@ console.log('CDC dashboard and report hub: current-year coverage, deduplication,
  main('themePick').value='ज्यामिति';await main('themePick').onchange();
  const panel=multiHost.querySelector('[data-cdc-multi="class"]');
  assert.ok(panel,'theme selection opens class matrix automatically');
- assert.equal(panel.querySelectorAll('[data-cdc-matrix-outcome]').length,8);
+ assert.equal(panel.querySelectorAll('[data-cdc-matrix-outcome]').length,5);
  const rows=[...panel.querySelectorAll('[data-cdc-matrix-outcome="0"] tbody tr')];
  assert.equal(rows.length,2);assert.equal(rows[0].dataset.cdcMatrixStudent,'multi-a');assert.equal(rows[1].dataset.cdcMatrixStudent,'multi-b');
  assert.ok(rows.every(row=>!row.querySelector('[data-cdc-matrix-rating="regular"]').disabled&&row.querySelector('[data-cdc-matrix-rating="support"]')));

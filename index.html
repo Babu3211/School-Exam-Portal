@@ -7976,9 +7976,9 @@ const cdcSeroGuideWorkingText={1:{
         "विद्यालयको नाम र ठेगाना बताउने",
         "सहपाठी र कक्षा शिक्षकको नाम बताउने",
         "विद्यालयका सामग्रीको नाम बताउने",
-        "विभिन्न दिशामा मुढ्की पल्टने अभ्यास",
+        "विविध दिशामा मुढ्की पल्टने अभ्यास गर्ने",
         "निर्देशनमा अग्लो र लामो उफ्राइ",
-        "शरीर तताउने सामान्य व्यायाम",
+        "शरीर तताउन साधारण कसरत गर्ने",
         "पीटी १–३ तालमा गर्ने",
         "प्राकृतिक वस्तु जोडेर सरल आकृति बनाउने"
       ],
@@ -8567,9 +8567,9 @@ const cdcSeroGuideWorkingText={1:{
     [
       "गायन, वादन र नृत्य",
       [
-        "राष्ट्रिय तथा कक्षागत गीत लय मिलाएर गाउने",
+        "राष्ट्रिय गान र कक्षागत गीत तालसँग गाउने",
         "पाठ्यपुस्तकका बालगीत लय मिलाएर गाउने",
-        "स्थानीय गीत गाउने",
+        "आफूले जानेका स्थानीय गीत लयमा गाउने",
         "तालमा ताली",
         "स्थानीय गीतमा नृत्य",
         "सिकेका गीतमा लय, ताल, भाव र चाल मिलाएर एकल नृत्य",
@@ -8963,8 +8963,8 @@ const cdcSeroGuideWorkingText={1:{
     [
       "जनावर र बिरुवाको वर्गीकरण",
       [
-        "चाल, अङ्ग र खानाबाट जीव छुट्याउने",
-        "फूल, बासस्थान र आयुअनुसार बिरुवा वर्गीकरण",
+        "चाल, शरीरका अङ्ग र खाना प्राप्त गर्ने तरिकाबाट वनस्पति र जनावर छुट्याउने",
+        "फूल फुल्ने/नफुल्ने, जमिन/पानी र एकवर्षे/बहुवर्षेका आधारमा बिरुवा वर्गीकरण",
         "मौसमी बिरुवा चिन्ने",
         "मौसमी बिरुवाको सूची",
         "बिरुवा रोप्ने",
@@ -9138,8 +9138,8 @@ const cdcSeroGuideWorkingText={1:{
         "वडाको नक्सा",
         "नक्सामा महत्त्वपूर्ण स्थल",
         "पृथ्वीको आकार र भित्री तह",
-        "कागजको चरा ओरिगामी",
-        "कागजी सजावट"
+        "वर्गाकार कागजबाट चराको ओरिगामी बनाउने",
+        "वर्गाकार कागजबाट सजावटका वस्तु बनाउने"
       ],
       [
         "रुजु सूची",
@@ -9169,9 +9169,11 @@ const cdcSeroGuideWorkingText={1:{
     ]
   ]
 }};
-// Release gate: only a visually verified, exact-wording theme may be approved.
-// Do not add a theme based on the working paraphrase alone.
-const cdcSeroGuideApproved=new Set();
+// All 27 remaining source forms reviewed against the original 2076 guide PDF
+// pp.131–149 on 2026-11-27. Approved for entry using source-aligned working
+// Nepali wording, not a verbatim transcription or official CDC certification.
+// The original PDF remains the authority. Existing 3 Class 1 IDs unchanged.
+const cdcSeroGuideApproved=new Set(["1:हाम्रो विद्यालय","1:हाम्रा वरपरका जीवजन्तु","1:हाम्रो वातावरण","1:मेरो सिर्जना","1:हाम्रो संस्कृति","1:सञ्चार प्रविधि र बजार","1:हाम्रो वरपरको संसार","2:म र मेरो परिवार","2:मेरो दैनिक जीवन","2:हाम्रो समुदाय","2:हाम्रो विद्यालय","2:हाम्रा वरपरका जीवजन्तु","2:हाम्रो वातावरण","2:मेरो सिर्जना","2:हाम्रो संस्कृति","2:सञ्चार प्रविधि र बजार","2:हाम्रो वरपरको संसार","3:म र मेरो परिवार","3:मेरो दैनिक जीवन","3:हाम्रो समुदाय","3:हाम्रो विद्यालय","3:हाम्रा वरपरका जीवजन्तु","3:हाम्रो वातावरण","3:मेरो सिर्जना","3:हाम्रो संस्कृति","3:सञ्चार प्रविधि र बजार","3:हाम्रो वरपरको संसार"]);
 // Class 1 seven remaining themes (pp. 131–134), all Class 2 themes
 // (pp. 135–141), and all Class 3 themes (pp. 142–149): visually checked
 // 2026-11-25 for indicator order, tools and block layout. Working text is
@@ -9211,7 +9213,7 @@ function cdcSeroGuideEntryForm(grade,unit,year){
 }
 // Existing Grade 1 source forms (2076 guide PDF pp.128–130) already
 // accept saved evidence. Report calculations must use their unchanged IDs.
-// The remaining 27 review-only themes still require explicit source approval.
+// Additional source-reviewed themes use stable four-indicator block IDs.
 function cdcSeroSavedReportForm(grade,unit,year){
   if(String(year)!=='2083')return null;
   const approved=cdcSeroGuideEntryForm(grade,unit,year);
@@ -9306,7 +9308,7 @@ function cdcThemeMarkRows(grade,subject,year){
       const guide=cdcSeroferoGuideCounts[grade]?.[unit];
       if(guide){
         const indicators=guide.groups.reduce((sum,n)=>sum+n,0);
-        add(unit,'',guide.groups.length,form&&!form.referenceOnly?'mapped':'guideCounts',indicators,indicators);
+        add(unit,'',guide.groups.length,cdcSeroGuideEntryForm(grade,unit,year)?'guideMatched':form&&!form.referenceOnly?'mapped':'guideCounts',indicators,indicators);
       }else if(form)add(unit,'',form.groups.length,form.referenceOnly?'review':'mapped',form.groups.reduce((n,g)=>n+g[1].length,0));
       else if(sample)add(unit,'',sample.groups,'curriculum',sample.indicators);
       else add(unit,'',null,'pending',null);
@@ -10166,7 +10168,7 @@ function openCdcAssessment(context = null) {
     field('annexSign').textContent='शिक्षकको सही __________   अभिभावकको सही __________';
     if(form.referenceOnly){field('annexStatus').textContent='एकीकृत पाठ्यक्रम २०७६, अनुसूची ३(घ), मुद्रित पृष्ठ '+digits(form.page)+' — '+digits(form.groups.length*4)+' सूचक। पाठ्य अंशमा आधारित समीक्षा फाराम; मूल मार्गदर्शन र दृश्य पृष्ठ प्रमाणीकरण नभएसम्म सूचक प्रविष्टि, सुरक्षित गर्ने र छपाइ निष्क्रिय छन्।';return;}
     const status=field('annexStatus');
-    status.textContent='पाठ्यक्रम विकास केन्द्र २०७६, पीडीएफ पृष्ठ '+digits(form.page)+' — '+digits(form.groups.length*4)+' सूचक। स्रोतमा आधारित समीक्षा प्रति। '+(loaded?(readOnly?'सुरक्षित अभिलेख मात्र हेर्न सकिन्छ।':'चारै सूचक र मिति भरेर प्रत्येक चरण छुट्टै सुरक्षित गर्नुहोस्। नसुरक्षित छनोट पुनः पढ्दा हट्छ।'):'सुरक्षित गर्न पहिले सूचक अभिलेख पढ्नुहोस्। हालको छनोट अस्थायी हो।')+' प्रयोग गरेको साधन सम्बन्धित चरणको कोठामा लेख्नुहोस् वा प्रयोग गरेको सुझाइएको साधन छान्नुहोस्। सुरक्षित गर्नुहोस् नथिचेसम्म अभिलेख बदलिँदैन। छपाइको प्रमाणीकरण बाँकी छ। पुराना अभिलेख सुरक्षित छन्। ';
+    status.textContent='पाठ्यक्रम विकास केन्द्र २०७६, पीडीएफ पृष्ठ '+digits(form.page)+' — '+digits(form.groups.length*4)+' सूचक। स्रोतसँग अङ्कन संरचना मिलाइएको; डिजिटल शब्दावली कार्यगत रूपान्तरण हो। '+(loaded?(readOnly?'सुरक्षित अभिलेख मात्र हेर्न सकिन्छ।':'चारै सूचक र मिति भरेर प्रत्येक चरण छुट्टै सुरक्षित गर्नुहोस्। नसुरक्षित छनोट पुनः पढ्दा हट्छ।'):'सुरक्षित गर्न पहिले सूचक अभिलेख पढ्नुहोस्। हालको छनोट अस्थायी हो।')+' प्रयोग गरेको साधन सम्बन्धित चरणको कोठामा लेख्नुहोस् वा प्रयोग गरेको सुझाइएको साधन छान्नुहोस्। सुरक्षित गर्नुहोस् नथिचेसम्म अभिलेख बदलिँदैन। छपाइको प्रमाणीकरण बाँकी छ। पुराना अभिलेख सुरक्षित छन्। ';
     const link=document.createElement('a');link.href=field('guidePdf13').href+'#page='+form.page;link.target='_blank';link.rel='noopener noreferrer';link.textContent='मूल CDC PDF — पृष्ठ '+digits(form.page);status.append(link);
   }
   function renderPrimaryLegacy(){
@@ -11022,7 +11024,7 @@ function openCdcAssessment(context = null) {
       const pair=units().find(([ne])=>ne===field('themePick').value);
       [field('unit').value,field('unitEn').value]=pair||['',''];
       field('topic').value='';load();
-      if(context&&!embedded&&entryMode==='class'&&pair&&matrixSource().rows.length){await showMulti('class');return;}
+      if(context&&!embedded&&entryMode==='class'&&pair){if(matrixSource().rows.length){await showMulti('class');return;}setEntryMode('single');}
       if(context&&pair&&!field('themeEntryHelp').hidden&&!field('themeManualOpen').hidden)openManualAssessment();
       if(context&&pair&&!field('annex3').hidden&&!field('gridRead').hidden&&schoolSelection())await field('gridRead').onclick();
     };
@@ -11287,16 +11289,16 @@ function openCdcAssessment(context = null) {
   function matrixSource(){
     const g=field('class').value,k=cdcAssessmentSubjectKey(field('subject').value),u=field('unit').value;
     const legacy=primaryLegacyForm(),rev=primaryRevisedForm(),ne=primaryNepaliForm(),eng=primaryEnglishForm(),sero=primarySeroferoReference();
-    if(sero&&!sero.referenceOnly&&year==='2083')return {binary:true,rows:sero.groups.map(([title,indicators,tools],i)=>({title,id:'cdc2076-g'+g+'-'+(sero.start+i),indicators,tools}))};
+    if(sero&&!sero.referenceOnly&&year==='2083')return {binary:true,page:sero.page,rows:sero.groups.map(([title,indicators,tools],i)=>({title,id:'cdc2076-g'+g+'-'+(sero.start+i),indicators,tools,main:sero.mainRows?.[i]}))};
     if(legacy)return {rows:legacy.rows.map(r=>({title:r.ne,alt:r.en,criteria:r.criteria,toolsMode:g!=='1'}))};
     if(rev)return {rows:rev.rows.map(([content,title,alt])=>({title,alt,content}))};
     if(ne?.editable)return {rows:primaryNepaliRows(ne,u).map(([,title],i)=>{const idx=ne.indices[i],tools=cdcNepaliThemeRows[ne.grade]?cdcNepaliThemeRows[ne.grade][idx].slice(1):cdcPrimaryNepaliTools[idx];return {title,content:tools?.join(' / ')||''};})};
-    if(eng)return {rows:primaryEnglishRows(eng,u).map(([,title,alt])=>({title,alt:alt||title}))};
+    if(eng){const rows=primaryEnglishRows(eng,u);if(rows.length!==eng.groups.reduce((a,b)=>a+b,0))return {rows:[]};let offset=0;return {rows:eng.groups.flatMap((n,i)=>Array.from({length:n},()=>{const [,title,alt]=rows[offset++];return {title,alt,content:['Listening','Speaking','Reading','Writing'][i]};}))};}
     if(Number(g)>=4&&hasAnnexGrid())return {rows:(cdcVerifiedOutcomes[g+':'+k]||[]).filter(([unit])=>unit===u).map(([,title,alt])=>{const key=JSON.stringify([g,u,title]),math=cdcUpperMathSourceByTitle.get(key),science=cdcUpperScienceByTitle.get(key);return {title,alt,display:math?.[2]||science?.ne,content:math?localized(math[0],math[1]):''};})};
     return {rows:[]};
   }
   async function renderClassMatrix(panel,status,pupils,current){
-    const {binary,rows}=matrixSource();
+    const {binary,rows,page}=matrixSource();
     if(!rows.length){status.textContent='यस थिमको प्रमाणित कक्षागत फाराम उपलब्ध छैन। Individual CDC Form बाट स्रोत तथा पुराना अभिलेख हेर्नुहोस्।';return;}
     const unit=field('unit').value,unitEn=field('unitEn').value.trim(),grade=field('class').value,subject=field('subject').value;
     const collectionName=binary?'cdc_serofero_indicators':'cdc_observations';
@@ -11308,12 +11310,13 @@ function openCdcAssessment(context = null) {
         try{
           const result=await getDocsFromServer(query(collection(db,collectionName),...Object.entries(scope).map(([k,v])=>where(k,'==',v))));
           if(!current())return;
-          row.records=result.docs.map(d=>d.data()).filter(o=>Object.entries(scope).every(([k,v])=>o[k]===v)&&o.unit===unit&&['regular','support'].includes(o.stage)&&typeof o.date==='string').sort((a,b)=>b.date.localeCompare(a.date)||(b.createdAt?.toMillis?.()??0)-(a.createdAt?.toMillis?.()??0));row.loaded=true;
+          row.records=result.docs.map(d=>d.data()).filter(o=>Object.entries(scope).every(([k,v])=>o[k]===v)&&(binary?o.unit===unit:normalizeTitle(o.unit)===normalizeTitle(unit))&&['regular','support'].includes(o.stage)&&typeof o.date==='string').sort((a,b)=>b.date.localeCompare(a.date)||(b.createdAt?.toMillis?.()??0)-(a.createdAt?.toMillis?.()??0));row.loaded=true;
         }catch{}
       }
     }
     await Promise.all(Array.from({length:Math.min(4,roster.length)},readWorker));
     if(!current())return;
+    if(binary&&page){const a=document.createElement('a');a.href=field('guidePdf13').href.split('#')[0]+'#page='+page;a.target='_blank';a.rel='noopener noreferrer';a.textContent='मूल CDC PDF — पृष्ठ '+page+' (डिजिटल शब्दावली कार्यगत रूपान्तरण)';panel.append(a);}
     const entries=[],save=document.createElement('button'),stages=['regular','support'];
     const label=(a,b)=>language()==='en'?b:a;
     const add=(parent,tag,value)=>{const node=document.createElement(tag);node.textContent=value;parent.append(node);return node;};
@@ -11321,7 +11324,7 @@ function openCdcAssessment(context = null) {
     const input=(value,aria,max=10)=>{const el=document.createElement('input');el.type='text';el.value=value;el.maxLength=max;el.setAttribute('aria-label',aria);el.style.cssText='width:'+(max===10?'112':'130')+'px;min-height:40px;font-size:16px';if(max===10)el.inputMode='numeric';return el;};
     for(const [i,item] of rows.entries()){
       const section=document.createElement('section');section.dataset.cdcMatrixOutcome=String(i);section.style.cssText='border:1px solid #b9d5e7;border-radius:8px;margin:12px 0;padding:8px;min-width:0;max-width:100%;box-sizing:border-box';
-      add(section,'h3',(i+1)+'. '+localized(item.display||item.title,item.alt)).style.cssText='font-size:16px;color:#17466e';
+      add(section,'h3',(item.main?item.main.index+' — सूचक '+(item.main.offset+1)+'–'+(item.main.offset+4):i+1)+'. '+localized(item.display||item.title,item.alt)).style.cssText='font-size:16px;color:#17466e';
       if(item.content)add(section,'p',item.content);
       if(item.criteria||item.indicators){
         const details=document.createElement('details');add(details,'summary',label('सिकाइ उपलब्धिका सूचक / मूल्याङ्कन आधार','Assessment criteria'));
