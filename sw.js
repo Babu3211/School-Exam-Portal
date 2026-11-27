@@ -1,10 +1,11 @@
-const CACHE_NAME = 'smss-pwa-v137-grade9-quick-builder';
+const CACHE_NAME = 'smss-pwa-v138-iemis-direct-sync';
 const APP_SHELL = [
   './',
   './index.html',
   './iemis-ledger.js',
   './iemis-entry.js',
   './iemis-transfer-export.js',
+  './iemis-direct-saved-marks.js',
   './iemis-importer/transfer.js',
   './iemis-ledger.js?v=20261115-class6-ledger',
   './iemis-entry.js?v=20261122-viewer-readonly',
