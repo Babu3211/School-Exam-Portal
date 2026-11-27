@@ -11,7 +11,7 @@ import {assessmentStagePercentage,formatAssessmentStagePercentage,reviewCombined
 import {scoreSeroferoDraft,v46SeroferoPrintedNumber} from './primary-assessment-v46-serofero-text.mjs';
 import {todayAssessmentDate2083} from './assessment-date-2083.mjs';
 import {loadMathAssessmentDraft,saveMathAssessmentDraft,validateMathDraftValues,hasAssessmentStages} from './primary-assessment-math-draft.mjs';
-import {readAnnualReview,annualReviewHeaders,exportUpperAnnualReview} from './primary-assessment-annual-review.mjs';
+import {readAnnualReview,annualReviewHeaders,exportUpperAnnualReview,annualAnnexPrintModel} from './primary-assessment-annual-review.mjs';
 import {readSubjectProgressReport,exportSubjectProgressReport} from './primary-assessment-progress-report.mjs';
 import {readAssessmentDraftProgress} from './primary-assessment-draft-progress.mjs';
 import {readSavedAssessmentDraftReport,exportSavedAssessmentDraft,readClassAssessmentDraftReports,exportClassAssessmentDraftReports} from './primary-assessment-draft-export.mjs';
@@ -375,7 +375,7 @@ async function outputAnnualReview(kind){
  if(ids.some(id=>$(id).disabled))return;const operatingDays=$('annualOperatingDays').value,registerSource=$('annualRegisterSource').value;for(const id of [...ids,'annualOperatingDays','annualRegisterSource'])$(id).disabled=true;
  const check=()=>{if(request!==portfolioEpoch||actor!==member||member?.role!=='school_admin'||auth.currentUser?.uid!==member.uid||$('portfolioGrade').value!==grade||$('portfolioStudent').value!==studentId)throw Error('Annual selection changed')};
  try{await verify();check();$('annualReviewStatus').textContent='वार्षिक समीक्षा तयार हुँदैछ…';const report=await readAnnualReview({db,api,auth,actor:member,schoolId:member.schoolId,grade,studentId,catalogue,operatingDays,registerSource,assertCurrent:check});await verify();check();
- if(kind==='view'){$('annualReviewRows').replaceChildren();for(const row of report.rows){const tr=document.createElement('tr');for(const v of row)cell(tr,v);$('annualReviewRows').append(tr)}}else if(kind==='print')renderSavedPrintModel(report);else{const file=exportUpperAnnualReview(report,kind);const url=URL.createObjectURL(file.blob),a=document.createElement('a');a.href=url;a.download=file.filename;try{document.body.append(a);a.click()}finally{a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000)}}
+ if(kind==='view'){$('annualReviewRows').replaceChildren();for(const row of report.rows){const tr=document.createElement('tr');for(const v of row)cell(tr,v);$('annualReviewRows').append(tr)}}else if(kind==='print')renderSavedPrintModel(annualAnnexPrintModel(report));else{const file=exportUpperAnnualReview(report,kind);const url=URL.createObjectURL(file.blob),a=document.createElement('a');a.href=url;a.download=file.filename;try{document.body.append(a);a.click()}finally{a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000)}}
  $('annualReviewStatus').textContent=(report.rows.length===5?'पाँच':'सात')+' विषयको सुरक्षित Draft समीक्षा तयार भयो। आधिकारिक प्रतिवेदन होइन। '+report.attendance.present+' दिन उपस्थित, '+report.attendance.absent+' दिन अनुपस्थित, '+report.attendance.leave+' दिन बिदा, '+report.attendance.recorded+' दिनको V46/V47 दैनिक अभिलेख। '+report.attendance.conflicts+' बाझिएका दिन गणनाबाट हटाइएका छन्। '+(report.operating?'Admin ले दिएको खुलेका दिन: '+report.operating.operatingDays+'। हाजिरी प्रतिशत: '+(report.operating.percentage===null?'अभिलेख पूरा भएपछि मात्र':report.operating.percentage.toFixed(2)+'%')+'।':'विद्यालय खुलेका दिनको विवरण दिइएको छैन।');
  }catch(e){try{check();$('annualReviewRows').replaceChildren();$('annualReviewStatus').textContent='वार्षिक समीक्षा तयार भएन: '+neError(e)}catch{}}finally{try{check();for(const id of [...ids,'annualOperatingDays','annualRegisterSource'])$(id).disabled=false}catch{}}
 }
@@ -388,14 +388,16 @@ function renderSavedPrintModels(models){
   for(const model of models){const page=add('section','');page.className='assessment-print-student';
   const append=(tag,value)=>add(tag,value,page);
   append('h1',model.title);
+  if(model.metadataLines){for(const line of model.metadataLines)append('p',line)}else{
   append('p','SMSS Exam Portal V47 · School ID: '+model.schoolId+' · Academic Year: '+model.year);
-  append('p','Student: '+(model.studentName||model.studentId)+' · Student ID: '+model.studentId+' · Class: '+model.grade+(model.section?' · Section: '+model.section:''));
+  append('p','Student: '+(model.studentName||model.studentId)+' · Student ID: '+model.studentId+' · Class: '+model.grade+(model.section?' · Section: '+model.section:''));}
   append('p',model.notice);if(model.stageSummary)append('p',model.stageSummary);if(model.hasSaved===false)append('p','No saved draft — blank assessment form');
-  append('p','Records: '+model.rows.length+' · Excluded historical records: '+model.historical);
+  if(!model.metadataLines)append('p','Records: '+model.rows.length+' · Excluded historical records: '+model.historical);
   const table=append('table',''),head=add('thead','',table),tr=add('tr','',head);
   for(const v of model.headers)add('th',v,tr);
   const body=add('tbody','',table);
   for(const row of model.rows){const r=add('tr','',body);for(const v of row)add('td',v??'—',r)}
+  for(const line of model.footerLines??[])append('p',line);
   }
   root.hidden=false;document.body.classList.add('portfolio-printing');
   try{window.print()}finally{clearPrint()}

@@ -208,3 +208,8 @@ for(const label of ['मातृभाषा/स्थानीय विषय
 assert.equal(primarySubjectKey('सामाजिक अध्ययन तथा मानवमूल्य शिक्षा'),'socialstudies');
 assert.equal(primarySubjectKey('नेपाली भाषा'),'nepali');
 assert.equal(primarySubjectKey('Health, Physical and Creative Arts'),'healthphysicalcreativeart');
+
+import {annualAnnexPrintModel} from './primary-assessment-annual-review.mjs';
+const mockAnnex={grade:'1',schoolId:'11111001',schoolProfile:{nameNepali:'नमुना विद्यालय',addressNepali:'नमुना ठेगाना'},studentName:'Synthetic Student',rollNo:'12',year:'2083',attendance:{present:2,absent:0,leave:0,recorded:2,conflicts:0,duplicates:0},operating:{operatingDays:2,source:'Register',percentage:100},officialAssessmentApproved:false,rows:Array.from({length:5},(_,i)=>[i+1,'subject',160,10,'10 / 10','A','review'])};
+const annex2=annualAnnexPrintModel(mockAnnex);assert.equal(annex2.headers.length,4);assert.equal(annex2.rows.length,5);assert.equal(annex2.rows[3][1],'हाम्रो सेरोफेरो');assert.ok(annex2.metadataLines.join(' ').includes('नमुना ठेगाना'));assert.ok(annex2.metadataLines.join(' ').includes('१००.००%'));assert.ok(annex2.footerLines.join(' ').includes('प्रधानाध्यापक'));
+const annex4=annualAnnexPrintModel({...mockAnnex,grade:'5',rows:Array.from({length:7},(_,i)=>[i+1,'subject',5,30,'30 / 30','A (3.6)','review'])});assert.equal(annex4.headers.length,6);assert.equal(annex4.rows.length,7);assert.equal(annex4.rows[6][1],'मातृभाषा वा स्थानीय विषय वा अन्य');assert.equal(annex4.rows[0][3],'३०');assert.throws(()=>annualAnnexPrintModel({...mockAnnex,officialAssessmentApproved:true}));

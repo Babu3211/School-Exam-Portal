@@ -140,3 +140,6 @@ Raw max is the sum of the individual 4-indicator scoring blocks, not the officia
 
 ## 2026-11-27 — Local subject grade review
 - Reopened CDC 2076 PDF pp.6 and 14 and CDC 2083 printed pp.3,15,148. Both guides allow local tools based on the respective guidance; the national documents do not fix local themes/counts. Apply existing class-level scales to the complete single-stage local draft only as a review, with exact 90% lower boundary unresolved; no official local rubric approval implied. Incomplete, unavailable or mismatched source evidence cannot produce a grade. Exact CDC subject aliases now accepted without renaming stored subjects or changing IDs. Synthetic unit/browser checks updated; official publication remains blocked.
+
+## 2026-11-27 — CDC annual annex print structure
+- Visually reopened CDC 2076 PDF pages 13–14 and 2083 PDF page 149 (printed 148). Separate lower four-column and upper six-column review print/Word models, exact Nepali subject order and labels, school profile and register metadata, signature lines and lower scale legend. Excel remains detailed audit with school identity and roll number. No official release or grade change; source data gaps and draft notices retained. This is structural parity, not pixel-identical PDF or certified publication. Unit and browser checks added.

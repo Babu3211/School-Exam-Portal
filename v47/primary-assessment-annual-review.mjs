@@ -11,6 +11,27 @@ import {validateAttendance} from './attendance-service.mjs';
 import {nepalGregorianDate} from './nepal-date.mjs';
 import {prepareLegacyAttendance} from './legacy-attendance-history.mjs';
 import {lowerAssessmentGrade,upperAssessmentGrade} from './primary-assessment-percentage.mjs';
+import {schoolProfileView} from './school-settings-profile.mjs';
+const neDigits=v=>String(v??'').replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]);
+// CDC Annex 2 (2076) and Annex 4 (2083). Separate from detailed review/export.
+export function annualAnnexPrintModel(report){
+ const lower=['1','2','3'].includes(report.grade);
+ if(!lower&&!['4','5'].includes(report.grade)||report.rows.length!==(lower?5:7)||report.officialAssessmentApproved!==false)throw Error('Invalid annual annex review');
+ const names=lower?['नेपाली भाषा','गणित','अङ्ग्रेजी भाषा','हाम्रो सेरोफेरो','मातृभाषा/ स्थानीय विषय']:['नेपाली','अङ्ग्रेजी','गणित','विज्ञान तथा प्रविधि','सामाजिक अध्ययन तथा मानवमूल्य शिक्षा','स्वास्थ्य, शारीरिक तथा सिर्जनात्मक कला','मातृभाषा वा स्थानीय विषय वा अन्य'];
+ const headers=lower?['क्र. सं.','विषयक्षेत्र','पाठ्यघण्टा','समग्र उपलब्धि स्तर']:['क्र. स.','विषय','पाठ्यघण्टा','सिकाइ उपलब्धि सङ्ख्या','समग्र उपलब्धिस्तर','कैफियत'];
+ const rows=report.rows.map((r,i)=>lower?[neDigits(i+1),names[i],neDigits(r[2]),r[5]]:[neDigits(i+1),names[i],neDigits(r[2]),neDigits(r[3]),r[5],r[6]]);
+ const profile=report.schoolProfile??{},school=profile.nameNepali||profile.nameEnglish||'—',address=profile.addressNepali||profile.addressEnglish||'—';
+ const attendance=report.attendance,operating=report.operating;
+ const metadataLines=[
+  'विद्यालयको नाम: '+school+(profile.nameNepali&&profile.nameEnglish?' / '+profile.nameEnglish:''),
+  ...(lower?['ठेगाना: '+address]:[]),
+  'सङ्केत नं.: '+report.schoolId+'    शैक्षिक सत्र: '+neDigits(report.year),
+  'विद्यार्थीको नाम: '+(report.studentName||'—')+'    कक्षा: '+neDigits(report.grade)+'    '+(lower?'परिचय नं. / रोल नं.: ':'रोल नं.: ')+(report.rollNo||'—'),
+  'विद्यालय सञ्चालन भएको दिन: '+(operating?neDigits(operating.operatingDays):'—')+'    उपस्थित भएको दिन: '+(attendance.recorded?neDigits(attendance.present):'—')+'    उपस्थिति प्रतिशत: '+(operating?.percentage!=null?neDigits(operating.percentage.toFixed(2))+'%':'—')
+ ];
+ const footerLines=['कक्षा शिक्षक: __________________    प्रधानाध्यापक: __________________    मिति: __________________',...(lower?['उपलब्धि स्तरको व्याख्या: A* उत्कृष्ट; A उच्च; B राम्रो; C सामान्य; D कमजोर; E ज्यादै कमजोर। ठीक ९०% को सीमा समीक्षा बाँकी।']:[]),'समीक्षा मात्र — आधिकारिक प्रकाशन होइन। '+annualAttendanceText(attendance)+' '+annualOperatingDaysText(operating)];
+ return Object.freeze({...report,title:lower?'अनुसूची २ — विद्यार्थीको प्रगति प्रतिवेदन':'अनुसूची ४ — प्रगति प्रतिवेदन',headers,rows,metadataLines,footerLines,stageSummary:'',notice:'DRAFT / समीक्षा मात्र — NOT official annual report. Migrated assessment observations are not included.'});
+}
 // School-supplied local curriculum, single saved stage. This is a review under
 // the class-level CDC scale, not approval of the school's local rubric or publication.
 export function reviewLocalAnnualGrade({grade,expected,rows}){
@@ -96,7 +117,9 @@ export async function readAnnualReview(args){
  const read=async path=>{check();const s=await api.getDocFromServer(api.doc(db,...path.split('/')));check();return s.exists()?s.data():null};
  const verify=async()=>{const member=await verifySchoolSession({schoolId,uid,readDocument:read});check();if(member.role!=='school_admin')throw Error('School Admin required')};
  await verify();const root='schools/'+schoolId;
- const [student,subjects,assignments]=await Promise.all([read(root+'/students/'+studentId),readSchoolSubjectCatalog({db,api,actor,schoolId,schoolClass:grade,assertCurrent:check}),api.getDocsFromServer(api.query(api.collection(db,'schools',schoolId,'teacher_assignments'),api.where('classId','==',grade),api.limit(501)))]);check();
+ const [student,subjects,assignments,registry,profile]=await Promise.all([read(root+'/students/'+studentId),readSchoolSubjectCatalog({db,api,actor,schoolId,schoolClass:grade,assertCurrent:check}),api.getDocsFromServer(api.query(api.collection(db,'schools',schoolId,'teacher_assignments'),api.where('classId','==',grade),api.limit(501))),read(root),read(root+'/school_settings/profile')]);check();
+ if(registry?.id!==schoolId||registry.active!==true||profile&&profile.schoolId!==schoolId)throw Error('School profile identity mismatch');
+ const schoolProfile=schoolProfileView(profile??{},registry.name);
  if(student?.schoolId!==schoolId||student.class!==grade||student.active===false)throw Error('Active student required');
  if(assignments.docs.length>500)throw Error('Assignment review limit exceeded');
  const duties=assignments.docs.map(d=>{const a=d.data();if(a.schoolId!==schoolId||a.classId!==grade||d.id!==[schoolId,a.uid,grade,a.subjectId].join(':'))throw Error('Assignment identity mismatch');return a}).filter(a=>a.active===true);
@@ -139,10 +162,10 @@ export async function readAnnualReview(args){
  const attendance=summarizeAnnualAttendance({schoolId,grade,studentId,docs:attendanceSnap.docs,legacyDocs:legacySnap.docs,section:String(student.section??''),asOf});
  const operating=reviewOperatingDays(attendance,args.operatingDays,args.registerSource,asOf);
  await verify();check();
- return Object.freeze({attendance,operating,title:lower?'Annual Student Progress — Annex 2 Review':'Annual Student Progress — Annex 4 Review',schoolId,studentId,studentName:String(student.nameEnglish??student.name??studentId),grade,section:String(student.section??''),year:'2083',historical:0,headers:annualReviewHeaders(grade),rows:Object.freeze(rows.map(Object.freeze)),notice:'Saved teacher drafts only — NOT official annual report. Migrated assessment observations are not included. Daily attendance is a review, not verified school operating days.',stageSummary:(lower?'CDC 2076 A*–E scale; draft levels only. ':'') +annualAttendanceText(attendance)+' '+annualOperatingDaysText(operating)+' Signatures pending official verification. Class teacher __________ · Headteacher __________ · Date __________',officialAssessmentApproved:false});
+ return Object.freeze({attendance,operating,schoolProfile,rollNo:String(student.rollNo??''),title:lower?'Annual Student Progress — Annex 2 Review':'Annual Student Progress — Annex 4 Review',schoolId,studentId,studentName:String(student.nameEnglish??student.name??studentId),grade,section:String(student.section??''),year:'2083',historical:0,headers:annualReviewHeaders(grade),rows:Object.freeze(rows.map(Object.freeze)),notice:'Saved teacher drafts only — NOT official annual report. Migrated assessment observations are not included. Daily attendance is a review, not verified school operating days.',stageSummary:(lower?'CDC 2076 A*–E scale; draft levels only. ':'') +annualAttendanceText(attendance)+' '+annualOperatingDaysText(operating)+' Signatures pending official verification. Class teacher __________ · Headteacher __________ · Date __________',officialAssessmentApproved:false});
 }
 export function exportUpperAnnualReview(report,kind){
  if(!['word','excel'].includes(kind))throw Error('Invalid annual export');
- const blob=kind==='word'?assessmentPrintWordBlob(report):excelWorkbook(['Status','School ID','Student ID','Student','Class','Year','Attendance summary','Operating days review',...report.headers],report.rows.map(row=>[report.notice,report.schoolId,report.studentId,report.studentName,report.grade,report.year,annualAttendanceText(report.attendance),annualOperatingDaysText(report.operating),...row]),{sheetName:'Annual review'});
+ const blob=kind==='word'?assessmentPrintWordBlob(annualAnnexPrintModel(report)):excelWorkbook(['Status','School ID','Student ID','Student','Class','Year','School name','School address','Roll No','Attendance summary','Operating days review',...report.headers],report.rows.map(row=>[report.notice,report.schoolId,report.studentId,report.studentName,report.grade,report.year,report.schoolProfile?.nameNepali||report.schoolProfile?.nameEnglish||'',report.schoolProfile?.addressNepali||report.schoolProfile?.addressEnglish||'',report.rollNo??'',annualAttendanceText(report.attendance),annualOperatingDaysText(report.operating),...row]),{sheetName:'Annual review'});
  return {blob,filename:'V47-ANNUAL-REVIEW-'+report.schoolId+'-'+report.studentId+'-2083.'+(kind==='word'?'docx':'xlsx')};
 }
