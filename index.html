@@ -422,7 +422,7 @@ document.addEventListener("click",e=>{const pageButton=e.target.closest("[data-p
 <script type="module">
 import "./iemis-importer/transfer.js";
 import {buildIemisTransferExport,renderIemisTransferLedger,planIemisPortalImport} from "./iemis-transfer-export.js";
-import {createV46DirectReader} from "./iemis-direct-saved-marks.js";
+import {createV46DirectReader} from "./iemis-direct-saved-marks.js?v=20261127-sync-r141";
 import {iemisLegacyTheory,iemisSubjectKey,iemisSubjects,iemisSummary,iemisGpa,iemisLedger,iemisComponentKey,iemisDisplaySubject} from "./iemis-ledger.js?v=20261115-class6-ledger";
 import {IemisEntryGrid,iemisEntrySchema,iemisEntryBatches,normalizeIemisEntryScores} from "./iemis-entry.js?v=20261122-viewer-readonly";
 import {initIdleLogout} from "./idle-logout.js?v=20261112-final";
@@ -12746,6 +12746,7 @@ document.addEventListener("change",e=>{if(["reportType","reportClass"].includes(
 window.loadDashboardData=loadDashboardData;window.loadReportsData=loadReportsData;
 
 // Direct sync: existing authenticated V46 session and fresh saved data only.
+Object.defineProperty(globalThis,'__SMSS_IEMIS_PROVIDER_REVISION__',{value:'v46-sync-r141',configurable:true,enumerable:false});
 if(!Object.hasOwn(globalThis,'__SMSS_IEMIS_READ_SAVED_V1__'))Object.defineProperty(globalThis,'__SMSS_IEMIS_READ_SAVED_V1__',{value:createV46DirectReader({
  getWorkspace:()=>({auth,db,role:currentUserRole,isAdmin,api:{collection,query,where,limit,orderBy,startAfter,doc,getDocFromServer,getDocsFromServer}}),
  T:globalThis.SmssIemisTransfer,examTermKey:smssExamTermKey,
