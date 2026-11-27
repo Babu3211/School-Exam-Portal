@@ -262,6 +262,7 @@ try{
     assert.equal(sourceRows.length,count);
     const scienceThemeId=sha(JSON.stringify(['ad2e3b96a22601fed9d956397a98c564b3ffb768',grade,themeName,sourceRows]));
     const sciencePath=root+'/teacher_assessment_drafts/'+teacherUid+'/classes/'+grade+'/subjects/'+subjectId+'/students/'+studentId+'/themes/'+scienceThemeId;
+    const supportPath=sciencePath.replace(scienceThemeId,sha(JSON.stringify(['ad2e3b96a22601fed9d956397a98c564b3ffb768',grade,themeName,sourceRows,'support'])));
     try{
      await db.doc(subjectPath).set({schoolId:sid,class:grade,name:({science:'Science and Technology',social:'सामाजिक अध्ययन',nepali:'नेपाली',english:'English',health:'Health Physical Education and Creative Arts'})[kind],active:true});
      await db.doc(studentPath).set({schoolId:sid,class:grade,nameEnglish:'Synthetic '+kind+' '+grade,active:true});
@@ -300,12 +301,16 @@ try{
      const updated=(await db.doc(sciencePath).get()).data();
      assert.equal(updated.revision,2);
      assert.equal(updated.ratings,'4'+'_'.repeat(count-2)+'2');
+     assert.equal(await page.locator('#teacherStage').isVisible(),true);await page.locator('#teacherStage').selectOption('support');await wait(page,()=>!document.getElementById('teacherSaveDraft').disabled);
+     assert.equal(await ratings.first().inputValue(),'');await ratings.first().selectOption('3');await page.locator('#teacherDate').fill('2083-08-12');await page.locator('#teacherSaveDraft').click();await wait(page,()=>document.getElementById('teacherDraftSaveStatus').textContent.includes('Revision 1 सुरक्षित भयो'));
+     const support=(await db.doc(supportPath).get()).data();assert.equal(support.format,'smss-v47-primary-'+kind+'-support-draft-v1');assert.equal(support.ratings,'3'+'_'.repeat(count-1));assert.equal(support.date,'2083-08-12');assert.deepEqual((await db.doc(sciencePath).get()).data(),updated);
+     await page.locator('#teacherStage').selectOption('regular');await wait(page,()=>!document.getElementById('teacherSaveDraft').disabled);assert.equal(await ratings.first().inputValue(),'4');assert.ok((await page.locator('#teacherDraftRows .assessment-peer-value').allTextContents()).includes('2083-08-12'));
      assert.equal((await db.doc(sciencePath.replace(sid,schools[1].sid)).get()).exists,false);
      assert.deepEqual((await db.doc(legacy).get()).data(),original);
      assert.deepEqual(errors,[]);
      console.log('PASS browser '+kind+' assessment draft Grade '+grade+': source rows, date, save, reload, update and isolation');
     }finally{
-     await Promise.all([sciencePath,assignmentPath,studentPath,subjectPath].map(p=>db.doc(p).delete()));
+     await Promise.all([sciencePath,supportPath,assignmentPath,studentPath,subjectPath].map(p=>db.doc(p).delete()));
     }
    }
    // Lower-language stages must be independent and never overwrite migrated evidence.

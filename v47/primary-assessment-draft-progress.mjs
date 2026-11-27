@@ -1,12 +1,12 @@
 // Bounded, on-demand school-admin progress for one student and assigned subject.
 // Missing drafts remain unassessed, never zero marks. No collection-group scan.
-import {loadMathAssessmentDraft} from './primary-assessment-math-draft.mjs';
+import {loadMathAssessmentDraft,hasAssessmentStages} from './primary-assessment-math-draft.mjs';
 import {draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
 import {scoreSeroferoDraft} from './primary-assessment-v46-serofero-text.mjs';
 export async function readAssessmentDraftProgress(args){
  const {actor,model,assertCurrent,reviewTeacherUid}=args;
  if(actor?.role!=='school_admin'||!reviewTeacherUid||!Array.isArray(model?.themes)||model.themes.length<1||model.themes.length>100)throw Error('Verified Admin review required');
- const binary=model.key==='serophero',staged=['1','2','3'].includes(model.grade)&&['nepali','english','serophero'].includes(model.key),stages=staged?['regular','support']:[undefined];
+ const binary=model.key==='serophero',staged=hasAssessmentStages(model),stages=staged?['regular','support']:[undefined];
  const rows=[];
  for(const [themeIndex,theme] of model.themes.entries()){
   assertCurrent();

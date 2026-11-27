@@ -77,6 +77,7 @@ const worksheetEnd=rules.indexOf('      // Per-student CDC assessment evidence',
 assert.ok(worksheetStart>=0&&worksheetEnd>worksheetStart);
 const worksheetBlock=rules.slice(worksheetStart,worksheetEnd);
 assert.ok(worksheetBlock.length<9500);
+for(const subject of ['math','science','social','nepali','english','health'])assert.ok(worksheetBlock.includes('smss-v47-primary-'+subject+'-support-draft-v1'));
 assert.ok(worksheetBlock.includes("match /primary_local_curricula/{id}"));
 assert.ok(worksheetBlock.includes("allow list, update, delete: if false;"));
 assert.ok(worksheetBlock.includes("d.format == 'smss-v47-primary-local-draft-v1'"));

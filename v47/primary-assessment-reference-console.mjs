@@ -9,7 +9,7 @@ import {readSchoolSubjectCatalog} from './subject-catalog-view.mjs';
 import {loadAssignedPrimarySubjects,loadPrimaryTeacherWorksheet,loadAdminAssessmentWorksheet,primarySubjectKey,draftThemeSlots} from './primary-assessment-teacher-worksheet.mjs';
 import {scoreSeroferoDraft,v46SeroferoPrintedNumber} from './primary-assessment-v46-serofero-text.mjs';
 import {todayAssessmentDate2083} from './assessment-date-2083.mjs';
-import {loadMathAssessmentDraft,saveMathAssessmentDraft,validateMathDraftValues} from './primary-assessment-math-draft.mjs';
+import {loadMathAssessmentDraft,saveMathAssessmentDraft,validateMathDraftValues,hasAssessmentStages} from './primary-assessment-math-draft.mjs';
 import {readAssessmentDraftProgress} from './primary-assessment-draft-progress.mjs';
 import {readSavedAssessmentDraftReport,exportSavedAssessmentDraft,readClassAssessmentDraftReports,exportClassAssessmentDraftReports} from './primary-assessment-draft-export.mjs';
 import {neError} from './nepali-feedback.mjs';
@@ -42,7 +42,7 @@ async function render(){
 function fill(){const previous=$('subject').value;$('subject').replaceChildren(...subjectsForGrade($('grade').value).map(([key,name])=>new Option(name,key)));if([...$('subject').options].some(o=>o.value===previous))$('subject').value=previous;void render()}
 $('grade').onchange=fill;$('subject').onchange=()=>void render();
 let teacherEpoch=0,worksheet=null,worksheetRequest=0,worksheetRevision=null;
-const usesLanguageStages=model=>['1','2','3'].includes(model?.grade)&&['nepali','english','serophero'].includes(model?.key);
+const usesLanguageStages=hasAssessmentStages;
 function setDraftExportEnabled(enabled){for(const id of ['teacherDraftPrint','teacherDraftWord','teacherDraftExcel'])$(id).disabled=!enabled}
 function setTeacherClassExportEnabled(enabled){for(const id of ['teacherClassPrint','teacherClassWord','teacherClassExcel'])$(id).disabled=!enabled}
 function clearDraft(){
@@ -81,14 +81,14 @@ async function renderTeacherDraft(){
  const binary=worksheet.key==='serophero';
  const key=worksheet.key,lower=['1','2','3'].includes(worksheet.grade),nepaliOnly=['nepali','socialstudies','serophero','hamrodhunibeshi'].includes(key),ne=nepaliOnly;
  const digits=n=>ne?String(n).replace(/[0-9]/g,d=>'०१२३४५६७८९'[Number(d)]):String(n);
- const nepaliForm=lower&&key==='nepali',englishForm=lower&&key==='english',mathForm=lower&&key==='mathematics';
+ const nepaliForm=lower&&key==='nepali',englishForm=lower&&key==='english',mathForm=lower&&key==='mathematics',upperMath=!lower&&key==='mathematics';
  const sourceReady=slots.every(s=>s.sourceText),indicatorForm=binary&&sourceReady;
  const staged=usesLanguageStages(worksheet)&&sourceReady,activeStage=$('teacherStage').value,peerStage=activeStage==='regular'?'support':'regular';
  const stageLabel=usesLanguageStages(worksheet)?($('teacherStage').value==='regular'?(ne?'नियमित मूल्याङ्कन':'Regular Assessment'):(ne?'थप सहायतापछिको मूल्याङ्कन':'Assessment after Remedial Class')):(ne?'मूल्याङ्कन':'Assessment');
- const labels=indicatorForm?['थिम','मुख्य सिकाइ उपलब्धि','उपलब्धि सूचक','सकेको / नसकेको','मिति','अङ्कन / ४','मूल्याङ्कन साधन']:nepaliForm?['सिकाइ उपलब्धि','परीक्षण गर्ने पक्ष','साधन','मिति','अङ्कन / ४']:englishForm?['SN','Areas / Skills','Learning outcomes','Date (BS)','Achievement / 4']:mathForm?['Learning achievement / सिकाइ उपलब्धि','Criteria / अङ्कन आधार','Date (BS) / मिति','Achievement / 4']:ne?['सिकाइ उपलब्धि','मिति','अङ्कन / ४']:['Learning achievement','Date (BS)','Achievement / 4'];
+ const labels=indicatorForm?['थिम','मुख्य सिकाइ उपलब्धि','उपलब्धि सूचक','सकेको / नसकेको','मिति','अङ्कन / ४','मूल्याङ्कन साधन']:nepaliForm?['सिकाइ उपलब्धि','परीक्षण गर्ने पक्ष','साधन','मिति','अङ्कन / ४']:englishForm?['SN','Areas / Skills','Learning outcomes','Date (BS)','Achievement / 4']:upperMath?['SN / क्र.सं.','Content / विषयवस्तु','Learning achievement / सिकाइ उपलब्धि','Date (BS) / मिति','Achievement / 4']:mathForm?['Learning achievement / सिकाइ उपलब्धि','Criteria / अङ्कन आधार','Date (BS) / मिति','Achievement / 4']:ne?['सिकाइ उपलब्धि','मिति','अङ्कन / ४']:['Learning achievement','Date (BS)','Achievement / 4'];
  const head=$('teacherDraftHead');head.replaceChildren();const top=document.createElement('tr');const th=document.createElement('th');th.colSpan=labels.length;th.textContent=stageLabel+' — '+[theme.theme,theme.en&&theme.en!==theme.theme?theme.en:''].filter(Boolean).join(' / ');top.append(th);head.append(top);const heading=document.createElement('tr');
  if(staged){
-  const count=indicatorForm?3:2,lead=labels.slice(0,3),stageColumns=indicatorForm?['सकेको / नसकेको','मिति','अङ्कन / ४']:labels.slice(-2);
+  const count=indicatorForm?3:2,lead=indicatorForm?labels.slice(0,3):labels.slice(0,-2),stageColumns=indicatorForm?['सकेको / नसकेको','मिति','अङ्कन / ४']:labels.slice(-2);
   th.colSpan=lead.length+2*count+(indicatorForm?1:0);
   th.textContent=[theme.theme,theme.en&&theme.en!==theme.theme?theme.en:''].filter(Boolean).join(' / ');
   const sub=document.createElement('tr');
@@ -127,7 +127,8 @@ async function renderTeacherDraft(){
    continue;
   }
   const tr=document.createElement('tr');
-  if(englishForm){cell(tr,String(slot.number));cell(tr,row?.aspect??'—');cell(tr,row?.title??'Source text unavailable')}
+  if(upperMath){cell(tr,String(slot.number));addText(cell(tr,''),[row?.title,row?.titleEn]);cell(tr,row?.achievement??'Source text unavailable')}
+  else if(englishForm){cell(tr,String(slot.number));cell(tr,row?.aspect??'—');cell(tr,row?.title??'Source text unavailable')}
   else{
    const label=cell(tr,digits(slot.number)+'.');addText(label,row?[row.title,row.titleEn,row.achievement]:[ne?'स्रोत पाठ उपलब्ध छैन':'Source text unavailable']);
    if(nepaliForm){cell(tr,row?.aspect??'—');cell(tr,row?.tool??'—')}

@@ -97,3 +97,6 @@ Raw max is the sum of the individual 4-indicator scoring blocks, not the officia
 ## 2026-11-27 — V47 Our Surroundings display numbering
 - Copied the exact printed-number mapping from pinned V46 source blob ad2e3b96a22601fed9d956397a98c564b3ffb768, not a new independent PDF verification. All 30 themes use the source's continuous numbering including the repeated Class 2 number 5. Export orders theme, main outcome, indicator, both stages and tools, matching the V46 column sequence.
 - Display-only mapping: sourceRows, ordinal identities, draft hashes, scores and Firestore rules unchanged. Verbatim guide wording, exact print layout and official publication remain unapproved.
+
+## 2026-11-27 — Upper-primary two-stage form correction
+- CDC 2083 Annex 3 sample pages 18, 48, 81, 93, 111, 123 visually confirm separate regular and additional-support dates/ratings in all six national subjects. Upper-primary previously had only one stage. Existing stage-less draft identities remain the regular stage; only additional support receives a new format and hash suffix. No conversion or deletion. Exports and progress now read both stages separately. Content column mapping improved for mathematics; exact content labels, remarks, final percentage logic and full visual certification remain pending. Local subject remains a separate school-supplied source.
