@@ -100,11 +100,73 @@ def analyze(data):
     print("POSSIBLE STORAGE REFERENCES:",sum(any(x in json.dumps(d.get("fields",{})) for x in ("firebasestorage.googleapis.com","gs://","storage.googleapis.com")) for d in s["documents"]))
     print("DRY RUN COMPLETE; FIREBASE WRITES: ZERO")
     print("No automatic mapping or password overwrite authorized; Storage and restore rehearsal remain separate.")
+def review_orphan_subjects(data):
+    """Historical evidence only: exact original subject ID and class.
+    Never infer assignment from a teacher name, a similar label or marks."""
+    if set(data)!={SOURCE,TARGET}:raise ValueError("Unexpected backup projects")
+    s,t=data[SOURCE],data[TARGET]
+    verify(SOURCE,s);verify(TARGET,t)
+    def collection(p,docs,path):
+        prefix=root(p)+path+"/"
+        return {d["name"][len(prefix):]:d for d in docs if d["name"].startswith(prefix) and "/" not in d["name"][len(prefix):]}
+    old=collection(SOURCE,s["documents"],"subjects")
+    target=collection(TARGET,t["documents"],"schools/"+SCHOOL+"/subjects")
+    assignments=collection(TARGET,t["documents"],"schools/"+SCHOOL+"/teacher_assignments")
+    def label(d):
+        values=[val(d,k) for k in ("name","subjectName","subject","nameEnglish")]
+        values=[v.strip() for v in values if isinstance(v,str) and v.strip()]
+        return values[0] if values and len({v.casefold() for v in values})==1 else None
+    def klass(d):
+        values=[val(d,k) for k in ("class","className")]
+        values=[str(v).strip() for v in values if v is not None and not isinstance(v,bool)]
+        return values[0] if values and len(set(values))==1 and values[0] in CLASSES else None
+    counts=Counter()
+    for aid,a in assignments.items():
+        sid=val(a,"subjectId");cl=val(a,"classId")
+        if not isinstance(sid,str) or not sid or val(a,"schoolId")!=SCHOOL or not isinstance(cl,str) or cl not in CLASSES:
+            counts["invalid_assignment_identity"]+=1;continue
+        if sid in target:continue
+        original=old.get(sid)
+        if original is None:
+            counts["original_id_not_in_backup"]+=1;continue
+        name=label(original)
+        if not name or klass(original)!=cl:
+            counts["original_label_or_class_unverified"]+=1;continue
+        matches=[key for key,d in target.items() if val(d,"schoolId")==SCHOOL and val(d,"active") is True and klass(d)==cl and label(d) and label(d).casefold()==name.casefold()]
+        if len(matches)==1:counts["exact_historical_subject_candidate"]+=1
+        elif matches:counts["ambiguous_target_subject"]+=1
+        else:counts["no_exact_target_subject"]+=1
+    return {"backup_assignments":len(assignments),"backup_subjects":len(target),"review_counts":dict(sorted(counts.items())),"write_authorized":False}
+
+def self_test_orphan_review():
+    def record(p,path,fields):
+        return {"name":root(p)+path,"updateTime":"synthetic","fields":{k:{"booleanValue" if isinstance(v,bool) else "stringValue":v} for k,v in fields.items()}}
+    def project(docs):
+        return {"documents":docs,"collectionCounts":dict(Counter(d["name"].rsplit("/",1)[0] for d in docs)),"users":[]}
+    prefix="schools/"+SCHOOL+"/"
+    src=[record(SOURCE,"subjects/old",{"name":"Mathematics","class":"6"}),record(SOURCE,"subjects/wrong",{"name":"Science","class":"7"})]
+    dst=[record(TARGET,prefix+"subjects/new",{"schoolId":SCHOOL,"name":"Mathematics","class":"6","active":True})]
+    dst += [record(TARGET,prefix+"teacher_assignments/"+str(i),{"schoolId":SCHOOL,"subjectId":sid,"classId":"6"}) for i,sid in enumerate(("old","wrong","missing","new"))]
+    data={SOURCE:project(src),TARGET:project(dst)}
+    result=review_orphan_subjects(data)
+    assert result["review_counts"]=={"exact_historical_subject_candidate":1,"original_id_not_in_backup":1,"original_label_or_class_unverified":1}
+    assert result["write_authorized"] is False
+    dst.append(record(TARGET,prefix+"subjects/duplicate",{"schoolId":SCHOOL,"name":"Mathematics","class":"6","active":True}))
+    assert review_orphan_subjects({SOURCE:project(src),TARGET:project(dst)})["review_counts"]["ambiguous_target_subject"]==1
+    print("PASS synthetic historical subject evidence; no Firebase writes")
+
 if __name__=="__main__":
     try:
         warnings.simplefilter("error",getpass.GetPassWarning)
-        if len(sys.argv)!=2:raise ValueError("Specify encrypted backup path")
-        analyze(open_backup(Path(sys.argv[1]).expanduser(),getpass.getpass("Backup passphrase: ")))
+        if sys.argv[1:]==["--self-test-orphans"]:
+            self_test_orphan_review()
+        elif len(sys.argv)==3 and sys.argv[2]=="--review-orphans":
+            data=open_backup(Path(sys.argv[1]).expanduser(),getpass.getpass("Backup passphrase: "))
+            print("HISTORICAL BACKUP ONLY:",json.dumps(review_orphan_subjects(data),sort_keys=True))
+            print("Recheck current target before any approval; no assignment or Firebase write authorized.")
+        else:
+            if len(sys.argv)!=2:raise ValueError("Specify encrypted backup path")
+            analyze(open_backup(Path(sys.argv[1]).expanduser(),getpass.getpass("Backup passphrase: ")))
     except Exception as e:
         print("DRY RUN STOPPED:",type(e).__name__,str(e) if isinstance(e,ValueError) else "",file=sys.stderr)
         sys.exit(1)
