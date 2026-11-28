@@ -379,11 +379,27 @@ export async function readMigratedReportCoverage({schoolId,list,registry,before,
  return result;
 }
 
+export function summarizeClassSectionCoverage({schoolId,school,students,classNo='5'}){
+ requireScope(schoolId);
+ if(school?.id!==schoolId||school.active!==true)throw Error('Active school required for report coverage');
+ if(!classes.includes(classNo)||!Array.isArray(students)||students.length>2000||new Set(students.map(x=>x.id)).size!==students.length||students.some(x=>!x.id||x.fields?.schoolId!==schoolId))throw Error('Incomplete or foreign staged inventory');
+ const rows=students.filter(x=>String(x.fields.class)===classNo);
+ const counts=new Map();let unknown=0,inactive=0;
+ for(const {fields:f} of rows){
+  if(!isActiveEnrolledStudent(f)){inactive++;continue}
+  // Missing or blank means unknown; never infer the only section.
+  if(typeof f.section!=='string'||!f.section.trim()||f.section.length>80){unknown++;continue}
+  const label=f.section.trim();
+  counts.set(label,(counts.get(label)??0)+1);
+ }
+ return {schoolId,classNo,students:rows.length,activeStudents:rows.length-inactive,inactiveOrInvalidActive:inactive,unknownSection:unknown,distinctRecordedSections:counts.size,sectionSizes:[...counts.values()].sort((a,b)=>a-b),allActiveStudentsHaveOneExplicitSection:rows.length>inactive&&unknown===0&&counts.size===1,readOnly:true,activationAuthorized:false,sourceDutyCompared:false};
+}
 async function main(){
  const sid=process.argv[2];requireScope(sid);
  const localReview=process.argv.length===4&&process.argv[3]==='--local-review';
  const reportCoverage=process.argv.length===4&&process.argv[3]==='--report-coverage';
- if((process.argv.length!==3&&!localReview&&!reportCoverage)||process.env.FIRESTORE_EMULATOR_HOST||localReview&&process.env.GITHUB_ACTIONS==='true')throw Error('Specify one target school ID; private review is local only');
+ const sectionCoverage=process.argv.length===4&&process.argv[3]==='--section-coverage';
+ if((process.argv.length!==3&&!localReview&&!reportCoverage&&!sectionCoverage)||process.env.FIRESTORE_EMULATOR_HOST||localReview&&process.env.GITHUB_ACTIONS==='true')throw Error('Specify one target school ID; private review is local only');
  // The token remains in this process; never print it or put it in URLs.
  const token=await operatorToken();
  if(typeof token!=='string'||!token||/\s/.test(token))throw Error('Operator authentication unavailable');
@@ -410,6 +426,14 @@ async function main(){
   }while(next);
   return out;
  };
+ if(sectionCoverage){
+  const students=await list('students',['schoolId','class','active','section'],2000);
+  const after=await registry();
+  if(!before.updateTime||before.updateTime!==after.updateTime||before.fields.id!==sid||after.fields.id!==sid||after.fields.active!==true)throw Error('Registry changed during audit');
+  console.log('CLASS 5 SECTION COVERAGE (aggregate only): '+JSON.stringify(summarizeClassSectionCoverage({schoolId:sid,school:after.fields,students})));
+  console.log('TARGET READ ONLY; FIREBASE WRITES: ZERO; SECTION AUTHORIZATION NOT CHANGED');
+  return;
+ }
  if(reportCoverage){
   const result=await readMigratedReportCoverage({schoolId:sid,list,registry,before,log:console.log});
   console.log('MIGRATED REPORT COVERAGE (aggregate only): '+JSON.stringify(result));

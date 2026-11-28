@@ -215,3 +215,13 @@ import {readMigratedReportCoverage} from './diagnostics/staged-school-settings-a
  await assert.rejects(readMigratedReportCoverage({...args,schoolId:'99999'}),/Active school/);
  console.log('PASS real CLI report read-mode scope, masked roster, inventory sequence and registry recheck');
 }
+
+import {summarizeClassSectionCoverage} from './diagnostics/staged-school-settings-audit.mjs';
+{
+ const input={schoolId,school:{id:schoolId,active:true},students:[row('a',{class:'5',section:'A'}),row('b',{class:'5',section:'A',active:true}),row('c',{class:'5',section:'B',active:false}),row('d',{class:'6',section:'B'})]};
+ const r=summarizeClassSectionCoverage(input);assert.equal(r.students,3);assert.equal(r.activeStudents,2);assert.equal(r.allActiveStudentsHaveOneExplicitSection,true);assert.deepEqual(r.sectionSizes,[2]);assert.equal(r.activationAuthorized,false);
+ const b=summarizeClassSectionCoverage({...input,students:[...input.students,row('e',{class:'5',section:'B'})]});assert.equal(b.distinctRecordedSections,2);assert.equal(b.allActiveStudentsHaveOneExplicitSection,false);
+ const c=summarizeClassSectionCoverage({...input,students:[...input.students,row('e',{class:'5',section:''})]});assert.equal(c.unknownSection,1);assert.equal(c.allActiveStudentsHaveOneExplicitSection,false);
+ assert.throws(()=>summarizeClassSectionCoverage({...input,students:[row('e',{schoolId:'99999'})]}),/foreign/);
+ console.log('PASS Class 5 section coverage: missing, single, multiple, inactive and foreign school; no automatic permission expansion');
+}
