@@ -58,6 +58,23 @@ def select_changes(expected,members,assignments,held_details=None,plan_reasons=N
             counts["activate_memberships" if key==n else "activate_assignments"]+=1
             writes.append({"update":{"name":key,"fields":{"active":{"booleanValue":True}}},"updateMask":{"fieldPaths":["active"]},"currentDocument":{"updateTime":x["updateTime"]}})
     return writes,dict(counts)
+def held_subject_details(items,catalog,canonical_class,subject_key):
+    # Inspect only the failing source duties; never include a UID, email or password.
+    rows=[]
+    for item in items:
+        f=item.get("mapValue",{}).get("fields",{})
+        raw_class=scalar(f,"className")
+        raw_subject=scalar(f,"subject")
+        cls=None
+        try:cls=canonical_class(raw_class)
+        except ValueError:pass
+        if cls is None:reason="invalid class"
+        elif str(scalar(f,"section") or "").strip():reason="section-specific duty"
+        elif not isinstance(raw_subject,str) or not raw_subject.strip():reason="invalid subject"
+        elif not catalog.get((cls,subject_key(raw_subject))):reason="subject absent from active class catalog"
+        else:continue
+        rows.append({"class":cls or "(unrecognized)","subject":raw_subject[:120] if isinstance(raw_subject,str) else "(invalid)","reason":reason})
+    return rows
 def api_error_summary(project,url,status,payload):
     # Never print API messages, URLs with identifiers, tokens or response bodies.
     if url.startswith(RB):service="Rules metadata"
@@ -102,7 +119,10 @@ def self_test():
     msg=api_error_summary(SOURCE,"https://identitytoolkit.googleapis.com/v1/projects/"+SOURCE+"/accounts:batchGet",429,{"error":{"status":"RESOURCE_EXHAUSTED","message":"private data","details":[{"reason":"RATE_LIMIT_EXCEEDED"}]}})
     assert msg=="V46 Auth inventory: HTTP 429 (RESOURCE_EXHAUSTED RATE_LIMIT_EXCEEDED)" and "private" not in msg
     assert api_error_summary(TARGET,FS+BASE,429,{})=="V47 Firestore school registry: HTTP 429"
-    print("PASS exact staged roles and duties, missing/mismatched held, active-only writes and sanitized API diagnostics")
+    item=lambda c,n,section="":{"mapValue":{"fields":{"className":s(c),"subject":s(n),"section":s(section)}}}
+    reasons=held_subject_details([item("6","Math"),item("6","Science"),item("6","Math","A")],{("6","math"):"math"},lambda x:x,lambda x:x.lower())
+    assert reasons==[{"class":"6","subject":"Science","reason":"subject absent from active class catalog"},{"class":"6","subject":"Math","reason":"section-specific duty"}]
+    print("PASS exact staged roles and duties, missing/mismatched held, active-only writes and sanitized API diagnostics; specific held subject details")
 def main():
     if sys.argv[1:]==["--self-test"]:return self_test()
     if sys.argv[1:] not in (["--review"],["--held-review"],["--apply"]):raise ValueError("Choose review, held-review or apply")
@@ -171,18 +191,22 @@ def main():
         roles=docs(SOURCE,"user_roles",300);assignments=docs(TARGET,"schools/"+SID+"/teacher_assignments",1000)
         expected={}
         plan_reasons={}
+        held_subject_rows=[]
         allowed_reasons={"invalid UID","collision or missing target identity","disabled account held","admin held for explicit authorization","missing or inactive role","mixed or unsupported roles held","class assignments held","subject assignments held"}
         for u in src:
             uid=u["localId"]
             rr=[d for n,d in roles.items() if n.rsplit("/",1)[1]==uid]
             out,held=planner.plan([u],dst,rr,catalog,superuids,source_admin[0])
             plan_reasons[uid]=sorted(k for k,v in held.items() if v and k in allowed_reasons)
+            if explain and held.get("subject assignments held") and len(rr)==1 and BASE+"/members/"+uid in members:
+                held_subject_rows.extend(held_subject_details(planner.cdc.decode_array(rr[0]["fields"],"subjectAssignments"),catalog,planner.m.canonical_class,planner.sub.subject_key))
             if any("assignments held" in k and v for k,v in held.items()):continue
             if out:expected[uid]=out
         details=Counter() if explain else None
         w,c=select_changes(expected,members,assignments,details,plan_reasons)
         if explain:
             print("HELD ACCOUNT REASONS (aggregate; categories may overlap):",json.dumps(dict(details),sort_keys=True))
+            print("HELD SUBJECT DUTIES (no account identity):",json.dumps(held_subject_rows,ensure_ascii=False,sort_keys=True))
             print("READ ONLY; V46 WRITES: ZERO; V47 WRITES: ZERO; AUTH CHANGES: ZERO")
         return w,c
     ok=rules_match()
