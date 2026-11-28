@@ -108,3 +108,23 @@ import {summarizeTermCompatibility} from './diagnostics/staged-school-settings-a
  const report=summarizeTermCompatibility({schoolId,subjects:[primarySubject],settings:[custom]});
  assert.equal(report.distinctSingleSourceSubjects,1);assert.equal(report.byTerm.final['Configured settings valid'],1);
 }
+
+import {summarizeRegisteredSubjectCoverage} from './diagnostics/staged-school-settings-audit.mjs';
+{
+ const customSubjects=[row('math9',{class:'9',name:'Mathematics',active:true}),row('math10',{class:'10',name:'Mathematics',active:true}),row('music9',{class:'9',name:'Music',active:true}),row('art9',{class:'9',name:'Art',active:true})];
+ const group=row('group',{classGroup:'9-10',subject:'Mathematics',components:[{name:'Assessment',fullMarks:137.5}]});
+ const single=row('single',{classGroup:'9-10',className:'9',subject:'Mathematics',components:[{name:'Assessment',fullMarks:50}]});
+ const r=summarizeRegisteredSubjectCoverage({schoolId,subjects:customSubjects,settings:[group,single]});
+ assert.equal(r.classification['Overlapping source records'],1);
+ assert.equal(r.classification['Group source review required'],1);
+ assert.equal(r.classification['No candidate source'],2);
+ assert.equal(r.termAssigned,false);assert.equal(r.writeAuthorized,false);
+ const missing=(id,label)=>row('12345:teacher:9:'+id,{uid:'teacher',classId:'9',subjectId:id,subjectName:label,active:false});
+ const input={...args,subjects:customSubjects,settings:[group,single],assignments:[missing('m1','Music'),missing('m2','Unknown subject'),missing('m3','')]};
+ const result=summarizeStagedSettings(input);
+ assert.equal(result.orphanAssignmentReview['Unique label candidate'],1);
+ assert.equal(result.orphanAssignmentReview['No matching class subject'],1);
+ assert.equal(result.orphanAssignmentReview['No stored subject label'],1);
+ const files=buildLocalReviewWorkbooks(input);assert.equal(files.assignmentRows,3);
+ assert.match(new TextDecoder().decode(await files.assignmentBlob.arrayBuffer()),/No matching class subject/);
+}

@@ -127,6 +127,45 @@ export function summarizeTermCompatibility({schoolId,subjects,settings}){
   noCompatibleTerm:details.filter(r=>terms.every(t=>!['Schema compatible','Configured settings valid'].includes(r.statuses[t]))).length,
   termAssigned:false,writeAuthorized:false,iemisVerified:false};
 }
+// Review every registered subject, including group-only sources and overlaps.
+// Never choose a group setting over a class-specific setting (or vice versa)
+// without independently verified precedence. No term assignment or writes.
+export function summarizeRegisteredSubjectCoverage({schoolId,subjects,settings}){
+ const rows=legacyCandidateRows({schoolId,subjects,settings});
+ const active=subjects.filter(r=>r.fields.active===true&&classes.includes(r.fields.class));
+ const byId=new Map(active.map(r=>[r.id,[]]));
+ for(const row of rows)for(const candidate of row.candidates)if(byId.has(candidate.id))byId.get(candidate.id).push({row,candidate});
+ const coverage=active.map(candidate=>{
+  const sources=byId.get(candidate.id),classId=candidate.fields.class;
+  let status='No candidate source';
+  if(sources.length>1)status='Overlapping source records';
+  else if(sources.length===1){
+   const {row}=sources[0];
+   if(row.kind==='Ambiguous within class')status='Ambiguous subject identity';
+   else{
+    const isolated={...row,candidates:[candidate]};
+    const valid=termCompatibility(isolated,schoolId,'1st');
+    status=valid==='Invalid candidate settings'?'Invalid source components':row.bucket==='group or unknown'?'Group source review required':'Single class source valid';
+   }
+  }
+  return {classId,status};
+ });
+ return {registeredSubjects:active.length,classification:countBy(coverage,r=>r.status),
+  byClass:classes.map(classId=>({classId,counts:countBy(coverage.filter(r=>r.classId===classId),r=>r.status)})),
+  termAssigned:false,writeAuthorized:false};
+}
+function orphanAssignmentCandidates({subjects,assignments}){
+ const ids=new Set(subjects.map(r=>r.id));
+ return assignments.filter(r=>!ids.has(r.fields.subjectId)).map(r=>{
+  const a=r.fields,labels=[a.subjectName,a.subject].filter(v=>typeof v==='string'&&v.trim());
+  const label=labels.length&&new Set(labels.map(norm)).size===1?labels[0]:'';
+  const key=label?candidateKey(label,a.classId):null;
+  const matches=label?subjects.filter(r=>r.fields.class===a.classId&&r.fields.active===true&&
+   (norm(r.fields.name)===norm(label)||!!key&&candidateKey(r.fields.name,a.classId)===key)):[];
+  const status=labels.length&&!label?'Conflicting stored labels':!label?'No stored subject label':matches.length===1?'Unique label candidate':matches.length>1?'Ambiguous label candidate':'No matching class subject';
+  return {r,label,matches,status};
+ });
+}
 export function summarizeLegacySettings({schoolId,subjects,settings}){
  const results=[];
  for(const row of settings){
@@ -187,7 +226,7 @@ export function summarizeStagedSettings({schoolId,school,subjects,settings,membe
  const legacySettings=settings.filter(r=>!recognized.includes(r));
  const legacyMapping=summarizeLegacySettings({schoolId,subjects,settings:legacySettings});
  const legacySubjectCandidates=summarizeLegacySubjectCandidates({schoolId,subjects,settings:legacySettings});
- return {schoolActive:school.active,activeClassSubjects:activeSubjects.length,totalSettings:settings.length,recognizedEntrySettings:recognized.length,settingsIdentityMismatches:idMismatch,otherOrLegacySettings:settings.length-recognized.length,matchedClassTermSubjects:matrix.reduce((n,r)=>n+r.matched,0),reviewClassTermSubjects:matrix.reduce((n,r)=>n+r.reviewRequired,0),members:members.length,activeAdmins:members.filter(r=>r.fields.role==='school_admin'&&r.fields.active===true&&r.fields.uid===r.id).length,invalidMemberRecords:badMembers,teacherAssignments:assignments.length,invalidAssignmentRecords:badAssignments,assignmentReviewReasons:countBy(assignmentReasons,r=>r),legacyMapping,legacySubjectCandidates,termCompatibility:summarizeTermCompatibility({schoolId,subjects,settings:legacySettings}),matrix,writeAuthorized:false,liveIemisVerified:false,activationAuthorized:false};
+ return {schoolActive:school.active,activeClassSubjects:activeSubjects.length,totalSettings:settings.length,recognizedEntrySettings:recognized.length,settingsIdentityMismatches:idMismatch,otherOrLegacySettings:settings.length-recognized.length,matchedClassTermSubjects:matrix.reduce((n,r)=>n+r.matched,0),reviewClassTermSubjects:matrix.reduce((n,r)=>n+r.reviewRequired,0),members:members.length,activeAdmins:members.filter(r=>r.fields.role==='school_admin'&&r.fields.active===true&&r.fields.uid===r.id).length,invalidMemberRecords:badMembers,teacherAssignments:assignments.length,invalidAssignmentRecords:badAssignments,assignmentReviewReasons:countBy(assignmentReasons,r=>r),legacyMapping,legacySubjectCandidates,registeredSubjectCoverage:summarizeRegisteredSubjectCoverage({schoolId,subjects,settings:legacySettings}),orphanAssignmentReview:countBy(orphanAssignmentCandidates({subjects,assignments}),r=>r.status),termCompatibility:summarizeTermCompatibility({schoolId,subjects,settings:legacySettings}),matrix,writeAuthorized:false,liveIemisVerified:false,activationAuthorized:false};
 }
 // Optional private operator workbooks. No student records, scores, email,
 // passwords, tokens, or raw data dumps; CI never creates these files.
@@ -211,13 +250,11 @@ export function buildLocalReviewWorkbooks(inputs){
   for(const choice of choices)rows.push([schoolId,r.id,str(d.classGroup),r.bucket,str(d.subject),components(d),r.kind,r.validComponents===1?'Shape valid':'Review required',choice?.fields.class??'',choice?.id??'',choice?.fields.name??'',choice&&(targetCounts.get(choice.id)??0)>1?'Conflicting legacy records':'',...terms.map(t=>status[t]),'', 'Review only; no term or write approved']);
  }
  const settingsBlob=excelWorkbook(['School ID','Legacy settings ID','Class group','Legacy class','Legacy subject','Saved component maxima','Candidate status','Component check','Candidate class','Candidate subject ID','Candidate subject','Target conflict','1st schema','2nd schema','3rd schema','Final schema','Approved term (operator review only)','Notice'],rows,{sheetName:'Legacy mapping review'});
- const subjectIds=new Set(subjects.map(r=>r.id));
- const assignmentRows=assignments.filter(r=>!subjectIds.has(r.fields.subjectId)).map(r=>{
-  const a=r.fields,labels=[a.subjectName,a.subject].filter(v=>typeof v==='string'&&v.trim()),label=labels.length&&new Set(labels.map(norm)).size===1?labels[0]:'';
-  const matches=label?subjects.filter(r=>r.fields.class===a.classId&&r.fields.active===true&&candidateKey(r.fields.name,a.classId)===candidateKey(label,a.classId)):[];
-  return [schoolId,r.id,str(a.uid),str(a.classId),str(a.subjectId),label,matches.length,matches.length===1?matches[0].id:'',matches.length===1?matches[0].fields.name:'','Review only — no teacher assignment authorized'];
+ const assignmentRows=orphanAssignmentCandidates({subjects,assignments}).map(({r,label,matches,status})=>{
+  const a=r.fields;
+  return [schoolId,r.id,str(a.uid),str(a.classId),str(a.subjectId),label,matches.length,matches.length===1?matches[0].id:'',matches.length===1?matches[0].fields.name:'',status,'Review only — no teacher assignment authorized'];
  });
- const assignmentBlob=excelWorkbook(['School ID','Assignment ID','Teacher UID','Class','Missing subject ID','Stored subject label','Candidate count','Unique candidate ID','Unique candidate name','Notice'],assignmentRows,{sheetName:'Missing assignment IDs'});
+ const assignmentBlob=excelWorkbook(['School ID','Assignment ID','Teacher UID','Class','Missing subject ID','Stored subject label','Candidate count','Unique candidate ID','Unique candidate name','Review status','Notice'],assignmentRows,{sheetName:'Missing assignment IDs'});
  return {settingsBlob,assignmentBlob,settingsRows:rows.length,assignmentRows:assignmentRows.length,writeAuthorized:result.writeAuthorized};
 }
 // Only the previously configured V47 service-account secret is accepted in CI.
