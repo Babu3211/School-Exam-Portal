@@ -55,6 +55,9 @@ jobs:
           node v47/test-dashboard-access.mjs
           node v47/test-grade-report-browser-ui.mjs
           node v47/test-nepali-feedback.mjs
+          node v47/test-legacy-grade-report-preview.mjs
+          node v47/test-spark-draft-report.mjs
+          node v47/test-v46-iemis-rendered-source-parity.mjs
           grep -q 'smss/incomplete-legacy-grid' v47/dist/verified-legacy-grade-report.mjs
           grep -q 'smss/incomplete-legacy-grid' v47/dist/nepali-feedback.mjs
       - name: Verify teacher account Excel validation and school isolation
