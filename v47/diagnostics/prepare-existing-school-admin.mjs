@@ -50,19 +50,30 @@ async function selfTest(){
 }
 async function main(){
  if(process.argv[2]==='--self-test'){await selfTest();return}
- if(process.argv[2]!=='--review'&&process.argv[2]!=='--apply')throw Error('Explicit review or apply required');
+ const mode=process.argv[2];
+ const local=mode==='--local-review'||mode==='--local-apply';
+ const apply=mode==='--apply'||mode==='--local-apply';
+ if(!['--review','--apply','--local-review','--local-apply'].includes(mode))throw Error('Explicit review or apply required');
+ if(local&&(process.env.CI||process.env.GITHUB_ACTIONS))throw Error('Local operator mode forbidden in CI');
  if(process.env.FIRESTORE_EMULATOR_HOST||process.env.FIREBASE_AUTH_EMULATOR_HOST)throw Error('Unexpected emulator environment');
  const requireAdmin=createRequire(new URL('../../v47-runtime/package.json',import.meta.url));
- const {initializeApp,cert,deleteApp}=requireAdmin('firebase-admin/app');
+ const {initializeApp,cert,applicationDefault,deleteApp}=requireAdmin('firebase-admin/app');
  const {getAuth}=requireAdmin('firebase-admin/auth');const {getFirestore}=requireAdmin('firebase-admin/firestore');
- const key=JSON.parse(process.env.V47_SERVICE_ACCOUNT??'null');
- if(key?.type!=='service_account'||key.project_id!==projectId)throw Error('Dedicated V47 credential required');
- const app=initializeApp({credential:cert(key),projectId},'v47-existing-admin-membership');
+ let credential;
+ if(local){
+  if(process.env.V47_CONFIRM_PROJECT!==projectId)throw Error('Explicit V47 project confirmation required');
+  credential=applicationDefault();
+ }else{
+  const key=JSON.parse(process.env.V47_SERVICE_ACCOUNT??'null');
+  if(key?.type!=='service_account'||key.project_id!==projectId)throw Error('Dedicated V47 credential required');
+  credential=cert(key);
+ }
+ const app=initializeApp({credential,projectId},'v47-existing-admin-membership');
  try{
   const args={auth:getAuth(app),db:getFirestore(app),rootEmail:process.env.V47_ROOT_EMAIL,adminEmail:process.env.V47_SCHOOL_ADMIN_EMAIL};
-  const result=await ensureExistingSchoolAdmin({...args,apply:process.argv[2]==='--apply'});
+  const result=await ensureExistingSchoolAdmin({...args,apply});
   console.log('SCHOOL ADMIN MEMBERSHIP:',result);
-  if(process.argv[2]==='--apply'&&await ensureExistingSchoolAdmin(args)!=='ALREADY_ACTIVE')throw Error('Post-write verification incomplete; review before retrying');
+  if(apply&&await ensureExistingSchoolAdmin(args)!=='ALREADY_ACTIVE')throw Error('Post-write verification incomplete; review before retrying');
   console.log('V46 WRITES: ZERO; AUTH CHANGES: ZERO; SUPER ADMIN CHANGES: ZERO; ACADEMIC DATA CHANGES: ZERO');
  }finally{await deleteApp(app)}
 }
