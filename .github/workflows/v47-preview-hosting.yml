@@ -60,6 +60,7 @@ jobs:
           node v47/test-iemis-grade-sheet-print-preview.mjs
           grep -q 'id="sampleTerminal"' v47/dist/grade-sheet.html
           grep -q 'id="sampleFinal"' v47/dist/grade-sheet.html
+          grep -q 'id="sampleFrame" sandbox="allow-same-origin"' v47/dist/grade-sheet.html
           grep -q 'SAMPLE DESIGN ONLY' v47/dist/iemis-grade-sheet-print-preview.mjs
           node v47/test-v46-iemis-rendered-source-parity.mjs
           grep -q 'smss/incomplete-legacy-grid' v47/dist/verified-legacy-grade-report.mjs

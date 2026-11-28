@@ -953,7 +953,10 @@ try{
     await page.locator('#sampleFinal').click();
     await wait(page,()=>document.getElementById('sampleFrame').srcdoc.includes('@page{size:A4 portrait'));
     assert.equal(await page.locator('#printSheet').isDisabled(),true);
-    assert.equal(await page.locator('#sampleFrame').getAttribute('sandbox'),'');
+    // Same-origin avoids Chromium's sandboxed Service Worker accessor error
+    // in the Playwright serviceWorkers:block harness. Scripts and modals stay forbidden.
+    assert.equal(await page.locator('#sampleFrame').getAttribute('sandbox'),'allow-same-origin');
+    assert.equal(await page.locator('#sampleFrame').evaluate(frame=>frame.sandbox.contains('allow-scripts')||frame.sandbox.contains('allow-modals')),false);
     await page.locator('#sampleClose').click();
     assert.equal(await page.locator('#sampleFrame').getAttribute('srcdoc'),null);
     assert.equal(await page.locator('#sampleFrame').isVisible(),false);
