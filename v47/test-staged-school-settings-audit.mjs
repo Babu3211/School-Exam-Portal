@@ -171,3 +171,19 @@ console.log('PASS duplicate sources: ordered labels and configured maxima, equal
  const inactive={...args,members:[members[0],{...members[1],fields:{...members[1].fields,active:false}}],assignments:[duty]};
  assert.equal(summarizeStagedSettings(inactive).invalidAssignmentRecords,1);
 }
+
+import {summarizeMigratedReportCoverage} from './diagnostics/staged-school-settings-audit.mjs';
+import {iemisEntrySchema,iemisEntryValues} from './iemis-entry.js';
+{
+ const classNo='1',term='1st',examId='historical1';
+ const students=[row('s1',{class:classNo,active:true,name:'Private Student'})];
+ const subjects=[row('english',{class:classNo,active:true,name:'English',creditHour:4})];
+ const exams=[row(examId,{class:classNo,term,termKey:'first',academicYear:'2083',active:true})];
+ const marks=[row('m1',{...iemisEntryValues(iemisEntrySchema(classNo,'first','English'),{values:{count:'10',obtained:'35'},isAbsent:false,incompatible:false}),class:classNo,term,termKey:'first',academicYear:'2083',examId,studentId:'s1',subjectId:'english',subject:'English'})];
+ const args={schoolId,school:{id:schoolId,active:true},students,subjects,exams,marks};
+ const report=await summarizeMigratedReportCoverage(args);assert.equal(report.rows.length,9);assert.equal(report.rows[0].completePreviews,1);assert.equal(report.rows[0].missingFullGridPairs,0);assert.equal(report.liveIemisCompared,false);assert.equal(JSON.stringify(report).includes('Private Student'),false);
+ const partial=await summarizeMigratedReportCoverage({...args,marks:[]});assert.equal(partial.rows[0].completePreviews,0);assert.equal(partial.rows[0].missingFullGridPairs,1);
+ const duplicate=await summarizeMigratedReportCoverage({...args,marks:[...marks,{...marks[0],id:'m2'}]});assert.equal(duplicate.rows[0].duplicatePairs,1);assert.equal(duplicate.rows[0].blockedExams,1);
+ await assert.rejects(summarizeMigratedReportCoverage({...args,marks:[row('x',{schoolId:'99999'})]}),/foreign/);
+ console.log('PASS actual-schema report coverage aggregate: complete, missing, duplicate, no student identity output or publication approval');
+}

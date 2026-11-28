@@ -12,6 +12,9 @@ import {auditAllTermSettingsCoverage,auditEntrySettingsCoverage} from '../entry-
 import {prepareNewSubjectExamSettings} from '../create-subject-exam-settings.mjs';
 import {previewV46MarkSettingsMigration,isLegacyPrimaryAchievement,legacySettingsSubjectKey as candidateKey,legacySettingsClassValue as classValue} from '../preview-v46-mark-settings-migration.mjs';
 import {previewV46PrimaryAchievementSettings} from '../preview-v46-primary-achievement-settings.mjs';
+import {prepareLegacyGradeReport} from '../legacy-grade-report-preview.mjs';
+import {resolveScopedReportExam} from '../scoped-legacy-report-exam.mjs';
+import {isActiveEnrolledStudent} from '../student-enrollment-status.mjs';
 const project='smss-exam-portal-v47',terms=['1st','2nd','3rd','final'];
 const classes=Array.from({length:10},(_,i)=>String(i+1));
 const requireScope=sid=>{if(typeof sid!=='string'||!/^\d{5,20}$/.test(sid))throw Error('Invalid school ID')};
@@ -297,6 +300,46 @@ export function buildLocalReviewWorkbooks(inputs){
  const coverageBlob=excelWorkbook(['School ID','Class','Subject ID','Subject','Source status','Overlap comparison','Legacy settings ID','Legacy subject label','Original component maxima','Component validation','Approved source ID (operator review only)','Notice'],coverageRows,{sheetName:'Registered subject review'});
  return {settingsBlob,assignmentBlob,coverageBlob,settingsRows:rows.length,assignmentRows:assignmentRows.length,coverageRows:coverageRows.length,writeAuthorized:result.writeAuthorized};
 }
+// Existing migrated records, not a live source reconciliation or official result.
+// Only aggregate counts and fixed status labels leave this process.
+export async function summarizeMigratedReportCoverage({schoolId,school,students,subjects,exams,marks}){
+ requireScope(schoolId);
+ if(school?.id!==schoolId||school.active!==true)throw Error('Active school required for report coverage');
+ const scoped=(rows,cap)=>{
+  if(!Array.isArray(rows)||rows.length>cap||new Set(rows.map(r=>r.id)).size!==rows.length||rows.some(r=>!r.id||r.fields?.schoolId!==schoolId))throw Error('Incomplete or foreign staged inventory');
+  return rows.map(r=>({...r.fields,id:r.id}));
+ };
+ const roster=scoped(students,2000),catalog=scoped(subjects,1000),historical=scoped(exams,500),records=scoped(marks,5000);
+ const examById=new Map(historical.map(x=>[x.id,x]));
+ const output=[];
+ for(const classNo of ['1','6','9'])for(const term of ['1st','2nd','final']){
+  const classStudents=roster.filter(x=>x.class===classNo),classSubjects=catalog.filter(x=>x.class===classNo);
+  const matching=records.filter(x=>x.class===classNo&&x.term===term);
+  const examIds=[...new Set([...historical.filter(x=>x.class===classNo&&x.term===term&&String(x.academicYear)==='2083'&&x.active!==false).map(x=>x.id),...matching.map(x=>x.examId)])].sort();
+  const counts={classNo,term,students:classStudents.length,activeStudents:classStudents.filter(isActiveEnrolledStudent).length,subjects:classSubjects.length,records:matching.length,examCount:examIds.length,completePreviews:0,blockedExams:0,missingFullGridPairs:0,duplicatePairs:0,outsideGridRecords:0,unsupportedRecords:0};
+  const studentIds=new Set(classStudents.map(x=>x.id)),subjectIds=new Set(classSubjects.map(x=>x.id));
+  for(const examId of examIds){
+   const subset=matching.filter(x=>x.examId===examId),pairs=new Set();
+   for(const x of subset){
+    if(!studentIds.has(x.studentId)||!subjectIds.has(x.subjectId)){counts.outsideGridRecords++;continue}
+    const pair=JSON.stringify([x.studentId,x.subjectId]);
+    if(pairs.has(pair))counts.duplicatePairs++;pairs.add(pair);
+    if(!Array.isArray(x.scores))counts.unsupportedRecords++;
+   }
+   counts.missingFullGridPairs+=Math.max(0,classStudents.length*classSubjects.length-pairs.size);
+   try{
+    if(!subset.length||typeof examId!=='string')throw Error('Empty exam');
+    const verified=await resolveScopedReportExam({schoolId,classNo,term,records:subset,readDocument:async path=>examById.get(path.split('/').at(-1))??null,assertCurrent:()=>{}});
+    if(verified!==examId)throw Error('Wrong exam');
+    const report=prepareLegacyGradeReport({schoolId,school:{nameEnglish:'Private diagnostic'},classNo,term,examId,students:classStudents,subjects:classSubjects,records:subset});
+    if(report.previewOnly!==true||report.summary?.complete!==true||report.publicationAllowed!==false)throw Error('Unexpected preview');
+    counts.completePreviews++;
+   }catch{counts.blockedExams++}
+  }
+  output.push(counts);
+ }
+ return {schoolId,rows:output,recordsInInventory:records.length,readOnly:true,officialAssessmentApproved:false,liveIemisCompared:false,fullGridNote:'Full-grid missing pairs are diagnostic only; optional eligibility and inactive records require review.'};
+}
 // Only the previously configured V47 service-account secret is accepted in CI.
 // This does not request extra IAM grants, nor expose tokens or raw fields.
 export function validateTargetCredential(value){
@@ -318,7 +361,8 @@ async function operatorToken(){
 async function main(){
  const sid=process.argv[2];requireScope(sid);
  const localReview=process.argv.length===4&&process.argv[3]==='--local-review';
- if((process.argv.length!==3&&!localReview)||process.env.FIRESTORE_EMULATOR_HOST||localReview&&process.env.GITHUB_ACTIONS==='true')throw Error('Specify one target school ID; private review is local only');
+ const reportCoverage=process.argv.length===4&&process.argv[3]==='--report-coverage';
+ if((process.argv.length!==3&&!localReview&&!reportCoverage)||process.env.FIRESTORE_EMULATOR_HOST||localReview&&process.env.GITHUB_ACTIONS==='true')throw Error('Specify one target school ID; private review is local only');
  // The token remains in this process; never print it or put it in URLs.
  const token=await operatorToken();
  if(typeof token!=='string'||!token||/\s/.test(token))throw Error('Operator authentication unavailable');
@@ -346,6 +390,19 @@ async function main(){
  };
  const subjects=await list('subjects',['schoolId','class','name','active'],1000);
  console.log('Target subject inventory read: OK; '+subjects.length+' documents');
+ if(reportCoverage){
+  const students=await list('students',['schoolId','class','active','name','nameEnglish','nameNepali','studentNameEnglish','studentName','studentIemisNo','symbolNo','optionalSubject'],2000);
+  const exams=await list('exams',['schoolId','class','term','termKey','academicYear','active'],500);
+  const marks=await list('marks',['schoolId','class','term','termKey','academicYear','examId','studentId','subjectId','subject','scores','isAbsent','assessmentType','totalFullMarks','totalObtained'],5000);
+  // Credit is required by the exact existing report adapter; no default.
+  const reportSubjects=await list('subjects',['schoolId','class','name','active','creditHour'],1000);
+  const after=await registry();
+  if(!before.updateTime||before.updateTime!==after.updateTime||after.fields.active!==true)throw Error('Registry changed during audit');
+  const result=await summarizeMigratedReportCoverage({schoolId,school:after.fields,students,subjects:reportSubjects,exams,marks});
+  console.log('MIGRATED REPORT COVERAGE (aggregate only): '+JSON.stringify(result));
+  console.log('TARGET READ ONLY; FIREBASE WRITES: ZERO; NOT A CONSISTENT SNAPSHOT OR LIVE IEMIS COMPARISON');
+  return;
+ }
  const settings=await list('mark_settings',['schoolId','id','classId','subjectId','examId','active','components','classGroup','className','subject','term','examName','totalFullMarks'],4000);
  console.log('Target settings inventory read: OK; '+settings.length+' documents');
  const members=await list('members',['schoolId','uid','role','active'],300);
