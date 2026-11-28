@@ -30,3 +30,15 @@ import {summarizeLegacySettings} from './diagnostics/staged-school-settings-audi
  const inactive=summarizeStagedSettings({...args,members:[members[0],{...members[1],fields:{...members[1].fields,active:false}}]});
  assert.equal(inactive.assignmentReviewReasons['Teacher membership inactive'],1);
 }
+
+{
+ const malformed=[
+  row('odd-class',{classGroup:'constructor',subject:'Computer',components:[]}),
+  row('odd-term',{classGroup:'9-10',className:'9',subject:'Computer',term:'constructor',components:[]}),
+  row('odd-object',{classGroup:{toString:1},className:{toString:1},subject:'Computer',components:[]})
+ ];
+ const safe=summarizeLegacySettings({schoolId,subjects,settings:malformed});
+ assert.equal(safe.records,3);assert.equal(safe.validatedPreviews,0);
+ assert.equal(safe.classification['Unrecognized legacy structure'],2);
+ assert.equal(safe.classification['Explicit term review required'],1);
+}

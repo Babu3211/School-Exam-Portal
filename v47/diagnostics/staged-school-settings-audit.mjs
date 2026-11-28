@@ -28,8 +28,9 @@ export function decodeScopedDocument(doc,prefix){
 }
 const groups={'1-3':['1','2','3'],'4-5':['4','5'],'6-8':['6','7','8'],'9-10':['9','10']};
 const norm=v=>typeof v==='string'?v.normalize('NFC').trim().toLocaleLowerCase('en'):'';
-const classValue=v=>String(v??'').trim().replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d))).match(/^(?:(?:class|कक्षा)\s*)?([1-9]|10)$/i)?.[1];
-const termValue=v=>({'1st':'1st','first':'1st','2nd':'2nd','second':'2nd','3rd':'3rd','third':'3rd','final':'final','annual':'final'}[norm(v)]);
+const classValue=v=>(typeof v==='string'||typeof v==='number'?String(v):'').trim().replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d))).match(/^(?:(?:class|कक्षा)\s*)?([1-9]|10)$/i)?.[1];
+const termAliases=new Map(Object.entries({'1st':'1st','first':'1st','2nd':'2nd','second':'2nd','3rd':'3rd','third':'3rd','final':'final','annual':'final'}));
+const termValue=v=>termAliases.get(norm(v));
 const present=v=>v!==undefined&&v!==null&&v!=='';
 const countBy=(rows,key)=>Object.fromEntries([...new Set(rows.map(key))].sort().map(k=>[k,rows.filter(r=>key(r)===k).length]));
 // Count possible exact-name/class mappings, never assume a term or fan out a
@@ -37,7 +38,8 @@ const countBy=(rows,key)=>Object.fromEntries([...new Set(rows.map(key))].sort().
 export function summarizeLegacySettings({schoolId,subjects,settings}){
  const results=[];
  for(const row of settings){
-  const d=row.fields,group=groups[d.classGroup],specific=classValue(d.className);
+  // Do not treat malformed legacy metadata as a mapped setting.
+  const d=row.fields,group=typeof d.classGroup==='string'&&Object.hasOwn(groups,d.classGroup)?groups[d.classGroup]:null,specific=classValue(d.className);
   const record={kind:'Unrecognized legacy structure',term:'Unspecified',candidates:0,validPreviews:0};
   const rawTerms=[d.examId,d.term,d.examName].filter(present),mapped=rawTerms.map(termValue);
   if(rawTerms.length)record.term=mapped.every(Boolean)&&new Set(mapped).size===1?mapped[0]:'Unresolved or conflicting';
@@ -146,10 +148,23 @@ async function main(){
  console.log('Target member inventory read: OK; '+members.length+' documents');
  const assignments=await list('teacher_assignments',['schoolId','uid','classId','subjectId','active'],1000);
  console.log('Target assignment inventory read: OK; '+assignments.length+' documents');
+ console.log('Recheck registry: starting');
  const after=await registry();
- if(before.updateTime!==after.updateTime||JSON.stringify(before.fields)!==JSON.stringify(after.fields))throw Error('Registry changed during audit');
- const result=summarizeStagedSettings({schoolId:sid,school:after.fields,subjects,settings,members,assignments});
+ // REST map field ordering is not significant. Compare typed fields, not JSON ordering.
+ if(!before.updateTime||!after.updateTime||before.updateTime!==after.updateTime||before.fields.id!==after.fields.id||before.fields.active!==after.fields.active)throw Error('Registry changed during audit');
+ console.log('Recheck registry: OK');
+ const inputs={schoolId:sid,school:after.fields,subjects,settings,members,assignments};
+ console.log('Legacy schema inventory: starting');
+ // Explicit aggregate field-shape counts help diagnose old metadata without exposing values.
+ const shape={};
+ for(const field of ['classGroup','className','subject','classId','subjectId','examId','term','examName','components','totalFullMarks']){
+  const types=settings.map(r=>{const v=r.fields[field];return v===undefined?'missing':v===null?'null':Array.isArray(v)?'array':typeof v});
+  shape[field]=countBy(types,x=>x);
+ }
+ console.log('Legacy field shapes: '+JSON.stringify(shape));
+ console.log('Scoped settings and membership summary: starting');
+ const result=summarizeStagedSettings(inputs);
  console.log(JSON.stringify(result,null,2));
  console.log('TARGET READ ONLY; FIREBASE WRITES: ZERO; NOT A CONSISTENT SNAPSHOT OR RELEASE APPROVAL');
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)main().catch(e=>{console.error('Audit stopped: '+(e.message.startsWith('Target read failed: HTTP ')?e.message:'Invalid scope, incomplete inventory or unavailable operator access'));process.exitCode=1});
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)main().catch(e=>{console.error('Audit stopped: '+(typeof e?.message==='string'&&/^Target read failed: HTTP [0-9]{3}$/.test(e.message)?e.message:['Registry changed during audit','Target registry identity mismatch','Incomplete or foreign staged inventory','Invalid IEMIS settings audit scope','Class settings audit exceeds 800 records','Unexpected class settings identity','Invalid or foreign settings identity','Invalid subject identity'].includes(e?.message)?e.message:'Invalid scope, incomplete inventory or unavailable operator access ('+(e instanceof TypeError?'TypeError':e instanceof RangeError?'RangeError':'Error')+')'));process.exitCode=1});
