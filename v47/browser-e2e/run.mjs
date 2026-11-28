@@ -581,6 +581,7 @@ try{
     await page.locator('#subjectId').selectOption('math');
     // Verify the existing V46 Settings loader through real browser + emulator.
     // Legacy rows are fixtures only; loading must not create a V47 setting.
+    const otherSubjectPath=root+'/subjects/browser_settings_english';
     const legacyBase={schoolId:sid,classGroup:'1-3',subject:'Mathematics'};
     const legacyGroupPath=root+'/mark_settings/browser_legacy_group';
     const legacyExactPath=root+'/mark_settings/browser_legacy_exact';
@@ -590,12 +591,31 @@ try{
     const exactLegacy={...legacyBase,className:'1',components:[{name:'Assessment',fullMarks:137.5},{name:'Project',fullMarks:62.5}]};
     const foreignLegacy={...exactLegacy,schoolId:schools[1].sid,components:[{name:'Assessment',fullMarks:999}]};
     try{
-     await Promise.all([[legacyGroupPath,groupLegacy],[legacyExactPath,exactLegacy],[foreignLegacyPath,foreignLegacy]].map(([p,v])=>db.doc(p).set(v)));
+     await Promise.all([[legacyGroupPath,groupLegacy],[legacyExactPath,exactLegacy],[foreignLegacyPath,foreignLegacy],[otherSubjectPath,{schoolId:sid,class:'1',name:'English',active:true}]].map(([p,v])=>db.doc(p).set(v)));
+     await page.locator('#loadSubjects').click();await wait(page,()=>Array.from(document.getElementById('subjectId').options).some(o=>o.value==='browser_settings_english')&&!document.getElementById('loadSubjects').disabled);
+     await page.locator('#subjectId').selectOption('math');
      await page.locator('#loadLegacySettings').click();
      await wait(page,()=>document.getElementById('legacySettingsStatus').textContent.includes('Class-specific'));
      assert.equal(await page.locator('#newSettingsComponents').inputValue(),'component_1,Assessment,137.5\ncomponent_2,Project,62.5');
      assert.equal((await db.doc(customSettingsPath).get()).exists,false);
      assert.deepEqual((await db.doc(settingPath).get()).data(),settingBefore);
+     await page.locator('#additionalSettingsTerms input[value="monthly"]').check();
+     await page.locator('#subjectId').selectOption('browser_settings_english');
+     assert.equal(await page.locator('#newSettingsComponents').inputValue(),'');
+     assert.equal(await page.locator('#legacySettingsStatus').textContent(),'');
+     assert.equal(await page.locator('#additionalSettingsTerms input:checked').count(),0);
+     await page.locator('#loadLegacySettings').click();
+     await wait(page,()=>document.getElementById('legacySettingsStatus').textContent.includes('पुरानो Settings लोड भएन'));
+     assert.equal(await page.locator('#newSettingsComponents').inputValue(),'');
+     await page.locator('#subjectId').selectOption('math');
+     await page.locator('#loadLegacySettings').click();
+     await wait(page,()=>document.getElementById('legacySettingsStatus').textContent.includes('Class-specific'));
+     await page.locator('#loadSubjects').click();
+     await wait(page,()=>!document.getElementById('loadSubjects').disabled);
+     assert.equal(await page.locator('#newSettingsComponents').inputValue(),'');
+     await page.locator('#subjectId').selectOption('math');
+     await page.locator('#loadLegacySettings').click();
+     await wait(page,()=>document.getElementById('legacySettingsStatus').textContent.includes('Class-specific'));
      await page.locator('#term').selectOption('2nd');
      assert.equal(await page.locator('#newSettingsComponents').inputValue(),'');
      await page.locator('#term').selectOption('1st');
@@ -615,7 +635,9 @@ try{
      assert.equal(await page.locator('#newSettingsComponents').inputValue(),'');
      await page.locator('#term').selectOption('1st');
      console.log('PASS legacy Settings browser: exact precedence, duplicate refusal, fallback, term reset, tenant isolation and no writes');
-    }finally{await Promise.all([legacyGroupPath,legacyExactPath,legacyDupPath,foreignLegacyPath].map(p=>db.doc(p).delete()))}
+    }finally{await Promise.all([legacyGroupPath,legacyExactPath,legacyDupPath,foreignLegacyPath,otherSubjectPath].map(p=>db.doc(p).delete()))}
+    await page.locator('#loadSubjects').click();await wait(page,()=>!document.getElementById('loadSubjects').disabled&&document.getElementById('subjectId').options.length===1);
+    await page.locator('#subjectId').selectOption('math');
     await page.locator('#newSettingsComponents').fill('assessment,Assessment,137.5\nproject,Project,62.5');
     page.once('dialog',d=>d.accept());
     await page.locator('#createExamSettings').click();

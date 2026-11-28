@@ -33,3 +33,9 @@ assert.match(html,/id="additionalSettingsTerms"/);
 assert.match(handler,/createNewSubjectExamSettings\(\{db,api,actor,settings,additionalTerms\}\)/);
 assert.match(helper,/for\(const target of targets\)\{const snapshot=await transaction\.get\(target\.ref\)/);
 assert.ok(helper.indexOf('await transaction.get(target.ref)')<helper.indexOf('transaction.set(ref,prepared)'));
+
+// Assigning onchange twice silently overrides the earlier safety handler.
+assert.equal((js.match(/\$\('subjectId'\)\.onchange=/g)??[]).length,1);
+assert.match(js,/\$\('subjectId'\)\.onchange=\(\)=>\{optionRequest\+\+;invalidateClassMarks\(\);clearSubjectSettingsEditor\(\);lock\(false\)\}/);
+assert.match(js,/if\(collection==='subjects'\)\{invalidateClassMarks\(\);clearSubjectSettingsEditor\(\)\}/);
+assert.match(js,/function clearSubjectSettingsEditor\(\)\{clearLegacySettingsEditor\(\);\$\('newSettingsComponents'\)\.value='';/);
