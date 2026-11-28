@@ -109,6 +109,24 @@ function validatedCandidateSettings(row,schoolId,examId){
   }
   return prepareNewSubjectExamSettings({schoolId,classId,subjectId,examId,components});
 }
+function candidateIssue(row,candidate,schoolId){
+ const isolated={...row,candidates:[candidate]};
+ try{validatedCandidateSettings(isolated,schoolId,'1st');return 'Valid configured components'}
+ catch(error){
+  const legacy=row.legacy;
+  if(Number(candidate.fields.class)<=5&&isLegacyPrimaryAchievement(legacy)){
+   try{
+    const p=previewV46PrimaryAchievementSettings({legacy:{...legacy,subject:candidate.fields.name,...(row.bucket!=='group or unknown'?{className:row.bucket}:{})},schoolId,classId:candidate.fields.class,subjectId:candidate.id,examId:'1st',verifiedSubjectName:candidate.fields.name});
+    if(p.learningAchievementCount===0)return 'Zero achievement placeholder (not an entry setting)';
+   }catch(e){
+    if(e.message==='Primary learning-achievement derived full marks mismatch')return 'Primary count and maximum mismatch';
+    if(e.message==='Primary legacy total mismatch')return 'Primary legacy total mismatch';
+    if(e.message==='Invalid primary learning-achievement fields'||e.message==='Expected exactly three learning-achievement fields')return 'Invalid primary field structure';
+   }
+  }
+  return 'Other invalid or unverified component structure';
+ }
+}
 function termCompatibility(row,schoolId,examId){
  try{
   const target=row.candidates[0],classId=target.fields.class,subjectId=target.id;
@@ -166,7 +184,7 @@ function registeredSubjectRows({schoolId,subjects,settings}){
     status=valid==='Invalid candidate settings'?'Invalid source components':row.bucket==='group or unknown'?'Group source review required':'Single class source valid';
    }
   }
-  return {classId,status,overlap,candidate,sources};
+  return {classId,status,overlap,candidate,sources,issues:sources.map(({row})=>candidateIssue(row,candidate,schoolId))};
  });
 }
 export function summarizeRegisteredSubjectCoverage(args){
@@ -174,6 +192,7 @@ export function summarizeRegisteredSubjectCoverage(args){
  const overlaps=coverage.filter(r=>r.status==='Overlapping source records');
  return {registeredSubjects:coverage.length,classification:countBy(coverage,r=>r.status),
   overlapClassification:countBy(overlaps,r=>r.overlap),
+  unresolvedSourceIssues:countBy(coverage.flatMap(r=>r.issues).filter(v=>v!=='Valid configured components'),v=>v),
   byClass:classes.map(classId=>({classId,counts:countBy(coverage.filter(r=>r.classId===classId),r=>r.status),overlaps:countBy(overlaps.filter(r=>r.classId===classId),r=>r.overlap)})),
   termAssigned:false,writeAuthorized:false};
 }
@@ -278,8 +297,8 @@ export function buildLocalReviewWorkbooks(inputs){
   return [schoolId,r.id,str(a.uid),str(a.classId),str(a.subjectId),label,matches.length,matches.length===1?matches[0].id:'',matches.length===1?matches[0].fields.name:'',status,'Review only — no teacher assignment authorized'];
  });
  const assignmentBlob=excelWorkbook(['School ID','Assignment ID','Teacher UID','Class','Missing subject ID','Stored subject label','Candidate count','Unique candidate ID','Unique candidate name','Review status','Notice'],assignmentRows,{sheetName:'Missing assignment IDs'});
- const coverageRows=registeredSubjectRows({schoolId,subjects,settings:legacy}).flatMap(({classId,status,overlap,candidate,sources})=>(sources.length?sources:[null]).map(source=>[schoolId,classId,candidate.id,candidate.fields.name,status,overlap,source?.row.id??'',source?str(source.row.legacy.subject):'',source?components(source.row.legacy):'','', 'Review only; preserve original settings']));
- const coverageBlob=excelWorkbook(['School ID','Class','Subject ID','Subject','Source status','Overlap comparison','Legacy settings ID','Legacy subject label','Original component maxima','Approved source ID (operator review only)','Notice'],coverageRows,{sheetName:'Registered subject review'});
+ const coverageRows=registeredSubjectRows({schoolId,subjects,settings:legacy}).flatMap(({classId,status,overlap,candidate,sources,issues})=>(sources.length?sources:[null]).map((source,i)=>[schoolId,classId,candidate.id,candidate.fields.name,status,overlap,source?.row.id??'',source?str(source.row.legacy.subject):'',source?components(source.row.legacy):'',issues[i]??'No source','', 'Review only; preserve original settings']));
+ const coverageBlob=excelWorkbook(['School ID','Class','Subject ID','Subject','Source status','Overlap comparison','Legacy settings ID','Legacy subject label','Original component maxima','Component validation','Approved source ID (operator review only)','Notice'],coverageRows,{sheetName:'Registered subject review'});
  return {settingsBlob,assignmentBlob,coverageBlob,settingsRows:rows.length,assignmentRows:assignmentRows.length,coverageRows:coverageRows.length,writeAuthorized:result.writeAuthorized};
 }
 // Only the previously configured V47 service-account secret is accepted in CI.

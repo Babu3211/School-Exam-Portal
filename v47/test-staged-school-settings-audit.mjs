@@ -149,3 +149,16 @@ import {summarizeRegisteredSubjectCoverage} from './diagnostics/staged-school-se
  assert.equal(summarizeRegisteredSubjectCoverage({...input,settings:[group,swapped,other]}).overlapClassification['Different configured components'],2);
 }
 console.log('PASS duplicate sources: ordered labels and configured maxima, equal totals with different parts, private review workbook');
+
+{
+ const a=row('p1',{class:'1',name:'Mathematics',active:true});
+ const make=(id,count,full,obtained,scope={})=>row(id,{classGroup:'1-3',subject:'Math',...scope,components:[{name:'No. of Learning Achievement',fullMarks:count},{name:'Full Marks',fullMarks:full},{name:'Obtained Learning Achievement',fullMarks:obtained}]});
+ const input={...args,subjects:[a],settings:[make('group',0,0,0),make('class',3,12,12,{className:'1'})],assignments:[]};
+ const r=summarizeRegisteredSubjectCoverage(input);
+ assert.equal(r.overlapClassification['Invalid or unverified source components'],1);
+ assert.equal(r.unresolvedSourceIssues['Zero achievement placeholder (not an entry setting)'],1);
+ const bad=summarizeRegisteredSubjectCoverage({...input,settings:[make('group',3,11,11),input.settings[1]]});
+ assert.equal(bad.unresolvedSourceIssues['Primary count and maximum mismatch'],1);
+ const file=buildLocalReviewWorkbooks(input);
+ assert.match(new TextDecoder().decode(await file.coverageBlob.arrayBuffer()),/Zero achievement placeholder/);
+}
