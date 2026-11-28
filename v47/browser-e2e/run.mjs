@@ -845,6 +845,13 @@ try{
    if(role==='viewer')await page.setViewportSize({width:375,height:812});
    await login(page,school.sid,uid);
    if(role!=='school_admin')assert.equal(await page.locator('[data-required-role="school_admin"][aria-disabled="false"]').count(),0);
+   assert.equal(await page.locator('[data-required-role="teacher"][aria-disabled="false"]').count(),role==='teacher'?3:0);
+   if(role==='teacher'){
+    await page.locator('.quick-action[href="./teacher-assigned-class.html"]').click();
+    await wait(page,()=>location.pathname.endsWith('/teacher-assigned-class.html')&&!document.getElementById('work')?.hidden);
+    assert.equal(await page.locator('#schoolId').inputValue(),school.sid);
+    assert.equal(await page.locator('#password').inputValue(),'');
+   }
    await report(page,school,role);assert.deepEqual(errors,[]);
    // After report logout, returning to the dashboard must not restore any menu.
    await page.goto(origin+'/');

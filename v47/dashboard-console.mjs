@@ -28,6 +28,7 @@ async function showRecentActivity(){
 }
 const MAX_IDLE_MS=60*60*1000;
 const SCHOOL_SELECTION_KEY='smss-v47-dashboard-school';
+const moduleAccess=link=>link.dataset.requiredRole==='school_admin'?'school-admin':link.dataset.requiredRole==='teacher'?'teacher':link.dataset.requiredRole===undefined?'module':'unsupported';
 const readDocument=async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null};
 async function verifiedSchoolLabel(schoolId,registryName){
  const settings=await readDocument('schools/'+schoolId+'/school_settings/profile');
@@ -42,7 +43,7 @@ function lock(){
  $('dashboardLoginFields').hidden=signedIn;
  document.body.classList.toggle('verified-school',signedIn);
  if(signedIn){$('dashboardPassword').value='';$('dashboardPassword').type='password';$('dashboardPasswordToggle').textContent='Show';$('dashboardPasswordToggle').setAttribute('aria-pressed','false');}
- for(const link of document.querySelectorAll('[data-school-module]')){const allowed=!!verified&&schoolDashboardAccess(verified.role,link.dataset.requiredRole==='school_admin'?'school-admin':'module')&&!link.hasAttribute('data-post-release');if(link.hasAttribute('data-post-release'))link.hidden=true;link.setAttribute('aria-disabled',String(!allowed));link.tabIndex=allowed?0:-1;link.classList.toggle('locked',!allowed)}$('schoolIdentity').textContent=verified?verified.name+' · '+verified.schoolId+' · '+verified.role:'विद्यालय प्रमाणित भएको छैन।';$('schoolAccessMode').textContent=!verified?'विद्यालयका सुविधा हेर्न पहिले लगइन गर्नुहोस्।':verified.role==='viewer'?'Viewer — पढ्न र रिपोर्ट हेर्न मात्र मिल्छ। Add, Edit, Delete वा Save अनुमति छैन।':verified.role==='teacher'?'Teacher — तोकिएको कक्षा र विषयमा मात्र अनुमति अनुसार काम गर्न मिल्छ।':'School Admin — विद्यालयको व्यवस्थापन गर्न मिल्छ; प्रत्येक Module ले अनुमति पुनः जाँच्छ।';$('dashboardLogout').disabled=!verified;$('dashboardRefreshStats').disabled=!verified;$('schoolMapSection').hidden=!verified;$('schoolMapLoad').disabled=!verified?.map;$('schoolMapMessage').textContent=!verified?'विद्यालय प्रमाणित गरेपछि नक्सा हेर्नुहोस्।':verified.map?'नक्सा खोल्न बटन थिच्नुहोस्। देखाइएको स्थान खोज परिणाम हो, प्रमाणित GPS होइन।':'School Settings मा विद्यालयको ठेगाना राखेपछि Satellite Map उपलब्ध हुन्छ।'}
+ for(const link of document.querySelectorAll('[data-school-module]')){const allowed=!!verified&&schoolDashboardAccess(verified.role,moduleAccess(link))&&!link.hasAttribute('data-post-release');if(link.hasAttribute('data-post-release'))link.hidden=true;link.setAttribute('aria-disabled',String(!allowed));link.tabIndex=allowed?0:-1;link.classList.toggle('locked',!allowed)}$('schoolIdentity').textContent=verified?verified.name+' · '+verified.schoolId+' · '+verified.role:'विद्यालय प्रमाणित भएको छैन।';$('schoolAccessMode').textContent=!verified?'विद्यालयका सुविधा हेर्न पहिले लगइन गर्नुहोस्।':verified.role==='viewer'?'Viewer — पढ्न र रिपोर्ट हेर्न मात्र मिल्छ। Add, Edit, Delete वा Save अनुमति छैन।':verified.role==='teacher'?'Teacher — तोकिएको कक्षा र विषयमा मात्र अनुमति अनुसार काम गर्न मिल्छ।':'School Admin — विद्यालयको व्यवस्थापन गर्न मिल्छ; प्रत्येक Module ले अनुमति पुनः जाँच्छ।';$('dashboardLogout').disabled=!verified;$('dashboardRefreshStats').disabled=!verified;$('schoolMapSection').hidden=!verified;$('schoolMapLoad').disabled=!verified?.map;$('schoolMapMessage').textContent=!verified?'विद्यालय प्रमाणित गरेपछि नक्सा हेर्नुहोस्।':verified.map?'नक्सा खोल्न बटन थिच्नुहोस्। देखाइएको स्थान खोज परिणाम हो, प्रमाणित GPS होइन।':'School Settings मा विद्यालयको ठेगाना राखेपछि Satellite Map उपलब्ध हुन्छ।'}
 const DASHBOARD_METRICS=Object.freeze(['students','staff','subjects','exams','members','activeMembers']);
 let assessmentClassRequest=0;
 function resetAssessmentCounts(){
@@ -217,7 +218,7 @@ document.querySelectorAll('[data-school-module]').forEach(link=>link.addEventLis
  event.preventDefault();
  if(link.hasAttribute('data-post-release'))return;
  if(!verified||checkingLink){message('पहिले विद्यालयको Login प्रमाणित गर्नुहोस्।');return}
- if(!schoolDashboardAccess(verified.role,link.dataset.requiredRole==='school_admin'?'school-admin':'module')){message('यो Module खोल्न School Admin अनुमति आवश्यक छ।');return}
+ if(!schoolDashboardAccess(verified.role,moduleAccess(link))){message(link.dataset.requiredRole==='teacher'?'यो सुविधा तोकिएको शिक्षकको खाताबाट मात्र खोल्न मिल्छ।':'यो Module खोल्न School Admin अनुमति आवश्यक छ।');return}
  if(await expireIdle())return;
  checkingLink=true;
  try{
@@ -225,7 +226,7 @@ document.querySelectorAll('[data-school-module]').forEach(link=>link.addEventLis
   if(auth?.currentUser?.uid!==current.uid)throw Error('Login session changed');
   const session=await verifySchoolSession({schoolId:current.schoolId,uid:current.uid,readDocument});
   if(verified!==current||auth.currentUser?.uid!==current.uid||session.role!==current.role)throw Error('School membership changed');
-  if(!schoolDashboardAccess(session.role,link.dataset.requiredRole==='school_admin'?'school-admin':'module'))throw Error('School Admin permission required');
+  if(!schoolDashboardAccess(session.role,moduleAccess(link)))throw Error('School membership changed');
   const school=await readDocument('schools/'+current.schoolId);
   if(verified!==current||school?.active!==true)throw Error('School inactive');
   const destination=new URL(link.getAttribute('href'),location.href);

@@ -5,6 +5,9 @@ for(const role of ['school_admin','teacher','viewer'])assert.equal(schoolDashboa
 assert.equal(schoolDashboardAccess('school_admin','school-admin'),true);
 for(const role of ['teacher','viewer',null,'super_admin',''])assert.equal(schoolDashboardAccess(role,'school-admin'),false);
 assert.equal(schoolDashboardAccess(undefined,'module'),false);
+assert.equal(schoolDashboardAccess('teacher','teacher'),true);
+for(const role of ['school_admin','viewer','super_admin',null])assert.equal(schoolDashboardAccess(role,'teacher'),false);
+assert.equal(schoolDashboardAccess('teacher','unsupported'),false);
 const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
 const js=readFileSync(new URL('./dashboard-console.mjs',import.meta.url),'utf8');
 assert.match(html,/data-school-module data-required-role="school_admin"/);
@@ -45,3 +48,8 @@ for(const [tag] of hiddenDeferred){
 assert.match(js,/&&!link\.hasAttribute\('data-post-release'\)/);
 assert.match(js,/if\(link\.hasAttribute\('data-post-release'\)\)return;/);
 console.log('PASS first-release scope: new assessment and question-paper references retained but not offered in normal exam navigation');
+
+const teacherLinks=[...html.matchAll(/<a\b[^>]*href="\.\/teacher-assigned-class\.html"[^>]*>/g)];
+assert.equal(teacherLinks.length,3);
+assert.ok(teacherLinks.every(([tag])=>tag.includes('data-required-role="teacher"')&&tag.includes('data-school-module')));
+assert.equal((js.match(/moduleAccess\(link\)/g)??[]).length,3);
