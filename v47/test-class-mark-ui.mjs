@@ -79,3 +79,9 @@ console.log('V47 full-class marks UI contract passed');
 
 assert.ok(js.includes("$('schoolClass').onchange=()=>{optionRequest++;invalidateClassMarks();clearSettingsAudit();"),'Class change must also clear settings audit');
 assert.ok(js.includes("$('term').onchange=()=>{clearSettingsAudit();invalidateClassMarks();"),'Term change must clear audit and marks');
+
+assert.match(html,/id="prefillAdminLegacy"/);
+assert.match(js,/loadAdminLegacyMarks\(/);
+assert.match(js,/prepareLegacyDraftPrefill\(/);
+assert.match(js,/target\.exists\(\)\|\|!sameMarkJson/);
+assert.match(js,/if\(!blank\(\)\)/);

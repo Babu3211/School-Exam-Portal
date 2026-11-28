@@ -4,13 +4,23 @@ import {verifySchoolSession} from './verified-school-session.mjs';
 import {verifyTeacherSubjectAssignment} from './verified-teacher-subject-assignment.mjs';
 import {resolveScopedReportExam} from './scoped-legacy-report-exam.mjs';
 import {iemisSubjectKey} from './iemis-ledger.js';
-export async function loadAssignedLegacyMarks({db,api,actor,schoolId,classId,subjectId,term,assertCurrent}){
+export const loadAssignedLegacyMarks=args=>loadScopedLegacyMarks(args,'teacher');
+export const loadAdminLegacyMarks=args=>loadScopedLegacyMarks(args,'school_admin');
+async function loadScopedLegacyMarks({db,api,actor,schoolId,classId,subjectId,term,assertCurrent},requiredRole){
  if(!['1st','2nd','3rd','final'].includes(term)||!/^(?:[1-9]|10)$/.test(classId)||typeof assertCurrent!=='function')throw Error('Verified class and term required');
  const uid=actor?.uid;
- const check=()=>{assertCurrent();if(actor?.uid!==uid||actor?.role!=='teacher'||actor?.schoolId!==schoolId||actor?.active!==true)throw Error('Teacher session changed')};
+ const check=()=>{assertCurrent();if(actor?.uid!==uid||actor?.role!==requiredRole||actor?.schoolId!==schoolId||actor?.active!==true)throw Error('Teacher session changed')};
  const readDocument=async path=>{check();const s=await api.getDocFromServer(api.doc(db,...path.split('/')));check();return s.exists()?s.data():null};
- const verify=async()=>{check();const member=await verifySchoolSession({schoolId,uid,readDocument});check();if(member.role!=='teacher')throw Error('Teacher role changed')};
- const assignment=()=>verifyTeacherSubjectAssignment({db,api:{...api,getDoc:api.getDocFromServer},actor,schoolId,classId,subjectId,revalidate:verify});
+ const verify=async()=>{check();const member=await verifySchoolSession({schoolId,uid,readDocument});check();if(member.role!==requiredRole)throw Error('Teacher or Admin role changed')};
+ const assignment=async()=>{
+  if(requiredRole==='teacher')return verifyTeacherSubjectAssignment({db,api:{...api,getDoc:api.getDocFromServer},actor,schoolId,classId,subjectId,revalidate:verify});
+  await verify();
+  if(!/^[A-Za-z0-9_-]{1,128}$/.test(subjectId??''))throw Error('Invalid subject ID');
+  const subject=await readDocument('schools/'+schoolId+'/subjects/'+subjectId);
+  if(!subject||subject.schoolId!==schoolId||subject.class!==classId||subject.active!==true||typeof subject.name!=='string'||!subject.name.trim())throw Error('Active class subject required');
+  await verify();
+  return {subjectName:subject.name.trim()};
+ };
  const assigned=await assignment();check();
  const query=api.query(api.collection(db,'schools',schoolId,'marks'),api.where('class','==',classId),api.where('term','==',term),api.where('subjectId','==',subjectId),api.limit(3001));
  const snap=await api.getDocsFromServer(query);check();
