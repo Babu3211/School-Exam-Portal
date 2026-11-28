@@ -513,7 +513,7 @@ $('serverReviewMarks').onclick=async()=>{
    onCommit:()=>{committing=true}
   });
   check();
-  show(result.committed?'Marks committed. CDC Grade Sheet approval is separate.':'Publication cancelled. No final marks committed by this action.');
+  show(result.committed?'Marks committed. CDC Grade Sheet approval is separate.':result.reviewOnly?'सुरक्षित मस्यौदाका '+result.rosterCount+' विद्यार्थीको समीक्षा भयो। सर्भरमा आधिकारिक प्रकाशन बन्द छ। कुनै अङ्क प्रकाशन भएको छैन।':'प्रकाशन रद्द भयो। यस कार्यबाट अन्तिम अङ्क प्रकाशन भएको छैन।');
  }catch(e){if(attempt===epoch&&request===rosterRequest)show((committing?'Final publication outcome not confirmed; reload official report before retrying. ':'Server review/stage blocked. ')+neError(e))}
  finally{if(attempt===epoch)lock(false)}
 };

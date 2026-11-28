@@ -14,6 +14,20 @@ export async function runSavedClassPublication({scope,getIdToken,fetchImpl,asser
   assertCurrent();if(!response?.ok)throw Error('Isolated publication API unavailable or request refused ('+(response?.status??'network')+')');
   let data;try{data=await response.json()}catch{throw Error('Isolated publication API response unavailable')};assertCurrent();return data;
  };
+ // Probe the same-origin Node process before sending any Firebase ID token.
+ // Static Hosting may return HTML with HTTP 200; that is not a valid runtime.
+ assertCurrent();
+ let runtime;
+ try{
+  const probe=await fetchImpl('/api/v47/runtime-status',{method:'GET',headers:{Accept:'application/json'},cache:'no-store',credentials:'omit',redirect:'error'});
+  if(!probe?.ok)throw Error('Unavailable');
+  runtime=await probe.json();
+ }catch{throw Error('V47 publication runtime unavailable')}
+ assertCurrent();
+ if(runtime?.format!=='smss-v47-runtime-status-v1'||runtime.version!=='V47'||
+    typeof runtime.publicationEnabled!=='boolean'||typeof runtime.atomicAttendanceEnabled!=='boolean'||
+    runtime.productionReady!==false||runtime.cdcGradeApproved!==false)
+  throw Error('V47 publication runtime unavailable');
  const response=await request('/api/v47/publication-review?'+new URLSearchParams(scope));
  const {review,previousPublicationId}=response??{};
  if(!same(review)||response.readOnly!==true||response.stageAuthorized!==false||response.publishAuthorized!==false||
@@ -23,6 +37,8 @@ export async function runSavedClassPublication({scope,getIdToken,fetchImpl,asser
  review.writeAuthorized!==false||review.publicationAllowed!==false||
  !(previousPublicationId===null||typeof previousPublicationId==='string'&&id.test(previousPublicationId)))
  throw Error('Invalid publication review response');
+ // Preserve the authenticated read-only review when writes are disabled.
+ if(!runtime.publicationEnabled)return {committed:false,reviewOnly:true,rosterCount:review.rosterCount};
  if(await confirmStage(review)!==true)return {committed:false};
  assertCurrent();
  const confirmation=Object.fromEntries(keys.map(k=>[k,review[k]]));
