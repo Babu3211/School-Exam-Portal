@@ -54,7 +54,12 @@ for(const klass of ['1','2','3','4','5','6','7','8','9','10'])for(const exam of 
   const bytes=new Uint8Array(await legacyGradePreviewExcel(result,mode).arrayBuffer());
   assert.deepEqual([...bytes.slice(0,2)],[80,75]);assert.match(new TextDecoder().decode(bytes),/NOT FOR OFFICIAL USE/);
  }
- const sheet=result.printFor('s1');if(Number(klass)<=5||exam==='final'){assert.equal(sheet.ready,true);assert.match(sheet.html,/NOT VALID FOR OFFICIAL USE/)}else assert.equal(sheet.ready,false);
+ const sheet=result.printFor('s1');
+ assert.equal(sheet.ready,true);
+ assert.match(sheet.html,/NOT VALID FOR OFFICIAL USE/);
+ assert.ok(sheet.html.includes('GPA: '+result.summary.rows[0].gpa.toFixed(2)));
+ assert.ok(sheet.html.includes(exam==='final'?'@page{size:A4 portrait':'@page{size:A5 portrait'));
+ assert.match(sheet.html,/background-repeat:repeat/);
 }
 console.log('PASS Spark Draft reports: 30 class/term combinations, two subjects, all ledgers and preview XLSX, GPA and watermark');
 
