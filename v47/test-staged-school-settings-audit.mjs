@@ -187,3 +187,14 @@ import {iemisEntrySchema,iemisEntryValues} from './iemis-entry.js';
  await assert.rejects(summarizeMigratedReportCoverage({...args,marks:[row('x',{schoolId:'99999'})]}),/foreign/);
  console.log('PASS actual-schema report coverage aggregate: complete, missing, duplicate, no student identity output or publication approval');
 }
+
+// Aggregate report coverage does not depend on private student names.
+{
+ const sid='12345',classNo='1',term='1st',examId='historical2';
+ const students=[row('anonymous1',{class:classNo,active:true,name:'Diagnostic student 1'})];
+ const subjects=[row('math',{class:classNo,active:true,name:'Mathematics',creditHour:4})];
+ const exams=[row(examId,{class:classNo,term,termKey:'first',academicYear:'2083',active:true})];
+ const marks=[row('m1',{...iemisEntryValues(iemisEntrySchema(classNo,'first','Mathematics'),{values:{count:'10',obtained:'35'},isAbsent:false,incompatible:false}),class:classNo,term,termKey:'first',academicYear:'2083',examId,studentId:'anonymous1',subjectId:'math',subject:'Mathematics'})];
+ const r=await summarizeMigratedReportCoverage({schoolId:sid,school:{id:sid,active:true},students,subjects,exams,marks});
+ assert.equal(r.rows[0].completePreviews,1);assert.equal(JSON.stringify(r).includes('Diagnostic student'),false);
+}
