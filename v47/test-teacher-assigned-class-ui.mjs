@@ -53,7 +53,8 @@ assert.match(ui,/for\(const subjectId of subjects\)/);
 assert.match(ui,/data\.subjectId==='attendance'\)continue/);
 assert.match(ui,/name:subject\.subjectName/);
 assert.match(ui,/option\.textContent=subject\.name/);
-assert.match(ui,/student\.name\?\?student\.id/);
+assert.match(ui,/studentDisplayName\(student\)/);
+assert.match(ui,/import \{studentDisplayName\} from '\.\/student-display-name\.mjs'/);
 assert.doesNotMatch(ui,/setDoc\(|addDoc\(|updateDoc\(|deleteDoc\(|runTransaction\(|writeBatch\(/);
 assert.match(ui,/const failedEpoch=epoch;try\{await authSdk\.signOut\(auth\)\}catch\{\}if\(epoch===failedEpoch\)\{lock\(false\)/);
 for(const id of ['teacherDraftArea','draftTerm','loadTeacherDraft','inspectTeacherDraft',

@@ -28,3 +28,8 @@ assert.match(helper,/subjectData\.active!==true/);
 assert.match(helper,/transaction\.set\(ref,prepared\)/);
 assert.ok(helper.indexOf('transaction.get(ref)')<helper.indexOf('transaction.set(ref,prepared)'));
 console.log('V47 create-once exam settings UI and transactional no-overwrite guard wired; emulator verification still required');
+
+assert.match(html,/id="additionalSettingsTerms"/);
+assert.match(handler,/createNewSubjectExamSettings\(\{db,api,actor,settings,additionalTerms\}\)/);
+assert.match(helper,/for\(const target of targets\)\{const snapshot=await transaction\.get\(target\.ref\)/);
+assert.ok(helper.indexOf('await transaction.get(target.ref)')<helper.indexOf('transaction.set(ref,prepared)'));

@@ -49,3 +49,23 @@ assert.equal(writes,1);
 await assert.rejects(()=>createNewSubjectExamSettings({db:{},api,actor:{...actor,role:'viewer'},settings}),/School Admin/);
 assert.equal(writes,1);
 console.log('V47 create-once subject examination settings contract tests passed (emulator still required)');
+
+// Multi-term creation is atomic: all reads before any set, no overwrites.
+{
+ const seen=new Map(),written=[];let reads=0;
+ const subject='schools/12345/subjects/computer';
+ const multiApi={doc:(_db,...parts)=>parts.join('/'),runTransaction:async(_db,callback)=>{
+  const pending=[];await callback({get:async ref=>{assert.equal(pending.length,0,'All reads must precede writes');reads++;return ref===subject?{exists:()=>true,data:()=>({schoolId:'12345',class:'9',active:true})}:{exists:()=>seen.has(ref)}},set:(ref,data)=>pending.push([ref,data])});
+  for(const [ref,data] of pending){seen.set(ref,data);written.push(ref)}
+ }};
+ const created=await createNewSubjectExamSettings({db:{},api:multiApi,actor,settings,additionalTerms:['1st','2nd']});
+ assert.equal(created.createdCount,3);assert.equal(reads,4);assert.equal(written.length,3);
+ assert.deepEqual([...seen.values()].map(x=>x.examId),['final','1st','2nd']);
+ assert.ok([...seen.values()].every(x=>JSON.stringify(x.components)===JSON.stringify(settings.components)));
+ const third=prepareNewSubjectExamSettings({...settings,examId:'3rd'});
+ await assert.rejects(createNewSubjectExamSettings({db:{},api:multiApi,actor,settings:third,additionalTerms:['weekly','1st']}),/already exist/);
+ assert.equal(written.length,3);assert.equal(seen.has('schools/12345/mark_settings/9_computer_3rd'),false);
+ await assert.rejects(createNewSubjectExamSettings({db:{},api:multiApi,actor,settings:third,additionalTerms:['3rd']}),/distinct/);
+ await assert.rejects(createNewSubjectExamSettings({db:{},api:multiApi,actor:{...actor,role:'teacher'},settings:third,additionalTerms:['weekly']}),/School Admin/);
+ assert.equal(written.length,3);
+}
