@@ -96,6 +96,37 @@ export function prepareLegacyGradeReport({schoolId,school,classNo,term,examId=te
  const printFor=createIemisGradeSheetPrinter({school,classNo,term,students,subjects,draftsBySubject,academicYear:'2083',allowAbsent:true});
  return Object.freeze({schoolId,school,classNo:String(classNo),term,examId,students,subjects,rosterCount:students.length,subjectCount:subjects.length,ledger,ledgers,excelFor,summary,printFor,previewOnly:true,writeAuthorized:false,publicationAllowed:false});
 }
+// Separate individual, watermarked screen review. Never exports a class ledger
+// or relaxes the complete-class gate. Each student must have every subject.
+export function prepareIndividualLegacySheetReview({schoolId,school,classNo,term,examId=term,students,subjects,records}){
+ validateSchoolId(schoolId);
+ if(!/^(?:[1-9]|10)$/.test(String(classNo))||!Object.hasOwn(termMap,term)||typeof examId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(examId))throw Error('Invalid report scope');
+ if(!Array.isArray(students)||students.length<1||students.length>1500||!Array.isArray(subjects)||subjects.length<1||subjects.length>30||!Array.isArray(records)||records.length>30000)throw Error('Invalid report inventory');
+ const byStudent=new Map(),bySubject=new Map(),subjectIds=new Set();
+ for(const st of students){
+  if(!st||st.schoolId!==schoolId||String(st.class)!==String(classNo)||!isActiveEnrolledStudent(st)||typeof st.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(st.id)||byStudent.has(st.id))throw Error('Foreign, inactive or duplicate student');
+  byStudent.set(st.id,{student:st,marks:[],seen:new Set()});
+ }
+ for(const sub of subjects){
+  const key=iemisSubjectKey(sub?.name);
+  if(!sub||sub.schoolId!==schoolId||String(sub.class)!==String(classNo)||sub.active!==true||!key||bySubject.has(key)||typeof sub.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(sub.id)||subjectIds.has(sub.id)||!Number.isFinite(sub.creditHour)||sub.creditHour<=0||sub.creditHour>20)throw Error('Foreign, inactive or duplicate subject');
+  bySubject.set(key,sub);subjectIds.add(sub.id);
+ }
+ for(const mark of records){
+  const entry=byStudent.get(mark?.studentId),sub=bySubject.get(iemisSubjectKey(mark?.subject));
+  if(!mark||mark.schoolId!==schoolId||String(mark.class)!==String(classNo)||mark.term!==term||mark.examId!==examId||(examId!==term&&String(mark.academicYear)!=='2083')||!entry||!sub||mark.subjectId!==sub.id)throw Error('Mark outside verified school/class/term');
+  if(entry.seen.has(sub.id))throw Error('Duplicate class subject marks');
+  entry.seen.add(sub.id);entry.marks.push(mark);
+ }
+ const printFor=id=>{
+  const entry=byStudent.get(id);if(!entry)throw Error('Student not in selected class');
+  const missing=subjects.filter(sub=>!entry.seen.has(sub.id));
+  if(missing.length)return {ready:false,html:null,reason:'सबै विषयका अङ्क पूरा भएका छैनन्। बाँकी विषय: '+missing.map(s=>s.name).join(', ')};
+  // Reuse the complete verified calculation for this student's full subject grid.
+  return prepareLegacyGradeReport({schoolId,school,classNo,term,examId,students:[entry.student],subjects,records:entry.marks}).printFor(id);
+ };
+ return Object.freeze({individualOnly:true,previewOnly:true,writeAuthorized:false,publicationAllowed:false,students,rosterCount:students.length,subjectCount:subjects.length,completeRecordCount:[...byStudent.values()].filter(x=>x.marks.length===subjects.length).length,printFor});
+}
 export function legacyGradePreviewExcel(result,mode='grade'){
  if(result?.previewOnly!==true||result.publicationAllowed!==false||result.writeAuthorized!==false||result.summary?.complete!==true)throw Error('Complete read-only grade preview required');
  if(!['grade','number','entry'].includes(mode))throw Error('Unapproved ledger mode required');

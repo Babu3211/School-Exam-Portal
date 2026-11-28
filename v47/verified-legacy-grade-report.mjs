@@ -3,7 +3,7 @@
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {loadAllClassMarks} from './complete-class-marks-query.mjs';
-import {prepareLegacyGradeReport} from './legacy-grade-report-preview.mjs';
+import {prepareLegacyGradeReport,prepareIndividualLegacySheetReview} from './legacy-grade-report-preview.mjs';
 import {validateSchoolId} from './school-paths.mjs';
 import {resolveScopedReportExam} from './scoped-legacy-report-exam.mjs';
 // The existing preview requires a complete class × subject grid. A count
@@ -18,7 +18,7 @@ export function assertLegacyReportGridCount(students,subjects,records){
   throw error;
  }
 }
-export async function loadVerifiedLegacyGradeReport({db,api,auth,actor,schoolId,classNo,term,selectedExamId=null,readDocument,assertCurrent,onProgress=()=>{}}){
+export async function loadVerifiedLegacyGradeReport({db,api,auth,actor,schoolId,classNo,term,selectedExamId=null,individualOnly=false,readDocument,assertCurrent,onProgress=()=>{}}){
  validateSchoolId(schoolId);
  if(typeof assertCurrent!=='function'||typeof readDocument!=='function'||typeof onProgress!=='function')throw TypeError('Verified report callbacks required');
  const uid=auth?.currentUser?.uid;
@@ -49,6 +49,11 @@ export async function loadVerifiedLegacyGradeReport({db,api,auth,actor,schoolId,
  if(after.role!==before.role)throw Error('School membership changed during report load');
  // Empty selections have no records whose exam identity could be resolved.
  // Report zero records without substituting another exam or producing a sheet.
+ if(individualOnly===true){
+  if(selectedExamId!==null&&marks.records.length&&examId!==selectedExamId)throw Error('No matching records for selected exam');
+  const result=prepareIndividualLegacySheetReview({schoolId,school:branding,classNo:String(classNo),term,examId:selectedExamId??examId,students:roster.students,subjects,records:marks.records});
+  check();return result;
+ }
  assertLegacyReportGridCount(roster.count,subjects.length,marks.records.length);
  if(selectedExamId!==null&&examId!==selectedExamId)throw Error('No matching records for selected exam');
  const result=prepareLegacyGradeReport({schoolId,school:branding,classNo:String(classNo),term,examId,students:roster.students,subjects,records:marks.records});

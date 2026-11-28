@@ -80,7 +80,9 @@ $('login').onclick=async()=>{
 };
 $('logout').onclick=async()=>{clearSession();try{if(auth)await authSdk.signOut(auth);status('Logout सफल भयो।')}catch(e){status('Logout असफल: '+neError(e))}};
 const resetReportFilters=()=>{clearReview();resetExamSelection()};
+if($('individualReview'))$('individualReview').onchange=clearReview;
 $('schoolClass').onchange=resetReportFilters;$('term').onchange=resetReportFilters;$('reportSource').onchange=resetReportFilters;
+if($('individualReview'))$('reportSource').addEventListener('change',()=>{$('individualReview').checked=false;$('individualReview').disabled=$('reportSource').value!=='legacy';});
 $('legacyExam').onchange=clearReview;
 $('loadLegacyExams').onclick=async()=>{
  if(!actor||busy||loading||$('reportSource').value!=='legacy')return;
@@ -109,7 +111,7 @@ function showSheet(){
   frame.onload=()=>{
    if(sheetSeq!==seq||!report||sheetKey()!==selection)return;
    frame.dataset.loadedStudent=studentId;frame.dataset.loadedSelection=selection;
-   $('printSheet').disabled=false;
+   $('printSheet').disabled=report.individualOnly===true;
    $('sheetStatus').textContent='पूर्वावलोकन मात्र — आधिकारिक प्रयोगका लागि मान्य छैन।';
   };
   frame.srcdoc=doc.html;
@@ -133,7 +135,8 @@ $('load').onclick=async()=>{
  if(loading||busy||!actor)return;
  clearReview();const seq=sessionSeq,review=reviewSeq,member=actor,klass=$('schoolClass').value,term=$('term').value;
  const source=$('reportSource').value,selectedExamId=source==='legacy'?$('legacyExam').value||null:null;
- const check=()=>{assertCurrent(seq,review,member,klass,term);if($('reportSource').value!==source||source==='legacy'&&($('legacyExam').value||null)!==selectedExamId)throw Error('Report source changed')};
+ const individualOnly=source==='legacy'&&$('individualReview')?.checked===true;
+ const check=()=>{assertCurrent(seq,review,member,klass,term);if($('reportSource').value!==source||source==='legacy'&&(($('legacyExam').value||null)!==selectedExamId||($('individualReview')?.checked===true)!==individualOnly))throw Error('Report source changed')};
  loading=true;$('load').disabled=true;$('cancel').disabled=false;
  try{
   await verifyAgain(member,seq,review,klass,term);
@@ -141,11 +144,18 @@ $('load').onclick=async()=>{
    ?await loadCommittedReportPreview({schoolId:member.schoolId,classNo:klass,term,
     getIdToken:()=>auth.currentUser.getIdToken(),fetchImpl:(...args)=>fetch(...args),assertCurrent:check})
    :source==='legacy'?await loadVerifiedLegacyGradeReport({db,api:{...api,getDocs:api.getDocsFromServer},auth,actor:member,schoolId:member.schoolId,
-   classNo:klass,term,selectedExamId,readDocument,assertCurrent:check,
+   classNo:klass,term,selectedExamId,individualOnly,readDocument,assertCurrent:check,
    onProgress:s=>{check();$('progress').textContent=s}}):null;
   if(!data)throw Error('Unknown report source');
   await verifyAgain(member,seq,review,klass,term);
   check();report=data;
+  if(data.individualOnly===true){
+   if(!individualOnly||!$('individualReview'))throw Error('Invalid individual preview scope');
+   for(const st of data.students)$('student').append(new Option(String(st.nameEnglish??st.name??st.id),st.id));
+   $('student').disabled=false;$('previewSheet').disabled=false;$('sheetArea').hidden=false;resetPair();showSheet();
+   $('progress').textContent=data.rosterCount+' विद्यार्थीमध्ये '+data.completeRecordCount+' का सबै विषयका अभिलेख छन्।';
+   status('विद्यार्थीगत पूर्वावलोकन मात्र। पूर्ण Ledger, Excel र Print उपलब्ध छैन।');return;
+  }
   if(data.configuredMarksPreview===true){
    if(source!=='configuredDraft'||member.role!=='school_admin'||!['number','entry'].includes(reportMode)||!$('configuredPaging'))throw Error('Configured marks review is not a grade report');
    configuredTable=data.tableFor(reportMode);configuredPage=0;renderConfiguredPage();
@@ -170,7 +180,7 @@ $('load').onclick=async()=>{
 function refreshPairOptions(){
  if(!pairSelect)return;
  const second=selectedPair(),first=$('student').value;
- const eligible=report&&['1st','2nd','3rd'].includes($('term').value)&&report.students.length>1;
+ const eligible=report&&!report.individualOnly&&['1st','2nd','3rd'].includes($('term').value)&&report.students.length>1;
  pairSelect.replaceChildren(new Option('Single Grade Sheet',''));
  if(eligible)for(const st of report.students){if(st.id!==first)pairSelect.append(new Option(String(st.nameEnglish??st.name??st.id),st.id))}
  if([...pairSelect.options].some(o=>o.value===second))pairSelect.value=second;
@@ -179,7 +189,7 @@ function refreshPairOptions(){
 $('student').onchange=()=>{refreshPairOptions();showSheet()};$('previewSheet').onclick=showSheet;
 if(pairSelect)pairSelect.onchange=showSheet;
 $('printSheet').onclick=async()=>{
- if(!report||$('printSheet').disabled)return;
+ if(!report||report.individualOnly||$('printSheet').disabled)return;
  const seq=sessionSeq,review=reviewSeq,member=actor,klass=$('schoolClass').value,term=$('term').value;
  try{
   await verifyAgain(member,seq,review,klass,term);

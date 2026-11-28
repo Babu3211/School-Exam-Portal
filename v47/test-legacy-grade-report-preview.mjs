@@ -222,3 +222,19 @@ console.log('PASS scoped historical report identity; canonical terms unchanged; 
 }
 
 import {combineTerminalGradeSheets} from './iemis-grade-sheet-print-preview.mjs';
+
+import {prepareIndividualLegacySheetReview} from './legacy-grade-report-preview.mjs';
+{
+ const partial=records.slice(0,3),review=prepareIndividualLegacySheetReview({...args,records:partial});
+ assert.equal(review.individualOnly,true);assert.equal(review.completeRecordCount,1);
+ assert.deepEqual(review.printFor('s1'),r.printFor('s1'));
+ assert.equal(review.printFor('s2').ready,false);assert.match(review.printFor('s2').reason,/Nepali/);
+ assert.throws(()=>legacyGradePreviewExcel(review),/read-only/);
+ assert.throws(()=>prepareLegacyGradeReport({...args,records:partial}),/Complete/);
+ assert.throws(()=>prepareIndividualLegacySheetReview({...args,records:[...partial,partial[0]]}),/Duplicate/);
+ assert.throws(()=>prepareIndividualLegacySheetReview({...args,records:[{...partial[0],schoolId:'99999'}]}),/outside/);
+ assert.throws(()=>review.printFor('foreign'),/not in selected class/);
+ const invalid=prepareIndividualLegacySheetReview({...args,records:[{...partial[0],scores:undefined},partial[1]]});
+ assert.throws(()=>invalid.printFor('s1'),/Raw marks/);
+}
+console.log('PASS independent student sheet review preserves full subject validation and forbids class export');
