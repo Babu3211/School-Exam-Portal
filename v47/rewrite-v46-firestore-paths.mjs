@@ -31,17 +31,25 @@ export function rewriteV46FirestorePaths(source){
   seen.add(name);
   return kind+'(db, "schools", activeSchoolId, '+quote+name+quote;
  });
- // V46 dashboard counts, backup and restore use a variable collection name.
- // Scope these three call sites too; their allowlisted values require a separate review.
- let dynamicCount=0;
- const dynamicScoped=rewritten.replace(/\b(collection|doc)\(\s*db\s*,\s*name\b/g,(match,kind)=>{
-  dynamicCount++;return kind+'(db, "schools", activeSchoolId, assertV47TenantCollection(name)';
+ // Reviewed V46 main 541b417: three older name references, one class
+ // deletion inventory and three matrix references choosing CDC evidence.
+ // The generated source is still NOT deployable.
+ const matrixSelector="const collectionName=binary?'cdc_serofero_indicators':'cdc_observations';";
+ const deleteSelector="['cdc_observations','cdc_serofero_indicators'].map(name=>getDocsFromServer(query(collection(db,name)";
+ if(rewritten.split(matrixSelector).length!==2||rewritten.split(deleteSelector).length!==2)throw new Error('Reviewed CDC selector changed');
+ const conditional="collection(db,key==='serophero'?'cdc_serofero_indicators':'cdc_observations')";
+ if(rewritten.split(conditional).length!==2)throw new Error('Reviewed CDC conditional changed');
+ const scopedConditional=rewritten.replace(conditional,"collection(db, \"schools\", activeSchoolId, assertV47TenantCollection(key==='serophero'?'cdc_serofero_indicators':'cdc_observations'))");
+ const counts={name:0,collectionName:0};
+ const dynamicScoped=scopedConditional.replace(/\b(collection|doc)\(\s*db\s*,\s*(name|collectionName)\b/g,(match,kind,name)=>{
+  counts[name]++;return kind+'(db, "schools", activeSchoolId, assertV47TenantCollection('+name+')';
  });
- if(dynamicCount!==3)throw new Error('V46 dynamic collection/document call count changed: '+dynamicCount);
+ const dynamicCount=counts.name+counts.collectionName;
+ if(counts.name!==4||counts.collectionName!==3)throw new Error('V46 dynamic collection/document call count changed: '+dynamicCount);
  for(const name of V46_COLLECTIONS)if(!seen.has(name))throw new Error('Expected V46 collection not found: '+name);
  // Do not silently rewrite dynamic paths, nested references or database rules.
  const legacyLiteral=/\b(?:collection|doc)\(\s*db\s*,\s*(['"`])([a-z_]+)\1/g;
  for(const match of dynamicScoped.matchAll(legacyLiteral))if(match[2]!=='schools')throw new Error('Unscoped literal Firestore reference remains: '+match[2]);
- if(/\b(?:collection|doc)\(\s*db\s*,\s*name\b/.test(dynamicScoped))throw new Error('Unscoped dynamic Firestore reference remains');
+ if(/\b(?:collection|doc)\s*\(\s*db\s*,\s*[A-Za-z_$]/.test(dynamicScoped))throw new Error('Unscoped dynamic Firestore reference remains');
  return {source:dynamicScoped,collections:[...seen].sort(),dynamicCount};
 }

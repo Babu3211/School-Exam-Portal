@@ -8,7 +8,7 @@ const html=readFileSync(new URL("../dist/v47-v46-port-audit/index.html",import.m
 assert.equal(audit.state,"QUARANTINED_NOT_DEPLOYABLE");
 assert.equal(audit.deploymentApproved,false);
 assert.ok(audit.literalReferencesRewritten>=140);
-assert.equal(audit.dynamicReferencesRewritten,3);
+assert.equal(audit.dynamicReferencesRewritten,7);
 assert.ok(audit.legacyBackupRestoreRequiresReview);
 assert.ok(audit.firebaseOperationInventory.getDocs>0);
 assert.ok(audit.firebaseOperationInventory.getDoc>0);

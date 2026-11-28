@@ -27,21 +27,27 @@ const reviewedCdcConditionalReferences=1;
 // Route all remaining variable collection names through the same fail-closed gateway.
 const dynamicSource=/\b(collection|doc)\s*\(\s*db\s*,\s*([a-zA-Z_$][\w$]*)/g;
 const dynamicNames=new Set();
+const counts={name:0,collectionName:0};
+assert.equal(source.split("const collectionName=binary?'cdc_serofero_indicators':'cdc_observations';").length-1,1,'Reviewed matrix selector changed');
+assert.equal(source.split("['cdc_observations','cdc_serofero_indicators'].map(name=>getDocsFromServer(query(collection(db,name)").length-1,1,'Reviewed class deletion selector changed');
 let dynamicReferences=0;
 port=port.replace(dynamicSource,(full,fn,name)=>{
  if(name==="tenantCollection")return full;
- if(name!=="name")throw new Error("Unreviewed dynamic V46 collection variable: "+name);
+ if(!Object.hasOwn(counts,name))throw new Error("Unreviewed dynamic V46 collection variable: "+name);
+ counts[name]++;
  dynamicNames.add(name);
  dynamicReferences++;
  return fn+"(db,tenantCollection("+name+")";
 });
 const unresolved=[...port.matchAll(dynamicSource)].filter(m=>m[2]!=="tenantCollection");
 assert.equal(unresolved.length,0,"Unscoped V46 Firestore access remains");
-assert.equal(dynamicReferences,3,"V46 dynamic Firestore references changed: review required");
+assert.deepEqual(counts,{name:4,collectionName:3},"V46 dynamic Firestore references changed: review required");
+assert.equal(dynamicReferences,7);
 // Legacy backup/restore traverses arbitrary collection names. It must remain
 // disabled until a tenant-aware export/import design is independently reviewed.
 const legacyBackupRestoreCalls=[...source.matchAll(/\b(collection|doc)\s*\(\s*db\s*,\s*name\b/g)].length;
-assert.equal(legacyBackupRestoreCalls,dynamicReferences,"Legacy backup/restore references changed; review required");
+assert.equal(legacyBackupRestoreCalls,4,"Reviewed name references changed; review required");
+assert.equal([...source.matchAll(/\b(?:collection|doc)\s*\(\s*db\s*,\s*collectionName\b/g)].length,3,"Reviewed matrix references changed");
 
 assert.equal((port.match(/tenantCollection\(/g)||[]).length,changed+dynamicReferences+reviewedCdcConditionalReferences,"Every V46 Firestore reference must use tenant gateway");
 const legacyConfig=/const firebaseConfig=\{[^;]+\};\s*const ADMIN_UID="[^"]+";\s*const app=initializeApp\(firebaseConfig\),auth=getAuth\(app\),db=getFirestore\(app\);/;

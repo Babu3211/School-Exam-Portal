@@ -19,12 +19,14 @@ assert.doesNotMatch(visual,/exam-portal-smss-95016/);
 
 assert.equal(audit.state,"QUARANTINED_NOT_DEPLOYABLE");
 assert.ok(audit.literalReferencesRewritten>=140);
-assert.equal(audit.dynamicReferencesRewritten,3);
+assert.equal(audit.dynamicReferencesRewritten,7);
 assert.equal(audit.reviewedCdcConditionalReferences,1);
 assert.ok(html.includes("collection(db,tenantCollection(key==='serophero'?'cdc_serofero_indicators':'cdc_observations'))"));
 assert.ok(!html.includes("collection(db,key==='serophero'"));
 assert.equal(audit.legacyBackupRestoreRequiresReview,true);
-assert.deepEqual(audit.dynamicVariablesScoped,["name"]);
+assert.deepEqual([...audit.dynamicVariablesScoped].sort(),["collectionName","name"]);
+assert.equal((html.match(/tenantCollection\(collectionName\)/g)||[]).length,3);
+assert.equal((html.match(/tenantCollection\(name\)/g)||[]).length,4);
 assert.equal(audit.unresolvedDynamicReferences.length,0);
 assert.ok(html.includes("collection(db,tenantCollection(name))"));
 assert.ok(html.includes("doc(db,tenantCollection(name),item.id)"));
