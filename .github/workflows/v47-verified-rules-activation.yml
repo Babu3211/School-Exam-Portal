@@ -28,13 +28,15 @@ jobs:
         run: |
           npm install --no-package-lock --no-audit --no-fund
           npm install --prefix v47-runtime --no-package-lock --no-audit --no-fund --ignore-scripts
-      - name: Confirm V47 project isolation and strict academic write guards
+      - name: Confirm V47 project isolation and strict academic write guards for the reviewed migration rules upgrade
         run: |
           node scripts/test-v47-school-isolation-gate.mjs
           node scripts/test-v47-rules-structure.mjs
           node v47/test-production-marks-guard.mjs
           node v47/test-super-admin-session-guard.mjs
           node --check v47/diagnostics/activate-reviewed-rules.mjs
+          test "$(git hash-object v47/firestore.rules)" = '174dbb914674c4389695d808a083a2784a251217'
+          node scripts/test-v47-production-boundary.mjs
           node --check v47/diagnostics/check-live-access.mjs
           npm run test:v47:rules-iemis-syntax
           node -e 'const c=require("./v47/firebase.v47.json");if(c.firestore.rules!=="firestore.rules"||c.hosting||c.functions)throw Error("Unexpected V47 deployment config")'
