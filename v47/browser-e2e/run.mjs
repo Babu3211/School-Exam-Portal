@@ -536,7 +536,7 @@ try{
    await page.locator('#schoolClass').selectOption('1');
    await page.locator('#term').selectOption('final');
    const settingPath=root+'/mark_settings/1_math_final',settingBefore=(await db.doc(settingPath).get()).data();
-   await page.locator('#auditEntrySettings').click();await wait(page,()=>document.getElementById('auditEntrySettingsStatus').textContent.includes('1 सेटिङ'));
+   await page.locator('#auditEntrySettings').click();await wait(page,()=>document.getElementById('auditEntrySettingsStatus').textContent.includes('1 वैध सेटिङ'));
    assert.match(await page.locator('#auditEntrySettingsRows').textContent(),/Mathematics.*Schema match/);
    const auditDownload=page.waitForEvent('download',{timeout:30000});await page.locator('#exportEntrySettingsAudit').click();const auditFile=await auditDownload;assert.equal(auditFile.suggestedFilename(),'V47-SETTINGS-AUDIT-'+sid+'-1-final.xlsx');
    const auditBytes=(await readFile(await auditFile.path())).toString();assert.match(auditBytes,/Schema match/);assert.match(auditBytes,/NOT verified against live IEMIS/);
@@ -544,6 +544,57 @@ try{
    await page.locator('#auditEntrySettings').click();await wait(page,()=>document.getElementById('auditEntrySettingsStatus').textContent.includes('1 समीक्षा आवश्यक'));
    assert.match(await page.locator('#auditEntrySettingsRows').textContent(),/Missing active settings/);
    const allAuditDownload=page.waitForEvent('download',{timeout:30000});await page.locator('#exportAllTermSettingsAudit').click();const allAuditFile=await allAuditDownload;assert.equal(allAuditFile.suggestedFilename(),'V47-SETTINGS-AUDIT-'+sid+'-1-ALL-TERMS.xlsx');const allAuditBytes=(await readFile(await allAuditFile.path())).toString();assert.match(allAuditBytes,/Schema match/);assert.match(allAuditBytes,/Missing active settings/);
+   // Create school-defined settings in an unused term via the actual Admin UI.
+   // This does not change the existing primary achievement settings in Final.
+   const customSettingsPath=root+'/mark_settings/1_math_1st',customDraftPath=root+'/class_mark_drafts/1_math_1st';
+   const otherSettings='schools/'+schools[1].sid+'/mark_settings/1_math_1st';
+   const otherDraft='schools/'+schools[1].sid+'/class_mark_drafts/1_math_1st';
+   assert.equal((await db.doc(customSettingsPath).get()).exists,false);
+   assert.equal((await db.doc(customDraftPath).get()).exists,false);
+   try{
+    await page.locator('#loadSubjects').click();
+    await wait(page,()=>Array.from(document.getElementById('subjectId').options).some(o=>o.value==='math'));
+    await page.locator('#subjectId').selectOption('math');
+    await page.locator('#newSettingsComponents').fill('assessment,Assessment,137.5\nproject,Project,62.5');
+    page.once('dialog',d=>d.accept());
+    await page.locator('#createExamSettings').click();
+    await wait(page,()=>document.getElementById('settingsCreateResult').textContent.includes('Settings created.'));
+    const savedSettings=(await db.doc(customSettingsPath).get()).data();
+    assert.deepEqual(savedSettings.components,[{key:'assessment',name:'Assessment',fullMarks:137.5},{key:'project',name:'Project',fullMarks:62.5}]);
+    await page.locator('#auditEntrySettings').click();
+    await wait(page,()=>document.getElementById('auditEntrySettingsStatus').textContent.includes('1 वैध सेटिङ'));
+    assert.match(await page.locator('#auditEntrySettingsRows').textContent(),/Configured settings valid/);
+    assert.match(await page.locator('#auditEntrySettingsRows').textContent(),/Assessment \/ 137.5/);
+    const customDownload=page.waitForEvent('download',{timeout:30000});
+    await page.locator('#exportEntrySettingsAudit').click();const customFile=await customDownload;
+    assert.match((await readFile(await customFile.path())).toString(),/Configured settings valid/);
+    await page.locator('#loadClassMarks').click();
+    await wait(page,()=>!document.getElementById('inspectClassMarks').disabled);
+    assert.deepEqual(await page.locator('#classMarkHeader th').allTextContents(),['Student','Absent','Assessment / 137.5','Project / 62.5']);
+    const assessment=page.locator('#classMarkRows input[data-field="assessment"]'),project=page.locator('#classMarkRows input[data-field="project"]');
+    assert.equal(await assessment.getAttribute('max'),'137.5');assert.equal(await project.getAttribute('max'),'62.5');
+    const sampleDownload=page.waitForEvent('download',{timeout:30000});await page.locator('#downloadClassTemplateExcel').click();const sample=await sampleDownload;
+    const sampleBytes=(await readFile(await sample.path())).toString();assert.match(sampleBytes,/137.5/);assert.match(sampleBytes,/62.5/);
+    await assessment.fill('138');await project.fill('62.5');await page.locator('#inspectClassMarks').click();
+    await wait(page,()=>document.getElementById('draftCheckResult').textContent.includes('Class marks incomplete.'));
+    assert.equal(await page.locator('#saveClassDraft').isDisabled(),true);
+    assert.equal((await db.doc(customDraftPath).get()).exists,false);
+    await assessment.fill('137.5');await page.locator('#inspectClassMarks').click();
+    await wait(page,()=>!document.getElementById('saveClassDraft').disabled);
+    const reviewDownload=page.waitForEvent('download',{timeout:30000});await page.locator('#downloadClassReviewExcel').click();const reviewFile=await reviewDownload;
+    const reviewBytes=(await readFile(await reviewFile.path())).toString();assert.match(reviewBytes,/137.5/);assert.match(reviewBytes,/62.5/);
+    page.once('dialog',d=>d.accept());await page.locator('#saveClassDraft').click();
+    await wait(page,()=>document.getElementById('classDraftStatus').textContent.includes('Revision 1 सुरक्षित भयो'));
+    const draft=(await db.doc(customDraftPath).get()).data();
+    assert.equal(draft.revision,1);assert.deepEqual(draft.entries[0].values,{assessment:137.5,project:62.5});assert.equal(draft.entries[0].totalObtained,200);
+    await page.locator('#loadClassMarks').click();await wait(page,()=>document.getElementById('classDraftStatus').textContent.includes('Revision 1 restored'));
+    assert.equal(await assessment.inputValue(),'137.5');assert.equal(await project.inputValue(),'62.5');
+    assert.deepEqual((await db.doc(customSettingsPath).get()).data(),savedSettings);
+    assert.deepEqual((await db.doc(settingPath).get()).data(),settingBefore);
+    assert.equal((await db.doc(otherSettings).get()).exists,false);assert.equal((await db.doc(otherDraft).get()).exists,false);
+    assert.equal((await db.doc(root+'/official_marks_pointers/'+sha(JSON.stringify(['1','math','1st']))).get()).exists,false);
+    console.log('PASS configured custom primary maxima: Admin settings, audit, class entry, over-maximum rejection, Excel, saved draft reload and school isolation');
+   }finally{await Promise.all([customDraftPath,customSettingsPath].map(path=>db.doc(path).delete()))}
    await page.locator('#term').selectOption('final');assert.deepEqual((await db.doc(settingPath).get()).data(),settingBefore);
    await page.locator('#loadSubjects').click();
    await wait(page,()=>Array.from(document.getElementById('subjectId').options).some(o=>o.value==='math'));
