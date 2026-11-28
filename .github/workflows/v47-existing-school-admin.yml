@@ -1,0 +1,45 @@
+name: V47 existing School Admin membership repair
+on:
+  workflow_dispatch:
+    inputs:
+      root_email:
+        description: Existing account that will remain Super Admin
+        required: true
+        type: string
+      school_admin_email:
+        description: Existing account to grant school 300160003 School Admin membership
+        required: true
+        type: string
+      action:
+        description: Review only or explicitly apply exact membership
+        required: true
+        default: review
+        type: choice
+        options: [review, apply]
+permissions:
+  contents: read
+concurrency:
+  group: v47-existing-admin-membership
+  cancel-in-progress: false
+jobs:
+  repair:
+    if: github.ref == 'refs/heads/smss-v47-multischool-work'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node v47/diagnostics/prepare-existing-school-admin.mjs --self-test
+      - run: npm install --prefix v47-runtime --no-package-lock --no-audit --no-fund --ignore-scripts
+      - name: Verify or repair only the authorized membership
+        env:
+          V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}
+          V47_ROOT_EMAIL: ${{ inputs.root_email }}
+          V47_SCHOOL_ADMIN_EMAIL: ${{ inputs.school_admin_email }}
+          ACTION: ${{ inputs.action }}
+        run: |
+          test "$ACTION" = review || test "$ACTION" = apply
+          node v47/diagnostics/prepare-existing-school-admin.mjs "--$ACTION"
