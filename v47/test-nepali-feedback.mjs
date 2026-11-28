@@ -15,3 +15,7 @@ const report=readFileSync(new URL('./report-preview-console.mjs',import.meta.url
 assert.match(report,/import \{neError\} from '\.\/nepali-feedback\.mjs'/);
 assert.doesNotMatch(report,/status\(error\.message\)/);
 console.log('PASS V47 Nepali feedback, auxiliary non-official warnings and English controls');
+
+assert.match(neError({code:'smss/incomplete-legacy-grid',reportCounts:{students:22,subjects:8,records:22,expected:176}}),/176 अभिलेख/);
+assert.doesNotMatch(neError({code:'smss/incomplete-legacy-grid',reportCounts:{students:'private',subjects:8,records:22,expected:176}}),/private/);
+assert.match(neError(Error('No matching records for selected exam')),/अङ्क अभिलेख भेटिएनन्/);

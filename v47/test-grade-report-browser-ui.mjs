@@ -79,3 +79,13 @@ await assert.rejects(loadCommittedReportPreview({...options,fetchImpl:async()=>(
 await assert.rejects(loadCommittedReportPreview({...options,fetchImpl:async()=>({ok:true,json:async()=>{throw Error('HTML')}})}),/static Hosting/);
 await assert.rejects(loadCommittedReportPreview({...options,fetchImpl:async()=>{changed=true;return {ok:true,json:async()=>body}}}),/Session changed/);
 console.log('PASS V47 committed report browser client: scoped preview, no fallback, unavailable API, stale session and foreign payload refused');
+
+import {assertLegacyReportGridCount} from './verified-legacy-grade-report.mjs';
+import {neError} from './nepali-feedback.mjs';
+assert.doesNotThrow(()=>assertLegacyReportGridCount(22,8,176));
+for(const [students,subjects,records] of [[11,6,0],[22,8,22],[25,8,24],[1,1,2]]){
+ assert.throws(()=>assertLegacyReportGridCount(students,subjects,records),e=>e.code==='smss/incomplete-legacy-grid'&&e.reportCounts.expected===students*subjects&&neError(e).includes(String(records)+' अङ्क अभिलेख'));
+}
+assert.throws(()=>assertLegacyReportGridCount(22,8,-1),/Invalid report inventory/);
+assert.match(read,/if\(after\.role!==before\.role\)[\s\S]*?assertLegacyReportGridCount\(roster\.count,subjects\.length,marks\.records\.length\)[\s\S]*?prepareLegacyGradeReport\(/);
+console.log('PASS real inventory count mismatch blocks report with precise Nepali guidance; no grading or permission changes');

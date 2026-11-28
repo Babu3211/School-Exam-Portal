@@ -3,6 +3,14 @@ const errors={
  'auth/invalid-credential':'इमेल वा पासवर्ड मिलेन।','auth/wrong-password':'इमेल वा पासवर्ड मिलेन।','auth/user-not-found':'यो खाता दर्ता भएको छैन।','auth/invalid-email':'मान्य इमेल ठेगाना राख्नुहोस्।','auth/user-disabled':'यो खाता निष्क्रिय छ।','auth/email-already-in-use':'यो इमेल पहिल्यै दर्ता छ।','auth/too-many-requests':'धेरै प्रयास भएका छन्। केही समयपछि पुनः प्रयास गर्नुहोस्।','auth/network-request-failed':'इन्टरनेट जडान जाँचेर पुनः प्रयास गर्नुहोस्।','auth/operation-not-allowed':'यो लगइन विधि सक्षम गरिएको छैन। व्यवस्थापकलाई सम्पर्क गर्नुहोस्।','permission-denied':'यो काम गर्ने अनुमति छैन। आफ्नो विद्यालयको सदस्यता र भूमिका जाँच्नुहोस्।','unavailable':'सेवा हाल उपलब्ध छैन। पुनः प्रयास गर्नुहोस्।','resource-exhausted':'सेवाको प्रयोग सीमा पुगेको छ। व्यवस्थापकलाई सम्पर्क गर्नुहोस्।','failed-precondition':'आवश्यक पूर्वसर्त पूरा भएको छैन। व्यवस्थापकलाई सम्पर्क गर्नुहोस्।','deadline-exceeded':'अनुरोधको समयसीमा सकियो। फेरि प्रयास गर्नुहोस्।','not-found':'खोजिएको विवरण भेटिएन।','already-exists':'यो विवरण पहिल्यै दर्ता छ।','unauthenticated':'पहिले लगइन गर्नुहोस्।'
 };
 const exact={
+ 'Complete class and subject marks required':'पूर्ण कक्षाको सबै विषयको अङ्क अभिलेख उपलब्ध छैन। Marks Entry र परीक्षा छनोट जाँच्नुहोस्।',
+ 'No matching records for selected exam':'छानिएको परीक्षाका अङ्क अभिलेख भेटिएनन्।',
+ 'Multiple exams in this class and term; explicit exam selection required':'यो कक्षा र Term मा एकभन्दा बढी परीक्षा छन्। सही परीक्षा छान्नुहोस्।',
+ 'Historical exam identity or academic year not verified':'पुरानो परीक्षा वा शैक्षिक वर्ष प्रमाणित भएन।',
+ 'Foreign, inactive or duplicate subject':'विषयको सक्रिय अवस्था, पहिचान र Credit Hour जाँच्नुहोस्।',
+ 'Foreign, inactive or duplicate student':'विद्यार्थीको सक्रिय अवस्था र अभिलेख जाँच्नुहोस्।',
+ 'Duplicate class subject marks':'एउटै विद्यार्थी र विषयका दोहोरो अङ्क भेटिए। अभिलेख जाँच्नुहोस्।',
+ 'Incompatible V46 IEMIS assessment components':'सुरक्षित अङ्कका शीर्षकहरू V46 IEMIS ढाँचासँग मिलेनन्। Assessment Settings जाँच्नुहोस्।',
  'V47 publication runtime unavailable':'V47 को सुरक्षित प्रकाशन सर्भर उपलब्ध छैन। सुरक्षित मस्यौदा यथावत् छ।',
  'Settings already exist. No changes made':'छानिएका Term मध्ये कुनैको सेटिङ पहिल्यै छ। कुनै नयाँ सेटिङ सिर्जना गरिएको छैन।',
  'Choose distinct examination terms':'फरक Term हरू मात्र छान्नुहोस्।',
@@ -19,6 +27,11 @@ const exact={
 };
 export function neError(error){
  const code=typeof error?.code==='string'?error.code.replace(/^firestore\//,''):'';
+ if(code==='smss/incomplete-legacy-grid'){
+  const c=error.reportCounts;
+  if(c&&Number.isSafeInteger(c.students)&&c.students>=1&&c.students<=1500&&Number.isSafeInteger(c.subjects)&&c.subjects>=1&&c.subjects<=30&&Number.isSafeInteger(c.records)&&c.records>=0&&c.records<=30000&&c.expected===c.students*c.subjects&&c.records!==c.expected)
+   return 'पूर्ण Grade Preview तयार भएन। '+c.students+' विद्यार्थी, '+c.subjects+' विषय, '+c.records+' अङ्क अभिलेख उपलब्ध छन्। पूर्ण कक्षा–विषय तालिकाको आधार '+c.expected+' अभिलेख हो। वैकल्पिक विषय र परीक्षा छनोटसमेत जाँच्नुहोस्।';
+ }
  if(Object.hasOwn(errors,code))return errors[code];
  const message=typeof error==='string'?error:error?.message;
  if(typeof message==='string'&&Object.hasOwn(exact,message))return exact[message];
