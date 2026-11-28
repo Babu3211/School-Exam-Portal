@@ -213,5 +213,12 @@ jobs:
         run: node scripts/test-v47-ledger-review-page-guard.mjs
       - name: V47 missing marks Firestore index coverage
         run: node scripts/test-v47-ledger-query-indexes.mjs
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test offline marks delta using synthetic data only
+        run: |
+          python -m pip install cryptography
+          python v47/diagnostics/cloud-shell-migration-dry-run.py --self-test-marks-delta
       - name: Existing V46 preservation gate
         run: node scripts/test-v46-preservation.mjs

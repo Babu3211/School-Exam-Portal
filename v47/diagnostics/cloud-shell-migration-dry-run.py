@@ -2,7 +2,8 @@
 No network, Firebase writes, credential display, plaintext output or data upload.
 Only aggregate schema and identity diagnostics are printed.
 """
-import getpass, json, sys, warnings
+import getpass, json, sys, warnings, os
+from datetime import datetime
 from collections import Counter
 from pathlib import Path
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -155,10 +156,81 @@ def self_test_orphan_review():
     assert review_orphan_subjects({SOURCE:project(src),TARGET:project(dst)})["review_counts"]["ambiguous_target_subject"]==1
     print("PASS synthetic historical subject evidence; no Firebase writes")
 
+def marks_delta(old,new):
+    """Compare exact typed marks at original IDs; no alias mapping or writes."""
+    def timestamp(value):
+        if not isinstance(value,str):raise ValueError("Missing snapshot readTime")
+        try: t=datetime.fromisoformat(value.replace("Z","+00:00"))
+        except ValueError:raise ValueError("Invalid snapshot readTime") from None
+        if t.tzinfo is None:raise ValueError("Snapshot readTime must be timezone aware")
+        return t
+    for b in (old,new):
+        if set(b)!={SOURCE,TARGET}:raise ValueError("Unexpected backup projects")
+        for p in (SOURCE,TARGET):verify(p,b[p])
+    for p in (SOURCE,TARGET):
+        if timestamp(new[p].get("readTime"))<=timestamp(old[p].get("readTime")):raise ValueError("New snapshot must follow old snapshot")
+    def records(b,p):
+        prefix=root(p)+("marks/" if p==SOURCE else "schools/"+SCHOOL+"/marks/")
+        out={}
+        for doc in b[p]["documents"]:
+            name=doc["name"]
+            if not name.startswith(prefix):continue
+            key=name[len(prefix):]
+            if not key or "/" in key:raise ValueError("Nested marks require separate review")
+            fields=doc.get("fields")
+            if not isinstance(fields,dict):raise ValueError("Invalid marks fields")
+            if p==TARGET:
+                if fields.get("schoolId")!={"stringValue":SCHOOL}:raise ValueError("Target marks school mismatch")
+            elif "schoolId" in fields and fields["schoolId"]!={"stringValue":SCHOOL}:raise ValueError("Source marks school mismatch")
+            out[key]={k:v for k,v in fields.items() if k!="schoolId"}
+        return out
+    previous,current,target=records(old,SOURCE),records(new,SOURCE),records(new,TARGET)
+    # Canonical typed JSON, not Python's bool/int coercion or numeric conversion.
+    def same(a,b):return json.dumps(a,sort_keys=True,ensure_ascii=False,allow_nan=False)==json.dumps(b,sort_keys=True,ensure_ascii=False,allow_nan=False)
+    changes=Counter();coverage=Counter()
+    for key,fields in current.items():
+        kind="added" if key not in previous else "unchanged" if same(previous[key],fields) else "changed"
+        changes[kind]+=1
+        status="missing_target" if key not in target else "exact_target" if same(fields,target[key]) else "target_differs_review"
+        coverage[kind+"_"+status]+=1
+    changes["removed_from_source"]=len(previous.keys()-current.keys())
+    return {"source_old":len(previous),"source_new":len(current),"target_new":len(target),
+        "source_changes":dict(sorted(changes.items())),"target_coverage":dict(sorted(coverage.items())),
+        "target_only_preserve":len(target.keys()-current.keys()),"write_authorized":False,
+        "note":"Exact original document IDs and typed fields only; transformed records need separate review. No deletion or copy authorized."}
+
+def self_test_marks_delta():
+    from copy import deepcopy
+    def make(p,rt,records):
+        prefix=root(p)+("marks/" if p==SOURCE else "schools/"+SCHOOL+"/marks/")
+        docs=[{"name":prefix+k,"updateTime":rt,"fields":{**{"score":{"integerValue":str(v)}},**({"schoolId":{"stringValue":SCHOOL}} if p==TARGET else {})}} for k,v in records.items()]
+        return {"readTime":rt,"documents":docs,"collectionCounts":dict(Counter(x["name"].rsplit("/",1)[0] for x in docs)),"users":[]}
+    t1="2026-11-26T00:00:00Z";t2="2026-11-28T00:00:00Z"
+    old={SOURCE:make(SOURCE,t1,{"a":0,"b":3,"c":2}),TARGET:make(TARGET,t1,{})}
+    new={SOURCE:make(SOURCE,t2,{"a":0,"b":4,"d":5}),TARGET:make(TARGET,t2,{"a":0,"b":3,"c":2})}
+    result=marks_delta(old,new)
+    assert result["source_changes"]=={"added":1,"changed":1,"removed_from_source":1,"unchanged":1}
+    assert result["target_coverage"]=={"added_missing_target":1,"changed_target_differs_review":1,"unchanged_exact_target":1}
+    assert result["target_only_preserve"]==1 and result["write_authorized"] is False
+    for invalid in (old,deepcopy(new)):
+        if invalid is not old:invalid[TARGET]["documents"][0]["fields"]["schoolId"]={"stringValue":"99999"}
+        try:marks_delta(old,invalid)
+        except ValueError:pass
+        else:raise AssertionError("Unsafe snapshot accepted")
+    print("PASS marks delta: exact zero, changed source, missing target, removed source, target-only preservation and school guard")
+
 if __name__=="__main__":
     try:
         warnings.simplefilter("error",getpass.GetPassWarning)
-        if sys.argv[1:]==["--self-test-orphans"]:
+        if sys.argv[1:]==["--self-test-marks-delta"]:
+            self_test_marks_delta()
+        elif len(sys.argv)==4 and sys.argv[1]=="--compare-marks":
+            if os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):raise ValueError("Private backups must not be opened in CI")
+            old=open_backup(Path(sys.argv[2]).expanduser(),getpass.getpass("Older backup passphrase: "))
+            new=open_backup(Path(sys.argv[3]).expanduser(),getpass.getpass("Newer backup passphrase: "))
+            print("OFFLINE MARKS DELTA:",json.dumps(marks_delta(old,new),sort_keys=True))
+            print("FIREBASE WRITES: ZERO; no migration or deletion authorized.")
+        elif sys.argv[1:]==["--self-test-orphans"]:
             self_test_orphan_review()
         elif len(sys.argv)==3 and sys.argv[2]=="--review-orphans":
             data=open_backup(Path(sys.argv[1]).expanduser(),getpass.getpass("Backup passphrase: "))

@@ -37,3 +37,12 @@ GitHub run 45569738725 passed the synthetic Unicode and identity checks, but liv
 
 ## Confirmed source permission blocker
 Run 45570859323 specifically confirmed V46 source collection listing permission denied and V46 Auth user listing insufficient permission. The target did not report those errors; that does not certify complete target readiness. The existing V46 deployment credential is not an authorized migration reader. Use an owner-approved local migration operator with Cloud Datastore Viewer (roles/datastore.viewer) and Firebase Authentication user-list permission for inventory. Password hash access (firebaseauth.configs.getHashConfig) is separately sensitive; do not grant to CI. Use local protected export/import with the source SCRYPT parameters only after collision review and an encrypted backup. No source write, billing, public artifact, or role escalation in this change. Prototype coverage explicitly denies all browser access to cdc_serofero_indicators; deployed V47 catch-all already denies it. No rule deployment needed for this fix.
+
+## 2026-11-28 — offline marks catch-up reconciliation
+Use the existing encrypted backup utility locally to create a newer read-only snapshot while teachers continue entering V46 marks. Compare the earlier and newer encrypted backups (both projects, strictly increasing read times):
+
+```sh
+python3 v47/diagnostics/cloud-shell-migration-dry-run.py --compare-marks /private/older.enc /private/newer.enc
+```
+
+Enter passphrases at the protected prompts. The command prints aggregate added/changed/unchanged/removed source counts and exact-ID target match/missing/different counts only. Target-only records are explicitly preserved, including records deleted at source. Typed fields are compared exactly except the verified schoolId envelope; transformed records or different IDs need separate review. Snapshot comparison cannot prove live synchronization or authorize a write, delete, activation, or publication. Never upload real backups to CI. An owner-approved final fresh inventory and reconciliation are still required before a cutover.
