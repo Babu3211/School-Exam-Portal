@@ -594,6 +594,49 @@ try{
     assert.equal((await db.doc(otherSettings).get()).exists,false);assert.equal((await db.doc(otherDraft).get()).exists,false);
     assert.equal((await db.doc(root+'/official_marks_pointers/'+sha(JSON.stringify(['1','math','1st']))).get()).exists,false);
     console.log('PASS configured custom primary maxima: Admin settings, audit, class entry, over-maximum rejection, Excel, saved draft reload and school isolation');
+    // The configured ledger is a distinct read-only source; no IEMIS maxima
+    // are substituted and no GPA or official grade sheet is rendered.
+    const review=await newSession(),viewer=await newSession();
+    try{
+     for(const [session,user] of [[review,'alpha-admin'],[viewer,'alpha-viewer']]){
+      await session.page.goto(origin+'/mark-ledger.html?schoolId='+sid);
+      await wait(session.page,()=>!document.getElementById('login').disabled);
+      await session.page.locator('#email').fill(email(user));await session.page.locator('#password').fill(password);
+      await session.page.locator('#login').click();await wait(session.page,()=>!document.getElementById('reportArea').hidden);
+     }
+     assert.equal(await viewer.page.locator('#reportSource option[value="configuredDraft"]').evaluate(o=>o.disabled),true);
+     assert.equal(await review.page.locator('#reportSource option[value="configuredDraft"]').evaluate(o=>o.disabled),false);
+     for(const [route,mode] of [['mark-ledger','number'],['mark-entry-ledger','entry']]){
+      if(mode==='entry'){
+       await review.page.goto(origin+'/'+route+'.html?schoolId='+sid);
+       await wait(review.page,()=>!document.getElementById('login').disabled);
+       await review.page.locator('#login').click();await wait(review.page,()=>!document.getElementById('reportArea').hidden);
+      }
+      await review.page.locator('#schoolClass').selectOption('1');await review.page.locator('#term').selectOption('1st');
+      await review.page.locator('#reportSource').selectOption('configuredDraft');
+      await review.page.locator('#load').click();await wait(review.page,()=>!document.getElementById('ledgerArea').hidden);
+      const row=await review.page.locator('#gradeOutput tbody tr td').allTextContents();
+      assert.deepEqual(row.slice(0,7),['s1','Alpha Student','Mathematics','Recorded','200','200','100']);
+      if(mode==='entry'){assert.equal(row[7],'Assessment / 137.5 — 137.5');assert.equal(row[8],'Project / 62.5 — 62.5')}
+      assert.equal(await review.page.locator('#configuredPageLabel').textContent(),'1–1 / 1');
+      assert.equal(await review.page.locator('#sheetArea').isVisible(),false);
+      assert.equal(await review.page.locator('#printSheet').isDisabled(),true);
+      const dl=review.page.waitForEvent('download',{timeout:30000});await review.page.locator('#exportExcel').click();const file=await dl;
+      assert.match(file.suggestedFilename(),/CONFIGURED-DRAFT-.*\.xlsx$/);
+      const bytes=(await readFile(await file.path())).toString();
+      assert.match(bytes,/PRIVATE DRAFT — NOT FOR OFFICIAL USE/);assert.match(bytes,/<v>200<\/v>/);
+      if(mode==='entry'){assert.match(bytes,/137.5/);assert.match(bytes,/62.5/)}
+      await review.page.locator('#term').selectOption('final');
+      assert.equal(await review.page.locator('#gradeOutput').textContent(),'');
+      assert.equal(await review.page.locator('#exportExcel').isDisabled(),true);
+      assert.equal(await review.page.locator('#configuredPaging').isVisible(),false);
+     }
+     assert.deepEqual((await db.doc(customDraftPath).get()).data(),draft);
+     assert.deepEqual((await db.doc(customSettingsPath).get()).data(),savedSettings);
+     assert.equal((await db.doc(otherDraft).get()).exists,false);
+     assert.deepEqual(review.errors,[]);assert.deepEqual(viewer.errors,[]);
+     console.log('PASS real browser configured Mark Ledger and Entry Ledger: original maxima, 200/200, Excel, no grade sheet, role gate and stale selection reset');
+    }finally{await review.context.close();await viewer.context.close()}
    }finally{await Promise.all([customDraftPath,customSettingsPath].map(path=>db.doc(path).delete()))}
    await page.locator('#term').selectOption('final');assert.deepEqual((await db.doc(settingPath).get()).data(),settingBefore);
    await page.locator('#loadSubjects').click();
