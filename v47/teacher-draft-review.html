@@ -30,7 +30,7 @@ th{position:sticky;top:0;background:#eaf2fd}a{color:#175eb5}
 <label>Subject ID <input id="subjectId" autocomplete="off" maxlength="128"></label>
 <label>Exam Term <select id="examId"><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="1st">1st Term</option><option value="2nd">2nd Term</option><option value="3rd">3rd Term</option><option value="final">Final Term</option></select></label>
 </div>
-<button id="review" type="button">Verify and load read-only Draft</button>
+<button id="loadReviewAssignments" type="button">Load Assigned Teachers &amp; Subjects</button><label>Assigned teacher / subject <select id="reviewAssignment" disabled><option value="">Select an assignment</option></select></label><p id="assignmentStatus" role="status" aria-live="polite"></p><button id="review" type="button">Verify and load read-only Draft</button>
 <button id="exportDraft" type="button" disabled>Export verified Draft (.xlsx)</button>
 <button id="copyDraft" type="button" disabled>Create Admin Draft from Teacher Draft</button><p lang="ne">नयाँ Admin Draft मात्र सिर्जना गर्न मिल्छ। पहिलेको Admin Draft वा शिक्षकको मूल Draft बदलिँदैन।</p>
 <p lang="ne">Excel फाइलमा Draft मात्र हुन्छ; यो आधिकारिक Mark Ledger, Grade Sheet वा नतिजा होइन। Export अघि शिक्षकको नियुक्ति, विद्यार्थी, Settings र Draft फेरि जाँचिन्छ।</p>

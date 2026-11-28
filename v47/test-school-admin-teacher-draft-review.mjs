@@ -237,3 +237,10 @@ assert.doesNotMatch(ui,/\.(?:setDoc|updateDoc|addDoc|deleteDoc|runTransaction)\s
 assert.match(schoolAdminHtml,/teacher-draft-review\.html/);
 assert.match(index,/data-required-role="school_admin"[^>]*href="\.\/teacher-draft-review\.html"/);
 console.log('PASS School Admin read-only Teacher Draft review: two-role scope, class roster, active assignment, settings and revision recheck');
+
+assert.match(html,/id="loadReviewAssignments"/);
+assert.match(html,/id="reviewAssignment"/);
+assert.match(ui,/where\('classId','==',cl\)/);
+assert.match(ui,/where\('authUid','==',uid\)/);
+assert.match(ui,/m\.role!=='teacher'\|\|m\.active!==true/);
+assert.match(ui,/getDoc:api\.getDocFromServer,getDocs:api\.getDocsFromServer/);

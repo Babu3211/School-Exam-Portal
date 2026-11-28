@@ -533,8 +533,16 @@ try{
    await wait(page,()=>!document.getElementById('login').disabled);
    await page.locator('#email').fill(email('alpha-admin'));await page.locator('#password').fill(password);
    await page.locator('#login').click();await wait(page,()=>!document.getElementById('reviewArea').hidden);
-   await page.locator('#teacherUid').fill(teacherUid);await page.locator('#classId').selectOption('1');
-   await page.locator('#subjectId').fill('math');await page.locator('#examId').selectOption('final');
+   await page.locator('#classId').selectOption('1');
+   await page.locator('#loadReviewAssignments').click();
+   await wait(page,()=>!document.getElementById('reviewAssignment').disabled);
+   const options=await page.locator('#reviewAssignment option').allTextContents();
+   assert.ok(options.some(x=>x.includes(teacherUid)&&x.includes('Mathematics')));
+   const selection=await page.locator('#reviewAssignment option').evaluateAll((opts,uid)=>opts.find(o=>o.textContent.includes(uid)&&o.textContent.includes('Mathematics')).value,teacherUid);
+   await page.locator('#reviewAssignment').selectOption(selection);
+   assert.equal(await page.locator('#teacherUid').inputValue(),teacherUid);
+   assert.equal(await page.locator('#subjectId').inputValue(),'math');
+   await page.locator('#examId').selectOption('final');
    await page.locator('#review').click();await wait(page,()=>!document.getElementById('copyDraft').disabled);
    page.once('dialog',d=>d.accept());await page.locator('#copyDraft').click();
    await wait(page,()=>document.getElementById('reviewStatus').textContent.includes('नयाँ Admin Draft सुरक्षित भयो'));
