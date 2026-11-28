@@ -1,0 +1,43 @@
+import '../iemis-importer/transfer.js';
+import {createV46DirectReader} from '../iemis-direct-saved-marks.js';
+async function test(T,createV46DirectReader){
+ const check=(v,m)=>{if(!v)throw Error(m)};
+ const eq=(a,b,m)=>check(JSON.stringify(a)===JSON.stringify(b),m+': '+JSON.stringify(a));
+ const reject=async(fn,re)=>{let e;try{await fn()}catch(err){e=err;}check(e&&re.test(e.message),'Expected '+re+', got '+e?.message)};
+ const schoolCode='999990001',school={iemisCode:schoolCode,academicYear:'2083'},user={uid:'synthetic-admin'},auth={currentUser:user},role={active:true};
+ const klass='कक्षा ९',students=[{id:'b',studentName:'Student B',studentIemisId:'902',class:klass,section:'A',optionalSubject2:'Optional II Computer Science'},{id:'a',studentName:'Student A',studentIemisId:'901',studentIemisNo:'901',class:klass,section:'A',optionalSubject2:'Optional II Health'}];
+ const subjects=[{id:'c1',className:klass,subject:'Mathematics'},{id:'c2',className:klass,subject:'English'},{id:'c3',className:klass,subject:'Optional II Computer Science'}];
+ const exams=[{id:'exam2',className:klass,academicYear:'2083',termKey:'second'}];
+ const marks=[];
+ for(const [studentId,subject,n,max] of [['b','Mathematics',80,100],['a','Mathematics',95,100],['b','English',0,50],['a','English',35,50],['b','Optional II Computer Science',45,50]])marks.push({id:'m'+marks.length,studentId,className:klass,section:'A',examId:'exam2',subject,isAbsent:false,scores:[{name:'Second Term Examination',fullMarks:max,obtained:n}]});
+ const tables={classes:subjects,students,exams,marks};let admin=true,changed=false,reads=0;
+ const doc=(v,p)=>({id:v.id,ref:{path:p},data:()=>v,exists:()=>true});
+ const api={collection:(_,name)=>name,doc:(_, ...p)=>p.join('/'),query:(path,...filters)=>({path,filters}),where:(k,op,v)=>[k,v],limit:n=>{if(!Number.isInteger(n)||n>10000||n<1)throw Error('Limit value in the structured query is over the maximum value of 10000');return n},orderBy:k=>({order:k}),startAfter:d=>({after:d.id}),getDocFromServer:async p=>{eq(p,'school_settings/main','School path');return doc(school,p)},getDocsFromServer:async({path,filters})=>{reads++;if(changed&&path==='marks')auth.currentUser=null;const rows=tables[path].filter(d=>filters.filter(Array.isArray).every(([k,v])=>d[k]===v));const ordered=filters.some(x=>x?.order);if(ordered)rows.sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);const after=filters.find(x=>x?.after)?.after;const selected=after?rows.filter(r=>r.id>after):rows;return{docs:selected.slice(0,filters.find(x=>typeof x==='number')).map(v=>doc(v,path+'/'+v.id))}}};
+ const reader=createV46DirectReader({getWorkspace:()=>({auth,db:{},api,role,isAdmin:()=>admin}),T,examTermKey:e=>e.termKey,subjectLabel:s=>s,optionalSlot:s=>s.startsWith('Optional II')?'optionalSubject2':'',studentOptional:(s,k)=>s[k]});
+ const req={mode:'marks',examTerm:'second',context:{schoolCode,year:'2083',className:'Class 9',term:'Second Term',section:'All'},columns:[{subject:'English',label:'Second Term Examination(25)'},{subject:'Mathematics',label:'Second Term Examination(50)'},{subject:'Computer Science (3031)',label:'Second Term Examination(36)'}]};
+ const response=await reader(req),g=response.grid;
+ eq([response.format,response.savedOnly,response.examTerm],['SMSS-IEMIS-DIRECT-1',true,'second'],'Response envelope');
+ const keys=g.columns.map(c=>T.columnKey(c.subject,c.label));const m=keys.indexOf('mathematics::term')+4,e=keys.indexOf('english::term')+4,computer=keys.indexOf('computerscience::term')+4;
+ eq(g.rows.map(r=>[r[2],r[m],r[e],r[computer]]),[['902',80,0,45],['901',95,35,'N/A']],'Original scores and optional student assignment');
+ eq([T.maximum(g.columns[m-4].label),T.maximum(g.columns[e-4].label),T.maximum(g.columns[computer-4].label)],[100,50,50],'Source maxima');
+ // Reproduce the live 10,000-limit failure and verify full paginated retrieval.
+ const beforePages=reads;
+ for(let i=0;i<10001;i++)marks.push({id:'extra-'+String(i).padStart(5,'0'),examId:'exam2',subject:'Unrequested Subject'});
+ const big=await reader(req);
+ eq(big.grid.rows,g.rows,'Pagination preserves all selected marks');check(reads-beforePages>=11,'Multiple pages must be read');
+ marks.splice(5);
+ const n=reads;await reject(()=>reader({...req,context:{...req.context,schoolCode:'999990002'}}),/School/);eq(reads,n,'Wrong school must not read marks');
+ await reject(()=>reader({...req,examTerm:'first'}),/Term/);
+ await reject(()=>reader({...req,mode:'attendance'}),/Attendance/);
+ admin=false;await reject(()=>reader(req),/Admin/);admin=true;
+ marks[0].scores[0].obtained=101;await reject(()=>reader(req),/Invalid original/);marks[0].scores[0].obtained=80;
+ marks[0].scores[0].fullMarks=90;await reject(()=>reader(req),/Mixed SMSS/);marks[0].scores[0].fullMarks=100;
+ const missing=marks.pop();await reject(()=>reader(req),/Incomplete/);marks.push(missing);
+ marks.push({...marks[0],id:'duplicate'});await reject(()=>reader(req),/Duplicate/);marks.pop();
+ exams.push({...exams[0],id:'other'});await reject(()=>reader(req),/एउटा मात्र/);exams.pop();
+ students[1].optionalSubject2='';await reject(()=>reader(req),/Optional subject assignment/);students[1].optionalSubject2='Optional II Health';
+ students[1].studentIemisNo='999';await reject(()=>reader(req),/Conflicting/);students[1].studentIemisNo='901';
+ changed=true;await reject(()=>reader(req),/Login/);
+ return 'PASS V46 saved marks: original maxima, zero, optional eligibility, scope, duplicate/incomplete records, login changes';
+}
+console.log(await test(globalThis.SmssIemisTransfer,createV46DirectReader));
