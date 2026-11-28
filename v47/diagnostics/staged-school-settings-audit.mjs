@@ -3,6 +3,10 @@
 import {execFileSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
+import {mkdtemp,writeFile} from 'node:fs/promises';
+import {homedir} from 'node:os';
+import {join} from 'node:path';
+import {excelWorkbook} from '../excel-workbook.mjs';
 import {auditAllTermSettingsCoverage} from '../entry-settings-coverage.mjs';
 import {previewV46MarkSettingsMigration} from '../preview-v46-mark-settings-migration.mjs';
 import {previewV46PrimaryAchievementSettings} from '../preview-v46-primary-achievement-settings.mjs';
@@ -39,22 +43,22 @@ const countBy=(rows,key)=>Object.fromEntries([...new Set(rows.map(key))].sort().
 // group setting to all exams. All raw labels, IDs, and scores stay in memory.
 // Use existing V46/V47 subject aliases for candidate discovery only.
 // Never replace a subject ID, assign a teacher or choose an exam from aliases.
-export function summarizeLegacySubjectCandidates({schoolId,subjects,settings}){
- const counts=[],classCounts={};
- const key=(label,grade)=>{
-  if(typeof label!=='string'||!label.trim())return null;
-  return Number(grade)<=5?primarySubjectKey(label)??iemisSubjectKey(label):iemisSubjectKey(label);
- };
- for(const {fields:d} of settings){
+const candidateKey=(label,grade)=>{
+ if(typeof label!=='string'||!label.trim())return null;
+ return Number(grade)<=5?primarySubjectKey(label)??iemisSubjectKey(label):iemisSubjectKey(label);
+};
+function legacyCandidateRows({schoolId,subjects,settings}){
+ const rows=[];
+ for(const {id,fields:d} of settings){
   const group=typeof d.classGroup==='string'&&Object.hasOwn(groups,d.classGroup)?groups[d.classGroup]:null,specific=classValue(d.className);
-  let kind='Unsupported scope',validComponents=0;
+  let kind='Unsupported scope',validComponents=0,candidates=[];
   if(group&&(!present(d.className)||specific&&group.includes(specific))&&typeof d.subject==='string'&&d.subject.trim()){
    const scope=specific?[specific]:group;
    const eligible=subjects.filter(r=>r.fields.active===true&&scope.includes(r.fields.class));
    const exact=eligible.filter(r=>norm(r.fields.name)===norm(d.subject));
-   const aliases=eligible.filter(r=>key(r.fields.name,r.fields.class)&&key(r.fields.name,r.fields.class)===key(d.subject,r.fields.class));
+   const aliases=eligible.filter(r=>candidateKey(r.fields.name,r.fields.class)&&candidateKey(r.fields.name,r.fields.class)===candidateKey(d.subject,r.fields.class));
    // Exact name is not sufficient when another alias in the same class could conflict.
-   const candidates=exact.length?[...new Map([...exact,...aliases].map(r=>[r.id,r])).values()]:aliases;
+   candidates=exact.length?[...new Map([...exact,...aliases].map(r=>[r.id,r])).values()]:aliases;
    if(!candidates.length)kind='No existing alias candidate';
    else if(new Set(candidates.map(r=>r.fields.class)).size!==candidates.length)kind='Ambiguous within class';
    else if(!specific&&candidates.length>1)kind='Group expansion review required';
@@ -69,14 +73,24 @@ export function summarizeLegacySubjectCandidates({schoolId,subjects,settings}){
     }catch{}
    }
   }
-  counts.push({kind,validComponents});
-  const bucket=specific??'group or unknown';
+  rows.push({id,legacy:d,kind,validComponents,candidates,bucket:specific??'group or unknown'});
+ }
+ return rows;
+}
+export function summarizeLegacySubjectCandidates(args){
+ const counts=legacyCandidateRows(args),classCounts={};
+ const targetCounts=new Map();
+ for(const {kind,validComponents,candidates,bucket} of counts){
+  if(kind.startsWith('Unique ')&&validComponents===1&&candidates.length===1){
+   const target=candidates[0].id;
+   targetCounts.set(target,(targetCounts.get(target)??0)+1);
+  }
   classCounts[bucket]??={records:0,uniqueCandidates:0,componentShapeValid:0};
   classCounts[bucket].records++;
   if(kind.startsWith('Unique '))classCounts[bucket].uniqueCandidates++;
   classCounts[bucket].componentShapeValid+=validComponents;
  }
- return {records:counts.length,classification:countBy(counts,r=>r.kind),componentShapeValid:counts.reduce((n,r)=>n+r.validComponents,0),byClass:classCounts,termAssigned:false,writeAuthorized:false};
+ return {records:counts.length,classification:countBy(counts,r=>r.kind),componentShapeValid:counts.reduce((n,r)=>n+r.validComponents,0),distinctValidatedTargetSubjects:targetCounts.size,conflictingTargetSubjects:[...targetCounts.values()].filter(n=>n>1).length,byClass:classCounts,termAssigned:false,writeAuthorized:false};
 }
 export function summarizeLegacySettings({schoolId,subjects,settings}){
  const results=[];
@@ -140,6 +154,36 @@ export function summarizeStagedSettings({schoolId,school,subjects,settings,membe
  const legacySubjectCandidates=summarizeLegacySubjectCandidates({schoolId,subjects,settings:legacySettings});
  return {schoolActive:school.active,activeClassSubjects:activeSubjects.length,totalSettings:settings.length,recognizedEntrySettings:recognized.length,settingsIdentityMismatches:idMismatch,otherOrLegacySettings:settings.length-recognized.length,matchedClassTermSubjects:matrix.reduce((n,r)=>n+r.matched,0),reviewClassTermSubjects:matrix.reduce((n,r)=>n+r.reviewRequired,0),members:members.length,activeAdmins:members.filter(r=>r.fields.role==='school_admin'&&r.fields.active===true&&r.fields.uid===r.id).length,invalidMemberRecords:badMembers,teacherAssignments:assignments.length,invalidAssignmentRecords:badAssignments,assignmentReviewReasons:countBy(assignmentReasons,r=>r),legacyMapping,legacySubjectCandidates,matrix,writeAuthorized:false,liveIemisVerified:false,activationAuthorized:false};
 }
+// Optional private operator workbooks. No student records, scores, email,
+// passwords, tokens, or raw data dumps; CI never creates these files.
+export function buildLocalReviewWorkbooks(inputs){
+ const result=summarizeStagedSettings(inputs);
+ const {schoolId,subjects,settings,assignments}=inputs;
+ const legacy=settings.filter(r=>!(classes.includes(r.fields.classId)&&terms.includes(r.fields.examId)&&typeof r.fields.subjectId==='string'));
+ const candidates=legacyCandidateRows({schoolId,subjects,settings:legacy});
+ const str=v=>typeof v==='string'?v:'';
+ const components=d=>Array.isArray(d.components)?d.components.map(c=>str(c?.name)+' / '+(typeof c?.fullMarks==='number'?c.fullMarks:'?')).join(' | '):'';
+ const targetCounts=new Map();
+ for(const row of candidates)if(row.kind.startsWith('Unique ')&&row.validComponents===1&&row.candidates.length===1){
+  const id=row.candidates[0].id;targetCounts.set(id,(targetCounts.get(id)??0)+1);
+ }
+ const rows=[];
+ for(const r of candidates){
+  const d=r.legacy;
+  const choices=r.candidates.length?r.candidates:[null];
+  if(rows.length+choices.length>50000)throw Error('Private review row limit exceeded');
+  for(const choice of choices)rows.push([schoolId,r.id,str(d.classGroup),r.bucket,str(d.subject),components(d),r.kind,r.validComponents===1?'Shape valid':'Review required',choice?.fields.class??'',choice?.id??'',choice?.fields.name??'',choice&&(targetCounts.get(choice.id)??0)>1?'Conflicting legacy records':'','', 'Review only; no term or write approved']);
+ }
+ const settingsBlob=excelWorkbook(['School ID','Legacy settings ID','Class group','Legacy class','Legacy subject','Saved component maxima','Candidate status','Component check','Candidate class','Candidate subject ID','Candidate subject','Target conflict','Approved term (operator review only)','Notice'],rows,{sheetName:'Legacy mapping review'});
+ const subjectIds=new Set(subjects.map(r=>r.id));
+ const assignmentRows=assignments.filter(r=>!subjectIds.has(r.fields.subjectId)).map(r=>{
+  const a=r.fields,labels=[a.subjectName,a.subject].filter(v=>typeof v==='string'&&v.trim()),label=labels.length&&new Set(labels.map(norm)).size===1?labels[0]:'';
+  const matches=label?subjects.filter(r=>r.fields.class===a.classId&&r.fields.active===true&&candidateKey(r.fields.name,a.classId)===candidateKey(label,a.classId)):[];
+  return [schoolId,r.id,str(a.uid),str(a.classId),str(a.subjectId),label,matches.length,matches.length===1?matches[0].id:'',matches.length===1?matches[0].fields.name:'','Review only — no teacher assignment authorized'];
+ });
+ const assignmentBlob=excelWorkbook(['School ID','Assignment ID','Teacher UID','Class','Missing subject ID','Stored subject label','Candidate count','Unique candidate ID','Unique candidate name','Notice'],assignmentRows,{sheetName:'Missing assignment IDs'});
+ return {settingsBlob,assignmentBlob,settingsRows:rows.length,assignmentRows:assignmentRows.length,writeAuthorized:result.writeAuthorized};
+}
 // Only the previously configured V47 service-account secret is accepted in CI.
 // This does not request extra IAM grants, nor expose tokens or raw fields.
 export function validateTargetCredential(value){
@@ -160,7 +204,8 @@ async function operatorToken(){
 }
 async function main(){
  const sid=process.argv[2];requireScope(sid);
- if(process.argv.length!==3||process.env.FIRESTORE_EMULATOR_HOST)throw Error('Specify one target school ID');
+ const localReview=process.argv.length===4&&process.argv[3]==='--local-review';
+ if((process.argv.length!==3&&!localReview)||process.env.FIRESTORE_EMULATOR_HOST||localReview&&process.env.GITHUB_ACTIONS==='true')throw Error('Specify one target school ID; private review is local only');
  // The token remains in this process; never print it or put it in URLs.
  const token=await operatorToken();
  if(typeof token!=='string'||!token||/\s/.test(token))throw Error('Operator authentication unavailable');
@@ -192,7 +237,7 @@ async function main(){
  console.log('Target settings inventory read: OK; '+settings.length+' documents');
  const members=await list('members',['schoolId','uid','role','active'],300);
  console.log('Target member inventory read: OK; '+members.length+' documents');
- const assignments=await list('teacher_assignments',['schoolId','uid','classId','subjectId','active'],1000);
+ const assignments=await list('teacher_assignments',['schoolId','uid','classId','subjectId','subjectName','subject','active'],1000);
  console.log('Target assignment inventory read: OK; '+assignments.length+' documents');
  console.log('Recheck registry: starting');
  const after=await registry();
@@ -211,6 +256,15 @@ async function main(){
  console.log('Scoped settings and membership summary: starting');
  const result=summarizeStagedSettings(inputs);
  console.log(JSON.stringify(result,null,2));
+ if(localReview){
+  const files=buildLocalReviewWorkbooks(inputs);
+  // mkdtemp creates a private 0700 directory on Cloud Shell/Linux. Exclusive
+  // 0600 files: never overwrite an earlier review and never upload them.
+  const dir=await mkdtemp(join(homedir(),'smss-v47-review-'));
+  await writeFile(join(dir,'settings-review.xlsx'),Buffer.from(await files.settingsBlob.arrayBuffer()),{flag:'wx',mode:0o600});
+  await writeFile(join(dir,'assignment-review.xlsx'),Buffer.from(await files.assignmentBlob.arrayBuffer()),{flag:'wx',mode:0o600});
+  console.log('Private local workbooks saved: '+dir+'; settings rows '+files.settingsRows+'; assignment rows '+files.assignmentRows);
+ }
  console.log('TARGET READ ONLY; FIREBASE WRITES: ZERO; NOT A CONSISTENT SNAPSHOT OR RELEASE APPROVAL');
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)main().catch(e=>{console.error('Audit stopped: '+(typeof e?.message==='string'&&/^Target read failed: HTTP [0-9]{3}$/.test(e.message)?e.message:['Registry changed during audit','Target registry identity mismatch','Incomplete or foreign staged inventory','Invalid IEMIS settings audit scope','Class settings audit exceeds 800 records','Unexpected class settings identity','Invalid or foreign settings identity','Invalid subject identity'].includes(e?.message)?e.message:'Invalid scope, incomplete inventory or unavailable operator access ('+(e instanceof TypeError?'TypeError':e instanceof RangeError?'RangeError':'Error')+')'));process.exitCode=1});

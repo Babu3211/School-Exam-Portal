@@ -57,3 +57,22 @@ import {summarizeLegacySubjectCandidates} from './diagnostics/staged-school-sett
  const missing=summarizeStagedSettings({...args,assignments:[row('12345:teacher:9:unknown',{uid:'teacher',classId:'9',subjectId:'unknown',active:true})]});
  assert.equal(missing.assignmentReviewReasons['Missing subject ID'],1);
 }
+
+import {buildLocalReviewWorkbooks} from './diagnostics/staged-school-settings-audit.mjs';
+{
+ const legacy=row('old-settings',{classGroup:'9-10',className:'9',subject:'Computer',components:[{name:'Participation',fullMarks:4},{name:'Practical/Project',fullMarks:36},{name:'First Term Examination',fullMarks:10}]});
+ const legacy2={...legacy,id:'old-settings-two'};
+ const missingAssignment=row('12345:teacher:9:missing',{uid:'teacher',classId:'9',subjectId:'missing',subjectName:'Computer',active:false});
+ const input={...args,settings:[legacy,legacy2],assignments:[missingAssignment]};
+ const result=summarizeStagedSettings(input);
+ assert.equal(result.legacySubjectCandidates.componentShapeValid,2);
+ assert.equal(result.legacySubjectCandidates.distinctValidatedTargetSubjects,1);
+ assert.equal(result.legacySubjectCandidates.conflictingTargetSubjects,1);
+ const files=buildLocalReviewWorkbooks(input);
+ assert.equal(files.settingsRows,2);assert.equal(files.assignmentRows,1);assert.equal(files.writeAuthorized,false);
+ const settingXML=new TextDecoder().decode(await files.settingsBlob.arrayBuffer());
+ const assignmentXML=new TextDecoder().decode(await files.assignmentBlob.arrayBuffer());
+ assert.match(settingXML,/Conflicting legacy records/);assert.match(settingXML,/Approved term \(operator review only\)/);
+ assert.match(assignmentXML,/Missing subject ID/);assert.match(assignmentXML,/Computer/);
+ assert.throws(()=>buildLocalReviewWorkbooks({...input,settings:[{...legacy,fields:{...legacy.fields,schoolId:'99999'}}]}),/foreign/);
+}
