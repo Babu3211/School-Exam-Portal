@@ -8,7 +8,7 @@ SID="300160003"
 ROOT="projects/"+PROJECT+"/databases/(default)/documents"
 FS="https://firestore.googleapis.com/v1/"
 AUTH="https://identitytoolkit.googleapis.com/v1/projects/"+PROJECT+"/accounts:batchGet?maxResults=1000"
-def run(call,root_email,admin_email,apply):
+def run(call,root_email,admin_email,apply,remove_extra_root=False):
     emails=[v.strip().casefold() for v in (root_email,admin_email)]
     if not all(emails) or emails[0]==emails[1]:raise ValueError("Two distinct existing emails required")
     accounts=call(AUTH)
@@ -37,9 +37,16 @@ def run(call,root_email,admin_email,apply):
         boolean=lambda b:{"booleanValue":b}
         school,r,a,m=[docs[n] for n in names]
         if not school or school["fields"].get("id")!=string(SID) or school["fields"].get("active")!=boolean(True):raise ValueError("Canonical active school not verified")
-        if any(not x or x["fields"].get("active")!=boolean(True) for x in (r,a)):raise ValueError("Both existing Super Admin roles must be active")
+        if not r or r["fields"].get("active")!=boolean(True):raise ValueError("Retained Super Admin must be active")
+        if not a or a["fields"].get("active") not in (boolean(True),boolean(False)):raise ValueError("Existing extra Super Admin status not verified")
+        if not remove_extra_root and a["fields"].get("active")!=boolean(True):raise ValueError("Both current Super Admin roles must be active for membership repair")
         expected={"uid":string(uid),"schoolId":string(SID),"role":string("school_admin"),"active":boolean(True)}
-        if m:
+        if remove_extra_root:
+            if not m or any(m["fields"].get(k)!=v for k,v in expected.items()):raise ValueError("Active exact School Admin membership required before root deactivation")
+            if a["fields"]["active"]==boolean(False):return "ROOT_ALREADY_INACTIVE"
+            write={"update":{"name":names[2],"fields":{"active":boolean(False)}},"updateMask":{"fieldPaths":["active"]},"currentDocument":{"updateTime":a["updateTime"]}}
+            status="EXTRA_ROOT_DEACTIVATED"
+        elif m:
             f=m["fields"]
             if any(f.get(k)!=expected[k] for k in ("uid","schoolId","role")) or f.get("active") not in (boolean(False),boolean(True)):raise ValueError("Conflicting membership: no overwrite")
             if f["active"]==boolean(True):return "ALREADY_ACTIVE"
@@ -48,7 +55,7 @@ def run(call,root_email,admin_email,apply):
         else:
             write={"update":{"name":names[3],"fields":expected},"currentDocument":{"exists":False}}
             status="CREATED"
-        if not apply:return "WOULD_"+("ACTIVATE" if m else "CREATE")
+        if not apply:return "WOULD_DEACTIVATE_EXTRA_ROOT" if remove_extra_root else "WOULD_"+("ACTIVATE" if m else "CREATE")
         committing=True
         result=call(base+":commit",{"writes":[write],"transaction":tx})
         if len(result.get("writeResults",[]))!=1:raise ValueError("Commit response uncertain; review before retry")
@@ -68,8 +75,8 @@ def self_test():
         if url.endswith(":batchGet"):return [{"found":{"name":n,"fields":data[n],"updateTime":"2026-11-28T00:00:00Z"}} if n in data else {"missing":n} for n in body["documents"]]
         if url.endswith(":rollback"):return {}
         if url.endswith(":commit"):
-            w=body["writes"][0];assert w["update"]["name"]==paths[3]
-            writes.append(w);data.setdefault(paths[3],{}).update(w["update"]["fields"])
+            w=body["writes"][0];p=w["update"]["name"];assert p in (paths[2],paths[3])
+            writes.append(w);data.setdefault(p,{}).update(w["update"]["fields"])
             return {"writeResults":[{}]}
         raise AssertionError("Unexpected API")
     args=(fake,"r@example.test","a@example.test")
@@ -84,10 +91,21 @@ def self_test():
     except ValueError:pass
     else:raise AssertionError("Conflicting role accepted")
     assert len(writes)==2
-    print("PASS: membership-only create/activate, conflict rejection and repeat safety")
+    try:run(*args,True,True)
+    except ValueError:pass
+    else:raise AssertionError("Wrong membership allowed root removal")
+    data[paths[3]]["role"]=s("school_admin")
+    assert run(*args,False,True)=="WOULD_DEACTIVATE_EXTRA_ROOT" and len(writes)==2
+    assert run(*args,True,True)=="EXTRA_ROOT_DEACTIVATED" and len(writes)==3
+    assert run(*args,True,True)=="ROOT_ALREADY_INACTIVE" and len(writes)==3
+    assert data[paths[1]]["active"]==b(True) and data[paths[3]]["active"]==b(True)
+    print("PASS: membership-only repair, protected retained root, exact extra root deactivation and repeat safety")
 def main():
     if sys.argv[1:]==["--self-test"]:return self_test()
-    if sys.argv[1:] not in (["--review"],["--apply"]):raise ValueError("Explicit review or apply required")
+    if sys.argv[1:] not in (["--review"],["--apply"],["--review-extra-root"],["--deactivate-extra-root"]):raise ValueError("Explicit operation required")
+    remove_extra_root=sys.argv[1] in ("--review-extra-root","--deactivate-extra-root")
+    apply=sys.argv[1] in ("--apply","--deactivate-extra-root")
+    if sys.argv[1]=="--deactivate-extra-root" and os.getenv("V47_CONFIRM_SCHOOL_ADMIN_LOGIN")!="YES":raise ValueError("Confirm successful School Admin browser login first")
     if os.getenv("CI") or os.getenv("GITHUB_ACTIONS") or os.getenv("FIRESTORE_EMULATOR_HOST") or os.getenv("FIREBASE_AUTH_EMULATOR_HOST"):raise ValueError("Cloud Shell operator only")
     if os.getenv("V47_CONFIRM_PROJECT")!=PROJECT:raise ValueError("Confirm exact V47 project")
     token=subprocess.check_output(["gcloud","auth","print-access-token"],text=True).strip()
@@ -102,10 +120,11 @@ def main():
         except urllib.error.HTTPError as e:
             raise RuntimeError("API "+("Auth inventory" if url==AUTH else url.rsplit(":",1)[-1])+" HTTP "+str(e.code)) from None
     args=(call,os.getenv("V47_ROOT_EMAIL",""),os.getenv("V47_SCHOOL_ADMIN_EMAIL",""))
-    result=run(*args,sys.argv[1]=="--apply")
-    print("SCHOOL ADMIN MEMBERSHIP:",result)
-    if sys.argv[1]=="--apply" and run(*args,False)!="ALREADY_ACTIVE":raise ValueError("Post-write verification failed; review before retry")
-    print("V46 WRITES: ZERO; AUTH CHANGES: ZERO; SUPER ADMIN CHANGES: ZERO; ACADEMIC DATA CHANGES: ZERO")
+    result=run(*args,apply,remove_extra_root)
+    print("ROLE SEPARATION:" if remove_extra_root else "SCHOOL ADMIN MEMBERSHIP:",result)
+    if apply and run(*args,False,remove_extra_root)!=("ROOT_ALREADY_INACTIVE" if remove_extra_root else "ALREADY_ACTIVE"):raise ValueError("Post-write verification failed; review before retry")
+    print("V46 WRITES: ZERO; AUTH CHANGES: ZERO; ACADEMIC DATA CHANGES: ZERO")
+    print("RETAINED SUPER ADMIN AND SCHOOL ADMIN MEMBERSHIP VERIFIED" if remove_extra_root else "SUPER ADMIN CHANGES: ZERO")
 if __name__=="__main__":
     try:main()
     except Exception as e:
